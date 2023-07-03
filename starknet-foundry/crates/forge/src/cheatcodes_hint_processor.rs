@@ -94,7 +94,6 @@ impl HintProcessor for CairoHintProcessor<'_> {
         _reference_ids: &HashMap<String, usize>,
         _references: &[HintReference],
     ) -> Result<Box<dyn Any>, VirtualMachineError> {
-        println!("{hint_code}");
         Ok(Box::new(
             self.original_cairo_hint_processor.string_to_hint[hint_code].clone(),
         ))

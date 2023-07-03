@@ -28,7 +28,7 @@ fn build_hints_dict<'b>(
         if !instruction.hints.is_empty() {
             // Register hint with string for the hint processor.
             for hint in &instruction.hints {
-                string_to_hint.insert(hint.to_string(), hint.clone()); // FIXME
+                string_to_hint.insert(format!("{hint:?}"), hint.clone()); // FIXME
             }
             // Add hint, associated with the instruction offset.
             hints_dict.insert(
