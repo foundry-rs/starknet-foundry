@@ -6,7 +6,6 @@ use cairo_vm::serde::deserialize_program::HintParams;
 use itertools::chain;
 
 use cairo_lang_casm::hints::Hint;
-use cairo_lang_casm::hints::PythonicHint;
 use cairo_lang_casm::instructions::Instruction;
 use cairo_lang_runner::casm_run::hint_to_hint_params;
 use cairo_lang_runner::CairoHintProcessor as CoreCairoHintProcessor;

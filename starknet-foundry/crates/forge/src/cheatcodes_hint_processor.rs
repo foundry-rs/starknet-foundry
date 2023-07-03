@@ -41,16 +41,16 @@ use starknet_api::transaction::{
 };
 use starknet_api::{patricia_key, stark_felt};
 
-use cairo_lang_casm::hints::ProtostarHint;
 use cairo_lang_casm::hints::{Hint, StarknetHint};
-use cairo_lang_casm::operand::ResOperand;
+use cairo_lang_casm::operand::{CellRef, ResOperand};
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{
-    casm_run::{cell_ref_to_relocatable, extract_buffer, get_ptr, get_val},
+    casm_run::{cell_ref_to_relocatable, extract_buffer, get_ptr},
     insert_value_to_cellref, CairoHintProcessor as OriginalCairoHintProcessor,
 };
 use cairo_lang_starknet::casm_contract_class::CasmContractClass;
 use cairo_lang_starknet::contract_class::ContractClass;
+use cairo_lang_utils::bigint::BigIntAsHex;
 
 pub struct CairoHintProcessor<'a> {
     pub original_cairo_hint_processor: OriginalCairoHintProcessor<'a>,
@@ -71,8 +71,22 @@ impl HintProcessor for CairoHintProcessor<'_> {
             .blockifier_state
             .as_mut()
             .expect("blockifier state is needed for executing hints");
-        if let Some(Hint::Protostar(hint)) = maybe_extended_hint {
-            return execute_cheatcode_hint(vm, exec_scopes, hint, blockifier_state);
+        if let Some(Hint::Starknet(StarknetHint::Cheatcode {
+            selector,
+            input_start,
+            input_end,
+            output_start,
+            output_end,
+        })) = maybe_extended_hint
+        {
+            return execute_cheatcode_hint(
+                vm,
+                exec_scopes,
+                blockifier_state,
+                selector,
+                [input_start, input_end],
+                [output_start, output_end],
+            );
         }
         if let Some(Hint::Starknet(StarknetHint::SystemCall { system })) = maybe_extended_hint {
             return execute_syscall(system, vm, blockifier_state);
@@ -210,24 +224,60 @@ fn call_contract(
     Ok(return_data)
 }
 
-#[allow(unused, clippy::too_many_lines)]
 fn execute_cheatcode_hint(
     vm: &mut VirtualMachine,
-    exec_scopes: &mut ExecutionScopes,
-    hint: &ProtostarHint,
+    _exec_scopes: &mut ExecutionScopes,
     blockifier_state: &mut CachedState<DictStateReader>,
+    selector: &BigIntAsHex,
+    [input_start, input_end]: [&ResOperand; 2],
+    [output_start, output_end]: [&CellRef; 2],
 ) -> Result<(), HintError> {
-    match hint {
-        &ProtostarHint::StartRoll { .. } => todo!(),
-        &ProtostarHint::StopRoll { .. } => todo!(),
-        &ProtostarHint::StartWarp { .. } => todo!(),
-        &ProtostarHint::StopWarp { .. } => todo!(),
-        ProtostarHint::Declare {
-            contract,
-            result,
-            err_code,
-        } => {
-            let contract_value = get_val(vm, contract)?;
+    // Parse the selector.
+    let selector = &selector.value.to_bytes_be().1;
+    let selector = std::str::from_utf8(selector).map_err(|_| {
+        HintError::CustomHint(Box::from(
+            "Failed to parse the  cheatcode selector".to_string(),
+        ))
+    })?;
+
+    // Extract the inputs.
+    let input_start = extract_relocatable(vm, input_start)?;
+    let input_end = extract_relocatable(vm, input_end)?;
+    let inputs = read_data_from_range(vm, input_start, input_end)
+        .map_err(|_| HintError::CustomHint(Box::from("Failed to read input data".to_string())))?;
+
+    match_cheatcode_by_selector(
+        vm,
+        blockifier_state,
+        selector,
+        inputs,
+        [output_start, output_end],
+    )
+}
+
+#[allow(unused, clippy::too_many_lines)]
+fn match_cheatcode_by_selector(
+    vm: &mut VirtualMachine,
+    blockifier_state: &mut CachedState<DictStateReader>,
+    selector: &str,
+    inputs: Vec<Felt252>,
+    [output_start, output_end]: [&CellRef; 2],
+) -> Result<(), HintError> {
+    let mut result_segment_ptr = vm.add_memory_segment();
+    let result_start = result_segment_ptr;
+
+    match selector {
+        "prepare" => todo!(),
+        "start_roll" => todo!(),
+        "stop_roll" => todo!(),
+        "start_warp" => todo!(),
+        "stop_warp" => todo!(),
+        "start_prank" => todo!(),
+        "stop_prank" => todo!(),
+        "mock_call" => todo!(),
+        "declare_cairo0" => todo!(),
+        "declare" => {
+            let contract_value = inputs[0].clone();
 
             let contract_value_as_short_str = as_cairo_short_string(&contract_value)
                 .expect("Converting contract name to short string failed");
@@ -235,7 +285,7 @@ fn execute_cheatcode_hint(
                 .expect("Failed to get current directory")
                 .join("target/dev");
 
-            let mut paths = std::fs::read_dir(&current_dir)
+            let mut paths = fs::read_dir(&current_dir)
                 .expect("Failed to read ./target/dev, scarb build probably failed");
 
             let starknet_artifacts_entry = &paths
@@ -270,7 +320,7 @@ fn execute_cheatcode_hint(
             }).unwrap_or_else(|| panic!("Failed to find contract {contract_value_as_short_str} in starknet_artifacts.json"));
             let sierra_path = current_dir.join(sierra_path);
 
-            let file = std::fs::File::open(&sierra_path)
+            let file = fs::File::open(&sierra_path)
                 .unwrap_or_else(|_| panic!("Failed to open file at path = {:?}", &sierra_path));
             let sierra_contract_class: ContractClass = serde_json::from_reader(&file)
                 .unwrap_or_else(|_| panic!("File to parse json from file = {file:?}"));
@@ -311,43 +361,25 @@ fn execute_cheatcode_hint(
             let tx_result = account_tx
                 .execute(blockifier_state, block_context)
                 .expect("Failed to execute declare transaction");
-
-            insert_value_to_cellref!(
-                vm,
-                result,
-                felt252_from_hex_string(&class_hash.to_string()).unwrap()
-            )?;
+            // result_segment.
+            let felt_class_hash = felt252_from_hex_string(&class_hash.to_string()).unwrap();
+            insert_at_pointer(vm, &mut result_segment_ptr, felt_class_hash).unwrap();
             // TODO https://github.com/software-mansion/protostar/issues/2024
             //  in case of errors above, consider not panicking, set an error and return it here
             //  instead
-            insert_value_to_cellref!(vm, err_code, Felt252::from(0))?;
-            Ok(())
+            insert_at_pointer(vm, &mut result_segment_ptr, Felt252::from(0)).unwrap();
         }
-        &ProtostarHint::DeclareCairo0 { .. } => todo!(),
-        &ProtostarHint::StartPrank { .. } => todo!(),
-        &ProtostarHint::StopPrank { .. } => todo!(),
-        &ProtostarHint::Invoke { .. } => todo!(),
-        &ProtostarHint::MockCall { .. } => todo!(),
-        ProtostarHint::Deploy {
-            prepared_contract_address,
-            prepared_class_hash,
-            prepared_constructor_calldata_start,
-            prepared_constructor_calldata_end,
-            deployed_contract_address,
-            panic_data_start,
-            panic_data_end,
-        } => {
-            let contract_address = get_val(vm, prepared_contract_address)?;
+        "deploy" => {
+            let contract_address = inputs[0].clone();
             // TODO(#1991) deploy should fail if contract address provided doesn't match calculated
             //  or not accept this address as argument at all.
-            let class_hash = get_val(vm, prepared_class_hash)?;
-            let as_relocatable = |vm, value| {
-                let (base, offset) = extract_buffer(value);
-                get_ptr(vm, base, &offset)
-            };
-            let mut curr = as_relocatable(vm, prepared_constructor_calldata_start)?;
-            let end = as_relocatable(vm, prepared_constructor_calldata_end)?;
-            let calldata = read_data_from_range(vm, curr, end).unwrap();
+            let class_hash = inputs[1].clone();
+
+            let calldata_length: usize = inputs[2].to_biguint().to_usize().unwrap_or(0);
+            let mut calldata = vec![];
+            for felt in inputs.into_iter().skip(2).take(calldata_length) {
+                calldata.push(felt);
+            }
 
             // Deploy a contract using syscall deploy.
             let account_address = ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS));
@@ -385,37 +417,38 @@ fn execute_cheatcode_hint(
                 .expect("Failed to get contract_address from return_data");
             let contract_address = Felt252::from_bytes_be(contract_address.bytes());
 
-            insert_value_to_cellref!(vm, deployed_contract_address, contract_address)?;
+            insert_at_pointer(vm, &mut result_segment_ptr, contract_address).unwrap();
             // todo in case of error, consider filling the panic data instead of packing in rust
-            insert_value_to_cellref!(vm, panic_data_start, Felt252::from(0))?;
-            insert_value_to_cellref!(vm, panic_data_end, Felt252::from(0))?;
-
-            Ok(())
+            insert_at_pointer(vm, &mut result_segment_ptr, Felt252::from(0)).unwrap();
         }
-        &ProtostarHint::Prepare { .. } => todo!(),
-        &ProtostarHint::Call { .. } => todo!(),
-        ProtostarHint::Print { start, end } => {
-            let as_relocatable = |vm, value| {
-                let (base, offset) = extract_buffer(value);
-                get_ptr(vm, base, &offset)
-            };
-
-            let mut curr = as_relocatable(vm, start)?;
-            let end = as_relocatable(vm, end)?;
-
-            while curr != end {
-                let value = vm.get_integer(curr)?;
-                if let Some(shortstring) = as_cairo_short_string(&value) {
-                    println!("original value: [{value}], converted to a string: [{shortstring}]",);
+        "print" => {
+            for value in inputs {
+                if let Some(short_string) = as_cairo_short_string(&value) {
+                    println!("original value: [{value}], converted to a string: [{short_string}]",);
                 } else {
                     println!("original value: [{value}]");
                 }
-                curr += 1;
             }
-
-            Ok(())
         }
+        _ => Err(HintError::CustomHint(Box::from(format!(
+            "Unknown cheatcode selector: {selector}"
+        ))))?,
     }
+
+    let result_end = result_segment_ptr;
+    insert_value_to_cellref!(vm, output_start, result_start)?;
+    insert_value_to_cellref!(vm, output_end, result_end)?;
+
+    Ok(())
+}
+
+// TODO: remove this when extract_relocatable is pub in cairo
+fn extract_relocatable(
+    vm: &VirtualMachine,
+    buffer: &ResOperand,
+) -> Result<Relocatable, VirtualMachineError> {
+    let (base, offset) = extract_buffer(buffer);
+    get_ptr(vm, base, &offset)
 }
 
 fn create_execute_calldata(
