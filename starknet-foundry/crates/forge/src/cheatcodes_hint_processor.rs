@@ -363,11 +363,12 @@ fn match_cheatcode_by_selector(
                 .expect("Failed to execute declare transaction");
             // result_segment.
             let felt_class_hash = felt252_from_hex_string(&class_hash.to_string()).unwrap();
-            insert_at_pointer(vm, &mut result_segment_ptr, felt_class_hash).unwrap();
+
             // TODO https://github.com/software-mansion/protostar/issues/2024
-            //  in case of errors above, consider not panicking, set an error and return it here
-            //  instead
+            //  in case of errors above, consider not panicking,
+            //  set an error and return it here instead
             insert_at_pointer(vm, &mut result_segment_ptr, Felt252::from(0)).unwrap();
+            insert_at_pointer(vm, &mut result_segment_ptr, felt_class_hash).unwrap();
         }
         "deploy" => {
             let contract_address = inputs[0].clone();
@@ -375,9 +376,9 @@ fn match_cheatcode_by_selector(
             //  or not accept this address as argument at all.
             let class_hash = inputs[1].clone();
 
-            let calldata_length: usize = inputs[2].to_biguint().to_usize().unwrap_or(0);
+            let calldata_length: usize = inputs[2].to_usize().unwrap_or(0);
             let mut calldata = vec![];
-            for felt in inputs.into_iter().skip(2).take(calldata_length) {
+            for felt in inputs.into_iter().skip(3).take(calldata_length) {
                 calldata.push(felt);
             }
 
@@ -417,9 +418,9 @@ fn match_cheatcode_by_selector(
                 .expect("Failed to get contract_address from return_data");
             let contract_address = Felt252::from_bytes_be(contract_address.bytes());
 
-            insert_at_pointer(vm, &mut result_segment_ptr, contract_address).unwrap();
-            // todo in case of error, consider filling the panic data instead of packing in rust
+            // TODO: in case of error, consider filling the panic data instead of packing in rust
             insert_at_pointer(vm, &mut result_segment_ptr, Felt252::from(0)).unwrap();
+            insert_at_pointer(vm, &mut result_segment_ptr, contract_address).unwrap();
         }
         "print" => {
             for value in inputs {

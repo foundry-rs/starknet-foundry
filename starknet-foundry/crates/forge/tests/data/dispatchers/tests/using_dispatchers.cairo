@@ -15,7 +15,7 @@ use dispatchers::hello_starknet::IHelloStarknetDispatcherTrait;
 #[test]
 fn call_and_invoke() {
     let class_hash = declare('HelloStarknet').unwrap();
-    let prepared = PreparedContract { contract_address: 1234, class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
+    let prepared = PreparedContract { contract_address: 1234, class_hash: class_hash, constructor_calldata: ArrayTrait::new().span() };
     let contract_address = deploy(prepared).unwrap();
     let contract_address: ContractAddress = contract_address.try_into().unwrap();
     let dispatcher = IHelloStarknetDispatcher { contract_address };
@@ -40,7 +40,7 @@ fn advanced_types() {
     calldata.append(1234);      // recipient
 
     let class_hash = declare('ERC20').unwrap();
-    let prepared = PreparedContract { contract_address: 4567, class_hash: class_hash, constructor_calldata: @calldata };
+    let prepared = PreparedContract { contract_address: 4567, class_hash: class_hash, constructor_calldata: calldata.span() };
     let contract_address = deploy(prepared).unwrap();
     let contract_address: ContractAddress = contract_address.try_into().unwrap();
     let dispatcher = IERC20Dispatcher { contract_address };
