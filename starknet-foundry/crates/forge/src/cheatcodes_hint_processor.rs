@@ -21,16 +21,6 @@ use blockifier::transaction::account_transaction::AccountTransaction;
 use blockifier::transaction::transaction_utils_for_protostar::declare_tx_default;
 use blockifier::transaction::transactions::{DeclareTransaction, ExecutableTransaction};
 use cairo_felt::Felt252;
-use cairo_lang_casm::hints::ProtostarHint;
-use cairo_lang_casm::hints::{Hint, StarknetHint};
-use cairo_lang_casm::operand::ResOperand;
-use cairo_lang_runner::short_string::as_cairo_short_string;
-use cairo_lang_runner::{
-    casm_run::{cell_ref_to_relocatable, extract_buffer, get_ptr, get_val},
-    insert_value_to_cellref, CairoHintProcessor as OriginalCairoHintProcessor,
-};
-use cairo_lang_starknet::casm_contract_class::CasmContractClass;
-use cairo_lang_starknet::contract_class::ContractClass;
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessor;
 use cairo_vm::hint_processor::hint_processor_definition::HintReference;
 use cairo_vm::serde::deserialize_program::ApTracking;
@@ -38,6 +28,7 @@ use cairo_vm::types::exec_scope::ExecutionScopes;
 use cairo_vm::types::relocatable::{MaybeRelocatable, Relocatable};
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
+use cairo_vm::vm::runners::cairo_runner::RunResources;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use num_traits::{Num, ToPrimitive};
 use serde::Deserialize;
@@ -49,6 +40,17 @@ use starknet_api::transaction::{
     InvokeTransactionV1,
 };
 use starknet_api::{patricia_key, stark_felt};
+
+use cairo_lang_casm::hints::ProtostarHint;
+use cairo_lang_casm::hints::{Hint, StarknetHint};
+use cairo_lang_casm::operand::ResOperand;
+use cairo_lang_runner::short_string::as_cairo_short_string;
+use cairo_lang_runner::{
+    casm_run::{cell_ref_to_relocatable, extract_buffer, get_ptr, get_val},
+    insert_value_to_cellref, CairoHintProcessor as OriginalCairoHintProcessor,
+};
+use cairo_lang_starknet::casm_contract_class::CasmContractClass;
+use cairo_lang_starknet::contract_class::ContractClass;
 
 pub struct CairoHintProcessor<'a> {
     pub original_cairo_hint_processor: OriginalCairoHintProcessor<'a>,
@@ -62,6 +64,7 @@ impl HintProcessor for CairoHintProcessor<'_> {
         exec_scopes: &mut ExecutionScopes,
         hint_data: &Box<dyn Any>,
         constants: &HashMap<String, Felt252>,
+        run_resources: &mut RunResources,
     ) -> Result<(), HintError> {
         let maybe_extended_hint = hint_data.downcast_ref::<Hint>();
         let blockifier_state = self
@@ -74,8 +77,13 @@ impl HintProcessor for CairoHintProcessor<'_> {
         if let Some(Hint::Starknet(StarknetHint::SystemCall { system })) = maybe_extended_hint {
             return execute_syscall(system, vm, blockifier_state);
         }
-        self.original_cairo_hint_processor
-            .execute_hint(vm, exec_scopes, hint_data, constants)
+        self.original_cairo_hint_processor.execute_hint(
+            vm,
+            exec_scopes,
+            hint_data,
+            constants,
+            run_resources,
+        )
     }
 
     /// Trait function to store hint in the hint processor by string.
@@ -84,8 +92,9 @@ impl HintProcessor for CairoHintProcessor<'_> {
         hint_code: &str,
         _ap_tracking_data: &ApTracking,
         _reference_ids: &HashMap<String, usize>,
-        _references: &HashMap<usize, HintReference>,
+        _references: &[HintReference],
     ) -> Result<Box<dyn Any>, VirtualMachineError> {
+        println!("{hint_code}");
         Ok(Box::new(
             self.original_cairo_hint_processor.string_to_hint[hint_code].clone(),
         ))
@@ -486,8 +495,9 @@ fn felt252_from_hex_string(value: &str) -> Result<Felt252> {
 
 #[cfg(test)]
 mod test {
-    use super::*;
     use cairo_felt::Felt252;
+
+    use super::*;
 
     #[test]
     fn felt_2525_from_prefixed_hex() {
