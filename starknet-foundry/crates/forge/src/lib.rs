@@ -8,6 +8,7 @@ use test_results::TestResult;
 use walkdir::WalkDir;
 
 use cairo_lang_runner::SierraCasmRunner;
+use cairo_lang_runner::{RunResult, RunResultValue, SierraCasmRunner};
 use cairo_lang_sierra::program::Program;
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
@@ -23,7 +24,7 @@ mod running;
 mod test_results;
 
 /// Configuration of the test runner
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Default)]
 pub struct RunnerConfig {
     test_name_filter: Option<String>,
     exact_match: bool,
@@ -46,7 +47,7 @@ impl RunnerConfig {
     }
 }
 
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 enum RunnerStatus {
     Default,
     TestFailed,
@@ -153,7 +154,7 @@ pub fn run(
     linked_libraries: Option<Vec<LinkedLibrary>>,
     runner_config: &RunnerConfig,
     corelib_path: Option<&Utf8PathBuf>,
-) -> Result<()> {
+) -> Result<Vec<RunTestsSummary>> {
     let tests =
         collect_tests_from_directory(input_path, linked_libraries, corelib_path, runner_config)?;
 
@@ -165,10 +166,12 @@ pub fn run(
     let mut tests_summary = TestSummary::default();
     let mut tests_iterator = tests.into_iter();
 
+    let mut summaries = vec![];
     for tests_from_file in tests_iterator.by_ref() {
-        if run_tests(tests_from_file, &mut tests_summary, runner_config)?
-            == RunnerStatus::TestFailed
-        {
+        let summary = run_tests_from_file(tests_from_file, &mut tests_summary, runner_config)?
+           ;
+        summaries.push(summary.clone());
+        if summary.runner_exit_status == RunnerStatus::TestFailed {
             break;
         }
     }
@@ -182,14 +185,27 @@ pub fn run(
     }
 
     pretty_printing::print_test_summary(&tests_summary);
-    Ok(())
+    Ok(summaries)
 }
 
-fn run_tests(
+#[derive(Debug, PartialEq, Clone)]
+pub struct RunTestsSummary {
+    test_run_summaries: Vec<TestRunSummary>,
+    runner_exit_status: RunnerStatus,
+    relative_path: Utf8PathBuf,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+struct TestRunSummary {
+    test_unit: TestUnit,
+    run_result: RunResult,
+}
+
+fn run_tests_from_file(
     tests: TestsFromFile,
     tests_summary: &mut TestSummary,
     runner_config: &RunnerConfig,
-) -> Result<RunnerStatus> {
+) -> Result<RunTestsSummary> {
     let mut runner = SierraCasmRunner::new(
         tests.sierra_program,
         Some(MetadataComputationConfig::default()),
@@ -198,8 +214,13 @@ fn run_tests(
     .context("Failed setting up runner.")?;
 
     pretty_printing::print_running_tests(&tests.relative_path, tests.test_units.len());
+    let mut results = vec![];
     for (i, unit) in tests.test_units.iter().enumerate() {
         let result = run_from_test_units(&mut runner, unit)?;
+        results.push(TestRunSummary {
+            test_unit: unit.clone(),
+            run_result: result.clone(),
+        });
 
         pretty_printing::print_test_result(&result);
         if runner_config.exit_first {
@@ -210,13 +231,21 @@ fn run_tests(
                     tests_summary.update(skipped_result);
                 }
                 tests_summary.update(result);
-                return Ok(RunnerStatus::TestFailed);
+                return Ok(RunTestsSummary {
+                    test_run_summaries: results,
+                    runner_exit_status: RunnerStatus::TestFailed,
+                    relative_path: tests.relative_path,
+                });
             }
         }
 
         tests_summary.update(result.value);
     }
-    Ok(RunnerStatus::Default)
+    Ok(RunTestsSummary {
+        test_run_summaries: results,
+        runner_exit_status: RunnerStatus::Default,
+        relative_path: tests.relative_path,
+    })
 }
 
 fn strip_path_from_test_names(test_units: Vec<TestUnit>) -> Result<Vec<TestUnit>> {
