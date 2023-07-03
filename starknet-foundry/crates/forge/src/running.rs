@@ -13,7 +13,7 @@ use cairo_lang_runner::{
 };
 use cairo_lang_runner::{RunResult, SierraCasmRunner, StarknetState};
 use cairo_vm::vm::runners::cairo_runner::RunResources;
-use test_collector::TestConfig;
+use test_collector::TestUnit;
 
 use crate::cheatcodes_hint_processor::CairoHintProcessor;
 use crate::test_results::{extract_result_data, TestResult};
@@ -59,16 +59,16 @@ fn test_result_from_run_result(name: &str, run_result: RunResult) -> TestResult 
     }
 }
 
-pub(crate) fn run_from_test_config(
+pub(crate) fn run_from_test_units(
     runner: &mut SierraCasmRunner,
-    config: &TestConfig,
+    unit: &TestUnit,
 ) -> Result<TestResult> {
-    let available_gas = if let Some(available_gas) = &config.available_gas {
+    let available_gas = if let Some(available_gas) = &unit.available_gas {
         Some(*available_gas)
     } else {
         Some(usize::MAX)
     };
-    let func = runner.find_function(config.name.as_str())?;
+    let func = runner.find_function(unit.name.as_str())?;
     let initial_gas = runner.get_initial_available_gas(func, available_gas)?;
     let (entry_code, builtins) = runner.create_entry_code(func, &[], initial_gas)?;
     let footer = runner.create_code_footer();

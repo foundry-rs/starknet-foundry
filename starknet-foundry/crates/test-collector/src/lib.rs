@@ -272,7 +272,7 @@ pub struct LinkedLibrary {
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub struct TestConfig {
+pub struct TestUnit {
     pub name: String,
     pub available_gas: Option<usize>,
 }
@@ -284,7 +284,7 @@ pub fn collect_tests(
     linked_libraries: Option<Vec<LinkedLibrary>>,
     builtins: Option<Vec<&str>>,
     corelib_path: Option<&str>,
-) -> Result<(Program, Vec<TestConfig>)> {
+) -> Result<(Program, Vec<TestUnit>)> {
     // code taken from crates/cairo-lang-test-runner/src/lib.rs
     let db = &mut {
         let mut b = RootDatabase::builder();
@@ -335,7 +335,7 @@ pub fn collect_tests(
         .context("Compilation failed without any diagnostics")
         .context("Failed to get sierra program")?;
 
-    let collected_tests: Vec<TestConfig> = all_tests
+    let collected_tests: Vec<TestUnit> = all_tests
         .into_iter()
         .map(|(func_id, test)| {
             (
@@ -354,7 +354,7 @@ pub fn collect_tests(
         })
         .collect_vec()
         .into_iter()
-        .map(|(test_name, config)| TestConfig {
+        .map(|(test_name, config)| TestUnit {
             name: test_name,
             available_gas: config.available_gas,
         })
@@ -376,7 +376,7 @@ pub fn collect_tests(
 
 fn validate_tests(
     sierra_program: Program,
-    collected_tests: &Vec<TestConfig>,
+    collected_tests: &Vec<TestUnit>,
     ignored_params: Vec<String>,
 ) -> Result<(), anyhow::Error> {
     let casm_generator = match SierraCasmGenerator::new(sierra_program) {
