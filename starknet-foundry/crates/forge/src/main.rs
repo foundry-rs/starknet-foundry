@@ -21,6 +21,7 @@ struct Args {
     #[arg(short, long)]
     exact: bool,
 
+    /// Stop test execution after first failed test
     #[arg(short = 'x', long)]
     exit_first: bool,
 }
