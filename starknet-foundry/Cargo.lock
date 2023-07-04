@@ -616,6 +616,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "cairo-felt"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "edaee21a254b549dd00ecb5db15399c8d03b663ddb5a659f7c62ea7e16a3ed85"
+dependencies = [
+ "lazy_static",
+ "num-bigint",
+ "num-integer",
+ "num-traits 0.2.15",
+ "serde",
+]
+
+[[package]]
 name = "cairo-lang-casm"
 version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1050,6 +1063,7 @@ dependencies = [
  "salsa",
  "serde_json",
  "smol_str",
+ "snapbox",
  "starknet_api",
  "thiserror",
 ]
@@ -1507,6 +1521,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "cairo-take_until_unbalanced"
+version = "0.30.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "32c366b2a52b63db19fcc20a761ea37aa9f5fdce1723016c458e3990ef4fdf2c"
+dependencies = [
+ "nom",
+]
+
+[[package]]
 name = "cairo-vm"
 version = "0.3.0-rc1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1549,6 +1572,40 @@ dependencies = [
  "bitvec 1.0.1",
  "cairo-felt 0.5.2",
  "cairo-take_until_unbalanced 0.28.0",
+ "generic-array",
+ "hashbrown 0.13.2",
+ "hex",
+ "keccak",
+ "lazy_static",
+ "mimalloc",
+ "nom",
+ "num-bigint",
+ "num-integer",
+ "num-prime",
+ "num-traits 0.2.15",
+ "rand",
+ "rand_core",
+ "serde",
+ "serde_bytes",
+ "serde_json",
+ "sha2 0.10.7",
+ "sha3 0.10.8",
+ "starknet-crypto 0.5.1",
+ "thiserror",
+ "thiserror-no-std",
+]
+
+[[package]]
+name = "cairo-vm"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8be504f2684bab154d3bd45257c847db6fb450333305f162600dc497687d87d2"
+dependencies = [
+ "anyhow",
+ "bincode",
+ "bitvec 1.0.1",
+ "cairo-felt 0.6.1",
+ "cairo-take_until_unbalanced 0.30.0",
  "generic-array",
  "hashbrown 0.13.2",
  "hex",
@@ -2274,7 +2331,7 @@ dependencies = [
  "ark-std 0.3.0",
  "assert_fs",
  "blockifier",
- "cairo-felt 0.5.2",
+ "cairo-felt 0.6.1",
  "cairo-lang-casm 2.0.0-rc2",
  "cairo-lang-runner 2.0.0-rc2",
  "cairo-lang-sierra 2.0.0-rc2",
@@ -2282,7 +2339,7 @@ dependencies = [
  "cairo-lang-starknet 2.0.0-rc2",
  "cairo-lang-test-runner",
  "cairo-lang-utils 2.0.0-rc2",
- "cairo-vm 0.5.2",
+ "cairo-vm 0.6.1",
  "camino",
  "clap",
  "console",
