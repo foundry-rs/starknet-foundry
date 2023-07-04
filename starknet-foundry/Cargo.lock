@@ -1050,7 +1050,6 @@ dependencies = [
  "salsa",
  "serde_json",
  "smol_str",
- "snapbox",
  "starknet_api",
  "thiserror",
 ]
