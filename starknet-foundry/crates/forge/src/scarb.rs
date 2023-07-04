@@ -1,8 +1,11 @@
+use crate::ProtostarConfigFromScarb;
 use anyhow::{anyhow, Context, Result};
 use camino::Utf8PathBuf;
+use scarb_metadata::{Metadata, PackageId};
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs;
+use test_collector::LinkedLibrary;
 
 #[allow(dead_code)]
 #[derive(Deserialize, Debug, PartialEq, Clone)]
@@ -84,10 +87,60 @@ pub fn get_contracts_map(path: &Utf8PathBuf) -> Result<HashMap<String, StarknetC
     Ok(map)
 }
 
+pub fn config_from_scarb_for_package(
+    metadata: &Metadata,
+    package: &PackageId,
+) -> Result<ProtostarConfigFromScarb> {
+    let raw_metadata = metadata
+        .get_package(package)
+        .ok_or_else(|| anyhow!("Failed to find metadata for package = {package}"))?
+        .tool_metadata("protostar");
+
+    raw_metadata.map_or_else(
+        || Ok(Default::default()),
+        |raw_metadata| Ok(serde_json::from_value(raw_metadata.clone())?),
+    )
+}
+
+pub fn dependencies_for_package(
+    metadata: &Metadata,
+    package: &PackageId,
+) -> Result<(Utf8PathBuf, Vec<LinkedLibrary>)> {
+    let compilation_unit = metadata
+        .compilation_units
+        .iter()
+        .filter(|unit| unit.package == *package)
+        .min_by_key(|unit| match unit.target.name.as_str() {
+            name @ "starknet-contract" => (0, name),
+            name @ "lib" => (1, name),
+            name => (2, name),
+        })
+        .ok_or_else(|| anyhow!("Failed to find metadata for package = {package}"))?;
+
+    let base_path = metadata
+        .get_package(package)
+        .ok_or_else(|| anyhow!("Failed to find metadata for package = {package}"))?
+        .root
+        .clone();
+
+    let dependencies = compilation_unit
+        .components
+        .iter()
+        .filter(|du| !du.source_path.to_string().contains("core/src"))
+        .map(|cu| LinkedLibrary {
+            name: cu.name.clone(),
+            path: cu.source_root().to_owned().into_std_path_buf(),
+        })
+        .collect();
+
+    Ok((base_path, dependencies))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use assert_fs::fixture::PathCopy;
+    use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
+    use scarb_metadata::MetadataCommand;
     use std::process::Command;
 
     #[test]
@@ -165,5 +218,102 @@ mod tests {
         let contract = contracts.get("HelloStarknet").unwrap();
         assert_eq!(&sierra_contents_erc20, &contract.sierra);
         assert_eq!(&casm_contents_erc20, &contract.casm.clone().unwrap());
+    }
+
+    #[test]
+    fn get_dependencies_for_package() {
+        let temp = assert_fs::TempDir::new().unwrap();
+        temp.copy_from("tests/data/simple_test", &["**/*"]).unwrap();
+        let scarb_metadata = MetadataCommand::new()
+            .inherit_stderr()
+            .current_dir(temp.path())
+            .exec()
+            .unwrap();
+
+        let (_, dependencies) =
+            dependencies_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
+                .unwrap();
+
+        assert!(!dependencies.is_empty());
+        assert!(dependencies.iter().all(|dep| dep.path.exists()));
+    }
+
+    #[test]
+    fn get_dependencies_for_package_err_on_invalid_package() {
+        let temp = assert_fs::TempDir::new().unwrap();
+        temp.copy_from("tests/data/simple_test", &["**/*"]).unwrap();
+        let scarb_metadata = MetadataCommand::new()
+            .inherit_stderr()
+            .current_dir(temp.path())
+            .exec()
+            .unwrap();
+
+        let result =
+            dependencies_for_package(&scarb_metadata, &PackageId::from(String::from("12345679")));
+        let err = result.unwrap_err();
+
+        assert!(err
+            .to_string()
+            .contains("Failed to find metadata for package"));
+    }
+
+    #[test]
+    fn get_protostar_config_for_package() {
+        let temp = assert_fs::TempDir::new().unwrap();
+        temp.copy_from("tests/data/simple_test", &["**/*"]).unwrap();
+        let scarb_metadata = MetadataCommand::new()
+            .inherit_stderr()
+            .current_dir(temp.path())
+            .exec()
+            .unwrap();
+
+        let config =
+            config_from_scarb_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
+                .unwrap();
+
+        assert_eq!(config, ProtostarConfigFromScarb { exit_first: false });
+    }
+
+    #[test]
+    fn get_protostar_config_for_package_err_on_invalid_package() {
+        let temp = assert_fs::TempDir::new().unwrap();
+        temp.copy_from("tests/data/simple_test", &["**/*"]).unwrap();
+        let scarb_metadata = MetadataCommand::new()
+            .inherit_stderr()
+            .current_dir(temp.path())
+            .exec()
+            .unwrap();
+
+        let result = config_from_scarb_for_package(
+            &scarb_metadata,
+            &PackageId::from(String::from("12345679")),
+        );
+        let err = result.unwrap_err();
+
+        assert!(err
+            .to_string()
+            .contains("Failed to find metadata for package"));
+    }
+
+    #[test]
+    fn get_protostar_config_for_package_default_on_missing_config() {
+        let temp = assert_fs::TempDir::new().unwrap();
+        temp.copy_from("tests/data/simple_test", &["**/*"]).unwrap();
+        let content = "[package]
+name = \"example_package\"
+version = \"0.1.0\"";
+        temp.child("Scarb.toml").write_str(content).unwrap();
+
+        let scarb_metadata = MetadataCommand::new()
+            .inherit_stderr()
+            .current_dir(temp.path())
+            .exec()
+            .unwrap();
+
+        let config =
+            config_from_scarb_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
+                .unwrap();
+
+        assert_eq!(config, Default::default());
     }
 }
