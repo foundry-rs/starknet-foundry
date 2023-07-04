@@ -83,3 +83,87 @@ pub fn get_contracts_map(path: &Utf8PathBuf) -> Result<HashMap<String, StarknetC
     }
     Ok(map)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use assert_fs::fixture::PathCopy;
+    use std::process::Command;
+
+    #[test]
+    fn get_starknet_artifacts_path() {
+        let temp = assert_fs::TempDir::new().unwrap();
+        temp.copy_from("tests/data/declare_test", &["**/*"])
+            .unwrap();
+        Command::new("scarb")
+            .current_dir(&temp)
+            .arg("build")
+            .output()
+            .unwrap();
+
+        let result = try_get_starknet_artifacts_path(
+            &Utf8PathBuf::from_path_buf(temp.to_path_buf()).unwrap(),
+        );
+        let path = result.unwrap().unwrap();
+        assert_eq!(
+            path,
+            temp.path()
+                .join("target/dev/declare_test.starknet_artifacts.json")
+        );
+    }
+
+    #[test]
+    fn get_starknet_artifacts_path_for_project_without_contracts() {
+        let temp = assert_fs::TempDir::new().unwrap();
+        temp.copy_from("tests/data/simple_test", &["**/*"]).unwrap();
+        Command::new("scarb")
+            .current_dir(&temp)
+            .arg("build")
+            .output()
+            .unwrap();
+
+        let result = try_get_starknet_artifacts_path(
+            &Utf8PathBuf::from_path_buf(temp.to_path_buf()).unwrap(),
+        );
+        let path = result.unwrap();
+        assert!(path.is_none());
+    }
+
+    #[test]
+    fn get_contracts() {
+        let temp = assert_fs::TempDir::new().unwrap();
+        temp.copy_from("tests/data/dispatchers", &["**/*"]).unwrap();
+        Command::new("scarb")
+            .current_dir(&temp)
+            .arg("build")
+            .output()
+            .unwrap();
+        let artifacts_path = temp
+            .path()
+            .join("target/dev/dispatchers.starknet_artifacts.json");
+        let artifacts_path = Utf8PathBuf::from_path_buf(artifacts_path).unwrap();
+
+        let contracts = get_contracts_map(&artifacts_path).unwrap();
+
+        assert!(contracts.contains_key("ERC20"));
+        assert!(contracts.contains_key("HelloStarknet"));
+
+        let sierra_contents_erc20 =
+            fs::read_to_string(temp.join("target/dev/dispatchers_ERC20.sierra.json")).unwrap();
+        let casm_contents_erc20 =
+            fs::read_to_string(temp.join("target/dev/dispatchers_ERC20.casm.json")).unwrap();
+        let contract = contracts.get("ERC20").unwrap();
+        assert_eq!(&sierra_contents_erc20, &contract.sierra);
+        assert_eq!(&casm_contents_erc20, &contract.casm.clone().unwrap());
+
+        let sierra_contents_erc20 =
+            fs::read_to_string(temp.join("target/dev/dispatchers_HelloStarknet.sierra.json"))
+                .unwrap();
+        let casm_contents_erc20 =
+            fs::read_to_string(temp.join("target/dev/dispatchers_HelloStarknet.casm.json"))
+                .unwrap();
+        let contract = contracts.get("HelloStarknet").unwrap();
+        assert_eq!(&sierra_contents_erc20, &contract.sierra);
+        assert_eq!(&casm_contents_erc20, &contract.casm.clone().unwrap());
+    }
+}
