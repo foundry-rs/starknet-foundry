@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fmt::Debug;
 
 use anyhow::{anyhow, Context, Result};
@@ -14,12 +15,15 @@ use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 
 use crate::running::run_from_test_units;
+use crate::scarb::{get_contracts_map, try_get_starknet_artifacts_path, StarknetContractArtifacts};
 use test_collector::{collect_tests, LinkedLibrary, TestUnit};
 
 use crate::test_results::TestSummary;
 
-mod cheatcodes_hint_processor;
 pub mod pretty_printing;
+pub mod scarb;
+
+mod cheatcodes_hint_processor;
 mod running;
 mod test_results;
 
@@ -163,12 +167,19 @@ pub fn run(
         tests.len(),
     );
 
+    let contracts_path = try_get_starknet_artifacts_path(input_path)?;
+    let contracts = contracts_path
+        .map(|path| get_contracts_map(&path))
+        .transpose()?
+        .unwrap_or_default();
+
     let mut tests_summary = TestSummary::default();
     let mut tests_iterator = tests.into_iter();
 
     let mut summaries = vec![];
     for tests_from_file in tests_iterator.by_ref() {
-        let summary = run_tests_from_file(tests_from_file, &mut tests_summary, runner_config)?
+        let summary =
+            run_tests_from_file(tests_from_file, &mut tests_summary, runner_config, &contracts)?
            ;
         summaries.push(summary.clone());
         if summary.runner_exit_status == RunnerStatus::TestFailed {
@@ -205,6 +216,7 @@ fn run_tests_from_file(
     tests: TestsFromFile,
     tests_summary: &mut TestSummary,
     runner_config: &RunnerConfig,
+    contracts: &HashMap<String, StarknetContractArtifacts>,
 ) -> Result<RunTestsSummary> {
     let mut runner = SierraCasmRunner::new(
         tests.sierra_program,
@@ -216,7 +228,7 @@ fn run_tests_from_file(
     pretty_printing::print_running_tests(&tests.relative_path, tests.test_units.len());
     let mut results = vec![];
     for (i, unit) in tests.test_units.iter().enumerate() {
-        let result = run_from_test_units(&mut runner, unit)?;
+        let result = run_from_test_units(&mut runner, unit, contracts)?;
         results.push(TestRunSummary {
             test_unit: unit.clone(),
             run_result: result.clone(),

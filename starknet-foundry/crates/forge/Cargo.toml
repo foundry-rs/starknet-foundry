@@ -27,7 +27,7 @@ serde_json = "1.0.96"
 serde = { version = "1.0.163", features = ["derive"] }
 itertools = "0.10.5"
 walkdir = "2.3.3"
-camino = "1.1.4"
+camino = { version = "1.1.4", features = ["serde1"] }
 scarb-metadata = "1.4.2"
 project-root = "0.2.2"
 console = "0.15.7"
