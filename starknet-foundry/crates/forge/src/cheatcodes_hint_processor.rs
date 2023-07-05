@@ -285,15 +285,7 @@ fn match_cheatcode_by_selector(
         "declare_cairo0" => todo!(),
         "declare" => declare(vm, blockifier_state, &inputs, &mut result_segment_ptr),
         "deploy" => deploy(vm, blockifier_state, &inputs, &mut result_segment_ptr),
-        "print" => {
-            for value in inputs {
-                if let Some(short_string) = as_cairo_short_string(&value) {
-                    println!("original value: [{value}], converted to a string: [{short_string}]",);
-                } else {
-                    println!("original value: [{value}]");
-                }
-            }
-        }
+        "print" => print(inputs),
         _ => Err(HintError::CustomHint(Box::from(format!(
             "Unknown cheatcode selector: {selector}"
         ))))?,
@@ -304,6 +296,16 @@ fn match_cheatcode_by_selector(
     insert_value_to_cellref!(vm, output_end, result_end)?;
 
     Ok(())
+}
+
+fn print(inputs: Vec<Felt252>) {
+    for value in inputs {
+        if let Some(short_string) = as_cairo_short_string(&value) {
+            println!("original value: [{value}], converted to a string: [{short_string}]",);
+        } else {
+            println!("original value: [{value}]");
+        }
+    }
 }
 
 fn declare(
