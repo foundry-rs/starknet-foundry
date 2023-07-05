@@ -377,58 +377,7 @@ fn match_cheatcode_by_selector(
             insert_at_pointer(vm, &mut result_segment_ptr, Felt252::from(0)).unwrap();
             insert_at_pointer(vm, &mut result_segment_ptr, felt_class_hash).unwrap();
         }
-        "deploy" => {
-            let contract_address = inputs[0].clone();
-            // TODO(#1991) deploy should fail if contract address provided doesn't match calculated
-            //  or not accept this address as argument at all.
-            let class_hash = inputs[1].clone();
-
-            let calldata_length = inputs[2].to_usize().unwrap();
-            let mut calldata = vec![];
-            for felt in inputs.into_iter().skip(3).take(calldata_length) {
-                calldata.push(felt);
-            }
-
-            // Deploy a contract using syscall deploy.
-            let account_address = ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS));
-            let block_context = &BlockContext::create_for_account_testing();
-            let entry_point_selector = selector_from_name("deploy_contract");
-            let salt = ContractAddressSalt::default();
-            let class_hash = ClassHash(StarkFelt::new(class_hash.to_be_bytes()).unwrap());
-
-            let execute_calldata = create_execute_calldata(
-                &calldata,
-                &class_hash,
-                &account_address,
-                &entry_point_selector,
-                &salt,
-            );
-
-            let nonce = blockifier_state
-                .get_nonce_at(account_address)
-                .expect("Failed to get nonce");
-            let tx = invoke_tx(execute_calldata, account_address, Fee(MAX_FEE), None);
-            let account_tx =
-                AccountTransaction::Invoke(InvokeTransaction::V1(InvokeTransactionV1 {
-                    nonce,
-                    ..tx
-                }));
-            let tx_result = account_tx.execute(blockifier_state, block_context).unwrap();
-            let return_data = tx_result
-                .execute_call_info
-                .expect("Failed to get execution data from method")
-                .execution
-                .retdata;
-            let contract_address = return_data
-                .0
-                .get(0)
-                .expect("Failed to get contract_address from return_data");
-            let contract_address = Felt252::from_bytes_be(contract_address.bytes());
-
-            // TODO: in case of error, consider filling the panic data instead of packing in rust
-            insert_at_pointer(vm, &mut result_segment_ptr, Felt252::from(0)).unwrap();
-            insert_at_pointer(vm, &mut result_segment_ptr, contract_address).unwrap();
-        }
+        "deploy" => deploy(vm, blockifier_state, &inputs, &mut result_segment_ptr),
         "print" => {
             for value in inputs {
                 if let Some(short_string) = as_cairo_short_string(&value) {
@@ -448,6 +397,61 @@ fn match_cheatcode_by_selector(
     insert_value_to_cellref!(vm, output_end, result_end)?;
 
     Ok(())
+}
+
+fn deploy(
+    vm: &mut VirtualMachine,
+    blockifier_state: &mut CachedState<DictStateReader>,
+    inputs: &[Felt252],
+    result_segment_ptr: &mut Relocatable,
+) {
+    let _contract_address = inputs[0].clone();
+    // TODO(#1991) deploy should fail if contract address provided doesn't match calculated
+    //  or not accept this address as argument at all.
+    let class_hash = inputs[1].clone();
+
+    let calldata_length = inputs[2].to_usize().unwrap();
+    let mut calldata = vec![];
+    for felt in inputs.iter().skip(3).take(calldata_length) {
+        calldata.push(felt.clone());
+    }
+
+    // Deploy a contract using syscall deploy.
+    let account_address = ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS));
+    let block_context = &BlockContext::create_for_account_testing();
+    let entry_point_selector = selector_from_name("deploy_contract");
+    let salt = ContractAddressSalt::default();
+    let class_hash = ClassHash(StarkFelt::new(class_hash.to_be_bytes()).unwrap());
+
+    let execute_calldata = create_execute_calldata(
+        &calldata,
+        &class_hash,
+        &account_address,
+        &entry_point_selector,
+        &salt,
+    );
+
+    let nonce = blockifier_state
+        .get_nonce_at(account_address)
+        .expect("Failed to get nonce");
+    let tx = invoke_tx(execute_calldata, account_address, Fee(MAX_FEE), None);
+    let account_tx =
+        AccountTransaction::Invoke(InvokeTransaction::V1(InvokeTransactionV1 { nonce, ..tx }));
+    let tx_result = account_tx.execute(blockifier_state, block_context).unwrap();
+    let return_data = tx_result
+        .execute_call_info
+        .expect("Failed to get execution data from method")
+        .execution
+        .retdata;
+    let contract_address = return_data
+        .0
+        .get(0)
+        .expect("Failed to get contract_address from return_data");
+    let contract_address = Felt252::from_bytes_be(contract_address.bytes());
+
+    // TODO: in case of error, consider filling the panic data instead of packing in rust
+    insert_at_pointer(vm, result_segment_ptr, Felt252::from(0)).unwrap();
+    insert_at_pointer(vm, result_segment_ptr, contract_address).unwrap();
 }
 
 // TODO: remove this when extract_relocatable is pub in cairo
