@@ -383,7 +383,7 @@ fn match_cheatcode_by_selector(
             //  or not accept this address as argument at all.
             let class_hash = inputs[1].clone();
 
-            let calldata_length: usize = inputs[2].to_usize().unwrap_or(0);
+            let calldata_length = inputs[2].to_usize().unwrap();
             let mut calldata = vec![];
             for felt in inputs.into_iter().skip(3).take(calldata_length) {
                 calldata.push(felt);
