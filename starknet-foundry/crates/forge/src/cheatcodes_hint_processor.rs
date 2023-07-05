@@ -465,12 +465,12 @@ fn deploy(
         .expect("Failed to get contract_address from return_data");
     let contract_address = Felt252::from_bytes_be(contract_address.bytes());
 
-    // TODO: in case of error, consider filling the panic data instead of packing in rust
+    // TODO(#2152): in case of error, consider filling the panic data instead of packing in rust
     insert_at_pointer(vm, result_segment_ptr, Felt252::from(0)).unwrap();
     insert_at_pointer(vm, result_segment_ptr, contract_address).unwrap();
 }
 
-// TODO: remove this when extract_relocatable is pub in cairo
+// TODO(#2164): remove this when extract_relocatable is pub in cairo
 fn extract_relocatable(
     vm: &VirtualMachine,
     buffer: &ResOperand,
