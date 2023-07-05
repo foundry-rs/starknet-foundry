@@ -283,100 +283,7 @@ fn match_cheatcode_by_selector(
         "stop_prank" => todo!(),
         "mock_call" => todo!(),
         "declare_cairo0" => todo!(),
-        "declare" => {
-            let contract_value = inputs[0].clone();
-
-            let contract_value_as_short_str = as_cairo_short_string(&contract_value)
-                .expect("Converting contract name to short string failed");
-            let current_dir = std::env::current_dir()
-                .expect("Failed to get current directory")
-                .join("target/dev");
-
-            let mut paths = fs::read_dir(&current_dir)
-                .expect("Failed to read ./target/dev, scarb build probably failed");
-
-            let starknet_artifacts_entry = &paths
-                .find_map(|path| match path {
-                    Ok(path) => {
-                        let name = path.file_name().into_string().ok()?;
-                        name.contains("starknet_artifacts").then_some(path)
-                    }
-                    Err(_) => None,
-                })
-                .expect("Failed to find starknet_artifacts.json file");
-            let starknet_artifacts = fs::read_to_string(starknet_artifacts_entry.path())
-                .unwrap_or_else(|_| {
-                    panic!(
-                        "Failed to read {:?} contents",
-                        starknet_artifacts_entry.file_name()
-                    )
-                });
-            let starknet_artifacts: ScarbStarknetArtifacts =
-                serde_json::from_str(starknet_artifacts.as_str()).unwrap_or_else(|_| {
-                    panic!(
-                        "Failed to parse {:?} contents",
-                        starknet_artifacts_entry.file_name()
-                    )
-                });
-
-            let sierra_path = starknet_artifacts.contracts.iter().find_map(|contract| {
-                if contract.contract_name == contract_value_as_short_str {
-                    return Some(contract.artifacts.sierra.clone());
-                }
-                None
-            }).unwrap_or_else(|| panic!("Failed to find contract {contract_value_as_short_str} in starknet_artifacts.json"));
-            let sierra_path = current_dir.join(sierra_path);
-
-            let file = fs::File::open(&sierra_path)
-                .unwrap_or_else(|_| panic!("Failed to open file at path = {:?}", &sierra_path));
-            let sierra_contract_class: ContractClass = serde_json::from_reader(&file)
-                .unwrap_or_else(|_| panic!("File to parse json from file = {file:?}"));
-
-            let casm_contract_class =
-                CasmContractClass::from_contract_class(sierra_contract_class, true)
-                    .expect("sierra to casm failed");
-            let casm_serialized = serde_json::to_string_pretty(&casm_contract_class)
-                .expect("Failed to serialize contract to casm");
-
-            let contract_class = ContractClassV1::try_from_json_string(&casm_serialized)
-                .expect("Failed to read contract class from json");
-            let contract_class = BlockifierContractClass::V1(contract_class);
-
-            // TODO(#2134) replace this. Hash should be calculated in the correct manner. This is just a workaround.
-            let mut hasher = DefaultHasher::new();
-            casm_serialized.hash(&mut hasher);
-            let class_hash = hasher.finish();
-            let class_hash = ClassHash(stark_felt!(class_hash));
-
-            let nonce = blockifier_state
-                .get_nonce_at(ContractAddress(patricia_key!(
-                    TEST_ACCOUNT_CONTRACT_ADDRESS
-                )))
-                .expect("Failed to get nonce");
-
-            let declare_tx = DeclareTransactionV0V1 {
-                nonce,
-                class_hash,
-                ..declare_tx_default()
-            };
-            let tx = DeclareTransaction {
-                tx: starknet_api::transaction::DeclareTransaction::V1(declare_tx),
-                contract_class,
-            };
-            let account_tx = AccountTransaction::Declare(tx);
-            let block_context = &BlockContext::create_for_account_testing();
-            let tx_result = account_tx
-                .execute(blockifier_state, block_context)
-                .expect("Failed to execute declare transaction");
-            // result_segment.
-            let felt_class_hash = felt252_from_hex_string(&class_hash.to_string()).unwrap();
-
-            // TODO https://github.com/software-mansion/protostar/issues/2024
-            //  in case of errors above, consider not panicking,
-            //  set an error and return it here instead
-            insert_at_pointer(vm, &mut result_segment_ptr, Felt252::from(0)).unwrap();
-            insert_at_pointer(vm, &mut result_segment_ptr, felt_class_hash).unwrap();
-        }
+        "declare" => declare(vm, blockifier_state, &inputs, &mut result_segment_ptr),
         "deploy" => deploy(vm, blockifier_state, &inputs, &mut result_segment_ptr),
         "print" => {
             for value in inputs {
@@ -397,6 +304,113 @@ fn match_cheatcode_by_selector(
     insert_value_to_cellref!(vm, output_end, result_end)?;
 
     Ok(())
+}
+
+fn declare(
+    vm: &mut VirtualMachine,
+    blockifier_state: &mut CachedState<DictStateReader>,
+    inputs: &[Felt252],
+    result_segment_ptr: &mut Relocatable,
+) {
+    let contract_value = inputs[0].clone();
+
+    let contract_value_as_short_str = as_cairo_short_string(&contract_value)
+        .expect("Converting contract name to short string failed");
+    let current_dir = std::env::current_dir()
+        .expect("Failed to get current directory")
+        .join("target/dev");
+
+    let mut paths = fs::read_dir(&current_dir)
+        .expect("Failed to read ./target/dev, scarb build probably failed");
+
+    let starknet_artifacts_entry = &paths
+        .find_map(|path| match path {
+            Ok(path) => {
+                let name = path.file_name().into_string().ok()?;
+                name.contains("starknet_artifacts").then_some(path)
+            }
+            Err(_) => None,
+        })
+        .expect("Failed to find starknet_artifacts.json file");
+    let starknet_artifacts =
+        fs::read_to_string(starknet_artifacts_entry.path()).unwrap_or_else(|_| {
+            panic!(
+                "Failed to read {:?} contents",
+                starknet_artifacts_entry.file_name()
+            )
+        });
+    let starknet_artifacts: ScarbStarknetArtifacts =
+        serde_json::from_str(starknet_artifacts.as_str()).unwrap_or_else(|_| {
+            panic!(
+                "Failed to parse {:?} contents",
+                starknet_artifacts_entry.file_name()
+            )
+        });
+
+    let sierra_path = starknet_artifacts
+        .contracts
+        .iter()
+        .find_map(|contract| {
+            if contract.contract_name == contract_value_as_short_str {
+                return Some(contract.artifacts.sierra.clone());
+            }
+            None
+        })
+        .unwrap_or_else(|| {
+            panic!(
+                "Failed to find contract {contract_value_as_short_str} in starknet_artifacts.json"
+            )
+        });
+    let sierra_path = current_dir.join(sierra_path);
+
+    let file = fs::File::open(&sierra_path)
+        .unwrap_or_else(|_| panic!("Failed to open file at path = {:?}", &sierra_path));
+    let sierra_contract_class: ContractClass = serde_json::from_reader(&file)
+        .unwrap_or_else(|_| panic!("File to parse json from file = {file:?}"));
+
+    let casm_contract_class = CasmContractClass::from_contract_class(sierra_contract_class, true)
+        .expect("sierra to casm failed");
+    let casm_serialized = serde_json::to_string_pretty(&casm_contract_class)
+        .expect("Failed to serialize contract to casm");
+
+    let contract_class = ContractClassV1::try_from_json_string(&casm_serialized)
+        .expect("Failed to read contract class from json");
+    let contract_class = BlockifierContractClass::V1(contract_class);
+
+            // TODO(#2134) replace this. Hash should be calculated in the correct manner. This is just a workaround.
+            let mut hasher = DefaultHasher::new();
+            casm_serialized.hash(&mut hasher);
+            let class_hash = hasher.finish();
+            let class_hash = ClassHash(stark_felt!(class_hash));
+
+    let nonce = blockifier_state
+        .get_nonce_at(ContractAddress(patricia_key!(
+            TEST_ACCOUNT_CONTRACT_ADDRESS
+        )))
+        .expect("Failed to get nonce");
+
+    let declare_tx = DeclareTransactionV0V1 {
+        nonce,
+        class_hash,
+        ..declare_tx_default()
+    };
+    let tx = DeclareTransaction {
+        tx: starknet_api::transaction::DeclareTransaction::V1(declare_tx),
+        contract_class,
+    };
+    let account_tx = AccountTransaction::Declare(tx);
+    let block_context = &BlockContext::create_for_account_testing();
+    let _tx_result = account_tx
+        .execute(blockifier_state, block_context)
+        .expect("Failed to execute declare transaction");
+    // result_segment.
+    let felt_class_hash = felt252_from_hex_string(&class_hash.to_string()).unwrap();
+
+    // TODO https://github.com/software-mansion/protostar/issues/2024
+    //  in case of errors above, consider not panicking,
+    //  set an error and return it here instead
+    insert_at_pointer(vm, result_segment_ptr, Felt252::from(0)).unwrap();
+    insert_at_pointer(vm, result_segment_ptr, felt_class_hash).unwrap();
 }
 
 fn deploy(
