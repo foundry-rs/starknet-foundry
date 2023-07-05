@@ -84,8 +84,10 @@ impl HintProcessor for CairoHintProcessor<'_> {
                 exec_scopes,
                 blockifier_state,
                 selector,
-                [input_start, input_end],
-                [output_start, output_end],
+                input_start,
+                input_end,
+                output_start,
+                output_end,
             );
         }
         if let Some(Hint::Starknet(StarknetHint::SystemCall { system })) = maybe_extended_hint {
@@ -224,13 +226,16 @@ fn call_contract(
     Ok(return_data)
 }
 
+#[allow(clippy::trivially_copy_pass_by_ref, clippy::too_many_arguments)]
 fn execute_cheatcode_hint(
     vm: &mut VirtualMachine,
     _exec_scopes: &mut ExecutionScopes,
     blockifier_state: &mut CachedState<DictStateReader>,
     selector: &BigIntAsHex,
-    [input_start, input_end]: [&ResOperand; 2],
-    [output_start, output_end]: [&CellRef; 2],
+    input_start: &ResOperand,
+    input_end: &ResOperand,
+    output_start: &CellRef,
+    output_end: &CellRef,
 ) -> Result<(), HintError> {
     // Parse the selector.
     let selector = &selector.value.to_bytes_be().1;
@@ -251,17 +256,19 @@ fn execute_cheatcode_hint(
         blockifier_state,
         selector,
         inputs,
-        [output_start, output_end],
+        output_start,
+        output_end,
     )
 }
 
-#[allow(unused, clippy::too_many_lines)]
+#[allow(unused, clippy::too_many_lines, clippy::trivially_copy_pass_by_ref)]
 fn match_cheatcode_by_selector(
     vm: &mut VirtualMachine,
     blockifier_state: &mut CachedState<DictStateReader>,
     selector: &str,
     inputs: Vec<Felt252>,
-    [output_start, output_end]: [&CellRef; 2],
+    output_start: &CellRef,
+    output_end: &CellRef,
 ) -> Result<(), HintError> {
     let mut result_segment_ptr = vm.add_memory_segment();
     let result_start = result_segment_ptr;
