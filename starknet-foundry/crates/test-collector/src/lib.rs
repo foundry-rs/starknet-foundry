@@ -312,7 +312,7 @@ pub fn collect_tests(
                 &linked_library.path,
                 &linked_library.name,
             )
-            .with_context(|| format!("Failed to add linked library ({})", input_path))?;
+            .with_context(|| format!("Failed to add linked library ({})", linked_library.name))?;
         }
     }
 
