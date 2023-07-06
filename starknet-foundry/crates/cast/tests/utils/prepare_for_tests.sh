@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-COMPILER_DIRECTORY="$(git rev-parse --show-toplevel)/cast/tests/utils/"
+COMPILER_DIRECTORY="$(git rev-parse --show-toplevel)/starknet-foundry/crates/cast/tests/utils/"
 CAIRO_REPO="https://github.com/starkware-libs/cairo/releases/download"
 COMPILER_VERSION="v1.1.1"
 SCARB_VERSION="0.4.1"
@@ -12,10 +12,17 @@ if ! which starknet-devnet > /dev/null 2>&1; then
 fi
 
 if command -v asdf &> /dev/null; then
-  asdf plugin add scarb https://github.com/software-mansion/asdf-scarb.git
+  version_output=$(scarb --version)
+  installed_version=$(echo "$version_output" | awk 'NR!=2' | awk '{print $2}')
+
+  if [[ "$installed_version" == "$SCARB_VERSION" ]]; then
+    echo "Correct scarb version already installed"
+  else
+    asdf plugin add scarb https://github.com/software-mansion/asdf-scarb.git
   asdf install scarb "$SCARB_VERSION"
   asdf global scarb "$SCARB_VERSION"
   scarb --version
+  fi
 else
   printf "Please install asdf\n https://asdf-vm.com/guide/getting-started.html#_2-download-asdf\n"
   exit 1
