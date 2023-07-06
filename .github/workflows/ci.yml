@@ -6,24 +6,20 @@ on:
 
 jobs:
   test:
-    name: test ${{ matrix.name }}
-    runs-on: ${{ matrix.os }}
+    name: test ${{ matrix.runner.name }}
+    runs-on: ${{ matrix.os.runner }}
     strategy:
       matrix:
-        include:
-          - name: linux x86-64
-            os: ubuntu-latest
-          # - name: macos x86-64
-          #   os: macos-latest
-          - name: windows x86-64
-            os: windows-latest
+          # TODO: do we want macs as well?
+          os : [{runner: ubuntu-latest, name: linux x86-64 }, {runner: windows-latest, name: windows x86-64 }]
+          crate: ['test-collector', 'forge', 'cast']
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: true
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      - run: cargo test --manifest-path ./starknet-foundry/Cargo.toml
+      - run: cargo test --manifest-path ./starknet-foundry/Cargo.toml -p ${{ matrix.crate }}
 
   rustfmt:
     runs-on: ubuntu-latest
@@ -33,7 +29,12 @@ jobs:
           submodules: true
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      - run: cargo fmt --check --manifest-path ./starknet-foundry/Cargo.toml
+      - name: Check forge formatting
+        run: cargo fmt --manifest-path ./starknet-foundry/Cargo.toml --check -p forge
+      - name: Check cast formatting
+        run: cargo fmt --manifest-path ./starknet-foundry/Cargo.toml --check -p cast
+      - name: Check test-collector formatting
+        run: cargo fmt --manifest-path ./starknet-foundry/Cargo.toml --check -p test-collector
 
   clippy:
     runs-on: ubuntu-latest
@@ -47,15 +48,3 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - run: cargo clippy --all-targets --all-features -- --no-deps  --manifest-path ./starknet-foundry/Cargo.toml
-
-# TODO: Do we need this
-#  rustdoc:
-#    runs-on: ubuntu-latest
-#    env:
-#      # Make sure CI fails on all warnings, including Clippy lints.
-#      RUSTDOCFLAGS: "-Dwarnings"
-#    steps:
-#      - uses: actions/checkout@v3
-#      - uses: dtolnay/rust-toolchain@stable
-#      - uses: Swatinem/rust-cache@v2
-#      - run: cargo doc --all-features --no-deps
