@@ -48,7 +48,7 @@ pub async fn declare_deploy_simple_balance_contract() {
         ),
         casm_class_hash,
     );
-    let declared = dbg!(declaration.send().await.unwrap());
+    let declared = declaration.send().await.unwrap();
 
     let factory = ContractFactory::new(declared.class_hash, account);
     let deployment = factory.deploy(Vec::new(), FieldElement::ONE, false);

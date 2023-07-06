@@ -139,7 +139,6 @@ pub fn get_network(name: &str) -> Result<Network> {
     }
 }
 
-// todo: #2142 add tests
 pub async fn wait_for_tx(
     provider: &JsonRpcClient<HttpTransport>,
     tx_hash: FieldElement,
@@ -148,7 +147,7 @@ pub async fn wait_for_tx(
         let receipt = provider
             .get_transaction_receipt(tx_hash)
             .await
-            .expect("Could not get transaction with hash: {tx_hash:#x}");
+            .unwrap_or_else(|_| panic!("Could not get transaction with hash: {tx_hash:#x}"));
 
         let status = if let Receipt(receipt) = receipt {
             match receipt {
@@ -176,7 +175,7 @@ pub async fn wait_for_tx(
         }
     } {}
 
-    Err(anyhow!("Unexpected error happened"))
+    unreachable!("Unexpected error happened");
 }
 
 #[must_use]
