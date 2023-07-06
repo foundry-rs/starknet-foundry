@@ -6,6 +6,8 @@ on:
 
 jobs:
   test-forge:
+    env:
+      SCARB_VERSION: "0.4.1"
     name: test ${{ matrix.runner.name }}
     runs-on: ${{ matrix.os.runner }}
     strategy:
@@ -18,6 +20,9 @@ jobs:
           submodules: true
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
+      - name: Setup Scarb
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://docs.swmansion.com/scarb/install.sh | bash -s -- -v ${{ env.SCARB_VERSION }}
       - run: cargo test --manifest-path ./starknet-foundry/Cargo.toml -p forge
 
   test-cast:
@@ -41,7 +46,7 @@ jobs:
       - run: pip install starknet-devnet
       - uses: asdf-vm/actions/setup@v2
       - name: Prepare for cast tests
-        run: bash ./tests/utils/prepare_for_tests.sh
+        run: bash ./crates/cast/tests/utils/prepare_for_tests.sh
       - run: cargo test --manifest-path ./starknet-foundry/Cargo.toml -p cast
 
   rustfmt:
