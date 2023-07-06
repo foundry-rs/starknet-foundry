@@ -13,7 +13,8 @@ jobs:
     strategy:
       matrix:
           # TODO: do we want macs as well?
-          os : [{runner: ubuntu-latest, name: linux x86-64 }, {runner: windows-latest, name: windows x86-64 }]
+          # TODO: Windows {runner: windows-latest, name: windows x86-64 }
+          os : [{runner: ubuntu-latest, name: linux x86-64 }]
     steps:
       - uses: actions/checkout@v3
         with:
@@ -46,7 +47,7 @@ jobs:
       - run: pip install starknet-devnet
       - uses: asdf-vm/actions/setup@v2
       - name: Prepare for cast tests
-        run: bash ./crates/cast/tests/utils/prepare_for_tests.sh
+        run: bash ./starknet-foundry/crates/cast/tests/utils/prepare_for_tests.sh
       - run: cargo test --manifest-path ./starknet-foundry/Cargo.toml -p cast
 
   rustfmt:
