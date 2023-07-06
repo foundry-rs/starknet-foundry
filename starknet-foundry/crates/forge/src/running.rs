@@ -64,6 +64,13 @@ impl TestUnitSummary {
             exit_status: run_result.value,
         }
     }
+
+    pub fn passed(&self) -> bool {
+        match self.exit_status {
+            TestUnitExitStatus::Success(_) => true,
+            TestUnitExitStatus::Panic(_) => false,
+        }
+    }
 }
 
 fn test_result_from_run_result(name: &str, run_result: RunResult) -> TestResult {
