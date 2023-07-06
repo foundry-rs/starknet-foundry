@@ -13,7 +13,7 @@ use cairo_lang_sierra::program::Program;
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 
-use crate::running::run_from_test_units;
+use crate::running::{run_from_test_units, TestUnitSummary};
 use crate::scarb::{get_contracts_map, try_get_starknet_artifacts_path, StarknetContractArtifacts};
 use test_collector::{collect_tests, LinkedLibrary, TestUnit};
 
@@ -51,7 +51,7 @@ impl RunnerConfig {
 }
 
 #[derive(Debug, PartialEq, Clone)]
-enum RunnerStatus {
+pub enum RunnerStatus {
     Default,
     TestFailed,
 }
@@ -157,7 +157,7 @@ pub fn run(
     linked_libraries: Option<Vec<LinkedLibrary>>,
     runner_config: &RunnerConfig,
     corelib_path: Option<&Utf8PathBuf>,
-) -> Result<Vec<RunTestsSummary>> {
+) -> Result<Vec<TestFileSummary>> {
     let tests =
         collect_tests_from_directory(input_path, linked_libraries, corelib_path, runner_config)?;
 
@@ -199,16 +199,10 @@ pub fn run(
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub struct RunTestsSummary {
-    test_run_summaries: Vec<TestRunSummary>,
-    runner_exit_status: RunnerStatus,
-    relative_path: Utf8PathBuf,
-}
-
-#[derive(Debug, PartialEq, Clone)]
-struct TestRunSummary {
-    test_unit: TestUnit,
-    run_result: RunResult,
+pub struct TestFileSummary {
+    pub test_unit_summaries: Vec<TestUnitSummary>,
+    pub runner_exit_status: RunnerStatus,
+    pub relative_path: Utf8PathBuf,
 }
 
 fn run_tests_from_file(
@@ -216,7 +210,7 @@ fn run_tests_from_file(
     tests_summary: &mut TestSummary,
     runner_config: &RunnerConfig,
     contracts: &HashMap<String, StarknetContractArtifacts>,
-) -> Result<RunTestsSummary> {
+) -> Result<TestFileSummary> {
     let mut runner = SierraCasmRunner::new(
         tests.sierra_program,
         Some(MetadataComputationConfig::default()),
@@ -228,10 +222,7 @@ fn run_tests_from_file(
     let mut results = vec![];
     for (i, unit) in tests.test_units.iter().enumerate() {
         let result = run_from_test_units(&mut runner, unit, contracts)?;
-        results.push(TestRunSummary {
-            test_unit: unit.clone(),
-            run_result: result.clone(),
-        });
+        results.push(result.clone());
 
         pretty_printing::print_test_result(&result);
         if runner_config.exit_first {
@@ -252,8 +243,8 @@ fn run_tests_from_file(
 
         tests_summary.update(result.value);
     }
-    Ok(RunTestsSummary {
-        test_run_summaries: results,
+    Ok(TestFileSummary {
+        test_unit_summaries: results,
         runner_exit_status: RunnerStatus::Default,
         relative_path: tests.relative_path,
     })

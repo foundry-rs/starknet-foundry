@@ -45,6 +45,27 @@ fn build_hints_dict<'b>(
     (hints_dict, string_to_hint)
 }
 
+type TestUnitExitStatus = RunResultValue;
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct TestUnitSummary {
+    pub test_unit: TestUnit,
+    pub gas_counter: Option<cairo_felt::Felt252>,
+    pub memory: Vec<Option<cairo_felt::Felt252>>,
+    pub exit_status: TestUnitExitStatus,
+}
+
+impl TestUnitSummary {
+    fn from(test_unit: TestUnit, run_result: RunResult) -> Self {
+        Self {
+            test_unit,
+            gas_counter: run_result.gas_counter,
+            memory: run_result.memory,
+            exit_status: run_result.value,
+        }
+    }
+}
+
 fn test_result_from_run_result(name: &str, run_result: RunResult) -> TestResult {
     match run_result.value {
         RunResultValue::Success(_) => TestResult::Passed {
