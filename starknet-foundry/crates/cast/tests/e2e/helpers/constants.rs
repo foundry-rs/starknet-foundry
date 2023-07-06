@@ -10,4 +10,3 @@ pub const MAP_CONTRACT_ADDRESS: &str =
     "0x38b7b9507ccf73d79cb42c2cc4e58cf3af1248f342112879bfdf5aa4f606cc9";
 pub const MAP_CLASS_HASH: &str =
     "0x76e94149fc55e7ad9c5fe3b9af570970ae2cf51205f8452f39753e9497fe849";
-
