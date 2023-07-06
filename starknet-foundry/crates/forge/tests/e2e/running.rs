@@ -347,3 +347,21 @@ fn exit_first_flag_takes_precedence() {
             Tests: 8 passed, 1 failed, 2 skipped
         "#});
 }
+
+#[test]
+fn with_prank() {
+    let temp = assert_fs::TempDir::new().unwrap();
+    temp.copy_from("tests/data/prank_test", &["**/*"]).unwrap();
+
+    let snapbox = runner();
+
+    snapbox
+        .current_dir(&temp)
+        .assert()
+        .success()
+        .stdout_matches(indoc! {r#"Collected 1 test(s) and 1 test file(s)
+            Running 1 test(s) from tests/test_start_prank.cairo
+            [PASS] test_start_prank::test_start_prank::test_prank_basic
+            Tests: 1 passed, 0 failed, 0 skipped
+        "#});
+}
