@@ -13,11 +13,14 @@ use cairo_lang_sierra::program::Program;
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 
-use crate::running::{run_from_test_units, TestUnitSummary};
+use crate::running::run_from_test_units;
 use crate::scarb::{get_contracts_map, try_get_starknet_artifacts_path, StarknetContractArtifacts};
 use test_collector::{collect_tests, LinkedLibrary, TestUnit};
 
 use crate::test_results::TestSummary;
+
+// Reexport modules in lib.rs scope
+pub use crate::running::TestUnitSummary;
 
 pub mod pretty_printing;
 pub mod scarb;
