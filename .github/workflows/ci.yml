@@ -47,4 +47,4 @@ jobs:
           submodules: true
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      - run: cargo clippy --all-targets --all-features -- --no-deps  --manifest-path ./starknet-foundry/Cargo.toml
+      - run: cargo clippy --manifest-path ./starknet-foundry/Cargo.toml --all-targets --all-features -- --no-deps
