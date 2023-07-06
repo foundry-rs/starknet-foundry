@@ -1,25 +1,40 @@
 #!/bin/bash
 set -e
 
-COMPILER_DIRECTORY="$(git rev-parse --show-toplevel)/cast/tests/utils/"
+COMPILER_DIRECTORY="$(git rev-parse --show-toplevel)/starknet-foundry/crates/cast/tests/utils/"
 CAIRO_REPO="https://github.com/starkware-libs/cairo/releases/download"
 COMPILER_VERSION="v1.1.1"
 SCARB_VERSION="0.4.1"
+
+install_scarb_version() {
+  asdf install scarb "$1"
+  asdf global scarb "$1"
+  scarb --version
+}
 
 if ! which starknet-devnet > /dev/null 2>&1; then
   echo "starknet-devnet not found, exiting."
   exit 1
 fi
 
-if command -v asdf &> /dev/null; then
-  asdf plugin add scarb https://github.com/software-mansion/asdf-scarb.git
-  asdf install scarb "$SCARB_VERSION"
-  asdf global scarb "$SCARB_VERSION"
-  scarb --version
-else
+if ! command -v asdf &> /dev/null; then
   printf "Please install asdf\n https://asdf-vm.com/guide/getting-started.html#_2-download-asdf\n"
   exit 1
 fi
+
+if command -v scarb &> /dev/null; then
+    installed_version=$(scarb --version | grep -e "scarb" | awk '{print $2}')
+
+    if [[ "$installed_version" == "$SCARB_VERSION" ]]; then
+      echo "Correct scarb version already installed"
+    else
+      install_scarb_version $SCARB_VERSION
+    fi
+
+  else
+    asdf plugin add scarb https://github.com/software-mansion/asdf-scarb.git
+    install_scarb_version $SCARB_VERSION
+  fi
 
 if [ ! -x "$COMPILER_DIRECTORY/cairo/bin/starknet-sierra-compile" ]; then
   if [[ $(uname -s) == 'Darwin' ]]; then
