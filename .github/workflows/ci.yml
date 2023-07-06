@@ -5,21 +5,44 @@ on:
   merge_group:
 
 jobs:
-  test:
+  test-forge:
     name: test ${{ matrix.runner.name }}
     runs-on: ${{ matrix.os.runner }}
     strategy:
       matrix:
           # TODO: do we want macs as well?
           os : [{runner: ubuntu-latest, name: linux x86-64 }, {runner: windows-latest, name: windows x86-64 }]
-          crate: ['test-collector', 'forge', 'cast']
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: true
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      - run: cargo test --manifest-path ./starknet-foundry/Cargo.toml -p ${{ matrix.crate }}
+      - run: cargo test --manifest-path ./starknet-foundry/Cargo.toml -p forge
+
+  test-cast:
+    name: test ${{ matrix.runner.name }}
+    runs-on: ${{ matrix.os.runner }}
+    strategy:
+      matrix:
+          # TODO: do we want macs as well?
+          # TODO: Windows {runner: windows-latest, name: windows x86-64 }
+          os : [{runner: ubuntu-latest, name: linux x86-64 }]
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - run: sudo apt install -y libgmp3-dev
+      - run: pip install starknet-devnet
+      - uses: asdf-vm/actions/setup@v2
+      - name: Prepare for cast tests
+        run: bash ./tests/utils/prepare_for_tests.sh
+      - run: cargo test --manifest-path ./starknet-foundry/Cargo.toml -p cast
 
   rustfmt:
     runs-on: ubuntu-latest
