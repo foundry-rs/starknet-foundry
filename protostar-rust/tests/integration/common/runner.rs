@@ -46,7 +46,7 @@ macro_rules! test_case {
     ($test_code:expr) => {{
         use $crate::common::runner::TestCase;
 
-        let test = TestCase::from($test_code, vec![]);
+        let test = TestCase::from($test_code, vec![]).unwrap();
         test
     }};
 }

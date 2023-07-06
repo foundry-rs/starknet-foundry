@@ -14,7 +14,7 @@ use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 
 use crate::running::run_from_test_units;
-use crate::scarb::{get_contracts_map, try_get_starknet_artifacts_path, StarknetContractArtifacts};
+use crate::scarb::StarknetContractArtifacts;
 use test_collector::{collect_tests, LinkedLibrary, TestUnit};
 
 use crate::test_results::TestSummary;
@@ -155,11 +155,14 @@ fn internal_collect_tests(
     Ok(tests)
 }
 
+// TODO consider resolving this
+#[allow(clippy::implicit_hasher)]
 pub fn run(
     input_path: &Utf8PathBuf,
     linked_libraries: Option<Vec<LinkedLibrary>>,
     runner_config: &RunnerConfig,
     corelib_path: Option<&Utf8PathBuf>,
+    contracts: &HashMap<String, StarknetContractArtifacts>,
 ) -> Result<Vec<TestFileSummary>> {
     let tests =
         collect_tests_from_directory(input_path, linked_libraries, corelib_path, runner_config)?;
@@ -169,19 +172,13 @@ pub fn run(
         tests.len(),
     );
 
-    let contracts_path = try_get_starknet_artifacts_path(input_path)?;
-    let contracts = contracts_path
-        .map(|path| get_contracts_map(&path))
-        .transpose()?
-        .unwrap_or_default();
-
     let mut tests_summary = TestSummary::default();
     let mut tests_iterator = tests.into_iter();
 
     let mut summaries = vec![];
     for tests_from_file in tests_iterator.by_ref() {
         let summary =
-            run_tests_from_file(tests_from_file, &mut tests_summary, runner_config, &contracts)?
+            run_tests_from_file(tests_from_file, &mut tests_summary, runner_config, contracts)?
            ;
         summaries.push(summary.clone());
         if summary.runner_exit_status == RunnerStatus::TestFailed {
