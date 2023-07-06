@@ -51,8 +51,8 @@ pub fn artifacts_for_package(path: &Utf8PathBuf) -> Result<StarknetArtifacts> {
 
 pub fn try_get_starknet_artifacts_path(path: &Utf8PathBuf) -> Result<Option<Utf8PathBuf>> {
     let path = path.join("target/dev");
-    let mut paths = fs::read_dir(&path)
-        .with_context(|| format!("Failed to read directory at path = {}", path))?;
+    let paths = fs::read_dir(&path);
+    let Ok(mut paths) = paths else { return Ok(None) };
     let starknet_artifacts = paths.find_map(|path| match path {
         Ok(path) => {
             let name = path.file_name().into_string().ok()?;
@@ -174,6 +174,19 @@ mod tests {
             .current_dir(&temp)
             .arg("build")
             .output()
+            .unwrap();
+
+        let result = try_get_starknet_artifacts_path(
+            &Utf8PathBuf::from_path_buf(temp.to_path_buf()).unwrap(),
+        );
+        let path = result.unwrap();
+        assert!(path.is_none());
+    }
+
+    #[test]
+    fn get_starknet_artifacts_path_for_project_without_scarb_build() {
+        let temp = assert_fs::TempDir::new().unwrap();
+        temp.copy_from("tests/data/simple_test", &["**/*.cairo", "**/*.toml"])
             .unwrap();
 
         let result = try_get_starknet_artifacts_path(
