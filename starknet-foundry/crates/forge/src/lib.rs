@@ -313,7 +313,8 @@ mod tests {
     #[test]
     fn collecting_tests() {
         let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from("tests/data/simple_test", &["**/*"]).unwrap();
+        temp.copy_from("tests/data/simple_test", &["**/*.cairo", "**/*.toml"])
+            .unwrap();
         let tests_path = Utf8PathBuf::from_path_buf(temp.to_path_buf()).unwrap();
 
         let tests = find_cairo_files_in_directory(&tests_path).unwrap();

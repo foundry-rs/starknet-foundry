@@ -146,7 +146,7 @@ mod tests {
     #[test]
     fn get_starknet_artifacts_path() {
         let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from("tests/data/declare_test", &["**/*"])
+        temp.copy_from("tests/data/declare_test", &["**/*.cairo", "**/*.toml"])
             .unwrap();
         Command::new("scarb")
             .current_dir(&temp)
@@ -168,7 +168,8 @@ mod tests {
     #[test]
     fn get_starknet_artifacts_path_for_project_without_contracts() {
         let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from("tests/data/simple_test", &["**/*"]).unwrap();
+        temp.copy_from("tests/data/simple_test", &["**/*.cairo", "**/*.toml"])
+            .unwrap();
         Command::new("scarb")
             .current_dir(&temp)
             .arg("build")
@@ -185,7 +186,8 @@ mod tests {
     #[test]
     fn get_contracts() {
         let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from("tests/data/dispatchers", &["**/*"]).unwrap();
+        temp.copy_from("tests/data/dispatchers", &["**/*.cairo", "**/*.toml"])
+            .unwrap();
         Command::new("scarb")
             .current_dir(&temp)
             .arg("build")
@@ -223,7 +225,8 @@ mod tests {
     #[test]
     fn get_dependencies_for_package() {
         let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from("tests/data/simple_test", &["**/*"]).unwrap();
+        temp.copy_from("tests/data/simple_test", &["**/*.cairo", "**/*.toml"])
+            .unwrap();
         let scarb_metadata = MetadataCommand::new()
             .inherit_stderr()
             .current_dir(temp.path())
@@ -241,7 +244,8 @@ mod tests {
     #[test]
     fn get_dependencies_for_package_err_on_invalid_package() {
         let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from("tests/data/simple_test", &["**/*"]).unwrap();
+        temp.copy_from("tests/data/simple_test", &["**/*.cairo", "**/*.toml"])
+            .unwrap();
         let scarb_metadata = MetadataCommand::new()
             .inherit_stderr()
             .current_dir(temp.path())
@@ -260,7 +264,8 @@ mod tests {
     #[test]
     fn get_protostar_config_for_package() {
         let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from("tests/data/simple_test", &["**/*"]).unwrap();
+        temp.copy_from("tests/data/simple_test", &["**/*.cairo", "**/*.toml"])
+            .unwrap();
         let scarb_metadata = MetadataCommand::new()
             .inherit_stderr()
             .current_dir(temp.path())
@@ -277,7 +282,8 @@ mod tests {
     #[test]
     fn get_protostar_config_for_package_err_on_invalid_package() {
         let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from("tests/data/simple_test", &["**/*"]).unwrap();
+        temp.copy_from("tests/data/simple_test", &["**/*.cairo", "**/*.toml"])
+            .unwrap();
         let scarb_metadata = MetadataCommand::new()
             .inherit_stderr()
             .current_dir(temp.path())
@@ -298,7 +304,8 @@ mod tests {
     #[test]
     fn get_protostar_config_for_package_default_on_missing_config() {
         let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from("tests/data/simple_test", &["**/*"]).unwrap();
+        temp.copy_from("tests/data/simple_test", &["**/*.cairo", "**/*.toml"])
+            .unwrap();
         let content = "[package]
 name = \"example_package\"
 version = \"0.1.0\"";
