@@ -17,11 +17,13 @@ if ! which starknet-devnet > /dev/null 2>&1; then
   exit 1
 fi
 
-if command -v asdf &> /dev/null; then
+if ! command -v asdf &> /dev/null; then
+  printf "Please install asdf\n https://asdf-vm.com/guide/getting-started.html#_2-download-asdf\n"
+  exit 1
+fi
 
-  if command -v scarb &> /dev/null; then
-    version_output=$(scarb --version)
-    installed_version=$(echo "$version_output" | awk 'NR!=2' | awk '{print $2}')
+if command -v scarb &> /dev/null; then
+    installed_version=$(scarb --version | grep -e "scarb" | awk '{print $2}')
 
     if [[ "$installed_version" == "$SCARB_VERSION" ]]; then
       echo "Correct scarb version already installed"
@@ -33,11 +35,6 @@ if command -v asdf &> /dev/null; then
     asdf plugin add scarb https://github.com/software-mansion/asdf-scarb.git
     install_scarb_version $SCARB_VERSION
   fi
-
-else
-  printf "Please install asdf\n https://asdf-vm.com/guide/getting-started.html#_2-download-asdf\n"
-  exit 1
-fi
 
 if [ ! -x "$COMPILER_DIRECTORY/cairo/bin/starknet-sierra-compile" ]; then
   if [[ $(uname -s) == 'Darwin' ]]; then
