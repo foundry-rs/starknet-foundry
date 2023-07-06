@@ -4,8 +4,6 @@ use camino::Utf8PathBuf;
 use cast::{get_account, get_block_id, get_network, get_provider, print_formatted};
 use clap::{Parser, Subcommand};
 use console::style;
-use scarb_metadata;
-use std::env::current_dir;
 
 mod starknet_commands;
 
