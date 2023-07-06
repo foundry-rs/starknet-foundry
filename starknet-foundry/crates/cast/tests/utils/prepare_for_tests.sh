@@ -4,7 +4,7 @@ set -e
 COMPILER_DIRECTORY="$(git rev-parse --show-toplevel)/starknet-foundry/crates/cast/tests/utils/"
 CAIRO_REPO="https://github.com/starkware-libs/cairo/releases/download"
 COMPILER_VERSION="v1.1.1"
-SCARB_VERSION="0.4.0"
+SCARB_VERSION="0.4.1"
 
 install_scarb_version() {
   asdf install scarb "$1"
