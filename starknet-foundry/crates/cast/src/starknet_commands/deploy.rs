@@ -13,6 +13,7 @@ use starknet::core::utils::{get_udc_deployed_address, UdcUniqueSettings};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
+use cast::print_formatted;
 
 #[derive(Args)]
 #[command(about = "Deploy a contract on Starknet")]
@@ -36,6 +37,41 @@ pub struct Deploy {
     /// Max fee for the transaction. If not provided, max fee will be automatically estimated
     #[clap(short, long)]
     pub max_fee: Option<u128>,
+}
+
+pub async fn deploy_and_print(
+    class_hash: &str,
+    constructor_calldata: Vec<&str>,
+    salt: Option<&str>,
+    unique: bool,
+    max_fee: Option<u128>,
+    account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
+    int_format: bool,
+    json: bool,
+) -> Result<()> {
+    let result = deploy(class_hash, constructor_calldata, salt, unique, max_fee, account).await;
+
+    match result {
+        Ok((transaction_hash, contract_address)) => print_formatted(
+            vec![
+                ("command", "Deploy".to_string()),
+                ("contract_address", format!("{contract_address}")),
+                ("transaction_hash", format!("{transaction_hash}")),
+            ],
+            int_format,
+            json,
+            false,
+        )?,
+        Err(error) => {
+            print_formatted(
+                vec![("error", error.to_string())],
+                int_format,
+                json,
+                true,
+            )?;
+        }
+    };
+    Ok(())
 }
 
 pub async fn deploy(

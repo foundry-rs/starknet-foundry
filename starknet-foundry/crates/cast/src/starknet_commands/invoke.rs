@@ -9,6 +9,7 @@ use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
+use cast::print_formatted;
 
 use cast::parse_number;
 
@@ -30,6 +31,38 @@ pub struct Invoke {
     /// Max fee for the transaction. If not provided, max fee will be automatically estimated
     #[clap(short, long)]
     pub max_fee: Option<u128>,
+}
+
+pub async fn invoke_and_print(
+    contract_address: &str,
+    entry_point_name: &str,
+    calldata: Vec<&str>,
+    max_fee: Option<u128>,
+    account: &mut SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
+    int_format: bool,
+    json: bool,
+) -> Result<()> {
+    let result = invoke(contract_address, entry_point_name, calldata, max_fee, account).await;
+    match result {
+        Ok(transaction_hash) => print_formatted(
+            vec![
+                ("command", "Invoke".to_string()),
+                ("transaction_hash", format!("{transaction_hash}")),
+            ],
+            int_format,
+            json,
+            false,
+        )?,
+        Err(error) => {
+            print_formatted(
+                vec![("error", error.to_string())],
+                int_format,
+                json,
+                true,
+            )?;
+        }
+    };
+    Ok(())
 }
 
 pub async fn invoke(
