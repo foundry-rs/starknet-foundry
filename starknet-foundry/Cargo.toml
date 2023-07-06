@@ -2,7 +2,7 @@
 members = [
     "crates/forge",
     "crates/test-collector",
-]
+    "crates/cast",]
 
 [workspace.package]
 version = "0.0.1"

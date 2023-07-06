@@ -1,0 +1,4 @@
+tests/utils/cairo
+tests/utils/scarb*
+tests/utils/*.tar
+tests/utils/*.tar.gz
