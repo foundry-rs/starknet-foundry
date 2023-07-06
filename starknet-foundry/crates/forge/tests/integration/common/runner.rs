@@ -58,7 +58,7 @@ macro_rules! assert_passed {
             result
                 .test_unit_summaries
                 .iter()
-                .all(rust_test_runner::TestUnitSummary::passed)
+                .all(forge::TestUnitSummary::passed)
         }));
     }};
 }

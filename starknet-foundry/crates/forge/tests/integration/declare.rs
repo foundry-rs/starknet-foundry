@@ -1,8 +1,8 @@
 use crate::common::corelib::corelib;
 use crate::{assert_passed, test_case};
 use camino::Utf8PathBuf;
+use forge::run;
 use indoc::indoc;
-use rust_test_runner::run;
 use std::collections::HashMap;
 
 #[test]
