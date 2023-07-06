@@ -9,7 +9,7 @@ use tempfile::{tempdir, TempDir};
 use forge::run;
 use forge::{pretty_printing, RunnerConfig};
 
-use rust_test_runner::scarb::{get_contracts_map, try_get_starknet_artifacts_path};
+use forge::scarb::{get_contracts_map, try_get_starknet_artifacts_path};
 use std::process::Command;
 
 static CORELIB_PATH: Dir = include_dir!("../cairo/corelib/src");
