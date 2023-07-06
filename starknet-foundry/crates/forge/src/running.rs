@@ -65,6 +65,7 @@ impl TestUnitSummary {
         }
     }
 
+    #[must_use]
     pub fn passed(&self) -> bool {
         match self.exit_status {
             TestUnitExitStatus::Success(_) => true,

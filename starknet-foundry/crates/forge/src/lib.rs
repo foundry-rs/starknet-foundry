@@ -8,7 +8,7 @@ use test_results::TestResult;
 use walkdir::WalkDir;
 
 use cairo_lang_runner::SierraCasmRunner;
-use cairo_lang_runner::{RunResult, RunResultValue, SierraCasmRunner};
+use cairo_lang_runner::{RunResultValue, SierraCasmRunner};
 use cairo_lang_sierra::program::Program;
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
