@@ -1,4 +1,4 @@
-use crate::starknet_commands::{call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall};
+use crate::starknet_commands::{call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall, multicall_new::MulticallNew};
 use anyhow::{bail, Result};
 use camino::Utf8PathBuf;
 use cast::{get_account, get_block_id, get_network, get_provider, print_formatted};
@@ -59,6 +59,9 @@ enum Commands {
 
     /// execute multiple calls
     Multicall(Multicall),
+
+    /// generate multicall template
+    MulticallNew(MulticallNew),
 }
 
 #[tokio::main]
@@ -190,6 +193,13 @@ async fn main() -> Result<()> {
             let mut account =
                 get_account(&cli.account, &accounts_file_path, &provider, &network)?;
             starknet_commands::multicall::multicall(&multicall.path, &mut account, cli.int_format, cli.json).await?;
+            Ok(())
+        }
+        Commands::MulticallNew(multicall_new) => {
+            starknet_commands::multicall_new::multicall_new(
+                multicall_new.output_path,
+                multicall_new.overwrite.unwrap_or(false)
+            ).await?;
             Ok(())
         }
     }
