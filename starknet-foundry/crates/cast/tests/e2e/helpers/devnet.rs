@@ -46,6 +46,10 @@ fn start_devnet() {
         }
     }
 
+    Command::new("tests/utils/build_contracts.sh")
+        .spawn()
+        .expect("Failed to compile contracts")
+        .wait();
     let rt = Runtime::new().expect("Could not instantiate Runtime");
     rt.block_on(declare_deploy_simple_balance_contract());
 }
