@@ -1,4 +1,3 @@
-//todo: move to integration
 use crate::helpers::constants::{NETWORK, URL};
 use crate::helpers::fixtures::create_test_provider;
 

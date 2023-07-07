@@ -144,6 +144,7 @@ pub async fn get_transaction_receipt(tx_hash: FieldElement) -> TransactionReceip
         .expect("Could not serialize result to `TransactionReceipt`")
 }
 
+#[must_use]
 pub fn create_test_provider() -> JsonRpcClient<HttpTransport> {
     let parsed_url = Url::parse(URL).unwrap();
     JsonRpcClient::new(HttpTransport::new(parsed_url))

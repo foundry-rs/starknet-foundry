@@ -80,7 +80,7 @@ pub fn parse_scarb_config(
 
 #[cfg(test)]
 mod tests {
-    use crate::utils::config::parse_scarb_config;
+    use crate::helpers::scarb_utils::parse_scarb_config;
     use camino::Utf8PathBuf;
 
     #[test]
