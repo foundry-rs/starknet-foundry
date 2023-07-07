@@ -42,6 +42,7 @@ ark-std = "0.3.0"
 ark-secp256k1 = "0.4.0"
 ark-secp256r1 = "0.4.0"
 num-traits = "0.2"
+thiserror = "1.0.43"
 
 [lib]
 name = "forge"
