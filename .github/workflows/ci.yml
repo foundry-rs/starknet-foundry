@@ -28,6 +28,8 @@ jobs:
       DEVNET_VERSION: 0.5.5
     steps:
       - uses: actions/checkout@v3
+        with:
+          submodules: true
       - uses: dtolnay/rust-toolchain@0e66bd3e6b38ec0ad5312288c83e47c143e6b09e
         with:
           toolchain: stable
@@ -48,7 +50,7 @@ jobs:
       - name: Prepare for tests
         run: bash ./scripts/prepare_for_tests.sh
       - name: Run tests
-        run: cargo test --manifest-path ./starknet-foundry/crates/cast/Cargo.toml -p cast
+        run: cargo test --manifest-path ./starknet-foundry/Cargo.toml -p cast
 
   rustfmt:
     runs-on: ubuntu-latest
