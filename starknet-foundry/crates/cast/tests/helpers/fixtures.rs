@@ -18,13 +18,12 @@ use starknet::providers::JsonRpcClient;
 use url::Url;
 
 pub async fn declare_deploy_simple_balance_contract() {
-    let network = get_network(&NETWORK).unwrap();
-    let provider = get_provider(URL, &network).await.expect("Could not get the provider");
+    let provider = get_provider(URL, NETWORK).await.expect("Could not get the provider");
     let account = get_account(
         ACCOUNT,
         &Utf8PathBuf::from(ACCOUNT_FILE_PATH),
         &provider,
-        &get_network(NETWORK).expect("Could not get the network"),
+        NETWORK,
     )
     .expect("Could not get the account");
 
@@ -61,13 +60,12 @@ pub async fn declare_deploy_simple_balance_contract() {
 }
 
 pub async fn invoke_map_contract(key: &str, value: &str) {
-    let network = get_network(&NETWORK).unwrap();
-    let provider = get_provider(URL, &network).await.expect("Could not get the provider");
+    let provider = get_provider(URL, NETWORK).await.expect("Could not get the provider");
     let account = get_account(
         ACCOUNT,
         &Utf8PathBuf::from(ACCOUNT_FILE_PATH),
         &provider,
-        &get_network(NETWORK).expect("Could not get the network"),
+        NETWORK,
     )
     .expect("Could not get the account");
 
