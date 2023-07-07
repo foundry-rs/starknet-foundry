@@ -69,12 +69,15 @@ impl Network {
     }
 }
 
-pub async fn get_provider(url: &str, network: &Network) -> Result<JsonRpcClient<HttpTransport>> {
+pub async fn get_provider(url: &str, network: &str) -> Result<JsonRpcClient<HttpTransport>> {
     let parsed_url = Url::parse(url)?;
+    if network.is_empty() {
+        bail!("Network not passed nor found in Scarb.toml")
+    }
     let provider = JsonRpcClient::new(HttpTransport::new(parsed_url));
 
     let provider_chain_id = provider.chain_id().await?;
-    let cli_chain_id = network.get_chain_id();
+    let cli_chain_id = get_network(network)?.get_chain_id();
     if provider_chain_id != cli_chain_id {
         bail!("Networks mismatch: requested network is different than provider network!")
     }
@@ -83,6 +86,9 @@ pub async fn get_provider(url: &str, network: &Network) -> Result<JsonRpcClient<
 }
 
 fn get_account_info(name: &str, chain_id: &str, path: &Utf8PathBuf) -> Result<Account> {
+    if name.is_empty() {
+        bail!("Account name not passed nor found in Scarb.toml")
+    }
     let accounts: HashMap<String, HashMap<String, Account>> =
         serde_json::from_str(&fs::read_to_string(path)?)?;
     let user = accounts
@@ -97,9 +103,12 @@ pub fn get_account<'a>(
     name: &str,
     accounts_file_path: &Utf8PathBuf,
     provider: &'a JsonRpcClient<HttpTransport>,
-    network: &Network,
+    network: &str,
 ) -> Result<SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, LocalWallet>> {
-    let account_info = get_account_info(name, network.get_value(), accounts_file_path)?;
+    if network.is_empty() {
+        bail!("Network not passed nor found in Scarb.toml")
+    }
+    let account_info = get_account_info(name, get_network(network)?.get_value(), accounts_file_path)?;
     let signer = LocalWallet::from(SigningKey::from_secret_scalar(
         FieldElement::from_hex_be(&account_info.private_key).with_context(|| {
             format!(
@@ -114,7 +123,7 @@ pub fn get_account<'a>(
             &account_info.address
         )
     })?;
-    let account = SingleOwnerAccount::new(provider, signer, address, network.get_chain_id());
+    let account = SingleOwnerAccount::new(provider, signer, address, get_network(network)?.get_chain_id());
 
     Ok(account)
 }
