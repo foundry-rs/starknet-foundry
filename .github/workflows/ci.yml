@@ -41,7 +41,7 @@ jobs:
       - name: Prepare for tests
         run: bash ./scripts/prepare_for_tests.sh
       - name: Run tests
-        run: cargo test --manifest-path ./starknet-foundry/Cargo.toml -p cast
+        run: cargo test --manifest-path ./starknet-foundry/crates/cast/Cargo.toml -p cast
 
   rustfmt:
     runs-on: ubuntu-latest
