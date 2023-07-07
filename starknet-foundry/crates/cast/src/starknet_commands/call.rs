@@ -33,7 +33,7 @@ pub struct Call {
 pub async fn call(
     contract_address: &str,
     func_name: &str,
-    calldata: &Vec<String>,
+    calldata: &[String],
     provider: &JsonRpcClient<HttpTransport>,
     block_id: &BlockId,
 ) -> Result<Vec<FieldElement>> {
