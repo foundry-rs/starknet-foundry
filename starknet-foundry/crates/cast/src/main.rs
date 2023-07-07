@@ -57,7 +57,7 @@ enum Commands {
     /// Invoke a contract
     Invoke(Invoke),
 
-    /// Invoke a contract
+    /// execute multiple calls
     Multicall(Multicall),
 }
 
