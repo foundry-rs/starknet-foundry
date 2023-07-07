@@ -123,11 +123,7 @@ macro_rules! test_case {
     ( $test_code:expr, $( $contract:expr ),*) => ({
         use $crate::common::runner::TestCase;
 
-        let mut contracts = Vec::new();
-        $(
-            //let contract = Contract::new("HelloStarknet".to_string(), $contract);
-            contracts.push($contract);
-        )*
+        let contracts = vec![$($contract,)*];
         TestCase::from($test_code, contracts).unwrap()
     });
 }
