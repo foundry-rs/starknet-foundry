@@ -49,7 +49,9 @@ jobs:
             pip install starknet-devnet
       - uses: asdf-vm/actions/setup@v2
       - name: Prepare for tests
-        run: bash ./starknet-foundry/crates/cast/tests/utils/prepare_for_tests.sh
+        run: |
+          ls -la
+          bash ./starknet-foundry/crates/cast/tests/utils/prepare_for_tests.sh
       - name: Build test contracts
         run: bash ./starknet-foundry/crates/cast/tests/utils/build_contracts.sh
       - name: Run tests
