@@ -13,5 +13,5 @@ if command -v scarb &> /dev/null; then
   done
 
 else
-  printf "Please run prepare_for_tests.sh\n"
+  echo "Please run tests/utils/prepare_for_tests.sh script first!"
 fi

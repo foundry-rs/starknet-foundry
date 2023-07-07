@@ -1,3 +1,4 @@
+.idea
 tests/utils/cairo
 tests/utils/scarb*
 tests/utils/*.tar
