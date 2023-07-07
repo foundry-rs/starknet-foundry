@@ -1,29 +1,30 @@
 //todo: move to integration
 
 use crate::helpers::constants::URL;
+use crate::helpers::fixtures::create_test_provider;
 
 use camino::Utf8PathBuf;
 use cast::{get_account, get_provider, Network};
 use std::fs;
 use url::ParseError;
 
-#[test]
-fn test_get_provider() {
+#[tokio::test]
+async fn test_get_provider() {
     let provider = get_provider(URL, &Network::Testnet);
-    assert!(provider.is_ok());
+    assert!(provider.await.is_ok());
 }
 
-#[test]
-fn test_get_provider_invalid_url() {
+#[tokio::test]
+async fn test_get_provider_invalid_url() {
     let provider = get_provider("", &Network::Testnet);
-    let err = provider.unwrap_err();
+    let err = provider.await.unwrap_err();
     assert!(err.is::<ParseError>());
 }
 
-#[test]
-fn test_get_provider_wrong_network() {
+#[tokio::test]
+async fn test_get_provider_wrong_network() {
     let provider = get_provider(URL, &Network::Mainnet);
-    let err = provider.unwrap_err();
+    let err = provider.await.unwrap_err();
     assert!(err
         .to_string()
         .contains("Networks mismatch: requested network is different than provider network!"));
@@ -31,7 +32,7 @@ fn test_get_provider_wrong_network() {
 
 #[test]
 fn test_get_account() {
-    let provider = get_provider(URL, &Network::Testnet).unwrap();
+    let provider = create_test_provider();
     let account = get_account(
         "user1",
         &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
@@ -49,7 +50,7 @@ fn test_get_account() {
 
 #[test]
 fn test_get_account_no_file() {
-    let provider = get_provider(URL, &Network::Testnet).unwrap();
+    let provider = create_test_provider();
     let account = get_account(
         "user1",
         &Utf8PathBuf::from("tests/data/accounts/nonexistentfile.json"),
@@ -62,7 +63,7 @@ fn test_get_account_no_file() {
 
 #[test]
 fn test_get_account_invalid_file() {
-    let provider = get_provider(URL, &Network::Testnet).unwrap();
+    let provider = create_test_provider();
     let account = get_account(
         "user1",
         &Utf8PathBuf::from("tests/data/accounts/invalid_format.json"),
@@ -75,7 +76,7 @@ fn test_get_account_invalid_file() {
 
 #[test]
 fn test_get_account_no_network() {
-    let provider = get_provider(URL, &Network::Testnet).unwrap();
+    let provider = create_test_provider();
     let account = get_account(
         "user1",
         &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
@@ -90,7 +91,7 @@ fn test_get_account_no_network() {
 
 #[test]
 fn test_get_account_no_user_for_network() {
-    let provider = get_provider(URL, &Network::Testnet).unwrap();
+    let provider = create_test_provider();
     let account = get_account(
         "user10",
         &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
@@ -105,7 +106,7 @@ fn test_get_account_no_user_for_network() {
 
 #[test]
 fn test_get_account_failed_to_convert_field_elements() {
-    let provider = get_provider(URL, &Network::Testnet).unwrap();
+    let provider = create_test_provider();
     let account1 = get_account(
         "with_wrong_private_key",
         &Utf8PathBuf::from("tests/data/accounts/faulty_accounts.json"),

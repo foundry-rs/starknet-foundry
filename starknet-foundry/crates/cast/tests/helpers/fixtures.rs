@@ -1,6 +1,7 @@
 use crate::helpers::constants::{
     ACCOUNT, ACCOUNT_FILE_PATH, CONTRACTS_DIR, MAP_CONTRACT_ADDRESS, NETWORK, URL,
 };
+use anyhow::Result;
 use camino::Utf8PathBuf;
 use cast::{get_account, get_network, get_provider, parse_number};
 use serde_json::{json, Value};
@@ -12,10 +13,13 @@ use starknet::core::types::TransactionReceipt;
 use starknet::core::utils::get_selector_from_name;
 use std::collections::HashMap;
 use std::sync::Arc;
+use starknet::providers::jsonrpc::HttpTransport;
+use starknet::providers::JsonRpcClient;
+use url::Url;
 
 pub async fn declare_deploy_simple_balance_contract() {
     let network = get_network(&NETWORK).unwrap();
-    let provider = get_provider(URL, &network).expect("Could not get the provider");
+    let provider = get_provider(URL, &network).await.expect("Could not get the provider");
     let account = get_account(
         ACCOUNT,
         &Utf8PathBuf::from(ACCOUNT_FILE_PATH),
@@ -58,7 +62,7 @@ pub async fn declare_deploy_simple_balance_contract() {
 
 pub async fn invoke_map_contract(key: &str, value: &str) {
     let network = get_network(&NETWORK).unwrap();
-    let provider = get_provider(URL, &network).expect("Could not get the provider");
+    let provider = get_provider(URL, &network).await.expect("Could not get the provider");
     let account = get_account(
         ACCOUNT,
         &Utf8PathBuf::from(ACCOUNT_FILE_PATH),
@@ -137,4 +141,10 @@ pub async fn get_transaction_receipt(tx_hash: FieldElement) -> TransactionReceip
         .expect("There is no `result` field in getTransactionReceipt response");
     serde_json::from_str(&result.to_string())
         .expect("Could not serialize result to `TransactionReceipt`")
+}
+
+pub fn create_test_provider() -> JsonRpcClient<HttpTransport> {
+    let parsed_url = Url::parse(URL).unwrap();
+    let provider = JsonRpcClient::new(HttpTransport::new(parsed_url));
+    return provider
 }

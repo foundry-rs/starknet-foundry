@@ -69,12 +69,11 @@ impl Network {
     }
 }
 
-pub fn get_provider(url: &str, network: &Network) -> Result<JsonRpcClient<HttpTransport>> {
+pub async fn get_provider(url: &str, network: &Network) -> Result<JsonRpcClient<HttpTransport>> {
     let parsed_url = Url::parse(url)?;
     let provider = JsonRpcClient::new(HttpTransport::new(parsed_url));
 
-    let rt = Runtime::new()?;
-    let provider_chain_id = rt.block_on(provider.chain_id())?;
+    let provider_chain_id = provider.chain_id().await?;
     let cli_chain_id = network.get_chain_id();
     if provider_chain_id != cli_chain_id {
         bail!("Networks mismatch: requested network is different than provider network!")
