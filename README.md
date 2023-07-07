@@ -6,5 +6,7 @@ Blazingly fast implementation of Foundry for developing Starknet contracts desig
 
 ```bash
 $ ./tests/utils/prepare_for_tests.sh
+asdf install scarb 0.5.0-alpha.0
+asdf global scarb 0.5.0-alpha.0 
 $ cargo test
 ```
