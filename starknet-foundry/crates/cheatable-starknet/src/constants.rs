@@ -10,7 +10,7 @@ pub const TEST_SEQUENCER_ADDRESS: &str = "0x1000";
 pub const TEST_ERC20_CONTRACT_ADDRESS: &str = "0x1001";
 pub const TEST_ACCOUNT_CONTRACT_ADDRESS: &str = "0x101";
 pub const MAX_FEE: u128 = 1000000 * 100000000000; // 1000000 * min_gas_price.
-pub const INITIAL_BALANCE: &str = "0x100000000000000000000000000000000000";
+pub const INITIAL_BALANCE: u128 = 10 * MAX_FEE;
 
 // Mocked class hashes, those are not checked anywhere
 pub const TEST_CLASS_HASH: &str = "0x110";
@@ -62,28 +62,22 @@ pub fn build_declare_transaction (nonce: Nonce, class_hash: ClassHash, sender_ad
 
 pub fn build_invoke_transaction (calldata: Calldata, sender_address: ContractAddress) -> InvokeTransactionV1 {    
     InvokeTransactionV1 {
-        max_fee: Fee(1000000000000000000000000000),
-        sender_address: sender_address,
+        max_fee: Fee::default(),
+        sender_address,
         calldata,
         signature: TransactionSignature::default(),
         ..Default::default()
     }
 }
 
-
 fn get_raw_contract_class(contract_path: &str) -> String {
     let path: PathBuf = [env!("CARGO_MANIFEST_DIR"), contract_path].iter().collect();
     fs::read_to_string(path).unwrap()
 }
 
-fn load_erc20_from_file(contract_path: &str) -> ContractClassV0 {
+fn load_contract_class(contract_path: &str) -> ContractClassV0 {
     let raw_contract_class = get_raw_contract_class(contract_path);
     ContractClassV0::try_from_json_string(&raw_contract_class).unwrap()
-}
-
-fn load_account_from_file(contract_path: &str) -> ContractClassV1 {
-    let raw_contract_class = get_raw_contract_class(contract_path);
-    ContractClassV1::try_from_json_string(&raw_contract_class).unwrap()
 }
 
 fn erc20_account_balance_key() -> StorageKey {
@@ -95,14 +89,14 @@ fn erc20_account_balance_key() -> StorageKey {
 // Creates a state with predeployed account and erc20 used to send transactions during tests
 pub fn build_testing_state(
 ) -> CachedState<DictStateReader> {
-    let account_class = load_account_from_file("./predeployed-contracts/account_contract.casm.json");
-    let erc20_class = load_erc20_from_file("./predeployed-contracts/erc20_contract_without_some_syscalls_compiled.json");
+    let account_class = load_contract_class("./predeployed-contracts/account_no_validations_contract.casm.json");
+    let erc20_class = load_contract_class("./predeployed-contracts/erc20_contract_without_some_syscalls_compiled.json");
     let block_context = build_block_context();
     let test_account_class_hash = ClassHash(stark_felt!(TEST_ACCOUNT_CONTRACT_CLASS_HASH));
     let test_erc20_class_hash = ClassHash(stark_felt!(TEST_ERC20_CONTRACT_CLASS_HASH));
 
     let class_hash_to_class = HashMap::from([
-        (test_account_class_hash, ContractClass::V1(account_class)),
+        (test_account_class_hash, ContractClass::V0(account_class)),
         (test_erc20_class_hash, ContractClass::V0(erc20_class)),
     ]);
 

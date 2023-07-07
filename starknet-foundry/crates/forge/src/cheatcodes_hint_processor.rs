@@ -190,8 +190,8 @@ fn call_contract(
     };
 
     let mut resources = ExecutionResources::default();
-    let block_context = build_block_context(); // TODO
     let account_context = build_transaction_context();
+    let block_context = build_block_context();
 
     let mut context = EntryPointExecutionContext::new(
         block_context.clone(),
@@ -372,7 +372,9 @@ fn execute_cheatcode_hint(
                     nonce,
                     ..tx
                 }));
-            let tx_result = account_tx.execute(blockifier_state, &block_context).unwrap();
+            let tx_result = account_tx
+                .execute(blockifier_state, &block_context)
+                .expect("Failed to execute deploy transaction");
             let return_data = tx_result
                 .execute_call_info
                 .expect("Failed to get execution data from method")
