@@ -6,15 +6,10 @@ on:
 
 jobs:
   test-forge:
+    name: Test Forge
     env:
       SCARB_VERSION: "0.5.0-alpha.0"
-    name: test ${{ matrix.runner.name }}
-    runs-on: ${{ matrix.os.runner }}
-    strategy:
-      matrix:
-          # TODO: do we want macs as well?
-          # TODO: Windows {runner: windows-latest, name: windows x86-64 }
-          os : [{runner: ubuntu-latest, name: linux x86-64 }]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
@@ -27,13 +22,8 @@ jobs:
       - run: cargo test --manifest-path ./starknet-foundry/Cargo.toml -p forge
 
   test-cast:
-    name: test ${{ matrix.runner.name }}
-    runs-on: ${{ matrix.os.runner }}
-    strategy:
-      matrix:
-          # TODO: do we want macs as well?
-          # TODO: Windows {runner: windows-latest, name: windows x86-64 }
-          os : [{runner: ubuntu-latest, name: linux x86-64 }]
+    name: Test Cast
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
@@ -43,6 +33,7 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.9'
+          cache: 'pip'
       - name: Install devnet
         run: |
             sudo apt install -y libgmp3-dev
