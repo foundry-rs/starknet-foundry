@@ -1,8 +1,9 @@
 use std::collections::HashMap;
 
 use anyhow::{Context, Result};
-use blockifier::transaction::transaction_utils_for_protostar::create_state_with_trivial_validation_account;
+// use blockifier::transaction::transaction_utils_for_protostar::create_state_with_trivial_validation_account;
 use cairo_vm::serde::deserialize_program::HintParams;
+use cheatable_starknet::constants::build_testing_state;
 use itertools::chain;
 
 use cairo_lang_casm::hints::Hint;
@@ -63,11 +64,11 @@ pub(crate) fn run_from_test_config(
         runner: Some(runner),
         starknet_state: StarknetState::default(),
         string_to_hint,
-        blockifier_state: Some(create_state_with_trivial_validation_account()),
+        blockifier_state: None,
     };
     let mut cairo_hint_processor = CairoHintProcessor {
         original_cairo_hint_processor: core_cairo_hint_processor,
-        blockifier_state: Some(create_state_with_trivial_validation_account()),
+        blockifier_state: Some(build_testing_state()),
     };
     let result = runner
         .run_function(

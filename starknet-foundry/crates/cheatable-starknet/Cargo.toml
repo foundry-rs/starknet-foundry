@@ -7,8 +7,8 @@ edition = "2021"
 testing = []
 
 [dependencies]
-blockifier = { git = "https://github.com/starkware-libs/blockifier.git", rev = "9238b4d" }
-starknet_api = { git = "https://github.com/starkware-libs/starknet-api", rev = "a4c78ff" }
+blockifier.workspace = true
+starknet_api.workspace = true
 cairo-felt-blockifier = { path = "../compatibility/cairo-felt-blockifier" }
 
 
