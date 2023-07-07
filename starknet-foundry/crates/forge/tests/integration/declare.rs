@@ -80,3 +80,96 @@ fn simple_declare() {
 
     assert_passed!(result);
 }
+
+#[test]
+fn multiple_declare() {
+    let test = test_case!(
+        indoc!(
+            r#"
+        use result::ResultTrait;
+
+        #[test]
+        fn multiple_contracts() {
+            let class_hash = declare('HelloStarknet').unwrap();
+            assert(class_hash != 0, 'proper class hash');
+        
+            let class_hash2 = declare('Contract1').unwrap();
+            assert(class_hash2 != 0, 'proper class hash');
+        
+            assert(class_hash != class_hash2, 'class hashes neq');
+        }
+        "#
+        ),
+        contract!(
+            "HelloStarknet",
+            indoc!(
+                r#"
+                #[starknet::contract]
+                mod HelloStarknet {
+                    #[storage]
+                    struct Storage {
+                        balance: felt252,
+                    }
+        
+                    // Increases the balance by the given amount.
+                    #[external]
+                    fn increase_balance(ref self: ContractState, amount: felt252) {
+                        self.balance.write(self.balance.read() + amount);
+                    }
+        
+                    // Decreases the balance by the given amount.
+                    #[external]
+                    fn decrease_balance(ref self: ContractState, amount: felt252) {
+                        self.balance.write(self.balance.read() - amount);
+                    }
+                }
+                "#
+            )
+        ),
+        contract!(
+            "Contract1",
+            indoc!(
+                r#"
+                #[starknet::interface]
+                trait IContract1<TContractState> {
+                    fn increase_balance(ref self: TContractState, amount: felt252);
+                    fn get_balance(self: @TContractState) -> felt252;
+                }
+                
+                #[starknet::contract]
+                mod Contract1 {
+                    #[storage]
+                    struct Storage {
+                        balance: felt252,
+                    }
+                
+                    #[external(v0)]
+                    impl Contract1Impl of super::IContract1<ContractState> {
+                        // Increases the balance by the given amount.
+                        fn increase_balance(ref self: ContractState, amount: felt252) {
+                            assert(amount != 0, 'Amount cannot be 0');
+                            self.balance.write(self.balance.read() + amount);
+                        }
+                
+                        // Returns the current balance.
+                        fn get_balance(self: @ContractState) -> felt252 {
+                            self.balance.read()
+                        }
+                    }
+                }
+                "#
+            )
+        )
+    );
+
+    let result = run(
+        &test.path().unwrap(),
+        Some(test.linked_libraries()),
+        &Default::default(),
+        Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
+        &test.contracts(corelib().path()).unwrap(),
+    )
+    .unwrap();
+
+    assert_passed!(result);
+}
