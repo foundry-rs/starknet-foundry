@@ -1,6 +1,6 @@
 use crate::common::corelib::corelib;
 use crate::common::runner::Contract;
-use crate::{assert_passed, contract, test_case};
+use crate::{assert_failed, assert_passed, contract, test_case};
 use camino::Utf8PathBuf;
 use forge::run;
 use indoc::indoc;
@@ -26,6 +26,28 @@ fn simple() {
     .unwrap();
 
     assert_passed!(result);
+}
+
+#[test]
+fn failing() {
+    let test = test_case!(indoc!(
+        r#"#[test]
+        fn test_two_and_three() {
+            assert(2 == 3, '2 == 3');
+        }
+    "#
+    ));
+
+    let result = run(
+        &test.path().unwrap(),
+        Some(test.linked_libraries()),
+        &Default::default(),
+        Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
+        &test.contracts(corelib().path()).unwrap(),
+    )
+    .unwrap();
+
+    assert_failed!(result);
 }
 
 #[test]
@@ -210,4 +232,33 @@ fn simple_declare_from_contract_code() {
     .unwrap();
 
     assert_passed!(result);
+}
+
+// TODO: Restore this test once we correctly handle panic data
+#[ignore]
+#[test]
+fn declare_unknown() {
+    let test = test_case!(indoc!(
+        r#"
+        use result::ResultTrait;
+
+        #[test]
+        fn test_declare_simple() {
+            assert(1 == 1, 'simple check');
+            let class_hash = declare('Unknown').unwrap();
+            assert(class_hash != 0, 'proper class hash');
+        }
+        "#
+    ));
+
+    let result = run(
+        &test.path().unwrap(),
+        Some(test.linked_libraries()),
+        &Default::default(),
+        Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
+        &test.contracts(corelib().path()).unwrap(),
+    )
+    .unwrap();
+
+    assert_failed!(result);
 }

@@ -12,7 +12,7 @@ use camino::Utf8PathBuf;
 use forge::scarb::StarknetContractArtifacts;
 use std::collections::HashMap;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::sync::Arc;
 use test_collector::LinkedLibrary;
 
@@ -152,5 +152,14 @@ macro_rules! assert_passed {
                 .iter()
                 .all(forge::TestUnitSummary::passed)
         }));
+    }};
+}
+
+#[macro_export]
+macro_rules! assert_failed {
+    ($result:expr) => {{
+        assert!($result
+            .iter()
+            .all(|result| { result.test_unit_summaries.iter().all(|us| !us.passed()) }));
     }};
 }
