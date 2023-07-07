@@ -1,4 +1,6 @@
-use crate::starknet_commands::{call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall};
+use crate::starknet_commands::{
+    call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
+};
 use anyhow::{bail, Result};
 use camino::Utf8PathBuf;
 use cast::{get_account, get_block_id, get_network, get_provider, print_formatted};
@@ -187,9 +189,14 @@ async fn main() -> Result<()> {
             Ok(())
         }
         Commands::Multicall(multicall) => {
-            let mut account =
-                get_account(&cli.account, &accounts_file_path, &provider, &network)?;
-            starknet_commands::multicall::multicall(&multicall.path, &mut account, cli.int_format, cli.json).await?;
+            let mut account = get_account(&cli.account, &accounts_file_path, &provider, &network)?;
+            starknet_commands::multicall::multicall(
+                &multicall.path,
+                &mut account,
+                cli.int_format,
+                cli.json,
+            )
+            .await?;
             Ok(())
         }
     }
