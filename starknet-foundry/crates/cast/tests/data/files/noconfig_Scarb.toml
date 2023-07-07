@@ -1,0 +1,12 @@
+[package]
+name = "noconfig"
+version = "0.1.0"
+
+[dependencies]
+starknet = ">=1.1.1"
+
+[[target.starknet-contract]]
+casm = true
+
+[lib]
+sierra = false
