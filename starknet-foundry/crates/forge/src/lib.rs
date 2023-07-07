@@ -67,17 +67,10 @@ struct TestsFromFile {
 fn collect_tests_from_directory(
     input_path: &Utf8PathBuf,
     linked_libraries: Option<Vec<LinkedLibrary>>,
-    corelib_path: Option<&Utf8PathBuf>,
     runner_config: &RunnerConfig,
 ) -> Result<Vec<TestsFromFile>> {
     let test_files = find_cairo_files_in_directory(input_path)?;
-    internal_collect_tests(
-        input_path,
-        linked_libraries,
-        test_files,
-        corelib_path,
-        runner_config,
-    )
+    internal_collect_tests(input_path, linked_libraries, test_files, runner_config)
 }
 
 fn find_cairo_files_in_directory(input_path: &Utf8PathBuf) -> Result<Vec<Utf8PathBuf>> {
@@ -103,7 +96,6 @@ fn internal_collect_tests(
     input_path: &Utf8PathBuf,
     linked_libraries: Option<Vec<LinkedLibrary>>,
     test_files: Vec<Utf8PathBuf>,
-    corelib_path: Option<&Utf8PathBuf>,
     runner_config: &RunnerConfig,
 ) -> Result<Vec<TestsFromFile>> {
     let builtins = vec![
@@ -126,7 +118,6 @@ fn internal_collect_tests(
             None,
             linked_libraries.clone(),
             Some(builtins.clone()),
-            corelib_path.map(|corelib_path| corelib_path.as_str()),
         )?;
 
         let tests_configs = strip_path_from_test_names(tests_configs)?;
@@ -151,10 +142,8 @@ pub fn run(
     input_path: &Utf8PathBuf,
     linked_libraries: Option<Vec<LinkedLibrary>>,
     runner_config: &RunnerConfig,
-    corelib_path: Option<&Utf8PathBuf>,
 ) -> Result<()> {
-    let tests =
-        collect_tests_from_directory(input_path, linked_libraries, corelib_path, runner_config)?;
+    let tests = collect_tests_from_directory(input_path, linked_libraries, runner_config)?;
 
     pretty_printing::print_collected_tests_count(
         tests.iter().map(|tests| tests.tests_configs.len()).sum(),
