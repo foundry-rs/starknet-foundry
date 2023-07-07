@@ -63,7 +63,6 @@ pub(crate) fn run_from_test_config(
         runner: Some(runner),
         starknet_state: StarknetState::default(),
         string_to_hint,
-        blockifier_state: Some(create_state_with_trivial_validation_account()),
     };
     let mut cairo_hint_processor = CairoHintProcessor {
         original_cairo_hint_processor: core_cairo_hint_processor,
