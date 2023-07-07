@@ -38,10 +38,22 @@ fn get_tool_property(
 }
 
 pub fn parse_scarb_config(profile: Option<String>, path: Option<Utf8PathBuf>) -> Result<ScarbConfig> {
-    let path = find_manifest_path(path.as_ref().map(|buf| buf.as_path())).expect("Failed to obtain Scarb.toml file path");
+    let manifest_path = find_manifest_path(path.as_ref().map(|buf| buf.as_path())).expect("Failed to obtain Scarb.toml file path");
+
+    if let Some(manifest_path) = path {
+        if !manifest_path.exists() {
+            return bail! {"{manifest_path} file does not exist!"}};
+    } else {
+        return Ok(ScarbConfig {
+            rpc_url: String::new(),
+            network: String::new(),
+            account: String::new(),
+        });
+    }
+
     let metadata = scarb_metadata::MetadataCommand::new()
         .inherit_stderr()
-        .manifest_path(&path)
+        .manifest_path(&manifest_path)
         .no_deps()
         .exec()
         .context(
@@ -100,10 +112,19 @@ mod tests {
 
     #[test]
     fn test_parse_scarb_config_not_found() {
-        let config = parse_scarb_config(None, None).unwrap_err();
+        let config = parse_scarb_config(None, Some(Utf8PathBuf::from("whatever/Scarb.toml"))).unwrap_err();
         assert!(config.to_string().contains(
-            "Failed to read Scarb.toml manifest file, not found in current nor parent directories"
+            "file does not exist!"
         ));
+    }
+
+    #[test]
+    fn test_parse_scarb_config_no_path_not_found() {
+        let config = parse_scarb_config(None, None).unwrap();
+
+        assert_eq!(config.rpc_url.is_empty(), true);
+        assert_eq!(config.network.is_empty(), true);
+        assert_eq!(config.account.is_empty(), true);
     }
 
     #[test]
