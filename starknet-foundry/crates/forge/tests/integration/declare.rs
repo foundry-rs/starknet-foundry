@@ -1,8 +1,10 @@
 use crate::common::corelib::corelib;
+use crate::common::runner::Contract;
 use crate::{assert_passed, contract, test_case};
 use camino::Utf8PathBuf;
 use forge::run;
 use indoc::indoc;
+use std::path::Path;
 
 #[test]
 fn simple() {
@@ -160,6 +162,42 @@ fn multiple_declare() {
                 "#
             )
         )
+    );
+
+    let result = run(
+        &test.path().unwrap(),
+        Some(test.linked_libraries()),
+        &Default::default(),
+        Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
+        &test.contracts(corelib().path()).unwrap(),
+    )
+    .unwrap();
+
+    assert_passed!(result);
+}
+
+#[test]
+fn simple_declare_from_contract_code() {
+    let contract = Contract::from_code_path(
+        "Contract1".to_string(),
+        Path::new("./tests/data/declare_test/src/contract1.cairo"),
+    )
+    .unwrap();
+
+    let test = test_case!(
+        indoc!(
+            r#"
+        use result::ResultTrait;
+
+        #[test]
+        fn test_declare_simple() {
+            assert(1 == 1, 'simple check');
+            let class_hash = declare('Contract1').unwrap();
+            assert(class_hash != 0, 'proper class hash');
+        }
+        "#
+        ),
+        contract
     );
 
     let result = run(

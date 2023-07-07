@@ -11,7 +11,8 @@ use cairo_lang_starknet::plugin::StarkNetPlugin;
 use camino::Utf8PathBuf;
 use forge::scarb::StarknetContractArtifacts;
 use std::collections::HashMap;
-use std::path::Path;
+use std::fs;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use test_collector::LinkedLibrary;
 
@@ -24,6 +25,11 @@ pub struct Contract {
 impl Contract {
     pub fn new(name: String, code: String) -> Self {
         Self { name, code }
+    }
+
+    pub fn from_code_path(name: String, path: &Path) -> Result<Self> {
+        let code = fs::read_to_string(path)?;
+        Ok(Self { name, code })
     }
 
     pub fn sierra(self, corelib_path: &Path) -> Result<String> {
