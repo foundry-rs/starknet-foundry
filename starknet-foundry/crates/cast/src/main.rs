@@ -1,14 +1,9 @@
-use crate::helpers::{
-    errors::{MissingAccountError, MissingRpcUrlError},
-    scarb_utils::{parse_scarb_config, ScarbConfig},
-}; // todo: cleanup imports
+use crate::helpers::scarb_utils::{parse_scarb_config};
 use crate::starknet_commands::{call::Call, declare::Declare, deploy::Deploy, invoke::Invoke};
 use anyhow::{bail, Result};
-use camino::{Utf8Path, Utf8PathBuf};
-use cast::{get_account, get_block_id, get_network, get_provider, print_formatted};
+use camino::Utf8PathBuf;
+use cast::{get_account, get_block_id, get_provider, print_formatted};
 use clap::{Parser, Subcommand};
-use console::style;
-use std::path::Path;
 
 mod helpers;
 mod starknet_commands;

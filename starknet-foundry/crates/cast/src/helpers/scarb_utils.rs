@@ -1,12 +1,10 @@
 use anyhow::{anyhow, bail, Context, Error, Result};
-use camino::{Utf8Path, Utf8PathBuf};
+use camino::Utf8PathBuf;
 use scarb::ops::find_manifest_path;
 use scarb_metadata;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::BTreeMap;
-use std::env::current_dir;
-use std::process::Command;
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct ScarbConfig {
@@ -17,7 +15,7 @@ pub struct ScarbConfig {
 
 fn get_tool_property(
     tool: &Option<BTreeMap<String, Value>>,
-    profile: Option<String>,
+    profile: &Option<String>,
     property: &str,
 ) -> Result<String, Error> {
     let profiled = tool.as_ref().and_then(|t| t.get("protostar"));
@@ -26,14 +24,14 @@ fn get_tool_property(
         Some(ref p) => profiled
             .and_then(|t| t.get(p))
             .and_then(|t| t.get(property))
-            .and_then(|t| t.as_str())
+            .and_then(serde_json::Value::as_str)
             .map(String::from)
             .ok_or(anyhow!(
                 "Profile or property not found in Scarb.toml: {p}, {property}"
             )),
         None => profiled
             .and_then(|t| t.get(property))
-            .and_then(|t| t.as_str())
+            .and_then(serde_json::Value::as_str)
             .map(String::from)
             .ok_or(anyhow!("Property not found in tool: {property}")),
     }
@@ -43,12 +41,12 @@ pub fn parse_scarb_config(
     profile: Option<String>,
     path: Option<Utf8PathBuf>,
 ) -> Result<ScarbConfig> {
-    let manifest_path = find_manifest_path(path.as_ref().map(|buf| buf.as_path()))
+    let manifest_path = find_manifest_path(path.as_ref().map(camino::Utf8PathBuf::as_path))
         .expect("Failed to obtain Scarb.toml file path");
 
     if let Some(manifest_path) = path {
         if !manifest_path.exists() {
-            return bail! {"{manifest_path} file does not exist!"};
+            bail! {"{manifest_path} file does not exist!"};
         };
     } else {
         return Ok(ScarbConfig {
@@ -69,22 +67,21 @@ pub fn parse_scarb_config(
 
     let package = &metadata.packages[0].manifest_metadata.tool;
 
-    let url = get_tool_property(package, profile.clone(), "rpc_url")?;
-    let network = get_tool_property(package, profile.clone(), "network")?;
-    let account = get_tool_property(package, profile.clone(), "account")?;
+    let rpc_url = get_tool_property(package, &profile, "rpc_url")?;
+    let network = get_tool_property(package, &profile, "network")?;
+    let account = get_tool_property(package, &profile, "account")?;
 
     Ok(ScarbConfig {
-        rpc_url: url,
-        network: network,
-        account: account,
+        rpc_url,
+        network,
+        account,
     })
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::helpers::scarb_utils::{parse_scarb_config, ScarbConfig};
-    use camino::{Utf8Path, Utf8PathBuf};
-    use std::env;
+    use crate::helpers::scarb_utils::parse_scarb_config;
+    use camino::Utf8PathBuf;
 
     #[test]
     fn test_parse_scarb_config_happy_case_with_profile() {
@@ -122,9 +119,9 @@ mod tests {
     fn test_parse_scarb_config_no_path_not_found() {
         let config = parse_scarb_config(None, None).unwrap();
 
-        assert_eq!(config.rpc_url.is_empty(), true);
-        assert_eq!(config.network.is_empty(), true);
-        assert_eq!(config.account.is_empty(), true);
+        assert!(config.rpc_url.is_empty());
+        assert!(config.network.is_empty());
+        assert!(config.account.is_empty());
     }
 
     #[test]

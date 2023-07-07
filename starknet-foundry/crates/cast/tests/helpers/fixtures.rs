@@ -1,9 +1,8 @@
 use crate::helpers::constants::{
     ACCOUNT, ACCOUNT_FILE_PATH, CONTRACTS_DIR, MAP_CONTRACT_ADDRESS, NETWORK, URL,
 };
-use anyhow::Result;
 use camino::Utf8PathBuf;
-use cast::{get_account, get_network, get_provider, parse_number};
+use cast::{get_account, get_provider, parse_number};
 use serde_json::{json, Value};
 use starknet::accounts::{Account, Call};
 use starknet::contract::ContractFactory;
@@ -147,6 +146,5 @@ pub async fn get_transaction_receipt(tx_hash: FieldElement) -> TransactionReceip
 
 pub fn create_test_provider() -> JsonRpcClient<HttpTransport> {
     let parsed_url = Url::parse(URL).unwrap();
-    let provider = JsonRpcClient::new(HttpTransport::new(parsed_url));
-    return provider;
+    JsonRpcClient::new(HttpTransport::new(parsed_url))
 }
