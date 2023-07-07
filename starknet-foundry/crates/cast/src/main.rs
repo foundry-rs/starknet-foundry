@@ -1,26 +1,37 @@
 use crate::starknet_commands::{call::Call, declare::Declare, deploy::Deploy, invoke::Invoke};
+use crate::helpers::scarb_utils::{parse_scarb_config, ScarbConfig};
 use anyhow::{bail, Result};
-use camino::Utf8PathBuf;
+use camino::{Utf8Path, Utf8PathBuf};
 use cast::{get_account, get_block_id, get_network, get_provider, print_formatted};
 use clap::{Parser, Subcommand};
 use console::style;
+use std::path::Path;
 
 mod starknet_commands;
+mod helpers;
 
 #[derive(Parser)]
 #[command(version)]
 #[command(about = "cast - a starknet-foundry CLI", long_about = None)]
 struct Cli {
-    /// RPC provider url address
+    /// Profile name in Scarb.toml config file
+    #[clap(short, long)]
+    profile: Option<String>,
+
+    /// Path to Scarb.toml that is to be used; overrides default behaviour of searching for scarb.toml in current or parent directories
+    #[clap(short, long)]
+    override_project: Option<Utf8PathBuf>,
+
+    /// RPC provider url address; overrides rpc_url from Scarb.toml
     #[clap(short = 'u', long = "url")]
     rpc_url: String,
 
-    /// Network name, one of: testnet, testnet2, mainnet
+    /// Network name, one of: testnet, testnet2, mainnet; overrides network from Scarb.toml
     #[clap(short = 'n', long = "network")]
     network: Option<String>,
 
-    /// Account name to be used for contract declaration, defaults to __default__
-    #[clap(short = 'a', long = "account", default_value = "__default__")]
+    /// Account name to be used for contract declaration; overrides rpc_url from Scarb.toml
+    #[clap(short = 'a', long = "account")]
     account: String,
 
     /// Path to the file holding accounts info, defaults to ~/.starknet_accounts/starknet_open_zeppelin_accounts.json
@@ -74,7 +85,7 @@ async fn main() -> Result<()> {
         std::process::exit(1);
     });
     let network = get_network(&network_name)?;
-    let provider = get_provider(&cli.rpc_url, &network)?;
+    let provider = get_provider(&cli.rpc_url, &network).await?;
 
     match cli.command {
         Commands::Declare(declare) => {
