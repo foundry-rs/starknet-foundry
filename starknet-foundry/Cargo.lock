@@ -1595,6 +1595,7 @@ dependencies = [
  "primitive-types 0.12.1",
  "project-root",
  "rand",
+ "reqwest",
  "scarb-metadata",
  "serde",
  "serde_json",
