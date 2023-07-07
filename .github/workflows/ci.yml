@@ -7,7 +7,7 @@ on:
 jobs:
   test-forge:
     env:
-      SCARB_VERSION: "0.4.1"
+      SCARB_VERSION: "0.5.0-alpha.0"
     name: test ${{ matrix.runner.name }}
     runs-on: ${{ matrix.os.runner }}
     strategy:
@@ -43,14 +43,17 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.9'
-      - run: sudo apt install -y libgmp3-dev
-      - run: pip install starknet-devnet
-      - uses: asdf-vm/actions/setup@v2
-      - name: Prepare for cast tests
+      - name: Install devnet
         run: |
-          bash ./starknet-foundry/crates/cast/tests/utils/prepare_for_tests.sh &&\
-          bash ./starknet-foundry/crates/cast/tests/utils/build_contracts.sh
-      - run: cargo test --manifest-path ./starknet-foundry/Cargo.toml -p cast
+            sudo apt install -y libgmp3-dev
+            pip install starknet-devnet
+      - uses: asdf-vm/actions/setup@v2
+      - name: Prepare for tests
+        run: bash ./starknet-foundry/crates/cast/tests/utils/prepare_for_tests.sh
+      - name: Build test contracts
+        run: bash ./starknet-foundry/crates/cast/tests/utils/build_contracts.sh
+      - name: Run tests
+        run: cargo test --manifest-path ./starknet-foundry/Cargo.toml -p cast
 
   rustfmt:
     runs-on: ubuntu-latest
