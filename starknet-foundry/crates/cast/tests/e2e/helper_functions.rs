@@ -1,5 +1,4 @@
 //todo: move to integration
-
 use crate::helpers::constants::{NETWORK, URL};
 use crate::helpers::fixtures::create_test_provider;
 
@@ -16,9 +15,18 @@ async fn test_get_provider() {
 
 #[tokio::test]
 async fn test_get_provider_invalid_url() {
-    let provider = get_provider("", NETWORK);
+    let provider = get_provider("what", NETWORK);
     let err = provider.await.unwrap_err();
     assert!(err.is::<ParseError>());
+}
+
+#[tokio::test]
+async fn test_get_provider_empty_url() {
+    let provider = get_provider("", NETWORK);
+    let err = provider.await.unwrap_err();
+    assert!(err
+        .to_string()
+        .contains("RPC url not passed nor found in Scarb.toml"));
 }
 
 #[tokio::test]

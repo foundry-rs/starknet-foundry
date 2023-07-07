@@ -78,7 +78,7 @@ async fn main() -> Result<()> {
         bail! {"Accounts file {} does not exist! Make sure to supply correct path to accounts file.", cli.accounts_file_path}
     }
 
-    let config = parse_scarb_config(&cli.profile, cli.override_project)?; // todo: add tests for things from main that are here? and below
+    let config = parse_scarb_config(&cli.profile, cli.override_project)?;
 
     let rpc_url = cli.rpc_url.unwrap_or(config.rpc_url);
     let network = cli.network.unwrap_or(config.network);

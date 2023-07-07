@@ -69,6 +69,9 @@ impl Network {
 }
 
 pub async fn get_provider(url: &str, network: &str) -> Result<JsonRpcClient<HttpTransport>> {
+    if url.is_empty() {
+        bail!("RPC url not passed nor found in Scarb.toml")
+    }
     let parsed_url = Url::parse(url)?;
     if network.is_empty() {
         bail!("Network not passed nor found in Scarb.toml")
