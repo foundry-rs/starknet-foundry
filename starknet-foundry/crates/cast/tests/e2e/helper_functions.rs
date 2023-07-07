@@ -1,6 +1,6 @@
 //todo: move to integration
 
-use crate::helpers::constants::{URL, NETWORK};
+use crate::helpers::constants::{NETWORK, URL};
 use crate::helpers::fixtures::create_test_provider;
 
 use camino::Utf8PathBuf;
@@ -29,7 +29,6 @@ async fn test_get_provider_no_network() {
         .to_string()
         .contains("Network not passed nor found in Scarb.toml"));
 }
-
 
 #[tokio::test]
 async fn test_get_provider_wrong_network() {

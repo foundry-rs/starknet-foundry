@@ -28,7 +28,9 @@ fn get_tool_property(
             .and_then(|t| t.get(property))
             .and_then(|t| t.as_str())
             .map(String::from)
-            .ok_or(anyhow!("Profile or property not found in Scarb.toml: {p}, {property}")),
+            .ok_or(anyhow!(
+                "Profile or property not found in Scarb.toml: {p}, {property}"
+            )),
         None => profiled
             .and_then(|t| t.get(property))
             .and_then(|t| t.as_str())
@@ -37,12 +39,17 @@ fn get_tool_property(
     }
 }
 
-pub fn parse_scarb_config(profile: Option<String>, path: Option<Utf8PathBuf>) -> Result<ScarbConfig> {
-    let manifest_path = find_manifest_path(path.as_ref().map(|buf| buf.as_path())).expect("Failed to obtain Scarb.toml file path");
+pub fn parse_scarb_config(
+    profile: Option<String>,
+    path: Option<Utf8PathBuf>,
+) -> Result<ScarbConfig> {
+    let manifest_path = find_manifest_path(path.as_ref().map(|buf| buf.as_path()))
+        .expect("Failed to obtain Scarb.toml file path");
 
     if let Some(manifest_path) = path {
         if !manifest_path.exists() {
-            return bail! {"{manifest_path} file does not exist!"}};
+            return bail! {"{manifest_path} file does not exist!"};
+        };
     } else {
         return Ok(ScarbConfig {
             rpc_url: String::new(),
@@ -89,10 +96,7 @@ mod tests {
 
         assert_eq!(config.account, String::from("user1"));
         assert_eq!(config.network, String::from("testnet"));
-        assert_eq!(
-            config.rpc_url,
-            String::from("http://127.0.0.1:5055/rpc")
-        );
+        assert_eq!(config.rpc_url, String::from("http://127.0.0.1:5055/rpc"));
     }
 
     #[test]
@@ -104,18 +108,14 @@ mod tests {
         .unwrap();
         assert_eq!(config.account, String::from("user2"));
         assert_eq!(config.network, String::from("testnet"));
-        assert_eq!(
-            config.rpc_url,
-            String::from("http://127.0.0.1:5055/rpc")
-        );
+        assert_eq!(config.rpc_url, String::from("http://127.0.0.1:5055/rpc"));
     }
 
     #[test]
     fn test_parse_scarb_config_not_found() {
-        let config = parse_scarb_config(None, Some(Utf8PathBuf::from("whatever/Scarb.toml"))).unwrap_err();
-        assert!(config.to_string().contains(
-            "file does not exist!"
-        ));
+        let config =
+            parse_scarb_config(None, Some(Utf8PathBuf::from("whatever/Scarb.toml"))).unwrap_err();
+        assert!(config.to_string().contains("file does not exist!"));
     }
 
     #[test]
@@ -134,7 +134,9 @@ mod tests {
             Some(Utf8PathBuf::from("tests/data/files/noconfig_Scarb.toml")),
         )
         .unwrap_err();
-        assert!(config.to_string().contains("Property not found in tool: rpc_url"));
+        assert!(config
+            .to_string()
+            .contains("Property not found in tool: rpc_url"));
     }
 
     #[test]
@@ -144,7 +146,9 @@ mod tests {
             Some(Utf8PathBuf::from("tests/data/contracts/balance/Scarb.toml")),
         )
         .unwrap_err();
-        assert!(config.to_string().contains("Profile or property not found in Scarb.toml: mariusz, rpc_url"));
+        assert!(config
+            .to_string()
+            .contains("Profile or property not found in Scarb.toml: mariusz, rpc_url"));
     }
 
     #[test]
@@ -154,6 +158,8 @@ mod tests {
             Some(Utf8PathBuf::from("tests/data/files/somemissing_Scarb.toml")),
         )
         .unwrap_err();
-        assert!(config.to_string().contains("Property not found in tool: account"));
+        assert!(config
+            .to_string()
+            .contains("Property not found in tool: account"));
     }
 }

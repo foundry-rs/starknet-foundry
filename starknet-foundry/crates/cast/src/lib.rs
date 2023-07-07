@@ -108,7 +108,8 @@ pub fn get_account<'a>(
     if network.is_empty() {
         bail!("Network not passed nor found in Scarb.toml")
     }
-    let account_info = get_account_info(name, get_network(network)?.get_value(), accounts_file_path)?;
+    let account_info =
+        get_account_info(name, get_network(network)?.get_value(), accounts_file_path)?;
     let signer = LocalWallet::from(SigningKey::from_secret_scalar(
         FieldElement::from_hex_be(&account_info.private_key).with_context(|| {
             format!(
@@ -123,7 +124,12 @@ pub fn get_account<'a>(
             &account_info.address
         )
     })?;
-    let account = SingleOwnerAccount::new(provider, signer, address, get_network(network)?.get_chain_id());
+    let account = SingleOwnerAccount::new(
+        provider,
+        signer,
+        address,
+        get_network(network)?.get_chain_id(),
+    );
 
     Ok(account)
 }

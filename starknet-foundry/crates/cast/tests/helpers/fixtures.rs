@@ -11,14 +11,16 @@ use starknet::core::types::contract::{CompiledClass, SierraClass};
 use starknet::core::types::FieldElement;
 use starknet::core::types::TransactionReceipt;
 use starknet::core::utils::get_selector_from_name;
-use std::collections::HashMap;
-use std::sync::Arc;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
+use std::collections::HashMap;
+use std::sync::Arc;
 use url::Url;
 
 pub async fn declare_deploy_simple_balance_contract() {
-    let provider = get_provider(URL, NETWORK).await.expect("Could not get the provider");
+    let provider = get_provider(URL, NETWORK)
+        .await
+        .expect("Could not get the provider");
     let account = get_account(
         ACCOUNT,
         &Utf8PathBuf::from(ACCOUNT_FILE_PATH),
@@ -60,7 +62,9 @@ pub async fn declare_deploy_simple_balance_contract() {
 }
 
 pub async fn invoke_map_contract(key: &str, value: &str) {
-    let provider = get_provider(URL, NETWORK).await.expect("Could not get the provider");
+    let provider = get_provider(URL, NETWORK)
+        .await
+        .expect("Could not get the provider");
     let account = get_account(
         ACCOUNT,
         &Utf8PathBuf::from(ACCOUNT_FILE_PATH),
@@ -144,5 +148,5 @@ pub async fn get_transaction_receipt(tx_hash: FieldElement) -> TransactionReceip
 pub fn create_test_provider() -> JsonRpcClient<HttpTransport> {
     let parsed_url = Url::parse(URL).unwrap();
     let provider = JsonRpcClient::new(HttpTransport::new(parsed_url));
-    return provider
+    return provider;
 }
