@@ -11,11 +11,11 @@ use blockifier::abi::abi_utils::selector_from_name;
 use blockifier::execution::contract_class::{
     ContractClass as BlockifierContractClass, ContractClassV1,
 };
-use blockifier::execution::entry_point::{CallEntryPoint, CallType, ExecutionResources, EntryPointExecutionContext};
+use blockifier::execution::entry_point::{
+    CallEntryPoint, CallType, EntryPointExecutionContext, ExecutionResources,
+};
 use blockifier::state::cached_state::CachedState;
 use blockifier::state::state_api::StateReader;
-use cheatable_starknet::constants::{TEST_ACCOUNT_CONTRACT_ADDRESS, build_block_context, build_transaction_context, build_declare_transaction, build_invoke_transaction};
-use cheatable_starknet::state::DictStateReader;
 use blockifier::transaction::account_transaction::AccountTransaction;
 use blockifier::transaction::transactions::{DeclareTransaction, ExecutableTransaction};
 use cairo_felt::Felt252;
@@ -37,14 +37,18 @@ use cairo_vm::types::relocatable::{MaybeRelocatable, Relocatable};
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::vm_core::VirtualMachine;
+use cheatable_starknet::constants::{
+    build_block_context, build_declare_transaction, build_invoke_transaction,
+    build_transaction_context, TEST_ACCOUNT_CONTRACT_ADDRESS,
+};
+use cheatable_starknet::state::DictStateReader;
 use num_traits::{Num, ToPrimitive};
 use serde::Deserialize;
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, PatriciaKey};
 use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::hash::{StarkFelt, StarkHash};
 use starknet_api::transaction::{
-    Calldata, ContractAddressSalt, InvokeTransaction,
-    InvokeTransactionV1,
+    Calldata, ContractAddressSalt, InvokeTransaction, InvokeTransactionV1,
 };
 use starknet_api::{patricia_key, stark_felt};
 
@@ -199,7 +203,9 @@ fn call_contract(
         block_context.invoke_tx_max_n_steps,
     );
 
-    let call_info = entry_point.execute(blockifier_state, &mut resources, &mut context).unwrap();
+    let call_info = entry_point
+        .execute(blockifier_state, &mut resources, &mut context)
+        .unwrap();
 
     let raw_return_data = &call_info.execution.retdata.0;
     assert!(!call_info.execution.failed);
@@ -299,11 +305,16 @@ fn execute_cheatcode_hint(
                 )))
                 .expect("Failed to get nonce");
 
-            let declare_tx = build_declare_transaction(nonce, class_hash, ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS)));
+            let declare_tx = build_declare_transaction(
+                nonce,
+                class_hash,
+                ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS)),
+            );
             let tx = DeclareTransaction::new(
                 starknet_api::transaction::DeclareTransaction::V2(declare_tx),
                 contract_class,
-            ).unwrap_or_else(|err| panic!("Unable to build transaction {:?}", err));
+            )
+            .unwrap_or_else(|err| panic!("Unable to build transaction {:?}", err));
 
             let account_tx = AccountTransaction::Declare(tx);
             let mut block_context = build_block_context();

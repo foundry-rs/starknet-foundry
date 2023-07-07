@@ -1,8 +1,27 @@
-use std::{collections::HashMap, path::PathBuf, fs};
+use std::{collections::HashMap, fs, path::PathBuf};
 
-use blockifier::{block_context::BlockContext, transaction::objects::AccountTransactionContext, execution::{execution_utils::felt_to_stark_felt, contract_class::{ContractClassV1, ContractClassV0, ContractClass}}, state::cached_state::CachedState, abi::abi_utils::get_storage_var_address};
+use blockifier::{
+    abi::abi_utils::get_storage_var_address,
+    block_context::BlockContext,
+    execution::{
+        contract_class::{ContractClass, ContractClassV0},
+        execution_utils::felt_to_stark_felt,
+    },
+    state::cached_state::CachedState,
+    transaction::objects::AccountTransactionContext,
+};
 use cairo_felt_blockifier::Felt252;
-use starknet_api::{core::{ChainId, ContractAddress, Nonce, ClassHash, PatriciaKey}, block::{BlockNumber, BlockTimestamp}, patricia_key, transaction::{TransactionHash, Fee, TransactionVersion, TransactionSignature, Calldata, InvokeTransactionV1, DeclareTransactionV2}, hash::{StarkFelt, StarkHash}, state::StorageKey, stark_felt};
+use starknet_api::{
+    block::{BlockNumber, BlockTimestamp},
+    core::{ChainId, ClassHash, ContractAddress, Nonce, PatriciaKey},
+    hash::{StarkFelt, StarkHash},
+    patricia_key, stark_felt,
+    state::StorageKey,
+    transaction::{
+        Calldata, DeclareTransactionV2, Fee, InvokeTransactionV1, TransactionHash,
+        TransactionSignature, TransactionVersion,
+    },
+};
 
 use crate::state::DictStateReader;
 
@@ -20,7 +39,6 @@ pub const TEST_FAULTY_ACCOUNT_CONTRACT_CLASS_HASH: &str = "0x113";
 pub const SECURITY_TEST_CLASS_HASH: &str = "0x114";
 pub const TEST_ERC20_CONTRACT_CLASS_HASH: &str = "0x1010";
 
-
 pub fn build_block_context() -> BlockContext {
     BlockContext {
         chain_id: ChainId("SN_GOERLI".to_string()),
@@ -34,7 +52,6 @@ pub fn build_block_context() -> BlockContext {
         validate_max_n_steps: 1_000_000,
         max_recursion_depth: 50,
     }
-    
 }
 
 pub fn build_transaction_context() -> AccountTransactionContext {
@@ -49,7 +66,11 @@ pub fn build_transaction_context() -> AccountTransactionContext {
     }
 }
 
-pub fn build_declare_transaction (nonce: Nonce, class_hash: ClassHash, sender_address: ContractAddress) -> DeclareTransactionV2 {    
+pub fn build_declare_transaction(
+    nonce: Nonce,
+    class_hash: ClassHash,
+    sender_address: ContractAddress,
+) -> DeclareTransactionV2 {
     DeclareTransactionV2 {
         nonce: nonce,
         max_fee: Fee::default(),
@@ -60,7 +81,10 @@ pub fn build_declare_transaction (nonce: Nonce, class_hash: ClassHash, sender_ad
     }
 }
 
-pub fn build_invoke_transaction (calldata: Calldata, sender_address: ContractAddress) -> InvokeTransactionV1 {    
+pub fn build_invoke_transaction(
+    calldata: Calldata,
+    sender_address: ContractAddress,
+) -> InvokeTransactionV1 {
     InvokeTransactionV1 {
         max_fee: Fee::default(),
         sender_address,
@@ -81,16 +105,22 @@ fn load_contract_class(contract_path: &str) -> ContractClassV0 {
 }
 
 fn erc20_account_balance_key() -> StorageKey {
-    get_storage_var_address("ERC20_balances", &[stark_felt!(TEST_ACCOUNT_CONTRACT_ADDRESS)])
-        .unwrap()
+    get_storage_var_address(
+        "ERC20_balances",
+        &[stark_felt!(TEST_ACCOUNT_CONTRACT_ADDRESS)],
+    )
+    .unwrap()
 }
 
-
-// Creates a state with predeployed account and erc20 used to send transactions during tests
-pub fn build_testing_state(
-) -> CachedState<DictStateReader> {
-    let account_class = load_contract_class("./predeployed-contracts/account_no_validations_contract.casm.json");
-    let erc20_class = load_contract_class("./predeployed-contracts/erc20_contract_without_some_syscalls_compiled.json");
+// Creates a state with predeployed account and erc20 used to send transactions during tests.
+// Deployed contracts are cairo 0 contracts
+// Account does not include validations
+pub fn build_testing_state() -> CachedState<DictStateReader> {
+    let account_class =
+        load_contract_class("./predeployed-contracts/account_no_validations_contract.casm.json");
+    let erc20_class = load_contract_class(
+        "./predeployed-contracts/erc20_contract_without_some_syscalls_compiled.json",
+    );
     let block_context = build_block_context();
     let test_account_class_hash = ClassHash(stark_felt!(TEST_ACCOUNT_CONTRACT_CLASS_HASH));
     let test_erc20_class_hash = ClassHash(stark_felt!(TEST_ERC20_CONTRACT_CLASS_HASH));
@@ -111,9 +141,15 @@ pub fn build_testing_state(
     let minter_var_address = get_storage_var_address("permitted_minter", &[])
         .expect("Failed to get permitted_minter storage address.");
     let storage_view = HashMap::from([
-        ((test_erc20_address, erc20_account_balance_key()), stark_felt!(INITIAL_BALANCE)),
+        (
+            (test_erc20_address, erc20_account_balance_key()),
+            stark_felt!(INITIAL_BALANCE),
+        ),
         // Give the account mint permission.
-        ((test_erc20_address, minter_var_address), *test_account_address.0.key()),
+        (
+            (test_erc20_address, minter_var_address),
+            *test_account_address.0.key(),
+        ),
     ]);
     CachedState::new(DictStateReader {
         address_to_class_hash,

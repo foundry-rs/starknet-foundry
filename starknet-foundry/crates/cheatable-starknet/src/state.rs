@@ -1,8 +1,18 @@
 use std::collections::HashMap;
 
-use blockifier::{state::{state_api::{StateResult, StateReader}, errors::StateError, cached_state::ContractStorageKey}, execution::contract_class::ContractClass};
-use starknet_api::{core::{ClassHash, ContractAddress, Nonce, CompiledClassHash}, hash::StarkFelt, state::StorageKey};
-
+use blockifier::{
+    execution::contract_class::ContractClass,
+    state::{
+        cached_state::ContractStorageKey,
+        errors::StateError,
+        state_api::{StateReader, StateResult},
+    },
+};
+use starknet_api::{
+    core::{ClassHash, CompiledClassHash, ContractAddress, Nonce},
+    hash::StarkFelt,
+    state::StorageKey,
+};
 
 /// A simple implementation of `StateReader` using `HashMap`s as storage.
 #[derive(Debug, Default)]
@@ -21,12 +31,20 @@ impl StateReader for DictStateReader {
         key: StorageKey,
     ) -> StateResult<StarkFelt> {
         let contract_storage_key = (contract_address, key);
-        let value = self.storage_view.get(&contract_storage_key).copied().unwrap_or_default();
+        let value = self
+            .storage_view
+            .get(&contract_storage_key)
+            .copied()
+            .unwrap_or_default();
         Ok(value)
     }
 
     fn get_nonce_at(&mut self, contract_address: ContractAddress) -> StateResult<Nonce> {
-        let nonce = self.address_to_nonce.get(&contract_address).copied().unwrap_or_default();
+        let nonce = self
+            .address_to_nonce
+            .get(&contract_address)
+            .copied()
+            .unwrap_or_default();
         Ok(nonce)
     }
 
@@ -42,8 +60,11 @@ impl StateReader for DictStateReader {
     }
 
     fn get_class_hash_at(&mut self, contract_address: ContractAddress) -> StateResult<ClassHash> {
-        let class_hash =
-            self.address_to_class_hash.get(&contract_address).copied().unwrap_or_default();
+        let class_hash = self
+            .address_to_class_hash
+            .get(&contract_address)
+            .copied()
+            .unwrap_or_default();
         Ok(class_hash)
     }
 
@@ -51,8 +72,11 @@ impl StateReader for DictStateReader {
         &mut self,
         class_hash: ClassHash,
     ) -> StateResult<starknet_api::core::CompiledClassHash> {
-        let compiled_class_hash =
-            self.class_hash_to_compiled_class_hash.get(&class_hash).copied().unwrap_or_default();
+        let compiled_class_hash = self
+            .class_hash_to_compiled_class_hash
+            .get(&class_hash)
+            .copied()
+            .unwrap_or_default();
         Ok(compiled_class_hash)
     }
 }
