@@ -4,9 +4,6 @@ members = [
     "crates/test-collector",
     "crates/cast",
     "crates/compatibility/cairo-felt-blockifier",
-    "crates/compatibility/cairo-felt-compiler",
-    "crates/compatibility/cairo-vm-blockifier",
-    "crates/compatibility/cairo-vm-compiler",
     "crates/cheatable-starknet"
 ]
 

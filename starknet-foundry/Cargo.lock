@@ -668,13 +668,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "cairo-felt-compiler"
-version = "1.0.0"
-dependencies = [
- "cairo-felt 0.5.2",
-]
-
-[[package]]
 name = "cairo-lang-casm"
 version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2108,20 +2101,6 @@ dependencies = [
  "starknet-crypto 0.5.1",
  "thiserror",
  "thiserror-no-std",
-]
-
-[[package]]
-name = "cairo-vm-blockifier"
-version = "1.0.0"
-dependencies = [
- "cairo-felt 0.5.2",
-]
-
-[[package]]
-name = "cairo-vm-compiler"
-version = "1.0.0"
-dependencies = [
- "cairo-felt 0.5.2",
 ]
 
 [[package]]

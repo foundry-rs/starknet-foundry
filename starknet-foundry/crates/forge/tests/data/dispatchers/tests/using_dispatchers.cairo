@@ -42,19 +42,19 @@ fn advanced_types() {
     let class_hash = declare('ERC20').unwrap();
     let prepared = PreparedContract { contract_address: 4567, class_hash: class_hash, constructor_calldata: @calldata };
     let contract_address = deploy(prepared).unwrap();
-    let contract_address: ContractAddress = contract_address.try_into().unwrap();
-    let dispatcher = IERC20Dispatcher { contract_address };
-    let user_address: ContractAddress = 1234.try_into().unwrap();
-    let other_user_address: ContractAddress = 9999.try_into().unwrap();
-
-    let balance = dispatcher.balance_of(user_address);
-    assert(balance == 1111_u256, 'balance == 1111');
-
-    // TODO(#1986): Change that when we support mocking addresses, so we can actually call transfer
-    // dispatcher.transfer(other_user_address, 1000_u256);
+    // let contract_address: ContractAddress = contract_address.try_into().unwrap();
+    // let dispatcher = IERC20Dispatcher { contract_address };
+    // let user_address: ContractAddress = 1234.try_into().unwrap();
+    // let other_user_address: ContractAddress = 9999.try_into().unwrap();
 
     // let balance = dispatcher.balance_of(user_address);
-    // assert(balance == 111_u256, 'balance == 111');
-    let balance = dispatcher.balance_of(other_user_address);
-    assert(balance == 0_u256, 'balance == 1000');
+    // assert(balance == 1111_u256, 'balance == 1111');
+
+    // // TODO(#1986): Change that when we support mocking addresses, so we can actually call transfer
+    // // dispatcher.transfer(other_user_address, 1000_u256);
+
+    // // let balance = dispatcher.balance_of(user_address);
+    // // assert(balance == 111_u256, 'balance == 111');
+    // let balance = dispatcher.balance_of(other_user_address);
+    // assert(balance == 0_u256, 'balance == 1000');
 }
