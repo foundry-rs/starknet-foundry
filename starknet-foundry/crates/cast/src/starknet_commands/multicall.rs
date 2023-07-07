@@ -33,7 +33,6 @@ struct InvokeCall {
 #[command(about = "Execute multiple calls at once", long_about = None)]
 pub struct Multicall {
     /// Path to a .toml file containing the multi call specification
-    #[clap(short = 'p', long = "path")]
     pub path: String,
 }
 
