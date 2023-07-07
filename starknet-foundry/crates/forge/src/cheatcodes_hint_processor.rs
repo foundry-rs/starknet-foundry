@@ -395,11 +395,11 @@ fn declare(
         .expect("Failed to read contract class from json");
     let contract_class = BlockifierContractClass::V1(contract_class);
 
-            // TODO(#2134) replace this. Hash should be calculated in the correct manner. This is just a workaround.
-            let mut hasher = DefaultHasher::new();
-            casm_serialized.hash(&mut hasher);
-            let class_hash = hasher.finish();
-            let class_hash = ClassHash(stark_felt!(class_hash));
+    // TODO(#2134) replace this. Hash should be calculated in the correct manner. This is just a workaround.
+    let mut hasher = DefaultHasher::new();
+    casm_serialized.hash(&mut hasher);
+    let class_hash = hasher.finish();
+    let class_hash = ClassHash(stark_felt!(class_hash));
 
     let nonce = blockifier_state
         .get_nonce_at(ContractAddress(patricia_key!(
@@ -419,7 +419,7 @@ fn declare(
     .unwrap_or_else(|err| panic!("Unable to build transaction {:?}", err));
 
     let account_tx = AccountTransaction::Declare(tx);
-    let mut block_context = build_block_context();
+    let block_context = build_block_context();
     let _tx_result = account_tx
         .execute(blockifier_state, &block_context)
         .expect("Failed to execute declare transaction");
@@ -452,7 +452,7 @@ fn deploy(
 
     // Deploy a contract using syscall deploy.
     let account_address = ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS));
-    let mut block_context = build_block_context();
+    let block_context = build_block_context();
     let entry_point_selector = selector_from_name("deploy_contract");
     let salt = ContractAddressSalt::default();
     let class_hash = ClassHash(StarkFelt::new(class_hash.to_be_bytes()).unwrap());
@@ -470,10 +470,7 @@ fn deploy(
         .expect("Failed to get nonce");
     let tx = build_invoke_transaction(execute_calldata, account_address);
     let account_tx =
-        AccountTransaction::Invoke(InvokeTransaction::V1(InvokeTransactionV1 {
-            nonce,
-            ..tx
-        }));
+        AccountTransaction::Invoke(InvokeTransaction::V1(InvokeTransactionV1 { nonce, ..tx }));
     let tx_result = account_tx
         .execute(blockifier_state, &block_context)
         .expect("Failed to execute deploy transaction");
