@@ -47,7 +47,9 @@ jobs:
       - run: pip install starknet-devnet
       - uses: asdf-vm/actions/setup@v2
       - name: Prepare for cast tests
-        run: bash ./starknet-foundry/crates/cast/tests/utils/prepare_for_tests.sh
+        run: |
+          bash ./starknet-foundry/crates/cast/tests/utils/prepare_for_tests.sh &&\
+          bash ./starknet-foundry/crates/cast/tests/utils/build_contracts.sh
       - run: cargo test --manifest-path ./starknet-foundry/Cargo.toml -p cast
 
   rustfmt:
