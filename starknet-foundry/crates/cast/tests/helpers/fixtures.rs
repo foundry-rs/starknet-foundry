@@ -14,7 +14,8 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 pub async fn declare_deploy_simple_balance_contract() {
-    let provider = get_provider(URL).expect("Could not get the provider");
+    let network = get_network(&NETWORK).unwrap();
+    let provider = get_provider(URL, &network).expect("Could not get the provider");
     let account = get_account(
         ACCOUNT,
         &Utf8PathBuf::from(ACCOUNT_FILE_PATH),
@@ -56,7 +57,8 @@ pub async fn declare_deploy_simple_balance_contract() {
 }
 
 pub async fn invoke_map_contract(key: &str, value: &str) {
-    let provider = get_provider(URL).expect("Could not get the provider");
+    let network = get_network(&NETWORK).unwrap();
+    let provider = get_provider(URL, &network).expect("Could not get the provider");
     let account = get_account(
         ACCOUNT,
         &Utf8PathBuf::from(ACCOUNT_FILE_PATH),
