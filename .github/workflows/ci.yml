@@ -24,6 +24,8 @@ jobs:
   test-cast:
     name: Test Cast
     runs-on: ubuntu-latest
+    env:
+      DEVNET_VERSION: 0.5.5
     steps:
       - uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@0e66bd3e6b38ec0ad5312288c83e47c143e6b09e
@@ -33,10 +35,15 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.9'
+      - name: pip cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ env.DEVNET_VERSION }}
       - name: Install devnet
         run: |
             sudo apt install -y libgmp3-dev
-            pip install starknet-devnet
+            pip install starknet-devnet==${{ env.DEVNET_VERSION }}
       - uses: asdf-vm/actions/setup@v2
       - name: Prepare for tests
         run: bash ./scripts/prepare_for_tests.sh
