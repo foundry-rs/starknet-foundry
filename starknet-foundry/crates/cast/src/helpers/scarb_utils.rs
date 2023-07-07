@@ -38,7 +38,7 @@ fn get_tool_property(
 }
 
 pub fn parse_scarb_config(
-    profile: Option<String>,
+    profile: &Option<String>,
     path: Option<Utf8PathBuf>,
 ) -> Result<ScarbConfig> {
     let manifest_path = find_manifest_path(path.as_ref().map(camino::Utf8PathBuf::as_path))
@@ -67,9 +67,9 @@ pub fn parse_scarb_config(
 
     let package = &metadata.packages[0].manifest_metadata.tool;
 
-    let rpc_url = get_tool_property(package, &profile, "rpc_url")?;
-    let network = get_tool_property(package, &profile, "network")?;
-    let account = get_tool_property(package, &profile, "account")?;
+    let rpc_url = get_tool_property(package, profile, "rpc_url")?;
+    let network = get_tool_property(package, profile, "network")?;
+    let account = get_tool_property(package, profile, "account")?;
 
     Ok(ScarbConfig {
         rpc_url,
@@ -86,7 +86,7 @@ mod tests {
     #[test]
     fn test_parse_scarb_config_happy_case_with_profile() {
         let config = parse_scarb_config(
-            Some(String::from("myprofile")),
+            &Some(String::from("myprofile")),
             Some(Utf8PathBuf::from("tests/data/contracts/balance/Scarb.toml")),
         )
         .unwrap();
@@ -99,7 +99,7 @@ mod tests {
     #[test]
     fn test_parse_scarb_config_happy_case_without_profile() {
         let config = parse_scarb_config(
-            None,
+            &None,
             Some(Utf8PathBuf::from("tests/data/contracts/map/Scarb.toml")),
         )
         .unwrap();
@@ -111,13 +111,13 @@ mod tests {
     #[test]
     fn test_parse_scarb_config_not_found() {
         let config =
-            parse_scarb_config(None, Some(Utf8PathBuf::from("whatever/Scarb.toml"))).unwrap_err();
+            parse_scarb_config(&None, Some(Utf8PathBuf::from("whatever/Scarb.toml"))).unwrap_err();
         assert!(config.to_string().contains("file does not exist!"));
     }
 
     #[test]
     fn test_parse_scarb_config_no_path_not_found() {
-        let config = parse_scarb_config(None, None).unwrap();
+        let config = parse_scarb_config(&None, None).unwrap();
 
         assert!(config.rpc_url.is_empty());
         assert!(config.network.is_empty());
@@ -127,7 +127,7 @@ mod tests {
     #[test]
     fn test_parse_scarb_config_not_in_file() {
         let config = parse_scarb_config(
-            None,
+            &None,
             Some(Utf8PathBuf::from("tests/data/files/noconfig_Scarb.toml")),
         )
         .unwrap_err();
@@ -139,7 +139,7 @@ mod tests {
     #[test]
     fn test_parse_scarb_config_no_profile_found() {
         let config = parse_scarb_config(
-            Some(String::from("mariusz")),
+            &Some(String::from("mariusz")),
             Some(Utf8PathBuf::from("tests/data/contracts/balance/Scarb.toml")),
         )
         .unwrap_err();
@@ -151,7 +151,7 @@ mod tests {
     #[test]
     fn test_parse_scarb_config_account_missing() {
         let config = parse_scarb_config(
-            None,
+            &None,
             Some(Utf8PathBuf::from("tests/data/files/somemissing_Scarb.toml")),
         )
         .unwrap_err();
