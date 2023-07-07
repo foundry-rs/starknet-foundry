@@ -6,8 +6,8 @@ use scarb_metadata::MetadataCommand;
 use std::path::PathBuf;
 use tempfile::{tempdir, TempDir};
 
-use forge::run;
-use forge::{pretty_printing, RunnerConfig};
+use rust_test_runner::run;
+use rust_test_runner::{pretty_printing, RunnerConfig};
 
 use std::process::Command;
 
@@ -51,9 +51,9 @@ fn main_execution() -> Result<()> {
 
     for package in &scarb_metadata.workspace.members {
         let protostar_config =
-            forge::protostar_config_for_package(&scarb_metadata, package)?;
+            rust_test_runner::protostar_config_for_package(&scarb_metadata, package)?;
         let (base_path, dependencies) =
-            forge::dependencies_for_package(&scarb_metadata, package)?;
+            rust_test_runner::dependencies_for_package(&scarb_metadata, package)?;
         let runner_config = RunnerConfig::new(
             args.test_name.clone(),
             args.exact,
