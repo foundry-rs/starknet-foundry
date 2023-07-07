@@ -50,3 +50,12 @@ async fn test_wait_for_nonexistent_tx() {
     .await
     .unwrap();
 }
+
+#[tokio::test]
+#[should_panic(expected = "Could not get transaction with hash: 0x0")]
+async fn test_call_nonexistent_rpc() {
+    let provider = get_provider("http://127.0.0.1:5055/nonexistent-rpc").unwrap();
+    wait_for_tx(&provider, parse_number("0x0").unwrap())
+        .await
+        .unwrap();
+}
