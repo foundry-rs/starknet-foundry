@@ -13,26 +13,26 @@ install_scarb_version() {
 }
 
 if ! which starknet-devnet > /dev/null 2>&1; then
-  echo "starknet-devnet not found, exiting."
+  echo "starknet-devnet not found, please install"
+  echo "https://0xspaceshard.github.io/starknet-devnet/docs/intro"
   exit 1
 fi
 
-if ! command -v asdf &> /dev/null; then
-  printf "Please install asdf\n https://asdf-vm.com/guide/getting-started.html#_2-download-asdf\n"
+if ! command -v asdf 2>&1 /dev/null; then
+  echo "asdf not found, please install"
+  echo "https://asdf-vm.com/guide/getting-started.html#_2-download-asdf"
   exit 1
 fi
 
-if command -v scarb &> /dev/null; then
+if command -v scarb 2>&1 /dev/null; then
     installed_version=$(scarb --version | grep -e "scarb" | awk '{print $2}')
 
-    if [[ "$installed_version" == "$SCARB_VERSION" ]]; then
-      echo "Correct scarb version already installed"
-    else
+    if [[ "$installed_version" != "$SCARB_VERSION" ]]; then
       install_scarb_version $SCARB_VERSION
     fi
 
   else
-    asdf plugin add scarb https://github.com/software-mansion/asdf-scarb.git
+    asdf plugin add scarb
     install_scarb_version $SCARB_VERSION
   fi
 
@@ -49,4 +49,12 @@ if [ ! -x "$COMPILER_DIRECTORY/cairo/bin/starknet-sierra-compile" ]; then
     tar -xzvf "$COMPILER_DIRECTORY/release-x86_64-unknown-linux-musl.tar.gz" cairo/bin/starknet-sierra-compile
     popd
   fi
+
+  else
+    echo "System $(uname -s) currently not supported"
+    exit 1
 fi
+
+echo "All done!"
+exit 0
+
