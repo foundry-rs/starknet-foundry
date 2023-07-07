@@ -122,15 +122,23 @@ macro_rules! test_case {
     });
     ( $test_code:expr, $( $contract:expr ),*) => ({
         use $crate::common::runner::TestCase;
-        use $crate::common::runner::Contract;
 
         let mut contracts = Vec::new();
         $(
-            let contract = Contract::new("HelloStarknet".to_string(), $contract);
-            contracts.push(contract);
+            //let contract = Contract::new("HelloStarknet".to_string(), $contract);
+            contracts.push($contract);
         )*
         TestCase::from($test_code, contracts).unwrap()
     });
+}
+
+#[macro_export]
+macro_rules! contract {
+    ( $name:expr, $contract:expr ) => {{
+        use $crate::common::runner::Contract;
+
+        Contract::new($name.into(), $contract.into())
+    }};
 }
 
 #[macro_export]

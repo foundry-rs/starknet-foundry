@@ -1,5 +1,5 @@
 use crate::common::corelib::corelib;
-use crate::{assert_passed, test_case};
+use crate::{assert_passed, contract, test_case};
 use camino::Utf8PathBuf;
 use forge::run;
 use indoc::indoc;
@@ -41,30 +41,32 @@ fn simple_declare() {
         }
         "#
         ),
-        indoc!(
-            r#"
-        #[starknet::contract]
-        mod HelloStarknet {
-            #[storage]
-            struct Storage {
-                balance: felt252,
-            }
-
-            // Increases the balance by the given amount.
-            #[external]
-            fn increase_balance(ref self: ContractState, amount: felt252) {
-                self.balance.write(self.balance.read() + amount);
-            }
-
-            // Decreases the balance by the given amount.
-            #[external]
-            fn decrease_balance(ref self: ContractState, amount: felt252) {
-                self.balance.write(self.balance.read() - amount);
-            }
-        }
-        "#
+        contract!(
+            "HelloStarknet",
+            indoc!(
+                r#"
+                #[starknet::contract]
+                mod HelloStarknet {
+                    #[storage]
+                    struct Storage {
+                        balance: felt252,
+                    }
+        
+                    // Increases the balance by the given amount.
+                    #[external]
+                    fn increase_balance(ref self: ContractState, amount: felt252) {
+                        self.balance.write(self.balance.read() + amount);
+                    }
+        
+                    // Decreases the balance by the given amount.
+                    #[external]
+                    fn decrease_balance(ref self: ContractState, amount: felt252) {
+                        self.balance.write(self.balance.read() - amount);
+                    }
+                }
+                "#
+            )
         )
-        .to_string()
     );
 
     let result = run(
