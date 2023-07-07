@@ -616,6 +616,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "cairo-felt-blockifier"
+version = "1.0.0"
+dependencies = [
+ "cairo-felt 0.5.2",
+]
+
+[[package]]
+name = "cairo-felt-compiler"
+version = "1.0.0"
+dependencies = [
+ "cairo-felt 0.5.2",
+]
+
+[[package]]
 name = "cairo-lang-casm"
 version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1574,6 +1588,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "cairo-vm-blockifier"
+version = "1.0.0"
+dependencies = [
+ "cairo-felt 0.5.2",
+]
+
+[[package]]
+name = "cairo-vm-compiler"
+version = "1.0.0"
+dependencies = [
+ "cairo-felt 0.5.2",
+]
+
+[[package]]
 name = "camino"
 version = "1.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1616,6 +1644,13 @@ name = "cfg-if"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
+
+[[package]]
+name = "cheatable-starknet"
+version = "1.0.0"
+dependencies = [
+ "cairo-felt 0.5.2",
+]
 
 [[package]]
 name = "chrono"

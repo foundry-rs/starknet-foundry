@@ -1,0 +1,10 @@
+[package]
+name = "cairo-felt-blockifier"
+version = "1.0.0"
+edition = "2021"
+
+[dependencies]
+cairo-felt = "0.5.2"
+
+[lib]
+name = "cairo_felt_blockifier"

@@ -2,7 +2,13 @@
 members = [
     "crates/forge",
     "crates/test-collector",
-    "crates/cast",]
+    "crates/cast",
+    "crates/compatibility/cairo-felt-blockifier",
+    "crates/compatibility/cairo-felt-compiler",
+    "crates/compatibility/cairo-vm-blockifier",
+    "crates/compatibility/cairo-vm-compiler",
+    "crates/cheatable-starknet"
+]
 
 [workspace.package]
 version = "0.0.1"
