@@ -16,6 +16,20 @@ fn start_devnet() {
     }
 
     let port = Url::parse(URL).unwrap().port().unwrap_or(80).to_string();
+    let host = Url::parse(URL)
+        .unwrap()
+        .host()
+        .expect("Can't parse devnet URL!")
+        .to_string();
+
+    loop {
+        if verify_devnet_availability(&format!("{host}:{port}")) {
+            stop_devnet();
+        } else {
+            break;
+        }
+    }
+
     Command::new("starknet-devnet")
         .args([
             "--port",
@@ -31,11 +45,6 @@ fn start_devnet() {
 
     let now = Instant::now();
     let timeout = Duration::from_secs(10);
-    let host = Url::parse(URL)
-        .unwrap()
-        .host()
-        .expect("Can't parse devnet URL!")
-        .to_string();
 
     loop {
         if verify_devnet_availability(&format!("{host}:{port}")) {
@@ -49,7 +58,8 @@ fn start_devnet() {
     Command::new("tests/utils/build_contracts.sh")
         .spawn()
         .expect("Failed to compile contracts")
-        .wait();
+        .wait()
+        .expect("Timed out compiling contracts");
     let rt = Runtime::new().expect("Could not instantiate Runtime");
     rt.block_on(declare_deploy_simple_balance_contract());
 }
