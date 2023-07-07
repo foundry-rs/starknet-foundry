@@ -965,7 +965,7 @@ dependencies = [
  "serde",
  "smol_str",
  "thiserror",
- "toml",
+ "toml 0.4.10",
 ]
 
 [[package]]
@@ -977,7 +977,7 @@ dependencies = [
  "serde",
  "smol_str",
  "thiserror",
- "toml",
+ "toml 0.4.10",
 ]
 
 [[package]]
@@ -1593,8 +1593,8 @@ dependencies = [
  "ctor",
  "indoc",
  "primitive-types 0.12.1",
+ "project-root",
  "rand",
- "reqwest",
  "scarb-metadata",
  "serde",
  "serde_json",
@@ -1602,6 +1602,7 @@ dependencies = [
  "snapbox",
  "starknet",
  "tokio",
+ "toml 0.5.11",
  "url",
 ]
 
@@ -5247,6 +5248,15 @@ name = "toml"
 version = "0.4.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "758664fc71a3a69038656bee8b6be6477d2a6c315a6b81f7081f591bffa4111f"
+dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "toml"
+version = "0.5.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f4f7f0dd8d50a853a531c426359045b1998f04219d88799810762cd4ad314234"
 dependencies = [
  "serde",
 ]
