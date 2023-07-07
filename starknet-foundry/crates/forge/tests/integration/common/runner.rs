@@ -1,20 +1,77 @@
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use assert_fs::fixture::{FileTouch, FileWriteStr, PathChild};
 use assert_fs::TempDir;
+use cairo_lang_compiler::db::RootDatabase;
+use cairo_lang_compiler::project::setup_project;
+use cairo_lang_compiler::CompilerConfig;
+use cairo_lang_filesystem::db::init_dev_corelib;
+use cairo_lang_starknet::allowed_libfuncs::{validate_compatible_sierra_version, ListSelector};
+use cairo_lang_starknet::contract_class::compile_contract_in_prepared_db;
+use cairo_lang_starknet::plugin::StarkNetPlugin;
 use camino::Utf8PathBuf;
-use std::path::PathBuf;
+use forge::scarb::StarknetContractArtifacts;
+use std::collections::HashMap;
+use std::path::Path;
+use std::sync::Arc;
 use test_collector::LinkedLibrary;
 
+#[derive(Debug, Clone)]
+pub struct Contract {
+    name: String,
+    code: String,
+}
+
+impl Contract {
+    pub fn new(name: String, code: String) -> Self {
+        Self { name, code }
+    }
+
+    pub fn sierra(self, corelib_path: &Path) -> Result<String> {
+        let path = TempDir::new()?;
+        let contract_path = path.child("contract.cairo");
+        contract_path.touch()?;
+        contract_path.write_str(&self.code)?;
+
+        let allowed_libfuncs_list = Some(ListSelector::default());
+
+        let db = &mut {
+            RootDatabase::builder()
+                .with_semantic_plugin(Arc::new(StarkNetPlugin::default()))
+                .build()?
+        };
+        init_dev_corelib(db, corelib_path.to_path_buf());
+
+        let main_crate_ids = setup_project(db, Path::new(&contract_path.path()))?;
+
+        let contract =
+            compile_contract_in_prepared_db(db, None, main_crate_ids, CompilerConfig::default())?;
+
+        validate_compatible_sierra_version(
+            &contract,
+            if let Some(allowed_libfuncs_list) = allowed_libfuncs_list {
+                allowed_libfuncs_list
+            } else {
+                ListSelector::default()
+            },
+        )?;
+        let sierra =
+            serde_json::to_string_pretty(&contract).with_context(|| "Serialization failed.")?;
+
+        Ok(sierra)
+    }
+}
+
+#[derive(Debug)]
 pub struct TestCase {
     dir: TempDir,
-    _contract_paths: Vec<PathBuf>,
+    contracts: Vec<Contract>,
 }
 
 impl<'a> TestCase {
     const TEST_PATH: &'a str = "test_case.cairo";
     const PACKAGE_NAME: &'a str = "my_package";
 
-    pub fn from(test_code: &str, contract_paths: Vec<PathBuf>) -> Result<Self> {
+    pub fn from(test_code: &str, contracts: Vec<Contract>) -> Result<Self> {
         let dir = TempDir::new()?;
         let test_file = dir.child(Self::TEST_PATH);
         test_file.touch()?;
@@ -22,10 +79,7 @@ impl<'a> TestCase {
 
         dir.child("src/lib.cairo").touch().unwrap();
 
-        Ok(Self {
-            dir,
-            _contract_paths: contract_paths,
-        })
+        Ok(Self { dir, contracts })
     }
 
     pub fn path(&self) -> Result<Utf8PathBuf> {
@@ -39,16 +93,44 @@ impl<'a> TestCase {
             path: self.dir.path().join("src"),
         }]
     }
+
+    pub fn contracts(
+        &self,
+        corelib_path: &Path,
+    ) -> Result<HashMap<String, StarknetContractArtifacts>> {
+        self.contracts
+            .clone()
+            .into_iter()
+            .map(|contract| {
+                Ok((
+                    contract.name.clone(),
+                    StarknetContractArtifacts {
+                        sierra: contract.sierra(corelib_path)?,
+                        casm: None,
+                    },
+                ))
+            })
+            .collect()
+    }
 }
 
 #[macro_export]
 macro_rules! test_case {
-    ($test_code:expr) => {{
+    ( $test_code:expr ) => ({
         use $crate::common::runner::TestCase;
+        TestCase::from($test_code, vec![]).unwrap()
+    });
+    ( $test_code:expr, $( $contract:expr ),*) => ({
+        use $crate::common::runner::TestCase;
+        use $crate::common::runner::Contract;
 
-        let test = TestCase::from($test_code, vec![]).unwrap();
-        test
-    }};
+        let mut contracts = Vec::new();
+        $(
+            let contract = Contract::new("HelloStarknet".to_string(), $contract);
+            contracts.push(contract);
+        )*
+        TestCase::from($test_code, contracts).unwrap()
+    });
 }
 
 #[macro_export]

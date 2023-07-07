@@ -16,6 +16,8 @@ cairo-lang-sierra = { path = "../../../cairo/crates/cairo-lang-sierra", version 
 cairo-lang-utils = { path = "../../../cairo/crates/cairo-lang-utils", version = "2.0.0-rc2" }
 cairo-lang-casm = { path = "../../../cairo/crates/cairo-lang-casm", version = "2.0.0-rc2" }
 cairo-lang-starknet = { path = "../../../cairo/crates/cairo-lang-starknet", version = "2.0.0-rc2" }
+cairo-lang-compiler = { path = "../../../cairo/crates/cairo-lang-compiler", version = "2.0.0-rc2" }
+cairo-lang-filesystem = { path = "../../../cairo/crates/cairo-lang-filesystem", version = "2.0.0-rc2" }
 blockifier.workspace = true
 starknet_api.workspace = true
 schemars = { version = "0.8.12", features = ["preserve_order"] }
