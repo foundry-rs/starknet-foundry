@@ -78,6 +78,7 @@ pub async fn invoke_map_contract(key: &str, value: &str) {
     execution.send().await.unwrap();
 }
 
+#[must_use]
 pub fn default_cli_args() -> Vec<&'static str> {
     vec![
         "--url",
@@ -91,6 +92,7 @@ pub fn default_cli_args() -> Vec<&'static str> {
     ]
 }
 
+#[must_use]
 pub fn get_transaction_hash(output: &[u8]) -> FieldElement {
     let output: HashMap<String, String> =
         serde_json::from_slice(output).expect("Could not serialize transaction output to HashMap");

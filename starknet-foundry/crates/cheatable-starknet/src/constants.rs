@@ -28,7 +28,7 @@ use crate::state::DictStateReader;
 pub const TEST_SEQUENCER_ADDRESS: &str = "0x1000";
 pub const TEST_ERC20_CONTRACT_ADDRESS: &str = "0x1001";
 pub const TEST_ACCOUNT_CONTRACT_ADDRESS: &str = "0x101";
-pub const MAX_FEE: u128 = 1000000 * 100000000000; // 1000000 * min_gas_price.
+pub const MAX_FEE: u128 = 1_000_000 * 100_000_000_000; // 1000000 * min_gas_price.
 pub const INITIAL_BALANCE: u128 = 10 * MAX_FEE;
 
 // Mocked class hashes, those are not checked anywhere
@@ -39,6 +39,7 @@ pub const TEST_FAULTY_ACCOUNT_CONTRACT_CLASS_HASH: &str = "0x113";
 pub const SECURITY_TEST_CLASS_HASH: &str = "0x114";
 pub const TEST_ERC20_CONTRACT_CLASS_HASH: &str = "0x1010";
 
+#[must_use]
 pub fn build_block_context() -> BlockContext {
     BlockContext {
         chain_id: ChainId("SN_GOERLI".to_string()),
@@ -54,6 +55,7 @@ pub fn build_block_context() -> BlockContext {
     }
 }
 
+#[must_use]
 pub fn build_transaction_context() -> AccountTransactionContext {
     AccountTransactionContext {
         transaction_hash: TransactionHash::default(),
@@ -65,6 +67,7 @@ pub fn build_transaction_context() -> AccountTransactionContext {
     }
 }
 
+#[must_use]
 pub fn build_declare_transaction(
     nonce: Nonce,
     class_hash: ClassHash,
@@ -78,6 +81,7 @@ pub fn build_declare_transaction(
     }
 }
 
+#[must_use]
 pub fn build_invoke_transaction(
     calldata: Calldata,
     sender_address: ContractAddress,
@@ -110,6 +114,7 @@ fn erc20_account_balance_key() -> StorageKey {
 // Creates a state with predeployed account and erc20 used to send transactions during tests.
 // Deployed contracts are cairo 0 contracts
 // Account does not include validations
+#[must_use]
 pub fn build_testing_state() -> CachedState<DictStateReader> {
     let account_class =
         load_contract_class("./predeployed-contracts/account_no_validations_contract.casm.json");
@@ -147,9 +152,9 @@ pub fn build_testing_state() -> CachedState<DictStateReader> {
         ),
     ]);
     CachedState::new(DictStateReader {
+        storage_view,
         address_to_class_hash,
         class_hash_to_class,
-        storage_view,
         ..Default::default()
     })
 }
