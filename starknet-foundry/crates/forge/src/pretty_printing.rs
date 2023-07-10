@@ -36,16 +36,16 @@ pub fn print_test_result(test_result: &TestResult) {
     };
 
     let result_name = match test_result {
-        TestResult::Passed { name, .. } => name,
-        TestResult::Failed { name, .. } => name,
-        TestResult::Skipped { name } => name,
+        TestResult::Passed { name, .. }
+        | TestResult::Failed { name, .. }
+        | TestResult::Skipped { name } => name,
     };
 
     let result_message = match test_result {
-        TestResult::Passed { msg: Some(msg), .. } => format!("\n\nSuccess data:{}", msg),
-        TestResult::Failed { msg: Some(msg), .. } => format!("\n\nFailure data:{}", msg),
+        TestResult::Passed { msg: Some(msg), .. } => format!("\n\nSuccess data:{msg}"),
+        TestResult::Failed { msg: Some(msg), .. } => format!("\n\nFailure data:{msg}"),
         _ => String::new(),
     };
 
-    println!("{result_header} {result_name}{result_message}")
+    println!("{result_header} {result_name}{result_message}");
 }

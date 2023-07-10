@@ -53,6 +53,7 @@ pub struct Declare {
     pub max_fee: Option<u128>,
 }
 
+#[allow(clippy::too_many_lines)]
 pub async fn declare(
     contract_name: &str,
     max_fee: Option<u128>,

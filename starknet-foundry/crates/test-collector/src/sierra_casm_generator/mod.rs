@@ -67,6 +67,7 @@ impl SierraCasmGenerator {
             })
     }
 
+    #[must_use]
     pub fn get_info(
         &self,
         ty: &cairo_lang_sierra::ids::ConcreteTypeId,
