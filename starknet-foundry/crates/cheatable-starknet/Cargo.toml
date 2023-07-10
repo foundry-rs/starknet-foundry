@@ -7,6 +7,7 @@ edition = "2021"
 testing = []
 
 [dependencies]
+anyhow.workspace = true
 blockifier.workspace = true
 starknet_api.workspace = true
 cairo-felt-blockifier = { path = "../compatibility/cairo-felt-blockifier" }

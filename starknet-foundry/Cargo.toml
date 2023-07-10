@@ -15,5 +15,6 @@ license = "Apache-2.0"
 license-file = "LICENSE"
 
 [workspace.dependencies]
+anyhow = "1.0.66"
 blockifier = { git = "https://github.com/starkware-libs/blockifier.git", rev = "9238b4d" }
 starknet_api = { git = "https://github.com/starkware-libs/starknet-api", rev = "a4c78ff" }
