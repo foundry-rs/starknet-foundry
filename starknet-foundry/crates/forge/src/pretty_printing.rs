@@ -30,32 +30,22 @@ pub fn print_test_summary(test_summary: &TestSummary) {
 
 pub fn print_test_result(test_result: &TestResult) {
     let result_header = match test_result {
-        TestResult::Passed {
-            name,
-            run_result: _,
-            msg: _,
-        } => format!("[{}] {}", style("PASS").green(), name),
-        TestResult::Failed {
-            name,
-            run_result: _,
-            msg: _,
-        } => format!("[{}] {}", style("FAIL").red(), name),
-        TestResult::Skipped { name } => format!("[{}] {}", style("SKIP").yellow(), name),
+        TestResult::Passed { .. } => format!("[{}] ", style("PASS").green()),
+        TestResult::Failed { .. } => format!("[{}] ", style("FAIL").red()),
+        TestResult::Skipped { .. } => format!("[{}] ", style("SKIP").yellow()),
+    };
+
+    let result_name = match test_result {
+        TestResult::Passed { name, .. } => name,
+        TestResult::Failed { name, .. } => name,
+        TestResult::Skipped { name } => name,
     };
 
     let result_message = match test_result {
-        TestResult::Passed {
-            name: _,
-            run_result: _,
-            msg: Some(msg),
-        } => format!("\n\nSuccess data:{}", msg),
-        TestResult::Failed {
-            name: _,
-            run_result: _,
-            msg: Some(msg),
-        } => format!("\n\nFailure data:{}", msg),
+        TestResult::Passed { msg: Some(msg), .. } => format!("\n\nSuccess data:{}", msg),
+        TestResult::Failed { msg: Some(msg), .. } => format!("\n\nFailure data:{}", msg),
         _ => String::new(),
     };
 
-    println!("{result_header}{result_message}")
+    println!("{result_header} {result_name}{result_message}")
 }

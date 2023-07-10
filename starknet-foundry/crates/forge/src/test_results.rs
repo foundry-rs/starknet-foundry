@@ -19,7 +19,7 @@ pub enum TestResult {
     // TODO: Broken
 }
 
-pub fn recover_result_data(run_result: &RunResult) -> Option<String> {
+pub fn extract_result_data(run_result: &RunResult) -> Option<String> {
     let data = match &run_result.value {
         RunResultValue::Success(data) => data,
         RunResultValue::Panic(data) => data,

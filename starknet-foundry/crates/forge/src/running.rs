@@ -15,7 +15,7 @@ use cairo_lang_runner::{RunResult, SierraCasmRunner, StarknetState};
 use test_collector::TestConfig;
 
 use crate::cheatcodes_hint_processor::CairoHintProcessor;
-use crate::test_results::{recover_result_data, TestResult};
+use crate::test_results::{extract_result_data, TestResult};
 
 /// Builds `hints_dict` required in `cairo_vm::types::program::Program` from instructions.
 fn build_hints_dict<'b>(
@@ -43,16 +43,16 @@ fn build_hints_dict<'b>(
     (hints_dict, string_to_hint)
 }
 
-fn map_run_result_to_test_result(name: &str, run_result: RunResult) -> TestResult {
+fn test_result_from_run_result(name: &str, run_result: RunResult) -> TestResult {
     match run_result.value {
         RunResultValue::Success(_) => TestResult::Passed {
             name: name.to_string(),
-            msg: recover_result_data(&run_result),
+            msg: extract_result_data(&run_result),
             run_result: Some(run_result),
         },
         RunResultValue::Panic(_) => TestResult::Failed {
             name: name.to_string(),
-            msg: recover_result_data(&run_result),
+            msg: extract_result_data(&run_result),
             run_result: Some(run_result),
         },
     }
@@ -95,7 +95,7 @@ pub(crate) fn run_from_test_config(
         instructions,
         builtins,
     ) {
-        Ok(result) => Ok(map_run_result_to_test_result(config.name.as_str(), result)),
+        Ok(result) => Ok(test_result_from_run_result(config.name.as_str(), result)),
 
         // CairoRunError comes from VirtualMachineError which may come from HintException that originates in the cheatcode processor
         Err(RunnerError::CairoRunError(error)) => Ok(TestResult::Failed {
