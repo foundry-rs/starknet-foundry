@@ -55,13 +55,12 @@ pub fn build_block_context() -> BlockContext {
 }
 
 pub fn build_transaction_context() -> AccountTransactionContext {
-    let nonce = &Felt252::from(0);
     AccountTransactionContext {
         transaction_hash: TransactionHash::default(),
         max_fee: Fee::default(),
         version: TransactionVersion(StarkFelt::from(2_u8)),
         signature: TransactionSignature::default(),
-        nonce: Nonce(felt_to_stark_felt(nonce)),
+        nonce: Nonce(felt_to_stark_felt(&Felt252::from(0))),
         sender_address: ContractAddress::default(),
     }
 }

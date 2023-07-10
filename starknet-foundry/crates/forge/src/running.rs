@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 use anyhow::{Context, Result};
-// use blockifier::transaction::transaction_utils_for_protostar::create_state_with_trivial_validation_account;
 use cairo_vm::serde::deserialize_program::HintParams;
 use cheatable_starknet::constants::build_testing_state;
 use itertools::chain;

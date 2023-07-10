@@ -214,7 +214,7 @@ fn call_contract(
         storage_address: contract_address,
         caller_address: account_address,
         call_type: CallType::Call,
-        initial_gas: 100000000000000,
+        initial_gas: u64::MAX,
     };
 
     let mut resources = ExecutionResources::default();
