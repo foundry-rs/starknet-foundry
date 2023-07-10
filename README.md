@@ -4,10 +4,10 @@ Blazingly fast implementation of Foundry for developing Starknet contracts desig
 
 ## Installation
 
-To install Starknet-Foundry, run:
+To install Forge/Cast, run:
 
 ```shell
-curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/install.sh | bash
+curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/install.sh | bash forge
 ```
 
 If you want to specify a version, run the following command with the requested version:
