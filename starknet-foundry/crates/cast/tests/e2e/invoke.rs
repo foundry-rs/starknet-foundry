@@ -1,7 +1,8 @@
 use crate::helpers::constants::MAP_CONTRACT_ADDRESS;
-use crate::helpers::fixtures::default_cli_args;
+use crate::helpers::fixtures::{default_cli_args, get_transaction_hash, get_transaction_receipt};
 use crate::helpers::runner::runner;
 use indoc::indoc;
+use starknet::core::types::TransactionReceipt::Invoke;
 
 #[tokio::test]
 async fn test_happy_case() {
@@ -21,13 +22,12 @@ async fn test_happy_case() {
     ]);
 
     let snapbox = runner(&args);
+    let output = snapbox.assert().success().get_output().stdout.clone();
 
-    snapbox.assert().success().stdout_eq(indoc! {r#"
-{
-  "command": "Invoke",
-  "transaction_hash": "3605890974153350937151855747920890264574574669766639448911509832790086538715"
-}
-"#});
+    let hash = get_transaction_hash(&output);
+    let receipt = get_transaction_receipt(hash).await;
+
+    assert!(matches!(receipt, Invoke(_)));
 }
 
 #[tokio::test]

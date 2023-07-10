@@ -3,6 +3,7 @@ use clap::Args;
 use rand::rngs::OsRng;
 use rand::RngCore;
 
+use cast::print_formatted;
 use cast::{handle_rpc_error, handle_wait_for_tx_result, UDC_ADDRESS};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{Account, ConnectedAccount, SingleOwnerAccount};
@@ -13,7 +14,6 @@ use starknet::core::utils::{get_udc_deployed_address, UdcUniqueSettings};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
-use cast::print_formatted;
 
 #[derive(Args)]
 #[command(about = "Deploy a contract on Starknet")]
@@ -39,19 +39,12 @@ pub struct Deploy {
     pub max_fee: Option<u128>,
 }
 
-pub async fn deploy_and_print(
-    class_hash: &str,
-    constructor_calldata: Vec<&str>,
-    salt: Option<&str>,
-    unique: bool,
-    max_fee: Option<u128>,
-    account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
+pub async fn print_deploy_result(
+    deploy_result: Result<(FieldElement, FieldElement)>,
     int_format: bool,
     json: bool,
 ) -> Result<()> {
-    let result = deploy(class_hash, constructor_calldata, salt, unique, max_fee, account).await;
-
-    match result {
+    match deploy_result {
         Ok((transaction_hash, contract_address)) => print_formatted(
             vec![
                 ("command", "Deploy".to_string()),
@@ -63,12 +56,7 @@ pub async fn deploy_and_print(
             false,
         )?,
         Err(error) => {
-            print_formatted(
-                vec![("error", error.to_string())],
-                int_format,
-                json,
-                true,
-            )?;
+            print_formatted(vec![("error", error.to_string())], int_format, json, true)?;
         }
     };
     Ok(())

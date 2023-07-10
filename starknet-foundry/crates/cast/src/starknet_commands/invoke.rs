@@ -1,6 +1,7 @@
 use anyhow::{anyhow, Context, Result};
 use clap::Args;
 
+use cast::print_formatted;
 use cast::{handle_rpc_error, handle_wait_for_tx_result};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{Account, Call, ConnectedAccount, SingleOwnerAccount};
@@ -9,7 +10,6 @@ use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
-use cast::print_formatted;
 
 use cast::parse_number;
 
@@ -33,17 +33,12 @@ pub struct Invoke {
     pub max_fee: Option<u128>,
 }
 
-pub async fn invoke_and_print(
-    contract_address: &str,
-    entry_point_name: &str,
-    calldata: Vec<&str>,
-    max_fee: Option<u128>,
-    account: &mut SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
+pub async fn print_invoke_result(
+    invoke_result: Result<FieldElement>,
     int_format: bool,
     json: bool,
 ) -> Result<()> {
-    let result = invoke(contract_address, entry_point_name, calldata, max_fee, account).await;
-    match result {
+    match invoke_result {
         Ok(transaction_hash) => print_formatted(
             vec![
                 ("command", "Invoke".to_string()),
@@ -54,12 +49,7 @@ pub async fn invoke_and_print(
             false,
         )?,
         Err(error) => {
-            print_formatted(
-                vec![("error", error.to_string())],
-                int_format,
-                json,
-                true,
-            )?;
+            print_formatted(vec![("error", error.to_string())], int_format, json, true)?;
         }
     };
     Ok(())

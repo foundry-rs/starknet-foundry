@@ -6,12 +6,6 @@ CAIRO_REPO="https://github.com/starkware-libs/cairo/releases/download"
 COMPILER_VERSION="v1.1.1"
 SCARB_VERSION="0.4.1"
 
-install_scarb_version() {
-  asdf install scarb "$1"
-  asdf global scarb "$1"
-  scarb --version
-}
-
 if ! which starknet-devnet > /dev/null 2>&1; then
   echo "starknet-devnet not found, please install"
   echo "https://0xspaceshard.github.io/starknet-devnet/docs/intro"
@@ -25,16 +19,16 @@ if ! command -v asdf 2>&1 /dev/null; then
 fi
 
 if command -v scarb 2>&1 /dev/null; then
-    installed_version=$(scarb --version | grep -e "scarb" | awk '{print $2}')
+  installed_versions=$(asdf list scarb)
 
-    if [[ "$installed_version" != "$SCARB_VERSION" ]]; then
-      install_scarb_version $SCARB_VERSION
-    fi
-
-  else
-    asdf plugin add scarb
-    install_scarb_version $SCARB_VERSION
+  if ! grep -q $SCARB_VERSION <<< $installed_versions; then
+    asdf install scarb $SCARB_VERSION
   fi
+
+else
+  asdf plugin add scarb
+  asdf install scarb $SCARB_VERSION
+fi
 
 if [ ! -x "$COMPILER_DIRECTORY/cairo/bin/starknet-sierra-compile" ]; then
   if [[ $(uname -s) == 'Darwin' ]]; then
@@ -48,11 +42,11 @@ if [ ! -x "$COMPILER_DIRECTORY/cairo/bin/starknet-sierra-compile" ]; then
     pushd "$COMPILER_DIRECTORY"
     tar -xzvf "$COMPILER_DIRECTORY/release-x86_64-unknown-linux-musl.tar.gz" cairo/bin/starknet-sierra-compile
     popd
-  fi
 
   else
     echo "System $(uname -s) currently not supported"
     exit 1
+  fi
 fi
 
 echo "All done!"
