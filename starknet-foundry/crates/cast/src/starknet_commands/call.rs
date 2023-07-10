@@ -30,6 +30,7 @@ pub struct Call {
     pub block_id: String,
 }
 
+#[allow(clippy::ptr_arg)]
 pub async fn call(
     contract_address: &str,
     func_name: &str,
