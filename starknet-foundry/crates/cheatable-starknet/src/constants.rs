@@ -72,10 +72,8 @@ pub fn build_declare_transaction(
 ) -> DeclareTransactionV2 {
     DeclareTransactionV2 {
         nonce: nonce,
-        max_fee: Fee::default(),
         class_hash: class_hash,
         sender_address: sender_address,
-        signature: TransactionSignature::default(),
         ..Default::default()
     }
 }
@@ -85,10 +83,8 @@ pub fn build_invoke_transaction(
     sender_address: ContractAddress,
 ) -> InvokeTransactionV1 {
     InvokeTransactionV1 {
-        max_fee: Fee::default(),
         sender_address,
         calldata,
-        signature: TransactionSignature::default(),
         ..Default::default()
     }
 }
