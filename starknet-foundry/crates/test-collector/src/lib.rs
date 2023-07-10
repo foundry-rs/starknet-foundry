@@ -1,3 +1,4 @@
+use crate::sierra_casm_generator::SierraCasmGenerator;
 use anyhow::{anyhow, Context, Result};
 use cairo_felt::Felt252;
 use cairo_lang_compiler::db::RootDatabase;
@@ -38,7 +39,6 @@ use smol_str::SmolStr;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use crate::sierra_casm_generator::SierraCasmGenerator;
 
 pub mod sierra_casm_generator;
 
