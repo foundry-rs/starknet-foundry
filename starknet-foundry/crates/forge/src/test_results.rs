@@ -20,8 +20,7 @@ pub enum TestResult {
 
 pub fn extract_result_data(run_result: &RunResult) -> Option<String> {
     let data = match &run_result.value {
-        RunResultValue::Success(data) => data,
-        RunResultValue::Panic(data) => data,
+        RunResultValue::Success(data) | RunResultValue::Panic(data) => data,
     };
 
     let mut readable_text = String::new();
