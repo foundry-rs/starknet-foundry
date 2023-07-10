@@ -21,14 +21,13 @@ use blockifier::transaction::account_transaction::AccountTransaction;
 use blockifier::transaction::transaction_utils_for_protostar::declare_tx_default;
 use blockifier::transaction::transactions::{DeclareTransaction, ExecutableTransaction};
 use cairo_felt::Felt252;
-use cairo_vm::hint_processor::hint_processor_definition::HintProcessor;
+use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
 use cairo_vm::hint_processor::hint_processor_definition::HintReference;
 use cairo_vm::serde::deserialize_program::ApTracking;
 use cairo_vm::types::exec_scope::ExecutionScopes;
 use cairo_vm::types::relocatable::{MaybeRelocatable, Relocatable};
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
-use cairo_vm::vm::runners::cairo_runner::RunResources;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use num_traits::{Num, ToPrimitive};
 use serde::Deserialize;
@@ -51,20 +50,45 @@ use cairo_lang_runner::{
 use cairo_lang_starknet::casm_contract_class::CasmContractClass;
 use cairo_lang_starknet::contract_class::ContractClass;
 use cairo_lang_utils::bigint::BigIntAsHex;
+use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 
 pub struct CairoHintProcessor<'a> {
     pub original_cairo_hint_processor: OriginalCairoHintProcessor<'a>,
     pub blockifier_state: Option<CachedState<DictStateReader>>,
 }
 
-impl HintProcessor for CairoHintProcessor<'_> {
+impl ResourceTracker for CairoHintProcessor<'_> {
+    fn consumed(&self) -> bool {
+        self.original_cairo_hint_processor.run_resources.consumed()
+    }
+
+    fn consume_step(&mut self) {
+        self.original_cairo_hint_processor
+            .run_resources
+            .consume_step();
+    }
+
+    fn get_n_steps(&self) -> Option<usize> {
+        self.original_cairo_hint_processor
+            .run_resources
+            .get_n_steps()
+    }
+
+    fn run_resources(&self) -> &RunResources {
+        self.original_cairo_hint_processor
+            .run_resources
+            .run_resources()
+    }
+}
+
+impl HintProcessorLogic for CairoHintProcessor<'_> {
     fn execute_hint(
         &mut self,
         vm: &mut VirtualMachine,
         exec_scopes: &mut ExecutionScopes,
         hint_data: &Box<dyn Any>,
         constants: &HashMap<String, Felt252>,
-        run_resources: &mut RunResources,
+        // run_resources: &mut RunResources,
     ) -> Result<(), HintError> {
         let maybe_extended_hint = hint_data.downcast_ref::<Hint>();
         let blockifier_state = self
@@ -98,7 +122,7 @@ impl HintProcessor for CairoHintProcessor<'_> {
             exec_scopes,
             hint_data,
             constants,
-            run_resources,
+            // run_resources,
         )
     }
 
