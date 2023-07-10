@@ -77,13 +77,13 @@ fn simple_declare() {
                     }
         
                     // Increases the balance by the given amount.
-                    #[external]
+                    #[external(v0)]
                     fn increase_balance(ref self: ContractState, amount: felt252) {
                         self.balance.write(self.balance.read() + amount);
                     }
         
                     // Decreases the balance by the given amount.
-                    #[external]
+                    #[external(v0)]
                     fn decrease_balance(ref self: ContractState, amount: felt252) {
                         self.balance.write(self.balance.read() - amount);
                     }
@@ -136,13 +136,13 @@ fn multiple_declare() {
                     }
         
                     // Increases the balance by the given amount.
-                    #[external]
+                    #[external(v0)]
                     fn increase_balance(ref self: ContractState, amount: felt252) {
                         self.balance.write(self.balance.read() + amount);
                     }
         
                     // Decreases the balance by the given amount.
-                    #[external]
+                    #[external(v0)]
                     fn decrease_balance(ref self: ContractState, amount: felt252) {
                         self.balance.write(self.balance.read() - amount);
                     }
