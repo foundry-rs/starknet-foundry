@@ -7,7 +7,7 @@ use serde_json::Value;
 use std::collections::BTreeMap;
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
-pub struct ScarbConfig {
+pub struct CastConfig {
     pub rpc_url: String,
     pub network: String,
     pub account: String,
@@ -40,7 +40,7 @@ fn get_tool_property(
 pub fn parse_scarb_config(
     profile: &Option<String>,
     path: Option<Utf8PathBuf>,
-) -> Result<ScarbConfig> {
+) -> Result<CastConfig> {
     let manifest_path = find_manifest_path(path.as_ref().map(camino::Utf8PathBuf::as_path))
         .expect("Failed to obtain Scarb.toml file path");
 
@@ -49,7 +49,7 @@ pub fn parse_scarb_config(
             bail! {"{manifest_path} file does not exist!"};
         };
     } else {
-        return Ok(ScarbConfig {
+        return Ok(CastConfig {
             rpc_url: String::new(),
             network: String::new(),
             account: String::new(),
@@ -71,7 +71,7 @@ pub fn parse_scarb_config(
     let network = get_tool_property(package, profile, "network")?;
     let account = get_tool_property(package, profile, "account")?;
 
-    Ok(ScarbConfig {
+    Ok(CastConfig {
         rpc_url,
         network,
         account,
