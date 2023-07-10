@@ -36,6 +36,7 @@ pub struct SierraCasmGenerator {
     sierra_program_registry: ProgramRegistry<CoreType, CoreLibfunc>,
 }
 
+#[allow(clippy::result_large_err)]
 impl SierraCasmGenerator {
     pub fn new(
         sierra_program: cairo_lang_sierra::program::Program,

@@ -26,7 +26,7 @@ if command -v scarb 2>&1 /dev/null; then
   fi
 
 else
-  asdf plugin add scarb
+  asdf plugin add scarb https://github.com/software-mansion/asdf-scarb.git
   asdf install scarb $SCARB_VERSION
 fi
 
