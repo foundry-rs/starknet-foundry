@@ -21,6 +21,7 @@ pub enum TestUnitSummary {
 }
 
 impl TestUnitSummary {
+    #[must_use]
     pub fn from_run_result(run_result: RunResult, test_unit: &TestUnit) -> Self {
         match run_result.value {
             RunResultValue::Success(_) => TestUnitSummary::Passed {
@@ -36,6 +37,7 @@ impl TestUnitSummary {
         }
     }
 
+    #[must_use]
     pub fn skipped(test_unit: &TestUnit) -> Self {
         Self::Skipped {
             name: test_unit.name.to_string(),
@@ -43,10 +45,10 @@ impl TestUnitSummary {
     }
 }
 
+#[must_use]
 pub fn extract_result_data(run_result: &RunResult) -> Option<String> {
     let data = match &run_result.value {
-        RunResultValue::Success(data) => data,
-        RunResultValue::Panic(data) => data,
+        RunResultValue::Panic(data) | RunResultValue::Success(data) => data,
     };
 
     let mut readable_text = String::new();

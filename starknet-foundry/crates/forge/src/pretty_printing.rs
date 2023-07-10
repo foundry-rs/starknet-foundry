@@ -1,4 +1,4 @@
-use crate::test_results::{TestUnitSummary, TestSummary};
+use crate::test_results::{TestSummary, TestUnitSummary};
 use anyhow::Error;
 use camino::Utf8PathBuf;
 use console::style;
@@ -36,16 +36,16 @@ pub fn print_test_result(test_result: &TestUnitSummary) {
     };
 
     let result_name = match test_result {
-        TestUnitSummary::Passed { name, .. } => name,
-        TestUnitSummary::Failed { name, .. } => name,
-        TestUnitSummary::Skipped { name } => name,
+        TestUnitSummary::Skipped { name }
+        | TestUnitSummary::Failed { name, .. }
+        | TestUnitSummary::Passed { name, .. } => name,
     };
 
     let result_message = match test_result {
-        TestUnitSummary::Passed { msg: Some(msg), .. } => format!("\n\nSuccess data:{}", msg),
-        TestUnitSummary::Failed { msg: Some(msg), .. } => format!("\n\nFailure data:{}", msg),
+        TestUnitSummary::Passed { msg: Some(msg), .. } => format!("\n\nSuccess data:{msg}"),
+        TestUnitSummary::Failed { msg: Some(msg), .. } => format!("\n\nFailure data:{msg}"),
         _ => String::new(),
     };
 
-    println!("{result_header} {result_name}{result_message}")
+    println!("{result_header} {result_name}{result_message}");
 }

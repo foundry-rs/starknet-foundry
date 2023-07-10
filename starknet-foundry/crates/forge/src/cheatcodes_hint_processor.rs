@@ -366,7 +366,10 @@ fn match_cheatcode_by_selector(
             contracts,
         ),
         "deploy" => deploy(vm, blockifier_state, &inputs, &mut result_segment_ptr),
-        "print" => print(inputs),
+        "print" => {
+            print(inputs);
+            Ok(())
+        }
         _ => Err(anyhow!("Unknown cheatcode selector: {selector}")).map_err(Into::into),
     }?;
 
@@ -377,7 +380,7 @@ fn match_cheatcode_by_selector(
     Ok(())
 }
 
-fn print(inputs: Vec<Felt252>) -> Result<(), EnhancedHintError> {
+fn print(inputs: Vec<Felt252>) {
     for value in inputs {
         if let Some(short_string) = as_cairo_short_string(&value) {
             println!("original value: [{value}], converted to a string: [{short_string}]",);
@@ -385,7 +388,6 @@ fn print(inputs: Vec<Felt252>) -> Result<(), EnhancedHintError> {
             println!("original value: [{value}]");
         }
     }
-    Ok(())
 }
 
 fn declare(
