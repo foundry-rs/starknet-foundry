@@ -30,9 +30,9 @@ pub fn print_test_summary(test_summary: &TestSummary) {
 
 pub fn print_test_result(test_result: &TestResult) {
     let result_header = match test_result {
-        TestResult::Passed { .. } => format!("[{}] ", style("PASS").green()),
-        TestResult::Failed { .. } => format!("[{}] ", style("FAIL").red()),
-        TestResult::Skipped { .. } => format!("[{}] ", style("SKIP").yellow()),
+        TestResult::Passed { .. } => format!("[{}]", style("PASS").green()),
+        TestResult::Failed { .. } => format!("[{}]", style("FAIL").red()),
+        TestResult::Skipped { .. } => format!("[{}]", style("SKIP").yellow()),
     };
 
     let result_name = match test_result {
