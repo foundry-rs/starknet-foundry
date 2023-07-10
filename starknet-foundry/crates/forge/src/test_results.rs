@@ -28,7 +28,7 @@ pub fn extract_result_data(run_result: &RunResult) -> Option<String> {
 
     for felt in data {
         readable_text.push_str(&format!("\n    original value: [{felt}]"));
-        if let Some(short_string) = as_cairo_short_string(&felt) {
+        if let Some(short_string) = as_cairo_short_string(felt) {
             readable_text.push_str(&format!(", converted to a string: [{short_string}]"));
         }
     }
@@ -36,7 +36,7 @@ pub fn extract_result_data(run_result: &RunResult) -> Option<String> {
     if readable_text.is_empty() {
         None
     } else {
-        readable_text.push_str("\n");
+        readable_text.push('\n');
         Some(readable_text)
     }
 }

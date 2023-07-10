@@ -205,7 +205,7 @@ fn run_tests(
         if runner_config.exit_first {
             if let TestResult::Failed { .. } = result {
                 for config in &tests.tests_configs[i + 1..] {
-                    let skipped_result = skip_from_test_config(&config);
+                    let skipped_result = skip_from_test_config(config);
                     pretty_printing::print_test_result(&skipped_result);
                     tests_summary.update(skipped_result);
                 }
