@@ -1,10 +1,12 @@
-use crate::helpers::constants::{ACCOUNT, MAP_CONTRACT_ADDRESS, NETWORK, URL};
+use crate::helpers::constants::{ACCOUNT, ACCOUNT_FILE_PATH, MAP_CONTRACT_ADDRESS, NETWORK, URL};
 use crate::helpers::runner::runner;
 use indoc::indoc;
 
 #[tokio::test]
 async fn test_happy_case_from_scarb() {
     let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
         "--override-project",
         "tests/data/files/correct_Scarb.toml",
         "call",
@@ -24,6 +26,8 @@ async fn test_happy_case_from_scarb() {
 #[tokio::test]
 async fn test_happy_case_from_cli_no_scarb() {
     let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
         "--url",
         URL,
         "--network",
@@ -47,6 +51,8 @@ async fn test_happy_case_from_cli_no_scarb() {
 #[tokio::test]
 async fn test_happy_case_from_cli_with_scarb() {
     let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
         "--json",
         "--override-project",
         "tests/data/files/correct_Scarb.toml",
@@ -82,6 +88,8 @@ async fn test_happy_case_from_cli_with_scarb() {
 #[tokio::test]
 async fn test_happy_case_mixed() {
     let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
         "--json",
         "--override-project",
         "tests/data/files/correct_Scarb.toml",
@@ -113,6 +121,8 @@ async fn test_happy_case_mixed() {
 #[tokio::test]
 async fn test_missing_account() {
     let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
         "--url",
         URL,
         "--network",
@@ -132,6 +142,8 @@ async fn test_missing_account() {
 #[tokio::test]
 async fn test_missing_network() {
     let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
         "--url",
         URL,
         "--account",
@@ -151,6 +163,8 @@ async fn test_missing_network() {
 #[tokio::test]
 async fn test_missing_url() {
     let args = vec![
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
         "--network",
         NETWORK,
         "--account",

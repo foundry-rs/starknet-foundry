@@ -49,7 +49,6 @@ jobs:
       - uses: asdf-vm/actions/setup@v2
       - name: Prepare for tests
         run: |
-          . "$HOME/.asdf/asdf.sh"
           ./scripts/prepare_for_tests.sh
       - name: Run tests
         run: cargo test --manifest-path ./starknet-foundry/Cargo.toml -p cast
