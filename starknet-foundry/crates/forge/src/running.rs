@@ -12,6 +12,7 @@ use cairo_lang_runner::{
     CairoHintProcessor as CoreCairoHintProcessor, RunResultValue, RunnerError,
 };
 use cairo_lang_runner::{RunResult, SierraCasmRunner, StarknetState};
+use cairo_vm::vm::runners::cairo_runner::RunResources;
 use test_collector::TestConfig;
 
 use crate::cheatcodes_hint_processor::CairoHintProcessor;
@@ -82,6 +83,7 @@ pub(crate) fn run_from_test_config(
         starknet_state: StarknetState::default(),
         string_to_hint,
         blockifier_state: None,
+        run_resources: RunResources::default(),
     };
     let mut cairo_hint_processor = CairoHintProcessor {
         original_cairo_hint_processor: core_cairo_hint_processor,
