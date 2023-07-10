@@ -1,8 +1,6 @@
 use crate::helpers::{
+    constants::{ACCOUNT, ACCOUNT_FILE_PATH, DECLARE_TRANSACTION_HASH, MAP_CLASS_HASH, NETWORK},
     fixtures::create_test_provider,
-    constants::{
-        ACCOUNT, ACCOUNT_FILE_PATH, DECLARE_TRANSACTION_HASH, MAP_CLASS_HASH, NETWORK,
-    }
 };
 use camino::Utf8PathBuf;
 use cast::{get_account, parse_number, wait_for_tx};

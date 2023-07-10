@@ -1,4 +1,4 @@
-use crate::helpers::constants::{MAP_CONTRACT_ADDRESS, URL, NETWORK, ACCOUNT};
+use crate::helpers::constants::{ACCOUNT, MAP_CONTRACT_ADDRESS, NETWORK, URL};
 use crate::helpers::runner::runner;
 use indoc::indoc;
 
