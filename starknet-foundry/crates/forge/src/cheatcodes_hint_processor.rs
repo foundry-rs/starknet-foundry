@@ -3,10 +3,11 @@ use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
 use std::fs;
 use std::hash::{Hash, Hasher};
+use std::io;
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use blockifier::abi::abi_utils::selector_from_name;
 use blockifier::execution::contract_class::{
     ContractClass as BlockifierContractClass, ContractClassV1,
@@ -15,6 +16,7 @@ use blockifier::execution::entry_point::{
     CallEntryPoint, CallType, EntryPointExecutionContext, ExecutionResources,
 };
 use blockifier::state::cached_state::CachedState;
+use blockifier::state::errors::StateError;
 use blockifier::state::state_api::StateReader;
 use blockifier::transaction::account_transaction::AccountTransaction;
 use blockifier::transaction::transactions::{DeclareTransaction, ExecutableTransaction};
@@ -25,6 +27,7 @@ use cairo_vm::serde::deserialize_program::ApTracking;
 use cairo_vm::types::exec_scope::ExecutionScopes;
 use cairo_vm::types::relocatable::{MaybeRelocatable, Relocatable};
 use cairo_vm::vm::errors::hint_errors::HintError;
+use cairo_vm::vm::errors::memory_errors::MemoryError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::runners::cairo_runner::RunResources;
 use cairo_vm::vm::vm_core::VirtualMachine;
@@ -41,7 +44,8 @@ use starknet_api::hash::{StarkFelt, StarkHash};
 use starknet_api::transaction::{
     Calldata, ContractAddressSalt, InvokeTransaction, InvokeTransactionV1,
 };
-use starknet_api::{patricia_key, stark_felt};
+use starknet_api::{patricia_key, stark_felt, StarknetApiError};
+use thiserror::Error;
 
 use cairo_lang_casm::hints::{Hint, StarknetHint};
 use cairo_lang_casm::operand::{CellRef, ResOperand};
@@ -72,7 +76,7 @@ impl HintProcessor for CairoHintProcessor<'_> {
         let blockifier_state = self
             .blockifier_state
             .as_mut()
-            .expect("blockifier state is needed for executing hints");
+            .expect("Blockifier state is needed for executing hints");
         if let Some(Hint::Starknet(StarknetHint::Cheatcode {
             selector,
             input_start,
@@ -242,6 +246,37 @@ fn call_contract(
     Ok(return_data)
 }
 
+// All errors that can be thrown from the hint executor have to be added here,
+// to prevent the whole runner from panicking
+#[derive(Error, Debug)]
+enum EnhancedHintError {
+    #[error(transparent)]
+    Hint(#[from] HintError),
+    #[error(transparent)]
+    Io(#[from] io::Error),
+    #[error(transparent)]
+    Anyhow(#[from] anyhow::Error),
+    #[error(transparent)]
+    VirtualMachine(#[from] VirtualMachineError),
+    #[error(transparent)]
+    Memory(#[from] MemoryError),
+    #[error(transparent)]
+    State(#[from] StateError),
+    #[error(transparent)]
+    SerdeJson(#[from] serde_json::Error),
+    #[error(transparent)]
+    StarknetApi(#[from] StarknetApiError),
+}
+
+impl From<EnhancedHintError> for HintError {
+    fn from(error: EnhancedHintError) -> Self {
+        match error {
+            EnhancedHintError::Hint(error) => error,
+            error => HintError::CustomHint(error.to_string().into_boxed_str()),
+        }
+    }
+}
+
 #[allow(clippy::trivially_copy_pass_by_ref, clippy::too_many_arguments)]
 fn execute_cheatcode_hint(
     vm: &mut VirtualMachine,
@@ -275,6 +310,7 @@ fn execute_cheatcode_hint(
         output_start,
         output_end,
     )
+    .map_err(Into::into)
 }
 
 #[allow(unused, clippy::too_many_lines, clippy::trivially_copy_pass_by_ref)]
@@ -285,7 +321,7 @@ fn match_cheatcode_by_selector(
     inputs: Vec<Felt252>,
     output_start: &CellRef,
     output_end: &CellRef,
-) -> Result<(), HintError> {
+) -> Result<(), EnhancedHintError> {
     let mut result_segment_ptr = vm.add_memory_segment();
     let result_start = result_segment_ptr;
 
@@ -302,10 +338,8 @@ fn match_cheatcode_by_selector(
         "declare" => declare(vm, blockifier_state, &inputs, &mut result_segment_ptr),
         "deploy" => deploy(vm, blockifier_state, &inputs, &mut result_segment_ptr),
         "print" => print(inputs),
-        _ => Err(HintError::CustomHint(Box::from(format!(
-            "Unknown cheatcode selector: {selector}"
-        ))))?,
-    }
+        _ => Err(anyhow!("Unknown cheatcode selector: {selector}")).map_err(Into::into),
+    }?;
 
     let result_end = result_segment_ptr;
     insert_value_to_cellref!(vm, output_start, result_start)?;
@@ -314,7 +348,7 @@ fn match_cheatcode_by_selector(
     Ok(())
 }
 
-fn print(inputs: Vec<Felt252>) {
+fn print(inputs: Vec<Felt252>) -> Result<(), EnhancedHintError> {
     for value in inputs {
         if let Some(short_string) = as_cairo_short_string(&value) {
             println!("original value: [{value}], converted to a string: [{short_string}]",);
@@ -322,6 +356,7 @@ fn print(inputs: Vec<Felt252>) {
             println!("original value: [{value}]");
         }
     }
+    Ok(())
 }
 
 fn declare(
@@ -329,17 +364,17 @@ fn declare(
     blockifier_state: &mut CachedState<DictStateReader>,
     inputs: &[Felt252],
     result_segment_ptr: &mut Relocatable,
-) {
+) -> Result<(), EnhancedHintError> {
     let contract_value = inputs[0].clone();
 
     let contract_value_as_short_str = as_cairo_short_string(&contract_value)
-        .expect("Converting contract name to short string failed");
+        .context("Converting contract name to short string failed")?;
     let current_dir = std::env::current_dir()
-        .expect("Failed to get current directory")
+        .context("Failed to get current directory")?
         .join("target/dev");
 
     let mut paths = fs::read_dir(&current_dir)
-        .expect("Failed to read ./target/dev, scarb build probably failed");
+        .context("Failed to read ./target/dev, scarb build probably failed")?;
 
     let starknet_artifacts_entry = &paths
         .find_map(|path| match path {
@@ -349,21 +384,17 @@ fn declare(
             }
             Err(_) => None,
         })
-        .expect("Failed to find starknet_artifacts.json file");
+        .context("Failed to find starknet_artifacts.json file")?;
     let starknet_artifacts =
-        fs::read_to_string(starknet_artifacts_entry.path()).unwrap_or_else(|_| {
-            panic!(
-                "Failed to read {:?} contents",
-                starknet_artifacts_entry.file_name()
-            )
-        });
+        fs::read_to_string(starknet_artifacts_entry.path()).context(format!(
+            "Failed to read {:?} contents",
+            starknet_artifacts_entry.file_name()
+        ))?;
     let starknet_artifacts: ScarbStarknetArtifacts =
-        serde_json::from_str(starknet_artifacts.as_str()).unwrap_or_else(|_| {
-            panic!(
-                "Failed to parse {:?} contents",
-                starknet_artifacts_entry.file_name()
-            )
-        });
+        serde_json::from_str(starknet_artifacts.as_str()).context(format!(
+            "Failed to parse {:?} contents",
+            starknet_artifacts_entry.file_name()
+        ))?;
 
     let sierra_path = starknet_artifacts
         .contracts
@@ -374,25 +405,23 @@ fn declare(
             }
             None
         })
-        .unwrap_or_else(|| {
-            panic!(
-                "Failed to find contract {contract_value_as_short_str} in starknet_artifacts.json"
-            )
-        });
+        .context(format!(
+            "Failed to find contract {contract_value_as_short_str} in starknet_artifacts.json"
+        ))?;
     let sierra_path = current_dir.join(sierra_path);
 
     let file = fs::File::open(&sierra_path)
-        .unwrap_or_else(|_| panic!("Failed to open file at path = {:?}", &sierra_path));
-    let sierra_contract_class: ContractClass = serde_json::from_reader(&file)
-        .unwrap_or_else(|_| panic!("File to parse json from file = {file:?}"));
+        .context(format!("Failed to open file at path = {:?}", &sierra_path))?;
+    let sierra_contract_class: ContractClass =
+        serde_json::from_reader(&file).context("File to parse json from file = {file:?}")?;
 
     let casm_contract_class = CasmContractClass::from_contract_class(sierra_contract_class, true)
-        .expect("sierra to casm failed");
+        .context("Sierra to casm failed")?;
     let casm_serialized = serde_json::to_string_pretty(&casm_contract_class)
-        .expect("Failed to serialize contract to casm");
+        .context("Failed to serialize contract to casm")?;
 
     let contract_class = ContractClassV1::try_from_json_string(&casm_serialized)
-        .expect("Failed to read contract class from json");
+        .context("Failed to read contract class from json")?;
     let contract_class = BlockifierContractClass::V1(contract_class);
 
     // TODO(#2134) replace this. Hash should be calculated in the correct manner. This is just a workaround.
@@ -405,7 +434,7 @@ fn declare(
         .get_nonce_at(ContractAddress(patricia_key!(
             TEST_ACCOUNT_CONTRACT_ADDRESS
         )))
-        .expect("Failed to get nonce");
+        .context("Failed to get nonce")?;
 
     let declare_tx = build_declare_transaction(
         nonce,
@@ -422,15 +451,14 @@ fn declare(
     let block_context = build_block_context();
     let _tx_result = account_tx
         .execute(blockifier_state, &block_context)
-        .expect("Failed to execute declare transaction");
+        .context("Failed to execute declare transaction")?;
     // result_segment.
     let felt_class_hash = felt252_from_hex_string(&class_hash.to_string()).unwrap();
 
-    // TODO https://github.com/software-mansion/protostar/issues/2024
-    //  in case of errors above, consider not panicking,
-    //  set an error and return it here instead
-    insert_at_pointer(vm, result_segment_ptr, Felt252::from(0)).unwrap();
-    insert_at_pointer(vm, result_segment_ptr, felt_class_hash).unwrap();
+    insert_at_pointer(vm, result_segment_ptr, Felt252::from(0))?;
+    insert_at_pointer(vm, result_segment_ptr, felt_class_hash)?;
+
+    Ok(())
 }
 
 fn deploy(
@@ -438,7 +466,7 @@ fn deploy(
     blockifier_state: &mut CachedState<DictStateReader>,
     inputs: &[Felt252],
     result_segment_ptr: &mut Relocatable,
-) {
+) -> Result<(), EnhancedHintError> {
     let _contract_address = inputs[0].clone();
     // TODO(#1991) deploy should fail if contract address provided doesn't match calculated
     //  or not accept this address as argument at all.
@@ -467,27 +495,29 @@ fn deploy(
 
     let nonce = blockifier_state
         .get_nonce_at(account_address)
-        .expect("Failed to get nonce");
+        .context("Failed to get nonce")?;
     let tx = build_invoke_transaction(execute_calldata, account_address);
     let account_tx =
         AccountTransaction::Invoke(InvokeTransaction::V1(InvokeTransactionV1 { nonce, ..tx }));
     let tx_result = account_tx
         .execute(blockifier_state, &block_context)
-        .expect("Failed to execute deploy transaction");
+        .context("Failed to execute deploy transaction")?;
     let return_data = tx_result
         .execute_call_info
-        .expect("Failed to get execution data from method")
+        .context("Failed to get execution data from method")?
         .execution
         .retdata;
     let contract_address = return_data
         .0
         .get(0)
-        .expect("Failed to get contract_address from return_data");
+        .context("Failed to get contract_address from return_data")?;
     let contract_address = Felt252::from_bytes_be(contract_address.bytes());
 
     // TODO(#2152): in case of error, consider filling the panic data instead of packing in rust
     insert_at_pointer(vm, result_segment_ptr, Felt252::from(0)).unwrap();
     insert_at_pointer(vm, result_segment_ptr, contract_address).unwrap();
+
+    Ok(())
 }
 
 // TODO(#2164): remove this when extract_relocatable is pub in cairo
@@ -499,6 +529,7 @@ fn extract_relocatable(
     get_ptr(vm, base, &offset)
 }
 
+// Should this function panic?
 fn create_execute_calldata(
     calldata: &[Felt252],
     class_hash: &ClassHash,
