@@ -4,19 +4,19 @@ Blazingly fast implementation of Foundry for developing Starknet contracts desig
 
 ## Installation
 
-To install Forge/Cast, run:
+To install Starknet-Foundry, run:
 
 ```shell
-curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/install.sh | bash forge
+curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/install.sh | bash starknet-foundry
 ```
 
 If you want to specify a version, run the following command with the requested version:
 
 ```shell
-curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/install.sh | bash -s -- -v 0.1.0
+curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/install.sh | bash starknet-foundry -s -- -v 0.1.0
 ```
 
-To check if the Starknet-Foundry is installed correctly, run `forge -v` and `cast -v`.
+To check if the Starknet-Foundry is installed correctly, run `forge --version` and `cast --version`.
 
 ## Development
 
@@ -26,7 +26,9 @@ TODO
 
 ### Testing
 Test scripts require you to have asdf installed. 
-Moreover, Cast's tests require devenet.
+Cast's tests require devenet as well.
+Moreover, `./scripts/prepare-for-tests.sh` should be run once after setting up the development environment.
+
 ```bash
 $ ./scripts/test_forge.sh
 $ ./scripts/test_cast.sh
