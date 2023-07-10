@@ -1,3 +1,8 @@
 [package]
 name = "panic_decoding_test"
 version = "0.1.0"
+
+[dependencies]
+starknet = "2.0.0-rc2"
+# cheatcodes = { git = "https://github.com/foundry-rs/starknet-foundry", rev = "xyz" } TODO: investigate with Scarb team
+cheatcodes = { git = "https://github.com/piotmag769/cheatcodes" }

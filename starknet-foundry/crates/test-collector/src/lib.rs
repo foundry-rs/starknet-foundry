@@ -1,3 +1,4 @@
+use crate::sierra_casm_generator::SierraCasmGenerator;
 use anyhow::{anyhow, Context, Result};
 use cairo_felt::Felt252;
 use cairo_lang_compiler::db::RootDatabase;
@@ -38,7 +39,6 @@ use smol_str::SmolStr;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use crate::sierra_casm_generator::SierraCasmGenerator;
 
 pub mod sierra_casm_generator;
 
@@ -283,7 +283,6 @@ pub fn collect_tests(
     output_path: Option<&str>,
     linked_libraries: Option<Vec<LinkedLibrary>>,
     builtins: Option<Vec<&str>>,
-    corelib_path: Option<&str>,
 ) -> Result<(Program, Vec<TestConfig>)> {
     // code taken from crates/cairo-lang-test-runner/src/lib.rs
     let db = &mut {
@@ -296,12 +295,8 @@ pub fn collect_tests(
 
     init_dev_corelib(
         db,
-        corelib_path.map_or_else(
-            || detect_corelib().ok_or_else(|| anyhow!("Failed to load development corelib")),
-            |corelib_path| Ok(corelib_path.into()),
-        )?,
+        detect_corelib().ok_or_else(|| anyhow!("Failed to load development corelib"))?,
     );
-
     let main_crate_ids = setup_project(db, Path::new(&input_path))
         .with_context(|| format!("Failed to setup project for path({})", input_path))?;
 

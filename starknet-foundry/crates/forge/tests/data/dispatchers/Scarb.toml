@@ -2,11 +2,9 @@
 name = "dispatchers"
 version = "0.1.0"
 
-# See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest
-
 [dependencies]
 starknet = "2.0.0-rc2"
+# cheatcodes = { git = "https://github.com/foundry-rs/starknet-foundry", rev = "xyz" } TODO: investigate with Scarb team
+cheatcodes = { git = "https://github.com/piotmag769/cheatcodes" }
 
 [[target.starknet-contract]]
-sierra = true
-casm = true
