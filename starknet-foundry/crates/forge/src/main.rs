@@ -52,8 +52,10 @@ fn main_execution() -> Result<()> {
         .context("Failed to build contracts with Scarb")?;
 
     for package in &scarb_metadata.workspace.members {
-        let protostar_config = forge::scarb::config_from_scarb_for_package(&scarb_metadata, package)?;
-        let (base_path, dependencies) = forge::scarb::dependencies_for_package(&scarb_metadata, package)?;
+        let protostar_config =
+            forge::scarb::config_from_scarb_for_package(&scarb_metadata, package)?;
+        let (base_path, dependencies) =
+            forge::scarb::dependencies_for_package(&scarb_metadata, package)?;
         let runner_config = RunnerConfig::new(
             args.test_name.clone(),
             args.exact,

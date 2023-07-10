@@ -307,6 +307,7 @@ fn execute_cheatcode_hint(
     input_end: &ResOperand,
     output_start: &CellRef,
     output_end: &CellRef,
+    contracts: &HashMap<String, StarknetContractArtifacts>,
 ) -> Result<(), HintError> {
     // Parse the selector.
     let selector = &selector.value.to_bytes_be().1;
@@ -329,6 +330,7 @@ fn execute_cheatcode_hint(
         inputs,
         output_start,
         output_end,
+        contracts,
     )
     .map_err(Into::into)
 }
@@ -356,7 +358,13 @@ fn match_cheatcode_by_selector(
         "stop_prank" => todo!(),
         "mock_call" => todo!(),
         "declare_cairo0" => todo!(),
-        "declare" => declare(vm, blockifier_state, &inputs, &mut result_segment_ptr),
+        "declare" => declare(
+            vm,
+            blockifier_state,
+            &inputs,
+            &mut result_segment_ptr,
+            contracts,
+        ),
         "deploy" => deploy(vm, blockifier_state, &inputs, &mut result_segment_ptr),
         "print" => print(inputs),
         _ => Err(anyhow!("Unknown cheatcode selector: {selector}")).map_err(Into::into),
@@ -385,23 +393,19 @@ fn declare(
     blockifier_state: &mut CachedState<DictStateReader>,
     inputs: &[Felt252],
     result_segment_ptr: &mut Relocatable,
+    contracts: &HashMap<String, StarknetContractArtifacts>,
 ) -> Result<(), EnhancedHintError> {
     let contract_value = inputs[0].clone();
 
-            let contract_value_as_short_str = as_cairo_short_string(&contract_value)
-                .expect("Converting contract name to short string failed");
-            let contract_artifact =
-                contracts
-                    .get(&contract_value_as_short_str)
-                    .unwrap_or_else(|| {
-                        panic!(
-                        "Failed to get contract artifact for name = {contract_value_as_short_str}"
-                    )
-                    });
-            let sierra_contract_class: ContractClass =
-                serde_json::from_str(&contract_artifact.sierra).unwrap_or_else(|_| {
-                    panic!("File to parse json from artifact = {contract_artifact:?}")
-                });
+    let contract_value_as_short_str = as_cairo_short_string(&contract_value)
+        .expect("Converting contract name to short string failed");
+    let contract_artifact = contracts
+        .get(&contract_value_as_short_str)
+        .unwrap_or_else(|| {
+            panic!("Failed to get contract artifact for name = {contract_value_as_short_str}")
+        });
+    let sierra_contract_class: ContractClass = serde_json::from_str(&contract_artifact.sierra)
+        .unwrap_or_else(|_| panic!("File to parse json from artifact = {contract_artifact:?}"));
 
     let casm_contract_class = CasmContractClass::from_contract_class(sierra_contract_class, true)
         .context("Sierra to casm failed")?;
