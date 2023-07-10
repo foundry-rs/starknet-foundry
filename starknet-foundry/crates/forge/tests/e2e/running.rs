@@ -129,7 +129,7 @@ fn with_declare() {
 
             Failure data:
                 Got an exception while executing a hint:
-                Failed to find contract GoodbyeStarknet in starknet_artifacts.json
+                Failed to get contract artifact for name = GoodbyeStarknet
 
             Tests: 2 passed, 1 failed, 0 skipped
         "#});

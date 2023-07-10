@@ -399,13 +399,11 @@ fn declare(
 
     let contract_value_as_short_str = as_cairo_short_string(&contract_value)
         .expect("Converting contract name to short string failed");
-    let contract_artifact = contracts
-        .get(&contract_value_as_short_str)
-        .unwrap_or_else(|| {
-            panic!("Failed to get contract artifact for name = {contract_value_as_short_str}")
-        });
+    let contract_artifact = contracts.get(&contract_value_as_short_str).ok_or_else(|| {
+        anyhow!("Failed to get contract artifact for name = {contract_value_as_short_str}")
+    })?;
     let sierra_contract_class: ContractClass = serde_json::from_str(&contract_artifact.sierra)
-        .unwrap_or_else(|_| panic!("File to parse json from artifact = {contract_artifact:?}"));
+        .with_context(|| format!("File to parse json from artifact = {contract_artifact:?}"))?;
 
     let casm_contract_class = CasmContractClass::from_contract_class(sierra_contract_class, true)
         .context("Sierra to casm failed")?;

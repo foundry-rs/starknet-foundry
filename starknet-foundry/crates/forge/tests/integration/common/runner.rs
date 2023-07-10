@@ -150,7 +150,7 @@ macro_rules! assert_passed {
             result
                 .test_unit_summaries
                 .iter()
-                .all(forge::TestUnitSummary::passed)
+                .all(|r| matches!(r, TestUnitSummary::Passed { .. }))
         }));
     }};
 }
@@ -158,8 +158,11 @@ macro_rules! assert_passed {
 #[macro_export]
 macro_rules! assert_failed {
     ($result:expr) => {{
-        assert!($result
-            .iter()
-            .all(|result| { result.test_unit_summaries.iter().all(|us| !us.passed()) }));
+        assert!($result.iter().all(|result| {
+            result
+                .test_unit_summaries
+                .iter()
+                .all(|r| !matches!(r, TestUnitSummary::Passed { .. }))
+        }));
     }};
 }

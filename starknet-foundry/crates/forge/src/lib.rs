@@ -4,11 +4,10 @@ use std::fmt::Debug;
 use anyhow::{Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use serde::Deserialize;
-use test_results::TestResult;
+use test_results::TestUnitSummary;
 use walkdir::WalkDir;
 
 use cairo_lang_runner::SierraCasmRunner;
-use cairo_lang_runner::{RunResultValue, SierraCasmRunner};
 use cairo_lang_sierra::program::Program;
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
@@ -19,15 +18,12 @@ use test_collector::{collect_tests, LinkedLibrary, TestUnit};
 
 use crate::test_results::TestSummary;
 
-// Reexport modules in lib.rs scope
-pub use crate::running::TestUnitSummary;
-
 pub mod pretty_printing;
 pub mod scarb;
+pub mod test_results;
 
 mod cheatcodes_hint_processor;
 mod running;
-mod test_results;
 
 /// Configuration of the test runner
 #[derive(Deserialize, Debug, PartialEq, Default)]
@@ -177,9 +173,12 @@ pub fn run(
 
     let mut summaries = vec![];
     for tests_from_file in tests_iterator.by_ref() {
-        let summary =
-            run_tests_from_file(tests_from_file, &mut tests_summary, runner_config, contracts)?
-           ;
+        let summary = run_tests_from_file(
+            tests_from_file,
+            &mut tests_summary,
+            runner_config,
+            contracts,
+        )?;
         summaries.push(summary.clone());
         if summary.runner_exit_status == RunnerStatus::TestFailed {
             break;
@@ -188,7 +187,7 @@ pub fn run(
 
     for tests_from_file in tests_iterator {
         for unit in tests_from_file.test_units {
-            let skipped_result = skip_from_test_config(&unit);
+            let skipped_result = TestUnitSummary::skipped(&unit);
             pretty_printing::print_test_result(&skipped_result);
             tests_summary.update(skipped_result);
         }
@@ -226,22 +225,22 @@ fn run_tests_from_file(
 
         pretty_printing::print_test_result(&result);
         if runner_config.exit_first {
-            if let TestResult::Failed { .. } = result {
-                for config in &tests.tests_configs[i + 1..] {
-                    let skipped_result = skip_from_test_config(config);
+            if let TestUnitSummary::Failed { .. } = result {
+                for unit in &tests.test_units[i + 1..] {
+                    let skipped_result = TestUnitSummary::skipped(unit);
                     pretty_printing::print_test_result(&skipped_result);
                     tests_summary.update(skipped_result);
                 }
                 tests_summary.update(result);
-                return Ok(RunTestsSummary {
-                    test_run_summaries: results,
+                return Ok(TestFileSummary {
+                    test_unit_summaries: results,
                     runner_exit_status: RunnerStatus::TestFailed,
                     relative_path: tests.relative_path,
                 });
             }
         }
 
-        tests_summary.update(result.value);
+        tests_summary.update(result);
     }
     Ok(TestFileSummary {
         test_unit_summaries: results,

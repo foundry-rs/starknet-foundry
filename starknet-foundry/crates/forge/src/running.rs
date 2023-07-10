@@ -8,16 +8,14 @@ use itertools::chain;
 use cairo_lang_casm::hints::Hint;
 use cairo_lang_casm::instructions::Instruction;
 use cairo_lang_runner::casm_run::hint_to_hint_params;
-use cairo_lang_runner::{
-    CairoHintProcessor as CoreCairoHintProcessor, RunResultValue, RunnerError,
-};
-use cairo_lang_runner::{RunResult, SierraCasmRunner, StarknetState};
+use cairo_lang_runner::{CairoHintProcessor as CoreCairoHintProcessor, RunnerError};
+use cairo_lang_runner::{SierraCasmRunner, StarknetState};
 use cairo_vm::vm::runners::cairo_runner::RunResources;
 use test_collector::TestUnit;
 
 use crate::cheatcodes_hint_processor::CairoHintProcessor;
 use crate::scarb::StarknetContractArtifacts;
-use crate::test_results::{extract_result_data, TestResult};
+use crate::test_results::TestUnitSummary;
 
 /// Builds `hints_dict` required in `cairo_vm::types::program::Program` from instructions.
 fn build_hints_dict<'b>(
@@ -45,55 +43,40 @@ fn build_hints_dict<'b>(
     (hints_dict, string_to_hint)
 }
 
-type TestUnitExitStatus = RunResultValue;
-
-#[derive(Debug, PartialEq, Clone)]
-pub struct TestUnitSummary {
-    pub test_unit: TestUnit,
-    pub gas_counter: Option<cairo_felt::Felt252>,
-    pub memory: Vec<Option<cairo_felt::Felt252>>,
-    pub exit_status: TestUnitExitStatus,
-}
-
-impl TestUnitSummary {
-    fn from(test_unit: TestUnit, run_result: RunResult) -> Self {
-        Self {
-            test_unit,
-            gas_counter: run_result.gas_counter,
-            memory: run_result.memory,
-            exit_status: run_result.value,
-        }
-    }
-
-    #[must_use]
-    pub fn passed(&self) -> bool {
-        match self.exit_status {
-            TestUnitExitStatus::Success(_) => true,
-            TestUnitExitStatus::Panic(_) => false,
-        }
-    }
-}
-
-fn test_result_from_run_result(name: &str, run_result: RunResult) -> TestResult {
-    match run_result.value {
-        RunResultValue::Success(_) => TestResult::Passed {
-            name: name.to_string(),
-            msg: extract_result_data(&run_result),
-            run_result: Some(run_result),
-        },
-        RunResultValue::Panic(_) => TestResult::Failed {
-            name: name.to_string(),
-            msg: extract_result_data(&run_result),
-            run_result: Some(run_result),
-        },
-    }
-}
+// pub type TestUnitExitStatus = RunResultValue;
+//
+// #[derive(Debug, PartialEq, Clone)]
+// pub struct TestUnitSummary {
+//     pub test_unit: TestUnit,
+//     pub gas_counter: Option<cairo_felt::Felt252>,
+//     pub memory: Vec<Option<cairo_felt::Felt252>>,
+//     pub exit_status: TestUnitExitStatus,
+// }
+//
+// impl TestUnitSummary {
+//     fn from(test_unit: TestUnit, run_result: RunResult) -> Self {
+//         Self {
+//             test_unit,
+//             gas_counter: run_result.gas_counter,
+//             memory: run_result.memory,
+//             exit_status: run_result.value,
+//         }
+//     }
+//
+//     #[must_use]
+//     pub fn passed(&self) -> bool {
+//         match self.exit_status {
+//             TestUnitExitStatus::Success(_) => true,
+//             TestUnitExitStatus::Panic(_) => false,
+//         }
+//     }
+// }
 
 pub(crate) fn run_from_test_units(
     runner: &mut SierraCasmRunner,
     unit: &TestUnit,
     contracts: &HashMap<String, StarknetContractArtifacts>,
-) -> Result<TestResult> {
+) -> Result<TestUnitSummary> {
     let available_gas = if let Some(available_gas) = &unit.available_gas {
         Some(*available_gas)
     } else {
@@ -123,17 +106,17 @@ pub(crate) fn run_from_test_units(
     };
 
     match runner.run_function(
-        runner.find_function(config.name.as_str())?,
+        runner.find_function(unit.name.as_str())?,
         &mut cairo_hint_processor,
         hints_dict,
         instructions,
         builtins,
     ) {
-        Ok(result) => Ok(test_result_from_run_result(config.name.as_str(), result)),
+        Ok(result) => Ok(TestUnitSummary::from_run_result(result, unit)),
 
         // CairoRunError comes from VirtualMachineError which may come from HintException that originates in the cheatcode processor
-        Err(RunnerError::CairoRunError(error)) => Ok(TestResult::Failed {
-            name: config.name.clone(),
+        Err(RunnerError::CairoRunError(error)) => Ok(TestUnitSummary::Failed {
+            name: unit.name.clone(),
             run_result: None,
             msg: Some(format!(
                 "\n    {}\n",
@@ -142,11 +125,5 @@ pub(crate) fn run_from_test_units(
         }),
 
         Err(err) => Err(err.into()),
-    }
-}
-
-pub(crate) fn skip_from_test_config(config: &TestConfig) -> TestResult {
-    TestResult::Skipped {
-        name: config.name.clone(),
     }
 }
