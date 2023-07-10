@@ -49,7 +49,8 @@ pub async fn multicall(
     let contents = std::fs::read_to_string(path)?;
     let items_map: HashMap<String, Vec<toml::Value>> =
         toml::from_str(&contents).expect("failed to parse toml file");
-    let calls = &items_map["call"];
+    let empty_vec = &vec![];
+    let calls = items_map.get("call").unwrap_or(empty_vec);
     for call in calls {
         if let Some(call_type) = call.get("call_type") {
             match call_type.to_string().as_str() {
@@ -61,7 +62,7 @@ pub async fn multicall(
                     let result = deploy(
                         deploy_call.class_hash.as_str(),
                         inputs_as_strings_slices,
-                        deploy_call.salt.as_ref().map(|x| &**x),
+                        deploy_call.salt.as_deref(),
                         deploy_call.unique,
                         deploy_call.max_fee,
                         account,
