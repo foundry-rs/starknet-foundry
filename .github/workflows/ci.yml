@@ -8,7 +8,7 @@ jobs:
   test-forge:
     name: Test Forge
     env:
-      SCARB_VERSION: "0.5.0-alpha.0"
+      SCARB_VERSION: 0.5.0-alpha.0
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -16,9 +16,9 @@ jobs:
           submodules: true
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@dd05243424bd5c0e585e4b55eb2d7615cdd32f1f
-      - name: Setup Scarb
-        run: |
-          curl --proto '=https' --tlsv1.2 -sSf https://docs.swmansion.com/scarb/install.sh | bash -s -- -v ${{ env.SCARB_VERSION }}
+      - uses: software-mansion/setup-scarb@v1
+        with:
+          scarb-version: ${{ env.SCARB_VERSION }}
       - run: cargo test --manifest-path ./starknet-foundry/Cargo.toml -p forge
 
   test-cast:
