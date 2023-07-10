@@ -9,18 +9,16 @@ use std::sync::Arc;
 
 use anyhow::{anyhow, Context, Result};
 use blockifier::abi::abi_utils::selector_from_name;
-use blockifier::block_context::BlockContext;
 use blockifier::execution::contract_class::{
     ContractClass as BlockifierContractClass, ContractClassV1,
 };
-use blockifier::execution::entry_point::{CallEntryPoint, CallType};
+use blockifier::execution::entry_point::{
+    CallEntryPoint, CallType, EntryPointExecutionContext, ExecutionResources,
+};
 use blockifier::state::cached_state::CachedState;
 use blockifier::state::errors::StateError;
 use blockifier::state::state_api::StateReader;
-use blockifier::test_utils::{invoke_tx, DictStateReader};
-use blockifier::test_utils::{MAX_FEE, TEST_ACCOUNT_CONTRACT_ADDRESS};
 use blockifier::transaction::account_transaction::AccountTransaction;
-use blockifier::transaction::transaction_utils_for_protostar::declare_tx_default;
 use blockifier::transaction::transactions::{DeclareTransaction, ExecutableTransaction};
 use cairo_felt::Felt252;
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessor;
@@ -33,14 +31,18 @@ use cairo_vm::vm::errors::memory_errors::MemoryError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::runners::cairo_runner::RunResources;
 use cairo_vm::vm::vm_core::VirtualMachine;
+use cheatable_starknet::constants::{
+    build_block_context, build_declare_transaction, build_invoke_transaction,
+    build_transaction_context, TEST_ACCOUNT_CONTRACT_ADDRESS,
+};
+use cheatable_starknet::state::DictStateReader;
 use num_traits::{Num, ToPrimitive};
 use serde::Deserialize;
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, PatriciaKey};
 use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::hash::{StarkFelt, StarkHash};
 use starknet_api::transaction::{
-    Calldata, ContractAddressSalt, DeclareTransactionV0V1, Fee, InvokeTransaction,
-    InvokeTransactionV1,
+    Calldata, ContractAddressSalt, InvokeTransaction, InvokeTransactionV1,
 };
 use starknet_api::{patricia_key, stark_felt, StarknetApiError};
 use thiserror::Error;
@@ -216,8 +218,22 @@ fn call_contract(
         storage_address: contract_address,
         caller_address: account_address,
         call_type: CallType::Call,
+        initial_gas: u64::MAX,
     };
-    let call_info = entry_point.execute_directly(blockifier_state).unwrap();
+
+    let mut resources = ExecutionResources::default();
+    let account_context = build_transaction_context();
+    let block_context = build_block_context();
+
+    let mut context = EntryPointExecutionContext::new(
+        block_context.clone(),
+        account_context,
+        block_context.invoke_tx_max_n_steps,
+    );
+
+    let call_info = entry_point
+        .execute(blockifier_state, &mut resources, &mut context)
+        .unwrap();
 
     let raw_return_data = &call_info.execution.retdata.0;
     assert!(!call_info.execution.failed);
@@ -420,20 +436,23 @@ fn declare(
         )))
         .context("Failed to get nonce")?;
 
-    let declare_tx = DeclareTransactionV0V1 {
+    let declare_tx = build_declare_transaction(
         nonce,
         class_hash,
-        ..declare_tx_default()
-    };
-    let tx = DeclareTransaction {
-        tx: starknet_api::transaction::DeclareTransaction::V1(declare_tx),
+        ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS)),
+    );
+    let tx = DeclareTransaction::new(
+        starknet_api::transaction::DeclareTransaction::V2(declare_tx),
         contract_class,
-    };
+    )
+    .unwrap_or_else(|err| panic!("Unable to build transaction {:?}", err));
+
     let account_tx = AccountTransaction::Declare(tx);
-    let block_context = &BlockContext::create_for_account_testing();
+    let block_context = build_block_context();
     let _tx_result = account_tx
-        .execute(blockifier_state, block_context)
+        .execute(blockifier_state, &block_context)
         .context("Failed to execute declare transaction")?;
+    // result_segment.
     let felt_class_hash = felt252_from_hex_string(&class_hash.to_string()).unwrap();
 
     insert_at_pointer(vm, result_segment_ptr, Felt252::from(0))?;
@@ -461,7 +480,7 @@ fn deploy(
 
     // Deploy a contract using syscall deploy.
     let account_address = ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS));
-    let block_context = &BlockContext::create_for_account_testing();
+    let block_context = build_block_context();
     let entry_point_selector = selector_from_name("deploy_contract");
     let salt = ContractAddressSalt::default();
     let class_hash = ClassHash(StarkFelt::new(class_hash.to_be_bytes()).unwrap());
@@ -477,11 +496,11 @@ fn deploy(
     let nonce = blockifier_state
         .get_nonce_at(account_address)
         .context("Failed to get nonce")?;
-    let tx = invoke_tx(execute_calldata, account_address, Fee(MAX_FEE), None);
+    let tx = build_invoke_transaction(execute_calldata, account_address);
     let account_tx =
         AccountTransaction::Invoke(InvokeTransaction::V1(InvokeTransactionV1 { nonce, ..tx }));
     let tx_result = account_tx
-        .execute(blockifier_state, block_context)
+        .execute(blockifier_state, &block_context)
         .context("Failed to execute deploy transaction")?;
     let return_data = tx_result
         .execute_call_info

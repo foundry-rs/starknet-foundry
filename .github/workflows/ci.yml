@@ -68,6 +68,8 @@ jobs:
         run: cargo fmt --manifest-path ./starknet-foundry/Cargo.toml --check -p cast
       - name: Check test-collector formatting
         run: cargo fmt --manifest-path ./starknet-foundry/Cargo.toml --check -p test-collector
+      - name: Check cheatable-starknet formatting
+        run: cargo fmt --manifest-path ./starknet-foundry/Cargo.toml --check -p cheatable-starknet
 
   clippy:
     runs-on: ubuntu-latest
