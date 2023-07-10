@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use cairo_vm::serde::deserialize_program::HintParams;
 use cheatable_starknet::constants::build_testing_state;
 use itertools::chain;
@@ -8,12 +8,15 @@ use itertools::chain;
 use cairo_lang_casm::hints::Hint;
 use cairo_lang_casm::instructions::Instruction;
 use cairo_lang_runner::casm_run::hint_to_hint_params;
-use cairo_lang_runner::CairoHintProcessor as CoreCairoHintProcessor;
+use cairo_lang_runner::{
+    CairoHintProcessor as CoreCairoHintProcessor, RunResultValue, RunnerError,
+};
 use cairo_lang_runner::{RunResult, SierraCasmRunner, StarknetState};
 use cairo_vm::vm::runners::cairo_runner::RunResources;
 use test_collector::TestConfig;
 
 use crate::cheatcodes_hint_processor::CairoHintProcessor;
+use crate::test_results::{extract_result_data, TestResult};
 
 /// Builds `hints_dict` required in `cairo_vm::types::program::Program` from instructions.
 fn build_hints_dict<'b>(
@@ -41,10 +44,25 @@ fn build_hints_dict<'b>(
     (hints_dict, string_to_hint)
 }
 
+fn test_result_from_run_result(name: &str, run_result: RunResult) -> TestResult {
+    match run_result.value {
+        RunResultValue::Success(_) => TestResult::Passed {
+            name: name.to_string(),
+            msg: extract_result_data(&run_result),
+            run_result: Some(run_result),
+        },
+        RunResultValue::Panic(_) => TestResult::Failed {
+            name: name.to_string(),
+            msg: extract_result_data(&run_result),
+            run_result: Some(run_result),
+        },
+    }
+}
+
 pub(crate) fn run_from_test_config(
     runner: &mut SierraCasmRunner,
     config: &TestConfig,
-) -> Result<RunResult> {
+) -> Result<TestResult> {
     let available_gas = if let Some(available_gas) = &config.available_gas {
         Some(*available_gas)
     } else {
@@ -71,14 +89,32 @@ pub(crate) fn run_from_test_config(
         original_cairo_hint_processor: core_cairo_hint_processor,
         blockifier_state: Some(build_testing_state()),
     };
-    let result = runner
-        .run_function(
-            runner.find_function(config.name.as_str())?,
-            &mut cairo_hint_processor,
-            hints_dict,
-            instructions,
-            builtins,
-        )
-        .with_context(|| format!("Failed to run the function `{}`.", config.name.as_str()))?;
-    Ok(result)
+
+    match runner.run_function(
+        runner.find_function(config.name.as_str())?,
+        &mut cairo_hint_processor,
+        hints_dict,
+        instructions,
+        builtins,
+    ) {
+        Ok(result) => Ok(test_result_from_run_result(config.name.as_str(), result)),
+
+        // CairoRunError comes from VirtualMachineError which may come from HintException that originates in the cheatcode processor
+        Err(RunnerError::CairoRunError(error)) => Ok(TestResult::Failed {
+            name: config.name.clone(),
+            run_result: None,
+            msg: Some(format!(
+                "\n    {}\n",
+                error.to_string().replace(" Custom Hint Error: ", "\n    ")
+            )),
+        }),
+
+        Err(err) => Err(err.into()),
+    }
+}
+
+pub(crate) fn skip_from_test_config(config: &TestConfig) -> TestResult {
+    TestResult::Skipped {
+        name: config.name.clone(),
+    }
 }
