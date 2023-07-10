@@ -30,10 +30,11 @@ pub struct Call {
     pub block_id: String,
 }
 
+#[allow(clippy::ptr_arg)]
 pub async fn call(
     contract_address: &str,
     func_name: &str,
-    calldata: &[String],
+    calldata: &Vec<String>,
     provider: &JsonRpcClient<HttpTransport>,
     block_id: &BlockId,
 ) -> Result<Vec<FieldElement>> {
