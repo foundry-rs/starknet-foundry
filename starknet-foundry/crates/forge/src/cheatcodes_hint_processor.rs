@@ -5,15 +5,11 @@ use std::fs;
 use std::hash::{Hash, Hasher};
 use std::io;
 use std::path::PathBuf;
-use std::sync::Arc;
 
 use anyhow::{anyhow, Context, Result};
 use blockifier::abi::abi_utils::selector_from_name;
 use blockifier::execution::contract_class::{
     ContractClass as BlockifierContractClass, ContractClassV1,
-};
-use blockifier::execution::entry_point::{
-    CallEntryPoint, CallType, EntryPointExecutionContext, ExecutionResources,
 };
 use blockifier::state::cached_state::CachedState;
 use blockifier::state::errors::StateError;
@@ -32,17 +28,18 @@ use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use cheatable_starknet::constants::{
     build_block_context, build_declare_transaction, build_invoke_transaction,
-    build_transaction_context, TEST_ACCOUNT_CONTRACT_ADDRESS,
+    TEST_ACCOUNT_CONTRACT_ADDRESS,
 };
+use cheatable_starknet::rpc::call_contract;
 use cheatable_starknet::state::DictStateReader;
-use num_traits::{Num, ToPrimitive};
+use num_traits::{Num, ToPrimitive, FromPrimitive};
 use serde::Deserialize;
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, PatriciaKey};
-use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::hash::{StarkFelt, StarkHash};
 use starknet_api::transaction::{
     Calldata, ContractAddressSalt, InvokeTransaction, InvokeTransactionV1,
 };
+use cairo_felt_blockifier::Felt252 as blockifier_Felt252;
 use starknet_api::{patricia_key, stark_felt, StarknetApiError};
 use thiserror::Error;
 
@@ -163,6 +160,15 @@ struct ScarbStarknetContractArtifact {
     casm: Option<PathBuf>,
 }
 
+fn convert_to_blockifier_felt(val: Felt252) -> blockifier_Felt252 {
+    let v = val.to_i64().unwrap();
+    blockifier_Felt252::from_i64(v).unwrap() // TODO incorrect conversion
+}
+fn convert_from_blockifier_felt(val: blockifier_Felt252) -> Felt252 {
+    let v = val.to_i64().unwrap();
+    Felt252::from_i64(v).unwrap() // TODO incorrect conversion
+}
+
 fn execute_syscall(
     system: &ResOperand,
     vm: &mut VirtualMachine,
@@ -183,14 +189,16 @@ fn execute_syscall(
     let end = relocatable_from_pointer(vm, &mut system_ptr).unwrap();
     let calldata = read_data_from_range(vm, start, end).unwrap();
 
+    let calldata_blockifier: Vec<blockifier_Felt252> = calldata.into_iter().map(|v| convert_to_blockifier_felt(v)).collect();
     assert_eq!(std::str::from_utf8(&selector).unwrap(), "CallContract");
-    let result = call_contract(
-        &contract_address,
-        &entry_point_selector,
-        &calldata,
+    let result_blockfier: Vec<blockifier_Felt252> = call_contract(
+        &convert_to_blockifier_felt(contract_address),
+        &convert_to_blockifier_felt(entry_point_selector),
+        &calldata_blockifier,
         blockifier_state,
     )
     .unwrap();
+    let result: Vec<Felt252> = result_blockfier.into_iter().map(|v| convert_from_blockifier_felt(v)).collect();
 
     insert_at_pointer(vm, &mut system_ptr, gas_counter).unwrap();
     insert_at_pointer(vm, &mut system_ptr, Felt252::from(0)).unwrap();
@@ -569,6 +577,8 @@ fn felt252_from_hex_string(value: &str) -> Result<Felt252> {
 
 #[cfg(test)]
 mod test {
+    use std::sync::Arc;
+
     use cairo_felt::Felt252;
 
     use super::*;

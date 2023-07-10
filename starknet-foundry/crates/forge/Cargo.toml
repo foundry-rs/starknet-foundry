@@ -9,6 +9,7 @@ edition = "2021"
 anyhow.workspace = true
 test-collector = { path = "../test-collector" }
 cheatable-starknet = { path = "../cheatable-starknet" }
+cairo-felt-blockifier = { path = "../compatibility/cairo-felt-blockifier" }
 cairo-lang-test-runner = { path = "../../../cairo/crates/cairo-lang-test-runner", version = "2.0.0-rc2" }
 cairo-lang-runner = { path = "../../../cairo/crates/cairo-lang-runner", version = "2.0.0-rc2" }
 cairo-lang-sierra-to-casm = { path = "../../../cairo/crates/cairo-lang-sierra-to-casm", version = "2.0.0-rc2" }

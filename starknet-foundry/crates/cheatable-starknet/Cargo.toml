@@ -10,6 +10,7 @@ testing = []
 anyhow.workspace = true
 blockifier.workspace = true
 starknet_api.workspace = true
+cairo-felt = "0.8.1"
 cairo-felt-blockifier = { path = "../compatibility/cairo-felt-blockifier" }
 
 
