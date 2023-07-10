@@ -16,7 +16,6 @@ pub enum TestResult {
     Skipped {
         name: String,
     },
-    // TODO: Broken
 }
 
 pub fn extract_result_data(run_result: &RunResult) -> Option<String> {
