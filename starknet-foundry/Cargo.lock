@@ -1037,7 +1037,6 @@ dependencies = [
  "ark-secp256k1",
  "ark-secp256r1",
  "ark-std 0.3.0",
- "blockifier",
  "cairo-felt 0.6.1",
  "cairo-lang-casm 2.0.0-rc5",
  "cairo-lang-compiler 2.0.0-rc5",
@@ -1061,9 +1060,6 @@ dependencies = [
  "num-integer",
  "num-traits 0.2.15",
  "salsa",
- "serde_json",
- "smol_str",
- "starknet_api",
  "thiserror",
 ]
 
@@ -2342,7 +2338,6 @@ dependencies = [
  "camino",
  "clap",
  "console",
- "include_dir",
  "indoc",
  "itertools",
  "num-traits 0.2.15",
@@ -2904,25 +2899,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 1.0.109",
-]
-
-[[package]]
-name = "include_dir"
-version = "0.7.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "18762faeff7122e89e0857b02f7ce6fcc0d101d5e9ad2ad7846cc01d61b7f19e"
-dependencies = [
- "include_dir_macros",
-]
-
-[[package]]
-name = "include_dir_macros"
-version = "0.7.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b139284b5cf57ecfa712bcc66950bb635b31aff41c188e8a4cfc758eca374a3f"
-dependencies = [
- "proc-macro2",
- "quote",
 ]
 
 [[package]]
