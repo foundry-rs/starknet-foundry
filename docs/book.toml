@@ -1,0 +1,6 @@
+[book]
+authors = ["Piotr Magiera"]
+language = "en"
+multilingual = false
+src = "src"
+title = "The Starknet-Foundry Book"
