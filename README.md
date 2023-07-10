@@ -4,7 +4,9 @@ Blazingly fast implementation of Foundry for developing Starknet contracts desig
 
 ### Testing
 Test scripts require you to have asdf installed. 
-Moreover, Cast's tests require devenet.
+Cast's tests require devenet as well.
+Moreover, `./scripts/prepare-for-tests.sh` should be run once after setting up the development environment
+
 ```bash
 $ ./scripts/test_forge.sh
 $ ./scripts/test_cast.sh
