@@ -39,27 +39,12 @@ pub struct Deploy {
     pub max_fee: Option<u128>,
 }
 
-pub async fn deploy_and_print(
-    class_hash: &str,
-    constructor_calldata: Vec<&str>,
-    salt: Option<&str>,
-    unique: bool,
-    max_fee: Option<u128>,
-    account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
+pub async fn print_deploy_result(
+    deploy_result: Result<(FieldElement, FieldElement)>,
     int_format: bool,
     json: bool,
 ) -> Result<()> {
-    let result = deploy(
-        class_hash,
-        constructor_calldata,
-        salt,
-        unique,
-        max_fee,
-        account,
-    )
-    .await;
-
-    match result {
+    match deploy_result {
         Ok((transaction_hash, contract_address)) => print_formatted(
             vec![
                 ("command", "Deploy".to_string()),

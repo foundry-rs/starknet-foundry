@@ -33,24 +33,12 @@ pub struct Invoke {
     pub max_fee: Option<u128>,
 }
 
-pub async fn invoke_and_print(
-    contract_address: &str,
-    entry_point_name: &str,
-    calldata: Vec<&str>,
-    max_fee: Option<u128>,
-    account: &mut SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
+pub async fn print_invoke_result(
+    invoke_result: Result<FieldElement>,
     int_format: bool,
     json: bool,
 ) -> Result<()> {
-    let result = invoke(
-        contract_address,
-        entry_point_name,
-        calldata,
-        max_fee,
-        account,
-    )
-    .await;
-    match result {
+    match invoke_result {
         Ok(transaction_hash) => print_formatted(
             vec![
                 ("command", "Invoke".to_string()),

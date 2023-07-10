@@ -56,7 +56,7 @@ async fn test_deploy_fail() {
     let stderr_str =
         std::str::from_utf8(&out.stderr).expect("failed to convert command output to string");
 
-    assert!(stderr_str.contains("Class with hash 0x76e94149fc55e7ad9c5fe3b9af570970ae2cf51205f8452f39753e9497fe84 is not declared"));
+    assert!(stderr_str.contains("Class with hash 0x1 is not declared"));
 }
 
 #[tokio::test]

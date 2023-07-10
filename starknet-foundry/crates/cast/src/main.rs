@@ -121,7 +121,7 @@ async fn main() -> Result<()> {
         Commands::Deploy(deploy) => {
             let account = get_account(&cli.account, &accounts_file_path, &provider, &network)?;
 
-            starknet_commands::deploy::deploy_and_print(
+            let result = starknet_commands::deploy::deploy(
                 &deploy.class_hash,
                 deploy
                     .constructor_calldata
@@ -132,10 +132,10 @@ async fn main() -> Result<()> {
                 deploy.unique,
                 deploy.max_fee,
                 &account,
-                cli.int_format,
-                cli.json,
             )
-            .await?;
+            .await;
+            starknet_commands::deploy::print_deploy_result(result, cli.int_format, cli.json)
+                .await?;
 
             Ok(())
         }
@@ -175,16 +175,16 @@ async fn main() -> Result<()> {
         }
         Commands::Invoke(invoke) => {
             let mut account = get_account(&cli.account, &accounts_file_path, &provider, &network)?;
-            starknet_commands::invoke::invoke_and_print(
+            let result = starknet_commands::invoke::invoke(
                 &invoke.contract_address,
                 &invoke.entry_point_name,
                 invoke.calldata.iter().map(AsRef::as_ref).collect(),
                 invoke.max_fee,
                 &mut account,
-                cli.int_format,
-                cli.json,
             )
-            .await?;
+            .await;
+            starknet_commands::invoke::print_invoke_result(result, cli.int_format, cli.json)
+                .await?;
 
             Ok(())
         }

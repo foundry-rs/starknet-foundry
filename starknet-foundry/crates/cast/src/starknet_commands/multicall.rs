@@ -1,4 +1,7 @@
-use crate::starknet_commands::{deploy::deploy_and_print, invoke::invoke_and_print};
+use crate::starknet_commands::{
+    deploy::{deploy, print_deploy_result},
+    invoke::{invoke, print_invoke_result},
+};
 use anyhow::Result;
 use clap::Args;
 use serde::Deserialize;
@@ -32,6 +35,7 @@ struct InvokeCall {
 #[derive(Args)]
 #[command(about = "Execute multiple calls at once", long_about = None)]
 pub struct Multicall {
+    #[clap(short = 'p', long = "path")]
     /// Path to a .toml file containing the multi call specification
     pub path: String,
 }
@@ -59,17 +63,16 @@ pub async fn multicall(
                         .collect();
                     let inputs_as_strings_slices: Vec<&str> =
                         inputs_as_strings.iter().map(String::as_str).collect();
-                    deploy_and_print(
+                    let result = deploy(
                         deploy_call.class_hash.as_str(),
                         inputs_as_strings_slices,
                         deploy_call.salt.as_ref().map(|x| &**x),
                         deploy_call.unique,
                         deploy_call.max_fee,
                         account,
-                        int_format,
-                        json,
                     )
-                    .await?;
+                    .await;
+                    print_deploy_result(result, int_format, json).await?;
                 }
                 "\"invoke\"" => {
                     let invoke_call: InvokeCall = toml::from_str(call.to_string().as_str())
@@ -81,16 +84,15 @@ pub async fn multicall(
                         .collect();
                     let inputs_as_strings_slices: Vec<&str> =
                         inputs_as_strings.iter().map(String::as_str).collect();
-                    invoke_and_print(
+                    let result = invoke(
                         &invoke_call.contract_address[..],
                         &invoke_call.function,
                         inputs_as_strings_slices,
                         invoke_call.max_fee,
                         account,
-                        int_format,
-                        json,
                     )
-                    .await?;
+                    .await;
+                    print_invoke_result(result, int_format, json).await?;
                 }
                 unsupported => {
                     anyhow::bail!("unsupported call type found: {}", unsupported);
