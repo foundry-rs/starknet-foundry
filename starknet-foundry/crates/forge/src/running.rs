@@ -15,7 +15,7 @@ use test_collector::TestUnit;
 
 use crate::cheatcodes_hint_processor::CairoHintProcessor;
 use crate::scarb::StarknetContractArtifacts;
-use crate::test_results::TestUnitSummary;
+use crate::test_unit_summary::TestUnitSummary;
 
 /// Builds `hints_dict` required in `cairo_vm::types::program::Program` from instructions.
 fn build_hints_dict<'b>(
@@ -42,35 +42,6 @@ fn build_hints_dict<'b>(
     }
     (hints_dict, string_to_hint)
 }
-
-// pub type TestUnitExitStatus = RunResultValue;
-//
-// #[derive(Debug, PartialEq, Clone)]
-// pub struct TestUnitSummary {
-//     pub test_unit: TestUnit,
-//     pub gas_counter: Option<cairo_felt::Felt252>,
-//     pub memory: Vec<Option<cairo_felt::Felt252>>,
-//     pub exit_status: TestUnitExitStatus,
-// }
-//
-// impl TestUnitSummary {
-//     fn from(test_unit: TestUnit, run_result: RunResult) -> Self {
-//         Self {
-//             test_unit,
-//             gas_counter: run_result.gas_counter,
-//             memory: run_result.memory,
-//             exit_status: run_result.value,
-//         }
-//     }
-//
-//     #[must_use]
-//     pub fn passed(&self) -> bool {
-//         match self.exit_status {
-//             TestUnitExitStatus::Success(_) => true,
-//             TestUnitExitStatus::Panic(_) => false,
-//         }
-//     }
-// }
 
 pub(crate) fn run_from_test_units(
     runner: &mut SierraCasmRunner,

@@ -7,7 +7,7 @@ use test_collector::TestUnit;
 pub enum TestUnitSummary {
     Passed {
         name: String,
-        run_result: Option<RunResult>,
+        run_result: RunResult,
         msg: Option<String>,
     },
     Failed {
@@ -27,7 +27,7 @@ impl TestUnitSummary {
             RunResultValue::Success(_) => TestUnitSummary::Passed {
                 name: test_unit.name.to_string(),
                 msg: extract_result_data(&run_result),
-                run_result: Some(run_result),
+                run_result,
             },
             RunResultValue::Panic(_) => TestUnitSummary::Failed {
                 name: test_unit.name.to_string(),

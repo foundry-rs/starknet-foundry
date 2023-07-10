@@ -1,4 +1,4 @@
-use crate::test_results::{TestSummary, TestUnitSummary};
+use crate::test_unit_summary::{TestSummary, TestUnitSummary};
 use anyhow::Error;
 use camino::Utf8PathBuf;
 use console::style;

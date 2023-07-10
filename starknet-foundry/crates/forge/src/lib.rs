@@ -4,7 +4,7 @@ use std::fmt::Debug;
 use anyhow::{Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use serde::Deserialize;
-use test_results::TestUnitSummary;
+use test_unit_summary::TestUnitSummary;
 use walkdir::WalkDir;
 
 use cairo_lang_runner::SierraCasmRunner;
@@ -16,11 +16,11 @@ use crate::running::run_from_test_units;
 use crate::scarb::StarknetContractArtifacts;
 use test_collector::{collect_tests, LinkedLibrary, TestUnit};
 
-use crate::test_results::TestSummary;
+use crate::test_unit_summary::TestSummary;
 
 pub mod pretty_printing;
 pub mod scarb;
-pub mod test_results;
+pub mod test_unit_summary;
 
 mod cheatcodes_hint_processor;
 mod running;
