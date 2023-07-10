@@ -88,7 +88,6 @@ impl HintProcessorLogic for CairoHintProcessor<'_> {
         exec_scopes: &mut ExecutionScopes,
         hint_data: &Box<dyn Any>,
         constants: &HashMap<String, Felt252>,
-        // run_resources: &mut RunResources,
     ) -> Result<(), HintError> {
         let maybe_extended_hint = hint_data.downcast_ref::<Hint>();
         let blockifier_state = self
@@ -117,13 +116,8 @@ impl HintProcessorLogic for CairoHintProcessor<'_> {
         if let Some(Hint::Starknet(StarknetHint::SystemCall { system })) = maybe_extended_hint {
             return execute_syscall(system, vm, blockifier_state);
         }
-        self.original_cairo_hint_processor.execute_hint(
-            vm,
-            exec_scopes,
-            hint_data,
-            constants,
-            // run_resources,
-        )
+        self.original_cairo_hint_processor
+            .execute_hint(vm, exec_scopes, hint_data, constants)
     }
 
     /// Trait function to store hint in the hint processor by string.
