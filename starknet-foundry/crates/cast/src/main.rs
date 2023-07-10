@@ -1,4 +1,7 @@
-use crate::starknet_commands::{call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall, multicall_new::MulticallNew};
+use crate::starknet_commands::{
+    call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
+    multicall_new::MulticallNew,
+};
 use anyhow::{bail, Result};
 use camino::Utf8PathBuf;
 use cast::{get_account, get_block_id, get_network, get_provider, print_formatted};
@@ -203,8 +206,9 @@ async fn main() -> Result<()> {
         Commands::MulticallNew(multicall_new) => {
             starknet_commands::multicall_new::multicall_new(
                 multicall_new.output_path,
-                multicall_new.overwrite.unwrap_or(false)
-            ).await?;
+                multicall_new.overwrite.unwrap_or(false),
+            )
+            .await?;
             Ok(())
         }
     }

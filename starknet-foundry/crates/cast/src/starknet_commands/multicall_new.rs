@@ -34,7 +34,9 @@ pub async fn multicall_new(maybe_output_path: Option<String>, overwrite: bool) -
             anyhow::bail!("invalid output file");
         }
         if output_path.exists() && !overwrite {
-            anyhow::bail!("output file already exists, if you want to overwrite it, use the `overwrite` flag");
+            anyhow::bail!(
+                "output file already exists, if you want to overwrite it, use the `overwrite` flag"
+            );
         }
         std::fs::write(output_path, DEFAULT_MULTICALL_CONTENTS)?;
     } else {
