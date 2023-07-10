@@ -59,7 +59,7 @@ fn start_devnet() {
         .spawn()
         .expect("Failed to compile contracts")
         .wait()
-        .expect("build contracts failed");
+        .expect("Timed out compiling contracts");
     let rt = Runtime::new().expect("Could not instantiate Runtime");
     rt.block_on(declare_deploy_simple_balance_contract());
 }
