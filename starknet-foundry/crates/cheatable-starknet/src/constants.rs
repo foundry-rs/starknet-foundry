@@ -71,9 +71,9 @@ pub fn build_declare_transaction(
     sender_address: ContractAddress,
 ) -> DeclareTransactionV2 {
     DeclareTransactionV2 {
-        nonce: nonce,
-        class_hash: class_hash,
-        sender_address: sender_address,
+        nonce,
+        class_hash,
+        sender_address,
         ..Default::default()
     }
 }
