@@ -2,4 +2,4 @@
 call_type = "invoke"
 contract_address = "0x1"
 function = "put"
-inputs = [123, 234]
+inputs = ["123", "234"]

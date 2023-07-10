@@ -57,7 +57,7 @@ pub async fn multicall(
             anyhow::bail!("`call_type` field is missing in a call specification");
         }
         match call_type.unwrap().as_str() {
-            Some("\"deploy\"") => {
+            Some("deploy") => {
                 let deploy_call: DeployCall = toml::from_str(call.to_string().as_str())
                     .expect("failed to parse toml `deploy` call");
                 let inputs_as_strings_slices: Vec<&str> =
@@ -73,7 +73,7 @@ pub async fn multicall(
                 .await;
                 print_deploy_result(result, int_format, json).await?;
             }
-            Some("\"invoke\"") => {
+            Some("invoke") => {
                 let invoke_call: InvokeCall = toml::from_str(call.to_string().as_str())
                     .expect("failed to parse toml `invoke` call");
                 let inputs_as_strings_slices: Vec<&str> =
