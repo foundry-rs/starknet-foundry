@@ -16,7 +16,7 @@ use std::collections::HashMap;
 struct DeployCall {
     call_type: String,
     class_hash: String,
-    inputs: Vec<u32>,
+    inputs: Vec<String>,
     max_fee: Option<u128>,
     unique: bool,
     salt: Option<String>,
@@ -28,7 +28,7 @@ struct InvokeCall {
     call_type: String,
     contract_address: String,
     function: String,
-    inputs: Vec<u32>,
+    inputs: Vec<String>,
     max_fee: Option<u128>,
 }
 
@@ -56,13 +56,8 @@ pub async fn multicall(
                 "\"deploy\"" => {
                     let deploy_call: DeployCall = toml::from_str(call.to_string().as_str())
                         .expect("failed to parse toml `deploy` call");
-                    let inputs_as_strings: Vec<String> = deploy_call
-                        .inputs
-                        .iter()
-                        .map(|item| item.to_string())
-                        .collect();
                     let inputs_as_strings_slices: Vec<&str> =
-                        inputs_as_strings.iter().map(String::as_str).collect();
+                        deploy_call.inputs.iter().map(String::as_str).collect();
                     let result = deploy(
                         deploy_call.class_hash.as_str(),
                         inputs_as_strings_slices,
@@ -77,13 +72,8 @@ pub async fn multicall(
                 "\"invoke\"" => {
                     let invoke_call: InvokeCall = toml::from_str(call.to_string().as_str())
                         .expect("failed to parse toml `invoke` call");
-                    let inputs_as_strings: Vec<String> = invoke_call
-                        .inputs
-                        .iter()
-                        .map(|item| item.to_string())
-                        .collect();
                     let inputs_as_strings_slices: Vec<&str> =
-                        inputs_as_strings.iter().map(String::as_str).collect();
+                        invoke_call.inputs.iter().map(String::as_str).collect();
                     let result = invoke(
                         &invoke_call.contract_address[..],
                         &invoke_call.function,
