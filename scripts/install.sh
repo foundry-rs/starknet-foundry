@@ -22,7 +22,7 @@ usage() {
   cat <<EOF
 The installer for Starknet-Foundry
 
-Usage: install.sh starknet-foundry/forge/cast [OPTIONS]
+Usage: install.sh (starknet-foundry|forge|cast) [OPTIONS]
 
 Options:
   -p, --no-modify-path   Skip PATH variable modification
