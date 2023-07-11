@@ -545,7 +545,7 @@ fn deploy(
 
         insert_at_pointer(vm, result_segment_ptr, 1).expect("Failed to insert err code");
         insert_at_pointer(vm, result_segment_ptr, extracted_panic_data.len())
-            .expect("Failed to insert err code");
+            .expect("Failed to insert panic_data len");
         for datum in extracted_panic_data {
             insert_at_pointer(vm, result_segment_ptr, datum)
                 .expect("Failed to insert error in memory");
