@@ -129,7 +129,7 @@ fn with_declare() {
 
             Failure data:
                 Got an exception while executing a hint:
-                Failed to get contract artifact for name = GoodbyeStarknet
+                Failed to get contract artifact for name = GoodbyeStarknet. Make sure starknet target is correctly defined in Scarb.toml file.
 
             Tests: 2 passed, 1 failed, 0 skipped
         "#});
