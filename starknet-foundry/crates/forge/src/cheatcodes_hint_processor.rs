@@ -523,7 +523,7 @@ fn deploy(
 
     let tx_info = account_tx
         .execute(blockifier_state, &block_context)
-        .unwrap_or_else(|e| panic!("Unparseable txn error, {e:?}"));
+        .unwrap_or_else(|e| panic!("Unparseable transaction error: {e:?}"));
 
     if let Some(CallInfo { execution, .. }) = tx_info.execute_call_info {
         let contract_address = execution
