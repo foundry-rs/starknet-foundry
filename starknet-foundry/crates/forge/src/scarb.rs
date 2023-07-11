@@ -62,7 +62,7 @@ pub fn try_get_starknet_artifacts_path(path: &Utf8PathBuf) -> Result<Option<Utf8
     });
     let starknet_artifacts: Option<Result<Utf8PathBuf>> = starknet_artifacts.map(|artifacts| {
         Utf8PathBuf::try_from(artifacts.clone())
-            .with_context(|| format!("Failed to convert path = {:?} to Utf8PathBuf", artifacts))
+            .with_context(|| format!("Failed to convert path = {artifacts:?} to Utf8PathBuf"))
     });
     starknet_artifacts.transpose()
 }
