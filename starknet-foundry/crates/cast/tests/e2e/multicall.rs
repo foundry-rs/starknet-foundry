@@ -16,7 +16,7 @@ async fn test_happy_case() {
     let bdg = snapbox.assert();
     let out = bdg.get_output();
 
-    assert!(out.stderr.len() == 0);
+    assert!(out.stderr.is_empty());
     let stdout_str =
         std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
     assert!(stdout_str.contains("command: Deploy"));
@@ -33,7 +33,7 @@ async fn test_invalid_path() {
     let bdg = snapbox.assert();
     let out = bdg.get_output();
 
-    assert!(out.stdout.len() == 0);
+    assert!(out.stdout.is_empty());
     let stderr_str =
         std::str::from_utf8(&out.stderr[..]).expect("failed to convert stderr to string");
     assert!(stderr_str.contains("No such file or directory"));
@@ -76,7 +76,7 @@ async fn test_invoke_fail() {
     let stderr_str =
         std::str::from_utf8(&out.stderr).expect("failed to convert command output to string");
 
-    assert!(out.stdout.len() == 0);
+    assert!(out.stdout.is_empty());
     assert!(stderr_str.contains("There is no contract at the specified address"));
 }
 
