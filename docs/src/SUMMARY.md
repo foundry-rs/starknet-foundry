@@ -2,14 +2,24 @@
 
 [Introduction](./README.md)
 
-# Getting Started
+* [Getting Started](getting-started/index.md)
+  * [Installation](getting-started/installation.md)
 
-- [Installation](./getting-started/installation.md)
-- [First Steps with Foundry](./getting-started/first-steps.md)
+* [Projects](projects/index.md)
+  * [Project templates](./getting-started/template.md)
+  * [Project configuration](./projects/configuration.md)
+  * [Understanding Cairo Packages](./projects/packages.md)
 
-# Projects
+* [Testing](testing/index.md)
+  * [Unit testing](testing/unit_testing.md)
+  * [Integration testing](testing/integration_testing.md)
+  * [Invoking and calling contracts](testing/dispatchers.md)
+  * [Cheatcodes](testing/cheatcodes.md)
+    * [Declare](testing/cheatcodes/declare.md)
+    * [Deploy](testing/cheatcodes/deploy.md)
 
-- [Creating a New Project](./projects/creating-a-new-project.md)
-- [Working on an Existing Project](./projects/working-on-an-existing-project.md)
-- [Dependencies](./projects/dependencies.md)
-- [Project Layout](./projects/project-layout.md)
+* [Interacting with Starknet](starknet/index.md)
+  * [Declaring new contracts](starknet/declare.md)
+  * [Deploying new contracts](starknet/deploy.md)
+  * [Invoking contracts](starknet/invoke.md)
+  * [Calling contracts](starknet/call.md)
