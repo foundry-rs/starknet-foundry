@@ -3,12 +3,19 @@ set -e
 
 COMPILER_DIRECTORY="$(git rev-parse --show-toplevel)/starknet-foundry/crates/cast/tests/utils/"
 CAIRO_REPO="https://github.com/starkware-libs/cairo/releases/download"
+
 COMPILER_VERSION="v1.1.1"
 SCARB_VERSION="0.4.1"
+DEVNET_VERSION="0.5.5"
 
 if ! which starknet-devnet > /dev/null 2>&1; then
-  echo "starknet-devnet not found, please install"
+  echo "starknet-devnet not found, please install with version $DEVNET_VERSION"
   echo "https://0xspaceshard.github.io/starknet-devnet/docs/intro"
+  exit 1
+fi
+
+if ! grep -q $(starknet-devnet --version) <<< "$DEVNET_VERSION"; then
+  echo "wrong version of starknet-devnet found, required version is $DEVNET_VERSION"
   exit 1
 fi
 
@@ -26,7 +33,7 @@ if command -v scarb 2>&1 /dev/null; then
   fi
 
 else
-  asdf plugin add scarb
+  asdf plugin add scarb https://github.com/software-mansion/asdf-scarb.git
   asdf install scarb $SCARB_VERSION
 fi
 

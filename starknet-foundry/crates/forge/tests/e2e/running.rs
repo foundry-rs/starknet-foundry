@@ -115,13 +115,19 @@ fn with_declare() {
         .current_dir(&temp)
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 2 test(s) and 3 test file(s)
+        .stdout_matches(indoc! {r#"Collected 3 test(s) and 3 test file(s)
             Running 0 test(s) from src/contract1.cairo
             Running 0 test(s) from src/lib.cairo
-            Running 2 test(s) from tests/test_declare.cairo
+            Running 3 test(s) from tests/test_declare.cairo
             [PASS] test_declare::test_declare::test_declare_simple
             [PASS] test_declare::test_declare::multiple_contracts
-            Tests: 2 passed, 0 failed, 0 skipped
+            [FAIL] test_declare::test_declare::non_existent_contract
+
+            Failure data:
+                Got an exception while executing a hint:
+                Failed to find contract GoodbyeStarknet in starknet_artifacts.json
+
+            Tests: 2 passed, 1 failed, 0 skipped
         "#});
 }
 
@@ -245,6 +251,10 @@ fn exit_first() {
             Failure data:
                 original value: [8111420071579136082810415440747], converted to a string: [failing check]
 
+            [SKIP] test_simple::test_simple::test_two
+            [SKIP] test_simple::test_simple::test_two_and_two
+            [SKIP] test_simple::test_simple::test_failing
+            [SKIP] without_prefix::without_prefix::five
             Tests: 5 passed, 1 failed, 4 skipped
         "#});
 }
@@ -276,6 +286,7 @@ fn exit_first_flag() {
             Failure data:
                 original value: [8111420071579136082810415440747], converted to a string: [failing check]
 
+            [SKIP] without_prefix::without_prefix::five
             Tests: 7 passed, 1 failed, 1 skipped
         "#});
 }

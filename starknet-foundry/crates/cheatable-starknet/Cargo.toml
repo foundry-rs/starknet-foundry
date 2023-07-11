@@ -1,0 +1,16 @@
+[package]
+name = "cheatable-starknet"
+version = "1.0.0"
+edition = "2021"
+
+[features]
+testing = []
+
+[dependencies]
+blockifier.workspace = true
+starknet_api.workspace = true
+cairo-felt-blockifier = { path = "../compatibility/cairo-felt-blockifier" }
+
+
+[lib]
+name = "cheatable_starknet"
