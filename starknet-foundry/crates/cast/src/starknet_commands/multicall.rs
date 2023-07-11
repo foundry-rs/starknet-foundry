@@ -62,8 +62,11 @@ pub async fn multicall(
             Some("deploy") => {
                 let deploy_call: DeployCall = toml::from_str(call.to_string().as_str())
                     .expect("failed to parse toml `deploy` call");
-                let inputs_as_strings_slices: Vec<&str> =
-                    deploy_call.inputs.iter().map(std::string::String::as_str).collect();
+                let inputs_as_strings_slices: Vec<&str> = deploy_call
+                    .inputs
+                    .iter()
+                    .map(std::string::String::as_str)
+                    .collect();
                 let result = deploy(
                     &deploy_call.class_hash,
                     inputs_as_strings_slices,
@@ -81,8 +84,11 @@ pub async fn multicall(
             Some("invoke") => {
                 let invoke_call: InvokeCall = toml::from_str(call.to_string().as_str())
                     .expect("failed to parse toml `invoke` call");
-                let inputs_as_strings_slices: Vec<&str> =
-                    invoke_call.inputs.iter().map(std::string::String::as_str).collect();
+                let inputs_as_strings_slices: Vec<&str> = invoke_call
+                    .inputs
+                    .iter()
+                    .map(std::string::String::as_str)
+                    .collect();
                 let mut contract_address = &invoke_call.contract_address;
                 if let Some(addr) = contracts.get(&invoke_call.contract_address) {
                     contract_address = addr;
