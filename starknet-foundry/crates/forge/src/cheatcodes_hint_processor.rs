@@ -13,7 +13,7 @@ use blockifier::execution::contract_class::{
     ContractClass as BlockifierContractClass, ContractClassV1,
 };
 use blockifier::execution::entry_point::{
-    CallEntryPoint, CallType, EntryPointExecutionContext, ExecutionResources,
+    CallEntryPoint, CallInfo, CallType, EntryPointExecutionContext, ExecutionResources,
 };
 use blockifier::state::cached_state::CachedState;
 use blockifier::state::errors::StateError;
@@ -37,6 +37,7 @@ use cheatable_starknet::constants::{
 };
 use cheatable_starknet::state::DictStateReader;
 use num_traits::{Num, ToPrimitive};
+use regex::Regex;
 use serde::Deserialize;
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, PatriciaKey};
 use starknet_api::deprecated_contract_class::EntryPointType;
@@ -499,25 +500,65 @@ fn deploy(
     let tx = build_invoke_transaction(execute_calldata, account_address);
     let account_tx =
         AccountTransaction::Invoke(InvokeTransaction::V1(InvokeTransactionV1 { nonce, ..tx }));
-    let tx_result = account_tx
-        .execute(blockifier_state, &block_context)
-        .context("Failed to execute deploy transaction")?;
-    let return_data = tx_result
-        .execute_call_info
-        .context("Failed to get execution data from method")?
-        .execution
-        .retdata;
-    let contract_address = return_data
-        .0
-        .get(0)
-        .context("Failed to get contract_address from return_data")?;
-    let contract_address = Felt252::from_bytes_be(contract_address.bytes());
 
-    // TODO(#2152): in case of error, consider filling the panic data instead of packing in rust
-    insert_at_pointer(vm, result_segment_ptr, Felt252::from(0)).unwrap();
-    insert_at_pointer(vm, result_segment_ptr, contract_address).unwrap();
+    match account_tx.execute(blockifier_state, &block_context) {
+        Ok(tx_info) => {
+            dbg!(&tx_info);
+            if let Some(CallInfo { execution, .. }) = tx_info.execute_call_info {
+                let contract_address = execution
+                    .retdata
+                    .0
+                    .get(0)
+                    .expect("Failed to get contract_address from return_data");
+                let contract_address = Felt252::from_bytes_be(contract_address.bytes());
 
-    Ok(())
+                insert_at_pointer(vm, result_segment_ptr, 0).expect("Failed to insert error code");
+                insert_at_pointer(vm, result_segment_ptr, contract_address)
+                    .expect("Failed to insert deployed contract address");
+                return Ok(());
+            }
+            if let Some(revert_error) = tx_info.revert_error {
+                return match try_extract_panic_data(&revert_error) {
+                    Some(extracted_panic_data) => {
+                        insert_at_pointer(vm, result_segment_ptr, 1)
+                            .expect("Failed to insert err code");
+                        insert_at_pointer(vm, result_segment_ptr, extracted_panic_data.len())
+                            .expect("Failed to insert err code");
+                        for datum in extracted_panic_data {
+                            insert_at_pointer(vm, result_segment_ptr, datum)
+                                .expect("Failed to insert error in memory");
+                        }
+                        Ok(())
+                    }
+                    None => panic!("Unparseable error message, {}", revert_error),
+                };
+            }
+            panic!("Unparseable tx info, {:?}", tx_info)
+        }
+        Err(e) => panic!("Unparseable txn error, {:?}", e),
+    }
+}
+
+fn felt_from_short_string(short_str: &str) -> Felt252 {
+    return Felt252::from_bytes_be(short_str.as_bytes());
+}
+
+fn try_extract_panic_data(err: &str) -> Option<Vec<Felt252>> {
+    let re = Regex::new(r#"(?m)^Got an exception while executing a hint: Custom Hint Error: Execution failed. Failure reason: "(.*)"\.$"#)
+        .expect("Could not create panic_data matching regex");
+
+    if let Some(captures) = re.captures(err) {
+        if let Some(panic_data_match) = captures.get(1) {
+            let panic_data_felts: Vec<Felt252> = panic_data_match
+                .as_str()
+                .split(", ")
+                .map(felt_from_short_string)
+                .collect();
+
+            return Some(panic_data_felts);
+        }
+    }
+    None
 }
 
 // TODO(#2164): remove this when extract_relocatable is pub in cairo
