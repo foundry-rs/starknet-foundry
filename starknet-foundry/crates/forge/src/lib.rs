@@ -36,12 +36,12 @@ impl RunnerConfig {
         test_name_filter: Option<String>,
         exact_match: bool,
         exit_first: bool,
-        protostar_config_from_scarb: &ProtostarConfigFromScarb,
+        forge_config_from_scarb: &ForgeConfigFromScarb,
     ) -> Self {
         Self {
             test_name_filter,
             exact_match,
-            exit_first: protostar_config_from_scarb.exit_first || exit_first,
+            exit_first: forge_config_from_scarb.exit_first || exit_first,
         }
     }
 }
@@ -52,9 +52,9 @@ enum RunnerStatus {
     TestFailed,
 }
 
-/// Represents protostar config deserialized from Scarb.toml
+/// Represents forge config deserialized from Scarb.toml
 #[derive(Deserialize, Debug, PartialEq, Default)]
-pub struct ProtostarConfigFromScarb {
+pub struct ForgeConfigFromScarb {
     #[serde(default)]
     exit_first: bool,
 }
@@ -265,14 +265,14 @@ fn test_name_contains(test_name_filter: &str, test: &TestConfig) -> Result<bool>
     Ok(name.contains(test_name_filter))
 }
 
-pub fn protostar_config_for_package(
+pub fn forge_config_for_package(
     metadata: &Metadata,
     package: &PackageId,
-) -> Result<ProtostarConfigFromScarb> {
+) -> Result<ForgeConfigFromScarb> {
     let raw_metadata = metadata
         .get_package(package)
         .ok_or_else(|| anyhow!("Failed to find metadata for package = {package}"))?
-        .tool_metadata("protostar");
+        .tool_metadata("forge");
 
     raw_metadata.map_or_else(
         || Ok(Default::default()),
@@ -358,7 +358,7 @@ mod tests {
     }
 
     #[test]
-    fn get_protostar_config_for_package() {
+    fn get_forge_config_for_package() {
         let temp = assert_fs::TempDir::new().unwrap();
         temp.copy_from("tests/data/simple_test", &["**/*"]).unwrap();
         let scarb_metadata = MetadataCommand::new()
@@ -368,14 +368,14 @@ mod tests {
             .unwrap();
 
         let config =
-            protostar_config_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
+            forge_config_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
                 .unwrap();
 
-        assert_eq!(config, ProtostarConfigFromScarb { exit_first: false });
+        assert_eq!(config, ForgeConfigFromScarb { exit_first: false });
     }
 
     #[test]
-    fn get_protostar_config_for_package_err_on_invalid_package() {
+    fn get_forge_config_for_package_err_on_invalid_package() {
         let temp = assert_fs::TempDir::new().unwrap();
         temp.copy_from("tests/data/simple_test", &["**/*"]).unwrap();
         let scarb_metadata = MetadataCommand::new()
@@ -384,10 +384,8 @@ mod tests {
             .exec()
             .unwrap();
 
-        let result = protostar_config_for_package(
-            &scarb_metadata,
-            &PackageId::from(String::from("12345679")),
-        );
+        let result =
+            forge_config_for_package(&scarb_metadata, &PackageId::from(String::from("12345679")));
         let err = result.unwrap_err();
 
         assert!(err
@@ -396,7 +394,7 @@ mod tests {
     }
 
     #[test]
-    fn get_protostar_config_for_package_default_on_missing_config() {
+    fn get_forge_config_for_package_default_on_missing_config() {
         let temp = assert_fs::TempDir::new().unwrap();
         temp.copy_from("tests/data/simple_test", &["**/*"]).unwrap();
         let content = "[package]
@@ -411,7 +409,7 @@ version = \"0.1.0\"";
             .unwrap();
 
         let config =
-            protostar_config_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
+            forge_config_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
                 .unwrap();
 
         assert_eq!(config, Default::default());
@@ -638,7 +636,7 @@ version = \"0.1.0\"";
     fn strip_path() {
         let mocked_tests: Vec<TestConfig> = vec![
             TestConfig {
-                name: "/Users/user/protostar/protostar-rust/tests/data/simple_test/src::test::test_fib".to_string(),
+                name: "/Users/user/forge/tests/data/simple_test/src::test::test_fib".to_string(),
                 available_gas: None,
             },
             TestConfig {
