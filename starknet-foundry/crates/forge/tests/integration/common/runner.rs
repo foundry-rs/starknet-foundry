@@ -35,7 +35,7 @@ impl Contract {
         Ok(Self { name, code })
     }
 
-    pub fn sierra(self, corelib_path: &Path) -> Result<String> {
+    fn generate_sierra(self, corelib_path: &Path) -> Result<String> {
         let path = TempDir::new()?;
         let contract_path = path.child("contract.cairo");
         contract_path.touch()?;
@@ -114,7 +114,7 @@ impl<'a> TestCase {
                 Ok((
                     contract.name.clone(),
                     StarknetContractArtifacts {
-                        sierra: contract.sierra(corelib_path)?,
+                        sierra: contract.generate_sierra(corelib_path)?,
                         casm: None,
                     },
                 ))
