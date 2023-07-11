@@ -545,6 +545,9 @@ fn try_extract_panic_data(err: &str) -> Option<Vec<Felt252>> {
 
     if let Some(captures) = re.captures(err) {
         if let Some(panic_data_match) = captures.get(1) {
+            if panic_data_match.as_str().is_empty() {
+                return Some(vec![]);
+            }
             let panic_data_felts: Vec<Felt252> = panic_data_match
                 .as_str()
                 .split(", ")
@@ -714,5 +717,42 @@ mod test {
                 StarkFelt::from(0_u32),
             ]))
         );
+    }
+
+    #[test]
+    fn string_extracting_panic_data() {
+        let cases: [(&str, Option<Vec<Felt252>>); 4] = [
+            (
+                "Beginning of trace\nGot an exception while executing a hint: Custom Hint Error: Execution failed. Failure reason: \"PANIK, DAYTA\".\n
+                 End of trace", 
+                Some(vec![Felt252::from(344693033291_u64), Felt252::from(293154149441_u64)])
+            ),
+            (
+                "Got an exception while executing a hint: Custom Hint Error: Execution failed. Failure reason: \"AYY, LMAO\".", 
+                Some(vec![Felt252::from(4282713_u64), Felt252::from(1280131407_u64)])
+            ),
+            (
+                "Got an exception while executing a hint: Custom Hint Error: Execution failed. Failure reason: \"\".", 
+                Some(vec![])
+            ),
+            ("Custom Hint Error: Invalid trace: \"PANIC, DATA\"", None)
+        ];
+
+        for (str, expected) in cases {
+            assert_eq!(try_extract_panic_data(str), expected)
+        }
+    }
+
+    #[test]
+    fn parsing_felt_from_short_string() {
+        let cases = [
+            ("", Felt252::from(0)),
+            ("{", Felt252::from(123)),
+            ("PANIK", Felt252::from(344693033291_u64)),
+        ];
+
+        for (str, felt_res) in cases {
+            assert_eq!(felt_from_short_string(str), felt_res);
+        }
     }
 }
