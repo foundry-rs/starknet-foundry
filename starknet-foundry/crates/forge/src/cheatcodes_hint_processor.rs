@@ -501,42 +501,40 @@ fn deploy(
     let account_tx =
         AccountTransaction::Invoke(InvokeTransaction::V1(InvokeTransactionV1 { nonce, ..tx }));
 
-    match account_tx.execute(blockifier_state, &block_context) {
-        Ok(tx_info) => {
-            dbg!(&tx_info);
-            if let Some(CallInfo { execution, .. }) = tx_info.execute_call_info {
-                let contract_address = execution
-                    .retdata
-                    .0
-                    .get(0)
-                    .expect("Failed to get contract_address from return_data");
-                let contract_address = Felt252::from_bytes_be(contract_address.bytes());
+    let tx_info = account_tx
+        .execute(blockifier_state, &block_context)
+        .unwrap_or_else(|e| panic!("Unparseable txn error, {e:?}"));
 
-                insert_at_pointer(vm, result_segment_ptr, 0).expect("Failed to insert error code");
-                insert_at_pointer(vm, result_segment_ptr, contract_address)
-                    .expect("Failed to insert deployed contract address");
-                return Ok(());
-            }
-            if let Some(revert_error) = tx_info.revert_error {
-                return match try_extract_panic_data(&revert_error) {
-                    Some(extracted_panic_data) => {
-                        insert_at_pointer(vm, result_segment_ptr, 1)
-                            .expect("Failed to insert err code");
-                        insert_at_pointer(vm, result_segment_ptr, extracted_panic_data.len())
-                            .expect("Failed to insert err code");
-                        for datum in extracted_panic_data {
-                            insert_at_pointer(vm, result_segment_ptr, datum)
-                                .expect("Failed to insert error in memory");
-                        }
-                        Ok(())
-                    }
-                    None => panic!("Unparseable error message, {}", revert_error),
-                };
-            }
-            panic!("Unparseable tx info, {:?}", tx_info)
+    match tx_info.execute_call_info {
+        Some(CallInfo { execution, .. }) => {
+            let contract_address = execution
+                .retdata
+                .0
+                .get(0)
+                .expect("Failed to get contract_address from return_data");
+            let contract_address = Felt252::from_bytes_be(contract_address.bytes());
+
+            insert_at_pointer(vm, result_segment_ptr, 0).expect("Failed to insert error code");
+            insert_at_pointer(vm, result_segment_ptr, contract_address)
+                .expect("Failed to insert deployed contract address");
         }
-        Err(e) => panic!("Unparseable txn error, {:?}", e),
+        None => {
+            tx_info
+                .revert_error
+                .expect("Unparseable tx info, {tx_info:?}");
+            let extracted_panic_data = try_extract_panic_data(&revert_error)
+                .expect("Unparseable error message, {revert_error}");
+
+            insert_at_pointer(vm, result_segment_ptr, 1).expect("Failed to insert err code");
+            insert_at_pointer(vm, result_segment_ptr, extracted_panic_data.len())
+                .expect("Failed to insert err code");
+            for datum in extracted_panic_data {
+                insert_at_pointer(vm, result_segment_ptr, datum)
+                    .expect("Failed to insert error in memory");
+            }
+        }
     }
+    Ok(())
 }
 
 fn felt_from_short_string(short_str: &str) -> Felt252 {
