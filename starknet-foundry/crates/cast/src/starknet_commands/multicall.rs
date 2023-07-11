@@ -20,6 +20,7 @@ struct DeployCall {
     max_fee: Option<u128>,
     unique: bool,
     salt: Option<String>,
+    id: String,
 }
 
 #[allow(dead_code)]
@@ -51,6 +52,7 @@ pub async fn multicall(
         toml::from_str(&contents).expect("failed to parse toml file");
     let empty_vec = &vec![];
     let calls = items_map.get("call").unwrap_or(empty_vec);
+    let mut contracts = HashMap::new();
     for call in calls {
         let call_type = call.get("call_type");
         if call_type.is_none() {
@@ -71,6 +73,9 @@ pub async fn multicall(
                     account,
                 )
                 .await;
+                if let Ok((_, contract_address)) = result {
+                    contracts.insert(deploy_call.id, contract_address.to_string());
+                }
                 print_deploy_result(result, int_format, json).await?;
             }
             Some("invoke") => {
@@ -78,8 +83,12 @@ pub async fn multicall(
                     .expect("failed to parse toml `invoke` call");
                 let inputs_as_strings_slices: Vec<&str> =
                     invoke_call.inputs.iter().map(|s| s.as_str()).collect();
+                let mut contract_address = &invoke_call.contract_address;
+                if let Some(addr) = contracts.get(&invoke_call.contract_address) {
+                    contract_address = addr;
+                }
                 let result = invoke(
-                    &invoke_call.contract_address,
+                    contract_address,
                     &invoke_call.function,
                     inputs_as_strings_slices,
                     invoke_call.max_fee,

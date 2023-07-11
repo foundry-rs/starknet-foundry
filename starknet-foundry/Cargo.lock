@@ -1226,7 +1226,7 @@ dependencies = [
  "serde",
  "smol_str",
  "thiserror",
- "toml",
+ "toml 0.4.10",
 ]
 
 [[package]]
