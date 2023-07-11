@@ -150,7 +150,6 @@ fn internal_collect_tests(
     Ok(tests)
 }
 
-// TODO consider resolving this
 #[allow(clippy::implicit_hasher)]
 pub fn run(
     input_path: &Utf8PathBuf,
