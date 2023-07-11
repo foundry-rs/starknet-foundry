@@ -8,7 +8,7 @@ jobs:
   test-forge:
     name: Test Forge
     env:
-      SCARB_VERSION: 0.5.0-alpha.0
+      SCARB_VERSION: 0.5.1
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -84,4 +84,5 @@ jobs:
         with:
           toolchain: stable
       - uses: Swatinem/rust-cache@dd05243424bd5c0e585e4b55eb2d7615cdd32f1f
-      - run: cargo clippy --manifest-path ./starknet-foundry/Cargo.toml --all-targets --all-features -- --no-deps
+      - run: cargo lint
+        working-directory: ./starknet-foundry
