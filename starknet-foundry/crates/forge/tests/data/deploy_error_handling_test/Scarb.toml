@@ -6,4 +6,4 @@ version = "0.1.0"
 sierra = true
 
 [dependencies]
-starknet = "2.0.0-rc2"
+starknet = "2.0.1"
