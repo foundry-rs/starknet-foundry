@@ -519,7 +519,7 @@ fn deploy(
                 .expect("Failed to insert deployed contract address");
         }
         None => {
-            tx_info
+            let revert_error = tx_info
                 .revert_error
                 .expect("Unparseable tx info, {tx_info:?}");
             let extracted_panic_data = try_extract_panic_data(&revert_error)
