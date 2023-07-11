@@ -2,5 +2,5 @@
 name = "simple_test"
 version = "0.1.0"
 
-[tool.protostar]
+[tool.forge]
 exit_first = false
