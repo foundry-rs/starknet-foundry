@@ -400,7 +400,7 @@ fn declare(
     let contract_value = inputs[0].clone();
 
     let contract_value_as_short_str = as_cairo_short_string(&contract_value)
-        .expect("Converting contract name to short string failed");
+        .context("Converting contract name to short string failed")?;
     let contract_artifact = contracts.get(&contract_value_as_short_str).ok_or_else(|| {
         anyhow!("Failed to get contract artifact for name = {contract_value_as_short_str}")
     })?;
