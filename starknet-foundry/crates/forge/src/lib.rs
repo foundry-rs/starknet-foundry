@@ -16,8 +16,6 @@ use crate::running::run_from_test_units;
 use crate::scarb::StarknetContractArtifacts;
 use test_collector::{collect_tests, LinkedLibrary, TestUnit};
 
-use crate::test_unit_summary::TestSummary;
-
 pub mod pretty_printing;
 pub mod scarb;
 pub mod test_unit_summary;
@@ -53,6 +51,7 @@ impl RunnerConfig {
 pub enum RunnerStatus {
     Default,
     TestFailed,
+    DidNotRun,
 }
 
 /// Represents protostar config deserialized from Scarb.toml
@@ -168,17 +167,11 @@ pub fn run(
         tests.len(),
     );
 
-    let mut tests_summary = TestSummary::default();
     let mut tests_iterator = tests.into_iter();
 
     let mut summaries = vec![];
     for tests_from_file in tests_iterator.by_ref() {
-        let summary = run_tests_from_file(
-            tests_from_file,
-            &mut tests_summary,
-            runner_config,
-            contracts,
-        )?;
+        let summary = run_tests_from_file(tests_from_file, runner_config, contracts)?;
         summaries.push(summary.clone());
         if summary.runner_exit_status == RunnerStatus::TestFailed {
             break;
@@ -186,14 +179,25 @@ pub fn run(
     }
 
     for tests_from_file in tests_iterator {
-        for unit in tests_from_file.test_units {
-            let skipped_result = TestUnitSummary::skipped(&unit);
-            pretty_printing::print_test_result(&skipped_result);
-            tests_summary.update(skipped_result);
+        let skipped: Vec<TestUnitSummary> = tests_from_file
+            .test_units
+            .iter()
+            .map(TestUnitSummary::skipped)
+            .collect();
+
+        for test_unit_summary in &skipped {
+            pretty_printing::print_test_result(test_unit_summary);
         }
+
+        let file_summary = TestFileSummary {
+            test_unit_summaries: skipped,
+            runner_exit_status: RunnerStatus::DidNotRun,
+            relative_path: tests_from_file.relative_path,
+        };
+        summaries.push(file_summary);
     }
 
-    pretty_printing::print_test_summary(&tests_summary);
+    pretty_printing::print_test_summary(&summaries);
     Ok(summaries)
 }
 
@@ -204,9 +208,32 @@ pub struct TestFileSummary {
     pub relative_path: Utf8PathBuf,
 }
 
+impl TestFileSummary {
+    fn count_passed(&self) -> usize {
+        self.test_unit_summaries
+            .iter()
+            .filter(|tu| matches!(tu, TestUnitSummary::Passed { .. }))
+            .count()
+    }
+
+    fn count_failed(&self) -> usize {
+        self.test_unit_summaries
+            .iter()
+            .filter(|tu| matches!(tu, TestUnitSummary::Failed { .. }))
+            .count()
+    }
+
+    fn count_skipped(&self) -> usize {
+        self.test_unit_summaries
+            .iter()
+            .filter(|tu| matches!(tu, TestUnitSummary::Skipped { .. }))
+            .count()
+    }
+}
+
 fn run_tests_from_file(
     tests: TestsFromFile,
-    tests_summary: &mut TestSummary,
+    // tests_summary: &mut TestSummary,
     runner_config: &RunnerConfig,
     contracts: &HashMap<String, StarknetContractArtifacts>,
 ) -> Result<TestFileSummary> {
@@ -229,9 +256,8 @@ fn run_tests_from_file(
                 for unit in &tests.test_units[i + 1..] {
                     let skipped_result = TestUnitSummary::skipped(unit);
                     pretty_printing::print_test_result(&skipped_result);
-                    tests_summary.update(skipped_result);
+                    results.push(skipped_result);
                 }
-                tests_summary.update(result);
                 return Ok(TestFileSummary {
                     test_unit_summaries: results,
                     runner_exit_status: RunnerStatus::TestFailed,
@@ -239,8 +265,6 @@ fn run_tests_from_file(
                 });
             }
         }
-
-        tests_summary.update(result);
     }
     Ok(TestFileSummary {
         test_unit_summaries: results,

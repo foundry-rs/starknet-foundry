@@ -1,4 +1,5 @@
-use crate::test_unit_summary::{TestSummary, TestUnitSummary};
+use crate::test_unit_summary::TestUnitSummary;
+use crate::TestFileSummary;
 use anyhow::Error;
 use camino::Utf8PathBuf;
 use console::style;
@@ -18,13 +19,17 @@ pub fn print_running_tests(test_file: &Utf8PathBuf, tests_num: usize) {
     println!("{}", style(plain_text).bold());
 }
 
-pub fn print_test_summary(test_summary: &TestSummary) {
+pub fn print_test_summary(summaries: &[TestFileSummary]) {
+    let passed: usize = summaries.iter().map(TestFileSummary::count_passed).sum();
+    let skipped: usize = summaries.iter().map(TestFileSummary::count_skipped).sum();
+    let failed: usize = summaries.iter().map(TestFileSummary::count_failed).sum();
+
     println!(
         "{}: {} passed, {} failed, {} skipped",
         style("Tests").bold(),
-        test_summary.passed.len(),
-        test_summary.failed.len(),
-        test_summary.skipped.len(),
+        passed,
+        failed,
+        skipped,
     );
 }
 
