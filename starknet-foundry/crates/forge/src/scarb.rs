@@ -1,4 +1,4 @@
-use crate::ProtostarConfigFromScarb;
+use crate::ForgeConfigFromScarb;
 use anyhow::{anyhow, Context, Result};
 use camino::Utf8PathBuf;
 use scarb_metadata::{Metadata, PackageId};
@@ -90,11 +90,11 @@ pub fn get_contracts_map(path: &Utf8PathBuf) -> Result<HashMap<String, StarknetC
 pub fn config_from_scarb_for_package(
     metadata: &Metadata,
     package: &PackageId,
-) -> Result<ProtostarConfigFromScarb> {
+) -> Result<ForgeConfigFromScarb> {
     let raw_metadata = metadata
         .get_package(package)
         .ok_or_else(|| anyhow!("Failed to find metadata for package = {package}"))?
-        .tool_metadata("protostar");
+        .tool_metadata("forge");
 
     raw_metadata.map_or_else(
         || Ok(Default::default()),
@@ -275,7 +275,7 @@ mod tests {
     }
 
     #[test]
-    fn get_protostar_config_for_package() {
+    fn get_forge_config_for_package() {
         let temp = assert_fs::TempDir::new().unwrap();
         temp.copy_from("tests/data/simple_test", &["**/*.cairo", "**/*.toml"])
             .unwrap();
@@ -289,11 +289,11 @@ mod tests {
             config_from_scarb_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
                 .unwrap();
 
-        assert_eq!(config, ProtostarConfigFromScarb { exit_first: false });
+        assert_eq!(config, ForgeConfigFromScarb { exit_first: false });
     }
 
     #[test]
-    fn get_protostar_config_for_package_err_on_invalid_package() {
+    fn get_forge_config_for_package_err_on_invalid_package() {
         let temp = assert_fs::TempDir::new().unwrap();
         temp.copy_from("tests/data/simple_test", &["**/*.cairo", "**/*.toml"])
             .unwrap();
@@ -315,7 +315,7 @@ mod tests {
     }
 
     #[test]
-    fn get_protostar_config_for_package_default_on_missing_config() {
+    fn get_forge_config_for_package_default_on_missing_config() {
         let temp = assert_fs::TempDir::new().unwrap();
         temp.copy_from("tests/data/simple_test", &["**/*.cairo", "**/*.toml"])
             .unwrap();
