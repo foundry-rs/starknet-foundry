@@ -745,11 +745,11 @@ mod test {
             (
                 "Beginning of trace\nGot an exception while executing a hint: Custom Hint Error: Execution failed. Failure reason: \"PANIK, DAYTA\".\n
                  End of trace", 
-                Some(vec![Felt252::from(344693033291_u64), Felt252::from(293154149441_u64)])
+                Some(vec![Felt252::from(344_693_033_291_u64), Felt252::from(293_154_149_441_u64)])
             ),
             (
                 "Got an exception while executing a hint: Custom Hint Error: Execution failed. Failure reason: \"AYY, LMAO\".", 
-                Some(vec![Felt252::from(4282713_u64), Felt252::from(1280131407_u64)])
+                Some(vec![Felt252::from(4_282_713_u64), Felt252::from(1_280_131_407_u64)])
             ),
             (
                 "Got an exception while executing a hint: Custom Hint Error: Execution failed. Failure reason: \"\".", 
@@ -759,7 +759,7 @@ mod test {
         ];
 
         for (str, expected) in cases {
-            assert_eq!(try_extract_panic_data(str), expected)
+            assert_eq!(try_extract_panic_data(str), expected);
         }
     }
 
@@ -768,7 +768,7 @@ mod test {
         let cases = [
             ("", Felt252::from(0)),
             ("{", Felt252::from(123)),
-            ("PANIK", Felt252::from(344693033291_u64)),
+            ("PANIK", Felt252::from(344_693_033_291_u64)),
         ];
 
         for (str, felt_res) in cases {
