@@ -134,8 +134,7 @@ async fn main() -> Result<()> {
                 &account,
             )
             .await;
-            starknet_commands::deploy::print_deploy_result(result, cli.int_format, cli.json)
-                .await?;
+            starknet_commands::deploy::print_deploy_result(result, cli.int_format, cli.json)?;
 
             Ok(())
         }
@@ -183,8 +182,7 @@ async fn main() -> Result<()> {
                 &mut account,
             )
             .await;
-            starknet_commands::invoke::print_invoke_result(result, cli.int_format, cli.json)
-                .await?;
+            starknet_commands::invoke::print_invoke_result(result, cli.int_format, cli.json)?;
 
             Ok(())
         }

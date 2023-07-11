@@ -63,7 +63,7 @@ pub async fn multicall(
                 let deploy_call: DeployCall = toml::from_str(call.to_string().as_str())
                     .expect("failed to parse toml `deploy` call");
                 let inputs_as_strings_slices: Vec<&str> =
-                    deploy_call.inputs.iter().map(|s| s.as_str()).collect();
+                    deploy_call.inputs.iter().map(std::string::String::as_str).collect();
                 let result = deploy(
                     &deploy_call.class_hash,
                     inputs_as_strings_slices,
@@ -76,13 +76,13 @@ pub async fn multicall(
                 if let Ok((_, contract_address)) = result {
                     contracts.insert(deploy_call.id, contract_address.to_string());
                 }
-                print_deploy_result(result, int_format, json).await?;
+                print_deploy_result(result, int_format, json)?;
             }
             Some("invoke") => {
                 let invoke_call: InvokeCall = toml::from_str(call.to_string().as_str())
                     .expect("failed to parse toml `invoke` call");
                 let inputs_as_strings_slices: Vec<&str> =
-                    invoke_call.inputs.iter().map(|s| s.as_str()).collect();
+                    invoke_call.inputs.iter().map(std::string::String::as_str).collect();
                 let mut contract_address = &invoke_call.contract_address;
                 if let Some(addr) = contracts.get(&invoke_call.contract_address) {
                     contract_address = addr;
@@ -95,7 +95,7 @@ pub async fn multicall(
                     account,
                 )
                 .await;
-                print_invoke_result(result, int_format, json).await?;
+                print_invoke_result(result, int_format, json)?;
             }
             Some(unsupported) => {
                 anyhow::bail!("unsupported call type found: {}", unsupported);
