@@ -1,6 +1,6 @@
 use crate::common::corelib::corelib;
 use crate::common::runner::Contract;
-use crate::{assert_failed, assert_passed, contract, test_case};
+use crate::{assert_failed, assert_passed, test_case};
 use camino::Utf8PathBuf;
 use forge::run;
 use forge::test_unit_summary::TestUnitSummary;
@@ -66,7 +66,7 @@ fn simple_declare() {
         }
         "#
         ),
-        contract!(
+        Contract::new(
             "HelloStarknet",
             indoc!(
                 r#"
@@ -125,7 +125,7 @@ fn multiple_declare() {
         }
         "#
         ),
-        contract!(
+        Contract::new(
             "HelloStarknet",
             indoc!(
                 r#"
@@ -151,7 +151,7 @@ fn multiple_declare() {
                 "#
             )
         ),
-        contract!(
+        Contract::new(
             "Contract1",
             indoc!(
                 r#"

@@ -23,8 +23,11 @@ pub struct Contract {
 }
 
 impl Contract {
-    pub fn new(name: String, code: String) -> Self {
-        Self { name, code }
+    pub fn new(name: &str, code: &str) -> Self {
+        Self {
+            name: name.to_string(),
+            code: code.to_string(),
+        }
     }
 
     pub fn from_code_path(name: String, path: &Path) -> Result<Self> {
@@ -135,15 +138,6 @@ macro_rules! test_case {
 }
 
 #[macro_export]
-macro_rules! contract {
-    ( $name:expr, $contract:expr ) => {{
-        use $crate::common::runner::Contract;
-
-        Contract::new($name.into(), $contract.into())
-    }};
-}
-
-#[macro_export]
 macro_rules! assert_passed {
     ($result:expr) => {{
         assert!($result.iter().all(|result| {
@@ -162,7 +156,7 @@ macro_rules! assert_failed {
             result
                 .test_unit_summaries
                 .iter()
-                .all(|r| !matches!(r, TestUnitSummary::Passed { .. }))
+                .all(|r| matches!(r, TestUnitSummary::Failed { .. }))
         }));
     }};
 }
