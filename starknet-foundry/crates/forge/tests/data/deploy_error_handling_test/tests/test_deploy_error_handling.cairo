@@ -1,5 +1,4 @@
 use result::ResultTrait;
-use protostar_print::PrintTrait;
 use cheatcodes::RevertedTransactionTrait;
 use cheatcodes::PreparedContract;
 use array::ArrayTrait;
