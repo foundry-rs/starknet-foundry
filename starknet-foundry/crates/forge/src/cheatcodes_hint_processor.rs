@@ -437,7 +437,7 @@ fn declare(
         starknet_api::transaction::DeclareTransaction::V2(declare_tx),
         contract_class,
     )
-    .unwrap_or_else(|err| panic!("Unable to build transaction {:?}", err));
+    .unwrap_or_else(|err| panic!("Unable to build transaction {err:?}"));
 
     let account_tx = AccountTransaction::Declare(tx);
     let block_context = build_block_context();

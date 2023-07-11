@@ -37,12 +37,12 @@ impl RunnerConfig {
         test_name_filter: Option<String>,
         exact_match: bool,
         exit_first: bool,
-        protostar_config_from_scarb: &ProtostarConfigFromScarb,
+        forge_config_from_scarb: &ForgeConfigFromScarb,
     ) -> Self {
         Self {
             test_name_filter,
             exact_match,
-            exit_first: protostar_config_from_scarb.exit_first || exit_first,
+            exit_first: forge_config_from_scarb.exit_first || exit_first,
         }
     }
 }
@@ -54,9 +54,9 @@ pub enum RunnerStatus {
     DidNotRun,
 }
 
-/// Represents protostar config deserialized from Scarb.toml
+/// Represents forge config deserialized from Scarb.toml
 #[derive(Deserialize, Debug, PartialEq, Default)]
-pub struct ProtostarConfigFromScarb {
+pub struct ForgeConfigFromScarb {
     #[serde(default)]
     exit_first: bool,
 }
@@ -546,7 +546,7 @@ mod tests {
     fn strip_path() {
         let mocked_tests: Vec<TestUnit> = vec![
             TestUnit {
-                name: "/Users/user/protostar/protostar-rust/tests/data/simple_test/src::test::test_fib".to_string(),
+                name: "/Users/user/forge/tests/data/simple_test/src::test::test_fib".to_string(),
                 available_gas: None,
             },
             TestUnit {

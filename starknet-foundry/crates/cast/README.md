@@ -1,6 +1,6 @@
-# Cast - protostar-cli
+# Cast - starknet-foundry cli
 
-todo [#2116](https://github.com/software-mansion/protostar/issues/2116)
+todo [#13](https://github.com/foundry-rs/starknet-foundry/issues/13)
 
 ## Development
 

@@ -60,7 +60,7 @@ fn main_execution() -> Result<()> {
             args.test_name.clone(),
             args.exact,
             args.exit_first,
-            &protostar_config,
+            &forge_config,
         );
 
         let contracts_path = try_get_starknet_artifacts_path(&base_path)?;

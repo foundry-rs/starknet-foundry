@@ -1,5 +1,5 @@
 use result::ResultTrait;
-use protostar_print::PrintTrait;
+use forge_print::PrintTrait;
 
 #[test]
 fn test_declare_simple() {
