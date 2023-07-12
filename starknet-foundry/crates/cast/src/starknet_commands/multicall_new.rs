@@ -30,13 +30,15 @@ pub struct MulticallNew {
 pub async fn multicall_new(maybe_output_path: Option<String>, overwrite: bool) -> Result<()> {
     if let Some(output_path) = maybe_output_path {
         let output_path = Path::new(output_path.as_str());
-        if !output_path.is_file() {
-            anyhow::bail!("invalid output file");
-        }
-        if output_path.exists() && !overwrite {
-            anyhow::bail!(
-                "output file already exists, if you want to overwrite it, use the `overwrite` flag"
-            );
+        if output_path.exists() {
+            if !output_path.is_file() {
+                anyhow::bail!("output file cannot be a directory");
+            }
+            if !overwrite {
+                anyhow::bail!(
+                    "output file already exists, if you want to overwrite it, use the `overwrite` flag"
+                );
+            }
         }
         std::fs::write(output_path, DEFAULT_MULTICALL_CONTENTS)?;
     } else {
