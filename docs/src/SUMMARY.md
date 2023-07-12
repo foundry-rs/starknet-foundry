@@ -5,7 +5,7 @@
 # Getting Started
 
 * [Installation](./getting-started/installation.md)
-* [Getting Started](./getting-started/getting-started.md)
+* [First Steps with Starknet-Foundry](./getting-started/first-steps.md)
 
 # Projects
 
