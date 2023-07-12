@@ -18,5 +18,5 @@ license-file = "LICENSE"
 anyhow = "1.0.66"
 blockifier = { git = "https://github.com/starkware-libs/blockifier.git", rev = "9238b4d" }
 starknet_api = { git = "https://github.com/starkware-libs/starknet-api", rev = "a4c78ff" }
-cairo-lang-casm = { path = "../../cairo/crates/cairo-lang-casm", version = "2.0.0-rc2" }
-cairo-lang-runner = { path = "../../cairo/crates/cairo-lang-runner", version = "2.0.0-rc2" }
+cairo-lang-casm = { path = "../cairo/crates/cairo-lang-casm", version = "2.0.0-rc2" }
+cairo-lang-runner = { path = "../cairo/crates/cairo-lang-runner", version = "2.0.0-rc2" }
