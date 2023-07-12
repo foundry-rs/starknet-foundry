@@ -197,8 +197,8 @@ fn execute_syscall(
     .unwrap_or_else(|err| panic!("Transaction execution error: {err}"));
 
     let (result, exit_code) = match call_result {
-        CallContractResult::Success { ret_data } => (ret_data, 0),
-        CallContractResult::Panic { panic_data } => (panic_data, 1),
+        CallContractOutput::Success { ret_data } => (ret_data, 0),
+        CallContractOutput::Panic { panic_data } => (panic_data, 1),
     };
 
     insert_at_pointer(vm, &mut system_ptr, gas_counter).unwrap();
@@ -217,7 +217,7 @@ fn execute_syscall(
     Ok(())
 }
 
-enum CallContractResult {
+enum CallContractOutput {
     Success { ret_data: Vec<Felt252> },
     Panic { panic_data: Vec<Felt252> },
 }
@@ -228,7 +228,7 @@ fn call_contract(
     entry_point_selector: &Felt252,
     calldata: &[Felt252],
     blockifier_state: &mut CachedState<DictStateReader>,
-) -> Result<CallContractResult> {
+) -> Result<CallContractOutput> {
     let contract_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
         contract_address.to_be_bytes(),
     )?)?);
@@ -272,7 +272,7 @@ fn call_contract(
             .map(|data| Felt252::from_bytes_be(data.bytes()))
             .collect();
 
-        Ok(CallContractResult::Success {
+        Ok(CallContractOutput::Success {
             ret_data: return_data,
         })
     } else if let Err(EntryPointExecutionError::ExecutionFailed { error_data }) = exec_result {
@@ -281,7 +281,7 @@ fn call_contract(
             .map(|data| Felt252::from_bytes_be(data.bytes()))
             .collect();
 
-        Ok(CallContractResult::Panic {
+        Ok(CallContractOutput::Panic {
             panic_data: err_data,
         })
     } else {
