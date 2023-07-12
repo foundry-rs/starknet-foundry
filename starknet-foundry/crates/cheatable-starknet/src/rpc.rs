@@ -1,10 +1,11 @@
 use anyhow::Result;
-use std::sync::Arc;
+use cairo_vm::{hint_processor::hint_processor_definition::{HintProcessor, HintReference}, vm::{vm_core::VirtualMachine, runners::cairo_runner::RunResources, errors::{hint_errors::HintError, vm_errors::VirtualMachineError}}, types::exec_scope::ExecutionScopes, serde::deserialize_program::ApTracking};
+use std::{sync::Arc, collections::HashMap, any::Any};
 
-use blockifier::{state::{cached_state::CachedState, state_api::State}, execution::{entry_point::{CallEntryPoint, CallType, ExecutionResources, EntryPointExecutionContext, EntryPointExecutionResult, CallInfo, FAULTY_CLASS_HASH}, errors::{EntryPointExecutionError, PreExecutionError}, contract_class::{ContractClassV1, ContractClass}, cairo1_execution::{VmExecutionContext, initialize_execution_context, prepare_call_arguments, finalize_execution, run_entry_point}}};
+use blockifier::{state::{cached_state::CachedState, state_api::State}, execution::{entry_point::{CallEntryPoint, CallType, ExecutionResources, EntryPointExecutionContext, EntryPointExecutionResult, CallInfo, FAULTY_CLASS_HASH}, errors::{EntryPointExecutionError, PreExecutionError}, contract_class::{ContractClassV1, ContractClass}, cairo1_execution::{VmExecutionContext, initialize_execution_context, prepare_call_arguments, finalize_execution, run_entry_point}, syscalls::hint_processor::SyscallHintProcessor, common_hints::HintExecutionResult}};
 use cairo_felt_blockifier::Felt252;
 use starknet_api::{core::{ContractAddress, PatriciaKey, EntryPointSelector, ClassHash}, hash::{StarkFelt, StarkHash}, patricia_key, transaction::{Calldata, TransactionVersion}, deprecated_contract_class::EntryPointType};
-
+use cairo_lang_casm::{hints::{Hint, StarknetHint}, operand::ResOperand};
 use crate::{state::DictStateReader, constants::{TEST_ACCOUNT_CONTRACT_ADDRESS, build_transaction_context, build_block_context}};
 
 
@@ -131,7 +132,7 @@ pub fn execute_if_cairo1(
     context: &mut EntryPointExecutionContext,
 ) -> EntryPointExecutionResult<CallInfo> {
     match contract_class {
-        ContractClass::V0(_) => todo!(),
+        ContractClass::V0(_) => todo!(), // TODO redirect to original cairo handling
         ContractClass::V1(contract_class) => execute_entry_point_call_cairo1(
             call,
             contract_class,
@@ -141,6 +142,108 @@ pub fn execute_if_cairo1(
         ),
     }
 }
+
+
+
+pub struct CheatableSyscallHandler<'a> {
+    pub syscall_handler: SyscallHintProcessor<'a>,
+    pub rolled_contracts: HashMap<Felt252, Felt252>,
+}
+
+impl HintProcessor for CheatableSyscallHandler<'_> {
+    fn execute_hint(
+        &mut self,
+        vm: &mut VirtualMachine,
+        exec_scopes: &mut ExecutionScopes,
+        hint_data: &Box<dyn Any>,
+        constants: &HashMap<String, Felt252>,
+        run_resources: &mut RunResources,
+    ) -> HintExecutionResult {
+        let maybe_extended_hint = hint_data.downcast_ref::<Hint>();
+
+        if let Some(Hint::Starknet(StarknetHint::SystemCall { system })) = maybe_extended_hint {
+            return self.execute_syscall(system, vm);
+        }
+        self.syscall_handler
+            .execute_hint(vm, exec_scopes, hint_data, constants, run_resources)
+    }
+
+    /// Trait function to store hint in the hint processor by string.
+    fn compile_hint(
+        &self,
+        hint_code: &str,
+        ap_tracking_data: &ApTracking,
+        reference_ids: &HashMap<String, usize>,
+        references: &[HintReference],
+    ) -> Result<Box<dyn Any>, VirtualMachineError> {
+        self.syscall_handler.compile_hint(hint_code, ap_tracking_data, reference_ids, references)
+    }
+}
+
+impl CheatableSyscallHandler<'_> {
+    fn execute_syscall(
+        &mut self,
+        system: &ResOperand,
+        vm: &mut VirtualMachine,
+    ) -> Result<(), HintError> {
+        let (cell, offset) = extract_buffer(system);
+        let mut system_ptr = get_ptr(vm, cell, &offset)?;
+    
+        let selector = felt_from_pointer(vm, &mut system_ptr)
+            .unwrap()
+            .to_bytes_be();
+    
+        let gas_counter = usize_from_pointer(vm, &mut system_ptr).unwrap();
+        let contract_address = felt_from_pointer(vm, &mut system_ptr).unwrap();
+        let entry_point_selector = felt_from_pointer(vm, &mut system_ptr).unwrap();
+    
+        let start = relocatable_from_pointer(vm, &mut system_ptr).unwrap();
+        let end = relocatable_from_pointer(vm, &mut system_ptr).unwrap();
+        let calldata = read_data_from_range(vm, start, end).unwrap();
+    
+        let calldata_blockifier: Vec<blockifier_Felt252> = calldata.into_iter().map(|v| convert_to_blockifier_felt(v)).collect();
+        assert_eq!(std::str::from_utf8(&selector).unwrap(), "CallContract");
+        let result_blockfier: Vec<blockifier_Felt252> = call_contract(
+            &convert_to_blockifier_felt(contract_address),
+            &convert_to_blockifier_felt(entry_point_selector),
+            &calldata_blockifier,
+            blockifier_state,
+        )
+        .unwrap();
+        let result: Vec<Felt252> = result_blockfier.into_iter().map(|v| convert_from_blockifier_felt(v)).collect();
+    
+        insert_at_pointer(vm, &mut system_ptr, gas_counter).unwrap();
+        insert_at_pointer(vm, &mut system_ptr, Felt252::from(0)).unwrap();
+    
+        let mut ptr = vm.add_memory_segment();
+        let start = ptr;
+        for value in result {
+            insert_at_pointer(vm, &mut ptr, value).unwrap();
+        }
+        let end = ptr;
+    
+        insert_at_pointer(vm, &mut system_ptr, start).unwrap();
+        insert_at_pointer(vm, &mut system_ptr, end).unwrap();
+    
+        Ok(())
+    }
+}
+
+fn felt_from_pointer(vm: &mut VirtualMachine, ptr: &mut Relocatable) -> Result<Felt252> {
+    let entry_point_selector = vm.get_integer(*ptr)?.into_owned();
+    *ptr += 1;
+    Ok(entry_point_selector)
+}
+
+fn usize_from_pointer(vm: &mut VirtualMachine, ptr: &mut Relocatable) -> Result<usize> {
+    let gas_counter = vm
+        .get_integer(*ptr)?
+        .to_usize()
+        .ok_or_else(|| anyhow!("Failed to convert to usize"))?;
+    *ptr += 1;
+    Ok(gas_counter)
+}
+
 
 /// Executes a specific call to a contract entry point and returns its output.
 pub fn execute_entry_point_call_cairo1(

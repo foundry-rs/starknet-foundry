@@ -11,12 +11,12 @@ test-collector = { path = "../test-collector" }
 cheatable-starknet = { path = "../cheatable-starknet" }
 cairo-felt-blockifier = { path = "../compatibility/cairo-felt-blockifier" }
 cairo-lang-test-runner = { path = "../../../cairo/crates/cairo-lang-test-runner", version = "2.0.0-rc2" }
-cairo-lang-runner = { path = "../../../cairo/crates/cairo-lang-runner", version = "2.0.0-rc2" }
+cairo-lang-runner.workspace = true
 cairo-lang-sierra-to-casm = { path = "../../../cairo/crates/cairo-lang-sierra-to-casm", version = "2.0.0-rc2" }
 cairo-lang-sierra = { path = "../../../cairo/crates/cairo-lang-sierra", version = "2.0.0-rc2" }
 cairo-lang-utils = { path = "../../../cairo/crates/cairo-lang-utils", version = "2.0.0-rc2" }
-cairo-lang-casm = { path = "../../../cairo/crates/cairo-lang-casm", version = "2.0.0-rc2" }
 cairo-lang-starknet = { path = "../../../cairo/crates/cairo-lang-starknet", version = "2.0.0-rc2" }
+cairo-lang-casm.workspace = true
 blockifier.workspace = true
 starknet_api.workspace = true
 schemars = { version = "0.8.12", features = ["preserve_order"] }
