@@ -4,8 +4,8 @@ set -e
 COMPILER_DIRECTORY="$(git rev-parse --show-toplevel)/starknet-foundry/crates/cast/tests/utils/"
 CAIRO_REPO="https://github.com/starkware-libs/cairo/releases/download"
 
-COMPILER_VERSION="v1.1.1"
-SCARB_VERSION="0.4.1"
+COMPILER_VERSION="v2.0.2"
+SCARB_VERSIONS=("0.4.1" "0.5.2")
 DEVNET_VERSION="0.5.5"
 
 if ! which starknet-devnet > /dev/null 2>&1; then
@@ -14,7 +14,7 @@ if ! which starknet-devnet > /dev/null 2>&1; then
   exit 1
 fi
 
-if ! grep -q $(starknet-devnet --version) <<< "$DEVNET_VERSION"; then
+if ! grep -q "$(starknet-devnet --version)" <<< "$DEVNET_VERSION"; then
   echo "wrong version of starknet-devnet found, required version is $DEVNET_VERSION"
   exit 1
 fi
@@ -28,13 +28,17 @@ fi
 if command -v scarb 2>&1 /dev/null; then
   installed_versions=$(asdf list scarb)
 
-  if ! grep -q $SCARB_VERSION <<< $installed_versions; then
-    asdf install scarb $SCARB_VERSION
-  fi
+  for scarb_version in "${SCARB_VERSIONS[@]}"; do
+    if ! grep -q "$scarb_version" <<< "$installed_versions"; then
+      asdf install scarb "$scarb_version"
+    fi
+  done
 
 else
   asdf plugin add scarb https://github.com/software-mansion/asdf-scarb.git
-  asdf install scarb $SCARB_VERSION
+  for scarb_version in "${SCARB_VERSIONS[@]}"; do
+    asdf install scarb "$scarb_version"
+  done
 fi
 
 if [ ! -x "$COMPILER_DIRECTORY/cairo/bin/starknet-sierra-compile" ]; then
