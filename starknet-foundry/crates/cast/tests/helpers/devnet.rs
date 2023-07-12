@@ -30,18 +30,16 @@ fn start_devnet() {
         }
     }
 
-    let res = Command::new("poetry")
+    Command::new("starknet-devnet")
         .args([
-            "run",
-            "starknet-devnet",
             "--port",
             &port,
             "--seed",
             &SEED.to_string(),
             "--sierra-compiler-path",
-            "/Users/karolbisztyga/Desktop/workspace/crypto/starknet-foundry/starknet-foundry/crates/cast/tests/utils/cairo/bin/starknet-sierra-compile",
+            "tests/utils/cairo/bin/starknet-sierra-compile",
         ])
-        .current_dir("/Users/karolbisztyga/Desktop/workspace/crypto/starknet-devnet")
+        .stdout(Stdio::null())
         .spawn()
         .expect("Failed to start devnet!");
 
