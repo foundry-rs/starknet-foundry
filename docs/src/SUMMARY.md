@@ -4,6 +4,7 @@
 
 * [Getting Started](getting-started/index.md)
   * [Installation](getting-started/installation.md)
+  * [Scarb](getting-started/scarb.md)
 
 * [Projects](projects/index.md)
   * [Project templates](./getting-started/template.md)
