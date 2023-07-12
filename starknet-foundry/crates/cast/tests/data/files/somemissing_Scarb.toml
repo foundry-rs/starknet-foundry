@@ -1,5 +1,5 @@
 [package]
-name = "map"
+name = "somemissing"
 version = "0.1.0"
 
 [dependencies]
@@ -14,4 +14,3 @@ sierra = false
 [tool.protostar]
 rpc_url = "http://127.0.0.1:5055/rpc"
 network = "testnet"
-account = "user2"
