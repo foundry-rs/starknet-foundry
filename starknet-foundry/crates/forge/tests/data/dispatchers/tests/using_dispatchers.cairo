@@ -77,7 +77,7 @@ fn handling_errors() {
             assert(*panic_data.at(0) == 'PANIC', *panic_data.at(0));
             assert(*panic_data.at(1) == 'DAYTAH', *panic_data.at(1));
         }
-    }
+    };
 
     let mut panic_data = ArrayTrait::new();
     panic_data.append('capybara');

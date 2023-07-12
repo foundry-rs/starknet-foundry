@@ -194,13 +194,13 @@ fn execute_syscall(
     )
     .unwrap_or_else(|err| panic!("Transaction execution error: {err}"));
 
-    let (result, err_code) = match call_result {
+    let (result, exit_code) = match call_result {
         CallContractResult::Success { ret_data } => (ret_data, 0),
         CallContractResult::Panic { panic_data } => (panic_data, 1),
     };
 
     insert_at_pointer(vm, &mut system_ptr, gas_counter).unwrap();
-    insert_at_pointer(vm, &mut system_ptr, Felt252::from(err_code)).unwrap();
+    insert_at_pointer(vm, &mut system_ptr, Felt252::from(exit_code)).unwrap();
 
     let mut ptr = vm.add_memory_segment();
     let start = ptr;
