@@ -197,7 +197,7 @@ async fn main() -> Result<()> {
             Ok(())
         }
         Commands::Multicall(multicall) => {
-            let mut account = get_account(&cli.account, &accounts_file_path, &provider, &network)?;
+            let mut account = get_account(&account, &accounts_file_path, &provider, &network)?;
             starknet_commands::multicall::multicall(
                 &multicall.path,
                 &mut account,
