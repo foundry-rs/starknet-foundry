@@ -10,4 +10,5 @@ Starknet-Foundry uses [Scarb](https://docs.swmansion.com/scarb) to:
 One of the core concepts of Scarb is its [manifest file](https://docs.swmansion.com/scarb/docs/reference/manifest) - `Scarb.toml`.
 It can be also used to provide [configuration](../projects/configuration.md) for Starknet-Foundry.
 
-Last but no least, remember that in order to use Starknet-Foundry, you must have Scarb executable added to the `PATH` environment variable. 
+Last but no least, remember that in order to use Starknet-Foundry, you must have Scarb 
+[installed](https://docs.swmansion.com/scarb/download) and added to the `PATH` environment variable. 
