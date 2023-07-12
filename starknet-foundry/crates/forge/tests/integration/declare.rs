@@ -235,8 +235,6 @@ fn simple_declare_from_contract_code() {
     assert_passed!(result);
 }
 
-// TODO: Restore this test once we correctly handle panic data
-#[ignore]
 #[test]
 fn declare_unknown() {
     let test = test_case!(indoc!(
