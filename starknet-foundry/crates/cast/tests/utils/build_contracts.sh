@@ -1,6 +1,14 @@
 #!/bin/bash
 set -e
 
+CAIRO_VERSIONS=["v1", "v2"]
+SCARB_VERSIONS=["0.4.1", "0.5.0"]
+
+for cairo_version in $CARIO_VERSIONS; do
+  CONTRACTS_DIRECTORY="$(git rev-parse --show-toplevel)/starknet-foundry/crates/cast/tests/data/contracts/$cairo_version"
+done
+
+
 CONTRACTS_DIRECTORY="$(git rev-parse --show-toplevel)/starknet-foundry/crates/cast/tests/data/contracts"
 SCARB_VERSION="0.4.1"
 ASDF_DATA_DIR=$(asdf info | grep -e "ASDF_DATA_DIR" | awk -F '=' '{print $2}')
