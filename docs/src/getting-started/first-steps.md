@@ -1,7 +1,7 @@
 # First Steps With Starknet-Foundry
 
-This section provides and overview of Starknet-Foundry `forge` command line tool. We demonstrate how to create a new
-project, compile, and test it.
+In this section we provide and overview of Starknet-Foundry `forge` command line tool. We demonstrate how to create a
+new project, compile, and test it.
 
 To start a new project with Starknet-Foundry, clone the template repository
 
