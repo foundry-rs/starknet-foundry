@@ -20,13 +20,8 @@ async fn test_happy_case() {
     let bdg = snapbox.assert();
     let out = bdg.get_output();
 
-    let stderr_str =
-        std::str::from_utf8(&out.stderr).expect("failed to convert command output to string");
     let stdout_str =
         std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
-
-    println!(">>>>>>>>>out: {:?}", stdout_str);
-    println!(">>>>>>>>>err: {:?}", stderr_str);
 
     assert!(out.stderr.is_empty());
     assert!(stdout_str.contains("command: Deploy"));
@@ -56,7 +51,8 @@ async fn test_deploy_fail() {
     let mut args: Vec<&str> = args.iter().map(String::as_str).collect();
 
     let path = project_root::get_project_root().expect("failed to get project root path");
-    let path = Path::new(&path).join("crates/cast/tests/data/multicall_configs/deploy_invalid.toml");
+    let path =
+        Path::new(&path).join("crates/cast/tests/data/multicall_configs/deploy_invalid.toml");
     let path_str = path.to_str().expect("failed converting path to str");
 
     args.append(&mut vec!["multicall", "--path", path_str]);
@@ -77,7 +73,8 @@ async fn test_invoke_fail() {
     let mut args: Vec<&str> = args.iter().map(String::as_str).collect();
 
     let path = project_root::get_project_root().expect("failed to get project root path");
-    let path = Path::new(&path).join("crates/cast/tests/data/multicall_configs/invoke_invalid.toml");
+    let path =
+        Path::new(&path).join("crates/cast/tests/data/multicall_configs/invoke_invalid.toml");
     let path_str = path.to_str().expect("failed converting path to str");
 
     args.append(&mut vec!["multicall", "--path", path_str]);
@@ -99,7 +96,8 @@ async fn test_deploy_success_invoke_fails() {
     let mut args: Vec<&str> = args.iter().map(String::as_str).collect();
 
     let path = project_root::get_project_root().expect("failed to get project root path");
-    let path = Path::new(&path).join("crates/cast/tests/data/multicall_configs/deploy_succ_invoke_fail.toml");
+    let path = Path::new(&path)
+        .join("crates/cast/tests/data/multicall_configs/deploy_succ_invoke_fail.toml");
     let path_str = path.to_str().expect("failed converting path to str");
 
     args.append(&mut vec!["multicall", "--path", path_str]);

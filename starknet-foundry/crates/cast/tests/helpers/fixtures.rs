@@ -87,7 +87,6 @@ pub async fn invoke_map_contract(key: &str, value: &str) {
 
 #[must_use]
 pub fn default_cli_args(account: String) -> Vec<String> {
-    let st: &str = account.clone().as_str();
     vec![
         "--url".to_string(),
         URL.to_string(),
