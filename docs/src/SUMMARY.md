@@ -4,14 +4,15 @@
 
 # Getting Started
 
-* [Installation](./getting-started/installation.md)
-* [First Steps with Starknet-Foundry](./getting-started/first-steps.md)
+* [Installation](getting-started/installation.md)
+* [First Steps with Starknet-Foundry](getting-started/first-steps.md)
+* [Scarb](getting-started/scarb.md)
 
 # Projects
 
-* [Project Templates](./projects/template.md)
-* [Project Configuration](./projects/configuration.md)
-* [Understanding Cairo Packages](./projects/packages.md)
+* [Project Templates](projects/template.md)
+* [Project Configuration](projects/configuration.md)
+* [Understanding Cairo Packages](projects/packages.md)
 
 # Testing
 

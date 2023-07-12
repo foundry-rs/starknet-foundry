@@ -3118,6 +3118,8 @@ dependencies = [
  "blockifier 0.1.0 (git+https://github.com/starkware-libs/blockifier.git?rev=9238b4d)",
  "cairo-felt 0.8.2",
  "cairo-lang-casm 2.0.1",
+ "cairo-lang-compiler 2.0.1",
+ "cairo-lang-filesystem 2.0.1",
  "cairo-lang-runner 2.0.1",
  "cairo-lang-sierra 2.0.1",
  "cairo-lang-sierra-to-casm 2.0.1",
