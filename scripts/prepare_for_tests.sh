@@ -56,6 +56,8 @@ if [ ! -x "$COMPILER_DIRECTORY/cairo/bin/starknet-sierra-compile" ]; then
   fi
 fi
 
+asdf global scarb 0.4.1
+
 echo "All done!"
 exit 0
 

@@ -6,7 +6,8 @@ use crate::common::runner::runner;
 #[test]
 fn simple_package() {
     let temp = assert_fs::TempDir::new().unwrap();
-    temp.copy_from("tests/data/simple_test", &["**/*"]).unwrap();
+    temp.copy_from("tests/data/simple_test", &["**/*.cairo", "**/*.toml"])
+        .unwrap();
 
     let snapbox = runner();
 
@@ -39,7 +40,8 @@ fn simple_package() {
 #[test]
 fn with_filter() {
     let temp = assert_fs::TempDir::new().unwrap();
-    temp.copy_from("tests/data/simple_test", &["**/*"]).unwrap();
+    temp.copy_from("tests/data/simple_test", &["**/*.cairo", "**/*.toml"])
+        .unwrap();
 
     let snapbox = runner();
 
@@ -62,7 +64,8 @@ fn with_filter() {
 #[test]
 fn with_exact_filter() {
     let temp = assert_fs::TempDir::new().unwrap();
-    temp.copy_from("tests/data/simple_test", &["**/*"]).unwrap();
+    temp.copy_from("tests/data/simple_test", &["**/*.cairo", "**/*.toml"])
+        .unwrap();
 
     let snapbox = runner();
 
@@ -85,7 +88,8 @@ fn with_exact_filter() {
 #[test]
 fn with_non_matching_filter() {
     let temp = assert_fs::TempDir::new().unwrap();
-    temp.copy_from("tests/data/simple_test", &["**/*"]).unwrap();
+    temp.copy_from("tests/data/simple_test", &["**/*.cairo", "**/*.toml"])
+        .unwrap();
 
     let snapbox = runner();
 
@@ -106,7 +110,7 @@ fn with_non_matching_filter() {
 #[test]
 fn with_declare() {
     let temp = assert_fs::TempDir::new().unwrap();
-    temp.copy_from("tests/data/declare_test", &["**/*"])
+    temp.copy_from("tests/data/declare_test", &["**/*.cairo", "**/*.toml"])
         .unwrap();
 
     let snapbox = runner();
@@ -125,7 +129,7 @@ fn with_declare() {
 
             Failure data:
                 Got an exception while executing a hint:
-                Failed to find contract GoodbyeStarknet in starknet_artifacts.json
+                Failed to get contract artifact for name = GoodbyeStarknet. Make sure starknet target is correctly defined in Scarb.toml file.
 
             Tests: 2 passed, 1 failed, 0 skipped
         "#});
@@ -134,7 +138,7 @@ fn with_declare() {
 #[test]
 fn run_with_multiple_contracts() {
     let temp = assert_fs::TempDir::new().unwrap();
-    temp.copy_from("tests/data/multicontract", &["**/*"])
+    temp.copy_from("tests/data/multicontract", &["**/*.cairo", "**/*.toml"])
         .unwrap();
 
     let snapbox = runner();
@@ -166,7 +170,8 @@ fn run_with_multiple_contracts() {
 #[test]
 fn with_print() {
     let temp = assert_fs::TempDir::new().unwrap();
-    temp.copy_from("tests/data/print_test", &["**/*"]).unwrap();
+    temp.copy_from("tests/data/print_test", &["**/*.cairo", "**/*.toml"])
+        .unwrap();
 
     let snapbox = runner();
 
@@ -192,8 +197,11 @@ fn with_print() {
 #[test]
 fn panic_data_decoding() {
     let temp = assert_fs::TempDir::new().unwrap();
-    temp.copy_from("tests/data/panic_decoding_test", &["**/*"])
-        .unwrap();
+    temp.copy_from(
+        "tests/data/panic_decoding_test",
+        &["**/*.cairo", "**/*.toml"],
+    )
+    .unwrap();
 
     let snapbox = runner();
 
@@ -228,7 +236,7 @@ fn panic_data_decoding() {
 #[test]
 fn exit_first() {
     let temp = assert_fs::TempDir::new().unwrap();
-    temp.copy_from("tests/data/exit_first_test", &["**/*"])
+    temp.copy_from("tests/data/exit_first_test", &["**/*.cairo", "**/*.toml"])
         .unwrap();
 
     let snapbox = runner();
@@ -262,7 +270,8 @@ fn exit_first() {
 #[test]
 fn exit_first_flag() {
     let temp = assert_fs::TempDir::new().unwrap();
-    temp.copy_from("tests/data/simple_test", &["**/*"]).unwrap();
+    temp.copy_from("tests/data/simple_test", &["**/*.cairo", "**/*.toml"])
+        .unwrap();
 
     let snapbox = runner().arg("--exit-first");
 
@@ -294,7 +303,8 @@ fn exit_first_flag() {
 #[test]
 fn dispatchers() {
     let temp = assert_fs::TempDir::new().unwrap();
-    temp.copy_from("tests/data/dispatchers", &["**/*"]).unwrap();
+    temp.copy_from("tests/data/dispatchers", &["**/*.cairo", "**/*.toml"])
+        .unwrap();
 
     let snapbox = runner();
 
@@ -302,13 +312,33 @@ fn dispatchers() {
         .current_dir(&temp)
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 2 test(s) and 4 test file(s)
+        .stdout_matches(indoc! {r#"Collected 3 test(s) and 4 test file(s)
             Running 0 test(s) from src/erc20.cairo
             Running 0 test(s) from src/hello_starknet.cairo
             Running 0 test(s) from src/lib.cairo
-            Running 2 test(s) from tests/using_dispatchers.cairo
+            Running 3 test(s) from tests/using_dispatchers.cairo
             [PASS] using_dispatchers::using_dispatchers::call_and_invoke
             [PASS] using_dispatchers::using_dispatchers::advanced_types
-            Tests: 2 passed, 0 failed, 0 skipped
+            [PASS] using_dispatchers::using_dispatchers::handling_errors
+            Tests: 3 passed, 0 failed, 0 skipped
+        "#});
+}
+
+#[test]
+fn test_deploy_error_handling() {
+    let temp = assert_fs::TempDir::new().unwrap();
+    temp.copy_from("tests/data/deploy_error_handling_test", &["**/*"])
+        .unwrap();
+
+    runner()
+        .current_dir(&temp)
+        .assert()
+        .success()
+        .stdout_matches(indoc! { r#"
+            Collected 1 test(s) and 2 test file(s)
+            Running 0 test(s) from src/lib.cairo
+            Running 1 test(s) from tests/test_deploy_error_handling.cairo
+            [PASS] test_deploy_error_handling::test_deploy_error_handling::test_deploy_error_handling
+            Tests: 1 passed, 0 failed, 0 skipped
         "#});
 }

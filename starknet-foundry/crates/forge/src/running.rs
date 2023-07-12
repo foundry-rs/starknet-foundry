@@ -8,15 +8,14 @@ use itertools::chain;
 use cairo_lang_casm::hints::Hint;
 use cairo_lang_casm::instructions::Instruction;
 use cairo_lang_runner::casm_run::hint_to_hint_params;
-use cairo_lang_runner::{
-    CairoHintProcessor as CoreCairoHintProcessor, RunResultValue, RunnerError,
-};
-use cairo_lang_runner::{RunResult, SierraCasmRunner, StarknetState};
+use cairo_lang_runner::{CairoHintProcessor as CoreCairoHintProcessor, RunnerError};
+use cairo_lang_runner::{SierraCasmRunner, StarknetState};
 use cairo_vm::vm::runners::cairo_runner::RunResources;
-use test_collector::TestConfig;
+use test_collector::TestCase;
 
 use crate::cheatcodes_hint_processor::CairoHintProcessor;
-use crate::test_results::{extract_result_data, TestResult};
+use crate::scarb::StarknetContractArtifacts;
+use crate::test_case_summary::TestCaseSummary;
 
 /// Builds `hints_dict` required in `cairo_vm::types::program::Program` from instructions.
 fn build_hints_dict<'b>(
@@ -44,31 +43,17 @@ fn build_hints_dict<'b>(
     (hints_dict, string_to_hint)
 }
 
-fn test_result_from_run_result(name: &str, run_result: RunResult) -> TestResult {
-    match run_result.value {
-        RunResultValue::Success(_) => TestResult::Passed {
-            name: name.to_string(),
-            msg: extract_result_data(&run_result),
-            run_result: Some(run_result),
-        },
-        RunResultValue::Panic(_) => TestResult::Failed {
-            name: name.to_string(),
-            msg: extract_result_data(&run_result),
-            run_result: Some(run_result),
-        },
-    }
-}
-
-pub(crate) fn run_from_test_config(
+pub(crate) fn run_from_test_case(
     runner: &mut SierraCasmRunner,
-    config: &TestConfig,
-) -> Result<TestResult> {
-    let available_gas = if let Some(available_gas) = &config.available_gas {
+    case: &TestCase,
+    contracts: &HashMap<String, StarknetContractArtifacts>,
+) -> Result<TestCaseSummary> {
+    let available_gas = if let Some(available_gas) = &case.available_gas {
         Some(*available_gas)
     } else {
         Some(usize::MAX)
     };
-    let func = runner.find_function(config.name.as_str())?;
+    let func = runner.find_function(case.name.as_str())?;
     let initial_gas = runner.get_initial_available_gas(func, available_gas)?;
     let (entry_code, builtins) = runner.create_entry_code(func, &[], initial_gas)?;
     let footer = runner.create_code_footer();
@@ -88,20 +73,21 @@ pub(crate) fn run_from_test_config(
     let mut cairo_hint_processor = CairoHintProcessor {
         original_cairo_hint_processor: core_cairo_hint_processor,
         blockifier_state: Some(build_testing_state()),
+        contracts,
     };
 
     match runner.run_function(
-        runner.find_function(config.name.as_str())?,
+        runner.find_function(case.name.as_str())?,
         &mut cairo_hint_processor,
         hints_dict,
         instructions,
         builtins,
     ) {
-        Ok(result) => Ok(test_result_from_run_result(config.name.as_str(), result)),
+        Ok(result) => Ok(TestCaseSummary::from_run_result(result, case)),
 
         // CairoRunError comes from VirtualMachineError which may come from HintException that originates in the cheatcode processor
-        Err(RunnerError::CairoRunError(error)) => Ok(TestResult::Failed {
-            name: config.name.clone(),
+        Err(RunnerError::CairoRunError(error)) => Ok(TestCaseSummary::Failed {
+            name: case.name.clone(),
             run_result: None,
             msg: Some(format!(
                 "\n    {}\n",
@@ -110,11 +96,5 @@ pub(crate) fn run_from_test_config(
         }),
 
         Err(err) => Err(err.into()),
-    }
-}
-
-pub(crate) fn skip_from_test_config(config: &TestConfig) -> TestResult {
-    TestResult::Skipped {
-        name: config.name.clone(),
     }
 }
