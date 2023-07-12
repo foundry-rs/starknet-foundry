@@ -1,4 +1,4 @@
-use crate::test_unit_summary::TestUnitSummary;
+use crate::test_case_summary::TestCaseSummary;
 use crate::TestFileSummary;
 use anyhow::Error;
 use camino::Utf8PathBuf;
@@ -33,22 +33,22 @@ pub fn print_test_summary(summaries: &[TestFileSummary]) {
     );
 }
 
-pub fn print_test_result(test_result: &TestUnitSummary) {
+pub fn print_test_result(test_result: &TestCaseSummary) {
     let result_header = match test_result {
-        TestUnitSummary::Passed { .. } => format!("[{}]", style("PASS").green()),
-        TestUnitSummary::Failed { .. } => format!("[{}]", style("FAIL").red()),
-        TestUnitSummary::Skipped { .. } => format!("[{}]", style("SKIP").yellow()),
+        TestCaseSummary::Passed { .. } => format!("[{}]", style("PASS").green()),
+        TestCaseSummary::Failed { .. } => format!("[{}]", style("FAIL").red()),
+        TestCaseSummary::Skipped { .. } => format!("[{}]", style("SKIP").yellow()),
     };
 
     let result_name = match test_result {
-        TestUnitSummary::Skipped { name }
-        | TestUnitSummary::Failed { name, .. }
-        | TestUnitSummary::Passed { name, .. } => name,
+        TestCaseSummary::Skipped { name }
+        | TestCaseSummary::Failed { name, .. }
+        | TestCaseSummary::Passed { name, .. } => name,
     };
 
     let result_message = match test_result {
-        TestUnitSummary::Passed { msg: Some(msg), .. } => format!("\n\nSuccess data:{msg}"),
-        TestUnitSummary::Failed { msg: Some(msg), .. } => format!("\n\nFailure data:{msg}"),
+        TestCaseSummary::Passed { msg: Some(msg), .. } => format!("\n\nSuccess data:{msg}"),
+        TestCaseSummary::Failed { msg: Some(msg), .. } => format!("\n\nFailure data:{msg}"),
         _ => String::new(),
     };
 

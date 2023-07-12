@@ -1,10 +1,10 @@
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{RunResult, RunResultValue};
 use std::option::Option;
-use test_collector::TestUnit;
+use test_collector::TestCase;
 
 #[derive(Debug, PartialEq, Clone)]
-pub enum TestUnitSummary {
+pub enum TestCaseSummary {
     Passed {
         name: String,
         run_result: RunResult,
@@ -20,17 +20,17 @@ pub enum TestUnitSummary {
     },
 }
 
-impl TestUnitSummary {
+impl TestCaseSummary {
     #[must_use]
-    pub fn from_run_result(run_result: RunResult, test_unit: &TestUnit) -> Self {
+    pub fn from_run_result(run_result: RunResult, test_case: &TestCase) -> Self {
         match run_result.value {
-            RunResultValue::Success(_) => TestUnitSummary::Passed {
-                name: test_unit.name.to_string(),
+            RunResultValue::Success(_) => TestCaseSummary::Passed {
+                name: test_case.name.to_string(),
                 msg: extract_result_data(&run_result),
                 run_result,
             },
-            RunResultValue::Panic(_) => TestUnitSummary::Failed {
-                name: test_unit.name.to_string(),
+            RunResultValue::Panic(_) => TestCaseSummary::Failed {
+                name: test_case.name.to_string(),
                 msg: extract_result_data(&run_result),
                 run_result: Some(run_result),
             },
@@ -38,9 +38,9 @@ impl TestUnitSummary {
     }
 
     #[must_use]
-    pub fn skipped(test_unit: &TestUnit) -> Self {
+    pub fn skipped(test_case: &TestCase) -> Self {
         Self::Skipped {
-            name: test_unit.name.to_string(),
+            name: test_case.name.to_string(),
         }
     }
 }

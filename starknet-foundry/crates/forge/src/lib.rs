@@ -4,7 +4,7 @@ use std::fmt::Debug;
 use anyhow::{Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use serde::Deserialize;
-use test_unit_summary::TestUnitSummary;
+use test_case_summary::TestCaseSummary;
 use walkdir::WalkDir;
 
 use cairo_lang_runner::SierraCasmRunner;
@@ -12,13 +12,13 @@ use cairo_lang_sierra::program::Program;
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 
-use crate::running::run_from_test_units;
+use crate::running::run_from_test_case;
 use crate::scarb::StarknetContractArtifacts;
-use test_collector::{collect_tests, LinkedLibrary, TestUnit};
+use test_collector::{collect_tests, LinkedLibrary, TestCase};
 
 pub mod pretty_printing;
 pub mod scarb;
-pub mod test_unit_summary;
+pub mod test_case_summary;
 
 mod cheatcodes_hint_processor;
 mod running;
@@ -63,7 +63,7 @@ pub struct ForgeConfigFromScarb {
 
 struct TestsFromFile {
     sierra_program: Program,
-    test_units: Vec<TestUnit>,
+    test_cases: Vec<TestCase>,
     relative_path: Utf8PathBuf,
 }
 
@@ -132,17 +132,17 @@ fn internal_collect_tests(
             corelib_path.map(|corelib_path| corelib_path.as_str()),
         )?;
 
-        let test_units = strip_path_from_test_names(tests_configs)?;
-        let test_units = if let Some(test_name_filter) = &runner_config.test_name_filter {
-            filter_tests_by_name(test_name_filter, runner_config.exact_match, test_units)?
+        let test_cases = strip_path_from_test_names(tests_configs)?;
+        let test_cases = if let Some(test_name_filter) = &runner_config.test_name_filter {
+            filter_tests_by_name(test_name_filter, runner_config.exact_match, test_cases)?
         } else {
-            test_units
+            test_cases
         };
 
         let relative_path = test_file.strip_prefix(input_path)?.to_path_buf();
         tests.push(TestsFromFile {
             sierra_program,
-            test_units,
+            test_cases,
             relative_path,
         });
     }
@@ -162,7 +162,7 @@ pub fn run(
         collect_tests_from_directory(input_path, linked_libraries, corelib_path, runner_config)?;
 
     pretty_printing::print_collected_tests_count(
-        tests.iter().map(|tests| tests.test_units.len()).sum(),
+        tests.iter().map(|tests| tests.test_cases.len()).sum(),
         tests.len(),
     );
 
@@ -178,18 +178,18 @@ pub fn run(
     }
 
     for tests_from_file in tests_iterator {
-        let skipped: Vec<TestUnitSummary> = tests_from_file
-            .test_units
+        let skipped: Vec<TestCaseSummary> = tests_from_file
+            .test_cases
             .iter()
-            .map(TestUnitSummary::skipped)
+            .map(TestCaseSummary::skipped)
             .collect();
 
-        for test_unit_summary in &skipped {
-            pretty_printing::print_test_result(test_unit_summary);
+        for test_case_summary in &skipped {
+            pretty_printing::print_test_result(test_case_summary);
         }
 
         let file_summary = TestFileSummary {
-            test_unit_summaries: skipped,
+            test_case_summaries: skipped,
             runner_exit_status: RunnerStatus::DidNotRun,
             relative_path: tests_from_file.relative_path,
         };
@@ -202,30 +202,30 @@ pub fn run(
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct TestFileSummary {
-    pub test_unit_summaries: Vec<TestUnitSummary>,
+    pub test_case_summaries: Vec<TestCaseSummary>,
     pub runner_exit_status: RunnerStatus,
     pub relative_path: Utf8PathBuf,
 }
 
 impl TestFileSummary {
     fn count_passed(&self) -> usize {
-        self.test_unit_summaries
+        self.test_case_summaries
             .iter()
-            .filter(|tu| matches!(tu, TestUnitSummary::Passed { .. }))
+            .filter(|tu| matches!(tu, TestCaseSummary::Passed { .. }))
             .count()
     }
 
     fn count_failed(&self) -> usize {
-        self.test_unit_summaries
+        self.test_case_summaries
             .iter()
-            .filter(|tu| matches!(tu, TestUnitSummary::Failed { .. }))
+            .filter(|tu| matches!(tu, TestCaseSummary::Failed { .. }))
             .count()
     }
 
     fn count_skipped(&self) -> usize {
-        self.test_unit_summaries
+        self.test_case_summaries
             .iter()
-            .filter(|tu| matches!(tu, TestUnitSummary::Skipped { .. }))
+            .filter(|tu| matches!(tu, TestCaseSummary::Skipped { .. }))
             .count()
     }
 }
@@ -243,22 +243,22 @@ fn run_tests_from_file(
     )
     .context("Failed setting up runner.")?;
 
-    pretty_printing::print_running_tests(&tests.relative_path, tests.test_units.len());
+    pretty_printing::print_running_tests(&tests.relative_path, tests.test_cases.len());
     let mut results = vec![];
-    for (i, unit) in tests.test_units.iter().enumerate() {
-        let result = run_from_test_units(&mut runner, unit, contracts)?;
+    for (i, case) in tests.test_cases.iter().enumerate() {
+        let result = run_from_test_case(&mut runner, case, contracts)?;
         results.push(result.clone());
 
         pretty_printing::print_test_result(&result);
         if runner_config.exit_first {
-            if let TestUnitSummary::Failed { .. } = result {
-                for unit in &tests.test_units[i + 1..] {
-                    let skipped_result = TestUnitSummary::skipped(unit);
+            if let TestCaseSummary::Failed { .. } = result {
+                for case in &tests.test_cases[i + 1..] {
+                    let skipped_result = TestCaseSummary::skipped(case);
                     pretty_printing::print_test_result(&skipped_result);
                     results.push(skipped_result);
                 }
                 return Ok(TestFileSummary {
-                    test_unit_summaries: results,
+                    test_case_summaries: results,
                     runner_exit_status: RunnerStatus::TestFailed,
                     relative_path: tests.relative_path,
                 });
@@ -266,26 +266,26 @@ fn run_tests_from_file(
         }
     }
     Ok(TestFileSummary {
-        test_unit_summaries: results,
+        test_case_summaries: results,
         runner_exit_status: RunnerStatus::Default,
         relative_path: tests.relative_path,
     })
 }
 
-fn strip_path_from_test_names(test_units: Vec<TestUnit>) -> Result<Vec<TestUnit>> {
-    test_units
+fn strip_path_from_test_names(test_cases: Vec<TestCase>) -> Result<Vec<TestCase>> {
+    test_cases
         .into_iter()
-        .map(|test_unit| {
-            let name: String = test_unit
+        .map(|test_case| {
+            let name: String = test_case
                 .name
                 .rsplit('/')
                 .next()
-                .with_context(|| format!("Failed to get test name from = {}", test_unit.name))?
+                .with_context(|| format!("Failed to get test name from = {}", test_case.name))?
                 .into();
 
-            Ok(TestUnit {
+            Ok(TestCase {
                 name,
-                available_gas: test_unit.available_gas,
+                available_gas: test_case.available_gas,
             })
         })
         .collect()
@@ -294,10 +294,10 @@ fn strip_path_from_test_names(test_units: Vec<TestUnit>) -> Result<Vec<TestUnit>
 fn filter_tests_by_name(
     test_name_filter: &str,
     exact_match: bool,
-    test_units: Vec<TestUnit>,
-) -> Result<Vec<TestUnit>> {
+    test_cases: Vec<TestCase>,
+) -> Result<Vec<TestCase>> {
     let mut result = vec![];
-    for test in test_units {
+    for test in test_cases {
         if exact_match {
             if test.name == test_name_filter {
                 result.push(test);
@@ -309,7 +309,7 @@ fn filter_tests_by_name(
     Ok(result)
 }
 
-fn test_name_contains(test_name_filter: &str, test: &TestUnit) -> Result<bool> {
+fn test_name_contains(test_name_filter: &str, test: &TestCase) -> Result<bool> {
     let name = test
         .name
         .rsplit("::")
@@ -347,16 +347,16 @@ mod tests {
 
     #[test]
     fn filtering_tests() {
-        let mocked_tests: Vec<TestUnit> = vec![
-            TestUnit {
+        let mocked_tests: Vec<TestCase> = vec![
+            TestCase {
                 name: "crate1::do_thing".to_string(),
                 available_gas: None,
             },
-            TestUnit {
+            TestCase {
                 name: "crate2::run_other_thing".to_string(),
                 available_gas: None,
             },
-            TestUnit {
+            TestCase {
                 name: "outer::crate2::execute_next_thing".to_string(),
                 available_gas: None,
             },
@@ -365,7 +365,7 @@ mod tests {
         let filtered = filter_tests_by_name("do", false, mocked_tests.clone()).unwrap();
         assert_eq!(
             filtered,
-            vec![TestUnit {
+            vec![TestCase {
                 name: "crate1::do_thing".to_string(),
                 available_gas: None,
             },]
@@ -374,7 +374,7 @@ mod tests {
         let filtered = filter_tests_by_name("run", false, mocked_tests.clone()).unwrap();
         assert_eq!(
             filtered,
-            vec![TestUnit {
+            vec![TestCase {
                 name: "crate2::run_other_thing".to_string(),
                 available_gas: None,
             },]
@@ -384,15 +384,15 @@ mod tests {
         assert_eq!(
             filtered,
             vec![
-                TestUnit {
+                TestCase {
                     name: "crate1::do_thing".to_string(),
                     available_gas: None,
                 },
-                TestUnit {
+                TestCase {
                     name: "crate2::run_other_thing".to_string(),
                     available_gas: None,
                 },
-                TestUnit {
+                TestCase {
                     name: "outer::crate2::execute_next_thing".to_string(),
                     available_gas: None,
                 },
@@ -406,15 +406,15 @@ mod tests {
         assert_eq!(
             filtered,
             vec![
-                TestUnit {
+                TestCase {
                     name: "crate1::do_thing".to_string(),
                     available_gas: None,
                 },
-                TestUnit {
+                TestCase {
                     name: "crate2::run_other_thing".to_string(),
                     available_gas: None,
                 },
-                TestUnit {
+                TestCase {
                     name: "outer::crate2::execute_next_thing".to_string(),
                     available_gas: None,
                 },
@@ -424,16 +424,16 @@ mod tests {
 
     #[test]
     fn filtering_tests_only_uses_name() {
-        let mocked_tests: Vec<TestUnit> = vec![
-            TestUnit {
+        let mocked_tests: Vec<TestCase> = vec![
+            TestCase {
                 name: "crate1::do_thing".to_string(),
                 available_gas: None,
             },
-            TestUnit {
+            TestCase {
                 name: "crate2::run_other_thing".to_string(),
                 available_gas: None,
             },
-            TestUnit {
+            TestCase {
                 name: "outer::crate2::run_other_thing".to_string(),
                 available_gas: None,
             },
@@ -445,20 +445,20 @@ mod tests {
 
     #[test]
     fn filtering_with_exact_match() {
-        let mocked_tests: Vec<TestUnit> = vec![
-            TestUnit {
+        let mocked_tests: Vec<TestCase> = vec![
+            TestCase {
                 name: "crate1::do_thing".to_string(),
                 available_gas: None,
             },
-            TestUnit {
+            TestCase {
                 name: "crate2::run_other_thing".to_string(),
                 available_gas: None,
             },
-            TestUnit {
+            TestCase {
                 name: "outer::crate3::run_other_thing".to_string(),
                 available_gas: None,
             },
-            TestUnit {
+            TestCase {
                 name: "do_thing".to_string(),
                 available_gas: None,
             },
@@ -473,7 +473,7 @@ mod tests {
         let filtered = filter_tests_by_name("do_thing", true, mocked_tests.clone()).unwrap();
         assert_eq!(
             filtered,
-            vec![TestUnit {
+            vec![TestCase {
                 name: "do_thing".to_string(),
                 available_gas: None,
             },]
@@ -483,7 +483,7 @@ mod tests {
             filter_tests_by_name("crate1::do_thing", true, mocked_tests.clone()).unwrap();
         assert_eq!(
             filtered,
-            vec![TestUnit {
+            vec![TestCase {
                 name: "crate1::do_thing".to_string(),
                 available_gas: None,
             },]
@@ -497,7 +497,7 @@ mod tests {
             filter_tests_by_name("outer::crate3::run_other_thing", true, mocked_tests).unwrap();
         assert_eq!(
             filtered,
-            vec![TestUnit {
+            vec![TestCase {
                 name: "outer::crate3::run_other_thing".to_string(),
                 available_gas: None,
             },]
@@ -506,16 +506,16 @@ mod tests {
 
     #[test]
     fn filtering_tests_works_without_crate_in_test_name() {
-        let mocked_tests: Vec<TestUnit> = vec![
-            TestUnit {
+        let mocked_tests: Vec<TestCase> = vec![
+            TestCase {
                 name: "crate1::do_thing".to_string(),
                 available_gas: None,
             },
-            TestUnit {
+            TestCase {
                 name: "crate2::run_other_thing".to_string(),
                 available_gas: None,
             },
-            TestUnit {
+            TestCase {
                 name: "thing".to_string(),
                 available_gas: None,
             },
@@ -525,15 +525,15 @@ mod tests {
         assert_eq!(
             result,
             vec![
-                TestUnit {
+                TestCase {
                     name: "crate1::do_thing".to_string(),
                     available_gas: None,
                 },
-                TestUnit {
+                TestCase {
                     name: "crate2::run_other_thing".to_string(),
                     available_gas: None,
                 },
-                TestUnit {
+                TestCase {
                     name: "thing".to_string(),
                     available_gas: None,
                 },
@@ -543,16 +543,16 @@ mod tests {
 
     #[test]
     fn strip_path() {
-        let mocked_tests: Vec<TestUnit> = vec![
-            TestUnit {
+        let mocked_tests: Vec<TestCase> = vec![
+            TestCase {
                 name: "/Users/user/forge/tests/data/simple_test/src::test::test_fib".to_string(),
                 available_gas: None,
             },
-            TestUnit {
+            TestCase {
                 name: "crate2::run_other_thing".to_string(),
                 available_gas: None,
             },
-            TestUnit {
+            TestCase {
                 name: "src/crate2::run_other_thing".to_string(),
                 available_gas: None,
             },
@@ -562,15 +562,15 @@ mod tests {
         assert_eq!(
             striped_tests,
             vec![
-                TestUnit {
+                TestCase {
                     name: "src::test::test_fib".to_string(),
                     available_gas: None,
                 },
-                TestUnit {
+                TestCase {
                     name: "crate2::run_other_thing".to_string(),
                     available_gas: None,
                 },
-                TestUnit {
+                TestCase {
                     name: "crate2::run_other_thing".to_string(),
                     available_gas: None,
                 },

@@ -142,9 +142,9 @@ macro_rules! assert_passed {
     ($result:expr) => {{
         assert!($result.iter().all(|result| {
             result
-                .test_unit_summaries
+                .test_case_summaries
                 .iter()
-                .all(|r| matches!(r, TestUnitSummary::Passed { .. }))
+                .all(|r| matches!(r, TestCaseSummary::Passed { .. }))
         }));
     }};
 }
@@ -154,9 +154,9 @@ macro_rules! assert_failed {
     ($result:expr) => {{
         assert!($result.iter().all(|result| {
             result
-                .test_unit_summaries
+                .test_case_summaries
                 .iter()
-                .all(|r| matches!(r, TestUnitSummary::Failed { .. }))
+                .all(|r| matches!(r, TestCaseSummary::Failed { .. }))
         }));
     }};
 }

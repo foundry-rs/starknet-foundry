@@ -11,11 +11,11 @@ use cairo_lang_runner::casm_run::hint_to_hint_params;
 use cairo_lang_runner::{CairoHintProcessor as CoreCairoHintProcessor, RunnerError};
 use cairo_lang_runner::{SierraCasmRunner, StarknetState};
 use cairo_vm::vm::runners::cairo_runner::RunResources;
-use test_collector::TestUnit;
+use test_collector::TestCase;
 
 use crate::cheatcodes_hint_processor::CairoHintProcessor;
 use crate::scarb::StarknetContractArtifacts;
-use crate::test_unit_summary::TestUnitSummary;
+use crate::test_case_summary::TestCaseSummary;
 
 /// Builds `hints_dict` required in `cairo_vm::types::program::Program` from instructions.
 fn build_hints_dict<'b>(
@@ -43,17 +43,17 @@ fn build_hints_dict<'b>(
     (hints_dict, string_to_hint)
 }
 
-pub(crate) fn run_from_test_units(
+pub(crate) fn run_from_test_case(
     runner: &mut SierraCasmRunner,
-    unit: &TestUnit,
+    case: &TestCase,
     contracts: &HashMap<String, StarknetContractArtifacts>,
-) -> Result<TestUnitSummary> {
-    let available_gas = if let Some(available_gas) = &unit.available_gas {
+) -> Result<TestCaseSummary> {
+    let available_gas = if let Some(available_gas) = &case.available_gas {
         Some(*available_gas)
     } else {
         Some(usize::MAX)
     };
-    let func = runner.find_function(unit.name.as_str())?;
+    let func = runner.find_function(case.name.as_str())?;
     let initial_gas = runner.get_initial_available_gas(func, available_gas)?;
     let (entry_code, builtins) = runner.create_entry_code(func, &[], initial_gas)?;
     let footer = runner.create_code_footer();
@@ -77,17 +77,17 @@ pub(crate) fn run_from_test_units(
     };
 
     match runner.run_function(
-        runner.find_function(unit.name.as_str())?,
+        runner.find_function(case.name.as_str())?,
         &mut cairo_hint_processor,
         hints_dict,
         instructions,
         builtins,
     ) {
-        Ok(result) => Ok(TestUnitSummary::from_run_result(result, unit)),
+        Ok(result) => Ok(TestCaseSummary::from_run_result(result, case)),
 
         // CairoRunError comes from VirtualMachineError which may come from HintException that originates in the cheatcode processor
-        Err(RunnerError::CairoRunError(error)) => Ok(TestUnitSummary::Failed {
-            name: unit.name.clone(),
+        Err(RunnerError::CairoRunError(error)) => Ok(TestCaseSummary::Failed {
+            name: case.name.clone(),
             run_result: None,
             msg: Some(format!(
                 "\n    {}\n",
