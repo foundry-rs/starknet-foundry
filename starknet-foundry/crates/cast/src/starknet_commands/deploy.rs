@@ -39,7 +39,7 @@ pub struct Deploy {
     pub max_fee: Option<u128>,
 }
 
-pub async fn print_deploy_result(
+pub fn print_deploy_result(
     deploy_result: Result<(FieldElement, FieldElement)>,
     int_format: bool,
     json: bool,

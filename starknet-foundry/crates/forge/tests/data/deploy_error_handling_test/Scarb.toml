@@ -1,0 +1,9 @@
+[package]
+name = "deploy_error_handling_test"
+version = "0.1.0"
+
+[[target.starknet-contract]]
+sierra = true
+
+[dependencies]
+starknet = "2.0.1"

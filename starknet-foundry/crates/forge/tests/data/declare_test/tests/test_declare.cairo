@@ -1,5 +1,5 @@
 use result::ResultTrait;
-use protostar_print::PrintTrait;
+use forge_print::PrintTrait;
 
 #[test]
 fn test_declare_simple() {
@@ -17,4 +17,9 @@ fn multiple_contracts() {
     assert(class_hash2 != 0, 'proper class hash');
 
     assert(class_hash != class_hash2, 'class hashes neq');
+}
+
+#[test]
+fn non_existent_contract() {
+    let class_hash = declare('GoodbyeStarknet').unwrap();
 }

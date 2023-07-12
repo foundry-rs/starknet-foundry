@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Context, Error, Result};
+use anyhow::{anyhow, bail, Context, Error, Result};
 use camino::Utf8PathBuf;
 use primitive_types::U256;
 use serde::{Deserialize, Serialize};
@@ -68,13 +68,29 @@ impl Network {
     }
 }
 
-pub fn get_provider(url: &str) -> Result<JsonRpcClient<HttpTransport>> {
+pub async fn get_provider(url: &str, network: &str) -> Result<JsonRpcClient<HttpTransport>> {
+    if url.is_empty() {
+        bail!("RPC url not passed nor found in Scarb.toml")
+    }
     let parsed_url = Url::parse(url)?;
+    if network.is_empty() {
+        bail!("Network not passed nor found in Scarb.toml")
+    }
     let provider = JsonRpcClient::new(HttpTransport::new(parsed_url));
+
+    let provider_chain_id = provider.chain_id().await?;
+    let cli_chain_id = get_network(network)?.get_chain_id();
+    if provider_chain_id != cli_chain_id {
+        bail!("Networks mismatch: requested network is different than provider network!")
+    }
+
     Ok(provider)
 }
 
 fn get_account_info(name: &str, chain_id: &str, path: &Utf8PathBuf) -> Result<Account> {
+    if name.is_empty() {
+        bail!("Account name not passed nor found in Scarb.toml")
+    }
     let accounts: HashMap<String, HashMap<String, Account>> =
         serde_json::from_str(&fs::read_to_string(path)?)?;
     let user = accounts
@@ -89,10 +105,13 @@ pub fn get_account<'a>(
     name: &str,
     accounts_file_path: &Utf8PathBuf,
     provider: &'a JsonRpcClient<HttpTransport>,
-    network: &Network,
+    network: &str,
 ) -> Result<SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, LocalWallet>> {
-    // todo: #2113 verify network with provider
-    let account_info = get_account_info(name, network.get_value(), accounts_file_path)?;
+    if network.is_empty() {
+        bail!("Network not passed nor found in Scarb.toml")
+    }
+    let account_info =
+        get_account_info(name, get_network(network)?.get_value(), accounts_file_path)?;
     let signer = LocalWallet::from(SigningKey::from_secret_scalar(
         FieldElement::from_hex_be(&account_info.private_key).with_context(|| {
             format!(
@@ -107,7 +126,12 @@ pub fn get_account<'a>(
             &account_info.address
         )
     })?;
-    let account = SingleOwnerAccount::new(provider, signer, address, network.get_chain_id());
+    let account = SingleOwnerAccount::new(
+        provider,
+        signer,
+        address,
+        get_network(network)?.get_chain_id(),
+    );
 
     Ok(account)
 }
@@ -272,128 +296,12 @@ pub fn parse_number(number_as_str: &str) -> Result<FieldElement> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{get_account, get_block_id, get_network, get_provider, Network};
-    use camino::Utf8PathBuf;
+    use crate::{get_block_id, get_network, Network};
     use starknet::core::types::{
         BlockId,
         BlockTag::{Latest, Pending},
         FieldElement,
     };
-    use std::fs;
-    use url::ParseError;
-
-    #[test]
-    fn test_get_provider() {
-        let provider = get_provider("http://127.0.0.1:5050/rpc");
-        assert!(provider.is_ok());
-    }
-
-    #[test]
-    fn test_get_provider_invalid_url() {
-        let provider = get_provider("");
-        let err = provider.unwrap_err();
-        assert!(err.is::<ParseError>());
-    }
-
-    #[test]
-    fn test_get_account() {
-        let provider = get_provider("http://127.0.0.1:5050/rpc").unwrap();
-        let account = get_account(
-            "user1",
-            &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
-            &provider,
-            &Network::Testnet,
-        );
-
-        assert!(account.is_ok());
-
-        let expected = fs::read_to_string("tests/data/accounts/user1_representation")
-            .expect("Failed to read expected debug representation");
-        let returned = format!("{:?}", account.unwrap());
-        assert_eq!(returned.trim(), expected.trim());
-    }
-
-    #[test]
-    fn test_get_account_no_file() {
-        let provider = get_provider("http://127.0.0.1:5050/rpc").unwrap();
-        let account = get_account(
-            "user1",
-            &Utf8PathBuf::from("tests/data/accounts/nonexistentfile.json"),
-            &provider,
-            &Network::Testnet,
-        );
-        let err = account.unwrap_err();
-        assert!(err.to_string().contains("No such file or directory"));
-    }
-
-    #[test]
-    fn test_get_account_invalid_file() {
-        let provider = get_provider("http://127.0.0.1:5050/rpc").unwrap();
-        let account = get_account(
-            "user1",
-            &Utf8PathBuf::from("tests/data/accounts/invalid_format.json"),
-            &provider,
-            &Network::Testnet,
-        );
-        let err = account.unwrap_err();
-        assert!(err.is::<serde_json::Error>());
-    }
-
-    #[test]
-    fn test_get_account_no_network() {
-        let provider = get_provider("http://127.0.0.1:5050/rpc").unwrap();
-        let account = get_account(
-            "user1",
-            &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
-            &provider,
-            &Network::Mainnet,
-        );
-        let err = account.unwrap_err();
-        assert!(err
-            .to_string()
-            .contains("Account user1 not found under chain id alpha-mainnet"));
-    }
-
-    #[test]
-    fn test_get_account_no_user_for_network() {
-        let provider = get_provider("http://127.0.0.1:5050/rpc").unwrap();
-        let account = get_account(
-            "user10",
-            &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
-            &provider,
-            &Network::Testnet,
-        );
-        let err = account.unwrap_err();
-        assert!(err
-            .to_string()
-            .contains("Account user10 not found under chain id alpha-goerli"));
-    }
-
-    #[test]
-    fn test_get_account_failed_to_convert_field_elements() {
-        let provider = get_provider("http://127.0.0.1:5050/rpc").unwrap();
-        let account1 = get_account(
-            "with_wrong_private_key",
-            &Utf8PathBuf::from("tests/data/accounts/faulty_accounts.json"),
-            &provider,
-            &Network::Testnet,
-        );
-        let err1 = account1.unwrap_err();
-        assert!(err1
-            .to_string()
-            .contains("Failed to convert private key: privatekey to FieldElement"));
-
-        let account2 = get_account(
-            "with_wrong_address",
-            &Utf8PathBuf::from("tests/data/accounts/faulty_accounts.json"),
-            &provider,
-            &Network::Testnet,
-        );
-        let err2 = account2.unwrap_err();
-        assert!(err2
-            .to_string()
-            .contains("Failed to convert account address: address to FieldElement"));
-    }
 
     #[test]
     fn test_get_block_id() {

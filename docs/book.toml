@@ -1,0 +1,6 @@
+[book]
+authors = ["Starknet-Foundry"]
+language = "en"
+multilingual = false
+src = "src"
+title = "The Starknet-Foundry Book"

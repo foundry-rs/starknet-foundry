@@ -4,22 +4,23 @@ use anyhow::{anyhow, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use scarb_metadata::{Metadata, PackageId};
 use serde::Deserialize;
+use test_results::TestResult;
 use walkdir::WalkDir;
 
-use cairo_lang_runner::{RunResultValue, SierraCasmRunner};
+use cairo_lang_runner::SierraCasmRunner;
 use cairo_lang_sierra::program::Program;
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 
-use crate::running::run_from_test_config;
+use crate::running::{run_from_test_config, skip_from_test_config};
 use test_collector::{collect_tests, LinkedLibrary, TestConfig};
 
-use crate::test_stats::TestsStats;
+use crate::test_results::TestSummary;
 
 mod cheatcodes_hint_processor;
 pub mod pretty_printing;
 mod running;
-mod test_stats;
+mod test_results;
 
 /// Configuration of the test runner
 #[derive(Deserialize, Debug, PartialEq)]
@@ -35,12 +36,12 @@ impl RunnerConfig {
         test_name_filter: Option<String>,
         exact_match: bool,
         exit_first: bool,
-        protostar_config_from_scarb: &ProtostarConfigFromScarb,
+        forge_config_from_scarb: &ForgeConfigFromScarb,
     ) -> Self {
         Self {
             test_name_filter,
             exact_match,
-            exit_first: protostar_config_from_scarb.exit_first || exit_first,
+            exit_first: forge_config_from_scarb.exit_first || exit_first,
         }
     }
 }
@@ -51,9 +52,9 @@ enum RunnerStatus {
     TestFailed,
 }
 
-/// Represents protostar config deserialized from Scarb.toml
+/// Represents forge config deserialized from Scarb.toml
 #[derive(Deserialize, Debug, PartialEq, Default)]
-pub struct ProtostarConfigFromScarb {
+pub struct ForgeConfigFromScarb {
     #[serde(default)]
     exit_first: bool,
 }
@@ -161,28 +162,32 @@ pub fn run(
         tests.len(),
     );
 
-    let mut tests_stats = TestsStats::default();
+    let mut tests_summary = TestSummary::default();
     let mut tests_iterator = tests.into_iter();
 
     for tests_from_file in tests_iterator.by_ref() {
-        if run_tests(tests_from_file, &mut tests_stats, runner_config)? == RunnerStatus::TestFailed
+        if run_tests(tests_from_file, &mut tests_summary, runner_config)?
+            == RunnerStatus::TestFailed
         {
             break;
         }
     }
 
     for tests_from_file in tests_iterator {
-        tests_stats.skipped += tests_from_file.tests_configs.len();
+        for config in tests_from_file.tests_configs {
+            let skipped_result = skip_from_test_config(&config);
+            pretty_printing::print_test_result(&skipped_result);
+            tests_summary.update(skipped_result);
+        }
     }
 
-    pretty_printing::print_test_summary(tests_stats);
-
+    pretty_printing::print_test_summary(&tests_summary);
     Ok(())
 }
 
 fn run_tests(
     tests: TestsFromFile,
-    tests_stats: &mut TestsStats,
+    tests_summary: &mut TestSummary,
     runner_config: &RunnerConfig,
 ) -> Result<RunnerStatus> {
     let mut runner = SierraCasmRunner::new(
@@ -196,15 +201,20 @@ fn run_tests(
     for (i, config) in tests.tests_configs.iter().enumerate() {
         let result = run_from_test_config(&mut runner, config)?;
 
-        tests_stats.update(&result.value);
-        pretty_printing::print_test_result(&config.name.clone(), &result.value);
-
+        pretty_printing::print_test_result(&result);
         if runner_config.exit_first {
-            if let RunResultValue::Panic(_) = result.value {
-                tests_stats.skipped += tests.tests_configs.len() - i - 1;
+            if let TestResult::Failed { .. } = result {
+                for config in &tests.tests_configs[i + 1..] {
+                    let skipped_result = skip_from_test_config(config);
+                    pretty_printing::print_test_result(&skipped_result);
+                    tests_summary.update(skipped_result);
+                }
+                tests_summary.update(result);
                 return Ok(RunnerStatus::TestFailed);
             }
         }
+
+        tests_summary.update(result);
     }
     Ok(RunnerStatus::Default)
 }
@@ -255,14 +265,14 @@ fn test_name_contains(test_name_filter: &str, test: &TestConfig) -> Result<bool>
     Ok(name.contains(test_name_filter))
 }
 
-pub fn protostar_config_for_package(
+pub fn forge_config_for_package(
     metadata: &Metadata,
     package: &PackageId,
-) -> Result<ProtostarConfigFromScarb> {
+) -> Result<ForgeConfigFromScarb> {
     let raw_metadata = metadata
         .get_package(package)
         .ok_or_else(|| anyhow!("Failed to find metadata for package = {package}"))?
-        .tool_metadata("protostar");
+        .tool_metadata("forge");
 
     raw_metadata.map_or_else(
         || Ok(Default::default()),
@@ -348,7 +358,7 @@ mod tests {
     }
 
     #[test]
-    fn get_protostar_config_for_package() {
+    fn get_forge_config_for_package() {
         let temp = assert_fs::TempDir::new().unwrap();
         temp.copy_from("tests/data/simple_test", &["**/*"]).unwrap();
         let scarb_metadata = MetadataCommand::new()
@@ -358,14 +368,14 @@ mod tests {
             .unwrap();
 
         let config =
-            protostar_config_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
+            forge_config_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
                 .unwrap();
 
-        assert_eq!(config, ProtostarConfigFromScarb { exit_first: false });
+        assert_eq!(config, ForgeConfigFromScarb { exit_first: false });
     }
 
     #[test]
-    fn get_protostar_config_for_package_err_on_invalid_package() {
+    fn get_forge_config_for_package_err_on_invalid_package() {
         let temp = assert_fs::TempDir::new().unwrap();
         temp.copy_from("tests/data/simple_test", &["**/*"]).unwrap();
         let scarb_metadata = MetadataCommand::new()
@@ -374,10 +384,8 @@ mod tests {
             .exec()
             .unwrap();
 
-        let result = protostar_config_for_package(
-            &scarb_metadata,
-            &PackageId::from(String::from("12345679")),
-        );
+        let result =
+            forge_config_for_package(&scarb_metadata, &PackageId::from(String::from("12345679")));
         let err = result.unwrap_err();
 
         assert!(err
@@ -386,7 +394,7 @@ mod tests {
     }
 
     #[test]
-    fn get_protostar_config_for_package_default_on_missing_config() {
+    fn get_forge_config_for_package_default_on_missing_config() {
         let temp = assert_fs::TempDir::new().unwrap();
         temp.copy_from("tests/data/simple_test", &["**/*"]).unwrap();
         let content = "[package]
@@ -401,7 +409,7 @@ version = \"0.1.0\"";
             .unwrap();
 
         let config =
-            protostar_config_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
+            forge_config_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
                 .unwrap();
 
         assert_eq!(config, Default::default());
@@ -628,7 +636,7 @@ version = \"0.1.0\"";
     fn strip_path() {
         let mocked_tests: Vec<TestConfig> = vec![
             TestConfig {
-                name: "/Users/user/protostar/protostar-rust/tests/data/simple_test/src::test::test_fib".to_string(),
+                name: "/Users/user/forge/tests/data/simple_test/src::test::test_fib".to_string(),
                 available_gas: None,
             },
             TestConfig {
