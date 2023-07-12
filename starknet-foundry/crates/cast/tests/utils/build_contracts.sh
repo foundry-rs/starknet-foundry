@@ -7,12 +7,14 @@ ASDF_DATA_DIR=$(asdf info | grep -e "ASDF_DATA_DIR" | awk -F '=' '{print $2}')
 SCARB_BIN="$ASDF_DATA_DIR/installs/scarb/$SCARB_VERSION/bin/scarb"
 
 if command -v "$SCARB_BIN" &> /dev/null; then
-  for contract_dir in "$CONTRACTS_DIRECTORY"/*; do
-    if ! test -d "$contract_dir"/target; then
-      pushd "$contract_dir"
-      "$SCARB_BIN" build
-      popd
-    fi
+  for version_dir in "$CONTRACTS_DIRECTORY"/*; do
+    for contract_dir in "$version_dir"/*; do
+      if ! test -d "$contract_dir"/target; then
+        pushd "$contract_dir"
+        "$SCARB_BIN" build
+        popd
+      fi
+    done
   done
 
 else

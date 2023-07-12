@@ -87,7 +87,7 @@ mod tests {
     fn test_parse_scarb_config_happy_case_with_profile() {
         let config = parse_scarb_config(
             &Some(String::from("myprofile")),
-            Some(Utf8PathBuf::from("tests/data/contracts/balance/Scarb.toml")),
+            Some(Utf8PathBuf::from("tests/data/contracts/v1/balance/Scarb.toml")),
         )
         .unwrap();
 
@@ -100,7 +100,7 @@ mod tests {
     fn test_parse_scarb_config_happy_case_without_profile() {
         let config = parse_scarb_config(
             &None,
-            Some(Utf8PathBuf::from("tests/data/contracts/map/Scarb.toml")),
+            Some(Utf8PathBuf::from("tests/data/contracts/v1/map/Scarb.toml")),
         )
         .unwrap();
         assert_eq!(config.account, String::from("user2"));
@@ -140,7 +140,7 @@ mod tests {
     fn test_parse_scarb_config_no_profile_found() {
         let config = parse_scarb_config(
             &Some(String::from("mariusz")),
-            Some(Utf8PathBuf::from("tests/data/contracts/balance/Scarb.toml")),
+            Some(Utf8PathBuf::from("tests/data/contracts/v1/balance/Scarb.toml")),
         )
         .unwrap_err();
         assert!(config

@@ -30,14 +30,14 @@ pub async fn declare_deploy_simple_balance_contract() {
 
     let contract_definition: SierraClass = {
         let file_contents =
-            std::fs::read(CONTRACTS_DIR.to_string() + "/map/target/dev/map_Map.sierra.json")
-                .expect("Could not read balance's sierra file");
+            std::fs::read(CONTRACTS_DIR.to_string() + "/v1/map/target/dev/map_Map.sierra.json")
+                .expect("Could not read map's sierra file");
         serde_json::from_slice(&file_contents).expect("Could not cast sierra file to SierraClass")
     };
     let casm_contract_definition: CompiledClass = {
         let file_contents =
-            std::fs::read(CONTRACTS_DIR.to_string() + "/map/target/dev/map_Map.casm.json")
-                .expect("Could not read balance's casm file");
+            std::fs::read(CONTRACTS_DIR.to_string() + "/v1/map/target/dev/map_Map.casm.json")
+                .expect("Could not read map's casm file");
         serde_json::from_slice(&file_contents).expect("Could not cast casm file to CompiledClass")
     };
 
