@@ -139,7 +139,7 @@ pub fn dependencies_for_package(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
+    use assert_fs::fixture::{FileTouch, FileWriteStr, PathChild, PathCopy};
     use scarb_metadata::MetadataCommand;
     use std::process::Command;
 
@@ -194,6 +194,40 @@ mod tests {
         );
         let path = result.unwrap();
         assert!(path.is_none());
+    }
+
+    #[test]
+    fn parsing_starknet_artifacts() {
+        let temp = assert_fs::TempDir::new().unwrap();
+        temp.copy_from("tests/data/dispatchers", &["**/*.cairo", "**/*.toml"])
+            .unwrap();
+        Command::new("scarb")
+            .current_dir(&temp)
+            .arg("build")
+            .output()
+            .unwrap();
+        let artifacts_path = temp
+            .path()
+            .join("target/dev/dispatchers.starknet_artifacts.json");
+        let artifacts_path = Utf8PathBuf::from_path_buf(artifacts_path).unwrap();
+
+        let artifacts = artifacts_for_package(&artifacts_path).unwrap();
+
+        assert!(!artifacts.contracts.is_empty());
+    }
+
+    #[test]
+    fn parsing_starknet_artifacts_on_invalid_file() {
+        let temp = assert_fs::TempDir::new().unwrap();
+        let path = temp.child("wrong.json");
+        path.touch().unwrap();
+        path.write_str("\"aa\": {}").unwrap();
+        let artifacts_path = Utf8PathBuf::from_path_buf(path.to_path_buf()).unwrap();
+
+        let result = artifacts_for_package(&artifacts_path);
+        let err = result.unwrap_err();
+
+        assert!(err.to_string().contains(&format!("Failed to parse {artifacts_path:?} contents. Make sure you have enabled sierra code generation in Scarb.toml")));
     }
 
     #[test]
