@@ -16,7 +16,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use url::Url;
 
-pub async fn declare_deploy_simple_balance_contract() {
+pub async fn declare_deploy_contract(path: &str) {
     let provider = get_provider(URL, NETWORK)
         .await
         .expect("Could not get the provider");
@@ -29,15 +29,13 @@ pub async fn declare_deploy_simple_balance_contract() {
     .expect("Could not get the account");
 
     let contract_definition: SierraClass = {
-        let file_contents =
-            std::fs::read(CONTRACTS_DIR.to_string() + "/v1/map/target/dev/map_Map.sierra.json")
-                .expect("Could not read map's sierra file");
+        let file_contents = std::fs::read(CONTRACTS_DIR.to_string() + path + ".sierra.json")
+            .expect("Could not read contract's sierra file");
         serde_json::from_slice(&file_contents).expect("Could not cast sierra file to SierraClass")
     };
     let casm_contract_definition: CompiledClass = {
-        let file_contents =
-            std::fs::read(CONTRACTS_DIR.to_string() + "/v1/map/target/dev/map_Map.casm.json")
-                .expect("Could not read map's casm file");
+        let file_contents = std::fs::read(CONTRACTS_DIR.to_string() + path + ".casm.json")
+            .expect("Could not read contract's casm file");
         serde_json::from_slice(&file_contents).expect("Could not cast casm file to CompiledClass")
     };
 

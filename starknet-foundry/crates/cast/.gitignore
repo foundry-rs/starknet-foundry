@@ -1,6 +1,5 @@
 .idea
 tests/utils/cairo
 tests/utils/scarb*
-tests/utils/*.tar
-tests/utils/*.tar.gz
 /tests/data/contracts/**/*.tool-versions
+/tests/utils/compiler/
