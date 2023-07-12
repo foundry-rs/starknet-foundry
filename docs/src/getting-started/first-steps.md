@@ -13,8 +13,10 @@ Let's check out the project structure
 
 ```shell
 $ cd starknet_forge_template
-$ tree . -d -L 1
+$ tree . -L 1
 .
+├── README.md
+├── Scarb.toml
 ├── src
 └── tests
 
