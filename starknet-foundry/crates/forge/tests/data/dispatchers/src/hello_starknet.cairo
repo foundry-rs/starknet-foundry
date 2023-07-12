@@ -2,10 +2,14 @@
 trait IHelloStarknet<TContractState> {
     fn increase_balance(ref self: TContractState, amount: felt252);
     fn get_balance(self: @TContractState) -> felt252;
+    fn do_a_panic(self: @TContractState);
+    fn do_a_panic_with(self: @TContractState, panic_data: Array<felt252>);
 }
 
 #[starknet::contract]
 mod HelloStarknet {
+    use array::ArrayTrait;
+
     #[storage]
     struct Storage {
         balance: felt252,
@@ -21,6 +25,19 @@ mod HelloStarknet {
         // Returns the current balance.
         fn get_balance(self: @ContractState) -> felt252 {
             self.balance.read()
+        }
+
+        // Panics
+        fn do_a_panic(self: @ContractState) {
+            let mut ary = ArrayTrait::new();
+            ary.append('PANIC');
+            ary.append('DAYTAH');
+            panic(ary);
+        }
+
+        // Panics with given array data
+        fn do_a_panic_with(self: @ContractState, panic_data: Array<felt252>) {
+            panic(panic_data);
         }
     }
 }
