@@ -12,11 +12,15 @@ for ((i = 0; i < ${#CAIRO_VERSIONS[@]}; i++)); do
   CONTRACTS_DIRECTORY="$(git rev-parse --show-toplevel)/starknet-foundry/crates/cast/tests/data/contracts/$cairo_version"
   SCARB_BIN="$ASDF_DATA_DIR/installs/scarb/$scarb_version/bin/scarb"
 
+  pushd "$CONTRACTS_DIRECTORY"
+  asdf local scarb "$scarb_version"
+  popd
+
   if command -v "$SCARB_BIN" &> /dev/null; then
     for contract_dir in "$CONTRACTS_DIRECTORY"/*; do
       if ! test -d "$contract_dir"/target; then
         pushd "$contract_dir"
-        "$SCARB_BIN" build
+        scarb build
         popd
       fi
     done
