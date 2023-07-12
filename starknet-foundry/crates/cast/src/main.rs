@@ -17,19 +17,19 @@ struct Cli {
     profile: Option<String>,
 
     /// Path to Scarb.toml that is to be used; overrides default behaviour of searching for scarb.toml in current or parent directories
-    #[clap(short, long)]
-    override_project: Option<Utf8PathBuf>,
+    #[clap(short = 's', long)]
+    path_to_scarb_toml: Option<Utf8PathBuf>,
 
     /// RPC provider url address; overrides rpc_url from Scarb.toml
     #[clap(short = 'u', long = "url")]
     rpc_url: Option<String>,
 
     /// Network name, one of: testnet, testnet2, mainnet; overrides network from Scarb.toml
-    #[clap(short = 'n', long = "network")]
+    #[clap(short = 'n', long)]
     network: Option<String>,
 
     /// Account name to be used for contract declaration; overrides rpc_url from Scarb.toml
-    #[clap(short = 'a', long = "account")]
+    #[clap(short = 'a', long)]
     account: Option<String>,
 
     /// Path to the file holding accounts info
@@ -78,7 +78,7 @@ async fn main() -> Result<()> {
         bail! {"Accounts file {} does not exist! Make sure to supply correct path to accounts file.", cli.accounts_file_path}
     }
 
-    let config = parse_scarb_config(&cli.profile, cli.override_project)?;
+    let config = parse_scarb_config(&cli.profile, cli.path_to_scarb_toml)?;
 
     let rpc_url = cli.rpc_url.unwrap_or(config.rpc_url);
     let network = cli.network.unwrap_or(config.network);

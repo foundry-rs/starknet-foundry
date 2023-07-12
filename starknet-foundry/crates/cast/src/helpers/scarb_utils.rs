@@ -13,7 +13,7 @@ pub struct CastConfig {
     pub account: String,
 }
 
-fn get_tool_property(
+fn get_property(
     tool: &Option<BTreeMap<String, Value>>,
     profile: &Option<String>,
     property: &str,
@@ -67,9 +67,9 @@ pub fn parse_scarb_config(
 
     let package = &metadata.packages[0].manifest_metadata.tool;
 
-    let rpc_url = get_tool_property(package, profile, "rpc_url")?;
-    let network = get_tool_property(package, profile, "network")?;
-    let account = get_tool_property(package, profile, "account")?;
+    let rpc_url = get_property(package, profile, "rpc_url")?;
+    let network = get_property(package, profile, "network")?;
+    let account = get_property(package, profile, "account")?;
 
     Ok(CastConfig {
         rpc_url,
