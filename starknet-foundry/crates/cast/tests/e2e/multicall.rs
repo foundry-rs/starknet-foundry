@@ -3,6 +3,7 @@ use crate::helpers::runner::runner;
 use std::path::Path;
 
 static USERNAME: &str = "user2";
+static USERNAME2: &str = "user3";
 
 #[tokio::test]
 async fn test_happy_case() {
@@ -94,7 +95,7 @@ async fn test_invoke_fail() {
 
 #[tokio::test]
 async fn test_deploy_success_invoke_fails() {
-    let args = default_cli_args(USERNAME.to_string());
+    let args = default_cli_args(USERNAME2.to_string());
     let mut args: Vec<&str> = args.iter().map(String::as_str).collect();
 
     let path = project_root::get_project_root().expect("failed to get project root path");
