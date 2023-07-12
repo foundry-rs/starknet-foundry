@@ -29,3 +29,9 @@
 * [Deploying New Contracts](starknet/deploy.md)
 * [Invoking Contracts](starknet/invoke.md)
 * [Calling Contracts](starknet/call.md)
+
+# Appendix
+
+* [References](reference/README.md)
+  * [Forge](reference/forge/README.md)
+  * [Cast](reference/cast/README.md)
