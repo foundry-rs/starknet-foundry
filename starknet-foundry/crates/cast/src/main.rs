@@ -215,8 +215,7 @@ async fn main() -> Result<()> {
             starknet_commands::multicall_new::multicall_new(
                 multicall_new.output_path,
                 multicall_new.overwrite.unwrap_or(false),
-            )
-            .await?;
+            )?;
             Ok(())
         }
     }

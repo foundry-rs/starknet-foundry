@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{bail, Result};
 use clap::Args;
 use std::path::Path;
 
@@ -27,15 +27,15 @@ pub struct MulticallNew {
     pub overwrite: Option<bool>,
 }
 
-pub async fn multicall_new(maybe_output_path: Option<String>, overwrite: bool) -> Result<()> {
+pub fn multicall_new(maybe_output_path: Option<String>, overwrite: bool) -> Result<()> {
     if let Some(output_path) = maybe_output_path {
         let output_path = Path::new(output_path.as_str());
         if output_path.exists() {
             if !output_path.is_file() {
-                anyhow::bail!("output file cannot be a directory");
+                bail!("output file cannot be a directory");
             }
             if !overwrite {
-                anyhow::bail!(
+                bail!(
                     "output file already exists, if you want to overwrite it, use the `overwrite` flag"
                 );
             }
