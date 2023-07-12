@@ -4,7 +4,8 @@
 
 # Getting Started
 
-* [Installation](getting-started/installation.md)
+* [Installation](./getting-started/installation.md)
+* [Getting Started](./getting-started/getting-started.md)
 
 # Projects
 
