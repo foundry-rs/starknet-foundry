@@ -9,22 +9,22 @@
 
 # Projects
 
-* [Project templates](./projects/template.md)
-* [Project configuration](./projects/configuration.md)
+* [Project Templates](./projects/template.md)
+* [Project Configuration](./projects/configuration.md)
 * [Understanding Cairo Packages](./projects/packages.md)
 
 # Testing
 
-* [Unit testing](testing/unit_testing.md)
-* [Integration testing](testing/integration_testing.md)
-* [Invoking and calling contracts](testing/dispatchers.md)
+* [Unit Testing](testing/unit_testing.md)
+* [Integration Testing](testing/integration_testing.md)
+* [Invoking and Calling Contracts](testing/dispatchers.md)
 * [Cheatcodes](testing/cheatcodes.md)
     * [Declare](testing/cheatcodes/declare.md)
     * [Deploy](testing/cheatcodes/deploy.md)
 
 # Interacting with Starknet
 
-* [Declaring new contracts](starknet/declare.md)
-* [Deploying new contracts](starknet/deploy.md)
-* [Invoking contracts](starknet/invoke.md)
-* [Calling contracts](starknet/call.md)
+* [Declaring New Contracts](starknet/declare.md)
+* [Deploying New Contracts](starknet/deploy.md)
+* [Invoking Contracts](starknet/invoke.md)
+* [Calling Contracts](starknet/call.md)
