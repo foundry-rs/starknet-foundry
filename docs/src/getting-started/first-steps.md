@@ -13,7 +13,7 @@ Let's check out the project structure
 
 ```shell
 $ cd starknet_forge_template
-$ . -d -L 1
+$ tree . -d -L 1
 .
 ├── src
 └── tests
