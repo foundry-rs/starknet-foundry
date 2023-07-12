@@ -9,13 +9,15 @@ edition = "2021"
 anyhow = "1.0.66"
 test-collector = { path = "../test-collector" }
 cheatable-starknet = { path = "../cheatable-starknet" }
-cairo-lang-test-runner = { path = "../../../cairo/crates/cairo-lang-test-runner", version = "2.0.0-rc2" }
-cairo-lang-runner = { path = "../../../cairo/crates/cairo-lang-runner", version = "2.0.0-rc2" }
-cairo-lang-sierra-to-casm = { path = "../../../cairo/crates/cairo-lang-sierra-to-casm", version = "2.0.0-rc2" }
-cairo-lang-sierra = { path = "../../../cairo/crates/cairo-lang-sierra", version = "2.0.0-rc2" }
-cairo-lang-utils = { path = "../../../cairo/crates/cairo-lang-utils", version = "2.0.0-rc2" }
-cairo-lang-casm = { path = "../../../cairo/crates/cairo-lang-casm", version = "2.0.0-rc2" }
-cairo-lang-starknet = { path = "../../../cairo/crates/cairo-lang-starknet", version = "2.0.0-rc2" }
+cairo-lang-test-runner = { path = "../../../cairo/crates/cairo-lang-test-runner", version = "2.0.1" }
+cairo-lang-runner = { path = "../../../cairo/crates/cairo-lang-runner", version = "2.0.1" }
+cairo-lang-sierra-to-casm = { path = "../../../cairo/crates/cairo-lang-sierra-to-casm", version = "2.0.1" }
+cairo-lang-sierra = { path = "../../../cairo/crates/cairo-lang-sierra", version = "2.0.1" }
+cairo-lang-utils = { path = "../../../cairo/crates/cairo-lang-utils", version = "2.0.1" }
+cairo-lang-casm = { path = "../../../cairo/crates/cairo-lang-casm", version = "2.0.1" }
+cairo-lang-starknet = { path = "../../../cairo/crates/cairo-lang-starknet", version = "2.0.1" }
+cairo-lang-compiler = { path = "../../../cairo/crates/cairo-lang-compiler", version = "2.0.1" }
+cairo-lang-filesystem = { path = "../../../cairo/crates/cairo-lang-filesystem", version = "2.0.1" }
 blockifier.workspace = true
 starknet_api.workspace = true
 schemars = { version = "0.8.12", features = ["preserve_order"] }
@@ -27,7 +29,7 @@ serde_json = "1.0.96"
 serde = { version = "1.0.163", features = ["derive"] }
 itertools = "0.10.5"
 walkdir = "2.3.3"
-camino = "1.1.4"
+camino = { version = "1.1.4", features = ["serde1"] }
 scarb-metadata = "1.4.2"
 project-root = "0.2.2"
 console = "0.15.7"

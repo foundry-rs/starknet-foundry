@@ -9,6 +9,7 @@ use tempfile::{tempdir, TempDir};
 use forge::run;
 use forge::{pretty_printing, RunnerConfig};
 
+use forge::scarb::{get_contracts_map, try_get_starknet_artifacts_path};
 use std::process::Command;
 
 static CORELIB_PATH: Dir = include_dir!("../cairo/corelib/src");
@@ -21,6 +22,7 @@ struct Args {
     #[arg(short, long)]
     exact: bool,
 
+    /// Stop test execution after first failed test
     #[arg(short = 'x', long)]
     exit_first: bool,
 }
@@ -50,8 +52,9 @@ fn main_execution() -> Result<()> {
         .context("Failed to build contracts with Scarb")?;
 
     for package in &scarb_metadata.workspace.members {
-        let forge_config = forge::forge_config_for_package(&scarb_metadata, package)?;
-        let (base_path, dependencies) = forge::dependencies_for_package(&scarb_metadata, package)?;
+        let forge_config = forge::scarb::config_from_scarb_for_package(&scarb_metadata, package)?;
+        let (base_path, dependencies) =
+            forge::scarb::dependencies_for_package(&scarb_metadata, package)?;
         let runner_config = RunnerConfig::new(
             args.test_name.clone(),
             args.exact,
@@ -59,11 +62,18 @@ fn main_execution() -> Result<()> {
             &forge_config,
         );
 
+        let contracts_path = try_get_starknet_artifacts_path(&base_path)?;
+        let contracts = contracts_path
+            .map(|path| get_contracts_map(&path))
+            .transpose()?
+            .unwrap_or_default();
+
         run(
             &base_path,
             Some(dependencies.clone()),
             &runner_config,
             Some(&corelib),
+            &contracts,
         )?;
     }
 
