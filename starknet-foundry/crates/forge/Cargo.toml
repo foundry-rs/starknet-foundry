@@ -47,6 +47,7 @@ ark-secp256r1 = "0.4.0"
 num-traits = "0.2"
 thiserror = "1.0.43"
 regex = "1.9.1"
+openssl = { version = "0.10", features = ["vendored"] }
 
 [lib]
 name = "forge"
