@@ -42,10 +42,10 @@ pub struct StarknetContractArtifacts {
 /// * `path` - A path to `starknet_artifacts.json` file.
 pub fn artifacts_for_package(path: &Utf8PathBuf) -> Result<StarknetArtifacts> {
     let starknet_artifacts =
-        fs::read_to_string(path).with_context(|| format!("Failed to read {:?} contents", path))?;
+        fs::read_to_string(path).with_context(|| format!("Failed to read {path:?} contents"))?;
     let starknet_artifacts: StarknetArtifacts =
         serde_json::from_str(starknet_artifacts.as_str())
-            .with_context(|| format!("Failed to parse {:?} contents. Make sure you have enabled sierra code generation in Scarb.toml", path))?;
+            .with_context(|| format!("Failed to parse {path:?} contents. Make sure you have enabled sierra code generation in Scarb.toml"))?;
     Ok(starknet_artifacts)
 }
 
