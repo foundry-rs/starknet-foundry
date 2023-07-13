@@ -1,6 +1,0 @@
-[[call]]
-call_type = "deploy"
-class_hash = "0x1"
-inputs = []
-id = "Map"
-unique = false
