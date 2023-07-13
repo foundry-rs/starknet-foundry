@@ -1,4 +1,5 @@
-use crate::test_results::{TestResult, TestSummary};
+use crate::test_case_summary::TestCaseSummary;
+use crate::TestFileSummary;
 use anyhow::Error;
 use camino::Utf8PathBuf;
 use console::style;
@@ -18,32 +19,36 @@ pub fn print_running_tests(test_file: &Utf8PathBuf, tests_num: usize) {
     println!("{}", style(plain_text).bold());
 }
 
-pub fn print_test_summary(test_summary: &TestSummary) {
+pub fn print_test_summary(summaries: &[TestFileSummary]) {
+    let passed: usize = summaries.iter().map(TestFileSummary::count_passed).sum();
+    let skipped: usize = summaries.iter().map(TestFileSummary::count_skipped).sum();
+    let failed: usize = summaries.iter().map(TestFileSummary::count_failed).sum();
+
     println!(
         "{}: {} passed, {} failed, {} skipped",
         style("Tests").bold(),
-        test_summary.passed.len(),
-        test_summary.failed.len(),
-        test_summary.skipped.len(),
+        passed,
+        failed,
+        skipped,
     );
 }
 
-pub fn print_test_result(test_result: &TestResult) {
+pub fn print_test_result(test_result: &TestCaseSummary) {
     let result_header = match test_result {
-        TestResult::Passed { .. } => format!("[{}]", style("PASS").green()),
-        TestResult::Failed { .. } => format!("[{}]", style("FAIL").red()),
-        TestResult::Skipped { .. } => format!("[{}]", style("SKIP").yellow()),
+        TestCaseSummary::Passed { .. } => format!("[{}]", style("PASS").green()),
+        TestCaseSummary::Failed { .. } => format!("[{}]", style("FAIL").red()),
+        TestCaseSummary::Skipped { .. } => format!("[{}]", style("SKIP").yellow()),
     };
 
     let result_name = match test_result {
-        TestResult::Passed { name, .. }
-        | TestResult::Failed { name, .. }
-        | TestResult::Skipped { name } => name,
+        TestCaseSummary::Skipped { name }
+        | TestCaseSummary::Failed { name, .. }
+        | TestCaseSummary::Passed { name, .. } => name,
     };
 
     let result_message = match test_result {
-        TestResult::Passed { msg: Some(msg), .. } => format!("\n\nSuccess data:{msg}"),
-        TestResult::Failed { msg: Some(msg), .. } => format!("\n\nFailure data:{msg}"),
+        TestCaseSummary::Passed { msg: Some(msg), .. } => format!("\n\nSuccess data:{msg}"),
+        TestCaseSummary::Failed { msg: Some(msg), .. } => format!("\n\nFailure data:{msg}"),
         _ => String::new(),
     };
 

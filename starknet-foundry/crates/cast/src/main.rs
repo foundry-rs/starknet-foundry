@@ -1,6 +1,10 @@
 use crate::helpers::scarb_utils::parse_scarb_config;
 use crate::starknet_commands::{
-    call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
+    call::Call,
+    declare::Declare,
+    deploy::Deploy,
+    invoke::Invoke,
+    multicall::Multicall,
     multicall_new::MulticallNew,
 };
 use anyhow::{bail, Result};
