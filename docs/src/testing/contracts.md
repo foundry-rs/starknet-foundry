@@ -5,7 +5,7 @@ writing smart contracts you often want to test interactions with the blockchain 
 
 ## The Test Contract
 
-For the purpose of this tutorial will be using this Starknet contract
+In this tutorial we will be using this Starknet contract
 
 ```cairo
 #[starknet::interface]
