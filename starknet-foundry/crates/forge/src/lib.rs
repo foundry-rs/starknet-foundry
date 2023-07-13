@@ -157,6 +157,7 @@ pub fn run(
     runner_config: &RunnerConfig,
     corelib_path: Option<&Utf8PathBuf>,
     contracts: &HashMap<String, StarknetContractArtifacts>,
+    predeployed_contracts: &Utf8PathBuf,
 ) -> Result<Vec<TestFileSummary>> {
     let tests =
         collect_tests_from_directory(input_path, linked_libraries, corelib_path, runner_config)?;
@@ -170,7 +171,12 @@ pub fn run(
 
     let mut summaries = vec![];
     for tests_from_file in tests_iterator.by_ref() {
-        let summary = run_tests_from_file(tests_from_file, runner_config, contracts)?;
+        let summary = run_tests_from_file(
+            tests_from_file,
+            runner_config,
+            contracts,
+            predeployed_contracts,
+        )?;
         summaries.push(summary.clone());
         if summary.runner_exit_status == RunnerStatus::TestFailed {
             break;
@@ -235,6 +241,7 @@ fn run_tests_from_file(
     // tests_summary: &mut TestSummary,
     runner_config: &RunnerConfig,
     contracts: &HashMap<String, StarknetContractArtifacts>,
+    predeployed_contracts: &Utf8PathBuf,
 ) -> Result<TestFileSummary> {
     let mut runner = SierraCasmRunner::new(
         tests.sierra_program,
@@ -246,7 +253,7 @@ fn run_tests_from_file(
     pretty_printing::print_running_tests(&tests.relative_path, tests.test_cases.len());
     let mut results = vec![];
     for (i, case) in tests.test_cases.iter().enumerate() {
-        let result = run_from_test_case(&mut runner, case, contracts)?;
+        let result = run_from_test_case(&mut runner, case, contracts, predeployed_contracts)?;
         results.push(result.clone());
 
         pretty_printing::print_test_result(&result);
