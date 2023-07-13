@@ -1,132 +1,155 @@
-# Testing smart contracts 
+# Testing Smart Contracts
 
-Using unit testing as much as possible is a good practice, as it makes your test suites run faster. However, when writing smart contracts you often want your test to cover the on-chain state and interactions between multiple contracts.
+Using unit testing as much as possible is a good practice, as it makes your test suites run faster. However, when
+writing smart contracts you often want to test interactions with the blockchain state and with other contracts.
 
-In this section, you will learn how to deploy and interact with a smart contract in Protostar for testing purposes.
-How to test a contract
+## The Test Contract
 
-To test a contract, you need to use an important Protostar feature: cheatcodes. Cheatcodes are additional library functions that Protostar exposes to help you with testing.
+For the purpose of this tutorial will be using this Starknet contract
 
-Let's write a test which deploys and calls a contract. First let's define our contract in the file src/lib.cairo
-Deployed contract
+```cairo
+#[starknet::interface]
+trait IHelloStarknet<TContractState> {
+    fn increase_balance(ref self: TContractState, amount: felt252);
+    fn decrease_balance(ref self: TContractState, amount: felt252);
+}
 
-#[contract]
-mod MinimalContract {
-    #[external]
-    fn hello() {
-        assert(5 == 5, 'always true');
+#[starknet::contract]
+mod HelloStarknet {
+    #[storage]
+    struct Storage {
+        balance: felt252,
     }
-}
 
-You need to define contract in protostar.toml configuration file. Add it to the [contracts] section
-Configuration file
+    #[external(v0)]
+    impl HelloStarknetImpl of super::IHelloStarknet<ContractState> {
+        // Increases the balance by the given amount.
+        fn increase_balance(ref self: ContractState, amount: felt252) {
+            self.balance.write(self.balance.read() + amount);
+        }
 
-[contracts]
-minimal = ["your_project_name"]
-
-We can write a test that deploys and calls this contract. Let's create a file test_contract.cairo:
-Example
-
-use array::ArrayTrait;
-use result::ResultTrait;
-
-#[test]
-fn test_deploy() {
-    let deployed_contract_address = deploy_contract('minimal', @ArrayTrait::new()).unwrap();
-    invoke(deployed_contract_address, 'hello', @ArrayTrait::new()).unwrap();
-}
-
-deploy_contract will declare and deploy the given contract. invoke will invoke hello method.
-Transaction reverts
-
-Cheatcodes deploy, invoke and call execute code on chain which can be reverted. In such case, they return RevertedTransaction structure. You can use it, for example, to verify if your contract reverts the transaction in a certain scenario.
-
-Here's how the structure looks:
-
-struct RevertedTransaction {
-    panic_data: Array::<felt252>, 
-}
-
-trait RevertedTransactionTrait {
-    fn first(self: @RevertedTransaction) -> felt252; // Gets the first felt of the panic data
-}
-
-Example usage
-Deployed contract
-
-#[contract]
-mod MinimalContract {
-    #[external]
-    fn panic_with(panic_data: Array::<felt252>) {
-        panic(panic_data);
-    }
-}
-
-Test
-
-use cheatcodes::RevertedTransactionTrait;
-use array::ArrayTrait;
-use result::ResultTrait;
-
-#[test]
-fn test_invoke_errors() {
-    let deployed_contract_address = deploy_contract('minimal', @ArrayTrait::new()).unwrap();
-    let mut panic_data = ArrayTrait::new();
-    panic_data.append(2); // Array length
-    panic_data.append('error');
-    panic_data.append('data');
-    
-    match invoke(deployed_contract_address, 'panic_with', @panic_data) {
-        Result::Ok(x) => assert(false, 'Shouldnt have succeeded'),
-        Result::Err(x) => {
-            assert(x.first() == 'error', 'first datum doesnt match');
-            assert(*x.panic_data.at(1_u32) == 'data', 'second datum doesnt match');
+        // Decreases the balance by the given amount.
+        fn decrease_balance(ref self: ContractState, amount: felt252) {
+            self.balance.write(self.balance.read() - amount);
         }
     }
 }
+```
 
-Cheatcodes in contract constructors
+Note that the name after `mod` will be used as the contract name for testing purposes.
 
-If you ever want to use prank, roll, warp or any of the environment-modifying cheatcodes in the constructor code, just split the deploy_contract into declare, prepare and deploy - so that you have a contract address (from prepare call) just before the deployment. Then you can use the cheatcode of your choice on the obtained address, and it will work in the constructor as well!
-Example:
-with_constructor.cairo
+## Writing Tests
 
-#[contract]
-mod WithConstructor {
-    use starknet::get_caller_address;
-    use starknet::ContractAddress;
-    use starknet::ContractAddressIntoFelt252;
-    use traits::Into;
+Let's write a test that will deploy the `HelloStarknet` contract and call some functions.
 
-
-    struct Storage {
-        owner: ContractAddress,
-    }
-
-    #[constructor]
-    fn constructor() {
-        let caller_address = get_caller_address();
-        owner::write(caller_address);
-    }
-
-    #[view]
-    fn get_owner() -> felt252 {
-        owner::read().into()
-    }
-}
-
-test_with_constructor.cairo
-
+```cairo
 #[test]
-fn test_prank_constructor() {
-    let class_hash = declare('with_constructor').unwrap();
-    let prepared = prepare(class_hash, @ArrayTrait::new()).unwrap();
-    let owner_address = 123;
+fn call_and_invoke() {
+    // First declare and deploy a contract
+    let class_hash = declare('HelloStarknet').unwrap();
+    let prepared = PreparedContract { contract_address: 1234, class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
+    let contract_address = deploy(prepared).unwrap();
+    let contract_address: ContractAddress = contract_address.try_into().unwrap();
+    
+    // Create a Dispatcher object that will allow interacting with the deployed contract
+    let dispatcher = IHelloStarknetDispatcher { contract_address };
 
-    start_prank(owner_address, prepared.contract_address).unwrap(); // <-- Prank before the deploy call
+    // Call a view function of the contract
+    let balance = dispatcher.get_balance();
+    assert(balance == 0, 'balance == 0');
 
-    let deployed_contract_address = deploy(prepared).unwrap();
+    // Call a function of the contract
+    // Here we mutate the state of the storage
+    dispatcher.increase_balance(100);
 
-    let return_data = call(deployed_contract_address, 'get_owner', @ArrayTrait::new()).unwrap();
-    assert(*return_data.at(0_u32) == owner_address, 'check call result');
+    // Check that transaction took effect
+    let balance = dispatcher.get_balance();
+    assert(balance == 100, 'balance == 100');
 }
+```
+
+```shell
+$ forge
+Collected 1 test(s) and 1 test file(s)
+Running 1 test(s) from src/lib.cairo
+[PASS] using_dispatchers::using_dispatchers::call_and_invoke
+Tests: 1 passed, 0 failed, 0 skipped
+```
+
+## Handling Errors
+
+Sometimes we want to test functions of contracts that can panic, resulting in failure. For that purpose Starknet also
+provides `SafeDispatcher`
+s, that return a `Result` instead of plain value.
+
+First, let's add a new, panicking function to our contract.
+
+```cairo
+// ...
+
+#[starknet::contract]
+mod HelloStarknet {
+    // ...
+    
+    // Panics
+    fn do_a_panic(self: @ContractState) {
+        let mut arr = ArrayTrait::new();
+        arr.append('PANIC');
+        arr.append('DAYTAH');
+        panic(arr);
+    }
+}
+```
+
+If we called this function in, standard test, this would result in a failure.
+
+```cairo
+#[test]
+fn failing() {
+    // ...
+    dispatcher.do_a_panic();
+}
+```
+
+```shell
+$ forge
+Collected 1 test(s) and 1 test file(s)
+Running 1 test(s) from src/lib.cairo
+[FAIL] src::failing
+
+Failure data:
+    original value: [344693033283], converted to a string: [PANIC]
+    original value: [75047462256968], converted to a string: [DAYTAH]
+
+Tests: 0 passed, 1 failed, 0 skipped
+```
+
+### `SafeDispatcher`
+
+Using `SafeDispatcher` we can test that the function in fact panics.
+
+```cairo
+#[test]
+fn handling_errors() {
+    // ...
+    let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
+
+    match safe_dispatcher.do_a_panic() {
+        Result::Ok(_) => panic_with_felt252('shouldve panicked'),
+        Result::Err(panic_data) => {
+            assert(*panic_data.at(0) == 'PANIC', *panic_data.at(0));
+            assert(*panic_data.at(1) == 'DAYTAH', *panic_data.at(1));
+        }
+    };
+}
+```
+
+Now running the test will pass as expected.
+
+```shell
+$ forge
+Collected 1 test(s) and 1 test file(s)
+Running 1 test(s) from src/lib.cairo
+[PASS] src::handling_errors
+Tests: 1 passed, 0 failed, 0 skipped
+```
