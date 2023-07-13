@@ -58,12 +58,12 @@ pub async fn declare_deploy_contract(path: &str) {
     deployment.send().await.unwrap();
 }
 
-pub async fn invoke_map_contract(key: &str, value: &str) {
+pub async fn invoke_map_contract(key: &str, value: &str, account: &str, contract_address: &str) {
     let provider = get_provider(URL, NETWORK)
         .await
         .expect("Could not get the provider");
     let account = get_account(
-        ACCOUNT,
+        account,
         &Utf8PathBuf::from(ACCOUNT_FILE_PATH),
         &provider,
         NETWORK,
@@ -71,7 +71,7 @@ pub async fn invoke_map_contract(key: &str, value: &str) {
     .expect("Could not get the account");
 
     let call = Call {
-        to: parse_number(MAP_CONTRACT_ADDRESS).expect("Could not parse the contract address"),
+        to: parse_number(contract_address).expect("Could not parse the contract address"),
         selector: get_selector_from_name("put").expect("Could not get selector from put"),
         calldata: vec![
             parse_number(key).expect("Could not parse the key"),
