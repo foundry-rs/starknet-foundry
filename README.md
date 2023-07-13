@@ -4,7 +4,7 @@ Blazingly fast implementation of Foundry for developing Starknet contracts desig
 
 ## Development
 
-### Environment setup
+### Environment setup and build
 
 1. Install the latest [Rust](https://www.rust-lang.org/tools/install) version.
 If you already have Rust installed make sure to upgrade it by running
