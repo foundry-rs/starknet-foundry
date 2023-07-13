@@ -36,6 +36,8 @@ jobs:
           toolchain: stable
       - uses: Swatinem/rust-cache@dd05243424bd5c0e585e4b55eb2d7615cdd32f1f
       - uses: actions/checkout@v3
+        with:
+          submodules: true
       - name: Install mdBook
         run: |
           cargo install --version ${MDBOOK_VERSION} mdbook
