@@ -38,7 +38,7 @@ Test functions cannot return any values and cannot take any arguments.
 
 ## Failing tests
 
-If your code panics, the test is considered failed. Here
+If your code panics, the test is considered failed. Here's an example of a failing test.
 
 ```
 use array::ArrayTrait;
