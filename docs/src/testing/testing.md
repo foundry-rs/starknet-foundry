@@ -1,11 +1,13 @@
-# Testing
-Forge lets you test standalone Cairo functions. This technique is referred to as unit testing. You should write as many unit tests as possible as these are faster than integration tests.
+# Writing Tests
+
+Forge lets you test standalone functions from you smart contracts. This technique is referred to as unit testing. You
+should write as many unit tests as possible as these are faster than integration tests.
 
 ## Writing your first test
 
-First, add the following code to the src/lib.cairo file:
+First, add the following code to the `src/lib.cairo` file:
 
-```
+```cairo
 fn sum(a: felt252, b: felt252) -> felt252 {
     return a + b;
 }
@@ -16,33 +18,53 @@ fn test_sum() {
 }
 ```
 
-It is good to keep your unit tests close to the tested code, in the source file. If you would like to you could put tests in a separate files. Create a file tests/test_sum.cairo:
+It is a common practise to keep your unit tests in the same file as tested code. If you prefer that, you can also put
+code in a separate file anywhere in project directory.
 
 Now run forge using command:
-```
-forge
+
+```shell
+$ forge
+Collected 1 test(s) and 1 test file(s)
+Running 1 test(s) from src/lib.cairo
+[PASS] src::test_sum
+Tests: 1 passed, 0 failed, 0 skipped
 ```
 
 ## Test collecting
 
-Forge considers as test all functions in your package with #[test] attribute.
-
-Test cases cannot return any values and cannot take any arguments. // TODO
+Forge considers all functions in your project marked with `#[test]` attribute as tests.
+Test functions cannot return any values and cannot take any arguments.
 
 ## Failing tests
 
-Your tests fail when code panics. To write a test that fails, you will need to use panic function, here's how you do it:
+If your code panics, the test is considered failed. Here
 
 ```
 use array::ArrayTrait;
 
-// Single value in the panic payload
 #[test]
-fn test_panic_single_value() {
+fn panicking_function() {
     let mut data = ArrayTrait::new();
-    data.append('this one should fail');
+    data.append('aaa');
     panic(data)
+}
+
+#[test]
+fn failing() {
+    panicking_function();
+    assert(2 == 2, '2 == 2');
 }
 ```
 
-Of course, if any of the functions you call from tests panics, your test will fail as well.
+```shell
+$ forge
+Collected 1 test(s) and 1 test file(s)
+Running 1 test(s) from src/lib.cairo
+[FAIL] src::failing
+
+Failure data:
+    [6381921], converted to a string: [aaa]
+
+Tests: 0 passed, 1 failed, 0 skipped
+```
