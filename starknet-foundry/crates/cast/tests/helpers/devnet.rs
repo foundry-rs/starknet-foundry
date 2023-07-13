@@ -30,10 +30,10 @@ fn start_devnet() {
         }
     }
 
-    let compiler_version = "v1.1.1";
+    let mut compiler_version = "v1.1.1";
     #[cfg(feature = "test-cairo2")]
     {
-        let compiler_version = "v2.0.2";
+        compiler_version = "v2.0.2";
     }
     let compiler_path = "tests/utils/compiler/".to_string()
         + compiler_version
@@ -46,6 +46,7 @@ fn start_devnet() {
             &SEED.to_string(),
             "--sierra-compiler-path",
             &compiler_path,
+            "--verbose",
         ])
         .stdout(Stdio::null())
         .spawn()
