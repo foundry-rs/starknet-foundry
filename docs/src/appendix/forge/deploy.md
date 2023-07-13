@@ -1,0 +1,28 @@
+# deploy
+
+> fn deploy(prepared_contract: PreparedContract) -> Result::<felt252, RevertedTransaction>
+
+Deploys a contract and returns its address.
+
+- prepared_contract - an object of the struct `PreparedContract` that consists of the following fields:
+  - `class_hash` - class hash calculated during contract declaration
+  - `constructor_calldata` - calldata for the constructor
+  - `contract_address` - ignored during the execution for now, will be used in future versions of `forge`
+
+```rust
+use array::ArrayTrait;
+use result::ResultTrait;
+use cheatcodes::PreparedContract;
+
+#[test]
+fn test_deploy() {
+    let class_hash = declare('HelloStarknet').unwrap();
+    let prepared = PreparedContract {
+        contract_address: 1234, 
+        class_hash: class_hash, 
+        constructor_calldata: @ArrayTrait::new(),
+    };
+    let contract_address = deploy(prepared).unwrap();
+    // ...
+}
+```

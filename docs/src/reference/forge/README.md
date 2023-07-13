@@ -1,1 +1,1 @@
-## `forge` Commands
+# Forge

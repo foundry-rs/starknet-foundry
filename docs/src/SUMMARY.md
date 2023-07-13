@@ -32,6 +32,7 @@
 
 # Appendix
 
-* [References](reference/README.md)
-  * [Forge](reference/forge/README.md)
-  * [Cast](reference/cast/README.md)
+* [Library functions references](appendix/README.md)
+  * [declare](appendix/forge/declare.md)
+  * [deploy](appendix/forge/deploy.md)
+* [Cast commands](reference/cast/README.md)
