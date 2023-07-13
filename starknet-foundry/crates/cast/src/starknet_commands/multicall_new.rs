@@ -1,20 +1,7 @@
+use crate::helpers::constants::DEFAULT_MULTICALL_CONTENTS;
 use anyhow::{bail, Result};
 use clap::Args;
 use std::path::Path;
-
-static DEFAULT_MULTICALL_CONTENTS: &str = r#"[[call]]
-call_type = ""
-class_hash = ""
-inputs = []
-id = ""
-unique = false
-
-[[call]]
-call_type = ""
-contract_address = ""
-function = ""
-inputs = []
-"#;
 
 #[derive(Args)]
 #[command(about = "Call a contract instance on Starknet", long_about = None)]

@@ -86,7 +86,7 @@ pub async fn invoke_map_contract(key: &str, value: &str) {
 }
 
 #[must_use]
-pub fn default_cli_args(account: String) -> Vec<String> {
+pub fn default_cli_args_with_account(account: String) -> Vec<String> {
     vec![
         "--url".to_string(),
         URL.to_string(),
@@ -97,6 +97,11 @@ pub fn default_cli_args(account: String) -> Vec<String> {
         "--account".to_string(),
         account,
     ]
+}
+
+#[must_use]
+pub fn default_cli_args() -> Vec<String> {
+    default_cli_args_with_account("user0".to_string())
 }
 
 #[must_use]
