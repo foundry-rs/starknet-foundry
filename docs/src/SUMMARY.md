@@ -22,6 +22,7 @@
 * [Cheatcodes](testing/cheatcodes.md)
     * [Declare](testing/cheatcodes/declare.md)
     * [Deploy](testing/cheatcodes/deploy.md)
+* [Debugging](testing/debugging.md)
 
 # Interacting with Starknet
 
@@ -33,5 +34,5 @@
 # Appendix
 
 * [References](reference/README.md)
-  * [Forge](reference/forge/README.md)
-  * [Cast](reference/cast/README.md)
+    * [Forge](reference/forge/README.md)
+    * [Cast](reference/cast/README.md)
