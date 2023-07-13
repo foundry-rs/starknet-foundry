@@ -1,1 +1,1 @@
-# Project configuration
+# Project Configuration
