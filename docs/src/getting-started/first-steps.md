@@ -23,6 +23,10 @@ $ tree . -L 1
 3 directories
 ```
 
+* `src/` contains source code of all your contracts.
+* `tests/` contains tests. Note that test can also be included in any file or directory.
+* `Scarb.toml` contains configuration of the project as well as of `forge`, `cast` etc.
+
 We can build a project with `scarb build`
 
 ```shell
