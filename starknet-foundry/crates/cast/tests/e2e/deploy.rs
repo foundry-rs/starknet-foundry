@@ -4,12 +4,9 @@ use crate::helpers::runner::runner;
 use indoc::indoc;
 use starknet::core::types::TransactionReceipt::Invoke;
 
-static USERNAME: &str = "user0";
-
 #[tokio::test]
 async fn test_happy_case() {
-    let args = default_cli_args(USERNAME.to_string());
-    let mut args: Vec<&str> = args.iter().map(String::as_str).collect();
+    let mut args = default_cli_args();
     args.append(&mut vec![
         "--int-format",
         "--json",
@@ -34,8 +31,7 @@ async fn test_happy_case() {
 
 #[tokio::test]
 async fn test_contract_not_declared() {
-    let args = default_cli_args(USERNAME.to_string());
-    let mut args: Vec<&str> = args.iter().map(String::as_str).collect();
+    let mut args = default_cli_args();
     args.append(&mut vec!["deploy", "--class-hash", "0x1"]);
 
     let snapbox = runner(&args);
@@ -46,8 +42,7 @@ async fn test_contract_not_declared() {
 
 #[tokio::test]
 async fn test_contract_already_deployed() {
-    let args = default_cli_args(USERNAME.to_string());
-    let mut args: Vec<&str> = args.iter().map(String::as_str).collect();
+    let mut args = default_cli_args();
     args.append(&mut vec![
         "deploy",
         "--class-hash",
@@ -64,8 +59,7 @@ async fn test_contract_already_deployed() {
 
 #[tokio::test]
 async fn test_too_low_max_fee() {
-    let args = default_cli_args(USERNAME.to_string());
-    let mut args: Vec<&str> = args.iter().map(String::as_str).collect();
+    let mut args = default_cli_args();
     args.append(&mut vec![
         "deploy",
         "--class-hash",
