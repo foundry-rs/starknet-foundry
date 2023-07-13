@@ -5,7 +5,7 @@ use indoc::indoc;
 use starknet::core::types::TransactionReceipt::Invoke;
 use test_case::test_case;
 
-#[test_case(MAP_CLASS_HASH, "user1" ; "when cairo1 contract")]
+#[test_case(MAP_CLASS_HASH_V1, "user1" ; "when cairo1 contract")]
 #[test_case(MAP_CLASS_HASH_V2, "user2" ; "when cairo2 contract")]
 #[tokio::test]
 async fn test_happy_case(class_hash: &str, account: &str) {
@@ -51,7 +51,7 @@ async fn test_contract_not_declared() {
     assert!(output.contains("Class with hash 0x1 is not declared."));
 }
 
-#[test_case(MAP_CLASS_HASH, "user1" ; "when cairo1 contract")]
+#[test_case(MAP_CLASS_HASH_V1, "user1" ; "when cairo1 contract")]
 #[test_case(MAP_CLASS_HASH_V2, "user2" ; "when cairo2 contract")]
 fn test_contract_already_deployed(class_hash: &str, account: &str) {
     let mut args = default_cli_args();
@@ -71,7 +71,7 @@ fn test_contract_already_deployed(class_hash: &str, account: &str) {
     assert!(output.contains("StarknetErrorCode.CONTRACT_ADDRESS_UNAVAILABLE"));
 }
 
-#[test_case(MAP_CLASS_HASH, "user1" ; "when cairo1 contract")]
+#[test_case(MAP_CLASS_HASH_V1, "user1" ; "when cairo1 contract")]
 #[test_case(MAP_CLASS_HASH_V2, "user2" ; "when cairo2 contract")]
 fn test_too_low_max_fee(class_hash: &str, account: &str) {
     let mut args = default_cli_args();

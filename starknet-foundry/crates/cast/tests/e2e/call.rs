@@ -4,7 +4,7 @@ use crate::helpers::runner::runner;
 use indoc::indoc;
 use test_case::test_case;
 
-#[test_case(MAP_CONTRACT_ADDRESS ; "when cairo1 contract")]
+#[test_case(MAP_CONTRACT_ADDRESS_V1 ; "when cairo1 contract")]
 #[test_case(MAP_CONTRACT_ADDRESS_V2 ; "when cairo2 contract")]
 fn test_happy_case(contract_address: &str) {
     let mut args = default_cli_args();
@@ -31,7 +31,7 @@ fn test_happy_case(contract_address: &str) {
 "#});
 }
 
-#[test_case(MAP_CONTRACT_ADDRESS, "user1" ; "when cairo1 contract")]
+#[test_case(MAP_CONTRACT_ADDRESS_V1, "user1" ; "when cairo1 contract")]
 #[test_case(MAP_CONTRACT_ADDRESS_V2, "user2" ; "when cairo2 contract")]
 #[tokio::test]
 async fn test_call_after_storage_changed(contract_address: &str, account: &str) {
@@ -74,7 +74,7 @@ async fn test_contract_does_not_exist() {
     "#});
 }
 
-#[test_case(MAP_CONTRACT_ADDRESS ; "when cairo1 contract")]
+#[test_case(MAP_CONTRACT_ADDRESS_V1 ; "when cairo1 contract")]
 #[test_case(MAP_CONTRACT_ADDRESS_V2 ; "when cairo2 contract")]
 fn test_wrong_function_name(contract_address: &str) {
     let mut args = default_cli_args();
@@ -93,7 +93,7 @@ fn test_wrong_function_name(contract_address: &str) {
     "#});
 }
 
-#[test_case(MAP_CONTRACT_ADDRESS ; "when cairo1 contract")]
+#[test_case(MAP_CONTRACT_ADDRESS_V1 ; "when cairo1 contract")]
 #[test_case(MAP_CONTRACT_ADDRESS_V2 ; "when cairo2 contract")]
 fn test_wrong_calldata(contract_address: &str) {
     let mut args = default_cli_args();

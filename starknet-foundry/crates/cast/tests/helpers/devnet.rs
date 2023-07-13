@@ -1,4 +1,4 @@
-use crate::helpers::constants::{SEED, URL};
+use crate::helpers::constants::{COMPILER_VERSION, SEED, URL};
 use crate::helpers::fixtures::declare_deploy_contract;
 use ctor::{ctor, dtor};
 use std::net::TcpStream;
@@ -30,9 +30,8 @@ fn start_devnet() {
         }
     }
 
-    let compiler_version = "v2.0.2";
     let compiler_path = "tests/utils/compiler/".to_string()
-        + compiler_version
+        + COMPILER_VERSION
         + "/cairo/bin/starknet-sierra-compile";
     Command::new("starknet-devnet")
         .args([
