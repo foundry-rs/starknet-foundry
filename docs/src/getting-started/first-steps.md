@@ -27,14 +27,6 @@ $ tree . -L 1
 * `tests/` contains tests. Note that test can also be included in any file or directory.
 * `Scarb.toml` contains configuration of the project as well as of `forge`, `cast` etc.
 
-We can build a project with `scarb build`
-
-```shell
-$ scarb build
-   Compiling starknet_forge_template v0.1.0 (/starknet_forge_template/Scarb.toml)
-    Finished release target(s) in 0 seconds
-```
-
 And run tests with `forge`
 
 ```shell
@@ -49,6 +41,3 @@ original value: [6381921], converted to a string: [aaa]
 [PASS] lib_test::lib_test::test_print
 Tests: 4 passed, 0 failed, 0 skipped
 ```
-
-> 💡 **Tip**
-> Running `scarb build` before `forge` is not required. Forge will automatically rebuild your project and tests.
