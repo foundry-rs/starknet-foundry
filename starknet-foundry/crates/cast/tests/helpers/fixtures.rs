@@ -92,8 +92,6 @@ pub fn default_cli_args() -> Vec<&'static str> {
         NETWORK,
         "--accounts-file",
         ACCOUNT_FILE_PATH,
-        "--account",
-        ACCOUNT,
     ]
 }
 

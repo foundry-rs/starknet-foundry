@@ -30,11 +30,7 @@ fn start_devnet() {
         }
     }
 
-    let mut compiler_version = "v1.1.1";
-    #[cfg(feature = "test-cairo2")]
-    {
-        compiler_version = "v2.0.2";
-    }
+    let compiler_version = "v2.0.2";
     let compiler_path = "tests/utils/compiler/".to_string()
         + compiler_version
         + "/cairo/bin/starknet-sierra-compile";
@@ -46,7 +42,6 @@ fn start_devnet() {
             &SEED.to_string(),
             "--sierra-compiler-path",
             &compiler_path,
-            "--verbose",
         ])
         .stdout(Stdio::null())
         .spawn()
@@ -72,10 +67,7 @@ fn start_devnet() {
 
     let rt = Runtime::new().expect("Could not instantiate Runtime");
     rt.block_on(declare_deploy_contract("/v1/map/target/dev/map_Map"));
-    #[cfg(feature = "test-cairo2")]
-    {
-        rt.block_on(declare_deploy_contract("/v2/map/target/dev/map_Map"));
-    }
+    rt.block_on(declare_deploy_contract("/v2/map/target/dev/map_Map"));
 }
 
 #[cfg(test)]
