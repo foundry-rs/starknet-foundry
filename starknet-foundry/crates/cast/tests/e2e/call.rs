@@ -1,4 +1,4 @@
-use crate::helpers::constants::{MAP_CONTRACT_ADDRESS, MAP_CONTRACT_ADDRESS_V2};
+use crate::helpers::constants::{MAP_CONTRACT_ADDRESS_V1, MAP_CONTRACT_ADDRESS_V2};
 use crate::helpers::fixtures::{default_cli_args, invoke_map_contract};
 use crate::helpers::runner::runner;
 use indoc::indoc;

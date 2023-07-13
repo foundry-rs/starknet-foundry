@@ -1,4 +1,4 @@
-use crate::helpers::constants::{ACCOUNT, ACCOUNT_FILE_PATH, MAP_CONTRACT_ADDRESS, NETWORK, URL};
+use crate::helpers::constants::{ACCOUNT, ACCOUNT_FILE_PATH, MAP_CONTRACT_ADDRESS_V1, NETWORK, URL};
 use crate::helpers::runner::runner;
 use indoc::indoc;
 
@@ -66,7 +66,7 @@ async fn test_happy_case_from_cli_with_scarb() {
         ACCOUNT,
         "call",
         "--contract-address",
-        MAP_CONTRACT_ADDRESS,
+        MAP_CONTRACT_ADDRESS_V1,
         "--function-name",
         "get",
         "--calldata",
@@ -99,7 +99,7 @@ async fn test_happy_case_mixed() {
         ACCOUNT,
         "call",
         "--contract-address",
-        MAP_CONTRACT_ADDRESS,
+        MAP_CONTRACT_ADDRESS_V1,
         "--function-name",
         "get",
         "--calldata",

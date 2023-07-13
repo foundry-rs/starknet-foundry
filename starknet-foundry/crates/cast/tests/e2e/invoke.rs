@@ -1,4 +1,4 @@
-use crate::helpers::constants::{ACCOUNT, MAP_CONTRACT_ADDRESS, MAP_CONTRACT_ADDRESS_V2};
+use crate::helpers::constants::{ACCOUNT, MAP_CONTRACT_ADDRESS_V1, MAP_CONTRACT_ADDRESS_V2};
 use crate::helpers::fixtures::{default_cli_args, get_transaction_hash, get_transaction_receipt};
 use crate::helpers::runner::runner;
 use indoc::indoc;
