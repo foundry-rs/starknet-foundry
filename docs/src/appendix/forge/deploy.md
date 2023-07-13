@@ -18,15 +18,15 @@ use cheatcodes::PreparedContract;
 fn test_deploy() {
     let class_hash = declare('HelloStarknet').unwrap();
     
-    let mut constructor_calldata = @ArrayTrait::new();
-    constructor_calldata.append(42);
+    let mut constructor_calldata = ArrayTrait::new();
+    constructor_calldata.append(42_u8.into());
     constructor_calldata.append(21);
     constructor_calldata.append(37);
   
     let prepared = PreparedContract {
-        contract_address: 1234, 
-        class_hash: class_hash, 
-        constructor_calldata: constructor_calldata,
+        contract_address: 1234,
+        class_hash: class_hash,
+        constructor_calldata: @constructor_calldata,
     };
     let contract_address = deploy(prepared).unwrap();
     // ...
