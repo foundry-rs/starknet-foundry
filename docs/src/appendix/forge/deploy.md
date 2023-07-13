@@ -5,7 +5,7 @@
 Deploys a contract and returns its address.
 
 - prepared_contract - an object of the struct `PreparedContract` that consists of the following fields:
-  - `class_hash` - class hash calculated during contract declaration
+  - `class_hash` - class hash of a declared contract
   - `constructor_calldata` - calldata for the constructor
   - `contract_address` - ignored during the execution for now, will be used in future versions of `forge`
 
@@ -17,10 +17,16 @@ use cheatcodes::PreparedContract;
 #[test]
 fn test_deploy() {
     let class_hash = declare('HelloStarknet').unwrap();
+    
+    let mut constructor_calldata = @ArrayTrait::new();
+    constructor_calldata.append(42);
+    constructor_calldata.append(21);
+    constructor_calldata.append(37);
+  
     let prepared = PreparedContract {
         contract_address: 1234, 
         class_hash: class_hash, 
-        constructor_calldata: @ArrayTrait::new(),
+        constructor_calldata: constructor_calldata,
     };
     let contract_address = deploy(prepared).unwrap();
     // ...
