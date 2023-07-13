@@ -312,14 +312,15 @@ fn dispatchers() {
         .current_dir(&temp)
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 2 test(s) and 4 test file(s)
+        .stdout_matches(indoc! {r#"Collected 3 test(s) and 4 test file(s)
             Running 0 test(s) from src/erc20.cairo
             Running 0 test(s) from src/hello_starknet.cairo
             Running 0 test(s) from src/lib.cairo
-            Running 2 test(s) from tests/using_dispatchers.cairo
+            Running 3 test(s) from tests/using_dispatchers.cairo
             [PASS] using_dispatchers::using_dispatchers::call_and_invoke
             [PASS] using_dispatchers::using_dispatchers::advanced_types
-            Tests: 2 passed, 0 failed, 0 skipped
+            [PASS] using_dispatchers::using_dispatchers::handling_errors
+            Tests: 3 passed, 0 failed, 0 skipped
         "#});
 }
 

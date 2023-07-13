@@ -11,7 +11,7 @@ clap = { version = "4.3.0", features = ["derive"] }
 console = "0.15.7"
 serde = { version = "1.0.163", features = ["derive"] }
 serde_json = "1.0.96"
-starknet = { git = "https://github.com/xJonathanLEI/starknet-rs" }
+starknet = "0.4.0"
 tokio = { version = "1.28.2", features = ["full"] }
 url = "2.2.2"
 rand = "0.8.5"
@@ -19,6 +19,8 @@ scarb-metadata = "1.4.2"
 scarb = "0.5.0"
 primitive-types = "0.12.1"
 shellexpand = "3.1.0"
+toml = "0.5.2"
+project-root = "0.2.2"
 
 [dev-dependencies]
 ctor = "0.2.2"
