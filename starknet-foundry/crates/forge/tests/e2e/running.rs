@@ -135,7 +135,7 @@ fn with_print() {
 }
 
 #[test]
-fn panic_data_decoding() {
+fn with_panic_data_decoding() {
     let temp = assert_fs::TempDir::new().unwrap();
     temp.copy_from(
         "tests/data/panic_decoding_test",
@@ -174,7 +174,7 @@ fn panic_data_decoding() {
 }
 
 #[test]
-fn exit_first() {
+fn with_exit_first() {
     let temp = assert_fs::TempDir::new().unwrap();
     temp.copy_from("tests/data/exit_first_test", &["**/*.cairo", "**/*.toml"])
         .unwrap();
@@ -208,7 +208,7 @@ fn exit_first() {
 }
 
 #[test]
-fn exit_first_flag() {
+fn with_exit_first_flag() {
     let temp = assert_fs::TempDir::new().unwrap();
     temp.copy_from("tests/data/simple_test", &["**/*.cairo", "**/*.toml"])
         .unwrap();
