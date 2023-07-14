@@ -202,7 +202,7 @@ fn multiple_declare() {
 fn simple_declare_from_contract_code() {
     let contract = Contract::from_code_path(
         "Contract1".to_string(),
-        Path::new("./tests/data/declare_test/src/contract1.cairo"),
+        Path::new("tests/data/contracts/hello_starknet.cairo"),
     )
     .unwrap();
 
