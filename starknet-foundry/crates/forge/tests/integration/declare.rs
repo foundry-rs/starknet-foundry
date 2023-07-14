@@ -3,7 +3,6 @@ use crate::common::runner::Contract;
 use crate::{assert_failed, assert_passed, test_case};
 use camino::Utf8PathBuf;
 use forge::run;
-use forge::test_case_summary::TestCaseSummary;
 use indoc::indoc;
 use std::path::Path;
 
