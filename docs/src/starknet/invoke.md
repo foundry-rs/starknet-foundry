@@ -21,6 +21,9 @@ $ cast invoke \
   --contract-address 0x4a739ab73aa3cac01f9da5d55f49fb67baee4919224454a2e3f85b16462a911 \
   --entry-point-name "some_function" \
   --calldata 1 2 3
+  
+  command: Invoke
+  transaction_hash: 0x7ad0d6e449e33b6581a4bb8df866c0fce3919a5ee05a30840ba521dafee217f
 ```
 
 ### Without profiles
@@ -35,6 +38,9 @@ $ cast \
   --contract-address 0x4a739ab73aa3cac01f9da5d55f49fb67baee4919224454a2e3f85b16462a911 \
   --entry-point-name "some_function" \
   --calldata 1 2 3
+  
+  command: Invoke
+  transaction_hash: 0x7ad0d6e449e33b6581a4bb8df866c0fce3919a5ee05a30840ba521dafee217f
 ```
 
 > 💡 **Info**
