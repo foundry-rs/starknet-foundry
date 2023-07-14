@@ -33,6 +33,7 @@ use cheatable_starknet::constants::{
 use cheatable_starknet::rpc::call_contract;
 use cheatable_starknet::state::DictStateReader;
 use num_traits::{Num, ToPrimitive, FromPrimitive};
+use schemars::_private::NoSerialize;
 use serde::Deserialize;
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, PatriciaKey};
 use starknet_api::hash::{StarkFelt, StarkHash};
@@ -161,12 +162,13 @@ struct ScarbStarknetContractArtifact {
 }
 
 fn convert_to_blockifier_felt(val: Felt252) -> blockifier_Felt252 {
-    let v = val.to_i64().unwrap();
-    blockifier_Felt252::from_i64(v).unwrap() // TODO incorrect conversion
+    let v = val.to_bigint();
+    blockifier_Felt252::from(v) // TODO incorrect conversion
 }
+
 fn convert_from_blockifier_felt(val: blockifier_Felt252) -> Felt252 {
-    let v = val.to_i64().unwrap();
-    Felt252::from_i64(v).unwrap() // TODO incorrect conversion
+    let v = val.to_bigint();
+    Felt252::from(v) // TODO incorrect conversion
 }
 
 fn execute_syscall(
