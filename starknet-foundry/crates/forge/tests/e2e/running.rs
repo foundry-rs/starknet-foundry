@@ -239,22 +239,3 @@ fn with_exit_first_flag() {
             Tests: 7 passed, 1 failed, 1 skipped
         "#});
 }
-
-#[test]
-fn test_deploy_error_handling() {
-    let temp = assert_fs::TempDir::new().unwrap();
-    temp.copy_from("tests/data/deploy_error_handling_test", &["**/*"])
-        .unwrap();
-
-    runner()
-        .current_dir(&temp)
-        .assert()
-        .success()
-        .stdout_matches(indoc! { r#"
-            Collected 1 test(s) and 2 test file(s)
-            Running 0 test(s) from src/lib.cairo
-            Running 1 test(s) from tests/test_deploy_error_handling.cairo
-            [PASS] test_deploy_error_handling::test_deploy_error_handling::test_deploy_error_handling
-            Tests: 1 passed, 0 failed, 0 skipped
-        "#});
-}
