@@ -15,7 +15,8 @@ fn simple_package() {
         .current_dir(&temp)
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 11 test(s) and 6 test file(s)
+        .stdout_matches(indoc! {r#"Collected 11 test(s) and 7 test file(s)
+            Running 0 test(s) from src/erc20.cairo
             Running 0 test(s) from src/hello_starknet.cairo
             Running 1 test(s) from src/lib.cairo
             [PASS] src::test_fib
@@ -58,7 +59,8 @@ fn with_filter() {
         .arg("two")
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 2 test(s) and 6 test file(s)
+        .stdout_matches(indoc! {r#"Collected 2 test(s) and 7 test file(s)
+            Running 0 test(s) from src/erc20.cairo
             Running 0 test(s) from src/hello_starknet.cairo
             Running 0 test(s) from src/lib.cairo
             Running 0 test(s) from tests/contract.cairo
@@ -85,7 +87,8 @@ fn with_exact_filter() {
         .arg("--exact")
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 1 test(s) and 6 test file(s)
+        .stdout_matches(indoc! {r#"Collected 1 test(s) and 7 test file(s)
+            Running 0 test(s) from src/erc20.cairo
             Running 0 test(s) from src/hello_starknet.cairo
             Running 0 test(s) from src/lib.cairo
             Running 0 test(s) from tests/contract.cairo
@@ -110,7 +113,8 @@ fn with_non_matching_filter() {
         .arg("qwerty")
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 0 test(s) and 6 test file(s)
+        .stdout_matches(indoc! {r#"Collected 0 test(s) and 7 test file(s)
+            Running 0 test(s) from src/erc20.cairo
             Running 0 test(s) from src/hello_starknet.cairo
             Running 0 test(s) from src/lib.cairo
             Running 0 test(s) from tests/contract.cairo
@@ -220,7 +224,8 @@ fn with_exit_first() {
         .current_dir(&temp)
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 11 test(s) and 6 test file(s)
+        .stdout_matches(indoc! {r#"Collected 11 test(s) and 7 test file(s)
+            Running 0 test(s) from src/erc20.cairo
             Running 0 test(s) from src/hello_starknet.cairo
             Running 1 test(s) from src/lib.cairo
             [PASS] src::test_fib
@@ -257,7 +262,8 @@ fn with_exit_first_flag() {
         .current_dir(&temp)
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 11 test(s) and 6 test file(s)
+        .stdout_matches(indoc! {r#"Collected 11 test(s) and 7 test file(s)
+            Running 0 test(s) from src/erc20.cairo
             Running 0 test(s) from src/hello_starknet.cairo
             Running 1 test(s) from src/lib.cairo
             [PASS] src::test_fib

@@ -10,3 +10,6 @@ starknet = "2.0.1"
 [[target.starknet-contract]]
 sierra = true
 casm = true
+
+[tool.forge]
+exit_first = false
