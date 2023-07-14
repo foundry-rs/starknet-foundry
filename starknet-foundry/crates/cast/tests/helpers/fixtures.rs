@@ -1,6 +1,7 @@
 use crate::helpers::constants::{ACCOUNT, ACCOUNT_FILE_PATH, CONTRACTS_DIR, NETWORK, URL};
 use camino::Utf8PathBuf;
 use cast::{get_account, get_provider, parse_number};
+use fs_extra::dir::CopyOptions;
 use serde_json::{json, Value};
 use starknet::accounts::{Account, Call};
 use starknet::contract::ContractFactory;
@@ -11,6 +12,7 @@ use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use std::collections::HashMap;
+use std::fs;
 use std::sync::Arc;
 use url::Url;
 
@@ -142,4 +144,27 @@ pub async fn get_transaction_receipt(tx_hash: FieldElement) -> TransactionReceip
 pub fn create_test_provider() -> JsonRpcClient<HttpTransport> {
     let parsed_url = Url::parse(URL).unwrap();
     JsonRpcClient::new(HttpTransport::new(parsed_url))
+}
+
+#[must_use]
+pub fn duplicate_and_salt_directory(src_path: String, to_be_salted: &str, salt: &str) -> String {
+    let dest_path = src_path.clone() + salt;
+    fs::create_dir_all(dest_path.clone()).unwrap();
+
+    let mut options = CopyOptions::new();
+    options.overwrite = true;
+
+    fs_extra::dir::copy(src_path.clone() + "/src", dest_path.clone(), &options).unwrap();
+    fs_extra::file::copy(
+        src_path + "/Scarb.toml",
+        dest_path.clone() + "/Scarb.toml",
+        &fs_extra::file::CopyOptions::new().overwrite(true),
+    )
+    .unwrap();
+
+    let contract_code = fs::read_to_string(dest_path.clone() + "/src/lib.cairo").unwrap();
+    let updated_code = contract_code.replace(to_be_salted, &(to_be_salted.to_string() + salt));
+    fs::write(dest_path.clone() + "/src/lib.cairo", updated_code).unwrap();
+
+    dest_path
 }
