@@ -1,1 +1,41 @@
 # Invoking Contracts
+
+## Overview
+
+Starknet Foundry cast supports invoking smart contracts on a given network with the `cast invoke` command.
+
+The basic inputs that you need for the command are:
+
+- Contract address
+- Function name
+- Inputs to the function
+
+For detailed CLI description, see [invoke command reference](../reference/cast/index.html#invoke).
+
+## Usage example
+
+### With profiles
+
+```shell
+$ cast invoke \
+  --contract-address 0x4a739ab73aa3cac01f9da5d55f49fb67baee4919224454a2e3f85b16462a911 \
+  --entry-point-name "some_function" \
+  --calldata 1 2 3
+```
+
+### Without profiles
+
+```shell
+$ cast \
+  --rpc_url http://127.0.0.1:5050 \
+  --network testnet \
+  --account example_user \
+  --accounts_file_path ./some/path \
+  invoke \
+  --contract-address 0x4a739ab73aa3cac01f9da5d55f49fb67baee4919224454a2e3f85b16462a911 \
+  --entry-point-name "some_function" \
+  --calldata 1 2 3
+```
+
+> 💡 **Info**
+> Max fee will be automatically computed if `--max-fee <MAX_FEE>` is not passed.
