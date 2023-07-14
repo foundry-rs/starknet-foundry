@@ -12,8 +12,8 @@ You can find what version of Scarb is compatible with your version of Starknet-F
 ```shell
 TODO: https://github.com/foundry-rs/starknet-foundry/pull/115
 ```
-2. Close and reopen the terminal.
-3. To check if the Starknet-Foundry is installed correctly, run `forge --version` and `cast --version`.
+2. To check if the Starknet-Foundry is installed correctly, run `forge --version` and `cast --version`.
+In some cases you may need too close and reopen the terminal.
 
 If you want to specify a version, run the following command with the requested version:
 
