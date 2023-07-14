@@ -2,10 +2,10 @@ use crate::helpers::constants::{CONTRACTS_DIR, NETWORK, URL};
 use crate::helpers::fixtures::{
     duplicate_and_salt_directory, get_transaction_hash, get_transaction_receipt,
 };
+use indoc::indoc;
 use snapbox::cmd::{cargo_bin, Command};
 use starknet::core::types::TransactionReceipt::Declare;
 use std::fs;
-use indoc::indoc;
 use test_case::test_case;
 
 #[test_case("/v1/map", "_xyz", "user1" ; "when cairo1 contract")]

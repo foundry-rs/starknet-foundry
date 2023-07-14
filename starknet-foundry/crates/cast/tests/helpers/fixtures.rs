@@ -1,7 +1,6 @@
 use crate::helpers::constants::{ACCOUNT, ACCOUNT_FILE_PATH, CONTRACTS_DIR, NETWORK, URL};
 use camino::Utf8PathBuf;
 use cast::{get_account, get_provider, parse_number};
-use fs_extra::dir::CopyOptions;
 use serde_json::{json, Value};
 use starknet::accounts::{Account, Call};
 use starknet::contract::ContractFactory;
@@ -149,22 +148,30 @@ pub fn create_test_provider() -> JsonRpcClient<HttpTransport> {
 #[must_use]
 pub fn duplicate_and_salt_directory(src_path: String, to_be_salted: &str, salt: &str) -> String {
     let dest_path = src_path.clone() + salt;
-    fs::create_dir_all(dest_path.clone()).unwrap();
 
-    let mut options = CopyOptions::new();
-    options.overwrite = true;
+    let src_dir = Utf8PathBuf::from(src_path);
+    let dest_dir = Utf8PathBuf::from(&dest_path);
 
-    fs_extra::dir::copy(src_path.clone() + "/src", dest_path.clone(), &options).unwrap();
+    fs::create_dir_all(&dest_dir).expect("Unable to create directory");
+
+    fs_extra::dir::copy(
+        src_dir.join("src"),
+        &dest_dir,
+        &fs_extra::dir::CopyOptions::new().overwrite(true),
+    )
+    .expect("Unable to copy the src directory");
     fs_extra::file::copy(
-        src_path + "/Scarb.toml",
-        dest_path.clone() + "/Scarb.toml",
+        src_dir.join("Scarb.toml"),
+        dest_dir.join("Scarb.toml"),
         &fs_extra::file::CopyOptions::new().overwrite(true),
     )
-    .unwrap();
+    .expect("Unable to copy Scarb.toml");
 
-    let contract_code = fs::read_to_string(dest_path.clone() + "/src/lib.cairo").unwrap();
+    let contract_code =
+        fs::read_to_string(src_dir.join("src/lib.cairo")).expect("Unable to get contract code");
     let updated_code = contract_code.replace(to_be_salted, &(to_be_salted.to_string() + salt));
-    fs::write(dest_path.clone() + "/src/lib.cairo", updated_code).unwrap();
+    fs::write(dest_dir.join("src/lib.cairo"), updated_code)
+        .expect("Unable to change contract code");
 
     dest_path
 }
