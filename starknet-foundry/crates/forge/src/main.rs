@@ -55,7 +55,7 @@ fn main_execution() -> Result<()> {
 
     let predeployed_contracts_dir = load_predeployed_contracts()?;
     let predeployed_contracts_path: PathBuf = predeployed_contracts_dir.path().into();
-    let predeployed_contracts = Utf8PathBuf::try_from(predeployed_contracts_path)
+    let predeployed_contracts = Utf8PathBuf::try_from(predeployed_contracts_path.clone())
         .context("Failed to convert path to predeployed contracts to Utf8PathBuf")?;
 
     let scarb_metadata = MetadataCommand::new().inherit_stderr().exec()?;
