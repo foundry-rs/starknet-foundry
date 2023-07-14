@@ -1,4 +1,4 @@
-# print
+# `print`
 
 > `trait PrintTrait<T> { fn print(self: T); }`
 

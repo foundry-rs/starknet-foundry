@@ -1,4 +1,4 @@
-# declare
+# `declare`
 
 > `fn declare(contract: felt252) -> Result::<felt252, felt252>`
 
