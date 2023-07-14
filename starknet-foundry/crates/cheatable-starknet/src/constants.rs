@@ -94,18 +94,13 @@ pub fn build_invoke_transaction(
     }
 }
 
-fn get_raw_contract_class(predeployed_contracts: &Utf8PathBuf, contract_path: &str) -> String {
-    let path: PathBuf = [predeployed_contracts.as_str(), contract_path]
-        .iter()
-        .collect();
-    fs::read_to_string(path).unwrap()
-}
-
 fn load_contract_class(
     predeployed_contracts: &Utf8PathBuf,
     contract_path: &str,
 ) -> ContractClassV0 {
-    let raw_contract_class = get_raw_contract_class(predeployed_contracts, contract_path);
+    let full_contract_path: PathBuf = predeployed_contracts.join(contract_path).into();
+    let raw_contract_class =
+        fs::read_to_string(full_contract_path).expect("Failed to read predeployed contracts");
     ContractClassV0::try_from_json_string(&raw_contract_class).unwrap()
 }
 

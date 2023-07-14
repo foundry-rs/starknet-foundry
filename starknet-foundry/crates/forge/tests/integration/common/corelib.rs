@@ -10,12 +10,12 @@ pub fn corelib() -> TempDir {
 }
 
 pub fn predeployed_contracts() -> TempDir {
-    let corelib = TempDir::new().unwrap();
-    corelib
+    let predeployed_contracts = TempDir::new().unwrap();
+    predeployed_contracts
         .copy_from(
             "../../crates/cheatable-starknet/predeployed-contracts",
             &["**/*"],
         )
         .unwrap();
-    corelib
+    predeployed_contracts
 }

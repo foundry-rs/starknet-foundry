@@ -92,13 +92,20 @@ fn main_execution() -> Result<()> {
         )?;
     }
 
-    // Explicitly close the temporary directory so we can handle the error
+    // Explicitly close the temporary directories so we can handle the errors
     corelib_dir.close().with_context(|| {
         anyhow!(
             "Failed to close temporary directory = {} with corelib. Corelib files might have not been released from filesystem",
             corelib_path.display()
         )
     })?;
+    predeployed_contracts_dir.close().with_context(|| {
+        anyhow!(
+            "Failed to close temporary directory = {} with predeployed contracts. Predeployed contract files might have not been released from filesystem",
+            corelib_path.display()
+        )
+    })?;
+
     Ok(())
 }
 

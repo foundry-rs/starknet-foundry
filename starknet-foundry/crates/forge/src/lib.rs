@@ -238,7 +238,6 @@ impl TestFileSummary {
 
 fn run_tests_from_file(
     tests: TestsFromFile,
-    // tests_summary: &mut TestSummary,
     runner_config: &RunnerConfig,
     contracts: &HashMap<String, StarknetContractArtifacts>,
     predeployed_contracts: &Utf8PathBuf,
