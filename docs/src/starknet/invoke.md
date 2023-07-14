@@ -18,6 +18,7 @@ For detailed CLI description, see [invoke command reference](../reference/cast/i
 
 ```shell
 $ cast invoke \
+  --profile testnet \
   --contract-address 0x4a739ab73aa3cac01f9da5d55f49fb67baee4919224454a2e3f85b16462a911 \
   --entry-point-name "some_function" \
   --calldata 1 2 3
