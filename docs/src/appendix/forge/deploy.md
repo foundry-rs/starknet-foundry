@@ -1,6 +1,6 @@
 # deploy
 
-> fn deploy(prepared_contract: PreparedContract) -> Result::<felt252, RevertedTransaction>
+> `fn deploy(prepared_contract: PreparedContract) -> Result::<felt252, RevertedTransaction>`
 
 Deploys a contract and returns its address.
 

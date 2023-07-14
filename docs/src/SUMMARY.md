@@ -35,4 +35,5 @@
 * [Library functions references](appendix/forge.md)
   * [declare](appendix/forge/declare.md)
   * [deploy](appendix/forge/deploy.md)
+  * [print](appendix/forge/print.md)
 * [Cast commands](appendix/cast.md)
