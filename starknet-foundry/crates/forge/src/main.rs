@@ -102,7 +102,7 @@ fn main_execution() -> Result<()> {
     predeployed_contracts_dir.close().with_context(|| {
         anyhow!(
             "Failed to close temporary directory = {} with predeployed contracts. Predeployed contract files might have not been released from filesystem",
-            corelib_path.display()
+            predeployed_contracts_path.display()
         )
     })?;
 
