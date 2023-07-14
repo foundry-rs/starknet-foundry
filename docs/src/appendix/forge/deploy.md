@@ -7,7 +7,6 @@ Deploys a contract and returns its address.
 - prepared_contract - an object of the struct `PreparedContract` that consists of the following fields:
   - `class_hash` - class hash of a declared contract
   - `constructor_calldata` - calldata for the constructor
-  - `contract_address` - ignored during the execution for now, will be used in future versions of `forge`
 
 ```rust
 use array::ArrayTrait;
@@ -24,9 +23,7 @@ fn test_deploy() {
     constructor_calldata.append(37);
   
     let prepared = PreparedContract {
-        contract_address: 1234,
-        class_hash: class_hash,
-        constructor_calldata: @constructor_calldata,
+        class_hash: class_hash, constructor_calldata: @constructor_calldata
     };
     let contract_address = deploy(prepared).unwrap();
     // ...
