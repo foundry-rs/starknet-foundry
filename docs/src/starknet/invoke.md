@@ -10,7 +10,7 @@ In most cases you have to provide:
 - Function name
 - Function arguments
 
-For detailed arguments description, see [invoke command reference](../reference/cast/index.html#invoke).
+For detailed arguments description, see [invoke command reference](../appendix/cast/invoke.md).
 
 ## Usage example
 
