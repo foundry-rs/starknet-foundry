@@ -72,30 +72,28 @@ async fn contract_already_declared() {
 }
 
 #[tokio::test]
-async fn contract_does_not_exist() {
+async fn wrong_contract_name_passed() {
     let args = vec![
         "--url",
         URL,
         "--network",
         NETWORK,
         "--accounts-file",
-        "../accounts/accounts.json",
+        "../../../accounts/accounts.json",
         "--account",
         "user1",
         "declare",
         "--contract-name",
         "nonexistent",
-        "--max-fee",
-        "999999999999",
     ];
 
     let snapbox = Command::new(cargo_bin!("cast"))
-        .current_dir(CONTRACTS_DIR)
+        .current_dir(CONTRACTS_DIR.to_string() + "/v1/map")
         .args(args);
 
-    snapbox.assert().success().stderr_matches(indoc! {r#"
-        error: scarb build returned non-zero exit code: 1
-    "#});
+    let output = String::from_utf8(snapbox.assert().failure().get_output().stderr.clone()).unwrap();
+
+    assert!(output.contains("Failed to find contract nonexistent in starknet_artifacts.json"));
 }
 
 #[test_case("/v1/map", "_zyx", "user1" ; "when cairo1 contract")]
