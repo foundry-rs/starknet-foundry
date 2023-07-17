@@ -1,21 +1,25 @@
-use crate::helpers::constants::MAP_CONTRACT_ADDRESS;
+use crate::helpers::constants::{ACCOUNT, MAP_CONTRACT_ADDRESS_V1, MAP_CONTRACT_ADDRESS_V2};
 use crate::helpers::fixtures::{default_cli_args_with_account, get_transaction_hash, get_transaction_receipt};
 use crate::helpers::runner::runner;
 use indoc::indoc;
 use starknet::core::types::TransactionReceipt::Invoke;
+use test_case::test_case;
 
 static USERNAME: &str = "user2";
 
+#[test_case(MAP_CONTRACT_ADDRESS_V1, "user1" ; "when cairo1 contract")]
+#[test_case(MAP_CONTRACT_ADDRESS_V2, "user2" ; "when cairo2 contract")]
 #[tokio::test]
-async fn test_happy_case() {
+async fn test_happy_case(contract_address: &str, account: &str) {
     let args = default_cli_args_with_account(USERNAME);
-    let mut args: Vec<&str> = args.iter().map(String::as_str).collect();
     args.append(&mut vec![
+        "--account",
+        account,
         "--int-format",
         "--json",
         "invoke",
         "--contract-address",
-        MAP_CONTRACT_ADDRESS,
+        contract_address,
         "--entry-point-name",
         "put",
         "--calldata",
@@ -38,6 +42,8 @@ async fn test_contract_does_not_exist() {
     let args = default_cli_args_with_account(USERNAME);
     let mut args: Vec<&str> = args.iter().map(String::as_str).collect();
     args.append(&mut vec![
+        "--account",
+        ACCOUNT,
         "invoke",
         "--contract-address",
         "0x1",
@@ -52,14 +58,16 @@ async fn test_contract_does_not_exist() {
     "#});
 }
 
-#[tokio::test]
-async fn test_wrong_function_name() {
+#[test_case(MAP_CONTRACT_ADDRESS_V1, "user1" ; "when cairo1 contract")]
+#[test_case(MAP_CONTRACT_ADDRESS_V2, "user2" ; "when cairo2 contract")]
+fn test_wrong_function_name(contract_address: &str, account: &str) {
     let args = default_cli_args_with_account(USERNAME);
-    let mut args: Vec<&str> = args.iter().map(String::as_str).collect();
     args.append(&mut vec![
+        "--account",
+        account,
         "invoke",
         "--contract-address",
-        MAP_CONTRACT_ADDRESS,
+        contract_address,
         "--entry-point-name",
         "nonexistent_put",
     ]);
@@ -71,14 +79,16 @@ async fn test_wrong_function_name() {
     "#});
 }
 
-#[tokio::test]
-async fn test_wrong_calldata() {
+#[test_case(MAP_CONTRACT_ADDRESS_V1, "user1" ; "when cairo1 contract")]
+#[test_case(MAP_CONTRACT_ADDRESS_V2, "user2" ; "when cairo2 contract")]
+fn test_wrong_calldata(contract_address: &str, account: &str) {
     let args = default_cli_args_with_account(USERNAME);
-    let mut args: Vec<&str> = args.iter().map(String::as_str).collect();
     args.append(&mut vec![
+        "--account",
+        account,
         "invoke",
         "--contract-address",
-        MAP_CONTRACT_ADDRESS,
+        contract_address,
         "--entry-point-name",
         "put",
         "--calldata",
@@ -86,29 +96,26 @@ async fn test_wrong_calldata() {
     ]);
 
     let snapbox = runner(&args);
+    let bdg = snapbox.assert();
+    let out = bdg.get_output();
 
-    snapbox.assert().success().stderr_matches(indoc! {r#"
-        error: Error at pc=0:81:
-        Got an exception while executing a hint.
-        Cairo traceback (most recent call last):
-        Unknown location (pc=0:731)
-        Unknown location (pc=0:677)
-        Unknown location (pc=0:291)
-        Unknown location (pc=0:314)
+    let stderr_str =
+        std::str::from_utf8(&out.stderr).expect("failed to convert command output to string");
 
-        Error in the called contract (0x38b7b9507ccf73d79cb42c2cc4e58cf3af1248f342112879bfdf5aa4f606cc9):
-        Execution was reverted; failure reason: [0x496e70757420746f6f2073686f727420666f7220617267756d656e7473].
-    "#});
+    assert!(stderr_str.contains("Error in the called contract"));
+    assert!(stderr_str.contains(contract_address));
 }
 
-#[tokio::test]
-async fn test_too_low_max_fee() {
+#[test_case(MAP_CONTRACT_ADDRESS_V1, "user1" ; "when cairo1 contract")]
+#[test_case(MAP_CONTRACT_ADDRESS_V2, "user2" ; "when cairo2 contract")]
+fn test_too_low_max_fee(contract_address: &str, account: &str) {
     let args = default_cli_args_with_account(USERNAME);
-    let mut args: Vec<&str> = args.iter().map(String::as_str).collect();
     args.append(&mut vec![
+        "--account",
+        account,
         "invoke",
         "--contract-address",
-        MAP_CONTRACT_ADDRESS,
+        contract_address,
         "--entry-point-name",
         "put",
         "--calldata",
