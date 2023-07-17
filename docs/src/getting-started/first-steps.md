@@ -31,13 +31,10 @@ And run tests with `forge`
 
 ```shell
 $ forge
-Collected 4 test(s) and 2 test file(s)
-Running 1 test(s) from src/lib.cairo
-[PASS] src::test_fib
-Running 3 test(s) from tests/lib_test.cairo
-[PASS] lib_test::lib_test::test_fib
-[PASS] lib_test::lib_test::test_simple
-original value: [6381921], converted to a string: [aaa]
-[PASS] lib_test::lib_test::test_print
-Tests: 4 passed, 0 failed, 0 skipped
+Collected 2 test(s) and 2 test file(s)
+Running 0 test(s) from src/lib.cairo
+Running 2 test(s) from tests/test_contract.cairo
+[PASS] test_contract::test_contract::test_increase_balance
+[PASS] test_contract::test_contract::test_cannot_increase_balance_with_zero_value
+Tests: 2 passed, 0 failed, 0 skipped
 ```
