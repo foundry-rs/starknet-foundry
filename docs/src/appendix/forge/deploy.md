@@ -4,8 +4,8 @@
 
 Deploys a contract and returns its address.
 
-- prepared_contract - an object of the struct `PreparedContract` that consists of the following fields:
-  - `class_hash` - class hash of a declared contract
+- `prepared_contract` - an instance of the struct `PreparedContract` that consists of the following fields:
+  - `class_hash` - class hash of a previously [declared](declare.md) contract
   - `constructor_calldata` - calldata for the constructor
 
 ```rust

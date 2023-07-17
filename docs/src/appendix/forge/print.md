@@ -2,7 +2,7 @@
 
 > `trait PrintTrait<T> { fn print(self: T); }`
 
-Trait used for displaying test data on `forge` command output.
+Trait used for displaying test data with the `forge` command line output.
 
 The trait is implemented for types:
 - `felt252`
