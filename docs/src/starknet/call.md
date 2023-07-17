@@ -14,7 +14,7 @@ For detailed CLI description, see [call command reference](../reference/cast/ind
 
 ## Usage example
 
-### With profiles
+### With [profiles](../projects/configuration.md#Cast)
 
 ```shell
 $ cast call \
