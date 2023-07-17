@@ -1,6 +1,6 @@
 use crate::helpers::constants::{CONTRACTS_DIR, NETWORK, URL};
 use crate::helpers::fixtures::{
-    duplicate_and_salt_directory, get_transaction_hash, get_transaction_receipt,
+    duplicate_directory_with_salt, get_transaction_hash, get_transaction_receipt,
 };
 use indoc::indoc;
 use snapbox::cmd::{cargo_bin, Command};
@@ -13,7 +13,7 @@ use test_case::test_case;
 #[tokio::test]
 async fn test_happy_case(contract_path: &str, salt: &str, account: &str) {
     let contract_path =
-        duplicate_and_salt_directory(CONTRACTS_DIR.to_string() + contract_path, "put", salt);
+        duplicate_directory_with_salt(CONTRACTS_DIR.to_string() + contract_path, "put", salt);
 
     let args = vec![
         "--url",
@@ -102,7 +102,7 @@ async fn contract_does_not_exist() {
 #[test_case("/v2/map", "_zyx", "user2" ; "when cairo2 contract")]
 fn test_too_low_max_fee(contract_path: &str, salt: &str, account: &str) {
     let contract_path =
-        duplicate_and_salt_directory(CONTRACTS_DIR.to_string() + contract_path, "put", salt);
+        duplicate_directory_with_salt(CONTRACTS_DIR.to_string() + contract_path, "put", salt);
 
     let args = vec![
         "--url",

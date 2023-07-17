@@ -146,7 +146,7 @@ pub fn create_test_provider() -> JsonRpcClient<HttpTransport> {
 }
 
 #[must_use]
-pub fn duplicate_and_salt_directory(src_path: String, to_be_salted: &str, salt: &str) -> String {
+pub fn duplicate_directory_with_salt(src_path: String, to_be_salted: &str, salt: &str) -> String {
     let dest_path = src_path.clone() + salt;
 
     let src_dir = Utf8PathBuf::from(src_path);
