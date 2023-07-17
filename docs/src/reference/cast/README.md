@@ -5,24 +5,6 @@ Optional.
 
 Profile name in Scarb.toml config file.
 
-Examples:
-
-Profile named `profile1`
-```toml
-(...)
-[tool.protostar.profile1]
-account = "user"
-(...)
-```
-
-No profile, but Scarb.toml exists and is configured for project:
-```toml
-(...)
-[tool.protostar]
-network = "testnet"
-(...)
-```
-
 ### `--path-to-scarb-toml, -s <PATH>`
 Optional.
 
@@ -35,7 +17,7 @@ Optional.
 
 Starknet RPC node url address.
 
-Overrides rpc_url from Scarb.toml.
+Overrides url from Scarb.toml.
 
 ### `--network, -n <NETWORK_NAME>`
 Optional.
