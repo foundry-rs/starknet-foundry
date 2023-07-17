@@ -34,5 +34,5 @@
 # Appendix
 
 * [References](reference/README.md)
-  * [Forge](reference/forge/README.md)
-  * [Cast](reference/cast/README.md)
+  * [Forge commands](reference/forge/README.md)
+  * [Cast commands](reference/cast/README.md)
