@@ -42,7 +42,6 @@ If your code panics, the test is considered failed. Here's an example of a faili
 ```
 use array::ArrayTrait;
 
-#[test]
 fn panicking_function() {
     let mut data = ArrayTrait::new();
     data.append('aaa');
