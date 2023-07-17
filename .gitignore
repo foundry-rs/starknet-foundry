@@ -1,3 +1,4 @@
 .idea
 pyproject.toml
 .DS_Store
+.tool-versions

@@ -1,7 +1,5 @@
 use crate::helpers::scarb_utils::parse_scarb_config;
-use crate::starknet_commands::{
-    call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
-};
+use crate::starknet_commands::{call::Call, declare::Declare, deploy::Deploy, invoke::Invoke};
 use anyhow::{bail, Result};
 use camino::Utf8PathBuf;
 use cast::{get_account, get_block_id, get_provider, print_formatted};
@@ -22,7 +20,7 @@ struct Cli {
     #[clap(short = 's', long)]
     path_to_scarb_toml: Option<Utf8PathBuf>,
 
-    /// RPC provider url address; overrides rpc_url from Scarb.toml
+    /// RPC provider url address; overrides url from Scarb.toml
     #[clap(short = 'u', long = "url")]
     rpc_url: Option<String>,
 
@@ -30,7 +28,7 @@ struct Cli {
     #[clap(short = 'n', long)]
     network: Option<String>,
 
-    /// Account name to be used for contract declaration; overrides rpc_url from Scarb.toml
+    /// Account name to be used for contract declaration; overrides account from Scarb.toml
     #[clap(short = 'a', long)]
     account: Option<String>,
 
@@ -67,9 +65,6 @@ enum Commands {
 
     /// Invoke a contract
     Invoke(Invoke),
-
-    /// execute multiple calls
-    Multicall(Multicall),
 }
 
 #[tokio::main]
@@ -144,7 +139,27 @@ async fn main() -> Result<()> {
                 &account,
             )
             .await;
-            starknet_commands::deploy::print_deploy_result(result, cli.int_format, cli.json)?;
+
+            match result {
+                Ok((transaction_hash, contract_address)) => print_formatted(
+                    vec![
+                        ("command", "Deploy".to_string()),
+                        ("contract_address", format!("{contract_address}")),
+                        ("transaction_hash", format!("{transaction_hash}")),
+                    ],
+                    cli.int_format,
+                    cli.json,
+                    false,
+                )?,
+                Err(error) => {
+                    print_formatted(
+                        vec![("error", error.to_string())],
+                        cli.int_format,
+                        cli.json,
+                        true,
+                    )?;
+                }
+            }
 
             Ok(())
         }
@@ -192,19 +207,27 @@ async fn main() -> Result<()> {
                 &mut account,
             )
             .await;
-            starknet_commands::invoke::print_invoke_result(result, cli.int_format, cli.json)?;
 
-            Ok(())
-        }
-        Commands::Multicall(multicall) => {
-            let mut account = get_account(&account, &accounts_file_path, &provider, &network)?;
-            starknet_commands::multicall::multicall(
-                &multicall.path,
-                &mut account,
-                cli.int_format,
-                cli.json,
-            )
-            .await?;
+            match result {
+                Ok(transaction_hash) => print_formatted(
+                    vec![
+                        ("command", "Invoke".to_string()),
+                        ("transaction_hash", format!("{transaction_hash}")),
+                    ],
+                    cli.int_format,
+                    cli.json,
+                    false,
+                )?,
+                Err(error) => {
+                    print_formatted(
+                        vec![("error", error.to_string())],
+                        cli.int_format,
+                        cli.json,
+                        true,
+                    )?;
+                }
+            }
+
             Ok(())
         }
     }

@@ -1,5 +1,5 @@
-use crate::helpers::constants::{SEED, URL};
-use crate::helpers::fixtures::declare_deploy_simple_balance_contract;
+use crate::helpers::constants::{COMPILER_VERSION, SEED, URL};
+use crate::helpers::fixtures::declare_deploy_contract;
 use ctor::{ctor, dtor};
 use std::net::TcpStream;
 use std::process::{Command, Stdio};
@@ -30,6 +30,9 @@ fn start_devnet() {
         }
     }
 
+    let compiler_path = "tests/utils/compiler/".to_string()
+        + COMPILER_VERSION
+        + "/cairo/bin/starknet-sierra-compile";
     Command::new("starknet-devnet")
         .args([
             "--port",
@@ -37,7 +40,7 @@ fn start_devnet() {
             "--seed",
             &SEED.to_string(),
             "--sierra-compiler-path",
-            "tests/utils/cairo/bin/starknet-sierra-compile",
+            &compiler_path,
         ])
         .stdout(Stdio::null())
         .spawn()
@@ -60,8 +63,10 @@ fn start_devnet() {
         .expect("Failed to compile contracts")
         .wait()
         .expect("Timed out compiling contracts");
+
     let rt = Runtime::new().expect("Could not instantiate Runtime");
-    rt.block_on(declare_deploy_simple_balance_contract());
+    rt.block_on(declare_deploy_contract("/v1/map/target/dev/map_Map"));
+    rt.block_on(declare_deploy_contract("/v2/map/target/dev/map_Map"));
 }
 
 #[cfg(test)]
