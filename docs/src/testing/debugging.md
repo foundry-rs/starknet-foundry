@@ -52,7 +52,7 @@ original value: [439721161573], converted to a string: [false]
 Tests: 1 passed, 0 failed, 0 skipped
 ```
 
-Starknet Forge tries to convert values to strings when possible. In case conversion is not possible,
+Forge tries to convert values to strings when possible. In case conversion is not possible,
 just `original value` is printed.
 
 > ℹ️ **Info**
