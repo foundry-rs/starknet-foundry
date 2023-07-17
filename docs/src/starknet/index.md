@@ -1,6 +1,6 @@
 # Cast overview
 
-Starknet Foundry cast is a command line tool for performing Starknet RPC calls. With it, You can easily declare, deploy, invoke and call Starknet contracts!
+Starknet-Foundry cast is a command line tool for performing Starknet RPC calls. With it, You can easily declare, deploy, invoke and call Starknet contracts!
 
 > 💡 **Info**
 > At the moment, cast only supports contracts written in cairo 1 and cairo 2.
@@ -12,7 +12,7 @@ To use cast, run the cast command followed by a subcommand (see [available comma
 $ cast <subcommand>
 ```
 
-If `Scarb.toml` is present and configured with `[tool.protostar]`, `url`, `network` and `account` name will be taken from it. You can, however, overwrite their values by supplying them as flags directly to cast cli.
+If `Scarb.toml` is present and configured with `[tool.cast]`, `url`, `network` and `account` name will be taken from it. You can, however, overwrite their values by supplying them as flags directly to cast cli.
 
 ## Example
 
