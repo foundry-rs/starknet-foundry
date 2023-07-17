@@ -10,7 +10,7 @@ The basic inputs that you need for the commands are:
 - Function name
 - Inputs to the function
 
-For detailed CLI description, see [call command reference](../reference/cast/index.html#call).
+For detailed CLI description, see [call command reference](../appendix/cast/call.md).
 
 ## Usage example
 
@@ -43,4 +43,4 @@ response: [FieldElement { inner: 0x000000000000000000000000000000000000000000000
 ```
 
 > 📝 **Note**
-> Call does not require passing account-connected parameters (`account` and `accounts-file`) because it doesn't create a transaction
+> Call does not require passing account-connected parameters (`account` and `accounts-file`) because it doesn't create a transaction.
