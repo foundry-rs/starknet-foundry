@@ -22,12 +22,12 @@ Starknet Foundry, like its [Ethereum counterpart](https://github.com/foundry-rs/
 
 ## Coming Soon 👀
 
-Starknet Foundry is very actively developed! Expect a lot of new features appear soon!
+Starknet Foundry is under active development! Expect a lot of new features appear soon! 🔥
 
-- Cheatcodes
-- Performance improvements
-- State forking
-- Advanced debugging utilities
+- [ ] Cheatcodes
+- [ ] Performance improvements
+- [ ] State forking
+- [ ] Advanced debugging utilities
 
 ## Performance
 
