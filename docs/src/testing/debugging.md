@@ -1,6 +1,6 @@
 # Debugging
 
-Starknet compiler has limited support for debugging smart contracts. Starknet Foundry standard library adds a utility
+ Starknet Foundry standard library adds a utility
 method for printing inside tests to facilitate simple debugging.
 
 Here's our test:
