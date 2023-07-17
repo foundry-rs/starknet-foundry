@@ -98,7 +98,7 @@ async fn wrong_contract_name_passed() {
 
 #[test_case("/v1/build_fails" ; "when cairo1 contract")]
 #[test_case("/v2/build_fails" ; "when cairo2 contract")]
-fn scarb_build_fails(contract_path: &str){
+fn scarb_build_fails(contract_path: &str) {
     let args = vec![
         "--url",
         URL,
