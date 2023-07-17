@@ -5,10 +5,7 @@ use std::path::Path;
 #[tokio::test]
 async fn test_happy_case() {
     let mut args = default_cli_args();
-    args.append(&mut vec![
-        "--account",
-        "user2",
-    ]);
+    args.append(&mut vec!["--account", "user2"]);
 
     let path = project_root::get_project_root().expect("failed to get project root path");
     let path = Path::new(&path).join("crates/cast/tests/data/multicall_configs/deploy_invoke.toml");
@@ -31,10 +28,7 @@ async fn test_happy_case() {
 #[tokio::test]
 async fn test_invalid_path() {
     let mut args = default_cli_args();
-    args.append(&mut vec![
-        "--account",
-        "user2",
-    ]);
+    args.append(&mut vec!["--account", "user2"]);
 
     args.append(&mut vec!["multicall", "--path", "non-existent"]);
 
@@ -51,10 +45,7 @@ async fn test_invalid_path() {
 #[tokio::test]
 async fn test_deploy_fail() {
     let mut args = default_cli_args();
-    args.append(&mut vec![
-        "--account",
-        "user2",
-    ]);
+    args.append(&mut vec!["--account", "user2"]);
 
     let path = project_root::get_project_root().expect("failed to get project root path");
     let path =
@@ -76,10 +67,7 @@ async fn test_deploy_fail() {
 #[tokio::test]
 async fn test_invoke_fail() {
     let mut args = default_cli_args();
-    args.append(&mut vec![
-        "--account",
-        "user2",
-    ]);
+    args.append(&mut vec!["--account", "user2"]);
 
     let path = project_root::get_project_root().expect("failed to get project root path");
     let path =
@@ -102,10 +90,7 @@ async fn test_invoke_fail() {
 #[tokio::test]
 async fn test_deploy_success_invoke_fails() {
     let mut args = default_cli_args();
-    args.append(&mut vec![
-        "--account",
-        "user3",
-    ]);
+    args.append(&mut vec!["--account", "user3"]);
 
     let path = project_root::get_project_root().expect("failed to get project root path");
     let path = Path::new(&path)
