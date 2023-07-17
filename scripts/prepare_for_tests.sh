@@ -52,7 +52,7 @@ function get_compiler () {
 
 for scarb_version in "${SCARB_VERSIONS[@]}"; do
 
-  asdf global scarb "$scarb_version"
+  asdf local scarb "$scarb_version"
   compiler_version="v$(scarb --version | grep -e "cairo:" | awk '{print $2}')"
 
   if [ ! -x "$COMPILER_DIRECTORY/$compiler_version/cairo/bin/starknet-sierra-compile" ]; then
