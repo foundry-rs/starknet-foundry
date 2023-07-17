@@ -1,6 +1,6 @@
 # Cast overview
 
-Starknet-Foundry cast is a command line tool for performing Starknet RPC calls. With it, You can easily declare, deploy, invoke and call Starknet contracts!
+Starknet Foundry cast is a command line tool for performing Starknet RPC calls. With it, You can easily declare, deploy, invoke and call Starknet contracts!
 
 > 💡 **Info**
 > At the moment, cast only supports contracts written in cairo 1 and cairo 2.
