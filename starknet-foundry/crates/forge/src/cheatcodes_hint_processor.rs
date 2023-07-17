@@ -433,10 +433,7 @@ fn declare(
         .context("Failed to read contract class from json")?;
     let contract_class = BlockifierContractClass::V1(contract_class);
 
-    let compiled_class = serde_json::from_str::<CompiledClass>(casm_serialized.as_str()).unwrap();
-    let class_hash = compiled_class.class_hash().unwrap();
-    let class_hash = StarkFelt::new(class_hash.to_bytes_be()).unwrap();
-    let class_hash = ClassHash(class_hash);
+    let class_hash = get_class_hash(casm_serialized.as_str());
 
     let nonce = blockifier_state
         .get_nonce_at(ContractAddress(patricia_key!(
@@ -467,6 +464,13 @@ fn declare(
     insert_at_pointer(vm, result_segment_ptr, felt_class_hash)?;
 
     Ok(())
+}
+
+fn get_class_hash(casm_contract: &str) -> ClassHash {
+    let compiled_class = serde_json::from_str::<CompiledClass>(casm_contract).unwrap();
+    let class_hash = compiled_class.class_hash().unwrap();
+    let class_hash = StarkFelt::new(class_hash.to_bytes_be()).unwrap();
+    ClassHash(class_hash)
 }
 
 fn deploy(
@@ -653,6 +657,7 @@ fn felt252_from_hex_string(value: &str) -> Result<Felt252> {
 #[cfg(test)]
 mod test {
     use cairo_felt::Felt252;
+    use std::path::Path;
 
     use super::*;
 
@@ -760,5 +765,15 @@ mod test {
         for (str, felt_res) in cases {
             assert_eq!(felt_from_short_string(str), felt_res);
         }
+    }
+
+    #[test]
+    fn class_hash_correct() {
+        let casm_contract_path = Path::new("./tests/data/example.casm");
+        let expected_class_hash = "0x3eb55a3f9f7485408838b08067c3b0f5d72523c525f568b04627464f5464749";
+
+        let casm_contract_definition = std::fs::read_to_string(casm_contract_path).unwrap();
+        let actual_class_hash = get_class_hash(casm_contract_definition.as_str());
+        assert_eq!(actual_class_hash, ClassHash(stark_felt!(expected_class_hash)));
     }
 }
