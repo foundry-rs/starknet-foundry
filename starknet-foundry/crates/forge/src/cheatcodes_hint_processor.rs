@@ -498,6 +498,16 @@ fn deploy(
     let salt = ContractAddressSalt::default();
     let class_hash = ClassHash(StarkFelt::new(class_hash.to_be_bytes()).unwrap());
 
+    let contract_class = blockifier_state.get_compiled_contract_class(&class_hash)?;
+    if contract_class.constructor_selector().is_none() && !calldata.is_empty() {
+        write_cheatcode_panic(
+            vm,
+            result_segment_ptr,
+            vec![felt_from_short_string("No constructor in contract")],
+        );
+        return Ok(());
+    }
+
     let execute_calldata = create_execute_calldata(
         &calldata,
         &class_hash,
@@ -535,16 +545,22 @@ fn deploy(
         let extracted_panic_data = try_extract_panic_data(&revert_error)
             .expect("Unparseable error message, {revert_error}");
 
-        insert_at_pointer(vm, result_segment_ptr, 1).expect("Failed to insert err code");
-        insert_at_pointer(vm, result_segment_ptr, extracted_panic_data.len())
-            .expect("Failed to insert panic_data len");
-        for datum in extracted_panic_data {
-            insert_at_pointer(vm, result_segment_ptr, datum)
-                .expect("Failed to insert error in memory");
-        }
+        write_cheatcode_panic(vm, result_segment_ptr, extracted_panic_data);
     }
-
     Ok(())
+}
+
+fn write_cheatcode_panic(
+    vm: &mut VirtualMachine,
+    result_segment_ptr: &mut Relocatable,
+    panic_data: Vec<Felt252>,
+) {
+    insert_at_pointer(vm, result_segment_ptr, 1).expect("Failed to insert err code");
+    insert_at_pointer(vm, result_segment_ptr, panic_data.len())
+        .expect("Failed to insert panic_data len");
+    for datum in panic_data {
+        insert_at_pointer(vm, result_segment_ptr, datum).expect("Failed to insert error in memory");
+    }
 }
 
 fn felt_from_short_string(short_str: &str) -> Felt252 {
@@ -552,7 +568,8 @@ fn felt_from_short_string(short_str: &str) -> Felt252 {
 }
 
 fn try_extract_panic_data(err: &str) -> Option<Vec<Felt252>> {
-    let re = Regex::new(r#"(?m)^Got an exception while executing a hint: Custom Hint Error: Execution failed. Failure reason: "(.*)"\.$"#)
+    dbg!(&err);
+    let re = Regex::new(r#"(?m)^Got an exception while executing a hint: Custom Hint Error: Execution failed\. Failure reason: "(.*)"\.$"#)
         .expect("Could not create panic_data matching regex");
 
     if let Some(captures) = re.captures(err) {

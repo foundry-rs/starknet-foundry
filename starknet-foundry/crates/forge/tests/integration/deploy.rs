@@ -1,9 +1,10 @@
 use crate::common::corelib::{corelib, predeployed_contracts};
 use crate::common::runner::Contract;
-use crate::{assert_passed, test_case};
+use crate::{assert_failed, assert_passed, test_case};
 use camino::Utf8PathBuf;
 use forge::run;
 use indoc::indoc;
+use std::path::Path;
 
 #[test]
 fn error_handling() {
@@ -68,4 +69,48 @@ fn error_handling() {
     .unwrap();
 
     assert_passed!(result);
+}
+
+#[test]
+fn deploy_with_calldata_no_constructor() {
+    let test = test_case!(
+        indoc!(
+            r#"
+        use result::ResultTrait;
+        use cheatcodes::RevertedTransactionTrait;
+        use cheatcodes::PreparedContract;
+        use array::ArrayTrait; 
+            
+        #[test]
+        fn deploy_invalid_calldata() {
+            let mut calldata = ArrayTrait::new();
+            calldata.append(1234);
+            calldata.append(5678);
+        
+            let class_hash = declare('HelloStarknet').unwrap();
+            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
+            let contract_address = deploy(prepared).unwrap();
+        
+            assert(2 == 2, '2 == 2');
+        }
+    "#
+        ),
+        Contract::from_code_path(
+            "HelloStarknet".to_string(),
+            Path::new("tests/data/contracts/hello_starknet.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run(
+        &test.path().unwrap(),
+        Some(test.linked_libraries()),
+        &Default::default(),
+        Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
+        &test.contracts(corelib().path()).unwrap(),
+        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
+    )
+    .unwrap();
+
+    assert_failed!(result);
 }
