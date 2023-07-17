@@ -26,7 +26,7 @@ use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
 use cairo_vm::hint_processor::hint_processor_definition::HintReference;
 use cairo_vm::serde::deserialize_program::ApTracking;
 use cairo_vm::types::exec_scope::ExecutionScopes;
-use cairo_vm::types::relocatable::{MaybeRelocatable, Relocatable};
+use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::errors::memory_errors::MemoryError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
@@ -48,8 +48,13 @@ use starknet_api::transaction::{
 use starknet_api::{patricia_key, stark_felt, StarknetApiError};
 use thiserror::Error;
 
+use crate::vm_memory::{
+    felt_from_pointer, insert_at_pointer, relocatable_from_pointer, usize_from_pointer,
+    write_cheatcode_panic,
+};
 use cairo_lang_casm::hints::{Hint, StarknetHint};
 use cairo_lang_casm::operand::{CellRef, ResOperand};
+use cairo_lang_runner::casm_run::extract_relocatable;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{
     casm_run::{cell_ref_to_relocatable, extract_buffer, get_ptr},
@@ -550,19 +555,6 @@ fn deploy(
     Ok(())
 }
 
-fn write_cheatcode_panic(
-    vm: &mut VirtualMachine,
-    result_segment_ptr: &mut Relocatable,
-    panic_data: Vec<Felt252>,
-) {
-    insert_at_pointer(vm, result_segment_ptr, 1).expect("Failed to insert err code");
-    insert_at_pointer(vm, result_segment_ptr, panic_data.len())
-        .expect("Failed to insert panic_data len");
-    for datum in panic_data {
-        insert_at_pointer(vm, result_segment_ptr, datum).expect("Failed to insert error in memory");
-    }
-}
-
 fn felt_from_short_string(short_str: &str) -> Felt252 {
     return Felt252::from_bytes_be(short_str.as_bytes());
 }
@@ -587,15 +579,6 @@ fn try_extract_panic_data(err: &str) -> Option<Vec<Felt252>> {
         }
     }
     None
-}
-
-// TODO(#2164): remove this when extract_relocatable is pub in cairo
-fn extract_relocatable(
-    vm: &VirtualMachine,
-    buffer: &ResOperand,
-) -> Result<Relocatable, VirtualMachineError> {
-    let (base, offset) = extract_buffer(buffer);
-    get_ptr(vm, base, &offset)
 }
 
 // Should this function panic?
@@ -634,37 +617,6 @@ fn read_data_from_range(
         calldata.push(value);
     }
     Ok(calldata)
-}
-
-fn insert_at_pointer<T: Into<MaybeRelocatable>>(
-    vm: &mut VirtualMachine,
-    ptr: &mut Relocatable,
-    value: T,
-) -> Result<()> {
-    vm.insert_value(*ptr, value)?;
-    *ptr += 1;
-    Ok(())
-}
-
-fn usize_from_pointer(vm: &mut VirtualMachine, ptr: &mut Relocatable) -> Result<usize> {
-    let gas_counter = vm
-        .get_integer(*ptr)?
-        .to_usize()
-        .ok_or_else(|| anyhow!("Failed to convert to usize"))?;
-    *ptr += 1;
-    Ok(gas_counter)
-}
-
-fn relocatable_from_pointer(vm: &mut VirtualMachine, ptr: &mut Relocatable) -> Result<Relocatable> {
-    let start = vm.get_relocatable(*ptr)?;
-    *ptr += 1;
-    Ok(start)
-}
-
-fn felt_from_pointer(vm: &mut VirtualMachine, ptr: &mut Relocatable) -> Result<Felt252> {
-    let entry_point_selector = vm.get_integer(*ptr)?.into_owned();
-    *ptr += 1;
-    Ok(entry_point_selector)
 }
 
 fn felt252_from_hex_string(value: &str) -> Result<Felt252> {
