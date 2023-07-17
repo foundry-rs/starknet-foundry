@@ -12,16 +12,16 @@ casm = true
 sierra = false
 
 [tool.protostar]
-rpc_url = "http://127.0.0.1:5055/rpc"
+url = "http://127.0.0.1:5055/rpc"
 network = "testnet"
 account = "user1"
 
 [tool.protostar.profile1]
-rpc_url = "http://127.0.0.1:5050/rpc"
+url = "http://127.0.0.1:5050/rpc"
 network = "testnet2"
 account = "user3"
 
 [tool.protostar.profile2]
-rpc_url = "http://127.0.0.1:5055/rpc"
+url = "http://127.0.0.1:5055/rpc"
 network = "testnet"
 account = "user100"
