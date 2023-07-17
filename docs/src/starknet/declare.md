@@ -1,10 +1,10 @@
 # Declaring new contracts
 
-Starknet provides a distinction between contract class and instance. This is similar to difference between writing the code of a `class MyClass {}` and creating a new instance of it `let myInstance = MyClass()` in object-oriented programming languages.
+Starknet provides a distinction between contract class and instance. This is similar to the difference between writing the code of a `class MyClass {}` and creating a new instance of it `let myInstance = MyClass()` in object-oriented programming languages.
 
 Declaring a contract is a necessary step to have your contract available on the network. Once a contract is declared, it then can be deployed and interacted with.
 
-For detailed CLI description, see [declare command reference](../reference/cast/index.html#declare).
+For a detailed CLI description, see [declare command reference](../reference/cast/index.html#declare).
 
 ## Usage example
 
