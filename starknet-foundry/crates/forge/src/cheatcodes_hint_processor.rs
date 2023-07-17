@@ -59,6 +59,7 @@ use cairo_lang_starknet::casm_contract_class::CasmContractClass;
 use cairo_lang_starknet::contract_class::ContractClass;
 use cairo_lang_utils::bigint::BigIntAsHex;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
+use starknet::core::types::contract::CompiledClass;
 
 pub struct CairoHintProcessor<'a> {
     pub original_cairo_hint_processor: OriginalCairoHintProcessor<'a>,
@@ -439,6 +440,15 @@ fn declare(
     casm_serialized.hash(&mut hasher);
     let class_hash = hasher.finish();
     let class_hash = ClassHash(stark_felt!(class_hash));
+
+    let temp = serde_json::from_str::<CompiledClass>(casm_serialized.as_str()).unwrap();
+    let computed_hash = temp.class_hash().unwrap();
+    let computed_hash = StarkFelt::new(computed_hash.to_bytes_be()).unwrap();
+    let computed_hash = ClassHash(computed_hash);
+
+    // assert_eq!(computed_hash, class_hash);
+    // assert_ne!(computed_hash, class_hash);
+    let class_hash = computed_hash;
 
     let nonce = blockifier_state
         .get_nonce_at(ContractAddress(patricia_key!(
