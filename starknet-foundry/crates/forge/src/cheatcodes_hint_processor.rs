@@ -560,7 +560,6 @@ fn felt_from_short_string(short_str: &str) -> Felt252 {
 }
 
 fn try_extract_panic_data(err: &str) -> Option<Vec<Felt252>> {
-    dbg!(&err);
     let re = Regex::new(r#"(?m)^Got an exception while executing a hint: Custom Hint Error: Execution failed\. Failure reason: "(.*)"\.$"#)
         .expect("Could not create panic_data matching regex");
 
