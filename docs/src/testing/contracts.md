@@ -78,8 +78,9 @@ Tests: 1 passed, 0 failed, 0 skipped
 
 ## Handling Errors
 
-Sometimes we want to test contracts functions that can panic. For that purpose Starknet also
-provides `SafeDispatcher`s, that return a `Result` instead of panicking.
+Sometimes we want to test contracts functions that can panic, like testing that function that verifies caller address
+panics on invalid address. For that purpose Starknet also provides `SafeDispatcher`s, that return a `Result` instead of
+panicking.
 
 First, let's add a new, panicking function to our contract.
 
