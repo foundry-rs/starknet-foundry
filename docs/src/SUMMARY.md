@@ -5,7 +5,7 @@
 # Getting Started
 
 * [Installation](getting-started/installation.md)
-* [First Steps with Starknet-Foundry](getting-started/first-steps.md)
+* [First Steps with Starknet Foundry](getting-started/first-steps.md)
 * [Scarb](getting-started/scarb.md)
 
 # Projects
@@ -25,6 +25,7 @@
 
 # Interacting with Starknet
 
+* [Overview](starknet/index.md)
 * [Declaring New Contracts](starknet/declare.md)
 * [Deploying New Contracts](starknet/deploy.md)
 * [Invoking Contracts](starknet/invoke.md)
@@ -37,3 +38,6 @@
   * [deploy](appendix/forge/deploy.md)
   * [print](appendix/forge/print.md)
 * [Cast commands](appendix/cast.md)
+  * [common flags](appendix/cast/common.md)
+  * [declare](appendix/cast/declare.md)
+  * [deploy](appendix/cast/deploy.md)
