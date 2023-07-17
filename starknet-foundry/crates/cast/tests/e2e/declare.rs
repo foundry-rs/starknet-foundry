@@ -96,6 +96,32 @@ async fn wrong_contract_name_passed() {
     assert!(output.contains("Failed to find contract nonexistent in starknet_artifacts.json"));
 }
 
+#[test_case("/v1/build_fails" ; "when cairo1 contract")]
+#[test_case("/v2/build_fails" ; "when cairo2 contract")]
+fn scarb_build_fails(contract_path: &str){
+    let args = vec![
+        "--url",
+        URL,
+        "--network",
+        NETWORK,
+        "--accounts-file",
+        "../../../accounts/accounts.json",
+        "--account",
+        "user1",
+        "declare",
+        "--contract-name",
+        "BuildFails",
+    ];
+
+    let snapbox = Command::new(cargo_bin!("cast"))
+        .current_dir(CONTRACTS_DIR.to_string() + contract_path)
+        .args(args);
+
+    snapbox.assert().success().stderr_matches(indoc! {r#"
+        error: scarb build returned non-zero exit code: 1
+    "#});
+}
+
 #[test_case("/v1/map", "_zyx", "user1" ; "when cairo1 contract")]
 #[test_case("/v2/map", "_zyx", "user2" ; "when cairo2 contract")]
 fn test_too_low_max_fee(contract_path: &str, salt: &str, account: &str) {

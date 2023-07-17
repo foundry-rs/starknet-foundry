@@ -18,7 +18,7 @@ for ((i = 0; i < ${#CAIRO_VERSIONS[@]}; i++)); do
 
   if command -v "$SCARB_BIN" &> /dev/null; then
     for contract_dir in "$CONTRACTS_DIRECTORY"/*; do
-      if ! test -d "$contract_dir"/target; then
+      if ! test -d "$contract_dir"/target && [[ "$contract_dir" != *"fails"* ]]; then
         pushd "$contract_dir"
         scarb build
         popd
