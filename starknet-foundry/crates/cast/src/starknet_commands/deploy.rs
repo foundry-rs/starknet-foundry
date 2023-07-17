@@ -18,7 +18,7 @@ use starknet::signers::LocalWallet;
 #[command(about = "Deploy a contract on Starknet")]
 pub struct Deploy {
     /// Class hash of contract to deploy
-    #[clap(long)]
+    #[clap(short = 'g', long)]
     pub class_hash: String,
 
     /// Calldata for the contract constructor
