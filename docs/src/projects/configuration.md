@@ -1,8 +1,9 @@
 # Project Configuration
 
 ## Cast
+### Defining profiles in Scarb.toml
 
-To be able to work with the network, you need to supply cast with a few parameters - namely the network name, rpc node url and an account name that should be used to interact with it. This can be done by either cupplying cast with those parameters directly [see more detailed CLI description](../reference/cast/index.html) or you can put them into Scarb.toml file:
+To be able to work with the network, you need to supply cast with a few parameters - namely the network name, rpc node url and an account name that should be used to interact with it. This can be done by either supplying cast with those parameters directly [see more detailed CLI description](../reference/cast/index.html) or you can put them into Scarb.toml file:
 
 
 ```toml
@@ -14,7 +15,7 @@ url = "http://127.0.0.1:5050/rpc"
 (...)
 ```
 
-With Scarb.toml configured this way, we can just pass `--profile profile1` to make sure cast uses parameters defined under it.
+With Scarb.toml configured this way, we can just pass `--profile profile1` argument to make sure cast uses parameters defined under it.
 
 > 📝 **Note**
 > Scarb.toml file has to be present in current or any of the parent directories.
@@ -36,7 +37,11 @@ command: Call
 response: [FieldElement { inner: 0x0000000000000000000000000000000000000000000000000000000000000000 }]
 ```
 
+### Multiple profiles
+
 You can have multiple profiles defined under Scarb.toml.
+
+### Default profile
 
 If you don't need multiple profiles, you can define the parameters without specifying one:
 

@@ -14,6 +14,9 @@ $ cast <subcommand>
 
 If `Scarb.toml` is present and configured with `[tool.cast]`, `url`, `network` and `account` name will be taken from it. You can, however, overwrite their values by supplying them as flags directly to cast cli.
 
+> 💡 **Info**
+> Some transactions (like declaring, deploying or invoking) must be signed. That requires paying a fee.
+
 ## Example
 
 Let's use cast to call a contract's function:
