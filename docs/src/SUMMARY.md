@@ -41,3 +41,4 @@
   * [common flags](appendix/cast/common.md)
   * [declare](appendix/cast/declare.md)
   * [deploy](appendix/cast/deploy.md)
+  * [call](appendix/cast/call.md)
