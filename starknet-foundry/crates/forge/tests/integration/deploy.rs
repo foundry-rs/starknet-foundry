@@ -72,7 +72,7 @@ fn error_handling() {
 }
 
 #[test]
-fn deploy_with_calldata_no_constructor() {
+fn deploy_fails_on_calldata_when_contract_has_no_constructor() {
     let test = test_case!(
         indoc!(
             r#"
