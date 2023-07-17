@@ -18,6 +18,3 @@ command: Deploy
 contract_address: 0x301316d47a81b39c5e27cca4a7b8ca4773edbf1103218588d6da4d3ed53035a
 transaction_hash: 0x64a62a000240e034d1862c2bbfa154aac6a8195b4b2e570f38bf4fd47a5ab1e
 ```
-
-> 💡 **Info**
-> Deploying a contract is a transaction, so it must be signed and requires paying a fee, similarly to how invoke transaction does. See [signing](./invoke.md#signing) for more details.
