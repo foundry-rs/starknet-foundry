@@ -1,6 +1,4 @@
-use crate::helpers::constants::{
-    ACCOUNT, ACCOUNT_FILE_PATH, CONTRACTS_DIR, MAP_CONTRACT_ADDRESS, NETWORK, URL,
-};
+use crate::helpers::constants::{ACCOUNT, ACCOUNT_FILE_PATH, CONTRACTS_DIR, NETWORK, URL};
 use camino::Utf8PathBuf;
 use cast::{get_account, get_provider, parse_number};
 use serde_json::{json, Value};
@@ -16,7 +14,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use url::Url;
 
-pub async fn declare_deploy_simple_balance_contract() {
+pub async fn declare_deploy_contract(path: &str) {
     let provider = get_provider(URL, NETWORK)
         .await
         .expect("Could not get the provider");
@@ -29,15 +27,13 @@ pub async fn declare_deploy_simple_balance_contract() {
     .expect("Could not get the account");
 
     let contract_definition: SierraClass = {
-        let file_contents =
-            std::fs::read(CONTRACTS_DIR.to_string() + "/map/target/dev/map_Map.sierra.json")
-                .expect("Could not read balance's sierra file");
+        let file_contents = std::fs::read(CONTRACTS_DIR.to_string() + path + ".sierra.json")
+            .expect("Could not read contract's sierra file");
         serde_json::from_slice(&file_contents).expect("Could not cast sierra file to SierraClass")
     };
     let casm_contract_definition: CompiledClass = {
-        let file_contents =
-            std::fs::read(CONTRACTS_DIR.to_string() + "/map/target/dev/map_Map.casm.json")
-                .expect("Could not read balance's casm file");
+        let file_contents = std::fs::read(CONTRACTS_DIR.to_string() + path + ".casm.json")
+            .expect("Could not read contract's casm file");
         serde_json::from_slice(&file_contents).expect("Could not cast casm file to CompiledClass")
     };
 
@@ -60,12 +56,12 @@ pub async fn declare_deploy_simple_balance_contract() {
     deployment.send().await.unwrap();
 }
 
-pub async fn invoke_map_contract(key: &str, value: &str) {
+pub async fn invoke_map_contract(key: &str, value: &str, account: &str, contract_address: &str) {
     let provider = get_provider(URL, NETWORK)
         .await
         .expect("Could not get the provider");
     let account = get_account(
-        ACCOUNT,
+        account,
         &Utf8PathBuf::from(ACCOUNT_FILE_PATH),
         &provider,
         NETWORK,
@@ -73,7 +69,7 @@ pub async fn invoke_map_contract(key: &str, value: &str) {
     .expect("Could not get the account");
 
     let call = Call {
-        to: parse_number(MAP_CONTRACT_ADDRESS).expect("Could not parse the contract address"),
+        to: parse_number(contract_address).expect("Could not parse the contract address"),
         selector: get_selector_from_name("put").expect("Could not get selector from put"),
         calldata: vec![
             parse_number(key).expect("Could not parse the key"),
@@ -86,16 +82,14 @@ pub async fn invoke_map_contract(key: &str, value: &str) {
 }
 
 #[must_use]
-pub fn default_cli_args(account: String) -> Vec<String> {
+pub fn default_cli_args() -> Vec<&'static str> {
     vec![
-        "--url".to_string(),
-        URL.to_string(),
-        "--network".to_string(),
-        NETWORK.to_string(),
-        "--accounts-file".to_string(),
-        ACCOUNT_FILE_PATH.to_string(),
-        "--account".to_string(),
-        account,
+        "--url",
+        URL,
+        "--network",
+        NETWORK,
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
     ]
 }
 

@@ -380,7 +380,6 @@ fn match_cheatcode_by_selector(
         "start_prank" => todo!(),
         "stop_prank" => todo!(),
         "mock_call" => todo!(),
-        "declare_cairo0" => todo!(),
         "declare" => declare(
             vm,
             blockifier_state,
@@ -482,14 +481,13 @@ fn deploy(
     inputs: &[Felt252],
     result_segment_ptr: &mut Relocatable,
 ) -> Result<(), EnhancedHintError> {
-    let _contract_address = inputs[0].clone();
     // TODO(#1991) deploy should fail if contract address provided doesn't match calculated
     //  or not accept this address as argument at all.
-    let class_hash = inputs[1].clone();
+    let class_hash = inputs[0].clone();
 
-    let calldata_length = inputs[2].to_usize().unwrap();
+    let calldata_length = inputs[1].to_usize().unwrap();
     let mut calldata = vec![];
-    for felt in inputs.iter().skip(3).take(calldata_length) {
+    for felt in inputs.iter().skip(2).take(calldata_length) {
         calldata.push(felt.clone());
     }
 

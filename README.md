@@ -13,7 +13,7 @@ $ rustup update
 ```
 2. Clone this repository
 3. Verify your setup by running [tests](#testing)
-4. Build Starknet-Foundry
+4. Build Starknet Foundry
 ```shell
 $ cd ./starknet-foundry && cargo build --bins --release
 ```

@@ -5,7 +5,7 @@
 # Getting Started
 
 * [Installation](getting-started/installation.md)
-* [First Steps with Starknet-Foundry](getting-started/first-steps.md)
+* [First Steps with Starknet Foundry](getting-started/first-steps.md)
 * [Scarb](getting-started/scarb.md)
 
 # Projects
@@ -33,6 +33,11 @@
 
 # Appendix
 
-* [References](reference/README.md)
-  * [Forge](reference/forge/README.md)
-  * [Cast](reference/cast/README.md)
+* [Forge library functions references](appendix/forge.md)
+  * [declare](appendix/forge/declare.md)
+  * [deploy](appendix/forge/deploy.md)
+  * [print](appendix/forge/print.md)
+* [Cast commands](appendix/cast.md)
+  * [common flags](appendix/cast/common.md)
+  * [declare](appendix/cast/declare.md)
+  * [deploy](appendix/cast/deploy.md)
