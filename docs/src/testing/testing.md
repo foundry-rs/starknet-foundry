@@ -18,8 +18,7 @@ fn test_sum() {
 }
 ```
 
-It is a common practise to keep your unit tests in the same file as tested code. If you prefer, you can also put
-code in a separate file anywhere in project directory.
+It is a common practice to keep your unit tests in the same file as the tested code. If you prefer, you can also put test code in a separate file anywhere in the project directory.
 
 Now run forge using command:
 

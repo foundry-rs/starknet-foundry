@@ -1,7 +1,7 @@
 # Testing Smart Contracts
 
 Using unit testing as much as possible is a good practice, as it makes your test suites run faster. However, when
-writing smart contracts you often want to test interactions with the blockchain state and with other contracts.
+writing smart contracts you often want to test their interactions with the blockchain state and with other contracts.
 
 ## The Test Contract
 
@@ -78,9 +78,8 @@ Tests: 1 passed, 0 failed, 0 skipped
 
 ## Handling Errors
 
-Sometimes we want to test functions of contracts that can panic, resulting in failure. For that purpose Starknet also
-provides `SafeDispatcher`
-s, that return a `Result` instead of plain value.
+Sometimes we want to test contracts functions that can panic. For that purpose Starknet also
+provides `SafeDispatcher`s, that return a `Result` instead of panicking.
 
 First, let's add a new, panicking function to our contract.
 
@@ -101,7 +100,7 @@ mod HelloStarknet {
 }
 ```
 
-If we called this function in, standard test, this would result in a failure.
+If we called this function in a test, it would result in a failure.
 
 ```cairo
 #[test]
@@ -126,7 +125,7 @@ Tests: 0 passed, 1 failed, 0 skipped
 
 ### `SafeDispatcher`
 
-Using `SafeDispatcher` we can test that the function in fact panics.
+Using `SafeDispatcher` we can test that the function in fact panics with an expected message.
 
 ```cairo
 #[test]
@@ -144,7 +143,7 @@ fn handling_errors() {
 }
 ```
 
-Now running the test will pass as expected.
+Now the test passes as expected.
 
 ```shell
 $ forge
