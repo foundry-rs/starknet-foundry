@@ -3,7 +3,7 @@
  Starknet Foundry standard library adds a utility
 method for printing inside tests to facilitate simple debugging.
 
-Here's our test:
+Here's a test with example use of print method:
 
 ```cairo
 // Make sure to import Starknet Foundry PrintTrait
