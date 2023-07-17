@@ -12,21 +12,21 @@ use cast::parse_number;
 #[command(about = "Call a contract instance on Starknet", long_about = None)]
 pub struct Call {
     /// Address of the called contract (hex)
-    #[clap(short = 'a', long = "contract-address")]
+    #[clap(short = 'a', long)]
     pub contract_address: String,
 
     /// Name of the contract function to be called
-    #[clap(short = 'f', long = "function-name")]
+    #[clap(short, long)]
     pub function: String,
 
     /// Arguments of the called function (list of hex)
-    #[clap(short = 'c', long = "calldata", value_delimiter = ' ')]
+    #[clap(short, long, value_delimiter = ' ')]
     pub calldata: Vec<String>,
 
     /// Block identifier on which call should be performed.
     /// Possible values: pending, latest, block hash (0x prefixed string)
     /// and block number (u64)
-    #[clap(short = 'b', long = "block-id", default_value = "pending")]
+    #[clap(short, long, default_value = "pending")]
     pub block_id: String,
 }
 

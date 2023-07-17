@@ -14,7 +14,7 @@ async fn test_happy_case_from_scarb() {
         "call",
         "--contract-address",
         "0x0",
-        "--function-name",
+        "--function",
         "doesnotmatter",
     ];
 
@@ -39,7 +39,7 @@ async fn test_happy_case_from_cli_no_scarb() {
         "call",
         "--contract-address",
         "0x0",
-        "--function-name",
+        "--function",
         "doesnotmatter",
     ];
 
@@ -69,7 +69,7 @@ async fn test_happy_case_from_cli_with_scarb() {
         "call",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_V1,
-        "--function-name",
+        "--function",
         "get",
         "--calldata",
         "0x0",
@@ -102,7 +102,7 @@ async fn test_happy_case_mixed() {
         "call",
         "--contract-address",
         MAP_CONTRACT_ADDRESS_V1,
-        "--function-name",
+        "--function",
         "get",
         "--calldata",
         "0x0",
