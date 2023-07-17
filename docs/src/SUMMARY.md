@@ -25,7 +25,7 @@
 
 # Interacting with Starknet
 
-* [Interacting with Starknet](starknet/index.md)
+* [Overview](starknet/index.md)
 * [Declaring New Contracts](starknet/declare.md)
 * [Deploying New Contracts](starknet/deploy.md)
 * [Invoking Contracts](starknet/invoke.md)
