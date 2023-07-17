@@ -168,7 +168,7 @@ async fn main() -> Result<()> {
 
             let result = starknet_commands::call::call(
                 call.contract_address.as_ref(),
-                call.function_name.as_ref(),
+                call.function.as_ref(),
                 call.calldata.as_ref(),
                 &provider,
                 block_id.as_ref(),

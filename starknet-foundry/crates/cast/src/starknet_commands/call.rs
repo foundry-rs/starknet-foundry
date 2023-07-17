@@ -17,7 +17,7 @@ pub struct Call {
 
     /// Name of the contract function to be called
     #[clap(short = 'f', long = "function-name")]
-    pub function_name: String,
+    pub function: String,
 
     /// Arguments of the called function (list of hex)
     #[clap(short = 'c', long = "calldata", value_delimiter = ' ')]
