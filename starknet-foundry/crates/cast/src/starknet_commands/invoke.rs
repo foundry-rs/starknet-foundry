@@ -21,7 +21,7 @@ pub struct Invoke {
 
     /// Name of the function to invoke
     #[clap(short, long)]
-    pub entry_point_name: String,
+    pub function: String,
 
     /// Calldata for the invoked function
     #[clap(short, long, value_delimiter = ' ')]

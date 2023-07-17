@@ -201,7 +201,7 @@ async fn main() -> Result<()> {
             let mut account = get_account(&account, &accounts_file_path, &provider, &network)?;
             let result = starknet_commands::invoke::invoke(
                 &invoke.contract_address,
-                &invoke.entry_point_name,
+                &invoke.function,
                 invoke.calldata.iter().map(AsRef::as_ref).collect(),
                 invoke.max_fee,
                 &mut account,
