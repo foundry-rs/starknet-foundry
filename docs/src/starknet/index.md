@@ -7,7 +7,7 @@ Starknet Foundry `cast` is a command line tool for performing Starknet RPC calls
 
 ## How to use cast
 
-To use cast, run the cast command followed by a subcommand (see [available commands](../appendix/cast/index.html)):
+To use cast, run the cast command followed by a subcommand (see [available commands](../appendix/cast.md)):
 ```shell
 $ cast <subcommand>
 ```

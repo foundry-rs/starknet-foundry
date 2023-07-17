@@ -3,7 +3,7 @@
 ## Cast
 ### Defining profiles in `Scarb.toml`
 
-To be able to work with the network, you need to supply cast with a few parameters - namely the network name, rpc node url and an account name that should be used to interact with it. This can be done by either supplying cast with those parameters directly [see more detailed CLI description](../appendix/cast/index.html) or you can put them into `Scarb.toml` file:
+To be able to work with the network, you need to supply cast with a few parameters - namely the network name, rpc node url and an account name that should be used to interact with it. This can be done by either supplying cast with those parameters directly [see more detailed CLI description](../appendix/cast.md) or you can put them into `Scarb.toml` file:
 
 
 ```toml

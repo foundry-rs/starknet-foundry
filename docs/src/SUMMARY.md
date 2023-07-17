@@ -38,4 +38,6 @@
   * [deploy](appendix/forge/deploy.md)
   * [print](appendix/forge/print.md)
 * [Cast commands](appendix/cast.md)
-  * [declare](appendix/cast/README.md#declare)
+  * [common flags](appendix/cast/common.md)
+  * [declare](appendix/cast/declare.md)
+  * [deploy](appendix/cast/deploy.md)
