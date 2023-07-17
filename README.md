@@ -38,8 +38,10 @@ WIP
 You haven't found your answer to your question in
 the [Starknet Foundry Book](https://foundry-rs.github.io/starknet-foundry/)?
 
+[//]: # (TODO add tg group and gh discussions)
+
 - Join the [Telegram](TODO) group to get help
-- Open a GitHub discussion with your question
+- Open a [GitHub discussion](TODO) with your question
 
 Found a bug? Open an [issue](TODO)
 
