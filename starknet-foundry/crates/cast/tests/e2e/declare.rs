@@ -47,6 +47,31 @@ async fn test_happy_case(contract_path: &str, salt: &str, account: &str) {
 }
 
 #[tokio::test]
+async fn contract_already_declared() {
+    let args = vec![
+        "--url",
+        URL,
+        "--network",
+        NETWORK,
+        "--accounts-file",
+        "../../../accounts/accounts.json",
+        "--account",
+        "user1",
+        "declare",
+        "--contract-name",
+        "Map",
+    ];
+
+    let snapbox = Command::new(cargo_bin!("cast"))
+        .current_dir(CONTRACTS_DIR.to_string() + "/v1/map")
+        .args(args);
+
+    let output = String::from_utf8(snapbox.assert().success().get_output().stderr.clone()).unwrap();
+
+    assert!(output.contains("is already declared"));
+}
+
+#[tokio::test]
 async fn contract_does_not_exist() {
     let args = vec![
         "--url",
