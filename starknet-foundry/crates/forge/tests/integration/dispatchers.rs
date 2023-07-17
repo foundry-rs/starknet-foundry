@@ -4,7 +4,7 @@ use camino::Utf8PathBuf;
 use std::path::Path;
 use std::string::ToString;
 
-use crate::common::corelib::corelib;
+use crate::common::corelib::{corelib, predeployed_contracts};
 use forge::run;
 use indoc::indoc;
 
@@ -32,7 +32,7 @@ fn simple_call_and_invoke() {
         #[test]
         fn call_and_invoke() {
             let class_hash = declare('HelloStarknet').unwrap();
-            let prepared = PreparedContract { contract_address: 1234, class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
+            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
             let contract_address = deploy(prepared).unwrap();
             let contract_address: ContractAddress = contract_address.try_into().unwrap();
             let dispatcher = IHelloStarknetDispatcher { contract_address };
@@ -60,6 +60,7 @@ fn simple_call_and_invoke() {
         &Default::default(),
         Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
         &test.contracts(corelib().path()).unwrap(),
+        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
     )
     .unwrap();
 
@@ -110,7 +111,7 @@ fn advanced_types() {
             calldata.append(1234);      // recipient
         
             let class_hash = declare('ERC20').unwrap();
-            let prepared = PreparedContract { contract_address: 4567, class_hash: class_hash, constructor_calldata: @calldata };
+            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
             let contract_address = deploy(prepared).unwrap();
             let contract_address: ContractAddress = contract_address.try_into().unwrap();
             let dispatcher = IERC20Dispatcher { contract_address };
@@ -143,6 +144,7 @@ fn advanced_types() {
         &Default::default(),
         Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
         &test.contracts(corelib().path()).unwrap(),
+        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
     )
     .unwrap();
 
@@ -173,7 +175,7 @@ fn handling_errors() {
         #[test]
         fn handling_errors() {
             let class_hash = declare('HelloStarknet').unwrap();
-            let prepared = PreparedContract { contract_address: 1234, class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
+            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
             let contract_address = deploy(prepared).unwrap();
             let contract_address: ContractAddress = contract_address.try_into().unwrap();
             let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
@@ -219,6 +221,7 @@ fn handling_errors() {
         &Default::default(),
         Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
         &test.contracts(corelib().path()).unwrap(),
+        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
     )
     .unwrap();
 

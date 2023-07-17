@@ -1,4 +1,4 @@
-use crate::common::corelib::corelib;
+use crate::common::corelib::{corelib, predeployed_contracts};
 use crate::common::runner::Contract;
 use crate::{assert_passed, test_case};
 use camino::Utf8PathBuf;
@@ -19,7 +19,6 @@ fn error_handling() {
         fn test_deploy_error_handling() {
             let class_hash = declare('PanickingConstructor').expect('Could not declare');
             let prepared_contract = PreparedContract {
-                contract_address: 'addr',
                 class_hash: class_hash,
                 constructor_calldata: @ArrayTrait::new()
             };
@@ -64,6 +63,7 @@ fn error_handling() {
         &Default::default(),
         Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
         &test.contracts(corelib().path()).unwrap(),
+        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
     )
     .unwrap();
 
