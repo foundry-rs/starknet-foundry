@@ -40,23 +40,27 @@ else
   done
 fi
 
+function get_compiler () {
+  compiler_version=$1
+  filename=$2
+
+  wget "$CAIRO_REPO/$compiler_version/$filename" -P "$COMPILER_DIRECTORY/$compiler_version"
+  pushd "$COMPILER_DIRECTORY/$compiler_version"
+  tar -xvf "$COMPILER_DIRECTORY/$compiler_version/$filename" cairo/bin/starknet-sierra-compile
+  popd
+}
+
 for scarb_version in "${SCARB_VERSIONS[@]}"; do
 
-  asdf global scarb "$scarb_version"
+  asdf local scarb "$scarb_version"
   compiler_version="v$(scarb --version | grep -e "cairo:" | awk '{print $2}')"
 
   if [ ! -x "$COMPILER_DIRECTORY/$compiler_version/cairo/bin/starknet-sierra-compile" ]; then
     if [[ $(uname -s) == 'Darwin' ]]; then
-      wget "$CAIRO_REPO/$compiler_version/release-aarch64-apple-darwin.tar" -P "$COMPILER_DIRECTORY/$compiler_version"
-      pushd "$COMPILER_DIRECTORY/$compiler_version"
-      tar -xvf "$COMPILER_DIRECTORY/$compiler_version/release-aarch64-apple-darwin.tar" cairo/bin/starknet-sierra-compile
-      popd
+      get_compiler "$compiler_version" "release-aarch64-apple-darwin.tar"
 
     elif [[ $(uname -s) == 'Linux' ]]; then
-      wget "$CAIRO_REPO/$compiler_version/release-x86_64-unknown-linux-musl.tar.gz" -P "$COMPILER_DIRECTORY/$compiler_version"
-      pushd "$COMPILER_DIRECTORY/$compiler_version"
-      tar -xzvf "$COMPILER_DIRECTORY/$compiler_version/release-x86_64-unknown-linux-musl.tar.gz" cairo/bin/starknet-sierra-compile
-      popd
+      get_compiler "$compiler_version" "release-x86_64-unknown-linux-musl.tar.gz"
 
     else
       echo "System $(uname -s) currently not supported"

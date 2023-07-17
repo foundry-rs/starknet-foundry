@@ -1,13 +1,12 @@
 #!/bin/bash
 set -e
 
-CAIRO_VERSIONS=("v1" "v2")
-SCARB_VERSIONS=("0.4.1" "0.5.2")
+# "major-cairo-version scarb-version"
+VERSIONS=("v1 0.4.1" "v2 0.5.2")
 ASDF_DATA_DIR=$(asdf info | grep -e "ASDF_DATA_DIR" | awk -F '=' '{print $2}')
 
-for ((i = 0; i < ${#CAIRO_VERSIONS[@]}; i++)); do
-  cairo_version="${CAIRO_VERSIONS[i]}"
-  scarb_version="${SCARB_VERSIONS[i]}"
+for versions_tuple in "${VERSIONS[@]}"; do
+  read -r cairo_version scarb_version <<< "$versions_tuple"
 
   CONTRACTS_DIRECTORY="$(git rev-parse --show-toplevel)/starknet-foundry/crates/cast/tests/data/contracts/$cairo_version"
   SCARB_BIN="$ASDF_DATA_DIR/installs/scarb/$scarb_version/bin/scarb"
