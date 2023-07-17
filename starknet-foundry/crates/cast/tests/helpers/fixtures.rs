@@ -86,17 +86,20 @@ pub async fn invoke_map_contract(key: &str, value: &str) {
 }
 
 #[must_use]
-pub fn default_cli_args(account: String) -> Vec<String> {
+pub fn default_cli_args(account: &str) -> Vec<String> {
     vec![
-        "--url".to_string(),
-        URL.to_string(),
-        "--network".to_string(),
-        NETWORK.to_string(),
-        "--accounts-file".to_string(),
-        ACCOUNT_FILE_PATH.to_string(),
-        "--account".to_string(),
+        "--url",
+        URL,
+        "--network",
+        NETWORK,
+        "--accounts-file",
+        ACCOUNT_FILE_PATH,
+        "--account",
         account,
     ]
+    .iter()
+    .map(std::string::ToString::to_string)
+    .collect()
 }
 
 #[must_use]

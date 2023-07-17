@@ -8,7 +8,7 @@ static USERNAME: &str = "user0";
 
 #[tokio::test]
 async fn test_happy_case() {
-    let args = default_cli_args(USERNAME.to_string());
+    let args = default_cli_args(USERNAME);
     let mut args: Vec<&str> = args.iter().map(String::as_str).collect();
     args.append(&mut vec![
         "--int-format",
@@ -34,7 +34,7 @@ async fn test_happy_case() {
 
 #[tokio::test]
 async fn test_contract_not_declared() {
-    let args = default_cli_args(USERNAME.to_string());
+    let args = default_cli_args(USERNAME);
     let mut args: Vec<&str> = args.iter().map(String::as_str).collect();
     args.append(&mut vec!["deploy", "--class-hash", "0x1"]);
 
@@ -46,7 +46,7 @@ async fn test_contract_not_declared() {
 
 #[tokio::test]
 async fn test_contract_already_deployed() {
-    let args = default_cli_args(USERNAME.to_string());
+    let args = default_cli_args(USERNAME);
     let mut args: Vec<&str> = args.iter().map(String::as_str).collect();
     args.append(&mut vec![
         "deploy",
@@ -64,7 +64,7 @@ async fn test_contract_already_deployed() {
 
 #[tokio::test]
 async fn test_too_low_max_fee() {
-    let args = default_cli_args(USERNAME.to_string());
+    let args = default_cli_args(USERNAME);
     let mut args: Vec<&str> = args.iter().map(String::as_str).collect();
     args.append(&mut vec![
         "deploy",

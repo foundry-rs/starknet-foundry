@@ -8,7 +8,7 @@ static USERNAME: &str = "user2";
 
 #[tokio::test]
 async fn test_happy_case() {
-    let args = default_cli_args(USERNAME.to_string());
+    let args = default_cli_args(USERNAME);
     let mut args: Vec<&str> = args.iter().map(String::as_str).collect();
     args.append(&mut vec![
         "--int-format",
@@ -35,7 +35,7 @@ async fn test_happy_case() {
 
 #[tokio::test]
 async fn test_contract_does_not_exist() {
-    let args = default_cli_args(USERNAME.to_string());
+    let args = default_cli_args(USERNAME);
     let mut args: Vec<&str> = args.iter().map(String::as_str).collect();
     args.append(&mut vec![
         "invoke",
@@ -54,7 +54,7 @@ async fn test_contract_does_not_exist() {
 
 #[tokio::test]
 async fn test_wrong_function_name() {
-    let args = default_cli_args(USERNAME.to_string());
+    let args = default_cli_args(USERNAME);
     let mut args: Vec<&str> = args.iter().map(String::as_str).collect();
     args.append(&mut vec![
         "invoke",
@@ -73,7 +73,7 @@ async fn test_wrong_function_name() {
 
 #[tokio::test]
 async fn test_wrong_calldata() {
-    let args = default_cli_args(USERNAME.to_string());
+    let args = default_cli_args(USERNAME);
     let mut args: Vec<&str> = args.iter().map(String::as_str).collect();
     args.append(&mut vec![
         "invoke",
@@ -103,7 +103,7 @@ async fn test_wrong_calldata() {
 
 #[tokio::test]
 async fn test_too_low_max_fee() {
-    let args = default_cli_args(USERNAME.to_string());
+    let args = default_cli_args(USERNAME);
     let mut args: Vec<&str> = args.iter().map(String::as_str).collect();
     args.append(&mut vec![
         "invoke",
