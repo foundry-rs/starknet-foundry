@@ -96,16 +96,18 @@ async fn wrong_contract_name_passed() {
     assert!(output.contains("Failed to find contract nonexistent in starknet_artifacts.json"));
 }
 
-#[test_case("/v1/build_fails" ; "when cairo1 contract")]
-#[test_case("/v2/build_fails" ; "when cairo2 contract")]
-fn scarb_build_fails(contract_path: &str) {
+#[test_case("/v1/build_fails", "../../../accounts/accounts.json" ; "when wrong cairo1 contract")]
+#[test_case("/v2/build_fails", "../../../accounts/accounts.json" ; "when wrong cairo2 contract")]
+#[test_case("/v1", "../../accounts/accounts.json" ; "when cairo 1 and Scarb.toml does not exist")]
+#[test_case("/v2", "../../accounts/accounts.json" ; "when cairo 2 and Scarb.toml does not exist")]
+fn scarb_build_fails(contract_path: &str, accounts_file_path: &str) {
     let args = vec![
         "--url",
         URL,
         "--network",
         NETWORK,
         "--accounts-file",
-        "../../../accounts/accounts.json",
+        accounts_file_path,
         "--account",
         "user1",
         "declare",
