@@ -23,8 +23,8 @@ $ cast call \
   --function-name some_function \
   --calldata 1 2 3
   
-  command: Call
-  response: [FieldElement { inner: 0x0000000000000000000000000000000000000000000000000000000000000000 }]
+command: Call
+response: [FieldElement { inner: 0x0000000000000000000000000000000000000000000000000000000000000000 }]
 ```
 
 ### Without profiles
@@ -38,9 +38,9 @@ $ cast \
   --entry-point-name "some_function" \
   --calldata 1 2 3
 
-  command: Call
-  response: [FieldElement { inner: 0x0000000000000000000000000000000000000000000000000000000000000000 }]
+command: Call
+response: [FieldElement { inner: 0x0000000000000000000000000000000000000000000000000000000000000000 }]
 ```
 
 > 📝 **Note**
-> Call does not require passing account connected parameters.
+> Call does not require passing account-connected parameters (`account` and `accounts-file`).
