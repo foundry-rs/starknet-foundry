@@ -1,7 +1,7 @@
 use crate::ForgeConfigFromScarb;
 use anyhow::{anyhow, Context, Result};
 use camino::Utf8PathBuf;
-use scarb_metadata::{Metadata, PackageId, TargetMetadata};
+use scarb_metadata::{Metadata, PackageId};
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs;
@@ -51,7 +51,7 @@ pub fn artifacts_for_package(path: &Utf8PathBuf) -> Result<StarknetArtifacts> {
 
 pub fn try_get_starknet_artifacts_path(
     path: &Utf8PathBuf,
-    target: &TargetMetadata,
+    target_name: &str,
 ) -> Result<Option<Utf8PathBuf>> {
     let path = path.join("target/dev");
     let paths = fs::read_dir(path);
@@ -59,7 +59,7 @@ pub fn try_get_starknet_artifacts_path(
     let starknet_artifacts = paths.find_map(|path| match path {
         Ok(path) => {
             let name = path.file_name().into_string().ok()?;
-            (name == format!("{}.starknet_artifacts.json", target.name)).then_some(path.path())
+            (name == format!("{target_name}.starknet_artifacts.json")).then_some(path.path())
         }
         Err(_) => None,
     });
@@ -108,7 +108,7 @@ pub fn config_from_scarb_for_package(
 pub fn dependencies_for_package(
     metadata: &Metadata,
     package: &PackageId,
-) -> Result<(Utf8PathBuf, Vec<LinkedLibrary>, TargetMetadata)> {
+) -> Result<(Utf8PathBuf, Vec<LinkedLibrary>, String)> {
     let compilation_unit = metadata
         .compilation_units
         .iter()
@@ -136,7 +136,9 @@ pub fn dependencies_for_package(
         })
         .collect();
 
-    Ok((base_path, dependencies, compilation_unit.target.clone()))
+    let target_name = compilation_unit.target.name.clone();
+
+    Ok((base_path, dependencies, target_name))
 }
 
 #[cfg(test)]
@@ -157,17 +159,9 @@ mod tests {
             .output()
             .unwrap();
 
-        let scarb_metadata = MetadataCommand::new()
-            .current_dir(temp.path())
-            .inherit_stderr()
-            .exec()
-            .unwrap();
-        let package = &scarb_metadata.workspace.members[0]; // there is only one package
-        let (_, _, target) = dependencies_for_package(&scarb_metadata, package).unwrap();
-
         let result = try_get_starknet_artifacts_path(
             &Utf8PathBuf::from_path_buf(temp.to_path_buf()).unwrap(),
-            &target,
+            "simple_package",
         );
         let path = result.unwrap().unwrap();
         assert_eq!(
@@ -188,17 +182,9 @@ mod tests {
             .output()
             .unwrap();
 
-        let scarb_metadata = MetadataCommand::new()
-            .current_dir(temp.path())
-            .inherit_stderr()
-            .exec()
-            .unwrap();
-        let package = &scarb_metadata.workspace.members[0]; // there is only one package
-        let (_, _, target) = dependencies_for_package(&scarb_metadata, package).unwrap();
-
         let result = try_get_starknet_artifacts_path(
             &Utf8PathBuf::from_path_buf(temp.to_path_buf()).unwrap(),
-            &target,
+            "print_test",
         );
         let path = result.unwrap();
         assert!(path.is_none());
@@ -210,17 +196,9 @@ mod tests {
         temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
             .unwrap();
 
-        let scarb_metadata = MetadataCommand::new()
-            .current_dir(temp.path())
-            .inherit_stderr()
-            .exec()
-            .unwrap();
-        let package = &scarb_metadata.workspace.members[0]; // there is only one package
-        let (_, _, target) = dependencies_for_package(&scarb_metadata, package).unwrap();
-
         let result = try_get_starknet_artifacts_path(
             &Utf8PathBuf::from_path_buf(temp.to_path_buf()).unwrap(),
-            &target,
+            "simple_package",
         );
         let path = result.unwrap();
         assert!(path.is_none());
