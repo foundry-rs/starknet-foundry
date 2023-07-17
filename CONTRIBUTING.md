@@ -16,7 +16,7 @@ $ rustup update
 3. Verify your setup by running [tests](#testing)
 4. Build Starknet Foundry
 ```shell
-$ cd ./starknet-foundry && cargo build --bins --release
+$ cd ./starknet-foundry && cargo build --bins
 ```
 
 ### Testing
