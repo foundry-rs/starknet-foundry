@@ -145,6 +145,7 @@ pub fn dependencies_for_package(
 mod tests {
     use super::*;
     use assert_fs::fixture::{FileTouch, FileWriteStr, PathChild, PathCopy};
+    use indoc::indoc;
     use scarb_metadata::MetadataCommand;
     use std::process::Command;
 
@@ -168,6 +169,46 @@ mod tests {
             path,
             temp.path()
                 .join("target/dev/simple_package.starknet_artifacts.json")
+        );
+    }
+
+    #[test]
+    fn get_starknet_artifacts_path_for_project_with_different_package_and_target_name() {
+        let temp = assert_fs::TempDir::new().unwrap();
+        temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
+            .unwrap();
+
+        let scarb_path = temp.child("Scarb.toml");
+        scarb_path
+            .write_str(indoc!(
+                r#"
+            [package]
+            name = "simple_package"
+            version = "0.1.0"
+            
+            [dependencies]
+            starknet = "2.0.1"
+            
+            [[target.starknet-contract]]
+            name = "essa"
+            "#
+            ))
+            .unwrap();
+
+        Command::new("scarb")
+            .current_dir(&temp)
+            .arg("build")
+            .output()
+            .unwrap();
+
+        let result = try_get_starknet_artifacts_path(
+            &Utf8PathBuf::from_path_buf(temp.to_path_buf()).unwrap(),
+            "essa",
+        );
+        let path = result.unwrap().unwrap();
+        assert_eq!(
+            path,
+            temp.path().join("target/dev/essa.starknet_artifacts.json")
         );
     }
 
