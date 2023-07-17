@@ -11,6 +11,7 @@ use cairo_lang_runner::casm_run::hint_to_hint_params;
 use cairo_lang_runner::{CairoHintProcessor as CoreCairoHintProcessor, RunnerError};
 use cairo_lang_runner::{SierraCasmRunner, StarknetState};
 use cairo_vm::vm::runners::cairo_runner::RunResources;
+use camino::Utf8PathBuf;
 use test_collector::TestCase;
 
 use crate::cheatcodes_hint_processor::CairoHintProcessor;
@@ -47,6 +48,7 @@ pub(crate) fn run_from_test_case(
     runner: &mut SierraCasmRunner,
     case: &TestCase,
     contracts: &HashMap<String, StarknetContractArtifacts>,
+    predeployed_contracts: &Utf8PathBuf,
 ) -> Result<TestCaseSummary> {
     let available_gas = if let Some(available_gas) = &case.available_gas {
         Some(*available_gas)
@@ -72,7 +74,7 @@ pub(crate) fn run_from_test_case(
     };
     let mut cairo_hint_processor = CairoHintProcessor {
         original_cairo_hint_processor: core_cairo_hint_processor,
-        blockifier_state: Some(build_testing_state()),
+        blockifier_state: Some(build_testing_state(predeployed_contracts)),
         contracts,
     };
 

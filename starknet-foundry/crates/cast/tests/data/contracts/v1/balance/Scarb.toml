@@ -1,5 +1,5 @@
 [package]
-name = "somemissing"
+name = "balance"
 version = "0.1.0"
 
 [dependencies]
@@ -11,6 +11,7 @@ casm = true
 [lib]
 sierra = false
 
-[tool.cast]
-url = "http://127.0.0.1:5055/rpc"
+[tool.cast.myprofile]
 network = "testnet"
+url = "http://127.0.0.1:5055/rpc"
+account = "user1"

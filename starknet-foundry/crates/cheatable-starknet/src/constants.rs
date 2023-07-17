@@ -11,6 +11,7 @@ use blockifier::{
     transaction::objects::AccountTransactionContext,
 };
 use cairo_felt_blockifier::Felt252;
+use camino::Utf8PathBuf;
 use starknet_api::{
     block::{BlockNumber, BlockTimestamp},
     core::{ChainId, ClassHash, ContractAddress, Nonce, PatriciaKey},
@@ -93,13 +94,13 @@ pub fn build_invoke_transaction(
     }
 }
 
-fn get_raw_contract_class(contract_path: &str) -> String {
-    let path: PathBuf = [env!("CARGO_MANIFEST_DIR"), contract_path].iter().collect();
-    fs::read_to_string(path).unwrap()
-}
-
-fn load_contract_class(contract_path: &str) -> ContractClassV0 {
-    let raw_contract_class = get_raw_contract_class(contract_path);
+fn load_contract_class(
+    predeployed_contracts: &Utf8PathBuf,
+    contract_path: &str,
+) -> ContractClassV0 {
+    let full_contract_path: PathBuf = predeployed_contracts.join(contract_path).into();
+    let raw_contract_class =
+        fs::read_to_string(full_contract_path).expect("Failed to read predeployed contracts");
     ContractClassV0::try_from_json_string(&raw_contract_class).unwrap()
 }
 
@@ -115,11 +116,14 @@ fn erc20_account_balance_key() -> StorageKey {
 // Deployed contracts are cairo 0 contracts
 // Account does not include validations
 #[must_use]
-pub fn build_testing_state() -> CachedState<DictStateReader> {
-    let account_class =
-        load_contract_class("./predeployed-contracts/account_no_validations_contract.casm.json");
+pub fn build_testing_state(predeployed_contracts: &Utf8PathBuf) -> CachedState<DictStateReader> {
+    let account_class = load_contract_class(
+        predeployed_contracts,
+        "account_no_validations_contract.casm.json",
+    );
     let erc20_class = load_contract_class(
-        "./predeployed-contracts/erc20_contract_without_some_syscalls_compiled.json",
+        predeployed_contracts,
+        "erc20_contract_without_some_syscalls_compiled.json",
     );
     let block_context = build_block_context();
     let test_account_class_hash = ClassHash(stark_felt!(TEST_ACCOUNT_CONTRACT_CLASS_HASH));
