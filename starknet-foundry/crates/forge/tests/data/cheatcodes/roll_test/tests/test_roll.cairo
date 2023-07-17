@@ -5,6 +5,7 @@ use traits::TryInto;
 use starknet::ContractAddress;
 use starknet::Felt252TryIntoContractAddress;
 use cheatcodes::PreparedContract;
+use protostar_print::PrintTrait;
 
 use roll_test::IRollCheckerDispatcher;
 use roll_test::IRollCheckerDispatcherTrait;
@@ -18,7 +19,7 @@ fn test_roll_simple() {
     let contract_address: ContractAddress = contract_address.try_into().unwrap();
     let dispatcher = IRollCheckerDispatcher { contract_address };
 
-    let balance = dispatcher.is_rolled(123);
+    dispatcher.is_rolled(123).print();
 }
 
 
