@@ -18,7 +18,7 @@ fn get_property(
     profile: &Option<String>,
     property: &str,
 ) -> Result<String, Error> {
-    let profiled = tool.as_ref().and_then(|t| t.get("protostar"));
+    let profiled = tool.as_ref().and_then(|t| t.get("cast"));
 
     match profile {
         Some(ref p) => profiled
@@ -67,7 +67,7 @@ pub fn parse_scarb_config(
 
     let package = &metadata.packages[0].manifest_metadata.tool;
 
-    let rpc_url = get_property(package, profile, "rpc_url")?;
+    let rpc_url = get_property(package, profile, "url")?;
     let network = get_property(package, profile, "network")?;
     let account = get_property(package, profile, "account")?;
 
@@ -87,7 +87,9 @@ mod tests {
     fn test_parse_scarb_config_happy_case_with_profile() {
         let config = parse_scarb_config(
             &Some(String::from("myprofile")),
-            Some(Utf8PathBuf::from("tests/data/contracts/balance/Scarb.toml")),
+            Some(Utf8PathBuf::from(
+                "tests/data/contracts/v1/balance/Scarb.toml",
+            )),
         )
         .unwrap();
 
@@ -100,7 +102,7 @@ mod tests {
     fn test_parse_scarb_config_happy_case_without_profile() {
         let config = parse_scarb_config(
             &None,
-            Some(Utf8PathBuf::from("tests/data/contracts/map/Scarb.toml")),
+            Some(Utf8PathBuf::from("tests/data/contracts/v1/map/Scarb.toml")),
         )
         .unwrap();
         assert_eq!(config.account, String::from("user2"));
@@ -133,19 +135,21 @@ mod tests {
         .unwrap_err();
         assert!(config
             .to_string()
-            .contains("Property not found in tool: rpc_url"));
+            .contains("Property not found in tool: url"));
     }
 
     #[test]
     fn test_parse_scarb_config_no_profile_found() {
         let config = parse_scarb_config(
             &Some(String::from("mariusz")),
-            Some(Utf8PathBuf::from("tests/data/contracts/balance/Scarb.toml")),
+            Some(Utf8PathBuf::from(
+                "tests/data/contracts/v1/balance/Scarb.toml",
+            )),
         )
         .unwrap_err();
         assert!(config
             .to_string()
-            .contains("Profile or property not found in Scarb.toml: mariusz, rpc_url"));
+            .contains("Profile or property not found in Scarb.toml: mariusz, url"));
     }
 
     #[test]

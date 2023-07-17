@@ -140,6 +140,8 @@ macro_rules! test_case {
 #[macro_export]
 macro_rules! assert_passed {
     ($result:expr) => {{
+        use forge::test_case_summary::TestCaseSummary;
+
         assert!($result.iter().all(|result| {
             result
                 .test_case_summaries
@@ -152,6 +154,8 @@ macro_rules! assert_passed {
 #[macro_export]
 macro_rules! assert_failed {
     ($result:expr) => {{
+        use forge::test_case_summary::TestCaseSummary;
+
         assert!($result.iter().all(|result| {
             result
                 .test_case_summaries
