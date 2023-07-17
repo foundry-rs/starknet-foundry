@@ -4,28 +4,15 @@
 
 Starknet Foundry cast supports invoking smart contracts on a given network with the `cast invoke` command.
 
-The basic inputs that you need for the command are:
+In most cases you have to provide:
 
 - Contract address
 - Function name
-- Inputs to the function
+- Function arguments
 
-For detailed CLI description, see [invoke command reference](../reference/cast/index.html#invoke).
+For detailed arguments description, see [invoke command reference](../reference/cast/index.html#invoke).
 
 ## Usage example
-
-### With profiles
-
-```shell
-$ cast invoke \
-  --profile testnet \
-  --contract-address 0x4a739ab73aa3cac01f9da5d55f49fb67baee4919224454a2e3f85b16462a911 \
-  --entry-point-name "some_function" \
-  --calldata 1 2 3
-  
-  command: Invoke
-  transaction_hash: 0x7ad0d6e449e33b6581a4bb8df866c0fce3919a5ee05a30840ba521dafee217f
-```
 
 ### Without profiles
 
@@ -36,6 +23,19 @@ $ cast \
   --account example_user \
   --accounts_file_path ./some/path \
   invoke \
+  --contract-address 0x4a739ab73aa3cac01f9da5d55f49fb67baee4919224454a2e3f85b16462a911 \
+  --entry-point-name "some_function" \
+  --calldata 1 2 3
+  
+  command: Invoke
+  transaction_hash: 0x7ad0d6e449e33b6581a4bb8df866c0fce3919a5ee05a30840ba521dafee217f
+```
+
+### With profiles
+
+```shell
+$ cast invoke \
+  --profile testnet \
   --contract-address 0x4a739ab73aa3cac01f9da5d55f49fb67baee4919224454a2e3f85b16462a911 \
   --entry-point-name "some_function" \
   --calldata 1 2 3

@@ -100,7 +100,7 @@ The address of the contract being called in hex (prefixed with '0x') or decimal 
 ### `--entry-point-name, -e <FUNCTION_NAME>`
 Required.
 
-The name of the function being called.
+The name of the function to call.
 
 #### `--calldata, -c <CALLDATA>`
 Optional.
