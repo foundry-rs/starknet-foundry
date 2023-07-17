@@ -1,8 +1,8 @@
 use anyhow::Result;
-use cairo_vm::{hint_processor::hint_processor_definition::{HintProcessor, HintReference}, vm::{vm_core::VirtualMachine, runners::cairo_runner::RunResources, errors::{hint_errors::HintError, vm_errors::VirtualMachineError}}, types::{exec_scope::ExecutionScopes, relocatable::{Relocatable, MaybeRelocatable}}, serde::deserialize_program::ApTracking};
+use cairo_vm::{hint_processor::hint_processor_definition::{HintProcessor, HintReference}, vm::{vm_core::VirtualMachine, runners::cairo_runner::{RunResources, CairoRunner, CairoArg}, errors::{hint_errors::HintError, vm_errors::VirtualMachineError}}, types::{exec_scope::ExecutionScopes, relocatable::{Relocatable, MaybeRelocatable}}, serde::deserialize_program::ApTracking};
 use std::{sync::Arc, collections::HashMap, any::Any};
 
-use blockifier::{state::{cached_state::CachedState, state_api::State}, execution::{entry_point::{CallEntryPoint, CallType, ExecutionResources, EntryPointExecutionContext, EntryPointExecutionResult, CallInfo, FAULTY_CLASS_HASH}, errors::{EntryPointExecutionError, PreExecutionError}, contract_class::{ContractClassV1, ContractClass}, cairo1_execution::{VmExecutionContext, initialize_execution_context, prepare_call_arguments, finalize_execution, run_entry_point}, syscalls::hint_processor::{SyscallHintProcessor, SyscallExecutionError, write_segment}, common_hints::HintExecutionResult, deprecated_syscalls::DeprecatedSyscallSelector, execution_utils::stark_felt_from_ptr}};
+use blockifier::{state::{cached_state::CachedState, state_api::State}, execution::{entry_point::{CallEntryPoint, CallType, ExecutionResources, EntryPointExecutionContext, EntryPointExecutionResult, CallInfo, FAULTY_CLASS_HASH}, errors::{EntryPointExecutionError, PreExecutionError, VirtualMachineExecutionError}, contract_class::{ContractClassV1, ContractClass, EntryPointV1}, cairo1_execution::{VmExecutionContext, initialize_execution_context, prepare_call_arguments, finalize_execution, run_entry_point}, syscalls::{hint_processor::{SyscallHintProcessor, SyscallExecutionError, write_segment}, GetExecutionInfoResponse}, common_hints::HintExecutionResult, deprecated_syscalls::DeprecatedSyscallSelector, execution_utils::{stark_felt_from_ptr, Args}}};
 use cairo_felt_blockifier::Felt252;
 use starknet_api::{core::{ContractAddress, PatriciaKey, EntryPointSelector, ClassHash}, hash::{StarkFelt, StarkHash}, patricia_key, transaction::{Calldata, TransactionVersion}, deprecated_contract_class::EntryPointType};
 use cairo_lang_casm::{hints::{Hint, StarknetHint}, operand::{ResOperand, BinOpOperand, Operation, DerefOrImmediate, Register}};
@@ -58,11 +58,11 @@ pub fn call_contract(
         block_context.invoke_tx_max_n_steps,
     );
 
-    let call_info = entry_point
-        .execute(blockifier_state, &mut resources, &mut context)
-        .unwrap();
-    // let call_info = execute_call_entry_point(entry_point, blockifier_state, &mut resources, &mut context)
+    // let call_info = entry_point
+    //     .execute(blockifier_state, &mut resources, &mut context)
     //     .unwrap();
+    let call_info = execute_call_entry_point(entry_point, blockifier_state, &mut resources, &mut context)
+        .unwrap();
 
     let raw_return_data = &call_info.execution.retdata.0;
     assert!(!call_info.execution.failed);
@@ -86,7 +86,6 @@ pub fn execute_call_entry_point(
     // if context.current_recursion_depth > context.max_recursion_depth {
     //     return Err(EntryPointExecutionError::RecursionDepthExceeded);
     // }
-
     // Validate contract is deployed.
     let storage_address = entry_point.storage_address;
     let storage_class_hash = state.get_class_hash_at(entry_point.storage_address)?;
@@ -172,7 +171,7 @@ impl HintProcessor for CheatableSyscallHandler<'_> {
 
         if let Some(Hint::Starknet(StarknetHint::SystemCall { system })) = maybe_extended_hint {
             if let Some(Hint::Starknet(hint)) = maybe_extended_hint {
-                return self.execute_next_syscall(vm, hint);
+                return self.execute_next_syscall_xd(vm, hint);
             }
         }
         self.syscall_handler
@@ -222,24 +221,43 @@ impl CheatableSyscallHandler<'_> {
         }
     }
 
-    pub fn execute_next_syscall(
+    pub fn execute_next_syscall_xd(
         &mut self,
         vm: &mut VirtualMachine,
         hint: &StarknetHint,
     ) -> HintExecutionResult {
-        let StarknetHint::SystemCall{ system: syscall } = hint else {
-            return Err(HintError::CustomHint(
-                "Test functions are unsupported on starknet.".into()
-            ));
-        };
+        // let StarknetHint::SystemCall{ system: syscall } = hint else {
+        //     return Err(HintError::CustomHint(
+        //         "Test functions are unsupported on starknet.".into()
+        //     ));
+        // };
         // let initial_syscall_ptr = get_ptr_from_res_operand_unchecked(vm, syscall);
         let selector = SyscallSelector::try_from(self.read_next_syscall_selector(vm)?)?;
+        self.syscall_handler.increment_syscall_count_by(&selector, 1);
+        // dbg!(self.is_cheated(vm, selector));
         if self.is_cheated(vm, selector) {
             let execution_info_ptr = self.syscall_handler.get_or_allocate_execution_info_segment(vm)?;
             let data = vm.get_range(execution_info_ptr, 1)[0].clone();
             if let MaybeRelocatable::RelocatableValue(block_info_ptr)  = data.unwrap().into_owned() {
-                let x = MaybeRelocatable::Int(Felt252::from(123));
-                vm.load_data(block_info_ptr, &vec![x]).unwrap();
+                let ptr_cheated_exec_info = vm.add_memory_segment();
+                let ptr_cheated_block_info = vm.add_memory_segment();
+
+                // create a new segment with replaced block info
+                let ptr_cheated_block_info_c = vm.load_data(ptr_cheated_block_info, &vec![MaybeRelocatable::Int(Felt252::from(123))]).unwrap(); 
+                let orginal_block_info = vm.get_continuous_range((block_info_ptr + 1 as usize).unwrap() as Relocatable, 2).unwrap();
+                vm.load_data(ptr_cheated_block_info_c, &orginal_block_info).unwrap();
+
+
+                // create a new segment with replaced execution_info including pointer to updated block info
+                let ptr_cheated_exec_info_c = vm.load_data(ptr_cheated_block_info, &vec![MaybeRelocatable::RelocatableValue(ptr_cheated_block_info)]).unwrap(); 
+                let original_execution_info = vm.get_continuous_range((execution_info_ptr + 1 as usize).unwrap() as Relocatable, 4).unwrap();
+                vm.load_data(ptr_cheated_exec_info_c, &original_execution_info).unwrap();
+
+                let response = GetExecutionInfoResponse { execution_info_ptr: ptr_cheated_exec_info };
+                let response_w = SyscallResponseWrapper::Success { gas_counter: 10000000000000000, response }; // TODO
+                response_w.write(vm, &mut self.syscall_handler.syscall_ptr)?;
+
+                // self.syscall_handler.execution_info_ptr = ptr_cheated_exec_info;
             }
 
             // TODO write to value
@@ -302,18 +320,23 @@ pub fn execute_entry_point_call_cairo1(
     // Fix the VM resources, in order to calculate the usage of this run at the end.
     let previous_vm_resources = syscall_handler.resources.vm_resources.clone();
 
+    let mut syscall_hh = CheatableSyscallHandler {
+        syscall_handler,
+        rolled_contracts: HashMap::new()
+    };
+
     // Execute.
-    run_entry_point(
+    run_entry_point_m(
         &mut vm,
         &mut runner,
-        &mut syscall_handler,
+        &mut syscall_hh,
         entry_point,
         args,
         program_segment_size,
     )?;
-
+    let sys_h = syscall_hh.syscall_handler; 
     let call_info =
-        finalize_execution(vm, runner, syscall_handler, previous_vm_resources, n_total_args)?;
+        finalize_execution(vm, runner, sys_h, previous_vm_resources, n_total_args)?;
     if call_info.execution.failed {
         return Err(EntryPointExecutionError::ExecutionFailed {
             error_data: call_info.execution.retdata.0,
@@ -321,4 +344,32 @@ pub fn execute_entry_point_call_cairo1(
     }
 
     Ok(call_info)
+}
+
+/// Runs the runner from the given PC.
+pub fn run_entry_point_m(
+    vm: &mut VirtualMachine,
+    runner: &mut CairoRunner,
+    hint_processor: &mut dyn HintProcessor,
+    entry_point: EntryPointV1,
+    args: Args,
+    program_segment_size: usize,
+) -> Result<(), VirtualMachineExecutionError> {
+    // let mut run_resources = hint_processor.context.vm_run_resources.clone(); // TODO
+    let verify_secure = true;
+    let args: Vec<&CairoArg> = args.iter().collect();
+
+    let mut run_resources = RunResources::default();
+    let result = runner.run_from_entrypoint(
+        entry_point.pc(),
+        &args,
+        &mut run_resources,
+        verify_secure,
+        Some(program_segment_size),
+        vm,
+        hint_processor,
+    );
+
+    // hint_processor.context.vm_run_resources = run_resources; // TODO 
+    Ok(result?)
 }
