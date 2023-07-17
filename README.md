@@ -1,6 +1,6 @@
-# Starknet-Foundry 🔨
+# Starknet Foundry 🔨
 
-Blazingly fast implementation of Foundry for developing Starknet contracts designed & developed by
+Blazing fast toolkit for developing Starknet contracts designed & developed by
 ex [Protostar](https://github.com/software-mansion/protostar) team from [Software Mansion](https://swmansion.com) based
 on native [Cairo](https://github.com/starkware-libs/cairo) test runner
 and [Blockifier](https://github.com/starkware-libs/blockifier), written in Rust 🦀.
@@ -8,7 +8,7 @@ and [Blockifier](https://github.com/starkware-libs/blockifier), written in Rust 
 Need help getting started with Starknet Foundry? Read the
 📖 [Starknet Foundry Book](https://foundry-rs.github.io/starknet-foundry/)!
 
-Starknet Foundry, like its Ethereum counterpart, consists of different modules
+Starknet Foundry, like its [Ethereum counterpart](https://github.com/foundry-rs/foundry), consists of different modules
 
 - Forge: Starknet testing framework (like Truffle, Hardhat and DappTools but for Starknet).
 - Cast: All-in-one tool for interacting with Starknet smart contracts, sending transactions and getting chain data.
