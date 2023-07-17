@@ -51,7 +51,7 @@ pub fn artifacts_for_package(path: &Utf8PathBuf) -> Result<StarknetArtifacts> {
 
 pub fn try_get_starknet_artifacts_path(
     path: &Utf8PathBuf,
-    target: TargetMetadata,
+    target: &TargetMetadata,
 ) -> Result<Option<Utf8PathBuf>> {
     let path = path.join("target/dev");
     let paths = fs::read_dir(path);
@@ -167,7 +167,7 @@ mod tests {
 
         let result = try_get_starknet_artifacts_path(
             &Utf8PathBuf::from_path_buf(temp.to_path_buf()).unwrap(),
-            target,
+            &target,
         );
         let path = result.unwrap().unwrap();
         assert_eq!(
@@ -198,7 +198,7 @@ mod tests {
 
         let result = try_get_starknet_artifacts_path(
             &Utf8PathBuf::from_path_buf(temp.to_path_buf()).unwrap(),
-            target,
+            &target,
         );
         let path = result.unwrap();
         assert!(path.is_none());
@@ -220,7 +220,7 @@ mod tests {
 
         let result = try_get_starknet_artifacts_path(
             &Utf8PathBuf::from_path_buf(temp.to_path_buf()).unwrap(),
-            target,
+            &target,
         );
         let path = result.unwrap();
         assert!(path.is_none());

@@ -76,7 +76,7 @@ fn main_execution() -> Result<()> {
             &forge_config,
         );
 
-        let contracts_path = try_get_starknet_artifacts_path(&base_path, target)?;
+        let contracts_path = try_get_starknet_artifacts_path(&base_path, &target)?;
         let contracts = contracts_path
             .map(|path| get_contracts_map(&path))
             .transpose()?
