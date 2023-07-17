@@ -43,4 +43,4 @@ response: [FieldElement { inner: 0x000000000000000000000000000000000000000000000
 ```
 
 > 📝 **Note**
-> Call does not require passing account-connected parameters (`account` and `accounts-file`).
+> Call does not require passing account-connected parameters (`account` and `accounts-file`) because it doesn't create a transaction
