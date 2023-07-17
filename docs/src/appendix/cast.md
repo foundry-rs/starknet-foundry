@@ -1,4 +1,4 @@
 # Cast CLI Reference
 
-* [`cast` Commands](./cast/index.html)
-  * [Declare](./cast/index.html#declare)
+* [`cast` commands](./cast/index.html)
+  * [declare](./cast/index.html#declare)
