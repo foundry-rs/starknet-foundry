@@ -770,10 +770,14 @@ mod test {
     #[test]
     fn class_hash_correct() {
         let casm_contract_path = Path::new("./tests/data/example.casm");
-        let expected_class_hash = "0x3eb55a3f9f7485408838b08067c3b0f5d72523c525f568b04627464f5464749";
+        let expected_class_hash =
+            "0x3eb55a3f9f7485408838b08067c3b0f5d72523c525f568b04627464f5464749";
 
         let casm_contract_definition = std::fs::read_to_string(casm_contract_path).unwrap();
         let actual_class_hash = get_class_hash(casm_contract_definition.as_str());
-        assert_eq!(actual_class_hash, ClassHash(stark_felt!(expected_class_hash)));
+        assert_eq!(
+            actual_class_hash,
+            ClassHash(stark_felt!(expected_class_hash))
+        );
     }
 }
