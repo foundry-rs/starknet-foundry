@@ -1,4 +1,4 @@
-# Cast - starknet-foundry cli
+# Cast - Starknet Foundry cli
 
 todo [#13](https://github.com/foundry-rs/starknet-foundry/issues/13)
 
