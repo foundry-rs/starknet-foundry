@@ -1,4 +1,4 @@
-use crate::helpers::fixtures::default_cli_args;
+use crate::helpers::fixtures::default_cli_args_with_account;
 use crate::helpers::runner::runner;
 use std::path::Path;
 
@@ -7,7 +7,7 @@ static USERNAME2: &str = "user3";
 
 #[tokio::test]
 async fn test_happy_case() {
-    let args = default_cli_args(USERNAME);
+    let args = default_cli_args_with_account(USERNAME);
     let mut args: Vec<&str> = args.iter().map(String::as_str).collect();
 
     let path = project_root::get_project_root().expect("failed to get project root path");
@@ -30,7 +30,7 @@ async fn test_happy_case() {
 
 #[tokio::test]
 async fn test_invalid_path() {
-    let args = default_cli_args(USERNAME);
+    let args = default_cli_args_with_account(USERNAME);
     let mut args: Vec<&str> = args.iter().map(String::as_str).collect();
 
     args.append(&mut vec!["multicall", "--path", "non-existent"]);
@@ -47,7 +47,7 @@ async fn test_invalid_path() {
 
 #[tokio::test]
 async fn test_deploy_fail() {
-    let args = default_cli_args(USERNAME);
+    let args = default_cli_args_with_account(USERNAME);
     let mut args: Vec<&str> = args.iter().map(String::as_str).collect();
 
     let path = project_root::get_project_root().expect("failed to get project root path");
@@ -69,7 +69,7 @@ async fn test_deploy_fail() {
 
 #[tokio::test]
 async fn test_invoke_fail() {
-    let args = default_cli_args(USERNAME);
+    let args = default_cli_args_with_account(USERNAME);
     let mut args: Vec<&str> = args.iter().map(String::as_str).collect();
 
     let path = project_root::get_project_root().expect("failed to get project root path");
@@ -92,7 +92,7 @@ async fn test_invoke_fail() {
 
 #[tokio::test]
 async fn test_deploy_success_invoke_fails() {
-    let args = default_cli_args(USERNAME2);
+    let args = default_cli_args_with_account(USERNAME2);
     let mut args: Vec<&str> = args.iter().map(String::as_str).collect();
 
     let path = project_root::get_project_root().expect("failed to get project root path");
