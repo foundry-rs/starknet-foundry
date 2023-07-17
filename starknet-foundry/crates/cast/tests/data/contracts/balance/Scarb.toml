@@ -11,7 +11,7 @@ casm = true
 [lib]
 sierra = false
 
-[tool.protostar.myprofile]
+[tool.cast.myprofile]
 network = "testnet"
 url = "http://127.0.0.1:5055/rpc"
 account = "user1"
