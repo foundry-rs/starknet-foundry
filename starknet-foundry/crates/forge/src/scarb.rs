@@ -148,9 +148,9 @@ mod tests {
 
     #[test]
     fn get_starknet_artifacts_path() {
-        let path = "tests/data/declare_test";
         let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from(path, &["**/*.cairo", "**/*.toml"]).unwrap();
+        temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
+            .unwrap();
         Command::new("scarb")
             .current_dir(&temp)
             .arg("build")
@@ -158,7 +158,7 @@ mod tests {
             .unwrap();
 
         let scarb_metadata = MetadataCommand::new()
-            .current_dir(&temp)
+            .current_dir(temp.path())
             .inherit_stderr()
             .exec()
             .unwrap();
@@ -179,9 +179,9 @@ mod tests {
 
     #[test]
     fn get_starknet_artifacts_path_for_project_without_contracts() {
-        let path = "tests/data/simple_test";
         let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from(path, &["**/*.cairo", "**/*.toml"]).unwrap();
+        temp.copy_from("tests/data/print_test", &["**/*.cairo", "**/*.toml"])
+            .unwrap();
         Command::new("scarb")
             .current_dir(&temp)
             .arg("build")
@@ -189,7 +189,7 @@ mod tests {
             .unwrap();
 
         let scarb_metadata = MetadataCommand::new()
-            .current_dir(&temp)
+            .current_dir(temp.path())
             .inherit_stderr()
             .exec()
             .unwrap();
@@ -206,12 +206,12 @@ mod tests {
 
     #[test]
     fn get_starknet_artifacts_path_for_project_without_scarb_build() {
-        let path = "tests/data/simple_test";
         let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from(path, &["**/*.cairo", "**/*.toml"]).unwrap();
+        temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
+            .unwrap();
 
         let scarb_metadata = MetadataCommand::new()
-            .current_dir(&temp)
+            .current_dir(temp.path())
             .inherit_stderr()
             .exec()
             .unwrap();
