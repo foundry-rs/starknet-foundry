@@ -435,20 +435,10 @@ fn declare(
         .context("Failed to read contract class from json")?;
     let contract_class = BlockifierContractClass::V1(contract_class);
 
-    // TODO(#2134) replace this. Hash should be calculated in the correct manner. This is just a workaround.
-    let mut hasher = DefaultHasher::new();
-    casm_serialized.hash(&mut hasher);
-    let class_hash = hasher.finish();
-    let class_hash = ClassHash(stark_felt!(class_hash));
-
-    let temp = serde_json::from_str::<CompiledClass>(casm_serialized.as_str()).unwrap();
-    let computed_hash = temp.class_hash().unwrap();
-    let computed_hash = StarkFelt::new(computed_hash.to_bytes_be()).unwrap();
-    let computed_hash = ClassHash(computed_hash);
-
-    // assert_eq!(computed_hash, class_hash);
-    // assert_ne!(computed_hash, class_hash);
-    let class_hash = computed_hash;
+    let compiled_class = serde_json::from_str::<CompiledClass>(casm_serialized.as_str()).unwrap();
+    let class_hash = compiled_class.class_hash().unwrap();
+    let class_hash = StarkFelt::new(class_hash.to_bytes_be()).unwrap();
+    let class_hash = ClassHash(class_hash);
 
     let nonce = blockifier_state
         .get_nonce_at(ContractAddress(patricia_key!(
