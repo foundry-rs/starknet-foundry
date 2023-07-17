@@ -1,3 +1,6 @@
+mod hello_starknet;
+mod erc20;
+
 fn fib(a: felt252, b: felt252, n: felt252) -> felt252 {
     match n {
         0 => a,
