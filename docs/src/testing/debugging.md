@@ -1,7 +1,6 @@
 # Debugging
 
- Starknet Foundry standard library adds a utility
-method for printing inside tests to facilitate simple debugging.
+Starknet Foundry standard library adds a utility method for printing inside tests to facilitate simple debugging.
 
 Here's a test with example use of print method:
 
