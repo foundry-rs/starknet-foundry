@@ -47,5 +47,5 @@ Found a bug? Open an [issue](https://github.com/foundry-rs/starknet-foundry/issu
 
 ## Contributions
 
-Starknet Foundry is actively developed, we appreaciate any help from the community! Want to contribute? Read
+Starknet Foundry is under active development, and we appreciate any help from the community! Want to contribute? Read
 the [contribution guidelines](./CONTRIBUTING.md).
