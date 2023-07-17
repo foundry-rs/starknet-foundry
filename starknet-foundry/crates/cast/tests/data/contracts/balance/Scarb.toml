@@ -13,5 +13,5 @@ sierra = false
 
 [tool.protostar.myprofile]
 network = "testnet"
-rpc_url = "http://127.0.0.1:5055/rpc"
+url = "http://127.0.0.1:5055/rpc"
 account = "user1"

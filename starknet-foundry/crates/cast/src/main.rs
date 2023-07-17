@@ -22,7 +22,7 @@ struct Cli {
     #[clap(short = 's', long)]
     path_to_scarb_toml: Option<Utf8PathBuf>,
 
-    /// RPC provider url address; overrides rpc_url from Scarb.toml
+    /// RPC provider url address; overrides url from Scarb.toml
     #[clap(short = 'u', long = "url")]
     rpc_url: Option<String>,
 
@@ -30,7 +30,7 @@ struct Cli {
     #[clap(short = 'n', long)]
     network: Option<String>,
 
-    /// Account name to be used for contract declaration; overrides rpc_url from Scarb.toml
+    /// Account name to be used for contract declaration; overrides account from Scarb.toml
     #[clap(short = 'a', long)]
     account: Option<String>,
 

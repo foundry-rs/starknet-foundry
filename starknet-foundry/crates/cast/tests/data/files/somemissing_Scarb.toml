@@ -12,5 +12,5 @@ casm = true
 sierra = false
 
 [tool.protostar]
-rpc_url = "http://127.0.0.1:5055/rpc"
+url = "http://127.0.0.1:5055/rpc"
 network = "testnet"

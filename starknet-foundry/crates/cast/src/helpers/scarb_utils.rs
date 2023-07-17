@@ -67,7 +67,7 @@ pub fn parse_scarb_config(
 
     let package = &metadata.packages[0].manifest_metadata.tool;
 
-    let rpc_url = get_property(package, profile, "rpc_url")?;
+    let rpc_url = get_property(package, profile, "url")?;
     let network = get_property(package, profile, "network")?;
     let account = get_property(package, profile, "account")?;
 
@@ -133,7 +133,7 @@ mod tests {
         .unwrap_err();
         assert!(config
             .to_string()
-            .contains("Property not found in tool: rpc_url"));
+            .contains("Property not found in tool: url"));
     }
 
     #[test]
@@ -145,7 +145,7 @@ mod tests {
         .unwrap_err();
         assert!(config
             .to_string()
-            .contains("Profile or property not found in Scarb.toml: mariusz, rpc_url"));
+            .contains("Profile or property not found in Scarb.toml: mariusz, url"));
     }
 
     #[test]
