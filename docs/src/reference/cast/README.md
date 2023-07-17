@@ -109,6 +109,8 @@ Inputs to the function, represented by a list of space-delimited values `0x1 2 0
 Calldata arguments may be either hex or decimal felts.
 
 ### `--block-id, -b <BLOCK_ID>`
+Optional.
 
 Block identifier on which call should be performed.
 Possible values: pending, latest, block hash (0x prefixed string) and block number (u64).
+`pending` is used as a default value.
