@@ -43,7 +43,7 @@ the [Starknet Foundry Book](https://foundry-rs.github.io/starknet-foundry/)?
 - Join the [Telegram](TODO) group to get help
 - Open a [GitHub discussion](TODO) with your question
 
-Found a bug? Open an [issue](TODO)
+Found a bug? Open an [issue](https://github.com/foundry-rs/starknet-foundry/issues).
 
 ## Contributions
 
