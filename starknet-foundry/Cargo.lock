@@ -3155,6 +3155,7 @@ dependencies = [
  "serde",
  "serde_json",
  "snapbox",
+ "starknet",
  "starknet_api 0.1.0 (git+https://github.com/starkware-libs/starknet-api?rev=a4c78ff)",
  "tempfile",
  "test-collector",
