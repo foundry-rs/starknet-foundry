@@ -16,12 +16,8 @@
 
 # Testing
 
-* [Unit Testing](testing/unit_testing.md)
-* [Integration Testing](testing/integration_testing.md)
-* [Invoking and Calling Contracts](testing/dispatchers.md)
-* [Cheatcodes](testing/cheatcodes.md)
-    * [Declare](testing/cheatcodes/declare.md)
-    * [Deploy](testing/cheatcodes/deploy.md)
+* [Writing Tests](testing/testing.md)
+* [Testing Smart Contracts](testing/contracts.md)
 * [Debugging](testing/debugging.md)
 
 # Interacting with Starknet
