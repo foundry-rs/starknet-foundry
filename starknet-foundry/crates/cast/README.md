@@ -137,3 +137,13 @@ response: [FieldElement { inner: 0x000000000000000000000000000000000000000000000
 ## Development
 
 Refer to [project readme](https://github.com/foundry-rs/starknet-foundry#development) to make sure you have all the pre-requisites, and to obtain an information on how to help to develop `cast`.
+
+Please make sure you're using scarb installed via asdf - otherwise some tests may fail.
+To verify, run:
+
+```shell
+$ which scarb
+$HOME/.asdf/shims/scarb
+```
+
+If you previously installed scarb using official installer, you may need to remove this installation or modify your PATH to make sure asdf installed one is always used.
