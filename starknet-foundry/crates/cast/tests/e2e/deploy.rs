@@ -1,17 +1,15 @@
 use crate::helpers::constants::{ACCOUNT, MAP_CLASS_HASH_V1, MAP_CLASS_HASH_V2};
-use crate::helpers::fixtures::{default_cli_args_with_account, get_transaction_hash, get_transaction_receipt};
+use crate::helpers::fixtures::{default_cli_args, get_transaction_hash, get_transaction_receipt};
 use crate::helpers::runner::runner;
 use indoc::indoc;
 use starknet::core::types::TransactionReceipt::Invoke;
 use test_case::test_case;
 
-static USERNAME: &str = "user0";
-
 #[test_case(MAP_CLASS_HASH_V1, "user1" ; "when cairo1 contract")]
 #[test_case(MAP_CLASS_HASH_V2, "user2" ; "when cairo2 contract")]
 #[tokio::test]
 async fn test_happy_case(class_hash: &str, account: &str) {
-    let mut args = default_cli_args_with_account();
+    let mut args = default_cli_args();
     args.append(&mut vec![
         "--account",
         account,
@@ -38,7 +36,7 @@ async fn test_happy_case(class_hash: &str, account: &str) {
 
 #[tokio::test]
 async fn test_contract_not_declared() {
-    let mut args = default_cli_args_with_account();
+    let mut args = default_cli_args();
     args.append(&mut vec![
         "--account",
         ACCOUNT,
@@ -56,7 +54,7 @@ async fn test_contract_not_declared() {
 #[test_case(MAP_CLASS_HASH_V1, "user1" ; "when cairo1 contract")]
 #[test_case(MAP_CLASS_HASH_V2, "user2" ; "when cairo2 contract")]
 fn test_contract_already_deployed(class_hash: &str, account: &str) {
-    let mut args = default_cli_args_with_account();
+    let mut args = default_cli_args();
     args.append(&mut vec![
         "--account",
         account,
@@ -76,7 +74,7 @@ fn test_contract_already_deployed(class_hash: &str, account: &str) {
 #[test_case(MAP_CLASS_HASH_V1, "user1" ; "when cairo1 contract")]
 #[test_case(MAP_CLASS_HASH_V2, "user2" ; "when cairo2 contract")]
 fn test_too_low_max_fee(class_hash: &str, account: &str) {
-    let mut args = default_cli_args_with_account();
+    let mut args = default_cli_args();
     args.append(&mut vec![
         "--account",
         account,

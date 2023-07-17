@@ -1,16 +1,16 @@
-use crate::helpers::constants::{MAP_CONTRACT_ADDRESS_V1, MAP_CONTRACT_ADDRESS_V2};
-use crate::helpers::fixtures::{default_cli_args_with_account, invoke_map_contract};
+use crate::helpers::constants::{MAP_CONTRACT_ADDRESS_V1, MAP_CONTRACT_ADDRESS_V2, ACCOUNT};
+use crate::helpers::fixtures::{default_cli_args, invoke_map_contract};
 use crate::helpers::runner::runner;
 use indoc::indoc;
 use test_case::test_case;
 
-static USERNAME: &str = "user1";
-
-#[test_case(MAP_CONTRACT_ADDRESS_V1 ; "when cairo1 contract")]
-#[test_case(MAP_CONTRACT_ADDRESS_V2 ; "when cairo2 contract")]
-fn test_happy_case(contract_address: &str) {
-    let args = default_cli_args_with_account(USERNAME);
+#[test_case(MAP_CONTRACT_ADDRESS_V1, "user1" ; "when cairo1 contract")]
+#[test_case(MAP_CONTRACT_ADDRESS_V2, "user2" ; "when cairo2 contract")]
+fn test_happy_case(contract_address: &str, account: &str) {
+    let mut args = default_cli_args();
     args.append(&mut vec![
+        "--account",
+        account,
         "--json",
         "call",
         "--contract-address",
@@ -39,9 +39,10 @@ fn test_happy_case(contract_address: &str) {
 async fn test_call_after_storage_changed(contract_address: &str, account: &str) {
     invoke_map_contract("0x2", "0x3", account, contract_address).await;
 
-    let args = default_cli_args_with_account(USERNAME);
-    let mut args: Vec<&str> = args.iter().map(String::as_str).collect();
+    let mut args = default_cli_args();
     args.append(&mut vec![
+        "--account",
+        account,
         "call",
         "--contract-address",
         contract_address,
@@ -61,9 +62,10 @@ async fn test_call_after_storage_changed(contract_address: &str, account: &str) 
 
 #[tokio::test]
 async fn test_contract_does_not_exist() {
-    let args = default_cli_args_with_account(USERNAME);
-    let mut args: Vec<&str> = args.iter().map(String::as_str).collect();
+    let mut args = default_cli_args();
     args.append(&mut vec![
+        "--account",
+        ACCOUNT,
         "call",
         "--contract-address",
         "0x1",
@@ -78,11 +80,13 @@ async fn test_contract_does_not_exist() {
     "#});
 }
 
-#[test_case(MAP_CONTRACT_ADDRESS_V1 ; "when cairo1 contract")]
-#[test_case(MAP_CONTRACT_ADDRESS_V2 ; "when cairo2 contract")]
-fn test_wrong_function_name(contract_address: &str) {
-    let args = default_cli_args_with_account(USERNAME);
+#[test_case(MAP_CONTRACT_ADDRESS_V1, "user1" ; "when cairo1 contract")]
+#[test_case(MAP_CONTRACT_ADDRESS_V2, "user2" ; "when cairo2 contract")]
+fn test_wrong_function_name(contract_address: &str, account: &str) {
+    let mut args = default_cli_args();
     args.append(&mut vec![
+        "--account",
+        account,
         "call",
         "--contract-address",
         contract_address,
@@ -97,11 +101,13 @@ fn test_wrong_function_name(contract_address: &str) {
     "#});
 }
 
-#[test_case(MAP_CONTRACT_ADDRESS_V1 ; "when cairo1 contract")]
-#[test_case(MAP_CONTRACT_ADDRESS_V2 ; "when cairo2 contract")]
-fn test_wrong_calldata(contract_address: &str) {
-    let args = default_cli_args_with_account(USERNAME);
+#[test_case(MAP_CONTRACT_ADDRESS_V1, "user1" ; "when cairo1 contract")]
+#[test_case(MAP_CONTRACT_ADDRESS_V2, "user2" ; "when cairo2 contract")]
+fn test_wrong_calldata(contract_address: &str, account: &str) {
+    let mut args = default_cli_args();
     args.append(&mut vec![
+        "--account",
+        account,
         "call",
         "--contract-address",
         contract_address,

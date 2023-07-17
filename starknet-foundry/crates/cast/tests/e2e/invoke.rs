@@ -1,17 +1,15 @@
 use crate::helpers::constants::{ACCOUNT, MAP_CONTRACT_ADDRESS_V1, MAP_CONTRACT_ADDRESS_V2};
-use crate::helpers::fixtures::{default_cli_args_with_account, get_transaction_hash, get_transaction_receipt};
+use crate::helpers::fixtures::{default_cli_args, get_transaction_hash, get_transaction_receipt};
 use crate::helpers::runner::runner;
 use indoc::indoc;
 use starknet::core::types::TransactionReceipt::Invoke;
 use test_case::test_case;
 
-static USERNAME: &str = "user2";
-
 #[test_case(MAP_CONTRACT_ADDRESS_V1, "user1" ; "when cairo1 contract")]
 #[test_case(MAP_CONTRACT_ADDRESS_V2, "user2" ; "when cairo2 contract")]
 #[tokio::test]
 async fn test_happy_case(contract_address: &str, account: &str) {
-    let args = default_cli_args_with_account(USERNAME);
+    let mut args = default_cli_args();
     args.append(&mut vec![
         "--account",
         account,
@@ -39,8 +37,7 @@ async fn test_happy_case(contract_address: &str, account: &str) {
 
 #[tokio::test]
 async fn test_contract_does_not_exist() {
-    let args = default_cli_args_with_account(USERNAME);
-    let mut args: Vec<&str> = args.iter().map(String::as_str).collect();
+    let mut args = default_cli_args();
     args.append(&mut vec![
         "--account",
         ACCOUNT,
@@ -61,7 +58,7 @@ async fn test_contract_does_not_exist() {
 #[test_case(MAP_CONTRACT_ADDRESS_V1, "user1" ; "when cairo1 contract")]
 #[test_case(MAP_CONTRACT_ADDRESS_V2, "user2" ; "when cairo2 contract")]
 fn test_wrong_function_name(contract_address: &str, account: &str) {
-    let args = default_cli_args_with_account(USERNAME);
+    let mut args = default_cli_args();
     args.append(&mut vec![
         "--account",
         account,
@@ -82,7 +79,7 @@ fn test_wrong_function_name(contract_address: &str, account: &str) {
 #[test_case(MAP_CONTRACT_ADDRESS_V1, "user1" ; "when cairo1 contract")]
 #[test_case(MAP_CONTRACT_ADDRESS_V2, "user2" ; "when cairo2 contract")]
 fn test_wrong_calldata(contract_address: &str, account: &str) {
-    let args = default_cli_args_with_account(USERNAME);
+    let mut args = default_cli_args();
     args.append(&mut vec![
         "--account",
         account,
@@ -109,7 +106,7 @@ fn test_wrong_calldata(contract_address: &str, account: &str) {
 #[test_case(MAP_CONTRACT_ADDRESS_V1, "user1" ; "when cairo1 contract")]
 #[test_case(MAP_CONTRACT_ADDRESS_V2, "user2" ; "when cairo2 contract")]
 fn test_too_low_max_fee(contract_address: &str, account: &str) {
-    let args = default_cli_args_with_account(USERNAME);
+    let mut args = default_cli_args();
     args.append(&mut vec![
         "--account",
         account,
