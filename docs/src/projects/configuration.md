@@ -7,7 +7,7 @@ To be able to work with the network, you need to supply cast with a few paramete
 
 ```toml
 (...)
-[tool.protostar.profile1]
+[tool.cast.profile1]
 account = "user"
 network = "testnet"
 url = "http://127.0.0.1:5050/rpc"
@@ -42,7 +42,7 @@ If you don't need multiple profiles, you can define the parameters without speci
 
 ```toml
 (...)
-[tool.protostar]
+[tool.cast]
 account = "user123"
 network = "testnet"
 url = "http://127.0.0.1:5050/rpc"
