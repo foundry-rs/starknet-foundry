@@ -1,5 +1,5 @@
 # `multicall`
-Execute multiple deploy (via UDC) or invoke calls in a single transaction ensuring atomicity.
+Execute multiple deploy (via UDC) or invoke calls ensuring atomicity.
 
 ## `--path, -p <CONTRACT_ADDRESS>`
 Required.
