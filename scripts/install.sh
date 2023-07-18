@@ -2,9 +2,9 @@
 # shellcheck shell=dash
 # shellcheck disable=SC2039
 
-# This is just a little script that can be downloaded from the internet to install Starknet-Foundry.
+# This is just a little script that can be downloaded from the internet to install Starknet Foundry.
 # It just does platform detection, downloads the release archive, extracts it and tries to make
-# the `forge` and `cast` binaries available in $PATH in least invasive way possible.
+# the `snforge` and `sncast` binaries available in $PATH in least invasive way possible.
 #
 # It runs on Unix shells like {a,ba,da,k,z}sh. It uses the common `local` extension.
 # Note: Most shells limit `local` to 1 var per line, contra bash.
@@ -21,14 +21,14 @@ LOCAL_BIN_ESCAPED="\$HOME/.local/bin"
 
 usage() {
   cat <<EOF
-The installer for Starknet-Foundry
+The installer for Starknet Foundry
 
 Usage: install.sh [OPTIONS]
 
 Options:
   -p, --no-modify-path   Skip PATH variable modification
   -h, --help             Print help
-  -v, --version          Specify Starknet-Foundry version to install
+  -v, --version          Specify Starknet Foundry version to install
 
 For more information, check out https://foundry-rs.github.io/starknet-foundry/getting-started/installation.html
 EOF
@@ -103,15 +103,15 @@ main() {
 
   download "$_resolved_version" "$_arch" "$_installdir" "$_tempdir"
 
-  say "installed forge and cast to ${_installdir}"
+  say "installed snforge and sncast to ${_installdir}"
 
   create_symlinks "$_installdir"
   local _retval=$?
 
   echo
   if echo ":$PATH:" | grep -q ":${LOCAL_BIN}:"; then
-    echo "Starknet-Foundry has been successfully installed and should be already available in your PATH."
-    echo "Run 'forge --version' and 'cast --version' to verify your installation. Happy coding!"
+    echo "Starknet Foundry has been successfully installed and should be already available in your PATH."
+    echo "Run 'snforge --version' and 'sncast --version' to verify your installation. Happy coding!"
   else
     if [ $_do_modify_path -eq 1 ]; then
       add_local_bin_to_path
@@ -120,7 +120,7 @@ main() {
       echo "Skipping PATH modification, please manually add '${LOCAL_BIN_ESCAPED}' to your PATH."
     fi
 
-    echo "Then, run 'forge --version' and 'cast --version' to verify your installation. Happy coding!"
+    echo "Then, run 'snforge --version' and 'sncast --version' to verify your installation. Happy coding!"
   fi
 
   ignore rm -rf "$_tempdir"
@@ -445,7 +445,7 @@ download() {
 }
 
 create_symlinks() {
-  for binary in "forge" "cast"; do
+  for binary in "snforge" "sncast"; do
     local _binary="${_installdir}/bin/${binary}"
     local _symlink="${LOCAL_BIN}/${binary}"
 
@@ -484,7 +484,7 @@ add_local_bin_to_path() {
   echo >>"$_profile" && echo "export PATH=\"\$PATH:${LOCAL_BIN_ESCAPED}\"" >>"$_profile"
   echo \
     "Detected your preferred shell is ${_pref_shell} and added '${LOCAL_BIN_ESCAPED}' to PATH." \
-    "Run 'source ${_profile}' or start a new terminal session to use Starknet-Foundry."
+    "Run 'source ${_profile}' or start a new terminal session to use Starknet Foundry."
 }
 
 main "$@" || exit 1

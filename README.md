@@ -25,13 +25,13 @@ To install Starknet Foundry, run:
 $ curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/install.sh | sh
 ```
 
-If you want to specify a version, run the following command with the requested version:
+You can also specify a version you wish to install:
 
 ```shell
 $ curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/install.sh | sh -s -- -v 0.1.0
 ```
 
-To check if the Starknet Foundry is installed correctly, run `forge --version` and `cast --version`.
+To verify that the Starknet Foundry is installed correctly, run `snforge --version` and `sncast --version`.
 
 
 ## Features
