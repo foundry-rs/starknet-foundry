@@ -1,6 +1,6 @@
 # Running Tests
 
-To run tests with Forge, simply run the `forge` command from the package directory.
+To run tests with Forge, simply run the `snforge` command from the package directory.
 
 ```shell
 $ snforge
@@ -14,7 +14,7 @@ Tests: 2 passed, 0 failed, 0 skipped
 
 ## Filtering Tests
 
-You can pass a filter string after the `forge` command to filter tests.
+You can pass a filter string after the `snforge` command to filter tests.
 By default, any test name matching the filter will be run.
 
 ```shell
@@ -41,7 +41,7 @@ Tests: 1 passed, 0 failed, 0 skipped
 
 ## Stopping Test Execution After First Failed Test
 
-To stop the test execution after first failed test, you can pass an `--exit-first` flag along with `forge` command.
+To stop the test execution after first failed test, you can pass an `--exit-first` flag along with `snforge` command.
 
 ```shell
 $ snforge --exit-first

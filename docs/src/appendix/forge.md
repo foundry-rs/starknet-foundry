@@ -1,4 +1,4 @@
-# `forge [test filter]`
+# `snforge [test filter]`
 
 Run forge in the current directory
 
