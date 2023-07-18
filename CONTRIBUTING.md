@@ -15,11 +15,13 @@ Foundry book for environment setup.
 
 ### Running Tests and Checks
 
-Test scripts require you to have asdf installed.
-Check out [asdf docs](https://asdf-vm.com/guide/getting-started.html) for more details.
+To run tests scripts, you have to install:
 
-⚠️ Make sure you run `./scripts/prepare-for-tests.sh` after setting up the development environment, otherwise tests will
-fail.
+- [asdf](https://asdf-vm.com/guide/getting-started.html)
+- [starknet-devnet](https://0xspaceshard.github.io/starknet-devnet/docs/intro)
+
+> ⚠️ Make sure you run `./scripts/prepare-for-tests.sh` after setting up the development environment, otherwise tests
+> will fail.
 
 Before creating a contribution, make sure your code passes the following checks
 
