@@ -6,7 +6,7 @@ use console::style;
 
 pub fn print_error_message(error: &Error) {
     let error_tag = style("ERROR").red();
-    println!("[{error_tag}] {error}");
+    eprintln!("[{error_tag}] {error}");
 }
 
 pub fn print_collected_tests_count(tests_num: usize, tests_files_num: usize) {
