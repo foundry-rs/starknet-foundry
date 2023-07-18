@@ -20,7 +20,7 @@ To run tests scripts, you have to install:
 - [asdf](https://asdf-vm.com/guide/getting-started.html)
 - [starknet-devnet](https://0xspaceshard.github.io/starknet-devnet/docs/intro)
 
-> ⚠️ Make sure you run `./scripts/prepare-for-tests.sh` after setting up the development environment, otherwise the
+> ⚠️ Make sure you run `./scripts/prepare_for_tests.sh` after setting up the development environment, otherwise the
 > tests will fail.
 
 Before creating a contribution, make sure your code passes the following checks
