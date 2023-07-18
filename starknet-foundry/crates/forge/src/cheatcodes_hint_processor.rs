@@ -790,7 +790,7 @@ mod test {
         // https://github.com/software-mansion/starknet.py/blob/cea191679cbdd2726ca7989f3a7662dee6ea43ca/starknet_py/tests/e2e/docs/guide/test_cairo1_contract.py#L29-L36
         let cases = [
             (
-                "0x675f3bd6b220adb32096bf277ba986413ba5e46d1c2ebd7adfd0e878586576c",
+                "0x5167b09ea07d236371efa6053537eb2e6163bdb531e7161643a7c1fddfc5814",
                 "target/dev/simple_package_ERC20.casm.json",
             ),
             (
