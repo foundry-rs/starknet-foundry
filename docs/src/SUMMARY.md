@@ -13,8 +13,9 @@
 * [Project Templates](projects/template.md)
 * [Project Configuration](projects/configuration.md)
 
-# Testing
+# Forge overview
 
+* [Running Tests](testing/running-tests.md)
 * [Writing Tests](testing/testing.md)
 * [Testing Smart Contracts](testing/contracts.md)
 * [Debugging](testing/debugging.md)
