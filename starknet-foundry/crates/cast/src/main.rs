@@ -183,7 +183,7 @@ async fn main() -> Result<()> {
             let result = starknet_commands::invoke::invoke(
                 &invoke.contract_address,
                 &invoke.function,
-                invoke.calldata.iter().map(AsRef::as_ref).collect(),
+                invoke.calldata,
                 invoke.max_fee,
                 &mut account,
             )
