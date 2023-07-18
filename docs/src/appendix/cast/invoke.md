@@ -6,7 +6,7 @@ Required.
 
 The address of the contract being called in hex (prefixed with '0x') or decimal representation.
 
-## `--entry-point-name, -e <FUNCTION_NAME>`
+## `--function, -e <FUNCTION_NAME>`
 Required.
 
 The name of the function to call.

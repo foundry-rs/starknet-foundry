@@ -20,7 +20,7 @@ For a detailed CLI description, see the [call command reference](../appendix/cas
 $ cast call \
   --profile testnet \
   --contract-address 0x4a739ab73aa3cac01f9da5d55f49fb67baee4919224454a2e3f85b16462a911 \
-  --function-name some_function \
+  --function some_function \
   --calldata 1 2 0x1e
   
 command: Call
@@ -35,7 +35,7 @@ $ cast \
   --network testnet \
   call \
   --contract-address 0x4a739ab73aa3cac01f9da5d55f49fb67baee4919224454a2e3f85b16462a911 \
-  --entry-point-name "some_function" \
+  --function "some_function" \
   --calldata 1 2 3
 
 command: Call
