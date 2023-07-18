@@ -28,8 +28,18 @@ body:
       options:
         - Windows
         - Linux
-        - MacOS (Intel)
-        - MacOS (Apple Silicon)
+        - MacOS
+    validations:
+      required: true
+
+  - type: dropdown
+    id: system-architecture
+    attributes:
+      label: What system architecture are you using?
+      multiple: false
+      options:
+        - x86
+        - arm
     validations:
       required: true
 
