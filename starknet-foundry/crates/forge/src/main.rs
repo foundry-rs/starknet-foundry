@@ -59,7 +59,7 @@ fn main_execution() -> Result<()> {
         .context("Failed to convert path to predeployed contracts to Utf8PathBuf")?;
 
     let scarb_metadata = MetadataCommand::new().inherit_stderr().exec()?;
-    let _ = Command::new("scarb")
+    Command::new("scarb")
         .current_dir(std::env::current_dir().context("Failed to get current directory")?)
         .arg("build")
         .output()
