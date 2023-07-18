@@ -1,6 +1,6 @@
 # Contribution Guideline
 
-Starknet Foundry is actively developed and open for contributions!
+Starknet Foundry is under active development and is open for contributions!
 Want to get started?
 Grab any [issue](https://github.com/foundry-rs/starknet-foundry/issues) labeled with `good-first-issue`!
 Need some guidance?
