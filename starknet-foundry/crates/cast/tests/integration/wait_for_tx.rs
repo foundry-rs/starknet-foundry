@@ -3,9 +3,10 @@ use crate::helpers::{
     fixtures::create_test_provider,
 };
 use camino::Utf8PathBuf;
-use cast::{get_account, parse_number, wait_for_tx};
+use cast::{get_account, wait_for_tx};
 use starknet::contract::ContractFactory;
 use starknet::core::types::FieldElement;
+use crate::helpers::fixtures::parse_number;
 
 #[tokio::test]
 async fn test_happy_path() {
