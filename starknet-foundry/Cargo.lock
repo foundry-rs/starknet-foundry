@@ -3159,6 +3159,7 @@ dependencies = [
  "test-collector",
  "thiserror",
  "walkdir",
+ "which",
 ]
 
 [[package]]
