@@ -1,4 +1,4 @@
-use multicontract::fib;
+use simple_package::fib;
 
 #[test]
 fn test_my_test() {

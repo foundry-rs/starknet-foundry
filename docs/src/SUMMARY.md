@@ -16,12 +16,9 @@
 
 # Testing
 
-* [Unit Testing](testing/unit_testing.md)
-* [Integration Testing](testing/integration_testing.md)
-* [Invoking and Calling Contracts](testing/dispatchers.md)
-* [Cheatcodes](testing/cheatcodes.md)
-    * [Declare](testing/cheatcodes/declare.md)
-    * [Deploy](testing/cheatcodes/deploy.md)
+* [Writing Tests](testing/testing.md)
+* [Testing Smart Contracts](testing/contracts.md)
+* [Debugging](testing/debugging.md)
 
 # Interacting with Starknet
 
@@ -34,11 +31,12 @@
 # Appendix
 
 * [Forge library functions references](appendix/forge.md)
-  * [declare](appendix/forge/declare.md)
-  * [deploy](appendix/forge/deploy.md)
-  * [print](appendix/forge/print.md)
+    * [declare](appendix/forge/declare.md)
+    * [deploy](appendix/forge/deploy.md)
+    * [print](appendix/forge/print.md)
 * [Cast commands](appendix/cast.md)
-  * [common flags](appendix/cast/common.md)
-  * [declare](appendix/cast/declare.md)
-  * [deploy](appendix/cast/deploy.md)
-  * [invoke](appendix/cast/invoke.md)
+    * [common flags](appendix/cast/common.md)
+    * [declare](appendix/cast/declare.md)
+    * [deploy](appendix/cast/deploy.md)
+    * [invoke](appendix/cast/invoke.md)
+    * [call](appendix/cast/call.md)
