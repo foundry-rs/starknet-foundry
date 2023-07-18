@@ -58,6 +58,9 @@ fn main_execution() -> Result<()> {
     let predeployed_contracts = Utf8PathBuf::try_from(predeployed_contracts_path.clone())
         .context("Failed to convert path to predeployed contracts to Utf8PathBuf")?;
 
+    which::which("scarb")
+        .context("Cannot find `scarb` binary in PATH. Make sure you have Scarb installed https://github.com/software-mansion/scarb")?;
+
     let scarb_metadata = MetadataCommand::new().inherit_stderr().exec()?;
     Command::new("scarb")
         .current_dir(std::env::current_dir().context("Failed to get current directory")?)
