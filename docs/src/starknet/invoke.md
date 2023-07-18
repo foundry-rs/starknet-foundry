@@ -10,7 +10,7 @@ In most cases you have to provide:
 - Function name
 - Function arguments
 
-For detailed arguments description, see [invoke command reference](../appendix/cast/invoke.md).
+For detailed CLI description, see [invoke command reference](../appendix/cast/invoke.md).
 
 ## Usage example
 
