@@ -33,7 +33,7 @@ async fn test_happy_case(contract_path: &str, salt: &str, account: &str) {
         "999999999999",
     ];
 
-    let snapbox = Command::new(cargo_bin!("cast"))
+    let snapbox = Command::new(cargo_bin!("sncast"))
         .current_dir(&contract_path)
         .args(args);
     let output = snapbox.assert().success().get_output().stdout.clone();
@@ -62,7 +62,7 @@ async fn contract_already_declared() {
         "Map",
     ];
 
-    let snapbox = Command::new(cargo_bin!("cast"))
+    let snapbox = Command::new(cargo_bin!("sncast"))
         .current_dir(CONTRACTS_DIR.to_string() + "/v1/map")
         .args(args);
 
@@ -87,7 +87,7 @@ async fn wrong_contract_name_passed() {
         "nonexistent",
     ];
 
-    let snapbox = Command::new(cargo_bin!("cast"))
+    let snapbox = Command::new(cargo_bin!("sncast"))
         .current_dir(CONTRACTS_DIR.to_string() + "/v1/map")
         .args(args);
 
@@ -115,7 +115,7 @@ fn scarb_build_fails(contract_path: &str, accounts_file_path: &str) {
         "BuildFails",
     ];
 
-    let snapbox = Command::new(cargo_bin!("cast"))
+    let snapbox = Command::new(cargo_bin!("sncast"))
         .current_dir(CONTRACTS_DIR.to_string() + contract_path)
         .args(args);
 
@@ -146,7 +146,7 @@ fn test_too_low_max_fee(contract_path: &str, salt: &str, account: &str) {
         "1",
     ];
 
-    let snapbox = Command::new(cargo_bin!("cast"))
+    let snapbox = Command::new(cargo_bin!("sncast"))
         .current_dir(&contract_path)
         .args(args);
 
