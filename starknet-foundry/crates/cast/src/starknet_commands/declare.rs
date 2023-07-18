@@ -50,16 +50,18 @@ pub struct Declare {
 
     /// Max fee for the transaction. If not provided, max fee will be automatically estimated
     #[clap(short, long)]
-    pub max_fee: Option<u128>,
+    pub max_fee: Option<FieldElement>,
 }
 
 #[allow(clippy::too_many_lines)]
 pub async fn declare(
     contract_name: &str,
-    max_fee: Option<u128>,
+    max_fee: Option<FieldElement>,
     account: &mut SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
 ) -> Result<DeclareTransactionResult> {
     let contract_name: String = contract_name.to_string();
+    which::which("scarb")
+        .context("Cannot find `scarb` binary in PATH. Make sure you have Scarb installed https://github.com/software-mansion/scarb")?;
     let command_result = Command::new("scarb")
         .current_dir(std::env::current_dir().context("Failed to obtain current dir")?)
         .arg("--release")
@@ -169,7 +171,7 @@ pub async fn declare(
 
     let declaration = account.declare(Arc::new(contract_definition.flatten()?), casm_class_hash);
     let execution = if let Some(max_fee) = max_fee {
-        declaration.max_fee(FieldElement::from(max_fee))
+        declaration.max_fee(max_fee)
     } else {
         declaration
     };

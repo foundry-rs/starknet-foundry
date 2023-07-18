@@ -1,0 +1,22 @@
+name: Feature request
+description: Suggest a feature
+body:
+  - type: dropdown
+    id: tool-name
+    attributes:
+      label: To what component is your bug related to?
+      multiple: true
+      options:
+        - Forge
+        - Cast
+        - Other (Please describe below)
+    validations:
+      required: true
+
+  - type: textarea
+    id: Suggestion
+    attributes:
+      label: Feature Request
+      description: Describe the feature(s) you would like to be added.
+    validations:
+      required: true

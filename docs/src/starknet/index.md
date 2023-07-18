@@ -7,9 +7,9 @@ Starknet Foundry `cast` is a command line tool for performing Starknet RPC calls
 
 ## How to use cast
 
-To use cast, run the cast command followed by a subcommand (see [available commands](../appendix/cast.md)):
+To use cast, run the `sncast` command followed by a subcommand (see [available commands](../appendix/cast.md)):
 ```shell
-$ cast <subcommand>
+$ sncast <subcommand>
 ```
 
 If `Scarb.toml` is present and configured with `[tool.cast]`, `url`, `network` and `account` name will be taken from it. You can, however, overwrite their values by supplying them as flags directly to `cast` cli.
@@ -22,12 +22,12 @@ If `Scarb.toml` is present and configured with `[tool.cast]`, `url`, `network` a
 Let's use `cast` to call a contract's function:
 
 ```shell
-$ cast --account myotheruser \
+$ sncast --account myotheruser \
     --network testnet \
     --url http://127.0.0.1:5050/rpc \
     call \
     --contract-address 0x38b7b9507ccf73d79cb42c2cc4e58cf3af1248f342112879bfdf5aa4f606cc9 \
-    --function-name get \
+    --function get \
     --calldata 0x0 \
     --block-id latest
 

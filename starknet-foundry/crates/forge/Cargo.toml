@@ -54,3 +54,7 @@ which = "4.4.0"
 
 [lib]
 name = "forge"
+
+[[bin]]
+name = "snforge"
+path = "src/main.rs"
