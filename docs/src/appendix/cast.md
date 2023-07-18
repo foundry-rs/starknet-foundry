@@ -4,3 +4,4 @@
 * [declare](./cast/declare.md)
 * [deploy](./cast/deploy.md)
 * [call](./cast/call.md)
+* [multicall](./cast/multicall.md)

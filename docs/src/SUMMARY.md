@@ -39,3 +39,4 @@
     * [declare](appendix/cast/declare.md)
     * [deploy](appendix/cast/deploy.md)
     * [call](appendix/cast/call.md)
+    * [multicall](appendix/cast/multicall.md)
