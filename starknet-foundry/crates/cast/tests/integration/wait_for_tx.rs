@@ -1,3 +1,4 @@
+use crate::helpers::fixtures::parse_number;
 use crate::helpers::{
     constants::{ACCOUNT, ACCOUNT_FILE_PATH, DECLARE_TRANSACTION_HASH, MAP_CLASS_HASH_V1, NETWORK},
     fixtures::create_test_provider,
@@ -6,7 +7,6 @@ use camino::Utf8PathBuf;
 use cast::{get_account, wait_for_tx};
 use starknet::contract::ContractFactory;
 use starknet::core::types::FieldElement;
-use crate::helpers::fixtures::parse_number;
 
 #[tokio::test]
 async fn test_happy_path() {

@@ -1,4 +1,5 @@
 use crate::helpers::constants::{ACCOUNT, ACCOUNT_FILE_PATH, CONTRACTS_DIR, NETWORK, URL};
+use anyhow::Result;
 use camino::Utf8PathBuf;
 use cast::{get_account, get_provider};
 use serde_json::{json, Value};
@@ -14,7 +15,6 @@ use std::collections::HashMap;
 use std::fs;
 use std::sync::Arc;
 use url::Url;
-use anyhow::Result;
 
 pub fn parse_number(number_as_str: &str) -> Result<FieldElement> {
     let contract_address = match &number_as_str[..2] {
