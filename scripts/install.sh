@@ -2,9 +2,9 @@
 # shellcheck shell=dash
 # shellcheck disable=SC2039
 
-# This is just a little script that can be downloaded from the internet to install Forge/Cast.
+# This is just a little script that can be downloaded from the internet to install Starknet-Foundry.
 # It just does platform detection, downloads the release archive, extracts it and tries to make
-# the `forge`/`cast` binary available in $PATH in least invasive way possible.
+# the `forge` and `cast` binaries available in $PATH in least invasive way possible.
 #
 # It runs on Unix shells like {a,ba,da,k,z}sh. It uses the common `local` extension.
 # Note: Most shells limit `local` to 1 var per line, contra bash.
@@ -13,8 +13,9 @@
 
 set -u
 
-REPOSITORY="https://github.com/foundry-rs/starknet-foundry"
+REPO="https://github.com/foundry-rs/starknet-foundry"
 XDG_DATA_HOME="${XDG_DATA_HOME:-"${HOME}/.local/share"}"
+INSTALL_ROOT="${XDG_DATA_HOME}/starknet-foundry-install"
 LOCAL_BIN="${HOME}/.local/bin"
 LOCAL_BIN_ESCAPED="\$HOME/.local/bin"
 
@@ -22,13 +23,14 @@ usage() {
   cat <<EOF
 The installer for Starknet-Foundry
 
-Usage: install.sh (starknet-foundry|forge|cast) [OPTIONS]
+Usage: install.sh [OPTIONS]
 
 Options:
   -p, --no-modify-path   Skip PATH variable modification
   -h, --help             Print help
-  -v, --version          Specify Forge version to install
+  -v, --version          Specify Starknet-Foundry version to install
 
+For more information, check out https://foundry-rs.github.io/starknet-foundry/getting-started/installation.html
 EOF
 }
 
@@ -47,10 +49,10 @@ main() {
   for arg in "$@"; do
     shift
     case "$arg" in
-    '--help') set -- "$@" '-h' ;;
-    '--no-modify-path') set -- "$@" '-p' ;;
-    '--version') set -- "$@" '-v' ;;
-    *) set -- "$@" "$arg" ;;
+      '--help')           set -- "$@" '-h'   ;;
+      '--no-modify-path') set -- "$@" '-p'   ;;
+      '--version')        set -- "$@" '-v'   ;;
+      *)                  set -- "$@" "$arg" ;;
     esac
   done
 
@@ -101,15 +103,15 @@ main() {
 
   download "$_resolved_version" "$_arch" "$_installdir" "$_tempdir"
 
-  say "installed ${NAME} to ${_installdir}"
+  say "installed forge and cast to ${_installdir}"
 
-  create_symlink "$_installdir"
+  create_symlinks "$_installdir"
   local _retval=$?
 
   echo
   if echo ":$PATH:" | grep -q ":${LOCAL_BIN}:"; then
-    echo "${NAME} has been successfully installed and should be already available in your PATH."
-    echo "Run '${NAME} --version' to verify your installation. Happy coding!"
+    echo "Starknet-Foundry has been successfully installed and should be already available in your PATH."
+    echo "Run 'forge --version' and 'cast --version' to verify your installation. Happy coding!"
   else
     if [ $_do_modify_path -eq 1 ]; then
       add_local_bin_to_path
@@ -118,7 +120,7 @@ main() {
       echo "Skipping PATH modification, please manually add '${LOCAL_BIN_ESCAPED}' to your PATH."
     fi
 
-    echo "Then, run '${NAME} --version' to verify your installation. Happy coding!"
+    echo "Then, run 'forge --version' and 'cast --version' to verify your installation. Happy coding!"
   fi
 
   ignore rm -rf "$_tempdir"
@@ -127,35 +129,35 @@ main() {
 
 # This function has been copied verbatim from rustup install script.
 check_proc() {
-  # Check for /proc by looking for the /proc/self/exe link
-  # This is only run on Linux
-  if ! test -L /proc/self/exe; then
-    err "fatal: Unable to find /proc/self/exe.  Is /proc mounted?  Installation cannot proceed without /proc."
-  fi
+    # Check for /proc by looking for the /proc/self/exe link
+    # This is only run on Linux
+    if ! test -L /proc/self/exe ; then
+        err "fatal: Unable to find /proc/self/exe.  Is /proc mounted?  Installation cannot proceed without /proc."
+    fi
 }
 
 # This function has been copied verbatim from rustup install script.
 get_bitness() {
-  need_cmd head
-  # Architecture detection without dependencies beyond coreutils.
-  # ELF files start out "\x7fELF", and the following byte is
-  #   0x01 for 32-bit and
-  #   0x02 for 64-bit.
-  # The printf builtin on some shells like dash only supports octal
-  # escape sequences, so we use those.
-  local _current_exe_head
-  _current_exe_head=$(head -c 5 /proc/self/exe)
-  if [ "$_current_exe_head" = "$(printf '\177ELF\001')" ]; then
-    echo 32
-  elif [ "$_current_exe_head" = "$(printf '\177ELF\002')" ]; then
-    echo 64
-  else
-    err "unknown platform bitness"
-  fi
+    need_cmd head
+    # Architecture detection without dependencies beyond coreutils.
+    # ELF files start out "\x7fELF", and the following byte is
+    #   0x01 for 32-bit and
+    #   0x02 for 64-bit.
+    # The printf builtin on some shells like dash only supports octal
+    # escape sequences, so we use those.
+    local _current_exe_head
+    _current_exe_head=$(head -c 5 /proc/self/exe )
+    if [ "$_current_exe_head" = "$(printf '\177ELF\001')" ]; then
+        echo 32
+    elif [ "$_current_exe_head" = "$(printf '\177ELF\002')" ]; then
+        echo 64
+    else
+        err "unknown platform bitness"
+    fi
 }
 
 say() {
-  printf "${NAME}-install: %s\n" "$1"
+  printf 'starknet-foundry-install: %s\n' "$1"
 }
 
 err() {
@@ -402,8 +404,8 @@ resolve_version() {
 
   local _response
 
-  say "retrieving $_requested_version version from ${REPOSITORY}..."
-  _response=$(ensure curl -Ls -H 'Accept: application/json' "${REPOSITORY}/releases/${_requested_ref}")
+  say "retrieving $_requested_version version from ${REPO}..."
+  _response=$(ensure curl -Ls -H 'Accept: application/json' "${REPO}/releases/${_requested_ref}")
   if [ "{\"error\":\"Not Found\"}" = "$_response" ]; then
     err "version $_requested_version not found"
   fi
@@ -418,7 +420,7 @@ create_install_dir() {
 
   if [ -d "$_installdir" ]; then
     ensure rm -rf "$_installdir"
-    say "removed existing ${NAME} installation at ${_installdir}"
+    say "removed existing forge and cast installation at ${_installdir}"
   fi
 
   ensure mkdir -p "$_installdir"
@@ -432,9 +434,9 @@ download() {
   local _installdir=$3
   local _tempdir=$4
 
-  local _tarball="${NAME}-${_resolved_version}-${_arch}.tar.gz"
-  local _url="${REPOSITORY}/releases/download/${_resolved_version}/${_tarball}"
-  local _dl="$_tempdir/${NAME}.tar.gz"
+  local _tarball="starknet-foundry-${_resolved_version}-${_arch}.tar.gz"
+  local _url="${REPO}/releases/download/${_resolved_version}/${_tarball}"
+  local _dl="$_tempdir/starknet-foundry.tar.gz"
 
   say "downloading ${_tarball}..."
 
@@ -442,17 +444,16 @@ download() {
   ensure tar -xz -C "$_installdir" --strip-components=1 -f "$_dl"
 }
 
-create_symlink() {
-  local _installdir=$1
+create_symlinks() {
+  for binary in "forge" "cast"; do
+    local _binary="${_installdir}/bin/${binary}"
+    local _symlink="${LOCAL_BIN}/${binary}"
 
-  local binary="${_installdir}/bin/${NAME}"
-  local _symlink="${LOCAL_BIN}/${NAME}"
-
-  ensure mkdir -p "$LOCAL_BIN"
-  ensure ln -fs "$binary" "$_symlink"
-  ensure chmod u+x "$_symlink"
-
-  say "created symlink ${_symlink} -> ${binary}"
+    ensure mkdir -p "$LOCAL_BIN"
+    ensure ln -fs "$_binary" "$_symlink"
+    ensure chmod u+x "$_symlink"
+    say "created symlink ${_symlink} -> ${_binary}"
+  done
 }
 
 add_local_bin_to_path() {
@@ -483,29 +484,7 @@ add_local_bin_to_path() {
   echo >>"$_profile" && echo "export PATH=\"\$PATH:${LOCAL_BIN_ESCAPED}\"" >>"$_profile"
   echo \
     "Detected your preferred shell is ${_pref_shell} and added '${LOCAL_BIN_ESCAPED}' to PATH." \
-    "Run 'source ${_profile}' or start a new terminal session to use ${NAME}."
+    "Run 'source ${_profile}' or start a new terminal session to use Starknet-Foundry."
 }
 
-main_wrapper() {
-  if [ "$#" -lt 1 ]; then
-    echo "At least one parameter is required, run with --help for more information"
-    exit 1
-  fi
-
-  if [ "$1" == "cast" ] || [ "$1" == "forge" ]; then
-    INSTALL_ROOT="${XDG_DATA_HOME}/$1"
-    NAME="$1"
-    main "$@" || exit 1
-  elif [ "$1" == "starknet-foundry" ]; then
-    for name in "forge" "cast"; do
-      INSTALL_ROOT="${XDG_DATA_HOME}/${name}"
-      NAME=$name
-      main "$@" || exit 1
-    done
-  else
-    echo "Invalid first argument, valid options are: starknet-foundry, forge, cast"
-    exit 1
-  fi
-}
-
-main_wrapper "$@"
+main "$@" || exit 1
