@@ -31,7 +31,7 @@ Starknet Foundry is under active development! Expect a lot of new features to ap
 
 ## Performance
 
-WIP
+[//]: # (TODO add benchmarks)
 
 ## Getting Help
 
