@@ -1,4 +1,4 @@
-## Scarb
+# Scarb
 
 [Scarb](https://docs.swmansion.com/scarb) is the package manager and build toolchain for Starknet ecosystem.
 Those coming from Rust ecosystem will find Scarb very similar to [Cargo](https://doc.rust-lang.org/cargo/).

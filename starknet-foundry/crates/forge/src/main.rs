@@ -13,6 +13,7 @@ use forge::scarb::{get_contracts_map, try_get_starknet_artifacts_path};
 use std::process::Command;
 
 static CORELIB_PATH: Dir = include_dir!("../cairo/corelib/src");
+static PREDEPLOYED_CONTRACTS: Dir = include_dir!("crates/cheatable-starknet/predeployed-contracts");
 
 #[derive(Parser, Debug)]
 struct Args {
@@ -35,6 +36,14 @@ fn load_corelib() -> Result<TempDir> {
     Ok(tmp_dir)
 }
 
+fn load_predeployed_contracts() -> Result<TempDir> {
+    let tmp_dir = tempdir()?;
+    PREDEPLOYED_CONTRACTS
+        .extract(&tmp_dir)
+        .context("Failed to copy corelib to temporary directory")?;
+    Ok(tmp_dir)
+}
+
 fn main_execution() -> Result<()> {
     let args = Args::parse();
 
@@ -43,6 +52,11 @@ fn main_execution() -> Result<()> {
     let corelib_path: PathBuf = corelib_dir.path().into();
     let corelib = Utf8PathBuf::try_from(corelib_path.clone())
         .context("Failed to convert corelib path to Utf8PathBuf")?;
+
+    let predeployed_contracts_dir = load_predeployed_contracts()?;
+    let predeployed_contracts_path: PathBuf = predeployed_contracts_dir.path().into();
+    let predeployed_contracts = Utf8PathBuf::try_from(predeployed_contracts_path.clone())
+        .context("Failed to convert path to predeployed contracts to Utf8PathBuf")?;
 
     let scarb_metadata = MetadataCommand::new().inherit_stderr().exec()?;
     let _ = Command::new("scarb")
@@ -74,16 +88,24 @@ fn main_execution() -> Result<()> {
             &runner_config,
             Some(&corelib),
             &contracts,
+            &predeployed_contracts,
         )?;
     }
 
-    // Explicitly close the temporary directory so we can handle the error
+    // Explicitly close the temporary directories so we can handle the errors
     corelib_dir.close().with_context(|| {
         anyhow!(
             "Failed to close temporary directory = {} with corelib. Corelib files might have not been released from filesystem",
             corelib_path.display()
         )
     })?;
+    predeployed_contracts_dir.close().with_context(|| {
+        anyhow!(
+            "Failed to close temporary directory = {} with predeployed contracts. Predeployed contract files might have not been released from filesystem",
+            predeployed_contracts_path.display()
+        )
+    })?;
+
     Ok(())
 }
 
