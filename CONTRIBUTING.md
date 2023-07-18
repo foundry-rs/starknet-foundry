@@ -5,9 +5,8 @@ Want to get started?
 Grab any issue labeled with `good-first-issue`!
 Need some guidance?
 
-[//]: # (TODO add telegram and gh discussions links)
-
-Reach out to other developers on [Telegram]() or open a [GitHub discussion]()!
+Reach out to other developers on [Telegram](https://t.me/+d8ULaPxeRqlhMDNk) or open
+a [GitHub discussion](https://github.com/foundry-rs/starknet-foundry/discussions)!
 
 ### Environment setup
 

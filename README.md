@@ -39,10 +39,8 @@ Starknet Foundry is under active development! Expect a lot of new features to ap
 You haven't found your answer to your question in
 the [Starknet Foundry Book](https://foundry-rs.github.io/starknet-foundry/)?
 
-[//]: # (TODO add tg group and gh discussions)
-
-- Join the [Telegram](TODO) group to get help
-- Open a [GitHub discussion](TODO) with your question
+- Join the [Telegram](https://t.me/+d8ULaPxeRqlhMDNk) group to get help
+- Open a [GitHub discussion](https://github.com/foundry-rs/starknet-foundry/discussions) with your question
 
 Found a bug? Open an [issue](https://github.com/foundry-rs/starknet-foundry/issues).
 
