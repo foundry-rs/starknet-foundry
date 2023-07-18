@@ -467,9 +467,13 @@ fn declare(
 }
 
 fn get_class_hash(casm_contract: &str) -> ClassHash {
-    let compiled_class = serde_json::from_str::<CompiledClass>(casm_contract).unwrap();
-    let class_hash = compiled_class.class_hash().unwrap();
-    let class_hash = StarkFelt::new(class_hash.to_bytes_be()).unwrap();
+    let compiled_class = serde_json::from_str::<CompiledClass>(casm_contract)
+        .expect("Failed to deserialize casm contract into CompiledClass");
+    let class_hash = compiled_class
+        .class_hash()
+        .expect("Failed to compute class_hash for CompiledClass");
+    let class_hash = StarkFelt::new(class_hash.to_bytes_be())
+        .unwrap_or_else(|_| panic!("Failed to create StarkFelt from class_hash: {class_hash:?}"));
     ClassHash(class_hash)
 }
 
@@ -775,7 +779,7 @@ mod test {
         let expected_class_hash =
             "0x3eb55a3f9f7485408838b08067c3b0f5d72523c525f568b04627464f5464749";
 
-        let casm_contract_definition = std::fs::read_to_string(casm_contract_path).unwrap();
+        let casm_contract_definition = std::fs::read_to_string(casm_contract_path).unwrap_or_else(|_| panic!("Failed to read file: {casm_contract_path:?}"));
         let actual_class_hash = get_class_hash(casm_contract_definition.as_str());
         assert_eq!(
             actual_class_hash,
