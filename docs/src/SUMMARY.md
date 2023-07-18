@@ -10,7 +10,6 @@
 
 # Projects
 
-* [Project Templates](projects/template.md)
 * [Project Configuration](projects/configuration.md)
 
 # Forge overview

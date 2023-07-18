@@ -16,7 +16,7 @@ First make sure that you have created a [`Scarb.toml`](../projects/template.md) 
 Then run:
 
 ```shell
-$ cast --account myuser \
+$ sncast --account myuser \
     --network testnet \
     --url http://127.0.0.1:5050/rpc \ 
     declare \

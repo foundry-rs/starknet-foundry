@@ -12,7 +12,7 @@ mod starknet_commands;
 
 #[derive(Parser)]
 #[command(version)]
-#[command(about = "cast - a starknet-foundry CLI", long_about = None)]
+#[command(about = "Cast - a Starknet Foundry CLI", long_about = None)]
 struct Cli {
     /// Profile name in Scarb.toml config file
     #[clap(short, long)]

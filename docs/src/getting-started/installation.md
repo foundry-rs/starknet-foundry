@@ -7,8 +7,18 @@ To use Starknet Foundry, you need [Scarb](https://docs.swmansion.com/scarb/docs/
 You can find what version of Scarb is compatible with your version of Starknet Foundry in [release notes](https://github.com/foundry-rs/starknet-foundry/releases).
 
 ### Install via installation script
+1. Open a terminal and run the following command:
+```shell
+$ curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/install.sh | sh
+```
+2. To verify that the Starknet Foundry is installed correctly, run `snforge --version` and `sncast --version`.
+In some cases, you may need to close and reopen the terminal.
 
-TODO: https://github.com/foundry-rs/starknet-foundry/pull/115
+You can also specify a version you wish to install:
+
+```shell
+$ curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/install.sh | sh -s -- -v 0.1.0
+```
 
 ## How to build Starknet Foundry from source code
 If you are unable to install Starknet Foundry using the instructions above, you can try building it from the [source code](https://github.com/foundry-rs/starknet-foundry) as follows:

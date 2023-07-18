@@ -21,10 +21,10 @@ fn test_sum() {
 It is a common practice to keep your unit tests in the same file as the tested code. If you prefer, you can also put
 test code in a separate file anywhere in the project directory.
 
-Now run forge using command:
+Now run forge using a command:
 
 ```shell
-$ forge
+$ snforge
 Collected 1 test(s) and 1 test file(s)
 Running 1 test(s) from src/lib.cairo
 [PASS] src::test_sum
@@ -57,7 +57,7 @@ fn failing() {
 ```
 
 ```shell
-$ forge
+$ snforge
 Collected 1 test(s) and 1 test file(s)
 Running 1 test(s) from src/lib.cairo
 [FAIL] src::failing

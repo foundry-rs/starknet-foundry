@@ -2,9 +2,9 @@
 
 ## Overview
 
-Starknet Foundry cast supports invoking smart contracts on a given network with the `cast invoke` command.
+Starknet Foundry cast supports invoking smart contracts on a given network with the `sncast invoke` command.
 
-In most cases you have to provide:
+In most cases, you have to provide:
 
 - Contract address
 - Function name
@@ -17,7 +17,7 @@ For detailed CLI description, see [invoke command reference](../appendix/cast/in
 ### Without profiles
 
 ```shell
-$ cast \
+$ sncast \
   --rpc_url http://127.0.0.1:5050 \
   --network testnet \
   --account example_user \
@@ -34,7 +34,7 @@ $ cast \
 ### With [profiles](../projects/configuration.md#Cast)
 
 ```shell
-$ cast invoke \
+$ sncast invoke \
   --profile testnet \
   --contract-address 0x4a739ab73aa3cac01f9da5d55f49fb67baee4919224454a2e3f85b16462a911 \
   --function "some_function" \
