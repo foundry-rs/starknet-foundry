@@ -34,10 +34,13 @@ Starknet Foundry is under active development! Expect a lot of new features to ap
 - [ ] Cheatcodes
 - [ ] Parallel tests execution
 - [ ] Performance improvements
-- [ ] Creating and deploying new accounts on Starknet
 - [ ] Deployment scripts written in Cairo
 - [ ] Starknet state forking
 - [ ] Advanced debugging utilities
+- [ ] L1 ↔ L2 messaging and cross-chain testing
+- [ ] Transactions profiling
+- [ ] Fuzz testing
+- [ ] Test coverage reports
 
 ## Performance
 
