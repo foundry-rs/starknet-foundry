@@ -132,13 +132,9 @@ async fn main() -> Result<()> {
             let account = get_account(&account, &accounts_file_path, &provider, &network)?;
 
             let result = starknet_commands::deploy::deploy(
-                &deploy.class_hash,
-                deploy
-                    .constructor_calldata
-                    .iter()
-                    .map(AsRef::as_ref)
-                    .collect(),
-                deploy.salt.as_deref(),
+                deploy.class_hash,
+                deploy.constructor_calldata,
+                deploy.salt,
                 deploy.unique,
                 deploy.max_fee,
                 &account,
@@ -152,9 +148,9 @@ async fn main() -> Result<()> {
             let block_id = get_block_id(&call.block_id)?;
 
             let result = starknet_commands::call::call(
-                call.contract_address.as_ref(),
+                call.contract_address,
                 call.function.as_ref(),
-                call.calldata.as_ref(),
+                call.calldata,
                 &provider,
                 block_id.as_ref(),
             )
@@ -185,9 +181,9 @@ async fn main() -> Result<()> {
         Commands::Invoke(invoke) => {
             let mut account = get_account(&account, &accounts_file_path, &provider, &network)?;
             let result = starknet_commands::invoke::invoke(
-                &invoke.contract_address,
+                invoke.contract_address,
                 &invoke.function,
-                invoke.calldata.iter().map(AsRef::as_ref).collect(),
+                invoke.calldata,
                 invoke.max_fee,
                 &mut account,
             )

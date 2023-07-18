@@ -3,9 +3,11 @@ use crate::starknet_commands::{
     invoke::{invoke, print_invoke_result},
 };
 use anyhow::Result;
+use cast::parse_number;
 use clap::Args;
 use serde::Deserialize;
 use starknet::accounts::SingleOwnerAccount;
+use starknet::core::types::FieldElement;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
@@ -15,11 +17,11 @@ use std::collections::HashMap;
 #[derive(Deserialize, Debug)]
 struct DeployCall {
     call_type: String,
-    class_hash: String,
-    inputs: Vec<String>,
-    max_fee: Option<u128>,
+    class_hash: FieldElement,
+    inputs: Vec<FieldElement>,
+    max_fee: Option<FieldElement>,
     unique: bool,
-    salt: Option<String>,
+    salt: Option<FieldElement>,
     id: String,
 }
 
@@ -29,8 +31,8 @@ struct InvokeCall {
     call_type: String,
     contract_address: String,
     function: String,
-    inputs: Vec<String>,
-    max_fee: Option<u128>,
+    inputs: Vec<FieldElement>,
+    max_fee: Option<FieldElement>,
 }
 
 #[derive(Args)]
@@ -62,15 +64,10 @@ pub async fn multicall(
             Some("deploy") => {
                 let deploy_call: DeployCall = toml::from_str(call.to_string().as_str())
                     .expect("failed to parse toml `deploy` call");
-                let inputs_as_strings_slices: Vec<&str> = deploy_call
-                    .inputs
-                    .iter()
-                    .map(std::string::String::as_str)
-                    .collect();
                 let result = deploy(
-                    &deploy_call.class_hash,
-                    inputs_as_strings_slices,
-                    deploy_call.salt.as_deref(),
+                    deploy_call.class_hash,
+                    deploy_call.inputs,
+                    deploy_call.salt,
                     deploy_call.unique,
                     deploy_call.max_fee,
                     account,
@@ -84,19 +81,15 @@ pub async fn multicall(
             Some("invoke") => {
                 let invoke_call: InvokeCall = toml::from_str(call.to_string().as_str())
                     .expect("failed to parse toml `invoke` call");
-                let inputs_as_strings_slices: Vec<&str> = invoke_call
-                    .inputs
-                    .iter()
-                    .map(std::string::String::as_str)
-                    .collect();
                 let mut contract_address = &invoke_call.contract_address;
                 if let Some(addr) = contracts.get(&invoke_call.contract_address) {
                     contract_address = addr;
                 }
                 let result = invoke(
-                    contract_address,
+                    parse_number(contract_address)
+                        .expect("Unable to parse contract address to FieldElement"),
                     &invoke_call.function,
-                    inputs_as_strings_slices,
+                    invoke_call.inputs,
                     invoke_call.max_fee,
                     account,
                 )
