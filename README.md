@@ -29,6 +29,8 @@ Starknet Foundry is under active development! Expect a lot of new features to ap
 - [ ] Performance improvements
 - [ ] State forking
 - [ ] Advanced debugging utilities
+- [ ] Creating and deploying new accounts
+- [ ] Deployment scripts written in Cairo
 
 ## Performance
 
