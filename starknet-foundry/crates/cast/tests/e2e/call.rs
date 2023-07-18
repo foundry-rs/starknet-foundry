@@ -1,16 +1,14 @@
-use crate::helpers::constants::{ACCOUNT, MAP_CONTRACT_ADDRESS_V1, MAP_CONTRACT_ADDRESS_V2};
+use crate::helpers::constants::{MAP_CONTRACT_ADDRESS_V1, MAP_CONTRACT_ADDRESS_V2};
 use crate::helpers::fixtures::{default_cli_args, invoke_map_contract};
 use crate::helpers::runner::runner;
 use indoc::indoc;
 use test_case::test_case;
 
-#[test_case(MAP_CONTRACT_ADDRESS_V1, "user1" ; "when cairo1 contract")]
-#[test_case(MAP_CONTRACT_ADDRESS_V2, "user2" ; "when cairo2 contract")]
-fn test_happy_case(contract_address: &str, account: &str) {
+#[test_case(MAP_CONTRACT_ADDRESS_V1 ; "when cairo1 contract")]
+#[test_case(MAP_CONTRACT_ADDRESS_V2 ; "when cairo2 contract")]
+fn test_happy_case(contract_address: &str) {
     let mut args = default_cli_args();
     args.append(&mut vec![
-        "--account",
-        account,
         "--json",
         "call",
         "--contract-address",
@@ -41,8 +39,6 @@ async fn test_call_after_storage_changed(contract_address: &str, account: &str) 
 
     let mut args = default_cli_args();
     args.append(&mut vec![
-        "--account",
-        account,
         "call",
         "--contract-address",
         contract_address,
@@ -64,8 +60,6 @@ async fn test_call_after_storage_changed(contract_address: &str, account: &str) 
 async fn test_contract_does_not_exist() {
     let mut args = default_cli_args();
     args.append(&mut vec![
-        "--account",
-        ACCOUNT,
         "call",
         "--contract-address",
         "0x1",
@@ -80,13 +74,11 @@ async fn test_contract_does_not_exist() {
     "#});
 }
 
-#[test_case(MAP_CONTRACT_ADDRESS_V1, "user1" ; "when cairo1 contract")]
-#[test_case(MAP_CONTRACT_ADDRESS_V2, "user2" ; "when cairo2 contract")]
-fn test_wrong_function_name(contract_address: &str, account: &str) {
+#[test_case(MAP_CONTRACT_ADDRESS_V1 ; "when cairo1 contract")]
+#[test_case(MAP_CONTRACT_ADDRESS_V2 ; "when cairo2 contract")]
+fn test_wrong_function_name(contract_address: &str) {
     let mut args = default_cli_args();
     args.append(&mut vec![
-        "--account",
-        account,
         "call",
         "--contract-address",
         contract_address,
@@ -101,13 +93,11 @@ fn test_wrong_function_name(contract_address: &str, account: &str) {
     "#});
 }
 
-#[test_case(MAP_CONTRACT_ADDRESS_V1, "user1" ; "when cairo1 contract")]
-#[test_case(MAP_CONTRACT_ADDRESS_V2, "user2" ; "when cairo2 contract")]
-fn test_wrong_calldata(contract_address: &str, account: &str) {
+#[test_case(MAP_CONTRACT_ADDRESS_V1 ; "when cairo1 contract")]
+#[test_case(MAP_CONTRACT_ADDRESS_V2 ; "when cairo2 contract")]
+fn test_wrong_calldata(contract_address: &str) {
     let mut args = default_cli_args();
     args.append(&mut vec![
-        "--account",
-        account,
         "call",
         "--contract-address",
         contract_address,
