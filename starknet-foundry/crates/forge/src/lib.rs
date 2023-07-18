@@ -78,7 +78,7 @@ fn collect_tests_from_directory(
     internal_collect_tests(
         input_path,
         linked_libraries,
-        test_files,
+        &test_files,
         corelib_path,
         runner_config,
     )
@@ -106,7 +106,7 @@ fn find_cairo_files_in_directory(input_path: &Utf8PathBuf) -> Result<Vec<Utf8Pat
 fn internal_collect_tests(
     input_path: &Utf8PathBuf,
     linked_libraries: &Option<Vec<LinkedLibrary>>,
-    test_files: Vec<Utf8PathBuf>,
+    test_files: &[Utf8PathBuf],
     corelib_path: Option<&Utf8PathBuf>,
     runner_config: &RunnerConfig,
 ) -> Result<Vec<TestsFromFile>> {
@@ -122,7 +122,6 @@ fn internal_collect_tests(
             )
         })
         .collect();
-
     tests
 }
 
