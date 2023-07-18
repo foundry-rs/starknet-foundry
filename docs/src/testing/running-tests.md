@@ -3,7 +3,7 @@
 To run tests with Forge, simply run the `forge` command from the package directory.
 
 ```shell
-$ forge
+$ snforge
 Collected 3 test(s) and 1 test file(s)
 Running 1 test(s) from src/lib.cairo
 [PASS] src::executing
@@ -18,7 +18,7 @@ You can pass a filter string after the `forge` command to filter tests.
 By default, any test name matching the filter will be run.
 
 ```shell
-$ forge calling
+$ snforge calling
 Collected 2 test(s) and 1 test file(s)
 Running 1 test(s) from src/lib.cairo
 [PASS] src::calling
@@ -32,7 +32,7 @@ To run a specific test, you can pass a filter string along with an `--exact` fla
 Note, you have to use a fully qualified test name, including a module name.
 
 ```shell
-$ forge src::calling --exact
+$ snforge src::calling --exact
 Collected 1 test(s) and 1 test file(s)
 Running 1 test(s) from src/lib.cairo
 [PASS] src::calling
@@ -44,7 +44,7 @@ Tests: 1 passed, 0 failed, 0 skipped
 To stop the test execution after first failed test, you can pass an `--exit-first` flag along with `forge` command.
 
 ```shell
-$ forge --exit-first
+$ snforge --exit-first
 Collected 5 test(s) and 1 test file(s)
 Running 1 test(s) from src/lib.cairo
 [PASS] src::executing

@@ -30,7 +30,7 @@ inputs = ["0x123", "234"]
 After running `multicall --path file.toml`, a declared contract will be first deployed, and then its function `put` will be invoked.
 
 ```shell
-$ cast multicall --path /Users/john/Desktop/multicall_example.toml
+$ sncast multicall --path /Users/john/Desktop/multicall_example.toml
 
 command: Deploy
 contract_address: 0x67354442e6cfecdbc0b06a6f55f330e73597f72d461bec7191093b9be78a2b6
