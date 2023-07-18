@@ -20,4 +20,4 @@ Calldata arguments may be either 0x hex or decimal felts.
 ## `--max-fee <MAX_FEE>`
 Optional.
 
-Max fee for transaction. If not provided, max fee will be automatically estimated.
+Max fee for the transaction. If not provided, it will be automatically estimated.
