@@ -4,7 +4,10 @@ Starknet Foundry is actively developed and open for contributions!
 Want to get started?
 Grab any issue labeled with `good-first-issue`!
 Need some guidance?
-Reach out to other developers on Telegram or open a GitHub discussion!
+
+[//]: # (TODO add telegram and gh discussions links)
+
+Reach out to other developers on [Telegram]() or open a [GitHub discussion]()!
 
 ### Environment setup
 
