@@ -21,5 +21,5 @@ Calldata arguments may be either hex or decimal felts.
 Optional.
 
 Block identifier on which call should be performed.
-Possible values: `pending`, `latest`, block hash (0x prefixed string) and block number (u64).
+Possible values: `pending`, `latest`, block hash (0x prefixed string), and block number (u64).
 `pending` is used as a default value.
