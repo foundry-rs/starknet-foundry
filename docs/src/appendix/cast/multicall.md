@@ -1,25 +1,30 @@
-# `call`
-Call a smart contract on Starknet with the given parameters.
+# `multicall`
+Execute multiple deploy (via UDC) or invoke calls in a single transaction ensuring atomicity.
 
-## `--contract-address, -a <CONTRACT_ADDRESS>`
+## `--path, -p <CONTRACT_ADDRESS>`
 Required.
 
-The address of the contract being called in hex (prefixed with '0x') or decimal representation.
+Path to a TOML file with call declarations.
 
-## `--function-name, -f <FUNCTION_NAME>`
-Required.
+File example:
 
-The name of the function being called.
+```toml
+[[call]]
+call_type = "deploy"
+class_hash = "0x076e94149fc55e7ad9c5fe3b9af570970ae2cf51205f8452f39753e9497fe849"
+inputs = []
+id = "map_contract"
+unique = false
 
-## `--calldata, -c <CALLDATA>`
-Optional.
+[[call]]
+call_type = "invoke"
+contract_address = "0x38b7b9507ccf73d79cb42c2cc4e58cf3af1248f342112879bfdf5aa4f606cc9"
+function = "put"
+inputs = ["0x123", "234"]
 
-Inputs to the function, represented by a list of space-delimited values, e.g. `0x1 2 0x3`.
-Calldata arguments may be either 0x hex or decimal felts.
-
-## `--block-id, -b <BLOCK_ID>`
-Optional.
-
-Block identifier on which call should be performed.
-Possible values: `pending`, `latest`, block hash (0x prefixed string), and block number (u64).
-`pending` is used as a default value.
+[[call]]
+call_type = "invoke"
+contract_address = "map_contract"
+function = "put"
+inputs = ["0x123", "234"]
+```
