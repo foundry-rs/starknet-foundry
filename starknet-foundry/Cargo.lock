@@ -2256,6 +2256,7 @@ dependencies = [
  "tokio",
  "toml 0.5.11",
  "url",
+ "which",
 ]
 
 [[package]]

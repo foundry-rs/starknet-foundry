@@ -60,6 +60,8 @@ pub async fn declare(
     account: &mut SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
 ) -> Result<DeclareTransactionResult> {
     let contract_name: String = contract_name.to_string();
+    which::which("scarb")
+        .context("Cannot find `scarb` binary in PATH. Make sure you have Scarb installed https://github.com/software-mansion/scarb")?;
     let command_result = Command::new("scarb")
         .current_dir(std::env::current_dir().context("Failed to obtain current dir")?)
         .arg("--release")
