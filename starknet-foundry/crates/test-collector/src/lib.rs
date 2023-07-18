@@ -40,6 +40,8 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+use rayon::prelude::*;
+
 pub mod sierra_casm_generator;
 
 pub fn build_project_config(

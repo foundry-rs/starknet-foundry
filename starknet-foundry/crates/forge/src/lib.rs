@@ -3,6 +3,7 @@ use std::fmt::Debug;
 
 use anyhow::{Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
+use rayon::prelude::{IntoParallelRefIterator, IntoParallelIterator, ParallelIterator};
 use serde::Deserialize;
 use test_case_summary::TestCaseSummary;
 use walkdir::WalkDir;
@@ -111,7 +112,7 @@ fn internal_collect_tests(
 ) -> Result<Vec<TestsFromFile>> {
     let linked_libraries = linked_libraries;
 
-    let tests : Result<Vec<TestsFromFile>> = test_files.iter().map(|tf|
+    let tests : Result<Vec<TestsFromFile>> = test_files.par_iter().map(|tf|
         collect_tests_from_file(tf, input_path, &linked_libraries, corelib_path, runner_config)
     ).collect(); 
 
