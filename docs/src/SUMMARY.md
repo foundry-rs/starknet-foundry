@@ -28,6 +28,10 @@
 * [Invoking Contracts](starknet/invoke.md)
 * [Calling Contracts](starknet/call.md)
 
+# Foundry Development
+
+* [Environment Setup](development/environment-setup.md)
+
 # Appendix
 
 * [Forge library functions references](appendix/forge.md)
@@ -38,4 +42,5 @@
     * [common flags](appendix/cast/common.md)
     * [declare](appendix/cast/declare.md)
     * [deploy](appendix/cast/deploy.md)
+    * [invoke](appendix/cast/invoke.md)
     * [call](appendix/cast/call.md)
