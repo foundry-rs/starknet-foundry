@@ -4,7 +4,7 @@
 
 Starknet Foundry cast supports calling smart contracts on a given network with the `cast call` command.
 
-The basic inputs that you need for the commands are:
+The basic inputs that you need for this command are:
 
 - Contract address
 - Function name
