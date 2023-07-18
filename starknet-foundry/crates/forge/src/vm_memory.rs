@@ -27,7 +27,7 @@ pub(crate) fn insert_at_pointer<T: Into<MaybeRelocatable>>(
     Ok(())
 }
 
-pub(crate) fn usize_from_pointer(vm: &mut VirtualMachine, ptr: &mut Relocatable) -> Result<usize> {
+pub(crate) fn usize_from_pointer(vm: &VirtualMachine, ptr: &mut Relocatable) -> Result<usize> {
     let gas_counter = vm
         .get_integer(*ptr)?
         .to_usize()
@@ -37,7 +37,7 @@ pub(crate) fn usize_from_pointer(vm: &mut VirtualMachine, ptr: &mut Relocatable)
 }
 
 pub(crate) fn relocatable_from_pointer(
-    vm: &mut VirtualMachine,
+    vm: &VirtualMachine,
     ptr: &mut Relocatable,
 ) -> Result<Relocatable> {
     let start = vm.get_relocatable(*ptr)?;
@@ -45,7 +45,7 @@ pub(crate) fn relocatable_from_pointer(
     Ok(start)
 }
 
-pub(crate) fn felt_from_pointer(vm: &mut VirtualMachine, ptr: &mut Relocatable) -> Result<Felt252> {
+pub(crate) fn felt_from_pointer(vm: &VirtualMachine, ptr: &mut Relocatable) -> Result<Felt252> {
     let entry_point_selector = vm.get_integer(*ptr)?.into_owned();
     *ptr += 1;
     Ok(entry_point_selector)

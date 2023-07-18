@@ -602,7 +602,7 @@ fn create_execute_calldata(
 }
 
 fn read_data_from_range(
-    vm: &mut VirtualMachine,
+    vm: &VirtualMachine,
     mut start: Relocatable,
     end: Relocatable,
 ) -> Result<Vec<Felt252>> {

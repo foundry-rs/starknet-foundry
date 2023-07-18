@@ -259,7 +259,7 @@ fn run_tests_from_file(
     contracts: &HashMap<String, StarknetContractArtifacts>,
     predeployed_contracts: &Utf8PathBuf,
 ) -> Result<TestFileSummary> {
-    let mut runner = SierraCasmRunner::new(
+    let runner = SierraCasmRunner::new(
         tests.sierra_program,
         Some(MetadataComputationConfig::default()),
         OrderedHashMap::default(),
@@ -269,7 +269,7 @@ fn run_tests_from_file(
     pretty_printing::print_running_tests(&tests.relative_path, tests.test_cases.len());
     let mut results = vec![];
     for (i, case) in tests.test_cases.iter().enumerate() {
-        let result = run_from_test_case(&mut runner, case, contracts, predeployed_contracts)?;
+        let result = run_from_test_case(&runner, case, contracts, predeployed_contracts)?;
         results.push(result.clone());
 
         pretty_printing::print_test_result(&result);
