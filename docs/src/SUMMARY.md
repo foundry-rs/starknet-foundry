@@ -18,6 +18,7 @@
 
 * [Writing Tests](testing/testing.md)
 * [Testing Smart Contracts](testing/contracts.md)
+* [Debugging](testing/debugging.md)
 
 # Interacting with Starknet
 
@@ -41,3 +42,4 @@
     * [common flags](appendix/cast/common.md)
     * [declare](appendix/cast/declare.md)
     * [deploy](appendix/cast/deploy.md)
+    * [call](appendix/cast/call.md)
