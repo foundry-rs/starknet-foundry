@@ -45,7 +45,7 @@ fn build_hints_dict<'b>(
 }
 
 pub(crate) fn run_from_test_case(
-    runner: &mut SierraCasmRunner,
+    runner: &SierraCasmRunner,
     case: &TestCase,
     contracts: &HashMap<String, StarknetContractArtifacts>,
     predeployed_contracts: &Utf8PathBuf,
