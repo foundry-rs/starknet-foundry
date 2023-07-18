@@ -49,14 +49,17 @@ pub fn artifacts_for_package(path: &Utf8PathBuf) -> Result<StarknetArtifacts> {
     Ok(starknet_artifacts)
 }
 
-pub fn try_get_starknet_artifacts_path(path: &Utf8PathBuf) -> Result<Option<Utf8PathBuf>> {
+pub fn try_get_starknet_artifacts_path(
+    path: &Utf8PathBuf,
+    target_name: &str,
+) -> Result<Option<Utf8PathBuf>> {
     let path = path.join("target/dev");
     let paths = fs::read_dir(path);
     let Ok(mut paths) = paths else { return Ok(None) };
     let starknet_artifacts = paths.find_map(|path| match path {
         Ok(path) => {
             let name = path.file_name().into_string().ok()?;
-            name.contains("starknet_artifacts").then_some(path.path())
+            (name == format!("{target_name}.starknet_artifacts.json")).then_some(path.path())
         }
         Err(_) => None,
     });
@@ -105,7 +108,7 @@ pub fn config_from_scarb_for_package(
 pub fn dependencies_for_package(
     metadata: &Metadata,
     package: &PackageId,
-) -> Result<(Utf8PathBuf, Vec<LinkedLibrary>)> {
+) -> Result<(Utf8PathBuf, Vec<LinkedLibrary>, String)> {
     let compilation_unit = metadata
         .compilation_units
         .iter()
@@ -133,13 +136,16 @@ pub fn dependencies_for_package(
         })
         .collect();
 
-    Ok((base_path, dependencies))
+    let target_name = compilation_unit.target.name.clone();
+
+    Ok((base_path, dependencies, target_name))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use assert_fs::fixture::{FileTouch, FileWriteStr, PathChild, PathCopy};
+    use indoc::indoc;
     use scarb_metadata::MetadataCommand;
     use std::process::Command;
 
@@ -156,12 +162,53 @@ mod tests {
 
         let result = try_get_starknet_artifacts_path(
             &Utf8PathBuf::from_path_buf(temp.to_path_buf()).unwrap(),
+            "simple_package",
         );
         let path = result.unwrap().unwrap();
         assert_eq!(
             path,
             temp.path()
                 .join("target/dev/simple_package.starknet_artifacts.json")
+        );
+    }
+
+    #[test]
+    fn get_starknet_artifacts_path_for_project_with_different_package_and_target_name() {
+        let temp = assert_fs::TempDir::new().unwrap();
+        temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
+            .unwrap();
+
+        let scarb_path = temp.child("Scarb.toml");
+        scarb_path
+            .write_str(indoc!(
+                r#"
+            [package]
+            name = "simple_package"
+            version = "0.1.0"
+            
+            [dependencies]
+            starknet = "2.0.1"
+            
+            [[target.starknet-contract]]
+            name = "essa"
+            "#
+            ))
+            .unwrap();
+
+        Command::new("scarb")
+            .current_dir(&temp)
+            .arg("build")
+            .output()
+            .unwrap();
+
+        let result = try_get_starknet_artifacts_path(
+            &Utf8PathBuf::from_path_buf(temp.to_path_buf()).unwrap(),
+            "essa",
+        );
+        let path = result.unwrap().unwrap();
+        assert_eq!(
+            path,
+            temp.path().join("target/dev/essa.starknet_artifacts.json")
         );
     }
 
@@ -178,6 +225,7 @@ mod tests {
 
         let result = try_get_starknet_artifacts_path(
             &Utf8PathBuf::from_path_buf(temp.to_path_buf()).unwrap(),
+            "print_test",
         );
         let path = result.unwrap();
         assert!(path.is_none());
@@ -191,6 +239,7 @@ mod tests {
 
         let result = try_get_starknet_artifacts_path(
             &Utf8PathBuf::from_path_buf(temp.to_path_buf()).unwrap(),
+            "simple_package",
         );
         let path = result.unwrap();
         assert!(path.is_none());
@@ -280,7 +329,7 @@ mod tests {
             .exec()
             .unwrap();
 
-        let (_, dependencies) =
+        let (_, dependencies, _) =
             dependencies_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
                 .unwrap();
 
