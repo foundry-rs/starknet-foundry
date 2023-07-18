@@ -26,7 +26,7 @@ Before creating a contribution, make sure your code passes the following checks
 ```shell
 cargo test
 cargo fmt --check
-cargo clippy --all-targets --all-features -- --no-deps -W clippy::pedantic -A clippy::missing_errors_doc -A clippy::missing_panics_doc -A clippy::default_trait_acces
+cargo lint
 ```
 
 Otherwise, it won't be possible to merge your contribution.
