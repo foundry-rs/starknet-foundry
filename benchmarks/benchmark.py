@@ -15,10 +15,7 @@ TOOLCHAINS = [
 ]
 
 # (unit, integration)
-TESTS = [
-    (1, 1),
-    (1, 0),
-]
+TESTS = [(x, x) for x in range(1, 4)]
 CASES_PER_UNIT_TEST = 25
 CASES_PER_INTEGRATION_TEST = 15
 
