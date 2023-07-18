@@ -7,7 +7,7 @@ If you already have Rust installed make sure to upgrade it by running
 $ rustup update
 ```
 
-To verify that project was cloned and setup correctly you can run
+To verify that project was cloned and set up correctly, you can run
 
 ```shell
 $ cargo check
@@ -41,7 +41,7 @@ Starknet Foundry uses [rustfmt](https://github.com/rust-lang/rustfmt) for format
 cargo fmt
 ```
 
-For linting it uses [clippy](https://github.com/rust-lang/rust-clippy). You can run it with this command:
+For linting, it uses [clippy](https://github.com/rust-lang/rust-clippy). You can run it with this command:
 
 ```shell
 $ cargo clippy --all-targets --all-features -- --no-deps -W clippy::pedantic -A clippy::missing_errors_doc -A clippy::missing_panics_doc -A clippy::default_trait_acces
