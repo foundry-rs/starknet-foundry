@@ -84,7 +84,7 @@ fn main_execution() -> Result<()> {
 
         run(
             &base_path,
-            Some(dependencies.clone()),
+            &Some(dependencies.clone()),
             &runner_config,
             Some(&corelib),
             &contracts,

@@ -70,7 +70,7 @@ struct TestsFromFile {
 
 fn collect_tests_from_directory(
     input_path: &Utf8PathBuf,
-    linked_libraries: Option<Vec<LinkedLibrary>>,
+    linked_libraries: &Option<Vec<LinkedLibrary>>,
     corelib_path: Option<&Utf8PathBuf>,
     runner_config: &RunnerConfig,
 ) -> Result<Vec<TestsFromFile>> {
@@ -105,7 +105,7 @@ fn find_cairo_files_in_directory(input_path: &Utf8PathBuf) -> Result<Vec<Utf8Pat
 
 fn internal_collect_tests(
     input_path: &Utf8PathBuf,
-    linked_libraries: Option<Vec<LinkedLibrary>>,
+    linked_libraries: &Option<Vec<LinkedLibrary>>,
     test_files: Vec<Utf8PathBuf>,
     corelib_path: Option<&Utf8PathBuf>,
     runner_config: &RunnerConfig,
@@ -116,7 +116,7 @@ fn internal_collect_tests(
             collect_tests_from_file(
                 tf,
                 input_path,
-                &linked_libraries,
+                linked_libraries,
                 corelib_path,
                 runner_config,
             )
@@ -170,7 +170,7 @@ fn collect_tests_from_file(
 #[allow(clippy::implicit_hasher)]
 pub fn run(
     input_path: &Utf8PathBuf,
-    linked_libraries: Option<Vec<LinkedLibrary>>,
+    linked_libraries: &Option<Vec<LinkedLibrary>>,
     runner_config: &RunnerConfig,
     corelib_path: Option<&Utf8PathBuf>,
     contracts: &HashMap<String, StarknetContractArtifacts>,
