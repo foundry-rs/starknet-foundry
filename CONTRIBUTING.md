@@ -39,7 +39,7 @@ work.
 ### Writing Tests
 
 Please make sure the feature you are implementing is thoroughly tested with automatic tests.
-You can check existing tests in the repository, to see recommended approach to testing.
+You can check existing tests in the repository to see the recommended approach to testing.
 
 ### Breaking Changes
 
