@@ -8,8 +8,8 @@ use starknet::core::types::TransactionReceipt::Declare;
 use std::fs;
 use test_case::test_case;
 
-#[test_case("/v1/map", "_xyz", "user1" ; "when cairo1 contract")]
-#[test_case("/v2/map", "_xyz", "user2" ; "when cairo2 contract")]
+#[test_case("/v1/map", "1", "user1" ; "when cairo1 contract")]
+#[test_case("/v2/map", "1", "user3" ; "when cairo2 contract")]
 #[tokio::test]
 async fn test_happy_case(contract_path: &str, salt: &str, account: &str) {
     let contract_path =
@@ -124,8 +124,8 @@ fn scarb_build_fails(contract_path: &str, accounts_file_path: &str) {
     "#});
 }
 
-#[test_case("/v1/map", "_zyx", "user1" ; "when cairo1 contract")]
-#[test_case("/v2/map", "_zyx", "user2" ; "when cairo2 contract")]
+#[test_case("/v1/map", "2", "user1" ; "when cairo1 contract")]
+#[test_case("/v2/map", "2", "user2" ; "when cairo2 contract")]
 fn test_too_low_max_fee(contract_path: &str, salt: &str, account: &str) {
     let contract_path =
         duplicate_directory_with_salt(CONTRACTS_DIR.to_string() + contract_path, "put", salt);
