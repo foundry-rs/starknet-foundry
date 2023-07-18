@@ -34,10 +34,10 @@
 
 # Appendix
 
-* [Forge library functions references](appendix/forge.md)
-    * [declare](appendix/forge/declare.md)
-    * [deploy](appendix/forge/deploy.md)
-    * [print](appendix/forge/print.md)
+* [Forge library functions references](appendix/forge-library.md)
+    * [declare](appendix/forge-library/declare.md)
+    * [deploy](appendix/forge-library/deploy.md)
+    * [print](appendix/forge-library/print.md)
 * [Cast commands](appendix/cast.md)
     * [common flags](appendix/cast/common.md)
     * [declare](appendix/cast/declare.md)
