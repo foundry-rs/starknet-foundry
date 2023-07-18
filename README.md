@@ -33,6 +33,8 @@ Starknet Foundry is under active development! Expect a lot of new features to ap
 - [ ] Performance improvements
 - [ ] State forking
 - [ ] Advanced debugging utilities
+- [ ] Creating and deploying new accounts
+- [ ] Deployment scripts written in Cairo
 
 ## Performance
 
@@ -45,6 +47,7 @@ the [Starknet Foundry Book](https://foundry-rs.github.io/starknet-foundry/)?
 
 - Join the [Telegram](https://t.me/+d8ULaPxeRqlhMDNk) group to get help
 - Open a [GitHub discussion](https://github.com/foundry-rs/starknet-foundry/discussions) with your question
+- Join the [Starknet Discord](https://discord.com/invite/qypnmzkhbc)
 
 Found a bug? Open an [issue](https://github.com/foundry-rs/starknet-foundry/issues).
 
