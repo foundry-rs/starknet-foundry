@@ -15,7 +15,7 @@ The name of the function being called.
 Optional.
 
 Inputs to the function, represented by a list of space-delimited values, e.g. `0x1 2 0x3`.
-Calldata arguments may be either hex or decimal felts.
+Calldata arguments may be either 0x hex or decimal felts.
 
 ## `--block-id, -b <BLOCK_ID>`
 Optional.
