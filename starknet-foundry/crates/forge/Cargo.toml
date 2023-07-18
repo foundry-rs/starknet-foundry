@@ -6,7 +6,12 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow = "1.0.66"
+anyhow.workspace = true
+blockifier.workspace = true
+camino.workspace = true
+include_dir.workspace = true
+starknet_api.workspace = true
+tempfile.workspace = true
 test-collector = { path = "../test-collector" }
 cheatable-starknet = { path = "../cheatable-starknet" }
 cairo-lang-test-runner = { path = "../../../cairo/crates/cairo-lang-test-runner", version = "2.0.1" }
@@ -18,8 +23,6 @@ cairo-lang-casm = { path = "../../../cairo/crates/cairo-lang-casm", version = "2
 cairo-lang-starknet = { path = "../../../cairo/crates/cairo-lang-starknet", version = "2.0.1" }
 cairo-lang-compiler = { path = "../../../cairo/crates/cairo-lang-compiler", version = "2.0.1" }
 cairo-lang-filesystem = { path = "../../../cairo/crates/cairo-lang-filesystem", version = "2.0.1" }
-blockifier.workspace = true
-starknet_api.workspace = true
 schemars = { version = "0.8.12", features = ["preserve_order"] }
 parity-scale-codec = "3.5.0"
 parity-scale-codec-derive = "3.1.4"
@@ -29,7 +32,6 @@ serde_json = "1.0.96"
 serde = { version = "1.0.163", features = ["derive"] }
 itertools = "0.10.5"
 walkdir = "2.3.3"
-camino = { version = "1.1.4", features = ["serde1"] }
 scarb-metadata = "1.4.2"
 project-root = "0.2.2"
 console = "0.15.7"
@@ -37,8 +39,6 @@ assert_fs = "1.0.13"
 snapbox = "0.4.11"
 once_cell = "1.18.0"
 indoc = "2.0.1"
-include_dir = "0.7.3"
-tempfile = "3.6.0"
 cairo-vm = "0.8.1"
 ark-ff = "0.4.0-alpha.7"
 ark-std = "0.3.0"
