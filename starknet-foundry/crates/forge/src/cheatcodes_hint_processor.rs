@@ -660,8 +660,9 @@ fn felt252_from_hex_string(value: &str) -> Result<Felt252> {
 
 #[cfg(test)]
 mod test {
+    use assert_fs::fixture::PathCopy;
     use cairo_felt::Felt252;
-    use std::path::Path;
+    use std::process::Command;
 
     use super::*;
 
@@ -773,18 +774,36 @@ mod test {
 
     #[test]
     fn class_hash_correct() {
-        let casm_contract_path = Path::new("./tests/data/contracts/example.casm");
+        let temp = assert_fs::TempDir::new().unwrap();
+        temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
+            .unwrap();
+
+        Command::new("scarb")
+            .current_dir(&temp)
+            .arg("build")
+            .output()
+            .unwrap();
+
+        let temp_dir_path = temp.path();
+
         // expected_class_hash computed with
         // https://github.com/software-mansion/starknet.py/blob/cea191679cbdd2726ca7989f3a7662dee6ea43ca/starknet_py/tests/e2e/docs/guide/test_cairo1_contract.py#L29-L36
-        let expected_class_hash =
-            "0x3eb55a3f9f7485408838b08067c3b0f5d72523c525f568b04627464f5464749";
+        let cases = [
+            ("0x675f3bd6b220adb32096bf277ba986413ba5e46d1c2ebd7adfd0e878586576c", "target/dev/simple_package_ERC20.casm.json"),
+            ("0x192485856ebf42c113825d359a948dacaf526d62bf6c2aa231beffed0fddc3f", "target/dev/simple_package_HelloStarknet.casm.json"),
+        ];
 
-        let casm_contract_definition = std::fs::read_to_string(casm_contract_path)
-            .unwrap_or_else(|_| panic!("Failed to read file: {casm_contract_path:?}"));
-        let actual_class_hash = get_class_hash(casm_contract_definition.as_str());
-        assert_eq!(
-            actual_class_hash,
-            ClassHash(stark_felt!(expected_class_hash))
-        );
+        for (expected_class_hash, casm_contract_path) in cases {
+            let casm_contract_path = temp_dir_path.join(casm_contract_path);
+            let casm_contract_path = casm_contract_path.as_path();
+
+            let casm_contract_definition = std::fs::read_to_string(casm_contract_path)
+                .unwrap_or_else(|_| panic!("Failed to read file: {casm_contract_path:?}"));
+            let actual_class_hash = get_class_hash(casm_contract_definition.as_str());
+            assert_eq!(
+                actual_class_hash,
+                ClassHash(stark_felt!(expected_class_hash))
+            );
+        }
     }
 }
