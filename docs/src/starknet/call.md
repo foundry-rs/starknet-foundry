@@ -21,7 +21,7 @@ $ cast call \
   --profile testnet \
   --contract-address 0x4a739ab73aa3cac01f9da5d55f49fb67baee4919224454a2e3f85b16462a911 \
   --function-name some_function \
-  --calldata 1 2 3
+  --calldata 1 2 0x1e
   
 command: Call
 response: [FieldElement { inner: 0x0000000000000000000000000000000000000000000000000000000000000000 }]
