@@ -3,6 +3,7 @@ use clap::Args;
 use rand::rngs::OsRng;
 use rand::RngCore;
 
+use cast::print_formatted;
 use cast::{handle_rpc_error, handle_wait_for_tx_result, UDC_ADDRESS};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{Account, ConnectedAccount, SingleOwnerAccount};
@@ -18,7 +19,7 @@ use starknet::signers::LocalWallet;
 #[command(about = "Deploy a contract on Starknet")]
 pub struct Deploy {
     /// Class hash of contract to deploy
-    #[clap(long)]
+    #[clap(short = 'g', long)]
     pub class_hash: String,
 
     /// Calldata for the contract constructor
@@ -36,6 +37,29 @@ pub struct Deploy {
     /// Max fee for the transaction. If not provided, max fee will be automatically estimated
     #[clap(short, long)]
     pub max_fee: Option<u128>,
+}
+
+pub fn print_deploy_result(
+    deploy_result: Result<(FieldElement, FieldElement)>,
+    int_format: bool,
+    json: bool,
+) -> Result<()> {
+    match deploy_result {
+        Ok((transaction_hash, contract_address)) => print_formatted(
+            vec![
+                ("command", "Deploy".to_string()),
+                ("contract_address", format!("{contract_address}")),
+                ("transaction_hash", format!("{transaction_hash}")),
+            ],
+            int_format,
+            json,
+            false,
+        )?,
+        Err(error) => {
+            print_formatted(vec![("error", error.to_string())], int_format, json, true)?;
+        }
+    };
+    Ok(())
 }
 
 pub async fn deploy(
