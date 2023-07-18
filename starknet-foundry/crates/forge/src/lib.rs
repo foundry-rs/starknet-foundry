@@ -110,8 +110,6 @@ fn internal_collect_tests(
     corelib_path: Option<&Utf8PathBuf>,
     runner_config: &RunnerConfig,
 ) -> Result<Vec<TestsFromFile>> {
-    let linked_libraries = linked_libraries;
-
     let tests: Result<Vec<TestsFromFile>> = test_files
         .par_iter()
         .map(|tf| {
