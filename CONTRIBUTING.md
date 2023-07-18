@@ -2,7 +2,7 @@
 
 Starknet Foundry is actively developed and open for contributions!
 Want to get started?
-Grab any issue labeled with `good-first-issue`!
+Grab any [issue](https://github.com/foundry-rs/starknet-foundry/issues) labeled with `good-first-issue`!
 Need some guidance?
 
 Reach out to other developers on [Telegram](https://t.me/+d8ULaPxeRqlhMDNk) or open
@@ -35,7 +35,8 @@ Otherwise, it won't be possible to merge your contribution.
 
 ## Contributing
 
-Before you open a pull request, it is always a good idea to search the issues and verify if the feature you would like
+Before you open a pull request, it is always a good idea to search
+the [issues](https://github.com/foundry-rs/starknet-foundry/issues) and verify if the feature you would like
 to add hasn't been already discussed.
 We also appreciate creating a feature request before making a contribution, so it can be discussed before you get to
 work.
