@@ -109,6 +109,16 @@ fn internal_collect_tests(
     corelib_path: Option<&Utf8PathBuf>,
     runner_config: &RunnerConfig,
 ) -> Result<Vec<TestsFromFile>> {
+    let linked_libraries = linked_libraries;
+
+    let tests : Result<Vec<TestsFromFile>> = test_files.iter().map(|tf|
+        collect_tests_from_file(tf, input_path, &linked_libraries, corelib_path, runner_config)
+    ).collect(); 
+
+    tests
+}
+
+fn collect_tests_from_file(test_file: &Utf8PathBuf, input_path: &Utf8PathBuf, linked_libraries: &Option<Vec<LinkedLibrary>>,  corelib_path: Option<&Utf8PathBuf>, runner_config: &RunnerConfig,)  -> Result<TestsFromFile> {
     let builtins = vec![
         "Pedersen",
         "RangeCheck",
@@ -120,34 +130,27 @@ fn internal_collect_tests(
         "System",
     ];
 
-    let linked_libraries = linked_libraries;
+    let (sierra_program, tests_configs) = collect_tests(
+        test_file.as_str(),
+        None,
+        linked_libraries.clone(),
+        Some(builtins.clone()),
+        corelib_path.map(|corelib_path| corelib_path.as_str()),
+    )?;
 
-    let mut tests = vec![];
-    for ref test_file in test_files {
-        let (sierra_program, tests_configs) = collect_tests(
-            test_file.as_str(),
-            None,
-            linked_libraries.clone(),
-            Some(builtins.clone()),
-            corelib_path.map(|corelib_path| corelib_path.as_str()),
-        )?;
+    let test_cases = strip_path_from_test_names(tests_configs)?;
+    let test_cases = if let Some(test_name_filter) = &runner_config.test_name_filter {
+        filter_tests_by_name(test_name_filter, runner_config.exact_match, test_cases)?
+    } else {
+        test_cases
+    };
 
-        let test_cases = strip_path_from_test_names(tests_configs)?;
-        let test_cases = if let Some(test_name_filter) = &runner_config.test_name_filter {
-            filter_tests_by_name(test_name_filter, runner_config.exact_match, test_cases)?
-        } else {
-            test_cases
-        };
-
-        let relative_path = test_file.strip_prefix(input_path)?.to_path_buf();
-        tests.push(TestsFromFile {
-            sierra_program,
-            test_cases,
-            relative_path,
-        });
-    }
-
-    Ok(tests)
+    let relative_path = test_file.strip_prefix(input_path)?.to_path_buf();
+    Ok(TestsFromFile {
+        sierra_program,
+        test_cases,
+        relative_path,
+    })
 }
 
 #[allow(clippy::implicit_hasher)]
