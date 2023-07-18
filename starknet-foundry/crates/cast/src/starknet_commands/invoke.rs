@@ -1,6 +1,7 @@
 use anyhow::{anyhow, Context, Result};
 use clap::Args;
 
+use cast::print_formatted;
 use cast::{handle_rpc_error, handle_wait_for_tx_result};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{Account, Call, ConnectedAccount, SingleOwnerAccount};
@@ -30,6 +31,29 @@ pub struct Invoke {
     /// Max fee for the transaction. If not provided, max fee will be automatically estimated
     #[clap(short, long)]
     pub max_fee: Option<u128>,
+}
+
+#[allow(clippy::unused_async)]
+pub fn print_invoke_result(
+    invoke_result: Result<FieldElement>,
+    int_format: bool,
+    json: bool,
+) -> Result<()> {
+    match invoke_result {
+        Ok(transaction_hash) => print_formatted(
+            vec![
+                ("command", "Invoke".to_string()),
+                ("transaction_hash", format!("{transaction_hash}")),
+            ],
+            int_format,
+            json,
+            false,
+        )?,
+        Err(error) => {
+            print_formatted(vec![("error", error.to_string())], int_format, json, true)?;
+        }
+    };
+    Ok(())
 }
 
 pub async fn invoke(
