@@ -62,7 +62,7 @@ use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 
 pub struct CairoHintProcessor<'a> {
     pub original_cairo_hint_processor: OriginalCairoHintProcessor<'a>,
-    pub blockifier_state: Option<CachedState<DictStateReader>>,
+    pub blockifier_state: CachedState<DictStateReader>,
     pub contracts: &'a HashMap<String, StarknetContractArtifacts>,
 }
 
@@ -99,10 +99,6 @@ impl HintProcessorLogic for CairoHintProcessor<'_> {
         constants: &HashMap<String, Felt252>,
     ) -> Result<(), HintError> {
         let maybe_extended_hint = hint_data.downcast_ref::<Hint>();
-        let blockifier_state = self
-            .blockifier_state
-            .as_mut()
-            .expect("Blockifier state is needed for executing hints");
         if let Some(Hint::Starknet(StarknetHint::Cheatcode {
             selector,
             input_start,
@@ -114,7 +110,7 @@ impl HintProcessorLogic for CairoHintProcessor<'_> {
             return execute_cheatcode_hint(
                 vm,
                 exec_scopes,
-                blockifier_state,
+                &mut self.blockifier_state,
                 selector,
                 input_start,
                 input_end,
@@ -124,7 +120,7 @@ impl HintProcessorLogic for CairoHintProcessor<'_> {
             );
         }
         if let Some(Hint::Starknet(StarknetHint::SystemCall { system })) = maybe_extended_hint {
-            return execute_syscall(system, vm, blockifier_state);
+            return execute_syscall(system, vm, &mut self.blockifier_state);
         }
         self.original_cairo_hint_processor
             .execute_hint(vm, exec_scopes, hint_data, constants)
