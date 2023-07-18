@@ -332,7 +332,7 @@ mod tests {
     #[test]
     fn collecting_tests() {
         let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from("tests/data/simple_test", &["**/*.cairo", "**/*.toml"])
+        temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
             .unwrap();
         let tests_path = Utf8PathBuf::from_path_buf(temp.to_path_buf()).unwrap();
 
@@ -551,7 +551,7 @@ mod tests {
     fn strip_path() {
         let mocked_tests: Vec<TestCase> = vec![
             TestCase {
-                name: "/Users/user/forge/tests/data/simple_test/src::test::test_fib".to_string(),
+                name: "/Users/user/forge/tests/data/simple_package/src::test::test_fib".to_string(),
                 available_gas: None,
             },
             TestCase {
