@@ -738,6 +738,8 @@ mod test {
     #[test]
     fn class_hash_correct() {
         let casm_contract_path = Path::new("./tests/data/example.casm");
+        // expected_class_hash computed with
+        // https://github.com/software-mansion/starknet.py/blob/cea191679cbdd2726ca7989f3a7662dee6ea43ca/starknet_py/tests/e2e/docs/guide/test_cairo1_contract.py#L29-L36
         let expected_class_hash =
             "0x3eb55a3f9f7485408838b08067c3b0f5d72523c525f568b04627464f5464749";
 
