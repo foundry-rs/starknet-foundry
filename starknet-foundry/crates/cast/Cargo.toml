@@ -19,6 +19,8 @@ scarb-metadata = "1.4.2"
 scarb = "0.5.0"
 primitive-types = "0.12.1"
 shellexpand = "3.1.0"
+toml = "0.5.2"
+project-root = "0.2.2"
 
 [dev-dependencies]
 ctor = "0.2.2"
