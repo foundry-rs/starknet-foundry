@@ -12,6 +12,7 @@ camino.workspace = true
 include_dir.workspace = true
 starknet_api.workspace = true
 tempfile.workspace = true
+rayon.workspace = true
 test-collector = { path = "../test-collector" }
 cheatable-starknet = { path = "../cheatable-starknet" }
 cairo-lang-test-runner = { path = "../../../cairo/crates/cairo-lang-test-runner", version = "2.0.1" }

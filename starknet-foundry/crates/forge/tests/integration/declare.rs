@@ -18,7 +18,7 @@ fn simple() {
 
     let result = run(
         &test.path().unwrap(),
-        Some(test.linked_libraries()),
+        &Some(test.linked_libraries()),
         &Default::default(),
         Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
         &test.contracts(corelib().path()).unwrap(),
@@ -41,7 +41,7 @@ fn failing() {
 
     let result = run(
         &test.path().unwrap(),
-        Some(test.linked_libraries()),
+        &Some(test.linked_libraries()),
         &Default::default(),
         Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
         &test.contracts(corelib().path()).unwrap(),
@@ -97,7 +97,7 @@ fn simple_declare() {
 
     let result = run(
         &test.path().unwrap(),
-        Some(test.linked_libraries()),
+        &Some(test.linked_libraries()),
         &Default::default(),
         Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
         &test.contracts(corelib().path()).unwrap(),
@@ -191,7 +191,7 @@ fn multiple_declare() {
 
     let result = run(
         &test.path().unwrap(),
-        Some(test.linked_libraries()),
+        &Some(test.linked_libraries()),
         &Default::default(),
         Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
         &test.contracts(corelib().path()).unwrap(),
@@ -228,7 +228,7 @@ fn simple_declare_from_contract_code() {
 
     let result = run(
         &test.path().unwrap(),
-        Some(test.linked_libraries()),
+        &Some(test.linked_libraries()),
         &Default::default(),
         Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
         &test.contracts(corelib().path()).unwrap(),
@@ -256,7 +256,7 @@ fn declare_unknown() {
 
     let result = run(
         &test.path().unwrap(),
-        Some(test.linked_libraries()),
+        &Some(test.linked_libraries()),
         &Default::default(),
         Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
         &test.contracts(corelib().path()).unwrap(),
