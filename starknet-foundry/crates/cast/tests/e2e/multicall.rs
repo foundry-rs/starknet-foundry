@@ -1,7 +1,7 @@
+use crate::helpers::constants::MULTICALL_CONFIGS_DIR;
 use crate::helpers::fixtures::default_cli_args;
 use crate::helpers::runner::runner;
 use std::path::Path;
-use crate::helpers::constants::MULTICALL_CONFIGS_DIR;
 
 #[tokio::test]
 async fn test_happy_case() {
@@ -9,7 +9,9 @@ async fn test_happy_case() {
     args.append(&mut vec!["--account", "user2"]);
 
     let path = project_root::get_project_root().expect("failed to get project root path");
-    let path = Path::new(&path).join(MULTICALL_CONFIGS_DIR).join("deploy_invoke.toml");
+    let path = Path::new(&path)
+        .join(MULTICALL_CONFIGS_DIR)
+        .join("deploy_invoke.toml");
     let path_str = path.to_str().expect("failed converting path to str");
 
     args.append(&mut vec!["multicall", "--path", path_str]);
@@ -49,8 +51,9 @@ async fn test_deploy_fail() {
     args.append(&mut vec!["--account", "user2"]);
 
     let path = project_root::get_project_root().expect("failed to get project root path");
-    let path =
-        Path::new(&path).join(MULTICALL_CONFIGS_DIR).join("deploy_invalid.toml");
+    let path = Path::new(&path)
+        .join(MULTICALL_CONFIGS_DIR)
+        .join("deploy_invalid.toml");
     let path_str = path.to_str().expect("failed converting path to str");
 
     args.append(&mut vec!["multicall", "--path", path_str]);
@@ -71,8 +74,9 @@ async fn test_invoke_fail() {
     args.append(&mut vec!["--account", "user2"]);
 
     let path = project_root::get_project_root().expect("failed to get project root path");
-    let path =
-        Path::new(&path).join(MULTICALL_CONFIGS_DIR).join("invoke_invalid.toml");
+    let path = Path::new(&path)
+        .join(MULTICALL_CONFIGS_DIR)
+        .join("invoke_invalid.toml");
     let path_str = path.to_str().expect("failed converting path to str");
 
     args.append(&mut vec!["multicall", "--path", path_str]);
