@@ -1,0 +1,16 @@
+name: Auto Assign issue to Project
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  assign_one_project:
+    runs-on: ubuntu-20.04
+    name: Assign to Project
+    steps:
+    - name: Assign new issues to the project board
+      uses: actions/add-to-project@v0.5.0
+      with:
+        project-url: https://github.com/orgs/foundry-rs/projects/3
+        github-token: ${{ secrets.PROJECT_PAT }}
