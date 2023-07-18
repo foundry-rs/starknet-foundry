@@ -51,3 +51,11 @@ You can check existing tests in the repository to see the recommended approach t
 If the change you are introducing is changing or breaking the behavior of any already existing features, make sure to
 include that information in the pull request description.
 
+### Pull Request Size
+
+Try to make your pull request self-contained, only introducing the necessary changes.
+If your feature is complicated,
+consider splitting the changes into meaningful parts and introducing them as separate pull requests.
+
+While creating large pull requests usually will not prevent them from being merged, it may significantly increase review
+time and increase the risk of complicated to resolve merge conflicts.
