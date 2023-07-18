@@ -29,7 +29,7 @@ With `Scarb.toml` configured this way, we can just pass `--profile myprofile` ar
 $ cast --profile myprofile \
     call \
     --contract-address 0x38b7b9507ccf73d79cb42c2cc4e58cf3af1248f342112879bfdf5aa4f606cc9 \
-    --function-name get \
+    --function get \
     --calldata 0x0 \
     --block-id latest
 
@@ -59,7 +59,7 @@ That way, you can omit passing `--profile` parameter:
 ```shell
 $ cast call \
     --contract-address 0x38b7b9507ccf73d79cb42c2cc4e58cf3af1248f342112879bfdf5aa4f606cc9 \
-    --function-name get \
+    --function get \
     --calldata 0x0 \
     --block-id latest
 

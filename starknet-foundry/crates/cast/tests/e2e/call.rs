@@ -13,7 +13,7 @@ fn test_happy_case(contract_address: &str) {
         "call",
         "--contract-address",
         contract_address,
-        "--function-name",
+        "--function",
         "get",
         "--calldata",
         "0x0",
@@ -42,7 +42,7 @@ async fn test_call_after_storage_changed(contract_address: &str, account: &str) 
         "call",
         "--contract-address",
         contract_address,
-        "--function-name",
+        "--function",
         "get",
         "--calldata",
         "0x2",
@@ -63,7 +63,7 @@ async fn test_contract_does_not_exist() {
         "call",
         "--contract-address",
         "0x1",
-        "--function-name",
+        "--function",
         "get",
     ]);
 
@@ -82,7 +82,7 @@ fn test_wrong_function_name(contract_address: &str) {
         "call",
         "--contract-address",
         contract_address,
-        "--function-name",
+        "--function",
         "nonexistent_get",
     ]);
 
@@ -101,7 +101,7 @@ fn test_wrong_calldata(contract_address: &str) {
         "call",
         "--contract-address",
         contract_address,
-        "--function-name",
+        "--function",
         "get",
         "--calldata",
         "0x1 0x2",
