@@ -94,15 +94,12 @@ pub async fn declare(
         }
     };
 
-    let starknet_artifacts = match paths.find_map(|path| {
+    let Some(starknet_artifacts) = paths.find_map(|path| {
         path.ok().and_then(|entry| {
             let name = entry.file_name().into_string().ok()?;
             name.contains("starknet_artifacts").then_some(entry.path())
         })
-    }) {
-        Some(path) => path,
-        None => return Err(anyhow!("Failed to find starknet_artifacts.json file")),
-    };
+    }) else { return Err(anyhow!("Failed to find starknet_artifacts.json file")) };
 
     let starknet_artifacts = match std::fs::read_to_string(starknet_artifacts) {
         Ok(content) => content,
@@ -149,23 +146,16 @@ pub async fn declare(
 
     let contract_definition: SierraClass = {
         let file_contents = std::fs::read(sierra_contract_path.clone())
-            .with_context(|| format!("Failed to read contract file: {}", sierra_contract_path))?;
+            .with_context(|| format!("Failed to read contract file: {sierra_contract_path}"))?;
         serde_json::from_slice(&file_contents).with_context(|| {
-            format!(
-                "Failed to parse contract definition: {}",
-                sierra_contract_path
-            )
+            format!("Failed to parse contract definition: {sierra_contract_path}")
         })?
     };
     let casm_contract_definition: CompiledClass = {
         let file_contents = std::fs::read(casm_contract_path.clone())
-            .with_context(|| format!("Failed to read contract file: {}", casm_contract_path))?;
-        serde_json::from_slice(&file_contents).with_context(|| {
-            format!(
-                "Failed to parse contract definition: {}",
-                casm_contract_path
-            )
-        })?
+            .with_context(|| format!("Failed to read contract file: {casm_contract_path}"))?;
+        serde_json::from_slice(&file_contents)
+            .with_context(|| format!("Failed to parse contract definition: {casm_contract_path}"))?
     };
 
     let casm_class_hash = casm_contract_definition.class_hash()?;
