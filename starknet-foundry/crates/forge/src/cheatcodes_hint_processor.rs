@@ -789,8 +789,14 @@ mod test {
         // expected_class_hash computed with
         // https://github.com/software-mansion/starknet.py/blob/cea191679cbdd2726ca7989f3a7662dee6ea43ca/starknet_py/tests/e2e/docs/guide/test_cairo1_contract.py#L29-L36
         let cases = [
-            ("0x675f3bd6b220adb32096bf277ba986413ba5e46d1c2ebd7adfd0e878586576c", "target/dev/simple_package_ERC20.casm.json"),
-            ("0x192485856ebf42c113825d359a948dacaf526d62bf6c2aa231beffed0fddc3f", "target/dev/simple_package_HelloStarknet.casm.json"),
+            (
+                "0x675f3bd6b220adb32096bf277ba986413ba5e46d1c2ebd7adfd0e878586576c",
+                "target/dev/simple_package_ERC20.casm.json",
+            ),
+            (
+                "0x192485856ebf42c113825d359a948dacaf526d62bf6c2aa231beffed0fddc3f",
+                "target/dev/simple_package_HelloStarknet.casm.json",
+            ),
         ];
 
         for (expected_class_hash, casm_contract_path) in cases {
