@@ -2,23 +2,23 @@
 set -euxo pipefail
 
 TARGET="$1"
-STAGING="$2"
+PKG_FULL_NAME="$2"
 
-rm -rf "$STAGING"
-mkdir -p "$STAGING/bin"
+rm -rf "$PKG_FULL_NAME"
+mkdir -p "$PKG_FULL_NAME/bin"
 
 bin_ext=""
 [[ "$TARGET" == *-windows-* ]] && bin_ext=".exe"
 
 binary_crates=("forge" "cast")
 for crate in "${binary_crates[@]}"; do
-  cp "./starknet-foundry/target/${TARGET}/release/${crate}${bin_ext}" "$STAGING/bin/"
+  cp "./starknet-foundry/target/${TARGET}/release/${crate}${bin_ext}" "$PKG_FULL_NAME/bin/"
 done
 
-cp -r README.md "$STAGING/"
+cp -r README.md "$PKG_FULL_NAME/"
 
 if [[ "$TARGET" == *-windows-* ]]; then
-  7z a "${STAGING}.zip" "$STAGING"
+  7z a "${PKG_FULL_NAME}.zip" "$PKG_FULL_NAME"
 else
-  tar czvf "${STAGING}.tar.gz" "$STAGING"
+  tar czvf "${PKG_FULL_NAME}.tar.gz" "$PKG_FULL_NAME"
 fi

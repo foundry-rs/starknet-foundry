@@ -76,17 +76,17 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          STAGING="starknet-foundry-${{ github.ref_name }}-${{ matrix.target }}" 
-          echo "STAGING=$STAGING" >> $GITHUB_ENV
+          PKG_FULL_NAME="starknet-foundry-${{ github.ref_name }}-${{ matrix.target }}" 
+          echo "PKG_FULL_NAME=$PKG_FULL_NAME" >> $GITHUB_ENV
 
           chmod +x ./scripts/package.sh
-          ./scripts/package.sh "${{ matrix.target }}" "$STAGING"
+          ./scripts/package.sh "${{ matrix.target }}" "$PKG_FULL_NAME"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
           name: build-${{ matrix.target }}
-          path: ${{ env.STAGING }}.*
+          path: ${{ env.PKG_FULL_NAME }}.*
 
   create-release:
     name: Draft release
