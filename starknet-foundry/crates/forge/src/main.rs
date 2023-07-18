@@ -59,7 +59,7 @@ fn main_execution() -> Result<()> {
         .context("Failed to convert path to predeployed contracts to Utf8PathBuf")?;
 
     which::which("scarb")
-        .context("Cannot find `scarb` binary in PATH. Make sure you have Scarb installed")?;
+        .context("Cannot find `scarb` binary in PATH. Make sure you have Scarb installed https://github.com/software-mansion/scarb")?;
 
     let scarb_metadata = MetadataCommand::new().inherit_stderr().exec()?;
     Command::new("scarb")
