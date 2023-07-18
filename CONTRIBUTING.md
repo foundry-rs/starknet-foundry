@@ -1,8 +1,10 @@
 # Contribution Guideline
 
-Starknet Foundry is actively developed and open for contributions! Want to get started? Grab any issue labeled
-with `good-first-issue`!
-Need some guidance? Reach out to other developers on Telegram or open a GitHub discussion!
+Starknet Foundry is actively developed and open for contributions!
+Want to get started?
+Grab any issue labeled with `good-first-issue`!
+Need some guidance?
+Reach out to other developers on Telegram or open a GitHub discussion!
 
 ### Environment setup
 
@@ -11,8 +13,8 @@ Foundry book for environment setup.
 
 ### Running Tests and Checks
 
-Test scripts require you to have asdf installed. Check out [asdf docs](https://asdf-vm.com/guide/getting-started.html)
-for more details.
+Test scripts require you to have asdf installed.
+Check out [asdf docs](https://asdf-vm.com/guide/getting-started.html) for more details.
 
 ⚠️ Make sure you run `./scripts/prepare-for-tests.sh` after setting up the development environment, otherwise tests will
 fail.
@@ -36,8 +38,8 @@ work.
 
 ### Writing Tests
 
-Please make sure the feature you are implementing is thoroughly tested with automatic tests. You can check test already
-in the repository, to see how to approach that.
+Please make sure the feature you are implementing is thoroughly tested with automatic tests.
+You can check test already in the repository, to see how to approach that.
 
 ### Breaking Changes
 

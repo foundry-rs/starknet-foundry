@@ -18,11 +18,11 @@ Starknet Foundry, like its [Ethereum counterpart](https://github.com/foundry-rs/
 ## Features
 
 - Fast testing framework `Forge` written in Rust
-- High quality dependency managment using [scarb](https://github.com/software-mansion/scarb)
+- High-quality dependency management using [scarb](https://github.com/software-mansion/scarb)
 
 ## Coming Soon 👀
 
-Starknet Foundry is under active development! Expect a lot of new features appear soon! 🔥
+Starknet Foundry is under active development! Expect a lot of new features to appear soon! 🔥
 
 - [ ] Cheatcodes
 - [ ] Performance improvements
