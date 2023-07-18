@@ -3,4 +3,7 @@ authors = ["Starknet-Foundry"]
 language = "en"
 multilingual = false
 src = "src"
-title = "The Starknet-Foundry Book"
+title = "The Starknet Foundry Book"
+
+[output.html.playground]
+runnable = false

@@ -1,4 +1,4 @@
-# Starknet Foundry 🔨
+# Starknet-Foundry 🔨
 
 Blazingly fast implementation of Foundry for developing Starknet contracts designed & developed by ex [Protostar](https://github.com/software-mansion/protostar) team from [Software Mansion](https://github.com/software-mansion/protostar)
 
@@ -29,7 +29,7 @@ $ rustup update
 ```
 2. Clone this repository
 3. Verify your setup by running [tests](#testing)
-4. Build Starknet-Foundry
+4. Build Starknet Foundry
 ```shell
 $ cd ./starknet-foundry && cargo build --bins --release
 ```

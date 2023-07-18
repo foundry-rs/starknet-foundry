@@ -49,14 +49,17 @@ pub fn artifacts_for_package(path: &Utf8PathBuf) -> Result<StarknetArtifacts> {
     Ok(starknet_artifacts)
 }
 
-pub fn try_get_starknet_artifacts_path(path: &Utf8PathBuf) -> Result<Option<Utf8PathBuf>> {
+pub fn try_get_starknet_artifacts_path(
+    path: &Utf8PathBuf,
+    target_name: &str,
+) -> Result<Option<Utf8PathBuf>> {
     let path = path.join("target/dev");
     let paths = fs::read_dir(path);
     let Ok(mut paths) = paths else { return Ok(None) };
     let starknet_artifacts = paths.find_map(|path| match path {
         Ok(path) => {
             let name = path.file_name().into_string().ok()?;
-            name.contains("starknet_artifacts").then_some(path.path())
+            (name == format!("{target_name}.starknet_artifacts.json")).then_some(path.path())
         }
         Err(_) => None,
     });
@@ -105,7 +108,7 @@ pub fn config_from_scarb_for_package(
 pub fn dependencies_for_package(
     metadata: &Metadata,
     package: &PackageId,
-) -> Result<(Utf8PathBuf, Vec<LinkedLibrary>)> {
+) -> Result<(Utf8PathBuf, Vec<LinkedLibrary>, String)> {
     let compilation_unit = metadata
         .compilation_units
         .iter()
@@ -133,20 +136,23 @@ pub fn dependencies_for_package(
         })
         .collect();
 
-    Ok((base_path, dependencies))
+    let target_name = compilation_unit.target.name.clone();
+
+    Ok((base_path, dependencies, target_name))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use assert_fs::fixture::{FileTouch, FileWriteStr, PathChild, PathCopy};
+    use indoc::indoc;
     use scarb_metadata::MetadataCommand;
     use std::process::Command;
 
     #[test]
     fn get_starknet_artifacts_path() {
         let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from("tests/data/declare_test", &["**/*.cairo", "**/*.toml"])
+        temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
             .unwrap();
         Command::new("scarb")
             .current_dir(&temp)
@@ -156,19 +162,60 @@ mod tests {
 
         let result = try_get_starknet_artifacts_path(
             &Utf8PathBuf::from_path_buf(temp.to_path_buf()).unwrap(),
+            "simple_package",
         );
         let path = result.unwrap().unwrap();
         assert_eq!(
             path,
             temp.path()
-                .join("target/dev/declare_test.starknet_artifacts.json")
+                .join("target/dev/simple_package.starknet_artifacts.json")
+        );
+    }
+
+    #[test]
+    fn get_starknet_artifacts_path_for_project_with_different_package_and_target_name() {
+        let temp = assert_fs::TempDir::new().unwrap();
+        temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
+            .unwrap();
+
+        let scarb_path = temp.child("Scarb.toml");
+        scarb_path
+            .write_str(indoc!(
+                r#"
+            [package]
+            name = "simple_package"
+            version = "0.1.0"
+            
+            [dependencies]
+            starknet = "2.0.1"
+            
+            [[target.starknet-contract]]
+            name = "essa"
+            "#
+            ))
+            .unwrap();
+
+        Command::new("scarb")
+            .current_dir(&temp)
+            .arg("build")
+            .output()
+            .unwrap();
+
+        let result = try_get_starknet_artifacts_path(
+            &Utf8PathBuf::from_path_buf(temp.to_path_buf()).unwrap(),
+            "essa",
+        );
+        let path = result.unwrap().unwrap();
+        assert_eq!(
+            path,
+            temp.path().join("target/dev/essa.starknet_artifacts.json")
         );
     }
 
     #[test]
     fn get_starknet_artifacts_path_for_project_without_contracts() {
         let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from("tests/data/simple_test", &["**/*.cairo", "**/*.toml"])
+        temp.copy_from("tests/data/print_test", &["**/*.cairo", "**/*.toml"])
             .unwrap();
         Command::new("scarb")
             .current_dir(&temp)
@@ -178,6 +225,7 @@ mod tests {
 
         let result = try_get_starknet_artifacts_path(
             &Utf8PathBuf::from_path_buf(temp.to_path_buf()).unwrap(),
+            "print_test",
         );
         let path = result.unwrap();
         assert!(path.is_none());
@@ -186,11 +234,12 @@ mod tests {
     #[test]
     fn get_starknet_artifacts_path_for_project_without_scarb_build() {
         let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from("tests/data/simple_test", &["**/*.cairo", "**/*.toml"])
+        temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
             .unwrap();
 
         let result = try_get_starknet_artifacts_path(
             &Utf8PathBuf::from_path_buf(temp.to_path_buf()).unwrap(),
+            "simple_package",
         );
         let path = result.unwrap();
         assert!(path.is_none());
@@ -199,7 +248,7 @@ mod tests {
     #[test]
     fn parsing_starknet_artifacts() {
         let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from("tests/data/dispatchers", &["**/*.cairo", "**/*.toml"])
+        temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
             .unwrap();
         Command::new("scarb")
             .current_dir(&temp)
@@ -208,7 +257,7 @@ mod tests {
             .unwrap();
         let artifacts_path = temp
             .path()
-            .join("target/dev/dispatchers.starknet_artifacts.json");
+            .join("target/dev/simple_package.starknet_artifacts.json");
         let artifacts_path = Utf8PathBuf::from_path_buf(artifacts_path).unwrap();
 
         let artifacts = artifacts_for_package(&artifacts_path).unwrap();
@@ -233,7 +282,7 @@ mod tests {
     #[test]
     fn get_contracts() {
         let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from("tests/data/dispatchers", &["**/*.cairo", "**/*.toml"])
+        temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
             .unwrap();
         Command::new("scarb")
             .current_dir(&temp)
@@ -242,7 +291,7 @@ mod tests {
             .unwrap();
         let artifacts_path = temp
             .path()
-            .join("target/dev/dispatchers.starknet_artifacts.json");
+            .join("target/dev/simple_package.starknet_artifacts.json");
         let artifacts_path = Utf8PathBuf::from_path_buf(artifacts_path).unwrap();
 
         let contracts = get_contracts_map(&artifacts_path).unwrap();
@@ -251,18 +300,18 @@ mod tests {
         assert!(contracts.contains_key("HelloStarknet"));
 
         let sierra_contents_erc20 =
-            fs::read_to_string(temp.join("target/dev/dispatchers_ERC20.sierra.json")).unwrap();
+            fs::read_to_string(temp.join("target/dev/simple_package_ERC20.sierra.json")).unwrap();
         let casm_contents_erc20 =
-            fs::read_to_string(temp.join("target/dev/dispatchers_ERC20.casm.json")).unwrap();
+            fs::read_to_string(temp.join("target/dev/simple_package_ERC20.casm.json")).unwrap();
         let contract = contracts.get("ERC20").unwrap();
         assert_eq!(&sierra_contents_erc20, &contract.sierra);
         assert_eq!(&casm_contents_erc20, &contract.casm.clone().unwrap());
 
         let sierra_contents_erc20 =
-            fs::read_to_string(temp.join("target/dev/dispatchers_HelloStarknet.sierra.json"))
+            fs::read_to_string(temp.join("target/dev/simple_package_HelloStarknet.sierra.json"))
                 .unwrap();
         let casm_contents_erc20 =
-            fs::read_to_string(temp.join("target/dev/dispatchers_HelloStarknet.casm.json"))
+            fs::read_to_string(temp.join("target/dev/simple_package_HelloStarknet.casm.json"))
                 .unwrap();
         let contract = contracts.get("HelloStarknet").unwrap();
         assert_eq!(&sierra_contents_erc20, &contract.sierra);
@@ -272,7 +321,7 @@ mod tests {
     #[test]
     fn get_dependencies_for_package() {
         let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from("tests/data/simple_test", &["**/*.cairo", "**/*.toml"])
+        temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
             .unwrap();
         let scarb_metadata = MetadataCommand::new()
             .inherit_stderr()
@@ -280,7 +329,7 @@ mod tests {
             .exec()
             .unwrap();
 
-        let (_, dependencies) =
+        let (_, dependencies, _) =
             dependencies_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
                 .unwrap();
 
@@ -291,7 +340,7 @@ mod tests {
     #[test]
     fn get_dependencies_for_package_err_on_invalid_package() {
         let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from("tests/data/simple_test", &["**/*.cairo", "**/*.toml"])
+        temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
             .unwrap();
         let scarb_metadata = MetadataCommand::new()
             .inherit_stderr()
@@ -311,7 +360,7 @@ mod tests {
     #[test]
     fn get_forge_config_for_package() {
         let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from("tests/data/simple_test", &["**/*.cairo", "**/*.toml"])
+        temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
             .unwrap();
         let scarb_metadata = MetadataCommand::new()
             .inherit_stderr()
@@ -329,7 +378,7 @@ mod tests {
     #[test]
     fn get_forge_config_for_package_err_on_invalid_package() {
         let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from("tests/data/simple_test", &["**/*.cairo", "**/*.toml"])
+        temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
             .unwrap();
         let scarb_metadata = MetadataCommand::new()
             .inherit_stderr()
@@ -351,10 +400,10 @@ mod tests {
     #[test]
     fn get_forge_config_for_package_default_on_missing_config() {
         let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from("tests/data/simple_test", &["**/*.cairo", "**/*.toml"])
+        temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
             .unwrap();
         let content = "[package]
-name = \"example_package\"
+name = \"simple_package\"
 version = \"0.1.0\"";
         temp.child("Scarb.toml").write_str(content).unwrap();
 
