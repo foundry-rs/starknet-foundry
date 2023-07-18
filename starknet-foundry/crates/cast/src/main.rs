@@ -132,13 +132,9 @@ async fn main() -> Result<()> {
             let account = get_account(&account, &accounts_file_path, &provider, &network)?;
 
             let result = starknet_commands::deploy::deploy(
-                &deploy.class_hash,
-                deploy
-                    .constructor_calldata
-                    .iter()
-                    .map(AsRef::as_ref)
-                    .collect(),
-                deploy.salt.as_deref(),
+                deploy.class_hash,
+                deploy.constructor_calldata,
+                deploy.salt,
                 deploy.unique,
                 deploy.max_fee,
                 &account,
