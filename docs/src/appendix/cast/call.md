@@ -1,5 +1,5 @@
 # `call`
-Call a smart contract on Starknet with given parameters.
+Call a smart contract on Starknet with the given parameters.
 
 ## `--contract-address, -a <CONTRACT_ADDRESS>`
 Required.
