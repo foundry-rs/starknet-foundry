@@ -5,3 +5,4 @@
 * [deploy](./cast/deploy.md)
 * [invoke](./cast/invoke.md)
 * [call](./cast/call.md)
+* [multicall](./cast/multicall.md)
