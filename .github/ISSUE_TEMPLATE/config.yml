@@ -1,5 +1,5 @@
 blank_issues_enabled: true
 contact_links:
   - name: Support
-    url: https://github.com/orgs/community/discussions
-    about: This issue tracker is only for bugs and feature requests. Support is available on other communication channels.
+    url: https://github.com/foundry-rs/starknet-foundry#getting-help
+    about: This issue tracker is only for bugs and feature requests. Support is available through other communication channels.
