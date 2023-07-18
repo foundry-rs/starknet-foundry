@@ -2,7 +2,7 @@
 
 ## Overview
 
-Starknet Foundry cast supports calling smart contracts on a given network with the `cast call` command.
+Starknet Foundry cast supports calling smart contracts on a given network with the `sncast call` command.
 
 The basic inputs that you need for this command are:
 
@@ -17,7 +17,7 @@ For a detailed CLI description, see the [call command reference](../appendix/cas
 ### With [profiles](../projects/configuration.md#Cast)
 
 ```shell
-$ cast call \
+$ sncast call \
   --profile testnet \
   --contract-address 0x4a739ab73aa3cac01f9da5d55f49fb67baee4919224454a2e3f85b16462a911 \
   --function some_function \
@@ -30,7 +30,7 @@ response: [FieldElement { inner: 0x000000000000000000000000000000000000000000000
 ### Without profiles
 
 ```shell
-$ cast \
+$ sncast \
   --rpc_url http://127.0.0.1:5050 \
   --network testnet \
   call \

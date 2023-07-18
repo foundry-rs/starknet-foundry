@@ -17,6 +17,23 @@ Starknet Foundry, like its [Ethereum counterpart](https://github.com/foundry-rs/
 - [Cast](https://github.com/foundry-rs/starknet-foundry/tree/master/starknet-foundry/crates/cast): All-in-one tool for
   interacting with Starknet smart contracts, sending transactions and getting chain data.
 
+## Installation
+
+To install Starknet Foundry, run:
+
+```shell
+$ curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/install.sh | sh
+```
+
+You can also specify a version you wish to install:
+
+```shell
+$ curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/install.sh | sh -s -- -v 0.1.0
+```
+
+To verify that the Starknet Foundry is installed correctly, run `snforge --version` and `sncast --version`.
+
+
 ## Features
 
 - Fast testing framework `Forge` written in Rust

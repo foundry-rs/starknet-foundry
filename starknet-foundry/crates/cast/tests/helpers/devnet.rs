@@ -47,7 +47,7 @@ fn start_devnet() {
         .expect("Failed to start devnet!");
 
     let now = Instant::now();
-    let timeout = Duration::from_secs(10);
+    let timeout = Duration::from_secs(30);
 
     loop {
         if verify_devnet_availability(&format!("{host}:{port}")) {
