@@ -31,7 +31,7 @@ $ cast \
   transaction_hash: 0x7ad0d6e449e33b6581a4bb8df866c0fce3919a5ee05a30840ba521dafee217f
 ```
 
-### With profiles
+### With [profiles](../projects/configuration.md#Cast)
 
 ```shell
 $ cast invoke \
