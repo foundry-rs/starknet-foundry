@@ -5,8 +5,7 @@ use tempfile::tempdir;
 
 #[tokio::test]
 async fn test_happy_case_stdout() {
-    let args = default_cli_args();
-    let mut args: Vec<&str> = args.iter().map(String::as_str).collect();
+    let mut args = default_cli_args();
 
     args.append(&mut vec!["multicall-new"]);
 
@@ -23,8 +22,7 @@ async fn test_happy_case_stdout() {
 
 #[tokio::test]
 async fn test_happy_case_file() {
-    let args = default_cli_args();
-    let mut args: Vec<&str> = args.iter().map(String::as_str).collect();
+    let mut args = default_cli_args();
 
     let tmp_dir = tempdir().expect("failed to create temporary directory");
     let tmp_path = tmp_dir.path().join("multicall.toml");
@@ -45,8 +43,7 @@ async fn test_happy_case_file() {
 
 #[tokio::test]
 async fn test_file_non_existent() {
-    let args = default_cli_args();
-    let mut args: Vec<&str> = args.iter().map(String::as_str).collect();
+    let  mut args = default_cli_args();
 
     let tmp_dir = tempdir().expect("failed to create temporary directory");
     let tmp_path = tmp_dir
@@ -71,8 +68,7 @@ async fn test_file_non_existent() {
 
 #[tokio::test]
 async fn test_file_invalid_path() {
-    let args = default_cli_args();
-    let mut args: Vec<&str> = args.iter().map(String::as_str).collect();
+    let mut args = default_cli_args();
 
     let tmp_dir = tempdir().expect("failed to create temporary directory");
     let tmp_path = tmp_dir

@@ -94,11 +94,6 @@ pub fn default_cli_args() -> Vec<&'static str> {
 }
 
 #[must_use]
-pub fn default_cli_args() -> Vec<String> {
-    default_cli_args_with_account("user0".to_string())
-}
-
-#[must_use]
 pub fn get_transaction_hash(output: &[u8]) -> FieldElement {
     let output: HashMap<String, String> =
         serde_json::from_slice(output).expect("Could not serialize transaction output to HashMap");

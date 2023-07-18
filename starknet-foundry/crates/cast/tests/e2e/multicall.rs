@@ -1,4 +1,4 @@
-use crate::helpers::fixtures::default_cli_args_with_account;
+use crate::helpers::fixtures::default_cli_args;
 use crate::helpers::runner::runner;
 use std::path::Path;
 use crate::helpers::constants::MULTICALL_CONFIGS_DIR;
