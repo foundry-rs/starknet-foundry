@@ -18,7 +18,7 @@ async fn test_happy_case(contract_address: &str, account: &str) {
         "invoke",
         "--contract-address",
         contract_address,
-        "--entry-point-name",
+        "--function",
         "put",
         "--calldata",
         "0x1 0x2",
@@ -44,7 +44,7 @@ async fn test_contract_does_not_exist() {
         "invoke",
         "--contract-address",
         "0x1",
-        "--entry-point-name",
+        "--function",
         "put",
     ]);
 
@@ -65,7 +65,7 @@ fn test_wrong_function_name(contract_address: &str, account: &str) {
         "invoke",
         "--contract-address",
         contract_address,
-        "--entry-point-name",
+        "--function",
         "nonexistent_put",
     ]);
 
@@ -86,7 +86,7 @@ fn test_wrong_calldata(contract_address: &str, account: &str) {
         "invoke",
         "--contract-address",
         contract_address,
-        "--entry-point-name",
+        "--function",
         "put",
         "--calldata",
         "0x1",
@@ -113,7 +113,7 @@ fn test_too_low_max_fee(contract_address: &str, account: &str) {
         "invoke",
         "--contract-address",
         contract_address,
-        "--entry-point-name",
+        "--function",
         "put",
         "--calldata",
         "0x1 0x2",
