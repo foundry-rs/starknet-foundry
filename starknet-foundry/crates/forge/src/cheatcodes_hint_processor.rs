@@ -26,7 +26,7 @@ use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
 use cairo_vm::hint_processor::hint_processor_definition::HintReference;
 use cairo_vm::serde::deserialize_program::ApTracking;
 use cairo_vm::types::exec_scope::ExecutionScopes;
-use cairo_vm::types::relocatable::{MaybeRelocatable, Relocatable};
+use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::errors::memory_errors::MemoryError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
@@ -48,8 +48,13 @@ use starknet_api::transaction::{
 use starknet_api::{patricia_key, stark_felt, StarknetApiError};
 use thiserror::Error;
 
+use crate::vm_memory::{
+    felt_from_pointer, insert_at_pointer, relocatable_from_pointer, usize_from_pointer,
+    write_cheatcode_panic,
+};
 use cairo_lang_casm::hints::{Hint, StarknetHint};
 use cairo_lang_casm::operand::{CellRef, ResOperand};
+use cairo_lang_runner::casm_run::extract_relocatable;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{
     casm_run::{cell_ref_to_relocatable, extract_buffer, get_ptr},
@@ -62,7 +67,7 @@ use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 
 pub struct CairoHintProcessor<'a> {
     pub original_cairo_hint_processor: OriginalCairoHintProcessor<'a>,
-    pub blockifier_state: Option<CachedState<DictStateReader>>,
+    pub blockifier_state: CachedState<DictStateReader>,
     pub contracts: &'a HashMap<String, StarknetContractArtifacts>,
 }
 
@@ -99,10 +104,6 @@ impl HintProcessorLogic for CairoHintProcessor<'_> {
         constants: &HashMap<String, Felt252>,
     ) -> Result<(), HintError> {
         let maybe_extended_hint = hint_data.downcast_ref::<Hint>();
-        let blockifier_state = self
-            .blockifier_state
-            .as_mut()
-            .expect("Blockifier state is needed for executing hints");
         if let Some(Hint::Starknet(StarknetHint::Cheatcode {
             selector,
             input_start,
@@ -114,7 +115,7 @@ impl HintProcessorLogic for CairoHintProcessor<'_> {
             return execute_cheatcode_hint(
                 vm,
                 exec_scopes,
-                blockifier_state,
+                &mut self.blockifier_state,
                 selector,
                 input_start,
                 input_end,
@@ -124,7 +125,7 @@ impl HintProcessorLogic for CairoHintProcessor<'_> {
             );
         }
         if let Some(Hint::Starknet(StarknetHint::SystemCall { system })) = maybe_extended_hint {
-            return execute_syscall(system, vm, blockifier_state);
+            return execute_syscall(system, vm, &mut self.blockifier_state);
         }
         self.original_cairo_hint_processor
             .execute_hint(vm, exec_scopes, hint_data, constants)
@@ -498,6 +499,16 @@ fn deploy(
     let salt = ContractAddressSalt::default();
     let class_hash = ClassHash(StarkFelt::new(class_hash.to_be_bytes()).unwrap());
 
+    let contract_class = blockifier_state.get_compiled_contract_class(&class_hash)?;
+    if contract_class.constructor_selector().is_none() && !calldata.is_empty() {
+        write_cheatcode_panic(
+            vm,
+            result_segment_ptr,
+            vec![felt_from_short_string("No constructor in contract")],
+        );
+        return Ok(());
+    }
+
     let execute_calldata = create_execute_calldata(
         &calldata,
         &class_hash,
@@ -535,15 +546,8 @@ fn deploy(
         let extracted_panic_data = try_extract_panic_data(&revert_error)
             .expect("Unparseable error message, {revert_error}");
 
-        insert_at_pointer(vm, result_segment_ptr, 1).expect("Failed to insert err code");
-        insert_at_pointer(vm, result_segment_ptr, extracted_panic_data.len())
-            .expect("Failed to insert panic_data len");
-        for datum in extracted_panic_data {
-            insert_at_pointer(vm, result_segment_ptr, datum)
-                .expect("Failed to insert error in memory");
-        }
+        write_cheatcode_panic(vm, result_segment_ptr, extracted_panic_data);
     }
-
     Ok(())
 }
 
@@ -552,7 +556,7 @@ fn felt_from_short_string(short_str: &str) -> Felt252 {
 }
 
 fn try_extract_panic_data(err: &str) -> Option<Vec<Felt252>> {
-    let re = Regex::new(r#"(?m)^Got an exception while executing a hint: Custom Hint Error: Execution failed. Failure reason: "(.*)"\.$"#)
+    let re = Regex::new(r#"(?m)^Got an exception while executing a hint: Custom Hint Error: Execution failed\. Failure reason: "(.*)"\.$"#)
         .expect("Could not create panic_data matching regex");
 
     if let Some(captures) = re.captures(err) {
@@ -570,15 +574,6 @@ fn try_extract_panic_data(err: &str) -> Option<Vec<Felt252>> {
         }
     }
     None
-}
-
-// TODO(#2164): remove this when extract_relocatable is pub in cairo
-fn extract_relocatable(
-    vm: &VirtualMachine,
-    buffer: &ResOperand,
-) -> Result<Relocatable, VirtualMachineError> {
-    let (base, offset) = extract_buffer(buffer);
-    get_ptr(vm, base, &offset)
 }
 
 // Should this function panic?
@@ -607,7 +602,7 @@ fn create_execute_calldata(
 }
 
 fn read_data_from_range(
-    vm: &mut VirtualMachine,
+    vm: &VirtualMachine,
     mut start: Relocatable,
     end: Relocatable,
 ) -> Result<Vec<Felt252>> {
@@ -617,37 +612,6 @@ fn read_data_from_range(
         calldata.push(value);
     }
     Ok(calldata)
-}
-
-fn insert_at_pointer<T: Into<MaybeRelocatable>>(
-    vm: &mut VirtualMachine,
-    ptr: &mut Relocatable,
-    value: T,
-) -> Result<()> {
-    vm.insert_value(*ptr, value)?;
-    *ptr += 1;
-    Ok(())
-}
-
-fn usize_from_pointer(vm: &mut VirtualMachine, ptr: &mut Relocatable) -> Result<usize> {
-    let gas_counter = vm
-        .get_integer(*ptr)?
-        .to_usize()
-        .ok_or_else(|| anyhow!("Failed to convert to usize"))?;
-    *ptr += 1;
-    Ok(gas_counter)
-}
-
-fn relocatable_from_pointer(vm: &mut VirtualMachine, ptr: &mut Relocatable) -> Result<Relocatable> {
-    let start = vm.get_relocatable(*ptr)?;
-    *ptr += 1;
-    Ok(start)
-}
-
-fn felt_from_pointer(vm: &mut VirtualMachine, ptr: &mut Relocatable) -> Result<Felt252> {
-    let entry_point_selector = vm.get_integer(*ptr)?.into_owned();
-    *ptr += 1;
-    Ok(entry_point_selector)
 }
 
 fn felt252_from_hex_string(value: &str) -> Result<Felt252> {

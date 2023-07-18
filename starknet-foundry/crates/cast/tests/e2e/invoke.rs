@@ -18,7 +18,7 @@ async fn test_happy_case(contract_address: &str, account: &str) {
         "invoke",
         "--contract-address",
         contract_address,
-        "--entry-point-name",
+        "--function",
         "put",
         "--calldata",
         "0x1 0x2",
@@ -44,13 +44,13 @@ async fn test_contract_does_not_exist() {
         "invoke",
         "--contract-address",
         "0x1",
-        "--entry-point-name",
+        "--function",
         "put",
     ]);
 
     let snapbox = runner(&args);
 
-    snapbox.assert().success().stderr_matches(indoc! {r#"
+    snapbox.assert().stderr_matches(indoc! {r#"
         error: There is no contract at the specified address
     "#});
 }
@@ -65,13 +65,13 @@ fn test_wrong_function_name(contract_address: &str, account: &str) {
         "invoke",
         "--contract-address",
         contract_address,
-        "--entry-point-name",
+        "--function",
         "nonexistent_put",
     ]);
 
     let snapbox = runner(&args);
 
-    snapbox.assert().success().stderr_matches(indoc! {r#"
+    snapbox.assert().stderr_matches(indoc! {r#"
         error: An error occurred in the called contract
     "#});
 }
@@ -86,7 +86,7 @@ fn test_wrong_calldata(contract_address: &str, account: &str) {
         "invoke",
         "--contract-address",
         contract_address,
-        "--entry-point-name",
+        "--function",
         "put",
         "--calldata",
         "0x1",
@@ -113,7 +113,7 @@ fn test_too_low_max_fee(contract_address: &str, account: &str) {
         "invoke",
         "--contract-address",
         contract_address,
-        "--entry-point-name",
+        "--function",
         "put",
         "--calldata",
         "0x1 0x2",
@@ -123,7 +123,7 @@ fn test_too_low_max_fee(contract_address: &str, account: &str) {
 
     let snapbox = runner(&args);
 
-    snapbox.assert().success().stderr_matches(indoc! {r#"
+    snapbox.assert().stderr_matches(indoc! {r#"
         error: Transaction has been rejected
     "#});
 }

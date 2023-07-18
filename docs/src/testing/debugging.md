@@ -33,7 +33,7 @@ fn test_print() {
 Running tests will include prints in the output:
 
 ```shell
-$ forge
+$ snforge
 Collected 1 test(s) and 2 test file(s)
 Running 0 test(s) from src/lib.cairo
 Running 1 test(s) from tests/test_print.cairo

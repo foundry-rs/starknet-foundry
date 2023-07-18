@@ -1,9 +1,9 @@
-# First Steps With Starknet-Foundry
+# First Steps With Starknet Foundry
 
-In this section we provide an overview of Starknet-Foundry `forge` command line tool. We demonstrate how to create a
-new project, compile, and test it.
+In this section we provide an overview of Starknet Foundry `forge` command line tool.
+We demonstrate how to create a new project, compile, and test it.
 
-To start a new project with Starknet-Foundry, clone the template repository
+To start a new project with Starknet Foundry, clone the template repository
 
 ```shell
 $ git clone https://github.com/foundry-rs/starknet_forge_template.git
@@ -30,7 +30,7 @@ $ tree . -L 1
 And run tests with `forge`
 
 ```shell
-$ forge
+$ snforge
 Collected 2 test(s) and 2 test file(s)
 Running 0 test(s) from src/lib.cairo
 Running 2 test(s) from tests/test_contract.cairo

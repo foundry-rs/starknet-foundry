@@ -7,7 +7,7 @@ writing smart contracts you often want to test their interactions with the block
 
 In this tutorial we will be using this Starknet contract
 
-```cairo
+```rust
 #[starknet::interface]
 trait IHelloStarknet<TContractState> {
     fn increase_balance(ref self: TContractState, amount: felt252);
@@ -42,7 +42,7 @@ Note that the name after `mod` will be used as the contract name for testing pur
 
 Let's write a test that will deploy the `HelloStarknet` contract and call some functions.
 
-```cairo
+```rust
 #[test]
 fn call_and_invoke() {
     // First declare and deploy a contract
@@ -69,7 +69,7 @@ fn call_and_invoke() {
 ```
 
 ```shell
-$ forge
+$ snforge
 Collected 1 test(s) and 1 test file(s)
 Running 1 test(s) from src/lib.cairo
 [PASS] using_dispatchers::using_dispatchers::call_and_invoke
@@ -84,7 +84,7 @@ panicking.
 
 First, let's add a new, panicking function to our contract.
 
-```cairo
+```rust
 // ...
 
 #[starknet::contract]
@@ -103,7 +103,7 @@ mod HelloStarknet {
 
 If we called this function in a test, it would result in a failure.
 
-```cairo
+```rust
 #[test]
 fn failing() {
     // ...
@@ -112,7 +112,7 @@ fn failing() {
 ```
 
 ```shell
-$ forge
+$ snforge
 Collected 1 test(s) and 1 test file(s)
 Running 1 test(s) from src/lib.cairo
 [FAIL] src::failing
@@ -128,7 +128,7 @@ Tests: 0 passed, 1 failed, 0 skipped
 
 Using `SafeDispatcher` we can test that the function in fact panics with an expected message.
 
-```cairo
+```rust
 #[test]
 fn handling_errors() {
     // ...
@@ -147,7 +147,7 @@ fn handling_errors() {
 Now the test passes as expected.
 
 ```shell
-$ forge
+$ snforge
 Collected 1 test(s) and 1 test file(s)
 Running 1 test(s) from src/lib.cairo
 [PASS] src::handling_errors

@@ -1,4 +1,4 @@
-# `cast` common flags
+# `sncast` common flags
 
 ## `--profile, -p <PROFILE_NAME>`
 Optional.

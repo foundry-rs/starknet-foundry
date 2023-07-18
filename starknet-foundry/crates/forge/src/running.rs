@@ -45,7 +45,7 @@ fn build_hints_dict<'b>(
 }
 
 pub(crate) fn run_from_test_case(
-    runner: &mut SierraCasmRunner,
+    runner: &SierraCasmRunner,
     case: &TestCase,
     contracts: &HashMap<String, StarknetContractArtifacts>,
     predeployed_contracts: &Utf8PathBuf,
@@ -74,7 +74,7 @@ pub(crate) fn run_from_test_case(
     };
     let mut cairo_hint_processor = CairoHintProcessor {
         original_cairo_hint_processor: core_cairo_hint_processor,
-        blockifier_state: Some(build_testing_state(predeployed_contracts)),
+        blockifier_state: build_testing_state(predeployed_contracts),
         contracts,
     };
 
