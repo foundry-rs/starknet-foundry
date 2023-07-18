@@ -3,7 +3,6 @@ use crate::common::runner::Contract;
 use crate::{assert_failed, assert_passed, test_case};
 use camino::Utf8PathBuf;
 use forge::run;
-use forge::test_case_summary::TestCaseSummary;
 use indoc::indoc;
 use std::path::Path;
 
@@ -19,7 +18,7 @@ fn simple() {
 
     let result = run(
         &test.path().unwrap(),
-        Some(test.linked_libraries()),
+        &Some(test.linked_libraries()),
         &Default::default(),
         Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
         &test.contracts(corelib().path()).unwrap(),
@@ -42,7 +41,7 @@ fn failing() {
 
     let result = run(
         &test.path().unwrap(),
-        Some(test.linked_libraries()),
+        &Some(test.linked_libraries()),
         &Default::default(),
         Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
         &test.contracts(corelib().path()).unwrap(),
@@ -98,7 +97,7 @@ fn simple_declare() {
 
     let result = run(
         &test.path().unwrap(),
-        Some(test.linked_libraries()),
+        &Some(test.linked_libraries()),
         &Default::default(),
         Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
         &test.contracts(corelib().path()).unwrap(),
@@ -192,7 +191,7 @@ fn multiple_declare() {
 
     let result = run(
         &test.path().unwrap(),
-        Some(test.linked_libraries()),
+        &Some(test.linked_libraries()),
         &Default::default(),
         Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
         &test.contracts(corelib().path()).unwrap(),
@@ -207,7 +206,7 @@ fn multiple_declare() {
 fn simple_declare_from_contract_code() {
     let contract = Contract::from_code_path(
         "Contract1".to_string(),
-        Path::new("./tests/data/declare_test/src/contract1.cairo"),
+        Path::new("tests/data/contracts/hello_starknet.cairo"),
     )
     .unwrap();
 
@@ -229,7 +228,7 @@ fn simple_declare_from_contract_code() {
 
     let result = run(
         &test.path().unwrap(),
-        Some(test.linked_libraries()),
+        &Some(test.linked_libraries()),
         &Default::default(),
         Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
         &test.contracts(corelib().path()).unwrap(),
@@ -257,7 +256,7 @@ fn declare_unknown() {
 
     let result = run(
         &test.path().unwrap(),
-        Some(test.linked_libraries()),
+        &Some(test.linked_libraries()),
         &Default::default(),
         Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
         &test.contracts(corelib().path()).unwrap(),

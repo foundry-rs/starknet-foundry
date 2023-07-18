@@ -2242,6 +2242,7 @@ dependencies = [
  "ctor",
  "indoc",
  "primitive-types 0.12.1",
+ "project-root",
  "rand",
  "reqwest",
  "scarb",
@@ -2253,6 +2254,7 @@ dependencies = [
  "starknet",
  "test-case",
  "tokio",
+ "toml 0.5.11",
  "url",
 ]
 
@@ -3144,6 +3146,7 @@ dependencies = [
  "parity-scale-codec 3.6.3",
  "parity-scale-codec-derive 3.6.3",
  "project-root",
+ "rayon",
  "regex",
  "scarb-metadata",
  "schemars",
@@ -3155,6 +3158,7 @@ dependencies = [
  "test-collector",
  "thiserror",
  "walkdir",
+ "which",
 ]
 
 [[package]]
@@ -4468,9 +4472,9 @@ checksum = "28b29a3cd74f0f4598934efe3aeba42bae0eb4680554128851ebbecb02af14e6"
 
 [[package]]
 name = "is-terminal"
-version = "0.4.9"
+version = "0.4.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cb0889898416213fab133e1d33a0e5858a48177452750691bde3666d0fdbaf8b"
+checksum = "24fddda5af7e54bf7da53067d6e802dbcc381d0a8eef629df528e3ebf68755cb"
 dependencies = [
  "hermit-abi 0.3.2",
  "rustix 0.38.4",
@@ -6837,6 +6841,7 @@ dependencies = [
  "num-bigint",
  "num-integer",
  "num-traits 0.2.15",
+ "rayon",
  "serde",
  "serde_json",
  "smol_str",
@@ -7042,6 +7047,15 @@ name = "toml"
 version = "0.4.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "758664fc71a3a69038656bee8b6be6477d2a6c315a6b81f7081f591bffa4111f"
+dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "toml"
+version = "0.5.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f4f7f0dd8d50a853a531c426359045b1998f04219d88799810762cd4ad314234"
 dependencies = [
  "serde",
 ]
