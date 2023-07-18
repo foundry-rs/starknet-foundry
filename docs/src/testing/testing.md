@@ -7,7 +7,7 @@ should write as many unit tests as possible as these are faster than integration
 
 First, add the following code to the `src/lib.cairo` file:
 
-```cairo
+```rust
 fn sum(a: felt252, b: felt252) -> felt252 {
     return a + b;
 }
@@ -40,7 +40,7 @@ Test functions cannot return any values and cannot take any arguments.
 
 If your code panics, the test is considered failed. Here's an example of a failing test.
 
-```
+```rust
 use array::ArrayTrait;
 
 fn panicking_function() {

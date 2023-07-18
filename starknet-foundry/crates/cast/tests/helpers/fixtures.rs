@@ -11,6 +11,7 @@ use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use std::collections::HashMap;
+use std::fs;
 use std::sync::Arc;
 use url::Url;
 
@@ -142,4 +143,35 @@ pub async fn get_transaction_receipt(tx_hash: FieldElement) -> TransactionReceip
 pub fn create_test_provider() -> JsonRpcClient<HttpTransport> {
     let parsed_url = Url::parse(URL).unwrap();
     JsonRpcClient::new(HttpTransport::new(parsed_url))
+}
+
+#[must_use]
+pub fn duplicate_directory_with_salt(src_path: String, to_be_salted: &str, salt: &str) -> String {
+    let dest_path = src_path.clone() + salt;
+
+    let src_dir = Utf8PathBuf::from(src_path);
+    let dest_dir = Utf8PathBuf::from(&dest_path);
+
+    fs::create_dir_all(&dest_dir).expect("Unable to create directory");
+
+    fs_extra::dir::copy(
+        src_dir.join("src"),
+        &dest_dir,
+        &fs_extra::dir::CopyOptions::new().overwrite(true),
+    )
+    .expect("Unable to copy the src directory");
+    fs_extra::file::copy(
+        src_dir.join("Scarb.toml"),
+        dest_dir.join("Scarb.toml"),
+        &fs_extra::file::CopyOptions::new().overwrite(true),
+    )
+    .expect("Unable to copy Scarb.toml");
+
+    let contract_code =
+        fs::read_to_string(src_dir.join("src/lib.cairo")).expect("Unable to get contract code");
+    let updated_code = contract_code.replace(to_be_salted, &(to_be_salted.to_string() + salt));
+    fs::write(dest_dir.join("src/lib.cairo"), updated_code)
+        .expect("Unable to change contract code");
+
+    dest_path
 }

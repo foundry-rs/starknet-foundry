@@ -55,7 +55,9 @@ pub fn try_get_starknet_artifacts_path(
 ) -> Result<Option<Utf8PathBuf>> {
     let path = path.join("target/dev");
     let paths = fs::read_dir(path);
-    let Ok(mut paths) = paths else { return Ok(None) };
+    let Ok(mut paths) = paths else {
+        return Ok(None);
+    };
     let starknet_artifacts = paths.find_map(|path| match path {
         Ok(path) => {
             let name = path.file_name().into_string().ok()?;
