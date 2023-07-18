@@ -137,7 +137,7 @@ response: [FieldElement { inner: 0x000000000000000000000000000000000000000000000
 
 ## Development
 
-Refer to [project readme](https://github.com/foundry-rs/starknet-foundry#development) to make sure you have all the pre-requisites, and to obtain an information on how to help to develop `cast`.
+Refer to [documentation](https://foundry-rs.github.io/starknet-foundry/development/environment-setup.html) to make sure you have all the pre-requisites, and to obtain an information on how to help to develop `cast`.
 
 Please make sure you're using scarb installed via asdf - otherwise some tests may fail.
 To verify, run:
