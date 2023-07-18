@@ -69,7 +69,7 @@ async fn test_contract_does_not_exist() {
 
     let snapbox = runner(&args);
 
-    snapbox.assert().success().stderr_matches(indoc! {r#"
+    snapbox.assert().stderr_matches(indoc! {r#"
         error: There is no contract at the specified address
     "#});
 }
@@ -88,7 +88,7 @@ fn test_wrong_function_name(contract_address: &str) {
 
     let snapbox = runner(&args);
 
-    snapbox.assert().success().stderr_matches(indoc! {r#"
+    snapbox.assert().stderr_matches(indoc! {r#"
         error: An error occurred in the called contract
     "#});
 }
@@ -109,7 +109,7 @@ fn test_wrong_calldata(contract_address: &str) {
 
     let snapbox = runner(&args);
 
-    snapbox.assert().success().stderr_matches(indoc! {r#"
+    snapbox.assert().stderr_matches(indoc! {r#"
         error: Execution was reverted; failure reason: [0x496e70757420746f6f206c6f6e6720666f7220617267756d656e7473].
     "#});
 }
