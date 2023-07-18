@@ -10,7 +10,7 @@ The basic inputs that you need for this command are:
 - Function name
 - Inputs to the function
 
-For detailed CLI description, see [call command reference](../appendix/cast/call.md).
+For a detailed CLI description, see the [call command reference](../appendix/cast/call.md).
 
 ## Usage example
 
