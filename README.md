@@ -49,3 +49,6 @@ Found a bug? Open an [issue](https://github.com/foundry-rs/starknet-foundry/issu
 
 Starknet Foundry is under active development, and we appreciate any help from the community! Want to contribute? Read
 the [contribution guidelines](./CONTRIBUTING.md).
+
+Check out [development guide](https://foundry-rs.github.io/starknet-foundry/development/environment-setup.html) for
+local environment setup guide.
