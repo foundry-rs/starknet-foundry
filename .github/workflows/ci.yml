@@ -17,7 +17,9 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@dd05243424bd5c0e585e4b55eb2d7615cdd32f1f
         with:
-          workspaces: starknet-foundry
+          workspaces: |
+            starknet-foundry
+            cairo
       - uses: software-mansion/setup-scarb@v1.0.0
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
@@ -37,7 +39,9 @@ jobs:
           toolchain: stable
       - uses: Swatinem/rust-cache@dd05243424bd5c0e585e4b55eb2d7615cdd32f1f
         with:
-          workspaces: starknet-foundry
+          workspaces: |
+            starknet-foundry
+            cairo
       - uses: actions/setup-python@v4
         with:
           python-version: '3.9'
@@ -68,7 +72,9 @@ jobs:
           toolchain: stable
       - uses: Swatinem/rust-cache@dd05243424bd5c0e585e4b55eb2d7615cdd32f1f
         with:
-          workspaces: starknet-foundry
+          workspaces: |
+            starknet-foundry
+            cairo
       - name: Check forge formatting
         run: cargo fmt --manifest-path ./starknet-foundry/Cargo.toml --check -p forge
       - name: Check cast formatting
@@ -92,6 +98,8 @@ jobs:
           toolchain: stable
       - uses: Swatinem/rust-cache@dd05243424bd5c0e585e4b55eb2d7615cdd32f1f
         with:
-          workspaces: starknet-foundry
+          workspaces: |
+            starknet-foundry
+            cairo
       - run: cargo lint
         working-directory: ./starknet-foundry
