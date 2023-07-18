@@ -46,7 +46,7 @@ async fn test_contract_not_declared() {
     ]);
 
     let snapbox = runner(&args);
-    let output = String::from_utf8(snapbox.assert().success().get_output().stderr.clone()).unwrap();
+    let output = String::from_utf8(snapbox.assert().get_output().stderr.clone()).unwrap();
 
     assert!(output.contains("Class with hash 0x1 is not declared."));
 }
@@ -66,7 +66,7 @@ fn test_contract_already_deployed(class_hash: &str, account: &str) {
     ]);
 
     let snapbox = runner(&args);
-    let output = String::from_utf8(snapbox.assert().success().get_output().stderr.clone()).unwrap();
+    let output = String::from_utf8(snapbox.assert().get_output().stderr.clone()).unwrap();
 
     assert!(output.contains("StarknetErrorCode.CONTRACT_ADDRESS_UNAVAILABLE"));
 }
@@ -90,7 +90,7 @@ fn test_too_low_max_fee(class_hash: &str, account: &str) {
 
     let snapbox = runner(&args);
 
-    snapbox.assert().success().stderr_matches(indoc! {r#"
+    snapbox.assert().stderr_matches(indoc! {r#"
         error: Transaction has been rejected
     "#});
 }

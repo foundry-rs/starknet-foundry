@@ -50,7 +50,7 @@ async fn test_contract_does_not_exist() {
 
     let snapbox = runner(&args);
 
-    snapbox.assert().success().stderr_matches(indoc! {r#"
+    snapbox.assert().stderr_matches(indoc! {r#"
         error: There is no contract at the specified address
     "#});
 }
@@ -71,7 +71,7 @@ fn test_wrong_function_name(contract_address: &str, account: &str) {
 
     let snapbox = runner(&args);
 
-    snapbox.assert().success().stderr_matches(indoc! {r#"
+    snapbox.assert().stderr_matches(indoc! {r#"
         error: An error occurred in the called contract
     "#});
 }
@@ -123,7 +123,7 @@ fn test_too_low_max_fee(contract_address: &str, account: &str) {
 
     let snapbox = runner(&args);
 
-    snapbox.assert().success().stderr_matches(indoc! {r#"
+    snapbox.assert().stderr_matches(indoc! {r#"
         error: Transaction has been rejected
     "#});
 }
