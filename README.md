@@ -19,6 +19,7 @@ Starknet Foundry, like its [Ethereum counterpart](https://github.com/foundry-rs/
 
 - Fast testing framework `Forge` written in Rust
 - High-quality dependency management using [scarb](https://github.com/software-mansion/scarb)
+- Intuitive interactions and deployment of Starknet contracts
 
 ## Coming Soon 👀
 
