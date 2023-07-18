@@ -1,6 +1,6 @@
 # Starknet Foundry 🔨
 
-Blazing fast toolkit for developing Starknet contracts designed & developed by
+Blazingly fast toolkit for developing Starknet contracts designed & developed by
 ex [Protostar](https://github.com/software-mansion/protostar) team from [Software Mansion](https://swmansion.com) based
 on native [Cairo](https://github.com/starkware-libs/cairo) test runner
 and [Blockifier](https://github.com/starkware-libs/blockifier), written in Rust 🦀.
@@ -8,9 +8,7 @@ and [Blockifier](https://github.com/starkware-libs/blockifier), written in Rust 
 Need help getting started with Starknet Foundry? Read the
 📖 [Starknet Foundry Book](https://foundry-rs.github.io/starknet-foundry/)!
 
-
 ![Example run](./docs/images/demo-gif/demo.gif)
-
 
 Starknet Foundry, like its [Ethereum counterpart](https://github.com/foundry-rs/foundry), consists of different modules
 
@@ -23,18 +21,23 @@ Starknet Foundry, like its [Ethereum counterpart](https://github.com/foundry-rs/
 
 - Fast testing framework `Forge` written in Rust
 - High-quality dependency management using [scarb](https://github.com/software-mansion/scarb)
-- Intuitive interactions and deployment of Starknet contracts
+- Intuitive interactions and deployment of Starknet contracts through `Cast`
 
-## Coming Soon 👀
+## Roadmap
 
 Starknet Foundry is under active development! Expect a lot of new features to appear soon! 🔥
 
+- [x] Running tests written in Cairo
+- [x] Contract interactions testing
+- [x] Interacting with Starknet from command line
+- [x] Multicall support
 - [ ] Cheatcodes
+- [ ] Parallel tests execution
 - [ ] Performance improvements
-- [ ] State forking
-- [ ] Advanced debugging utilities
-- [ ] Creating and deploying new accounts
+- [ ] Creating and deploying new accounts on Starknet
 - [ ] Deployment scripts written in Cairo
+- [ ] Starknet state forking
+- [ ] Advanced debugging utilities
 
 ## Performance
 

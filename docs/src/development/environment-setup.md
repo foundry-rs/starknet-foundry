@@ -1,6 +1,6 @@
 # Environment Setup
 
-Install the latest [Rust](https://www.rust-lang.org/tools/install) version.
+Install the latest stable [Rust](https://www.rust-lang.org/tools/install) version.
 If you already have Rust installed make sure to upgrade it by running
 
 ```shell
@@ -24,13 +24,14 @@ It is not possible to run tests without these installed.
 
 ## Running Tests
 
-> ⚠️ Make sure you run `./scripts/prepare-for-tests.sh` after setting up the development environment, otherwise tests
-> will fail.
+> ⚠️ Make sure you run `./scripts/prepare-for-tests.sh` after setting up the development environment, otherwise the
+> tests will fail.
 
 Tests can be run with:
 
 ```shell
-$ cargo test
+$ ./scripts/test_cast.sh
+$ ./scripts/test_forge.sh
 ```
 
 ## Formatting and Lints
