@@ -212,7 +212,7 @@ fn with_exit_first() {
             [[target.starknet-contract]]
             sierra = true
             casm = true
-            [tool.forge]
+            [tool.snforge]
             exit_first = true
             "#
         ))
@@ -309,7 +309,7 @@ fn exit_first_flag_takes_precedence() {
             [[target.starknet-contract]]
             sierra = true
             casm = true
-            [tool.forge]
+            [tool.snforge]
             exit_first = false
             "#
         ))

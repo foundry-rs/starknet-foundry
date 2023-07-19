@@ -9,7 +9,7 @@ Instead of passing arguments in the command line, set them directly in the file.
 
 ```toml
 (...)
-[tool.forge]
+[tool.snforge]
 exit_first = true
 (...)
 ```
@@ -28,7 +28,7 @@ or you can put them into `Scarb.toml` file:
 
 ```toml
 (...)
-[tool.cast.myprofile]
+[tool.sncast.myprofile]
 account = "user"
 network = "testnet"
 url = "http://127.0.0.1:5050/rpc"
@@ -68,7 +68,7 @@ If you don't need multiple profiles, you can define the parameters without speci
 
 ```toml
 (...)
-[tool.cast]
+[tool.sncast]
 account = "user123"
 network = "testnet"
 url = "http://127.0.0.1:5050/rpc"
