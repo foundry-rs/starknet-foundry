@@ -16,6 +16,7 @@ static CORELIB_PATH: Dir = include_dir!("../cairo/corelib/src");
 static PREDEPLOYED_CONTRACTS: Dir = include_dir!("crates/cheatable-starknet/predeployed-contracts");
 
 #[derive(Parser, Debug)]
+#[command(version)]
 struct Args {
     /// Name used to filter tests
     test_name: Option<String>,
