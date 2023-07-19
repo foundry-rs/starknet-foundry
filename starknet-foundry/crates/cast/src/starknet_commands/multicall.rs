@@ -4,8 +4,9 @@ use crate::starknet_commands::{
     invoke::{invoke, print_invoke_result},
 };
 use anyhow::{bail, Result};
-use clap::{Args, Subcommand};
+use camino::Utf8PathBuf;
 use cast::parse_number;
+use clap::{Args, Subcommand};
 use serde::Deserialize;
 use starknet::accounts::SingleOwnerAccount;
 use starknet::core::types::FieldElement;
@@ -13,7 +14,6 @@ use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
 use std::collections::HashMap;
-use camino::Utf8PathBuf;
 
 #[allow(dead_code)]
 #[derive(Deserialize, Debug)]
