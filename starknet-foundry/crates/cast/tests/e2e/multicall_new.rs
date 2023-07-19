@@ -46,7 +46,7 @@ async fn test_happy_case_file() {
 }
 
 #[tokio::test]
-async fn test_file_non_existent() {
+async fn test_directory_non_existent() {
     let mut args = default_cli_args();
 
     let tmp_dir = tempdir().expect("failed to create temporary directory");
