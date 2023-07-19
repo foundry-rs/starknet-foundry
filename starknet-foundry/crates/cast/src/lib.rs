@@ -33,8 +33,6 @@ use url::Url;
 
 pub mod helpers;
 
-pub const UDC_ADDRESS: &str = "0x041a78e741e5af2fec34b695679bc6891742439f7afb8484ecd7766661ad02bf";
-
 #[derive(Deserialize, Serialize, Clone)]
 struct Account {
     private_key: String,
