@@ -22,7 +22,7 @@ Starknet Foundry, like its [Ethereum counterpart](https://github.com/foundry-rs/
 To install Starknet Foundry, run:
 
 ```shell
-$ curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/scripts/install.sh | sh
+curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/scripts/install.sh | sh
 ```
 
 You can also specify a version you wish to install:
