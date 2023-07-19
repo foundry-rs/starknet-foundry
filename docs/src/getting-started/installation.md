@@ -12,7 +12,7 @@ You can find what version of Scarb is compatible with your version of Starknet F
 1. Open a terminal and run the following command:
 
 ```shell
-$ curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/install.sh | sh
+curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/scripts/install.sh | sh
 ```
 
 2. To verify that the Starknet Foundry is installed correctly, run `snforge --help` and `sncast --version`.
@@ -21,7 +21,7 @@ $ curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/i
 You can also specify a version you wish to install:
 
 ```shell
-$ curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/install.sh | sh -s -- -v 0.1.0
+curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/scripts/install.sh | sh -s -- -v 0.1.0
 ```
 
 ## How to build Starknet Foundry from source code
