@@ -61,5 +61,5 @@ Set Width 1200
 Set Height 800
 
 
-Type "forge" Sleep 500ms Enter
+Type "snforge" Sleep 500ms Enter
 Sleep 5s
