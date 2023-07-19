@@ -6,6 +6,7 @@ version = "0.1.0"
 
 [dependencies]
 starknet = "2.0.1"
+starknet_cheatcodes = { git = "https://github.com/piotmag769/starknet_cheatcodes" }
 
 [[target.starknet-contract]]
 sierra = true
