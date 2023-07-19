@@ -1,7 +1,6 @@
 use crate::helpers::scarb_utils::parse_scarb_config;
 use crate::starknet_commands::{
-    call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Command,
-    multicall::Multicall,
+    call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall,
 };
 use anyhow::{bail, Result};
 use camino::Utf8PathBuf;
@@ -70,7 +69,7 @@ enum Commands {
     Invoke(Invoke),
 
     /// execute multiple calls
-    Multicall(Multicall),
+    Multicall(multicall::Multicall),
 }
 
 #[tokio::main]
@@ -195,7 +194,7 @@ async fn main() -> Result<()> {
         }
         Commands::Multicall(multicall) => {
             match &multicall.command {
-                Command::New {
+                multicall::Commands::New {
                     output_path,
                     overwrite,
                 } => {
@@ -204,7 +203,7 @@ async fn main() -> Result<()> {
                         overwrite.unwrap_or(false),
                     )?;
                 }
-                Command::Run { path } => {
+                multicall::Commands::Run { path } => {
                     let mut account =
                         get_account(&account, &accounts_file_path, &provider, &network)?;
                     starknet_commands::multicall::run(path, &mut account, cli.int_format, cli.json)

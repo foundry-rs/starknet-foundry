@@ -41,11 +41,11 @@ struct InvokeCall {
 #[command(about = "Execute multiple calls at once", long_about = None)]
 pub struct Multicall {
     #[clap(subcommand)]
-    pub command: Command,
+    pub command: Commands,
 }
 
 #[derive(Debug, Subcommand)]
-pub enum Command {
+pub enum Commands {
     Run {
         /// path to the toml file with declared operations
         #[clap(short = 'p', long = "path")]
