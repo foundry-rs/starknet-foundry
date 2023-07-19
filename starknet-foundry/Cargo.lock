@@ -2240,6 +2240,7 @@ dependencies = [
  "clap",
  "console",
  "ctor",
+ "fs_extra",
  "indoc",
  "primitive-types 0.12.1",
  "project-root",
@@ -2257,6 +2258,7 @@ dependencies = [
  "tokio",
  "toml 0.5.11",
  "url",
+ "which",
 ]
 
 [[package]]
@@ -3144,9 +3146,11 @@ dependencies = [
  "itertools 0.10.5",
  "num-traits 0.2.15",
  "once_cell",
+ "openssl",
  "parity-scale-codec 3.6.3",
  "parity-scale-codec-derive 3.6.3",
  "project-root",
+ "rayon",
  "regex",
  "scarb-metadata",
  "schemars",
@@ -3158,6 +3162,7 @@ dependencies = [
  "test-collector",
  "thiserror",
  "walkdir",
+ "which",
 ]
 
 [[package]]
@@ -3178,6 +3183,12 @@ dependencies = [
  "rustix 0.38.4",
  "windows-sys 0.48.0",
 ]
+
+[[package]]
+name = "fs_extra"
+version = "1.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "42703706b716c37f96a77aea830392ad231f44c9e9a67872fa5548707e11b11c"
 
 [[package]]
 name = "funty"
@@ -4989,6 +5000,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ff011a302c396a5197692431fc1948019154afc178baf7d8e37367442a4601cf"
 
 [[package]]
+name = "openssl-src"
+version = "111.26.0+1.1.1u"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "efc62c9f12b22b8f5208c23a7200a442b2e5999f8bdf80233852122b5a4f6f37"
+dependencies = [
+ "cc",
+]
+
+[[package]]
 name = "openssl-sys"
 version = "0.9.90"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4996,6 +5016,7 @@ checksum = "374533b0e45f3a7ced10fcaeccca020e66656bc03dac384f852e4e5a7a8104a6"
 dependencies = [
  "cc",
  "libc",
+ "openssl-src",
  "pkg-config",
  "vcpkg",
 ]
@@ -5169,9 +5190,9 @@ checksum = "9b2a4787296e9989611394c33f193f676704af1686e70b8f8033ab5ba9a35a94"
 
 [[package]]
 name = "pest"
-version = "2.7.0"
+version = "2.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f73935e4d55e2abf7f130186537b19e7a4abc886a0252380b59248af473a3fc9"
+checksum = "0d2d1d55045829d65aad9d389139882ad623b33b904e7c9f1b10c5b8927298e5"
 dependencies = [
  "thiserror",
  "ucd-trie",
@@ -6840,6 +6861,7 @@ dependencies = [
  "num-bigint",
  "num-integer",
  "num-traits 0.2.15",
+ "rayon",
  "serde",
  "serde_json",
  "smol_str",

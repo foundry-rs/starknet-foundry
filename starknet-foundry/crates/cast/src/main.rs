@@ -13,7 +13,7 @@ mod starknet_commands;
 
 #[derive(Parser)]
 #[command(version)]
-#[command(about = "cast - a starknet-foundry CLI", long_about = None)]
+#[command(about = "Cast - a Starknet Foundry CLI", long_about = None)]
 struct Cli {
     /// Profile name in Scarb.toml config file
     #[clap(short, long)]
@@ -133,13 +133,9 @@ async fn main() -> Result<()> {
             let account = get_account(&account, &accounts_file_path, &provider, &network)?;
 
             let result = starknet_commands::deploy::deploy(
-                &deploy.class_hash,
-                deploy
-                    .constructor_calldata
-                    .iter()
-                    .map(AsRef::as_ref)
-                    .collect(),
-                deploy.salt.as_deref(),
+                deploy.class_hash,
+                deploy.constructor_calldata,
+                deploy.salt,
                 deploy.unique,
                 deploy.max_fee,
                 &account,
@@ -153,9 +149,9 @@ async fn main() -> Result<()> {
             let block_id = get_block_id(&call.block_id)?;
 
             let result = starknet_commands::call::call(
-                call.contract_address.as_ref(),
-                call.function_name.as_ref(),
-                call.calldata.as_ref(),
+                call.contract_address,
+                call.function.as_ref(),
+                call.calldata,
                 &provider,
                 block_id.as_ref(),
             )
@@ -186,9 +182,9 @@ async fn main() -> Result<()> {
         Commands::Invoke(invoke) => {
             let mut account = get_account(&account, &accounts_file_path, &provider, &network)?;
             let result = starknet_commands::invoke::invoke(
-                &invoke.contract_address,
-                &invoke.entry_point_name,
-                invoke.calldata.iter().map(AsRef::as_ref).collect(),
+                invoke.contract_address,
+                &invoke.function,
+                invoke.calldata,
                 invoke.max_fee,
                 &mut account,
             )

@@ -11,5 +11,5 @@ starknet = "2.0.1"
 sierra = true
 casm = true
 
-[tool.forge]
+[tool.snforge]
 exit_first = false

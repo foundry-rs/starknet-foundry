@@ -1,4 +1,4 @@
-# `cast` common flags
+# `sncast` common flags
 
 ## `--profile, -p <PROFILE_NAME>`
 Optional.
@@ -50,7 +50,7 @@ If passed, output will be displayed in json format.
 
 ## `--version, -v`
 
-Prints out `cast` version.
+Prints out `sncast` version.
 
 ## `--help, -h`
 

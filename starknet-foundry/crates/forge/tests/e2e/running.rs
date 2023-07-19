@@ -212,7 +212,7 @@ fn with_exit_first() {
             [[target.starknet-contract]]
             sierra = true
             casm = true
-            [tool.forge]
+            [tool.snforge]
             exit_first = true
             "#
         ))
@@ -260,6 +260,66 @@ fn with_exit_first_flag() {
 
     snapbox
         .current_dir(&temp)
+        .assert()
+        .success()
+        .stdout_matches(indoc! {r#"Collected 11 test(s) and 7 test file(s)
+            Running 0 test(s) from src/erc20.cairo
+            Running 0 test(s) from src/hello_starknet.cairo
+            Running 1 test(s) from src/lib.cairo
+            [PASS] src::test_fib
+            Running 1 test(s) from tests/contract.cairo
+            [PASS] contract::contract::call_and_invoke
+            Running 2 test(s) from tests/ext_function_test.cairo
+            [PASS] ext_function_test::ext_function_test::test_my_test
+            [PASS] ext_function_test::ext_function_test::test_simple
+            Running 6 test(s) from tests/test_simple.cairo
+            [PASS] test_simple::test_simple::test_simple
+            [PASS] test_simple::test_simple::test_simple2
+            [PASS] test_simple::test_simple::test_two
+            [PASS] test_simple::test_simple::test_two_and_two
+            [FAIL] test_simple::test_simple::test_failing
+
+            Failure data:
+                original value: [8111420071579136082810415440747], converted to a string: [failing check]
+
+            [SKIP] test_simple::test_simple::test_another_failing
+            [SKIP] without_prefix::without_prefix::five
+            Tests: 8 passed, 1 failed, 2 skipped
+        "#});
+}
+
+#[test]
+fn exit_first_flag_takes_precedence() {
+    let temp = assert_fs::TempDir::new().unwrap();
+    temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
+        .unwrap();
+    let scarb_path = temp.child("Scarb.toml");
+    scarb_path
+        .write_str(indoc!(
+            r#"
+            [package]
+            name = "simple_package"
+            version = "0.1.0"
+
+            # See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest
+
+            [dependencies]
+            starknet = "2.0.1"
+
+            [[target.starknet-contract]]
+            sierra = true
+            casm = true
+            [tool.snforge]
+            exit_first = false
+            "#
+        ))
+        .unwrap();
+
+    let snapbox = runner();
+
+    snapbox
+        .current_dir(&temp)
+        .arg("--exit-first")
         .assert()
         .success()
         .stdout_matches(indoc! {r#"Collected 11 test(s) and 7 test file(s)

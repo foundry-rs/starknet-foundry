@@ -69,13 +69,9 @@ impl Network {
 }
 
 pub async fn get_provider(url: &str, network: &str) -> Result<JsonRpcClient<HttpTransport>> {
-    if url.is_empty() {
-        bail!("RPC url not passed nor found in Scarb.toml")
-    }
+    raise_if_empty(url, "RPC url")?;
     let parsed_url = Url::parse(url)?;
-    if network.is_empty() {
-        bail!("Network not passed nor found in Scarb.toml")
-    }
+    raise_if_empty(network, "Network")?;
     let provider = JsonRpcClient::new(HttpTransport::new(parsed_url));
 
     let provider_chain_id = provider.chain_id().await?;
@@ -88,9 +84,7 @@ pub async fn get_provider(url: &str, network: &str) -> Result<JsonRpcClient<Http
 }
 
 fn get_account_info(name: &str, chain_id: &str, path: &Utf8PathBuf) -> Result<Account> {
-    if name.is_empty() {
-        bail!("Account name not passed nor found in Scarb.toml")
-    }
+    raise_if_empty(name, "Account name")?;
     let accounts: HashMap<String, HashMap<String, Account>> =
         serde_json::from_str(&fs::read_to_string(path)?)?;
     let user = accounts
@@ -107,9 +101,7 @@ pub fn get_account<'a>(
     provider: &'a JsonRpcClient<HttpTransport>,
     network: &str,
 ) -> Result<SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, LocalWallet>> {
-    if network.is_empty() {
-        bail!("Network not passed nor found in Scarb.toml")
-    }
+    raise_if_empty(network, "Network")?;
     let account_info =
         get_account_info(name, get_network(network)?.get_value(), accounts_file_path)?;
     let signer = LocalWallet::from(SigningKey::from_secret_scalar(
@@ -292,6 +284,13 @@ pub fn parse_number(number_as_str: &str) -> Result<FieldElement> {
         _ => FieldElement::from_dec_str(number_as_str)?,
     };
     Ok(contract_address)
+}
+
+pub fn raise_if_empty(value: &str, value_name: &str) -> Result<()> {
+    if value.is_empty() {
+        bail!("{value_name} not passed nor found in Scarb.toml")
+    }
+    Ok(())
 }
 
 #[cfg(test)]

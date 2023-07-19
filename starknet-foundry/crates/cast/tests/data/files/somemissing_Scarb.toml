@@ -11,6 +11,6 @@ casm = true
 [lib]
 sierra = false
 
-[tool.cast]
+[tool.sncast]
 url = "http://127.0.0.1:5055/rpc"
 network = "testnet"
