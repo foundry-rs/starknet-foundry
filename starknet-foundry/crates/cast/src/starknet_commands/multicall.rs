@@ -13,7 +13,7 @@ use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
 use std::collections::HashMap;
-use std::path::Path;
+use camino::Utf8PathBuf;
 
 #[allow(dead_code)]
 #[derive(Deserialize, Debug)]
@@ -49,12 +49,12 @@ pub enum Command {
     Run {
         /// path to the toml file with declared operations
         #[clap(short = 'p', long = "path")]
-        path: String,
+        path: Utf8PathBuf,
     },
     New {
         /// output path to the file where the template is going to be saved
         #[clap(short = 'p', long = "output-path")]
-        output_path: Option<String>,
+        output_path: Option<Utf8PathBuf>,
 
         /// if the file specified in output-path exists, this flag decides if it is going to be overwritten
         #[clap(short = 'o', long = "overwrite")]
@@ -63,7 +63,7 @@ pub enum Command {
 }
 
 pub async fn run(
-    path: &str,
+    path: &Utf8PathBuf,
     account: &mut SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     int_format: bool,
     json: bool,
@@ -125,9 +125,8 @@ pub async fn run(
     Ok(())
 }
 
-pub fn new(maybe_output_path: Option<String>, overwrite: bool) -> Result<()> {
+pub fn new(maybe_output_path: Option<Utf8PathBuf>, overwrite: bool) -> Result<()> {
     if let Some(output_path) = maybe_output_path {
-        let output_path = Path::new(output_path.as_str());
         if output_path.exists() {
             if !output_path.is_file() {
                 bail!("output file cannot be a directory");
@@ -138,13 +137,8 @@ pub fn new(maybe_output_path: Option<String>, overwrite: bool) -> Result<()> {
                 );
             }
         }
-        std::fs::write(output_path, DEFAULT_MULTICALL_CONTENTS)?;
-        println!(
-            "Multicall template successfully saved in {}",
-            output_path
-                .to_str()
-                .expect("failed to convert path to string")
-        );
+        std::fs::write(output_path.clone(), DEFAULT_MULTICALL_CONTENTS)?;
+        println!("Multicall template successfully saved in {output_path}");
     } else {
         println!("{DEFAULT_MULTICALL_CONTENTS}");
     }
