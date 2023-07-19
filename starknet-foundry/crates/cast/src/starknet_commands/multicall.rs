@@ -146,7 +146,12 @@ pub fn new(maybe_output_path: Option<String>, overwrite: bool) -> Result<()> {
             }
         }
         std::fs::write(output_path, DEFAULT_MULTICALL_CONTENTS)?;
-        println!("Multicall template successfully saved in {}", output_path.to_str().expect("failed to convert path to string"));
+        println!(
+            "Multicall template successfully saved in {}",
+            output_path
+                .to_str()
+                .expect("failed to convert path to string")
+        );
     } else {
         println!("{DEFAULT_MULTICALL_CONTENTS}");
     }
