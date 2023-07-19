@@ -111,7 +111,7 @@ main() {
   echo
   if echo ":$PATH:" | grep -q ":${LOCAL_BIN}:"; then
     echo "Starknet Foundry has been successfully installed and should be already available in your PATH."
-    echo "Run 'snforge --version' and 'sncast --version' to verify your installation. Happy coding!"
+    echo "Run 'snforge --help' and 'sncast --version' to verify your installation. Happy coding!"
   else
     if [ $_do_modify_path -eq 1 ]; then
       add_local_bin_to_path
@@ -120,7 +120,7 @@ main() {
       echo "Skipping PATH modification, please manually add '${LOCAL_BIN_ESCAPED}' to your PATH."
     fi
 
-    echo "Then, run 'snforge --version' and 'sncast --version' to verify your installation. Happy coding!"
+    echo "Then, run 'snforge --help' and 'sncast --version' to verify your installation. Happy coding!"
   fi
 
   ignore rm -rf "$_tempdir"

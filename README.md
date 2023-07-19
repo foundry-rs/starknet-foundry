@@ -31,7 +31,7 @@ You can also specify a version you wish to install:
 curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/scripts/install.sh | sh -s -- -v 0.1.0
 ```
 
-To verify that the Starknet Foundry is installed correctly, run `snforge --version` and `sncast --version`.
+To verify that the Starknet Foundry is installed correctly, run `snforge --help` and `sncast --version`.
 
 
 ## Features
