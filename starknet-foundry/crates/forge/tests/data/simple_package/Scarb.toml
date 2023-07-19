@@ -2,11 +2,8 @@
 name = "simple_package"
 version = "0.1.0"
 
-# See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest
-
 [dependencies]
 starknet = "2.0.1"
-starknet_cheatcodes = { git = "https://github.com/piotmag769/starknet_cheatcodes" }
 
 [[target.starknet-contract]]
 sierra = true
