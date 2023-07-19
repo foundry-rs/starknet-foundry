@@ -99,7 +99,7 @@ pub fn config_from_scarb_for_package(
     let raw_metadata = metadata
         .get_package(package)
         .ok_or_else(|| anyhow!("Failed to find metadata for package = {package}"))?
-        .tool_metadata("forge");
+        .tool_metadata("snforge");
 
     raw_metadata.map_or_else(
         || Ok(Default::default()),

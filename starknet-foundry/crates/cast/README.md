@@ -1,8 +1,8 @@
 # Cast - Starknet Foundry CLI
 
-Starknet Foundry `cast` is a command line tool for performing Starknet RPC calls. With it, you can easily interact with Starknet contracts!
+Starknet Foundry `sncast` is a command line tool for performing Starknet RPC calls. With it, you can easily interact with Starknet contracts!
 
-Note, that at the moment, `cast` only supports contracts written in Cairo 1 and Cairo 2.
+Note, that at the moment, `sncast` only supports contracts written in Cairo 1 and Cairo 2.
 
 ## Table of contents
 
@@ -19,11 +19,11 @@ Note, that at the moment, `cast` only supports contracts written in Cairo 1 and 
 
 ## Installation
 
-You can download latest version of `cast` [here](https://github.com/foundry-rs/starknet-foundry/releases).
+You can download latest version of `sncast` [here](https://github.com/foundry-rs/starknet-foundry/releases).
 
 ## Documentation
 
-For more details on Starknet Foundry `cast`, please visit [our docs](https://foundry-rs.github.io/starknet-foundry/starknet/index.html) 
+For more details on Starknet Foundry `sncast`, please visit [our docs](https://foundry-rs.github.io/starknet-foundry/starknet/index.html) 
 
 ## Example usages
 All subcommand usages are shown for two scenarios - when all necessary arguments are supplied using CLI, and when `network`, `url` and `account` arguments are taken from `Scarb.toml`. To learn more about configuring profiles with parameters in `Scarb.toml` file, please refer to the [documentation](https://foundry-rs.github.io/starknet-foundry/projects/configuration.html#defining-profiles-in-scarbtoml).
@@ -137,7 +137,7 @@ response: [FieldElement { inner: 0x000000000000000000000000000000000000000000000
 
 ## Development
 
-Refer to [documentation](https://foundry-rs.github.io/starknet-foundry/development/environment-setup.html) to make sure you have all the pre-requisites, and to obtain an information on how to help to develop `cast`.
+Refer to [documentation](https://foundry-rs.github.io/starknet-foundry/development/environment-setup.html) to make sure you have all the pre-requisites, and to obtain an information on how to help to develop `sncast`.
 
 Please make sure you're using scarb installed via asdf - otherwise some tests may fail.
 To verify, run:

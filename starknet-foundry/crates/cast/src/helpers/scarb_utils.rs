@@ -18,7 +18,7 @@ fn get_property(
     profile: &Option<String>,
     property: &str,
 ) -> Result<String, Error> {
-    let profiled = tool.as_ref().and_then(|t| t.get("cast"));
+    let profiled = tool.as_ref().and_then(|t| t.get("sncast"));
 
     match profile {
         Some(ref p) => profiled

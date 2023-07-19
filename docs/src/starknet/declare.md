@@ -9,7 +9,7 @@ For a detailed CLI description, see [declare command reference](../appendix/cast
 ## Usage example
 
 > 📝 **Note**
-> Building a contract before running `declare` is not required. Starknet Foundry `cast` builds a contract during declaration under the hood using [Scarb](https://docs.swmansion.com/scarb).
+> Building a contract before running `declare` is not required. Starknet Foundry `sncast` builds a contract during declaration under the hood using [Scarb](https://docs.swmansion.com/scarb).
 
 First make sure that you have created a [`Scarb.toml`](../projects/template.md) file for your contract (it should be present in project directory or one of its parent directories).
 
