@@ -1,6 +1,7 @@
 use crate::helpers::scarb_utils::parse_scarb_config;
+use crate::starknet_commands::account::Account;
 use crate::starknet_commands::{
-    call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
+    account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
 };
 use anyhow::{bail, Result};
 use camino::Utf8PathBuf;
@@ -70,6 +71,9 @@ enum Commands {
 
     /// execute multiple calls
     Multicall(Multicall),
+
+    /// Create and deploy an account
+    Account(Account),
 }
 
 #[tokio::main]
@@ -89,10 +93,9 @@ async fn main() -> Result<()> {
     let network = cli.network.unwrap_or(config.network);
     let account = cli.account.unwrap_or(config.account);
 
-    let provider = get_provider(&rpc_url, &network).await?;
-
     match cli.command {
         Commands::Declare(declare) => {
+            let provider = get_provider(&rpc_url, &network).await?;
             let mut account = get_account(&account, &accounts_file_path, &provider, &network)?;
 
             let result = starknet_commands::declare::declare(
@@ -129,6 +132,7 @@ async fn main() -> Result<()> {
             Ok(())
         }
         Commands::Deploy(deploy) => {
+            let provider = get_provider(&rpc_url, &network).await?;
             let account = get_account(&account, &accounts_file_path, &provider, &network)?;
 
             let result = starknet_commands::deploy::deploy(
@@ -145,6 +149,7 @@ async fn main() -> Result<()> {
             Ok(())
         }
         Commands::Call(call) => {
+            let provider = get_provider(&rpc_url, &network).await?;
             let block_id = get_block_id(&call.block_id)?;
 
             let result = starknet_commands::call::call(
@@ -179,6 +184,7 @@ async fn main() -> Result<()> {
             Ok(())
         }
         Commands::Invoke(invoke) => {
+            let provider = get_provider(&rpc_url, &network).await?;
             let mut account = get_account(&account, &accounts_file_path, &provider, &network)?;
             let result = starknet_commands::invoke::invoke(
                 invoke.contract_address,
@@ -193,6 +199,7 @@ async fn main() -> Result<()> {
             Ok(())
         }
         Commands::Multicall(multicall) => {
+            let provider = get_provider(&rpc_url, &network).await?;
             let mut account = get_account(&account, &accounts_file_path, &provider, &network)?;
             starknet_commands::multicall::multicall(
                 &multicall.path,
@@ -203,5 +210,24 @@ async fn main() -> Result<()> {
             .await?;
             Ok(())
         }
+        Commands::Account(account) => match account.command {
+            account::Commands::Create {
+                output_path,
+                name,
+                save_as_profile,
+            } => starknet_commands::account::create(
+                output_path,
+                name,
+                if network.is_empty() {
+                    None
+                } else {
+                    Some(network)
+                },
+                save_as_profile,
+                cli.int_format,
+                cli.json,
+            ),
+            account::Commands::Deploy { .. } => todo!(),
+        },
     }
 }
