@@ -6,7 +6,7 @@ Starknet Foundry cast supports executing multiple deployments or calls with the 
 
 You need to provide a **path** to a `.toml` file with declarations of desired operations that you want to execute.
 
-It also help you composing a config `.toml` file with the `sncast multicall new` command.
+You can also compose such config `.toml` file with the `sncast multicall new` command.
 
 For a detailed CLI description, see the [multicall command reference](../appendix/cast/multicall.md).
 

@@ -38,7 +38,7 @@ inputs = ["0x123", "234"]
 
 ## `new`
 
-Generates an empty template for the multicall `.toml` file that may be later use with the `run` subcommand.
+Generates an empty template for the multicall `.toml` file that may be later use with the `run` subcommand. It either outputs it to a new file or to the standard output.
 
 ### `--output_path, -p <PATH>`
 Optional.
