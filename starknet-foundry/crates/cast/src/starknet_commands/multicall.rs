@@ -1,15 +1,17 @@
+use crate::helpers::constants::DEFAULT_MULTICALL_CONTENTS;
 use crate::starknet_commands::{
     deploy::{deploy, print_deploy_result},
     invoke::{invoke, print_invoke_result},
 };
-use anyhow::Result;
-use clap::Args;
+use anyhow::{bail, Result};
+use clap::{Args, Subcommand};
 use serde::Deserialize;
 use starknet::accounts::SingleOwnerAccount;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
 use std::collections::HashMap;
+use std::path::Path;
 
 #[allow(dead_code)]
 #[derive(Deserialize, Debug)]
@@ -36,12 +38,26 @@ struct InvokeCall {
 #[derive(Args)]
 #[command(about = "Execute multiple calls at once", long_about = None)]
 pub struct Multicall {
-    #[clap(short = 'p', long = "path")]
-    /// Path to a .toml file containing the multi call specification
-    pub path: String,
+    #[clap(subcommand)]
+    pub command: Command,
 }
 
-pub async fn multicall(
+#[derive(Debug, Subcommand)]
+pub enum Command {
+    Run {
+        #[clap(short = 'p', long = "path")]
+        path: String,
+    },
+    New {
+        #[clap(short = 'p', long = "output-path")]
+        output_path: Option<String>,
+
+        #[clap(short = 'o', long = "overwrite")]
+        overwrite: Option<bool>,
+    },
+}
+
+pub async fn run(
     path: &str,
     account: &mut SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     int_format: bool,
@@ -108,6 +124,27 @@ pub async fn multicall(
             }
             None => anyhow::bail!("`call_type` field is missing in a call specification"),
         }
+    }
+
+    Ok(())
+}
+
+pub fn new(maybe_output_path: Option<String>, overwrite: bool) -> Result<()> {
+    if let Some(output_path) = maybe_output_path {
+        let output_path = Path::new(output_path.as_str());
+        if output_path.exists() {
+            if !output_path.is_file() {
+                bail!("output file cannot be a directory");
+            }
+            if !overwrite {
+                bail!(
+                    "output file already exists, if you want to overwrite it, use the `overwrite` flag"
+                );
+            }
+        }
+        std::fs::write(output_path, DEFAULT_MULTICALL_CONTENTS)?;
+    } else {
+        println!("{DEFAULT_MULTICALL_CONTENTS}");
     }
 
     Ok(())

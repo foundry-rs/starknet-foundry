@@ -7,7 +7,7 @@ use tempfile::tempdir;
 async fn test_happy_case_stdout() {
     let mut args = default_cli_args();
 
-    args.append(&mut vec!["multicall-new"]);
+    args.append(&mut vec!["multicall", "new"]);
 
     let snapbox = runner(&args);
     let bdg = snapbox.assert();
@@ -28,7 +28,7 @@ async fn test_happy_case_file() {
     let tmp_path = tmp_dir.path().join("multicall.toml");
     let tmp_path = tmp_path.to_str().expect("failed to convert path to string");
 
-    args.append(&mut vec!["multicall-new", "--output-path", tmp_path]);
+    args.append(&mut vec!["multicall", "new", "--output-path", tmp_path]);
 
     let snapbox = runner(&args);
     let bdg = snapbox.assert();
@@ -52,7 +52,7 @@ async fn test_file_non_existent() {
         .join("multicall.toml");
     let tmp_path = tmp_path.to_str().expect("failed to convert path to string");
 
-    args.append(&mut vec!["multicall-new", "--output-path", tmp_path]);
+    args.append(&mut vec!["multicall", "new", "--output-path", tmp_path]);
 
     let snapbox = runner(&args);
     let bdg = snapbox.assert();
@@ -76,7 +76,7 @@ async fn test_file_invalid_path() {
         .to_str()
         .expect("failed to convert path to string");
 
-    args.append(&mut vec!["multicall-new", "--output-path", tmp_path]);
+    args.append(&mut vec!["multicall", "new", "--output-path", tmp_path]);
 
     let snapbox = runner(&args);
     let bdg = snapbox.assert();
