@@ -45,13 +45,16 @@ pub struct Multicall {
 #[derive(Debug, Subcommand)]
 pub enum Command {
     Run {
+        /// path to the toml file with declared operations
         #[clap(short = 'p', long = "path")]
         path: String,
     },
     New {
+        /// output path to the file where the template is going to be saved
         #[clap(short = 'p', long = "output-path")]
         output_path: Option<String>,
 
+        /// if the file specified in output-path exists, this flag decides if it is going to be overwritten
         #[clap(short = 'o', long = "overwrite")]
         overwrite: Option<bool>,
     },

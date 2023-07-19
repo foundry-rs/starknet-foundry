@@ -3,8 +3,8 @@ use clap::Args;
 use rand::rngs::OsRng;
 use rand::RngCore;
 
-use cast::print_formatted;
 use crate::helpers::constants::UDC_ADDRESS;
+use cast::print_formatted;
 use cast::{handle_rpc_error, handle_wait_for_tx_result};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{Account, ConnectedAccount, SingleOwnerAccount};
