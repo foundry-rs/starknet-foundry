@@ -1,5 +1,5 @@
-use crate::common::corelib::{corelib, predeployed_contracts};
-use crate::common::runner::Contract;
+use crate::integration::common::corelib::{corelib, predeployed_contracts};
+use crate::integration::common::runner::Contract;
 use crate::{assert_case_output_contains, assert_failed, assert_passed, test_case};
 use camino::Utf8PathBuf;
 use forge::run;
