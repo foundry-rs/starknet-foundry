@@ -37,7 +37,11 @@ async fn test_happy_case_file() {
     let contents =
         std::fs::read_to_string(tmp_path).expect("Should have been able to read the file");
     assert!(out.stderr.is_empty());
-    assert!(out.stdout.is_empty());
+
+    let stdout_str =
+        std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
+
+    assert!(stdout_str.contains("Multicall template successfully saved in"));
     assert!(contents.contains(DEFAULT_MULTICALL_CONTENTS));
 }
 
