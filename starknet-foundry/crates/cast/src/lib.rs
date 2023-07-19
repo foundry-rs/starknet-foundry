@@ -63,7 +63,7 @@ impl Network {
         match self {
             Network::Testnet => "alpha-goerli",
             Network::Testnet2 => "alpha-goerli2",
-            Network::Mainnet => "alpha-mainnet,",
+            Network::Mainnet => "alpha-mainnet",
         }
     }
 }
