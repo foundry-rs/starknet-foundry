@@ -10,7 +10,7 @@ mkdir -p "$PKG_FULL_NAME/bin"
 bin_ext=""
 [[ "$TARGET" == *-windows-* ]] && bin_ext=".exe"
 
-binary_crates=("forge" "cast")
+binary_crates=("snforge" "sncast")
 for crate in "${binary_crates[@]}"; do
   cp "./starknet-foundry/target/${TARGET}/release/${crate}${bin_ext}" "$PKG_FULL_NAME/bin/"
 done
