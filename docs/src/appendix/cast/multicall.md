@@ -1,7 +1,14 @@
 # `multicall`
+
+Multicall has the following subcommands:
+- `run`
+- `new`
+
+## `run`
+
 Execute multiple deploy (via UDC) or invoke calls ensuring atomicity.
 
-## `--path, -p <CONTRACT_ADDRESS>`
+### `--path, -p <PATH>`
 Required.
 
 Path to a TOML file with call declarations.
@@ -28,3 +35,17 @@ contract_address = "map_contract"
 function = "put"
 inputs = ["0x123", "234"]
 ```
+
+## `new`
+
+Generates an empty template for the multicall `.toml` file that may be later use with the `run` subcommand.
+
+### `--output_path, -p <PATH>`
+Optional.
+
+When provided, it specifies where the template should be saved. If omitted, the template contents are going to be printed out to the stdout.
+
+### `--overwrite, -o <OVERWRITE>`
+Optional.
+
+If the `--output-path` argument is provided and such a file already exists, this flag decides whether it should be overwritten or not.
