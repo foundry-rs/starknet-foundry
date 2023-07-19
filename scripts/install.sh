@@ -420,7 +420,7 @@ create_install_dir() {
 
   if [ -d "$_installdir" ]; then
     ensure rm -rf "$_installdir"
-    say "removed existing forge and cast installation at ${_installdir}"
+    say "removed existing snforge and sncast installation at ${_installdir}"
   fi
 
   ensure mkdir -p "$_installdir"
