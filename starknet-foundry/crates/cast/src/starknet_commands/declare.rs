@@ -96,12 +96,14 @@ pub async fn declare(
         }
     };
 
-    let Some(starknet_artifacts) = paths.find_map(|path| {
-        path.ok().and_then(|entry| {
-            let name = entry.file_name().into_string().ok()?;
-            name.contains("starknet_artifacts").then_some(entry.path())
+    let starknet_artifacts = paths
+        .find_map(|path| {
+            path.ok().and_then(|entry| {
+                let name = entry.file_name().into_string().ok()?;
+                name.contains("starknet_artifacts").then_some(entry.path())
+            })
         })
-    }) else { return Err(anyhow!("Failed to find starknet_artifacts.json file")) };
+        .ok_or(anyhow!("Failed to find starknet_artifacts.json file"))?;
 
     let starknet_artifacts = match std::fs::read_to_string(starknet_artifacts) {
         Ok(content) => content,
