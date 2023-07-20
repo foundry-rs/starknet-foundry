@@ -173,7 +173,7 @@ pub fn execute_if_cairo1(
 
 pub struct CheatableSyscallHandler<'a> {
     pub syscall_handler: SyscallHintProcessor<'a>,
-    pub rolled_contracts: HashMap<Felt252, Felt252>,
+    pub rolled_contracts: HashMap<ContractAddress, Felt252>,
 }
 
 impl HintProcessor for CheatableSyscallHandler<'_> {
@@ -232,9 +232,9 @@ fn get_ptr_from_res_operand_unchecked(vm: &mut VirtualMachine, res: &ResOperand)
 
 impl CheatableSyscallHandler<'_> {
 
-    pub fn is_cheated(&mut self, vm: &mut VirtualMachine, selector: SyscallSelector) -> bool {
+    pub fn is_cheated(&mut self, vm: &mut VirtualMachine, selector: SyscallSelector, contract_address: &ContractAddress) -> bool {
         match selector {
-           SyscallSelector::GetExecutionInfo => true,
+           SyscallSelector::GetExecutionInfo => self.rolled_contracts.contains_key(&contract_address),
            _ => false 
         }
     }
@@ -257,7 +257,8 @@ impl CheatableSyscallHandler<'_> {
             self.syscall_handler.increment_syscall_count_by(&selector, 1);
         }
 
-        if self.is_cheated(vm, selector) {
+        let contract_address = self.syscall_handler.storage_address();
+        if self.is_cheated(vm, selector, &contract_address) {
             let execution_info_ptr = self.syscall_handler.get_or_allocate_execution_info_segment(vm)?;
             let data = vm.get_range(execution_info_ptr, 1)[0].clone();
             if let MaybeRelocatable::RelocatableValue(block_info_ptr)  = data.unwrap().into_owned() {
