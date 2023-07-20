@@ -19,7 +19,7 @@ fn test_roll_simple() {
     let contract_address: ContractAddress = contract_address.try_into().unwrap();
     let dispatcher = IRollCheckerDispatcher { contract_address };
 
-    dispatcher.is_rolled(123).print();
+    dispatcher.is_rolled(123);
 }
 
 

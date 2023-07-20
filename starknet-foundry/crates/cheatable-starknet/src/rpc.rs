@@ -2,7 +2,7 @@ use anyhow::Result;
 use cairo_vm::{hint_processor::hint_processor_definition::{HintProcessor, HintReference}, vm::{vm_core::VirtualMachine, runners::cairo_runner::{RunResources, CairoRunner, CairoArg}, errors::{hint_errors::HintError, vm_errors::VirtualMachineError}}, types::{exec_scope::ExecutionScopes, relocatable::{Relocatable, MaybeRelocatable}}, serde::deserialize_program::ApTracking};
 use std::{sync::Arc, collections::HashMap, any::Any};
 
-use blockifier::{state::{cached_state::CachedState, state_api::State}, execution::{entry_point::{CallEntryPoint, CallType, ExecutionResources, EntryPointExecutionContext, EntryPointExecutionResult, CallInfo, FAULTY_CLASS_HASH}, errors::{EntryPointExecutionError, PreExecutionError, VirtualMachineExecutionError}, contract_class::{ContractClassV1, ContractClass, EntryPointV1}, cairo1_execution::{VmExecutionContext, initialize_execution_context, prepare_call_arguments, finalize_execution, run_entry_point}, syscalls::{hint_processor::{SyscallHintProcessor, SyscallExecutionError, write_segment}, GetExecutionInfoResponse}, common_hints::HintExecutionResult, deprecated_syscalls::DeprecatedSyscallSelector, execution_utils::{stark_felt_from_ptr, Args}}};
+use blockifier::{state::{cached_state::CachedState, state_api::State}, execution::{entry_point::{CallEntryPoint, CallType, ExecutionResources, EntryPointExecutionContext, EntryPointExecutionResult, CallInfo, FAULTY_CLASS_HASH}, errors::{EntryPointExecutionError, PreExecutionError, VirtualMachineExecutionError}, contract_class::{ContractClassV1, ContractClass, EntryPointV1}, cairo1_execution::{VmExecutionContext, initialize_execution_context, prepare_call_arguments, finalize_execution, run_entry_point}, syscalls::{hint_processor::{SyscallHintProcessor, SyscallExecutionError, write_segment}, GetExecutionInfoResponse, EmptyRequest}, common_hints::HintExecutionResult, deprecated_syscalls::{DeprecatedSyscallSelector}, execution_utils::{stark_felt_from_ptr, Args}}};
 use cairo_felt_blockifier::Felt252;
 use starknet_api::{core::{ContractAddress, PatriciaKey, EntryPointSelector, ClassHash}, hash::{StarkFelt, StarkHash}, patricia_key, transaction::{Calldata, TransactionVersion}, deprecated_contract_class::EntryPointType};
 use cairo_lang_casm::{hints::{Hint, StarknetHint}, operand::{ResOperand, BinOpOperand, Operation, DerefOrImmediate, Register}};
@@ -244,15 +244,19 @@ impl CheatableSyscallHandler<'_> {
         vm: &mut VirtualMachine,
         hint: &StarknetHint,
     ) -> HintExecutionResult {
-        // let StarknetHint::SystemCall{ system: syscall } = hint else {
-        //     return Err(HintError::CustomHint(
-        //         "Test functions are unsupported on starknet.".into()
-        //     ));
-        // };
-        // let initial_syscall_ptr = get_ptr_from_res_operand_unchecked(vm, syscall);
+        let StarknetHint::SystemCall{ system: syscall } = hint else {
+            return Err(HintError::CustomHint(
+                "Test functions are unsupported on starknet.".into()
+            ));
+        };
+        let initial_syscall_ptr = get_ptr_from_res_operand_unchecked(vm, syscall);
+        self.verify_syscall_ptr(initial_syscall_ptr)?;
         let selector = SyscallSelector::try_from(self.read_next_syscall_selector(vm)?)?;
-        self.syscall_handler.increment_syscall_count_by(&selector, 1);
-        // dbg!(self.is_cheated(vm, selector));
+
+        if selector != SyscallSelector::Keccak {
+            self.syscall_handler.increment_syscall_count_by(&selector, 1);
+        }
+
         if self.is_cheated(vm, selector) {
             let execution_info_ptr = self.syscall_handler.get_or_allocate_execution_info_segment(vm)?;
             let data = vm.get_range(execution_info_ptr, 1)[0].clone();
@@ -267,19 +271,19 @@ impl CheatableSyscallHandler<'_> {
 
 
                 // create a new segment with replaced execution_info including pointer to updated block info
-                let ptr_cheated_exec_info_c = vm.load_data(ptr_cheated_block_info, &vec![MaybeRelocatable::RelocatableValue(ptr_cheated_block_info)]).unwrap(); 
+                let ptr_cheated_exec_info_c = vm.load_data(ptr_cheated_exec_info, &vec![MaybeRelocatable::RelocatableValue(ptr_cheated_block_info)]).unwrap(); 
                 let original_execution_info = vm.get_continuous_range((execution_info_ptr + 1 as usize).unwrap() as Relocatable, 4).unwrap();
                 vm.load_data(ptr_cheated_exec_info_c, &original_execution_info).unwrap();
 
+
+                let SyscallRequestWrapper { gas_counter, request: _ } =
+                    SyscallRequestWrapper::<EmptyRequest>::read(vm, &mut self.syscall_handler.syscall_ptr)?;
+
                 let response = GetExecutionInfoResponse { execution_info_ptr: ptr_cheated_exec_info };
-                let response_w = SyscallResponseWrapper::Success { gas_counter: 10000000000000000, response }; // TODO
+                let response_w = SyscallResponseWrapper::Success { gas_counter, response };
                 response_w.write(vm, &mut self.syscall_handler.syscall_ptr)?;
-
-                // self.syscall_handler.execution_info_ptr = ptr_cheated_exec_info;
+                return Ok(());
             }
-
-            // TODO write to value
-            // write_segment(vm, ptr, segment)
         }
         self.syscall_handler.execute_next_syscall(vm, hint)
     }
