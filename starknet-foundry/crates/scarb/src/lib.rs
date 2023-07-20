@@ -116,7 +116,7 @@ pub fn config_from_scarb_for_package(
 pub fn dependencies_for_package(
     metadata: &Metadata,
     package: &PackageId,
-) -> Result<(Utf8PathBuf, Vec<LinkedLibrary>, String)> {
+) -> Result<(Utf8PathBuf, Utf8PathBuf, Vec<LinkedLibrary>, String)> {
     let compilation_unit = metadata
         .compilation_units
         .iter()
@@ -146,7 +146,14 @@ pub fn dependencies_for_package(
 
     let target_name = compilation_unit.target.name.clone();
 
-    Ok((base_path, dependencies, target_name))
+    let corelib = compilation_unit
+        .components
+        .iter()
+        .find(|du| du.source_path.to_string().contains("core/src"))
+        .context("corelib could not be found")?;
+    let corelib_path = Utf8PathBuf::from(corelib.source_root());
+
+    Ok((base_path, corelib_path, dependencies, target_name))
 }
 
 #[cfg(test)]
@@ -337,7 +344,7 @@ mod tests {
             .exec()
             .unwrap();
 
-        let (_, dependencies, _) =
+        let (_, _, dependencies, _) =
             dependencies_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
                 .unwrap();
 
