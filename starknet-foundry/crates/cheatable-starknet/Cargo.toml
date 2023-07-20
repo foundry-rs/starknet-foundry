@@ -15,14 +15,15 @@ starknet_api.workspace = true
 tempfile.workspace = true
 scarb = { path = "../scarb" }
 cairo-felt-blockifier = { path = "../compatibility/cairo-felt-blockifier" }
-cairo-lang-casm = { path = "../../../cairo/crates/cairo-lang-casm", version = "2.0.1" }
-cairo-lang-starknet = { path = "../../../cairo/crates/cairo-lang-starknet", version = "2.0.1" }
-cairo-lang-runner = { path = "../../../cairo/crates/cairo-lang-runner", version = "2.0.1" }
-cairo-lang-utils = { path = "../../../cairo/crates/cairo-lang-utils", version = "2.0.1" }
+cairo-lang-casm = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
+cairo-lang-starknet = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
+cairo-lang-runner = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
+cairo-lang-utils = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
 cairo-vm = "0.8.1"
 cairo-felt = "0.8.1"
 num-traits = "0.2"
 regex = "1.9.1"
+starknet = "0.4.0"
 serde = { version = "1.0.163", features = ["derive"] }
 thiserror = "1.0.43"
 serde_json = "1.0.96"
