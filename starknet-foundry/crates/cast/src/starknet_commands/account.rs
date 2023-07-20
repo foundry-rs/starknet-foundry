@@ -3,9 +3,18 @@ use camino::Utf8PathBuf;
 use cast::{get_network, print_formatted, Network};
 use clap::{Args, Subcommand};
 use serde_json::json;
+use starknet::accounts::{AccountDeployment, OpenZeppelinAccountFactory};
 use starknet::core::types::FieldElement;
-use starknet::signers::SigningKey;
+use starknet::core::utils::get_contract_address;
+use starknet::providers::jsonrpc::HttpTransport;
+use starknet::providers::JsonRpcClient;
+use starknet::signers::{LocalWallet, SigningKey};
 use std::collections::HashMap;
+use rand::RngCore;
+use rand::rngs::OsRng;
+
+pub const OZ_CLASS_HASH: &str =
+    "0x058d97f7d76e78f44905cc30cb65b91ea49a4b908a76703c54197bca90f81773";
 
 #[derive(Args)]
 #[command(about = "Creates and deploys an account to the Starknet")]
@@ -25,9 +34,15 @@ pub enum Commands {
         #[clap(short, long)]
         name: Option<String>,
 
+        #[clap(short, long)]
+        salt: Option<FieldElement>,
+
+        #[clap(short, long, value_delimiter = ' ')]
+        constructor_calldata: Vec<FieldElement>,
+
         /// If passed, a profile with corresponding data will be created in Scarb.toml
         #[clap(short, long)]
-        save_as_profile: bool,
+        as_profile: bool,
         // TODO: think about supporting different account providers
     },
     Deploy {
@@ -44,28 +59,44 @@ pub enum Commands {
     },
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn create(
     maybe_output_path: Option<Utf8PathBuf>,
     maybe_name: Option<String>,
     maybe_network: Option<String>,
+    maybe_salt: Option<FieldElement>,
+    constructor_calldata: Vec<FieldElement>,
     save_as_profile: bool,
     int_format: bool,
     json: bool,
 ) -> Result<()> {
     let private_key = SigningKey::from_random();
     let public_key = private_key.verifying_key();
+    let salt = match maybe_salt {
+        Some(salt) => salt,
+        None => FieldElement::from(OsRng.next_u64()),
+    };
+
+    let address = get_contract_address(
+        salt,
+        FieldElement::from_hex_be(OZ_CLASS_HASH).unwrap(),
+        &constructor_calldata,
+        FieldElement::ZERO,
+    );
 
     let mut output: Vec<(&str, String)> = vec![
-        ("private_key", private_key.secret_scalar().to_string()),
-        ("public_key", public_key.scalar().to_string()),
+        ("private_key", format!("{:#x}", private_key.secret_scalar())),
+        ("public_key", format!("{:#x}", public_key.scalar())),
+        ("address", format!("{address:#x}")),
     ];
 
     if let Some(output_path) = maybe_output_path {
         if !output_path.exists() {
-            std::fs::write(output_path.clone(), "")?;
+            std::fs::create_dir_all(output_path.clone().parent().unwrap())?;
+            std::fs::write(output_path.clone(), "{}")?;
         }
 
-        match (maybe_name, maybe_network) {
+        match (maybe_name, maybe_network.clone()) {
             (Some(name), Some(network)) => {
                 let contents = std::fs::read_to_string(output_path.clone())?;
                 let mut items: serde_json::Value =
@@ -78,6 +109,9 @@ pub fn create(
                     .map(|(key, value)| (key, serde_json::Value::String(value)))
                     .collect();
                 json_output["deployed"] = serde_json::Value::from(false);
+                json_output["salt"] = serde_json::Value::from(salt.to_string());
+                let transformed_constructor_calldata: Vec<String> = constructor_calldata.iter().map(std::string::ToString::to_string).collect();
+                json_output["constructor_calldata"] = serde_json::Value::from(transformed_constructor_calldata);
 
                 items[network][name] = json_output;
 

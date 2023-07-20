@@ -214,7 +214,9 @@ async fn main() -> Result<()> {
             account::Commands::Create {
                 output_path,
                 name,
-                save_as_profile,
+                salt,
+                constructor_calldata,
+                as_profile,
             } => starknet_commands::account::create(
                 output_path,
                 name,
@@ -223,7 +225,9 @@ async fn main() -> Result<()> {
                 } else {
                     Some(network)
                 },
-                save_as_profile,
+                salt,
+                constructor_calldata,
+                as_profile,
                 cli.int_format,
                 cli.json,
             ),
