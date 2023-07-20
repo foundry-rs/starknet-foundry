@@ -438,7 +438,7 @@ fn declare(
         .context("Failed to read contract class from json")?;
     let contract_class = BlockifierContractClass::V1(contract_class);
 
-    let class_hash = get_class_hash(casm_serialized.as_str());
+    let class_hash = get_class_hash(casm_serialized.as_str())?;
 
     let nonce = blockifier_state
         .get_nonce_at(ContractAddress(patricia_key!(
@@ -471,15 +471,11 @@ fn declare(
     Ok(())
 }
 
-fn get_class_hash(casm_contract: &str) -> ClassHash {
-    let compiled_class = serde_json::from_str::<CompiledClass>(casm_contract)
-        .expect("Failed to deserialize casm contract into CompiledClass");
-    let class_hash = compiled_class
-        .class_hash()
-        .expect("Failed to compute class_hash for CompiledClass");
-    let class_hash = StarkFelt::new(class_hash.to_bytes_be())
-        .unwrap_or_else(|_| panic!("Failed to create StarkFelt from class_hash: {class_hash:?}"));
-    ClassHash(class_hash)
+fn get_class_hash(casm_contract: &str) -> Result<ClassHash> {
+    let compiled_class = serde_json::from_str::<CompiledClass>(casm_contract)?;
+    let class_hash = compiled_class.class_hash()?;
+    let class_hash = StarkFelt::new(class_hash.to_bytes_be())?;
+    Ok(ClassHash(class_hash))
 }
 
 fn deploy(
