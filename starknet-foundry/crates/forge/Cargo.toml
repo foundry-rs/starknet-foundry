@@ -18,7 +18,6 @@ cairo-lang-casm.workspace = true
 test-collector = { path = "../test-collector" }
 cairo-felt-blockifier = { path = "../compatibility/cairo-felt-blockifier" }
 cheatable-starknet = { path = "../cheatable-starknet" }
-cairo-lang-runner = { path = "../../../cairo/crates/cairo-lang-runner", version = "2.0.1" }
 cairo-lang-sierra-to-casm = { path = "../../../cairo/crates/cairo-lang-sierra-to-casm", version = "2.0.1" }
 cairo-lang-sierra = { path = "../../../cairo/crates/cairo-lang-sierra", version = "2.0.1" }
 cairo-lang-utils = { path = "../../../cairo/crates/cairo-lang-utils", version = "2.0.1" }

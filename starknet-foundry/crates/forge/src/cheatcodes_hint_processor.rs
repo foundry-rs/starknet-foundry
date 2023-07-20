@@ -34,7 +34,7 @@ use cheatable_starknet::constants::{
     build_block_context, build_declare_transaction, build_invoke_transaction,
     TEST_ACCOUNT_CONTRACT_ADDRESS,
 };
-use cheatable_starknet::rpc::call_contract;
+use cheatable_starknet::rpc::{call_contract, CallContractOutput};
 use cheatable_starknet::state::DictStateReader;
 use num_traits::{Num, ToPrimitive, FromPrimitive};
 use schemars::_private::NoSerialize;
@@ -201,25 +201,18 @@ fn execute_syscall(
 
     let calldata_blockifier: Vec<blockifier_Felt252> = calldata.into_iter().map(|v| convert_to_blockifier_felt(v)).collect();
     assert_eq!(std::str::from_utf8(&selector).unwrap(), "CallContract");
-    // let result_blockfier: Vec<blockifier_Felt252> = call_contract(
-    //     &convert_to_blockifier_felt(contract_address),
-    //     &convert_to_blockifier_felt(entry_point_selector),
-    //     &calldata_blockifier,
-    //     blockifier_state,
-    // )
-    // .unwrap();
-    // let result: Vec<Felt252> = result_blockfier.into_iter().map(|v| convert_from_blockifier_felt(v)).collect();
+
     let call_result = call_contract(
-        &contract_address,
-        &entry_point_selector,
-        &calldata,
+        &convert_to_blockifier_felt(contract_address),
+        &convert_to_blockifier_felt(entry_point_selector),
+        &calldata_blockifier,
         blockifier_state,
     )
     .unwrap_or_else(|err| panic!("Transaction execution error: {err}"));
 
     let (result, exit_code) = match call_result {
-        CallContractOutput::Success { ret_data } => (ret_data, 0),
-        CallContractOutput::Panic { panic_data } => (panic_data, 1),
+        CallContractOutput::Success { ret_data } => (ret_data.into_iter().map(|v| convert_from_blockifier_felt(v)).collect::<Vec<Felt252>>(), 0),
+        CallContractOutput::Panic { panic_data } => (panic_data.into_iter().map(|v| convert_from_blockifier_felt(v)).collect::<Vec<Felt252>>(), 1),
     };
 
     insert_at_pointer(vm, &mut system_ptr, gas_counter).unwrap();
@@ -236,78 +229,6 @@ fn execute_syscall(
     insert_at_pointer(vm, &mut system_ptr, end).unwrap();
 
     Ok(())
-}
-
-enum CallContractOutput {
-    Success { ret_data: Vec<Felt252> },
-    Panic { panic_data: Vec<Felt252> },
-}
-
-// This can mutate state, the name of the syscall is not very good
-fn call_contract(
-    contract_address: &Felt252,
-    entry_point_selector: &Felt252,
-    calldata: &[Felt252],
-    blockifier_state: &mut CachedState<DictStateReader>,
-) -> Result<CallContractOutput> {
-    let contract_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
-        contract_address.to_be_bytes(),
-    )?)?);
-    let entry_point_selector =
-        EntryPointSelector(StarkHash::new(entry_point_selector.to_be_bytes())?);
-    let account_address = ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS));
-    let calldata = Calldata(Arc::new(
-        calldata
-            .iter()
-            .map(|data| StarkFelt::new(data.to_be_bytes()))
-            .collect::<Result<Vec<_>, _>>()?,
-    ));
-    let entry_point = CallEntryPoint {
-        class_hash: None,
-        code_address: Some(contract_address),
-        entry_point_type: EntryPointType::External,
-        entry_point_selector,
-        calldata,
-        storage_address: contract_address,
-        caller_address: account_address,
-        call_type: CallType::Call,
-        initial_gas: u64::MAX,
-    };
-
-    let mut resources = ExecutionResources::default();
-    let account_context = build_transaction_context();
-    let block_context = build_block_context();
-
-    let mut context = EntryPointExecutionContext::new(
-        block_context.clone(),
-        account_context,
-        block_context.invoke_tx_max_n_steps,
-    );
-
-    let exec_result = entry_point.execute(blockifier_state, &mut resources, &mut context);
-    if let Ok(call_info) = exec_result {
-        let raw_return_data = &call_info.execution.retdata.0;
-
-        let return_data = raw_return_data
-            .iter()
-            .map(|data| Felt252::from_bytes_be(data.bytes()))
-            .collect();
-
-        Ok(CallContractOutput::Success {
-            ret_data: return_data,
-        })
-    } else if let Err(EntryPointExecutionError::ExecutionFailed { error_data }) = exec_result {
-        let err_data = error_data
-            .iter()
-            .map(|data| Felt252::from_bytes_be(data.bytes()))
-            .collect();
-
-        Ok(CallContractOutput::Panic {
-            panic_data: err_data,
-        })
-    } else {
-        panic!("Unparseable result: {exec_result:?}");
-    }
 }
 
 // All errors that can be thrown from the hint executor have to be added here,
