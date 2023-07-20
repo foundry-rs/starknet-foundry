@@ -2,6 +2,8 @@ use anyhow::{bail, Result};
 use camino::Utf8PathBuf;
 use cast::{get_network, print_formatted, Network};
 use clap::{Args, Subcommand};
+use rand::rngs::OsRng;
+use rand::RngCore;
 use serde_json::json;
 use starknet::accounts::{AccountDeployment, OpenZeppelinAccountFactory};
 use starknet::core::types::FieldElement;
@@ -10,8 +12,6 @@ use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::{LocalWallet, SigningKey};
 use std::collections::HashMap;
-use rand::RngCore;
-use rand::rngs::OsRng;
 
 pub const OZ_CLASS_HASH: &str =
     "0x058d97f7d76e78f44905cc30cb65b91ea49a4b908a76703c54197bca90f81773";
@@ -88,6 +88,7 @@ pub fn create(
         ("private_key", format!("{:#x}", private_key.secret_scalar())),
         ("public_key", format!("{:#x}", public_key.scalar())),
         ("address", format!("{address:#x}")),
+        ("salt", format!("{salt:#x}")),
     ];
 
     if let Some(output_path) = maybe_output_path {
@@ -104,15 +105,21 @@ pub fn create(
 
                 let network = get_network(&network)?.get_value();
 
+                if !items[network][&name].is_null() {
+                    bail!("Account with provided name already exists in this network")
+                }
+
                 let mut json_output: serde_json::Value = output
                     .into_iter()
                     .map(|(key, value)| (key, serde_json::Value::String(value)))
                     .collect();
                 json_output["deployed"] = serde_json::Value::from(false);
-                json_output["salt"] = serde_json::Value::from(salt.to_string());
-                let transformed_constructor_calldata: Vec<String> = constructor_calldata.iter().map(std::string::ToString::to_string).collect();
-                json_output["constructor_calldata"] = serde_json::Value::from(transformed_constructor_calldata);
-
+                json_output["constructor_calldata"] = serde_json::Value::from(
+                    constructor_calldata
+                        .iter()
+                        .map(std::string::ToString::to_string)
+                        .collect::<Vec<String>>(),
+                );
                 items[network][name] = json_output;
 
                 std::fs::write(
