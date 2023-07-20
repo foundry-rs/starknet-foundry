@@ -1,15 +1,12 @@
 use anyhow::{anyhow, Result};
 use camino::Utf8PathBuf;
-use cast::{get_network, parse_number};
+use cast::get_network;
 use clap::{Args, Subcommand};
 use rand::rngs::OsRng;
 use rand::RngCore;
-use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
 use starknet::core::types::FieldElement;
 use starknet::core::utils::get_contract_address;
-use starknet::providers::jsonrpc::HttpTransport;
-use starknet::providers::{JsonRpcClient, Provider};
-use starknet::signers::{LocalWallet, SigningKey};
+use starknet::signers::SigningKey;
 
 pub const OZ_CLASS_HASH: &str =
     "0x058d97f7d76e78f44905cc30cb65b91ea49a4b908a76703c54197bca90f81773";
@@ -141,39 +138,4 @@ pub fn create(
     }
 
     Ok(output)
-}
-
-pub async fn deploy(
-    provider: &JsonRpcClient<HttpTransport>,
-    network: String,
-    path: Utf8PathBuf,
-    name: String,
-    max_fee: Option<FieldElement>,
-) -> Result<()> {
-    let contents = std::fs::read_to_string(path.clone())?;
-    let items: serde_json::Value =
-        serde_json::from_str(&contents).expect("failed to parse json file");
-    let network = get_network(&network)?.get_value();
-
-    println!("{}", &items[network][&name]["private_key"]);
-
-    let private_key = SigningKey::from_secret_scalar(
-        parse_number(items[network][&name]["private_key"].as_str().unwrap()).expect("x"),
-    );
-
-    let factory = OpenZeppelinAccountFactory::new(
-        parse_number(OZ_CLASS_HASH).expect("xd"),
-        provider.chain_id().await.expect("xdd"),
-        LocalWallet::from_signing_key(private_key),
-        provider,
-    )
-    .await?;
-
-    let deployment = factory
-        .deploy(parse_number(items[network][&name]["salt"].as_str().unwrap()).expect("xddd"));
-    let deployment_tx = deployment.max_fee(max_fee.expect("xdddd")).send().await?;
-
-    println!("{}", deployment_tx.transaction_hash);
-
-    Ok(())
 }
