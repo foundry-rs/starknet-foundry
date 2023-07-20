@@ -253,8 +253,8 @@ async fn main() -> Result<()> {
                 name,
                 max_fee,
             } => {
-                let provider = get_provider(&rpc_url, &network).await?;
-                starknet_commands::account::deploy(&provider, network, path, name, max_fee).await
+                // TODO
+                Ok(())
             }
         },
     }
