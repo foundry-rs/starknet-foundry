@@ -1,16 +1,20 @@
 use std::any::Any;
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
-use std::fs;
 use std::hash::{Hash, Hasher};
 use std::io;
 use std::path::PathBuf;
 
+use crate::scarb::StarknetContractArtifacts;
 use anyhow::{anyhow, Context, Result};
 use blockifier::abi::abi_utils::selector_from_name;
 use blockifier::execution::contract_class::{
     ContractClass as BlockifierContractClass, ContractClassV1,
 };
+use blockifier::execution::entry_point::{
+    CallEntryPoint, CallInfo, CallType, EntryPointExecutionContext, ExecutionResources,
+};
+use blockifier::execution::errors::EntryPointExecutionError;
 use blockifier::state::cached_state::CachedState;
 use blockifier::state::errors::StateError;
 use blockifier::state::state_api::StateReader;
@@ -21,7 +25,7 @@ use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
 use cairo_vm::hint_processor::hint_processor_definition::HintReference;
 use cairo_vm::serde::deserialize_program::ApTracking;
 use cairo_vm::types::exec_scope::ExecutionScopes;
-use cairo_vm::types::relocatable::{MaybeRelocatable, Relocatable};
+use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::errors::memory_errors::MemoryError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
@@ -34,6 +38,7 @@ use cheatable_starknet::rpc::call_contract;
 use cheatable_starknet::state::DictStateReader;
 use num_traits::{Num, ToPrimitive, FromPrimitive};
 use schemars::_private::NoSerialize;
+use regex::Regex;
 use serde::Deserialize;
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, PatriciaKey};
 use starknet_api::hash::{StarkFelt, StarkHash};
@@ -44,8 +49,13 @@ use cairo_felt_blockifier::Felt252 as blockifier_Felt252;
 use starknet_api::{patricia_key, stark_felt, StarknetApiError};
 use thiserror::Error;
 
+use crate::vm_memory::{
+    felt_from_pointer, insert_at_pointer, relocatable_from_pointer, usize_from_pointer,
+    write_cheatcode_panic,
+};
 use cairo_lang_casm::hints::{Hint, StarknetHint};
 use cairo_lang_casm::operand::{CellRef, ResOperand};
+use cairo_lang_runner::casm_run::extract_relocatable;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{
     casm_run::{cell_ref_to_relocatable, extract_buffer, get_ptr},
@@ -58,7 +68,8 @@ use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 
 pub struct CairoHintProcessor<'a> {
     pub original_cairo_hint_processor: OriginalCairoHintProcessor<'a>,
-    pub blockifier_state: Option<CachedState<DictStateReader>>,
+    pub blockifier_state: CachedState<DictStateReader>,
+    pub contracts: &'a HashMap<String, StarknetContractArtifacts>,
 }
 
 impl ResourceTracker for CairoHintProcessor<'_> {
@@ -94,10 +105,6 @@ impl HintProcessorLogic for CairoHintProcessor<'_> {
         constants: &HashMap<String, Felt252>,
     ) -> Result<(), HintError> {
         let maybe_extended_hint = hint_data.downcast_ref::<Hint>();
-        let blockifier_state = self
-            .blockifier_state
-            .as_mut()
-            .expect("Blockifier state is needed for executing hints");
         if let Some(Hint::Starknet(StarknetHint::Cheatcode {
             selector,
             input_start,
@@ -109,16 +116,17 @@ impl HintProcessorLogic for CairoHintProcessor<'_> {
             return execute_cheatcode_hint(
                 vm,
                 exec_scopes,
-                blockifier_state,
+                &mut self.blockifier_state,
                 selector,
                 input_start,
                 input_end,
                 output_start,
                 output_end,
+                self.contracts,
             );
         }
         if let Some(Hint::Starknet(StarknetHint::SystemCall { system })) = maybe_extended_hint {
-            return execute_syscall(system, vm, blockifier_state);
+            return execute_syscall(system, vm, &mut self.blockifier_state);
         }
         self.original_cairo_hint_processor
             .execute_hint(vm, exec_scopes, hint_data, constants)
@@ -193,17 +201,29 @@ fn execute_syscall(
 
     let calldata_blockifier: Vec<blockifier_Felt252> = calldata.into_iter().map(|v| convert_to_blockifier_felt(v)).collect();
     assert_eq!(std::str::from_utf8(&selector).unwrap(), "CallContract");
-    let result_blockfier: Vec<blockifier_Felt252> = call_contract(
-        &convert_to_blockifier_felt(contract_address),
-        &convert_to_blockifier_felt(entry_point_selector),
-        &calldata_blockifier,
+    // let result_blockfier: Vec<blockifier_Felt252> = call_contract(
+    //     &convert_to_blockifier_felt(contract_address),
+    //     &convert_to_blockifier_felt(entry_point_selector),
+    //     &calldata_blockifier,
+    //     blockifier_state,
+    // )
+    // .unwrap();
+    // let result: Vec<Felt252> = result_blockfier.into_iter().map(|v| convert_from_blockifier_felt(v)).collect();
+    let call_result = call_contract(
+        &contract_address,
+        &entry_point_selector,
+        &calldata,
         blockifier_state,
     )
-    .unwrap();
-    let result: Vec<Felt252> = result_blockfier.into_iter().map(|v| convert_from_blockifier_felt(v)).collect();
+    .unwrap_or_else(|err| panic!("Transaction execution error: {err}"));
+
+    let (result, exit_code) = match call_result {
+        CallContractOutput::Success { ret_data } => (ret_data, 0),
+        CallContractOutput::Panic { panic_data } => (panic_data, 1),
+    };
 
     insert_at_pointer(vm, &mut system_ptr, gas_counter).unwrap();
-    insert_at_pointer(vm, &mut system_ptr, Felt252::from(0)).unwrap();
+    insert_at_pointer(vm, &mut system_ptr, Felt252::from(exit_code)).unwrap();
 
     let mut ptr = vm.add_memory_segment();
     let start = ptr;
@@ -218,6 +238,77 @@ fn execute_syscall(
     Ok(())
 }
 
+enum CallContractOutput {
+    Success { ret_data: Vec<Felt252> },
+    Panic { panic_data: Vec<Felt252> },
+}
+
+// This can mutate state, the name of the syscall is not very good
+fn call_contract(
+    contract_address: &Felt252,
+    entry_point_selector: &Felt252,
+    calldata: &[Felt252],
+    blockifier_state: &mut CachedState<DictStateReader>,
+) -> Result<CallContractOutput> {
+    let contract_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
+        contract_address.to_be_bytes(),
+    )?)?);
+    let entry_point_selector =
+        EntryPointSelector(StarkHash::new(entry_point_selector.to_be_bytes())?);
+    let account_address = ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS));
+    let calldata = Calldata(Arc::new(
+        calldata
+            .iter()
+            .map(|data| StarkFelt::new(data.to_be_bytes()))
+            .collect::<Result<Vec<_>, _>>()?,
+    ));
+    let entry_point = CallEntryPoint {
+        class_hash: None,
+        code_address: Some(contract_address),
+        entry_point_type: EntryPointType::External,
+        entry_point_selector,
+        calldata,
+        storage_address: contract_address,
+        caller_address: account_address,
+        call_type: CallType::Call,
+        initial_gas: u64::MAX,
+    };
+
+    let mut resources = ExecutionResources::default();
+    let account_context = build_transaction_context();
+    let block_context = build_block_context();
+
+    let mut context = EntryPointExecutionContext::new(
+        block_context.clone(),
+        account_context,
+        block_context.invoke_tx_max_n_steps,
+    );
+
+    let exec_result = entry_point.execute(blockifier_state, &mut resources, &mut context);
+    if let Ok(call_info) = exec_result {
+        let raw_return_data = &call_info.execution.retdata.0;
+
+        let return_data = raw_return_data
+            .iter()
+            .map(|data| Felt252::from_bytes_be(data.bytes()))
+            .collect();
+
+        Ok(CallContractOutput::Success {
+            ret_data: return_data,
+        })
+    } else if let Err(EntryPointExecutionError::ExecutionFailed { error_data }) = exec_result {
+        let err_data = error_data
+            .iter()
+            .map(|data| Felt252::from_bytes_be(data.bytes()))
+            .collect();
+
+        Ok(CallContractOutput::Panic {
+            panic_data: err_data,
+        })
+    } else {
+        panic!("Unparseable result: {exec_result:?}");
+    }
+}
 
 // All errors that can be thrown from the hint executor have to be added here,
 // to prevent the whole runner from panicking
@@ -260,6 +351,7 @@ fn execute_cheatcode_hint(
     input_end: &ResOperand,
     output_start: &CellRef,
     output_end: &CellRef,
+    contracts: &HashMap<String, StarknetContractArtifacts>,
 ) -> Result<(), HintError> {
     // Parse the selector.
     let selector = &selector.value.to_bytes_be().1;
@@ -282,6 +374,7 @@ fn execute_cheatcode_hint(
         inputs,
         output_start,
         output_end,
+        contracts,
     )
     .map_err(Into::into)
 }
@@ -294,6 +387,7 @@ fn match_cheatcode_by_selector(
     inputs: Vec<Felt252>,
     output_start: &CellRef,
     output_end: &CellRef,
+    contracts: &HashMap<String, StarknetContractArtifacts>,
 ) -> Result<(), EnhancedHintError> {
     let mut result_segment_ptr = vm.add_memory_segment();
     let result_start = result_segment_ptr;
@@ -307,10 +401,18 @@ fn match_cheatcode_by_selector(
         "start_prank" => todo!(),
         "stop_prank" => todo!(),
         "mock_call" => todo!(),
-        "declare_cairo0" => todo!(),
-        "declare" => declare(vm, blockifier_state, &inputs, &mut result_segment_ptr),
+        "declare" => declare(
+            vm,
+            blockifier_state,
+            &inputs,
+            &mut result_segment_ptr,
+            contracts,
+        ),
         "deploy" => deploy(vm, blockifier_state, &inputs, &mut result_segment_ptr),
-        "print" => print(inputs),
+        "print" => {
+            print(inputs);
+            Ok(())
+        }
         _ => Err(anyhow!("Unknown cheatcode selector: {selector}")).map_err(Into::into),
     }?;
 
@@ -321,7 +423,7 @@ fn match_cheatcode_by_selector(
     Ok(())
 }
 
-fn print(inputs: Vec<Felt252>) -> Result<(), EnhancedHintError> {
+fn print(inputs: Vec<Felt252>) {
     for value in inputs {
         if let Some(short_string) = as_cairo_short_string(&value) {
             println!("original value: [{value}], converted to a string: [{short_string}]",);
@@ -329,7 +431,6 @@ fn print(inputs: Vec<Felt252>) -> Result<(), EnhancedHintError> {
             println!("original value: [{value}]");
         }
     }
-    Ok(())
 }
 
 fn declare(
@@ -337,56 +438,17 @@ fn declare(
     blockifier_state: &mut CachedState<DictStateReader>,
     inputs: &[Felt252],
     result_segment_ptr: &mut Relocatable,
+    contracts: &HashMap<String, StarknetContractArtifacts>,
 ) -> Result<(), EnhancedHintError> {
     let contract_value = inputs[0].clone();
 
     let contract_value_as_short_str = as_cairo_short_string(&contract_value)
         .context("Converting contract name to short string failed")?;
-    let current_dir = std::env::current_dir()
-        .context("Failed to get current directory")?
-        .join("target/dev");
-
-    let mut paths = fs::read_dir(&current_dir)
-        .context("Failed to read ./target/dev, scarb build probably failed")?;
-
-    let starknet_artifacts_entry = &paths
-        .find_map(|path| match path {
-            Ok(path) => {
-                let name = path.file_name().into_string().ok()?;
-                name.contains("starknet_artifacts").then_some(path)
-            }
-            Err(_) => None,
-        })
-        .context("Failed to find starknet_artifacts.json file")?;
-    let starknet_artifacts =
-        fs::read_to_string(starknet_artifacts_entry.path()).context(format!(
-            "Failed to read {:?} contents",
-            starknet_artifacts_entry.file_name()
-        ))?;
-    let starknet_artifacts: ScarbStarknetArtifacts =
-        serde_json::from_str(starknet_artifacts.as_str()).context(format!(
-            "Failed to parse {:?} contents",
-            starknet_artifacts_entry.file_name()
-        ))?;
-
-    let sierra_path = starknet_artifacts
-        .contracts
-        .iter()
-        .find_map(|contract| {
-            if contract.contract_name == contract_value_as_short_str {
-                return Some(contract.artifacts.sierra.clone());
-            }
-            None
-        })
-        .context(format!(
-            "Failed to find contract {contract_value_as_short_str} in starknet_artifacts.json"
-        ))?;
-    let sierra_path = current_dir.join(sierra_path);
-
-    let file = fs::File::open(&sierra_path)
-        .context(format!("Failed to open file at path = {:?}", &sierra_path))?;
-    let sierra_contract_class: ContractClass =
-        serde_json::from_reader(&file).context("File to parse json from file = {file:?}")?;
+    let contract_artifact = contracts.get(&contract_value_as_short_str).ok_or_else(|| {
+        anyhow!("Failed to get contract artifact for name = {contract_value_as_short_str}. Make sure starknet target is correctly defined in Scarb.toml file.")
+    })?;
+    let sierra_contract_class: ContractClass = serde_json::from_str(&contract_artifact.sierra)
+        .with_context(|| format!("File to parse json from artifact = {contract_artifact:?}"))?;
 
     let casm_contract_class = CasmContractClass::from_contract_class(sierra_contract_class, true)
         .context("Sierra to casm failed")?;
@@ -418,7 +480,7 @@ fn declare(
         starknet_api::transaction::DeclareTransaction::V2(declare_tx),
         contract_class,
     )
-    .unwrap_or_else(|err| panic!("Unable to build transaction {:?}", err));
+    .unwrap_or_else(|err| panic!("Unable to build transaction {err:?}"));
 
     let account_tx = AccountTransaction::Declare(tx);
     let block_context = build_block_context();
@@ -440,14 +502,13 @@ fn deploy(
     inputs: &[Felt252],
     result_segment_ptr: &mut Relocatable,
 ) -> Result<(), EnhancedHintError> {
-    let _contract_address = inputs[0].clone();
     // TODO(#1991) deploy should fail if contract address provided doesn't match calculated
     //  or not accept this address as argument at all.
-    let class_hash = inputs[1].clone();
+    let class_hash = inputs[0].clone();
 
-    let calldata_length = inputs[2].to_usize().unwrap();
+    let calldata_length = inputs[1].to_usize().unwrap();
     let mut calldata = vec![];
-    for felt in inputs.iter().skip(3).take(calldata_length) {
+    for felt in inputs.iter().skip(2).take(calldata_length) {
         calldata.push(felt.clone());
     }
 
@@ -457,6 +518,16 @@ fn deploy(
     let entry_point_selector = selector_from_name("deploy_contract");
     let salt = ContractAddressSalt::default();
     let class_hash = ClassHash(StarkFelt::new(class_hash.to_be_bytes()).unwrap());
+
+    let contract_class = blockifier_state.get_compiled_contract_class(&class_hash)?;
+    if contract_class.constructor_selector().is_none() && !calldata.is_empty() {
+        write_cheatcode_panic(
+            vm,
+            result_segment_ptr,
+            vec![felt_from_short_string("No constructor in contract")],
+        );
+        return Ok(());
+    }
 
     let execute_calldata = create_execute_calldata(
         &calldata,
@@ -472,34 +543,57 @@ fn deploy(
     let tx = build_invoke_transaction(execute_calldata, account_address);
     let account_tx =
         AccountTransaction::Invoke(InvokeTransaction::V1(InvokeTransactionV1 { nonce, ..tx }));
-    let tx_result = account_tx
+
+    let tx_info = account_tx
         .execute(blockifier_state, &block_context)
-        .context("Failed to execute deploy transaction")?;
-    let return_data = tx_result
-        .execute_call_info
-        .context("Failed to get execution data from method")?
-        .execution
-        .retdata;
-    let contract_address = return_data
-        .0
-        .get(0)
-        .context("Failed to get contract_address from return_data")?;
-    let contract_address = Felt252::from_bytes_be(contract_address.bytes());
+        .unwrap_or_else(|e| panic!("Unparseable transaction error: {e:?}"));
 
-    // TODO(#2152): in case of error, consider filling the panic data instead of packing in rust
-    insert_at_pointer(vm, result_segment_ptr, Felt252::from(0)).unwrap();
-    insert_at_pointer(vm, result_segment_ptr, contract_address).unwrap();
+    if let Some(CallInfo { execution, .. }) = tx_info.execute_call_info {
+        let contract_address = execution
+            .retdata
+            .0
+            .get(0)
+            .expect("Failed to get contract_address from return_data");
+        let contract_address = Felt252::from_bytes_be(contract_address.bytes());
 
+        insert_at_pointer(vm, result_segment_ptr, 0).expect("Failed to insert error code");
+        insert_at_pointer(vm, result_segment_ptr, contract_address)
+            .expect("Failed to insert deployed contract address");
+    } else {
+        let revert_error = tx_info
+            .revert_error
+            .expect("Unparseable tx info, {tx_info:?}");
+        let extracted_panic_data = try_extract_panic_data(&revert_error)
+            .expect("Unparseable error message, {revert_error}");
+
+        write_cheatcode_panic(vm, result_segment_ptr, extracted_panic_data);
+    }
     Ok(())
 }
 
-// TODO(#2164): remove this when extract_relocatable is pub in cairo
-fn extract_relocatable(
-    vm: &VirtualMachine,
-    buffer: &ResOperand,
-) -> Result<Relocatable, VirtualMachineError> {
-    let (base, offset) = extract_buffer(buffer);
-    get_ptr(vm, base, &offset)
+fn felt_from_short_string(short_str: &str) -> Felt252 {
+    return Felt252::from_bytes_be(short_str.as_bytes());
+}
+
+fn try_extract_panic_data(err: &str) -> Option<Vec<Felt252>> {
+    let re = Regex::new(r#"(?m)^Got an exception while executing a hint: Custom Hint Error: Execution failed\. Failure reason: "(.*)"\.$"#)
+        .expect("Could not create panic_data matching regex");
+
+    if let Some(captures) = re.captures(err) {
+        if let Some(panic_data_match) = captures.get(1) {
+            if panic_data_match.as_str().is_empty() {
+                return Some(vec![]);
+            }
+            let panic_data_felts: Vec<Felt252> = panic_data_match
+                .as_str()
+                .split(", ")
+                .map(felt_from_short_string)
+                .collect();
+
+            return Some(panic_data_felts);
+        }
+    }
+    None
 }
 
 // Should this function panic?
@@ -528,7 +622,7 @@ fn create_execute_calldata(
 }
 
 fn read_data_from_range(
-    vm: &mut VirtualMachine,
+    vm: &VirtualMachine,
     mut start: Relocatable,
     end: Relocatable,
 ) -> Result<Vec<Felt252>> {
@@ -538,37 +632,6 @@ fn read_data_from_range(
         calldata.push(value);
     }
     Ok(calldata)
-}
-
-fn insert_at_pointer<T: Into<MaybeRelocatable>>(
-    vm: &mut VirtualMachine,
-    ptr: &mut Relocatable,
-    value: T,
-) -> Result<()> {
-    vm.insert_value(*ptr, value)?;
-    *ptr += 1;
-    Ok(())
-}
-
-fn usize_from_pointer(vm: &mut VirtualMachine, ptr: &mut Relocatable) -> Result<usize> {
-    let gas_counter = vm
-        .get_integer(*ptr)?
-        .to_usize()
-        .ok_or_else(|| anyhow!("Failed to convert to usize"))?;
-    *ptr += 1;
-    Ok(gas_counter)
-}
-
-fn relocatable_from_pointer(vm: &mut VirtualMachine, ptr: &mut Relocatable) -> Result<Relocatable> {
-    let start = vm.get_relocatable(*ptr)?;
-    *ptr += 1;
-    Ok(start)
-}
-
-fn felt_from_pointer(vm: &mut VirtualMachine, ptr: &mut Relocatable) -> Result<Felt252> {
-    let entry_point_selector = vm.get_integer(*ptr)?.into_owned();
-    *ptr += 1;
-    Ok(entry_point_selector)
 }
 
 fn felt252_from_hex_string(value: &str) -> Result<Felt252> {
@@ -652,5 +715,42 @@ mod test {
                 StarkFelt::from(0_u32),
             ]))
         );
+    }
+
+    #[test]
+    fn string_extracting_panic_data() {
+        let cases: [(&str, Option<Vec<Felt252>>); 4] = [
+            (
+                "Beginning of trace\nGot an exception while executing a hint: Custom Hint Error: Execution failed. Failure reason: \"PANIK, DAYTA\".\n
+                 End of trace", 
+                Some(vec![Felt252::from(344_693_033_291_u64), Felt252::from(293_154_149_441_u64)])
+            ),
+            (
+                "Got an exception while executing a hint: Custom Hint Error: Execution failed. Failure reason: \"AYY, LMAO\".", 
+                Some(vec![Felt252::from(4_282_713_u64), Felt252::from(1_280_131_407_u64)])
+            ),
+            (
+                "Got an exception while executing a hint: Custom Hint Error: Execution failed. Failure reason: \"\".", 
+                Some(vec![])
+            ),
+            ("Custom Hint Error: Invalid trace: \"PANIC, DATA\"", None)
+        ];
+
+        for (str, expected) in cases {
+            assert_eq!(try_extract_panic_data(str), expected);
+        }
+    }
+
+    #[test]
+    fn parsing_felt_from_short_string() {
+        let cases = [
+            ("", Felt252::from(0)),
+            ("{", Felt252::from(123)),
+            ("PANIK", Felt252::from(344_693_033_291_u64)),
+        ];
+
+        for (str, felt_res) in cases {
+            assert_eq!(felt_from_short_string(str), felt_res);
+        }
     }
 }

@@ -122,7 +122,7 @@ pub fn find_all_tests(
                 module_items.iter().filter_map(|item| {
                     let ModuleItemId::FreeFunction(func_id) = item else { return None };
                     let Ok(attrs) = db.function_with_body_attributes(FunctionWithBodyId::Free(*func_id)) else { return None };
-                    Some((*func_id, try_extract_test_config(db.upcast(), attrs).unwrap()?))
+                    Some((*func_id, try_extract_test_config(db.upcast(), &attrs).unwrap()?))
                 }),
             );
         }
@@ -134,7 +134,7 @@ pub fn find_all_tests(
 /// attributes are set illegally.
 pub fn try_extract_test_config(
     db: &dyn SyntaxGroup,
-    attrs: Vec<Attribute>,
+    attrs: &[Attribute],
 ) -> Result<Option<SingleTestConfig>, Vec<PluginDiagnostic>> {
     let test_attr = attrs.iter().find(|attr| attr.id.as_str() == "test");
     let ignore_attr = attrs.iter().find(|attr| attr.id.as_str() == "ignore");
@@ -272,7 +272,7 @@ pub struct LinkedLibrary {
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub struct TestConfig {
+pub struct TestCase {
     pub name: String,
     pub available_gas: Option<usize>,
 }
@@ -284,7 +284,7 @@ pub fn collect_tests(
     linked_libraries: Option<Vec<LinkedLibrary>>,
     builtins: Option<Vec<&str>>,
     corelib_path: Option<&str>,
-) -> Result<(Program, Vec<TestConfig>)> {
+) -> Result<(Program, Vec<TestCase>)> {
     // code taken from crates/cairo-lang-test-runner/src/lib.rs
     let db = &mut {
         let mut b = RootDatabase::builder();
@@ -303,7 +303,7 @@ pub fn collect_tests(
     );
 
     let main_crate_ids = setup_project(db, Path::new(&input_path))
-        .with_context(|| format!("Failed to setup project for path({})", input_path))?;
+        .with_context(|| format!("Failed to setup project for path({input_path})"))?;
 
     if let Some(linked_libraries) = linked_libraries {
         for linked_library in linked_libraries {
@@ -312,7 +312,7 @@ pub fn collect_tests(
                 &linked_library.path,
                 &linked_library.name,
             )
-            .with_context(|| format!("Failed to add linked library ({})", input_path))?;
+            .with_context(|| format!("Failed to add linked library ({})", linked_library.name))?;
         }
     }
 
@@ -326,7 +326,9 @@ pub fn collect_tests(
 
     let z: Vec<ConcreteFunctionWithBodyId> = all_tests
         .iter()
-        .flat_map(|(func_id, _cfg)| ConcreteFunctionWithBodyId::from_no_generics_free(db, *func_id))
+        .filter_map(|(func_id, _cfg)| {
+            ConcreteFunctionWithBodyId::from_no_generics_free(db, *func_id)
+        })
         .collect();
 
     let sierra_program = db
@@ -335,7 +337,7 @@ pub fn collect_tests(
         .context("Compilation failed without any diagnostics")
         .context("Failed to get sierra program")?;
 
-    let collected_tests: Vec<TestConfig> = all_tests
+    let collected_tests: Vec<TestCase> = all_tests
         .into_iter()
         .map(|(func_id, test)| {
             (
@@ -354,7 +356,7 @@ pub fn collect_tests(
         })
         .collect_vec()
         .into_iter()
-        .map(|(test_name, config)| TestConfig {
+        .map(|(test_name, config)| TestCase {
             name: test_name,
             available_gas: config.available_gas,
         })
@@ -363,10 +365,10 @@ pub fn collect_tests(
     let sierra_program = replace_sierra_ids_in_program(db, &sierra_program);
 
     let builtins = builtins.map_or_else(Vec::new, |builtins| {
-        builtins.iter().map(|s| s.to_string()).collect()
+        builtins.iter().map(|s| (*s).to_string()).collect()
     });
 
-    validate_tests(sierra_program.clone(), &collected_tests, builtins)?;
+    validate_tests(sierra_program.clone(), &collected_tests, &builtins)?;
 
     if let Some(path) = output_path {
         fs::write(path, sierra_program.to_string()).context("Failed to write output")?;
@@ -376,8 +378,8 @@ pub fn collect_tests(
 
 fn validate_tests(
     sierra_program: Program,
-    collected_tests: &Vec<TestConfig>,
-    ignored_params: Vec<String>,
+    collected_tests: &Vec<TestCase>,
+    ignored_params: &[String],
 ) -> Result<(), anyhow::Error> {
     let casm_generator = match SierraCasmGenerator::new(sierra_program) {
         Ok(casm_generator) => casm_generator,

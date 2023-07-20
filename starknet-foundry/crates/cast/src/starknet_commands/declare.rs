@@ -1,6 +1,8 @@
 use anyhow::{anyhow, Context, Result};
+use camino::Utf8PathBuf;
 use cast::{handle_rpc_error, handle_wait_for_tx_result};
 use clap::Args;
+use scarb::ops::find_manifest_path;
 use serde::Deserialize;
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::ConnectedAccount;
@@ -14,7 +16,6 @@ use starknet::{
     providers::jsonrpc::{HttpTransport, JsonRpcClient},
     signers::LocalWallet,
 };
-use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use std::sync::Arc;
 
@@ -37,8 +38,8 @@ struct ScarbStarknetContract {
 #[allow(dead_code)]
 #[derive(Deserialize)]
 struct ScarbStarknetContractArtifact {
-    sierra: PathBuf,
-    casm: Option<PathBuf>,
+    sierra: Utf8PathBuf,
+    casm: Option<Utf8PathBuf>,
 }
 
 #[derive(Args)]
@@ -50,15 +51,18 @@ pub struct Declare {
 
     /// Max fee for the transaction. If not provided, max fee will be automatically estimated
     #[clap(short, long)]
-    pub max_fee: Option<u128>,
+    pub max_fee: Option<FieldElement>,
 }
 
+#[allow(clippy::too_many_lines)]
 pub async fn declare(
     contract_name: &str,
-    max_fee: Option<u128>,
+    max_fee: Option<FieldElement>,
     account: &mut SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
 ) -> Result<DeclareTransactionResult> {
     let contract_name: String = contract_name.to_string();
+    which::which("scarb")
+        .context("Cannot find `scarb` binary in PATH. Make sure you have Scarb installed https://github.com/software-mansion/scarb")?;
     let command_result = Command::new("scarb")
         .current_dir(std::env::current_dir().context("Failed to obtain current dir")?)
         .arg("--release")
@@ -75,25 +79,42 @@ pub async fn declare(
         anyhow::bail!("scarb build returned non-zero exit code: {}", result_code);
     }
 
-    // TODO #2141 improve handling starknet artifacts
-    // TODO #2154 consider using `scarb manifest-path` instead of current_dir
-    let current_dir = std::env::current_dir()
-        .context("Failed to get current directory")?
-        .join("target/release");
-    let mut paths = std::fs::read_dir(&current_dir)
-        .context("Failed to read ./target/release, scarb build probably failed")?;
+    // TODO #41 improve handling starknet artifacts
+    let compiled_directory = find_manifest_path(None)
+        .expect("Failed to obtain Scarb.toml file path")
+        .parent()
+        .map(|parent| parent.join("target/release"))
+        .ok_or_else(|| anyhow!("Failed to obtain the path to compiled contracts"))?;
 
-    let starknet_artifacts = &paths
-        .find_map(|path| match path {
-            Ok(path) => {
-                let name = path.file_name().into_string().ok()?;
-                name.contains("starknet_artifacts").then_some(path)
-            }
-            Err(_) => None,
+    let mut paths = match compiled_directory.read_dir() {
+        Ok(paths) => paths,
+        Err(err) => {
+            return Err(anyhow!(
+                "Failed to read ./target/release, scarb build probably failed: {}",
+                err
+            ))
+        }
+    };
+
+    let starknet_artifacts = paths
+        .find_map(|path| {
+            path.ok().and_then(|entry| {
+                let name = entry.file_name().into_string().ok()?;
+                name.contains("starknet_artifacts").then_some(entry.path())
+            })
         })
-        .context("Failed to find starknet_artifacts.json file")?;
-    let starknet_artifacts = std::fs::read_to_string(starknet_artifacts.path())
-        .context("Failed to read starknet_artifacts.json contents")?;
+        .ok_or(anyhow!("Failed to find starknet_artifacts.json file"))?;
+
+    let starknet_artifacts = match std::fs::read_to_string(starknet_artifacts) {
+        Ok(content) => content,
+        Err(err) => {
+            return Err(anyhow!(
+                "Failed to read starknet_artifacts.json contents: {}",
+                err
+            ))
+        }
+    };
+
     let starknet_artifacts: ScarbStarknetArtifacts =
         serde_json::from_str(starknet_artifacts.as_str())
             .context("Failed to parse starknet_artifacts.json contents")?;
@@ -110,7 +131,7 @@ pub async fn declare(
         .unwrap_or_else(|| {
             panic!("Failed to find contract {contract_name} in starknet_artifacts.json")
         });
-    let sierra_contract_path = current_dir.join(sierra_path);
+    let sierra_contract_path = &compiled_directory.join(sierra_path);
 
     let casm_path = starknet_artifacts
         .contracts
@@ -125,50 +146,27 @@ pub async fn declare(
             panic!("Failed to find contract {contract_name} in starknet_artifacts.json")
         })
         .unwrap();
-    let casm_contract_path = current_dir.join(casm_path);
+    let casm_contract_path = &compiled_directory.join(casm_path);
 
     let contract_definition: SierraClass = {
-        let file_contents = std::fs::read(sierra_contract_path.clone()).with_context(|| {
-            format!(
-                "Failed to read contract file: {}",
-                sierra_contract_path
-                    .to_str()
-                    .expect("failed to convert sierra_contract_path to string")
-            )
-        })?;
+        let file_contents = std::fs::read(sierra_contract_path.clone())
+            .with_context(|| format!("Failed to read contract file: {sierra_contract_path}"))?;
         serde_json::from_slice(&file_contents).with_context(|| {
-            format!(
-                "Failed to parse contract definition: {}",
-                sierra_contract_path
-                    .to_str()
-                    .expect("failed to convert sierra_contract_path to string")
-            )
+            format!("Failed to parse contract definition: {sierra_contract_path}")
         })?
     };
     let casm_contract_definition: CompiledClass = {
-        let file_contents = std::fs::read(casm_contract_path.clone()).with_context(|| {
-            format!(
-                "Failed to read contract file: {}",
-                casm_contract_path
-                    .to_str()
-                    .expect("failed to convert casm_contract_path to string")
-            )
-        })?;
-        serde_json::from_slice(&file_contents).with_context(|| {
-            format!(
-                "Failed to parse contract definition: {}",
-                casm_contract_path
-                    .to_str()
-                    .expect("failed to convert casm_contract_path to string")
-            )
-        })?
+        let file_contents = std::fs::read(casm_contract_path.clone())
+            .with_context(|| format!("Failed to read contract file: {casm_contract_path}"))?;
+        serde_json::from_slice(&file_contents)
+            .with_context(|| format!("Failed to parse contract definition: {casm_contract_path}"))?
     };
 
     let casm_class_hash = casm_contract_definition.class_hash()?;
 
     let declaration = account.declare(Arc::new(contract_definition.flatten()?), casm_class_hash);
     let execution = if let Some(max_fee) = max_fee {
-        declaration.max_fee(FieldElement::from(max_fee))
+        declaration.max_fee(max_fee)
     } else {
         declaration
     };

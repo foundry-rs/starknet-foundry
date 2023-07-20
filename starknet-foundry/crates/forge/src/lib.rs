@@ -1,10 +1,11 @@
+use std::collections::HashMap;
 use std::fmt::Debug;
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
-use scarb_metadata::{Metadata, PackageId};
+use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use serde::Deserialize;
-use test_results::TestResult;
+use test_case_summary::TestCaseSummary;
 use walkdir::WalkDir;
 
 use cairo_lang_runner::SierraCasmRunner;
@@ -12,18 +13,20 @@ use cairo_lang_sierra::program::Program;
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 
-use crate::running::{run_from_test_config, skip_from_test_config};
-use test_collector::{collect_tests, LinkedLibrary, TestConfig};
+use crate::running::run_from_test_case;
+use crate::scarb::StarknetContractArtifacts;
+use test_collector::{collect_tests, LinkedLibrary, TestCase};
 
-use crate::test_results::TestSummary;
+pub mod pretty_printing;
+pub mod scarb;
+pub mod test_case_summary;
 
 mod cheatcodes_hint_processor;
-pub mod pretty_printing;
 mod running;
-mod test_results;
+mod vm_memory;
 
 /// Configuration of the test runner
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Deserialize, Debug, PartialEq, Default)]
 pub struct RunnerConfig {
     test_name_filter: Option<String>,
     exact_match: bool,
@@ -36,38 +39,39 @@ impl RunnerConfig {
         test_name_filter: Option<String>,
         exact_match: bool,
         exit_first: bool,
-        protostar_config_from_scarb: &ProtostarConfigFromScarb,
+        forge_config_from_scarb: &ForgeConfigFromScarb,
     ) -> Self {
         Self {
             test_name_filter,
             exact_match,
-            exit_first: protostar_config_from_scarb.exit_first || exit_first,
+            exit_first: forge_config_from_scarb.exit_first || exit_first,
         }
     }
 }
 
-#[derive(PartialEq)]
-enum RunnerStatus {
+#[derive(Debug, PartialEq, Clone)]
+pub enum RunnerStatus {
     Default,
     TestFailed,
+    DidNotRun,
 }
 
-/// Represents protostar config deserialized from Scarb.toml
+/// Represents forge config deserialized from Scarb.toml
 #[derive(Deserialize, Debug, PartialEq, Default)]
-pub struct ProtostarConfigFromScarb {
+pub struct ForgeConfigFromScarb {
     #[serde(default)]
     exit_first: bool,
 }
 
 struct TestsFromFile {
     sierra_program: Program,
-    tests_configs: Vec<TestConfig>,
+    test_cases: Vec<TestCase>,
     relative_path: Utf8PathBuf,
 }
 
 fn collect_tests_from_directory(
     input_path: &Utf8PathBuf,
-    linked_libraries: Option<Vec<LinkedLibrary>>,
+    linked_libraries: &Option<Vec<LinkedLibrary>>,
     corelib_path: Option<&Utf8PathBuf>,
     runner_config: &RunnerConfig,
 ) -> Result<Vec<TestsFromFile>> {
@@ -75,7 +79,7 @@ fn collect_tests_from_directory(
     internal_collect_tests(
         input_path,
         linked_libraries,
-        test_files,
+        &test_files,
         corelib_path,
         runner_config,
     )
@@ -102,11 +106,33 @@ fn find_cairo_files_in_directory(input_path: &Utf8PathBuf) -> Result<Vec<Utf8Pat
 
 fn internal_collect_tests(
     input_path: &Utf8PathBuf,
-    linked_libraries: Option<Vec<LinkedLibrary>>,
-    test_files: Vec<Utf8PathBuf>,
+    linked_libraries: &Option<Vec<LinkedLibrary>>,
+    test_files: &[Utf8PathBuf],
     corelib_path: Option<&Utf8PathBuf>,
     runner_config: &RunnerConfig,
 ) -> Result<Vec<TestsFromFile>> {
+    let tests: Result<Vec<TestsFromFile>> = test_files
+        .par_iter()
+        .map(|tf| {
+            collect_tests_from_file(
+                tf,
+                input_path,
+                linked_libraries,
+                corelib_path,
+                runner_config,
+            )
+        })
+        .collect();
+    tests
+}
+
+fn collect_tests_from_file(
+    test_file: &Utf8PathBuf,
+    input_path: &Utf8PathBuf,
+    linked_libraries: &Option<Vec<LinkedLibrary>>,
+    corelib_path: Option<&Utf8PathBuf>,
+    runner_config: &RunnerConfig,
+) -> Result<TestsFromFile> {
     let builtins = vec![
         "Pedersen",
         "RangeCheck",
@@ -118,121 +144,171 @@ fn internal_collect_tests(
         "System",
     ];
 
-    let linked_libraries = linked_libraries;
+    let (sierra_program, tests_configs) = collect_tests(
+        test_file.as_str(),
+        None,
+        linked_libraries.clone(),
+        Some(builtins.clone()),
+        corelib_path.map(|corelib_path| corelib_path.as_str()),
+    )?;
 
-    let mut tests = vec![];
-    for ref test_file in test_files {
-        let (sierra_program, tests_configs) = collect_tests(
-            test_file.as_str(),
-            None,
-            linked_libraries.clone(),
-            Some(builtins.clone()),
-            corelib_path.map(|corelib_path| corelib_path.as_str()),
-        )?;
+    let test_cases = strip_path_from_test_names(tests_configs)?;
+    let test_cases = if let Some(test_name_filter) = &runner_config.test_name_filter {
+        filter_tests_by_name(test_name_filter, runner_config.exact_match, test_cases)?
+    } else {
+        test_cases
+    };
 
-        let tests_configs = strip_path_from_test_names(tests_configs)?;
-        let tests_configs = if let Some(test_name_filter) = &runner_config.test_name_filter {
-            filter_tests_by_name(test_name_filter, runner_config.exact_match, tests_configs)?
-        } else {
-            tests_configs
-        };
-
-        let relative_path = test_file.strip_prefix(input_path)?.to_path_buf();
-        tests.push(TestsFromFile {
-            sierra_program,
-            tests_configs,
-            relative_path,
-        });
-    }
-
-    Ok(tests)
+    let relative_path = test_file.strip_prefix(input_path)?.to_path_buf();
+    Ok(TestsFromFile {
+        sierra_program,
+        test_cases,
+        relative_path,
+    })
 }
 
+#[allow(clippy::implicit_hasher)]
 pub fn run(
     input_path: &Utf8PathBuf,
-    linked_libraries: Option<Vec<LinkedLibrary>>,
+    linked_libraries: &Option<Vec<LinkedLibrary>>,
     runner_config: &RunnerConfig,
     corelib_path: Option<&Utf8PathBuf>,
-) -> Result<()> {
+    contracts: &HashMap<String, StarknetContractArtifacts>,
+    predeployed_contracts: &Utf8PathBuf,
+) -> Result<Vec<TestFileSummary>> {
     let tests =
         collect_tests_from_directory(input_path, linked_libraries, corelib_path, runner_config)?;
 
     pretty_printing::print_collected_tests_count(
-        tests.iter().map(|tests| tests.tests_configs.len()).sum(),
+        tests.iter().map(|tests| tests.test_cases.len()).sum(),
         tests.len(),
     );
 
-    let mut tests_summary = TestSummary::default();
     let mut tests_iterator = tests.into_iter();
 
+    let mut summaries = vec![];
     for tests_from_file in tests_iterator.by_ref() {
-        if run_tests(tests_from_file, &mut tests_summary, runner_config)?
-            == RunnerStatus::TestFailed
-        {
+        let summary = run_tests_from_file(
+            tests_from_file,
+            runner_config,
+            contracts,
+            predeployed_contracts,
+        )?;
+        summaries.push(summary.clone());
+        if summary.runner_exit_status == RunnerStatus::TestFailed {
             break;
         }
     }
 
     for tests_from_file in tests_iterator {
-        for config in tests_from_file.tests_configs {
-            let skipped_result = skip_from_test_config(&config);
-            pretty_printing::print_test_result(&skipped_result);
-            tests_summary.update(skipped_result);
+        let skipped: Vec<TestCaseSummary> = tests_from_file
+            .test_cases
+            .iter()
+            .map(TestCaseSummary::skipped)
+            .collect();
+
+        for test_case_summary in &skipped {
+            pretty_printing::print_test_result(test_case_summary);
         }
+
+        let file_summary = TestFileSummary {
+            test_case_summaries: skipped,
+            runner_exit_status: RunnerStatus::DidNotRun,
+            relative_path: tests_from_file.relative_path,
+        };
+        summaries.push(file_summary);
     }
 
-    pretty_printing::print_test_summary(&tests_summary);
-    Ok(())
+    pretty_printing::print_test_summary(&summaries);
+    Ok(summaries)
 }
 
-fn run_tests(
+#[derive(Debug, PartialEq, Clone)]
+pub struct TestFileSummary {
+    pub test_case_summaries: Vec<TestCaseSummary>,
+    pub runner_exit_status: RunnerStatus,
+    pub relative_path: Utf8PathBuf,
+}
+
+impl TestFileSummary {
+    fn count_passed(&self) -> usize {
+        self.test_case_summaries
+            .iter()
+            .filter(|tu| matches!(tu, TestCaseSummary::Passed { .. }))
+            .count()
+    }
+
+    fn count_failed(&self) -> usize {
+        self.test_case_summaries
+            .iter()
+            .filter(|tu| matches!(tu, TestCaseSummary::Failed { .. }))
+            .count()
+    }
+
+    fn count_skipped(&self) -> usize {
+        self.test_case_summaries
+            .iter()
+            .filter(|tu| matches!(tu, TestCaseSummary::Skipped { .. }))
+            .count()
+    }
+}
+
+fn run_tests_from_file(
     tests: TestsFromFile,
-    tests_summary: &mut TestSummary,
     runner_config: &RunnerConfig,
-) -> Result<RunnerStatus> {
-    let mut runner = SierraCasmRunner::new(
+    contracts: &HashMap<String, StarknetContractArtifacts>,
+    predeployed_contracts: &Utf8PathBuf,
+) -> Result<TestFileSummary> {
+    let runner = SierraCasmRunner::new(
         tests.sierra_program,
         Some(MetadataComputationConfig::default()),
         OrderedHashMap::default(),
     )
     .context("Failed setting up runner.")?;
 
-    pretty_printing::print_running_tests(&tests.relative_path, tests.tests_configs.len());
-    for (i, config) in tests.tests_configs.iter().enumerate() {
-        let result = run_from_test_config(&mut runner, config)?;
+    pretty_printing::print_running_tests(&tests.relative_path, tests.test_cases.len());
+    let mut results = vec![];
+    for (i, case) in tests.test_cases.iter().enumerate() {
+        let result = run_from_test_case(&runner, case, contracts, predeployed_contracts)?;
+        results.push(result.clone());
 
         pretty_printing::print_test_result(&result);
         if runner_config.exit_first {
-            if let TestResult::Failed { .. } = result {
-                for config in &tests.tests_configs[i + 1..] {
-                    let skipped_result = skip_from_test_config(config);
+            if let TestCaseSummary::Failed { .. } = result {
+                for case in &tests.test_cases[i + 1..] {
+                    let skipped_result = TestCaseSummary::skipped(case);
                     pretty_printing::print_test_result(&skipped_result);
-                    tests_summary.update(skipped_result);
+                    results.push(skipped_result);
                 }
-                tests_summary.update(result);
-                return Ok(RunnerStatus::TestFailed);
+                return Ok(TestFileSummary {
+                    test_case_summaries: results,
+                    runner_exit_status: RunnerStatus::TestFailed,
+                    relative_path: tests.relative_path,
+                });
             }
         }
-
-        tests_summary.update(result);
     }
-    Ok(RunnerStatus::Default)
+    Ok(TestFileSummary {
+        test_case_summaries: results,
+        runner_exit_status: RunnerStatus::Default,
+        relative_path: tests.relative_path,
+    })
 }
 
-fn strip_path_from_test_names(test_configs: Vec<TestConfig>) -> Result<Vec<TestConfig>> {
-    test_configs
+fn strip_path_from_test_names(test_cases: Vec<TestCase>) -> Result<Vec<TestCase>> {
+    test_cases
         .into_iter()
-        .map(|test_config| {
-            let name: String = test_config
+        .map(|test_case| {
+            let name: String = test_case
                 .name
                 .rsplit('/')
                 .next()
-                .with_context(|| format!("Failed to get test name from = {}", test_config.name))?
+                .with_context(|| format!("Failed to get test name from = {}", test_case.name))?
                 .into();
 
-            Ok(TestConfig {
+            Ok(TestCase {
                 name,
-                available_gas: test_config.available_gas,
+                available_gas: test_case.available_gas,
             })
         })
         .collect()
@@ -241,10 +317,10 @@ fn strip_path_from_test_names(test_configs: Vec<TestConfig>) -> Result<Vec<TestC
 fn filter_tests_by_name(
     test_name_filter: &str,
     exact_match: bool,
-    test_configs: Vec<TestConfig>,
-) -> Result<Vec<TestConfig>> {
+    test_cases: Vec<TestCase>,
+) -> Result<Vec<TestCase>> {
     let mut result = vec![];
-    for test in test_configs {
+    for test in test_cases {
         if exact_match {
             if test.name == test_name_filter {
                 result.push(test);
@@ -256,7 +332,7 @@ fn filter_tests_by_name(
     Ok(result)
 }
 
-fn test_name_contains(test_name_filter: &str, test: &TestConfig) -> Result<bool> {
+fn test_name_contains(test_name_filter: &str, test: &TestCase) -> Result<bool> {
     let name = test
         .name
         .rsplit("::")
@@ -265,162 +341,16 @@ fn test_name_contains(test_name_filter: &str, test: &TestConfig) -> Result<bool>
     Ok(name.contains(test_name_filter))
 }
 
-pub fn protostar_config_for_package(
-    metadata: &Metadata,
-    package: &PackageId,
-) -> Result<ProtostarConfigFromScarb> {
-    let raw_metadata = metadata
-        .get_package(package)
-        .ok_or_else(|| anyhow!("Failed to find metadata for package = {package}"))?
-        .tool_metadata("protostar");
-
-    raw_metadata.map_or_else(
-        || Ok(Default::default()),
-        |raw_metadata| Ok(serde_json::from_value(raw_metadata.clone())?),
-    )
-}
-
-pub fn dependencies_for_package(
-    metadata: &Metadata,
-    package: &PackageId,
-) -> Result<(Utf8PathBuf, Vec<LinkedLibrary>)> {
-    let compilation_unit = metadata
-        .compilation_units
-        .iter()
-        .filter(|unit| unit.package == *package)
-        .min_by_key(|unit| match unit.target.name.as_str() {
-            name @ "starknet-contract" => (0, name),
-            name @ "lib" => (1, name),
-            name => (2, name),
-        })
-        .ok_or_else(|| anyhow!("Failed to find metadata for package = {package}"))?;
-
-    let base_path = metadata
-        .get_package(package)
-        .ok_or_else(|| anyhow!("Failed to find metadata for package = {package}"))?
-        .root
-        .clone();
-
-    let dependencies = compilation_unit
-        .components
-        .iter()
-        .filter(|du| !du.source_path.to_string().contains("core/src"))
-        .map(|cu| LinkedLibrary {
-            name: cu.name.clone(),
-            path: cu.source_root().to_owned().into_std_path_buf(),
-        })
-        .collect();
-
-    Ok((base_path, dependencies))
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
-    use scarb_metadata::MetadataCommand;
-
-    #[test]
-    fn get_dependencies_for_package() {
-        let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from("tests/data/simple_test", &["**/*"]).unwrap();
-        let scarb_metadata = MetadataCommand::new()
-            .inherit_stderr()
-            .current_dir(temp.path())
-            .exec()
-            .unwrap();
-
-        let (_, dependencies) =
-            dependencies_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
-                .unwrap();
-
-        assert!(!dependencies.is_empty());
-        assert!(dependencies.iter().all(|dep| dep.path.exists()));
-    }
-
-    #[test]
-    fn get_dependencies_for_package_err_on_invalid_package() {
-        let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from("tests/data/simple_test", &["**/*"]).unwrap();
-        let scarb_metadata = MetadataCommand::new()
-            .inherit_stderr()
-            .current_dir(temp.path())
-            .exec()
-            .unwrap();
-
-        let result =
-            dependencies_for_package(&scarb_metadata, &PackageId::from(String::from("12345679")));
-        let err = result.unwrap_err();
-
-        assert!(err
-            .to_string()
-            .contains("Failed to find metadata for package"));
-    }
-
-    #[test]
-    fn get_protostar_config_for_package() {
-        let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from("tests/data/simple_test", &["**/*"]).unwrap();
-        let scarb_metadata = MetadataCommand::new()
-            .inherit_stderr()
-            .current_dir(temp.path())
-            .exec()
-            .unwrap();
-
-        let config =
-            protostar_config_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
-                .unwrap();
-
-        assert_eq!(config, ProtostarConfigFromScarb { exit_first: false });
-    }
-
-    #[test]
-    fn get_protostar_config_for_package_err_on_invalid_package() {
-        let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from("tests/data/simple_test", &["**/*"]).unwrap();
-        let scarb_metadata = MetadataCommand::new()
-            .inherit_stderr()
-            .current_dir(temp.path())
-            .exec()
-            .unwrap();
-
-        let result = protostar_config_for_package(
-            &scarb_metadata,
-            &PackageId::from(String::from("12345679")),
-        );
-        let err = result.unwrap_err();
-
-        assert!(err
-            .to_string()
-            .contains("Failed to find metadata for package"));
-    }
-
-    #[test]
-    fn get_protostar_config_for_package_default_on_missing_config() {
-        let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from("tests/data/simple_test", &["**/*"]).unwrap();
-        let content = "[package]
-name = \"example_package\"
-version = \"0.1.0\"";
-        temp.child("Scarb.toml").write_str(content).unwrap();
-
-        let scarb_metadata = MetadataCommand::new()
-            .inherit_stderr()
-            .current_dir(temp.path())
-            .exec()
-            .unwrap();
-
-        let config =
-            protostar_config_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
-                .unwrap();
-
-        assert_eq!(config, Default::default());
-    }
+    use assert_fs::fixture::PathCopy;
 
     #[test]
     fn collecting_tests() {
         let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from("tests/data/simple_test", &["**/*"]).unwrap();
+        temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
+            .unwrap();
         let tests_path = Utf8PathBuf::from_path_buf(temp.to_path_buf()).unwrap();
 
         let tests = find_cairo_files_in_directory(&tests_path).unwrap();
@@ -440,16 +370,16 @@ version = \"0.1.0\"";
 
     #[test]
     fn filtering_tests() {
-        let mocked_tests: Vec<TestConfig> = vec![
-            TestConfig {
+        let mocked_tests: Vec<TestCase> = vec![
+            TestCase {
                 name: "crate1::do_thing".to_string(),
                 available_gas: None,
             },
-            TestConfig {
+            TestCase {
                 name: "crate2::run_other_thing".to_string(),
                 available_gas: None,
             },
-            TestConfig {
+            TestCase {
                 name: "outer::crate2::execute_next_thing".to_string(),
                 available_gas: None,
             },
@@ -458,7 +388,7 @@ version = \"0.1.0\"";
         let filtered = filter_tests_by_name("do", false, mocked_tests.clone()).unwrap();
         assert_eq!(
             filtered,
-            vec![TestConfig {
+            vec![TestCase {
                 name: "crate1::do_thing".to_string(),
                 available_gas: None,
             },]
@@ -467,7 +397,7 @@ version = \"0.1.0\"";
         let filtered = filter_tests_by_name("run", false, mocked_tests.clone()).unwrap();
         assert_eq!(
             filtered,
-            vec![TestConfig {
+            vec![TestCase {
                 name: "crate2::run_other_thing".to_string(),
                 available_gas: None,
             },]
@@ -477,15 +407,15 @@ version = \"0.1.0\"";
         assert_eq!(
             filtered,
             vec![
-                TestConfig {
+                TestCase {
                     name: "crate1::do_thing".to_string(),
                     available_gas: None,
                 },
-                TestConfig {
+                TestCase {
                     name: "crate2::run_other_thing".to_string(),
                     available_gas: None,
                 },
-                TestConfig {
+                TestCase {
                     name: "outer::crate2::execute_next_thing".to_string(),
                     available_gas: None,
                 },
@@ -499,15 +429,15 @@ version = \"0.1.0\"";
         assert_eq!(
             filtered,
             vec![
-                TestConfig {
+                TestCase {
                     name: "crate1::do_thing".to_string(),
                     available_gas: None,
                 },
-                TestConfig {
+                TestCase {
                     name: "crate2::run_other_thing".to_string(),
                     available_gas: None,
                 },
-                TestConfig {
+                TestCase {
                     name: "outer::crate2::execute_next_thing".to_string(),
                     available_gas: None,
                 },
@@ -517,16 +447,16 @@ version = \"0.1.0\"";
 
     #[test]
     fn filtering_tests_only_uses_name() {
-        let mocked_tests: Vec<TestConfig> = vec![
-            TestConfig {
+        let mocked_tests: Vec<TestCase> = vec![
+            TestCase {
                 name: "crate1::do_thing".to_string(),
                 available_gas: None,
             },
-            TestConfig {
+            TestCase {
                 name: "crate2::run_other_thing".to_string(),
                 available_gas: None,
             },
-            TestConfig {
+            TestCase {
                 name: "outer::crate2::run_other_thing".to_string(),
                 available_gas: None,
             },
@@ -538,20 +468,20 @@ version = \"0.1.0\"";
 
     #[test]
     fn filtering_with_exact_match() {
-        let mocked_tests: Vec<TestConfig> = vec![
-            TestConfig {
+        let mocked_tests: Vec<TestCase> = vec![
+            TestCase {
                 name: "crate1::do_thing".to_string(),
                 available_gas: None,
             },
-            TestConfig {
+            TestCase {
                 name: "crate2::run_other_thing".to_string(),
                 available_gas: None,
             },
-            TestConfig {
+            TestCase {
                 name: "outer::crate3::run_other_thing".to_string(),
                 available_gas: None,
             },
-            TestConfig {
+            TestCase {
                 name: "do_thing".to_string(),
                 available_gas: None,
             },
@@ -566,7 +496,7 @@ version = \"0.1.0\"";
         let filtered = filter_tests_by_name("do_thing", true, mocked_tests.clone()).unwrap();
         assert_eq!(
             filtered,
-            vec![TestConfig {
+            vec![TestCase {
                 name: "do_thing".to_string(),
                 available_gas: None,
             },]
@@ -576,7 +506,7 @@ version = \"0.1.0\"";
             filter_tests_by_name("crate1::do_thing", true, mocked_tests.clone()).unwrap();
         assert_eq!(
             filtered,
-            vec![TestConfig {
+            vec![TestCase {
                 name: "crate1::do_thing".to_string(),
                 available_gas: None,
             },]
@@ -590,7 +520,7 @@ version = \"0.1.0\"";
             filter_tests_by_name("outer::crate3::run_other_thing", true, mocked_tests).unwrap();
         assert_eq!(
             filtered,
-            vec![TestConfig {
+            vec![TestCase {
                 name: "outer::crate3::run_other_thing".to_string(),
                 available_gas: None,
             },]
@@ -599,16 +529,16 @@ version = \"0.1.0\"";
 
     #[test]
     fn filtering_tests_works_without_crate_in_test_name() {
-        let mocked_tests: Vec<TestConfig> = vec![
-            TestConfig {
+        let mocked_tests: Vec<TestCase> = vec![
+            TestCase {
                 name: "crate1::do_thing".to_string(),
                 available_gas: None,
             },
-            TestConfig {
+            TestCase {
                 name: "crate2::run_other_thing".to_string(),
                 available_gas: None,
             },
-            TestConfig {
+            TestCase {
                 name: "thing".to_string(),
                 available_gas: None,
             },
@@ -618,15 +548,15 @@ version = \"0.1.0\"";
         assert_eq!(
             result,
             vec![
-                TestConfig {
+                TestCase {
                     name: "crate1::do_thing".to_string(),
                     available_gas: None,
                 },
-                TestConfig {
+                TestCase {
                     name: "crate2::run_other_thing".to_string(),
                     available_gas: None,
                 },
-                TestConfig {
+                TestCase {
                     name: "thing".to_string(),
                     available_gas: None,
                 },
@@ -636,16 +566,16 @@ version = \"0.1.0\"";
 
     #[test]
     fn strip_path() {
-        let mocked_tests: Vec<TestConfig> = vec![
-            TestConfig {
-                name: "/Users/user/protostar/protostar-rust/tests/data/simple_test/src::test::test_fib".to_string(),
+        let mocked_tests: Vec<TestCase> = vec![
+            TestCase {
+                name: "/Users/user/forge/tests/data/simple_package/src::test::test_fib".to_string(),
                 available_gas: None,
             },
-            TestConfig {
+            TestCase {
                 name: "crate2::run_other_thing".to_string(),
                 available_gas: None,
             },
-            TestConfig {
+            TestCase {
                 name: "src/crate2::run_other_thing".to_string(),
                 available_gas: None,
             },
@@ -655,15 +585,15 @@ version = \"0.1.0\"";
         assert_eq!(
             striped_tests,
             vec![
-                TestConfig {
+                TestCase {
                     name: "src::test::test_fib".to_string(),
                     available_gas: None,
                 },
-                TestConfig {
+                TestCase {
                     name: "crate2::run_other_thing".to_string(),
                     available_gas: None,
                 },
-                TestConfig {
+                TestCase {
                     name: "crate2::run_other_thing".to_string(),
                     available_gas: None,
                 },

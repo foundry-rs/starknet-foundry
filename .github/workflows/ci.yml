@@ -3,12 +3,15 @@ name: CI
 on:
   pull_request:
   merge_group:
+  push:
+    branches:
+      - master
 
 jobs:
   test-forge:
     name: Test Forge
     env:
-      SCARB_VERSION: 0.5.0-alpha.0
+      SCARB_VERSION: 0.5.1
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -16,6 +19,10 @@ jobs:
           submodules: true
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@dd05243424bd5c0e585e4b55eb2d7615cdd32f1f
+        with:
+          workspaces: |
+            starknet-foundry
+            cairo
       - uses: software-mansion/setup-scarb@v1.0.0
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
@@ -34,6 +41,9 @@ jobs:
         with:
           toolchain: stable
       - uses: Swatinem/rust-cache@dd05243424bd5c0e585e4b55eb2d7615cdd32f1f
+        with:
+          workspaces: |
+            starknet-foundry
       - uses: actions/setup-python@v4
         with:
           python-version: '3.9'
@@ -48,7 +58,8 @@ jobs:
             pip install starknet-devnet==${{ env.DEVNET_VERSION }}
       - uses: asdf-vm/actions/setup@v2
       - name: Prepare for tests
-        run: bash ./scripts/prepare_for_tests.sh
+        run: |
+          ./scripts/prepare_for_tests.sh
       - name: Run tests
         run: cargo test --manifest-path ./starknet-foundry/Cargo.toml -p cast
 
@@ -62,6 +73,10 @@ jobs:
         with:
           toolchain: stable
       - uses: Swatinem/rust-cache@dd05243424bd5c0e585e4b55eb2d7615cdd32f1f
+        with:
+          workspaces: |
+            starknet-foundry
+            cairo
       - name: Check forge formatting
         run: cargo fmt --manifest-path ./starknet-foundry/Cargo.toml --check -p forge
       - name: Check cast formatting
@@ -84,4 +99,9 @@ jobs:
         with:
           toolchain: stable
       - uses: Swatinem/rust-cache@dd05243424bd5c0e585e4b55eb2d7615cdd32f1f
-      - run: cargo clippy --manifest-path ./starknet-foundry/Cargo.toml --all-targets --all-features -- --no-deps
+        with:
+          workspaces: |
+            starknet-foundry
+            cairo
+      - run: cargo lint
+        working-directory: ./starknet-foundry

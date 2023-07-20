@@ -7,17 +7,24 @@ edition = "2021"
 
 [dependencies]
 anyhow.workspace = true
-test-collector = { path = "../test-collector" }
-cheatable-starknet = { path = "../cheatable-starknet" }
-cairo-felt-blockifier = { path = "../compatibility/cairo-felt-blockifier" }
-cairo-lang-runner.workspace = true
-cairo-lang-sierra-to-casm = { path = "../../../cairo/crates/cairo-lang-sierra-to-casm", version = "2.0.0-rc2" }
-cairo-lang-sierra = { path = "../../../cairo/crates/cairo-lang-sierra", version = "2.0.0-rc2" }
-cairo-lang-utils = { path = "../../../cairo/crates/cairo-lang-utils", version = "2.0.0-rc2" }
-cairo-lang-starknet = { path = "../../../cairo/crates/cairo-lang-starknet", version = "2.0.0-rc2" }
-cairo-lang-casm.workspace = true
 blockifier.workspace = true
+camino.workspace = true
+include_dir.workspace = true
 starknet_api.workspace = true
+tempfile.workspace = true
+rayon.workspace = true
+cairo-lang-runner.workspace = true
+cairo-lang-casm.workspace = true
+test-collector = { path = "../test-collector" }
+cairo-felt-blockifier = { path = "../compatibility/cairo-felt-blockifier" }
+cheatable-starknet = { path = "../cheatable-starknet" }
+cairo-lang-runner = { path = "../../../cairo/crates/cairo-lang-runner", version = "2.0.1" }
+cairo-lang-sierra-to-casm = { path = "../../../cairo/crates/cairo-lang-sierra-to-casm", version = "2.0.1" }
+cairo-lang-sierra = { path = "../../../cairo/crates/cairo-lang-sierra", version = "2.0.1" }
+cairo-lang-utils = { path = "../../../cairo/crates/cairo-lang-utils", version = "2.0.1" }
+cairo-lang-starknet = { path = "../../../cairo/crates/cairo-lang-starknet", version = "2.0.1" }
+cairo-lang-compiler = { path = "../../../cairo/crates/cairo-lang-compiler", version = "2.0.1" }
+cairo-lang-filesystem = { path = "../../../cairo/crates/cairo-lang-filesystem", version = "2.0.1" }
 schemars = { version = "0.8.12", features = ["preserve_order"] }
 parity-scale-codec = "3.5.0"
 parity-scale-codec-derive = "3.1.4"
@@ -27,7 +34,6 @@ serde_json = "1.0.96"
 serde = { version = "1.0.163", features = ["derive"] }
 itertools = "0.10.5"
 walkdir = "2.3.3"
-camino = "1.1.4"
 scarb-metadata = "1.4.2"
 project-root = "0.2.2"
 console = "0.15.7"
@@ -35,8 +41,6 @@ assert_fs = "1.0.13"
 snapbox = "0.4.11"
 once_cell = "1.18.0"
 indoc = "2.0.1"
-include_dir = "0.7.3"
-tempfile = "3.6.0"
 cairo-vm = "0.8.1"
 ark-ff = "0.4.0-alpha.7"
 ark-std = "0.3.0"
@@ -44,6 +48,14 @@ ark-secp256k1 = "0.4.0"
 ark-secp256r1 = "0.4.0"
 num-traits = "0.2"
 thiserror = "1.0.43"
+regex = "1.9.1"
+openssl = { version = "0.10", features = ["vendored"] }
+which = "4.4.0"
+
 
 [lib]
 name = "forge"
+
+[[bin]]
+name = "snforge"
+path = "src/main.rs"

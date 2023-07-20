@@ -1,17 +1,19 @@
-use crate::helpers::constants::MAP_CONTRACT_ADDRESS;
+use crate::helpers::constants::{MAP_CONTRACT_ADDRESS_V1, MAP_CONTRACT_ADDRESS_V2};
 use crate::helpers::fixtures::{default_cli_args, invoke_map_contract};
 use crate::helpers::runner::runner;
 use indoc::indoc;
+use test_case::test_case;
 
-#[tokio::test]
-async fn test_happy_case() {
+#[test_case(MAP_CONTRACT_ADDRESS_V1 ; "when cairo1 contract")]
+#[test_case(MAP_CONTRACT_ADDRESS_V2 ; "when cairo2 contract")]
+fn test_happy_case(contract_address: &str) {
     let mut args = default_cli_args();
     args.append(&mut vec![
         "--json",
         "call",
         "--contract-address",
-        MAP_CONTRACT_ADDRESS,
-        "--function-name",
+        contract_address,
+        "--function",
         "get",
         "--calldata",
         "0x0",
@@ -29,16 +31,18 @@ async fn test_happy_case() {
 "#});
 }
 
+#[test_case(MAP_CONTRACT_ADDRESS_V1, "user1" ; "when cairo1 contract")]
+#[test_case(MAP_CONTRACT_ADDRESS_V2, "user2" ; "when cairo2 contract")]
 #[tokio::test]
-async fn test_call_after_storage_changed() {
-    invoke_map_contract("0x2", "0x3").await;
+async fn test_call_after_storage_changed(contract_address: &str, account: &str) {
+    invoke_map_contract("0x2", "0x3", account, contract_address).await;
 
     let mut args = default_cli_args();
     args.append(&mut vec![
         "call",
         "--contract-address",
-        MAP_CONTRACT_ADDRESS,
-        "--function-name",
+        contract_address,
+        "--function",
         "get",
         "--calldata",
         "0x2",
@@ -59,43 +63,45 @@ async fn test_contract_does_not_exist() {
         "call",
         "--contract-address",
         "0x1",
-        "--function-name",
+        "--function",
         "get",
     ]);
 
     let snapbox = runner(&args);
 
-    snapbox.assert().success().stderr_matches(indoc! {r#"
+    snapbox.assert().stderr_matches(indoc! {r#"
         error: There is no contract at the specified address
     "#});
 }
 
-#[tokio::test]
-async fn test_wrong_function_name() {
+#[test_case(MAP_CONTRACT_ADDRESS_V1 ; "when cairo1 contract")]
+#[test_case(MAP_CONTRACT_ADDRESS_V2 ; "when cairo2 contract")]
+fn test_wrong_function_name(contract_address: &str) {
     let mut args = default_cli_args();
     args.append(&mut vec![
         "call",
         "--contract-address",
-        MAP_CONTRACT_ADDRESS,
-        "--function-name",
+        contract_address,
+        "--function",
         "nonexistent_get",
     ]);
 
     let snapbox = runner(&args);
 
-    snapbox.assert().success().stderr_matches(indoc! {r#"
+    snapbox.assert().stderr_matches(indoc! {r#"
         error: An error occurred in the called contract
     "#});
 }
 
-#[tokio::test]
-async fn test_wrong_calldata() {
+#[test_case(MAP_CONTRACT_ADDRESS_V1 ; "when cairo1 contract")]
+#[test_case(MAP_CONTRACT_ADDRESS_V2 ; "when cairo2 contract")]
+fn test_wrong_calldata(contract_address: &str) {
     let mut args = default_cli_args();
     args.append(&mut vec![
         "call",
         "--contract-address",
-        MAP_CONTRACT_ADDRESS,
-        "--function-name",
+        contract_address,
+        "--function",
         "get",
         "--calldata",
         "0x1 0x2",
@@ -103,7 +109,7 @@ async fn test_wrong_calldata() {
 
     let snapbox = runner(&args);
 
-    snapbox.assert().success().stderr_matches(indoc! {r#"
+    snapbox.assert().stderr_matches(indoc! {r#"
         error: Execution was reverted; failure reason: [0x496e70757420746f6f206c6f6e6720666f7220617267756d656e7473].
     "#});
 }

@@ -1,4 +1,6 @@
 mod call;
+mod declare;
 mod deploy;
 mod invoke;
-mod wait_for_tx;
+mod main_tests;
+mod multicall;
