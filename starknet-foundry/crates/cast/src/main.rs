@@ -231,7 +231,14 @@ async fn main() -> Result<()> {
                 cli.int_format,
                 cli.json,
             ),
-            account::Commands::Deploy { .. } => todo!(),
+            account::Commands::Deploy {
+                path,
+                name,
+                max_fee,
+            } => {
+                let provider = get_provider(&rpc_url, &network).await?;
+                starknet_commands::account::deploy(&provider, network, path, name, max_fee).await
+            }
         },
     }
 }

@@ -1,15 +1,15 @@
 use anyhow::{bail, Result};
 use camino::Utf8PathBuf;
-use cast::{get_network, print_formatted, Network};
+use cast::{get_network, parse_number, print_formatted, Network};
 use clap::{Args, Subcommand};
 use rand::rngs::OsRng;
 use rand::RngCore;
 use serde_json::json;
-use starknet::accounts::{AccountDeployment, OpenZeppelinAccountFactory};
+use starknet::accounts::{AccountDeployment, AccountFactory, OpenZeppelinAccountFactory};
 use starknet::core::types::FieldElement;
 use starknet::core::utils::get_contract_address;
 use starknet::providers::jsonrpc::HttpTransport;
-use starknet::providers::JsonRpcClient;
+use starknet::providers::{JsonRpcClient, Provider};
 use starknet::signers::{LocalWallet, SigningKey};
 use std::collections::HashMap;
 
@@ -37,7 +37,7 @@ pub enum Commands {
         #[clap(short, long)]
         salt: Option<FieldElement>,
 
-        #[clap(short, long, value_delimiter = ' ')]
+        #[clap(short, long, value_delimiter = ' ', num_args = 0..)]
         constructor_calldata: Vec<FieldElement>,
 
         /// If passed, a profile with corresponding data will be created in Scarb.toml
@@ -55,7 +55,7 @@ pub enum Commands {
         name: String,
 
         #[clap(short, long)]
-        max_fee: FieldElement,
+        max_fee: Option<FieldElement>,
     },
 }
 
@@ -135,6 +135,41 @@ pub fn create(
         output.push(("command", "Create account".to_string()));
         print_formatted(output, int_format, json, false).expect("Couldn't print account secrets");
     }
+
+    Ok(())
+}
+
+pub async fn deploy(
+    provider: &JsonRpcClient<HttpTransport>,
+    network: String,
+    path: Utf8PathBuf,
+    name: String,
+    max_fee: Option<FieldElement>,
+) -> Result<()> {
+    let contents = std::fs::read_to_string(path.clone())?;
+    let mut items: serde_json::Value =
+        serde_json::from_str(&contents).expect("failed to parse json file");
+    let network = get_network(&network)?.get_value();
+
+    println!("{}", &items[network][&name]["private_key"]);
+
+    let private_key = SigningKey::from_secret_scalar(
+        parse_number(items[network][&name]["private_key"].as_str().unwrap()).expect("x"),
+    );
+
+    let factory = OpenZeppelinAccountFactory::new(
+        parse_number(OZ_CLASS_HASH).expect("xd"),
+        provider.chain_id().await.expect("xdd"),
+        LocalWallet::from_signing_key(private_key),
+        provider,
+    )
+    .await?;
+
+    let deployment = factory
+        .deploy(parse_number(items[network][&name]["salt"].as_str().unwrap()).expect("xddd"));
+    let deployment_tx = deployment.max_fee(max_fee.expect("xdddd")).send().await?;
+
+    println!("{}", deployment_tx.transaction_hash);
 
     Ok(())
 }
