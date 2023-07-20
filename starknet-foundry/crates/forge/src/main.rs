@@ -12,7 +12,7 @@ use forge::{pretty_printing, RunnerConfig};
 use forge::scarb::{get_contracts_map, try_get_starknet_artifacts_path};
 use std::process::Command;
 
-static CORELIB_PATH: Dir = include_dir!("../cairo/corelib/src");
+static CORELIB_PATH: Dir = include_dir!("../corelib/src");
 static PREDEPLOYED_CONTRACTS: Dir = include_dir!("crates/cheatable-starknet/predeployed-contracts");
 
 #[derive(Parser, Debug)]
@@ -71,7 +71,8 @@ fn main_execution() -> Result<()> {
 
     for package in &scarb_metadata.workspace.members {
         let forge_config = forge::scarb::config_from_scarb_for_package(&scarb_metadata, package)?;
-        let (base_path, dependencies, target_name) =
+
+        let (base_path, _corelib_path, dependencies, target_name) =
             forge::scarb::dependencies_for_package(&scarb_metadata, package)?;
         let runner_config = RunnerConfig::new(
             args.test_name.clone(),
@@ -97,12 +98,6 @@ fn main_execution() -> Result<()> {
     }
 
     // Explicitly close the temporary directories so we can handle the errors
-    corelib_dir.close().with_context(|| {
-        anyhow!(
-            "Failed to close temporary directory = {} with corelib. Corelib files might have not been released from filesystem",
-            corelib_path.display()
-        )
-    })?;
     predeployed_contracts_dir.close().with_context(|| {
         anyhow!(
             "Failed to close temporary directory = {} with predeployed contracts. Predeployed contract files might have not been released from filesystem",
