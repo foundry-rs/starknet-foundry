@@ -6,7 +6,7 @@ use crate::starknet_commands::{
 use anyhow::{bail, Result};
 use camino::Utf8PathBuf;
 use cast::{get_account, get_block_id, get_provider, print_formatted};
-use clap::{Command, Parser, Subcommand};
+use clap::{Parser, Subcommand};
 
 mod helpers;
 mod starknet_commands;
@@ -230,11 +230,7 @@ async fn main() -> Result<()> {
                 print_account_create_result(result, cli.int_format, cli.json)?;
                 Ok(())
             }
-            account::Commands::Deploy {
-                path,
-                name,
-                max_fee,
-            } => {
+            account::Commands::Deploy { .. } => {
                 // TODO
                 Ok(())
             }
