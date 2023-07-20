@@ -235,7 +235,7 @@ fn test_deploy_fails_with_incorrect_class_hash() {
         use array::ArrayTrait;
 
         #[test]
-        fn deploy_not_existing_class_hash() {
+        fn deploy_non_existing_class_hash() {
             let mut calldata = ArrayTrait::new();
 
             let prepared = PreparedContract { class_hash: 'made-up-class-hash', constructor_calldata: @calldata };
@@ -267,7 +267,7 @@ fn test_deploy_fails_with_incorrect_class_hash() {
     )
     .unwrap();
 
-    assert_case_output_contains!(result, "deploy_not_existing_class_hash", "not declared");
+    assert_case_output_contains!(result, "deploy_non_existing_class_hash", "not declared");
     assert_failed!(result);
 }
 
