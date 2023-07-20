@@ -1,12 +1,10 @@
-use crate::helpers::constants::DEFAULT_MULTICALL_CONTENTS;
 use crate::starknet_commands::{
     deploy::{deploy, print_deploy_result},
     invoke::{invoke, print_invoke_result},
 };
-use anyhow::{bail, Result};
+use anyhow::Result;
 use camino::Utf8PathBuf;
 use cast::parse_number;
-use clap::{Args, Subcommand};
 use serde::Deserialize;
 use starknet::accounts::SingleOwnerAccount;
 use starknet::core::types::FieldElement;
@@ -35,31 +33,6 @@ struct InvokeCall {
     function: String,
     inputs: Vec<FieldElement>,
     max_fee: Option<FieldElement>,
-}
-
-#[derive(Args)]
-#[command(about = "Execute multiple calls at once", long_about = None)]
-pub struct Multicall {
-    #[clap(subcommand)]
-    pub command: Commands,
-}
-
-#[derive(Debug, Subcommand)]
-pub enum Commands {
-    Run {
-        /// path to the toml file with declared operations
-        #[clap(short = 'p', long = "path")]
-        path: Utf8PathBuf,
-    },
-    New {
-        /// output path to the file where the template is going to be saved
-        #[clap(short = 'p', long = "output-path")]
-        output_path: Option<Utf8PathBuf>,
-
-        /// if the file specified in output-path exists, this flag decides if it is going to be overwritten
-        #[clap(short = 'o', long = "overwrite")]
-        overwrite: Option<bool>,
-    },
 }
 
 pub async fn run(
@@ -123,28 +96,4 @@ pub async fn run(
     }
 
     Ok(())
-}
-
-pub fn new(maybe_output_path: Option<Utf8PathBuf>, overwrite: bool) -> Result<String> {
-    if let Some(output_path) = maybe_output_path {
-        if output_path.exists() {
-            if !output_path.is_file() {
-                bail!("output file cannot be a directory");
-            }
-            if !overwrite {
-                bail!(
-                    "output file already exists, if you want to overwrite it, use the `overwrite` flag"
-                );
-            }
-        }
-        std::fs::write(output_path.clone(), DEFAULT_MULTICALL_CONTENTS)?;
-        return Ok(format!(
-            "Multicall template successfully saved in {output_path}"
-        ));
-    }
-    Ok(DEFAULT_MULTICALL_CONTENTS.to_string())
-}
-
-pub fn print_new_result(new_result: &str) {
-    println!("{new_result}");
 }
