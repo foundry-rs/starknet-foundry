@@ -2,12 +2,13 @@ use std::any::Any;
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
-use std::io;
+use std::{io, hint};
 use std::path::PathBuf;
 
 use crate::scarb::StarknetContractArtifacts;
 use anyhow::{anyhow, Context, Result};
 use blockifier::abi::abi_utils::selector_from_name;
+use blockifier::execution::contract_address;
 use blockifier::execution::contract_class::{
     ContractClass as BlockifierContractClass, ContractClassV1,
 };
@@ -23,6 +24,7 @@ use blockifier::transaction::transactions::{DeclareTransaction, ExecutableTransa
 use cairo_felt::Felt252;
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
 use cairo_vm::hint_processor::hint_processor_definition::HintReference;
+use cairo_vm::hint_processor::hint_processor_utils;
 use cairo_vm::serde::deserialize_program::ApTracking;
 use cairo_vm::types::exec_scope::ExecutionScopes;
 use cairo_vm::types::relocatable::Relocatable;
@@ -70,6 +72,7 @@ pub struct CairoHintProcessor<'a> {
     pub original_cairo_hint_processor: OriginalCairoHintProcessor<'a>,
     pub blockifier_state: CachedState<DictStateReader>,
     pub contracts: &'a HashMap<String, StarknetContractArtifacts>,
+    pub rolled_contracts: HashMap<ContractAddress, Felt252>,
 }
 
 impl ResourceTracker for CairoHintProcessor<'_> {
@@ -96,6 +99,17 @@ impl ResourceTracker for CairoHintProcessor<'_> {
     }
 }
 
+trait ForgeHintProcessor {
+    fn start_roll(
+        &mut self,
+        vm: &mut VirtualMachine,
+        inputs: &[Felt252],
+        result_segment_ptr: &mut Relocatable,
+        contracts: &HashMap<String, StarknetContractArtifacts>,
+    ) -> Result<(), EnhancedHintError>; 
+}
+
+
 impl HintProcessorLogic for CairoHintProcessor<'_> {
     fn execute_hint(
         &mut self,
@@ -113,10 +127,9 @@ impl HintProcessorLogic for CairoHintProcessor<'_> {
             output_end,
         })) = maybe_extended_hint
         {
-            return execute_cheatcode_hint(
+            return self.execute_cheatcode_hint(
                 vm,
                 exec_scopes,
-                &mut self.blockifier_state,
                 selector,
                 input_start,
                 input_end,
@@ -144,6 +157,108 @@ impl HintProcessorLogic for CairoHintProcessor<'_> {
             self.original_cairo_hint_processor.string_to_hint[hint_code].clone(),
         ))
     }
+}
+
+impl ForgeHintProcessor for CairoHintProcessor<'_> {
+    fn start_roll(
+        &mut self,
+        _vm: &mut VirtualMachine,
+        inputs: &[Felt252],
+        _result_segment_ptr: &mut Relocatable,
+        _contracts: &HashMap<String, StarknetContractArtifacts>,
+    ) -> Result<(), EnhancedHintError> {
+        let contract_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
+            inputs[0].clone().to_be_bytes(),
+        )?)?);
+        let value = inputs[1].clone();
+        self.rolled_contracts.insert(contract_address, value); 
+    
+        // insert_at_pointer(vm, result_segment_ptr, Felt252::from(0))?;
+        Ok(())
+    }
+}
+
+impl CairoHintProcessor<'_> {
+    #[allow(clippy::trivially_copy_pass_by_ref, clippy::too_many_arguments)]
+    pub fn execute_cheatcode_hint(
+        &mut self,
+        vm: &mut VirtualMachine,
+        _exec_scopes: &mut ExecutionScopes,
+        selector: &BigIntAsHex,
+        input_start: &ResOperand,
+        input_end: &ResOperand,
+        output_start: &CellRef,
+        output_end: &CellRef,
+        contracts: &HashMap<String, StarknetContractArtifacts>,
+    ) -> Result<(), HintError> {
+        // Parse the selector.
+        let selector = &selector.value.to_bytes_be().1;
+        let selector = std::str::from_utf8(selector).map_err(|_| {
+            HintError::CustomHint(Box::from(
+                "Failed to parse the  cheatcode selector".to_string(),
+            ))
+        })?;
+
+        // Extract the inputs.
+        let input_start = extract_relocatable(vm, input_start)?;
+        let input_end = extract_relocatable(vm, input_end)?;
+        let inputs = read_data_from_range(vm, input_start, input_end)
+            .map_err(|_| HintError::CustomHint(Box::from("Failed to read input data".to_string())))?;
+
+        self.match_cheatcode_by_selector(
+            vm,
+            selector,
+            inputs,
+            output_start,
+            output_end,
+            contracts,
+        )
+        .map_err(Into::into)
+    }
+
+    #[allow(unused, clippy::too_many_lines, clippy::trivially_copy_pass_by_ref)]
+    fn match_cheatcode_by_selector(
+        &mut self,
+        vm: &mut VirtualMachine,
+        selector: &str,
+        inputs: Vec<Felt252>,
+        output_start: &CellRef,
+        output_end: &CellRef,
+        contracts: &HashMap<String, StarknetContractArtifacts>,
+    ) -> Result<(), EnhancedHintError> {
+        let mut result_segment_ptr = vm.add_memory_segment();
+        let result_start = result_segment_ptr;
+
+        match selector {
+            "prepare" => todo!(),
+            "start_roll" => self.start_roll(vm, &inputs, &mut result_segment_ptr, contracts),
+            "stop_roll" => todo!(),
+            "start_warp" => todo!(),
+            "stop_warp" => todo!(),
+            "start_prank" => todo!(),
+            "stop_prank" => todo!(),
+            "mock_call" => todo!(),
+            "declare" => declare(
+                vm,
+                &mut self.blockifier_state,
+                &inputs,
+                &mut result_segment_ptr,
+                contracts,
+            ),
+            "deploy" => deploy(vm, &mut self.blockifier_state, &inputs, &mut result_segment_ptr),
+            "print" => {
+                print(inputs);
+                Ok(())
+            }
+            _ => Err(anyhow!("Unknown cheatcode selector: {selector}")).map_err(Into::into),
+        }?;
+
+        let result_end = result_segment_ptr;
+        insert_value_to_cellref!(vm, output_start, result_start)?;
+        insert_value_to_cellref!(vm, output_end, result_end)?;
+
+        Ok(())
+}
 }
 
 #[allow(dead_code)]
@@ -262,88 +377,6 @@ impl From<EnhancedHintError> for HintError {
     }
 }
 
-#[allow(clippy::trivially_copy_pass_by_ref, clippy::too_many_arguments)]
-fn execute_cheatcode_hint(
-    vm: &mut VirtualMachine,
-    _exec_scopes: &mut ExecutionScopes,
-    blockifier_state: &mut CachedState<DictStateReader>,
-    selector: &BigIntAsHex,
-    input_start: &ResOperand,
-    input_end: &ResOperand,
-    output_start: &CellRef,
-    output_end: &CellRef,
-    contracts: &HashMap<String, StarknetContractArtifacts>,
-) -> Result<(), HintError> {
-    // Parse the selector.
-    let selector = &selector.value.to_bytes_be().1;
-    let selector = std::str::from_utf8(selector).map_err(|_| {
-        HintError::CustomHint(Box::from(
-            "Failed to parse the  cheatcode selector".to_string(),
-        ))
-    })?;
-
-    // Extract the inputs.
-    let input_start = extract_relocatable(vm, input_start)?;
-    let input_end = extract_relocatable(vm, input_end)?;
-    let inputs = read_data_from_range(vm, input_start, input_end)
-        .map_err(|_| HintError::CustomHint(Box::from("Failed to read input data".to_string())))?;
-
-    match_cheatcode_by_selector(
-        vm,
-        blockifier_state,
-        selector,
-        inputs,
-        output_start,
-        output_end,
-        contracts,
-    )
-    .map_err(Into::into)
-}
-
-#[allow(unused, clippy::too_many_lines, clippy::trivially_copy_pass_by_ref)]
-fn match_cheatcode_by_selector(
-    vm: &mut VirtualMachine,
-    blockifier_state: &mut CachedState<DictStateReader>,
-    selector: &str,
-    inputs: Vec<Felt252>,
-    output_start: &CellRef,
-    output_end: &CellRef,
-    contracts: &HashMap<String, StarknetContractArtifacts>,
-) -> Result<(), EnhancedHintError> {
-    let mut result_segment_ptr = vm.add_memory_segment();
-    let result_start = result_segment_ptr;
-
-    match selector {
-        "prepare" => todo!(),
-        "start_roll" => todo!(),
-        "stop_roll" => todo!(),
-        "start_warp" => todo!(),
-        "stop_warp" => todo!(),
-        "start_prank" => todo!(),
-        "stop_prank" => todo!(),
-        "mock_call" => todo!(),
-        "declare" => declare(
-            vm,
-            blockifier_state,
-            &inputs,
-            &mut result_segment_ptr,
-            contracts,
-        ),
-        "deploy" => deploy(vm, blockifier_state, &inputs, &mut result_segment_ptr),
-        "print" => {
-            print(inputs);
-            Ok(())
-        }
-        _ => Err(anyhow!("Unknown cheatcode selector: {selector}")).map_err(Into::into),
-    }?;
-
-    let result_end = result_segment_ptr;
-    insert_value_to_cellref!(vm, output_start, result_start)?;
-    insert_value_to_cellref!(vm, output_end, result_end)?;
-
-    Ok(())
-}
-
 fn print(inputs: Vec<Felt252>) {
     for value in inputs {
         if let Some(short_string) = as_cairo_short_string(&value) {
@@ -353,6 +386,7 @@ fn print(inputs: Vec<Felt252>) {
         }
     }
 }
+
 
 fn declare(
     vm: &mut VirtualMachine,
