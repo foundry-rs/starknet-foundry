@@ -24,6 +24,9 @@ It is not possible to run tests without these installed.
 
 ## Running Tests
 
+> ⚠️ Make sure you run `./scripts/prepare_for_tests.sh` after setting up the development environment, otherwise the
+> tests will fail.
+
 Tests can be run with:
 
 ```shell
