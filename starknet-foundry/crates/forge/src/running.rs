@@ -69,7 +69,6 @@ pub(crate) fn run_from_test_case(
         runner: Some(runner),
         starknet_state: StarknetState::default(),
         string_to_hint,
-        blockifier_state: None,
         run_resources: RunResources::default(),
     };
     let mut cairo_hint_processor = CairoHintProcessor {
