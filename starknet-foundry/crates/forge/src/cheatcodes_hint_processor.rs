@@ -48,13 +48,10 @@ use starknet_api::transaction::{
 use starknet_api::{patricia_key, stark_felt, StarknetApiError};
 use thiserror::Error;
 
-use crate::vm_memory::{
-    felt_from_pointer, insert_at_pointer, relocatable_from_pointer, usize_from_pointer,
-    write_cheatcode_panic,
-};
+use crate::vm_memory::write_cheatcode_panic;
 use cairo_lang_casm::hints::{Hint, StarknetHint};
 use cairo_lang_casm::operand::{CellRef, ResOperand};
-use cairo_lang_runner::casm_run::extract_relocatable;
+use cairo_lang_runner::casm_run::{extract_relocatable, vm_get_range, MemBuffer};
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{
     casm_run::{cell_ref_to_relocatable, extract_buffer, get_ptr},
@@ -174,19 +171,16 @@ fn execute_syscall(
     blockifier_state: &mut CachedState<DictStateReader>,
 ) -> Result<(), HintError> {
     let (cell, offset) = extract_buffer(system);
-    let mut system_ptr = get_ptr(vm, cell, &offset)?;
+    let system_ptr = get_ptr(vm, cell, &offset)?;
 
-    let selector = felt_from_pointer(vm, &mut system_ptr)
-        .unwrap()
-        .to_bytes_be();
+    let mut buffer = MemBuffer::new(vm, system_ptr);
 
-    let gas_counter = usize_from_pointer(vm, &mut system_ptr).unwrap();
-    let contract_address = felt_from_pointer(vm, &mut system_ptr).unwrap();
-    let entry_point_selector = felt_from_pointer(vm, &mut system_ptr).unwrap();
+    let selector = buffer.next_felt252()?.to_bytes_be();
+    let gas_counter = buffer.next_usize()?;
+    let contract_address = buffer.next_felt252()?.into_owned();
+    let entry_point_selector = buffer.next_felt252()?.into_owned();
 
-    let start = relocatable_from_pointer(vm, &mut system_ptr).unwrap();
-    let end = relocatable_from_pointer(vm, &mut system_ptr).unwrap();
-    let calldata = read_data_from_range(vm, start, end).unwrap();
+    let calldata = buffer.next_arr()?;
 
     assert_eq!(std::str::from_utf8(&selector).unwrap(), "CallContract");
     let call_result = call_contract(
@@ -202,18 +196,10 @@ fn execute_syscall(
         CallContractOutput::Panic { panic_data } => (panic_data, 1),
     };
 
-    insert_at_pointer(vm, &mut system_ptr, gas_counter).unwrap();
-    insert_at_pointer(vm, &mut system_ptr, Felt252::from(exit_code)).unwrap();
+    buffer.write(gas_counter)?;
+    buffer.write(Felt252::from(exit_code))?;
 
-    let mut ptr = vm.add_memory_segment();
-    let start = ptr;
-    for value in result {
-        insert_at_pointer(vm, &mut ptr, value).unwrap();
-    }
-    let end = ptr;
-
-    insert_at_pointer(vm, &mut system_ptr, start).unwrap();
-    insert_at_pointer(vm, &mut system_ptr, end).unwrap();
+    buffer.write_arr(result.iter())?;
 
     Ok(())
 }
@@ -344,7 +330,7 @@ fn execute_cheatcode_hint(
     // Extract the inputs.
     let input_start = extract_relocatable(vm, input_start)?;
     let input_end = extract_relocatable(vm, input_end)?;
-    let inputs = read_data_from_range(vm, input_start, input_end)
+    let inputs = vm_get_range(vm, input_start, input_end)
         .map_err(|_| HintError::CustomHint(Box::from("Failed to read input data".to_string())))?;
 
     match_cheatcode_by_selector(
@@ -470,8 +456,10 @@ fn declare(
     // result_segment.
     let felt_class_hash = felt252_from_hex_string(&class_hash.to_string()).unwrap();
 
-    insert_at_pointer(vm, result_segment_ptr, Felt252::from(0))?;
-    insert_at_pointer(vm, result_segment_ptr, felt_class_hash)?;
+    let mut buffer = MemBuffer::new(vm, *result_segment_ptr);
+
+    buffer.write(Felt252::from(0))?;
+    buffer.write(felt_class_hash)?;
 
     Ok(())
 }
@@ -536,9 +524,10 @@ fn deploy(
             .expect("Failed to get contract_address from return_data");
         let contract_address = Felt252::from_bytes_be(contract_address.bytes());
 
-        insert_at_pointer(vm, result_segment_ptr, 0).expect("Failed to insert error code");
-        insert_at_pointer(vm, result_segment_ptr, contract_address)
-            .expect("Failed to insert deployed contract address");
+        let mut buffer = MemBuffer::new(vm, *result_segment_ptr);
+
+        buffer.write(Felt252::from(0))?;
+        buffer.write(contract_address)?;
     } else {
         let revert_error = tx_info
             .revert_error
@@ -599,19 +588,6 @@ fn create_execute_calldata(
         .collect();
     execute_calldata.append(&mut calldata);
     Calldata(execute_calldata.into())
-}
-
-fn read_data_from_range(
-    vm: &VirtualMachine,
-    mut start: Relocatable,
-    end: Relocatable,
-) -> Result<Vec<Felt252>> {
-    let mut calldata: Vec<Felt252> = vec![];
-    while start != end {
-        let value = felt_from_pointer(vm, &mut start)?;
-        calldata.push(value);
-    }
-    Ok(calldata)
 }
 
 fn felt252_from_hex_string(value: &str) -> Result<Felt252> {
