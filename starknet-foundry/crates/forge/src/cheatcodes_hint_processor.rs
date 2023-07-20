@@ -769,7 +769,7 @@ mod test {
 
             let casm_contract_definition = std::fs::read_to_string(casm_contract_path)
                 .unwrap_or_else(|_| panic!("Failed to read file: {casm_contract_path:?}"));
-            let actual_class_hash = get_class_hash(casm_contract_definition.as_str());
+            let actual_class_hash = get_class_hash(casm_contract_definition.as_str()).unwrap();
             assert_eq!(
                 actual_class_hash,
                 ClassHash(stark_felt!(expected_class_hash))
