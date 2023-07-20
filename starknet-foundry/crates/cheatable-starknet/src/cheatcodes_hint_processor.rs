@@ -6,7 +6,11 @@ use std::io;
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use crate::scarb::StarknetContractArtifacts;
+use crate::constants::{
+    build_block_context, build_declare_transaction, build_invoke_transaction,
+    build_transaction_context, TEST_ACCOUNT_CONTRACT_ADDRESS,
+};
+use crate::state::DictStateReader;
 use anyhow::{anyhow, Context, Result};
 use blockifier::abi::abi_utils::selector_from_name;
 use blockifier::execution::contract_class::{
@@ -31,13 +35,9 @@ use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::errors::memory_errors::MemoryError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::vm_core::VirtualMachine;
-use cheatable_starknet::constants::{
-    build_block_context, build_declare_transaction, build_invoke_transaction,
-    build_transaction_context, TEST_ACCOUNT_CONTRACT_ADDRESS,
-};
-use cheatable_starknet::state::DictStateReader;
 use num_traits::{Num, ToPrimitive};
 use regex::Regex;
+use scarb::StarknetContractArtifacts;
 use serde::Deserialize;
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, PatriciaKey};
 use starknet_api::deprecated_contract_class::EntryPointType;

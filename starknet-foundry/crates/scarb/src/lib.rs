@@ -1,4 +1,3 @@
-use crate::ForgeConfigFromScarb;
 use anyhow::{anyhow, Context, Result};
 use camino::Utf8PathBuf;
 use scarb_metadata::{Metadata, PackageId};
@@ -6,6 +5,13 @@ use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs;
 use test_collector::LinkedLibrary;
+
+/// Represents forge config deserialized from Scarb.toml
+#[derive(Deserialize, Debug, PartialEq, Default)]
+pub struct ForgeConfigFromScarb {
+    #[serde(default)]
+    pub exit_first: bool,
+}
 
 #[allow(dead_code)]
 #[derive(Deserialize, Debug, PartialEq, Clone)]

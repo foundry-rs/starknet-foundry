@@ -2246,7 +2246,7 @@ dependencies = [
  "project-root",
  "rand",
  "reqwest",
- "scarb",
+ "scarb 0.5.2",
  "scarb-metadata",
  "serde",
  "serde_json",
@@ -2278,11 +2278,23 @@ version = "1.0.0"
 dependencies = [
  "anyhow",
  "blockifier 0.1.0 (git+https://github.com/starkware-libs/blockifier.git?rev=9238b4d)",
+ "cairo-felt 0.8.2",
  "cairo-felt-blockifier",
+ "cairo-lang-casm 2.0.1",
+ "cairo-lang-runner 2.0.1",
+ "cairo-lang-starknet 2.0.1",
+ "cairo-lang-utils 2.0.1",
+ "cairo-vm 0.8.2",
  "camino",
  "include_dir",
+ "num-traits 0.2.15",
+ "regex",
+ "scarb 0.1.0",
+ "serde",
+ "serde_json",
  "starknet_api 0.1.0 (git+https://github.com/starkware-libs/starknet-api?rev=a4c78ff)",
  "tempfile",
+ "thiserror",
 ]
 
 [[package]]
@@ -3125,14 +3137,12 @@ dependencies = [
  "ark-std 0.3.0",
  "assert_fs",
  "blockifier 0.1.0 (git+https://github.com/starkware-libs/blockifier.git?rev=9238b4d)",
- "cairo-felt 0.8.2",
  "cairo-lang-casm 2.0.1",
  "cairo-lang-compiler 2.0.1",
  "cairo-lang-filesystem 2.0.1",
  "cairo-lang-runner 2.0.1",
  "cairo-lang-sierra 2.0.1",
  "cairo-lang-sierra-to-casm 2.0.1",
- "cairo-lang-starknet 2.0.1",
  "cairo-lang-test-runner",
  "cairo-lang-utils 2.0.1",
  "cairo-vm 0.8.2",
@@ -3143,23 +3153,20 @@ dependencies = [
  "include_dir",
  "indoc",
  "itertools 0.10.5",
- "num-traits 0.2.15",
  "once_cell",
  "openssl",
  "parity-scale-codec 3.6.3",
  "parity-scale-codec-derive 3.6.3",
  "project-root",
  "rayon",
- "regex",
+ "scarb 0.1.0",
  "scarb-metadata",
  "schemars",
  "serde",
- "serde_json",
  "snapbox",
  "starknet_api 0.1.0 (git+https://github.com/starkware-libs/starknet-api?rev=a4c78ff)",
  "tempfile",
  "test-collector",
- "thiserror",
  "walkdir",
  "which",
 ]
@@ -5835,6 +5842,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "93fc1dc3aaa9bfed95e02e6eadabb4baf7e3078b0bd1b4d7b6b0b68378900502"
 dependencies = [
  "winapi-util",
+]
+
+[[package]]
+name = "scarb"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "camino",
+ "scarb-metadata",
+ "serde",
+ "serde_json",
+ "test-collector",
 ]
 
 [[package]]

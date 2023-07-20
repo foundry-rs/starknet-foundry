@@ -4,7 +4,8 @@ members = [
     "crates/test-collector",
     "crates/cast",
     "crates/compatibility/cairo-felt-blockifier",
-    "crates/cheatable-starknet"
+    "crates/cheatable-starknet",
+    "crates/scarb"
 ]
 
 [workspace.package]

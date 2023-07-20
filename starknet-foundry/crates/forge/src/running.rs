@@ -14,9 +14,9 @@ use cairo_vm::vm::runners::cairo_runner::RunResources;
 use camino::Utf8PathBuf;
 use test_collector::TestCase;
 
-use crate::cheatcodes_hint_processor::CairoHintProcessor;
-use crate::scarb::StarknetContractArtifacts;
 use crate::test_case_summary::TestCaseSummary;
+use cheatable_starknet::cheatcodes_hint_processor::CairoHintProcessor;
+use scarb::StarknetContractArtifacts;
 
 /// Builds `hints_dict` required in `cairo_vm::types::program::Program` from instructions.
 fn build_hints_dict<'b>(
