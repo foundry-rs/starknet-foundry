@@ -5,7 +5,7 @@ use traits::TryInto;
 use starknet::ContractAddress;
 use starknet::Felt252TryIntoContractAddress;
 use cheatcodes::PreparedContract;
-use protostar_print::PrintTrait;
+use forge_print::PrintTrait;
 
 use roll_test::IRollCheckerDispatcher;
 use roll_test::IRollCheckerDispatcherTrait;
