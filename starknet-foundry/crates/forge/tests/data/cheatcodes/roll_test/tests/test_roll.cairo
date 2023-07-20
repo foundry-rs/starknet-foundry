@@ -14,7 +14,7 @@ use roll_test::IRollCheckerDispatcherTrait;
 fn test_roll_simple() {
     assert(1 == 1, 'simple check');
     let class_hash = declare('RollChecker').unwrap();
-    let prepared = PreparedContract { contract_address: 1234, class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
+    let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
     let contract_address = deploy(prepared).unwrap();
     let contract_address: ContractAddress = contract_address.try_into().unwrap();
     let dispatcher = IRollCheckerDispatcher { contract_address };
