@@ -1,17 +1,15 @@
-use anyhow::{bail, Result};
+use anyhow::{anyhow, Result};
 use camino::Utf8PathBuf;
-use cast::{get_network, parse_number, print_formatted, Network};
+use cast::{get_network, parse_number};
 use clap::{Args, Subcommand};
 use rand::rngs::OsRng;
 use rand::RngCore;
-use serde_json::json;
-use starknet::accounts::{AccountDeployment, AccountFactory, OpenZeppelinAccountFactory};
+use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
 use starknet::core::types::FieldElement;
 use starknet::core::utils::get_contract_address;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider};
 use starknet::signers::{LocalWallet, SigningKey};
-use std::collections::HashMap;
 
 pub const OZ_CLASS_HASH: &str =
     "0x058d97f7d76e78f44905cc30cb65b91ea49a4b908a76703c54197bca90f81773";
@@ -39,10 +37,10 @@ pub enum Commands {
 
         #[clap(short, long, value_delimiter = ' ', num_args = 0..)]
         constructor_calldata: Vec<FieldElement>,
+        // If passed, a profile with corresponding data will be created in Scarb.toml
+        // #[clap(short, long)]
+        // as_profile: bool,
 
-        /// If passed, a profile with corresponding data will be created in Scarb.toml
-        #[clap(short, long)]
-        as_profile: bool,
         // TODO: think about supporting different account providers
     },
     Deploy {
@@ -65,11 +63,9 @@ pub fn create(
     maybe_name: Option<String>,
     maybe_network: Option<String>,
     maybe_salt: Option<FieldElement>,
-    constructor_calldata: Vec<FieldElement>,
-    save_as_profile: bool,
-    int_format: bool,
-    json: bool,
-) -> Result<()> {
+    constructor_calldata: &Vec<FieldElement>,
+    // save_as_profile: bool,
+) -> Result<Vec<(&'static str, String)>> {
     let private_key = SigningKey::from_random();
     let public_key = private_key.verifying_key();
     let salt = match maybe_salt {
@@ -79,12 +75,12 @@ pub fn create(
 
     let address = get_contract_address(
         salt,
-        FieldElement::from_hex_be(OZ_CLASS_HASH).unwrap(),
-        &constructor_calldata,
+        FieldElement::from_hex_be(OZ_CLASS_HASH)?,
+        constructor_calldata,
         FieldElement::ZERO,
     );
 
-    let mut output: Vec<(&str, String)> = vec![
+    let output: Vec<(&str, String)> = vec![
         ("private_key", format!("{:#x}", private_key.secret_scalar())),
         ("public_key", format!("{:#x}", public_key.scalar())),
         ("address", format!("{address:#x}")),
@@ -97,7 +93,7 @@ pub fn create(
             std::fs::write(output_path.clone(), "{}")?;
         }
 
-        match (maybe_name, maybe_network.clone()) {
+        return match (maybe_name, maybe_network) {
             (Some(name), Some(network)) => {
                 let contents = std::fs::read_to_string(output_path.clone())?;
                 let mut items: serde_json::Value =
@@ -106,7 +102,9 @@ pub fn create(
                 let network = get_network(&network)?.get_value();
 
                 if !items[network][&name].is_null() {
-                    bail!("Account with provided name already exists in this network")
+                    return Err(anyhow!(
+                        "Account with provided name already exists in this network"
+                    ));
                 }
 
                 let mut json_output: serde_json::Value = output
@@ -125,18 +123,24 @@ pub fn create(
                 std::fs::write(
                     output_path.clone(),
                     serde_json::to_string_pretty(&items).unwrap(),
-                )
-                .expect("xxx");
+                )?;
+
+                Ok(vec![(
+                    "message",
+                    "Account successfully created. Prefund generated address with some tokens."
+                        .to_string(),
+                )])
             }
-            (_, None) => bail!("Argument `network` has to be passed when `output-path` provided"),
-            (None, _) => bail!("Argument `name` has to be passed when `output-path` provided"),
-        }
-    } else {
-        output.push(("command", "Create account".to_string()));
-        print_formatted(output, int_format, json, false).expect("Couldn't print account secrets");
+            (_, None) => Err(anyhow!(
+                "Argument `network` has to be passed when `output-path` provided"
+            )),
+            (None, _) => Err(anyhow!(
+                "Argument `name` has to be passed when `output-path` provided"
+            )),
+        };
     }
 
-    Ok(())
+    Ok(output)
 }
 
 pub async fn deploy(
@@ -147,7 +151,7 @@ pub async fn deploy(
     max_fee: Option<FieldElement>,
 ) -> Result<()> {
     let contents = std::fs::read_to_string(path.clone())?;
-    let mut items: serde_json::Value =
+    let items: serde_json::Value =
         serde_json::from_str(&contents).expect("failed to parse json file");
     let network = get_network(&network)?.get_value();
 

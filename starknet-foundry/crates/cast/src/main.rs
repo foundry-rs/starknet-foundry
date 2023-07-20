@@ -216,21 +216,38 @@ async fn main() -> Result<()> {
                 name,
                 salt,
                 constructor_calldata,
-                as_profile,
-            } => starknet_commands::account::create(
-                output_path,
-                name,
-                if network.is_empty() {
-                    None
-                } else {
-                    Some(network)
-                },
-                salt,
-                constructor_calldata,
-                as_profile,
-                cli.int_format,
-                cli.json,
-            ),
+                // as_profile,
+            } => {
+                let result = starknet_commands::account::create(
+                    output_path,
+                    name,
+                    if network.is_empty() {
+                        None
+                    } else {
+                        Some(network)
+                    },
+                    salt,
+                    &constructor_calldata,
+                    // as_profile,
+                );
+
+                match result {
+                    Ok(mut values) => {
+                        values.insert(0, ("command", "Create account".to_string()));
+                        print_formatted(values, cli.int_format, cli.json, false)?;
+                    }
+                    Err(error) => {
+                        print_formatted(
+                            vec![("error", error.to_string())],
+                            cli.int_format,
+                            cli.json,
+                            true,
+                        )?;
+                    }
+                };
+
+                Ok(())
+            }
             account::Commands::Deploy {
                 path,
                 name,
