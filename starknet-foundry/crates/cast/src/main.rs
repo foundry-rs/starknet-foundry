@@ -6,7 +6,7 @@ use crate::starknet_commands::{
 use anyhow::{bail, Result};
 use camino::Utf8PathBuf;
 use cast::{get_account, get_block_id, get_provider, print_formatted};
-use clap::{Parser, Subcommand};
+use clap::{Command, Parser, Subcommand};
 
 mod helpers;
 mod starknet_commands;
@@ -81,10 +81,13 @@ enum Commands {
 async fn main() -> Result<()> {
     let cli = Cli::parse();
 
-    let accounts_file_path =
-        Utf8PathBuf::from(shellexpand::tilde(&cli.accounts_file_path).to_string());
-    if !&accounts_file_path.exists() {
-        bail! {"Accounts file {} does not exist! Make sure to supply correct path to accounts file.", cli.accounts_file_path}
+    let mut accounts_file_path = Utf8PathBuf::new();
+    if let Commands::Account(_) = cli.command {
+    } else {
+        accounts_file_path.push(shellexpand::tilde(&cli.accounts_file_path).to_string());
+        if !&accounts_file_path.exists() {
+            bail! {"Accounts file {} does not exist! Make sure to supply correct path to accounts file.", cli.accounts_file_path}
+        }
     }
 
     let config = parse_scarb_config(&cli.profile, cli.path_to_scarb_toml)?;
