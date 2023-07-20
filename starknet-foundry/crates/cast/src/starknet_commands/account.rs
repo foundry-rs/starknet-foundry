@@ -58,9 +58,9 @@ pub enum Commands {
 pub fn create(
     maybe_output_path: Option<Utf8PathBuf>,
     maybe_name: Option<String>,
-    maybe_network: Option<String>,
+    network: &str,
     maybe_salt: Option<FieldElement>,
-    constructor_calldata: &Vec<FieldElement>,
+    constructor_calldata: &[FieldElement],
     // save_as_profile: bool,
 ) -> Result<Vec<(&'static str, String)>> {
     let private_key = SigningKey::from_random();
@@ -90,13 +90,13 @@ pub fn create(
             std::fs::write(output_path.clone(), "{}")?;
         }
 
-        return match (maybe_name, maybe_network) {
-            (Some(name), Some(network)) => {
+        return match (maybe_name, network.is_empty()) {
+            (Some(name), false) => {
                 let contents = std::fs::read_to_string(output_path.clone())?;
                 let mut items: serde_json::Value =
                     serde_json::from_str(&contents).expect("failed to parse json file");
 
-                let network = get_network(&network)?.get_value();
+                let network = get_network(network)?.get_value();
 
                 if !items[network][&name].is_null() {
                     return Err(anyhow!(
@@ -128,7 +128,7 @@ pub fn create(
                         .to_string(),
                 )])
             }
-            (_, None) => Err(anyhow!(
+            (_, true) => Err(anyhow!(
                 "Argument `network` has to be passed when `output-path` provided"
             )),
             (None, _) => Err(anyhow!(

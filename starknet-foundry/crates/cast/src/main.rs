@@ -221,11 +221,7 @@ async fn main() -> Result<()> {
                 let result = starknet_commands::account::create(
                     output_path,
                     name,
-                    if network.is_empty() {
-                        None
-                    } else {
-                        Some(network)
-                    },
+                    &network,
                     salt,
                     &constructor_calldata,
                     // as_profile,
