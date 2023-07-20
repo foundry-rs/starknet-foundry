@@ -125,7 +125,7 @@ pub async fn run(
     Ok(())
 }
 
-pub fn new(maybe_output_path: Option<Utf8PathBuf>, overwrite: bool) -> Result<()> {
+pub fn new(maybe_output_path: Option<Utf8PathBuf>, overwrite: bool) -> Result<String> {
     if let Some(output_path) = maybe_output_path {
         if output_path.exists() {
             if !output_path.is_file() {
@@ -138,10 +138,13 @@ pub fn new(maybe_output_path: Option<Utf8PathBuf>, overwrite: bool) -> Result<()
             }
         }
         std::fs::write(output_path.clone(), DEFAULT_MULTICALL_CONTENTS)?;
-        println!("Multicall template successfully saved in {output_path}");
-    } else {
-        println!("{DEFAULT_MULTICALL_CONTENTS}");
+        return Ok(format!(
+            "Multicall template successfully saved in {output_path}"
+        ));
     }
+    Ok(DEFAULT_MULTICALL_CONTENTS.to_string())
+}
 
-    Ok(())
+pub fn print_new_result(new_result: &str) {
+    println!("{new_result}");
 }

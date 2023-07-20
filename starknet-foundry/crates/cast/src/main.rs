@@ -196,10 +196,11 @@ async fn main() -> Result<()> {
                     output_path,
                     overwrite,
                 } => {
-                    starknet_commands::multicall::new(
+                    let result = starknet_commands::multicall::new(
                         output_path.clone(),
                         overwrite.unwrap_or(false),
                     )?;
+                    starknet_commands::multicall::print_new_result(result.as_str());
                 }
                 starknet_commands::multicall::Commands::Run { path } => {
                     let mut account =
