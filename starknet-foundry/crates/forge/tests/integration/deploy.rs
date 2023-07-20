@@ -291,7 +291,7 @@ fn test_deploy_invokes_the_constructor() {
         }
         
         #[test]
-        fn deploy_not_existing_class_hash() {
+        fn deploy_invokes_constructor() {
             let mut calldata = ArrayTrait::new();
             calldata.append(420);
 
