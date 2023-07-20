@@ -1,12 +1,15 @@
 use anyhow::{anyhow, Result};
 use camino::Utf8PathBuf;
-use cast::get_network;
+use cast::{get_network, parse_number, print_formatted};
 use clap::{Args, Subcommand};
 use rand::rngs::OsRng;
 use rand::RngCore;
+use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
 use starknet::core::types::FieldElement;
 use starknet::core::utils::get_contract_address;
-use starknet::signers::SigningKey;
+use starknet::providers::jsonrpc::HttpTransport;
+use starknet::providers::JsonRpcClient;
+use starknet::signers::{LocalWallet, SigningKey};
 
 pub const OZ_CLASS_HASH: &str =
     "0x058d97f7d76e78f44905cc30cb65b91ea49a4b908a76703c54197bca90f81773";
@@ -31,9 +34,6 @@ pub enum Commands {
 
         #[clap(short, long)]
         salt: Option<FieldElement>,
-
-        #[clap(short, long, value_delimiter = ' ', num_args = 0..)]
-        constructor_calldata: Vec<FieldElement>,
         // If passed, a profile with corresponding data will be created in Scarb.toml
         // #[clap(short, long)]
         // as_profile: bool,
@@ -55,12 +55,12 @@ pub enum Commands {
 }
 
 #[allow(clippy::too_many_arguments)]
-pub fn create(
+pub async fn create(
+    provider: &JsonRpcClient<HttpTransport>,
     maybe_output_path: Option<Utf8PathBuf>,
     maybe_name: Option<String>,
     network: &str,
     maybe_salt: Option<FieldElement>,
-    constructor_calldata: &[FieldElement],
     // save_as_profile: bool,
 ) -> Result<Vec<(&'static str, String)>> {
     let private_key = SigningKey::from_random();
@@ -73,9 +73,23 @@ pub fn create(
     let address = get_contract_address(
         salt,
         FieldElement::from_hex_be(OZ_CLASS_HASH)?,
-        constructor_calldata,
+        &[public_key.scalar()],
         FieldElement::ZERO,
     );
+
+    let max_fee = {
+        let signer = LocalWallet::from_signing_key(private_key.clone());
+        let factory = OpenZeppelinAccountFactory::new(
+            parse_number(OZ_CLASS_HASH)?,
+            get_network(network)?.get_chain_id(),
+            signer,
+            provider,
+        )
+        .await?;
+        let deployment = factory.deploy(salt);
+
+        deployment.estimate_fee().await?.overall_fee
+    };
 
     let output: Vec<(&str, String)> = vec![
         ("private_key", format!("{:#x}", private_key.secret_scalar())),
@@ -90,8 +104,8 @@ pub fn create(
             std::fs::write(output_path.clone(), "{}")?;
         }
 
-        return match (maybe_name, network.is_empty()) {
-            (Some(name), false) => {
+        return match maybe_name {
+            Some(name) => {
                 let contents = std::fs::read_to_string(output_path.clone())?;
                 let mut items: serde_json::Value =
                     serde_json::from_str(&contents).expect("failed to parse json file");
@@ -109,12 +123,6 @@ pub fn create(
                     .map(|(key, value)| (key, serde_json::Value::String(value)))
                     .collect();
                 json_output["deployed"] = serde_json::Value::from(false);
-                json_output["constructor_calldata"] = serde_json::Value::from(
-                    constructor_calldata
-                        .iter()
-                        .map(std::string::ToString::to_string)
-                        .collect::<Vec<String>>(),
-                );
                 items[network][name] = json_output;
 
                 std::fs::write(
@@ -124,18 +132,33 @@ pub fn create(
 
                 Ok(vec![(
                     "message",
-                    "Account successfully created. Prefund generated address with some tokens."
-                        .to_string(),
+                    format!("Account successfully created. Prefund generated address with at least {max_fee} tokens. \
+                     It is good to send more in the case of higher demand, max_fee * 2 = {}", max_fee * 2),
                 )])
             }
-            (_, true) => Err(anyhow!(
-                "Argument `network` has to be passed when `output-path` provided"
-            )),
-            (None, _) => Err(anyhow!(
+            None => Err(anyhow!(
                 "Argument `name` has to be passed when `output-path` provided"
             )),
         };
     }
 
     Ok(output)
+}
+
+pub fn print_account_create_result(
+    account_create_result: Result<Vec<(&'static str, String)>>,
+    int_format: bool,
+    json: bool,
+) -> Result<()> {
+    match account_create_result {
+        Ok(mut values) => {
+            values.insert(0, ("command", "Create account".to_string()));
+            print_formatted(values, int_format, json, false)?;
+        }
+        Err(error) => {
+            print_formatted(vec![("error", error.to_string())], int_format, json, true)?;
+        }
+    };
+
+    Ok(())
 }

@@ -41,6 +41,9 @@ fn start_devnet() {
             &SEED.to_string(),
             "--sierra-compiler-path",
             &compiler_path,
+            // fixme: tmp solution for tests
+            "--fork-network",
+            "alpha-goerli",
         ])
         .stdout(Stdio::null())
         .spawn()

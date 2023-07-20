@@ -1,5 +1,5 @@
 use crate::helpers::scarb_utils::parse_scarb_config;
-use crate::starknet_commands::account::Account;
+use crate::starknet_commands::account::{print_account_create_result, Account};
 use crate::starknet_commands::{
     account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
 };
@@ -96,9 +96,10 @@ async fn main() -> Result<()> {
     let network = cli.network.unwrap_or(config.network);
     let account = cli.account.unwrap_or(config.account);
 
+    let provider = get_provider(&rpc_url, &network).await?;
+
     match cli.command {
         Commands::Declare(declare) => {
-            let provider = get_provider(&rpc_url, &network).await?;
             let mut account = get_account(&account, &accounts_file_path, &provider, &network)?;
 
             let result = starknet_commands::declare::declare(
@@ -135,7 +136,6 @@ async fn main() -> Result<()> {
             Ok(())
         }
         Commands::Deploy(deploy) => {
-            let provider = get_provider(&rpc_url, &network).await?;
             let account = get_account(&account, &accounts_file_path, &provider, &network)?;
 
             let result = starknet_commands::deploy::deploy(
@@ -152,7 +152,6 @@ async fn main() -> Result<()> {
             Ok(())
         }
         Commands::Call(call) => {
-            let provider = get_provider(&rpc_url, &network).await?;
             let block_id = get_block_id(&call.block_id)?;
 
             let result = starknet_commands::call::call(
@@ -187,7 +186,6 @@ async fn main() -> Result<()> {
             Ok(())
         }
         Commands::Invoke(invoke) => {
-            let provider = get_provider(&rpc_url, &network).await?;
             let mut account = get_account(&account, &accounts_file_path, &provider, &network)?;
             let result = starknet_commands::invoke::invoke(
                 invoke.contract_address,
@@ -202,7 +200,6 @@ async fn main() -> Result<()> {
             Ok(())
         }
         Commands::Multicall(multicall) => {
-            let provider = get_provider(&rpc_url, &network).await?;
             let mut account = get_account(&account, &accounts_file_path, &provider, &network)?;
             starknet_commands::multicall::multicall(
                 &multicall.path,
@@ -218,33 +215,19 @@ async fn main() -> Result<()> {
                 output_path,
                 name,
                 salt,
-                constructor_calldata,
                 // as_profile,
             } => {
                 let result = starknet_commands::account::create(
+                    &provider,
                     output_path,
                     name,
                     &network,
                     salt,
-                    &constructor_calldata,
                     // as_profile,
-                );
+                )
+                .await;
 
-                match result {
-                    Ok(mut values) => {
-                        values.insert(0, ("command", "Create account".to_string()));
-                        print_formatted(values, cli.int_format, cli.json, false)?;
-                    }
-                    Err(error) => {
-                        print_formatted(
-                            vec![("error", error.to_string())],
-                            cli.int_format,
-                            cli.json,
-                            true,
-                        )?;
-                    }
-                };
-
+                print_account_create_result(result, cli.int_format, cli.json)?;
                 Ok(())
             }
             account::Commands::Deploy {
