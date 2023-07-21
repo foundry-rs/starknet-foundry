@@ -196,8 +196,6 @@ impl HintProcessor for CheatableSyscallHandler<'_> {
             .execute_hint(vm, exec_scopes, hint_data, constants, run_resources)
     }
 
-
-
     /// Trait function to store hint in the hint processor by string.
     fn compile_hint(
         &self,
@@ -323,13 +321,6 @@ impl CheatableSyscallHandler<'_> {
     }
 }
 
-fn felt_from_pointer(vm: &mut VirtualMachine, ptr: &mut Relocatable) -> Result<Felt252> {
-    let entry_point_selector = vm.get_integer(*ptr)?.into_owned();
-    *ptr += 1;
-    Ok(entry_point_selector)
-}
-
-
 
 /// Executes a specific call to a contract entry point and returns its output.
 pub fn execute_entry_point_call_cairo1(
@@ -413,3 +404,4 @@ pub fn run_entry_point_m(
     // hint_processor.context.vm_run_resources = run_resources; // TODO 
     Ok(result?)
 }
+

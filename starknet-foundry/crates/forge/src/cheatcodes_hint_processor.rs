@@ -167,12 +167,6 @@ impl ForgeHintProcessor for CairoHintProcessor<'_> {
         _result_segment_ptr: &mut Relocatable,
         _contracts: &HashMap<String, StarknetContractArtifacts>,
     ) -> Result<(), EnhancedHintError> {
-        let contract_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
-            inputs[0].clone().to_be_bytes(),
-        )?)?);
-        let value = inputs[1].clone();
-        self.rolled_contracts.insert(contract_address, value); 
-    
         // insert_at_pointer(vm, result_segment_ptr, Felt252::from(0))?;
         Ok(())
     }
