@@ -81,13 +81,11 @@ enum Commands {
 async fn main() -> Result<()> {
     let cli = Cli::parse();
 
-    let mut accounts_file_path = Utf8PathBuf::new();
-    if let Commands::Account(_) = cli.command {
-    } else {
-        accounts_file_path.push(shellexpand::tilde(&cli.accounts_file_path).to_string());
-        if !&accounts_file_path.exists() {
-            bail! {"Accounts file {} does not exist! Make sure to supply correct path to accounts file.", cli.accounts_file_path}
-        }
+    let accounts_file_path =
+        Utf8PathBuf::from(shellexpand::tilde(&cli.accounts_file_path).to_string());
+    if let Commands::Account(_) = &cli.command {
+    } else if !&accounts_file_path.exists() {
+        bail! {"Accounts file {} does not exist! Make sure to supply correct path to accounts file.", cli.accounts_file_path}
     }
 
     let config = parse_scarb_config(&cli.profile, cli.path_to_scarb_toml)?;
@@ -212,7 +210,6 @@ async fn main() -> Result<()> {
         }
         Commands::Account(account) => match account.command {
             account::Commands::Create {
-                output_path,
                 name,
                 salt,
                 add_profile,
@@ -220,7 +217,7 @@ async fn main() -> Result<()> {
                 let result = starknet_commands::account::create(
                     &provider,
                     rpc_url,
-                    output_path,
+                    accounts_file_path,
                     name,
                     &network,
                     salt,
