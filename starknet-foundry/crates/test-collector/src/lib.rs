@@ -113,17 +113,14 @@ pub struct SingleTestConfig {
 /// Finds the tests in the requested crates.
 pub fn find_all_tests(
     db: &dyn SemanticGroup,
-    main_crates: Vec<CrateId>,
+    main_crates: &[CrateId],
     file_id: FileId,
 ) -> Vec<(FreeFunctionId, SingleTestConfig)> {
     let mut tests = vec![];
 
     let crate_modules = db.crate_modules(main_crates[0]);
 
-    let file_modules = match db.file_modules(file_id) {
-        Ok(x) => x,
-        Err(_diagnostics) => panic!("Error getting file modules!"),
-    };
+    let Ok(file_modules) = db.file_modules(file_id) else { panic!("Error getting file modules!") };
 
     // Somehow only the intersection of those two sets gives us tests from that single file :D
     let crate_modules_set = crate_modules.iter().collect::<HashSet<_>>();
@@ -132,7 +129,7 @@ pub fn find_all_tests(
         .intersection(&file_modules_set)
         .collect::<Vec<_>>();
 
-    for module_id in modules.iter() {
+    for module_id in &modules {
         let Ok(module_items) = db.module_items(***module_id) else {
                 continue;
             };
@@ -341,8 +338,8 @@ pub fn collect_tests(
         ));
     }
 
-    let file_id = db.intern_file(FileLongId::OnDisk(PathBuf::from_str(&input_path)?));
-    let all_tests = find_all_tests(db, main_crate_ids, file_id);
+    let file_id = db.intern_file(FileLongId::OnDisk(PathBuf::from_str(input_path)?));
+    let all_tests = find_all_tests(db, &main_crate_ids, file_id);
 
     let z: Vec<ConcreteFunctionWithBodyId> = all_tests
         .iter()

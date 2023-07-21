@@ -34,5 +34,5 @@ fn complex_structure() {
         [PASS] src::test_fob_in_lib
         [PASS] src::test_fib_in_lib
         Tests: 8 passed, 0 failed, 0 skipped
-            "#});
+        "#});
 }
