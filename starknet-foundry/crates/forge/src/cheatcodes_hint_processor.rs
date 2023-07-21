@@ -1,7 +1,5 @@
 use std::any::Any;
-use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
-use std::hash::{Hash, Hasher};
 use std::io;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -64,6 +62,7 @@ use cairo_lang_starknet::casm_contract_class::CasmContractClass;
 use cairo_lang_starknet::contract_class::ContractClass;
 use cairo_lang_utils::bigint::BigIntAsHex;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
+use starknet::core::types::contract::CompiledClass;
 
 pub struct CairoHintProcessor<'a> {
     pub original_cairo_hint_processor: OriginalCairoHintProcessor<'a>,
@@ -439,11 +438,7 @@ fn declare(
         .context("Failed to read contract class from json")?;
     let contract_class = BlockifierContractClass::V1(contract_class);
 
-    // TODO(#2134) replace this. Hash should be calculated in the correct manner. This is just a workaround.
-    let mut hasher = DefaultHasher::new();
-    casm_serialized.hash(&mut hasher);
-    let class_hash = hasher.finish();
-    let class_hash = ClassHash(stark_felt!(class_hash));
+    let class_hash = get_class_hash(casm_serialized.as_str())?;
 
     let nonce = blockifier_state
         .get_nonce_at(ContractAddress(patricia_key!(
@@ -474,6 +469,13 @@ fn declare(
     insert_at_pointer(vm, result_segment_ptr, felt_class_hash)?;
 
     Ok(())
+}
+
+fn get_class_hash(casm_contract: &str) -> Result<ClassHash> {
+    let compiled_class = serde_json::from_str::<CompiledClass>(casm_contract)?;
+    let class_hash = compiled_class.class_hash()?;
+    let class_hash = StarkFelt::new(class_hash.to_bytes_be())?;
+    Ok(ClassHash(class_hash))
 }
 
 fn deploy(
@@ -622,7 +624,9 @@ fn felt252_from_hex_string(value: &str) -> Result<Felt252> {
 
 #[cfg(test)]
 mod test {
+    use assert_fs::fixture::PathCopy;
     use cairo_felt::Felt252;
+    use std::process::Command;
 
     use super::*;
 
@@ -729,6 +733,47 @@ mod test {
 
         for (str, felt_res) in cases {
             assert_eq!(felt_from_short_string(str), felt_res);
+        }
+    }
+
+    #[test]
+    fn class_hash_correct() {
+        let temp = assert_fs::TempDir::new().unwrap();
+        temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
+            .unwrap();
+
+        Command::new("scarb")
+            .current_dir(&temp)
+            .arg("build")
+            .output()
+            .unwrap();
+
+        let temp_dir_path = temp.path();
+
+        // expected_class_hash computed with
+        // https://github.com/software-mansion/starknet.py/blob/cea191679cbdd2726ca7989f3a7662dee6ea43ca/starknet_py/tests/e2e/docs/guide/test_cairo1_contract.py#L29-L36
+        let cases = [
+            (
+                "0x5167b09ea07d236371efa6053537eb2e6163bdb531e7161643a7c1fddfc5814",
+                "target/dev/simple_package_ERC20.casm.json",
+            ),
+            (
+                "0x192485856ebf42c113825d359a948dacaf526d62bf6c2aa231beffed0fddc3f",
+                "target/dev/simple_package_HelloStarknet.casm.json",
+            ),
+        ];
+
+        for (expected_class_hash, casm_contract_path) in cases {
+            let casm_contract_path = temp_dir_path.join(casm_contract_path);
+            let casm_contract_path = casm_contract_path.as_path();
+
+            let casm_contract_definition = std::fs::read_to_string(casm_contract_path)
+                .unwrap_or_else(|_| panic!("Failed to read file: {casm_contract_path:?}"));
+            let actual_class_hash = get_class_hash(casm_contract_definition.as_str()).unwrap();
+            assert_eq!(
+                actual_class_hash,
+                ClassHash(stark_felt!(expected_class_hash))
+            );
         }
     }
 }

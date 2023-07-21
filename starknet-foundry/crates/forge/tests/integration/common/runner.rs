@@ -164,3 +164,30 @@ macro_rules! assert_failed {
         }));
     }};
 }
+
+#[macro_export]
+macro_rules! assert_case_output_contains {
+    ($result:expr, $test_case_name:expr, $asserted_msg:expr) => {{
+        use forge::test_case_summary::TestCaseSummary;
+
+        let test_case_name = $test_case_name;
+        let test_name_suffix = format!("::{test_case_name}");
+        assert!($result
+            .iter()
+            .any(|summary| summary.test_case_summaries.iter().any(|case| {
+                match case {
+                    TestCaseSummary::Failed {
+                        msg: Some(msg),
+                        name,
+                        ..
+                    }
+                    | TestCaseSummary::Passed {
+                        msg: Some(msg),
+                        name,
+                        ..
+                    } => msg.contains($asserted_msg) && name.ends_with(test_name_suffix.as_str()),
+                    _ => false,
+                }
+            })));
+    }};
+}
