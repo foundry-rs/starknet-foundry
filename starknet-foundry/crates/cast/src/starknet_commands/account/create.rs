@@ -25,6 +25,7 @@ pub struct Create {
     #[clap(short, long)]
     pub name: String,
 
+    /// Salt for the address
     #[clap(short, long)]
     pub salt: Option<FieldElement>,
 
@@ -102,15 +103,19 @@ pub async fn create(
         serde_json::to_string_pretty(&items).unwrap(),
     )?;
 
-    if add_profile {
-        add_created_profile_to_configuration(name, network.to_string(), url);
-    }
-
-    Ok(vec![(
+    let mut output = vec![(
         "message",
         format!("Account successfully created. Prefund generated address with at least {max_fee} tokens. \
          It is good to send more in the case of higher demand, max_fee * 2 = {}", max_fee * 2),
-    ), ("address", format!("{address:#x}")),])
+    ), ("address", format!("{address:#x}"))];
+    if add_profile {
+        output.push((
+            "add_profile",
+            add_created_profile_to_configuration(name, network.to_string(), url),
+        ));
+    }
+
+    Ok(output)
 }
 
 pub fn print_account_create_result(
@@ -146,9 +151,6 @@ pub fn add_created_profile_to_configuration(name: String, network: String, url: 
 
     let package = &metadata.packages[0].manifest_metadata.tool;
 
-    println!("dupa");
-    dbg!(package);
-
     let property = get_property(package, &Some(name.clone()), "account");
     if property.is_ok() {
         return format!("Failed to add {name} profile to the Scarb.toml. Profile already exists");
@@ -176,5 +178,5 @@ pub fn add_created_profile_to_configuration(name: String, network: String, url: 
         .write_all(format!("\n{toml_string}").as_bytes())
         .unwrap();
 
-    "abc".to_string()
+    "Profile successfully added to Scarb.toml".to_string()
 }
