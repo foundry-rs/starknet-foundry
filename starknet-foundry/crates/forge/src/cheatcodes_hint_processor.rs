@@ -24,7 +24,6 @@ use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
 use cairo_vm::hint_processor::hint_processor_definition::HintReference;
 use cairo_vm::serde::deserialize_program::ApTracking;
 use cairo_vm::types::exec_scope::ExecutionScopes;
-use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::errors::memory_errors::MemoryError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
@@ -354,8 +353,8 @@ fn match_cheatcode_by_selector(
     output_end: &CellRef,
     contracts: &HashMap<String, StarknetContractArtifacts>,
 ) -> Result<(), EnhancedHintError> {
-    let mut result_segment_ptr = vm.add_memory_segment();
-    let result_start = result_segment_ptr;
+    let mut buffer = MemBuffer::new_segment(vm);
+    let result_start = buffer.ptr;
 
     match selector {
         "prepare" => todo!(),
@@ -366,14 +365,8 @@ fn match_cheatcode_by_selector(
         "start_prank" => todo!(),
         "stop_prank" => todo!(),
         "mock_call" => todo!(),
-        "declare" => declare(
-            vm,
-            blockifier_state,
-            &inputs,
-            &mut result_segment_ptr,
-            contracts,
-        ),
-        "deploy" => deploy(vm, blockifier_state, &inputs, &mut result_segment_ptr),
+        "declare" => declare(&mut buffer, blockifier_state, &inputs, contracts),
+        "deploy" => deploy(&mut buffer, blockifier_state, &inputs),
         "print" => {
             print(inputs);
             Ok(())
@@ -381,7 +374,7 @@ fn match_cheatcode_by_selector(
         _ => Err(anyhow!("Unknown cheatcode selector: {selector}")).map_err(Into::into),
     }?;
 
-    let result_end = result_segment_ptr;
+    let result_end = buffer.ptr;
     insert_value_to_cellref!(vm, output_start, result_start)?;
     insert_value_to_cellref!(vm, output_end, result_end)?;
 
@@ -399,10 +392,9 @@ fn print(inputs: Vec<Felt252>) {
 }
 
 fn declare(
-    vm: &mut VirtualMachine,
+    buffer: &mut MemBuffer,
     blockifier_state: &mut CachedState<DictStateReader>,
     inputs: &[Felt252],
-    result_segment_ptr: &mut Relocatable,
     contracts: &HashMap<String, StarknetContractArtifacts>,
 ) -> Result<(), EnhancedHintError> {
     let contract_value = inputs[0].clone();
@@ -451,8 +443,6 @@ fn declare(
     // result_segment.
     let felt_class_hash = felt252_from_hex_string(&class_hash.to_string()).unwrap();
 
-    let mut buffer = MemBuffer::new(vm, *result_segment_ptr);
-
     buffer.write(Felt252::from(0))?;
     buffer.write(felt_class_hash)?;
 
@@ -467,10 +457,9 @@ fn get_class_hash(casm_contract: &str) -> Result<ClassHash> {
 }
 
 fn deploy(
-    vm: &mut VirtualMachine,
+    buffer: &mut MemBuffer,
     blockifier_state: &mut CachedState<DictStateReader>,
     inputs: &[Felt252],
-    result_segment_ptr: &mut Relocatable,
 ) -> Result<(), EnhancedHintError> {
     // TODO(#1991) deploy should fail if contract address provided doesn't match calculated
     //  or not accept this address as argument at all.
@@ -492,8 +481,7 @@ fn deploy(
     let contract_class = blockifier_state.get_compiled_contract_class(&class_hash)?;
     if contract_class.constructor_selector().is_none() && !calldata.is_empty() {
         write_cheatcode_panic(
-            vm,
-            result_segment_ptr,
+            buffer,
             vec![felt_from_short_string("No constructor in contract")],
         );
         return Ok(());
@@ -526,8 +514,6 @@ fn deploy(
             .expect("Failed to get contract_address from return_data");
         let contract_address = Felt252::from_bytes_be(contract_address.bytes());
 
-        let mut buffer = MemBuffer::new(vm, *result_segment_ptr);
-
         buffer.write(Felt252::from(0))?;
         buffer.write(contract_address)?;
     } else {
@@ -537,7 +523,7 @@ fn deploy(
         let extracted_panic_data = try_extract_panic_data(&revert_error)
             .expect("Unparseable error message, {revert_error}");
 
-        write_cheatcode_panic(vm, result_segment_ptr, extracted_panic_data);
+        write_cheatcode_panic(buffer, extracted_panic_data);
     }
     Ok(())
 }
