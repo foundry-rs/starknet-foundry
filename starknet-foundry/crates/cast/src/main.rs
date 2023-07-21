@@ -215,15 +215,16 @@ async fn main() -> Result<()> {
                 output_path,
                 name,
                 salt,
-                // as_profile,
+                add_profile,
             } => {
                 let result = starknet_commands::account::create(
                     &provider,
+                    rpc_url,
                     output_path,
                     name,
                     &network,
                     salt,
-                    // as_profile,
+                    add_profile,
                 )
                 .await;
 

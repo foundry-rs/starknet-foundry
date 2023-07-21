@@ -1,15 +1,21 @@
-use anyhow::{anyhow, Result};
+use std::fs::OpenOptions;
+use std::io::Write;
+use anyhow::{anyhow, Context, Result};
 use camino::Utf8PathBuf;
 use cast::{get_network, parse_number, print_formatted};
 use clap::{Args, Subcommand};
 use rand::rngs::OsRng;
 use rand::RngCore;
+use scarb::ops::find_manifest_path;
 use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
 use starknet::core::types::FieldElement;
 use starknet::core::utils::get_contract_address;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::{LocalWallet, SigningKey};
+use toml::map::Map;
+use toml::Value;
+use crate::helpers::scarb_utils::get_property;
 
 pub const OZ_CLASS_HASH: &str =
     "0x058d97f7d76e78f44905cc30cb65b91ea49a4b908a76703c54197bca90f81773";
@@ -34,9 +40,10 @@ pub enum Commands {
 
         #[clap(short, long)]
         salt: Option<FieldElement>,
+
         // If passed, a profile with corresponding data will be created in Scarb.toml
-        // #[clap(short, long)]
-        // as_profile: bool,
+        #[clap(short, long)]
+        add_profile: bool,
 
         // TODO: think about supporting different account providers
     },
@@ -57,11 +64,12 @@ pub enum Commands {
 #[allow(clippy::too_many_arguments)]
 pub async fn create(
     provider: &JsonRpcClient<HttpTransport>,
+    url: String,
     maybe_output_path: Option<Utf8PathBuf>,
     maybe_name: Option<String>,
     network: &str,
     maybe_salt: Option<FieldElement>,
-    // save_as_profile: bool,
+    add_profile: bool,
 ) -> Result<Vec<(&'static str, String)>> {
     let private_key = SigningKey::from_random();
     let public_key = private_key.verifying_key();
@@ -110,9 +118,9 @@ pub async fn create(
                 let mut items: serde_json::Value =
                     serde_json::from_str(&contents).expect("failed to parse json file");
 
-                let network = get_network(network)?.get_value();
+                let network_value = get_network(network)?.get_value();
 
-                if !items[network][&name].is_null() {
+                if !items[network_value][&name].is_null() {
                     return Err(anyhow!(
                         "Account with provided name already exists in this network"
                     ));
@@ -123,12 +131,15 @@ pub async fn create(
                     .map(|(key, value)| (key, serde_json::Value::String(value)))
                     .collect();
                 json_output["deployed"] = serde_json::Value::from(false);
-                items[network][name] = json_output;
+                items[network_value][&name] = json_output;
 
                 std::fs::write(
                     output_path.clone(),
                     serde_json::to_string_pretty(&items).unwrap(),
                 )?;
+
+
+                add_created_profile_to_configuration(name, network.to_string(), url);
 
                 Ok(vec![(
                     "message",
@@ -161,4 +172,49 @@ pub fn print_account_create_result(
     };
 
     Ok(())
+}
+
+pub fn add_created_profile_to_configuration(name: String, network: String, url: String) -> String {
+    let manifest_path = find_manifest_path(None).expect("Failed to obtain Scarb.toml file path");
+
+    let metadata = scarb_metadata::MetadataCommand::new()
+        .inherit_stderr()
+        .manifest_path(&manifest_path)
+        .no_deps()
+        .exec()
+        .context(
+            "Failed to read Scarb.toml manifest file, not found in current nor parent directories",
+        ).unwrap();
+
+    let package = &metadata.packages[0].manifest_metadata.tool;
+
+    println!("dupa");
+    dbg!(package);
+
+    let property = get_property(package, &Some(name.clone()), "account");
+    if property.is_ok() {
+        return format!("Failed to add {name} profile to the Scarb.toml. Profile already exists")
+    }
+
+    let mut tool_sncast = toml::value::Table::new();
+    let mut myprofile = toml::value::Table::new();
+
+    myprofile.insert("network".to_string(), Value::String(network));
+    myprofile.insert("url".to_string(), Value::String(url));
+    myprofile.insert("account".to_string(), Value::String(name.clone()));
+
+    tool_sncast.insert(name, Value::Table(myprofile));
+
+    let mut tool = toml::value::Table::new();
+    tool.insert("sncast".to_string(), Value::Table(tool_sncast));
+
+    let mut config = toml::value::Table::new();
+    config.insert("tool".to_string(), Value::Table(tool));
+
+    let toml_string = toml::to_string(&Value::Table(config)).unwrap();
+
+    let mut scarb_toml = OpenOptions::new().append(true).open(manifest_path).unwrap();
+    scarb_toml.write_all(format!("\n{toml_string}").as_bytes()).unwrap();
+
+    "abc".to_string()
 }
