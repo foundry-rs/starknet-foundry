@@ -44,6 +44,7 @@ use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use std::sync::Arc;
 
+#[allow(clippy::all, clippy::pedantic, clippy::nursery)]
 pub mod project;
 pub mod sierra_casm_generator;
 

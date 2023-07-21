@@ -51,7 +51,7 @@ fn main_execution() -> Result<()> {
     // TODO #1997
     let corelib_dir = load_corelib()?;
     let corelib_path: PathBuf = corelib_dir.path().into();
-    let corelib = Utf8PathBuf::try_from(corelib_path.clone())
+    let corelib = Utf8PathBuf::try_from(corelib_path)
         .context("Failed to convert corelib path to Utf8PathBuf")?;
 
     let predeployed_contracts_dir = load_predeployed_contracts()?;
