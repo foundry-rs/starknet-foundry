@@ -21,12 +21,17 @@ pub enum CallContractOutput {
     Panic { panic_data: Vec<Felt252> },
 }
 
+pub struct CheatedState {
+    pub rolled_contracts: HashMap<ContractAddress, Felt252>,
+}
+
 // This can mutate state, the name of the syscall is not very good
 pub fn call_contract(
     contract_address: &Felt252,
     entry_point_selector: &Felt252,
     calldata: &[Felt252],
     blockifier_state: &mut CachedState<DictStateReader>,
+    cheated_state: &CheatedState,
 ) -> Result<CallContractOutput> {
     let contract_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
         contract_address.to_be_bytes(),
@@ -64,7 +69,7 @@ pub fn call_contract(
 
     // let exec_result = entry_point.execute(blockifier_state, &mut resources, &mut context);
 
-    let exec_result = execute_call_entry_point(entry_point, blockifier_state, &mut resources, &mut context);
+    let exec_result = execute_call_entry_point(entry_point, blockifier_state, cheated_state, &mut resources, &mut context);
        
 
     if let Ok(call_info) = exec_result {
@@ -96,6 +101,7 @@ pub fn call_contract(
 pub fn execute_call_entry_point(
     entry_point: CallEntryPoint,
     state: &mut dyn State,
+    cheated_state: &CheatedState,
     resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
 ) -> EntryPointExecutionResult<CallInfo> {
@@ -127,7 +133,7 @@ pub fn execute_call_entry_point(
     // Add class hash to the call, that will appear in the output (call info).
     // entry_point.class_hash = Some(class_hash); // TODO
     let contract_class = state.get_compiled_contract_class(&class_hash)?;
-    let result = execute_if_cairo1(entry_point, contract_class, state, resources, context)
+    let result = execute_if_cairo1(entry_point, contract_class, state, cheated_state, resources, context)
         .map_err(|error| {
             match error {
                 // On VM error, pack the stack trace into the propagated error.
@@ -155,6 +161,7 @@ pub fn execute_if_cairo1(
     call: CallEntryPoint,
     contract_class: ContractClass,
     state: &mut dyn State,
+    cheated_state: &CheatedState,
     resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
 ) -> EntryPointExecutionResult<CallInfo> {
@@ -164,6 +171,7 @@ pub fn execute_if_cairo1(
             call,
             contract_class,
             state,
+            cheated_state,
             resources,
             context,
         ),
@@ -173,7 +181,7 @@ pub fn execute_if_cairo1(
 
 pub struct CheatableSyscallHandler<'a> {
     pub syscall_handler: SyscallHintProcessor<'a>,
-    pub rolled_contracts: HashMap<ContractAddress, Felt252>,
+    pub cheated_state: &'a CheatedState,
 }
 
 impl HintProcessor for CheatableSyscallHandler<'_> {
@@ -244,10 +252,9 @@ pub fn felt_from_ptr_immutable(
 }
 
 impl CheatableSyscallHandler<'_> {
-
-    pub fn is_cheated(&mut self, vm: &mut VirtualMachine, selector: SyscallSelector, contract_address: &ContractAddress) -> bool {
+    pub fn is_cheated(&mut self, _vm: &mut VirtualMachine, selector: SyscallSelector, contract_address: &ContractAddress) -> bool {
         match selector {
-           SyscallSelector::GetExecutionInfo => self.rolled_contracts.contains_key(&contract_address),
+           SyscallSelector::GetExecutionInfo => self.cheated_state.rolled_contracts.contains_key(&contract_address),
            _ => false 
         }
     }
@@ -257,11 +264,13 @@ impl CheatableSyscallHandler<'_> {
         vm: &mut VirtualMachine,
         hint: &StarknetHint,
     ) -> HintExecutionResult {
+        // We peak into the selector without incrementing the pointer as it is done later
         let syscall_selector_pointer = self.syscall_handler.syscall_ptr;
         let selector = SyscallSelector::try_from(stark_felt_from_ptr_immutable(vm, &syscall_selector_pointer)?)?;
         let contract_address = self.syscall_handler.storage_address();
 
         if self.is_cheated(vm, selector, &contract_address) {
+            // self.syscall_handler.syscall_ptr += 1;
             let StarknetHint::SystemCall{ system: syscall } = hint else {
                 return Err(HintError::CustomHint(
                     "Test functions are unsupported on starknet.".into()
@@ -304,11 +313,6 @@ impl CheatableSyscallHandler<'_> {
         self.syscall_handler.execute_next_syscall(vm, hint)
     }
 
-    fn read_next_syscall_selector(&mut self, vm: &mut VirtualMachine) -> SyscallResult<StarkFelt> {
-        let selector = stark_felt_from_ptr(vm, &mut self.syscall_handler.syscall_ptr)?;
-        Ok(selector)
-    }
-
     fn verify_syscall_ptr(&self, actual_ptr: Relocatable) -> SyscallResult<()> {
         if actual_ptr != self.syscall_handler.syscall_ptr {
             return Err(SyscallExecutionError::BadSyscallPointer {
@@ -327,6 +331,7 @@ pub fn execute_entry_point_call_cairo1(
     call: CallEntryPoint,
     contract_class: ContractClassV1,
     state: &mut dyn State,
+    cheated_state: &CheatedState,
     resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
 ) -> EntryPointExecutionResult<CallInfo> {
@@ -353,7 +358,7 @@ pub fn execute_entry_point_call_cairo1(
 
     let mut syscall_hh = CheatableSyscallHandler {
         syscall_handler,
-        rolled_contracts: HashMap::new()
+        cheated_state,
     };
 
     // Execute.

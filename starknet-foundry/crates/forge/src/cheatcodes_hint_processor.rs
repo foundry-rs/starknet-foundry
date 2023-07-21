@@ -36,7 +36,7 @@ use cheatable_starknet::constants::{
     build_block_context, build_declare_transaction, build_invoke_transaction,
     TEST_ACCOUNT_CONTRACT_ADDRESS,
 };
-use cheatable_starknet::rpc::{call_contract, CallContractOutput};
+use cheatable_starknet::rpc::{call_contract, CallContractOutput, CheatedState};
 use cheatable_starknet::state::DictStateReader;
 use num_traits::{Num, ToPrimitive, FromPrimitive};
 use schemars::_private::NoSerialize;
@@ -68,11 +68,12 @@ use cairo_lang_starknet::contract_class::ContractClass;
 use cairo_lang_utils::bigint::BigIntAsHex;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 
+
 pub struct CairoHintProcessor<'a> {
     pub original_cairo_hint_processor: OriginalCairoHintProcessor<'a>,
     pub blockifier_state: CachedState<DictStateReader>,
     pub contracts: &'a HashMap<String, StarknetContractArtifacts>,
-    pub rolled_contracts: HashMap<ContractAddress, Felt252>,
+    pub cheated_state: CheatedState, 
 }
 
 impl ResourceTracker for CairoHintProcessor<'_> {
@@ -139,7 +140,7 @@ impl HintProcessorLogic for CairoHintProcessor<'_> {
             );
         }
         if let Some(Hint::Starknet(StarknetHint::SystemCall { system })) = maybe_extended_hint {
-            return execute_syscall(system, vm, &mut self.blockifier_state);
+            return execute_syscall(system, vm, &mut self.blockifier_state, &self.cheated_state);
         }
         self.original_cairo_hint_processor
             .execute_hint(vm, exec_scopes, hint_data, constants)
@@ -167,7 +168,11 @@ impl ForgeHintProcessor for CairoHintProcessor<'_> {
         _result_segment_ptr: &mut Relocatable,
         _contracts: &HashMap<String, StarknetContractArtifacts>,
     ) -> Result<(), EnhancedHintError> {
-        // insert_at_pointer(vm, result_segment_ptr, Felt252::from(0))?;
+        let contract_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
+            inputs[0].clone().to_be_bytes(),
+        )?)?);
+        let value = inputs[1].clone();
+        self.cheated_state.rolled_contracts.insert(contract_address, convert_to_blockifier_felt(value)); 
         Ok(())
     }
 }
@@ -292,6 +297,7 @@ fn execute_syscall(
     system: &ResOperand,
     vm: &mut VirtualMachine,
     blockifier_state: &mut CachedState<DictStateReader>,
+    cheated_state: &CheatedState,
 ) -> Result<(), HintError> {
     let (cell, offset) = extract_buffer(system);
     let mut system_ptr = get_ptr(vm, cell, &offset)?;
@@ -316,6 +322,7 @@ fn execute_syscall(
         &convert_to_blockifier_felt(entry_point_selector),
         &calldata_blockifier,
         blockifier_state,
+        cheated_state,
     )
     .unwrap_or_else(|err| panic!("Transaction execution error: {err}"));
 
