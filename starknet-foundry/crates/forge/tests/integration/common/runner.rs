@@ -126,11 +126,11 @@ impl<'a> TestCase {
 #[macro_export]
 macro_rules! test_case {
     ( $test_code:expr ) => ({
-        use $crate::common::runner::TestCase;
+        use $crate::integration::common::runner::TestCase;
         TestCase::from($test_code, vec![]).unwrap()
     });
     ( $test_code:expr, $( $contract:expr ),*) => ({
-        use $crate::common::runner::TestCase;
+        use $crate::integration::common::runner::TestCase;
 
         let contracts = vec![$($contract,)*];
         TestCase::from($test_code, contracts).unwrap()
