@@ -156,27 +156,32 @@ pub fn add_created_profile_to_configuration(name: String, network: String, url: 
         return format!("Failed to add {name} profile to the Scarb.toml. Profile already exists");
     }
 
-    let mut tool_sncast = toml::value::Table::new();
-    let mut myprofile = toml::value::Table::new();
+    let toml_string = {
+        let mut tool_sncast = toml::value::Table::new();
+        let mut new_profile = toml::value::Table::new();
 
-    myprofile.insert("network".to_string(), Value::String(network));
-    myprofile.insert("url".to_string(), Value::String(url));
-    myprofile.insert("account".to_string(), Value::String(name.clone()));
+        new_profile.insert("network".to_string(), Value::String(network));
+        new_profile.insert("url".to_string(), Value::String(url));
+        new_profile.insert("account".to_string(), Value::String(name.clone()));
 
-    tool_sncast.insert(name, Value::Table(myprofile));
+        tool_sncast.insert(name, Value::Table(new_profile));
 
-    let mut tool = toml::value::Table::new();
-    tool.insert("sncast".to_string(), Value::Table(tool_sncast));
+        let mut tool = toml::value::Table::new();
+        tool.insert("sncast".to_string(), Value::Table(tool_sncast));
 
-    let mut config = toml::value::Table::new();
-    config.insert("tool".to_string(), Value::Table(tool));
+        let mut config = toml::value::Table::new();
+        config.insert("tool".to_string(), Value::Table(tool));
 
-    let toml_string = toml::to_string(&Value::Table(config)).unwrap();
+        toml::to_string(&Value::Table(config)).unwrap()
+    };
 
-    let mut scarb_toml = OpenOptions::new().append(true).open(manifest_path).unwrap();
+    let mut scarb_toml = OpenOptions::new()
+        .append(true)
+        .open(manifest_path)
+        .expect("Couldn't open Scarb.toml");
     scarb_toml
         .write_all(format!("\n{toml_string}").as_bytes())
-        .unwrap();
+        .expect("Couldn't write to the Scarb.toml");
 
     "Profile successfully added to Scarb.toml".to_string()
 }
