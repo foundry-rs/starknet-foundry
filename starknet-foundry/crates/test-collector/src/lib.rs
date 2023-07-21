@@ -9,13 +9,15 @@ use cairo_lang_compiler::project::{
     update_crate_roots_from_project_config, ProjectError,
 };
 use cairo_lang_debug::DebugWithDb;
+use cairo_lang_defs::ids::ModuleId;
 use cairo_lang_defs::ids::{FreeFunctionId, FunctionWithBodyId, ModuleItemId};
 use cairo_lang_defs::plugin::PluginDiagnostic;
 use cairo_lang_diagnostics::ToOption;
 use cairo_lang_filesystem::cfg::{Cfg, CfgSet};
 use cairo_lang_filesystem::db::init_dev_corelib;
+use cairo_lang_filesystem::db::FilesGroup;
 use cairo_lang_filesystem::detect::detect_corelib;
-use cairo_lang_filesystem::ids::CrateId;
+use cairo_lang_filesystem::ids::{CrateId, FileId, FileLongId};
 use cairo_lang_lowering::ids::ConcreteFunctionWithBodyId;
 use cairo_lang_project::{DeserializationError, ProjectConfig, ProjectConfigContent};
 use cairo_lang_semantic::db::SemanticGroup;
@@ -36,8 +38,10 @@ use cairo_lang_utils::OptionHelper;
 use itertools::Itertools;
 use num_traits::ToPrimitive;
 use smol_str::SmolStr;
+use std::collections::HashSet;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::str::FromStr;
 use std::sync::Arc;
 
 pub mod sierra_casm_generator;
@@ -110,22 +114,35 @@ pub struct SingleTestConfig {
 pub fn find_all_tests(
     db: &dyn SemanticGroup,
     main_crates: Vec<CrateId>,
+    file_id: FileId,
 ) -> Vec<(FreeFunctionId, SingleTestConfig)> {
     let mut tests = vec![];
-    for crate_id in main_crates {
-        let modules = db.crate_modules(crate_id);
-        for module_id in modules.iter() {
-            let Ok(module_items) = db.module_items(*module_id) else {
+
+    let crate_modules = db.crate_modules(main_crates[0]);
+
+    let file_modules = match db.file_modules(file_id) {
+        Ok(x) => x,
+        Err(_diagnostics) => panic!("Error getting file modules!"),
+    };
+
+    // Somehow only the intersection of those two sets gives us tests from that single file :D
+    let crate_modules_set = crate_modules.iter().collect::<HashSet<_>>();
+    let file_modules_set: HashSet<&ModuleId> = file_modules.iter().collect::<HashSet<_>>();
+    let modules = crate_modules_set
+        .intersection(&file_modules_set)
+        .collect::<Vec<_>>();
+
+    for module_id in modules.iter() {
+        let Ok(module_items) = db.module_items(***module_id) else {
                 continue;
             };
-            tests.extend(
+        tests.extend(
                 module_items.iter().filter_map(|item| {
                     let ModuleItemId::FreeFunction(func_id) = item else { return None };
                     let Ok(attrs) = db.function_with_body_attributes(FunctionWithBodyId::Free(*func_id)) else { return None };
                     Some((*func_id, try_extract_test_config(db.upcast(), &attrs).unwrap()?))
                 }),
             );
-        }
     }
     tests
 }
@@ -277,6 +294,7 @@ pub struct TestCase {
     pub available_gas: Option<usize>,
 }
 
+// must be provided with CAIRO FILE INPUT PATHS
 // returns tuple[sierra if no output_path, list[test_name, test_config]]
 pub fn collect_tests(
     input_path: &str,
@@ -322,7 +340,9 @@ pub fn collect_tests(
              above"
         ));
     }
-    let all_tests = find_all_tests(db, main_crate_ids);
+
+    let file_id = db.intern_file(FileLongId::OnDisk(PathBuf::from_str(&input_path)?));
+    let all_tests = find_all_tests(db, main_crate_ids, file_id);
 
     let z: Vec<ConcreteFunctionWithBodyId> = all_tests
         .iter()
