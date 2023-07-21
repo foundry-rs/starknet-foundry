@@ -43,7 +43,7 @@ Generates an empty template for the multicall `.toml` file that may be later use
 ### `--output-path, -p <PATH>`
 Optional.
 
-When provided, it specifies where the template should be saved, it has to be a file path.
+Specifies a file path where the template should be saved.
 If omitted, the template contents will be printed out to the stdout.
 
 ### `--overwrite, -o <OVERWRITE>`
