@@ -1,5 +1,4 @@
 use crate::helpers::scarb_utils::get_property;
-use crate::starknet_commands::account::OZ_CLASS_HASH;
 use anyhow::{anyhow, Context, Result};
 use camino::Utf8PathBuf;
 use cast::{get_network, parse_number, print_formatted};
@@ -17,6 +16,7 @@ use starknet::signers::{LocalWallet, SigningKey};
 use std::fs::OpenOptions;
 use std::io::Write;
 use toml::Value;
+use crate::helpers::constants::OZ_CLASS_HASH;
 
 #[derive(Args, Debug)]
 #[command(about = "Create an account with all important secrets")]
@@ -54,7 +54,7 @@ pub async fn create(
 
     let address = get_contract_address(
         salt,
-        FieldElement::from_hex_be(OZ_CLASS_HASH)?,
+        parse_number(OZ_CLASS_HASH)?,
         &[public_key.scalar()],
         FieldElement::ZERO,
     );

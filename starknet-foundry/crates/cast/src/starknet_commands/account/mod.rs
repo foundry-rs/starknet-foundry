@@ -5,9 +5,6 @@ use clap::{Args, Subcommand};
 pub mod create;
 pub mod deploy;
 
-pub const OZ_CLASS_HASH: &str =
-    "0x058d97f7d76e78f44905cc30cb65b91ea49a4b908a76703c54197bca90f81773";
-
 #[derive(Args)]
 #[command(about = "Creates and deploys an account to the Starknet")]
 pub struct Account {
