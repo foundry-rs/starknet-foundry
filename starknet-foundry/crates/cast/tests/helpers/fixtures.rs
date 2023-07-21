@@ -1,4 +1,4 @@
-use crate::helpers::constants::{ACCOUNT, ACCOUNT_FILE_PATH, CONTRACTS_DIR, NETWORK, URL};
+use crate::helpers::constants::{ACCOUNT_FILE_PATH, CONTRACTS_DIR, NETWORK, URL};
 use camino::Utf8PathBuf;
 use cast::{get_account, get_provider, parse_number};
 use serde_json::{json, Value};
@@ -15,12 +15,12 @@ use std::fs;
 use std::sync::Arc;
 use url::Url;
 
-pub async fn declare_deploy_contract(path: &str) {
+pub async fn declare_deploy_contract(account: &str, path: &str) {
     let provider = get_provider(URL, NETWORK)
         .await
         .expect("Could not get the provider");
     let account = get_account(
-        ACCOUNT,
+        account,
         &Utf8PathBuf::from(ACCOUNT_FILE_PATH),
         &provider,
         NETWORK,
@@ -52,8 +52,8 @@ pub async fn declare_deploy_contract(path: &str) {
     );
     let declared = declaration.send().await.unwrap();
 
-    let factory = ContractFactory::new(declared.class_hash, account);
-    let deployment = factory.deploy(Vec::new(), FieldElement::ONE, false);
+    let factory = ContractFactory::new(declared.class_hash, &account);
+    let deployment = factory.deploy(Vec::new(), FieldElement::ONE, true);
     deployment.send().await.unwrap();
 }
 

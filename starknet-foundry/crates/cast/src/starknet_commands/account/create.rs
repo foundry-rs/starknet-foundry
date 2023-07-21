@@ -1,8 +1,9 @@
 use crate::helpers::scarb_utils::get_property;
+use crate::starknet_commands::account::OZ_CLASS_HASH;
 use anyhow::{anyhow, Context, Result};
 use camino::Utf8PathBuf;
 use cast::{get_network, parse_number, print_formatted};
-use clap::{Args, Subcommand};
+use clap::Args;
 use rand::rngs::OsRng;
 use rand::RngCore;
 use scarb::ops::find_manifest_path;
@@ -17,43 +18,20 @@ use std::fs::OpenOptions;
 use std::io::Write;
 use toml::Value;
 
-pub const OZ_CLASS_HASH: &str =
-    "0x058d97f7d76e78f44905cc30cb65b91ea49a4b908a76703c54197bca90f81773";
+#[derive(Args, Debug)]
+#[command(about = "Create an account with all important secrets")]
+pub struct Create {
+    /// Account name under which secrets are going to be saved
+    #[clap(short, long)]
+    pub name: String,
 
-#[derive(Args)]
-#[command(about = "Creates and deploys an account to the Starknet")]
-pub struct Account {
-    #[clap(subcommand)]
-    pub command: Commands,
-}
+    #[clap(short, long)]
+    pub salt: Option<FieldElement>,
 
-#[derive(Debug, Subcommand)]
-pub enum Commands {
-    Create {
-        /// Account name under which secrets are going to be saved
-        #[clap(short, long)]
-        name: String,
-
-        #[clap(short, long)]
-        salt: Option<FieldElement>,
-
-        // If passed, a profile with corresponding data will be created in Scarb.toml
-        #[clap(short, long)]
-        add_profile: bool,
-        // TODO: think about supporting different account providers
-    },
-    Deploy {
-        /// Path to the file where the account secrets are stored
-        #[clap(short, long)]
-        path: Utf8PathBuf,
-
-        /// Name of the account to be deployed
-        #[clap(short, long)]
-        name: String,
-
-        #[clap(short, long)]
-        max_fee: Option<FieldElement>,
-    },
+    // If passed, a profile with corresponding data will be created in Scarb.toml
+    #[clap(short, long)]
+    pub add_profile: bool,
+    // TODO: think about supporting different account providers
 }
 
 #[allow(clippy::too_many_arguments)]

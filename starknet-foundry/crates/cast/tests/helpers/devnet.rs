@@ -67,8 +67,14 @@ fn start_devnet() {
         .expect("Timed out compiling contracts");
 
     let rt = Runtime::new().expect("Could not instantiate Runtime");
-    rt.block_on(declare_deploy_contract("/v1/map/target/dev/map_Map"));
-    rt.block_on(declare_deploy_contract("/v2/map/target/dev/map_Map"));
+    rt.block_on(declare_deploy_contract(
+        "user1",
+        "/v1/map/target/dev/map_Map",
+    ));
+    rt.block_on(declare_deploy_contract(
+        "user2",
+        "/v2/map/target/dev/map_Map",
+    ));
 }
 
 #[cfg(test)]

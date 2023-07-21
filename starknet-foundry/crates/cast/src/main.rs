@@ -1,5 +1,6 @@
 use crate::helpers::scarb_utils::parse_scarb_config;
-use crate::starknet_commands::account::{print_account_create_result, Account};
+use crate::starknet_commands::account::create::print_account_create_result;
+use crate::starknet_commands::account::Account;
 use crate::starknet_commands::{
     account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
 };
@@ -209,26 +210,22 @@ async fn main() -> Result<()> {
             Ok(())
         }
         Commands::Account(account) => match account.command {
-            account::Commands::Create {
-                name,
-                salt,
-                add_profile,
-            } => {
-                let result = starknet_commands::account::create(
+            account::Commands::Create(create) => {
+                let result = starknet_commands::account::create::create(
                     &provider,
                     rpc_url,
                     accounts_file_path,
-                    name,
+                    create.name,
                     &network,
-                    salt,
-                    add_profile,
+                    create.salt,
+                    create.add_profile,
                 )
                 .await;
 
                 print_account_create_result(result, cli.int_format, cli.json)?;
                 Ok(())
             }
-            account::Commands::Deploy { .. } => {
+            account::Commands::Deploy(_deploy) => {
                 // TODO
                 Ok(())
             }
