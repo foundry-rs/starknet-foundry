@@ -1,13 +1,13 @@
+use crate::project::setup_project;
+use crate::project::{
+    get_main_crate_ids_from_project, setup_single_file_project,
+    update_crate_roots_from_project_config, ProjectError,
+};
 use crate::sierra_casm_generator::SierraCasmGenerator;
 use anyhow::{anyhow, Context, Result};
 use cairo_felt::Felt252;
 use cairo_lang_compiler::db::RootDatabase;
 use cairo_lang_compiler::diagnostics::DiagnosticsReporter;
-use cairo_lang_compiler::project::setup_project;
-use cairo_lang_compiler::project::{
-    get_main_crate_ids_from_project, setup_single_file_project,
-    update_crate_roots_from_project_config, ProjectError,
-};
 use cairo_lang_debug::DebugWithDb;
 use cairo_lang_defs::ids::ModuleId;
 use cairo_lang_defs::ids::{FreeFunctionId, FunctionWithBodyId, ModuleItemId};
@@ -44,6 +44,7 @@ use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use std::sync::Arc;
 
+pub mod project;
 pub mod sierra_casm_generator;
 
 pub fn build_project_config(
