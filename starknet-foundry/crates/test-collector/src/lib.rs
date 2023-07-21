@@ -122,7 +122,7 @@ pub fn find_all_tests(
 
     let crate_modules = db.crate_modules(main_crates[0]);
 
-    let Ok(file_modules) = db.file_modules(file_id) else { panic!("Error getting file modules!") };
+    let Ok(file_modules) = db.file_modules(file_id) else { panic!("Error getting file modules! Make sure there are no test files that are in the same directory as the lib.cairo file while not being a part of this package themselves.") };
 
     // Somehow only the intersection of those two sets gives us tests from that single file :D
     let crate_modules_set = crate_modules.iter().collect::<HashSet<_>>();
