@@ -1,12 +1,6 @@
 use test_multiple::fob::fob_impl::fob_fn;
-use super::fab::fab_impl::fab_fn;
-
-fn fib_fn(a: felt252, b: felt252, n: felt252) -> felt252 {
-    match n {
-        0 => a,
-        _ => fib_fn(b, a + b, n - 1),
-    }
-}
+use test_multiple::fab::fab_impl::fab_fn;
+use test_multiple::fib::fib_fn;
 
 #[test]
 fn test_fib() {
@@ -14,11 +8,11 @@ fn test_fib() {
 }
 
 #[test]
-fn test_fob_in_fib() {
+fn test_fob() {
     assert(fob_fn(0, 1, 10) == 55, fob_fn(0, 1, 10));
 }
 
 #[test]
-fn test_fab_in_fib() {
+fn test_fab() {
     assert(fab_fn(0, 1, 10) == 55, fab_fn(0, 1, 10));
 }
