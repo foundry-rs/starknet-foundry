@@ -3,6 +3,7 @@ use crate::starknet_commands::{
     invoke::{invoke, print_invoke_result},
 };
 use anyhow::Result;
+use camino::Utf8PathBuf;
 use cast::parse_number;
 use clap::Args;
 use serde::Deserialize;
@@ -12,6 +13,14 @@ use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
 use std::collections::HashMap;
+
+#[derive(Args, Debug)]
+#[command(about = "Declare a contract to starknet", long_about = None)]
+pub struct Run {
+    /// path to the toml file with declared operations
+    #[clap(short = 'p', long = "path")]
+    pub path: Utf8PathBuf,
+}
 
 #[allow(dead_code)]
 #[derive(Deserialize, Debug)]
@@ -35,16 +44,8 @@ struct InvokeCall {
     max_fee: Option<FieldElement>,
 }
 
-#[derive(Args)]
-#[command(about = "Execute multiple calls at once", long_about = None)]
-pub struct Multicall {
-    #[clap(short = 'p', long = "path")]
-    /// Path to a .toml file containing the multi call specification
-    pub path: String,
-}
-
-pub async fn multicall(
-    path: &str,
+pub async fn run(
+    path: &Utf8PathBuf,
     account: &mut SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     int_format: bool,
     json: bool,
