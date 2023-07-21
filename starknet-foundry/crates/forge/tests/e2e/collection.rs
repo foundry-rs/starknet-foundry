@@ -1,7 +1,7 @@
 use assert_fs::fixture::PathCopy;
 use indoc::indoc;
 
-use crate::common::runner::runner;
+use crate::e2e::common::runner::runner;
 
 #[test]
 fn complex_structure() {
