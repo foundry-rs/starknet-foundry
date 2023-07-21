@@ -1,3 +1,4 @@
+use crate::helpers::constants::OZ_CLASS_HASH;
 use crate::helpers::scarb_utils::get_property;
 use anyhow::{anyhow, Context, Result};
 use camino::Utf8PathBuf;
@@ -16,7 +17,6 @@ use starknet::signers::{LocalWallet, SigningKey};
 use std::fs::OpenOptions;
 use std::io::Write;
 use toml::Value;
-use crate::helpers::constants::OZ_CLASS_HASH;
 
 #[derive(Args, Debug)]
 #[command(about = "Create an account with all important secrets")]
