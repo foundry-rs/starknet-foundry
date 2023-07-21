@@ -34,6 +34,23 @@ cargo lint
 
 Otherwise, it won't be possible to merge your contribution.
 
+You can also run specific set of tests, by directly running `cargo test`.
+
+For forge tests, make sure you are in `starkent-foundry/crates/forge` directory:
+```shell
+forge $ cargo test --lib        # runs all unit tests
+forge $ cargo test integration  # runs all integration tests
+forge $ cargo test e2e          # runs all e2e tests
+```
+
+Similarly, to run cast tests make sure you are in `starkent-foundry/crates/cast` directory:
+```shell
+cast $ cargo test --lib        # runs lib unit tests
+cast $ cargo test helpers      # runs helpers unit tests
+cast $ cargo test integration  # runs all integration tests
+cast $ cargo test e2e          # runs all e2e tests
+```
+
 ## Contributing
 
 Before you open a pull request, it is always a good idea to search

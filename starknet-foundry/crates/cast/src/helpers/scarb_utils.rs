@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::BTreeMap;
 
-#[derive(Deserialize, Serialize, Clone, Debug)]
+#[derive(Deserialize, Serialize, Clone, Debug, Default)]
 pub struct CastConfig {
     pub rpc_url: String,
     pub network: String,
@@ -49,11 +49,7 @@ pub fn parse_scarb_config(
             bail! {"{manifest_path} file does not exist!"};
         };
     } else {
-        return Ok(CastConfig {
-            rpc_url: String::new(),
-            network: String::new(),
-            account: String::new(),
-        });
+        return Ok(CastConfig::default());
     }
 
     let metadata = scarb_metadata::MetadataCommand::new()

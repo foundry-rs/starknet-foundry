@@ -1679,6 +1679,7 @@ dependencies = [
  "shellexpand",
  "snapbox",
  "starknet",
+ "tempfile",
  "test-case",
  "tokio",
  "toml 0.5.11",

@@ -8,8 +8,8 @@ on:
       - master
 
 jobs:
-  test-forge:
-    name: Test Forge
+  test-forge-unit-and-integration:
+    name: Test Forge / Unit and Integration Tests
     env:
       SCARB_VERSION: 0.5.2
     runs-on: ubuntu-latest
@@ -26,7 +26,28 @@ jobs:
       - uses: software-mansion/setup-scarb@v1.0.0
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
-      - run: cargo test --manifest-path ./starknet-foundry/Cargo.toml -p forge
+      - run: cargo test --lib --manifest-path ./starknet-foundry/Cargo.toml -p forge
+      - run: cargo test integration --manifest-path ./starknet-foundry/Cargo.toml -p forge
+
+  test-forge-e2e:
+    name: Test Forge / E2E Tests
+    env:
+      SCARB_VERSION: 0.5.1
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@dd05243424bd5c0e585e4b55eb2d7615cdd32f1f
+        with:
+          workspaces: |
+            starknet-foundry
+            cairo
+      - uses: software-mansion/setup-scarb@v1.0.0
+        with:
+          scarb-version: ${{ env.SCARB_VERSION }}
+      - run: cargo test e2e --manifest-path ./starknet-foundry/Cargo.toml -p forge
 
   test-cast:
     name: Test Cast
@@ -89,7 +110,7 @@ jobs:
   clippy:
     runs-on: ubuntu-latest
     env:
-      # Make sure CI fails on all warnings, including Clippy lints.
+      # Make sure CI fails on all warnings - including Clippy lints.
       RUSTFLAGS: "-Dwarnings"
     steps:
       - uses: actions/checkout@v3

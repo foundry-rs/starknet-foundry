@@ -31,7 +31,7 @@ use std::thread::sleep;
 use std::time::Duration;
 use url::Url;
 
-pub const UDC_ADDRESS: &str = "0x041a78e741e5af2fec34b695679bc6891742439f7afb8484ecd7766661ad02bf";
+pub mod helpers;
 
 #[derive(Deserialize, Serialize, Clone)]
 struct Account {

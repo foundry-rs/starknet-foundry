@@ -1,10 +1,10 @@
-use crate::common::runner::Contract;
+use crate::integration::common::runner::Contract;
 use crate::{assert_passed, test_case};
 use camino::Utf8PathBuf;
 use std::path::Path;
 use std::string::ToString;
 
-use crate::common::corelib::{corelib, predeployed_contracts};
+use crate::integration::common::corelib::{corelib, predeployed_contracts};
 use forge::run;
 use indoc::indoc;
 
