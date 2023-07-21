@@ -49,4 +49,4 @@ If omitted, the template contents are going to be printed out to the stdout.
 ### `--overwrite, -o <OVERWRITE>`
 Optional.
 
-Overwrites the file specified by `--output-path`, if it exists.
+If the file specified by `--output-path` already exists, this parameter overwrites it.
