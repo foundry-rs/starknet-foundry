@@ -201,7 +201,7 @@ async fn main() -> Result<()> {
                     )?;
                     starknet_commands::multicall::new::print_new_result(result.as_str());
                 }
-                starknet_commands::multicall::Commands::Run(run)=> {
+                starknet_commands::multicall::Commands::Run(run) => {
                     let mut account =
                         get_account(&account, &accounts_file_path, &provider, &network)?;
                     starknet_commands::multicall::run::run(

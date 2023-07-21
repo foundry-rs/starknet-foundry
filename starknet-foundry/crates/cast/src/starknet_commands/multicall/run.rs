@@ -5,6 +5,7 @@ use crate::starknet_commands::{
 use anyhow::Result;
 use camino::Utf8PathBuf;
 use cast::parse_number;
+use clap::Args;
 use serde::Deserialize;
 use starknet::accounts::SingleOwnerAccount;
 use starknet::core::types::FieldElement;
@@ -12,14 +13,13 @@ use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
 use std::collections::HashMap;
-use clap::Args;
 
 #[derive(Args, Debug)]
 #[command(about = "Declare a contract to starknet", long_about = None)]
 pub struct Run {
-  /// path to the toml file with declared operations
-  #[clap(short = 'p', long = "path")]
-  pub path: Utf8PathBuf,
+    /// path to the toml file with declared operations
+    #[clap(short = 'p', long = "path")]
+    pub path: Utf8PathBuf,
 }
 
 #[allow(dead_code)]
