@@ -482,7 +482,7 @@ fn deploy(
     if contract_class.constructor_selector().is_none() && !calldata.is_empty() {
         write_cheatcode_panic(
             buffer,
-            vec![felt_from_short_string("No constructor in contract")],
+            vec![felt_from_short_string("No constructor in contract")].as_slice(),
         );
         return Ok(());
     }
@@ -523,7 +523,7 @@ fn deploy(
         let extracted_panic_data = try_extract_panic_data(&revert_error)
             .expect("Unparseable error message, {revert_error}");
 
-        write_cheatcode_panic(buffer, extracted_panic_data);
+        write_cheatcode_panic(buffer, extracted_panic_data.as_slice());
     }
     Ok(())
 }

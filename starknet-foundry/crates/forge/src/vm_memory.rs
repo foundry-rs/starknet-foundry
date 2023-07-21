@@ -1,7 +1,7 @@
 use cairo_felt::Felt252;
 use cairo_lang_runner::casm_run::MemBuffer;
 
-pub(crate) fn write_cheatcode_panic(buffer: &mut MemBuffer, panic_data: Vec<Felt252>) {
+pub(crate) fn write_cheatcode_panic(buffer: &mut MemBuffer, panic_data: &[Felt252]) {
     buffer.write(1).expect("Failed to insert err code");
     buffer
         .write(panic_data.len())
