@@ -351,7 +351,8 @@ fn exit_first_flag_takes_precedence() {
 #[test]
 fn roll_cheatcode() {
     let temp = assert_fs::TempDir::new().unwrap();
-    temp.copy_from("tests/data/cheatcodes/roll_test", &["**/*"]).unwrap();
+    temp.copy_from("tests/data/cheatcodes/roll_test", &["**/*"])
+        .unwrap();
 
     let snapbox = runner();
 
@@ -359,13 +360,11 @@ fn roll_cheatcode() {
         .current_dir(&temp)
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 2 test(s) and 4 test file(s)
-            Running 0 test(s) from src/erc20.cairo
-            Running 0 test(s) from src/hello_starknet.cairo
-            Running 0 test(s) from src/lib.cairo
-            Running 2 test(s) from tests/using_dispatchers.cairo
-            [PASS] using_dispatchers::using_dispatchers::call_and_invoke
-            [PASS] using_dispatchers::using_dispatchers::advanced_types
-            Tests: 2 passed, 0 failed, 0 skipped
+        .stdout_matches(indoc! {r#"
+        Collected 1 test(s) and 2 test file(s)
+        Running 0 test(s) from src/lib.cairo
+        Running 1 test(s) from tests/test_roll.cairo
+        [PASS] test_roll::test_roll::test_roll_simple
+        Tests: 1 passed, 0 failed, 0 skipped
         "#});
 }

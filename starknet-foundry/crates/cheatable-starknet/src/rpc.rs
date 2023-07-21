@@ -1,18 +1,65 @@
 use anyhow::Result;
-use cairo_vm::{hint_processor::hint_processor_definition::{HintProcessor, HintReference}, vm::{vm_core::VirtualMachine, runners::cairo_runner::{RunResources, CairoRunner, CairoArg}, errors::{hint_errors::HintError, vm_errors::VirtualMachineError}}, types::{exec_scope::ExecutionScopes, relocatable::{Relocatable, MaybeRelocatable}}, serde::deserialize_program::ApTracking};
-use std::{sync::Arc, collections::HashMap, any::Any};
+use cairo_vm::{
+    hint_processor::hint_processor_definition::{HintProcessor, HintReference},
+    serde::deserialize_program::ApTracking,
+    types::{
+        exec_scope::ExecutionScopes,
+        relocatable::{MaybeRelocatable, Relocatable},
+    },
+    vm::{
+        errors::{hint_errors::HintError, vm_errors::VirtualMachineError},
+        runners::cairo_runner::{CairoArg, CairoRunner, RunResources},
+        vm_core::VirtualMachine,
+    },
+};
+use std::ops::Deref;
+use std::{any::Any, collections::HashMap, sync::Arc};
 
-use blockifier::{state::{cached_state::CachedState, state_api::State}, execution::{entry_point::{CallEntryPoint, CallType, ExecutionResources, EntryPointExecutionContext, EntryPointExecutionResult, CallInfo, FAULTY_CLASS_HASH}, errors::{EntryPointExecutionError, PreExecutionError, VirtualMachineExecutionError}, contract_class::{ContractClassV1, ContractClass, EntryPointV1}, cairo1_execution::{VmExecutionContext, initialize_execution_context, prepare_call_arguments, finalize_execution, run_entry_point}, syscalls::{hint_processor::{SyscallHintProcessor, SyscallExecutionError, write_segment}, GetExecutionInfoResponse, EmptyRequest}, common_hints::HintExecutionResult, deprecated_syscalls::{DeprecatedSyscallSelector}, execution_utils::{stark_felt_from_ptr, Args, felt_to_stark_felt}}};
+use crate::{
+    constants::{build_block_context, build_transaction_context, TEST_ACCOUNT_CONTRACT_ADDRESS},
+    state::DictStateReader,
+};
+use blockifier::abi::constants;
+use blockifier::{
+    execution::{
+        cairo1_execution::{
+            finalize_execution, initialize_execution_context, prepare_call_arguments,
+            run_entry_point, VmExecutionContext,
+        },
+        common_hints::HintExecutionResult,
+        contract_class::{ContractClass, ContractClassV1, EntryPointV1},
+        deprecated_syscalls::DeprecatedSyscallSelector,
+        entry_point::{
+            CallEntryPoint, CallInfo, CallType, EntryPointExecutionContext,
+            EntryPointExecutionResult, ExecutionResources, FAULTY_CLASS_HASH,
+        },
+        errors::{EntryPointExecutionError, PreExecutionError, VirtualMachineExecutionError},
+        execution_utils::{felt_to_stark_felt, stark_felt_from_ptr, Args},
+        syscalls::{
+            hint_processor::{write_segment, SyscallExecutionError, SyscallHintProcessor},
+            EmptyRequest, GetExecutionInfoResponse,
+        },
+    },
+    state::{cached_state::CachedState, state_api::State},
+};
 use cairo_felt_blockifier::Felt252;
-use starknet_api::{core::{ContractAddress, PatriciaKey, EntryPointSelector, ClassHash}, hash::{StarkFelt, StarkHash}, patricia_key, transaction::{Calldata, TransactionVersion}, deprecated_contract_class::EntryPointType};
-use cairo_lang_casm::{hints::{Hint, StarknetHint}, operand::{ResOperand, BinOpOperand, Operation, DerefOrImmediate, Register}};
-use crate::{state::DictStateReader, constants::{TEST_ACCOUNT_CONTRACT_ADDRESS, build_transaction_context, build_block_context}};
+use cairo_lang_casm::{
+    hints::{Hint, StarknetHint},
+    operand::{BinOpOperand, DerefOrImmediate, Operation, Register, ResOperand},
+};
+use starknet_api::{
+    core::{ClassHash, ContractAddress, EntryPointSelector, PatriciaKey},
+    deprecated_contract_class::EntryPointType,
+    hash::{StarkFelt, StarkHash},
+    patricia_key,
+    transaction::{Calldata, TransactionVersion},
+};
 
 use blockifier::execution::syscalls::{
     deploy, emit_event, get_block_hash, get_execution_info, keccak, library_call,
     library_call_l1_handler, replace_class, send_message_to_l1, storage_read, storage_write,
     StorageReadResponse, StorageWriteResponse, SyscallRequest, SyscallRequestWrapper,
-    SyscallResponse, SyscallResponseWrapper, SyscallResult, 
+    SyscallResponse, SyscallResponseWrapper, SyscallResult,
 };
 type SyscallSelector = DeprecatedSyscallSelector;
 
@@ -69,8 +116,13 @@ pub fn call_contract(
 
     // let exec_result = entry_point.execute(blockifier_state, &mut resources, &mut context);
 
-    let exec_result = execute_call_entry_point(entry_point, blockifier_state, cheated_state, &mut resources, &mut context);
-       
+    let exec_result = execute_call_entry_point(
+        entry_point,
+        blockifier_state,
+        cheated_state,
+        &mut resources,
+        &mut context,
+    );
 
     if let Ok(call_info) = exec_result {
         let raw_return_data = &call_info.execution.retdata.0;
@@ -97,7 +149,6 @@ pub fn call_contract(
     }
 }
 
-
 pub fn execute_call_entry_point(
     entry_point: CallEntryPoint,
     state: &mut dyn State,
@@ -114,7 +165,9 @@ pub fn execute_call_entry_point(
     let storage_address = entry_point.storage_address;
     let storage_class_hash = state.get_class_hash_at(entry_point.storage_address)?;
     if storage_class_hash == ClassHash::default() {
-        return Err(PreExecutionError::UninitializedStorageAddress(entry_point.storage_address).into());
+        return Err(
+            PreExecutionError::UninitializedStorageAddress(entry_point.storage_address).into(),
+        );
     }
 
     let class_hash = match entry_point.class_hash {
@@ -133,25 +186,34 @@ pub fn execute_call_entry_point(
     // Add class hash to the call, that will appear in the output (call info).
     // entry_point.class_hash = Some(class_hash); // TODO
     let contract_class = state.get_compiled_contract_class(&class_hash)?;
-    let result = execute_if_cairo1(entry_point, contract_class, state, cheated_state, resources, context)
-        .map_err(|error| {
-            match error {
-                // On VM error, pack the stack trace into the propagated error.
-                EntryPointExecutionError::VirtualMachineExecutionError(error) => {
-                    context.error_stack.push((storage_address, error.try_to_vm_trace()));
-                    // TODO(Dori, 1/5/2023): Call error_trace only in the top call; as it is
-                    // right now,  each intermediate VM error is wrapped
-                    // in a VirtualMachineExecutionErrorWithTrace  error
-                    // with the stringified trace of all errors below
-                    // it.
-                    EntryPointExecutionError::VirtualMachineExecutionErrorWithTrace {
-                        trace: context.error_trace(),
-                        source: error,
-                    }
+    let result = execute_if_cairo1(
+        entry_point,
+        contract_class,
+        state,
+        cheated_state,
+        resources,
+        context,
+    )
+    .map_err(|error| {
+        match error {
+            // On VM error, pack the stack trace into the propagated error.
+            EntryPointExecutionError::VirtualMachineExecutionError(error) => {
+                context
+                    .error_stack
+                    .push((storage_address, error.try_to_vm_trace()));
+                // TODO(Dori, 1/5/2023): Call error_trace only in the top call; as it is
+                // right now,  each intermediate VM error is wrapped
+                // in a VirtualMachineExecutionErrorWithTrace  error
+                // with the stringified trace of all errors below
+                // it.
+                EntryPointExecutionError::VirtualMachineExecutionErrorWithTrace {
+                    trace: context.error_trace(),
+                    source: error,
                 }
-                other_error => other_error,
             }
-        });
+            other_error => other_error,
+        }
+    });
 
     // context.current_recursion_depth -= 1; // TODO
     result
@@ -177,7 +239,6 @@ pub fn execute_if_cairo1(
         ),
     }
 }
-
 
 pub struct CheatableSyscallHandler<'a> {
     pub syscall_handler: SyscallHintProcessor<'a>,
@@ -212,7 +273,8 @@ impl HintProcessor for CheatableSyscallHandler<'_> {
         reference_ids: &HashMap<String, usize>,
         references: &[HintReference],
     ) -> Result<Box<dyn Any>, VirtualMachineError> {
-        self.syscall_handler.compile_hint(hint_code, ap_tracking_data, reference_ids, references)
+        self.syscall_handler
+            .compile_hint(hint_code, ap_tracking_data, reference_ids, references)
     }
 }
 
@@ -252,10 +314,18 @@ pub fn felt_from_ptr_immutable(
 }
 
 impl CheatableSyscallHandler<'_> {
-    pub fn is_cheated(&mut self, _vm: &mut VirtualMachine, selector: SyscallSelector, contract_address: &ContractAddress) -> bool {
+    pub fn is_cheated(
+        &mut self,
+        _vm: &mut VirtualMachine,
+        selector: SyscallSelector,
+        contract_address: &ContractAddress,
+    ) -> bool {
         match selector {
-           SyscallSelector::GetExecutionInfo => self.cheated_state.rolled_contracts.contains_key(&contract_address),
-           _ => false 
+            SyscallSelector::GetExecutionInfo => self
+                .cheated_state
+                .rolled_contracts
+                .contains_key(&contract_address),
+            _ => false,
         }
     }
 
@@ -266,11 +336,13 @@ impl CheatableSyscallHandler<'_> {
     ) -> HintExecutionResult {
         // We peak into the selector without incrementing the pointer as it is done later
         let syscall_selector_pointer = self.syscall_handler.syscall_ptr;
-        let selector = SyscallSelector::try_from(stark_felt_from_ptr_immutable(vm, &syscall_selector_pointer)?)?;
+        let selector = SyscallSelector::try_from(stark_felt_from_ptr_immutable(
+            vm,
+            &syscall_selector_pointer,
+        )?)?;
         let contract_address = self.syscall_handler.storage_address();
 
         if self.is_cheated(vm, selector, &contract_address) {
-            // self.syscall_handler.syscall_ptr += 1;
             let StarknetHint::SystemCall{ system: syscall } = hint else {
                 return Err(HintError::CustomHint(
                     "Test functions are unsupported on starknet.".into()
@@ -279,33 +351,73 @@ impl CheatableSyscallHandler<'_> {
             let initial_syscall_ptr = get_ptr_from_res_operand_unchecked(vm, syscall);
             self.verify_syscall_ptr(initial_syscall_ptr)?;
 
+            // Increment, since the selector was peeked into before
+            self.syscall_handler.syscall_ptr += 1;
+
             if selector != SyscallSelector::Keccak {
-                self.syscall_handler.increment_syscall_count_by(&selector, 1);
+                self.syscall_handler
+                    .increment_syscall_count_by(&selector, 1);
             }
 
-            let execution_info_ptr = self.syscall_handler.get_or_allocate_execution_info_segment(vm)?;
+            let SyscallRequestWrapper {
+                gas_counter,
+                request: _,
+            } = SyscallRequestWrapper::<EmptyRequest>::read(
+                vm,
+                &mut self.syscall_handler.syscall_ptr,
+            )?;
+
+            let execution_info_ptr = self
+                .syscall_handler
+                .get_or_allocate_execution_info_segment(vm)?;
             let data = vm.get_range(execution_info_ptr, 1)[0].clone();
-            if let MaybeRelocatable::RelocatableValue(block_info_ptr)  = data.unwrap().into_owned() {
+            if let MaybeRelocatable::RelocatableValue(block_info_ptr) = data.unwrap().into_owned() {
                 let ptr_cheated_exec_info = vm.add_memory_segment();
                 let ptr_cheated_block_info = vm.add_memory_segment();
 
                 // create a new segment with replaced block info
-                let ptr_cheated_block_info_c = vm.load_data(ptr_cheated_block_info, &vec![MaybeRelocatable::Int(Felt252::from(123))]).unwrap(); 
-                let orginal_block_info = vm.get_continuous_range((block_info_ptr + 1 as usize).unwrap() as Relocatable, 2).unwrap();
-                vm.load_data(ptr_cheated_block_info_c, &orginal_block_info).unwrap();
-
+                let ptr_cheated_block_info_c = vm
+                    .load_data(
+                        ptr_cheated_block_info,
+                        &vec![MaybeRelocatable::Int(
+                            self.cheated_state
+                                .rolled_contracts
+                                .get(&contract_address)
+                                .expect("No roll value found for contract address")
+                                .clone(),
+                        )],
+                    )
+                    .unwrap();
+                let orginal_block_info = vm
+                    .get_continuous_range((block_info_ptr + 1 as usize).unwrap() as Relocatable, 2)
+                    .unwrap();
+                vm.load_data(ptr_cheated_block_info_c, &orginal_block_info)
+                    .unwrap();
 
                 // create a new segment with replaced execution_info including pointer to updated block info
-                let ptr_cheated_exec_info_c = vm.load_data(ptr_cheated_exec_info, &vec![MaybeRelocatable::RelocatableValue(ptr_cheated_block_info)]).unwrap(); 
-                let original_execution_info = vm.get_continuous_range((execution_info_ptr + 1 as usize).unwrap() as Relocatable, 4).unwrap();
-                vm.load_data(ptr_cheated_exec_info_c, &original_execution_info).unwrap();
+                let ptr_cheated_exec_info_c = vm
+                    .load_data(
+                        ptr_cheated_exec_info,
+                        &vec![MaybeRelocatable::RelocatableValue(ptr_cheated_block_info)],
+                    )
+                    .unwrap();
+                let original_execution_info = vm
+                    .get_continuous_range(
+                        (execution_info_ptr + 1 as usize).unwrap() as Relocatable,
+                        4,
+                    )
+                    .unwrap();
+                vm.load_data(ptr_cheated_exec_info_c, &original_execution_info)
+                    .unwrap();
 
-
-                let SyscallRequestWrapper { gas_counter, request: _ } =
-                    SyscallRequestWrapper::<EmptyRequest>::read(vm, &mut self.syscall_handler.syscall_ptr)?;
-
-                let response = GetExecutionInfoResponse { execution_info_ptr: ptr_cheated_exec_info };
-                let response_w = SyscallResponseWrapper::Success { gas_counter, response };
+                let remaining_gas = gas_counter - constants::GET_EXECUTION_INFO_GAS_COST;
+                let response = GetExecutionInfoResponse {
+                    execution_info_ptr: ptr_cheated_exec_info,
+                };
+                let response_w = SyscallResponseWrapper::Success {
+                    gas_counter: remaining_gas,
+                    response,
+                };
                 response_w.write(vm, &mut self.syscall_handler.syscall_ptr)?;
                 return Ok(());
             }
@@ -324,7 +436,6 @@ impl CheatableSyscallHandler<'_> {
         Ok(())
     }
 }
-
 
 /// Executes a specific call to a contract entry point and returns its output.
 pub fn execute_entry_point_call_cairo1(
@@ -370,9 +481,8 @@ pub fn execute_entry_point_call_cairo1(
         args,
         program_segment_size,
     )?;
-    let sys_h = syscall_hh.syscall_handler; 
-    let call_info =
-        finalize_execution(vm, runner, sys_h, previous_vm_resources, n_total_args)?;
+    let sys_h = syscall_hh.syscall_handler;
+    let call_info = finalize_execution(vm, runner, sys_h, previous_vm_resources, n_total_args)?;
     if call_info.execution.failed {
         return Err(EntryPointExecutionError::ExecutionFailed {
             error_data: call_info.execution.retdata.0,
@@ -406,7 +516,6 @@ pub fn run_entry_point_m(
         hint_processor,
     );
 
-    // hint_processor.context.vm_run_resources = run_resources; // TODO 
+    // hint_processor.context.vm_run_resources = run_resources; // TODO
     Ok(result?)
 }
-
