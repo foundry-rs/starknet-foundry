@@ -44,7 +44,7 @@ Generates an empty template for the multicall `.toml` file that may be later use
 Optional.
 
 When provided, it specifies where the template should be saved, it has to be a file path.
-If omitted, the template contents are going to be printed out to the stdout.
+If omitted, the template contents will be printed out to the stdout.
 
 ### `--overwrite, -o <OVERWRITE>`
 Optional.
