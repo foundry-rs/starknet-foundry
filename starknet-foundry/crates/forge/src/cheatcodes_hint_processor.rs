@@ -173,12 +173,12 @@ fn execute_syscall(
 
     let mut buffer = MemBuffer::new(vm, system_ptr);
 
-    let selector = buffer.next_felt252()?.to_bytes_be();
-    let gas_counter = buffer.next_usize()?;
-    let contract_address = buffer.next_felt252()?.into_owned();
-    let entry_point_selector = buffer.next_felt252()?.into_owned();
+    let selector = buffer.next_felt252().unwrap().to_bytes_be();
+    let gas_counter = buffer.next_usize().unwrap();
+    let contract_address = buffer.next_felt252().unwrap().into_owned();
+    let entry_point_selector = buffer.next_felt252().unwrap().into_owned();
 
-    let calldata = buffer.next_arr()?;
+    let calldata = buffer.next_arr().unwrap();
 
     assert_eq!(std::str::from_utf8(&selector).unwrap(), "CallContract");
     let call_result = call_contract(
@@ -194,10 +194,10 @@ fn execute_syscall(
         CallContractOutput::Panic { panic_data } => (panic_data, 1),
     };
 
-    buffer.write(gas_counter)?;
-    buffer.write(Felt252::from(exit_code))?;
+    buffer.write(gas_counter).unwrap();
+    buffer.write(Felt252::from(exit_code)).unwrap();
 
-    buffer.write_arr(result.iter())?;
+    buffer.write_arr(result.iter()).unwrap();
 
     Ok(())
 }
@@ -443,8 +443,12 @@ fn declare(
     // result_segment.
     let felt_class_hash = felt252_from_hex_string(&class_hash.to_string()).unwrap();
 
-    buffer.write(Felt252::from(0))?;
-    buffer.write(felt_class_hash)?;
+    buffer
+        .write(Felt252::from(0))
+        .expect("Failed to insert error code");
+    buffer
+        .write(felt_class_hash)
+        .expect("Failed to insert declared contract class hash");
 
     Ok(())
 }
@@ -514,8 +518,12 @@ fn deploy(
             .expect("Failed to get contract_address from return_data");
         let contract_address = Felt252::from_bytes_be(contract_address.bytes());
 
-        buffer.write(Felt252::from(0))?;
-        buffer.write(contract_address)?;
+        buffer
+            .write(Felt252::from(0))
+            .expect("Failed to insert error code");
+        buffer
+            .write(contract_address)
+            .expect("Failed to insert deployed contract address");
     } else {
         let revert_error = tx_info
             .revert_error
