@@ -77,7 +77,7 @@ pub struct TestCase {
 }
 
 impl<'a> TestCase {
-    const TEST_PATH: &'a str = "test_case.cairo";
+    pub const TEST_PATH: &'a str = "test_case.cairo";
     const PACKAGE_NAME: &'a str = "my_package";
 
     pub fn from(test_code: &str, contracts: Vec<Contract>) -> Result<Self> {
@@ -141,13 +141,23 @@ macro_rules! test_case {
 macro_rules! assert_passed {
     ($result:expr) => {{
         use forge::test_case_summary::TestCaseSummary;
+        use $crate::common::runner::TestCase;
 
-        assert!($result.iter().all(|result| {
+        let result = $result
+            .iter()
+            .find(|r| r.relative_path.ends_with(TestCase::TEST_PATH))
+            .unwrap();
+        assert!(
+            !result.test_case_summaries.is_empty(),
+            "No test results found"
+        );
+        assert!(
             result
                 .test_case_summaries
                 .iter()
-                .all(|r| matches!(r, TestCaseSummary::Passed { .. }))
-        }));
+                .all(|r| matches!(r, TestCaseSummary::Passed { .. })),
+            "Some tests didn't pass"
+        );
     }};
 }
 
@@ -156,11 +166,22 @@ macro_rules! assert_failed {
     ($result:expr) => {{
         use forge::test_case_summary::TestCaseSummary;
 
-        assert!($result.iter().all(|result| {
+        use $crate::common::runner::TestCase;
+
+        let result = $result
+            .iter()
+            .find(|r| r.relative_path.ends_with(TestCase::TEST_PATH))
+            .unwrap();
+        assert!(
+            !result.test_case_summaries.is_empty(),
+            "No test results found"
+        );
+        assert!(
             result
                 .test_case_summaries
                 .iter()
-                .all(|r| matches!(r, TestCaseSummary::Failed { .. }))
-        }));
+                .all(|r| matches!(r, TestCaseSummary::Failed { .. })),
+            "Some tests didn't fail"
+        );
     }};
 }
