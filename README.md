@@ -1,5 +1,13 @@
 # Starknet Foundry 🔨
 
+[![Telegram Chat][tg-badge]][tg-url] [![Telegram Support][tg-support-badge]][tg-support-url]
+
+[tg-badge]: https://img.shields.io/endpoint?color=neon&logo=telegram&label=chat&style=flat-square&url=https%3A%2F%2Ftg.sumanjay.workers.dev%2Fstarknet_foundry
+[tg-url]: https://t.me/starknet_foundry
+[tg-support-badge]: https://img.shields.io/endpoint?color=neon&logo=telegram&label=support&style=flat-square&url=https%3A%2F%2Ftg.sumanjay.workers.dev%2Fstarknet_foundry_support
+[tg-support-url]: https://t.me/starknet_foundry_support
+
+
 Blazingly fast toolkit for developing Starknet contracts designed & developed by
 ex [Protostar](https://github.com/software-mansion/protostar) team from [Software Mansion](https://swmansion.com) based
 on native [Cairo](https://github.com/starkware-libs/cairo) test runner
@@ -61,7 +69,7 @@ Starknet Foundry is under active development! Expect a lot of new features to ap
 
 ## Performance
 
-Forge achieves performance comparable to the Cairo Test Runner with improved user experience. All that is possible on just a single thread and multithreading is well on it's way!
+Forge achieves performance comparable to the Cairo Test Runner with improved user experience. All that is possible on just a single thread and multithreading is well on its way!
 
 ![Starknet test framework speed comparison](./benchmarks/plot.png)
 

@@ -9,27 +9,26 @@ testing = []
 [dependencies]
 rayon.workspace = true
 
-cairo-lang-casm = { path = "../../../cairo/crates/cairo-lang-casm", version = "2.0.0-rc2" }
-cairo-lang-compiler = { path = "../../../cairo/crates/cairo-lang-compiler", version = "2.0.0-rc2" }
-cairo-lang-debug = { path = "../../../cairo/crates/cairo-lang-debug", version = "2.0.0-rc2" }
-cairo-lang-defs = { path = "../../../cairo/crates/cairo-lang-defs", version = "2.0.0-rc2" }
-cairo-lang-diagnostics = { path = "../../../cairo/crates/cairo-lang-diagnostics", version = "2.0.0-rc2" }
-cairo-lang-filesystem = { path = "../../../cairo/crates/cairo-lang-filesystem", version = "2.0.0-rc2" }
-cairo-lang-lowering = { path = "../../../cairo/crates/cairo-lang-lowering", version = "2.0.0-rc2" }
-cairo-lang-test-runner = { path = "../../../cairo/crates/cairo-lang-test-runner", version = "2.0.0-rc2" }
-cairo-lang-plugins = { path = "../../../cairo/crates/cairo-lang-plugins", version = "2.0.0-rc2" }
-cairo-lang-project = { path = "../../../cairo/crates/cairo-lang-project", version = "2.0.0-rc2" }
-cairo-lang-sierra-ap-change = { path = "../../../cairo/crates/cairo-lang-sierra-ap-change", version = "2.0.0-rc2" }
-cairo-lang-sierra-gas = { path = "../../../cairo/crates/cairo-lang-sierra-gas", version = "2.0.0-rc2" }
-cairo-lang-runner = { path = "../../../cairo/crates/cairo-lang-runner", version = "2.0.0-rc2" }
-cairo-lang-semantic = { path = "../../../cairo/crates/cairo-lang-semantic", version = "2.0.0-rc2" }
-cairo-lang-sierra = { path = "../../../cairo/crates/cairo-lang-sierra", version = "2.0.0-rc2" }
-cairo-lang-sierra-generator = { path = "../../../cairo/crates/cairo-lang-sierra-generator", version = "2.0.0-rc2" }
-cairo-lang-sierra-to-casm = { path = "../../../cairo/crates/cairo-lang-sierra-to-casm", version = "2.0.0-rc2" }
-cairo-lang-starknet = { path = "../../../cairo/crates/cairo-lang-starknet", version = "2.0.0-rc2" }
-cairo-lang-syntax = { path = "../../../cairo/crates/cairo-lang-syntax", version = "2.0.0-rc2" }
-cairo-lang-utils = { path = "../../../cairo/crates/cairo-lang-utils", version = "2.0.0-rc2" }
-cairo-lang-sierra-type-size = { path = "../../../cairo/crates/cairo-lang-sierra-type-size", version = "2.0.0-rc2" }
+cairo-lang-casm = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
+cairo-lang-compiler = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
+cairo-lang-debug = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
+cairo-lang-defs = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
+cairo-lang-diagnostics = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
+cairo-lang-filesystem = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
+cairo-lang-lowering = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
+cairo-lang-test-runner = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
+cairo-lang-plugins = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
+cairo-lang-project = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
+cairo-lang-sierra-ap-change = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
+cairo-lang-sierra-gas = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
+cairo-lang-runner = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
+cairo-lang-semantic = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
+cairo-lang-sierra = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
+cairo-lang-sierra-generator = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
+cairo-lang-sierra-to-casm = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
+cairo-lang-starknet = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
+cairo-lang-syntax = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
+cairo-lang-utils = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
 
 anyhow.workspace = true
 smol_str = { version = "0.2.0", features = ["serde"] }
