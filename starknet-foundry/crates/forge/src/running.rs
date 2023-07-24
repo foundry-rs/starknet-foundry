@@ -76,7 +76,9 @@ pub(crate) fn run_from_test_case(
         original_cairo_hint_processor: core_cairo_hint_processor,
         blockifier_state: build_testing_state(predeployed_contracts),
         contracts,
-        cheated_state: CheatedState { rolled_contracts: HashMap::new() },
+        cheated_state: CheatedState {
+            rolled_contracts: HashMap::new(),
+        },
     };
 
     match runner.run_function(

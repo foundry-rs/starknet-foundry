@@ -149,7 +149,7 @@ impl ForgeHintProcessor for CairoHintProcessor<'_> {
         let value = inputs[1].clone();
         self.cheated_state
             .rolled_contracts
-            .insert(contract_address, convert_to_blockifier_felt(value));
+            .insert(contract_address, convert_to_blockifier_felt(&value));
         Ok(())
     }
 }
@@ -248,12 +248,12 @@ struct ScarbStarknetContractArtifact {
     casm: Option<PathBuf>,
 }
 
-fn convert_to_blockifier_felt(val: Felt252) -> blockifier_Felt252 {
+fn convert_to_blockifier_felt(val: &Felt252) -> blockifier_Felt252 {
     let v = val.to_bigint();
     blockifier_Felt252::from(v)
 }
 
-fn convert_from_blockifier_felt(val: blockifier_Felt252) -> Felt252 {
+fn convert_from_blockifier_felt(val: &blockifier_Felt252) -> Felt252 {
     let v = val.to_bigint();
     Felt252::from(v)
 }
@@ -278,13 +278,13 @@ fn execute_syscall(
 
     let calldata_blockifier: Vec<blockifier_Felt252> = calldata
         .into_iter()
-        .map(|v| convert_to_blockifier_felt(v))
+        .map(|v| convert_to_blockifier_felt(&v))
         .collect();
     assert_eq!(std::str::from_utf8(&selector).unwrap(), "CallContract");
 
     let call_result = call_contract(
-        &convert_to_blockifier_felt(contract_address),
-        &convert_to_blockifier_felt(entry_point_selector),
+        &convert_to_blockifier_felt(&contract_address),
+        &convert_to_blockifier_felt(&entry_point_selector),
         &calldata_blockifier,
         blockifier_state,
         cheated_state,
@@ -295,14 +295,14 @@ fn execute_syscall(
         CallContractOutput::Success { ret_data } => (
             ret_data
                 .into_iter()
-                .map(|v| convert_from_blockifier_felt(v))
+                .map(|v| convert_from_blockifier_felt(&v))
                 .collect::<Vec<Felt252>>(),
             0,
         ),
         CallContractOutput::Panic { panic_data } => (
             panic_data
                 .into_iter()
-                .map(|v| convert_from_blockifier_felt(v))
+                .map(|v| convert_from_blockifier_felt(&v))
                 .collect::<Vec<Felt252>>(),
             1,
         ),

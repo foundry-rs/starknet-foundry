@@ -175,7 +175,8 @@ fn execute_call_entry_point(
     // Add class hash to the call, that will appear in the output (call info).
     entry_point.class_hash = Some(class_hash);
     let contract_class = state.get_compiled_contract_class(&class_hash)?;
-    let result = execute_if_cairo1(
+
+    execute_if_cairo1(
         entry_point.clone(),
         contract_class,
         state,
@@ -202,9 +203,7 @@ fn execute_call_entry_point(
             }
             other_error => other_error,
         }
-    });
-
-    result
+    })
 }
 
 fn execute_if_cairo1(
@@ -219,7 +218,7 @@ fn execute_if_cairo1(
         ContractClass::V0(_) => panic!("Cairo 0 classes are not supported"),
         ContractClass::V1(contract_class) => execute_entry_point_call_cairo1(
             call,
-            contract_class,
+            &contract_class,
             state,
             cheated_state,
             resources,
@@ -266,8 +265,8 @@ impl HintProcessor for CheatableSyscallHandler<'_> {
     }
 }
 
-/// Retrieves a [Relocatable] from the VM given a [ResOperand].
-/// A [ResOperand] represents a CASM result expression, and is deserialized with the hint.
+/// Retrieves a [Relocatable] from the VM given a [`ResOperand`].
+/// A [`ResOperand`] represents a CASM result expression, and is deserialized with the hint.
 fn get_ptr_from_res_operand_unchecked(vm: &mut VirtualMachine, res: &ResOperand) -> Relocatable {
     let (cell, base_offset) = match res {
         ResOperand::Deref(cell) => (cell, Felt252::from(0)),
@@ -282,7 +281,7 @@ fn get_ptr_from_res_operand_unchecked(vm: &mut VirtualMachine, res: &ResOperand)
         Register::AP => vm.get_ap(),
         Register::FP => vm.get_fp(),
     };
-    let cell_reloc = (base + (cell.offset as i32)).unwrap();
+    let cell_reloc = (base + i32::from(cell.offset)).unwrap();
     (vm.get_relocatable(cell_reloc).unwrap() + &base_offset).unwrap()
 }
 
@@ -312,7 +311,7 @@ impl CheatableSyscallHandler<'_> {
             SyscallSelector::GetExecutionInfo => self
                 .cheated_state
                 .rolled_contracts
-                .contains_key(&contract_address),
+                .contains_key(contract_address),
             _ => false,
         }
     }
@@ -377,7 +376,7 @@ impl CheatableSyscallHandler<'_> {
                     )
                     .unwrap();
                 let orginal_block_info = vm
-                    .get_continuous_range((block_info_ptr + 1 as usize).unwrap() as Relocatable, 2)
+                    .get_continuous_range((block_info_ptr + 1_usize).unwrap() as Relocatable, 2)
                     .unwrap();
                 vm.load_data(ptr_cheated_block_info_c, &orginal_block_info)
                     .unwrap();
@@ -390,10 +389,7 @@ impl CheatableSyscallHandler<'_> {
                     )
                     .unwrap();
                 let original_execution_info = vm
-                    .get_continuous_range(
-                        (execution_info_ptr + 1 as usize).unwrap() as Relocatable,
-                        4,
-                    )
+                    .get_continuous_range((execution_info_ptr + 1_usize).unwrap() as Relocatable, 4)
                     .unwrap();
                 vm.load_data(ptr_cheated_exec_info_c, &original_execution_info)
                     .unwrap();
@@ -428,7 +424,7 @@ impl CheatableSyscallHandler<'_> {
 /// Executes a specific call to a contract entry point and returns its output.
 fn execute_entry_point_call_cairo1(
     call: CallEntryPoint,
-    contract_class: ContractClassV1,
+    contract_class: &ContractClassV1,
     state: &mut dyn State,
     cheated_state: &CheatedState,
     resources: &mut ExecutionResources,
@@ -441,7 +437,7 @@ fn execute_entry_point_call_cairo1(
         initial_syscall_ptr,
         entry_point,
         program_segment_size,
-    } = initialize_execution_context(call, &contract_class, state, resources, context)?;
+    } = initialize_execution_context(call, contract_class, state, resources, context)?;
 
     let args = prepare_call_arguments(
         &syscall_handler.call,
@@ -465,8 +461,8 @@ fn execute_entry_point_call_cairo1(
         &mut vm,
         &mut runner,
         &mut syscall_hh,
-        entry_point,
-        args,
+        &entry_point,
+        &args,
         program_segment_size,
     )?;
 
@@ -487,8 +483,8 @@ fn run_entry_point_m(
     vm: &mut VirtualMachine,
     runner: &mut CairoRunner,
     hint_processor: &mut dyn HintProcessor,
-    entry_point: EntryPointV1,
-    args: Args,
+    entry_point: &EntryPointV1,
+    args: &Args,
     program_segment_size: usize,
 ) -> Result<RunResources, VirtualMachineExecutionError> {
     let verify_secure = false;
