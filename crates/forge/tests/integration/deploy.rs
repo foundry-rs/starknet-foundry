@@ -3,6 +3,7 @@ use crate::integration::common::runner::Contract;
 use crate::{assert_case_output_contains, assert_failed, assert_passed, test_case};
 use camino::Utf8PathBuf;
 use forge::run;
+use forge::test_case_summary::TestCaseSummary;
 use indoc::indoc;
 use std::path::Path;
 
@@ -90,9 +91,7 @@ fn deploy_fails_on_calldata_when_contract_has_no_constructor() {
         
             let class_hash = declare('HelloStarknet');
             let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
-            let contract_address = deploy(prepared).unwrap();
-        
-            assert(2 == 2, '2 == 2');
+            let result = deploy(prepared);
         }
     "#
         ),
@@ -115,6 +114,11 @@ fn deploy_fails_on_calldata_when_contract_has_no_constructor() {
     .unwrap();
 
     assert_failed!(result);
+    assert_case_output_contains!(
+        result,
+        "deploy_invalid_calldata",
+        "Constructor does not take any arguments and some were provided"
+    );
 }
 
 #[test]
@@ -133,7 +137,7 @@ fn test_deploy_fails_on_missing_constructor_arguments() {
         
             let class_hash = declare('HelloStarknet');
             let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
-            let contract_address = deploy(prepared).unwrap();
+            let contract_address = deploy(prepared);
         
             assert(2 == 2, '2 == 2');
         }
@@ -168,6 +172,11 @@ fn test_deploy_fails_on_missing_constructor_arguments() {
     .unwrap();
 
     assert_failed!(result);
+    assert_case_output_contains!(
+        result,
+        "deploy_invalid_calldata",
+        "Not enough arguments for constructor provided"
+    );
 }
 
 #[test]
@@ -191,7 +200,7 @@ fn test_deploy_fails_on_too_many_constructor_arguments() {
 
             let class_hash = declare('HelloStarknet');
             let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
-            let contract_address = deploy(prepared).unwrap();
+            let contract_address = deploy(prepared);
 
             assert(2 == 2, '2 == 2');
         }
@@ -226,6 +235,11 @@ fn test_deploy_fails_on_too_many_constructor_arguments() {
     .unwrap();
 
     assert_failed!(result);
+    assert_case_output_contains!(
+        result,
+        "deploy_invalid_calldata",
+        "Too many arguments for constructor provided"
+    );
 }
 
 #[test]
@@ -245,9 +259,9 @@ fn test_deploy_fails_with_incorrect_class_hash() {
         fn deploy_non_existing_class_hash() {
             let mut calldata = ArrayTrait::new();
 
-            let prepared = PreparedContract { 
-                class_hash: 'made-up-class-hash'.try_into().unwrap(), 
-                constructor_calldata: @calldata 
+            let prepared = PreparedContract {
+                class_hash: 'made-up-class-hash'.try_into().unwrap(),
+                constructor_calldata: @calldata
             };
             let contract_address = deploy(prepared).unwrap();
         }
@@ -295,12 +309,12 @@ fn test_deploy_invokes_the_constructor() {
         use traits::TryInto;
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
-        
+
         #[starknet::interface]
         trait ThingGetter<TContractState> {
             fn get_thing(self: @TContractState) -> felt252;
         }
-        
+
         #[test]
         fn deploy_invokes_constructor() {
             let mut calldata = ArrayTrait::new();
@@ -309,7 +323,7 @@ fn test_deploy_invokes_the_constructor() {
             let class_hash = declare('HelloStarknet');
             let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
             let contract_address = deploy(prepared).unwrap();
-            
+
             let thing_getter = ThingGetterDispatcher { contract_address };
             
             let thing = thing_getter.get_thing();
@@ -326,7 +340,7 @@ fn test_deploy_invokes_the_constructor() {
                 trait ThingGetter<TContractState> {
                     fn get_thing(self: @TContractState) -> felt252;
                 }
-                
+
                 #[starknet::contract]
                 mod HelloStarknet {
                     #[storage]
@@ -337,7 +351,7 @@ fn test_deploy_invokes_the_constructor() {
                      fn constructor(ref self: ContractState, arg1: felt252) {
                         self.stored_thing.write(arg1)
                      }
-                     
+
                      #[external(v0)]
                      impl ThingGetterImpl of super::ThingGetter<ContractState> {
                         fn get_thing(self: @ContractState) -> felt252 {
