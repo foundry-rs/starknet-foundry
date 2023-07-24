@@ -238,8 +238,7 @@ async fn main() -> Result<()> {
                 Ok(())
             }
             account::Commands::Deploy(_deploy) => {
-                // TODO
-                Ok(())
+                unimplemented!()
             }
         },
     }

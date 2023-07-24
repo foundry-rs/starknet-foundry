@@ -113,7 +113,7 @@ pub async fn test_happy_case_add_profile() {
 
     let stdout_str =
         std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
-    assert!(stdout_str.contains("add_profile: Profile successfully added to Scarb.toml"));
+    assert!(stdout_str.contains("add-profile: Profile successfully added to Scarb.toml"));
 
     let contents =
         fs::read_to_string(current_dir.join("Scarb.toml")).expect("Unable to read Scarb.toml");
@@ -152,13 +152,11 @@ pub async fn test_profile_already_exists() {
     let bdg = snapbox.assert();
     let out = bdg.get_output();
 
-    let stdout_str =
-        std::str::from_utf8(&out.stdout).expect("failed to convert command stderr to string");
-    assert!(stdout_str.contains(
-        "add_profile: Failed to add myprofile profile to the Scarb.toml. Profile already exists"
+    let std_err =
+        std::str::from_utf8(&out.stderr).expect("failed to convert command stderr to string");
+    assert!(std_err.contains(
+        "error: Failed to add myprofile profile to the Scarb.toml. Profile already exists"
     ));
-    assert!(stdout_str.contains("command: Create account"));
-    assert!(stdout_str.contains("message: Account successfully created. Prefund generated address with at least 432300000000 tokens. It is good to send more in the case of higher demand, max_fee * 2 = 864600000000"));
 
     fs::remove_dir_all(current_dir).unwrap();
 }

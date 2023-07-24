@@ -47,10 +47,7 @@ pub async fn create(
 ) -> Result<Vec<(&'static str, String)>> {
     let private_key = SigningKey::from_random();
     let public_key = private_key.verifying_key();
-    let salt = match maybe_salt {
-        Some(salt) => salt,
-        None => FieldElement::from(OsRng.next_u64()),
-    };
+    let salt = maybe_salt.unwrap_or(FieldElement::from(OsRng.next_u64()));
 
     let address = get_contract_address(
         salt,
@@ -98,20 +95,24 @@ pub async fn create(
         "deployed": false,
     });
 
+    if add_profile {
+        match add_created_profile_to_configuration(name, network.to_string(), url) {
+            Ok(()) => {}
+            Err(err) => return Err(anyhow!(err)),
+        };
+    }
+
     std::fs::write(
         accounts_file_path.clone(),
         serde_json::to_string_pretty(&items).unwrap(),
     )?;
 
-    let mut output = vec![(
-        "message",
-        format!("Account successfully created. Prefund generated address with at least {max_fee} tokens. \
-         It is good to send more in the case of higher demand, max_fee * 2 = {}", max_fee * 2),
-    ), ("address", format!("{address:#x}"))];
+    let mut output = vec![("message", format!("Account successfully created. Prefund generated address with at least {max_fee} tokens. It is good to send more in the case of higher demand, max_fee * 2 = {}", max_fee * 2)),
+                          ("address", format!("{address:#x}"))];
     if add_profile {
         output.push((
-            "add_profile",
-            add_created_profile_to_configuration(name, network.to_string(), url),
+            "add-profile",
+            "Profile successfully added to Scarb.toml".to_string(),
         ));
     }
 
@@ -136,7 +137,11 @@ pub fn print_account_create_result(
     Ok(())
 }
 
-pub fn add_created_profile_to_configuration(name: String, network: String, url: String) -> String {
+pub fn add_created_profile_to_configuration(
+    name: String,
+    network: String,
+    url: String,
+) -> Result<()> {
     let manifest_path = find_manifest_path(None).expect("Failed to obtain Scarb.toml file path");
 
     let metadata = scarb_metadata::MetadataCommand::new()
@@ -153,7 +158,9 @@ pub fn add_created_profile_to_configuration(name: String, network: String, url: 
 
     let property = get_property(package, &Some(name.clone()), "account");
     if property.is_ok() {
-        return format!("Failed to add {name} profile to the Scarb.toml. Profile already exists");
+        return Err(anyhow!(
+            "Failed to add {name} profile to the Scarb.toml. Profile already exists"
+        ));
     }
 
     let toml_string = {
@@ -183,5 +190,5 @@ pub fn add_created_profile_to_configuration(name: String, network: String, url: 
         .write_all(format!("\n{toml_string}").as_bytes())
         .expect("Couldn't write to the Scarb.toml");
 
-    "Profile successfully added to Scarb.toml".to_string()
+    Ok(())
 }
