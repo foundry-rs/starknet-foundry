@@ -88,7 +88,7 @@ pub fn call_contract(
             .map(|data| StarkFelt::new(data.to_be_bytes()))
             .collect::<Result<Vec<_>, _>>()?,
     ));
-    let entry_point = CallEntryPoint {
+    let mut entry_point = CallEntryPoint {
         class_hash: None,
         code_address: Some(contract_address),
         entry_point_type: EntryPointType::External,
@@ -110,10 +110,8 @@ pub fn call_contract(
         block_context.invoke_tx_max_n_steps,
     );
 
-    // let exec_result = entry_point.execute(blockifier_state, &mut resources, &mut context);
-
     let exec_result = execute_call_entry_point(
-        entry_point,
+        &mut entry_point,
         blockifier_state,
         cheated_state,
         &mut resources,
@@ -144,19 +142,14 @@ pub fn call_contract(
         panic!("Unparseable result: {exec_result:?}");
     }
 }
-
-pub fn execute_call_entry_point(
-    entry_point: CallEntryPoint,
+// Copied over (with modifications) from blockifier/src/execution/entry_point.rs:144
+fn execute_call_entry_point(
+    entry_point: &mut CallEntryPoint,
     state: &mut dyn State,
     cheated_state: &CheatedState,
     resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
 ) -> EntryPointExecutionResult<CallInfo> {
-    // TODO it is private but unnecessary
-    // context.current_recursion_depth += 1;
-    // if context.current_recursion_depth > context.max_recursion_depth {
-    //     return Err(EntryPointExecutionError::RecursionDepthExceeded);
-    // }
     // Validate contract is deployed.
     let storage_address = entry_point.storage_address;
     let storage_class_hash = state.get_class_hash_at(entry_point.storage_address)?;
@@ -180,10 +173,10 @@ pub fn execute_call_entry_point(
         return Err(PreExecutionError::FraudAttempt.into());
     }
     // Add class hash to the call, that will appear in the output (call info).
-    // entry_point.class_hash = Some(class_hash); // TODO
+    entry_point.class_hash = Some(class_hash);
     let contract_class = state.get_compiled_contract_class(&class_hash)?;
     let result = execute_if_cairo1(
-        entry_point,
+        entry_point.clone(),
         contract_class,
         state,
         cheated_state,
@@ -211,11 +204,10 @@ pub fn execute_call_entry_point(
         }
     });
 
-    // context.current_recursion_depth -= 1; // TODO
     result
 }
 
-pub fn execute_if_cairo1(
+fn execute_if_cairo1(
     call: CallEntryPoint,
     contract_class: ContractClass,
     state: &mut dyn State,
@@ -224,7 +216,7 @@ pub fn execute_if_cairo1(
     context: &mut EntryPointExecutionContext,
 ) -> EntryPointExecutionResult<CallInfo> {
     match contract_class {
-        ContractClass::V0(_) => todo!(), // TODO redirect to original cairo handling
+        ContractClass::V0(_) => panic!("Cairo 0 classes are not supported"),
         ContractClass::V1(contract_class) => execute_entry_point_call_cairo1(
             call,
             contract_class,
@@ -294,14 +286,14 @@ fn get_ptr_from_res_operand_unchecked(vm: &mut VirtualMachine, res: &ResOperand)
     (vm.get_relocatable(cell_reloc).unwrap() + &base_offset).unwrap()
 }
 
-pub fn stark_felt_from_ptr_immutable(
+fn stark_felt_from_ptr_immutable(
     vm: &VirtualMachine,
     ptr: &Relocatable,
 ) -> Result<StarkFelt, VirtualMachineError> {
     Ok(felt_to_stark_felt(&felt_from_ptr_immutable(vm, ptr)?))
 }
 
-pub fn felt_from_ptr_immutable(
+fn felt_from_ptr_immutable(
     vm: &VirtualMachine,
     ptr: &Relocatable,
 ) -> Result<Felt252, VirtualMachineError> {
@@ -310,7 +302,7 @@ pub fn felt_from_ptr_immutable(
 }
 
 impl CheatableSyscallHandler<'_> {
-    pub fn is_cheated(
+    fn is_cheated(
         &mut self,
         _vm: &mut VirtualMachine,
         selector: SyscallSelector,
@@ -325,7 +317,7 @@ impl CheatableSyscallHandler<'_> {
         }
     }
 
-    pub fn execute_next_syscall_cheated(
+    fn execute_next_syscall_cheated(
         &mut self,
         vm: &mut VirtualMachine,
         hint: &StarknetHint,
@@ -434,7 +426,7 @@ impl CheatableSyscallHandler<'_> {
 }
 
 /// Executes a specific call to a contract entry point and returns its output.
-pub fn execute_entry_point_call_cairo1(
+fn execute_entry_point_call_cairo1(
     call: CallEntryPoint,
     contract_class: ContractClassV1,
     state: &mut dyn State,
@@ -469,7 +461,7 @@ pub fn execute_entry_point_call_cairo1(
     };
 
     // Execute.
-    run_entry_point_m(
+    let run_resources = run_entry_point_m(
         &mut vm,
         &mut runner,
         &mut syscall_hh,
@@ -477,7 +469,9 @@ pub fn execute_entry_point_call_cairo1(
         args,
         program_segment_size,
     )?;
+
     let sys_h = syscall_hh.syscall_handler;
+    sys_h.context.vm_run_resources = run_resources;
     let call_info = finalize_execution(vm, runner, sys_h, previous_vm_resources, n_total_args)?;
     if call_info.execution.failed {
         return Err(EntryPointExecutionError::ExecutionFailed {
@@ -489,20 +483,19 @@ pub fn execute_entry_point_call_cairo1(
 }
 
 /// Runs the runner from the given PC.
-pub fn run_entry_point_m(
+fn run_entry_point_m(
     vm: &mut VirtualMachine,
     runner: &mut CairoRunner,
     hint_processor: &mut dyn HintProcessor,
     entry_point: EntryPointV1,
     args: Args,
     program_segment_size: usize,
-) -> Result<(), VirtualMachineExecutionError> {
-    // let mut run_resources = hint_processor.context.vm_run_resources.clone(); // TODO
-    let verify_secure = true;
+) -> Result<RunResources, VirtualMachineExecutionError> {
+    let verify_secure = false;
     let args: Vec<&CairoArg> = args.iter().collect();
 
     let mut run_resources = RunResources::default();
-    let result = runner.run_from_entrypoint(
+    runner.run_from_entrypoint(
         entry_point.pc(),
         &args,
         &mut run_resources,
@@ -510,8 +503,7 @@ pub fn run_entry_point_m(
         Some(program_segment_size),
         vm,
         hint_processor,
-    );
+    )?;
 
-    // hint_processor.context.vm_run_resources = run_resources; // TODO
-    Ok(result?)
+    Ok(run_resources)
 }

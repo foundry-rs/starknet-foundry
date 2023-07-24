@@ -250,12 +250,12 @@ struct ScarbStarknetContractArtifact {
 
 fn convert_to_blockifier_felt(val: Felt252) -> blockifier_Felt252 {
     let v = val.to_bigint();
-    blockifier_Felt252::from(v) // TODO incorrect conversion
+    blockifier_Felt252::from(v)
 }
 
 fn convert_from_blockifier_felt(val: blockifier_Felt252) -> Felt252 {
     let v = val.to_bigint();
-    Felt252::from(v) // TODO incorrect conversion
+    Felt252::from(v)
 }
 
 fn execute_syscall(
