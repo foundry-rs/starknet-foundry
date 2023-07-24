@@ -88,7 +88,7 @@ async fn main() -> Result<()> {
         bail! {"Accounts file {} does not exist! Make sure to supply correct path to accounts file.", cli.accounts_file_path}
     }
 
-    let config = parse_scarb_config(&cli.profile, cli.path_to_scarb_toml.clone())?;
+    let config = parse_scarb_config(&cli.profile, &cli.path_to_scarb_toml)?;
 
     let rpc_url = cli.rpc_url.unwrap_or(config.rpc_url);
     let network = cli.network.unwrap_or(config.network);
