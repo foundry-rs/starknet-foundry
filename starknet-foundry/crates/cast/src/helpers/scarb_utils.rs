@@ -29,11 +29,12 @@ fn get_property(
             .ok_or(anyhow!(
                 "Profile or property not found in Scarb.toml: {p}, {property}"
             )),
-        None => profiled
-            .and_then(|t| t.get(property))
-            .and_then(Value::as_str)
-            .map(String::from)
-            .ok_or(anyhow!("Property not found in tool: {property}")),
+        None => match profiled.and_then(|t| t.get(property)) {
+            Some(property) => Ok(String::from(
+                property.as_str().expect("Couldn't cast property to &str"),
+            )),
+            None => Ok(String::new()),
+        },
     }
 }
 
@@ -132,10 +133,11 @@ mod tests {
             &None,
             &Some(Utf8PathBuf::from("tests/data/files/noconfig_Scarb.toml")),
         )
-        .unwrap_err();
-        assert!(config
-            .to_string()
-            .contains("Property not found in tool: url"));
+        .unwrap();
+
+        assert!(config.rpc_url.is_empty());
+        assert!(config.network.is_empty());
+        assert!(config.account.is_empty());
     }
 
     #[test]
@@ -158,9 +160,8 @@ mod tests {
             &None,
             &Some(Utf8PathBuf::from("tests/data/files/somemissing_Scarb.toml")),
         )
-        .unwrap_err();
-        assert!(config
-            .to_string()
-            .contains("Property not found in tool: account"));
+        .unwrap();
+
+        assert!(config.account.is_empty());
     }
 }
