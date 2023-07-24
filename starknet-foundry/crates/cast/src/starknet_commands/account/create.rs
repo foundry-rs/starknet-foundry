@@ -21,7 +21,7 @@ use toml::Value;
 #[derive(Args, Debug)]
 #[command(about = "Create an account with all important secrets")]
 pub struct Create {
-    /// Account name under which secrets are going to be saved
+    /// Account name under which account information is going to be saved
     #[clap(short, long)]
     pub name: String,
 
@@ -32,7 +32,7 @@ pub struct Create {
     // If passed, a profile with corresponding data will be created in Scarb.toml
     #[clap(short, long)]
     pub add_profile: bool,
-    // TODO: think about supporting different account providers
+    // TODO (#253): think about supporting different account providers
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -40,6 +40,7 @@ pub async fn create(
     provider: &JsonRpcClient<HttpTransport>,
     url: String,
     accounts_file_path: Utf8PathBuf,
+    path_to_scarb_toml: Option<Utf8PathBuf>,
     name: String,
     network: &str,
     maybe_salt: Option<FieldElement>,
@@ -96,7 +97,12 @@ pub async fn create(
     });
 
     if add_profile {
-        match add_created_profile_to_configuration(name, network.to_string(), url) {
+        match add_created_profile_to_configuration(
+            path_to_scarb_toml,
+            name,
+            network.to_string(),
+            url,
+        ) {
             Ok(()) => {}
             Err(err) => return Err(anyhow!(err)),
         };
@@ -138,11 +144,13 @@ pub fn print_account_create_result(
 }
 
 pub fn add_created_profile_to_configuration(
+    path_to_scarb_toml: Option<Utf8PathBuf>,
     name: String,
     network: String,
     url: String,
 ) -> Result<()> {
-    let manifest_path = find_manifest_path(None).expect("Failed to obtain Scarb.toml file path");
+    let manifest_path = find_manifest_path(path_to_scarb_toml.as_ref().map(Utf8PathBuf::as_path))
+        .expect("Failed to obtain Scarb.toml file path");
 
     let metadata = scarb_metadata::MetadataCommand::new()
         .inherit_stderr()

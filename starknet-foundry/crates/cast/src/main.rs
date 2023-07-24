@@ -1,6 +1,5 @@
 use crate::helpers::scarb_utils::parse_scarb_config;
-use crate::starknet_commands::account::create::print_account_create_result;
-use crate::starknet_commands::account::Account;
+use crate::starknet_commands::account::{create::print_account_create_result, Account};
 use crate::starknet_commands::{
     account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
 };
@@ -89,7 +88,7 @@ async fn main() -> Result<()> {
         bail! {"Accounts file {} does not exist! Make sure to supply correct path to accounts file.", cli.accounts_file_path}
     }
 
-    let config = parse_scarb_config(&cli.profile, cli.path_to_scarb_toml)?;
+    let config = parse_scarb_config(&cli.profile, cli.path_to_scarb_toml.clone())?;
 
     let rpc_url = cli.rpc_url.unwrap_or(config.rpc_url);
     let network = cli.network.unwrap_or(config.network);
@@ -227,6 +226,7 @@ async fn main() -> Result<()> {
                     &provider,
                     rpc_url,
                     accounts_file_path,
+                    cli.path_to_scarb_toml,
                     create.name,
                     &network,
                     create.salt,
