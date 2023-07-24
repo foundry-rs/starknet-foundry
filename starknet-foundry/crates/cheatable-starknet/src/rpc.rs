@@ -12,7 +12,6 @@ use cairo_vm::{
         vm_core::VirtualMachine,
     },
 };
-use std::ops::Deref;
 use std::{any::Any, collections::HashMap, sync::Arc};
 
 use crate::{
@@ -24,7 +23,7 @@ use blockifier::{
     execution::{
         cairo1_execution::{
             finalize_execution, initialize_execution_context, prepare_call_arguments,
-            run_entry_point, VmExecutionContext,
+            VmExecutionContext,
         },
         common_hints::HintExecutionResult,
         contract_class::{ContractClass, ContractClassV1, EntryPointV1},
@@ -34,9 +33,9 @@ use blockifier::{
             EntryPointExecutionResult, ExecutionResources, FAULTY_CLASS_HASH,
         },
         errors::{EntryPointExecutionError, PreExecutionError, VirtualMachineExecutionError},
-        execution_utils::{felt_to_stark_felt, stark_felt_from_ptr, Args},
+        execution_utils::{felt_to_stark_felt, Args},
         syscalls::{
-            hint_processor::{write_segment, SyscallExecutionError, SyscallHintProcessor},
+            hint_processor::{SyscallExecutionError, SyscallHintProcessor},
             EmptyRequest, GetExecutionInfoResponse,
         },
     },
@@ -56,10 +55,7 @@ use starknet_api::{
 };
 
 use blockifier::execution::syscalls::{
-    deploy, emit_event, get_block_hash, get_execution_info, keccak, library_call,
-    library_call_l1_handler, replace_class, send_message_to_l1, storage_read, storage_write,
-    StorageReadResponse, StorageWriteResponse, SyscallRequest, SyscallRequestWrapper,
-    SyscallResponse, SyscallResponseWrapper, SyscallResult,
+    SyscallRequest, SyscallRequestWrapper, SyscallResponse, SyscallResponseWrapper, SyscallResult,
 };
 type SyscallSelector = DeprecatedSyscallSelector;
 
@@ -256,7 +252,7 @@ impl HintProcessor for CheatableSyscallHandler<'_> {
     ) -> HintExecutionResult {
         let maybe_extended_hint = hint_data.downcast_ref::<Hint>();
 
-        if let Some(Hint::Starknet(StarknetHint::SystemCall { system })) = maybe_extended_hint {
+        if let Some(Hint::Starknet(StarknetHint::SystemCall { system: _ })) = maybe_extended_hint {
             if let Some(Hint::Starknet(hint)) = maybe_extended_hint {
                 return self.execute_next_syscall_cheated(vm, hint);
             }

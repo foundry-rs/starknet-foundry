@@ -1,19 +1,15 @@
 use std::any::Any;
 use std::collections::HashMap;
+use std::io;
 use std::path::PathBuf;
-use std::{hint, io};
 
 use crate::scarb::StarknetContractArtifacts;
 use anyhow::{anyhow, Context, Result};
 use blockifier::abi::abi_utils::selector_from_name;
-use blockifier::execution::contract_address;
 use blockifier::execution::contract_class::{
     ContractClass as BlockifierContractClass, ContractClassV1,
 };
-use blockifier::execution::entry_point::{
-    CallEntryPoint, CallInfo, CallType, EntryPointExecutionContext, ExecutionResources,
-};
-use blockifier::execution::errors::EntryPointExecutionError;
+use blockifier::execution::entry_point::CallInfo;
 use blockifier::state::cached_state::CachedState;
 use blockifier::state::errors::StateError;
 use blockifier::state::state_api::StateReader;
@@ -23,7 +19,6 @@ use cairo_felt::Felt252;
 use cairo_felt_blockifier::Felt252 as blockifier_Felt252;
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
 use cairo_vm::hint_processor::hint_processor_definition::HintReference;
-use cairo_vm::hint_processor::hint_processor_utils;
 use cairo_vm::serde::deserialize_program::ApTracking;
 use cairo_vm::types::exec_scope::ExecutionScopes;
 use cairo_vm::vm::errors::hint_errors::HintError;
@@ -36,9 +31,8 @@ use cheatable_starknet::constants::{
 };
 use cheatable_starknet::rpc::{call_contract, CallContractOutput, CheatedState};
 use cheatable_starknet::state::DictStateReader;
-use num_traits::{FromPrimitive, Num, ToPrimitive};
+use num_traits::{Num, ToPrimitive};
 use regex::Regex;
-use schemars::_private::NoSerialize;
 use serde::Deserialize;
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, PatriciaKey};
 use starknet_api::hash::{StarkFelt, StarkHash};
@@ -95,13 +89,7 @@ impl ResourceTracker for CairoHintProcessor<'_> {
 }
 
 trait ForgeHintProcessor {
-    fn start_roll(
-        &mut self,
-        vm: &mut VirtualMachine,
-        inputs: &[Felt252],
-        result_segment_ptr: &mut Relocatable,
-        contracts: &HashMap<String, StarknetContractArtifacts>,
-    ) -> Result<(), EnhancedHintError>;
+    fn start_roll(&mut self, inputs: &[Felt252]) -> Result<(), EnhancedHintError>;
 }
 
 impl HintProcessorLogic for CairoHintProcessor<'_> {
@@ -154,13 +142,7 @@ impl HintProcessorLogic for CairoHintProcessor<'_> {
 }
 
 impl ForgeHintProcessor for CairoHintProcessor<'_> {
-    fn start_roll(
-        &mut self,
-        _vm: &mut VirtualMachine,
-        inputs: &[Felt252],
-        _result_segment_ptr: &mut Relocatable,
-        _contracts: &HashMap<String, StarknetContractArtifacts>,
-    ) -> Result<(), EnhancedHintError> {
+    fn start_roll(&mut self, inputs: &[Felt252]) -> Result<(), EnhancedHintError> {
         let contract_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
             inputs[0].clone().to_be_bytes(),
         )?)?);
@@ -196,7 +178,7 @@ impl CairoHintProcessor<'_> {
         // Extract the inputs.
         let input_start = extract_relocatable(vm, input_start)?;
         let input_end = extract_relocatable(vm, input_end)?;
-        let inputs = read_data_from_range(vm, input_start, input_end).map_err(|_| {
+        let inputs = vm_get_range(vm, input_start, input_end).map_err(|_| {
             HintError::CustomHint(Box::from("Failed to read input data".to_string()))
         })?;
 
@@ -214,31 +196,20 @@ impl CairoHintProcessor<'_> {
         output_end: &CellRef,
         contracts: &HashMap<String, StarknetContractArtifacts>,
     ) -> Result<(), EnhancedHintError> {
-        let mut result_segment_ptr = vm.add_memory_segment();
-        let result_start = result_segment_ptr;
+        let mut buffer = MemBuffer::new_segment(vm);
+        let result_start = buffer.ptr;
 
         match selector {
             "prepare" => todo!(),
-            "start_roll" => self.start_roll(vm, &inputs, &mut result_segment_ptr, contracts),
+            "start_roll" => self.start_roll(&inputs),
             "stop_roll" => todo!(),
             "start_warp" => todo!(),
             "stop_warp" => todo!(),
             "start_prank" => todo!(),
             "stop_prank" => todo!(),
             "mock_call" => todo!(),
-            "declare" => declare(
-                vm,
-                &mut self.blockifier_state,
-                &inputs,
-                &mut result_segment_ptr,
-                contracts,
-            ),
-            "deploy" => deploy(
-                vm,
-                &mut self.blockifier_state,
-                &inputs,
-                &mut result_segment_ptr,
-            ),
+            "declare" => declare(&mut buffer, &mut self.blockifier_state, &inputs, contracts),
+            "deploy" => deploy(&mut buffer, &mut self.blockifier_state, &inputs),
             "print" => {
                 print(inputs);
                 Ok(())
@@ -246,7 +217,7 @@ impl CairoHintProcessor<'_> {
             _ => Err(anyhow!("Unknown cheatcode selector: {selector}")).map_err(Into::into),
         }?;
 
-        let result_end = result_segment_ptr;
+        let result_end = buffer.ptr;
         insert_value_to_cellref!(vm, output_start, result_start)?;
         insert_value_to_cellref!(vm, output_end, result_end)?;
 

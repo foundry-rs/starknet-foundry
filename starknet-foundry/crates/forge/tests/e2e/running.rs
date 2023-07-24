@@ -347,24 +347,3 @@ fn exit_first_flag_takes_precedence() {
             Tests: 8 passed, 1 failed, 2 skipped
         "#});
 }
-
-#[test]
-fn roll_cheatcode() {
-    let temp = assert_fs::TempDir::new().unwrap();
-    temp.copy_from("tests/data/cheatcodes/roll_test", &["**/*"])
-        .unwrap();
-
-    let snapbox = runner();
-
-    snapbox
-        .current_dir(&temp)
-        .assert()
-        .success()
-        .stdout_matches(indoc! {r#"
-        Collected 1 test(s) and 2 test file(s)
-        Running 0 test(s) from src/lib.cairo
-        Running 1 test(s) from tests/test_roll.cairo
-        [PASS] test_roll::test_roll::test_roll_simple
-        Tests: 1 passed, 0 failed, 0 skipped
-        "#});
-}

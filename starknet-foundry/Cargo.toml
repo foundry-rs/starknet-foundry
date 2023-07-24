@@ -18,8 +18,8 @@ license-file = "LICENSE"
 [workspace.dependencies]
 blockifier = { git = "https://github.com/starkware-libs/blockifier.git", rev = "9238b4d" }
 starknet_api = { git = "https://github.com/starkware-libs/starknet-api", rev = "a4c78ff" }
-cairo-lang-casm = { path = "../cairo/crates/cairo-lang-casm", version = "2.0.0-rc2" }
-cairo-lang-runner = { path = "../cairo/crates/cairo-lang-runner", version = "2.0.0-rc2" }
+cairo-lang-casm = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
+cairo-lang-runner = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
 anyhow = "1.0.66"
 camino = { version = "1.1.4", features = ["serde1"] }
 include_dir = "0.7.3"
