@@ -18,5 +18,7 @@ pub const MAP_CLASS_HASH_V2: &str =
     "0x06eb3fda9eaa7d99bb7c9e72c8d874988a5b9269f3f866773889bc5ab4ec9079";
 pub const DECLARE_TRANSACTION_HASH: &str =
     "0x03000a327c4651c8317a88000c11830e4988d94ed130e875987521d7b173763d";
+pub const ETH_CONTRACT_ADDRESS: &str =
+    "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7";
 
 pub const MULTICALL_CONFIGS_DIR: &str = "crates/cast/tests/data/multicall_configs";

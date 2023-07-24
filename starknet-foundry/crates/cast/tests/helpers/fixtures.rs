@@ -1,4 +1,6 @@
-use crate::helpers::constants::{ACCOUNT_FILE_PATH, CONTRACTS_DIR, NETWORK, URL};
+use crate::helpers::constants::{
+    ACCOUNT_FILE_PATH, CONTRACTS_DIR, ETH_CONTRACT_ADDRESS, NETWORK, URL,
+};
 use camino::Utf8PathBuf;
 use cast::{get_account, get_provider, parse_number};
 use serde_json::{json, Value};
@@ -80,6 +82,23 @@ pub async fn invoke_map_contract(key: &str, value: &str, account: &str, contract
     let execution = account.execute(vec![call]);
 
     execution.send().await.unwrap();
+}
+
+pub async fn mint_token(recipient: &str, amount: f32) {
+    let client = reqwest::Client::new();
+    let json = json!(
+        {
+            "address": recipient,
+            "amount": amount,
+            "liter": true
+        }
+    );
+    client
+        .post("http://127.0.0.1:5055/mint")
+        .json(&json)
+        .send()
+        .await
+        .expect("Error occurred while minting tokens");
 }
 
 #[must_use]
