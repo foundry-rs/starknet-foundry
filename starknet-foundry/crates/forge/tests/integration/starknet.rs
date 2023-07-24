@@ -112,8 +112,8 @@ fn nonce_increases_between_transactions() {
             }
 
             #[test]
-            fn timestamp_doesnt_decrease() {
-               let class_hash = declare('Noncer').unwrap();
+            fn nonce_increases_between_transactions() {
+                let class_hash = declare('Noncer').unwrap();
                 let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
                 let contract_address = deploy(prepared).unwrap();
                 let contract_address: ContractAddress = contract_address.try_into().unwrap();
@@ -259,7 +259,7 @@ fn block_doesnt_decrease_between_transactions() {
                             let block_info = get_block_info().unbox();
                             self.block_number.write(block_info.block_number);
                             self.block_timestamp.write(block_info.block_timestamp);
-                            self.sequecer_address.write(block_info.sequecer_address);
+                            self.sequencer_address.write(block_info.sequencer_address);
                         }
 
                         fn read_block_number(self: @ContractState) -> u64 {
@@ -269,7 +269,7 @@ fn block_doesnt_decrease_between_transactions() {
                             self.block_timestamp.read()
                         }
                         fn read_sequencer_address(self: @ContractState) -> ContractAddress {
-                            self.sequecer_address.read()
+                            self.sequencer_address.read()
                         }
                     }
                 }
