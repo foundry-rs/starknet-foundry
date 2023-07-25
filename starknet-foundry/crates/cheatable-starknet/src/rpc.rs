@@ -445,7 +445,7 @@ fn execute_entry_point_call_cairo1(
     // Snapshot the VM resources, in order to calculate the usage of this run at the end.
     let previous_vm_resources = syscall_handler.resources.vm_resources.clone();
 
-    let mut syscall_hh = CheatableSyscallHandler {
+    let mut cheatable_syscall_handler = CheatableSyscallHandler {
         syscall_handler,
         cheated_state,
     };
@@ -454,7 +454,7 @@ fn execute_entry_point_call_cairo1(
     let run_resources = cheatable_run_entry_point(
         &mut vm,
         &mut runner,
-        &mut syscall_hh,
+        &mut cheatable_syscall_handler,
         &entry_point,
         &args,
         program_segment_size,
