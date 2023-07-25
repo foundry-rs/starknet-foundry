@@ -1,5 +1,5 @@
-use crate::common::corelib::{corelib, predeployed_contracts};
-use crate::common::runner::Contract;
+use crate::integration::common::corelib::{corelib, predeployed_contracts};
+use crate::integration::common::runner::Contract;
 use crate::{assert_passed, test_case};
 use camino::Utf8PathBuf;
 use forge::run;
@@ -194,6 +194,7 @@ fn block_doesnt_decrease_between_transactions() {
             use starknet::Felt252TryIntoContractAddress;
             use cheatcodes::PreparedContract;
 
+            #[starknet::interface]
             trait IBlocker<TContractState> {
                 fn write_block(ref self: TContractState);
                 fn read_block_number(self: @TContractState) -> u64;
