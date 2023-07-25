@@ -29,11 +29,12 @@ pub fn get_property(
             .ok_or(anyhow!(
                 "Profile or property not found in Scarb.toml: {p}, {property}"
             )),
-        None => profiled
-            .and_then(|t| t.get(property))
-            .and_then(Value::as_str)
-            .map(String::from)
-            .ok_or(anyhow!("Property not found in tool: {property}")),
+        None => match profiled.and_then(|t| t.get(property)) {
+            Some(property) => Ok(String::from(
+                property.as_str().expect("Couldn't cast property to &str"),
+            )),
+            None => Ok(String::new()),
+        },
     }
 }
 
@@ -82,6 +83,8 @@ pub fn parse_scarb_config(
 mod tests {
     use crate::helpers::scarb_utils::parse_scarb_config;
     use camino::Utf8PathBuf;
+    use sealed_test::prelude::rusty_fork_test;
+    use sealed_test::prelude::sealed_test;
 
     #[test]
     fn test_parse_scarb_config_happy_case_with_profile() {
@@ -132,10 +135,11 @@ mod tests {
             &None,
             &Some(Utf8PathBuf::from("tests/data/files/noconfig_Scarb.toml")),
         )
-        .unwrap_err();
-        assert!(config
-            .to_string()
-            .contains("Property not found in tool: url"));
+        .unwrap();
+
+        assert!(config.rpc_url.is_empty());
+        assert!(config.network.is_empty());
+        assert!(config.account.is_empty());
     }
 
     #[test]
@@ -158,9 +162,26 @@ mod tests {
             &None,
             &Some(Utf8PathBuf::from("tests/data/files/somemissing_Scarb.toml")),
         )
-        .unwrap_err();
-        assert!(config
-            .to_string()
-            .contains("Property not found in tool: account"));
+        .unwrap();
+
+        assert!(config.account.is_empty());
+    }
+
+    #[sealed_test(files = ["tests/data/contracts/v1/balance/Scarb.toml"])]
+    fn test_parse_scarb_config_no_profile_no_path() {
+        let config = parse_scarb_config(&None, &None).unwrap();
+
+        assert!(config.rpc_url.is_empty());
+        assert!(config.network.is_empty());
+        assert!(config.account.is_empty());
+    }
+
+    #[sealed_test(files = ["tests/data/contracts/v1/balance/Scarb.toml"])]
+    fn test_parse_scarb_config_no_path() {
+        let config = parse_scarb_config(&Some(String::from("myprofile")), &None).unwrap();
+
+        assert_eq!(config.rpc_url, String::from("http://127.0.0.1:5055/rpc"));
+        assert_eq!(config.network, String::from("testnet"));
+        assert_eq!(config.account, String::from("user1"));
     }
 }
