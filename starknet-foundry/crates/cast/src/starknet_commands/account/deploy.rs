@@ -1,5 +1,5 @@
 use crate::helpers::constants::OZ_CLASS_HASH;
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, bail, Result};
 use camino::Utf8PathBuf;
 use cast::{get_network, handle_rpc_error, parse_number, print_formatted, wait_for_tx};
 use clap::Args;
@@ -34,11 +34,22 @@ pub async fn deploy(
     let contents = std::fs::read_to_string(path.clone())?;
     let mut items: serde_json::Value =
         serde_json::from_str(&contents).expect("failed to parse json file");
+
+    if items[network].is_null() {
+        bail!("Provided network does not have any accounts defined")
+    }
+    if items[network][&name].is_null() {
+        bail!("Account with provided name does not exist")
+    }
+
     let private_key = SigningKey::from_secret_scalar(
         parse_number(
-            items[network][&name]["private_key"]
-                .as_str()
-                .expect("Couldn't get private key from accounts file"),
+            items
+                .get(network)
+                .and_then(|network| network.get(&name))
+                .and_then(|name| name.get("private_key"))
+                .and_then(serde_json::Value::as_str)
+                .ok_or_else(|| anyhow!("Couldn't get private key from accounts file"))?,
         )
         .expect("Couldn't parse private key"),
     );
@@ -53,9 +64,12 @@ pub async fn deploy(
 
     let deployment = factory.deploy(
         parse_number(
-            items[network][&name]["salt"]
-                .as_str()
-                .expect("Couldn't get salt from accounts file"),
+            items
+                .get(network)
+                .and_then(|network| network.get(&name))
+                .and_then(|name| name.get("salt"))
+                .and_then(serde_json::Value::as_str)
+                .ok_or_else(|| anyhow!("Couldn't get salt from accounts file"))?,
         )
         .expect("Couldn't parse salt"),
     );
@@ -64,7 +78,7 @@ pub async fn deploy(
     match result {
         Ok(result) => match wait_for_tx(provider, result.transaction_hash).await {
             Ok(_) => {
-                items[network][&name]["deployed"] = serde_json::Value::from(false);
+                items[network][&name]["deployed"] = serde_json::Value::from(true);
                 std::fs::write(path, serde_json::to_string_pretty(&items).unwrap())
                     .expect("Couldn't write to accounts file");
 
