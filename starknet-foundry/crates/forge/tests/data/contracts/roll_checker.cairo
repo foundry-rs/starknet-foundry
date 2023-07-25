@@ -1,6 +1,6 @@
 #[starknet::interface]
 trait IRollChecker<TContractState> {
-    fn is_rolled(ref self: TContractState, expected_block_number: u64);
+    fn get_block_number(ref self: TContractState) -> u64;
 }
 
 #[starknet::contract]
@@ -13,9 +13,8 @@ mod RollChecker {
 
     #[external(v0)]
     impl IRollChecker of super::IRollChecker<ContractState> {
-        fn is_rolled(ref self: ContractState, expected_block_number: u64) {
-            let block_numb = starknet::get_block_info().unbox().block_number;
-            assert(block_numb == expected_block_number, 'block_numb incorrect');
+        fn get_block_number(ref self: ContractState) -> u64 {
+            starknet::get_block_info().unbox().block_number
         }
     }
 }

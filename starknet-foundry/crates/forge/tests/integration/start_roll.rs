@@ -22,7 +22,7 @@ fn start_roll_simple() {
             
             #[starknet::interface]
             trait IRollChecker<TContractState> {
-                fn is_rolled(ref self: TContractState, expected_block_number: u64);
+                fn get_block_number(ref self: TContractState) -> u64;
             }
 
             #[test]
@@ -35,7 +35,8 @@ fn start_roll_simple() {
             
                 start_roll(contract_address, 234);
             
-                dispatcher.is_rolled(234);
+                let block_number = dispatcher.get_block_number();
+                assert(block_number == 234, 'Wrong block number');
             }
         "#
         ),
@@ -77,7 +78,7 @@ fn start_roll_in_constructor_test() {
             
             #[starknet::interface]
             trait IConstructorRollChecker<TContractState> {
-                fn was_rolled_on_construction(ref self: TContractState, expected_block_number: u64);
+                fn get_stored_block_number(ref self: TContractState) -> u64;
             }
             
             #[test]
@@ -91,7 +92,7 @@ fn start_roll_in_constructor_test() {
                 contract_address.print();
             
                 let dispatcher = IConstructorRollCheckerDispatcher { contract_address };
-                dispatcher.was_rolled_on_construction(234);
+                assert(dispatcher.get_stored_block_number() == 234, 'Wrong stored blk_nb');
             }
         "#
         ),
