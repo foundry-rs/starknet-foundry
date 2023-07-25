@@ -369,7 +369,7 @@ mod tests {
             dependencies_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
                 .unwrap();
 
-        assert!(!package_path.ends_with(Utf8PathBuf::from(".cairo")));
+        assert!(package_path.is_dir());
         assert!(lib_path.ends_with(Utf8PathBuf::from("src/lib.cairo")));
         assert!(lib_path.starts_with(package_path));
     }
