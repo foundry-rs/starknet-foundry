@@ -258,16 +258,6 @@ struct ScarbStarknetContractArtifact {
     casm: Option<PathBuf>,
 }
 
-fn convert_to_blockifier_felt(val: &Felt252) -> blockifier_Felt252 {
-    let v = val.to_bigint();
-    blockifier_Felt252::from(v)
-}
-
-fn convert_from_blockifier_felt(val: &blockifier_Felt252) -> Felt252 {
-    let v = val.to_bigint();
-    Felt252::from(v)
-}
-
 fn execute_syscall(
     system: &ResOperand,
     vm: &mut VirtualMachine,
@@ -719,6 +709,68 @@ mod test {
             assert_eq!(
                 actual_class_hash,
                 ClassHash(stark_felt!(expected_class_hash))
+            );
+        }
+    }
+}
+
+fn convert_to_blockifier_felt(val: &Felt252) -> blockifier_Felt252 {
+    let v = val.to_bigint();
+    blockifier_Felt252::from(v)
+}
+
+fn convert_from_blockifier_felt(val: &blockifier_Felt252) -> Felt252 {
+    let v = val.to_bigint();
+    Felt252::from(v)
+}
+
+#[cfg(test)]
+mod test_felt_conversions {
+    use super::convert_from_blockifier_felt;
+    use super::convert_to_blockifier_felt;
+    use cairo_felt::{
+        Felt252 as cairo_Felt252, FIELD_HIGH as cairo_FIELD_HIGH, FIELD_LOW as cairo_FIELD_LOW,
+    };
+    use cairo_felt_blockifier::Felt252 as blockifier_Felt252;
+
+    use num_traits::ToPrimitive;
+
+    // Does not re-export the consts
+    const BLOCKIFIER_FIELD_HIGH: u128 = (1 << 123) + (17 << 64);
+    const BLOCKIFIER_FIELD_LOW: u128 = 1;
+
+    #[test]
+    fn test_conversion_to_blockifier_felt() {
+        for value in [
+            BLOCKIFIER_FIELD_LOW,
+            200_u128,
+            400000000_u128,
+            9999999999999_u128,
+            BLOCKIFIER_FIELD_HIGH,
+        ] {
+            let from = cairo_Felt252::from(value);
+            let to = convert_to_blockifier_felt(&from);
+            assert_eq!(
+                to.to_u128().expect("Downcast failure"),
+                from.to_u128().expect("Downcast failure")
+            );
+        }
+    }
+
+    #[test]
+    fn test_conversion_from_blockifier_felt() {
+        for value in [
+            cairo_FIELD_LOW,
+            200_u128,
+            400000000_u128,
+            9999999999999_u128,
+            cairo_FIELD_HIGH,
+        ] {
+            let from = blockifier_Felt252::from(value);
+            let to = convert_from_blockifier_felt(&from);
+            assert_eq!(
+                to.to_u128().expect("Downcast failure"),
+                from.to_u128().expect("Downcast failure")
             );
         }
     }
