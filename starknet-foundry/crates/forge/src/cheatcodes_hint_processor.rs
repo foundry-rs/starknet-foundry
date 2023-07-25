@@ -744,8 +744,8 @@ mod test_felt_conversions {
         for value in [
             BLOCKIFIER_FIELD_LOW,
             200_u128,
-            400000000_u128,
-            9999999999999_u128,
+            400_000_000_u128,
+            9_999_999_999_999_u128,
             BLOCKIFIER_FIELD_HIGH,
         ] {
             let from = cairo_Felt252::from(value);
@@ -762,8 +762,8 @@ mod test_felt_conversions {
         for value in [
             cairo_FIELD_LOW,
             200_u128,
-            400000000_u128,
-            9999999999999_u128,
+            400_000_000_u128,
+            9_999_999_999_999_u128,
             cairo_FIELD_HIGH,
         ] {
             let from = blockifier_Felt252::from(value);
