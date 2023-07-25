@@ -75,6 +75,11 @@ impl CheatedState {
         }
     }
 }
+impl Default for CheatedState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 // This does contract call without the transaction layer. This way `call_contract` can return data and modify state.
 // `call` and `invoke` on the transactional layer use such method under the hood.
@@ -460,7 +465,7 @@ fn execute_entry_point_call_cairo1(
         program_segment_size,
     )?;
 
-    let sys_h = syscall_hh.syscall_handler;
+    let sys_h = cheatable_syscall_handler.syscall_handler;
     sys_h.context.vm_run_resources = run_resources;
     let call_info = finalize_execution(vm, runner, sys_h, previous_vm_resources, n_total_args)?;
     if call_info.execution.failed {
