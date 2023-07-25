@@ -369,10 +369,10 @@ impl CheatableSyscallHandler<'_> {
                         )],
                     )
                     .unwrap();
-                let orginal_block_info = vm
+                let original_block_info = vm
                     .get_continuous_range((block_info_ptr + 1_usize).unwrap() as Relocatable, 2)
                     .unwrap();
-                vm.load_data(ptr_cheated_block_info_c, &orginal_block_info)
+                vm.load_data(ptr_cheated_block_info_c, &original_block_info)
                     .unwrap();
 
                 // create a new segment with replaced execution_info including pointer to updated block info
