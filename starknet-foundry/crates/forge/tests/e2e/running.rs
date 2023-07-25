@@ -41,7 +41,7 @@ fn simple_package() {
         Running 1 test(s) from tests/without_prefix.cairo
         [PASS] without_prefix::without_prefix::five
         Tests: 9 passed, 2 failed, 0 skipped
-            "#});
+        "#});
 }
 
 #[test]
