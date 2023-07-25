@@ -92,7 +92,7 @@ fn find_cairo_root_files_in_directory(
 ) -> Result<Vec<Utf8PathBuf>> {
     let mut test_files: Vec<Utf8PathBuf> = vec![lib_path.clone()];
     let default_src_path = &input_path.join(Utf8PathBuf::from("/src"));
-    let src_path = lib_path.parent().unwrap_or(&default_src_path);
+    let src_path = lib_path.parent().unwrap_or(default_src_path);
 
     for entry in WalkDir::new(input_path)
         .sort_by_file_name()
