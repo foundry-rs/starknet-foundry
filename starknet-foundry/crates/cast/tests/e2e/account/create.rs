@@ -163,7 +163,8 @@ pub async fn test_happy_case_accounts_file_already_exists() {
     assert!(stdout_str.contains("max_fee: "));
     assert!(stdout_str.contains("address: "));
 
-    let contents = fs::read_to_string(current_dir.join(accounts_file)).expect("Unable to read created file");
+    let contents =
+        fs::read_to_string(current_dir.join(accounts_file)).expect("Unable to read created file");
     assert!(contents.contains("my_account"));
     assert!(contents.contains("deployed"));
 
