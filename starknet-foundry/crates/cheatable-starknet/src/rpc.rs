@@ -68,7 +68,8 @@ pub struct CheatedState {
     pub rolled_contracts: HashMap<ContractAddress, Felt252>,
 }
 
-// This can mutate state, the name of the syscall is not very good
+// This does contract call without the transaction layer. This way `call_contract` can return data and modify state. 
+// `call` and `invoke` on the transactional layer use such method under the hood.
 pub fn call_contract(
     contract_address: &Felt252,
     entry_point_selector: &Felt252,
