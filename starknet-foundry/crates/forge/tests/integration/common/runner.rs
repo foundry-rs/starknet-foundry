@@ -141,7 +141,7 @@ macro_rules! test_case {
 macro_rules! assert_passed {
     ($result:expr) => {{
         use forge::test_case_summary::TestCaseSummary;
-        use $crate::common::runner::TestCase;
+        use $crate::integration::common::runner::TestCase;
 
         let result = $result
             .iter()
@@ -166,7 +166,7 @@ macro_rules! assert_failed {
     ($result:expr) => {{
         use forge::test_case_summary::TestCaseSummary;
 
-        use $crate::common::runner::TestCase;
+        use $crate::integration::common::runner::TestCase;
 
         let result = $result
             .iter()
