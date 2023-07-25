@@ -276,10 +276,8 @@ fn execute_syscall(
 
     let calldata = buffer.next_arr().unwrap();
 
-    let calldata_blockifier: Vec<blockifier_Felt252> = calldata
-        .into_iter()
-        .map(|v| convert_to_blockifier_felt(&v))
-        .collect();
+    let calldata_blockifier: Vec<blockifier_Felt252> =
+        calldata.iter().map(convert_to_blockifier_felt).collect();
     assert_eq!(std::str::from_utf8(&selector).unwrap(), "CallContract");
 
     let call_result = call_contract(
@@ -294,15 +292,15 @@ fn execute_syscall(
     let (result, exit_code) = match call_result {
         CallContractOutput::Success { ret_data } => (
             ret_data
-                .into_iter()
-                .map(|v| convert_from_blockifier_felt(&v))
+                .iter()
+                .map(convert_from_blockifier_felt)
                 .collect::<Vec<Felt252>>(),
             0,
         ),
         CallContractOutput::Panic { panic_data } => (
             panic_data
-                .into_iter()
-                .map(|v| convert_from_blockifier_felt(&v))
+                .iter()
+                .map(convert_from_blockifier_felt)
                 .collect::<Vec<Felt252>>(),
             1,
         ),

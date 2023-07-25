@@ -312,7 +312,7 @@ fn felt_from_ptr_immutable(
 }
 
 impl CheatableSyscallHandler<'_> {
-    fn is_cheated(
+    fn address_is_cheated(
         &mut self,
         _vm: &mut VirtualMachine,
         selector: SyscallSelector,
@@ -340,7 +340,7 @@ impl CheatableSyscallHandler<'_> {
         )?)?;
         let contract_address = self.syscall_handler.storage_address();
 
-        if self.is_cheated(vm, selector, &contract_address) {
+        if self.address_is_cheated(vm, selector, &contract_address) {
             let StarknetHint::SystemCall{ system: syscall } = hint else {
                 return Err(HintError::CustomHint(
                     "Test functions are unsupported on starknet.".into()
@@ -459,7 +459,7 @@ fn execute_entry_point_call_cairo1(
     )?;
     let n_total_args = args.len();
 
-    // Fix the VM resources, in order to calculate the usage of this run at the end.
+    // Snapshot the VM resources, in order to calculate the usage of this run at the end.
     let previous_vm_resources = syscall_handler.resources.vm_resources.clone();
 
     let mut syscall_hh = CheatableSyscallHandler {
