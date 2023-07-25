@@ -6,11 +6,11 @@ use crate::helpers::runner::runner;
 use camino::Utf8PathBuf;
 use snapbox::cmd::{cargo_bin, Command};
 use starknet::core::types::TransactionReceipt::DeployAccount;
-use std::env::current_dir;
 use std::fs;
 
 #[tokio::test]
 pub async fn test_happy_case() {
+    // setup
     let accounts_file = "./tmp3/accounts.json";
     let args = vec![
         "--url",
@@ -41,6 +41,7 @@ pub async fn test_happy_case() {
     )
     .await;
 
+    // test
     let args = vec![
         "--url",
         URL,
@@ -76,10 +77,11 @@ pub async fn test_happy_case() {
 
 #[tokio::test]
 pub async fn test_happy_case_add_profile() {
+    // setup
     let created_dir = Utf8PathBuf::from(duplicate_directory_with_salt(
         CONTRACTS_DIR.to_string() + "/v1/balance",
         "put",
-        "2",
+        "3",
     ));
     let accounts_file = "./accounts.json";
 
@@ -97,14 +99,9 @@ pub async fn test_happy_case_add_profile() {
         "--add-profile",
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
+    Command::new(cargo_bin!("sncast"))
         .current_dir(&created_dir)
         .args(args);
-    let bdg = snapbox.assert();
-    let out = bdg.get_output();
-
-    let stdout_str =
-        dbg!(std::str::from_utf8(&out.stderr).expect("failed to convert command output to string"));
 
     let contents = fs::read_to_string(created_dir.join(accounts_file)).unwrap();
     let items: serde_json::Value =
@@ -118,6 +115,7 @@ pub async fn test_happy_case_add_profile() {
     )
     .await;
 
+    // test
     let args = vec![
         "--profile",
         "my_account",
@@ -137,9 +135,6 @@ pub async fn test_happy_case_add_profile() {
         .args(&args);
     let bdg = snapbox.assert();
     let out = bdg.get_output();
-
-    let stdout_str =
-        dbg!(std::str::from_utf8(&out.stderr).expect("failed to convert command output to string"));
 
     let hash = get_transaction_hash(&out.stdout);
     let receipt = get_transaction_receipt(hash).await;

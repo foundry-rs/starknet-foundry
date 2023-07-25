@@ -1,4 +1,5 @@
 use crate::helpers::scarb_utils::parse_scarb_config;
+use crate::starknet_commands::account::deploy::print_account_deploy_result;
 use crate::starknet_commands::account::{create::print_account_create_result, Account};
 use crate::starknet_commands::{
     account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
@@ -9,7 +10,6 @@ use cast::{
     check_accounts_file_existence, get_account, get_block_id, get_provider, print_formatted,
 };
 use clap::{Parser, Subcommand};
-use crate::starknet_commands::account::deploy::print_account_deploy_result;
 
 mod helpers;
 mod starknet_commands;
