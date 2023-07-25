@@ -1,2 +1,0 @@
-[build.env]
-volumes = ["CAIRO_DEP=./cairo"]

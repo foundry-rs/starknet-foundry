@@ -15,15 +15,15 @@ tempfile.workspace = true
 rayon.workspace = true
 test-collector = { path = "../test-collector" }
 cheatable-starknet = { path = "../cheatable-starknet" }
-cairo-lang-test-runner = { path = "../../../cairo/crates/cairo-lang-test-runner", version = "2.0.1" }
-cairo-lang-runner = { path = "../../../cairo/crates/cairo-lang-runner", version = "2.0.1" }
-cairo-lang-sierra-to-casm = { path = "../../../cairo/crates/cairo-lang-sierra-to-casm", version = "2.0.1" }
-cairo-lang-sierra = { path = "../../../cairo/crates/cairo-lang-sierra", version = "2.0.1" }
-cairo-lang-utils = { path = "../../../cairo/crates/cairo-lang-utils", version = "2.0.1" }
-cairo-lang-casm = { path = "../../../cairo/crates/cairo-lang-casm", version = "2.0.1" }
-cairo-lang-starknet = { path = "../../../cairo/crates/cairo-lang-starknet", version = "2.0.1" }
-cairo-lang-compiler = { path = "../../../cairo/crates/cairo-lang-compiler", version = "2.0.1" }
-cairo-lang-filesystem = { path = "../../../cairo/crates/cairo-lang-filesystem", version = "2.0.1" }
+cairo-lang-test-runner = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
+cairo-lang-runner = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
+cairo-lang-sierra-to-casm = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
+cairo-lang-sierra = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
+cairo-lang-utils = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
+cairo-lang-casm = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
+cairo-lang-starknet = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
+cairo-lang-compiler = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
+cairo-lang-filesystem = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
 schemars = { version = "0.8.12", features = ["preserve_order"] }
 parity-scale-codec = "3.5.0"
 parity-scale-codec-derive = "3.1.4"
@@ -38,6 +38,7 @@ project-root = "0.2.2"
 console = "0.15.7"
 assert_fs = "1.0.13"
 snapbox = "0.4.11"
+starknet = "0.4.0"
 once_cell = "1.18.0"
 indoc = "2.0.1"
 cairo-vm = "0.8.1"

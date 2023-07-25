@@ -83,7 +83,7 @@ async fn main() -> Result<()> {
         bail! {"Accounts file {} does not exist! Make sure to supply correct path to accounts file.", cli.accounts_file_path}
     }
 
-    let config = parse_scarb_config(&cli.profile, cli.path_to_scarb_toml)?;
+    let config = parse_scarb_config(&cli.profile, &cli.path_to_scarb_toml)?;
 
     let rpc_url = cli.rpc_url.unwrap_or(config.rpc_url);
     let network = cli.network.unwrap_or(config.network);
@@ -193,14 +193,26 @@ async fn main() -> Result<()> {
             Ok(())
         }
         Commands::Multicall(multicall) => {
-            let mut account = get_account(&account, &accounts_file_path, &provider, &network)?;
-            starknet_commands::multicall::multicall(
-                &multicall.path,
-                &mut account,
-                cli.int_format,
-                cli.json,
-            )
-            .await?;
+            match &multicall.command {
+                starknet_commands::multicall::Commands::New(new) => {
+                    let result = starknet_commands::multicall::new::new(
+                        new.output_path.clone(),
+                        new.overwrite.unwrap_or(false),
+                    )?;
+                    starknet_commands::multicall::new::print_new_result(result.as_str());
+                }
+                starknet_commands::multicall::Commands::Run(run) => {
+                    let mut account =
+                        get_account(&account, &accounts_file_path, &provider, &network)?;
+                    starknet_commands::multicall::run::run(
+                        &run.path,
+                        &mut account,
+                        cli.int_format,
+                        cli.json,
+                    )
+                    .await?;
+                }
+            }
             Ok(())
         }
     }
