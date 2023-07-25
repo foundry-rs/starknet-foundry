@@ -98,7 +98,7 @@ pub async fn create(
 
     if add_profile {
         match add_created_profile_to_configuration(
-            path_to_scarb_toml,
+            &path_to_scarb_toml,
             name,
             network.to_string(),
             url,
@@ -144,7 +144,7 @@ pub fn print_account_create_result(
 }
 
 pub fn add_created_profile_to_configuration(
-    path_to_scarb_toml: Option<Utf8PathBuf>,
+    path_to_scarb_toml: &Option<Utf8PathBuf>,
     name: String,
     network: String,
     url: String,

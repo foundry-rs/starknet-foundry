@@ -6,7 +6,9 @@ use crate::starknet_commands::{
 };
 use anyhow::{bail, Result};
 use camino::Utf8PathBuf;
-use cast::{get_account, get_block_id, get_provider, print_formatted};
+use cast::{
+    check_accounts_file_existence, get_account, get_block_id, get_provider, print_formatted,
+};
 use clap::{Parser, Subcommand};
 
 mod helpers;
@@ -84,10 +86,6 @@ async fn main() -> Result<()> {
 
     let accounts_file_path =
         Utf8PathBuf::from(shellexpand::tilde(&cli.accounts_file_path).to_string());
-    if let Commands::Account(_) = &cli.command {
-    } else if !&accounts_file_path.exists() {
-        bail! {"Accounts file {} does not exist! Make sure to supply correct path to accounts file.", cli.accounts_file_path}
-    }
 
     let config = parse_scarb_config(&cli.profile, &cli.path_to_scarb_toml)?;
 
@@ -99,6 +97,7 @@ async fn main() -> Result<()> {
 
     match cli.command {
         Commands::Declare(declare) => {
+            check_accounts_file_existence(&accounts_file_path)?;
             let mut account = get_account(&account, &accounts_file_path, &provider, &network)?;
 
             let result = starknet_commands::declare::declare(
@@ -135,6 +134,7 @@ async fn main() -> Result<()> {
             Ok(())
         }
         Commands::Deploy(deploy) => {
+            check_accounts_file_existence(&accounts_file_path)?;
             let account = get_account(&account, &accounts_file_path, &provider, &network)?;
 
             let result = starknet_commands::deploy::deploy(
@@ -185,6 +185,7 @@ async fn main() -> Result<()> {
             Ok(())
         }
         Commands::Invoke(invoke) => {
+            check_accounts_file_existence(&accounts_file_path)?;
             let mut account = get_account(&account, &accounts_file_path, &provider, &network)?;
             let result = starknet_commands::invoke::invoke(
                 invoke.contract_address,
@@ -208,6 +209,7 @@ async fn main() -> Result<()> {
                     starknet_commands::multicall::new::print_new_result(result.as_str());
                 }
                 starknet_commands::multicall::Commands::Run(run) => {
+                    check_accounts_file_existence(&accounts_file_path)?;
                     let mut account =
                         get_account(&account, &accounts_file_path, &provider, &network)?;
                     starknet_commands::multicall::run::run(
