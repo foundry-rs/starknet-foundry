@@ -237,7 +237,7 @@ impl HintProcessor for CheatableSyscallHandler<'_> {
     ) -> HintExecutionResult {
         let maybe_extended_hint = hint_data.downcast_ref::<Hint>();
 
-        if let Some(Hint::Starknet(StarknetHint::SystemCall { system: _ })) = maybe_extended_hint {
+        if let Some(Hint::Starknet(StarknetHint::SystemCall { .. })) = maybe_extended_hint {
             if let Some(Hint::Starknet(hint)) = maybe_extended_hint {
                 return self.execute_next_syscall_cheated(vm, hint);
             }
