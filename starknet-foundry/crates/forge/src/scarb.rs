@@ -355,6 +355,26 @@ mod tests {
     }
 
     #[test]
+    fn get_paths_for_package() {
+        let temp = assert_fs::TempDir::new().unwrap();
+        temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
+            .unwrap();
+        let scarb_metadata = MetadataCommand::new()
+            .inherit_stderr()
+            .current_dir(temp.path())
+            .exec()
+            .unwrap();
+
+        let (package_path, lib_path, _, _, _) =
+            dependencies_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
+                .unwrap();
+
+        assert!(!package_path.ends_with(Utf8PathBuf::from(".cairo")));
+        assert!(lib_path.ends_with(Utf8PathBuf::from("src/lib.cairo")));
+        assert!(lib_path.starts_with(package_path));
+    }
+
+    #[test]
     fn get_dependencies_for_package_err_on_invalid_package() {
         let temp = assert_fs::TempDir::new().unwrap();
         temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
