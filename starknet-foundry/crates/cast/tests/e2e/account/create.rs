@@ -31,7 +31,7 @@ pub async fn test_happy_case() {
     let stdout_str =
         std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
     assert!(stdout_str.contains("command: Create account"));
-    assert!(stdout_str.contains("message: Account successfully created. Prefund generated address with at least 432300000000 tokens. It is good to send more in the case of higher demand, max_fee * 2 = 864600000000"));
+    assert!(stdout_str.contains("max_fee: "));
     assert!(stdout_str.contains("address: "));
 
     let contents = fs::read_to_string(accounts_file).expect("Unable to read created file");
@@ -68,7 +68,7 @@ pub async fn test_happy_case_generate_salt() {
     let stdout_str =
         std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
     assert!(stdout_str.contains("command: Create account"));
-    assert!(stdout_str.contains("message: Account successfully created. Prefund generated address with at least 432300000000 tokens. It is good to send more in the case of higher demand, max_fee * 2 = 864600000000"));
+    assert!(stdout_str.contains("max_fee: "));
     assert!(stdout_str.contains("address: "));
 
     let contents = fs::read_to_string(accounts_file).expect("Unable to read created file");

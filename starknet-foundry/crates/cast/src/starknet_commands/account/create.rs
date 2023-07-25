@@ -113,8 +113,11 @@ pub async fn create(
         serde_json::to_string_pretty(&items).unwrap(),
     )?;
 
-    let mut output = vec![("message", format!("Account successfully created. Prefund generated address with at least {max_fee} tokens. It is good to send more in the case of higher demand, max_fee * 2 = {}", max_fee * 2)),
-                          ("address", format!("{address:#x}"))];
+    println!("Account successfully created. Prefund generated address with at least {max_fee} tokens. It is good to send more in the case of higher demand, max_fee * 2 = {}", max_fee * 2);
+    let mut output = vec![
+        ("max_fee", format!("{max_fee:#x}")),
+        ("address", format!("{address:#x}")),
+    ];
     if add_profile {
         output.push((
             "add-profile",
