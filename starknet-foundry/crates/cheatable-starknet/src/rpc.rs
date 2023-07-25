@@ -187,15 +187,19 @@ fn execute_call_entry_point(
     entry_point.class_hash = Some(class_hash);
     let contract_class = state.get_compiled_contract_class(&class_hash)?;
 
-    execute_if_cairo1(
-        entry_point.clone(),
-        contract_class,
-        state,
-        cheated_state,
-        resources,
-        context,
-    )
-    .map_err(|error| {
+    let result = match contract_class {
+        ContractClass::V0(_) => panic!("Cairo 0 classes are not supported"),
+        ContractClass::V1(contract_class) => execute_entry_point_call_cairo1(
+            call,
+            &contract_class,
+            state,
+            cheated_state,
+            resources,
+            context,
+        ),
+    };
+
+    result.map_err(|error| {
         match error {
             // On VM error, pack the stack trace into the propagated error.
             EntryPointExecutionError::VirtualMachineExecutionError(error) => {
@@ -215,27 +219,6 @@ fn execute_call_entry_point(
             other_error => other_error,
         }
     })
-}
-
-fn execute_if_cairo1(
-    call: CallEntryPoint,
-    contract_class: ContractClass,
-    state: &mut dyn State,
-    cheated_state: &CheatedState,
-    resources: &mut ExecutionResources,
-    context: &mut EntryPointExecutionContext,
-) -> EntryPointExecutionResult<CallInfo> {
-    match contract_class {
-        ContractClass::V0(_) => panic!("Cairo 0 classes are not supported"),
-        ContractClass::V1(contract_class) => execute_entry_point_call_cairo1(
-            call,
-            &contract_class,
-            state,
-            cheated_state,
-            resources,
-            context,
-        ),
-    }
 }
 
 pub struct CheatableSyscallHandler<'a> {
