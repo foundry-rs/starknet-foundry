@@ -68,7 +68,15 @@ pub struct CheatedState {
     pub rolled_contracts: HashMap<ContractAddress, Felt252>,
 }
 
-// This does contract call without the transaction layer. This way `call_contract` can return data and modify state. 
+impl CheatedState {
+    pub fn new() -> Self {
+        CheatedState {
+            rolled_contracts: HashMap::new(),
+        }
+    }
+}
+
+// This does contract call without the transaction layer. This way `call_contract` can return data and modify state.
 // `call` and `invoke` on the transactional layer use such method under the hood.
 pub fn call_contract(
     contract_address: &Felt252,
