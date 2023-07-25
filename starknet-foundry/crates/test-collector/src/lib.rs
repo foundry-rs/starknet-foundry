@@ -1,23 +1,21 @@
-use crate::project::setup_project;
-use crate::project::{
-    get_main_crate_ids_from_project, setup_single_file_project,
-    update_crate_roots_from_project_config, ProjectError,
-};
 use crate::sierra_casm_generator::SierraCasmGenerator;
 use anyhow::{anyhow, Context, Result};
 use cairo_felt::Felt252;
 use cairo_lang_compiler::db::RootDatabase;
 use cairo_lang_compiler::diagnostics::DiagnosticsReporter;
+use cairo_lang_compiler::project::setup_project;
+use cairo_lang_compiler::project::{
+    get_main_crate_ids_from_project, setup_single_file_project,
+    update_crate_roots_from_project_config, ProjectError,
+};
 use cairo_lang_debug::DebugWithDb;
-use cairo_lang_defs::ids::ModuleId;
 use cairo_lang_defs::ids::{FreeFunctionId, FunctionWithBodyId, ModuleItemId};
 use cairo_lang_defs::plugin::PluginDiagnostic;
 use cairo_lang_diagnostics::ToOption;
 use cairo_lang_filesystem::cfg::{Cfg, CfgSet};
 use cairo_lang_filesystem::db::init_dev_corelib;
-use cairo_lang_filesystem::db::FilesGroup;
 use cairo_lang_filesystem::detect::detect_corelib;
-use cairo_lang_filesystem::ids::{CrateId, FileId, FileLongId};
+use cairo_lang_filesystem::ids::CrateId;
 use cairo_lang_lowering::ids::ConcreteFunctionWithBodyId;
 use cairo_lang_project::{DeserializationError, ProjectConfig, ProjectConfigContent};
 use cairo_lang_semantic::db::SemanticGroup;
@@ -38,14 +36,10 @@ use cairo_lang_utils::OptionHelper;
 use itertools::Itertools;
 use num_traits::ToPrimitive;
 use smol_str::SmolStr;
-use std::collections::HashSet;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::str::FromStr;
 use std::sync::Arc;
 
-#[allow(clippy::all, clippy::pedantic, clippy::nursery)]
-pub mod project;
 pub mod sierra_casm_generator;
 
 pub fn build_project_config(
@@ -115,33 +109,23 @@ pub struct SingleTestConfig {
 /// Finds the tests in the requested crates.
 pub fn find_all_tests(
     db: &dyn SemanticGroup,
-    main_crates: &[CrateId],
-    file_id: FileId,
+    main_crates: Vec<CrateId>,
 ) -> Vec<(FreeFunctionId, SingleTestConfig)> {
     let mut tests = vec![];
-
-    let crate_modules = db.crate_modules(main_crates[0]);
-
-    let Ok(file_modules) = db.file_modules(file_id) else { panic!("Error getting file modules! Make sure there are no test files that are in the same directory as the lib.cairo file while not being a part of this package themselves.") };
-
-    // Somehow only the intersection of those two sets gives us tests from that single file :D
-    let crate_modules_set = crate_modules.iter().collect::<HashSet<_>>();
-    let file_modules_set: HashSet<&ModuleId> = file_modules.iter().collect::<HashSet<_>>();
-    let modules = crate_modules_set
-        .intersection(&file_modules_set)
-        .collect::<Vec<_>>();
-
-    for module_id in &modules {
-        let Ok(module_items) = db.module_items(***module_id) else {
+    for crate_id in main_crates {
+        let modules = db.crate_modules(crate_id);
+        for module_id in modules.iter() {
+            let Ok(module_items) = db.module_items(*module_id) else {
                 continue;
             };
-        tests.extend(
+            tests.extend(
                 module_items.iter().filter_map(|item| {
                     let ModuleItemId::FreeFunction(func_id) = item else { return None };
                     let Ok(attrs) = db.function_with_body_attributes(FunctionWithBodyId::Free(*func_id)) else { return None };
                     Some((*func_id, try_extract_test_config(db.upcast(), &attrs).unwrap()?))
                 }),
             );
+        }
     }
     tests
 }
@@ -293,7 +277,6 @@ pub struct TestCase {
     pub available_gas: Option<usize>,
 }
 
-// must be provided with CAIRO FILE INPUT PATHS
 // returns tuple[sierra if no output_path, list[test_name, test_config]]
 pub fn collect_tests(
     input_path: &str,
@@ -339,9 +322,7 @@ pub fn collect_tests(
              above"
         ));
     }
-
-    let file_id = db.intern_file(FileLongId::OnDisk(PathBuf::from_str(input_path)?));
-    let all_tests = find_all_tests(db, &main_crate_ids, file_id);
+    let all_tests = find_all_tests(db, main_crate_ids);
 
     let z: Vec<ConcreteFunctionWithBodyId> = all_tests
         .iter()
