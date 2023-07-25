@@ -6,9 +6,7 @@ use crate::starknet_commands::{
 };
 use anyhow::Result;
 use camino::Utf8PathBuf;
-use cast::{
-    check_accounts_file_existence, get_account, get_block_id, get_provider, print_formatted,
-};
+use cast::{account_file_exists, get_account, get_block_id, get_provider, print_formatted};
 use clap::{Parser, Subcommand};
 
 mod helpers;
@@ -97,7 +95,7 @@ async fn main() -> Result<()> {
 
     match cli.command {
         Commands::Declare(declare) => {
-            check_accounts_file_existence(&accounts_file_path)?;
+            account_file_exists(&accounts_file_path)?;
             let mut account = get_account(&account, &accounts_file_path, &provider, &network)?;
 
             let result = starknet_commands::declare::declare(
@@ -134,7 +132,7 @@ async fn main() -> Result<()> {
             Ok(())
         }
         Commands::Deploy(deploy) => {
-            check_accounts_file_existence(&accounts_file_path)?;
+            account_file_exists(&accounts_file_path)?;
             let account = get_account(&account, &accounts_file_path, &provider, &network)?;
 
             let result = starknet_commands::deploy::deploy(
@@ -185,7 +183,7 @@ async fn main() -> Result<()> {
             Ok(())
         }
         Commands::Invoke(invoke) => {
-            check_accounts_file_existence(&accounts_file_path)?;
+            account_file_exists(&accounts_file_path)?;
             let mut account = get_account(&account, &accounts_file_path, &provider, &network)?;
             let result = starknet_commands::invoke::invoke(
                 invoke.contract_address,
@@ -209,7 +207,7 @@ async fn main() -> Result<()> {
                     starknet_commands::multicall::new::print_new_result(result.as_str());
                 }
                 starknet_commands::multicall::Commands::Run(run) => {
-                    check_accounts_file_existence(&accounts_file_path)?;
+                    account_file_exists(&accounts_file_path)?;
                     let mut account =
                         get_account(&account, &accounts_file_path, &provider, &network)?;
                     starknet_commands::multicall::run::run(
