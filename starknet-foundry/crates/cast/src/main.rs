@@ -4,7 +4,7 @@ use crate::starknet_commands::account::Account;
 use crate::starknet_commands::{
     account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
 };
-use anyhow::{bail, Result};
+use anyhow::Result;
 use camino::Utf8PathBuf;
 use cast::{
     check_accounts_file_existence, get_account, get_block_id, get_provider, print_formatted,

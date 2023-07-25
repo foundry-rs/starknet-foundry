@@ -200,3 +200,41 @@ pub fn add_created_profile_to_configuration(
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::starknet_commands::account::create::add_created_profile_to_configuration;
+    use sealed_test::prelude::rusty_fork_test;
+    use sealed_test::prelude::sealed_test;
+    use std::fs;
+
+    #[sealed_test(files = ["tests/data/contracts/v1/balance/Scarb.toml"])]
+    fn test_add_created_profile_to_configuration_happy_case() {
+        let res = add_created_profile_to_configuration(
+            &None,
+            String::from("some-name"),
+            String::from("some-net"),
+            String::from("http://some-url"),
+        );
+
+        assert!(res.is_ok());
+
+        let contents = fs::read_to_string("Scarb.toml").expect("Unable to read Scarb.toml");
+        assert!(contents.contains("[tool.sncast.some-name]"));
+        assert!(contents.contains("account = \"some-name\""));
+        assert!(contents.contains("network = \"some-net\""));
+        assert!(contents.contains("url = \"http://some-url\""));
+    }
+
+    #[sealed_test(files = ["tests/data/contracts/v1/balance/Scarb.toml"])]
+    fn test_add_created_profile_to_configuration_profile_already_exists() {
+        let res = add_created_profile_to_configuration(
+            &None,
+            String::from("myprofile"),
+            String::from("some-net"),
+            String::from("http://some-url"),
+        );
+
+        assert!(res.is_err());
+    }
+}
