@@ -91,9 +91,9 @@ fn find_cairo_root_files_in_directory(
     lib_path: &Utf8PathBuf,
 ) -> Result<Vec<Utf8PathBuf>> {
     let mut test_files: Vec<Utf8PathBuf> = vec![lib_path.clone()];
-    let src_path = lib_path.parent().context(format!(
-        "Failed to get parent directory of a package at path = {lib_path}"
-    ))?;
+    let src_path = lib_path.parent().with_context(|| {
+        format!("Failed to get parent directory of a package at path = {lib_path}")
+    })?;
 
     for entry in WalkDir::new(package_path)
         .sort_by_file_name()
