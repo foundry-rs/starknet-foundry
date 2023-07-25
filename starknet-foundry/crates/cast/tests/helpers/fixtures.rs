@@ -2,6 +2,7 @@ use crate::helpers::constants::{ACCOUNT_FILE_PATH, CONTRACTS_DIR, NETWORK, URL};
 use camino::Utf8PathBuf;
 use cast::{get_account, get_provider, parse_number};
 use serde_json::{json, Value};
+use snapbox::cmd::{cargo_bin, Command};
 use starknet::accounts::{Account, Call};
 use starknet::contract::ContractFactory;
 use starknet::core::types::contract::{CompiledClass, SierraClass};
@@ -191,4 +192,48 @@ pub fn duplicate_directory_with_salt(src_path: String, to_be_salted: &str, salt:
         .expect("Unable to change contract code");
 
     dest_path
+}
+
+pub async fn create_account(salt: &str, add_profile: bool) -> (Utf8PathBuf, &str) {
+    let created_dir = Utf8PathBuf::from(duplicate_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/v1/balance",
+        "put",
+        salt,
+    ));
+    let accounts_file = "./accounts.json";
+
+    let mut args = vec![
+        "--url",
+        URL,
+        "--network",
+        NETWORK,
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "create",
+        "--name",
+        "my_account",
+    ];
+    if add_profile {
+        args.push("--add-profile");
+    }
+
+    Command::new(cargo_bin!("sncast"))
+        .current_dir(&created_dir)
+        .args(&args)
+        .assert()
+        .success();
+
+    let contents = fs::read_to_string(created_dir.join(accounts_file)).unwrap();
+    let items: Value = serde_json::from_str(&contents).expect("failed to parse json file");
+
+    mint_token(
+        items["alpha-goerli"]["my_account"]["address"]
+            .as_str()
+            .unwrap(),
+        1e17,
+    )
+    .await;
+
+    (created_dir, accounts_file)
 }
