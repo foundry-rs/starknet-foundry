@@ -1,7 +1,10 @@
-use crate::helpers::constants::{NETWORK, URL};
-use crate::helpers::fixtures::{create_account, get_transaction_hash, get_transaction_receipt};
+use crate::helpers::constants::{CONTRACTS_DIR, NETWORK, URL};
+use crate::helpers::fixtures::{
+    duplicate_directory_with_salt, get_transaction_hash, get_transaction_receipt, mint_token,
+};
 use camino::Utf8PathBuf;
 use indoc::indoc;
+use serde_json::Value;
 use snapbox::cmd::{cargo_bin, Command};
 use starknet::core::types::TransactionReceipt::DeployAccount;
 use std::fs;
@@ -155,4 +158,48 @@ async fn test_too_low_max_fee() {
     "#});
 
     fs::remove_dir_all(created_dir).unwrap();
+}
+
+pub async fn create_account(salt: &str, add_profile: bool) -> (Utf8PathBuf, &str) {
+    let created_dir = Utf8PathBuf::from(duplicate_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/v1/balance",
+        "put",
+        salt,
+    ));
+    let accounts_file = "./accounts.json";
+
+    let mut args = vec![
+        "--url",
+        URL,
+        "--network",
+        NETWORK,
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "create",
+        "--name",
+        "my_account",
+    ];
+    if add_profile {
+        args.push("--add-profile");
+    }
+
+    Command::new(cargo_bin!("sncast"))
+        .current_dir(&created_dir)
+        .args(&args)
+        .assert()
+        .success();
+
+    let contents = fs::read_to_string(created_dir.join(accounts_file)).unwrap();
+    let items: Value = serde_json::from_str(&contents).expect("failed to parse json file");
+
+    mint_token(
+        items["alpha-goerli"]["my_account"]["address"]
+            .as_str()
+            .unwrap(),
+        1e17,
+    )
+    .await;
+
+    (created_dir, accounts_file)
 }

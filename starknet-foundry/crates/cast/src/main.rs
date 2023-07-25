@@ -239,7 +239,7 @@ async fn main() -> Result<()> {
                 Ok(())
             }
             account::Commands::Deploy(deploy) => {
-                check_accounts_file_existence(&accounts_file_path)?;
+                account_file_exists(&accounts_file_path)?;
                 let result = starknet_commands::account::deploy::deploy(
                     &provider,
                     accounts_file_path,
