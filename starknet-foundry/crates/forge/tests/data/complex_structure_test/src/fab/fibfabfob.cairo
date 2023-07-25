@@ -1,3 +1,5 @@
+// Won't be found
+
 use test_multiple::fob::fob_impl::fob_fn;
 use test_multiple::fab::fab_impl::fab_fn;
 use test_multiple::fib::fib_fn;

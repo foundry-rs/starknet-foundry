@@ -15,34 +15,32 @@ fn simple_package() {
         .current_dir(&temp)
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 11 test(s) and 7 test file(s)
-            Running 0 test(s) from src/erc20.cairo
-            Running 0 test(s) from src/hello_starknet.cairo
-            Running 1 test(s) from src/lib.cairo
-            [PASS] src::test_fib
-            Running 1 test(s) from tests/contract.cairo
-            [PASS] contract::contract::call_and_invoke
-            Running 2 test(s) from tests/ext_function_test.cairo
-            [PASS] ext_function_test::ext_function_test::test_my_test
-            [PASS] ext_function_test::ext_function_test::test_simple
-            Running 6 test(s) from tests/test_simple.cairo
-            [PASS] test_simple::test_simple::test_simple
-            [PASS] test_simple::test_simple::test_simple2
-            [PASS] test_simple::test_simple::test_two
-            [PASS] test_simple::test_simple::test_two_and_two
-            [FAIL] test_simple::test_simple::test_failing
-            
-            Failure data:
-                original value: [8111420071579136082810415440747], converted to a string: [failing check]
-            
-            [FAIL] test_simple::test_simple::test_another_failing
-            
-            Failure data:
-                original value: [8111420071579136082810415440747], converted to a string: [failing check]
-            
-            Running 1 test(s) from tests/without_prefix.cairo
-            [PASS] without_prefix::without_prefix::five
-            Tests: 9 passed, 2 failed, 0 skipped
+        .stdout_matches(indoc! {r#"Collected 11 test(s) and 5 test file(s)
+        Running 1 test(s) from src/lib.cairo
+        [PASS] src::test_fib
+        Running 1 test(s) from tests/contract.cairo
+        [PASS] contract::contract::call_and_invoke
+        Running 2 test(s) from tests/ext_function_test.cairo
+        [PASS] ext_function_test::ext_function_test::test_my_test
+        [PASS] ext_function_test::ext_function_test::test_simple
+        Running 6 test(s) from tests/test_simple.cairo
+        [PASS] test_simple::test_simple::test_simple
+        [PASS] test_simple::test_simple::test_simple2
+        [PASS] test_simple::test_simple::test_two
+        [PASS] test_simple::test_simple::test_two_and_two
+        [FAIL] test_simple::test_simple::test_failing
+        
+        Failure data:
+            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+        
+        [FAIL] test_simple::test_simple::test_another_failing
+        
+        Failure data:
+            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+        
+        Running 1 test(s) from tests/without_prefix.cairo
+        [PASS] without_prefix::without_prefix::five
+        Tests: 9 passed, 2 failed, 0 skipped
             "#});
 }
 
@@ -59,17 +57,15 @@ fn with_filter() {
         .arg("two")
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 2 test(s) and 7 test file(s)
-            Running 0 test(s) from src/erc20.cairo
-            Running 0 test(s) from src/hello_starknet.cairo
-            Running 0 test(s) from src/lib.cairo
-            Running 0 test(s) from tests/contract.cairo
-            Running 0 test(s) from tests/ext_function_test.cairo
-            Running 2 test(s) from tests/test_simple.cairo
-            [PASS] test_simple::test_simple::test_two
-            [PASS] test_simple::test_simple::test_two_and_two
-            Running 0 test(s) from tests/without_prefix.cairo
-            Tests: 2 passed, 0 failed, 0 skipped
+        .stdout_matches(indoc! {r#"Collected 2 test(s) and 5 test file(s)
+        Running 0 test(s) from src/lib.cairo
+        Running 0 test(s) from tests/contract.cairo
+        Running 0 test(s) from tests/ext_function_test.cairo
+        Running 2 test(s) from tests/test_simple.cairo
+        [PASS] test_simple::test_simple::test_two
+        [PASS] test_simple::test_simple::test_two_and_two
+        Running 0 test(s) from tests/without_prefix.cairo
+        Tests: 2 passed, 0 failed, 0 skipped
         "#});
 }
 
@@ -87,16 +83,14 @@ fn with_exact_filter() {
         .arg("--exact")
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 1 test(s) and 7 test file(s)
-            Running 0 test(s) from src/erc20.cairo
-            Running 0 test(s) from src/hello_starknet.cairo
-            Running 0 test(s) from src/lib.cairo
-            Running 0 test(s) from tests/contract.cairo
-            Running 0 test(s) from tests/ext_function_test.cairo
-            Running 1 test(s) from tests/test_simple.cairo
-            [PASS] test_simple::test_simple::test_two
-            Running 0 test(s) from tests/without_prefix.cairo
-            Tests: 1 passed, 0 failed, 0 skipped
+        .stdout_matches(indoc! {r#"Collected 1 test(s) and 5 test file(s)
+        Running 0 test(s) from src/lib.cairo
+        Running 0 test(s) from tests/contract.cairo
+        Running 0 test(s) from tests/ext_function_test.cairo
+        Running 1 test(s) from tests/test_simple.cairo
+        [PASS] test_simple::test_simple::test_two
+        Running 0 test(s) from tests/without_prefix.cairo
+        Tests: 1 passed, 0 failed, 0 skipped
         "#});
 }
 
@@ -113,15 +107,13 @@ fn with_non_matching_filter() {
         .arg("qwerty")
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 0 test(s) and 7 test file(s)
-            Running 0 test(s) from src/erc20.cairo
-            Running 0 test(s) from src/hello_starknet.cairo
-            Running 0 test(s) from src/lib.cairo
-            Running 0 test(s) from tests/contract.cairo
-            Running 0 test(s) from tests/ext_function_test.cairo
-            Running 0 test(s) from tests/test_simple.cairo
-            Running 0 test(s) from tests/without_prefix.cairo
-            Tests: 0 passed, 0 failed, 0 skipped
+        .stdout_matches(indoc! {r#"Collected 0 test(s) and 5 test file(s)
+        Running 0 test(s) from src/lib.cairo
+        Running 0 test(s) from tests/contract.cairo
+        Running 0 test(s) from tests/ext_function_test.cairo
+        Running 0 test(s) from tests/test_simple.cairo
+        Running 0 test(s) from tests/without_prefix.cairo
+        Tests: 0 passed, 0 failed, 0 skipped
         "#});
 }
 
@@ -138,17 +130,17 @@ fn with_print() {
         .assert()
         .success()
         .stdout_matches(indoc! {r#"Collected 1 test(s) and 2 test file(s)
-            Running 0 test(s) from src/lib.cairo
-            Running 1 test(s) from tests/test_print.cairo
-            original value: [123], converted to a string: [{]
-            original value: [6381921], converted to a string: [aaa]
-            original value: [3618502788666131213697322783095070105623107215331596699973092056135872020480]
-            original value: [152]
-            original value: [124], converted to a string: [|]
-            original value: [149]
-            original value: [439721161573], converted to a string: [false]
-            [PASS] test_print::test_print::test_print
-            Tests: 1 passed, 0 failed, 0 skipped
+        Running 0 test(s) from src/lib.cairo
+        Running 1 test(s) from tests/test_print.cairo
+        original value: [123], converted to a string: [{]
+        original value: [6381921], converted to a string: [aaa]
+        original value: [3618502788666131213697322783095070105623107215331596699973092056135872020480]
+        original value: [152]
+        original value: [124], converted to a string: [|]
+        original value: [149]
+        original value: [439721161573], converted to a string: [false]
+        [PASS] test_print::test_print::test_print
+        Tests: 1 passed, 0 failed, 0 skipped
         "#});
 }
 
@@ -168,26 +160,26 @@ fn with_panic_data_decoding() {
         .assert()
         .success()
         .stdout_matches(indoc! {r#"Collected 4 test(s) and 2 test file(s)
-            Running 0 test(s) from src/lib.cairo
-            Running 4 test(s) from tests/test_panic_decoding.cairo
-            [PASS] test_panic_decoding::test_panic_decoding::test_simple
-            [FAIL] test_panic_decoding::test_panic_decoding::test_panic_decoding
-
-            Failure data:
-                original value: [123], converted to a string: [{]
-                original value: [6381921], converted to a string: [aaa]
-                original value: [3618502788666131213697322783095070105623107215331596699973092056135872020480]
-                original value: [152]
-                original value: [124], converted to a string: [|]
-                original value: [149]
-
-            [FAIL] test_panic_decoding::test_panic_decoding::test_panic_decoding2
-
-            Failure data:
-                original value: [128]
-
-            [PASS] test_panic_decoding::test_panic_decoding::test_simple2
-            Tests: 2 passed, 2 failed, 0 skipped
+        Running 0 test(s) from src/lib.cairo
+        Running 4 test(s) from tests/test_panic_decoding.cairo
+        [PASS] test_panic_decoding::test_panic_decoding::test_simple
+        [FAIL] test_panic_decoding::test_panic_decoding::test_panic_decoding
+        
+        Failure data:
+            original value: [123], converted to a string: [{]
+            original value: [6381921], converted to a string: [aaa]
+            original value: [3618502788666131213697322783095070105623107215331596699973092056135872020480]
+            original value: [152]
+            original value: [124], converted to a string: [|]
+            original value: [149]
+        
+        [FAIL] test_panic_decoding::test_panic_decoding::test_panic_decoding2
+        
+        Failure data:
+            original value: [128]
+        
+        [PASS] test_panic_decoding::test_panic_decoding::test_simple2
+        Tests: 2 passed, 2 failed, 0 skipped
         "#});
 }
 
@@ -224,29 +216,27 @@ fn with_exit_first() {
         .current_dir(&temp)
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 11 test(s) and 7 test file(s)
-            Running 0 test(s) from src/erc20.cairo
-            Running 0 test(s) from src/hello_starknet.cairo
-            Running 1 test(s) from src/lib.cairo
-            [PASS] src::test_fib
-            Running 1 test(s) from tests/contract.cairo
-            [PASS] contract::contract::call_and_invoke
-            Running 2 test(s) from tests/ext_function_test.cairo
-            [PASS] ext_function_test::ext_function_test::test_my_test
-            [PASS] ext_function_test::ext_function_test::test_simple
-            Running 6 test(s) from tests/test_simple.cairo
-            [PASS] test_simple::test_simple::test_simple
-            [PASS] test_simple::test_simple::test_simple2
-            [PASS] test_simple::test_simple::test_two
-            [PASS] test_simple::test_simple::test_two_and_two
-            [FAIL] test_simple::test_simple::test_failing
-
-            Failure data:
-                original value: [8111420071579136082810415440747], converted to a string: [failing check]
-
-            [SKIP] test_simple::test_simple::test_another_failing
-            [SKIP] without_prefix::without_prefix::five
-            Tests: 8 passed, 1 failed, 2 skipped
+        .stdout_matches(indoc! {r#"Collected 11 test(s) and 5 test file(s)
+        Running 1 test(s) from src/lib.cairo
+        [PASS] src::test_fib
+        Running 1 test(s) from tests/contract.cairo
+        [PASS] contract::contract::call_and_invoke
+        Running 2 test(s) from tests/ext_function_test.cairo
+        [PASS] ext_function_test::ext_function_test::test_my_test
+        [PASS] ext_function_test::ext_function_test::test_simple
+        Running 6 test(s) from tests/test_simple.cairo
+        [PASS] test_simple::test_simple::test_simple
+        [PASS] test_simple::test_simple::test_simple2
+        [PASS] test_simple::test_simple::test_two
+        [PASS] test_simple::test_simple::test_two_and_two
+        [FAIL] test_simple::test_simple::test_failing
+        
+        Failure data:
+            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+        
+        [SKIP] test_simple::test_simple::test_another_failing
+        [SKIP] without_prefix::without_prefix::five
+        Tests: 8 passed, 1 failed, 2 skipped
         "#});
 }
 
@@ -262,29 +252,27 @@ fn with_exit_first_flag() {
         .current_dir(&temp)
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 11 test(s) and 7 test file(s)
-            Running 0 test(s) from src/erc20.cairo
-            Running 0 test(s) from src/hello_starknet.cairo
-            Running 1 test(s) from src/lib.cairo
-            [PASS] src::test_fib
-            Running 1 test(s) from tests/contract.cairo
-            [PASS] contract::contract::call_and_invoke
-            Running 2 test(s) from tests/ext_function_test.cairo
-            [PASS] ext_function_test::ext_function_test::test_my_test
-            [PASS] ext_function_test::ext_function_test::test_simple
-            Running 6 test(s) from tests/test_simple.cairo
-            [PASS] test_simple::test_simple::test_simple
-            [PASS] test_simple::test_simple::test_simple2
-            [PASS] test_simple::test_simple::test_two
-            [PASS] test_simple::test_simple::test_two_and_two
-            [FAIL] test_simple::test_simple::test_failing
-
-            Failure data:
-                original value: [8111420071579136082810415440747], converted to a string: [failing check]
-
-            [SKIP] test_simple::test_simple::test_another_failing
-            [SKIP] without_prefix::without_prefix::five
-            Tests: 8 passed, 1 failed, 2 skipped
+        .stdout_matches(indoc! {r#"Collected 11 test(s) and 5 test file(s)
+        Running 1 test(s) from src/lib.cairo
+        [PASS] src::test_fib
+        Running 1 test(s) from tests/contract.cairo
+        [PASS] contract::contract::call_and_invoke
+        Running 2 test(s) from tests/ext_function_test.cairo
+        [PASS] ext_function_test::ext_function_test::test_my_test
+        [PASS] ext_function_test::ext_function_test::test_simple
+        Running 6 test(s) from tests/test_simple.cairo
+        [PASS] test_simple::test_simple::test_simple
+        [PASS] test_simple::test_simple::test_simple2
+        [PASS] test_simple::test_simple::test_two
+        [PASS] test_simple::test_simple::test_two_and_two
+        [FAIL] test_simple::test_simple::test_failing
+        
+        Failure data:
+            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+        
+        [SKIP] test_simple::test_simple::test_another_failing
+        [SKIP] without_prefix::without_prefix::five
+        Tests: 8 passed, 1 failed, 2 skipped
         "#});
 }
 
@@ -322,28 +310,26 @@ fn exit_first_flag_takes_precedence() {
         .arg("--exit-first")
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 11 test(s) and 7 test file(s)
-            Running 0 test(s) from src/erc20.cairo
-            Running 0 test(s) from src/hello_starknet.cairo
-            Running 1 test(s) from src/lib.cairo
-            [PASS] src::test_fib
-            Running 1 test(s) from tests/contract.cairo
-            [PASS] contract::contract::call_and_invoke
-            Running 2 test(s) from tests/ext_function_test.cairo
-            [PASS] ext_function_test::ext_function_test::test_my_test
-            [PASS] ext_function_test::ext_function_test::test_simple
-            Running 6 test(s) from tests/test_simple.cairo
-            [PASS] test_simple::test_simple::test_simple
-            [PASS] test_simple::test_simple::test_simple2
-            [PASS] test_simple::test_simple::test_two
-            [PASS] test_simple::test_simple::test_two_and_two
-            [FAIL] test_simple::test_simple::test_failing
-
-            Failure data:
-                original value: [8111420071579136082810415440747], converted to a string: [failing check]
-
-            [SKIP] test_simple::test_simple::test_another_failing
-            [SKIP] without_prefix::without_prefix::five
-            Tests: 8 passed, 1 failed, 2 skipped
+        .stdout_matches(indoc! {r#"Collected 11 test(s) and 5 test file(s)
+        Running 1 test(s) from src/lib.cairo
+        [PASS] src::test_fib
+        Running 1 test(s) from tests/contract.cairo
+        [PASS] contract::contract::call_and_invoke
+        Running 2 test(s) from tests/ext_function_test.cairo
+        [PASS] ext_function_test::ext_function_test::test_my_test
+        [PASS] ext_function_test::ext_function_test::test_simple
+        Running 6 test(s) from tests/test_simple.cairo
+        [PASS] test_simple::test_simple::test_simple
+        [PASS] test_simple::test_simple::test_simple2
+        [PASS] test_simple::test_simple::test_two
+        [PASS] test_simple::test_simple::test_two_and_two
+        [FAIL] test_simple::test_simple::test_failing
+        
+        Failure data:
+            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+        
+        [SKIP] test_simple::test_simple::test_another_failing
+        [SKIP] without_prefix::without_prefix::five
+        Tests: 8 passed, 1 failed, 2 skipped
         "#});
 }
