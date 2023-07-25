@@ -1,13 +1,10 @@
 use crate::helpers::constants::OZ_CLASS_HASH;
 use anyhow::{anyhow, Result};
 use camino::Utf8PathBuf;
-use cast::{
-    get_network, handle_rpc_error, handle_wait_for_tx_result, parse_number, print_formatted,
-    wait_for_tx,
-};
+use cast::{get_network, handle_rpc_error, parse_number, print_formatted, wait_for_tx};
 use clap::Args;
 use starknet::accounts::AccountFactoryError;
-use starknet::accounts::{AccountFactory, ArgentAccountFactory, OpenZeppelinAccountFactory};
+use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
 use starknet::core::types::FieldElement;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider};

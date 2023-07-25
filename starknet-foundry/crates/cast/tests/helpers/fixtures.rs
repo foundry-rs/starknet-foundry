@@ -1,6 +1,4 @@
-use crate::helpers::constants::{
-    ACCOUNT_FILE_PATH, CONTRACTS_DIR, ETH_CONTRACT_ADDRESS, NETWORK, URL,
-};
+use crate::helpers::constants::{ACCOUNT_FILE_PATH, CONTRACTS_DIR, NETWORK, URL};
 use camino::Utf8PathBuf;
 use cast::{get_account, get_provider, parse_number};
 use serde_json::{json, Value};
