@@ -80,7 +80,7 @@ To learn more about our benchmark methodology check [here](./benchmarks/).
 You haven't found your answer to your question in
 the [Starknet Foundry Book](https://foundry-rs.github.io/starknet-foundry/)?
 
-- Join the [Telegram](https://t.me/+d8ULaPxeRqlhMDNk) group to get help
+- Join the [Telegram](https://t.me/starknet_foundry_support) group to get help
 - Open a [GitHub discussion](https://github.com/foundry-rs/starknet-foundry/discussions) with your question
 - Join the [Starknet Discord](https://discord.com/invite/qypnmzkhbc)
 
