@@ -18,39 +18,53 @@ fn library_call_syscall() {
         use traits::TryInto;
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
+        use starknet::ClassHash;
+        use starknet::Felt252TryIntoClassHash;
         
         #[starknet::interface]
         trait ICaller<TContractState> {
-            fn call_libfunc_syscall(
-                self: @TContractState, class_hash: felt252, function_selector: felt252, calldata: Span<felt252>
-            ) -> Span<felt252>;
+            fn call_add_two(
+                self: @TContractState, class_hash: ClassHash, number: felt252
+            ) -> felt252;
+        }
+        
+        #[starknet::interface]
+        trait IExecutor<TContractState> {
+            fn add_two(ref self: TContractState, number: felt252) -> felt252;
+            fn get_thing(self: @TContractState) -> felt252;
+        }
+        
+        fn deploy_contract(name: felt252) -> ContractAddress {
+            let class_hash = declare(name).unwrap();
+            let prepared = PreparedContract {
+                class_hash: class_hash, constructor_calldata: @ArrayTrait::new()
+            };
+            let contract_address = deploy(prepared).unwrap();
+            
+            contract_address.try_into().unwrap()
         }
         
         #[test]
         fn test_increase_balance() {
-            let caller_class_hash = declare('Caller').unwrap();
-            let prepared = PreparedContract {
-                class_hash: caller_class_hash, constructor_calldata: @ArrayTrait::new()
+            let caller_address = deploy_contract('Caller');
+            let caller_safe_dispatcher = ICallerSafeDispatcher {
+                contract_address: caller_address
             };
-            let contract_address = deploy(prepared).unwrap();
-        
-            let safe_dispatcher = ICallerSafeDispatcher {
-                contract_address: contract_address.try_into().unwrap()
+            
+            let executor_class_hash = declare('Executor').unwrap().try_into().unwrap();
+            let executor_address = deploy_contract('Executor');
+            let executor_safe_dispatcher = IExecutorSafeDispatcher {
+                contract_address: executor_address
             };
-        
-            let executor_class_hash = declare('Executor').unwrap();
-            let mut calldata = ArrayTrait::new();
-            calldata.append(420);
-        
-            let result = safe_dispatcher
-                .call_libfunc_syscall(
-                    executor_class_hash,
-                    513583194757451964557877661208561352178142916039616450970863240829819831951,
-                    calldata.span()
-                )
-                .unwrap();
-        
-            assert(*result[0] == 422, 'Invalid balance');
+            
+            let thing = executor_safe_dispatcher.get_thing().unwrap();
+            assert(thing == 5, 'invalid thing');
+            
+            let result = caller_safe_dispatcher.call_add_two(executor_class_hash, 420).unwrap();        
+            assert(result == 422, 'invalid result');
+            
+            let thing = executor_safe_dispatcher.get_thing().unwrap();
+            assert(thing == 5, 'invalid thing');
         }
         "#
         ),
@@ -60,24 +74,24 @@ fn library_call_syscall() {
                 r#"
                 #[starknet::contract]
                 mod Caller {
-                    use starknet::ClassHash;
-                    use starknet::class_hash_try_from_felt252;
-                    use starknet::library_call_syscall;
-                
-                    use option::OptionTrait;
                     use result::ResultTrait;
+                    use starknet::ClassHash;
+                    use starknet::library_call_syscall;
+
+                    #[starknet::interface]
+                    trait IExecutor<TContractState> {
+                        fn add_two(ref self: ContractState, number: felt252) -> felt252;
+                    }
                 
                     #[storage]
                     struct Storage {}
                 
                     #[external(v0)]
-                    fn call_libfunc_syscall(
-                        self: @ContractState, class_hash: felt252, function_selector: felt252, calldata: Span<felt252>
-                    ) -> Span<felt252> {
-                        library_call_syscall(
-                            class_hash_try_from_felt252(class_hash).unwrap(), function_selector, calldata
-                        )
-                            .unwrap()
+                    fn call_add_two(
+                        self: @ContractState, class_hash: ClassHash, number: felt252
+                    ) -> felt252 {
+                        let safe_lib_dispatcher = IExecutorSafeLibraryDispatcher { class_hash };
+                        safe_lib_dispatcher.add_two(number).unwrap()
                     }
                 }
                 "#
@@ -90,11 +104,25 @@ fn library_call_syscall() {
                 #[starknet::contract]
                 mod Executor {
                     #[storage]
-                    struct Storage {}
+                    struct Storage {
+                        thing: felt252
+                    }
+
+                    #[constructor]
+                    fn constructor(ref self: ContractState) {
+                        assert(self.thing.read() == 0, 'default value should be 0');
+                        self.thing.write(5);
+                    }
                 
                     #[external(v0)]
-                    fn add_two(self: @ContractState, number: felt252) -> felt252 {
+                    fn add_two(ref self: ContractState, number: felt252) -> felt252 {
+                        self.thing.write(10);
                         number + 2
+                    }
+                    
+                    #[external(v0)]
+                    fn get_thing(self: @ContractState) -> felt252 {
+                        self.thing.read()
                     }
                 }
                 "#
