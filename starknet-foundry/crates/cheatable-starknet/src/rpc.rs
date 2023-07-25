@@ -69,6 +69,7 @@ pub struct CheatedState {
 }
 
 impl CheatedState {
+    #[must_use]
     pub fn new() -> Self {
         CheatedState {
             rolled_contracts: HashMap::new(),
