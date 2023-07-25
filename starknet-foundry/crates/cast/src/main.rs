@@ -1,4 +1,6 @@
 use crate::helpers::scarb_utils::parse_scarb_config;
+use crate::starknet_commands::account::create::print_account_create_result;
+use crate::starknet_commands::account::Account;
 use crate::starknet_commands::{
     account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
 };
