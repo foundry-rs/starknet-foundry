@@ -87,19 +87,19 @@ fn collect_tests_from_directory(
 }
 
 fn find_cairo_root_files_in_directory(
-    input_path: &Utf8PathBuf,
+    package_path: &Utf8PathBuf,
     lib_path: &Utf8PathBuf,
 ) -> Result<Vec<Utf8PathBuf>> {
     let mut test_files: Vec<Utf8PathBuf> = vec![lib_path.clone()];
     let src_path = lib_path.parent().unwrap();
 
-    for entry in WalkDir::new(input_path)
+    for entry in WalkDir::new(package_path)
         .sort_by_file_name()
         .into_iter()
         .filter_entry(|e| !e.path().starts_with(src_path))
     {
         let entry =
-            entry.with_context(|| format!("Failed to read directory at path = {input_path}"))?;
+            entry.with_context(|| format!("Failed to read directory at path = {package_path}"))?;
         let path = entry.path();
 
         if path.is_file() && path.extension().unwrap_or_default() == "cairo" {
@@ -136,7 +136,7 @@ fn internal_collect_tests(
 }
 
 fn collect_tests_from_tree(
-    root_path: &Utf8PathBuf,
+    test_root: &Utf8PathBuf,
     package_path: &Utf8PathBuf,
     linked_libraries: &Option<Vec<LinkedLibrary>>,
     corelib_path: Option<&Utf8PathBuf>,
@@ -154,7 +154,7 @@ fn collect_tests_from_tree(
     ];
 
     let (sierra_program, tests_configs) = collect_tests(
-        root_path.as_str(),
+        test_root.as_str(),
         None,
         linked_libraries.clone(),
         Some(builtins.clone()),
@@ -168,7 +168,7 @@ fn collect_tests_from_tree(
         test_cases
     };
 
-    let relative_path = root_path.strip_prefix(package_path)?.to_path_buf();
+    let relative_path = test_root.strip_prefix(package_path)?.to_path_buf();
     Ok(TestsFromFile {
         sierra_program,
         test_cases,

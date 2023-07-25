@@ -128,7 +128,7 @@ pub fn dependencies_for_package(
         })
         .ok_or_else(|| anyhow!("Failed to find metadata for package = {package}"))?;
 
-    let base_path = metadata
+    let package_path = metadata
         .get_package(package)
         .ok_or_else(|| anyhow!("Failed to find metadata for package = {package}"))?
         .root
@@ -155,7 +155,13 @@ pub fn dependencies_for_package(
         .context("corelib could not be found")?;
     let corelib_path = Utf8PathBuf::from(corelib.source_root());
 
-    Ok((base_path, lib_path, corelib_path, dependencies, target_name))
+    Ok((
+        package_path,
+        lib_path,
+        corelib_path,
+        dependencies,
+        target_name,
+    ))
 }
 
 #[cfg(test)]
