@@ -460,7 +460,7 @@ fn execute_entry_point_call_cairo1(
     };
 
     // Execute.
-    let run_resources = run_entry_point_m(
+    let run_resources = cheatable_run_entry_point(
         &mut vm,
         &mut runner,
         &mut syscall_hh,
@@ -482,7 +482,7 @@ fn execute_entry_point_call_cairo1(
 }
 
 /// Runs the runner from the given PC.
-fn run_entry_point_m(
+fn cheatable_run_entry_point(
     vm: &mut VirtualMachine,
     runner: &mut CairoRunner,
     hint_processor: &mut dyn HintProcessor,
