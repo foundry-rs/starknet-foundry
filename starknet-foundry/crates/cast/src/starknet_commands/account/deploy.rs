@@ -31,7 +31,7 @@ pub async fn deploy(
 ) -> Result<FieldElement> {
     let network = get_network(network)?.get_value();
 
-    let contents = std::fs::read_to_string(path.clone())?;
+    let contents = std::fs::read_to_string(path.clone()).expect("Couldn't read accounts file");
     let mut items: serde_json::Value =
         serde_json::from_str(&contents).expect("failed to parse json file");
 
@@ -55,7 +55,7 @@ pub async fn deploy(
     );
 
     let factory = OpenZeppelinAccountFactory::new(
-        parse_number(OZ_CLASS_HASH).expect("Couldn't parse OpenZeppelins account class hash"),
+        parse_number(OZ_CLASS_HASH).expect("Couldn't parse OpenZeppelin's account class hash"),
         provider.chain_id().await.expect("Couldn't get chain id"),
         LocalWallet::from_signing_key(private_key),
         provider,
@@ -76,18 +76,19 @@ pub async fn deploy(
     let result = deployment.max_fee(max_fee).send().await;
 
     match result {
-        Ok(result) => match wait_for_tx(provider, result.transaction_hash).await {
-            Ok(_) => {
-                items[network][&name]["deployed"] = serde_json::Value::from(true);
-                std::fs::write(path, serde_json::to_string_pretty(&items).unwrap())
-                    .expect("Couldn't write to accounts file");
-
-                Ok(result.transaction_hash)
-            }
-            Err(message) => Err(anyhow!(message)),
-        },
         Err(AccountFactoryError::Provider(error)) => handle_rpc_error(error),
-        _ => Err(anyhow!("Unknown RPC error")),
+        Err(_) => Err(anyhow!("Unknown RPC error")),
+        Ok(result) => {
+            if let Err(message) = wait_for_tx(provider, result.transaction_hash).await {
+                return Err(anyhow!(message));
+            }
+
+            items[network][&name]["deployed"] = serde_json::Value::from(true);
+            std::fs::write(path, serde_json::to_string_pretty(&items).unwrap())
+                .expect("Couldn't write to accounts file");
+
+            Ok(result.transaction_hash)
+        }
     }
 }
 
