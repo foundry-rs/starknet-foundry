@@ -89,7 +89,11 @@ impl ResourceTracker for CairoHintProcessor<'_> {
 }
 
 trait ForgeHintProcessor {
-    fn start_roll(&mut self, inputs: &[Felt252]) -> Result<(), EnhancedHintError>;
+    fn start_roll(
+        &mut self,
+        contract_address: ContractAddress,
+        timestamp: blockifier_Felt252,
+    ) -> Result<(), EnhancedHintError>;
 }
 
 impl HintProcessorLogic for CairoHintProcessor<'_> {
@@ -142,14 +146,14 @@ impl HintProcessorLogic for CairoHintProcessor<'_> {
 }
 
 impl ForgeHintProcessor for CairoHintProcessor<'_> {
-    fn start_roll(&mut self, inputs: &[Felt252]) -> Result<(), EnhancedHintError> {
-        let contract_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
-            inputs[0].clone().to_be_bytes(),
-        )?)?);
-        let value = inputs[1].clone();
+    fn start_roll(
+        &mut self,
+        contract_address: ContractAddress,
+        timestamp: blockifier_Felt252,
+    ) -> Result<(), EnhancedHintError> {
         self.cheated_state
             .rolled_contracts
-            .insert(contract_address, convert_to_blockifier_felt(&value));
+            .insert(contract_address, timestamp);
         Ok(())
     }
 }
@@ -201,7 +205,13 @@ impl CairoHintProcessor<'_> {
 
         match selector {
             "prepare" => todo!(),
-            "start_roll" => self.start_roll(&inputs),
+            "start_roll" => {
+                let contract_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
+                    inputs[0].clone().to_be_bytes(),
+                )?)?);
+                let value = inputs[1].clone();
+                self.start_roll(contract_address, convert_to_blockifier_felt(&value))
+            }
             "stop_roll" => todo!(),
             "start_warp" => todo!(),
             "stop_warp" => todo!(),

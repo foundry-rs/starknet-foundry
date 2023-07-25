@@ -190,7 +190,7 @@ fn execute_call_entry_point(
     let result = match contract_class {
         ContractClass::V0(_) => panic!("Cairo 0 classes are not supported"),
         ContractClass::V1(contract_class) => execute_entry_point_call_cairo1(
-            call,
+            entry_point.clone(),
             &contract_class,
             state,
             cheated_state,
