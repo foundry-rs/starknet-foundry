@@ -1,3 +1,4 @@
+mod account;
 mod call;
 mod declare;
 mod deploy;

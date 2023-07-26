@@ -13,14 +13,15 @@ include_dir.workspace = true
 starknet_api.workspace = true
 tempfile.workspace = true
 rayon.workspace = true
+cairo-lang-runner.workspace = true
+cairo-lang-casm.workspace = true
 test-collector = { path = "../test-collector" }
+cairo-felt-blockifier = { path = "../compatibility/cairo-felt-blockifier" }
 cheatable-starknet = { path = "../cheatable-starknet" }
 cairo-lang-test-runner = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
-cairo-lang-runner = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
 cairo-lang-sierra-to-casm = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
 cairo-lang-sierra = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
 cairo-lang-utils = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
-cairo-lang-casm = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
 cairo-lang-starknet = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
 cairo-lang-compiler = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
 cairo-lang-filesystem = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }

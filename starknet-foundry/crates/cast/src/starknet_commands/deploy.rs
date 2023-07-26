@@ -71,10 +71,7 @@ pub async fn deploy(
     max_fee: Option<FieldElement>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
 ) -> Result<(FieldElement, FieldElement)> {
-    let salt = match salt {
-        Some(salt) => salt,
-        None => FieldElement::from(OsRng.next_u64()),
-    };
+    let salt = salt.unwrap_or(FieldElement::from(OsRng.next_u64()));
 
     let factory = ContractFactory::new(class_hash, account);
     let deployment = factory.deploy(&constructor_calldata, salt, unique);
