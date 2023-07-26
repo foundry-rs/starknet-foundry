@@ -296,7 +296,7 @@ pub fn raise_if_empty(value: &str, value_name: &str) -> Result<()> {
 pub fn account_file_exists(accounts_file_path: &Utf8PathBuf) -> Result<()> {
     if !accounts_file_path.exists() {
         bail! {"Accounts file {} does not exist! If you do not have an account create one with `account create` command \
-        or make sure to supply correct path to the accounts file (with --accounts-file argument).", accounts_file_path}
+        or if you're using a custom accounts file, make sure to supply correct path to it with --accounts-file argument.", accounts_file_path}
     }
     Ok(())
 }
