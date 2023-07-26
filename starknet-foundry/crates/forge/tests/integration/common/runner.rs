@@ -123,8 +123,8 @@ impl<'a> TestCase {
             .collect()
     }
 
-    pub fn find_test_result(result: &[TestFileSummary]) -> &TestFileSummary {
-        result
+    pub fn find_test_result(results: &[TestFileSummary]) -> &TestFileSummary {
+        results
             .iter()
             .find(|r| r.relative_path.ends_with(TestCase::TEST_PATH))
             .unwrap()

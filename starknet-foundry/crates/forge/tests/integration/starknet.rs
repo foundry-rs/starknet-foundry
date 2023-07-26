@@ -27,7 +27,7 @@ fn timestamp_doesnt_decrease_between_transactions() {
             #[test]
             fn timestamp_doesnt_decrease() {
                let class_hash = declare('Timestamper').unwrap();
-                let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
+                let prepared = PreparedContract { class_hash, constructor_calldata: @ArrayTrait::new() };
                 let contract_address = deploy(prepared).unwrap();
                 let contract_address: ContractAddress = contract_address.try_into().unwrap();
                 let dispatcher = ITimestamperDispatcher { contract_address };
@@ -117,7 +117,7 @@ fn block_doesnt_decrease_between_transactions() {
             #[test]
             fn block_doesnt_decrease() {
                let class_hash = declare('Blocker').unwrap();
-                let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
+                let prepared = PreparedContract { class_hash, constructor_calldata: @ArrayTrait::new() };
                 let contract_address = deploy(prepared).unwrap();
                 let contract_address: ContractAddress = contract_address.try_into().unwrap();
                 let dispatcher = IBlockerDispatcher { contract_address };
@@ -132,8 +132,8 @@ fn block_doesnt_decrease_between_transactions() {
                 let next_block_timestamp = dispatcher.read_block_timestamp();
                 let next_sequencer_address = dispatcher.read_sequencer_address();
 
-                assert(next_block_number >= block_number, 'block number decrese');
-                assert(next_block_timestamp >= block_timestamp, 'block timestamp decrese');
+                assert(next_block_number >= block_number, 'block number decreases');
+                assert(next_block_timestamp >= block_timestamp, 'block timestamp decreases');
                 assert(sequencer_address == next_sequencer_address, 'sequencer changed');
             }
     "#
@@ -229,7 +229,7 @@ fn nonce_increases_between_transactions() {
             #[test]
             fn nonce_increases_between_transactions() {
                 let class_hash = declare('Noncer').unwrap();
-                let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
+                let prepared = PreparedContract { class_hash, constructor_calldata: @ArrayTrait::new() };
                 let contract_address = deploy(prepared).unwrap();
                 let contract_address: ContractAddress = contract_address.try_into().unwrap();
                 let dispatcher = INoncerDispatcher { contract_address };
@@ -322,7 +322,7 @@ fn nonce_increases_between_deploys_and_declares() {
             #[test]
             fn nonce_increases_between_transactions() {
                 let class_hash = declare('Noncer').unwrap();
-                let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
+                let prepared = PreparedContract { class_hash, constructor_calldata: @ArrayTrait::new() };
                 let contract_address = deploy(prepared).unwrap();
                 let contract_address: ContractAddress = contract_address.try_into().unwrap();
                 let dispatcher = INoncerDispatcher { contract_address };
