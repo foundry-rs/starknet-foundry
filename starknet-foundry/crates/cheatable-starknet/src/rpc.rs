@@ -430,10 +430,9 @@ impl CheatableSyscallHandler<'_> {
                         .pranked_contracts
                         .get(&contract_address)
                         .expect("No caller address value found for the pranked contract address")
-                        .clone()
                         .0
                         .key(),
-                ))
+                ));
             }
 
             vm.load_data(ptr_cheated_exec_info, &new_exec_info).unwrap();
