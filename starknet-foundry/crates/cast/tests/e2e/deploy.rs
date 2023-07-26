@@ -63,6 +63,7 @@ fn test_contract_already_deployed(class_hash: &str, account: &str) {
         class_hash,
         "--salt",
         "0x1",
+        "--unique",
     ]);
 
     let snapbox = runner(&args);

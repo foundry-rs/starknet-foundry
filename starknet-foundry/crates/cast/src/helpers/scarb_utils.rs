@@ -13,7 +13,7 @@ pub struct CastConfig {
     pub account: String,
 }
 
-fn get_property(
+pub fn get_property(
     tool: &Option<BTreeMap<String, Value>>,
     profile: &Option<String>,
     property: &str,

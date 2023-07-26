@@ -1,3 +1,4 @@
+pub mod account;
 pub mod call;
 pub mod declare;
 pub mod deploy;
