@@ -1,6 +1,6 @@
 # Instruction For Creating New Starknet Forge Releases
 
-1. Bump Starknet Forge versions in the top-level `Cargo.toml` file
+1. Bump Starknet Foundry version in the top-level `Cargo.toml` file
 2. Regenerate locks using `cargo generate-lockfile`
 3. Merge introduced changes
 4. Create a new tag in repository with format `vMAJOR.MINOR.PATCH`. This will trigger the release workflow
