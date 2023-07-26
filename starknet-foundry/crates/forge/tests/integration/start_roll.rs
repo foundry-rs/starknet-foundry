@@ -49,6 +49,7 @@ fn start_roll_simple() {
 
     let result = run(
         &test.path().unwrap(),
+        &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
         Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
@@ -102,6 +103,7 @@ fn start_roll_with_other_syscall() {
 
     let result = run(
         &test.path().unwrap(),
+        &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
         Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
@@ -156,6 +158,7 @@ fn start_roll_in_constructor_test() {
 
     let result = run(
         &test.path().unwrap(),
+        &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
         Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),

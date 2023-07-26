@@ -1,6 +1,6 @@
 # Writing Tests
 
-Forge lets you test standalone functions from you smart contracts. This technique is referred to as unit testing. You
+Forge lets you test standalone functions from your smart contracts. This technique is referred to as unit testing. You
 should write as many unit tests as possible as these are faster than integration tests.
 
 ## Writing your first test

@@ -8,8 +8,8 @@ use starknet::core::types::TransactionReceipt::Declare;
 use std::fs;
 use test_case::test_case;
 
-#[test_case("/v1/map", "1", "user1" ; "when cairo1 contract")]
-#[test_case("/v2/map", "1", "user3" ; "when cairo2 contract")]
+#[test_case("/v1/map", "1", "user7" ; "when cairo1 contract")]
+#[test_case("/v2/map", "1", "user8" ; "when cairo2 contract")]
 #[tokio::test]
 async fn test_happy_case(contract_path: &str, salt: &str, account: &str) {
     let contract_path =

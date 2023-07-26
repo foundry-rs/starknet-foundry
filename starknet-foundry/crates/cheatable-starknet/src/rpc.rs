@@ -109,7 +109,6 @@ pub fn call_contract(
         ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS))
     };
 
-    // let account_address = ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS));
     let calldata = Calldata(Arc::new(
         calldata
             .iter()
@@ -256,7 +255,7 @@ impl HintProcessor for CheatableSyscallHandler<'_> {
     ) -> HintExecutionResult {
         let maybe_extended_hint = hint_data.downcast_ref::<Hint>();
 
-        if let Some(Hint::Starknet(StarknetHint::SystemCall { system: _ })) = maybe_extended_hint {
+        if let Some(Hint::Starknet(StarknetHint::SystemCall { .. })) = maybe_extended_hint {
             if let Some(Hint::Starknet(hint)) = maybe_extended_hint {
                 return self.execute_next_syscall_cheated(vm, hint);
             }
@@ -388,10 +387,10 @@ impl CheatableSyscallHandler<'_> {
                         )],
                     )
                     .unwrap();
-                let orginal_block_info = vm
+                let original_block_info = vm
                     .get_continuous_range((block_info_ptr + 1_usize).unwrap() as Relocatable, 2)
                     .unwrap();
-                vm.load_data(ptr_cheated_block_info_c, &orginal_block_info)
+                vm.load_data(ptr_cheated_block_info_c, &original_block_info)
                     .unwrap();
 
                 // create a new segment with replaced execution_info including pointer to updated block info
@@ -464,7 +463,7 @@ fn execute_entry_point_call_cairo1(
     // Snapshot the VM resources, in order to calculate the usage of this run at the end.
     let previous_vm_resources = syscall_handler.resources.vm_resources.clone();
 
-    let mut syscall_hh = CheatableSyscallHandler {
+    let mut cheatable_syscall_handler = CheatableSyscallHandler {
         syscall_handler,
         cheated_state,
     };
@@ -473,13 +472,13 @@ fn execute_entry_point_call_cairo1(
     let run_resources = cheatable_run_entry_point(
         &mut vm,
         &mut runner,
-        &mut syscall_hh,
+        &mut cheatable_syscall_handler,
         &entry_point,
         &args,
         program_segment_size,
     )?;
 
-    let sys_h = syscall_hh.syscall_handler;
+    let sys_h = cheatable_syscall_handler.syscall_handler;
     sys_h.context.vm_run_resources = run_resources;
     let call_info = finalize_execution(vm, runner, sys_h, previous_vm_resources, n_total_args)?;
     if call_info.execution.failed {

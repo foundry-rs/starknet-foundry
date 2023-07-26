@@ -51,6 +51,7 @@ fn start_prank_simple() {
 
     let result = run(
         &test.path().unwrap(),
+        &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
         Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
@@ -107,6 +108,7 @@ fn start_prank_with_other_syscall() {
 
     let result = run(
         &test.path().unwrap(),
+        &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
         Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),

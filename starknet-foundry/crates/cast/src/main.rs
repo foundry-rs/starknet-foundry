@@ -1,10 +1,12 @@
 use crate::helpers::scarb_utils::parse_scarb_config;
+use crate::starknet_commands::account::deploy::print_account_deploy_result;
+use crate::starknet_commands::account::{create::print_account_create_result, Account};
 use crate::starknet_commands::{
-    call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
+    account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
 };
-use anyhow::{bail, Result};
+use anyhow::Result;
 use camino::Utf8PathBuf;
-use cast::{get_account, get_block_id, get_provider, print_formatted};
+use cast::{account_file_exists, get_account, get_block_id, get_provider, print_formatted};
 use clap::{Parser, Subcommand};
 
 mod helpers;
@@ -70,6 +72,9 @@ enum Commands {
 
     /// execute multiple calls
     Multicall(Multicall),
+
+    /// Create and deploy an account
+    Account(Account),
 }
 
 #[tokio::main]
@@ -79,11 +84,8 @@ async fn main() -> Result<()> {
 
     let accounts_file_path =
         Utf8PathBuf::from(shellexpand::tilde(&cli.accounts_file_path).to_string());
-    if !&accounts_file_path.exists() {
-        bail! {"Accounts file {} does not exist! Make sure to supply correct path to accounts file.", cli.accounts_file_path}
-    }
 
-    let config = parse_scarb_config(&cli.profile, cli.path_to_scarb_toml)?;
+    let config = parse_scarb_config(&cli.profile, &cli.path_to_scarb_toml)?;
 
     let rpc_url = cli.rpc_url.unwrap_or(config.rpc_url);
     let network = cli.network.unwrap_or(config.network);
@@ -93,6 +95,7 @@ async fn main() -> Result<()> {
 
     match cli.command {
         Commands::Declare(declare) => {
+            account_file_exists(&accounts_file_path)?;
             let mut account = get_account(&account, &accounts_file_path, &provider, &network)?;
 
             let result = starknet_commands::declare::declare(
@@ -129,6 +132,7 @@ async fn main() -> Result<()> {
             Ok(())
         }
         Commands::Deploy(deploy) => {
+            account_file_exists(&accounts_file_path)?;
             let account = get_account(&account, &accounts_file_path, &provider, &network)?;
 
             let result = starknet_commands::deploy::deploy(
@@ -179,6 +183,7 @@ async fn main() -> Result<()> {
             Ok(())
         }
         Commands::Invoke(invoke) => {
+            account_file_exists(&accounts_file_path)?;
             let mut account = get_account(&account, &accounts_file_path, &provider, &network)?;
             let result = starknet_commands::invoke::invoke(
                 invoke.contract_address,
@@ -202,6 +207,7 @@ async fn main() -> Result<()> {
                     starknet_commands::multicall::new::print_new_result(result.as_str());
                 }
                 starknet_commands::multicall::Commands::Run(run) => {
+                    account_file_exists(&accounts_file_path)?;
                     let mut account =
                         get_account(&account, &accounts_file_path, &provider, &network)?;
                     starknet_commands::multicall::run::run(
@@ -215,5 +221,37 @@ async fn main() -> Result<()> {
             }
             Ok(())
         }
+        Commands::Account(account) => match account.command {
+            account::Commands::Create(create) => {
+                let result = starknet_commands::account::create::create(
+                    &provider,
+                    rpc_url,
+                    accounts_file_path,
+                    cli.path_to_scarb_toml,
+                    create.name,
+                    &network,
+                    create.salt,
+                    create.add_profile,
+                )
+                .await;
+
+                print_account_create_result(result, cli.int_format, cli.json)?;
+                Ok(())
+            }
+            account::Commands::Deploy(deploy) => {
+                account_file_exists(&accounts_file_path)?;
+                let result = starknet_commands::account::deploy::deploy(
+                    &provider,
+                    accounts_file_path,
+                    deploy.name,
+                    &network,
+                    deploy.max_fee,
+                )
+                .await;
+
+                print_account_deploy_result(result, cli.int_format, cli.json)?;
+                Ok(())
+            }
+        },
     }
 }

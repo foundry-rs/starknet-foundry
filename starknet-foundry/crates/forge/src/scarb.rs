@@ -110,7 +110,13 @@ pub fn config_from_scarb_for_package(
 pub fn dependencies_for_package(
     metadata: &Metadata,
     package: &PackageId,
-) -> Result<(Utf8PathBuf, Utf8PathBuf, Vec<LinkedLibrary>, String)> {
+) -> Result<(
+    Utf8PathBuf,
+    Utf8PathBuf,
+    Utf8PathBuf,
+    Vec<LinkedLibrary>,
+    String,
+)> {
     let compilation_unit = metadata
         .compilation_units
         .iter()
@@ -122,7 +128,7 @@ pub fn dependencies_for_package(
         })
         .ok_or_else(|| anyhow!("Failed to find metadata for package = {package}"))?;
 
-    let base_path = metadata
+    let package_path = metadata
         .get_package(package)
         .ok_or_else(|| anyhow!("Failed to find metadata for package = {package}"))?
         .root
@@ -140,6 +146,8 @@ pub fn dependencies_for_package(
 
     let target_name = compilation_unit.target.name.clone();
 
+    let lib_path = compilation_unit.target.source_path.clone();
+
     let corelib = compilation_unit
         .components
         .iter()
@@ -147,7 +155,13 @@ pub fn dependencies_for_package(
         .context("corelib could not be found")?;
     let corelib_path = Utf8PathBuf::from(corelib.source_root());
 
-    Ok((base_path, corelib_path, dependencies, target_name))
+    Ok((
+        package_path,
+        lib_path,
+        corelib_path,
+        dependencies,
+        target_name,
+    ))
 }
 
 #[cfg(test)]
@@ -338,12 +352,32 @@ mod tests {
             .exec()
             .unwrap();
 
-        let (_, _, dependencies, _) =
+        let (_, _, _, dependencies, _) =
             dependencies_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
                 .unwrap();
 
         assert!(!dependencies.is_empty());
         assert!(dependencies.iter().all(|dep| dep.path.exists()));
+    }
+
+    #[test]
+    fn get_paths_for_package() {
+        let temp = assert_fs::TempDir::new().unwrap();
+        temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
+            .unwrap();
+        let scarb_metadata = MetadataCommand::new()
+            .inherit_stderr()
+            .current_dir(temp.path())
+            .exec()
+            .unwrap();
+
+        let (package_path, lib_path, _, _, _) =
+            dependencies_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
+                .unwrap();
+
+        assert!(package_path.is_dir());
+        assert!(lib_path.ends_with(Utf8PathBuf::from("src/lib.cairo")));
+        assert!(lib_path.starts_with(package_path));
     }
 
     #[test]
