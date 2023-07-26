@@ -88,7 +88,7 @@ pub async fn mint_token(recipient: &str, amount: f32) {
         {
             "address": recipient,
             "amount": amount,
-            "liter": true
+            "lite": true
         }
     );
     client
