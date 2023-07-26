@@ -33,7 +33,7 @@ use blockifier::{
             EntryPointExecutionResult, ExecutionResources, FAULTY_CLASS_HASH,
         },
         errors::{EntryPointExecutionError, PreExecutionError, VirtualMachineExecutionError},
-        execution_utils::{felt_to_stark_felt, Args},
+        execution_utils::{felt_to_stark_felt, stark_felt_to_felt, Args},
         syscalls::{
             hint_processor::{SyscallExecutionError, SyscallHintProcessor},
             EmptyRequest, GetExecutionInfoResponse,
@@ -100,15 +100,7 @@ pub fn call_contract(
     let entry_point_selector =
         EntryPointSelector(StarkHash::new(entry_point_selector.to_be_bytes())?);
 
-    let account_address = if cheated_state
-        .pranked_contracts
-        .contains_key(&contract_address)
-    {
-        cheated_state.pranked_contracts[&contract_address]
-    } else {
-        ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS))
-    };
-
+    let account_address = ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS));
     let calldata = Calldata(Arc::new(
         calldata
             .iter()
@@ -313,17 +305,37 @@ fn felt_from_ptr_immutable(
 }
 
 impl CheatableSyscallHandler<'_> {
-    fn address_is_cheated(
+    fn address_is_rolled(
         &mut self,
         _vm: &mut VirtualMachine,
+        contract_address: &ContractAddress,
+    ) -> bool {
+        self.cheated_state
+            .rolled_contracts
+            .contains_key(contract_address)
+    }
+
+    fn address_is_pranked(
+        &mut self,
+        _vm: &mut VirtualMachine,
+        contract_address: &ContractAddress,
+    ) -> bool {
+        self.cheated_state
+            .pranked_contracts
+            .contains_key(contract_address)
+    }
+
+    fn address_is_cheated(
+        &mut self,
+        vm: &mut VirtualMachine,
         selector: SyscallSelector,
         contract_address: &ContractAddress,
     ) -> bool {
         match selector {
-            SyscallSelector::GetExecutionInfo => self
-                .cheated_state
-                .rolled_contracts
-                .contains_key(contract_address),
+            SyscallSelector::GetExecutionInfo => {
+                self.address_is_rolled(vm, contract_address)
+                    || self.address_is_pranked(vm, contract_address)
+            }
             _ => false,
         }
     }
@@ -366,57 +378,76 @@ impl CheatableSyscallHandler<'_> {
                 &mut self.syscall_handler.syscall_ptr,
             )?;
 
+            // ExecutionInfo from corelib/src/starknet/info.cairo
+            // block_info, tx_info caller_address, contract_address, entry_point_selector
+
             let execution_info_ptr = self
                 .syscall_handler
                 .get_or_allocate_execution_info_segment(vm)?;
-            let data = vm.get_range(execution_info_ptr, 1)[0].clone();
-            if let MaybeRelocatable::RelocatableValue(block_info_ptr) = data.unwrap().into_owned() {
-                let ptr_cheated_exec_info = vm.add_memory_segment();
-                let ptr_cheated_block_info = vm.add_memory_segment();
 
-                // create a new segment with replaced block info
-                let ptr_cheated_block_info_c = vm
-                    .load_data(
-                        ptr_cheated_block_info,
-                        &vec![MaybeRelocatable::Int(
-                            self.cheated_state
-                                .rolled_contracts
-                                .get(&contract_address)
-                                .expect("No roll value found for contract address")
-                                .clone(),
-                        )],
-                    )
-                    .unwrap();
-                let original_block_info = vm
-                    .get_continuous_range((block_info_ptr + 1_usize).unwrap() as Relocatable, 2)
-                    .unwrap();
-                vm.load_data(ptr_cheated_block_info_c, &original_block_info)
-                    .unwrap();
+            let ptr_cheated_exec_info = vm.add_memory_segment();
 
-                // create a new segment with replaced execution_info including pointer to updated block info
-                let ptr_cheated_exec_info_c = vm
-                    .load_data(
-                        ptr_cheated_exec_info,
-                        &vec![MaybeRelocatable::RelocatableValue(ptr_cheated_block_info)],
-                    )
-                    .unwrap();
-                let original_execution_info = vm
-                    .get_continuous_range((execution_info_ptr + 1_usize).unwrap() as Relocatable, 4)
-                    .unwrap();
-                vm.load_data(ptr_cheated_exec_info_c, &original_execution_info)
-                    .unwrap();
+            // Initialize as old exec_info
+            let mut new_exec_info = vm
+                .get_continuous_range(execution_info_ptr, 5)
+                .unwrap()
+                .clone();
 
-                let remaining_gas = gas_counter - constants::GET_EXECUTION_INFO_GAS_COST;
-                let response = GetExecutionInfoResponse {
-                    execution_info_ptr: ptr_cheated_exec_info,
-                };
-                let response_w = SyscallResponseWrapper::Success {
-                    gas_counter: remaining_gas,
-                    response,
-                };
-                response_w.write(vm, &mut self.syscall_handler.syscall_ptr)?;
-                return Ok(());
+            if self.address_is_rolled(vm, &contract_address) {
+                let data = vm.get_range(execution_info_ptr, 1)[0].clone();
+                if let MaybeRelocatable::RelocatableValue(block_info_ptr) =
+                    data.unwrap().into_owned()
+                {
+                    let ptr_cheated_block_info = vm.add_memory_segment();
+
+                    // create a new segment with replaced block info
+                    let ptr_cheated_block_info_c = vm
+                        .load_data(
+                            ptr_cheated_block_info,
+                            &vec![MaybeRelocatable::Int(
+                                self.cheated_state
+                                    .rolled_contracts
+                                    .get(&contract_address)
+                                    .expect("No roll value found for contract address")
+                                    .clone(),
+                            )],
+                        )
+                        .unwrap();
+                    let original_block_info = vm
+                        .get_continuous_range((block_info_ptr + 1_usize).unwrap() as Relocatable, 2)
+                        .unwrap();
+                    vm.load_data(ptr_cheated_block_info_c, &original_block_info)
+                        .unwrap();
+
+                    new_exec_info[0] = MaybeRelocatable::RelocatableValue(ptr_cheated_block_info);
+                }
             }
+
+            if self.address_is_pranked(vm, &contract_address) {
+                new_exec_info[2] = MaybeRelocatable::Int(stark_felt_to_felt(
+                    *self
+                        .cheated_state
+                        .pranked_contracts
+                        .get(&contract_address)
+                        .expect("No caller address value found for the pranked contract address")
+                        .clone()
+                        .0
+                        .key(),
+                ))
+            }
+
+            vm.load_data(ptr_cheated_exec_info, &new_exec_info).unwrap();
+
+            let remaining_gas = gas_counter - constants::GET_EXECUTION_INFO_GAS_COST;
+            let response = GetExecutionInfoResponse {
+                execution_info_ptr: ptr_cheated_exec_info,
+            };
+            let response_w = SyscallResponseWrapper::Success {
+                gas_counter: remaining_gas,
+                response,
+            };
+            response_w.write(vm, &mut self.syscall_handler.syscall_ptr)?;
+            return Ok(());
         }
         self.syscall_handler.execute_next_syscall(vm, hint)
     }
