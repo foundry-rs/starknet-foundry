@@ -48,7 +48,7 @@ pub async fn test_happy_case() {
 
     let contents = fs::read_to_string(created_dir.join(accounts_file)).unwrap();
     let items: serde_json::Value =
-        serde_json::from_str(&contents).expect("failed to parse json file");
+        serde_json::from_str(&contents).expect("Failed to parse accounts file at ");
     assert_eq!(items["alpha-goerli"]["my_account"]["deployed"], true);
 
     fs::remove_dir_all(created_dir).unwrap();
@@ -191,7 +191,8 @@ pub async fn create_account(salt: &str, add_profile: bool) -> (Utf8PathBuf, &str
         .success();
 
     let contents = fs::read_to_string(created_dir.join(accounts_file)).unwrap();
-    let items: Value = serde_json::from_str(&contents).expect("failed to parse json file");
+    let items: Value =
+        serde_json::from_str(&contents).expect("Failed to parse accounts file at {path}");
 
     mint_token(
         items["alpha-goerli"]["my_account"]["address"]

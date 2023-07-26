@@ -32,8 +32,8 @@ pub async fn deploy(
     let network = get_network(network)?.get_value();
 
     let contents = std::fs::read_to_string(path.clone()).expect("Couldn't read accounts file");
-    let mut items: serde_json::Value =
-        serde_json::from_str(&contents).expect("failed to parse json file");
+    let mut items: serde_json::Value = serde_json::from_str(&contents)
+        .map_err(|_| anyhow!("Failed to parse accounts file at {path}"))?;
 
     if items[network].is_null() {
         bail!("Provided network does not have any accounts defined")
