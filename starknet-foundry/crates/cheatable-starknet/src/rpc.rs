@@ -66,13 +66,22 @@ pub enum CallContractOutput {
 
 pub struct CheatedState {
     pub rolled_contracts: HashMap<ContractAddress, Felt252>,
+    pub pranked_contracts: HashMap<ContractAddress, ContractAddress>,
 }
 
 impl CheatedState {
+    #[must_use]
     pub fn new() -> Self {
         CheatedState {
             rolled_contracts: HashMap::new(),
+            pranked_contracts: HashMap::new(),
         }
+    }
+}
+
+impl Default for CheatedState {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -90,7 +99,17 @@ pub fn call_contract(
     )?)?);
     let entry_point_selector =
         EntryPointSelector(StarkHash::new(entry_point_selector.to_be_bytes())?);
-    let account_address = ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS));
+
+    let account_address = if cheated_state
+        .pranked_contracts
+        .contains_key(&contract_address)
+    {
+        cheated_state.pranked_contracts[&contract_address]
+    } else {
+        ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS))
+    };
+
+    // let account_address = ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS));
     let calldata = Calldata(Arc::new(
         calldata
             .iter()

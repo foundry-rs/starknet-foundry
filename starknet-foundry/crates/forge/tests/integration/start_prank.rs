@@ -32,7 +32,10 @@ fn start_prank_simple() {
                 let contract_address: ContractAddress = contract_address.try_into().unwrap();
                 let dispatcher = IPrankCheckerDispatcher { contract_address };
             
-                start_prank(123, contract_address);
+                let caller_address: felt252 = 123;
+                let caller_address: ContractAddress = caller_address.try_into().unwrap();
+
+                start_prank(caller_address, contract_address);
             
                 let caller_address = dispatcher.get_caller_address();
                 assert(caller_address == 123, 'Wrong block number');
@@ -79,13 +82,16 @@ fn start_prank_with_other_syscall() {
 
             #[test]
             fn test_roll_simple() {
-                let class_hash = declare('RollChecker').unwrap();
+                let class_hash = declare('PrankChecker').unwrap();
                 let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
                 let contract_address = deploy(prepared).unwrap();
                 let contract_address: ContractAddress = contract_address.try_into().unwrap();
                 let dispatcher = IPrankCheckerDispatcher { contract_address };
             
-                start_prank(123, contract_address);
+                let caller_address: felt252 = 123;
+                let caller_address: ContractAddress = caller_address.try_into().unwrap();
+
+                start_prank(caller_address, contract_address);
 
                 let caller_address = dispatcher.get_caller_address_and_emit_event();
                 assert(caller_address == 123, 'Wrong block number');
