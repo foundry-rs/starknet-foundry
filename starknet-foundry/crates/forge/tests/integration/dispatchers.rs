@@ -56,6 +56,7 @@ fn simple_call_and_invoke() {
 
     let result = run(
         &test.path().unwrap(),
+        &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
         Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
@@ -140,6 +141,7 @@ fn advanced_types() {
 
     let result = run(
         &test.path().unwrap(),
+        &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
         Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
@@ -217,6 +219,7 @@ fn handling_errors() {
 
     let result = run(
         &test.path().unwrap(),
+        &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
         Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),

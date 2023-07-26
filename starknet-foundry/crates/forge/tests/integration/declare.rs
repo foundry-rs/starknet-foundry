@@ -18,6 +18,7 @@ fn simple() {
 
     let result = run(
         &test.path().unwrap(),
+        &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
         Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
@@ -41,6 +42,7 @@ fn failing() {
 
     let result = run(
         &test.path().unwrap(),
+        &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
         Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
@@ -97,6 +99,7 @@ fn simple_declare() {
 
     let result = run(
         &test.path().unwrap(),
+        &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
         Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
@@ -191,6 +194,7 @@ fn multiple_declare() {
 
     let result = run(
         &test.path().unwrap(),
+        &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
         Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
@@ -228,6 +232,7 @@ fn simple_declare_from_contract_code() {
 
     let result = run(
         &test.path().unwrap(),
+        &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
         Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
@@ -256,6 +261,7 @@ fn declare_unknown() {
 
     let result = run(
         &test.path().unwrap(),
+        &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
         Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),

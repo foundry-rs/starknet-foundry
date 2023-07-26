@@ -70,14 +70,15 @@ struct TestsFromFile {
 }
 
 fn collect_tests_from_directory(
-    input_path: &Utf8PathBuf,
+    package_path: &Utf8PathBuf,
+    lib_path: &Utf8PathBuf,
     linked_libraries: &Option<Vec<LinkedLibrary>>,
     corelib_path: Option<&Utf8PathBuf>,
     runner_config: &RunnerConfig,
 ) -> Result<Vec<TestsFromFile>> {
-    let test_files = find_cairo_files_in_directory(input_path)?;
+    let test_files = find_cairo_root_files_in_directory(package_path, lib_path)?;
     internal_collect_tests(
-        input_path,
+        package_path,
         linked_libraries,
         &test_files,
         corelib_path,
@@ -85,12 +86,22 @@ fn collect_tests_from_directory(
     )
 }
 
-fn find_cairo_files_in_directory(input_path: &Utf8PathBuf) -> Result<Vec<Utf8PathBuf>> {
-    let mut test_files: Vec<Utf8PathBuf> = vec![];
+fn find_cairo_root_files_in_directory(
+    package_path: &Utf8PathBuf,
+    lib_path: &Utf8PathBuf,
+) -> Result<Vec<Utf8PathBuf>> {
+    let mut test_files: Vec<Utf8PathBuf> = vec![lib_path.clone()];
+    let src_path = lib_path.parent().with_context(|| {
+        format!("Failed to get parent directory of a package at path = {lib_path}")
+    })?;
 
-    for entry in WalkDir::new(input_path).sort_by(|a, b| a.file_name().cmp(b.file_name())) {
+    for entry in WalkDir::new(package_path)
+        .sort_by_file_name()
+        .into_iter()
+        .filter_entry(|e| !e.path().starts_with(src_path))
+    {
         let entry =
-            entry.with_context(|| format!("Failed to read directory at path = {input_path}"))?;
+            entry.with_context(|| format!("Failed to read directory at path = {package_path}"))?;
         let path = entry.path();
 
         if path.is_file() && path.extension().unwrap_or_default() == "cairo" {
@@ -105,18 +116,18 @@ fn find_cairo_files_in_directory(input_path: &Utf8PathBuf) -> Result<Vec<Utf8Pat
 }
 
 fn internal_collect_tests(
-    input_path: &Utf8PathBuf,
+    package_path: &Utf8PathBuf,
     linked_libraries: &Option<Vec<LinkedLibrary>>,
-    test_files: &[Utf8PathBuf],
+    test_roots: &[Utf8PathBuf],
     corelib_path: Option<&Utf8PathBuf>,
     runner_config: &RunnerConfig,
 ) -> Result<Vec<TestsFromFile>> {
-    let tests: Result<Vec<TestsFromFile>> = test_files
+    let tests: Result<Vec<TestsFromFile>> = test_roots
         .par_iter()
         .map(|tf| {
-            collect_tests_from_file(
+            collect_tests_from_tree(
                 tf,
-                input_path,
+                package_path,
                 linked_libraries,
                 corelib_path,
                 runner_config,
@@ -126,9 +137,9 @@ fn internal_collect_tests(
     tests
 }
 
-fn collect_tests_from_file(
-    test_file: &Utf8PathBuf,
-    input_path: &Utf8PathBuf,
+fn collect_tests_from_tree(
+    test_root: &Utf8PathBuf,
+    package_path: &Utf8PathBuf,
     linked_libraries: &Option<Vec<LinkedLibrary>>,
     corelib_path: Option<&Utf8PathBuf>,
     runner_config: &RunnerConfig,
@@ -145,7 +156,7 @@ fn collect_tests_from_file(
     ];
 
     let (sierra_program, tests_configs) = collect_tests(
-        test_file.as_str(),
+        test_root.as_str(),
         None,
         linked_libraries.clone(),
         Some(builtins.clone()),
@@ -159,7 +170,7 @@ fn collect_tests_from_file(
         test_cases
     };
 
-    let relative_path = test_file.strip_prefix(input_path)?.to_path_buf();
+    let relative_path = test_root.strip_prefix(package_path)?.to_path_buf();
     Ok(TestsFromFile {
         sierra_program,
         test_cases,
@@ -169,15 +180,21 @@ fn collect_tests_from_file(
 
 #[allow(clippy::implicit_hasher)]
 pub fn run(
-    input_path: &Utf8PathBuf,
+    package_path: &Utf8PathBuf,
+    lib_path: &Utf8PathBuf,
     linked_libraries: &Option<Vec<LinkedLibrary>>,
     runner_config: &RunnerConfig,
     corelib_path: Option<&Utf8PathBuf>,
     contracts: &HashMap<String, StarknetContractArtifacts>,
     predeployed_contracts: &Utf8PathBuf,
 ) -> Result<Vec<TestFileSummary>> {
-    let tests =
-        collect_tests_from_directory(input_path, linked_libraries, corelib_path, runner_config)?;
+    let tests = collect_tests_from_directory(
+        package_path,
+        lib_path,
+        linked_libraries,
+        corelib_path,
+        runner_config,
+    )?;
 
     pretty_printing::print_collected_tests_count(
         tests.iter().map(|tests| tests.test_cases.len()).sum(),
@@ -352,8 +369,9 @@ mod tests {
         temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
             .unwrap();
         let tests_path = Utf8PathBuf::from_path_buf(temp.to_path_buf()).unwrap();
+        let lib_path = tests_path.join("src/lib.cairo");
 
-        let tests = find_cairo_files_in_directory(&tests_path).unwrap();
+        let tests = find_cairo_root_files_in_directory(&tests_path, &lib_path).unwrap();
 
         assert!(!tests.is_empty());
     }
@@ -361,8 +379,9 @@ mod tests {
     #[test]
     fn collecting_tests_err_on_invalid_dir() {
         let tests_path = Utf8PathBuf::from("aaee");
+        let lib_path = Utf8PathBuf::from("asdfgdfg");
 
-        let result = find_cairo_files_in_directory(&tests_path);
+        let result = find_cairo_root_files_in_directory(&tests_path, &lib_path);
         let err = result.unwrap_err();
 
         assert!(err.to_string().contains("Failed to read directory at path"));

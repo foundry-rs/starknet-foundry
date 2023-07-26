@@ -72,7 +72,7 @@ fn main_execution() -> Result<()> {
     for package in &scarb_metadata.workspace.members {
         let forge_config = forge::scarb::config_from_scarb_for_package(&scarb_metadata, package)?;
 
-        let (base_path, _corelib_path, dependencies, target_name) =
+        let (package_path, lib_path, _corelib_path, dependencies, target_name) =
             forge::scarb::dependencies_for_package(&scarb_metadata, package)?;
         let runner_config = RunnerConfig::new(
             args.test_name.clone(),
@@ -81,14 +81,15 @@ fn main_execution() -> Result<()> {
             &forge_config,
         );
 
-        let contracts_path = try_get_starknet_artifacts_path(&base_path, &target_name)?;
+        let contracts_path = try_get_starknet_artifacts_path(&package_path, &target_name)?;
         let contracts = contracts_path
             .map(|path| get_contracts_map(&path))
             .transpose()?
             .unwrap_or_default();
 
         run(
-            &base_path,
+            &package_path,
+            &lib_path,
             &Some(dependencies.clone()),
             &runner_config,
             Some(&corelib),
