@@ -2,7 +2,6 @@ use std::any::Any;
 use std::collections::HashMap;
 use std::io;
 use std::path::PathBuf;
-use std::sync::Arc;
 
 use crate::scarb::StarknetContractArtifacts;
 use anyhow::{anyhow, Context, Result};
@@ -10,16 +9,14 @@ use blockifier::abi::abi_utils::selector_from_name;
 use blockifier::execution::contract_class::{
     ContractClass as BlockifierContractClass, ContractClassV1,
 };
-use blockifier::execution::entry_point::{
-    CallEntryPoint, CallInfo, CallType, EntryPointExecutionContext, ExecutionResources,
-};
-use blockifier::execution::errors::EntryPointExecutionError;
+use blockifier::execution::entry_point::CallInfo;
 use blockifier::state::cached_state::CachedState;
 use blockifier::state::errors::StateError;
 use blockifier::state::state_api::StateReader;
 use blockifier::transaction::account_transaction::AccountTransaction;
 use blockifier::transaction::transactions::{DeclareTransaction, ExecutableTransaction};
 use cairo_felt::Felt252;
+use cairo_felt_blockifier::Felt252 as blockifier_Felt252;
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
 use cairo_vm::hint_processor::hint_processor_definition::HintReference;
 use cairo_vm::serde::deserialize_program::ApTracking;
@@ -30,14 +27,14 @@ use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use cheatable_starknet::constants::{
     build_block_context, build_declare_transaction, build_invoke_transaction,
-    build_transaction_context, TEST_ACCOUNT_CONTRACT_ADDRESS,
+    TEST_ACCOUNT_CONTRACT_ADDRESS,
 };
+use cheatable_starknet::rpc::{call_contract, CallContractOutput, CheatedState};
 use cheatable_starknet::state::DictStateReader;
 use num_traits::{Num, ToPrimitive};
 use regex::Regex;
 use serde::Deserialize;
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, PatriciaKey};
-use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::hash::{StarkFelt, StarkHash};
 use starknet_api::transaction::{
     Calldata, ContractAddressSalt, InvokeTransaction, InvokeTransactionV1,
@@ -64,6 +61,7 @@ pub struct CairoHintProcessor<'a> {
     pub original_cairo_hint_processor: OriginalCairoHintProcessor<'a>,
     pub blockifier_state: CachedState<DictStateReader>,
     pub contracts: &'a HashMap<String, StarknetContractArtifacts>,
+    pub cheated_state: CheatedState,
 }
 
 impl ResourceTracker for CairoHintProcessor<'_> {
@@ -90,6 +88,14 @@ impl ResourceTracker for CairoHintProcessor<'_> {
     }
 }
 
+trait ForgeHintProcessor {
+    fn start_roll(
+        &mut self,
+        contract_address: ContractAddress,
+        timestamp: blockifier_Felt252,
+    ) -> Result<(), EnhancedHintError>;
+}
+
 impl HintProcessorLogic for CairoHintProcessor<'_> {
     fn execute_hint(
         &mut self,
@@ -107,10 +113,9 @@ impl HintProcessorLogic for CairoHintProcessor<'_> {
             output_end,
         })) = maybe_extended_hint
         {
-            return execute_cheatcode_hint(
+            return self.execute_cheatcode_hint(
                 vm,
                 exec_scopes,
-                &mut self.blockifier_state,
                 selector,
                 input_start,
                 input_end,
@@ -120,7 +125,7 @@ impl HintProcessorLogic for CairoHintProcessor<'_> {
             );
         }
         if let Some(Hint::Starknet(StarknetHint::SystemCall { system })) = maybe_extended_hint {
-            return execute_syscall(system, vm, &mut self.blockifier_state);
+            return execute_syscall(system, vm, &mut self.blockifier_state, &self.cheated_state);
         }
         self.original_cairo_hint_processor
             .execute_hint(vm, exec_scopes, hint_data, constants)
@@ -137,6 +142,96 @@ impl HintProcessorLogic for CairoHintProcessor<'_> {
         Ok(Box::new(
             self.original_cairo_hint_processor.string_to_hint[hint_code].clone(),
         ))
+    }
+}
+
+impl ForgeHintProcessor for CairoHintProcessor<'_> {
+    fn start_roll(
+        &mut self,
+        contract_address: ContractAddress,
+        timestamp: blockifier_Felt252,
+    ) -> Result<(), EnhancedHintError> {
+        self.cheated_state
+            .rolled_contracts
+            .insert(contract_address, timestamp);
+        Ok(())
+    }
+}
+
+impl CairoHintProcessor<'_> {
+    #[allow(clippy::trivially_copy_pass_by_ref, clippy::too_many_arguments)]
+    pub fn execute_cheatcode_hint(
+        &mut self,
+        vm: &mut VirtualMachine,
+        _exec_scopes: &mut ExecutionScopes,
+        selector: &BigIntAsHex,
+        input_start: &ResOperand,
+        input_end: &ResOperand,
+        output_start: &CellRef,
+        output_end: &CellRef,
+        contracts: &HashMap<String, StarknetContractArtifacts>,
+    ) -> Result<(), HintError> {
+        // Parse the selector.
+        let selector = &selector.value.to_bytes_be().1;
+        let selector = std::str::from_utf8(selector).map_err(|_| {
+            HintError::CustomHint(Box::from(
+                "Failed to parse the  cheatcode selector".to_string(),
+            ))
+        })?;
+
+        // Extract the inputs.
+        let input_start = extract_relocatable(vm, input_start)?;
+        let input_end = extract_relocatable(vm, input_end)?;
+        let inputs = vm_get_range(vm, input_start, input_end).map_err(|_| {
+            HintError::CustomHint(Box::from("Failed to read input data".to_string()))
+        })?;
+
+        self.match_cheatcode_by_selector(vm, selector, inputs, output_start, output_end, contracts)
+            .map_err(Into::into)
+    }
+
+    #[allow(unused, clippy::too_many_lines, clippy::trivially_copy_pass_by_ref)]
+    fn match_cheatcode_by_selector(
+        &mut self,
+        vm: &mut VirtualMachine,
+        selector: &str,
+        inputs: Vec<Felt252>,
+        output_start: &CellRef,
+        output_end: &CellRef,
+        contracts: &HashMap<String, StarknetContractArtifacts>,
+    ) -> Result<(), EnhancedHintError> {
+        let mut buffer = MemBuffer::new_segment(vm);
+        let result_start = buffer.ptr;
+
+        match selector {
+            "prepare" => todo!(),
+            "start_roll" => {
+                let contract_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
+                    inputs[0].clone().to_be_bytes(),
+                )?)?);
+                let value = inputs[1].clone();
+                self.start_roll(contract_address, convert_to_blockifier_felt(&value))
+            }
+            "stop_roll" => todo!(),
+            "start_warp" => todo!(),
+            "stop_warp" => todo!(),
+            "start_prank" => todo!(),
+            "stop_prank" => todo!(),
+            "mock_call" => todo!(),
+            "declare" => declare(&mut buffer, &mut self.blockifier_state, &inputs, contracts),
+            "deploy" => deploy(&mut buffer, &mut self.blockifier_state, &inputs),
+            "print" => {
+                print(inputs);
+                Ok(())
+            }
+            _ => Err(anyhow!("Unknown cheatcode selector: {selector}")).map_err(Into::into),
+        }?;
+
+        let result_end = buffer.ptr;
+        insert_value_to_cellref!(vm, output_start, result_start)?;
+        insert_value_to_cellref!(vm, output_end, result_end)?;
+
+        Ok(())
     }
 }
 
@@ -167,6 +262,7 @@ fn execute_syscall(
     system: &ResOperand,
     vm: &mut VirtualMachine,
     blockifier_state: &mut CachedState<DictStateReader>,
+    cheated_state: &CheatedState,
 ) -> Result<(), HintError> {
     let (cell, offset) = extract_buffer(system);
     let system_ptr = get_ptr(vm, cell, &offset)?;
@@ -180,18 +276,34 @@ fn execute_syscall(
 
     let calldata = buffer.next_arr().unwrap();
 
+    let calldata_blockifier: Vec<blockifier_Felt252> =
+        calldata.iter().map(convert_to_blockifier_felt).collect();
     assert_eq!(std::str::from_utf8(&selector).unwrap(), "CallContract");
+
     let call_result = call_contract(
-        &contract_address,
-        &entry_point_selector,
-        &calldata,
+        &convert_to_blockifier_felt(&contract_address),
+        &convert_to_blockifier_felt(&entry_point_selector),
+        &calldata_blockifier,
         blockifier_state,
+        cheated_state,
     )
     .unwrap_or_else(|err| panic!("Transaction execution error: {err}"));
 
     let (result, exit_code) = match call_result {
-        CallContractOutput::Success { ret_data } => (ret_data, 0),
-        CallContractOutput::Panic { panic_data } => (panic_data, 1),
+        CallContractOutput::Success { ret_data } => (
+            ret_data
+                .iter()
+                .map(convert_from_blockifier_felt)
+                .collect::<Vec<Felt252>>(),
+            0,
+        ),
+        CallContractOutput::Panic { panic_data } => (
+            panic_data
+                .iter()
+                .map(convert_from_blockifier_felt)
+                .collect::<Vec<Felt252>>(),
+            1,
+        ),
     };
 
     buffer.write(gas_counter).unwrap();
@@ -200,78 +312,6 @@ fn execute_syscall(
     buffer.write_arr(result.iter()).unwrap();
 
     Ok(())
-}
-
-enum CallContractOutput {
-    Success { ret_data: Vec<Felt252> },
-    Panic { panic_data: Vec<Felt252> },
-}
-
-// This can mutate state, the name of the syscall is not very good
-fn call_contract(
-    contract_address: &Felt252,
-    entry_point_selector: &Felt252,
-    calldata: &[Felt252],
-    blockifier_state: &mut CachedState<DictStateReader>,
-) -> Result<CallContractOutput> {
-    let contract_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
-        contract_address.to_be_bytes(),
-    )?)?);
-    let entry_point_selector =
-        EntryPointSelector(StarkHash::new(entry_point_selector.to_be_bytes())?);
-    let account_address = ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS));
-    let calldata = Calldata(Arc::new(
-        calldata
-            .iter()
-            .map(|data| StarkFelt::new(data.to_be_bytes()))
-            .collect::<Result<Vec<_>, _>>()?,
-    ));
-    let entry_point = CallEntryPoint {
-        class_hash: None,
-        code_address: Some(contract_address),
-        entry_point_type: EntryPointType::External,
-        entry_point_selector,
-        calldata,
-        storage_address: contract_address,
-        caller_address: account_address,
-        call_type: CallType::Call,
-        initial_gas: u64::MAX,
-    };
-
-    let mut resources = ExecutionResources::default();
-    let account_context = build_transaction_context();
-    let block_context = build_block_context();
-
-    let mut context = EntryPointExecutionContext::new(
-        block_context.clone(),
-        account_context,
-        block_context.invoke_tx_max_n_steps,
-    );
-
-    let exec_result = entry_point.execute(blockifier_state, &mut resources, &mut context);
-    if let Ok(call_info) = exec_result {
-        let raw_return_data = &call_info.execution.retdata.0;
-
-        let return_data = raw_return_data
-            .iter()
-            .map(|data| Felt252::from_bytes_be(data.bytes()))
-            .collect();
-
-        Ok(CallContractOutput::Success {
-            ret_data: return_data,
-        })
-    } else if let Err(EntryPointExecutionError::ExecutionFailed { error_data }) = exec_result {
-        let err_data = error_data
-            .iter()
-            .map(|data| Felt252::from_bytes_be(data.bytes()))
-            .collect();
-
-        Ok(CallContractOutput::Panic {
-            panic_data: err_data,
-        })
-    } else {
-        panic!("Unparseable result: {exec_result:?}");
-    }
 }
 
 // All errors that can be thrown from the hint executor have to be added here,
@@ -303,82 +343,6 @@ impl From<EnhancedHintError> for HintError {
             error => HintError::CustomHint(error.to_string().into_boxed_str()),
         }
     }
-}
-
-#[allow(clippy::trivially_copy_pass_by_ref, clippy::too_many_arguments)]
-fn execute_cheatcode_hint(
-    vm: &mut VirtualMachine,
-    _exec_scopes: &mut ExecutionScopes,
-    blockifier_state: &mut CachedState<DictStateReader>,
-    selector: &BigIntAsHex,
-    input_start: &ResOperand,
-    input_end: &ResOperand,
-    output_start: &CellRef,
-    output_end: &CellRef,
-    contracts: &HashMap<String, StarknetContractArtifacts>,
-) -> Result<(), HintError> {
-    // Parse the selector.
-    let selector = &selector.value.to_bytes_be().1;
-    let selector = std::str::from_utf8(selector).map_err(|_| {
-        HintError::CustomHint(Box::from(
-            "Failed to parse the  cheatcode selector".to_string(),
-        ))
-    })?;
-
-    // Extract the inputs.
-    let input_start = extract_relocatable(vm, input_start)?;
-    let input_end = extract_relocatable(vm, input_end)?;
-    let inputs = vm_get_range(vm, input_start, input_end)
-        .map_err(|_| HintError::CustomHint(Box::from("Failed to read input data".to_string())))?;
-
-    match_cheatcode_by_selector(
-        vm,
-        blockifier_state,
-        selector,
-        inputs,
-        output_start,
-        output_end,
-        contracts,
-    )
-    .map_err(Into::into)
-}
-
-#[allow(unused, clippy::too_many_lines, clippy::trivially_copy_pass_by_ref)]
-fn match_cheatcode_by_selector(
-    vm: &mut VirtualMachine,
-    blockifier_state: &mut CachedState<DictStateReader>,
-    selector: &str,
-    inputs: Vec<Felt252>,
-    output_start: &CellRef,
-    output_end: &CellRef,
-    contracts: &HashMap<String, StarknetContractArtifacts>,
-) -> Result<(), EnhancedHintError> {
-    let mut buffer = MemBuffer::new_segment(vm);
-    let result_start = buffer.ptr;
-
-    match selector {
-        "prepare" => todo!(),
-        "start_roll" => todo!(),
-        "stop_roll" => todo!(),
-        "start_warp" => todo!(),
-        "stop_warp" => todo!(),
-        "start_prank" => todo!(),
-        "stop_prank" => todo!(),
-        "mock_call" => todo!(),
-        "declare" => declare(&mut buffer, blockifier_state, &inputs, contracts),
-        "deploy" => deploy(&mut buffer, blockifier_state, &inputs),
-        "print" => {
-            print(inputs);
-            Ok(())
-        }
-        _ => Err(anyhow!("Unknown cheatcode selector: {selector}")).map_err(Into::into),
-    }?;
-
-    let result_end = buffer.ptr;
-    insert_value_to_cellref!(vm, output_start, result_start)?;
-    insert_value_to_cellref!(vm, output_end, result_end)?;
-
-    Ok(())
 }
 
 fn print(inputs: Vec<Felt252>) {
@@ -595,6 +559,8 @@ fn felt252_from_hex_string(value: &str) -> Result<Felt252> {
 #[cfg(test)]
 mod test {
     use assert_fs::fixture::PathCopy;
+    use std::sync::Arc;
+
     use cairo_felt::Felt252;
     use std::process::Command;
 
@@ -743,6 +709,68 @@ mod test {
             assert_eq!(
                 actual_class_hash,
                 ClassHash(stark_felt!(expected_class_hash))
+            );
+        }
+    }
+}
+
+fn convert_to_blockifier_felt(val: &Felt252) -> blockifier_Felt252 {
+    let v = val.to_bigint();
+    blockifier_Felt252::from(v)
+}
+
+fn convert_from_blockifier_felt(val: &blockifier_Felt252) -> Felt252 {
+    let v = val.to_bigint();
+    Felt252::from(v)
+}
+
+#[cfg(test)]
+mod test_felt_conversions {
+    use super::convert_from_blockifier_felt;
+    use super::convert_to_blockifier_felt;
+    use cairo_felt::{
+        Felt252 as cairo_Felt252, FIELD_HIGH as cairo_FIELD_HIGH, FIELD_LOW as cairo_FIELD_LOW,
+    };
+    use cairo_felt_blockifier::Felt252 as blockifier_Felt252;
+
+    use num_traits::ToPrimitive;
+
+    // Does not re-export the consts
+    const BLOCKIFIER_FIELD_HIGH: u128 = (1 << 123) + (17 << 64);
+    const BLOCKIFIER_FIELD_LOW: u128 = 1;
+
+    #[test]
+    fn test_conversion_to_blockifier_felt() {
+        for value in [
+            BLOCKIFIER_FIELD_LOW,
+            200_u128,
+            400_000_000_u128,
+            9_999_999_999_999_u128,
+            BLOCKIFIER_FIELD_HIGH,
+        ] {
+            let from = cairo_Felt252::from(value);
+            let to = convert_to_blockifier_felt(&from);
+            assert_eq!(
+                to.to_u128().expect("Downcast failure"),
+                from.to_u128().expect("Downcast failure")
+            );
+        }
+    }
+
+    #[test]
+    fn test_conversion_from_blockifier_felt() {
+        for value in [
+            cairo_FIELD_LOW,
+            200_u128,
+            400_000_000_u128,
+            9_999_999_999_999_u128,
+            cairo_FIELD_HIGH,
+        ] {
+            let from = blockifier_Felt252::from(value);
+            let to = convert_from_blockifier_felt(&from);
+            assert_eq!(
+                to.to_u128().expect("Downcast failure"),
+                from.to_u128().expect("Downcast failure")
             );
         }
     }

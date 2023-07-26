@@ -5,6 +5,7 @@ use integer::Into;
 use integer::TryInto;
 use option::OptionTrait;
 use starknet::testing::cheatcode;
+use starknet::ContractAddress;
 
 #[derive(Drop, Clone)]
 struct PreparedContract {
@@ -80,4 +81,10 @@ fn deploy(prepared_contract: PreparedContract) -> Result::<felt252, RevertedTran
 
         Result::<felt252, RevertedTransaction>::Err(RevertedTransaction { panic_data })
     }
+}
+
+fn start_roll(contract_address: ContractAddress, block_number: u64) {
+    let contract_address_felt: felt252 = contract_address.into();
+    let block_number_felt: felt252 = block_number.into();
+    cheatcode::<'start_roll'>(array![contract_address_felt, block_number_felt].span());
 }
