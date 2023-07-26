@@ -170,6 +170,7 @@ impl ForgeHintProcessor for CairoHintProcessor<'_> {
         self.cheated_state
             .warped_contracts
             .insert(contract_address, timestamp);
+
         Ok(())
     }
 }
