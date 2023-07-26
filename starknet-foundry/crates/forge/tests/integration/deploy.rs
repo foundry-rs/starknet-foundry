@@ -18,7 +18,7 @@ fn error_handling() {
         
         #[test]
         fn test_deploy_error_handling() {
-            let class_hash = declare('PanickingConstructor').expect('Could not declare');
+            let class_hash = declare('PanickingConstructor');
             let prepared_contract = PreparedContract {
                 class_hash: class_hash,
                 constructor_calldata: @ArrayTrait::new()
