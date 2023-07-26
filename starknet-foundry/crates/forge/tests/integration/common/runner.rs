@@ -12,7 +12,7 @@ use camino::Utf8PathBuf;
 use forge::scarb::StarknetContractArtifacts;
 use std::collections::HashMap;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use test_collector::LinkedLibrary;
 
@@ -80,11 +80,18 @@ impl<'a> TestCase {
     const TEST_PATH: &'a str = "test_case.cairo";
     const PACKAGE_NAME: &'a str = "my_package";
 
-    pub fn from(test_code: &str, contracts: Vec<Contract>) -> Result<Self> {
+    pub fn from(test_code_or_path: &str, contracts: Vec<Contract>) -> Result<Self> {
+        let maybe_test_path = PathBuf::from(test_code_or_path);
+        let test_code = if maybe_test_path.exists() {
+            fs::read_to_string(maybe_test_path).unwrap()
+        } else {
+            test_code_or_path.to_string()
+        };
+
         let dir = TempDir::new()?;
         let test_file = dir.child(Self::TEST_PATH);
         test_file.touch()?;
-        test_file.write_str(test_code)?;
+        test_file.write_str(&test_code)?;
 
         dir.child("src/lib.cairo").touch().unwrap();
 
@@ -125,15 +132,15 @@ impl<'a> TestCase {
 
 #[macro_export]
 macro_rules! test_case {
-    ( $test_code:expr ) => ({
+    ( $test_code_or_path:expr ) => ({
         use $crate::integration::common::runner::TestCase;
-        TestCase::from($test_code, vec![]).unwrap()
+        TestCase::from($test_code_or_path, vec![]).unwrap()
     });
-    ( $test_code:expr, $( $contract:expr ),*) => ({
+    ( $test_code_or_path:expr, $( $contract:expr ),*) => ({
         use $crate::integration::common::runner::TestCase;
 
         let contracts = vec![$($contract,)*];
-        TestCase::from($test_code, contracts).unwrap()
+        TestCase::from($test_code_or_path, contracts).unwrap()
     });
 }
 

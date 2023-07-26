@@ -230,3 +230,128 @@ fn handling_errors() {
 
     assert_passed!(result);
 }
+
+#[test]
+fn serding() {
+    let test = test_case!(
+        "tests/data/test_files/test_serding.cairo",
+        Contract::from_code_path(
+            "Serding".to_string(),
+            Path::new("tests/data/contracts/serding.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run(
+        &test.path().unwrap(),
+        &test.path().unwrap().join("src/lib.cairo"),
+        &Some(test.linked_libraries()),
+        &Default::default(),
+        Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
+        &test.contracts(corelib().path()).unwrap(),
+        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
+    )
+    .unwrap();
+
+    assert_passed!(result);
+}
+
+#[test]
+fn proxy_storage() {
+    let test = test_case!(
+        "tests/data/test_files/test_proxy_storage.cairo",
+        Contract::new(
+            "Caller",
+            indoc!(
+                r#"
+            #[derive(Drop, Serde, storage_access::StorageAccess)]
+            struct NestedStruct {
+                d: felt252, 
+            }
+            
+            #[derive(Drop, Serde, storage_access::StorageAccess)]
+            struct CustomStruct {
+                a: felt252,
+                b: felt252,
+                c: NestedStruct,
+            }
+            
+            #[starknet::contract]
+            mod Caller {
+                use super::CustomStruct;
+                use result::ResultTrait;
+            
+                #[starknet::interface]
+                trait IExecutor<T> {
+                    fn store_and_add_5(self: @T, custom_struct: CustomStruct) -> felt252;
+                }
+            
+                #[storage]
+                struct Storage {}
+            
+                #[external(v0)]
+                fn call_executor(
+                    self: @ContractState,
+                    executor_address: starknet::ContractAddress,
+                    custom_struct: CustomStruct
+                ) -> felt252 {
+                    let safe_dispatcher = IExecutorDispatcher { contract_address: executor_address };
+                    safe_dispatcher.store_and_add_5(custom_struct)
+                }
+            }
+            "#
+            )
+        ),
+        Contract::new(
+            "Executor",
+            indoc!(
+                r#"
+            #[derive(Drop, Serde, storage_access::StorageAccess)]
+            struct NestedStruct {
+                d: felt252, 
+            }
+            
+            #[derive(Drop, Serde, storage_access::StorageAccess)]
+            struct CustomStruct {
+                a: felt252,
+                b: felt252,
+                c: NestedStruct,
+            }
+            
+            #[starknet::contract]
+            mod Executor {
+                use super::CustomStruct;
+                #[storage]
+                struct Storage {
+                    thing: CustomStruct
+                }
+            
+                #[external(v0)]
+                fn store_and_add_5(ref self: ContractState, custom_struct: CustomStruct) -> felt252 {
+                    self.thing.write(custom_struct);
+                    5 + self.thing.read().c.d
+                }
+            
+                #[external(v0)]
+                fn read_storage(ref self: ContractState) -> CustomStruct {
+                    self.thing.read()
+                }
+            }
+            "#
+            )
+        )
+    );
+
+    let result = run(
+        &test.path().unwrap(),
+        &test.path().unwrap().join("src/lib.cairo"),
+        &Some(test.linked_libraries()),
+        &Default::default(),
+        Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
+        &test.contracts(corelib().path()).unwrap(),
+        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
+    )
+    .unwrap();
+
+    assert_passed!(result);
+}

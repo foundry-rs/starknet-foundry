@@ -36,7 +36,11 @@ fn library_call_syscall() {
         fn deploy_contract(name: felt252) -> ContractAddress {
             let class_hash = declare(name);
             let prepared = PreparedContract {
+<<<<<<< Updated upstream
                 class_hash: class_hash, constructor_calldata: @ArrayTrait::new()
+=======
+                class_hash, constructor_calldata: @ArrayTrait::new()
+>>>>>>> Stashed changes
             };
             let contract_address = deploy(prepared).unwrap();
             
