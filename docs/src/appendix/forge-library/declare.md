@@ -1,6 +1,6 @@
 # `declare`
 
-> `fn declare(contract: felt252) -> Result::<felt252, felt252>`
+> `fn declare(contract: felt252) -> felt252`
 
 Declares a contract and returns its class hash.
 
@@ -11,7 +11,7 @@ use result::ResultTrait;
 
 #[test]
 fn test_declare() {
-    let class_hash = declare('HelloStarknet').unwrap();
+    let class_hash = declare('HelloStarknet');
     // ...
 }
 ```
