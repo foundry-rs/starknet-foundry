@@ -1,6 +1,6 @@
 # Writing Tests
 
-Forge lets you test standalone functions from you smart contracts. This technique is referred to as unit testing. You
+Forge lets you test standalone functions from your smart contracts. This technique is referred to as unit testing. You
 should write as many unit tests as possible as these are faster than integration tests.
 
 ## Writing your first test
@@ -35,6 +35,11 @@ Tests: 1 passed, 0 failed, 0 skipped
 
 Forge considers all functions in your project marked with `#[test]` attribute as tests.
 Test functions cannot return any values and cannot take any arguments.
+
+Starknet Forge will collect tests only from these places:
+
+- any files reachable from the package root (declared as `mod` in `lib.cairo` or its children)
+- files outside the package, including files in directories
 
 ## Failing tests
 

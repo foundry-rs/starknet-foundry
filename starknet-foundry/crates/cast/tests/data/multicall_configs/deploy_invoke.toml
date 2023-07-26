@@ -7,7 +7,7 @@ unique = false
 
 [[call]]
 call_type = "invoke"
-contract_address = "0x38b7b9507ccf73d79cb42c2cc4e58cf3af1248f342112879bfdf5aa4f606cc9"
+contract_address = "0x6a9b1c31fa25ca8f3cecb58142f3ec4d1f7611ed9520b4d3ae598d02d625e41"
 function = "put"
 inputs = ["0x123", "234"]
 

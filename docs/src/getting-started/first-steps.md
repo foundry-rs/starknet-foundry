@@ -6,7 +6,7 @@ We demonstrate how to create a new project, compile, and test it.
 To start a new project with Starknet Foundry, clone the template repository
 
 ```shell
-$ git clone https://github.com/foundry-rs/starknet_forge_template.git
+git clone https://github.com/foundry-rs/starknet_forge_template.git
 ```
 
 Let's check out the project structure

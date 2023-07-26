@@ -310,6 +310,7 @@ use starknet::System;
 mod cheatcodes;
 use cheatcodes::declare;
 use cheatcodes::deploy;
+use cheatcodes::start_roll;
 use cheatcodes::PreparedContract;
 
 mod forge_print;
