@@ -1,14 +1,16 @@
-use crate::starknet_commands::{
-    deploy::{deploy, print_deploy_result},
-    invoke::{invoke, print_invoke_result},
-};
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use camino::Utf8PathBuf;
-use cast::parse_number;
+use cast::helpers::constants::UDC_ADDRESS;
+use cast::{handle_rpc_error, handle_wait_for_tx_result, parse_number};
 use clap::Args;
+use rand::rngs::OsRng;
+use rand::RngCore;
 use serde::Deserialize;
-use starknet::accounts::SingleOwnerAccount;
+use starknet::accounts::AccountError::Provider;
+use starknet::accounts::{Account, Call, ConnectedAccount, SingleOwnerAccount};
 use starknet::core::types::FieldElement;
+use starknet::core::utils::UdcUniqueness::{NotUnique, Unique};
+use starknet::core::utils::{get_selector_from_name, get_udc_deployed_address, UdcUniqueSettings};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
@@ -20,6 +22,10 @@ pub struct Run {
     /// path to the toml file with declared operations
     #[clap(short = 'p', long = "path")]
     pub path: Utf8PathBuf,
+
+    /// Max fee for the transaction. If not provided, max fee will be automatically estimated
+    #[clap(short, long)]
+    pub max_fee: Option<FieldElement>,
 }
 
 #[allow(dead_code)]
@@ -28,7 +34,6 @@ struct DeployCall {
     call_type: String,
     class_hash: FieldElement,
     inputs: Vec<FieldElement>,
-    max_fee: Option<FieldElement>,
     unique: bool,
     salt: Option<FieldElement>,
     id: String,
@@ -41,43 +46,69 @@ struct InvokeCall {
     contract_address: String,
     function: String,
     inputs: Vec<FieldElement>,
-    max_fee: Option<FieldElement>,
 }
 
 pub async fn run(
     path: &Utf8PathBuf,
     account: &mut SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
-    int_format: bool,
-    json: bool,
-) -> Result<()> {
+    max_fee: Option<FieldElement>,
+) -> Result<FieldElement> {
     let contents = std::fs::read_to_string(path)?;
     let items_map: HashMap<String, Vec<toml::Value>> =
         toml::from_str(&contents).expect("failed to parse toml file");
-    let empty_vec = &vec![];
-    let calls = items_map.get("call").unwrap_or(empty_vec);
+
     let mut contracts = HashMap::new();
-    for call in calls {
+    let mut parsed_calls: Vec<Call> = vec![];
+
+    for call in items_map.get("call").unwrap_or(&vec![]) {
         let call_type = call.get("call_type");
         if call_type.is_none() {
             anyhow::bail!("`call_type` field is missing in a call specification");
         }
+
         match call_type.unwrap().as_str() {
             Some("deploy") => {
                 let deploy_call: DeployCall = toml::from_str(call.to_string().as_str())
                     .expect("failed to parse toml `deploy` call");
-                let result = deploy(
+
+                let salt = deploy_call
+                    .salt
+                    .unwrap_or(FieldElement::from(OsRng.next_u64()));
+                let mut calldata = vec![
                     deploy_call.class_hash,
-                    deploy_call.inputs,
-                    deploy_call.salt,
-                    deploy_call.unique,
-                    deploy_call.max_fee,
-                    account,
-                )
-                .await;
-                if let Ok((_, contract_address)) = result {
-                    contracts.insert(deploy_call.id, contract_address.to_string());
-                }
-                print_deploy_result(result, int_format, json)?;
+                    salt,
+                    if deploy_call.unique {
+                        FieldElement::ONE
+                    } else {
+                        FieldElement::ZERO
+                    },
+                    deploy_call.inputs.len().into(),
+                ];
+                deploy_call
+                    .inputs
+                    .iter()
+                    .for_each(|item| calldata.push(*item));
+
+                parsed_calls.push(Call {
+                    to: parse_number(UDC_ADDRESS)?,
+                    selector: get_selector_from_name("deployContract")?,
+                    calldata,
+                });
+
+                let contract_address = get_udc_deployed_address(
+                    salt,
+                    deploy_call.class_hash,
+                    &if deploy_call.unique {
+                        Unique(UdcUniqueSettings {
+                            deployer_address: account.address(),
+                            udc_contract_address: FieldElement::from_hex_be(UDC_ADDRESS)?,
+                        })
+                    } else {
+                        NotUnique
+                    },
+                    &deploy_call.inputs,
+                );
+                contracts.insert(deploy_call.id, contract_address.to_string());
             }
             Some("invoke") => {
                 let invoke_call: InvokeCall = toml::from_str(call.to_string().as_str())
@@ -86,16 +117,13 @@ pub async fn run(
                 if let Some(addr) = contracts.get(&invoke_call.contract_address) {
                     contract_address = addr;
                 }
-                let result = invoke(
-                    parse_number(contract_address)
+
+                parsed_calls.push(Call {
+                    to: parse_number(contract_address)
                         .expect("Unable to parse contract address to FieldElement"),
-                    &invoke_call.function,
-                    invoke_call.inputs,
-                    invoke_call.max_fee,
-                    account,
-                )
-                .await;
-                print_invoke_result(result, int_format, json)?;
+                    selector: get_selector_from_name(&invoke_call.function)?,
+                    calldata: invoke_call.inputs,
+                });
             }
             Some(unsupported) => {
                 anyhow::bail!("unsupported call type found: {}", unsupported);
@@ -104,5 +132,23 @@ pub async fn run(
         }
     }
 
-    Ok(())
+    let execution = account.execute(parsed_calls);
+    let execution = if let Some(max_fee) = max_fee {
+        execution.max_fee(max_fee)
+    } else {
+        execution
+    };
+
+    match execution.send().await {
+        Ok(result) => {
+            handle_wait_for_tx_result(
+                account.provider(),
+                result.transaction_hash,
+                result.transaction_hash,
+            )
+            .await
+        }
+        Err(Provider(error)) => handle_rpc_error(error),
+        _ => Err(anyhow!("Unknown RPC error")),
+    }
 }

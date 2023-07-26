@@ -24,7 +24,6 @@ async fn test_happy_case() {
         std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
 
     assert!(out.stderr.is_empty());
-    assert!(stdout_str.contains("command: Deploy"));
     assert!(stdout_str.contains("command: Invoke"));
 }
 
@@ -109,10 +108,7 @@ async fn test_deploy_success_invoke_fails() {
     let bdg = snapbox.assert();
     let out = bdg.get_output();
 
-    let stdout_str =
-        std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
     let stderr_str =
-        std::str::from_utf8(&out.stderr).expect("failed to convert command output to string");
-    assert!(stdout_str.contains("command: Deploy"));
+        dbg!(std::str::from_utf8(&out.stderr).expect("failed to convert command output to string"));
     assert!(stderr_str.contains("error: There is no contract at the specified address"));
 }
