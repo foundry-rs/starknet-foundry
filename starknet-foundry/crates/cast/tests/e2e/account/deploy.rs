@@ -92,8 +92,8 @@ pub async fn test_happy_case_add_profile() {
     fs::remove_dir_all(created_dir).unwrap();
 }
 
-#[test_case("4", "{}", "error: Provided network does not have any accounts defined" ; "when empty file")]
-#[test_case("5", "{\"alpha-goerli\": {}}", "error: Account with provided name does not exist" ; "when account name not present")]
+#[test_case("4", "{}", "error: Provided network testnet does not have any accounts defined" ; "when empty file")]
+#[test_case("5", "{\"alpha-goerli\": {}}", "error: Account with name my_account does not exist" ; "when account name not present")]
 #[test_case("6", "{\"alpha-goerli\": {\"my_account\" : {}}}", "error: Couldn't get private key from accounts file" ; "when private key not present")]
 #[test_case("7", "{\"alpha-goerli\": {\"my_account\" : {\"private_key\": \"0x1\"}}}", "error: Couldn't get salt from accounts file" ; "when salt not present")]
 fn test_account_deploy_error(salt: &str, accounts_content: &str, error: &str) {

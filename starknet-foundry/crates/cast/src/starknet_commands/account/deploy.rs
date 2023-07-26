@@ -29,23 +29,23 @@ pub async fn deploy(
     network: &str,
     max_fee: FieldElement,
 ) -> Result<FieldElement> {
-    let network = get_network(network)?.get_value();
+    let network_value = get_network(network)?.get_value();
 
     let contents = std::fs::read_to_string(path.clone()).expect("Couldn't read accounts file");
     let mut items: serde_json::Value = serde_json::from_str(&contents)
         .map_err(|_| anyhow!("Failed to parse accounts file at {path}"))?;
 
-    if items[network].is_null() {
-        bail!("Provided network does not have any accounts defined")
+    if items[network_value].is_null() {
+        bail!("Provided network {network} does not have any accounts defined")
     }
-    if items[network][&name].is_null() {
-        bail!("Account with provided name does not exist")
+    if items[network_value][&name].is_null() {
+        bail!("Account with name {name} does not exist")
     }
 
     let private_key = SigningKey::from_secret_scalar(
         parse_number(
             items
-                .get(network)
+                .get(network_value)
                 .and_then(|network| network.get(&name))
                 .and_then(|name| name.get("private_key"))
                 .and_then(serde_json::Value::as_str)
@@ -65,7 +65,7 @@ pub async fn deploy(
     let deployment = factory.deploy(
         parse_number(
             items
-                .get(network)
+                .get(network_value)
                 .and_then(|network| network.get(&name))
                 .and_then(|name| name.get("salt"))
                 .and_then(serde_json::Value::as_str)
@@ -83,7 +83,7 @@ pub async fn deploy(
                 return Err(anyhow!(message));
             }
 
-            items[network][&name]["deployed"] = serde_json::Value::from(true);
+            items[network_value][&name]["deployed"] = serde_json::Value::from(true);
             std::fs::write(path, serde_json::to_string_pretty(&items).unwrap())
                 .expect("Couldn't write to accounts file");
 
