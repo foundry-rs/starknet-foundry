@@ -205,7 +205,7 @@ fn block_doesnt_decrease_between_transactions() {
     assert_passed!(result);
 }
 
-// TODO Make nonce behavior consistent with Starknet
+// TODO(#292) Make nonce behavior consistent with Starknet
 #[ignore]
 #[test]
 fn nonce_increases_between_transactions() {
@@ -297,7 +297,7 @@ fn nonce_increases_between_transactions() {
     assert_passed!(result);
 }
 
-// TODO Make nonce behavior consistent with Starknet
+// TODO(#292) Make nonce behavior consistent with Starknet
 #[ignore]
 #[allow(clippy::too_many_lines)]
 #[test]
