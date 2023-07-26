@@ -1,5 +1,7 @@
 # `create`
 Create all data required for account deployment.
+Account information will be saved inside `~/.starknet_accounts/starknet_open_zeppelin_accounts.json` or in the file
+specified with `--accounts-file` argument.
 
 ## Required common arguments - passed by value or specified in Scarb.toml
 
