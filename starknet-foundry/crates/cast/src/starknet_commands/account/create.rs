@@ -77,8 +77,8 @@ pub async fn create(
     }
 
     let contents = std::fs::read_to_string(accounts_file_path.clone())?;
-    let mut items: serde_json::Value =
-        serde_json::from_str(&contents).expect("failed to parse json file");
+    let mut items: serde_json::Value = serde_json::from_str(&contents)
+        .map_err(|_| anyhow!("Failed to parse accounts file at {accounts_file_path}"))?;
 
     let network_value = get_network(network)?.get_value();
 

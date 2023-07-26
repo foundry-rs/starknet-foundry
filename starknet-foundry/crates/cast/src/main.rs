@@ -1,6 +1,6 @@
 use crate::helpers::scarb_utils::parse_scarb_config;
-use crate::starknet_commands::account::create::print_account_create_result;
-use crate::starknet_commands::account::Account;
+use crate::starknet_commands::account::deploy::print_account_deploy_result;
+use crate::starknet_commands::account::{create::print_account_create_result, Account};
 use crate::starknet_commands::{
     account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
 };
@@ -238,8 +238,19 @@ async fn main() -> Result<()> {
                 print_account_create_result(result, cli.int_format, cli.json)?;
                 Ok(())
             }
-            account::Commands::Deploy(_deploy) => {
-                unimplemented!()
+            account::Commands::Deploy(deploy) => {
+                account_file_exists(&accounts_file_path)?;
+                let result = starknet_commands::account::deploy::deploy(
+                    &provider,
+                    accounts_file_path,
+                    deploy.name,
+                    &network,
+                    deploy.max_fee,
+                )
+                .await;
+
+                print_account_deploy_result(result, cli.int_format, cli.json)?;
+                Ok(())
             }
         },
     }

@@ -82,6 +82,23 @@ pub async fn invoke_map_contract(key: &str, value: &str, account: &str, contract
     execution.send().await.unwrap();
 }
 
+pub async fn mint_token(recipient: &str, amount: f32) {
+    let client = reqwest::Client::new();
+    let json = json!(
+        {
+            "address": recipient,
+            "amount": amount,
+            "lite": true
+        }
+    );
+    client
+        .post("http://127.0.0.1:5055/mint")
+        .json(&json)
+        .send()
+        .await
+        .expect("Error occurred while minting tokens");
+}
+
 #[must_use]
 pub fn default_cli_args() -> Vec<&'static str> {
     vec![
