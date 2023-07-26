@@ -39,7 +39,7 @@ Test functions cannot return any values and cannot take any arguments.
 Starknet Forge will collect tests only from these places:
 
 - any files reachable from the package root (declared as `mod` in `lib.cairo` or its children)
-- files in directories outside the main package
+- files outside the package, including files in directories
 
 ## Failing tests
 
