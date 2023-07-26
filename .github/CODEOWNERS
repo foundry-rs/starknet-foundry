@@ -7,3 +7,7 @@
 # Forge
 /starknet-foundry/crates/forge              @foundry-rs/starknet-foundry-forge
 /starknet-foundry/crates/test-collector/    @foundry-rs/starknet-foundry-forge
+
+# Cheatable starknet
+
+/starknet-foundry/crates/cheatable-starknet @foundry-rs/starknet-foundry-cheatable-net
