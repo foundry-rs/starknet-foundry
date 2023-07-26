@@ -6,6 +6,7 @@ use forge::run;
 use indoc::indoc;
 
 #[test]
+#[allow(clippy::too_many_lines)]
 fn library_call_syscall() {
     let test = test_case!(
         indoc!(
