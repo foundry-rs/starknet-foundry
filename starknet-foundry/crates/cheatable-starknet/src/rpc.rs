@@ -312,10 +312,10 @@ impl CheatableSyscallHandler<'_> {
         // create a new segment with replaced block info
         let ptr_cheated_block_info = vm.add_memory_segment();
 
-        if let Some(rolled_number) = self.cheated_state.rolled_contracts.get(&contract_address) {
+        if let Some(rolled_number) = self.cheated_state.rolled_contracts.get(contract_address) {
             vm.insert_value(
                 ptr_cheated_block_info,
-                MaybeRelocatable::Int(rolled_number.to_owned()),
+                MaybeRelocatable::Int(rolled_number.clone()),
             )
             .unwrap();
         } else {
@@ -326,13 +326,13 @@ impl CheatableSyscallHandler<'_> {
                     .get(0)
                     .unwrap(),
             )
-            .unwrap()
+            .unwrap();
         }
 
-        if let Some(warped_timestamp) = self.cheated_state.warped_contracts.get(&contract_address) {
+        if let Some(warped_timestamp) = self.cheated_state.warped_contracts.get(contract_address) {
             vm.insert_value(
                 (ptr_cheated_block_info + 1_usize).unwrap(),
-                MaybeRelocatable::Int(warped_timestamp.to_owned()),
+                MaybeRelocatable::Int(warped_timestamp.clone()),
             )
             .unwrap();
         } else {
@@ -343,7 +343,7 @@ impl CheatableSyscallHandler<'_> {
                     .get(0)
                     .unwrap(),
             )
-            .unwrap()
+            .unwrap();
         }
 
         vm.insert_value(
