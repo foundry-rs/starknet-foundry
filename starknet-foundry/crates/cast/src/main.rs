@@ -217,7 +217,7 @@ async fn main() -> Result<()> {
                     )
                     .await;
 
-                    starknet_commands::invoke::print_invoke_result(
+                    starknet_commands::multicall::run::print_multicall_result(
                         result,
                         cli.int_format,
                         cli.json,

@@ -31,7 +31,6 @@ pub struct Invoke {
     pub max_fee: Option<FieldElement>,
 }
 
-#[allow(clippy::unused_async)]
 pub fn print_invoke_result(
     invoke_result: Result<FieldElement>,
     int_format: bool,
