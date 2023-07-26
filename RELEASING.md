@@ -5,7 +5,7 @@
     2. `crates/forge/Cargo.toml`
     3. `crates/cast/Cargo.toml`
     4. Any other applicable user-facing tools
-2. Regenerate locks using `cargo generatae-lockfile`
+2. Regenerate locks using `cargo generate-lockfile`
 3. Merge introduced changes
 4. Create a new tag in repository with format `vMAJOR.MINOR.PATCH`
 5. Wait for release workflows to pass. A new draft release will be created on GitHub.
