@@ -2,3 +2,5 @@
 pyproject.toml
 .DS_Store
 .tool-versions
+
+target

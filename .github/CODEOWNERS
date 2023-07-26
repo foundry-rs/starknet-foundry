@@ -2,11 +2,11 @@
 *                                           @foundry-rs/starknet-foundry-cast @foundry-rs/starknet-foundry-forge @foundry-rs/starknet-foundry-cheatable-net
 
 # Cast
-/starknet-foundry/crates/cast/              @foundry-rs/starknet-foundry-cast
+/crates/cast/              @foundry-rs/starknet-foundry-cast
 
 # Forge
-/starknet-foundry/crates/forge              @foundry-rs/starknet-foundry-forge
-/starknet-foundry/crates/test-collector/    @foundry-rs/starknet-foundry-forge
+/crates/forge              @foundry-rs/starknet-foundry-forge
+/crates/test-collector/    @foundry-rs/starknet-foundry-forge
 
 # Cheatable starknet
-/starknet-foundry/crates/cheatable-starknet @foundry-rs/starknet-foundry-cheatable-net
+/crates/cheatable-starknet @foundry-rs/starknet-foundry-cheatable-net
