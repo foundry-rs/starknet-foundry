@@ -66,7 +66,16 @@ pub async fn invoke(
         selector: get_selector_from_name(entry_point_name)?,
         calldata,
     };
-    let execution = account.execute(vec![call]);
+
+    execute_calls(account, vec![call], max_fee).await
+}
+
+pub async fn execute_calls(
+    account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
+    calls: Vec<Call>,
+    max_fee: Option<FieldElement>,
+) -> Result<FieldElement> {
+    let execution = account.execute(calls);
 
     let execution = if let Some(max_fee) = max_fee {
         execution.max_fee(max_fee)
@@ -74,9 +83,7 @@ pub async fn invoke(
         execution
     };
 
-    let result = execution.send().await;
-
-    match result {
+    match execution.send().await {
         Ok(result) => {
             handle_wait_for_tx_result(
                 account.provider(),

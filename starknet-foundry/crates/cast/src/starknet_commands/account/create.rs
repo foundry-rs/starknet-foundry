@@ -2,10 +2,8 @@ use crate::helpers::constants::OZ_CLASS_HASH;
 use crate::helpers::scarb_utils::get_property;
 use anyhow::{anyhow, Context, Result};
 use camino::Utf8PathBuf;
-use cast::{get_network, parse_number, print_formatted};
+use cast::{extract_or_generate_salt, get_network, parse_number, print_formatted};
 use clap::Args;
-use rand::rngs::OsRng;
-use rand::RngCore;
 use scarb::ops::find_manifest_path;
 use serde_json::json;
 use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
@@ -48,7 +46,7 @@ pub async fn create(
 ) -> Result<Vec<(&'static str, String)>> {
     let private_key = SigningKey::from_random();
     let public_key = private_key.verifying_key();
-    let salt = maybe_salt.unwrap_or(FieldElement::from(OsRng.next_u64()));
+    let salt = extract_or_generate_salt(maybe_salt);
 
     let address = get_contract_address(
         salt,

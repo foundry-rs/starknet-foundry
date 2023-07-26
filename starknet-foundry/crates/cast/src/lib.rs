@@ -1,6 +1,9 @@
+use crate::helpers::constants::UDC_ADDRESS;
 use anyhow::{anyhow, bail, Context, Error, Result};
 use camino::Utf8PathBuf;
 use primitive_types::U256;
+use rand::rngs::OsRng;
+use rand::RngCore;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use starknet::core::types::{
@@ -12,6 +15,8 @@ use starknet::core::types::{
     TransactionReceipt::{Declare, Deploy, DeployAccount, Invoke, L1Handler},
     TransactionStatus,
 };
+use starknet::core::utils::UdcUniqueness::{NotUnique, Unique};
+use starknet::core::utils::{UdcUniqueSettings, UdcUniqueness};
 use starknet::providers::jsonrpc::JsonRpcClientError;
 use starknet::providers::jsonrpc::JsonRpcClientError::RpcError;
 use starknet::providers::jsonrpc::RpcError::{Code, Unknown};
@@ -299,6 +304,23 @@ pub fn account_file_exists(accounts_file_path: &Utf8PathBuf) -> Result<()> {
         or if you're using a custom accounts file, make sure to supply correct path to it with --accounts-file argument.", accounts_file_path}
     }
     Ok(())
+}
+
+#[must_use]
+pub fn extract_or_generate_salt(salt: Option<FieldElement>) -> FieldElement {
+    salt.unwrap_or(FieldElement::from(OsRng.next_u64()))
+}
+
+#[must_use]
+pub fn udc_uniqueness(unique: bool, account_address: FieldElement) -> UdcUniqueness {
+    if unique {
+        Unique(UdcUniqueSettings {
+            deployer_address: account_address,
+            udc_contract_address: FieldElement::from_hex_be(UDC_ADDRESS).expect("Should not panic"),
+        })
+    } else {
+        NotUnique
+    }
 }
 
 #[cfg(test)]

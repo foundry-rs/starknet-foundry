@@ -1,16 +1,13 @@
+use crate::helpers::constants::UDC_ADDRESS;
+use crate::starknet_commands::invoke::execute_calls;
 use anyhow::{anyhow, Result};
 use camino::Utf8PathBuf;
-use cast::helpers::constants::UDC_ADDRESS;
-use cast::{handle_rpc_error, handle_wait_for_tx_result, parse_number};
+use cast::{extract_or_generate_salt, parse_number, udc_uniqueness};
 use clap::Args;
-use rand::rngs::OsRng;
-use rand::RngCore;
 use serde::Deserialize;
-use starknet::accounts::AccountError::Provider;
-use starknet::accounts::{Account, Call, ConnectedAccount, SingleOwnerAccount};
+use starknet::accounts::{Account, Call, SingleOwnerAccount};
 use starknet::core::types::FieldElement;
-use starknet::core::utils::UdcUniqueness::{NotUnique, Unique};
-use starknet::core::utils::{get_selector_from_name, get_udc_deployed_address, UdcUniqueSettings};
+use starknet::core::utils::{get_selector_from_name, get_udc_deployed_address};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
@@ -55,7 +52,7 @@ pub async fn run(
 ) -> Result<FieldElement> {
     let contents = std::fs::read_to_string(path)?;
     let items_map: HashMap<String, Vec<toml::Value>> =
-        toml::from_str(&contents).expect("failed to parse toml file");
+        toml::from_str(&contents).map_err(|_| anyhow!("Failed to parse {path}"))?;
 
     let mut contracts = HashMap::new();
     let mut parsed_calls: Vec<Call> = vec![];
@@ -69,19 +66,13 @@ pub async fn run(
         match call_type.unwrap().as_str() {
             Some("deploy") => {
                 let deploy_call: DeployCall = toml::from_str(call.to_string().as_str())
-                    .expect("failed to parse toml `deploy` call");
+                    .map_err(|_| anyhow!("Failed to parse toml `deploy` call"))?;
 
-                let salt = deploy_call
-                    .salt
-                    .unwrap_or(FieldElement::from(OsRng.next_u64()));
+                let salt = extract_or_generate_salt(deploy_call.salt);
                 let mut calldata = vec![
                     deploy_call.class_hash,
                     salt,
-                    if deploy_call.unique {
-                        FieldElement::ONE
-                    } else {
-                        FieldElement::ZERO
-                    },
+                    FieldElement::from(u8::from(deploy_call.unique)),
                     deploy_call.inputs.len().into(),
                 ];
                 deploy_call
@@ -98,14 +89,7 @@ pub async fn run(
                 let contract_address = get_udc_deployed_address(
                     salt,
                     deploy_call.class_hash,
-                    &if deploy_call.unique {
-                        Unique(UdcUniqueSettings {
-                            deployer_address: account.address(),
-                            udc_contract_address: FieldElement::from_hex_be(UDC_ADDRESS)?,
-                        })
-                    } else {
-                        NotUnique
-                    },
+                    &udc_uniqueness(deploy_call.unique, account.address()),
                     &deploy_call.inputs,
                 );
                 contracts.insert(deploy_call.id, contract_address.to_string());
@@ -132,23 +116,5 @@ pub async fn run(
         }
     }
 
-    let execution = account.execute(parsed_calls);
-    let execution = if let Some(max_fee) = max_fee {
-        execution.max_fee(max_fee)
-    } else {
-        execution
-    };
-
-    match execution.send().await {
-        Ok(result) => {
-            handle_wait_for_tx_result(
-                account.provider(),
-                result.transaction_hash,
-                result.transaction_hash,
-            )
-            .await
-        }
-        Err(Provider(error)) => handle_rpc_error(error),
-        _ => Err(anyhow!("Unknown RPC error")),
-    }
+    execute_calls(account, parsed_calls, max_fee).await
 }
