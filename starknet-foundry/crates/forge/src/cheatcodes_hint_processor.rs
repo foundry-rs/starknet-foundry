@@ -92,6 +92,12 @@ trait ForgeHintProcessor {
     fn start_roll(
         &mut self,
         contract_address: ContractAddress,
+        block_number: blockifier_Felt252,
+    ) -> Result<(), EnhancedHintError>;
+
+    fn start_warp(
+        &mut self,
+        contract_address: ContractAddress,
         timestamp: blockifier_Felt252,
     ) -> Result<(), EnhancedHintError>;
 }
@@ -149,10 +155,20 @@ impl ForgeHintProcessor for CairoHintProcessor<'_> {
     fn start_roll(
         &mut self,
         contract_address: ContractAddress,
-        timestamp: blockifier_Felt252,
+        block_number: blockifier_Felt252,
     ) -> Result<(), EnhancedHintError> {
         self.cheated_state
             .rolled_contracts
+            .insert(contract_address, block_number);
+        Ok(())
+    }
+    fn start_warp(
+        &mut self,
+        contract_address: ContractAddress,
+        timestamp: blockifier_Felt252,
+    ) -> Result<(), EnhancedHintError> {
+        self.cheated_state
+            .warped_contracts
             .insert(contract_address, timestamp);
         Ok(())
     }
@@ -213,7 +229,13 @@ impl CairoHintProcessor<'_> {
                 self.start_roll(contract_address, convert_to_blockifier_felt(&value))
             }
             "stop_roll" => todo!(),
-            "start_warp" => todo!(),
+            "start_warp" => {
+                let contract_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
+                    inputs[0].clone().to_be_bytes(),
+                )?)?);
+                let value = inputs[1].clone();
+                self.start_warp(contract_address, convert_to_blockifier_felt(&value))
+            }
             "stop_warp" => todo!(),
             "start_prank" => todo!(),
             "stop_prank" => todo!(),
