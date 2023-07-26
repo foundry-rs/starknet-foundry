@@ -7,8 +7,6 @@ use indoc::indoc;
 
 #[test]
 fn library_call_syscall() {
-    // function_selector calculated using starknet-py's `get_selector_from_name`
-    // https://starknetpy.readthedocs.io/en/latest/guide/account_and_client.html#executing-transactions
     let test = test_case!(
         indoc!(
             r#"
@@ -45,7 +43,7 @@ fn library_call_syscall() {
         }
         
         #[test]
-        fn test_increase_balance() {
+        fn test_library_call() {
             let caller_address = deploy_contract('Caller');
             let caller_safe_dispatcher = ICallerSafeDispatcher {
                 contract_address: caller_address
@@ -131,6 +129,7 @@ fn library_call_syscall() {
     );
     let result = run(
         &test.path().unwrap(),
+        &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
         Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
