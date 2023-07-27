@@ -316,7 +316,7 @@ pub fn udc_uniqueness(unique: bool, account_address: FieldElement) -> UdcUniquen
     if unique {
         Unique(UdcUniqueSettings {
             deployer_address: account_address,
-            udc_contract_address: FieldElement::from_hex_be(UDC_ADDRESS).expect("Should not panic"),
+            udc_contract_address: parse_number(UDC_ADDRESS).expect("Should not panic"),
         })
     } else {
         NotUnique
@@ -325,12 +325,14 @@ pub fn udc_uniqueness(unique: bool, account_address: FieldElement) -> UdcUniquen
 
 #[cfg(test)]
 mod tests {
-    use crate::{get_block_id, get_network, Network};
+    use crate::{extract_or_generate_salt, get_block_id, get_network, udc_uniqueness, Network};
     use starknet::core::types::{
         BlockId,
         BlockTag::{Latest, Pending},
         FieldElement,
     };
+    use starknet::core::utils::UdcUniqueSettings;
+    use starknet::core::utils::UdcUniqueness::{NotUnique, Unique};
 
     #[test]
     fn test_get_block_id() {
@@ -388,5 +390,33 @@ mod tests {
         assert!(net
             .to_string()
             .contains("No such network mariusz! Possible values are testnet, testnet2, mainnet."));
+    }
+
+    #[test]
+    fn test_generate_salt() {
+        let salt = extract_or_generate_salt(None);
+
+        assert!(salt >= FieldElement::ZERO);
+    }
+
+    #[test]
+    fn test_extract_salt() {
+        let salt = extract_or_generate_salt(Some(FieldElement::THREE));
+
+        assert_eq!(salt, FieldElement::THREE);
+    }
+
+    #[test]
+    fn test_udc_uniqueness_unique() {
+        let uniqueness = udc_uniqueness(true, FieldElement::ONE);
+
+        assert!(matches!(uniqueness, Unique(UdcUniqueSettings { .. })));
+    }
+
+    #[test]
+    fn test_udc_uniqueness_not_unique() {
+        let uniqueness = udc_uniqueness(false, FieldElement::ONE);
+
+        assert!(matches!(uniqueness, NotUnique));
     }
 }
