@@ -1,6 +1,9 @@
+use crate::helpers::constants::UDC_ADDRESS;
 use anyhow::{anyhow, bail, Context, Error, Result};
 use camino::Utf8PathBuf;
 use primitive_types::U256;
+use rand::rngs::OsRng;
+use rand::RngCore;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use starknet::core::types::{
@@ -12,6 +15,8 @@ use starknet::core::types::{
     TransactionReceipt::{Declare, Deploy, DeployAccount, Invoke, L1Handler},
     TransactionStatus,
 };
+use starknet::core::utils::UdcUniqueness::{NotUnique, Unique};
+use starknet::core::utils::{UdcUniqueSettings, UdcUniqueness};
 use starknet::providers::jsonrpc::JsonRpcClientError;
 use starknet::providers::jsonrpc::JsonRpcClientError::RpcError;
 use starknet::providers::jsonrpc::RpcError::{Code, Unknown};
@@ -301,14 +306,33 @@ pub fn account_file_exists(accounts_file_path: &Utf8PathBuf) -> Result<()> {
     Ok(())
 }
 
+#[must_use]
+pub fn extract_or_generate_salt(salt: Option<FieldElement>) -> FieldElement {
+    salt.unwrap_or(FieldElement::from(OsRng.next_u64()))
+}
+
+#[must_use]
+pub fn udc_uniqueness(unique: bool, account_address: FieldElement) -> UdcUniqueness {
+    if unique {
+        Unique(UdcUniqueSettings {
+            deployer_address: account_address,
+            udc_contract_address: parse_number(UDC_ADDRESS).expect("Should not panic"),
+        })
+    } else {
+        NotUnique
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::{get_block_id, get_network, Network};
+    use crate::{extract_or_generate_salt, get_block_id, get_network, udc_uniqueness, Network};
     use starknet::core::types::{
         BlockId,
         BlockTag::{Latest, Pending},
         FieldElement,
     };
+    use starknet::core::utils::UdcUniqueSettings;
+    use starknet::core::utils::UdcUniqueness::{NotUnique, Unique};
 
     #[test]
     fn test_get_block_id() {
@@ -366,5 +390,33 @@ mod tests {
         assert!(net
             .to_string()
             .contains("No such network mariusz! Possible values are testnet, testnet2, mainnet."));
+    }
+
+    #[test]
+    fn test_generate_salt() {
+        let salt = extract_or_generate_salt(None);
+
+        assert!(salt >= FieldElement::ZERO);
+    }
+
+    #[test]
+    fn test_extract_salt() {
+        let salt = extract_or_generate_salt(Some(FieldElement::THREE));
+
+        assert_eq!(salt, FieldElement::THREE);
+    }
+
+    #[test]
+    fn test_udc_uniqueness_unique() {
+        let uniqueness = udc_uniqueness(true, FieldElement::ONE);
+
+        assert!(matches!(uniqueness, Unique(UdcUniqueSettings { .. })));
+    }
+
+    #[test]
+    fn test_udc_uniqueness_not_unique() {
+        let uniqueness = udc_uniqueness(false, FieldElement::ONE);
+
+        assert!(matches!(uniqueness, NotUnique));
     }
 }
