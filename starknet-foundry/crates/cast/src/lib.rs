@@ -277,24 +277,24 @@ pub fn print_formatted(
 
 pub fn print_command_result(
     command: &str,
-    result: Result<Vec<FieldElement>>,
-    output_fields: Vec<&str>,
+    result: Result<Vec<(&str, FieldElement)>>,
     int_format: bool,
     json: bool,
 ) -> Result<()> {
     let mut output = vec![("command", command.to_string())];
+    let mut error = false;
     match result {
         Ok(result) => {
-            assert_eq!(result.len(), output_fields.len());
-            for (index, field) in output_fields.into_iter().enumerate() {
-                output.push((field, format!("{}", result[index])));
+            for (key, value) in result {
+                output.push((key, format!("{value}")));
             }
         }
-        Err(error) => {
-            output.push(("error", error.to_string()));
+        Err(message) => {
+            output.push(("error", message.to_string()));
+            error = true;
         }
     };
-    print_formatted(output, int_format, json, false)
+    print_formatted(output, int_format, json, error)
 }
 
 fn write_to_output<T: std::fmt::Display>(value: T, error: bool) {

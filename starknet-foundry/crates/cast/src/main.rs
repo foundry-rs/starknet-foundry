@@ -107,13 +107,7 @@ async fn main() -> Result<()> {
             )
             .await;
 
-            print_command_result(
-                "declare",
-                result,
-                vec!["class_hash", "transaction_hash"],
-                cli.int_format,
-                cli.json,
-            )?;
+            print_command_result("declare", result, cli.int_format, cli.json)?;
 
             Ok(())
         }
@@ -130,13 +124,7 @@ async fn main() -> Result<()> {
                 &account,
             )
             .await;
-            print_command_result(
-                "deploy",
-                result,
-                vec!["contract_address", "transaction_hash"],
-                cli.int_format,
-                cli.json,
-            )?;
+            print_command_result("deploy", result, cli.int_format, cli.json)?;
 
             Ok(())
         }
@@ -185,13 +173,7 @@ async fn main() -> Result<()> {
                 &mut account,
             )
             .await;
-            print_command_result(
-                "invoke",
-                result,
-                vec!["transaction_hash"],
-                cli.int_format,
-                cli.json,
-            )?;
+            print_command_result("invoke", result, cli.int_format, cli.json)?;
 
             Ok(())
         }
@@ -215,13 +197,7 @@ async fn main() -> Result<()> {
                     )
                     .await;
 
-                    print_command_result(
-                        "multicall run",
-                        result,
-                        vec!["transaction_hash"],
-                        cli.int_format,
-                        cli.json,
-                    )?;
+                    print_command_result("multicall run", result, cli.int_format, cli.json)?;
                 }
             }
             Ok(())
@@ -254,13 +230,7 @@ async fn main() -> Result<()> {
                 )
                 .await;
 
-                print_command_result(
-                    "account deploy",
-                    result,
-                    vec!["transaction_hash"],
-                    cli.int_format,
-                    cli.json,
-                )?;
+                print_command_result("account deploy", result, cli.int_format, cli.json)?;
                 Ok(())
             }
         },
