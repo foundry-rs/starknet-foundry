@@ -88,3 +88,10 @@ fn start_roll(contract_address: ContractAddress, block_number: u64) {
     let block_number_felt: felt252 = block_number.into();
     cheatcode::<'start_roll'>(array![contract_address_felt, block_number_felt].span());
 }
+
+fn start_warp(contract_address: ContractAddress, block_timestamp: u64) {
+    let contract_address_felt: felt252 = contract_address.into();
+    let block_timestamp_felt: felt252 = block_timestamp.into();
+    cheatcode::<'start_warp'>(array![contract_address_felt, block_timestamp_felt].span());
+}
+
