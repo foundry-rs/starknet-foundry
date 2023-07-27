@@ -2,7 +2,7 @@ use crate::helpers::constants::UDC_ADDRESS;
 use crate::starknet_commands::invoke::execute_calls;
 use anyhow::{anyhow, Result};
 use camino::Utf8PathBuf;
-use cast::{extract_or_generate_salt, parse_number, print_formatted, udc_uniqueness};
+use cast::{extract_or_generate_salt, parse_number, udc_uniqueness};
 use clap::Args;
 use serde::Deserialize;
 use starknet::accounts::{Account, Call, SingleOwnerAccount};
@@ -45,33 +45,11 @@ struct InvokeCall {
     inputs: Vec<FieldElement>,
 }
 
-pub fn print_multicall_result(
-    multicall: Result<FieldElement>,
-    int_format: bool,
-    json: bool,
-) -> Result<()> {
-    match multicall {
-        Ok(transaction_hash) => print_formatted(
-            vec![
-                ("command", "Multicall".to_string()),
-                ("transaction_hash", format!("{transaction_hash}")),
-            ],
-            int_format,
-            json,
-            false,
-        )?,
-        Err(error) => {
-            print_formatted(vec![("error", error.to_string())], int_format, json, true)?;
-        }
-    };
-    Ok(())
-}
-
 pub async fn run(
     path: &Utf8PathBuf,
     account: &mut SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     max_fee: Option<FieldElement>,
-) -> Result<FieldElement> {
+) -> Result<Vec<FieldElement>> {
     let contents = std::fs::read_to_string(path)?;
     let items_map: HashMap<String, Vec<toml::Value>> =
         toml::from_str(&contents).map_err(|_| anyhow!("Failed to parse {path}"))?;

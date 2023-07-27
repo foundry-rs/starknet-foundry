@@ -9,10 +9,7 @@ use starknet::accounts::ConnectedAccount;
 use starknet::core::types::FieldElement;
 use starknet::{
     accounts::{Account, SingleOwnerAccount},
-    core::types::{
-        contract::{CompiledClass, SierraClass},
-        DeclareTransactionResult,
-    },
+    core::types::contract::{CompiledClass, SierraClass},
     providers::jsonrpc::{HttpTransport, JsonRpcClient},
     signers::LocalWallet,
 };
@@ -59,7 +56,7 @@ pub async fn declare(
     contract_name: &str,
     max_fee: Option<FieldElement>,
     account: &mut SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
-) -> Result<DeclareTransactionResult> {
+) -> Result<Vec<FieldElement>> {
     let contract_name: String = contract_name.to_string();
     which::which("scarb")
         .context("Cannot find `scarb` binary in PATH. Make sure you have Scarb installed https://github.com/software-mansion/scarb")?;
@@ -174,7 +171,12 @@ pub async fn declare(
 
     match declared {
         Ok(result) => {
-            handle_wait_for_tx_result(account.provider(), result.transaction_hash, result).await
+            handle_wait_for_tx_result(
+                account.provider(),
+                result.transaction_hash,
+                vec![result.class_hash, result.transaction_hash],
+            )
+            .await
         }
         Err(Provider(error)) => handle_rpc_error(error),
         _ => Err(anyhow!("Unknown RPC error")),
