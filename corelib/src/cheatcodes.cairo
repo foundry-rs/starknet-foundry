@@ -28,17 +28,13 @@ impl RevertedTransactionImpl of RevertedTransactionTrait {
     }
 }
 
-fn declare(contract: felt252) -> Result::<felt252, felt252> {
+fn declare(contract: felt252) -> felt252 {
     let span = cheatcode::<'declare'>(array![contract].span());
 
     let exit_code = *span[0];
     let result = *span[1];
-
-    if exit_code == 0 {
-        Result::<felt252, felt252>::Ok(result)
-    } else {
-        Result::<felt252, felt252>::Err(result)
-    }
+    assert(exit_code == 0, 'declare should never fail');
+    result
 }
 
 fn deploy(prepared_contract: PreparedContract) -> Result::<felt252, RevertedTransaction> {
@@ -88,3 +84,10 @@ fn start_roll(contract_address: ContractAddress, block_number: u64) {
     let block_number_felt: felt252 = block_number.into();
     cheatcode::<'start_roll'>(array![contract_address_felt, block_number_felt].span());
 }
+
+fn start_warp(contract_address: ContractAddress, block_timestamp: u64) {
+    let contract_address_felt: felt252 = contract_address.into();
+    let block_timestamp_felt: felt252 = block_timestamp.into();
+    cheatcode::<'start_warp'>(array![contract_address_felt, block_timestamp_felt].span());
+}
+

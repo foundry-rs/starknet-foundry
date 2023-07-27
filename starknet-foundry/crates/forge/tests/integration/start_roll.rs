@@ -27,7 +27,7 @@ fn start_roll_simple() {
 
             #[test]
             fn test_roll_simple() {
-                let class_hash = declare('RollChecker').unwrap();
+                let class_hash = declare('RollChecker');
                 let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
                 let contract_address = deploy(prepared).unwrap();
                 let contract_address: ContractAddress = contract_address.try_into().unwrap();
@@ -81,7 +81,7 @@ fn start_roll_with_other_syscall() {
 
             #[test]
             fn test_roll_simple() {
-                let class_hash = declare('RollChecker').unwrap();
+                let class_hash = declare('RollChecker');
                 let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
                 let contract_address = deploy(prepared).unwrap();
                 let contract_address: ContractAddress = contract_address.try_into().unwrap();
@@ -138,7 +138,7 @@ fn start_roll_in_constructor_test() {
             
             #[test]
             fn test_roll_constructor_simple() {
-                let class_hash = declare('ConstructorRollChecker').unwrap();
+                let class_hash = declare('ConstructorRollChecker');
                 let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
                 let contract_address: ContractAddress = 2598896470772924212281968896271340780432065735045468431712403008297614014532.try_into().unwrap();
                 start_roll(contract_address, 234);
