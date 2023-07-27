@@ -1,12 +1,14 @@
 use crate::helpers::scarb_utils::parse_scarb_config;
-use crate::starknet_commands::account::deploy::print_account_deploy_result;
 use crate::starknet_commands::account::{create::print_account_create_result, Account};
 use crate::starknet_commands::{
     account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
 };
 use anyhow::Result;
 use camino::Utf8PathBuf;
-use cast::{account_file_exists, get_account, get_block_id, get_provider, print_formatted};
+use cast::{
+    account_file_exists, get_account, get_block_id, get_provider, print_command_result,
+    print_formatted,
+};
 use clap::{Parser, Subcommand};
 
 mod helpers;
@@ -105,29 +107,13 @@ async fn main() -> Result<()> {
             )
             .await;
 
-            match result {
-                Ok(declared_contract) => print_formatted(
-                    vec![
-                        ("command", "Declare".to_string()),
-                        ("class_hash", format!("{}", declared_contract.class_hash)),
-                        (
-                            "transaction_hash",
-                            format!("{}", declared_contract.transaction_hash),
-                        ),
-                    ],
-                    cli.int_format,
-                    cli.json,
-                    false,
-                )?,
-                Err(error) => {
-                    print_formatted(
-                        vec![("error", error.to_string())],
-                        cli.int_format,
-                        cli.json,
-                        true,
-                    )?;
-                }
-            }
+            print_command_result(
+                "declare",
+                result,
+                vec!["class_hash", "transaction_hash"],
+                cli.int_format,
+                cli.json,
+            )?;
 
             Ok(())
         }
@@ -144,7 +130,13 @@ async fn main() -> Result<()> {
                 &account,
             )
             .await;
-            starknet_commands::deploy::print_deploy_result(result, cli.int_format, cli.json)?;
+            print_command_result(
+                "deploy",
+                result,
+                vec!["contract_address", "transaction_hash"],
+                cli.int_format,
+                cli.json,
+            )?;
 
             Ok(())
         }
@@ -193,7 +185,13 @@ async fn main() -> Result<()> {
                 &mut account,
             )
             .await;
-            starknet_commands::invoke::print_invoke_result(result, cli.int_format, cli.json)?;
+            print_command_result(
+                "invoke",
+                result,
+                vec!["transaction_hash"],
+                cli.int_format,
+                cli.json,
+            )?;
 
             Ok(())
         }
@@ -204,7 +202,7 @@ async fn main() -> Result<()> {
                         new.output_path.clone(),
                         new.overwrite.unwrap_or(false),
                     )?;
-                    starknet_commands::multicall::new::print_new_result(result.as_str());
+                    println!("{result}");
                 }
                 starknet_commands::multicall::Commands::Run(run) => {
                     account_file_exists(&accounts_file_path)?;
@@ -217,8 +215,10 @@ async fn main() -> Result<()> {
                     )
                     .await;
 
-                    starknet_commands::multicall::run::print_multicall_result(
+                    print_command_result(
+                        "multicall run",
                         result,
+                        vec!["transaction_hash"],
                         cli.int_format,
                         cli.json,
                     )?;
@@ -254,7 +254,13 @@ async fn main() -> Result<()> {
                 )
                 .await;
 
-                print_account_deploy_result(result, cli.int_format, cli.json)?;
+                print_command_result(
+                    "account deploy",
+                    result,
+                    vec!["transaction_hash"],
+                    cli.int_format,
+                    cli.json,
+                )?;
                 Ok(())
             }
         },

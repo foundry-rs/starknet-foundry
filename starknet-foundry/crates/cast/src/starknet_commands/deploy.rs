@@ -1,8 +1,5 @@
 use anyhow::{anyhow, Result};
 use clap::Args;
-
-use cast::{extract_or_generate_salt, print_formatted, udc_uniqueness};
-use cast::{handle_rpc_error, handle_wait_for_tx_result};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{Account, ConnectedAccount, SingleOwnerAccount};
 use starknet::contract::ContractFactory;
@@ -11,6 +8,9 @@ use starknet::core::utils::get_udc_deployed_address;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
+
+use cast::{extract_or_generate_salt, udc_uniqueness};
+use cast::{handle_rpc_error, handle_wait_for_tx_result};
 
 #[derive(Args)]
 #[command(about = "Deploy a contract on Starknet")]
@@ -36,29 +36,6 @@ pub struct Deploy {
     pub max_fee: Option<FieldElement>,
 }
 
-pub fn print_deploy_result(
-    deploy_result: Result<(FieldElement, FieldElement)>,
-    int_format: bool,
-    json: bool,
-) -> Result<()> {
-    match deploy_result {
-        Ok((transaction_hash, contract_address)) => print_formatted(
-            vec![
-                ("command", "Deploy".to_string()),
-                ("contract_address", format!("{contract_address}")),
-                ("transaction_hash", format!("{transaction_hash}")),
-            ],
-            int_format,
-            json,
-            false,
-        )?,
-        Err(error) => {
-            print_formatted(vec![("error", error.to_string())], int_format, json, true)?;
-        }
-    };
-    Ok(())
-}
-
 pub async fn deploy(
     class_hash: FieldElement,
     constructor_calldata: Vec<FieldElement>,
@@ -66,7 +43,7 @@ pub async fn deploy(
     unique: bool,
     max_fee: Option<FieldElement>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
-) -> Result<(FieldElement, FieldElement)> {
+) -> Result<Vec<FieldElement>> {
     let salt = extract_or_generate_salt(salt);
 
     let factory = ContractFactory::new(class_hash, account);
@@ -85,7 +62,7 @@ pub async fn deploy(
             handle_wait_for_tx_result(
                 account.provider(),
                 result.transaction_hash,
-                (
+                vec![
                     result.transaction_hash,
                     get_udc_deployed_address(
                         salt,
@@ -93,7 +70,7 @@ pub async fn deploy(
                         &udc_uniqueness(unique, account.address()),
                         &constructor_calldata,
                     ),
-                ),
+                ],
             )
             .await
         }
