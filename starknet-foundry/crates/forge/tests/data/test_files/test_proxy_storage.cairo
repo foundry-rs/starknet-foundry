@@ -18,7 +18,7 @@ struct CustomStruct {
 }
 
 fn deploy_contract(name: felt252) -> ContractAddress {
-    let class_hash = declare(name).unwrap();
+    let class_hash = declare(name);
     let prepared = PreparedContract { class_hash, constructor_calldata: @ArrayTrait::new() };
     let contract_address = deploy(prepared).unwrap();
 

@@ -34,7 +34,7 @@ trait ISerding<T> {
 
 #[test]
 fn test_serding() {
-    let class_hash = declare('Serding').unwrap();
+    let class_hash = declare('Serding');
     let prepared = PreparedContract {
         class_hash, constructor_calldata: @ArrayTrait::new()
     };
