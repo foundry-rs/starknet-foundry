@@ -1,9 +1,10 @@
 # `create`
-Create all data required for account deployment.
-Account information will be saved inside `~/.starknet_accounts/starknet_open_zeppelin_accounts.json` or in the file
-specified with `--accounts-file` argument.
+Prepare all prerequisites for account deployment.
 
-## Required common arguments - passed by value or specified in Scarb.toml
+Account information will be saved to the file specified by `--accounts-file` argument,
+which is `~/.starknet_accounts/starknet_open_zeppelin_accounts.json` by default.
+
+## Required common arguments - passed by CLI or specified in Scarb.toml
 
 * [`network`](../common.md#--network--n-network_name)
 * [`url`](../common.md#--url--u-rpc_url)
@@ -16,9 +17,9 @@ Account name under which account information is going to be saved.
 ## `--salt, -s <SALT>`
 Optional.
 
-Salt for the account address. If omitted random one will be used.
+Salt for the account address. If omitted random one will be generated.
 
 ## `--add-profile, -a`
 Optional.
 
-If passed, a profile with corresponding data will be created in Scarb.toml
+If passed, a profile with corresponding data will be added to Scarb.toml

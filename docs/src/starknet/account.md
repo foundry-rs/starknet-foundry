@@ -1,6 +1,10 @@
 # Creating And Deploying Accounts
 
-Starknet Foundry cast supports entire account management flow with the `sncast account create` and `sncast account deploy` commands.
+Account is required to perform interactions with Starknet (only calls can be done without it). Starknet Foundry cast supports
+entire account management flow with the `sncast account create` and `sncast account deploy` commands.
+
+Difference between those two commands is that the first one creates account information (private key, address and more)
+and the second one deploys it to the network. After deployment, account can be used to interact with Starknet.
 
 Do the following to start interacting with the Starknet:
 
@@ -26,7 +30,7 @@ Do the following to start interacting with the Starknet:
 
 - prefund generated address with tokens
   
-    You can do it both by sending tokens from another starknet account or by bridging them with StarkGate.
+    You can do it both by sending tokens from another starknet account or by bridging them with [StarkGate](https://starkgate.starknet.io/).
 
 
 - deploy account with the `sncast account deploy` command
