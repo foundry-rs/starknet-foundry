@@ -1,4 +1,4 @@
-# Calling Contracts
+# Performing Multicall
 
 ## Overview
 
@@ -37,7 +37,7 @@ inputs = ["0x123", "234"]
 After running `sncast multicall run --path file.toml`, a declared contract will be first deployed, and then its function `put` will be invoked.
 
 > 📝 **Note**
-> You can add property `id` to the deploy call specification and then use it as a `contract_address` when declaring an invoke call 🔥
+> The example above demonstrates the use of the `id` property in a deploy call, which is then referenced as the `contract address` in an invoke call 🔥
 
 ```shell
 $ sncast multicall run --path /Users/john/Desktop/multicall_example.toml
