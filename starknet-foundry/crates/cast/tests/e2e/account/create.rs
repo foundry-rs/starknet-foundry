@@ -30,7 +30,7 @@ pub async fn test_happy_case() {
 
     let stdout_str =
         std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
-    assert!(stdout_str.contains("command: Create account"));
+    assert!(stdout_str.contains("command: account create"));
     assert!(stdout_str.contains("max_fee: "));
     assert!(stdout_str.contains("address: "));
 
@@ -67,7 +67,7 @@ pub async fn test_happy_case_generate_salt() {
 
     let stdout_str =
         std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
-    assert!(stdout_str.contains("command: Create account"));
+    assert!(stdout_str.contains("command: account create"));
     assert!(stdout_str.contains("max_fee: "));
     assert!(stdout_str.contains("address: "));
 
@@ -159,7 +159,7 @@ pub async fn test_happy_case_accounts_file_already_exists() {
 
     let stdout_str =
         std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
-    assert!(stdout_str.contains("command: Create account"));
+    assert!(stdout_str.contains("command: account create"));
     assert!(stdout_str.contains("max_fee: "));
     assert!(stdout_str.contains("address: "));
 
@@ -219,6 +219,7 @@ pub async fn test_account_already_exists() {
     let snapbox = runner(&args);
 
     snapbox.assert().stderr_matches(indoc! {r#"
+        command: account create
         error: Account with provided name already exists in this network
     "#});
 }

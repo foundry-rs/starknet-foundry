@@ -30,7 +30,7 @@ pub async fn deploy(
     name: String,
     network: &str,
     max_fee: FieldElement,
-) -> Result<Vec<(&'static str, FieldElement)>> {
+) -> Result<Vec<(&'static str, String)>> {
     let network_value = get_network(network)?.get_value();
 
     let contents = std::fs::read_to_string(path.clone()).expect("Couldn't read accounts file");
@@ -89,7 +89,10 @@ pub async fn deploy(
             std::fs::write(path, serde_json::to_string_pretty(&items).unwrap())
                 .expect("Couldn't write to accounts file");
 
-            Ok(vec![("transaction_hash", result.transaction_hash)])
+            Ok(vec![(
+                "transaction_hash",
+                format!("{:#x}", result.transaction_hash),
+            )])
         }
     }
 }
