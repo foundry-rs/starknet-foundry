@@ -63,8 +63,10 @@ pub fn setup_single_file_project(
         Ok(crate_id)
     } else {
         // If file_stem is not lib, create a fake lib file.
+        // MODIFIED
         let phantom_package_name = format!("{PHANTOM_PACKAGE_NAME_PREFIX}{file_stem}").into();
         let crate_id = db.intern_crate(CrateLongId(phantom_package_name));
+        // END MODIFIED
         db.set_crate_root(
             crate_id,
             Some(Directory(path.parent().unwrap().to_path_buf())),
