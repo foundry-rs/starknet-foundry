@@ -135,7 +135,7 @@ pub async fn get_transaction_receipt(tx_hash: FieldElement) -> TransactionReceip
             "id": 0,
         }
     );
-    let resp: Value = dbg!(serde_json::from_str(
+    let resp: Value = serde_json::from_str(
         &client
             .post(URL)
             .header("Content-Type", "application/json")
@@ -147,7 +147,7 @@ pub async fn get_transaction_receipt(tx_hash: FieldElement) -> TransactionReceip
             .await
             .expect("Could not get response from getTransactionReceipt"),
     )
-    .expect("Could not serialize getTransactionReceipt response"));
+    .expect("Could not serialize getTransactionReceipt response");
 
     let result = resp
         .get("result")
