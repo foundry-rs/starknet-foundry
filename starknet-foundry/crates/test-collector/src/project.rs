@@ -1,4 +1,4 @@
-// COPIED FROM CAIRO COMPILER
+// Copied from cairo compiler cairo-lang-compiler/src/project.rs
 use cairo_lang_compiler::project::{
     get_main_crate_ids_from_project, update_crate_roots_from_project_config, ProjectError,
 };
@@ -12,8 +12,11 @@ use cairo_lang_filesystem::ids::{CrateId, CrateLongId, Directory};
 pub use cairo_lang_project::*;
 use cairo_lang_semantic::db::SemanticGroup;
 
-pub const PHANTOM_PACKAGE_NAME_PREFIX: &str = "forgor";
+pub const PHANTOM_PACKAGE_NAME_PREFIX: &str = "___PREFIX_FOR_PACKAGE___";
 
+/// Setup the 'db' to compile the project in the given path.
+/// The path can be either a directory with cairo project file or a .cairo file.
+/// Returns the ids of the project crates.
 pub fn setup_project(
     db: &mut dyn SemanticGroup,
     path: &Path,
@@ -32,6 +35,8 @@ pub fn setup_project(
     }
 }
 
+/// Setup to 'db' to compile the file at the given path.
+/// Returns the id of the generated crate.
 pub fn setup_single_file_project(
     db: &mut dyn SemanticGroup,
     path: &Path,
@@ -63,10 +68,10 @@ pub fn setup_single_file_project(
         Ok(crate_id)
     } else {
         // If file_stem is not lib, create a fake lib file.
-        // MODIFIED
+        // region: Modified code
         let phantom_package_name = format!("{PHANTOM_PACKAGE_NAME_PREFIX}{file_stem}").into();
         let crate_id = db.intern_crate(CrateLongId(phantom_package_name));
-        // END MODIFIED
+        // endregion
         db.set_crate_root(
             crate_id,
             Some(Directory(path.parent().unwrap().to_path_buf())),
