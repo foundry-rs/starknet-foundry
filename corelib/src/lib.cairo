@@ -311,11 +311,8 @@ mod cheatcodes;
 use cheatcodes::declare;
 use cheatcodes::deploy;
 use cheatcodes::start_roll;
-<<<<<<< HEAD
 use cheatcodes::start_prank;
-=======
 use cheatcodes::start_warp;
->>>>>>> origin/master
 use cheatcodes::PreparedContract;
 
 mod forge_print;
