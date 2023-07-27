@@ -56,7 +56,7 @@ pub async fn declare(
     contract_name: &str,
     max_fee: Option<FieldElement>,
     account: &mut SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
-) -> Result<Vec<FieldElement>> {
+) -> Result<Vec<(&'static str, FieldElement)>> {
     let contract_name: String = contract_name.to_string();
     which::which("scarb")
         .context("Cannot find `scarb` binary in PATH. Make sure you have Scarb installed https://github.com/software-mansion/scarb")?;
@@ -174,7 +174,10 @@ pub async fn declare(
             handle_wait_for_tx_result(
                 account.provider(),
                 result.transaction_hash,
-                vec![result.class_hash, result.transaction_hash],
+                vec![
+                    ("class_hash", result.class_hash),
+                    ("transaction_hash", result.transaction_hash),
+                ],
             )
             .await
         }

@@ -43,7 +43,7 @@ pub async fn deploy(
     unique: bool,
     max_fee: Option<FieldElement>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
-) -> Result<Vec<FieldElement>> {
+) -> Result<Vec<(&'static str, FieldElement)>> {
     let salt = extract_or_generate_salt(salt);
 
     let factory = ContractFactory::new(class_hash, account);
@@ -63,13 +63,16 @@ pub async fn deploy(
                 account.provider(),
                 result.transaction_hash,
                 vec![
-                    result.transaction_hash,
-                    get_udc_deployed_address(
-                        salt,
-                        class_hash,
-                        &udc_uniqueness(unique, account.address()),
-                        &constructor_calldata,
+                    (
+                        "contract_address",
+                        get_udc_deployed_address(
+                            salt,
+                            class_hash,
+                            &udc_uniqueness(unique, account.address()),
+                            &constructor_calldata,
+                        ),
                     ),
+                    ("transaction_hash", result.transaction_hash),
                 ],
             )
             .await

@@ -43,7 +43,7 @@ pub async fn test_happy_case() {
 
     let stdout_str =
         std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
-    assert!(stdout_str.contains("Deploy account"));
+    assert!(stdout_str.contains("account deploy"));
     assert!(stdout_str.contains("transaction_hash"));
 
     let contents = fs::read_to_string(created_dir.join(accounts_file)).unwrap();
@@ -86,7 +86,7 @@ pub async fn test_happy_case_add_profile() {
 
     let stdout_str =
         std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
-    assert!(stdout_str.contains("Deploy account"));
+    assert!(stdout_str.contains("account deploy"));
     assert!(stdout_str.contains("transaction_hash"));
 
     fs::remove_dir_all(created_dir).unwrap();
@@ -154,6 +154,7 @@ async fn test_too_low_max_fee() {
         .args(args);
 
     snapbox.assert().success().stderr_matches(indoc! {r#"
+        command: account deploy
         error: Transaction has been rejected
     "#});
 
