@@ -416,7 +416,7 @@ impl CheatableSyscallHandler<'_> {
             )?;
 
             // ExecutionInfo from corelib/src/starknet/info.cairo
-            // block_info, tx_info caller_address, contract_address, entry_point_selector
+            // block_info, tx_info, caller_address, contract_address, entry_point_selector
 
             let execution_info_ptr = self
                 .syscall_handler
