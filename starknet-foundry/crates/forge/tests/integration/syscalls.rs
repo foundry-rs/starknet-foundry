@@ -34,7 +34,7 @@ fn library_call_syscall() {
         }
         
         fn deploy_contract(name: felt252) -> ContractAddress {
-            let class_hash = declare(name).unwrap();
+            let class_hash = declare(name);
             let prepared = PreparedContract {
                 class_hash: class_hash, constructor_calldata: @ArrayTrait::new()
             };
@@ -50,7 +50,7 @@ fn library_call_syscall() {
                 contract_address: caller_address
             };
             
-            let executor_class_hash = declare('Executor').unwrap().try_into().unwrap();
+            let executor_class_hash = declare('Executor').try_into().unwrap();
             let executor_address = deploy_contract('Executor');
             let executor_safe_dispatcher = IExecutorSafeDispatcher {
                 contract_address: executor_address
