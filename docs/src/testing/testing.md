@@ -36,6 +36,11 @@ Tests: 1 passed, 0 failed, 0 skipped
 Forge considers all functions in your project marked with `#[test]` attribute as tests.
 Test functions cannot return any values and cannot take any arguments.
 
+Starknet Forge will collect tests only from these places:
+
+- any files reachable from the package root (declared as `mod` in `lib.cairo` or its children)
+- files outside the package, including files in directories
+
 ## Failing tests
 
 If your code panics, the test is considered failed. Here's an example of a failing test.
