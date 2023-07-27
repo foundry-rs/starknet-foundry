@@ -67,6 +67,7 @@ pub enum CallContractOutput {
 pub struct CheatedState {
     pub rolled_contracts: HashMap<ContractAddress, Felt252>,
     pub pranked_contracts: HashMap<ContractAddress, ContractAddress>,
+    pub warped_contracts: HashMap<ContractAddress, Felt252>,
 }
 
 impl CheatedState {
@@ -75,6 +76,7 @@ impl CheatedState {
         CheatedState {
             rolled_contracts: HashMap::new(),
             pranked_contracts: HashMap::new(),
+            warped_contracts: HashMap::new(),
         }
     }
 }
@@ -305,14 +307,28 @@ fn felt_from_ptr_immutable(
 }
 
 impl CheatableSyscallHandler<'_> {
-    fn address_is_rolled(
-        &mut self,
-        _vm: &mut VirtualMachine,
+    fn get_cheated_block_info_ptr(
+        &self,
+        vm: &mut VirtualMachine,
+        original_block_info: &Vec<MaybeRelocatable>,
         contract_address: &ContractAddress,
-    ) -> bool {
-        self.cheated_state
-            .rolled_contracts
-            .contains_key(contract_address)
+    ) -> Relocatable {
+        // create a new segment with replaced block info
+        let ptr_cheated_block_info = vm.add_memory_segment();
+
+        let mut new_block_info = original_block_info.clone();
+
+        if let Some(rolled_number) = self.cheated_state.rolled_contracts.get(contract_address) {
+            new_block_info[0] = MaybeRelocatable::Int(rolled_number.clone());
+        };
+
+        if let Some(warped_timestamp) = self.cheated_state.warped_contracts.get(contract_address) {
+            new_block_info[1] = MaybeRelocatable::Int(warped_timestamp.clone());
+        };
+
+        vm.load_data(ptr_cheated_block_info, &new_block_info)
+            .unwrap();
+        ptr_cheated_block_info
     }
 
     fn address_is_pranked(
@@ -322,6 +338,26 @@ impl CheatableSyscallHandler<'_> {
     ) -> bool {
         self.cheated_state
             .pranked_contracts
+            .contains_key(contract_address)
+    }
+
+    fn address_is_warped(
+        &mut self,
+        _vm: &mut VirtualMachine,
+        contract_address: &ContractAddress,
+    ) -> bool {
+        self.cheated_state
+            .warped_contracts
+            .contains_key(contract_address)
+    }
+
+    fn address_is_rolled(
+        &mut self,
+        _vm: &mut VirtualMachine,
+        contract_address: &ContractAddress,
+    ) -> bool {
+        self.cheated_state
+            .rolled_contracts
             .contains_key(contract_address)
     }
 
@@ -335,6 +371,7 @@ impl CheatableSyscallHandler<'_> {
             SyscallSelector::GetExecutionInfo => {
                 self.address_is_rolled(vm, contract_address)
                     || self.address_is_pranked(vm, contract_address)
+                    || self.address_is_warped(vm, contract_address)
             }
             _ => false,
         }
@@ -393,31 +430,20 @@ impl CheatableSyscallHandler<'_> {
                 .unwrap()
                 .clone();
 
-            if self.address_is_rolled(vm, &contract_address) {
+            if self.address_is_rolled(vm, &contract_address)
+                || self.address_is_warped(vm, &contract_address)
+            {
                 let data = vm.get_range(execution_info_ptr, 1)[0].clone();
                 if let MaybeRelocatable::RelocatableValue(block_info_ptr) =
                     data.unwrap().into_owned()
                 {
-                    let ptr_cheated_block_info = vm.add_memory_segment();
+                    let original_block_info = vm.get_continuous_range(block_info_ptr, 3).unwrap();
 
-                    // create a new segment with replaced block info
-                    let ptr_after_cheated_block_info = vm
-                        .load_data(
-                            ptr_cheated_block_info,
-                            &vec![MaybeRelocatable::Int(
-                                self.cheated_state
-                                    .rolled_contracts
-                                    .get(&contract_address)
-                                    .expect("No roll value found for contract address")
-                                    .clone(),
-                            )],
-                        )
-                        .unwrap();
-                    let original_block_info = vm
-                        .get_continuous_range((block_info_ptr + 1_usize).unwrap() as Relocatable, 2)
-                        .unwrap();
-                    vm.load_data(ptr_after_cheated_block_info, &original_block_info)
-                        .unwrap();
+                    let ptr_cheated_block_info = self.get_cheated_block_info_ptr(
+                        vm,
+                        &original_block_info,
+                        &contract_address,
+                    );
 
                     new_exec_info[0] = MaybeRelocatable::RelocatableValue(ptr_cheated_block_info);
                 }

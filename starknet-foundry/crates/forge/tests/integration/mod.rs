@@ -4,4 +4,5 @@ mod deploy;
 mod dispatchers;
 mod start_prank;
 mod start_roll;
+mod start_warp;
 mod syscalls;
