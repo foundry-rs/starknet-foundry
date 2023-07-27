@@ -23,20 +23,45 @@ fn start_warp_simple() {
             #[starknet::interface]
             trait IWarpChecker<TContractState> {
                 fn get_block_timestamp(ref self: TContractState) -> u64;
+                fn get_block_timestamp_and_emit_event(ref self: TContractState) -> u64;
+                fn get_block_timestamp_and_number(ref self: TContractState) -> (u64, u64);
             }
-
-            #[test]
-            fn test_warp_simple() {
+            
+            fn deploy_warp_checker()  -> IWarpCheckerDispatcher {
                 let class_hash = declare('WarpChecker').unwrap();
                 let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
                 let contract_address = deploy(prepared).unwrap();
                 let contract_address: ContractAddress = contract_address.try_into().unwrap();
-                let dispatcher = IWarpCheckerDispatcher { contract_address };
+                IWarpCheckerDispatcher { contract_address }                
+            }
+
+            #[test]
+            fn test_warp_simple() {
+                let warp_checker = deploy_warp_checker();
+                start_warp(warp_checker.contract_address, 234);
             
-                start_warp(contract_address, 234);
-            
-                let block_timestamp = dispatcher.get_block_timestamp();
+                let block_timestamp = warp_checker.get_block_timestamp();
                 assert(block_timestamp == 234, block_timestamp.into());
+            }
+            
+            #[test]
+            fn test_warp_with_emit() {
+                let warp_checker = deploy_warp_checker();
+                start_warp(warp_checker.contract_address, 234);
+            
+                let block_timestamp = warp_checker.get_block_timestamp_and_emit_event();
+                assert(block_timestamp == 234, 'Wrong block timestamp');
+            }
+            
+            #[test]
+            fn test_warp_with_roll() {
+                let warp_checker = deploy_warp_checker();
+                start_warp(warp_checker.contract_address, 123);
+                start_roll(warp_checker.contract_address, 456);
+                
+                let (block_timestamp, block_number) = warp_checker.get_block_timestamp_and_number();
+                assert(block_timestamp == 123, 'Wrong block timestamp');
+                assert(block_number == 456, 'Wrong block number');
             }
         "#
         ),
