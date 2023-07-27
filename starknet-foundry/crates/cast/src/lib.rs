@@ -277,7 +277,7 @@ pub fn print_formatted(
 
 pub fn print_command_result(
     command: &str,
-    result: Result<Vec<(&str, FieldElement)>>,
+    result: &mut Result<Vec<(&str, String)>>,
     int_format: bool,
     json: bool,
 ) -> Result<()> {
@@ -285,9 +285,7 @@ pub fn print_command_result(
     let mut error = false;
     match result {
         Ok(result) => {
-            for (key, value) in result {
-                output.push((key, format!("{value}")));
-            }
+            output.append(result);
         }
         Err(message) => {
             output.push(("error", message.to_string()));

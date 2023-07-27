@@ -49,7 +49,7 @@ pub async fn run(
     path: &Utf8PathBuf,
     account: &mut SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     max_fee: Option<FieldElement>,
-) -> Result<Vec<(&'static str, FieldElement)>> {
+) -> Result<Vec<(&'static str, String)>> {
     let contents = std::fs::read_to_string(path)?;
     let items_map: HashMap<String, Vec<toml::Value>> =
         toml::from_str(&contents).map_err(|_| anyhow!("Failed to parse {path}"))?;
