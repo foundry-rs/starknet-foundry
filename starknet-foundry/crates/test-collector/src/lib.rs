@@ -40,6 +40,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+#[allow(clippy::module_name_repetitions)]
 mod project;
 pub mod sierra_casm_generator;
 

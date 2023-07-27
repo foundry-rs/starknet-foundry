@@ -12,7 +12,7 @@ use cairo_lang_filesystem::ids::{CrateId, CrateLongId, Directory};
 pub use cairo_lang_project::*;
 use cairo_lang_semantic::db::SemanticGroup;
 
-pub const PHANTOM_PACKAGE_NAME_PREFIX: &'static str = "forgor";
+pub const PHANTOM_PACKAGE_NAME_PREFIX: &str = "forgor";
 
 pub fn setup_project(
     db: &mut dyn SemanticGroup,
