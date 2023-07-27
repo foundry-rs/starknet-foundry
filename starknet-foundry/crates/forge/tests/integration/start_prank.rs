@@ -26,7 +26,7 @@ fn start_prank_simple() {
 
             #[test]
             fn test_prank_simple() {
-                let class_hash = declare('PrankChecker').unwrap();
+                let class_hash = declare('PrankChecker');
                 let prepared = PreparedContract { class_hash, constructor_calldata: @ArrayTrait::new() };
                 let contract_address = deploy(prepared).unwrap();
                 let contract_address: ContractAddress = contract_address.try_into().unwrap();
@@ -83,7 +83,7 @@ fn start_prank_with_other_syscall() {
 
             #[test]
             fn test_prank_with_other_syscall() {
-                let class_hash = declare('PrankChecker').unwrap();
+                let class_hash = declare('PrankChecker');
                 let prepared = PreparedContract { class_hash, constructor_calldata: @ArrayTrait::new() };
                 let contract_address = deploy(prepared).unwrap();
                 let contract_address: ContractAddress = contract_address.try_into().unwrap();
@@ -143,13 +143,14 @@ fn start_prank_in_constructor_test() {
             
             #[test]
             fn test_prank_constructor_simple() {
-                let class_hash = declare('ConstructorPrankChecker').unwrap();
+                let class_hash = declare('ConstructorPrankChecker');
                 let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
 
                 // TODO (#254): Change to the actual address
                 let contract_address: ContractAddress = 2598896470772924212281968896271340780432065735045468431712403008297614014532.try_into().unwrap();
                 start_prank(555, contract_address);
                 let contract_address: ContractAddress = deploy(prepared).unwrap().try_into().unwrap();
+                contract_address.print();
             
                 let dispatcher = IConstructorPrankCheckerDispatcher { contract_address };
                 assert(dispatcher.get_stored_block_number() == 555, 'Wrong stored caller address');
