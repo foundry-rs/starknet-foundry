@@ -43,17 +43,17 @@ fn test_proxy_storage() {
     let caller_address = deploy_contract('Caller');
     let executor_address = deploy_contract('Executor');
 
-    let caller_dispatcher = ICallerSafeDispatcher { contract_address: caller_address };
-    let executor_dispatcher = IExecutorSafeDispatcher { contract_address: executor_address };
+    let caller_dispatcher = ICallerDispatcher { contract_address: caller_address };
+    let executor_dispatcher = IExecutorDispatcher { contract_address: executor_address };
 
     let ns = NestedStruct { d: 6 };
     let cs = CustomStruct { a: 2, b: 3, c: ns };
 
-    let result = caller_dispatcher.call_executor(executor_address, cs).unwrap();
+    let result = caller_dispatcher.call_executor(executor_address, cs);
 
     assert(result == 6 + 5, 'Invalid result');
 
-    let storage_after = executor_dispatcher.read_storage().unwrap();
+    let storage_after = executor_dispatcher.read_storage();
 
     assert(storage_after == cs, 'Invalid storage');
 }

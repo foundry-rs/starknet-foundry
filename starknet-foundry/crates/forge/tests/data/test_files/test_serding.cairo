@@ -40,7 +40,7 @@ fn test_serding() {
     };
     let contract_address = deploy(prepared).unwrap().try_into().unwrap();
 
-    let safe_dispatcher = ISerdingSafeDispatcher {
+    let dispatcher = ISerdingDispatcher {
         contract_address
     };
 
@@ -49,7 +49,7 @@ fn test_serding() {
     let acs = AnotherCustomStruct { e: 4 };
     let standalone_arg = 5;
 
-    let result = safe_dispatcher.add_multiple_parts(cs, acs, standalone_arg).unwrap();
+    let result = dispatcher.add_multiple_parts(cs, acs, standalone_arg);
 
     assert(result == 1 + 2 + 3 + 4 + 5, 'Invalid sum');
 }
