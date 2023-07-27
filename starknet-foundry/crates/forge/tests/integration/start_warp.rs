@@ -85,3 +85,57 @@ fn start_warp_simple() {
 
     assert_passed!(result);
 }
+
+// TODO (#254): Make it pass
+#[test]
+#[ignore]
+fn start_warp_in_constructor_test() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use result::ResultTrait;
+            use array::ArrayTrait;
+            use option::OptionTrait;
+            use traits::TryInto;
+            use starknet::ContractAddress;
+            use starknet::Felt252TryIntoContractAddress;
+            use cheatcodes::PreparedContract;
+            
+            #[starknet::interface]
+            trait IConstructorWarpChecker<TContractState> {
+                fn get_stored_block_timestamp(ref self: TContractState) -> u64;
+            }
+            
+            #[test]
+            fn test_warp_constructor_simple() {
+                let class_hash = declare('ConstructorWarpChecker').unwrap();
+                let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
+                let contract_address: ContractAddress = 3536868843103376321721783970179672615412806578951102081876401371045020950704.try_into().unwrap();
+                start_roll(contract_address, 234);
+                let contract_address: ContractAddress = deploy(prepared).unwrap().try_into().unwrap();
+            
+                let dispatcher = IConstructorWarpCheckerDispatcher { contract_address };
+                assert(dispatcher.get_stored_block_timestamp() == 234, 'Wrong stored timestamp');
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "ConstructorWarpChecker".to_string(),
+            Path::new("tests/data/contracts/constructor_warp_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run(
+        &test.path().unwrap(),
+        &test.path().unwrap().join("src/lib.cairo"),
+        &Some(test.linked_libraries()),
+        &Default::default(),
+        Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
+        &test.contracts(corelib().path()).unwrap(),
+        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
+    )
+    .unwrap();
+
+    assert_passed!(result);
+}
