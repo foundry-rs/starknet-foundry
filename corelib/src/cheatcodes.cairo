@@ -28,17 +28,13 @@ impl RevertedTransactionImpl of RevertedTransactionTrait {
     }
 }
 
-fn declare(contract: felt252) -> Result::<felt252, felt252> {
+fn declare(contract: felt252) -> felt252 {
     let span = cheatcode::<'declare'>(array![contract].span());
 
     let exit_code = *span[0];
     let result = *span[1];
-
-    if exit_code == 0 {
-        Result::<felt252, felt252>::Ok(result)
-    } else {
-        Result::<felt252, felt252>::Err(result)
-    }
+    assert(exit_code == 0, 'declare should never fail');
+    result
 }
 
 fn deploy(prepared_contract: PreparedContract) -> Result::<felt252, RevertedTransaction> {

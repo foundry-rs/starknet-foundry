@@ -15,7 +15,7 @@ use cheatcodes::PreparedContract;
 
 #[test]
 fn test_deploy() {
-    let class_hash = declare('HelloStarknet').unwrap();
+    let class_hash = declare('HelloStarknet');
     
     let mut constructor_calldata = ArrayTrait::new();
     constructor_calldata.append(42_u8.into());

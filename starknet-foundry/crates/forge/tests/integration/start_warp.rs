@@ -28,7 +28,7 @@ fn start_warp_simple() {
             }
             
             fn deploy_warp_checker()  -> IWarpCheckerDispatcher {
-                let class_hash = declare('WarpChecker').unwrap();
+                let class_hash = declare('WarpChecker');
                 let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
                 let contract_address = deploy(prepared).unwrap();
                 let contract_address: ContractAddress = contract_address.try_into().unwrap();
@@ -108,7 +108,7 @@ fn start_warp_in_constructor_test() {
             
             #[test]
             fn test_warp_constructor_simple() {
-                let class_hash = declare('ConstructorWarpChecker').unwrap();
+                let class_hash = declare('ConstructorWarpChecker');
                 let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
                 let contract_address: ContractAddress = 3536868843103376321721783970179672615412806578951102081876401371045020950704.try_into().unwrap();
                 start_roll(contract_address, 234);
