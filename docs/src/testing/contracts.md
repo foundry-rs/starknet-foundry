@@ -46,7 +46,7 @@ Let's write a test that will deploy the `HelloStarknet` contract and call some f
 #[test]
 fn call_and_invoke() {
     // First declare and deploy a contract
-    let class_hash = declare('HelloStarknet').unwrap();
+    let class_hash = declare('HelloStarknet');
     let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
     let contract_address = deploy(prepared).unwrap();
     let contract_address: ContractAddress = contract_address.try_into().unwrap();
