@@ -310,13 +310,13 @@ impl CheatableSyscallHandler<'_> {
     fn get_cheated_block_info_ptr(
         &self,
         vm: &mut VirtualMachine,
-        original_block_info: &Vec<MaybeRelocatable>,
+        original_block_info: &[MaybeRelocatable],
         contract_address: &ContractAddress,
     ) -> Relocatable {
         // create a new segment with replaced block info
         let ptr_cheated_block_info = vm.add_memory_segment();
 
-        let mut new_block_info = original_block_info.clone();
+        let mut new_block_info = original_block_info.to_owned();
 
         if let Some(rolled_number) = self.cheated_state.rolled_contracts.get(contract_address) {
             new_block_info[0] = MaybeRelocatable::Int(rolled_number.clone());
