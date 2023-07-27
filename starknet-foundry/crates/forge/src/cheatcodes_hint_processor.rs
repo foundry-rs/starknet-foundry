@@ -100,6 +100,12 @@ trait ForgeHintProcessor {
         contract_address: ContractAddress,
         timestamp: blockifier_Felt252,
     ) -> Result<(), EnhancedHintError>;
+
+    fn start_prank(
+        &mut self,
+        caller_address: ContractAddress,
+        target_contract_address: ContractAddress,
+    ) -> Result<(), EnhancedHintError>;
 }
 
 impl HintProcessorLogic for CairoHintProcessor<'_> {
@@ -173,6 +179,17 @@ impl ForgeHintProcessor for CairoHintProcessor<'_> {
 
         Ok(())
     }
+
+    fn start_prank(
+        &mut self,
+        caller_address: ContractAddress,
+        target_contract_address: ContractAddress,
+    ) -> Result<(), EnhancedHintError> {
+        self.cheated_state
+            .pranked_contracts
+            .insert(target_contract_address, caller_address);
+        Ok(())
+    }
 }
 
 impl CairoHintProcessor<'_> {
@@ -238,7 +255,17 @@ impl CairoHintProcessor<'_> {
                 self.start_warp(contract_address, convert_to_blockifier_felt(&value))
             }
             "stop_warp" => todo!(),
-            "start_prank" => todo!(),
+            "start_prank" => {
+                let caller_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
+                    inputs[0].clone().to_be_bytes(),
+                )?)?);
+
+                let target_contract_address = ContractAddress(PatriciaKey::try_from(
+                    StarkFelt::new(inputs[1].clone().to_be_bytes())?,
+                )?);
+
+                self.start_prank(caller_address, target_contract_address)
+            }
             "stop_prank" => todo!(),
             "mock_call" => todo!(),
             "declare" => declare(&mut buffer, &mut self.blockifier_state, &inputs, contracts),

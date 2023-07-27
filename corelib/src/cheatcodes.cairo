@@ -85,6 +85,12 @@ fn start_roll(contract_address: ContractAddress, block_number: u64) {
     cheatcode::<'start_roll'>(array![contract_address_felt, block_number_felt].span());
 }
 
+fn start_prank(caller_address: ContractAddress, target_contract_address: ContractAddress) {
+    let caller_address_felt: felt252 = caller_address.into();
+    let target_contract_address_felt: felt252 = target_contract_address.into();
+    cheatcode::<'start_prank'>(array![caller_address_felt, target_contract_address_felt].span());
+}
+
 fn start_warp(contract_address: ContractAddress, block_timestamp: u64) {
     let contract_address_felt: felt252 = contract_address.into();
     let block_timestamp_felt: felt252 = block_timestamp.into();
