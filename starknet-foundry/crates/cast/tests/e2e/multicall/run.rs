@@ -109,6 +109,6 @@ async fn test_deploy_success_invoke_fails() {
     let out = bdg.get_output();
 
     let stderr_str =
-        dbg!(std::str::from_utf8(&out.stderr).expect("failed to convert command output to string"));
+        std::str::from_utf8(&out.stderr).expect("failed to convert command output to string");
     assert!(stderr_str.contains("error: There is no contract at the specified address"));
 }

@@ -124,7 +124,7 @@ fn test_account_deploy_error(salt: &str, accounts_content: &str, error: &str) {
     let out = bdg.get_output();
 
     let stderr_str =
-        dbg!(std::str::from_utf8(&out.stderr).expect("failed to convert command output to string"));
+        std::str::from_utf8(&out.stderr).expect("failed to convert command output to string");
     assert!(stderr_str.contains(error));
 
     fs::remove_dir_all(current_dir).unwrap();
