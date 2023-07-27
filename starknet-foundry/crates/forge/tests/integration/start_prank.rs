@@ -27,7 +27,7 @@ fn start_prank_simple() {
             #[test]
             fn test_prank_simple() {
                 let class_hash = declare('PrankChecker').unwrap();
-                let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
+                let prepared = PreparedContract { class_hash, constructor_calldata: @ArrayTrait::new() };
                 let contract_address = deploy(prepared).unwrap();
                 let contract_address: ContractAddress = contract_address.try_into().unwrap();
                 let dispatcher = IPrankCheckerDispatcher { contract_address };
@@ -38,7 +38,7 @@ fn start_prank_simple() {
                 start_prank(caller_address, contract_address);
             
                 let caller_address = dispatcher.get_caller_address();
-                assert(caller_address == 123, 'Wrong block number');
+                assert(caller_address == 123, 'Wrong caller address');
             }
         "#
         ),
@@ -84,7 +84,7 @@ fn start_prank_with_other_syscall() {
             #[test]
             fn test_roll_simple() {
                 let class_hash = declare('PrankChecker').unwrap();
-                let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
+                let prepared = PreparedContract { class_hash, constructor_calldata: @ArrayTrait::new() };
                 let contract_address = deploy(prepared).unwrap();
                 let contract_address: ContractAddress = contract_address.try_into().unwrap();
                 let dispatcher = IPrankCheckerDispatcher { contract_address };
@@ -95,7 +95,7 @@ fn start_prank_with_other_syscall() {
                 start_prank(caller_address, contract_address);
 
                 let caller_address = dispatcher.get_caller_address_and_emit_event();
-                assert(caller_address == 123, 'Wrong block number');
+                assert(caller_address == 123, 'Wrong caller address');
             }
         "#
         ),

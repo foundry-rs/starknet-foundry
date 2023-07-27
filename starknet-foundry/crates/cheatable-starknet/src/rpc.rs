@@ -401,7 +401,7 @@ impl CheatableSyscallHandler<'_> {
                     let ptr_cheated_block_info = vm.add_memory_segment();
 
                     // create a new segment with replaced block info
-                    let ptr_cheated_block_info_c = vm
+                    let ptr_after_cheated_block_info = vm
                         .load_data(
                             ptr_cheated_block_info,
                             &vec![MaybeRelocatable::Int(
@@ -416,7 +416,7 @@ impl CheatableSyscallHandler<'_> {
                     let original_block_info = vm
                         .get_continuous_range((block_info_ptr + 1_usize).unwrap() as Relocatable, 2)
                         .unwrap();
-                    vm.load_data(ptr_cheated_block_info_c, &original_block_info)
+                    vm.load_data(ptr_after_cheated_block_info, &original_block_info)
                         .unwrap();
 
                     new_exec_info[0] = MaybeRelocatable::RelocatableValue(ptr_cheated_block_info);
@@ -441,11 +441,11 @@ impl CheatableSyscallHandler<'_> {
             let response = GetExecutionInfoResponse {
                 execution_info_ptr: ptr_cheated_exec_info,
             };
-            let response_w = SyscallResponseWrapper::Success {
+            let response_wrapper = SyscallResponseWrapper::Success {
                 gas_counter: remaining_gas,
                 response,
             };
-            response_w.write(vm, &mut self.syscall_handler.syscall_ptr)?;
+            response_wrapper.write(vm, &mut self.syscall_handler.syscall_ptr)?;
             return Ok(());
         }
         self.syscall_handler.execute_next_syscall(vm, hint)
