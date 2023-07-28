@@ -315,6 +315,7 @@ fn serding() {
 }
 
 #[test]
+#[allow(clippy::too_many_lines)]
 fn proxy_storage() {
     let test = test_case!(
         indoc!(
