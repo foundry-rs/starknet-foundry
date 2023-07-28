@@ -1,3 +1,4 @@
+use std::sync::Arc;
 use std::{collections::HashMap, fs, path::PathBuf};
 
 use blockifier::{
@@ -10,7 +11,7 @@ use blockifier::{
     state::cached_state::CachedState,
     transaction::objects::AccountTransactionContext,
 };
-use cairo_felt_blockifier::Felt252;
+use cairo_felt::Felt252;
 use camino::Utf8PathBuf;
 use starknet_api::{
     block::{BlockNumber, BlockTimestamp},
@@ -48,7 +49,7 @@ pub fn build_block_context() -> BlockContext {
         block_timestamp: BlockTimestamp::default(),
         sequencer_address: ContractAddress(patricia_key!(TEST_SEQUENCER_ADDRESS)),
         fee_token_address: ContractAddress(patricia_key!(TEST_ERC20_CONTRACT_ADDRESS)),
-        vm_resource_fee_cost: HashMap::default(),
+        vm_resource_fee_cost: Arc::new(HashMap::default()),
         gas_price: 100 * u128::pow(10, 9),
         invoke_tx_max_n_steps: 1_000_000,
         validate_max_n_steps: 1_000_000,

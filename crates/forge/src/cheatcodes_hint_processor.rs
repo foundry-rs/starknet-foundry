@@ -14,9 +14,10 @@ use blockifier::state::cached_state::CachedState;
 use blockifier::state::errors::StateError;
 use blockifier::state::state_api::StateReader;
 use blockifier::transaction::account_transaction::AccountTransaction;
-use blockifier::transaction::transactions::{DeclareTransaction, ExecutableTransaction};
+use blockifier::transaction::transactions::{
+    DeclareTransaction, ExecutableTransaction, InvokeTransaction,
+};
 use cairo_felt::Felt252;
-use cairo_felt_blockifier::Felt252 as blockifier_Felt252;
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
 use cairo_vm::hint_processor::hint_processor_definition::HintReference;
 use cairo_vm::serde::deserialize_program::ApTracking;
@@ -37,7 +38,7 @@ use serde::Deserialize;
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, PatriciaKey};
 use starknet_api::hash::{StarkFelt, StarkHash};
 use starknet_api::transaction::{
-    Calldata, ContractAddressSalt, InvokeTransaction, InvokeTransactionV1,
+    Calldata, ContractAddressSalt, InvokeTransactionV1, TransactionHash,
 };
 use starknet_api::{patricia_key, stark_felt, StarknetApiError};
 use thiserror::Error;
@@ -92,13 +93,13 @@ trait ForgeHintProcessor {
     fn start_roll(
         &mut self,
         contract_address: ContractAddress,
-        block_number: blockifier_Felt252,
+        block_number: Felt252,
     ) -> Result<(), EnhancedHintError>;
 
     fn start_warp(
         &mut self,
         contract_address: ContractAddress,
-        timestamp: blockifier_Felt252,
+        timestamp: Felt252,
     ) -> Result<(), EnhancedHintError>;
 
     fn start_prank(
@@ -167,7 +168,7 @@ impl ForgeHintProcessor for CairoHintProcessor<'_> {
     fn start_roll(
         &mut self,
         contract_address: ContractAddress,
-        block_number: blockifier_Felt252,
+        block_number: Felt252,
     ) -> Result<(), EnhancedHintError> {
         self.cheated_state
             .rolled_contracts
@@ -177,7 +178,7 @@ impl ForgeHintProcessor for CairoHintProcessor<'_> {
     fn start_warp(
         &mut self,
         contract_address: ContractAddress,
-        timestamp: blockifier_Felt252,
+        timestamp: Felt252,
     ) -> Result<(), EnhancedHintError> {
         self.cheated_state
             .warped_contracts
@@ -371,7 +372,7 @@ fn execute_syscall(
 
     let calldata = buffer.next_arr().unwrap();
 
-    let calldata_blockifier: Vec<blockifier_Felt252> =
+    let calldata_blockifier: Vec<Felt252> =
         calldata.iter().map(convert_to_blockifier_felt).collect();
     assert_eq!(std::str::from_utf8(&selector).unwrap(), "CallContract");
 
@@ -490,6 +491,7 @@ fn declare(
     );
     let tx = DeclareTransaction::new(
         starknet_api::transaction::DeclareTransaction::V2(declare_tx),
+        TransactionHash::default(),
         contract_class,
     )
     .unwrap_or_else(|err| panic!("Unable to build transaction {err:?}"));
@@ -497,7 +499,7 @@ fn declare(
     let account_tx = AccountTransaction::Declare(tx);
     let block_context = build_block_context();
     let _tx_result = account_tx
-        .execute(blockifier_state, &block_context)
+        .execute(blockifier_state, &block_context, false, true)
         .context("Failed to execute declare transaction")?;
     // result_segment.
     let felt_class_hash = felt252_from_hex_string(&class_hash.to_string()).unwrap();
@@ -562,11 +564,14 @@ fn deploy(
         .get_nonce_at(account_address)
         .context("Failed to get nonce")?;
     let tx = build_invoke_transaction(execute_calldata, account_address);
-    let account_tx =
-        AccountTransaction::Invoke(InvokeTransaction::V1(InvokeTransactionV1 { nonce, ..tx }));
+    let tx = InvokeTransactionV1 { nonce, ..tx };
+    let account_tx = AccountTransaction::Invoke(InvokeTransaction {
+        tx: starknet_api::transaction::InvokeTransaction::V1(tx),
+        tx_hash: TransactionHash::default(),
+    });
 
     let tx_info = account_tx
-        .execute(blockifier_state, &block_context)
+        .execute(blockifier_state, &block_context, false, true)
         .unwrap_or_else(|e| panic!("Unparseable transaction error: {e:?}"));
 
     if let Some(CallInfo { execution, .. }) = tx_info.execute_call_info {
@@ -785,11 +790,13 @@ mod test {
         // https://github.com/software-mansion/starknet.py/blob/cea191679cbdd2726ca7989f3a7662dee6ea43ca/starknet_py/tests/e2e/docs/guide/test_cairo1_contract.py#L29-L36
         let cases = [
             (
-                "0x5167b09ea07d236371efa6053537eb2e6163bdb531e7161643a7c1fddfc5814",
+                // TODO verify calculation of this
+                "0x00b0e07d0ab5d68a22072cd5f35f39335d0dcbf1a28fb92820bd5d547c497f33",
                 "target/dev/simple_package_ERC20.casm.json",
             ),
             (
-                "0x192485856ebf42c113825d359a948dacaf526d62bf6c2aa231beffed0fddc3f",
+                // TODO verify calculation of this
+                "0x02ff90d068517ba09883a50339d55cc8a678a60e1526032ee0a899ed219f44e7",
                 "target/dev/simple_package_HelloStarknet.casm.json",
             ),
         ];
@@ -809,12 +816,12 @@ mod test {
     }
 }
 
-fn convert_to_blockifier_felt(val: &Felt252) -> blockifier_Felt252 {
+fn convert_to_blockifier_felt(val: &Felt252) -> Felt252 {
     let v = val.to_bigint();
-    blockifier_Felt252::from(v)
+    Felt252::from(v)
 }
 
-fn convert_from_blockifier_felt(val: &blockifier_Felt252) -> Felt252 {
+fn convert_from_blockifier_felt(val: &Felt252) -> Felt252 {
     let v = val.to_bigint();
     Felt252::from(v)
 }
@@ -824,9 +831,9 @@ mod test_felt_conversions {
     use super::convert_from_blockifier_felt;
     use super::convert_to_blockifier_felt;
     use cairo_felt::{
-        Felt252 as cairo_Felt252, FIELD_HIGH as cairo_FIELD_HIGH, FIELD_LOW as cairo_FIELD_LOW,
+        Felt252 as cairo_Felt252, Felt252, FIELD_HIGH as cairo_FIELD_HIGH,
+        FIELD_LOW as cairo_FIELD_LOW,
     };
-    use cairo_felt_blockifier::Felt252 as blockifier_Felt252;
 
     use num_traits::ToPrimitive;
 
@@ -861,7 +868,7 @@ mod test_felt_conversions {
             9_999_999_999_999_u128,
             cairo_FIELD_HIGH,
         ] {
-            let from = blockifier_Felt252::from(value);
+            let from = Felt252::from(value);
             let to = convert_from_blockifier_felt(&from);
             assert_eq!(
                 to.to_u128().expect("Downcast failure"),

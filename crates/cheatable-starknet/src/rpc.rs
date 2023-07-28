@@ -51,7 +51,7 @@ use blockifier::{
     },
     state::{cached_state::CachedState, state_api::State},
 };
-use cairo_felt_blockifier::Felt252;
+use cairo_felt::Felt252;
 use cairo_lang_casm::{
     hints::{Hint, StarknetHint},
     operand::{BinOpOperand, DerefOrImmediate, Operation, Register, ResOperand},
@@ -67,6 +67,9 @@ use starknet_api::{
 use blockifier::execution::syscalls::{
     SyscallRequest, SyscallRequestWrapper, SyscallResponse, SyscallResponseWrapper, SyscallResult,
 };
+use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
+use cairo_vm::vm::runners::cairo_runner::ResourceTracker;
+
 type SyscallSelector = DeprecatedSyscallSelector;
 
 pub enum CallContractOutput {
@@ -138,7 +141,7 @@ pub fn call_contract(
     let mut context = EntryPointExecutionContext::new(
         block_context.clone(),
         account_context,
-        block_context.invoke_tx_max_n_steps,
+        block_context.invoke_tx_max_n_steps.try_into().unwrap(),
     );
 
     let exec_result = execute_call_entry_point(
@@ -249,14 +252,34 @@ pub struct CheatableSyscallHandler<'a> {
     pub cheated_state: &'a CheatedState,
 }
 
-impl HintProcessor for CheatableSyscallHandler<'_> {
+impl ResourceTracker for CheatableSyscallHandler<'_> {
+    fn consumed(&self) -> bool {
+        self.syscall_handler.context.vm_run_resources.consumed()
+    }
+
+    fn consume_step(&mut self) {
+        self.syscall_handler.context.vm_run_resources.consume_step()
+    }
+
+    fn get_n_steps(&self) -> Option<usize> {
+        self.syscall_handler.context.vm_run_resources.get_n_steps()
+    }
+
+    fn run_resources(&self) -> &RunResources {
+        self.syscall_handler
+            .context
+            .vm_run_resources
+            .run_resources()
+    }
+}
+
+impl HintProcessorLogic for CheatableSyscallHandler<'_> {
     fn execute_hint(
         &mut self,
         vm: &mut VirtualMachine,
         exec_scopes: &mut ExecutionScopes,
         hint_data: &Box<dyn Any>,
         constants: &HashMap<String, Felt252>,
-        run_resources: &mut RunResources,
     ) -> HintExecutionResult {
         let maybe_extended_hint = hint_data.downcast_ref::<Hint>();
 
@@ -266,7 +289,7 @@ impl HintProcessor for CheatableSyscallHandler<'_> {
             }
         }
         self.syscall_handler
-            .execute_hint(vm, exec_scopes, hint_data, constants, run_resources)
+            .execute_hint(vm, exec_scopes, hint_data, constants)
     }
 
     /// Trait function to store hint in the hint processor by string.
@@ -402,9 +425,9 @@ impl CheatableSyscallHandler<'_> {
         let contract_address = self.syscall_handler.storage_address();
 
         if self.address_is_cheated(vm, selector, &contract_address) {
-            let StarknetHint::SystemCall{ system: syscall } = hint else {
+            let StarknetHint::SystemCall { system: syscall } = hint else {
                 return Err(HintError::CustomHint(
-                    "Test functions are unsupported on starknet.".into()
+                    "Test functions are unsupported on starknet.".into(),
                 ));
             };
             let initial_syscall_ptr = get_ptr_from_res_operand_unchecked(vm, syscall);
@@ -657,8 +680,8 @@ fn execute_entry_point_call_cairo1(
         mut syscall_handler,
         initial_syscall_ptr,
         entry_point,
-        program_segment_size,
-    } = initialize_execution_context(call, contract_class, state, resources, context)?;
+        program_extra_data_length,
+    } = initialize_execution_context(call, &contract_class, state, resources, context)?;
 
     let args = prepare_call_arguments(
         &syscall_handler.call,
@@ -678,18 +701,23 @@ fn execute_entry_point_call_cairo1(
     };
 
     // Execute.
-    let run_resources = cheatable_run_entry_point(
+    cheatable_run_entry_point(
         &mut vm,
         &mut runner,
         &mut cheatable_syscall_handler,
         &entry_point,
         &args,
-        program_segment_size,
+        program_extra_data_length,
     )?;
 
-    let sys_h = cheatable_syscall_handler.syscall_handler;
-    sys_h.context.vm_run_resources = run_resources;
-    let call_info = finalize_execution(vm, runner, sys_h, previous_vm_resources, n_total_args)?;
+    let call_info = finalize_execution(
+        vm,
+        runner,
+        cheatable_syscall_handler.syscall_handler,
+        previous_vm_resources,
+        n_total_args,
+        program_extra_data_length,
+    )?;
     if call_info.execution.failed {
         return Err(EntryPointExecutionError::ExecutionFailed {
             error_data: call_info.execution.retdata.0,
@@ -707,20 +735,18 @@ fn cheatable_run_entry_point(
     entry_point: &EntryPointV1,
     args: &Args,
     program_segment_size: usize,
-) -> Result<RunResources, VirtualMachineExecutionError> {
+) -> Result<(), VirtualMachineExecutionError> {
     let verify_secure = false;
     let args: Vec<&CairoArg> = args.iter().collect();
 
-    let mut run_resources = RunResources::default();
     runner.run_from_entrypoint(
         entry_point.pc(),
         &args,
-        &mut run_resources,
         verify_secure,
         Some(program_segment_size),
         vm,
         hint_processor,
     )?;
 
-    Ok(run_resources)
+    Ok(())
 }
