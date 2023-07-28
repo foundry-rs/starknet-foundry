@@ -562,9 +562,9 @@ dependencies = [
 
 [[package]]
 name = "cairo-felt"
-version = "0.8.2"
+version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0f8de851723a7d13ed8b0b588a78ffa6b38d8e1f3eb4b6e71a96376510e5504a"
+checksum = "9ce04b099042dc52ad1579cfa54aca08a1049b0026c4c62d0f64944621c05de2"
 dependencies = [
  "lazy_static",
  "num-bigint",
@@ -1031,7 +1031,7 @@ dependencies = [
  "ark-secp256k1",
  "ark-secp256r1",
  "ark-std 0.3.0",
- "cairo-felt 0.8.2",
+ "cairo-felt 0.8.3",
  "cairo-lang-casm 2.0.2 (git+https://github.com/starkware-libs/cairo?rev=f9e7b41)",
  "cairo-lang-compiler 2.0.2 (git+https://github.com/starkware-libs/cairo?rev=f9e7b41)",
  "cairo-lang-defs 2.0.2 (git+https://github.com/starkware-libs/cairo?rev=f9e7b41)",
@@ -1277,7 +1277,7 @@ version = "2.0.2"
 source = "git+https://github.com/starkware-libs/cairo?rev=f9e7b41#f9e7b41f21294e40749b0a34cf2e8a6f47fa949e"
 dependencies = [
  "assert_matches",
- "cairo-felt 0.8.2",
+ "cairo-felt 0.8.3",
  "cairo-lang-casm 2.0.2 (git+https://github.com/starkware-libs/cairo?rev=f9e7b41)",
  "cairo-lang-sierra 2.0.2 (git+https://github.com/starkware-libs/cairo?rev=f9e7b41)",
  "cairo-lang-sierra-ap-change 2.0.2 (git+https://github.com/starkware-libs/cairo?rev=f9e7b41)",
@@ -1347,7 +1347,7 @@ version = "2.0.2"
 source = "git+https://github.com/starkware-libs/cairo?rev=f9e7b41#f9e7b41f21294e40749b0a34cf2e8a6f47fa949e"
 dependencies = [
  "anyhow",
- "cairo-felt 0.8.2",
+ "cairo-felt 0.8.3",
  "cairo-lang-casm 2.0.2 (git+https://github.com/starkware-libs/cairo?rev=f9e7b41)",
  "cairo-lang-compiler 2.0.2 (git+https://github.com/starkware-libs/cairo?rev=f9e7b41)",
  "cairo-lang-defs 2.0.2 (git+https://github.com/starkware-libs/cairo?rev=f9e7b41)",
@@ -1438,7 +1438,7 @@ version = "2.0.2"
 source = "git+https://github.com/starkware-libs/cairo?rev=f9e7b41#f9e7b41f21294e40749b0a34cf2e8a6f47fa949e"
 dependencies = [
  "anyhow",
- "cairo-felt 0.8.2",
+ "cairo-felt 0.8.3",
  "cairo-lang-casm 2.0.2 (git+https://github.com/starkware-libs/cairo?rev=f9e7b41)",
  "cairo-lang-compiler 2.0.2 (git+https://github.com/starkware-libs/cairo?rev=f9e7b41)",
  "cairo-lang-debug 2.0.2 (git+https://github.com/starkware-libs/cairo?rev=f9e7b41)",
@@ -1595,7 +1595,7 @@ dependencies = [
  "anyhow",
  "bincode",
  "bitvec",
- "cairo-felt 0.8.2",
+ "cairo-felt 0.8.3",
  "generic-array",
  "hashbrown 0.14.0",
  "hex",
@@ -1697,7 +1697,7 @@ version = "1.0.0"
 dependencies = [
  "anyhow",
  "blockifier",
- "cairo-felt 0.8.2",
+ "cairo-felt 0.8.3",
  "cairo-felt-blockifier",
  "cairo-lang-casm 2.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "cairo-lang-runner 2.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2443,7 +2443,7 @@ dependencies = [
  "ark-std 0.3.0",
  "assert_fs",
  "blockifier",
- "cairo-felt 0.8.2",
+ "cairo-felt 0.8.3",
  "cairo-felt-blockifier",
  "cairo-lang-casm 2.0.2 (git+https://github.com/starkware-libs/cairo?rev=f9e7b41)",
  "cairo-lang-compiler 2.0.2 (git+https://github.com/starkware-libs/cairo?rev=f9e7b41)",
@@ -3297,9 +3297,9 @@ checksum = "d2fabcfbdc87f4758337ca535fb41a6d701b65693ce38287d856d1674551ec9b"
 
 [[package]]
 name = "globset"
-version = "0.4.11"
+version = "0.4.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1391ab1f92ffcc08911957149833e682aa3fe252b9f45f966d2ef972274c97df"
+checksum = "aca8bbd8e0707c1887a8bbb7e6b40e228f251ff5d62c8220a4a7a53c73aff006"
 dependencies = [
  "aho-corasick",
  "bstr",
@@ -4482,9 +4482,9 @@ checksum = "26072860ba924cbfa98ea39c8c19b4dd6a4a25423dbdf219c1eca91aa0cf6964"
 
 [[package]]
 name = "portable-atomic"
-version = "1.4.1"
+version = "1.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "edc55135a600d700580e406b4de0d59cb9ad25e344a3a091a97ded2622ec4ec6"
+checksum = "f32154ba0af3a075eefa1eda8bb414ee928f62303a54ea85b8d6638ff1a6ee9e"
 
 [[package]]
 name = "ppv-lite86"
@@ -5167,9 +5167,9 @@ dependencies = [
 
 [[package]]
 name = "serde"
-version = "1.0.175"
+version = "1.0.177"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5d25439cd7397d044e2748a6fe2432b5e85db703d6d097bd014b3c0ad1ebff0b"
+checksum = "63ba2516aa6bf82e0b19ca8b50019d52df58455d3cf9bdaf6315225fdd0c560a"
 dependencies = [
  "serde_derive",
 ]
@@ -5185,9 +5185,9 @@ dependencies = [
 
 [[package]]
 name = "serde_derive"
-version = "1.0.175"
+version = "1.0.177"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b23f7ade6f110613c0d63858ddb8b94c1041f550eab58a16b371bdf2c9c80ab4"
+checksum = "401797fe7833d72109fedec6bfcbe67c0eed9b99772f26eb8afd261f0abc6fd3"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -5207,9 +5207,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.103"
+version = "1.0.104"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d03b412469450d4404fe8499a268edd7f8b79fecb074b0d812ad64ca21f4031b"
+checksum = "076066c5f1078eac5b722a31827a8832fe108bed65dfa75e233c89f8206e976c"
 dependencies = [
  "itoa",
  "ryu",
