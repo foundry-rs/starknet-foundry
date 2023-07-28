@@ -52,6 +52,7 @@ use cairo_lang_runner::{
     insert_value_to_cellref, CairoHintProcessor as OriginalCairoHintProcessor,
 };
 use cairo_lang_starknet::casm_contract_class::CasmContractClass;
+use cairo_lang_starknet::contract_class::ContractClass;
 use cairo_lang_utils::bigint::BigIntAsHex;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use starknet::core::types::contract::CompiledClass;
@@ -462,14 +463,11 @@ fn declare(
     let contract_artifact = contracts.get(&contract_value_as_short_str).ok_or_else(|| {
         anyhow!("Failed to get contract artifact for name = {contract_value_as_short_str}. Make sure starknet target is correctly defined in Scarb.toml file.")
     })?;
+    let sierra_contract_class: ContractClass = serde_json::from_str(&contract_artifact.sierra)
+        .with_context(|| format!("File to parse json from artifact = {contract_artifact:?}"))?;
 
-    let casm_contract_class: CasmContractClass = serde_json::from_str(&contract_artifact.casm)
-        .with_context(|| {
-            format!(
-                "Failed to parse casm from code = {}",
-                contract_artifact.casm
-            )
-        })?;
+    let casm_contract_class = CasmContractClass::from_contract_class(sierra_contract_class, true)
+        .context("Sierra to casm failed")?;
     let casm_serialized = serde_json::to_string_pretty(&casm_contract_class)
         .context("Failed to serialize contract to casm")?;
 
