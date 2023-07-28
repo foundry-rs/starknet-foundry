@@ -13,18 +13,18 @@ include_dir.workspace = true
 starknet_api.workspace = true
 tempfile.workspace = true
 rayon.workspace = true
-cairo-lang-runner.workspace = true
-cairo-lang-casm.workspace = true
 test-collector = { path = "../test-collector" }
 cairo-felt-blockifier = { path = "../compatibility/cairo-felt-blockifier" }
 cheatable-starknet = { path = "../cheatable-starknet" }
-cairo-lang-test-runner = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
-cairo-lang-sierra-to-casm = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
-cairo-lang-sierra = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
-cairo-lang-utils = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
-cairo-lang-starknet = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
-cairo-lang-compiler = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
-cairo-lang-filesystem = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
+cairo-lang-runner.workspace = true
+cairo-lang-casm.workspace = true
+cairo-lang-test-runner.workspace = true
+cairo-lang-sierra-to-casm.workspace = true
+cairo-lang-sierra.workspace = true
+cairo-lang-utils.workspace = true
+cairo-lang-starknet.workspace = true
+cairo-lang-compiler.workspace = true
+cairo-lang-filesystem.workspace = true
 schemars = { version = "0.8.12", features = ["preserve_order"] }
 parity-scale-codec = "3.5.0"
 parity-scale-codec-derive = "3.1.4"
