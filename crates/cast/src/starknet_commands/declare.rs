@@ -134,25 +134,24 @@ pub async fn declare(
             }
             None
         })
-        .unwrap_or_else(|| {
-            panic!("Failed to find contract {contract_name} in starknet_artifacts.json")
+        .ok_or_else(|| -> anyhow::Result<Utf8PathBuf> {
+            anyhow::bail!("Failed to find contract {contract_name} in starknet_artifacts.json")
         });
-    let sierra_contract_path = &compiled_directory.join(sierra_path);
+    let sierra_contract_path = &compiled_directory.join(sierra_path.expect("Cannot find sierra artifact file - please make sure sierra is set to 'true' under your [[target.starknet-contract]] field in Scarb.toml"));
 
     let casm_path = starknet_artifacts
         .contracts
         .iter()
         .find_map(|contract| {
             if contract.contract_name == contract_name {
-                return Some(contract.artifacts.casm.clone());
+                return contract.artifacts.casm.clone();
             }
             None
         })
-        .unwrap_or_else(|| {
-            panic!("Failed to find contract {contract_name} in starknet_artifacts.json")
-        })
-        .unwrap();
-    let casm_contract_path = &compiled_directory.join(casm_path);
+        .ok_or_else(|| -> anyhow::Result<Utf8PathBuf> {
+            anyhow::bail!("Failed to find contract {contract_name} in starknet_artifacts.json")
+        });
+    let casm_contract_path = &compiled_directory.join(casm_path.expect("Cannot find casm artifact file - please make sure casm is set to 'true' under your [[target.starknet-contract]] field in Scarb.toml"));
 
     let contract_definition: SierraClass = {
         let file_contents = std::fs::read(sierra_contract_path.clone())
