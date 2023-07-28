@@ -491,7 +491,8 @@ fn declare(
     );
     let tx = DeclareTransaction::new(
         starknet_api::transaction::DeclareTransaction::V2(declare_tx),
-        TransactionHash::default(),
+        // FIXME incorrectly calculating hashes may be the case of the problems
+        TransactionHash(StarkFelt::from(1_u32)),
         contract_class,
     )
     .unwrap_or_else(|err| panic!("Unable to build transaction {err:?}"));
@@ -499,7 +500,8 @@ fn declare(
     let account_tx = AccountTransaction::Declare(tx);
     let block_context = build_block_context();
     let _tx_result = account_tx
-        .execute(blockifier_state, &block_context, false, true)
+        // FIXME not sure we should be using true or false for these
+        .execute(blockifier_state, &block_context, true, true)
         .context("Failed to execute declare transaction")?;
     // result_segment.
     let felt_class_hash = felt252_from_hex_string(&class_hash.to_string()).unwrap();
@@ -571,7 +573,7 @@ fn deploy(
     });
 
     let tx_info = account_tx
-        .execute(blockifier_state, &block_context, false, true)
+        .execute(blockifier_state, &block_context, true, true)
         .unwrap_or_else(|e| panic!("Unparseable transaction error: {e:?}"));
 
     if let Some(CallInfo { execution, .. }) = tx_info.execute_call_info {
