@@ -5,10 +5,7 @@ use crate::starknet_commands::{
 };
 use anyhow::Result;
 use camino::Utf8PathBuf;
-use cast::{
-    account_file_exists, get_account, get_block_id, get_provider, print_command_result,
-    print_formatted,
-};
+use cast::{account_file_exists, get_account, get_block_id, get_provider, print_command_result};
 use clap::{Parser, Subcommand};
 
 mod helpers;
@@ -131,7 +128,7 @@ async fn main() -> Result<()> {
         Commands::Call(call) => {
             let block_id = get_block_id(&call.block_id)?;
 
-            let result = starknet_commands::call::call(
+            let mut result = starknet_commands::call::call(
                 call.contract_address,
                 call.function.as_ref(),
                 call.calldata,
@@ -139,26 +136,7 @@ async fn main() -> Result<()> {
                 block_id.as_ref(),
             )
             .await;
-
-            match result {
-                Ok(response) => print_formatted(
-                    vec![
-                        ("command", "Call".to_string()),
-                        ("response", format!("{response:?}")),
-                    ],
-                    cli.int_format,
-                    cli.json,
-                    false,
-                )?,
-                Err(error) => {
-                    print_formatted(
-                        vec![("error", error.to_string())],
-                        cli.int_format,
-                        cli.json,
-                        true,
-                    )?;
-                }
-            }
+            print_command_result("call", &mut result, cli.int_format, cli.json)?;
 
             Ok(())
         }

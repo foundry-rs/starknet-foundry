@@ -18,7 +18,7 @@ Do the following to start interacting with the Starknet:
       --name some-name
       
     Account successfully created. Prefund generated address with at least 432300000000 tokens. It is good to send more in the case of higher demand, max_fee * 2 = 864600000000
-    command: Create account
+    command: account create
     max_fee: 0x64a7168300
     address: 0x7a949e83b243068d0cbedd8d5b8b32fafea66c54de23c40e68b126b5c845b61
     ```
@@ -43,7 +43,7 @@ Do the following to start interacting with the Starknet:
       --name some-name \
       --max-fee 864600000000
     
-    command: Deploy account
+    command: account deploy
     transaction_hash: 0x20b20896ce63371ef015d66b4dd89bf18c5510a840b4a85a43a983caa6e2579
     ```
   

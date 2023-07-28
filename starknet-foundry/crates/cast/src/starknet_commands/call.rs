@@ -35,7 +35,7 @@ pub async fn call(
     calldata: Vec<FieldElement>,
     provider: &JsonRpcClient<HttpTransport>,
     block_id: &BlockId,
-) -> Result<Vec<FieldElement>> {
+) -> Result<Vec<(&'static str, String)>> {
     let function_call = FunctionCall {
         contract_address,
         entry_point_selector: get_selector_from_name(func_name)
@@ -45,7 +45,13 @@ pub async fn call(
     let res = provider.call(function_call, block_id).await;
 
     match res {
-        Ok(res) => Ok(res),
+        Ok(res) => {
+            let response: String = res.iter().map(|item| format!("{item:#x}, ")).collect();
+            Ok(vec![(
+                "response",
+                "[".to_string() + response.trim_end_matches(|c| c == ' ' || c == ',') + "]",
+            )])
+        }
         Err(error) => handle_rpc_error(error),
     }
 }
