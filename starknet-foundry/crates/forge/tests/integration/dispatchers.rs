@@ -31,7 +31,7 @@ fn simple_call_and_invoke() {
 
         #[test]
         fn call_and_invoke() {
-            let class_hash = declare('HelloStarknet').unwrap();
+            let class_hash = declare('HelloStarknet');
             let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
             let contract_address = deploy(prepared).unwrap();
             let contract_address: ContractAddress = contract_address.try_into().unwrap();
@@ -111,7 +111,7 @@ fn advanced_types() {
             calldata.append(0);         // initial supply high
             calldata.append(1234);      // recipient
         
-            let class_hash = declare('ERC20').unwrap();
+            let class_hash = declare('ERC20');
             let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
             let contract_address = deploy(prepared).unwrap();
             let contract_address: ContractAddress = contract_address.try_into().unwrap();
@@ -122,13 +122,13 @@ fn advanced_types() {
             let balance = dispatcher.balance_of(user_address);
             assert(balance == 1111_u256, 'balance == 1111');
         
-            // TODO(#1986): Change that when we support mocking addresses, so we can actually call transfer
-            // dispatcher.transfer(other_user_address, 1000_u256);
+            start_prank(user_address, contract_address);
+            dispatcher.transfer(other_user_address, 1000_u256);
         
-            // let balance = dispatcher.balance_of(user_address);
-            // assert(balance == 111_u256, 'balance == 111');
+            let balance = dispatcher.balance_of(user_address);
+            assert(balance == 111_u256, 'balance == 111');
             let balance = dispatcher.balance_of(other_user_address);
-            assert(balance == 0_u256, 'balance == 1000');
+            assert(balance == 1000_u256, 'balance == 1000');
         }
     "#
         ),
@@ -176,7 +176,7 @@ fn handling_errors() {
 
         #[test]
         fn handling_errors() {
-            let class_hash = declare('HelloStarknet').unwrap();
+            let class_hash = declare('HelloStarknet');
             let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
             let contract_address = deploy(prepared).unwrap();
             let contract_address: ContractAddress = contract_address.try_into().unwrap();

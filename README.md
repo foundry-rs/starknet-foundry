@@ -1,4 +1,6 @@
-# Starknet Foundry 🔨
+<img src="./docs/src/images/logo.png" alt="logo" width="120" align="right" />
+
+## Starknet Foundry
 
 [![Telegram Chat][tg-badge]][tg-url] [![Telegram Support][tg-support-badge]][tg-support-url]
 
@@ -16,7 +18,7 @@ and [Blockifier](https://github.com/starkware-libs/blockifier), written in Rust 
 Need help getting started with Starknet Foundry? Read the
 📖 [Starknet Foundry Book](https://foundry-rs.github.io/starknet-foundry/)!
 
-![Example run](./docs/images/demo-gif/demo.gif)
+![Example run](.github/images/demo-gif/demo.gif)
 
 Starknet Foundry, like its [Ethereum counterpart](https://github.com/foundry-rs/foundry), consists of different modules
 

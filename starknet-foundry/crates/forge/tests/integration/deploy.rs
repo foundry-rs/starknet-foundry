@@ -18,7 +18,7 @@ fn error_handling() {
         
         #[test]
         fn test_deploy_error_handling() {
-            let class_hash = declare('PanickingConstructor').expect('Could not declare');
+            let class_hash = declare('PanickingConstructor');
             let prepared_contract = PreparedContract {
                 class_hash: class_hash,
                 constructor_calldata: @ArrayTrait::new()
@@ -88,7 +88,7 @@ fn deploy_fails_on_calldata_when_contract_has_no_constructor() {
             calldata.append(1234);
             calldata.append(5678);
         
-            let class_hash = declare('HelloStarknet').unwrap();
+            let class_hash = declare('HelloStarknet');
             let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
             let contract_address = deploy(prepared).unwrap();
         
@@ -131,7 +131,7 @@ fn test_deploy_fails_on_missing_constructor_arguments() {
         fn deploy_invalid_calldata() {
             let mut calldata = ArrayTrait::new();
         
-            let class_hash = declare('HelloStarknet').unwrap();
+            let class_hash = declare('HelloStarknet');
             let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
             let contract_address = deploy(prepared).unwrap();
         
@@ -189,7 +189,7 @@ fn test_deploy_fails_on_too_many_constructor_arguments() {
             calldata.append(4);
             calldata.append(5);
 
-            let class_hash = declare('HelloStarknet').unwrap();
+            let class_hash = declare('HelloStarknet');
             let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
             let contract_address = deploy(prepared).unwrap();
 
@@ -300,7 +300,7 @@ fn test_deploy_invokes_the_constructor() {
             let mut calldata = ArrayTrait::new();
             calldata.append(420);
 
-            let class_hash = declare('HelloStarknet').unwrap();
+            let class_hash = declare('HelloStarknet');
             let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
             let contract_address = deploy(prepared).unwrap();
             let contract_address: ContractAddress = contract_address.try_into().unwrap();

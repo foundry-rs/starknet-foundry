@@ -1,17 +1,13 @@
 use anyhow::{anyhow, Result};
 use clap::Args;
-use rand::rngs::OsRng;
-use rand::RngCore;
 
-use crate::helpers::constants::UDC_ADDRESS;
-use cast::print_formatted;
+use cast::{extract_or_generate_salt, print_formatted, udc_uniqueness};
 use cast::{handle_rpc_error, handle_wait_for_tx_result};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{Account, ConnectedAccount, SingleOwnerAccount};
 use starknet::contract::ContractFactory;
 use starknet::core::types::FieldElement;
-use starknet::core::utils::UdcUniqueness::{NotUnique, Unique};
-use starknet::core::utils::{get_udc_deployed_address, UdcUniqueSettings};
+use starknet::core::utils::get_udc_deployed_address;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
@@ -71,7 +67,7 @@ pub async fn deploy(
     max_fee: Option<FieldElement>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
 ) -> Result<(FieldElement, FieldElement)> {
-    let salt = salt.unwrap_or(FieldElement::from(OsRng.next_u64()));
+    let salt = extract_or_generate_salt(salt);
 
     let factory = ContractFactory::new(class_hash, account);
     let deployment = factory.deploy(&constructor_calldata, salt, unique);
@@ -94,14 +90,7 @@ pub async fn deploy(
                     get_udc_deployed_address(
                         salt,
                         class_hash,
-                        &if unique {
-                            Unique(UdcUniqueSettings {
-                                deployer_address: account.address(),
-                                udc_contract_address: FieldElement::from_hex_be(UDC_ADDRESS)?,
-                            })
-                        } else {
-                            NotUnique
-                        },
+                        &udc_uniqueness(unique, account.address()),
                         &constructor_calldata,
                     ),
                 ),
