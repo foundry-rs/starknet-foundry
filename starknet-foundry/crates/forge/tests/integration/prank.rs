@@ -177,3 +177,65 @@ fn start_prank_in_constructor_test() {
 
     assert_passed!(result);
 }
+
+#[test]
+fn stop_prank() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use result::ResultTrait;
+            use array::ArrayTrait;
+            use option::OptionTrait;
+            use traits::TryInto;
+            use starknet::ContractAddress;
+            use starknet::Felt252TryIntoContractAddress;
+            use cheatcodes::PreparedContract;
+
+            #[starknet::interface]
+            trait IPrankChecker<TContractState> {
+                fn get_caller_address(ref self: TContractState) -> felt252;
+            }
+
+            #[test]
+            fn test_stop_prank() {
+                let class_hash = declare('PrankChecker');
+                let prepared = PreparedContract { class_hash, constructor_calldata: @ArrayTrait::new() };
+                let contract_address = deploy(prepared).unwrap();
+                let contract_address: ContractAddress = contract_address.try_into().unwrap();
+                let dispatcher = IPrankCheckerDispatcher { contract_address };
+            
+                let caller_address: felt252 = 123;
+                let caller_address: ContractAddress = caller_address.try_into().unwrap();
+
+                start_prank(caller_address, contract_address);
+            
+                let caller_address = dispatcher.get_caller_address();
+                assert(caller_address == 123, 'Wrong caller address');
+
+                stop_prank(contract_address);
+
+                let caller_address = dispatcher.get_caller_address();
+                assert(caller_address != 123, 'Address did not change back');
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "PrankChecker".to_string(),
+            Path::new("tests/data/contracts/prank_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run(
+        &test.path().unwrap(),
+        &test.path().unwrap().join("src/lib.cairo"),
+        &Some(test.linked_libraries()),
+        &Default::default(),
+        Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
+        &test.contracts(corelib().path()).unwrap(),
+        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
+    )
+    .unwrap();
+
+    assert_passed!(result);
+}

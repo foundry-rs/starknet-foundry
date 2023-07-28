@@ -97,3 +97,18 @@ fn start_warp(contract_address: ContractAddress, block_timestamp: u64) {
     cheatcode::<'start_warp'>(array![contract_address_felt, block_timestamp_felt].span());
 }
 
+fn stop_roll(contract_address: ContractAddress) {
+    let contract_address_felt: felt252 = contract_address.into();
+    cheatcode::<'stop_roll'>(array![contract_address_felt].span());
+}
+
+fn stop_prank(target_contract_address: ContractAddress) {
+    let target_contract_address_felt: felt252 = target_contract_address.into();
+    cheatcode::<'stop_prank'>(array![target_contract_address_felt].span());
+}
+
+fn stop_warp(contract_address: ContractAddress) {
+    let contract_address_felt: felt252 = contract_address.into();
+    cheatcode::<'stop_warp'>(array![contract_address_felt].span());
+}
+
