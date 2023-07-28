@@ -205,7 +205,7 @@ fn stop_roll() {
                 stop_roll(contract_address);
 
                 let block_number = dispatcher.get_block_number();
-                assert(block_number != 234, 'Block number  did not change back'');
+                assert(block_number != 234, 'Block number did not change back');
             }
         "#
         ),
