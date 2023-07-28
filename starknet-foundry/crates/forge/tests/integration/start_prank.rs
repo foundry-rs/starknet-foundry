@@ -7,7 +7,7 @@ use indoc::indoc;
 use std::path::Path;
 
 #[test]
-fn start_roll_simple() {
+fn start_prank_simple() {
     let test = test_case!(
         indoc!(
             r#"
@@ -18,31 +18,33 @@ fn start_roll_simple() {
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
             use cheatcodes::PreparedContract;
-            use forge_print::PrintTrait;
-            
+
             #[starknet::interface]
-            trait IRollChecker<TContractState> {
-                fn get_block_number(ref self: TContractState) -> u64;
+            trait IPrankChecker<TContractState> {
+                fn get_caller_address(ref self: TContractState) -> felt252;
             }
 
             #[test]
-            fn test_roll_simple() {
-                let class_hash = declare('RollChecker');
-                let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
+            fn test_prank_simple() {
+                let class_hash = declare('PrankChecker');
+                let prepared = PreparedContract { class_hash, constructor_calldata: @ArrayTrait::new() };
                 let contract_address = deploy(prepared).unwrap();
                 let contract_address: ContractAddress = contract_address.try_into().unwrap();
-                let dispatcher = IRollCheckerDispatcher { contract_address };
+                let dispatcher = IPrankCheckerDispatcher { contract_address };
             
-                start_roll(contract_address, 234);
+                let caller_address: felt252 = 123;
+                let caller_address: ContractAddress = caller_address.try_into().unwrap();
+
+                start_prank(caller_address, contract_address);
             
-                let block_number = dispatcher.get_block_number();
-                assert(block_number == 234, 'Wrong block number');
+                let caller_address = dispatcher.get_caller_address();
+                assert(caller_address == 123, 'Wrong caller address');
             }
         "#
         ),
         Contract::from_code_path(
-            "RollChecker".to_string(),
-            Path::new("tests/data/contracts/roll_checker.cairo"),
+            "PrankChecker".to_string(),
+            Path::new("tests/data/contracts/prank_checker.cairo"),
         )
         .unwrap()
     );
@@ -62,7 +64,7 @@ fn start_roll_simple() {
 }
 
 #[test]
-fn start_roll_with_other_syscall() {
+fn start_prank_with_other_syscall() {
     let test = test_case!(
         indoc!(
             r#"
@@ -75,28 +77,31 @@ fn start_roll_with_other_syscall() {
             use cheatcodes::PreparedContract;
             
             #[starknet::interface]
-            trait IRollChecker<TContractState> {
-                fn get_block_number_and_emit_event(ref self: TContractState) -> u64;
+            trait IPrankChecker<TContractState> {
+                fn get_caller_address_and_emit_event(ref self: TContractState) -> felt252;
             }
 
             #[test]
-            fn test_roll_simple() {
-                let class_hash = declare('RollChecker');
-                let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
+            fn test_prank_with_other_syscall() {
+                let class_hash = declare('PrankChecker');
+                let prepared = PreparedContract { class_hash, constructor_calldata: @ArrayTrait::new() };
                 let contract_address = deploy(prepared).unwrap();
                 let contract_address: ContractAddress = contract_address.try_into().unwrap();
-                let dispatcher = IRollCheckerDispatcher { contract_address };
+                let dispatcher = IPrankCheckerDispatcher { contract_address };
             
-                start_roll(contract_address, 234);
-            
-                let block_number = dispatcher.get_block_number_and_emit_event();
-                assert(block_number == 234, 'Wrong block number');
+                let caller_address: felt252 = 123;
+                let caller_address: ContractAddress = caller_address.try_into().unwrap();
+
+                start_prank(caller_address, contract_address);
+
+                let caller_address = dispatcher.get_caller_address_and_emit_event();
+                assert(caller_address == 123, 'Wrong caller address');
             }
         "#
         ),
         Contract::from_code_path(
-            "RollChecker".to_string(),
-            Path::new("tests/data/contracts/roll_checker.cairo"),
+            "PrankChecker".to_string(),
+            Path::new("tests/data/contracts/prank_checker.cairo"),
         )
         .unwrap()
     );
@@ -118,7 +123,7 @@ fn start_roll_with_other_syscall() {
 // TODO (#254): Make it pass
 #[test]
 #[ignore]
-fn start_roll_in_constructor_test() {
+fn start_prank_in_constructor_test() {
     let test = test_case!(
         indoc!(
             r#"
@@ -132,26 +137,29 @@ fn start_roll_in_constructor_test() {
             use forge_print::PrintTrait;
             
             #[starknet::interface]
-            trait IConstructorRollChecker<TContractState> {
-                fn get_stored_block_number(ref self: TContractState) -> u64;
+            trait IConstructorPrankChecker<TContractState> {
+                fn get_stored_caller_address(ref self: TContractState) -> ContractAddress;
             }
             
             #[test]
-            fn test_roll_constructor_simple() {
-                let class_hash = declare('ConstructorRollChecker');
+            fn test_prank_constructor_simple() {
+                let class_hash = declare('ConstructorPrankChecker');
                 let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
+
+                // TODO (#254): Change to the actual address
                 let contract_address: ContractAddress = 2598896470772924212281968896271340780432065735045468431712403008297614014532.try_into().unwrap();
-                start_roll(contract_address, 234);
+                start_prank(555, contract_address);
                 let contract_address: ContractAddress = deploy(prepared).unwrap().try_into().unwrap();
+                contract_address.print();
             
-                let dispatcher = IConstructorRollCheckerDispatcher { contract_address };
-                assert(dispatcher.get_stored_block_number() == 234, 'Wrong stored blk_nb');
+                let dispatcher = IConstructorPrankCheckerDispatcher { contract_address };
+                assert(dispatcher.get_stored_block_number() == 555, 'Wrong stored caller address');
             }
         "#
         ),
         Contract::from_code_path(
             "ConstructorRollChecker".to_string(),
-            Path::new("tests/data/contracts/constructor_roll_checker.cairo"),
+            Path::new("tests/data/contracts/constructor_prank_checker.cairo"),
         )
         .unwrap()
     );
