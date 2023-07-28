@@ -22,10 +22,12 @@
 # Interacting with Starknet
 
 * [Overview](starknet/index.md)
+* [Creating And Deploying Accounts](starknet/account.md)
 * [Declaring New Contracts](starknet/declare.md)
 * [Deploying New Contracts](starknet/deploy.md)
 * [Invoking Contracts](starknet/invoke.md)
 * [Calling Contracts](starknet/call.md)
+* [Performing Multicall](starknet/multicall.md)
 
 # Foundry Development
 
@@ -40,8 +42,13 @@
     * [print](appendix/forge-library/print.md)
 * [Cast Commands](appendix/cast.md)
     * [common flags](appendix/cast/common.md)
+    * [account](appendix/cast/account/account.md)
+        * [create](appendix/cast/account/create.md)
+        * [deploy](appendix/cast/account/deploy.md)
     * [declare](appendix/cast/declare.md)
     * [deploy](appendix/cast/deploy.md)
     * [invoke](appendix/cast/invoke.md)
     * [call](appendix/cast/call.md)
-    * [multicall](appendix/cast/multicall.md)
+    * [multicall](appendix/cast/multicall/multicall.md)
+        * [new](appendix/cast/multicall/new.md)
+        * [run](appendix/cast/multicall/run.md)
