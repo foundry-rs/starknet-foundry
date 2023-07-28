@@ -333,3 +333,32 @@ fn exit_first_flag_takes_precedence() {
         Tests: 8 passed, 1 failed, 2 skipped
         "#});
 }
+
+#[test]
+fn using_corelib_names() {
+    let temp = assert_fs::TempDir::new().unwrap();
+    temp.copy_from(
+        "tests/data/using_corelib_names",
+        &["**/*.cairo", "**/*.toml"],
+    )
+    .unwrap();
+
+    let snapbox = runner();
+
+    snapbox
+        .current_dir(&temp)
+        .assert()
+        .success()
+        .stdout_matches(indoc! {r#"Collected 4 test(s) and 5 test file(s)
+        Running 0 test(s) from src/lib.cairo
+        Running 1 test(s) from tests/bits.cairo
+        [PASS] bits::bits::test_names
+        Running 1 test(s) from tests/math.cairo
+        [PASS] math::math::test_names
+        Running 1 test(s) from tests/test.cairo
+        [PASS] test::test::test_names
+        Running 1 test(s) from tests/types.cairo
+        [PASS] types::types::test_names
+        Tests: 4 passed, 0 failed, 0 skipped
+        "#});
+}
