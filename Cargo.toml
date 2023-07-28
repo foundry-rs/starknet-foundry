@@ -18,8 +18,6 @@ license-file = "LICENSE"
 [workspace.dependencies]
 blockifier = { git = "https://github.com/starkware-libs/blockifier.git", rev = "d568042" }
 starknet_api = "0.3.0"
-#cairo-lang-casm = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
-#cairo-lang-runner = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
 cairo-lang-casm = "2.1.0-rc1"
 cairo-lang-runner = "2.1.0-rc1"
 cairo-lang-test-runner = "2.1.0-rc1"

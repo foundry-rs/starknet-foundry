@@ -14,7 +14,6 @@ include_dir.workspace = true
 starknet_api.workspace = true
 cairo-felt.workspace = true
 tempfile.workspace = true
-#cairo-felt-blockifier = { path = "../compatibility/cairo-felt-blockifier" }
 cairo-lang-casm.workspace = true
 cairo-lang-runner.workspace = true
 cairo-vm.workspace = true
