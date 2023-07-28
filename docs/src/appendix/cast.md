@@ -8,4 +8,6 @@
 * [deploy](./cast/deploy.md)
 * [invoke](./cast/invoke.md)
 * [call](./cast/call.md)
-* [multicall](./cast/multicall.md)
+* [multicall](./cast/multicall/multicall.md)
+    * [new](./cast/multicall/new.md)
+    * [run](./cast/multicall/run.md)
