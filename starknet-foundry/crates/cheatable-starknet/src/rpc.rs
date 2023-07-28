@@ -18,7 +18,17 @@ use crate::{
     constants::{build_block_context, build_transaction_context, TEST_ACCOUNT_CONTRACT_ADDRESS},
     state::DictStateReader,
 };
-use blockifier::{abi::constants, execution::{syscalls::{hint_processor::{OUT_OF_GAS_ERROR, create_retdata_segment, write_segment}, CallContractRequest, CallContractResponse, WriteResponseResult}, execution_utils::ReadOnlySegment}, transaction::transaction_utils::update_remaining_gas};
+use blockifier::{
+    abi::constants,
+    execution::{
+        execution_utils::ReadOnlySegment,
+        syscalls::{
+            hint_processor::{create_retdata_segment, write_segment, OUT_OF_GAS_ERROR},
+            CallContractRequest, WriteResponseResult,
+        },
+    },
+    transaction::transaction_utils::update_remaining_gas,
+};
 use blockifier::{
     execution::{
         cairo1_execution::{
@@ -478,8 +488,12 @@ impl CheatableSyscallHandler<'_> {
 
         if let SyscallSelector::CallContract = selector {
             // Increment, since the selector was peeked into before
-            self.syscall_handler.syscall_ptr += 1; 
-            return self.execute_syscall(vm, call_contract_syscall, constants::CALL_CONTRACT_GAS_COST);
+            self.syscall_handler.syscall_ptr += 1;
+            return self.execute_syscall(
+                vm,
+                call_contract_syscall,
+                constants::CALL_CONTRACT_GAS_COST,
+            );
         }
 
         self.syscall_handler.execute_next_syscall(vm, hint)
@@ -501,15 +515,19 @@ impl CheatableSyscallHandler<'_> {
             &mut u64, // Remaining gas.
         ) -> SyscallResult<Response>,
     {
-        let SyscallRequestWrapper { gas_counter, request } =
-            SyscallRequestWrapper::<Request>::read(vm, &mut self.syscall_handler.syscall_ptr)?;
+        let SyscallRequestWrapper {
+            gas_counter,
+            request,
+        } = SyscallRequestWrapper::<Request>::read(vm, &mut self.syscall_handler.syscall_ptr)?;
 
         if gas_counter < base_gas_cost {
             //  Out of gas failure.
             let out_of_gas_error =
                 StarkFelt::try_from(OUT_OF_GAS_ERROR).map_err(SyscallExecutionError::from)?;
-            let response: SyscallResponseWrapper<Response> =
-                SyscallResponseWrapper::Failure { gas_counter, error_data: vec![out_of_gas_error] };
+            let response: SyscallResponseWrapper<Response> = SyscallResponseWrapper::Failure {
+                gas_counter,
+                error_data: vec![out_of_gas_error],
+            };
             response.write(vm, &mut self.syscall_handler.syscall_ptr)?;
 
             return Ok(());
@@ -519,11 +537,15 @@ impl CheatableSyscallHandler<'_> {
         let mut remaining_gas = gas_counter - base_gas_cost;
         let original_response = execute_callback(request, vm, self, &mut remaining_gas);
         let response = match original_response {
-            Ok(response) => {
-                SyscallResponseWrapper::Success { gas_counter: remaining_gas, response }
-            }
+            Ok(response) => SyscallResponseWrapper::Success {
+                gas_counter: remaining_gas,
+                response,
+            },
             Err(SyscallExecutionError::SyscallError { error_data: data }) => {
-                SyscallResponseWrapper::Failure { gas_counter: remaining_gas, error_data: data }
+                SyscallResponseWrapper::Failure {
+                    gas_counter: remaining_gas,
+                    error_data: data,
+                }
             }
             Err(error) => return Err(error.into()),
         };
@@ -532,7 +554,6 @@ impl CheatableSyscallHandler<'_> {
 
         Ok(())
     }
-
 
     fn verify_syscall_ptr(&self, actual_ptr: Relocatable) -> SyscallResult<()> {
         if actual_ptr != self.syscall_handler.syscall_ptr {
@@ -577,7 +598,9 @@ pub fn call_contract_syscall(
     };
     let retdata_segment = execute_inner_call(&mut entry_point, vm, syscall_handler, remaining_gas)?;
 
-    Ok(SingleSegmentResponse { segment: retdata_segment })
+    Ok(SingleSegmentResponse {
+        segment: retdata_segment,
+    })
 }
 
 pub fn execute_inner_call(
@@ -586,18 +609,26 @@ pub fn execute_inner_call(
     syscall_handler: &mut CheatableSyscallHandler<'_>,
     remaining_gas: &mut u64,
 ) -> SyscallResult<ReadOnlySegment> {
-    let call_info =
-        execute_call_entry_point(call, syscall_handler.syscall_handler.state, syscall_handler.cheated_state, syscall_handler.syscall_handler.resources, syscall_handler.syscall_handler.context)?;
+    let call_info = execute_call_entry_point(
+        call,
+        syscall_handler.syscall_handler.state,
+        syscall_handler.cheated_state,
+        syscall_handler.syscall_handler.resources,
+        syscall_handler.syscall_handler.context,
+    )?;
 
     let raw_retdata = &call_info.execution.retdata.0;
 
     if call_info.execution.failed {
         // TODO(spapini): Append an error word according to starknet spec if needed.
         // Something like "EXECUTION_ERROR".
-        return Err(SyscallExecutionError::SyscallError { error_data: raw_retdata.clone() });
+        return Err(SyscallExecutionError::SyscallError {
+            error_data: raw_retdata.clone(),
+        });
     }
 
-    let retdata_segment = create_retdata_segment(vm, &mut syscall_handler.syscall_handler, raw_retdata)?;
+    let retdata_segment =
+        create_retdata_segment(vm, &mut syscall_handler.syscall_handler, raw_retdata)?;
     update_remaining_gas(remaining_gas, &call_info);
 
     syscall_handler.syscall_handler.inner_calls.push(call_info);

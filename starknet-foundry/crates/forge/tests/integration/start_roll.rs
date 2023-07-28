@@ -170,7 +170,6 @@ fn start_roll_in_constructor_test() {
     assert_passed!(result);
 }
 
-
 #[test]
 fn start_roll_with_proxy() {
     let test = test_case!(
