@@ -18,7 +18,7 @@ use crate::{
     constants::{build_block_context, build_transaction_context, TEST_ACCOUNT_CONTRACT_ADDRESS},
     state::DictStateReader,
 };
-use blockifier::abi::constants;
+use blockifier::{abi::constants, execution::{syscalls::{hint_processor::{OUT_OF_GAS_ERROR, create_retdata_segment, write_segment}, CallContractRequest, CallContractResponse, WriteResponseResult}, execution_utils::ReadOnlySegment}, transaction::transaction_utils::update_remaining_gas};
 use blockifier::{
     execution::{
         cairo1_execution::{
@@ -163,6 +163,7 @@ pub fn call_contract(
         panic!("Unparseable result: {exec_result:?}");
     }
 }
+
 // Copied over (with modifications) from blockifier/src/execution/entry_point.rs:144
 fn execute_call_entry_point(
     entry_point: &mut CallEntryPoint,
@@ -474,8 +475,64 @@ impl CheatableSyscallHandler<'_> {
             response_wrapper.write(vm, &mut self.syscall_handler.syscall_ptr)?;
             return Ok(());
         }
+
+        if let SyscallSelector::CallContract = selector {
+            // Increment, since the selector was peeked into before
+            self.syscall_handler.syscall_ptr += 1; 
+            return self.execute_syscall(vm, call_contract_syscall, constants::CALL_CONTRACT_GAS_COST);
+        }
+
         self.syscall_handler.execute_next_syscall(vm, hint)
     }
+
+    fn execute_syscall<Request, Response, ExecuteCallback>(
+        &mut self,
+        vm: &mut VirtualMachine,
+        execute_callback: ExecuteCallback,
+        base_gas_cost: u64,
+    ) -> HintExecutionResult
+    where
+        Request: SyscallRequest + std::fmt::Debug,
+        Response: SyscallResponse + std::fmt::Debug,
+        ExecuteCallback: FnOnce(
+            Request,
+            &mut VirtualMachine,
+            &mut CheatableSyscallHandler<'_>,
+            &mut u64, // Remaining gas.
+        ) -> SyscallResult<Response>,
+    {
+        let SyscallRequestWrapper { gas_counter, request } =
+            SyscallRequestWrapper::<Request>::read(vm, &mut self.syscall_handler.syscall_ptr)?;
+
+        if gas_counter < base_gas_cost {
+            //  Out of gas failure.
+            let out_of_gas_error =
+                StarkFelt::try_from(OUT_OF_GAS_ERROR).map_err(SyscallExecutionError::from)?;
+            let response: SyscallResponseWrapper<Response> =
+                SyscallResponseWrapper::Failure { gas_counter, error_data: vec![out_of_gas_error] };
+            response.write(vm, &mut self.syscall_handler.syscall_ptr)?;
+
+            return Ok(());
+        }
+
+        // Execute.
+        let mut remaining_gas = gas_counter - base_gas_cost;
+        let original_response = execute_callback(request, vm, self, &mut remaining_gas);
+        let response = match original_response {
+            Ok(response) => {
+                SyscallResponseWrapper::Success { gas_counter: remaining_gas, response }
+            }
+            Err(SyscallExecutionError::SyscallError { error_data: data }) => {
+                SyscallResponseWrapper::Failure { gas_counter: remaining_gas, error_data: data }
+            }
+            Err(error) => return Err(error.into()),
+        };
+
+        response.write(vm, &mut self.syscall_handler.syscall_ptr)?;
+
+        Ok(())
+    }
+
 
     fn verify_syscall_ptr(&self, actual_ptr: Relocatable) -> SyscallResult<()> {
         if actual_ptr != self.syscall_handler.syscall_ptr {
@@ -487,6 +544,65 @@ impl CheatableSyscallHandler<'_> {
 
         Ok(())
     }
+}
+
+#[derive(Debug)]
+pub struct SingleSegmentResponse {
+    segment: ReadOnlySegment,
+}
+
+impl SyscallResponse for SingleSegmentResponse {
+    fn write(self, vm: &mut VirtualMachine, ptr: &mut Relocatable) -> WriteResponseResult {
+        write_segment(vm, ptr, self.segment)
+    }
+}
+
+pub fn call_contract_syscall(
+    request: CallContractRequest,
+    vm: &mut VirtualMachine,
+    syscall_handler: &mut CheatableSyscallHandler<'_>,
+    remaining_gas: &mut u64,
+) -> SyscallResult<SingleSegmentResponse> {
+    let storage_address = request.contract_address;
+    let mut entry_point = CallEntryPoint {
+        class_hash: None,
+        code_address: Some(storage_address),
+        entry_point_type: EntryPointType::External,
+        entry_point_selector: request.function_selector,
+        calldata: request.calldata,
+        storage_address,
+        caller_address: syscall_handler.syscall_handler.storage_address(),
+        call_type: CallType::Call,
+        initial_gas: *remaining_gas,
+    };
+    let retdata_segment = execute_inner_call(&mut entry_point, vm, syscall_handler, remaining_gas)?;
+
+    Ok(SingleSegmentResponse { segment: retdata_segment })
+}
+
+pub fn execute_inner_call(
+    call: &mut CallEntryPoint,
+    vm: &mut VirtualMachine,
+    syscall_handler: &mut CheatableSyscallHandler<'_>,
+    remaining_gas: &mut u64,
+) -> SyscallResult<ReadOnlySegment> {
+    let call_info =
+        execute_call_entry_point(call, syscall_handler.syscall_handler.state, syscall_handler.cheated_state, syscall_handler.syscall_handler.resources, syscall_handler.syscall_handler.context)?;
+
+    let raw_retdata = &call_info.execution.retdata.0;
+
+    if call_info.execution.failed {
+        // TODO(spapini): Append an error word according to starknet spec if needed.
+        // Something like "EXECUTION_ERROR".
+        return Err(SyscallExecutionError::SyscallError { error_data: raw_retdata.clone() });
+    }
+
+    let retdata_segment = create_retdata_segment(vm, &mut syscall_handler.syscall_handler, raw_retdata)?;
+    update_remaining_gas(remaining_gas, &call_info);
+
+    syscall_handler.syscall_handler.inner_calls.push(call_info);
+
+    Ok(retdata_segment)
 }
 
 /// Executes a specific call to a contract entry point and returns its output.
