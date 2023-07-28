@@ -122,13 +122,13 @@ fn advanced_types() {
             let balance = dispatcher.balance_of(user_address);
             assert(balance == 1111_u256, 'balance == 1111');
         
-            // TODO(#1986): Change that when we support mocking addresses, so we can actually call transfer
-            // dispatcher.transfer(other_user_address, 1000_u256);
+            start_prank(user_address, contract_address);
+            dispatcher.transfer(other_user_address, 1000_u256);
         
-            // let balance = dispatcher.balance_of(user_address);
-            // assert(balance == 111_u256, 'balance == 111');
+            let balance = dispatcher.balance_of(user_address);
+            assert(balance == 111_u256, 'balance == 111');
             let balance = dispatcher.balance_of(other_user_address);
-            assert(balance == 0_u256, 'balance == 1000');
+            assert(balance == 1000_u256, 'balance == 1000');
         }
     "#
         ),
