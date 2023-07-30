@@ -76,7 +76,7 @@ pub fn parse_scarb_config(
         return Ok(CastConfig::default());
     }
 
-    let metadata = scarb_metadata::MetadataCommand::new()
+    let metadata = scarb_metadata::MetadataCommand::new() // ??
         .inherit_stderr()
         .manifest_path(manifest_path)
         .no_deps()
