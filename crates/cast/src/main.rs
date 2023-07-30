@@ -102,6 +102,7 @@ async fn main() -> Result<()> {
                 &declare.contract,
                 declare.max_fee,
                 &mut account,
+                &cli.path_to_scarb_toml
             )
             .await;
 
