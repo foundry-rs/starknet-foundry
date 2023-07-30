@@ -1,10 +1,11 @@
 use anyhow::{anyhow, bail, Context, Error, Result};
 use camino::Utf8PathBuf;
-use scarb::ops::find_manifest_path;
 use scarb_metadata;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::BTreeMap;
+use std::process::{Command, Stdio};
+use std::str::FromStr;
 
 #[derive(Deserialize, Serialize, Clone, Debug, Default)]
 pub struct CastConfig {
@@ -38,11 +39,31 @@ pub fn get_property(
     }
 }
 
+pub fn get_scarb_manifest(path: &Option<Utf8PathBuf>) -> Result<Utf8PathBuf> {
+    which::which("scarb")
+        .context("Cannot find `scarb` binary in PATH. Make sure you have Scarb installed https://github.com/software-mansion/scarb")?;
+    path.as_ref().map_or_else(
+        || {
+            let output = Command::new("scarb")
+                .arg("manifest-path")
+                .stdout(Stdio::piped())
+                .output()
+                .expect("Failed to execute scarb manifest-path command");
+            let output_str = String::from_utf8(output.stdout)
+                .expect("Invalid output of scarb manifest-path command");
+            let path = Utf8PathBuf::from_str(output_str.trim())
+                .expect("Scarb manifest-path returned invalid path");
+            Ok(path)
+        },
+        |path| Ok(path.clone()),
+    )
+}
+
 pub fn parse_scarb_config(
     profile: &Option<String>,
     path: &Option<Utf8PathBuf>,
 ) -> Result<CastConfig> {
-    let found_path = find_manifest_path(path.as_ref().map(Utf8PathBuf::as_path));
+    let found_path = get_scarb_manifest(path);
     let manifest_path;
 
     if let Ok(found_path) = found_path {
@@ -57,7 +78,7 @@ pub fn parse_scarb_config(
         return Ok(CastConfig::default());
     }
 
-    let metadata = scarb_metadata::MetadataCommand::new()
+    let metadata = scarb_metadata::MetadataCommand::new() // ??
         .inherit_stderr()
         .manifest_path(manifest_path)
         .no_deps()

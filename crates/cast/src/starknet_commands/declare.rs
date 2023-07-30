@@ -1,9 +1,11 @@
-use crate::helpers::response_structs::DeclareResponse;
+use crate::helpers::{
+    response_structs::DeclareResponse,
+    scarb_utils::get_scarb_manifest,
+};
 use anyhow::{anyhow, Context, Result};
 use camino::Utf8PathBuf;
 use cast::{handle_rpc_error, handle_wait_for_tx};
 use clap::Args;
-use scarb::ops::find_manifest_path;
 use serde::Deserialize;
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::ConnectedAccount;
@@ -57,13 +59,14 @@ pub async fn declare(
     contract_name: &str,
     max_fee: Option<FieldElement>,
     account: &mut SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
+    path_to_scarb_toml: &Option<Utf8PathBuf>,
     wait: bool,
 ) -> Result<DeclareResponse> {
     let contract_name: String = contract_name.to_string();
-    which::which("scarb")
-        .context("Cannot find `scarb` binary in PATH. Make sure you have Scarb installed https://github.com/software-mansion/scarb")?;
+    let manifest_path = get_scarb_manifest(path_to_scarb_toml).expect("Failed to obtain scarb manifest file path");
     let command_result = Command::new("scarb")
-        .current_dir(std::env::current_dir().context("Failed to obtain current dir")?)
+        .arg("--manifest-path")
+        .arg(&manifest_path)
         .arg("--release")
         .arg("build")
         .stdout(Stdio::piped())
@@ -79,8 +82,7 @@ pub async fn declare(
     }
 
     // TODO #41 improve handling starknet artifacts
-    let compiled_directory = find_manifest_path(None)
-        .expect("Failed to obtain Scarb.toml file path")
+    let compiled_directory = &manifest_path // ? scarb_metadata?
         .parent()
         .map(|parent| parent.join("target/release"))
         .ok_or_else(|| anyhow!("Failed to obtain the path to compiled contracts"))?;
