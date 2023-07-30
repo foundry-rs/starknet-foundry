@@ -39,6 +39,7 @@ pub fn get_property(
     }
 }
 
+<<<<<<< HEAD
 pub fn get_scarb_manifest() -> Result<Utf8PathBuf> {
     which::which("scarb")
         .context("Cannot find `scarb` binary in PATH. Make sure you have Scarb installed https://github.com/software-mansion/scarb")?;
@@ -62,6 +63,7 @@ pub fn parse_scarb_config(
     profile: &Option<String>,
     path: &Option<Utf8PathBuf>,
 ) -> Result<CastConfig> {
+<<<<<<< HEAD
     if let Some(path) = path {
         if !path.exists() {
             bail!("{path} file does not exist!");
@@ -76,7 +78,7 @@ pub fn parse_scarb_config(
         return Ok(CastConfig::default());
     }
 
-    let metadata = scarb_metadata::MetadataCommand::new()
+    let metadata = scarb_metadata::MetadataCommand::new() // ??
         .inherit_stderr()
         .manifest_path(manifest_path)
         .no_deps()
