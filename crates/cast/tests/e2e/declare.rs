@@ -161,3 +161,29 @@ fn test_too_low_max_fee(contract_path: &str, salt: &str, account: &str) {
 
     fs::remove_dir_all(contract_path).unwrap();
 }
+
+#[test_case("/v1/no_sierra", "../../../accounts/accounts.json" ; "dupa")]
+#[test_case("/v1/no_casm", "../../../accounts/accounts.json" ; "dupa2")]
+fn scarb_no_artifacts(contract_path: &str, accounts_file_path: &str) {
+    let args = vec![
+        "--url",
+        URL,
+        "--network",
+        NETWORK,
+        "--accounts-file",
+        accounts_file_path,
+        "--account",
+        "user1",
+        "declare",
+        "--contract-name",
+        "BuildFails",
+    ];
+
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(CONTRACTS_DIR.to_string() + contract_path)
+        .args(args);
+
+    snapbox.assert().success().stderr_matches(indoc! {r#"
+        error: scarb build returned non-zero exit code: 1
+    "#});
+}
