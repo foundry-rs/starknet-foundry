@@ -38,7 +38,7 @@ struct ScarbStarknetContract {
 #[allow(dead_code)]
 #[derive(Deserialize)]
 struct ScarbStarknetContractArtifact {
-    sierra: Utf8PathBuf,
+    sierra: Option<Utf8PathBuf>,
     casm: Option<Utf8PathBuf>,
 }
 
@@ -130,7 +130,7 @@ pub async fn declare(
         .iter()
         .find_map(|contract| {
             if contract.contract_name == contract_name {
-                return Some(contract.artifacts.sierra.clone());
+                return contract.artifacts.sierra.clone();
             }
             None
         })

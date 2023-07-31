@@ -174,14 +174,19 @@ fn scarb_no_artifacts(contract_path: &str, accounts_file_path: &str) {
         "user1",
         "declare",
         "--contract-name",
-        "BuildFails",
+        "SimpleBalance",
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
         .current_dir(CONTRACTS_DIR.to_string() + contract_path)
         .args(args);
+    let assert = snapbox.assert().failure();
+    let stderr_output = String::from_utf8(assert.get_output().stderr.clone()).unwrap();
 
-    snapbox.assert().success().stderr_matches(indoc! {r#"
-        error: scarb build returned non-zero exit code: 1
-    "#});
+    assert!(
+        stderr_output.contains(
+            "is set to 'true' under your [[target.starknet-contract]] field in Scarb.toml"
+        ),
+        "Expected error message not found in stderr: {stderr_output}",
+    );
 }
