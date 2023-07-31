@@ -3,6 +3,7 @@ use crate::helpers::{
     fixtures::create_test_provider,
 };
 use camino::Utf8PathBuf;
+use cast::helpers::constants::DEFAULT_RETRIES;
 use cast::{get_account, parse_number, wait_for_tx};
 use starknet::contract::ContractFactory;
 use starknet::core::types::FieldElement;
@@ -10,7 +11,12 @@ use starknet::core::types::FieldElement;
 #[tokio::test]
 async fn test_happy_path() {
     let provider = create_test_provider();
-    let res = wait_for_tx(&provider, parse_number(DECLARE_TRANSACTION_HASH).unwrap()).await;
+    let res = wait_for_tx(
+        &provider,
+        parse_number(DECLARE_TRANSACTION_HASH).unwrap(),
+        DEFAULT_RETRIES,
+    )
+    .await;
 
     assert!(matches!(res, Ok(_)));
     assert!(matches!(res.unwrap(), "Transaction accepted"));
@@ -33,7 +39,7 @@ async fn test_rejected_transaction() {
         .max_fee(FieldElement::ONE);
     let resp = deployment.send().await.unwrap();
 
-    let result = wait_for_tx(&provider, resp.transaction_hash).await;
+    let result = wait_for_tx(&provider, resp.transaction_hash, DEFAULT_RETRIES).await;
 
     assert!(
         matches!(result, Err(message) if message.to_string() == "Transaction has been rejected")
@@ -47,6 +53,7 @@ async fn test_wait_for_nonexistent_tx() {
     wait_for_tx(
         &provider,
         parse_number("0x123456789").expect("Could not parse a number"),
+        3,
     )
     .await
     .unwrap();

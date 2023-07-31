@@ -1,4 +1,4 @@
-use crate::helpers::constants::OZ_CLASS_HASH;
+use crate::helpers::constants::{DEFAULT_RETRIES, OZ_CLASS_HASH};
 use anyhow::{anyhow, bail, Result};
 use camino::Utf8PathBuf;
 use cast::{get_network, handle_rpc_error, parse_number, print_formatted, wait_for_tx};
@@ -79,7 +79,9 @@ pub async fn deploy(
         Err(AccountFactoryError::Provider(error)) => handle_rpc_error(error),
         Err(_) => Err(anyhow!("Unknown RPC error")),
         Ok(result) => {
-            if let Err(message) = wait_for_tx(provider, result.transaction_hash).await {
+            if let Err(message) =
+                wait_for_tx(provider, result.transaction_hash, DEFAULT_RETRIES).await
+            {
                 return Err(anyhow!(message));
             }
 

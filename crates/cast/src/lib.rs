@@ -1,4 +1,4 @@
-use crate::helpers::constants::UDC_ADDRESS;
+use crate::helpers::constants::{DEFAULT_RETRIES, UDC_ADDRESS};
 use anyhow::{anyhow, bail, Context, Error, Result};
 use camino::Utf8PathBuf;
 use primitive_types::U256;
@@ -163,40 +163,46 @@ pub fn get_network(name: &str) -> Result<Network> {
 pub async fn wait_for_tx(
     provider: &JsonRpcClient<HttpTransport>,
     tx_hash: FieldElement,
+    retries: u8,
 ) -> Result<&str> {
-    'a: while {
-        let receipt = provider
-            .get_transaction_receipt(tx_hash)
-            .await
-            .unwrap_or_else(|_| panic!("Could not get transaction with hash: {tx_hash:#x}"));
+    let mut retries = retries;
+    'a: loop {
+        sleep(Duration::from_secs(5));
 
-        let status = if let Receipt(receipt) = receipt {
-            match receipt {
-                Invoke(receipt) => receipt.status,
-                Declare(receipt) => receipt.status,
-                Deploy(receipt) => receipt.status,
-                DeployAccount(receipt) => receipt.status,
-                L1Handler(receipt) => receipt.status,
+        match provider.get_transaction_receipt(tx_hash).await {
+            Ok(receipt) => {
+                let status = if let Receipt(receipt) = receipt {
+                    match receipt {
+                        Invoke(receipt) => receipt.status,
+                        Declare(receipt) => receipt.status,
+                        Deploy(receipt) => receipt.status,
+                        DeployAccount(receipt) => receipt.status,
+                        L1Handler(receipt) => receipt.status,
+                    }
+                } else {
+                    continue 'a;
+                };
+
+                match status {
+                    TransactionStatus::AcceptedOnL2 | TransactionStatus::AcceptedOnL1 => {
+                        return Ok("Transaction accepted")
+                    }
+                    TransactionStatus::Rejected => {
+                        return Err(anyhow!("Transaction has been rejected"));
+                    }
+                    TransactionStatus::Pending => {}
+                }
             }
-        } else {
-            continue 'a;
+            Err(ProviderError::StarknetError(StarknetError::TransactionHashNotFound)) => {
+                if retries > 0 {
+                    retries -= 1;
+                } else {
+                    bail!("Could not get transaction with hash: {tx_hash:#x}")
+                }
+            }
+            Err(err) => return Err(err.into()),
         };
-
-        match status {
-            TransactionStatus::Pending => {
-                sleep(Duration::from_secs(5));
-                true
-            }
-            TransactionStatus::AcceptedOnL2 | TransactionStatus::AcceptedOnL1 => {
-                return Ok("Transaction accepted")
-            }
-            TransactionStatus::Rejected => {
-                return Err(anyhow!("Transaction has been rejected"));
-            }
-        }
-    } {}
-
-    unreachable!("Unexpected error happened");
+    }
 }
 
 #[must_use]
@@ -236,7 +242,7 @@ pub async fn handle_wait_for_tx_result<T>(
     transaction_hash: FieldElement,
     return_value: T,
 ) -> Result<T> {
-    match wait_for_tx(provider, transaction_hash).await {
+    match wait_for_tx(provider, transaction_hash, DEFAULT_RETRIES).await {
         Ok(_) => Ok(return_value),
         Err(message) => Err(anyhow!(message)),
     }
