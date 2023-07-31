@@ -52,6 +52,10 @@ struct Cli {
     #[clap(short, long)]
     json: bool,
 
+    // If passed, command will wait until transaction is accepted or rejected
+    #[clap(short, long)]
+    wait: bool,
+
     #[command(subcommand)]
     command: Commands,
 }

@@ -59,6 +59,7 @@ pub async fn invoke(
     calldata: Vec<FieldElement>,
     max_fee: Option<FieldElement>,
     account: &mut SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
+    wait: bool,
 ) -> Result<FieldElement> {
     let call = Call {
         to: contract_address,
@@ -66,13 +67,14 @@ pub async fn invoke(
         calldata,
     };
 
-    execute_calls(account, vec![call], max_fee).await
+    execute_calls(account, vec![call], max_fee, wait).await
 }
 
 pub async fn execute_calls(
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     calls: Vec<Call>,
     max_fee: Option<FieldElement>,
+    wait: bool,
 ) -> Result<FieldElement> {
     let execution = account.execute(calls);
 
@@ -84,12 +86,17 @@ pub async fn execute_calls(
 
     match execution.send().await {
         Ok(result) => {
-            handle_wait_for_tx_result(
-                account.provider(),
-                result.transaction_hash,
-                result.transaction_hash,
-            )
-            .await
+            let return_value = result.transaction_hash;
+            if wait {
+                handle_wait_for_tx_result(
+                    account.provider(),
+                    result.transaction_hash,
+                    return_value,
+                )
+                    .await
+            } else {
+                return Ok(return_value);
+            }
         }
         Err(Provider(error)) => handle_rpc_error(error),
         _ => Err(anyhow!("Unknown RPC error")),

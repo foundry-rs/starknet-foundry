@@ -202,7 +202,7 @@ pub async fn wait_for_tx(
                     retries -= 1;
                     println!("Waiting for transaction to be received");
                 } else {
-                    bail!("Could not get transaction with hash: {tx_hash:#x}")
+                    bail!("Could not get transaction with hash: {tx_hash:#x}. Transaction not received or rejected.")
                 }
             }
             Err(err) => return Err(err.into()),

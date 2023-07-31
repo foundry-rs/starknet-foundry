@@ -80,8 +80,6 @@ pub async fn deploy(
 
     let result = execution.send().await;
 
-    println!("{result:?}");
-
     match result {
         Ok(result) => {
             handle_wait_for_tx_result(
