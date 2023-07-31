@@ -436,10 +436,7 @@ impl CheatableSyscallHandler<'_> {
             let ptr_cheated_exec_info = vm.add_memory_segment();
 
             // Initialize as old exec_info
-            let mut new_exec_info = vm
-                .get_continuous_range(execution_info_ptr, 5)
-                .unwrap()
-                .clone();
+            let mut new_exec_info = vm.get_continuous_range(execution_info_ptr, 5).unwrap();
 
             if self.address_is_rolled(vm, &contract_address)
                 || self.address_is_warped(vm, &contract_address)

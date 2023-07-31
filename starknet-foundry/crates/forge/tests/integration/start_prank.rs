@@ -243,4 +243,3 @@ fn start_prank_with_proxy() {
 
     assert_passed!(result);
 }
-

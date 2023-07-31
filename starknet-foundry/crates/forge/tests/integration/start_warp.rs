@@ -140,7 +140,6 @@ fn start_warp_in_constructor_test() {
     assert_passed!(result);
 }
 
-
 #[test]
 fn start_warp_with_proxy() {
     let test = test_case!(
@@ -204,4 +203,3 @@ fn start_warp_with_proxy() {
 
     assert_passed!(result);
 }
-
