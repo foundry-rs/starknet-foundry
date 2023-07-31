@@ -9,6 +9,7 @@ use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
 
+use crate::starknet_commands::response_structs::DeployResponse;
 use cast::{extract_or_generate_salt, udc_uniqueness};
 use cast::{handle_rpc_error, handle_wait_for_tx_result};
 
@@ -43,7 +44,7 @@ pub async fn deploy(
     unique: bool,
     max_fee: Option<FieldElement>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
-) -> Result<Vec<(&'static str, String)>> {
+) -> Result<DeployResponse> {
     let salt = extract_or_generate_salt(salt);
 
     let factory = ContractFactory::new(class_hash, account);
@@ -62,24 +63,15 @@ pub async fn deploy(
             handle_wait_for_tx_result(
                 account.provider(),
                 result.transaction_hash,
-                vec![
-                    (
-                        "contract_address",
-                        format!(
-                            "{:#x}",
-                            get_udc_deployed_address(
-                                salt,
-                                class_hash,
-                                &udc_uniqueness(unique, account.address()),
-                                &constructor_calldata,
-                            ),
-                        ),
+                DeployResponse {
+                    contract_address: get_udc_deployed_address(
+                        salt,
+                        class_hash,
+                        &udc_uniqueness(unique, account.address()),
+                        &constructor_calldata,
                     ),
-                    (
-                        "transaction_hash",
-                        format!("{:#x}", result.transaction_hash),
-                    ),
-                ],
+                    transaction_hash: result.transaction_hash,
+                },
             )
             .await
         }

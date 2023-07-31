@@ -29,10 +29,12 @@ pub async fn test_happy_case() {
     let out = bdg.get_output();
 
     let stdout_str =
-        std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
+        dbg!(std::str::from_utf8(&out.stdout).expect("failed to convert command output to string"));
+    dbg!(std::str::from_utf8(&out.stderr).expect("failed to convert command output to string"));
     assert!(stdout_str.contains("command: account create"));
     assert!(stdout_str.contains("max_fee: "));
     assert!(stdout_str.contains("address: "));
+    assert!(stdout_str.contains("add_profile: Flag was not set. No profile added to Scarb.toml"));
 
     let contents = fs::read_to_string(accounts_file).expect("Unable to read created file");
     assert!(contents.contains("my_account"));
@@ -113,7 +115,7 @@ pub async fn test_happy_case_add_profile() {
 
     let stdout_str =
         std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
-    assert!(stdout_str.contains("add-profile: Profile successfully added to Scarb.toml"));
+    assert!(stdout_str.contains("add_profile: Profile successfully added to Scarb.toml"));
 
     let contents =
         fs::read_to_string(current_dir.join("Scarb.toml")).expect("Unable to read Scarb.toml");

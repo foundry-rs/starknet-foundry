@@ -1,5 +1,6 @@
 use crate::helpers::constants::UDC_ADDRESS;
 use crate::starknet_commands::invoke::execute_calls;
+use crate::starknet_commands::response_structs::InvokeResponse;
 use anyhow::{anyhow, Result};
 use camino::Utf8PathBuf;
 use cast::{extract_or_generate_salt, parse_number, udc_uniqueness};
@@ -49,7 +50,7 @@ pub async fn run(
     path: &Utf8PathBuf,
     account: &mut SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     max_fee: Option<FieldElement>,
-) -> Result<Vec<(&'static str, String)>> {
+) -> Result<InvokeResponse> {
     let contents = std::fs::read_to_string(path)?;
     let items_map: HashMap<String, Vec<toml::Value>> =
         toml::from_str(&contents).map_err(|_| anyhow!("Failed to parse {path}"))?;

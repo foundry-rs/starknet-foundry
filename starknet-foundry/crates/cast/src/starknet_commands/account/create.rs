@@ -1,5 +1,6 @@
 use crate::helpers::constants::OZ_CLASS_HASH;
 use crate::helpers::scarb_utils::get_property;
+use crate::starknet_commands::response_structs::AccountCreateResponse;
 use anyhow::{anyhow, Context, Result};
 use camino::Utf8PathBuf;
 use cast::{extract_or_generate_salt, get_network, parse_number};
@@ -43,7 +44,7 @@ pub async fn create(
     network: &str,
     maybe_salt: Option<FieldElement>,
     add_profile: bool,
-) -> Result<Vec<(&'static str, String)>> {
+) -> Result<AccountCreateResponse> {
     let private_key = SigningKey::from_random();
     let public_key = private_key.verifying_key();
     let salt = extract_or_generate_salt(maybe_salt);
@@ -123,7 +124,15 @@ pub async fn create(
         ));
     }
 
-    Ok(output)
+    Ok(AccountCreateResponse {
+        address,
+        max_fee: FieldElement::from(max_fee),
+        add_profile: if add_profile {
+            "Profile successfully added to Scarb.toml".to_string()
+        } else {
+            "Flag was not set. No profile added to Scarb.toml".to_string()
+        },
+    })
 }
 
 pub fn add_created_profile_to_configuration(

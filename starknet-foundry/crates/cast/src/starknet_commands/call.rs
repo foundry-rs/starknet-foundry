@@ -1,3 +1,4 @@
+use crate::starknet_commands::response_structs::CallResponse;
 use anyhow::{Context, Result};
 use cast::handle_rpc_error;
 use clap::Args;
@@ -35,7 +36,7 @@ pub async fn call(
     calldata: Vec<FieldElement>,
     provider: &JsonRpcClient<HttpTransport>,
     block_id: &BlockId,
-) -> Result<Vec<(&'static str, String)>> {
+) -> Result<CallResponse> {
     let function_call = FunctionCall {
         contract_address,
         entry_point_selector: get_selector_from_name(func_name)
@@ -47,10 +48,11 @@ pub async fn call(
     match res {
         Ok(res) => {
             let response: String = res.iter().map(|item| format!("{item:#x}, ")).collect();
-            Ok(vec![(
-                "response",
-                "[".to_string() + response.trim_end_matches(|c| c == ' ' || c == ',') + "]",
-            )])
+            Ok(CallResponse {
+                response: "[".to_string()
+                    + response.trim_end_matches(|c| c == ' ' || c == ',')
+                    + "]",
+            })
         }
         Err(error) => handle_rpc_error(error),
     }

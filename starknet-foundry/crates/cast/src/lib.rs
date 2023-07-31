@@ -275,17 +275,29 @@ pub fn print_formatted(
     Ok(())
 }
 
-pub fn print_command_result(
+pub fn print_command_result<T: Serialize>(
     command: &str,
-    result: &mut Result<Vec<(&str, String)>>,
+    result: &mut Result<T>,
     int_format: bool,
     json: bool,
 ) -> Result<()> {
     let mut output = vec![("command", command.to_string())];
+    let json_value: Value;
+
     let mut error = false;
     match result {
         Ok(result) => {
-            output.append(result);
+            json_value = serde_json::to_value(result)
+                .map_err(|_| anyhow!("Failed to convert command result to serde_json::Value"))?;
+
+            output.extend(
+                json_value
+                    .as_object()
+                    .expect("Invalid JSON value")
+                    .iter()
+                    .map(|(k, v)| (k.as_str(), v.as_str().expect("Invalid value").to_string()))
+                    .collect::<Vec<(&str, String)>>(),
+            );
         }
         Err(message) => {
             output.push(("error", message.to_string()));

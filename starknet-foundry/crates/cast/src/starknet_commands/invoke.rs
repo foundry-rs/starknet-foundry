@@ -1,6 +1,7 @@
 use anyhow::{anyhow, Result};
 use clap::Args;
 
+use crate::starknet_commands::response_structs::InvokeResponse;
 use cast::{handle_rpc_error, handle_wait_for_tx_result};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{Account, Call, ConnectedAccount, SingleOwnerAccount};
@@ -36,7 +37,7 @@ pub async fn invoke(
     calldata: Vec<FieldElement>,
     max_fee: Option<FieldElement>,
     account: &mut SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
-) -> Result<Vec<(&'static str, String)>> {
+) -> Result<InvokeResponse> {
     let call = Call {
         to: contract_address,
         selector: get_selector_from_name(entry_point_name)?,
@@ -50,7 +51,7 @@ pub async fn execute_calls(
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     calls: Vec<Call>,
     max_fee: Option<FieldElement>,
-) -> Result<Vec<(&'static str, String)>> {
+) -> Result<InvokeResponse> {
     let execution = account.execute(calls);
 
     let execution = if let Some(max_fee) = max_fee {
@@ -64,10 +65,9 @@ pub async fn execute_calls(
             handle_wait_for_tx_result(
                 account.provider(),
                 result.transaction_hash,
-                vec![(
-                    "transaction_hash",
-                    format!("{:#x}", result.transaction_hash),
-                )],
+                InvokeResponse {
+                    transaction_hash: result.transaction_hash,
+                },
             )
             .await
         }
