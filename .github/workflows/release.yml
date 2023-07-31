@@ -72,7 +72,7 @@ jobs:
           echo "CARGO=cross" >> $GITHUB_ENV
 
       - name: Build
-        run: ${{ env.CARGO }} build --release --manifest-path ./starknet-foundry/Cargo.toml --locked --target ${{ matrix.target }}
+        run: ${{ env.CARGO }} build --release --locked --target ${{ matrix.target }}
 
       - name: Package
         shell: bash

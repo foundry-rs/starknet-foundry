@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-COMPILER_DIRECTORY="$(git rev-parse --show-toplevel)/starknet-foundry/crates/cast/tests/utils/compiler"
+COMPILER_DIRECTORY="$(git rev-parse --show-toplevel)/crates/cast/tests/utils/compiler"
 CAIRO_REPO="https://github.com/starkware-libs/cairo/releases/download"
 
 SCARB_VERSIONS=("0.4.1" "0.5.2")

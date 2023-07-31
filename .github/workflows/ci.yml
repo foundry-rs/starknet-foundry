@@ -24,8 +24,8 @@ jobs:
       - uses: software-mansion/setup-scarb@v1.0.0
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
-      - run: cargo test --lib --manifest-path ./starknet-foundry/Cargo.toml -p forge
-      - run: cargo test integration --manifest-path ./starknet-foundry/Cargo.toml -p forge
+      - run: cargo test --lib -p forge
+      - run: cargo test integration -p forge
 
   test-forge-e2e:
     name: Test Forge / E2E Tests
@@ -43,7 +43,7 @@ jobs:
       - uses: software-mansion/setup-scarb@v1.0.0
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
-      - run: cargo test e2e --manifest-path ./starknet-foundry/Cargo.toml -p forge
+      - run: cargo test e2e -p forge
 
   test-cast:
     name: Test Cast
@@ -77,7 +77,7 @@ jobs:
         run: |
           ./scripts/prepare_for_tests.sh
       - name: Run tests
-        run: cargo test --manifest-path ./starknet-foundry/Cargo.toml -p cast
+        run: cargo test -p cast
 
   rustfmt:
     runs-on: ubuntu-latest
@@ -92,13 +92,13 @@ jobs:
         with:
           workspaces: starknet-foundry
       - name: Check forge formatting
-        run: cargo fmt --manifest-path ./starknet-foundry/Cargo.toml --check -p forge
+        run: cargo fmt --check -p forge
       - name: Check cast formatting
-        run: cargo fmt --manifest-path ./starknet-foundry/Cargo.toml --check -p cast
+        run: cargo fmt --check -p cast
       - name: Check test-collector formatting
-        run: cargo fmt --manifest-path ./starknet-foundry/Cargo.toml --check -p test-collector
+        run: cargo fmt --check -p test-collector
       - name: Check cheatable-starknet formatting
-        run: cargo fmt --manifest-path ./starknet-foundry/Cargo.toml --check -p cheatable-starknet
+        run: cargo fmt --check -p cheatable-starknet
 
   clippy:
     runs-on: ubuntu-latest
