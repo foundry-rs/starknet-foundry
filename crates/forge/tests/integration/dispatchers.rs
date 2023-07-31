@@ -34,7 +34,6 @@ fn simple_call_and_invoke() {
             let class_hash = declare('HelloStarknet');
             let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
             let contract_address = deploy(prepared).unwrap();
-            let contract_address: ContractAddress = contract_address.try_into().unwrap();
             let dispatcher = IHelloStarknetDispatcher { contract_address };
 
             let balance = dispatcher.get_balance();
@@ -114,7 +113,6 @@ fn advanced_types() {
             let class_hash = declare('ERC20');
             let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
             let contract_address = deploy(prepared).unwrap();
-            let contract_address: ContractAddress = contract_address.try_into().unwrap();
             let dispatcher = IERC20Dispatcher { contract_address };
             let user_address: ContractAddress = 1234.try_into().unwrap();
             let other_user_address: ContractAddress = 9999.try_into().unwrap();
@@ -179,7 +177,6 @@ fn handling_errors() {
             let class_hash = declare('HelloStarknet');
             let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
             let contract_address = deploy(prepared).unwrap();
-            let contract_address: ContractAddress = contract_address.try_into().unwrap();
             let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
         
         

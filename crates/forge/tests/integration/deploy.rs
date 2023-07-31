@@ -234,15 +234,21 @@ fn test_deploy_fails_with_incorrect_class_hash() {
         indoc!(
             r#"
         use result::ResultTrait;
+        use option::OptionTrait;
         use cheatcodes::RevertedTransactionTrait;
         use cheatcodes::PreparedContract;
         use array::ArrayTrait;
+        use traits::TryInto;
+        use starknet::Felt252TryIntoClassHash;
 
         #[test]
         fn deploy_non_existing_class_hash() {
             let mut calldata = ArrayTrait::new();
 
-            let prepared = PreparedContract { class_hash: 'made-up-class-hash', constructor_calldata: @calldata };
+            let prepared = PreparedContract { 
+                class_hash: 'made-up-class-hash'.try_into().unwrap(), 
+                constructor_calldata: @calldata 
+            };
             let contract_address = deploy(prepared).unwrap();
         }
     "#
@@ -303,7 +309,6 @@ fn test_deploy_invokes_the_constructor() {
             let class_hash = declare('HelloStarknet');
             let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
             let contract_address = deploy(prepared).unwrap();
-            let contract_address: ContractAddress = contract_address.try_into().unwrap();
             
             let thing_getter = ThingGetterDispatcher { contract_address };
             

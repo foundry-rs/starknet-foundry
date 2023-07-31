@@ -60,12 +60,14 @@ fn simple_declare() {
         indoc!(
             r#"
         use result::ResultTrait;
+        use traits::Into;
+        use starknet::ClassHashIntoFelt252;
 
         #[test]
         fn test_declare_simple() {
             assert(1 == 1, 'simple check');
             let class_hash = declare('HelloStarknet');
-            assert(class_hash != 0, 'proper class hash');
+            assert(class_hash.into() != 0, 'proper class hash');
         }
         "#
         ),
@@ -117,13 +119,15 @@ fn multiple_declare() {
         indoc!(
             r#"
         use result::ResultTrait;
+        use traits::Into;
+        use starknet::ClassHashIntoFelt252;
 
         #[test]
         fn multiple_contracts() {
-            let class_hash = declare('HelloStarknet');
+            let class_hash = declare('HelloStarknet').into();
             assert(class_hash != 0, 'proper class hash');
         
-            let class_hash2 = declare('Contract1');
+            let class_hash2 = declare('Contract1').into();
             assert(class_hash2 != 0, 'proper class hash');
         
             assert(class_hash != class_hash2, 'class hashes neq');
@@ -218,12 +222,14 @@ fn simple_declare_from_contract_code() {
         indoc!(
             r#"
         use result::ResultTrait;
+        use traits::Into;
+        use starknet::ClassHashIntoFelt252;
 
         #[test]
         fn test_declare_simple() {
             assert(1 == 1, 'simple check');
             let class_hash = declare('Contract1');
-            assert(class_hash != 0, 'proper class hash');
+            assert(class_hash.into() != 0, 'proper class hash');
         }
         "#
         ),
@@ -249,12 +255,14 @@ fn declare_unknown() {
     let test = test_case!(indoc!(
         r#"
         use result::ResultTrait;
+        use traits::Into;
+        use starknet::ClassHashIntoFelt252;
 
         #[test]
         fn test_declare_simple() {
             assert(1 == 1, 'simple check');
             let class_hash = declare('Unknown');
-            assert(class_hash != 0, 'proper class hash');
+            assert(class_hash.into() != 0, 'proper class hash');
         }
         "#
     ));
