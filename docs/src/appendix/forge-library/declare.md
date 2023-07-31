@@ -1,6 +1,6 @@
 # `declare`
 
-> `fn declare(contract: felt252) -> felt252`
+> `fn declare(contract: felt252) -> ClassHash`
 
 Declares a contract and returns its class hash.
 

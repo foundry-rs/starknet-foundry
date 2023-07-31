@@ -29,7 +29,6 @@ fn start_prank_simple() {
                 let class_hash = declare('PrankChecker');
                 let prepared = PreparedContract { class_hash, constructor_calldata: @ArrayTrait::new() };
                 let contract_address = deploy(prepared).unwrap();
-                let contract_address: ContractAddress = contract_address.try_into().unwrap();
                 let dispatcher = IPrankCheckerDispatcher { contract_address };
             
                 let caller_address: felt252 = 123;
@@ -86,7 +85,6 @@ fn start_prank_with_other_syscall() {
                 let class_hash = declare('PrankChecker');
                 let prepared = PreparedContract { class_hash, constructor_calldata: @ArrayTrait::new() };
                 let contract_address = deploy(prepared).unwrap();
-                let contract_address: ContractAddress = contract_address.try_into().unwrap();
                 let dispatcher = IPrankCheckerDispatcher { contract_address };
             
                 let caller_address: felt252 = 123;

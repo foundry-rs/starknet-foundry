@@ -1,15 +1,21 @@
 use array::ArrayTrait;
 use array::SpanTrait;
 use clone::Clone;
-use integer::Into;
-use integer::TryInto;
 use option::OptionTrait;
+use traits::Into;
+use traits::TryInto;
+
 use starknet::testing::cheatcode;
+use starknet::ClassHash;
 use starknet::ContractAddress;
+use starknet::ClassHashIntoFelt252;
+use starknet::ContractAddressIntoFelt252;
+use starknet::Felt252TryIntoClassHash;
+use starknet::Felt252TryIntoContractAddress;
 
 #[derive(Drop, Clone)]
 struct PreparedContract {
-    class_hash: felt252,
+    class_hash: ClassHash,
     constructor_calldata: @Array::<felt252>,
 }
 
@@ -28,18 +34,18 @@ impl RevertedTransactionImpl of RevertedTransactionTrait {
     }
 }
 
-fn declare(contract: felt252) -> felt252 {
+fn declare(contract: felt252) -> ClassHash {
     let span = cheatcode::<'declare'>(array![contract].span());
 
     let exit_code = *span[0];
     let result = *span[1];
     assert(exit_code == 0, 'declare should never fail');
-    result
+    result.try_into().unwrap()
 }
 
-fn deploy(prepared_contract: PreparedContract) -> Result::<felt252, RevertedTransaction> {
+fn deploy(prepared_contract: PreparedContract) -> Result::<ContractAddress, RevertedTransaction> {
     let PreparedContract{class_hash, constructor_calldata } = prepared_contract;
-    let mut inputs = array![class_hash];
+    let mut inputs = array![class_hash.into()];
 
     let calldata_len_felt = constructor_calldata.len().into();
     inputs.append(calldata_len_felt);
@@ -59,7 +65,7 @@ fn deploy(prepared_contract: PreparedContract) -> Result::<felt252, RevertedTran
 
     if exit_code == 0 {
         let result = *outputs[1];
-        Result::<felt252, RevertedTransaction>::Ok(result)
+        Result::<ContractAddress, RevertedTransaction>::Ok(result.try_into().unwrap())
     } else {
         let panic_data_len_felt = *outputs[1];
         let panic_data_len = panic_data_len_felt.try_into().unwrap();
@@ -75,7 +81,7 @@ fn deploy(prepared_contract: PreparedContract) -> Result::<felt252, RevertedTran
             i += 1;
         };
 
-        Result::<felt252, RevertedTransaction>::Err(RevertedTransaction { panic_data })
+        Result::<ContractAddress, RevertedTransaction>::Err(RevertedTransaction { panic_data })
     }
 }
 
