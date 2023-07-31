@@ -119,12 +119,11 @@ fn scarb_build_fails(contract_path: &str, accounts_file_path: &str) {
         .current_dir(CONTRACTS_DIR.to_string() + contract_path)
         .args(args);
     let assert = snapbox.assert().success();
-    let stderr_output = String::from_utf8(assert.get_output().stderr.to_owned()).unwrap();
+    let stderr_output = String::from_utf8(assert.get_output().stderr.clone()).unwrap();
 
     assert!(
         stderr_output.contains("error: Scarb build returned non-zero exit code: 1"),
-        "Expected error message not found in stderr: {}",
-        stderr_output
+        "Expected error message not found in stderr: {stderr_output}",
     );
 }
 
