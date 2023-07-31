@@ -1,4 +1,4 @@
-use crate::starknet_commands::response_structs::DeclareResponse;
+use crate::helpers::response_structs::DeclareResponse;
 use anyhow::{anyhow, Context, Result};
 use camino::Utf8PathBuf;
 use cast::{handle_rpc_error, handle_wait_for_tx_result};

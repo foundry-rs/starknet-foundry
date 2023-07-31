@@ -33,7 +33,8 @@ pub async fn test_happy_case() {
     assert!(stdout_str.contains("command: account create"));
     assert!(stdout_str.contains("max_fee: "));
     assert!(stdout_str.contains("address: "));
-    assert!(stdout_str.contains("add_profile: Flag was not set. No profile added to Scarb.toml"));
+    assert!(stdout_str
+        .contains("add_profile: --add-profile flag was not set. No profile added to Scarb.toml"));
 
     let contents = fs::read_to_string(accounts_file).expect("Unable to read created file");
     assert!(contents.contains("my_account"));

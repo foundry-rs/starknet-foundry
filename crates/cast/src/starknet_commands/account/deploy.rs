@@ -11,7 +11,7 @@ use starknet::signers::{LocalWallet, SigningKey};
 use cast::{get_network, handle_rpc_error, parse_number, wait_for_tx};
 
 use crate::helpers::constants::OZ_CLASS_HASH;
-use crate::starknet_commands::response_structs::InvokeResponse;
+use crate::helpers::response_structs::InvokeResponse;
 
 #[derive(Args, Debug)]
 #[command(about = "Deploy an account to the Starknet")]

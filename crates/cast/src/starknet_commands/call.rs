@@ -1,4 +1,4 @@
-use crate::starknet_commands::response_structs::CallResponse;
+use crate::helpers::response_structs::CallResponse;
 use anyhow::{Context, Result};
 use cast::handle_rpc_error;
 use clap::Args;

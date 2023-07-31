@@ -1,6 +1,6 @@
 use crate::helpers::constants::OZ_CLASS_HASH;
+use crate::helpers::response_structs::AccountCreateResponse;
 use crate::helpers::scarb_utils::get_property;
-use crate::starknet_commands::response_structs::AccountCreateResponse;
 use anyhow::{anyhow, Context, Result};
 use camino::Utf8PathBuf;
 use cast::{extract_or_generate_salt, get_network, parse_number};
@@ -130,7 +130,7 @@ pub async fn create(
         add_profile: if add_profile {
             "Profile successfully added to Scarb.toml".to_string()
         } else {
-            "Flag was not set. No profile added to Scarb.toml".to_string()
+            "--add-profile flag was not set. No profile added to Scarb.toml".to_string()
         },
     })
 }
