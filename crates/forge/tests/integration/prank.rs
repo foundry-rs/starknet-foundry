@@ -34,7 +34,7 @@ fn start_prank_simple() {
                 let caller_address: felt252 = 123;
                 let caller_address: ContractAddress = caller_address.try_into().unwrap();
 
-                start_prank(caller_address, contract_address);
+                start_prank(contract_address, caller_address);
             
                 let caller_address = dispatcher.get_caller_address();
                 assert(caller_address == 123, 'Wrong caller address');
@@ -90,7 +90,7 @@ fn start_prank_with_other_syscall() {
                 let caller_address: felt252 = 123;
                 let caller_address: ContractAddress = caller_address.try_into().unwrap();
 
-                start_prank(caller_address, contract_address);
+                start_prank(contract_address, caller_address);
 
                 let caller_address = dispatcher.get_caller_address_and_emit_event();
                 assert(caller_address == 123, 'Wrong caller address');
@@ -146,7 +146,7 @@ fn start_prank_in_constructor_test() {
 
                 // TODO (#254): Change to the actual address
                 let contract_address: ContractAddress = 2598896470772924212281968896271340780432065735045468431712403008297614014532.try_into().unwrap();
-                start_prank(555, contract_address);
+                start_prank(contract_address, 555);
                 let contract_address: ContractAddress = deploy(prepared).unwrap().try_into().unwrap();
                 contract_address.print();
             
@@ -177,6 +177,138 @@ fn start_prank_in_constructor_test() {
 }
 
 #[test]
+fn stop_prank() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use result::ResultTrait;
+            use array::ArrayTrait;
+            use option::OptionTrait;
+            use traits::TryInto;
+            use starknet::ContractAddress;
+            use starknet::Felt252TryIntoContractAddress;
+            use cheatcodes::PreparedContract;
+            use forge_print::PrintTrait;
+
+            #[starknet::interface]
+            trait IPrankChecker<TContractState> {
+                fn get_caller_address(ref self: TContractState) -> felt252;
+            }
+
+            #[test]
+            fn test_stop_prank() {
+                let class_hash = declare('PrankChecker');
+                let prepared = PreparedContract { class_hash, constructor_calldata: @ArrayTrait::new() };
+                let contract_address = deploy(prepared).unwrap();
+                let dispatcher = IPrankCheckerDispatcher { contract_address };
+            
+                let target_caller_address: felt252 = 123;
+                let target_caller_address: ContractAddress = target_caller_address.try_into().unwrap();
+
+                let old_caller_address = dispatcher.get_caller_address();
+                old_caller_address.print();
+
+                start_prank(contract_address, target_caller_address);
+            
+                let new_caller_address = dispatcher.get_caller_address();
+                new_caller_address.print();
+                assert(new_caller_address == 123, 'Wrong caller address');
+
+                stop_prank(contract_address);
+
+                let new_caller_address = dispatcher.get_caller_address();
+                assert(old_caller_address == new_caller_address, 'Address did not change back');
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "PrankChecker".to_string(),
+            Path::new("tests/data/contracts/prank_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run(
+        &test.path().unwrap(),
+        &test.path().unwrap().join("src/lib.cairo"),
+        &Some(test.linked_libraries()),
+        &Default::default(),
+        Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
+        &test.contracts(corelib().path()).unwrap(),
+        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
+    )
+    .unwrap();
+
+    assert_passed!(result);
+}
+
+#[test]
+fn double_prank() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use result::ResultTrait;
+            use array::ArrayTrait;
+            use option::OptionTrait;
+            use traits::TryInto;
+            use starknet::ContractAddress;
+            use starknet::Felt252TryIntoContractAddress;
+            use cheatcodes::PreparedContract;
+
+            #[starknet::interface]
+            trait IPrankChecker<TContractState> {
+                fn get_caller_address(ref self: TContractState) -> felt252;
+            }
+
+            #[test]
+            fn test_stop_prank() {
+                let class_hash = declare('PrankChecker');
+                let prepared = PreparedContract { class_hash, constructor_calldata: @ArrayTrait::new() };
+                let contract_address = deploy(prepared).unwrap();
+                let dispatcher = IPrankCheckerDispatcher { contract_address };
+            
+                let target_caller_address: felt252 = 123;
+                let target_caller_address: ContractAddress = target_caller_address.try_into().unwrap();
+
+                let old_caller_address = dispatcher.get_caller_address();
+
+                start_prank(contract_address, target_caller_address);
+                start_prank(contract_address, target_caller_address);
+            
+                let new_caller_address = dispatcher.get_caller_address();
+                assert(new_caller_address == 123, 'Wrong caller address');
+
+                stop_prank(contract_address);
+
+                let new_caller_address = dispatcher.get_caller_address();
+                assert(old_caller_address == new_caller_address, 'Address did not change back');
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "PrankChecker".to_string(),
+            Path::new("tests/data/contracts/prank_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run(
+        &test.path().unwrap(),
+        &test.path().unwrap().join("src/lib.cairo"),
+        &Some(test.linked_libraries()),
+        &Default::default(),
+        Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
+        &test.contracts(corelib().path()).unwrap(),
+        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
+    )
+    .unwrap();
+
+    assert_passed!(result);
+
+
+}
+
+#[test]
 fn start_prank_with_proxy() {
     let test = test_case!(
         indoc!(
@@ -190,12 +322,10 @@ fn start_prank_with_proxy() {
             use starknet::Felt252TryIntoContractAddress;
             use cheatcodes::PreparedContract;
             use forge_print::PrintTrait;
-
             #[starknet::interface]
             trait IPrankCheckerProxy<TContractState> {
                 fn get_prank_checkers_caller_address(ref self: TContractState, address: ContractAddress) -> felt252;
             }
-
             #[test]
             fn test_prank_simple() {
                 let class_hash = declare('PrankChecker');
@@ -208,7 +338,6 @@ fn start_prank_with_proxy() {
                 let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
                 let proxy_contract_address = deploy(prepared).unwrap();
                 let proxy_dispatcher = IPrankCheckerProxyDispatcher { contract_address: proxy_contract_address };
-
                 let caller_address = proxy_dispatcher.get_prank_checkers_caller_address(prank_checker_contract_address);
                 assert(caller_address == 234, caller_address);
             }

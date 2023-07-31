@@ -119,8 +119,8 @@ fn advanced_types() {
         
             let balance = dispatcher.balance_of(user_address);
             assert(balance == 1111_u256, 'balance == 1111');
-        
-            start_prank(user_address, contract_address);
+
+            start_prank(contract_address, user_address);
             dispatcher.transfer(other_user_address, 1000_u256);
         
             let balance = dispatcher.balance_of(user_address);
