@@ -63,7 +63,8 @@ pub async fn declare(
     wait: bool,
 ) -> Result<DeclareResponse> {
     let contract_name: String = contract_name.to_string();
-    let manifest_path = get_scarb_manifest(path_to_scarb_toml).expect("Failed to obtain scarb manifest file path");
+    let manifest_path =
+        get_scarb_manifest(path_to_scarb_toml).expect("Failed to obtain scarb manifest file path");
     let command_result = Command::new("scarb")
         .arg("--manifest-path")
         .arg(&manifest_path)
@@ -76,13 +77,18 @@ pub async fn declare(
     let result_code = command_result
         .status
         .code()
-        .context("failed to obtain status code from scarb build")?;
+        .context("Failed to obtain status code from scarb build")?;
+    let result_msg = String::from_utf8(command_result.stdout)?;
     if result_code != 0 {
-        anyhow::bail!("scarb build returned non-zero exit code: {}", result_code);
+        anyhow::bail!(
+            "Scarb build returned non-zero exit code: {} - error message: {}",
+            result_code,
+            result_msg
+        );
     }
 
     // TODO #41 improve handling starknet artifacts
-    let compiled_directory = &manifest_path // ? scarb_metadata?
+    let compiled_directory = &manifest_path
         .parent()
         .map(|parent| parent.join("target/release"))
         .ok_or_else(|| anyhow!("Failed to obtain the path to compiled contracts"))?;
