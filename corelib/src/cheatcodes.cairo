@@ -86,7 +86,7 @@ fn start_roll(contract_address: ContractAddress, block_number: u64) {
 }
 
 fn start_prank(contract_address: ContractAddress, caller_address: ContractAddress) {
-    let contract_address_felt: felt252 = target_contract_address.into();
+    let contract_address_felt: felt252 = contract_address.into();
     let caller_address_felt: felt252 = caller_address.into();
     cheatcode::<'start_prank'>(array![caller_address_felt, contract_address_felt].span());
 }
