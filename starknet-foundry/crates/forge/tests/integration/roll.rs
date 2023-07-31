@@ -197,15 +197,17 @@ fn stop_roll() {
                 let contract_address: ContractAddress = contract_address.try_into().unwrap();
                 let dispatcher = IRollCheckerDispatcher { contract_address };
             
+                let old_block_number = dispatcher.get_block_number();
+
                 start_roll(contract_address, 234);
             
-                let block_number = dispatcher.get_block_number();
-                assert(block_number == 234, 'Wrong block number');
+                let new_block_number = dispatcher.get_block_number();
+                assert(new_block_number == 234, 'Wrong block number');
 
                 stop_roll(contract_address);
 
-                let block_number = dispatcher.get_block_number();
-                assert(block_number != 234, 'Block number did not change back');
+                let new_block_number = dispatcher.get_block_number();
+                assert(new_block_number == old_block_number, 'Block num did not change back');
             }
         "#
         ),

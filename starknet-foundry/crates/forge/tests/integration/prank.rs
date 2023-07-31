@@ -204,18 +204,20 @@ fn stop_prank() {
                 let contract_address: ContractAddress = contract_address.try_into().unwrap();
                 let dispatcher = IPrankCheckerDispatcher { contract_address };
             
-                let caller_address: felt252 = 123;
-                let caller_address: ContractAddress = caller_address.try_into().unwrap();
+                let target_caller_address: felt252 = 123;
+                let target_caller_address: ContractAddress = target_caller_address.try_into().unwrap();
 
-                start_prank(caller_address, contract_address);
+                let old_caller_address = dispatcher.get_caller_address();
+
+                start_prank(target_caller_address, contract_address);
             
-                let caller_address = dispatcher.get_caller_address();
-                assert(caller_address == 123, 'Wrong caller address');
+                let new_caller_address = dispatcher.get_caller_address();
+                assert(new_caller_address == 123, 'Wrong caller address');
 
                 stop_prank(contract_address);
 
-                let caller_address = dispatcher.get_caller_address();
-                assert(caller_address != 123, 'Address did not change back');
+                let new_caller_address = dispatcher.get_caller_address();
+                assert(old_caller_address == new_caller_address, 'Address did not change back');
             }
         "#
         ),
