@@ -191,12 +191,12 @@ impl ForgeHintProcessor for CairoHintProcessor<'_> {
 
     fn start_prank(
         &mut self,
+        contract_address: ContractAddress,
         caller_address: ContractAddress,
-        target_contract_address: ContractAddress,
     ) -> Result<(), EnhancedHintError> {
         self.cheated_state
             .pranked_contracts
-            .insert(target_contract_address, caller_address);
+            .insert(contract_address, caller_address);
         Ok(())
     }
 
@@ -301,15 +301,15 @@ impl CairoHintProcessor<'_> {
                 self.stop_warp(contract_address)
             }
             "start_prank" => {
-                let caller_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
+                let contract_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
                     inputs[0].clone().to_be_bytes(),
                 )?)?);
 
-                let target_contract_address = ContractAddress(PatriciaKey::try_from(
-                    StarkFelt::new(inputs[1].clone().to_be_bytes())?,
-                )?);
+                let caller_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
+                    inputs[1].clone().to_be_bytes(),
+                )?)?);
 
-                self.start_prank(caller_address, target_contract_address)
+                self.start_prank(contract_address, caller_address)
             }
             "stop_prank" => {
                 let target_contract_address = ContractAddress(PatriciaKey::try_from(

@@ -35,7 +35,7 @@ fn start_prank_simple() {
                 let caller_address: felt252 = 123;
                 let caller_address: ContractAddress = caller_address.try_into().unwrap();
 
-                start_prank(caller_address, contract_address);
+                start_prank(contract_address, caller_address);
             
                 let caller_address = dispatcher.get_caller_address();
                 assert(caller_address == 123, 'Wrong caller address');
@@ -92,7 +92,7 @@ fn start_prank_with_other_syscall() {
                 let caller_address: felt252 = 123;
                 let caller_address: ContractAddress = caller_address.try_into().unwrap();
 
-                start_prank(caller_address, contract_address);
+                start_prank(contract_address, caller_address);
 
                 let caller_address = dispatcher.get_caller_address_and_emit_event();
                 assert(caller_address == 123, 'Wrong caller address');
@@ -148,7 +148,7 @@ fn start_prank_in_constructor_test() {
 
                 // TODO (#254): Change to the actual address
                 let contract_address: ContractAddress = 2598896470772924212281968896271340780432065735045468431712403008297614014532.try_into().unwrap();
-                start_prank(555, contract_address);
+                start_prank(contract_address, 555);
                 let contract_address: ContractAddress = deploy(prepared).unwrap().try_into().unwrap();
                 contract_address.print();
             
@@ -209,7 +209,7 @@ fn stop_prank() {
 
                 let old_caller_address = dispatcher.get_caller_address();
 
-                start_prank(target_caller_address, contract_address);
+                start_prank(contract_address, target_caller_address);
             
                 let new_caller_address = dispatcher.get_caller_address();
                 assert(new_caller_address == 123, 'Wrong caller address');
