@@ -163,13 +163,11 @@ fn start_warp_with_proxy() {
                 let class_hash = declare('WarpChecker');
                 let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
                 let warp_checker_contract_address = deploy(prepared).unwrap();
-                let warp_checker_contract_address: ContractAddress = warp_checker_contract_address.try_into().unwrap();
                 start_warp(warp_checker_contract_address, 234);
                 
                 let class_hash = declare('WarpCheckerProxy');
                 let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
                 let proxy_contract_address = deploy(prepared).unwrap();
-                let proxy_contract_address: ContractAddress = proxy_contract_address.try_into().unwrap();
                 let proxy_dispatcher = IWarpCheckerProxyDispatcher { contract_address: proxy_contract_address };
 
                 let block_timestamp = proxy_dispatcher.get_warp_checkers_block_info(warp_checker_contract_address);
