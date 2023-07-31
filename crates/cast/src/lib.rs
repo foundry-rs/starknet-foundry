@@ -165,6 +165,8 @@ pub async fn wait_for_tx(
     tx_hash: FieldElement,
     retries: u8,
 ) -> Result<&str> {
+    println!("Transaction hash: {tx_hash:#x}");
+
     let mut retries = retries;
     'a: loop {
         sleep(Duration::from_secs(5));
@@ -180,6 +182,7 @@ pub async fn wait_for_tx(
                         L1Handler(receipt) => receipt.status,
                     }
                 } else {
+                    println!("Received transaction. Status: Pending");
                     continue 'a;
                 };
 
@@ -190,12 +193,14 @@ pub async fn wait_for_tx(
                     TransactionStatus::Rejected => {
                         return Err(anyhow!("Transaction has been rejected"));
                     }
-                    TransactionStatus::Pending => {}
+                    TransactionStatus::Pending => {
+                    }
                 }
             }
             Err(ProviderError::StarknetError(StarknetError::TransactionHashNotFound)) => {
                 if retries > 0 {
                     retries -= 1;
+                    println!("Waiting for transaction to be received");
                 } else {
                     bail!("Could not get transaction with hash: {tx_hash:#x}")
                 }
