@@ -1,6 +1,7 @@
 use std::sync::Arc;
 use std::{collections::HashMap, fs, path::PathBuf};
 
+use blockifier::state::cached_state::GlobalContractCache;
 use blockifier::{
     abi::abi_utils::get_storage_var_address,
     block_context::BlockContext,
@@ -156,10 +157,13 @@ pub fn build_testing_state(predeployed_contracts: &Utf8PathBuf) -> CachedState<D
             *test_account_address.0.key(),
         ),
     ]);
-    CachedState::new(DictStateReader {
-        storage_view,
-        address_to_class_hash,
-        class_hash_to_class,
-        ..Default::default()
-    })
+    CachedState::new(
+        DictStateReader {
+            storage_view,
+            address_to_class_hash,
+            class_hash_to_class,
+            ..Default::default()
+        },
+        GlobalContractCache::default(),
+    )
 }

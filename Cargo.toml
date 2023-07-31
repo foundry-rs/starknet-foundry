@@ -16,7 +16,7 @@ license = "Apache-2.0"
 license-file = "LICENSE"
 
 [workspace.dependencies]
-blockifier = { git = "https://github.com/starkware-libs/blockifier.git", rev = "d568042" }
+blockifier = { git = "https://github.com/starkware-libs/blockifier.git", rev = "bf38764" }
 starknet_api = "0.3.0"
 cairo-lang-casm = "2.1.0-rc2"
 cairo-lang-runner = "2.1.0-rc2"

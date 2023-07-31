@@ -209,7 +209,7 @@ mod tests {
             version = "0.1.0"
             
             [dependencies]
-            starknet = "2.0.1"
+            starknet = "2.1.0-rc2"
             
             [[target.starknet-contract]]
             name = "essa"
