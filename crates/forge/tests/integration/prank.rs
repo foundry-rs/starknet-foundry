@@ -304,8 +304,6 @@ fn double_prank() {
     .unwrap();
 
     assert_passed!(result);
-
-
 }
 
 #[test]
