@@ -179,7 +179,6 @@ fn start_prank_in_constructor_test() {
 }
 
 #[test]
-#[ignore]
 fn start_prank_with_proxy() {
     let test = test_case!(
         indoc!(
@@ -206,7 +205,7 @@ fn start_prank_with_proxy() {
                 let prank_checker_contract_address = deploy(prepared).unwrap();
                 let prank_checker_contract_address: ContractAddress = prank_checker_contract_address.try_into().unwrap();
                 let contract_address: ContractAddress = 234.try_into().unwrap();
-                start_prank(prank_checker_contract_address, contract_address);
+                start_prank(contract_address, prank_checker_contract_address);
                 
                 let class_hash = declare('PrankCheckerProxy');
                 let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
