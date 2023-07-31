@@ -162,8 +162,8 @@ fn test_too_low_max_fee(contract_path: &str, salt: &str, account: &str) {
     fs::remove_dir_all(contract_path).unwrap();
 }
 
-#[test_case("/v1/no_sierra", "../../../accounts/accounts.json" ; "dupa")]
-#[test_case("/v1/no_casm", "../../../accounts/accounts.json" ; "dupa2")]
+#[test_case("/v1/no_sierra", "../../../accounts/accounts.json" ; "when there is no sierra artifact")]
+#[test_case("/v1/no_casm", "../../../accounts/accounts.json" ; "when there is no casm artifact")]
 fn scarb_no_artifacts(contract_path: &str, accounts_file_path: &str) {
     let args = vec![
         "--url",
@@ -176,14 +176,19 @@ fn scarb_no_artifacts(contract_path: &str, accounts_file_path: &str) {
         "user1",
         "declare",
         "--contract-name",
-        "BuildFails",
+        "SimpleBalance",
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
         .current_dir(CONTRACTS_DIR.to_string() + contract_path)
         .args(args);
+    let assert = snapbox.assert().failure();
+    let stderr_output = String::from_utf8(assert.get_output().stderr.clone()).unwrap();
 
-    snapbox.assert().success().stderr_matches(indoc! {r#"
-        error: scarb build returned non-zero exit code: 1
-    "#});
+    assert!(
+        stderr_output.contains(
+            "is set to 'true' under your [[target.starknet-contract]] field in Scarb.toml"
+        ),
+        "Expected error message not found in stderr: {stderr_output}",
+    );
 }
