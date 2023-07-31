@@ -28,7 +28,8 @@ pub async fn test_happy_case() {
     let bdg = snapbox.assert();
     let out = bdg.get_output();
 
-    let stdout_str = std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
+    let stdout_str =
+        std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
     assert!(stdout_str.contains("command: account create"));
     assert!(stdout_str.contains("max_fee: "));
     assert!(stdout_str.contains("address: "));
