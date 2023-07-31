@@ -22,23 +22,21 @@ impl IRollChecker of super::IRollChecker<ContractState> {
 We can use roll in a test to change 
 ```rust
 use result::ResultTrait;
-use array::ArrayTrait;
-use option::OptionTrait;
-use starknet::ContractAddress;
-use starknet::Felt252TryIntoContractAddress;
-use cheatcodes::PreparedContract;
-use forge_print::PrintTrait;
 
 #[test]
 fn test_roll() {
     // ...
+    let original_block_number = dispatcher.get_block_number().unwrap();
     start_roll(contract_address, 234);
 
-    let new_block_number = dispatcher.get_block_number();
+    let new_block_number = dispatcher.get_block_number().unwrap();
     assert(new_block_number == 234, 'Wrong block number');
 
     stop_roll(contract_address);
 
+    // Block number is not mocked anymore
+    let current_block_number = dispatcher.get_block_number().unwrap();
+    assert(current_block_number == original_block_number, 'Wrong block number');
     // ...
 }
 ```
