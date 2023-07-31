@@ -3,10 +3,8 @@ use anyhow::{anyhow, Context, Result};
 use cairo_felt::Felt252;
 use cairo_lang_compiler::db::RootDatabase;
 use cairo_lang_compiler::diagnostics::DiagnosticsReporter;
-use cairo_lang_compiler::project::setup_project;
 use cairo_lang_compiler::project::{
-    get_main_crate_ids_from_project, setup_single_file_project,
-    update_crate_roots_from_project_config, ProjectError,
+    get_main_crate_ids_from_project, update_crate_roots_from_project_config, ProjectError,
 };
 use cairo_lang_debug::DebugWithDb;
 use cairo_lang_defs::ids::{FreeFunctionId, FunctionWithBodyId, ModuleItemId};
@@ -35,11 +33,15 @@ use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use cairo_lang_utils::OptionHelper;
 use itertools::Itertools;
 use num_traits::ToPrimitive;
+use project::PHANTOM_PACKAGE_NAME_PREFIX;
+use project::{setup_project, setup_single_file_project};
 use smol_str::SmolStr;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+#[allow(clippy::module_name_repetitions)]
+mod project;
 pub mod sierra_casm_generator;
 
 pub fn build_project_config(
@@ -357,7 +359,9 @@ pub fn collect_tests(
         .collect_vec()
         .into_iter()
         .map(|(test_name, config)| TestCase {
-            name: test_name,
+            name: test_name
+                .replace(PHANTOM_PACKAGE_NAME_PREFIX, "")
+                .to_string(),
             available_gas: config.available_gas,
         })
         .collect();
