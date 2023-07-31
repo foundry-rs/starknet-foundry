@@ -188,6 +188,7 @@ fn stop_prank() {
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
             use cheatcodes::PreparedContract;
+            use forge_print::PrintTrait;
 
             #[starknet::interface]
             trait IPrankChecker<TContractState> {
@@ -199,17 +200,18 @@ fn stop_prank() {
                 let class_hash = declare('PrankChecker');
                 let prepared = PreparedContract { class_hash, constructor_calldata: @ArrayTrait::new() };
                 let contract_address = deploy(prepared).unwrap();
-                let contract_address: ContractAddress = contract_address.try_into().unwrap();
                 let dispatcher = IPrankCheckerDispatcher { contract_address };
             
                 let target_caller_address: felt252 = 123;
                 let target_caller_address: ContractAddress = target_caller_address.try_into().unwrap();
 
                 let old_caller_address = dispatcher.get_caller_address();
+                old_caller_address.print();
 
                 start_prank(contract_address, target_caller_address);
             
                 let new_caller_address = dispatcher.get_caller_address();
+                new_caller_address.print();
                 assert(new_caller_address == 123, 'Wrong caller address');
 
                 stop_prank(contract_address);
@@ -263,7 +265,6 @@ fn double_prank() {
                 let class_hash = declare('PrankChecker');
                 let prepared = PreparedContract { class_hash, constructor_calldata: @ArrayTrait::new() };
                 let contract_address = deploy(prepared).unwrap();
-                let contract_address: ContractAddress = contract_address.try_into().unwrap();
                 let dispatcher = IPrankCheckerDispatcher { contract_address };
             
                 let target_caller_address: felt252 = 123;

@@ -192,7 +192,6 @@ fn stop_roll() {
                 let class_hash = declare('RollChecker');
                 let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
                 let contract_address = deploy(prepared).unwrap();
-                let contract_address: ContractAddress = contract_address.try_into().unwrap();
                 let dispatcher = IRollCheckerDispatcher { contract_address };
             
                 let old_block_number = dispatcher.get_block_number();
@@ -254,7 +253,6 @@ fn double_roll() {
                 let class_hash = declare('RollChecker');
                 let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
                 let contract_address = deploy(prepared).unwrap();
-                let contract_address: ContractAddress = contract_address.try_into().unwrap();
                 let dispatcher = IRollCheckerDispatcher { contract_address };
             
                 let old_block_number = dispatcher.get_block_number();
