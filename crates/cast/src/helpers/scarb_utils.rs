@@ -42,21 +42,24 @@ pub fn get_property(
 pub fn get_scarb_manifest(path: &Option<Utf8PathBuf>) -> Result<Utf8PathBuf> {
     which::which("scarb")
         .context("Cannot find `scarb` binary in PATH. Make sure you have Scarb installed https://github.com/software-mansion/scarb")?;
-    path.as_ref().map_or_else(
-        || {
-            let output = Command::new("scarb")
-                .arg("manifest-path")
-                .stdout(Stdio::piped())
-                .output()
-                .expect("Failed to execute scarb manifest-path command");
-            let output_str = String::from_utf8(output.stdout)
-                .expect("Invalid output of scarb manifest-path command");
-            let path = Utf8PathBuf::from_str(output_str.trim())
-                .expect("Scarb manifest-path returned invalid path");
-            Ok(path)
-        },
-        |path| Ok(path.clone()),
-    )
+
+    if let Some(path) = path {
+        return Ok(path.clone());
+    }
+
+    let output = Command::new("scarb")
+        .arg("manifest-path")
+        .stdout(Stdio::piped())
+        .output()
+        .context("Failed to execute scarb manifest-path command")?;
+
+    let output_str = String::from_utf8(output.stdout)
+        .context("Invalid output of scarb manifest-path command")?;
+
+    let path = Utf8PathBuf::from_str(output_str.trim())
+        .context("Scarb manifest-path returned invalid path")?;
+
+    Ok(path)
 }
 
 pub fn parse_scarb_config(
