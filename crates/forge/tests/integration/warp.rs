@@ -173,3 +173,65 @@ fn start_warp_in_constructor_test() {
 
     assert_passed!(result);
 }
+
+#[test]
+fn start_warp_with_proxy() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use result::ResultTrait;
+            use array::ArrayTrait;
+            use option::OptionTrait;
+            use traits::TryInto;
+            use traits::Into;
+            use starknet::ContractAddress;
+            use starknet::Felt252TryIntoContractAddress;
+            use cheatcodes::PreparedContract;
+
+            #[starknet::interface]
+            trait IWarpCheckerProxy<TContractState> {
+                fn get_warp_checkers_block_info(ref self: TContractState, address: ContractAddress) -> u64;
+            }
+
+            #[test]
+            fn test_warp_simple() {
+                let class_hash = declare('WarpChecker');
+                let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
+                let warp_checker_contract_address = deploy(prepared).unwrap();
+                start_warp(warp_checker_contract_address, 234);
+                
+                let class_hash = declare('WarpCheckerProxy');
+                let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
+                let proxy_contract_address = deploy(prepared).unwrap();
+                let proxy_dispatcher = IWarpCheckerProxyDispatcher { contract_address: proxy_contract_address };
+
+                let block_timestamp = proxy_dispatcher.get_warp_checkers_block_info(warp_checker_contract_address);
+                assert(block_timestamp == 234, block_timestamp.into());
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "WarpChecker".to_string(),
+            Path::new("tests/data/contracts/warp_checker.cairo"),
+        )
+        .unwrap(),
+        Contract::from_code_path(
+            "WarpCheckerProxy".to_string(),
+            Path::new("tests/data/contracts/warp_checker_proxy.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run(
+        &test.path().unwrap(),
+        &test.path().unwrap().join("src/lib.cairo"),
+        &Some(test.linked_libraries()),
+        &Default::default(),
+        Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
+        &test.contracts(corelib().path()).unwrap(),
+        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
+    )
+    .unwrap();
+
+    assert_passed!(result);
+}
