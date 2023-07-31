@@ -481,9 +481,7 @@ impl CheatableSyscallHandler<'_> {
             };
             response_wrapper.write(vm, &mut self.syscall_handler.syscall_ptr)?;
             return Ok(());
-        }
-
-        if let SyscallSelector::CallContract = selector {
+        } else if SyscallSelector::CallContract == selector {
             // Increment, since the selector was peeked into before
             self.syscall_handler.syscall_ptr += 1;
             return self.execute_syscall(
@@ -496,6 +494,9 @@ impl CheatableSyscallHandler<'_> {
         self.syscall_handler.execute_next_syscall(vm, hint)
     }
 
+    // Exactly the same implementation as SyscallHintProcessor::execute_syscall
+    // It is copied because it is private in SyscallHintProcessor 
+    // and we need to call it here to override syscalls logic. 
     fn execute_syscall<Request, Response, ExecuteCallback>(
         &mut self,
         vm: &mut VirtualMachine,
@@ -565,6 +566,9 @@ impl CheatableSyscallHandler<'_> {
 }
 
 #[derive(Debug)]
+// Inspired by blockifier::execution::syscalls::SingleSegmentResponse
+// It is created here because fields in the original structure are private
+// so we cannot create it in call_contract_syscall
 pub struct SingleSegmentResponse {
     segment: ReadOnlySegment,
 }
@@ -575,6 +579,8 @@ impl SyscallResponse for SingleSegmentResponse {
     }
 }
 
+// Inspired by blockifier::execution::syscalls::call_contract
+// Calls a contract using our implementation with modified logic 
 pub fn call_contract_syscall(
     request: CallContractRequest,
     vm: &mut VirtualMachine,
@@ -600,12 +606,14 @@ pub fn call_contract_syscall(
     })
 }
 
+// Inspired by blockifier::hint_processor::execute_inner_call
 pub fn execute_inner_call(
     call: &mut CallEntryPoint,
     vm: &mut VirtualMachine,
     syscall_handler: &mut CheatableSyscallHandler<'_>,
     remaining_gas: &mut u64,
 ) -> SyscallResult<ReadOnlySegment> {
+    // Modified code
     let call_info = execute_call_entry_point(
         call,
         syscall_handler.syscall_handler.state,
@@ -613,6 +621,7 @@ pub fn execute_inner_call(
         syscall_handler.syscall_handler.resources,
         syscall_handler.syscall_handler.context,
     )?;
+    // Modified end
 
     let raw_retdata = &call_info.execution.retdata.0;
 

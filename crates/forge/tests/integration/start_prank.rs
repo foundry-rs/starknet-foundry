@@ -201,14 +201,12 @@ fn start_prank_with_proxy() {
                 let class_hash = declare('PrankChecker');
                 let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
                 let prank_checker_contract_address = deploy(prepared).unwrap();
-                let prank_checker_contract_address: ContractAddress = prank_checker_contract_address.try_into().unwrap();
                 let contract_address: ContractAddress = 234.try_into().unwrap();
                 start_prank(contract_address, prank_checker_contract_address);
                 
                 let class_hash = declare('PrankCheckerProxy');
                 let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
                 let proxy_contract_address = deploy(prepared).unwrap();
-                let proxy_contract_address: ContractAddress = proxy_contract_address.try_into().unwrap();
                 let proxy_dispatcher = IPrankCheckerProxyDispatcher { contract_address: proxy_contract_address };
 
                 let caller_address = proxy_dispatcher.get_prank_checkers_caller_address(prank_checker_contract_address);

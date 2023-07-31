@@ -192,7 +192,6 @@ fn start_roll_with_proxy() {
                 let class_hash = declare('RollChecker');
                 let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
                 let roll_checker_contract_address = deploy(prepared).unwrap();
-                let roll_checker_contract_address: ContractAddress = roll_checker_contract_address.try_into().unwrap();
                 start_roll(roll_checker_contract_address, 234);
                 
                 let class_hash = declare('RollCheckerProxy');
