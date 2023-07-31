@@ -111,10 +111,7 @@ trait ForgeHintProcessor {
 
     fn stop_warp(&mut self, contract_address: ContractAddress) -> Result<(), EnhancedHintError>;
 
-    fn stop_prank(
-        &mut self,
-        target_contract_address: ContractAddress,
-    ) -> Result<(), EnhancedHintError>;
+    fn stop_prank(&mut self, contract_address: ContractAddress) -> Result<(), EnhancedHintError>;
 }
 
 impl HintProcessorLogic for CairoHintProcessor<'_> {
@@ -191,12 +188,12 @@ impl ForgeHintProcessor for CairoHintProcessor<'_> {
 
     fn start_prank(
         &mut self,
+        contract_address: ContractAddress,
         caller_address: ContractAddress,
-        target_contract_address: ContractAddress,
     ) -> Result<(), EnhancedHintError> {
         self.cheated_state
             .pranked_contracts
-            .insert(target_contract_address, caller_address);
+            .insert(contract_address, caller_address);
         Ok(())
     }
 
@@ -214,13 +211,10 @@ impl ForgeHintProcessor for CairoHintProcessor<'_> {
         Ok(())
     }
 
-    fn stop_prank(
-        &mut self,
-        target_contract_address: ContractAddress,
-    ) -> Result<(), EnhancedHintError> {
+    fn stop_prank(&mut self, contract_address: ContractAddress) -> Result<(), EnhancedHintError> {
         self.cheated_state
             .pranked_contracts
-            .remove(&target_contract_address);
+            .remove(&contract_address);
         Ok(())
     }
 }
@@ -301,22 +295,22 @@ impl CairoHintProcessor<'_> {
                 self.stop_warp(contract_address)
             }
             "start_prank" => {
-                let caller_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
+                let contract_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
                     inputs[0].clone().to_be_bytes(),
                 )?)?);
 
-                let target_contract_address = ContractAddress(PatriciaKey::try_from(
-                    StarkFelt::new(inputs[1].clone().to_be_bytes())?,
-                )?);
+                let caller_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
+                    inputs[1].clone().to_be_bytes(),
+                )?)?);
 
-                self.start_prank(caller_address, target_contract_address)
+                self.start_prank(contract_address, caller_address)
             }
             "stop_prank" => {
-                let target_contract_address = ContractAddress(PatriciaKey::try_from(
-                    StarkFelt::new(inputs[0].clone().to_be_bytes())?,
-                )?);
+                let contract_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
+                    inputs[0].clone().to_be_bytes(),
+                )?)?);
 
-                self.stop_prank(target_contract_address)
+                self.stop_prank(contract_address)
             }
             "mock_call" => todo!(),
             "declare" => declare(&mut buffer, &mut self.blockifier_state, &inputs, contracts),
