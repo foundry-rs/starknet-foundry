@@ -193,16 +193,15 @@ pub async fn wait_for_tx(
                     TransactionStatus::Rejected => {
                         return Err(anyhow!("Transaction has been rejected"));
                     }
-                    TransactionStatus::Pending => {
-                    }
+                    TransactionStatus::Pending => {}
                 }
             }
             Err(ProviderError::StarknetError(StarknetError::TransactionHashNotFound)) => {
                 if retries > 0 {
                     retries -= 1;
-                    println!("Waiting for transaction to be received");
+                    println!("Waiting for transaction to be received. Retries left: {retries}");
                 } else {
-                    bail!("Could not get transaction with hash: {tx_hash:#x}. Transaction not received or rejected.")
+                    bail!("Could not get transaction with hash: {tx_hash:#x}. Transaction rejected or not received.")
                 }
             }
             Err(err) => return Err(err.into()),
@@ -242,15 +241,20 @@ pub fn handle_rpc_error<T, G>(
     }
 }
 
-pub async fn handle_wait_for_tx_result<T>(
+pub async fn handle_wait_for_tx<T>(
     provider: &JsonRpcClient<HttpTransport>,
     transaction_hash: FieldElement,
     return_value: T,
+    wait: bool,
 ) -> Result<T> {
-    match wait_for_tx(provider, transaction_hash, DEFAULT_RETRIES).await {
-        Ok(_) => Ok(return_value),
-        Err(message) => Err(anyhow!(message)),
+    if wait {
+        return match wait_for_tx(provider, transaction_hash, DEFAULT_RETRIES).await {
+            Ok(_) => Ok(return_value),
+            Err(message) => Err(anyhow!(message)),
+        };
     }
+
+    Ok(return_value)
 }
 
 pub fn print_formatted(

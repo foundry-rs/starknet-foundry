@@ -1,7 +1,7 @@
 use crate::helpers::response_structs::DeclareResponse;
 use anyhow::{anyhow, Context, Result};
 use camino::Utf8PathBuf;
-use cast::{handle_rpc_error, handle_wait_for_tx_result};
+use cast::{handle_rpc_error, handle_wait_for_tx};
 use clap::Args;
 use scarb::ops::find_manifest_path;
 use serde::Deserialize;
@@ -57,6 +57,7 @@ pub async fn declare(
     contract_name: &str,
     max_fee: Option<FieldElement>,
     account: &mut SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
+    wait: bool,
 ) -> Result<DeclareResponse> {
     let contract_name: String = contract_name.to_string();
     which::which("scarb")
@@ -172,13 +173,14 @@ pub async fn declare(
 
     match declared {
         Ok(result) => {
-            handle_wait_for_tx_result(
+            handle_wait_for_tx(
                 account.provider(),
                 result.transaction_hash,
                 DeclareResponse {
                     class_hash: result.class_hash,
                     transaction_hash: result.transaction_hash,
                 },
+                wait,
             )
             .await
         }

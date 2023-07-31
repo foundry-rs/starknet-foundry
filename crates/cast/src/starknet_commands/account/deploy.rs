@@ -1,4 +1,4 @@
-use crate::helpers::constants::{DEFAULT_RETRIES, OZ_CLASS_HASH};
+use crate::helpers::constants::OZ_CLASS_HASH;
 use anyhow::{anyhow, bail, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
@@ -9,9 +9,8 @@ use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider};
 use starknet::signers::{LocalWallet, SigningKey};
 
-use cast::{get_network, handle_rpc_error, parse_number, wait_for_tx};
+use cast::{get_network, handle_rpc_error, handle_wait_for_tx, parse_number};
 
-use crate::helpers::constants::OZ_CLASS_HASH;
 use crate::helpers::response_structs::InvokeResponse;
 
 #[derive(Args, Debug)]
@@ -32,6 +31,7 @@ pub async fn deploy(
     name: String,
     network: &str,
     max_fee: FieldElement,
+    wait: bool,
 ) -> Result<InvokeResponse> {
     let network_value = get_network(network)?.get_value();
 
@@ -83,8 +83,16 @@ pub async fn deploy(
         Err(AccountFactoryError::Provider(error)) => handle_rpc_error(error),
         Err(_) => Err(anyhow!("Unknown RPC error")),
         Ok(result) => {
-            if let Err(message) =
-                wait_for_tx(provider, result.transaction_hash, DEFAULT_RETRIES).await
+            let return_value = InvokeResponse {
+                transaction_hash: result.transaction_hash,
+            };
+            if let Err(message) = handle_wait_for_tx(
+                provider,
+                result.transaction_hash,
+                return_value.clone(),
+                wait,
+            )
+            .await
             {
                 return Err(anyhow!(message));
             }
@@ -93,9 +101,7 @@ pub async fn deploy(
             std::fs::write(path, serde_json::to_string_pretty(&items).unwrap())
                 .expect("Couldn't write to accounts file");
 
-            Ok(InvokeResponse {
-                transaction_hash: result.transaction_hash,
-            })
+            Ok(return_value)
         }
     }
 }

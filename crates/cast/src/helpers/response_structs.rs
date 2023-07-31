@@ -1,7 +1,7 @@
 use serde::Serialize;
 use starknet::core::types::FieldElement;
 
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 pub struct InvokeResponse {
     pub transaction_hash: FieldElement,
 }

@@ -2,7 +2,7 @@ use anyhow::{anyhow, Result};
 use clap::Args;
 
 use crate::helpers::response_structs::InvokeResponse;
-use cast::{handle_rpc_error, handle_wait_for_tx_result};
+use cast::{handle_rpc_error, handle_wait_for_tx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{Account, Call, ConnectedAccount, SingleOwnerAccount};
 use starknet::core::types::FieldElement;
@@ -64,19 +64,15 @@ pub async fn execute_calls(
 
     match execution.send().await {
         Ok(result) => {
-            let return_value = InvokeResponse {
-                        transaction_hash: result.transaction_hash,
-                    };
-            if wait {
-                handle_wait_for_tx_result(
-                    account.provider(),
-                    result.transaction_hash,
-                    return_value,
-                )
-                .await
-            } else {
-                return Ok(return_value);
-            }
+            handle_wait_for_tx(
+                account.provider(),
+                result.transaction_hash,
+                InvokeResponse {
+                    transaction_hash: result.transaction_hash,
+                },
+                wait,
+            )
+            .await
         }
         Err(Provider(error)) => handle_rpc_error(error),
         _ => Err(anyhow!("Unknown RPC error")),

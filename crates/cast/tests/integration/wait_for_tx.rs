@@ -47,7 +47,9 @@ async fn test_rejected_transaction() {
 }
 
 #[tokio::test]
-#[should_panic(expected = "Could not get transaction with hash: 0x123456789")]
+#[should_panic(
+    expected = "Could not get transaction with hash: 0x123456789. Transaction rejected or not received."
+)]
 async fn test_wait_for_nonexistent_tx() {
     let provider = create_test_provider();
     wait_for_tx(
