@@ -58,9 +58,9 @@ fn start_warp_simple() {
                 start_warp(warp_checker.contract_address, 123);
                 start_roll(warp_checker.contract_address, 456);
                 
-                let (block_timestamp, block_timestamp) = warp_checker.get_block_timestamp_and_number();
+                let (block_timestamp, block_number) = warp_checker.get_block_timestamp_and_number();
                 assert(block_timestamp == 123, 'Wrong block timestamp');
-                assert(block_timestamp == 456, 'Wrong block number');
+                assert(block_number == 456, 'Wrong block number');
             }
         "#
         ),
