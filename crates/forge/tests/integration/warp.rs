@@ -80,6 +80,24 @@ fn start_warp_simple() {
                 let new_block_timestamp = warp_checker.get_block_timestamp();
                 assert(new_block_timestamp == old_block_timestamp, 'Timestamp did not change back')
             }
+
+            #[test]
+            fn test_double_warp() {
+                let warp_checker = deploy_warp_checker();
+
+                let old_block_timestamp = warp_checker.get_block_timestamp();
+
+                start_warp(warp_checker.contract_address, 123);
+                start_warp(warp_checker.contract_address, 123);
+
+                let new_block_timestamp = warp_checker.get_block_timestamp();
+                assert(new_block_timestamp == 123, 'Wrong block timestamp');
+
+                stop_warp(warp_checker.contract_address);
+
+                let new_block_timestamp = warp_checker.get_block_timestamp();
+                assert(new_block_timestamp == old_block_timestamp, 'Timestamp did not change back')
+            }
         "#
         ),
         Contract::from_code_path(
