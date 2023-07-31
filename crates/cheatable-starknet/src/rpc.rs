@@ -495,8 +495,8 @@ impl CheatableSyscallHandler<'_> {
     }
 
     // Exactly the same implementation as SyscallHintProcessor::execute_syscall
-    // It is copied because it is private in SyscallHintProcessor 
-    // and we need to call it here to override syscalls logic. 
+    // It is copied because it is private in SyscallHintProcessor
+    // and we need to call it here to override syscalls logic.
     fn execute_syscall<Request, Response, ExecuteCallback>(
         &mut self,
         vm: &mut VirtualMachine,
@@ -580,7 +580,7 @@ impl SyscallResponse for SingleSegmentResponse {
 }
 
 // Inspired by blockifier::execution::syscalls::call_contract
-// Calls a contract using our implementation with modified logic 
+// Calls a contract using our implementation with modified logic
 pub fn call_contract_syscall(
     request: CallContractRequest,
     vm: &mut VirtualMachine,
