@@ -210,13 +210,18 @@ async fn main() -> Result<()> {
                     account_file_exists(&accounts_file_path)?;
                     let mut account =
                         get_account(&account, &accounts_file_path, &provider, &network)?;
-                    starknet_commands::multicall::run::run(
+                    let result = starknet_commands::multicall::run::run(
                         &run.path,
                         &mut account,
+                        run.max_fee,
+                    )
+                    .await;
+
+                    starknet_commands::multicall::run::print_multicall_result(
+                        result,
                         cli.int_format,
                         cli.json,
-                    )
-                    .await?;
+                    )?;
                 }
             }
             Ok(())

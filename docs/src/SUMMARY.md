@@ -49,4 +49,6 @@
     * [deploy](appendix/cast/deploy.md)
     * [invoke](appendix/cast/invoke.md)
     * [call](appendix/cast/call.md)
-    * [multicall](appendix/cast/multicall.md)
+    * [multicall](appendix/cast/multicall/multicall.md)
+        * [new](appendix/cast/multicall/new.md)
+        * [run](appendix/cast/multicall/run.md)
