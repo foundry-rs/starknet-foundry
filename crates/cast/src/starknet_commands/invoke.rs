@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Result};
 use clap::Args;
 
-use cast::print_formatted;
+use crate::helpers::response_structs::InvokeResponse;
 use cast::{handle_rpc_error, handle_wait_for_tx_result};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{Account, Call, ConnectedAccount, SingleOwnerAccount};
@@ -31,28 +31,6 @@ pub struct Invoke {
     pub max_fee: Option<FieldElement>,
 }
 
-pub fn print_invoke_result(
-    invoke_result: Result<FieldElement>,
-    int_format: bool,
-    json: bool,
-) -> Result<()> {
-    match invoke_result {
-        Ok(transaction_hash) => print_formatted(
-            vec![
-                ("command", "Invoke".to_string()),
-                ("transaction_hash", format!("{transaction_hash}")),
-            ],
-            int_format,
-            json,
-            false,
-        )?,
-        Err(error) => {
-            print_formatted(vec![("error", error.to_string())], int_format, json, true)?;
-        }
-    };
-    Ok(())
-}
-
 pub async fn invoke(
     contract_address: FieldElement,
     entry_point_name: &str,
@@ -60,7 +38,7 @@ pub async fn invoke(
     max_fee: Option<FieldElement>,
     account: &mut SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     wait: bool,
-) -> Result<FieldElement> {
+) -> Result<InvokeResponse> {
     let call = Call {
         to: contract_address,
         selector: get_selector_from_name(entry_point_name)?,
@@ -75,7 +53,7 @@ pub async fn execute_calls(
     calls: Vec<Call>,
     max_fee: Option<FieldElement>,
     wait: bool,
-) -> Result<FieldElement> {
+) -> Result<InvokeResponse> {
     let execution = account.execute(calls);
 
     let execution = if let Some(max_fee) = max_fee {
@@ -86,14 +64,16 @@ pub async fn execute_calls(
 
     match execution.send().await {
         Ok(result) => {
-            let return_value = result.transaction_hash;
+            let return_value = InvokeResponse {
+                        transaction_hash: result.transaction_hash,
+                    };
             if wait {
                 handle_wait_for_tx_result(
                     account.provider(),
                     result.transaction_hash,
                     return_value,
                 )
-                    .await
+                .await
             } else {
                 return Ok(return_value);
             }

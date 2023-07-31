@@ -23,8 +23,8 @@ $ sncast call \
   --function some_function \
   --calldata 1 2 0x1e
   
-command: Call
-response: [FieldElement { inner: 0x0000000000000000000000000000000000000000000000000000000000000000 }]
+command: call
+response: [0x0]
 ```
 
 ### Without profiles
@@ -38,8 +38,8 @@ $ sncast \
   --function "some_function" \
   --calldata 1 2 3
 
-command: Call
-response: [FieldElement { inner: 0x0000000000000000000000000000000000000000000000000000000000000000 }]
+command: call
+response: [0x1, 0x23, 0x4]
 ```
 
 > 📝 **Note**

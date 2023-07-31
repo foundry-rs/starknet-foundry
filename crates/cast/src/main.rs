@@ -1,12 +1,11 @@
 use crate::helpers::scarb_utils::parse_scarb_config;
-use crate::starknet_commands::account::deploy::print_account_deploy_result;
-use crate::starknet_commands::account::{create::print_account_create_result, Account};
+use crate::starknet_commands::account::Account;
 use crate::starknet_commands::{
     account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
 };
 use anyhow::Result;
 use camino::Utf8PathBuf;
-use cast::{account_file_exists, get_account, get_block_id, get_provider, print_formatted};
+use cast::{account_file_exists, get_account, get_block_id, get_provider, print_command_result};
 use clap::{Parser, Subcommand};
 
 mod helpers;
@@ -102,36 +101,14 @@ async fn main() -> Result<()> {
             account_file_exists(&accounts_file_path)?;
             let mut account = get_account(&account, &accounts_file_path, &provider, &network)?;
 
-            let result = starknet_commands::declare::declare(
+            let mut result = starknet_commands::declare::declare(
                 &declare.contract,
                 declare.max_fee,
                 &mut account,
             )
             .await;
 
-            match result {
-                Ok(declared_contract) => print_formatted(
-                    vec![
-                        ("command", "Declare".to_string()),
-                        ("class_hash", format!("{}", declared_contract.class_hash)),
-                        (
-                            "transaction_hash",
-                            format!("{}", declared_contract.transaction_hash),
-                        ),
-                    ],
-                    cli.int_format,
-                    cli.json,
-                    false,
-                )?,
-                Err(error) => {
-                    print_formatted(
-                        vec![("error", error.to_string())],
-                        cli.int_format,
-                        cli.json,
-                        true,
-                    )?;
-                }
-            }
+            print_command_result("declare", &mut result, cli.int_format, cli.json)?;
 
             Ok(())
         }
@@ -139,7 +116,7 @@ async fn main() -> Result<()> {
             account_file_exists(&accounts_file_path)?;
             let account = get_account(&account, &accounts_file_path, &provider, &network)?;
 
-            let result = starknet_commands::deploy::deploy(
+            let mut result = starknet_commands::deploy::deploy(
                 deploy.class_hash,
                 deploy.constructor_calldata,
                 deploy.salt,
@@ -148,14 +125,14 @@ async fn main() -> Result<()> {
                 &account,
             )
             .await;
-            starknet_commands::deploy::print_deploy_result(result, cli.int_format, cli.json)?;
+            print_command_result("deploy", &mut result, cli.int_format, cli.json)?;
 
             Ok(())
         }
         Commands::Call(call) => {
             let block_id = get_block_id(&call.block_id)?;
 
-            let result = starknet_commands::call::call(
+            let mut result = starknet_commands::call::call(
                 call.contract_address,
                 call.function.as_ref(),
                 call.calldata,
@@ -163,33 +140,14 @@ async fn main() -> Result<()> {
                 block_id.as_ref(),
             )
             .await;
-
-            match result {
-                Ok(response) => print_formatted(
-                    vec![
-                        ("command", "Call".to_string()),
-                        ("response", format!("{response:?}")),
-                    ],
-                    cli.int_format,
-                    cli.json,
-                    false,
-                )?,
-                Err(error) => {
-                    print_formatted(
-                        vec![("error", error.to_string())],
-                        cli.int_format,
-                        cli.json,
-                        true,
-                    )?;
-                }
-            }
+            print_command_result("call", &mut result, cli.int_format, cli.json)?;
 
             Ok(())
         }
         Commands::Invoke(invoke) => {
             account_file_exists(&accounts_file_path)?;
             let mut account = get_account(&account, &accounts_file_path, &provider, &network)?;
-            let result = starknet_commands::invoke::invoke(
+            let mut result = starknet_commands::invoke::invoke(
                 invoke.contract_address,
                 &invoke.function,
                 invoke.calldata,
@@ -197,7 +155,7 @@ async fn main() -> Result<()> {
                 &mut account,
             )
             .await;
-            starknet_commands::invoke::print_invoke_result(result, cli.int_format, cli.json)?;
+            print_command_result("invoke", &mut result, cli.int_format, cli.json)?;
 
             Ok(())
         }
@@ -208,31 +166,27 @@ async fn main() -> Result<()> {
                         new.output_path.clone(),
                         new.overwrite.unwrap_or(false),
                     )?;
-                    starknet_commands::multicall::new::print_new_result(result.as_str());
+                    println!("{result}");
                 }
                 starknet_commands::multicall::Commands::Run(run) => {
                     account_file_exists(&accounts_file_path)?;
                     let mut account =
                         get_account(&account, &accounts_file_path, &provider, &network)?;
-                    let result = starknet_commands::multicall::run::run(
+                    let mut result = starknet_commands::multicall::run::run(
                         &run.path,
                         &mut account,
                         run.max_fee,
                     )
                     .await;
 
-                    starknet_commands::multicall::run::print_multicall_result(
-                        result,
-                        cli.int_format,
-                        cli.json,
-                    )?;
+                    print_command_result("multicall run", &mut result, cli.int_format, cli.json)?;
                 }
             }
             Ok(())
         }
         Commands::Account(account) => match account.command {
             account::Commands::Create(create) => {
-                let result = starknet_commands::account::create::create(
+                let mut result = starknet_commands::account::create::create(
                     &provider,
                     rpc_url,
                     accounts_file_path,
@@ -244,12 +198,12 @@ async fn main() -> Result<()> {
                 )
                 .await;
 
-                print_account_create_result(result, cli.int_format, cli.json)?;
+                print_command_result("account create", &mut result, cli.int_format, cli.json)?;
                 Ok(())
             }
             account::Commands::Deploy(deploy) => {
                 account_file_exists(&accounts_file_path)?;
-                let result = starknet_commands::account::deploy::deploy(
+                let mut result = starknet_commands::account::deploy::deploy(
                     &provider,
                     accounts_file_path,
                     deploy.name,
@@ -258,7 +212,7 @@ async fn main() -> Result<()> {
                 )
                 .await;
 
-                print_account_deploy_result(result, cli.int_format, cli.json)?;
+                print_command_result("account deploy", &mut result, cli.int_format, cli.json)?;
                 Ok(())
             }
         },

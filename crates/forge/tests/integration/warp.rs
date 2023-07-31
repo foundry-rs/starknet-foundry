@@ -62,6 +62,41 @@ fn start_warp_simple() {
                 assert(block_timestamp == 123, 'Wrong block timestamp');
                 assert(block_number == 456, 'Wrong block number');
             }
+
+            #[test]
+            fn test_stop_warp() {
+                let warp_checker = deploy_warp_checker();
+
+                let old_block_timestamp = warp_checker.get_block_timestamp();
+
+                start_warp(warp_checker.contract_address, 123);
+
+                let new_block_timestamp = warp_checker.get_block_timestamp();
+                assert(new_block_timestamp == 123, 'Wrong block timestamp');
+
+                stop_warp(warp_checker.contract_address);
+
+                let new_block_timestamp = warp_checker.get_block_timestamp();
+                assert(new_block_timestamp == old_block_timestamp, 'Timestamp did not change back')
+            }
+
+            #[test]
+            fn test_double_warp() {
+                let warp_checker = deploy_warp_checker();
+
+                let old_block_timestamp = warp_checker.get_block_timestamp();
+
+                start_warp(warp_checker.contract_address, 123);
+                start_warp(warp_checker.contract_address, 123);
+
+                let new_block_timestamp = warp_checker.get_block_timestamp();
+                assert(new_block_timestamp == 123, 'Wrong block timestamp');
+
+                stop_warp(warp_checker.contract_address);
+
+                let new_block_timestamp = warp_checker.get_block_timestamp();
+                assert(new_block_timestamp == old_block_timestamp, 'Timestamp did not change back')
+            }
         "#
         ),
         Contract::from_code_path(
@@ -121,6 +156,68 @@ fn start_warp_in_constructor_test() {
         Contract::from_code_path(
             "ConstructorWarpChecker".to_string(),
             Path::new("tests/data/contracts/constructor_warp_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run(
+        &test.path().unwrap(),
+        &test.path().unwrap().join("src/lib.cairo"),
+        &Some(test.linked_libraries()),
+        &Default::default(),
+        Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
+        &test.contracts(corelib().path()).unwrap(),
+        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
+    )
+    .unwrap();
+
+    assert_passed!(result);
+}
+
+#[test]
+fn start_warp_with_proxy() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use result::ResultTrait;
+            use array::ArrayTrait;
+            use option::OptionTrait;
+            use traits::TryInto;
+            use traits::Into;
+            use starknet::ContractAddress;
+            use starknet::Felt252TryIntoContractAddress;
+            use cheatcodes::PreparedContract;
+
+            #[starknet::interface]
+            trait IWarpCheckerProxy<TContractState> {
+                fn get_warp_checkers_block_info(ref self: TContractState, address: ContractAddress) -> u64;
+            }
+
+            #[test]
+            fn test_warp_simple() {
+                let class_hash = declare('WarpChecker');
+                let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
+                let warp_checker_contract_address = deploy(prepared).unwrap();
+                start_warp(warp_checker_contract_address, 234);
+                
+                let class_hash = declare('WarpCheckerProxy');
+                let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
+                let proxy_contract_address = deploy(prepared).unwrap();
+                let proxy_dispatcher = IWarpCheckerProxyDispatcher { contract_address: proxy_contract_address };
+
+                let block_timestamp = proxy_dispatcher.get_warp_checkers_block_info(warp_checker_contract_address);
+                assert(block_timestamp == 234, block_timestamp.into());
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "WarpChecker".to_string(),
+            Path::new("tests/data/contracts/warp_checker.cairo"),
+        )
+        .unwrap(),
+        Contract::from_code_path(
+            "WarpCheckerProxy".to_string(),
+            Path::new("tests/data/contracts/warp_checker_proxy.cairo"),
         )
         .unwrap()
     );

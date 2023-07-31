@@ -313,6 +313,9 @@ use cheatcodes::deploy;
 use cheatcodes::start_roll;
 use cheatcodes::start_prank;
 use cheatcodes::start_warp;
+use cheatcodes::stop_roll;
+use cheatcodes::stop_prank;
+use cheatcodes::stop_warp;
 use cheatcodes::PreparedContract;
 
 mod forge_print;
