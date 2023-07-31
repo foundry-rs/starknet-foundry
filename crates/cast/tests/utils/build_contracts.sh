@@ -8,7 +8,7 @@ ASDF_DATA_DIR=$(asdf info | grep -e "ASDF_DATA_DIR" | awk -F '=' '{print $2}')
 for versions_tuple in "${VERSIONS[@]}"; do
   read -r cairo_version scarb_version <<< "$versions_tuple"
 
-  CONTRACTS_DIRECTORY="$(git rev-parse --show-toplevel)/starknet-foundry/crates/cast/tests/data/contracts/$cairo_version"
+  CONTRACTS_DIRECTORY="$(git rev-parse --show-toplevel)/crates/cast/tests/data/contracts/$cairo_version"
   SCARB_BIN="$ASDF_DATA_DIR/installs/scarb/$scarb_version/bin/scarb"
 
   pushd "$CONTRACTS_DIRECTORY"

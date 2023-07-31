@@ -12,7 +12,7 @@ use forge::{pretty_printing, RunnerConfig};
 use forge::scarb::{get_contracts_map, try_get_starknet_artifacts_path};
 use std::process::Command;
 
-static CORELIB_PATH: Dir = include_dir!("../corelib/src");
+static CORELIB_PATH: Dir = include_dir!("./corelib/src");
 static PREDEPLOYED_CONTRACTS: Dir = include_dir!("crates/cheatable-starknet/predeployed-contracts");
 
 #[derive(Parser, Debug)]
