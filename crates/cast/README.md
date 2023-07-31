@@ -117,8 +117,8 @@ $ sncast --url http://127.0.0.1:5050 \
     --function "some_function" \
     --calldata 1 2 3
 
-command: Call
-response: [FieldElement { inner: 0x0000000000000000000000000000000000000000000000000000000000000000 }]
+command: call
+response: [0x0]
 ```
 
 
@@ -130,8 +130,8 @@ $ sncast call \
     --function some_function \
     --calldata 1 2 3
 
-command: Call
-response: [FieldElement { inner: 0x0000000000000000000000000000000000000000000000000000000000000000 }]
+command: call
+response: [0x0]
 ```
 
 

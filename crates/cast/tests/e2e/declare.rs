@@ -120,6 +120,7 @@ fn scarb_build_fails(contract_path: &str, accounts_file_path: &str) {
         .args(args);
 
     snapbox.assert().success().stderr_matches(indoc! {r#"
+        command: declare
         error: scarb build returned non-zero exit code: 1
     "#});
 }
@@ -151,6 +152,7 @@ fn test_too_low_max_fee(contract_path: &str, salt: &str, account: &str) {
         .args(args);
 
     snapbox.assert().success().stderr_matches(indoc! {r#"
+        command: declare
         error: Transaction has been rejected
     "#});
 
