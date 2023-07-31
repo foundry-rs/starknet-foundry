@@ -156,7 +156,7 @@ fn start_prank_in_constructor_test() {
         "#
         ),
         Contract::from_code_path(
-            "ConstructorRollChecker".to_string(),
+            "ConstructorPrankChecker".to_string(),
             Path::new("tests/data/contracts/constructor_prank_checker.cairo"),
         )
         .unwrap()
@@ -288,6 +288,67 @@ fn double_prank() {
         Contract::from_code_path(
             "PrankChecker".to_string(),
             Path::new("tests/data/contracts/prank_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run(
+        &test.path().unwrap(),
+        &test.path().unwrap().join("src/lib.cairo"),
+        &Some(test.linked_libraries()),
+        &Default::default(),
+        Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
+        &test.contracts(corelib().path()).unwrap(),
+        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
+    )
+    .unwrap();
+
+    assert_passed!(result);
+}
+
+#[test]
+fn start_prank_with_proxy() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use result::ResultTrait;
+            use array::ArrayTrait;
+            use option::OptionTrait;
+            use traits::TryInto;
+            use traits::Into;
+            use starknet::ContractAddress;
+            use starknet::Felt252TryIntoContractAddress;
+            use cheatcodes::PreparedContract;
+            use forge_print::PrintTrait;
+            #[starknet::interface]
+            trait IPrankCheckerProxy<TContractState> {
+                fn get_prank_checkers_caller_address(ref self: TContractState, address: ContractAddress) -> felt252;
+            }
+            #[test]
+            fn test_prank_simple() {
+                let class_hash = declare('PrankChecker');
+                let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
+                let prank_checker_contract_address = deploy(prepared).unwrap();
+                let contract_address: ContractAddress = 234.try_into().unwrap();
+                start_prank(prank_checker_contract_address, contract_address);
+                
+                let class_hash = declare('PrankCheckerProxy');
+                let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
+                let proxy_contract_address = deploy(prepared).unwrap();
+                let proxy_dispatcher = IPrankCheckerProxyDispatcher { contract_address: proxy_contract_address };
+                let caller_address = proxy_dispatcher.get_prank_checkers_caller_address(prank_checker_contract_address);
+                assert(caller_address == 234, caller_address);
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "PrankChecker".to_string(),
+            Path::new("tests/data/contracts/prank_checker.cairo"),
+        )
+        .unwrap(),
+        Contract::from_code_path(
+            "PrankCheckerProxy".to_string(),
+            Path::new("tests/data/contracts/prank_checker_proxy.cairo"),
         )
         .unwrap()
     );
