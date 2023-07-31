@@ -1,7 +1,4 @@
-use crate::helpers::{
-    response_structs::DeclareResponse,
-    scarb_utils::get_scarb_manifest,
-};
+use crate::helpers::{response_structs::DeclareResponse, scarb_utils::get_scarb_manifest};
 use anyhow::{anyhow, Context, Result};
 use camino::Utf8PathBuf;
 use cast::{handle_rpc_error, handle_wait_for_tx};
