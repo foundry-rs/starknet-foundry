@@ -4,7 +4,7 @@ use crate::helpers::{
 };
 use camino::Utf8PathBuf;
 use cast::helpers::constants::DEFAULT_RETRIES;
-use cast::{get_account, parse_number, wait_for_tx};
+use cast::{get_account, handle_wait_for_tx, parse_number, wait_for_tx};
 use starknet::contract::ContractFactory;
 use starknet::core::types::FieldElement;
 
@@ -59,4 +59,18 @@ async fn test_wait_for_nonexistent_tx() {
     )
     .await
     .unwrap();
+}
+
+#[tokio::test]
+async fn test_happy_path_handle_wait_for_tx() {
+    let provider = create_test_provider();
+    let res = handle_wait_for_tx(
+        &provider,
+        parse_number(DECLARE_TRANSACTION_HASH).unwrap(),
+        1,
+        true,
+    )
+    .await;
+
+    assert!(matches!(res, Ok(1)));
 }

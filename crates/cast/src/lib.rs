@@ -1,6 +1,6 @@
-use crate::helpers::constants::{DEFAULT_RETRIES, UDC_ADDRESS};
 use anyhow::{anyhow, bail, Context, Error, Result};
 use camino::Utf8PathBuf;
+use helpers::constants::{DEFAULT_RETRIES, UDC_ADDRESS};
 use primitive_types::U256;
 use rand::rngs::OsRng;
 use rand::RngCore;
@@ -167,10 +167,7 @@ pub async fn wait_for_tx(
 ) -> Result<&str> {
     println!("Transaction hash: {tx_hash:#x}");
 
-    let mut retries = retries;
-    'a: loop {
-        sleep(Duration::from_secs(5));
-
+    for i in (1..retries).rev() {
         match provider.get_transaction_receipt(tx_hash).await {
             Ok(receipt) => {
                 let status = if let Receipt(receipt) = receipt {
@@ -183,7 +180,7 @@ pub async fn wait_for_tx(
                     }
                 } else {
                     println!("Received transaction. Status: Pending");
-                    continue 'a;
+                    continue;
                 };
 
                 match status {
@@ -197,16 +194,17 @@ pub async fn wait_for_tx(
                 }
             }
             Err(ProviderError::StarknetError(StarknetError::TransactionHashNotFound)) => {
-                if retries > 0 {
-                    retries -= 1;
-                    println!("Waiting for transaction to be received. Retries left: {retries}");
-                } else {
-                    bail!("Could not get transaction with hash: {tx_hash:#x}. Transaction rejected or not received.")
-                }
+                println!("Waiting for transaction to be received. Retries left: {i}");
             }
             Err(err) => return Err(err.into()),
         };
+
+        sleep(Duration::from_secs(5));
     }
+
+    bail!(
+        "Could not get transaction with hash: {tx_hash:#x}. Transaction rejected or not received."
+    )
 }
 
 #[must_use]
