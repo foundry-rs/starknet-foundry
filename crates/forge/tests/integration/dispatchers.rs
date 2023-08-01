@@ -380,12 +380,12 @@ fn proxy_storage() {
             "Caller",
             indoc!(
                 r#"
-            #[derive(Drop, Serde, storage_access::StorageAccess)]
+            #[derive(Drop, Serde, starknet::Store)]
             struct NestedStruct {
                 d: felt252, 
             }
             
-            #[derive(Drop, Serde, storage_access::StorageAccess)]
+            #[derive(Drop, Serde, starknet::Store)]
             struct CustomStruct {
                 a: felt252,
                 b: felt252,
@@ -422,12 +422,12 @@ fn proxy_storage() {
             "Executor",
             indoc!(
                 r#"
-            #[derive(Drop, Serde, storage_access::StorageAccess)]
+            #[derive(Drop, Serde, starknet::Store)]
             struct NestedStruct {
                 d: felt252, 
             }
             
-            #[derive(Drop, Serde, storage_access::StorageAccess)]
+            #[derive(Drop, Serde, starknet::Store)]
             struct CustomStruct {
                 a: felt252,
                 b: felt252,
