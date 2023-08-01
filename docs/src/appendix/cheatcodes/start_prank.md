@@ -14,8 +14,19 @@ For contract implementation:
 // ...
 #[external(v0)]
 impl IContractImpl of IContract<ContractState> {
-    fn get_caller_address( ref self: ContractState) -> ContractAddress {
-        starknet::get_caller_address()
+    #[storage]
+    struct Storage {
+        // ...
+        
+        stored_caller_address: ContractAddress
+    }
+
+    fn set_caller_address(ref self: ContractState) {
+        self.stored_caller_address.write(starknet::get_caller_address());
+    }
+
+    fn get_caller_address(self: @ContractState) -> ContractAddress {
+        self.stored_caller_address.read()
     }
 }
 // ...
@@ -32,6 +43,7 @@ fn test_prank_simple() {
 
     start_prank(contract_address, caller_address);
 
+    dispatcher.set_caller_address();
     let caller_address = dispatcher.get_caller_address();
     assert(caller_address.into() == 123, 'Wrong caller address');
 }

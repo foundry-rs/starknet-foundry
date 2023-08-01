@@ -14,8 +14,19 @@ For contract implementation:
 // ...
 #[external(v0)]
 impl IContractImpl of IContract<ContractState> {
-    fn get_block_number(ref self: ContractState) -> u64 {
-        starknet::get_block_info().unbox().block_number
+    #[storage]
+    struct Storage {
+        // ...
+
+        stored_block_number: u64
+    }
+    
+    fn set_block_number(ref self: ContractState) {
+        self.stored_block_number.write(starknet::get_block_info().unbox().block_number);
+    }
+    
+    fn get_block_number(self: @ContractState) -> u64 {
+        self.stored_block_number.read()
     }
 }
 // ...
@@ -30,7 +41,8 @@ fn test_roll() {
 
     start_roll(contract_address, 234);
 
-    let new_block_number = dispatcher.get_block_number().unwrap();
+    let new_block_number = dispatcher.set_block_number();
+    let new_block_number = dispatcher.get_block_number();
     assert(new_block_number == 234, 'Wrong block number');
 }
 ```
