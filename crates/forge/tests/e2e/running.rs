@@ -115,7 +115,7 @@ fn simple_package_with_git_dependency() {
         .success()
         .stdout_matches(indoc! {r#"Collected 11 test(s) and 5 test file(s)
         Running 1 test(s) from src/lib.cairo
-        [PASS] src::test_fib
+        [PASS] simple_package::test_fib
         Running 1 test(s) from tests/contract.cairo
         [PASS] contract::contract::call_and_invoke
         Running 2 test(s) from tests/ext_function_test.cairo
@@ -323,7 +323,7 @@ fn with_exit_first() {
         .success()
         .stdout_matches(indoc! {r#"Collected 11 test(s) and 5 test file(s)
         Running 1 test(s) from src/lib.cairo
-        [PASS] src::test_fib
+        [PASS] simple_package::test_fib
         Running 1 test(s) from tests/contract.cairo
         [PASS] contract::contract::call_and_invoke
         Running 2 test(s) from tests/ext_function_test.cairo
@@ -356,7 +356,7 @@ fn with_exit_first_flag() {
         .success()
         .stdout_matches(indoc! {r#"Collected 11 test(s) and 5 test file(s)
         Running 1 test(s) from src/lib.cairo
-        [PASS] src::test_fib
+        [PASS] simple_package::test_fib
         Running 1 test(s) from tests/contract.cairo
         [PASS] contract::contract::call_and_invoke
         Running 2 test(s) from tests/ext_function_test.cairo
@@ -413,7 +413,7 @@ fn exit_first_flag_takes_precedence() {
         .success()
         .stdout_matches(indoc! {r#"Collected 11 test(s) and 5 test file(s)
         Running 1 test(s) from src/lib.cairo
-        [PASS] src::test_fib
+        [PASS] simple_package::test_fib
         Running 1 test(s) from tests/contract.cairo
         [PASS] contract::contract::call_and_invoke
         Running 2 test(s) from tests/ext_function_test.cairo

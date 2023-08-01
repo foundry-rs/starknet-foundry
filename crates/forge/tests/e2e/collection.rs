@@ -20,18 +20,18 @@ fn complex_structure() {
         .success()
         .stdout_matches(indoc! {r#"Collected 16 test(s) and 4 test file(s)
         Running 12 test(s) from src/lib.cairo
-        [PASS] src::test_simple
-        [PASS] src::test_fob_in_lib
-        [PASS] src::test_fib_in_lib
-        [PASS] src::fib::test_fib
-        [PASS] src::fib::test_fob_in_fib
-        [PASS] src::fib::test_fab_in_fib
-        [PASS] src::fob::test_simple
-        [PASS] src::fob::fob_impl::test_fob
-        [PASS] src::fab::test_simple
-        [PASS] src::fab::fab_impl::test_fab
-        [PASS] src::fab::fab_impl::test_how_does_this_work
-        [PASS] src::fab::fab_impl::test_super
+        [PASS] test_multiple::test_simple
+        [PASS] test_multiple::test_fob_in_lib
+        [PASS] test_multiple::test_fib_in_lib
+        [PASS] test_multiple::fib::test_fib
+        [PASS] test_multiple::fib::test_fob_in_fib
+        [PASS] test_multiple::fib::test_fab_in_fib
+        [PASS] test_multiple::fob::test_simple
+        [PASS] test_multiple::fob::fob_impl::test_fob
+        [PASS] test_multiple::fab::test_simple
+        [PASS] test_multiple::fab::fab_impl::test_fab
+        [PASS] test_multiple::fab::fab_impl::test_how_does_this_work
+        [PASS] test_multiple::fab::fab_impl::test_super
         Running 1 test(s) from fob.cairo
         [PASS] fob::fob::test_fob
         Running 0 test(s) from tests/fab.cairo
