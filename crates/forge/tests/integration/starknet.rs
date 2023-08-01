@@ -12,7 +12,6 @@ fn timestamp_doesnt_decrease_between_transactions() {
             r#"
             use array::ArrayTrait;
             use result::ResultTrait;
-            use option::OptionTrait;
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
@@ -26,10 +25,9 @@ fn timestamp_doesnt_decrease_between_transactions() {
 
             #[test]
             fn timestamp_doesnt_decrease() {
-               let class_hash = declare('Timestamper').unwrap();
+                let class_hash = declare('Timestamper');
                 let prepared = PreparedContract { class_hash, constructor_calldata: @ArrayTrait::new() };
                 let contract_address = deploy(prepared).unwrap();
-                let contract_address: ContractAddress = contract_address.try_into().unwrap();
                 let dispatcher = ITimestamperDispatcher { contract_address };
 
                 dispatcher.write_timestamp();
@@ -100,7 +98,6 @@ fn block_doesnt_decrease_between_transactions() {
             r#"
             use array::ArrayTrait;
             use result::ResultTrait;
-            use option::OptionTrait;
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
@@ -116,10 +113,9 @@ fn block_doesnt_decrease_between_transactions() {
 
             #[test]
             fn block_doesnt_decrease() {
-               let class_hash = declare('Blocker').unwrap();
+               let class_hash = declare('Blocker');
                 let prepared = PreparedContract { class_hash, constructor_calldata: @ArrayTrait::new() };
                 let contract_address = deploy(prepared).unwrap();
-                let contract_address: ContractAddress = contract_address.try_into().unwrap();
                 let dispatcher = IBlockerDispatcher { contract_address };
 
                 dispatcher.write_block();
@@ -231,7 +227,6 @@ fn nonce_increases_between_transactions() {
                 let class_hash = declare('Noncer').unwrap();
                 let prepared = PreparedContract { class_hash, constructor_calldata: @ArrayTrait::new() };
                 let contract_address = deploy(prepared).unwrap();
-                let contract_address: ContractAddress = contract_address.try_into().unwrap();
                 let dispatcher = INoncerDispatcher { contract_address };
 
                 dispatcher.write_nonce();
@@ -324,7 +319,6 @@ fn nonce_increases_between_deploys_and_declares() {
                 let class_hash = declare('Noncer').unwrap();
                 let prepared = PreparedContract { class_hash, constructor_calldata: @ArrayTrait::new() };
                 let contract_address = deploy(prepared).unwrap();
-                let contract_address: ContractAddress = contract_address.try_into().unwrap();
                 let dispatcher = INoncerDispatcher { contract_address };
 
                 dispatcher.write_nonce();
