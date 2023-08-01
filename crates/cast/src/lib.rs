@@ -9,7 +9,7 @@ use serde_json::Value;
 use starknet::core::types::{
     BlockId,
     BlockTag::{Latest, Pending},
-    FieldElement,
+    FieldElement, MaybePendingTransactionReceipt,
     MaybePendingTransactionReceipt::Receipt,
     StarknetError,
     TransactionReceipt::{Declare, Deploy, DeployAccount, Invoke, L1Handler},
@@ -167,31 +167,12 @@ pub async fn wait_for_tx(
 ) -> Result<&str> {
     println!("Transaction hash: {tx_hash:#x}");
 
+    let mut maybe_receipt: Option<MaybePendingTransactionReceipt> = None;
     for i in (1..retries).rev() {
         match provider.get_transaction_receipt(tx_hash).await {
             Ok(receipt) => {
-                let status = if let Receipt(receipt) = receipt {
-                    match receipt {
-                        Invoke(receipt) => receipt.status,
-                        Declare(receipt) => receipt.status,
-                        Deploy(receipt) => receipt.status,
-                        DeployAccount(receipt) => receipt.status,
-                        L1Handler(receipt) => receipt.status,
-                    }
-                } else {
-                    println!("Received transaction. Status: Pending");
-                    continue;
-                };
-
-                match status {
-                    TransactionStatus::AcceptedOnL2 | TransactionStatus::AcceptedOnL1 => {
-                        return Ok("Transaction accepted")
-                    }
-                    TransactionStatus::Rejected => {
-                        return Err(anyhow!("Transaction has been rejected"));
-                    }
-                    TransactionStatus::Pending => {}
-                }
+                maybe_receipt = Some(receipt);
+                break;
             }
             Err(ProviderError::StarknetError(StarknetError::TransactionHashNotFound)) => {
                 println!("Waiting for transaction to be received. Retries left: {i}");
@@ -202,9 +183,36 @@ pub async fn wait_for_tx(
         sleep(Duration::from_secs(5));
     }
 
-    bail!(
-        "Could not get transaction with hash: {tx_hash:#x}. Transaction rejected or not received."
-    )
+    if maybe_receipt.is_none() {
+        bail!("Could not get transaction with hash: {tx_hash:#x}. Transaction rejected or not received.")
+    }
+
+    loop {
+        let status = if let Ok(Receipt(receipt)) = provider.get_transaction_receipt(tx_hash).await {
+            match receipt {
+                Invoke(receipt) => receipt.status,
+                Declare(receipt) => receipt.status,
+                Deploy(receipt) => receipt.status,
+                DeployAccount(receipt) => receipt.status,
+                L1Handler(receipt) => receipt.status,
+            }
+        } else {
+            println!("Received transaction. Status: Pending");
+            sleep(Duration::from_secs(5));
+
+            continue;
+        };
+
+        match status {
+            TransactionStatus::AcceptedOnL2 | TransactionStatus::AcceptedOnL1 => {
+                return Ok("Transaction accepted")
+            }
+            TransactionStatus::Rejected => {
+                return Err(anyhow!("Transaction has been rejected"));
+            }
+            TransactionStatus::Pending => {}
+        }
+    }
 }
 
 #[must_use]
