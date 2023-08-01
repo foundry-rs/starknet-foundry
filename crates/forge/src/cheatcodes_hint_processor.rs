@@ -499,10 +499,17 @@ fn declare(
 
     let account_tx = AccountTransaction::Declare(tx);
     let block_context = build_block_context();
-    let _tx_result = account_tx
+    let tx_result = account_tx
         // FIXME not sure we should be using true or false for these
-        .execute(blockifier_state, &block_context, true, true)
-        .context("Failed to execute declare transaction")?;
+        .execute(blockifier_state, &block_context, true, true);
+
+    match tx_result {
+        Ok(_) => (),
+        Err(e) => {
+            return Err(anyhow!(format!("Failed to execute declare transaction:\n    {e}")).into())
+        }
+    };
+
     // result_segment.
     let felt_class_hash = felt252_from_hex_string(&class_hash.to_string()).unwrap();
 
@@ -569,7 +576,7 @@ fn deploy(
     let tx = InvokeTransactionV1 { nonce, ..tx };
     let account_tx = AccountTransaction::Invoke(InvokeTransaction {
         tx: starknet_api::transaction::InvokeTransaction::V1(tx),
-        tx_hash: TransactionHash::default(),
+        tx_hash: TransactionHash::default(), // TODO(#358): Check if this is legit
     });
 
     let tx_info = account_tx

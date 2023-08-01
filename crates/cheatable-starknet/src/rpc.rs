@@ -258,7 +258,7 @@ impl ResourceTracker for CheatableSyscallHandler<'_> {
     }
 
     fn consume_step(&mut self) {
-        self.syscall_handler.context.vm_run_resources.consume_step()
+        self.syscall_handler.context.vm_run_resources.consume_step();
     }
 
     fn get_n_steps(&self) -> Option<usize> {
@@ -681,7 +681,7 @@ fn execute_entry_point_call_cairo1(
         initial_syscall_ptr,
         entry_point,
         program_extra_data_length,
-    } = initialize_execution_context(call, &contract_class, state, resources, context)?;
+    } = initialize_execution_context(call, contract_class, state, resources, context)?;
 
     let args = prepare_call_arguments(
         &syscall_handler.call,

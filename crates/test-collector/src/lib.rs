@@ -359,9 +359,7 @@ pub fn collect_tests(
         .collect_vec()
         .into_iter()
         .map(|(test_name, config)| TestCase {
-            name: test_name
-                .replace(PHANTOM_PACKAGE_NAME_PREFIX, "")
-                .to_string(),
+            name: test_name.replace(PHANTOM_PACKAGE_NAME_PREFIX, ""),
             available_gas: config.available_gas,
         })
         .collect();
