@@ -273,7 +273,7 @@ fn serding() {
             let prepared = PreparedContract {
                 class_hash, constructor_calldata: @ArrayTrait::new()
             };
-            let contract_address = deploy(prepared).unwrap().try_into().unwrap();
+            let contract_address = deploy(prepared).unwrap();
         
             let dispatcher = ISerdingDispatcher {
                 contract_address
@@ -339,9 +339,7 @@ fn proxy_storage() {
         fn deploy_contract(name: felt252) -> ContractAddress {
             let class_hash = declare(name);
             let prepared = PreparedContract { class_hash, constructor_calldata: @ArrayTrait::new() };
-            let contract_address = deploy(prepared).unwrap();
-        
-            contract_address.try_into().unwrap()
+            deploy(prepared).unwrap()
         }
         
         
