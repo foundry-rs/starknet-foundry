@@ -33,6 +33,6 @@ fn test_prank_simple() {
     start_prank(contract_address, caller_address);
 
     let caller_address = dispatcher.get_caller_address();
-    assert(caller_address == 123, 'Wrong caller address');
+    assert(caller_address.into() == 123, 'Wrong caller address');
 }
 ```
