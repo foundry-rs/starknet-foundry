@@ -36,6 +36,8 @@
 # Appendix
 
 * [Forge Command](appendix/forge.md)
+* [Cheatcodes Reference](appendix/cheatcodes.md)
+  * [start_prank](appendix/cheatcodes/start_prank.md)
 * [Forge Library Functions References](appendix/forge-library.md)
     * [declare](appendix/forge-library/declare.md)
     * [deploy](appendix/forge-library/deploy.md)
