@@ -92,6 +92,7 @@ fn test_too_low_max_fee(class_hash: &str, account: &str) {
     let snapbox = runner(&args);
 
     snapbox.assert().stderr_matches(indoc! {r#"
+        command: deploy
         error: Transaction has been rejected
     "#});
 }

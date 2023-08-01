@@ -25,8 +25,8 @@ fn test_happy_case(contract_address: &str) {
 
     snapbox.assert().success().stdout_eq(indoc! {r#"
 {
-  "command": "Call",
-  "response": "[FieldElement { inner: 0x0000000000000000000000000000000000000000000000000000000000000000 }]"
+  "command": "call",
+  "response": "[0x0]"
 }
 "#});
 }
@@ -51,8 +51,8 @@ async fn test_call_after_storage_changed(contract_address: &str, account: &str) 
     let snapbox = runner(&args);
 
     snapbox.assert().success().stdout_eq(indoc! {r#"
-        command: Call
-        response: [FieldElement { inner: 0x0000000000000000000000000000000000000000000000000000000000000003 }]
+        command: call
+        response: [0x3]
     "#});
 }
 
@@ -70,6 +70,7 @@ async fn test_contract_does_not_exist() {
     let snapbox = runner(&args);
 
     snapbox.assert().stderr_matches(indoc! {r#"
+        command: call
         error: There is no contract at the specified address
     "#});
 }
@@ -89,6 +90,7 @@ fn test_wrong_function_name(contract_address: &str) {
     let snapbox = runner(&args);
 
     snapbox.assert().stderr_matches(indoc! {r#"
+        command: call
         error: An error occurred in the called contract
     "#});
 }
@@ -110,6 +112,7 @@ fn test_wrong_calldata(contract_address: &str) {
     let snapbox = runner(&args);
 
     snapbox.assert().stderr_matches(indoc! {r#"
+        command: call
         error: Execution was reverted; failure reason: [0x496e70757420746f6f206c6f6e6720666f7220617267756d656e7473].
     "#});
 }

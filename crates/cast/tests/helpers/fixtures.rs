@@ -115,6 +115,7 @@ pub fn default_cli_args() -> Vec<&'static str> {
 pub fn get_transaction_hash(output: &[u8]) -> FieldElement {
     let output: HashMap<String, String> =
         serde_json::from_slice(output).expect("Could not serialize transaction output to HashMap");
+
     parse_number(
         output
             .get("transaction_hash")

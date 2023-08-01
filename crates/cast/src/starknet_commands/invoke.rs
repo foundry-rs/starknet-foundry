@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Result};
 use clap::Args;
 
-use cast::print_formatted;
+use crate::helpers::response_structs::InvokeResponse;
 use cast::{handle_rpc_error, handle_wait_for_tx_result};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{Account, Call, ConnectedAccount, SingleOwnerAccount};
@@ -31,35 +31,13 @@ pub struct Invoke {
     pub max_fee: Option<FieldElement>,
 }
 
-pub fn print_invoke_result(
-    invoke_result: Result<FieldElement>,
-    int_format: bool,
-    json: bool,
-) -> Result<()> {
-    match invoke_result {
-        Ok(transaction_hash) => print_formatted(
-            vec![
-                ("command", "Invoke".to_string()),
-                ("transaction_hash", format!("{transaction_hash}")),
-            ],
-            int_format,
-            json,
-            false,
-        )?,
-        Err(error) => {
-            print_formatted(vec![("error", error.to_string())], int_format, json, true)?;
-        }
-    };
-    Ok(())
-}
-
 pub async fn invoke(
     contract_address: FieldElement,
     entry_point_name: &str,
     calldata: Vec<FieldElement>,
     max_fee: Option<FieldElement>,
     account: &mut SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
-) -> Result<FieldElement> {
+) -> Result<InvokeResponse> {
     let call = Call {
         to: contract_address,
         selector: get_selector_from_name(entry_point_name)?,
@@ -73,7 +51,7 @@ pub async fn execute_calls(
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     calls: Vec<Call>,
     max_fee: Option<FieldElement>,
-) -> Result<FieldElement> {
+) -> Result<InvokeResponse> {
     let execution = account.execute(calls);
 
     let execution = if let Some(max_fee) = max_fee {
@@ -87,7 +65,9 @@ pub async fn execute_calls(
             handle_wait_for_tx_result(
                 account.provider(),
                 result.transaction_hash,
-                result.transaction_hash,
+                InvokeResponse {
+                    transaction_hash: result.transaction_hash,
+                },
             )
             .await
         }

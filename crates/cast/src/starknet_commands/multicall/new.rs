@@ -34,7 +34,3 @@ pub fn new(maybe_output_path: Option<Utf8PathBuf>, overwrite: bool) -> Result<St
     }
     Ok(DEFAULT_MULTICALL_CONTENTS.to_string())
 }
-
-pub fn print_new_result(new_result: &str) {
-    println!("{new_result}");
-}
