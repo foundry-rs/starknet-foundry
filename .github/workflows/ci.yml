@@ -30,7 +30,7 @@ jobs:
   test-forge-e2e:
     name: Test Forge / E2E Tests
     env:
-      SCARB_VERSION: 0.5.1
+      SCARB_VERSION: 0.6.0-alpha.2
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
