@@ -48,6 +48,11 @@ Optional.
 
 If passed, output will be displayed in json format.
 
+## `--wait, -w`
+Optional.
+
+If passed, command will wait until transaction is accepted or rejected.
+
 ## `--version, -v`
 
 Prints out `sncast` version.

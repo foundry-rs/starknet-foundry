@@ -140,6 +140,7 @@ fn test_too_low_max_fee(contract_path: &str, salt: &str, account: &str) {
         "../../../accounts/accounts.json",
         "--account",
         account,
+        "--wait",
         "declare",
         "--contract-name",
         "Map",

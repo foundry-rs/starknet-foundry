@@ -112,6 +112,7 @@ fn test_too_low_max_fee(contract_address: &str, account: &str) {
     args.append(&mut vec![
         "--account",
         account,
+        "--wait",
         "invoke",
         "--contract-address",
         contract_address,
