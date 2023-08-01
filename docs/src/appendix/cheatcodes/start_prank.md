@@ -4,8 +4,8 @@
 
 Changes the caller address in the `ExecutionInfo` struct and methods utilizing it (e.g. `get_caller_address`).
 
-- `contract_address` - address of the contract to be pranked.
-- `caller_address` - caller address to be set.
+- `contract_address` - address of the contract to be pranked
+- `caller_address` - caller address to be set
 
 ```rust
 #[test]
