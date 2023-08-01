@@ -33,7 +33,7 @@ cairo-lang-utils = { git = "https://github.com/starkware-libs/cairo", rev = "f9e
 anyhow.workspace = true
 smol_str = { version = "0.2.0", features = ["serde"] }
 itertools = "0.10.3"
-cairo-vm = "0.5.2"
+cairo-vm = "0.8.2"
 cairo-felt = "0.5.2"
 num-bigint = "0.4"
 num-integer = "0.1"
