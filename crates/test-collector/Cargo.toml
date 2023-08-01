@@ -38,7 +38,7 @@ cairo-felt = "0.5.2"
 num-bigint = "0.4"
 num-integer = "0.1"
 num-traits = "0.2"
-serde = { version = "1.0.130", features = ["derive"] }
+serde = { version = "1.0.180", features = ["derive"] }
 thiserror = "1.0.32"
 serde_json = "1.0"
 
