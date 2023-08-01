@@ -21,7 +21,7 @@ impl IContractImpl of IContract<ContractState> {
 // ...
 ```
 
-We can use roll in a test to mock block number for a given contract:
+We can use `start_roll` in a test to change the block number for a given contract:
 
 ```rust
 #[test]
