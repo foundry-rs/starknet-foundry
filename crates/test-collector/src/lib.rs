@@ -32,8 +32,7 @@ use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use cairo_lang_utils::OptionHelper;
 use itertools::Itertools;
 use num_traits::ToPrimitive;
-use project::PHANTOM_PACKAGE_NAME_PREFIX;
-use project::{setup_project, setup_single_file_project};
+use project::{setup_single_file_project, PHANTOM_PACKAGE_NAME_PREFIX};
 use smol_str::SmolStr;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -42,6 +41,8 @@ use std::sync::Arc;
 #[allow(clippy::module_name_repetitions)]
 mod project;
 pub mod sierra_casm_generator;
+
+pub use project::LIB_PATH_PREFIX;
 
 pub fn build_project_config(
     source_root: &Path,
@@ -74,7 +75,7 @@ pub fn setup_project_without_cairo_project_toml(
             _ => Err(ProjectError::LoadProjectError),
         }
     } else {
-        Ok(vec![setup_single_file_project(db, path)?])
+        Ok(vec![setup_single_file_project(db, path, Some(crate_name))?])
     }
 }
 
@@ -110,23 +111,21 @@ pub struct SingleTestConfig {
 /// Finds the tests in the requested crates.
 pub fn find_all_tests(
     db: &dyn SemanticGroup,
-    main_crates: Vec<CrateId>,
+    main_crate: CrateId,
 ) -> Vec<(FreeFunctionId, SingleTestConfig)> {
     let mut tests = vec![];
-    for crate_id in main_crates {
-        let modules = db.crate_modules(crate_id);
-        for module_id in modules.iter() {
-            let Ok(module_items) = db.module_items(*module_id) else {
-                continue;
-            };
-            tests.extend(
-                module_items.iter().filter_map(|item| {
-                    let ModuleItemId::FreeFunction(func_id) = item else { return None };
-                    let Ok(attrs) = db.function_with_body_attributes(FunctionWithBodyId::Free(*func_id)) else { return None };
-                    Some((*func_id, try_extract_test_config(db.upcast(), &attrs).unwrap()?))
-                }),
-            );
-        }
+    let modules = db.crate_modules(main_crate);
+    for module_id in modules.iter() {
+        let Ok(module_items) = db.module_items(*module_id) else {
+            continue;
+        };
+        tests.extend(
+            module_items.iter().filter_map(|item| {
+                let ModuleItemId::FreeFunction(func_id) = item else { return None };
+                let Ok(attrs) = db.function_with_body_attributes(FunctionWithBodyId::Free(*func_id)) else { return None };
+                Some((*func_id, try_extract_test_config(db.upcast(), &attrs).unwrap()?))
+            }),
+        );
     }
     tests
 }
@@ -297,7 +296,7 @@ pub fn collect_tests(
 
     init_dev_corelib(db, corelib_path);
 
-    let main_crate_ids = setup_project(db, Path::new(&input_path))
+    let main_crate_id = setup_single_file_project(db, &Path::new(&input_path), None)
         .with_context(|| format!("Failed to setup project for path({input_path})"))?;
 
     if let Some(linked_libraries) = linked_libraries {
@@ -317,7 +316,7 @@ pub fn collect_tests(
              above"
         ));
     }
-    let all_tests = find_all_tests(db, main_crate_ids);
+    let all_tests = find_all_tests(db, main_crate_id);
 
     let z: Vec<ConcreteFunctionWithBodyId> = all_tests
         .iter()

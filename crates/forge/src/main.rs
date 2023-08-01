@@ -81,6 +81,7 @@ fn main_execution() -> Result<()> {
 
         run(
             &package_path,
+            &target_name,
             &lib_path,
             &Some(dependencies.clone()),
             &runner_config,

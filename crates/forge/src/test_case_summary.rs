@@ -43,6 +43,44 @@ impl TestCaseSummary {
             name: test_case.name.to_string(),
         }
     }
+
+    pub fn name(&self) -> &String {
+        match self {
+            TestCaseSummary::Passed {
+                name,
+                run_result: _,
+                msg: _,
+            } => name,
+            TestCaseSummary::Skipped { name } => name,
+            TestCaseSummary::Failed {
+                name,
+                run_result: _,
+                msg: _,
+            } => name,
+        }
+    }
+
+    pub fn update_name(&mut self, new_name: String) {
+        match self {
+            TestCaseSummary::Passed {
+                name,
+                run_result: _,
+                msg: _,
+            } => {
+                *name = new_name;
+            }
+            TestCaseSummary::Skipped { name } => {
+                *name = new_name;
+            }
+            TestCaseSummary::Failed {
+                name,
+                run_result: _,
+                msg: _,
+            } => {
+                *name = new_name;
+            }
+        }
+    }
 }
 
 #[must_use]

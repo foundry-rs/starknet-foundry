@@ -1,7 +1,5 @@
 // Copied from cairo compiler cairo-lang-compiler/src/project.rs
-use cairo_lang_compiler::project::{
-    get_main_crate_ids_from_project, update_crate_roots_from_project_config, ProjectError,
-};
+use cairo_lang_compiler::project::ProjectError;
 use std::ffi::OsStr;
 use std::path::Path;
 use std::sync::Arc;
@@ -13,33 +11,12 @@ pub use cairo_lang_project::*;
 use cairo_lang_semantic::db::SemanticGroup;
 
 pub const PHANTOM_PACKAGE_NAME_PREFIX: &str = "___PREFIX_FOR_PACKAGE___";
+pub const LIB_PATH_PREFIX: &str = "___PREFIX_FOR_LIB_PATH___";
 
-/// Setup the 'db' to compile the project in the given path.
-/// The path can be either a directory with cairo project file or a .cairo file.
-/// Returns the ids of the project crates.
-pub fn setup_project(
-    db: &mut dyn SemanticGroup,
-    path: &Path,
-) -> Result<Vec<CrateId>, ProjectError> {
-    if path.is_dir() {
-        match ProjectConfig::from_directory(path) {
-            Ok(config) => {
-                let main_crate_ids = get_main_crate_ids_from_project(db, &config);
-                update_crate_roots_from_project_config(db, config);
-                Ok(main_crate_ids)
-            }
-            _ => Err(ProjectError::LoadProjectError),
-        }
-    } else {
-        Ok(vec![setup_single_file_project(db, path)?])
-    }
-}
-
-/// Setup to 'db' to compile the file at the given path.
-/// Returns the id of the generated crate.
 pub fn setup_single_file_project(
     db: &mut dyn SemanticGroup,
     path: &Path,
+    crate_name: Option<&str>,
 ) -> Result<CrateId, ProjectError> {
     match path.extension().and_then(OsStr::to_str) {
         Some("cairo") => (),
@@ -62,8 +39,7 @@ pub fn setup_single_file_project(
     if file_stem == "lib" {
         let canonical = path.canonicalize().map_err(|_| bad_path_err())?;
         let file_dir = canonical.parent().ok_or_else(bad_path_err)?;
-        let crate_name = file_dir.to_str().ok_or_else(bad_path_err)?;
-        let crate_id = db.intern_crate(CrateLongId(crate_name.into()));
+        let crate_id = db.intern_crate(CrateLongId(crate_name.unwrap_or(LIB_PATH_PREFIX).into()));
         db.set_crate_root(crate_id, Some(Directory(file_dir.to_path_buf())));
         Ok(crate_id)
     } else {

@@ -15,7 +15,7 @@ use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 
 use crate::running::run_from_test_case;
 use crate::scarb::StarknetContractArtifacts;
-use test_collector::{collect_tests, LinkedLibrary, TestCase};
+use test_collector::{collect_tests, LinkedLibrary, TestCase, LIB_PATH_PREFIX};
 
 pub mod pretty_printing;
 pub mod scarb;
@@ -89,7 +89,11 @@ fn find_cairo_root_files_in_directory(
     package_path: &Utf8PathBuf,
     lib_path: &Utf8PathBuf,
 ) -> Result<Vec<Utf8PathBuf>> {
-    let mut test_files: Vec<Utf8PathBuf> = vec![lib_path.clone()];
+    let mut test_files: Vec<Utf8PathBuf> = vec![lib_path
+        .clone()
+        .strip_prefix(package_path)
+        .with_context(|| format!("Failed to read directory at path = {package_path}"))?
+        .into()];
     let src_path = lib_path.parent().with_context(|| {
         format!("Failed to get parent directory of a package at path = {lib_path}")
     })?;
@@ -104,8 +108,10 @@ fn find_cairo_root_files_in_directory(
         let path = entry.path();
 
         if path.is_file() && path.extension().unwrap_or_default() == "cairo" {
+            let stripped_path = path.strip_prefix(package_path).expect("Incorrect path");
+
             test_files.push(
-                Utf8Path::from_path(path)
+                Utf8Path::from_path(stripped_path)
                     .with_context(|| format!("Failed to convert path = {path:?} to utf-8"))?
                     .to_path_buf(),
             );
@@ -154,32 +160,33 @@ fn collect_tests_from_tree(
         "System",
     ];
 
+    let test_path = package_path.join(test_root);
+
     let (sierra_program, tests_configs) = collect_tests(
-        test_root.as_str(),
+        test_path.as_str(),
         None,
         linked_libraries.clone(),
         Some(builtins.clone()),
         corelib_path.into(),
     )?;
 
-    let test_cases = strip_path_from_test_names(tests_configs)?;
     let test_cases = if let Some(test_name_filter) = &runner_config.test_name_filter {
-        filter_tests_by_name(test_name_filter, runner_config.exact_match, test_cases)?
+        filter_tests_by_name(test_name_filter, runner_config.exact_match, tests_configs)?
     } else {
-        test_cases
+        tests_configs
     };
 
-    let relative_path = test_root.strip_prefix(package_path)?.to_path_buf();
     Ok(TestsFromFile {
         sierra_program,
         test_cases,
-        relative_path,
+        relative_path: test_root.clone(),
     })
 }
 
 #[allow(clippy::implicit_hasher)]
 pub fn run(
     package_path: &Utf8PathBuf,
+    package_name: &String,
     lib_path: &Utf8PathBuf,
     linked_libraries: &Option<Vec<LinkedLibrary>>,
     runner_config: &RunnerConfig,
@@ -206,6 +213,7 @@ pub fn run(
     for tests_from_file in tests_iterator.by_ref() {
         let summary = run_tests_from_file(
             tests_from_file,
+            package_name,
             runner_config,
             contracts,
             predeployed_contracts,
@@ -271,6 +279,7 @@ impl TestFileSummary {
 
 fn run_tests_from_file(
     tests: TestsFromFile,
+    package_name: &String,
     runner_config: &RunnerConfig,
     contracts: &HashMap<String, StarknetContractArtifacts>,
     predeployed_contracts: &Utf8PathBuf,
@@ -285,7 +294,9 @@ fn run_tests_from_file(
     pretty_printing::print_running_tests(&tests.relative_path, tests.test_cases.len());
     let mut results = vec![];
     for (i, case) in tests.test_cases.iter().enumerate() {
-        let result = run_from_test_case(&runner, case, contracts, predeployed_contracts)?;
+        let mut result = run_from_test_case(&runner, case, contracts, predeployed_contracts)?;
+
+        result.update_name(result.name().replace(LIB_PATH_PREFIX, package_name));
         results.push(result.clone());
 
         pretty_printing::print_test_result(&result);
@@ -309,25 +320,6 @@ fn run_tests_from_file(
         runner_exit_status: RunnerStatus::Default,
         relative_path: tests.relative_path,
     })
-}
-
-fn strip_path_from_test_names(test_cases: Vec<TestCase>) -> Result<Vec<TestCase>> {
-    test_cases
-        .into_iter()
-        .map(|test_case| {
-            let name: String = test_case
-                .name
-                .rsplit('/')
-                .next()
-                .with_context(|| format!("Failed to get test name from = {}", test_case.name))?
-                .into();
-
-            Ok(TestCase {
-                name,
-                available_gas: test_case.available_gas,
-            })
-        })
-        .collect()
 }
 
 fn filter_tests_by_name(
@@ -576,43 +568,6 @@ mod tests {
                 },
                 TestCase {
                     name: "thing".to_string(),
-                    available_gas: None,
-                },
-            ]
-        );
-    }
-
-    #[test]
-    fn strip_path() {
-        let mocked_tests: Vec<TestCase> = vec![
-            TestCase {
-                name: "/Users/user/forge/tests/data/simple_package/src::test::test_fib".to_string(),
-                available_gas: None,
-            },
-            TestCase {
-                name: "crate2::run_other_thing".to_string(),
-                available_gas: None,
-            },
-            TestCase {
-                name: "src/crate2::run_other_thing".to_string(),
-                available_gas: None,
-            },
-        ];
-
-        let striped_tests = strip_path_from_test_names(mocked_tests).unwrap();
-        assert_eq!(
-            striped_tests,
-            vec![
-                TestCase {
-                    name: "src::test::test_fib".to_string(),
-                    available_gas: None,
-                },
-                TestCase {
-                    name: "crate2::run_other_thing".to_string(),
-                    available_gas: None,
-                },
-                TestCase {
-                    name: "crate2::run_other_thing".to_string(),
                     available_gas: None,
                 },
             ]
