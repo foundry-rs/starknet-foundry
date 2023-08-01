@@ -21,6 +21,7 @@ async fn test_happy_case_from_scarb() {
     let snapbox = runner(&args);
 
     snapbox.assert().success().stderr_matches(indoc! {r#"
+        command: call
         error: There is no contract at the specified address
     "#});
 }
@@ -46,6 +47,7 @@ async fn test_happy_case_from_cli_no_scarb() {
     let snapbox = runner(&args);
 
     snapbox.assert().success().stderr_matches(indoc! {r#"
+        command: call
         error: There is no contract at the specified address
     "#});
 }
@@ -81,8 +83,8 @@ async fn test_happy_case_from_cli_with_scarb() {
 
     snapbox.assert().success().stdout_eq(indoc! {r#"
 {
-  "command": "Call",
-  "response": "[FieldElement { inner: 0x0000000000000000000000000000000000000000000000000000000000000000 }]"
+  "command": "call",
+  "response": "[0x0]"
 }
 "#});
 }
@@ -114,8 +116,8 @@ async fn test_happy_case_mixed() {
 
     snapbox.assert().success().stdout_eq(indoc! {r#"
 {
-  "command": "Call",
-  "response": "[FieldElement { inner: 0x0000000000000000000000000000000000000000000000000000000000000000 }]"
+  "command": "call",
+  "response": "[0x0]"
 }
 "#});
 }
