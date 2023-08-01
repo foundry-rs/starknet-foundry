@@ -477,8 +477,8 @@ fn declare(
     );
     let tx = DeclareTransaction::new(
         starknet_api::transaction::DeclareTransaction::V2(declare_tx),
-        // FIXME incorrectly calculating hashes may be the case of the problems
-        TransactionHash(StarkFelt::from(1_u32)),
+        // TODO(#358)
+        TransactionHash::default(),
         contract_class,
     )
     .unwrap_or_else(|err| panic!("Unable to build transaction {err:?}"));
