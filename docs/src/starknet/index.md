@@ -31,8 +31,8 @@ $ sncast --account myotheruser \
     --calldata 0x0 \
     --block-id latest
 
-command: Call
-response: [FieldElement { inner: 0x0000000000000000000000000000000000000000000000000000000000000000 }]
+command: call
+response: [0x0]
 ```
 
 > 📝 **Note**

@@ -1,7 +1,5 @@
-use crate::helpers::constants::OZ_CLASS_HASH;
 use anyhow::{anyhow, bail, Result};
 use camino::Utf8PathBuf;
-use cast::{get_network, handle_rpc_error, parse_number, print_formatted, wait_for_tx};
 use clap::Args;
 use starknet::accounts::AccountFactoryError;
 use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
@@ -9,6 +7,11 @@ use starknet::core::types::FieldElement;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider};
 use starknet::signers::{LocalWallet, SigningKey};
+
+use cast::{get_network, handle_rpc_error, parse_number, wait_for_tx};
+
+use crate::helpers::constants::OZ_CLASS_HASH;
+use crate::helpers::response_structs::InvokeResponse;
 
 #[derive(Args, Debug)]
 #[command(about = "Deploy an account to the Starknet")]
@@ -28,7 +31,7 @@ pub async fn deploy(
     name: String,
     network: &str,
     max_fee: FieldElement,
-) -> Result<FieldElement> {
+) -> Result<InvokeResponse> {
     let network_value = get_network(network)?.get_value();
 
     let contents = std::fs::read_to_string(path.clone()).expect("Couldn't read accounts file");
@@ -87,29 +90,9 @@ pub async fn deploy(
             std::fs::write(path, serde_json::to_string_pretty(&items).unwrap())
                 .expect("Couldn't write to accounts file");
 
-            Ok(result.transaction_hash)
+            Ok(InvokeResponse {
+                transaction_hash: result.transaction_hash,
+            })
         }
     }
-}
-
-pub fn print_account_deploy_result(
-    deploy_result: Result<FieldElement>,
-    int_format: bool,
-    json: bool,
-) -> Result<()> {
-    match deploy_result {
-        Ok(transaction_hash) => print_formatted(
-            vec![
-                ("command", "Deploy account".to_string()),
-                ("transaction_hash", format!("{transaction_hash}")),
-            ],
-            int_format,
-            json,
-            false,
-        )?,
-        Err(error) => {
-            print_formatted(vec![("error", error.to_string())], int_format, json, true)?;
-        }
-    };
-    Ok(())
 }

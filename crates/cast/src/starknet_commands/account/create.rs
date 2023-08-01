@@ -1,8 +1,9 @@
 use crate::helpers::constants::OZ_CLASS_HASH;
+use crate::helpers::response_structs::AccountCreateResponse;
 use crate::helpers::scarb_utils::get_property;
 use anyhow::{anyhow, Context, Result};
 use camino::Utf8PathBuf;
-use cast::{extract_or_generate_salt, get_network, parse_number, print_formatted};
+use cast::{extract_or_generate_salt, get_network, parse_number};
 use clap::Args;
 use scarb::ops::find_manifest_path;
 use serde_json::json;
@@ -43,7 +44,7 @@ pub async fn create(
     network: &str,
     maybe_salt: Option<FieldElement>,
     add_profile: bool,
-) -> Result<Vec<(&'static str, String)>> {
+) -> Result<AccountCreateResponse> {
     let private_key = SigningKey::from_random();
     let public_key = private_key.verifying_key();
     let salt = extract_or_generate_salt(maybe_salt);
@@ -123,25 +124,15 @@ pub async fn create(
         ));
     }
 
-    Ok(output)
-}
-
-pub fn print_account_create_result(
-    account_create_result: Result<Vec<(&'static str, String)>>,
-    int_format: bool,
-    json: bool,
-) -> Result<()> {
-    match account_create_result {
-        Ok(mut values) => {
-            values.insert(0, ("command", "Create account".to_string()));
-            print_formatted(values, int_format, json, false)?;
-        }
-        Err(error) => {
-            print_formatted(vec![("error", error.to_string())], int_format, json, true)?;
-        }
-    };
-
-    Ok(())
+    Ok(AccountCreateResponse {
+        address,
+        max_fee: FieldElement::from(max_fee),
+        add_profile: if add_profile {
+            "Profile successfully added to Scarb.toml".to_string()
+        } else {
+            "--add-profile flag was not set. No profile added to Scarb.toml".to_string()
+        },
+    })
 }
 
 pub fn add_created_profile_to_configuration(

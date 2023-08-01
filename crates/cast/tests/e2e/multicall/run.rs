@@ -24,7 +24,7 @@ async fn test_happy_case() {
         std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
 
     assert!(out.stderr.is_empty());
-    assert!(stdout_str.contains("command: Multicall"));
+    assert!(stdout_str.contains("command: multicall"));
 }
 
 #[tokio::test]

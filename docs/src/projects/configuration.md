@@ -54,8 +54,8 @@ $ sncast --profile myprofile \
     --calldata 0x0 \
     --block-id latest
 
-command: Call
-response: [FieldElement { inner: 0x0000000000000000000000000000000000000000000000000000000000000000 }]
+command: call
+response: [0x0]
 ```
 
 ### Multiple Profiles
@@ -84,6 +84,6 @@ $ sncast call \
     --calldata 0x0 \
     --block-id latest
 
-command: Call
-response: [FieldElement { inner: 0x0000000000000000000000000000000000000000000000000000000000000000 }]
+command: call
+response: [0x1, 0x23, 0x4]
 ```
