@@ -12,7 +12,7 @@ bin_ext=""
 
 binary_crates=("snforge" "sncast")
 for crate in "${binary_crates[@]}"; do
-  cp "./starknet-foundry/target/${TARGET}/release/${crate}${bin_ext}" "$PKG_FULL_NAME/bin/"
+  cp "./target/${TARGET}/release/${crate}${bin_ext}" "$PKG_FULL_NAME/bin/"
 done
 
 cp -r README.md "$PKG_FULL_NAME/"

@@ -1,7 +1,7 @@
 # Testing Smart Contracts
 
 Using unit testing as much as possible is a good practice, as it makes your test suites run faster. However, when
-writing smart contracts you often want to test their interactions with the blockchain state and with other contracts.
+writing smart contracts, you often want to test their interactions with the blockchain state and with other contracts.
 
 ## The Test Contract
 
@@ -49,7 +49,6 @@ fn call_and_invoke() {
     let class_hash = declare('HelloStarknet');
     let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
     let contract_address = deploy(prepared).unwrap();
-    let contract_address: ContractAddress = contract_address.try_into().unwrap();
     
     // Create a Dispatcher object that will allow interacting with the deployed contract
     let dispatcher = IHelloStarknetDispatcher { contract_address };

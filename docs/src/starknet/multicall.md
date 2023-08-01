@@ -42,7 +42,7 @@ After running `sncast multicall run --path file.toml`, a declared contract will 
 ```shell
 $ sncast multicall run --path /Users/john/Desktop/multicall_example.toml
 
-command: Multicall
+command: multicall
 transaction_hash: 0x38fb8a0432f71bf2dae746a1b4f159a75a862e253002b48599c9611fa271dcb
 ```
 
