@@ -3,7 +3,7 @@
 > `fn start_prank(contract_address: ContractAddress, caller_address: ContractAddress)`
 
 Changes the caller address for a contract at the given address.
-This change can be canceled with [`stop_prank](./stop_prank.md).
+This change can be canceled with [`stop_prank`](./stop_prank.md).
 
 - `contract_address` - target contract address
 - `caller_address` - caller address to be set
