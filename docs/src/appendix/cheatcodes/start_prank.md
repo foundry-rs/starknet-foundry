@@ -5,7 +5,7 @@
 Changes the caller address for a contract at the given address.
 This change can be canceled with [`stop_prank](./stop_prank.md).
 
-- `contract_address` - address of the contract to be pranked
+- `contract_address` - target contract address
 - `caller_address` - caller address to be set
 
 For contract implementation:

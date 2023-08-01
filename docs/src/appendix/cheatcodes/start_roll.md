@@ -6,7 +6,7 @@ Changes the block number for a contract at the given address.
 The change can be canceled with [`stop_roll`](./stop_roll.md).
 
 - `contract_address` - target contract address
-- `block_number` - mocked value of block number
+- `block_number` - block number to be set
 
 For contract implementation:
 

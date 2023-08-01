@@ -2,7 +2,7 @@
 
 > `fn stop_prank(contract_address: ContractAddress)`
 
-Cancels the [`stop_prank`](./stop_prank.md) for the contract at the given address.
+Cancels the [`start_prank`](./start_prank.md) for the contract at the given address.
 
 - `contract_address` - target contract address
 
