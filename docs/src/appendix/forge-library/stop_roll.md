@@ -1,6 +1,6 @@
 # `stop_roll`
 
-> `fn stop(contract_address: ContractAddress)`
+> `fn stop_roll(contract_address: ContractAddress)`
 
 Cancels block number mock for the contract at the given address.
 
@@ -19,13 +19,14 @@ impl IRollChecker of super::IRollChecker<ContractState> {
 // ...
 ```
 
-We can use roll in a test to change 
+We can use `stop_roll` in a test to cancel `start_roll` effects.
 ```rust
 use result::ResultTrait;
 
 #[test]
 fn test_roll() {
     // ...
+
     let original_block_number = dispatcher.get_block_number().unwrap();
     start_roll(contract_address, 234);
 
@@ -37,6 +38,7 @@ fn test_roll() {
     // Block number is not mocked anymore
     let current_block_number = dispatcher.get_block_number().unwrap();
     assert(current_block_number == original_block_number, 'Wrong block number');
+
     // ...
 }
 ```

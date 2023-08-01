@@ -20,7 +20,7 @@ impl IRollChecker of super::IRollChecker<ContractState> {
 // ...
 ```
 
-We can use roll in a test to change 
+We can use roll in a test to mock block number for a given contract
 ```rust
 use result::ResultTrait;
 
