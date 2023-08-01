@@ -5,8 +5,9 @@ multilingual = false
 src = "src"
 title = "The Starknet Foundry Book"
 
-[output.html.playground]
 [output.html]
 git-repository-url = "https://github.com/foundry-rs/starknet-foundry/"
 edit-url-template = "https://github.com/foundry-rs/starknet-foundry/edit/master/docs/{path}"
+
+[output.html.playground]
 runnable = false
