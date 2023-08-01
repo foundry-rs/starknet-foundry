@@ -60,8 +60,11 @@ pub async fn declare(
     wait: bool,
 ) -> Result<DeclareResponse> {
     let contract_name: String = contract_name.to_string();
-    let manifest_path =
-        get_scarb_manifest(path_to_scarb_toml).expect("Failed to obtain scarb manifest file path");
+    let manifest_path = path_to_scarb_toml.clone().unwrap_or_else(|| {
+        get_scarb_manifest().expect("Failed to obtain manifest path from scarb")
+    });
+    which::which("scarb")
+        .context("Cannot find `scarb` binary in PATH. Make sure you have Scarb installed https://github.com/software-mansion/scarb")?;
     let command_result = Command::new("scarb")
         .arg("--manifest-path")
         .arg(&manifest_path)

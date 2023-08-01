@@ -39,13 +39,9 @@ pub fn get_property(
     }
 }
 
-pub fn get_scarb_manifest(path: &Option<Utf8PathBuf>) -> Result<Utf8PathBuf> {
+pub fn get_scarb_manifest() -> Result<Utf8PathBuf> {
     which::which("scarb")
         .context("Cannot find `scarb` binary in PATH. Make sure you have Scarb installed https://github.com/software-mansion/scarb")?;
-
-    if let Some(path) = path {
-        return Ok(path.clone());
-    }
 
     let output = Command::new("scarb")
         .arg("manifest-path")
@@ -66,18 +62,17 @@ pub fn parse_scarb_config(
     profile: &Option<String>,
     path: &Option<Utf8PathBuf>,
 ) -> Result<CastConfig> {
-    let found_path = get_scarb_manifest(path);
-    let manifest_path;
-
-    if let Ok(found_path) = found_path {
-        if !found_path.exists() {
-            if path.is_some() {
-                bail! {"{} file does not exist!", found_path};
-            }
-            return Ok(CastConfig::default());
+    if let Some(path) = path {
+        if !path.exists() {
+            bail!("{path} file does not exist!");
         }
-        manifest_path = found_path;
-    } else {
+    }
+
+    let manifest_path = path.clone().unwrap_or_else(|| {
+        get_scarb_manifest().expect("Failed to obtain manifest path from scarb")
+    });
+
+    if !manifest_path.exists() {
         return Ok(CastConfig::default());
     }
 

@@ -140,8 +140,9 @@ pub fn add_created_profile_to_configuration(
     network: String,
     url: String,
 ) -> Result<()> {
-    let manifest_path =
-        get_scarb_manifest(path_to_scarb_toml).expect("Failed to obtain scarb manifest file path");
+    let manifest_path = path_to_scarb_toml.clone().unwrap_or_else(|| {
+        get_scarb_manifest().expect("Failed to obtain manifest path from scarb")
+    });
     let metadata = scarb_metadata::MetadataCommand::new()
         .inherit_stderr()
         .manifest_path(&manifest_path)
