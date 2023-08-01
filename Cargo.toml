@@ -3,7 +3,6 @@ members = [
     "crates/forge",
     "crates/test-collector",
     "crates/cast",
-    "crates/compatibility/cairo-felt-blockifier",
     "crates/cheatable-starknet"
 ]
 
