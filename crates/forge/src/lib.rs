@@ -186,7 +186,7 @@ fn collect_tests_from_tree(
 #[allow(clippy::implicit_hasher)]
 pub fn run(
     package_path: &Utf8PathBuf,
-    package_name: &String,
+    package_name: &str,
     lib_path: &Utf8PathBuf,
     linked_libraries: &Option<Vec<LinkedLibrary>>,
     runner_config: &RunnerConfig,
@@ -279,7 +279,7 @@ impl TestFileSummary {
 
 fn run_tests_from_file(
     tests: TestsFromFile,
-    package_name: &String,
+    package_name: &str,
     runner_config: &RunnerConfig,
     contracts: &HashMap<String, StarknetContractArtifacts>,
     predeployed_contracts: &Utf8PathBuf,

@@ -44,15 +44,16 @@ impl TestCaseSummary {
         }
     }
 
+    #[must_use]
     pub fn name(&self) -> &String {
         match self {
             TestCaseSummary::Passed {
                 name,
                 run_result: _,
                 msg: _,
-            } => name,
-            TestCaseSummary::Skipped { name } => name,
-            TestCaseSummary::Failed {
+            }
+            | TestCaseSummary::Skipped { name }
+            | TestCaseSummary::Failed {
                 name,
                 run_result: _,
                 msg: _,
@@ -66,13 +67,9 @@ impl TestCaseSummary {
                 name,
                 run_result: _,
                 msg: _,
-            } => {
-                *name = new_name;
             }
-            TestCaseSummary::Skipped { name } => {
-                *name = new_name;
-            }
-            TestCaseSummary::Failed {
+            | TestCaseSummary::Skipped { name }
+            | TestCaseSummary::Failed {
                 name,
                 run_result: _,
                 msg: _,

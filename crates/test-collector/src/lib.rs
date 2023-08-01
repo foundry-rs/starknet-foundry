@@ -296,7 +296,7 @@ pub fn collect_tests(
 
     init_dev_corelib(db, corelib_path);
 
-    let main_crate_id = setup_single_file_project(db, &Path::new(&input_path), None)
+    let main_crate_id = setup_single_file_project(db, Path::new(&input_path), None)
         .with_context(|| format!("Failed to setup project for path({input_path})"))?;
 
     if let Some(linked_libraries) = linked_libraries {
