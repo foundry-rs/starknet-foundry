@@ -1,6 +1,6 @@
-use crate::helpers::constants::UDC_ADDRESS;
 use anyhow::{anyhow, bail, Context, Error, Result};
 use camino::Utf8PathBuf;
+use helpers::constants::{DEFAULT_RETRIES, UDC_ADDRESS};
 use primitive_types::U256;
 use rand::rngs::OsRng;
 use rand::RngCore;
@@ -9,7 +9,7 @@ use serde_json::Value;
 use starknet::core::types::{
     BlockId,
     BlockTag::{Latest, Pending},
-    FieldElement,
+    FieldElement, MaybePendingTransactionReceipt,
     MaybePendingTransactionReceipt::Receipt,
     StarknetError,
     TransactionReceipt::{Declare, Deploy, DeployAccount, Invoke, L1Handler},
@@ -163,14 +163,32 @@ pub fn get_network(name: &str) -> Result<Network> {
 pub async fn wait_for_tx(
     provider: &JsonRpcClient<HttpTransport>,
     tx_hash: FieldElement,
+    retries: u8,
 ) -> Result<&str> {
-    'a: while {
-        let receipt = provider
-            .get_transaction_receipt(tx_hash)
-            .await
-            .unwrap_or_else(|_| panic!("Could not get transaction with hash: {tx_hash:#x}"));
+    println!("Transaction hash: {tx_hash:#x}");
 
-        let status = if let Receipt(receipt) = receipt {
+    let mut maybe_receipt: Option<MaybePendingTransactionReceipt> = None;
+    for i in (1..retries).rev() {
+        match provider.get_transaction_receipt(tx_hash).await {
+            Ok(receipt) => {
+                maybe_receipt = Some(receipt);
+                break;
+            }
+            Err(ProviderError::StarknetError(StarknetError::TransactionHashNotFound)) => {
+                println!("Waiting for transaction to be received. Retries left: {i}");
+            }
+            Err(err) => return Err(err.into()),
+        };
+
+        sleep(Duration::from_secs(5));
+    }
+
+    if maybe_receipt.is_none() {
+        bail!("Could not get transaction with hash: {tx_hash:#x}. Transaction rejected or not received.")
+    }
+
+    loop {
+        let status = if let Ok(Receipt(receipt)) = provider.get_transaction_receipt(tx_hash).await {
             match receipt {
                 Invoke(receipt) => receipt.status,
                 Declare(receipt) => receipt.status,
@@ -179,24 +197,22 @@ pub async fn wait_for_tx(
                 L1Handler(receipt) => receipt.status,
             }
         } else {
-            continue 'a;
+            println!("Received transaction. Status: Pending");
+            sleep(Duration::from_secs(5));
+
+            continue;
         };
 
         match status {
-            TransactionStatus::Pending => {
-                sleep(Duration::from_secs(5));
-                true
-            }
             TransactionStatus::AcceptedOnL2 | TransactionStatus::AcceptedOnL1 => {
                 return Ok("Transaction accepted")
             }
             TransactionStatus::Rejected => {
                 return Err(anyhow!("Transaction has been rejected"));
             }
+            TransactionStatus::Pending => {}
         }
-    } {}
-
-    unreachable!("Unexpected error happened");
+    }
 }
 
 #[must_use]
@@ -231,15 +247,20 @@ pub fn handle_rpc_error<T, G>(
     }
 }
 
-pub async fn handle_wait_for_tx_result<T>(
+pub async fn handle_wait_for_tx<T>(
     provider: &JsonRpcClient<HttpTransport>,
     transaction_hash: FieldElement,
     return_value: T,
+    wait: bool,
 ) -> Result<T> {
-    match wait_for_tx(provider, transaction_hash).await {
-        Ok(_) => Ok(return_value),
-        Err(message) => Err(anyhow!(message)),
+    if wait {
+        return match wait_for_tx(provider, transaction_hash, DEFAULT_RETRIES).await {
+            Ok(_) => Ok(return_value),
+            Err(message) => Err(anyhow!(message)),
+        };
     }
+
+    Ok(return_value)
 }
 
 pub fn print_formatted(
