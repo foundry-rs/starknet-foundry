@@ -785,12 +785,12 @@ mod test {
         // https://github.com/software-mansion/starknet.py/blob/cea191679cbdd2726ca7989f3a7662dee6ea43ca/starknet_py/tests/e2e/docs/guide/test_cairo1_contract.py#L29-L36
         let cases = [
             (
-                // TODO verify calculation of this
+                // TODO(#369) verify calculation of this
                 "0x00b0e07d0ab5d68a22072cd5f35f39335d0dcbf1a28fb92820bd5d547c497f33",
                 "target/dev/simple_package_ERC20.casm.json",
             ),
             (
-                // TODO verify calculation of this
+                // TODO(#369) verify calculation of this
                 "0x02ff90d068517ba09883a50339d55cc8a678a60e1526032ee0a899ed219f44e7",
                 "target/dev/simple_package_HelloStarknet.casm.json",
             ),
