@@ -87,11 +87,15 @@ pub async fn declare(
         );
     }
 
+    let metadata = scarb_metadata::MetadataCommand::new()
+        .inherit_stderr()
+        .exec()
+        .context("Failed to obtain scarb metadata")?;
     // TODO #41 improve handling starknet artifacts
-    let compiled_directory = &manifest_path
-        .parent()
-        .map(|parent| parent.join("target/release"))
-        .ok_or_else(|| anyhow!("Failed to obtain the path to compiled contracts"))?;
+    let compiled_directory = metadata
+        .target_dir
+        .map(|path| path.join("release"))
+        .ok_or_else(|| anyhow!("Failed to obtain path to compiled contracts"))?;
 
     let mut paths = match compiled_directory.read_dir() {
         Ok(paths) => paths,
