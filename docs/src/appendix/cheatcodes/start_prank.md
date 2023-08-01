@@ -21,6 +21,8 @@ impl IContractImpl of IContract<ContractState> {
 // ...
 ```
 
+We can use prank in a test to mock caller address for a given contract:
+
 ```rust
 #[test]
 fn test_prank_simple() {
