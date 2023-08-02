@@ -32,7 +32,7 @@ curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/scr
 If you are unable to install Starknet Foundry using the instructions above, you can try building it from
 the [source code](https://github.com/foundry-rs/starknet-foundry) as follows:
 
-1. [Set up a development environment.](https://github.com/software-mansion/protostar#setting-up-environment)
+1. [Set up a development environment.](../development/environment-setup.md)
 2. Run `git submodule update --init --recursive && cd starknet-foundry && cargo build --release`.
    This will create a `target` directory.
 3. Move the `target` directory to the desired location (e.g. `~/.starknet-foundry`).
