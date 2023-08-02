@@ -6,6 +6,7 @@ use cairo_lang_compiler::project::setup_project;
 use cairo_lang_compiler::CompilerConfig;
 use cairo_lang_filesystem::db::init_dev_corelib;
 use cairo_lang_starknet::allowed_libfuncs::{validate_compatible_sierra_version, ListSelector};
+use cairo_lang_starknet::casm_contract_class::CasmContractClass;
 use cairo_lang_starknet::contract_class::compile_contract_in_prepared_db;
 use cairo_lang_starknet::plugin::StarkNetPlugin;
 use camino::Utf8PathBuf;
@@ -36,7 +37,7 @@ impl Contract {
         Ok(Self { name, code })
     }
 
-    fn generate_sierra(self, corelib_path: &Path) -> Result<String> {
+    fn generate_sierra_and_casm(self, corelib_path: &Path) -> Result<(String, String)> {
         let path = TempDir::new()?;
         let contract_path = path.child("contract.cairo");
         contract_path.touch()?;
@@ -64,10 +65,14 @@ impl Contract {
                 ListSelector::default()
             },
         )?;
+
         let sierra =
             serde_json::to_string_pretty(&contract).with_context(|| "Serialization failed.")?;
 
-        Ok(sierra)
+        let casm = CasmContractClass::from_contract_class(contract, true)?;
+        let casm = serde_json::to_string_pretty(&casm)?;
+
+        Ok((sierra, casm))
     }
 }
 
@@ -112,13 +117,10 @@ impl<'a> TestCase {
             .clone()
             .into_iter()
             .map(|contract| {
-                Ok((
-                    contract.name.clone(),
-                    StarknetContractArtifacts {
-                        sierra: contract.generate_sierra(corelib_path)?,
-                        casm: None,
-                    },
-                ))
+                let name = contract.name.clone();
+                let (sierra, casm) = contract.generate_sierra_and_casm(corelib_path)?;
+
+                Ok((name, StarknetContractArtifacts { sierra, casm }))
             })
             .collect()
     }
