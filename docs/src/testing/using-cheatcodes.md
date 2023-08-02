@@ -9,7 +9,7 @@ using [cheatcodes](../appendix/cheatcodes.md).
 
 In this tutorial will be using this Starknet contract:
 
-```cairo
+```rust
 #[starknet::interface]
 trait IHelloStarknet<TContractState> {
     fn increase_balance(ref self: TContractState, amount: felt252);
@@ -51,7 +51,7 @@ the `assert_is_allowed_user` function added.
 
 We can try to create a test that will increase and verify the balance.
 
-```cairo
+```rust
 #[test]
 fn call_and_invoke() {
     // ...
@@ -85,13 +85,13 @@ Our user validation is not letting us call the contract, because the default cal
 ## Using Cheatcodes in Tests
 
 By using cheatcodes, we can change various properties of transaction info, block info, etc.
-For example, we can use the [start_prank](../appendix/cheatcodes/start_prank.md) cheatcode, to change the caller
+For example, we can use the [`start_prank`](../appendix/cheatcodes/start_prank.md) cheatcode, to change the caller
 address,
 so it passes our validation.
 
 ### Pranking the Address
 
-```cairo
+```rust
 #[test]
 fn call_and_invoke() {
     let class_hash = declare('HelloStarknet');
@@ -129,7 +129,7 @@ change.
 In case of the `start_prank`, we can cancel the address change
 using [`stop_prank`](../appendix/cheatcodes/start_prank.md)
 
-```cairo
+```rust
 #[test]
 fn call_and_invoke() {
     // ...
