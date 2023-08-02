@@ -69,7 +69,6 @@ fn main_execution() -> Result<()> {
         .arg("build")
         .output()
         .context("Failed to build contracts with Scarb")?;
-
     if !build_output.status.success() {
         bail!(
             "Scarb build didn't succeed:\n\n{}",
