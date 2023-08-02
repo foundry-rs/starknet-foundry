@@ -199,7 +199,7 @@ fn with_exit_first() {
             # See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest
             
             [dependencies]
-            starknet = "2.0.1"
+            starknet = "2.1.0-rc2"
             
             [[target.starknet-contract]]
             sierra = true
@@ -292,7 +292,7 @@ fn exit_first_flag_takes_precedence() {
             # See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest
 
             [dependencies]
-            starknet = "2.0.1"
+            starknet = "2.1.0-rc2"
 
             [[target.starknet-contract]]
             sierra = true

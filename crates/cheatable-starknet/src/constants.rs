@@ -1,7 +1,9 @@
+use std::sync::Arc;
 use std::{collections::HashMap, fs, path::PathBuf};
 
+use blockifier::state::cached_state::GlobalContractCache;
 use blockifier::{
-    abi::abi_utils::get_storage_var_address,
+    abi::{abi_utils::get_storage_var_address, constants},
     block_context::BlockContext,
     execution::{
         contract_class::{ContractClass, ContractClassV0},
@@ -10,7 +12,11 @@ use blockifier::{
     state::cached_state::CachedState,
     transaction::objects::AccountTransactionContext,
 };
-use cairo_felt_blockifier::Felt252;
+use cairo_felt::Felt252;
+use cairo_vm::vm::runners::builtin_runner::{
+    BITWISE_BUILTIN_NAME, EC_OP_BUILTIN_NAME, HASH_BUILTIN_NAME, OUTPUT_BUILTIN_NAME,
+    POSEIDON_BUILTIN_NAME, RANGE_CHECK_BUILTIN_NAME, SIGNATURE_BUILTIN_NAME,
+};
 use camino::Utf8PathBuf;
 use starknet_api::{
     block::{BlockNumber, BlockTimestamp},
@@ -42,13 +48,25 @@ pub const TEST_ERC20_CONTRACT_CLASS_HASH: &str = "0x1010";
 
 #[must_use]
 pub fn build_block_context() -> BlockContext {
+    // blockifier::test_utils::create_for_account_testing
+    let vm_resource_fee_cost = Arc::new(HashMap::from([
+        (constants::N_STEPS_RESOURCE.to_string(), 1_f64),
+        (HASH_BUILTIN_NAME.to_string(), 1_f64),
+        (RANGE_CHECK_BUILTIN_NAME.to_string(), 1_f64),
+        (SIGNATURE_BUILTIN_NAME.to_string(), 1_f64),
+        (BITWISE_BUILTIN_NAME.to_string(), 1_f64),
+        (POSEIDON_BUILTIN_NAME.to_string(), 1_f64),
+        (OUTPUT_BUILTIN_NAME.to_string(), 1_f64),
+        (EC_OP_BUILTIN_NAME.to_string(), 1_f64),
+    ]));
+
     BlockContext {
         chain_id: ChainId("SN_GOERLI".to_string()),
         block_number: BlockNumber(2000),
         block_timestamp: BlockTimestamp::default(),
         sequencer_address: ContractAddress(patricia_key!(TEST_SEQUENCER_ADDRESS)),
         fee_token_address: ContractAddress(patricia_key!(TEST_ERC20_CONTRACT_ADDRESS)),
-        vm_resource_fee_cost: HashMap::default(),
+        vm_resource_fee_cost,
         gas_price: 100 * u128::pow(10, 9),
         invoke_tx_max_n_steps: 1_000_000,
         validate_max_n_steps: 1_000_000,
@@ -155,10 +173,13 @@ pub fn build_testing_state(predeployed_contracts: &Utf8PathBuf) -> CachedState<D
             *test_account_address.0.key(),
         ),
     ]);
-    CachedState::new(DictStateReader {
-        storage_view,
-        address_to_class_hash,
-        class_hash_to_class,
-        ..Default::default()
-    })
+    CachedState::new(
+        DictStateReader {
+            storage_view,
+            address_to_class_hash,
+            class_hash_to_class,
+            ..Default::default()
+        },
+        GlobalContractCache::default(),
+    )
 }

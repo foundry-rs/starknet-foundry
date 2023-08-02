@@ -3,7 +3,6 @@ members = [
     "crates/forge",
     "crates/test-collector",
     "crates/cast",
-    "crates/compatibility/cairo-felt-blockifier",
     "crates/cheatable-starknet"
 ]
 
@@ -16,10 +15,30 @@ license = "Apache-2.0"
 license-file = "LICENSE"
 
 [workspace.dependencies]
-blockifier = { git = "https://github.com/starkware-libs/blockifier.git", rev = "9238b4d" }
-starknet_api = { git = "https://github.com/starkware-libs/starknet-api", rev = "a4c78ff" }
-cairo-lang-casm = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
-cairo-lang-runner = { git = "https://github.com/starkware-libs/cairo", rev = "f9e7b41" }
+blockifier = { git = "https://github.com/starkware-libs/blockifier.git", rev = "bf38764" }
+starknet_api = "0.3.0"
+cairo-lang-casm = "2.1.0-rc2"
+cairo-lang-runner = "2.1.0-rc2"
+cairo-lang-test-runner = "2.1.0-rc2"
+cairo-lang-sierra-to-casm = "2.1.0-rc2"
+cairo-lang-sierra = "2.1.0-rc2"
+cairo-lang-utils = "2.1.0-rc2"
+cairo-lang-starknet = "2.1.0-rc2"
+cairo-lang-compiler = "2.1.0-rc2"
+cairo-lang-filesystem = "2.1.0-rc2"
+cairo-lang-debug = "2.1.0-rc2"
+cairo-lang-defs = "2.1.0-rc2"
+cairo-lang-diagnostics = "2.1.0-rc2"
+cairo-lang-lowering = "2.1.0-rc2"
+cairo-lang-plugins = "2.1.0-rc2"
+cairo-lang-project = "2.1.0-rc2"
+cairo-lang-semantic = "2.1.0-rc2"
+cairo-lang-sierra-ap-change = "2.1.0-rc2"
+cairo-lang-sierra-gas = "2.1.0-rc2"
+cairo-lang-sierra-generator = "2.1.0-rc2"
+cairo-lang-syntax = "2.1.0-rc2"
+cairo-vm = "0.8.2"
+cairo-felt = "0.8.2"
 anyhow = "1.0.66"
 camino = { version = "1.1.4", features = ["serde1"] }
 include_dir = "0.7.3"
