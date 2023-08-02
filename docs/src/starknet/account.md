@@ -6,6 +6,9 @@ entire account management flow with the `sncast account create` and `sncast acco
 Difference between those two commands is that the first one creates account information (private key, address and more)
 and the second one deploys it to the network. After deployment, account can be used to interact with Starknet.
 
+> 💡 **Info**
+> Currently, only OpenZeppelin account creation is supported.
+
 ## Examples
 
 ### General example

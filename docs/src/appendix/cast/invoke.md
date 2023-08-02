@@ -17,7 +17,7 @@ Optional.
 Inputs to the function, represented by a list of space-delimited values `0x1 2 0x3`.
 Calldata arguments may be either 0x hex or decimal felts.
 
-## `--max-fee <MAX_FEE>`
+## `--max-fee, -m <MAX_FEE>`
 Optional.
 
 Max fee for the transaction. If not provided, it will be automatically estimated.
