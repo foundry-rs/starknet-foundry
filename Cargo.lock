@@ -1116,15 +1116,23 @@ name = "cheatable-starknet"
 version = "1.0.0"
 dependencies = [
  "anyhow",
+ "assert_fs",
  "blockifier",
  "cairo-felt",
  "cairo-lang-casm",
  "cairo-lang-runner",
+ "cairo-lang-starknet",
+ "cairo-lang-utils",
  "cairo-vm",
  "camino",
  "include_dir",
+ "num-traits 0.2.16",
+ "regex",
+ "serde_json",
+ "starknet",
  "starknet_api",
  "tempfile",
+ "thiserror",
 ]
 
 [[package]]

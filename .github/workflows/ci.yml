@@ -45,6 +45,24 @@ jobs:
           scarb-version: ${{ env.SCARB_VERSION }}
       - run: cargo test e2e -p forge
 
+  test-cheatnet:
+    name: Test Cheatnet
+    env:
+      SCARB_VERSION: 0.6.0-alpha.2
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@dd05243424bd5c0e585e4b55eb2d7615cdd32f1f
+        with:
+          workspaces: starknet-foundry
+      - uses: software-mansion/setup-scarb@v1.0.1
+        with:
+          scarb-version: ${{ env.SCARB_VERSION }}
+      - run: cargo test -p cheatable-starknet
+
   test-cast:
     name: Test Cast
     runs-on: ubuntu-latest

@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use anyhow::Result;
 use cairo_vm::serde::deserialize_program::HintParams;
 use cheatable_starknet::constants::build_testing_state;
-use cheatable_starknet::rpc::CheatedState;
+use cheatable_starknet::CheatedState;
 use itertools::chain;
 
 use cairo_lang_casm::hints::Hint;
