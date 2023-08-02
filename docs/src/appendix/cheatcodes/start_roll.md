@@ -41,7 +41,7 @@ fn test_roll() {
 
     start_roll(contract_address, 234);
 
-    let new_block_number = dispatcher.set_block_number();
+    dispatcher.set_block_number();
     let new_block_number = dispatcher.get_block_number();
     assert(new_block_number == 234, 'Wrong block number');
 }

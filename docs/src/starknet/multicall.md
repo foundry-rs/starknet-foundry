@@ -13,9 +13,9 @@ You can also compose such config `.toml` file with the `sncast multicall new` co
 
 For a detailed CLI description, see the [multicall command reference](../appendix/cast/multicall/multicall.md).
 
-## Usage examples
+## Example
 
-### `run` example
+### `multicall run` example
 
 Example file:
 
@@ -46,7 +46,13 @@ command: multicall
 transaction_hash: 0x38fb8a0432f71bf2dae746a1b4f159a75a862e253002b48599c9611fa271dcb
 ```
 
-### `new` example
+> 💡 **Info**
+> Max fee will be automatically computed if `--max-fee <MAX_FEE>` is not passed.
+
+
+### `multicall new` example
+
+You can also generate multicall template with `multicall new` command.
 
 ```shell
 $ sncast multicall new
@@ -63,4 +69,27 @@ call_type = ""
 contract_address = ""
 function = ""
 inputs = []
+```
+
+### `multicall new` with `output-path` argument
+
+Template can be automatically saved to file.
+
+```shell
+$ sncast multicall new \
+    --output-path ./new_multicall_template.toml
+
+Multicall template successfully saved in ./new_multicall_template.toml
+```
+
+### `multicall new` with `overwrite` argument
+
+If there is a file with the same name as passed in the `--output-path` argument it can be overwritten.
+
+```shell
+$ sncast multicall new \
+    --output-path ./new_multicall_template.toml
+    --overwrite
+
+Multicall template successfully saved in ./new_multicall_template.toml
 ```

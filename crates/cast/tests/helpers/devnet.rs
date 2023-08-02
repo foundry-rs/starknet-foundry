@@ -1,5 +1,5 @@
 use crate::helpers::constants::{COMPILER_VERSION, SEED, URL};
-use crate::helpers::fixtures::declare_deploy_contract;
+use crate::helpers::fixtures::{declare_contract, declare_deploy_contract};
 use ctor::{ctor, dtor};
 use std::net::TcpStream;
 use std::process::{Command, Stdio};
@@ -74,6 +74,14 @@ fn start_devnet() {
     rt.block_on(declare_deploy_contract(
         "user2",
         "/v2/map/target/dev/map_Map",
+    ));
+    rt.block_on(declare_contract(
+        "user3",
+        "/v1/constructor_with_params/target/dev/constructor_with_params_ConstructorWithParams",
+    ));
+    rt.block_on(declare_contract(
+        "user4",
+        "/v2/constructor_with_params/target/dev/constructor_with_params_ConstructorWithParams",
     ));
 }
 

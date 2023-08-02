@@ -36,7 +36,7 @@ We can use `start_prank` in a test to change the caller address for a given cont
 
 ```rust
 #[test]
-fn test_prank_simple() {
+fn test_prank() {
     // ...
 
     let caller_address: ContractAddress = 123.try_into().unwrap();

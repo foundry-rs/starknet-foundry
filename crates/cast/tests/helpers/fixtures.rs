@@ -15,7 +15,7 @@ use std::fs;
 use std::sync::Arc;
 use url::Url;
 
-pub async fn declare_deploy_contract(account: &str, path: &str) {
+pub async fn declare_contract(account: &str, path: &str) -> FieldElement {
     let provider = get_provider(URL, NETWORK)
         .await
         .expect("Could not get the provider");
@@ -50,9 +50,25 @@ pub async fn declare_deploy_contract(account: &str, path: &str) {
         ),
         casm_class_hash,
     );
-    let declared = declaration.send().await.unwrap();
 
-    let factory = ContractFactory::new(declared.class_hash, &account);
+    declaration.send().await.unwrap().class_hash
+}
+
+pub async fn declare_deploy_contract(account: &str, path: &str) {
+    let class_hash = declare_contract(account, path).await;
+
+    let provider = get_provider(URL, NETWORK)
+        .await
+        .expect("Could not get the provider");
+    let account = get_account(
+        account,
+        &Utf8PathBuf::from(ACCOUNT_FILE_PATH),
+        &provider,
+        NETWORK,
+    )
+    .expect("Could not get the account");
+
+    let factory = ContractFactory::new(class_hash, &account);
     let deployment = factory.deploy(Vec::new(), FieldElement::ONE, true);
     deployment.send().await.unwrap();
 }
