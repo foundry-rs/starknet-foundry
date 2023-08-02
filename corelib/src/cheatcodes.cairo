@@ -118,3 +118,22 @@ fn stop_warp(contract_address: ContractAddress) {
     cheatcode::<'stop_warp'>(array![contract_address_felt].span());
 }
 
+fn start_mock_call(contract_address: ContractAddress, fn_name: felt252, ret_data: Array::<felt252>) {
+    let contract_address_felt: felt252 = contract_address.into();
+    let mut inputs = array![contract_address_felt, fn_name];
+
+    let ret_data_len = ret_data.len();
+
+    inputs.append(ret_data_len.into());
+
+    let mut i = 0;
+    loop {
+        if ret_data_len == i {
+            break ();
+        }
+        inputs.append(*ret_data[i]);
+        i += 1;
+    };
+
+    cheatcode::<'start_mock_call'>(inputs.span());
+}

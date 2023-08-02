@@ -2,6 +2,7 @@ pub(crate) mod common;
 mod declare;
 mod deploy;
 mod dispatchers;
+mod mock_call;
 mod prank;
 mod roll;
 mod starknet;

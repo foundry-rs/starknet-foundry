@@ -322,6 +322,7 @@ use cheatcodes::start_warp;
 use cheatcodes::stop_roll;
 use cheatcodes::stop_prank;
 use cheatcodes::stop_warp;
+use cheatcodes::start_mock_call;
 use cheatcodes::PreparedContract;
 
 mod forge_print;
