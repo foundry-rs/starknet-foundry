@@ -37,7 +37,7 @@ impl Contract {
         Ok(Self { name, code })
     }
 
-    fn generate_sierra(self, corelib_path: &Path) -> Result<(String, String)> {
+    fn generate_sierra_and_casm(self, corelib_path: &Path) -> Result<(String, String)> {
         let path = TempDir::new()?;
         let contract_path = path.child("contract.cairo");
         contract_path.touch()?;
@@ -118,7 +118,7 @@ impl<'a> TestCase {
             .into_iter()
             .map(|contract| {
                 let name = contract.name.clone();
-                let (sierra, casm) = contract.generate_sierra(corelib_path)?;
+                let (sierra, casm) = contract.generate_sierra_and_casm(corelib_path)?;
 
                 Ok((name, StarknetContractArtifacts { sierra, casm }))
             })
