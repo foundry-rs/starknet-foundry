@@ -6,3 +6,4 @@
 * [`stop_roll`](cheatcodes/stop_roll.md)
 * [`start_warp`](cheatcodes/start_warp.md)
 * [`stop_warp`](cheatcodes/stop_warp.md)
+* [`start_mock_call`](cheatcodes/start_mock_call.md)
