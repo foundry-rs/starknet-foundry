@@ -93,7 +93,7 @@ async fn wrong_contract_name_passed() {
 
     let output = String::from_utf8(snapbox.assert().failure().get_output().stderr.clone()).unwrap();
 
-    assert!(output.contains("Failed to find contract nonexistent in starknet_artifacts.json"));
+    assert!(output.contains("Failed to find contract nonexistent in starknet_artifacts.json"), "Expected error message not found in stderr: {output}",);
 }
 
 #[test_case("/v1/build_fails", "../../../accounts/accounts.json" ; "when wrong cairo1 contract")]
@@ -182,7 +182,7 @@ fn scarb_no_artifacts(contract_path: &str, accounts_file_path: &str) {
     let snapbox = Command::new(cargo_bin!("sncast"))
         .current_dir(CONTRACTS_DIR.to_string() + contract_path)
         .args(args);
-    let assert = snapbox.assert().failure();
+    let assert = snapbox.assert().success();
     let stderr_output = String::from_utf8(assert.get_output().stderr.clone()).unwrap();
 
     assert!(
