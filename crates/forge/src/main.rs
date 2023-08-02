@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Parser;
 use include_dir::{include_dir, Dir};
@@ -63,11 +63,19 @@ fn main_execution() -> Result<()> {
         .context("Cannot find `scarb` binary in PATH. Make sure you have Scarb installed https://github.com/software-mansion/scarb")?;
 
     let scarb_metadata = MetadataCommand::new().inherit_stderr().exec()?;
-    Command::new("scarb")
+
+    let build_output = Command::new("scarb")
         .current_dir(std::env::current_dir().context("Failed to get current directory")?)
         .arg("build")
         .output()
         .context("Failed to build contracts with Scarb")?;
+
+    if !build_output.status.success() {
+        bail!(
+            "Scarb build didn't succeed:\n\n{}",
+            String::from_utf8_lossy(&build_output.stdout)
+        )
+    }
 
     for package in &scarb_metadata.workspace.members {
         let forge_config = forge::scarb::config_from_scarb_for_package(&scarb_metadata, package)?;
