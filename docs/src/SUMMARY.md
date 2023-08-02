@@ -17,6 +17,7 @@
 * [Running Tests](testing/running-tests.md)
 * [Writing Tests](testing/testing.md)
 * [Testing Smart Contracts](testing/contracts.md)
+* [Using Cheatcodes](testing/using-cheatcodes.md)
 * [Debugging](testing/debugging.md)
 
 # Interacting with Starknet
