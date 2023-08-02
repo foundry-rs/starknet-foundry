@@ -12,12 +12,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `warp` cheatcode
 - `roll` cheatcode
 - `prank` cheatcode
+- multicall as a single transaction
+- account creation and deployment
+- `--wait` flag to wait for transaction to be accepted/rejected
 
 ### Changed
 
 - `declare` return type to `starknet::ClassHash`, doesn't return a `Result`
 - `PreparedContract` `class_hash` changed to `starknet::ClassHash`
 - `deploy` return type to `starknet::ContractAddress`
+- sierra and casm artifacts are now required in Scarb.toml for contract declaration
+- improved error messages
 
 ### Fixed
 
