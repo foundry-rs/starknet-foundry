@@ -63,6 +63,27 @@ async fn test_happy_case_with_constructor(class_hash: &str, account: &str) {
     assert!(matches!(receipt, Invoke(_)));
 }
 
+#[test_case(CONTRACT_WITH_CONSTRUCTOR_CLASS_HASH_V1, "user3" ; "when cairo1 contract")]
+#[test_case(CONTRACT_WITH_CONSTRUCTOR_CLASS_HASH_V2, "user4" ; "when cairo2 contract")]
+fn test_wrong_calldata(class_hash: &str, account: &str) {
+    let mut args = default_cli_args();
+    args.append(&mut vec![
+        "--account",
+        account,
+        "deploy",
+        "--class-hash",
+        class_hash,
+        "--constructor-calldata",
+        "0x1 0x1",
+    ]);
+
+    let snapbox = runner(&args);
+    let output = String::from_utf8(snapbox.assert().success().get_output().stderr.clone()).unwrap();
+
+    assert!(output.contains("error: "));
+    assert!(output.contains("Error in the called contract"));
+}
+
 #[tokio::test]
 async fn test_contract_not_declared() {
     let mut args = default_cli_args();
