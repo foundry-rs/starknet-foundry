@@ -70,34 +70,13 @@ use blockifier::execution::syscalls::{
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
 use cairo_vm::vm::runners::cairo_runner::ResourceTracker;
 
+use crate::CheatedState;
+
 type SyscallSelector = DeprecatedSyscallSelector;
 
 pub enum CallContractOutput {
     Success { ret_data: Vec<Felt252> },
     Panic { panic_data: Vec<Felt252> },
-}
-
-pub struct CheatedState {
-    pub rolled_contracts: HashMap<ContractAddress, Felt252>,
-    pub pranked_contracts: HashMap<ContractAddress, ContractAddress>,
-    pub warped_contracts: HashMap<ContractAddress, Felt252>,
-}
-
-impl CheatedState {
-    #[must_use]
-    pub fn new() -> Self {
-        CheatedState {
-            rolled_contracts: HashMap::new(),
-            pranked_contracts: HashMap::new(),
-            warped_contracts: HashMap::new(),
-        }
-    }
-}
-
-impl Default for CheatedState {
-    fn default() -> Self {
-        Self::new()
-    }
 }
 
 // This does contract call without the transaction layer. This way `call_contract` can return data and modify state.
