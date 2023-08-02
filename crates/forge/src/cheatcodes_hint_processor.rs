@@ -649,10 +649,11 @@ fn felt252_from_hex_string(value: &str) -> Result<Felt252> {
 
 #[cfg(test)]
 mod test {
-    use assert_fs::fixture::PathCopy;
+    use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy, PathCreateDir};
     use std::sync::Arc;
 
     use cairo_felt::Felt252;
+    use indoc::indoc;
     use std::process::Command;
 
     use super::*;
@@ -767,6 +768,31 @@ mod test {
     fn class_hash_correct() {
         let temp = assert_fs::TempDir::new().unwrap();
         temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
+            .unwrap();
+
+        let manifest_path = temp.child("Scarb.toml");
+        manifest_path
+            .write_str(indoc!(
+                r#"
+            [package]
+            name = "simple_package"
+            version = "0.1.0"
+            
+            [[target.starknet-contract]]
+            sierra = true
+            casm = true
+            
+            [dependencies]
+            starknet = "2.1.0-rc2"
+            cheatcodes = { path = "cheatcodes" }
+            "#,
+            ))
+            .unwrap();
+
+        let cheatcodes_dir = temp.child("cheatcodes");
+        cheatcodes_dir.create_dir_all().unwrap();
+        cheatcodes_dir
+            .copy_from("../..", &["src/*.cairo", "Scarb.toml"])
             .unwrap();
 
         Command::new("scarb")

@@ -1,3 +1,4 @@
+use crate::integration::common::corelib::cheatcodes;
 use anyhow::{anyhow, Context, Result};
 use assert_fs::fixture::{FileTouch, FileWriteStr, PathChild};
 use assert_fs::TempDir;
@@ -103,10 +104,13 @@ impl<'a> TestCase {
     }
 
     pub fn linked_libraries(&self) -> Vec<LinkedLibrary> {
-        vec![LinkedLibrary {
-            name: Self::PACKAGE_NAME.to_string(),
-            path: self.dir.path().join("src"),
-        }]
+        vec![
+            LinkedLibrary {
+                name: Self::PACKAGE_NAME.to_string(),
+                path: self.dir.path().join("src"),
+            },
+            cheatcodes(),
+        ]
     }
 
     pub fn contracts(
