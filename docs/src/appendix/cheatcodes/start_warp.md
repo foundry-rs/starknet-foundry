@@ -14,8 +14,19 @@ For contract implementation:
 // ...
 #[external(v0)]
 impl IContractImpl of IContract<ContractState> {
-    fn get_block_timestamp(ref self: ContractState) -> u64 {
-        starknet::get_block_timestamp()
+    #[storage]
+    struct Storage {
+        // ...
+
+        stored_block_timestamp: u64
+    }
+    
+    fn set_block_timestamp(ref self: ContractState) {
+        self.stored_block_timestamp.write(starknet::get_block_timestamp());
+    }
+    
+    fn get_block_timestamp(self: @ContractState) -> u64 {
+        self.stored_block_timestamp.read()
     }
 }
 // ...
@@ -30,7 +41,8 @@ fn test_warp() {
 
     start_warp(contract_address, 1000);
 
-    let new_timestamp = dispatcher.get_block_timestamp().unwrap();
+    dispatcher.set_block_timestamp();
+    let new_timestamp = dispatcher.get_block_timestamp();
     assert(new_timestamp == 1000, 'Wrong timestamp');
 }
 ```
