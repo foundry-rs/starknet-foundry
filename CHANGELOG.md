@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `warp` cheatcode
 - `roll` cheatcode
 - `prank` cheatcode
+- Most unsafe libfuncs can now be used in contracts
 
 #### Changed
 
