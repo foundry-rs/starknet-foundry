@@ -45,6 +45,29 @@ fn simple_package() {
 }
 
 #[test]
+fn with_failing_scarb_build() {
+    let temp = assert_fs::TempDir::new().unwrap();
+    temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
+        .unwrap();
+    let lib_file = temp.child("src/lib.cairo");
+    lib_file
+        .write_str(indoc!(
+            r#"
+        mod hello_starknet;
+        mods erc20;
+    "#
+        ))
+        .unwrap();
+
+    let snapbox = runner();
+
+    let result = snapbox.current_dir(&temp).assert().failure();
+
+    let stdout = String::from_utf8_lossy(&result.get_output().stdout);
+    assert!(stdout.contains("Scarb build didn't succeed:"));
+}
+
+#[test]
 fn with_filter() {
     let temp = assert_fs::TempDir::new().unwrap();
     temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
