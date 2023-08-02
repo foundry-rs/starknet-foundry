@@ -61,7 +61,7 @@ jobs:
       - uses: software-mansion/setup-scarb@v1.0.1
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
-      - run: cargo test -p cheatable_starknet
+      - run: cargo test -p cheatable-starknet
 
   test-cast:
     name: Test Cast
