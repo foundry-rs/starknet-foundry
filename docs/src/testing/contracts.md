@@ -11,7 +11,7 @@ In this tutorial we will be using this Starknet contract
 #[starknet::interface]
 trait IHelloStarknet<TContractState> {
     fn increase_balance(ref self: TContractState, amount: felt252);
-    fn decrease_balance(ref self: TContractState, amount: felt252);
+    fn get_balance(self: @TContractState) -> felt252;
 }
 
 #[starknet::contract]
@@ -28,9 +28,9 @@ mod HelloStarknet {
             self.balance.write(self.balance.read() + amount);
         }
 
-        // Decreases the balance by the given amount.
-        fn decrease_balance(ref self: ContractState, amount: felt252) {
-            self.balance.write(self.balance.read() - amount);
+        // Gets the balance. 
+        fn get_balance(self: @ContractState) -> felt252 {
+            self.balance.read()
         }
     }
 }
@@ -71,7 +71,7 @@ fn call_and_invoke() {
 $ snforge
 Collected 1 test(s) and 1 test file(s)
 Running 1 test(s) from src/lib.cairo
-[PASS] using_dispatchers::using_dispatchers::call_and_invoke
+[PASS] src::call_and_invoke
 Tests: 1 passed, 0 failed, 0 skipped
 ```
 
