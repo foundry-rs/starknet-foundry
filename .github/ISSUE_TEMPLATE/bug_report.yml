@@ -1,5 +1,6 @@
 name: Bug Report
 description: Report a bug
+labels: [ "bug" ]
 body:
   - type: dropdown
     id: tool-name
