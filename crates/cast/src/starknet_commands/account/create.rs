@@ -1,11 +1,10 @@
 use crate::helpers::constants::OZ_CLASS_HASH;
 use crate::helpers::response_structs::AccountCreateResponse;
-use crate::helpers::scarb_utils::get_property;
+use crate::helpers::scarb_utils::{get_property, get_scarb_manifest};
 use anyhow::{anyhow, Context, Result};
 use camino::Utf8PathBuf;
 use cast::{extract_or_generate_salt, get_network, parse_number};
 use clap::Args;
-use scarb::ops::find_manifest_path;
 use serde_json::json;
 use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
 use starknet::core::types::FieldElement;
@@ -141,9 +140,9 @@ pub fn add_created_profile_to_configuration(
     network: String,
     url: String,
 ) -> Result<()> {
-    let manifest_path = find_manifest_path(path_to_scarb_toml.as_ref().map(Utf8PathBuf::as_path))
-        .expect("Failed to obtain Scarb.toml file path");
-
+    let manifest_path = path_to_scarb_toml.clone().unwrap_or_else(|| {
+        get_scarb_manifest().expect("Failed to obtain manifest path from scarb")
+    });
     let metadata = scarb_metadata::MetadataCommand::new()
         .inherit_stderr()
         .manifest_path(&manifest_path)

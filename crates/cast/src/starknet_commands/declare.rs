@@ -1,9 +1,8 @@
-use crate::helpers::response_structs::DeclareResponse;
+use crate::helpers::{response_structs::DeclareResponse, scarb_utils::get_scarb_manifest};
 use anyhow::{anyhow, Context, Result};
 use camino::Utf8PathBuf;
-use cast::{handle_rpc_error, handle_wait_for_tx_result};
+use cast::{handle_rpc_error, handle_wait_for_tx};
 use clap::Args;
-use scarb::ops::find_manifest_path;
 use serde::Deserialize;
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::ConnectedAccount;
@@ -57,12 +56,18 @@ pub async fn declare(
     contract_name: &str,
     max_fee: Option<FieldElement>,
     account: &mut SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
+    path_to_scarb_toml: &Option<Utf8PathBuf>,
+    wait: bool,
 ) -> Result<DeclareResponse> {
     let contract_name: String = contract_name.to_string();
+    let manifest_path = path_to_scarb_toml.clone().unwrap_or_else(|| {
+        get_scarb_manifest().expect("Failed to obtain manifest path from scarb")
+    });
     which::which("scarb")
         .context("Cannot find `scarb` binary in PATH. Make sure you have Scarb installed https://github.com/software-mansion/scarb")?;
     let command_result = Command::new("scarb")
-        .current_dir(std::env::current_dir().context("Failed to obtain current dir")?)
+        .arg("--manifest-path")
+        .arg(&manifest_path)
         .arg("--release")
         .arg("build")
         .stdout(Stdio::piped())
@@ -72,17 +77,25 @@ pub async fn declare(
     let result_code = command_result
         .status
         .code()
-        .context("failed to obtain status code from scarb build")?;
+        .context("Failed to obtain status code from scarb build")?;
+    let result_msg = String::from_utf8(command_result.stdout)?;
     if result_code != 0 {
-        anyhow::bail!("scarb build returned non-zero exit code: {}", result_code);
+        anyhow::bail!(
+            "Scarb build returned non-zero exit code: {} - error message: {}",
+            result_code,
+            result_msg
+        );
     }
 
+    let metadata = scarb_metadata::MetadataCommand::new()
+        .inherit_stderr()
+        .exec()
+        .context("Failed to obtain scarb metadata")?;
     // TODO #41 improve handling starknet artifacts
-    let compiled_directory = find_manifest_path(None)
-        .expect("Failed to obtain Scarb.toml file path")
-        .parent()
-        .map(|parent| parent.join("target/release"))
-        .ok_or_else(|| anyhow!("Failed to obtain the path to compiled contracts"))?;
+    let compiled_directory = metadata
+        .target_dir
+        .map(|path| path.join("release"))
+        .ok_or_else(|| anyhow!("Failed to obtain path to compiled contracts"))?;
 
     let mut paths = match compiled_directory.read_dir() {
         Ok(paths) => paths,
@@ -172,13 +185,14 @@ pub async fn declare(
 
     match declared {
         Ok(result) => {
-            handle_wait_for_tx_result(
+            handle_wait_for_tx(
                 account.provider(),
                 result.transaction_hash,
                 DeclareResponse {
                     class_hash: result.class_hash,
                     transaction_hash: result.transaction_hash,
                 },
+                wait,
             )
             .await
         }

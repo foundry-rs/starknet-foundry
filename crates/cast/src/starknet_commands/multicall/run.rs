@@ -50,6 +50,7 @@ pub async fn run(
     path: &Utf8PathBuf,
     account: &mut SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     max_fee: Option<FieldElement>,
+    wait: bool,
 ) -> Result<InvokeResponse> {
     let contents = std::fs::read_to_string(path)?;
     let items_map: HashMap<String, Vec<toml::Value>> =
@@ -117,5 +118,5 @@ pub async fn run(
         }
     }
 
-    execute_calls(account, parsed_calls, max_fee).await
+    execute_calls(account, parsed_calls, max_fee, wait).await
 }

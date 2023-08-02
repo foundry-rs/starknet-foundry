@@ -141,6 +141,7 @@ async fn test_too_low_max_fee() {
         NETWORK,
         "--accounts-file",
         accounts_file,
+        "--wait",
         "account",
         "deploy",
         "--name",

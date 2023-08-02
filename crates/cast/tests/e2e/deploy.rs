@@ -79,6 +79,7 @@ fn test_too_low_max_fee(class_hash: &str, account: &str) {
     args.append(&mut vec![
         "--account",
         account,
+        "--wait",
         "deploy",
         "--class-hash",
         class_hash,

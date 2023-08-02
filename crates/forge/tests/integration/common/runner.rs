@@ -11,6 +11,7 @@ use cairo_lang_starknet::contract_class::compile_contract_in_prepared_db;
 use cairo_lang_starknet::plugin::StarkNetPlugin;
 use camino::Utf8PathBuf;
 use forge::scarb::StarknetContractArtifacts;
+use forge::TestFileSummary;
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
@@ -82,7 +83,7 @@ pub struct TestCase {
 }
 
 impl<'a> TestCase {
-    const TEST_PATH: &'a str = "test_case.cairo";
+    pub const TEST_PATH: &'a str = "test_case.cairo";
     const PACKAGE_NAME: &'a str = "my_package";
 
     pub fn from(test_code: &str, contracts: Vec<Contract>) -> Result<Self> {
@@ -123,6 +124,13 @@ impl<'a> TestCase {
             })
             .collect()
     }
+
+    pub fn find_test_result(results: &[TestFileSummary]) -> &TestFileSummary {
+        results
+            .iter()
+            .find(|r| r.relative_path.ends_with(TestCase::TEST_PATH))
+            .unwrap()
+    }
 }
 
 #[macro_export]
@@ -143,13 +151,20 @@ macro_rules! test_case {
 macro_rules! assert_passed {
     ($result:expr) => {{
         use forge::test_case_summary::TestCaseSummary;
+        use $crate::integration::common::runner::TestCase;
 
-        assert!($result.iter().all(|result| {
+        let result = TestCase::find_test_result(&$result);
+        assert!(
+            !result.test_case_summaries.is_empty(),
+            "No test results found"
+        );
+        assert!(
             result
                 .test_case_summaries
                 .iter()
-                .all(|r| matches!(r, TestCaseSummary::Passed { .. }))
-        }));
+                .all(|r| matches!(r, TestCaseSummary::Passed { .. })),
+            "Some tests didn't pass"
+        );
     }};
 }
 
@@ -158,12 +173,20 @@ macro_rules! assert_failed {
     ($result:expr) => {{
         use forge::test_case_summary::TestCaseSummary;
 
-        assert!($result.iter().all(|result| {
+        use $crate::integration::common::runner::TestCase;
+
+        let result = TestCase::find_test_result(&$result);
+        assert!(
+            !result.test_case_summaries.is_empty(),
+            "No test results found"
+        );
+        assert!(
             result
                 .test_case_summaries
                 .iter()
-                .all(|r| matches!(r, TestCaseSummary::Failed { .. }))
-        }));
+                .all(|r| matches!(r, TestCaseSummary::Failed { .. })),
+            "Some tests didn't fail"
+        );
     }};
 }
 
@@ -172,24 +195,27 @@ macro_rules! assert_case_output_contains {
     ($result:expr, $test_case_name:expr, $asserted_msg:expr) => {{
         use forge::test_case_summary::TestCaseSummary;
 
+        use $crate::integration::common::runner::TestCase;
+
         let test_case_name = $test_case_name;
         let test_name_suffix = format!("::{test_case_name}");
-        assert!($result
-            .iter()
-            .any(|summary| summary.test_case_summaries.iter().any(|case| {
-                match case {
-                    TestCaseSummary::Failed {
-                        msg: Some(msg),
-                        name,
-                        ..
-                    }
-                    | TestCaseSummary::Passed {
-                        msg: Some(msg),
-                        name,
-                        ..
-                    } => msg.contains($asserted_msg) && name.ends_with(test_name_suffix.as_str()),
-                    _ => false,
+
+        let result = TestCase::find_test_result(&$result);
+
+        assert!(result.test_case_summaries.iter().any(|case| {
+            match case {
+                TestCaseSummary::Failed {
+                    msg: Some(msg),
+                    name,
+                    ..
                 }
-            })));
+                | TestCaseSummary::Passed {
+                    msg: Some(msg),
+                    name,
+                    ..
+                } => msg.contains($asserted_msg) && name.ends_with(test_name_suffix.as_str()),
+                _ => false,
+            }
+        }));
     }};
 }

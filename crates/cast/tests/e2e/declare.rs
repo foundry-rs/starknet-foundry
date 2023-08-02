@@ -118,11 +118,13 @@ fn scarb_build_fails(contract_path: &str, accounts_file_path: &str) {
     let snapbox = Command::new(cargo_bin!("sncast"))
         .current_dir(CONTRACTS_DIR.to_string() + contract_path)
         .args(args);
+    let assert = snapbox.assert().success();
+    let stderr_output = String::from_utf8(assert.get_output().stderr.clone()).unwrap();
 
-    snapbox.assert().success().stderr_matches(indoc! {r#"
-        command: declare
-        error: scarb build returned non-zero exit code: 1
-    "#});
+    assert!(
+        stderr_output.contains("error: Scarb build returned non-zero exit code: 1"),
+        "Expected error message not found in stderr: {stderr_output}",
+    );
 }
 
 #[test_case("/v1/map", "2", "user1" ; "when cairo1 contract")]
@@ -140,6 +142,7 @@ fn test_too_low_max_fee(contract_path: &str, salt: &str, account: &str) {
         "../../../accounts/accounts.json",
         "--account",
         account,
+        "--wait",
         "declare",
         "--contract-name",
         "Map",

@@ -485,9 +485,7 @@ fn declare(
 
     let account_tx = AccountTransaction::Declare(tx);
     let block_context = build_block_context();
-    let tx_result = account_tx
-        // FIXME not sure we should be using true or false for these
-        .execute(blockifier_state, &block_context, true, true);
+    let tx_result = account_tx.execute(blockifier_state, &block_context, true, true);
 
     match tx_result {
         Ok(_) => (),

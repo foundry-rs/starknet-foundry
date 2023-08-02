@@ -51,6 +51,10 @@ struct Cli {
     #[clap(short, long)]
     json: bool,
 
+    // If passed, command will wait until transaction is accepted or rejected
+    #[clap(short, long)]
+    wait: bool,
+
     #[command(subcommand)]
     command: Commands,
 }
@@ -101,6 +105,8 @@ async fn main() -> Result<()> {
                 &declare.contract,
                 declare.max_fee,
                 &mut account,
+                &cli.path_to_scarb_toml,
+                cli.wait,
             )
             .await;
 
@@ -119,6 +125,7 @@ async fn main() -> Result<()> {
                 deploy.unique,
                 deploy.max_fee,
                 &account,
+                cli.wait,
             )
             .await;
             print_command_result("deploy", &mut result, cli.int_format, cli.json)?;
@@ -149,6 +156,7 @@ async fn main() -> Result<()> {
                 invoke.calldata,
                 invoke.max_fee,
                 &mut account,
+                cli.wait,
             )
             .await;
             print_command_result("invoke", &mut result, cli.int_format, cli.json)?;
@@ -172,6 +180,7 @@ async fn main() -> Result<()> {
                         &run.path,
                         &mut account,
                         run.max_fee,
+                        cli.wait,
                     )
                     .await;
 
@@ -205,6 +214,7 @@ async fn main() -> Result<()> {
                     deploy.name,
                     &network,
                     deploy.max_fee,
+                    cli.wait,
                 )
                 .await;
 
