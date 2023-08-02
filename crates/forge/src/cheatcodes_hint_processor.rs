@@ -485,9 +485,7 @@ fn declare(
 
     let account_tx = AccountTransaction::Declare(tx);
     let block_context = build_block_context();
-    let tx_result = account_tx.execute(blockifier_state, &block_context, true, true);
-
-    match tx_result {
+    match account_tx.execute(blockifier_state, &block_context, true, true) {
         Ok(_) => (),
         Err(e) => {
             return Err(anyhow!(format!("Failed to execute declare transaction:\n    {e}")).into())
