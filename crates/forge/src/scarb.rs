@@ -104,7 +104,7 @@ pub fn config_from_scarb_for_package(
     )
 }
 
-pub fn dependencies_for_package(
+pub fn extract_metadata_from_package(
     metadata: &Metadata,
     package: &PackageId,
 ) -> Result<(
@@ -352,7 +352,7 @@ mod tests {
             .unwrap();
 
         let (_, _, _, dependencies, _) =
-            dependencies_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
+            extract_metadata_from_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
                 .unwrap();
 
         assert!(!dependencies.is_empty());
@@ -371,7 +371,7 @@ mod tests {
             .unwrap();
 
         let (package_path, lib_path, _, _, _) =
-            dependencies_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
+            extract_metadata_from_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
                 .unwrap();
 
         assert!(package_path.is_dir());
@@ -390,8 +390,10 @@ mod tests {
             .exec()
             .unwrap();
 
-        let result =
-            dependencies_for_package(&scarb_metadata, &PackageId::from(String::from("12345679")));
+        let result = extract_metadata_from_package(
+            &scarb_metadata,
+            &PackageId::from(String::from("12345679")),
+        );
         let err = result.unwrap_err();
 
         assert!(err

@@ -37,7 +37,7 @@ impl Contract {
         Ok(Self { name, code })
     }
 
-    fn generate_sierra_and_casm(self, corelib_path: &Path) -> Result<(String, String)> {
+    fn generate_sierra_and_casm(self, corelib_path: &Utf8PathBuf) -> Result<(String, String)> {
         let path = TempDir::new()?;
         let contract_path = path.child("contract.cairo");
         contract_path.touch()?;
@@ -50,7 +50,7 @@ impl Contract {
                 .with_semantic_plugin(Arc::new(StarkNetPlugin::default()))
                 .build()?
         };
-        init_dev_corelib(db, corelib_path.to_path_buf());
+        init_dev_corelib(db, corelib_path.into());
 
         let main_crate_ids = setup_project(db, Path::new(&contract_path.path()))?;
 
@@ -111,7 +111,7 @@ impl<'a> TestCase {
 
     pub fn contracts(
         &self,
-        corelib_path: &Path,
+        corelib_path: &Utf8PathBuf,
     ) -> Result<HashMap<String, StarknetContractArtifacts>> {
         self.contracts
             .clone()
