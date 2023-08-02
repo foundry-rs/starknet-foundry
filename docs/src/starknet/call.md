@@ -12,22 +12,9 @@ The basic inputs that you need for this command are:
 
 For a detailed CLI description, see the [call command reference](../appendix/cast/call.md).
 
-## Usage example
+## Examples
 
-### With [profiles](../projects/configuration.md#Cast)
-
-```shell
-$ sncast call \
-  --profile testnet \
-  --contract-address 0x4a739ab73aa3cac01f9da5d55f49fb67baee4919224454a2e3f85b16462a911 \
-  --function some_function \
-  --calldata 1 2 0x1e
-  
-command: call
-response: [0x0]
-```
-
-### Without profiles
+### General example
 
 ```shell
 $ sncast \
@@ -44,3 +31,18 @@ response: [0x1, 0x23, 0x4]
 
 > 📝 **Note**
 > Call does not require passing account-connected parameters (`account` and `accounts-file`) because it doesn't create a transaction.
+
+### Passing `block-id` argument
+
+You can call a contract at the specific blok by passing `--block-id` argument.
+
+```shell
+$ sncast call \
+  --contract-address 0x4a739ab73aa3cac01f9da5d55f49fb67baee4919224454a2e3f85b16462a911 \
+  --function "some_function" \
+  --calldata 1 2 3
+  --block-id 1234
+
+command: call
+response: [0x1, 0x23]
+```
