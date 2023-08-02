@@ -4,6 +4,7 @@ version = "0.1.0"
 
 [dependencies]
 starknet = "2.1.0-rc2"
+cheatcodes = { git = "https://github.com/foundry-rs/starknet-foundry", branch = "68-export-cheatcodes-as-scarb-package"}
 
 [[target.starknet-contract]]
 sierra = true
