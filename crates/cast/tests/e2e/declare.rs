@@ -93,7 +93,10 @@ async fn wrong_contract_name_passed() {
 
     let output = String::from_utf8(snapbox.assert().failure().get_output().stderr.clone()).unwrap();
 
-    assert!(output.contains("Failed to find contract nonexistent in starknet_artifacts.json"), "Expected error message not found in stderr: {output}",);
+    assert!(
+        output.contains("Failed to find contract nonexistent in starknet_artifacts.json"),
+        "Expected error message not found in stderr: {output}",
+    );
 }
 
 #[test_case("/v1/build_fails", "../../../accounts/accounts.json" ; "when wrong cairo1 contract")]
@@ -162,8 +165,8 @@ fn test_too_low_max_fee(contract_path: &str, salt: &str, account: &str) {
     fs::remove_dir_all(contract_path).unwrap();
 }
 
-#[test_case("/v1/no_sierra", "../../../accounts/accounts.json" ; "when there is no sierra artifact")]
-#[test_case("/v1/no_casm", "../../../accounts/accounts.json" ; "when there is no casm artifact")]
+#[test_case("/v2/no_sierra", "../../../accounts/accounts.json" ; "when there is no sierra artifact")]
+#[test_case("/v2/no_casm", "../../../accounts/accounts.json" ; "when there is no casm artifact")]
 fn scarb_no_artifacts(contract_path: &str, accounts_file_path: &str) {
     let args = vec![
         "--url",
@@ -176,13 +179,13 @@ fn scarb_no_artifacts(contract_path: &str, accounts_file_path: &str) {
         "user1",
         "declare",
         "--contract-name",
-        "SimpleBalance",
+        "minimal_contract",
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
         .current_dir(CONTRACTS_DIR.to_string() + contract_path)
         .args(args);
-    let assert = snapbox.assert().success();
+    let assert = snapbox.assert().failure();
     let stderr_output = String::from_utf8(assert.get_output().stderr.clone()).unwrap();
 
     assert!(
