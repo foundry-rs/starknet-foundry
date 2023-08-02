@@ -1,4 +1,7 @@
-use crate::helpers::constants::{ACCOUNT, MAP_CLASS_HASH_V1, MAP_CLASS_HASH_V2};
+use crate::helpers::constants::{
+    ACCOUNT, CONTRACT_WITH_CONSTRUCTOR_CLASS_HASH_V1, CONTRACT_WITH_CONSTRUCTOR_CLASS_HASH_V2,
+    MAP_CLASS_HASH_V1, MAP_CLASS_HASH_V2,
+};
 use crate::helpers::fixtures::{default_cli_args, get_transaction_hash, get_transaction_receipt};
 use crate::helpers::runner::runner;
 use indoc::indoc;
@@ -23,6 +26,32 @@ async fn test_happy_case(class_hash: &str, account: &str) {
         "--unique",
         "--max-fee",
         "999999999999",
+    ]);
+
+    let snapbox = runner(&args);
+    let output = snapbox.assert().success().get_output().stdout.clone();
+
+    let hash = get_transaction_hash(&output);
+    let receipt = get_transaction_receipt(hash).await;
+
+    assert!(matches!(receipt, Invoke(_)));
+}
+
+#[test_case(CONTRACT_WITH_CONSTRUCTOR_CLASS_HASH_V1, "user3" ; "when cairo1 contract")]
+#[test_case(CONTRACT_WITH_CONSTRUCTOR_CLASS_HASH_V2, "user4" ; "when cairo2 contract")]
+#[tokio::test]
+async fn test_happy_case_with_constructor(class_hash: &str, account: &str) {
+    let mut args = default_cli_args();
+    args.append(&mut vec![
+        "--account",
+        account,
+        "--int-format",
+        "--json",
+        "deploy",
+        "--class-hash",
+        class_hash,
+        "--constructor-calldata",
+        "0x1 0x1 0x0",
     ]);
 
     let snapbox = runner(&args);
