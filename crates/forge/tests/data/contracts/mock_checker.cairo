@@ -2,6 +2,7 @@
 trait IMockChecker<TContractState> {
     fn get_thing(self: @TContractState) -> felt252;
     fn get_thing_wrapper(self: @TContractState) -> felt252;
+    fn get_other_thing(self: @TContractState) -> felt252;
 }
 
 #[starknet::contract]
@@ -25,6 +26,10 @@ mod MockChecker {
 
         fn get_thing_wrapper(self: @ContractState) -> felt252 {
             self.get_thing()
+        }
+
+        fn get_other_thing(self: @ContractState) -> felt252 {
+            13
         }
     }
 }
