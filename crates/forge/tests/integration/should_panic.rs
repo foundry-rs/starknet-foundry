@@ -1,16 +1,15 @@
 use crate::integration::common::corelib::{corelib, predeployed_contracts};
-use crate::integration::common::runner::Contract;
+
 use crate::{assert_passed, test_case};
 use camino::Utf8PathBuf;
 use forge::run;
 use indoc::indoc;
-use std::path::Path;
+
 
 #[test]
 fn test_should_panic() {
-    let test = test_case!(
-        indoc!(
-            r#"
+    let test = test_case!(indoc!(
+        r#"
             use array::ArrayTrait;
 
             #[test]
@@ -35,8 +34,7 @@ fn test_should_panic() {
             }
 
         "#
-        )
-    );
+    ));
 
     let result = run(
         &test.path().unwrap(),
@@ -47,7 +45,7 @@ fn test_should_panic() {
         &test.contracts(corelib().path()).unwrap(),
         &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
     )
-        .unwrap();
+    .unwrap();
 
     assert_passed!(result);
 }

@@ -4,7 +4,7 @@ mod deploy;
 mod dispatchers;
 mod prank;
 mod roll;
+mod should_panic;
 mod starknet;
 mod syscalls;
 mod warp;
-mod should_panic;

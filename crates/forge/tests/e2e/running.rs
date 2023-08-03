@@ -389,10 +389,7 @@ fn using_corelib_names() {
 #[test]
 fn should_panic() {
     let temp = assert_fs::TempDir::new().unwrap();
-    temp.copy_from(
-        "tests/data/should_panic_test",
-        &["**/*.cairo", "**/*.toml"],
-    )
+    temp.copy_from("tests/data/should_panic_test", &["**/*.cairo", "**/*.toml"])
         .unwrap();
 
     let snapbox = runner();
@@ -426,5 +423,3 @@ fn should_panic() {
         Tests: 4 passed, 2 failed, 0 skipped
         "#});
 }
-
-
