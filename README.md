@@ -58,11 +58,12 @@ Starknet Foundry is under active development! Expect a lot of new features to ap
 - [x] Contract interactions testing
 - [x] Interacting with Starknet from command line
 - [x] Multicall support
-- [ ] Cheatcodes
-- [ ] Parallel tests execution
-- [ ] Performance improvements
+- [x] Cheatcodes
+- [ ] Cheatcodes parity with Foundry
 - [ ] Deployment scripts written in Cairo
 - [ ] Starknet state forking
+- [ ] Parallel tests execution
+- [ ] Performance improvements
 - [ ] Advanced debugging utilities
 - [ ] L1 ↔ L2 messaging and cross-chain testing
 - [ ] Transactions profiling
