@@ -80,7 +80,7 @@ pub fn setup_project_without_cairo_project_toml(
 }
 
 /// Expectation for a panic case.
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum PanicExpectation {
     /// Accept any panic value.
     Any,
@@ -89,7 +89,7 @@ pub enum PanicExpectation {
 }
 
 /// Expectation for a result of a test.
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum TestExpectation {
     /// Running the test should not panic.
     Success,
@@ -277,6 +277,7 @@ pub struct LinkedLibrary {
 pub struct TestCase {
     pub name: String,
     pub available_gas: Option<usize>,
+    pub expectation: TestExpectation,
 }
 
 // returns tuple[sierra if no output_path, list[test_name, test_config]]
@@ -361,6 +362,7 @@ pub fn collect_tests(
         .map(|(test_name, config)| TestCase {
             name: test_name.replace(PHANTOM_PACKAGE_NAME_PREFIX, ""),
             available_gas: config.available_gas,
+            expectation: config.expectation,
         })
         .collect();
 

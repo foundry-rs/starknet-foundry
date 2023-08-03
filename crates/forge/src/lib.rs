@@ -325,6 +325,7 @@ fn strip_path_from_test_names(test_cases: Vec<TestCase>) -> Result<Vec<TestCase>
             Ok(TestCase {
                 name,
                 available_gas: test_case.available_gas,
+                expectation: test_case.expectation,
             })
         })
         .collect()
@@ -361,6 +362,7 @@ fn test_name_contains(test_name_filter: &str, test: &TestCase) -> Result<bool> {
 mod tests {
     use super::*;
     use assert_fs::fixture::PathCopy;
+    use test_collector::TestExpectation;
 
     #[test]
     fn collecting_tests() {
@@ -392,14 +394,17 @@ mod tests {
             TestCase {
                 name: "crate1::do_thing".to_string(),
                 available_gas: None,
+                expectation: TestExpectation::Success,
             },
             TestCase {
                 name: "crate2::run_other_thing".to_string(),
                 available_gas: None,
+                expectation: TestExpectation::Success,
             },
             TestCase {
                 name: "outer::crate2::execute_next_thing".to_string(),
                 available_gas: None,
+                expectation: TestExpectation::Success,
             },
         ];
 
@@ -409,6 +414,7 @@ mod tests {
             vec![TestCase {
                 name: "crate1::do_thing".to_string(),
                 available_gas: None,
+                expectation: TestExpectation::Success,
             },]
         );
 
@@ -418,6 +424,7 @@ mod tests {
             vec![TestCase {
                 name: "crate2::run_other_thing".to_string(),
                 available_gas: None,
+                expectation: TestExpectation::Success,
             },]
         );
 
@@ -428,14 +435,17 @@ mod tests {
                 TestCase {
                     name: "crate1::do_thing".to_string(),
                     available_gas: None,
+                    expectation: TestExpectation::Success,
                 },
                 TestCase {
                     name: "crate2::run_other_thing".to_string(),
                     available_gas: None,
+                    expectation: TestExpectation::Success,
                 },
                 TestCase {
                     name: "outer::crate2::execute_next_thing".to_string(),
                     available_gas: None,
+                    expectation: TestExpectation::Success,
                 },
             ]
         );
@@ -450,14 +460,17 @@ mod tests {
                 TestCase {
                     name: "crate1::do_thing".to_string(),
                     available_gas: None,
+                    expectation: TestExpectation::Success,
                 },
                 TestCase {
                     name: "crate2::run_other_thing".to_string(),
                     available_gas: None,
+                    expectation: TestExpectation::Success,
                 },
                 TestCase {
                     name: "outer::crate2::execute_next_thing".to_string(),
                     available_gas: None,
+                    expectation: TestExpectation::Success,
                 },
             ]
         );
@@ -469,14 +482,17 @@ mod tests {
             TestCase {
                 name: "crate1::do_thing".to_string(),
                 available_gas: None,
+                expectation: TestExpectation::Success,
             },
             TestCase {
                 name: "crate2::run_other_thing".to_string(),
                 available_gas: None,
+                expectation: TestExpectation::Success,
             },
             TestCase {
                 name: "outer::crate2::run_other_thing".to_string(),
                 available_gas: None,
+                expectation: TestExpectation::Success,
             },
         ];
 
@@ -490,18 +506,22 @@ mod tests {
             TestCase {
                 name: "crate1::do_thing".to_string(),
                 available_gas: None,
+                expectation: TestExpectation::Success,
             },
             TestCase {
                 name: "crate2::run_other_thing".to_string(),
                 available_gas: None,
+                expectation: TestExpectation::Success,
             },
             TestCase {
                 name: "outer::crate3::run_other_thing".to_string(),
                 available_gas: None,
+                expectation: TestExpectation::Success,
             },
             TestCase {
                 name: "do_thing".to_string(),
                 available_gas: None,
+                expectation: TestExpectation::Success,
             },
         ];
 
@@ -517,6 +537,7 @@ mod tests {
             vec![TestCase {
                 name: "do_thing".to_string(),
                 available_gas: None,
+                expectation: TestExpectation::Success,
             },]
         );
 
@@ -527,6 +548,7 @@ mod tests {
             vec![TestCase {
                 name: "crate1::do_thing".to_string(),
                 available_gas: None,
+                expectation: TestExpectation::Success,
             },]
         );
 
@@ -541,6 +563,7 @@ mod tests {
             vec![TestCase {
                 name: "outer::crate3::run_other_thing".to_string(),
                 available_gas: None,
+                expectation: TestExpectation::Success,
             },]
         );
     }
@@ -551,14 +574,17 @@ mod tests {
             TestCase {
                 name: "crate1::do_thing".to_string(),
                 available_gas: None,
+                expectation: TestExpectation::Success,
             },
             TestCase {
                 name: "crate2::run_other_thing".to_string(),
                 available_gas: None,
+                expectation: TestExpectation::Success,
             },
             TestCase {
                 name: "thing".to_string(),
                 available_gas: None,
+                expectation: TestExpectation::Success,
             },
         ];
 
@@ -569,14 +595,17 @@ mod tests {
                 TestCase {
                     name: "crate1::do_thing".to_string(),
                     available_gas: None,
+                    expectation: TestExpectation::Success,
                 },
                 TestCase {
                     name: "crate2::run_other_thing".to_string(),
                     available_gas: None,
+                    expectation: TestExpectation::Success,
                 },
                 TestCase {
                     name: "thing".to_string(),
                     available_gas: None,
+                    expectation: TestExpectation::Success,
                 },
             ]
         );
@@ -588,14 +617,17 @@ mod tests {
             TestCase {
                 name: "/Users/user/forge/tests/data/simple_package/src::test::test_fib".to_string(),
                 available_gas: None,
+                expectation: TestExpectation::Success,
             },
             TestCase {
                 name: "crate2::run_other_thing".to_string(),
                 available_gas: None,
+                expectation: TestExpectation::Success,
             },
             TestCase {
                 name: "src/crate2::run_other_thing".to_string(),
                 available_gas: None,
+                expectation: TestExpectation::Success,
             },
         ];
 
@@ -606,14 +638,17 @@ mod tests {
                 TestCase {
                     name: "src::test::test_fib".to_string(),
                     available_gas: None,
+                    expectation: TestExpectation::Success,
                 },
                 TestCase {
                     name: "crate2::run_other_thing".to_string(),
                     available_gas: None,
+                    expectation: TestExpectation::Success,
                 },
                 TestCase {
                     name: "crate2::run_other_thing".to_string(),
                     available_gas: None,
+                    expectation: TestExpectation::Success,
                 },
             ]
         );
