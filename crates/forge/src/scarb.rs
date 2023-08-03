@@ -162,7 +162,7 @@ pub fn extract_metadata_from_package(
 }
 
 #[cfg(test)]
-pub mod tests {
+mod tests {
     use super::*;
     use assert_fs::fixture::{FileTouch, FileWriteStr, PathChild, PathCopy, PathCreateDir};
     use assert_fs::TempDir;

@@ -166,7 +166,6 @@ mod test {
             .unwrap()
             .canonicalize_utf8()
             .unwrap();
-        println!("{}", cheatcodes_path);
 
         let manifest_path = temp.child("Scarb.toml");
         manifest_path
