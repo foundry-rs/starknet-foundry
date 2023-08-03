@@ -1,6 +1,8 @@
 // Copied from cairo compiler cairo-lang-compiler/src/project.rs
 use cairo_lang_compiler::project::ProjectError;
+use cairo_lang_debug::DebugWithDb;
 use std::ffi::OsStr;
+use std::fs;
 use std::path::Path;
 use std::sync::Arc;
 
@@ -39,8 +41,10 @@ pub fn setup_single_file_project(
     if file_stem == "lib" {
         let canonical = path.canonicalize().map_err(|_| bad_path_err())?;
         let file_dir = canonical.parent().ok_or_else(bad_path_err)?;
+        // region: Modified code
         let crate_id = db.intern_crate(CrateLongId(crate_name.unwrap_or(LIB_PATH_PREFIX).into()));
         db.set_crate_root(crate_id, Some(Directory(file_dir.to_path_buf())));
+        // endregion
         Ok(crate_id)
     } else {
         // If file_stem is not lib, create a fake lib file.
@@ -55,8 +59,13 @@ pub fn setup_single_file_project(
 
         let module_id = ModuleId::CrateRoot(crate_id);
         let file_id = db.module_main_file(module_id).unwrap();
+
+        // region: Modified code
+        let file_content =
+            fs::read_to_string(path).expect("Failed to read test file at path: {path}");
         db.as_files_group_mut()
-            .override_file_content(file_id, Some(Arc::new(format!("mod {file_stem};"))));
+            .override_file_content(file_id, Some(Arc::new(file_content)));
+        // endregion
         Ok(crate_id)
     }
 }

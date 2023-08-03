@@ -33,12 +33,12 @@ fn complex_structure() {
         [PASS] test_multiple::fab::fab_impl::test_how_does_this_work
         [PASS] test_multiple::fab::fab_impl::test_super
         Running 1 test(s) from fob.cairo
-        [PASS] fob::fob::test_fob
+        [PASS] fob::test_fob
         Running 0 test(s) from tests/fab.cairo
         Running 3 test(s) from tests/fibfabfob.cairo
-        [PASS] fibfabfob::fibfabfob::test_fib
-        [PASS] fibfabfob::fibfabfob::test_fob
-        [PASS] fibfabfob::fibfabfob::test_fab
+        [PASS] fibfabfob::test_fib
+        [PASS] fibfabfob::test_fob
+        [PASS] fibfabfob::test_fab
         Tests: 16 passed, 0 failed, 0 skipped
         "#});
 }
