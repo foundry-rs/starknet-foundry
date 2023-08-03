@@ -183,7 +183,7 @@ fn collect_tests_from_tree(
 ///
 /// # Arguments
 ///
-/// * `package_path` - A path to the top level of the Cairo package
+/// * `package_path` - A path to the top-level of the Cairo package
 /// * `lib_path` - A path to the main file in the package (usually `src/lib.cairo`)
 /// * `linked_libraries` - Dependencies needed to run the package at `package_path`
 /// * `runner_config` - A configuration of the test runner
