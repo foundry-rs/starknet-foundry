@@ -140,11 +140,13 @@ fn compilation_unit_for_package<'a>(
         .ok_or_else(|| anyhow!("Failed to find metadata for package = {package}"))
 }
 
+/// Get the target name for the given package
 pub fn target_name_for_package(metadata: &Metadata, package: &PackageId) -> Result<String> {
     let compilation_unit = compilation_unit_for_package(metadata, package)?;
     Ok(compilation_unit.target.name.clone())
 }
 
+/// Get the path to Cairo corelib for the given package
 pub fn corelib_for_package(metadata: &Metadata, package: &PackageId) -> Result<Utf8PathBuf> {
     let compilation_unit = compilation_unit_for_package(metadata, package)?;
     let corelib = compilation_unit
@@ -155,6 +157,7 @@ pub fn corelib_for_package(metadata: &Metadata, package: &PackageId) -> Result<U
     Ok(Utf8PathBuf::from(corelib.source_root()))
 }
 
+/// Get the top-level and main file paths for the given package
 pub fn paths_for_package(
     metadata: &Metadata,
     package: &PackageId,
@@ -172,6 +175,7 @@ pub fn paths_for_package(
     Ok((package_path, lib_path))
 }
 
+/// Get the dependencies for the given package
 pub fn dependencies_for_package(
     metadata: &Metadata,
     package: &PackageId,
