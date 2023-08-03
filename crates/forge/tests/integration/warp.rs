@@ -248,7 +248,7 @@ fn start_warp_with_library_call() {
             use traits::Into;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use cheatcodes::PreparedContract;
+            use cheatcodes::{ declare, PreparedContract, deploy, start_warp };
             use starknet::ClassHash;
 
             #[starknet::interface]
@@ -289,8 +289,8 @@ fn start_warp_with_library_call() {
         &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
-        Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
-        &test.contracts(corelib().path()).unwrap(),
+        &corelib_path(),
+        &test.contracts(&corelib_path()).unwrap(),
         &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
     )
     .unwrap();

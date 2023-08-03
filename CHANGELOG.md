@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Changed
+
+- Exported cheatcodes as a Scarb package, now you have to import them explicitly with e.g. `use cheatcodes::declare`
+and add them as a dependency to your Scarb.toml 
+```toml
+[dependencies]
+# ...
+cheatcodes = { git = "https://github.com/foundry-rs/starknet-foundry", tag = "0.4.0" }
+```
+
 ## [0.3.0] - 2023-08-02
 
 ### Forge
