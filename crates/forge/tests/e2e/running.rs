@@ -1,11 +1,12 @@
 use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
 use assert_fs::TempDir;
-use camino::Utf8Path;
+use camino::Utf8PathBuf;
 use indoc::{formatdoc, indoc};
 
 use crate::e2e::common::runner::runner;
+use std::str::FromStr;
 
-fn setup_package(package_name: &str) -> (TempDir, TempDir) {
+fn setup_package(package_name: &str, cheatcodes_path: &str) -> TempDir {
     let temp = TempDir::new().unwrap();
     temp.copy_from(
         format!("tests/data/{package_name}"),
@@ -35,16 +36,19 @@ fn setup_package(package_name: &str) -> (TempDir, TempDir) {
             cheatcodes = {{ path = "{}" }}
             "#,
             package_name,
-            Utf8Path::from_path(cheatcodes_dir.path()).unwrap()
+            Utf8PathBuf::from_str(cheatcodes_path)
+                .unwrap()
+                .canonicalize_utf8()
+                .unwrap()
         ))
         .unwrap();
 
-    (temp, cheatcodes_dir)
+    temp
 }
 
 #[test]
 fn simple_package() {
-    let (temp, cheatcodes_dir) = setup_package("simple_package");
+    let temp = setup_package("simple_package", "../..");
     let snapbox = runner();
 
     snapbox
@@ -78,16 +82,11 @@ fn simple_package() {
         [PASS] without_prefix::without_prefix::five
         Tests: 9 passed, 2 failed, 0 skipped
         "#});
-
-    temp.close().unwrap();
-    cheatcodes_dir.close().unwrap();
 }
 
 #[test]
 fn with_failing_scarb_build() {
-    let temp = assert_fs::TempDir::new().unwrap();
-    temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
-        .unwrap();
+    let temp = setup_package("simple_package", "../..");
     let lib_file = temp.child("src/lib.cairo");
     lib_file
         .write_str(indoc!(
@@ -103,12 +102,13 @@ fn with_failing_scarb_build() {
     let result = snapbox.current_dir(&temp).assert().failure();
 
     let stdout = String::from_utf8_lossy(&result.get_output().stdout);
+    println!("{}", stdout);
     assert!(stdout.contains("Scarb build didn't succeed:"));
 }
 
 #[test]
 fn with_filter() {
-    let (temp, cheatcodes_dir) = setup_package("simple_package");
+    let temp = setup_package("simple_package", "../..");
     let snapbox = runner();
 
     snapbox
@@ -126,14 +126,11 @@ fn with_filter() {
         Running 0 test(s) from tests/without_prefix.cairo
         Tests: 2 passed, 0 failed, 0 skipped
         "#});
-
-    temp.close().unwrap();
-    cheatcodes_dir.close().unwrap();
 }
 
 #[test]
 fn with_exact_filter() {
-    let (temp, cheatcodes_dir) = setup_package("simple_package");
+    let temp = setup_package("simple_package", "../..");
     let snapbox = runner();
 
     snapbox
@@ -151,14 +148,11 @@ fn with_exact_filter() {
         Running 0 test(s) from tests/without_prefix.cairo
         Tests: 1 passed, 0 failed, 0 skipped
         "#});
-
-    temp.close().unwrap();
-    cheatcodes_dir.close().unwrap();
 }
 
 #[test]
 fn with_non_matching_filter() {
-    let (temp, cheatcodes_dir) = setup_package("simple_package");
+    let temp = setup_package("simple_package", "../..");
     let snapbox = runner();
 
     snapbox
@@ -174,14 +168,11 @@ fn with_non_matching_filter() {
         Running 0 test(s) from tests/without_prefix.cairo
         Tests: 0 passed, 0 failed, 0 skipped
         "#});
-
-    temp.close().unwrap();
-    cheatcodes_dir.close().unwrap();
 }
 
 #[test]
 fn with_print() {
-    let (temp, cheatcodes_dir) = setup_package("print_test");
+    let temp = setup_package("print_test", "../..");
     let snapbox = runner();
 
     snapbox
@@ -201,9 +192,6 @@ fn with_print() {
         [PASS] test_print::test_print::test_print
         Tests: 1 passed, 0 failed, 0 skipped
         "#});
-
-    temp.close().unwrap();
-    cheatcodes_dir.close().unwrap();
 }
 
 #[test]
@@ -247,7 +235,7 @@ fn with_panic_data_decoding() {
 
 #[test]
 fn with_exit_first() {
-    let (temp, cheatcodes_dir) = setup_package("simple_package");
+    let temp = setup_package("simple_package", "../..");
     let scarb_path = temp.child("Scarb.toml");
     scarb_path
         .write_str(&formatdoc!(
@@ -268,7 +256,11 @@ fn with_exit_first() {
             
             [tool.snforge]
             exit_first = true
-            "#, Utf8Path::from_path(cheatcodes_dir.path()).unwrap()
+            "#, 
+            Utf8PathBuf::from_str("../..")
+                .unwrap()
+                .canonicalize_utf8()
+                .unwrap()
         ))
         .unwrap();
 
@@ -300,14 +292,11 @@ fn with_exit_first() {
         [SKIP] without_prefix::without_prefix::five
         Tests: 8 passed, 1 failed, 2 skipped
         "#});
-
-    temp.close().unwrap();
-    cheatcodes_dir.close().unwrap();
 }
 
 #[test]
 fn with_exit_first_flag() {
-    let (temp, cheatcodes_dir) = setup_package("simple_package");
+    let temp = setup_package("simple_package", "../..");
     let snapbox = runner().arg("--exit-first");
 
     snapbox
@@ -336,14 +325,11 @@ fn with_exit_first_flag() {
         [SKIP] without_prefix::without_prefix::five
         Tests: 8 passed, 1 failed, 2 skipped
         "#});
-
-    temp.close().unwrap();
-    cheatcodes_dir.close().unwrap();
 }
 
 #[test]
 fn exit_first_flag_takes_precedence() {
-    let (temp, cheatcodes_dir) = setup_package("simple_package");
+    let temp = setup_package("simple_package", "../..");
     let scarb_path = temp.child("simple_package/Scarb.toml");
     scarb_path
         .write_str(indoc!(
@@ -396,9 +382,6 @@ fn exit_first_flag_takes_precedence() {
         [SKIP] without_prefix::without_prefix::five
         Tests: 8 passed, 1 failed, 2 skipped
         "#});
-
-    temp.close().unwrap();
-    cheatcodes_dir.close().unwrap();
 }
 
 #[test]

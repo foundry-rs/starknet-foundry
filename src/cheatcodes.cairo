@@ -21,7 +21,7 @@ struct PreparedContract {
 
 #[derive(Drop, Clone)]
 struct RevertedTransaction {
-    panic_data: Array::<felt252>, 
+    panic_data: Array::<felt252>,
 }
 
 trait RevertedTransactionTrait {
