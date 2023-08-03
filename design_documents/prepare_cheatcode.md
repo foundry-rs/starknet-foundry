@@ -120,3 +120,63 @@ fn call_and_invoke() {
     let dispatcher = IHelloStarknetDispatcher { contract_address };
 }
 ```
+
+## Proposed Solution 2
+
+Change the current deployment flow, so it can better facilitate precalculating of contract addresses.
+
+### `declare` Cheatcode
+
+Change the `declare` cheatcode signature to this:
+
+```cairo
+trait DeclaredContractTrait {
+    fn precalculate_address(constructor_calldata: @Array::<felt252>) -> ContractAddress;
+    fn deploy(constructor_calldata: @Array::<felt252>) -> -> Result::<ContractAddress, RevertedTransaction>;
+}
+
+fn declare(contract: felt252) -> DeclaredContractTrait;
+```
+
+And remove the `deploy` cheatcode entirely.
+
+Both `precalculate_address` and `deploy` should use the same way of calculating the contract address.
+
+## Salt "Counter"
+
+Introduce the same salt counter as [discussed here](#salt-counter).
+This will allow deterministic address calculation and deploying of multiple instances of the same contract.
+
+### Known Problems With This Solution
+
+Same problems as [indicated here](#known-problems-with-this-solution) apply to Proposed Solution 2 as well.
+
+### Example Usage
+
+```cairo
+mod HelloStarknet {
+    // ...
+    
+    #[constructor]
+    fn constructor(ref self: ContractState) {
+        let caller_address = starknet::get_caller_address();
+        self.owner.write(caller_address);
+    }
+}
+
+#[test]
+fn call_and_invoke() {
+    // Declare the contract
+    let contract = declare('HelloStarknet');
+        
+    // Precalculate the address
+    let contract_address = contract.precalulucate_address(@ArrayTrait::new());
+    
+    // Prank the address
+    start_prank(contract_address, 1234.into());
+    
+    // Deploy with pranked constructor
+    let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+    let dispatcher = IHelloStarknetDispatcher { contract_address };
+}
+```
