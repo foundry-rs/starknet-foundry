@@ -82,6 +82,67 @@ fn simple_package() {
 }
 
 #[test]
+fn simple_package_with_git_dependency() {
+    let temp = TempDir::new().unwrap();
+    temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
+        .unwrap();
+
+    let manifest_path = temp.child("Scarb.toml");
+    manifest_path
+        // TODO #403
+        .write_str(indoc!(
+            r#"
+            [package]
+            name = "simple_package"
+            version = "0.1.0"
+    
+            [[target.starknet-contract]]
+            sierra = true
+            casm = true
+    
+            [dependencies]
+            starknet = "2.1.0-rc2"
+            cheatcodes = { git = "https://github.com/foundry-rs/starknet-foundry", rev="b881f48" }
+            "#,
+        ))
+        .unwrap();
+
+    let snapbox = runner();
+
+    snapbox
+        .current_dir(&temp)
+        .assert()
+        .success()
+        .stdout_matches(indoc! {r#"Collected 11 test(s) and 5 test file(s)
+        Running 1 test(s) from src/lib.cairo
+        [PASS] src::test_fib
+        Running 1 test(s) from tests/contract.cairo
+        [PASS] contract::contract::call_and_invoke
+        Running 2 test(s) from tests/ext_function_test.cairo
+        [PASS] ext_function_test::ext_function_test::test_my_test
+        [PASS] ext_function_test::ext_function_test::test_simple
+        Running 6 test(s) from tests/test_simple.cairo
+        [PASS] test_simple::test_simple::test_simple
+        [PASS] test_simple::test_simple::test_simple2
+        [PASS] test_simple::test_simple::test_two
+        [PASS] test_simple::test_simple::test_two_and_two
+        [FAIL] test_simple::test_simple::test_failing
+        
+        Failure data:
+            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+        
+        [FAIL] test_simple::test_simple::test_another_failing
+        
+        Failure data:
+            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+        
+        Running 1 test(s) from tests/without_prefix.cairo
+        [PASS] without_prefix::without_prefix::five
+        Tests: 9 passed, 2 failed, 0 skipped
+        "#});
+}
+
+#[test]
 fn with_failing_scarb_build() {
     let temp = setup_package("simple_package");
     let lib_file = temp.child("src/lib.cairo");
