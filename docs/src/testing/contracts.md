@@ -71,7 +71,7 @@ fn call_and_invoke() {
 $ snforge
 Collected 1 test(s) and 1 test file(s)
 Running 1 test(s) from src/lib.cairo
-[PASS] src::call_and_invoke
+[PASS] using_dispatchers::call_and_invoke
 Tests: 1 passed, 0 failed, 0 skipped
 ```
 
