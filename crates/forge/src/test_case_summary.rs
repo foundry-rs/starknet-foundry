@@ -26,10 +26,17 @@ impl TestCaseSummary {
         let name = test_case.name.to_string();
         let msg = extract_result_data(&run_result, &test_case.expectation);
         match run_result.clone().value {
-            RunResultValue::Success(_) => TestCaseSummary::Passed {
-                name,
-                msg,
-                run_result,
+            RunResultValue::Success(_) => match &test_case.expectation {
+                TestExpectation::Success => TestCaseSummary::Passed {
+                    name,
+                    msg,
+                    run_result,
+                },
+                TestExpectation::Panics(_) => TestCaseSummary::Failed {
+                    name,
+                    msg,
+                    run_result: Some(run_result),
+                },
             },
             RunResultValue::Panic(value) => match &test_case.expectation {
                 TestExpectation::Success => TestCaseSummary::Failed {
@@ -73,20 +80,20 @@ pub fn extract_result_data(
 ) -> Option<String> {
     match &run_result.value {
         RunResultValue::Success(data) => {
-            let readable_text: String = data
-                .iter()
-                .map(|felt| {
-                    let short_string = as_cairo_short_string(felt).map_or(String::new(), |s| {
-                        format!(", converted to a string: [{s:?}]")
-                    });
-                    format!("\n    original value: [{felt:?}]{short_string}")
-                })
-                .collect();
+            let mut readable_text = String::new();
+
+            for felt in data {
+                readable_text.push_str(&format!("\n    original value: [{felt}]"));
+                if let Some(short_string) = as_cairo_short_string(felt) {
+                    readable_text.push_str(&format!(", converted to a string: [{short_string}]"));
+                }
+            }
 
             if readable_text.is_empty() {
                 None
             } else {
-                Some(format!("{}{}", readable_text, '\n'))
+                readable_text.push('\n');
+                Some(readable_text)
             }
         }
         RunResultValue::Panic(panic_data) => {
@@ -117,9 +124,23 @@ pub fn extract_result_data(
                                   \x1B[31m    Expected: {expected:?} ({expected_string:?})\x1B[0m\n"
                     ))
                 }
-                None => Some(format!(
-                    "\x1B[31mERROR: Run panicked with data: {panic_data:?}\x1B[0m\n"
-                )),
+                None => {
+                    let mut readable_text = String::new();
+
+                    for felt in panic_data {
+                        readable_text.push_str(&format!("\n    original value: [{felt}]"));
+                        if let Some(short_string) = as_cairo_short_string(felt) {
+                            readable_text.push_str(&format!(", converted to a string: [{short_string}]"));
+                        }
+                    }
+
+                    if readable_text.is_empty() {
+                        None
+                    } else {
+                        readable_text.push('\n');
+                        Some(readable_text)
+                    }
+                }
             }
         }
     }
