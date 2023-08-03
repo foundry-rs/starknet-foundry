@@ -65,12 +65,8 @@ use starknet_api::{
 };
 
 use blockifier::execution::syscalls::{
-    LibraryCallRequest,
-    SyscallRequest,
-    SyscallRequestWrapper,
-    SyscallResponse,
-    SyscallResponseWrapper,
-    SyscallResult
+    LibraryCallRequest, SyscallRequest, SyscallRequestWrapper, SyscallResponse,
+    SyscallResponseWrapper, SyscallResult,
 };
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
 use cairo_vm::vm::runners::cairo_runner::ResourceTracker;
@@ -644,7 +640,9 @@ pub fn library_call_syscall(
 
     let retdata_segment = execute_inner_call(&mut entry_point, vm, syscall_handler, remaining_gas)?;
 
-    Ok(SingleSegmentResponse { segment: retdata_segment })
+    Ok(SingleSegmentResponse {
+        segment: retdata_segment,
+    })
 }
 
 // Inspired by blockifier::hint_processor::execute_inner_call
