@@ -150,8 +150,8 @@ Change the `declare` cheatcode signature to this:
 
 ```cairo
 trait DeclaredContractTrait {
-    fn precalculate_address(constructor_calldata: @Array::<felt252>) -> ContractAddress;
-    fn deploy(constructor_calldata: @Array::<felt252>) -> -> Result::<ContractAddress, RevertedTransaction>;
+    fn precalculate_address(self: @DeclaredContract, constructor_calldata: @Array::<felt252>) -> ContractAddress;
+    fn deploy(self: @DeclaredContract, constructor_calldata: @Array::<felt252>) -> Result::<ContractAddress, RevertedTransaction>;
 }
 
 fn declare(contract: felt252) -> DeclaredContractTrait;
