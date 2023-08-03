@@ -1,5 +1,24 @@
 # `prepare` Cheatcode
 
+<!-- TOC -->
+* [`prepare` Cheatcode](#prepare-cheatcode)
+  * [Context](#context)
+  * [Goal](#goal)
+  * [Considered Solutions](#considered-solutions)
+    * [Require Calling the `prepare` Cheatcode Before Every Deployment](#require-calling-the-prepare-cheatcode-before-every-deployment)
+    * [Introducing the `precalculate_address` Cheatcode](#introducing-the-precalculateaddress-cheatcode)
+  * [Proposed Solution 1](#proposed-solution-1)
+    * [Salt "Counter"](#salt-counter)
+    * [`precalculate_address` Cheatcode](#precalculateaddress-cheatcode)
+    * [Known Problems With This Solution](#known-problems-with-this-solution)
+  * [Example Usage](#example-usage)
+  * [Proposed Solution 2](#proposed-solution-2)
+    * [`declare` Cheatcode](#declare-cheatcode)
+  * [Salt "Counter"](#salt-counter-1)
+    * [Known Problems With This Solution](#known-problems-with-this-solution-1)
+    * [Example Usage](#example-usage-1)
+<!-- TOC -->
+
 ## Context
 
 Some testing cases require knowing the address of the contract that will be deployed in advance.
@@ -39,7 +58,7 @@ deployed with `deploy` cheatcode.
 The problem with this approach is that for it to work, contract addresses would have to be deterministic.
 This would limit the user to only deploying a one instance of the given contact.
 
-## Proposed Solution
+## Proposed Solution 1
 
 Improving on the solution [proposed here](#introducing-the-precalculateaddress-cheatcode), allow precalculating the
 address while having the contract address semi-deterministic.
