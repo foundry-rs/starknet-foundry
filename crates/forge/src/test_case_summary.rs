@@ -118,10 +118,9 @@ pub fn extract_result_data(
                         .map(|felt| as_cairo_short_string(felt).unwrap_or_default())
                         .collect();
 
-                    Some(format!(
-                        "\x1B[31mFAIL: Test did not meet expectations!\x1B[0m\n\
-                                  \x1B[32m    Actual:   {panic_data:?} ({panic_string:?})\x1B[0m\n\
-                                  \x1B[31m    Expected: {expected:?} ({expected_string:?})\x1B[0m\n"
+                    Some(format!("\x1B[31mFAIL: Test did not meet expectations!\x1B[0m\n\
+  \x1B[32m  Actual:   {panic_data:?} ({panic_string:?})\x1B[0m\n\
+  \x1B[31m  Expected: {expected:?} ({expected_string:?})\x1B[0m\n"
                     ))
                 }
                 None => {

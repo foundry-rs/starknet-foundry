@@ -29,15 +29,15 @@ fn simple_package() {
         [PASS] test_simple::test_simple::test_two
         [PASS] test_simple::test_simple::test_two_and_two
         [FAIL] test_simple::test_simple::test_failing
-        
+
         Failure data:
             original value: [8111420071579136082810415440747], converted to a string: [failing check]
-        
+
         [FAIL] test_simple::test_simple::test_another_failing
-        
+
         Failure data:
             original value: [8111420071579136082810415440747], converted to a string: [failing check]
-        
+
         Running 1 test(s) from tests/without_prefix.cairo
         [PASS] without_prefix::without_prefix::five
         Tests: 9 passed, 2 failed, 0 skipped
@@ -187,7 +187,7 @@ fn with_panic_data_decoding() {
         Running 4 test(s) from tests/test_panic_decoding.cairo
         [PASS] test_panic_decoding::test_panic_decoding::test_simple
         [FAIL] test_panic_decoding::test_panic_decoding::test_panic_decoding
-        
+
         Failure data:
             original value: [123], converted to a string: [{]
             original value: [6381921], converted to a string: [aaa]
@@ -195,12 +195,12 @@ fn with_panic_data_decoding() {
             original value: [152]
             original value: [124], converted to a string: [|]
             original value: [149]
-        
+
         [FAIL] test_panic_decoding::test_panic_decoding::test_panic_decoding2
-        
+
         Failure data:
             original value: [128]
-        
+
         [PASS] test_panic_decoding::test_panic_decoding::test_simple2
         Tests: 2 passed, 2 failed, 0 skipped
         "#});
@@ -218,12 +218,12 @@ fn with_exit_first() {
             [package]
             name = "simple_package"
             version = "0.1.0"
-            
+
             # See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest
-            
+
             [dependencies]
             starknet = "2.1.0-rc2"
-            
+
             [[target.starknet-contract]]
             sierra = true
             casm = true
@@ -253,10 +253,10 @@ fn with_exit_first() {
         [PASS] test_simple::test_simple::test_two
         [PASS] test_simple::test_simple::test_two_and_two
         [FAIL] test_simple::test_simple::test_failing
-        
+
         Failure data:
             original value: [8111420071579136082810415440747], converted to a string: [failing check]
-        
+
         [SKIP] test_simple::test_simple::test_another_failing
         [SKIP] without_prefix::without_prefix::five
         Tests: 8 passed, 1 failed, 2 skipped
@@ -289,10 +289,10 @@ fn with_exit_first_flag() {
         [PASS] test_simple::test_simple::test_two
         [PASS] test_simple::test_simple::test_two_and_two
         [FAIL] test_simple::test_simple::test_failing
-        
+
         Failure data:
             original value: [8111420071579136082810415440747], converted to a string: [failing check]
-        
+
         [SKIP] test_simple::test_simple::test_another_failing
         [SKIP] without_prefix::without_prefix::five
         Tests: 8 passed, 1 failed, 2 skipped
@@ -347,10 +347,10 @@ fn exit_first_flag_takes_precedence() {
         [PASS] test_simple::test_simple::test_two
         [PASS] test_simple::test_simple::test_two_and_two
         [FAIL] test_simple::test_simple::test_failing
-        
+
         Failure data:
             original value: [8111420071579136082810415440747], converted to a string: [failing check]
-        
+
         [SKIP] test_simple::test_simple::test_another_failing
         [SKIP] without_prefix::without_prefix::five
         Tests: 8 passed, 1 failed, 2 skipped
@@ -385,3 +385,46 @@ fn using_corelib_names() {
         Tests: 4 passed, 0 failed, 0 skipped
         "#});
 }
+
+#[test]
+fn should_panic() {
+    let temp = assert_fs::TempDir::new().unwrap();
+    temp.copy_from(
+        "tests/data/should_panic_test",
+        &["**/*.cairo", "**/*.toml"],
+    )
+        .unwrap();
+
+    let snapbox = runner();
+
+    snapbox
+        .current_dir(&temp)
+        .assert()
+        .success()
+        .stdout_matches(indoc! { r#"Collected 6 test(s) and 2 test file(s)
+        Running 0 test(s) from src/lib.cairo
+        Running 6 test(s) from tests/should_panic_test.cairo
+        [PASS] should_panic_test::should_panic_test::should_panic_no_data
+
+        Success data:
+            original value: [0], converted to a string: []
+
+        [PASS] should_panic_test::should_panic_test::should_panic_check_data
+        [PASS] should_panic_test::should_panic_test::should_panic_multiple_messages
+        [FAIL] should_panic_test::should_panic_test::should_panic_actual_doesnt_match
+
+        Failure data:FAIL: Test did not meet expectations
+            Actual:   [1] (["/u{1}"])
+            Expected: [0] ([""])
+
+        [FAIL] should_panic_test::should_panic_test::didnt_expect_panic
+
+        Failure data:
+            original value: [1], converted to a string: []
+
+        [PASS] should_panic_test::should_panic_test::expected_panic_but_didnt
+        Tests: 4 passed, 2 failed, 0 skipped
+        "#});
+}
+
+

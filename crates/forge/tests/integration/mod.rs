@@ -7,3 +7,4 @@ mod roll;
 mod starknet;
 mod syscalls;
 mod warp;
+mod should_panic;
