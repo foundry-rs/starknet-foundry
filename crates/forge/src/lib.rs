@@ -33,6 +33,7 @@ pub struct RunnerConfig {
 }
 
 impl RunnerConfig {
+    /// Creates a new `RunnerConfig` from given arguments
     #[must_use]
     pub fn new(
         test_name_filter: Option<String>,
@@ -48,6 +49,7 @@ impl RunnerConfig {
     }
 }
 
+/// Exit status of the runner
 #[derive(Debug, PartialEq, Clone)]
 pub enum RunnerStatus {
     Default,
@@ -177,6 +179,18 @@ fn collect_tests_from_tree(
     })
 }
 
+/// Run the tests in the package at the given path
+///
+/// # Arguments
+///
+/// * `package_path` - A path to the top level of the Cairo package
+/// * `lib_path` - A path to the main file in the package (usually `src/lib.cairo`)
+/// * `linked_libraries` - Dependencies needed to run the package at `package_path`
+/// * `runner_config` - A configuration of the test runner
+/// * `corelib_path` - A path to the Cairo corelib
+/// * `contracts` - Map with names of contract used in tests and corresponding sierra and casm artifacts
+/// * `predeployed_contracts` - Path to predeployed contracts used by starknet state e.g. account contracts
+///
 #[allow(clippy::implicit_hasher)]
 pub fn run(
     package_path: &Utf8PathBuf,
@@ -239,10 +253,14 @@ pub fn run(
     Ok(summaries)
 }
 
+/// Summary of the test run in the file
 #[derive(Debug, PartialEq, Clone)]
 pub struct TestFileSummary {
+    /// Summaries of each test case in the file
     pub test_case_summaries: Vec<TestCaseSummary>,
+    /// Exit status of the runner after executing tests in the file
     pub runner_exit_status: RunnerStatus,
+    /// Relative path to the test file
     pub relative_path: Utf8PathBuf,
 }
 
