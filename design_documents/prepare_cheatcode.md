@@ -97,8 +97,8 @@ mod HelloStarknet {
     
     #[constructor]
     fn constructor(ref self: ContractState) {
-        let caller_address = starknet::get_caller_address();
-        self.owner.write(caller_address);
+        let timestamp = starknet::get_block_timestamp();
+        self.create_time.write(timestamp);
     }
 }
 
@@ -113,10 +113,10 @@ fn call_and_invoke() {
     // Precalculate the address
     let contract_address = precalulucate_address(prepared);
     
-    // Prank the address
-    start_prank(contract_address, 1234.into());
+    // Warp the address
+    start_warp(contract_address, 1234);
     
-    // Deploy with pranked constructor
+    // Deploy with warped constructor
     let contract_address = deploy(prepared).unwrap();
     let dispatcher = IHelloStarknetDispatcher { contract_address };
 }
@@ -134,7 +134,7 @@ fn call_and_invoke() {
     // Prepare contract for deployment
     let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
         
-    // Deploy with pranked constructor
+    // Deploy
     let contract_address = deploy(prepared).unwrap();
     let dispatcher = IHelloStarknetDispatcher { contract_address };
 }
@@ -191,10 +191,10 @@ fn call_and_invoke() {
     // Precalculate the address
     let contract_address = contract.precalulucate_address(@ArrayTrait::new());
     
-    // Prank the address
-    start_prank(contract_address, 1234.into());
+    // Warp the address
+    start_warp(contract_address, 1234);
     
-    // Deploy with pranked constructor
+    // Deploy with warped constructor
     let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
     let dispatcher = IHelloStarknetDispatcher { contract_address };
 }
