@@ -1,7 +1,7 @@
 use crate::ForgeConfigFromScarb;
 use anyhow::{anyhow, Context, Result};
 use camino::Utf8PathBuf;
-use scarb_metadata::{Metadata, PackageId};
+use scarb_metadata::{CompilationUnitMetadata, Metadata, PackageId};
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs;
@@ -124,17 +124,11 @@ pub fn config_from_scarb_for_package(
     )
 }
 
-pub fn dependencies_for_package(
-    metadata: &Metadata,
+fn compilation_unit_for_package<'a>(
+    metadata: &'a Metadata,
     package: &PackageId,
-) -> Result<(
-    Utf8PathBuf,
-    Utf8PathBuf,
-    Utf8PathBuf,
-    Vec<LinkedLibrary>,
-    String,
-)> {
-    let compilation_unit = metadata
+) -> Result<&'a CompilationUnitMetadata> {
+    metadata
         .compilation_units
         .iter()
         .filter(|unit| unit.package == *package)
@@ -143,7 +137,29 @@ pub fn dependencies_for_package(
             name @ "lib" => (1, name),
             name => (2, name),
         })
-        .ok_or_else(|| anyhow!("Failed to find metadata for package = {package}"))?;
+        .ok_or_else(|| anyhow!("Failed to find metadata for package = {package}"))
+}
+
+pub fn target_name_for_package(metadata: &Metadata, package: &PackageId) -> Result<String> {
+    let compilation_unit = compilation_unit_for_package(metadata, package)?;
+    Ok(compilation_unit.target.name.clone())
+}
+
+pub fn corelib_for_package(metadata: &Metadata, package: &PackageId) -> Result<Utf8PathBuf> {
+    let compilation_unit = compilation_unit_for_package(metadata, package)?;
+    let corelib = compilation_unit
+        .components
+        .iter()
+        .find(|du| du.source_path.to_string().contains("core/src"))
+        .context("corelib could not be found")?;
+    Ok(Utf8PathBuf::from(corelib.source_root()))
+}
+
+pub fn paths_for_package(
+    metadata: &Metadata,
+    package: &PackageId,
+) -> Result<(Utf8PathBuf, Utf8PathBuf)> {
+    let compilation_unit = compilation_unit_for_package(metadata, package)?;
 
     let package_path = metadata
         .get_package(package)
@@ -151,6 +167,16 @@ pub fn dependencies_for_package(
         .root
         .clone();
 
+    let lib_path = compilation_unit.target.source_path.clone();
+
+    Ok((package_path, lib_path))
+}
+
+pub fn dependencies_for_package(
+    metadata: &Metadata,
+    package: &PackageId,
+) -> Result<Vec<LinkedLibrary>> {
+    let compilation_unit = compilation_unit_for_package(metadata, package)?;
     let dependencies = compilation_unit
         .components
         .iter()
@@ -161,24 +187,7 @@ pub fn dependencies_for_package(
         })
         .collect();
 
-    let target_name = compilation_unit.target.name.clone();
-
-    let lib_path = compilation_unit.target.source_path.clone();
-
-    let corelib = compilation_unit
-        .components
-        .iter()
-        .find(|du| du.source_path.to_string().contains("core/src"))
-        .context("corelib could not be found")?;
-    let corelib_path = Utf8PathBuf::from(corelib.source_root());
-
-    Ok((
-        package_path,
-        lib_path,
-        corelib_path,
-        dependencies,
-        target_name,
-    ))
+    Ok(dependencies)
 }
 
 #[cfg(test)]
@@ -371,7 +380,7 @@ mod tests {
             .exec()
             .unwrap();
 
-        let (_, _, _, dependencies, _) =
+        let dependencies =
             dependencies_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
                 .unwrap();
 
@@ -390,9 +399,8 @@ mod tests {
             .exec()
             .unwrap();
 
-        let (package_path, lib_path, _, _, _) =
-            dependencies_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
-                .unwrap();
+        let (package_path, lib_path) =
+            paths_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0]).unwrap();
 
         assert!(package_path.is_dir());
         assert!(lib_path.ends_with(Utf8PathBuf::from("src/lib.cairo")));
