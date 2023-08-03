@@ -51,7 +51,7 @@ impl TestCaseSummary {
                         run_result,
                     },
                 },
-            }
+            },
         }
     }
 
@@ -67,13 +67,19 @@ impl TestCaseSummary {
 /// Returns a string with the data that was produced by the test case.
 /// If the test case was successful, it returns the data that was produced by the test case.
 /// If the test case failed, it returns a string comparing the panic data and the expected data.
-pub fn extract_result_data(run_result: &RunResult, expectation: &TestExpectation) -> Option<String> {
+pub fn extract_result_data(
+    run_result: &RunResult,
+    expectation: &TestExpectation,
+) -> Option<String> {
     match &run_result.value {
         RunResultValue::Success(data) => {
-            let readable_text: String = data.iter()
+            let readable_text: String = data
+                .iter()
                 .map(|felt| {
-                    let short_string = as_cairo_short_string(felt).map_or(String::new(), |s| format!(", converted to a string: [{:?}]", s));
-                    format!("\n    original value: [{:?}]{}", felt, short_string)
+                    let short_string = as_cairo_short_string(felt).map_or(String::new(), |s| {
+                        format!(", converted to a string: [{s:?}]")
+                    });
+                    format!("\n    original value: [{felt:?}]{short_string}")
                 })
                 .collect();
 
@@ -92,27 +98,28 @@ pub fn extract_result_data(run_result: &RunResult, expectation: &TestExpectation
                 TestExpectation::Success => None,
             };
 
-            let panic_string: Vec<String> = panic_data.iter()
-                .map(|felt| {
-                    as_cairo_short_string(felt).unwrap_or_default()
-                })
+            let panic_string: Vec<String> = panic_data
+                .iter()
+                .map(|felt| as_cairo_short_string(felt).unwrap_or_default())
                 .collect();
 
             match expected_data {
                 Some(expected) if expected == panic_data => None,
                 Some(expected) => {
-                    let expected_string: Vec<String> = expected.iter()
-                        .map(|felt| {
-                            as_cairo_short_string(felt).unwrap_or_default()
-                        })
+                    let expected_string: Vec<String> = expected
+                        .iter()
+                        .map(|felt| as_cairo_short_string(felt).unwrap_or_default())
                         .collect();
 
-                    Some(format!("\x1B[31mFAIL: Test did not meet expectations!\x1B[0m\n\
-                                  \x1B[32m    Actual:   {:?} ({:?})\x1B[0m\n\
-                                  \x1B[31m    Expected: {:?} ({:?})\x1B[0m\n",
-                                 panic_data, panic_string, expected, expected_string))
+                    Some(format!(
+                        "\x1B[31mFAIL: Test did not meet expectations!\x1B[0m\n\
+                                  \x1B[32m    Actual:   {panic_data:?} ({panic_string:?})\x1B[0m\n\
+                                  \x1B[31m    Expected: {expected:?} ({expected_string:?})\x1B[0m\n"
+                    ))
                 }
-                None => Some(format!("\x1B[31mERROR: Run panicked with data: {:?}\x1B[0m\n", panic_data)),
+                None => Some(format!(
+                    "\x1B[31mERROR: Run panicked with data: {panic_data:?}\x1B[0m\n"
+                )),
             }
         }
     }
