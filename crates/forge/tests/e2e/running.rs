@@ -6,7 +6,7 @@ use indoc::{formatdoc, indoc};
 use crate::e2e::common::runner::runner;
 use std::str::FromStr;
 
-fn setup_package(package_name: &str, cheatcodes_path: &str) -> TempDir {
+fn setup_package(package_name: &str) -> TempDir {
     let temp = TempDir::new().unwrap();
     temp.copy_from(
         format!("tests/data/{package_name}"),
@@ -14,9 +14,9 @@ fn setup_package(package_name: &str, cheatcodes_path: &str) -> TempDir {
     )
     .unwrap();
 
-    let cheatcodes_dir = TempDir::new().unwrap();
-    cheatcodes_dir
-        .copy_from("../..", &["src/*.cairo", "Scarb.toml"])
+    let cheatcodes_path = Utf8PathBuf::from_str("../..")
+        .unwrap()
+        .canonicalize_utf8()
         .unwrap();
 
     let manifest_path = temp.child("Scarb.toml");
@@ -36,10 +36,7 @@ fn setup_package(package_name: &str, cheatcodes_path: &str) -> TempDir {
             cheatcodes = {{ path = "{}" }}
             "#,
             package_name,
-            Utf8PathBuf::from_str(cheatcodes_path)
-                .unwrap()
-                .canonicalize_utf8()
-                .unwrap()
+            cheatcodes_path
         ))
         .unwrap();
 
@@ -48,7 +45,7 @@ fn setup_package(package_name: &str, cheatcodes_path: &str) -> TempDir {
 
 #[test]
 fn simple_package() {
-    let temp = setup_package("simple_package", "../..");
+    let temp = setup_package("simple_package");
     let snapbox = runner();
 
     snapbox
@@ -86,7 +83,7 @@ fn simple_package() {
 
 #[test]
 fn with_failing_scarb_build() {
-    let temp = setup_package("simple_package", "../..");
+    let temp = setup_package("simple_package");
     let lib_file = temp.child("src/lib.cairo");
     lib_file
         .write_str(indoc!(
@@ -102,13 +99,12 @@ fn with_failing_scarb_build() {
     let result = snapbox.current_dir(&temp).assert().failure();
 
     let stdout = String::from_utf8_lossy(&result.get_output().stdout);
-    println!("{}", stdout);
     assert!(stdout.contains("Scarb build didn't succeed:"));
 }
 
 #[test]
 fn with_filter() {
-    let temp = setup_package("simple_package", "../..");
+    let temp = setup_package("simple_package");
     let snapbox = runner();
 
     snapbox
@@ -130,7 +126,7 @@ fn with_filter() {
 
 #[test]
 fn with_exact_filter() {
-    let temp = setup_package("simple_package", "../..");
+    let temp = setup_package("simple_package");
     let snapbox = runner();
 
     snapbox
@@ -152,7 +148,7 @@ fn with_exact_filter() {
 
 #[test]
 fn with_non_matching_filter() {
-    let temp = setup_package("simple_package", "../..");
+    let temp = setup_package("simple_package");
     let snapbox = runner();
 
     snapbox
@@ -172,7 +168,7 @@ fn with_non_matching_filter() {
 
 #[test]
 fn with_print() {
-    let temp = setup_package("print_test", "../..");
+    let temp = setup_package("print_test");
     let snapbox = runner();
 
     snapbox
@@ -196,13 +192,7 @@ fn with_print() {
 
 #[test]
 fn with_panic_data_decoding() {
-    let temp = TempDir::new().unwrap();
-    temp.copy_from(
-        "tests/data/panic_decoding_test",
-        &["**/*.cairo", "**/*.toml"],
-    )
-    .unwrap();
-
+    let temp = setup_package("panic_decoding_test");
     let snapbox = runner();
 
     snapbox
@@ -235,7 +225,7 @@ fn with_panic_data_decoding() {
 
 #[test]
 fn with_exit_first() {
-    let temp = setup_package("simple_package", "../..");
+    let temp = setup_package("simple_package");
     let scarb_path = temp.child("Scarb.toml");
     scarb_path
         .write_str(&formatdoc!(
@@ -296,7 +286,7 @@ fn with_exit_first() {
 
 #[test]
 fn with_exit_first_flag() {
-    let temp = setup_package("simple_package", "../..");
+    let temp = setup_package("simple_package");
     let snapbox = runner().arg("--exit-first");
 
     snapbox
@@ -329,7 +319,7 @@ fn with_exit_first_flag() {
 
 #[test]
 fn exit_first_flag_takes_precedence() {
-    let temp = setup_package("simple_package", "../..");
+    let temp = setup_package("simple_package");
     let scarb_path = temp.child("simple_package/Scarb.toml");
     scarb_path
         .write_str(indoc!(
@@ -386,13 +376,7 @@ fn exit_first_flag_takes_precedence() {
 
 #[test]
 fn using_corelib_names() {
-    let temp = TempDir::new().unwrap();
-    temp.copy_from(
-        "tests/data/using_corelib_names",
-        &["**/*.cairo", "**/*.toml"],
-    )
-    .unwrap();
-
+    let temp = setup_package("using_corelib_names");
     let snapbox = runner();
 
     snapbox
