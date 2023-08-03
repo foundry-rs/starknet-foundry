@@ -23,7 +23,6 @@ pub mod test_case_summary;
 
 mod cheatcodes_hint_processor;
 mod running;
-mod vm_memory;
 
 /// Configuration of the test runner
 #[derive(Deserialize, Debug, PartialEq, Default)]

@@ -6,6 +6,13 @@ entire account management flow with the `sncast account create` and `sncast acco
 Difference between those two commands is that the first one creates account information (private key, address and more)
 and the second one deploys it to the network. After deployment, account can be used to interact with Starknet.
 
+> 💡 **Info**
+> Currently, only OpenZeppelin account creation is supported.
+
+## Examples
+
+### General example
+
 Do the following to start interacting with the Starknet:
 
 - create account with the `sncast account create` command
@@ -51,3 +58,23 @@ Do the following to start interacting with the Starknet:
     was set in the `account create` command. Just pass `profile` argument with the account name.
     
     For a detailed CLI description, see [account deploy command reference](../appendix/cast/account/deploy.md).
+
+    > 💡 **Info**
+    > Max fee will be automatically computed if `--max-fee <MAX_FEE>` is not passed.
+
+
+### `account create` with salt argument
+
+Salt will not be generated if `--salt` argument is passed.
+
+```shell
+$ sncast
+    account create \
+    --name some-name
+    --salt 0x1
+  
+Account successfully created. Prefund generated address with at least 432300000000 tokens. It is good to send more in the case of higher demand, max_fee * 2 = 864600000000
+command: account create
+max_fee: 0x64a7168300
+address: 0x7a949e83b243068d0cbedd8d5b8b32fafea66c54de23c40e68b126b5c845b61
+```

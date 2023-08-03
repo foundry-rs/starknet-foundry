@@ -4,3 +4,5 @@
 * [`stop_prank`](cheatcodes/stop_prank.md)
 * [`start_roll`](cheatcodes/start_roll.md)
 * [`stop_roll`](cheatcodes/stop_roll.md)
+* [`start_warp`](cheatcodes/start_warp.md)
+* [`stop_warp`](cheatcodes/stop_warp.md)

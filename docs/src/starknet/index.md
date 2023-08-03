@@ -12,7 +12,8 @@ To use cast, run the `sncast` command followed by a subcommand (see [available c
 $ sncast <subcommand>
 ```
 
-If `Scarb.toml` is present and configured with `[tool.sncast]`, `url`, `network` and `account` name will be taken from it. You can, however, overwrite their values by supplying them as flags directly to `sncast` cli.
+If `Scarb.toml` is present and configured with `[tool.sncast]`, `url`, `network` and `account` name will be taken from it.
+You can, however, overwrite their values by supplying them as flags directly to `sncast` cli.
 
 > 💡 **Info**
 > Some transactions (like declaring, deploying or invoking) require paying a fee, and they must be signed.
