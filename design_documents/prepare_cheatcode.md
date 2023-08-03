@@ -178,8 +178,8 @@ mod HelloStarknet {
     
     #[constructor]
     fn constructor(ref self: ContractState) {
-        let caller_address = starknet::get_caller_address();
-        self.owner.write(caller_address);
+        let timestamp = starknet::get_block_timestamp();
+        self.create_time.write(timestamp);
     }
 }
 
