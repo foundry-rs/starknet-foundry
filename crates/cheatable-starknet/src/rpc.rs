@@ -65,7 +65,8 @@ use starknet_api::{
 };
 
 use blockifier::execution::syscalls::{
-    SyscallRequest, SyscallRequestWrapper, SyscallResponse, SyscallResponseWrapper, SyscallResult,
+    LibraryCallRequest, SyscallRequest, SyscallRequestWrapper, SyscallResponse,
+    SyscallResponseWrapper, SyscallResult,
 };
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
 use cairo_vm::vm::runners::cairo_runner::ResourceTracker;
@@ -491,6 +492,14 @@ impl CheatableSyscallHandler<'_> {
                 call_contract_syscall,
                 constants::CALL_CONTRACT_GAS_COST,
             );
+        } else if SyscallSelector::LibraryCall == selector {
+            // Increment, since the selector was peeked into before
+            self.syscall_handler.syscall_ptr += 1;
+            return self.execute_syscall(
+                vm,
+                library_call_syscall,
+                constants::CALL_CONTRACT_GAS_COST,
+            );
         }
 
         self.syscall_handler.execute_next_syscall(vm, hint)
@@ -601,6 +610,34 @@ pub fn call_contract_syscall(
         call_type: CallType::Call,
         initial_gas: *remaining_gas,
     };
+    let retdata_segment = execute_inner_call(&mut entry_point, vm, syscall_handler, remaining_gas)?;
+
+    Ok(SingleSegmentResponse {
+        segment: retdata_segment,
+    })
+}
+
+// Inspired by blockifier::execution::syscalls::library_call
+// Calls a library using our implementation with modified logic
+pub fn library_call_syscall(
+    request: LibraryCallRequest,
+    vm: &mut VirtualMachine,
+    syscall_handler: &mut CheatableSyscallHandler<'_>,
+    remaining_gas: &mut u64,
+) -> SyscallResult<SingleSegmentResponse> {
+    let mut entry_point = CallEntryPoint {
+        class_hash: Some(request.class_hash),
+        code_address: None,
+        entry_point_type: EntryPointType::External,
+        entry_point_selector: request.function_selector,
+        calldata: request.calldata,
+        // The call context remains the same in a library call.
+        storage_address: syscall_handler.syscall_handler.storage_address(),
+        caller_address: syscall_handler.syscall_handler.caller_address(),
+        call_type: CallType::Delegate,
+        initial_gas: *remaining_gas,
+    };
+
     let retdata_segment = execute_inner_call(&mut entry_point, vm, syscall_handler, remaining_gas)?;
 
     Ok(SingleSegmentResponse {
