@@ -1,6 +1,5 @@
 // Copied from cairo compiler cairo-lang-compiler/src/project.rs
 use cairo_lang_compiler::project::ProjectError;
-use cairo_lang_debug::DebugWithDb;
 use std::ffi::OsStr;
 use std::fs;
 use std::path::Path;
