@@ -127,7 +127,7 @@ Tests: 1 passed, 0 failed, 0 skipped
 Most cheatcodes come with corresponding `start_` and `stop_` functions that can be used to start and stop the state
 change.
 In case of the `start_prank`, we can cancel the address change
-using [`stop_prank`](../appendix/cheatcodes/start_prank.md)
+using [`stop_prank`](../appendix/cheatcodes/stop_prank.md)
 
 ```rust
 #[test]
