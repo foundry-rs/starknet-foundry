@@ -1,0 +1,28 @@
+use starknet::ClassHash;
+
+#[starknet::interface]
+trait IWarpChecker<TContractState> {
+    fn get_block_timestamp(ref self: TContractState) -> u64;
+}
+
+#[starknet::interface]
+trait IWarpCheckerLibCall<TContractState> {
+    fn get_warp_checkers_block_info(ref self: TContractState, class_hash: ClassHash) -> u64;
+}
+
+#[starknet::contract]
+mod WarpCheckerLibCall {
+    use super::{IWarpCheckerDispatcherTrait, IWarpCheckerLibraryDispatcher};
+    use starknet::ClassHash;
+
+    #[storage]
+    struct Storage {}
+
+    #[external(v0)]
+    impl IWarpCheckerLibCall of super::IWarpCheckerLibCall<ContractState> {
+        fn get_warp_checkers_block_info(ref self: ContractState, class_hash: ClassHash) -> u64 {
+            let warp_checker = IWarpCheckerLibraryDispatcher { class_hash };
+            warp_checker.get_block_timestamp()
+        }
+    }
+}
