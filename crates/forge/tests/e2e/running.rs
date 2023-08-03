@@ -398,7 +398,8 @@ fn should_panic() {
         .current_dir(&temp)
         .assert()
         .success()
-        .stdout_matches(indoc! { r#"Collected 6 test(s) and 2 test file(s)
+        .stdout_matches(indoc! { r#"
+        Collected 6 test(s) and 2 test file(s)
         Running 0 test(s) from src/lib.cairo
         Running 6 test(s) from tests/should_panic_test.cairo
         [PASS] should_panic_test::should_panic_test::should_panic_no_data
@@ -408,18 +409,18 @@ fn should_panic() {
 
         [PASS] should_panic_test::should_panic_test::should_panic_check_data
         [PASS] should_panic_test::should_panic_test::should_panic_multiple_messages
-        [FAIL] should_panic_test::should_panic_test::should_panic_actual_doesnt_match
+        [FAIL] should_panic_test::should_panic_test::should_panic_with_non_matching_data
 
-        Failure data:FAIL: Test did not meet expectations
-            Actual:    [8111420071579136082810415440747] (["failing check"])
-            Expected:    [0] ([""])
+        Failure data:Incorrect panic data
+            Actual:    [8111420071579136082810415440747] (failing check)
+            Expected:    [0] ()
 
         [FAIL] should_panic_test::should_panic_test::didnt_expect_panic
 
         Failure data:
             original value: [156092886226808350968498952598218238307], converted to a string: [unexpected panic]
 
-        [PASS] should_panic_test::should_panic_test::expected_panic_but_didnt
-        Tests: 4 passed, 2 failed, 0 skipped
+        [FAIL] should_panic_test::should_panic_test::expected_panic_but_didnt
+        Tests: 3 passed, 3 failed, 0 skipped
         "#});
 }

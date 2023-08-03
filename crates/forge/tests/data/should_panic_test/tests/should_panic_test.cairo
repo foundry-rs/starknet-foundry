@@ -23,7 +23,7 @@ fn should_panic_multiple_messages(){
 
 #[test]
 #[should_panic(expected: (0,))]
-fn should_panic_actual_doesnt_match() {
+fn should_panic_with_non_matching_data() {
 	panic_with_felt252('failing check');
 }
 
@@ -35,5 +35,5 @@ fn didnt_expect_panic() {
 #[test]
 #[should_panic(expected: (0,))]
 fn expected_panic_but_didnt() {
-	panic_with_felt252(0);
+	assert(1==1,'err');
 }

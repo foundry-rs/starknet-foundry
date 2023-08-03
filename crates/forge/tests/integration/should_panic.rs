@@ -13,7 +13,7 @@ fn test_should_panic() {
 
             #[test]
             #[should_panic]
-            fn should_panic_no_data() {
+            fn should_panic_with_no_expected_data() {
                 panic_with_felt252(0);
             }
 
@@ -31,7 +31,6 @@ fn test_should_panic() {
                 arr.append('second message');
                 panic(arr);
             }
-
         "#
     ));
 

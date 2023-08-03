@@ -1,3 +1,4 @@
+use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{RunResult, RunResultValue};
 use console::style;
@@ -72,32 +73,35 @@ impl TestCaseSummary {
     }
 }
 
+/// Helper function to build `readable_text` from a run data.
+fn build_readable_text(data: &Vec<Felt252>) -> Option<String> {
+    let mut readable_text = String::new();
+
+    for felt in data {
+        readable_text.push_str(&format!("\n    original value: [{felt}]"));
+        if let Some(short_string) = as_cairo_short_string(felt) {
+            readable_text.push_str(&format!(", converted to a string: [{short_string}]"));
+        }
+    }
+
+    if readable_text.is_empty() {
+        None
+    } else {
+        readable_text.push('\n');
+        Some(readable_text)
+    }
+}
+
 #[must_use]
 /// Returns a string with the data that was produced by the test case.
-/// If the test case was successful, it returns the data that was produced by the test case.
-/// If the test case failed, it returns a string comparing the panic data and the expected data.
+/// If the test was expected to fail with specific data e.g. `#[should_panic(expected: ('data',))]`
+/// and failed to do so, it returns a string comparing the panic data and the expected data.
 pub fn extract_result_data(
     run_result: &RunResult,
     expectation: &TestExpectation,
 ) -> Option<String> {
     match &run_result.value {
-        RunResultValue::Success(data) => {
-            let mut readable_text = String::new();
-
-            for felt in data {
-                readable_text.push_str(&format!("\n    original value: [{felt}]"));
-                if let Some(short_string) = as_cairo_short_string(felt) {
-                    readable_text.push_str(&format!(", converted to a string: [{short_string}]"));
-                }
-            }
-
-            if readable_text.is_empty() {
-                None
-            } else {
-                readable_text.push('\n');
-                Some(readable_text)
-            }
-        }
+        RunResultValue::Success(data) => build_readable_text(data),
         RunResultValue::Panic(panic_data) => {
             let expected_data = match expectation {
                 TestExpectation::Panics(panic_expectation) => match panic_expectation {
@@ -107,52 +111,33 @@ pub fn extract_result_data(
                 TestExpectation::Success => None,
             };
 
-            let panic_string: Vec<String> = panic_data
+            let panic_string: String = panic_data
                 .iter()
                 .map(|felt| as_cairo_short_string(felt).unwrap_or_default())
-                .collect();
+                .collect::<Vec<String>>()
+                .join(", ");
 
             match expected_data {
                 Some(expected) if expected == panic_data => None,
                 Some(expected) => {
-                    let expected_string: Vec<String> = expected
+                    let expected_string = expected
                         .iter()
                         .map(|felt| as_cairo_short_string(felt).unwrap_or_default())
-                        .collect();
-
-                    let actual_string = format!("Actual:    {panic_data:?} ({panic_string:?})");
-                    let expected_string =
-                        format!("Expected:    {expected:?} ({expected_string:?})");
+                        .collect::<Vec<String>>()
+                        .join(", ");
 
                     Some(format!(
                         indoc! {"
-                    FAIL: Test did not meet expectations
+                    Incorrect panic data
                         {}
                         {}
                     "
                         },
-                        style(actual_string).red(),
-                        style(expected_string).green()
+                        style(format!("Actual:    {panic_data:?} ({panic_string})")).red(),
+                        style(format!("Expected:    {expected:?} ({expected_string})")).green()
                     ))
                 }
-                None => {
-                    let mut readable_text = String::new();
-
-                    for felt in panic_data {
-                        readable_text.push_str(&format!("\n    original value: [{felt}]"));
-                        if let Some(short_string) = as_cairo_short_string(felt) {
-                            readable_text
-                                .push_str(&format!(", converted to a string: [{short_string}]"));
-                        }
-                    }
-
-                    if readable_text.is_empty() {
-                        None
-                    } else {
-                        readable_text.push('\n');
-                        Some(readable_text)
-                    }
-                }
+                None => build_readable_text(panic_data),
             }
         }
     }
