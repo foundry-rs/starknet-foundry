@@ -1,7 +1,6 @@
 # Using Cheatcodes
 
-When testing smart contracts, often there are parts of code that are dependent on specific blockchain state or are
-triggered on specific transaction properties.
+When testing smart contracts, often there are parts of code that are dependent on a specific blockchain state.
 Instead of trying to replicate these conditions in tests, you can emulate them
 using [cheatcodes](../appendix/cheatcodes.md).
 
