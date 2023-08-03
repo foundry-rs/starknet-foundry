@@ -19,7 +19,7 @@ fn start_roll_simple() {
             use starknet::Felt252TryIntoContractAddress;
             use cheatcodes::PreparedContract;
             use forge_print::PrintTrait;
-            
+
             #[starknet::interface]
             trait IRollChecker<TContractState> {
                 fn get_block_number(ref self: TContractState) -> u64;
@@ -31,9 +31,9 @@ fn start_roll_simple() {
                 let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
                 let contract_address = deploy(prepared).unwrap();
                 let dispatcher = IRollCheckerDispatcher { contract_address };
-            
+
                 start_roll(contract_address, 234);
-            
+
                 let block_number = dispatcher.get_block_number();
                 assert(block_number == 234, 'Wrong block number');
             }
@@ -72,7 +72,7 @@ fn start_roll_with_other_syscall() {
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
             use cheatcodes::PreparedContract;
-            
+
             #[starknet::interface]
             trait IRollChecker<TContractState> {
                 fn get_block_number_and_emit_event(ref self: TContractState) -> u64;
@@ -84,9 +84,9 @@ fn start_roll_with_other_syscall() {
                 let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
                 let contract_address = deploy(prepared).unwrap();
                 let dispatcher = IRollCheckerDispatcher { contract_address };
-            
+
                 start_roll(contract_address, 234);
-            
+
                 let block_number = dispatcher.get_block_number_and_emit_event();
                 assert(block_number == 234, 'Wrong block number');
             }
@@ -128,12 +128,12 @@ fn start_roll_in_constructor_test() {
             use starknet::Felt252TryIntoContractAddress;
             use cheatcodes::PreparedContract;
             use forge_print::PrintTrait;
-            
+
             #[starknet::interface]
             trait IConstructorRollChecker<TContractState> {
                 fn get_stored_block_number(ref self: TContractState) -> u64;
             }
-            
+
             #[test]
             fn test_roll_constructor_simple() {
                 let class_hash = declare('ConstructorRollChecker');
@@ -141,7 +141,7 @@ fn start_roll_in_constructor_test() {
                 let contract_address: ContractAddress = 2598896470772924212281968896271340780432065735045468431712403008297614014532.try_into().unwrap();
                 start_roll(contract_address, 234);
                 let contract_address: ContractAddress = deploy(prepared).unwrap().try_into().unwrap();
-            
+
                 let dispatcher = IConstructorRollCheckerDispatcher { contract_address };
                 assert(dispatcher.get_stored_block_number() == 234, 'Wrong stored blk_nb');
             }
@@ -181,7 +181,7 @@ fn stop_roll() {
             use starknet::Felt252TryIntoContractAddress;
             use cheatcodes::PreparedContract;
             use forge_print::PrintTrait;
-            
+
             #[starknet::interface]
             trait IRollChecker<TContractState> {
                 fn get_block_number(ref self: TContractState) -> u64;
@@ -193,11 +193,11 @@ fn stop_roll() {
                 let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
                 let contract_address = deploy(prepared).unwrap();
                 let dispatcher = IRollCheckerDispatcher { contract_address };
-            
+
                 let old_block_number = dispatcher.get_block_number();
 
                 start_roll(contract_address, 234);
-            
+
                 let new_block_number = dispatcher.get_block_number();
                 assert(new_block_number == 234, 'Wrong block number');
 
@@ -242,7 +242,7 @@ fn double_roll() {
             use starknet::Felt252TryIntoContractAddress;
             use cheatcodes::PreparedContract;
             use forge_print::PrintTrait;
-            
+
             #[starknet::interface]
             trait IRollChecker<TContractState> {
                 fn get_block_number(ref self: TContractState) -> u64;
@@ -254,12 +254,12 @@ fn double_roll() {
                 let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
                 let contract_address = deploy(prepared).unwrap();
                 let dispatcher = IRollCheckerDispatcher { contract_address };
-            
+
                 let old_block_number = dispatcher.get_block_number();
 
                 start_roll(contract_address, 234);
                 start_roll(contract_address, 234);
-            
+
                 let new_block_number = dispatcher.get_block_number();
                 assert(new_block_number == 234, 'Wrong block number');
 
@@ -314,7 +314,7 @@ fn start_roll_with_proxy() {
                 let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
                 let roll_checker_contract_address = deploy(prepared).unwrap();
                 start_roll(roll_checker_contract_address, 234);
-                
+
                 let class_hash = declare('RollCheckerProxy');
                 let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
                 let proxy_contract_address = deploy(prepared).unwrap();
@@ -332,6 +332,68 @@ fn start_roll_with_proxy() {
         Contract::from_code_path(
             "RollCheckerProxy".to_string(),
             Path::new("tests/data/contracts/roll_checker_proxy.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run(
+        &test.path().unwrap(),
+        &test.path().unwrap().join("src/lib.cairo"),
+        &Some(test.linked_libraries()),
+        &Default::default(),
+        Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
+        &test.contracts(corelib().path()).unwrap(),
+        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
+    )
+    .unwrap();
+
+    assert_passed!(result);
+}
+
+#[test]
+fn start_roll_with_library_call() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use result::ResultTrait;
+            use array::ArrayTrait;
+            use option::OptionTrait;
+            use traits::TryInto;
+            use traits::Into;
+            use starknet::ContractAddress;
+            use starknet::Felt252TryIntoContractAddress;
+            use cheatcodes::PreparedContract;
+            use starknet::ClassHash;
+
+            #[starknet::interface]
+            trait IRollCheckerLibCall<TContractState> {
+                fn get_roll_checkers_block_info(ref self: TContractState, class_hash: ClassHash) -> u64;
+            }
+
+            #[test]
+            fn test_roll_simple() {
+                let roll_checker_class_hash = declare('RollChecker');
+
+                let class_hash = declare('RollCheckerLibCall');
+                let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
+                let contract_address = deploy(prepared).unwrap();
+
+                start_roll(contract_address, 234);
+
+                let dispatcher = IRollCheckerLibCallDispatcher { contract_address };
+                let block_number = dispatcher.get_roll_checkers_block_info(roll_checker_class_hash);
+                assert(block_number == 234, block_number.into());
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "RollChecker".to_string(),
+            Path::new("tests/data/contracts/roll_checker.cairo"),
+        )
+        .unwrap(),
+        Contract::from_code_path(
+            "RollCheckerLibCall".to_string(),
+            Path::new("tests/data/contracts/roll_checker_library_call.cairo"),
         )
         .unwrap()
     );
