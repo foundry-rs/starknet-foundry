@@ -162,7 +162,7 @@ pub fn extract_metadata_from_package(
 }
 
 #[cfg(test)]
-mod tests {
+pub mod tests {
     use super::*;
     use assert_fs::fixture::{FileTouch, FileWriteStr, PathChild, PathCopy, PathCreateDir};
     use assert_fs::TempDir;
@@ -171,7 +171,7 @@ mod tests {
     use std::process::Command;
     use std::str::FromStr;
 
-    fn setup_package(package_name: &str) -> TempDir {
+    pub fn setup_package(package_name: &str) -> TempDir {
         let temp = TempDir::new().unwrap();
         temp.copy_from(
             format!("tests/data/{package_name}"),

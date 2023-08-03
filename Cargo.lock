@@ -1126,6 +1126,7 @@ dependencies = [
  "cairo-vm",
  "camino",
  "include_dir",
+ "indoc",
  "num-traits 0.2.16",
  "regex",
  "serde_json",
