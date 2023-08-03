@@ -253,7 +253,7 @@ fn start_warp_with_library_call() {
 
             #[starknet::interface]
             trait IWarpCheckerLibCall<TContractState> {
-                fn get_warp_checkers_block_info(ref self: TContractState, class_hash: ClassHash) -> u64;
+                fn get_block_timestamp_with_lib_call(ref self: TContractState, class_hash: ClassHash) -> u64;
             }
 
             #[test]
@@ -267,7 +267,7 @@ fn start_warp_with_library_call() {
                 start_warp(contract_address, 234);
 
                 let dispatcher = IWarpCheckerLibCallDispatcher { contract_address };
-                let block_timestamp = dispatcher.get_warp_checkers_block_info(warp_checker_class_hash);
+                let block_timestamp = dispatcher.get_block_timestamp_with_lib_call(warp_checker_class_hash);
                 assert(block_timestamp == 234, block_timestamp.into());
             }
         "#

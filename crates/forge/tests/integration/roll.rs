@@ -367,7 +367,7 @@ fn start_roll_with_library_call() {
 
             #[starknet::interface]
             trait IRollCheckerLibCall<TContractState> {
-                fn get_roll_checkers_block_info(ref self: TContractState, class_hash: ClassHash) -> u64;
+                fn get_block_number_with_lib_call(ref self: TContractState, class_hash: ClassHash) -> u64;
             }
 
             #[test]
@@ -381,7 +381,7 @@ fn start_roll_with_library_call() {
                 start_roll(contract_address, 234);
 
                 let dispatcher = IRollCheckerLibCallDispatcher { contract_address };
-                let block_number = dispatcher.get_roll_checkers_block_info(roll_checker_class_hash);
+                let block_number = dispatcher.get_block_number_with_lib_call(roll_checker_class_hash);
                 assert(block_number == 234, block_number.into());
             }
         "#
