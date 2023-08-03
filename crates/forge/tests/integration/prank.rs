@@ -30,12 +30,12 @@ fn start_prank_simple() {
                 let prepared = PreparedContract { class_hash, constructor_calldata: @ArrayTrait::new() };
                 let contract_address = deploy(prepared).unwrap();
                 let dispatcher = IPrankCheckerDispatcher { contract_address };
-            
+
                 let caller_address: felt252 = 123;
                 let caller_address: ContractAddress = caller_address.try_into().unwrap();
 
                 start_prank(contract_address, caller_address);
-            
+
                 let caller_address = dispatcher.get_caller_address();
                 assert(caller_address == 123, 'Wrong caller address');
             }
@@ -74,7 +74,7 @@ fn start_prank_with_other_syscall() {
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
             use cheatcodes::PreparedContract;
-            
+
             #[starknet::interface]
             trait IPrankChecker<TContractState> {
                 fn get_caller_address_and_emit_event(ref self: TContractState) -> felt252;
@@ -86,7 +86,7 @@ fn start_prank_with_other_syscall() {
                 let prepared = PreparedContract { class_hash, constructor_calldata: @ArrayTrait::new() };
                 let contract_address = deploy(prepared).unwrap();
                 let dispatcher = IPrankCheckerDispatcher { contract_address };
-            
+
                 let caller_address: felt252 = 123;
                 let caller_address: ContractAddress = caller_address.try_into().unwrap();
 
@@ -133,12 +133,12 @@ fn start_prank_in_constructor_test() {
             use starknet::Felt252TryIntoContractAddress;
             use cheatcodes::PreparedContract;
             use forge_print::PrintTrait;
-            
+
             #[starknet::interface]
             trait IConstructorPrankChecker<TContractState> {
                 fn get_stored_caller_address(ref self: TContractState) -> ContractAddress;
             }
-            
+
             #[test]
             fn test_prank_constructor_simple() {
                 let class_hash = declare('ConstructorPrankChecker');
@@ -149,7 +149,7 @@ fn start_prank_in_constructor_test() {
                 start_prank(contract_address, 555);
                 let contract_address: ContractAddress = deploy(prepared).unwrap().try_into().unwrap();
                 contract_address.print();
-            
+
                 let dispatcher = IConstructorPrankCheckerDispatcher { contract_address };
                 assert(dispatcher.get_stored_block_number() == 555, 'Wrong stored caller address');
             }
@@ -201,7 +201,7 @@ fn stop_prank() {
                 let prepared = PreparedContract { class_hash, constructor_calldata: @ArrayTrait::new() };
                 let contract_address = deploy(prepared).unwrap();
                 let dispatcher = IPrankCheckerDispatcher { contract_address };
-            
+
                 let target_caller_address: felt252 = 123;
                 let target_caller_address: ContractAddress = target_caller_address.try_into().unwrap();
 
@@ -209,7 +209,7 @@ fn stop_prank() {
                 old_caller_address.print();
 
                 start_prank(contract_address, target_caller_address);
-            
+
                 let new_caller_address = dispatcher.get_caller_address();
                 new_caller_address.print();
                 assert(new_caller_address == 123, 'Wrong caller address');
@@ -266,7 +266,7 @@ fn double_prank() {
                 let prepared = PreparedContract { class_hash, constructor_calldata: @ArrayTrait::new() };
                 let contract_address = deploy(prepared).unwrap();
                 let dispatcher = IPrankCheckerDispatcher { contract_address };
-            
+
                 let target_caller_address: felt252 = 123;
                 let target_caller_address: ContractAddress = target_caller_address.try_into().unwrap();
 
@@ -274,7 +274,7 @@ fn double_prank() {
 
                 start_prank(contract_address, target_caller_address);
                 start_prank(contract_address, target_caller_address);
-            
+
                 let new_caller_address = dispatcher.get_caller_address();
                 assert(new_caller_address == 123, 'Wrong caller address');
 
@@ -331,7 +331,7 @@ fn start_prank_with_proxy() {
                 let prank_checker_contract_address = deploy(prepared).unwrap();
                 let contract_address: ContractAddress = 234.try_into().unwrap();
                 start_prank(prank_checker_contract_address, contract_address);
-                
+
                 let class_hash = declare('PrankCheckerProxy');
                 let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
                 let proxy_contract_address = deploy(prepared).unwrap();
@@ -349,6 +349,69 @@ fn start_prank_with_proxy() {
         Contract::from_code_path(
             "PrankCheckerProxy".to_string(),
             Path::new("tests/data/contracts/prank_checker_proxy.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run(
+        &test.path().unwrap(),
+        &test.path().unwrap().join("src/lib.cairo"),
+        &Some(test.linked_libraries()),
+        &Default::default(),
+        Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
+        &test.contracts(corelib().path()).unwrap(),
+        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
+    )
+    .unwrap();
+
+    assert_passed!(result);
+}
+
+#[test]
+fn start_prank_with_library_call() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use result::ResultTrait;
+            use array::ArrayTrait;
+            use option::OptionTrait;
+            use traits::TryInto;
+            use traits::Into;
+            use starknet::ContractAddress;
+            use starknet::Felt252TryIntoContractAddress;
+            use cheatcodes::PreparedContract;
+            use starknet::ClassHash;
+
+            #[starknet::interface]
+            trait IPrankCheckerLibCall<TContractState> {
+                fn get_caller_address_with_lib_call(ref self: TContractState, class_hash: ClassHash) -> felt252;
+            }
+
+            #[test]
+            fn test_prank_simple() {
+                let prank_checker_class_hash = declare('PrankChecker');
+
+                let class_hash = declare('PrankCheckerLibCall');
+                let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
+                let contract_address = deploy(prepared).unwrap();
+
+                let pranked_address: ContractAddress = 234.try_into().unwrap();
+                start_prank(contract_address, pranked_address);
+
+                let dispatcher = IPrankCheckerLibCallDispatcher { contract_address };
+                let caller_address = dispatcher.get_caller_address_with_lib_call(prank_checker_class_hash);
+                assert(caller_address == 234, caller_address);
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "PrankChecker".to_string(),
+            Path::new("tests/data/contracts/prank_checker.cairo"),
+        )
+        .unwrap(),
+        Contract::from_code_path(
+            "PrankCheckerLibCall".to_string(),
+            Path::new("tests/data/contracts/prank_checker_library_call.cairo"),
         )
         .unwrap()
     );
