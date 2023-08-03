@@ -7,7 +7,7 @@ use indoc::indoc;
 use std::path::Path;
 
 #[test]
-fn mock_call_simple() {
+fn start_mock_call_simple() {
     let test = test_case!(
         indoc!(
             r#"
@@ -21,7 +21,7 @@ fn mock_call_simple() {
         }
 
         #[test]
-        fn mock_call_simple() {
+        fn start_mock_call_simple() {
             let mut calldata = ArrayTrait::new();
             calldata.append(420);
 
@@ -41,7 +41,7 @@ fn mock_call_simple() {
         }
 
         #[test]
-        fn mock_call_simple_mock_before_dispatcher_created() {
+        fn start_mock_call_simple_mock_before_dispatcher_created() {
             let mut calldata = ArrayTrait::new();
             calldata.append(420);
 
@@ -57,6 +57,81 @@ fn mock_call_simple() {
             let thing = dispatcher.get_thing();
 
             assert(thing == 421, 'Incorrect thing');
+        }
+    "#
+        ),
+        Contract::from_code_path(
+            "MockChecker".to_string(),
+            Path::new("tests/data/contracts/mock_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run(
+        &test.path().unwrap(),
+        &test.path().unwrap().join("src/lib.cairo"),
+        &Some(test.linked_libraries()),
+        &Default::default(),
+        Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
+        &test.contracts(corelib().path()).unwrap(),
+        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
+    )
+    .unwrap();
+    assert_passed!(result);
+}
+
+#[test]
+fn stop_mock_call_simple() {
+    let test = test_case!(
+        indoc!(
+            r#"
+        use result::ResultTrait;
+        use cheatcodes::PreparedContract;
+        use array::ArrayTrait;
+
+        #[starknet::interface]
+        trait IMockChecker<TContractState> {
+            fn get_thing(self: @TContractState) -> felt252;
+        }
+
+        #[test]
+        fn stop_mock_call_simple() {
+            let mut calldata = ArrayTrait::new();
+            calldata.append(420);
+
+            let class_hash = declare('MockChecker');
+            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
+            let contract_address = deploy(prepared).unwrap();
+
+            let dispatcher = IMockCheckerDispatcher { contract_address };
+
+            let mut mock_ret_data = ArrayTrait::new();
+            mock_ret_data.append(421);
+
+            start_mock_call(contract_address, 'get_thing', mock_ret_data);
+            let thing = dispatcher.get_thing();
+            assert(thing == 421, 'Incorrect thing');
+
+            stop_mock_call(contract_address, 'get_thing');
+            let thing = dispatcher.get_thing();
+            assert(thing == 420, 'Incorrect thing');
+        }
+
+        #[test]
+        fn stop_mock_call_when_mock_not_started() {
+            let mut calldata = ArrayTrait::new();
+            calldata.append(420);
+
+            let class_hash = declare('MockChecker');
+            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
+            let contract_address = deploy(prepared).unwrap();
+
+            stop_mock_call(contract_address, 'get_thing');
+
+            let dispatcher = IMockCheckerDispatcher { contract_address };
+            let thing = dispatcher.get_thing();
+
+            assert(thing == 420, 'Incorrect thing');
         }
     "#
         ),
@@ -114,8 +189,11 @@ fn mock_call_double() {
             start_mock_call(contract_address, 'get_thing', mock_ret_data);
 
             let thing = dispatcher.get_thing();
-
             assert(thing == 427, 'Incorrect thing');
+
+            stop_mock_call(contract_address, 'get_thing');
+            let thing = dispatcher.get_thing();
+            assert(thing == 420, 'Incorrect thing');
         }
 
         #[test]
@@ -138,6 +216,10 @@ fn mock_call_double() {
 
             assert(thing1 == 421, 'Incorrect thing');
             assert(thing2 == 421, 'Incorrect thing');
+
+            stop_mock_call(contract_address, 'get_thing');
+            let thing = dispatcher.get_thing();
+            assert(thing == 420, 'Incorrect thing');
         }
     "#
         ),
@@ -162,6 +244,7 @@ fn mock_call_double() {
 }
 
 #[test]
+#[should_panic]
 fn mock_call_inner_call() {
     let test = test_case!(
         indoc!(

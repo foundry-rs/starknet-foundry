@@ -137,3 +137,8 @@ fn start_mock_call(contract_address: ContractAddress, fn_name: felt252, ret_data
 
     cheatcode::<'start_mock_call'>(inputs.span());
 }
+
+fn stop_mock_call(contract_address: ContractAddress, fn_name: felt252) {
+    let contract_address_felt: felt252 = contract_address.into();
+    cheatcode::<'stop_mock_call'>(array![contract_address_felt, fn_name].span());
+}

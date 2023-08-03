@@ -1,3 +1,5 @@
+extern crate core;
+
 use cairo_felt::Felt252;
 use starknet_api::core::{ContractAddress, EntryPointSelector};
 use starknet_api::hash::StarkFelt;

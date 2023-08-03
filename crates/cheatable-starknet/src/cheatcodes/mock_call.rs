@@ -21,4 +21,19 @@ impl CheatedState {
 
         Ok(())
     }
+
+    pub fn stop_mock_call(
+        &mut self,
+        contract_address: ContractAddress,
+        fn_name: EntryPointSelector,
+    ) -> Result<(), EnhancedHintError> {
+        if let std::collections::hash_map::Entry::Occupied(mut e) =
+            self.mocked_functions.entry(contract_address)
+        {
+            let contract_mocked_fns = e.get_mut();
+            contract_mocked_fns.remove(&fn_name);
+        }
+
+        Ok(())
+    }
 }
