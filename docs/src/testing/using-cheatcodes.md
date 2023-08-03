@@ -85,7 +85,7 @@ Our user validation is not letting us call the contract, because the default cal
 ## Using Cheatcodes in Tests
 
 By using cheatcodes, we can change various properties of transaction info, block info, etc.
-For example, we can use the [`start_prank`](../appendix/cheatcodes/start_prank.md) cheatcode, to change the caller
+For example, we can use the [`start_prank`](../appendix/cheatcodes/start_prank.md) cheatcode to change the caller
 address,
 so it passes our validation.
 
