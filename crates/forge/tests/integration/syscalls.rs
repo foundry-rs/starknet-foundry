@@ -18,6 +18,7 @@ fn library_call_syscall() {
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
         use starknet::ClassHash;
+        use cheatcodes::{ declare, PreparedContract, deploy };
         
         #[starknet::interface]
         trait ICaller<TContractState> {

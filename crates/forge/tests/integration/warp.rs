@@ -7,7 +7,7 @@ use indoc::indoc;
 use std::path::Path;
 
 #[test]
-fn start_warp_simple() {
+fn warp() {
     let test = test_case!(
         indoc!(
             r#"
@@ -18,7 +18,7 @@ fn start_warp_simple() {
             use traits::Into;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use cheatcodes::PreparedContract;
+            use cheatcodes::{ declare, PreparedContract, deploy, start_warp, stop_warp, start_roll };
             
             #[starknet::interface]
             trait IWarpChecker<TContractState> {
@@ -133,7 +133,7 @@ fn start_warp_in_constructor_test() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use cheatcodes::PreparedContract;
+            use cheatcodes::{ declare, PreparedContract, deploy, start_warp };
             
             #[starknet::interface]
             trait IConstructorWarpChecker<TContractState> {
@@ -145,8 +145,8 @@ fn start_warp_in_constructor_test() {
                 let class_hash = declare('ConstructorWarpChecker');
                 let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
                 let contract_address: ContractAddress = 3536868843103376321721783970179672615412806578951102081876401371045020950704.try_into().unwrap();
-                start_roll(contract_address, 234);
-                let contract_address: ContractAddress = deploy(prepared).unwrap().try_into().unwrap();
+                start_warp(contract_address, 234);
+                let contract_address = deploy(prepared).unwrap().;
             
                 let dispatcher = IConstructorWarpCheckerDispatcher { contract_address };
                 assert(dispatcher.get_stored_block_timestamp() == 234, 'Wrong stored timestamp');
@@ -186,7 +186,7 @@ fn start_warp_with_proxy() {
             use traits::Into;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use cheatcodes::PreparedContract;
+            use cheatcodes::{ declare, PreparedContract, deploy, start_warp };
 
             #[starknet::interface]
             trait IWarpCheckerProxy<TContractState> {

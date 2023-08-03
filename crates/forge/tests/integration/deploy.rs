@@ -12,8 +12,7 @@ fn error_handling() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use cheatcodes::RevertedTransactionTrait;
-        use cheatcodes::PreparedContract;
+        use cheatcodes::{ declare, PreparedContract, deploy };
         use array::ArrayTrait;
         
         #[test]
@@ -78,8 +77,7 @@ fn deploy_fails_on_calldata_when_contract_has_no_constructor() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use cheatcodes::RevertedTransactionTrait;
-        use cheatcodes::PreparedContract;
+        use cheatcodes::{ declare, PreparedContract, deploy };
         use array::ArrayTrait; 
             
         #[test]
@@ -123,8 +121,7 @@ fn test_deploy_fails_on_missing_constructor_arguments() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use cheatcodes::RevertedTransactionTrait;
-        use cheatcodes::PreparedContract;
+        use cheatcodes::{ declare, PreparedContract, deploy };
         use array::ArrayTrait; 
             
         #[test]
@@ -176,8 +173,7 @@ fn test_deploy_fails_on_too_many_constructor_arguments() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use cheatcodes::RevertedTransactionTrait;
-        use cheatcodes::PreparedContract;
+        use cheatcodes::{ declare, PreparedContract, deploy };
         use array::ArrayTrait;
 
         #[test]
@@ -235,8 +231,7 @@ fn test_deploy_fails_with_incorrect_class_hash() {
             r#"
         use result::ResultTrait;
         use option::OptionTrait;
-        use cheatcodes::RevertedTransactionTrait;
-        use cheatcodes::PreparedContract;
+        use cheatcodes::{ declare, PreparedContract, deploy };
         use array::ArrayTrait;
         use traits::TryInto;
         use starknet::Felt252TryIntoClassHash;
@@ -289,8 +284,7 @@ fn test_deploy_invokes_the_constructor() {
             r#"
         use option::OptionTrait;
         use result::ResultTrait;
-        use cheatcodes::RevertedTransactionTrait;
-        use cheatcodes::PreparedContract;
+        use cheatcodes::{ declare, PreparedContract, deploy };
         use array::ArrayTrait;
         use traits::TryInto;
         use starknet::ContractAddress;

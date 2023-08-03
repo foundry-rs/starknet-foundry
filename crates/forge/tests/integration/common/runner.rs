@@ -1,4 +1,3 @@
-use crate::integration::common::corelib::cheatcodes;
 use anyhow::{anyhow, Context, Result};
 use assert_fs::fixture::{FileTouch, FileWriteStr, PathChild};
 use assert_fs::TempDir;
@@ -15,7 +14,8 @@ use forge::scarb::StarknetContractArtifacts;
 use forge::TestFileSummary;
 use std::collections::HashMap;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
+use std::str::FromStr;
 use std::sync::Arc;
 use test_collector::LinkedLibrary;
 
@@ -104,12 +104,16 @@ impl<'a> TestCase {
     }
 
     pub fn linked_libraries(&self) -> Vec<LinkedLibrary> {
+        let cheatcodes_path = PathBuf::from_str("../..").unwrap().canonicalize().unwrap();
         vec![
             LinkedLibrary {
                 name: Self::PACKAGE_NAME.to_string(),
                 path: self.dir.path().join("src"),
             },
-            cheatcodes(),
+            LinkedLibrary {
+                name: "cheatcodes".to_string(),
+                path: cheatcodes_path.join("src"),
+            },
         ]
     }
 
