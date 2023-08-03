@@ -1,5 +1,7 @@
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{RunResult, RunResultValue};
+use console::style;
+use indoc::indoc;
 use std::option::Option;
 use test_collector::{PanicExpectation, TestCase, TestExpectation};
 
@@ -118,10 +120,19 @@ pub fn extract_result_data(
                         .map(|felt| as_cairo_short_string(felt).unwrap_or_default())
                         .collect();
 
+                    let actual_string = format!("Actual:    {panic_data:?} ({panic_string:?})");
+                    let expected_string =
+                        format!("Expected:    {expected:?} ({expected_string:?})");
+
                     Some(format!(
-                        "\x1B[31mFAIL: Test did not meet expectations!\x1B[0m\n\
-  \x1B[32m  Actual:   {panic_data:?} ({panic_string:?})\x1B[0m\n\
-  \x1B[31m  Expected: {expected:?} ({expected_string:?})\x1B[0m\n"
+                        indoc! {"
+                    FAIL: Test did not meet expectations
+                        {}
+                        {}
+                    "
+                        },
+                        style(actual_string).red(),
+                        style(expected_string).green()
                     ))
                 }
                 None => {

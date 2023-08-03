@@ -411,13 +411,13 @@ fn should_panic() {
         [FAIL] should_panic_test::should_panic_test::should_panic_actual_doesnt_match
 
         Failure data:FAIL: Test did not meet expectations
-            Actual:   [1] (["/u{1}"])
-            Expected: [0] ([""])
+            Actual:    [8111420071579136082810415440747] (["failing check"])
+            Expected:    [0] ([""])
 
         [FAIL] should_panic_test::should_panic_test::didnt_expect_panic
 
         Failure data:
-            original value: [1], converted to a string: []
+            original value: [156092886226808350968498952598218238307], converted to a string: [unexpected panic]
 
         [PASS] should_panic_test::should_panic_test::expected_panic_but_didnt
         Tests: 4 passed, 2 failed, 0 skipped

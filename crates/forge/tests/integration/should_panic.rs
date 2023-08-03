@@ -5,7 +5,6 @@ use camino::Utf8PathBuf;
 use forge::run;
 use indoc::indoc;
 
-
 #[test]
 fn test_should_panic() {
     let test = test_case!(indoc!(

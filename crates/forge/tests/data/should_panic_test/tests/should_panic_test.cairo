@@ -24,12 +24,12 @@ fn should_panic_multiple_messages(){
 #[test]
 #[should_panic(expected: (0,))]
 fn should_panic_actual_doesnt_match() {
-	panic_with_felt252(1);
+	panic_with_felt252('failing check');
 }
 
 #[test]
 fn didnt_expect_panic() {
-	panic_with_felt252(1);
+	panic_with_felt252('unexpected panic');
 }
 
 #[test]
