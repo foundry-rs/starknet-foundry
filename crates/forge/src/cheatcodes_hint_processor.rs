@@ -227,7 +227,7 @@ impl CairoHintProcessor<'_> {
                 )?)?);
                 let fn_name = inputs[1].clone();
                 let fn_name = as_cairo_short_string(&fn_name).unwrap_or_else(|| {
-                    panic!("Failed to convert {:?} to Cairo short str", fn_name)
+                    panic!("Failed to convert {fn_name:?} to Cairo short str")
                 });
                 let fn_name = selector_from_name(fn_name.as_str());
 

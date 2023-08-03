@@ -691,7 +691,7 @@ fn get_ret_data_by_call_entry_point<'a>(
 ) -> Option<&'a Vec<StarkFelt>> {
     let contract_address = call
         .code_address
-        .unwrap_or_else(|| panic!("ContractAddress not found for CallEntryPoint {:?}", call));
+        .unwrap_or_else(|| panic!("ContractAddress not found for CallEntryPoint {call:?}"));
     if cheated_state
         .mocked_functions
         .contains_key(&contract_address)
@@ -700,17 +700,14 @@ fn get_ret_data_by_call_entry_point<'a>(
             .mocked_functions
             .get(&contract_address)
             .unwrap_or_else(|| {
-                panic!(
-                    "ContractAddress {:?} not found in mocked functions map",
-                    contract_address
-                )
+                panic!("ContractAddress {contract_address:?} not found in mocked functions map")
             });
         let entrypoint_selector = call.entry_point_selector;
 
         let ret_data = contract_functions.get(&entrypoint_selector);
         return ret_data;
     }
-    return None;
+    None
 }
 
 /// Executes a specific call to a contract entry point and returns its output.
@@ -722,11 +719,11 @@ fn execute_entry_point_call_cairo1(
     resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
 ) -> EntryPointExecutionResult<CallInfo> {
-    if let Some(ret_data) = get_ret_data_by_call_entry_point(&call, &cheated_state) {
+    if let Some(ret_data) = get_ret_data_by_call_entry_point(&call, cheated_state) {
         return Ok(CallInfo {
             call,
             execution: CallExecution {
-                retdata: Retdata(ret_data.to_owned()),
+                retdata: Retdata(ret_data.clone()),
                 events: vec![],
                 l2_to_l1_messages: vec![],
                 failed: false,

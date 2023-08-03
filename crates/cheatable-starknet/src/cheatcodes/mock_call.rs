@@ -10,12 +10,13 @@ impl CheatedState {
         fn_name: EntryPointSelector,
         ret_data: Vec<StarkFelt>,
     ) -> Result<(), EnhancedHintError> {
-        if self.mocked_functions.contains_key(&contract_address) {
+        if let std::collections::hash_map::Entry::Vacant(e) =
+            self.mocked_functions.entry(contract_address)
+        {
+            e.insert(HashMap::from([(fn_name, ret_data)]));
+        } else {
             let contract_mocked_fns = self.mocked_functions.get_mut(&contract_address).unwrap();
             contract_mocked_fns.insert(fn_name, ret_data);
-        } else {
-            self.mocked_functions
-                .insert(contract_address, HashMap::from([(fn_name, ret_data)]));
         }
 
         Ok(())
