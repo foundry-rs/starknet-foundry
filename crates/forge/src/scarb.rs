@@ -412,6 +412,41 @@ mod tests {
     }
 
     #[test]
+    fn get_corelib_path_for_package() {
+        let temp = assert_fs::TempDir::new().unwrap();
+        temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
+            .unwrap();
+        let scarb_metadata = MetadataCommand::new()
+            .inherit_stderr()
+            .current_dir(temp.path())
+            .exec()
+            .unwrap();
+
+        let corelib_path =
+            corelib_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0]).unwrap();
+
+        assert!(corelib_path.is_dir());
+        // TODO add better test
+    }
+
+    #[test]
+    fn get_target_name_for_package() {
+        let temp = assert_fs::TempDir::new().unwrap();
+        temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
+            .unwrap();
+        let scarb_metadata = MetadataCommand::new()
+            .inherit_stderr()
+            .current_dir(temp.path())
+            .exec()
+            .unwrap();
+
+        let target_name =
+            target_name_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0]).unwrap();
+
+        assert_eq!(target_name, "simple_package");
+    }
+
+    #[test]
     fn get_dependencies_for_package_err_on_invalid_package() {
         let temp = assert_fs::TempDir::new().unwrap();
         temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
