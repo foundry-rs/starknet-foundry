@@ -149,21 +149,21 @@ Change the current deployment flow, so it can better facilitate precalculating o
 Change the `declare` cheatcode signature to this:
 
 ```cairo
-struct DeclaredContract {
+struct ContractClass {
     class_hash: ClassHash
     // ...
 }
 
-trait DeclaredContractTrait {
-    fn precalculate_address(self: @DeclaredContract, constructor_calldata: @Array::<felt252>) -> ContractAddress;
-    fn deploy(self: @DeclaredContract, constructor_calldata: @Array::<felt252>) -> Result::<ContractAddress, RevertedTransaction>;
+trait ContractClassTrait {
+    fn precalculate_address(self: @ContractClass, constructor_calldata: @Array::<felt252>) -> ContractAddress;
+    fn deploy(self: @ContractClass, constructor_calldata: @Array::<felt252>) -> Result::<ContractAddress, RevertedTransaction>;
 }
 
-impl DeclaredContractTrait of DeclaredContractTrait {
+impl ContractClassTrait of ContractClassTrait {
     // ...
 }
 
-fn declare(contract: felt252) -> DeclaredContract;
+fn declare(contract: felt252) -> ContractClass;
 ```
 
 And remove the `deploy` cheatcode entirely.
