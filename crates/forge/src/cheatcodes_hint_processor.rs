@@ -282,13 +282,18 @@ fn execute_syscall(
     let mut buffer = MemBuffer::new(vm, system_ptr);
 
     let selector = buffer.next_felt252().unwrap().to_bytes_be();
+
+    if std::str::from_utf8(&selector).unwrap() != "CallContract" {
+        return Err(HintError::CustomHint(Box::from(
+            "starknet syscalls cannot be used in tests".to_string()
+        )));
+    }
+
     let gas_counter = buffer.next_usize().unwrap();
     let contract_address = buffer.next_felt252().unwrap().into_owned();
     let entry_point_selector = buffer.next_felt252().unwrap().into_owned();
 
     let calldata = buffer.next_arr().unwrap();
-
-    assert_eq!(std::str::from_utf8(&selector).unwrap(), "CallContract");
 
     let call_result = call_contract(
         &contract_address,

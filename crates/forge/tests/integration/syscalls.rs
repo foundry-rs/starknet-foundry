@@ -1,6 +1,6 @@
 use crate::integration::common::corelib::{corelib, predeployed_contracts};
 use crate::integration::common::runner::Contract;
-use crate::{assert_passed, test_case};
+use crate::{assert_passed, test_case, assert_failed};
 use camino::Utf8PathBuf;
 use forge::run;
 use indoc::indoc;
@@ -141,4 +141,30 @@ fn library_call_syscall() {
     .unwrap();
 
     assert_passed!(result);
+}
+
+#[test]
+fn test_call_syscall_fail_in_test_fn() {
+    let test = test_case!(indoc!(
+        r#"
+        use starknet::{ get_block_timestamp };
+        #[test]
+        fn test_execute_disallowed_syscall() {
+            get_block_timestamp();
+        }
+    "#
+    ));
+
+    let result = run(
+        &test.path().unwrap(),
+        &test.path().unwrap().join("src/lib.cairo"),
+        &Some(test.linked_libraries()),
+        &Default::default(),
+        Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
+        &test.contracts(corelib().path()).unwrap(),
+        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
+    )
+    .unwrap();
+
+    assert_failed!(result);
 }
