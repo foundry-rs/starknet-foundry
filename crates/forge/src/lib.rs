@@ -72,7 +72,7 @@ fn collect_tests_from_directory(
     package_path: &Utf8PathBuf,
     lib_path: &Utf8PathBuf,
     linked_libraries: &Option<Vec<LinkedLibrary>>,
-    corelib_path: Option<&Utf8PathBuf>,
+    corelib_path: &Utf8PathBuf,
     runner_config: &RunnerConfig,
 ) -> Result<Vec<TestsFromFile>> {
     let test_files = find_cairo_root_files_in_directory(package_path, lib_path)?;
@@ -118,7 +118,7 @@ fn internal_collect_tests(
     package_path: &Utf8PathBuf,
     linked_libraries: &Option<Vec<LinkedLibrary>>,
     test_roots: &[Utf8PathBuf],
-    corelib_path: Option<&Utf8PathBuf>,
+    corelib_path: &Utf8PathBuf,
     runner_config: &RunnerConfig,
 ) -> Result<Vec<TestsFromFile>> {
     let tests: Result<Vec<TestsFromFile>> = test_roots
@@ -140,7 +140,7 @@ fn collect_tests_from_tree(
     test_root: &Utf8PathBuf,
     package_path: &Utf8PathBuf,
     linked_libraries: &Option<Vec<LinkedLibrary>>,
-    corelib_path: Option<&Utf8PathBuf>,
+    corelib_path: &Utf8PathBuf,
     runner_config: &RunnerConfig,
 ) -> Result<TestsFromFile> {
     let builtins = vec![
@@ -159,7 +159,7 @@ fn collect_tests_from_tree(
         None,
         linked_libraries.clone(),
         Some(builtins.clone()),
-        corelib_path.map(|corelib_path| corelib_path.as_str()),
+        corelib_path.into(),
     )?;
 
     let test_cases = strip_path_from_test_names(tests_configs)?;
@@ -183,7 +183,7 @@ pub fn run(
     lib_path: &Utf8PathBuf,
     linked_libraries: &Option<Vec<LinkedLibrary>>,
     runner_config: &RunnerConfig,
-    corelib_path: Option<&Utf8PathBuf>,
+    corelib_path: &Utf8PathBuf,
     contracts: &HashMap<String, StarknetContractArtifacts>,
     predeployed_contracts: &Utf8PathBuf,
 ) -> Result<Vec<TestFileSummary>> {

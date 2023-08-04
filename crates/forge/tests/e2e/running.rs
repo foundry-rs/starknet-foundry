@@ -1,12 +1,110 @@
 use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
-use indoc::indoc;
+use camino::Utf8PathBuf;
+use indoc::{formatdoc, indoc};
 
 use crate::e2e::common::runner::runner;
+use assert_fs::TempDir;
+use std::str::FromStr;
+
+pub fn setup_package(package_name: &str) -> TempDir {
+    let temp = TempDir::new().unwrap();
+    temp.copy_from(
+        format!("tests/data/{package_name}"),
+        &["**/*.cairo", "**/*.toml"],
+    )
+    .unwrap();
+
+    let cheatcodes_path = Utf8PathBuf::from_str("../../cheatcodes")
+        .unwrap()
+        .canonicalize_utf8()
+        .unwrap();
+
+    let manifest_path = temp.child("Scarb.toml");
+    manifest_path
+        .write_str(&formatdoc!(
+            r#"
+                [package]
+                name = "{}"
+                version = "0.1.0"
+        
+                [[target.starknet-contract]]
+                sierra = true
+                casm = true
+        
+                [dependencies]
+                starknet = "2.1.0-rc2"
+                cheatcodes = {{ path = "{}" }}
+                "#,
+            package_name,
+            cheatcodes_path
+        ))
+        .unwrap();
+
+    temp
+}
 
 #[test]
 fn simple_package() {
-    let temp = assert_fs::TempDir::new().unwrap();
+    let temp = setup_package("simple_package");
+    let snapbox = runner();
+
+    snapbox
+        .current_dir(&temp)
+        .assert()
+        .success()
+        .stdout_matches(indoc! {r#"Collected 11 test(s) and 5 test file(s)
+        Running 1 test(s) from src/lib.cairo
+        [PASS] src::test_fib
+        Running 1 test(s) from tests/contract.cairo
+        [PASS] contract::contract::call_and_invoke
+        Running 2 test(s) from tests/ext_function_test.cairo
+        [PASS] ext_function_test::ext_function_test::test_my_test
+        [PASS] ext_function_test::ext_function_test::test_simple
+        Running 6 test(s) from tests/test_simple.cairo
+        [PASS] test_simple::test_simple::test_simple
+        [PASS] test_simple::test_simple::test_simple2
+        [PASS] test_simple::test_simple::test_two
+        [PASS] test_simple::test_simple::test_two_and_two
+        [FAIL] test_simple::test_simple::test_failing
+        
+        Failure data:
+            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+        
+        [FAIL] test_simple::test_simple::test_another_failing
+        
+        Failure data:
+            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+        
+        Running 1 test(s) from tests/without_prefix.cairo
+        [PASS] without_prefix::without_prefix::five
+        Tests: 9 passed, 2 failed, 0 skipped
+        "#});
+}
+
+#[test]
+fn simple_package_with_git_dependency() {
+    let temp = TempDir::new().unwrap();
     temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
+        .unwrap();
+
+    let manifest_path = temp.child("Scarb.toml");
+    manifest_path
+        // TODO #403
+        .write_str(indoc!(
+            r#"
+            [package]
+            name = "simple_package"
+            version = "0.1.0"
+    
+            [[target.starknet-contract]]
+            sierra = true
+            casm = true
+    
+            [dependencies]
+            starknet = "2.1.0-rc2"
+            cheatcodes = { git = "https://github.com/foundry-rs/starknet-foundry.git", rev = "7df1248" }
+            "#,
+        ))
         .unwrap();
 
     let snapbox = runner();
@@ -46,9 +144,7 @@ fn simple_package() {
 
 #[test]
 fn with_failing_scarb_build() {
-    let temp = assert_fs::TempDir::new().unwrap();
-    temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
-        .unwrap();
+    let temp = setup_package("simple_package");
     let lib_file = temp.child("src/lib.cairo");
     lib_file
         .write_str(indoc!(
@@ -69,10 +165,7 @@ fn with_failing_scarb_build() {
 
 #[test]
 fn with_filter() {
-    let temp = assert_fs::TempDir::new().unwrap();
-    temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
-        .unwrap();
-
+    let temp = setup_package("simple_package");
     let snapbox = runner();
 
     snapbox
@@ -94,10 +187,7 @@ fn with_filter() {
 
 #[test]
 fn with_exact_filter() {
-    let temp = assert_fs::TempDir::new().unwrap();
-    temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
-        .unwrap();
-
+    let temp = setup_package("simple_package");
     let snapbox = runner();
 
     snapbox
@@ -119,10 +209,7 @@ fn with_exact_filter() {
 
 #[test]
 fn with_non_matching_filter() {
-    let temp = assert_fs::TempDir::new().unwrap();
-    temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
-        .unwrap();
-
+    let temp = setup_package("simple_package");
     let snapbox = runner();
 
     snapbox
@@ -142,10 +229,7 @@ fn with_non_matching_filter() {
 
 #[test]
 fn with_print() {
-    let temp = assert_fs::TempDir::new().unwrap();
-    temp.copy_from("tests/data/print_test", &["**/*.cairo", "**/*.toml"])
-        .unwrap();
-
+    let temp = setup_package("print_test");
     let snapbox = runner();
 
     snapbox
@@ -169,13 +253,7 @@ fn with_print() {
 
 #[test]
 fn with_panic_data_decoding() {
-    let temp = assert_fs::TempDir::new().unwrap();
-    temp.copy_from(
-        "tests/data/panic_decoding_test",
-        &["**/*.cairo", "**/*.toml"],
-    )
-    .unwrap();
-
+    let temp = setup_package("panic_decoding");
     let snapbox = runner();
 
     snapbox
@@ -208,12 +286,10 @@ fn with_panic_data_decoding() {
 
 #[test]
 fn with_exit_first() {
-    let temp = assert_fs::TempDir::new().unwrap();
-    temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
-        .unwrap();
+    let temp = setup_package("simple_package");
     let scarb_path = temp.child("Scarb.toml");
     scarb_path
-        .write_str(indoc!(
+        .write_str(&formatdoc!(
             r#"
             [package]
             name = "simple_package"
@@ -223,13 +299,19 @@ fn with_exit_first() {
 
             [dependencies]
             starknet = "2.1.0-rc2"
+            cheatcodes = {{ path = "{}" }}
 
             [[target.starknet-contract]]
             sierra = true
             casm = true
+            
             [tool.snforge]
             exit_first = true
-            "#
+            "#, 
+            Utf8PathBuf::from_str("../../cheatcodes")
+                .unwrap()
+                .canonicalize_utf8()
+                .unwrap()
         ))
         .unwrap();
 
@@ -265,10 +347,7 @@ fn with_exit_first() {
 
 #[test]
 fn with_exit_first_flag() {
-    let temp = assert_fs::TempDir::new().unwrap();
-    temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
-        .unwrap();
-
+    let temp = setup_package("simple_package");
     let snapbox = runner().arg("--exit-first");
 
     snapbox
@@ -301,10 +380,8 @@ fn with_exit_first_flag() {
 
 #[test]
 fn exit_first_flag_takes_precedence() {
-    let temp = assert_fs::TempDir::new().unwrap();
-    temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
-        .unwrap();
-    let scarb_path = temp.child("Scarb.toml");
+    let temp = setup_package("simple_package");
+    let scarb_path = temp.child("simple_package/Scarb.toml");
     scarb_path
         .write_str(indoc!(
             r#"
@@ -316,6 +393,7 @@ fn exit_first_flag_takes_precedence() {
 
             [dependencies]
             starknet = "2.1.0-rc2"
+            cheatcodes = { path = "../.." }
 
             [[target.starknet-contract]]
             sierra = true
@@ -359,13 +437,7 @@ fn exit_first_flag_takes_precedence() {
 
 #[test]
 fn using_corelib_names() {
-    let temp = assert_fs::TempDir::new().unwrap();
-    temp.copy_from(
-        "tests/data/using_corelib_names",
-        &["**/*.cairo", "**/*.toml"],
-    )
-    .unwrap();
-
+    let temp = setup_package("using_corelib_names");
     let snapbox = runner();
 
     snapbox
