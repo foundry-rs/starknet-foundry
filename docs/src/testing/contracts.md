@@ -145,6 +145,8 @@ Using `SafeDispatcher` we can test that the function in fact panics with an expe
 ```rust
 #[test]
 fn handling_errors() {
+    // ...
+    
     let contract_address = deploy(prepared).unwrap();
     let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
 
