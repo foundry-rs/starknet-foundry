@@ -14,7 +14,7 @@ use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 
 use crate::running::run_from_test_case;
-use crate::scarb::StarknetContractArtifacts;
+use crate::scarb::{ForgeConfig, StarknetContractArtifacts};
 use test_collector::{collect_tests, LinkedLibrary, TestCase};
 
 pub mod pretty_printing;
@@ -39,7 +39,7 @@ impl RunnerConfig {
         test_name_filter: Option<String>,
         exact_match: bool,
         exit_first: bool,
-        forge_config_from_scarb: &ForgeConfigFromScarb,
+        forge_config_from_scarb: &ForgeConfig,
     ) -> Self {
         Self {
             test_name_filter,
@@ -55,13 +55,6 @@ pub enum RunnerStatus {
     Default,
     TestFailed,
     DidNotRun,
-}
-
-/// Represents forge config deserialized from Scarb.toml
-#[derive(Deserialize, Debug, PartialEq, Default)]
-pub struct ForgeConfigFromScarb {
-    #[serde(default)]
-    exit_first: bool,
 }
 
 struct TestsFromFile {
