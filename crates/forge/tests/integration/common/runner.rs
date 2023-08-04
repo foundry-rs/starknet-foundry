@@ -14,7 +14,8 @@ use forge::scarb::StarknetContractArtifacts;
 use forge::TestFileSummary;
 use std::collections::HashMap;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
+use std::str::FromStr;
 use std::sync::Arc;
 use test_collector::LinkedLibrary;
 
@@ -37,7 +38,7 @@ impl Contract {
         Ok(Self { name, code })
     }
 
-    fn generate_sierra_and_casm(self, corelib_path: &Path) -> Result<(String, String)> {
+    fn generate_sierra_and_casm(self, corelib_path: &Utf8PathBuf) -> Result<(String, String)> {
         let path = TempDir::new()?;
         let contract_path = path.child("contract.cairo");
         contract_path.touch()?;
@@ -50,7 +51,7 @@ impl Contract {
                 .with_semantic_plugin(Arc::new(StarkNetPlugin::default()))
                 .build()?
         };
-        init_dev_corelib(db, corelib_path.to_path_buf());
+        init_dev_corelib(db, corelib_path.into());
 
         let main_crate_ids = setup_project(db, Path::new(&contract_path.path()))?;
 
@@ -103,15 +104,25 @@ impl<'a> TestCase {
     }
 
     pub fn linked_libraries(&self) -> Vec<LinkedLibrary> {
-        vec![LinkedLibrary {
-            name: Self::PACKAGE_NAME.to_string(),
-            path: self.dir.path().join("src"),
-        }]
+        let cheatcodes_path = PathBuf::from_str("../../cheatcodes")
+            .unwrap()
+            .canonicalize()
+            .unwrap();
+        vec![
+            LinkedLibrary {
+                name: Self::PACKAGE_NAME.to_string(),
+                path: self.dir.path().join("src"),
+            },
+            LinkedLibrary {
+                name: "cheatcodes".to_string(),
+                path: cheatcodes_path.join("src"),
+            },
+        ]
     }
 
     pub fn contracts(
         &self,
-        corelib_path: &Path,
+        corelib_path: &Utf8PathBuf,
     ) -> Result<HashMap<String, StarknetContractArtifacts>> {
         self.contracts
             .clone()

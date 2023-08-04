@@ -104,7 +104,7 @@ pub fn config_from_scarb_for_package(
     )
 }
 
-pub fn dependencies_for_package(
+pub fn extract_metadata_from_package(
     metadata: &Metadata,
     package: &PackageId,
 ) -> Result<(
@@ -165,20 +165,59 @@ pub fn dependencies_for_package(
 mod tests {
     use super::*;
     use assert_fs::fixture::{FileTouch, FileWriteStr, PathChild, PathCopy};
-    use indoc::indoc;
+    use assert_fs::TempDir;
+    use indoc::{formatdoc, indoc};
     use scarb_metadata::MetadataCommand;
     use std::process::Command;
+    use std::str::FromStr;
+
+    fn setup_package(package_name: &str) -> TempDir {
+        let temp = TempDir::new().unwrap();
+        temp.copy_from(
+            format!("tests/data/{package_name}"),
+            &["**/*.cairo", "**/*.toml"],
+        )
+        .unwrap();
+
+        let cheatcodes_path = Utf8PathBuf::from_str("../../cheatcodes")
+            .unwrap()
+            .canonicalize_utf8()
+            .unwrap();
+
+        let manifest_path = temp.child("Scarb.toml");
+        manifest_path
+            .write_str(&formatdoc!(
+                r#"
+                [package]
+                name = "{}"
+                version = "0.1.0"
+        
+                [[target.starknet-contract]]
+                sierra = true
+                casm = true
+        
+                [dependencies]
+                starknet = "2.1.0-rc2"
+                cheatcodes = {{ path = "{}" }}
+                "#,
+                package_name,
+                cheatcodes_path
+            ))
+            .unwrap();
+
+        temp
+    }
 
     #[test]
     fn get_starknet_artifacts_path() {
-        let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
-            .unwrap();
-        Command::new("scarb")
+        let temp = setup_package("simple_package");
+
+        let build_output = Command::new("scarb")
             .current_dir(&temp)
             .arg("build")
             .output()
             .unwrap();
+        assert!(build_output.status.success());
 
         let result = try_get_starknet_artifacts_path(
             &Utf8PathBuf::from_path_buf(temp.to_path_buf()).unwrap(),
@@ -192,36 +231,42 @@ mod tests {
         );
     }
 
-    // TODO un-ignore
-    #[ignore]
     #[test]
     fn get_starknet_artifacts_path_for_project_with_different_package_and_target_name() {
-        let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
+        let temp = setup_package("simple_package");
+
+        let cheatcodes_path = Utf8PathBuf::from_str("../../cheatcodes")
+            .unwrap()
+            .canonicalize_utf8()
             .unwrap();
 
         let scarb_path = temp.child("Scarb.toml");
         scarb_path
-            .write_str(indoc!(
+            .write_str(&formatdoc!(
                 r#"
-            [package]
-            name = "simple_package"
-            version = "0.1.0"
-            
-            [dependencies]
-            starknet = "2.1.0-rc2"
-            
-            [[target.starknet-contract]]
-            name = "essa"
-            "#
+                [package]
+                name = "simple_package"
+                version = "0.1.0"
+                
+                [dependencies]
+                starknet = "2.1.0-rc2"
+                cheatcodes = {{ path = "{}" }}
+                
+                [[target.starknet-contract]]
+                name = "essa"
+                sierra = true
+                casm = true
+                "#,
+                cheatcodes_path
             ))
             .unwrap();
 
-        Command::new("scarb")
+        let build_output = Command::new("scarb")
             .current_dir(&temp)
             .arg("build")
             .output()
             .unwrap();
+        assert!(build_output.status.success());
 
         let result = try_get_starknet_artifacts_path(
             &Utf8PathBuf::from_path_buf(temp.to_path_buf()).unwrap(),
@@ -235,19 +280,30 @@ mod tests {
     }
 
     #[test]
-    fn get_starknet_artifacts_path_for_project_without_contracts() {
-        let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from("tests/data/print_test", &["**/*.cairo", "**/*.toml"])
+    fn get_starknet_artifacts_path_for_project_without_starknet_target() {
+        let temp = setup_package("panic_decoding");
+
+        let manifest_path = temp.child("Scarb.toml");
+        manifest_path
+            .write_str(indoc!(
+                r#"
+            [package]
+            name = "panic_decoding"
+            version = "0.1.0"
+            "#,
+            ))
             .unwrap();
-        Command::new("scarb")
+
+        let build_output = Command::new("scarb")
             .current_dir(&temp)
             .arg("build")
             .output()
             .unwrap();
+        assert!(build_output.status.success());
 
         let result = try_get_starknet_artifacts_path(
             &Utf8PathBuf::from_path_buf(temp.to_path_buf()).unwrap(),
-            "print_test",
+            "panic_decoding",
         );
         let path = result.unwrap();
         assert!(path.is_none());
@@ -255,9 +311,7 @@ mod tests {
 
     #[test]
     fn get_starknet_artifacts_path_for_project_without_scarb_build() {
-        let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
-            .unwrap();
+        let temp = setup_package("simple_package");
 
         let result = try_get_starknet_artifacts_path(
             &Utf8PathBuf::from_path_buf(temp.to_path_buf()).unwrap(),
@@ -269,14 +323,15 @@ mod tests {
 
     #[test]
     fn parsing_starknet_artifacts() {
-        let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
-            .unwrap();
-        Command::new("scarb")
+        let temp = setup_package("simple_package");
+
+        let build_output = Command::new("scarb")
             .current_dir(&temp)
             .arg("build")
             .output()
             .unwrap();
+        assert!(build_output.status.success());
+
         let artifacts_path = temp
             .path()
             .join("target/dev/simple_package.starknet_artifacts.json");
@@ -289,7 +344,7 @@ mod tests {
 
     #[test]
     fn parsing_starknet_artifacts_on_invalid_file() {
-        let temp = assert_fs::TempDir::new().unwrap();
+        let temp = TempDir::new().unwrap();
         let path = temp.child("wrong.json");
         path.touch().unwrap();
         path.write_str("\"aa\": {}").unwrap();
@@ -303,14 +358,15 @@ mod tests {
 
     #[test]
     fn get_contracts() {
-        let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
-            .unwrap();
-        Command::new("scarb")
+        let temp = setup_package("simple_package");
+
+        let build_output = Command::new("scarb")
             .current_dir(&temp)
             .arg("build")
             .output()
             .unwrap();
+        assert!(build_output.status.success());
+
         let artifacts_path = temp
             .path()
             .join("target/dev/simple_package.starknet_artifacts.json");
@@ -342,9 +398,7 @@ mod tests {
 
     #[test]
     fn get_dependencies_for_package() {
-        let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
-            .unwrap();
+        let temp = setup_package("simple_package");
         let scarb_metadata = MetadataCommand::new()
             .inherit_stderr()
             .current_dir(temp.path())
@@ -352,7 +406,7 @@ mod tests {
             .unwrap();
 
         let (_, _, _, dependencies, _) =
-            dependencies_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
+            extract_metadata_from_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
                 .unwrap();
 
         assert!(!dependencies.is_empty());
@@ -361,9 +415,7 @@ mod tests {
 
     #[test]
     fn get_paths_for_package() {
-        let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
-            .unwrap();
+        let temp = setup_package("simple_package");
         let scarb_metadata = MetadataCommand::new()
             .inherit_stderr()
             .current_dir(temp.path())
@@ -371,7 +423,7 @@ mod tests {
             .unwrap();
 
         let (package_path, lib_path, _, _, _) =
-            dependencies_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
+            extract_metadata_from_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
                 .unwrap();
 
         assert!(package_path.is_dir());
@@ -381,17 +433,17 @@ mod tests {
 
     #[test]
     fn get_dependencies_for_package_err_on_invalid_package() {
-        let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
-            .unwrap();
+        let temp = setup_package("simple_package");
         let scarb_metadata = MetadataCommand::new()
             .inherit_stderr()
             .current_dir(temp.path())
             .exec()
             .unwrap();
 
-        let result =
-            dependencies_for_package(&scarb_metadata, &PackageId::from(String::from("12345679")));
+        let result = extract_metadata_from_package(
+            &scarb_metadata,
+            &PackageId::from(String::from("12345679")),
+        );
         let err = result.unwrap_err();
 
         assert!(err
@@ -401,9 +453,7 @@ mod tests {
 
     #[test]
     fn get_forge_config_for_package() {
-        let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
-            .unwrap();
+        let temp = setup_package("simple_package");
         let scarb_metadata = MetadataCommand::new()
             .inherit_stderr()
             .current_dir(temp.path())
@@ -419,9 +469,7 @@ mod tests {
 
     #[test]
     fn get_forge_config_for_package_err_on_invalid_package() {
-        let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
-            .unwrap();
+        let temp = setup_package("simple_package");
         let scarb_metadata = MetadataCommand::new()
             .inherit_stderr()
             .current_dir(temp.path())
@@ -441,12 +489,14 @@ mod tests {
 
     #[test]
     fn get_forge_config_for_package_default_on_missing_config() {
-        let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
-            .unwrap();
-        let content = "[package]
-name = \"simple_package\"
-version = \"0.1.0\"";
+        let temp = setup_package("simple_package");
+        let content = indoc!(
+            r#"
+            [package]
+            name = "simple_package"
+            version = "0.1.0"
+            "#
+        );
         temp.child("Scarb.toml").write_str(content).unwrap();
 
         let scarb_metadata = MetadataCommand::new()

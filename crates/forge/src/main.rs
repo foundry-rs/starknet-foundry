@@ -12,7 +12,6 @@ use forge::{pretty_printing, RunnerConfig};
 use forge::scarb::{get_contracts_map, try_get_starknet_artifacts_path};
 use std::process::Command;
 
-static CORELIB_PATH: Dir = include_dir!("./corelib/src");
 static PREDEPLOYED_CONTRACTS: Dir = include_dir!("crates/cheatable-starknet/predeployed-contracts");
 
 #[derive(Parser, Debug)]
@@ -29,14 +28,6 @@ struct Args {
     exit_first: bool,
 }
 
-fn load_corelib() -> Result<TempDir> {
-    let tmp_dir = tempdir()?;
-    CORELIB_PATH
-        .extract(&tmp_dir)
-        .context("Failed to copy corelib to temporary directory")?;
-    Ok(tmp_dir)
-}
-
 fn load_predeployed_contracts() -> Result<TempDir> {
     let tmp_dir = tempdir()?;
     PREDEPLOYED_CONTRACTS
@@ -47,12 +38,6 @@ fn load_predeployed_contracts() -> Result<TempDir> {
 
 fn main_execution() -> Result<()> {
     let args = Args::parse();
-
-    // TODO #1997
-    let corelib_dir = load_corelib()?;
-    let corelib_path: PathBuf = corelib_dir.path().into();
-    let corelib = Utf8PathBuf::try_from(corelib_path)
-        .context("Failed to convert corelib path to Utf8PathBuf")?;
 
     let predeployed_contracts_dir = load_predeployed_contracts()?;
     let predeployed_contracts_path: PathBuf = predeployed_contracts_dir.path().into();
@@ -79,8 +64,8 @@ fn main_execution() -> Result<()> {
     for package in &scarb_metadata.workspace.members {
         let forge_config = forge::scarb::config_from_scarb_for_package(&scarb_metadata, package)?;
 
-        let (package_path, lib_path, _corelib_path, dependencies, target_name) =
-            forge::scarb::dependencies_for_package(&scarb_metadata, package)?;
+        let (package_path, lib_path, corelib_path, dependencies, target_name) =
+            forge::scarb::extract_metadata_from_package(&scarb_metadata, package)?;
         let runner_config = RunnerConfig::new(
             args.test_name.clone(),
             args.exact,
@@ -99,7 +84,7 @@ fn main_execution() -> Result<()> {
             &lib_path,
             &Some(dependencies.clone()),
             &runner_config,
-            Some(&corelib),
+            &corelib_path,
             &contracts,
             &predeployed_contracts,
         )?;
