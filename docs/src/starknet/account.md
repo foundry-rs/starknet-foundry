@@ -65,7 +65,7 @@ Do the following to start interacting with the Starknet:
 Salt will not be randomly generated if it's specified with `--salt`.
 
 ```shell
-$ sncast
+$ sncast \
     account create \
     --name some-name \
     --salt 0x1
