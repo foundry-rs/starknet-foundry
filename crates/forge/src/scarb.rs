@@ -171,7 +171,7 @@ mod tests {
     use std::process::Command;
     use std::str::FromStr;
 
-    pub fn setup_package(package_name: &str) -> TempDir {
+    fn setup_package(package_name: &str) -> TempDir {
         let temp = TempDir::new().unwrap();
         temp.copy_from(
             format!("tests/data/{package_name}"),
