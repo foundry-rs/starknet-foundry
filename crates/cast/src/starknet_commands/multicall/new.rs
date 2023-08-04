@@ -4,15 +4,15 @@ use camino::Utf8PathBuf;
 use clap::Args;
 
 #[derive(Args, Debug)]
-#[command(about = "Declare a contract to starknet", long_about = None)]
+#[command(about = "Generate template for the multicall .toml file", long_about = None)]
 pub struct New {
-    /// output path to the file where the template is going to be saved
+    /// Output path to the file where the template is going to be saved
     #[clap(short = 'p', long = "output-path")]
     pub output_path: Option<Utf8PathBuf>,
 
-    /// if the file specified in output-path exists, this flag decides if it is going to be overwritten
+    /// If the file specified in output-path exists, this flag decides if it is going to be overwritten
     #[clap(short = 'o', long = "overwrite")]
-    pub overwrite: Option<bool>,
+    pub overwrite: bool,
 }
 
 pub fn new(maybe_output_path: Option<Utf8PathBuf>, overwrite: bool) -> Result<String> {
@@ -23,7 +23,7 @@ pub fn new(maybe_output_path: Option<Utf8PathBuf>, overwrite: bool) -> Result<St
             }
             if !overwrite {
                 bail!(
-                  "output file already exists, if you want to overwrite it, use the `overwrite` flag"
+                  "output file already exists, if you want to overwrite it, use the `--overwrite` flag"
               );
             }
         }
