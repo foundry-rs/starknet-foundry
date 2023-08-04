@@ -9,7 +9,7 @@ use test_collector::LinkedLibrary;
 
 #[allow(dead_code)]
 #[derive(Deserialize, Debug, PartialEq, Clone)]
-pub struct StarknetContract {
+struct StarknetContract {
     id: String,
     package_name: String,
     contract_name: String,
@@ -18,13 +18,13 @@ pub struct StarknetContract {
 
 #[allow(dead_code)]
 #[derive(Deserialize, Debug, PartialEq, Clone)]
-pub struct StarknetContractArtifactPaths {
+struct StarknetContractArtifactPaths {
     sierra: Utf8PathBuf,
     casm: Utf8PathBuf,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Clone)]
-pub struct StarknetArtifacts {
+struct StarknetArtifacts {
     version: u32,
     contracts: Vec<StarknetContract>,
 }
@@ -40,7 +40,7 @@ pub struct StarknetContractArtifacts {
 /// # Arguments
 ///
 /// * `path` - A path to `starknet_artifacts.json` file.
-pub fn artifacts_for_package(path: &Utf8PathBuf) -> Result<StarknetArtifacts> {
+fn artifacts_for_package(path: &Utf8PathBuf) -> Result<StarknetArtifacts> {
     let starknet_artifacts =
         fs::read_to_string(path).with_context(|| format!("Failed to read {path:?} contents"))?;
     let starknet_artifacts: StarknetArtifacts =
