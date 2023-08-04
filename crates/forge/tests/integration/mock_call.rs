@@ -275,7 +275,7 @@ fn mock_call_inner_call() {
 
             let thing = dispatcher.get_thing_wrapper();
 
-            assert(thing == 421, 'Incorrect thing'); // TODO: should this work?
+            assert(thing == 421, 'Incorrect thing');
         }
     "#
         ),
