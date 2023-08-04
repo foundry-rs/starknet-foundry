@@ -164,7 +164,7 @@ pub fn extract_metadata_from_package(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use assert_fs::fixture::{FileTouch, FileWriteStr, PathChild, PathCopy, PathCreateDir};
+    use assert_fs::fixture::{FileTouch, FileWriteStr, PathChild, PathCopy};
     use assert_fs::TempDir;
     use indoc::{formatdoc, indoc};
     use scarb_metadata::MetadataCommand;
@@ -179,7 +179,7 @@ mod tests {
         )
         .unwrap();
 
-        let cheatcodes_path = Utf8PathBuf::from_str("../..")
+        let cheatcodes_path = Utf8PathBuf::from_str("../../cheatcodes")
             .unwrap()
             .canonicalize_utf8()
             .unwrap();
@@ -235,7 +235,7 @@ mod tests {
     fn get_starknet_artifacts_path_for_project_with_different_package_and_target_name() {
         let temp = setup_package("simple_package");
 
-        let cheatcodes_path = Utf8PathBuf::from_str("../..")
+        let cheatcodes_path = Utf8PathBuf::from_str("../../cheatcodes")
             .unwrap()
             .canonicalize_utf8()
             .unwrap();
@@ -281,27 +281,17 @@ mod tests {
 
     #[test]
     fn get_starknet_artifacts_path_for_project_without_starknet_target() {
-        let temp = setup_package("print_test");
+        let temp = setup_package("panic_decoding");
 
         let manifest_path = temp.child("Scarb.toml");
         manifest_path
             .write_str(indoc!(
                 r#"
             [package]
-            name = "print_test"
+            name = "panic_decoding"
             version = "0.1.0"
-            
-            [dependencies]
-            starknet = "2.1.0-rc2"
-            cheatcodes = { path = "cheatcodes" }
             "#,
             ))
-            .unwrap();
-
-        let cheatcodes_dir = temp.child("cheatcodes");
-        cheatcodes_dir.create_dir_all().unwrap();
-        cheatcodes_dir
-            .copy_from("../..", &["src/*.cairo", "Scarb.toml"])
             .unwrap();
 
         let build_output = Command::new("scarb")
@@ -313,7 +303,7 @@ mod tests {
 
         let result = try_get_starknet_artifacts_path(
             &Utf8PathBuf::from_path_buf(temp.to_path_buf()).unwrap(),
-            "print_test",
+            "panic_decoding",
         );
         let path = result.unwrap();
         assert!(path.is_none());

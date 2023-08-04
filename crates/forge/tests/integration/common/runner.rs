@@ -104,7 +104,10 @@ impl<'a> TestCase {
     }
 
     pub fn linked_libraries(&self) -> Vec<LinkedLibrary> {
-        let cheatcodes_path = PathBuf::from_str("../..").unwrap().canonicalize().unwrap();
+        let cheatcodes_path = PathBuf::from_str("../../cheatcodes")
+            .unwrap()
+            .canonicalize()
+            .unwrap();
         vec![
             LinkedLibrary {
                 name: Self::PACKAGE_NAME.to_string(),

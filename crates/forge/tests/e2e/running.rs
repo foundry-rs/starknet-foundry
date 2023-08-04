@@ -14,7 +14,7 @@ pub fn setup_package(package_name: &str) -> TempDir {
     )
     .unwrap();
 
-    let cheatcodes_path = Utf8PathBuf::from_str("../..")
+    let cheatcodes_path = Utf8PathBuf::from_str("../../cheatcodes")
         .unwrap()
         .canonicalize_utf8()
         .unwrap();
@@ -253,7 +253,7 @@ fn with_print() {
 
 #[test]
 fn with_panic_data_decoding() {
-    let temp = setup_package("panic_decoding_test");
+    let temp = setup_package("panic_decoding");
     let snapbox = runner();
 
     snapbox
@@ -308,7 +308,7 @@ fn with_exit_first() {
             [tool.snforge]
             exit_first = true
             "#, 
-            Utf8PathBuf::from_str("../..")
+            Utf8PathBuf::from_str("../../cheatcodes")
                 .unwrap()
                 .canonicalize_utf8()
                 .unwrap()

@@ -162,7 +162,7 @@ mod test {
         )
         .unwrap();
 
-        let cheatcodes_path = Utf8PathBuf::from_str("../..")
+        let cheatcodes_path = Utf8PathBuf::from_str("../../cheatcodes")
             .unwrap()
             .canonicalize_utf8()
             .unwrap();
