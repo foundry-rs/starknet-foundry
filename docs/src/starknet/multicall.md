@@ -88,7 +88,7 @@ If there is a file with the same name as passed in the `--output-path` argument 
 
 ```shell
 $ sncast multicall new \
-    --output-path ./new_multicall_template.toml
+    --output-path ./new_multicall_template.toml \
     --overwrite
 
 Multicall template successfully saved in ./new_multicall_template.toml

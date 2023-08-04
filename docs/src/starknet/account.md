@@ -19,7 +19,7 @@ Do the following to start interacting with the Starknet:
 
     ```shell
     $ sncast \
-      --url http://127.0.0.1:5050
+      --url http://127.0.0.1:5050 \
       --network testnet \
       account create \
       --name some-name
@@ -59,18 +59,15 @@ Do the following to start interacting with the Starknet:
     
     For a detailed CLI description, see [account deploy command reference](../appendix/cast/account/deploy.md).
 
-    > 💡 **Info**
-    > Max fee will be automatically computed if `--max-fee <MAX_FEE>` is not passed.
-
 
 ### `account create` with salt argument
 
-Salt will not be generated if `--salt` argument is passed.
+Salt will not be randomly generated if it's specified with `--salt`.
 
 ```shell
 $ sncast
     account create \
-    --name some-name
+    --name some-name \
     --salt 0x1
   
 Account successfully created. Prefund generated address with at least 432300000000 tokens. It is good to send more in the case of higher demand, max_fee * 2 = 864600000000
