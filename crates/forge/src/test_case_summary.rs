@@ -3,19 +3,30 @@ use cairo_lang_runner::{RunResult, RunResultValue};
 use std::option::Option;
 use test_collector::TestCase;
 
+/// Summary of running a single test case
 #[derive(Debug, PartialEq, Clone)]
 pub enum TestCaseSummary {
+    /// Test case passed
     Passed {
+        /// Name of the test case
         name: String,
+        /// Values returned by the test case run
         run_result: RunResult,
+        /// Message returned by the test case run
         msg: Option<String>,
     },
+    /// Test case failed
     Failed {
+        /// Name of the test case
         name: String,
+        /// Values returned by the test case run
         run_result: Option<RunResult>,
+        /// Message returned by the test case run
         msg: Option<String>,
     },
+    /// Test case skipped (did not run)
     Skipped {
+        /// Name of the test case
         name: String,
     },
 }
