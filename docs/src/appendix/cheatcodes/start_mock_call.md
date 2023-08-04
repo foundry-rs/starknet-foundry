@@ -6,7 +6,7 @@ Mocks external function `fn_name` for a contract at the given address. The funct
 This change can be canceled with [`stop_mock_call`](./stop_mock_call.md).
 
 - `contract_address` - target contract address
-- `fn_name` - name of the function in contract `contract_address` that will be mocked
+- `fn_name` - name of the function in a contract at the `contract_address` that will be mocked
 - `ret_data` - data to return by the function `fn_name`
 
 For contract implementation:
