@@ -289,6 +289,7 @@ fn start_warp_with_library_call() {
 
     let result = run(
         &test.path().unwrap(),
+        &String::from("src"),
         &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
