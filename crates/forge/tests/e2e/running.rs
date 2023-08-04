@@ -102,7 +102,7 @@ fn simple_package_with_git_dependency() {
     
             [dependencies]
             starknet = "2.1.0-rc2"
-            cheatcodes = { git = "https://github.com/foundry-rs/starknet-foundry", rev="7df1248" }
+            cheatcodes = { git = "https://github.com/foundry-rs/starknet-foundry.git", rev = "7df1248" }
             "#,
         ))
         .unwrap();
