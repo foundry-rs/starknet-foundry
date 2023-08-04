@@ -6,7 +6,7 @@ use forge::run;
 use indoc::indoc;
 
 #[test]
-fn test_should_panic() {
+fn should_panic() {
     let test = test_case!(indoc!(
         r#"
             use array::ArrayTrait;

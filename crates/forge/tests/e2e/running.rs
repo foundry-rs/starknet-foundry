@@ -414,7 +414,7 @@ fn should_panic() {
         Failure data:
             Incorrect panic data
             Actual:    [8111420071579136082810415440747] (failing check)
-            Expected:    [0] ()
+            Expected:  [0] ()
 
         [FAIL] should_panic_test::should_panic_test::didnt_expect_panic
 

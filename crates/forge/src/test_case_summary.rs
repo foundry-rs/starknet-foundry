@@ -1,8 +1,6 @@
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{RunResult, RunResultValue};
-use console::style;
-use indoc::indoc;
 use std::option::Option;
 use test_collector::{ExpectedPanicValue, ExpectedTestResult, TestCase};
 
@@ -126,15 +124,9 @@ pub fn extract_result_data(
                         .collect::<Vec<String>>()
                         .join(", ");
 
-                    Some(format!(
-                        indoc! {"\n
-                    Incorrect panic data
-                        {}
-                        {}
-                    "
-                        },
+                    Some(format!("\n    Incorrect panic data\n    {}\n    {}\n",
                         format!("Actual:    {panic_data:?} ({panic_string})"),
-                        format!("Expected:    {expected:?} ({expected_string})")
+                        format!("Expected:  {expected:?} ({expected_string})")
                     ))
                 }
                 None => build_readable_text(panic_data),
