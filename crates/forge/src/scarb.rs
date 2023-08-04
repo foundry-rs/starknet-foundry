@@ -475,9 +475,7 @@ mod tests {
 
     #[test]
     fn get_corelib_path_for_package() {
-        let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
-            .unwrap();
+        let temp = setup_package("simple_package");
         let scarb_metadata = MetadataCommand::new()
             .inherit_stderr()
             .current_dir(temp.path())
@@ -496,9 +494,7 @@ mod tests {
 
     #[test]
     fn get_target_name_for_package() {
-        let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
-            .unwrap();
+        let temp = setup_package("simple_package");
         let scarb_metadata = MetadataCommand::new()
             .inherit_stderr()
             .current_dir(temp.path())
@@ -520,10 +516,8 @@ mod tests {
             .exec()
             .unwrap();
 
-        let result = extract_metadata_from_package(
-            &scarb_metadata,
-            &PackageId::from(String::from("12345679")),
-        );
+        let result =
+            dependencies_for_package(&scarb_metadata, &PackageId::from(String::from("12345679")));
         let err = result.unwrap_err();
 
         assert!(err
