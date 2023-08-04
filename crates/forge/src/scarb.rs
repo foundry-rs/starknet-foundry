@@ -29,9 +29,12 @@ struct StarknetArtifacts {
     contracts: Vec<StarknetContract>,
 }
 
+/// Contains compiled Starknet artifacts
 #[derive(Debug, PartialEq, Clone)]
 pub struct StarknetContractArtifacts {
+    /// Compiled sierra code
     pub sierra: String,
+    /// Compiled casm code
     pub casm: String,
 }
 
