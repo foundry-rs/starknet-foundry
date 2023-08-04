@@ -185,13 +185,13 @@ fn collect_tests_from_tree(
 ///
 /// # Arguments
 ///
-/// * `package_path` - A path to the top-level of the Cairo package
-/// * `lib_path` - A path to the main file in the package (usually `src/lib.cairo`)
+/// * `package_path` - Absolute path to the top-level of the Cairo package
+/// * `lib_path` - Absolute path to the main file in the package (usually `src/lib.cairo`)
 /// * `linked_libraries` - Dependencies needed to run the package at `package_path`
 /// * `runner_config` - A configuration of the test runner
-/// * `corelib_path` - A path to the Cairo corelib
+/// * `corelib_path` - Absolute path to the Cairo corelib
 /// * `contracts` - Map with names of contract used in tests and corresponding sierra and casm artifacts
-/// * `predeployed_contracts` - Path to predeployed contracts used by starknet state e.g. account contracts
+/// * `predeployed_contracts` - Absolute path to predeployed contracts used by starknet state e.g. account contracts
 ///
 #[allow(clippy::implicit_hasher)]
 pub fn run(
@@ -260,7 +260,7 @@ pub fn run(
 pub struct TestFileSummary {
     /// Summaries of each test case in the file
     pub test_case_summaries: Vec<TestCaseSummary>,
-    /// Exit status of the runner after executing tests in the file
+    /// Status of the runner after executing tests in the file
     pub runner_exit_status: RunnerStatus,
     /// Relative path to the test file
     pub relative_path: Utf8PathBuf,
