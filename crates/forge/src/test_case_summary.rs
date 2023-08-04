@@ -4,7 +4,7 @@ use cairo_lang_runner::{RunResult, RunResultValue};
 use console::style;
 use indoc::indoc;
 use std::option::Option;
-use test_collector::{PanicExpectation, TestCase, TestExpectation};
+use test_collector::{ExpectedPanicValue, ExpectedTestResult, TestCase};
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum TestCaseSummary {
@@ -27,28 +27,28 @@ impl TestCaseSummary {
     #[must_use]
     pub fn from_run_result(run_result: RunResult, test_case: &TestCase) -> Self {
         let name = test_case.name.to_string();
-        let msg = extract_result_data(&run_result, &test_case.expectation);
+        let msg = extract_result_data(&run_result, &test_case.expected_result);
         match run_result.clone().value {
-            RunResultValue::Success(_) => match &test_case.expectation {
-                TestExpectation::Success => TestCaseSummary::Passed {
+            RunResultValue::Success(_) => match &test_case.expected_result {
+                ExpectedTestResult::Success => TestCaseSummary::Passed {
                     name,
                     msg,
                     run_result,
                 },
-                TestExpectation::Panics(_) => TestCaseSummary::Failed {
+                ExpectedTestResult::Panics(_) => TestCaseSummary::Failed {
                     name,
                     msg,
                     run_result: Some(run_result),
                 },
             },
-            RunResultValue::Panic(value) => match &test_case.expectation {
-                TestExpectation::Success => TestCaseSummary::Failed {
+            RunResultValue::Panic(value) => match &test_case.expected_result {
+                ExpectedTestResult::Success => TestCaseSummary::Failed {
                     name,
                     msg,
                     run_result: Some(run_result),
                 },
-                TestExpectation::Panics(panic_expectation) => match panic_expectation {
-                    PanicExpectation::Exact(expected) if &value != expected => {
+                ExpectedTestResult::Panics(panic_expectation) => match panic_expectation {
+                    ExpectedPanicValue::Exact(expected) if &value != expected => {
                         TestCaseSummary::Failed {
                             name,
                             msg,
@@ -98,17 +98,17 @@ fn build_readable_text(data: &Vec<Felt252>) -> Option<String> {
 /// and failed to do so, it returns a string comparing the panic data and the expected data.
 pub fn extract_result_data(
     run_result: &RunResult,
-    expectation: &TestExpectation,
+    expectation: &ExpectedTestResult,
 ) -> Option<String> {
     match &run_result.value {
         RunResultValue::Success(data) => build_readable_text(data),
         RunResultValue::Panic(panic_data) => {
             let expected_data = match expectation {
-                TestExpectation::Panics(panic_expectation) => match panic_expectation {
-                    PanicExpectation::Exact(data) => Some(data),
-                    PanicExpectation::Any => None,
+                ExpectedTestResult::Panics(panic_expectation) => match panic_expectation {
+                    ExpectedPanicValue::Exact(data) => Some(data),
+                    ExpectedPanicValue::Any => None,
                 },
-                TestExpectation::Success => None,
+                ExpectedTestResult::Success => None,
             };
 
             let panic_string: String = panic_data
