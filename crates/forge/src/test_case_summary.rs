@@ -133,8 +133,8 @@ pub fn extract_result_data(
                         {}
                     "
                         },
-                        style(format!("Actual:    {panic_data:?} ({panic_string})")).red(),
-                        style(format!("Expected:    {expected:?} ({expected_string})")).green()
+                        format!("Actual:    {panic_data:?} ({panic_string})"),
+                        format!("Expected:    {expected:?} ({expected_string})")
                     ))
                 }
                 None => build_readable_text(panic_data),
