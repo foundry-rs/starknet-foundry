@@ -134,4 +134,4 @@ jobs:
         with:
           workspaces: starknet-foundry
       - run: cargo lint
-        working-directory: starknet-foundry
+        working-directory: .
