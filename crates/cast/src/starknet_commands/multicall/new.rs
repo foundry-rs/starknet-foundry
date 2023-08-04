@@ -4,7 +4,7 @@ use camino::Utf8PathBuf;
 use clap::Args;
 
 #[derive(Args, Debug)]
-#[command(about = "Generate template for the multicall .toml file", long_about = None)]
+#[command(about = "Generate a template for the multicall .toml file", long_about = None)]
 pub struct New {
     /// Output path to the file where the template is going to be saved
     #[clap(short = 'p', long = "output-path")]
