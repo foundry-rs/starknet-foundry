@@ -33,7 +33,7 @@ All subcommand usages are shown for two scenarios - when all necessary arguments
 ```shell
 $ sncast --account myuser \
     --network testnet \
-    --url http://127.0.0.1:5050/rpc \ 
+    --url http://127.0.0.1:5050/rpc \
     declare \
     --contract-name SimpleBalance
 
@@ -59,7 +59,7 @@ transaction_hash: 0x7ad0d6e449e33b6581a4bb8df866c0fce3919a5ee05a30840ba521dafee2
 ```shell
 $ sncast --account myuser \
     --network testnet \
-    --url http://127.0.0.1:5050/rpc \ 
+    --url http://127.0.0.1:5050/rpc \
     deploy --class-hash 0x8448a68b5ea1affc45e3fd4b8b480ea36a51dc34e337a16d2567d32d0c6f8a
 
 command: Deploy
