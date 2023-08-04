@@ -34,6 +34,12 @@ pub struct RunnerConfig {
 
 impl RunnerConfig {
     /// Creates a new `RunnerConfig` from given arguments
+    ///
+    /// # Arguments
+    ///
+    /// * `test_name_filter` - Used to filter test cases by names
+    /// * `exact_match` - Should test names match the `test_name_filter` exactly
+    /// * `exit_first` - Should runner exit after first failed test
     #[must_use]
     pub fn new(
         test_name_filter: Option<String>,
@@ -52,8 +58,11 @@ impl RunnerConfig {
 /// Exit status of the runner
 #[derive(Debug, PartialEq, Clone)]
 pub enum RunnerStatus {
+    /// Runner exited without problems
     Default,
+    /// Some test failed
     TestFailed,
+    /// Runner did not run, e.g. when test cases got skipped
     DidNotRun,
 }
 
