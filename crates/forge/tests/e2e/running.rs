@@ -411,7 +411,8 @@ fn should_panic() {
         [PASS] should_panic_test::should_panic_test::should_panic_multiple_messages
         [FAIL] should_panic_test::should_panic_test::should_panic_with_non_matching_data
 
-        Failure data:Incorrect panic data
+        Failure data:
+            Incorrect panic data
             Actual:    [8111420071579136082810415440747] (failing check)
             Expected:    [0] ()
 

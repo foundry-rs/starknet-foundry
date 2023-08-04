@@ -127,7 +127,7 @@ pub fn extract_result_data(
                         .join(", ");
 
                     Some(format!(
-                        indoc! {"
+                        indoc! {"\n
                     Incorrect panic data
                         {}
                         {}

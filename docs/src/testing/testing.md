@@ -75,7 +75,7 @@ Tests: 0 passed, 1 failed, 0 skipped
 
 ## Expected failures
 
-Sometimes you want to mark a test as expected to fail. This is useful when you are working on a feature that is not yet, or when you want to verify that an action fails as expected.
+Sometimes you want to mark a test as expected to fail. This is useful when you want to verify that an action fails as expected.
 
 To mark a test as expected to fail, use the `#[should_panic]` attribute. You can pass the expected failure message as an argument to the attribute to verify that the test fails with the expected message with `#[should_panic(expected: ('panic message', 'eventual second message',))]`.
 
@@ -83,7 +83,7 @@ To mark a test as expected to fail, use the `#[should_panic]` attribute. You can
 #[test]
 #[should_panic(expected: ('panic message', ))]
 fn should_panic_check_data() {
- panic_with_felt252('panic message');
+    panic_with_felt252('panic message');
 }
 ```
 
