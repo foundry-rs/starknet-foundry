@@ -3,26 +3,37 @@ use cairo_lang_runner::{RunResult, RunResultValue};
 use std::option::Option;
 use test_collector::TestCase;
 
+/// Summary of running a single test case
 #[derive(Debug, PartialEq, Clone)]
 pub enum TestCaseSummary {
+    /// Test case passed
     Passed {
+        /// Name of the test case
         name: String,
+        /// Values returned by the test case run
         run_result: RunResult,
+        /// Message to be printed after the test case run
         msg: Option<String>,
     },
+    /// Test case failed
     Failed {
+        /// Name of the test case
         name: String,
+        /// Values returned by the test case run
         run_result: Option<RunResult>,
+        /// Message returned by the test case run
         msg: Option<String>,
     },
+    /// Test case skipped (did not run)
     Skipped {
+        /// Name of the test case
         name: String,
     },
 }
 
 impl TestCaseSummary {
     #[must_use]
-    pub fn from_run_result(run_result: RunResult, test_case: &TestCase) -> Self {
+    pub(crate) fn from_run_result(run_result: RunResult, test_case: &TestCase) -> Self {
         match run_result.value {
             RunResultValue::Success(_) => TestCaseSummary::Passed {
                 name: test_case.name.to_string(),
@@ -38,7 +49,7 @@ impl TestCaseSummary {
     }
 
     #[must_use]
-    pub fn skipped(test_case: &TestCase) -> Self {
+    pub(crate) fn skipped(test_case: &TestCase) -> Self {
         Self::Skipped {
             name: test_case.name.to_string(),
         }
@@ -46,7 +57,7 @@ impl TestCaseSummary {
 }
 
 #[must_use]
-pub fn extract_result_data(run_result: &RunResult) -> Option<String> {
+fn extract_result_data(run_result: &RunResult) -> Option<String> {
     let data = match &run_result.value {
         RunResultValue::Panic(data) | RunResultValue::Success(data) => data,
     };
