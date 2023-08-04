@@ -124,9 +124,10 @@ pub fn extract_result_data(
                         .collect::<Vec<String>>()
                         .join(", ");
 
-                    Some(format!("\n    Incorrect panic data\n    {}\n    {}\n",
-                        format!("Actual:    {panic_data:?} ({panic_string})"),
-                        format!("Expected:  {expected:?} ({expected_string})")
+                    Some(format!(
+                        "\n    Incorrect panic data\n    {}\n    {}\n",
+                        format_args!("Actual:    {panic_data:?} ({panic_string})"),
+                        format_args!("Expected:  {expected:?} ({expected_string})")
                     ))
                 }
                 None => build_readable_text(panic_data),
