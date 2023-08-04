@@ -5,11 +5,11 @@ To run tests with Forge, simply run the `snforge` command from the package direc
 ```shell
 $ snforge
 Collected 3 test(s) and 1 test file(s)
-Running 1 test(s) from src/lib.cairo
+Running 3 test(s) from src/lib.cairo
 [PASS] src::executing
 [PASS] src::calling
 [PASS] src::calling_another
-Tests: 2 passed, 0 failed, 0 skipped
+Tests: 3 passed, 0 failed, 0 skipped
 ```
 
 ## Filtering Tests
@@ -20,7 +20,7 @@ By default, any test name matching the filter will be run.
 ```shell
 $ snforge calling
 Collected 2 test(s) and 1 test file(s)
-Running 1 test(s) from src/lib.cairo
+Running 2 test(s) from src/lib.cairo
 [PASS] src::calling
 [PASS] src::calling_another
 Tests: 2 passed, 0 failed, 0 skipped
@@ -45,8 +45,8 @@ To stop the test execution after first failed test, you can pass an `--exit-firs
 
 ```shell
 $ snforge --exit-first
-Collected 5 test(s) and 1 test file(s)
-Running 1 test(s) from src/lib.cairo
+Collected 6 test(s) and 1 test file(s)
+Running 6 test(s) from src/lib.cairo
 [PASS] src::executing
 [PASS] src::calling
 [PASS] src::calling_another

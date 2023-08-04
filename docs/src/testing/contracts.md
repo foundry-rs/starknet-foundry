@@ -78,24 +78,35 @@ Tests: 1 passed, 0 failed, 0 skipped
 ## Handling Errors
 
 Sometimes we want to test contracts functions that can panic, like testing that function that verifies caller address
-panics on invalid address. For that purpose Starknet also provides `SafeDispatcher`s, that return a `Result` instead of
+panics on invalid address. For that purpose Starknet also provides a `SafeDispatcher`, that returns a `Result` instead of
 panicking.
 
 First, let's add a new, panicking function to our contract.
 
 ```rust
-// ...
+#[starknet::interface]
+trait IHelloStarknet<TContractState> {
+    // ...
+    fn do_a_panic(self: @TContractState);
+}
 
 #[starknet::contract]
 mod HelloStarknet {
+    use array::ArrayTrait;
+
     // ...
     
-    // Panics
-    fn do_a_panic(self: @ContractState) {
-        let mut arr = ArrayTrait::new();
-        arr.append('PANIC');
-        arr.append('DAYTAH');
-        panic(arr);
+    #[external(v0)]
+    impl HelloStarknetImpl of super::IHelloStarknet<ContractState> {
+        // ...
+
+        // Panics
+        fn do_a_panic(self: @ContractState) {
+            let mut arr = ArrayTrait::new();
+            arr.append('PANIC');
+            arr.append('DAYTAH');
+            panic(arr);
+        }
     }
 }
 ```
@@ -105,7 +116,9 @@ If we called this function in a test, it would result in a failure.
 ```rust
 #[test]
 fn failing() {
-    // ...
+    let contract_address = deploy_contract('HelloStarknet');
+    let dispatcher = IHelloStarknetDispatcher { contract_address };
+
     dispatcher.do_a_panic();
 }
 ```
@@ -130,7 +143,7 @@ Using `SafeDispatcher` we can test that the function in fact panics with an expe
 ```rust
 #[test]
 fn handling_errors() {
-    // ...
+    let contract_address = deploy_contract('HelloStarknet');
     let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
 
     match safe_dispatcher.do_a_panic() {
