@@ -436,7 +436,10 @@ mod tests {
             corelib_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0]).unwrap();
 
         assert!(corelib_path.is_dir());
-        // TODO add better test
+        assert!(corelib_path.exists());
+
+        let lib_path = corelib_path.join("lib.cairo");
+        assert!(lib_path.exists());
     }
 
     #[test]
