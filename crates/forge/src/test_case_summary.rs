@@ -22,7 +22,7 @@ pub enum TestCaseSummary {
 
 impl TestCaseSummary {
     #[must_use]
-    pub fn from_run_result(run_result: RunResult, test_case: &TestCase) -> Self {
+    pub(crate) fn from_run_result(run_result: RunResult, test_case: &TestCase) -> Self {
         match run_result.value {
             RunResultValue::Success(_) => TestCaseSummary::Passed {
                 name: test_case.name.to_string(),
@@ -38,7 +38,7 @@ impl TestCaseSummary {
     }
 
     #[must_use]
-    pub fn skipped(test_case: &TestCase) -> Self {
+    pub(crate) fn skipped(test_case: &TestCase) -> Self {
         Self::Skipped {
             name: test_case.name.to_string(),
         }
