@@ -64,7 +64,7 @@ mod HelloEvent {
 }
 
 #[test]
-fn call_and_invoke() {
+fn check_emitted_event() {
     // ...
     let mut expected_events = ArrayTrait::new();
     	a.append(HelloEvent::StoredName);
