@@ -14,6 +14,8 @@ use cairo_lang_semantic::db::SemanticGroup;
 pub const PHANTOM_PACKAGE_NAME_PREFIX: &str = "___PREFIX_FOR_PACKAGE___";
 pub const LIB_PATH_PREFIX: &str = "___PREFIX_FOR_LIB_PATH___";
 
+/// Setup to 'db' to compile the file at the given path.
+/// Returns the id of the generated crate.
 pub fn setup_single_file_project(
     db: &mut dyn SemanticGroup,
     path: &Path,
@@ -60,8 +62,7 @@ pub fn setup_single_file_project(
         let file_id = db.module_main_file(module_id).unwrap();
 
         // region: Modified code
-        let file_content =
-            fs::read_to_string(path).expect("Failed to read test file at path: {path}");
+        let file_content = fs::read_to_string(path).expect("Failed to read file at path: {path}");
         db.as_files_group_mut()
             .override_file_content(file_id, Some(Arc::new(file_content)));
         // endregion

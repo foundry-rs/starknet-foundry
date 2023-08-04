@@ -183,7 +183,7 @@ fn collect_tests_from_tree(
     })
 }
 
-#[allow(clippy::implicit_hasher)]
+#[allow(clippy::implicit_hasher, clippy::too_many_arguments)]
 pub fn run(
     package_path: &Utf8PathBuf,
     package_name: &str,
