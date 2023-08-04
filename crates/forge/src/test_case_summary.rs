@@ -12,7 +12,7 @@ pub enum TestCaseSummary {
         name: String,
         /// Values returned by the test case run
         run_result: RunResult,
-        /// Message returned by the test case run
+        /// Message to be printed after the test case run
         msg: Option<String>,
     },
     /// Test case failed
