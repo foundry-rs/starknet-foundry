@@ -46,7 +46,7 @@ impl TestCaseSummary {
 }
 
 #[must_use]
-pub fn extract_result_data(run_result: &RunResult) -> Option<String> {
+fn extract_result_data(run_result: &RunResult) -> Option<String> {
     let data = match &run_result.value {
         RunResultValue::Panic(data) | RunResultValue::Success(data) => data,
     };
