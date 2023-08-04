@@ -27,7 +27,7 @@ pub struct Create {
     #[clap(short, long)]
     pub salt: Option<FieldElement>,
 
-    // If passed, a profile with corresponding data will be created in Scarb.toml
+    /// If passed, a profile with corresponding data will be created in Scarb.toml
     #[clap(short, long)]
     pub add_profile: bool,
     // TODO (#253): think about supporting different account providers

@@ -42,7 +42,7 @@ struct ScarbStarknetContractArtifact {
 #[derive(Args)]
 #[command(about = "Declare a contract to starknet", long_about = None)]
 pub struct Declare {
-    /// contract name
+    /// Contract name
     #[clap(short = 'c', long = "contract-name")]
     pub contract: String,
 
