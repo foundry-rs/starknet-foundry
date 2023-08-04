@@ -129,7 +129,7 @@ fn failing() {
 $ snforge
 Collected 1 test(s) and 1 test file(s)
 Running 1 test(s) from src/lib.cairo
-[FAIL] src::failing
+[FAIL] package_name::failing
 
 Failure data:
     original value: [344693033283], converted to a string: [PANIC]
@@ -166,6 +166,6 @@ Now the test passes as expected.
 $ snforge
 Collected 1 test(s) and 1 test file(s)
 Running 1 test(s) from src/lib.cairo
-[PASS] src::handling_errors
+[PASS] package_name::handling_errors
 Tests: 1 passed, 0 failed, 0 skipped
 ```
