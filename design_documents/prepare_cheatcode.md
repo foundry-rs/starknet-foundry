@@ -7,14 +7,13 @@
   * [Considered Solutions](#considered-solutions)
     * [Require Calling the `prepare` Cheatcode Before Every Deployment](#require-calling-the-prepare-cheatcode-before-every-deployment)
     * [Introducing the `precalculate_address` Cheatcode](#introducing-the-precalculateaddress-cheatcode)
-  * [Proposed Solution 1](#proposed-solution-1)
-    * [Salt "Counter"](#salt-counter)
-    * [`precalculate_address` Cheatcode](#precalculateaddress-cheatcode)
-    * [Known Problems With This Solution](#known-problems-with-this-solution)
-  * [Example Usage](#example-usage)
-  * [Proposed Solution 2](#proposed-solution-2)
+      * [Salt "Counter"](#salt-counter)
+      * [`precalculate_address` Cheatcode](#precalculateaddress-cheatcode)
+      * [Known Problems With This Solution](#known-problems-with-this-solution)
+      * [Example Usage](#example-usage)
+  * [Proposed Solution](#proposed-solution)
     * [`declare` Cheatcode](#declare-cheatcode)
-  * [Salt "Counter"](#salt-counter-1)
+    * [Salt "Counter"](#salt-counter-1)
     * [Known Problems With This Solution](#known-problems-with-this-solution-1)
     * [Example Usage](#example-usage-1)
 <!-- TOC -->
@@ -55,21 +54,14 @@ Users would have to perform an often unnecessary extra step with every deploymen
 
 Introducing the `precalculate_address` cheatcode that would return the contract address of the contract that would be
 deployed with `deploy` cheatcode.
-The problem with this approach is that for it to work, contract addresses would have to be deterministic.
-This would limit the user to only deploying a one instance of the given contact.
 
-## Proposed Solution 1
-
-Improving on the solution [proposed here](#introducing-the-precalculateaddress-cheatcode), allow precalculating the
-address while having the contract address semi-deterministic.
-
-### Salt "Counter"
+#### Salt "Counter"
 
 Introduce an internal "counter" and use its value to salt the otherwise deterministic contract address.
 Every time the `deploy` is called, increment this counter, so subsequent calls of `deploy` with the same `class_hash`
 will yield different addresses.
 
-### `precalculate_address` Cheatcode
+#### `precalculate_address` Cheatcode
 
 Introduce a cheatcode with the signature:
 
@@ -81,7 +73,7 @@ That will use the same method of calculating the contract address as `deploy` us
 This way the user will have an ability to know the address of the contract that will be deployed, and the current
 deployment flow will remain unchanged.
 
-### Known Problems With This Solution
+#### Known Problems With This Solution
 
 For the address returned by `precalculate_address` to match the address from `deploy`, the user will have to
 call `precalculate_address` immediately before the deployment or at least before any other calls to `deploy` as the
@@ -89,7 +81,7 @@ internal counter will then be incremented.
 
 This could be remedied by having separate counters for all `class_hashe`es, but it will still remain a limiting factor.
 
-## Example Usage
+#### Example Usage
 
 ```cairo
 mod HelloStarknet {
@@ -140,7 +132,7 @@ fn call_and_invoke() {
 }
 ```
 
-## Proposed Solution 2
+## Proposed Solution
 
 Change the current deployment flow, so it can better facilitate precalculating of contract addresses.
 
@@ -170,7 +162,7 @@ And remove the `deploy` cheatcode entirely.
 
 Both `precalculate_address` and `deploy` should use the same way of calculating the contract address.
 
-## Salt "Counter"
+### Salt "Counter"
 
 Introduce the same salt counter as [discussed here](#salt-counter).
 This will allow deterministic address calculation and deploying of multiple instances of the same contract.
