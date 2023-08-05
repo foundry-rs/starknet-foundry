@@ -14,7 +14,7 @@ use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 
 use crate::running::run_from_test_case;
-use crate::scarb::StarknetContractArtifacts;
+use crate::scarb::{ForgeConfig, StarknetContractArtifacts};
 use test_collector::{collect_tests, LinkedLibrary, TestCase};
 
 pub mod pretty_printing;
@@ -33,12 +33,19 @@ pub struct RunnerConfig {
 }
 
 impl RunnerConfig {
+    /// Creates a new `RunnerConfig` from given arguments
+    ///
+    /// # Arguments
+    ///
+    /// * `test_name_filter` - Used to filter test cases by names
+    /// * `exact_match` - Should test names match the `test_name_filter` exactly
+    /// * `exit_first` - Should runner exit after first failed test
     #[must_use]
     pub fn new(
         test_name_filter: Option<String>,
         exact_match: bool,
         exit_first: bool,
-        forge_config_from_scarb: &ForgeConfigFromScarb,
+        forge_config_from_scarb: &ForgeConfig,
     ) -> Self {
         Self {
             test_name_filter,
@@ -48,18 +55,15 @@ impl RunnerConfig {
     }
 }
 
+/// Exit status of the runner
 #[derive(Debug, PartialEq, Clone)]
 pub enum RunnerStatus {
+    /// Runner exited without problems
     Default,
+    /// Some test failed
     TestFailed,
+    /// Runner did not run, e.g. when test cases got skipped
     DidNotRun,
-}
-
-/// Represents forge config deserialized from Scarb.toml
-#[derive(Deserialize, Debug, PartialEq, Default)]
-pub struct ForgeConfigFromScarb {
-    #[serde(default)]
-    exit_first: bool,
 }
 
 struct TestsFromFile {
@@ -177,6 +181,18 @@ fn collect_tests_from_tree(
     })
 }
 
+/// Run the tests in the package at the given path
+///
+/// # Arguments
+///
+/// * `package_path` - Absolute path to the top-level of the Cairo package
+/// * `lib_path` - Absolute path to the main file in the package (usually `src/lib.cairo`)
+/// * `linked_libraries` - Dependencies needed to run the package at `package_path`
+/// * `runner_config` - A configuration of the test runner
+/// * `corelib_path` - Absolute path to the Cairo corelib
+/// * `contracts` - Map with names of contract used in tests and corresponding sierra and casm artifacts
+/// * `predeployed_contracts` - Absolute path to predeployed contracts used by starknet state e.g. account contracts
+///
 #[allow(clippy::implicit_hasher)]
 pub fn run(
     package_path: &Utf8PathBuf,
@@ -239,10 +255,14 @@ pub fn run(
     Ok(summaries)
 }
 
+/// Summary of the test run in the file
 #[derive(Debug, PartialEq, Clone)]
 pub struct TestFileSummary {
+    /// Summaries of each test case in the file
     pub test_case_summaries: Vec<TestCaseSummary>,
+    /// Status of the runner after executing tests in the file
     pub runner_exit_status: RunnerStatus,
+    /// Relative path to the test file
     pub relative_path: Utf8PathBuf,
 }
 

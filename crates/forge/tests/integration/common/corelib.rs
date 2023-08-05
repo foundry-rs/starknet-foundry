@@ -1,7 +1,7 @@
 use assert_fs::fixture::{FileTouch, FileWriteStr, PathChild, PathCopy};
 use assert_fs::TempDir;
 use camino::Utf8PathBuf;
-use forge::scarb::extract_metadata_from_package;
+use forge::scarb::corelib_for_package;
 use indoc::indoc;
 use scarb_metadata::MetadataCommand;
 
@@ -31,10 +31,7 @@ pub fn corelib_path() -> Utf8PathBuf {
         .exec()
         .unwrap();
     let package = &scarb_metadata.workspace.members[0];
-    let (_, _, corelib_path, _, _) =
-        extract_metadata_from_package(&scarb_metadata, package).unwrap();
-
-    corelib_path
+    corelib_for_package(&scarb_metadata, package).unwrap()
 }
 
 pub fn predeployed_contracts() -> TempDir {

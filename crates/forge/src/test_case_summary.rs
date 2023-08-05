@@ -4,26 +4,37 @@ use cairo_lang_runner::{RunResult, RunResultValue};
 use std::option::Option;
 use test_collector::{ExpectedPanicValue, ExpectedTestResult, TestCase};
 
+/// Summary of running a single test case
 #[derive(Debug, PartialEq, Clone)]
 pub enum TestCaseSummary {
+    /// Test case passed
     Passed {
+        /// Name of the test case
         name: String,
+        /// Values returned by the test case run
         run_result: RunResult,
+        /// Message to be printed after the test case run
         msg: Option<String>,
     },
+    /// Test case failed
     Failed {
+        /// Name of the test case
         name: String,
+        /// Values returned by the test case run
         run_result: Option<RunResult>,
+        /// Message returned by the test case run
         msg: Option<String>,
     },
+    /// Test case skipped (did not run)
     Skipped {
+        /// Name of the test case
         name: String,
     },
 }
 
 impl TestCaseSummary {
     #[must_use]
-    pub fn from_run_result(run_result: RunResult, test_case: &TestCase) -> Self {
+    pub(crate) fn from_run_result(run_result: RunResult, test_case: &TestCase) -> Self {
         let name = test_case.name.to_string();
         let msg = extract_result_data(&run_result, &test_case.expected_result);
         match run_result.clone().value {
@@ -64,7 +75,7 @@ impl TestCaseSummary {
     }
 
     #[must_use]
-    pub fn skipped(test_case: &TestCase) -> Self {
+    pub(crate) fn skipped(test_case: &TestCase) -> Self {
         Self::Skipped {
             name: test_case.name.to_string(),
         }
@@ -94,7 +105,7 @@ fn build_readable_text(data: &Vec<Felt252>) -> Option<String> {
 /// Returns a string with the data that was produced by the test case.
 /// If the test was expected to fail with specific data e.g. `#[should_panic(expected: ('data',))]`
 /// and failed to do so, it returns a string comparing the panic data and the expected data.
-pub fn extract_result_data(
+pub(crate) fn extract_result_data(
     run_result: &RunResult,
     expectation: &ExpectedTestResult,
 ) -> Option<String> {

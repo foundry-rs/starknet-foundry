@@ -9,7 +9,10 @@ use tempfile::{tempdir, TempDir};
 use forge::run;
 use forge::{pretty_printing, RunnerConfig};
 
-use forge::scarb::{get_contracts_map, try_get_starknet_artifacts_path};
+use forge::scarb::{
+    corelib_for_package, dependencies_for_package, get_contracts_map, paths_for_package,
+    target_name_for_package, try_get_starknet_artifacts_path,
+};
 use std::process::Command;
 
 static PREDEPLOYED_CONTRACTS: Dir = include_dir!("crates/cheatable-starknet/predeployed-contracts");
@@ -64,8 +67,10 @@ fn main_execution() -> Result<()> {
     for package in &scarb_metadata.workspace.members {
         let forge_config = forge::scarb::config_from_scarb_for_package(&scarb_metadata, package)?;
 
-        let (package_path, lib_path, corelib_path, dependencies, target_name) =
-            forge::scarb::extract_metadata_from_package(&scarb_metadata, package)?;
+        let (package_path, lib_path) = paths_for_package(&scarb_metadata, package)?;
+        let dependencies = dependencies_for_package(&scarb_metadata, package)?;
+        let target_name = target_name_for_package(&scarb_metadata, package)?;
+        let corelib_path = corelib_for_package(&scarb_metadata, package)?;
         let runner_config = RunnerConfig::new(
             args.test_name.clone(),
             args.exact,
