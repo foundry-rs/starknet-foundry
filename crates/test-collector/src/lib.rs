@@ -79,8 +79,8 @@ pub fn setup_project_without_cairo_project_toml(
 }
 
 /// Expectation for a panic case.
-#[derive(Debug)]
-pub enum PanicExpectation {
+#[derive(Debug, Clone, PartialEq)]
+pub enum ExpectedPanicValue {
     /// Accept any panic value.
     Any,
     /// Accept only this specific vector of panics.
@@ -88,12 +88,12 @@ pub enum PanicExpectation {
 }
 
 /// Expectation for a result of a test.
-#[derive(Debug)]
-pub enum TestExpectation {
+#[derive(Debug, Clone, PartialEq)]
+pub enum ExpectedTestResult {
     /// Running the test should not panic.
     Success,
     /// Running the test should result in a panic.
-    Panics(PanicExpectation),
+    Panics(ExpectedPanicValue),
 }
 
 /// The configuration for running a single test.
@@ -102,7 +102,7 @@ pub struct SingleTestConfig {
     /// The amount of gas the test requested.
     pub available_gas: Option<usize>,
     /// The expected result of the run.
-    pub expectation: TestExpectation,
+    pub expected_result: ExpectedTestResult,
     /// Should the test be ignored.
     pub ignored: bool,
 }
@@ -221,14 +221,14 @@ pub fn try_extract_test_config(
     } else {
         Some(SingleTestConfig {
             available_gas,
-            expectation: if should_panic {
-                TestExpectation::Panics(if let Some(values) = expected_panic_value {
-                    PanicExpectation::Exact(values)
+            expected_result: if should_panic {
+                ExpectedTestResult::Panics(if let Some(values) = expected_panic_value {
+                    ExpectedPanicValue::Exact(values)
                 } else {
-                    PanicExpectation::Any
+                    ExpectedPanicValue::Any
                 })
             } else {
-                TestExpectation::Success
+                ExpectedTestResult::Success
             },
             ignored,
         })
@@ -276,6 +276,7 @@ pub struct LinkedLibrary {
 pub struct TestCase {
     pub name: String,
     pub available_gas: Option<usize>,
+    pub expected_result: ExpectedTestResult,
 }
 
 // returns tuple[sierra if no output_path, list[test_name, test_config]]
@@ -354,6 +355,7 @@ pub fn collect_tests(
         .map(|(test_name, config)| TestCase {
             name: test_name.replace(PHANTOM_PACKAGE_NAME_PREFIX, ""),
             available_gas: config.available_gas,
+            expected_result: config.expected_result,
         })
         .collect();
 
