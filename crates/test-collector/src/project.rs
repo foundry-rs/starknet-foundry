@@ -12,14 +12,13 @@ pub use cairo_lang_project::*;
 use cairo_lang_semantic::db::SemanticGroup;
 
 pub const PHANTOM_PACKAGE_NAME_PREFIX: &str = "___PREFIX_FOR_PACKAGE___";
-pub const LIB_PATH_PREFIX: &str = "___PREFIX_FOR_LIB_PATH___";
 
 /// Setup to 'db' to compile the file at the given path.
 /// Returns the id of the generated crate.
 pub fn setup_single_file_project(
     db: &mut dyn SemanticGroup,
     path: &Path,
-    crate_name: Option<&str>,
+    package_name: &str,
 ) -> Result<CrateId, ProjectError> {
     match path.extension().and_then(OsStr::to_str) {
         Some("cairo") => (),
@@ -43,7 +42,7 @@ pub fn setup_single_file_project(
         let canonical = path.canonicalize().map_err(|_| bad_path_err())?;
         let file_dir = canonical.parent().ok_or_else(bad_path_err)?;
         // region: Modified code
-        let crate_id = db.intern_crate(CrateLongId(crate_name.unwrap_or(LIB_PATH_PREFIX).into()));
+        let crate_id = db.intern_crate(CrateLongId(package_name.into()));
         db.set_crate_root(crate_id, Some(Directory(file_dir.to_path_buf())));
         // endregion
         Ok(crate_id)

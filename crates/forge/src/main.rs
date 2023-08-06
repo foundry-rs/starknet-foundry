@@ -64,7 +64,7 @@ fn main_execution() -> Result<()> {
     for package in &scarb_metadata.workspace.members {
         let forge_config = forge::scarb::config_from_scarb_for_package(&scarb_metadata, package)?;
 
-        let (package_path, lib_path, corelib_path, dependencies, target_name) =
+        let (package_path, package_name, lib_path, corelib_path, dependencies, target_name) =
             forge::scarb::extract_metadata_from_package(&scarb_metadata, package)?;
         let runner_config = RunnerConfig::new(
             args.test_name.clone(),
@@ -81,7 +81,7 @@ fn main_execution() -> Result<()> {
 
         run(
             &package_path,
-            &target_name,
+            &package_name,
             &lib_path,
             &Some(dependencies.clone()),
             &runner_config,

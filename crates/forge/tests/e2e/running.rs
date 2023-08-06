@@ -54,29 +54,29 @@ fn simple_package() {
         .success()
         .stdout_matches(indoc! {r#"Collected 11 test(s) and 5 test file(s)
         Running 1 test(s) from src/lib.cairo
-        [PASS] src::test_fib
+        [PASS] simple_package::test_fib
         Running 1 test(s) from tests/contract.cairo
-        [PASS] contract::contract::call_and_invoke
+        [PASS] contract::call_and_invoke
         Running 2 test(s) from tests/ext_function_test.cairo
-        [PASS] ext_function_test::ext_function_test::test_my_test
-        [PASS] ext_function_test::ext_function_test::test_simple
+        [PASS] ext_function_test::test_my_test
+        [PASS] ext_function_test::test_simple
         Running 6 test(s) from tests/test_simple.cairo
-        [PASS] test_simple::test_simple::test_simple
-        [PASS] test_simple::test_simple::test_simple2
-        [PASS] test_simple::test_simple::test_two
-        [PASS] test_simple::test_simple::test_two_and_two
-        [FAIL] test_simple::test_simple::test_failing
+        [PASS] test_simple::test_simple
+        [PASS] test_simple::test_simple2
+        [PASS] test_simple::test_two
+        [PASS] test_simple::test_two_and_two
+        [FAIL] test_simple::test_failing
         
         Failure data:
             original value: [8111420071579136082810415440747], converted to a string: [failing check]
         
-        [FAIL] test_simple::test_simple::test_another_failing
+        [FAIL] test_simple::test_another_failing
         
         Failure data:
             original value: [8111420071579136082810415440747], converted to a string: [failing check]
         
         Running 1 test(s) from tests/without_prefix.cairo
-        [PASS] without_prefix::without_prefix::five
+        [PASS] without_prefix::five
         Tests: 9 passed, 2 failed, 0 skipped
         "#});
 }

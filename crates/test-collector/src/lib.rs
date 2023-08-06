@@ -42,8 +42,6 @@ use std::sync::Arc;
 mod project;
 pub mod sierra_casm_generator;
 
-pub use project::LIB_PATH_PREFIX;
-
 pub fn build_project_config(
     source_root: &Path,
     crate_name: &str,
@@ -65,17 +63,13 @@ pub fn setup_project_without_cairo_project_toml(
     path: &Path,
     crate_name: &str,
 ) -> Result<Vec<CrateId>, ProjectError> {
-    if path.is_dir() {
-        match build_project_config(path, crate_name) {
-            Ok(config) => {
-                let main_crate_ids = get_main_crate_ids_from_project(db, &config);
-                update_crate_roots_from_project_config(db, config);
-                Ok(main_crate_ids)
-            }
-            _ => Err(ProjectError::LoadProjectError),
+    match build_project_config(path, crate_name) {
+        Ok(config) => {
+            let main_crate_ids = get_main_crate_ids_from_project(db, &config);
+            update_crate_roots_from_project_config(db, config);
+            Ok(main_crate_ids)
         }
-    } else {
-        Ok(vec![setup_single_file_project(db, path, Some(crate_name))?])
+        _ => Err(ProjectError::LoadProjectError),
     }
 }
 
@@ -281,6 +275,7 @@ pub struct TestCase {
 pub fn collect_tests(
     input_path: &str,
     output_path: Option<&str>,
+    package_name: &str,
     linked_libraries: Option<Vec<LinkedLibrary>>,
     builtins: Option<Vec<&str>>,
     corelib_path: PathBuf,
@@ -296,7 +291,7 @@ pub fn collect_tests(
 
     init_dev_corelib(db, corelib_path);
 
-    let main_crate_id = setup_single_file_project(db, Path::new(&input_path), None)
+    let main_crate_id = setup_single_file_project(db, Path::new(&input_path), package_name)
         .with_context(|| format!("Failed to setup project for path({input_path})"))?;
 
     if let Some(linked_libraries) = linked_libraries {

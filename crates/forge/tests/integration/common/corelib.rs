@@ -31,7 +31,7 @@ pub fn corelib_path() -> Utf8PathBuf {
         .exec()
         .unwrap();
     let package = &scarb_metadata.workspace.members[0];
-    let (_, _, corelib_path, _, _) =
+    let (_, _, _, corelib_path, _, _) =
         extract_metadata_from_package(&scarb_metadata, package).unwrap();
 
     corelib_path

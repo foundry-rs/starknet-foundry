@@ -109,6 +109,7 @@ pub fn extract_metadata_from_package(
     package: &PackageId,
 ) -> Result<(
     Utf8PathBuf,
+    String,
     Utf8PathBuf,
     Utf8PathBuf,
     Vec<LinkedLibrary>,
@@ -125,11 +126,12 @@ pub fn extract_metadata_from_package(
         })
         .ok_or_else(|| anyhow!("Failed to find metadata for package = {package}"))?;
 
-    let package_path = metadata
+    let package = metadata
         .get_package(package)
-        .ok_or_else(|| anyhow!("Failed to find metadata for package = {package}"))?
-        .root
-        .clone();
+        .ok_or_else(|| anyhow!("Failed to find metadata for package = {package}"))?;
+
+    let package_path = package.root.clone();
+    let package_name = package.name.clone();
 
     let dependencies = compilation_unit
         .components
@@ -154,6 +156,7 @@ pub fn extract_metadata_from_package(
 
     Ok((
         package_path,
+        package_name,
         lib_path,
         corelib_path,
         dependencies,
@@ -405,7 +408,7 @@ mod tests {
             .exec()
             .unwrap();
 
-        let (_, _, _, dependencies, _) =
+        let (_, _, _, _, dependencies, _) =
             extract_metadata_from_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
                 .unwrap();
 
@@ -422,13 +425,29 @@ mod tests {
             .exec()
             .unwrap();
 
-        let (package_path, lib_path, _, _, _) =
+        let (package_path, _, lib_path, _, _, _) =
             extract_metadata_from_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
                 .unwrap();
 
         assert!(package_path.is_dir());
         assert!(lib_path.ends_with(Utf8PathBuf::from("src/lib.cairo")));
         assert!(lib_path.starts_with(package_path));
+    }
+
+    #[test]
+    fn get_name_for_package() {
+        let temp = setup_package("simple_package");
+        let scarb_metadata = MetadataCommand::new()
+            .inherit_stderr()
+            .current_dir(temp.path())
+            .exec()
+            .unwrap();
+
+        let (_, package_name, _, _, _, _) =
+            extract_metadata_from_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
+                .unwrap();
+
+        assert_eq!(package_name, "simple_package".to_string());
     }
 
     #[test]

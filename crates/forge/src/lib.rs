@@ -15,7 +15,7 @@ use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 
 use crate::running::run_from_test_case;
 use crate::scarb::StarknetContractArtifacts;
-use test_collector::{collect_tests, LinkedLibrary, TestCase, LIB_PATH_PREFIX};
+use test_collector::{collect_tests, LinkedLibrary, TestCase};
 
 pub mod pretty_printing;
 pub mod scarb;
@@ -70,6 +70,7 @@ struct TestsFromFile {
 
 fn collect_tests_from_directory(
     package_path: &Utf8PathBuf,
+    package_name: &str,
     lib_path: &Utf8PathBuf,
     linked_libraries: &Option<Vec<LinkedLibrary>>,
     corelib_path: &Utf8PathBuf,
@@ -78,6 +79,7 @@ fn collect_tests_from_directory(
     let test_files = find_cairo_root_files_in_directory(package_path, lib_path)?;
     internal_collect_tests(
         package_path,
+        package_name,
         linked_libraries,
         &test_files,
         corelib_path,
@@ -122,6 +124,7 @@ fn find_cairo_root_files_in_directory(
 
 fn internal_collect_tests(
     package_path: &Utf8PathBuf,
+    package_name: &str,
     linked_libraries: &Option<Vec<LinkedLibrary>>,
     test_roots: &[Utf8PathBuf],
     corelib_path: &Utf8PathBuf,
@@ -133,6 +136,7 @@ fn internal_collect_tests(
             collect_tests_from_tree(
                 tf,
                 package_path,
+                package_name,
                 linked_libraries,
                 corelib_path,
                 runner_config,
@@ -145,6 +149,7 @@ fn internal_collect_tests(
 fn collect_tests_from_tree(
     test_root: &Utf8PathBuf,
     package_path: &Utf8PathBuf,
+    package_name: &str,
     linked_libraries: &Option<Vec<LinkedLibrary>>,
     corelib_path: &Utf8PathBuf,
     runner_config: &RunnerConfig,
@@ -165,6 +170,7 @@ fn collect_tests_from_tree(
     let (sierra_program, tests_configs) = collect_tests(
         test_path.as_str(),
         None,
+        package_name,
         linked_libraries.clone(),
         Some(builtins.clone()),
         corelib_path.into(),
@@ -196,6 +202,7 @@ pub fn run(
 ) -> Result<Vec<TestFileSummary>> {
     let tests = collect_tests_from_directory(
         package_path,
+        package_name,
         lib_path,
         linked_libraries,
         corelib_path,
@@ -213,7 +220,6 @@ pub fn run(
     for tests_from_file in tests_iterator.by_ref() {
         let summary = run_tests_from_file(
             tests_from_file,
-            package_name,
             runner_config,
             contracts,
             predeployed_contracts,
@@ -279,7 +285,6 @@ impl TestFileSummary {
 
 fn run_tests_from_file(
     tests: TestsFromFile,
-    package_name: &str,
     runner_config: &RunnerConfig,
     contracts: &HashMap<String, StarknetContractArtifacts>,
     predeployed_contracts: &Utf8PathBuf,
@@ -294,9 +299,7 @@ fn run_tests_from_file(
     pretty_printing::print_running_tests(&tests.relative_path, tests.test_cases.len());
     let mut results = vec![];
     for (i, case) in tests.test_cases.iter().enumerate() {
-        let mut result = run_from_test_case(&runner, case, contracts, predeployed_contracts)?;
-
-        result.update_name(result.name().replace(LIB_PATH_PREFIX, package_name));
+        let result = run_from_test_case(&runner, case, contracts, predeployed_contracts)?;
         results.push(result.clone());
 
         pretty_printing::print_test_result(&result);
