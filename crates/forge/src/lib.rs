@@ -91,11 +91,7 @@ fn find_cairo_root_files_in_directory(
     package_path: &Utf8PathBuf,
     lib_path: &Utf8PathBuf,
 ) -> Result<Vec<Utf8PathBuf>> {
-    let mut test_files: Vec<Utf8PathBuf> = vec![lib_path
-        .clone()
-        .strip_prefix(package_path)
-        .with_context(|| format!("Failed to read directory at path = {package_path}"))?
-        .into()];
+    let mut test_files: Vec<Utf8PathBuf> = vec![lib_path.clone()];
     let src_path = lib_path.parent().with_context(|| {
         format!("Failed to get parent directory of a package at path = {lib_path}")
     })?;
@@ -110,10 +106,8 @@ fn find_cairo_root_files_in_directory(
         let path = entry.path();
 
         if path.is_file() && path.extension().unwrap_or_default() == "cairo" {
-            let stripped_path = path.strip_prefix(package_path).expect("Incorrect path");
-
             test_files.push(
-                Utf8Path::from_path(stripped_path)
+                Utf8Path::from_path(path)
                     .with_context(|| format!("Failed to convert path = {path:?} to utf-8"))?
                     .to_path_buf(),
             );
@@ -165,10 +159,8 @@ fn collect_tests_from_tree(
         "System",
     ];
 
-    let test_path = package_path.join(test_root);
-
     let (sierra_program, tests_configs) = collect_tests(
-        test_path.as_str(),
+        test_root.as_str(),
         None,
         package_name,
         linked_libraries.clone(),
@@ -182,10 +174,12 @@ fn collect_tests_from_tree(
         tests_configs
     };
 
+    let relative_path = test_root.strip_prefix(package_path)?.to_path_buf();
+
     Ok(TestsFromFile {
         sierra_program,
         test_cases,
-        relative_path: test_root.clone(),
+        relative_path,
     })
 }
 
