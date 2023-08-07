@@ -7,6 +7,12 @@ fn test_print() {
     'aaa'.print();
     3618502788666131213697322783095070105623107215331596699973092056135872020480.print();
 
+    let u8: u8 = 12;
+    u8.print();
+
+    let u16: u16 = 1234;
+    u16.print();
+
     let u32: u32 = 123456;
     u32.print();
 
@@ -21,6 +27,12 @@ fn test_print() {
 
     let usize: usize = 1;
     usize.print();
+
+    let i8: i8 = 12;
+    i8.print();
+
+    let i16: i16 = 1234;
+    i16.print();
 
     let i32: i32 = 123456;
     i32.print();
