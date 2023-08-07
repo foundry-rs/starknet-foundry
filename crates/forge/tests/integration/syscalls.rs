@@ -1,6 +1,6 @@
 use crate::integration::common::corelib::{corelib_path, predeployed_contracts};
 use crate::integration::common::runner::Contract;
-use crate::{assert_passed, test_case, assert_failed};
+use crate::{assert_case_output_contains, assert_failed, assert_passed, test_case};
 use camino::Utf8PathBuf;
 use forge::run;
 use indoc::indoc;
@@ -167,5 +167,10 @@ fn test_call_syscall_fail_in_test_fn() {
     )
     .unwrap();
 
+    assert_case_output_contains!(
+        result,
+        "test_execute_disallowed_syscall",
+        "starknet syscalls cannot be used in tests"
+    );
     assert_failed!(result);
 }

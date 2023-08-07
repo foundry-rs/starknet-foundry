@@ -285,7 +285,7 @@ fn execute_syscall(
 
     if std::str::from_utf8(&selector).unwrap() != "CallContract" {
         return Err(HintError::CustomHint(Box::from(
-            "starknet syscalls cannot be used in tests".to_string()
+            "starknet syscalls cannot be used in tests".to_string(),
         )));
     }
 
