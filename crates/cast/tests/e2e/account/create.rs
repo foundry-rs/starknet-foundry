@@ -1,4 +1,4 @@
-use crate::helpers::constants::{CONTRACTS_DIR, NETWORK, URL, DEVNET_OZ_CLASS_HASH};
+use crate::helpers::constants::{CONTRACTS_DIR, DEVNET_OZ_CLASS_HASH, NETWORK, URL};
 use crate::helpers::fixtures::{default_cli_args, duplicate_directory_with_salt};
 use crate::helpers::runner::runner;
 use camino::Utf8PathBuf;
@@ -225,7 +225,14 @@ pub async fn test_profile_already_exists() {
 pub async fn test_account_already_exists() {
     let mut args = default_cli_args();
     args.append(&mut vec![
-        "account", "create", "--name", "user1", "--salt", "0x1", "--class-hash", DEVNET_OZ_CLASS_HASH,
+        "account",
+        "create",
+        "--name",
+        "user1",
+        "--salt",
+        "0x1",
+        "--class-hash",
+        DEVNET_OZ_CLASS_HASH,
     ]);
 
     let snapbox = runner(&args);

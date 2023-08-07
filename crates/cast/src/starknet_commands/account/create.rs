@@ -31,7 +31,6 @@ pub struct Create {
     #[clap(short, long)]
     pub add_profile: bool,
     // TODO (#253): think about supporting different account providers
-
     /// Custom open zeppelin contract class hash of declared contract
     #[clap(short, long)]
     pub class_hash: Option<String>,

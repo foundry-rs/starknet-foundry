@@ -1,4 +1,4 @@
-use crate::helpers::constants::{CONTRACTS_DIR, NETWORK, URL, DEVNET_OZ_CLASS_HASH};
+use crate::helpers::constants::{CONTRACTS_DIR, DEVNET_OZ_CLASS_HASH, NETWORK, URL};
 use crate::helpers::fixtures::{
     duplicate_directory_with_salt, get_transaction_hash, get_transaction_receipt, mint_token,
 };
