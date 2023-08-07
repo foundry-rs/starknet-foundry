@@ -45,7 +45,7 @@ fn test_mock() {
     start_mock_call(contract_address, 'get_balance', mock_ret_data);
 
     dispatcher.set_balance(13);
-    let caller_address = dispatcher.get_balance();
-    assert(caller_address.into() == 421, 'Wrong caller address');
+    let balance = dispatcher.get_balance();
+    assert(balance == 421, 'Wrong balance');
 }
 ```
