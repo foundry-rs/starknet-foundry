@@ -70,7 +70,7 @@ fn call_and_invoke() {
 ```shell
 $ snforge
 Collected 1 test(s) and 1 test file(s)
-Running 1 test(s) from src/lib.cairo
+Running 1 test(s) from using_dispatchers
 [PASS] using_dispatchers::call_and_invoke
 Tests: 1 passed, 0 failed, 0 skipped
 ```
@@ -128,7 +128,7 @@ fn failing() {
 ```shell
 $ snforge
 Collected 1 test(s) and 1 test file(s)
-Running 1 test(s) from src/lib.cairo
+Running 1 test(s) from package_name
 [FAIL] package_name::failing
 
 Failure data:
@@ -165,7 +165,7 @@ Now the test passes as expected.
 ```shell
 $ snforge
 Collected 1 test(s) and 1 test file(s)
-Running 1 test(s) from src/lib.cairo
+Running 1 test(s) from package_name
 [PASS] package_name::handling_errors
 Tests: 1 passed, 0 failed, 0 skipped
 ```

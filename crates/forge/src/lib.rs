@@ -70,6 +70,7 @@ struct TestsFromFile {
     sierra_program: Program,
     test_cases: Vec<TestCase>,
     relative_path: Utf8PathBuf,
+    package_name: String,
 }
 
 fn collect_tests_from_directory(
@@ -184,6 +185,7 @@ fn collect_tests_from_tree(
         sierra_program,
         test_cases,
         relative_path,
+        package_name: package_name.to_string(),
     })
 }
 
@@ -310,7 +312,14 @@ fn run_tests_from_file(
     )
     .context("Failed setting up runner.")?;
 
-    pretty_printing::print_running_tests(&tests.relative_path, tests.test_cases.len());
+    let tests_source = if tests.relative_path == "src/lib.cairo" {
+        tests.package_name.as_str()
+    } else {
+        tests.relative_path.as_str()
+    };
+
+    pretty_printing::print_running_tests(&tests_source, tests.test_cases.len());
+
     let mut results = vec![];
     for (i, case) in tests.test_cases.iter().enumerate() {
         let result = run_from_test_case(&runner, case, contracts, predeployed_contracts)?;
