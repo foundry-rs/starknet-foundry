@@ -2,7 +2,6 @@ use std::io;
 
 use blockifier::state::errors::StateError;
 use cairo_felt::Felt252;
-use cairo_lang_runner::casm_run::MemBuffer;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::errors::memory_errors::MemoryError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
