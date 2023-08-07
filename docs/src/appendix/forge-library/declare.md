@@ -8,6 +8,7 @@ Declares a contract and returns its class hash.
 
 ```rust
 use result::ResultTrait;
+use cheatcodes::declare;
 
 #[test]
 fn test_declare() {

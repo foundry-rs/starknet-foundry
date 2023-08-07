@@ -13,7 +13,7 @@ The trait is implemented for types:
 
 ```rust
 use array::ArrayTrait;
-use forge_print::PrintTrait;
+use cheatcodes::PrintTrait;
 use starknet::contract_address_const;
 
 #[test]
