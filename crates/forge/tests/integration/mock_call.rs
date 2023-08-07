@@ -12,7 +12,6 @@ fn start_mock_call_simple() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use array::ArrayTrait;
         use cheatcodes::{ declare, PreparedContract, deploy, start_mock_call };
 
         #[starknet::interface]
@@ -22,8 +21,7 @@ fn start_mock_call_simple() {
 
         #[test]
         fn start_mock_call_simple() {
-            let mut calldata = ArrayTrait::new();
-            calldata.append(420);
+            let mut calldata = array![420];
 
             let class_hash = declare('MockChecker');
             let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
@@ -31,8 +29,7 @@ fn start_mock_call_simple() {
 
             let dispatcher = IMockCheckerDispatcher { contract_address };
 
-            let mut mock_ret_data = ArrayTrait::new();
-            mock_ret_data.append(421);
+            let mut mock_ret_data = array![421];
             start_mock_call(contract_address, 'get_thing', mock_ret_data);
 
             let thing = dispatcher.get_thing();
@@ -42,15 +39,13 @@ fn start_mock_call_simple() {
 
         #[test]
         fn start_mock_call_simple_mock_before_dispatcher_created() {
-            let mut calldata = ArrayTrait::new();
-            calldata.append(420);
+            let mut calldata = array![420];
 
             let class_hash = declare('MockChecker');
             let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
             let contract_address = deploy(prepared).unwrap();
 
-            let mut mock_ret_data = ArrayTrait::new();
-            mock_ret_data.append(421);
+            let mut mock_ret_data = array![421];
             start_mock_call(contract_address, 'get_thing', mock_ret_data);
 
             let dispatcher = IMockCheckerDispatcher { contract_address };
@@ -86,7 +81,6 @@ fn stop_mock_call_simple() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use array::ArrayTrait;
         use cheatcodes::{ declare, PreparedContract, deploy, start_mock_call, stop_mock_call };
 
         #[starknet::interface]
@@ -96,8 +90,7 @@ fn stop_mock_call_simple() {
 
         #[test]
         fn stop_mock_call_simple() {
-            let mut calldata = ArrayTrait::new();
-            calldata.append(420);
+            let mut calldata = array![420];
 
             let class_hash = declare('MockChecker');
             let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
@@ -105,8 +98,7 @@ fn stop_mock_call_simple() {
 
             let dispatcher = IMockCheckerDispatcher { contract_address };
 
-            let mut mock_ret_data = ArrayTrait::new();
-            mock_ret_data.append(421);
+            let mut mock_ret_data = array![421];
 
             start_mock_call(contract_address, 'get_thing', mock_ret_data);
             let thing = dispatcher.get_thing();
@@ -119,8 +111,7 @@ fn stop_mock_call_simple() {
 
         #[test]
         fn stop_mock_call_when_mock_not_started() {
-            let mut calldata = ArrayTrait::new();
-            calldata.append(420);
+            let mut calldata = array![420];
 
             let class_hash = declare('MockChecker');
             let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
@@ -161,7 +152,6 @@ fn mock_call_double() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use array::ArrayTrait;
         use cheatcodes::{ declare, PreparedContract, deploy, start_mock_call, stop_mock_call };
 
         #[starknet::interface]
@@ -171,8 +161,7 @@ fn mock_call_double() {
 
         #[test]
         fn mock_call_double_mocks() {
-            let mut calldata = ArrayTrait::new();
-            calldata.append(420);
+            let mut calldata = array![420];
 
             let class_hash = declare('MockChecker');
             let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
@@ -180,12 +169,10 @@ fn mock_call_double() {
 
             let dispatcher = IMockCheckerDispatcher { contract_address };
 
-            let mut mock_ret_data = ArrayTrait::new();
-            mock_ret_data.append(421);
+            let mut mock_ret_data = array![421];
             start_mock_call(contract_address, 'get_thing', mock_ret_data);
 
-            let mut mock_ret_data = ArrayTrait::new();
-            mock_ret_data.append(427);
+            let mut mock_ret_data = array![427];
             start_mock_call(contract_address, 'get_thing', mock_ret_data);
 
             let thing = dispatcher.get_thing();
@@ -198,8 +185,7 @@ fn mock_call_double() {
 
         #[test]
         fn mock_call_double_calls() {
-            let mut calldata = ArrayTrait::new();
-            calldata.append(420);
+            let mut calldata = array![420];
 
             let class_hash = declare('MockChecker');
             let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
@@ -207,8 +193,7 @@ fn mock_call_double() {
 
             let dispatcher = IMockCheckerDispatcher { contract_address };
 
-            let mut mock_ret_data = ArrayTrait::new();
-            mock_ret_data.append(421);
+            let mut mock_ret_data = array![421];
             start_mock_call(contract_address, 'get_thing', mock_ret_data);
 
             let thing1 = dispatcher.get_thing();
@@ -249,7 +234,6 @@ fn mock_call_inner_call() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use array::ArrayTrait;
         use cheatcodes::{ declare, PreparedContract, deploy, start_mock_call };
 
         #[starknet::interface]
@@ -259,8 +243,7 @@ fn mock_call_inner_call() {
 
         #[test]
         fn mock_call_inner() {
-            let mut calldata = ArrayTrait::new();
-            calldata.append(420);
+            let mut calldata = array![420];
 
             let class_hash = declare('MockChecker');
             let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
@@ -268,8 +251,7 @@ fn mock_call_inner_call() {
 
             let dispatcher = IMockCheckerDispatcher { contract_address };
 
-            let mut mock_ret_data = ArrayTrait::new();
-            mock_ret_data.append(421);
+            let mut mock_ret_data = array![421];
             start_mock_call(contract_address, 'get_thing', mock_ret_data);
 
             let thing = dispatcher.get_thing_wrapper();
@@ -315,14 +297,12 @@ fn mock_call_proxy() {
 
         #[test]
         fn mock_call_proxy() {
-            let mut calldata = ArrayTrait::new();
-            calldata.append(420);
+            let mut calldata = array![420];
 
             let class_hash = declare('MockChecker');
             let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
             let mock_checker_contract_address = deploy(prepared).unwrap();
-            let mut mock_ret_data = ArrayTrait::new();
-            mock_ret_data.append(421);
+            let mut mock_ret_data = array![421];
             start_mock_call(mock_checker_contract_address, 'get_thing', mock_ret_data);
 
             let class_hash = declare('MockCheckerProxy');
@@ -366,7 +346,6 @@ fn mock_call_two_methods() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use array::ArrayTrait;
         use cheatcodes::{ declare, PreparedContract, deploy, start_mock_call };
 
         #[starknet::interface]
@@ -377,8 +356,7 @@ fn mock_call_two_methods() {
 
         #[test]
         fn mock_call_two_methods() {
-            let mut calldata = ArrayTrait::new();
-            calldata.append(420);
+            let mut calldata = array![420];
 
             let class_hash = declare('MockChecker');
             let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
@@ -386,12 +364,10 @@ fn mock_call_two_methods() {
 
             let dispatcher = IMockCheckerDispatcher { contract_address };
 
-            let mut mock_ret_data = ArrayTrait::new();
-            mock_ret_data.append(421);
+            let mut mock_ret_data = array![421];
             start_mock_call(contract_address, 'get_thing', mock_ret_data);
 
-            let mut mock_ret_data = ArrayTrait::new();
-            mock_ret_data.append(999);
+            let mut mock_ret_data = array![999];
             start_mock_call(contract_address, 'get_other_thing', mock_ret_data);
 
             let thing = dispatcher.get_thing();
