@@ -45,8 +45,18 @@ impl From<EnhancedHintError> for HintError {
         }
     }
 }
+pub enum CheatcodeError {
+    Recoverable(Vec<Felt252>),        // Return result in cairo
+    Unrecoverable(EnhancedHintError), // Fail whole test
+}
 
-fn write_cheatcode_panic(buffer: &mut MemBuffer, panic_data: &[Felt252]) {
+impl From<EnhancedHintError> for CheatcodeError {
+    fn from(error: EnhancedHintError) -> Self {
+        CheatcodeError::Unrecoverable(error)
+    }
+}
+
+pub fn write_cheatcode_panic(buffer: &mut MemBuffer, panic_data: &[Felt252]) {
     buffer.write(1).expect("Failed to insert err code");
     buffer
         .write(panic_data.len())
