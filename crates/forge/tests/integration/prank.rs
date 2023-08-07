@@ -92,7 +92,7 @@ fn start_prank_with_other_syscall() {
 
                 start_prank(contract_address, caller_address);
 
-                expect_events(array!['NewEventCheck']);
+                expect_events(array!['ContractAddressEmitted']);
                 let caller_address = dispatcher.get_caller_address_and_emit_event();
                 assert(caller_address == 123, 'Wrong caller address');
             }

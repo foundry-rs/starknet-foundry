@@ -73,6 +73,7 @@ use cairo_lang_starknet::contract::starknet_keccak;
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
 use cairo_vm::vm::runners::cairo_runner::ResourceTracker;
 use num_bigint::BigUint;
+use starknet::core::utils::cairo_short_string_to_felt;
 
 use crate::CheatedState;
 
@@ -145,7 +146,19 @@ pub fn call_contract(
                     found = true;
                 }
             }
-            assert!(found, "{} was not emitted", as_cairo_short_string(expected_event).unwrap());
+            if !found {
+                let err_data: Vec<Felt252> = vec![
+                    Felt252::from_bytes_be(
+                        &cairo_short_string_to_felt("Expected event was not emitted")
+                            .unwrap()
+                            .to_bytes_be(),
+                    ),
+                    expected_event.clone(),
+                ];
+                return Ok(CallContractOutput::Panic {
+                    panic_data: err_data,
+                });
+            }
         }
         cheated_state.expected_events = vec![];
 
