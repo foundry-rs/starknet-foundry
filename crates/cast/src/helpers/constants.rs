@@ -1,12 +1,12 @@
 pub static DEFAULT_MULTICALL_CONTENTS: &str = r#"[[call]]
-call_type = ""
+call_type = "deploy"
 class_hash = ""
 inputs = []
 id = ""
 unique = false
 
 [[call]]
-call_type = ""
+call_type = "invoke"
 contract_address = ""
 function = ""
 inputs = []

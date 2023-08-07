@@ -58,14 +58,14 @@ You can also generate multicall template with `multicall new` command.
 $ sncast multicall new
 
 [[call]]
-call_type = ""
+call_type = "deploy"
 class_hash = ""
 inputs = []
 id = ""
 unique = false
 
 [[call]]
-call_type = ""
+call_type = "invoke"
 contract_address = ""
 function = ""
 inputs = []

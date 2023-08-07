@@ -1,5 +1,5 @@
 use array::ArrayTrait;
-use forge_print::PrintTrait;
+use cheatcodes::PrintTrait;
 
 #[test]
 fn test_print() {
