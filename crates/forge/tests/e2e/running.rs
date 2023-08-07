@@ -102,7 +102,7 @@ fn simple_package_with_git_dependency() {
     
             [dependencies]
             starknet = "2.1.0-rc2"
-            cheatcodes = { git = "https://github.com/foundry-rs/starknet-foundry.git", rev = "7df1248" }
+            cheatcodes = { git = "https://github.com/foundry-rs/starknet-foundry.git" }
             "#,
         ))
         .unwrap();
@@ -135,7 +135,7 @@ fn simple_package_with_git_dependency() {
         
         Failure data:
             original value: [8111420071579136082810415440747], converted to a string: [failing check]
-        
+
         Running 1 test(s) from tests/without_prefix.cairo
         [PASS] without_prefix::five
         Tests: 9 passed, 2 failed, 0 skipped
@@ -294,13 +294,13 @@ fn with_exit_first() {
             [package]
             name = "simple_package"
             version = "0.1.0"
-            
+
             # See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest
-            
+
             [dependencies]
             starknet = "2.1.0-rc2"
             cheatcodes = {{ path = "{}" }}
-            
+
             [[target.starknet-contract]]
             sierra = true
             casm = true
@@ -455,5 +455,45 @@ fn using_corelib_names() {
         Running 1 test(s) from tests/types.cairo
         [PASS] types::test_names
         Tests: 4 passed, 0 failed, 0 skipped
+        "#});
+}
+
+#[test]
+fn should_panic() {
+    let temp = assert_fs::TempDir::new().unwrap();
+    temp.copy_from("tests/data/should_panic_test", &["**/*.cairo", "**/*.toml"])
+        .unwrap();
+
+    let snapbox = runner();
+
+    snapbox
+        .current_dir(&temp)
+        .assert()
+        .success()
+        .stdout_matches(indoc! { r#"
+        Collected 6 test(s) and 2 test file(s)
+        Running 0 test(s) from src/lib.cairo
+        Running 6 test(s) from tests/should_panic_test.cairo
+        [PASS] should_panic_test::should_panic_no_data
+
+        Success data:
+            original value: [0], converted to a string: []
+
+        [PASS] should_panic_test::should_panic_check_data
+        [PASS] should_panic_test::should_panic_multiple_messages
+        [FAIL] should_panic_test::should_panic_with_non_matching_data
+
+        Failure data:
+            Incorrect panic data
+            Actual:    [8111420071579136082810415440747] (failing check)
+            Expected:  [0] ()
+
+        [FAIL] should_panic_test::didnt_expect_panic
+
+        Failure data:
+            original value: [156092886226808350968498952598218238307], converted to a string: [unexpected panic]
+
+        [FAIL] should_panic_test::expected_panic_but_didnt
+        Tests: 3 passed, 3 failed, 0 skipped
         "#});
 }
