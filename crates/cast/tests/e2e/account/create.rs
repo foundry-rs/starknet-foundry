@@ -1,4 +1,4 @@
-use crate::helpers::constants::{CONTRACTS_DIR, NETWORK, URL};
+use crate::helpers::constants::{CONTRACTS_DIR, NETWORK, URL, DEVNET_OZ_CLASS_HASH};
 use crate::helpers::fixtures::{default_cli_args, duplicate_directory_with_salt};
 use crate::helpers::runner::runner;
 use camino::Utf8PathBuf;
@@ -22,6 +22,8 @@ pub async fn test_happy_case() {
         "my_account",
         "--salt",
         "0x1",
+        "--class-hash",
+        DEVNET_OZ_CLASS_HASH,
     ];
 
     let snapbox = runner(&args);
@@ -61,6 +63,8 @@ pub async fn test_happy_case_generate_salt() {
         "create",
         "--name",
         "my_account",
+        "--class-hash",
+        DEVNET_OZ_CLASS_HASH,
     ];
 
     let snapbox = runner(&args);
@@ -105,6 +109,8 @@ pub async fn test_happy_case_add_profile() {
         "--name",
         "my_account",
         "--add-profile",
+        "--class-hash",
+        DEVNET_OZ_CLASS_HASH,
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
@@ -151,6 +157,8 @@ pub async fn test_happy_case_accounts_file_already_exists() {
         "my_account",
         "--salt",
         "0x1",
+        "--class-hash",
+        DEVNET_OZ_CLASS_HASH,
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
@@ -194,6 +202,8 @@ pub async fn test_profile_already_exists() {
         "--name",
         "myprofile",
         "--add-profile",
+        "--class-hash",
+        DEVNET_OZ_CLASS_HASH,
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
@@ -215,7 +225,7 @@ pub async fn test_profile_already_exists() {
 pub async fn test_account_already_exists() {
     let mut args = default_cli_args();
     args.append(&mut vec![
-        "account", "create", "--name", "user1", "--salt", "0x1",
+        "account", "create", "--name", "user1", "--salt", "0x1", "--class-hash", DEVNET_OZ_CLASS_HASH,
     ]);
 
     let snapbox = runner(&args);

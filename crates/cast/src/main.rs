@@ -200,6 +200,7 @@ async fn main() -> Result<()> {
                     &network,
                     create.salt,
                     create.add_profile,
+                    create.class_hash,
                 )
                 .await;
 
@@ -215,6 +216,7 @@ async fn main() -> Result<()> {
                     &network,
                     deploy.max_fee,
                     cli.wait,
+                    deploy.class_hash,
                 )
                 .await;
 
