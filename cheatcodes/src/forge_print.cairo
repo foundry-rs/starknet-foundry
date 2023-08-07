@@ -38,6 +38,30 @@ impl ContractAddressPrintImpl of PrintTrait<starknet::ContractAddress> {
     }
 }
 
+impl I8PrintImpl of PrintTrait<i8> {
+    fn print(self: i8) {
+        Into::<_, felt252>::into(self).print();
+    }
+}
+
+impl I32PrintImpl of PrintTrait<i32> {
+    fn print(self: i32) {
+        Into::<_, felt252>::into(self).print();
+    }
+}
+
+impl I64PrintImpl of PrintTrait<i64> {
+    fn print(self: i64) {
+        Into::<_, felt252>::into(self).print();
+    }
+}
+
+impl I128PrintImpl of PrintTrait<i128> {
+    fn print(self: i128) {
+        Into::<_, felt252>::into(self).print();
+    }
+}
+
 impl U8PrintImpl of PrintTrait<u8> {
     fn print(self: u8) {
         Into::<_, felt252>::into(self).print();
