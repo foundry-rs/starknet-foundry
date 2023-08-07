@@ -10,7 +10,9 @@ impl CheatedState {
         function_name: EntryPointSelector,
         ret_data: Vec<StarkFelt>,
     ) -> Result<(), EnhancedHintError> {
-        self.mocked_functions.entry(contract_address).or_insert_with(|| HashMap::new());
+        self.mocked_functions
+            .entry(contract_address)
+            .or_insert_with(HashMap::new);
 
         let contract_mocked_fns = self.mocked_functions.get_mut(&contract_address).unwrap();
         contract_mocked_fns.insert(function_name, ret_data);

@@ -226,8 +226,9 @@ impl CairoHintProcessor<'_> {
                     inputs[0].clone().to_be_bytes(),
                 )?)?);
                 let function_name = inputs[1].clone();
-                let function_name = as_cairo_short_string(&function_name)
-                    .unwrap_or_else(|| panic!("Failed to convert {function_name:?} to Cairo short str"));
+                let function_name = as_cairo_short_string(&function_name).unwrap_or_else(|| {
+                    panic!("Failed to convert {function_name:?} to Cairo short str")
+                });
                 let function_name = selector_from_name(function_name.as_str());
 
                 let ret_data_length = inputs[2]
@@ -246,11 +247,13 @@ impl CairoHintProcessor<'_> {
                     inputs[0].clone().to_be_bytes(),
                 )?)?);
                 let function_name = inputs[1].clone();
-                let function_name = as_cairo_short_string(&function_name)
-                    .unwrap_or_else(|| panic!("Failed to convert {function_name:?} to Cairo short str"));
+                let function_name = as_cairo_short_string(&function_name).unwrap_or_else(|| {
+                    panic!("Failed to convert {function_name:?} to Cairo short str")
+                });
                 let function_name = selector_from_name(function_name.as_str());
 
-                self.cheated_state.stop_mock_call(contract_address, function_name)
+                self.cheated_state
+                    .stop_mock_call(contract_address, function_name)
             }
             "declare" => self.cheated_state.declare(
                 &mut buffer,
