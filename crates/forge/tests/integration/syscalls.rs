@@ -161,8 +161,8 @@ fn test_call_syscall_fail_in_test_fn() {
         &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
-        Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
-        &test.contracts(corelib().path()).unwrap(),
+        &corelib_path(),
+        &test.contracts(&corelib_path()).unwrap(),
         &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
     )
     .unwrap();
