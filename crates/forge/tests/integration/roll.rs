@@ -1,4 +1,4 @@
-use crate::integration::common::corelib::{corelib, predeployed_contracts};
+use crate::integration::common::corelib::{corelib_path, predeployed_contracts};
 use crate::integration::common::runner::Contract;
 use crate::{assert_passed, test_case};
 use camino::Utf8PathBuf;
@@ -17,8 +17,7 @@ fn start_roll_simple() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use cheatcodes::PreparedContract;
-            use forge_print::PrintTrait;
+            use cheatcodes::{ declare, PreparedContract, deploy, start_roll };
 
             #[starknet::interface]
             trait IRollChecker<TContractState> {
@@ -51,8 +50,8 @@ fn start_roll_simple() {
         &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
-        Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
-        &test.contracts(corelib().path()).unwrap(),
+        &corelib_path(),
+        &test.contracts(&corelib_path()).unwrap(),
         &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
     )
     .unwrap();
@@ -71,8 +70,8 @@ fn start_roll_with_other_syscall() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use cheatcodes::PreparedContract;
-
+            use cheatcodes::{ declare, PreparedContract, deploy, start_roll };
+            
             #[starknet::interface]
             trait IRollChecker<TContractState> {
                 fn get_block_number_and_emit_event(ref self: TContractState) -> u64;
@@ -104,8 +103,8 @@ fn start_roll_with_other_syscall() {
         &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
-        Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
-        &test.contracts(corelib().path()).unwrap(),
+        &corelib_path(),
+        &test.contracts(&corelib_path()).unwrap(),
         &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
     )
     .unwrap();
@@ -126,8 +125,7 @@ fn start_roll_in_constructor_test() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use cheatcodes::PreparedContract;
-            use forge_print::PrintTrait;
+            use cheatcodes::{ declare, PreparedContract, deploy, start_roll };
 
             #[starknet::interface]
             trait IConstructorRollChecker<TContractState> {
@@ -140,7 +138,7 @@ fn start_roll_in_constructor_test() {
                 let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
                 let contract_address: ContractAddress = 2598896470772924212281968896271340780432065735045468431712403008297614014532.try_into().unwrap();
                 start_roll(contract_address, 234);
-                let contract_address: ContractAddress = deploy(prepared).unwrap().try_into().unwrap();
+                let contract_address = deploy(prepared).unwrap();
 
                 let dispatcher = IConstructorRollCheckerDispatcher { contract_address };
                 assert(dispatcher.get_stored_block_number() == 234, 'Wrong stored blk_nb');
@@ -159,8 +157,8 @@ fn start_roll_in_constructor_test() {
         &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
-        Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
-        &test.contracts(corelib().path()).unwrap(),
+        &corelib_path(),
+        &test.contracts(&corelib_path()).unwrap(),
         &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
     )
     .unwrap();
@@ -179,8 +177,7 @@ fn stop_roll() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use cheatcodes::PreparedContract;
-            use forge_print::PrintTrait;
+            use cheatcodes::{ declare, PreparedContract, deploy, start_roll, stop_roll };
 
             #[starknet::interface]
             trait IRollChecker<TContractState> {
@@ -220,8 +217,8 @@ fn stop_roll() {
         &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
-        Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
-        &test.contracts(corelib().path()).unwrap(),
+        &corelib_path(),
+        &test.contracts(&corelib_path()).unwrap(),
         &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
     )
     .unwrap();
@@ -240,8 +237,7 @@ fn double_roll() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use cheatcodes::PreparedContract;
-            use forge_print::PrintTrait;
+            use cheatcodes::{ declare, PreparedContract, deploy, start_roll, stop_roll };
 
             #[starknet::interface]
             trait IRollChecker<TContractState> {
@@ -282,8 +278,8 @@ fn double_roll() {
         &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
-        Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
-        &test.contracts(corelib().path()).unwrap(),
+        &corelib_path(),
+        &test.contracts(&corelib_path()).unwrap(),
         &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
     )
     .unwrap();
@@ -303,7 +299,8 @@ fn start_roll_with_proxy() {
             use traits::Into;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use cheatcodes::PreparedContract;
+            use cheatcodes::{ declare, PreparedContract, deploy, start_roll };
+            
             #[starknet::interface]
             trait IRollCheckerProxy<TContractState> {
                 fn get_roll_checkers_block_info(ref self: TContractState, address: ContractAddress) -> u64;
@@ -341,8 +338,8 @@ fn start_roll_with_proxy() {
         &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
-        Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
-        &test.contracts(corelib().path()).unwrap(),
+        &corelib_path(),
+        &test.contracts(&corelib_path()).unwrap(),
         &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
     )
     .unwrap();
@@ -362,7 +359,7 @@ fn start_roll_with_library_call() {
             use traits::Into;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use cheatcodes::PreparedContract;
+            use cheatcodes::{ declare, PreparedContract, deploy, start_roll };
             use starknet::ClassHash;
 
             #[starknet::interface]
@@ -403,8 +400,8 @@ fn start_roll_with_library_call() {
         &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
-        Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
-        &test.contracts(corelib().path()).unwrap(),
+        &corelib_path(),
+        &test.contracts(&corelib_path()).unwrap(),
         &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
     )
     .unwrap();

@@ -51,7 +51,7 @@ struct Cli {
     #[clap(short, long)]
     json: bool,
 
-    // If passed, command will wait until transaction is accepted or rejected
+    /// If passed, command will wait until transaction is accepted or rejected
     #[clap(short, long)]
     wait: bool,
 
@@ -73,7 +73,7 @@ enum Commands {
     /// Invoke a contract
     Invoke(Invoke),
 
-    /// execute multiple calls
+    /// Execute multiple calls
     Multicall(Multicall),
 
     /// Create and deploy an account
@@ -168,7 +168,7 @@ async fn main() -> Result<()> {
                 starknet_commands::multicall::Commands::New(new) => {
                     let result = starknet_commands::multicall::new::new(
                         new.output_path.clone(),
-                        new.overwrite.unwrap_or(false),
+                        new.overwrite,
                     )?;
                     println!("{result}");
                 }

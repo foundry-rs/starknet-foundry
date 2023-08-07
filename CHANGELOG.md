@@ -11,7 +11,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
+- `#[should_panic]` attribute support
+- Documentation to public methods
 - `mock_call` cheatcode
+
+#### Changed
+
+- Exported cheatcodes as a Scarb package, now you have to import them explicitly with e.g. `use cheatcodes::declare`
+  and add them as a dependency to your Scarb.toml
+
+```toml
+[dependencies]
+# ...
+cheatcodes = { git = "https://github.com/foundry-rs/starknet-foundry", tag = "0.4.0" }
+```
+
+- Moved `ForgeConfigFromScarb` to `scarb.rs` and renamed to `ForgeConfig`
+- Made private:
+    - `print_collected_tests_count`
+    - `print_running_tests`
+    - `print_test_result`
+    - `print_test_summary`
+    - `TestCaseSummary::from_run_result`
+    - `TestCaseSummary::skipped`
+    - `extract_result_data`
+    - `StarknetArtifacts`
+    - `StarknetContractArtifactPaths`
+    - `StarknetContract`
+- Split `dependencies_for_package` into separate methods:
+    - `paths_for_package`
+    - `corelib_for_package`
+    - `target_name_for_package`
+    - `compilation_unit_for_package`
 
 ## [0.3.0] - 2023-08-02
 
