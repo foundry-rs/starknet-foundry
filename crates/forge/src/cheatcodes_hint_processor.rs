@@ -225,10 +225,10 @@ impl CairoHintProcessor<'_> {
                 let contract_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
                     inputs[0].clone().to_be_bytes(),
                 )?)?);
-                let fn_name = inputs[1].clone();
-                let fn_name = as_cairo_short_string(&fn_name)
-                    .unwrap_or_else(|| panic!("Failed to convert {fn_name:?} to Cairo short str"));
-                let fn_name = selector_from_name(fn_name.as_str());
+                let function_name = inputs[1].clone();
+                let function_name = as_cairo_short_string(&function_name)
+                    .unwrap_or_else(|| panic!("Failed to convert {function_name:?} to Cairo short str"));
+                let function_name = selector_from_name(function_name.as_str());
 
                 let ret_data_length = inputs[2]
                     .to_usize()
@@ -239,18 +239,18 @@ impl CairoHintProcessor<'_> {
                 }
 
                 self.cheated_state
-                    .start_mock_call(contract_address, fn_name, ret_data)
+                    .start_mock_call(contract_address, function_name, ret_data)
             }
             "stop_mock_call" => {
                 let contract_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
                     inputs[0].clone().to_be_bytes(),
                 )?)?);
-                let fn_name = inputs[1].clone();
-                let fn_name = as_cairo_short_string(&fn_name)
-                    .unwrap_or_else(|| panic!("Failed to convert {fn_name:?} to Cairo short str"));
-                let fn_name = selector_from_name(fn_name.as_str());
+                let function_name = inputs[1].clone();
+                let function_name = as_cairo_short_string(&function_name)
+                    .unwrap_or_else(|| panic!("Failed to convert {function_name:?} to Cairo short str"));
+                let function_name = selector_from_name(function_name.as_str());
 
-                self.cheated_state.stop_mock_call(contract_address, fn_name)
+                self.cheated_state.stop_mock_call(contract_address, function_name)
             }
             "declare" => self.cheated_state.declare(
                 &mut buffer,

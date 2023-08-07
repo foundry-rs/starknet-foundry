@@ -7,16 +7,16 @@ impl CheatedState {
     pub fn start_mock_call(
         &mut self,
         contract_address: ContractAddress,
-        fn_name: EntryPointSelector,
+        function_name: EntryPointSelector,
         ret_data: Vec<StarkFelt>,
     ) -> Result<(), EnhancedHintError> {
         if let std::collections::hash_map::Entry::Vacant(e) =
             self.mocked_functions.entry(contract_address)
         {
-            e.insert(HashMap::from([(fn_name, ret_data)]));
+            e.insert(HashMap::from([(function_name, ret_data)]));
         } else {
             let contract_mocked_fns = self.mocked_functions.get_mut(&contract_address).unwrap();
-            contract_mocked_fns.insert(fn_name, ret_data);
+            contract_mocked_fns.insert(function_name, ret_data);
         }
 
         Ok(())
@@ -25,13 +25,13 @@ impl CheatedState {
     pub fn stop_mock_call(
         &mut self,
         contract_address: ContractAddress,
-        fn_name: EntryPointSelector,
+        function_name: EntryPointSelector,
     ) -> Result<(), EnhancedHintError> {
         if let std::collections::hash_map::Entry::Occupied(mut e) =
             self.mocked_functions.entry(contract_address)
         {
             let contract_mocked_fns = e.get_mut();
-            contract_mocked_fns.remove(&fn_name);
+            contract_mocked_fns.remove(&function_name);
         }
 
         Ok(())
