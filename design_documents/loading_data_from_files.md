@@ -78,7 +78,7 @@ trait TxtParser {
 }
 
 impl TxtParserImpl of JsonParser {
-    fn from_txt(self: @File) -> Result<Array<felt252>, felt252> {
+    fn from_json(self: @File) -> Result<Array<felt252>, felt252> {
         // ...
     }
 }
