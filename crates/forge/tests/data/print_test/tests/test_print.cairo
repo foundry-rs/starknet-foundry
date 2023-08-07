@@ -6,6 +6,11 @@ fn test_print() {
     123.print();
     'aaa'.print();
     3618502788666131213697322783095070105623107215331596699973092056135872020480.print();
+    let u32: u32 = 123;
+    u32.print();
+
+    let usize: usize = 1;
+    usize.print();
 
     let mut arr = ArrayTrait::new();
     arr.append(152);

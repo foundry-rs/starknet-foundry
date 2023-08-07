@@ -44,6 +44,12 @@ impl U8PrintImpl of PrintTrait<u8> {
     }
 }
 
+impl U32PrintImpl of PrintTrait<u32> {
+    fn print(self: u32) {
+        Into::<_, felt252>::into(self).print();
+    }
+}
+
 impl U64PrintImpl of PrintTrait<u64> {
     fn print(self: u64) {
         Into::<_, felt252>::into(self).print();
