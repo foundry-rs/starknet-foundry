@@ -3,9 +3,15 @@ use cheatcodes::PrintTrait;
 
 #[test]
 fn test_print() {
-    123.print();
-    'aaa'.print();
-    3618502788666131213697322783095070105623107215331596699973092056135872020480.print();
+    let felt252: felt252 = 123;
+    felt252.print();
+
+    let felt252_2: felt252 = 3618502788666131213697322783095070105623107215331596699973092056135872020480;
+    felt252_2.print();
+
+    let string = 'aaa';
+    string.print();
+
 
     let u8: u8 = 12;
     u8.print();
@@ -49,6 +55,8 @@ fn test_print() {
     arr.append(149);
     arr.print();
 
-    (1 == 5).print();
+    let bool: bool = 1 == 5;
+    bool.print();
+
     assert(1 == 1, 'simple check');
 }
