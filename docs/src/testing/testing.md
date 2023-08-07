@@ -27,7 +27,7 @@ Now run forge using a command:
 $ snforge
 Collected 1 test(s) and 1 test file(s)
 Running 1 test(s) from src/lib.cairo
-[PASS] src::test_sum
+[PASS] package_name::test_sum
 Tests: 1 passed, 0 failed, 0 skipped
 ```
 
@@ -65,7 +65,7 @@ fn failing() {
 $ snforge
 Collected 1 test(s) and 1 test file(s)
 Running 1 test(s) from src/lib.cairo
-[FAIL] src::failing
+[FAIL] package_name::failing
 
 Failure data:
     [6381921], converted to a string: [aaa]

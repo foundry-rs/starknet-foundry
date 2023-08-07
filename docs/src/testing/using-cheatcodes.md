@@ -71,7 +71,7 @@ However, when running this test, we will get a failure with a message
 $ snforge
 Collected 1 test(s) and 1 test file(s)
 Running 1 test(s) from src/lib.cairo
-[FAIL] src::call_and_invoke
+[FAIL] package_name::call_and_invoke
 
 Failure data:
     original value: [1234], converted to a string: [user is not allowed]
@@ -117,7 +117,7 @@ The test will now pass without an error
 $ snforge
 Collected 1 test(s) and 1 test file(s)
 Running 1 test(s) from src/lib.cairo
-[PASS] src::call_and_invoke
+[PASS] package_name::call_and_invoke
 Tests: 1 passed, 0 failed, 0 skipped
 ```
 
@@ -148,7 +148,7 @@ fn call_and_invoke() {
 $ snforge
 Collected 1 test(s) and 1 test file(s)
 Running 1 test(s) from src/lib.cairo
-[FAIL] src::call_and_invoke
+[FAIL] package_name::call_and_invoke
 
 Failure data:
     original value: [1234], converted to a string: [user is not allowed]
