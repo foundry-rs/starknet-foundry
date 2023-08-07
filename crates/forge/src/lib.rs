@@ -318,7 +318,7 @@ fn run_tests_from_file(
         tests.relative_path.as_str()
     };
 
-    pretty_printing::print_running_tests(&tests_source, tests.test_cases.len());
+    pretty_printing::print_running_tests(tests_source, tests.test_cases.len());
 
     let mut results = vec![];
     for (i, case) in tests.test_cases.iter().enumerate() {
