@@ -22,4 +22,9 @@ Salt for the account address. If omitted random one will be generated.
 ## `--add-profile, -a`
 Optional.
 
-If passed, a profile with corresponding data will be added to Scarb.toml
+If passed, a profile with corresponding data will be added to Scarb.toml.
+
+## `--class-hash, -c`
+Optional.
+
+Class hash of a custom openzeppelin account contract declared to the network.

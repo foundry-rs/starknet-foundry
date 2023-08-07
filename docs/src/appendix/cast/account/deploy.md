@@ -15,3 +15,8 @@ Name of the (previously created) account to be deployed.
 Required.
 
 Max fee for deploy account transaction.
+
+## `--class-hash, -c`
+Optional.
+
+Class hash of a custom openzeppelin account contract declared to the network.
