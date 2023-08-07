@@ -31,10 +31,10 @@ fn test_print() {
     let u256: u256 = 3618502788666131213697322783095070105623107215331596699973092056135872020480;
     u256.print();
 
-    let usize: usize = 1;
+    let usize: usize = 2;
     usize.print();
 
-    let i8: i8 = 12;
+    let i8: i8 = 11;
     i8.print();
 
     let i16: i16 = 1234;
