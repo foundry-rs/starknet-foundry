@@ -9,7 +9,7 @@ Cancels the [`start_mock_call`](./start_mock_call.md) for the function `function
 
 ```rust
 #[test]
-fn test_prank() {
+fn test_mock_call() {
     // ...
     
     stop_mock_call(contract_address, function_name);
