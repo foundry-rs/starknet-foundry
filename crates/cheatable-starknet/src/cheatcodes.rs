@@ -11,6 +11,7 @@ use thiserror::Error;
 
 pub mod declare;
 pub mod deploy;
+pub mod expect_events;
 pub mod prank;
 pub mod roll;
 pub mod warp;

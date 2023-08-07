@@ -68,8 +68,11 @@ use blockifier::execution::syscalls::{
     LibraryCallRequest, SyscallRequest, SyscallRequestWrapper, SyscallResponse,
     SyscallResponseWrapper, SyscallResult,
 };
+use cairo_lang_runner::short_string::as_cairo_short_string;
+use cairo_lang_starknet::contract::starknet_keccak;
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
 use cairo_vm::vm::runners::cairo_runner::ResourceTracker;
+use num_bigint::BigUint;
 
 use crate::CheatedState;
 
@@ -87,7 +90,7 @@ pub fn call_contract(
     entry_point_selector: &Felt252,
     calldata: &[Felt252],
     blockifier_state: &mut CachedState<DictStateReader>,
-    cheated_state: &CheatedState,
+    cheated_state: &mut CheatedState,
 ) -> Result<CallContractOutput> {
     let contract_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
         contract_address.to_be_bytes(),
@@ -133,6 +136,19 @@ pub fn call_contract(
     );
 
     if let Ok(call_info) = exec_result {
+        for expected_event in &cheated_state.expected_events {
+            let mut found = false;
+            for event in &call_info.execution.events {
+                if starknet_keccak(as_cairo_short_string(expected_event).unwrap().as_bytes())
+                    == BigUint::from_bytes_be(event.event.keys[0].0.bytes())
+                {
+                    found = true;
+                }
+            }
+            assert!(found, "{} was not emitted", as_cairo_short_string(expected_event).unwrap());
+        }
+        cheated_state.expected_events = vec![];
+
         let raw_return_data = &call_info.execution.retdata.0;
 
         let return_data = raw_return_data

@@ -11,6 +11,7 @@ pub struct CheatedState {
     pub rolled_contracts: HashMap<ContractAddress, Felt252>,
     pub pranked_contracts: HashMap<ContractAddress, ContractAddress>,
     pub warped_contracts: HashMap<ContractAddress, Felt252>,
+    pub expected_events: Vec<Felt252>,
 }
 
 impl CheatedState {
@@ -20,6 +21,7 @@ impl CheatedState {
             rolled_contracts: HashMap::new(),
             pranked_contracts: HashMap::new(),
             warped_contracts: HashMap::new(),
+            expected_events: vec![],
         }
     }
 }

@@ -73,8 +73,8 @@ fn start_prank_with_other_syscall() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use cheatcodes::{ declare, PreparedContract, deploy, start_prank };
-            
+            use cheatcodes::{ declare, PreparedContract, deploy, start_prank, expect_events };
+
             #[starknet::interface]
             trait IPrankChecker<TContractState> {
                 fn get_caller_address_and_emit_event(ref self: TContractState) -> felt252;
@@ -92,6 +92,7 @@ fn start_prank_with_other_syscall() {
 
                 start_prank(contract_address, caller_address);
 
+                expect_events(array!['NewEventCheck']);
                 let caller_address = dispatcher.get_caller_address_and_emit_event();
                 assert(caller_address == 123, 'Wrong caller address');
             }
@@ -132,7 +133,7 @@ fn start_prank_in_constructor_test() {
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
             use cheatcodes::{ declare, PreparedContract, deploy, start_prank };
-            
+
             #[starknet::interface]
             trait IConstructorPrankChecker<TContractState> {
                 fn get_stored_caller_address(ref self: TContractState) -> ContractAddress;
@@ -314,7 +315,7 @@ fn start_prank_with_proxy() {
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
             use cheatcodes::{ declare, PreparedContract, deploy, start_prank, stop_prank };
-            
+
             #[starknet::interface]
             trait IPrankCheckerProxy<TContractState> {
                 fn get_prank_checkers_caller_address(ref self: TContractState, address: ContractAddress) -> felt252;

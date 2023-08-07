@@ -117,3 +117,7 @@ fn stop_warp(contract_address: ContractAddress) {
     let contract_address_felt: felt252 = contract_address.into();
     cheatcode::<'stop_warp'>(array![contract_address_felt].span());
 }
+
+fn expect_events(events: Array<felt252>) {
+    cheatcode::<'expect_events'>(events.span());
+}

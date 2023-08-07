@@ -11,6 +11,7 @@ mod PrankChecker {
     use starknet::ContractAddress;
     use option::Option;
     use traits::Into;
+    use array::ArrayTrait;
 
     #[storage]
     struct Storage {
@@ -20,7 +21,12 @@ mod PrankChecker {
     #[event]
     #[derive(Drop, starknet::Event)]
     enum Event {
-        CallerAddressEmitted: CallerAddressEmitted
+        NewEventCheck: NewEventCheck,
+        CallerAddressEmitted: CallerAddressEmitted,
+    }
+
+    #[derive(Drop, starknet::Event)]
+    struct NewEventCheck {
     }
 
     #[derive(Drop, starknet::Event)]
@@ -36,7 +42,7 @@ mod PrankChecker {
 
         fn get_caller_address_and_emit_event(ref self: ContractState) -> felt252 {
             let caller_address = starknet::get_caller_address().into();
-            self.emit(Event::CallerAddressEmitted(CallerAddressEmitted { caller_address }));
+            self.emit(Event::NewEventCheck(NewEventCheck { }));
             caller_address
         }
     }
