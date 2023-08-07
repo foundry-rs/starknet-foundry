@@ -1,4 +1,4 @@
-use crate::integration::common::corelib::{corelib, predeployed_contracts};
+use crate::integration::common::corelib::{corelib_path, predeployed_contracts};
 use crate::integration::common::runner::Contract;
 use crate::{assert_passed, test_case};
 use camino::Utf8PathBuf;
@@ -12,8 +12,8 @@ fn start_mock_call_simple() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use cheatcodes::PreparedContract;
         use array::ArrayTrait;
+        use cheatcodes::{ declare, PreparedContract, deploy, start_mock_call };
 
         #[starknet::interface]
         trait IMockChecker<TContractState> {
@@ -72,8 +72,8 @@ fn start_mock_call_simple() {
         &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
-        Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
-        &test.contracts(corelib().path()).unwrap(),
+        &corelib_path(),
+        &test.contracts(&corelib_path()).unwrap(),
         &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
     )
     .unwrap();
@@ -86,8 +86,8 @@ fn stop_mock_call_simple() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use cheatcodes::PreparedContract;
         use array::ArrayTrait;
+        use cheatcodes::{ declare, PreparedContract, deploy, start_mock_call, stop_mock_call };
 
         #[starknet::interface]
         trait IMockChecker<TContractState> {
@@ -147,8 +147,8 @@ fn stop_mock_call_simple() {
         &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
-        Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
-        &test.contracts(corelib().path()).unwrap(),
+        &corelib_path(),
+        &test.contracts(&corelib_path()).unwrap(),
         &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
     )
     .unwrap();
@@ -161,8 +161,8 @@ fn mock_call_double() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use cheatcodes::PreparedContract;
         use array::ArrayTrait;
+        use cheatcodes::{ declare, PreparedContract, deploy, start_mock_call, stop_mock_call };
 
         #[starknet::interface]
         trait IMockChecker<TContractState> {
@@ -235,8 +235,8 @@ fn mock_call_double() {
         &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
-        Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
-        &test.contracts(corelib().path()).unwrap(),
+        &corelib_path(),
+        &test.contracts(&corelib_path()).unwrap(),
         &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
     )
     .unwrap();
@@ -244,14 +244,13 @@ fn mock_call_double() {
 }
 
 #[test]
-#[should_panic]
 fn mock_call_inner_call() {
     let test = test_case!(
         indoc!(
             r#"
         use result::ResultTrait;
-        use cheatcodes::PreparedContract;
         use array::ArrayTrait;
+        use cheatcodes::{ declare, PreparedContract, deploy, start_mock_call };
 
         #[starknet::interface]
         trait IMockChecker<TContractState> {
@@ -275,7 +274,7 @@ fn mock_call_inner_call() {
 
             let thing = dispatcher.get_thing_wrapper();
 
-            assert(thing == 421, 'Incorrect thing');
+            assert(thing == 420, 'Incorrect thing');
         }
     "#
         ),
@@ -291,8 +290,8 @@ fn mock_call_inner_call() {
         &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
-        Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
-        &test.contracts(corelib().path()).unwrap(),
+        &corelib_path(),
+        &test.contracts(&corelib_path()).unwrap(),
         &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
     )
     .unwrap();
@@ -305,9 +304,9 @@ fn mock_call_proxy() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use cheatcodes::PreparedContract;
         use array::ArrayTrait;
         use starknet::ContractAddress;
+        use cheatcodes::{ declare, PreparedContract, deploy, start_mock_call };
 
         #[starknet::interface]
         trait IMockCheckerProxy<TContractState> {
@@ -353,8 +352,8 @@ fn mock_call_proxy() {
         &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
-        Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
-        &test.contracts(corelib().path()).unwrap(),
+        &corelib_path(),
+        &test.contracts(&corelib_path()).unwrap(),
         &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
     )
     .unwrap();
@@ -367,8 +366,8 @@ fn mock_call_two_methods() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use cheatcodes::PreparedContract;
         use array::ArrayTrait;
+        use cheatcodes::{ declare, PreparedContract, deploy, start_mock_call };
 
         #[starknet::interface]
         trait IMockChecker<TContractState> {
@@ -415,8 +414,8 @@ fn mock_call_two_methods() {
         &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
-        Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
-        &test.contracts(corelib().path()).unwrap(),
+        &corelib_path(),
+        &test.contracts(&corelib_path()).unwrap(),
         &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
     )
     .unwrap();

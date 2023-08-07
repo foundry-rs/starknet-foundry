@@ -2,7 +2,7 @@ use starknet::ContractAddress;
 
 #[starknet::interface]
 trait IMockChecker<TContractState> {
-    fn get_thing(self: @TContractState) -> felt252;
+    fn get_thing(ref self: TContractState) -> felt252;
 }
 
 
