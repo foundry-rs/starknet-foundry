@@ -63,6 +63,8 @@ pub fn setup_project_without_cairo_project_toml(
     path: &Path,
     crate_name: &str,
 ) -> Result<Vec<CrateId>, ProjectError> {
+    assert!(path.is_dir(), "Project path must be a directory");
+
     match build_project_config(path, crate_name) {
         Ok(config) => {
             let main_crate_ids = get_main_crate_ids_from_project(db, &config);
