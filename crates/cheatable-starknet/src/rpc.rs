@@ -690,16 +690,7 @@ fn get_ret_data_by_call_entry_point<'a>(
     cheated_state: &'a CheatedState,
 ) -> Option<&'a Vec<StarkFelt>> {
     if let Some(contract_address) = call.code_address {
-        if cheated_state
-            .mocked_functions
-            .contains_key(&contract_address)
-        {
-            let contract_functions = cheated_state
-                .mocked_functions
-                .get(&contract_address)
-                .unwrap_or_else(|| {
-                    panic!("ContractAddress {contract_address:?} not found in mocked functions map")
-                });
+        if let Some(contract_functions) = cheated_state.mocked_functions.get(&contract_address) {
             let entrypoint_selector = call.entry_point_selector;
 
             let ret_data = contract_functions.get(&entrypoint_selector);
