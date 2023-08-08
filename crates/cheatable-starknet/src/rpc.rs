@@ -139,7 +139,7 @@ pub fn call_contract(
     if let Ok(call_info) = exec_result {
         let panic_data = check_emitted_events(cheated_state, &call_info);
         if !panic_data.is_empty() {
-            return Ok(CallContractOutput::Panic {panic_data})
+            return Ok(CallContractOutput::Panic { panic_data });
         }
 
         let raw_return_data = &call_info.execution.retdata.0;
@@ -777,10 +777,7 @@ fn cheatable_run_entry_point(
 }
 
 /// Check if events defined in `expect_events` cheatcode were emitted
-fn check_emitted_events(
-    cheated_state: &mut CheatedState,
-    call_info: &CallInfo,
-) -> Vec<Felt252> {
+fn check_emitted_events(cheated_state: &mut CheatedState, call_info: &CallInfo) -> Vec<Felt252> {
     for expected_event in &cheated_state.expected_events {
         let mut found = false;
         for event in &call_info.execution.events {
