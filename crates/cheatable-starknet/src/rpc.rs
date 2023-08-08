@@ -137,33 +137,10 @@ pub fn call_contract(
     );
 
     if let Ok(call_info) = exec_result {
-        for expected_event in &cheated_state.expected_events {
-            let mut found = false;
-            for event in &call_info.execution.events {
-                if starknet_keccak(
-                    as_cairo_short_string(&expected_event.name)
-                        .unwrap()
-                        .as_bytes(),
-                ) == BigUint::from_bytes_be(event.event.keys[0].0.bytes())
-                {
-                    found = true;
-                }
-            }
-            if !found {
-                let err_data: Vec<Felt252> = vec![
-                    Felt252::from_bytes_be(
-                        &cairo_short_string_to_felt("Expected event was not emitted")
-                            .unwrap()
-                            .to_bytes_be(),
-                    ),
-                    expected_event.name.clone(),
-                ];
-                return Ok(CallContractOutput::Panic {
-                    panic_data: err_data,
-                });
-            }
+        let panic_data = check_emitted_events(cheated_state, &call_info);
+        if !panic_data.is_empty() {
+            return Ok(CallContractOutput::Panic {panic_data})
         }
-        cheated_state.expected_events = vec![];
 
         let raw_return_data = &call_info.execution.retdata.0;
 
@@ -797,4 +774,37 @@ fn cheatable_run_entry_point(
     )?;
 
     Ok(())
+}
+
+/// Check if events defined in `expect_events` cheatcode were emitted
+fn check_emitted_events(
+    cheated_state: &mut CheatedState,
+    call_info: &CallInfo,
+) -> Vec<Felt252> {
+    for expected_event in &cheated_state.expected_events {
+        let mut found = false;
+        for event in &call_info.execution.events {
+            if starknet_keccak(
+                as_cairo_short_string(&expected_event.name)
+                    .unwrap()
+                    .as_bytes(),
+            ) == BigUint::from_bytes_be(event.event.keys[0].0.bytes())
+            {
+                found = true;
+            }
+        }
+        if !found {
+            let err_data: Vec<Felt252> = vec![
+                Felt252::from_bytes_be(
+                    &cairo_short_string_to_felt("Expected event was not emitted")
+                        .unwrap()
+                        .to_bytes_be(),
+                ),
+                expected_event.name.clone(),
+            ];
+            return err_data;
+        }
+    }
+    cheated_state.expected_events = vec![];
+    vec![]
 }
