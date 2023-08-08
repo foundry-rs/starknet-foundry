@@ -58,14 +58,14 @@ You can also generate multicall template with `multicall new` command.
 $ sncast multicall new
 
 [[call]]
-call_type = ""
+call_type = "deploy"
 class_hash = ""
 inputs = []
 id = ""
 unique = false
 
 [[call]]
-call_type = ""
+call_type = "invoke"
 contract_address = ""
 function = ""
 inputs = []
@@ -88,7 +88,7 @@ If there is a file with the same name as passed in the `--output-path` argument 
 
 ```shell
 $ sncast multicall new \
-    --output-path ./new_multicall_template.toml
+    --output-path ./new_multicall_template.toml \
     --overwrite
 
 Multicall template successfully saved in ./new_multicall_template.toml

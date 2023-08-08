@@ -15,9 +15,9 @@ use starknet::signers::LocalWallet;
 use std::collections::HashMap;
 
 #[derive(Args, Debug)]
-#[command(about = "Declare a contract to starknet", long_about = None)]
+#[command(about = "Execute a multicall from a .toml file", long_about = None)]
 pub struct Run {
-    /// path to the toml file with declared operations
+    /// Path to the toml file with declared operations
     #[clap(short = 'p', long = "path")]
     pub path: Utf8PathBuf,
 

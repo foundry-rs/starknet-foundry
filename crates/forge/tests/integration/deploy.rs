@@ -1,4 +1,4 @@
-use crate::integration::common::corelib::{corelib, predeployed_contracts};
+use crate::integration::common::corelib::{corelib_path, predeployed_contracts};
 use crate::integration::common::runner::Contract;
 use crate::{assert_case_output_contains, assert_failed, assert_passed, test_case};
 use camino::Utf8PathBuf;
@@ -12,8 +12,7 @@ fn error_handling() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use cheatcodes::RevertedTransactionTrait;
-        use cheatcodes::PreparedContract;
+        use cheatcodes::{ declare, PreparedContract, deploy };
         use array::ArrayTrait;
         
         #[test]
@@ -60,11 +59,12 @@ fn error_handling() {
 
     let result = run(
         &test.path().unwrap(),
+        &String::from("src"),
         &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
-        Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
-        &test.contracts(corelib().path()).unwrap(),
+        &corelib_path(),
+        &test.contracts(&corelib_path()).unwrap(),
         &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
     )
     .unwrap();
@@ -78,8 +78,7 @@ fn deploy_fails_on_calldata_when_contract_has_no_constructor() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use cheatcodes::RevertedTransactionTrait;
-        use cheatcodes::PreparedContract;
+        use cheatcodes::{ declare, PreparedContract, deploy };
         use array::ArrayTrait; 
             
         #[test]
@@ -105,11 +104,12 @@ fn deploy_fails_on_calldata_when_contract_has_no_constructor() {
 
     let result = run(
         &test.path().unwrap(),
+        &String::from("src"),
         &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
-        Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
-        &test.contracts(corelib().path()).unwrap(),
+        &corelib_path(),
+        &test.contracts(&corelib_path()).unwrap(),
         &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
     )
     .unwrap();
@@ -123,8 +123,7 @@ fn test_deploy_fails_on_missing_constructor_arguments() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use cheatcodes::RevertedTransactionTrait;
-        use cheatcodes::PreparedContract;
+        use cheatcodes::{ declare, PreparedContract, deploy };
         use array::ArrayTrait; 
             
         #[test]
@@ -158,11 +157,12 @@ fn test_deploy_fails_on_missing_constructor_arguments() {
 
     let result = run(
         &test.path().unwrap(),
+        &String::from("src"),
         &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
-        Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
-        &test.contracts(corelib().path()).unwrap(),
+        &corelib_path(),
+        &test.contracts(&corelib_path()).unwrap(),
         &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
     )
     .unwrap();
@@ -176,8 +176,7 @@ fn test_deploy_fails_on_too_many_constructor_arguments() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use cheatcodes::RevertedTransactionTrait;
-        use cheatcodes::PreparedContract;
+        use cheatcodes::{ declare, PreparedContract, deploy };
         use array::ArrayTrait;
 
         #[test]
@@ -216,11 +215,12 @@ fn test_deploy_fails_on_too_many_constructor_arguments() {
 
     let result = run(
         &test.path().unwrap(),
+        &String::from("src"),
         &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
-        Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
-        &test.contracts(corelib().path()).unwrap(),
+        &corelib_path(),
+        &test.contracts(&corelib_path()).unwrap(),
         &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
     )
     .unwrap();
@@ -235,8 +235,7 @@ fn test_deploy_fails_with_incorrect_class_hash() {
             r#"
         use result::ResultTrait;
         use option::OptionTrait;
-        use cheatcodes::RevertedTransactionTrait;
-        use cheatcodes::PreparedContract;
+        use cheatcodes::{ declare, PreparedContract, deploy };
         use array::ArrayTrait;
         use traits::TryInto;
         use starknet::Felt252TryIntoClassHash;
@@ -269,11 +268,12 @@ fn test_deploy_fails_with_incorrect_class_hash() {
 
     let result = run(
         &test.path().unwrap(),
+        &String::from("src"),
         &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
-        Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
-        &test.contracts(corelib().path()).unwrap(),
+        &corelib_path(),
+        &test.contracts(&corelib_path()).unwrap(),
         &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
     )
     .unwrap();
@@ -289,8 +289,7 @@ fn test_deploy_invokes_the_constructor() {
             r#"
         use option::OptionTrait;
         use result::ResultTrait;
-        use cheatcodes::RevertedTransactionTrait;
-        use cheatcodes::PreparedContract;
+        use cheatcodes::{ declare, PreparedContract, deploy };
         use array::ArrayTrait;
         use traits::TryInto;
         use starknet::ContractAddress;
@@ -352,11 +351,12 @@ fn test_deploy_invokes_the_constructor() {
 
     let result = run(
         &test.path().unwrap(),
+        &String::from("src"),
         &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
-        Some(&Utf8PathBuf::from_path_buf(corelib().to_path_buf()).unwrap()),
-        &test.contracts(corelib().path()).unwrap(),
+        &corelib_path(),
+        &test.contracts(&corelib_path()).unwrap(),
         &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
     )
     .unwrap();
