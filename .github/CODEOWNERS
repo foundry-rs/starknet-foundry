@@ -9,4 +9,4 @@
 /crates/test-collector/    @foundry-rs/starknet-foundry-forge
 
 # Cheatable starknet
-/crates/cheatable-starknet @foundry-rs/starknet-foundry-cheatable-net
+/crates/cheatnet @foundry-rs/starknet-foundry-cheatable-net

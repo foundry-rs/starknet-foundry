@@ -14,8 +14,13 @@ pub(crate) fn print_collected_tests_count(tests_num: usize, tests_files_num: usi
     println!("{}", style(plain_text).bold());
 }
 
-pub(crate) fn print_running_tests(test_file: &Utf8PathBuf, tests_num: usize) {
-    let plain_text = format!("Running {tests_num} test(s) from {test_file}");
+pub(crate) fn print_running_tests(test_file: &Utf8PathBuf, package_name: &str, tests_num: usize) {
+    let plain_text = if test_file == "src/lib.cairo" {
+        format!("Running {tests_num} test(s) from {package_name} package")
+    } else {
+        format!("Running {tests_num} test(s) from {test_file}")
+    };
+
     println!("{}", style(plain_text).bold());
 }
 

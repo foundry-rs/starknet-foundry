@@ -15,7 +15,7 @@ starknet_api.workspace = true
 tempfile.workspace = true
 rayon.workspace = true
 test-collector = { path = "../test-collector" }
-cheatable-starknet = { path = "../cheatable-starknet" }
+cheatnet = { path = "../cheatnet" }
 cairo-lang-runner.workspace = true
 cairo-lang-casm.workspace = true
 cairo-lang-test-runner.workspace = true

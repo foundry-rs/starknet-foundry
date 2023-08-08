@@ -1,5 +1,5 @@
 [package]
-name = "cheatable-starknet"
+name = "cheatnet"
 version = "1.0.0"
 edition = "2021"
 
@@ -30,4 +30,4 @@ assert_fs = "1.0.13"
 indoc.workspace = true
 
 [lib]
-name = "cheatable_starknet"
+name = "cheatnet"
