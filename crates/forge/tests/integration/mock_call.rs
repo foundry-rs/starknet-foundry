@@ -64,6 +64,7 @@ fn start_mock_call_simple() {
 
     let result = run(
         &test.path().unwrap(),
+        &String::from("src"),
         &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
@@ -135,6 +136,7 @@ fn stop_mock_call_simple() {
 
     let result = run(
         &test.path().unwrap(),
+        &String::from("src"),
         &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
@@ -217,6 +219,7 @@ fn mock_call_double() {
 
     let result = run(
         &test.path().unwrap(),
+        &String::from("src"),
         &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
@@ -277,6 +280,7 @@ fn mock_call_proxy() {
 
     let result = run(
         &test.path().unwrap(),
+        &String::from("src"),
         &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
@@ -335,6 +339,7 @@ fn mock_call_two_methods() {
 
     let result = run(
         &test.path().unwrap(),
+        &String::from("src"),
         &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
@@ -387,6 +392,7 @@ fn start_mock_call_inner_call_has_no_effect() {
 
     let result = run(
         &test.path().unwrap(),
+        &String::from("src"),
         &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
@@ -443,6 +449,7 @@ fn start_mock_call_with_library_call_has_no_effect() {
 
     let result = run(
         &test.path().unwrap(),
+        &String::from("src"),
         &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
@@ -496,6 +503,7 @@ fn start_mock_call_in_constructor_test_has_no_effect() {
 
     let result = run(
         &test.path().unwrap(),
+        &String::from("src"),
         &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
@@ -548,6 +556,7 @@ fn start_mock_call_with_syscall_has_no_effect() {
 
     let result = run(
         &test.path().unwrap(),
+        &String::from("src"),
         &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
