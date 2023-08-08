@@ -405,7 +405,7 @@ mod tests {
         let result = artifacts_for_package(&artifacts_path);
         let err = result.unwrap_err();
 
-        assert!(err.to_string().contains(&format!("Failed to parse {artifacts_path:?} contents. Make sure you have enabled sierra code generation in Scarb.toml")));
+        assert!(err.to_string().contains(&format!("Failed to parse {artifacts_path:?} contents. Make sure you have enabled sierra and casm code generation in Scarb.toml")));
     }
 
     #[test]
