@@ -56,5 +56,5 @@ while considering future expansion.
 3. Implement user interface, enabling the forking in the tests
 
 ### Further down the line
-3. Implement storing worker cache on disk, loading and clearing it
-4. Implement multifork, fetching utilizing multiple workers + controlling cheatcodes
+4. Implement storing worker cache on disk, loading and clearing it
+5. Implement multifork, fetching utilizing multiple workers + controlling cheatcodes
