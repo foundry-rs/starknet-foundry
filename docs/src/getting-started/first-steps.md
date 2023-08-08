@@ -27,6 +27,13 @@ $ tree . -L 1
 * `tests/` contains tests. Note that test can also be included in any file or directory.
 * `Scarb.toml` contains configuration of the project as well as of `snforge`, `sncast` etc.
 
+Ensures that `sierra` and `casm` codegen are enabled in the `Scarb.toml` file.
+```toml
+[[target.starknet-contract]]
+sierra = true
+casm = true
+```
+
 And run tests with `snforge`
 
 ```shell
