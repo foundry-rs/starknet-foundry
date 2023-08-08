@@ -61,7 +61,7 @@ jobs:
       - uses: software-mansion/setup-scarb@v1.0.1
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
-      - run: cargo test -p cheatable-starknet
+      - run: cargo test -p cheatnet
 
   test-cast:
     name: Test Cast
@@ -115,8 +115,8 @@ jobs:
         run: cargo fmt --check -p cast
       - name: Check test-collector formatting
         run: cargo fmt --check -p test-collector
-      - name: Check cheatable-starknet formatting
-        run: cargo fmt --check -p cheatable-starknet
+      - name: Check cheatnet formatting
+        run: cargo fmt --check -p cheatnet
 
   clippy:
     runs-on: ubuntu-latest
