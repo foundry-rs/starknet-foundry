@@ -490,7 +490,7 @@ fn start_mock_call_in_constructor_test_has_no_effect() {
 
             let thing = dispatcher.get_stored_thing();
 
-            assert(thing == 13, 'Incorrect thing');
+            assert(thing == 421, 'Incorrect thing');
         }
     "#
         ),
