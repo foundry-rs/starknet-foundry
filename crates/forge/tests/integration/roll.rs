@@ -47,6 +47,7 @@ fn start_roll_simple() {
 
     let result = run(
         &test.path().unwrap(),
+        &String::from("src"),
         &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
@@ -100,6 +101,7 @@ fn start_roll_with_other_syscall() {
 
     let result = run(
         &test.path().unwrap(),
+        &String::from("src"),
         &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
@@ -154,6 +156,7 @@ fn start_roll_in_constructor_test() {
 
     let result = run(
         &test.path().unwrap(),
+        &String::from("src"),
         &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
@@ -214,6 +217,7 @@ fn stop_roll() {
 
     let result = run(
         &test.path().unwrap(),
+        &String::from("src"),
         &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
@@ -275,6 +279,7 @@ fn double_roll() {
 
     let result = run(
         &test.path().unwrap(),
+        &String::from("src"),
         &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
@@ -335,6 +340,7 @@ fn start_roll_with_proxy() {
 
     let result = run(
         &test.path().unwrap(),
+        &String::from("src"),
         &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
@@ -397,6 +403,7 @@ fn start_roll_with_library_call() {
 
     let result = run(
         &test.path().unwrap(),
+        &String::from("src"),
         &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
