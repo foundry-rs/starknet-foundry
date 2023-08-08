@@ -265,7 +265,7 @@ impl CairoHintProcessor<'_> {
                     events.push(Event {
                         name,
                         keys: Vec::from(&keys_and_data[..keys_length]),
-                        data: Vec::from(&keys_and_data[keys_length..]),
+                        data: Vec::from(&keys_and_data[keys_length + 1..]),
                     });
                 }
 

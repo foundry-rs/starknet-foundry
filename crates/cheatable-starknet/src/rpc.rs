@@ -787,6 +787,35 @@ fn check_emitted_events(cheated_state: &mut CheatedState, call_info: &CallInfo) 
                     .as_bytes(),
             ) == BigUint::from_bytes_be(event.event.keys[0].0.bytes())
             {
+                let keys: Vec<Felt252> = event
+                    .event
+                    .keys
+                    .iter()
+                    .map(|stark_felt| stark_felt_to_felt(stark_felt.0))
+                    .collect();
+                if expected_event.keys != keys[1..] {
+                    let err_data: Vec<Felt252> = vec![Felt252::from_bytes_be(
+                        &cairo_short_string_to_felt("Expected keys differ from real")
+                            .unwrap()
+                            .to_bytes_be(),
+                    )];
+                    return err_data;
+                }
+                let data: Vec<Felt252> = event
+                    .event
+                    .data
+                    .0
+                    .iter()
+                    .map(|stark_felt| stark_felt_to_felt(*stark_felt))
+                    .collect();
+                if expected_event.data != data {
+                    let err_data: Vec<Felt252> = vec![Felt252::from_bytes_be(
+                        &cairo_short_string_to_felt("Expected data differs from real")
+                            .unwrap()
+                            .to_bytes_be(),
+                    )];
+                    return err_data;
+                }
                 found = true;
             }
         }
