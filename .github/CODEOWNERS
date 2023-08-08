@@ -1,5 +1,5 @@
 # Default owners: Any directory not specified by lines below will match all our teams
-*                                           @foundry-rs/starknet-foundry-cast @foundry-rs/starknet-foundry-forge @foundry-rs/starknet-foundry-cheatable-net
+*                                           @foundry-rs/starknet-foundry-cast @foundry-rs/starknet-foundry-forge @foundry-rs/starknet-foundry-cheatnet
 
 # Cast
 /crates/cast/              @foundry-rs/starknet-foundry-cast
@@ -9,4 +9,4 @@
 /crates/test-collector/    @foundry-rs/starknet-foundry-forge
 
 # Cheatable starknet
-/crates/cheatable-starknet @foundry-rs/starknet-foundry-cheatable-net
+/crates/cheatnet @foundry-rs/starknet-foundry-cheatnet

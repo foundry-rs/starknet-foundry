@@ -15,7 +15,7 @@ use forge::scarb::{
 };
 use std::process::Command;
 
-static PREDEPLOYED_CONTRACTS: Dir = include_dir!("crates/cheatable-starknet/predeployed-contracts");
+static PREDEPLOYED_CONTRACTS: Dir = include_dir!("crates/cheatnet/predeployed-contracts");
 
 #[derive(Parser, Debug)]
 #[command(version)]
