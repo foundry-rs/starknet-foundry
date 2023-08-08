@@ -77,13 +77,13 @@ trait TxtParser {
     fn from_txt(self: @File) -> Result<Array<felt252>, felt252>;
 }
 
-impl TxtParserImpl of JsonParser {
+impl JsonParserImpl of JsonParser {
     fn from_json(self: @File) -> Result<Array<felt252>, felt252> {
         // ...
     }
 }
 
-impl JsonParserImpl of TxtParser {
+impl TxtParserImpl of TxtParser {
     fn from_txt(self: @File) -> Result<Array<felt252>, felt252> {
         // ...
     }
