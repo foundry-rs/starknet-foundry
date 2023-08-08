@@ -306,13 +306,17 @@ fn run_tests_from_file(
     predeployed_contracts: &Utf8PathBuf,
 ) -> Result<TestFileSummary> {
     let runner = SierraCasmRunner::new(
-        tests.sierra_program.clone(),
+        tests.sierra_program,
         Some(MetadataComputationConfig::default()),
         OrderedHashMap::default(),
     )
     .context("Failed setting up runner.")?;
 
-    pretty_printing::print_running_tests(&tests, package_name);
+    pretty_printing::print_running_tests(
+        &tests.relative_path,
+        package_name,
+        tests.test_cases.len(),
+    );
 
     let mut results = vec![];
     for (i, case) in tests.test_cases.iter().enumerate() {
