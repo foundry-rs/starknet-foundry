@@ -18,7 +18,7 @@ fn library_call_syscall() {
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
         use starknet::ClassHash;
-        use cheatcodes::{ declare, PreparedContract, deploy };
+        use cheatcodes::{ declare, ContractClassTrait };
         
         #[starknet::interface]
         trait ICaller<TContractState> {
@@ -34,11 +34,8 @@ fn library_call_syscall() {
         }
         
         fn deploy_contract(name: felt252) -> ContractAddress {
-            let class_hash = declare(name);
-            let prepared = PreparedContract {
-                class_hash, constructor_calldata: @ArrayTrait::new()
-            };
-            deploy(prepared).unwrap()
+            let contract = declare(name);
+            contract.deploy(@ArrayTrait::new()).unwrap()
         }
         
         #[test]

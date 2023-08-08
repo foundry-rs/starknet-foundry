@@ -12,18 +12,14 @@ fn error_handling() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use cheatcodes::{ declare, PreparedContract, deploy };
+        use cheatcodes::{ declare, PreparedContract, ContractClass, ContractClassTrait };
         use array::ArrayTrait;
         
         #[test]
         fn test_deploy_error_handling() {
-            let class_hash = declare('PanickingConstructor');
-            let prepared_contract = PreparedContract {
-                class_hash: class_hash,
-                constructor_calldata: @ArrayTrait::new()
-            };
+            let contract = declare('PanickingConstructor');
         
-            match deploy(prepared_contract) {
+            match contract.deploy(@ArrayTrait::new()) {
                 Result::Ok(_) => panic_with_felt252('Should have panicked'),
                 Result::Err(x) => {
                     assert(*x.panic_data.at(0_usize) == 'PANIK', *x.panic_data.at(0_usize));
@@ -78,7 +74,7 @@ fn deploy_fails_on_calldata_when_contract_has_no_constructor() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use cheatcodes::{ declare, PreparedContract, deploy };
+        use cheatcodes::{ declare, PreparedContract, ContractClass, ContractClassTrait };
         use array::ArrayTrait; 
             
         #[test]
@@ -87,9 +83,9 @@ fn deploy_fails_on_calldata_when_contract_has_no_constructor() {
             calldata.append(1234);
             calldata.append(5678);
         
-            let class_hash = declare('HelloStarknet');
-            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
-            let contract_address = deploy(prepared).unwrap();
+            let contract = declare('HelloStarknet');
+    
+            let contract_address = contract.deploy(@calldata ).unwrap();
         
             assert(2 == 2, '2 == 2');
         }
@@ -123,17 +119,15 @@ fn test_deploy_fails_on_missing_constructor_arguments() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use cheatcodes::{ declare, PreparedContract, deploy };
+        use cheatcodes::{ declare, PreparedContract, ContractClass, ContractClassTrait };
         use array::ArrayTrait; 
             
         #[test]
         fn deploy_invalid_calldata() {
             let mut calldata = ArrayTrait::new();
         
-            let class_hash = declare('HelloStarknet');
-            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
-            let contract_address = deploy(prepared).unwrap();
-        
+            let contract = declare('HelloStarknet');
+            let contract_address = contract.deploy(@calldata).unwrap();
             assert(2 == 2, '2 == 2');
         }
     "#
@@ -176,7 +170,7 @@ fn test_deploy_fails_on_too_many_constructor_arguments() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use cheatcodes::{ declare, PreparedContract, deploy };
+        use cheatcodes::{ declare, PreparedContract, ContractClass, ContractClassTrait };
         use array::ArrayTrait;
 
         #[test]
@@ -188,9 +182,8 @@ fn test_deploy_fails_on_too_many_constructor_arguments() {
             calldata.append(4);
             calldata.append(5);
 
-            let class_hash = declare('HelloStarknet');
-            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
-            let contract_address = deploy(prepared).unwrap();
+            let contract = declare('HelloStarknet');
+            let contract_address = contract.deploy(@calldata).unwrap();
 
             assert(2 == 2, '2 == 2');
         }
@@ -235,7 +228,7 @@ fn test_deploy_fails_with_incorrect_class_hash() {
             r#"
         use result::ResultTrait;
         use option::OptionTrait;
-        use cheatcodes::{ declare, PreparedContract, deploy };
+        use cheatcodes::{ declare, PreparedContract, ContractClass, ContractClassTrait };
         use array::ArrayTrait;
         use traits::TryInto;
         use starknet::Felt252TryIntoClassHash;
@@ -244,11 +237,10 @@ fn test_deploy_fails_with_incorrect_class_hash() {
         fn deploy_non_existing_class_hash() {
             let mut calldata = ArrayTrait::new();
 
-            let prepared = PreparedContract { 
+            let contract = ContractClass { 
                 class_hash: 'made-up-class-hash'.try_into().unwrap(), 
-                constructor_calldata: @calldata 
             };
-            let contract_address = deploy(prepared).unwrap();
+            let contract_address = contract.deploy(@calldata).unwrap();
         }
     "#
         ),
@@ -289,7 +281,7 @@ fn test_deploy_invokes_the_constructor() {
             r#"
         use option::OptionTrait;
         use result::ResultTrait;
-        use cheatcodes::{ declare, PreparedContract, deploy };
+        use cheatcodes::{ declare, ContractClass, ContractClassTrait };
         use array::ArrayTrait;
         use traits::TryInto;
         use starknet::ContractAddress;
@@ -305,9 +297,9 @@ fn test_deploy_invokes_the_constructor() {
             let mut calldata = ArrayTrait::new();
             calldata.append(420);
 
-            let class_hash = declare('HelloStarknet');
-            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
-            let contract_address = deploy(prepared).unwrap();
+            let contract = declare('HelloStarknet');
+
+            let contract_address = contract.deploy(@calldata).unwrap();
             
             let thing_getter = ThingGetterDispatcher { contract_address };
             

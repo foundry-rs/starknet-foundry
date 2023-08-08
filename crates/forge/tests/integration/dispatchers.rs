@@ -79,7 +79,7 @@ fn advanced_types() {
         use traits::TryInto;
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
-        use cheatcodes::{ declare, PreparedContract, deploy, start_prank };
+        use cheatcodes::{ declare, PreparedContract, ContractClassTrait, start_prank };
             
 
         #[starknet::interface]
@@ -111,9 +111,8 @@ fn advanced_types() {
             calldata.append(0);         // initial supply high
             calldata.append(1234);      // recipient
         
-            let class_hash = declare('ERC20');
-            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
-            let contract_address = deploy(prepared).unwrap();
+            let contract = declare('ERC20');
+            let contract_address = contract.deploy(@calldata).unwrap();
             let dispatcher = IERC20Dispatcher { contract_address };
             let user_address: ContractAddress = 1234.try_into().unwrap();
             let other_user_address: ContractAddress = 9999.try_into().unwrap();
@@ -164,7 +163,7 @@ fn handling_errors() {
         use traits::TryInto;
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
-        use cheatcodes::{ declare, PreparedContract, deploy };
+        use cheatcodes::{ declare, PreparedContract, ContractClassTrait };
             
         #[starknet::interface]
         trait IHelloStarknet<TContractState> {
@@ -176,9 +175,8 @@ fn handling_errors() {
 
         #[test]
         fn handling_errors() {
-            let class_hash = declare('HelloStarknet');
-            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
-            let contract_address = deploy(prepared).unwrap();
+            let contract = declare('HelloStarknet');
+            let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
             let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
         
         
@@ -242,7 +240,7 @@ fn serding() {
         use traits::TryInto;
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
-        use cheatcodes::{ declare, PreparedContract, deploy };
+        use cheatcodes::{ declare, PreparedContract, ContractClassTrait };
         
         #[derive(Drop, Serde)]
         struct NestedStruct {
@@ -273,11 +271,8 @@ fn serding() {
         
         #[test]
         fn test_serding() {
-            let class_hash = declare('Serding');
-            let prepared = PreparedContract {
-                class_hash, constructor_calldata: @ArrayTrait::new()
-            };
-            let contract_address = deploy(prepared).unwrap();
+            let contract = declare('Serding');
+            let contract_address = contract.deploy( @ArrayTrait::new()).unwrap();
         
             let dispatcher = ISerdingDispatcher {
                 contract_address

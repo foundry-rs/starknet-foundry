@@ -17,7 +17,7 @@ fn start_roll_simple() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use cheatcodes::{ declare, PreparedContract, deploy, start_roll };
+            use cheatcodes::{ declare, ContractClassTrait, start_roll };
 
             #[starknet::interface]
             trait IRollChecker<TContractState> {
@@ -26,9 +26,8 @@ fn start_roll_simple() {
 
             #[test]
             fn test_roll_simple() {
-                let class_hash = declare('RollChecker');
-                let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
-                let contract_address = deploy(prepared).unwrap();
+                let contract = declare('RollChecker');
+                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IRollCheckerDispatcher { contract_address };
 
                 start_roll(contract_address, 234);
@@ -71,7 +70,7 @@ fn start_roll_with_other_syscall() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use cheatcodes::{ declare, PreparedContract, deploy, start_roll };
+            use cheatcodes::{ declare, ContractClassTrait, start_roll };
             
             #[starknet::interface]
             trait IRollChecker<TContractState> {
@@ -80,9 +79,8 @@ fn start_roll_with_other_syscall() {
 
             #[test]
             fn test_roll_simple() {
-                let class_hash = declare('RollChecker');
-                let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
-                let contract_address = deploy(prepared).unwrap();
+                let contract = declare('RollChecker');
+                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IRollCheckerDispatcher { contract_address };
 
                 start_roll(contract_address, 234);
@@ -127,7 +125,7 @@ fn start_roll_in_constructor_test() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use cheatcodes::{ declare, PreparedContract, deploy, start_roll };
+            use cheatcodes::{ declare, ContractClassTrait, start_roll };
 
             #[starknet::interface]
             trait IConstructorRollChecker<TContractState> {
@@ -136,11 +134,10 @@ fn start_roll_in_constructor_test() {
 
             #[test]
             fn test_roll_constructor_simple() {
-                let class_hash = declare('ConstructorRollChecker');
-                let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
+                let contract = declare('ConstructorRollChecker');
                 let contract_address: ContractAddress = 2598896470772924212281968896271340780432065735045468431712403008297614014532.try_into().unwrap();
                 start_roll(contract_address, 234);
-                let contract_address = deploy(prepared).unwrap();
+                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
 
                 let dispatcher = IConstructorRollCheckerDispatcher { contract_address };
                 assert(dispatcher.get_stored_block_number() == 234, 'Wrong stored blk_nb');
@@ -180,7 +177,7 @@ fn stop_roll() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use cheatcodes::{ declare, PreparedContract, deploy, start_roll, stop_roll };
+            use cheatcodes::{ declare, ContractClassTrait, start_roll, stop_roll };
 
             #[starknet::interface]
             trait IRollChecker<TContractState> {
@@ -189,9 +186,8 @@ fn stop_roll() {
 
             #[test]
             fn test_stop_roll() {
-                let class_hash = declare('RollChecker');
-                let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
-                let contract_address = deploy(prepared).unwrap();
+                let contract = declare('RollChecker');
+                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IRollCheckerDispatcher { contract_address };
 
                 let old_block_number = dispatcher.get_block_number();
@@ -241,7 +237,7 @@ fn double_roll() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use cheatcodes::{ declare, PreparedContract, deploy, start_roll, stop_roll };
+            use cheatcodes::{ declare, PreparedContract,  ContractClassTrait, start_roll, stop_roll };
 
             #[starknet::interface]
             trait IRollChecker<TContractState> {
@@ -250,9 +246,8 @@ fn double_roll() {
 
             #[test]
             fn test_stop_roll() {
-                let class_hash = declare('RollChecker');
-                let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
-                let contract_address = deploy(prepared).unwrap();
+                let contract = declare('RollChecker');
+                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IRollCheckerDispatcher { contract_address };
 
                 let old_block_number = dispatcher.get_block_number();
@@ -304,7 +299,7 @@ fn start_roll_with_proxy() {
             use traits::Into;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use cheatcodes::{ declare, PreparedContract, deploy, start_roll };
+            use cheatcodes::{ declare, ContractClassTrait, start_roll };
             
             #[starknet::interface]
             trait IRollCheckerProxy<TContractState> {
@@ -312,14 +307,12 @@ fn start_roll_with_proxy() {
             }
             #[test]
             fn test_roll_simple() {
-                let class_hash = declare('RollChecker');
-                let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
-                let roll_checker_contract_address = deploy(prepared).unwrap();
+                let contract = declare('RollChecker');
+                let roll_checker_contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 start_roll(roll_checker_contract_address, 234);
 
-                let class_hash = declare('RollCheckerProxy');
-                let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
-                let proxy_contract_address = deploy(prepared).unwrap();
+                let contract = declare('RollCheckerProxy');
+                let proxy_contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let proxy_dispatcher = IRollCheckerProxyDispatcher { contract_address: proxy_contract_address };
                 let block_number = proxy_dispatcher.get_roll_checkers_block_info(roll_checker_contract_address);
                 assert(block_number == 234, block_number.into());
@@ -365,7 +358,7 @@ fn start_roll_with_library_call() {
             use traits::Into;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use cheatcodes::{ declare, PreparedContract, deploy, start_roll };
+            use cheatcodes::{ declare, ContractClassTrait, start_roll };
             use starknet::ClassHash;
 
             #[starknet::interface]
@@ -375,11 +368,11 @@ fn start_roll_with_library_call() {
 
             #[test]
             fn test_roll_simple() {
-                let roll_checker_class_hash = declare('RollChecker');
+                let roll_checker_contract = declare('RollChecker');
+                let roll_checker_class_hash = roll_checker_contract.class_hash
 
-                let class_hash = declare('RollCheckerLibCall');
-                let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
-                let contract_address = deploy(prepared).unwrap();
+                let contract = declare('RollCheckerLibCall');
+                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
 
                 start_roll(contract_address, 234);
 
