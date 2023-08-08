@@ -47,7 +47,7 @@ original value: [2], converted to a string: []
 original value: [3], converted to a string: []
 original value: [379899844591278365831020], converted to a string: [Print bool:]
 original value: [439721161573], converted to a string: [false]
-[PASS] test_print::test_print::test_print
+[PASS] test_print::test_print
 Tests: 1 passed, 0 failed, 0 skipped
 ```
 
