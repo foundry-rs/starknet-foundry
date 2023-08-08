@@ -19,7 +19,7 @@ fn complex_structure() {
         .assert()
         .success()
         .stdout_matches(indoc! {r#"Collected 16 test(s) and 4 test file(s)
-        Running 12 test(s) from test_multiple
+        Running 12 test(s) from test_multiple package
         [PASS] test_multiple::test_simple
         [PASS] test_multiple::test_fob_in_lib
         [PASS] test_multiple::test_fib_in_lib

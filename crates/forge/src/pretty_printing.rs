@@ -1,7 +1,6 @@
 use crate::test_case_summary::TestCaseSummary;
-use crate::TestFileSummary;
+use crate::{TestFileSummary, TestsFromFile};
 use anyhow::Error;
-use camino::Utf8PathBuf;
 use console::style;
 
 pub fn print_error_message(error: &Error) {
@@ -14,8 +13,17 @@ pub(crate) fn print_collected_tests_count(tests_num: usize, tests_files_num: usi
     println!("{}", style(plain_text).bold());
 }
 
-pub(crate) fn print_running_tests(tests_source: &str, tests_num: usize) {
-    let plain_text = format!("Running {tests_num} test(s) from {tests_source}");
+pub(crate) fn print_running_tests(tests: &TestsFromFile, package_name: &str) {
+    let tests_num = tests.test_cases.len();
+    let plain_text = if tests.relative_path == "src/lib.cairo" {
+        format!("Running {tests_num} test(s) from {package_name} package")
+    } else {
+        format!(
+            "Running {tests_num} test(s) from {}",
+            tests.relative_path.as_str()
+        )
+    };
+
     println!("{}", style(plain_text).bold());
 }
 

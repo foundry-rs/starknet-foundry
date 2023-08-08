@@ -53,7 +53,7 @@ fn simple_package() {
         .assert()
         .success()
         .stdout_matches(indoc! {r#"Collected 11 test(s) and 5 test file(s)
-        Running 1 test(s) from simple_package
+        Running 1 test(s) from simple_package package
         [PASS] simple_package::test_fib
         Running 1 test(s) from tests/contract.cairo
         [PASS] contract::call_and_invoke
@@ -114,7 +114,7 @@ fn simple_package_with_git_dependency() {
         .assert()
         .success()
         .stdout_matches(indoc! {r#"Collected 11 test(s) and 5 test file(s)
-        Running 1 test(s) from simple_package
+        Running 1 test(s) from simple_package package
         [PASS] simple_package::test_fib
         Running 1 test(s) from tests/contract.cairo
         [PASS] contract::call_and_invoke
@@ -174,7 +174,7 @@ fn with_filter() {
         .assert()
         .success()
         .stdout_matches(indoc! {r#"Collected 2 test(s) and 5 test file(s)
-        Running 0 test(s) from simple_package
+        Running 0 test(s) from simple_package package
         Running 0 test(s) from tests/contract.cairo
         Running 0 test(s) from tests/ext_function_test.cairo
         Running 2 test(s) from tests/test_simple.cairo
@@ -197,7 +197,7 @@ fn with_exact_filter() {
         .assert()
         .success()
         .stdout_matches(indoc! {r#"Collected 1 test(s) and 5 test file(s)
-        Running 0 test(s) from simple_package
+        Running 0 test(s) from simple_package package
         Running 0 test(s) from tests/contract.cairo
         Running 0 test(s) from tests/ext_function_test.cairo
         Running 1 test(s) from tests/test_simple.cairo
@@ -218,7 +218,7 @@ fn with_non_matching_filter() {
         .assert()
         .success()
         .stdout_matches(indoc! {r#"Collected 0 test(s) and 5 test file(s)
-        Running 0 test(s) from simple_package
+        Running 0 test(s) from simple_package package
         Running 0 test(s) from tests/contract.cairo
         Running 0 test(s) from tests/ext_function_test.cairo
         Running 0 test(s) from tests/test_simple.cairo
@@ -237,7 +237,7 @@ fn with_print() {
         .assert()
         .success()
         .stdout_matches(indoc! {r#"Collected 1 test(s) and 2 test file(s)
-        Running 0 test(s) from print_test
+        Running 0 test(s) from print_test package
         Running 1 test(s) from tests/test_print.cairo
         original value: [123], converted to a string: [{]
         original value: [6381921], converted to a string: [aaa]
@@ -261,7 +261,7 @@ fn with_panic_data_decoding() {
         .assert()
         .success()
         .stdout_matches(indoc! {r#"Collected 4 test(s) and 2 test file(s)
-        Running 0 test(s) from panic_decoding
+        Running 0 test(s) from panic_decoding package
         Running 4 test(s) from tests/test_panic_decoding.cairo
         [PASS] test_panic_decoding::test_simple
         [FAIL] test_panic_decoding::test_panic_decoding
@@ -322,7 +322,7 @@ fn with_exit_first() {
         .assert()
         .success()
         .stdout_matches(indoc! {r#"Collected 11 test(s) and 5 test file(s)
-        Running 1 test(s) from simple_package
+        Running 1 test(s) from simple_package package
         [PASS] simple_package::test_fib
         Running 1 test(s) from tests/contract.cairo
         [PASS] contract::call_and_invoke
@@ -355,7 +355,7 @@ fn with_exit_first_flag() {
         .assert()
         .success()
         .stdout_matches(indoc! {r#"Collected 11 test(s) and 5 test file(s)
-        Running 1 test(s) from simple_package
+        Running 1 test(s) from simple_package package
         [PASS] simple_package::test_fib
         Running 1 test(s) from tests/contract.cairo
         [PASS] contract::call_and_invoke
@@ -412,7 +412,7 @@ fn exit_first_flag_takes_precedence() {
         .assert()
         .success()
         .stdout_matches(indoc! {r#"Collected 11 test(s) and 5 test file(s)
-        Running 1 test(s) from simple_package
+        Running 1 test(s) from simple_package package
         [PASS] simple_package::test_fib
         Running 1 test(s) from tests/contract.cairo
         [PASS] contract::call_and_invoke
@@ -445,7 +445,7 @@ fn using_corelib_names() {
         .assert()
         .success()
         .stdout_matches(indoc! {r#"Collected 4 test(s) and 5 test file(s)
-        Running 0 test(s) from using_corelib_names
+        Running 0 test(s) from using_corelib_names package
         Running 1 test(s) from tests/bits.cairo
         [PASS] bits::test_names
         Running 1 test(s) from tests/math.cairo
@@ -472,7 +472,7 @@ fn should_panic() {
         .success()
         .stdout_matches(indoc! { r#"
         Collected 6 test(s) and 2 test file(s)
-        Running 0 test(s) from should_panic_test
+        Running 0 test(s) from should_panic_test package
         Running 6 test(s) from tests/should_panic_test.cairo
         [PASS] should_panic_test::should_panic_no_data
 
