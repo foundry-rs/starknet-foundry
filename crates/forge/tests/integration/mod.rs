@@ -2,6 +2,7 @@ pub(crate) mod common;
 mod declare;
 mod deploy;
 mod dispatchers;
+mod emit_events;
 mod prank;
 mod pure_cairo;
 mod roll;
