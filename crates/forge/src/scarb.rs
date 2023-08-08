@@ -174,15 +174,24 @@ pub fn paths_for_package(
 ) -> Result<(Utf8PathBuf, Utf8PathBuf)> {
     let compilation_unit = compilation_unit_for_package(metadata, package)?;
 
-    let package_path = metadata
+    let package = metadata
         .get_package(package)
-        .ok_or_else(|| anyhow!("Failed to find metadata for package = {package}"))?
-        .root
-        .clone();
+        .ok_or_else(|| anyhow!("Failed to find metadata for package = {package}"))?;
+
+    let package_path = package.root.clone();
 
     let lib_path = compilation_unit.target.source_path.clone();
 
     Ok((package_path, lib_path))
+}
+
+/// Get a name of the given package
+pub fn name_for_package(metadata: &Metadata, package: &PackageId) -> Result<String> {
+    let package = metadata
+        .get_package(package)
+        .ok_or_else(|| anyhow!("Failed to find metadata for package = {package}"))?;
+
+    Ok(package.name.clone())
 }
 
 /// Get the dependencies for the given package
@@ -471,6 +480,21 @@ mod tests {
         assert!(package_path.is_dir());
         assert!(lib_path.ends_with(Utf8PathBuf::from("src/lib.cairo")));
         assert!(lib_path.starts_with(package_path));
+    }
+
+    #[test]
+    fn get_name_for_package() {
+        let temp = setup_package("simple_package");
+        let scarb_metadata = MetadataCommand::new()
+            .inherit_stderr()
+            .current_dir(temp.path())
+            .exec()
+            .unwrap();
+
+        let package_name =
+            name_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0]).unwrap();
+
+        assert_eq!(package_name, "simple_package".to_string());
     }
 
     #[test]
