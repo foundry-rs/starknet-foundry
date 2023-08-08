@@ -12,7 +12,6 @@ use cairo_lang_defs::plugin::PluginDiagnostic;
 use cairo_lang_diagnostics::ToOption;
 use cairo_lang_filesystem::cfg::{Cfg, CfgSet};
 use cairo_lang_filesystem::db::init_dev_corelib;
-use cairo_lang_filesystem::detect::detect_corelib;
 use cairo_lang_filesystem::ids::CrateId;
 use cairo_lang_lowering::ids::ConcreteFunctionWithBodyId;
 use cairo_lang_project::{DeserializationError, ProjectConfig, ProjectConfigContent};
@@ -33,8 +32,7 @@ use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use cairo_lang_utils::OptionHelper;
 use itertools::Itertools;
 use num_traits::ToPrimitive;
-use project::PHANTOM_PACKAGE_NAME_PREFIX;
-use project::{setup_project, setup_single_file_project};
+use project::{setup_single_file_project, PHANTOM_PACKAGE_NAME_PREFIX};
 use smol_str::SmolStr;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -65,23 +63,21 @@ pub fn setup_project_without_cairo_project_toml(
     path: &Path,
     crate_name: &str,
 ) -> Result<Vec<CrateId>, ProjectError> {
-    if path.is_dir() {
-        match build_project_config(path, crate_name) {
-            Ok(config) => {
-                let main_crate_ids = get_main_crate_ids_from_project(db, &config);
-                update_crate_roots_from_project_config(db, config);
-                Ok(main_crate_ids)
-            }
-            _ => Err(ProjectError::LoadProjectError),
+    assert!(path.is_dir(), "Project path must be a directory");
+
+    match build_project_config(path, crate_name) {
+        Ok(config) => {
+            let main_crate_ids = get_main_crate_ids_from_project(db, &config);
+            update_crate_roots_from_project_config(db, config);
+            Ok(main_crate_ids)
         }
-    } else {
-        Ok(vec![setup_single_file_project(db, path)?])
+        _ => Err(ProjectError::LoadProjectError),
     }
 }
 
 /// Expectation for a panic case.
-#[derive(Debug)]
-pub enum PanicExpectation {
+#[derive(Debug, Clone, PartialEq)]
+pub enum ExpectedPanicValue {
     /// Accept any panic value.
     Any,
     /// Accept only this specific vector of panics.
@@ -89,12 +85,12 @@ pub enum PanicExpectation {
 }
 
 /// Expectation for a result of a test.
-#[derive(Debug)]
-pub enum TestExpectation {
+#[derive(Debug, Clone, PartialEq)]
+pub enum ExpectedTestResult {
     /// Running the test should not panic.
     Success,
     /// Running the test should result in a panic.
-    Panics(PanicExpectation),
+    Panics(ExpectedPanicValue),
 }
 
 /// The configuration for running a single test.
@@ -103,7 +99,7 @@ pub struct SingleTestConfig {
     /// The amount of gas the test requested.
     pub available_gas: Option<usize>,
     /// The expected result of the run.
-    pub expectation: TestExpectation,
+    pub expected_result: ExpectedTestResult,
     /// Should the test be ignored.
     pub ignored: bool,
 }
@@ -111,23 +107,21 @@ pub struct SingleTestConfig {
 /// Finds the tests in the requested crates.
 pub fn find_all_tests(
     db: &dyn SemanticGroup,
-    main_crates: Vec<CrateId>,
+    main_crate: CrateId,
 ) -> Vec<(FreeFunctionId, SingleTestConfig)> {
     let mut tests = vec![];
-    for crate_id in main_crates {
-        let modules = db.crate_modules(crate_id);
-        for module_id in modules.iter() {
-            let Ok(module_items) = db.module_items(*module_id) else {
-                continue;
-            };
-            tests.extend(
-                module_items.iter().filter_map(|item| {
-                    let ModuleItemId::FreeFunction(func_id) = item else { return None };
-                    let Ok(attrs) = db.function_with_body_attributes(FunctionWithBodyId::Free(*func_id)) else { return None };
-                    Some((*func_id, try_extract_test_config(db.upcast(), &attrs).unwrap()?))
-                }),
-            );
-        }
+    let modules = db.crate_modules(main_crate);
+    for module_id in modules.iter() {
+        let Ok(module_items) = db.module_items(*module_id) else {
+            continue;
+        };
+        tests.extend(
+            module_items.iter().filter_map(|item| {
+                let ModuleItemId::FreeFunction(func_id) = item else { return None };
+                let Ok(attrs) = db.function_with_body_attributes(FunctionWithBodyId::Free(*func_id)) else { return None };
+                Some((*func_id, try_extract_test_config(db.upcast(), &attrs).unwrap()?))
+            }),
+        );
     }
     tests
 }
@@ -222,14 +216,14 @@ pub fn try_extract_test_config(
     } else {
         Some(SingleTestConfig {
             available_gas,
-            expectation: if should_panic {
-                TestExpectation::Panics(if let Some(values) = expected_panic_value {
-                    PanicExpectation::Exact(values)
+            expected_result: if should_panic {
+                ExpectedTestResult::Panics(if let Some(values) = expected_panic_value {
+                    ExpectedPanicValue::Exact(values)
                 } else {
-                    PanicExpectation::Any
+                    ExpectedPanicValue::Any
                 })
             } else {
-                TestExpectation::Success
+                ExpectedTestResult::Success
             },
             ignored,
         })
@@ -277,15 +271,17 @@ pub struct LinkedLibrary {
 pub struct TestCase {
     pub name: String,
     pub available_gas: Option<usize>,
+    pub expected_result: ExpectedTestResult,
 }
 
 // returns tuple[sierra if no output_path, list[test_name, test_config]]
 pub fn collect_tests(
     input_path: &str,
     output_path: Option<&str>,
+    package_name: &str,
     linked_libraries: Option<Vec<LinkedLibrary>>,
     builtins: Option<Vec<&str>>,
-    corelib_path: Option<&str>,
+    corelib_path: PathBuf,
 ) -> Result<(Program, Vec<TestCase>)> {
     // code taken from crates/cairo-lang-test-runner/src/lib.rs
     let db = &mut {
@@ -296,15 +292,9 @@ pub fn collect_tests(
         b.build()?
     };
 
-    init_dev_corelib(
-        db,
-        corelib_path.map_or_else(
-            || detect_corelib().ok_or_else(|| anyhow!("Failed to load development corelib")),
-            |corelib_path| Ok(corelib_path.into()),
-        )?,
-    );
+    init_dev_corelib(db, corelib_path);
 
-    let main_crate_ids = setup_project(db, Path::new(&input_path))
+    let main_crate_id = setup_single_file_project(db, Path::new(&input_path), package_name)
         .with_context(|| format!("Failed to setup project for path({input_path})"))?;
 
     if let Some(linked_libraries) = linked_libraries {
@@ -324,7 +314,7 @@ pub fn collect_tests(
              above"
         ));
     }
-    let all_tests = find_all_tests(db, main_crate_ids);
+    let all_tests = find_all_tests(db, main_crate_id);
 
     let z: Vec<ConcreteFunctionWithBodyId> = all_tests
         .iter()
@@ -361,6 +351,7 @@ pub fn collect_tests(
         .map(|(test_name, config)| TestCase {
             name: test_name.replace(PHANTOM_PACKAGE_NAME_PREFIX, ""),
             available_gas: config.available_gas,
+            expected_result: config.expected_result,
         })
         .collect();
 

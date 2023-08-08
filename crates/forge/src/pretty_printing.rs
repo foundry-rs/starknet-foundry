@@ -9,17 +9,22 @@ pub fn print_error_message(error: &Error) {
     println!("[{error_tag}] {error}");
 }
 
-pub fn print_collected_tests_count(tests_num: usize, tests_files_num: usize) {
+pub(crate) fn print_collected_tests_count(tests_num: usize, tests_files_num: usize) {
     let plain_text = format!("Collected {tests_num} test(s) and {tests_files_num} test file(s)");
     println!("{}", style(plain_text).bold());
 }
 
-pub fn print_running_tests(test_file: &Utf8PathBuf, tests_num: usize) {
-    let plain_text = format!("Running {tests_num} test(s) from {test_file}");
+pub(crate) fn print_running_tests(test_file: &Utf8PathBuf, package_name: &str, tests_num: usize) {
+    let plain_text = if test_file == "src/lib.cairo" {
+        format!("Running {tests_num} test(s) from {package_name} package")
+    } else {
+        format!("Running {tests_num} test(s) from {test_file}")
+    };
+
     println!("{}", style(plain_text).bold());
 }
 
-pub fn print_test_summary(summaries: &[TestFileSummary]) {
+pub(crate) fn print_test_summary(summaries: &[TestFileSummary]) {
     let passed: usize = summaries.iter().map(TestFileSummary::count_passed).sum();
     let skipped: usize = summaries.iter().map(TestFileSummary::count_skipped).sum();
     let failed: usize = summaries.iter().map(TestFileSummary::count_failed).sum();
@@ -33,7 +38,7 @@ pub fn print_test_summary(summaries: &[TestFileSummary]) {
     );
 }
 
-pub fn print_test_result(test_result: &TestCaseSummary) {
+pub(crate) fn print_test_result(test_result: &TestCaseSummary) {
     let result_header = match test_result {
         TestCaseSummary::Passed { .. } => format!("[{}]", style("PASS").green()),
         TestCaseSummary::Failed { .. } => format!("[{}]", style("FAIL").red()),

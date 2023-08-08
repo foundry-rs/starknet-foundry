@@ -26,8 +26,8 @@ Now run forge using a command:
 ```shell
 $ snforge
 Collected 1 test(s) and 1 test file(s)
-Running 1 test(s) from src/lib.cairo
-[PASS] src::test_sum
+Running 1 test(s) from package_name package
+[PASS] package_name::test_sum
 Tests: 1 passed, 0 failed, 0 skipped
 ```
 
@@ -64,11 +64,33 @@ fn failing() {
 ```shell
 $ snforge
 Collected 1 test(s) and 1 test file(s)
-Running 1 test(s) from src/lib.cairo
-[FAIL] src::failing
+Running 1 test(s) from package_name package
+[FAIL] package_name::failing
 
 Failure data:
     [6381921], converted to a string: [aaa]
 
 Tests: 0 passed, 1 failed, 0 skipped
+```
+
+## Expected failures
+
+Sometimes you want to mark a test as expected to fail. This is useful when you want to verify that an action fails as expected.
+
+To mark a test as expected to fail, use the `#[should_panic]` attribute. You can pass the expected failure message as an argument to the attribute to verify that the test fails with the expected message with `#[should_panic(expected: ('panic message', 'eventual second message',))]`.
+
+```text
+#[test]
+#[should_panic(expected: ('panic message', ))]
+fn should_panic_check_data() {
+    panic_with_felt252('panic message');
+}
+```
+
+```shell
+$ snforge
+Collected 1 test(s) and 1 test file(s)
+Running 1 test(s) from package_name package
+[PASS] src::should_panic_check_data
+Tests: 1 passed, 0 failed, 0 skipped
 ```

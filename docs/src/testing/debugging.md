@@ -35,7 +35,7 @@ Running tests will include prints in the output:
 ```shell
 $ snforge
 Collected 1 test(s) and 2 test file(s)
-Running 0 test(s) from src/lib.cairo
+Running 0 test(s) from package_name package
 Running 1 test(s) from tests/test_print.cairo
 original value: [1794026292945241370577200538206453096157964090], converted to a string: [Print short string:]
 original value: [2019423207056158060135], converted to a string: [my string]
@@ -47,7 +47,7 @@ original value: [2], converted to a string: []
 original value: [3], converted to a string: []
 original value: [379899844591278365831020], converted to a string: [Print bool:]
 original value: [439721161573], converted to a string: [false]
-[PASS] test_print::test_print::test_print
+[PASS] test_print::test_print
 Tests: 1 passed, 0 failed, 0 skipped
 ```
 

@@ -19,7 +19,7 @@ Do the following to start interacting with the Starknet:
 
     ```shell
     $ sncast \
-      --url http://127.0.0.1:5050
+      --url http://127.0.0.1:5050 \
       --network testnet \
       account create \
       --name some-name
@@ -59,22 +59,45 @@ Do the following to start interacting with the Starknet:
     
     For a detailed CLI description, see [account deploy command reference](../appendix/cast/account/deploy.md).
 
-    > 💡 **Info**
-    > Max fee will be automatically computed if `--max-fee <MAX_FEE>` is not passed.
-
 
 ### `account create` with salt argument
 
-Salt will not be generated if `--salt` argument is passed.
+Salt will not be randomly generated if it's specified with `--salt`.
 
 ```shell
-$ sncast
+$ sncast \
     account create \
-    --name some-name
+    --name some-name \
     --salt 0x1
   
 Account successfully created. Prefund generated address with at least 432300000000 tokens. It is good to send more in the case of higher demand, max_fee * 2 = 864600000000
 command: account create
 max_fee: 0x64a7168300
 address: 0x7a949e83b243068d0cbedd8d5b8b32fafea66c54de23c40e68b126b5c845b61
+```
+
+### Custom account contract
+
+By default, `sncast` creates/deploys an account using [openzeppelin contract's class hash](https://starkscan.co/class/0x058d97f7d76e78f44905cc30cb65b91ea49a4b908a76703c54197bca90f81773).
+It is possible to create an account using custom openzeppelin contract declared to starknet. This can be achieved
+with `--class-hash` flag:
+
+```shell
+$ sncast \
+    account create \
+    --name some-name \
+    --class-hash 0x058d97f7d76e78f44905cc30cb65b91ea49a4b908a76703c54197bca90f81773
+
+Account successfully created. Prefund generated address with at least 432300000000 tokens. It is good to send more in the case of higher demand, max_fee * 2 = 864600000000
+command: account create
+max_fee: 0x64a7168300
+address: 0x7a949e83b243068d0cbedd8d5b8b32fafea66c54de23c40e68b126b5c845b61
+
+$ sncast \
+  account deploy \
+  --name some-name \
+  --max-fee 864600000000
+
+command: account deploy
+transaction_hash: 0x20b20896ce63371ef015d66b4dd89bf18c5510a840b4a85a43a983caa6e2579
 ```

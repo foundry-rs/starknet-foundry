@@ -23,6 +23,10 @@ pub struct Deploy {
     /// Max fee for the transaction
     #[clap(short, long)]
     pub max_fee: FieldElement,
+
+    /// Custom open zeppelin contract class hash of declared contract
+    #[clap(short, long)]
+    pub class_hash: Option<String>,
 }
 
 pub async fn deploy(
@@ -32,6 +36,7 @@ pub async fn deploy(
     network: &str,
     max_fee: FieldElement,
     wait: bool,
+    class_hash: Option<String>,
 ) -> Result<InvokeResponse> {
     let network_value = get_network(network)?.get_value();
 
@@ -58,8 +63,14 @@ pub async fn deploy(
         .expect("Couldn't parse private key"),
     );
 
+    let oz_class_hash: &str = if let Some(value) = &class_hash {
+        value
+    } else {
+        OZ_CLASS_HASH
+    };
+
     let factory = OpenZeppelinAccountFactory::new(
-        parse_number(OZ_CLASS_HASH).expect("Couldn't parse OpenZeppelin's account class hash"),
+        parse_number(oz_class_hash).expect("Couldn't parse OpenZeppelin's account class hash"),
         provider.chain_id().await.expect("Couldn't get chain id"),
         LocalWallet::from_signing_key(private_key),
         provider,

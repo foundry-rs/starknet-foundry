@@ -27,10 +27,13 @@ pub struct Create {
     #[clap(short, long)]
     pub salt: Option<FieldElement>,
 
-    // If passed, a profile with corresponding data will be created in Scarb.toml
+    /// If passed, a profile with corresponding data will be created in Scarb.toml
     #[clap(short, long)]
     pub add_profile: bool,
     // TODO (#253): think about supporting different account providers
+    /// Custom open zeppelin contract class hash of declared contract
+    #[clap(short, long)]
+    pub class_hash: Option<String>,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -43,14 +46,20 @@ pub async fn create(
     network: &str,
     maybe_salt: Option<FieldElement>,
     add_profile: bool,
+    class_hash: Option<String>,
 ) -> Result<AccountCreateResponse> {
     let private_key = SigningKey::from_random();
     let public_key = private_key.verifying_key();
     let salt = extract_or_generate_salt(maybe_salt);
+    let oz_class_hash: &str = if let Some(value) = &class_hash {
+        value
+    } else {
+        OZ_CLASS_HASH
+    };
 
     let address = get_contract_address(
         salt,
-        parse_number(OZ_CLASS_HASH)?,
+        parse_number(oz_class_hash)?,
         &[public_key.scalar()],
         FieldElement::ZERO,
     );
@@ -58,7 +67,7 @@ pub async fn create(
     let max_fee = {
         let signer = LocalWallet::from_signing_key(private_key.clone());
         let factory = OpenZeppelinAccountFactory::new(
-            parse_number(OZ_CLASS_HASH)?,
+            parse_number(oz_class_hash)?,
             get_network(network)?.get_chain_id(),
             signer,
             provider,
