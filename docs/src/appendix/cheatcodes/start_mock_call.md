@@ -42,8 +42,7 @@ We can use `start_mock_call` in a test to change the data returned by `get_balan
 fn test_mock() {
     // ...
     
-    let mut mock_ret_data = ArrayTrait::new();
-    mock_ret_data.append(421);
+    let mock_ret_data = array![421];
     start_mock_call(contract_address, 'get_balance', mock_ret_data);
 
     dispatcher.set_balance(13);
