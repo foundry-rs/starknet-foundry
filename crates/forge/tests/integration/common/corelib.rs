@@ -37,10 +37,7 @@ pub fn corelib_path() -> Utf8PathBuf {
 pub fn predeployed_contracts() -> TempDir {
     let predeployed_contracts = TempDir::new().unwrap();
     predeployed_contracts
-        .copy_from(
-            "../../crates/cheatnet/predeployed-contracts",
-            &["**/*"],
-        )
+        .copy_from("../../crates/cheatnet/predeployed-contracts", &["**/*"])
         .unwrap();
     predeployed_contracts
 }
