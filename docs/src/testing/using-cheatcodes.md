@@ -1,12 +1,12 @@
 # Using Cheatcodes
 
 > ℹ️ **Info**
-> To use cheatcodes you need to add `cheatcodes` package as a dependency in
+> To use cheatcodes you need to add `snforge_std` package as a dependency in
 > your [`Scarb.toml`](https://docs.swmansion.com/scarb/docs/guides/dependencies#adding-a-dependency) 
 > using appropriate release tag.
 >```toml
 > [dependencies]
-> cheatcodes = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.4.0" }
+> snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.4.0" }
 > ```
 
 When testing smart contracts, often there are parts of code that are dependent on a specific blockchain state.
@@ -100,7 +100,7 @@ so it passes our validation.
 ### Pranking the Address
 
 ```rust
-use cheatcodes::{ declare, PreparedContract, deploy, start_prank };
+use snforge_std::{ declare, PreparedContract, deploy, start_prank };
 
 #[test]
 fn call_and_invoke() {
@@ -140,7 +140,7 @@ In case of the `start_prank`, we can cancel the address change
 using [`stop_prank`](../appendix/cheatcodes/stop_prank.md)
 
 ```rust
-use cheatcodes::stop_prank;
+use snforge_std::stop_prank;
 
 #[test]
 fn call_and_invoke() {

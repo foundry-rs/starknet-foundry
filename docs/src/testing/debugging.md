@@ -1,12 +1,12 @@
 # Debugging
 
 > ℹ️ **Info**
-> To use `PrintTrait` you need to add `cheatcodes` package as a dependency in
+> To use `PrintTrait` you need to add `snforge_std` package as a dependency in
 > your [`Scarb.toml`](https://docs.swmansion.com/scarb/docs/guides/dependencies#adding-a-dependency) 
 > using appropriate release tag.
 >```toml
 > [dependencies]
-> cheatcodes = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.4.0" }
+> snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.4.0" }
 > ```
 
 Starknet Foundry standard library adds a utility method for printing inside tests to facilitate simple debugging.
@@ -16,7 +16,7 @@ Here's a test with example use of print method:
 ```rust
 // Make sure to import Starknet Foundry PrintTrait
 use array::ArrayTrait;
-use cheatcodes::PrintTrait;
+use snforge_std::PrintTrait;
 
 #[test]
 fn test_print() {

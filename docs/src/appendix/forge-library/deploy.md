@@ -11,7 +11,7 @@ Deploys a contract and returns its address.
 ```rust
 use array::ArrayTrait;
 use result::ResultTrait;
-use cheatcodes::{ declare, PreparedContract, deploy };
+use snforge_std::{ declare, PreparedContract, deploy };
 
 #[test]
 fn test_deploy() {
