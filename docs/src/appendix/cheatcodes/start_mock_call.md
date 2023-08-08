@@ -39,7 +39,7 @@ We can use `start_mock_call` in a test to change the data returned by `get_balan
 
 ```rust
 #[test]
-fn test_mock() {
+fn test_mock_call() {
     // ...
     
     let mock_ret_data = array![421];
