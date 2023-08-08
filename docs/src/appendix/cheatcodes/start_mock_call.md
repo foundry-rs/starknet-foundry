@@ -2,7 +2,9 @@
 
 > `fn start_mock_call(contract_address: ContractAddress, function_name: felt252, ret_data: Array::<felt252>)`
 
-Mocks external function `function_name` for a contract at the given address. The function `function_name` will return data provided in `ret_data` argument.
+Mocks function `function_name` of a contract at the given address. The function `function_name` will return data provided in `ret_data` argument. 
+
+If contract is deployed at given address, mocked function won't be executed. Address with no contract can be mocked as well.
 Mock can be canceled with [`stop_mock_call`](./stop_mock_call.md).
 
 - `contract_address` - target contract address
