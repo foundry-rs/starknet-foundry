@@ -46,6 +46,6 @@ fn test_mock() {
 
     dispatcher.set_balance(13);
     let balance = dispatcher.get_balance();
-    assert(balance == 421, 'Wrong balance');
+    assert(balance == 421, 'Wrong balance'); // this assert passes
 }
 ```
