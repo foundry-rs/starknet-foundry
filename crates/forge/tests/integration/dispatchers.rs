@@ -19,7 +19,7 @@ fn simple_call_and_invoke() {
         use traits::TryInto;
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
-        use cheatcodes::{ declare, PreparedContract, deploy };
+        use cheatcodes::{ declare, ContractClassTrait };
             
         #[starknet::interface]
         trait IHelloStarknet<TContractState> {
@@ -31,9 +31,8 @@ fn simple_call_and_invoke() {
 
         #[test]
         fn call_and_invoke() {
-            let class_hash = declare('HelloStarknet');
-            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
-            let contract_address = deploy(prepared).unwrap();
+            let contract = declare('HelloStarknet');
+            let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
             let dispatcher = IHelloStarknetDispatcher { contract_address };
 
             let balance = dispatcher.get_balance();
@@ -79,7 +78,7 @@ fn advanced_types() {
         use traits::TryInto;
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
-        use cheatcodes::{ declare, PreparedContract, ContractClassTrait, start_prank };
+        use cheatcodes::{ declare, ContractClassTrait, start_prank };
             
 
         #[starknet::interface]
@@ -163,7 +162,7 @@ fn handling_errors() {
         use traits::TryInto;
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
-        use cheatcodes::{ declare, PreparedContract, ContractClassTrait };
+        use cheatcodes::{ declare, ContractClassTrait };
             
         #[starknet::interface]
         trait IHelloStarknet<TContractState> {
@@ -240,7 +239,7 @@ fn serding() {
         use traits::TryInto;
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
-        use cheatcodes::{ declare, PreparedContract, ContractClassTrait };
+        use cheatcodes::{ declare, ContractClassTrait };
         
         #[derive(Drop, Serde)]
         struct NestedStruct {
@@ -323,7 +322,7 @@ fn proxy_storage() {
         use traits::TryInto;
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
-        use cheatcodes::{ declare, PreparedContract, deploy };
+        use cheatcodes::{ declare, ContractClassTrait };
         
         #[derive(Drop, Serde, PartialEq, Copy)]
         struct NestedStruct {
@@ -338,9 +337,8 @@ fn proxy_storage() {
         }
         
         fn deploy_contract(name: felt252) -> ContractAddress {
-            let class_hash = declare(name);
-            let prepared = PreparedContract { class_hash, constructor_calldata: @ArrayTrait::new() };
-            deploy(prepared).unwrap()
+            let contract = declare(name);
+            contract.deploy(@ArrayTrait::new()).unwrap()
         }
         
         

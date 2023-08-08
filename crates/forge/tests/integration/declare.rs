@@ -76,16 +76,18 @@ fn multiple_declare() {
         use traits::Into;
         use starknet::ClassHashIntoFelt252;
         use cheatcodes::declare;
+        use forge_print::PrintTrait;
 
         #[test]
         fn multiple_contracts() {
-            let contract = declare('HelloStarknet').into();
+            let contract = declare('HelloStarknet');
             let class_hash = contract.class_hash.into();
 
             assert(class_hash != 0, 'proper class hash');
-        
-            let contract2 = declare('Contract1')
+
+            let contract2 = declare('Contract1');
             let class_hash2 = contract2.class_hash.into();
+
             assert(class_hash2 != 0, 'proper class hash');
         
             assert(class_hash != class_hash2, 'class hashes neq');

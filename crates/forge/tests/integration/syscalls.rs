@@ -45,12 +45,10 @@ fn library_call_syscall() {
                 contract_address: caller_address
             };
             
-            let executor_class_hash = declare('Executor');
-            let prepared = PreparedContract {
-                class_hash: executor_class_hash, constructor_calldata: @ArrayTrait::new()
-            };
+            let executor_contract = declare('Executor');
+            let executor_class_hash = executor_contract.class_hash;
 
-            let executor_address = deploy(prepared).unwrap();
+            let executor_address = executor_contract.deploy(@ArrayTrait::new()).unwrap();
             let executor_safe_dispatcher = IExecutorSafeDispatcher {
                 contract_address: executor_address
             };

@@ -237,7 +237,7 @@ fn double_roll() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use cheatcodes::{ declare, PreparedContract,  ContractClassTrait, start_roll, stop_roll };
+            use cheatcodes::{ declare, ContractClassTrait, start_roll, stop_roll };
 
             #[starknet::interface]
             trait IRollChecker<TContractState> {
@@ -369,7 +369,7 @@ fn start_roll_with_library_call() {
             #[test]
             fn test_roll_simple() {
                 let roll_checker_contract = declare('RollChecker');
-                let roll_checker_class_hash = roll_checker_contract.class_hash
+                let roll_checker_class_hash = roll_checker_contract.class_hash;
 
                 let contract = declare('RollCheckerLibCall');
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();

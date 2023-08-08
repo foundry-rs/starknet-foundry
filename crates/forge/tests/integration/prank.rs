@@ -322,13 +322,12 @@ fn start_prank_with_proxy() {
             #[test]
             fn test_prank_simple() {
                 let contract = declare('PrankChecker');
-                let prank_checker_contract_address = deploy(prepared).unwrap();
+                let prank_checker_contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let contract_address: ContractAddress = 234.try_into().unwrap();
                 start_prank(prank_checker_contract_address, contract_address);
 
-                let class_hash = declare('PrankCheckerProxy');
-                let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
-                let proxy_contract_address = deploy(prepared).unwrap();
+                let contract = declare('PrankCheckerProxy');
+                let proxy_contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let proxy_dispatcher = IPrankCheckerProxyDispatcher { contract_address: proxy_contract_address };
                 let caller_address = proxy_dispatcher.get_prank_checkers_caller_address(prank_checker_contract_address);
                 assert(caller_address == 234, caller_address);
