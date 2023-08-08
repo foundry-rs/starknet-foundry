@@ -1,3 +1,4 @@
+use crate::cheatcodes::expect_events::Event;
 use cairo_felt::Felt252;
 use starknet_api::core::ContractAddress;
 use std::collections::HashMap;
@@ -11,7 +12,7 @@ pub struct CheatedState {
     pub rolled_contracts: HashMap<ContractAddress, Felt252>,
     pub pranked_contracts: HashMap<ContractAddress, ContractAddress>,
     pub warped_contracts: HashMap<ContractAddress, Felt252>,
-    pub expected_events: Vec<Felt252>,
+    pub expected_events: Vec<Event>,
 }
 
 impl CheatedState {

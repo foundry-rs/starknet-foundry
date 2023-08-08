@@ -73,7 +73,7 @@ fn start_prank_with_other_syscall() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use cheatcodes::{ declare, PreparedContract, deploy, start_prank, expect_events };
+            use cheatcodes::{ declare, PreparedContract, deploy, start_prank, expect_events, Event };
 
             #[starknet::interface]
             trait IPrankChecker<TContractState> {
@@ -92,7 +92,10 @@ fn start_prank_with_other_syscall() {
 
                 start_prank(contract_address, caller_address);
 
-                expect_events(array!['ContractAddressEmitted']);
+                expect_events(array![
+                    Event { name: 'NewEventCheck', keys: array![], data: array![123, 456, 789] },
+                    Event { name: 'ContractAddressEmitted', keys: array![1], data: array![123, 456, 789] }
+                ]);
                 let caller_address = dispatcher.get_caller_address_and_emit_event();
                 assert(caller_address == 123, 'Wrong caller address');
             }

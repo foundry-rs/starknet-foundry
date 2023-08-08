@@ -33,6 +33,7 @@ use cairo_lang_runner::{
 };
 use cairo_lang_utils::bigint::BigIntAsHex;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
+use cheatable_starknet::cheatcodes::expect_events::Event;
 
 // TODO(#41) Remove after we have a separate scarb package
 impl From<&StarknetContractArtifacts> for ContractArtifacts {
@@ -104,7 +105,12 @@ impl HintProcessorLogic for CairoHintProcessor<'_> {
             );
         }
         if let Some(Hint::Starknet(StarknetHint::SystemCall { system })) = maybe_extended_hint {
-            return execute_syscall(system, vm, &mut self.blockifier_state, &mut self.cheated_state);
+            return execute_syscall(
+                system,
+                vm,
+                &mut self.blockifier_state,
+                &mut self.cheated_state,
+            );
         }
         self.original_cairo_hint_processor
             .execute_hint(vm, exec_scopes, hint_data, constants)
@@ -237,7 +243,33 @@ impl CairoHintProcessor<'_> {
                 Ok(())
             }
             "expect_events" => {
-                self.cheated_state.expect_events(inputs);
+                let mut events = vec![];
+                let mut i = 0;
+
+                while i < inputs.len() {
+                    // inputs will be structured as follows (for every event)
+                    // name, keys_length, key, key, ..., data_length, data, data ...
+                    let name = inputs.get(i).unwrap().clone();
+                    let keys_length: usize =
+                        inputs.get(i + 1).unwrap().to_biguint().try_into().unwrap();
+                    let data_length: usize = inputs
+                        .get(i + 2 + keys_length)
+                        .unwrap()
+                        .to_biguint()
+                        .try_into()
+                        .unwrap();
+                    let keys_and_data = &inputs[i + 2..i + 2 + keys_length + 1 + data_length];
+
+                    i = i + 1 + 1 + keys_length + 1 + data_length;
+
+                    events.push(Event {
+                        name,
+                        keys: Vec::from(&keys_and_data[..keys_length]),
+                        data: Vec::from(&keys_and_data[keys_length..]),
+                    });
+                }
+
+                self.cheated_state.expect_events(events);
                 Ok(())
             }
             _ => Err(anyhow!("Unknown cheatcode selector: {selector}")).map_err(Into::into),

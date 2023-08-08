@@ -140,8 +140,11 @@ pub fn call_contract(
         for expected_event in &cheated_state.expected_events {
             let mut found = false;
             for event in &call_info.execution.events {
-                if starknet_keccak(as_cairo_short_string(expected_event).unwrap().as_bytes())
-                    == BigUint::from_bytes_be(event.event.keys[0].0.bytes())
+                if starknet_keccak(
+                    as_cairo_short_string(&expected_event.name)
+                        .unwrap()
+                        .as_bytes(),
+                ) == BigUint::from_bytes_be(event.event.keys[0].0.bytes())
                 {
                     found = true;
                 }
@@ -153,7 +156,7 @@ pub fn call_contract(
                             .unwrap()
                             .to_bytes_be(),
                     ),
-                    expected_event.clone(),
+                    expected_event.name.clone(),
                 ];
                 return Ok(CallContractOutput::Panic {
                     panic_data: err_data,

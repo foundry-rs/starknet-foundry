@@ -4,6 +4,7 @@ use clone::Clone;
 use option::OptionTrait;
 use traits::Into;
 use traits::TryInto;
+use serde::Serde;
 
 use starknet::testing::cheatcode;
 use starknet::ClassHash;
@@ -118,6 +119,23 @@ fn stop_warp(contract_address: ContractAddress) {
     cheatcode::<'stop_warp'>(array![contract_address_felt].span());
 }
 
-fn expect_events(events: Array<felt252>) {
-    cheatcode::<'expect_events'>(events.span());
+#[derive(Drop, Clone, Serde)]
+struct Event {
+    name: felt252,
+    keys: Array<felt252>,
+    data: Array<felt252>
+}
+
+fn expect_events(events: Array<Event>) {
+    let mut i: usize = 0;
+    let mut serialized_events = ArrayTrait::new();
+    loop {
+        if i >= events.len() {
+            break;
+        }
+        events.at(i).serialize(ref serialized_events);
+        i += 1;
+    };
+
+    cheatcode::<'expect_events'>(serialized_events.span());
 }
