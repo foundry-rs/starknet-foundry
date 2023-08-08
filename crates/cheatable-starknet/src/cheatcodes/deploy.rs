@@ -153,7 +153,8 @@ fn try_extract_panic_data(err: &str) -> Option<Vec<Felt252>> {
     None
 }
 
-fn felt_from_short_string(short_str: &str) -> Felt252 {
+#[must_use]
+pub fn felt_from_short_string(short_str: &str) -> Felt252 {
     return Felt252::from_bytes_be(short_str.as_bytes());
 }
 

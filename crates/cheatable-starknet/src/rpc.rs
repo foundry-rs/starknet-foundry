@@ -64,6 +64,7 @@ use starknet_api::{
     transaction::{Calldata, TransactionVersion},
 };
 
+use crate::cheatcodes::deploy::felt_from_short_string;
 use blockifier::execution::syscalls::{
     LibraryCallRequest, SyscallRequest, SyscallRequestWrapper, SyscallResponse,
     SyscallResponseWrapper, SyscallResult,
@@ -73,7 +74,6 @@ use cairo_lang_starknet::contract::starknet_keccak;
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
 use cairo_vm::vm::runners::cairo_runner::ResourceTracker;
 use num_bigint::BigUint;
-use starknet::core::utils::cairo_short_string_to_felt;
 
 use crate::CheatedState;
 
@@ -794,12 +794,7 @@ fn check_emitted_events(cheated_state: &mut CheatedState, call_info: &CallInfo) 
                     .map(|stark_felt| stark_felt_to_felt(stark_felt.0))
                     .collect();
                 if expected_event.keys != keys[1..] {
-                    let err_data: Vec<Felt252> = vec![Felt252::from_bytes_be(
-                        &cairo_short_string_to_felt("Expected keys differ from real")
-                            .unwrap()
-                            .to_bytes_be(),
-                    )];
-                    return err_data;
+                    return vec![felt_from_short_string("Expected keys differ from real")];
                 }
                 let data: Vec<Felt252> = event
                     .event
@@ -809,26 +804,18 @@ fn check_emitted_events(cheated_state: &mut CheatedState, call_info: &CallInfo) 
                     .map(|stark_felt| stark_felt_to_felt(*stark_felt))
                     .collect();
                 if expected_event.data != data {
-                    let err_data: Vec<Felt252> = vec![Felt252::from_bytes_be(
-                        &cairo_short_string_to_felt("Expected data differs from real")
-                            .unwrap()
-                            .to_bytes_be(),
-                    )];
-                    return err_data;
+                    return vec![felt_from_short_string("Expected data differs from real")];
                 }
+
                 found = true;
+                break;
             }
         }
         if !found {
-            let err_data: Vec<Felt252> = vec![
-                Felt252::from_bytes_be(
-                    &cairo_short_string_to_felt("Expected event was not emitted")
-                        .unwrap()
-                        .to_bytes_be(),
-                ),
+            return vec![
+                felt_from_short_string("Expected event was not emitted"),
                 expected_event.name.clone(),
             ];
-            return err_data;
         }
     }
     cheated_state.expected_events = vec![];
