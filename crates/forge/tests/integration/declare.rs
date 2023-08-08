@@ -76,7 +76,6 @@ fn multiple_declare() {
         use traits::Into;
         use starknet::ClassHashIntoFelt252;
         use cheatcodes::declare;
-        use forge_print::PrintTrait;
 
         #[test]
         fn multiple_contracts() {
