@@ -427,7 +427,7 @@ dependencies = [
 [[package]]
 name = "blockifier"
 version = "0.2.0-rc0"
-source = "git+https://github.com/starkware-libs/blockifier.git?rev=39730ea#39730ea3078034367939f1bfa34d5e979ce9f426"
+source = "git+https://github.com/starkware-libs/blockifier.git?rev=df23f46#df23f465125ff88e5e28aac219181f382ba12ce0"
 dependencies = [
  "ark-ff",
  "ark-secp256k1",
@@ -4009,6 +4009,7 @@ dependencies = [
 ]
 
 [[package]]
+<<<<<<< HEAD
 name = "starknet-signers"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4028,6 +4029,11 @@ dependencies = [
 name = "starknet_api"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+=======
+name = "starknet_api"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+>>>>>>> 7cb7165 (Bumped cairo-lang to 2.1.0)
 checksum = "3f6e445fbd6bf3826dda26fd64aa5311353b4799c9bd1119d6ec1906be4c73bf"
 dependencies = [
  "cairo-lang-starknet",
