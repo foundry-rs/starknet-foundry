@@ -1,4 +1,4 @@
-use crate::helpers::constants::{CONTRACTS_DIR, NETWORK, URL};
+use crate::helpers::constants::{CONTRACTS_DIR, DEVNET_OZ_CLASS_HASH, NETWORK, URL};
 use crate::helpers::fixtures::{
     duplicate_directory_with_salt, get_transaction_hash, get_transaction_receipt, mint_token,
 };
@@ -28,6 +28,8 @@ pub async fn test_happy_case() {
         "my_account",
         "--max-fee",
         "10000000000000000",
+        "--class-hash",
+        DEVNET_OZ_CLASS_HASH,
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
@@ -71,6 +73,8 @@ pub async fn test_happy_case_add_profile() {
         "my_account",
         "--max-fee",
         "10000000000000000",
+        "--class-hash",
+        DEVNET_OZ_CLASS_HASH,
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
@@ -148,6 +152,8 @@ async fn test_too_low_max_fee() {
         "my_account",
         "--max-fee",
         "1",
+        "--class-hash",
+        DEVNET_OZ_CLASS_HASH,
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
@@ -181,6 +187,8 @@ pub async fn create_account(salt: &str, add_profile: bool) -> (Utf8PathBuf, &str
         "create",
         "--name",
         "my_account",
+        "--class-hash",
+        DEVNET_OZ_CLASS_HASH,
     ];
     if add_profile {
         args.push("--add-profile");

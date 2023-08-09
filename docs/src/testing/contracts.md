@@ -70,8 +70,8 @@ fn call_and_invoke() {
 ```shell
 $ snforge
 Collected 1 test(s) and 1 test file(s)
-Running 1 test(s) from src/lib.cairo
-[PASS] src::call_and_invoke
+Running 1 test(s) from using_dispatchers
+[PASS] using_dispatchers::call_and_invoke
 Tests: 1 passed, 0 failed, 0 skipped
 ```
 
@@ -128,8 +128,8 @@ fn failing() {
 ```shell
 $ snforge
 Collected 1 test(s) and 1 test file(s)
-Running 1 test(s) from src/lib.cairo
-[FAIL] src::failing
+Running 1 test(s) from package_name package
+[FAIL] package_name::failing
 
 Failure data:
     original value: [344693033283], converted to a string: [PANIC]
@@ -165,7 +165,7 @@ Now the test passes as expected.
 ```shell
 $ snforge
 Collected 1 test(s) and 1 test file(s)
-Running 1 test(s) from src/lib.cairo
-[PASS] src::handling_errors
+Running 1 test(s) from package_name package
+[PASS] package_name::handling_errors
 Tests: 1 passed, 0 failed, 0 skipped
 ```

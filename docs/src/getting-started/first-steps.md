@@ -32,9 +32,9 @@ And run tests with `snforge`
 ```shell
 $ snforge
 Collected 2 test(s) and 2 test file(s)
-Running 0 test(s) from src/lib.cairo
+Running 0 test(s) from package_name package
 Running 2 test(s) from tests/test_contract.cairo
-[PASS] test_contract::test_contract::test_increase_balance
-[PASS] test_contract::test_contract::test_cannot_increase_balance_with_zero_value
+[PASS] test_contract::test_increase_balance
+[PASS] test_contract::test_cannot_increase_balance_with_zero_value
 Tests: 2 passed, 0 failed, 0 skipped
 ```

@@ -13,9 +13,9 @@ use cairo_vm::types::exec_scope::ExecutionScopes;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::vm_core::VirtualMachine;
-use cheatable_starknet::rpc::{call_contract, CallContractOutput};
-use cheatable_starknet::state::DictStateReader;
-use cheatable_starknet::{
+use cheatnet::rpc::{call_contract, CallContractOutput};
+use cheatnet::state::DictStateReader;
+use cheatnet::{
     cheatcodes::{ContractArtifacts, EnhancedHintError},
     CheatedState,
 };
