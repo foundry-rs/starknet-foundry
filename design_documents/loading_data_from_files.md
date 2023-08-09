@@ -98,7 +98,7 @@ struct A {
     item_two: felt252,
 }
 
-let file = File::new('data/file.json');
+let file = FileTrait::new('data/file.json');
 let data = file.from_json().unwrap();
 
 let mut span = data.span();    
