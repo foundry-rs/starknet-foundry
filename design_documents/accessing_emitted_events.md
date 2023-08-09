@@ -7,7 +7,7 @@
   * [Considered Solutions](#considered-solutions)
   * [`expect_events` cheatcode](#expectevents-cheatcode)
     * [Usage example](#usage-example)
-  * [`start_spy` cheatcode](#startspy-cheatcode)
+  * [`spy_events` cheatcode](#spyevents-cheatcode)
     * [Usage example](#usage-example-1)
 <!-- TOC -->
 
@@ -22,7 +22,7 @@ Propose a solution that will allow checking if events were emitted.
 ## Considered Solutions
 
 1. `expect_events` cheatcode 
-2. `start_spy` cheatcode
+2. `spy_events` cheatcode
 
 ## `expect_events` cheatcode
 
@@ -110,16 +110,16 @@ fn check_emitted_event() {
 }
 ```
 
-## `start_spy` cheatcode
+## `spy_events` cheatcode
 
 Another idea is to give users the highest possible customization. There would be a handler for extracting events emitted
 after the line it was created. Users would have to assert events manually (which could be more complex than the previous
 solution but would add more flexibility).
 
-Introduce `start_spy` cheatcode with the signature:
+Introduce `spy_events` cheatcode with the signature:
 
 ```cario
-fn start_spy() -> snforge_std::EventSpy
+fn spy_events() -> snforge_std::EventSpy
 ```
 
 where `snforge_std::EventSpy` would allow for accessing events emitted after its creation.
@@ -144,27 +144,20 @@ impl EventFetcherImpl of EventFetcher {
 
 Users will be responsible for calling `fetch_events` to load emitted events to the `events` property.
 
-It would be important to somehow end spying (if users want to check events only in some places), so we will introduce
-
-```cario
-fn stop_spy()
-```
-
-cheatcode which will stop events collection. After `stop_spy` usage, handler will not be modifier (no more events will be added).
-
 ### Usage example
 
 ```cario
 // Contract is the same as in the previous example
 
-use snforge_std::start_spy;
-use snforge_std::stop_spy;
+use snforge_std::spy_events;
 use snforge_std::EventSpy;
+use snforge_std::EventFetcher;
+use snforge_std::EventFetcherImpl;
 
 #[test]
 fn check_emitted_event() {
     // ...
-	let mut spy = start_spy();  // all events emitted after this line will be saved under the `spy` variable
+	let mut spy = spy_events();  // all events emitted after this line will be saved under the `spy` variable
     let res = contract.emit_store_name(...);
     
     spy.fetch_events();
@@ -187,13 +180,6 @@ fn check_emitted_event() {
         assert!(contract_events.at(i).name == 'StoredName', 'Unexpected event name');
         i += 1;
     }
-    
-    stop_spy();  // no more events will be added to the handler
-    
-    let res = contract.emit_store_name(...);
-    
-    spy.fetch_events();
-    assert!(spy.events.get(contract_address).len() == 3, 'There should be three events');
     // ...
 }
 ```
