@@ -7,6 +7,7 @@ edition.workspace = true
 
 [dependencies]
 anyhow.workspace = true
+assert_fs.workspace = true
 blockifier.workspace = true
 camino.workspace = true
 include_dir.workspace = true
@@ -25,30 +26,29 @@ cairo-lang-utils.workspace = true
 cairo-lang-starknet.workspace = true
 cairo-lang-compiler.workspace = true
 cairo-lang-filesystem.workspace = true
+itertools.workspace = true
+regex.workspace = true
+serde_json.workspace = true
+serde.workspace = true
+starknet.workspace = true
+thiserror.workspace = true
+num-traits.workspace = true
 schemars = { version = "0.8.12", features = ["preserve_order"] }
 parity-scale-codec = "3.5.0"
 parity-scale-codec-derive = "3.1.4"
 cairo-felt = "0.8.1"
 clap = { version = "4.2.7", features = ["derive"] }
-serde_json = "1.0.96"
-serde = { version = "1.0.163", features = ["derive"] }
-itertools = "0.10.5"
 walkdir = "2.3.3"
 scarb-metadata = "1.4.2"
 project-root = "0.2.2"
 console = "0.15.7"
-assert_fs = "1.0.13"
 snapbox = "0.4.11"
-starknet = "0.4.0"
 once_cell = "1.18.0"
 cairo-vm = "0.8.1"
 ark-ff = "0.4.0-alpha.7"
 ark-std = "0.4.0"
 ark-secp256k1 = "0.4.0"
 ark-secp256r1 = "0.4.0"
-num-traits = "0.2"
-thiserror = "1.0.43"
-regex = "1.9.1"
 openssl = { version = "0.10", features = ["vendored"] }
 which = "4.4.0"
 

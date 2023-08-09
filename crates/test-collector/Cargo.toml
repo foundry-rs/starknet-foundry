@@ -32,14 +32,14 @@ cairo-lang-utils.workspace = true
 anyhow.workspace = true
 cairo-vm.workspace = true
 cairo-felt.workspace = true
+itertools.workspace = true
+num-traits.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
 smol_str = { version = "0.2.0", features = ["serde"] }
-itertools = "0.10.3"
 num-bigint = "0.4"
 num-integer = "0.1"
-num-traits = "0.2"
-serde = { version = "1.0.130", features = ["derive"] }
-thiserror = "1.0.32"
-serde_json = "1.0"
 
 
 [lib]
