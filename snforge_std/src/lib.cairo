@@ -14,6 +14,16 @@ use cheatcodes::stop_roll;
 use cheatcodes::start_warp;
 use cheatcodes::stop_warp;
 
+
+mod file_operations;
+
+use file_operations::File;
+use file_operations::FileTrait;
+use file_operations::FileTraitImpl;
+use file_operations::parse_txt;
+use file_operations::parse_json;
+
+
 mod forge_print;
 
 use forge_print::PrintTrait;

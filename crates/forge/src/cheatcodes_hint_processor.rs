@@ -34,6 +34,8 @@ use cairo_lang_runner::{
 use cairo_lang_utils::bigint::BigIntAsHex;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 
+mod file_operations;
+
 // TODO(#41) Remove after we have a separate scarb package
 impl From<&StarknetContractArtifacts> for ContractArtifacts {
     fn from(artifacts: &StarknetContractArtifacts) -> Self {
@@ -236,6 +238,11 @@ impl CairoHintProcessor<'_> {
                 print(inputs);
                 Ok(())
             }
+            "parse_txt" => {
+                let file_path = inputs[0].clone();
+                file_operations::parse_txt(&mut buffer, file_path)
+            }
+            "parse_json" => todo!(),
             _ => Err(anyhow!("Unknown cheatcode selector: {selector}")).map_err(Into::into),
         }?;
 

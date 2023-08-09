@@ -14,8 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `#[should_panic]` attribute support
 - Documentation to public methods
 - Information sections to documentation about importing `snforge_std`
-- Added print support for basic numeric data types
->>>>>>> origin/master
+- Print support for basic numeric data types
+- Functions to load data from files 
 
 #### Changed
 
