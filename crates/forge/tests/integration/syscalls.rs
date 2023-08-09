@@ -1,6 +1,6 @@
 use crate::integration::common::corelib::{corelib_path, predeployed_contracts};
 use crate::integration::common::runner::Contract;
-use crate::{assert_passed, test_case};
+use crate::{assert_case_output_contains, assert_failed, assert_passed, test_case};
 use camino::Utf8PathBuf;
 use forge::run;
 use indoc::indoc;
@@ -143,4 +143,36 @@ fn library_call_syscall() {
     .unwrap();
 
     assert_passed!(result);
+}
+
+#[test]
+fn test_call_syscall_fail_in_test_fn() {
+    let test = test_case!(indoc!(
+        r#"
+        use starknet::{ get_block_timestamp };
+        #[test]
+        fn test_execute_disallowed_syscall() {
+            get_block_timestamp();
+        }
+    "#
+    ));
+
+    let result = run(
+        &test.path().unwrap(),
+        &String::from("src"),
+        &test.path().unwrap().join("src/lib.cairo"),
+        &Some(test.linked_libraries()),
+        &Default::default(),
+        &corelib_path(),
+        &test.contracts(&corelib_path()).unwrap(),
+        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
+    )
+    .unwrap();
+
+    assert_case_output_contains!(
+        result,
+        "test_execute_disallowed_syscall",
+        "starknet syscalls cannot be used in tests"
+    );
+    assert_failed!(result);
 }

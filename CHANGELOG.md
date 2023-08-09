@@ -44,12 +44,13 @@ cheatcodes = { git = "https://github.com/foundry-rs/starknet-foundry", tag = "0.
     - `target_name_for_package`
     - `compilation_unit_for_package`
 
+- Fails test when user tries to use syscalls not supported by forge test runner
+
 ### Cast
 
 #### Added
 
 - Added `--class-hash` flag to account create/deploy, allowing for custom openzeppelin account contract class hash 
-
 
 ## [0.3.0] - 2023-08-02
 
