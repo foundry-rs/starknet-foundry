@@ -492,7 +492,7 @@ fn proxy_dispatcher_panic() {
         use traits::Into;
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
-        use cheatcodes::{ declare, PreparedContract, deploy };
+        use snforge_std::{ declare, PreparedContract, deploy };
         
 
         fn deploy_contract(name: felt252, constructor_calldata: @Array<felt252>) -> ContractAddress {
