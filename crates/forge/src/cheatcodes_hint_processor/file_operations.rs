@@ -15,8 +15,6 @@ pub(super) fn parse_txt(
     let content = std::fs::read_to_string(file_path_str.clone())?;
     let split_content: Vec<&str> = content.trim().split_ascii_whitespace().collect();
 
-    println!("{split_content:?}");
-
     let felts_in_results: Vec<Result<Felt252, ()>> = split_content
         .iter()
         .map(|&string| string_into_felt(string))
@@ -29,8 +27,6 @@ pub(super) fn parse_txt(
         .map_err(|_| FileParsing {
             path: file_path_str,
         })?;
-
-    println!("{felts:?}");
 
     buffer
         .write_data(felts.iter())

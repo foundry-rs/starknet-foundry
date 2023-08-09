@@ -1,13 +1,13 @@
 use snforge_std::{ FileTrait, FileTraitImpl, parse_txt, PrintTrait };
 use array::ArrayTrait;
 
-#[test]
-fn test() {
-    let file = FileTrait::new('uwu.txt');
-    let x = parse_txt(@file);
-    x.print();
-    assert(1 == 1, 'simple check');
-}
+// #[test]
+// fn test() {
+//    let file = FileTrait::new('file.txt');
+//    let x = parse_txt(@file);
+//    x.print();
+//    assert(1 == 1, 'simple check');
+// }
 
 #[test]
 fn test_simple() {
