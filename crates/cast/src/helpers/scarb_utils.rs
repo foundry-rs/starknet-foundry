@@ -92,17 +92,7 @@ pub fn parse_scarb_config(
         return Ok(CastConfig::default());
     }
 
-    let package_tool = package_tool_result?;
-
-    let rpc_url = get_property(package_tool, profile, "url")?;
-    let network = get_property(package_tool, profile, "network")?;
-    let account = get_property(package_tool, profile, "account")?;
-
-    Ok(CastConfig {
-        rpc_url,
-        network,
-        account,
-    })
+    cast_config_from_package_tool(package_tool_result.unwrap(), profile)
 }
 
 pub fn get_package_tool(metadata: &scarb_metadata::Metadata) -> Result<&BTreeMap<String, Value>> {
@@ -118,6 +108,21 @@ pub fn get_package_tool(metadata: &scarb_metadata::Metadata) -> Result<&BTreeMap
         .ok_or_else(|| anyhow!("No tool found in package"))?;
 
     Ok(tool)
+}
+
+pub fn cast_config_from_package_tool(
+    package_tool: &BTreeMap<String, Value>,
+    profile: &Option<String>,
+) -> Result<CastConfig> {
+    let rpc_url = get_property(package_tool, profile, "url")?;
+    let network = get_property(package_tool, profile, "network")?;
+    let account = get_property(package_tool, profile, "account")?;
+
+    Ok(CastConfig {
+        rpc_url,
+        network,
+        account,
+    })
 }
 
 #[cfg(test)]
