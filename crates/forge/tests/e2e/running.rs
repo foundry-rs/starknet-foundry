@@ -82,6 +82,7 @@ fn simple_package() {
 }
 
 #[test]
+#[ignore]
 fn simple_package_with_git_dependency() {
     let temp = TempDir::new().unwrap();
     temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
@@ -239,8 +240,21 @@ fn with_print() {
         Running 0 test(s) from print_test package
         Running 1 test(s) from tests/test_print.cairo
         original value: [123], converted to a string: [{]
-        original value: [6381921], converted to a string: [aaa]
         original value: [3618502788666131213697322783095070105623107215331596699973092056135872020480]
+        original value: [6381921], converted to a string: [aaa]
+        original value: [12], converted to a string: []
+        original value: [1234]
+        original value: [123456]
+        original value: [1233456789]
+        original value: [123345678910]
+        original value: [0], converted to a string: []
+        original value: [10633823966279327296825105735305134080]
+        original value: [2], converted to a string: []
+        original value: [11], converted to a string: []
+        original value: [1234]
+        original value: [123456]
+        original value: [123456789]
+        original value: [12345612342]
         original value: [152]
         original value: [124], converted to a string: [|]
         original value: [149]

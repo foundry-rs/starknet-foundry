@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `#[should_panic]` attribute support
 - Documentation to public methods
 - Information sections to documentation about importing `snforge_std`
+- Added print support for basic numeric data types
 
 #### Changed
 
@@ -44,12 +45,13 @@ snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry", tag = "0
     - `target_name_for_package`
     - `compilation_unit_for_package`
 
+- Fails test when user tries to use syscalls not supported by forge test runner
+
 ### Cast
 
 #### Added
 
 - Added `--class-hash` flag to account create/deploy, allowing for custom openzeppelin account contract class hash 
-
 
 ## [0.3.0] - 2023-08-02
 
