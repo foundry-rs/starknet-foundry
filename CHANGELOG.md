@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `#[should_panic]` attribute support
 - Documentation to public methods
+- Added print support for basic numeric data types
 
 #### Changed
 
