@@ -6,3 +6,12 @@
 * [`stop_roll`](cheatcodes/stop_roll.md)
 * [`start_warp`](cheatcodes/start_warp.md)
 * [`stop_warp`](cheatcodes/stop_warp.md)
+
+> ℹ️ **Info**
+> To use cheatcodes you need to add `snforge_std` package as a dependency in
+> your [`Scarb.toml`](https://docs.swmansion.com/scarb/docs/guides/dependencies.html#adding-a-dependency) 
+> using appropriate release tag.
+>```toml
+> [dependencies]
+> snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.4.0" }
+> ```

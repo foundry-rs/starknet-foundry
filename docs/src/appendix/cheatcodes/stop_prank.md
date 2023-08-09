@@ -7,6 +7,8 @@ Cancels the [`start_prank`](./start_prank.md) for the contract at the given addr
 - `contract_address` - target contract address
 
 ```rust
+use snforge_std::stop_prank;
+
 #[test]
 fn test_prank() {
     // ...

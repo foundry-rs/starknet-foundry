@@ -4,7 +4,7 @@ use option::OptionTrait;
 use traits::TryInto;
 use starknet::ContractAddress;
 use starknet::Felt252TryIntoContractAddress;
-use cheatcodes::PreparedContract;
+use snforge_std::PreparedContract;
 
 fn deploy_hello_starknet() -> felt252 {
     let class_hash = declare('HelloStarknet').unwrap();

@@ -13,16 +13,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `#[should_panic]` attribute support
 - Documentation to public methods
+- Information sections to documentation about importing `snforge_std`
+- Added print support for basic numeric data types
 
 #### Changed
 
-- Exported cheatcodes as a Scarb package, now you have to import them explicitly with e.g. `use cheatcodes::declare`
-  and add them as a dependency to your Scarb.toml
+- Exported `snforge_std` as a Scarb package, now you have to import it explicitly with e.g. `use snforge_std::declare`
+  and add it as a dependency to your Scarb.toml
 
 ```toml
 [dependencies]
 # ...
-cheatcodes = { git = "https://github.com/foundry-rs/starknet-foundry", tag = "0.4.0" }
+snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry", tag = "0.4.0" }
 ```
 
 - Moved `ForgeConfigFromScarb` to `scarb.rs` and renamed to `ForgeConfig`
@@ -43,12 +45,13 @@ cheatcodes = { git = "https://github.com/foundry-rs/starknet-foundry", tag = "0.
     - `target_name_for_package`
     - `compilation_unit_for_package`
 
+- Fails test when user tries to use syscalls not supported by forge test runner
+
 ### Cast
 
 #### Added
 
 - Added `--class-hash` flag to account create/deploy, allowing for custom openzeppelin account contract class hash 
-
 
 ## [0.3.0] - 2023-08-02
 
