@@ -1112,7 +1112,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
-name = "cheatable-starknet"
+name = "cheatnet"
 version = "1.0.0"
 dependencies = [
  "anyhow",
@@ -1738,7 +1738,7 @@ dependencies = [
  "cairo-lang-utils",
  "cairo-vm",
  "camino",
- "cheatable-starknet",
+ "cheatnet",
  "clap",
  "console",
  "include_dir",
