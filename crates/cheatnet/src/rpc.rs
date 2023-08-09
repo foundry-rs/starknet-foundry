@@ -71,6 +71,7 @@ use blockifier::execution::syscalls::{
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
 use cairo_vm::vm::runners::cairo_runner::ResourceTracker;
 
+use crate::panic_data::try_extract_panic_data;
 use crate::CheatedState;
 
 type SyscallSelector = DeprecatedSyscallSelector;
@@ -152,6 +153,14 @@ pub fn call_contract(
         Ok(CallContractOutput::Panic {
             panic_data: err_data,
         })
+    } else if let Err(EntryPointExecutionError::VirtualMachineExecutionErrorWithTrace {
+        trace,
+        ..
+    }) = exec_result
+    {
+        let panic_data =
+            try_extract_panic_data(&trace).unwrap_or_else(|| panic!("Unparseable result: {trace}"));
+        Ok(CallContractOutput::Panic { panic_data })
     } else {
         panic!("Unparseable result: {exec_result:?}");
     }
