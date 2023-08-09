@@ -104,7 +104,7 @@ impl<'a> TestCase {
     }
 
     pub fn linked_libraries(&self) -> Vec<LinkedLibrary> {
-        let cheatcodes_path = PathBuf::from_str("../../cheatcodes")
+        let snforge_std_path = PathBuf::from_str("../../snforge_std")
             .unwrap()
             .canonicalize()
             .unwrap();
@@ -114,8 +114,8 @@ impl<'a> TestCase {
                 path: self.dir.path().join("src"),
             },
             LinkedLibrary {
-                name: "cheatcodes".to_string(),
-                path: cheatcodes_path.join("src"),
+                name: "snforge_std".to_string(),
+                path: snforge_std_path.join("src"),
             },
         ]
     }

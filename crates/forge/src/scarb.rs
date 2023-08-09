@@ -231,7 +231,7 @@ mod tests {
         )
         .unwrap();
 
-        let cheatcodes_path = Utf8PathBuf::from_str("../../cheatcodes")
+        let snforge_std_path = Utf8PathBuf::from_str("../../snforge_std")
             .unwrap()
             .canonicalize_utf8()
             .unwrap();
@@ -250,10 +250,10 @@ mod tests {
 
                 [dependencies]
                 starknet = "2.1.0-rc2"
-                cheatcodes = {{ path = "{}" }}
+                snforge_std = {{ path = "{}" }}
                 "#,
                 package_name,
-                cheatcodes_path
+                snforge_std_path
             ))
             .unwrap();
 
@@ -287,7 +287,7 @@ mod tests {
     fn get_starknet_artifacts_path_for_project_with_different_package_and_target_name() {
         let temp = setup_package("simple_package");
 
-        let cheatcodes_path = Utf8PathBuf::from_str("../../cheatcodes")
+        let snforge_std_path = Utf8PathBuf::from_str("../../snforge_std")
             .unwrap()
             .canonicalize_utf8()
             .unwrap();
@@ -302,14 +302,14 @@ mod tests {
 
                 [dependencies]
                 starknet = "2.1.0-rc2"
-                cheatcodes = {{ path = "{}" }}
+                snforge_std = {{ path = "{}" }}
 
                 [[target.starknet-contract]]
                 name = "essa"
                 sierra = true
                 casm = true
                 "#,
-                cheatcodes_path
+                snforge_std_path
             ))
             .unwrap();
 

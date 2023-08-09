@@ -162,7 +162,7 @@ mod test {
         )
         .unwrap();
 
-        let cheatcodes_path = Utf8PathBuf::from_str("../../cheatcodes")
+        let snforge_std_path = Utf8PathBuf::from_str("../../snforge_std")
             .unwrap()
             .canonicalize_utf8()
             .unwrap();
@@ -181,9 +181,9 @@ mod test {
         
                 [dependencies]
                 starknet = "2.1.0-rc2"
-                cheatcodes = {{ path = "{}" }}
+                snforge_std = {{ path = "{}" }}
                 "#,
-                cheatcodes_path
+                snforge_std_path
             ))
             .unwrap();
 

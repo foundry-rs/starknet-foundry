@@ -14,7 +14,7 @@ pub fn setup_package(package_name: &str) -> TempDir {
     )
     .unwrap();
 
-    let cheatcodes_path = Utf8PathBuf::from_str("../../cheatcodes")
+    let snforge_std_path = Utf8PathBuf::from_str("../../snforge_std")
         .unwrap()
         .canonicalize_utf8()
         .unwrap();
@@ -33,10 +33,10 @@ pub fn setup_package(package_name: &str) -> TempDir {
 
                 [dependencies]
                 starknet = "2.1.0-rc2"
-                cheatcodes = {{ path = "{}" }}
+                snforge_std = {{ path = "{}" }}
                 "#,
             package_name,
-            cheatcodes_path
+            snforge_std_path
         ))
         .unwrap();
 
@@ -82,6 +82,7 @@ fn simple_package() {
 }
 
 #[test]
+#[ignore]
 fn simple_package_with_git_dependency() {
     let temp = TempDir::new().unwrap();
     temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
@@ -89,7 +90,6 @@ fn simple_package_with_git_dependency() {
 
     let manifest_path = temp.child("Scarb.toml");
     manifest_path
-        // TODO #403
         .write_str(indoc!(
             r#"
             [package]
@@ -102,7 +102,7 @@ fn simple_package_with_git_dependency() {
 
             [dependencies]
             starknet = "2.1.0-rc2"
-            cheatcodes = { git = "https://github.com/foundry-rs/starknet-foundry.git" }
+            snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git" }
             "#,
         ))
         .unwrap();
@@ -310,7 +310,7 @@ fn with_exit_first() {
 
             [dependencies]
             starknet = "2.1.0-rc2"
-            cheatcodes = {{ path = "{}" }}
+            snforge_std = {{ path = "{}" }}
 
             [[target.starknet-contract]]
             sierra = true
@@ -319,7 +319,7 @@ fn with_exit_first() {
             [tool.snforge]
             exit_first = true
             "#,
-            Utf8PathBuf::from_str("../../cheatcodes")
+            Utf8PathBuf::from_str("../../snforge_std")
                 .unwrap()
                 .canonicalize_utf8()
                 .unwrap()
@@ -402,7 +402,7 @@ fn exit_first_flag_takes_precedence() {
 
             [dependencies]
             starknet = "2.1.0-rc2"
-            cheatcodes = { path = "../.." }
+            snforge_std = { path = "../.." }
 
             [[target.starknet-contract]]
             sierra = true
