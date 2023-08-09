@@ -2,7 +2,7 @@
 
 > ℹ️ **Info**
 > To use `PrintTrait` you need to add `snforge_std` package as a dependency in
-> your [`Scarb.toml`](https://docs.swmansion.com/scarb/docs/guides/dependencies#adding-a-dependency) 
+> your [`Scarb.toml`](https://docs.swmansion.com/scarb/docs/guides/dependencies.html#adding-a-dependency) 
 > using appropriate release tag.
 >```toml
 > [dependencies]
