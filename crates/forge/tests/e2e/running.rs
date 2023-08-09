@@ -90,7 +90,6 @@ fn simple_package_with_git_dependency() {
 
     let manifest_path = temp.child("Scarb.toml");
     manifest_path
-        // TODO #403
         .write_str(indoc!(
             r#"
             [package]
