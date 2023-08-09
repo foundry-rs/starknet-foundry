@@ -69,8 +69,8 @@ impl FileTraitImpl of FileTrait {
     }
 }
 
-fn from_txt(file: @File) -> Array<felt252>;
-fn from_json(file: @File) -> Array<felt252>;
+fn parse_txt(file: @File) -> Array<felt252>;
+fn parse_json(file: @File) -> Array<felt252>;
 ```
 
 Example usage:
@@ -82,7 +82,7 @@ struct A {
 }
 
 let file = FileTrait::new('data/file.txt');
-let data = from_txt(file);
+let data = parse_txt(file);
 
 let mut span = data.span();
 let deserialized_struct: A = Serde::<A>::deserialize(ref span).unwrap();
