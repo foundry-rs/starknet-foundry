@@ -36,9 +36,9 @@ where `snforge_std::Event` is defined as below
 
 ```cario
 struct Event {
-   name: felt252,
-   keys: Array<felt252>,
-   data: Array<felt252>
+    name: felt252,
+    keys: Array<felt252>,
+    data: Array<felt252>
 }
 ```
 
@@ -127,9 +127,21 @@ where `snforge_std::EventSpy` would allow for accessing events emitted after its
 
 ```cario
 struct EventSpy {
-   events: Array<snforge_std::Event>,
+    events: Array<snforge_std::Event>,
+}
+
+trait EventFetcher {
+    fn fetch_events(self: EventSpy);
+}
+
+impl EventFetcherImpl of EventFetcher {
+    fn fetch_events(self: EventSpy) {
+        // ...
+    }
 }
 ```
+
+Users will be responsible for calling `fetch_events` to load emitted events to the `events` property.
 
 It would be important to somehow end spying (if users want to check events only in some places), so we will introduce
 
@@ -154,11 +166,15 @@ fn check_emitted_event() {
 	let ref spy = start_spy();  // all events emitted after this line will be saved under the `spy` variable
     let res = contract.emit_store_name(...);
     
+    spy.fetch_events();
     assert!(spy.events.len() == 1, 'There should be one event');
 
     let res = contract.emit_store_name(...);
     let res = contract.emit_store_name(...);
     
+    assert!(spy.events.len() == 1, 'There should be one event');
+    
+    spy.fetch_events();
     assert!(spy.events.len() == 3, 'There should be three events');
     
     let mut i = 0;
@@ -174,6 +190,7 @@ fn check_emitted_event() {
     
     let res = contract.emit_store_name(...);
     
+    spy.fetch_events();
     assert!(spy.events.len() == 3, 'There should be three events');
     // ...
 }
