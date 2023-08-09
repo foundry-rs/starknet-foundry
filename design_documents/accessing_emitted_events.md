@@ -119,7 +119,7 @@ solution but would add more flexibility).
 Introduce `start_spy` cheatcode with the signature:
 
 ```cario
-fn start_spy() -> ref snforge_std::EventSpy
+fn start_spy() -> snforge_std::EventSpy
 ```
 
 where `snforge_std::EventSpy` would allow for accessing events emitted after its creation.
@@ -127,7 +127,8 @@ where `snforge_std::EventSpy` would allow for accessing events emitted after its
 
 ```cario
 struct EventSpy {
-    events: Array<snforge_std::Event>,
+    // mapping between contract address and its events
+    events: Felt252Dict<Array<snforge_std::Event>>,
 }
 
 trait EventFetcher {
@@ -163,26 +164,27 @@ use snforge_std::EventSpy;
 #[test]
 fn check_emitted_event() {
     // ...
-	let ref spy = start_spy();  // all events emitted after this line will be saved under the `spy` variable
+	let mut spy = start_spy();  // all events emitted after this line will be saved under the `spy` variable
     let res = contract.emit_store_name(...);
     
     spy.fetch_events();
-    assert!(spy.events.len() == 1, 'There should be one event');
+    assert!(spy.events.get(contract_address).len() == 1, 'There should be one event');
 
     let res = contract.emit_store_name(...);
     let res = contract.emit_store_name(...);
     
-    assert!(spy.events.len() == 1, 'There should be one event');
+    assert!(spy.events.get(contract_address).len() == 1, 'There should be one event');
     
     spy.fetch_events();
-    assert!(spy.events.len() == 3, 'There should be three events');
+    let contract_events = spy.events.get(contract_address);
+    assert!(contract_events.len() == 3, 'There should be three events');
     
     let mut i = 0;
     loop {
-        if i >= spy.events.len() {
+        if i >= contract_events.len() {
             break;
         }
-        assert!(spy.events.at(i).name == 'StoredName', 'Unexpected event name');
+        assert!(contract_events.at(i).name == 'StoredName', 'Unexpected event name');
         i += 1;
     }
     
@@ -191,7 +193,7 @@ fn check_emitted_event() {
     let res = contract.emit_store_name(...);
     
     spy.fetch_events();
-    assert!(spy.events.len() == 3, 'There should be three events');
+    assert!(spy.events.get(contract_address).len() == 3, 'There should be three events');
     // ...
 }
 ```
