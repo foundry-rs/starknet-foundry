@@ -29,9 +29,11 @@ $ tree . -L 1
 
 Ensures that `sierra` and `casm` codegen are enabled in the `Scarb.toml` file.
 ```toml
+(...)
 [[target.starknet-contract]]
 sierra = true
 casm = true
+(...)
 ```
 
 And run tests with `snforge`
