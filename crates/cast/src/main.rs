@@ -5,6 +5,7 @@ use crate::starknet_commands::{
 };
 use anyhow::Result;
 use camino::Utf8PathBuf;
+use cast::helpers::constants::DEFAULT_ACCOUNTS_FILE;
 use cast::{account_file_exists, get_account, get_block_id, get_provider, print_command_result};
 use clap::{Parser, Subcommand};
 
@@ -36,12 +37,8 @@ struct Cli {
     account: Option<String>,
 
     /// Path to the file holding accounts info
-    #[clap(
-        short = 'f',
-        long = "accounts-file",
-        default_value = "~/.starknet_accounts/starknet_open_zeppelin_accounts.json"
-    )]
-    accounts_file_path: Utf8PathBuf,
+    #[clap(short = 'f', long = "accounts-file")]
+    accounts_file_path: Option<Utf8PathBuf>,
 
     /// If passed, values will be displayed as integers, otherwise as hexes
     #[clap(short, long)]
@@ -85,15 +82,15 @@ enum Commands {
 async fn main() -> Result<()> {
     let cli = Cli::parse();
 
-    let accounts_file_path =
-        Utf8PathBuf::from(shellexpand::tilde(&cli.accounts_file_path).to_string());
+    let accounts_file_path = cli
+        .accounts_file_path
+        .unwrap_or(Utf8PathBuf::from(DEFAULT_ACCOUNTS_FILE));
 
     let config = parse_scarb_config(&cli.profile, &cli.path_to_scarb_toml)?;
 
     let rpc_url = cli.rpc_url.unwrap_or(config.rpc_url);
     let network = cli.network.unwrap_or(config.network);
     let account = cli.account.unwrap_or(config.account);
-
     let provider = get_provider(&rpc_url, &network).await?;
 
     match cli.command {

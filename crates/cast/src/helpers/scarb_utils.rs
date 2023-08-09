@@ -15,22 +15,24 @@ pub struct CastConfig {
 }
 
 pub fn get_property(
-    tool: &Option<BTreeMap<String, Value>>,
+    tool: &BTreeMap<String, Value>,
     profile: &Option<String>,
     property: &str,
 ) -> Result<String, Error> {
-    let profiled = tool.as_ref().and_then(|t| t.get("sncast"));
+    let tool_sncast = tool
+        .get("sncast")
+        .ok_or_else(|| anyhow!("No tool.sncast"))?;
 
     match profile {
-        Some(ref p) => profiled
-            .and_then(|t| t.get(p))
+        Some(ref p) => tool_sncast
+            .get(p)
             .and_then(|t| t.get(property))
             .and_then(serde_json::Value::as_str)
             .map(String::from)
             .ok_or(anyhow!(
                 "Profile or property not found in Scarb.toml: {p}, {property}"
             )),
-        None => match profiled.and_then(|t| t.get(property)) {
+        None => match tool_sncast.get(property) {
             Some(property) => Ok(String::from(
                 property.as_str().expect("Couldn't cast property to &str"),
             )),
@@ -85,17 +87,37 @@ pub fn parse_scarb_config(
             "Failed to read Scarb.toml manifest file, not found in current nor parent directories",
         )?;
 
-    let package = &metadata.packages[0].manifest_metadata.tool;
+    let package_tool_result = get_package_tool(&metadata);
+    if package_tool_result.is_err() {
+        return Ok(CastConfig::default());
+    }
 
-    let rpc_url = get_property(package, profile, "url")?;
-    let network = get_property(package, profile, "network")?;
-    let account = get_property(package, profile, "account")?;
+    let package_tool = package_tool_result?;
+
+    let rpc_url = get_property(package_tool, profile, "url")?;
+    let network = get_property(package_tool, profile, "network")?;
+    let account = get_property(package_tool, profile, "account")?;
 
     Ok(CastConfig {
         rpc_url,
         network,
         account,
     })
+}
+
+pub fn get_package_tool(metadata: &scarb_metadata::Metadata) -> Result<&BTreeMap<String, Value>> {
+    let first_package = metadata
+        .packages
+        .get(0)
+        .ok_or_else(|| anyhow!("No package found in metadata"))?;
+
+    let tool = first_package
+        .manifest_metadata
+        .tool
+        .as_ref()
+        .ok_or_else(|| anyhow!("No tool found in package"))?;
+
+    Ok(tool)
 }
 
 #[cfg(test)]
