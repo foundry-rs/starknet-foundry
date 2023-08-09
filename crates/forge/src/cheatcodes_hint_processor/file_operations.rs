@@ -32,7 +32,9 @@ pub(super) fn parse_txt(
 
     println!("{felts:?}");
 
-    buffer.write_arr(felts.iter()).unwrap();
+    buffer
+        .write_data(felts.iter())
+        .expect("Failed to insert file content to memory");
     Ok(())
 }
 
