@@ -1,8 +1,9 @@
 use crate::helpers::constants::OZ_CLASS_HASH;
 use crate::helpers::response_structs::AccountCreateResponse;
-use crate::helpers::scarb_utils::{get_property, get_scarb_manifest};
+use crate::helpers::scarb_utils::{get_property_from_profile, get_scarb_manifest};
 use anyhow::{anyhow, Context, Result};
 use camino::Utf8PathBuf;
+use cast::helpers::scarb_utils::get_package_tool_sncast;
 use cast::{extract_or_generate_salt, get_network, parse_number};
 use clap::Args;
 use serde_json::json;
@@ -162,9 +163,9 @@ pub fn add_created_profile_to_configuration(
         )
         .unwrap();
 
-    let package = &metadata.packages[0].manifest_metadata.tool;
+    let package_tool_sncast = get_package_tool_sncast(&metadata)?;
 
-    let property = get_property(package, &Some(name.clone()), "account");
+    let property = get_property_from_profile(package_tool_sncast, &Some(name.clone()), "account");
     if property.is_ok() {
         return Err(anyhow!(
             "Failed to add {name} profile to the Scarb.toml. Profile already exists"

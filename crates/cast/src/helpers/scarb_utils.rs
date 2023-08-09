@@ -1,9 +1,8 @@
-use anyhow::{anyhow, bail, Context, Error, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use scarb_metadata;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::collections::BTreeMap;
 use std::process::{Command, Stdio};
 use std::str::FromStr;
 
@@ -14,31 +13,27 @@ pub struct CastConfig {
     pub account: String,
 }
 
-pub fn get_property(
-    tool: &BTreeMap<String, Value>,
+pub fn get_property(tool: &Value, property: &str) -> String {
+    tool.get(property)
+        .and_then(serde_json::Value::as_str)
+        .map(String::from)
+        .unwrap_or_default()
+}
+
+pub fn get_property_from_profile(
+    tool_sncast: &Value,
     profile: &Option<String>,
     property: &str,
-) -> Result<String, Error> {
-    let tool_sncast = tool
-        .get("sncast")
-        .ok_or_else(|| anyhow!("No tool.sncast"))?;
+) -> Result<String> {
+    let tool_sncast_profile = match profile {
+        Some(ref profile_) => tool_sncast.get(profile_).ok_or(anyhow!(format!(
+            "No field [tool.sncast.{}] found in package",
+            profile_
+        )))?,
+        None => tool_sncast,
+    };
 
-    match profile {
-        Some(ref p) => tool_sncast
-            .get(p)
-            .and_then(|t| t.get(property))
-            .and_then(serde_json::Value::as_str)
-            .map(String::from)
-            .ok_or(anyhow!(
-                "Profile or property not found in Scarb.toml: {p}, {property}"
-            )),
-        None => match tool_sncast.get(property) {
-            Some(property) => Ok(String::from(
-                property.as_str().expect("Couldn't cast property to &str"),
-            )),
-            None => Ok(String::new()),
-        },
-    }
+    Ok(get_property(tool_sncast_profile, property))
 }
 
 pub fn get_scarb_manifest() -> Result<Utf8PathBuf> {
@@ -87,15 +82,15 @@ pub fn parse_scarb_config(
             "Failed to read Scarb.toml manifest file, not found in current nor parent directories",
         )?;
 
-    let package_tool_result = get_package_tool(&metadata);
-    if package_tool_result.is_err() {
+    let package_tool_sncast_result = get_package_tool_sncast(&metadata);
+    if package_tool_sncast_result.is_err() {
         return Ok(CastConfig::default());
     }
 
-    cast_config_from_package_tool(package_tool_result.unwrap(), profile)
+    cast_config_from_package_tool_sncast(package_tool_sncast_result.unwrap(), profile)
 }
 
-pub fn get_package_tool(metadata: &scarb_metadata::Metadata) -> Result<&BTreeMap<String, Value>> {
+pub fn get_package_tool_sncast(metadata: &scarb_metadata::Metadata) -> Result<&Value> {
     let first_package = metadata
         .packages
         .get(0)
@@ -105,18 +100,22 @@ pub fn get_package_tool(metadata: &scarb_metadata::Metadata) -> Result<&BTreeMap
         .manifest_metadata
         .tool
         .as_ref()
-        .ok_or_else(|| anyhow!("No tool found in package"))?;
+        .ok_or_else(|| anyhow!("No field [tool] found in package"))?;
 
-    Ok(tool)
+    let tool_sncast = tool
+        .get("sncast")
+        .ok_or_else(|| anyhow!("No field [tool.sncast] found in package"))?;
+
+    Ok(tool_sncast)
 }
 
-pub fn cast_config_from_package_tool(
-    package_tool: &BTreeMap<String, Value>,
+pub fn cast_config_from_package_tool_sncast(
+    package_tool_sncast: &Value,
     profile: &Option<String>,
 ) -> Result<CastConfig> {
-    let rpc_url = get_property(package_tool, profile, "url")?;
-    let network = get_property(package_tool, profile, "network")?;
-    let account = get_property(package_tool, profile, "account")?;
+    let rpc_url = get_property_from_profile(package_tool_sncast, profile, "url")?;
+    let network = get_property_from_profile(package_tool_sncast, profile, "network")?;
+    let account = get_property_from_profile(package_tool_sncast, profile, "account")?;
 
     Ok(CastConfig {
         rpc_url,
@@ -197,9 +196,10 @@ mod tests {
             )),
         )
         .unwrap_err();
-        assert!(config
-            .to_string()
-            .contains("Profile or property not found in Scarb.toml: mariusz, url"));
+        assert_eq!(
+            config.to_string(),
+            "No field [tool.sncast.mariusz] found in package"
+        );
     }
 
     #[test]
