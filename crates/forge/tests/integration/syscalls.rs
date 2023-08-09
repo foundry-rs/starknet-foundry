@@ -159,6 +159,7 @@ fn test_call_syscall_fail_in_test_fn() {
 
     let result = run(
         &test.path().unwrap(),
+        &String::from("src"),
         &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),
