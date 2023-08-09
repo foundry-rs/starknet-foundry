@@ -69,25 +69,8 @@ impl FileTraitImpl of FileTrait {
     }
 }
 
-trait JsonParser {
-    fn from_json(self: @File) -> Result<Array<felt252>, felt252>;
-}
-
-trait TxtParser {
-    fn from_txt(self: @File) -> Result<Array<felt252>, felt252>;
-}
-
-impl JsonParserImpl of JsonParser {
-    fn from_json(self: @File) -> Result<Array<felt252>, felt252> {
-        // ...
-    }
-}
-
-impl TxtParserImpl of TxtParser {
-    fn from_txt(self: @File) -> Result<Array<felt252>, felt252> {
-        // ...
-    }
-}
+fn from_txt(file: @File) -> Array<felt252>;
+fn from_json(file: @File) -> Array<felt252>;
 ```
 
 Example usage:
@@ -98,9 +81,9 @@ struct A {
     item_two: felt252,
 }
 
-let file = FileTrait::new('data/file.json');
-let data = file.from_json().unwrap();
+let file = FileTrait::new('data/file.txt');
+let data = from_txt(file);
 
-let mut span = data.span();    
+let mut span = data.span();
 let deserialized_struct: A = Serde::<A>::deserialize(ref span).unwrap();
 ```
