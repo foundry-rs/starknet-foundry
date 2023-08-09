@@ -28,6 +28,7 @@ cairo-lang-filesystem.workspace = true
 schemars = { version = "0.8.12", features = ["preserve_order"] }
 parity-scale-codec = "3.5.0"
 parity-scale-codec-derive = "3.1.4"
+num-bigint = "0.4.3"
 cairo-felt = "0.8.1"
 clap = { version = "4.2.7", features = ["derive"] }
 serde_json = "1.0.96"

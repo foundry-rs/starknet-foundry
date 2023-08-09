@@ -5,8 +5,9 @@ use option::OptionTrait;
 
 use starknet::testing::cheatcode;
 
+#[derive(Drop, Copy)]
 struct File {
-    path: felt252
+    path: felt252  // relative path to a file from a dir where snforge is executed
 }
 
 trait FileTrait {
