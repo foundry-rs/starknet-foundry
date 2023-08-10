@@ -17,3 +17,11 @@ use cheatcodes::stop_warp;
 mod forge_print;
 
 use forge_print::PrintTrait;
+
+mod event;
+
+use event::Event;
+use event::EventSpy;
+use event::EventFetcher;
+use event::EventFetcherImpl;
+use event::spy_events;

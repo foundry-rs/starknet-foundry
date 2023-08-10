@@ -64,6 +64,7 @@ use starknet_api::{
     transaction::{Calldata, TransactionVersion},
 };
 
+use crate::cheatcodes::spy_events::Event;
 use blockifier::execution::syscalls::{
     LibraryCallRequest, SyscallRequest, SyscallRequestWrapper, SyscallResponse,
     SyscallResponseWrapper, SyscallResult,
@@ -87,7 +88,7 @@ pub fn call_contract(
     entry_point_selector: &Felt252,
     calldata: &[Felt252],
     blockifier_state: &mut CachedState<DictStateReader>,
-    cheated_state: &CheatedState,
+    cheated_state: &mut CheatedState,
 ) -> Result<CallContractOutput> {
     let contract_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
         contract_address.to_be_bytes(),
@@ -133,6 +134,35 @@ pub fn call_contract(
     );
 
     if let Ok(call_info) = exec_result {
+        if cheated_state.spy_events {
+            let mut events: Vec<Event> = call_info
+                .execution
+                .events
+                .iter()
+                .map(|ordered_event| Event {
+                    from: call_info.call.caller_address,
+                    name: stark_felt_to_felt(ordered_event.event.keys[0].0),
+                    keys: {
+                        let keys: Vec<Felt252> = ordered_event
+                            .event
+                            .keys
+                            .iter()
+                            .map(|key| stark_felt_to_felt(key.0))
+                            .collect();
+                        Vec::from(&keys[1..])
+                    },
+                    data: ordered_event
+                        .event
+                        .data
+                        .0
+                        .iter()
+                        .map(|data| stark_felt_to_felt(*data))
+                        .collect(),
+                })
+                .collect();
+            cheated_state.emitted_events.append(&mut events);
+        }
+
         let raw_return_data = &call_info.execution.retdata.0;
 
         let return_data = raw_return_data

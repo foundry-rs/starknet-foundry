@@ -104,7 +104,12 @@ impl HintProcessorLogic for CairoHintProcessor<'_> {
             );
         }
         if let Some(Hint::Starknet(StarknetHint::SystemCall { system })) = maybe_extended_hint {
-            return execute_syscall(system, vm, &mut self.blockifier_state, &self.cheated_state);
+            return execute_syscall(
+                system,
+                vm,
+                &mut self.blockifier_state,
+                &mut self.cheated_state,
+            );
         }
         self.original_cairo_hint_processor
             .execute_hint(vm, exec_scopes, hint_data, constants)
@@ -236,6 +241,8 @@ impl CairoHintProcessor<'_> {
                 print(inputs);
                 Ok(())
             }
+            "spy_events" => self.cheated_state.spy_events(),
+            "fetch_events" => self.cheated_state.fetch_events(&mut buffer),
             _ => Err(anyhow!("Unknown cheatcode selector: {selector}")).map_err(Into::into),
         }?;
 
@@ -274,7 +281,7 @@ fn execute_syscall(
     system: &ResOperand,
     vm: &mut VirtualMachine,
     blockifier_state: &mut CachedState<DictStateReader>,
-    cheated_state: &CheatedState,
+    cheated_state: &mut CheatedState,
 ) -> Result<(), HintError> {
     let (cell, offset) = extract_buffer(system);
     let system_ptr = get_ptr(vm, cell, &offset)?;

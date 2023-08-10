@@ -13,6 +13,7 @@ pub mod declare;
 pub mod deploy;
 pub mod prank;
 pub mod roll;
+pub mod spy_events;
 pub mod warp;
 
 // All errors that can be thrown from the hint executor have to be added here,
