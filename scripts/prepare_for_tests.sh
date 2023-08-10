@@ -4,7 +4,7 @@ set -e
 COMPILER_DIRECTORY="$(git rev-parse --show-toplevel)/crates/cast/tests/utils/compiler"
 CAIRO_REPO="https://github.com/starkware-libs/cairo/releases/download"
 
-SCARB_VERSIONS=("0.6.0")
+SCARB_VERSIONS=("0.4.1" "0.6.0")
 DEVNET_VERSION="0.5.5"
 
 if ! which starknet-devnet > /dev/null 2>&1; then
@@ -69,7 +69,7 @@ for scarb_version in "${SCARB_VERSIONS[@]}"; do
   fi
 done
 
-asdf global scarb 0.6.0
+asdf global scarb 0.4.1
 
 echo "All done!"
 exit 0
