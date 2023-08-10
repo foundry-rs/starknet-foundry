@@ -20,7 +20,7 @@ fn get_class_hash() {
                 let class_hash = declare('GetClassHashCheckerUpg');
                 let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
                 let contract_address = deploy(prepared).unwrap();
-                assert(get_class_hash(contract_address) == class_hash, 'Wrong class hash');
+                assert(get_class_hash(contract_address) == class_hash, 'Incorrect class hash');
             }
         "#
         ),
