@@ -17,7 +17,7 @@ fn start_roll_simple() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use cheatcodes::{ declare, PreparedContract, deploy, start_roll };
+            use snforge_std::{ declare, PreparedContract, deploy, start_roll };
 
             #[starknet::interface]
             trait IRollChecker<TContractState> {
@@ -71,7 +71,7 @@ fn start_roll_with_other_syscall() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use cheatcodes::{ declare, PreparedContract, deploy, start_roll };
+            use snforge_std::{ declare, PreparedContract, deploy, start_roll };
             
             #[starknet::interface]
             trait IRollChecker<TContractState> {
@@ -127,7 +127,7 @@ fn start_roll_in_constructor_test() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use cheatcodes::{ declare, PreparedContract, deploy, start_roll };
+            use snforge_std::{ declare, PreparedContract, deploy, start_roll };
 
             #[starknet::interface]
             trait IConstructorRollChecker<TContractState> {
@@ -180,7 +180,7 @@ fn stop_roll() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use cheatcodes::{ declare, PreparedContract, deploy, start_roll, stop_roll };
+            use snforge_std::{ declare, PreparedContract, deploy, start_roll, stop_roll };
 
             #[starknet::interface]
             trait IRollChecker<TContractState> {
@@ -241,7 +241,7 @@ fn double_roll() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use cheatcodes::{ declare, PreparedContract, deploy, start_roll, stop_roll };
+            use snforge_std::{ declare, PreparedContract, deploy, start_roll, stop_roll };
 
             #[starknet::interface]
             trait IRollChecker<TContractState> {
@@ -304,7 +304,7 @@ fn start_roll_with_proxy() {
             use traits::Into;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use cheatcodes::{ declare, PreparedContract, deploy, start_roll };
+            use snforge_std::{ declare, PreparedContract, deploy, start_roll };
             
             #[starknet::interface]
             trait IRollCheckerProxy<TContractState> {
@@ -365,7 +365,7 @@ fn start_roll_with_library_call() {
             use traits::Into;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use cheatcodes::{ declare, PreparedContract, deploy, start_roll };
+            use snforge_std::{ declare, PreparedContract, deploy, start_roll };
             use starknet::ClassHash;
 
             #[starknet::interface]

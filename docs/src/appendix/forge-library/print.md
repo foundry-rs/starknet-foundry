@@ -8,12 +8,13 @@ The trait is implemented for types:
 - `felt252`
 - `Array<felt252>`
 - `ContractAddress`
-- `u8`, `u64`, `u128`, `u256`
+- `u8`, `u16`, `u32`, `u64`, `u128`, `u256`
+- `i8`, `i16`, `i32`, `i64`, `i128`
 - `bool`
 
 ```rust
 use array::ArrayTrait;
-use forge_print::PrintTrait;
+use snforge_std::PrintTrait;
 use starknet::contract_address_const;
 
 #[test]

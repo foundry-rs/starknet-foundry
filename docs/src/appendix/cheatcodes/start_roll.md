@@ -35,6 +35,8 @@ impl IContractImpl of IContract<ContractState> {
 We can use `start_roll` in a test to change the block number for a given contract:
 
 ```rust
+use snforge_std::start_roll;
+
 #[test]
 fn test_roll() {
     // ...
