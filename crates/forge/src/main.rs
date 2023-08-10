@@ -66,8 +66,10 @@ fn main_execution() -> Result<()> {
 
     for package in &scarb_metadata.workspace.members {
         let forge_config = forge::scarb::config_from_scarb_for_package(&scarb_metadata, package)?;
-
         let (package_path, lib_path) = paths_for_package(&scarb_metadata, package)?;
+
+        std::env::set_current_dir(package_path.clone())?;
+
         let package_name = name_for_package(&scarb_metadata, package)?;
         let dependencies = dependencies_for_package(&scarb_metadata, package)?;
         let target_name = target_name_for_package(&scarb_metadata, package)?;
