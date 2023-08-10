@@ -143,7 +143,7 @@ mod test {
                 casm = true
         
                 [dependencies]
-                starknet = "2.1.0-rc2"
+                starknet = "2.1.0"
                 snforge_std = {{ path = "{}" }}
                 "#,
                 snforge_std_path

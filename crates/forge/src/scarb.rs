@@ -249,7 +249,7 @@ mod tests {
                 casm = true
 
                 [dependencies]
-                starknet = "2.1.0-rc2"
+                starknet = "2.1.0"
                 snforge_std = {{ path = "{}" }}
                 "#,
                 package_name,
@@ -301,7 +301,7 @@ mod tests {
                 version = "0.1.0"
 
                 [dependencies]
-                starknet = "2.1.0-rc2"
+                starknet = "2.1.0"
                 snforge_std = {{ path = "{}" }}
 
                 [[target.starknet-contract]]
