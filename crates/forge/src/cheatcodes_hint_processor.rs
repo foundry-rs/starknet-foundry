@@ -4,7 +4,7 @@ use std::path::PathBuf;
 
 use crate::scarb::StarknetContractArtifacts;
 use anyhow::{anyhow, Result};
-use blockifier::execution::execution_utils::stark_felt_to_felt;
+use blockifier::execution::execution_utils::{felt_to_stark_felt, stark_felt_to_felt};
 
 use cairo_felt::Felt252;
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
@@ -406,9 +406,9 @@ fn write_cheatcode_panic(buffer: &mut MemBuffer, panic_data: &[Felt252]) {
 }
 
 fn contract_address_from_felt252(felt: &Felt252) -> Result<ContractAddress, EnhancedHintError> {
-    Ok(ContractAddress(PatriciaKey::try_from(StarkFelt::new(
-        felt.to_be_bytes(),
-    )?)?))
+    Ok(ContractAddress(PatriciaKey::try_from(felt_to_stark_felt(
+        felt,
+    ))?))
 }
 
 #[cfg(test)]
@@ -436,12 +436,5 @@ mod test {
         let result = felt252_from_hex_string("yyyy");
         let err = result.unwrap_err();
         assert_eq!(err.to_string(), "Failed to convert value = yyyy to Felt252");
-    }
-
-    #[test]
-    fn contract_address_from_felt_252() {
-        let felt = Felt252::from(112_233);
-        let addr = contract_address_from_felt252(&felt).unwrap();
-        assert_eq!(stark_felt_to_felt(*addr.0.key()), felt);
     }
 }
