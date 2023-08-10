@@ -11,6 +11,7 @@ pub struct CastConfig {
     pub rpc_url: String,
     pub network: String,
     pub account: String,
+    pub accounts_file: Option<Utf8PathBuf>,
 }
 
 pub fn get_property(tool: &Value, property: &str) -> String {
@@ -116,11 +117,13 @@ pub fn cast_config_from_package_tool_sncast(
     let rpc_url = get_property_from_profile(package_tool_sncast, profile, "url")?;
     let network = get_property_from_profile(package_tool_sncast, profile, "network")?;
     let account = get_property_from_profile(package_tool_sncast, profile, "account")?;
+    let accounts_file = get_property_from_profile(package_tool_sncast, profile, "accounts-file")?;
 
     Ok(CastConfig {
         rpc_url,
         network,
         account,
+        accounts_file: (!accounts_file.is_empty()).then(|| accounts_file.into()),
     })
 }
 

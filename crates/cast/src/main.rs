@@ -82,15 +82,20 @@ enum Commands {
 async fn main() -> Result<()> {
     let cli = Cli::parse();
 
-    let accounts_file_path = cli
-        .accounts_file_path
-        .unwrap_or(Utf8PathBuf::from(DEFAULT_ACCOUNTS_FILE));
-
     let config = parse_scarb_config(&cli.profile, &cli.path_to_scarb_toml)?;
 
     let rpc_url = cli.rpc_url.unwrap_or(config.rpc_url);
     let network = cli.network.unwrap_or(config.network);
     let account = cli.account.unwrap_or(config.account);
+    let accounts_file_path = Utf8PathBuf::from(
+        shellexpand::tilde(
+            &cli.accounts_file_path
+                .or(config.accounts_file)
+                .unwrap_or_else(|| Utf8PathBuf::from(DEFAULT_ACCOUNTS_FILE)),
+        )
+        .to_string(),
+    );
+
     let provider = get_provider(&rpc_url, &network).await?;
 
     match cli.command {

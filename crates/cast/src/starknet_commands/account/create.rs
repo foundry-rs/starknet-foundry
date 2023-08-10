@@ -1,7 +1,7 @@
 use crate::helpers::constants::OZ_CLASS_HASH;
 use crate::helpers::response_structs::AccountCreateResponse;
 use crate::helpers::scarb_utils::{get_property_from_profile, get_scarb_manifest};
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use cast::helpers::scarb_utils::get_package_tool_sncast;
 use cast::{extract_or_generate_salt, get_network, parse_number};
@@ -110,6 +110,7 @@ pub async fn create(
             name,
             network.to_string(),
             url,
+            &accounts_file_path,
         ) {
             Ok(()) => {}
             Err(err) => return Err(anyhow!(err)),
@@ -149,6 +150,7 @@ pub fn add_created_profile_to_configuration(
     name: String,
     network: String,
     url: String,
+    accounts_file: &Utf8PathBuf,
 ) -> Result<()> {
     let manifest_path = path_to_scarb_toml.clone().unwrap_or_else(|| {
         get_scarb_manifest().expect("Failed to obtain manifest path from scarb")
@@ -163,13 +165,11 @@ pub fn add_created_profile_to_configuration(
         )
         .unwrap();
 
-    let package_tool_sncast = get_package_tool_sncast(&metadata)?;
-
-    let property = get_property_from_profile(package_tool_sncast, &Some(name.clone()), "account");
-    if property.is_ok() {
-        return Err(anyhow!(
-            "Failed to add {name} profile to the Scarb.toml. Profile already exists"
-        ));
+    if let Ok(tool_sncast) = get_package_tool_sncast(&metadata) {
+        let property = get_property_from_profile(tool_sncast, &Some(name.clone()), "account");
+        if property.is_ok() {
+            bail!("Failed to add {name} profile to the Scarb.toml. Profile already exists");
+        }
     }
 
     let toml_string = {
@@ -179,6 +179,10 @@ pub fn add_created_profile_to_configuration(
         new_profile.insert("network".to_string(), Value::String(network));
         new_profile.insert("url".to_string(), Value::String(url));
         new_profile.insert("account".to_string(), Value::String(name.clone()));
+        new_profile.insert(
+            "accounts-file".to_string(),
+            Value::String(accounts_file.to_string()),
+        );
 
         tool_sncast.insert(name, Value::Table(new_profile));
 
@@ -205,6 +209,7 @@ pub fn add_created_profile_to_configuration(
 #[cfg(test)]
 mod tests {
     use crate::starknet_commands::account::create::add_created_profile_to_configuration;
+    use cast::helpers::constants::DEFAULT_ACCOUNTS_FILE;
     use sealed_test::prelude::rusty_fork_test;
     use sealed_test::prelude::sealed_test;
     use std::fs;
@@ -216,6 +221,7 @@ mod tests {
             String::from("some-name"),
             String::from("some-net"),
             String::from("http://some-url"),
+            &"accounts".into(),
         );
 
         assert!(res.is_ok());
@@ -225,6 +231,7 @@ mod tests {
         assert!(contents.contains("account = \"some-name\""));
         assert!(contents.contains("network = \"some-net\""));
         assert!(contents.contains("url = \"http://some-url\""));
+        assert!(contents.contains("accounts-file = \"accounts\""));
     }
 
     #[sealed_test(files = ["tests/data/contracts/v1/balance/Scarb.toml"])]
@@ -234,6 +241,7 @@ mod tests {
             String::from("myprofile"),
             String::from("some-net"),
             String::from("http://some-url"),
+            &DEFAULT_ACCOUNTS_FILE.into(),
         );
 
         assert!(res.is_err());
