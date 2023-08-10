@@ -49,7 +49,7 @@ impl CheatedState {
             ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS));
         let block_context = build_block_context();
         let entry_point_selector = selector_from_name("deploy_contract");
-        let salt = ContractAddressSalt(StarkFelt::from(333_u32 + self.deploy_counter));
+        let salt = self.gen_salt();
         let class_hash = ClassHash(StarkFelt::new(class_hash.to_be_bytes()).unwrap());
         self.increment_deploy_counter();
         let contract_class = blockifier_state.get_compiled_contract_class(&class_hash)?;

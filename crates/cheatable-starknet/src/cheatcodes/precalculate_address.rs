@@ -7,7 +7,7 @@ use num_traits::cast::ToPrimitive;
 use starknet_api::core::PatriciaKey;
 use starknet_api::core::{calculate_contract_address, ClassHash, ContractAddress};
 use starknet_api::hash::{StarkFelt, StarkHash};
-use starknet_api::transaction::{Calldata, ContractAddressSalt};
+use starknet_api::transaction::Calldata;
 
 use starknet_api::patricia_key;
 
@@ -22,7 +22,7 @@ impl CheatedState {
         let account_address: ContractAddress =
             ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS));
         let class_hash = ClassHash(StarkFelt::new(class_hash.to_be_bytes()).unwrap());
-        let salt = ContractAddressSalt(StarkFelt::from(333_u32 + self.deploy_counter));
+        let salt = self.gen_salt();
         let calldata_length = inputs[1].to_usize().unwrap();
 
         let mut calldata = vec![];

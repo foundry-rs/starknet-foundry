@@ -1,5 +1,7 @@
 use cairo_felt::Felt252;
 use starknet_api::core::ContractAddress;
+use starknet_api::hash::StarkFelt;
+use starknet_api::transaction::ContractAddressSalt;
 use std::collections::HashMap;
 
 pub mod cheatcodes;
@@ -24,8 +26,13 @@ impl CheatedState {
             deploy_counter: 0,
         }
     }
+
     pub fn increment_deploy_counter(&mut self) -> () {
         self.deploy_counter += 1;
+    }
+
+    pub fn gen_salt(&self) -> ContractAddressSalt {
+        ContractAddressSalt(StarkFelt::from(333_u32 + self.deploy_counter))
     }
 }
 
