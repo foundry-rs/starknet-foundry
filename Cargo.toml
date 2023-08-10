@@ -1,13 +1,11 @@
 [workspace]
 members = [
     "crates/forge",
-    "crates/test-collector",
     "crates/cast",
     "crates/cheatnet"
 ]
 
 [workspace.package]
-name = "starknet-foundry"
 version = "0.3.0"
 edition = "2021"
 repository = "https://github.com/foundry-rs/starknet-foundry"

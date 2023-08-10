@@ -1760,7 +1760,6 @@ dependencies = [
  "starknet 0.5.0",
  "starknet_api",
  "tempfile",
- "test-collector",
  "thiserror",
  "walkdir",
  "which",
@@ -4182,44 +4181,6 @@ dependencies = [
  "quote",
  "syn 1.0.109",
  "test-case-core",
-]
-
-[[package]]
-name = "test-collector"
-version = "1.0.0"
-dependencies = [
- "anyhow",
- "cairo-felt",
- "cairo-lang-casm",
- "cairo-lang-compiler",
- "cairo-lang-debug",
- "cairo-lang-defs",
- "cairo-lang-diagnostics",
- "cairo-lang-filesystem",
- "cairo-lang-lowering",
- "cairo-lang-plugins",
- "cairo-lang-project",
- "cairo-lang-runner",
- "cairo-lang-semantic",
- "cairo-lang-sierra",
- "cairo-lang-sierra-ap-change",
- "cairo-lang-sierra-gas",
- "cairo-lang-sierra-generator",
- "cairo-lang-sierra-to-casm",
- "cairo-lang-starknet",
- "cairo-lang-syntax",
- "cairo-lang-test-runner",
- "cairo-lang-utils",
- "cairo-vm",
- "itertools 0.11.0",
- "num-bigint",
- "num-integer",
- "num-traits 0.2.16",
- "rayon",
- "serde",
- "serde_json",
- "smol_str",
- "thiserror",
 ]
 
 [[package]]

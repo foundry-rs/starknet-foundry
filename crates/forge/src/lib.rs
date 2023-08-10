@@ -15,7 +15,7 @@ use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 
 use crate::running::run_from_test_case;
 use crate::scarb::{ForgeConfig, StarknetContractArtifacts};
-use test_collector::{collect_tests, LinkedLibrary, TestCase};
+use crate::test_case_summary::TestCase;
 
 pub mod pretty_printing;
 pub mod scarb;
@@ -374,7 +374,7 @@ fn test_name_contains(test_name_filter: &str, test: &TestCase) -> Result<bool> {
 mod tests {
     use super::*;
     use assert_fs::fixture::PathCopy;
-    use test_collector::ExpectedTestResult;
+    use crate::test_case_summary::ExpectedTestResult;
 
     #[test]
     fn collecting_tests() {

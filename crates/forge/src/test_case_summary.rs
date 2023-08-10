@@ -1,8 +1,33 @@
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{RunResult, RunResultValue};
+use serde::{Deserialize, Serialize};
 use std::option::Option;
-use test_collector::{ExpectedPanicValue, ExpectedTestResult, TestCase};
+
+/// Expectation for a panic case.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum ExpectedPanicValue {
+    /// Accept any panic value.
+    Any,
+    /// Accept only this specific vector of panics.
+    Exact(Vec<Felt252>),
+}
+
+/// Expectation for a result of a test.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum ExpectedTestResult {
+    /// Running the test should not panic.
+    Success,
+    /// Running the test should result in a panic.
+    Panics(ExpectedPanicValue),
+}
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub struct TestCase {
+    pub name: String,
+    pub available_gas: Option<usize>,
+    pub expected_result: ExpectedTestResult,
+}
 
 /// Summary of running a single test case
 #[derive(Debug, PartialEq, Clone)]

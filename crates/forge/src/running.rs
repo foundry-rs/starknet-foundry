@@ -12,11 +12,10 @@ use cairo_lang_runner::{CairoHintProcessor as CoreCairoHintProcessor, RunnerErro
 use cairo_lang_runner::{SierraCasmRunner, StarknetState};
 use cairo_vm::vm::runners::cairo_runner::RunResources;
 use camino::Utf8PathBuf;
-use test_collector::TestCase;
 
 use crate::cheatcodes_hint_processor::CairoHintProcessor;
 use crate::scarb::StarknetContractArtifacts;
-use crate::test_case_summary::TestCaseSummary;
+use crate::test_case_summary::{TestCase, TestCaseSummary};
 
 /// Builds `hints_dict` required in `cairo_vm::types::program::Program` from instructions.
 fn build_hints_dict<'b>(
