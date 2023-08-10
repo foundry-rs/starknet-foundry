@@ -38,7 +38,6 @@ fn should_panic() {
         &test.path().unwrap(),
         &String::from("src"),
         &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
         &Default::default(),
         &corelib_path(),
         &test.contracts(&corelib_path()).unwrap(),

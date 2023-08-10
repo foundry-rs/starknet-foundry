@@ -4,7 +4,7 @@ use scarb_metadata::{CompilationUnitMetadata, Metadata, PackageId};
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs;
-use test_collector::LinkedLibrary;
+
 
 #[allow(dead_code)]
 #[derive(Deserialize, Debug, PartialEq, Clone)]
@@ -192,25 +192,6 @@ pub fn name_for_package(metadata: &Metadata, package: &PackageId) -> Result<Stri
         .ok_or_else(|| anyhow!("Failed to find metadata for package = {package}"))?;
 
     Ok(package.name.clone())
-}
-
-/// Get the dependencies for the given package
-pub fn dependencies_for_package(
-    metadata: &Metadata,
-    package: &PackageId,
-) -> Result<Vec<LinkedLibrary>> {
-    let compilation_unit = compilation_unit_for_package(metadata, package)?;
-    let dependencies = compilation_unit
-        .components
-        .iter()
-        .filter(|du| !du.source_path.to_string().contains("core/src"))
-        .map(|cu| LinkedLibrary {
-            name: cu.name.clone(),
-            path: cu.source_root().to_owned().into_std_path_buf(),
-        })
-        .collect();
-
-    Ok(dependencies)
 }
 
 #[cfg(test)]

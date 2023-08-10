@@ -10,7 +10,7 @@ use forge::run;
 use forge::{pretty_printing, RunnerConfig};
 
 use forge::scarb::{
-    corelib_for_package, dependencies_for_package, get_contracts_map, name_for_package,
+    corelib_for_package, get_contracts_map, name_for_package, paths_for_package,
     paths_for_package, target_name_for_package, try_get_starknet_artifacts_path,
 };
 use std::process::Command;
@@ -69,7 +69,6 @@ fn main_execution() -> Result<()> {
 
         let (package_path, lib_path) = paths_for_package(&scarb_metadata, package)?;
         let package_name = name_for_package(&scarb_metadata, package)?;
-        let dependencies = dependencies_for_package(&scarb_metadata, package)?;
         let target_name = target_name_for_package(&scarb_metadata, package)?;
         let corelib_path = corelib_for_package(&scarb_metadata, package)?;
         let runner_config = RunnerConfig::new(
@@ -89,7 +88,6 @@ fn main_execution() -> Result<()> {
             &package_path,
             &package_name,
             &lib_path,
-            &Some(dependencies.clone()),
             &runner_config,
             &corelib_path,
             &contracts,

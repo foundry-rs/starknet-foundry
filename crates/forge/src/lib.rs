@@ -76,7 +76,6 @@ fn collect_tests_from_directory(
     package_path: &Utf8PathBuf,
     package_name: &str,
     lib_path: &Utf8PathBuf,
-    linked_libraries: &Option<Vec<LinkedLibrary>>,
     corelib_path: &Utf8PathBuf,
     runner_config: &RunnerConfig,
 ) -> Result<Vec<TestsFromFile>> {
@@ -84,7 +83,6 @@ fn collect_tests_from_directory(
     internal_collect_tests(
         package_path,
         package_name,
-        linked_libraries,
         &test_files,
         corelib_path,
         runner_config,
@@ -204,7 +202,6 @@ pub fn run(
     package_path: &Utf8PathBuf,
     package_name: &str,
     lib_path: &Utf8PathBuf,
-    linked_libraries: &Option<Vec<LinkedLibrary>>,
     runner_config: &RunnerConfig,
     corelib_path: &Utf8PathBuf,
     contracts: &HashMap<String, StarknetContractArtifacts>,

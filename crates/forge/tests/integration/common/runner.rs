@@ -14,10 +14,8 @@ use forge::scarb::StarknetContractArtifacts;
 use forge::TestFileSummary;
 use std::collections::HashMap;
 use std::fs;
-use std::path::{Path, PathBuf};
-use std::str::FromStr;
+use std::path::Path;
 use std::sync::Arc;
-use test_collector::LinkedLibrary;
 
 #[derive(Debug, Clone)]
 pub struct Contract {
@@ -85,7 +83,6 @@ pub struct TestCase {
 
 impl<'a> TestCase {
     pub const TEST_PATH: &'a str = "test_case.cairo";
-    const PACKAGE_NAME: &'a str = "my_package";
 
     pub fn from(test_code: &str, contracts: Vec<Contract>) -> Result<Self> {
         let dir = TempDir::new()?;
@@ -101,23 +98,6 @@ impl<'a> TestCase {
     pub fn path(&self) -> Result<Utf8PathBuf> {
         Utf8PathBuf::from_path_buf(self.dir.path().to_path_buf())
             .map_err(|_| anyhow!("Failed to convert TestCase path to Utf8PathBuf"))
-    }
-
-    pub fn linked_libraries(&self) -> Vec<LinkedLibrary> {
-        let snforge_std_path = PathBuf::from_str("../../snforge_std")
-            .unwrap()
-            .canonicalize()
-            .unwrap();
-        vec![
-            LinkedLibrary {
-                name: Self::PACKAGE_NAME.to_string(),
-                path: self.dir.path().join("src"),
-            },
-            LinkedLibrary {
-                name: "snforge_std".to_string(),
-                path: snforge_std_path.join("src"),
-            },
-        ]
     }
 
     pub fn contracts(
