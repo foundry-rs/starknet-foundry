@@ -127,16 +127,22 @@ where `snforge_std::EventSpy` would allow for accessing events emitted after its
 
 ```cario
 struct EventSpy {
-    // mapping between contract address and its events
-    events: Felt252Dict<Array<snforge_std::Event>>,
+    events: Array<snforge_std::Event>,
+}
+
+struct Event {
+    from: ContractAddress,
+    name: felt252,
+    keys: Array<felt252>,
+    data: Array<felt252>
 }
 
 trait EventFetcher {
-    fn fetch_events(self: EventSpy);
+    fn fetch_events(ref self: EventSpy);
 }
 
 impl EventFetcherImpl of EventFetcher {
-    fn fetch_events(self: EventSpy) {
+    fn fetch_events(ref self: EventSpy) {
         // ...
     }
 }
@@ -161,25 +167,15 @@ fn check_emitted_event() {
     let res = contract.emit_store_name(...);
     
     spy.fetch_events();
-    assert!(spy.events.get(contract_address).len() == 1, 'There should be one event');
+    assert!(spy.events.len() == 1, 'There should be one event');
 
     let res = contract.emit_store_name(...);
     let res = contract.emit_store_name(...);
     
-    assert!(spy.events.get(contract_address).len() == 1, 'There should be one event');
+    assert!(spy.events.len() == 1, 'There should be one event');
     
     spy.fetch_events();
-    let contract_events = spy.events.get(contract_address);
-    assert!(contract_events.len() == 3, 'There should be three events');
-    
-    let mut i = 0;
-    loop {
-        if i >= contract_events.len() {
-            break;
-        }
-        assert!(contract_events.at(i).name == 'StoredName', 'Unexpected event name');
-        i += 1;
-    }
+    assert!(spy.events.len() == 3, 'There should be three events');
     // ...
 }
 ```
