@@ -3,6 +3,7 @@ mod declare;
 mod deploy;
 mod dispatchers;
 mod prank;
+mod precalculate_address;
 mod pure_cairo;
 mod roll;
 mod should_panic;
