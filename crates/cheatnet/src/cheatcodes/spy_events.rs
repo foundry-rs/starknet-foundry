@@ -38,9 +38,9 @@ impl CheatedState {
         buffer
             .write(Felt252::from(self.emitted_events.len()))
             .expect("Failed to insert serialized events length");
-        buffer
-            .write_arr(serialized_events.concat().iter())
-            .expect("Failed to insert serialized events");
+        for felt in serialized_events.concat() {
+            buffer.write(felt).expect("Failed to insert serialized events");
+        }
         Ok(())
     }
 }

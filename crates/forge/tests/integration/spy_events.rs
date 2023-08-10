@@ -34,6 +34,16 @@ fn expect_events_simple() {
 
                 assert(spy.events.len() == 1, 'There should be one event');
                 assert(spy.events.at(0).keys.len() == 0, 'There should be no keys');
+
+                let data: Array<felt252> = array![123];
+                let mut i = 0;
+                loop {
+                    if i >= data.len() {
+                        break;
+                    }
+                    assert(spy.events.at(0).data.at(i) == data.at(i), 'Event data is invalid');
+                    i += 1;
+                }
             }
         "#
         ),
