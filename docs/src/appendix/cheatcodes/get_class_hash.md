@@ -10,14 +10,12 @@ The main purpose of this cheatcode is to test upgradable contracts. For contract
 
 ```rust
     // ...
-
     #[external(v0)]
     impl IUpgradeableImpl of super::IUpgradeable<ContractState> {
         fn upgrade(ref self: ContractState, class_hash: starknet::ClassHash) {
             starknet::replace_class_syscall(class_hash).unwrap_syscall();
         }
     }
-
     // ...
 ```
 

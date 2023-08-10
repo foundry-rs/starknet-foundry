@@ -80,15 +80,15 @@ fn get_class_hash_replace_class() {
 
                 let contract_address = deploy(prepared).unwrap();
 
-                assert(get_class_hash(contract_address) == class_hash, 'Bad class hash');
+                assert(get_class_hash(contract_address) == class_hash, 'Incorrect class hash');
 
                 let hsn_class_hash = declare('HelloStarknet');
                 IUpgradeableDispatcher { contract_address }.upgrade(hsn_class_hash);
-                assert(get_class_hash(contract_address) == hsn_class_hash, 'Bad class hash upg');
+                assert(get_class_hash(contract_address) == hsn_class_hash, 'Incorrect upgrade class hash');
 
                 let hello_dispatcher = IHelloStarknetDispatcher { contract_address };
                 hello_dispatcher.increase_balance(42);
-                assert(hello_dispatcher.get_balance() == 42, 'Fail to get balance');
+                assert(hello_dispatcher.get_balance() == 42, 'Invalid balance');
             }
         "#
         ),
