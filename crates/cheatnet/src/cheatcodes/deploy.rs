@@ -12,7 +12,7 @@ use blockifier::state::state_api::StateReader;
 use blockifier::transaction::account_transaction::AccountTransaction;
 use blockifier::transaction::transactions::{ExecutableTransaction, InvokeTransaction};
 use cairo_felt::Felt252;
-use regex::Regex;
+
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, PatriciaKey};
 use starknet_api::hash::{StarkFelt, StarkHash};
 use starknet_api::transaction::{
@@ -21,6 +21,8 @@ use starknet_api::transaction::{
 use starknet_api::{patricia_key, stark_felt};
 
 use super::CheatcodeError;
+use crate::conversions::felt_from_short_string;
+use crate::panic_data::try_extract_panic_data;
 
 impl CheatnetState {
     pub fn deploy(
@@ -116,31 +118,6 @@ fn create_execute_calldata(
     Calldata(execute_calldata.into())
 }
 
-fn try_extract_panic_data(err: &str) -> Option<Vec<Felt252>> {
-    let re = Regex::new(r#"(?m)^Got an exception while executing a hint: Custom Hint Error: Execution failed\. Failure reason: "(.*)"\.$"#)
-        .expect("Could not create panic_data matching regex");
-
-    if let Some(captures) = re.captures(err) {
-        if let Some(panic_data_match) = captures.get(1) {
-            if panic_data_match.as_str().is_empty() {
-                return Some(vec![]);
-            }
-            let panic_data_felts: Vec<Felt252> = panic_data_match
-                .as_str()
-                .split(", ")
-                .map(felt_from_short_string)
-                .collect();
-
-            return Some(panic_data_felts);
-        }
-    }
-    None
-}
-
-fn felt_from_short_string(short_str: &str) -> Felt252 {
-    return Felt252::from_bytes_be(short_str.as_bytes());
-}
-
 #[cfg(test)]
 mod test {
     use super::*;
@@ -190,42 +167,5 @@ mod test {
                 StarkFelt::from(0_u32),
             ]))
         );
-    }
-
-    #[test]
-    fn string_extracting_panic_data() {
-        let cases: [(&str, Option<Vec<Felt252>>); 4] = [
-            (
-                "Beginning of trace\nGot an exception while executing a hint: Custom Hint Error: Execution failed. Failure reason: \"PANIK, DAYTA\".\n
-                 End of trace",
-                Some(vec![Felt252::from(344_693_033_291_u64), Felt252::from(293_154_149_441_u64)])
-            ),
-            (
-                "Got an exception while executing a hint: Custom Hint Error: Execution failed. Failure reason: \"AYY, LMAO\".",
-                Some(vec![Felt252::from(4_282_713_u64), Felt252::from(1_280_131_407_u64)])
-            ),
-            (
-                "Got an exception while executing a hint: Custom Hint Error: Execution failed. Failure reason: \"\".",
-                Some(vec![])
-            ),
-            ("Custom Hint Error: Invalid trace: \"PANIC, DATA\"", None)
-        ];
-
-        for (str, expected) in cases {
-            assert_eq!(try_extract_panic_data(str), expected);
-        }
-    }
-
-    #[test]
-    fn parsing_felt_from_short_string() {
-        let cases = [
-            ("", Felt252::from(0)),
-            ("{", Felt252::from(123)),
-            ("PANIK", Felt252::from(344_693_033_291_u64)),
-        ];
-
-        for (str, felt_res) in cases {
-            assert_eq!(felt_from_short_string(str), felt_res);
-        }
     }
 }
