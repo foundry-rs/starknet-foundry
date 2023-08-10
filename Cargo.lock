@@ -1087,7 +1087,7 @@ dependencies = [
  "serde_json",
  "shellexpand",
  "snapbox",
- "starknet",
+ "starknet 0.4.0",
  "tempfile",
  "test-case",
  "tokio",
@@ -1130,7 +1130,7 @@ dependencies = [
  "num-traits 0.2.16",
  "regex",
  "serde_json",
- "starknet",
+ "starknet 0.5.0",
  "starknet_api",
  "tempfile",
  "thiserror",
@@ -1745,6 +1745,7 @@ dependencies = [
  "indoc",
  "itertools 0.10.5",
  "num-bigint",
+ "itertools 0.11.0",
  "num-traits 0.2.16",
  "once_cell",
  "openssl",
@@ -1758,7 +1759,7 @@ dependencies = [
  "serde",
  "serde_json",
  "snapbox",
- "starknet",
+ "starknet 0.5.0",
  "starknet_api",
  "tempfile",
  "test-collector",
@@ -3129,9 +3130,9 @@ dependencies = [
 
 [[package]]
 name = "regex"
-version = "1.9.1"
+version = "1.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b2eae68fc220f7cf2532e4494aded17545fce192d59cd996e0fe7887f4ceb575"
+checksum = "81bc1d4caf89fac26a70747fe603c130093b53c773888797a6329091246d651a"
 dependencies = [
  "aho-corasick",
  "memchr",
@@ -3141,9 +3142,9 @@ dependencies = [
 
 [[package]]
 name = "regex-automata"
-version = "0.3.4"
+version = "0.3.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b7b6d6190b7594385f61bd3911cd1be99dfddcfc365a4160cc2ab5bff4aed294"
+checksum = "fed1ceff11a1dddaee50c9dc8e4938bd106e9d89ae372f192311e7da498e3b69"
 dependencies = [
  "aho-corasick",
  "memchr",
@@ -3742,13 +3743,29 @@ version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7c2a1d8fc6a9747641a5a5fa7e8ae401be8bb73c817f16f573dd9cd440173d09"
 dependencies = [
- "starknet-accounts",
- "starknet-contract",
+ "starknet-accounts 0.3.0",
+ "starknet-contract 0.3.0",
  "starknet-core 0.4.0",
  "starknet-ff",
  "starknet-macros",
- "starknet-providers",
- "starknet-signers",
+ "starknet-providers 0.4.1",
+ "starknet-signers 0.2.2",
+]
+
+[[package]]
+name = "starknet"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8fcb61961b91757a9bc2d11549067445b2f921bd957f53710db35449767a1ba3"
+dependencies = [
+ "starknet-accounts 0.4.0",
+ "starknet-contract 0.4.0",
+ "starknet-core 0.5.1",
+ "starknet-crypto 0.6.0",
+ "starknet-ff",
+ "starknet-macros",
+ "starknet-providers 0.5.0",
+ "starknet-signers 0.3.0",
 ]
 
 [[package]]
@@ -3759,8 +3776,21 @@ checksum = "44adbf4180a34e2697744506e91a114b46edbbd5261b1eb1c713a435638b3e69"
 dependencies = [
  "async-trait",
  "starknet-core 0.4.0",
- "starknet-providers",
- "starknet-signers",
+ "starknet-providers 0.4.1",
+ "starknet-signers 0.2.2",
+ "thiserror",
+]
+
+[[package]]
+name = "starknet-accounts"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "111ed887e4db14f0df1f909905e7737e4730770c8ed70997b58a71d5d940daac"
+dependencies = [
+ "async-trait",
+ "starknet-core 0.5.1",
+ "starknet-providers 0.5.0",
+ "starknet-signers 0.3.0",
  "thiserror",
 ]
 
@@ -3773,9 +3803,24 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_with",
- "starknet-accounts",
+ "starknet-accounts 0.3.0",
  "starknet-core 0.4.0",
- "starknet-providers",
+ "starknet-providers 0.4.1",
+ "thiserror",
+]
+
+[[package]]
+name = "starknet-contract"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d0d6f81a647694b2cb669ab60e77954b57bf5fbc757f5fcaf0a791c3bd341f04"
+dependencies = [
+ "serde",
+ "serde_json",
+ "serde_with",
+ "starknet-accounts 0.4.0",
+ "starknet-core 0.5.1",
+ "starknet-providers 0.5.0",
  "thiserror",
 ]
 
@@ -3929,6 +3974,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "starknet-providers"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dbbfccb46a8969fb3ac803718d9d8270cff4eed5b7f6b9ba234875ad2cc997c5"
+dependencies = [
+ "async-trait",
+ "auto_impl",
+ "ethereum-types",
+ "flate2",
+ "log",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "serde_with",
+ "starknet-core 0.5.1",
+ "thiserror",
+ "url",
+]
+
+[[package]]
 name = "starknet-signers"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3940,6 +4005,22 @@ dependencies = [
  "eth-keystore",
  "rand",
  "starknet-core 0.4.0",
+ "starknet-crypto 0.6.0",
+ "thiserror",
+]
+
+[[package]]
+name = "starknet-signers"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5313524cc79344015ef2a8618947332ab17012b5c50600c7f84c60989bdec980"
+dependencies = [
+ "async-trait",
+ "auto_impl",
+ "crypto-bigint",
+ "eth-keystore",
+ "rand",
+ "starknet-core 0.5.1",
  "starknet-crypto 0.6.0",
  "thiserror",
 ]
@@ -4132,7 +4213,7 @@ dependencies = [
  "cairo-lang-test-runner",
  "cairo-lang-utils",
  "cairo-vm",
- "itertools 0.10.5",
+ "itertools 0.11.0",
  "num-bigint",
  "num-integer",
  "num-traits 0.2.16",
