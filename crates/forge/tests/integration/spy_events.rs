@@ -14,7 +14,7 @@ fn expect_events_simple() {
             use array::ArrayTrait;
             use result::ResultTrait;
             use starknet::ContractAddress;
-            use snforge_std::{ declare, PreparedContract, deploy, spy_events, EventSpy, EventFetcher, EventFetcherImpl };
+            use snforge_std::{ declare, PreparedContract, deploy, spy_events, EventSpy, EventFetcher };
 
             #[starknet::interface]
             trait IEventEmitter<TContractState> {
