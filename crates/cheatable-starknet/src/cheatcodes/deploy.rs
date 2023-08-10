@@ -42,11 +42,9 @@ impl CheatedState {
         for felt in inputs.iter().skip(2).take(calldata_length) {
             calldata.push(felt.clone());
         }
-        // self.increment_deploy_counter();
-        // print!("deploy_counter {}", self.deploy_counter);
+
         // Deploy a contract using syscall deploy.
-        let account_address: ContractAddress =
-            ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS));
+        let account_address = ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS));
         let block_context = build_block_context();
         let entry_point_selector = selector_from_name("deploy_contract");
         let salt = self.gen_salt();

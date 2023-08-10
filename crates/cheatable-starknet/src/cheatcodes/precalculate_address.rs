@@ -19,8 +19,7 @@ impl CheatedState {
     ) -> Result<(), EnhancedHintError> {
         let class_hash = inputs[0].clone();
 
-        let account_address: ContractAddress =
-            ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS));
+        let account_address = ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS));
         let class_hash = ClassHash(StarkFelt::new(class_hash.to_be_bytes()).unwrap());
         let salt = self.gen_salt();
         let calldata_length = inputs[1].to_usize().unwrap();

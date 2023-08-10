@@ -36,8 +36,8 @@ fn test_get_contract_precalculate_address() {
             let contract_address_pre2 = contract.precalculate_address(@calldata);
             let contract_address2 = contract.deploy(@calldata).unwrap();
 
-            assert(contract_address_pre.into() == contract_address, contract_address.into());
-            assert(contract_address_pre2.into() == contract_address2, contract_address.into());
+            assert(contract_address_pre == contract_address, contract_address.into());
+            assert(contract_address_pre2 == contract_address2, contract_address.into());
         }
     "#
         ),

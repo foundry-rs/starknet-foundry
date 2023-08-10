@@ -47,20 +47,7 @@ impl RevertedTransactionImpl of RevertedTransactionTrait {
 impl ContractClassImpl of ContractClassTrait {
     fn precalculate_address(self: @ContractClass, constructor_calldata: @Array::<felt252>) -> ContractAddress {
         let class_hash: felt252 = (*self.class_hash).into();
-        let mut inputs: Array::<felt252> = array![class_hash];
-        let calldata_len_felt = constructor_calldata.len().into();
-        inputs.append(calldata_len_felt);
-
-        let calldata_len = constructor_calldata.len();
-        let mut i = 0;
-
-        loop {
-            if i == calldata_len {
-                break();
-            }
-            inputs.append(*constructor_calldata[i]);
-            i += 1;
-        };
+        let mut inputs: Array::<felt252> = _prepare_calldata(class_hash, constructor_calldata);
 
         let outputs = cheatcode::<'precalculate_address'>(inputs.span());
         (*outputs[1]).try_into().unwrap()
@@ -68,19 +55,7 @@ impl ContractClassImpl of ContractClassTrait {
 
     fn deploy(self: @ContractClass, constructor_calldata: @Array::<felt252>) -> Result<ContractAddress, RevertedTransaction> {
         let class_hash: felt252 = (*self.class_hash).into();
-        let mut inputs = array![class_hash];
-        let calldata_len_felt = constructor_calldata.len().into();
-        inputs.append(calldata_len_felt);
-
-        let calldata_len = constructor_calldata.len();
-        let mut i = 0;
-        loop {
-            if calldata_len == i {
-                break ();
-            }
-            inputs.append(*constructor_calldata[i]);
-            i += 1;
-        };
+        let mut inputs = _prepare_calldata(class_hash, constructor_calldata);
 
         let outputs = cheatcode::<'deploy'>(inputs.span());
         let exit_code = *outputs[0];
@@ -106,6 +81,25 @@ impl ContractClassImpl of ContractClassTrait {
             Result::<ContractAddress, RevertedTransaction>::Err(RevertedTransaction { panic_data })
         }
     }
+}
+
+fn _prepare_calldata(class_hash: felt252, constructor_calldata: @Array::<felt252>) -> Array::<felt252>  {
+    let mut inputs: Array::<felt252> = array![class_hash];
+    let calldata_len_felt = constructor_calldata.len().into();
+    inputs.append(calldata_len_felt);
+
+    let calldata_len = constructor_calldata.len();
+    let mut i = 0;
+
+    loop {
+        if i == calldata_len {
+            break();
+        }
+        inputs.append(*constructor_calldata[i]);
+        i += 1;
+    };
+
+    inputs
 }
 
 fn declare(contract: felt252) -> ContractClass {
