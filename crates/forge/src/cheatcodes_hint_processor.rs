@@ -291,7 +291,11 @@ impl CairoHintProcessor<'_> {
             }
             "parse_txt" => {
                 let file_path = inputs[0].clone();
-                file_operations::parse_txt(&mut buffer, &file_path)
+                let parsed_content = file_operations::parse_txt(&file_path)?;
+                buffer
+                    .write_data(parsed_content.iter())
+                    .expect("Failed to insert file content to memory");
+                Ok(())
             }
             "parse_json" => todo!(),
             _ => Err(anyhow!("Unknown cheatcode selector: {selector}")).map_err(Into::into),

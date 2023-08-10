@@ -1,15 +1,12 @@
 use anyhow::Context;
 use cairo_felt::Felt252;
-use cairo_lang_runner::casm_run::MemBuffer;
 use cairo_lang_runner::short_string::as_cairo_short_string;
+use cairo_vm::utils::CAIRO_PRIME;
 use cheatnet::cheatcodes::EnhancedHintError;
 use cheatnet::cheatcodes::EnhancedHintError::FileParsing;
 use num_bigint::BigUint;
 
-pub(super) fn parse_txt(
-    buffer: &mut MemBuffer,
-    file_path: &Felt252,
-) -> Result<(), EnhancedHintError> {
+pub(super) fn parse_txt(file_path: &Felt252) -> Result<Vec<Felt252>, EnhancedHintError> {
     let file_path_str = as_cairo_short_string(file_path)
         .with_context(|| format!("Failed to convert {file_path} to str"))?;
     let content = std::fs::read_to_string(file_path_str.clone())?;
@@ -20,23 +17,23 @@ pub(super) fn parse_txt(
         .map(|&string| string_into_felt(string))
         .collect();
 
-    let felts = felts_in_results
+    felts_in_results
         .iter()
         .cloned()
         .collect::<Result<Vec<Felt252>, ()>>()
         .map_err(|_| FileParsing {
             path: file_path_str,
-        })?;
-
-    buffer
-        .write_data(felts.iter())
-        .expect("Failed to insert file content to memory");
-    Ok(())
+        })
 }
 
 fn string_into_felt(string: &str) -> Result<Felt252, ()> {
     if let Ok(number) = string.parse::<BigUint>() {
-        Ok(number.into())
+        // By default it is replaced with 0 in this case
+        if number < *CAIRO_PRIME {
+            Ok(number.into())
+        } else {
+            Err(())
+        }
     } else {
         let length = string.len();
         let first_char = string.chars().next();

@@ -19,14 +19,10 @@ mod file_operations;
 
 use file_operations::File;
 use file_operations::FileTrait;
-use file_operations::FileTraitImpl;
 use file_operations::parse_txt;
 use file_operations::parse_json;
 use file_operations::TxtParser;
 use file_operations::JsonParser;
-use file_operations::TxtParserImpl;
-use file_operations::JsonParserImpl;
-
 
 mod forge_print;
 
