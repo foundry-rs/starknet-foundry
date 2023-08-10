@@ -2,7 +2,7 @@ use crate::constants::{
     build_block_context, build_invoke_transaction, TEST_ACCOUNT_CONTRACT_ADDRESS,
 };
 use crate::state::DictStateReader;
-use crate::{cheatcodes::EnhancedHintError, CheatedState};
+use crate::{cheatcodes::EnhancedHintError, CheatnetState};
 use anyhow::{Context, Result};
 use blockifier::abi::abi_utils::selector_from_name;
 
@@ -22,13 +22,14 @@ use starknet_api::{patricia_key, stark_felt};
 
 use super::CheatcodeError;
 
-impl CheatedState {
+impl CheatnetState {
     pub fn deploy(
-        &self,
-        blockifier_state: &mut CachedState<DictStateReader>,
+        &mut self,
         class_hash: &Felt252,
         calldata: &[Felt252],
     ) -> Result<ContractAddress, CheatcodeError> {
+        let blockifier_state: &mut CachedState<DictStateReader> = &mut self.blockifier_state;
+
         // Deploy a contract using syscall deploy.
         let account_address = ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS));
         let block_context = build_block_context();

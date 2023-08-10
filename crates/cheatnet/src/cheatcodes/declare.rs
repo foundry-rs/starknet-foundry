@@ -6,7 +6,7 @@ use crate::constants::{
 use crate::state::DictStateReader;
 use crate::{
     cheatcodes::{CheatcodeError, ContractArtifacts, EnhancedHintError},
-    CheatedState,
+    CheatnetState,
 };
 use anyhow::{anyhow, Context, Result};
 use blockifier::execution::contract_class::{
@@ -28,13 +28,14 @@ use cairo_lang_starknet::casm_contract_class::CasmContractClass;
 use cairo_lang_starknet::contract_class::ContractClass;
 use starknet::core::types::contract::CompiledClass;
 
-impl CheatedState {
+impl CheatnetState {
     pub fn declare(
-        &self,
-        blockifier_state: &mut CachedState<DictStateReader>,
+        &mut self,
         contract_name: &Felt252,
         contracts: &HashMap<String, ContractArtifacts>,
     ) -> Result<ClassHash, CheatcodeError> {
+        let blockifier_state: &mut CachedState<DictStateReader> = &mut self.blockifier_state;
+
         let contract_name_as_short_str = as_cairo_short_string(contract_name)
             .context("Converting contract name to short string failed")
             .map_err::<EnhancedHintError, _>(From::from)?;

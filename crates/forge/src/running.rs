@@ -2,8 +2,7 @@ use std::collections::HashMap;
 
 use anyhow::Result;
 use cairo_vm::serde::deserialize_program::HintParams;
-use cheatnet::constants::build_testing_state;
-use cheatnet::CheatedState;
+use cheatnet::CheatnetState;
 use itertools::chain;
 
 use cairo_lang_casm::hints::Hint;
@@ -74,9 +73,8 @@ pub(crate) fn run_from_test_case(
     };
     let mut cairo_hint_processor = CairoHintProcessor {
         original_cairo_hint_processor: core_cairo_hint_processor,
-        blockifier_state: build_testing_state(predeployed_contracts),
         contracts,
-        cheated_state: CheatedState::new(),
+        cheatnet_state: CheatnetState::new(predeployed_contracts),
     };
 
     match runner.run_function(
