@@ -6,6 +6,7 @@ mod prank;
 mod pure_cairo;
 mod roll;
 mod should_panic;
+mod spy_events;
 mod starknet;
 mod syscalls;
 mod warp;
