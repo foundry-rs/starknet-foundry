@@ -12,6 +12,7 @@ use thiserror::Error;
 pub mod declare;
 pub mod deploy;
 pub mod prank;
+pub mod precalculate_address;
 pub mod roll;
 pub mod warp;
 

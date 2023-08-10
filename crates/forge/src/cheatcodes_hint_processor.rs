@@ -236,6 +236,9 @@ impl CairoHintProcessor<'_> {
                 print(inputs);
                 Ok(())
             }
+            "precalculate_address" => self
+                .cheated_state
+                .precalculate_address(&mut buffer, &inputs),
             _ => Err(anyhow!("Unknown cheatcode selector: {selector}")).map_err(Into::into),
         }?;
 

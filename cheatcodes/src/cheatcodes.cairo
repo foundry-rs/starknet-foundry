@@ -63,9 +63,9 @@ impl ContractClassImpl of ContractClassTrait {
         };
 
         let outputs = cheatcode::<'precalculate_address'>(inputs.span());
-        let result = *outputs[0];
-        result.try_into().unwrap()
+        (*outputs[1]).try_into().unwrap()
     }
+
     fn deploy(self: @ContractClass, constructor_calldata: @Array::<felt252>) -> Result<ContractAddress, RevertedTransaction> {
         let class_hash: felt252 = (*self.class_hash).into();
         let mut inputs = array![class_hash];
