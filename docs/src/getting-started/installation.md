@@ -5,8 +5,8 @@ In this section, we will walk through the process of installing Starknet Foundry
 
 ### Requirements
 
-To use Starknet Foundry, you need [Scarb](https://docs.swmansion.com/scarb/download) installed and added to
-your `PATH` environment variable.
+To use Starknet Foundry, you need [Scarb](https://docs.swmansion.com/scarb/download.html) installed
+and added to your `PATH` environment variable.
 You can find what version of Scarb is compatible with your version of Starknet Foundry
 in [release notes](https://github.com/foundry-rs/starknet-foundry/releases).
 

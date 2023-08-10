@@ -19,7 +19,7 @@ fn simple_call_and_invoke() {
         use traits::TryInto;
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
-        use cheatcodes::{ declare, PreparedContract, deploy };
+        use snforge_std::{ declare, PreparedContract, deploy };
             
         #[starknet::interface]
         trait IHelloStarknet<TContractState> {
@@ -79,7 +79,7 @@ fn advanced_types() {
         use traits::TryInto;
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
-        use cheatcodes::{ declare, PreparedContract, deploy, start_prank };
+        use snforge_std::{ declare, PreparedContract, deploy, start_prank };
             
 
         #[starknet::interface]
@@ -164,7 +164,7 @@ fn handling_errors() {
         use traits::TryInto;
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
-        use cheatcodes::{ declare, PreparedContract, deploy };
+        use snforge_std::{ declare, PreparedContract, deploy };
             
         #[starknet::interface]
         trait IHelloStarknet<TContractState> {
@@ -242,7 +242,7 @@ fn serding() {
         use traits::TryInto;
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
-        use cheatcodes::{ declare, PreparedContract, deploy };
+        use snforge_std::{ declare, PreparedContract, deploy };
         
         #[derive(Drop, Serde)]
         struct NestedStruct {
@@ -328,7 +328,7 @@ fn proxy_storage() {
         use traits::TryInto;
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
-        use cheatcodes::{ declare, PreparedContract, deploy };
+        use snforge_std::{ declare, PreparedContract, deploy };
         
         #[derive(Drop, Serde, PartialEq, Copy)]
         struct NestedStruct {

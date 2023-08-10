@@ -14,7 +14,7 @@ pub fn setup_package(package_name: &str) -> TempDir {
     )
     .unwrap();
 
-    let cheatcodes_path = Utf8PathBuf::from_str("../../cheatcodes")
+    let snforge_std_path = Utf8PathBuf::from_str("../../snforge_std")
         .unwrap()
         .canonicalize_utf8()
         .unwrap();
@@ -26,17 +26,17 @@ pub fn setup_package(package_name: &str) -> TempDir {
                 [package]
                 name = "{}"
                 version = "0.1.0"
-        
+
                 [[target.starknet-contract]]
                 sierra = true
                 casm = true
-        
+
                 [dependencies]
                 starknet = "2.1.0-rc2"
-                cheatcodes = {{ path = "{}" }}
+                snforge_std = {{ path = "{}" }}
                 "#,
             package_name,
-            cheatcodes_path
+            snforge_std_path
         ))
         .unwrap();
 
@@ -53,7 +53,7 @@ fn simple_package() {
         .assert()
         .success()
         .stdout_matches(indoc! {r#"Collected 11 test(s) and 5 test file(s)
-        Running 1 test(s) from src/lib.cairo
+        Running 1 test(s) from simple_package package
         [PASS] simple_package::test_fib
         Running 1 test(s) from tests/contract.cairo
         [PASS] contract::call_and_invoke
@@ -66,15 +66,15 @@ fn simple_package() {
         [PASS] test_simple::test_two
         [PASS] test_simple::test_two_and_two
         [FAIL] test_simple::test_failing
-        
+
         Failure data:
             original value: [8111420071579136082810415440747], converted to a string: [failing check]
-        
+
         [FAIL] test_simple::test_another_failing
-        
+
         Failure data:
             original value: [8111420071579136082810415440747], converted to a string: [failing check]
-        
+
         Running 1 test(s) from tests/without_prefix.cairo
         [PASS] without_prefix::five
         Tests: 9 passed, 2 failed, 0 skipped
@@ -89,20 +89,19 @@ fn simple_package_with_git_dependency() {
 
     let manifest_path = temp.child("Scarb.toml");
     manifest_path
-        // TODO #403
         .write_str(indoc!(
             r#"
             [package]
             name = "simple_package"
             version = "0.1.0"
-    
+
             [[target.starknet-contract]]
             sierra = true
             casm = true
-    
+
             [dependencies]
             starknet = "2.1.0-rc2"
-            cheatcodes = { git = "https://github.com/foundry-rs/starknet-foundry.git" }
+            snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git" }
             "#,
         ))
         .unwrap();
@@ -114,7 +113,7 @@ fn simple_package_with_git_dependency() {
         .assert()
         .success()
         .stdout_matches(indoc! {r#"Collected 11 test(s) and 5 test file(s)
-        Running 1 test(s) from src/lib.cairo
+        Running 1 test(s) from simple_package package
         [PASS] simple_package::test_fib
         Running 1 test(s) from tests/contract.cairo
         [PASS] contract::call_and_invoke
@@ -127,12 +126,12 @@ fn simple_package_with_git_dependency() {
         [PASS] test_simple::test_two
         [PASS] test_simple::test_two_and_two
         [FAIL] test_simple::test_failing
-        
+
         Failure data:
             original value: [8111420071579136082810415440747], converted to a string: [failing check]
-        
+
         [FAIL] test_simple::test_another_failing
-        
+
         Failure data:
             original value: [8111420071579136082810415440747], converted to a string: [failing check]
 
@@ -174,7 +173,7 @@ fn with_filter() {
         .assert()
         .success()
         .stdout_matches(indoc! {r#"Collected 2 test(s) and 5 test file(s)
-        Running 0 test(s) from src/lib.cairo
+        Running 0 test(s) from simple_package package
         Running 0 test(s) from tests/contract.cairo
         Running 0 test(s) from tests/ext_function_test.cairo
         Running 2 test(s) from tests/test_simple.cairo
@@ -197,7 +196,7 @@ fn with_exact_filter() {
         .assert()
         .success()
         .stdout_matches(indoc! {r#"Collected 1 test(s) and 5 test file(s)
-        Running 0 test(s) from src/lib.cairo
+        Running 0 test(s) from simple_package package
         Running 0 test(s) from tests/contract.cairo
         Running 0 test(s) from tests/ext_function_test.cairo
         Running 1 test(s) from tests/test_simple.cairo
@@ -218,7 +217,7 @@ fn with_non_matching_filter() {
         .assert()
         .success()
         .stdout_matches(indoc! {r#"Collected 0 test(s) and 5 test file(s)
-        Running 0 test(s) from src/lib.cairo
+        Running 0 test(s) from simple_package package
         Running 0 test(s) from tests/contract.cairo
         Running 0 test(s) from tests/ext_function_test.cairo
         Running 0 test(s) from tests/test_simple.cairo
@@ -237,11 +236,24 @@ fn with_print() {
         .assert()
         .success()
         .stdout_matches(indoc! {r#"Collected 1 test(s) and 2 test file(s)
-        Running 0 test(s) from src/lib.cairo
+        Running 0 test(s) from print_test package
         Running 1 test(s) from tests/test_print.cairo
         original value: [123], converted to a string: [{]
-        original value: [6381921], converted to a string: [aaa]
         original value: [3618502788666131213697322783095070105623107215331596699973092056135872020480]
+        original value: [6381921], converted to a string: [aaa]
+        original value: [12], converted to a string: []
+        original value: [1234]
+        original value: [123456]
+        original value: [1233456789]
+        original value: [123345678910]
+        original value: [0], converted to a string: []
+        original value: [10633823966279327296825105735305134080]
+        original value: [2], converted to a string: []
+        original value: [11], converted to a string: []
+        original value: [1234]
+        original value: [123456]
+        original value: [123456789]
+        original value: [12345612342]
         original value: [152]
         original value: [124], converted to a string: [|]
         original value: [149]
@@ -261,11 +273,11 @@ fn with_panic_data_decoding() {
         .assert()
         .success()
         .stdout_matches(indoc! {r#"Collected 4 test(s) and 2 test file(s)
-        Running 0 test(s) from src/lib.cairo
+        Running 0 test(s) from panic_decoding package
         Running 4 test(s) from tests/test_panic_decoding.cairo
         [PASS] test_panic_decoding::test_simple
         [FAIL] test_panic_decoding::test_panic_decoding
-        
+
         Failure data:
             original value: [123], converted to a string: [{]
             original value: [6381921], converted to a string: [aaa]
@@ -273,12 +285,12 @@ fn with_panic_data_decoding() {
             original value: [152]
             original value: [124], converted to a string: [|]
             original value: [149]
-        
+
         [FAIL] test_panic_decoding::test_panic_decoding2
-        
+
         Failure data:
             original value: [128]
-        
+
         [PASS] test_panic_decoding::test_simple2
         Tests: 2 passed, 2 failed, 0 skipped
         "#});
@@ -295,20 +307,18 @@ fn with_exit_first() {
             name = "simple_package"
             version = "0.1.0"
 
-            # See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest
-
             [dependencies]
             starknet = "2.1.0-rc2"
-            cheatcodes = {{ path = "{}" }}
+            snforge_std = {{ path = "{}" }}
 
             [[target.starknet-contract]]
             sierra = true
             casm = true
-            
+
             [tool.snforge]
             exit_first = true
-            "#, 
-            Utf8PathBuf::from_str("../../cheatcodes")
+            "#,
+            Utf8PathBuf::from_str("../../snforge_std")
                 .unwrap()
                 .canonicalize_utf8()
                 .unwrap()
@@ -322,7 +332,7 @@ fn with_exit_first() {
         .assert()
         .success()
         .stdout_matches(indoc! {r#"Collected 11 test(s) and 5 test file(s)
-        Running 1 test(s) from src/lib.cairo
+        Running 1 test(s) from simple_package package
         [PASS] simple_package::test_fib
         Running 1 test(s) from tests/contract.cairo
         [PASS] contract::call_and_invoke
@@ -335,10 +345,10 @@ fn with_exit_first() {
         [PASS] test_simple::test_two
         [PASS] test_simple::test_two_and_two
         [FAIL] test_simple::test_failing
-        
+
         Failure data:
             original value: [8111420071579136082810415440747], converted to a string: [failing check]
-        
+
         [SKIP] test_simple::test_another_failing
         [SKIP] without_prefix::five
         Tests: 8 passed, 1 failed, 2 skipped
@@ -355,7 +365,7 @@ fn with_exit_first_flag() {
         .assert()
         .success()
         .stdout_matches(indoc! {r#"Collected 11 test(s) and 5 test file(s)
-        Running 1 test(s) from src/lib.cairo
+        Running 1 test(s) from simple_package package
         [PASS] simple_package::test_fib
         Running 1 test(s) from tests/contract.cairo
         [PASS] contract::call_and_invoke
@@ -368,10 +378,10 @@ fn with_exit_first_flag() {
         [PASS] test_simple::test_two
         [PASS] test_simple::test_two_and_two
         [FAIL] test_simple::test_failing
-        
+
         Failure data:
             original value: [8111420071579136082810415440747], converted to a string: [failing check]
-        
+
         [SKIP] test_simple::test_another_failing
         [SKIP] without_prefix::five
         Tests: 8 passed, 1 failed, 2 skipped
@@ -389,11 +399,9 @@ fn exit_first_flag_takes_precedence() {
             name = "simple_package"
             version = "0.1.0"
 
-            # See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest
-
             [dependencies]
             starknet = "2.1.0-rc2"
-            cheatcodes = { path = "../.." }
+            snforge_std = { path = "../.." }
 
             [[target.starknet-contract]]
             sierra = true
@@ -412,7 +420,7 @@ fn exit_first_flag_takes_precedence() {
         .assert()
         .success()
         .stdout_matches(indoc! {r#"Collected 11 test(s) and 5 test file(s)
-        Running 1 test(s) from src/lib.cairo
+        Running 1 test(s) from simple_package package
         [PASS] simple_package::test_fib
         Running 1 test(s) from tests/contract.cairo
         [PASS] contract::call_and_invoke
@@ -425,10 +433,10 @@ fn exit_first_flag_takes_precedence() {
         [PASS] test_simple::test_two
         [PASS] test_simple::test_two_and_two
         [FAIL] test_simple::test_failing
-        
+
         Failure data:
             original value: [8111420071579136082810415440747], converted to a string: [failing check]
-        
+
         [SKIP] test_simple::test_another_failing
         [SKIP] without_prefix::five
         Tests: 8 passed, 1 failed, 2 skipped
@@ -445,7 +453,7 @@ fn using_corelib_names() {
         .assert()
         .success()
         .stdout_matches(indoc! {r#"Collected 4 test(s) and 5 test file(s)
-        Running 0 test(s) from src/lib.cairo
+        Running 0 test(s) from using_corelib_names package
         Running 1 test(s) from tests/bits.cairo
         [PASS] bits::test_names
         Running 1 test(s) from tests/math.cairo
@@ -472,7 +480,7 @@ fn should_panic() {
         .success()
         .stdout_matches(indoc! { r#"
         Collected 6 test(s) and 2 test file(s)
-        Running 0 test(s) from src/lib.cairo
+        Running 0 test(s) from should_panic_test package
         Running 6 test(s) from tests/should_panic_test.cairo
         [PASS] should_panic_test::should_panic_no_data
 

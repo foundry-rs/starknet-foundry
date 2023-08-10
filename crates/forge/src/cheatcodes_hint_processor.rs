@@ -14,9 +14,9 @@ use cairo_vm::types::exec_scope::ExecutionScopes;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::vm_core::VirtualMachine;
-use cheatable_starknet::rpc::{call_contract, CallContractOutput};
-use cheatable_starknet::state::DictStateReader;
-use cheatable_starknet::{
+use cheatnet::rpc::{call_contract, CallContractOutput};
+use cheatnet::state::DictStateReader;
+use cheatnet::{
     cheatcodes::{CheatcodeError, ContractArtifacts, EnhancedHintError},
     CheatedState,
 };
@@ -342,13 +342,18 @@ fn execute_syscall(
     let mut buffer = MemBuffer::new(vm, system_ptr);
 
     let selector = buffer.next_felt252().unwrap().to_bytes_be();
+
+    if std::str::from_utf8(&selector).unwrap() != "CallContract" {
+        return Err(HintError::CustomHint(Box::from(
+            "starknet syscalls cannot be used in tests".to_string(),
+        )));
+    }
+
     let gas_counter = buffer.next_usize().unwrap();
     let contract_address = buffer.next_felt252().unwrap().into_owned();
     let entry_point_selector = buffer.next_felt252().unwrap().into_owned();
 
     let calldata = buffer.next_arr().unwrap();
-
-    assert_eq!(std::str::from_utf8(&selector).unwrap(), "CallContract");
 
     let call_result = call_contract(
         &contract_address,

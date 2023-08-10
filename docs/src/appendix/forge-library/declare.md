@@ -8,6 +8,7 @@ Declares a contract and returns its class hash.
 
 ```rust
 use result::ResultTrait;
+use snforge_std::declare;
 
 #[test]
 fn test_declare() {

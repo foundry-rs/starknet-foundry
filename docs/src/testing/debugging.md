@@ -1,13 +1,22 @@
 # Debugging
 
+> ℹ️ **Info**
+> To use `PrintTrait` you need to add `snforge_std` package as a dependency in
+> your [`Scarb.toml`](https://docs.swmansion.com/scarb/docs/guides/dependencies.html#adding-a-dependency) 
+> using appropriate release tag.
+>```toml
+> [dependencies]
+> snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.4.0" }
+> ```
+
 Starknet Foundry standard library adds a utility method for printing inside tests to facilitate simple debugging.
 
 Here's a test with example use of print method:
 
-```cairo
+```rust
 // Make sure to import Starknet Foundry PrintTrait
 use array::ArrayTrait;
-use forge_print::PrintTrait;
+use snforge_std::PrintTrait;
 
 #[test]
 fn test_print() {
@@ -35,7 +44,7 @@ Running tests will include prints in the output:
 ```shell
 $ snforge
 Collected 1 test(s) and 2 test file(s)
-Running 0 test(s) from src/lib.cairo
+Running 0 test(s) from package_name package
 Running 1 test(s) from tests/test_print.cairo
 original value: [1794026292945241370577200538206453096157964090], converted to a string: [Print short string:]
 original value: [2019423207056158060135], converted to a string: [my string]

@@ -17,7 +17,7 @@ fn start_prank_simple() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use cheatcodes::{ declare, PreparedContract, deploy, start_prank };
+            use snforge_std::{ declare, PreparedContract, deploy, start_prank };
 
             #[starknet::interface]
             trait IPrankChecker<TContractState> {
@@ -74,7 +74,7 @@ fn start_prank_with_other_syscall() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use cheatcodes::{ declare, PreparedContract, deploy, start_prank };
+            use snforge_std::{ declare, PreparedContract, deploy, start_prank };
             
             #[starknet::interface]
             trait IPrankChecker<TContractState> {
@@ -133,7 +133,7 @@ fn start_prank_in_constructor_test() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use cheatcodes::{ declare, PreparedContract, deploy, start_prank };
+            use snforge_std::{ declare, PreparedContract, deploy, start_prank };
             
             #[starknet::interface]
             trait IConstructorPrankChecker<TContractState> {
@@ -188,7 +188,7 @@ fn stop_prank() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use cheatcodes::{ declare, PreparedContract, deploy, start_prank, stop_prank };
+            use snforge_std::{ declare, PreparedContract, deploy, start_prank, stop_prank };
 
             #[starknet::interface]
             trait IPrankChecker<TContractState> {
@@ -252,7 +252,7 @@ fn double_prank() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use cheatcodes::{ declare, PreparedContract, deploy, start_prank, stop_prank };
+            use snforge_std::{ declare, PreparedContract, deploy, start_prank, stop_prank };
 
             #[starknet::interface]
             trait IPrankChecker<TContractState> {
@@ -318,7 +318,7 @@ fn start_prank_with_proxy() {
             use traits::Into;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use cheatcodes::{ declare, PreparedContract, deploy, start_prank, stop_prank };
+            use snforge_std::{ declare, PreparedContract, deploy, start_prank, stop_prank };
             
             #[starknet::interface]
             trait IPrankCheckerProxy<TContractState> {
@@ -380,7 +380,7 @@ fn start_prank_with_library_call() {
             use traits::Into;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use cheatcodes::{ declare, PreparedContract, deploy, start_prank };
+            use snforge_std::{ declare, PreparedContract, deploy, start_prank };
             use starknet::ClassHash;
 
             #[starknet::interface]
