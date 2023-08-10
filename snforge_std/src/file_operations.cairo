@@ -2,12 +2,13 @@ use array::ArrayTrait;
 use array::SpanTrait;
 use clone::Clone;
 use option::OptionTrait;
+use serde::Serde;
 
 use starknet::testing::cheatcode;
 
 #[derive(Drop, Copy)]
 struct File {
-    path: felt252  // relative path to a file from a dir where snforge is executed
+    path: felt252  // relative path
 }
 
 trait FileTrait {
@@ -50,4 +51,26 @@ fn parse_json(file: @File) -> Array<felt252> {
         i += 1;
     };
     result
+}
+
+trait TxtParser<T, impl TSerde: Serde<T>> {
+    fn deserialize_txt(file: @File) -> Option<T>;
+}
+
+trait JsonParser<T, impl TSerde: Serde<T>> {
+    fn deserialize_json(file: @File) -> Option<T>;
+}
+
+impl TxtParserImpl<T, impl TSerde: Serde<T>> of TxtParser<T> {
+    fn deserialize_txt(file: @File) -> Option<T> {
+        let mut content = cheatcode::<'parse_txt'>(array![*file.path].span());
+        Serde::<T>::deserialize(ref content)
+    }
+}
+
+impl JsonParserImpl<T, impl TSerde: Serde<T>> of JsonParser<T> {
+    fn deserialize_json(file: @File) -> Option<T> {
+        let mut content = cheatcode::<'parse_json'>(array![*file.path].span());
+        Serde::<T>::deserialize(ref content)
+    }
 }
