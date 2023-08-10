@@ -289,7 +289,7 @@ impl CairoHintProcessor<'_> {
                 Ok(())
             }
             "get_class_hash" => {
-                let contract_address = contract_address_from_felt252(inputs[0].clone())?;
+                let contract_address = contract_address_from_felt252(&inputs[0])?;
 
                 match self.cheatnet_state.get_class_hash(contract_address) {
                     Ok(class_hash) => {
@@ -405,7 +405,7 @@ fn write_cheatcode_panic(buffer: &mut MemBuffer, panic_data: &[Felt252]) {
         .expect("Failed to insert error in memory");
 }
 
-fn contract_address_from_felt252(felt: Felt252) -> Result<ContractAddress, EnhancedHintError> {
+fn contract_address_from_felt252(felt: &Felt252) -> Result<ContractAddress, EnhancedHintError> {
     Ok(ContractAddress(PatriciaKey::try_from(StarkFelt::new(
         felt.to_be_bytes(),
     )?)?))
@@ -440,8 +440,8 @@ mod test {
 
     #[test]
     fn contract_address_from_felt_252() {
-        let felt = Felt252::from(112233);
-        let addr = contract_address_from_felt252(felt.clone()).unwrap();
+        let felt = Felt252::from(112_233);
+        let addr = contract_address_from_felt252(&felt).unwrap();
         assert_eq!(stark_felt_to_felt(*addr.0.key()), felt);
     }
 }
