@@ -3,7 +3,6 @@ use std::fmt::Debug;
 
 use anyhow::{Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
-use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use serde::Deserialize;
 use test_case_summary::TestCaseSummary;
 use walkdir::WalkDir;
@@ -12,6 +11,7 @@ use cairo_lang_runner::SierraCasmRunner;
 use cairo_lang_sierra::program::Program;
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
+use itertools::Itertools;
 
 use crate::running::run_from_test_case;
 use crate::scarb::{ForgeConfig, StarknetContractArtifacts};
@@ -76,16 +76,10 @@ fn collect_tests_from_directory(
     package_path: &Utf8PathBuf,
     package_name: &str,
     lib_path: &Utf8PathBuf,
-    corelib_path: &Utf8PathBuf,
     runner_config: &RunnerConfig,
 ) -> Result<Vec<TestsFromFile>> {
     let test_files = find_cairo_root_files_in_directory(package_path, lib_path)?;
-    internal_collect_tests(
-        package_path,
-        package_name,
-        &test_files,
-        runner_config,
-    )
+    internal_collect_tests(package_path, package_name, &test_files, runner_config)
 }
 
 fn find_cairo_root_files_in_directory(
@@ -119,55 +113,64 @@ fn find_cairo_root_files_in_directory(
 
 fn internal_collect_tests(
     package_path: &Utf8PathBuf,
-    package_name: &str,
-    linked_libraries: &Option<Vec<LinkedLibrary>>,
-    test_roots: &[Utf8PathBuf],
-    corelib_path: &Utf8PathBuf,
+    _package_name: &str,
+    _test_roots: &[Utf8PathBuf],
     runner_config: &RunnerConfig,
 ) -> Result<Vec<TestsFromFile>> {
-    let tests: Result<Vec<TestsFromFile>> = test_roots
-        .par_iter()
-        .map(|tf| {
-            collect_tests_from_tree(
-                tf,
-                package_path,
-                package_name,
-                linked_libraries,
-                corelib_path,
-                runner_config,
+    let target_dir = package_path.join("target/dev");
+    let unit_names = std::fs::read_dir(target_dir.clone())?
+        .into_iter()
+        .map(|entry| entry.map(|entry| entry.file_name().to_string_lossy().to_string()))
+        .filter(|entry| {
+            if let Ok(name) = entry {
+                if name.starts_with("test.") {
+                    return true;
+                }
+            }
+            false
+        })
+        .map(|entry| entry.map(|entry| entry.replace(".sierra", "")))
+        .map(|entry| entry.map(|entry| entry.replace(".json", "")))
+        .map(|entry| entry.map(|entry| entry.replace("test.", "")))
+        .map(|p| p.map_err(|e| e.into()))
+        .collect::<Result<Vec<String>>>()?;
+
+    let unit_names = unit_names.into_iter().dedup().collect::<Vec<String>>();
+
+    let tests = unit_names
+        .iter()
+        .map(|unit_name| {
+            collect_tests_for_unit(
+                &package_path,
+                &runner_config,
+                &target_dir.clone(),
+                &unit_name.clone(),
             )
         })
         .collect();
+
     tests
 }
 
-fn collect_tests_from_tree(
-    test_root: &Utf8PathBuf,
-    package_path: &Utf8PathBuf,
-    package_name: &str,
-    linked_libraries: &Option<Vec<LinkedLibrary>>,
-    corelib_path: &Utf8PathBuf,
+fn collect_tests_for_unit(
+    _package_path: &Utf8PathBuf,
     runner_config: &RunnerConfig,
+    target_dir: &Utf8PathBuf,
+    unit_name: &str,
 ) -> Result<TestsFromFile> {
-    let builtins = vec![
-        "Pedersen",
-        "RangeCheck",
-        "Bitwise",
-        "EcOp",
-        "Poseidon",
-        "SegmentArena",
-        "GasBuiltin",
-        "System",
-    ];
+    eprintln!("Reading test case from: {}", unit_name);
 
-    let (sierra_program, tests_configs) = collect_tests(
-        test_root.as_str(),
-        None,
-        package_name,
-        linked_libraries.clone(),
-        Some(builtins.clone()),
-        corelib_path.into(),
-    )?;
+    let program_path = target_dir.join(format!("test.{unit_name}.sierra"));
+    let cases_path = target_dir.join(format!("test.{unit_name}.json"));
+
+    dbg!(cases_path.clone());
+    dbg!(program_path.clone());
+
+    let sierra_program = cairo_lang_sierra::ProgramParser::new()
+        .parse(&std::fs::read_to_string(program_path.clone()).unwrap())
+        .unwrap();
+    let tests_configs: Vec<TestCase> =
+        serde_json::from_str(&std::fs::read_to_string(cases_path).unwrap()).unwrap();
 
     let test_cases = if let Some(test_name_filter) = &runner_config.test_name_filter {
         filter_tests_by_name(test_name_filter, runner_config.exact_match, tests_configs)?
@@ -175,7 +178,9 @@ fn collect_tests_from_tree(
         tests_configs
     };
 
-    let relative_path = test_root.strip_prefix(package_path)?.to_path_buf();
+    // TODO: read from artifact file
+    let relative_path = Utf8PathBuf::from("test");
+    // let relative_path = test_root.strip_prefix(package_path)?.to_path_buf();
 
     Ok(TestsFromFile {
         sierra_program,
@@ -202,17 +207,11 @@ pub fn run(
     package_name: &str,
     lib_path: &Utf8PathBuf,
     runner_config: &RunnerConfig,
-    corelib_path: &Utf8PathBuf,
+    _corelib_path: &Utf8PathBuf,
     contracts: &HashMap<String, StarknetContractArtifacts>,
     predeployed_contracts: &Utf8PathBuf,
 ) -> Result<Vec<TestFileSummary>> {
-    let tests = collect_tests_from_directory(
-        package_path,
-        package_name,
-        lib_path,
-        corelib_path,
-        runner_config,
-    )?;
+    let tests = collect_tests_from_directory(package_path, package_name, lib_path, runner_config)?;
 
     pretty_printing::print_collected_tests_count(
         tests.iter().map(|tests| tests.test_cases.len()).sum(),
@@ -371,8 +370,8 @@ fn test_name_contains(test_name_filter: &str, test: &TestCase) -> Result<bool> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use assert_fs::fixture::PathCopy;
     use crate::test_case_summary::ExpectedTestResult;
+    use assert_fs::fixture::PathCopy;
 
     #[test]
     fn collecting_tests() {
