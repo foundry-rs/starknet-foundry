@@ -1,4 +1,4 @@
-pub const COMPILER_VERSION: &str = "v2.1.0";
+pub const COMPILER_VERSION: &str = "v2.0.2";
 
 pub const ACCOUNT: &str = "user1";
 pub const ACCOUNT_FILE_PATH: &str = "tests/data/accounts/accounts.json";
