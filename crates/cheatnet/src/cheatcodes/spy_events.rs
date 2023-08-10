@@ -43,6 +43,9 @@ impl CheatedState {
                 .write(felt)
                 .expect("Failed to insert serialized events");
         }
+
+        self.emitted_events = vec![];
+
         Ok(())
     }
 }

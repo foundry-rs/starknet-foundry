@@ -35,6 +35,13 @@ impl EventFetcherImpl of EventFetcher {
         let mut output = cheatcode::<'fetch_events'>(array![].span());
         let events = Serde::<Array<Event>>::deserialize(ref output).unwrap();
 
-        self.events = events;
+        let mut i = 0;
+        loop {
+            if i >= events.len() {
+                break;
+            }
+            self.events.append(events.at(i).clone());
+            i += 1;
+        }
     }
 }

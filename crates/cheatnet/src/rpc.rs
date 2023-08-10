@@ -135,6 +135,7 @@ pub fn call_contract(
 
     if let Ok(call_info) = exec_result {
         if cheated_state.spy_events {
+            // TODO: include nested calls too
             let mut events: Vec<Event> = call_info
                 .execution
                 .events

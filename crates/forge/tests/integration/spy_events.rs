@@ -1,6 +1,6 @@
 use crate::integration::common::corelib::{corelib_path, predeployed_contracts};
 use crate::integration::common::runner::Contract;
-use crate::{assert_failed, assert_passed, test_case};
+use crate::{assert_passed, test_case};
 use camino::Utf8PathBuf;
 use forge::run;
 use indoc::indoc;
@@ -34,16 +34,13 @@ fn expect_events_simple() {
 
                 assert(spy.events.len() == 1, 'There should be one event');
                 assert(spy.events.at(0).keys.len() == 0, 'There should be no keys');
+                assert(spy.events.at(0).data.len() == 1, 'There should be one data');
 
-                let data: Array<felt252> = array![123];
-                let mut i = 0;
-                loop {
-                    if i >= data.len() {
-                        break;
-                    }
-                    assert(spy.events.at(0).data.at(i) == data.at(i), 'Event data is invalid');
-                    i += 1;
-                }
+                dispatcher.emit_one_event(123);
+                assert(spy.events.len() == 1, 'There should be one event');
+
+                spy.fetch_events();
+                assert(spy.events.len() == 2, 'There should be two events');
             }
         "#
         ),
