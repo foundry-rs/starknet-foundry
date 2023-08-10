@@ -295,7 +295,7 @@ impl CairoHintProcessor<'_> {
                     Ok(class_hash) => {
                         buffer.write(Felt252::from_bytes_be(class_hash.0.bytes()));
                         Ok(())
-                    },
+                    }
                     Err(CheatcodeError::Recoverable(_)) => unreachable!(),
                     Err(CheatcodeError::Unrecoverable(err)) => Err(err),
                 }
@@ -406,9 +406,9 @@ fn write_cheatcode_panic(buffer: &mut MemBuffer, panic_data: &[Felt252]) {
 }
 
 fn contract_address_from_felt252(felt: Felt252) -> Result<ContractAddress, EnhancedHintError> {
-    Ok(
-        ContractAddress(PatriciaKey::try_from(StarkFelt::new(felt.to_be_bytes())?)?)
-    )
+    Ok(ContractAddress(PatriciaKey::try_from(StarkFelt::new(
+        felt.to_be_bytes(),
+    )?)?))
 }
 
 #[cfg(test)]

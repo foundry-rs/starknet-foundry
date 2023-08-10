@@ -41,7 +41,7 @@ fn get_class_hash() {
         &test.contracts(&corelib_path()).unwrap(),
         &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
     )
-        .unwrap();
+    .unwrap();
 
     assert_passed!(result);
 }
@@ -89,7 +89,7 @@ fn get_class_hash_replace_class() {
             "HelloStarknet".to_string(),
             Path::new("tests/data/contracts/hello_starknet.cairo"),
         )
-            .unwrap()
+        .unwrap()
     );
 
     let result = run(
@@ -102,7 +102,7 @@ fn get_class_hash_replace_class() {
         &test.contracts(&corelib_path()).unwrap(),
         &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
     )
-        .unwrap();
+    .unwrap();
 
     assert_passed!(result);
 }

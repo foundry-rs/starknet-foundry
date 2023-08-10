@@ -10,10 +10,10 @@ use thiserror::Error;
 
 pub mod declare;
 pub mod deploy;
+pub mod get_class_hash;
 pub mod prank;
 pub mod roll;
 pub mod warp;
-pub mod get_class_hash;
 
 // All errors that can be thrown from the hint executor have to be added here,
 // to prevent the whole runner from panicking
