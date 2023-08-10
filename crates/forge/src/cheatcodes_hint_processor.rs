@@ -240,7 +240,7 @@ impl CairoHintProcessor<'_> {
             }
             "parse_txt" => {
                 let file_path = inputs[0].clone();
-                file_operations::parse_txt(&mut buffer, file_path)
+                file_operations::parse_txt(&mut buffer, &file_path)
             }
             "parse_json" => todo!(),
             _ => Err(anyhow!("Unknown cheatcode selector: {selector}")).map_err(Into::into),

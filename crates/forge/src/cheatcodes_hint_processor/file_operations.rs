@@ -8,9 +8,9 @@ use num_bigint::BigUint;
 
 pub(super) fn parse_txt(
     buffer: &mut MemBuffer,
-    file_path: Felt252,
+    file_path: &Felt252,
 ) -> Result<(), EnhancedHintError> {
-    let file_path_str = as_cairo_short_string(&file_path)
+    let file_path_str = as_cairo_short_string(file_path)
         .with_context(|| format!("Failed to convert {file_path} to str"))?;
     let content = std::fs::read_to_string(file_path_str.clone())?;
     let split_content: Vec<&str> = content.trim().split_ascii_whitespace().collect();
@@ -35,26 +35,24 @@ pub(super) fn parse_txt(
 }
 
 fn string_into_felt(string: &str) -> Result<Felt252, ()> {
-    let maybe_number = string.parse::<BigUint>();
-    match maybe_number {
-        Ok(number) => Ok(number.into()),
-        Err(_) => {
-            let length = string.len();
-            let first_char = string.chars().nth(0);
-            let last_char = string.chars().nth(length - 1);
+    if let Ok(number) = string.parse::<BigUint>() {
+        Ok(number.into())
+    } else {
+        let length = string.len();
+        let first_char = string.chars().next();
+        let last_char = string.chars().nth(length - 1);
 
-            if length >= 2
-                && length - 2 <= 31
-                && (first_char == Some('\'') || first_char == Some('\"'))
-                && first_char == last_char
-                && string.is_ascii()
-            {
-                let string = string.to_string();
-                let bytes = string[1..length - 1].as_bytes();
-                Ok(Felt252::from_bytes_be(bytes))
-            } else {
-                Err(())
-            }
+        if length >= 2
+            && length - 2 <= 31
+            && (first_char == Some('\'') || first_char == Some('\"'))
+            && first_char == last_char
+            && string.is_ascii()
+        {
+            let string = string.to_string();
+            let bytes = string[1..length - 1].as_bytes();
+            Ok(Felt252::from_bytes_be(bytes))
+        } else {
+            Err(())
         }
     }
 }
