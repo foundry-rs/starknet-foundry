@@ -28,7 +28,7 @@ use cairo_lang_runner::casm_run::MemBuffer;
 
 impl CheatedState {
     pub fn deploy(
-        &self,
+        &mut self,
         buffer: &mut MemBuffer,
         blockifier_state: &mut CachedState<DictStateReader>,
         inputs: &[Felt252],
@@ -42,15 +42,16 @@ impl CheatedState {
         for felt in inputs.iter().skip(2).take(calldata_length) {
             calldata.push(felt.clone());
         }
-
+        // self.increment_deploy_counter();
+        // print!("deploy_counter {}", self.deploy_counter);
         // Deploy a contract using syscall deploy.
         let account_address: ContractAddress =
             ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS));
         let block_context = build_block_context();
         let entry_point_selector = selector_from_name("deploy_contract");
-        let salt = ContractAddressSalt::default();
+        let salt = ContractAddressSalt(StarkFelt::from(333_u32 + self.deploy_counter));
         let class_hash = ClassHash(StarkFelt::new(class_hash.to_be_bytes()).unwrap());
-
+        self.increment_deploy_counter();
         let contract_class = blockifier_state.get_compiled_contract_class(&class_hash)?;
         if contract_class.constructor_selector().is_none() && !calldata.is_empty() {
             write_cheatcode_panic(

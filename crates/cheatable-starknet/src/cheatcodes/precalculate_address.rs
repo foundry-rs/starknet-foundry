@@ -21,11 +21,8 @@ impl CheatedState {
 
         let account_address: ContractAddress =
             ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS));
-        println!("{}", *account_address.0.key());
         let class_hash = ClassHash(StarkFelt::new(class_hash.to_be_bytes()).unwrap());
-        let next_deploy_id = self.next_deploy_id;
-        println!("Next deploy id will be {}", next_deploy_id);
-        let salt = ContractAddressSalt::default();
+        let salt = ContractAddressSalt(StarkFelt::from(333_u32 + self.deploy_counter));
         let calldata_length = inputs[1].to_usize().unwrap();
 
         let mut calldata = vec![];
