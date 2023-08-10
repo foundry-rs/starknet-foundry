@@ -5,7 +5,6 @@ use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs;
 
-
 #[allow(dead_code)]
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 struct StarknetContract {
@@ -430,23 +429,6 @@ mod tests {
     }
 
     #[test]
-    fn get_dependencies_for_package() {
-        let temp = setup_package("simple_package");
-        let scarb_metadata = MetadataCommand::new()
-            .inherit_stderr()
-            .current_dir(temp.path())
-            .exec()
-            .unwrap();
-
-        let dependencies =
-            dependencies_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
-                .unwrap();
-
-        assert!(!dependencies.is_empty());
-        assert!(dependencies.iter().all(|dep| dep.path.exists()));
-    }
-
-    #[test]
     fn get_paths_for_package() {
         let temp = setup_package("simple_package");
         let scarb_metadata = MetadataCommand::new()
@@ -510,24 +492,6 @@ mod tests {
             target_name_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0]).unwrap();
 
         assert_eq!(target_name, "simple_package");
-    }
-
-    #[test]
-    fn get_dependencies_for_package_err_on_invalid_package() {
-        let temp = setup_package("simple_package");
-        let scarb_metadata = MetadataCommand::new()
-            .inherit_stderr()
-            .current_dir(temp.path())
-            .exec()
-            .unwrap();
-
-        let result =
-            dependencies_for_package(&scarb_metadata, &PackageId::from(String::from("12345679")));
-        let err = result.unwrap_err();
-
-        assert!(err
-            .to_string()
-            .contains("Failed to find metadata for package"));
     }
 
     #[test]

@@ -84,7 +84,6 @@ fn collect_tests_from_directory(
         package_path,
         package_name,
         &test_files,
-        corelib_path,
         runner_config,
     )
 }
@@ -211,7 +210,6 @@ pub fn run(
         package_path,
         package_name,
         lib_path,
-        linked_libraries,
         corelib_path,
         runner_config,
     )?;

@@ -11,7 +11,7 @@ use forge::{pretty_printing, RunnerConfig};
 
 use forge::scarb::{
     corelib_for_package, get_contracts_map, name_for_package, paths_for_package,
-    paths_for_package, target_name_for_package, try_get_starknet_artifacts_path,
+    target_name_for_package, try_get_starknet_artifacts_path,
 };
 use std::process::Command;
 
