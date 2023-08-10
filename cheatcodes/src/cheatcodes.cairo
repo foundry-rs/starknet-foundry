@@ -69,7 +69,6 @@ impl ContractClassImpl of ContractClassTrait {
     fn deploy(self: @ContractClass, constructor_calldata: @Array::<felt252>) -> Result<ContractAddress, RevertedTransaction> {
         let class_hash: felt252 = (*self.class_hash).into();
         let mut inputs = array![class_hash];
-
         let calldata_len_felt = constructor_calldata.len().into();
         inputs.append(calldata_len_felt);
 
