@@ -47,6 +47,7 @@ snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry", tag = "0
     - `compilation_unit_for_package`
 
 - Fails test when user tries to use syscalls not supported by forge test runner
+- Updated cairo-lang to 2.1.0, starknet-api to 0.4.1 and blockifier to 0.2.0-rc0
 
 ### Cast
 
