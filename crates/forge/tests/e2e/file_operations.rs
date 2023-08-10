@@ -7,9 +7,10 @@ use crate::e2e::common::runner::{runner, setup_package};
 fn file_reading() {
     let temp = setup_package("file_reading");
 
-    let expected = indoc! {r#"Collected 16 test(s) and 2 test file(s)
-        Running 8 test(s) from file_reading package
+    let expected = indoc! {r#"Collected 18 test(s) and 2 test file(s)
+        Running 9 test(s) from file_reading package
         [PASS] file_reading::valid_content_and_same_content_no_matter_whitespaces
+        [PASS] file_reading::serialization
         [FAIL] file_reading::non_existent
         
         Failure data:
@@ -47,8 +48,9 @@ fn file_reading() {
             Failed to parse data/too_large_number.txt file
         
         [PASS] file_reading::valid_content_different_folder
-        Running 8 test(s) from test.cairo
+        Running 9 test(s) from test.cairo
         [PASS] test::valid_content_and_same_content_no_matter_whitespaces
+        [PASS] test::serialization
         [FAIL] test::non_existent
         
         Failure data:
@@ -86,9 +88,10 @@ fn file_reading() {
             Failed to parse data/too_large_number.txt file
         
         [PASS] test::valid_content_different_folder
-        Tests: 4 passed, 12 failed, 0 skipped
+        Tests: 6 passed, 12 failed, 0 skipped
         "#};
 
+    // run from different directories to make sure cwd is always set to package directory
     let snapbox = runner();
     snapbox
         .current_dir(&temp)

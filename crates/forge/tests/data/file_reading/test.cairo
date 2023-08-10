@@ -1,5 +1,7 @@
-use snforge_std::{FileTrait, parse_txt, PrintTrait};
+use snforge_std::{FileTrait, parse_txt, TxtParser};
 use array::ArrayTrait;
+use option::OptionTrait;
+use serde::Serde;
 
 fn compare_with_expected_content(content: Array<felt252>) {
     let expected = array![
@@ -22,8 +24,46 @@ fn compare_with_expected_content(content: Array<felt252>) {
     };
 }
 
+#[derive(Serde, Drop, PartialEq)]
+struct A {
+    a: u32,
+    nested_b: B,
+    nested_d: D,
+    f: felt252
+}
+
+#[derive(Serde, Drop, PartialEq)]
+struct B {
+    nested_c: C,
+}
+
+#[derive(Serde, Drop, PartialEq)]
+struct C {
+    c: u256
+}
+
+#[derive(Serde, Drop, PartialEq)]
+struct D {
+    d: u64,
+    e: u8
+}
+
+
 #[test]
 fn valid_content_and_same_content_no_matter_whitespaces() {
+    let file = FileTrait::new('data/valid.txt');
+    let content = TxtParser::<A>::deserialize_txt(@file).unwrap();
+    let expected = A {
+        a: 1, nested_b: B {
+            nested_c: C { c: u256 { low: 'hello', high: 3 } }
+            }, nested_d: D {
+            d: 'world', e: 0
+        }, f: 3618502788666131213697322783095070105623107215331596699973092056135872020480,
+    };
+}
+
+#[test]
+fn serialization() {
     let file = FileTrait::new('data/valid.txt');
     let content = parse_txt(@file);
     compare_with_expected_content(content);
@@ -93,4 +133,3 @@ fn too_large_number() {
     let content = parse_txt(@file);
     assert(1 == 1, '');
 }
-
