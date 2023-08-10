@@ -18,13 +18,6 @@ fn test_get_contract_precalculate_address() {
         use traits::TryInto;
         use starknet::ContractAddressIntoFelt252;
 
-        #[starknet::interface]
-        trait IHelloStarknet<TContractState> {
-            fn increase_balance(ref self: TContractState, amount: felt252);
-            fn get_balance(self: @TContractState) -> felt252;
-            fn do_a_panic(self: @TContractState);
-            fn do_a_panic_with(self: @TContractState, panic_data: Array<felt252>);
-        }
             
         #[test]
         fn get_contract_precalculate_address() {
@@ -36,8 +29,9 @@ fn test_get_contract_precalculate_address() {
             let contract_address_pre2 = contract.precalculate_address(@calldata);
             let contract_address2 = contract.deploy(@calldata).unwrap();
 
-            assert(contract_address_pre == contract_address, contract_address.into());
-            assert(contract_address_pre2 == contract_address2, contract_address.into());
+            assert(contract_address_pre == contract_address, 'must be eq');
+            assert(contract_address_pre2 == contract_address2, 'must be eq');
+            assert(contract_address != contract_address2, 'must be different');
         }
     "#
         ),

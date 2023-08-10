@@ -4,6 +4,7 @@ use array::ArrayTrait;
 use traits::Into;
 use traits::TryInto;
 use starknet::ContractAddressIntoFelt252;
+use debug::PrintTrait;
     
 #[test]
 fn deploy_invalid_calldata() {
@@ -14,7 +15,8 @@ fn deploy_invalid_calldata() {
     let contract_address = contract.deploy(@calldata).unwrap();
     let contract_address_pre2 = contract.precalculate_address(@calldata);
     let contract_address2 = contract.deploy(@calldata).unwrap();
-
-    assert(contract_address_pre.into() == contract_address, contract_address.into());
-    assert(contract_address_pre2.into() == contract_address2, contract_address.into());
+    contract_address_pre.print();
+    contract_address.print();
+    assert(contract_address_pre == contract_address, contract_address.into());
+    assert(contract_address_pre2 == contract_address2, contract_address.into());
 }

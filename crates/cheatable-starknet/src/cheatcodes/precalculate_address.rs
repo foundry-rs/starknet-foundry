@@ -37,10 +37,6 @@ impl CheatedState {
         let contract_address = Felt252::from_bytes_be((*contract_address.0.key()).bytes());
 
         buffer
-            .write(Felt252::from(0))
-            .expect("Failed to insert error code");
-
-        buffer
             .write(contract_address)
             .expect("Failed to insert declared contract class hash");
         Ok(())

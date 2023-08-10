@@ -14,12 +14,6 @@ use starknet::Felt252TryIntoClassHash;
 use starknet::Felt252TryIntoContractAddress;
 
 #[derive(Drop, Clone)]
-struct PreparedContract {
-    class_hash: ClassHash,
-    constructor_calldata: @Array::<felt252>,
-}
-
-#[derive(Drop, Clone)]
 struct ContractClass {
     class_hash: ClassHash,
 }
@@ -50,7 +44,7 @@ impl ContractClassImpl of ContractClassTrait {
         let mut inputs: Array::<felt252> = _prepare_calldata(class_hash, constructor_calldata);
 
         let outputs = cheatcode::<'precalculate_address'>(inputs.span());
-        (*outputs[1]).try_into().unwrap()
+        (*outputs[0]).try_into().unwrap()
     }
 
     fn deploy(self: @ContractClass, constructor_calldata: @Array::<felt252>) -> Result<ContractAddress, RevertedTransaction> {

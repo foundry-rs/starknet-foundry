@@ -133,7 +133,7 @@ fn start_warp_in_constructor_test() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use cheatcodes::{ declare, PreparedContract, deploy, start_warp };
+            use cheatcodes::{ declare, deploy, start_warp };
             
             #[starknet::interface]
             trait IConstructorWarpChecker<TContractState> {
@@ -142,11 +142,10 @@ fn start_warp_in_constructor_test() {
 
             #[test]
             fn test_warp_constructor_simple() {
-                let class_hash = declare('ConstructorWarpChecker');
-                let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
+                let contract = declare('ConstructorWarpChecker');
                 let contract_address: ContractAddress = 3536868843103376321721783970179672615412806578951102081876401371045020950704.try_into().unwrap();
                 start_warp(contract_address, 234);
-                let contract_address = deploy(prepared).unwrap().;            
+                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
 
                 let dispatcher = IConstructorWarpCheckerDispatcher { contract_address };
                 assert(dispatcher.get_stored_block_timestamp() == 234, 'Wrong stored timestamp');

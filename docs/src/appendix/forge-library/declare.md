@@ -1,8 +1,8 @@
 # `declare`
 
-> `fn declare(contract: felt252) -> ClassHash`
+> `fn declare(contract: felt252) -> ContractClass`
 
-Declares a contract and returns its class hash.
+Declares a contract and returns `ContractClass`.
 
 - `contract` - name of a contract as Cairo shortstring. It is a name of the contract (part after `mod` keyword) e.g. `'HelloStarknet'`
 
@@ -11,7 +11,7 @@ use result::ResultTrait;
 
 #[test]
 fn test_declare() {
-    let class_hash = declare('HelloStarknet');
+    let contract = declare('HelloStarknet');
     // ...
 }
 ```

@@ -5,7 +5,7 @@ use traits::TryInto;
 use starknet::ContractAddress;
 use starknet::Felt252TryIntoContractAddress;
 
-use cheatcodes::{ declare, PreparedContract, ContractClassTrait, ContractClassImpl };
+use cheatcodes::{ declare, ContractClassTrait, ContractClassImpl };
 
 use simple_package::hello_starknet::IHelloStarknetDispatcher;
 use simple_package::hello_starknet::IHelloStarknetDispatcherTrait;

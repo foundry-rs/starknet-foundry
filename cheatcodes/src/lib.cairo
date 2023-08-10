@@ -2,7 +2,6 @@ mod cheatcodes;
 
 use cheatcodes::declare;
 
-use cheatcodes::PreparedContract;
 use cheatcodes::RevertedTransaction;
 use cheatcodes::RevertedTransactionTrait;
 use cheatcodes::ContractClass;

@@ -46,9 +46,8 @@ Let's write a test that will deploy the `HelloStarknet` contract and call some f
 #[test]
 fn call_and_invoke() {
     // First declare and deploy a contract
-    let class_hash = declare('HelloStarknet');
-    let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
-    let contract_address = deploy(prepared).unwrap();
+    let contract = declare('HelloStarknet');
+    let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
     
     // Create a Dispatcher object that will allow interacting with the deployed contract
     let dispatcher = IHelloStarknetDispatcher { contract_address };
@@ -118,7 +117,7 @@ If we called this function in a test, it would result in a failure.
 fn failing() {
     // ...
 
-    let contract_address = deploy(prepared).unwrap();
+    let contract_address = contract.deploy(calldata).unwrap();
     let dispatcher = IHelloStarknetDispatcher { contract_address };
 
     dispatcher.do_a_panic();
@@ -147,7 +146,7 @@ Using `SafeDispatcher` we can test that the function in fact panics with an expe
 fn handling_errors() {
     // ...
     
-    let contract_address = deploy(prepared).unwrap();
+    let contract_address = contract.deploy(calldata).unwrap();
     let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
 
     match safe_dispatcher.do_a_panic() {

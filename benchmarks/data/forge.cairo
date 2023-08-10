@@ -4,7 +4,6 @@ use option::OptionTrait;
 use traits::TryInto;
 use starknet::ContractAddress;
 use starknet::Felt252TryIntoContractAddress;
-use cheatcodes::PreparedContract;
 
 use project::IHelloStarknetSafeDispatcher;
 use project::IHelloStarknetSafeDispatcherTrait;
