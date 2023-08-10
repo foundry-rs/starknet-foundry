@@ -4,6 +4,8 @@ use std::collections::HashMap;
 
 pub mod cheatcodes;
 pub mod constants;
+pub mod conversions;
+pub mod panic_data;
 pub mod rpc;
 pub mod state;
 
