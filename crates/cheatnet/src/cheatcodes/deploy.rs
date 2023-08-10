@@ -2,13 +2,9 @@ use crate::constants::{
     build_block_context, build_invoke_transaction, TEST_ACCOUNT_CONTRACT_ADDRESS,
 };
 use crate::state::DictStateReader;
-use crate::{
-    cheatcodes::{write_cheatcode_panic, EnhancedHintError},
-    CheatedState,
-};
+use crate::{cheatcodes::EnhancedHintError, CheatnetState};
 use anyhow::{Context, Result};
 use blockifier::abi::abi_utils::selector_from_name;
-use num_traits::cast::ToPrimitive;
 
 use blockifier::execution::entry_point::CallInfo;
 use blockifier::state::cached_state::CachedState;
@@ -24,26 +20,17 @@ use starknet_api::transaction::{
 };
 use starknet_api::{patricia_key, stark_felt};
 
+use super::CheatcodeError;
 use crate::conversions::felt_from_short_string;
 use crate::panic_data::try_extract_panic_data;
-use cairo_lang_runner::casm_run::MemBuffer;
 
-impl CheatedState {
+impl CheatnetState {
     pub fn deploy(
-        &self,
-        buffer: &mut MemBuffer,
-        blockifier_state: &mut CachedState<DictStateReader>,
-        inputs: &[Felt252],
-    ) -> Result<(), EnhancedHintError> {
-        // TODO(#1991) deploy should fail if contract address provided doesn't match calculated
-        //  or not accept this address as argument at all.
-        let class_hash = inputs[0].clone();
-
-        let calldata_length = inputs[1].to_usize().unwrap();
-        let mut calldata = vec![];
-        for felt in inputs.iter().skip(2).take(calldata_length) {
-            calldata.push(felt.clone());
-        }
+        &mut self,
+        class_hash: &Felt252,
+        calldata: &[Felt252],
+    ) -> Result<ContractAddress, CheatcodeError> {
+        let blockifier_state: &mut CachedState<DictStateReader> = &mut self.blockifier_state;
 
         // Deploy a contract using syscall deploy.
         let account_address = ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS));
@@ -52,17 +39,17 @@ impl CheatedState {
         let salt = ContractAddressSalt::default();
         let class_hash = ClassHash(StarkFelt::new(class_hash.to_be_bytes()).unwrap());
 
-        let contract_class = blockifier_state.get_compiled_contract_class(&class_hash)?;
+        let contract_class = blockifier_state
+            .get_compiled_contract_class(&class_hash)
+            .map_err::<EnhancedHintError, _>(From::from)?;
         if contract_class.constructor_selector().is_none() && !calldata.is_empty() {
-            write_cheatcode_panic(
-                buffer,
-                vec![felt_from_short_string("No constructor in contract")].as_slice(),
-            );
-            return Ok(());
+            return Err(CheatcodeError::Recoverable(vec![felt_from_short_string(
+                "No constructor in contract",
+            )]));
         }
 
         let execute_calldata = create_execute_calldata(
-            &calldata,
+            calldata,
             &class_hash,
             &account_address,
             &entry_point_selector,
@@ -71,7 +58,8 @@ impl CheatedState {
 
         let nonce = blockifier_state
             .get_nonce_at(account_address)
-            .context("Failed to get nonce")?;
+            .context("Failed to get nonce")
+            .map_err::<EnhancedHintError, _>(From::from)?;
         let tx = build_invoke_transaction(execute_calldata, account_address);
         let tx = InvokeTransactionV1 { nonce, ..tx };
         let account_tx = AccountTransaction::Invoke(InvokeTransaction {
@@ -89,24 +77,20 @@ impl CheatedState {
                 .0
                 .get(0)
                 .expect("Failed to get contract_address from return_data");
-            let contract_address = Felt252::from_bytes_be(contract_address.bytes());
 
-            buffer
-                .write(Felt252::from(0))
-                .expect("Failed to insert error code");
-            buffer
-                .write(contract_address)
-                .expect("Failed to insert deployed contract address");
-        } else {
-            let revert_error = tx_info
-                .revert_error
-                .expect("Unparseable tx info, {tx_info:?}");
-            let extracted_panic_data = try_extract_panic_data(&revert_error)
-                .expect("Unparseable error message, {revert_error}");
+            let contract_address = ContractAddress::try_from(*contract_address)
+                .expect("Failed to cast contract address into the right struct");
 
-            write_cheatcode_panic(buffer, extracted_panic_data.as_slice());
+            return Ok(contract_address);
         }
-        Ok(())
+
+        let revert_error = tx_info
+            .revert_error
+            .expect("Unparseable tx info, {tx_info:?}");
+        let extracted_panic_data = try_extract_panic_data(&revert_error)
+            .expect("Unparseable error message, {revert_error}");
+
+        Err(CheatcodeError::Recoverable(extracted_panic_data))
     }
 }
 

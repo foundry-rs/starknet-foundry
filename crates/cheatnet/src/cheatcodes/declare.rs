@@ -5,8 +5,8 @@ use crate::constants::{
 };
 use crate::state::DictStateReader;
 use crate::{
-    cheatcodes::{ContractArtifacts, EnhancedHintError},
-    CheatedState,
+    cheatcodes::{CheatcodeError, ContractArtifacts, EnhancedHintError},
+    CheatnetState,
 };
 use anyhow::{anyhow, Context, Result};
 use blockifier::execution::contract_class::{
@@ -17,54 +17,55 @@ use blockifier::state::state_api::StateReader;
 use blockifier::transaction::account_transaction::AccountTransaction;
 use blockifier::transaction::transactions::{DeclareTransaction, ExecutableTransaction};
 use cairo_felt::Felt252;
-use num_traits::Num;
 use serde_json;
 use starknet_api::core::{ClassHash, ContractAddress, PatriciaKey};
 use starknet_api::hash::{StarkFelt, StarkHash};
 use starknet_api::patricia_key;
 use starknet_api::transaction::TransactionHash;
 
-use cairo_lang_runner::casm_run::MemBuffer;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_starknet::casm_contract_class::CasmContractClass;
 use cairo_lang_starknet::contract_class::ContractClass;
 use starknet::core::types::contract::CompiledClass;
 
-impl CheatedState {
+impl CheatnetState {
     pub fn declare(
-        &self,
-        buffer: &mut MemBuffer,
-        blockifier_state: &mut CachedState<DictStateReader>,
-        inputs: &[Felt252],
+        &mut self,
+        contract_name: &Felt252,
         contracts: &HashMap<String, ContractArtifacts>,
-    ) -> Result<(), EnhancedHintError> {
-        let contract_value = inputs[0].clone();
+    ) -> Result<ClassHash, CheatcodeError> {
+        let blockifier_state: &mut CachedState<DictStateReader> = &mut self.blockifier_state;
 
-        let contract_value_as_short_str = as_cairo_short_string(&contract_value)
-            .context("Converting contract name to short string failed")?;
-        let contract_artifact = contracts.get(&contract_value_as_short_str).ok_or_else(|| {
-            anyhow!("Failed to get contract artifact for name = {contract_value_as_short_str}. Make sure starknet target is correctly defined in Scarb.toml file.")
-        })?;
+        let contract_name_as_short_str = as_cairo_short_string(contract_name)
+            .context("Converting contract name to short string failed")
+            .map_err::<EnhancedHintError, _>(From::from)?;
+        let contract_artifact = contracts.get(&contract_name_as_short_str).with_context(|| {
+            format!("Failed to get contract artifact for name = {contract_name_as_short_str}. Make sure starknet target is correctly defined in Scarb.toml file.")
+        }).map_err::<EnhancedHintError, _>(From::from)?;
+
         let sierra_contract_class: ContractClass = serde_json::from_str(&contract_artifact.sierra)
-            .with_context(|| format!("File to parse json from artifact = {contract_artifact:?}"))?;
+            .unwrap_or_else(|_| {
+                panic!("Failed to parse json from artifact = {contract_artifact:?}")
+            });
 
         let casm_contract_class =
             CasmContractClass::from_contract_class(sierra_contract_class, true)
-                .context("Sierra to casm failed")?;
+                .expect("Sierra to casm failed");
         let casm_serialized = serde_json::to_string_pretty(&casm_contract_class)
-            .context("Failed to serialize contract to casm")?;
+            .expect("Failed to serialize contract to casm");
 
         let contract_class = ContractClassV1::try_from_json_string(&casm_serialized)
-            .context("Failed to read contract class from json")?;
+            .expect("Failed to read contract class from json");
         let contract_class = BlockifierContractClass::V1(contract_class);
 
-        let class_hash = get_class_hash(casm_serialized.as_str())?;
+        let class_hash =
+            get_class_hash(casm_serialized.as_str()).expect("Failed to get class hash");
 
         let nonce = blockifier_state
             .get_nonce_at(ContractAddress(patricia_key!(
                 TEST_ACCOUNT_CONTRACT_ADDRESS
             )))
-            .context("Failed to get nonce")?;
+            .expect("Failed to get nonce");
 
         let declare_tx = build_declare_transaction(
             nonce,
@@ -84,23 +85,14 @@ impl CheatedState {
         match account_tx.execute(blockifier_state, &block_context, true, true) {
             Ok(_) => (),
             Err(e) => {
-                return Err(
-                    anyhow!(format!("Failed to execute declare transaction:\n    {e}")).into(),
-                )
+                return Err(EnhancedHintError::Anyhow(anyhow!(format!(
+                    "Failed to execute declare transaction:\n    {e}"
+                ))))
+                .map_err(From::from)
             }
         };
 
-        // result_segment.
-        let felt_class_hash = felt252_from_hex_string(&class_hash.to_string()).unwrap();
-
-        buffer
-            .write(Felt252::from(0))
-            .expect("Failed to insert error code");
-        buffer
-            .write(felt_class_hash)
-            .expect("Failed to insert declared contract class hash");
-
-        Ok(())
+        Ok(class_hash)
     }
 }
 
@@ -109,12 +101,6 @@ fn get_class_hash(casm_contract: &str) -> Result<ClassHash> {
     let class_hash = compiled_class.class_hash()?;
     let class_hash = StarkFelt::new(class_hash.to_bytes_be())?;
     Ok(ClassHash(class_hash))
-}
-
-fn felt252_from_hex_string(value: &str) -> Result<Felt252> {
-    let stripped_value = value.replace("0x", "");
-    Felt252::from_str_radix(&stripped_value, 16)
-        .map_err(|_| anyhow!("Failed to convert value = {value} to Felt252"))
 }
 
 #[cfg(test)]
@@ -128,29 +114,6 @@ mod test {
     use std::str::FromStr;
 
     use super::*;
-
-    #[test]
-    fn felt_2525_from_prefixed_hex() {
-        assert_eq!(
-            felt252_from_hex_string("0x1234").unwrap(),
-            Felt252::from(0x1234)
-        );
-    }
-
-    #[test]
-    fn felt_2525_from_non_prefixed_hex() {
-        assert_eq!(
-            felt252_from_hex_string("1234").unwrap(),
-            Felt252::from(0x1234)
-        );
-    }
-
-    #[test]
-    fn felt_252_err_on_failed_conversion() {
-        let result = felt252_from_hex_string("yyyy");
-        let err = result.unwrap_err();
-        assert_eq!(err.to_string(), "Failed to convert value = yyyy to Felt252");
-    }
 
     #[test]
     fn class_hash_correct() {
