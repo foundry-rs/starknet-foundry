@@ -5,6 +5,7 @@ use std::path::PathBuf;
 use crate::scarb::StarknetContractArtifacts;
 use anyhow::{anyhow, Result};
 use blockifier::execution::execution_utils::stark_felt_to_felt;
+
 use cairo_felt::Felt252;
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
 use cairo_vm::hint_processor::hint_processor_definition::HintReference;
@@ -287,6 +288,18 @@ impl CairoHintProcessor<'_> {
                 print(inputs);
                 Ok(())
             }
+            "get_class_hash" => {
+                let contract_address = contract_address_from_felt252(inputs[0].clone())?;
+
+                match self.cheatnet_state.get_class_hash(contract_address) {
+                    Ok(class_hash) => {
+                        buffer.write(Felt252::from_bytes_be(class_hash.0.bytes()));
+                        Ok(())
+                    },
+                    Err(CheatcodeError::Recoverable(_)) => unreachable!(),
+                    Err(CheatcodeError::Unrecoverable(err)) => Err(err),
+                }
+            }
             _ => Err(anyhow!("Unknown cheatcode selector: {selector}")).map_err(Into::into),
         }?;
 
@@ -392,6 +405,12 @@ fn write_cheatcode_panic(buffer: &mut MemBuffer, panic_data: &[Felt252]) {
         .expect("Failed to insert error in memory");
 }
 
+fn contract_address_from_felt252(felt: Felt252) -> Result<ContractAddress, EnhancedHintError> {
+    Ok(
+        ContractAddress(PatriciaKey::try_from(StarkFelt::new(felt.to_be_bytes())?)?)
+    )
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -417,5 +436,12 @@ mod test {
         let result = felt252_from_hex_string("yyyy");
         let err = result.unwrap_err();
         assert_eq!(err.to_string(), "Failed to convert value = yyyy to Felt252");
+    }
+
+    #[test]
+    fn contract_address_from_felt_252() {
+        let felt = Felt252::from(112233);
+        let addr = contract_address_from_felt252(felt.clone()).unwrap();
+        assert_eq!(stark_felt_to_felt(*addr.0.key()), felt);
     }
 }

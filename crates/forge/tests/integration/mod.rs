@@ -9,3 +9,4 @@ mod should_panic;
 mod starknet;
 mod syscalls;
 mod warp;
+mod get_class_hash;
