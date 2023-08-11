@@ -17,7 +17,6 @@ use cheatcodes::stop_warp;
 use cheatcodes::get_class_hash;
 use cheatcodes::l1_handler_call;
 
-
 mod forge_print;
 
 use forge_print::PrintTrait;
