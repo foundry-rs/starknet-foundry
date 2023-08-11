@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Documentation to public methods
 - Information sections to documentation about importing `snforge_std`
 - Added print support for basic numeric data types
+- `get_class_hash` cheatcode
 
 #### Changed
 
