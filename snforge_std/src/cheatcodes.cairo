@@ -126,6 +126,14 @@ fn stop_warp(contract_address: ContractAddress) {
     cheatcode::<'stop_warp'>(array![contract_address_felt].span());
 }
 
+fn get_class_hash(contract_address: ContractAddress) -> ClassHash {
+    let contract_address_felt: felt252 = contract_address.into();
+
+    // Expecting a buffer with one felt252, being the class hash.
+    let buf = cheatcode::<'get_class_hash'>(array![contract_address_felt].span());
+    (*buf[0]).try_into().expect('Invalid class hash value')
+}
+
 fn l1_handler_call(prepared_l1_handler: PreparedL1Handler) {
     let PreparedL1Handler{
         contract_address,
