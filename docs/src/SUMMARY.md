@@ -44,6 +44,7 @@
   * [stop_roll](appendix/cheatcodes/stop_roll.md)
   * [start_warp](appendix/cheatcodes/start_warp.md)
   * [stop_warp](appendix/cheatcodes/stop_warp.md)
+  * [l1_handler_call](appendix/cheatcodes/l1_handler_call.md)
 * [Forge Library Functions References](appendix/forge-library.md)
     * [declare](appendix/forge-library/declare.md)
     * [deploy](appendix/forge-library/deploy.md)
