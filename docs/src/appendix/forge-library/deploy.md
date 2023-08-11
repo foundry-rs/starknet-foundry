@@ -1,6 +1,6 @@
 # `deploy`
 
-```rust 
+```rust
 trait ContractClassTrait {
     fn deploy(self: @ContractClass, constructor_calldata: @Array::<felt252>) -> Result<ContractAddress, RevertedTransaction>;
     // ...
@@ -21,12 +21,12 @@ use cheatcodes::{ declare, ContractClassTrait };
 #[test]
 fn test_deploy() {
     let contract = declare('HelloStarknet');
-    
+
     let mut constructor_calldata = ArrayTrait::new();
     constructor_calldata.append(42_u8.into());
     constructor_calldata.append(21);
     constructor_calldata.append(37);
-  
+
     let contract_address = contract.deploy(@constructor_calldata).unwrap();
     // ...
 }

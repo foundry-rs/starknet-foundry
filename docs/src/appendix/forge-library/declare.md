@@ -2,8 +2,8 @@
 
 > `fn declare(contract: felt252) -> ContractClass`
 
-Declares a contract and returns `ContractClass`. f
-Function [deploy](./deploy.md) and [precalculate_address](./precalculate_address.md) can be called on it.
+Declares a contract and returns `ContractClass`.
+Function [deploy](./deploy.md) and [precalculate_address](./precalculate_address.md) can be called on this struct.
 
 ```rust
 #[derive(Drop, Clone)]
