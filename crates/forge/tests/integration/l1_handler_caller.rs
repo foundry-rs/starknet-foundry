@@ -67,7 +67,7 @@ fn l1_handler_caller() {
             "l1_handler_caller".to_string(),
             Path::new("tests/data/contracts/l1_handler_call_checker.cairo"),
         )
-            .unwrap()
+        .unwrap()
     );
 
     let result = run(
