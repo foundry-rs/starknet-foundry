@@ -9,8 +9,7 @@ trait ContractClassTrait {
 
 Deploys a contract and returns its address.
 
-- `self` - an instance of the struct `ContractClass` that consists of the following fields:
-  - `class_hash` - class hash of a previously [declared](declare.md) contract
+- `self` - an instance of `ContractClass` struct can be obtained by invoking [declare](./declare.md).
 
 - `constructor_calldata` - snapshot of calldata for the constructor
 

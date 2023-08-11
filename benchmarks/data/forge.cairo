@@ -8,7 +8,6 @@ use starknet::Felt252TryIntoContractAddress;
 use project::IHelloStarknetSafeDispatcher;
 use project::IHelloStarknetSafeDispatcherTrait;
 
-use cheatcodes::ContractClass;
 use cheatcodes::ContractClassTrait;
 
 fn deploy_hello_starknet() -> ContractAddress {

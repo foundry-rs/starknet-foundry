@@ -2,7 +2,15 @@
 
 > `fn declare(contract: felt252) -> ContractClass`
 
-Declares a contract and returns `ContractClass`.
+Declares a contract and returns `ContractClass`. f
+Function [deploy](./deploy.md) and [precalculate_address](./precalculate_address.md) can be called on it.
+
+```rust
+#[derive(Drop, Clone)]
+struct ContractClass {
+    class_hash: ClassHash,
+}
+```
 
 - `contract` - name of a contract as Cairo shortstring. It is a name of the contract (part after `mod` keyword) e.g. `'HelloStarknet'`
 
