@@ -64,12 +64,11 @@ use starknet_api::{
     transaction::{Calldata, TransactionVersion},
 };
 
-use blockifier::execution::syscalls::{
-    LibraryCallRequest, SyscallRequest, SyscallRequestWrapper, SyscallResponse,
-    SyscallResponseWrapper, SyscallResult,
-};
+use blockifier::execution::syscalls::{KeccakRequest, KeccakResponse, LibraryCallRequest, SyscallRequest, SyscallRequestWrapper, SyscallResponse, SyscallResponseWrapper, SyscallResult};
+use blockifier::execution::syscalls::hint_processor::INVALID_INPUT_LENGTH_ERROR;
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
 use cairo_vm::vm::runners::cairo_runner::ResourceTracker;
+use num_traits::ToPrimitive;
 
 use crate::panic_data::try_extract_panic_data;
 use crate::state::CheatcodeState;
@@ -654,6 +653,53 @@ pub fn library_call_syscall(
 
     Ok(SingleSegmentResponse {
         segment: retdata_segment,
+    })
+}
+
+pub fn keccak_syscall(
+    request: KeccakRequest,
+    vm: &mut VirtualMachine,
+    remaining_gas: &mut u64,
+) -> SyscallResult<KeccakResponse> {
+    let input_length = (request.input_end - request.input_start)?;
+
+    const KECCAK_FULL_RATE_IN_WORDS: usize = 17;
+    let (n_rounds, remainder) = num_integer::div_rem(input_length, KECCAK_FULL_RATE_IN_WORDS);
+
+    if remainder != 0 {
+        return Err(SyscallExecutionError::SyscallError {
+            error_data: vec![
+                StarkFelt::try_from(INVALID_INPUT_LENGTH_ERROR)
+                    .map_err(SyscallExecutionError::from)?,
+            ],
+        });
+    }
+
+    let gas_cost = n_rounds as u64 * constants::KECCAK_ROUND_COST_GAS_COST;
+    if gas_cost > *remaining_gas {
+        let out_of_gas_error =
+            StarkFelt::try_from(OUT_OF_GAS_ERROR).map_err(SyscallExecutionError::from)?;
+
+        return Err(SyscallExecutionError::SyscallError { error_data: vec![out_of_gas_error] });
+    }
+    *remaining_gas -= gas_cost;
+
+    let data = vm.get_integer_range(request.input_start, input_length)?;
+
+    let mut state = [0u64; 25];
+    for chunk in data.chunks(KECCAK_FULL_RATE_IN_WORDS) {
+        for (i, val) in chunk.iter().enumerate() {
+            state[i] ^= val.to_u64().ok_or_else(|| SyscallExecutionError::InvalidSyscallInput {
+                input: felt_to_stark_felt(val),
+                info: String::from("Invalid input for the keccak syscall."),
+            })?;
+        }
+        keccak::f1600(&mut state);
+    }
+
+    Ok(KeccakResponse {
+        result_low: (Felt252::from(state[1]) << 64u32) + Felt252::from(state[0]),
+        result_high: (Felt252::from(state[3]) << 64u32) + Felt252::from(state[2]),
     })
 }
 

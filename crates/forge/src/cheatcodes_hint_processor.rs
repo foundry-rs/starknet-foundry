@@ -4,7 +4,9 @@ use std::path::PathBuf;
 
 use crate::scarb::StarknetContractArtifacts;
 use anyhow::{anyhow, Result};
+use blockifier::abi::constants::KECCAK_GAS_COST;
 use blockifier::execution::execution_utils::stark_felt_to_felt;
+use blockifier::execution::syscalls::{keccak, KeccakRequest};
 use cairo_felt::Felt252;
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
 use cairo_vm::hint_processor::hint_processor_definition::HintReference;
@@ -13,7 +15,7 @@ use cairo_vm::types::exec_scope::ExecutionScopes;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::vm_core::VirtualMachine;
-use cheatnet::rpc::{call_contract, CallContractOutput};
+use cheatnet::rpc::{call_contract, CallContractOutput, keccak_syscall};
 use cheatnet::{
     cheatcodes::{CheatcodeError, ContractArtifacts, EnhancedHintError},
     CheatnetState,
@@ -26,7 +28,7 @@ use starknet_api::hash::StarkFelt;
 
 use cairo_lang_casm::hints::{Hint, StarknetHint};
 use cairo_lang_casm::operand::{CellRef, ResOperand};
-use cairo_lang_runner::casm_run::{extract_relocatable, vm_get_range, MemBuffer};
+use cairo_lang_runner::casm_run::{extract_relocatable, vm_get_range, MemBuffer, VMWrapper};
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{
     casm_run::{cell_ref_to_relocatable, extract_buffer, get_ptr},
@@ -332,6 +334,17 @@ fn execute_syscall(
     let mut buffer = MemBuffer::new(vm, system_ptr);
 
     let selector = buffer.next_felt252().unwrap().to_bytes_be();
+
+    if std::str::from_utf8(&selector).unwrap() == "Keccak" {
+        let gas_counter = buffer.next_usize().unwrap();
+        let input_start = buffer.next_addr().unwrap();
+        let input_end = buffer.next_addr().unwrap();
+        let request = KeccakRequest {input_start, input_end};
+
+        let response = keccak_syscall(request, buffer.vm(), &mut (gas_counter.to_u64().unwrap() - KECCAK_GAS_COST)).unwrap_or_else(|err| panic!("Transaction execution error: {err}"));
+
+
+    }
 
     if std::str::from_utf8(&selector).unwrap() != "CallContract" {
         return Err(HintError::CustomHint(Box::from(

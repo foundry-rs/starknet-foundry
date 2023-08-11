@@ -19,20 +19,20 @@ fn library_call_syscall() {
         use starknet::Felt252TryIntoContractAddress;
         use starknet::ClassHash;
         use snforge_std::{ declare, PreparedContract, deploy };
-        
+
         #[starknet::interface]
         trait ICaller<TContractState> {
             fn call_add_two(
                 self: @TContractState, class_hash: ClassHash, number: felt252
             ) -> felt252;
         }
-        
+
         #[starknet::interface]
         trait IExecutor<TContractState> {
             fn add_two(ref self: TContractState, number: felt252) -> felt252;
             fn get_thing(self: @TContractState) -> felt252;
         }
-        
+
         fn deploy_contract(name: felt252) -> ContractAddress {
             let class_hash = declare(name);
             let prepared = PreparedContract {
@@ -40,14 +40,14 @@ fn library_call_syscall() {
             };
             deploy(prepared).unwrap()
         }
-        
+
         #[test]
         fn test_library_call() {
             let caller_address = deploy_contract('Caller');
             let caller_safe_dispatcher = ICallerSafeDispatcher {
                 contract_address: caller_address
             };
-            
+
             let executor_class_hash = declare('Executor');
             let prepared = PreparedContract {
                 class_hash: executor_class_hash, constructor_calldata: @ArrayTrait::new()
@@ -57,13 +57,13 @@ fn library_call_syscall() {
             let executor_safe_dispatcher = IExecutorSafeDispatcher {
                 contract_address: executor_address
             };
-            
+
             let thing = executor_safe_dispatcher.get_thing().unwrap();
             assert(thing == 5, 'invalid thing');
-            
-            let result = caller_safe_dispatcher.call_add_two(executor_class_hash, 420).unwrap();        
+
+            let result = caller_safe_dispatcher.call_add_two(executor_class_hash, 420).unwrap();
             assert(result == 422, 'invalid result');
-            
+
             let thing = executor_safe_dispatcher.get_thing().unwrap();
             assert(thing == 5, 'invalid thing');
         }
@@ -83,10 +83,10 @@ fn library_call_syscall() {
                     trait IExecutor<TContractState> {
                         fn add_two(ref self: ContractState, number: felt252) -> felt252;
                     }
-                
+
                     #[storage]
                     struct Storage {}
-                
+
                     #[external(v0)]
                     fn call_add_two(
                         self: @ContractState, class_hash: ClassHash, number: felt252
@@ -114,13 +114,13 @@ fn library_call_syscall() {
                         assert(self.thing.read() == 0, 'default value should be 0');
                         self.thing.write(5);
                     }
-                
+
                     #[external(v0)]
                     fn add_two(ref self: ContractState, number: felt252) -> felt252 {
                         self.thing.write(10);
                         number + 2
                     }
-                    
+
                     #[external(v0)]
                     fn get_thing(self: @ContractState) -> felt252 {
                         self.thing.read()
@@ -175,4 +175,37 @@ fn test_call_syscall_fail_in_test_fn() {
         "starknet syscalls cannot be used in tests"
     );
     assert_failed!(result);
+}
+
+#[test]
+fn test_keccak_syscall() {
+    let test = test_case!(indoc!(
+        r#"
+        use traits::Into;
+        use starknet::syscalls::keccak_syscall;
+        use array::ArrayTrait;
+        use starknet::SyscallResultTrait;
+
+        #[test]
+        fn test_execute_disallowed_syscall() {
+            let shortstring: u256 = keccak_syscall(array![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17].span()).unwrap_syscall();
+
+            assert(1==1, 'xdd');
+        }
+    "#
+    ));
+
+    let result = run(
+        &test.path().unwrap(),
+        &String::from("src"),
+        &test.path().unwrap().join("src/lib.cairo"),
+        &Some(test.linked_libraries()),
+        &Default::default(),
+        &corelib_path(),
+        &test.contracts(&corelib_path()).unwrap(),
+        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
+    )
+    .unwrap();
+
+    assert_passed!(result);
 }

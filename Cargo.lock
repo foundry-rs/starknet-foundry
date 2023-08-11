@@ -1127,6 +1127,8 @@ dependencies = [
  "camino",
  "include_dir",
  "indoc",
+ "keccak",
+ "num-integer",
  "num-traits 0.2.16",
  "regex",
  "serde_json",
