@@ -19,7 +19,6 @@ use cheatnet::{
     cheatcodes::{CheatcodeError, ContractArtifacts, EnhancedHintError},
     CheatnetState,
 };
-use num_traits::Num;
 use num_traits::ToPrimitive;
 use serde::Deserialize;
 use starknet_api::core::{ContractAddress, PatriciaKey};
@@ -238,8 +237,7 @@ impl CairoHintProcessor<'_> {
                         .collect(),
                 ) {
                     Ok(class_hash) => {
-                        let felt_class_hash =
-                            felt252_from_hex_string(&class_hash.to_string()).unwrap();
+                        let felt_class_hash = stark_felt_to_felt(class_hash.0);
 
                         buffer
                             .write(Felt252::from(0))
@@ -293,7 +291,11 @@ impl CairoHintProcessor<'_> {
 
                 match self.cheatnet_state.get_class_hash(contract_address) {
                     Ok(class_hash) => {
-                        buffer.write(Felt252::from_bytes_be(class_hash.0.bytes()));
+                        let felt_class_hash = stark_felt_to_felt(class_hash.0);
+
+                        buffer
+                            .write(felt_class_hash)
+                            .expect("Failed to insert contract class hash");
                         Ok(())
                     }
                     Err(CheatcodeError::Recoverable(_)) => unreachable!(),
@@ -389,12 +391,6 @@ fn print(inputs: Vec<Felt252>) {
     }
 }
 
-fn felt252_from_hex_string(value: &str) -> Result<Felt252> {
-    let stripped_value = value.replace("0x", "");
-    Felt252::from_str_radix(&stripped_value, 16)
-        .map_err(|_| anyhow!("Failed to convert value = {value} to Felt252"))
-}
-
 fn write_cheatcode_panic(buffer: &mut MemBuffer, panic_data: &[Felt252]) {
     buffer.write(1).expect("Failed to insert err code");
     buffer
@@ -409,32 +405,4 @@ fn contract_address_from_felt252(felt: &Felt252) -> Result<ContractAddress, Enha
     Ok(ContractAddress(PatriciaKey::try_from(felt_to_stark_felt(
         felt,
     ))?))
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn felt_2525_from_prefixed_hex() {
-        assert_eq!(
-            felt252_from_hex_string("0x1234").unwrap(),
-            Felt252::from(0x1234)
-        );
-    }
-
-    #[test]
-    fn felt_2525_from_non_prefixed_hex() {
-        assert_eq!(
-            felt252_from_hex_string("1234").unwrap(),
-            Felt252::from(0x1234)
-        );
-    }
-
-    #[test]
-    fn felt_252_err_on_failed_conversion() {
-        let result = felt252_from_hex_string("yyyy");
-        let err = result.unwrap_err();
-        assert_eq!(err.to_string(), "Failed to convert value = yyyy to Felt252");
-    }
 }
