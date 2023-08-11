@@ -288,7 +288,7 @@ impl CairoHintProcessor<'_> {
                 Ok(())
             }
             "l1_handler_call" => {
-                // TODO: remove this when #441 is merged.
+                // TODO(#441): Remove this function when merged.
                 fn contract_address_from_felt252(
                     felt: &Felt252,
                 ) -> Result<ContractAddress, EnhancedHintError> {
@@ -296,17 +296,17 @@ impl CairoHintProcessor<'_> {
                         felt,
                     ))?))
                 }
+                // --
 
                 let contract_address = contract_address_from_felt252(&inputs[0])?;
                 let selector = inputs[1].clone();
                 let from_address = inputs[2].clone();
-                let payload_length_felt = inputs[3].clone();
-
-                let payload_length = payload_length_felt
+                let payload_length: usize = inputs[3]
+                    .clone()
                     .to_usize()
                     .expect("Payload length is expected to fit into usize type");
 
-                let mut payload = vec![payload_length_felt];
+                let mut payload = vec![];
                 for felt in inputs.iter().skip(4).take(payload_length) {
                     payload.push(felt.clone());
                 }

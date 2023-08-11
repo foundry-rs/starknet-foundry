@@ -65,7 +65,6 @@ impl CheatnetState {
 
                     return Err(CheatcodeError::Recoverable(extracted_panic_data));
                 }
-                // TODO: verify what else can be used from here.
                 Ok(())
             }
             Err(err) => {
