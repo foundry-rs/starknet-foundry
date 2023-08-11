@@ -160,3 +160,4 @@ fn l1_handler_call(prepared_l1_handler: PreparedL1Handler) {
 
     cheatcode::<'l1_handler_call'>(inputs.span());
 }
+
