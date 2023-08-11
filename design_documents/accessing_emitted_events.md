@@ -141,10 +141,8 @@ trait EventFetcher {
     fn fetch_events(ref self: EventSpy);
 }
 
-impl EventFetcherImpl of EventFetcher {
-    fn fetch_events(ref self: EventSpy) {
-        // ...
-    }
+trait EventAssertions {
+    fn assert_emitted(ref self: EventSpy, events: Array<snforge_std::Event>);
 }
 ```
 
@@ -158,7 +156,7 @@ Users will be responsible for calling `fetch_events` to load emitted events to t
 use snforge_std::spy_events;
 use snforge_std::EventSpy;
 use snforge_std::EventFetcher;
-use snforge_std::EventFetcherImpl;
+use snforge_std::EventAsserions;
 
 #[test]
 fn check_emitted_event() {
@@ -167,15 +165,25 @@ fn check_emitted_event() {
     let res = contract.emit_store_name(...);
     
     spy.fetch_events();
-    assert!(spy.events.len() == 1, 'There should be one event');
+    
+    // users can assert events on their own
+    assert(spy.events.len() == 1, 'There should be one event');
+    assert(spy.events.at(0).name == sn_keccak('StoredName'), 'Wrong event name');
+    
+    let data = array![...];
+    assert(spy.events.at(0).data == data, 'Wrong data');
+    
+    // or use prepared assertions
+    spy.assert_emitted(array![Event {from: ..., name: 'StoredName', ...}, Event {...}]);
 
     let res = contract.emit_store_name(...);
     let res = contract.emit_store_name(...);
     
+    // events will not be present before fetching
     assert!(spy.events.len() == 1, 'There should be one event');
     
     spy.fetch_events();
-    assert!(spy.events.len() == 3, 'There should be three events');
+    assert(spy.events.len() == 3, 'There should be three events');
     // ...
 }
 ```
