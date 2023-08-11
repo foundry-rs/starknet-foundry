@@ -2,7 +2,9 @@
 
 > `fn l1_handler_call(prepared_l1_handler: PreparedL1Handler)`
 
-Calls a `#[l1_handler]` function to mock a message arriving from Ethereum.
+Calls a `#[l1_handler]` function to mock a
+[message](https://docs.starknet.io/documentation/architecture_and_concepts/L1-L2_Communication/messaging-mechanism/)
+arriving from Ethereum.
 
 ```rust
 struct PreparedL1Handler {
