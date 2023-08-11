@@ -11,7 +11,7 @@ Parses plain text file content to an array of felts.
 use snforge_std::{ FileTrait, parse_txt };
 
 #[test]
-fn test_deploy() {
+fn test_parse_txt() {
     let file = FileTrait::new('data/file.txt');
     let content = parse_txt(@file);
     // ...
