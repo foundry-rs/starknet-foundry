@@ -13,6 +13,7 @@ use cheatcodes::start_roll;
 use cheatcodes::stop_roll;
 use cheatcodes::start_warp;
 use cheatcodes::stop_warp;
+use cheatcodes::get_class_hash;
 
 
 mod file_operations;
