@@ -42,11 +42,6 @@ impl CheatedState {
 }
 
 fn create_execute_calldata(calldata: &[Felt252]) -> Calldata {
-    let mut execute_calldata = vec![];
-    let mut calldata: Vec<StarkFelt> = calldata
-        .iter()
-        .map(|data| felt_to_stark_felt(data))
-        .collect();
-    execute_calldata.append(&mut calldata);
-    Calldata(execute_calldata.into())
+    let calldata: Vec<StarkFelt> = calldata.iter().map(felt_to_stark_felt).collect();
+    Calldata(calldata.into())
 }

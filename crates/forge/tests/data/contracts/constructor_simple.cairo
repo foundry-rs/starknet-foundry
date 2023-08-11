@@ -16,10 +16,9 @@ mod ConstructorSimple {
         self.number.write(new_number);
         new_number
     }
-    
+
     #[external(v0)]
     fn get_number(self: @ContractState) -> felt252 {
         self.number.read()
     }
 }
-  
