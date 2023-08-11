@@ -13,7 +13,7 @@ pub struct CheatedState {
     pub rolled_contracts: HashMap<ContractAddress, Felt252>,
     pub pranked_contracts: HashMap<ContractAddress, ContractAddress>,
     pub warped_contracts: HashMap<ContractAddress, Felt252>,
-    pub deploy_counter: u32,
+    pub deploy_salt_base: u32,
 }
 
 impl CheatedState {
@@ -23,16 +23,16 @@ impl CheatedState {
             rolled_contracts: HashMap::new(),
             pranked_contracts: HashMap::new(),
             warped_contracts: HashMap::new(),
-            deploy_counter: 0,
+            deploy_salt_base: 0,
         }
     }
 
-    pub fn increment_deploy_counter(&mut self) -> () {
-        self.deploy_counter += 1;
+    pub fn increment_deploy_salt_base(&mut self) -> () {
+        self.deploy_salt_base += 1;
     }
 
-    pub fn gen_salt(&self) -> ContractAddressSalt {
-        ContractAddressSalt(StarkFelt::from(333_u32 + self.deploy_counter))
+    pub fn get_salt(&self) -> ContractAddressSalt {
+        ContractAddressSalt(StarkFelt::from(self.deploy_salt_base))
     }
 }
 

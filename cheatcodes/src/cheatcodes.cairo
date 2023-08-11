@@ -40,16 +40,14 @@ impl RevertedTransactionImpl of RevertedTransactionTrait {
 
 impl ContractClassImpl of ContractClassTrait {
     fn precalculate_address(self: @ContractClass, constructor_calldata: @Array::<felt252>) -> ContractAddress {
-        let class_hash: felt252 = (*self.class_hash).into();
-        let mut inputs: Array::<felt252> = _prepare_calldata(class_hash, constructor_calldata);
+        let mut inputs: Array::<felt252> = _prepare_calldata(self.class_hash, constructor_calldata);
 
         let outputs = cheatcode::<'precalculate_address'>(inputs.span());
         (*outputs[0]).try_into().unwrap()
     }
 
     fn deploy(self: @ContractClass, constructor_calldata: @Array::<felt252>) -> Result<ContractAddress, RevertedTransaction> {
-        let class_hash: felt252 = (*self.class_hash).into();
-        let mut inputs = _prepare_calldata(class_hash, constructor_calldata);
+        let mut inputs = _prepare_calldata(self.class_hash, constructor_calldata);
 
         let outputs = cheatcode::<'deploy'>(inputs.span());
         let exit_code = *outputs[0];
@@ -77,7 +75,8 @@ impl ContractClassImpl of ContractClassTrait {
     }
 }
 
-fn _prepare_calldata(class_hash: felt252, constructor_calldata: @Array::<felt252>) -> Array::<felt252>  {
+fn _prepare_calldata(class_hash: @ClassHash, constructor_calldata: @Array::<felt252>) -> Array::<felt252>  {
+    let class_hash: felt252 = class_hash.clone().into();
     let mut inputs: Array::<felt252> = array![class_hash];
     let calldata_len_felt = constructor_calldata.len().into();
     inputs.append(calldata_len_felt);

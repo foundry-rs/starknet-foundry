@@ -1,6 +1,7 @@
 use crate::constants::TEST_ACCOUNT_CONTRACT_ADDRESS;
 
 use crate::{cheatcodes::EnhancedHintError, CheatedState};
+use blockifier::execution::execution_utils::felt_to_stark_felt;
 use cairo_felt::Felt252;
 use cairo_lang_runner::casm_run::MemBuffer;
 use num_traits::cast::ToPrimitive;
@@ -21,13 +22,10 @@ impl CheatedState {
 
         let account_address = ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS));
         let class_hash = ClassHash(StarkFelt::new(class_hash.to_be_bytes()).unwrap());
-        let salt = self.gen_salt();
+        let salt = self.get_salt();
         let calldata_length = inputs[1].to_usize().unwrap();
 
-        let mut calldata = vec![];
-        for felt in inputs.iter().skip(2).take(calldata_length) {
-            calldata.push(felt.clone());
-        }
+        let calldata = Vec::from(&inputs[2..(2 + calldata_length)]);
 
         let execute_calldata = create_execute_calldata(&calldata);
         let contract_address =
@@ -47,7 +45,7 @@ fn create_execute_calldata(calldata: &[Felt252]) -> Calldata {
     let mut execute_calldata = vec![];
     let mut calldata: Vec<StarkFelt> = calldata
         .iter()
-        .map(|data| StarkFelt::new(data.to_be_bytes()).unwrap())
+        .map(|data| felt_to_stark_felt(data))
         .collect();
     execute_calldata.append(&mut calldata);
     Calldata(execute_calldata.into())

@@ -8,6 +8,7 @@ use crate::{
 };
 use anyhow::{Context, Result};
 use blockifier::abi::abi_utils::selector_from_name;
+use blockifier::execution::execution_utils::felt_to_stark_felt;
 use num_traits::cast::ToPrimitive;
 
 use blockifier::execution::entry_point::CallInfo;
@@ -38,18 +39,16 @@ impl CheatedState {
         let class_hash = inputs[0].clone();
 
         let calldata_length = inputs[1].to_usize().unwrap();
-        let mut calldata = vec![];
-        for felt in inputs.iter().skip(2).take(calldata_length) {
-            calldata.push(felt.clone());
-        }
+
+        let calldata = Vec::from(&inputs[2..(2 + calldata_length)]);
 
         // Deploy a contract using syscall deploy.
         let account_address = ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS));
         let block_context = build_block_context();
         let entry_point_selector = selector_from_name("deploy_contract");
-        let salt = self.gen_salt();
+        let salt = self.get_salt();
         let class_hash = ClassHash(StarkFelt::new(class_hash.to_be_bytes()).unwrap());
-        self.increment_deploy_counter();
+        self.increment_deploy_salt_base();
         let contract_class = blockifier_state.get_compiled_contract_class(&class_hash)?;
         if contract_class.constructor_selector().is_none() && !calldata.is_empty() {
             write_cheatcode_panic(
@@ -126,7 +125,7 @@ fn create_execute_calldata(
     ];
     let mut calldata: Vec<StarkFelt> = calldata
         .iter()
-        .map(|data| StarkFelt::new(data.to_be_bytes()).unwrap())
+        .map(|data| felt_to_stark_felt(data))
         .collect();
     execute_calldata.append(&mut calldata);
     Calldata(execute_calldata.into())
