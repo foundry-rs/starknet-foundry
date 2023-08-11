@@ -20,6 +20,14 @@ struct PreparedContract {
 }
 
 #[derive(Drop, Clone)]
+struct PreparedL1Handler {
+    contract_address: ContractAddress,
+    selector: felt252,
+    from_address: felt252,
+    payload: Span::<felt252>,
+}
+
+#[derive(Drop, Clone)]
 struct RevertedTransaction {
     panic_data: Array::<felt252>,
 }
@@ -116,4 +124,31 @@ fn stop_prank(contract_address: ContractAddress) {
 fn stop_warp(contract_address: ContractAddress) {
     let contract_address_felt: felt252 = contract_address.into();
     cheatcode::<'stop_warp'>(array![contract_address_felt].span());
+}
+
+fn l1_handler_call(prepared_l1_handler: PreparedL1Handler) {
+    let PreparedL1Handler{
+        contract_address,
+        selector,
+        from_address,
+        payload
+    } = prepared_l1_handler;
+
+    let contract_address_felt: felt252 = contract_address.into();
+    let mut inputs = array![contract_address_felt, selector, from_address];
+
+    let payload_len_felt: felt252 = payload.len().into();
+    inputs.append(payload_len_felt);
+
+    let payload_len = payload.len();
+    let mut i = 0;
+    loop {
+        if payload_len == i {
+            break ();
+        }
+        inputs.append(*payload[i]);
+        i += 1;
+    };
+
+    cheatcode::<'l1_handler_call'>(inputs.span());
 }

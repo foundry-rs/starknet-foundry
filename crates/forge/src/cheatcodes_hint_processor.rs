@@ -4,7 +4,7 @@ use std::path::PathBuf;
 
 use crate::scarb::StarknetContractArtifacts;
 use anyhow::{anyhow, Result};
-use blockifier::execution::execution_utils::stark_felt_to_felt;
+use blockifier::execution::execution_utils::{felt_to_stark_felt, stark_felt_to_felt};
 use cairo_felt::Felt252;
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
 use cairo_vm::hint_processor::hint_processor_definition::HintReference;
@@ -286,6 +286,44 @@ impl CairoHintProcessor<'_> {
             "print" => {
                 print(inputs);
                 Ok(())
+            }
+            "l1_handler_call" => {
+                // TODO: remove this when #441 is merged.
+                fn contract_address_from_felt252(
+                    felt: &Felt252,
+                ) -> Result<ContractAddress, EnhancedHintError> {
+                    Ok(ContractAddress(PatriciaKey::try_from(felt_to_stark_felt(
+                        felt,
+                    ))?))
+                }
+
+                let contract_address = contract_address_from_felt252(&inputs[0])?;
+                let selector = inputs[1].clone();
+                let from_address = inputs[2].clone();
+                let payload_length_felt = inputs[3].clone();
+
+                let payload_length = payload_length_felt
+                    .to_usize()
+                    .expect("Payload length is expected to fit into usize type");
+
+                let mut payload = vec![payload_length_felt];
+                for felt in inputs.iter().skip(4).take(payload_length) {
+                    payload.push(felt.clone());
+                }
+
+                match self.cheatnet_state.l1_handler_call(
+                    contract_address,
+                    &selector,
+                    &from_address,
+                    &payload,
+                ) {
+                    Ok(()) => Ok(()),
+                    Err(CheatcodeError::Recoverable(panic_data)) => {
+                        write_cheatcode_panic(&mut buffer, &panic_data);
+                        Ok(())
+                    }
+                    Err(CheatcodeError::Unrecoverable(err)) => Err(err),
+                }
             }
             _ => Err(anyhow!("Unknown cheatcode selector: {selector}")).map_err(Into::into),
         }?;

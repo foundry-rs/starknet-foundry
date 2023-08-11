@@ -10,6 +10,7 @@ use thiserror::Error;
 
 pub mod declare;
 pub mod deploy;
+pub mod l1_handler_call;
 pub mod prank;
 pub mod roll;
 pub mod warp;
