@@ -335,7 +335,7 @@ impl CairoHintProcessor<'_> {
                     Err(CheatcodeError::Recoverable(panic_data)) => {
                         write_cheatcode_panic(&mut buffer, &panic_data);
                         Ok(())
-                    },
+                    }
                     Err(CheatcodeError::Unrecoverable(err)) => Err(err),
                 }
             }
