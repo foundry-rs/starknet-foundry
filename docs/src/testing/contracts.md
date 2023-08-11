@@ -117,7 +117,7 @@ If we called this function in a test, it would result in a failure.
 fn failing() {
     // ...
 
-    let contract_address = contract.deploy(calldata).unwrap();
+    let contract_address = contract.deploy(@calldata).unwrap();
     let dispatcher = IHelloStarknetDispatcher { contract_address };
 
     dispatcher.do_a_panic();
@@ -146,7 +146,7 @@ Using `SafeDispatcher` we can test that the function in fact panics with an expe
 fn handling_errors() {
     // ...
     
-    let contract_address = contract.deploy(calldata).unwrap();
+    let contract_address = contract.deploy(@calldata).unwrap();
     let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
 
     match safe_dispatcher.do_a_panic() {

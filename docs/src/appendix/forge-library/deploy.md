@@ -3,7 +3,7 @@
 ```rust 
 trait ContractClassTrait {
     fn deploy(self: @ContractClass, constructor_calldata: @Array::<felt252>) -> Result<ContractAddress, RevertedTransaction>;
-    ...
+    // ...
 }
 ```
 

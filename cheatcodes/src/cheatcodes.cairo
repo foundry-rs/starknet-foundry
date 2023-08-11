@@ -104,7 +104,7 @@ fn declare(contract: felt252) -> ContractClass {
     let class_hash = result.try_into().unwrap();
 
     ContractClass {
-        class_hash: class_hash
+        class_hash
     }
 }
 
