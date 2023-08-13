@@ -579,3 +579,111 @@ fn start_mock_call_with_library_call_has_no_effect() {
 
     assert_passed!(result);
 }
+
+#[test]
+fn start_mock_call_when_contract_not_deployed() {
+    let test = test_case!(
+        indoc!(
+            r#"
+        use result::ResultTrait;
+        use option::OptionTrait;
+        use traits::TryInto;
+        use starknet::ContractAddress;
+        use starknet::Felt252TryIntoContractAddress;
+        use snforge_std::{ declare, PreparedContract, deploy, start_mock_call };
+
+        #[starknet::interface]
+        trait IMockChecker<TContractState> {
+            fn get_thing(ref self: TContractState) -> felt252;
+        }
+
+        #[test]
+        fn start_mock_call_when_contract_not_deployed() {
+            let calldata = array![420];
+
+            let class_hash = declare('MockChecker');
+            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
+
+            let contract_address: felt252 = 123;
+            let contract_address: ContractAddress = contract_address.try_into().unwrap();
+
+            let dispatcher = IMockCheckerDispatcher { contract_address };
+
+            let mock_ret_data = array![421];
+            start_mock_call(contract_address, 'get_thing', mock_ret_data);
+        }
+    "#
+        ),
+        Contract::from_code_path(
+            "MockChecker".to_string(),
+            Path::new("tests/data/contracts/mock_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run(
+        &test.path().unwrap(),
+        &String::from("src"),
+        &test.path().unwrap().join("src/lib.cairo"),
+        &Some(test.linked_libraries()),
+        &Default::default(),
+        &corelib_path(),
+        &test.contracts(&corelib_path()).unwrap(),
+        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
+    )
+    .unwrap();
+    assert_passed!(result);
+}
+
+#[test]
+fn start_mock_call_when_function_not_implemented() {
+    let test = test_case!(
+        indoc!(
+            r#"
+        use result::ResultTrait;
+        use option::OptionTrait;
+        use traits::TryInto;
+        use starknet::ContractAddress;
+        use starknet::Felt252TryIntoContractAddress;
+        use snforge_std::{ declare, PreparedContract, deploy, start_mock_call };
+
+        #[starknet::interface]
+        trait IMockChecker<TContractState> {
+            fn get_thing_not_implemented(ref self: TContractState) -> felt252;
+        }
+
+        #[test]
+        fn start_mock_call_when_function_not_implemented() {
+            let calldata = array![420];
+
+            let class_hash = declare('MockChecker');
+            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
+            let contract_address = deploy(prepared).unwrap();
+
+            let dispatcher = IMockCheckerDispatcher { contract_address };
+
+            let mock_ret_data = array![421];
+            start_mock_call(contract_address, 'get_thing_not_implemented', mock_ret_data);
+        }
+    "#
+        ),
+        Contract::from_code_path(
+            "MockChecker".to_string(),
+            Path::new("tests/data/contracts/mock_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run(
+        &test.path().unwrap(),
+        &String::from("src"),
+        &test.path().unwrap().join("src/lib.cairo"),
+        &Some(test.linked_libraries()),
+        &Default::default(),
+        &corelib_path(),
+        &test.contracts(&corelib_path()).unwrap(),
+        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
+    )
+    .unwrap();
+    assert_passed!(result);
+}
