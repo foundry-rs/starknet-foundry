@@ -14,7 +14,7 @@ fn simple_declare() {
         use result::ResultTrait;
         use traits::Into;
         use starknet::ClassHashIntoFelt252;
-        use cheatcodes::declare;
+        use snforge_std::declare;
 
         #[test]
         fn test_declare_simple() {
@@ -75,7 +75,7 @@ fn multiple_declare() {
         use result::ResultTrait;
         use traits::Into;
         use starknet::ClassHashIntoFelt252;
-        use cheatcodes::declare;
+        use snforge_std::declare;
 
         #[test]
         fn multiple_contracts() {
@@ -180,7 +180,7 @@ fn simple_declare_from_contract_code() {
         use result::ResultTrait;
         use traits::Into;
         use starknet::ClassHashIntoFelt252;
-        use cheatcodes::declare;
+        use snforge_std::declare;
 
         #[test]
         fn test_declare_simple() {
@@ -215,7 +215,7 @@ fn declare_unknown() {
         use result::ResultTrait;
         use traits::Into;
         use starknet::ClassHashIntoFelt252;
-        use cheatcodes::declare;
+        use snforge_std::declare;
 
         #[test]
         fn test_declare_simple() {

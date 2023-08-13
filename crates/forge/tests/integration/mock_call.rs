@@ -12,7 +12,7 @@ fn start_mock_call_simple() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use cheatcodes::{ declare, PreparedContract, deploy, start_mock_call };
+        use snforge_std::{ declare, PreparedContract, deploy, start_mock_call };
 
         #[starknet::interface]
         trait IMockChecker<TContractState> {
@@ -82,7 +82,7 @@ fn stop_mock_call_simple() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use cheatcodes::{ declare, PreparedContract, deploy, start_mock_call, stop_mock_call };
+        use snforge_std::{ declare, PreparedContract, deploy, start_mock_call, stop_mock_call };
 
         #[starknet::interface]
         trait IMockChecker<TContractState> {
@@ -154,7 +154,7 @@ fn mock_call_double() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use cheatcodes::{ declare, PreparedContract, deploy, start_mock_call, stop_mock_call };
+        use snforge_std::{ declare, PreparedContract, deploy, start_mock_call, stop_mock_call };
 
         #[starknet::interface]
         trait IMockChecker<TContractState> {
@@ -239,7 +239,7 @@ fn mock_call_proxy() {
         use result::ResultTrait;
         use array::ArrayTrait;
         use starknet::ContractAddress;
-        use cheatcodes::{ declare, PreparedContract, deploy, start_mock_call };
+        use snforge_std::{ declare, PreparedContract, deploy, start_mock_call };
 
         #[starknet::interface]
         trait IMockCheckerProxy<TContractState> {
@@ -298,7 +298,7 @@ fn mock_call_two_methods() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use cheatcodes::{ declare, PreparedContract, deploy, start_mock_call };
+        use snforge_std::{ declare, PreparedContract, deploy, start_mock_call };
 
         #[starknet::interface]
         trait IMockChecker<TContractState> {
@@ -359,7 +359,7 @@ fn start_mock_call_in_constructor_test() {
             r#"
         use result::ResultTrait;
         use array::ArrayTrait;
-        use cheatcodes::{ declare, PreparedContract, deploy, start_mock_call };
+        use snforge_std::{ declare, PreparedContract, deploy, start_mock_call };
 
         #[starknet::interface]
         trait IConstructorMockChecker<TContractState> {
@@ -412,7 +412,7 @@ fn start_mock_call_with_syscall() {
             r#"
         use result::ResultTrait;
         use starknet::ContractAddress;
-        use cheatcodes::{ declare, PreparedContract, deploy, start_mock_call, stop_mock_call };
+        use snforge_std::{ declare, PreparedContract, deploy, start_mock_call, stop_mock_call };
 
         #[starknet::interface]
         trait IMockCheckerProxy<TContractState> {
@@ -475,7 +475,7 @@ fn start_mock_call_inner_call_has_no_effect() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use cheatcodes::{ declare, PreparedContract, deploy, start_mock_call };
+        use snforge_std::{ declare, PreparedContract, deploy, start_mock_call };
 
         #[starknet::interface]
         trait IMockChecker<TContractState> {
@@ -528,7 +528,7 @@ fn start_mock_call_with_library_call_has_no_effect() {
         indoc!(
             r#"
             use result::ResultTrait;
-            use cheatcodes::{ declare, PreparedContract, deploy, start_mock_call };
+            use snforge_std::{ declare, PreparedContract, deploy, start_mock_call };
             use starknet::ClassHash;
 
             #[starknet::interface]

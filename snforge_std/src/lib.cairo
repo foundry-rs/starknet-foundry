@@ -15,6 +15,7 @@ use cheatcodes::start_warp;
 use cheatcodes::stop_warp;
 use cheatcodes::start_mock_call;
 use cheatcodes::stop_mock_call;
+use cheatcodes::get_class_hash;
 
 mod forge_print;
 

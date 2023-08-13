@@ -14,7 +14,7 @@ pub fn setup_package(package_name: &str) -> TempDir {
     )
     .unwrap();
 
-    let cheatcodes_path = Utf8PathBuf::from_str("../../cheatcodes")
+    let snforge_std_path = Utf8PathBuf::from_str("../../snforge_std")
         .unwrap()
         .canonicalize_utf8()
         .unwrap();
@@ -32,11 +32,11 @@ pub fn setup_package(package_name: &str) -> TempDir {
                 casm = true
 
                 [dependencies]
-                starknet = "2.1.0-rc2"
-                cheatcodes = {{ path = "{}" }}
+                starknet = "2.1.0"
+                snforge_std = {{ path = "{}" }}
                 "#,
             package_name,
-            cheatcodes_path
+            snforge_std_path
         ))
         .unwrap();
 
@@ -89,7 +89,6 @@ fn simple_package_with_git_dependency() {
 
     let manifest_path = temp.child("Scarb.toml");
     manifest_path
-        // TODO #403
         .write_str(indoc!(
             r#"
             [package]
@@ -101,8 +100,8 @@ fn simple_package_with_git_dependency() {
             casm = true
 
             [dependencies]
-            starknet = "2.1.0-rc2"
-            cheatcodes = { git = "https://github.com/foundry-rs/starknet-foundry.git" }
+            starknet = "2.1.0"
+            snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git" }
             "#,
         ))
         .unwrap();
@@ -240,8 +239,21 @@ fn with_print() {
         Running 0 test(s) from print_test package
         Running 1 test(s) from tests/test_print.cairo
         original value: [123], converted to a string: [{]
-        original value: [6381921], converted to a string: [aaa]
         original value: [3618502788666131213697322783095070105623107215331596699973092056135872020480]
+        original value: [6381921], converted to a string: [aaa]
+        original value: [12], converted to a string: []
+        original value: [1234]
+        original value: [123456]
+        original value: [1233456789]
+        original value: [123345678910]
+        original value: [0], converted to a string: []
+        original value: [10633823966279327296825105735305134080]
+        original value: [2], converted to a string: []
+        original value: [11], converted to a string: []
+        original value: [1234]
+        original value: [123456]
+        original value: [123456789]
+        original value: [12345612342]
         original value: [152]
         original value: [124], converted to a string: [|]
         original value: [149]
@@ -296,8 +308,8 @@ fn with_exit_first() {
             version = "0.1.0"
 
             [dependencies]
-            starknet = "2.1.0-rc2"
-            cheatcodes = {{ path = "{}" }}
+            starknet = "2.1.0"
+            snforge_std = {{ path = "{}" }}
 
             [[target.starknet-contract]]
             sierra = true
@@ -306,7 +318,7 @@ fn with_exit_first() {
             [tool.snforge]
             exit_first = true
             "#,
-            Utf8PathBuf::from_str("../../cheatcodes")
+            Utf8PathBuf::from_str("../../snforge_std")
                 .unwrap()
                 .canonicalize_utf8()
                 .unwrap()
@@ -388,8 +400,8 @@ fn exit_first_flag_takes_precedence() {
             version = "0.1.0"
 
             [dependencies]
-            starknet = "2.1.0-rc2"
-            cheatcodes = { path = "../.." }
+            starknet = "2.1.0"
+            snforge_std = { path = "../.." }
 
             [[target.starknet-contract]]
             sierra = true

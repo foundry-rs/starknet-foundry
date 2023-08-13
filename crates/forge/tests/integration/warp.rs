@@ -18,7 +18,7 @@ fn warp() {
             use traits::Into;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use cheatcodes::{ declare, PreparedContract, deploy, start_warp, stop_warp, start_roll };
+            use snforge_std::{ declare, PreparedContract, deploy, start_warp, stop_warp, start_roll };
 
             #[starknet::interface]
             trait IWarpChecker<TContractState> {
@@ -134,7 +134,7 @@ fn start_warp_in_constructor_test() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use cheatcodes::{ declare, PreparedContract, deploy, start_warp };
+            use snforge_std::{ declare, PreparedContract, deploy, start_warp };
             
             #[starknet::interface]
             trait IConstructorWarpChecker<TContractState> {
@@ -188,7 +188,7 @@ fn start_warp_with_proxy() {
             use traits::Into;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use cheatcodes::{ declare, PreparedContract, deploy, start_warp };
+            use snforge_std::{ declare, PreparedContract, deploy, start_warp };
 
             #[starknet::interface]
             trait IWarpCheckerProxy<TContractState> {
@@ -251,7 +251,7 @@ fn start_warp_with_library_call() {
             use traits::Into;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use cheatcodes::{ declare, PreparedContract, deploy, start_warp };
+            use snforge_std::{ declare, PreparedContract, deploy, start_warp };
             use starknet::ClassHash;
 
             #[starknet::interface]

@@ -2,13 +2,9 @@ use crate::constants::{
     build_block_context, build_invoke_transaction, TEST_ACCOUNT_CONTRACT_ADDRESS,
 };
 use crate::state::DictStateReader;
-use crate::{
-    cheatcodes::{write_cheatcode_panic, EnhancedHintError},
-    CheatedState,
-};
+use crate::{cheatcodes::EnhancedHintError, CheatnetState};
 use anyhow::{Context, Result};
 use blockifier::abi::abi_utils::selector_from_name;
-use num_traits::cast::ToPrimitive;
 
 use blockifier::execution::entry_point::CallInfo;
 use blockifier::state::cached_state::CachedState;
@@ -16,7 +12,7 @@ use blockifier::state::state_api::StateReader;
 use blockifier::transaction::account_transaction::AccountTransaction;
 use blockifier::transaction::transactions::{ExecutableTransaction, InvokeTransaction};
 use cairo_felt::Felt252;
-use regex::Regex;
+
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, PatriciaKey};
 use starknet_api::hash::{StarkFelt, StarkHash};
 use starknet_api::transaction::{
@@ -24,24 +20,17 @@ use starknet_api::transaction::{
 };
 use starknet_api::{patricia_key, stark_felt};
 
-use cairo_lang_runner::casm_run::MemBuffer;
+use super::CheatcodeError;
+use crate::conversions::felt_from_short_string;
+use crate::panic_data::try_extract_panic_data;
 
-impl CheatedState {
+impl CheatnetState {
     pub fn deploy(
-        &self,
-        buffer: &mut MemBuffer,
-        blockifier_state: &mut CachedState<DictStateReader>,
-        inputs: &[Felt252],
-    ) -> Result<(), EnhancedHintError> {
-        // TODO(#1991) deploy should fail if contract address provided doesn't match calculated
-        //  or not accept this address as argument at all.
-        let class_hash = inputs[0].clone();
-
-        let calldata_length = inputs[1].to_usize().unwrap();
-        let mut calldata = vec![];
-        for felt in inputs.iter().skip(2).take(calldata_length) {
-            calldata.push(felt.clone());
-        }
+        &mut self,
+        class_hash: &Felt252,
+        calldata: &[Felt252],
+    ) -> Result<ContractAddress, CheatcodeError> {
+        let blockifier_state: &mut CachedState<DictStateReader> = &mut self.blockifier_state;
 
         // Deploy a contract using syscall deploy.
         let account_address = ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS));
@@ -50,17 +39,17 @@ impl CheatedState {
         let salt = ContractAddressSalt::default();
         let class_hash = ClassHash(StarkFelt::new(class_hash.to_be_bytes()).unwrap());
 
-        let contract_class = blockifier_state.get_compiled_contract_class(&class_hash)?;
+        let contract_class = blockifier_state
+            .get_compiled_contract_class(&class_hash)
+            .map_err::<EnhancedHintError, _>(From::from)?;
         if contract_class.constructor_selector().is_none() && !calldata.is_empty() {
-            write_cheatcode_panic(
-                buffer,
-                vec![felt_from_short_string("No constructor in contract")].as_slice(),
-            );
-            return Ok(());
+            return Err(CheatcodeError::Recoverable(vec![felt_from_short_string(
+                "No constructor in contract",
+            )]));
         }
 
         let execute_calldata = create_execute_calldata(
-            &calldata,
+            calldata,
             &class_hash,
             &account_address,
             &entry_point_selector,
@@ -69,7 +58,8 @@ impl CheatedState {
 
         let nonce = blockifier_state
             .get_nonce_at(account_address)
-            .context("Failed to get nonce")?;
+            .context("Failed to get nonce")
+            .map_err::<EnhancedHintError, _>(From::from)?;
         let tx = build_invoke_transaction(execute_calldata, account_address);
         let tx = InvokeTransactionV1 { nonce, ..tx };
         let account_tx = AccountTransaction::Invoke(InvokeTransaction {
@@ -87,24 +77,20 @@ impl CheatedState {
                 .0
                 .get(0)
                 .expect("Failed to get contract_address from return_data");
-            let contract_address = Felt252::from_bytes_be(contract_address.bytes());
 
-            buffer
-                .write(Felt252::from(0))
-                .expect("Failed to insert error code");
-            buffer
-                .write(contract_address)
-                .expect("Failed to insert deployed contract address");
-        } else {
-            let revert_error = tx_info
-                .revert_error
-                .expect("Unparseable tx info, {tx_info:?}");
-            let extracted_panic_data = try_extract_panic_data(&revert_error)
-                .expect("Unparseable error message, {revert_error}");
+            let contract_address = ContractAddress::try_from(*contract_address)
+                .expect("Failed to cast contract address into the right struct");
 
-            write_cheatcode_panic(buffer, extracted_panic_data.as_slice());
+            return Ok(contract_address);
         }
-        Ok(())
+
+        let revert_error = tx_info
+            .revert_error
+            .expect("Unparseable tx info, {tx_info:?}");
+        let extracted_panic_data = try_extract_panic_data(&revert_error)
+            .expect("Unparseable error message, {revert_error}");
+
+        Err(CheatcodeError::Recoverable(extracted_panic_data))
     }
 }
 
@@ -130,31 +116,6 @@ fn create_execute_calldata(
         .collect();
     execute_calldata.append(&mut calldata);
     Calldata(execute_calldata.into())
-}
-
-fn try_extract_panic_data(err: &str) -> Option<Vec<Felt252>> {
-    let re = Regex::new(r#"(?m)^Got an exception while executing a hint: Custom Hint Error: Execution failed\. Failure reason: "(.*)"\.$"#)
-        .expect("Could not create panic_data matching regex");
-
-    if let Some(captures) = re.captures(err) {
-        if let Some(panic_data_match) = captures.get(1) {
-            if panic_data_match.as_str().is_empty() {
-                return Some(vec![]);
-            }
-            let panic_data_felts: Vec<Felt252> = panic_data_match
-                .as_str()
-                .split(", ")
-                .map(felt_from_short_string)
-                .collect();
-
-            return Some(panic_data_felts);
-        }
-    }
-    None
-}
-
-fn felt_from_short_string(short_str: &str) -> Felt252 {
-    return Felt252::from_bytes_be(short_str.as_bytes());
 }
 
 #[cfg(test)]
@@ -206,42 +167,5 @@ mod test {
                 StarkFelt::from(0_u32),
             ]))
         );
-    }
-
-    #[test]
-    fn string_extracting_panic_data() {
-        let cases: [(&str, Option<Vec<Felt252>>); 4] = [
-            (
-                "Beginning of trace\nGot an exception while executing a hint: Custom Hint Error: Execution failed. Failure reason: \"PANIK, DAYTA\".\n
-                 End of trace",
-                Some(vec![Felt252::from(344_693_033_291_u64), Felt252::from(293_154_149_441_u64)])
-            ),
-            (
-                "Got an exception while executing a hint: Custom Hint Error: Execution failed. Failure reason: \"AYY, LMAO\".",
-                Some(vec![Felt252::from(4_282_713_u64), Felt252::from(1_280_131_407_u64)])
-            ),
-            (
-                "Got an exception while executing a hint: Custom Hint Error: Execution failed. Failure reason: \"\".",
-                Some(vec![])
-            ),
-            ("Custom Hint Error: Invalid trace: \"PANIC, DATA\"", None)
-        ];
-
-        for (str, expected) in cases {
-            assert_eq!(try_extract_panic_data(str), expected);
-        }
-    }
-
-    #[test]
-    fn parsing_felt_from_short_string() {
-        let cases = [
-            ("", Felt252::from(0)),
-            ("{", Felt252::from(123)),
-            ("PANIK", Felt252::from(344_693_033_291_u64)),
-        ];
-
-        for (str, felt_res) in cases {
-            assert_eq!(felt_from_short_string(str), felt_res);
-        }
     }
 }

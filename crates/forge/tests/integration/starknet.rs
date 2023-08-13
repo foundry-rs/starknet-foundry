@@ -15,7 +15,7 @@ fn timestamp_doesnt_decrease_between_transactions() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use cheatcodes::{ declare, PreparedContract, deploy };
+            use snforge_std::{ declare, PreparedContract, deploy };
 
             #[starknet::interface]
                 trait ITimestamper<TContractState> {
@@ -102,7 +102,7 @@ fn block_doesnt_decrease_between_transactions() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use cheatcodes::{ declare, PreparedContract, deploy };
+            use snforge_std::{ declare, PreparedContract, deploy };
 
             #[starknet::interface]
             trait IBlocker<TContractState> {
@@ -216,7 +216,7 @@ fn nonce_increases_between_transactions() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use cheatcodes::{ declare, PreparedContract, deploy };
+            use snforge_std::{ declare, PreparedContract, deploy };
 
             #[starknet::interface]
             trait INoncer<TContractState> {
@@ -309,7 +309,7 @@ fn nonce_increases_between_deploys_and_declares() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use cheatcodes::{ declare, PreparedContract, deploy };
+            use snforge_std::{ declare, PreparedContract, deploy };
 
             #[starknet::interface]
             trait INoncer<TContractState> {
