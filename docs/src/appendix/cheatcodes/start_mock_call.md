@@ -11,6 +11,9 @@ Mock can be canceled with [`stop_mock_call`](./stop_mock_call.md).
 - `function_name` - name of the function in a contract at the `contract_address` that will be mocked
 - `ret_data` - data to return by the function `function_name`
 
+> 📝 **Note**
+> The inner call (i.e. when a contract calls a function from within itself) cannot be mocked.
+
 For contract implementation:
 
 ```rust
