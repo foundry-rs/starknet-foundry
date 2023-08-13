@@ -29,12 +29,12 @@ fn start_mock_call_simple() {
 
             let dispatcher = IMockCheckerDispatcher { contract_address };
 
-            let mock_ret_data = array![421];
+            let mock_ret_data = 421;
             start_mock_call(contract_address, 'get_thing', mock_ret_data);
 
             let thing = dispatcher.get_thing();
 
-            assert(thing == 421, 'Incorrect thing');
+            assert(thing == 421, thing);
         }
 
         #[test]
@@ -45,7 +45,7 @@ fn start_mock_call_simple() {
             let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
             let contract_address = deploy(prepared).unwrap();
 
-            let mock_ret_data = array![421];
+            let mock_ret_data = 421;
             start_mock_call(contract_address, 'get_thing', mock_ret_data);
 
             let dispatcher = IMockCheckerDispatcher { contract_address };
@@ -60,6 +60,134 @@ fn start_mock_call_simple() {
             Path::new("tests/data/contracts/mock_checker.cairo"),
         )
         .unwrap()
+    );
+
+    let result = run(
+        &test.path().unwrap(),
+        &String::from("src"),
+        &test.path().unwrap().join("src/lib.cairo"),
+        &Some(test.linked_libraries()),
+        &Default::default(),
+        &corelib_path(),
+        &test.contracts(&corelib_path()).unwrap(),
+        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
+    )
+    .unwrap();
+    assert_passed!(result);
+}
+
+#[test]
+fn start_mock_call_return_complex_dtypes() {
+    let test = test_case!(
+        indoc!(
+            r#"
+        use result::ResultTrait;
+        use array::ArrayTrait;
+        use serde::Serde;
+        use snforge_std::{ declare, PreparedContract, deploy, start_mock_call };
+
+        #[starknet::interface]
+        trait IMockChecker<TContractState> {
+            fn get_struct_thing(ref self: TContractState) -> StructThing;
+            fn get_arr_thing(ref self: TContractState) -> Array<StructThing>;
+        }
+
+        #[derive(Serde, Drop)]
+        struct StructThing {
+            item_one: felt252,
+            item_two: felt252,
+        }
+
+        #[test]
+        fn start_mock_call_return_struct() {
+            let calldata = array![420];
+
+            let class_hash = declare('MockChecker');
+            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
+            let contract_address = deploy(prepared).unwrap();
+
+            let dispatcher = IMockCheckerDispatcher { contract_address };
+
+            let mock_ret_data = StructThing {item_one: 412, item_two: 421};
+            start_mock_call(contract_address, 'get_struct_thing', mock_ret_data);
+
+            let thing: StructThing = dispatcher.get_struct_thing();
+
+            assert(thing.item_one == 412, 'thing.item_one');
+            assert(thing.item_two == 421, 'thing.item_two');
+        }
+
+        #[test]
+        fn start_mock_call_return_arr() {
+            let calldata = array![420];
+
+            let class_hash = declare('MockChecker');
+            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
+            let contract_address = deploy(prepared).unwrap();
+
+            let dispatcher = IMockCheckerDispatcher { contract_address };
+
+            let mock_ret_data =  array![ StructThing {item_one: 112, item_two: 121}, StructThing {item_one: 412, item_two: 421} ];
+            start_mock_call(contract_address, 'get_arr_thing', mock_ret_data);
+
+            let things: Array<StructThing> = dispatcher.get_arr_thing();
+
+            let thing = things.at(0);
+            assert(*thing.item_one == 112, 'thing1.item_one');
+            assert(*thing.item_two == 121, 'thing1.item_two');
+
+            let thing = things.at(1);
+            assert(*thing.item_one == 412, 'thing2.item_one');
+            assert(*thing.item_two == 421, 'thing2.item_two');
+        }
+    "#
+        ),
+        Contract::new(
+            "MockChecker",
+            indoc!(
+                r#"
+            #[derive(Serde, Drop)]
+            struct StructThing {
+                item_one: felt252,
+                item_two: felt252,
+            }
+
+            #[starknet::interface]
+            trait IMockChecker<TContractState> {
+                fn get_struct_thing(ref self: TContractState) -> StructThing;
+                fn get_arr_thing(ref self: TContractState) -> Array<StructThing>;
+            }
+
+            #[starknet::contract]
+            mod MockChecker {
+                use super::IMockChecker;
+                use super::StructThing;
+                use array::ArrayTrait;
+
+                #[storage]
+                struct Storage {
+                    stored_thing: felt252
+                }
+
+                #[constructor]
+                fn constructor(ref self: ContractState, arg1: felt252) {
+                    self.stored_thing.write(arg1)
+                }
+
+                #[external(v0)]
+                impl IMockCheckerImpl of super::IMockChecker<ContractState> {
+                    fn get_struct_thing(ref self: ContractState) -> StructThing {
+                        StructThing {item_one: 12, item_two: 21}
+                    }
+
+                    fn get_arr_thing(ref self: ContractState) -> Array<StructThing> {
+                        array![StructThing {item_one: 12, item_two: 21}]
+                    }
+                }
+            }
+    "#
+            )
+        )
     );
 
     let result = run(
@@ -99,7 +227,7 @@ fn stop_mock_call_simple() {
 
             let dispatcher = IMockCheckerDispatcher { contract_address };
 
-            let mock_ret_data = array![421];
+            let mock_ret_data = 421;
 
             start_mock_call(contract_address, 'get_thing', mock_ret_data);
             let thing = dispatcher.get_thing();
@@ -171,10 +299,10 @@ fn mock_call_double() {
 
             let dispatcher = IMockCheckerDispatcher { contract_address };
 
-            let mock_ret_data = array![421];
+            let mock_ret_data = 421;
             start_mock_call(contract_address, 'get_thing', mock_ret_data);
 
-            let  mock_ret_data = array![427];
+            let  mock_ret_data = 427;
             start_mock_call(contract_address, 'get_thing', mock_ret_data);
 
             let thing = dispatcher.get_thing();
@@ -195,7 +323,7 @@ fn mock_call_double() {
 
             let dispatcher = IMockCheckerDispatcher { contract_address };
 
-            let mock_ret_data = array![421];
+            let mock_ret_data = 421;
             start_mock_call(contract_address, 'get_thing', mock_ret_data);
 
             let thing1 = dispatcher.get_thing();
@@ -253,7 +381,7 @@ fn mock_call_proxy() {
             let class_hash = declare('MockChecker');
             let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
             let mock_checker_contract_address = deploy(prepared).unwrap();
-            let mock_ret_data = array![421];
+            let mock_ret_data = 421;
             start_mock_call(mock_checker_contract_address, 'get_thing', mock_ret_data);
 
             let class_hash = declare('MockCheckerProxy');
@@ -316,10 +444,10 @@ fn mock_call_two_methods() {
 
             let dispatcher = IMockCheckerDispatcher { contract_address };
 
-            let mock_ret_data = array![421];
+            let mock_ret_data = 421;
             start_mock_call(contract_address, 'get_thing', mock_ret_data);
 
-            let mock_ret_data = array![999];
+            let mock_ret_data = 999;
             start_mock_call(contract_address, 'get_constant_thing', mock_ret_data);
 
             let thing = dispatcher.get_thing();
@@ -375,7 +503,7 @@ fn start_mock_call_in_constructor_test() {
 
             let dispatcher = IConstructorMockCheckerDispatcher { contract_address };
 
-            let mock_ret_data = array![421];
+            let mock_ret_data = 421;
             start_mock_call(contract_address, 'get_constant_thing', mock_ret_data);
 
             let thing = dispatcher.get_stored_thing();
@@ -426,7 +554,7 @@ fn start_mock_call_with_syscall() {
             let class_hash = declare('MockChecker');
             let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
             let mock_checker_contract_address = deploy(prepared).unwrap();
-            let mock_ret_data = array![421];
+            let mock_ret_data = 421;
             start_mock_call(mock_checker_contract_address, 'get_thing', mock_ret_data);
 
             let class_hash = declare('MockCheckerProxy');
@@ -492,7 +620,7 @@ fn start_mock_call_inner_call_has_no_effect() {
 
             let dispatcher = IMockCheckerDispatcher { contract_address };
 
-            let mock_ret_data = array![421];
+            let mock_ret_data = 421;
             start_mock_call(contract_address, 'get_thing', mock_ret_data);
 
             let thing = dispatcher.get_thing_wrapper();
@@ -544,7 +672,7 @@ fn start_mock_call_with_library_call_has_no_effect() {
                 let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
                 let contract_address = deploy(prepared).unwrap();
 
-                let mock_ret_data = array![421];
+                let mock_ret_data = 421;
                 start_mock_call(contract_address, 'get_thing', mock_ret_data);
 
                 let dispatcher = IMockCheckerLibCallDispatcher { contract_address };
@@ -609,7 +737,7 @@ fn start_mock_call_when_contract_not_deployed() {
 
             let dispatcher = IMockCheckerDispatcher { contract_address };
 
-            let mock_ret_data = array![421];
+            let mock_ret_data = 421;
             start_mock_call(contract_address, 'get_thing', mock_ret_data);
         }
     "#
@@ -662,7 +790,7 @@ fn start_mock_call_when_function_not_implemented() {
 
             let dispatcher = IMockCheckerDispatcher { contract_address };
 
-            let mock_ret_data = array![421];
+            let mock_ret_data = 421;
             start_mock_call(contract_address, 'get_thing_not_implemented', mock_ret_data);
         }
     "#

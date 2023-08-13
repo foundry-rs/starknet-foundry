@@ -1,6 +1,6 @@
 # `start_mock_call`
 
-> `fn start_mock_call(contract_address: ContractAddress, function_name: felt252, ret_data: Array::<felt252>)`
+> `fn start_mock_call<T, impl TSerde: serde::Serde<T>, impl TDestruct: Destruct<T>>(contract_address: ContractAddress, function_name: felt252, ret_data: T)`
 
 Mocks contract call to a `function_name` of a contract at the given address. A call to function `function_name` will return data provided in `ret_data` argument. 
 
@@ -45,7 +45,7 @@ We can use `start_mock_call` in a test to change the data returned by `get_balan
 fn test_mock_call() {
     // ...
     
-    let mock_ret_data = array![421];
+    let mock_ret_data = 421;
     start_mock_call(contract_address, 'get_balance', mock_ret_data);
 
     dispatcher.set_balance(13);
