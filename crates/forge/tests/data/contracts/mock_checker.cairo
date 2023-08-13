@@ -3,7 +3,6 @@ trait IMockChecker<TContractState> {
     fn get_thing(ref self: TContractState) -> felt252;
     fn get_thing_wrapper(ref self: TContractState) -> felt252;
     fn get_constant_thing(ref self: TContractState) -> felt252;
-    fn get_thing_and_emit_event(ref self: TContractState) -> felt252;
 }
 
 #[starknet::contract]
@@ -13,17 +12,6 @@ mod MockChecker {
     #[storage]
     struct Storage {
         stored_thing: felt252
-    }
-
-    #[event]
-    #[derive(Drop, starknet::Event)]
-    enum Event {
-        ThingEmitted: ThingEmitted
-    }
-
-    #[derive(Drop, starknet::Event)]
-    struct ThingEmitted {
-        thing: felt252
     }
 
     #[constructor]
@@ -43,12 +31,6 @@ mod MockChecker {
 
         fn get_constant_thing(ref self: ContractState) -> felt252 {
             13
-        }
-
-        fn get_thing_and_emit_event(ref self: ContractState) -> felt252 {
-            let thing = self.get_thing();
-            self.emit(Event::ThingEmitted(ThingEmitted { thing }));
-            thing
         }
     }
 }

@@ -406,6 +406,70 @@ fn start_mock_call_in_constructor_test() {
 }
 
 #[test]
+fn start_mock_call_with_syscall() {
+    let test = test_case!(
+        indoc!(
+            r#"
+        use result::ResultTrait;
+        use starknet::ContractAddress;
+        use cheatcodes::{ declare, PreparedContract, deploy, start_mock_call, stop_mock_call };
+
+        #[starknet::interface]
+        trait IMockCheckerProxy<TContractState> {
+            fn get_thing_from_contract_and_emit_event(ref self: TContractState, address: ContractAddress) -> felt252;
+        }
+
+        #[test]
+        fn start_mock_call_with_syscall() {
+            let calldata = array![420];
+
+            let class_hash = declare('MockChecker');
+            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
+            let mock_checker_contract_address = deploy(prepared).unwrap();
+            let mock_ret_data = array![421];
+            start_mock_call(mock_checker_contract_address, 'get_thing', mock_ret_data);
+
+            let class_hash = declare('MockCheckerProxy');
+            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
+            let proxy_contract_address = deploy(prepared).unwrap();
+            let proxy_dispatcher = IMockCheckerProxyDispatcher { contract_address: proxy_contract_address };
+            let thing = proxy_dispatcher.get_thing_from_contract_and_emit_event(mock_checker_contract_address);
+
+            assert(thing == 421, 'Incorrect thing');
+
+            stop_mock_call(mock_checker_contract_address, 'get_thing');
+            let thing = proxy_dispatcher.get_thing_from_contract_and_emit_event(mock_checker_contract_address);
+            assert(thing == 420, 'Incorrect thing');
+        }
+    "#
+        ),
+        Contract::from_code_path(
+            "MockChecker".to_string(),
+            Path::new("tests/data/contracts/mock_checker.cairo"),
+        )
+        .unwrap(),
+        Contract::from_code_path(
+            "MockCheckerProxy".to_string(),
+            Path::new("tests/data/contracts/mock_checker_proxy.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run(
+        &test.path().unwrap(),
+        &String::from("src"),
+        &test.path().unwrap().join("src/lib.cairo"),
+        &Some(test.linked_libraries()),
+        &Default::default(),
+        &corelib_path(),
+        &test.contracts(&corelib_path()).unwrap(),
+        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
+    )
+    .unwrap();
+    assert_passed!(result);
+}
+
+#[test]
 fn start_mock_call_inner_call_has_no_effect() {
     let test = test_case!(
         indoc!(
@@ -513,58 +577,5 @@ fn start_mock_call_with_library_call_has_no_effect() {
     )
     .unwrap();
 
-    assert_passed!(result);
-}
-
-#[test]
-fn start_mock_call_with_syscall_has_no_effect() {
-    let test = test_case!(
-        indoc!(
-            r#"
-        use result::ResultTrait;
-        use cheatcodes::{ declare, PreparedContract, deploy, start_mock_call };
-
-        #[starknet::interface]
-        trait IMockChecker<TContractState> {
-            fn get_thing_and_emit_event(ref self: TContractState) -> felt252;
-        }
-
-        #[test]
-        fn mock_call_with_syscall_has_no_effect() {
-            let calldata = array![420];
-
-            let class_hash = declare('MockChecker');
-            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
-            let contract_address = deploy(prepared).unwrap();
-
-            let dispatcher = IMockCheckerDispatcher { contract_address };
-
-            let mock_ret_data = array![421];
-            start_mock_call(contract_address, 'get_thing', mock_ret_data);
-
-            let thing = dispatcher.get_thing_and_emit_event();
-
-            assert(thing == 420, 'Incorrect thing');
-        }
-    "#
-        ),
-        Contract::from_code_path(
-            "MockChecker".to_string(),
-            Path::new("tests/data/contracts/mock_checker.cairo"),
-        )
-        .unwrap()
-    );
-
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
     assert_passed!(result);
 }
