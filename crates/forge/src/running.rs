@@ -20,7 +20,7 @@ use crate::test_case_summary::TestCaseSummary;
 
 /// Builds `hints_dict` required in `cairo_vm::types::program::Program` from instructions.
 fn build_hints_dict<'b>(
-    instructions: impl Iterator<Item = &'b Instruction>,
+    instructions: impl Iterator<Item=&'b Instruction>,
 ) -> (HashMap<usize, Vec<HintParams>>, HashMap<String, Hint>) {
     let mut hints_dict: HashMap<usize, Vec<HintParams>> = HashMap::new();
     let mut string_to_hint: HashMap<String, Hint> = HashMap::new();
@@ -84,7 +84,8 @@ pub(crate) fn run_from_test_case(
         instructions,
         builtins,
     ) {
-        Ok(result) => Ok(TestCaseSummary::from_run_result(result, case)),
+        Ok(result) => {
+            Ok(TestCaseSummary::from_run_result(result, case)) }
 
         // CairoRunError comes from VirtualMachineError which may come from HintException that originates in the cheatcode processor
         Err(RunnerError::CairoRunError(error)) => Ok(TestCaseSummary::Failed {
@@ -94,6 +95,7 @@ pub(crate) fn run_from_test_case(
                 "\n    {}\n",
                 error.to_string().replace(" Custom Hint Error: ", "\n    ")
             )),
+            available_gas,
         }),
 
         Err(err) => Err(err.into()),

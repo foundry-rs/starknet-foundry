@@ -15,6 +15,8 @@ pub enum TestCaseSummary {
         run_result: RunResult,
         /// Message to be printed after the test case run
         msg: Option<String>,
+        /// The amount of gas the test requested.
+        available_gas: Option<usize>,
     },
     /// Test case failed
     Failed {
@@ -24,6 +26,9 @@ pub enum TestCaseSummary {
         run_result: Option<RunResult>,
         /// Message returned by the test case run
         msg: Option<String>,
+        /// The amount of gas the test requested.
+        available_gas: Option<usize>,
+
     },
     /// Test case skipped (did not run)
     Skipped {
@@ -37,17 +42,20 @@ impl TestCaseSummary {
     pub(crate) fn from_run_result(run_result: RunResult, test_case: &TestCase) -> Self {
         let name = test_case.name.to_string();
         let msg = extract_result_data(&run_result, &test_case.expected_result);
+        let available_gas = test_case.available_gas;
         match run_result.clone().value {
             RunResultValue::Success(_) => match &test_case.expected_result {
                 ExpectedTestResult::Success => TestCaseSummary::Passed {
                     name,
                     msg,
                     run_result,
+                    available_gas,
                 },
                 ExpectedTestResult::Panics(_) => TestCaseSummary::Failed {
                     name,
                     msg,
                     run_result: Some(run_result),
+                    available_gas,
                 },
             },
             RunResultValue::Panic(value) => match &test_case.expected_result {
@@ -55,6 +63,7 @@ impl TestCaseSummary {
                     name,
                     msg,
                     run_result: Some(run_result),
+                    available_gas,
                 },
                 ExpectedTestResult::Panics(panic_expectation) => match panic_expectation {
                     ExpectedPanicValue::Exact(expected) if &value != expected => {
@@ -62,12 +71,14 @@ impl TestCaseSummary {
                             name,
                             msg,
                             run_result: Some(run_result),
+                            available_gas,
                         }
                     }
                     _ => TestCaseSummary::Passed {
                         name,
                         msg,
                         run_result,
+                        available_gas,
                     },
                 },
             },

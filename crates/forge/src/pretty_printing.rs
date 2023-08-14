@@ -3,6 +3,7 @@ use crate::TestFileSummary;
 use anyhow::Error;
 use camino::Utf8PathBuf;
 use console::style;
+use num_traits::ToPrimitive;
 
 pub fn print_error_message(error: &Error) {
     let error_tag = style("ERROR").red();
@@ -51,11 +52,23 @@ pub(crate) fn print_test_result(test_result: &TestCaseSummary) {
         | TestCaseSummary::Passed { name, .. } => name,
     };
 
+    let gas_used = match test_result {
+        TestCaseSummary::Passed { available_gas, run_result, .. }
+        | TestCaseSummary::Failed { available_gas, run_result: Some(run_result), .. } if available_gas.is_some() => {
+            run_result.gas_counter.clone().and_then(|gas_counter| {
+                gas_counter.to_usize().map(|gas| available_gas.unwrap() - gas)
+            })
+        },
+        _ => None,
+    };
+
+    let gas_estimation_message = gas_used.map_or(String::new(), |gas| format!(" (gas usage est.: {})", gas));
+
     let result_message = match test_result {
         TestCaseSummary::Passed { msg: Some(msg), .. } => format!("\n\nSuccess data:{msg}"),
         TestCaseSummary::Failed { msg: Some(msg), .. } => format!("\n\nFailure data:{msg}"),
         _ => String::new(),
     };
 
-    println!("{result_header} {result_name}{result_message}");
+    println!("{result_header} {result_name} {gas_estimation_message} {result_message}");
 }
