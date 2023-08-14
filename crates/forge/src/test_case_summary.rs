@@ -28,7 +28,6 @@ pub enum TestCaseSummary {
         msg: Option<String>,
         /// The amount of gas the test requested.
         available_gas: Option<usize>,
-
     },
     /// Test case skipped (did not run)
     Skipped {
