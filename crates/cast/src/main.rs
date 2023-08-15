@@ -1,4 +1,3 @@
-use crate::helpers::scarb_utils::{parse_scarb_config, CastConfig};
 use crate::starknet_commands::account::Account;
 use crate::starknet_commands::{
     account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
@@ -6,10 +5,11 @@ use crate::starknet_commands::{
 use anyhow::Result;
 use camino::Utf8PathBuf;
 use cast::helpers::constants::DEFAULT_ACCOUNTS_FILE;
+use cast::helpers::scarb_utils::{parse_scarb_config, CastConfig};
 use cast::{account_file_exists, get_account, get_block_id, get_provider, print_command_result};
 use clap::{Parser, Subcommand};
 
-mod helpers;
+pub mod helpers;
 mod starknet_commands;
 
 #[derive(Parser)]
@@ -201,13 +201,11 @@ async fn main() -> Result<()> {
         }
         Commands::Account(account) => match account.command {
             account::Commands::Create(create) => {
+                config.account = create.name;
                 let mut result = starknet_commands::account::create::create(
+                    &config,
                     &provider,
-                    config.rpc_url,
-                    config.accounts_file,
                     cli.path_to_scarb_toml,
-                    create.name,
-                    &config.network,
                     create.salt,
                     create.add_profile,
                     create.class_hash,
