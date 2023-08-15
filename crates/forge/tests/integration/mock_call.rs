@@ -142,52 +142,11 @@ fn start_mock_call_return_complex_dtypes() {
         }
     "#
         ),
-        Contract::new(
-            "MockChecker",
-            indoc!(
-                r#"
-            #[derive(Serde, Drop)]
-            struct StructThing {
-                item_one: felt252,
-                item_two: felt252,
-            }
-
-            #[starknet::interface]
-            trait IMockChecker<TContractState> {
-                fn get_struct_thing(ref self: TContractState) -> StructThing;
-                fn get_arr_thing(ref self: TContractState) -> Array<StructThing>;
-            }
-
-            #[starknet::contract]
-            mod MockChecker {
-                use super::IMockChecker;
-                use super::StructThing;
-                use array::ArrayTrait;
-
-                #[storage]
-                struct Storage {
-                    stored_thing: felt252
-                }
-
-                #[constructor]
-                fn constructor(ref self: ContractState, arg1: felt252) {
-                    self.stored_thing.write(arg1)
-                }
-
-                #[external(v0)]
-                impl IMockCheckerImpl of super::IMockChecker<ContractState> {
-                    fn get_struct_thing(ref self: ContractState) -> StructThing {
-                        StructThing {item_one: 12, item_two: 21}
-                    }
-
-                    fn get_arr_thing(ref self: ContractState) -> Array<StructThing> {
-                        array![StructThing {item_one: 12, item_two: 21}]
-                    }
-                }
-            }
-    "#
-            )
+        Contract::from_code_path(
+            "MockChecker".to_string(),
+            Path::new("tests/data/contracts/mock_checker.cairo"),
         )
+        .unwrap()
     );
 
     let result = run(
