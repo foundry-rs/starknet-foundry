@@ -1,4 +1,4 @@
-use crate::helpers::scarb_utils::parse_scarb_config;
+use crate::helpers::scarb_utils::{parse_scarb_config, CastConfig};
 use crate::starknet_commands::account::Account;
 use crate::starknet_commands::{
     account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
@@ -15,7 +15,7 @@ mod starknet_commands;
 #[derive(Parser)]
 #[command(version)]
 #[command(about = "Cast - a Starknet Foundry CLI", long_about = None)]
-struct Cli {
+pub struct Cli {
     /// Profile name in Scarb.toml config file
     #[clap(short, long)]
     profile: Option<String>,
@@ -82,26 +82,20 @@ enum Commands {
 async fn main() -> Result<()> {
     let cli = Cli::parse();
 
-    let config = parse_scarb_config(&cli.profile, &cli.path_to_scarb_toml)?;
+    let mut config = parse_scarb_config(&cli.profile, &cli.path_to_scarb_toml)?;
+    update_cast_config(&mut config, &cli);
 
-    let rpc_url = cli.rpc_url.unwrap_or(config.rpc_url);
-    let network = cli.network.unwrap_or(config.network);
-    let account = cli.account.unwrap_or(config.account);
-    let accounts_file_path = Utf8PathBuf::from(
-        shellexpand::tilde(
-            &cli.accounts_file_path
-                .or(config.accounts_file)
-                .unwrap_or_else(|| Utf8PathBuf::from(DEFAULT_ACCOUNTS_FILE)),
-        )
-        .to_string(),
-    );
-
-    let provider = get_provider(&rpc_url, &network).await?;
+    let provider = get_provider(&config.rpc_url, &config.network).await?;
 
     match cli.command {
         Commands::Declare(declare) => {
-            account_file_exists(&accounts_file_path)?;
-            let mut account = get_account(&account, &accounts_file_path, &provider, &network)?;
+            account_file_exists(&config.accounts_file)?;
+            let mut account = get_account(
+                &config.account,
+                &config.accounts_file,
+                &provider,
+                &config.network,
+            )?;
 
             let mut result = starknet_commands::declare::declare(
                 &declare.contract,
@@ -117,8 +111,13 @@ async fn main() -> Result<()> {
             Ok(())
         }
         Commands::Deploy(deploy) => {
-            account_file_exists(&accounts_file_path)?;
-            let account = get_account(&account, &accounts_file_path, &provider, &network)?;
+            account_file_exists(&config.accounts_file)?;
+            let account = get_account(
+                &config.account,
+                &config.accounts_file,
+                &provider,
+                &config.network,
+            )?;
 
             let mut result = starknet_commands::deploy::deploy(
                 deploy.class_hash,
@@ -150,8 +149,13 @@ async fn main() -> Result<()> {
             Ok(())
         }
         Commands::Invoke(invoke) => {
-            account_file_exists(&accounts_file_path)?;
-            let mut account = get_account(&account, &accounts_file_path, &provider, &network)?;
+            account_file_exists(&config.accounts_file)?;
+            let mut account = get_account(
+                &config.account,
+                &config.accounts_file,
+                &provider,
+                &config.network,
+            )?;
             let mut result = starknet_commands::invoke::invoke(
                 invoke.contract_address,
                 &invoke.function,
@@ -175,9 +179,13 @@ async fn main() -> Result<()> {
                     println!("{result}");
                 }
                 starknet_commands::multicall::Commands::Run(run) => {
-                    account_file_exists(&accounts_file_path)?;
-                    let mut account =
-                        get_account(&account, &accounts_file_path, &provider, &network)?;
+                    account_file_exists(&config.accounts_file)?;
+                    let mut account = get_account(
+                        &config.account,
+                        &config.accounts_file,
+                        &provider,
+                        &config.network,
+                    )?;
                     let mut result = starknet_commands::multicall::run::run(
                         &run.path,
                         &mut account,
@@ -195,11 +203,11 @@ async fn main() -> Result<()> {
             account::Commands::Create(create) => {
                 let mut result = starknet_commands::account::create::create(
                     &provider,
-                    rpc_url,
-                    accounts_file_path,
+                    config.rpc_url,
+                    config.accounts_file,
                     cli.path_to_scarb_toml,
                     create.name,
-                    &network,
+                    &config.network,
                     create.salt,
                     create.add_profile,
                     create.class_hash,
@@ -210,12 +218,12 @@ async fn main() -> Result<()> {
                 Ok(())
             }
             account::Commands::Deploy(deploy) => {
-                account_file_exists(&accounts_file_path)?;
+                account_file_exists(&config.accounts_file)?;
                 let mut result = starknet_commands::account::deploy::deploy(
                     &provider,
-                    accounts_file_path,
+                    config.accounts_file,
                     deploy.name,
-                    &network,
+                    &config.network,
                     deploy.max_fee,
                     cli.wait,
                     deploy.class_hash,
@@ -227,4 +235,23 @@ async fn main() -> Result<()> {
             }
         },
     }
+}
+
+pub fn update_cast_config(config: &mut CastConfig, cli: &Cli) {
+    if let Some(url) = &cli.rpc_url {
+        config.rpc_url = url.clone();
+    }
+    if let Some(network) = &cli.network {
+        config.network = network.clone();
+    }
+    if let Some(account) = &cli.account {
+        config.account = account.clone();
+    }
+    if let Some(accounts_file) = &cli.accounts_file_path {
+        config.accounts_file = accounts_file.clone();
+    } else if config.accounts_file == Utf8PathBuf::default() {
+        config.accounts_file = DEFAULT_ACCOUNTS_FILE.into();
+    }
+
+    config.accounts_file = Utf8PathBuf::from(shellexpand::tilde(&config.accounts_file).to_string());
 }

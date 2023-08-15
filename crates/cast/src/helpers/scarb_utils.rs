@@ -11,30 +11,42 @@ pub struct CastConfig {
     pub rpc_url: String,
     pub network: String,
     pub account: String,
-    pub accounts_file: Option<Utf8PathBuf>,
+    pub accounts_file: Utf8PathBuf,
 }
 
-pub fn get_property(tool: &Value, property: &str) -> String {
-    tool.get(property)
-        .and_then(serde_json::Value::as_str)
-        .map(String::from)
+impl CastConfig {
+    pub fn from_package_tool_sncast(
+        package_tool_sncast: &Value,
+        profile: &Option<String>,
+    ) -> Result<CastConfig> {
+        let tool = get_profile(package_tool_sncast, profile)?;
+
+        Ok(CastConfig {
+            rpc_url: get_field_as_type(tool, "url"),
+            network: get_field_as_type(tool, "network"),
+            account: get_field_as_type(tool, "account"),
+            accounts_file: get_field_as_type(tool, "accounts_file"),
+        })
+    }
+}
+
+pub fn get_profile<'a>(tool_sncast: &'a Value, profile: &Option<String>) -> Result<&'a Value> {
+    match profile {
+        Some(profile_) => tool_sncast
+            .get(profile_)
+            .ok_or_else(|| anyhow!("No field [tool.sncast.{}] found in package", profile_)),
+        None => Ok(tool_sncast),
+    }
+}
+
+pub fn get_field_as_type<'a, T>(tool: &'a Value, field: &str) -> T
+where
+    T: From<&'a str> + Default,
+{
+    tool.get(field)
+        .and_then(Value::as_str)
+        .map(T::from)
         .unwrap_or_default()
-}
-
-pub fn get_property_from_profile(
-    tool_sncast: &Value,
-    profile: &Option<String>,
-    property: &str,
-) -> Result<String> {
-    let tool_sncast_profile = match profile {
-        Some(ref profile_) => tool_sncast.get(profile_).ok_or(anyhow!(format!(
-            "No field [tool.sncast.{}] found in package",
-            profile_
-        )))?,
-        None => tool_sncast,
-    };
-
-    Ok(get_property(tool_sncast_profile, property))
 }
 
 pub fn get_scarb_manifest() -> Result<Utf8PathBuf> {
@@ -88,7 +100,7 @@ pub fn parse_scarb_config(
         return Ok(CastConfig::default());
     }
 
-    cast_config_from_package_tool_sncast(package_tool_sncast_result.unwrap(), profile)
+    CastConfig::from_package_tool_sncast(package_tool_sncast_result.unwrap(), profile)
 }
 
 pub fn get_package_tool_sncast(metadata: &scarb_metadata::Metadata) -> Result<&Value> {
@@ -108,23 +120,6 @@ pub fn get_package_tool_sncast(metadata: &scarb_metadata::Metadata) -> Result<&V
         .ok_or_else(|| anyhow!("No field [tool.sncast] found in package"))?;
 
     Ok(tool_sncast)
-}
-
-pub fn cast_config_from_package_tool_sncast(
-    package_tool_sncast: &Value,
-    profile: &Option<String>,
-) -> Result<CastConfig> {
-    let rpc_url = get_property_from_profile(package_tool_sncast, profile, "url")?;
-    let network = get_property_from_profile(package_tool_sncast, profile, "network")?;
-    let account = get_property_from_profile(package_tool_sncast, profile, "account")?;
-    let accounts_file = get_property_from_profile(package_tool_sncast, profile, "accounts-file")?;
-
-    Ok(CastConfig {
-        rpc_url,
-        network,
-        account,
-        accounts_file: (!accounts_file.is_empty()).then(|| accounts_file.into()),
-    })
 }
 
 #[cfg(test)]

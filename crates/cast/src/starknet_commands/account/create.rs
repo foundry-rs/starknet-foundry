@@ -1,6 +1,6 @@
 use crate::helpers::constants::OZ_CLASS_HASH;
 use crate::helpers::response_structs::AccountCreateResponse;
-use crate::helpers::scarb_utils::{get_property_from_profile, get_scarb_manifest};
+use crate::helpers::scarb_utils::get_scarb_manifest;
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use cast::helpers::scarb_utils::get_package_tool_sncast;
@@ -166,8 +166,10 @@ pub fn add_created_profile_to_configuration(
         .unwrap();
 
     if let Ok(tool_sncast) = get_package_tool_sncast(&metadata) {
-        let property = get_property_from_profile(tool_sncast, &Some(name.clone()), "account");
-        if property.is_ok() {
+        let property = tool_sncast
+            .get(&name)
+            .and_then(|profile_| profile_.get("account"));
+        if property.is_some() {
             bail!("Failed to add {name} profile to the Scarb.toml. Profile already exists");
         }
     }
