@@ -22,10 +22,10 @@ impl CastConfig {
         let tool = get_profile(package_tool_sncast, profile)?;
 
         Ok(CastConfig {
-            rpc_url: get_field_as_type(tool, "url"),
-            network: get_field_as_type(tool, "network"),
-            account: get_field_as_type(tool, "account"),
-            accounts_file: get_field_as_type(tool, "accounts_file"),
+            rpc_url: get_property(tool, "url"),
+            network: get_property(tool, "network"),
+            account: get_property(tool, "account"),
+            accounts_file: get_property(tool, "accounts-file"),
         })
     }
 }
@@ -39,7 +39,7 @@ pub fn get_profile<'a>(tool_sncast: &'a Value, profile: &Option<String>) -> Resu
     }
 }
 
-pub fn get_field_as_type<'a, T>(tool: &'a Value, field: &str) -> T
+pub fn get_property<'a, T>(tool: &'a Value, field: &str) -> T
 where
     T: From<&'a str> + Default,
 {
