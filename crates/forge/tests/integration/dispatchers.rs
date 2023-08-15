@@ -1,12 +1,9 @@
+use crate::integration::common::result::get;
 use crate::integration::common::runner::Contract;
 use crate::{assert_passed, test_case};
-use camino::Utf8PathBuf;
+use indoc::indoc;
 use std::path::Path;
 use std::string::ToString;
-
-use crate::integration::common::corelib::{corelib_path, predeployed_contracts};
-use forge::run;
-use indoc::indoc;
 
 #[test]
 fn simple_call_and_invoke() {
@@ -53,17 +50,7 @@ fn simple_call_and_invoke() {
         .unwrap()
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = get(&test);
 
     assert_passed!(result);
 }
@@ -138,17 +125,7 @@ fn advanced_types() {
         .unwrap()
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = get(&test);
 
     assert_passed!(result);
 }
@@ -216,17 +193,7 @@ fn handling_errors() {
         .unwrap()
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = get(&test);
 
     assert_passed!(result);
 }
@@ -301,17 +268,7 @@ fn serding() {
         .unwrap()
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = get(&test);
 
     assert_passed!(result);
 }
@@ -464,17 +421,7 @@ fn proxy_storage() {
         )
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = get(&test);
 
     assert_passed!(result);
 }
@@ -575,17 +522,7 @@ fn proxy_dispatcher_panic() {
         )
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = get(&test);
 
     assert_passed!(result);
 }

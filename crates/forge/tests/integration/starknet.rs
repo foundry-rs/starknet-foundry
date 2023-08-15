@@ -1,8 +1,6 @@
-use crate::integration::common::corelib::{corelib_path, predeployed_contracts};
+use crate::integration::common::result::get;
 use crate::integration::common::runner::Contract;
 use crate::{assert_passed, test_case};
-use camino::Utf8PathBuf;
-use forge::run;
 use indoc::indoc;
 
 #[test]
@@ -77,17 +75,7 @@ fn timestamp_doesnt_decrease_between_transactions() {
         )
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = get(&test);
 
     assert_passed!(result);
 }
@@ -188,17 +176,7 @@ fn block_doesnt_decrease_between_transactions() {
         )
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = get(&test);
 
     assert_passed!(result);
 }
@@ -280,17 +258,7 @@ fn nonce_increases_between_transactions() {
         )
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = get(&test);
 
     assert_passed!(result);
 }
@@ -414,17 +382,7 @@ fn nonce_increases_between_deploys_and_declares() {
         )
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = get(&test);
 
     assert_passed!(result);
 }
