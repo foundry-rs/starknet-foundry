@@ -4,7 +4,7 @@ use camino::Utf8PathBuf;
 use forge::run;
 use forge::TestFileSummary;
 
-pub fn get(test: &TestCase) -> Vec<TestFileSummary> {
+pub fn run_test_case(test: &TestCase) -> Vec<TestFileSummary> {
     run(
         &test.path().unwrap(),
         &String::from("src"),

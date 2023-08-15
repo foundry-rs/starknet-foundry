@@ -1,4 +1,4 @@
-use crate::integration::common::result::get;
+use crate::integration::common::result::run_test_case;
 use crate::integration::common::runner::Contract;
 use crate::{assert_failed, assert_passed, test_case};
 use indoc::indoc;
@@ -50,7 +50,7 @@ fn simple_declare() {
         )
     );
 
-    let result = get(&test);
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
@@ -139,7 +139,7 @@ fn multiple_declare() {
         )
     );
 
-    let result = get(&test);
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
@@ -171,7 +171,7 @@ fn simple_declare_from_contract_code() {
         contract
     );
 
-    let result = get(&test);
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
@@ -194,7 +194,7 @@ fn declare_unknown() {
         "#
     ));
 
-    let result = get(&test);
+    let result = run_test_case(&test);
 
     assert_failed!(result);
 }

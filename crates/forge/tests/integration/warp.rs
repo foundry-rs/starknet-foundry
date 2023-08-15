@@ -1,4 +1,4 @@
-use crate::integration::common::result::get;
+use crate::integration::common::result::run_test_case;
 use crate::integration::common::runner::Contract;
 use crate::{assert_passed, test_case};
 use indoc::indoc;
@@ -104,7 +104,7 @@ fn warp() {
         .unwrap()
     );
 
-    let result = get(&test);
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
@@ -149,7 +149,7 @@ fn start_warp_in_constructor_test() {
         .unwrap()
     );
 
-    let result = get(&test);
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
@@ -202,7 +202,7 @@ fn start_warp_with_proxy() {
         .unwrap()
     );
 
-    let result = get(&test);
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
@@ -255,7 +255,7 @@ fn start_warp_with_library_call() {
         .unwrap()
     );
 
-    let result = get(&test);
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }

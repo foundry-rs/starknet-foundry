@@ -1,4 +1,4 @@
-use crate::integration::common::result::get;
+use crate::integration::common::result::run_test_case;
 use crate::{assert_failed, assert_passed, test_case};
 use indoc::indoc;
 
@@ -12,7 +12,7 @@ fn simple() {
     "#
     ));
 
-    let result = get(&test);
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
@@ -27,7 +27,7 @@ fn failing() {
     "#
     ));
 
-    let result = get(&test);
+    let result = run_test_case(&test);
 
     assert_failed!(result);
 }

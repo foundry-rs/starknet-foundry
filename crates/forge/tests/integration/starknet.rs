@@ -1,4 +1,4 @@
-use crate::integration::common::result::get;
+use crate::integration::common::result::run_test_case;
 use crate::integration::common::runner::Contract;
 use crate::{assert_passed, test_case};
 use indoc::indoc;
@@ -75,7 +75,7 @@ fn timestamp_doesnt_decrease_between_transactions() {
         )
     );
 
-    let result = get(&test);
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
@@ -176,7 +176,7 @@ fn block_doesnt_decrease_between_transactions() {
         )
     );
 
-    let result = get(&test);
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
@@ -258,7 +258,7 @@ fn nonce_increases_between_transactions() {
         )
     );
 
-    let result = get(&test);
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
@@ -382,7 +382,7 @@ fn nonce_increases_between_deploys_and_declares() {
         )
     );
 
-    let result = get(&test);
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }

@@ -1,4 +1,4 @@
-use crate::integration::common::result::get;
+use crate::integration::common::result::run_test_case;
 use crate::{assert_passed, test_case};
 use indoc::indoc;
 
@@ -31,7 +31,7 @@ fn should_panic() {
         "#
     ));
 
-    let result = get(&test);
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }

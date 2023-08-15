@@ -1,4 +1,4 @@
-use crate::integration::common::result::get;
+use crate::integration::common::result::run_test_case;
 use crate::integration::common::runner::Contract;
 use crate::{assert_case_output_contains, assert_failed, assert_passed, test_case};
 use indoc::indoc;
@@ -55,7 +55,7 @@ fn error_handling() {
         )
     );
 
-    let result = get(&test);
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
@@ -90,7 +90,7 @@ fn deploy_fails_on_calldata_when_contract_has_no_constructor() {
         .unwrap()
     );
 
-    let result = get(&test);
+    let result = run_test_case(&test);
 
     assert_failed!(result);
 }
@@ -133,7 +133,7 @@ fn test_deploy_fails_on_missing_constructor_arguments() {
         )
     );
 
-    let result = get(&test);
+    let result = run_test_case(&test);
 
     assert_failed!(result);
 }
@@ -181,7 +181,7 @@ fn test_deploy_fails_on_too_many_constructor_arguments() {
         )
     );
 
-    let result = get(&test);
+    let result = run_test_case(&test);
 
     assert_failed!(result);
 }
@@ -224,7 +224,7 @@ fn test_deploy_fails_with_incorrect_class_hash() {
         )
     );
 
-    let result = get(&test);
+    let result = run_test_case(&test);
 
     assert_case_output_contains!(result, "deploy_non_existing_class_hash", "not declared");
     assert_failed!(result);
@@ -297,6 +297,6 @@ fn test_deploy_invokes_the_constructor() {
         )
     );
 
-    let result = get(&test);
+    let result = run_test_case(&test);
     assert_passed!(result);
 }

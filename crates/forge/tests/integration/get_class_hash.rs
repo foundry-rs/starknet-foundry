@@ -1,4 +1,4 @@
-use crate::integration::common::result::get;
+use crate::integration::common::result::run_test_case;
 use crate::integration::common::runner::Contract;
 use crate::{assert_passed, test_case};
 use indoc::indoc;
@@ -29,7 +29,7 @@ fn get_class_hash() {
         .unwrap()
     );
 
-    let result = get(&test);
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
@@ -92,7 +92,7 @@ fn get_class_hash_replace_class() {
         .unwrap()
     );
 
-    let result = get(&test);
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }

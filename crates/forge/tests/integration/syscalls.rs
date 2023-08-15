@@ -1,4 +1,4 @@
-use crate::integration::common::result::get;
+use crate::integration::common::result::run_test_case;
 use crate::integration::common::runner::Contract;
 use crate::{assert_case_output_contains, assert_failed, assert_passed, test_case};
 use indoc::indoc;
@@ -129,7 +129,7 @@ fn library_call_syscall() {
         )
     );
 
-    let result = get(&test);
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
@@ -146,7 +146,7 @@ fn test_call_syscall_fail_in_test_fn() {
     "#
     ));
 
-    let result = get(&test);
+    let result = run_test_case(&test);
 
     assert_case_output_contains!(
         result,

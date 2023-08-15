@@ -1,4 +1,4 @@
-use crate::integration::common::result::get;
+use crate::integration::common::result::run_test_case;
 use crate::integration::common::runner::Contract;
 use crate::{assert_passed, test_case};
 use indoc::indoc;
@@ -50,7 +50,7 @@ fn simple_call_and_invoke() {
         .unwrap()
     );
 
-    let result = get(&test);
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
@@ -125,7 +125,7 @@ fn advanced_types() {
         .unwrap()
     );
 
-    let result = get(&test);
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
@@ -193,7 +193,7 @@ fn handling_errors() {
         .unwrap()
     );
 
-    let result = get(&test);
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
@@ -268,7 +268,7 @@ fn serding() {
         .unwrap()
     );
 
-    let result = get(&test);
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
@@ -421,7 +421,7 @@ fn proxy_storage() {
         )
     );
 
-    let result = get(&test);
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
@@ -522,7 +522,7 @@ fn proxy_dispatcher_panic() {
         )
     );
 
-    let result = get(&test);
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }

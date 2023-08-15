@@ -1,4 +1,4 @@
-use crate::integration::common::result::get;
+use crate::integration::common::result::run_test_case;
 use crate::integration::common::runner::Contract;
 use crate::{assert_passed, test_case};
 use indoc::indoc;
@@ -46,7 +46,7 @@ fn start_prank_simple() {
         .unwrap()
     );
 
-    let result = get(&test);
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
@@ -93,7 +93,7 @@ fn start_prank_with_other_syscall() {
         .unwrap()
     );
 
-    let result = get(&test);
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
@@ -140,7 +140,7 @@ fn start_prank_in_constructor_test() {
         .unwrap()
     );
 
-    let result = get(&test);
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
@@ -194,7 +194,7 @@ fn stop_prank() {
         .unwrap()
     );
 
-    let result = get(&test);
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
@@ -249,7 +249,7 @@ fn double_prank() {
         .unwrap()
     );
 
-    let result = get(&test);
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
@@ -301,7 +301,7 @@ fn start_prank_with_proxy() {
         .unwrap()
     );
 
-    let result = get(&test);
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
@@ -355,7 +355,7 @@ fn start_prank_with_library_call() {
         .unwrap()
     );
 
-    let result = get(&test);
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
