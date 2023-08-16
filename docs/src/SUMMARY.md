@@ -49,6 +49,8 @@
     * [declare](appendix/forge-library/declare.md)
     * [deploy](appendix/forge-library/deploy.md)
     * [print](appendix/forge-library/print.md)
+    * [parse_txt](appendix/forge-library/parse_txt.md)
+    * [deserialize_txt](appendix/forge-library/deserialize_txt.md)
 * [Cast Commands](appendix/cast.md)
     * [common flags](appendix/cast/common.md)
     * [account](appendix/cast/account/account.md)

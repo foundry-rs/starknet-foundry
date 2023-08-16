@@ -12,15 +12,14 @@ For contract implementation:
 
 ```rust
 // ...
+#[storage]
+struct Storage {
+    // ...
+    stored_caller_address: ContractAddress
+}
+
 #[external(v0)]
 impl IContractImpl of IContract<ContractState> {
-    #[storage]
-    struct Storage {
-        // ...
-        
-        stored_caller_address: ContractAddress
-    }
-
     fn set_caller_address(ref self: ContractState) {
         self.stored_caller_address.write(starknet::get_caller_address());
     }
