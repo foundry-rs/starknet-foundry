@@ -30,5 +30,5 @@ For example, this file content:
 ```
 will be parsed to the following array:
 ```rust
-array![1, 2, 'hello', 10, 'world]
+array![1, 2, 'hello', 10, 'world']
 ```
