@@ -182,15 +182,13 @@ fn test_keccak_syscall() {
     let test = test_case!(indoc!(
         r#"
         use traits::Into;
-        use keccak::cairo_keccak;
         use array::ArrayTrait;
         use starknet::SyscallResultTrait;
-        use snforge_std::PrintTrait;
+        use snforge_std::{PrintTrait, shortstring_keccak};
 
         #[test]
         fn test_execute_disallowed_syscall() {
-            let mut inputs = array![8031924123371070792, 560229490];
-            let shortstring = cairo_keccak(ref inputs, 0, 0);
+            let shortstring = shortstring_keccak('EventStruct');
             shortstring.print();
 
             assert(1==1, 'xdd');
