@@ -4,7 +4,7 @@
 
 Mocks contract call to a `function_name` of a contract at the given address. A call to function `function_name` will return data provided in `ret_data` argument. 
 
-If contract is deployed at given address, mocked function won't be executed. Address with no contract can be mocked as well.
+If there is a contract deployed at the given address, mocked function won't be executed. Address with no contract can be mocked as well.
 Mock can be canceled with [`stop_mock_call`](./stop_mock_call.md).
 
 - `contract_address` - target contract address
