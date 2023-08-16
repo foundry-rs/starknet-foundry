@@ -1,16 +1,21 @@
 # `precalculate_address`
 
+> ⚠️ **Warning**
+>
+> Precalculated address is only correct for the very next deploy call. It will be different for all deploy calls after the first one after calculating the address.
+
+
 ```rust
 trait ContractClassTrait {
     fn precalculate_address(self: @ContractClass, constructor_calldata: @Array::<felt252>) -> ContractAddress;
     // ...
 }
 ```
-Calculate the address of a contract in advance that will be returned upon the next deploy.
+Calculate an address of a contract in advance that would be returned when calling [`deploy`](./deploy.md).
 
-- `self` - an instance of the struct `ContractClass` which is obtained by calling [declare](./declare.md).
+- `self` - an instance of the struct `ContractClass` which is obtained by calling [`declare`](./declare.md).
 
-- `constructor_calldata` - snapshot of calldata for the deploy constructor. The constructor_calldata has an impact on the resulting contract_address. To precalculate the address for a future deploy, the calldata couldn't change.
+- `constructor_calldata` - snapshot of calldata for the deploy constructor. The `constructor_calldata` has an impact on the resulting contract address. To precalculate an address for a future deployment, the calldata cannot change.
 
 ```rust
 use array::ArrayTrait;

@@ -47,6 +47,7 @@
   * [get_class_hash](appendix/cheatcodes/get_class_hash.md)
 * [Forge Library Functions References](appendix/forge-library.md)
     * [declare](appendix/forge-library/declare.md)
+    * [precalculate_address](appendix/forge-library/precalculate_address.md)
     * [deploy](appendix/forge-library/deploy.md)
     * [print](appendix/forge-library/print.md)
 * [Cast Commands](appendix/cast.md)

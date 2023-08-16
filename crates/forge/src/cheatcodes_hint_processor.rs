@@ -296,7 +296,7 @@ impl CairoHintProcessor<'_> {
                 let felt_contract_address: Felt252 = stark_felt_to_felt(*contract_address.0.key());
                 buffer
                     .write(felt_contract_address)
-                    .expect("Failed to insert declared contract class hash");
+                    .expect("Failed to insert a precalculated contract address");
 
                 Ok(())
             }
