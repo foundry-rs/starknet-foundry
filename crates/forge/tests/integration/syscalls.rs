@@ -188,7 +188,7 @@ fn test_keccak_syscall() {
 
         #[test]
         fn test_execute_disallowed_syscall() {
-            let shortstring = shortstring_keccak('EventStruct');
+            let shortstring = shortstring_keccak('FirstEvent');
             shortstring.print();
 
             assert(1==1, 'xdd');
