@@ -1,3 +1,3 @@
 pub mod corelib;
-pub mod result;
+pub mod running_tests;
 pub mod runner;

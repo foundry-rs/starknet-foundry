@@ -1,4 +1,4 @@
-use crate::integration::common::result::run_test_case;
+use crate::integration::common::running_tests::run_test_case;
 use crate::integration::common::runner::Contract;
 use crate::{assert_case_output_contains, assert_failed, assert_passed, test_case};
 use indoc::indoc;
