@@ -24,21 +24,16 @@ We can use `get_class_hash` to check if it upgraded properly:
 ```rust
     #[test]
     fn test_get_class_hash() {
-        let class_hash = declare('Contract1');
+        let contract = declare('Contract1');
 
-        let prepared = PreparedContract {
-            class_hash: class_hash,
-            constructor_calldata: @ArrayTrait::new()
-        };
+        let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
 
-        let contract_address = deploy(prepared).unwrap();
+        assert(get_class_hash(contract_address) == contract.class_hash, 'Incorrect class hash');
 
-        assert(get_class_hash(contract_address) == class_hash, 'Incorrect class hash');
+        let other_contract = declare('OtherContract');
 
-        let other_class_hash = declare('OtherContract');
+        IUpgradeableDispatcher { contract_address }.upgrade(other_contract.class_hash);
 
-        IUpgradeableDispatcher { contract_address }.upgrade(other_class_hash);
-
-        assert(get_class_hash(contract_address) == other_class_hash, 'Incorrect class hash upgrade');
+        assert(get_class_hash(contract_address) == other_contract.class_hash, 'Incorrect class hash upgrade');
     }
 ```
