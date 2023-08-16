@@ -22,11 +22,11 @@ File content must consists of elements that:
 - have to be separated with whitespaces
 - have to be either:
   - integers in range of `[0, P)` where P is [`Cairo Prime`](https://book.cairo-lang.org/ch02-02-data-types.html?highlight=prime#felt-type)
-  - strings of length `<=31` enclosed in single or double quotation marks
+  - strings of length `<=31` enclosed in single quotation marks
 
 For example, this file content:
 ```txt
-1  2   'hello' 10     "world"
+1  2   'hello' 10     'world'
 ```
 will be parsed to the following array:
 ```rust
