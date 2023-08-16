@@ -15,7 +15,7 @@ use cairo_vm::types::exec_scope::ExecutionScopes;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::vm_core::VirtualMachine;
-use cheatnet::rpc::{call_contract, CallContractOutput, keccak_syscall};
+use cheatnet::rpc::{call_contract, keccak_syscall, CallContractOutput};
 use cheatnet::{
     cheatcodes::{CheatcodeError, ContractArtifacts, EnhancedHintError},
     CheatnetState,
@@ -339,11 +339,25 @@ fn execute_syscall(
         let gas_counter = buffer.next_usize().unwrap();
         let input_start = buffer.next_addr().unwrap();
         let input_end = buffer.next_addr().unwrap();
-        let request = KeccakRequest {input_start, input_end};
+        let request = KeccakRequest {
+            input_start,
+            input_end,
+        };
 
-        let response = keccak_syscall(request, buffer.vm(), &mut (gas_counter.to_u64().unwrap() - KECCAK_GAS_COST)).unwrap_or_else(|err| panic!("Transaction execution error: {err}"));
+        let result = keccak_syscall(
+            request,
+            buffer.vm(),
+            &mut (gas_counter.to_u64().unwrap() - KECCAK_GAS_COST),
+        )
+        .unwrap_or_else(|err| panic!("Keccak calculation error: {err}"));
 
+        buffer.write(gas_counter).unwrap();
+        buffer.write(Felt252::from(0)).unwrap();
 
+        buffer.write(result.result_low).unwrap();
+        buffer.write(result.result_high).unwrap();
+
+        return Ok(());
     }
 
     if std::str::from_utf8(&selector).unwrap() != "CallContract" {

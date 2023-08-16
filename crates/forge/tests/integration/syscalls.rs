@@ -182,13 +182,16 @@ fn test_keccak_syscall() {
     let test = test_case!(indoc!(
         r#"
         use traits::Into;
-        use starknet::syscalls::keccak_syscall;
+        use keccak::cairo_keccak;
         use array::ArrayTrait;
         use starknet::SyscallResultTrait;
+        use snforge_std::PrintTrait;
 
         #[test]
         fn test_execute_disallowed_syscall() {
-            let shortstring: u256 = keccak_syscall(array![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17].span()).unwrap_syscall();
+            let mut inputs = array![8031924123371070792, 560229490];
+            let shortstring = cairo_keccak(ref inputs, 0, 0);
+            shortstring.print();
 
             assert(1==1, 'xdd');
         }
