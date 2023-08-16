@@ -11,6 +11,7 @@ use starknet_api::transaction::Calldata;
 use starknet_api::patricia_key;
 
 impl CheatnetState {
+    #[must_use]
     pub fn precalculate_address(
         &self,
         class_hash: &Felt252,
@@ -20,7 +21,7 @@ impl CheatnetState {
         let class_hash = ClassHash(StarkFelt::new(class_hash.to_be_bytes()).unwrap());
         let salt = self.get_salt();
 
-        let execute_calldata = create_execute_calldata(&calldata);
+        let execute_calldata = create_execute_calldata(calldata);
         calculate_contract_address(salt, class_hash, &execute_calldata, account_address).unwrap()
     }
 }

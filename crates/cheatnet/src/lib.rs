@@ -32,6 +32,7 @@ impl CheatnetState {
         self.deploy_salt_base += 1;
     }
 
+    #[must_use]
     pub fn get_salt(&self) -> ContractAddressSalt {
         ContractAddressSalt(StarkFelt::from(self.deploy_salt_base))
     }
