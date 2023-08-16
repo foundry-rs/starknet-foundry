@@ -1,5 +1,15 @@
 # Testing Smart Contracts
 
+> ℹ️ **Info**
+> To use the library functions designed for testing smart contracts,
+> you need to add `snforge_std` package as a dependency in
+> your [`Scarb.toml`](https://docs.swmansion.com/scarb/docs/guides/dependencies.html#adding-a-dependency) 
+> using appropriate release tag.
+>```toml
+> [dependencies]
+> snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.4.0" }
+> ```
+
 Using unit testing as much as possible is a good practice, as it makes your test suites run faster. However, when
 writing smart contracts, you often want to test their interactions with the blockchain state and with other contracts.
 
@@ -43,6 +53,8 @@ Note that the name after `mod` will be used as the contract name for testing pur
 Let's write a test that will deploy the `HelloStarknet` contract and call some functions.
 
 ```rust
+use snforge_std::{ declare, PreparedContrac, deploy };
+
 #[test]
 fn call_and_invoke() {
     // First declare and deploy a contract
@@ -69,7 +81,7 @@ fn call_and_invoke() {
 ```shell
 $ snforge
 Collected 1 test(s) and 1 test file(s)
-Running 1 test(s) from src/lib.cairo
+Running 1 test(s) from using_dispatchers
 [PASS] using_dispatchers::call_and_invoke
 Tests: 1 passed, 0 failed, 0 skipped
 ```
@@ -127,7 +139,7 @@ fn failing() {
 ```shell
 $ snforge
 Collected 1 test(s) and 1 test file(s)
-Running 1 test(s) from src/lib.cairo
+Running 1 test(s) from package_name package
 [FAIL] package_name::failing
 
 Failure data:
@@ -164,7 +176,7 @@ Now the test passes as expected.
 ```shell
 $ snforge
 Collected 1 test(s) and 1 test file(s)
-Running 1 test(s) from src/lib.cairo
+Running 1 test(s) from package_name package
 [PASS] package_name::handling_errors
 Tests: 1 passed, 0 failed, 0 skipped
 ```

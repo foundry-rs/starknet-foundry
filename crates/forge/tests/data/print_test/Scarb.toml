@@ -3,4 +3,4 @@ name = "print_test"
 version = "0.1.0"
 
 [dependencies]
-cheatcodes = { path = "../../../../../cheatcodes" }
+snforge_std = { path = "../../../../../snforge_std" }

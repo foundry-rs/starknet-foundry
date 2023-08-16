@@ -35,6 +35,8 @@ impl IContractImpl of IContract<ContractState> {
 We can use `start_warp` in a test to change the block timestamp for a given contract:
 
 ```rust
+use snforge_std::start_warp;
+
 #[test]
 fn test_warp() {
     // ...

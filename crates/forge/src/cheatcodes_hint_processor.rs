@@ -4,7 +4,8 @@ use std::path::PathBuf;
 
 use crate::scarb::StarknetContractArtifacts;
 use anyhow::{anyhow, Result};
-use blockifier::state::cached_state::CachedState;
+use blockifier::execution::execution_utils::{felt_to_stark_felt, stark_felt_to_felt};
+
 use cairo_felt::Felt252;
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
 use cairo_vm::hint_processor::hint_processor_definition::HintReference;
@@ -13,12 +14,12 @@ use cairo_vm::types::exec_scope::ExecutionScopes;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::vm_core::VirtualMachine;
-use cheatable_starknet::rpc::{call_contract, CallContractOutput};
-use cheatable_starknet::state::DictStateReader;
-use cheatable_starknet::{
-    cheatcodes::{ContractArtifacts, EnhancedHintError},
-    CheatedState,
+use cheatnet::rpc::{call_contract, CallContractOutput};
+use cheatnet::{
+    cheatcodes::{CheatcodeError, ContractArtifacts, EnhancedHintError},
+    CheatnetState,
 };
+use num_traits::ToPrimitive;
 use serde::Deserialize;
 use starknet_api::core::{ContractAddress, PatriciaKey};
 use starknet_api::hash::StarkFelt;
@@ -46,9 +47,8 @@ impl From<&StarknetContractArtifacts> for ContractArtifacts {
 
 pub struct CairoHintProcessor<'a> {
     pub original_cairo_hint_processor: OriginalCairoHintProcessor<'a>,
-    pub blockifier_state: CachedState<DictStateReader>,
     pub contracts: &'a HashMap<String, StarknetContractArtifacts>,
-    pub cheated_state: CheatedState,
+    pub cheatnet_state: CheatnetState,
 }
 
 impl ResourceTracker for CairoHintProcessor<'_> {
@@ -104,7 +104,7 @@ impl HintProcessorLogic for CairoHintProcessor<'_> {
             );
         }
         if let Some(Hint::Starknet(StarknetHint::SystemCall { system })) = maybe_extended_hint {
-            return execute_syscall(system, vm, &mut self.blockifier_state, &self.cheated_state);
+            return execute_syscall(system, vm, &mut self.cheatnet_state);
         }
         self.original_cairo_hint_processor
             .execute_hint(vm, exec_scopes, hint_data, constants)
@@ -176,28 +176,32 @@ impl CairoHintProcessor<'_> {
                     inputs[0].clone().to_be_bytes(),
                 )?)?);
                 let value = inputs[1].clone();
-                self.cheated_state.start_roll(contract_address, value)
+                self.cheatnet_state.start_roll(contract_address, value);
+                Ok(())
             }
             "stop_roll" => {
                 let contract_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
                     inputs[0].clone().to_be_bytes(),
                 )?)?);
 
-                self.cheated_state.stop_roll(contract_address)
+                self.cheatnet_state.stop_roll(contract_address);
+                Ok(())
             }
             "start_warp" => {
                 let contract_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
                     inputs[0].clone().to_be_bytes(),
                 )?)?);
                 let value = inputs[1].clone();
-                self.cheated_state.start_warp(contract_address, value)
+                self.cheatnet_state.start_warp(contract_address, value);
+                Ok(())
             }
             "stop_warp" => {
                 let contract_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
                     inputs[0].clone().to_be_bytes(),
                 )?)?);
 
-                self.cheated_state.stop_warp(contract_address)
+                self.cheatnet_state.stop_warp(contract_address);
+                Ok(())
             }
             "start_prank" => {
                 let contract_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
@@ -208,37 +212,107 @@ impl CairoHintProcessor<'_> {
                     inputs[1].clone().to_be_bytes(),
                 )?)?);
 
-                self.cheated_state
-                    .start_prank(contract_address, caller_address)
+                self.cheatnet_state
+                    .start_prank(contract_address, caller_address);
+                Ok(())
             }
             "stop_prank" => {
                 let contract_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
                     inputs[0].clone().to_be_bytes(),
                 )?)?);
 
-                self.cheated_state.stop_prank(contract_address)
+                self.cheatnet_state.stop_prank(contract_address);
+                Ok(())
             }
             "mock_call" => todo!(),
-            "declare" => self.cheated_state.declare(
-                &mut buffer,
-                &mut self.blockifier_state,
-                &inputs,
-                // TODO(#41) Remove after we have a separate scarb package
-                &contracts
-                    .iter()
-                    .map(|(k, v)| (k.clone(), ContractArtifacts::from(v)))
-                    .collect(),
-            ),
-            "deploy" => self
-                .cheated_state
-                .deploy(&mut buffer, &mut self.blockifier_state, &inputs),
+            "declare" => {
+                let contract_name = inputs[0].clone();
+
+                match self.cheatnet_state.declare(
+                    &contract_name,
+                    // TODO(#41) Remove after we have a separate scarb package
+                    &contracts
+                        .iter()
+                        .map(|(k, v)| (k.clone(), ContractArtifacts::from(v)))
+                        .collect(),
+                ) {
+                    Ok(class_hash) => {
+                        let felt_class_hash = stark_felt_to_felt(class_hash.0);
+
+                        buffer
+                            .write(Felt252::from(0))
+                            .expect("Failed to insert error code");
+                        buffer
+                            .write(felt_class_hash)
+                            .expect("Failed to insert declared contract class hash");
+                        Ok(())
+                    }
+                    Err(CheatcodeError::Recoverable(_)) => {
+                        panic!("Declare should not fail recoverably!")
+                    }
+                    Err(CheatcodeError::Unrecoverable(err)) => Err(err),
+                }
+            }
+            "deploy" => {
+                let class_hash = inputs[0].clone();
+
+                let calldata_length = inputs[1].to_usize().unwrap();
+                let mut calldata = vec![];
+                for felt in inputs.iter().skip(2).take(calldata_length) {
+                    calldata.push(felt.clone());
+                }
+
+                match self.cheatnet_state.deploy(&class_hash, &calldata) {
+                    Ok(contract_address) => {
+                        let felt_contract_address: Felt252 =
+                            stark_felt_to_felt(*contract_address.0.key());
+
+                        buffer
+                            .write(Felt252::from(0))
+                            .expect("Failed to insert error code");
+                        buffer
+                            .write(felt_contract_address)
+                            .expect("Failed to insert deployed contract address");
+                        Ok(())
+                    }
+                    Err(CheatcodeError::Recoverable(panic_data)) => {
+                        write_cheatcode_panic(&mut buffer, &panic_data);
+                        Ok(())
+                    }
+                    Err(CheatcodeError::Unrecoverable(err)) => Err(err),
+                }
+            }
             "print" => {
                 print(inputs);
                 Ok(())
             }
-            "precalculate_address" => self
-                .cheated_state
-                .precalculate_address(&mut buffer, &inputs),
+            "precalculate_address" => {
+                let class_hash = inputs[0].clone();
+
+                let calldata_length = inputs[1].to_usize().unwrap();
+                let mut calldata = vec![];
+                for felt in inputs.iter().skip(2).take(calldata_length) {
+                    calldata.push(felt.clone());
+                }
+                self.cheatnet_state
+                    .precalculate_address(&mut buffer, &inputs)
+            }
+            "get_class_hash" => {
+                let contract_address = contract_address_from_felt252(&inputs[0])?;
+
+                match self.cheatnet_state.get_class_hash(contract_address) {
+                    Ok(class_hash) => {
+                        let felt_class_hash = stark_felt_to_felt(class_hash.0);
+
+                        buffer
+                            .write(felt_class_hash)
+                            .expect("Failed to insert contract class hash");
+                        Ok(())
+                    }
+                    Err(CheatcodeError::Recoverable(_)) => unreachable!(),
+                    Err(CheatcodeError::Unrecoverable(err)) => Err(err),
+                }
+            }
             _ => Err(anyhow!("Unknown cheatcode selector: {selector}")).map_err(Into::into),
         }?;
 
@@ -276,8 +350,7 @@ struct ScarbStarknetContractArtifact {
 fn execute_syscall(
     system: &ResOperand,
     vm: &mut VirtualMachine,
-    blockifier_state: &mut CachedState<DictStateReader>,
-    cheated_state: &CheatedState,
+    cheatnet_state: &mut CheatnetState,
 ) -> Result<(), HintError> {
     let (cell, offset) = extract_buffer(system);
     let system_ptr = get_ptr(vm, cell, &offset)?;
@@ -285,20 +358,24 @@ fn execute_syscall(
     let mut buffer = MemBuffer::new(vm, system_ptr);
 
     let selector = buffer.next_felt252().unwrap().to_bytes_be();
+
+    if std::str::from_utf8(&selector).unwrap() != "CallContract" {
+        return Err(HintError::CustomHint(Box::from(
+            "starknet syscalls cannot be used in tests".to_string(),
+        )));
+    }
+
     let gas_counter = buffer.next_usize().unwrap();
     let contract_address = buffer.next_felt252().unwrap().into_owned();
     let entry_point_selector = buffer.next_felt252().unwrap().into_owned();
 
     let calldata = buffer.next_arr().unwrap();
 
-    assert_eq!(std::str::from_utf8(&selector).unwrap(), "CallContract");
-
     let call_result = call_contract(
         &contract_address,
         &entry_point_selector,
         &calldata,
-        blockifier_state,
-        cheated_state,
+        cheatnet_state,
     )
     .unwrap_or_else(|err| panic!("Transaction execution error: {err}"));
 
@@ -323,4 +400,20 @@ fn print(inputs: Vec<Felt252>) {
             println!("original value: [{value}]");
         }
     }
+}
+
+fn write_cheatcode_panic(buffer: &mut MemBuffer, panic_data: &[Felt252]) {
+    buffer.write(1).expect("Failed to insert err code");
+    buffer
+        .write(panic_data.len())
+        .expect("Failed to insert panic_data len");
+    buffer
+        .write_data(panic_data.iter())
+        .expect("Failed to insert error in memory");
+}
+
+fn contract_address_from_felt252(felt: &Felt252) -> Result<ContractAddress, EnhancedHintError> {
+    Ok(ContractAddress(PatriciaKey::try_from(felt_to_stark_felt(
+        felt,
+    ))?))
 }

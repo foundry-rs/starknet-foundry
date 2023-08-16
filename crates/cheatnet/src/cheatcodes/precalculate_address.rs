@@ -1,6 +1,6 @@
 use crate::constants::TEST_ACCOUNT_CONTRACT_ADDRESS;
 
-use crate::{cheatcodes::EnhancedHintError, CheatedState};
+use crate::{cheatcodes::EnhancedHintError, CheatnetState};
 use blockifier::execution::execution_utils::felt_to_stark_felt;
 use cairo_felt::Felt252;
 use cairo_lang_runner::casm_run::MemBuffer;
@@ -12,7 +12,7 @@ use starknet_api::transaction::Calldata;
 
 use starknet_api::patricia_key;
 
-impl CheatedState {
+impl CheatnetState {
     pub fn precalculate_address(
         &self,
         buffer: &mut MemBuffer,

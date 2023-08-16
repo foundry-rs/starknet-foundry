@@ -16,7 +16,9 @@ Deploys a contract and returns its address.
 ```rust
 use array::ArrayTrait;
 use result::ResultTrait;
-use cheatcodes::{ declare, ContractClassTrait };
+
+use snforge_std::{ declare, ContractClassTrait };
+
 
 #[test]
 fn test_deploy() {

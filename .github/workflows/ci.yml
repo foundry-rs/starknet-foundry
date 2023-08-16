@@ -11,7 +11,7 @@ jobs:
   test-forge-unit-and-integration:
     name: Test Forge / Unit and Integration Tests
     env:
-      SCARB_VERSION: 0.6.0-alpha.2
+      SCARB_VERSION: 0.6.0
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -30,7 +30,7 @@ jobs:
   test-forge-e2e:
     name: Test Forge / E2E Tests
     env:
-      SCARB_VERSION: 0.6.0-alpha.2
+      SCARB_VERSION: 0.6.0
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -48,7 +48,7 @@ jobs:
   test-cheatnet:
     name: Test Cheatnet
     env:
-      SCARB_VERSION: 0.6.0-alpha.2
+      SCARB_VERSION: 0.6.0
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -61,7 +61,7 @@ jobs:
       - uses: software-mansion/setup-scarb@v1.0.1
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
-      - run: cargo test -p cheatable-starknet
+      - run: cargo test -p cheatnet
 
   test-cast:
     name: Test Cast
@@ -115,8 +115,8 @@ jobs:
         run: cargo fmt --check -p cast
       - name: Check test-collector formatting
         run: cargo fmt --check -p test-collector
-      - name: Check cheatable-starknet formatting
-        run: cargo fmt --check -p cheatable-starknet
+      - name: Check cheatnet formatting
+        run: cargo fmt --check -p cheatnet
 
   clippy:
     runs-on: ubuntu-latest

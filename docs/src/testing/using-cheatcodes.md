@@ -1,5 +1,14 @@
 # Using Cheatcodes
 
+> ℹ️ **Info**
+> To use cheatcodes you need to add `snforge_std` package as a dependency in
+> your [`Scarb.toml`](https://docs.swmansion.com/scarb/docs/guides/dependencies.html#adding-a-dependency) 
+> using appropriate release tag.
+>```toml
+> [dependencies]
+> snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.4.0" }
+> ```
+
 When testing smart contracts, often there are parts of code that are dependent on a specific blockchain state.
 Instead of trying to replicate these conditions in tests, you can emulate them
 using [cheatcodes](../appendix/cheatcodes.md).
@@ -70,7 +79,7 @@ However, when running this test, we will get a failure with a message
 ```shell
 $ snforge
 Collected 1 test(s) and 1 test file(s)
-Running 1 test(s) from src/lib.cairo
+Running 1 test(s) from package_name package
 [FAIL] package_name::call_and_invoke
 
 Failure data:
@@ -91,6 +100,8 @@ so it passes our validation.
 ### Pranking the Address
 
 ```rust
+use snforge_std::{ declare, PreparedContract, deploy, start_prank };
+
 #[test]
 fn call_and_invoke() {
     let contract = declare('HelloStarknet');
@@ -115,7 +126,7 @@ The test will now pass without an error
 ```shell
 $ snforge
 Collected 1 test(s) and 1 test file(s)
-Running 1 test(s) from src/lib.cairo
+Running 1 test(s) from package_name package
 [PASS] package_name::call_and_invoke
 Tests: 1 passed, 0 failed, 0 skipped
 ```
@@ -128,6 +139,8 @@ In case of the `start_prank`, we can cancel the address change
 using [`stop_prank`](../appendix/cheatcodes/stop_prank.md)
 
 ```rust
+use snforge_std::stop_prank;
+
 #[test]
 fn call_and_invoke() {
     // ...
@@ -146,7 +159,7 @@ fn call_and_invoke() {
 ```shell
 $ snforge
 Collected 1 test(s) and 1 test file(s)
-Running 1 test(s) from src/lib.cairo
+Running 1 test(s) from package_name package
 [FAIL] package_name::call_and_invoke
 
 Failure data:

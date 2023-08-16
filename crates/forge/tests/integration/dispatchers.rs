@@ -19,8 +19,8 @@ fn simple_call_and_invoke() {
         use traits::TryInto;
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
-        use cheatcodes::{ declare, ContractClassTrait };
-            
+        use snforge_std::{ declare, ContractClassTrait };
+
         #[starknet::interface]
         trait IHelloStarknet<TContractState> {
             fn increase_balance(ref self: TContractState, amount: felt252);
@@ -78,8 +78,7 @@ fn advanced_types() {
         use traits::TryInto;
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
-        use cheatcodes::{ declare, ContractClassTrait, start_prank };
-            
+        use snforge_std::{ declare, ContractClassTrait, start_prank };
 
         #[starknet::interface]
         trait IERC20<TContractState> {
@@ -162,8 +161,8 @@ fn handling_errors() {
         use traits::TryInto;
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
-        use cheatcodes::{ declare, ContractClassTrait };
-            
+        use snforge_std::{ declare, ContractClassTrait };
+
         #[starknet::interface]
         trait IHelloStarknet<TContractState> {
             fn increase_balance(ref self: TContractState, amount: felt252);
@@ -239,13 +238,13 @@ fn serding() {
         use traits::TryInto;
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
-        use cheatcodes::{ declare, ContractClassTrait };
-        
+        use snforge_std::{ declare, ContractClassTrait };
+
         #[derive(Drop, Serde)]
         struct NestedStruct {
             d: felt252,
         }
-        
+
         #[derive(Drop, Serde)]
         struct CustomStruct {
             a: felt252,
@@ -322,7 +321,8 @@ fn proxy_storage() {
         use traits::TryInto;
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
-        use cheatcodes::{ declare, ContractClassTrait };
+        use snforge_std::{ declare, ContractClassTrait };
+
         
         #[derive(Drop, Serde, PartialEq, Copy)]
         struct NestedStruct {
@@ -450,6 +450,117 @@ fn proxy_storage() {
                 #[external(v0)]
                 fn read_storage(ref self: ContractState) -> CustomStruct {
                     self.thing.read()
+                }
+            }
+            "#
+            )
+        )
+    );
+
+    let result = run(
+        &test.path().unwrap(),
+        &String::from("src"),
+        &test.path().unwrap().join("src/lib.cairo"),
+        &Some(test.linked_libraries()),
+        &Default::default(),
+        &corelib_path(),
+        &test.contracts(&corelib_path()).unwrap(),
+        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
+    )
+    .unwrap();
+
+    assert_passed!(result);
+}
+
+#[test]
+#[allow(clippy::too_many_lines)]
+fn proxy_dispatcher_panic() {
+    let test = test_case!(
+        indoc!(
+            r#"
+        use array::ArrayTrait;
+        use result::ResultTrait;
+        use option::OptionTrait;
+        use traits::TryInto;
+        use traits::Into;
+        use starknet::ContractAddress;
+        use starknet::Felt252TryIntoContractAddress;
+        use snforge_std::{ declare, PreparedContract, deploy };
+        
+
+        fn deploy_contract(name: felt252, constructor_calldata: @Array<felt252>) -> ContractAddress {
+            let class_hash = declare(name);
+            let prepared = PreparedContract { class_hash, constructor_calldata };
+            deploy(prepared).unwrap()
+        }
+        
+        #[starknet::interface]
+        trait ICaller<T> {
+            fn invoke_executor(ref self: T);
+        }
+        
+        #[test]
+        fn test_proxy_storage() {
+            let executor_address = deploy_contract('Executor', @ArrayTrait::new());
+            let caller_constructor_calldata: Array<felt252> = array![executor_address.into()]; 
+            let caller_address = deploy_contract('Caller', @caller_constructor_calldata);
+        
+            let caller_dispatcher = ICallerSafeDispatcher { contract_address: caller_address };
+        
+            match caller_dispatcher.invoke_executor() {
+                Result::Ok(_) => panic_with_felt252('should have panicked'),
+                Result::Err(x) => assert(*x.at(0) == 'panic_msg', 'wrong panic msg')
+            }
+        }
+    "#
+        ),
+        Contract::new(
+            "Caller",
+            indoc!(
+                r#"
+            #[starknet::contract]
+            mod Caller {
+                use result::ResultTrait;
+                use starknet::ContractAddress;
+            
+                #[starknet::interface]
+                trait IExecutor<T> {
+                    fn invoke_with_panic(self: @T);
+                }
+            
+                #[storage]
+                struct Storage {
+                    executor_address: ContractAddress
+                }
+            
+                #[constructor]
+                fn constructor(ref self: ContractState, executor_address: ContractAddress) {
+                    self.executor_address.write(executor_address);
+                }
+                
+                #[external(v0)]
+                fn invoke_executor(
+                    self: @ContractState,
+                ) {
+                    let dispatcher = IExecutorDispatcher { contract_address: self.executor_address.read() };
+                    dispatcher.invoke_with_panic()
+                }
+            }
+            "#
+            )
+        ),
+        Contract::new(
+            "Executor",
+            indoc!(
+                r#"
+            #[starknet::contract]
+            mod Executor {
+                #[storage]
+                struct Storage {}
+            
+                #[external(v0)]
+                fn invoke_with_panic(ref self: ContractState){
+                    panic_with_felt252('panic_msg');
                 }
             }
             "#
