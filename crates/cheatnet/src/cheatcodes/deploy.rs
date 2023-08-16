@@ -112,10 +112,7 @@ fn create_execute_calldata(
         salt.0,                        // Contract_address_salt.
         stark_felt!(calldata_len),     // Constructor calldata length.
     ];
-    let mut calldata: Vec<StarkFelt> = calldata
-        .iter()
-        .map(|data| felt_to_stark_felt(data))
-        .collect();
+    let mut calldata: Vec<StarkFelt> = calldata.iter().map(felt_to_stark_felt).collect();
     execute_calldata.append(&mut calldata);
     Calldata(execute_calldata.into())
 }

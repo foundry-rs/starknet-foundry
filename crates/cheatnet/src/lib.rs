@@ -28,7 +28,7 @@ impl CheatnetState {
         }
     }
 
-    pub fn increment_deploy_salt_base(&mut self) -> () {
+    pub fn increment_deploy_salt_base(&mut self) {
         self.deploy_salt_base += 1;
     }
 
