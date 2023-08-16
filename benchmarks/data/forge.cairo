@@ -8,7 +8,7 @@ use starknet::Felt252TryIntoContractAddress;
 use project::IHelloStarknetSafeDispatcher;
 use project::IHelloStarknetSafeDispatcherTrait;
 
-use cheatcodes::ContractClassTrait;
+use snforge_std::ContractClassTrait;
 
 fn deploy_hello_starknet() -> ContractAddress {
     let contract = declare('HelloStarknet').unwrap();
