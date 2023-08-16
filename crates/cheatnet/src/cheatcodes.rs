@@ -35,6 +35,8 @@ pub enum EnhancedHintError {
     SerdeJson(#[from] serde_json::Error),
     #[error(transparent)]
     StarknetApi(#[from] StarknetApiError),
+    #[error("Failed to parse {path} file")]
+    FileParsing { path: String },
 }
 
 impl From<EnhancedHintError> for HintError {
