@@ -485,13 +485,11 @@ fn proxy_dispatcher_panic() {
         use traits::Into;
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
-        use snforge_std::{ declare, PreparedContract, deploy };
-        
+        use snforge_std::{ declare, ContractClassTrait };
 
         fn deploy_contract(name: felt252, constructor_calldata: @Array<felt252>) -> ContractAddress {
-            let class_hash = declare(name);
-            let prepared = PreparedContract { class_hash, constructor_calldata };
-            deploy(prepared).unwrap()
+            let contract = declare(name);
+            contract.deploy(constructor_calldata).unwrap()
         }
         
         #[starknet::interface]

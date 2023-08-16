@@ -12,13 +12,12 @@ fn test_get_contract_precalculate_address() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use cheatcodes::{ declare, ContractClass, ContractClassTrait };
+        use snforge_std::{ declare, ContractClass, ContractClassTrait };
         use array::ArrayTrait;
         use traits::Into;
         use traits::TryInto;
         use starknet::ContractAddressIntoFelt252;
 
-            
         #[test]
         fn get_contract_precalculate_address() {
             let mut calldata = ArrayTrait::new();
@@ -63,7 +62,7 @@ fn test_precalculate_address_with_calldata() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use cheatcodes::{ declare, ContractClass, ContractClassTrait };
+        use snforge_std::{ declare, ContractClass, ContractClassTrait };
         use array::ArrayTrait;
         use traits::Into;
         use traits::TryInto;
