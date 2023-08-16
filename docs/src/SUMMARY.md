@@ -45,6 +45,8 @@
   * [start_warp](appendix/cheatcodes/start_warp.md)
   * [stop_warp](appendix/cheatcodes/stop_warp.md)
   * [get_class_hash](appendix/cheatcodes/get_class_hash.md)
+  * [start_mock_call](appendix/cheatcodes/start_mock_call.md)
+  * [stop_mock_call](appendix/cheatcodes/stop_mock_call.md)
 * [Forge Library Functions References](appendix/forge-library.md)
     * [declare](appendix/forge-library/declare.md)
     * [deploy](appendix/forge-library/deploy.md)
