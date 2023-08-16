@@ -140,13 +140,21 @@ struct Event {
 trait EventFetcher {
     fn fetch_events(ref self: EventSpy);
 }
+```
 
+Users will be responsible for calling `fetch_events` to load emitted events to the `events` property.
+
+There will also be `assert_emitted` method available on the `EventSpy` struct.
+
+```cairo
 trait EventAssertions {
     fn assert_emitted(ref self: EventSpy, events: Array<snforge_std::Event>);
 }
 ```
 
-Users will be responsible for calling `fetch_events` to load emitted events to the `events` property.
+It is designed to enable more simplified flow:
+- `fetch_events` will be called internally, so there will always be the newest events,
+- checked events will be removed from the `events` property.
 
 ### Usage example
 
@@ -159,7 +167,30 @@ use snforge_std::EventFetcher;
 use snforge_std::EventAsserions;
 
 #[test]
-fn check_emitted_event() {
+fn check_emitted_event_simple() {
+    // ...
+	let mut spy = spy_events();  // all events emitted after this line will be saved under the `spy` variable
+    let res = contract.emit_store_name(...);
+    
+    // after this line there will be no events under the `spy.events`
+    spy.assert_emitted(array![Event {from: ..., name: 'StoredName', ...}]);
+
+    let res = contract.emit_store_name(...);
+    let res = contract.emit_store_name(...);
+    
+    spy.assert_emitted(
+        array![
+            Event {from: ..., name: 'StoredName', ...},
+            Event {from: ..., name: 'StoredName', ...}
+        ]
+    );
+    
+    assert(spy.events.len() == 0, 'All events should be consumed');
+    // ...
+}
+
+#[test]
+fn check_emitted_event_complex() {
     // ...
 	let mut spy = spy_events();  // all events emitted after this line will be saved under the `spy` variable
     let res = contract.emit_store_name(...);
@@ -172,9 +203,6 @@ fn check_emitted_event() {
     
     let data = array![...];
     assert(spy.events.at(0).data == data, 'Wrong data');
-    
-    // or use prepared assertions
-    spy.assert_emitted(array![Event {from: ..., name: 'StoredName', ...}, Event {...}]);
 
     let res = contract.emit_store_name(...);
     let res = contract.emit_store_name(...);
@@ -185,7 +213,6 @@ fn check_emitted_event() {
     spy.fetch_events();
     assert(spy.events.len() == 3, 'There should be three events');
     // ...
-}
 ```
 
 
