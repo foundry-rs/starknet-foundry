@@ -40,7 +40,7 @@ fn string_into_felt(string: &str) -> Result<Felt252, ()> {
 
         if length >= 2
             && length - 2 <= 31
-            && (first_char == Some('\'') || first_char == Some('\"'))
+            && first_char == Some('\'')
             && first_char == last_char
             && string.is_ascii()
         {
@@ -93,17 +93,6 @@ mod tests {
     #[test]
     fn test_string_into_felt_shortstring_single_quotes() {
         let string = "\'1he5llo9\'";
-        assert_eq!(
-            string_into_felt(string),
-            Ok(Felt252::from_bytes_be(
-                string[1..string.len() - 1].as_bytes()
-            ))
-        );
-    }
-
-    #[test]
-    fn test_string_into_felt_shortstring_double_quotes() {
-        let string = "\"hello\"";
         assert_eq!(
             string_into_felt(string),
             Ok(Felt252::from_bytes_be(
