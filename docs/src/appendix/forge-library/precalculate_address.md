@@ -2,7 +2,7 @@
 
 > ⚠️ **Warning**
 >
-> Precalculated address is only correct for the very next deploy call. It will be different for all deploy calls after the first one after calculating the address.
+> Precalculated address is only correct for the very next [`deploy`](./deploy.md) call. It will be different for all `deploy` calls after the first one after calculating the address.
 
 
 ```rust
