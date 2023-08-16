@@ -751,6 +751,9 @@ fn start_mock_call_when_function_not_implemented() {
 
             let mock_ret_data = 421;
             start_mock_call(contract_address, 'get_thing_not_implemented', mock_ret_data);
+
+            let thing = dispatcher.get_thing_not_implemented();
+            assert(thing == 421, thing);
         }
     "#
         ),
