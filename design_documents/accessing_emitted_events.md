@@ -49,7 +49,7 @@ struct Event {
 `expect_event` cheatcode will define events which should be emitted in the next call. Other calls will not be affected.
 If provided events will not be emitted it will panic with a detailed message.
 
-`events` are the subsequence of all events emitted by the function, but you can also require function
+`events` are the subset of all events emitted by the function, but you can also require function
 to return exactly those (and not more) events with the `expect_exact_events` cheatcode. 
 
 ```cario
