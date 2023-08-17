@@ -4,6 +4,7 @@ use crate::{assert_case_output_contains, assert_failed, assert_passed, test_case
 use camino::Utf8PathBuf;
 use forge::run;
 use indoc::indoc;
+use std::path::Path;
 
 #[test]
 #[allow(clippy::too_many_lines)]
@@ -172,13 +173,83 @@ fn test_call_syscall_fail_in_test_fn() {
     assert_case_output_contains!(
         result,
         "test_execute_disallowed_syscall",
-        "starknet syscalls cannot be used in tests"
+        "starknet syscalls (other than CallContract and Keccak) cannot be used in tests"
     );
     assert_failed!(result);
 }
 
 #[test]
 fn test_keccak_syscall() {
+    let test = test_case!(indoc!(
+        r#"
+        use array::ArrayTrait;
+        use starknet::syscalls::keccak_syscall;
+        use starknet::SyscallResultTrait;
+
+        #[test]
+        fn test_execute_cairo_keccak() {
+            let input = array![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
+            assert(
+                @keccak_syscall(input.span()).unwrap_syscall()
+                == @u256 { low: 0xec687be9c50d2218388da73622e8fdd5, high: 0xd2eb808dfba4703c528d145dfe6571af },
+                'Wrong hash value'
+            );
+        }
+    "#
+    ));
+
+    let result = run(
+        &test.path().unwrap(),
+        &String::from("src"),
+        &test.path().unwrap().join("src/lib.cairo"),
+        &Some(test.linked_libraries()),
+        &Default::default(),
+        &corelib_path(),
+        &test.contracts(&corelib_path()).unwrap(),
+        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
+    )
+    .unwrap();
+
+    assert_passed!(result);
+}
+
+#[test]
+fn test_keccak_syscall_too_small_input() {
+    let test = test_case!(indoc!(
+        r#"
+        use array::ArrayTrait;
+        use starknet::syscalls::keccak_syscall;
+        use starknet::SyscallResultTrait;
+
+        #[test]
+        fn test_execute_cairo_keccak() {
+            let input = array![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
+            assert(
+                @keccak_syscall(input.span()).unwrap_syscall()
+                == @u256 { low: 0xec687be9c50d2218388da73622e8fdd5, high: 0xd2eb808dfba4703c528d145dfe6571af },
+                'Wrong hash value'
+            );
+        }
+    "#
+    ));
+
+    let result = run(
+        &test.path().unwrap(),
+        &String::from("src"),
+        &test.path().unwrap().join("src/lib.cairo"),
+        &Some(test.linked_libraries()),
+        &Default::default(),
+        &corelib_path(),
+        &test.contracts(&corelib_path()).unwrap(),
+        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
+    )
+    .unwrap();
+
+    assert_failed!(result);
+}
+
+#[test]
+fn test_cairo_keccak() {
     let test = test_case!(indoc!(
         r#"
         use array::ArrayTrait;
@@ -213,6 +284,61 @@ fn test_keccak_syscall() {
         }
     "#
     ));
+
+    let result = run(
+        &test.path().unwrap(),
+        &String::from("src"),
+        &test.path().unwrap().join("src/lib.cairo"),
+        &Some(test.linked_libraries()),
+        &Default::default(),
+        &corelib_path(),
+        &test.contracts(&corelib_path()).unwrap(),
+        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
+    )
+    .unwrap();
+
+    assert_passed!(result);
+}
+
+#[test]
+fn test_keccak_syscall_in_contract() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use result::ResultTrait;
+            use array::ArrayTrait;
+            use option::OptionTrait;
+            use traits::TryInto;
+            use starknet::ContractAddress;
+            use starknet::Felt252TryIntoContractAddress;
+            use snforge_std::{ declare, PreparedContract, deploy };
+
+            #[starknet::interface]
+            trait IHelloKeccak<TContractState> {
+                fn run_keccak(ref self: TContractState) -> u256;
+            }
+
+            #[test]
+            fn test_keccak_simple() {
+                let class_hash = declare('HelloKeccak');
+                let prepared = PreparedContract { class_hash, constructor_calldata: @ArrayTrait::new() };
+                let contract_address = deploy(prepared).unwrap();
+                let dispatcher = IHelloKeccakDispatcher { contract_address };
+
+                let res = dispatcher.run_keccak();
+                assert(
+                    res == u256 { low: 0xec687be9c50d2218388da73622e8fdd5, high: 0xd2eb808dfba4703c528d145dfe6571af },
+                    'Wrong hash value'
+                );
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "HelloKeccak".to_string(),
+            Path::new("tests/data/contracts/keccak_usage.cairo"),
+        )
+        .unwrap()
+    );
 
     let result = run(
         &test.path().unwrap(),

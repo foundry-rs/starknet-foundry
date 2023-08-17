@@ -16,7 +16,7 @@ use cairo_vm::types::exec_scope::ExecutionScopes;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::vm_core::VirtualMachine;
-use cheatnet::rpc::{call_contract, keccak_syscall, CallContractOutput};
+use cheatnet::rpc::{call_contract, keccak_syscall, CallContractOutput, KeccakOutput};
 use cheatnet::{
     cheatcodes::{CheatcodeError, ContractArtifacts, EnhancedHintError},
     CheatnetState,
@@ -445,18 +445,28 @@ fn execute_keccak(mut buffer: MemBuffer) {
         input_end,
     };
 
-    let result = keccak_syscall(
+    let keccak_result = keccak_syscall(
         &request,
         buffer.vm(),
         &mut (gas_counter.to_u64().unwrap() - KECCAK_GAS_COST),
     )
     .unwrap_or_else(|err| panic!("Keccak calculation error: {err}"));
 
-    buffer.write(gas_counter).unwrap();
-    buffer.write(Felt252::from(0)).unwrap();
+    match keccak_result {
+        KeccakOutput::Success { ret_data } => {
+            buffer.write(gas_counter).unwrap();
+            buffer.write(Felt252::from(0)).unwrap();
 
-    buffer.write(result.result_low).unwrap();
-    buffer.write(result.result_high).unwrap();
+            buffer.write(ret_data.result_low).unwrap();
+            buffer.write(ret_data.result_high).unwrap();
+        },
+        KeccakOutput::Panic { panic_data } => {
+            buffer.write(gas_counter).unwrap();
+            buffer.write(Felt252::from(0)).unwrap();
+
+            buffer.write_arr(panic_data.iter()).unwrap();
+        },
+    };
 }
 
 fn print(inputs: Vec<Felt252>) {
