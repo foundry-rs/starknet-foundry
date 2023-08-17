@@ -5,7 +5,7 @@ Those coming from Rust ecosystem will find Scarb very similar to [Cargo](https:/
 
 Starknet Foundry uses [Scarb](https://docs.swmansion.com/scarb) to:
 - [manage dependencies](https://docs.swmansion.com/scarb/docs/reference/specifying-dependencies.html)
-- [build contracts](https://docs.swmansion.com/scarb/docs/starknet/contract-target.html)
+- [build contracts](https://docs.swmansion.com/scarb/docs/extensions/starknet/contract-target.html)
 
 One of the core concepts of Scarb is its [manifest file](https://docs.swmansion.com/scarb/docs/reference/manifest.html) - `Scarb.toml`.
 It can be also used to provide [configuration](../projects/configuration.md) for Starknet Foundry.

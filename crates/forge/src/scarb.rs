@@ -55,7 +55,7 @@ fn artifacts_for_package(path: &Utf8PathBuf) -> Result<StarknetArtifacts> {
         fs::read_to_string(path).with_context(|| format!("Failed to read {path:?} contents"))?;
     let starknet_artifacts: StarknetArtifacts =
         serde_json::from_str(starknet_artifacts.as_str())
-            .with_context(|| format!("Failed to parse {path:?} contents. Make sure you have enabled sierra code generation in Scarb.toml"))?;
+            .with_context(|| format!("Failed to parse {path:?} contents. Make sure you have enabled sierra and casm code generation in Scarb.toml"))?;
     Ok(starknet_artifacts)
 }
 
@@ -249,7 +249,7 @@ mod tests {
                 casm = true
 
                 [dependencies]
-                starknet = "2.1.0-rc2"
+                starknet = "2.1.0"
                 snforge_std = {{ path = "{}" }}
                 "#,
                 package_name,
@@ -301,7 +301,7 @@ mod tests {
                 version = "0.1.0"
 
                 [dependencies]
-                starknet = "2.1.0-rc2"
+                starknet = "2.1.0"
                 snforge_std = {{ path = "{}" }}
 
                 [[target.starknet-contract]]
@@ -405,7 +405,7 @@ mod tests {
         let result = artifacts_for_package(&artifacts_path);
         let err = result.unwrap_err();
 
-        assert!(err.to_string().contains(&format!("Failed to parse {artifacts_path:?} contents. Make sure you have enabled sierra code generation in Scarb.toml")));
+        assert!(err.to_string().contains(&format!("Failed to parse {artifacts_path:?} contents. Make sure you have enabled sierra and casm code generation in Scarb.toml")));
     }
 
     #[test]

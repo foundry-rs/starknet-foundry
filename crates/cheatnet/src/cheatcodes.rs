@@ -2,7 +2,6 @@ use std::io;
 
 use blockifier::state::errors::StateError;
 use cairo_felt::Felt252;
-use cairo_lang_runner::casm_run::MemBuffer;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::errors::memory_errors::MemoryError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
@@ -11,6 +10,8 @@ use thiserror::Error;
 
 pub mod declare;
 pub mod deploy;
+pub mod get_class_hash;
+pub mod mock_call;
 pub mod prank;
 pub mod roll;
 pub mod spy_events;
@@ -36,6 +37,8 @@ pub enum EnhancedHintError {
     SerdeJson(#[from] serde_json::Error),
     #[error(transparent)]
     StarknetApi(#[from] StarknetApiError),
+    #[error("Failed to parse {path} file")]
+    FileParsing { path: String },
 }
 
 impl From<EnhancedHintError> for HintError {
@@ -46,15 +49,15 @@ impl From<EnhancedHintError> for HintError {
         }
     }
 }
+pub enum CheatcodeError {
+    Recoverable(Vec<Felt252>),        // Return error result in cairo
+    Unrecoverable(EnhancedHintError), // Fail whole test
+}
 
-fn write_cheatcode_panic(buffer: &mut MemBuffer, panic_data: &[Felt252]) {
-    buffer.write(1).expect("Failed to insert err code");
-    buffer
-        .write(panic_data.len())
-        .expect("Failed to insert panic_data len");
-    buffer
-        .write_data(panic_data.iter())
-        .expect("Failed to insert error in memory");
+impl From<EnhancedHintError> for CheatcodeError {
+    fn from(error: EnhancedHintError) -> Self {
+        CheatcodeError::Unrecoverable(error)
+    }
 }
 
 #[derive(Debug, PartialEq, Clone)]

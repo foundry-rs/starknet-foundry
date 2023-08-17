@@ -2,46 +2,9 @@ use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
 use camino::Utf8PathBuf;
 use indoc::{formatdoc, indoc};
 
-use crate::e2e::common::runner::runner;
+use crate::e2e::common::runner::{runner, setup_package};
 use assert_fs::TempDir;
 use std::str::FromStr;
-
-pub fn setup_package(package_name: &str) -> TempDir {
-    let temp = TempDir::new().unwrap();
-    temp.copy_from(
-        format!("tests/data/{package_name}"),
-        &["**/*.cairo", "**/*.toml"],
-    )
-    .unwrap();
-
-    let snforge_std_path = Utf8PathBuf::from_str("../../snforge_std")
-        .unwrap()
-        .canonicalize_utf8()
-        .unwrap();
-
-    let manifest_path = temp.child("Scarb.toml");
-    manifest_path
-        .write_str(&formatdoc!(
-            r#"
-                [package]
-                name = "{}"
-                version = "0.1.0"
-
-                [[target.starknet-contract]]
-                sierra = true
-                casm = true
-
-                [dependencies]
-                starknet = "2.1.0-rc2"
-                snforge_std = {{ path = "{}" }}
-                "#,
-            package_name,
-            snforge_std_path
-        ))
-        .unwrap();
-
-    temp
-}
 
 #[test]
 fn simple_package() {
@@ -82,7 +45,6 @@ fn simple_package() {
 }
 
 #[test]
-#[ignore]
 fn simple_package_with_git_dependency() {
     let temp = TempDir::new().unwrap();
     temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
@@ -101,7 +63,7 @@ fn simple_package_with_git_dependency() {
             casm = true
 
             [dependencies]
-            starknet = "2.1.0-rc2"
+            starknet = "2.1.0"
             snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git" }
             "#,
         ))
@@ -309,7 +271,7 @@ fn with_exit_first() {
             version = "0.1.0"
 
             [dependencies]
-            starknet = "2.1.0-rc2"
+            starknet = "2.1.0"
             snforge_std = {{ path = "{}" }}
 
             [[target.starknet-contract]]
@@ -401,7 +363,7 @@ fn exit_first_flag_takes_precedence() {
             version = "0.1.0"
 
             [dependencies]
-            starknet = "2.1.0-rc2"
+            starknet = "2.1.0"
             snforge_std = { path = "../.." }
 
             [[target.starknet-contract]]

@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use blockifier::{
     execution::contract_class::ContractClass,
     state::{
@@ -8,11 +6,14 @@ use blockifier::{
         state_api::{StateReader, StateResult},
     },
 };
+use cairo_felt::Felt252;
+use starknet_api::core::EntryPointSelector;
 use starknet_api::{
     core::{ClassHash, CompiledClassHash, ContractAddress, Nonce},
     hash::StarkFelt,
     state::StorageKey,
 };
+use std::collections::HashMap;
 
 /// A simple implementation of `StateReader` using `HashMap`s as storage.
 #[derive(Debug, Default)]
@@ -78,5 +79,31 @@ impl StateReader for DictStateReader {
             .copied()
             .unwrap_or_default();
         Ok(compiled_class_hash)
+    }
+}
+
+#[allow(clippy::module_name_repetitions)]
+pub struct CheatcodeState {
+    pub rolled_contracts: HashMap<ContractAddress, Felt252>,
+    pub pranked_contracts: HashMap<ContractAddress, ContractAddress>,
+    pub warped_contracts: HashMap<ContractAddress, Felt252>,
+    pub mocked_functions: HashMap<ContractAddress, HashMap<EntryPointSelector, Vec<StarkFelt>>>,
+}
+
+impl CheatcodeState {
+    #[must_use]
+    pub fn new() -> Self {
+        CheatcodeState {
+            rolled_contracts: HashMap::new(),
+            pranked_contracts: HashMap::new(),
+            warped_contracts: HashMap::new(),
+            mocked_functions: HashMap::new(),
+        }
+    }
+}
+
+impl Default for CheatcodeState {
+    fn default() -> Self {
+        Self::new()
     }
 }

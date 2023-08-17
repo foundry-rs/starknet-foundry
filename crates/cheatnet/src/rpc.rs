@@ -12,12 +12,15 @@ use cairo_vm::{
         vm_core::VirtualMachine,
     },
 };
+use std::collections::HashSet;
 use std::{any::Any, collections::HashMap, sync::Arc};
 
 use crate::{
     constants::{build_block_context, build_transaction_context, TEST_ACCOUNT_CONTRACT_ADDRESS},
-    state::DictStateReader,
+    CheatnetState,
 };
+use blockifier::execution::entry_point::CallExecution;
+use blockifier::execution::entry_point::Retdata;
 use blockifier::{
     abi::constants,
     execution::{
@@ -49,13 +52,14 @@ use blockifier::{
             EmptyRequest, GetExecutionInfoResponse,
         },
     },
-    state::{cached_state::CachedState, state_api::State},
+    state::state_api::State,
 };
 use cairo_felt::Felt252;
 use cairo_lang_casm::{
     hints::{Hint, StarknetHint},
     operand::{BinOpOperand, DerefOrImmediate, Operation, Register, ResOperand},
 };
+use cairo_vm::vm::runners::cairo_runner::ExecutionResources as VmExecutionResources;
 use starknet_api::{
     core::{ClassHash, ContractAddress, EntryPointSelector, PatriciaKey},
     deprecated_contract_class::EntryPointType,
@@ -72,7 +76,8 @@ use blockifier::execution::syscalls::{
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
 use cairo_vm::vm::runners::cairo_runner::ResourceTracker;
 
-use crate::CheatedState;
+use crate::panic_data::try_extract_panic_data;
+use crate::state::CheatcodeState;
 
 type SyscallSelector = DeprecatedSyscallSelector;
 
@@ -87,9 +92,11 @@ pub fn call_contract(
     contract_address: &Felt252,
     entry_point_selector: &Felt252,
     calldata: &[Felt252],
-    blockifier_state: &mut CachedState<DictStateReader>,
-    cheated_state: &mut CheatedState,
+    cheatnet_state: &mut CheatnetState,
 ) -> Result<CallContractOutput> {
+    let blockifier_state = &mut cheatnet_state.blockifier_state;
+    let cheatcode_state = &mut cheatnet_state.cheatcode_state;
+
     let contract_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
         contract_address.to_be_bytes(),
     )?)?);
@@ -128,13 +135,13 @@ pub fn call_contract(
     let exec_result = execute_call_entry_point(
         &mut entry_point,
         blockifier_state,
-        cheated_state,
+        cheatcode_state,
         &mut resources,
         &mut context,
     );
 
     if let Ok(call_info) = exec_result {
-        if cheated_state.spy_events {
+        if cheatcode_state.spy_events {
             // TODO: include nested calls too
             let mut events: Vec<Event> = call_info
                 .execution
@@ -161,7 +168,7 @@ pub fn call_contract(
                         .collect(),
                 })
                 .collect();
-            cheated_state.emitted_events.append(&mut events);
+            cheatcode_state.emitted_events.append(&mut events);
         }
 
         let raw_return_data = &call_info.execution.retdata.0;
@@ -183,6 +190,14 @@ pub fn call_contract(
         Ok(CallContractOutput::Panic {
             panic_data: err_data,
         })
+    } else if let Err(EntryPointExecutionError::VirtualMachineExecutionErrorWithTrace {
+        trace,
+        ..
+    }) = exec_result
+    {
+        let panic_data =
+            try_extract_panic_data(&trace).unwrap_or_else(|| panic!("Unparseable result: {trace}"));
+        Ok(CallContractOutput::Panic { panic_data })
     } else {
         panic!("Unparseable result: {exec_result:?}");
     }
@@ -192,7 +207,7 @@ pub fn call_contract(
 fn execute_call_entry_point(
     entry_point: &mut CallEntryPoint,
     state: &mut dyn State,
-    cheated_state: &CheatedState,
+    cheatcode_state: &CheatcodeState,
     resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
 ) -> EntryPointExecutionResult<CallInfo> {
@@ -230,7 +245,7 @@ fn execute_call_entry_point(
             entry_point.clone(),
             &contract_class,
             state,
-            cheated_state,
+            cheatcode_state,
             resources,
             context,
         ),
@@ -260,7 +275,7 @@ fn execute_call_entry_point(
 
 pub struct CheatableSyscallHandler<'a> {
     pub syscall_handler: SyscallHintProcessor<'a>,
-    pub cheated_state: &'a CheatedState,
+    pub cheatcode_state: &'a CheatcodeState,
 }
 
 impl ResourceTracker for CheatableSyscallHandler<'_> {
@@ -363,11 +378,12 @@ impl CheatableSyscallHandler<'_> {
 
         let mut new_block_info = original_block_info.to_owned();
 
-        if let Some(rolled_number) = self.cheated_state.rolled_contracts.get(contract_address) {
+        if let Some(rolled_number) = self.cheatcode_state.rolled_contracts.get(contract_address) {
             new_block_info[0] = MaybeRelocatable::Int(rolled_number.clone());
         };
 
-        if let Some(warped_timestamp) = self.cheated_state.warped_contracts.get(contract_address) {
+        if let Some(warped_timestamp) = self.cheatcode_state.warped_contracts.get(contract_address)
+        {
             new_block_info[1] = MaybeRelocatable::Int(warped_timestamp.clone());
         };
 
@@ -381,7 +397,7 @@ impl CheatableSyscallHandler<'_> {
         _vm: &mut VirtualMachine,
         contract_address: &ContractAddress,
     ) -> bool {
-        self.cheated_state
+        self.cheatcode_state
             .pranked_contracts
             .contains_key(contract_address)
     }
@@ -391,7 +407,7 @@ impl CheatableSyscallHandler<'_> {
         _vm: &mut VirtualMachine,
         contract_address: &ContractAddress,
     ) -> bool {
-        self.cheated_state
+        self.cheatcode_state
             .warped_contracts
             .contains_key(contract_address)
     }
@@ -401,7 +417,7 @@ impl CheatableSyscallHandler<'_> {
         _vm: &mut VirtualMachine,
         contract_address: &ContractAddress,
     ) -> bool {
-        self.cheated_state
+        self.cheatcode_state
             .rolled_contracts
             .contains_key(contract_address)
     }
@@ -494,7 +510,7 @@ impl CheatableSyscallHandler<'_> {
             if self.address_is_pranked(vm, &contract_address) {
                 new_exec_info[2] = MaybeRelocatable::Int(stark_felt_to_felt(
                     *self
-                        .cheated_state
+                        .cheatcode_state
                         .pranked_contracts
                         .get(&contract_address)
                         .expect("No caller address value found for the pranked contract address")
@@ -687,7 +703,7 @@ pub fn execute_inner_call(
     let call_info = execute_call_entry_point(
         call,
         syscall_handler.syscall_handler.state,
-        syscall_handler.cheated_state,
+        syscall_handler.cheatcode_state,
         syscall_handler.syscall_handler.resources,
         syscall_handler.syscall_handler.context,
     )?;
@@ -712,15 +728,47 @@ pub fn execute_inner_call(
     Ok(retdata_segment)
 }
 
+fn get_ret_data_by_call_entry_point<'a>(
+    call: &CallEntryPoint,
+    cheatcode_state: &'a CheatcodeState,
+) -> Option<&'a Vec<StarkFelt>> {
+    if let Some(contract_address) = call.code_address {
+        if let Some(contract_functions) = cheatcode_state.mocked_functions.get(&contract_address) {
+            let entrypoint_selector = call.entry_point_selector;
+
+            let ret_data = contract_functions.get(&entrypoint_selector);
+            return ret_data;
+        }
+    }
+    None
+}
+
 /// Executes a specific call to a contract entry point and returns its output.
 fn execute_entry_point_call_cairo1(
     call: CallEntryPoint,
     contract_class: &ContractClassV1,
     state: &mut dyn State,
-    cheated_state: &CheatedState,
+    cheatcode_state: &CheatcodeState,
     resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
 ) -> EntryPointExecutionResult<CallInfo> {
+    if let Some(ret_data) = get_ret_data_by_call_entry_point(&call, cheatcode_state) {
+        return Ok(CallInfo {
+            call,
+            execution: CallExecution {
+                retdata: Retdata(ret_data.clone()),
+                events: vec![],
+                l2_to_l1_messages: vec![],
+                failed: false,
+                gas_consumed: 0,
+            },
+            vm_resources: VmExecutionResources::default(),
+            inner_calls: vec![],
+            storage_read_values: vec![],
+            accessed_storage_keys: HashSet::new(),
+        });
+    }
+
     let VmExecutionContext {
         mut runner,
         mut vm,
@@ -744,7 +792,7 @@ fn execute_entry_point_call_cairo1(
 
     let mut cheatable_syscall_handler = CheatableSyscallHandler {
         syscall_handler,
-        cheated_state,
+        cheatcode_state,
     };
 
     // Execute.

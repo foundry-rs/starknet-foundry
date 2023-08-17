@@ -4,6 +4,7 @@ use clone::Clone;
 use option::OptionTrait;
 use traits::Into;
 use traits::TryInto;
+use serde::Serde;
 
 use starknet::testing::cheatcode;
 use starknet::ClassHash;
@@ -116,4 +117,42 @@ fn stop_prank(contract_address: ContractAddress) {
 fn stop_warp(contract_address: ContractAddress) {
     let contract_address_felt: felt252 = contract_address.into();
     cheatcode::<'stop_warp'>(array![contract_address_felt].span());
+}
+
+fn start_mock_call<T, impl TSerde: serde::Serde<T>, impl TDestruct: Destruct<T>>(
+    contract_address: ContractAddress, function_name: felt252, ret_data: T
+) {
+    let contract_address_felt: felt252 = contract_address.into();
+    let mut inputs = array![contract_address_felt, function_name];
+
+    let mut ret_data_arr = ArrayTrait::new();
+    ret_data.serialize(ref ret_data_arr);
+
+    let ret_data_len = ret_data_arr.len();
+
+    inputs.append(ret_data_len.into());
+
+    let mut i = 0;
+    loop {
+        if ret_data_len == i {
+            break ();
+        }
+        inputs.append(*ret_data_arr[i]);
+        i += 1;
+    };
+
+    cheatcode::<'start_mock_call'>(inputs.span());
+}
+
+fn stop_mock_call(contract_address: ContractAddress, function_name: felt252) {
+    let contract_address_felt: felt252 = contract_address.into();
+    cheatcode::<'stop_mock_call'>(array![contract_address_felt, function_name].span());
+}
+
+fn get_class_hash(contract_address: ContractAddress) -> ClassHash {
+    let contract_address_felt: felt252 = contract_address.into();
+
+    // Expecting a buffer with one felt252, being the class hash.
+    let buf = cheatcode::<'get_class_hash'>(array![contract_address_felt].span());
+    (*buf[0]).try_into().expect('Invalid class hash value')
 }
