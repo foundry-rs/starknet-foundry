@@ -181,17 +181,35 @@ fn test_call_syscall_fail_in_test_fn() {
 fn test_keccak_syscall() {
     let test = test_case!(indoc!(
         r#"
-        use traits::Into;
         use array::ArrayTrait;
-        use starknet::SyscallResultTrait;
-        use snforge_std::{PrintTrait, shortstring_keccak};
+        use keccak::cairo_keccak;
 
         #[test]
-        fn test_execute_disallowed_syscall() {
-            let shortstring = shortstring_keccak('FirstEvent');
-            shortstring.print();
+        fn test_execute_cairo_keccak() {
+            let mut input = array![
+                0x0000000000000001,
+                0x0000000000000002,
+                0x0000000000000003,
+                0x0000000000000004,
+                0x0000000000000005,
+                0x0000000000000006,
+                0x0000000000000007,
+                0x0000000000000008,
+                0x0000000000000009,
+                0x000000000000000a,
+                0x000000000000000b,
+                0x000000000000000c,
+                0x000000000000000d,
+                0x000000000000000e,
+                0x000000000000000f,
+                0x0000000000000010,
+                0x0000000000000011
+            ];
 
-            assert(1==1, 'xdd');
+            let res = keccak::cairo_keccak(ref input, 0, 0);
+
+            assert(@res.low == @0x5d291eebae35b254ff50ec1fc57832e8, 'Wrong hash low');
+            assert(@res.high == @0x210740d45b1fe2ac908a497ef45509f5, 'Wrong hash high');
         }
     "#
     ));
