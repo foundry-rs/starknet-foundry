@@ -68,6 +68,7 @@ use starknet_api::{
     transaction::{Calldata, TransactionVersion},
 };
 
+use crate::conversions::felt_from_short_string;
 use blockifier::execution::syscalls::hint_processor::INVALID_INPUT_LENGTH_ERROR;
 use blockifier::execution::syscalls::{
     KeccakRequest, KeccakResponse, LibraryCallRequest, SyscallRequest, SyscallRequestWrapper,
@@ -705,12 +706,15 @@ pub fn keccak_syscall(
     let mut state = [0u64; 25];
     for chunk in data.chunks(KECCAK_FULL_RATE_IN_WORDS) {
         for (i, val) in chunk.iter().enumerate() {
-            state[i] ^= val
-                .to_u64()
-                .ok_or_else(|| SyscallExecutionError::InvalidSyscallInput {
-                    input: felt_to_stark_felt(val),
-                    info: String::from("Invalid input for the keccak syscall."),
-                })?;
+            let Some(val) = val.to_u64() else {
+                return Ok(KeccakOutput::Panic {
+                    panic_data: vec![
+                        Felt252::from_bytes_be(&val.to_be_bytes()),
+                        felt_from_short_string("Invalid input for the keccak")
+                    ],
+                })
+            };
+            state[i] ^= val;
         }
         keccak::f1600(&mut state);
     }
