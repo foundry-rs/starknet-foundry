@@ -45,7 +45,6 @@ fn simple_package() {
 }
 
 #[test]
-#[ignore]
 fn simple_package_with_git_dependency() {
     let temp = TempDir::new().unwrap();
     temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
