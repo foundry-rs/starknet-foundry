@@ -1,4 +1,4 @@
-use crate::helpers::constants::{CONTRACTS_DIR, DEVNET_OZ_CLASS_HASH, NETWORK, URL};
+use crate::helpers::constants::{CONTRACTS_DIR, DEVNET_OZ_CLASS_HASH, URL};
 use crate::helpers::fixtures::{default_cli_args, duplicate_directory_with_salt};
 use crate::helpers::runner::runner;
 use camino::Utf8PathBuf;
@@ -12,8 +12,6 @@ pub async fn test_happy_case() {
     let args = vec![
         "--url",
         URL,
-        "--network",
-        NETWORK,
         "--accounts-file",
         accounts_file,
         "account",
@@ -55,8 +53,6 @@ pub async fn test_happy_case_generate_salt() {
     let args = vec![
         "--url",
         URL,
-        "--network",
-        NETWORK,
         "--accounts-file",
         accounts_file,
         "account",
@@ -100,8 +96,6 @@ pub async fn test_happy_case_add_profile() {
     let args = vec![
         "--url",
         URL,
-        "--network",
-        NETWORK,
         "--accounts-file",
         accounts_file,
         "account",
@@ -147,8 +141,6 @@ pub async fn test_happy_case_accounts_file_already_exists() {
     let args = vec![
         "--url",
         URL,
-        "--network",
-        NETWORK,
         "--accounts-file",
         accounts_file,
         "account",
@@ -193,8 +185,6 @@ pub async fn test_profile_already_exists() {
     let args = vec![
         "--url",
         URL,
-        "--network",
-        NETWORK,
         "--accounts-file",
         accounts_file,
         "account",
@@ -239,6 +229,6 @@ pub async fn test_account_already_exists() {
 
     snapbox.assert().stderr_matches(indoc! {r#"
         command: account create
-        error: Account with provided name already exists in this network
+        error: Account with provided name already exists in network alpha-goerli
     "#});
 }

@@ -13,15 +13,12 @@ sierra = false
 
 [tool.sncast]
 url = "http://127.0.0.1:5055/rpc"
-network = "testnet"
 account = "user1"
 
 [tool.sncast.profile1]
 url = "http://127.0.0.1:5050/rpc"
-network = "testnet2"
 account = "user3"
 
 [tool.sncast.profile2]
 url = "http://127.0.0.1:5055/rpc"
-network = "testnet"
 account = "user100"

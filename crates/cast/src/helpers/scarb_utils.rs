@@ -10,7 +10,6 @@ use std::str::FromStr;
 #[derive(Deserialize, Serialize, Clone, Debug, Default)]
 pub struct CastConfig {
     pub rpc_url: String,
-    pub network: String,
     pub account: String,
 }
 
@@ -88,14 +87,9 @@ pub fn parse_scarb_config(
     let package = &metadata.packages[0].manifest_metadata.tool;
 
     let rpc_url = get_property(package, profile, "url")?;
-    let network = get_property(package, profile, "network")?;
     let account = get_property(package, profile, "account")?;
 
-    Ok(CastConfig {
-        rpc_url,
-        network,
-        account,
-    })
+    Ok(CastConfig { rpc_url, account })
 }
 
 #[cfg(test)]
@@ -116,7 +110,6 @@ mod tests {
         .unwrap();
 
         assert_eq!(config.account, String::from("user1"));
-        assert_eq!(config.network, String::from("testnet"));
         assert_eq!(config.rpc_url, String::from("http://127.0.0.1:5055/rpc"));
     }
 
@@ -128,7 +121,6 @@ mod tests {
         )
         .unwrap();
         assert_eq!(config.account, String::from("user2"));
-        assert_eq!(config.network, String::from("testnet"));
         assert_eq!(config.rpc_url, String::from("http://127.0.0.1:5055/rpc"));
     }
 
@@ -144,7 +136,6 @@ mod tests {
         let config = parse_scarb_config(&None, &None).unwrap();
 
         assert!(config.rpc_url.is_empty());
-        assert!(config.network.is_empty());
         assert!(config.account.is_empty());
     }
 
@@ -157,7 +148,6 @@ mod tests {
         .unwrap();
 
         assert!(config.rpc_url.is_empty());
-        assert!(config.network.is_empty());
         assert!(config.account.is_empty());
     }
 
@@ -191,7 +181,6 @@ mod tests {
         let config = parse_scarb_config(&None, &None).unwrap();
 
         assert!(config.rpc_url.is_empty());
-        assert!(config.network.is_empty());
         assert!(config.account.is_empty());
     }
 
@@ -200,7 +189,6 @@ mod tests {
         let config = parse_scarb_config(&Some(String::from("myprofile")), &None).unwrap();
 
         assert_eq!(config.rpc_url, String::from("http://127.0.0.1:5055/rpc"));
-        assert_eq!(config.network, String::from("testnet"));
         assert_eq!(config.account, String::from("user1"));
     }
 }

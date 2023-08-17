@@ -3,7 +3,7 @@ use crate::helpers::response_structs::AccountCreateResponse;
 use crate::helpers::scarb_utils::{get_property, get_scarb_manifest};
 use anyhow::{anyhow, Context, Result};
 use camino::Utf8PathBuf;
-use cast::{extract_or_generate_salt, get_network, parse_number};
+use cast::{chain_id_to_network_name, extract_or_generate_salt, parse_number};
 use clap::Args;
 use serde_json::json;
 use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
@@ -43,7 +43,7 @@ pub async fn create(
     accounts_file_path: Utf8PathBuf,
     path_to_scarb_toml: Option<Utf8PathBuf>,
     name: String,
-    network: &str,
+    chain_id: FieldElement,
     maybe_salt: Option<FieldElement>,
     add_profile: bool,
     class_hash: Option<String>,
@@ -68,7 +68,7 @@ pub async fn create(
         let signer = LocalWallet::from_signing_key(private_key.clone());
         let factory = OpenZeppelinAccountFactory::new(
             parse_number(oz_class_hash)?,
-            get_network(network)?.get_chain_id(),
+            chain_id,
             signer,
             provider,
         )
@@ -87,15 +87,15 @@ pub async fn create(
     let mut items: serde_json::Value = serde_json::from_str(&contents)
         .map_err(|_| anyhow!("Failed to parse accounts file at {accounts_file_path}"))?;
 
-    let network_value = get_network(network)?.get_value();
+    let network_name = chain_id_to_network_name(chain_id);
 
-    if !items[network_value][&name].is_null() {
+    if !items[&network_name][&name].is_null() {
         return Err(anyhow!(
-            "Account with provided name already exists in this network"
+            "Account with provided name already exists in network {network_name}"
         ));
     }
 
-    items[network_value][&name] = json!({
+    items[&network_name][&name] = json!({
         "private_key": format!("{:#x}", private_key.secret_scalar()),
         "public_key": format!("{:#x}", public_key.scalar()),
         "address": format!("{address:#x}"),
@@ -104,12 +104,7 @@ pub async fn create(
     });
 
     if add_profile {
-        match add_created_profile_to_configuration(
-            &path_to_scarb_toml,
-            name,
-            network.to_string(),
-            url,
-        ) {
+        match add_created_profile_to_configuration(&path_to_scarb_toml, name, url) {
             Ok(()) => {}
             Err(err) => return Err(anyhow!(err)),
         };
@@ -146,7 +141,6 @@ pub async fn create(
 pub fn add_created_profile_to_configuration(
     path_to_scarb_toml: &Option<Utf8PathBuf>,
     name: String,
-    network: String,
     url: String,
 ) -> Result<()> {
     let manifest_path = path_to_scarb_toml.clone().unwrap_or_else(|| {
@@ -175,7 +169,6 @@ pub fn add_created_profile_to_configuration(
         let mut tool_sncast = toml::value::Table::new();
         let mut new_profile = toml::value::Table::new();
 
-        new_profile.insert("network".to_string(), Value::String(network));
         new_profile.insert("url".to_string(), Value::String(url));
         new_profile.insert("account".to_string(), Value::String(name.clone()));
 
@@ -213,7 +206,6 @@ mod tests {
         let res = add_created_profile_to_configuration(
             &None,
             String::from("some-name"),
-            String::from("some-net"),
             String::from("http://some-url"),
         );
 
@@ -222,7 +214,6 @@ mod tests {
         let contents = fs::read_to_string("Scarb.toml").expect("Unable to read Scarb.toml");
         assert!(contents.contains("[tool.sncast.some-name]"));
         assert!(contents.contains("account = \"some-name\""));
-        assert!(contents.contains("network = \"some-net\""));
         assert!(contents.contains("url = \"http://some-url\""));
     }
 
@@ -231,7 +222,6 @@ mod tests {
         let res = add_created_profile_to_configuration(
             &None,
             String::from("myprofile"),
-            String::from("some-net"),
             String::from("http://some-url"),
         );
 
