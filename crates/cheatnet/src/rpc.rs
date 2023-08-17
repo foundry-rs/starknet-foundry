@@ -12,12 +12,15 @@ use cairo_vm::{
         vm_core::VirtualMachine,
     },
 };
+use std::collections::HashSet;
 use std::{any::Any, collections::HashMap, sync::Arc};
 
 use crate::{
     constants::{build_block_context, build_transaction_context, TEST_ACCOUNT_CONTRACT_ADDRESS},
     CheatnetState,
 };
+use blockifier::execution::entry_point::CallExecution;
+use blockifier::execution::entry_point::Retdata;
 use blockifier::{
     abi::constants,
     execution::{
@@ -56,6 +59,7 @@ use cairo_lang_casm::{
     hints::{Hint, StarknetHint},
     operand::{BinOpOperand, DerefOrImmediate, Operation, Register, ResOperand},
 };
+use cairo_vm::vm::runners::cairo_runner::ExecutionResources as VmExecutionResources;
 use starknet_api::{
     core::{ClassHash, ContractAddress, EntryPointSelector, PatriciaKey},
     deprecated_contract_class::EntryPointType,
@@ -739,6 +743,21 @@ pub fn execute_inner_call(
     Ok(retdata_segment)
 }
 
+fn get_ret_data_by_call_entry_point<'a>(
+    call: &CallEntryPoint,
+    cheatcode_state: &'a CheatcodeState,
+) -> Option<&'a Vec<StarkFelt>> {
+    if let Some(contract_address) = call.code_address {
+        if let Some(contract_functions) = cheatcode_state.mocked_functions.get(&contract_address) {
+            let entrypoint_selector = call.entry_point_selector;
+
+            let ret_data = contract_functions.get(&entrypoint_selector);
+            return ret_data;
+        }
+    }
+    None
+}
+
 /// Executes a specific call to a contract entry point and returns its output.
 fn execute_entry_point_call_cairo1(
     call: CallEntryPoint,
@@ -748,6 +767,23 @@ fn execute_entry_point_call_cairo1(
     resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
 ) -> EntryPointExecutionResult<CallInfo> {
+    if let Some(ret_data) = get_ret_data_by_call_entry_point(&call, cheatcode_state) {
+        return Ok(CallInfo {
+            call,
+            execution: CallExecution {
+                retdata: Retdata(ret_data.clone()),
+                events: vec![],
+                l2_to_l1_messages: vec![],
+                failed: false,
+                gas_consumed: 0,
+            },
+            vm_resources: VmExecutionResources::default(),
+            inner_calls: vec![],
+            storage_read_values: vec![],
+            accessed_storage_keys: HashSet::new(),
+        });
+    }
+
     let VmExecutionContext {
         mut runner,
         mut vm,

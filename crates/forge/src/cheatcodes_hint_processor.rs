@@ -4,8 +4,9 @@ use std::path::PathBuf;
 
 use crate::scarb::StarknetContractArtifacts;
 use anyhow::{anyhow, Result};
+use blockifier::abi::abi_utils::selector_from_name;
+use blockifier::execution::execution_utils::{felt_to_stark_felt, stark_felt_to_felt};
 use blockifier::abi::constants::KECCAK_GAS_COST;
-use blockifier::execution::execution_utils::stark_felt_to_felt;
 use blockifier::execution::syscalls::{keccak, KeccakRequest};
 use cairo_felt::Felt252;
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
@@ -20,7 +21,6 @@ use cheatnet::{
     cheatcodes::{CheatcodeError, ContractArtifacts, EnhancedHintError},
     CheatnetState,
 };
-use num_traits::Num;
 use num_traits::ToPrimitive;
 use serde::Deserialize;
 use starknet_api::core::{ContractAddress, PatriciaKey};
@@ -36,6 +36,8 @@ use cairo_lang_runner::{
 };
 use cairo_lang_utils::bigint::BigIntAsHex;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
+
+mod file_operations;
 
 // TODO(#41) Remove after we have a separate scarb package
 impl From<&StarknetContractArtifacts> for ContractArtifacts {
@@ -226,7 +228,42 @@ impl CairoHintProcessor<'_> {
                 self.cheatnet_state.stop_prank(contract_address);
                 Ok(())
             }
-            "mock_call" => todo!(),
+            "start_mock_call" => {
+                let contract_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
+                    inputs[0].clone().to_be_bytes(),
+                )?)?);
+                let function_name = inputs[1].clone();
+                let function_name = as_cairo_short_string(&function_name).unwrap_or_else(|| {
+                    panic!("Failed to convert {function_name:?} to Cairo short str")
+                });
+                let function_name = selector_from_name(function_name.as_str());
+
+                let ret_data_length = inputs[2]
+                    .to_usize()
+                    .expect("Missing ret_data len in inputs");
+                let mut ret_data = vec![];
+                for felt in inputs.iter().skip(3).take(ret_data_length) {
+                    ret_data.push(felt_to_stark_felt(&felt.clone()));
+                }
+
+                self.cheatnet_state
+                    .start_mock_call(contract_address, function_name, ret_data);
+                Ok(())
+            }
+            "stop_mock_call" => {
+                let contract_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
+                    inputs[0].clone().to_be_bytes(),
+                )?)?);
+                let function_name = inputs[1].clone();
+                let function_name = as_cairo_short_string(&function_name).unwrap_or_else(|| {
+                    panic!("Failed to convert {function_name:?} to Cairo short str")
+                });
+                let function_name = selector_from_name(function_name.as_str());
+
+                self.cheatnet_state
+                    .stop_mock_call(contract_address, function_name);
+                Ok(())
+            }
             "declare" => {
                 let contract_name = inputs[0].clone();
 
@@ -239,8 +276,7 @@ impl CairoHintProcessor<'_> {
                         .collect(),
                 ) {
                     Ok(class_hash) => {
-                        let felt_class_hash =
-                            felt252_from_hex_string(&class_hash.to_string()).unwrap();
+                        let felt_class_hash = stark_felt_to_felt(class_hash.0);
 
                         buffer
                             .write(Felt252::from(0))
@@ -289,6 +325,31 @@ impl CairoHintProcessor<'_> {
                 print(inputs);
                 Ok(())
             }
+            "get_class_hash" => {
+                let contract_address = contract_address_from_felt252(&inputs[0])?;
+
+                match self.cheatnet_state.get_class_hash(contract_address) {
+                    Ok(class_hash) => {
+                        let felt_class_hash = stark_felt_to_felt(class_hash.0);
+
+                        buffer
+                            .write(felt_class_hash)
+                            .expect("Failed to insert contract class hash");
+                        Ok(())
+                    }
+                    Err(CheatcodeError::Recoverable(_)) => unreachable!(),
+                    Err(CheatcodeError::Unrecoverable(err)) => Err(err),
+                }
+            }
+            "parse_txt" => {
+                let file_path = inputs[0].clone();
+                let parsed_content = file_operations::parse_txt(&file_path)?;
+                buffer
+                    .write_data(parsed_content.iter())
+                    .expect("Failed to insert file content to memory");
+                Ok(())
+            }
+            "parse_json" => todo!(),
             _ => Err(anyhow!("Unknown cheatcode selector: {selector}")).map_err(Into::into),
         }?;
 
@@ -403,12 +464,6 @@ fn print(inputs: Vec<Felt252>) {
     }
 }
 
-fn felt252_from_hex_string(value: &str) -> Result<Felt252> {
-    let stripped_value = value.replace("0x", "");
-    Felt252::from_str_radix(&stripped_value, 16)
-        .map_err(|_| anyhow!("Failed to convert value = {value} to Felt252"))
-}
-
 fn write_cheatcode_panic(buffer: &mut MemBuffer, panic_data: &[Felt252]) {
     buffer.write(1).expect("Failed to insert err code");
     buffer
@@ -419,30 +474,8 @@ fn write_cheatcode_panic(buffer: &mut MemBuffer, panic_data: &[Felt252]) {
         .expect("Failed to insert error in memory");
 }
 
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn felt_2525_from_prefixed_hex() {
-        assert_eq!(
-            felt252_from_hex_string("0x1234").unwrap(),
-            Felt252::from(0x1234)
-        );
-    }
-
-    #[test]
-    fn felt_2525_from_non_prefixed_hex() {
-        assert_eq!(
-            felt252_from_hex_string("1234").unwrap(),
-            Felt252::from(0x1234)
-        );
-    }
-
-    #[test]
-    fn felt_252_err_on_failed_conversion() {
-        let result = felt252_from_hex_string("yyyy");
-        let err = result.unwrap_err();
-        assert_eq!(err.to_string(), "Failed to convert value = yyyy to Felt252");
-    }
+fn contract_address_from_felt252(felt: &Felt252) -> Result<ContractAddress, EnhancedHintError> {
+    Ok(ContractAddress(PatriciaKey::try_from(felt_to_stark_felt(
+        felt,
+    ))?))
 }
