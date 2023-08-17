@@ -1744,6 +1744,7 @@ dependencies = [
  "include_dir",
  "indoc",
  "itertools 0.11.0",
+ "num-bigint",
  "num-traits 0.2.16",
  "once_cell",
  "openssl",

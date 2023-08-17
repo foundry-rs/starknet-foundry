@@ -3,6 +3,7 @@ mod declare;
 mod deploy;
 mod dispatchers;
 mod get_class_hash;
+mod mock_call;
 mod prank;
 mod pure_cairo;
 mod roll;

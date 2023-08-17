@@ -7,6 +7,7 @@ use blockifier::{
     },
 };
 use cairo_felt::Felt252;
+use starknet_api::core::EntryPointSelector;
 use starknet_api::{
     core::{ClassHash, CompiledClassHash, ContractAddress, Nonce},
     hash::StarkFelt,
@@ -86,6 +87,7 @@ pub struct CheatcodeState {
     pub rolled_contracts: HashMap<ContractAddress, Felt252>,
     pub pranked_contracts: HashMap<ContractAddress, ContractAddress>,
     pub warped_contracts: HashMap<ContractAddress, Felt252>,
+    pub mocked_functions: HashMap<ContractAddress, HashMap<EntryPointSelector, Vec<StarkFelt>>>,
 }
 
 impl CheatcodeState {
@@ -95,6 +97,7 @@ impl CheatcodeState {
             rolled_contracts: HashMap::new(),
             pranked_contracts: HashMap::new(),
             warped_contracts: HashMap::new(),
+            mocked_functions: HashMap::new(),
         }
     }
 }
