@@ -177,17 +177,7 @@ fn test_keccak_syscall() {
     "#
     ));
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
@@ -212,17 +202,9 @@ fn test_keccak_syscall_too_small_input() {
     "#
     ));
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
+
+    assert_case_output_contains!(result, "test_execute_cairo_keccak", "Invalid input length");
 
     assert_failed!(result);
 }
@@ -264,17 +246,7 @@ fn test_cairo_keccak() {
     "#
     ));
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
@@ -319,17 +291,7 @@ fn test_keccak_syscall_in_contract() {
         .unwrap()
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
