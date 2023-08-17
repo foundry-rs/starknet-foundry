@@ -6,7 +6,7 @@ use scarb_metadata::MetadataCommand;
 use std::path::PathBuf;
 use tempfile::{tempdir, TempDir};
 
-use forge::run;
+use forge::{collect_packages, run};
 use forge::{pretty_printing, RunnerConfig};
 
 use forge::scarb::{
@@ -29,6 +29,14 @@ struct Args {
     /// Stop test execution after first failed test
     #[arg(short = 'x', long)]
     exit_first: bool,
+
+    /// Select package for which the tests should be run  
+    #[arg(short = 'p', long)]
+    package: Option<String>,
+
+    /// Run tests for all packages in the workspace
+    #[arg(short, long)]
+    workspace: bool,
 }
 
 fn load_predeployed_contracts() -> Result<TempDir> {
@@ -52,8 +60,10 @@ fn main_execution() -> Result<()> {
 
     let scarb_metadata = MetadataCommand::new().inherit_stderr().exec()?;
 
+    let current_dir = std::env::current_dir().context("Failed to get current directory")?;
+
     let build_output = Command::new("scarb")
-        .current_dir(std::env::current_dir().context("Failed to get current directory")?)
+        .current_dir(current_dir.clone())
         .arg("build")
         .output()
         .context("Failed to build contracts with Scarb")?;
@@ -64,7 +74,23 @@ fn main_execution() -> Result<()> {
         )
     }
 
-    for package in &scarb_metadata.workspace.members {
+    let manifest_path = Command::new("scarb")
+        .current_dir(current_dir.clone())
+        .arg("manifest-path")
+        .output()
+        .context("Failed to fetch manifest-path")?
+        .stdout;
+    let manifest_path =
+        Utf8PathBuf::from(String::from_utf8_lossy(&manifest_path).as_ref().trim_end());
+
+    let packages = collect_packages(
+        &scarb_metadata,
+        &manifest_path,
+        &args.package,
+        args.workspace,
+    );
+
+    for package in packages.iter() {
         let forge_config = forge::scarb::config_from_scarb_for_package(&scarb_metadata, package)?;
         let (package_path, lib_path) = paths_for_package(&scarb_metadata, package)?;
 

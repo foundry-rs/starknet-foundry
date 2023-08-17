@@ -3,7 +3,9 @@ use std::fmt::Debug;
 
 use anyhow::{Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
+use itertools::Itertools;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
+use scarb_metadata::{Metadata, PackageId};
 use serde::Deserialize;
 use test_case_summary::TestCaseSummary;
 use walkdir::WalkDir;
@@ -72,6 +74,40 @@ struct TestsFromFile {
     relative_path: Utf8PathBuf,
 }
 
+pub fn collect_packages(
+    metadata: &Metadata,
+    manifest_path: &Utf8PathBuf,
+    package_name: &Option<String>,
+    workspace: bool,
+) -> Vec<PackageId> {
+    let workspace_members = &metadata.workspace.members;
+
+    let is_virtual_workspace = metadata
+        .packages
+        .iter()
+        .filter(|package| package.manifest_path == metadata.workspace.manifest_path)
+        .collect_vec()
+        .is_empty();
+
+    metadata
+        .packages
+        .iter()
+        .filter(|package| workspace_members.contains(&package.id))
+        .filter(|package| {
+            if let Some(package_name) = package_name {
+                package.name == *package_name
+            } else if workspace {
+                true
+            } else if metadata.workspace.manifest_path != *manifest_path {
+                package.manifest_path == *manifest_path
+            } else {
+                package.manifest_path == *manifest_path || is_virtual_workspace
+            }
+        })
+        .map(|package| package.id.clone())
+        .collect_vec()
+}
+
 fn collect_tests_from_directory(
     package_path: &Utf8PathBuf,
     package_name: &str,
@@ -99,11 +135,15 @@ fn find_cairo_root_files_in_directory(
     let src_path = lib_path.parent().with_context(|| {
         format!("Failed to get parent directory of a package at path = {lib_path}")
     })?;
+    let crates_path = src_path
+        .parent()
+        .with_context(|| format!("Failed to get root directory of a package at path = {lib_path}"))?
+        .join(Utf8PathBuf::from("crates"));
 
     for entry in WalkDir::new(package_path)
         .sort_by_file_name()
         .into_iter()
-        .filter_entry(|e| !e.path().starts_with(src_path))
+        .filter_entry(|e| !e.path().starts_with(src_path) && !e.path().starts_with(&crates_path))
     {
         let entry =
             entry.with_context(|| format!("Failed to read directory at path = {package_path}"))?;
@@ -400,7 +440,9 @@ mod tests {
         let result = find_cairo_root_files_in_directory(&tests_path, &lib_path);
         let err = result.unwrap_err();
 
-        assert!(err.to_string().contains("Failed to read directory at path"));
+        assert!(err
+            .to_string()
+            .contains("Failed to get root directory of a package at path"));
     }
 
     #[test]
