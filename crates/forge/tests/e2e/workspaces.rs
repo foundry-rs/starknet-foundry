@@ -230,5 +230,6 @@ fn virtual_workspace_specify_package() {
         [PASS] test_nested::test_two_and_two
         Running 1 test(s) from tests/test_simple.cairo
         [PASS] test_simple::simple_case
+        Tests: 4 passed, 0 failed, 0 skipped
         "#});
 }
