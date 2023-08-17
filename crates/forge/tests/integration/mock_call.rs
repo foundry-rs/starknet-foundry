@@ -555,7 +555,6 @@ fn start_mock_call_with_library_call_has_no_effect() {
 
 #[test]
 fn start_mock_call_when_contract_not_deployed_yet() {
-    // TODO (#465): Finish it! (after precalculate address is ready)
     let test = test_case!(
         indoc!(
             r#"
