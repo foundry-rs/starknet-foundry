@@ -348,8 +348,22 @@ impl CairoHintProcessor<'_> {
                 Ok(())
             }
             "parse_json" => todo!(),
-            "spy_events" => self.cheatnet_state.spy_events(),
-            "fetch_events" => self.cheatnet_state.fetch_events(&mut buffer),
+            "spy_events" => {
+                self.cheatnet_state.spy_events();
+                Ok(())
+            }
+            "fetch_events" => {
+                let (emitted_events_len, serialized_events) = self.cheatnet_state.fetch_events();
+                buffer
+                    .write(Felt252::from(emitted_events_len))
+                    .expect("Failed to insert serialized events length");
+                for felt in serialized_events {
+                    buffer
+                        .write(felt)
+                        .expect("Failed to insert serialized events");
+                }
+                Ok(())
+            }
             _ => Err(anyhow!("Unknown cheatcode selector: {selector}")).map_err(Into::into),
         }?;
 
