@@ -1,5 +1,5 @@
 use crate::cheatcodes::EnhancedHintError;
-use crate::CheatedState;
+use crate::CheatnetState;
 use cairo_felt::Felt252;
 use cairo_lang_runner::casm_run::MemBuffer;
 use starknet_api::core::ContractAddress;
@@ -11,14 +11,15 @@ pub struct Event {
     pub data: Vec<Felt252>,
 }
 
-impl CheatedState {
+impl CheatnetState {
     pub fn spy_events(&mut self) -> Result<(), EnhancedHintError> {
-        self.spy_events = true;
+        self.cheatcode_state.spy_events = true;
         Ok(())
     }
 
     pub fn fetch_events(&mut self, buffer: &mut MemBuffer) -> Result<(), EnhancedHintError> {
         let serialized_events: Vec<Vec<Felt252>> = self
+            .cheatcode_state
             .emitted_events
             .iter()
             .map(|event| {
@@ -36,7 +37,7 @@ impl CheatedState {
             .collect();
 
         buffer
-            .write(Felt252::from(self.emitted_events.len()))
+            .write(Felt252::from(self.cheatcode_state.emitted_events.len()))
             .expect("Failed to insert serialized events length");
         for felt in serialized_events.concat() {
             buffer
@@ -44,7 +45,7 @@ impl CheatedState {
                 .expect("Failed to insert serialized events");
         }
 
-        self.emitted_events = vec![];
+        self.cheatcode_state.emitted_events = vec![];
 
         Ok(())
     }

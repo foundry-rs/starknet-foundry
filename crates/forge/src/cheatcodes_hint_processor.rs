@@ -348,8 +348,8 @@ impl CairoHintProcessor<'_> {
                 Ok(())
             }
             "parse_json" => todo!(),
-            "spy_events" => self.cheated_state.spy_events(),
-            "fetch_events" => self.cheated_state.fetch_events(&mut buffer),
+            "spy_events" => self.cheatnet_state.spy_events(),
+            "fetch_events" => self.cheatnet_state.fetch_events(&mut buffer),
             _ => Err(anyhow!("Unknown cheatcode selector: {selector}")).map_err(Into::into),
         }?;
 
