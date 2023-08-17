@@ -15,7 +15,7 @@ mod starknet_commands;
 #[derive(Parser)]
 #[command(version)]
 #[command(about = "Cast - a Starknet Foundry CLI", long_about = None)]
-pub struct Cli {
+struct Cli {
     /// Profile name in Scarb.toml config file
     #[clap(short, long)]
     profile: Option<String>,
@@ -235,7 +235,7 @@ async fn main() -> Result<()> {
     }
 }
 
-pub fn update_cast_config(config: &mut CastConfig, cli: &Cli) {
+fn update_cast_config(config: &mut CastConfig, cli: &Cli) {
     if let Some(url) = &cli.rpc_url {
         config.rpc_url = url.clone();
     }
