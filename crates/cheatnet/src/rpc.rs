@@ -83,6 +83,7 @@ type SyscallSelector = DeprecatedSyscallSelector;
 pub enum CallContractOutput {
     Success { ret_data: Vec<Felt252> },
     Panic { panic_data: Vec<Felt252> },
+    Error { msg: String },
 }
 
 // This does contract call without the transaction layer. This way `call_contract` can return data and modify state.
@@ -164,9 +165,25 @@ pub fn call_contract(
         ..
     }) = exec_result
     {
-        let panic_data =
-            try_extract_panic_data(&trace).unwrap_or_else(|| panic!("Unparseable result: {trace}"));
-        Ok(CallContractOutput::Panic { panic_data })
+        if let Some(panic_data) = try_extract_panic_data(&trace) {
+            Ok(CallContractOutput::Panic { panic_data })
+        } else {
+            Ok(CallContractOutput::Error { msg: trace })
+        }
+    } else if let Err(EntryPointExecutionError::PreExecutionError(
+        PreExecutionError::EntryPointNotFound(selector),
+    )) = exec_result
+    {
+        let selector_hash = selector.0;
+        let msg = format!("Entry point selector not found in contract: {selector_hash}");
+        Ok(CallContractOutput::Error { msg })
+    } else if let Err(EntryPointExecutionError::PreExecutionError(
+        PreExecutionError::UninitializedStorageAddress(contract_address),
+    )) = exec_result
+    {
+        let address = contract_address.0.key().to_string();
+        let msg = format!("Contract not deployed at address: {address}");
+        Ok(CallContractOutput::Error { msg })
     } else {
         panic!("Unparseable result: {exec_result:?}");
     }
