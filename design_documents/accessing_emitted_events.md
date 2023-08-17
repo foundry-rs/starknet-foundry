@@ -165,6 +165,7 @@ use snforge_std::spy_events;
 use snforge_std::EventSpy;
 use snforge_std::EventFetcher;
 use snforge_std::EventAsserions;
+use snforge_std::event_name_hash;
 
 #[test]
 fn check_emitted_event_simple() {
@@ -199,7 +200,7 @@ fn check_emitted_event_complex() {
     
     // users can assert events on their own
     assert(spy.events.len() == 1, 'There should be one event');
-    assert(spy.events.at(0).name == sn_keccak('StoredName'), 'Wrong event name');
+    assert(spy.events.at(0).name == event_name_hash('StoredName'), 'Wrong event name');
     
     let data = array![...];
     assert(spy.events.at(0).data == data, 'Wrong data');
