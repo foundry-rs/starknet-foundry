@@ -462,7 +462,7 @@ fn execute_keccak(mut buffer: MemBuffer) {
         }
         KeccakOutput::Panic { panic_data } => {
             buffer.write(gas_counter).unwrap();
-            buffer.write(Felt252::from(0)).unwrap();
+            buffer.write(Felt252::from(1)).unwrap();
 
             buffer.write_arr(panic_data.iter()).unwrap();
         }
