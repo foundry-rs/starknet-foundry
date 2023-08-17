@@ -5,7 +5,7 @@ use anyhow::{Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use itertools::Itertools;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
-use scarb_metadata::{Metadata, PackageId};
+use scarb_metadata::{Metadata, PackageId, PackageMetadata};
 use serde::Deserialize;
 use test_case_summary::TestCaseSummary;
 use walkdir::WalkDir;
@@ -89,21 +89,28 @@ pub fn collect_packages(
         .collect_vec()
         .is_empty();
 
+    let filter_method: Box<dyn Fn(&PackageMetadata) -> bool> = {
+        if let Some(package_name) = package_name {
+            // selected specific package
+            Box::new(|package| package.name == *package_name)
+        } else if workspace {
+            Box::new(|_| true)
+        } else if metadata.workspace.manifest_path != *manifest_path {
+            // snforge command ran inside package
+            Box::new(|package| package.manifest_path == *manifest_path)
+        } else {
+            // snforge command ran in root directory
+            Box::new(|package| {
+                package.manifest_path == metadata.workspace.manifest_path || is_virtual_workspace
+            })
+        }
+    };
+
     metadata
         .packages
         .iter()
         .filter(|package| workspace_members.contains(&package.id))
-        .filter(|package| {
-            if let Some(package_name) = package_name {
-                package.name == *package_name
-            } else if workspace {
-                true
-            } else if metadata.workspace.manifest_path != *manifest_path {
-                package.manifest_path == *manifest_path
-            } else {
-                package.manifest_path == metadata.workspace.manifest_path || is_virtual_workspace
-            }
-        })
+        .filter(|package| filter_method(package))
         .map(|package| package.id.clone())
         .collect_vec()
 }
