@@ -5,9 +5,9 @@ use std::path::PathBuf;
 use crate::scarb::StarknetContractArtifacts;
 use anyhow::{anyhow, Result};
 use blockifier::abi::abi_utils::selector_from_name;
-use blockifier::execution::execution_utils::{felt_to_stark_felt, stark_felt_to_felt};
 use blockifier::abi::constants::KECCAK_GAS_COST;
-use blockifier::execution::syscalls::{keccak, KeccakRequest};
+use blockifier::execution::execution_utils::{felt_to_stark_felt, stark_felt_to_felt};
+use blockifier::execution::syscalls::KeccakRequest;
 use cairo_felt::Felt252;
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
 use cairo_vm::hint_processor::hint_processor_definition::HintReference;
@@ -396,37 +396,21 @@ fn execute_syscall(
 
     let selector = buffer.next_felt252().unwrap().to_bytes_be();
 
-    if std::str::from_utf8(&selector).unwrap() == "Keccak" {
-        let gas_counter = buffer.next_usize().unwrap();
-        let input_start = buffer.next_addr().unwrap();
-        let input_end = buffer.next_addr().unwrap();
-        let request = KeccakRequest {
-            input_start,
-            input_end,
-        };
+    match std::str::from_utf8(&selector).unwrap() {
+        "CallContract" => execute_call_contract(buffer, cheatnet_state),
+        "Keccak" => execute_keccak(buffer),
+        _ => {
+            return Err(HintError::CustomHint(Box::from(
+                "starknet syscalls (other than CallContract and Keccak) cannot be used in tests"
+                    .to_string(),
+            )))
+        }
+    };
 
-        let result = keccak_syscall(
-            request,
-            buffer.vm(),
-            &mut (gas_counter.to_u64().unwrap() - KECCAK_GAS_COST),
-        )
-        .unwrap_or_else(|err| panic!("Keccak calculation error: {err}"));
+    Ok(())
+}
 
-        buffer.write(gas_counter).unwrap();
-        buffer.write(Felt252::from(0)).unwrap();
-
-        buffer.write(result.result_low).unwrap();
-        buffer.write(result.result_high).unwrap();
-
-        return Ok(());
-    }
-
-    if std::str::from_utf8(&selector).unwrap() != "CallContract" {
-        return Err(HintError::CustomHint(Box::from(
-            "starknet syscalls cannot be used in tests".to_string(),
-        )));
-    }
-
+fn execute_call_contract(mut buffer: MemBuffer, cheatnet_state: &mut CheatnetState) {
     let gas_counter = buffer.next_usize().unwrap();
     let contract_address = buffer.next_felt252().unwrap().into_owned();
     let entry_point_selector = buffer.next_felt252().unwrap().into_owned();
@@ -450,8 +434,29 @@ fn execute_syscall(
     buffer.write(Felt252::from(exit_code)).unwrap();
 
     buffer.write_arr(result.iter()).unwrap();
+}
 
-    Ok(())
+fn execute_keccak(mut buffer: MemBuffer) {
+    let gas_counter = buffer.next_usize().unwrap();
+    let input_start = buffer.next_addr().unwrap();
+    let input_end = buffer.next_addr().unwrap();
+    let request = KeccakRequest {
+        input_start,
+        input_end,
+    };
+
+    let result = keccak_syscall(
+        &request,
+        buffer.vm(),
+        &mut (gas_counter.to_u64().unwrap() - KECCAK_GAS_COST),
+    )
+    .unwrap_or_else(|err| panic!("Keccak calculation error: {err}"));
+
+    buffer.write(gas_counter).unwrap();
+    buffer.write(Felt252::from(0)).unwrap();
+
+    buffer.write(result.result_low).unwrap();
+    buffer.write(result.result_high).unwrap();
 }
 
 fn print(inputs: Vec<Felt252>) {

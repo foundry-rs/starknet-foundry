@@ -68,8 +68,11 @@ use starknet_api::{
     transaction::{Calldata, TransactionVersion},
 };
 
-use blockifier::execution::syscalls::{KeccakRequest, KeccakResponse, LibraryCallRequest, SyscallRequest, SyscallRequestWrapper, SyscallResponse, SyscallResponseWrapper, SyscallResult};
 use blockifier::execution::syscalls::hint_processor::INVALID_INPUT_LENGTH_ERROR;
+use blockifier::execution::syscalls::{
+    KeccakRequest, KeccakResponse, LibraryCallRequest, SyscallRequest, SyscallRequestWrapper,
+    SyscallResponse, SyscallResponseWrapper, SyscallResult,
+};
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
 use cairo_vm::vm::runners::cairo_runner::ResourceTracker;
 use num_traits::ToPrimitive;
@@ -661,21 +664,19 @@ pub fn library_call_syscall(
 }
 
 pub fn keccak_syscall(
-    request: KeccakRequest,
+    request: &KeccakRequest,
     vm: &mut VirtualMachine,
     remaining_gas: &mut u64,
 ) -> SyscallResult<KeccakResponse> {
+    const KECCAK_FULL_RATE_IN_WORDS: usize = 17;
     let input_length = (request.input_end - request.input_start)?;
 
-    const KECCAK_FULL_RATE_IN_WORDS: usize = 17;
     let (n_rounds, remainder) = num_integer::div_rem(input_length, KECCAK_FULL_RATE_IN_WORDS);
 
     if remainder != 0 {
         return Err(SyscallExecutionError::SyscallError {
-            error_data: vec![
-                StarkFelt::try_from(INVALID_INPUT_LENGTH_ERROR)
-                    .map_err(SyscallExecutionError::from)?,
-            ],
+            error_data: vec![StarkFelt::try_from(INVALID_INPUT_LENGTH_ERROR)
+                .map_err(SyscallExecutionError::from)?],
         });
     }
 
@@ -684,7 +685,9 @@ pub fn keccak_syscall(
         let out_of_gas_error =
             StarkFelt::try_from(OUT_OF_GAS_ERROR).map_err(SyscallExecutionError::from)?;
 
-        return Err(SyscallExecutionError::SyscallError { error_data: vec![out_of_gas_error] });
+        return Err(SyscallExecutionError::SyscallError {
+            error_data: vec![out_of_gas_error],
+        });
     }
     *remaining_gas -= gas_cost;
 
@@ -693,10 +696,12 @@ pub fn keccak_syscall(
     let mut state = [0u64; 25];
     for chunk in data.chunks(KECCAK_FULL_RATE_IN_WORDS) {
         for (i, val) in chunk.iter().enumerate() {
-            state[i] ^= val.to_u64().ok_or_else(|| SyscallExecutionError::InvalidSyscallInput {
-                input: felt_to_stark_felt(val),
-                info: String::from("Invalid input for the keccak syscall."),
-            })?;
+            state[i] ^= val
+                .to_u64()
+                .ok_or_else(|| SyscallExecutionError::InvalidSyscallInput {
+                    input: felt_to_stark_felt(val),
+                    info: String::from("Invalid input for the keccak syscall."),
+                })?;
         }
         keccak::f1600(&mut state);
     }
