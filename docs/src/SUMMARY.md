@@ -49,6 +49,7 @@
   * [stop_mock_call](appendix/cheatcodes/stop_mock_call.md)
 * [Forge Library Functions References](appendix/forge-library.md)
     * [declare](appendix/forge-library/declare.md)
+    * [precalculate_address](appendix/forge-library/precalculate_address.md)
     * [deploy](appendix/forge-library/deploy.md)
     * [print](appendix/forge-library/print.md)
     * [parse_txt](appendix/forge-library/parse_txt.md)
