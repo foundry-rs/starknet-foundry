@@ -663,30 +663,39 @@ pub fn library_call_syscall(
     })
 }
 
+pub enum KeccakOutput {
+    Success { ret_data: KeccakResponse },
+    Panic { panic_data: Vec<Felt252> },
+}
+
 pub fn keccak_syscall(
     request: &KeccakRequest,
     vm: &mut VirtualMachine,
     remaining_gas: &mut u64,
-) -> SyscallResult<KeccakResponse> {
+) -> Result<KeccakOutput> {
     const KECCAK_FULL_RATE_IN_WORDS: usize = 17;
     let input_length = (request.input_end - request.input_start)?;
 
     let (n_rounds, remainder) = num_integer::div_rem(input_length, KECCAK_FULL_RATE_IN_WORDS);
 
     if remainder != 0 {
-        return Err(SyscallExecutionError::SyscallError {
-            error_data: vec![StarkFelt::try_from(INVALID_INPUT_LENGTH_ERROR)
-                .map_err(SyscallExecutionError::from)?],
+        let invalid_input_length_error = stark_felt_to_felt(
+            StarkFelt::try_from(INVALID_INPUT_LENGTH_ERROR).map_err(SyscallExecutionError::from)?,
+        );
+
+        return Ok(KeccakOutput::Panic {
+            panic_data: vec![invalid_input_length_error],
         });
     }
 
     let gas_cost = n_rounds as u64 * constants::KECCAK_ROUND_COST_GAS_COST;
     if gas_cost > *remaining_gas {
-        let out_of_gas_error =
-            StarkFelt::try_from(OUT_OF_GAS_ERROR).map_err(SyscallExecutionError::from)?;
+        let out_of_gas_error = stark_felt_to_felt(
+            StarkFelt::try_from(OUT_OF_GAS_ERROR).map_err(SyscallExecutionError::from)?,
+        );
 
-        return Err(SyscallExecutionError::SyscallError {
-            error_data: vec![out_of_gas_error],
+        return Ok(KeccakOutput::Panic {
+            panic_data: vec![out_of_gas_error],
         });
     }
     *remaining_gas -= gas_cost;
@@ -706,9 +715,11 @@ pub fn keccak_syscall(
         keccak::f1600(&mut state);
     }
 
-    Ok(KeccakResponse {
-        result_low: (Felt252::from(state[1]) << 64u32) + Felt252::from(state[0]),
-        result_high: (Felt252::from(state[3]) << 64u32) + Felt252::from(state[2]),
+    Ok(KeccakOutput::Success {
+        ret_data: KeccakResponse {
+            result_low: (Felt252::from(state[1]) << 64u32) + Felt252::from(state[0]),
+            result_high: (Felt252::from(state[3]) << 64u32) + Felt252::from(state[2]),
+        },
     })
 }
 
