@@ -1,7 +1,8 @@
 # Library Functions References
 
 * [`declare`](forge-library/declare.md)
-* [`deploy`](forge-library/deploy.md) 
+* [`precalculate_address`](forge-library/precalculate_address.md)
+* [`deploy`](forge-library/deploy.md)
 * [`print`](forge-library/print.md)
 * [`parse_txt`](forge-library/parse_txt.md)
 * [`deserialize_txt`](forge-library/deserialize_txt.md)

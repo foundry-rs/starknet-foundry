@@ -16,8 +16,8 @@ fn library_call_syscall() {
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
         use starknet::ClassHash;
-        use snforge_std::{ declare, PreparedContract, deploy };
-        
+        use snforge_std::{ declare, ContractClassTrait };
+
         #[starknet::interface]
         trait ICaller<TContractState> {
             fn call_add_two(
@@ -32,11 +32,8 @@ fn library_call_syscall() {
         }
         
         fn deploy_contract(name: felt252) -> ContractAddress {
-            let class_hash = declare(name);
-            let prepared = PreparedContract {
-                class_hash, constructor_calldata: @ArrayTrait::new()
-            };
-            deploy(prepared).unwrap()
+            let contract = declare(name);
+            contract.deploy(@ArrayTrait::new()).unwrap()
         }
         
         #[test]
@@ -46,12 +43,10 @@ fn library_call_syscall() {
                 contract_address: caller_address
             };
             
-            let executor_class_hash = declare('Executor');
-            let prepared = PreparedContract {
-                class_hash: executor_class_hash, constructor_calldata: @ArrayTrait::new()
-            };
+            let executor_contract = declare('Executor');
+            let executor_class_hash = executor_contract.class_hash;
 
-            let executor_address = deploy(prepared).unwrap();
+            let executor_address = executor_contract.deploy(@ArrayTrait::new()).unwrap();
             let executor_safe_dispatcher = IExecutorSafeDispatcher {
                 contract_address: executor_address
             };
