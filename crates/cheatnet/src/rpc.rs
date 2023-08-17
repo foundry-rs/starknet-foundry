@@ -669,6 +669,7 @@ pub enum KeccakOutput {
     Panic { panic_data: Vec<Felt252> },
 }
 
+// Inspired by blockifier::execution::syscalls::mod::keccak
 pub fn keccak_syscall(
     request: &KeccakRequest,
     vm: &mut VirtualMachine,
