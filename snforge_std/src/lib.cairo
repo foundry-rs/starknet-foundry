@@ -17,7 +17,3 @@ use cheatcodes::stop_warp;
 mod forge_print;
 
 use forge_print::PrintTrait;
-
-mod sn_keccak;
-
-use sn_keccak::shortstring_keccak;
