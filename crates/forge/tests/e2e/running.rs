@@ -6,43 +6,6 @@ use crate::e2e::common::runner::{runner, setup_package};
 use assert_fs::TempDir;
 use std::str::FromStr;
 
-pub fn setup_package(package_name: &str) -> TempDir {
-    let temp = TempDir::new().unwrap();
-    temp.copy_from(
-        format!("tests/data/{package_name}"),
-        &["**/*.cairo", "**/*.toml"],
-    )
-    .unwrap();
-
-    let snforge_std_path = Utf8PathBuf::from_str("../../snforge_std")
-        .unwrap()
-        .canonicalize_utf8()
-        .unwrap();
-
-    let manifest_path = temp.child("Scarb.toml");
-    manifest_path
-        .write_str(&formatdoc!(
-            r#"
-                [package]
-                name = "{}"
-                version = "0.1.0"
-
-                [[target.starknet-contract]]
-                sierra = true
-                casm = true
-
-                [dependencies]
-                starknet = "2.1.0"
-                snforge_std = {{ path = "{}" }}
-                "#,
-            package_name,
-            snforge_std_path
-        ))
-        .unwrap();
-
-    temp
-}
-
 #[test]
 fn simple_package() {
     let temp = setup_package("simple_package");
