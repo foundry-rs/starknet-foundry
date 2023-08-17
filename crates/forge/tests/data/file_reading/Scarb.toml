@@ -1,0 +1,11 @@
+[package]
+name = "file_reading"
+version = "0.1.0"
+
+[[target.starknet-contract]]
+sierra = true
+casm = true
+
+[dependencies]
+starknet = "2.1.0"
+snforge_std = { path = "../../../../../snforge_std" }

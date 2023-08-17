@@ -11,6 +11,7 @@ use thiserror::Error;
 pub mod declare;
 pub mod deploy;
 pub mod get_class_hash;
+pub mod mock_call;
 pub mod prank;
 pub mod precalculate_address;
 pub mod roll;
@@ -36,6 +37,8 @@ pub enum EnhancedHintError {
     SerdeJson(#[from] serde_json::Error),
     #[error(transparent)]
     StarknetApi(#[from] StarknetApiError),
+    #[error("Failed to parse {path} file")]
+    FileParsing { path: String },
 }
 
 impl From<EnhancedHintError> for HintError {

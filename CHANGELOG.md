@@ -14,9 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `#[should_panic]` attribute support
 - Documentation to public methods
 - Information sections to documentation about importing `snforge_std`
-- Added print support for basic numeric data types
+- Print support for basic numeric data types
+- Functions `parse_txt` and `TxtParser<T>::deserialize_txt` to load data from plain text files and serialize it
 - `get_class_hash` cheatcode
+- `mock_call` cheatcode
 - `precalculate_address` cheatcode
+
 
 #### Changed
 
