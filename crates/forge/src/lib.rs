@@ -101,7 +101,7 @@ pub fn collect_packages(
             } else if metadata.workspace.manifest_path != *manifest_path {
                 package.manifest_path == *manifest_path
             } else {
-                package.manifest_path == *manifest_path || is_virtual_workspace
+                package.manifest_path == metadata.workspace.manifest_path || is_virtual_workspace
             }
         })
         .map(|package| package.id.clone())
