@@ -32,6 +32,8 @@ use cairo_lang_runner::{
     casm_run::{cell_ref_to_relocatable, extract_buffer, get_ptr},
     insert_value_to_cellref, CairoHintProcessor as OriginalCairoHintProcessor,
 };
+
+use cairo_lang_starknet::contract::starknet_keccak;
 use cairo_lang_utils::bigint::BigIntAsHex;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 
@@ -362,6 +364,15 @@ impl CairoHintProcessor<'_> {
                         .write(felt)
                         .expect("Failed to insert serialized events");
                 }
+                Ok(())
+            }
+            "event_name_hash" => {
+                let name = inputs[0].clone();
+                let hash = starknet_keccak(as_cairo_short_string(&name).unwrap().as_bytes());
+
+                buffer
+                    .write(Felt252::from(hash))
+                    .expect("Failed to insert event name hash");
                 Ok(())
             }
             _ => Err(anyhow!("Unknown cheatcode selector: {selector}")).map_err(Into::into),

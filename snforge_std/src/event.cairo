@@ -13,6 +13,11 @@ fn spy_events() -> EventSpy {
     EventSpy { events: array![] }
 }
 
+fn event_name_hash(name: felt252) -> felt252 {
+    let mut output = cheatcode::<'event_name_hash'>(array![name].span());
+    *output[0]
+}
+
 #[derive(Drop, Clone, Serde)]
 struct Event {
     from: ContractAddress,

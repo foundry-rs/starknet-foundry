@@ -37,3 +37,4 @@ use event::EventSpy;
 use event::EventFetcher;
 use event::EventFetcherImpl;
 use event::spy_events;
+use event::event_name_hash;

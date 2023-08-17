@@ -14,7 +14,7 @@ fn expect_events_simple() {
             use array::ArrayTrait;
             use result::ResultTrait;
             use starknet::ContractAddress;
-            use snforge_std::{ declare, PreparedContract, deploy, spy_events, EventSpy, EventFetcher };
+            use snforge_std::{ declare, PreparedContract, deploy, spy_events, EventSpy, EventFetcher, event_name_hash };
 
             #[starknet::interface]
             trait IEventEmitter<TContractState> {
@@ -33,6 +33,7 @@ fn expect_events_simple() {
                 spy.fetch_events();
 
                 assert(spy.events.len() == 1, 'There should be one event');
+                assert(*spy.events.at(0).name == event_name_hash('FirstEvent'), 'Wrong event name');
                 assert(spy.events.at(0).keys.len() == 0, 'There should be no keys');
                 assert(spy.events.at(0).data.len() == 1, 'There should be one data');
 
