@@ -13,6 +13,7 @@ pub mod deploy;
 pub mod get_class_hash;
 pub mod mock_call;
 pub mod prank;
+pub mod precalculate_address;
 pub mod roll;
 pub mod warp;
 

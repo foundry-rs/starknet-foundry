@@ -1,8 +1,6 @@
-use crate::integration::common::corelib::{corelib_path, predeployed_contracts};
 use crate::integration::common::runner::Contract;
+use crate::integration::common::running_tests::run_test_case;
 use crate::{assert_passed, test_case};
-use camino::Utf8PathBuf;
-use forge::run;
 use indoc::indoc;
 use std::path::Path;
 
@@ -12,7 +10,7 @@ fn start_mock_call_simple() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use snforge_std::{ declare, PreparedContract, deploy, start_mock_call };
+        use snforge_std::{ declare, ContractClassTrait, start_mock_call };
 
         #[starknet::interface]
         trait IMockChecker<TContractState> {
@@ -23,9 +21,8 @@ fn start_mock_call_simple() {
         fn start_mock_call_simple() {
             let calldata = array![420];
 
-            let class_hash = declare('MockChecker');
-            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
-            let contract_address = deploy(prepared).unwrap();
+            let contract = declare('MockChecker');
+            let contract_address = contract.deploy(@calldata).unwrap();
 
             let dispatcher = IMockCheckerDispatcher { contract_address };
 
@@ -41,9 +38,8 @@ fn start_mock_call_simple() {
         fn start_mock_call_simple_mock_before_dispatcher_created() {
             let calldata = array![420];
 
-            let class_hash = declare('MockChecker');
-            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
-            let contract_address = deploy(prepared).unwrap();
+            let contract = declare('MockChecker');
+            let contract_address = contract.deploy(@calldata).unwrap();
 
             let mock_ret_data = 421;
             start_mock_call(contract_address, 'get_thing', mock_ret_data);
@@ -62,17 +58,7 @@ fn start_mock_call_simple() {
         .unwrap()
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
     assert_passed!(result);
 }
 
@@ -84,7 +70,7 @@ fn start_mock_call_return_complex_dtypes() {
         use result::ResultTrait;
         use array::ArrayTrait;
         use serde::Serde;
-        use snforge_std::{ declare, PreparedContract, deploy, start_mock_call };
+        use snforge_std::{ declare, ContractClassTrait, start_mock_call };
 
         #[starknet::interface]
         trait IMockChecker<TContractState> {
@@ -102,9 +88,8 @@ fn start_mock_call_return_complex_dtypes() {
         fn start_mock_call_return_struct() {
             let calldata = array![420];
 
-            let class_hash = declare('MockChecker');
-            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
-            let contract_address = deploy(prepared).unwrap();
+            let contract = declare('MockChecker');
+            let contract_address = contract.deploy(@calldata).unwrap();
 
             let dispatcher = IMockCheckerDispatcher { contract_address };
 
@@ -121,9 +106,8 @@ fn start_mock_call_return_complex_dtypes() {
         fn start_mock_call_return_arr() {
             let calldata = array![420];
 
-            let class_hash = declare('MockChecker');
-            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
-            let contract_address = deploy(prepared).unwrap();
+            let contract = declare('MockChecker');
+            let contract_address = contract.deploy(@calldata).unwrap();
 
             let dispatcher = IMockCheckerDispatcher { contract_address };
 
@@ -149,17 +133,7 @@ fn start_mock_call_return_complex_dtypes() {
         .unwrap()
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
     assert_passed!(result);
 }
 
@@ -169,7 +143,7 @@ fn stop_mock_call_simple() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use snforge_std::{ declare, PreparedContract, deploy, start_mock_call, stop_mock_call };
+        use snforge_std::{ declare, ContractClassTrait, start_mock_call, stop_mock_call };
 
         #[starknet::interface]
         trait IMockChecker<TContractState> {
@@ -180,9 +154,8 @@ fn stop_mock_call_simple() {
         fn stop_mock_call_simple() {
             let calldata = array![420];
 
-            let class_hash = declare('MockChecker');
-            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
-            let contract_address = deploy(prepared).unwrap();
+            let contract = declare('MockChecker');
+            let contract_address = contract.deploy(@calldata).unwrap();
 
             let dispatcher = IMockCheckerDispatcher { contract_address };
 
@@ -201,9 +174,8 @@ fn stop_mock_call_simple() {
         fn stop_mock_call_when_mock_not_started() {
             let calldata = array![420];
 
-            let class_hash = declare('MockChecker');
-            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
-            let contract_address = deploy(prepared).unwrap();
+            let contract = declare('MockChecker');
+            let contract_address = contract.deploy(@calldata).unwrap();
 
             stop_mock_call(contract_address, 'get_thing');
 
@@ -221,17 +193,7 @@ fn stop_mock_call_simple() {
         .unwrap()
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
     assert_passed!(result);
 }
 
@@ -241,7 +203,7 @@ fn mock_call_double() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use snforge_std::{ declare, PreparedContract, deploy, start_mock_call, stop_mock_call };
+        use snforge_std::{ declare, ContractClassTrait, start_mock_call, stop_mock_call };
 
         #[starknet::interface]
         trait IMockChecker<TContractState> {
@@ -252,9 +214,8 @@ fn mock_call_double() {
         fn mock_call_double_mocks() {
             let calldata = array![420];
 
-            let class_hash = declare('MockChecker');
-            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
-            let contract_address = deploy(prepared).unwrap();
+            let contract = declare('MockChecker');
+            let contract_address = contract.deploy(@calldata).unwrap();
 
             let dispatcher = IMockCheckerDispatcher { contract_address };
 
@@ -276,9 +237,8 @@ fn mock_call_double() {
         fn mock_call_double_calls() {
             let calldata = array![420];
 
-            let class_hash = declare('MockChecker');
-            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
-            let contract_address = deploy(prepared).unwrap();
+            let contract = declare('MockChecker');
+            let contract_address = contract.deploy(@calldata).unwrap();
 
             let dispatcher = IMockCheckerDispatcher { contract_address };
 
@@ -304,17 +264,7 @@ fn mock_call_double() {
         .unwrap()
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
     assert_passed!(result);
 }
 
@@ -326,7 +276,7 @@ fn mock_call_proxy() {
         use result::ResultTrait;
         use array::ArrayTrait;
         use starknet::ContractAddress;
-        use snforge_std::{ declare, PreparedContract, deploy, start_mock_call };
+        use snforge_std::{ declare, ContractClassTrait, start_mock_call };
 
         #[starknet::interface]
         trait IMockCheckerProxy<TContractState> {
@@ -337,15 +287,15 @@ fn mock_call_proxy() {
         fn mock_call_proxy() {
             let calldata = array![420];
 
-            let class_hash = declare('MockChecker');
-            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
-            let mock_checker_contract_address = deploy(prepared).unwrap();
+            let contract = declare('MockChecker');
+            let mock_checker_contract_address = contract.deploy(@calldata).unwrap();
+
             let mock_ret_data = 421;
             start_mock_call(mock_checker_contract_address, 'get_thing', mock_ret_data);
 
-            let class_hash = declare('MockCheckerProxy');
-            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
-            let proxy_contract_address = deploy(prepared).unwrap();
+            let proxy_contract = declare('MockCheckerProxy');
+            let proxy_contract_address = proxy_contract.deploy(@ArrayTrait::new()).unwrap();
+
             let proxy_dispatcher = IMockCheckerProxyDispatcher { contract_address: proxy_contract_address };
             let thing = proxy_dispatcher.get_thing_from_contract(mock_checker_contract_address);
 
@@ -365,17 +315,7 @@ fn mock_call_proxy() {
         .unwrap()
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
     assert_passed!(result);
 }
 
@@ -385,7 +325,7 @@ fn mock_call_two_methods() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use snforge_std::{ declare, PreparedContract, deploy, start_mock_call };
+        use snforge_std::{ declare, ContractClassTrait, start_mock_call };
 
         #[starknet::interface]
         trait IMockChecker<TContractState> {
@@ -397,9 +337,8 @@ fn mock_call_two_methods() {
         fn mock_call_two_methods() {
             let calldata = array![420];
 
-            let class_hash = declare('MockChecker');
-            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
-            let contract_address = deploy(prepared).unwrap();
+            let contract = declare('MockChecker');
+            let contract_address = contract.deploy(@calldata).unwrap();
 
             let dispatcher = IMockCheckerDispatcher { contract_address };
 
@@ -424,17 +363,7 @@ fn mock_call_two_methods() {
         .unwrap()
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
     assert_passed!(result);
 }
 
@@ -446,7 +375,7 @@ fn start_mock_call_in_constructor_test() {
             r#"
         use result::ResultTrait;
         use array::ArrayTrait;
-        use snforge_std::{ declare, PreparedContract, deploy, start_mock_call };
+        use snforge_std::{ declare, ContractClassTrait, start_mock_call };
 
         #[starknet::interface]
         trait IConstructorMockChecker<TContractState> {
@@ -456,9 +385,8 @@ fn start_mock_call_in_constructor_test() {
 
         #[test]
         fn start_mock_call_in_constructor_test_has_no_effect() {
-            let class_hash = declare('ConstructorMockChecker');
-            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
-            let contract_address = deploy(prepared).unwrap();
+            let contract = declare('ConstructorMockChecker');
+            let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
 
             let dispatcher = IConstructorMockCheckerDispatcher { contract_address };
 
@@ -478,17 +406,7 @@ fn start_mock_call_in_constructor_test() {
         .unwrap()
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
     assert_passed!(result);
 }
 
@@ -499,7 +417,7 @@ fn start_mock_call_with_syscall() {
             r#"
         use result::ResultTrait;
         use starknet::ContractAddress;
-        use snforge_std::{ declare, PreparedContract, deploy, start_mock_call, stop_mock_call };
+        use snforge_std::{ declare, ContractClassTrait, start_mock_call, stop_mock_call };
 
         #[starknet::interface]
         trait IMockCheckerProxy<TContractState> {
@@ -510,15 +428,15 @@ fn start_mock_call_with_syscall() {
         fn start_mock_call_with_syscall() {
             let calldata = array![420];
 
-            let class_hash = declare('MockChecker');
-            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
-            let mock_checker_contract_address = deploy(prepared).unwrap();
+            let contract = declare('MockChecker');
+            let mock_checker_contract_address = contract.deploy(@calldata).unwrap();
+
             let mock_ret_data = 421;
             start_mock_call(mock_checker_contract_address, 'get_thing', mock_ret_data);
 
-            let class_hash = declare('MockCheckerProxy');
-            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
-            let proxy_contract_address = deploy(prepared).unwrap();
+            let contract = declare('MockCheckerProxy');
+            let proxy_contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+
             let proxy_dispatcher = IMockCheckerProxyDispatcher { contract_address: proxy_contract_address };
             let thing = proxy_dispatcher.get_thing_from_contract_and_emit_event(mock_checker_contract_address);
 
@@ -542,17 +460,7 @@ fn start_mock_call_with_syscall() {
         .unwrap()
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
     assert_passed!(result);
 }
 
@@ -562,7 +470,7 @@ fn start_mock_call_inner_call_has_no_effect() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use snforge_std::{ declare, PreparedContract, deploy, start_mock_call };
+        use snforge_std::{ declare, ContractClassTrait, start_mock_call };
 
         #[starknet::interface]
         trait IMockChecker<TContractState> {
@@ -573,9 +481,8 @@ fn start_mock_call_inner_call_has_no_effect() {
         fn start_mock_call_inner_call_has_no_effect() {
             let calldata = array![420];
 
-            let class_hash = declare('MockChecker');
-            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
-            let contract_address = deploy(prepared).unwrap();
+            let contract = declare('MockChecker');
+            let contract_address = contract.deploy(@calldata).unwrap();
 
             let dispatcher = IMockCheckerDispatcher { contract_address };
 
@@ -595,17 +502,7 @@ fn start_mock_call_inner_call_has_no_effect() {
         .unwrap()
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
     assert_passed!(result);
 }
 
@@ -615,7 +512,7 @@ fn start_mock_call_with_library_call_has_no_effect() {
         indoc!(
             r#"
             use result::ResultTrait;
-            use snforge_std::{ declare, PreparedContract, deploy, start_mock_call };
+            use snforge_std::{ declare, ContractClassTrait, start_mock_call };
             use starknet::ClassHash;
 
             #[starknet::interface]
@@ -625,11 +522,10 @@ fn start_mock_call_with_library_call_has_no_effect() {
 
             #[test]
             fn start_mock_call_with_library_call_has_no_effect() {
-                let mock_checker_class_hash = declare('MockChecker');
+                let mock_checker_class_hash = declare('MockChecker').class_hash;
 
-                let class_hash = declare('MockCheckerLibCall');
-                let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
-                let contract_address = deploy(prepared).unwrap();
+                let contract = declare('MockCheckerLibCall');
+                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
 
                 let mock_ret_data = 421;
                 start_mock_call(contract_address, 'get_thing', mock_ret_data);
@@ -652,24 +548,13 @@ fn start_mock_call_with_library_call_has_no_effect() {
         .unwrap()
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
 
 #[test]
 fn start_mock_call_when_contract_not_deployed_yet() {
-    // TODO (#465): Finish it! (after precalculate address is ready)
     let test = test_case!(
         indoc!(
             r#"
@@ -678,7 +563,7 @@ fn start_mock_call_when_contract_not_deployed_yet() {
         use traits::TryInto;
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
-        use snforge_std::{ declare, PreparedContract, deploy, start_mock_call };
+        use snforge_std::{ declare, ContractClassTrait, start_mock_call };
 
         #[starknet::interface]
         trait IMockChecker<TContractState> {
@@ -689,16 +574,17 @@ fn start_mock_call_when_contract_not_deployed_yet() {
         fn start_mock_call_when_contract_not_deployed_yet() {
             let calldata = array![420];
 
-            let class_hash = declare('MockChecker');
-            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
-
-            let contract_address: felt252 = 123;
-            let contract_address: ContractAddress = contract_address.try_into().unwrap();
-
-            let dispatcher = IMockCheckerDispatcher { contract_address };
+            let contract = declare('MockChecker');
+            let precalculate_address = contract.precalculate_address(@calldata);
 
             let mock_ret_data = 421;
-            start_mock_call(contract_address, 'get_thing', mock_ret_data);
+            start_mock_call(precalculate_address, 'get_thing', mock_ret_data);
+
+            let contract_address = contract.deploy(@calldata).unwrap();
+            let dispatcher = IMockCheckerDispatcher { contract_address };
+            let thing = dispatcher.get_thing();
+
+            assert(thing == 421, thing);
         }
     "#
         ),
@@ -709,17 +595,7 @@ fn start_mock_call_when_contract_not_deployed_yet() {
         .unwrap()
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
     assert_passed!(result);
 }
 
@@ -733,7 +609,7 @@ fn start_mock_call_when_function_not_implemented() {
         use traits::TryInto;
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
-        use snforge_std::{ declare, PreparedContract, deploy, start_mock_call };
+        use snforge_std::{ declare, ContractClassTrait, start_mock_call };
 
         #[starknet::interface]
         trait IMockChecker<TContractState> {
@@ -744,9 +620,8 @@ fn start_mock_call_when_function_not_implemented() {
         fn start_mock_call_when_function_not_implemented() {
             let calldata = array![420];
 
-            let class_hash = declare('MockChecker');
-            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
-            let contract_address = deploy(prepared).unwrap();
+            let contract = declare('MockChecker');
+            let contract_address = contract.deploy(@calldata).unwrap();
 
             let dispatcher = IMockCheckerDispatcher { contract_address };
 
@@ -765,16 +640,6 @@ fn start_mock_call_when_function_not_implemented() {
         .unwrap()
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
     assert_passed!(result);
 }

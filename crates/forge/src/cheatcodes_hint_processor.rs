@@ -295,10 +295,7 @@ impl CairoHintProcessor<'_> {
                 let class_hash = ClassHash(StarkFelt::new(class_hash.to_be_bytes()).unwrap());
 
                 let calldata_length = inputs[1].to_usize().unwrap();
-                let mut calldata = vec![];
-                for felt in inputs.iter().skip(2).take(calldata_length) {
-                    calldata.push(felt.clone());
-                }
+                let calldata = Vec::from(&inputs[2..(2 + calldata_length)]);
 
                 match self.cheatnet_state.deploy(&class_hash, &calldata) {
                     Ok(contract_address) => {
@@ -322,6 +319,23 @@ impl CairoHintProcessor<'_> {
             }
             "print" => {
                 print(inputs);
+                Ok(())
+            }
+            "precalculate_address" => {
+                let class_hash = inputs[0].clone();
+
+                let calldata_length = inputs[1].to_usize().unwrap();
+                let calldata = Vec::from(&inputs[2..(2 + calldata_length)]);
+
+                let contract_address = self
+                    .cheatnet_state
+                    .precalculate_address(&class_hash, &calldata);
+
+                let felt_contract_address: Felt252 = stark_felt_to_felt(*contract_address.0.key());
+                buffer
+                    .write(felt_contract_address)
+                    .expect("Failed to insert a precalculated contract address");
+
                 Ok(())
             }
             "get_class_hash" => {

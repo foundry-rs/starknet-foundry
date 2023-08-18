@@ -15,14 +15,18 @@ use starknet::Felt252TryIntoClassHash;
 use starknet::Felt252TryIntoContractAddress;
 
 #[derive(Drop, Clone)]
-struct PreparedContract {
+struct ContractClass {
     class_hash: ClassHash,
-    constructor_calldata: @Array::<felt252>,
 }
 
 #[derive(Drop, Clone)]
 struct RevertedTransaction {
     panic_data: Array::<felt252>,
+}
+
+trait ContractClassTrait {
+    fn precalculate_address(self: @ContractClass, constructor_calldata: @Array::<felt252>) -> ContractAddress;
+    fn deploy(self: @ContractClass, constructor_calldata: @Array::<felt252>) -> Result<ContractAddress, RevertedTransaction>;
 }
 
 trait RevertedTransactionTrait {
@@ -35,54 +39,73 @@ impl RevertedTransactionImpl of RevertedTransactionTrait {
     }
 }
 
-fn declare(contract: felt252) -> ClassHash {
-    let span = cheatcode::<'declare'>(array![contract].span());
+impl ContractClassImpl of ContractClassTrait {
+    fn precalculate_address(self: @ContractClass, constructor_calldata: @Array::<felt252>) -> ContractAddress {
+        let mut inputs: Array::<felt252> = _prepare_calldata(self.class_hash, constructor_calldata);
 
-    let exit_code = *span[0];
-    let result = *span[1];
-    assert(exit_code == 0, 'declare should never fail');
-    result.try_into().unwrap()
+        let outputs = cheatcode::<'precalculate_address'>(inputs.span());
+        (*outputs[0]).try_into().unwrap()
+    }
+
+    fn deploy(self: @ContractClass, constructor_calldata: @Array::<felt252>) -> Result<ContractAddress, RevertedTransaction> {
+        let mut inputs = _prepare_calldata(self.class_hash, constructor_calldata);
+
+        let outputs = cheatcode::<'deploy'>(inputs.span());
+        let exit_code = *outputs[0];
+
+        if exit_code == 0 {
+            let result = *outputs[1];
+            Result::<ContractAddress, RevertedTransaction>::Ok(result.try_into().unwrap())
+        } else {
+            let panic_data_len_felt = *outputs[1];
+            let panic_data_len = panic_data_len_felt.try_into().unwrap();
+            let mut panic_data = array![];
+
+            let offset = 2;
+            let mut i = offset;
+            loop {
+                if panic_data_len + offset == i {
+                    break ();
+                }
+                panic_data.append(*outputs[i]);
+                i += 1;
+            };
+
+            Result::<ContractAddress, RevertedTransaction>::Err(RevertedTransaction { panic_data })
+        }
+    }
 }
 
-fn deploy(prepared_contract: PreparedContract) -> Result::<ContractAddress, RevertedTransaction> {
-    let PreparedContract{class_hash, constructor_calldata } = prepared_contract;
-    let mut inputs = array![class_hash.into()];
-
+fn _prepare_calldata(class_hash: @ClassHash, constructor_calldata: @Array::<felt252>) -> Array::<felt252>  {
+    let class_hash: felt252 = class_hash.clone().into();
+    let mut inputs: Array::<felt252> = array![class_hash];
     let calldata_len_felt = constructor_calldata.len().into();
     inputs.append(calldata_len_felt);
 
     let calldata_len = constructor_calldata.len();
     let mut i = 0;
+
     loop {
-        if calldata_len == i {
-            break ();
+        if i == calldata_len {
+            break();
         }
         inputs.append(*constructor_calldata[i]);
         i += 1;
     };
 
-    let outputs = cheatcode::<'deploy'>(inputs.span());
-    let exit_code = *outputs[0];
+    inputs
+}
 
-    if exit_code == 0 {
-        let result = *outputs[1];
-        Result::<ContractAddress, RevertedTransaction>::Ok(result.try_into().unwrap())
-    } else {
-        let panic_data_len_felt = *outputs[1];
-        let panic_data_len = panic_data_len_felt.try_into().unwrap();
-        let mut panic_data = array![];
+fn declare(contract: felt252) -> ContractClass {
+    let span = cheatcode::<'declare'>(array![contract].span());
 
-        let offset = 2;
-        let mut i = offset;
-        loop {
-            if panic_data_len + offset == i {
-                break ();
-            }
-            panic_data.append(*outputs[i]);
-            i += 1;
-        };
+    let exit_code = *span[0];
+    let result = *span[1];
+    assert(exit_code == 0, 'declare should never fail');
+    let class_hash = result.try_into().unwrap();
 
-        Result::<ContractAddress, RevertedTransaction>::Err(RevertedTransaction { panic_data })
+    ContractClass {
+        class_hash
     }
 }
 
