@@ -54,7 +54,10 @@ fn simple_package_with_git_dependency() {
 
     let name = "GITHUB_SHA";
     let git_hash = match env::var(name) {
-        Ok(v) => v,
+        Ok(v) => {
+            println!("GITHUB_SHA {v}");
+            v
+        }
         Err(_e) => {
             let output = Command::new("git")
                 .args(["rev-parse", "HEAD"])
