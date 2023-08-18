@@ -4,6 +4,7 @@ use indoc::{formatdoc, indoc};
 
 use crate::e2e::common::runner::{runner, setup_package};
 use assert_fs::TempDir;
+use std::env;
 use std::process::Command;
 use std::str::FromStr;
 
@@ -51,12 +52,19 @@ fn simple_package_with_git_dependency() {
     temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
         .unwrap();
 
-    let output = Command::new("git")
-        .args(&["rev-parse", "HEAD"])
-        .output()
-        .unwrap();
-    let git_hash = String::from_utf8(output.stdout).unwrap();
-    println!("hash {}", git_hash);
+    let name = "GITHUB_SHA";
+    let git_hash = match env::var(name) {
+        Ok(v) => v,
+        Err(_e) => {
+            let output = Command::new("git")
+                .args(["rev-parse", "HEAD"])
+                .output()
+                .unwrap();
+            let res = String::from_utf8(output.stdout).unwrap();
+            res
+        }
+    };
+    println!("hash {git_hash}");
 
     let manifest_path = temp.child("Scarb.toml");
     manifest_path
@@ -73,8 +81,8 @@ fn simple_package_with_git_dependency() {
             [dependencies]
             starknet = "2.1.0"
             snforge_std = {{ git = "https://github.com/foundry-rs/starknet-foundry.git", rev = "{}" }}
-            "#,
-            git_hash.trim()
+            "#, git_hash.trim()
+
         ))
         .unwrap();
 
