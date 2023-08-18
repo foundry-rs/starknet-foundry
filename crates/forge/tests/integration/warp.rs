@@ -1,8 +1,6 @@
-use crate::integration::common::corelib::{corelib_path, predeployed_contracts};
 use crate::integration::common::runner::Contract;
+use crate::integration::common::running_tests::run_test_case;
 use crate::{assert_passed, test_case};
-use camino::Utf8PathBuf;
-use forge::run;
 use indoc::indoc;
 use std::path::Path;
 
@@ -18,7 +16,7 @@ fn warp() {
             use traits::Into;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use snforge_std::{ declare, PreparedContract, deploy, start_warp, stop_warp, start_roll };
+            use snforge_std::{ declare, ContractClassTrait, start_warp, stop_warp, start_roll };
 
             #[starknet::interface]
             trait IWarpChecker<TContractState> {
@@ -28,9 +26,8 @@ fn warp() {
             }
 
             fn deploy_warp_checker()  -> IWarpCheckerDispatcher {
-                let class_hash = declare('WarpChecker');
-                let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
-                let contract_address = deploy(prepared).unwrap();
+                let contract = declare('WarpChecker');
+                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 IWarpCheckerDispatcher { contract_address }
             }
 
@@ -106,17 +103,7 @@ fn warp() {
         .unwrap()
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
@@ -134,8 +121,8 @@ fn start_warp_in_constructor_test() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use snforge_std::{ declare, PreparedContract, deploy, start_warp };
-            
+            use snforge_std::{ declare, deploy, start_warp };
+
             #[starknet::interface]
             trait IConstructorWarpChecker<TContractState> {
                 fn get_stored_block_timestamp(ref self: TContractState) -> u64;
@@ -143,11 +130,10 @@ fn start_warp_in_constructor_test() {
 
             #[test]
             fn test_warp_constructor_simple() {
-                let class_hash = declare('ConstructorWarpChecker');
-                let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
+                let contract = declare('ConstructorWarpChecker');
                 let contract_address: ContractAddress = 3536868843103376321721783970179672615412806578951102081876401371045020950704.try_into().unwrap();
                 start_warp(contract_address, 234);
-                let contract_address = deploy(prepared).unwrap().;            
+                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
 
                 let dispatcher = IConstructorWarpCheckerDispatcher { contract_address };
                 assert(dispatcher.get_stored_block_timestamp() == 234, 'Wrong stored timestamp');
@@ -161,17 +147,7 @@ fn start_warp_in_constructor_test() {
         .unwrap()
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
@@ -188,7 +164,8 @@ fn start_warp_with_proxy() {
             use traits::Into;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use snforge_std::{ declare, PreparedContract, deploy, start_warp };
+            use snforge_std::{ declare, ContractClassTrait, start_warp };
+
 
             #[starknet::interface]
             trait IWarpCheckerProxy<TContractState> {
@@ -197,14 +174,12 @@ fn start_warp_with_proxy() {
 
             #[test]
             fn test_warp_simple() {
-                let class_hash = declare('WarpChecker');
-                let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
-                let warp_checker_contract_address = deploy(prepared).unwrap();
+                let contract = declare('WarpChecker');
+                let warp_checker_contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 start_warp(warp_checker_contract_address, 234);
 
-                let class_hash = declare('WarpCheckerProxy');
-                let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
-                let proxy_contract_address = deploy(prepared).unwrap();
+                let contract = declare('WarpCheckerProxy');
+                let proxy_contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let proxy_dispatcher = IWarpCheckerProxyDispatcher { contract_address: proxy_contract_address };
 
                 let block_timestamp = proxy_dispatcher.get_warp_checkers_block_info(warp_checker_contract_address);
@@ -224,17 +199,7 @@ fn start_warp_with_proxy() {
         .unwrap()
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
@@ -251,7 +216,8 @@ fn start_warp_with_library_call() {
             use traits::Into;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use snforge_std::{ declare, PreparedContract, deploy, start_warp };
+            use snforge_std::{ declare, ContractClassTrait, start_warp };
+
             use starknet::ClassHash;
 
             #[starknet::interface]
@@ -261,11 +227,12 @@ fn start_warp_with_library_call() {
 
             #[test]
             fn test_warp_simple() {
-                let warp_checker_class_hash = declare('WarpChecker');
+                let warp_checker_contract = declare('WarpChecker');
 
-                let class_hash = declare('WarpCheckerLibCall');
-                let prepared = PreparedContract { class_hash, constructor_calldata: @ArrayTrait::new() };
-                let contract_address = deploy(prepared).unwrap();
+                let warp_checker_class_hash = warp_checker_contract.class_hash;
+
+                let contract = declare('WarpCheckerLibCall');
+                let contract_address = contract.deploy( @ArrayTrait::new()).unwrap();
 
                 start_warp(contract_address, 234);
 
@@ -287,17 +254,7 @@ fn start_warp_with_library_call() {
         .unwrap()
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }

@@ -1,12 +1,9 @@
 use crate::integration::common::runner::Contract;
+use crate::integration::common::running_tests::run_test_case;
 use crate::{assert_passed, test_case};
-use camino::Utf8PathBuf;
+use indoc::indoc;
 use std::path::Path;
 use std::string::ToString;
-
-use crate::integration::common::corelib::{corelib_path, predeployed_contracts};
-use forge::run;
-use indoc::indoc;
 
 #[test]
 fn simple_call_and_invoke() {
@@ -19,8 +16,8 @@ fn simple_call_and_invoke() {
         use traits::TryInto;
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
-        use snforge_std::{ declare, PreparedContract, deploy };
-            
+        use snforge_std::{ declare, ContractClassTrait };
+
         #[starknet::interface]
         trait IHelloStarknet<TContractState> {
             fn increase_balance(ref self: TContractState, amount: felt252);
@@ -31,9 +28,8 @@ fn simple_call_and_invoke() {
 
         #[test]
         fn call_and_invoke() {
-            let class_hash = declare('HelloStarknet');
-            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
-            let contract_address = deploy(prepared).unwrap();
+            let contract = declare('HelloStarknet');
+            let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
             let dispatcher = IHelloStarknetDispatcher { contract_address };
 
             let balance = dispatcher.get_balance();
@@ -53,17 +49,7 @@ fn simple_call_and_invoke() {
         .unwrap()
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
@@ -79,8 +65,7 @@ fn advanced_types() {
         use traits::TryInto;
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
-        use snforge_std::{ declare, PreparedContract, deploy, start_prank };
-            
+        use snforge_std::{ declare, ContractClassTrait, start_prank };
 
         #[starknet::interface]
         trait IERC20<TContractState> {
@@ -111,9 +96,8 @@ fn advanced_types() {
             calldata.append(0);         // initial supply high
             calldata.append(1234);      // recipient
         
-            let class_hash = declare('ERC20');
-            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
-            let contract_address = deploy(prepared).unwrap();
+            let contract = declare('ERC20');
+            let contract_address = contract.deploy(@calldata).unwrap();
             let dispatcher = IERC20Dispatcher { contract_address };
             let user_address: ContractAddress = 1234.try_into().unwrap();
             let other_user_address: ContractAddress = 9999.try_into().unwrap();
@@ -138,17 +122,7 @@ fn advanced_types() {
         .unwrap()
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
@@ -164,8 +138,8 @@ fn handling_errors() {
         use traits::TryInto;
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
-        use snforge_std::{ declare, PreparedContract, deploy };
-            
+        use snforge_std::{ declare, ContractClassTrait };
+
         #[starknet::interface]
         trait IHelloStarknet<TContractState> {
             fn increase_balance(ref self: TContractState, amount: felt252);
@@ -176,9 +150,8 @@ fn handling_errors() {
 
         #[test]
         fn handling_errors() {
-            let class_hash = declare('HelloStarknet');
-            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
-            let contract_address = deploy(prepared).unwrap();
+            let contract = declare('HelloStarknet');
+            let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
             let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
         
         
@@ -216,17 +189,7 @@ fn handling_errors() {
         .unwrap()
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
@@ -242,13 +205,13 @@ fn serding() {
         use traits::TryInto;
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
-        use snforge_std::{ declare, PreparedContract, deploy };
-        
+        use snforge_std::{ declare, ContractClassTrait };
+
         #[derive(Drop, Serde)]
         struct NestedStruct {
             d: felt252,
         }
-        
+
         #[derive(Drop, Serde)]
         struct CustomStruct {
             a: felt252,
@@ -273,11 +236,8 @@ fn serding() {
         
         #[test]
         fn test_serding() {
-            let class_hash = declare('Serding');
-            let prepared = PreparedContract {
-                class_hash, constructor_calldata: @ArrayTrait::new()
-            };
-            let contract_address = deploy(prepared).unwrap();
+            let contract = declare('Serding');
+            let contract_address = contract.deploy( @ArrayTrait::new()).unwrap();
         
             let dispatcher = ISerdingDispatcher {
                 contract_address
@@ -301,17 +261,7 @@ fn serding() {
         .unwrap()
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
@@ -328,7 +278,8 @@ fn proxy_storage() {
         use traits::TryInto;
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
-        use snforge_std::{ declare, PreparedContract, deploy };
+        use snforge_std::{ declare, ContractClassTrait };
+
         
         #[derive(Drop, Serde, PartialEq, Copy)]
         struct NestedStruct {
@@ -343,9 +294,8 @@ fn proxy_storage() {
         }
         
         fn deploy_contract(name: felt252) -> ContractAddress {
-            let class_hash = declare(name);
-            let prepared = PreparedContract { class_hash, constructor_calldata: @ArrayTrait::new() };
-            deploy(prepared).unwrap()
+            let contract = declare(name);
+            contract.deploy(@ArrayTrait::new()).unwrap()
         }
         
         
@@ -464,17 +414,7 @@ fn proxy_storage() {
         )
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
@@ -492,13 +432,11 @@ fn proxy_dispatcher_panic() {
         use traits::Into;
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
-        use snforge_std::{ declare, PreparedContract, deploy };
-        
+        use snforge_std::{ declare, ContractClassTrait };
 
         fn deploy_contract(name: felt252, constructor_calldata: @Array<felt252>) -> ContractAddress {
-            let class_hash = declare(name);
-            let prepared = PreparedContract { class_hash, constructor_calldata };
-            deploy(prepared).unwrap()
+            let contract = declare(name);
+            contract.deploy(constructor_calldata).unwrap()
         }
         
         #[starknet::interface]
@@ -575,17 +513,7 @@ fn proxy_dispatcher_panic() {
         )
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
