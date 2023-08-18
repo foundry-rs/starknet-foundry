@@ -292,3 +292,94 @@ fn test_keccak_syscall_in_contract() {
 
     assert_passed!(result);
 }
+
+#[test]
+fn compare_keccak_from_contract_with_plain_keccak() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use result::ResultTrait;
+            use array::ArrayTrait;
+            use option::OptionTrait;
+            use traits::TryInto;
+            use clone::Clone;
+            use starknet::ContractAddress;
+            use starknet::syscalls::keccak_syscall;
+            use starknet::SyscallResultTrait;
+            use snforge_std::{ declare, ContractClassTrait };
+
+            #[starknet::interface]
+            trait IHelloKeccak<TContractState> {
+                fn run_keccak(ref self: TContractState, input: Array<u64>) -> u256;
+            }
+
+            #[test]
+            fn test_keccak_simple() {
+                let contract = declare('HelloKeccak');
+                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+                let dispatcher = IHelloKeccakDispatcher { contract_address };
+
+                let input = array![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
+                let contract_keccak = dispatcher.run_keccak(input.clone());
+                let keccak = keccak_syscall(input.span()).unwrap_syscall();
+
+                assert(contract_keccak == keccak, 'Keccaks dont match');
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "HelloKeccak".to_string(),
+            Path::new("tests/data/contracts/keccak_usage.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test);
+
+    assert_passed!(result);
+}
+
+// #[test]
+// fn compare_keccak_from_contract_with_plain_keccak() {
+//     let test = test_case!(
+//         indoc!(
+//             r#"
+//             use result::ResultTrait;
+//             use array::ArrayTrait;
+//             use option::OptionTrait;
+//             use traits::TryInto;
+//             use starknet::ContractAddress;
+//             use starknet::syscalls::keccak_syscall;
+//             use starknet::SyscallResultTrait;
+//             use snforge_std::{ declare, ContractClassTrait };
+//
+//             #[starknet::interface]
+//             trait IHelloKeccak<TContractState> {
+//                 fn run_keccak(ref self: TContractState) -> u256;
+//             }
+//
+//             #[test]
+//             fn test_compare_keccaks() {
+//                 let contract = declare('HelloKeccak');
+//                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+//                 let dispatcher = IHelloKeccakDispatcher { contract_address };
+//
+//                 let contract_keccak = dispatcher.run_keccak();
+//                 let input = array![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
+//                 let keccak = keccak_syscall(input.span()).unwrap_syscall();
+//
+//                 assert(contract_keccak == keccak, 'Keccaks don't match');
+//             }
+//         "#
+//         ),
+//         Contract::from_code_path(
+//             "HelloKeccak".to_string(),
+//             Path::new("tests/data/contracts/keccak_usage.cairo"),
+//         )
+//         .unwrap()
+//     );
+//
+//     let result = run_test_case(&test);
+//
+//     assert_passed!(result);
+// }
