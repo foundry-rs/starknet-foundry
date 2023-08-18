@@ -5,9 +5,8 @@ use std::path::PathBuf;
 use crate::scarb::StarknetContractArtifacts;
 use anyhow::{anyhow, Result};
 use blockifier::abi::abi_utils::selector_from_name;
-use blockifier::abi::constants::KECCAK_GAS_COST;
+use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::execution_utils::{felt_to_stark_felt, stark_felt_to_felt};
-use blockifier::execution::syscalls::KeccakRequest;
 use cairo_felt::Felt252;
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
 use cairo_vm::hint_processor::hint_processor_definition::HintReference;
@@ -16,7 +15,7 @@ use cairo_vm::types::exec_scope::ExecutionScopes;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::vm_core::VirtualMachine;
-use cheatnet::rpc::{call_contract, keccak_syscall, CallContractOutput, KeccakOutput};
+use cheatnet::rpc::{call_contract, CallContractOutput};
 use cheatnet::{
     cheatcodes::{CheatcodeError, ContractArtifacts, EnhancedHintError},
     CheatnetState,
@@ -28,7 +27,7 @@ use starknet_api::hash::StarkFelt;
 
 use cairo_lang_casm::hints::{Hint, StarknetHint};
 use cairo_lang_casm::operand::{CellRef, ResOperand};
-use cairo_lang_runner::casm_run::{extract_relocatable, vm_get_range, MemBuffer, VMWrapper};
+use cairo_lang_runner::casm_run::{extract_relocatable, vm_get_range, MemBuffer};
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{
     casm_run::{cell_ref_to_relocatable, extract_buffer, get_ptr},
@@ -108,7 +107,15 @@ impl HintProcessorLogic for CairoHintProcessor<'_> {
             );
         }
         if let Some(Hint::Starknet(StarknetHint::SystemCall { system })) = maybe_extended_hint {
-            return execute_syscall(system, vm, &mut self.cheatnet_state);
+            return execute_syscall(
+                system,
+                vm,
+                &mut self.cheatnet_state,
+                exec_scopes,
+                hint_data,
+                constants,
+                &mut self.original_cairo_hint_processor,
+            );
         }
         self.original_cairo_hint_processor
             .execute_hint(vm, exec_scopes, hint_data, constants)
@@ -296,10 +303,7 @@ impl CairoHintProcessor<'_> {
                 let class_hash = inputs[0].clone();
 
                 let calldata_length = inputs[1].to_usize().unwrap();
-                let mut calldata = vec![];
-                for felt in inputs.iter().skip(2).take(calldata_length) {
-                    calldata.push(felt.clone());
-                }
+                let calldata = Vec::from(&inputs[2..(2 + calldata_length)]);
 
                 match self.cheatnet_state.deploy(&class_hash, &calldata) {
                     Ok(contract_address) => {
@@ -323,6 +327,23 @@ impl CairoHintProcessor<'_> {
             }
             "print" => {
                 print(inputs);
+                Ok(())
+            }
+            "precalculate_address" => {
+                let class_hash = inputs[0].clone();
+
+                let calldata_length = inputs[1].to_usize().unwrap();
+                let calldata = Vec::from(&inputs[2..(2 + calldata_length)]);
+
+                let contract_address = self
+                    .cheatnet_state
+                    .precalculate_address(&class_hash, &calldata);
+
+                let felt_contract_address: Felt252 = stark_felt_to_felt(*contract_address.0.key());
+                buffer
+                    .write(felt_contract_address)
+                    .expect("Failed to insert a precalculated contract address");
+
                 Ok(())
             }
             "get_class_hash" => {
@@ -388,17 +409,31 @@ fn execute_syscall(
     system: &ResOperand,
     vm: &mut VirtualMachine,
     cheatnet_state: &mut CheatnetState,
+    exec_scopes: &mut ExecutionScopes,
+    hint_data: &Box<dyn Any>,
+    constants: &HashMap<String, Felt252>,
+    original_cairo_hint_processor: &mut OriginalCairoHintProcessor,
 ) -> Result<(), HintError> {
     let (cell, offset) = extract_buffer(system);
-    let system_ptr = get_ptr(vm, cell, &offset)?;
+    let mut system_ptr = get_ptr(vm, cell, &offset)?;
 
-    let mut buffer = MemBuffer::new(vm, system_ptr);
+    let selector = DeprecatedSyscallSelector::try_from(felt_to_stark_felt(
+        &vm.get_integer(system_ptr).unwrap(),
+    ))?;
 
-    let selector = buffer.next_felt252().unwrap().to_bytes_be();
+    system_ptr.offset += 1;
 
-    match std::str::from_utf8(&selector).unwrap() {
-        "CallContract" => execute_call_contract(buffer, cheatnet_state),
-        "Keccak" => execute_keccak(buffer),
+    match selector {
+        DeprecatedSyscallSelector::CallContract => {
+            execute_call_contract(MemBuffer::new(vm, system_ptr), cheatnet_state);
+        }
+        DeprecatedSyscallSelector::Keccak => execute_keccak(
+            original_cairo_hint_processor,
+            vm,
+            exec_scopes,
+            hint_data,
+            constants,
+        ),
         _ => {
             return Err(HintError::CustomHint(Box::from(
                 "starknet syscalls (other than CallContract and Keccak) cannot be used in tests"
@@ -436,37 +471,16 @@ fn execute_call_contract(mut buffer: MemBuffer, cheatnet_state: &mut CheatnetSta
     buffer.write_arr(result.iter()).unwrap();
 }
 
-fn execute_keccak(mut buffer: MemBuffer) {
-    let gas_counter = buffer.next_usize().unwrap();
-    let input_start = buffer.next_addr().unwrap();
-    let input_end = buffer.next_addr().unwrap();
-    let request = KeccakRequest {
-        input_start,
-        input_end,
-    };
-
-    let keccak_result = keccak_syscall(
-        &request,
-        buffer.vm(),
-        &mut (gas_counter.to_u64().unwrap() - KECCAK_GAS_COST),
-    )
-    .unwrap_or_else(|err| panic!("Keccak calculation error: {err}"));
-
-    match keccak_result {
-        KeccakOutput::Success { ret_data } => {
-            buffer.write(gas_counter).unwrap();
-            buffer.write(Felt252::from(0)).unwrap();
-
-            buffer.write(ret_data.result_low).unwrap();
-            buffer.write(ret_data.result_high).unwrap();
-        }
-        KeccakOutput::Panic { panic_data } => {
-            buffer.write(gas_counter).unwrap();
-            buffer.write(Felt252::from(1)).unwrap();
-
-            buffer.write_arr(panic_data.iter()).unwrap();
-        }
-    };
+fn execute_keccak(
+    original_cairo_hint_processor: &mut OriginalCairoHintProcessor,
+    vm: &mut VirtualMachine,
+    exec_scopes: &mut ExecutionScopes,
+    hint_data: &Box<dyn Any>,
+    constants: &HashMap<String, Felt252>,
+) {
+    original_cairo_hint_processor
+        .execute_hint(vm, exec_scopes, hint_data, constants)
+        .expect("TODO: panic message");
 }
 
 fn print(inputs: Vec<Felt252>) {

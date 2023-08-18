@@ -17,7 +17,7 @@ fn library_call_syscall() {
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
         use starknet::ClassHash;
-        use snforge_std::{ declare, PreparedContract, deploy };
+        use snforge_std::{ declare, ContractClassTrait };
 
         #[starknet::interface]
         trait ICaller<TContractState> {
@@ -33,11 +33,8 @@ fn library_call_syscall() {
         }
 
         fn deploy_contract(name: felt252) -> ContractAddress {
-            let class_hash = declare(name);
-            let prepared = PreparedContract {
-                class_hash, constructor_calldata: @ArrayTrait::new()
-            };
-            deploy(prepared).unwrap()
+            let contract = declare(name);
+            contract.deploy(@ArrayTrait::new()).unwrap()
         }
 
         #[test]
@@ -47,12 +44,10 @@ fn library_call_syscall() {
                 contract_address: caller_address
             };
 
-            let executor_class_hash = declare('Executor');
-            let prepared = PreparedContract {
-                class_hash: executor_class_hash, constructor_calldata: @ArrayTrait::new()
-            };
+            let executor_contract = declare('Executor');
+            let executor_class_hash = executor_contract.class_hash;
 
-            let executor_address = deploy(prepared).unwrap();
+            let executor_address = executor_contract.deploy(@ArrayTrait::new()).unwrap();
             let executor_safe_dispatcher = IExecutorSafeDispatcher {
                 contract_address: executor_address
             };
@@ -204,7 +199,11 @@ fn test_keccak_syscall_too_small_input() {
 
     let result = run_test_case(&test);
 
-    assert_case_output_contains!(result, "test_execute_cairo_keccak", "Invalid input length");
+    assert_case_output_contains!(
+        result,
+        "test_execute_cairo_keccak",
+        "Invalid keccak input size"
+    );
 
     assert_failed!(result);
 }
@@ -261,8 +260,7 @@ fn test_keccak_syscall_in_contract() {
             use option::OptionTrait;
             use traits::TryInto;
             use starknet::ContractAddress;
-            use starknet::Felt252TryIntoContractAddress;
-            use snforge_std::{ declare, PreparedContract, deploy };
+            use snforge_std::{ declare, ContractClassTrait };
 
             #[starknet::interface]
             trait IHelloKeccak<TContractState> {
@@ -271,9 +269,8 @@ fn test_keccak_syscall_in_contract() {
 
             #[test]
             fn test_keccak_simple() {
-                let class_hash = declare('HelloKeccak');
-                let prepared = PreparedContract { class_hash, constructor_calldata: @ArrayTrait::new() };
-                let contract_address = deploy(prepared).unwrap();
+                let contract = declare('HelloKeccak');
+                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IHelloKeccakDispatcher { contract_address };
 
                 let res = dispatcher.run_keccak();
