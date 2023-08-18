@@ -99,7 +99,7 @@ pub async fn create(
         .map_err(|_| anyhow!("Failed to parse accounts file at {accounts_file_path}"))?;
 
     let network_name = chain_id_to_network_name(chain_id);
-    println!("Detected chain_id: {:#x}", chain_id);
+    println!("Detected chain_id: {chain_id:#x}");
 
     if !items[&network_name][&name].is_null() {
         return Err(anyhow!(

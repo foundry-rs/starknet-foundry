@@ -66,6 +66,7 @@ fn get_account_info(name: &str, chain_id: FieldElement, path: &Utf8PathBuf) -> R
     account.ok_or_else(|| anyhow!("Account {} not found under network {}", name, network_name))
 }
 
+#[must_use]
 pub fn chain_id_to_network_name(chain_id: FieldElement) -> String {
     let non_zero_bytes: Vec<u8> = chain_id
         .to_bytes_be()
