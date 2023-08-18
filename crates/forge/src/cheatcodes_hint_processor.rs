@@ -417,15 +417,16 @@ fn execute_syscall(
     let (cell, offset) = extract_buffer(system);
     let mut system_ptr = get_ptr(vm, cell, &offset)?;
 
+    // We peek into memory to check the selector
     let selector = DeprecatedSyscallSelector::try_from(felt_to_stark_felt(
         &vm.get_integer(system_ptr).unwrap(),
     ))?;
-
     system_ptr.offset += 1;
 
-    match selector {
+    return match selector {
         DeprecatedSyscallSelector::CallContract => {
             execute_call_contract(MemBuffer::new(vm, system_ptr), cheatnet_state);
+            Ok(())
         }
         DeprecatedSyscallSelector::Keccak => execute_keccak(
             original_cairo_hint_processor,
@@ -441,8 +442,6 @@ fn execute_syscall(
             )))
         }
     };
-
-    Ok(())
 }
 
 fn execute_call_contract(mut buffer: MemBuffer, cheatnet_state: &mut CheatnetState) {
@@ -477,10 +476,8 @@ fn execute_keccak(
     exec_scopes: &mut ExecutionScopes,
     hint_data: &Box<dyn Any>,
     constants: &HashMap<String, Felt252>,
-) {
-    original_cairo_hint_processor
-        .execute_hint(vm, exec_scopes, hint_data, constants)
-        .expect("TODO: panic message");
+) -> Result<(), HintError> {
+    original_cairo_hint_processor.execute_hint(vm, exec_scopes, hint_data, constants)
 }
 
 fn print(inputs: Vec<Felt252>) {
