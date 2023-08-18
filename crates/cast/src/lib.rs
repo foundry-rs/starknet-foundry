@@ -68,14 +68,7 @@ fn get_account_info(name: &str, chain_id: FieldElement, path: &Utf8PathBuf) -> R
 
 #[must_use]
 pub fn chain_id_to_network_name(chain_id: FieldElement) -> String {
-    let non_zero_bytes: Vec<u8> = chain_id
-        .to_bytes_be()
-        .iter()
-        .copied()
-        .filter(|&byte| byte != 0)
-        .collect();
-
-    let decoded = String::from_utf8(non_zero_bytes).unwrap_or_default();
+    let decoded = decode_chain_id(chain_id);
 
     match &decoded[..] {
         "SN_GOERLI" => "alpha-goerli".into(),
@@ -83,6 +76,18 @@ pub fn chain_id_to_network_name(chain_id: FieldElement) -> String {
         "SN_MAIN" => "alpha-mainnet".into(),
         _ => decoded,
     }
+}
+
+#[must_use]
+pub fn decode_chain_id(chain_id: FieldElement) -> String {
+    let non_zero_bytes: Vec<u8> = chain_id
+        .to_bytes_be()
+        .iter()
+        .copied()
+        .filter(|&byte| byte != 0)
+        .collect();
+
+    String::from_utf8(non_zero_bytes).unwrap_or_default()
 }
 
 pub fn get_account<'a>(

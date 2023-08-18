@@ -3,7 +3,7 @@ use crate::helpers::response_structs::AccountCreateResponse;
 use crate::helpers::scarb_utils::{get_property, get_scarb_manifest};
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
-use cast::{chain_id_to_network_name, extract_or_generate_salt, parse_number};
+use cast::{chain_id_to_network_name, decode_chain_id, extract_or_generate_salt, parse_number};
 use clap::Args;
 use serde_json::json;
 use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
@@ -102,7 +102,9 @@ pub async fn create(
 
     if !items[&network_name][&name].is_null() {
         return Err(anyhow!(
-            "Account with provided name already exists in network {network_name}"
+            "Account with name {} already exists in network with chain_id {}",
+            name,
+            decode_chain_id(chain_id)
         ));
     }
 

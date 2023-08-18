@@ -229,6 +229,6 @@ pub async fn test_account_already_exists() {
 
     snapbox.assert().stderr_matches(indoc! {r#"
         command: account create
-        error: Account with provided name already exists in network alpha-goerli
+        error: Account with name user1 already exists in network with chain_id SN_GOERLI
     "#});
 }
