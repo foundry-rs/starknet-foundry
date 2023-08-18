@@ -1,34 +1,9 @@
 use anyhow::{anyhow, Context, Result};
-use cairo_felt::Felt252;
 use camino::Utf8PathBuf;
-use cheatnet::{cheatcodes::ContractArtifacts, conversions::felt_from_short_string, CheatnetState};
-use include_dir::{include_dir, Dir};
+use cheatnet::cheatcodes::ContractArtifacts;
 use serde::Deserialize;
-use starknet_api::core::ContractAddress;
+use std::collections::HashMap;
 use std::fs;
-use std::str::FromStr;
-use std::{collections::HashMap, path::PathBuf};
-use tempfile::{tempdir, TempDir};
-
-static PREDEPLOYED_CONTRACTS: Dir = include_dir!("crates/cheatnet/predeployed-contracts");
-static TARGET_NAME: &str = "cheatnet_testing_contracts";
-
-fn load_predeployed_contracts() -> TempDir {
-    let tmp_dir = tempdir().expect("Failed to create a temporary directory");
-    PREDEPLOYED_CONTRACTS
-        .extract(&tmp_dir)
-        .expect("Failed to copy corelib to temporary directory");
-    tmp_dir
-}
-
-pub fn create_cheatnet_state() -> CheatnetState {
-    let predeployed_contracts_dir = load_predeployed_contracts();
-    let predeployed_contracts: PathBuf = predeployed_contracts_dir.path().into();
-    let predeployed_contracts = Utf8PathBuf::try_from(predeployed_contracts)
-        .expect("Failed to convert path to predeployed contracts to Utf8PathBuf");
-
-    CheatnetState::new(&predeployed_contracts)
-}
 
 // TAKEN FROM FORGE
 // REMOVE AFTER SCARB HAS BEEN MOVED TO A SEPARATE PACKAGE
@@ -63,7 +38,7 @@ fn artifacts_for_package(path: &Utf8PathBuf) -> Result<StarknetArtifacts> {
     Ok(starknet_artifacts)
 }
 
-fn try_get_starknet_artifacts_path(
+pub fn try_get_starknet_artifacts_path(
     path: &Utf8PathBuf,
     target_name: &str,
 ) -> Result<Option<Utf8PathBuf>> {
@@ -87,7 +62,7 @@ fn try_get_starknet_artifacts_path(
     starknet_artifacts.transpose()
 }
 
-fn get_contracts_map(path: &Utf8PathBuf) -> HashMap<String, ContractArtifacts> {
+pub fn get_contracts_map(path: &Utf8PathBuf) -> HashMap<String, ContractArtifacts> {
     let base_path = path
         .parent()
         .ok_or_else(|| anyhow!("Failed to get parent for path = {}", path))
@@ -103,25 +78,4 @@ fn get_contracts_map(path: &Utf8PathBuf) -> HashMap<String, ContractArtifacts> {
         map.insert(name, ContractArtifacts { sierra, casm });
     }
     map
-}
-
-pub fn deploy_contract(
-    state: &mut CheatnetState,
-    contract_name: &str,
-    calldata: &[Felt252],
-) -> ContractAddress {
-    let contract = felt_from_short_string(&contract_name);
-
-    let contracts_path = Utf8PathBuf::from_str("tests/contracts")
-        .unwrap()
-        .canonicalize_utf8()
-        .unwrap();
-    dbg!(&contracts_path);
-    let artifacts_path = try_get_starknet_artifacts_path(&contracts_path, TARGET_NAME)
-        .unwrap()
-        .unwrap();
-    let contracts = get_contracts_map(&artifacts_path);
-
-    let class_hash = state.declare(&contract, &contracts).unwrap();
-    state.deploy(&class_hash, calldata).unwrap()
 }

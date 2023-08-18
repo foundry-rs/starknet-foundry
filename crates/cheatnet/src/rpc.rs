@@ -108,11 +108,11 @@ pub fn call_contract(
     ));
     let mut entry_point = CallEntryPoint {
         class_hash: None,
-        code_address: Some(contract_address.clone()),
+        code_address: Some(*contract_address),
         entry_point_type: EntryPointType::External,
         entry_point_selector,
         calldata,
-        storage_address: contract_address.clone(),
+        storage_address: *contract_address,
         caller_address: account_address,
         call_type: CallType::Call,
         initial_gas: u64::MAX,
