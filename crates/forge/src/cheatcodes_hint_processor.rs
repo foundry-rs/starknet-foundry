@@ -415,7 +415,7 @@ fn execute_syscall(
     original_cairo_hint_processor: &mut OriginalCairoHintProcessor,
 ) -> Result<(), HintError> {
     let (cell, offset) = extract_buffer(system);
-    let mut system_ptr = get_ptr(vm, cell, &offset)?;
+    let system_ptr = get_ptr(vm, cell, &offset)?;
 
     // We peek into memory to check the selector
     let selector = DeprecatedSyscallSelector::try_from(felt_to_stark_felt(
