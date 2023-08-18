@@ -421,7 +421,6 @@ fn execute_syscall(
     let selector = DeprecatedSyscallSelector::try_from(felt_to_stark_felt(
         &vm.get_integer(system_ptr).unwrap(),
     ))?;
-    system_ptr.offset += 1;
 
     return match selector {
         DeprecatedSyscallSelector::CallContract => {
@@ -439,6 +438,7 @@ fn execute_syscall(
 }
 
 fn execute_call_contract(mut buffer: MemBuffer, cheatnet_state: &mut CheatnetState) {
+    let _selector = buffer.next_felt252().unwrap();
     let gas_counter = buffer.next_usize().unwrap();
     let contract_address = buffer.next_felt252().unwrap().into_owned();
     let entry_point_selector = buffer.next_felt252().unwrap().into_owned();
