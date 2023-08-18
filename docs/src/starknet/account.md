@@ -20,7 +20,6 @@ Do the following to start interacting with the Starknet:
     ```shell
     $ sncast \
       --url http://127.0.0.1:5050 \
-      --network testnet \
       account create \
       --name some-name
       
@@ -45,7 +44,6 @@ Do the following to start interacting with the Starknet:
     ```shell
     $ sncast \
       --url http://127.0.0.1:5050
-      --network testnet \
       account deploy
       --name some-name \
       --max-fee 864600000000
@@ -54,7 +52,7 @@ Do the following to start interacting with the Starknet:
     transaction_hash: 0x20b20896ce63371ef015d66b4dd89bf18c5510a840b4a85a43a983caa6e2579
     ```
   
-    Note that you don't have to pass `url` and `network` parameters if `add-profile` flag
+    Note that you don't have to pass `url` parameter if `add-profile` flag
     was set in the `account create` command. Just pass `profile` argument with the account name.
     
     For a detailed CLI description, see [account deploy command reference](../appendix/cast/account/deploy.md).

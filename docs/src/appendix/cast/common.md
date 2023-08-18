@@ -19,13 +19,6 @@ Starknet RPC node url address.
 
 Overrides url from `Scarb.toml`.
 
-## `--network, -n <NETWORK_NAME>`
-Optional.
-
-Starknet network name, one of `testnet`, `testnet2`, `mainnet`.
-
-Overrides network from `Scarb.toml`.
-
 ## `--account, -a <ACCOUNT_NAME`
 Optional.
 
