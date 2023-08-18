@@ -35,6 +35,6 @@ mod event;
 use event::Event;
 use event::EventSpy;
 use event::EventFetcher;
-use event::EventFetcherImpl;
+use event::EventAssertions;
 use event::spy_events;
 use event::event_name_hash;

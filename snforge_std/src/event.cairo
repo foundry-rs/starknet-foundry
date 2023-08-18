@@ -50,3 +50,45 @@ impl EventFetcherImpl of EventFetcher {
         }
     }
 }
+
+trait EventAssertions {
+    fn assert_emitted(ref self: EventSpy, events: @Array<Event>);
+}
+
+impl EventAssertionsImpl of EventAssertions {
+    fn assert_emitted(ref self: EventSpy, events: @Array<Event>) {
+        self.fetch_events();
+
+        let emitted_events = @self.events;
+
+        let mut i = 0;
+        let all_found = loop {
+            if i >= events.len() {
+                break true;
+            }
+
+            let mut j = 0;
+            let found = loop {
+                if j >= emitted_events.len() {
+                    break false;
+                }
+
+                if event_name_hash(*events.at(i).name) == *emitted_events.at(j).name
+                    && events.at(i).from == emitted_events.at(j).from
+                {
+                    break true;
+                }
+
+                j += 1;
+            };
+
+            if !found {
+                break false;
+            }
+
+            i += 1;
+        };
+
+        assert(all_found, 'Not all events were found');
+    }
+}

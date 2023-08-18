@@ -148,7 +148,7 @@ pub fn call_contract(
                 .events
                 .iter()
                 .map(|ordered_event| Event {
-                    from: call_info.call.caller_address,
+                    from: call_info.call.code_address.unwrap(),
                     name: stark_felt_to_felt(ordered_event.event.keys[0].0),
                     keys: {
                         let keys: Vec<Felt252> = ordered_event
