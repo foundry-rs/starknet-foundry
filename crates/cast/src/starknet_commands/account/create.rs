@@ -99,7 +99,6 @@ pub async fn create(
         .map_err(|_| anyhow!("Failed to parse accounts file at {accounts_file_path}"))?;
 
     let network_name = chain_id_to_network_name(chain_id);
-    println!("Detected chain_id: {chain_id:#x}");
 
     if !items[&network_name][&name].is_null() {
         return Err(anyhow!(
@@ -122,10 +121,6 @@ pub async fn create(
         };
     }
 
-    println!(
-        "Saving created account under network {}",
-        chain_id_to_network_name(chain_id)
-    );
     std::fs::write(
         accounts_file_path.clone(),
         serde_json::to_string_pretty(&items).unwrap(),
