@@ -1,75 +1,75 @@
 {
-  "alpha-goerli": {
-      "__default__": {
-          "private_key": "0x421b62d2cba1fd39798d719a6cee5f599afc79b0bacbea50f76215057c068dd",
-          "public_key": "0x12d3ad59161fd2a72d5bc8501bb2f2ca1acd34706d2dfa31a90aadb4b41e050",
-          "address": "0x20f8c63faff27a0c5fe8a25dc1635c40c971bf67b8c35c6089a998649dfdfcb"
-      },
-      "user0": {
-          "private_key": "0x1e9038bdc68ce1d27d54205256988e85",
-          "public_key": "0x2f91ed13f8f0f7d39b942c80bfcd3d0967809d99e0cc083606cbe59033d2b39",
-          "address": "0x4f5f24ceaae64434fa2bc2befd08976b51cf8f6a5d8257f7ec3616f61de263a"
-      },
-      "user1": {
-          "private_key": "0x55ae34c86281fbd19292c7e3bfdfceb4",
-          "public_key": "0xe2d3d7080bfc665e0060a06e8e95c3db3ff78a1fec4cc81ddc87e49a12e0a",
-          "salt": "0x14b6b215424909f34f417ddd7cbaca48de2d505d03c92467367d275e847d252",
-          "address": "0x112b61669a84940af30544786a6b615755b192173c4665a7d38fb3aa0541cac",
-          "deployed": true
-      },
-      "user2": {
-          "private_key": "0xfd73132ffc530fb608d1fa3334b56972",
-          "public_key": "0x452050f06519756305b1466d28ee82bde7b31254ba7383fd80ff76d3c82fafb",
-          "address": "0x2cd8799590e8c05fe5919259442e4ee976b34966b288fcb3e29ebde342b8b47"
-      },
-      "user3": {
-          "private_key": "0xf4d605559d38c42e9aa8c93006dbb0e3",
-          "public_key": "0x2bc19d916c3ef2e680a706a9e6bf54698e299c4a9d1d89c7b75cf9cfbe9d8af",
-          "address": "0x21c1f9ec02c33f8877d355959d73288e631fd7e3b4acee52d5bcbad8c472d3a"
-      },
-      "user4": {
-          "private_key": "0x5cda2833fffba80dbfd23837a20c5acc",
-          "public_key": "0x36367a688e99e891b2c6e9e20b3add552efcaba6b0d255ce349b1e70b4d198b",
-          "address": "0x616e21b420e8700510bac9ed70403acc756a2846c7e59800adb8e2bc965f95f"
-      },
-      "user5": {
-          "private_key": "0x23023632f1b88701935990f88adc4802",
-          "public_key": "0x11157caf647196a35cc3aff6ce6c5c0c8e36ee456f45bfa46e43faf887d697e",
-          "address": "0x5ed963027d0fc6e6e24c742b092354a8b0c35eabe3f6e94846b964c777b366d"
-      },
-      "user6": {
-          "private_key": "0x30777ec8669aa11f6b7db279fe63ff5d",
-          "public_key": "0x5030400932747f937b0fb00fb5027cedd912ded7661ccb2aaded7eb5c9c6d83",
-          "address": "0x2ef7645c5317d89bdeb95a07525d313952285ae19cf183acd0ff37e1c99f8a0"
-      },
-      "user7": {
-          "private_key": "0x3fb0a9b4d3940716a454269d2cbf86f5",
-          "public_key": "0x65a6ad63bdce70951f0f7b49130ac3d04862ca3b41c1d67897ba683ac689294",
-          "address": "0x55e6167945cb63b52303dfe9ac4fe8c43331bd3d23330da4cffc201c684405c"
-      },
-      "user8": {
-          "private_key": "0xea088dd3a0d24c29be1de3d39e7d4339",
-          "public_key": "0xaaf12b4dd84b99d1fc4356eded2d21dbff5b1e1a26f28ec94640e0b55143f1",
-          "address": "0x321c02f63e477b9b25ca9ab0132fb76f30902943e37ba5ab797b3ae30b29b69"
-      },
-      "user9": {
-          "private_key": "0x5c0883893a3c32b57769f168383c53ee",
-          "public_key": "0x3a00dc633e18cadbcacf7b36b348e7c97827081318f6a08d85ddb546c38d2bf",
-          "address": "0x98459bc7e9740d1b55e5d04c3942badca974f327f7e1bb9d10737c87ea0aec"
-      }
-  },
-  "alpha-goerli2": {
-      "user3": {
-          "private_key": "0xe3e70682c2094cac629f6fbed82c07cd",
-          "public_key": "0x7e52885445756b313ea16849145363ccb73fb4ab0440dbac333cf9d13de82b9",
-          "address": "0x7e00d496e324876bbc8531f2d9a82bf154d1a04a50218ee74cdd372f75a551a"
-      },
-      "user4": {
-          "private_key": "0x73fbb3c1eff11167598455d0408f3932e42c678bd8f7fbc6028c716867cc01f",
-          "public_key": "0x43a74f86b7e204f1ba081636c9d4015e1f54f5bb03a4ae8741602a15ffbb182",
-          "salt": "0x54aa715a5cff30ccf7845ad4659eb1dac5b730c2541263c358c7e3a4c4a8064",
-          "address": "0x7ccdf182d27c7aaa2e733b94db4a3f7b28ff56336b34abf43c15e3a9edfbe91",
-          "deployed": true
-      }
-  }
+    "alpha-goerli": {
+        "__default__": {
+            "private_key": "0x421b62d2cba1fd39798d719a6cee5f599afc79b0bacbea50f76215057c068dd",
+            "public_key": "0x12d3ad59161fd2a72d5bc8501bb2f2ca1acd34706d2dfa31a90aadb4b41e050",
+            "address": "0x20f8c63faff27a0c5fe8a25dc1635c40c971bf67b8c35c6089a998649dfdfcb"
+        },
+        "user0": {
+            "private_key": "0x1e9038bdc68ce1d27d54205256988e85",
+            "public_key": "0x2f91ed13f8f0f7d39b942c80bfcd3d0967809d99e0cc083606cbe59033d2b39",
+            "address": "0x4f5f24ceaae64434fa2bc2befd08976b51cf8f6a5d8257f7ec3616f61de263a"
+        },
+        "user1": {
+            "private_key": "0x55ae34c86281fbd19292c7e3bfdfceb4",
+            "public_key": "0xe2d3d7080bfc665e0060a06e8e95c3db3ff78a1fec4cc81ddc87e49a12e0a",
+            "salt": "0x14b6b215424909f34f417ddd7cbaca48de2d505d03c92467367d275e847d252",
+            "address": "0x112b61669a84940af30544786a6b615755b192173c4665a7d38fb3aa0541cac",
+            "deployed": true
+        },
+        "user2": {
+            "private_key": "0xfd73132ffc530fb608d1fa3334b56972",
+            "public_key": "0x452050f06519756305b1466d28ee82bde7b31254ba7383fd80ff76d3c82fafb",
+            "address": "0x2cd8799590e8c05fe5919259442e4ee976b34966b288fcb3e29ebde342b8b47"
+        },
+        "user3": {
+            "private_key": "0xf4d605559d38c42e9aa8c93006dbb0e3",
+            "public_key": "0x2bc19d916c3ef2e680a706a9e6bf54698e299c4a9d1d89c7b75cf9cfbe9d8af",
+            "address": "0x21c1f9ec02c33f8877d355959d73288e631fd7e3b4acee52d5bcbad8c472d3a"
+        },
+        "user4": {
+            "private_key": "0x5cda2833fffba80dbfd23837a20c5acc",
+            "public_key": "0x36367a688e99e891b2c6e9e20b3add552efcaba6b0d255ce349b1e70b4d198b",
+            "address": "0x616e21b420e8700510bac9ed70403acc756a2846c7e59800adb8e2bc965f95f"
+        },
+        "user5": {
+            "private_key": "0x23023632f1b88701935990f88adc4802",
+            "public_key": "0x11157caf647196a35cc3aff6ce6c5c0c8e36ee456f45bfa46e43faf887d697e",
+            "address": "0x5ed963027d0fc6e6e24c742b092354a8b0c35eabe3f6e94846b964c777b366d"
+        },
+        "user6": {
+            "private_key": "0x30777ec8669aa11f6b7db279fe63ff5d",
+            "public_key": "0x5030400932747f937b0fb00fb5027cedd912ded7661ccb2aaded7eb5c9c6d83",
+            "address": "0x2ef7645c5317d89bdeb95a07525d313952285ae19cf183acd0ff37e1c99f8a0"
+        },
+        "user7": {
+            "private_key": "0x3fb0a9b4d3940716a454269d2cbf86f5",
+            "public_key": "0x65a6ad63bdce70951f0f7b49130ac3d04862ca3b41c1d67897ba683ac689294",
+            "address": "0x55e6167945cb63b52303dfe9ac4fe8c43331bd3d23330da4cffc201c684405c"
+        },
+        "user8": {
+            "private_key": "0xea088dd3a0d24c29be1de3d39e7d4339",
+            "public_key": "0xaaf12b4dd84b99d1fc4356eded2d21dbff5b1e1a26f28ec94640e0b55143f1",
+            "address": "0x321c02f63e477b9b25ca9ab0132fb76f30902943e37ba5ab797b3ae30b29b69"
+        },
+        "user9": {
+            "private_key": "0x5c0883893a3c32b57769f168383c53ee",
+            "public_key": "0x3a00dc633e18cadbcacf7b36b348e7c97827081318f6a08d85ddb546c38d2bf",
+            "address": "0x98459bc7e9740d1b55e5d04c3942badca974f327f7e1bb9d10737c87ea0aec"
+        }
+    },
+    "alpha-goerli2": {
+        "user3": {
+            "private_key": "0xe3e70682c2094cac629f6fbed82c07cd",
+            "public_key": "0x7e52885445756b313ea16849145363ccb73fb4ab0440dbac333cf9d13de82b9",
+            "address": "0x7e00d496e324876bbc8531f2d9a82bf154d1a04a50218ee74cdd372f75a551a"
+        },
+        "user4": {
+            "private_key": "0x73fbb3c1eff11167598455d0408f3932e42c678bd8f7fbc6028c716867cc01f",
+            "public_key": "0x43a74f86b7e204f1ba081636c9d4015e1f54f5bb03a4ae8741602a15ffbb182",
+            "salt": "0x54aa715a5cff30ccf7845ad4659eb1dac5b730c2541263c358c7e3a4c4a8064",
+            "address": "0x7ccdf182d27c7aaa2e733b94db4a3f7b28ff56336b34abf43c15e3a9edfbe91",
+            "deployed": true
+        }
+    }
 }
