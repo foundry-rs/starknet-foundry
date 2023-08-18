@@ -1,7 +1,7 @@
 use crate::helpers::constants::OZ_CLASS_HASH;
 use crate::helpers::response_structs::AccountCreateResponse;
 use crate::helpers::scarb_utils::{get_property, get_scarb_manifest};
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use cast::{chain_id_to_network_name, extract_or_generate_salt, parse_number};
 use clap::Args;
@@ -75,7 +75,18 @@ pub async fn create(
         .await?;
         let deployment = factory.deploy(salt);
 
-        deployment.estimate_fee().await?.overall_fee
+        let fee_estimate = deployment.estimate_fee().await;
+
+        if let Err(err) = &fee_estimate {
+            if err
+                .to_string()
+                .contains("StarknetErrorCode.UNDECLARED_CLASS")
+            {
+                bail!("The class {oz_class_hash} is undeclared, try using --class-hash with a class hash that is already declared");
+            }
+        }
+
+        fee_estimate?.overall_fee
     };
 
     if !accounts_file_path.exists() {
@@ -88,6 +99,7 @@ pub async fn create(
         .map_err(|_| anyhow!("Failed to parse accounts file at {accounts_file_path}"))?;
 
     let network_name = chain_id_to_network_name(chain_id);
+    println!("Detected chain_id: {:#x}", chain_id);
 
     if !items[&network_name][&name].is_null() {
         return Err(anyhow!(
@@ -110,6 +122,10 @@ pub async fn create(
         };
     }
 
+    println!(
+        "Saving created account under network {}",
+        chain_id_to_network_name(chain_id)
+    );
     std::fs::write(
         accounts_file_path.clone(),
         serde_json::to_string_pretty(&items).unwrap(),
