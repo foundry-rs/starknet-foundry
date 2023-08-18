@@ -52,12 +52,12 @@ fn simple_package_with_git_dependency() {
     temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
         .unwrap();
 
-    let name: &str = "GITHUB_REF";
+    let name: &str = "GITHUB_REF_NAME";
 
     println!("{:?}", name);
 
     let branch = match env::var(name) {
-        Ok(v) => v.replace("refs/heads/", ""),
+        Ok(v) => v,
         Err(_e) => {
             println!("dupa");
             let output = Command::new("git")
