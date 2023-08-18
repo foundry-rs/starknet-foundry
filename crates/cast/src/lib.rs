@@ -344,7 +344,7 @@ pub fn udc_uniqueness(unique: bool, account_address: FieldElement) -> UdcUniquen
 
 #[cfg(test)]
 mod tests {
-    use crate::{extract_or_generate_salt, get_block_id, udc_uniqueness};
+    use crate::{chain_id_to_network_name, extract_or_generate_salt, get_block_id, udc_uniqueness};
     use starknet::core::types::{
         BlockId,
         BlockTag::{Latest, Pending},
@@ -418,5 +418,17 @@ mod tests {
         let uniqueness = udc_uniqueness(false, FieldElement::ONE);
 
         assert!(matches!(uniqueness, NotUnique));
+    }
+
+    #[test]
+    fn test_chain_id_to_network_name() {
+        let network_name_goerli = chain_id_to_network_name(
+            FieldElement::from_byte_slice_be("SN_GOERLI".as_bytes()).unwrap(),
+        );
+        let network_name_katana = chain_id_to_network_name(
+            FieldElement::from_byte_slice_be("KATANA".as_bytes()).unwrap(),
+        );
+        assert_eq!(network_name_goerli, "alpha-goerli");
+        assert_eq!(network_name_katana, "KATANA");
     }
 }
