@@ -5,8 +5,7 @@ use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs;
 
-// TAKEN FROM FORGE
-// REMOVE AFTER SCARB HAS BEEN MOVED TO A SEPARATE PACKAGE
+// TODO(#41) TAKEN FROM FORGE, REMOVE AFTER SCARB HAS BEEN MOVED TO A SEPARATE PACKAGE
 #[allow(dead_code)]
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 struct StarknetContract {
