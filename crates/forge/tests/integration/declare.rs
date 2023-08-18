@@ -1,8 +1,6 @@
-use crate::integration::common::corelib::{corelib_path, predeployed_contracts};
 use crate::integration::common::runner::Contract;
+use crate::integration::common::running_tests::run_test_case;
 use crate::{assert_failed, assert_passed, test_case};
-use camino::Utf8PathBuf;
-use forge::run;
 use indoc::indoc;
 use std::path::Path;
 
@@ -19,8 +17,8 @@ fn simple_declare() {
         #[test]
         fn test_declare_simple() {
             assert(1 == 1, 'simple check');
-            let class_hash = declare('HelloStarknet');
-            assert(class_hash.into() != 0, 'proper class hash');
+            let contract = declare('HelloStarknet');
+            assert(contract.class_hash.into() != 0, 'proper class hash');
         }
         "#
         ),
@@ -52,17 +50,7 @@ fn simple_declare() {
         )
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
@@ -79,10 +67,14 @@ fn multiple_declare() {
 
         #[test]
         fn multiple_contracts() {
-            let class_hash = declare('HelloStarknet').into();
+            let contract = declare('HelloStarknet');
+            let class_hash = contract.class_hash.into();
+
             assert(class_hash != 0, 'proper class hash');
-        
-            let class_hash2 = declare('Contract1').into();
+
+            let contract2 = declare('Contract1');
+            let class_hash2 = contract2.class_hash.into();
+
             assert(class_hash2 != 0, 'proper class hash');
         
             assert(class_hash != class_hash2, 'class hashes neq');
@@ -151,17 +143,7 @@ fn multiple_declare() {
         )
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
@@ -185,25 +167,16 @@ fn simple_declare_from_contract_code() {
         #[test]
         fn test_declare_simple() {
             assert(1 == 1, 'simple check');
-            let class_hash = declare('Contract1');
-            assert(class_hash.into() != 0, 'proper class hash');
+            let contract = declare('Contract1');
+            let class_hash = contract.class_hash.into();
+            assert(class_hash != 0, 'proper class hash');
         }
         "#
         ),
         contract
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
@@ -220,23 +193,13 @@ fn declare_unknown() {
         #[test]
         fn test_declare_simple() {
             assert(1 == 1, 'simple check');
-            let class_hash = declare('Unknown');
-            assert(class_hash.into() != 0, 'proper class hash');
+            let contract = declare('Unknown');
+            assert(contract.class_hash.into() != 0, 'proper class hash');
         }
         "#
     ));
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
 
     assert_failed!(result);
 }

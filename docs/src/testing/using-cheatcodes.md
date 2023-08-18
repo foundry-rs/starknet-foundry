@@ -104,9 +104,8 @@ use snforge_std::{ declare, PreparedContract, deploy, start_prank };
 
 #[test]
 fn call_and_invoke() {
-    let class_hash = declare('HelloStarknet');
-    let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
-    let contract_address = deploy(prepared).unwrap();
+    let contract = declare('HelloStarknet');
+    let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
     let dispatcher = IHelloStarknetDispatcher { contract_address };
     
     let balance = dispatcher.get_balance();

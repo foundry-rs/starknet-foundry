@@ -1,8 +1,6 @@
-use crate::integration::common::corelib::{corelib_path, predeployed_contracts};
 use crate::integration::common::runner::Contract;
+use crate::integration::common::running_tests::run_test_case;
 use crate::{assert_passed, test_case};
-use camino::Utf8PathBuf;
-use forge::run;
 use indoc::indoc;
 
 #[test]
@@ -15,7 +13,8 @@ fn timestamp_doesnt_decrease_between_transactions() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use snforge_std::{ declare, PreparedContract, deploy };
+            use snforge_std::{ declare, ContractClassTrait };
+
 
             #[starknet::interface]
                 trait ITimestamper<TContractState> {
@@ -25,9 +24,8 @@ fn timestamp_doesnt_decrease_between_transactions() {
 
             #[test]
             fn timestamp_doesnt_decrease() {
-                let class_hash = declare('Timestamper');
-                let prepared = PreparedContract { class_hash, constructor_calldata: @ArrayTrait::new() };
-                let contract_address = deploy(prepared).unwrap();
+                let contract = declare('Timestamper');
+                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ITimestamperDispatcher { contract_address };
 
                 dispatcher.write_timestamp();
@@ -77,17 +75,7 @@ fn timestamp_doesnt_decrease_between_transactions() {
         )
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
@@ -102,7 +90,8 @@ fn block_doesnt_decrease_between_transactions() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use snforge_std::{ declare, PreparedContract, deploy };
+            use snforge_std::{ declare, ContractClassTrait };
+
 
             #[starknet::interface]
             trait IBlocker<TContractState> {
@@ -114,9 +103,8 @@ fn block_doesnt_decrease_between_transactions() {
 
             #[test]
             fn block_doesnt_decrease() {
-               let class_hash = declare('Blocker');
-                let prepared = PreparedContract { class_hash, constructor_calldata: @ArrayTrait::new() };
-                let contract_address = deploy(prepared).unwrap();
+               let contract = declare('Blocker');
+                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IBlockerDispatcher { contract_address };
 
                 dispatcher.write_block();
@@ -188,17 +176,7 @@ fn block_doesnt_decrease_between_transactions() {
         )
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
@@ -216,7 +194,7 @@ fn nonce_increases_between_transactions() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use snforge_std::{ declare, PreparedContract, deploy };
+            use snforge_std::{ declare, ContractClassTrait };
 
             #[starknet::interface]
             trait INoncer<TContractState> {
@@ -226,9 +204,8 @@ fn nonce_increases_between_transactions() {
 
             #[test]
             fn nonce_increases_between_transactions() {
-                let class_hash = declare('Noncer').unwrap();
-                let prepared = PreparedContract { class_hash, constructor_calldata: @ArrayTrait::new() };
-                let contract_address = deploy(prepared).unwrap();
+                let contract = declare('Noncer').unwrap();
+                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = INoncerDispatcher { contract_address };
 
                 dispatcher.write_nonce();
@@ -280,17 +257,7 @@ fn nonce_increases_between_transactions() {
         )
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
@@ -309,7 +276,7 @@ fn nonce_increases_between_deploys_and_declares() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use snforge_std::{ declare, PreparedContract, deploy };
+            use snforge_std::{ declare, ContractClassTrait };
 
             #[starknet::interface]
             trait INoncer<TContractState> {
@@ -319,26 +286,23 @@ fn nonce_increases_between_deploys_and_declares() {
 
             #[test]
             fn nonce_increases_between_transactions() {
-                let class_hash = declare('Noncer').unwrap();
-                let prepared = PreparedContract { class_hash, constructor_calldata: @ArrayTrait::new() };
-                let contract_address = deploy(prepared).unwrap();
+                let contract = declare('Noncer').unwrap();
+                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = INoncerDispatcher { contract_address };
 
                 dispatcher.write_nonce();
                 let nonce = dispatcher.read_nonce();
 
-                let class_hash1 = declare('Contract1').unwrap();
-                let class_hash2 = declare('Contract2').unwrap();
+                let contract1 = declare('Contract1').unwrap();
+                let contract2 = declare('Contract2').unwrap();
 
                 dispatcher.write_nonce();
                 let new_nonce = dispatcher.read_nonce();
 
                 assert(new_nonce == nonce + 3, 'nonce doesnt increase');
 
-                let prepared1 = PreparedContract { class_hash: class_hash1, constructor_calldata: @ArrayTrait::new() };
-                let prepared2 = PreparedContract { class_hash: class_hash2, constructor_calldata: @ArrayTrait::new() };
-                deploy(prepared1).unwrap();
-                deploy(prepared2).unwrap();
+                contract1.deploy(@ArrayTrait::new()).unwrap();
+                contract2.deploy(@ArrayTrait::new()).unwrap();
 
                 dispatcher.write_nonce();
                 let new_new_nonce = dispatcher.read_nonce();
@@ -414,17 +378,7 @@ fn nonce_increases_between_deploys_and_declares() {
         )
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
