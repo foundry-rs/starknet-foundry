@@ -68,15 +68,12 @@ use starknet_api::{
     transaction::{Calldata, TransactionVersion},
 };
 
-use crate::conversions::felt_from_short_string;
-use blockifier::execution::syscalls::hint_processor::INVALID_INPUT_LENGTH_ERROR;
 use blockifier::execution::syscalls::{
-    KeccakRequest, KeccakResponse, LibraryCallRequest, SyscallRequest, SyscallRequestWrapper,
-    SyscallResponse, SyscallResponseWrapper, SyscallResult,
+    LibraryCallRequest, SyscallRequest, SyscallRequestWrapper, SyscallResponse,
+    SyscallResponseWrapper, SyscallResult,
 };
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
 use cairo_vm::vm::runners::cairo_runner::ResourceTracker;
-use num_traits::ToPrimitive;
 
 use crate::panic_data::try_extract_panic_data;
 use crate::state::CheatcodeState;
@@ -661,70 +658,6 @@ pub fn library_call_syscall(
 
     Ok(SingleSegmentResponse {
         segment: retdata_segment,
-    })
-}
-
-pub enum KeccakOutput {
-    Success { ret_data: KeccakResponse },
-    Panic { panic_data: Vec<Felt252> },
-}
-
-// Inspired by blockifier::execution::syscalls::mod::keccak
-pub fn keccak_syscall(
-    request: &KeccakRequest,
-    vm: &mut VirtualMachine,
-    remaining_gas: &mut u64,
-) -> Result<KeccakOutput> {
-    const KECCAK_FULL_RATE_IN_WORDS: usize = 17;
-    let input_length = (request.input_end - request.input_start)?;
-
-    let (n_rounds, remainder) = num_integer::div_rem(input_length, KECCAK_FULL_RATE_IN_WORDS);
-
-    if remainder != 0 {
-        let invalid_input_length_error = stark_felt_to_felt(
-            StarkFelt::try_from(INVALID_INPUT_LENGTH_ERROR).map_err(SyscallExecutionError::from)?,
-        );
-
-        return Ok(KeccakOutput::Panic {
-            panic_data: vec![invalid_input_length_error],
-        });
-    }
-
-    let gas_cost = n_rounds as u64 * constants::KECCAK_ROUND_COST_GAS_COST;
-    if gas_cost > *remaining_gas {
-        let out_of_gas_error = stark_felt_to_felt(
-            StarkFelt::try_from(OUT_OF_GAS_ERROR).map_err(SyscallExecutionError::from)?,
-        );
-
-        return Ok(KeccakOutput::Panic {
-            panic_data: vec![out_of_gas_error],
-        });
-    }
-    *remaining_gas -= gas_cost;
-
-    let data = vm.get_integer_range(request.input_start, input_length)?;
-
-    let mut state = [0u64; 25];
-    for chunk in data.chunks(KECCAK_FULL_RATE_IN_WORDS) {
-        for (i, val) in chunk.iter().enumerate() {
-            let Some(val) = val.to_u64() else {
-                return Ok(KeccakOutput::Panic {
-                    panic_data: vec![
-                        Felt252::from_bytes_be(&val.to_be_bytes()),
-                        felt_from_short_string("Invalid input for the keccak")
-                    ],
-                })
-            };
-            state[i] ^= val;
-        }
-        keccak::f1600(&mut state);
-    }
-
-    Ok(KeccakOutput::Success {
-        ret_data: KeccakResponse {
-            result_low: (Felt252::from(state[1]) << 64u32) + Felt252::from(state[0]),
-            result_high: (Felt252::from(state[3]) << 64u32) + Felt252::from(state[2]),
-        },
     })
 }
 
