@@ -156,6 +156,20 @@ It is designed to enable more simplified flow:
 - `fetch_events` will be called internally, so there will always be the newest events,
 - checked events will be removed from the `events` property.
 
+### Propositions to consider
+
+- `TargetedSpy` - regular spy with the target parameter for creation, which would be an enumeration of:
+  ```cairo
+  enum SpyOn {
+      All,
+      One(ContractAddress),
+      Multiple(Array<ContractAddress>>)
+  }
+  ```
+- Two different classes for Events - one for incoming events and the second one for events created by users. 
+  It would clarify the confusion when `name` field is hashed when it comes from `EventSpy`.
+
+
 ### Usage example
 
 ```cario
