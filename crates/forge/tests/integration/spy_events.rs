@@ -1,20 +1,22 @@
 use crate::integration::common::corelib::{corelib_path, predeployed_contracts};
 use crate::integration::common::runner::Contract;
-use crate::{assert_passed, test_case};
+use crate::{assert_failed, assert_passed, test_case};
 use camino::Utf8PathBuf;
 use forge::run;
 use indoc::indoc;
 use std::path::Path;
+use crate::integration::common::running_tests::run_test_case;
 
 #[test]
-fn expect_events_complex() {
+fn spy_events_complex() {
     let test = test_case!(
         indoc!(
             r#"
             use array::ArrayTrait;
             use result::ResultTrait;
             use starknet::ContractAddress;
-            use snforge_std::{ declare, PreparedContract, deploy, spy_events, EventSpy, EventFetcher, event_name_hash };
+            use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpy,
+                EventFetcher, event_name_hash };
 
             #[starknet::interface]
             trait IEventEmitter<TContractState> {
@@ -23,9 +25,8 @@ fn expect_events_complex() {
 
             #[test]
             fn test_expect_events_complex() {
-                let class_hash = declare('EventEmitter');
-                let prepared = PreparedContract { class_hash, constructor_calldata: @ArrayTrait::new() };
-                let contract_address = deploy(prepared).unwrap();
+                let contract = declare('EventEmitter');
+                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IEventEmitterDispatcher { contract_address };
 
                 let mut spy = spy_events();
@@ -52,30 +53,21 @@ fn expect_events_complex() {
         .unwrap()
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
 
 #[test]
-fn expect_events_simple() {
+fn spy_events_simple() {
     let test = test_case!(
         indoc!(
             r#"
             use array::ArrayTrait;
             use result::ResultTrait;
             use starknet::ContractAddress;
-            use snforge_std::{ declare, PreparedContract, deploy, spy_events, EventSpy, EventFetcher, event_name_hash, EventAssertions, Event };
+            use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpy, EventFetcher,
+                event_name_hash, EventAssertions, Event };
 
             #[starknet::interface]
             trait IEventEmitter<TContractState> {
@@ -84,9 +76,8 @@ fn expect_events_simple() {
 
             #[test]
             fn test_expect_events_simple() {
-                let class_hash = declare('EventEmitter');
-                let prepared = PreparedContract { class_hash, constructor_calldata: @ArrayTrait::new() };
-                let contract_address = deploy(prepared).unwrap();
+                let contract = declare('EventEmitter');
+                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IEventEmitterDispatcher { contract_address };
 
                 let mut spy = spy_events();
@@ -105,17 +96,50 @@ fn expect_events_simple() {
         .unwrap()
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
 
     assert_passed!(result);
+}
+
+#[test]
+fn assert_emitted_fails() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use array::ArrayTrait;
+            use result::ResultTrait;
+            use starknet::ContractAddress;
+            use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpy, EventFetcher,
+                event_name_hash, EventAssertions, Event };
+
+            #[starknet::interface]
+            trait IEventEmitter<TContractState> {
+                fn do_not_emit(ref self: TContractState);
+            }
+
+            #[test]
+            fn test_expect_events_simple() {
+                let contract = declare('EventEmitter');
+                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+                let dispatcher = IEventEmitterDispatcher { contract_address };
+
+                let mut spy = spy_events();
+                dispatcher.do_not_emit();
+
+                spy.assert_emitted(@array![
+                    Event { from: contract_address, name: 'FirstEvent', keys: array![], data: array![] }
+                ]);
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "EventEmitter".to_string(),
+            Path::new("tests/data/contracts/event_emitter.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test);
+
+    assert_failed!(result);
 }
