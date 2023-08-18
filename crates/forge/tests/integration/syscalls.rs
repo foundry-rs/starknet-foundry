@@ -264,7 +264,7 @@ fn test_keccak_syscall_in_contract() {
 
             #[starknet::interface]
             trait IHelloKeccak<TContractState> {
-                fn run_keccak(ref self: TContractState) -> u256;
+                fn run_keccak(ref self: TContractState, input: Array<u64>) -> u256;
             }
 
             #[test]
@@ -273,7 +273,7 @@ fn test_keccak_syscall_in_contract() {
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IHelloKeccakDispatcher { contract_address };
 
-                let res = dispatcher.run_keccak();
+                let res = dispatcher.run_keccak(array![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]);
                 assert(
                     res == u256 { low: 0xec687be9c50d2218388da73622e8fdd5, high: 0xd2eb808dfba4703c528d145dfe6571af },
                     'Wrong hash value'
@@ -302,7 +302,6 @@ fn compare_keccak_from_contract_with_plain_keccak() {
             use array::ArrayTrait;
             use option::OptionTrait;
             use traits::TryInto;
-            use clone::Clone;
             use starknet::ContractAddress;
             use starknet::syscalls::keccak_syscall;
             use starknet::SyscallResultTrait;
@@ -320,8 +319,8 @@ fn compare_keccak_from_contract_with_plain_keccak() {
                 let dispatcher = IHelloKeccakDispatcher { contract_address };
 
                 let input = array![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
-                let contract_keccak = dispatcher.run_keccak(input.clone());
                 let keccak = keccak_syscall(input.span()).unwrap_syscall();
+                let contract_keccak = dispatcher.run_keccak(input);
 
                 assert(contract_keccak == keccak, 'Keccaks dont match');
             }

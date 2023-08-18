@@ -428,19 +428,13 @@ fn execute_syscall(
             execute_call_contract(MemBuffer::new(vm, system_ptr), cheatnet_state);
             Ok(())
         }
-        DeprecatedSyscallSelector::Keccak => execute_keccak(
-            original_cairo_hint_processor,
-            vm,
-            exec_scopes,
-            hint_data,
-            constants,
-        ),
-        _ => {
-            return Err(HintError::CustomHint(Box::from(
-                "starknet syscalls (other than CallContract and Keccak) cannot be used in tests"
-                    .to_string(),
-            )))
+        DeprecatedSyscallSelector::Keccak => {
+            original_cairo_hint_processor.execute_hint(vm, exec_scopes, hint_data, constants)
         }
+        _ => Err(HintError::CustomHint(Box::from(
+            "starknet syscalls (other than CallContract and Keccak) cannot be used in tests"
+                .to_string(),
+        ))),
     };
 }
 
@@ -468,16 +462,6 @@ fn execute_call_contract(mut buffer: MemBuffer, cheatnet_state: &mut CheatnetSta
     buffer.write(Felt252::from(exit_code)).unwrap();
 
     buffer.write_arr(result.iter()).unwrap();
-}
-
-fn execute_keccak(
-    original_cairo_hint_processor: &mut OriginalCairoHintProcessor,
-    vm: &mut VirtualMachine,
-    exec_scopes: &mut ExecutionScopes,
-    hint_data: &Box<dyn Any>,
-    constants: &HashMap<String, Felt252>,
-) -> Result<(), HintError> {
-    original_cairo_hint_processor.execute_hint(vm, exec_scopes, hint_data, constants)
 }
 
 fn print(inputs: Vec<Felt252>) {
