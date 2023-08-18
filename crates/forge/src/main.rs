@@ -30,7 +30,7 @@ struct Args {
     #[arg(short = 'x', long)]
     exit_first: bool,
 
-    /// Select package for which the tests should be run  
+    /// Run tests for specific package
     #[arg(short = 'p', long)]
     package: Option<String>,
 
