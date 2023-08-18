@@ -1,8 +1,8 @@
-use crate::helpers::constants::OZ_CLASS_HASH;
-use crate::helpers::response_structs::AccountCreateResponse;
-use crate::helpers::scarb_utils::get_scarb_manifest;
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
+use cast::helpers::constants::OZ_CLASS_HASH;
+use cast::helpers::response_structs::AccountCreateResponse;
+use cast::helpers::scarb_utils::get_scarb_manifest;
 use cast::helpers::scarb_utils::{get_package_tool_sncast, CastConfig};
 use cast::{extract_or_generate_salt, get_network, parse_number};
 use clap::Args;

@@ -9,7 +9,6 @@ use cast::helpers::scarb_utils::{parse_scarb_config, CastConfig};
 use cast::{account_file_exists, get_account, get_block_id, get_provider, print_command_result};
 use clap::{Parser, Subcommand};
 
-pub mod helpers;
 mod starknet_commands;
 
 #[derive(Parser)]
