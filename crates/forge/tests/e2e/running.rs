@@ -52,7 +52,7 @@ fn simple_package_with_git_dependency() {
     temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
         .unwrap();
 
-    let name: &str = "{GITHUB_REF#refs/heads/}";
+    let name: &str = "GITHUB_REF#refs/heads/";
 
     println!("{:?}", name);
 
