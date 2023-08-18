@@ -74,6 +74,7 @@ struct TestsFromFile {
     relative_path: Utf8PathBuf,
 }
 
+#[must_use]
 pub fn collect_packages(
     metadata: &Metadata,
     manifest_path: &Utf8PathBuf,

@@ -113,7 +113,7 @@ fn workspace_run_inside_nested_package() {
     let snapbox = runner();
 
     snapbox
-        .current_dir(&package_dir)
+        .current_dir(package_dir)
         .assert()
         .success()
         .stdout_matches(indoc! {r#"Collected 4 test(s) and 3 test file(s)

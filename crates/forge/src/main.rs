@@ -75,7 +75,7 @@ fn main_execution() -> Result<()> {
     }
 
     let manifest_path = Command::new("scarb")
-        .current_dir(current_dir.clone())
+        .current_dir(current_dir)
         .arg("manifest-path")
         .output()
         .context("Failed to fetch manifest-path")?
@@ -90,7 +90,7 @@ fn main_execution() -> Result<()> {
         args.workspace,
     );
 
-    for package in packages.iter() {
+    for package in &packages {
         let forge_config = forge::scarb::config_from_scarb_for_package(&scarb_metadata, package)?;
         let (package_path, lib_path) = paths_for_package(&scarb_metadata, package)?;
 
