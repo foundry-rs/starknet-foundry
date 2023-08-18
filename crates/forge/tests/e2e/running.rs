@@ -52,22 +52,27 @@ fn simple_package_with_git_dependency() {
     temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
         .unwrap();
 
-    let name = "GITHUB_SHA";
-    let test = match env::var(name) {
+    let name: &str = "{GITHUB_REF#refs/heads/}";
+
+    println!("{:?}", name);
+
+    let branch = match env::var(name) {
         Ok(v) => {
             println!("GITHUB_SHA {v}");
             v
         }
-        Err(_e) => String::from("HEAD"),
+        Err(_e) => {
+            println!("dupa");
+            let output = Command::new("git")
+                .args(["rev-parse", "--abbrev-ref", "HEAD"])
+                .output()
+                .unwrap();
+
+            let a = String::from_utf8(output.stdout).unwrap();
+            println!("a {a}");
+            a
+        }
     };
-
-    let a = ["rev-parse", test.trim()];
-
-    let output = Command::new("git").args(a).output().unwrap();
-
-    let git_hash = String::from_utf8(output.stdout).unwrap();
-
-    println!("hash {git_hash}");
 
     let manifest_path = temp.child("Scarb.toml");
     manifest_path
@@ -83,8 +88,8 @@ fn simple_package_with_git_dependency() {
 
             [dependencies]
             starknet = "2.1.0"
-            snforge_std = {{ git = "https://github.com/foundry-rs/starknet-foundry.git", rev = "{}" }}
-            "#, git_hash.trim()
+            snforge_std = {{ git = "https://github.com/foundry-rs/starknet-foundry.git", branch = "{}" }}
+            "#, branch.trim()
 
         ))
         .unwrap();
