@@ -2,7 +2,7 @@ use crate::helpers::constants::URL;
 use crate::helpers::fixtures::create_test_provider;
 
 use camino::Utf8PathBuf;
-use cast::{get_account, get_provider};
+use cast::{chain_id_to_network_name, get_account, get_provider};
 use starknet::core::chain_id;
 use starknet::core::types::FieldElement;
 use std::fs;
@@ -144,4 +144,14 @@ fn test_get_account_failed_to_convert_field_elements() {
     assert!(err2
         .to_string()
         .contains("Failed to convert account address: address to FieldElement"));
+}
+
+#[test]
+fn test_chain_id_to_network_name() {
+    let network_name_goerli =
+        chain_id_to_network_name(FieldElement::from_byte_slice_be("SN_GOERLI".as_bytes()).unwrap());
+    let network_name_katana =
+        chain_id_to_network_name(FieldElement::from_byte_slice_be("KATANA".as_bytes()).unwrap());
+    assert_eq!(network_name_goerli, "alpha-goerli");
+    assert_eq!(network_name_katana, "KATANA");
 }
