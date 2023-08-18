@@ -16,6 +16,7 @@ pub mod prank;
 pub mod precalculate_address;
 pub mod roll;
 pub mod warp;
+pub mod spoof;
 
 // All errors that can be thrown from the hint executor have to be added here,
 // to prevent the whole runner from panicking

@@ -14,6 +14,8 @@ use starknet_api::{
     state::StorageKey,
 };
 use std::collections::HashMap;
+use crate::cheatcodes;
+use cheatcodes::spoof::TxInfoMock;
 
 /// A simple implementation of `StateReader` using `HashMap`s as storage.
 #[derive(Debug, Default)]
@@ -88,6 +90,7 @@ pub struct CheatcodeState {
     pub pranked_contracts: HashMap<ContractAddress, ContractAddress>,
     pub warped_contracts: HashMap<ContractAddress, Felt252>,
     pub mocked_functions: HashMap<ContractAddress, HashMap<EntryPointSelector, Vec<StarkFelt>>>,
+    pub spoofed_contracts: HashMap<ContractAddress, TxInfoMock>,
 }
 
 impl CheatcodeState {
@@ -98,6 +101,7 @@ impl CheatcodeState {
             pranked_contracts: HashMap::new(),
             warped_contracts: HashMap::new(),
             mocked_functions: HashMap::new(),
+            spoofed_contracts: HashMap::new(),
         }
     }
 }

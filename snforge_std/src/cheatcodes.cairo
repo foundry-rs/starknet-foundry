@@ -39,6 +39,42 @@ impl RevertedTransactionImpl of RevertedTransactionTrait {
     }
 }
 
+#[derive(Drop)]
+struct TxInfoMock {
+    version: Option<felt252>,
+    account_contract_address: Option<felt252>,
+    max_fee: Option<u128>,
+    signature: Option<Array<felt252>>,
+    transaction_hash: Option<felt252>,
+    chain_id: Option<felt252>,
+    nonce: Option<felt252>,
+}
+
+trait TxInfoMockTrait {
+    fn default() -> TxInfoMock;
+}
+
+impl TxInfoMockImpl of TxInfoMockTrait {
+    fn default() -> TxInfoMock {
+        TxInfoMock {
+            version: Option::None(()),
+            account_contract_address: Option::None(()),
+            max_fee: Option::None(()),
+            signature: Option::None(()),
+            transaction_hash: Option::None(()),
+            chain_id: Option::None(()),
+            nonce: Option::None(()),
+        }
+    }
+}
+
+fn value_or_default<T, impl TDrop: Drop::<T>>(option: Option<T>, default: T) -> T {
+    match option {
+        Option::Some(x) => x,
+        Option::None => default,
+    }
+}
+
 impl ContractClassImpl of ContractClassTrait {
     fn precalculate_address(self: @ContractClass, constructor_calldata: @Array::<felt252>) -> ContractAddress {
         let mut inputs: Array::<felt252> = _prepare_calldata(self.class_hash, constructor_calldata);
@@ -178,4 +214,48 @@ fn get_class_hash(contract_address: ContractAddress) -> ClassHash {
     // Expecting a buffer with one felt252, being the class hash.
     let buf = cheatcode::<'get_class_hash'>(array![contract_address_felt].span());
     (*buf[0]).try_into().expect('Invalid class hash value')
+}
+
+fn start_spoof(contract_address: ContractAddress, tx_info_mock: TxInfoMock) {
+    let contract_address_felt: felt252 = contract_address.into();
+
+    let TxInfoMock{
+        version,
+        account_contract_address,
+        max_fee,
+        signature,
+        transaction_hash,
+        chain_id,
+        nonce
+    } = tx_info_mock;
+
+    let mut inputs = array![
+        contract_address_felt,
+        value_or_default(version, 0),
+        value_or_default(account_contract_address, 0),
+        value_or_default(max_fee, 0_u128).into(),
+        value_or_default(transaction_hash, 0),
+        value_or_default(chain_id, 0),
+        value_or_default(nonce, 0)
+    ];
+
+    let signature = value_or_default(signature, ArrayTrait::new());
+    let signature_len = signature.len();
+    inputs.append(signature_len.into());
+
+    let mut i = 0;
+    loop {
+        if signature_len == i {
+            break ();
+        }
+        inputs.append(*signature[i]);
+        i += 1;
+    };
+
+    cheatcode::<'start_spoof'>(inputs.span());
+}
+
+fn stop_spoof(contract_address: ContractAddress) {
+    let contract_address_felt: felt252 = contract_address.into();
+    cheatcode::<'stop_spoof'>(array![contract_address_felt].span());
 }

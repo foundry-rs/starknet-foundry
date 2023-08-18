@@ -265,6 +265,36 @@ impl CairoHintProcessor<'_> {
                     .stop_mock_call(contract_address, &function_name);
                 Ok(())
             }
+            "start_spoof" => {
+                let contract_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
+                    inputs[0].clone().to_be_bytes(),
+                )?)?);
+
+                let version = inputs[1].clone();
+                let account_contract_address = inputs[2].clone();
+                let max_fee = inputs[3].clone();
+                let transaction_hash = inputs[4].clone();
+                let chain_id = inputs[5].clone();
+                let nonce = inputs[6].clone();
+
+                let signature_len= inputs[7]
+                    .to_usize()
+                    .expect("Missing signature len in inputs");
+                let signature = Vec::from(&inputs[8..(8 + signature_len)]);
+
+                self.cheatnet_state
+                    .start_spoof(contract_address, version, account_contract_address, max_fee, signature, transaction_hash, chain_id, nonce);
+                Ok(())
+            }
+            "stop_spoof" => {
+                let contract_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
+                    inputs[0].clone().to_be_bytes(),
+                )?)?);
+
+                self.cheatnet_state
+                    .stop_spoof(contract_address);
+                Ok(())
+            }
             "declare" => {
                 let contract_name = inputs[0].clone();
 

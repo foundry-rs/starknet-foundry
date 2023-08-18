@@ -6,6 +6,8 @@ use cheatcodes::RevertedTransaction;
 use cheatcodes::RevertedTransactionTrait;
 use cheatcodes::ContractClass;
 use cheatcodes::ContractClassTrait;
+use cheatcodes::TxInfoMock;
+use cheatcodes::TxInfoMockTrait;
 
 use cheatcodes::start_prank;
 use cheatcodes::stop_prank;
@@ -16,6 +18,8 @@ use cheatcodes::stop_warp;
 use cheatcodes::start_mock_call;
 use cheatcodes::stop_mock_call;
 use cheatcodes::get_class_hash;
+use cheatcodes::start_spoof;
+use cheatcodes::stop_spoof;
 
 
 mod file_operations;
