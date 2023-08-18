@@ -53,20 +53,20 @@ fn simple_package_with_git_dependency() {
         .unwrap();
 
     let name = "GITHUB_SHA";
-    let git_hash = match env::var(name) {
+    let test = match env::var(name) {
         Ok(v) => {
             println!("GITHUB_SHA {v}");
             v
         }
-        Err(_e) => {
-            let output = Command::new("git")
-                .args(["rev-parse", "HEAD"])
-                .output()
-                .unwrap();
-            let res = String::from_utf8(output.stdout).unwrap();
-            res
-        }
+        Err(_e) => String::from("HEAD"),
     };
+
+    let a = ["rev-parse", test.trim()];
+
+    let output = Command::new("git").args(a).output().unwrap();
+
+    let git_hash = String::from_utf8(output.stdout).unwrap();
+
     println!("hash {git_hash}");
 
     let manifest_path = temp.child("Scarb.toml");
