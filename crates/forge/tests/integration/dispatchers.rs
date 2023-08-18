@@ -530,13 +530,12 @@ fn nonexistent_method_call() {
         use traits::Into;
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
-        use snforge_std::{ declare, PreparedContract, deploy };
+        use snforge_std::{ declare, ContractClassTrait };
         
 
         fn deploy_contract(name: felt252, constructor_calldata: @Array<felt252>) -> ContractAddress {
-            let class_hash = declare(name);
-            let prepared = PreparedContract { class_hash, constructor_calldata };
-            deploy(prepared).unwrap()
+            let contract = declare(name);
+            contract.deploy(constructor_calldata).unwrap()
         }
         
         #[starknet::interface]
@@ -595,12 +594,11 @@ fn nonexistent_libcall_function() {
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
         use starknet::ClassHash;
-        use snforge_std::{ declare, PreparedContract, deploy };
+        use snforge_std::{ declare, ContractClassTrait };
         
         fn deploy_contract(name: felt252) -> ContractAddress {
-            let class_hash = declare(name);
-            let prepared = PreparedContract { class_hash, constructor_calldata: @ArrayTrait::new() };
-            deploy(prepared).unwrap()
+            let contract = declare(name);
+            contract.deploy(@ArrayTrait::new()).unwrap()
         }
         
         #[starknet::interface]
@@ -610,11 +608,11 @@ fn nonexistent_libcall_function() {
 
         #[test]
         fn test_nonexistent_libcall() {
-            let target_class_hash = declare('Contract');
+            let class = declare('Contract');
             let contract_address = deploy_contract('LibCaller');
             
             let dispatcher = IContractDispatcher { contract_address };
-            dispatcher.invoke_nonexistent_libcall_from_contract(target_class_hash);
+            dispatcher.invoke_nonexistent_libcall_from_contract(class.class_hash);
         }
         "#
         ),
@@ -715,12 +713,11 @@ fn nonexistent_class_libcall() {
         use option::OptionTrait;
         use starknet::ContractAddress;
         use starknet::ClassHash;
-        use snforge_std::{ declare, PreparedContract, deploy };
+        use snforge_std::{ declare, ContractClassTrait };
         
         fn deploy_contract(name: felt252) -> ContractAddress {
-            let class_hash = declare(name);
-            let prepared = PreparedContract { class_hash, constructor_calldata: @ArrayTrait::new() };
-            deploy(prepared).unwrap()
+            let contract = declare(name);
+            contract.deploy(@ArrayTrait::new()).unwrap()
         }
         
         #[starknet::interface]
