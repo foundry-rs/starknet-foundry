@@ -236,20 +236,20 @@ async fn main() -> Result<()> {
 }
 
 fn update_cast_config(config: &mut CastConfig, cli: &Cli) {
-    if let Some(url) = &cli.rpc_url {
-        config.rpc_url = url.clone();
-    }
-    if let Some(network) = &cli.network {
-        config.network = network.clone();
-    }
-    if let Some(account) = &cli.account {
-        config.account = account.clone();
-    }
-    if let Some(accounts_file) = &cli.accounts_file_path {
-        config.accounts_file = accounts_file.clone();
-    } else if config.accounts_file == Utf8PathBuf::default() {
-        config.accounts_file = DEFAULT_ACCOUNTS_FILE.into();
+    macro_rules! clone_or_else {
+        ($field:expr, $config_field:expr) => {
+            $field.clone().unwrap_or_else(|| $config_field.clone())
+        };
     }
 
-    config.accounts_file = Utf8PathBuf::from(shellexpand::tilde(&config.accounts_file).to_string());
+    config.rpc_url = clone_or_else!(cli.rpc_url, config.rpc_url);
+    config.network = clone_or_else!(cli.network, config.network);
+    config.account = clone_or_else!(cli.account, config.account);
+
+    let new_accounts_file = cli
+        .accounts_file_path
+        .clone()
+        .unwrap_or_else(|| Utf8PathBuf::from(DEFAULT_ACCOUNTS_FILE));
+
+    config.accounts_file = Utf8PathBuf::from(shellexpand::tilde(&new_accounts_file).to_string());
 }
