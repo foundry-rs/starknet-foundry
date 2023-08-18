@@ -5,6 +5,7 @@ use crate::state::DictStateReader;
 use crate::{cheatcodes::EnhancedHintError, CheatnetState};
 use anyhow::{Context, Result};
 use blockifier::abi::abi_utils::selector_from_name;
+use blockifier::execution::execution_utils::felt_to_stark_felt;
 
 use blockifier::execution::entry_point::CallInfo;
 use blockifier::state::cached_state::CachedState;
@@ -30,14 +31,15 @@ impl CheatnetState {
         class_hash: &Felt252,
         calldata: &[Felt252],
     ) -> Result<ContractAddress, CheatcodeError> {
-        let blockifier_state: &mut CachedState<DictStateReader> = &mut self.blockifier_state;
-
         // Deploy a contract using syscall deploy.
         let account_address = ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS));
         let block_context = build_block_context();
         let entry_point_selector = selector_from_name("deploy_contract");
-        let salt = ContractAddressSalt::default();
+        let salt = self.get_salt();
         let class_hash = ClassHash(StarkFelt::new(class_hash.to_be_bytes()).unwrap());
+        self.increment_deploy_salt_base();
+
+        let blockifier_state: &mut CachedState<DictStateReader> = &mut self.blockifier_state;
 
         let contract_class = blockifier_state
             .get_compiled_contract_class(&class_hash)
@@ -110,10 +112,7 @@ fn create_execute_calldata(
         salt.0,                        // Contract_address_salt.
         stark_felt!(calldata_len),     // Constructor calldata length.
     ];
-    let mut calldata: Vec<StarkFelt> = calldata
-        .iter()
-        .map(|data| StarkFelt::new(data.to_be_bytes()).unwrap())
-        .collect();
+    let mut calldata: Vec<StarkFelt> = calldata.iter().map(felt_to_stark_felt).collect();
     execute_calldata.append(&mut calldata);
     Calldata(execute_calldata.into())
 }

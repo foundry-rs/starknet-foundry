@@ -15,7 +15,7 @@ fn start_prank_simple() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use snforge_std::{ declare, PreparedContract, deploy, start_prank };
+            use snforge_std::{ declare, ContractClassTrait, start_prank };
 
             #[starknet::interface]
             trait IPrankChecker<TContractState> {
@@ -24,9 +24,8 @@ fn start_prank_simple() {
 
             #[test]
             fn test_prank_simple() {
-                let class_hash = declare('PrankChecker');
-                let prepared = PreparedContract { class_hash, constructor_calldata: @ArrayTrait::new() };
-                let contract_address = deploy(prepared).unwrap();
+                let contract = declare('PrankChecker');
+                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IPrankCheckerDispatcher { contract_address };
 
                 let caller_address: felt252 = 123;
@@ -62,8 +61,8 @@ fn start_prank_with_other_syscall() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use snforge_std::{ declare, PreparedContract, deploy, start_prank };
-            
+            use snforge_std::{ declare, ContractClassTrait, start_prank };
+
             #[starknet::interface]
             trait IPrankChecker<TContractState> {
                 fn get_caller_address_and_emit_event(ref self: TContractState) -> felt252;
@@ -71,9 +70,8 @@ fn start_prank_with_other_syscall() {
 
             #[test]
             fn test_prank_with_other_syscall() {
-                let class_hash = declare('PrankChecker');
-                let prepared = PreparedContract { class_hash, constructor_calldata: @ArrayTrait::new() };
-                let contract_address = deploy(prepared).unwrap();
+                let contract = declare('PrankChecker');
+                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IPrankCheckerDispatcher { contract_address };
 
                 let caller_address: felt252 = 123;
@@ -111,8 +109,8 @@ fn start_prank_in_constructor_test() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use snforge_std::{ declare, PreparedContract, deploy, start_prank };
-            
+            use snforge_std::{ declare, ContractClassTrait, start_prank };
+
             #[starknet::interface]
             trait IConstructorPrankChecker<TContractState> {
                 fn get_stored_caller_address(ref self: TContractState) -> ContractAddress;
@@ -120,13 +118,12 @@ fn start_prank_in_constructor_test() {
 
             #[test]
             fn test_prank_constructor_simple() {
-                let class_hash = declare('ConstructorPrankChecker');
-                let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
+                let contract = declare('ConstructorPrankChecker');
 
                 // TODO (#254): Change to the actual address
                 let contract_address: ContractAddress = 2598896470772924212281968896271340780432065735045468431712403008297614014532.try_into().unwrap();
                 start_prank(contract_address, 555);
-                let contract_address: ContractAddress = deploy(prepared).unwrap().try_into().unwrap();
+                let contract_address: ContractAddress = contract.deploy(@ArrayTrait::new()).unwrap().try_into().unwrap();
 
                 let dispatcher = IConstructorPrankCheckerDispatcher { contract_address };
                 assert(dispatcher.get_stored_block_number() == 555, 'Wrong stored caller address');
@@ -156,7 +153,7 @@ fn stop_prank() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use snforge_std::{ declare, PreparedContract, deploy, start_prank, stop_prank };
+            use snforge_std::{ declare, ContractClassTrait, start_prank, stop_prank };
 
             #[starknet::interface]
             trait IPrankChecker<TContractState> {
@@ -165,9 +162,8 @@ fn stop_prank() {
 
             #[test]
             fn test_stop_prank() {
-                let class_hash = declare('PrankChecker');
-                let prepared = PreparedContract { class_hash, constructor_calldata: @ArrayTrait::new() };
-                let contract_address = deploy(prepared).unwrap();
+                let contract = declare('PrankChecker');
+                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IPrankCheckerDispatcher { contract_address };
 
                 let target_caller_address: felt252 = 123;
@@ -210,7 +206,8 @@ fn double_prank() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use snforge_std::{ declare, PreparedContract, deploy, start_prank, stop_prank };
+            use snforge_std::{ declare, ContractClassTrait, start_prank, stop_prank };
+
 
             #[starknet::interface]
             trait IPrankChecker<TContractState> {
@@ -219,9 +216,8 @@ fn double_prank() {
 
             #[test]
             fn test_stop_prank() {
-                let class_hash = declare('PrankChecker');
-                let prepared = PreparedContract { class_hash, constructor_calldata: @ArrayTrait::new() };
-                let contract_address = deploy(prepared).unwrap();
+                let contract = declare('PrankChecker');
+                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IPrankCheckerDispatcher { contract_address };
 
                 let target_caller_address: felt252 = 123;
@@ -266,23 +262,21 @@ fn start_prank_with_proxy() {
             use traits::Into;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use snforge_std::{ declare, PreparedContract, deploy, start_prank, stop_prank };
-            
+            use snforge_std::{ declare, ContractClassTrait, start_prank, stop_prank };
+
             #[starknet::interface]
             trait IPrankCheckerProxy<TContractState> {
                 fn get_prank_checkers_caller_address(ref self: TContractState, address: ContractAddress) -> felt252;
             }
             #[test]
             fn test_prank_simple() {
-                let class_hash = declare('PrankChecker');
-                let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
-                let prank_checker_contract_address = deploy(prepared).unwrap();
+                let contract = declare('PrankChecker');
+                let prank_checker_contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let contract_address: ContractAddress = 234.try_into().unwrap();
                 start_prank(prank_checker_contract_address, contract_address);
 
-                let class_hash = declare('PrankCheckerProxy');
-                let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
-                let proxy_contract_address = deploy(prepared).unwrap();
+                let contract = declare('PrankCheckerProxy');
+                let proxy_contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let proxy_dispatcher = IPrankCheckerProxyDispatcher { contract_address: proxy_contract_address };
                 let caller_address = proxy_dispatcher.get_prank_checkers_caller_address(prank_checker_contract_address);
                 assert(caller_address == 234, caller_address);
@@ -318,7 +312,8 @@ fn start_prank_with_library_call() {
             use traits::Into;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use snforge_std::{ declare, PreparedContract, deploy, start_prank };
+            use snforge_std::{ declare, ContractClassTrait, start_prank };
+
             use starknet::ClassHash;
 
             #[starknet::interface]
@@ -328,11 +323,11 @@ fn start_prank_with_library_call() {
 
             #[test]
             fn test_prank_simple() {
-                let prank_checker_class_hash = declare('PrankChecker');
+                let prank_checker_contract = declare('PrankChecker');
+                let prank_checker_class_hash = prank_checker_contract.class_hash.into();
 
-                let class_hash = declare('PrankCheckerLibCall');
-                let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
-                let contract_address = deploy(prepared).unwrap();
+                let contract = declare('PrankCheckerLibCall');
+                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
 
                 let pranked_address: ContractAddress = 234.try_into().unwrap();
                 start_prank(contract_address, pranked_address);
