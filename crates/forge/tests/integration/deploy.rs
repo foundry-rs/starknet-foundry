@@ -1,8 +1,6 @@
-use crate::integration::common::corelib::{corelib_path, predeployed_contracts};
 use crate::integration::common::runner::Contract;
+use crate::integration::common::running_tests::run_test_case;
 use crate::{assert_case_output_contains, assert_failed, assert_passed, test_case};
-use camino::Utf8PathBuf;
-use forge::run;
 use indoc::indoc;
 use std::path::Path;
 
@@ -12,18 +10,14 @@ fn error_handling() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use snforge_std::{ declare, PreparedContract, deploy };
+        use snforge_std::{ declare, ContractClass, ContractClassTrait };
         use array::ArrayTrait;
-        
+
         #[test]
         fn test_deploy_error_handling() {
-            let class_hash = declare('PanickingConstructor');
-            let prepared_contract = PreparedContract {
-                class_hash: class_hash,
-                constructor_calldata: @ArrayTrait::new()
-            };
-        
-            match deploy(prepared_contract) {
+            let contract = declare('PanickingConstructor');
+
+            match contract.deploy(@ArrayTrait::new()) {
                 Result::Ok(_) => panic_with_felt252('Should have panicked'),
                 Result::Err(x) => {
                     assert(*x.panic_data.at(0_usize) == 'PANIK', *x.panic_data.at(0_usize));
@@ -40,10 +34,10 @@ fn error_handling() {
                 #[starknet::contract]
                 mod PanickingConstructor {
                     use array::ArrayTrait;
-                
+
                     #[storage]
                     struct Storage {}
-                
+
                     #[constructor]
                     fn constructor(ref self: ContractState) {
                         let mut panic_data = ArrayTrait::new();
@@ -57,17 +51,7 @@ fn error_handling() {
         )
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
@@ -78,18 +62,18 @@ fn deploy_fails_on_calldata_when_contract_has_no_constructor() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use snforge_std::{ declare, PreparedContract, deploy };
-        use array::ArrayTrait; 
-            
+        use snforge_std::{ declare, ContractClass, ContractClassTrait };
+        use array::ArrayTrait;
+
         #[test]
         fn deploy_invalid_calldata() {
             let mut calldata = ArrayTrait::new();
             calldata.append(1234);
             calldata.append(5678);
         
-            let class_hash = declare('HelloStarknet');
-            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
-            let contract_address = deploy(prepared).unwrap();
+            let contract = declare('HelloStarknet');
+    
+            let contract_address = contract.deploy(@calldata ).unwrap();
         
             assert(2 == 2, '2 == 2');
         }
@@ -102,17 +86,7 @@ fn deploy_fails_on_calldata_when_contract_has_no_constructor() {
         .unwrap()
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
 
     assert_failed!(result);
 }
@@ -123,17 +97,15 @@ fn test_deploy_fails_on_missing_constructor_arguments() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use snforge_std::{ declare, PreparedContract, deploy };
-        use array::ArrayTrait; 
-            
+        use snforge_std::{ declare, ContractClass, ContractClassTrait };
+        use array::ArrayTrait;
+
         #[test]
         fn deploy_invalid_calldata() {
             let mut calldata = ArrayTrait::new();
-        
-            let class_hash = declare('HelloStarknet');
-            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
-            let contract_address = deploy(prepared).unwrap();
-        
+
+            let contract = declare('HelloStarknet');
+            let contract_address = contract.deploy(@calldata).unwrap();
             assert(2 == 2, '2 == 2');
         }
     "#
@@ -155,17 +127,7 @@ fn test_deploy_fails_on_missing_constructor_arguments() {
         )
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
 
     assert_failed!(result);
 }
@@ -176,7 +138,7 @@ fn test_deploy_fails_on_too_many_constructor_arguments() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use snforge_std::{ declare, PreparedContract, deploy };
+        use snforge_std::{ declare, ContractClass, ContractClassTrait };
         use array::ArrayTrait;
 
         #[test]
@@ -188,9 +150,8 @@ fn test_deploy_fails_on_too_many_constructor_arguments() {
             calldata.append(4);
             calldata.append(5);
 
-            let class_hash = declare('HelloStarknet');
-            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
-            let contract_address = deploy(prepared).unwrap();
+            let contract = declare('HelloStarknet');
+            let contract_address = contract.deploy(@calldata).unwrap();
 
             assert(2 == 2, '2 == 2');
         }
@@ -213,17 +174,7 @@ fn test_deploy_fails_on_too_many_constructor_arguments() {
         )
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
 
     assert_failed!(result);
 }
@@ -235,7 +186,7 @@ fn test_deploy_fails_with_incorrect_class_hash() {
             r#"
         use result::ResultTrait;
         use option::OptionTrait;
-        use snforge_std::{ declare, PreparedContract, deploy };
+        use snforge_std::{ declare, ContractClass, ContractClassTrait };
         use array::ArrayTrait;
         use traits::TryInto;
         use starknet::Felt252TryIntoClassHash;
@@ -244,11 +195,10 @@ fn test_deploy_fails_with_incorrect_class_hash() {
         fn deploy_non_existing_class_hash() {
             let mut calldata = ArrayTrait::new();
 
-            let prepared = PreparedContract { 
+            let contract = ContractClass { 
                 class_hash: 'made-up-class-hash'.try_into().unwrap(), 
-                constructor_calldata: @calldata 
             };
-            let contract_address = deploy(prepared).unwrap();
+            let contract_address = contract.deploy(@calldata).unwrap();
         }
     "#
         ),
@@ -266,17 +216,7 @@ fn test_deploy_fails_with_incorrect_class_hash() {
         )
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
 
     assert_case_output_contains!(result, "deploy_non_existing_class_hash", "not declared");
     assert_failed!(result);
@@ -289,25 +229,25 @@ fn test_deploy_invokes_the_constructor() {
             r#"
         use option::OptionTrait;
         use result::ResultTrait;
-        use snforge_std::{ declare, PreparedContract, deploy };
+        use snforge_std::{ declare, ContractClass, ContractClassTrait };
         use array::ArrayTrait;
         use traits::TryInto;
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
-        
+
         #[starknet::interface]
         trait ThingGetter<TContractState> {
             fn get_thing(self: @TContractState) -> felt252;
         }
-        
+
         #[test]
         fn deploy_invokes_constructor() {
             let mut calldata = ArrayTrait::new();
             calldata.append(420);
 
-            let class_hash = declare('HelloStarknet');
-            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
-            let contract_address = deploy(prepared).unwrap();
+            let contract = declare('HelloStarknet');
+
+            let contract_address = contract.deploy(@calldata).unwrap();
             
             let thing_getter = ThingGetterDispatcher { contract_address };
             
@@ -349,16 +289,6 @@ fn test_deploy_invokes_the_constructor() {
         )
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
     assert_passed!(result);
 }

@@ -1,11 +1,11 @@
 mod cheatcodes;
 
 use cheatcodes::declare;
-use cheatcodes::deploy;
 
-use cheatcodes::PreparedContract;
 use cheatcodes::RevertedTransaction;
 use cheatcodes::RevertedTransactionTrait;
+use cheatcodes::ContractClass;
+use cheatcodes::ContractClassTrait;
 
 use cheatcodes::start_prank;
 use cheatcodes::stop_prank;
