@@ -236,7 +236,7 @@ mod tests {
             .canonicalize_utf8()
             .unwrap()
             .to_string()
-            .replace('\\', "/"); // to make tests on Windows pass - prevents incorrect toml format error
+            .replace('\\', "/");
 
         let manifest_path = temp.child("Scarb.toml");
         manifest_path
@@ -294,7 +294,7 @@ mod tests {
             .canonicalize_utf8()
             .unwrap()
             .to_string()
-            .replace('\\', "/"); // to make tests on Windows pass - prevents incorrect toml format error;
+            .replace('\\', "/");
 
         let scarb_path = temp.child("Scarb.toml");
         scarb_path
@@ -390,7 +390,7 @@ mod tests {
 
         let artifacts_path = temp
             .path()
-            .join("targe/dev/simple_package.starknet_artifacts.json");
+            .join("target/dev/simple_package.starknet_artifacts.json");
         let artifacts_path = Utf8PathBuf::from_path_buf(artifacts_path).unwrap();
 
         let artifacts = artifacts_for_package(&artifacts_path).unwrap();

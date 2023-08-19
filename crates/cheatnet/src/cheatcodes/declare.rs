@@ -128,7 +128,9 @@ mod test {
         let snforge_std_path = Utf8PathBuf::from_str("../../snforge_std")
             .unwrap()
             .canonicalize_utf8()
-            .unwrap();
+            .unwrap()
+            .to_string()
+            .replace('\\', "/");
 
         let manifest_path = temp.child("Scarb.toml");
         manifest_path
@@ -150,11 +152,12 @@ mod test {
             ))
             .unwrap();
 
-        Command::new("scarb")
+        let output = Command::new("scarb")
             .current_dir(&temp)
             .arg("build")
             .output()
             .unwrap();
+        assert!(output.status.success());
 
         let temp_dir_path = temp.path();
 

@@ -285,6 +285,8 @@ fn with_exit_first() {
                 .unwrap()
                 .canonicalize_utf8()
                 .unwrap()
+                .to_string()
+                .replace('\\', "/")
         ))
         .unwrap();
 
