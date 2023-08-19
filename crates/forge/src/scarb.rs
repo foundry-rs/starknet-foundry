@@ -231,12 +231,12 @@ mod tests {
         )
         .unwrap();
 
-        let snforge_std_path = Utf8PathBuf::from_str("..")
+        let snforge_std_path = Utf8PathBuf::from_str("../../snforge_std")
             .unwrap()
-            .join("..")
-            .join("snforge_std")
             .canonicalize_utf8()
-            .unwrap();
+            .unwrap()
+            .to_string()
+            .replace('\\', "/"); // to make tests on Windows pass - prevents incorrect toml format error
 
         let manifest_path = temp.child("Scarb.toml");
         manifest_path
@@ -289,12 +289,12 @@ mod tests {
     fn get_starknet_artifacts_path_for_project_with_different_package_and_target_name() {
         let temp = setup_package("simple_package");
 
-        let snforge_std_path = Utf8PathBuf::from_str("..")
+        let snforge_std_path = Utf8PathBuf::from_str("../../snforge_std")
             .unwrap()
-            .join("..")
-            .join("snforge_std")
             .canonicalize_utf8()
-            .unwrap();
+            .unwrap()
+            .to_string()
+            .replace('\\', "/"); // to make tests on Windows pass - prevents incorrect toml format error;
 
         let scarb_path = temp.child("Scarb.toml");
         scarb_path
@@ -331,10 +331,7 @@ mod tests {
         let path = result.unwrap().unwrap();
         assert_eq!(
             path,
-            temp.path()
-                .join("target")
-                .join("dev")
-                .join("essa.starknet_artifacts.json")
+            temp.path().join("target/dev/essa.starknet_artifacts.json")
         );
     }
 
@@ -393,9 +390,7 @@ mod tests {
 
         let artifacts_path = temp
             .path()
-            .join("target")
-            .join("dev")
-            .join("simple_package.starknet_artifacts.json");
+            .join("targe/dev/simple_package.starknet_artifacts.json");
         let artifacts_path = Utf8PathBuf::from_path_buf(artifacts_path).unwrap();
 
         let artifacts = artifacts_for_package(&artifacts_path).unwrap();
@@ -430,9 +425,7 @@ mod tests {
 
         let artifacts_path = temp
             .path()
-            .join("target")
-            .join("dev")
-            .join("simple_package.starknet_artifacts.json");
+            .join("target/dev/simple_package.starknet_artifacts.json");
         let artifacts_path = Utf8PathBuf::from_path_buf(artifacts_path).unwrap();
 
         let contracts = get_contracts_map(&artifacts_path).unwrap();
@@ -440,34 +433,20 @@ mod tests {
         assert!(contracts.contains_key("ERC20"));
         assert!(contracts.contains_key("HelloStarknet"));
 
-        let sierra_contents_erc20 = fs::read_to_string(
-            temp.join("target")
-                .join("dev")
-                .join("simple_package_ERC20.sierra.json"),
-        )
-        .unwrap();
-        let casm_contents_erc20 = fs::read_to_string(
-            temp.join("target")
-                .join("dev")
-                .join("simple_package_ERC20.casm.json"),
-        )
-        .unwrap();
+        let sierra_contents_erc20 =
+            fs::read_to_string(temp.join("target/dev/simple_package_ERC20.sierra.json")).unwrap();
+        let casm_contents_erc20 =
+            fs::read_to_string(temp.join("target/dev/simple_package_ERC20.casm.json")).unwrap();
         let contract = contracts.get("ERC20").unwrap();
         assert_eq!(&sierra_contents_erc20, &contract.sierra);
         assert_eq!(&casm_contents_erc20, &contract.casm);
 
-        let sierra_contents_erc20 = fs::read_to_string(
-            temp.join("target")
-                .join("dev")
-                .join("simple_package_HelloStarknet.sierra.json"),
-        )
-        .unwrap();
-        let casm_contents_erc20 = fs::read_to_string(
-            temp.join("target")
-                .join("dev")
-                .join("simple_package_HelloStarknet.casm.json"),
-        )
-        .unwrap();
+        let sierra_contents_erc20 =
+            fs::read_to_string(temp.join("target/dev/simple_package_HelloStarknet.sierra.json"))
+                .unwrap();
+        let casm_contents_erc20 =
+            fs::read_to_string(temp.join("target/dev/simple_package_HelloStarknet.casm.json"))
+                .unwrap();
         let contract = contracts.get("HelloStarknet").unwrap();
         assert_eq!(&sierra_contents_erc20, &contract.sierra);
         assert_eq!(&casm_contents_erc20, &contract.casm);
@@ -503,7 +482,7 @@ mod tests {
             paths_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0]).unwrap();
 
         assert!(package_path.is_dir());
-        assert!(lib_path.ends_with(Utf8PathBuf::from("src").join("lib.cairo")));
+        assert!(lib_path.ends_with(Utf8PathBuf::from("src/lib.cairo")));
         assert!(lib_path.starts_with(package_path));
     }
 
