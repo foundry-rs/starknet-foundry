@@ -19,6 +19,8 @@ pub fn class_hash_to_felt(class_hash: ClassHash) -> Felt252 {
 
 #[cfg(test)]
 mod test {
+    use starknet_api::hash::StarkFelt;
+
     use super::*;
 
     #[test]
@@ -31,6 +33,36 @@ mod test {
 
         for (str, felt_res) in cases {
             assert_eq!(felt_from_short_string(str), felt_res);
+        }
+    }
+
+    #[test]
+    fn test_contract_address_to_felt() {
+        let cases = [
+            (ContractAddress::from(0_u8), Felt252::from(0)),
+            (ContractAddress::from(123_u8), Felt252::from(123)),
+        ];
+
+        for (input, expected) in cases {
+            assert_eq!(contract_address_to_felt(input), expected);
+        }
+    }
+
+    #[test]
+    fn test_class_hash_to_felt() {
+        let cases = [
+            (
+                ClassHash(StarkFelt::new(Felt252::from(0).to_be_bytes()).unwrap()),
+                Felt252::from(0),
+            ),
+            (
+                ClassHash(StarkFelt::new(Felt252::from(123).to_be_bytes()).unwrap()),
+                Felt252::from(123),
+            ),
+        ];
+
+        for (input, expected) in cases {
+            assert_eq!(class_hash_to_felt(input), expected);
         }
     }
 }
