@@ -395,10 +395,8 @@ impl CheatableSyscallHandler<'_> {
                 let signature_len = signature.len();
                 let signature_start_ptr = vm.add_memory_segment();
                 let signature_end_ptr = (signature_start_ptr + signature_len).unwrap();
-                let signature: Vec<MaybeRelocatable> = signature
-                    .iter()
-                    .map(MaybeRelocatable::from)
-                    .collect();
+                let signature: Vec<MaybeRelocatable> =
+                    signature.iter().map(MaybeRelocatable::from).collect();
                 vm.load_data(signature_start_ptr, &signature).unwrap();
 
                 new_tx_info[3] = signature_start_ptr.into();
