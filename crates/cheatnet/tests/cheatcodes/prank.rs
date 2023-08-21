@@ -1,9 +1,9 @@
 use crate::{
     assert_success,
-    common::{deploy_contract, get_felt_selector_from_name, state::create_cheatnet_state},
+    common::{deploy_contract, state::create_cheatnet_state},
 };
 use cairo_felt::Felt252;
-use cheatnet::rpc::call_contract;
+use cheatnet::{conversions::felt_selector_from_name, rpc::call_contract};
 use starknet_api::core::ContractAddress;
 
 #[test]
@@ -14,7 +14,7 @@ fn prank_simple() {
 
     state.start_prank(contract_address, ContractAddress::from(123_u128));
 
-    let selector = get_felt_selector_from_name("get_caller_address");
+    let selector = felt_selector_from_name("get_caller_address");
 
     let output =
         call_contract(&contract_address, &selector, vec![].as_slice(), &mut state).unwrap();
