@@ -1,13 +1,13 @@
 use crate::{
     assert_success,
-    common::{
-        deploy_contract, get_contracts, get_felt_selector_from_name, recover_data,
-        state::create_cheatnet_state,
-    },
+    common::{deploy_contract, get_contracts, recover_data, state::create_cheatnet_state},
 };
 use cairo_felt::Felt252;
 use cheatnet::{
-    conversions::{class_hash_to_felt, contract_address_to_felt, felt_from_short_string},
+    conversions::{
+        class_hash_to_felt, contract_address_to_felt, felt_from_short_string,
+        felt_selector_from_name,
+    },
     rpc::call_contract,
 };
 
@@ -19,7 +19,7 @@ fn roll_simple() {
 
     state.start_roll(contract_address, Felt252::from(123_u128));
 
-    let selector = get_felt_selector_from_name("get_block_number");
+    let selector = felt_selector_from_name("get_block_number");
 
     let output =
         call_contract(&contract_address, &selector, vec![].as_slice(), &mut state).unwrap();
@@ -35,7 +35,7 @@ fn roll_with_other_syscall() {
 
     state.start_roll(contract_address, Felt252::from(123_u128));
 
-    let selector = get_felt_selector_from_name("get_block_number_and_emit_event");
+    let selector = felt_selector_from_name("get_block_number_and_emit_event");
 
     let output =
         call_contract(&contract_address, &selector, vec![].as_slice(), &mut state).unwrap();
@@ -60,7 +60,7 @@ fn roll_in_constructor() {
 
     assert_eq!(precalculated_address, contract_address);
 
-    let selector = get_felt_selector_from_name("get_stored_block_number");
+    let selector = felt_selector_from_name("get_stored_block_number");
 
     let output =
         call_contract(&contract_address, &selector, vec![].as_slice(), &mut state).unwrap();
@@ -74,7 +74,7 @@ fn roll_stop() {
 
     let contract_address = deploy_contract(&mut state, "RollChecker", vec![].as_slice());
 
-    let selector = get_felt_selector_from_name("get_block_number");
+    let selector = felt_selector_from_name("get_block_number");
 
     let output =
         call_contract(&contract_address, &selector, vec![].as_slice(), &mut state).unwrap();
@@ -105,7 +105,7 @@ fn roll_double() {
 
     let contract_address = deploy_contract(&mut state, "RollChecker", vec![].as_slice());
 
-    let selector = get_felt_selector_from_name("get_block_number");
+    let selector = felt_selector_from_name("get_block_number");
 
     let output =
         call_contract(&contract_address, &selector, vec![].as_slice(), &mut state).unwrap();
@@ -139,7 +139,7 @@ fn roll_proxy() {
 
     state.start_roll(contract_address, Felt252::from(123_u128));
 
-    let selector = get_felt_selector_from_name("get_block_number");
+    let selector = felt_selector_from_name("get_block_number");
 
     let output =
         call_contract(&contract_address, &selector, vec![].as_slice(), &mut state).unwrap();
@@ -147,7 +147,7 @@ fn roll_proxy() {
     assert_success!(output, vec![Felt252::from(123)]);
 
     let proxy_address = deploy_contract(&mut state, "RollCheckerProxy", vec![].as_slice());
-    let proxy_selector = get_felt_selector_from_name("get_roll_checkers_block_number");
+    let proxy_selector = felt_selector_from_name("get_roll_checkers_block_number");
     let output = call_contract(
         &proxy_address,
         &proxy_selector,
@@ -171,7 +171,7 @@ fn roll_library_call() {
 
     state.start_roll(lib_call_address, Felt252::from(123_u128));
 
-    let lib_call_selector = get_felt_selector_from_name("get_block_number_with_lib_call");
+    let lib_call_selector = felt_selector_from_name("get_block_number_with_lib_call");
     let output = call_contract(
         &lib_call_address,
         &lib_call_selector,

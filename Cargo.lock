@@ -1125,6 +1125,7 @@ dependencies = [
  "cairo-lang-utils",
  "cairo-vm",
  "camino",
+ "ctor",
  "include_dir",
  "indoc",
  "num-traits 0.2.16",

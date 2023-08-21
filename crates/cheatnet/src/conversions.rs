@@ -1,6 +1,13 @@
 use blockifier::execution::execution_utils::stark_felt_to_felt;
 use cairo_felt::Felt252;
+use starknet::core::utils::get_selector_from_name;
 use starknet_api::core::{ClassHash, ContractAddress};
+
+#[must_use]
+pub fn felt_selector_from_name(name: &str) -> Felt252 {
+    let selector = get_selector_from_name(name).unwrap();
+    Felt252::from_bytes_be(&selector.to_bytes_be())
+}
 
 #[must_use]
 pub fn felt_from_short_string(short_str: &str) -> Felt252 {

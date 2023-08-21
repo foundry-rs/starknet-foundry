@@ -1,13 +1,13 @@
 use crate::{
     assert_success,
-    common::{
-        deploy_contract, get_contracts, get_felt_selector_from_name, recover_data,
-        state::create_cheatnet_state,
-    },
+    common::{deploy_contract, get_contracts, recover_data, state::create_cheatnet_state},
 };
 use cairo_felt::Felt252;
 use cheatnet::{
-    conversions::{class_hash_to_felt, contract_address_to_felt, felt_from_short_string},
+    conversions::{
+        class_hash_to_felt, contract_address_to_felt, felt_from_short_string,
+        felt_selector_from_name,
+    },
     rpc::call_contract,
 };
 use starknet_api::core::ContractAddress;
@@ -20,7 +20,7 @@ fn prank_simple() {
 
     state.start_prank(contract_address, ContractAddress::from(123_u128));
 
-    let selector = get_felt_selector_from_name("get_caller_address");
+    let selector = felt_selector_from_name("get_caller_address");
 
     let output =
         call_contract(&contract_address, &selector, vec![].as_slice(), &mut state).unwrap();
@@ -36,7 +36,7 @@ fn prank_with_other_syscall() {
 
     state.start_prank(contract_address, ContractAddress::from(123_u128));
 
-    let selector = get_felt_selector_from_name("get_caller_address_and_emit_event");
+    let selector = felt_selector_from_name("get_caller_address_and_emit_event");
 
     let output =
         call_contract(&contract_address, &selector, vec![].as_slice(), &mut state).unwrap();
@@ -61,7 +61,7 @@ fn prank_in_constructor() {
 
     assert_eq!(precalculated_address, contract_address);
 
-    let selector = get_felt_selector_from_name("get_stored_caller_address");
+    let selector = felt_selector_from_name("get_stored_caller_address");
 
     let output =
         call_contract(&contract_address, &selector, vec![].as_slice(), &mut state).unwrap();
@@ -75,7 +75,7 @@ fn prank_stop() {
 
     let contract_address = deploy_contract(&mut state, "PrankChecker", vec![].as_slice());
 
-    let selector = get_felt_selector_from_name("get_caller_address");
+    let selector = felt_selector_from_name("get_caller_address");
 
     let output =
         call_contract(&contract_address, &selector, vec![].as_slice(), &mut state).unwrap();
@@ -106,7 +106,7 @@ fn prank_double() {
 
     let contract_address = deploy_contract(&mut state, "PrankChecker", vec![].as_slice());
 
-    let selector = get_felt_selector_from_name("get_caller_address");
+    let selector = felt_selector_from_name("get_caller_address");
 
     let output =
         call_contract(&contract_address, &selector, vec![].as_slice(), &mut state).unwrap();
@@ -140,7 +140,7 @@ fn prank_proxy() {
 
     state.start_prank(contract_address, ContractAddress::from(123_u128));
 
-    let selector = get_felt_selector_from_name("get_caller_address");
+    let selector = felt_selector_from_name("get_caller_address");
 
     let output =
         call_contract(&contract_address, &selector, vec![].as_slice(), &mut state).unwrap();
@@ -148,7 +148,7 @@ fn prank_proxy() {
     assert_success!(output, vec![Felt252::from(123)]);
 
     let proxy_address = deploy_contract(&mut state, "PrankCheckerProxy", vec![].as_slice());
-    let proxy_selector = get_felt_selector_from_name("get_prank_checkers_caller_address");
+    let proxy_selector = felt_selector_from_name("get_prank_checkers_caller_address");
     let output = call_contract(
         &proxy_address,
         &proxy_selector,
@@ -172,7 +172,7 @@ fn prank_library_call() {
 
     state.start_prank(lib_call_address, ContractAddress::from(123_u128));
 
-    let lib_call_selector = get_felt_selector_from_name("get_caller_address_with_lib_call");
+    let lib_call_selector = felt_selector_from_name("get_caller_address_with_lib_call");
     let output = call_contract(
         &lib_call_address,
         &lib_call_selector,

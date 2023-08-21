@@ -9,7 +9,7 @@ use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::LocalWallet;
 
-use crate::helpers::response_structs::DeployResponse;
+use cast::helpers::response_structs::DeployResponse;
 use cast::{extract_or_generate_salt, udc_uniqueness};
 use cast::{handle_rpc_error, handle_wait_for_tx};
 

@@ -4,7 +4,6 @@ use cheatnet::{
     cheatcodes::ContractArtifacts, conversions::felt_from_short_string, rpc::CallContractOutput,
     CheatnetState,
 };
-use starknet::core::utils::get_selector_from_name;
 use starknet_api::core::ContractAddress;
 use std::{collections::HashMap, str::FromStr};
 
@@ -12,7 +11,7 @@ use crate::common::scarb::{get_contracts_map, try_get_starknet_artifacts_path};
 
 static TARGET_NAME: &str = "cheatnet_testing_contracts";
 
-pub mod assert;
+pub mod assertions;
 pub mod scarb;
 pub mod state;
 
@@ -44,9 +43,4 @@ pub fn deploy_contract(
 
     let class_hash = state.declare(&contract, &contracts).unwrap();
     state.deploy(&class_hash, calldata).unwrap()
-}
-
-pub fn get_felt_selector_from_name(name: &str) -> Felt252 {
-    let selector = get_selector_from_name(name).unwrap();
-    Felt252::from_bytes_be(&selector.to_bytes_be())
 }
