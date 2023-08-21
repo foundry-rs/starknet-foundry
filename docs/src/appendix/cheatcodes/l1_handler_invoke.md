@@ -43,11 +43,8 @@ fn process_l1_message(ref self: ContractState, from_address: felt252, data: Span
 // ...
 ```
 
-First, the `build` method is used to configure the `L1Handler` to the
-desired contract and selector. Once built, you can invoke the handler
-several times, with different parameters to test.
-
-Invoke is used to execute `process_l1_message`, which is not accessible using a dispatcher:
+First, `L1Handler` struct is initialized with the `contract_address` and the `selector_name`.
+Then, invoke is used to execute `process_l1_message`, which is not accessible using a dispatcher:
 
 ```rust
 use snforge_std::L1Handler;
