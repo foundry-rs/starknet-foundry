@@ -2,10 +2,8 @@ use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
 use camino::Utf8PathBuf;
 use indoc::{formatdoc, indoc};
 
-use crate::e2e::common::runner::{gen_current_branch, gen_current_branch_snforge, runner};
+use crate::e2e::common::runner::{gen_current_branch, runner, setup_package};
 use assert_fs::TempDir;
-use std::env;
-use std::process::Command;
 use std::str::FromStr;
 
 #[test]
@@ -67,7 +65,7 @@ fn simple_package_with_git_dependency() {
             [dependencies]
             starknet = "2.1.0"
             snforge_std = {{ git = "https://github.com/foundry-rs/starknet-foundry.git", branch = "{}" }}
-            "#, branch
+            "#, branch.trim()
 
         ))
         .unwrap();

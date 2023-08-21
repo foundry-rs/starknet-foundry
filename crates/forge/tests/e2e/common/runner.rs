@@ -3,27 +3,12 @@ use assert_fs::TempDir;
 use camino::Utf8PathBuf;
 use indoc::formatdoc;
 use snapbox::cmd::{cargo_bin, Command as SnapboxCommand};
+use std::env;
 use std::str::FromStr;
 
 pub(crate) fn runner() -> SnapboxCommand {
     let snapbox = SnapboxCommand::new(cargo_bin!("snforge"));
     snapbox
-}
-
-pub(crate) fn gen_current_branch() -> &str {
-    let name: &str = "BRANCH_NAME";
-
-    match env::var(name) {
-        Ok(v) => v,
-        Err(_e) => {
-            let output = Command::new("git")
-                .args(["rev-parse", "--abbrev-ref", "HEAD"])
-                .output()
-                .unwrap();
-
-            String::from_utf8(output.stdout).unwrap().trim();
-        }
-    }
 }
 
 pub(crate) fn setup_package(package_name: &str) -> TempDir {
@@ -61,4 +46,19 @@ pub(crate) fn setup_package(package_name: &str) -> TempDir {
         .unwrap();
 
     temp
+}
+
+pub(crate) fn gen_current_branch() -> String {
+    let name: &str = "BRANCH_NAME";
+    match env::var(name) {
+        Ok(v) => v,
+        Err(_e) => {
+            let output = SnapboxCommand::new("git")
+                .args(["rev-parse", "--abbrev-ref", "HEAD"])
+                .output()
+                .unwrap();
+
+            String::from_utf8(output.stdout).unwrap()
+        }
+    }
 }
