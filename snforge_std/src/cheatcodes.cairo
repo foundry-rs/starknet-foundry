@@ -20,11 +20,9 @@ struct PreparedContract {
 }
 
 #[derive(Drop, Clone)]
-struct PreparedL1Handler {
+struct L1HandlerFn {
     contract_address: ContractAddress,
-    selector: felt252,
-    from_address: felt252,
-    payload: Span::<felt252>,
+    selector_name: felt252,
 }
 
 #[derive(Drop, Clone)]
@@ -134,30 +132,38 @@ fn get_class_hash(contract_address: ContractAddress) -> ClassHash {
     (*buf[0]).try_into().expect('Invalid class hash value')
 }
 
-fn l1_handler_call(prepared_l1_handler: PreparedL1Handler) {
-    let PreparedL1Handler{
-        contract_address,
-        selector,
-        from_address,
-        payload
-    } = prepared_l1_handler;
-
-    let contract_address_felt: felt252 = contract_address.into();
-    let mut inputs = array![contract_address_felt, selector, from_address];
-
-    let payload_len_felt: felt252 = payload.len().into();
-    inputs.append(payload_len_felt);
-
-    let payload_len = payload.len();
-    let mut i = 0;
-    loop {
-        if payload_len == i {
-            break ();
-        }
-        inputs.append(*payload[i]);
-        i += 1;
-    };
-
-    cheatcode::<'l1_handler_call'>(inputs.span());
+trait L1Handler {
+    fn build(contract_address: ContractAddress, selector_name: felt252) -> L1HandlerFn;
+    fn invoke(self: L1HandlerFn, from_address: felt252, fee: u128, payload: Span::<felt252>);
 }
 
+impl L1HandlerImpl of L1Handler {
+    fn build(contract_address: ContractAddress, selector_name: felt252) -> L1HandlerFn {
+        L1HandlerFn {
+            contract_address,
+            selector_name,
+        }
+    }
+
+    fn invoke(self: L1HandlerFn, from_address: felt252, fee: u128, payload: Span::<felt252>) {
+        let mut inputs: Array::<felt252> = array![
+            self.contract_address.into(),
+            self.selector_name,
+            from_address,
+            fee.into(),
+            payload.len().into(),
+        ];
+
+        let payload_len = payload.len();
+        let mut i = 0;
+        loop {
+            if payload_len == i {
+                break ();
+            }
+            inputs.append(*payload[i]);
+            i += 1;
+        };
+
+        cheatcode::<'l1_handler_invoke'>(inputs.span());
+    }
+}

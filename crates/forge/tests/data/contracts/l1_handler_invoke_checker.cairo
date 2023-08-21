@@ -11,7 +11,7 @@ trait IBalanceToken<TContractState> {
 }
 
 #[starknet::contract]
-mod l1_handler_caller {
+mod l1_handler_invoker {
 
     use super::{IBalanceToken, L1Data};
 

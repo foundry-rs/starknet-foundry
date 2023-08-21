@@ -301,34 +301,23 @@ impl CairoHintProcessor<'_> {
                     Err(CheatcodeError::Unrecoverable(err)) => Err(err),
                 }
             }
-            "l1_handler_call" => {
-                // TODO(#441): Remove this function when merged.
-                fn contract_address_from_felt252(
-                    felt: &Felt252,
-                ) -> Result<ContractAddress, EnhancedHintError> {
-                    Ok(ContractAddress(PatriciaKey::try_from(felt_to_stark_felt(
-                        felt,
-                    ))?))
-                }
-                // --
-
+            "l1_handler_invoke" => {
                 let contract_address = contract_address_from_felt252(&inputs[0])?;
                 let selector = inputs[1].clone();
                 let from_address = inputs[2].clone();
-                let payload_length: usize = inputs[3]
+                let fee = inputs[3].clone();
+                let payload_length: usize = inputs[4]
                     .clone()
                     .to_usize()
                     .expect("Payload length is expected to fit into usize type");
 
-                let mut payload = vec![];
-                for felt in inputs.iter().skip(4).take(payload_length) {
-                    payload.push(felt.clone());
-                }
+                let payload = Vec::from(&inputs[5..inputs.len()]);
 
-                match self.cheatnet_state.l1_handler_call(
+                match self.cheatnet_state.l1_handler_invoke(
                     contract_address,
                     &selector,
                     &from_address,
+                    &fee,
                     &payload,
                 ) {
                     Ok(()) => Ok(()),

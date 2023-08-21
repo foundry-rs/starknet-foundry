@@ -3,7 +3,7 @@ mod declare;
 mod deploy;
 mod dispatchers;
 mod get_class_hash;
-mod l1_handler_caller;
+mod l1_handler_invoker;
 mod prank;
 mod pure_cairo;
 mod roll;

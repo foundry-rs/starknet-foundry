@@ -27,11 +27,11 @@ fn l1_handler_caller() {
             use serde::Serde;
             use array::{ArrayTrait, SpanTrait};
             use core::result::ResultTrait;
-            use snforge_std::{declare, deploy, PreparedContract, l1_handler_call, PreparedL1Handler};
+            use snforge_std::{declare, deploy, PreparedContract, L1Handler};
 
             #[test]
-            fn test_l1_handler_call() {
-                let class_hash = declare('l1_handler_caller');
+            fn test_l1_handler_invoke() {
+                let class_hash = declare('l1_handler_invoker');
 
                 let prepared = PreparedContract {
                     class_hash: class_hash,
@@ -48,14 +48,8 @@ fn l1_handler_caller() {
                 let mut payload: Array<felt252> = ArrayTrait::new();
                 l1_data.serialize(ref payload);
 
-                let l1_handler_prepared = PreparedL1Handler {
-                    contract_address,
-                    selector: 0x01e6b389ca484cb6fb23cbbcaa2db5581a8d970e3c135e8170c2ea5fdc2d3d8e,
-                    from_address: 0x123,
-                    payload: payload.span(),
-                };
-
-                l1_handler_call(l1_handler_prepared);
+                let l1_handler = L1Handler::build(contract_address, 'process_l1_message');
+                l1_handler.invoke(0x123, 1, payload.span());
 
                 let dispatcher = IBalanceTokenDispatcher { contract_address };
                 assert(dispatcher.get_balance() == 42, 'Invalid balance');
@@ -64,8 +58,8 @@ fn l1_handler_caller() {
         "#
         ),
         Contract::from_code_path(
-            "l1_handler_caller".to_string(),
-            Path::new("tests/data/contracts/l1_handler_call_checker.cairo"),
+            "l1_handler_invoker".to_string(),
+            Path::new("tests/data/contracts/l1_handler_invoke_checker.cairo"),
         )
         .unwrap()
     );
