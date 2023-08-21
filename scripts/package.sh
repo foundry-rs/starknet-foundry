@@ -15,7 +15,7 @@ for crate in "${binary_crates[@]}"; do
   cp "./target/${TARGET}/release/${crate}${bin_ext}" "$PKG_FULL_NAME/bin/"
 done
 
-cp -r README.md "$PKG_FULL_NAME/"
+cp -r README.md LICENSE "$PKG_FULL_NAME/"
 
 if [[ "$TARGET" == *-windows-* ]]; then
   7z a "${PKG_FULL_NAME}.zip" "$PKG_FULL_NAME"
