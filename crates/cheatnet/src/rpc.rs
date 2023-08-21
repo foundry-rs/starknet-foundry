@@ -19,8 +19,8 @@ use crate::{
     constants::{build_block_context, build_transaction_context, TEST_ACCOUNT_CONTRACT_ADDRESS},
     CheatnetState,
 };
-use blockifier::execution::entry_point::CallExecution;
 use blockifier::execution::entry_point::Retdata;
+use blockifier::execution::entry_point::{CallExecution, OrderedEvent};
 use blockifier::{
     abi::constants,
     execution::{
@@ -142,33 +142,7 @@ pub fn call_contract(
 
     if let Ok(call_info) = exec_result {
         if cheatcode_state.spy_events {
-            // TODO: include nested calls too
-            let mut events: Vec<Event> = call_info
-                .execution
-                .events
-                .iter()
-                .map(|ordered_event| Event {
-                    from: call_info.call.code_address.unwrap(),
-                    name: stark_felt_to_felt(ordered_event.event.keys[0].0),
-                    keys: {
-                        let keys: Vec<Felt252> = ordered_event
-                            .event
-                            .keys
-                            .iter()
-                            .map(|key| stark_felt_to_felt(key.0))
-                            .collect();
-                        Vec::from(&keys[1..])
-                    },
-                    data: ordered_event
-                        .event
-                        .data
-                        .0
-                        .iter()
-                        .map(|data| stark_felt_to_felt(*data))
-                        .collect(),
-                })
-                .collect();
-            cheatcode_state.emitted_events.append(&mut events);
+            collect_emitted_events(&call_info, cheatcode_state);
         }
 
         let raw_return_data = &call_info.execution.retdata.0;
@@ -201,6 +175,48 @@ pub fn call_contract(
     } else {
         panic!("Unparseable result: {exec_result:?}");
     }
+}
+
+fn collect_emitted_events(call_info: &CallInfo, cheatcode_state: &mut CheatcodeState) {
+    let mut all_events: Vec<(ContractAddress, &OrderedEvent)> = vec![];
+    let mut stack: Vec<&CallInfo> = vec![call_info];
+
+    while let Some(current_call) = stack.pop() {
+        all_events.extend(
+            current_call
+                .execution
+                .events
+                .iter()
+                .map(|event| (current_call.call.code_address.unwrap(), event)),
+        );
+
+        stack.extend(current_call.inner_calls.iter().rev());
+    }
+
+    let mut events: Vec<Event> = all_events
+        .iter()
+        .map(|(address, ordered_event)| Event {
+            from: *address,
+            name: stark_felt_to_felt(ordered_event.event.keys[0].0),
+            keys: {
+                let keys: Vec<Felt252> = ordered_event
+                    .event
+                    .keys
+                    .iter()
+                    .map(|key| stark_felt_to_felt(key.0))
+                    .collect();
+                Vec::from(&keys[1..])
+            },
+            data: ordered_event
+                .event
+                .data
+                .0
+                .iter()
+                .map(|data| stark_felt_to_felt(*data))
+                .collect(),
+        })
+        .collect();
+    cheatcode_state.emitted_events.append(&mut events);
 }
 
 // Copied over (with modifications) from blockifier/src/execution/entry_point.rs:144
