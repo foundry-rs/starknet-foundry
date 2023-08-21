@@ -10,6 +10,8 @@ on:
 jobs:
   test-forge-unit-and-integration:
     name: Test Forge / Unit and Integration Tests
+    needs: changes
+    if: ${{ needs.changes.outputs.forge == 'true' }}
     env:
       SCARB_VERSION: 0.6.0
     runs-on: ubuntu-latest
@@ -134,3 +136,23 @@ jobs:
         with:
           workspaces: starknet-foundry
       - run: cargo lint
+
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      cast: ${{ steps.filter.outputs.cast }}
+      cheatnet: ${{ steps.filter.outputs.cheatnet }}
+      forge: ${{ steps.filter.outputs.forge }}
+    steps:
+    - uses: dorny/paths-filter@v2
+      id: filter
+      with:
+        filters: |
+          cast:
+            - 'crates/cast/**'
+          cheatnet:
+            - 'crates/cheatnet/**'
+          forge:
+            - 'crates/forge/**'
