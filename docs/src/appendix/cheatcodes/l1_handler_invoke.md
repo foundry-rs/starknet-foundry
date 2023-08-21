@@ -1,14 +1,13 @@
 # `l1_handler_invoke`
 
-> `fn build(contract_address: ContractAddress, selector_name: felt252) -> L1HandlerFn`
-> `fn invoke(self: L1HandlerFn, from_address: felt252, fee: u128, payload: Span::<felt252>)`
+> `fn invoke(self: L1Handler, from_address: felt252, fee: u128, payload: Span::<felt252>)`
 
 Invokes a `#[l1_handler]` function to mock a
 [message](https://docs.starknet.io/documentation/architecture_and_concepts/L1-L2_Communication/messaging-mechanism/)
 arriving from Ethereum.
 
 ```rust
-struct L1HandlerFn {
+struct L1Handler {
     contract_address: ContractAddress,
     selector_name: felt252,
 }
@@ -61,7 +60,11 @@ fn test_l1_handler_invoke() {
     let mut payload_buffer: Array<felt252> = ArrayTrait::new();
     data.serialize(ref payload_buffer);
 
-    let l1_handler = L1Handler::build(contract_address, 'process_l1_message');
+    let l1_handler = L1Handler {
+        contract_address,
+        selector_name: 'process_l1_message'
+    };
+
     l1_handler.invoke(0x123, 1, payload.span());
     //...
 }

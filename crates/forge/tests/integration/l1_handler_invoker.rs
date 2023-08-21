@@ -7,7 +7,7 @@ use indoc::indoc;
 use std::path::Path;
 
 #[test]
-fn l1_handler_caller() {
+fn l1_handler_invoker() {
     let test = test_case!(
         indoc!(
             r#"
@@ -27,18 +27,14 @@ fn l1_handler_caller() {
             use serde::Serde;
             use array::{ArrayTrait, SpanTrait};
             use core::result::ResultTrait;
-            use snforge_std::{declare, deploy, PreparedContract, L1Handler};
+            use snforge_std::{declare, ContractClassTrait, L1Handler, L1HandlerTrait};
 
             #[test]
             fn test_l1_handler_invoke() {
-                let class_hash = declare('l1_handler_invoker');
+                let calldata = array![0x123];
 
-                let prepared = PreparedContract {
-                    class_hash: class_hash,
-                    constructor_calldata: @array![0x123]
-                };
-
-                let contract_address = deploy(prepared).unwrap();
+                let contract = declare('l1_handler_invoker');
+                let contract_address = contract.deploy(@calldata).unwrap();
 
                 let l1_data = L1Data {
                     balance: 42,
@@ -48,7 +44,11 @@ fn l1_handler_caller() {
                 let mut payload: Array<felt252> = ArrayTrait::new();
                 l1_data.serialize(ref payload);
 
-                let l1_handler = L1Handler::build(contract_address, 'process_l1_message');
+                let l1_handler = L1Handler {
+                    contract_address,
+                    selector_name: 'process_l1_message'
+                };
+
                 l1_handler.invoke(0x123, 1, payload.span());
 
                 let dispatcher = IBalanceTokenDispatcher { contract_address };

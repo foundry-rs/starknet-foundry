@@ -20,7 +20,7 @@ struct ContractClass {
 }
 
 #[derive(Drop, Clone)]
-struct L1HandlerFn {
+struct L1Handler {
     contract_address: ContractAddress,
     selector_name: felt252,
 }
@@ -186,20 +186,12 @@ fn get_class_hash(contract_address: ContractAddress) -> ClassHash {
     (*buf[0]).try_into().expect('Invalid class hash value')
 }
 
-trait L1Handler {
-    fn build(contract_address: ContractAddress, selector_name: felt252) -> L1HandlerFn;
-    fn invoke(self: L1HandlerFn, from_address: felt252, fee: u128, payload: Span::<felt252>);
+trait L1HandlerTrait {
+    fn invoke(self: L1Handler, from_address: felt252, fee: u128, payload: Span::<felt252>);
 }
 
-impl L1HandlerImpl of L1Handler {
-    fn build(contract_address: ContractAddress, selector_name: felt252) -> L1HandlerFn {
-        L1HandlerFn {
-            contract_address,
-            selector_name,
-        }
-    }
-
-    fn invoke(self: L1HandlerFn, from_address: felt252, fee: u128, payload: Span::<felt252>) {
+impl L1HandlerImpl of L1HandlerTrait {
+    fn invoke(self: L1Handler, from_address: felt252, fee: u128, payload: Span::<felt252>) {
         let mut inputs: Array::<felt252> = array![
             self.contract_address.into(),
             self.selector_name,
