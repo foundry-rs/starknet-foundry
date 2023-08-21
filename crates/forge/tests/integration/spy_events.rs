@@ -45,7 +45,7 @@ fn spy_events_complex() {
         ),
         Contract::from_code_path(
             "SpyEventsChecker".to_string(),
-            Path::new("tests/data/contracts/event_emitter.cairo"),
+            Path::new("tests/data/contracts/spy_events_checker.cairo"),
         )
         .unwrap()
     );
@@ -88,7 +88,7 @@ fn spy_events_simple() {
         ),
         Contract::from_code_path(
             "SpyEventsChecker".to_string(),
-            Path::new("tests/data/contracts/event_emitter.cairo"),
+            Path::new("tests/data/contracts/spy_events_checker.cairo"),
         )
         .unwrap()
     );
@@ -131,7 +131,7 @@ fn assert_emitted_fails() {
         ),
         Contract::from_code_path(
             "SpyEventsChecker".to_string(),
-            Path::new("tests/data/contracts/event_emitter.cairo"),
+            Path::new("tests/data/contracts/spy_events_checker.cairo"),
         )
         .unwrap()
     );
@@ -248,6 +248,11 @@ fn expect_three_events_while_two_emitted() {
     assert_case_output_contains!(
         result,
         "test_expect_three_events_while_two_emitted",
-        "Not all events were found"
+        "ThirdEvent"
+    );
+    assert_case_output_contains!(
+        result,
+        "test_expect_three_events_while_two_emitted",
+        "event was not emitted"
     );
 }
