@@ -7,9 +7,9 @@
 * [`start_warp`](cheatcodes/start_warp.md)
 * [`stop_warp`](cheatcodes/stop_warp.md)
 * [`get_class_hash`](cheatcodes/get_class_hash.md)
-* [`l1_handler_invoke`](cheatcodes/l1_handler_invoke.md)
 * [`start_mock_call`](cheatcodes/start_mock_call.md)
 * [`stop_mock_call`](cheatcodes/stop_mock_call.md)
+* [`l1_handler_invoke`](cheatcodes/l1_handler_invoke.md)
 
 > ℹ️ **Info**
 > To use cheatcodes you need to add `snforge_std` package as a dependency in
