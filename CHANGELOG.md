@@ -28,8 +28,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `precalculate_address` cheatcode
 - `l1_handler_invoke` cheatcode
 
->>>>>>> starknet/master
-
 #### Changed
 
 - Exported `snforge_std` as a Scarb package, now you have to import it explicitly with e.g. `use snforge_std::declare`
