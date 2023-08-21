@@ -19,7 +19,7 @@ use cheatnet::{
     cheatcodes::{CheatcodeError, ContractArtifacts, EnhancedHintError},
     CheatnetState,
 };
-use num_traits::ToPrimitive;
+use num_traits::{One, ToPrimitive};
 use serde::Deserialize;
 use starknet_api::core::{ClassHash, ContractAddress, PatriciaKey};
 use starknet_api::hash::StarkFelt;
@@ -266,24 +266,44 @@ impl CairoHintProcessor<'_> {
                 Ok(())
             }
             "start_spoof" => {
+                fn make_option<T>(is_value_set: bool, value: T) -> Option<T> {
+                    if is_value_set {
+                        Option::Some(value)
+                    } else {
+                        Option::None
+                    }
+                };
+
                 let contract_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
                     inputs[0].clone().to_be_bytes(),
                 )?)?);
 
-                let version = inputs[1].clone();
-                let account_contract_address = inputs[2].clone();
-                let max_fee = inputs[3].clone();
-                let transaction_hash = inputs[4].clone();
-                let chain_id = inputs[5].clone();
-                let nonce = inputs[6].clone();
+                let version = make_option(inputs[1].clone().is_one(), inputs[2].clone());
+                let account_contract_address =
+                    make_option(inputs[3].clone().is_one(), inputs[4].clone());
+                let max_fee = make_option(inputs[5].clone().is_one(), inputs[6].clone());
+                let transaction_hash = make_option(inputs[7].clone().is_one(), inputs[8].clone());
+                let chain_id = make_option(inputs[9].clone().is_one(), inputs[10].clone());
+                let nonce = make_option(inputs[11].clone().is_one(), inputs[12].clone());
 
-                let signature_len= inputs[7]
+                let signature_len = inputs[14]
                     .to_usize()
                     .expect("Missing signature len in inputs");
-                let signature = Vec::from(&inputs[8..(8 + signature_len)]);
+                let signature = make_option(
+                    inputs[13].clone().is_one(),
+                    Vec::from(&inputs[15..(15 + signature_len)]),
+                );
 
-                self.cheatnet_state
-                    .start_spoof(contract_address, version, account_contract_address, max_fee, signature, transaction_hash, chain_id, nonce);
+                self.cheatnet_state.start_spoof(
+                    contract_address,
+                    version,
+                    account_contract_address,
+                    max_fee,
+                    signature,
+                    transaction_hash,
+                    chain_id,
+                    nonce,
+                );
                 Ok(())
             }
             "stop_spoof" => {
@@ -291,8 +311,7 @@ impl CairoHintProcessor<'_> {
                     inputs[0].clone().to_be_bytes(),
                 )?)?);
 
-                self.cheatnet_state
-                    .stop_spoof(contract_address);
+                self.cheatnet_state.stop_spoof(contract_address);
                 Ok(())
             }
             "declare" => {

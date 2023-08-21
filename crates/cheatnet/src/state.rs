@@ -1,3 +1,4 @@
+use crate::cheatcodes;
 use blockifier::{
     execution::contract_class::ContractClass,
     state::{
@@ -7,6 +8,7 @@ use blockifier::{
     },
 };
 use cairo_felt::Felt252;
+use cheatcodes::spoof::TxInfoMock;
 use starknet_api::core::EntryPointSelector;
 use starknet_api::{
     core::{ClassHash, CompiledClassHash, ContractAddress, Nonce},
@@ -14,8 +16,6 @@ use starknet_api::{
     state::StorageKey,
 };
 use std::collections::HashMap;
-use crate::cheatcodes;
-use cheatcodes::spoof::TxInfoMock;
 
 /// A simple implementation of `StateReader` using `HashMap`s as storage.
 #[derive(Debug, Default)]
