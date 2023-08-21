@@ -323,6 +323,7 @@ impl CairoHintProcessor<'_> {
             }
             "precalculate_address" => {
                 let class_hash = inputs[0].clone();
+                let class_hash = ClassHash(StarkFelt::new(class_hash.to_be_bytes()).unwrap());
 
                 let calldata_length = inputs[1].to_usize().unwrap();
                 let calldata = Vec::from(&inputs[2..(2 + calldata_length)]);
