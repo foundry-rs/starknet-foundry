@@ -2,13 +2,12 @@ mod cheatcodes;
 
 use cheatcodes::declare;
 
-use cheatcodes::PreparedContract;
-use cheatcodes::L1HandlerFn;
-use cheatcodes::L1Handler;
 use cheatcodes::RevertedTransaction;
 use cheatcodes::RevertedTransactionTrait;
 use cheatcodes::ContractClass;
 use cheatcodes::ContractClassTrait;
+use cheatcodes::L1Handler;
+use cheatcodes::L1HandlerFn;
 
 use cheatcodes::start_prank;
 use cheatcodes::stop_prank;
