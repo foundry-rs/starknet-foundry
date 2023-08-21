@@ -42,7 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ```toml
 [dependencies]
 # ...
-snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry", tag = "0.4.0" }
+snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry", tag = "v0.4.0" }
 ```
 
 - Moved `ForgeConfigFromScarb` to `scarb.rs` and renamed to `ForgeConfig`
