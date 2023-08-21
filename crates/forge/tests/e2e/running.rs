@@ -54,24 +54,17 @@ fn simple_package_with_git_dependency() {
 
     let name: &str = "BRANCH_NAME";
 
-    println!("{:?}", name);
-
     let branch = match env::var(name) {
         Ok(v) => v,
         Err(_e) => {
-            println!("dupa");
             let output = Command::new("git")
                 .args(["rev-parse", "--abbrev-ref", "HEAD"])
                 .output()
                 .unwrap();
 
-            let a = String::from_utf8(output.stdout).unwrap();
-            println!("a {a}");
-            a
+            String::from_utf8(output.stdout).unwrap()
         }
     };
-
-    println!("GITHUB_SHA {branch}");
 
     let manifest_path = temp.child("Scarb.toml");
     manifest_path
