@@ -21,7 +21,9 @@ pub(crate) fn setup_package(package_name: &str) -> TempDir {
     let snforge_std_path = Utf8PathBuf::from_str("../../snforge_std")
         .unwrap()
         .canonicalize_utf8()
-        .unwrap();
+        .unwrap()
+        .to_string()
+        .replace('\\', "/");
 
     let manifest_path = temp.child("Scarb.toml");
     manifest_path
