@@ -5,6 +5,7 @@ use std::path::PathBuf;
 use crate::scarb::StarknetContractArtifacts;
 use anyhow::{anyhow, Result};
 use blockifier::abi::abi_utils::selector_from_name;
+use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::execution_utils::{felt_to_stark_felt, stark_felt_to_felt};
 use cairo_felt::Felt252;
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
@@ -106,7 +107,15 @@ impl HintProcessorLogic for CairoHintProcessor<'_> {
             );
         }
         if let Some(Hint::Starknet(StarknetHint::SystemCall { system })) = maybe_extended_hint {
-            return execute_syscall(system, vm, &mut self.cheatnet_state);
+            return execute_syscall(
+                system,
+                vm,
+                &mut self.cheatnet_state,
+                exec_scopes,
+                hint_data,
+                constants,
+                &mut self.original_cairo_hint_processor,
+            );
         }
         self.original_cairo_hint_processor
             .execute_hint(vm, exec_scopes, hint_data, constants)
@@ -400,20 +409,36 @@ fn execute_syscall(
     system: &ResOperand,
     vm: &mut VirtualMachine,
     cheatnet_state: &mut CheatnetState,
+    exec_scopes: &mut ExecutionScopes,
+    hint_data: &Box<dyn Any>,
+    constants: &HashMap<String, Felt252>,
+    original_cairo_hint_processor: &mut OriginalCairoHintProcessor,
 ) -> Result<(), HintError> {
     let (cell, offset) = extract_buffer(system);
     let system_ptr = get_ptr(vm, cell, &offset)?;
 
-    let mut buffer = MemBuffer::new(vm, system_ptr);
+    // We peek into memory to check the selector
+    let selector = DeprecatedSyscallSelector::try_from(felt_to_stark_felt(
+        &vm.get_integer(system_ptr).unwrap(),
+    ))?;
 
-    let selector = buffer.next_felt252().unwrap().to_bytes_be();
+    return match selector {
+        DeprecatedSyscallSelector::CallContract => {
+            execute_call_contract(MemBuffer::new(vm, system_ptr), cheatnet_state);
+            Ok(())
+        }
+        DeprecatedSyscallSelector::Keccak => {
+            original_cairo_hint_processor.execute_hint(vm, exec_scopes, hint_data, constants)
+        }
+        _ => Err(HintError::CustomHint(Box::from(
+            "starknet syscalls (other than CallContract and Keccak) cannot be used in tests"
+                .to_string(),
+        ))),
+    };
+}
 
-    if std::str::from_utf8(&selector).unwrap() != "CallContract" {
-        return Err(HintError::CustomHint(Box::from(
-            "starknet syscalls cannot be used in tests".to_string(),
-        )));
-    }
-
+fn execute_call_contract(mut buffer: MemBuffer, cheatnet_state: &mut CheatnetState) {
+    let _selector = buffer.next_felt252().unwrap();
     let gas_counter = buffer.next_usize().unwrap();
     let contract_address = buffer.next_felt252().unwrap().into_owned();
     let entry_point_selector = buffer.next_felt252().unwrap().into_owned();
@@ -437,8 +462,6 @@ fn execute_syscall(
     buffer.write(Felt252::from(exit_code)).unwrap();
 
     buffer.write_arr(result.iter()).unwrap();
-
-    Ok(())
 }
 
 fn print(inputs: Vec<Felt252>) {
