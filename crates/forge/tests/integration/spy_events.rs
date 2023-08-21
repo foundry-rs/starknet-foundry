@@ -82,7 +82,8 @@ fn spy_events_simple() {
 
                 spy.assert_emitted(@array![
                     Event { from: contract_address, name: 'FirstEvent', keys: array![], data: array![] }
-                ])
+                ]);
+                assert(spy.events.len() == 0, 'There should be no events');
             }
         "#
         ),

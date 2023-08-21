@@ -59,14 +59,13 @@ impl EventAssertionsImpl of EventAssertions {
     fn assert_emitted(ref self: EventSpy, events: @Array<Event>) {
         self.fetch_events();
 
-        let emitted_events = @self.events;
-
         let mut i = 0;
         let all_found = loop {
             if i >= events.len() {
                 break true;
             }
 
+            let mut emitted_events = @self.events;
             let mut j = 0;
             let found = loop {
                 if j >= emitted_events.len() {
@@ -76,6 +75,20 @@ impl EventAssertionsImpl of EventAssertions {
                 if event_name_hash(*events.at(i).name) == *emitted_events.at(j).name
                     && events.at(i).from == emitted_events.at(j).from
                 {
+                    let mut emitted_events_deleted_event = array![];
+                    let mut k = 0;
+                    loop {
+                        if k >= emitted_events.len() {
+                            break;
+                        }
+
+                        if k != j {
+                            emitted_events_deleted_event.append(copy_event(emitted_events.at(j)));
+                        }
+                        k += 1;
+                    };
+                    self.events = emitted_events_deleted_event;
+
                     break true;
                 }
 
@@ -83,12 +96,35 @@ impl EventAssertionsImpl of EventAssertions {
             };
 
             if !found {
-                break false;
+                panic(array![*events.at(i).name, 'event was not emitted']);
             }
 
             i += 1;
         };
-
-        assert(all_found, 'Not all events were found');
     }
+}
+
+fn copy_event(event: @Event) -> Event {
+    let from = *event.from;
+    let name = *event.name;
+
+    let mut keys = array![];
+    let mut i = 0;
+    loop {
+        if i >= event.keys.len() { break; }
+
+        keys.append(*event.keys.at(i));
+        i += 1;
+    };
+
+    let mut data = array![];
+    i = 0;
+    loop {
+        if i >= event.data.len() { break; }
+
+        data.append(*event.data.at(i));
+        i += 1;
+    };
+
+    Event { from, name, keys, data }
 }
