@@ -83,7 +83,7 @@ impl EventAssertionsImpl of EventAssertions {
                         }
 
                         if k != j {
-                            emitted_events_deleted_event.append(copy_event(emitted_events.at(j)));
+                            emitted_events_deleted_event.append(copy_event(emitted_events.at(k)));
                         }
                         k += 1;
                     };
