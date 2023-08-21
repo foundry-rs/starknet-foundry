@@ -2,7 +2,7 @@ use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
 use camino::Utf8PathBuf;
 use indoc::{formatdoc, indoc};
 
-use crate::e2e::common::runner::{runner, setup_package};
+use crate::e2e::common::runner::{gen_current_branch, gen_current_branch_snforge, runner};
 use assert_fs::TempDir;
 use std::env;
 use std::process::Command;
@@ -51,21 +51,7 @@ fn simple_package_with_git_dependency() {
     let temp = TempDir::new().unwrap();
     temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
         .unwrap();
-
-    let name: &str = "BRANCH_NAME";
-
-    let branch = match env::var(name) {
-        Ok(v) => v,
-        Err(_e) => {
-            let output = Command::new("git")
-                .args(["rev-parse", "--abbrev-ref", "HEAD"])
-                .output()
-                .unwrap();
-
-            String::from_utf8(output.stdout).unwrap()
-        }
-    };
-
+    let branch = gen_current_branch();
     let manifest_path = temp.child("Scarb.toml");
     manifest_path
         .write_str(&formatdoc!(
@@ -81,7 +67,7 @@ fn simple_package_with_git_dependency() {
             [dependencies]
             starknet = "2.1.0"
             snforge_std = {{ git = "https://github.com/foundry-rs/starknet-foundry.git", branch = "{}" }}
-            "#, branch.trim()
+            "#, branch
 
         ))
         .unwrap();
