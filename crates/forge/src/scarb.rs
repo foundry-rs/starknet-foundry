@@ -162,7 +162,7 @@ pub fn corelib_for_package(metadata: &Metadata, package: &PackageId) -> Result<U
     let corelib = compilation_unit
         .components
         .iter()
-        .find(|du| du.source_path.to_string().contains("core/src"))
+        .find(|du| du.name == "core")
         .context("corelib could not be found")?;
     Ok(Utf8PathBuf::from(corelib.source_root()))
 }
@@ -234,7 +234,9 @@ mod tests {
         let snforge_std_path = Utf8PathBuf::from_str("../../snforge_std")
             .unwrap()
             .canonicalize_utf8()
-            .unwrap();
+            .unwrap()
+            .to_string()
+            .replace('\\', "/");
 
         let manifest_path = temp.child("Scarb.toml");
         manifest_path
@@ -290,7 +292,9 @@ mod tests {
         let snforge_std_path = Utf8PathBuf::from_str("../../snforge_std")
             .unwrap()
             .canonicalize_utf8()
-            .unwrap();
+            .unwrap()
+            .to_string()
+            .replace('\\', "/");
 
         let scarb_path = temp.child("Scarb.toml");
         scarb_path

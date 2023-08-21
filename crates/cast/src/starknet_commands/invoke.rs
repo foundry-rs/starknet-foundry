@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Result};
 use clap::Args;
 
-use crate::helpers::response_structs::InvokeResponse;
+use cast::helpers::response_structs::InvokeResponse;
 use cast::{handle_rpc_error, handle_wait_for_tx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{Account, Call, ConnectedAccount, SingleOwnerAccount};
