@@ -13,7 +13,7 @@ fn spy_events_complex() {
             use result::ResultTrait;
             use starknet::ContractAddress;
             use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpy,
-                EventFetcher, event_name_hash };
+                EventFetcher, event_name_hash, SpyOn };
 
             #[starknet::interface]
             trait ISpyEventsChecker<TContractState> {
@@ -26,7 +26,7 @@ fn spy_events_complex() {
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
 
-                let mut spy = spy_events();
+                let mut spy = spy_events(SpyOn::All);
                 dispatcher.emit_one_event(123);
                 spy.fetch_events();
 
@@ -64,7 +64,7 @@ fn spy_events_simple() {
             use result::ResultTrait;
             use starknet::ContractAddress;
             use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpy, EventFetcher,
-                event_name_hash, EventAssertions, Event };
+                event_name_hash, EventAssertions, Event, SpyOn };
 
             #[starknet::interface]
             trait ISpyEventsChecker<TContractState> {
@@ -77,7 +77,7 @@ fn spy_events_simple() {
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
 
-                let mut spy = spy_events();
+                let mut spy = spy_events(SpyOn::One(contract_address));
                 dispatcher.emit_one_event(123);
 
                 spy.assert_emitted(@array![
@@ -108,7 +108,7 @@ fn assert_emitted_fails() {
             use result::ResultTrait;
             use starknet::ContractAddress;
             use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpy, EventFetcher,
-                event_name_hash, EventAssertions, Event };
+                event_name_hash, EventAssertions, Event, SpyOn };
 
             #[starknet::interface]
             trait ISpyEventsChecker<TContractState> {
@@ -121,7 +121,7 @@ fn assert_emitted_fails() {
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
 
-                let mut spy = spy_events();
+                let mut spy = spy_events(SpyOn::One(contract_address));
                 dispatcher.do_not_emit();
 
                 spy.assert_emitted(@array![
@@ -152,7 +152,7 @@ fn test_nested_calls() {
             use traits::Into;
             use starknet::ContractAddress;
             use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpy, EventFetcher,
-                event_name_hash, EventAssertions, Event };
+                event_name_hash, EventAssertions, Event, SpyOn };
 
             #[starknet::interface]
             trait ISpyEventsChecker<TContractState> {
@@ -173,7 +173,7 @@ fn test_nested_calls() {
 
                 let dispatcher = ISpyEventsCheckerDispatcher { contract_address: spy_events_checker_top_proxy_address };
 
-                let mut spy = spy_events();
+                let mut spy = spy_events(SpyOn::All);
                 dispatcher.emit_one_event(222);
 
                 spy.assert_emitted(@array![
