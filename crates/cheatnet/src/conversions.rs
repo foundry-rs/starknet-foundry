@@ -1,4 +1,11 @@
 use cairo_felt::Felt252;
+use starknet::core::utils::get_selector_from_name;
+
+#[must_use]
+pub fn felt_selector_from_name(name: &str) -> Felt252 {
+    let selector = get_selector_from_name(name).unwrap();
+    Felt252::from_bytes_be(&selector.to_bytes_be())
+}
 
 #[must_use]
 pub fn felt_from_short_string(short_str: &str) -> Felt252 {

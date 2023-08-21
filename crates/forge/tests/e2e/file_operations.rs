@@ -97,14 +97,14 @@ fn file_reading() {
         .current_dir(&temp)
         .assert()
         .success()
-        .stdout_matches(expected.clone());
+        .stdout_matches(expected);
 
     let snapbox = runner();
     snapbox
         .current_dir(temp.child("src"))
         .assert()
         .success()
-        .stdout_matches(expected.clone());
+        .stdout_matches(expected);
 
     let snapbox = runner();
     snapbox
