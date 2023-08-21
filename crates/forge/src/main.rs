@@ -64,7 +64,7 @@ fn main_execution() -> Result<()> {
         )
     }
 
-    println!({ String::from_utf8_lossy(&build_output.stdout) });
+    println!("{}", String::from_utf8_lossy(&build_output.stdout));
 
     for package in &scarb_metadata.workspace.members {
         let forge_config = forge::scarb::config_from_scarb_for_package(&scarb_metadata, package)?;
