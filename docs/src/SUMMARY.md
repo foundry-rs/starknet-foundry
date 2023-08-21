@@ -48,7 +48,7 @@
   * [l1_handler_invoke](appendix/cheatcodes/l1_handler_invoke.md)
   * [start_mock_call](appendix/cheatcodes/start_mock_call.md)
   * [stop_mock_call](appendix/cheatcodes/stop_mock_call.md)
->>>>>>> starknet/master
+
 * [Forge Library Functions References](appendix/forge-library.md)
     * [declare](appendix/forge-library/declare.md)
     * [precalculate_address](appendix/forge-library/precalculate_address.md)
