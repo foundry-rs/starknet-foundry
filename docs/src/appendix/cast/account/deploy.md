@@ -3,7 +3,6 @@ Deploy previously created account to Starknet.
 
 ## Required common arguments - passed by CLI or specified in Scarb.toml
 
-* [`accounts-file`](../common.html#--accounts-file--f-path_to_accounts_file)
 * [`network`](../common.md#--network--n-network_name)
 * [`url`](../common.md#--url--u-rpc_url)
 

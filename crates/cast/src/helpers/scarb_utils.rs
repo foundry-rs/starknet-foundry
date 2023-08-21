@@ -95,12 +95,12 @@ pub fn parse_scarb_config(
             "Failed to read Scarb.toml manifest file, not found in current nor parent directories",
         )?;
 
-    let package_tool_sncast_result = get_package_tool_sncast(&metadata);
-    if package_tool_sncast_result.is_err() {
-        return Ok(CastConfig::default());
+    match get_package_tool_sncast(&metadata) {
+        Ok(package_tool_sncast) => {
+            CastConfig::from_package_tool_sncast(package_tool_sncast, profile)
+        }
+        Err(_) => Ok(CastConfig::default()),
     }
-
-    CastConfig::from_package_tool_sncast(package_tool_sncast_result.unwrap(), profile)
 }
 
 pub fn get_package_tool_sncast(metadata: &scarb_metadata::Metadata) -> Result<&Value> {
