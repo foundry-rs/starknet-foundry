@@ -8,8 +8,18 @@ use traits::Into;
 use starknet::testing::cheatcode;
 use starknet::ContractAddress;
 
-fn spy_events() -> EventSpy {
-    cheatcode::<'spy_events'>(array![].span());
+#[derive(Drop, Serde)]
+enum SpyOn {
+    All: (),
+    One: ContractAddress,
+    Multiple: Array<ContractAddress>
+}
+
+fn spy_events(spy_on: SpyOn) -> EventSpy {
+    let mut inputs = array![];
+    spy_on.serialize(ref inputs);
+    cheatcode::<'spy_events'>(inputs.span());
+
     EventSpy { events: array![] }
 }
 

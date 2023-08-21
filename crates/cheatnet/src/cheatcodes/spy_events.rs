@@ -9,9 +9,15 @@ pub struct Event {
     pub data: Vec<Felt252>,
 }
 
+pub enum SpyOn {
+    All,
+    One(ContractAddress),
+    Multiple(Vec<ContractAddress>),
+}
+
 impl CheatnetState {
-    pub fn spy_events(&mut self) {
-        self.cheatcode_state.spy_events = true;
+    pub fn spy_events(&mut self, spy_on: SpyOn) {
+        self.cheatcode_state.spy_events = Some(spy_on);
     }
 
     pub fn fetch_events(&mut self) -> (usize, Vec<Felt252>) {

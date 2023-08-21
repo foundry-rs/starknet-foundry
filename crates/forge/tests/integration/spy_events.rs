@@ -212,7 +212,7 @@ fn expect_three_events_while_two_emitted() {
             use starknet::contract_address_const;
             use starknet::ContractAddress;
             use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpy, EventFetcher,
-                event_name_hash, EventAssertions, Event };
+                event_name_hash, EventAssertions, Event, SpyOn };
 
             #[starknet::interface]
             trait ISpyEventsChecker<TContractState> {
@@ -225,7 +225,7 @@ fn expect_three_events_while_two_emitted() {
                 let contract_address = contract.deploy(@array![]).unwrap();
                 let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
 
-                let mut spy = spy_events();
+                let mut spy = spy_events(SpyOn::One(contract_address));
                 dispatcher.emit_two_events(456, contract_address_const::<789>());
 
                 spy.assert_emitted(@array![

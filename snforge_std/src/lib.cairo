@@ -32,6 +32,7 @@ use forge_print::PrintTrait;
 
 mod event;
 
+use event::SpyOn;
 use event::Event;
 use event::EventSpy;
 use event::EventFetcher;
