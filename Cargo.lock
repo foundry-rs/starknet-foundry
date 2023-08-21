@@ -1068,7 +1068,7 @@ dependencies = [
 
 [[package]]
 name = "cast"
-version = "0.3.0"
+version = "0.4.1"
 dependencies = [
  "anyhow",
  "camino",
@@ -1717,7 +1717,7 @@ checksum = "00b0228411908ca8685dba7fc2cdd70ec9990a6e753e89b6ac91a84c40fbaf4b"
 
 [[package]]
 name = "forge"
-version = "0.3.0"
+version = "0.4.1"
 dependencies = [
  "anyhow",
  "ark-ff",
@@ -1744,6 +1744,7 @@ dependencies = [
  "include_dir",
  "indoc",
  "itertools 0.11.0",
+ "num-bigint",
  "num-traits 0.2.16",
  "once_cell",
  "openssl",
