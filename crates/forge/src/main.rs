@@ -66,7 +66,7 @@ fn main_execution() -> Result<()> {
     let scarb_stdout = String::from_utf8_lossy(&build_output.stdout);
 
     if scarb_stdout.contains("warn:") {
-        eprintln!("{}", scarb_stdout);
+        eprintln!("{scarb_stdout}");
     }
 
     for package in &scarb_metadata.workspace.members {
