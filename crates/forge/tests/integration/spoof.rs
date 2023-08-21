@@ -1,7 +1,5 @@
-use crate::integration::common::corelib::{corelib_path, predeployed_contracts};
 use crate::integration::common::runner::Contract;
 use crate::{assert_passed, test_case};
-use camino::Utf8PathBuf;
 use indoc::indoc;
 use std::path::Path;
 use crate::integration::common::running_tests::run_test_case;
