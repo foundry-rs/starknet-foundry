@@ -26,9 +26,9 @@ where:
 [Serde](https://book.cairo-lang.org/appendix-03-derivable-traits.html?highlight=serde#serializing-with-serde)
 
 It is important to note that when executing the `l1_handler`,
-the `from_address` must always be checked as any L1 contract can call any L2 contract.
+the `from_address` may be checked as any L1 contract can call any L2 contract.
 
-For contract implementation:
+For a contract implementation:
 
 ```rust
 // ...
@@ -48,7 +48,7 @@ fn process_l1_message(ref self: ContractState, from_address: felt252, data: Span
 ```
 
 We can use `execute` method to test the execution of the `#[l1_handler]` function that is
-not available using a dispatcher:
+not available through contracts dispatcher:
 
 ```rust
 use snforge_std::L1Handler;
