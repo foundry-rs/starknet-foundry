@@ -4,7 +4,6 @@ use std::path::PathBuf;
 
 use crate::scarb::StarknetContractArtifacts;
 use anyhow::{anyhow, Result};
-use blockifier::abi::abi_utils::selector_from_name;
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::execution_utils::{felt_to_stark_felt, stark_felt_to_felt};
 use cairo_felt::Felt252;
@@ -22,7 +21,7 @@ use cheatnet::{
 };
 use num_traits::ToPrimitive;
 use serde::Deserialize;
-use starknet_api::core::{ContractAddress, PatriciaKey};
+use starknet_api::core::{ClassHash, ContractAddress, PatriciaKey};
 use starknet_api::hash::StarkFelt;
 
 use cairo_lang_casm::hints::{Hint, StarknetHint};
@@ -240,21 +239,20 @@ impl CairoHintProcessor<'_> {
                     inputs[0].clone().to_be_bytes(),
                 )?)?);
                 let function_name = inputs[1].clone();
-                let function_name = as_cairo_short_string(&function_name).unwrap_or_else(|| {
-                    panic!("Failed to convert {function_name:?} to Cairo short str")
-                });
-                let function_name = selector_from_name(function_name.as_str());
 
                 let ret_data_length = inputs[2]
                     .to_usize()
                     .expect("Missing ret_data len in inputs");
-                let mut ret_data = vec![];
-                for felt in inputs.iter().skip(3).take(ret_data_length) {
-                    ret_data.push(felt_to_stark_felt(&felt.clone()));
-                }
+
+                let ret_data = inputs
+                    .iter()
+                    .skip(3)
+                    .take(ret_data_length)
+                    .cloned()
+                    .collect::<Vec<_>>();
 
                 self.cheatnet_state
-                    .start_mock_call(contract_address, function_name, ret_data);
+                    .start_mock_call(contract_address, &function_name, &ret_data);
                 Ok(())
             }
             "stop_mock_call" => {
@@ -262,13 +260,9 @@ impl CairoHintProcessor<'_> {
                     inputs[0].clone().to_be_bytes(),
                 )?)?);
                 let function_name = inputs[1].clone();
-                let function_name = as_cairo_short_string(&function_name).unwrap_or_else(|| {
-                    panic!("Failed to convert {function_name:?} to Cairo short str")
-                });
-                let function_name = selector_from_name(function_name.as_str());
 
                 self.cheatnet_state
-                    .stop_mock_call(contract_address, function_name);
+                    .stop_mock_call(contract_address, &function_name);
                 Ok(())
             }
             "declare" => {
@@ -301,6 +295,7 @@ impl CairoHintProcessor<'_> {
             }
             "deploy" => {
                 let class_hash = inputs[0].clone();
+                let class_hash = ClassHash(StarkFelt::new(class_hash.to_be_bytes()).unwrap());
 
                 let calldata_length = inputs[1].to_usize().unwrap();
                 let calldata = Vec::from(&inputs[2..(2 + calldata_length)]);
@@ -331,6 +326,7 @@ impl CairoHintProcessor<'_> {
             }
             "precalculate_address" => {
                 let class_hash = inputs[0].clone();
+                let class_hash = ClassHash(StarkFelt::new(class_hash.to_be_bytes()).unwrap());
 
                 let calldata_length = inputs[1].to_usize().unwrap();
                 let calldata = Vec::from(&inputs[2..(2 + calldata_length)]);
@@ -467,7 +463,15 @@ fn execute_syscall(
 fn execute_call_contract(mut buffer: MemBuffer, cheatnet_state: &mut CheatnetState) {
     let _selector = buffer.next_felt252().unwrap();
     let gas_counter = buffer.next_usize().unwrap();
+
     let contract_address = buffer.next_felt252().unwrap().into_owned();
+    let contract_address = ContractAddress(
+        PatriciaKey::try_from(
+            StarkFelt::new(contract_address.to_be_bytes()).expect("Felt conversion failed"),
+        )
+        .expect("PatriciaKey failed"),
+    );
+
     let entry_point_selector = buffer.next_felt252().unwrap().into_owned();
 
     let calldata = buffer.next_arr().unwrap();

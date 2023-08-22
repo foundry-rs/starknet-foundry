@@ -1,42 +1,50 @@
-use anyhow::{anyhow, bail, Context, Error, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use scarb_metadata;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::collections::BTreeMap;
 use std::process::{Command, Stdio};
 use std::str::FromStr;
 
 #[derive(Deserialize, Serialize, Clone, Debug, Default)]
 pub struct CastConfig {
     pub rpc_url: String,
-    pub network: String,
     pub account: String,
+    pub accounts_file: Utf8PathBuf,
 }
 
-pub fn get_property(
-    tool: &Option<BTreeMap<String, Value>>,
-    profile: &Option<String>,
-    property: &str,
-) -> Result<String, Error> {
-    let profiled = tool.as_ref().and_then(|t| t.get("sncast"));
+impl CastConfig {
+    pub fn from_package_tool_sncast(
+        package_tool_sncast: &Value,
+        profile: &Option<String>,
+    ) -> Result<CastConfig> {
+        let tool = get_profile(package_tool_sncast, profile)?;
 
-    match profile {
-        Some(ref p) => profiled
-            .and_then(|t| t.get(p))
-            .and_then(|t| t.get(property))
-            .and_then(serde_json::Value::as_str)
-            .map(String::from)
-            .ok_or(anyhow!(
-                "Profile or property not found in Scarb.toml: {p}, {property}"
-            )),
-        None => match profiled.and_then(|t| t.get(property)) {
-            Some(property) => Ok(String::from(
-                property.as_str().expect("Couldn't cast property to &str"),
-            )),
-            None => Ok(String::new()),
-        },
+        Ok(CastConfig {
+            rpc_url: get_property(tool, "url"),
+            account: get_property(tool, "account"),
+            accounts_file: get_property(tool, "accounts-file"),
+        })
     }
+}
+
+pub fn get_profile<'a>(tool_sncast: &'a Value, profile: &Option<String>) -> Result<&'a Value> {
+    match profile {
+        Some(profile_) => tool_sncast
+            .get(profile_)
+            .ok_or_else(|| anyhow!("No field [tool.sncast.{}] found in package", profile_)),
+        None => Ok(tool_sncast),
+    }
+}
+
+pub fn get_property<'a, T>(tool: &'a Value, field: &str) -> T
+where
+    T: From<&'a str> + Default,
+{
+    tool.get(field)
+        .and_then(Value::as_str)
+        .map(T::from)
+        .unwrap_or_default()
 }
 
 pub fn get_scarb_manifest() -> Result<Utf8PathBuf> {
@@ -85,17 +93,31 @@ pub fn parse_scarb_config(
             "Failed to read Scarb.toml manifest file, not found in current nor parent directories",
         )?;
 
-    let package = &metadata.packages[0].manifest_metadata.tool;
+    match get_package_tool_sncast(&metadata) {
+        Ok(package_tool_sncast) => {
+            CastConfig::from_package_tool_sncast(package_tool_sncast, profile)
+        }
+        Err(_) => Ok(CastConfig::default()),
+    }
+}
 
-    let rpc_url = get_property(package, profile, "url")?;
-    let network = get_property(package, profile, "network")?;
-    let account = get_property(package, profile, "account")?;
+pub fn get_package_tool_sncast(metadata: &scarb_metadata::Metadata) -> Result<&Value> {
+    let first_package = metadata
+        .packages
+        .get(0)
+        .ok_or_else(|| anyhow!("No package found in metadata"))?;
 
-    Ok(CastConfig {
-        rpc_url,
-        network,
-        account,
-    })
+    let tool = first_package
+        .manifest_metadata
+        .tool
+        .as_ref()
+        .ok_or_else(|| anyhow!("No field [tool] found in package"))?;
+
+    let tool_sncast = tool
+        .get("sncast")
+        .ok_or_else(|| anyhow!("No field [tool.sncast] found in package"))?;
+
+    Ok(tool_sncast)
 }
 
 #[cfg(test)]
@@ -116,7 +138,6 @@ mod tests {
         .unwrap();
 
         assert_eq!(config.account, String::from("user1"));
-        assert_eq!(config.network, String::from("testnet"));
         assert_eq!(config.rpc_url, String::from("http://127.0.0.1:5055/rpc"));
     }
 
@@ -128,7 +149,6 @@ mod tests {
         )
         .unwrap();
         assert_eq!(config.account, String::from("user2"));
-        assert_eq!(config.network, String::from("testnet"));
         assert_eq!(config.rpc_url, String::from("http://127.0.0.1:5055/rpc"));
     }
 
@@ -144,7 +164,6 @@ mod tests {
         let config = parse_scarb_config(&None, &None).unwrap();
 
         assert!(config.rpc_url.is_empty());
-        assert!(config.network.is_empty());
         assert!(config.account.is_empty());
     }
 
@@ -157,7 +176,6 @@ mod tests {
         .unwrap();
 
         assert!(config.rpc_url.is_empty());
-        assert!(config.network.is_empty());
         assert!(config.account.is_empty());
     }
 
@@ -170,9 +188,10 @@ mod tests {
             )),
         )
         .unwrap_err();
-        assert!(config
-            .to_string()
-            .contains("Profile or property not found in Scarb.toml: mariusz, url"));
+        assert_eq!(
+            config.to_string(),
+            "No field [tool.sncast.mariusz] found in package"
+        );
     }
 
     #[test]
@@ -191,7 +210,6 @@ mod tests {
         let config = parse_scarb_config(&None, &None).unwrap();
 
         assert!(config.rpc_url.is_empty());
-        assert!(config.network.is_empty());
         assert!(config.account.is_empty());
     }
 
@@ -200,7 +218,6 @@ mod tests {
         let config = parse_scarb_config(&Some(String::from("myprofile")), &None).unwrap();
 
         assert_eq!(config.rpc_url, String::from("http://127.0.0.1:5055/rpc"));
-        assert_eq!(config.network, String::from("testnet"));
         assert_eq!(config.account, String::from("user1"));
     }
 }

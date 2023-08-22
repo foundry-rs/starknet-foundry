@@ -1,6 +1,4 @@
-use crate::helpers::constants::{
-    ACCOUNT, ACCOUNT_FILE_PATH, MAP_CONTRACT_ADDRESS_V1, NETWORK, URL,
-};
+use crate::helpers::constants::{ACCOUNT, ACCOUNT_FILE_PATH, MAP_CONTRACT_ADDRESS_V1, URL};
 use crate::helpers::runner::runner;
 use indoc::indoc;
 
@@ -33,8 +31,6 @@ async fn test_happy_case_from_cli_no_scarb() {
         ACCOUNT_FILE_PATH,
         "--url",
         URL,
-        "--network",
-        NETWORK,
         "--account",
         ACCOUNT,
         "call",
@@ -64,8 +60,6 @@ async fn test_happy_case_from_cli_with_scarb() {
         "profile1",
         "--url",
         URL,
-        "--network",
-        NETWORK,
         "--account",
         ACCOUNT,
         "call",
@@ -129,8 +123,6 @@ async fn test_missing_account() {
         ACCOUNT_FILE_PATH,
         "--url",
         URL,
-        "--network",
-        NETWORK,
         "declare",
         "--contract-name",
         "whatever",
@@ -144,33 +136,10 @@ async fn test_missing_account() {
 }
 
 #[tokio::test]
-async fn test_missing_network() {
-    let args = vec![
-        "--accounts-file",
-        ACCOUNT_FILE_PATH,
-        "--url",
-        URL,
-        "--account",
-        ACCOUNT,
-        "declare",
-        "--contract-name",
-        "whatever",
-    ];
-
-    let snapbox = runner(&args);
-
-    snapbox.assert().stderr_matches(indoc! {r#"
-        Error: Network not passed nor found in Scarb.toml
-    "#});
-}
-
-#[tokio::test]
 async fn test_missing_url() {
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
-        "--network",
-        NETWORK,
         "--account",
         ACCOUNT,
         "declare",
