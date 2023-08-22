@@ -428,14 +428,10 @@ fn execute_syscall(
     )
     .unwrap_or_else(|err| panic!("Transaction execution error: {err}"));
 
-    if let CallContractOutput::Error { msg } = call_result {
-        return Err(HintError::CustomHint(Box::from(msg)));
-    }
-
     let (result, exit_code) = match call_result {
         CallContractOutput::Success { ret_data } => (ret_data, 0),
         CallContractOutput::Panic { panic_data } => (panic_data, 1),
-        CallContractOutput::Error { .. } => panic!("Should be unreachable"),
+        CallContractOutput::Error { msg } => return Err(HintError::CustomHint(Box::from(msg))),
     };
 
     buffer.write(gas_counter).unwrap();

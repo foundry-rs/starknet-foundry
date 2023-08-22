@@ -140,52 +140,54 @@ pub fn call_contract(
         &mut context,
     );
 
-    if let Ok(call_info) = exec_result {
-        let raw_return_data = &call_info.execution.retdata.0;
+    match exec_result {
+        Ok(call_info) => {
+            let raw_return_data = &call_info.execution.retdata.0;
 
-        let return_data = raw_return_data
-            .iter()
-            .map(|data| Felt252::from_bytes_be(data.bytes()))
-            .collect();
+            let return_data = raw_return_data
+                .iter()
+                .map(|data| Felt252::from_bytes_be(data.bytes()))
+                .collect();
 
-        Ok(CallContractOutput::Success {
-            ret_data: return_data,
-        })
-    } else if let Err(EntryPointExecutionError::ExecutionFailed { error_data }) = exec_result {
-        let err_data = error_data
-            .iter()
-            .map(|data| Felt252::from_bytes_be(data.bytes()))
-            .collect();
-
-        Ok(CallContractOutput::Panic {
-            panic_data: err_data,
-        })
-    } else if let Err(EntryPointExecutionError::VirtualMachineExecutionErrorWithTrace {
-        trace,
-        ..
-    }) = exec_result
-    {
-        if let Some(panic_data) = try_extract_panic_data(&trace) {
-            Ok(CallContractOutput::Panic { panic_data })
-        } else {
-            Ok(CallContractOutput::Error { msg: trace })
+            Ok(CallContractOutput::Success {
+                ret_data: return_data,
+            })
         }
-    } else if let Err(EntryPointExecutionError::PreExecutionError(
-        PreExecutionError::EntryPointNotFound(selector),
-    )) = exec_result
-    {
-        let selector_hash = selector.0;
-        let msg = format!("Entry point selector not found in contract: {selector_hash}");
-        Ok(CallContractOutput::Error { msg })
-    } else if let Err(EntryPointExecutionError::PreExecutionError(
-        PreExecutionError::UninitializedStorageAddress(contract_address),
-    )) = exec_result
-    {
-        let address = contract_address.0.key().to_string();
-        let msg = format!("Contract not deployed at address: {address}");
-        Ok(CallContractOutput::Error { msg })
-    } else {
-        panic!("Unparseable result: {exec_result:?}");
+        Err(EntryPointExecutionError::ExecutionFailed { error_data }) => {
+            let err_data = error_data
+                .iter()
+                .map(|data| Felt252::from_bytes_be(data.bytes()))
+                .collect();
+
+            Ok(CallContractOutput::Panic {
+                panic_data: err_data,
+            })
+        }
+        Err(EntryPointExecutionError::VirtualMachineExecutionErrorWithTrace { trace, .. }) => {
+            if let Some(panic_data) = try_extract_panic_data(&trace) {
+                Ok(CallContractOutput::Panic { panic_data })
+            } else {
+                Ok(CallContractOutput::Error { msg: trace })
+            }
+        }
+        Err(EntryPointExecutionError::PreExecutionError(
+            PreExecutionError::EntryPointNotFound(selector),
+        )) => {
+            let selector_hash = selector.0;
+            let contract_addr = contract_address.0.key();
+            let msg = format!(
+                "Entry point selector {selector_hash} not found in contract {contract_addr}"
+            );
+            Ok(CallContractOutput::Error { msg })
+        }
+        Err(EntryPointExecutionError::PreExecutionError(
+            PreExecutionError::UninitializedStorageAddress(contract_address),
+        )) => {
+            let address = contract_address.0.key().to_string();
+            let msg = format!("Contract not deployed at address: {address}");
+            Ok(CallContractOutput::Error { msg })
+        }
+        result => panic!("Unparseable result: {result:?}"),
     }
 }
 
