@@ -1,8 +1,8 @@
-use crate::helpers::constants::UDC_ADDRESS;
-use crate::helpers::response_structs::InvokeResponse;
 use crate::starknet_commands::invoke::execute_calls;
 use anyhow::{anyhow, Result};
 use camino::Utf8PathBuf;
+use cast::helpers::constants::UDC_ADDRESS;
+use cast::helpers::response_structs::InvokeResponse;
 use cast::{extract_or_generate_salt, parse_number, udc_uniqueness};
 use clap::Args;
 use serde::Deserialize;
