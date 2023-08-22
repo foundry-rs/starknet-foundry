@@ -1,4 +1,4 @@
-use crate::helpers::constants::{ACCOUNT_FILE_PATH, CONTRACTS_DIR, NETWORK, URL};
+use crate::helpers::constants::{ACCOUNT_FILE_PATH, CONTRACTS_DIR, URL};
 use camino::Utf8PathBuf;
 use cast::{get_account, get_provider, parse_number};
 use serde_json::{json, Value};
@@ -9,21 +9,20 @@ use starknet::core::types::FieldElement;
 use starknet::core::types::TransactionReceipt;
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
-use starknet::providers::JsonRpcClient;
+use starknet::providers::{JsonRpcClient, Provider};
 use std::collections::HashMap;
 use std::fs;
 use std::sync::Arc;
 use url::Url;
 
 pub async fn declare_contract(account: &str, path: &str) -> FieldElement {
-    let provider = get_provider(URL, NETWORK)
-        .await
-        .expect("Could not get the provider");
+    let provider = get_provider(URL).expect("Could not get the provider");
+    let chain_id = provider.chain_id().await.expect("Could not get chain_id");
     let account = get_account(
         account,
         &Utf8PathBuf::from(ACCOUNT_FILE_PATH),
         &provider,
-        NETWORK,
+        chain_id,
     )
     .expect("Could not get the account");
 
@@ -57,14 +56,13 @@ pub async fn declare_contract(account: &str, path: &str) -> FieldElement {
 pub async fn declare_deploy_contract(account: &str, path: &str) {
     let class_hash = declare_contract(account, path).await;
 
-    let provider = get_provider(URL, NETWORK)
-        .await
-        .expect("Could not get the provider");
+    let provider = get_provider(URL).expect("Could not get the provider");
+    let chain_id = provider.chain_id().await.expect("Could not get chain_id");
     let account = get_account(
         account,
         &Utf8PathBuf::from(ACCOUNT_FILE_PATH),
         &provider,
-        NETWORK,
+        chain_id,
     )
     .expect("Could not get the account");
 
@@ -74,14 +72,13 @@ pub async fn declare_deploy_contract(account: &str, path: &str) {
 }
 
 pub async fn invoke_map_contract(key: &str, value: &str, account: &str, contract_address: &str) {
-    let provider = get_provider(URL, NETWORK)
-        .await
-        .expect("Could not get the provider");
+    let provider = get_provider(URL).expect("Could not get the provider");
+    let chain_id = provider.chain_id().await.expect("Could not get chain_id");
     let account = get_account(
         account,
         &Utf8PathBuf::from(ACCOUNT_FILE_PATH),
         &provider,
-        NETWORK,
+        chain_id,
     )
     .expect("Could not get the account");
 
@@ -117,14 +114,7 @@ pub async fn mint_token(recipient: &str, amount: f32) {
 
 #[must_use]
 pub fn default_cli_args() -> Vec<&'static str> {
-    vec![
-        "--url",
-        URL,
-        "--network",
-        NETWORK,
-        "--accounts-file",
-        ACCOUNT_FILE_PATH,
-    ]
+    vec!["--url", URL, "--accounts-file", ACCOUNT_FILE_PATH]
 }
 
 #[must_use]

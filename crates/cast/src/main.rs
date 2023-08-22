@@ -8,6 +8,7 @@ use cast::helpers::constants::DEFAULT_ACCOUNTS_FILE;
 use cast::helpers::scarb_utils::{parse_scarb_config, CastConfig};
 use cast::{account_file_exists, get_account, get_block_id, get_provider, print_command_result};
 use clap::{Parser, Subcommand};
+use starknet::providers::Provider;
 
 mod starknet_commands;
 
@@ -26,10 +27,6 @@ struct Cli {
     /// RPC provider url address; overrides url from Scarb.toml
     #[clap(short = 'u', long = "url")]
     rpc_url: Option<String>,
-
-    /// Network name, one of: testnet, testnet2, mainnet; overrides network from Scarb.toml
-    #[clap(short = 'n', long)]
-    network: Option<String>,
 
     /// Account name to be used for contract declaration; overrides account from Scarb.toml
     #[clap(short = 'a', long)]
@@ -84,17 +81,14 @@ async fn main() -> Result<()> {
     let mut config = parse_scarb_config(&cli.profile, &cli.path_to_scarb_toml)?;
     update_cast_config(&mut config, &cli);
 
-    let provider = get_provider(&config.rpc_url, &config.network).await?;
+    let provider = get_provider(&config.rpc_url)?;
 
     match cli.command {
         Commands::Declare(declare) => {
             account_file_exists(&config.accounts_file)?;
-            let mut account = get_account(
-                &config.account,
-                &config.accounts_file,
-                &provider,
-                &config.network,
-            )?;
+            let chain_id = provider.chain_id().await?;
+            let mut account =
+                get_account(&config.account, &config.accounts_file, &provider, chain_id)?;
 
             let mut result = starknet_commands::declare::declare(
                 &declare.contract,
@@ -111,12 +105,8 @@ async fn main() -> Result<()> {
         }
         Commands::Deploy(deploy) => {
             account_file_exists(&config.accounts_file)?;
-            let account = get_account(
-                &config.account,
-                &config.accounts_file,
-                &provider,
-                &config.network,
-            )?;
+            let chain_id = provider.chain_id().await?;
+            let account = get_account(&config.account, &config.accounts_file, &provider, chain_id)?;
 
             let mut result = starknet_commands::deploy::deploy(
                 deploy.class_hash,
@@ -149,12 +139,9 @@ async fn main() -> Result<()> {
         }
         Commands::Invoke(invoke) => {
             account_file_exists(&config.accounts_file)?;
-            let mut account = get_account(
-                &config.account,
-                &config.accounts_file,
-                &provider,
-                &config.network,
-            )?;
+            let chain_id = provider.chain_id().await?;
+            let mut account =
+                get_account(&config.account, &config.accounts_file, &provider, chain_id)?;
             let mut result = starknet_commands::invoke::invoke(
                 invoke.contract_address,
                 &invoke.function,
@@ -179,12 +166,9 @@ async fn main() -> Result<()> {
                 }
                 starknet_commands::multicall::Commands::Run(run) => {
                     account_file_exists(&config.accounts_file)?;
-                    let mut account = get_account(
-                        &config.account,
-                        &config.accounts_file,
-                        &provider,
-                        &config.network,
-                    )?;
+                    let chain_id = provider.chain_id().await?;
+                    let mut account =
+                        get_account(&config.account, &config.accounts_file, &provider, chain_id)?;
                     let mut result = starknet_commands::multicall::run::run(
                         &run.path,
                         &mut account,
@@ -200,11 +184,13 @@ async fn main() -> Result<()> {
         }
         Commands::Account(account) => match account.command {
             account::Commands::Create(create) => {
+                let chain_id = provider.chain_id().await?;
                 config.account = create.name;
                 let mut result = starknet_commands::account::create::create(
                     &config,
                     &provider,
                     cli.path_to_scarb_toml,
+                    chain_id,
                     create.salt,
                     create.add_profile,
                     create.class_hash,
@@ -216,11 +202,12 @@ async fn main() -> Result<()> {
             }
             account::Commands::Deploy(deploy) => {
                 account_file_exists(&config.accounts_file)?;
+                let chain_id = provider.chain_id().await?;
                 let mut result = starknet_commands::account::deploy::deploy(
                     &provider,
                     config.accounts_file,
                     deploy.name,
-                    &config.network,
+                    chain_id,
                     deploy.max_fee,
                     cli.wait,
                     deploy.class_hash,
@@ -242,13 +229,12 @@ fn update_cast_config(config: &mut CastConfig, cli: &Cli) {
     }
 
     config.rpc_url = clone_or_else!(cli.rpc_url, config.rpc_url);
-    config.network = clone_or_else!(cli.network, config.network);
     config.account = clone_or_else!(cli.account, config.account);
 
-    let new_accounts_file = cli
-        .accounts_file_path
-        .clone()
-        .unwrap_or_else(|| Utf8PathBuf::from(DEFAULT_ACCOUNTS_FILE));
+    if config.accounts_file == Utf8PathBuf::default() {
+        config.accounts_file = Utf8PathBuf::from(DEFAULT_ACCOUNTS_FILE);
+    }
+    let new_accounts_file = clone_or_else!(cli.accounts_file_path, config.accounts_file);
 
     config.accounts_file = Utf8PathBuf::from(shellexpand::tilde(&new_accounts_file).to_string());
 }

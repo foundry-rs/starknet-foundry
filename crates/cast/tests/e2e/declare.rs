@@ -1,4 +1,4 @@
-use crate::helpers::constants::{CONTRACTS_DIR, NETWORK, URL};
+use crate::helpers::constants::{CONTRACTS_DIR, URL};
 use crate::helpers::fixtures::{
     duplicate_directory_with_salt, get_transaction_hash, get_transaction_receipt,
 };
@@ -18,8 +18,6 @@ async fn test_happy_case(contract_path: &str, salt: &str, account: &str) {
     let args = vec![
         "--url",
         URL,
-        "--network",
-        NETWORK,
         "--accounts-file",
         "../../../accounts/accounts.json",
         "--account",
@@ -51,8 +49,6 @@ async fn contract_already_declared() {
     let args = vec![
         "--url",
         URL,
-        "--network",
-        NETWORK,
         "--accounts-file",
         "../../../accounts/accounts.json",
         "--account",
@@ -76,8 +72,6 @@ async fn wrong_contract_name_passed() {
     let args = vec![
         "--url",
         URL,
-        "--network",
-        NETWORK,
         "--accounts-file",
         "../../../accounts/accounts.json",
         "--account",
@@ -107,8 +101,6 @@ fn scarb_build_fails(contract_path: &str, accounts_file_path: &str) {
     let args = vec![
         "--url",
         URL,
-        "--network",
-        NETWORK,
         "--accounts-file",
         accounts_file_path,
         "--account",
@@ -139,8 +131,6 @@ fn test_too_low_max_fee(contract_path: &str, salt: &str, account: &str) {
     let args = vec![
         "--url",
         URL,
-        "--network",
-        NETWORK,
         "--accounts-file",
         "../../../accounts/accounts.json",
         "--account",
@@ -171,8 +161,6 @@ fn scarb_no_artifacts(contract_path: &str, accounts_file_path: &str) {
     let args = vec![
         "--url",
         URL,
-        "--network",
-        NETWORK,
         "--accounts-file",
         accounts_file_path,
         "--account",

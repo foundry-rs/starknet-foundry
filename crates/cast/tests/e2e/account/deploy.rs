@@ -1,4 +1,4 @@
-use crate::helpers::constants::{CONTRACTS_DIR, DEVNET_OZ_CLASS_HASH, NETWORK, URL};
+use crate::helpers::constants::{CONTRACTS_DIR, DEVNET_OZ_CLASS_HASH, URL};
 use crate::helpers::fixtures::{
     duplicate_directory_with_salt, get_transaction_hash, get_transaction_receipt, mint_token,
 };
@@ -17,8 +17,6 @@ pub async fn test_happy_case() {
     let args = vec![
         "--url",
         URL,
-        "--network",
-        NETWORK,
         "--accounts-file",
         accounts_file,
         "--json",
@@ -96,7 +94,7 @@ pub async fn test_happy_case_add_profile() {
     fs::remove_dir_all(created_dir).unwrap();
 }
 
-#[test_case("4", "{}", "error: Provided network testnet does not have any accounts defined" ; "when empty file")]
+#[test_case("4", "{}", "error: No accounts defined for network alpha-goerli" ; "when empty file")]
 #[test_case("5", "{\"alpha-goerli\": {}}", "error: Account with name my_account does not exist" ; "when account name not present")]
 #[test_case("6", "{\"alpha-goerli\": {\"my_account\" : {}}}", "error: Couldn't get private key from accounts file" ; "when private key not present")]
 #[test_case("7", "{\"alpha-goerli\": {\"my_account\" : {\"private_key\": \"0x1\"}}}", "error: Couldn't get salt from accounts file" ; "when salt not present")]
@@ -109,8 +107,6 @@ fn test_account_deploy_error(salt: &str, accounts_content: &str, error: &str) {
     let args = vec![
         "--url",
         URL,
-        "--network",
-        NETWORK,
         "--accounts-file",
         accounts_file,
         "account",
@@ -141,8 +137,6 @@ async fn test_too_low_max_fee() {
     let args = vec![
         "--url",
         URL,
-        "--network",
-        NETWORK,
         "--accounts-file",
         accounts_file,
         "--wait",
@@ -179,8 +173,6 @@ pub async fn create_account(salt: &str, add_profile: bool) -> (Utf8PathBuf, &str
     let mut args = vec![
         "--url",
         URL,
-        "--network",
-        NETWORK,
         "--accounts-file",
         accounts_file,
         "account",

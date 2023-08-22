@@ -18,14 +18,12 @@ jobs:
         with:
           submodules: true
       - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@dd05243424bd5c0e585e4b55eb2d7615cdd32f1f
-        with:
-          workspaces: starknet-foundry
+      - uses: Swatinem/rust-cache@v2
       - uses: software-mansion/setup-scarb@v1.0.1
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
-      - run: cargo test --lib -p forge
-      - run: cargo test integration -p forge
+      - run: cargo test --release --lib -p forge
+      - run: cargo test --release integration -p forge
 
   test-forge-e2e:
     name: Test Forge / E2E Tests
@@ -53,13 +51,11 @@ jobs:
         with:
           submodules: true
       - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@dd05243424bd5c0e585e4b55eb2d7615cdd32f1f
-        with:
-          workspaces: starknet-foundry
+      - uses: Swatinem/rust-cache@v2
       - uses: software-mansion/setup-scarb@v1.0.1
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
-      - run: cargo test e2e -p forge
+      - run: cargo test --release e2e -p forge
 
   test-cheatnet:
     name: Test Cheatnet
@@ -71,9 +67,7 @@ jobs:
         with:
           submodules: true
       - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@dd05243424bd5c0e585e4b55eb2d7615cdd32f1f
-        with:
-          workspaces: starknet-foundry
+      - uses: Swatinem/rust-cache@v2
       - uses: software-mansion/setup-scarb@v1.0.1
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
@@ -91,9 +85,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@0e66bd3e6b38ec0ad5312288c83e47c143e6b09e
         with:
           toolchain: stable
-      - uses: Swatinem/rust-cache@dd05243424bd5c0e585e4b55eb2d7615cdd32f1f
-        with:
-          workspaces: starknet-foundry
+      - uses: Swatinem/rust-cache@v2
       - uses: actions/setup-python@v4
         with:
           python-version: '3.9'
@@ -111,7 +103,7 @@ jobs:
         run: |
           ./scripts/prepare_for_tests.sh
       - name: Run tests
-        run: cargo test -p cast
+        run: cargo test --release -p cast
 
   rustfmt:
     runs-on: ubuntu-latest
@@ -122,9 +114,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@0e66bd3e6b38ec0ad5312288c83e47c143e6b09e
         with:
           toolchain: stable
-      - uses: Swatinem/rust-cache@dd05243424bd5c0e585e4b55eb2d7615cdd32f1f
-        with:
-          workspaces: starknet-foundry
+      - uses: Swatinem/rust-cache@v2
       - name: Check forge formatting
         run: cargo fmt --check -p forge
       - name: Check cast formatting
@@ -146,7 +136,5 @@ jobs:
       - uses: dtolnay/rust-toolchain@0e66bd3e6b38ec0ad5312288c83e47c143e6b09e
         with:
           toolchain: stable
-      - uses: Swatinem/rust-cache@dd05243424bd5c0e585e4b55eb2d7615cdd32f1f
-        with:
-          workspaces: starknet-foundry
+      - uses: Swatinem/rust-cache@v2
       - run: cargo lint

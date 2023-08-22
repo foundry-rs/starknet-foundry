@@ -23,7 +23,6 @@ use starknet::providers::jsonrpc::RpcError::{Code, Unknown};
 use starknet::providers::ProviderError::{Other, StarknetError as ProviderStarknetError};
 use starknet::{
     accounts::SingleOwnerAccount,
-    core::chain_id,
     providers::{
         jsonrpc::{HttpTransport, JsonRpcClient},
         Provider, ProviderError,
@@ -47,68 +46,57 @@ struct Account {
     deployed: Option<bool>,
 }
 
-#[derive(Debug, PartialEq)]
-pub enum Network {
-    Testnet,
-    Testnet2,
-    Mainnet,
-}
-
-impl Network {
-    #[must_use]
-    pub fn get_chain_id(&self) -> FieldElement {
-        match self {
-            Network::Testnet => chain_id::TESTNET,
-            Network::Testnet2 => chain_id::TESTNET2,
-            Network::Mainnet => chain_id::MAINNET,
-        }
-    }
-    #[must_use]
-    pub fn get_value(&self) -> &'static str {
-        match self {
-            Network::Testnet => "alpha-goerli",
-            Network::Testnet2 => "alpha-goerli2",
-            Network::Mainnet => "alpha-mainnet",
-        }
-    }
-}
-
-pub async fn get_provider(url: &str, network: &str) -> Result<JsonRpcClient<HttpTransport>> {
+pub fn get_provider(url: &str) -> Result<JsonRpcClient<HttpTransport>> {
     raise_if_empty(url, "RPC url")?;
     let parsed_url = Url::parse(url)?;
-    raise_if_empty(network, "Network")?;
     let provider = JsonRpcClient::new(HttpTransport::new(parsed_url));
-
-    let provider_chain_id = provider.chain_id().await?;
-    let cli_chain_id = get_network(network)?.get_chain_id();
-    if provider_chain_id != cli_chain_id {
-        bail!("Networks mismatch: requested network is different than provider network!")
-    }
-
     Ok(provider)
 }
 
-fn get_account_info(name: &str, chain_id: &str, path: &Utf8PathBuf) -> Result<Account> {
+fn get_account_info(name: &str, chain_id: FieldElement, path: &Utf8PathBuf) -> Result<Account> {
     raise_if_empty(name, "Account name")?;
     let accounts: HashMap<String, HashMap<String, Account>> =
         serde_json::from_str(&fs::read_to_string(path)?)?;
-    let user = accounts
-        .get(chain_id)
+    let network_name = chain_id_to_network_name(chain_id);
+    let account = accounts
+        .get(&network_name)
         .and_then(|accounts_map| accounts_map.get(name))
         .cloned();
 
-    user.ok_or_else(|| anyhow!("Account {} not found under chain id {}", name, chain_id))
+    account.ok_or_else(|| anyhow!("Account {} not found under network {}", name, network_name))
+}
+
+#[must_use]
+pub fn chain_id_to_network_name(chain_id: FieldElement) -> String {
+    let decoded = decode_chain_id(chain_id);
+
+    match &decoded[..] {
+        "SN_GOERLI" => "alpha-goerli".into(),
+        "SN_GOERLI2" => "alpha-goerli2".into(),
+        "SN_MAIN" => "alpha-mainnet".into(),
+        _ => decoded,
+    }
+}
+
+#[must_use]
+pub fn decode_chain_id(chain_id: FieldElement) -> String {
+    let non_zero_bytes: Vec<u8> = chain_id
+        .to_bytes_be()
+        .iter()
+        .copied()
+        .filter(|&byte| byte != 0)
+        .collect();
+
+    String::from_utf8(non_zero_bytes).unwrap_or_default()
 }
 
 pub fn get_account<'a>(
     name: &str,
     accounts_file_path: &Utf8PathBuf,
     provider: &'a JsonRpcClient<HttpTransport>,
-    network: &str,
+    chain_id: FieldElement,
 ) -> Result<SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, LocalWallet>> {
-    raise_if_empty(network, "Network")?;
-    let account_info =
-        get_account_info(name, get_network(network)?.get_value(), accounts_file_path)?;
+    let account_info = get_account_info(name, chain_id, accounts_file_path)?;
     let signer = LocalWallet::from(SigningKey::from_secret_scalar(
         FieldElement::from_hex_be(&account_info.private_key).with_context(|| {
             format!(
@@ -123,12 +111,7 @@ pub fn get_account<'a>(
             &account_info.address
         )
     })?;
-    let account = SingleOwnerAccount::new(
-        provider,
-        signer,
-        address,
-        get_network(network)?.get_chain_id(),
-    );
+    let account = SingleOwnerAccount::new(provider, signer, address, chain_id);
 
     Ok(account)
 }
@@ -145,18 +128,6 @@ pub fn get_block_id(value: &str) -> Result<BlockId> {
                 value
             )),
         },
-    }
-}
-
-pub fn get_network(name: &str) -> Result<Network> {
-    match name {
-        "testnet" => Ok(Network::Testnet),
-        "testnet2" => Ok(Network::Testnet2),
-        "mainnet" => Ok(Network::Mainnet),
-        _ => Err(anyhow::anyhow!(
-            "No such network {}! Possible values are testnet, testnet2, mainnet.",
-            name
-        )),
     }
 }
 
@@ -378,7 +349,7 @@ pub fn udc_uniqueness(unique: bool, account_address: FieldElement) -> UdcUniquen
 
 #[cfg(test)]
 mod tests {
-    use crate::{extract_or_generate_salt, get_block_id, get_network, udc_uniqueness, Network};
+    use crate::{chain_id_to_network_name, extract_or_generate_salt, get_block_id, udc_uniqueness};
     use starknet::core::types::{
         BlockId,
         BlockTag::{Latest, Pending},
@@ -427,25 +398,6 @@ mod tests {
     }
 
     #[test]
-    fn test_get_network() {
-        let testnet = get_network("testnet").unwrap();
-        let testnet2 = get_network("testnet2").unwrap();
-        let mainnet = get_network("mainnet").unwrap();
-
-        assert_eq!(testnet, Network::Testnet);
-        assert_eq!(testnet2, Network::Testnet2);
-        assert_eq!(mainnet, Network::Mainnet);
-    }
-
-    #[test]
-    fn test_get_network_invalid() {
-        let net = get_network("mariusz").unwrap_err();
-        assert!(net
-            .to_string()
-            .contains("No such network mariusz! Possible values are testnet, testnet2, mainnet."));
-    }
-
-    #[test]
     fn test_generate_salt() {
         let salt = extract_or_generate_salt(None);
 
@@ -471,5 +423,17 @@ mod tests {
         let uniqueness = udc_uniqueness(false, FieldElement::ONE);
 
         assert!(matches!(uniqueness, NotUnique));
+    }
+
+    #[test]
+    fn test_chain_id_to_network_name() {
+        let network_name_goerli = chain_id_to_network_name(
+            FieldElement::from_byte_slice_be("SN_GOERLI".as_bytes()).unwrap(),
+        );
+        let network_name_katana = chain_id_to_network_name(
+            FieldElement::from_byte_slice_be("KATANA".as_bytes()).unwrap(),
+        );
+        assert_eq!(network_name_goerli, "alpha-goerli");
+        assert_eq!(network_name_katana, "KATANA");
     }
 }
