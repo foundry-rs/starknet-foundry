@@ -34,7 +34,6 @@ use cairo_lang_runner::{
 };
 use cairo_lang_utils::bigint::BigIntAsHex;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
-use cheatnet::cheatcodes::spoof::TxInfoMock;
 
 mod file_operations;
 
@@ -295,7 +294,8 @@ impl CairoHintProcessor<'_> {
                     Vec::from(&inputs[15..(15 + signature_len)]),
                 );
 
-                let tx_info = TxInfoMock {
+                self.cheatnet_state.start_spoof(
+                    contract_address,
                     version,
                     account_contract_address,
                     max_fee,
@@ -303,9 +303,7 @@ impl CairoHintProcessor<'_> {
                     transaction_hash,
                     chain_id,
                     nonce,
-                };
-
-                self.cheatnet_state.start_spoof(contract_address, tx_info);
+                );
                 Ok(())
             }
             "stop_spoof" => {
