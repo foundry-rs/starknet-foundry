@@ -23,3 +23,8 @@ mod mock_checker_library_call;
 mod mock_checker_proxy;
 
 mod get_class_hash_checker;
+
+mod spoof_checker;
+mod constructor_spoof_checker;
+mod spoof_checker_library_call;
+mod spoof_checker_proxy;

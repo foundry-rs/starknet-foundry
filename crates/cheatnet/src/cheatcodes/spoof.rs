@@ -32,7 +32,7 @@ impl CheatnetState {
             signature,
             transaction_hash,
             chain_id,
-            nonce
+            nonce,
         };
         self.cheatcode_state
             .spoofed_contracts
