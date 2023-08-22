@@ -1,6 +1,6 @@
-use crate::helpers::constants::OZ_CLASS_HASH;
 use anyhow::{anyhow, bail, Result};
 use camino::Utf8PathBuf;
+use cast::helpers::constants::OZ_CLASS_HASH;
 use clap::Args;
 use starknet::accounts::AccountFactoryError;
 use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
@@ -11,7 +11,7 @@ use starknet::signers::{LocalWallet, SigningKey};
 
 use cast::{get_network, handle_rpc_error, handle_wait_for_tx, parse_number};
 
-use crate::helpers::response_structs::InvokeResponse;
+use cast::helpers::response_structs::InvokeResponse;
 
 #[derive(Args, Debug)]
 #[command(about = "Deploy an account to the Starknet")]

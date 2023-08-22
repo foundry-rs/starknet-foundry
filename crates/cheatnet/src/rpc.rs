@@ -89,7 +89,7 @@ pub enum CallContractOutput {
 // This does contract call without the transaction layer. This way `call_contract` can return data and modify state.
 // `call` and `invoke` on the transactional layer use such method under the hood.
 pub fn call_contract(
-    contract_address: &Felt252,
+    contract_address: &ContractAddress,
     entry_point_selector: &Felt252,
     calldata: &[Felt252],
     cheatnet_state: &mut CheatnetState,
@@ -97,9 +97,6 @@ pub fn call_contract(
     let blockifier_state = &mut cheatnet_state.blockifier_state;
     let cheatcode_state = &mut cheatnet_state.cheatcode_state;
 
-    let contract_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
-        contract_address.to_be_bytes(),
-    )?)?);
     let entry_point_selector =
         EntryPointSelector(StarkHash::new(entry_point_selector.to_be_bytes())?);
 
@@ -112,11 +109,11 @@ pub fn call_contract(
     ));
     let mut entry_point = CallEntryPoint {
         class_hash: None,
-        code_address: Some(contract_address),
+        code_address: Some(*contract_address),
         entry_point_type: EntryPointType::External,
         entry_point_selector,
         calldata,
-        storage_address: contract_address,
+        storage_address: *contract_address,
         caller_address: account_address,
         call_type: CallType::Call,
         initial_gas: u64::MAX,
