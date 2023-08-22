@@ -81,7 +81,7 @@ fn spy_events_simple() {
                 dispatcher.emit_one_event(123);
 
                 spy.assert_emitted(@array![
-                    Event { from: contract_address, name: 'FirstEvent', keys: array![], data: array![] }
+                    Event { from: contract_address, name: 'FirstEvent', keys: array![], data: array![123] }
                 ]);
                 assert(spy.events.len() == 0, 'There should be no events');
             }
@@ -177,9 +177,9 @@ fn test_nested_calls() {
                 dispatcher.emit_one_event(222);
 
                 spy.assert_emitted(@array![
-                    Event { from: spy_events_checker_address, name: 'FirstEvent', keys: array![], data: array![] },
-                    Event { from: spy_events_checker_proxy_address, name: 'FirstEvent', keys: array![], data: array![] },
-                    Event { from: spy_events_checker_top_proxy_address, name: 'FirstEvent', keys: array![], data: array![] }
+                    Event { from: spy_events_checker_address, name: 'FirstEvent', keys: array![], data: array![222] },
+                    Event { from: spy_events_checker_proxy_address, name: 'FirstEvent', keys: array![], data: array![222] },
+                    Event { from: spy_events_checker_top_proxy_address, name: 'FirstEvent', keys: array![], data: array![222] }
                 ]);
             }
         "#
@@ -231,7 +231,7 @@ fn expect_three_events_while_two_emitted() {
                 spy.assert_emitted(@array![
                     Event { from: contract_address, name: 'FirstEvent', keys: array![], data: array![456] },
                     Event { from: contract_address, name: 'SecondEvent', keys: array![789], data: array![456] },
-                    Event { from: contract_address, name: 'ThirdEvent', keys: array![], data: array![456, 789, 1, 1] },
+                    Event { from: contract_address, name: 'ThirdEvent', keys: array![], data: array![] },
                 ]);
             }
         "#
@@ -255,5 +255,142 @@ fn expect_three_events_while_two_emitted() {
         result,
         "test_expect_three_events_while_two_emitted",
         "event was not emitted"
+    );
+}
+
+#[test]
+fn spy_on_multiple_contracts() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use array::ArrayTrait;
+            use result::ResultTrait;
+            use traits::Into;
+            use starknet::ContractAddress;
+            use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpy, EventFetcher,
+                event_name_hash, EventAssertions, Event, SpyOn };
+
+            #[starknet::interface]
+            trait ISpyEventsChecker<TContractState> {
+                fn emit_one_event(ref self: TContractState, some_data: felt252);
+            }
+
+            #[test]
+            fn test_spy_on_multiple_contracts() {
+                let spy_events_checker = declare('SpyEventsChecker');
+                let spy_events_checker_address = spy_events_checker.deploy(@array![]).unwrap();
+
+                let spy_events_checker_proxy = declare('SpyEventsCheckerProxy');
+                let spy_events_checker_proxy_address =
+                    spy_events_checker_proxy.deploy(@array![spy_events_checker_address.into()]).unwrap();
+
+                let spy_events_checker_top_proxy_address =
+                    spy_events_checker_proxy.deploy(@array![spy_events_checker_proxy_address.into()]).unwrap();
+
+                let dispatcher = ISpyEventsCheckerDispatcher { contract_address: spy_events_checker_top_proxy_address };
+
+                let mut spy = spy_events(SpyOn::Multiple(array![spy_events_checker_address, spy_events_checker_proxy_address]));
+                dispatcher.emit_one_event(222);
+
+                spy.assert_emitted(@array![
+                    Event { from: spy_events_checker_address, name: 'FirstEvent', keys: array![], data: array![222] },
+                    Event { from: spy_events_checker_proxy_address, name: 'FirstEvent', keys: array![], data: array![222] },
+                    Event { from: spy_events_checker_top_proxy_address, name: 'FirstEvent', keys: array![], data: array![222] }
+                ]);
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "SpyEventsChecker".to_string(),
+            Path::new("tests/data/contracts/spy_events_checker.cairo"),
+        )
+        .unwrap(),
+        Contract::from_code_path(
+            "SpyEventsCheckerProxy".to_string(),
+            Path::new("tests/data/contracts/spy_events_checker_proxy.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test);
+
+    assert_failed!(result);
+    assert_case_output_contains!(
+        result,
+        "test_spy_on_multiple_contracts",
+        "FirstEvent"
+    );
+    assert_case_output_contains!(
+        result,
+        "test_spy_on_multiple_contracts",
+        "event was not emitted from"
+    );
+    assert_case_output_contains!(
+        result,
+        "test_spy_on_multiple_contracts",
+        "2851901425299487987270770980201168426168489605512291031522895630582264352821"
+    );
+}
+
+#[test]
+fn event_emitted_wrong_data_asserted() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use array::ArrayTrait;
+            use result::ResultTrait;
+            use starknet::ContractAddress;
+            use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpy, EventFetcher,
+                event_name_hash, EventAssertions, Event, SpyOn };
+
+            #[starknet::interface]
+            trait ISpyEventsChecker<TContractState> {
+                fn emit_one_event(ref self: TContractState, some_data: felt252);
+            }
+
+            #[test]
+            fn test_assert_wrong_data() {
+                let contract = declare('SpyEventsChecker');
+                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+                let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
+
+                let mut spy = spy_events(SpyOn::One(contract_address));
+                dispatcher.emit_one_event(123);
+
+                spy.assert_emitted(@array![
+                    Event { from: contract_address, name: 'FirstEvent', keys: array![], data: array![124] }
+                ]);
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "SpyEventsChecker".to_string(),
+            Path::new("tests/data/contracts/spy_events_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test);
+
+    assert_failed!(result);
+    assert_case_output_contains!(
+        result,
+        "test_assert_wrong_data",
+        "FirstEvent"
+    );
+    assert_case_output_contains!(
+        result,
+        "test_assert_wrong_data",
+        "event was emitted from"
+    );
+    assert_case_output_contains!(
+        result,
+        "test_assert_wrong_data",
+        "313030104761018700624599948735635264152311475736681672041458379825603828958"
+    );
+    assert_case_output_contains!(
+        result,
+        "test_assert_wrong_data",
+        "but keys or data are different"
     );
 }

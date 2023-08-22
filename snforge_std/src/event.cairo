@@ -85,6 +85,14 @@ impl EventAssertionsImpl of EventAssertions {
                 if event_name_hash(*events.at(i).name) == *emitted_events.at(j).name
                     && events.at(i).from == emitted_events.at(j).from
                 {
+                    if events.at(i).keys != emitted_events.at(j).keys
+                        || events.at(i).data != emitted_events.at(j).data
+                    {
+                        panic(array![*events.at(i).name, 'event was emitted from', (*events.at(i).from).into(),
+                            'but keys or data are different'
+                        ]);
+                    }
+
                     let mut emitted_events_deleted_event = array![];
                     let mut k = 0;
                     loop {
@@ -106,7 +114,7 @@ impl EventAssertionsImpl of EventAssertions {
             };
 
             if !found {
-                panic(array![*events.at(i).name, 'event was not emitted']);
+                panic(array![*events.at(i).name, 'event was not emitted from', (*events.at(i).from).into()]);
             }
 
             i += 1;
@@ -137,4 +145,39 @@ fn copy_event(event: @Event) -> Event {
     };
 
     Event { from, name, keys, data }
+}
+
+// Copied from corelib until it will be included in the release
+impl ArrayPartialEq<T, impl PartialEqImpl: PartialEq<T>> of PartialEq<Array<T>> {
+    fn eq(lhs: @Array<T>, rhs: @Array<T>) -> bool {
+        lhs.span() == rhs.span()
+    }
+    fn ne(lhs: @Array<T>, rhs: @Array<T>) -> bool {
+        !(lhs == rhs)
+    }
+}
+
+impl SpanPartialEq<T, impl PartialEqImpl: PartialEq<T>> of PartialEq<Span<T>> {
+    fn eq(lhs: @Span<T>, rhs: @Span<T>) -> bool {
+        if (*lhs).len() != (*rhs).len() {
+            return false;
+        }
+        let mut lhs_span = *lhs;
+        let mut rhs_span = *rhs;
+        loop {
+            match lhs_span.pop_front() {
+                Option::Some(lhs_v) => {
+                    if lhs_v != rhs_span.pop_front().unwrap() {
+                        break false;
+                    }
+                },
+                Option::None => {
+                    break true;
+                },
+            };
+        }
+    }
+    fn ne(lhs: @Span<T>, rhs: @Span<T>) -> bool {
+        !(lhs == rhs)
+    }
 }
