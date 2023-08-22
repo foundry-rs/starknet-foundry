@@ -4,7 +4,6 @@ use std::path::PathBuf;
 
 use crate::scarb::StarknetContractArtifacts;
 use anyhow::{anyhow, Result};
-use blockifier::abi::abi_utils::selector_from_name;
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::execution_utils::{felt_to_stark_felt, stark_felt_to_felt};
 use cairo_felt::Felt252;
@@ -243,21 +242,20 @@ impl CairoHintProcessor<'_> {
                     inputs[0].clone().to_be_bytes(),
                 )?)?);
                 let function_name = inputs[1].clone();
-                let function_name = as_cairo_short_string(&function_name).unwrap_or_else(|| {
-                    panic!("Failed to convert {function_name:?} to Cairo short str")
-                });
-                let function_name = selector_from_name(function_name.as_str());
 
                 let ret_data_length = inputs[2]
                     .to_usize()
                     .expect("Missing ret_data len in inputs");
-                let mut ret_data = vec![];
-                for felt in inputs.iter().skip(3).take(ret_data_length) {
-                    ret_data.push(felt_to_stark_felt(&felt.clone()));
-                }
+
+                let ret_data = inputs
+                    .iter()
+                    .skip(3)
+                    .take(ret_data_length)
+                    .cloned()
+                    .collect::<Vec<_>>();
 
                 self.cheatnet_state
-                    .start_mock_call(contract_address, function_name, ret_data);
+                    .start_mock_call(contract_address, &function_name, &ret_data);
                 Ok(())
             }
             "stop_mock_call" => {
@@ -265,13 +263,9 @@ impl CairoHintProcessor<'_> {
                     inputs[0].clone().to_be_bytes(),
                 )?)?);
                 let function_name = inputs[1].clone();
-                let function_name = as_cairo_short_string(&function_name).unwrap_or_else(|| {
-                    panic!("Failed to convert {function_name:?} to Cairo short str")
-                });
-                let function_name = selector_from_name(function_name.as_str());
 
                 self.cheatnet_state
-                    .stop_mock_call(contract_address, function_name);
+                    .stop_mock_call(contract_address, &function_name);
                 Ok(())
             }
             "declare" => {
