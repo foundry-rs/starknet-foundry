@@ -35,7 +35,7 @@ impl CheatnetState {
         let blockifier_state: &mut CachedState<DictStateReader> = &mut self.blockifier_state;
 
         let contract_class = blockifier_state
-            .get_compiled_contract_class(&class_hash)
+            .get_compiled_contract_class(class_hash)
             .map_err::<EnhancedHintError, _>(From::from)?;
         if contract_class.constructor_selector().is_none() && !calldata.is_empty() {
             return Err(CheatcodeError::Recoverable(vec![felt_from_short_string(
@@ -45,7 +45,7 @@ impl CheatnetState {
 
         let execute_calldata = create_execute_calldata(
             calldata,
-            &class_hash,
+            class_hash,
             &account_address,
             &entry_point_selector,
             &salt,
@@ -108,14 +108,14 @@ mod test {
         assert_eq!(
             calldata,
             vec![
-                StarkFelt::from(111_u32),
-                StarkFelt::from(222_u32),
-                StarkFelt::from(5_u32),
-                StarkFelt::from(123_u32),
-                StarkFelt::from(333_u32),
-                StarkFelt::from(2_u32),
-                StarkFelt::from(100_u32),
-                StarkFelt::from(200_u32),
+                Felt252::from(111_u32),
+                Felt252::from(222_u32),
+                Felt252::from(5_u32),
+                Felt252::from(123_u32),
+                Felt252::from(333_u32),
+                Felt252::from(2_u32),
+                Felt252::from(100_u32),
+                Felt252::from(200_u32),
             ]
         );
     }
@@ -132,12 +132,12 @@ mod test {
         assert_eq!(
             calldata,
             vec![
-                StarkFelt::from(111_u32),
-                StarkFelt::from(222_u32),
-                StarkFelt::from(3_u32),
-                StarkFelt::from(123_u32),
-                StarkFelt::from(333_u32),
-                StarkFelt::from(0_u32),
+                Felt252::from(111_u32),
+                Felt252::from(222_u32),
+                Felt252::from(3_u32),
+                Felt252::from(123_u32),
+                Felt252::from(333_u32),
+                Felt252::from(0_u32),
             ]
         );
     }

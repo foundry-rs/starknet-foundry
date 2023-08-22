@@ -28,7 +28,7 @@ pub fn class_hash_to_felt(class_hash: ClassHash) -> Felt252 {
 
 #[must_use]
 pub fn class_hash_from_felt(felt: &Felt252) -> ClassHash {
-    return ClassHash(felt_to_stark_felt(felt));
+    ClassHash(felt_to_stark_felt(felt))
 }
 
 #[must_use]

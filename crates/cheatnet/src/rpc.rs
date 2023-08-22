@@ -642,10 +642,12 @@ fn deploy_syscall(
     remaining_gas: &mut u64,
 ) -> SyscallResult<DeployResponse> {
     let deployer_address = syscall_handler.syscall_handler.storage_address();
-    let deployer_address_for_calculation = match request.deploy_from_zero {
-        true => ContractAddress::default(),
-        false => deployer_address,
+    let deployer_address_for_calculation = if request.deploy_from_zero {
+        ContractAddress::default()
+    } else {
+        deployer_address
     };
+
     let deployed_contract_address = calculate_contract_address(
         request.contract_address_salt,
         request.class_hash,
@@ -730,7 +732,7 @@ pub fn execute_constructor_entry_point(
     let contract_class = state.get_compiled_contract_class(&ctor_context.class_hash)?;
     let Some(constructor_selector) = contract_class.constructor_selector() else {
         // Contract has no constructor.
-        return handle_empty_constructor(ctor_context, calldata, remaining_gas.clone());
+        return handle_empty_constructor(ctor_context, calldata, remaining_gas);
     };
 
     let mut constructor_call = CallEntryPoint {
@@ -742,7 +744,7 @@ pub fn execute_constructor_entry_point(
         storage_address: ctor_context.storage_address,
         caller_address: ctor_context.caller_address,
         call_type: CallType::Call,
-        initial_gas: remaining_gas.clone(),
+        initial_gas: remaining_gas,
     };
 
     execute_call_entry_point(

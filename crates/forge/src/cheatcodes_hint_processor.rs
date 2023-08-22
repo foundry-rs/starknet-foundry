@@ -457,7 +457,7 @@ fn execute_call_contract(mut buffer: MemBuffer, cheatnet_state: &mut CheatnetSta
     let calldata = buffer.next_arr().unwrap();
 
     let call_result = call_contract(
-        &contract_address_from_felt(&contract_address),
+        &contract_address,
         &entry_point_selector,
         &calldata,
         cheatnet_state,
