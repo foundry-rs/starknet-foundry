@@ -28,7 +28,7 @@ use crate::panic_data::try_extract_panic_data;
 impl CheatnetState {
     pub fn deploy(
         &mut self,
-        class_hash: &Felt252,
+        class_hash: &ClassHash,
         calldata: &[Felt252],
     ) -> Result<ContractAddress, CheatcodeError> {
         // Deploy a contract using syscall deploy.
@@ -36,13 +36,12 @@ impl CheatnetState {
         let block_context = build_block_context();
         let entry_point_selector = selector_from_name("deploy_contract");
         let salt = self.get_salt();
-        let class_hash = ClassHash(StarkFelt::new(class_hash.to_be_bytes()).unwrap());
         self.increment_deploy_salt_base();
 
         let blockifier_state: &mut CachedState<DictStateReader> = &mut self.blockifier_state;
 
         let contract_class = blockifier_state
-            .get_compiled_contract_class(&class_hash)
+            .get_compiled_contract_class(class_hash)
             .map_err::<EnhancedHintError, _>(From::from)?;
         if contract_class.constructor_selector().is_none() && !calldata.is_empty() {
             return Err(CheatcodeError::Recoverable(vec![felt_from_short_string(
@@ -52,7 +51,7 @@ impl CheatnetState {
 
         let execute_calldata = create_execute_calldata(
             calldata,
-            &class_hash,
+            class_hash,
             &account_address,
             &entry_point_selector,
             &salt,
