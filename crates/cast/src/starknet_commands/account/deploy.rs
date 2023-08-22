@@ -9,7 +9,7 @@ use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider};
 use starknet::signers::{LocalWallet, SigningKey};
 
-use cast::{get_network, handle_rpc_error, handle_wait_for_tx, parse_number};
+use cast::{chain_id_to_network_name, handle_rpc_error, handle_wait_for_tx, parse_number};
 
 use cast::helpers::response_structs::InvokeResponse;
 
@@ -33,28 +33,28 @@ pub async fn deploy(
     provider: &JsonRpcClient<HttpTransport>,
     path: Utf8PathBuf,
     name: String,
-    network: &str,
+    chain_id: FieldElement,
     max_fee: FieldElement,
     wait: bool,
     class_hash: Option<String>,
 ) -> Result<InvokeResponse> {
-    let network_value = get_network(network)?.get_value();
+    let network_name = chain_id_to_network_name(chain_id);
 
     let contents = std::fs::read_to_string(path.clone()).expect("Couldn't read accounts file");
     let mut items: serde_json::Value = serde_json::from_str(&contents)
         .map_err(|_| anyhow!("Failed to parse accounts file at {path}"))?;
 
-    if items[network_value].is_null() {
-        bail!("Provided network {network} does not have any accounts defined")
+    if items[&network_name].is_null() {
+        bail!("No accounts defined for network {}", network_name);
     }
-    if items[network_value][&name].is_null() {
+    if items[&network_name][&name].is_null() {
         bail!("Account with name {name} does not exist")
     }
 
     let private_key = SigningKey::from_secret_scalar(
         parse_number(
             items
-                .get(network_value)
+                .get(&network_name)
                 .and_then(|network| network.get(&name))
                 .and_then(|name| name.get("private_key"))
                 .and_then(serde_json::Value::as_str)
@@ -80,7 +80,7 @@ pub async fn deploy(
     let deployment = factory.deploy(
         parse_number(
             items
-                .get(network_value)
+                .get(&network_name)
                 .and_then(|network| network.get(&name))
                 .and_then(|name| name.get("salt"))
                 .and_then(serde_json::Value::as_str)
@@ -108,7 +108,7 @@ pub async fn deploy(
                 return Err(anyhow!(message));
             }
 
-            items[network_value][&name]["deployed"] = serde_json::Value::from(true);
+            items[&network_name][&name]["deployed"] = serde_json::Value::from(true);
             std::fs::write(path, serde_json::to_string_pretty(&items).unwrap())
                 .expect("Couldn't write to accounts file");
 

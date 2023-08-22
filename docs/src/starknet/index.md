@@ -12,7 +12,7 @@ To use cast, run the `sncast` command followed by a subcommand (see [available c
 $ sncast <subcommand>
 ```
 
-If `Scarb.toml` is present and configured with `[tool.sncast]`, `url`, `network`, `accounts-file` and `account` name will be taken from it.
+If `Scarb.toml` is present and configured with `[tool.sncast]`, `url`, `accounts-file` and `account` name will be taken from it.
 You can, however, overwrite their values by supplying them as flags directly to `sncast` cli.
 
 > 💡 **Info**
@@ -26,7 +26,6 @@ Let's use `sncast` to call a contract's function:
 
 ```shell
 $ sncast --account myuser \
-    --network testnet \
     --url http://127.0.0.1:5050 \
     call \
     --contract-address 0x38b7b9507ccf73d79cb42c2cc4e58cf3af1248f342112879bfdf5aa4f606cc9 \
@@ -39,7 +38,7 @@ response: [0x0]
 ```
 
 > 📝 **Note**
-> In the above example we supply cast with `--account`, `--network` and `--url` flags. If `Scarb.toml` is present, and have these properties set, values provided using these flags will override values from `Scarb.toml`. Learn more about `Scarb.toml` configuration [here](../projects/configuration.md#cast).
+> In the above example we supply cast with `--account` and `--url` flags. If `Scarb.toml` is present, and have these properties set, values provided using these flags will override values from `Scarb.toml`. Learn more about `Scarb.toml` configuration [here](../projects/configuration.md#cast).
 
 ### How to use `--wait` flag
 
@@ -47,7 +46,6 @@ Let's invoke a transaction and wait for it to be `ACCEPTED_ON_L2`.
 
 ```shell
 $ sncast --account myuser \
-    --network testnet \
     --url http://127.0.0.1:5050 \
     --wait \
     deploy \

@@ -9,7 +9,6 @@ use std::str::FromStr;
 #[derive(Deserialize, Serialize, Clone, Debug, Default)]
 pub struct CastConfig {
     pub rpc_url: String,
-    pub network: String,
     pub account: String,
     pub accounts_file: Utf8PathBuf,
 }
@@ -23,7 +22,6 @@ impl CastConfig {
 
         Ok(CastConfig {
             rpc_url: get_property(tool, "url"),
-            network: get_property(tool, "network"),
             account: get_property(tool, "account"),
             accounts_file: get_property(tool, "accounts-file"),
         })
@@ -140,7 +138,6 @@ mod tests {
         .unwrap();
 
         assert_eq!(config.account, String::from("user1"));
-        assert_eq!(config.network, String::from("testnet"));
         assert_eq!(config.rpc_url, String::from("http://127.0.0.1:5055/rpc"));
     }
 
@@ -152,7 +149,6 @@ mod tests {
         )
         .unwrap();
         assert_eq!(config.account, String::from("user2"));
-        assert_eq!(config.network, String::from("testnet"));
         assert_eq!(config.rpc_url, String::from("http://127.0.0.1:5055/rpc"));
     }
 
@@ -168,7 +164,6 @@ mod tests {
         let config = parse_scarb_config(&None, &None).unwrap();
 
         assert!(config.rpc_url.is_empty());
-        assert!(config.network.is_empty());
         assert!(config.account.is_empty());
     }
 
@@ -181,7 +176,6 @@ mod tests {
         .unwrap();
 
         assert!(config.rpc_url.is_empty());
-        assert!(config.network.is_empty());
         assert!(config.account.is_empty());
     }
 
@@ -216,7 +210,6 @@ mod tests {
         let config = parse_scarb_config(&None, &None).unwrap();
 
         assert!(config.rpc_url.is_empty());
-        assert!(config.network.is_empty());
         assert!(config.account.is_empty());
     }
 
@@ -225,7 +218,6 @@ mod tests {
         let config = parse_scarb_config(&Some(String::from("myprofile")), &None).unwrap();
 
         assert_eq!(config.rpc_url, String::from("http://127.0.0.1:5055/rpc"));
-        assert_eq!(config.network, String::from("testnet"));
         assert_eq!(config.account, String::from("user1"));
     }
 }
