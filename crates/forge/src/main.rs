@@ -13,7 +13,7 @@ use forge::scarb::{
     corelib_for_package, dependencies_for_package, get_contracts_map, name_for_package,
     paths_for_package, target_name_for_package, try_get_starknet_artifacts_path,
 };
-use std::process::Command;
+use std::process::{Command, Stdio};
 
 static PREDEPLOYED_CONTRACTS: Dir = include_dir!("crates/cheatnet/predeployed-contracts");
 
@@ -55,6 +55,8 @@ fn main_execution() -> Result<()> {
     let build_output = Command::new("scarb")
         .current_dir(std::env::current_dir().context("Failed to get current directory")?)
         .arg("build")
+        .stderr(Stdio::inherit())
+        .stdout(Stdio::inherit())
         .output()
         .context("Failed to build contracts with Scarb")?;
     if !build_output.status.success() {
@@ -62,11 +64,6 @@ fn main_execution() -> Result<()> {
             "Scarb build didn't succeed:\n\n{}",
             String::from_utf8_lossy(&build_output.stdout)
         )
-    }
-    let scarb_stdout = String::from_utf8_lossy(&build_output.stdout);
-
-    if scarb_stdout.contains("warn:") {
-        eprintln!("{scarb_stdout}");
     }
 
     for package in &scarb_metadata.workspace.members {

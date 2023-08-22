@@ -15,7 +15,10 @@ fn simple_package() {
         .current_dir(&temp)
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 11 test(s) and 5 test file(s)
+        .stdout_matches(indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+        Collected 11 test(s) and 5 test file(s)
         Running 1 test(s) from simple_package package
         [PASS] simple_package::test_fib
         Running 1 test(s) from tests/contract.cairo
@@ -76,7 +79,11 @@ fn simple_package_with_git_dependency() {
         .current_dir(&temp)
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 11 test(s) and 5 test file(s)
+        .stdout_matches(indoc! {r#"
+        [..]Updating git repository[..]
+        [..]Compiling[..]
+        [..]Finished[..]
+        Collected 11 test(s) and 5 test file(s)
         Running 1 test(s) from simple_package package
         [PASS] simple_package::test_fib
         Running 1 test(s) from tests/contract.cairo
@@ -136,7 +143,10 @@ fn with_filter() {
         .arg("two")
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 2 test(s) and 5 test file(s)
+        .stdout_matches(indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+        Collected 2 test(s) and 5 test file(s)
         Running 0 test(s) from simple_package package
         Running 0 test(s) from tests/contract.cairo
         Running 0 test(s) from tests/ext_function_test.cairo
@@ -159,7 +169,10 @@ fn with_exact_filter() {
         .arg("--exact")
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 1 test(s) and 5 test file(s)
+        .stdout_matches(indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+        Collected 1 test(s) and 5 test file(s)
         Running 0 test(s) from simple_package package
         Running 0 test(s) from tests/contract.cairo
         Running 0 test(s) from tests/ext_function_test.cairo
@@ -180,7 +193,10 @@ fn with_non_matching_filter() {
         .arg("qwerty")
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 0 test(s) and 5 test file(s)
+        .stdout_matches(indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+        Collected 0 test(s) and 5 test file(s)
         Running 0 test(s) from simple_package package
         Running 0 test(s) from tests/contract.cairo
         Running 0 test(s) from tests/ext_function_test.cairo
@@ -199,7 +215,10 @@ fn with_print() {
         .current_dir(&temp)
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 1 test(s) and 2 test file(s)
+        .stdout_matches(indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+        Collected 1 test(s) and 2 test file(s)
         Running 0 test(s) from print_test package
         Running 1 test(s) from tests/test_print.cairo
         original value: [123], converted to a string: [{]
@@ -236,7 +255,10 @@ fn with_panic_data_decoding() {
         .current_dir(&temp)
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 4 test(s) and 2 test file(s)
+        .stdout_matches(indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+        Collected 4 test(s) and 2 test file(s)
         Running 0 test(s) from panic_decoding package
         Running 4 test(s) from tests/test_panic_decoding.cairo
         [PASS] test_panic_decoding::test_simple
@@ -297,7 +319,10 @@ fn with_exit_first() {
         .current_dir(&temp)
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 11 test(s) and 5 test file(s)
+        .stdout_matches(indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+        Collected 11 test(s) and 5 test file(s)
         Running 1 test(s) from simple_package package
         [PASS] simple_package::test_fib
         Running 1 test(s) from tests/contract.cairo
@@ -330,7 +355,10 @@ fn with_exit_first_flag() {
         .current_dir(&temp)
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 11 test(s) and 5 test file(s)
+        .stdout_matches(indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+        Collected 11 test(s) and 5 test file(s)
         Running 1 test(s) from simple_package package
         [PASS] simple_package::test_fib
         Running 1 test(s) from tests/contract.cairo
@@ -385,7 +413,10 @@ fn exit_first_flag_takes_precedence() {
         .arg("--exit-first")
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 11 test(s) and 5 test file(s)
+        .stdout_matches(indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+        Collected 11 test(s) and 5 test file(s)
         Running 1 test(s) from simple_package package
         [PASS] simple_package::test_fib
         Running 1 test(s) from tests/contract.cairo
@@ -418,7 +449,10 @@ fn using_corelib_names() {
         .current_dir(&temp)
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 4 test(s) and 5 test file(s)
+        .stdout_matches(indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+        Collected 4 test(s) and 5 test file(s)
         Running 0 test(s) from using_corelib_names package
         Running 1 test(s) from tests/bits.cairo
         [PASS] bits::test_names
@@ -445,6 +479,8 @@ fn should_panic() {
         .assert()
         .success()
         .stdout_matches(indoc! { r#"
+        [..]Compiling[..]
+        [..]Finished[..]
         Collected 6 test(s) and 2 test file(s)
         Running 0 test(s) from should_panic_test package
         Running 6 test(s) from tests/should_panic_test.cairo
