@@ -1,4 +1,3 @@
-# dummy cast change
 [package]
 name = "cast"
 description = "Cast - a Starknet Foundry CLI client"
