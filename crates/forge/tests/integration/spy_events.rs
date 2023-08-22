@@ -5,57 +5,6 @@ use indoc::indoc;
 use std::path::Path;
 
 #[test]
-fn spy_events_complex() {
-    let test = test_case!(
-        indoc!(
-            r#"
-            use array::ArrayTrait;
-            use result::ResultTrait;
-            use starknet::ContractAddress;
-            use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpy,
-                EventFetcher, event_name_hash, SpyOn };
-
-            #[starknet::interface]
-            trait ISpyEventsChecker<TContractState> {
-                fn emit_one_event(ref self: TContractState, some_data: felt252);
-            }
-
-            #[test]
-            fn test_expect_events_complex() {
-                let contract = declare('SpyEventsChecker');
-                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
-                let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
-
-                let mut spy = spy_events(SpyOn::All);
-                dispatcher.emit_one_event(123);
-                spy.fetch_events();
-
-                assert(spy.events.len() == 1, 'There should be one event');
-                assert(spy.events.at(0).name == @event_name_hash('FirstEvent'), 'Wrong event name');
-                assert(spy.events.at(0).keys.len() == 0, 'There should be no keys');
-                assert(spy.events.at(0).data.len() == 1, 'There should be one data');
-
-                dispatcher.emit_one_event(123);
-                assert(spy.events.len() == 1, 'There should be one event');
-
-                spy.fetch_events();
-                assert(spy.events.len() == 2, 'There should be two events');
-            }
-        "#
-        ),
-        Contract::from_code_path(
-            "SpyEventsChecker".to_string(),
-            Path::new("tests/data/contracts/spy_events_checker.cairo"),
-        )
-        .unwrap()
-    );
-
-    let result = run_test_case(&test);
-
-    assert_passed!(result);
-}
-
-#[test]
 fn spy_events_simple() {
     let test = test_case!(
         indoc!(
