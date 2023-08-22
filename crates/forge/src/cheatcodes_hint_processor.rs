@@ -392,11 +392,16 @@ impl CairoHintProcessor<'_> {
                     }
                 };
 
-                self.cheatnet_state.spy_events(spy_on);
+                let id = self.cheatnet_state.spy_events(spy_on);
+                buffer
+                    .write(Felt252::from(id))
+                    .expect("Failed to insert spy id");
                 Ok(())
             }
             "fetch_events" => {
-                let (emitted_events_len, serialized_events) = self.cheatnet_state.fetch_events();
+                let id = &inputs[0];
+                let (emitted_events_len, serialized_events) = self.cheatnet_state.fetch_events(id);
+
                 buffer
                     .write(Felt252::from(emitted_events_len))
                     .expect("Failed to insert serialized events length");

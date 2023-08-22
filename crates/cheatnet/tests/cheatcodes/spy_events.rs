@@ -12,7 +12,7 @@ fn spy_events_complex() {
 
     let contract_address = deploy_contract(&mut state, "SpyEventsChecker", vec![].as_slice());
 
-    state.spy_events(SpyOn::All);
+    let id = state.spy_events(SpyOn::All);
 
     let selector = felt_selector_from_name("emit_one_event");
     call_contract(
@@ -23,7 +23,7 @@ fn spy_events_complex() {
     )
     .unwrap();
 
-    let (length, serialized_events) = state.fetch_events();
+    let (length, serialized_events) = state.fetch_events(&Felt252::from(id));
 
     assert_eq!(length, 1, "There should be one event");
     assert_eq!(
@@ -56,9 +56,9 @@ fn spy_events_complex() {
     )
     .unwrap();
 
-    let (length, _) = state.fetch_events();
+    let (length, _) = state.fetch_events(&Felt252::from(id));
     assert_eq!(length, 1, "There should be one new event");
 
-    let (length, _) = state.fetch_events();
+    let (length, _) = state.fetch_events(&Felt252::from(id));
     assert_eq!(length, 0, "There should be no new events");
 }

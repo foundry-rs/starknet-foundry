@@ -89,7 +89,7 @@ pub struct CheatcodeState {
     pub pranked_contracts: HashMap<ContractAddress, ContractAddress>,
     pub warped_contracts: HashMap<ContractAddress, Felt252>,
     pub mocked_functions: HashMap<ContractAddress, HashMap<EntryPointSelector, Vec<StarkFelt>>>,
-    pub spy_events: Option<SpyOn>,
+    pub spies: Vec<SpyOn>,
     pub emitted_events: Vec<Event>,
 }
 
@@ -101,7 +101,7 @@ impl CheatcodeState {
             pranked_contracts: HashMap::new(),
             warped_contracts: HashMap::new(),
             mocked_functions: HashMap::new(),
-            spy_events: None,
+            spies: vec![],
             emitted_events: vec![],
         }
     }

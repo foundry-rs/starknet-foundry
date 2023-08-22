@@ -68,7 +68,7 @@ use starknet_api::{
     transaction::{Calldata, TransactionVersion},
 };
 
-use crate::cheatcodes::spy_events::{Event, SpyOn};
+use crate::cheatcodes::spy_events::Event;
 use blockifier::execution::syscalls::{
     LibraryCallRequest, SyscallRequest, SyscallRequestWrapper, SyscallResponse,
     SyscallResponseWrapper, SyscallResult,
@@ -138,9 +138,7 @@ pub fn call_contract(
     );
 
     if let Ok(call_info) = exec_result {
-        if cheatcode_state.spy_events.is_some() {
-            collect_emitted_events(&call_info, cheatcode_state);
-        }
+        collect_emitted_events(&call_info, cheatcode_state);
 
         let raw_return_data = &call_info.execution.retdata.0;
 
@@ -180,20 +178,17 @@ fn collect_emitted_events(call_info: &CallInfo, cheatcode_state: &mut CheatcodeS
 
     while let Some(current_call) = stack.pop() {
         let code_address = current_call.call.code_address.unwrap();
-        let collect = match &cheatcode_state.spy_events.as_ref().unwrap() {
-            SpyOn::All => true,
-            SpyOn::One(address) => *address == code_address,
-            SpyOn::Multiple(addresses) => addresses.contains(&code_address),
-        };
-
-        if collect {
-            all_events.extend(
-                current_call
-                    .execution
-                    .events
-                    .iter()
-                    .map(|event| (code_address, event)),
-            );
+        for spy_on in &mut cheatcode_state.spies {
+            if spy_on.should_be_spied(code_address) {
+                all_events.extend(
+                    current_call
+                        .execution
+                        .events
+                        .iter()
+                        .map(|event| (code_address, event)),
+                );
+                break;
+            }
         }
 
         stack.extend(current_call.inner_calls.iter().rev());

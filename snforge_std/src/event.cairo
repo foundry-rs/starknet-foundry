@@ -18,9 +18,9 @@ enum SpyOn {
 fn spy_events(spy_on: SpyOn) -> EventSpy {
     let mut inputs = array![];
     spy_on.serialize(ref inputs);
-    cheatcode::<'spy_events'>(inputs.span());
+    let output = cheatcode::<'spy_events'>(inputs.span());
 
-    EventSpy { events: array![] }
+    EventSpy { _id: *output[0], events: array![] }
 }
 
 fn event_name_hash(name: felt252) -> felt252 {
@@ -38,6 +38,7 @@ struct Event {
 
 #[derive(Drop, Clone, Serde)]
 struct EventSpy {
+    _id: felt252,
     events: Array<Event>,
 }
 
@@ -47,7 +48,7 @@ trait EventFetcher {
 
 impl EventFetcherImpl of EventFetcher {
     fn fetch_events(ref self: EventSpy) {
-        let mut output = cheatcode::<'fetch_events'>(array![].span());
+        let mut output = cheatcode::<'fetch_events'>(array![self._id].span());
         let events = Serde::<Array<Event>>::deserialize(ref output).unwrap();
 
         let mut i = 0;
