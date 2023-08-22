@@ -2,6 +2,8 @@ use crate::CheatnetState;
 use cairo_felt::Felt252;
 use starknet_api::core::ContractAddress;
 
+/// Represents emitted event. It is used in the CheatnetState to keep track of events
+/// emitted in the `cheatnet::src::rpc::call_contract`
 pub struct Event {
     pub from: ContractAddress,
     pub name: Felt252,
@@ -9,6 +11,7 @@ pub struct Event {
     pub data: Vec<Felt252>,
 }
 
+/// Specifies which contract are spied on.
 pub enum SpyOn {
     All,
     One(ContractAddress),
