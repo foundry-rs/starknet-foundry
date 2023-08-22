@@ -90,9 +90,7 @@ fn start_roll_with_other_syscall() {
     assert_passed!(result);
 }
 
-// TODO (#254): Make it pass
 #[test]
-#[ignore]
 fn start_roll_in_constructor_test() {
     let test = test_case!(
         indoc!(
@@ -101,6 +99,7 @@ fn start_roll_in_constructor_test() {
             use array::ArrayTrait;
             use option::OptionTrait;
             use traits::TryInto;
+            use traits::Into;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
 
@@ -114,12 +113,16 @@ fn start_roll_in_constructor_test() {
             #[test]
             fn test_roll_constructor_simple() {
                 let contract = declare('ConstructorRollChecker');
-                let contract_address: ContractAddress = 2598896470772924212281968896271340780432065735045468431712403008297614014532.try_into().unwrap();
-                start_roll(contract_address, 234);
-                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
-
+                let constructor_calldata = array![];
+                let precalculated_address = contract.precalculate_address(@constructor_calldata); 
+                
+                start_roll(precalculated_address, 234);
+                let contract_address = contract.deploy(@constructor_calldata).unwrap();
+                
+                assert(contract_address == precalculated_address, 'Addresses dont match'); 
+                    
                 let dispatcher = IConstructorRollCheckerDispatcher { contract_address };
-                assert(dispatcher.get_stored_block_number() == 234, 'Wrong stored blk_nb');
+                assert(dispatcher.get_stored_block_number() == 234, 'Wrong stored block nb');
             }
         "#
         ),

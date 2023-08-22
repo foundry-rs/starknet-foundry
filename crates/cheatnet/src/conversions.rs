@@ -1,8 +1,29 @@
+use blockifier::execution::execution_utils::felt_to_stark_felt;
 use cairo_felt::Felt252;
+use starknet::core::types::FieldElement;
+use starknet_api::core::{ClassHash, ContractAddress, PatriciaKey};
 
 #[must_use]
 pub fn felt_from_short_string(short_str: &str) -> Felt252 {
     return Felt252::from_bytes_be(short_str.as_bytes());
+}
+
+#[must_use]
+pub fn class_hash_from_felt(felt: &Felt252) -> ClassHash {
+    return ClassHash(felt_to_stark_felt(felt));
+}
+
+#[must_use]
+pub fn contract_address_from_felt(felt: &Felt252) -> ContractAddress {
+    ContractAddress(
+        PatriciaKey::try_from(felt_to_stark_felt(felt))
+            .expect("StarkFelt to PatriciaKey conversion failed"),
+    )
+}
+
+#[must_use]
+pub fn field_element_to_felt252(field_element: &FieldElement) -> Felt252 {
+    Felt252::from_bytes_be(&field_element.to_bytes_be())
 }
 
 #[cfg(test)]

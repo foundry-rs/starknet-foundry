@@ -108,9 +108,7 @@ fn warp() {
     assert_passed!(result);
 }
 
-// TODO (#254): Make it pass
 #[test]
-#[ignore]
 fn start_warp_in_constructor_test() {
     let test = test_case!(
         indoc!(
@@ -119,9 +117,11 @@ fn start_warp_in_constructor_test() {
             use array::ArrayTrait;
             use option::OptionTrait;
             use traits::TryInto;
+            use traits::Into;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use snforge_std::{ declare, deploy, start_warp };
+            
+            use snforge_std::{ declare, ContractClassTrait, start_warp };
 
             #[starknet::interface]
             trait IConstructorWarpChecker<TContractState> {
@@ -131,9 +131,13 @@ fn start_warp_in_constructor_test() {
             #[test]
             fn test_warp_constructor_simple() {
                 let contract = declare('ConstructorWarpChecker');
-                let contract_address: ContractAddress = 3536868843103376321721783970179672615412806578951102081876401371045020950704.try_into().unwrap();
-                start_warp(contract_address, 234);
+                let constructor_calldata = array![];
+                let precalculated_address = contract.precalculate_address(@constructor_calldata);
+                
+                start_warp(precalculated_address, 234);
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+                
+                assert(contract_address == precalculated_address, 'Addresses dont match');
 
                 let dispatcher = IConstructorWarpCheckerDispatcher { contract_address };
                 assert(dispatcher.get_stored_block_timestamp() == 234, 'Wrong stored timestamp');
