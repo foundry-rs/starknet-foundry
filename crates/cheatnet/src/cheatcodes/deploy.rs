@@ -16,20 +16,20 @@ use starknet_api::transaction::ContractAddressSalt;
 use starknet_api::{patricia_key, stark_felt};
 
 use super::CheatcodeError;
-use crate::conversions::{felt_from_short_string, field_element_to_felt252};
+use crate::conversions::{class_hash_to_felt, felt_from_short_string, field_element_to_felt252};
 use crate::rpc::{call_contract, CallContractOutput};
 
 impl CheatnetState {
     pub fn deploy(
         &mut self,
-        class_hash: &Felt252,
+        class_hash: &ClassHash,
         calldata: &[Felt252],
     ) -> Result<ContractAddress, CheatcodeError> {
         // Deploy a contract using syscall deploy.
         let account_address = ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS));
         let entry_point_selector = selector_from_name("deploy_contract");
         let salt = self.get_salt();
-        let contract_address = self.precalculate_address(&class_hash, calldata);
+        let contract_address = self.precalculate_address(class_hash_to_felt(class_hash), calldata);
         let class_hash = ClassHash(StarkFelt::new(class_hash.to_be_bytes()).unwrap());
         self.increment_deploy_salt_base();
 

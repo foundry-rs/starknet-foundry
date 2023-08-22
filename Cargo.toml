@@ -11,7 +11,7 @@ name = "starknet-foundry"
 version = "0.4.1"
 edition = "2021"
 repository = "https://github.com/foundry-rs/starknet-foundry"
-license = "Apache-2.0"
+license = "MIT"
 license-file = "LICENSE"
 
 [workspace.dependencies]
@@ -53,3 +53,4 @@ serde_json = "1.0.104"
 starknet = "0.5.0"
 tempfile = "3.6.0"
 thiserror = "1.0.43"
+ctor = "0.2.4"

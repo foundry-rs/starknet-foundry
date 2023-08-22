@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
+
+### Forge
+
+#### Added
+
+- support for `keccak_syscall` syscall. It can be used directly in cairo tests
+
+### Cast
+
+#### Added
+
+- `accounts-file` field in Scarb.toml profile
+
 ## [0.4.0] - 2023-08-17
 
 ### Forge
@@ -29,7 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ```toml
 [dependencies]
 # ...
-snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry", tag = "0.4.0" }
+snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry", tag = "v0.4.0" }
 ```
 
 - Moved `ForgeConfigFromScarb` to `scarb.rs` and renamed to `ForgeConfig`
