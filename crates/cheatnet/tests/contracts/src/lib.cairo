@@ -1,4 +1,5 @@
 mod hello_starknet;
+mod constructor_simple;
 mod erc20;
 
 mod prank_checker;

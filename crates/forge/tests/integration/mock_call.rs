@@ -5,7 +5,7 @@ use indoc::indoc;
 use std::path::Path;
 
 #[test]
-fn stop_mock_call_simple() {
+fn mock_call_simple() {
     let test = test_case!(
         indoc!(
             r#"
