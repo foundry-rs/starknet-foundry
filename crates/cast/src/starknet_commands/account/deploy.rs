@@ -45,10 +45,7 @@ pub async fn deploy(
         .map_err(|_| anyhow!("Failed to parse accounts file at {path}"))?;
 
     if items[&network_name].is_null() {
-        bail!(
-            "No accounts defined for network {}",
-            chain_id_to_network_name(chain_id)
-        );
+        bail!("No accounts defined for network {}", network_name);
     }
     if items[&network_name][&name].is_null() {
         bail!("Account with name {name} does not exist")
