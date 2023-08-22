@@ -14,15 +14,14 @@ impl CheatnetState {
     #[must_use]
     pub fn precalculate_address(
         &self,
-        class_hash: &Felt252,
+        class_hash: &ClassHash,
         calldata: &[Felt252],
     ) -> ContractAddress {
         let account_address = ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS));
-        let class_hash = ClassHash(StarkFelt::new(class_hash.to_be_bytes()).unwrap());
         let salt = self.get_salt();
 
         let execute_calldata = create_execute_calldata(calldata);
-        calculate_contract_address(salt, class_hash, &execute_calldata, account_address).unwrap()
+        calculate_contract_address(salt, *class_hash, &execute_calldata, account_address).unwrap()
     }
 }
 

@@ -26,13 +26,13 @@ You can download latest version of `sncast` [here](https://github.com/foundry-rs
 For more details on Starknet Foundry `sncast`, please visit [our docs](https://foundry-rs.github.io/starknet-foundry/starknet/index.html) 
 
 ## Example usages
-All subcommand usages are shown for two scenarios - when all necessary arguments are supplied using CLI, and when `network`, `url` and `account` arguments are taken from `Scarb.toml`. To learn more about configuring profiles with parameters in `Scarb.toml` file, please refer to the [documentation](https://foundry-rs.github.io/starknet-foundry/projects/configuration.html#defining-profiles-in-scarbtoml).
+
+All subcommand usages are shown for two scenarios - when all necessary arguments are supplied using CLI, and when `url`, `accounts-file` and `account` arguments are taken from `Scarb.toml`. To learn more about configuring profiles with parameters in `Scarb.toml` file, please refer to the [documentation](https://foundry-rs.github.io/starknet-foundry/projects/configuration.html#defining-profiles-in-scarbtoml).
 
 ### Declare a contract
 
 ```shell
 $ sncast --account myuser \
-    --network testnet \
     --url http://127.0.0.1:5050/rpc \
     declare \
     --contract-name SimpleBalance
@@ -58,7 +58,6 @@ transaction_hash: 0x7ad0d6e449e33b6581a4bb8df866c0fce3919a5ee05a30840ba521dafee2
 
 ```shell
 $ sncast --account myuser \
-    --network testnet \
     --url http://127.0.0.1:5050/rpc \
     deploy --class-hash 0x8448a68b5ea1affc45e3fd4b8b480ea36a51dc34e337a16d2567d32d0c6f8a
 
@@ -83,7 +82,6 @@ transaction_hash: 0x64a62a000240e034d1862c2bbfa154aac6a8195b4b2e570f38bf4fd47a5a
 
 ```shell
 $ sncast --url http://127.0.0.1:5050 \
-    --network testnet \
     --account example_user \
     invoke \
     --contract-address 0x4a739ab73aa3cac01f9da5d55f49fb67baee4919224454a2e3f85b16462a911 \
@@ -111,7 +109,6 @@ transaction_hash: 0x7ad0d6e449e33b6581a4bb8df866c0fce3919a5ee05a30840ba521dafee2
 
 ```shell
 $ sncast --url http://127.0.0.1:5050 \
-    --network testnet \
     call \
     --contract-address 0x4a739ab73aa3cac01f9da5d55f49fb67baee4919224454a2e3f85b16462a911 \
     --function "some_function" \
