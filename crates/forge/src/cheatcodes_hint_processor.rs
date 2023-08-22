@@ -378,7 +378,7 @@ impl CairoHintProcessor<'_> {
             "parse_json" => todo!(),
             "spy_events" => {
                 let spy_on = match inputs.len() {
-                    0 => unreachable!(),
+                    0 => unreachable!("Serialized enum should always be longer than 0"),
                     1 => SpyOn::All,
                     2 => SpyOn::One(contract_address_from_felt252(&inputs[1])?),
                     _ => {

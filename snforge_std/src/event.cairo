@@ -70,56 +70,74 @@ impl EventAssertionsImpl of EventAssertions {
         self.fetch_events();
 
         let mut i = 0;
-        let all_found = loop {
+        loop {
             if i >= events.len() {
-                break true;
+                break;
             }
 
-            let mut emitted_events = @self.events;
-            let mut j = 0;
-            let found = loop {
-                if j >= emitted_events.len() {
-                    break false;
-                }
+            let emitted = check_if_emitted(ref self, copy_event(events.at(i)));
 
-                if event_name_hash(*events.at(i).name) == *emitted_events.at(j).name
-                    && events.at(i).from == emitted_events.at(j).from
-                {
-                    if events.at(i).keys != emitted_events.at(j).keys
-                        || events.at(i).data != emitted_events.at(j).data
-                    {
-                        panic(array![*events.at(i).name, 'event was emitted from', (*events.at(i).from).into(),
-                            'but keys or data are different'
-                        ]);
-                    }
-
-                    let mut emitted_events_deleted_event = array![];
-                    let mut k = 0;
-                    loop {
-                        if k >= emitted_events.len() {
-                            break;
-                        }
-
-                        if k != j {
-                            emitted_events_deleted_event.append(copy_event(emitted_events.at(k)));
-                        }
-                        k += 1;
-                    };
-                    self.events = emitted_events_deleted_event;
-
-                    break true;
-                }
-
-                j += 1;
-            };
-
-            if !found {
-                panic(array![*events.at(i).name, 'event was not emitted from', (*events.at(i).from).into()]);
+            if !emitted {
+                panic(
+                    array![
+                        *events.at(i).name,
+                        'event was not emitted from',
+                        (*events.at(i).from).into()
+                    ]
+                );
             }
 
             i += 1;
         };
     }
+}
+
+fn check_if_emitted(ref self: EventSpy, event: Event) -> bool {
+    let emitted_events = @self.events;
+    let mut j = 0;
+    return loop {
+        if j >= emitted_events.len() {
+            break false;
+        }
+
+        if event_name_hash(event.name) == *self.events.at(j).name
+            && event.from == *emitted_events.at(j).from {
+            if @event.keys != emitted_events.at(j).keys
+                || @event.data != emitted_events.at(j).data {
+                panic(
+                    array![
+                        event.name,
+                        'event was emitted from',
+                        event.from.into(),
+                        'but keys or data are different'
+                    ]
+                );
+            }
+
+            remove_event(ref self, j);
+
+            break true;
+        }
+
+        j += 1;
+    };
+}
+
+fn remove_event(ref self: EventSpy, index: usize) {
+    let emitted_events = @self.events;
+    let mut emitted_events_deleted_event = array![];
+    let mut k = 0;
+    loop {
+        if k >= emitted_events.len() {
+            break;
+        }
+
+        if k != index {
+            emitted_events_deleted_event.append(copy_event(emitted_events.at(k)));
+        }
+        k += 1;
+    };
+    self.events = emitted_events_deleted_event;
 }
 
 fn copy_event(event: @Event) -> Event {
@@ -129,7 +147,9 @@ fn copy_event(event: @Event) -> Event {
     let mut keys = array![];
     let mut i = 0;
     loop {
-        if i >= event.keys.len() { break; }
+        if i >= event.keys.len() {
+            break;
+        }
 
         keys.append(*event.keys.at(i));
         i += 1;
@@ -138,7 +158,9 @@ fn copy_event(event: @Event) -> Event {
     let mut data = array![];
     i = 0;
     loop {
-        if i >= event.data.len() { break; }
+        if i >= event.data.len() {
+            break;
+        }
 
         data.append(*event.data.at(i));
         i += 1;

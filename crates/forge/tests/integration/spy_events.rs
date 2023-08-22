@@ -89,6 +89,8 @@ fn assert_emitted_fails() {
     let result = run_test_case(&test);
 
     assert_failed!(result);
+    assert_case_output_contains!(result, "test_expect_events_simple", "FirstEvent");
+    assert_case_output_contains!(result, "test_expect_events_simple", "event was not emitted");
 }
 
 #[test]
@@ -205,6 +207,57 @@ fn expect_three_events_while_two_emitted() {
         "test_expect_three_events_while_two_emitted",
         "event was not emitted"
     );
+}
+
+#[test]
+fn expect_two_events_while_three_emitted() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use array::ArrayTrait;
+            use result::ResultTrait;
+            use traits::Into;
+            use starknet::contract_address_const;
+            use starknet::ContractAddress;
+            use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpy, EventFetcher,
+                event_name_hash, EventAssertions, Event, SpyOn };
+
+            #[starknet::interface]
+            trait ISpyEventsChecker<TContractState> {
+                fn emit_three_events(
+                    ref self: TContractState,
+                    some_data: felt252,
+                    some_more_data: ContractAddress,
+                    even_more_data: u256
+                );
+            }
+
+            #[test]
+            fn test_expect_three_events_while_two_emitted() {
+                let contract = declare('SpyEventsChecker');
+                let contract_address = contract.deploy(@array![]).unwrap();
+                let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
+
+                let mut spy = spy_events(SpyOn::One(contract_address));
+                dispatcher.emit_three_events(456, contract_address_const::<789>(), u256 { low: 1, high: 0 });
+
+                spy.assert_emitted(@array![
+                    Event { from: contract_address, name: 'FirstEvent', keys: array![], data: array![456] },
+                    Event { from: contract_address, name: 'ThirdEvent', keys: array![], data: array![456, 789, 1, 0] },
+                ]);
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "SpyEventsChecker".to_string(),
+            Path::new("tests/data/contracts/spy_events_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test);
+
+    assert_passed!(result);
 }
 
 #[test]
