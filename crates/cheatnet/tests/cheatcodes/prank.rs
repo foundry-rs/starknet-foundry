@@ -45,7 +45,6 @@ fn prank_with_other_syscall() {
 }
 
 #[test]
-#[ignore = "TODO(#254)"]
 fn prank_in_constructor() {
     let mut state = create_cheatnet_state();
 
