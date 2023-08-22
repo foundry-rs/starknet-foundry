@@ -12,7 +12,7 @@ To use cast, run the `sncast` command followed by a subcommand (see [available c
 $ sncast <subcommand>
 ```
 
-If `Scarb.toml` is present and configured with `[tool.sncast]`, `url` and `account` name will be taken from it.
+If `Scarb.toml` is present and configured with `[tool.sncast]`, `url`, `accounts-file` and `account` name will be taken from it.
 You can, however, overwrite their values by supplying them as flags directly to `sncast` cli.
 
 > 💡 **Info**

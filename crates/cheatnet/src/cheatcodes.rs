@@ -49,6 +49,8 @@ impl From<EnhancedHintError> for HintError {
         }
     }
 }
+
+#[derive(Debug)]
 pub enum CheatcodeError {
     Recoverable(Vec<Felt252>),        // Return error result in cairo
     Unrecoverable(EnhancedHintError), // Fail whole test

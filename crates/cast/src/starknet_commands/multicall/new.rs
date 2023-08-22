@@ -1,6 +1,6 @@
-use crate::helpers::constants::DEFAULT_MULTICALL_CONTENTS;
 use anyhow::{bail, Result};
 use camino::Utf8PathBuf;
+use cast::helpers::constants::DEFAULT_MULTICALL_CONTENTS;
 use clap::Args;
 
 #[derive(Args, Debug)]

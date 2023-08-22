@@ -30,6 +30,7 @@ or you can put them into `Scarb.toml` file:
 (...)
 [tool.sncast.myprofile]
 account = "user"
+accounts-file = "~/my_accounts.json"
 url = "http://127.0.0.1:5050/rpc"
 (...)
 ```
@@ -69,6 +70,7 @@ If you don't need multiple profiles, you can define the parameters without speci
 (...)
 [tool.sncast]
 account = "user123"
+accounts-file = "~/my_accounts.json"
 url = "http://127.0.0.1:5050/rpc"
 (...)
 ```

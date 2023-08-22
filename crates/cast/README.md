@@ -26,7 +26,8 @@ You can download latest version of `sncast` [here](https://github.com/foundry-rs
 For more details on Starknet Foundry `sncast`, please visit [our docs](https://foundry-rs.github.io/starknet-foundry/starknet/index.html) 
 
 ## Example usages
-All subcommand usages are shown for two scenarios - when all necessary arguments are supplied using CLI, and when `url` and `account` arguments are taken from `Scarb.toml`. To learn more about configuring profiles with parameters in `Scarb.toml` file, please refer to the [documentation](https://foundry-rs.github.io/starknet-foundry/projects/configuration.html#defining-profiles-in-scarbtoml).
+
+All subcommand usages are shown for two scenarios - when all necessary arguments are supplied using CLI, and when `url`, `accounts-file` and `account` arguments are taken from `Scarb.toml`. To learn more about configuring profiles with parameters in `Scarb.toml` file, please refer to the [documentation](https://foundry-rs.github.io/starknet-foundry/projects/configuration.html#defining-profiles-in-scarbtoml).
 
 ### Declare a contract
 
