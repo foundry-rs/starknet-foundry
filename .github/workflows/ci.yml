@@ -19,8 +19,6 @@ jobs:
           submodules: true
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@dd05243424bd5c0e585e4b55eb2d7615cdd32f1f
-        with:
-          workspaces: starknet-foundry
       - uses: software-mansion/setup-scarb@v1.0.1
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
@@ -38,8 +36,6 @@ jobs:
           submodules: true
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@dd05243424bd5c0e585e4b55eb2d7615cdd32f1f
-        with:
-          workspaces: starknet-foundry
       - uses: software-mansion/setup-scarb@v1.0.1
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
@@ -56,8 +52,6 @@ jobs:
           submodules: true
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@dd05243424bd5c0e585e4b55eb2d7615cdd32f1f
-        with:
-          workspaces: starknet-foundry
       - uses: software-mansion/setup-scarb@v1.0.1
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
@@ -76,8 +70,6 @@ jobs:
         with:
           toolchain: stable
       - uses: Swatinem/rust-cache@dd05243424bd5c0e585e4b55eb2d7615cdd32f1f
-        with:
-          workspaces: starknet-foundry
       - uses: actions/setup-python@v4
         with:
           python-version: '3.9'
@@ -107,8 +99,6 @@ jobs:
         with:
           toolchain: stable
       - uses: Swatinem/rust-cache@dd05243424bd5c0e585e4b55eb2d7615cdd32f1f
-        with:
-          workspaces: starknet-foundry
       - name: Check forge formatting
         run: cargo fmt --check -p forge
       - name: Check cast formatting
@@ -131,6 +121,4 @@ jobs:
         with:
           toolchain: stable
       - uses: Swatinem/rust-cache@dd05243424bd5c0e585e4b55eb2d7615cdd32f1f
-        with:
-          workspaces: starknet-foundry
       - run: cargo lint
