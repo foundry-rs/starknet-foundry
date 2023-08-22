@@ -4,6 +4,7 @@ use camino::Utf8PathBuf;
 use indoc::formatdoc;
 use snapbox::cmd::{cargo_bin, Command as SnapboxCommand};
 use std::env;
+use std::process::Command;
 use std::str::FromStr;
 
 pub(crate) fn runner() -> SnapboxCommand {
@@ -59,7 +60,7 @@ pub(crate) fn gen_current_branch() -> String {
     match env::var(name) {
         Ok(v) => v,
         Err(_e) => {
-            let output = SnapboxCommand::new("git")
+            let output = Command::new("git")
                 .args(["rev-parse", "--abbrev-ref", "HEAD"])
                 .output()
                 .unwrap();
