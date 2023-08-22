@@ -29,7 +29,8 @@ impl CheatnetState {
         let account_address = ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS));
         let entry_point_selector = selector_from_name("deploy_contract");
         let salt = self.get_salt();
-        let contract_address = self.precalculate_address(class_hash_to_felt(class_hash), calldata);
+        let contract_address =
+            self.precalculate_address(class_hash_to_felt(*class_hash.clone()), calldata);
         let class_hash = ClassHash(StarkFelt::new(class_hash.to_be_bytes()).unwrap());
         self.increment_deploy_salt_base();
 
