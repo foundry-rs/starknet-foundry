@@ -362,9 +362,9 @@ impl CairoHintProcessor<'_> {
                     Err(CheatcodeError::Unrecoverable(err)) => Err(err),
                 }
             }
-            "l1_handler_invoke" => {
+            "l1_handler_execute" => {
                 let contract_address = contract_address_from_felt252(&inputs[0])?;
-                let selector = inputs[1].clone();
+                let function_name = inputs[1].clone();
                 let from_address = inputs[2].clone();
                 let fee = inputs[3].clone();
                 let payload_length: usize = inputs[4]
@@ -374,9 +374,9 @@ impl CairoHintProcessor<'_> {
 
                 let payload = Vec::from(&inputs[5..inputs.len()]);
 
-                match self.cheatnet_state.l1_handler_invoke(
+                match self.cheatnet_state.l1_handler_execute(
                     contract_address,
-                    &selector,
+                    &function_name,
                     &from_address,
                     &fee,
                     &payload,

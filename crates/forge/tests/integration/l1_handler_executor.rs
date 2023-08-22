@@ -7,7 +7,7 @@ use indoc::indoc;
 use std::path::Path;
 
 #[test]
-fn l1_handler_invoker() {
+fn l1_handler_executor() {
     let test = test_case!(
         indoc!(
             r#"
@@ -30,10 +30,10 @@ fn l1_handler_invoker() {
             use snforge_std::{declare, ContractClassTrait, L1Handler, L1HandlerTrait};
 
             #[test]
-            fn test_l1_handler_invoke() {
+            fn test_l1_handler_execute() {
                 let calldata = array![0x123];
 
-                let contract = declare('l1_handler_invoker');
+                let contract = declare('l1_handler_executor');
                 let contract_address = contract.deploy(@calldata).unwrap();
 
                 let l1_data = L1Data {
@@ -44,12 +44,15 @@ fn l1_handler_invoker() {
                 let mut payload: Array<felt252> = ArrayTrait::new();
                 l1_data.serialize(ref payload);
 
-                let l1_handler = L1Handler {
+                let mut l1_handler = L1HandlerTrait::new(
                     contract_address,
-                    selector_name: 'process_l1_message'
-                };
+                    function_name: 'process_l1_message'
+                );
 
-                l1_handler.invoke(0x123, 1, payload.span());
+                l1_handler.from_address = 0x123;
+                l1_handler.payload = payload.span();
+
+                l1_handler.execute();
 
                 let dispatcher = IBalanceTokenDispatcher { contract_address };
                 assert(dispatcher.get_balance() == 42, 'Invalid balance');
@@ -58,8 +61,8 @@ fn l1_handler_invoker() {
         "#
         ),
         Contract::from_code_path(
-            "l1_handler_invoker".to_string(),
-            Path::new("tests/data/contracts/l1_handler_invoke_checker.cairo"),
+            "l1_handler_executor".to_string(),
+            Path::new("tests/data/contracts/l1_handler_execute_checker.cairo"),
         )
         .unwrap()
     );

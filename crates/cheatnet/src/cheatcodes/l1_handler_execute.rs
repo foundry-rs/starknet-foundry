@@ -21,10 +21,10 @@ use super::{CheatcodeError, EnhancedHintError};
 use crate::panic_data::try_extract_panic_data;
 
 impl CheatnetState {
-    pub fn l1_handler_invoke(
+    pub fn l1_handler_execute(
         &mut self,
         contract_address: ContractAddress,
-        l1_handler_fn_name: &Felt252,
+        function_name: &Felt252,
         from_address: &Felt252,
         paid_fee_on_l1: &Felt252,
         payload: &[Felt252],
@@ -33,7 +33,7 @@ impl CheatnetState {
 
         let block_context = build_block_context();
 
-        let selector = Felt252::try_from(starknet_keccak(&l1_handler_fn_name.to_bytes_be()))
+        let selector = Felt252::try_from(starknet_keccak(&function_name.to_bytes_be()))
             .context("Computing selector from short string failed")
             .map_err::<EnhancedHintError, _>(From::from)?;
 
