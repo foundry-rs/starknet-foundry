@@ -9,8 +9,27 @@ permissions:
   contents: write
 
 jobs:
+  verify-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Get version from Cargo.toml
+        id: lookupVersion
+        uses: mikefarah/yq@master
+        with:
+          cmd: yq -oy '"v" + .workspace.package.version' 'Cargo.toml'
+
+      - name: Version check
+        if: steps.lookupVersion.outputs.result != github.ref_name
+        uses: actions/github-script@v3
+        with:
+          script: |
+            core.setFailed('Version in Cargo.toml does not match the tag')
+
   build-binaries:
     name: Build ${{ matrix.target }}
+    needs: verify-version
     runs-on: ${{ matrix.os }}
     continue-on-error: true
 
