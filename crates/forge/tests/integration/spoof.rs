@@ -5,7 +5,7 @@ use indoc::indoc;
 use std::path::Path;
 
 #[test]
-fn start_spoof_single_attribute() {
+fn start_and_stop_spoof_single_attribute() {
     let test = test_case!(
         indoc!(
             r#"
@@ -15,7 +15,7 @@ fn start_spoof_single_attribute() {
             use serde::Serde;
             use starknet::ContractAddress;
             use array::SpanTrait;
-            use snforge_std::{ declare, ContractClassTrait, start_spoof, TxInfoMock, TxInfoMockTrait };
+            use snforge_std::{ declare, ContractClassTrait, start_spoof, stop_spoof, TxInfoMock, TxInfoMockTrait };
 
             #[starknet::interface]
             trait ISpoofChecker<TContractState> {
@@ -40,6 +40,7 @@ fn start_spoof_single_attribute() {
                 let max_fee_before_mock = dispatcher.get_max_fee();
                 let chain_id_before_mock = dispatcher.get_chain_id();
                 let signature_before_mock = dispatcher.get_signature();
+                let tx_hash_before_mock = dispatcher.get_tx_hash();
 
                 let mut tx_info_mock = TxInfoMockTrait::default();
                 tx_info_mock.transaction_hash = Option::Some(421);
@@ -63,6 +64,11 @@ fn start_spoof_single_attribute() {
                 assert(chain_id == chain_id_before_mock, 'Invalid chain_id');
                 let signature = dispatcher.get_signature();
                 assert(signature.len() == signature_before_mock.len(), 'Invalid signature');
+
+                stop_spoof(contract_address);
+
+                let transaction_hash = dispatcher.get_tx_hash();
+                assert(transaction_hash == tx_hash_before_mock, 'Invalid tx hash');
             }
         "#
         ),
