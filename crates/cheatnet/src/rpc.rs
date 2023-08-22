@@ -139,7 +139,7 @@ pub fn call_contract(
 
     if let Ok(call_info) = exec_result {
         if !cheatcode_state.spies.is_empty() {
-           collect_emitted_events(&call_info, cheatcode_state);
+            collect_emitted_events(&call_info, cheatcode_state);
         }
 
         let raw_return_data = &call_info.execution.retdata.0;
