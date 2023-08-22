@@ -12,7 +12,7 @@ jobs:
   test-forge-unit-and-integration:
     name: Test Forge / Unit and Integration Tests
     needs: changes
-    if: ${{ needs.changes.outputs.forge == 'true' }}
+    if: ${{ needs.changes.outputs.forge == 'true' || needs.changes.outputs.global == 'true' }}
     env:
       SCARB_VERSION: 0.6.0
     runs-on: ubuntu-latest
@@ -33,7 +33,7 @@ jobs:
   test-forge-e2e:
     name: Test Forge / E2E Tests
     needs: changes
-    if: ${{ needs.changes.outputs.forge == 'true' }}
+    if: ${{ needs.changes.outputs.forge == 'true' || needs.changes.outputs.global == 'true' }}
     env:
       SCARB_VERSION: 0.6.0
     runs-on: ubuntu-latest
@@ -52,6 +52,8 @@ jobs:
 
   test-cheatnet:
     name: Test Cheatnet
+    needs: changes
+    if: ${{ needs.changes.outputs.cheatnet == 'true' || needs.changes.outputs.global == 'true' }}    
     env:
       SCARB_VERSION: 0.6.0
     runs-on: ubuntu-latest
@@ -70,6 +72,8 @@ jobs:
 
   test-cast:
     name: Test Cast
+    needs: changes
+    if: ${{ needs.changes.outputs.cast == 'true' || needs.changes.outputs.global == 'true' }}    
     runs-on: ubuntu-latest
     env:
       DEVNET_VERSION: 0.5.5
@@ -159,3 +163,5 @@ jobs:
             - 'crates/cheatnet/**'
           forge:
             - 'crates/forge/**'
+          global:
+            - '!(crates/cast/**|crates/cheatnet/**|crates/forge/**)'
