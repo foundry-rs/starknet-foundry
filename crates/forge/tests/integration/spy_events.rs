@@ -315,11 +315,7 @@ fn spy_on_multiple_contracts() {
     let result = run_test_case(&test);
 
     assert_failed!(result);
-    assert_case_output_contains!(
-        result,
-        "test_spy_on_multiple_contracts",
-        "FirstEvent"
-    );
+    assert_case_output_contains!(result, "test_spy_on_multiple_contracts", "FirstEvent");
     assert_case_output_contains!(
         result,
         "test_spy_on_multiple_contracts",
@@ -373,16 +369,8 @@ fn event_emitted_wrong_data_asserted() {
     let result = run_test_case(&test);
 
     assert_failed!(result);
-    assert_case_output_contains!(
-        result,
-        "test_assert_wrong_data",
-        "FirstEvent"
-    );
-    assert_case_output_contains!(
-        result,
-        "test_assert_wrong_data",
-        "event was emitted from"
-    );
+    assert_case_output_contains!(result, "test_assert_wrong_data", "FirstEvent");
+    assert_case_output_contains!(result, "test_assert_wrong_data", "event was emitted from");
     assert_case_output_contains!(
         result,
         "test_assert_wrong_data",
