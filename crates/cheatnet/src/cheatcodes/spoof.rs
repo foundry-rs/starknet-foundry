@@ -13,27 +13,7 @@ pub struct TxInfoMock {
 }
 
 impl CheatnetState {
-    pub fn start_spoof(
-        &mut self,
-        contract_address: ContractAddress,
-        version: Option<Felt252>,
-        account_contract_address: Option<Felt252>,
-        max_fee: Option<Felt252>,
-        signature: Option<Vec<Felt252>>,
-        transaction_hash: Option<Felt252>,
-        chain_id: Option<Felt252>,
-        nonce: Option<Felt252>,
-    ) {
-        let tx_info = TxInfoMock {
-            version,
-            account_contract_address,
-            max_fee,
-            signature,
-            transaction_hash,
-            chain_id,
-            nonce,
-        };
-
+    pub fn start_spoof(&mut self, contract_address: ContractAddress, tx_info: TxInfoMock) {
         self.cheatcode_state
             .spoofed_contracts
             .insert(contract_address, tx_info);
