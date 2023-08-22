@@ -152,6 +152,7 @@ jobs:
       cast: ${{ steps.filter.outputs.cast }}
       cheatnet: ${{ steps.filter.outputs.cheatnet }}
       forge: ${{ steps.filter.outputs.forge }}
+      global: ${{ steps.filter.outputs.global }}
     steps:
     - uses: dorny/paths-filter@v2
       id: filter
