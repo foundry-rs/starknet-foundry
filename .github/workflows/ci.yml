@@ -18,7 +18,7 @@ jobs:
         with:
           submodules: true
       - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@dd05243424bd5c0e585e4b55eb2d7615cdd32f1f
+      - uses: Swatinem/rust-cache@v2
       - uses: software-mansion/setup-scarb@v1.0.1
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
@@ -35,7 +35,7 @@ jobs:
         with:
           submodules: true
       - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@dd05243424bd5c0e585e4b55eb2d7615cdd32f1f
+      - uses: Swatinem/rust-cache@v2
       - uses: software-mansion/setup-scarb@v1.0.1
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
@@ -51,7 +51,7 @@ jobs:
         with:
           submodules: true
       - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@dd05243424bd5c0e585e4b55eb2d7615cdd32f1f
+      - uses: Swatinem/rust-cache@v2
       - uses: software-mansion/setup-scarb@v1.0.1
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
@@ -69,7 +69,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@0e66bd3e6b38ec0ad5312288c83e47c143e6b09e
         with:
           toolchain: stable
-      - uses: Swatinem/rust-cache@dd05243424bd5c0e585e4b55eb2d7615cdd32f1f
+      - uses: Swatinem/rust-cache@v2
       - uses: actions/setup-python@v4
         with:
           python-version: '3.9'
@@ -98,7 +98,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@0e66bd3e6b38ec0ad5312288c83e47c143e6b09e
         with:
           toolchain: stable
-      - uses: Swatinem/rust-cache@dd05243424bd5c0e585e4b55eb2d7615cdd32f1f
+      - uses: Swatinem/rust-cache@v2
       - name: Check forge formatting
         run: cargo fmt --check -p forge
       - name: Check cast formatting
@@ -120,5 +120,5 @@ jobs:
       - uses: dtolnay/rust-toolchain@0e66bd3e6b38ec0ad5312288c83e47c143e6b09e
         with:
           toolchain: stable
-      - uses: Swatinem/rust-cache@dd05243424bd5c0e585e4b55eb2d7615cdd32f1f
+      - uses: Swatinem/rust-cache@v2
       - run: cargo lint
