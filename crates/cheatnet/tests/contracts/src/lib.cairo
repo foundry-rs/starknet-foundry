@@ -24,4 +24,3 @@ mod mock_checker_proxy;
 mod get_class_hash_checker;
 
 mod spy_events_checker;
-mod spy_events_checker_proxy;
