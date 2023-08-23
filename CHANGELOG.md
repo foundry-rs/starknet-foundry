@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - support for `keccak_syscall` syscall. It can be used directly in cairo tests
+- `l1_handler_execute` cheatcode
 
 ### Cast
 
@@ -40,7 +41,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `get_class_hash` cheatcode
 - `mock_call` cheatcode
 - `precalculate_address` cheatcode
-- `l1_handler_execute` cheatcode
 
 #### Changed
 
