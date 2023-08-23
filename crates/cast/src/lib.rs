@@ -53,6 +53,10 @@ pub fn get_provider(url: &str) -> Result<JsonRpcClient<HttpTransport>> {
     Ok(provider)
 }
 
+pub async fn get_chain_id(provider: &JsonRpcClient<HttpTransport>) -> Result<FieldElement> {
+    provider.chain_id().await.context("Couldn't fetch chain_id")
+}
+
 fn get_account_info(name: &str, chain_id: FieldElement, path: &Utf8PathBuf) -> Result<Account> {
     raise_if_empty(name, "Account name")?;
     let accounts: HashMap<String, HashMap<String, Account>> =
