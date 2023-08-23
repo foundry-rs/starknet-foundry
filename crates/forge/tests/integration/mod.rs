@@ -9,6 +9,5 @@ mod precalculate_address;
 mod pure_cairo;
 mod roll;
 mod should_panic;
-mod starknet;
 mod syscalls;
 mod warp;
