@@ -2,9 +2,8 @@ use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use cast::helpers::constants::OZ_CLASS_HASH;
 use cast::helpers::response_structs::AccountCreateResponse;
-use cast::helpers::scarb_utils::get_scarb_manifest;
-use cast::helpers::scarb_utils::{get_package_tool_sncast, CastConfig};
-use cast::{extract_or_generate_salt, get_network, parse_number};
+use cast::helpers::scarb_utils::{get_package_tool_sncast, get_scarb_manifest, CastConfig};
+use cast::{chain_id_to_network_name, decode_chain_id, extract_or_generate_salt, parse_number};
 use clap::Args;
 use serde_json::json;
 use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
@@ -42,6 +41,7 @@ pub async fn create(
     config: &CastConfig,
     provider: &JsonRpcClient<HttpTransport>,
     path_to_scarb_toml: Option<Utf8PathBuf>,
+    chain_id: FieldElement,
     maybe_salt: Option<FieldElement>,
     add_profile: bool,
     class_hash: Option<String>,
@@ -66,14 +66,25 @@ pub async fn create(
         let signer = LocalWallet::from_signing_key(private_key.clone());
         let factory = OpenZeppelinAccountFactory::new(
             parse_number(oz_class_hash)?,
-            get_network(&config.network)?.get_chain_id(),
+            chain_id,
             signer,
             provider,
         )
         .await?;
         let deployment = factory.deploy(salt);
 
-        deployment.estimate_fee().await?.overall_fee
+        let fee_estimate = deployment.estimate_fee().await;
+
+        if let Err(err) = &fee_estimate {
+            if err
+                .to_string()
+                .contains("StarknetErrorCode.UNDECLARED_CLASS")
+            {
+                bail!("The class {oz_class_hash} is undeclared, try using --class-hash with a class hash that is already declared");
+            }
+        }
+
+        fee_estimate?.overall_fee
     };
 
     if !config.accounts_file.exists() {
@@ -85,15 +96,17 @@ pub async fn create(
     let mut items: serde_json::Value = serde_json::from_str(&contents)
         .map_err(|_| anyhow!("Failed to parse accounts file at {}", config.accounts_file))?;
 
-    let network_value = get_network(&config.network)?.get_value();
+    let network_name = chain_id_to_network_name(chain_id);
 
-    if !items[network_value][&config.account].is_null() {
+    if !items[&network_name][&config.account].is_null() {
         return Err(anyhow!(
-            "Account with provided name already exists in this network"
+            "Account with name {} already exists in network with chain_id {}",
+            &config.account,
+            decode_chain_id(chain_id)
         ));
     }
 
-    items[network_value][&config.account] = json!({
+    items[&network_name][&config.account] = json!({
         "private_key": format!("{:#x}", private_key.secret_scalar()),
         "public_key": format!("{:#x}", public_key.scalar()),
         "address": format!("{address:#x}"),
@@ -169,7 +182,6 @@ pub fn add_created_profile_to_configuration(
         let mut tool_sncast = toml::value::Table::new();
         let mut new_profile = toml::value::Table::new();
 
-        new_profile.insert("network".to_string(), Value::String(config.network.clone()));
         new_profile.insert("url".to_string(), Value::String(config.rpc_url.clone()));
         new_profile.insert("account".to_string(), Value::String(config.account.clone()));
         new_profile.insert(
@@ -212,7 +224,6 @@ mod tests {
     fn test_add_created_profile_to_configuration_happy_case() {
         let config = CastConfig {
             rpc_url: String::from("http://some-url"),
-            network: String::from("some-net"),
             account: String::from("some-name"),
             accounts_file: "accounts".into(),
         };
@@ -223,7 +234,6 @@ mod tests {
         let contents = fs::read_to_string("Scarb.toml").expect("Unable to read Scarb.toml");
         assert!(contents.contains("[tool.sncast.some-name]"));
         assert!(contents.contains("account = \"some-name\""));
-        assert!(contents.contains("network = \"some-net\""));
         assert!(contents.contains("url = \"http://some-url\""));
         assert!(contents.contains("accounts-file = \"accounts\""));
     }
@@ -232,7 +242,6 @@ mod tests {
     fn test_add_created_profile_to_configuration_profile_already_exists() {
         let config = CastConfig {
             rpc_url: String::from("http://some-url"),
-            network: String::from("some-net"),
             account: String::from("myprofile"),
             accounts_file: DEFAULT_ACCOUNTS_FILE.into(),
         };

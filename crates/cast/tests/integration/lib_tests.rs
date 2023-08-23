@@ -1,49 +1,33 @@
-use crate::helpers::constants::{NETWORK, URL};
+use crate::helpers::constants::URL;
 use crate::helpers::fixtures::create_test_provider;
 
 use camino::Utf8PathBuf;
 use cast::{get_account, get_provider};
+use starknet::core::chain_id;
+use starknet::core::types::FieldElement;
 use std::fs;
 use url::ParseError;
 
 #[tokio::test]
 async fn test_get_provider() {
-    let provider = get_provider(URL, NETWORK);
-    assert!(provider.await.is_ok());
+    let provider = get_provider(URL);
+    assert!(provider.is_ok());
 }
 
 #[tokio::test]
 async fn test_get_provider_invalid_url() {
-    let provider = get_provider("what", NETWORK);
-    let err = provider.await.unwrap_err();
+    let provider = get_provider("what");
+    let err = provider.unwrap_err();
     assert!(err.is::<ParseError>());
 }
 
 #[tokio::test]
 async fn test_get_provider_empty_url() {
-    let provider = get_provider("", NETWORK);
-    let err = provider.await.unwrap_err();
+    let provider = get_provider("");
+    let err = provider.unwrap_err();
     assert!(err
         .to_string()
         .contains("RPC url not passed nor found in Scarb.toml"));
-}
-
-#[tokio::test]
-async fn test_get_provider_no_network() {
-    let provider = get_provider(URL, "");
-    let err = provider.await.unwrap_err();
-    assert!(err
-        .to_string()
-        .contains("Network not passed nor found in Scarb.toml"));
-}
-
-#[tokio::test]
-async fn test_get_provider_wrong_network() {
-    let provider = get_provider(URL, "mainnet");
-    let err = provider.await.unwrap_err();
-    assert!(err
-        .to_string()
-        .contains("Networks mismatch: requested network is different than provider network!"));
 }
 
 #[test]
@@ -53,7 +37,7 @@ fn test_get_account() {
         "user1",
         &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
         &provider,
-        NETWORK,
+        chain_id::TESTNET,
     );
 
     assert!(account.is_ok());
@@ -71,7 +55,7 @@ fn test_get_account_no_file() {
         "user1",
         &Utf8PathBuf::from("tests/data/accounts/nonexistentfile.json"),
         &provider,
-        NETWORK,
+        chain_id::TESTNET,
     );
     let err = account.unwrap_err();
     assert!(err.to_string().contains("No such file or directory"));
@@ -84,40 +68,26 @@ fn test_get_account_invalid_file() {
         "user1",
         &Utf8PathBuf::from("tests/data/accounts/invalid_format.json"),
         &provider,
-        NETWORK,
+        chain_id::TESTNET,
     );
     let err = account.unwrap_err();
     assert!(err.is::<serde_json::Error>());
 }
 
 #[test]
-fn test_get_account_wrong_network() {
+fn test_get_account_wrong_chain_id() {
     let provider = create_test_provider();
     let account = get_account(
         "user1",
         &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
         &provider,
-        "mainnet",
+        FieldElement::from_hex_be("0x435553544f4d5f434841494e5f4944")
+            .expect("Should convert from hex"),
     );
     let err = account.unwrap_err();
     assert!(err
         .to_string()
-        .contains("Account user1 not found under chain id alpha-mainnet"));
-}
-
-#[test]
-fn test_get_account_no_network() {
-    let provider = create_test_provider();
-    let account = get_account(
-        "user1",
-        &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
-        &provider,
-        "",
-    );
-    let err = account.unwrap_err();
-    assert!(err
-        .to_string()
-        .contains("Network not passed nor found in Scarb.toml"));
+        .contains("Account user1 not found under network CUSTOM_CHAIN_ID"));
 }
 
 #[test]
@@ -127,7 +97,7 @@ fn test_get_account_no_account() {
         "",
         &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
         &provider,
-        NETWORK,
+        chain_id::TESTNET,
     );
     let err = account.unwrap_err();
     assert!(err
@@ -142,12 +112,12 @@ fn test_get_account_no_user_for_network() {
         "user10",
         &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
         &provider,
-        NETWORK,
+        chain_id::TESTNET,
     );
     let err = account.unwrap_err();
     assert!(err
         .to_string()
-        .contains("Account user10 not found under chain id alpha-goerli"));
+        .contains("Account user10 not found under network alpha-goerli"));
 }
 
 #[test]
@@ -157,7 +127,7 @@ fn test_get_account_failed_to_convert_field_elements() {
         "with_wrong_private_key",
         &Utf8PathBuf::from("tests/data/accounts/faulty_accounts.json"),
         &provider,
-        NETWORK,
+        chain_id::TESTNET,
     );
     let err1 = account1.unwrap_err();
     assert!(err1
@@ -168,7 +138,7 @@ fn test_get_account_failed_to_convert_field_elements() {
         "with_wrong_address",
         &Utf8PathBuf::from("tests/data/accounts/faulty_accounts.json"),
         &provider,
-        NETWORK,
+        chain_id::TESTNET,
     );
     let err2 = account2.unwrap_err();
     assert!(err2

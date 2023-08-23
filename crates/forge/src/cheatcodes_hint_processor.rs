@@ -4,7 +4,6 @@ use std::path::PathBuf;
 
 use crate::scarb::StarknetContractArtifacts;
 use anyhow::{anyhow, Result};
-use blockifier::abi::abi_utils::selector_from_name;
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::execution_utils::{felt_to_stark_felt, stark_felt_to_felt};
 use cairo_felt::Felt252;
@@ -241,21 +240,20 @@ impl CairoHintProcessor<'_> {
                     inputs[0].clone().to_be_bytes(),
                 )?)?);
                 let function_name = inputs[1].clone();
-                let function_name = as_cairo_short_string(&function_name).unwrap_or_else(|| {
-                    panic!("Failed to convert {function_name:?} to Cairo short str")
-                });
-                let function_name = selector_from_name(function_name.as_str());
 
                 let ret_data_length = inputs[2]
                     .to_usize()
                     .expect("Missing ret_data len in inputs");
-                let mut ret_data = vec![];
-                for felt in inputs.iter().skip(3).take(ret_data_length) {
-                    ret_data.push(felt_to_stark_felt(&felt.clone()));
-                }
+
+                let ret_data = inputs
+                    .iter()
+                    .skip(3)
+                    .take(ret_data_length)
+                    .cloned()
+                    .collect::<Vec<_>>();
 
                 self.cheatnet_state
-                    .start_mock_call(contract_address, function_name, ret_data);
+                    .start_mock_call(contract_address, &function_name, &ret_data);
                 Ok(())
             }
             "stop_mock_call" => {
@@ -263,13 +261,9 @@ impl CairoHintProcessor<'_> {
                     inputs[0].clone().to_be_bytes(),
                 )?)?);
                 let function_name = inputs[1].clone();
-                let function_name = as_cairo_short_string(&function_name).unwrap_or_else(|| {
-                    panic!("Failed to convert {function_name:?} to Cairo short str")
-                });
-                let function_name = selector_from_name(function_name.as_str());
 
                 self.cheatnet_state
-                    .stop_mock_call(contract_address, function_name);
+                    .stop_mock_call(contract_address, &function_name);
                 Ok(())
             }
             "declare" => {
@@ -365,6 +359,33 @@ impl CairoHintProcessor<'_> {
                     Err(CheatcodeError::Unrecoverable(err)) => Err(err),
                 }
             }
+            "l1_handler_execute" => {
+                let contract_address = contract_address_from_felt252(&inputs[0])?;
+                let function_name = inputs[1].clone();
+                let from_address = inputs[2].clone();
+                let fee = inputs[3].clone();
+                let payload_length: usize = inputs[4]
+                    .clone()
+                    .to_usize()
+                    .expect("Payload length is expected to fit into usize type");
+
+                let payload = Vec::from(&inputs[5..inputs.len()]);
+
+                match self.cheatnet_state.l1_handler_execute(
+                    contract_address,
+                    &function_name,
+                    &from_address,
+                    &fee,
+                    &payload,
+                ) {
+                    Ok(()) => Ok(()),
+                    Err(CheatcodeError::Recoverable(panic_data)) => {
+                        write_cheatcode_panic(&mut buffer, &panic_data);
+                        Ok(())
+                    }
+                    Err(CheatcodeError::Unrecoverable(err)) => Err(err),
+                }
+            }
             "parse_txt" => {
                 let file_path = inputs[0].clone();
                 let parsed_content = file_operations::parse_txt(&file_path)?;
@@ -425,9 +446,9 @@ fn execute_syscall(
         &vm.get_integer(system_ptr).unwrap(),
     ))?;
 
-    return match selector {
+    match selector {
         DeprecatedSyscallSelector::CallContract => {
-            execute_call_contract(MemBuffer::new(vm, system_ptr), cheatnet_state);
+            execute_call_contract(MemBuffer::new(vm, system_ptr), cheatnet_state)?;
             Ok(())
         }
         DeprecatedSyscallSelector::Keccak => {
@@ -437,10 +458,13 @@ fn execute_syscall(
             "starknet syscalls (other than CallContract and Keccak) cannot be used in tests"
                 .to_string(),
         ))),
-    };
+    }
 }
 
-fn execute_call_contract(mut buffer: MemBuffer, cheatnet_state: &mut CheatnetState) {
+fn execute_call_contract(
+    mut buffer: MemBuffer,
+    cheatnet_state: &mut CheatnetState,
+) -> Result<(), HintError> {
     let _selector = buffer.next_felt252().unwrap();
     let gas_counter = buffer.next_usize().unwrap();
 
@@ -467,12 +491,14 @@ fn execute_call_contract(mut buffer: MemBuffer, cheatnet_state: &mut CheatnetSta
     let (result, exit_code) = match call_result {
         CallContractOutput::Success { ret_data } => (ret_data, 0),
         CallContractOutput::Panic { panic_data } => (panic_data, 1),
+        CallContractOutput::Error { msg } => return Err(HintError::CustomHint(Box::from(msg))),
     };
 
     buffer.write(gas_counter).unwrap();
     buffer.write(Felt252::from(exit_code)).unwrap();
 
     buffer.write_arr(result.iter()).unwrap();
+    Ok(())
 }
 
 fn print(inputs: Vec<Felt252>) {

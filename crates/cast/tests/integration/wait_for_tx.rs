@@ -1,12 +1,12 @@
 use crate::helpers::{
-    constants::{ACCOUNT, ACCOUNT_FILE_PATH, DECLARE_TRANSACTION_HASH, MAP_CLASS_HASH_V1, NETWORK},
+    constants::{ACCOUNT, ACCOUNT_FILE_PATH, DECLARE_TRANSACTION_HASH, MAP_CLASS_HASH_V1},
     fixtures::create_test_provider,
 };
 use camino::Utf8PathBuf;
 use cast::helpers::constants::DEFAULT_RETRIES;
 use cast::{get_account, handle_wait_for_tx, parse_number, wait_for_tx};
-use starknet::contract::ContractFactory;
 use starknet::core::types::FieldElement;
+use starknet::{contract::ContractFactory, core::chain_id};
 
 #[tokio::test]
 async fn test_happy_path() {
@@ -29,7 +29,7 @@ async fn test_rejected_transaction() {
         ACCOUNT,
         &Utf8PathBuf::from(ACCOUNT_FILE_PATH),
         &provider,
-        NETWORK,
+        chain_id::TESTNET,
     )
     .expect("Could not get the account");
 

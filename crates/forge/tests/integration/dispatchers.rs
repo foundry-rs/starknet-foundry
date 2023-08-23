@@ -1,6 +1,6 @@
 use crate::integration::common::runner::Contract;
 use crate::integration::common::running_tests::run_test_case;
-use crate::{assert_passed, test_case};
+use crate::{assert_case_output_contains, assert_failed, assert_passed, test_case};
 use indoc::indoc;
 use std::path::Path;
 use std::string::ToString;
@@ -516,4 +516,272 @@ fn proxy_dispatcher_panic() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
+}
+
+#[test]
+fn nonexistent_method_call() {
+    let test = test_case!(
+        indoc!(
+            r#"
+        use array::ArrayTrait;
+        use result::ResultTrait;
+        use option::OptionTrait;
+        use traits::TryInto;
+        use traits::Into;
+        use starknet::ContractAddress;
+        use starknet::Felt252TryIntoContractAddress;
+        use snforge_std::{ declare, ContractClassTrait };
+        
+
+        fn deploy_contract(name: felt252, constructor_calldata: @Array<felt252>) -> ContractAddress {
+            let contract = declare(name);
+            contract.deploy(constructor_calldata).unwrap()
+        }
+        
+        #[starknet::interface]
+        trait ICaller<T> {
+            fn invoke_nonexistent(ref self: T);
+        }
+        
+        #[test]
+        fn test_nonexistent_method_call() {
+            let contract_address = deploy_contract('Contract', @ArrayTrait::new());
+        
+            let caller_dispatcher = ICallerSafeDispatcher { contract_address };
+        
+            match caller_dispatcher.invoke_nonexistent() {
+                Result::Ok(_) => panic_with_felt252('should have panicked'),
+                Result::Err(x) => assert(*x.at(0) == 'panic_msg', 'wrong panic msg')
+            }
+        }
+    "#
+        ),
+        Contract::new(
+            "Contract",
+            indoc!(
+                r#"
+            #[starknet::contract]
+            mod Contract {
+                #[storage]
+                struct Storage {
+                }
+            }
+            "#
+            )
+        )
+    );
+
+    let result = run_test_case(&test);
+
+    assert_failed!(result);
+    assert_case_output_contains!(
+        result,
+        "test_nonexistent_method_call",
+        "Entry point selector 0x01fdb214e1495025fa4baf660d34f03c0d8b5037cf10311d2a3202a806aa9485 not found in contract 0x0727a198cf6adcce513eb543664d87f6cd04e3a74a7661416a2f9e7da305d9e2"
+    );
+}
+
+#[test]
+fn nonexistent_libcall_function() {
+    let test = test_case!(
+        indoc!(
+            r#"
+        use array::ArrayTrait;
+        use result::ResultTrait;
+        use option::OptionTrait;
+        use traits::TryInto;
+        use traits::Into;
+        use starknet::ContractAddress;
+        use starknet::Felt252TryIntoContractAddress;
+        use starknet::ClassHash;
+        use snforge_std::{ declare, ContractClassTrait };
+        
+        fn deploy_contract(name: felt252) -> ContractAddress {
+            let contract = declare(name);
+            contract.deploy(@ArrayTrait::new()).unwrap()
+        }
+        
+        #[starknet::interface]
+        trait IContract<T> {
+            fn invoke_nonexistent_libcall_from_contract(ref self: T, class_hash: ClassHash);
+        }
+
+        #[test]
+        fn test_nonexistent_libcall() {
+            let class = declare('Contract');
+            let contract_address = deploy_contract('LibCaller');
+            
+            let dispatcher = IContractDispatcher { contract_address };
+            dispatcher.invoke_nonexistent_libcall_from_contract(class.class_hash);
+        }
+        "#
+        ),
+        Contract::new(
+            "LibCaller",
+            indoc!(
+                r#"
+                #[starknet::contract]
+                mod Contract {
+                    use starknet::ClassHash;
+                    use result::ResultTrait;
+                    use array::ArrayTrait;
+                    
+                    #[storage]
+                    struct Storage {}
+                    
+                    #[starknet::interface]
+                    trait ICaller<T> {
+                        fn invoke_nonexistent(ref self: T);
+                    }
+                    
+                    #[external(v0)]
+                    fn invoke_nonexistent_libcall_from_contract(ref self: ContractState, class_hash: ClassHash) {
+                        let lib_dispatcher = ICallerSafeLibraryDispatcher { class_hash };
+                        
+                        match lib_dispatcher.invoke_nonexistent() {
+                            Result::Ok(_) => panic_with_felt252('should have panicked'),
+                            Result::Err(x) => assert(*x.at(0) == 'panic_msg', 'wrong panic msg')
+                        }
+                    }
+                }
+                "#
+            )
+        ),
+        Contract::new(
+            "Contract",
+            indoc!(
+                r#"
+            #[starknet::contract]
+            mod Contract {
+                #[storage]
+                struct Storage {
+                }
+            }
+            "#
+            )
+        )
+    );
+
+    let result = run_test_case(&test);
+
+    assert_failed!(result);
+    assert_case_output_contains!(
+        result,
+        "test_nonexistent_libcall",
+        "Entry point EntryPointSelector(StarkFelt(\"0x01fdb214e1495025fa4baf660d34f03c0d8b5037cf10311d2a3202a806aa9485\")) not found in contract"
+    );
+}
+
+#[test]
+fn undeclared_class_call() {
+    let test = test_case!(indoc!(
+        r#"
+        use starknet::ContractAddress;
+        use traits::TryInto;
+        use option::OptionTrait;
+        
+        #[starknet::interface]
+        trait IContract<T> {
+            fn invoke_nonexistent(ref self: T);
+        }
+
+        #[test]
+        fn test_undeclared_call() {
+            let dispatcher = IContractDispatcher { contract_address: 5.try_into().unwrap() };
+            dispatcher.invoke_nonexistent();
+        }
+        "#
+    ));
+
+    let result = run_test_case(&test);
+
+    assert_failed!(result);
+    assert_case_output_contains!(
+        result,
+        "test_undeclared_call",
+        "Contract not deployed at address: 0x0000000000000000000000000000000000000000000000000000000000000005"
+    );
+}
+
+#[test]
+fn nonexistent_class_libcall() {
+    let test = test_case!(
+        indoc!(
+            r#"
+        use array::ArrayTrait;
+        use result::ResultTrait;
+        use option::OptionTrait;
+        use starknet::ContractAddress;
+        use starknet::ClassHash;
+        use snforge_std::{ declare, ContractClassTrait };
+        
+        fn deploy_contract(name: felt252) -> ContractAddress {
+            let contract = declare(name);
+            contract.deploy(@ArrayTrait::new()).unwrap()
+        }
+        
+        #[starknet::interface]
+        trait IContract<T> {
+            fn invoke_nonexistent_libcall_from_contract(ref self: T);
+        }
+
+        #[test]
+        fn test_nonexistent_libcall() {
+            let contract_address = deploy_contract('LibCaller');
+            let dispatcher = IContractDispatcher { contract_address };
+            dispatcher.invoke_nonexistent_libcall_from_contract();
+        }
+        "#
+        ),
+        Contract::new(
+            "LibCaller",
+            indoc!(
+                r#"
+                #[starknet::contract]
+                mod Contract {
+                    use starknet::class_hash::class_hash_try_from_felt252;
+                    use starknet::ClassHash;
+                    use result::ResultTrait;
+                    use array::ArrayTrait;
+                    use traits::TryInto;
+                    use option::OptionTrait;
+                    
+                    #[storage]
+                    struct Storage {}
+                    
+                    #[starknet::interface]
+                    trait ICaller<T> {
+                        fn invoke_nonexistent(ref self: T);
+                    }
+                    
+                    #[external(v0)]
+                    fn invoke_nonexistent_libcall_from_contract(ref self: ContractState) {
+                        let target_class_hash: ClassHash = class_hash_try_from_felt252(5_felt252).unwrap();
+                        let lib_dispatcher = ICallerSafeLibraryDispatcher { class_hash: target_class_hash  };
+                        lib_dispatcher.invoke_nonexistent();
+                    }
+                }
+                "#
+            )
+        ),
+        Contract::new(
+            "Contract",
+            indoc!(
+                r#"
+            #[starknet::contract]
+            mod Contract {
+                #[storage]
+                struct Storage {
+                }
+            }
+            "#
+            )
+        )
+    );
+
+    let result = run_test_case(&test);
+
+    assert_failed!(result);
+    assert_case_output_contains!(result, "test_nonexistent_libcall", "Class with hash");
+    assert_case_output_contains!(result, "test_nonexistent_libcall", "is not declared.");
 }

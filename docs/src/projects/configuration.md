@@ -21,7 +21,7 @@ Forge automatically looks for `Scarb.toml` in the directory you are running the 
 ### Defining Profiles in `Scarb.toml`
 
 To be able to work with the network, you need to supply cast with a few parameters —
-namely the network name, rpc node url and an account name that should be used to interact with it.
+namely the rpc node url and an account name that should be used to interact with it.
 This can be done
 by either supplying cast with those parameters directly [see more detailed CLI description,](../appendix/cast.md)
 or you can put them into `Scarb.toml` file:
@@ -31,7 +31,6 @@ or you can put them into `Scarb.toml` file:
 [tool.sncast.myprofile]
 account = "user"
 accounts-file = "~/my_accounts.json"
-network = "testnet"
 url = "http://127.0.0.1:5050/rpc"
 (...)
 ```
@@ -72,7 +71,6 @@ If you don't need multiple profiles, you can define the parameters without speci
 [tool.sncast]
 account = "user123"
 accounts-file = "~/my_accounts.json"
-network = "testnet"
 url = "http://127.0.0.1:5050/rpc"
 (...)
 ```
