@@ -358,6 +358,33 @@ impl CairoHintProcessor<'_> {
                     Err(CheatcodeError::Unrecoverable(err)) => Err(err),
                 }
             }
+            "l1_handler_execute" => {
+                let contract_address = contract_address_from_felt252(&inputs[0])?;
+                let function_name = inputs[1].clone();
+                let from_address = inputs[2].clone();
+                let fee = inputs[3].clone();
+                let payload_length: usize = inputs[4]
+                    .clone()
+                    .to_usize()
+                    .expect("Payload length is expected to fit into usize type");
+
+                let payload = Vec::from(&inputs[5..inputs.len()]);
+
+                match self.cheatnet_state.l1_handler_execute(
+                    contract_address,
+                    &function_name,
+                    &from_address,
+                    &fee,
+                    &payload,
+                ) {
+                    Ok(()) => Ok(()),
+                    Err(CheatcodeError::Recoverable(panic_data)) => {
+                        write_cheatcode_panic(&mut buffer, &panic_data);
+                        Ok(())
+                    }
+                    Err(CheatcodeError::Unrecoverable(err)) => Err(err),
+                }
+            }
             "parse_txt" => {
                 let file_path = inputs[0].clone();
                 let parsed_content = file_operations::parse_txt(&file_path)?;
