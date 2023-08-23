@@ -22,7 +22,7 @@ jobs:
 
       - name: Version check
         if: steps.lookupVersion.outputs.result != github.ref_name
-        run: exit 1
+        run: echo "Project version in Cargo.toml does not match the tag" && exit 1
 
   build-binaries:
     name: Build ${{ matrix.target }}
