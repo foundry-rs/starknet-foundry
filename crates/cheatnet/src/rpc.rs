@@ -191,13 +191,14 @@ fn collect_emitted_events_from_spied_contracts(
 
         for spy_on in &mut cheatcode_state.spies {
             if spy_on.does_spy(code_address) {
-                all_events.extend(
-                    current_call
-                        .execution
-                        .events
-                        .iter()
-                        .map(|event| (code_address, event)),
-                );
+                let mut emitted_events: Vec<(ContractAddress, &OrderedEvent)> = current_call
+                    .execution
+                    .events
+                    .iter()
+                    .map(|event| (code_address, event))
+                    .collect();
+                emitted_events.sort_by(|(_, event1), (_, event2)| event1.order.cmp(&event2.order));
+                all_events.extend(emitted_events);
                 break;
             }
         }
@@ -211,6 +212,8 @@ fn collect_emitted_events_from_spied_contracts(
         );
     }
 
+    // creates cheatcodes::spy_events::Event from (ContractAddress, blockifier::src::execution::entry_point::OrderedEvent)
+    // event name is removed from the keys (it is located under the first index)
     all_events
         .iter()
         .map(|(address, ordered_event)| Event {
