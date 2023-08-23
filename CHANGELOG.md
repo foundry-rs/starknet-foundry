@@ -18,14 +18,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- Support for custom networks
-	- accounts created on custom networks are saved in `accounts-file` under network's chain_id
+- Support for custom networks - accounts created on custom networks are saved in `accounts-file` under network's
+  chain_id
 - `accounts-file` field in Scarb.toml profile
 
 #### Removed
 
-- `--network` option together with the `network` field in Scarb.toml profile
-  - previously used as a validation factor; now networks are identified by their chain_id
+- `--network` option together with the `network` field in Scarb.toml profile — previously used as a validation factor;
+  now networks are identified by their chain_id
 
 ## [0.4.0] - 2023-08-17
 
@@ -78,7 +78,7 @@ snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry", tag = "v
 
 #### Added
 
-- Added `--class-hash` flag to account create/deploy, allowing for custom openzeppelin account contract class hash 
+- Added `--class-hash` flag to account create/deploy, allowing for custom openzeppelin account contract class hash
 
 ## [0.3.0] - 2023-08-02
 
