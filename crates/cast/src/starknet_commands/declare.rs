@@ -60,9 +60,10 @@ pub async fn declare(
     wait: bool,
 ) -> Result<DeclareResponse> {
     let contract_name: String = contract_name.to_string();
-    let manifest_path = path_to_scarb_toml.clone().unwrap_or_else(|| {
-        get_scarb_manifest().expect("Failed to obtain manifest path from scarb")
-    });
+    let manifest_path = match path_to_scarb_toml.clone() {
+        Some(path) => path,
+        None => get_scarb_manifest().context("Failed to obtain manifest path from scarb")?,
+    };
     which::which("scarb")
         .context("Cannot find `scarb` binary in PATH. Make sure you have Scarb installed https://github.com/software-mansion/scarb")?;
     let command_result = Command::new("scarb")
@@ -95,17 +96,11 @@ pub async fn declare(
     let compiled_directory = metadata
         .target_dir
         .map(|path| path.join("release"))
-        .ok_or_else(|| anyhow!("Failed to obtain path to compiled contracts"))?;
+        .ok_or(anyhow!("Failed to obtain path to compiled contracts"))?;
 
-    let mut paths = match compiled_directory.read_dir() {
-        Ok(paths) => paths,
-        Err(err) => {
-            return Err(anyhow!(
-                "Failed to read ./target/release, scarb build probably failed: {}",
-                err
-            ))
-        }
-    };
+    let mut paths = compiled_directory
+        .read_dir()
+        .context("Failed to read ./target/release, scarb build probably failed")?;
 
     let starknet_artifacts = paths
         .find_map(|path| {
@@ -116,15 +111,12 @@ pub async fn declare(
         })
         .ok_or(anyhow!("Failed to find starknet_artifacts.json file"))?;
 
-    let starknet_artifacts = match std::fs::read_to_string(starknet_artifacts) {
-        Ok(content) => content,
-        Err(err) => {
-            return Err(anyhow!(
-                "Failed to read starknet_artifacts.json contents: {}",
-                err
-            ))
-        }
-    };
+    let starknet_artifacts = std::fs::read_to_string(&starknet_artifacts).with_context(|| {
+        format!(
+            "Failed to read {} contents",
+            starknet_artifacts.into_os_string().into_string().unwrap()
+        )
+    })?;
 
     let starknet_artifacts: ScarbStarknetArtifacts =
         serde_json::from_str(starknet_artifacts.as_str())
@@ -139,13 +131,7 @@ pub async fn declare(
             }
             None
         })
-        .ok_or_else(|| -> anyhow::Result<Utf8PathBuf> {
-            anyhow::bail!("Failed to find contract {contract_name} in starknet_artifacts.json")
-        });
-    let sierra_contract_path = &compiled_directory
-        .join(sierra_path
-            .expect("Cannot find sierra artifact file - please make sure sierra is set to 'true' under your [[target.starknet-contract]] field in Scarb.toml")
-        );
+        .ok_or(anyhow!("Cannot find sierra artifact {contract_name} in starknet_artifacts.json - please make sure sierra is set to 'true' under your [[target.starknet-contract]] field in Scarb.toml"))?;
 
     let casm_path = starknet_artifacts
         .contracts
@@ -156,13 +142,10 @@ pub async fn declare(
             }
             None
         })
-        .ok_or_else(|| -> anyhow::Result<Utf8PathBuf> {
-            anyhow::bail!("Failed to find contract {contract_name} in starknet_artifacts.json")
-        });
-    let casm_contract_path = &compiled_directory
-        .join(casm_path
-            .expect("Cannot find casm artifact file - please make sure casm is set to 'true' under your [[target.starknet-contract]] field in Scarb.toml")
-        );
+        .ok_or(anyhow!("Cannot find casm artifact {contract_name} in starknet_artifacts.json - please make sure casm is set to 'true' under your [[target.starknet-contract]] field in Scarb.toml"))?;
+
+    let sierra_contract_path = &compiled_directory.join(sierra_path);
+    let casm_contract_path = &compiled_directory.join(casm_path);
 
     let contract_definition: SierraClass = {
         let file_contents = std::fs::read(sierra_contract_path.clone())

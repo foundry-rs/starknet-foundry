@@ -66,6 +66,17 @@ pub fn get_scarb_manifest() -> Result<Utf8PathBuf> {
     Ok(path)
 }
 
+pub fn get_scarb_metadata(manifest_path: &Utf8PathBuf) -> Result<scarb_metadata::Metadata> {
+    scarb_metadata::MetadataCommand::new()
+        .inherit_stderr()
+        .manifest_path(manifest_path)
+        .no_deps()
+        .exec()
+        .context(
+            "Failed to read Scarb.toml manifest file, not found in current nor parent directories",
+        )
+}
+
 pub fn parse_scarb_config(
     profile: &Option<String>,
     path: &Option<Utf8PathBuf>,
@@ -76,9 +87,10 @@ pub fn parse_scarb_config(
         }
     }
 
-    let manifest_path = path.clone().unwrap_or_else(|| {
-        get_scarb_manifest().expect("Failed to obtain manifest path from scarb")
-    });
+    let manifest_path = match path.clone() {
+        Some(path) => path,
+        None => get_scarb_manifest().context("Failed to obtain manifest path from scarb")?,
+    };
 
     if !manifest_path.exists() {
         return Ok(CastConfig::default());
