@@ -3,7 +3,7 @@ use cairo_felt::Felt252;
 use cairo_vm::hint_processor::hint_processor_utils::felt_to_usize;
 use starknet_api::core::ContractAddress;
 
-/// Represents emitted event. It is used in the `CheatnetState` to keep track of events
+/// Represents an emitted event. It is used in the `CheatnetState` to keep track of events
 /// emitted in the `cheatnet::src::rpc::call_contract`
 #[derive(Clone)]
 pub struct Event {
