@@ -5,7 +5,7 @@ use starknet_api::core::ContractAddress;
 
 /// Represents an emitted event. It is used in the `CheatnetState` to keep track of events
 /// emitted in the `cheatnet::src::rpc::call_contract`
-#[derive(Clone)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Event {
     pub from: ContractAddress,
     pub name: Felt252,

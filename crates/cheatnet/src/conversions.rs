@@ -1,7 +1,7 @@
-use blockifier::execution::execution_utils::stark_felt_to_felt;
+use blockifier::execution::execution_utils::{felt_to_stark_felt, stark_felt_to_felt};
 use cairo_felt::Felt252;
 use starknet::core::utils::get_selector_from_name;
-use starknet_api::core::{ClassHash, ContractAddress};
+use starknet_api::core::{ClassHash, ContractAddress, PatriciaKey};
 
 #[must_use]
 pub fn felt_selector_from_name(name: &str) -> Felt252 {
@@ -22,6 +22,11 @@ pub fn contract_address_to_felt(contract_address: ContractAddress) -> Felt252 {
 #[must_use]
 pub fn class_hash_to_felt(class_hash: ClassHash) -> Felt252 {
     stark_felt_to_felt(class_hash.0)
+}
+
+#[must_use]
+pub fn contract_address_from_felt252(felt: &Felt252) -> ContractAddress {
+    ContractAddress(PatriciaKey::try_from(felt_to_stark_felt(felt)).unwrap())
 }
 
 #[cfg(test)]
