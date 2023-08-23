@@ -2,6 +2,10 @@ mod hello_starknet;
 mod constructor_simple;
 mod erc20;
 
+mod timestamper;
+mod blocker;
+mod noncer;
+
 mod prank_checker;
 mod constructor_prank_checker;
 mod prank_checker_library_call;
