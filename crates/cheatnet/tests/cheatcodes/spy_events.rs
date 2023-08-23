@@ -2,7 +2,7 @@ use crate::common::deploy_contract;
 use crate::common::state::create_cheatnet_state;
 use cairo_felt::Felt252;
 use cairo_lang_starknet::contract::starknet_keccak;
-use cheatnet::cheatcodes::spy_events::SpyOn;
+use cheatnet::cheatcodes::spy_events::SpyTarget;
 use cheatnet::conversions::{contract_address_to_felt, felt_selector_from_name};
 use cheatnet::rpc::call_contract;
 
@@ -12,7 +12,7 @@ fn spy_events_complex() {
 
     let contract_address = deploy_contract(&mut state, "SpyEventsChecker", vec![].as_slice());
 
-    let id = state.spy_events(SpyOn::All);
+    let id = state.spy_events(SpyTarget::All);
 
     let selector = felt_selector_from_name("emit_one_event");
     call_contract(

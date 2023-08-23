@@ -14,24 +14,24 @@ pub struct Event {
 }
 
 /// Specifies which contract are spied on.
-pub enum SpyOn {
+pub enum SpyTarget {
     All,
     One(ContractAddress),
     Multiple(Vec<ContractAddress>),
 }
 
-impl SpyOn {
-    pub fn should_be_spied(&mut self, contract_address: ContractAddress) -> bool {
+impl SpyTarget {
+    pub fn does_spy(&mut self, contract_address: ContractAddress) -> bool {
         match self {
-            SpyOn::All => true,
-            SpyOn::One(address) => *address == contract_address,
-            SpyOn::Multiple(addresses) => addresses.contains(&contract_address),
+            SpyTarget::All => true,
+            SpyTarget::One(address) => *address == contract_address,
+            SpyTarget::Multiple(addresses) => addresses.contains(&contract_address),
         }
     }
 }
 
 impl CheatnetState {
-    pub fn spy_events(&mut self, spy_on: SpyOn) -> usize {
+    pub fn spy_events(&mut self, spy_on: SpyTarget) -> usize {
         self.cheatcode_state.spies.push(spy_on);
         self.cheatcode_state.spies.len() - 1
     }
@@ -43,11 +43,11 @@ impl CheatnetState {
 
         let serialized_events: Vec<Vec<Felt252>> = self
             .cheatcode_state
-            .emitted_events
+            .detected_events
             .iter()
             .map(|event| {
                 let mut flattened_event = vec![];
-                if spy_on.should_be_spied(event.from) {
+                if spy_on.does_spy(event.from) {
                     flattened_event.push(Felt252::from_bytes_be(event.from.0.key().bytes()));
                     flattened_event.push(event.name.clone());
                     flattened_event.push(Felt252::from(event.keys.len()));
@@ -63,7 +63,7 @@ impl CheatnetState {
             })
             .collect();
 
-        self.cheatcode_state.emitted_events = unconsumed_emitted_events;
+        self.cheatcode_state.detected_events = unconsumed_emitted_events;
         (spied_events_len, serialized_events.concat())
     }
 }

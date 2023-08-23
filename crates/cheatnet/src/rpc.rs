@@ -139,7 +139,9 @@ pub fn call_contract(
 
     if let Ok(call_info) = exec_result {
         if !cheatcode_state.spies.is_empty() {
-            collect_emitted_events(&call_info, cheatcode_state);
+            let mut events =
+                collect_emitted_events_from_spied_contracts(&call_info, cheatcode_state);
+            cheatcode_state.detected_events.append(&mut events);
         }
 
         let raw_return_data = &call_info.execution.retdata.0;
@@ -174,14 +176,21 @@ pub fn call_contract(
     }
 }
 
-fn collect_emitted_events(call_info: &CallInfo, cheatcode_state: &mut CheatcodeState) {
+fn collect_emitted_events_from_spied_contracts(
+    call_info: &CallInfo,
+    cheatcode_state: &mut CheatcodeState,
+) -> Vec<Event> {
     let mut all_events: Vec<(ContractAddress, &OrderedEvent)> = vec![];
-    let mut stack: Vec<&CallInfo> = vec![call_info];
+    let mut stack: Vec<(Option<ContractAddress>, &CallInfo)> = vec![(None, call_info)];
 
-    while let Some(current_call) = stack.pop() {
-        let code_address = current_call.call.code_address.unwrap();
+    while let Some((parent_address, current_call)) = stack.pop() {
+        let code_address = current_call
+            .call
+            .code_address
+            .unwrap_or_else(|| parent_address.unwrap());
+
         for spy_on in &mut cheatcode_state.spies {
-            if spy_on.should_be_spied(code_address) {
+            if spy_on.does_spy(code_address) {
                 all_events.extend(
                     current_call
                         .execution
@@ -193,10 +202,16 @@ fn collect_emitted_events(call_info: &CallInfo, cheatcode_state: &mut CheatcodeS
             }
         }
 
-        stack.extend(current_call.inner_calls.iter().rev());
+        stack.extend(
+            current_call
+                .inner_calls
+                .iter()
+                .map(|inner_call| (Some(code_address), inner_call))
+                .rev(),
+        );
     }
 
-    let mut events: Vec<Event> = all_events
+    all_events
         .iter()
         .map(|(address, ordered_event)| Event {
             from: *address,
@@ -218,8 +233,7 @@ fn collect_emitted_events(call_info: &CallInfo, cheatcode_state: &mut CheatcodeS
                 .map(|data| stark_felt_to_felt(*data))
                 .collect(),
         })
-        .collect();
-    cheatcode_state.emitted_events.append(&mut events);
+        .collect::<Vec<Event>>()
 }
 
 // Copied over (with modifications) from blockifier/src/execution/entry_point.rs:144

@@ -36,7 +36,7 @@ use cairo_lang_runner::{
 use cairo_lang_starknet::contract::starknet_keccak;
 use cairo_lang_utils::bigint::BigIntAsHex;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
-use cheatnet::cheatcodes::spy_events::SpyOn;
+use cheatnet::cheatcodes::spy_events::SpyTarget;
 
 mod file_operations;
 
@@ -373,8 +373,8 @@ impl CairoHintProcessor<'_> {
             "spy_events" => {
                 let spy_on = match inputs.len() {
                     0 => unreachable!("Serialized enum should always be longer than 0"),
-                    1 => SpyOn::All,
-                    2 => SpyOn::One(contract_address_from_felt252(&inputs[1])?),
+                    1 => SpyTarget::All,
+                    2 => SpyTarget::One(contract_address_from_felt252(&inputs[1])?),
                     _ => {
                         let addresses_length = inputs[1].to_usize().unwrap();
                         let addresses = Vec::from(&inputs[2..(2 + addresses_length)])
@@ -382,7 +382,7 @@ impl CairoHintProcessor<'_> {
                             .map(|felt| contract_address_from_felt252(felt).unwrap())
                             .collect();
 
-                        SpyOn::Multiple(addresses)
+                        SpyTarget::Multiple(addresses)
                     }
                 };
 

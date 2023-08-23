@@ -1,4 +1,4 @@
-use crate::cheatcodes::spy_events::{Event, SpyOn};
+use crate::cheatcodes::spy_events::{Event, SpyTarget};
 use blockifier::{
     execution::contract_class::ContractClass,
     state::{
@@ -89,8 +89,8 @@ pub struct CheatcodeState {
     pub pranked_contracts: HashMap<ContractAddress, ContractAddress>,
     pub warped_contracts: HashMap<ContractAddress, Felt252>,
     pub mocked_functions: HashMap<ContractAddress, HashMap<EntryPointSelector, Vec<StarkFelt>>>,
-    pub spies: Vec<SpyOn>,
-    pub emitted_events: Vec<Event>,
+    pub spies: Vec<SpyTarget>,
+    pub detected_events: Vec<Event>,
 }
 
 impl CheatcodeState {
@@ -102,7 +102,7 @@ impl CheatcodeState {
             warped_contracts: HashMap::new(),
             mocked_functions: HashMap::new(),
             spies: vec![],
-            emitted_events: vec![],
+            detected_events: vec![],
         }
     }
 }

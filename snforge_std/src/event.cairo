@@ -76,7 +76,7 @@ impl EventAssertionsImpl of EventAssertions {
                 break;
             }
 
-            let emitted = check_if_emitted(ref self, copy_event(events.at(i)));
+            let emitted = assert_if_emitted(ref self, copy_event(events.at(i)));
 
             if !emitted {
                 panic(
@@ -93,7 +93,7 @@ impl EventAssertionsImpl of EventAssertions {
     }
 }
 
-fn check_if_emitted(ref self: EventSpy, event: Event) -> bool {
+fn assert_if_emitted(ref self: EventSpy, event: Event) -> bool {
     let emitted_events = @self.events;
     let mut j = 0;
     return loop {
