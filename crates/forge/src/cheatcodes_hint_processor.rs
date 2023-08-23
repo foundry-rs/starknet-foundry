@@ -418,9 +418,9 @@ fn execute_syscall(
         &vm.get_integer(system_ptr).unwrap(),
     ))?;
 
-    return match selector {
+    match selector {
         DeprecatedSyscallSelector::CallContract => {
-            execute_call_contract(MemBuffer::new(vm, system_ptr), cheatnet_state);
+            execute_call_contract(MemBuffer::new(vm, system_ptr), cheatnet_state)?;
             Ok(())
         }
         DeprecatedSyscallSelector::Keccak => {
@@ -430,10 +430,13 @@ fn execute_syscall(
             "starknet syscalls (other than CallContract and Keccak) cannot be used in tests"
                 .to_string(),
         ))),
-    };
+    }
 }
 
-fn execute_call_contract(mut buffer: MemBuffer, cheatnet_state: &mut CheatnetState) {
+fn execute_call_contract(
+    mut buffer: MemBuffer,
+    cheatnet_state: &mut CheatnetState,
+) -> Result<(), HintError> {
     let _selector = buffer.next_felt252().unwrap();
     let gas_counter = buffer.next_usize().unwrap();
 
@@ -467,6 +470,7 @@ fn execute_call_contract(mut buffer: MemBuffer, cheatnet_state: &mut CheatnetSta
     buffer.write(Felt252::from(exit_code)).unwrap();
 
     buffer.write_arr(result.iter()).unwrap();
+    Ok(())
 }
 
 fn print(inputs: Vec<Felt252>) {
