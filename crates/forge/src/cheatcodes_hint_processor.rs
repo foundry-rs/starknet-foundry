@@ -37,6 +37,7 @@ use cairo_lang_starknet::contract::starknet_keccak;
 use cairo_lang_utils::bigint::BigIntAsHex;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cheatnet::cheatcodes::spy_events::SpyTarget;
+use cheatnet::conversions::contract_address_from_felt;
 
 mod file_operations;
 
@@ -346,7 +347,7 @@ impl CairoHintProcessor<'_> {
                 Ok(())
             }
             "get_class_hash" => {
-                let contract_address = contract_address_from_felt252(&inputs[0])?;
+                let contract_address = contract_address_from_felt(&inputs[0]);
 
                 match self.cheatnet_state.get_class_hash(contract_address) {
                     Ok(class_hash) => {
@@ -362,7 +363,7 @@ impl CairoHintProcessor<'_> {
                 }
             }
             "l1_handler_execute" => {
-                let contract_address = contract_address_from_felt252(&inputs[0])?;
+                let contract_address = contract_address_from_felt(&inputs[0]);
                 let function_name = inputs[1].clone();
                 let from_address = inputs[2].clone();
                 let fee = inputs[3].clone();
@@ -566,10 +567,4 @@ fn write_cheatcode_panic(buffer: &mut MemBuffer, panic_data: &[Felt252]) {
     buffer
         .write_data(panic_data.iter())
         .expect("Failed to insert error in memory");
-}
-
-fn contract_address_from_felt252(felt: &Felt252) -> Result<ContractAddress, EnhancedHintError> {
-    Ok(ContractAddress(PatriciaKey::try_from(felt_to_stark_felt(
-        felt,
-    ))?))
 }

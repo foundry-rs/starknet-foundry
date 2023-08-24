@@ -292,7 +292,7 @@ pub fn print_command_result<T: Serialize>(
             );
         }
         Err(message) => {
-            output.push(("error", message.to_string()));
+            output.push(("error", format!("{message:#}")));
             error = true;
         }
     };
@@ -340,7 +340,7 @@ pub fn udc_uniqueness(unique: bool, account_address: FieldElement) -> UdcUniquen
     if unique {
         Unique(UdcUniqueSettings {
             deployer_address: account_address,
-            udc_contract_address: parse_number(UDC_ADDRESS).expect("Should not panic"),
+            udc_contract_address: parse_number(UDC_ADDRESS).expect("Failed to parse UDC address"),
         })
     } else {
         NotUnique

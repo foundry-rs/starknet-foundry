@@ -85,10 +85,10 @@ async fn wrong_contract_name_passed() {
         .current_dir(CONTRACTS_DIR.to_string() + "/v1/map")
         .args(args);
 
-    let output = String::from_utf8(snapbox.assert().failure().get_output().stderr.clone()).unwrap();
+    let output = String::from_utf8(snapbox.assert().success().get_output().stderr.clone()).unwrap();
 
     assert!(
-        output.contains("Failed to find contract nonexistent in starknet_artifacts.json"),
+        output.contains("Cannot find sierra artifact nonexistent in starknet_artifacts.json"),
         "Expected error message not found in stderr: {output}",
     );
 }
@@ -173,7 +173,7 @@ fn scarb_no_artifacts(contract_path: &str, accounts_file_path: &str) {
     let snapbox = Command::new(cargo_bin!("sncast"))
         .current_dir(CONTRACTS_DIR.to_string() + contract_path)
         .args(args);
-    let assert = snapbox.assert().failure();
+    let assert = snapbox.assert().success();
     let stderr_output = String::from_utf8(assert.get_output().stderr.clone()).unwrap();
 
     assert!(
