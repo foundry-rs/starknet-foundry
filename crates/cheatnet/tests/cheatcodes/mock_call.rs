@@ -1,3 +1,4 @@
+use crate::common::recover_data;
 use crate::{
     assert_success,
     common::{deploy_contract, get_contracts, state::create_cheatnet_state},
@@ -296,32 +297,36 @@ fn mock_call_not_implemented() {
 }
 
 #[test]
-#[ignore = "TODO(#254)"]
 fn mock_call_in_constructor() {
     let mut state = create_cheatnet_state();
 
     let contracts = get_contracts();
 
-    let contract_name = felt_from_short_string("ConstructorMockChecker");
+    let contract_name = felt_from_short_string("HelloStarknet");
     let class_hash = state.declare(&contract_name, &contracts).unwrap();
-    let precalculated_address = state.precalculate_address(&class_hash, &[]);
-
-    let ret_data = vec![Felt252::from(123)];
+    let balance_contract_address = state.deploy(&class_hash, &[]).unwrap();
+    let ret_data = vec![Felt252::from(223)];
     state.start_mock_call(
-        precalculated_address,
-        &felt_from_short_string("get_constant_thing"),
+        balance_contract_address,
+        &felt_from_short_string("get_balance"),
         &ret_data,
     );
 
-    let contract_address = state.deploy(&class_hash, &[]).unwrap();
+    let contract_name = felt_from_short_string("ConstructorMockChecker");
+    let class_hash = state.declare(&contract_name, &contracts).unwrap();
+    let contract_address = state
+        .deploy(
+            &class_hash,
+            &[contract_address_to_felt(balance_contract_address)],
+        )
+        .unwrap();
 
-    assert_eq!(precalculated_address, contract_address);
-
-    let selector = felt_selector_from_name("get_stored_thing");
+    let selector = felt_selector_from_name("get_constructor_balance");
 
     let output = call_contract(&contract_address, &selector, &[], &mut state).unwrap();
-
-    assert_success!(output, ret_data);
+    let output_data = recover_data(output);
+    assert_eq!(output_data.len(), 1);
+    assert_eq!(output_data.get(0).unwrap().clone(), Felt252::from(223));
 }
 
 #[test]
