@@ -296,7 +296,6 @@ fn mock_call_not_implemented() {
 }
 
 #[test]
-#[ignore = "TODO(#254)"]
 fn mock_call_in_constructor() {
     let mut state = create_cheatnet_state();
 

@@ -360,7 +360,7 @@ impl CairoHintProcessor<'_> {
                 }
             }
             "l1_handler_execute" => {
-                let contract_address = contract_address_from_felt252(&inputs[0])?;
+                let contract_address = contract_address_from_felt(&inputs[0]);
                 let function_name = inputs[1].clone();
                 let from_address = inputs[2].clone();
                 let fee = inputs[3].clone();

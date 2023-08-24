@@ -8,6 +8,7 @@ use blockifier::execution::execution_utils::{felt_to_stark_felt, stark_felt_to_f
 use blockifier::state::cached_state::CachedState;
 use blockifier::state::state_api::StateReader;
 use cairo_felt::Felt252;
+use cairo_vm::vm::errors::hint_errors::HintError::CustomHint;
 use starknet::core::utils::get_selector_from_name;
 
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, PatriciaKey};
@@ -64,6 +65,9 @@ impl CheatnetState {
             CallContractOutput::Panic { panic_data } => {
                 Err(CheatcodeError::Recoverable(panic_data))
             }
+            CallContractOutput::Error { msg } => Err(CheatcodeError::Unrecoverable(
+                EnhancedHintError::from(CustomHint(Box::from(msg))),
+            )),
         }
     }
 }
