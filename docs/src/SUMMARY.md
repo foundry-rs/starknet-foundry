@@ -48,6 +48,7 @@
   * [l1_handler_execute](appendix/cheatcodes/l1_handler_execute.md)
   * [start_mock_call](appendix/cheatcodes/start_mock_call.md)
   * [stop_mock_call](appendix/cheatcodes/stop_mock_call.md)
+  * [spy_events](appendix/cheatcodes/spy_events.md)
 
 * [Forge Library Functions References](appendix/forge-library.md)
     * [declare](appendix/forge-library/declare.md)
