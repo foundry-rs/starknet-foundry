@@ -38,7 +38,7 @@ trait EventAssertions {
 
 ## There are two ways of interaction with emitted events
 
-### Complex one which assumes user will assert events manually
+### Complex one in which user asserts manually
 
 ```rust
 use snforge_std::{declare, ContractClassTrait, spy_events, SpyOn, EventSpy, EventFetcher
