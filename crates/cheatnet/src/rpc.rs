@@ -765,7 +765,7 @@ pub fn execute_constructor_entry_point(
         call_type: CallType::Call,
         initial_gas: remaining_gas,
     };
-
+    // region: Modified code
     execute_call_entry_point(
         &mut constructor_call,
         state,
@@ -773,6 +773,7 @@ pub fn execute_constructor_entry_point(
         resources,
         context,
     )
+    // endregion
 }
 
 // Inspired by blockifier::execution::syscalls::library_call
