@@ -111,12 +111,8 @@ pub async fn declare(
         })
         .ok_or(anyhow!("Failed to find starknet_artifacts.json file"))?;
 
-    let starknet_artifacts = std::fs::read_to_string(&starknet_artifacts).with_context(|| {
-        format!(
-            "Failed to read {} contents",
-            starknet_artifacts.into_os_string().into_string().unwrap()
-        )
-    })?;
+    let starknet_artifacts = std::fs::read_to_string(&starknet_artifacts)
+        .with_context(|| format!("Failed to read {starknet_artifacts:?} contents"))?;
 
     let starknet_artifacts: ScarbStarknetArtifacts =
         serde_json::from_str(starknet_artifacts.as_str())

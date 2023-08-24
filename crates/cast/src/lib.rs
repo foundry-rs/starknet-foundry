@@ -292,7 +292,7 @@ pub fn print_command_result<T: Serialize>(
             );
         }
         Err(message) => {
-            output.push(("error", message.to_string()));
+            output.push(("error", format!("{message:#}")));
             error = true;
         }
     };
