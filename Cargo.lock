@@ -1697,6 +1697,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "flatten-serde-json"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6cdad763dbe1a3a9298e89667509ad36ece8a9ed22edd132ac8a45405863e5e9"
+dependencies = [
+ "serde_json",
+]
+
+[[package]]
 name = "fnv"
 version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1743,6 +1752,7 @@ dependencies = [
  "cheatnet",
  "clap",
  "console",
+ "flatten-serde-json",
  "include_dir",
  "indoc",
  "itertools 0.11.0",

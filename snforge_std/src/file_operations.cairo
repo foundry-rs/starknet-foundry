@@ -37,6 +37,22 @@ fn parse_txt(file: @File) -> Array<felt252> {
     result
 }
 
+fn parse_json(file: @File) -> Array<felt252> {
+    let content = cheatcode::<'parse_json'>(array![*file.path].span());
+
+    let mut result = array![];
+
+    let mut i = 0;
+    loop {
+        if content.len() == i {
+            break ();
+        }
+        result.append(*content[i]);
+        i += 1;
+    };
+    result
+}
+
 trait TxtParser<T, impl TSerde: Serde<T>> {
     fn deserialize_txt(file: @File) -> Option<T>;
 }
