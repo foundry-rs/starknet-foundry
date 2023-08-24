@@ -402,12 +402,12 @@ impl CairoHintProcessor<'_> {
                 let spy_on = match inputs.len() {
                     0 => unreachable!("Serialized enum should always be longer than 0"),
                     1 => SpyTarget::All,
-                    2 => SpyTarget::One(contract_address_from_felt252(&inputs[1])?),
+                    2 => SpyTarget::One(contract_address_from_felt(&inputs[1])),
                     _ => {
                         let addresses_length = inputs[1].to_usize().unwrap();
                         let addresses = Vec::from(&inputs[2..(2 + addresses_length)])
                             .iter()
-                            .map(|felt| contract_address_from_felt252(felt).unwrap())
+                            .map(contract_address_from_felt)
                             .collect();
 
                         SpyTarget::Multiple(addresses)

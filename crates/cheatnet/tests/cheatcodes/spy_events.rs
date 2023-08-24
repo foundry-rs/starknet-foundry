@@ -5,7 +5,7 @@ use cairo_lang_starknet::contract::starknet_keccak;
 use cairo_vm::hint_processor::hint_processor_utils::felt_to_usize;
 use cheatnet::cheatcodes::spy_events::{Event, SpyTarget};
 use cheatnet::conversions::{
-    class_hash_to_felt, contract_address_from_felt252, contract_address_to_felt,
+    class_hash_to_felt, contract_address_from_felt, contract_address_to_felt,
     felt_from_short_string, felt_selector_from_name,
 };
 use cheatnet::rpc::call_contract;
@@ -15,7 +15,7 @@ fn felt_vec_to_event_vec(felts: &[Felt252]) -> Vec<Event> {
     let mut events = vec![];
     let mut i = 0;
     while i < felts.len() {
-        let from = contract_address_from_felt252(&felts[i]);
+        let from = contract_address_from_felt(&felts[i]);
         let name = &felts[i + 1];
         let keys_length = &felts[i + 2];
         let keys = &felts[i + 3..i + 3 + felt_to_usize(keys_length).unwrap()];
@@ -225,7 +225,6 @@ fn library_call_emits_event() {
 }
 
 #[test]
-#[ignore]
 fn event_emitted_in_constructor() {
     let mut state = create_cheatnet_state();
 
