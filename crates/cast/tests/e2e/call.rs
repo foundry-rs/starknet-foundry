@@ -116,3 +116,23 @@ fn test_wrong_calldata(contract_address: &str) {
         error: Execution was reverted; failure reason: [0x496e70757420746f6f206c6f6e6720666f7220617267756d656e7473].
     "#});
 }
+
+#[tokio::test]
+async fn test_invalid_selector() {
+    let mut args = default_cli_args();
+    args.append(&mut vec![
+        "call",
+        "--contract-address",
+        MAP_CONTRACT_ADDRESS_V2,
+        "--function",
+        "ą",
+        "--calldata",
+        "0x1 0x2",
+    ]);
+
+    let snapbox = runner(&args);
+    snapbox.assert().stderr_matches(indoc! {r#"
+      command: call
+      error: Failed to convert entry point selector to FieldElement: the provided name contains non-ASCII characters
+  "#});
+}
