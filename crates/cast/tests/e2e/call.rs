@@ -24,11 +24,11 @@ fn test_happy_case(contract_address: &str) {
     let snapbox = runner(&args);
 
     snapbox.assert().success().stdout_eq(indoc! {r#"
-{
-  "command": "call",
-  "response": "[0x0]"
-}
-"#});
+        {
+          "command": "call",
+          "response": "[0x0]"
+        }
+    "#});
 }
 
 #[test_case(MAP_CONTRACT_ADDRESS_V1, "user1" ; "when cairo1 contract")]

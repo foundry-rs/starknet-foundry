@@ -6,9 +6,11 @@ use anyhow::Result;
 use camino::Utf8PathBuf;
 use cast::helpers::constants::DEFAULT_ACCOUNTS_FILE;
 use cast::helpers::scarb_utils::{parse_scarb_config, CastConfig};
-use cast::{account_file_exists, get_account, get_block_id, get_provider, print_command_result};
+use cast::{
+    account_file_exists, get_account, get_block_id, get_chain_id, get_provider,
+    print_command_result,
+};
 use clap::{Parser, Subcommand};
-use starknet::providers::Provider;
 
 mod starknet_commands;
 
@@ -86,7 +88,7 @@ async fn main() -> Result<()> {
     match cli.command {
         Commands::Declare(declare) => {
             account_file_exists(&config.accounts_file)?;
-            let chain_id = provider.chain_id().await?;
+            let chain_id = get_chain_id(&provider).await?;
             let mut account =
                 get_account(&config.account, &config.accounts_file, &provider, chain_id)?;
 
@@ -105,7 +107,7 @@ async fn main() -> Result<()> {
         }
         Commands::Deploy(deploy) => {
             account_file_exists(&config.accounts_file)?;
-            let chain_id = provider.chain_id().await?;
+            let chain_id = get_chain_id(&provider).await?;
             let account = get_account(&config.account, &config.accounts_file, &provider, chain_id)?;
 
             let mut result = starknet_commands::deploy::deploy(
@@ -139,7 +141,7 @@ async fn main() -> Result<()> {
         }
         Commands::Invoke(invoke) => {
             account_file_exists(&config.accounts_file)?;
-            let chain_id = provider.chain_id().await?;
+            let chain_id = get_chain_id(&provider).await?;
             let mut account =
                 get_account(&config.account, &config.accounts_file, &provider, chain_id)?;
             let mut result = starknet_commands::invoke::invoke(
@@ -166,7 +168,7 @@ async fn main() -> Result<()> {
                 }
                 starknet_commands::multicall::Commands::Run(run) => {
                     account_file_exists(&config.accounts_file)?;
-                    let chain_id = provider.chain_id().await?;
+                    let chain_id = get_chain_id(&provider).await?;
                     let mut account =
                         get_account(&config.account, &config.accounts_file, &provider, chain_id)?;
                     let mut result = starknet_commands::multicall::run::run(
@@ -184,7 +186,7 @@ async fn main() -> Result<()> {
         }
         Commands::Account(account) => match account.command {
             account::Commands::Create(create) => {
-                let chain_id = provider.chain_id().await?;
+                let chain_id = get_chain_id(&provider).await?;
                 config.account = create.name;
                 let mut result = starknet_commands::account::create::create(
                     &config,
@@ -202,7 +204,7 @@ async fn main() -> Result<()> {
             }
             account::Commands::Deploy(deploy) => {
                 account_file_exists(&config.accounts_file)?;
-                let chain_id = provider.chain_id().await?;
+                let chain_id = get_chain_id(&provider).await?;
                 let mut result = starknet_commands::account::deploy::deploy(
                     &provider,
                     config.accounts_file,
