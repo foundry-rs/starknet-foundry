@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - support for `keccak_syscall` syscall. It can be used directly in cairo tests
 - `l1_handler_execute` cheatcode
 - support for `roll`ing/`warp`ing/`prank`ing the constructor logic (precalculate address, prank, assert pranked state in constructor)
+- `spy_events` cheatcode
 
 ### Cast
 

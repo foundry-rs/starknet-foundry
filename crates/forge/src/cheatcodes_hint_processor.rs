@@ -32,8 +32,11 @@ use cairo_lang_runner::{
     casm_run::{cell_ref_to_relocatable, extract_buffer, get_ptr},
     insert_value_to_cellref, CairoHintProcessor as OriginalCairoHintProcessor,
 };
+
+use cairo_lang_starknet::contract::starknet_keccak;
 use cairo_lang_utils::bigint::BigIntAsHex;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
+use cheatnet::cheatcodes::spy_events::SpyTarget;
 use cheatnet::conversions::contract_address_from_felt;
 
 mod file_operations;
@@ -395,6 +398,51 @@ impl CairoHintProcessor<'_> {
                 Ok(())
             }
             "parse_json" => todo!(),
+            "spy_events" => {
+                let spy_on = match inputs.len() {
+                    0 => unreachable!("Serialized enum should always be longer than 0"),
+                    1 => SpyTarget::All,
+                    2 => SpyTarget::One(contract_address_from_felt(&inputs[1])),
+                    _ => {
+                        let addresses_length = inputs[1].to_usize().unwrap();
+                        let addresses = Vec::from(&inputs[2..(2 + addresses_length)])
+                            .iter()
+                            .map(contract_address_from_felt)
+                            .collect();
+
+                        SpyTarget::Multiple(addresses)
+                    }
+                };
+
+                let id = self.cheatnet_state.spy_events(spy_on);
+                buffer
+                    .write(Felt252::from(id))
+                    .expect("Failed to insert spy id");
+                Ok(())
+            }
+            "fetch_events" => {
+                let id = &inputs[0];
+                let (emitted_events_len, serialized_events) = self.cheatnet_state.fetch_events(id);
+
+                buffer
+                    .write(Felt252::from(emitted_events_len))
+                    .expect("Failed to insert serialized events length");
+                for felt in serialized_events {
+                    buffer
+                        .write(felt)
+                        .expect("Failed to insert serialized events");
+                }
+                Ok(())
+            }
+            "event_name_hash" => {
+                let name = inputs[0].clone();
+                let hash = starknet_keccak(as_cairo_short_string(&name).unwrap().as_bytes());
+
+                buffer
+                    .write(Felt252::from(hash))
+                    .expect("Failed to insert event name hash");
+                Ok(())
+            }
             _ => Err(anyhow!("Unknown cheatcode selector: {selector}")).map_err(Into::into),
         }?;
 

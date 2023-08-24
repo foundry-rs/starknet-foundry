@@ -1,5 +1,4 @@
-use blockifier::execution::execution_utils::felt_to_stark_felt;
-use blockifier::execution::execution_utils::stark_felt_to_felt;
+use blockifier::execution::execution_utils::{felt_to_stark_felt, stark_felt_to_felt};
 use cairo_felt::Felt252;
 use starknet::core::types::FieldElement;
 use starknet::core::utils::get_selector_from_name;
