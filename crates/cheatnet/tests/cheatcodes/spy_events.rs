@@ -43,7 +43,7 @@ fn felt_vec_to_event_vec(felts: &[Felt252]) -> Vec<Event> {
 fn spy_events_complex() {
     let mut state = create_cheatnet_state();
 
-    let contract_address = deploy_contract(&mut state, "SpyEventsChecker", vec![].as_slice());
+    let contract_address = deploy_contract(&mut state, "SpyEventsChecker", &[]);
 
     let id = state.spy_events(SpyTarget::All);
 
@@ -51,7 +51,7 @@ fn spy_events_complex() {
     call_contract(
         &contract_address,
         &selector,
-        vec![Felt252::from(123)].as_slice(),
+        &[Felt252::from(123)],
         &mut state,
     )
     .unwrap();
@@ -80,7 +80,7 @@ fn spy_events_complex() {
     call_contract(
         &contract_address,
         &selector,
-        vec![Felt252::from(123)].as_slice(),
+        &[Felt252::from(123)],
         &mut state,
     )
     .unwrap();
@@ -96,10 +96,9 @@ fn spy_events_complex() {
 fn check_events_order() {
     let mut state = create_cheatnet_state();
 
-    let spy_events_checker_address =
-        deploy_contract(&mut state, "SpyEventsChecker", vec![].as_slice());
+    let spy_events_checker_address = deploy_contract(&mut state, "SpyEventsChecker", &[]);
     let spy_events_order_checker_address =
-        deploy_contract(&mut state, "SpyEventsOrderChecker", vec![].as_slice());
+        deploy_contract(&mut state, "SpyEventsOrderChecker", &[]);
 
     let id = state.spy_events(SpyTarget::All);
 
@@ -107,13 +106,12 @@ fn check_events_order() {
     call_contract(
         &spy_events_order_checker_address,
         &selector,
-        vec![
+        &[
             Felt252::from(123),
             Felt252::from(234),
             Felt252::from(345),
             contract_address_to_felt(spy_events_checker_address),
-        ]
-        .as_slice(),
+        ],
         &mut state,
     )
     .unwrap();
@@ -158,7 +156,7 @@ fn check_events_order() {
 fn duplicate_spies_on_one_address() {
     let mut state = create_cheatnet_state();
 
-    let contract_address = deploy_contract(&mut state, "SpyEventsChecker", vec![].as_slice());
+    let contract_address = deploy_contract(&mut state, "SpyEventsChecker", &[]);
 
     let id1 = state.spy_events(SpyTarget::One(contract_address));
     let id2 = state.spy_events(SpyTarget::One(contract_address));
@@ -167,7 +165,7 @@ fn duplicate_spies_on_one_address() {
     call_contract(
         &contract_address,
         &selector,
-        vec![Felt252::from(123)].as_slice(),
+        &[Felt252::from(123)],
         &mut state,
     )
     .unwrap();
@@ -197,7 +195,7 @@ fn library_call_emits_event() {
     let contracts = get_contracts();
     let contract_name = felt_from_short_string("SpyEventsChecker");
     let class_hash = state.declare(&contract_name, &contracts).unwrap();
-    let contract_address = deploy_contract(&mut state, "SpyEventsLibCall", vec![].as_slice());
+    let contract_address = deploy_contract(&mut state, "SpyEventsLibCall", &[]);
 
     let id = state.spy_events(SpyTarget::All);
 
@@ -205,7 +203,7 @@ fn library_call_emits_event() {
     call_contract(
         &contract_address,
         &selector,
-        vec![Felt252::from(123), class_hash_to_felt(class_hash)].as_slice(),
+        &[Felt252::from(123), class_hash_to_felt(class_hash)],
         &mut state,
     )
     .unwrap();
@@ -279,7 +277,7 @@ fn check_if_there_is_no_interference() {
     call_contract(
         &spy_events_checker_address,
         &selector,
-        vec![Felt252::from(123)].as_slice(),
+        &[Felt252::from(123)],
         &mut state,
     )
     .unwrap();
@@ -332,7 +330,7 @@ fn test_nested_calls() {
     call_contract(
         &spy_events_checker_top_proxy_address,
         &selector,
-        vec![Felt252::from(123)].as_slice(),
+        &[Felt252::from(123)],
         &mut state,
     )
     .unwrap();
