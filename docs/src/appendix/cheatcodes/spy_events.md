@@ -5,8 +5,6 @@
 Creates `EventSpy` instance which spies on events emitted by contracts defined
 under the `spy_on` argument.
 
-Where:
-
 ```rust
 struct EventSpy {
     events: Array<Event>,
