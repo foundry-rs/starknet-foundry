@@ -372,3 +372,83 @@ fn test_nested_calls() {
         "Wrong third event"
     );
 }
+
+#[test]
+fn use_multiple_spies() {
+    let mut state = create_cheatnet_state();
+
+    let spy_events_checker_address = deploy_contract(&mut state, "SpyEventsChecker", &[]);
+
+    let contracts = get_contracts();
+
+    let contract_name = felt_from_short_string("SpyEventsCheckerProxy");
+    let class_hash = state.declare(&contract_name, &contracts).unwrap();
+
+    let spy_events_checker_proxy_address = state
+        .deploy(
+            &class_hash,
+            &[contract_address_to_felt(spy_events_checker_address)],
+        )
+        .unwrap();
+    let spy_events_checker_top_proxy_address = state
+        .deploy(
+            &class_hash,
+            &[contract_address_to_felt(spy_events_checker_proxy_address)],
+        )
+        .unwrap();
+
+    let id1 = state.spy_events(SpyTarget::One(spy_events_checker_address));
+    let id2 = state.spy_events(SpyTarget::One(spy_events_checker_proxy_address));
+    let id3 = state.spy_events(SpyTarget::One(spy_events_checker_top_proxy_address));
+
+    let selector = felt_selector_from_name("emit_one_event");
+    call_contract(
+        &spy_events_checker_top_proxy_address,
+        &selector,
+        &[Felt252::from(123)],
+        &mut state,
+    )
+    .unwrap();
+
+    let (length1, serialized_events1) = state.fetch_events(&Felt252::from(id1));
+    let (length2, serialized_events2) = state.fetch_events(&Felt252::from(id2));
+    let (length3, serialized_events3) = state.fetch_events(&Felt252::from(id3));
+    let events1 = felt_vec_to_event_vec(&serialized_events1);
+    let events2 = felt_vec_to_event_vec(&serialized_events2);
+    let events3 = felt_vec_to_event_vec(&serialized_events3);
+
+    assert_eq!(length1, 1, "There should be one event");
+    assert_eq!(length2, 1, "There should be one event");
+    assert_eq!(length3, 1, "There should be one event");
+
+    assert_eq!(
+        events1[0],
+        Event {
+            from: spy_events_checker_address,
+            name: starknet_keccak("FirstEvent".as_ref()).into(),
+            keys: vec![],
+            data: vec![Felt252::from(123)]
+        },
+        "Wrong spy_events_checker event"
+    );
+    assert_eq!(
+        events2[0],
+        Event {
+            from: spy_events_checker_proxy_address,
+            name: starknet_keccak("FirstEvent".as_ref()).into(),
+            keys: vec![],
+            data: vec![Felt252::from(123)]
+        },
+        "Wrong spy_events_checker_proxy event"
+    );
+    assert_eq!(
+        events3[0],
+        Event {
+            from: spy_events_checker_top_proxy_address,
+            name: starknet_keccak("FirstEvent".as_ref()).into(),
+            keys: vec![],
+            data: vec![Felt252::from(123)]
+        },
+        "Wrong spy_events_checker_top_proxy event"
+    );
+}
