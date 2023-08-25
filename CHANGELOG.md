@@ -15,6 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `l1_handler_execute` cheatcode
 - support for `roll`ing/`warp`ing/`prank`ing the constructor logic (precalculate address, prank, assert pranked state in constructor)
 - `spy_events` cheatcode
+- Functions `parse_json` and `Parser<T>::deserialize_json` to load data from json files and serialize it
+
+#### Changed
+
+- rename `TxtParser` trait to `Parser`
 
 ### Cast
 
@@ -39,7 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Documentation to public methods
 - Information sections to documentation about importing `snforge_std`
 - Print support for basic numeric data types
-- Functions `parse_txt` and `Parser<T>::deserialize_txt` to load data from plain text files and serialize it
+- Functions `parse_txt` and `TxtParser<T>::deserialize_txt` to load data from plain text files and serialize it
 - `get_class_hash` cheatcode
 - `mock_call` cheatcode
 - `precalculate_address` cheatcode

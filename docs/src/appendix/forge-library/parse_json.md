@@ -1,0 +1,42 @@
+# `parse_json`
+
+> `fn parse_json(file: @File) -> Array<felt252>`
+
+Parses json file content to an array of felts.
+
+- `file` - a snapshot of an instance of the struct `File` that consists of the following fields:
+  - `path` - Cairo shortstring representing a path to a file relative to a package root.
+
+```rust
+use snforge_std::{ FileTrait, parse_json };
+
+#[test]
+fn test_parse_json() {
+    let file = FileTrait::new('data/file.json');
+    let content = parse_json(@file);
+    // ...
+}
+```
+
+File content must have proper JSON Format with values satisfying the conditions:
+  - integers in range of `[0, P)` where P is [`Cairo Prime`](https://book.cairo-lang.org/ch02-02-data-types.html?highlight=prime#felt-type)
+  - strings of length `<=31`
+
+For example, this file content:
+```json
+{
+    "b": 1,
+    "a": 12,
+    "d": {
+        "e": 1234
+    },
+    "c": "123"
+}
+```
+will be parsed to the following array:
+> ⚠️ **Warning**
+>
+>  JSON object is an unordered data, we had to somehow give it order. Therefore, the values in the array are sorted alphabetically by JSON key
+```rust
+array![12, 1, '123', 1234]
+```
