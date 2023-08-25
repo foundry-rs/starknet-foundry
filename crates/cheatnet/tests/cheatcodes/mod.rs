@@ -3,4 +3,5 @@ mod mock_call;
 mod prank;
 mod precalculate_address;
 mod roll;
+mod spy_events;
 mod warp;

@@ -53,6 +53,10 @@ pub fn get_provider(url: &str) -> Result<JsonRpcClient<HttpTransport>> {
     Ok(provider)
 }
 
+pub async fn get_chain_id(provider: &JsonRpcClient<HttpTransport>) -> Result<FieldElement> {
+    provider.chain_id().await.context("Couldn't fetch chain_id")
+}
+
 fn get_account_info(name: &str, chain_id: FieldElement, path: &Utf8PathBuf) -> Result<Account> {
     raise_if_empty(name, "Account name")?;
     let accounts: HashMap<String, HashMap<String, Account>> =
@@ -292,7 +296,7 @@ pub fn print_command_result<T: Serialize>(
             );
         }
         Err(message) => {
-            output.push(("error", message.to_string()));
+            output.push(("error", format!("{message:#}")));
             error = true;
         }
     };
@@ -340,7 +344,7 @@ pub fn udc_uniqueness(unique: bool, account_address: FieldElement) -> UdcUniquen
     if unique {
         Unique(UdcUniqueSettings {
             deployer_address: account_address,
-            udc_contract_address: parse_number(UDC_ADDRESS).expect("Should not panic"),
+            udc_contract_address: parse_number(UDC_ADDRESS).expect("Failed to parse UDC address"),
         })
     } else {
         NotUnique
