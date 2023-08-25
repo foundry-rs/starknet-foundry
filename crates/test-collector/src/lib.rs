@@ -23,6 +23,7 @@ use cairo_lang_sierra::extensions::NamedType;
 use cairo_lang_sierra::program::{GenericArg, Program};
 use cairo_lang_sierra_generator::db::SierraGenGroup;
 use cairo_lang_sierra_generator::replace_ids::replace_sierra_ids_in_program;
+use cairo_lang_starknet::inline_macros::selector::SelectorMacro;
 use cairo_lang_starknet::plugin::StarkNetPlugin;
 use cairo_lang_syntax::attribute::structured::{Attribute, AttributeArg, AttributeArgVariant};
 use cairo_lang_syntax::node::ast;
@@ -299,8 +300,9 @@ pub fn collect_tests(
     let db = &mut {
         let mut b = RootDatabase::builder();
         b.with_cfg(CfgSet::from_iter([Cfg::name("test")]));
-        b.with_semantic_plugin(Arc::new(TestPlugin::default()));
-        b.with_semantic_plugin(Arc::new(StarkNetPlugin::default()));
+        b.with_macro_plugin(Arc::new(TestPlugin::default()));
+        b.with_macro_plugin(Arc::new(StarkNetPlugin::default()))
+            .with_inline_macro_plugin(SelectorMacro::NAME, Arc::new(SelectorMacro));
         b.build()?
     };
 
@@ -320,7 +322,10 @@ pub fn collect_tests(
         }
     }
 
-    if DiagnosticsReporter::stderr().check(db) {
+    if DiagnosticsReporter::stderr()
+        .with_extra_crates(&[main_crate_id])
+        .check(db)
+    {
         return Err(anyhow!(
             "Failed to add linked library, for a detailed information, please go through the logs \
              above"

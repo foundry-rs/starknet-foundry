@@ -14,6 +14,7 @@ fn file_reading() {
         Running 9 test(s) from file_reading package
         [PASS] file_reading::valid_content_and_same_content_no_matter_whitespaces
         [PASS] file_reading::serialization
+        [PASS] file_reading::valid_content_different_folder
         [FAIL] file_reading::non_existent
         
         Failure data:
@@ -50,7 +51,6 @@ fn file_reading() {
             Got an exception while executing a hint:
             Failed to parse data/too_large_number.txt file
         
-        [PASS] file_reading::valid_content_different_folder
         Running 12 test(s) from test.cairo
         [PASS] test::valid_content_and_same_content_no_matter_whitespaces
         [PASS] test::serialization
@@ -62,6 +62,7 @@ fn file_reading() {
             Failed to parse data/json/invalid.json file
 
         [PASS] test::json_deserialization
+        [PASS] test::valid_content_different_folder
         [FAIL] test::non_existent
         
         Failure data:
@@ -98,9 +99,8 @@ fn file_reading() {
             Got an exception while executing a hint:
             Failed to parse data/too_large_number.txt file
         
-        [PASS] test::valid_content_different_folder
         Tests: 8 passed, 13 failed, 0 skipped
-        "#};
+    "#};
 
     // run from different directories to make sure cwd is always set to package directory
     let snapbox = runner();

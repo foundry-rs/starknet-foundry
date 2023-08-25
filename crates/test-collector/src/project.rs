@@ -42,19 +42,19 @@ pub fn setup_single_file_project(
         let canonical = path.canonicalize().map_err(|_| bad_path_err())?;
         let file_dir = canonical.parent().ok_or_else(bad_path_err)?;
         // region: Modified code
-        let crate_id = db.intern_crate(CrateLongId(package_name.into()));
-        db.set_crate_root(crate_id, Some(Directory(file_dir.to_path_buf())));
+        let crate_id = db.intern_crate(CrateLongId::Real(package_name.into()));
+        db.set_crate_root(crate_id, Some(Directory::Real(file_dir.to_path_buf())));
         // endregion
         Ok(crate_id)
     } else {
         // If file_stem is not lib, create a fake lib file.
         // region: Modified code
         let phantom_package_name = format!("{PHANTOM_PACKAGE_NAME_PREFIX}{file_stem}").into();
-        let crate_id = db.intern_crate(CrateLongId(phantom_package_name));
+        let crate_id = db.intern_crate(CrateLongId::Real(phantom_package_name));
         // endregion
         db.set_crate_root(
             crate_id,
-            Some(Directory(path.parent().unwrap().to_path_buf())),
+            Some(Directory::Real(path.parent().unwrap().to_path_buf())),
         );
 
         let module_id = ModuleId::CrateRoot(crate_id);

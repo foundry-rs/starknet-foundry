@@ -40,7 +40,7 @@ pub(crate) fn setup_package(package_name: &str) -> TempDir {
                 casm = true
 
                 [dependencies]
-                starknet = "2.1.0"
+                starknet = "2.2.0"
                 snforge_std = {{ path = "{}" }}
                 "#,
             package_name,
