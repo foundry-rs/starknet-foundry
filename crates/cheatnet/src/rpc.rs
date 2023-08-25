@@ -258,15 +258,17 @@ fn collect_emitted_events_from_spied_contracts(
         .collect::<Vec<Event>>()
 }
 
-// Copied over (with modifications) from blockifier/src/execution/entry_point.rs:144
+// blockifier/src/execution/entry_point.rs:180 (CallEntryPoint::execute)
 fn execute_call_entry_point(
-    entry_point: &mut CallEntryPoint,
+    entry_point: &mut CallEntryPoint, // Instead of 'self'
     state: &mut dyn State,
-    cheatcode_state: &CheatcodeState,
+    cheatcode_state: &CheatcodeState, // Added parameter
     resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
 ) -> EntryPointExecutionResult<CallInfo> {
+    // region: Modified blockifier code
     // We skip recursion depth validation here.
+    // endregion
 
     // Validate contract is deployed.
     let storage_address = entry_point.storage_address;
@@ -294,6 +296,7 @@ fn execute_call_entry_point(
     entry_point.class_hash = Some(class_hash);
     let contract_class = state.get_compiled_contract_class(&class_hash)?;
 
+    // Region: Modified blockifier code
     let result = match contract_class {
         ContractClass::V0(_) => panic!("Cairo 0 classes are not supported"),
         ContractClass::V1(contract_class) => execute_entry_point_call_cairo1(
@@ -307,6 +310,7 @@ fn execute_call_entry_point(
     };
 
     result.map_err(|error| {
+        // endregion
         match error {
             // On VM error, pack the stack trace into the propagated error.
             EntryPointExecutionError::VirtualMachineExecutionError(error) => {
@@ -326,6 +330,9 @@ fn execute_call_entry_point(
             other_error => other_error,
         }
     })
+    // region: Modified blockifier code
+    // We skip recursion depth decrease
+    // endregion
 }
 
 pub struct CheatableSyscallHandler<'a> {
@@ -333,6 +340,7 @@ pub struct CheatableSyscallHandler<'a> {
     pub cheatcode_state: &'a CheatcodeState,
 }
 
+// crates/blockifier/src/execution/syscalls/hint_processor.rs:472 (ResourceTracker for SyscallHintProcessor)
 impl ResourceTracker for CheatableSyscallHandler<'_> {
     fn consumed(&self) -> bool {
         self.syscall_handler.context.vm_run_resources.consumed()
@@ -386,6 +394,7 @@ impl HintProcessorLogic for CheatableSyscallHandler<'_> {
     }
 }
 
+// crates/blockifier/src/execution/syscalls/hint_processor.rs:454
 /// Retrieves a [Relocatable] from the VM given a [`ResOperand`].
 /// A [`ResOperand`] represents a CASM result expression, and is deserialized with the hint.
 fn get_ptr_from_res_operand_unchecked(vm: &mut VirtualMachine, res: &ResOperand) -> Relocatable {
@@ -611,9 +620,7 @@ impl CheatableSyscallHandler<'_> {
         self.syscall_handler.execute_next_syscall(vm, hint)
     }
 
-    // Exactly the same implementation as SyscallHintProcessor::execute_syscall
-    // It is copied because it is private in SyscallHintProcessor
-    // and we need to call it here to override syscalls logic.
+    // crates/blockifier/src/execution/syscalls/hint_processor.rs:280 (SyscallHintProcessor::execute_syscall)
     fn execute_syscall<Request, Response, ExecuteCallback>(
         &mut self,
         vm: &mut VirtualMachine,
@@ -669,7 +676,7 @@ impl CheatableSyscallHandler<'_> {
 
         Ok(())
     }
-
+    // crates/blockifier/src/execution/syscalls/hint_processor.rs:176 (verify_syscall_ptr)
     fn verify_syscall_ptr(&self, actual_ptr: Relocatable) -> SyscallResult<()> {
         if actual_ptr != self.syscall_handler.syscall_ptr {
             return Err(SyscallExecutionError::BadSyscallPointer {
@@ -683,25 +690,24 @@ impl CheatableSyscallHandler<'_> {
 }
 
 #[derive(Debug)]
-// Inspired by blockifier::execution::syscalls::SingleSegmentResponse
+// crates/blockifier/src/execution/syscalls/mod.rs:127 (SingleSegmentResponse)
 // It is created here because fields in the original structure are private
 // so we cannot create it in call_contract_syscall
 pub struct SingleSegmentResponse {
     segment: ReadOnlySegment,
 }
-
+// crates/blockifier/src/execution/syscalls/mod.rs:131 (SyscallResponse for SingleSegmentResponse)
 impl SyscallResponse for SingleSegmentResponse {
     fn write(self, vm: &mut VirtualMachine, ptr: &mut Relocatable) -> WriteResponseResult {
         write_segment(vm, ptr, self.segment)
     }
 }
 
-// Inspired by blockifier::execution::syscalls::call_contract
-// Calls a contract using our implementation with modified logic
+// blockifier/src/execution/syscalls/mod.rs:157 (call_contract)
 pub fn call_contract_syscall(
     request: CallContractRequest,
     vm: &mut VirtualMachine,
-    syscall_handler: &mut CheatableSyscallHandler<'_>,
+    syscall_handler: &mut CheatableSyscallHandler<'_>, // Modified parameter type
     remaining_gas: &mut u64,
 ) -> SyscallResult<SingleSegmentResponse> {
     let storage_address = request.contract_address;
@@ -718,16 +724,18 @@ pub fn call_contract_syscall(
     };
     let retdata_segment = execute_inner_call(&mut entry_point, vm, syscall_handler, remaining_gas)?;
 
+    // region: Modified blockifier code
     Ok(SingleSegmentResponse {
         segment: retdata_segment,
     })
+    // endregion
 }
 
 // blockifier/src/execution/syscalls/mod.rs:222 (deploy_syscall)
 fn deploy_syscall(
     request: DeployRequest,
     vm: &mut VirtualMachine,
-    syscall_handler: &mut CheatableSyscallHandler<'_>,
+    syscall_handler: &mut CheatableSyscallHandler<'_>, // Modified parameter type
     remaining_gas: &mut u64,
 ) -> SyscallResult<DeployResponse> {
     let deployer_address = syscall_handler.syscall_handler.storage_address();
@@ -835,7 +843,7 @@ pub fn execute_constructor_entry_point(
         call_type: CallType::Call,
         initial_gas: remaining_gas,
     };
-    // region: Modified code
+    // region: Modified blockifier code
     execute_call_entry_point(
         &mut constructor_call,
         state,
@@ -846,20 +854,50 @@ pub fn execute_constructor_entry_point(
     // endregion
 }
 
-// Inspired by blockifier::execution::syscalls::library_call
-// Calls a library using our implementation with modified logic
+// blockifier/src/execution/syscalls/mod.rs:407 (library_call)
 pub fn library_call_syscall(
     request: LibraryCallRequest,
     vm: &mut VirtualMachine,
-    syscall_handler: &mut CheatableSyscallHandler<'_>,
+    syscall_handler: &mut CheatableSyscallHandler<'_>, // Modified parameter type
     remaining_gas: &mut u64,
 ) -> SyscallResult<SingleSegmentResponse> {
+    let call_to_external = true;
+    let retdata_segment = execute_library_call(
+        syscall_handler,
+        vm,
+        request.class_hash,
+        call_to_external,
+        request.function_selector,
+        request.calldata,
+        remaining_gas,
+    )?;
+
+    Ok(SingleSegmentResponse {
+        segment: retdata_segment,
+    })
+}
+
+// blockifier/src/execution/syscalls/hint_processor.rs:577 (execute_library_call)
+pub fn execute_library_call(
+    syscall_handler: &mut CheatableSyscallHandler<'_>, // Modified parameter type
+    vm: &mut VirtualMachine,
+    class_hash: ClassHash,
+    call_to_external: bool,
+    entry_point_selector: EntryPointSelector,
+    calldata: Calldata,
+    remaining_gas: &mut u64,
+) -> SyscallResult<ReadOnlySegment> {
+    let entry_point_type = if call_to_external {
+        EntryPointType::External
+    } else {
+        EntryPointType::L1Handler
+    };
     let mut entry_point = CallEntryPoint {
-        class_hash: Some(request.class_hash),
+        class_hash: Some(class_hash),
         code_address: None,
-        entry_point_type: EntryPointType::External,
-        entry_point_selector: request.function_selector,
-        calldata: request.calldata,
+        entry_point_type,
+        entry_point_selector,
+        calldata,
         // The call context remains the same in a library call.
         storage_address: syscall_handler.syscall_handler.storage_address(),
         caller_address: syscall_handler.syscall_handler.caller_address(),
@@ -867,21 +905,17 @@ pub fn library_call_syscall(
         initial_gas: *remaining_gas,
     };
 
-    let retdata_segment = execute_inner_call(&mut entry_point, vm, syscall_handler, remaining_gas)?;
-
-    Ok(SingleSegmentResponse {
-        segment: retdata_segment,
-    })
+    execute_inner_call(&mut entry_point, vm, syscall_handler, remaining_gas)
 }
 
-// Inspired by blockifier::hint_processor::execute_inner_call
+// blockifier/src/execution/syscalls/hint_processor.rs:541 (execute_inner_call)
 pub fn execute_inner_call(
     call: &mut CallEntryPoint,
     vm: &mut VirtualMachine,
-    syscall_handler: &mut CheatableSyscallHandler<'_>,
+    syscall_handler: &mut CheatableSyscallHandler<'_>, // Changed parameter type
     remaining_gas: &mut u64,
 ) -> SyscallResult<ReadOnlySegment> {
-    // Modified code
+    // region: Modified blockifier code
     let call_info = execute_call_entry_point(
         call,
         syscall_handler.syscall_handler.state,
@@ -889,7 +923,7 @@ pub fn execute_inner_call(
         syscall_handler.syscall_handler.resources,
         syscall_handler.syscall_handler.context,
     )?;
-    // Modified end
+    // endregion
 
     let raw_retdata = &call_info.execution.retdata.0;
 
@@ -925,15 +959,16 @@ fn get_ret_data_by_call_entry_point<'a>(
     None
 }
 
-/// Executes a specific call to a contract entry point and returns its output.
+// blockifier/src/execution/cairo1_execution.rs:48 (execute_entry_point_call)
 fn execute_entry_point_call_cairo1(
     call: CallEntryPoint,
     contract_class: &ContractClassV1,
     state: &mut dyn State,
-    cheatcode_state: &CheatcodeState,
+    cheatcode_state: &CheatcodeState, // Added parameter
     resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
 ) -> EntryPointExecutionResult<CallInfo> {
+    // region: Modified blockifier code
     if let Some(ret_data) = get_ret_data_by_call_entry_point(&call, cheatcode_state) {
         return Ok(CallInfo {
             call,
@@ -950,6 +985,7 @@ fn execute_entry_point_call_cairo1(
             accessed_storage_keys: HashSet::new(),
         });
     }
+    // endregion
 
     let VmExecutionContext {
         mut runner,
@@ -972,6 +1008,7 @@ fn execute_entry_point_call_cairo1(
     // Snapshot the VM resources, in order to calculate the usage of this run at the end.
     let previous_vm_resources = syscall_handler.resources.vm_resources.clone();
 
+    // region: Modified blockifier code
     let mut cheatable_syscall_handler = CheatableSyscallHandler {
         syscall_handler,
         cheatcode_state,
@@ -986,6 +1023,7 @@ fn execute_entry_point_call_cairo1(
         &args,
         program_extra_data_length,
     )?;
+    // endregion
 
     let call_info = finalize_execution(
         vm,
@@ -1004,7 +1042,7 @@ fn execute_entry_point_call_cairo1(
     Ok(call_info)
 }
 
-/// Runs the runner from the given PC.
+// crates/blockifier/src/execution/cairo1_execution.rs:236 (run_entry_point)
 fn cheatable_run_entry_point(
     vm: &mut VirtualMachine,
     runner: &mut CairoRunner,
@@ -1013,7 +1051,10 @@ fn cheatable_run_entry_point(
     args: &Args,
     program_segment_size: usize,
 ) -> Result<(), VirtualMachineExecutionError> {
+    // region: Modified blockifier code
+    // Opposite to blockifier
     let verify_secure = false;
+    // endregion
     let args: Vec<&CairoArg> = args.iter().collect();
 
     runner.run_from_entrypoint(
