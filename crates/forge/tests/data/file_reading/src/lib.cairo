@@ -1,4 +1,4 @@
-use snforge_std::{FileTrait, parse_txt, TxtParser};
+use snforge_std::{FileTrait, parse_txt, Parser};
 use array::ArrayTrait;
 use option::OptionTrait;
 use serde::Serde;
@@ -51,7 +51,7 @@ struct D {
 #[test]
 fn valid_content_and_same_content_no_matter_whitespaces() {
     let file = FileTrait::new('data/valid.txt');
-    let content = TxtParser::<A>::deserialize_txt(@file).unwrap();
+    let content = Parser::<A>::deserialize_txt(@file).unwrap();
     let expected = A {
         a: 1, nested_b: B {
             nested_c: C { c: u256 { low: 'hello', high: 3 } }

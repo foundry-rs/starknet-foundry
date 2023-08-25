@@ -1,4 +1,4 @@
-use snforge_std::{FileTrait, parse_txt, parse_json, TxtParser};
+use snforge_std::{FileTrait, parse_txt, parse_json, Parser};
 use array::ArrayTrait;
 use option::OptionTrait;
 use serde::Serde;
@@ -68,7 +68,7 @@ struct G {
 #[test]
 fn valid_content_and_same_content_no_matter_whitespaces() {
     let file = FileTrait::new('data/valid.txt');
-    let content = TxtParser::<A>::deserialize_txt(@file).unwrap();
+    let content = Parser::<A>::deserialize_txt(@file).unwrap();
     let expected = A {
         a: 1, nested_b: B {
             nested_c: C { c: u256 { low: 'hello', high: 3 } }
@@ -107,7 +107,7 @@ fn invalid_json() {
 #[test]
 fn json_deserialization() {
     let file = FileTrait::new('data/json/nested_valid.json');
-    let content = TxtParser::<E>::deserialize_json(@file).unwrap();
+    let content = Parser::<E>::deserialize_json(@file).unwrap();
 
     let mut output_array = ArrayTrait::new();
     let serialized = content.serialize(ref output_array);

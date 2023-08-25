@@ -1,7 +1,7 @@
 # `deserialize_txt`
 
 
-> `trait TxtParser<T, impl TSerde: Serde<T>> {
+> `trait Parser<T, impl TSerde: Serde<T>> {
 >     fn deserialize_txt(file: @File) -> Option<T>;
 > }` 
 
@@ -13,7 +13,7 @@ Parses plain text file content and tries to deserialize it to type `T` that impl
 ```rust
 use option::OptionTrait;
 use serde::Serde;
-use snforge_std::{ FileTrait, TxtParser };
+use snforge_std::{ FileTrait, Parser };
 
 #[derive(Serde, Drop)]
 struct MyStruct {
@@ -24,7 +24,7 @@ struct MyStruct {
 #[test]
 fn test_deserialize_txt() {
     let file = FileTrait::new('data/file.txt');
-    let my_struct = TxtParser::<MyStruct>::deserialize_txt(@file).unwrap();
+    let my_struct = Parser::<MyStruct>::deserialize_txt(@file).unwrap();
     // ...
 }
 ```

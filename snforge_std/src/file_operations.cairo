@@ -53,12 +53,12 @@ fn parse_json(file: @File) -> Array<felt252> {
     result
 }
 
-trait TxtParser<T, impl TSerde: Serde<T>> {
+trait Parser<T, impl TSerde: Serde<T>> {
     fn deserialize_txt(file: @File) -> Option<T>;
     fn deserialize_json(file: @File) -> Option<T>;
 }
 
-impl TxtParserImpl<T, impl TSerde: Serde<T>> of TxtParser<T> {
+impl ParserImpl<T, impl TSerde: Serde<T>> of Parser<T> {
     fn deserialize_txt(file: @File) -> Option<T> {
         let mut content = cheatcode::<'parse_txt'>(array![*file.path].span());
         Serde::<T>::deserialize(ref content)
