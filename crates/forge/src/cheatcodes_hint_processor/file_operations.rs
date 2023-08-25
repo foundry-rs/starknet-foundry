@@ -31,7 +31,7 @@ pub(super) fn parse_json(file_path: &Felt252) -> Result<Vec<Felt252>, EnhancedHi
     let file_path_str = as_cairo_short_string(file_path)
         .with_context(|| format!("Failed to convert {file_path} to str"))?;
     let content = std::fs::read_to_string(&file_path_str)?;
-    let split_content = json_values_sorted_by_keys(content).map_err(|_| FileParsing {
+    let split_content = json_values_sorted_by_keys(&content).map_err(|_| FileParsing {
         path: file_path_str.clone(),
     })?;
 
@@ -49,13 +49,13 @@ pub(super) fn parse_json(file_path: &Felt252) -> Result<Vec<Felt252>, EnhancedHi
         })
 }
 
-fn json_values_sorted_by_keys(content: String) -> Result<Vec<String>, EnhancedHintError> {
+fn json_values_sorted_by_keys(content: &str) -> Result<Vec<String>, EnhancedHintError> {
     let json: Map<String, Value> =
-        serde_json::from_str(&content).map_err(|_| anyhow!("Wrong format"))?;
+        serde_json::from_str(content).map_err(|_| anyhow!("Wrong format"))?;
 
     let data = flatten(&json);
 
-    let mut keys: Vec<String> = data.keys().map(|e| e.to_string()).collect();
+    let mut keys: Vec<String> = data.keys().map(std::string::ToString::to_string).collect();
     keys.sort_by_key(|a| a.to_lowercase());
 
     Ok(keys
@@ -113,7 +113,7 @@ mod tests {
             "ab": 12
         }"#
         .to_owned();
-        let result = dbg!(json_values_sorted_by_keys(string).unwrap());
+        let result = json_values_sorted_by_keys(&string).unwrap();
         let expected_result = ["1", "2", "12", "43", "\'Joh\'"].to_vec();
         let result_length = expected_result.len();
 
@@ -123,7 +123,7 @@ mod tests {
             .filter(|&(a, b)| a == b)
             .count();
 
-        assert_eq!(has_proper_values, result_length)
+        assert_eq!(has_proper_values, result_length);
     }
 
     #[test]
