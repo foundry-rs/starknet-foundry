@@ -7,7 +7,10 @@ use crate::e2e::common::runner::{runner, setup_package};
 fn file_reading() {
     let temp = setup_package("file_reading");
 
-    let expected = indoc! {r#"Collected 18 test(s) and 2 test file(s)
+    let expected = indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+        Collected 18 test(s) and 2 test file(s)
         Running 9 test(s) from file_reading package
         [PASS] file_reading::valid_content_and_same_content_no_matter_whitespaces
         [PASS] file_reading::serialization

@@ -1,5 +1,5 @@
 [package]
-name = "build_fails"
+name = "build_fails_no_casm"
 version = "0.1.0"
 
 [dependencies]
