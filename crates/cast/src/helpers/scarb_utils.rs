@@ -230,7 +230,7 @@ mod tests {
     #[test]
     fn test_get_scarb_metadata() {
         let metadata = get_scarb_metadata(&"tests/data/contracts/v1/balance/Scarb.toml".into());
-        assert!(matches!(metadata, Ok(_)));
+        assert!(metadata.is_ok());
     }
 
     #[test]
