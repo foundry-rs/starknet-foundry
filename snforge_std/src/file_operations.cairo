@@ -55,11 +55,16 @@ fn parse_json(file: @File) -> Array<felt252> {
 
 trait TxtParser<T, impl TSerde: Serde<T>> {
     fn deserialize_txt(file: @File) -> Option<T>;
+    fn deserialize_json(file: @File) -> Option<T>;
 }
 
 impl TxtParserImpl<T, impl TSerde: Serde<T>> of TxtParser<T> {
     fn deserialize_txt(file: @File) -> Option<T> {
         let mut content = cheatcode::<'parse_txt'>(array![*file.path].span());
+        Serde::<T>::deserialize(ref content)
+    }
+    fn deserialize_json(file: @File) -> Option<T> {
+        let mut content = cheatcode::<'parse_json'>(array![*file.path].span());
         Serde::<T>::deserialize(ref content)
     }
 }

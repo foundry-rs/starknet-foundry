@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use anyhow::Context;
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
@@ -58,13 +56,13 @@ fn json_to_alphanumeric_sorted_vec(content: String) -> Vec<String> {
     keys.sort_by(|a, b| a.to_lowercase().cmp(&b.to_lowercase()));
 
     keys.into_iter()
-        .map(|key| data.get(&key).unwrap().to_string())
+        .map(|key| data.get(&key).unwrap().to_string().replace("\"", "\'"))
         .collect()
 }
 
 fn string_into_felt(string: &str) -> Result<Felt252, ()> {
     if let Ok(number) = string.parse::<BigUint>() {
-        // By default it is replaced with 0 in this case
+        // By default it is replaced with 0 in this cases
         if number < Felt252::prime() {
             Ok(number.into())
         } else {
@@ -112,7 +110,7 @@ mod tests {
         }"#
         .to_owned();
         let result = json_to_alphanumeric_sorted_vec(string);
-        let expected_result = ["1", "2", "12", "43", "\"Joh\""].to_vec();
+        let expected_result = ["1", "2", "12", "43", "Joh"].to_vec();
         let result_length = expected_result.len();
 
         let has_proper_values = result

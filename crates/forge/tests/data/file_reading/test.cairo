@@ -1,4 +1,4 @@
-use snforge_std::{FileTrait, parse_txt, TxtParser};
+use snforge_std::{FileTrait, parse_txt, parse_json, TxtParser};
 use array::ArrayTrait;
 use option::OptionTrait;
 use serde::Serde;
@@ -48,6 +48,22 @@ struct D {
     e: u8
 }
 
+#[derive(Serde, Drop, PartialEq)]
+struct E {
+    a: felt252,
+    b: F
+}
+#[derive(Serde, Drop, PartialEq)]
+struct F {
+    c: felt252,
+    d: u8,
+    e: G
+}
+#[derive(Serde, Drop, PartialEq)]
+struct G {
+    c: felt252,
+}
+
 
 #[test]
 fn valid_content_and_same_content_no_matter_whitespaces() {
@@ -60,6 +76,7 @@ fn valid_content_and_same_content_no_matter_whitespaces() {
             d: 'world', e: 0
         }, f: 3618502788666131213697322783095070105623107215331596699973092056135872020480,
     };
+    assert(content.f == expected.f, '')
 }
 
 #[test]
@@ -71,6 +88,32 @@ fn serialization() {
     let file = FileTrait::new('data/valid_diff_spaces.txt');
     let content = parse_txt(@file);
     compare_with_expected_content(content);
+}
+
+#[test]
+fn json_serialization() {
+    let file = FileTrait::new('data/json/valid.json');
+    let content = parse_json(@file);
+    compare_with_expected_content(content);
+}
+
+#[test]
+fn invalid_json() {
+    let file = FileTrait::new('data/json/invalid.json');
+    let content = parse_json(@file);
+    assert(1 == 1, '');
+}
+
+#[test]
+fn json_deserialization() {
+    let file = FileTrait::new('data/json/nested_valid.json');
+    let content = TxtParser::<E>::deserialize_json(@file).unwrap();
+
+    let mut output_array = ArrayTrait::new();
+    let serialized = content.serialize(ref output_array);
+    assert(content.a == 23, '');
+    assert(content.b.c == 'test', '');
+    assert(content.b.e.c == 2, '');
 }
 
 #[test]

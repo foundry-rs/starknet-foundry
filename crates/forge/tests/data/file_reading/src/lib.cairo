@@ -48,7 +48,6 @@ struct D {
     e: u8
 }
 
-
 #[test]
 fn valid_content_and_same_content_no_matter_whitespaces() {
     let file = FileTrait::new('data/valid.txt');
@@ -60,6 +59,7 @@ fn valid_content_and_same_content_no_matter_whitespaces() {
             d: 'world', e: 0
         }, f: 3618502788666131213697322783095070105623107215331596699973092056135872020480,
     };
+    assert(content.f == expected.f, '')
 }
 
 #[test]
