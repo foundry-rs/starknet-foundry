@@ -44,6 +44,7 @@ struct Account {
     address: String,
     salt: Option<String>,
     deployed: Option<bool>,
+    class_hash: Option<String>,
 }
 
 pub fn get_provider(url: &str) -> Result<JsonRpcClient<HttpTransport>> {
