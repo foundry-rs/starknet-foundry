@@ -18,7 +18,7 @@ async fn test_happy_path() {
     )
     .await;
 
-    assert!(matches!(res, Ok(_)));
+    assert!(res.is_ok());
     assert!(matches!(res.unwrap(), "Transaction accepted"));
 }
 
