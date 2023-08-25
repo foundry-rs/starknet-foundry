@@ -51,10 +51,8 @@ pub(crate) fn setup_package(package_name: &str) -> TempDir {
     temp
 }
 
-/**
- * In the context of GITHUB actions, get the source branch that triggered the workflow run.
- * Locally returns current branch.
- */
+/// In the context of GITHUB actions, get the source branch that triggered the workflow run.
+/// Locally returns current branch.
 pub(crate) fn gen_current_branch() -> String {
     let name: &str = "BRANCH_NAME";
     match env::var(name) {
