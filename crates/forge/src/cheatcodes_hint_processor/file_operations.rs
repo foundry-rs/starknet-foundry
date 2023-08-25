@@ -1,4 +1,4 @@
-use anyhow::Context;
+use anyhow::{anyhow, Context};
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cheatnet::cheatcodes::EnhancedHintError;
@@ -30,8 +30,12 @@ pub(super) fn parse_txt(file_path: &Felt252) -> Result<Vec<Felt252>, EnhancedHin
 pub(super) fn parse_json(file_path: &Felt252) -> Result<Vec<Felt252>, EnhancedHintError> {
     let file_path_str = as_cairo_short_string(file_path)
         .with_context(|| format!("Failed to convert {file_path} to str"))?;
-    let content = std::fs::read_to_string(file_path_str.clone())?;
-    let split_content = json_to_alphanumeric_sorted_vec(content);
+    let content = std::fs::read_to_string(&file_path_str)?;
+    let split_content = json_values_sorted_by_keys(content).map_err(|_| {
+        return FileParsing {
+            path: file_path_str.clone(),
+        };
+    })?;
 
     // let split_content: Vec<&str> = content.trim().split_ascii_whitespace().collect();
     let felts_in_results: Vec<Result<Felt252, ()>> = split_content
@@ -48,16 +52,19 @@ pub(super) fn parse_json(file_path: &Felt252) -> Result<Vec<Felt252>, EnhancedHi
         })
 }
 
-fn json_to_alphanumeric_sorted_vec(content: String) -> Vec<String> {
-    let json: Map<String, Value> = serde_json::from_str(&content).unwrap();
+fn json_values_sorted_by_keys(content: String) -> Result<Vec<String>, EnhancedHintError> {
+    let json: Map<String, Value> =
+        serde_json::from_str(&content).map_err(|_| anyhow!("Wrong format"))?;
+
     let data = flatten(&json);
 
     let mut keys: Vec<String> = data.keys().map(|e| e.to_string()).collect();
     keys.sort_by(|a, b| a.to_lowercase().cmp(&b.to_lowercase()));
 
-    keys.into_iter()
+    Ok(keys
+        .into_iter()
         .map(|key| data.get(&key).unwrap().to_string().replace("\"", "\'"))
-        .collect()
+        .collect())
 }
 
 fn string_into_felt(string: &str) -> Result<Felt252, ()> {
@@ -94,7 +101,7 @@ mod tests {
     use num_bigint::BigUint;
     use num_traits::One;
 
-    use super::json_to_alphanumeric_sorted_vec;
+    use super::json_values_sorted_by_keys;
 
     #[test]
     fn test_parse_json() {
@@ -109,8 +116,8 @@ mod tests {
             "ab": 12
         }"#
         .to_owned();
-        let result = json_to_alphanumeric_sorted_vec(string);
-        let expected_result = ["1", "2", "12", "43", "Joh"].to_vec();
+        let result = dbg!(json_values_sorted_by_keys(string).unwrap());
+        let expected_result = ["1", "2", "12", "43", "\'Joh\'"].to_vec();
         let result_length = expected_result.len();
 
         let has_proper_values = result
