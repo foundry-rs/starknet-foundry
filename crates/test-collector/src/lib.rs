@@ -115,13 +115,19 @@ pub fn find_all_tests(
         let Ok(module_items) = db.module_items(*module_id) else {
             continue;
         };
-        tests.extend(
-            module_items.iter().filter_map(|item| {
-                let ModuleItemId::FreeFunction(func_id) = item else { return None };
-                let Ok(attrs) = db.function_with_body_attributes(FunctionWithBodyId::Free(*func_id)) else { return None };
-                Some((*func_id, try_extract_test_config(db.upcast(), &attrs).unwrap()?))
-            }),
-        );
+        tests.extend(module_items.iter().filter_map(|item| {
+            let ModuleItemId::FreeFunction(func_id) = item else {
+                return None;
+            };
+            let Ok(attrs) = db.function_with_body_attributes(FunctionWithBodyId::Free(*func_id))
+            else {
+                return None;
+            };
+            Some((
+                *func_id,
+                try_extract_test_config(db.upcast(), &attrs).unwrap()?,
+            ))
+        }));
     }
     tests
 }
@@ -232,18 +238,24 @@ pub fn try_extract_test_config(
 
 /// Tries to extract the relevant expected panic values.
 fn extract_panic_values(db: &dyn SyntaxGroup, attr: &Attribute) -> Option<Vec<Felt252>> {
-    let [
-        AttributeArg {
-            variant: AttributeArgVariant::Named { name, value: panics, .. },
-            ..
-        }
-    ] = &attr.args[..] else {
+    let [AttributeArg {
+        variant:
+            AttributeArgVariant::Named {
+                name,
+                value: panics,
+                ..
+            },
+        ..
+    }] = &attr.args[..]
+    else {
         return None;
     };
     if name != "expected" {
         return None;
     }
-    let ast::Expr::Tuple(panics) = panics else { return None };
+    let ast::Expr::Tuple(panics) = panics else {
+        return None;
+    };
     panics
         .expressions(db)
         .elements(db)

@@ -19,6 +19,7 @@ pub fn recover_data(output: CallContractOutput) -> Vec<Felt252> {
     match output {
         CallContractOutput::Success { ret_data } => ret_data,
         CallContractOutput::Panic { panic_data } => panic_data,
+        CallContractOutput::Error { msg } => panic!("Call failed with message: {msg}"),
     }
 }
 

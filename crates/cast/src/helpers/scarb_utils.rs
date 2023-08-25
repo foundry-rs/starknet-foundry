@@ -9,7 +9,6 @@ use std::str::FromStr;
 #[derive(Deserialize, Serialize, Clone, Debug, Default)]
 pub struct CastConfig {
     pub rpc_url: String,
-    pub network: String,
     pub account: String,
     pub accounts_file: Utf8PathBuf,
 }
@@ -23,7 +22,6 @@ impl CastConfig {
 
         Ok(CastConfig {
             rpc_url: get_property(tool, "url"),
-            network: get_property(tool, "network"),
             account: get_property(tool, "account"),
             accounts_file: get_property(tool, "accounts-file"),
         })
@@ -68,6 +66,17 @@ pub fn get_scarb_manifest() -> Result<Utf8PathBuf> {
     Ok(path)
 }
 
+pub fn get_scarb_metadata(manifest_path: &Utf8PathBuf) -> Result<scarb_metadata::Metadata> {
+    scarb_metadata::MetadataCommand::new()
+        .inherit_stderr()
+        .manifest_path(manifest_path)
+        .no_deps()
+        .exec()
+        .context(
+            "Failed to read Scarb.toml manifest file, not found in current nor parent directories",
+        )
+}
+
 pub fn parse_scarb_config(
     profile: &Option<String>,
     path: &Option<Utf8PathBuf>,
@@ -78,22 +87,16 @@ pub fn parse_scarb_config(
         }
     }
 
-    let manifest_path = path.clone().unwrap_or_else(|| {
-        get_scarb_manifest().expect("Failed to obtain manifest path from scarb")
-    });
+    let manifest_path = match path.clone() {
+        Some(path) => path,
+        None => get_scarb_manifest().context("Failed to obtain manifest path from scarb")?,
+    };
 
     if !manifest_path.exists() {
         return Ok(CastConfig::default());
     }
 
-    let metadata = scarb_metadata::MetadataCommand::new()
-        .inherit_stderr()
-        .manifest_path(manifest_path)
-        .no_deps()
-        .exec()
-        .context(
-            "Failed to read Scarb.toml manifest file, not found in current nor parent directories",
-        )?;
+    let metadata = get_scarb_metadata(&manifest_path)?;
 
     match get_package_tool_sncast(&metadata) {
         Ok(package_tool_sncast) => {
@@ -124,6 +127,7 @@ pub fn get_package_tool_sncast(metadata: &scarb_metadata::Metadata) -> Result<&V
 
 #[cfg(test)]
 mod tests {
+    use crate::helpers::scarb_utils::get_scarb_metadata;
     use crate::helpers::scarb_utils::parse_scarb_config;
     use camino::Utf8PathBuf;
     use sealed_test::prelude::rusty_fork_test;
@@ -140,7 +144,6 @@ mod tests {
         .unwrap();
 
         assert_eq!(config.account, String::from("user1"));
-        assert_eq!(config.network, String::from("testnet"));
         assert_eq!(config.rpc_url, String::from("http://127.0.0.1:5055/rpc"));
     }
 
@@ -152,7 +155,6 @@ mod tests {
         )
         .unwrap();
         assert_eq!(config.account, String::from("user2"));
-        assert_eq!(config.network, String::from("testnet"));
         assert_eq!(config.rpc_url, String::from("http://127.0.0.1:5055/rpc"));
     }
 
@@ -168,7 +170,6 @@ mod tests {
         let config = parse_scarb_config(&None, &None).unwrap();
 
         assert!(config.rpc_url.is_empty());
-        assert!(config.network.is_empty());
         assert!(config.account.is_empty());
     }
 
@@ -181,7 +182,6 @@ mod tests {
         .unwrap();
 
         assert!(config.rpc_url.is_empty());
-        assert!(config.network.is_empty());
         assert!(config.account.is_empty());
     }
 
@@ -216,7 +216,6 @@ mod tests {
         let config = parse_scarb_config(&None, &None).unwrap();
 
         assert!(config.rpc_url.is_empty());
-        assert!(config.network.is_empty());
         assert!(config.account.is_empty());
     }
 
@@ -225,7 +224,20 @@ mod tests {
         let config = parse_scarb_config(&Some(String::from("myprofile")), &None).unwrap();
 
         assert_eq!(config.rpc_url, String::from("http://127.0.0.1:5055/rpc"));
-        assert_eq!(config.network, String::from("testnet"));
         assert_eq!(config.account, String::from("user1"));
+    }
+
+    #[test]
+    fn test_get_scarb_metadata() {
+        let metadata = get_scarb_metadata(&"tests/data/contracts/v1/balance/Scarb.toml".into());
+        assert!(metadata.is_ok());
+    }
+
+    #[test]
+    fn test_get_scarb_metadata_not_found() {
+        let metadata_err = get_scarb_metadata(&"Scarb.toml".into()).unwrap_err();
+        assert!(metadata_err
+            .to_string()
+            .contains("Failed to read Scarb.toml manifest file"));
     }
 }

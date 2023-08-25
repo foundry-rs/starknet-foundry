@@ -1,6 +1,7 @@
 use std::sync::Arc;
 use std::{collections::HashMap, fs, path::PathBuf};
 
+use blockifier::execution::contract_class::ContractClassV1;
 use blockifier::state::cached_state::GlobalContractCache;
 use blockifier::{
     abi::{abi_utils::get_storage_var_address, constants},
@@ -112,14 +113,28 @@ pub fn build_invoke_transaction(
     }
 }
 
-fn load_contract_class(
+fn read_predeployed_contract_file(
+    predeployed_contracts: &Utf8PathBuf,
+    contract_path: &str,
+) -> String {
+    let full_contract_path: PathBuf = predeployed_contracts.join(contract_path).into();
+    fs::read_to_string(full_contract_path).expect("Failed to read predeployed contracts")
+}
+
+fn load_v0_contract_class(
     predeployed_contracts: &Utf8PathBuf,
     contract_path: &str,
 ) -> ContractClassV0 {
-    let full_contract_path: PathBuf = predeployed_contracts.join(contract_path).into();
-    let raw_contract_class =
-        fs::read_to_string(full_contract_path).expect("Failed to read predeployed contracts");
+    let raw_contract_class = read_predeployed_contract_file(predeployed_contracts, contract_path);
     ContractClassV0::try_from_json_string(&raw_contract_class).unwrap()
+}
+
+fn load_v1_contract_class(
+    predeployed_contracts: &Utf8PathBuf,
+    contract_path: &str,
+) -> ContractClassV1 {
+    let raw_contract_class = read_predeployed_contract_file(predeployed_contracts, contract_path);
+    ContractClassV1::try_from_json_string(&raw_contract_class).unwrap()
 }
 
 fn erc20_account_balance_key() -> StorageKey {
@@ -135,11 +150,8 @@ fn erc20_account_balance_key() -> StorageKey {
 // Account does not include validations
 #[must_use]
 pub fn build_testing_state(predeployed_contracts: &Utf8PathBuf) -> CachedState<DictStateReader> {
-    let account_class = load_contract_class(
-        predeployed_contracts,
-        "account_no_validations_contract.casm.json",
-    );
-    let erc20_class = load_contract_class(
+    let account_class = load_v1_contract_class(predeployed_contracts, "account_cairo1.casm.json");
+    let erc20_class = load_v0_contract_class(
         predeployed_contracts,
         "erc20_contract_without_some_syscalls_compiled.json",
     );
@@ -148,7 +160,7 @@ pub fn build_testing_state(predeployed_contracts: &Utf8PathBuf) -> CachedState<D
     let test_erc20_class_hash = ClassHash(stark_felt!(TEST_ERC20_CONTRACT_CLASS_HASH));
 
     let class_hash_to_class = HashMap::from([
-        (test_account_class_hash, ContractClass::V0(account_class)),
+        (test_account_class_hash, ContractClass::V1(account_class)),
         (test_erc20_class_hash, ContractClass::V0(erc20_class)),
     ]);
 

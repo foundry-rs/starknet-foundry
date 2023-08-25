@@ -24,11 +24,11 @@ fn test_happy_case(contract_address: &str) {
     let snapbox = runner(&args);
 
     snapbox.assert().success().stdout_eq(indoc! {r#"
-{
-  "command": "call",
-  "response": "[0x0]"
-}
-"#});
+        {
+          "command": "call",
+          "response": "[0x0]"
+        }
+    "#});
 }
 
 #[test_case(MAP_CONTRACT_ADDRESS_V1, "user1" ; "when cairo1 contract")]
@@ -115,4 +115,24 @@ fn test_wrong_calldata(contract_address: &str) {
         command: call
         error: Execution was reverted; failure reason: [0x496e70757420746f6f206c6f6e6720666f7220617267756d656e7473].
     "#});
+}
+
+#[tokio::test]
+async fn test_invalid_selector() {
+    let mut args = default_cli_args();
+    args.append(&mut vec![
+        "call",
+        "--contract-address",
+        MAP_CONTRACT_ADDRESS_V2,
+        "--function",
+        "ą",
+        "--calldata",
+        "0x1 0x2",
+    ]);
+
+    let snapbox = runner(&args);
+    snapbox.assert().stderr_matches(indoc! {r#"
+      command: call
+      error: Failed to convert entry point selector to FieldElement: the provided name contains non-ASCII characters
+  "#});
 }

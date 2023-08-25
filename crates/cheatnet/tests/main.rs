@@ -1,5 +1,6 @@
 mod cheatcodes;
 pub(crate) mod common;
+mod starknet;
 
 // Build testing contracts before executing the tests
 #[cfg(test)]

@@ -67,19 +67,19 @@ fn start_devnet() {
     let rt = Runtime::new().expect("Could not instantiate Runtime");
     rt.block_on(declare_deploy_contract(
         "user1",
-        "/v1/map/target/dev/map_Map",
+        "/v1/map/target/dev/map_v1_Map",
     ));
     rt.block_on(declare_deploy_contract(
         "user2",
-        "/v2/map/target/dev/map_Map",
+        "/v2/map/target/dev/map_v2_Map",
     ));
     rt.block_on(declare_contract(
         "user3",
-        "/v1/constructor_with_params/target/dev/constructor_with_params_ConstructorWithParams",
+        "/v1/constructor_with_params/target/dev/constructor_with_params_v1_ConstructorWithParams",
     ));
     rt.block_on(declare_contract(
         "user4",
-        "/v2/constructor_with_params/target/dev/constructor_with_params_ConstructorWithParams",
+        "/v2/constructor_with_params/target/dev/constructor_with_params_v2_ConstructorWithParams",
     ));
 }
 
