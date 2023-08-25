@@ -249,7 +249,7 @@ fn event_emitted_wrong_data_asserted() {
     assert_case_output_contains!(
         result,
         "test_assert_wrong_data",
-        "313030104761018700624599948735635264152311475736681672041458379825603828958"
+        "1123343347349132833855871321423793552243395519676903121856829201345276603084"
     );
     assert_case_output_contains!(
         result,
