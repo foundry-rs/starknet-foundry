@@ -37,7 +37,6 @@ pub(super) fn parse_json(file_path: &Felt252) -> Result<Vec<Felt252>, EnhancedHi
         };
     })?;
 
-    // let split_content: Vec<&str> = content.trim().split_ascii_whitespace().collect();
     let felts_in_results: Vec<Result<Felt252, ()>> = split_content
         .iter()
         .map(|string| string_into_felt(&string))
@@ -69,7 +68,7 @@ fn json_values_sorted_by_keys(content: String) -> Result<Vec<String>, EnhancedHi
 
 fn string_into_felt(string: &str) -> Result<Felt252, ()> {
     if let Ok(number) = string.parse::<BigUint>() {
-        // By default it is replaced with 0 in this cases
+        // By default it is replaced with 0 in this case
         if number < Felt252::prime() {
             Ok(number.into())
         } else {
