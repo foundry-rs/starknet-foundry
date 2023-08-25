@@ -31,15 +31,13 @@ pub(super) fn parse_json(file_path: &Felt252) -> Result<Vec<Felt252>, EnhancedHi
     let file_path_str = as_cairo_short_string(file_path)
         .with_context(|| format!("Failed to convert {file_path} to str"))?;
     let content = std::fs::read_to_string(&file_path_str)?;
-    let split_content = json_values_sorted_by_keys(content).map_err(|_| {
-        return FileParsing {
-            path: file_path_str.clone(),
-        };
+    let split_content = json_values_sorted_by_keys(content).map_err(|_| FileParsing {
+        path: file_path_str.clone(),
     })?;
 
     let felts_in_results: Vec<Result<Felt252, ()>> = split_content
         .iter()
-        .map(|string| string_into_felt(&string))
+        .map(|string| string_into_felt(string))
         .collect();
 
     felts_in_results
@@ -58,11 +56,11 @@ fn json_values_sorted_by_keys(content: String) -> Result<Vec<String>, EnhancedHi
     let data = flatten(&json);
 
     let mut keys: Vec<String> = data.keys().map(|e| e.to_string()).collect();
-    keys.sort_by(|a, b| a.to_lowercase().cmp(&b.to_lowercase()));
+    keys.sort_by_key(|a| a.to_lowercase());
 
     Ok(keys
         .into_iter()
-        .map(|key| data.get(&key).unwrap().to_string().replace("\"", "\'"))
+        .map(|key| data.get(&key).unwrap().to_string().replace('\"', "\'"))
         .collect())
 }
 
