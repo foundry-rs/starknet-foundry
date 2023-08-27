@@ -9,4 +9,4 @@ test.workspace = true
 snforge.workspace = true
 
 [dependencies]
-addition2 = { path = "../addition" }
+addition = { path = "../addition" }

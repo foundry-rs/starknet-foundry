@@ -90,12 +90,12 @@ pub fn collect_packages(
         .collect_vec()
         .is_empty();
 
-    let filter_method: Box<dyn Fn(&PackageMetadata) -> bool> = {
-        if let Some(package_name) = package_name {
+    let package_filter: Box<dyn Fn(&PackageMetadata) -> bool> = {
+        if workspace {
+            Box::new(|_| true)
+        } else if let Some(package_name) = package_name {
             // selected specific package
             Box::new(|package| package.name == *package_name)
-        } else if workspace {
-            Box::new(|_| true)
         } else if metadata.workspace.manifest_path != *manifest_path {
             // snforge command ran inside package
             Box::new(|package| package.manifest_path == *manifest_path)
@@ -111,7 +111,7 @@ pub fn collect_packages(
         .packages
         .iter()
         .filter(|package| workspace_members.contains(&package.id))
-        .filter(|package| filter_method(package))
+        .filter(|package| package_filter(package))
         .map(|package| package.id.clone())
         .collect_vec()
 }
