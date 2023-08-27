@@ -17,7 +17,10 @@ fn workspace_run_without_arguments() {
         .current_dir(&temp)
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 3 test(s) and 2 test file(s)
+        .stdout_matches(indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+        Collected 3 test(s) and 2 test file(s)
         Running 1 test(s) from hello_workspaces package
         [PASS] hello_workspaces::test_simple
         Running 2 test(s) from tests/test_failing.cairo
@@ -43,7 +46,10 @@ fn workspace_run_specific_package() {
         .current_dir(&temp)
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 4 test(s) and 3 test file(s)
+        .stdout_matches(indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+        Collected 4 test(s) and 3 test file(s)
         Running 1 test(s) from addition package
         [PASS] addition::tests::it_works
         Running 2 test(s) from tests/nested/test_nested.cairo
@@ -67,7 +73,10 @@ fn workspace_run_specific_package_and_name() {
         .current_dir(&temp)
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 1 test(s) and 3 test file(s)
+        .stdout_matches(indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+        Collected 1 test(s) and 3 test file(s)
         Running 0 test(s) from addition package
         Running 0 test(s) from tests/nested/test_nested.cairo
         Running 1 test(s) from tests/test_simple.cairo
@@ -88,7 +97,10 @@ fn workspace_specify_root_package() {
         .current_dir(&temp)
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 3 test(s) and 2 test file(s)
+        .stdout_matches(indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+        Collected 3 test(s) and 2 test file(s)
         Running 1 test(s) from hello_workspaces package
         [PASS] hello_workspaces::test_simple
         Running 2 test(s) from tests/test_failing.cairo
@@ -116,7 +128,10 @@ fn workspace_run_inside_nested_package() {
         .current_dir(package_dir)
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 4 test(s) and 3 test file(s)
+        .stdout_matches(indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+        Collected 4 test(s) and 3 test file(s)
         Running 1 test(s) from addition package
         [PASS] addition::tests::it_works
         Running 2 test(s) from tests/nested/test_nested.cairo
@@ -140,7 +155,10 @@ fn workspace_run_for_entire_workspace() {
         .current_dir(&temp)
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 4 test(s) and 3 test file(s)
+        .stdout_matches(indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+        Collected 4 test(s) and 3 test file(s)
         Running 1 test(s) from addition package
         [PASS] addition::tests::it_works
         Running 2 test(s) from tests/nested/test_nested.cairo
@@ -179,7 +197,10 @@ fn workspace_run_missing_package() {
         .current_dir(&temp)
         .assert()
         .success()
-        .stdout_matches(indoc! {r#""#});
+        .stdout_matches(indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+        "#});
 }
 
 #[test]
@@ -194,7 +215,11 @@ fn virtual_workspace() {
         .current_dir(&temp)
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 4 test(s) and 3 test file(s)
+        .stdout_matches(indoc! {r#"
+        [..]Compiling[..]
+        [..]Compiling[..]
+        [..]Finished[..]
+        Collected 4 test(s) and 3 test file(s)
         Running 1 test(s) from addition package
         [PASS] addition::tests::it_works
         Running 2 test(s) from tests/nested/test_nested.cairo
@@ -222,7 +247,11 @@ fn virtual_workspace_specify_package() {
         .current_dir(&temp)
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 4 test(s) and 3 test file(s)
+        .stdout_matches(indoc! {r#"
+        [..]Compiling[..]
+        [..]Compiling[..]
+        [..]Finished[..]
+        Collected 4 test(s) and 3 test file(s)
         Running 1 test(s) from addition package
         [PASS] addition::tests::it_works
         Running 2 test(s) from tests/nested/test_nested.cairo
