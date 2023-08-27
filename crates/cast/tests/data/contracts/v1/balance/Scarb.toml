@@ -3,7 +3,7 @@ name = "balance"
 version = "0.1.0"
 
 [dependencies]
-starknet = ">=2.1.0"
+starknet = ">=1.1.1"
 
 [[target.starknet-contract]]
 casm = true
