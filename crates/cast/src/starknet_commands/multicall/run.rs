@@ -1,8 +1,8 @@
-use crate::helpers::constants::UDC_ADDRESS;
-use crate::helpers::response_structs::InvokeResponse;
 use crate::starknet_commands::invoke::execute_calls;
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use camino::Utf8PathBuf;
+use cast::helpers::constants::UDC_ADDRESS;
+use cast::helpers::response_structs::InvokeResponse;
 use cast::{extract_or_generate_salt, parse_number, udc_uniqueness};
 use clap::Args;
 use serde::Deserialize;
@@ -98,7 +98,7 @@ pub async fn run(
             }
             Some("invoke") => {
                 let invoke_call: InvokeCall = toml::from_str(call.to_string().as_str())
-                    .expect("failed to parse toml `invoke` call");
+                    .context("failed to parse toml `invoke` call")?;
                 let mut contract_address = &invoke_call.contract_address;
                 if let Some(addr) = contracts.get(&invoke_call.contract_address) {
                     contract_address = addr;
@@ -106,7 +106,7 @@ pub async fn run(
 
                 parsed_calls.push(Call {
                     to: parse_number(contract_address)
-                        .expect("Unable to parse contract address to FieldElement"),
+                        .context("Unable to parse contract address to FieldElement")?,
                     selector: get_selector_from_name(&invoke_call.function)?,
                     calldata: invoke_call.inputs,
                 });

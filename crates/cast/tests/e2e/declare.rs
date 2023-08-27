@@ -1,4 +1,4 @@
-use crate::helpers::constants::{CONTRACTS_DIR, NETWORK, URL};
+use crate::helpers::constants::{CONTRACTS_DIR, URL};
 use crate::helpers::fixtures::{
     duplicate_directory_with_salt, get_transaction_hash, get_transaction_receipt,
 };
@@ -18,8 +18,6 @@ async fn test_happy_case(contract_path: &str, salt: &str, account: &str) {
     let args = vec![
         "--url",
         URL,
-        "--network",
-        NETWORK,
         "--accounts-file",
         "../../../accounts/accounts.json",
         "--account",
@@ -51,8 +49,6 @@ async fn contract_already_declared() {
     let args = vec![
         "--url",
         URL,
-        "--network",
-        NETWORK,
         "--accounts-file",
         "../../../accounts/accounts.json",
         "--account",
@@ -66,9 +62,11 @@ async fn contract_already_declared() {
         .current_dir(CONTRACTS_DIR.to_string() + "/v1/map")
         .args(args);
 
-    let output = String::from_utf8(snapbox.assert().success().get_output().stderr.clone()).unwrap();
-
-    assert!(output.contains("is already declared"));
+    snapbox.assert().success().stderr_matches(indoc! {r#"
+        command: declare
+        [..] is already declared.
+        ...
+    "#});
 }
 
 #[tokio::test]
@@ -76,8 +74,6 @@ async fn wrong_contract_name_passed() {
     let args = vec![
         "--url",
         URL,
-        "--network",
-        NETWORK,
         "--accounts-file",
         "../../../accounts/accounts.json",
         "--account",
@@ -91,12 +87,10 @@ async fn wrong_contract_name_passed() {
         .current_dir(CONTRACTS_DIR.to_string() + "/v1/map")
         .args(args);
 
-    let output = String::from_utf8(snapbox.assert().failure().get_output().stderr.clone()).unwrap();
-
-    assert!(
-        output.contains("Failed to find contract nonexistent in starknet_artifacts.json"),
-        "Expected error message not found in stderr: {output}",
-    );
+    snapbox.assert().success().stderr_matches(indoc! {r#"
+        command: declare
+        error: Cannot find sierra artifact nonexistent in starknet_artifacts.json[..]
+    "#});
 }
 
 #[test_case("/v1/build_fails", "../../../accounts/accounts.json" ; "when wrong cairo1 contract")]
@@ -107,8 +101,6 @@ fn scarb_build_fails(contract_path: &str, accounts_file_path: &str) {
     let args = vec![
         "--url",
         URL,
-        "--network",
-        NETWORK,
         "--accounts-file",
         accounts_file_path,
         "--account",
@@ -121,13 +113,12 @@ fn scarb_build_fails(contract_path: &str, accounts_file_path: &str) {
     let snapbox = Command::new(cargo_bin!("sncast"))
         .current_dir(CONTRACTS_DIR.to_string() + contract_path)
         .args(args);
-    let assert = snapbox.assert().success();
-    let stderr_output = String::from_utf8(assert.get_output().stderr.clone()).unwrap();
 
-    assert!(
-        stderr_output.contains("error: Scarb build returned non-zero exit code: 1"),
-        "Expected error message not found in stderr: {stderr_output}",
-    );
+    snapbox.assert().stderr_matches(indoc! {r#"
+        command: declare
+        error: Scarb build returned non-zero exit code: 1[..]
+        ...
+    "#});
 }
 
 #[test_case("/v1/map", "2", "user1" ; "when cairo1 contract")]
@@ -139,8 +130,6 @@ fn test_too_low_max_fee(contract_path: &str, salt: &str, account: &str) {
     let args = vec![
         "--url",
         URL,
-        "--network",
-        NETWORK,
         "--accounts-file",
         "../../../accounts/accounts.json",
         "--account",
@@ -171,8 +160,6 @@ fn scarb_no_artifacts(contract_path: &str, accounts_file_path: &str) {
     let args = vec![
         "--url",
         URL,
-        "--network",
-        NETWORK,
         "--accounts-file",
         accounts_file_path,
         "--account",
@@ -185,13 +172,9 @@ fn scarb_no_artifacts(contract_path: &str, accounts_file_path: &str) {
     let snapbox = Command::new(cargo_bin!("sncast"))
         .current_dir(CONTRACTS_DIR.to_string() + contract_path)
         .args(args);
-    let assert = snapbox.assert().failure();
-    let stderr_output = String::from_utf8(assert.get_output().stderr.clone()).unwrap();
 
-    assert!(
-        stderr_output.contains(
-            "is set to 'true' under your [[target.starknet-contract]] field in Scarb.toml"
-        ),
-        "Expected error message not found in stderr: {stderr_output}",
-    );
+    snapbox.assert().success().stderr_matches(indoc! {r#"
+        command: declare
+        [..]is set to 'true' under your [[target.starknet-contract]] field in Scarb.toml[..]
+    "#});
 }

@@ -16,11 +16,11 @@ use std::collections::HashSet;
 use std::{any::Any, collections::HashMap, sync::Arc};
 
 use crate::{
-    constants::{build_block_context, build_transaction_context, TEST_ACCOUNT_CONTRACT_ADDRESS},
+    constants::{build_block_context, build_transaction_context},
     CheatnetState,
 };
-use blockifier::execution::entry_point::CallExecution;
-use blockifier::execution::entry_point::Retdata;
+use blockifier::execution::entry_point::{handle_empty_constructor, Retdata};
+use blockifier::execution::entry_point::{CallExecution, ConstructorContext, OrderedEvent};
 use blockifier::{
     abi::constants,
     execution::{
@@ -61,19 +61,21 @@ use cairo_lang_casm::{
 };
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources as VmExecutionResources;
 use starknet_api::{
-    core::{ClassHash, ContractAddress, EntryPointSelector, PatriciaKey},
+    core::{ClassHash, ContractAddress, EntryPointSelector},
     deprecated_contract_class::EntryPointType,
     hash::{StarkFelt, StarkHash},
-    patricia_key,
     transaction::{Calldata, TransactionVersion},
 };
 
+use crate::cheatcodes::spy_events::Event;
 use blockifier::execution::syscalls::{
-    LibraryCallRequest, SyscallRequest, SyscallRequestWrapper, SyscallResponse,
-    SyscallResponseWrapper, SyscallResult,
+    DeployRequest, DeployResponse, LibraryCallRequest, SyscallRequest, SyscallRequestWrapper,
+    SyscallResponse, SyscallResponseWrapper, SyscallResult,
 };
+use blockifier::state::errors::StateError;
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
 use cairo_vm::vm::runners::cairo_runner::ResourceTracker;
+use starknet_api::core::calculate_contract_address;
 
 use crate::panic_data::try_extract_panic_data;
 use crate::state::CheatcodeState;
@@ -83,12 +85,13 @@ type SyscallSelector = DeprecatedSyscallSelector;
 pub enum CallContractOutput {
     Success { ret_data: Vec<Felt252> },
     Panic { panic_data: Vec<Felt252> },
+    Error { msg: String },
 }
 
 // This does contract call without the transaction layer. This way `call_contract` can return data and modify state.
 // `call` and `invoke` on the transactional layer use such method under the hood.
 pub fn call_contract(
-    contract_address: &Felt252,
+    contract_address: &ContractAddress,
     entry_point_selector: &Felt252,
     calldata: &[Felt252],
     cheatnet_state: &mut CheatnetState,
@@ -96,13 +99,9 @@ pub fn call_contract(
     let blockifier_state = &mut cheatnet_state.blockifier_state;
     let cheatcode_state = &mut cheatnet_state.cheatcode_state;
 
-    let contract_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
-        contract_address.to_be_bytes(),
-    )?)?);
     let entry_point_selector =
         EntryPointSelector(StarkHash::new(entry_point_selector.to_be_bytes())?);
 
-    let account_address = ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS));
     let calldata = Calldata(Arc::new(
         calldata
             .iter()
@@ -111,12 +110,12 @@ pub fn call_contract(
     ));
     let mut entry_point = CallEntryPoint {
         class_hash: None,
-        code_address: Some(contract_address),
+        code_address: Some(*contract_address),
         entry_point_type: EntryPointType::External,
         entry_point_selector,
         calldata,
-        storage_address: contract_address,
-        caller_address: account_address,
+        storage_address: *contract_address,
+        caller_address: ContractAddress::default(),
         call_type: CallType::Call,
         initial_gas: u64::MAX,
     };
@@ -139,37 +138,124 @@ pub fn call_contract(
         &mut context,
     );
 
-    if let Ok(call_info) = exec_result {
-        let raw_return_data = &call_info.execution.retdata.0;
+    match exec_result {
+        Ok(call_info) => {
+            if !cheatcode_state.spies.is_empty() {
+                let mut events =
+                    collect_emitted_events_from_spied_contracts(&call_info, cheatcode_state);
+                cheatcode_state.detected_events.append(&mut events);
+            }
 
-        let return_data = raw_return_data
-            .iter()
-            .map(|data| Felt252::from_bytes_be(data.bytes()))
-            .collect();
+            let raw_return_data = &call_info.execution.retdata.0;
 
-        Ok(CallContractOutput::Success {
-            ret_data: return_data,
-        })
-    } else if let Err(EntryPointExecutionError::ExecutionFailed { error_data }) = exec_result {
-        let err_data = error_data
-            .iter()
-            .map(|data| Felt252::from_bytes_be(data.bytes()))
-            .collect();
+            let return_data = raw_return_data
+                .iter()
+                .map(|data| Felt252::from_bytes_be(data.bytes()))
+                .collect();
 
-        Ok(CallContractOutput::Panic {
-            panic_data: err_data,
-        })
-    } else if let Err(EntryPointExecutionError::VirtualMachineExecutionErrorWithTrace {
-        trace,
-        ..
-    }) = exec_result
-    {
-        let panic_data =
-            try_extract_panic_data(&trace).unwrap_or_else(|| panic!("Unparseable result: {trace}"));
-        Ok(CallContractOutput::Panic { panic_data })
-    } else {
-        panic!("Unparseable result: {exec_result:?}");
+            Ok(CallContractOutput::Success {
+                ret_data: return_data,
+            })
+        }
+        Err(EntryPointExecutionError::ExecutionFailed { error_data }) => {
+            let err_data = error_data
+                .iter()
+                .map(|data| Felt252::from_bytes_be(data.bytes()))
+                .collect();
+
+            Ok(CallContractOutput::Panic {
+                panic_data: err_data,
+            })
+        }
+        Err(EntryPointExecutionError::VirtualMachineExecutionErrorWithTrace { trace, .. }) => {
+            if let Some(panic_data) = try_extract_panic_data(&trace) {
+                Ok(CallContractOutput::Panic { panic_data })
+            } else {
+                Ok(CallContractOutput::Error { msg: trace })
+            }
+        }
+        Err(EntryPointExecutionError::PreExecutionError(
+            PreExecutionError::EntryPointNotFound(selector),
+        )) => {
+            let selector_hash = selector.0;
+            let contract_addr = contract_address.0.key();
+            let msg = format!(
+                "Entry point selector {selector_hash} not found in contract {contract_addr}"
+            );
+            Ok(CallContractOutput::Error { msg })
+        }
+        Err(EntryPointExecutionError::PreExecutionError(
+            PreExecutionError::UninitializedStorageAddress(contract_address),
+        )) => {
+            let address = contract_address.0.key().to_string();
+            let msg = format!("Contract not deployed at address: {address}");
+            Ok(CallContractOutput::Error { msg })
+        }
+        result => panic!("Unparseable result: {result:?}"),
     }
+}
+
+fn collect_emitted_events_from_spied_contracts(
+    call_info: &CallInfo,
+    cheatcode_state: &mut CheatcodeState,
+) -> Vec<Event> {
+    let mut all_events: Vec<(ContractAddress, &OrderedEvent)> = vec![];
+    let mut stack: Vec<(Option<ContractAddress>, &CallInfo)> = vec![(None, call_info)];
+
+    while let Some((parent_address, current_call)) = stack.pop() {
+        let code_address = current_call
+            .call
+            .code_address
+            .unwrap_or_else(|| parent_address.unwrap());
+
+        for spy_on in &mut cheatcode_state.spies {
+            if spy_on.does_spy(code_address) {
+                let mut emitted_events: Vec<(ContractAddress, &OrderedEvent)> = current_call
+                    .execution
+                    .events
+                    .iter()
+                    .map(|event| (code_address, event))
+                    .collect();
+                emitted_events.sort_by(|(_, event1), (_, event2)| event1.order.cmp(&event2.order));
+                all_events.extend(emitted_events);
+                break;
+            }
+        }
+
+        stack.extend(
+            current_call
+                .inner_calls
+                .iter()
+                .map(|inner_call| (Some(code_address), inner_call))
+                .rev(),
+        );
+    }
+
+    // creates cheatcodes::spy_events::Event from (ContractAddress, blockifier::src::execution::entry_point::OrderedEvent)
+    // event name is removed from the keys (it is located under the first index)
+    all_events
+        .iter()
+        .map(|(address, ordered_event)| Event {
+            from: *address,
+            name: stark_felt_to_felt(ordered_event.event.keys[0].0),
+            keys: {
+                let keys: Vec<Felt252> = ordered_event
+                    .event
+                    .keys
+                    .iter()
+                    .map(|key| stark_felt_to_felt(key.0))
+                    .collect();
+                Vec::from(&keys[1..])
+            },
+            data: ordered_event
+                .event
+                .data
+                .0
+                .iter()
+                .map(|data| stark_felt_to_felt(*data))
+                .collect(),
+        })
+        .collect::<Vec<Event>>()
 }
 
 // Copied over (with modifications) from blockifier/src/execution/entry_point.rs:144
@@ -516,6 +602,10 @@ impl CheatableSyscallHandler<'_> {
                 library_call_syscall,
                 constants::CALL_CONTRACT_GAS_COST,
             );
+        } else if SyscallSelector::Deploy == selector {
+            // Increment, since the selector was peeked into before
+            self.syscall_handler.syscall_ptr += 1;
+            return self.execute_syscall(vm, deploy_syscall, constants::DEPLOY_GAS_COST);
         }
 
         self.syscall_handler.execute_next_syscall(vm, hint)
@@ -631,6 +721,129 @@ pub fn call_contract_syscall(
     Ok(SingleSegmentResponse {
         segment: retdata_segment,
     })
+}
+
+// blockifier/src/execution/syscalls/mod.rs:222 (deploy_syscall)
+fn deploy_syscall(
+    request: DeployRequest,
+    vm: &mut VirtualMachine,
+    syscall_handler: &mut CheatableSyscallHandler<'_>,
+    remaining_gas: &mut u64,
+) -> SyscallResult<DeployResponse> {
+    let deployer_address = syscall_handler.syscall_handler.storage_address();
+    let deployer_address_for_calculation = if request.deploy_from_zero {
+        ContractAddress::default()
+    } else {
+        deployer_address
+    };
+
+    let deployed_contract_address = calculate_contract_address(
+        request.contract_address_salt,
+        request.class_hash,
+        &request.constructor_calldata,
+        deployer_address_for_calculation,
+    )?;
+
+    let ctor_context = ConstructorContext {
+        class_hash: request.class_hash,
+        code_address: Some(deployed_contract_address),
+        storage_address: deployed_contract_address,
+        caller_address: deployer_address,
+    };
+    let call_info = execute_deployment(
+        syscall_handler.syscall_handler.state,
+        syscall_handler.syscall_handler.resources,
+        syscall_handler.syscall_handler.context,
+        ctor_context,
+        request.constructor_calldata,
+        *remaining_gas,
+        syscall_handler.cheatcode_state,
+    )?;
+
+    let constructor_retdata = create_retdata_segment(
+        vm,
+        &mut syscall_handler.syscall_handler,
+        &call_info.execution.retdata.0,
+    )?;
+    update_remaining_gas(remaining_gas, &call_info);
+
+    syscall_handler.syscall_handler.inner_calls.push(call_info);
+
+    Ok(DeployResponse {
+        contract_address: deployed_contract_address,
+        constructor_retdata,
+    })
+}
+
+// blockifier/src/execution/execution_utils.rs:217 (execute_deployment)
+pub fn execute_deployment(
+    state: &mut dyn State,
+    resources: &mut ExecutionResources,
+    context: &mut EntryPointExecutionContext,
+    ctor_context: ConstructorContext,
+    constructor_calldata: Calldata,
+    remaining_gas: u64,
+    cheatcode_state: &CheatcodeState,
+) -> EntryPointExecutionResult<CallInfo> {
+    // Address allocation in the state is done before calling the constructor, so that it is
+    // visible from it.
+    let deployed_contract_address = ctor_context.storage_address;
+    let current_class_hash = state.get_class_hash_at(deployed_contract_address)?;
+    if current_class_hash != ClassHash::default() {
+        return Err(StateError::UnavailableContractAddress(deployed_contract_address).into());
+    }
+
+    state.set_class_hash_at(deployed_contract_address, ctor_context.class_hash)?;
+
+    let call_info = execute_constructor_entry_point(
+        state,
+        resources,
+        context,
+        ctor_context,
+        constructor_calldata,
+        remaining_gas,
+        cheatcode_state,
+    )?;
+
+    Ok(call_info)
+}
+// blockifier/src/execution/entry_point.rs:366 (execute_constructor_entry_point)
+pub fn execute_constructor_entry_point(
+    state: &mut dyn State,
+    resources: &mut ExecutionResources,
+    context: &mut EntryPointExecutionContext,
+    ctor_context: ConstructorContext,
+    calldata: Calldata,
+    remaining_gas: u64,
+    cheatcode_state: &CheatcodeState,
+) -> EntryPointExecutionResult<CallInfo> {
+    // Ensure the class is declared (by reading it).
+    let contract_class = state.get_compiled_contract_class(&ctor_context.class_hash)?;
+    let Some(constructor_selector) = contract_class.constructor_selector() else {
+        // Contract has no constructor.
+        return handle_empty_constructor(ctor_context, calldata, remaining_gas);
+    };
+
+    let mut constructor_call = CallEntryPoint {
+        class_hash: None,
+        code_address: ctor_context.code_address,
+        entry_point_type: EntryPointType::Constructor,
+        entry_point_selector: constructor_selector,
+        calldata,
+        storage_address: ctor_context.storage_address,
+        caller_address: ctor_context.caller_address,
+        call_type: CallType::Call,
+        initial_gas: remaining_gas,
+    };
+    // region: Modified code
+    execute_call_entry_point(
+        &mut constructor_call,
+        state,
+        cheatcode_state,
+        resources,
+        context,
+    )
+    // endregion
 }
 
 // Inspired by blockifier::execution::syscalls::library_call

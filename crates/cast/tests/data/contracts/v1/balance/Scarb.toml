@@ -12,6 +12,5 @@ casm = true
 sierra = false
 
 [tool.sncast.myprofile]
-network = "testnet"
 url = "http://127.0.0.1:5055/rpc"
 account = "user1"
