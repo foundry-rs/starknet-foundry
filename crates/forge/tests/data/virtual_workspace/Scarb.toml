@@ -13,7 +13,7 @@ exit_first = true
 starknet = "2.2.0"
 
 [workspace.package]
-version = "0.1.0"
+version = "0.2.0"
 
 [scripts]
 test.workspace = true

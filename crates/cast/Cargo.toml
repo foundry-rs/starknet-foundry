@@ -19,7 +19,7 @@ primitive-types = "0.12.1"
 shellexpand = "3.1.0"
 toml = "0.5.2"
 project-root = "0.2.2"
-scarb-metadata_1_4_2.workspace = true
+scarb-metadata_1_4_2 = { git = "https://github.com/software-mansion/scarb.git", rev="4b87413", package = "scarb-metadata" }
 which = "4.4.0"
 
 [dev-dependencies]

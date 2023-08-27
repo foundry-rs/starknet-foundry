@@ -40,7 +40,7 @@ num-bigint = "0.4.3"
 cairo-felt = "0.8.1"
 clap = { version = "4.2.7", features = ["derive"] }
 walkdir = "2.3.3"
-scarb-metadata.workspace = true
+scarb-metadata = { version = "1.7.0" }
 project-root = "0.2.2"
 console = "0.15.7"
 snapbox = "0.4.11"
