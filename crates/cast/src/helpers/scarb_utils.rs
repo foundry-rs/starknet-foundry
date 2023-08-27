@@ -1,6 +1,6 @@
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
-use scarb_metadata;
+use scarb_metadata_1_4_2;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::process::{Command, Stdio};
@@ -66,8 +66,8 @@ pub fn get_scarb_manifest() -> Result<Utf8PathBuf> {
     Ok(path)
 }
 
-pub fn get_scarb_metadata(manifest_path: &Utf8PathBuf) -> Result<scarb_metadata::Metadata> {
-    scarb_metadata::MetadataCommand::new()
+pub fn get_scarb_metadata(manifest_path: &Utf8PathBuf) -> Result<scarb_metadata_1_4_2::Metadata> {
+    scarb_metadata_1_4_2::MetadataCommand::new()
         .inherit_stderr()
         .manifest_path(manifest_path)
         .no_deps()
@@ -106,7 +106,7 @@ pub fn parse_scarb_config(
     }
 }
 
-pub fn get_package_tool_sncast(metadata: &scarb_metadata::Metadata) -> Result<&Value> {
+pub fn get_package_tool_sncast(metadata: &scarb_metadata_1_4_2::Metadata) -> Result<&Value> {
     let first_package = metadata
         .packages
         .get(0)

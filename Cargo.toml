@@ -15,7 +15,7 @@ license = "MIT"
 license-file = "LICENSE"
 
 [workspace.dependencies]
-blockifier = { git = "https://github.com/starkware-libs/blockifier.git", rev = "39730ea" }
+blockifier = { git = "https://github.com/starkware-libs/blockifier.git", rev = "ea6a3f7" }
 starknet_api = "0.4.1"
 cairo-lang-casm = "2.2.0"
 cairo-lang-runner = "2.2.0"
@@ -37,6 +37,8 @@ cairo-lang-sierra-ap-change = "2.2.0"
 cairo-lang-sierra-gas = "2.2.0"
 cairo-lang-sierra-generator = "2.2.0"
 cairo-lang-syntax = "2.2.0"
+scarb-metadata = { version = "1.7.0" }
+scarb-metadata_1_4_2 = { git = "https://github.com/software-mansion/scarb.git", rev="4b87413", package = "scarb-metadata" }
 cairo-vm = "0.8.2"
 cairo-felt = "0.8.2"
 anyhow = "1.0.66"

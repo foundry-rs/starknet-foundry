@@ -15,11 +15,11 @@ starknet = "0.4.0"
 tokio = { version = "1.28.2", features = ["full"] }
 url = "2.2.2"
 rand = "0.8.5"
-scarb-metadata = "1.4.2"
 primitive-types = "0.12.1"
 shellexpand = "3.1.0"
 toml = "0.5.2"
 project-root = "0.2.2"
+scarb-metadata_1_4_2.workspace = true
 which = "4.4.0"
 
 [dev-dependencies]

@@ -427,7 +427,7 @@ dependencies = [
 [[package]]
 name = "blockifier"
 version = "0.2.0-rc0"
-source = "git+https://github.com/starkware-libs/blockifier.git?rev=39730ea#39730ea3078034367939f1bfa34d5e979ce9f426"
+source = "git+https://github.com/starkware-libs/blockifier.git?rev=ea6a3f7#ea6a3f7483d02813066dc03f8f86e0545404a977"
 dependencies = [
  "ark-ff",
  "ark-secp256k1",
@@ -1086,7 +1086,7 @@ dependencies = [
  "project-root",
  "rand",
  "reqwest",
- "scarb-metadata",
+ "scarb-metadata 1.4.2",
  "sealed_test",
  "serde",
  "serde_json",
@@ -1760,7 +1760,7 @@ dependencies = [
  "project-root",
  "rayon",
  "regex",
- "scarb-metadata",
+ "scarb-metadata 1.7.0",
  "schemars",
  "serde",
  "serde_json",
@@ -3390,9 +3390,21 @@ dependencies = [
 
 [[package]]
 name = "scarb-metadata"
-version = "1.5.0"
+version = "1.4.2"
+source = "git+https://github.com/software-mansion/scarb.git?rev=4b87413#4b87413cc10611614434f9124b8044b4dd0ad7ed"
+dependencies = [
+ "camino",
+ "semver",
+ "serde",
+ "serde_json",
+ "thiserror",
+]
+
+[[package]]
+name = "scarb-metadata"
+version = "1.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e66b1ee9b775bacf1d0a707d936b579ce3c5d30096e9a47867addf337d137b48"
+checksum = "1e1bb385b852343276fdfc1aad0e4c48e0c01106c209a602481f36c9b50c5f59"
 dependencies = [
  "camino",
  "semver",
@@ -3519,18 +3531,18 @@ dependencies = [
 
 [[package]]
 name = "serde"
-version = "1.0.171"
+version = "1.0.188"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "30e27d1e4fd7659406c492fd6cfaf2066ba8773de45ca75e855590f856dc34a9"
+checksum = "cf9e0fcba69a370eed61bcf2b728575f726b50b55cba78064753d708ddc7549e"
 dependencies = [
  "serde_derive",
 ]
 
 [[package]]
 name = "serde_derive"
-version = "1.0.171"
+version = "1.0.188"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "389894603bd18c46fa56231694f8d827779c0951a667087194cf9de94ed24682"
+checksum = "4eca7ac642d82aa35b60049a6eccb4be6be75e599bd2e9adb5f875a737654af2"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3550,9 +3562,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.104"
+version = "1.0.105"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "076066c5f1078eac5b722a31827a8832fe108bed65dfa75e233c89f8206e976c"
+checksum = "693151e1ac27563d6dbcec9dee9fbd5da8539b20fa14ad3752b2e6d363ace360"
 dependencies = [
  "itoa",
  "ryu",
@@ -4232,18 +4244,18 @@ dependencies = [
 
 [[package]]
 name = "thiserror"
-version = "1.0.44"
+version = "1.0.47"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "611040a08a0439f8248d1990b111c95baa9c704c805fa1f62104b39655fd7f90"
+checksum = "97a802ec30afc17eee47b2855fc72e0c4cd62be9b4efe6591edde0ec5bd68d8f"
 dependencies = [
  "thiserror-impl",
 ]
 
 [[package]]
 name = "thiserror-impl"
-version = "1.0.44"
+version = "1.0.47"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "090198534930841fab3a5d1bb637cde49e339654e606195f8d9c76eeb081dc96"
+checksum = "6bb623b56e39ab7dcd4b1b98bb6c8f8d907ed255b18de254088016b27a8ee19b"
 dependencies = [
  "proc-macro2",
  "quote",
