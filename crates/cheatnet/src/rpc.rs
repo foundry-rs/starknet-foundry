@@ -19,8 +19,8 @@ use crate::{
     constants::{build_block_context, build_transaction_context},
     CheatnetState,
 };
-use blockifier::execution::entry_point::{handle_empty_constructor, Retdata};
-use blockifier::execution::entry_point::{CallExecution, ConstructorContext, OrderedEvent};
+use blockifier::execution::call_info::{CallExecution, CallInfo, OrderedEvent, Retdata};
+use blockifier::execution::entry_point::{handle_empty_constructor, ConstructorContext};
 use blockifier::{
     abi::constants,
     execution::{
@@ -42,8 +42,8 @@ use blockifier::{
         contract_class::{ContractClass, ContractClassV1, EntryPointV1},
         deprecated_syscalls::DeprecatedSyscallSelector,
         entry_point::{
-            CallEntryPoint, CallInfo, CallType, EntryPointExecutionContext,
-            EntryPointExecutionResult, ExecutionResources, FAULTY_CLASS_HASH,
+            CallEntryPoint, CallType, EntryPointExecutionContext, EntryPointExecutionResult,
+            ExecutionResources, FAULTY_CLASS_HASH,
         },
         errors::{EntryPointExecutionError, PreExecutionError, VirtualMachineExecutionError},
         execution_utils::{felt_to_stark_felt, stark_felt_to_felt, Args},
