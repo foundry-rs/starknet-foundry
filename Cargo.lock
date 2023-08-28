@@ -1126,8 +1126,10 @@ dependencies = [
  "cairo-vm",
  "camino",
  "ctor",
+ "flate2",
  "include_dir",
  "indoc",
+ "num-bigint",
  "num-traits 0.2.16",
  "regex",
  "serde",
@@ -1136,6 +1138,8 @@ dependencies = [
  "starknet_api",
  "tempfile",
  "thiserror",
+ "tokio",
+ "url",
 ]
 
 [[package]]

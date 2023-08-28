@@ -1,9 +1,9 @@
 use crate::cheatcodes::spy_events::{Event, SpyTarget};
+use crate::workers::worker::Worker;
 use blockifier::{
     execution::contract_class::ContractClass,
     state::{
         cached_state::ContractStorageKey,
-        errors::StateError,
         state_api::{StateReader, StateResult},
     },
 };
@@ -24,6 +24,7 @@ pub struct DictStateReader {
     pub address_to_class_hash: HashMap<ContractAddress, ClassHash>,
     pub class_hash_to_class: HashMap<ClassHash, ContractClass>,
     pub class_hash_to_compiled_class_hash: HashMap<ClassHash, CompiledClassHash>,
+    pub workers: Vec<Worker>,
 }
 
 impl StateReader for DictStateReader {
@@ -37,7 +38,7 @@ impl StateReader for DictStateReader {
             .storage_view
             .get(&contract_storage_key)
             .copied()
-            .unwrap_or_default();
+            .unwrap_or(self.workers[0].get_storage_at(contract_address, key));
         Ok(value)
     }
 
@@ -46,7 +47,8 @@ impl StateReader for DictStateReader {
             .address_to_nonce
             .get(&contract_address)
             .copied()
-            .unwrap_or_default();
+            .unwrap_or(self.workers[0].get_nonce(contract_address));
+
         Ok(nonce)
     }
 
@@ -57,7 +59,7 @@ impl StateReader for DictStateReader {
         let contract_class = self.class_hash_to_class.get(class_hash).cloned();
         match contract_class {
             Some(contract_class) => Ok(contract_class),
-            _ => Err(StateError::UndeclaredClassHash(*class_hash)),
+            _ => Ok(self.workers[0].get_compiled_contract_class(class_hash)),
         }
     }
 
@@ -66,14 +68,11 @@ impl StateReader for DictStateReader {
             .address_to_class_hash
             .get(&contract_address)
             .copied()
-            .unwrap_or_default();
+            .unwrap_or(self.workers[0].get_class_hash_at(contract_address));
         Ok(class_hash)
     }
 
-    fn get_compiled_class_hash(
-        &mut self,
-        class_hash: ClassHash,
-    ) -> StateResult<starknet_api::core::CompiledClassHash> {
+    fn get_compiled_class_hash(&mut self, class_hash: ClassHash) -> StateResult<CompiledClassHash> {
         let compiled_class_hash = self
             .class_hash_to_compiled_class_hash
             .get(&class_hash)
