@@ -1,6 +1,6 @@
-# `parse_txt`
+# `read_txt`
 
-> `fn parse_txt(file: @File) -> Array<felt252>`
+> `fn read_txt(file: @File) -> Array<felt252>`
 
 Parses plain text file content to an array of felts.
 
@@ -8,12 +8,12 @@ Parses plain text file content to an array of felts.
   - `path` - Cairo shortstring representing a path to a file relative to a package root.
 
 ```rust
-use snforge_std::{ FileTrait, parse_txt };
+use snforge_std::{ FileTrait, read_txt };
 
 #[test]
-fn test_parse_txt() {
+fn test_read_txt() {
     let file = FileTrait::new('data/file.txt');
-    let content = parse_txt(@file);
+    let content = read_txt(@file);
     // ...
 }
 ```

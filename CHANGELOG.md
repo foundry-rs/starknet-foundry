@@ -15,11 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `l1_handler_execute` cheatcode
 - support for `roll`ing/`warp`ing/`prank`ing the constructor logic (precalculate address, prank, assert pranked state in constructor)
 - `spy_events` cheatcode
-- Functions `parse_json` and `Parser<T>::deserialize_json` to load data from json files and serialize it
+- Functions `read_json` and `Parser<T>::deserialize_json` to load data from json files and serialize it
 
 #### Changed
 
 - rename `TxtParser` trait to `Parser`
+- rename `parse_txt` trait to `read_txt`
 
 ### Cast
 

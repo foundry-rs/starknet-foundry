@@ -7,7 +7,7 @@ use flatten_serde_json::flatten;
 use num_bigint::BigUint;
 use serde_json::{Map, Value};
 
-pub(super) fn parse_txt(file_path: &Felt252) -> Result<Vec<Felt252>, EnhancedHintError> {
+pub(super) fn read_txt(file_path: &Felt252) -> Result<Vec<Felt252>, EnhancedHintError> {
     let file_path_str = as_cairo_short_string(file_path)
         .with_context(|| format!("Failed to convert {file_path} to str"))?;
     let content = std::fs::read_to_string(file_path_str.clone())?;
@@ -27,7 +27,7 @@ pub(super) fn parse_txt(file_path: &Felt252) -> Result<Vec<Felt252>, EnhancedHin
         })
 }
 
-pub(super) fn parse_json(file_path: &Felt252) -> Result<Vec<Felt252>, EnhancedHintError> {
+pub(super) fn read_json(file_path: &Felt252) -> Result<Vec<Felt252>, EnhancedHintError> {
     let file_path_str = as_cairo_short_string(file_path)
         .with_context(|| format!("Failed to convert {file_path} to str"))?;
     let content = std::fs::read_to_string(&file_path_str)?;

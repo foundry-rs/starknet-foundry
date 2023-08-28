@@ -389,17 +389,17 @@ impl CairoHintProcessor<'_> {
                     Err(CheatcodeError::Unrecoverable(err)) => Err(err),
                 }
             }
-            "parse_txt" => {
+            "read_txt" => {
                 let file_path = inputs[0].clone();
-                let parsed_content = file_operations::parse_txt(&file_path)?;
+                let parsed_content = file_operations::read_txt(&file_path)?;
                 buffer
                     .write_data(parsed_content.iter())
                     .expect("Failed to insert file content to memory");
                 Ok(())
             }
-            "parse_json" => {
+            "read_json" => {
                 let file_path = inputs[0].clone();
-                let parsed_content = file_operations::parse_json(&file_path)?;
+                let parsed_content = file_operations::read_json(&file_path)?;
                 buffer
                     .write_data(parsed_content.iter())
                     .expect("Failed to insert file content to memory");

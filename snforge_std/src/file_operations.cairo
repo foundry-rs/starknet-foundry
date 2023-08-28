@@ -21,8 +21,8 @@ impl FileTraitImpl of FileTrait {
     }
 }
 
-fn parse_txt(file: @File) -> Array<felt252> {
-    let content = cheatcode::<'parse_txt'>(array![*file.path].span());
+fn read_txt(file: @File) -> Array<felt252> {
+    let content = cheatcode::<'read_txt'>(array![*file.path].span());
 
     let mut result = array![];
 
@@ -37,8 +37,8 @@ fn parse_txt(file: @File) -> Array<felt252> {
     result
 }
 
-fn parse_json(file: @File) -> Array<felt252> {
-    let content = cheatcode::<'parse_json'>(array![*file.path].span());
+fn read_json(file: @File) -> Array<felt252> {
+    let content = cheatcode::<'read_json'>(array![*file.path].span());
 
     let mut result = array![];
 
@@ -60,11 +60,11 @@ trait Parser<T, impl TSerde: Serde<T>> {
 
 impl ParserImpl<T, impl TSerde: Serde<T>> of Parser<T> {
     fn deserialize_txt(file: @File) -> Option<T> {
-        let mut content = cheatcode::<'parse_txt'>(array![*file.path].span());
+        let mut content = cheatcode::<'read_txt'>(array![*file.path].span());
         Serde::<T>::deserialize(ref content)
     }
     fn deserialize_json(file: @File) -> Option<T> {
-        let mut content = cheatcode::<'parse_json'>(array![*file.path].span());
+        let mut content = cheatcode::<'read_json'>(array![*file.path].span());
         Serde::<T>::deserialize(ref content)
     }
 }

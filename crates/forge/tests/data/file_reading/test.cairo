@@ -1,4 +1,4 @@
-use snforge_std::{FileTrait, parse_txt, parse_json, Parser};
+use snforge_std::{FileTrait, read_txt, read_json, Parser};
 use array::ArrayTrait;
 use option::OptionTrait;
 use serde::Serde;
@@ -82,25 +82,25 @@ fn valid_content_and_same_content_no_matter_whitespaces() {
 #[test]
 fn serialization() {
     let file = FileTrait::new('data/valid.txt');
-    let content = parse_txt(@file);
+    let content = read_txt(@file);
     compare_with_expected_content(content);
 
     let file = FileTrait::new('data/valid_diff_spaces.txt');
-    let content = parse_txt(@file);
+    let content = read_txt(@file);
     compare_with_expected_content(content);
 }
 
 #[test]
 fn json_serialization() {
     let file = FileTrait::new('data/json/valid.json');
-    let content = parse_json(@file);
+    let content = read_json(@file);
     compare_with_expected_content(content);
 }
 
 #[test]
 fn invalid_json() {
     let file = FileTrait::new('data/json/invalid.json');
-    let content = parse_json(@file);
+    let content = read_json(@file);
     assert(1 == 1, '');
 }
 
@@ -119,7 +119,7 @@ fn json_deserialization() {
 #[test]
 fn valid_content_different_folder() {
     let file = FileTrait::new('valid_file.txt');
-    let content = parse_txt(@file);
+    let content = read_txt(@file);
     let expected = array!['123', '12dsfwe', 124];
 
     assert(content.len() == expected.len(), 'lengths not equal');
@@ -138,41 +138,41 @@ fn valid_content_different_folder() {
 #[test]
 fn non_existent() {
     let file = FileTrait::new('data/non_existent.txt');
-    let content = parse_txt(@file);
+    let content = read_txt(@file);
     assert(1 == 1, '');
 }
 
 #[test]
 fn invalid_quotes() {
     let file = FileTrait::new('data/invalid_quotes.txt');
-    let content = parse_txt(@file);
+    let content = read_txt(@file);
     assert(1 == 1, '');
 }
 
 #[test]
 fn negative_number() {
     let file = FileTrait::new('data/negative_number.txt');
-    let content = parse_txt(@file);
+    let content = read_txt(@file);
     assert(1 == 1, '');
 }
 
 #[test]
 fn non_ascii() {
     let file = FileTrait::new('data/non_ascii.txt');
-    let content = parse_txt(@file);
+    let content = read_txt(@file);
     assert(1 == 1, '');
 }
 
 #[test]
 fn not_number_without_quotes() {
     let file = FileTrait::new('data/nan_without_quotes.txt');
-    let content = parse_txt(@file);
+    let content = read_txt(@file);
     assert(1 == 1, '');
 }
 
 #[test]
 fn too_large_number() {
     let file = FileTrait::new('data/too_large_number.txt');
-    let content = parse_txt(@file);
+    let content = read_txt(@file);
     assert(1 == 1, '');
 }
