@@ -78,13 +78,6 @@ impl TxInfoMockImpl of TxInfoMockTrait {
     }
 }
 
-fn is_set_and_value<T, impl TDrop: Drop::<T>>(option: Option<T>, default: T) -> (bool, T) {
-    match option {
-        Option::Some(x) => (true, x),
-        Option::None => (false, default),
-    }
-}
-
 impl ContractClassImpl of ContractClassTrait {
     fn precalculate_address(self: @ContractClass, constructor_calldata: @Array::<felt252>) -> ContractAddress {
         let mut inputs: Array::<felt252> = _prepare_calldata(self.class_hash, constructor_calldata);
@@ -226,6 +219,13 @@ fn get_class_hash(contract_address: ContractAddress) -> ClassHash {
     (*buf[0]).try_into().expect('Invalid class hash value')
 }
 
+fn option_as_tuple<T, impl TDrop: Drop::<T>>(option: Option<T>, default: T) -> (bool, T) {
+    match option {
+        Option::Some(x) => (true, x),
+        Option::None => (false, default),
+    }
+}
+
 fn start_spoof(contract_address: ContractAddress, tx_info_mock: TxInfoMock) {
     let contract_address_felt: felt252 = contract_address.into();
 
@@ -239,14 +239,14 @@ fn start_spoof(contract_address: ContractAddress, tx_info_mock: TxInfoMock) {
         nonce
     } = tx_info_mock;
 
-    let (is_version_set, version) = is_set_and_value(version, 0);
+    let (is_version_set, version) = option_as_tuple(version, 0);
 
-    let (is_acc_address_set, account_contract_address) = is_set_and_value(account_contract_address, contract_address_const::<0>());
-    let (is_max_fee_set, max_fee) = is_set_and_value(max_fee, 0_u128);
-    let (is_tx_hash_set, transaction_hash) = is_set_and_value(transaction_hash, 0);
-    let (is_chain_id_set, chain_id) = is_set_and_value(chain_id, 0);
-    let (is_nonce_set, nonce) = is_set_and_value(nonce, 0);
-    let (is_signature_set, signature) = is_set_and_value(signature, ArrayTrait::new().span());
+    let (is_acc_address_set, account_contract_address) = option_as_tuple(account_contract_address, contract_address_const::<0>());
+    let (is_max_fee_set, max_fee) = option_as_tuple(max_fee, 0_u128);
+    let (is_tx_hash_set, transaction_hash) = option_as_tuple(transaction_hash, 0);
+    let (is_chain_id_set, chain_id) = option_as_tuple(chain_id, 0);
+    let (is_nonce_set, nonce) = option_as_tuple(nonce, 0);
+    let (is_signature_set, signature) = option_as_tuple(signature, ArrayTrait::new().span());
 
     let mut inputs = array![
         contract_address_felt,
