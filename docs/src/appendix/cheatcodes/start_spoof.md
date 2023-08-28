@@ -55,6 +55,7 @@ use snforge_std::start_spoof;
 #[test]
 fn test_spoof() {
     // ...
+    let tx_hash_before_mock = dispatcher.get_stored_tx_hash();
     
     // Change transaction_hash to 1234
     // All other fields of `TxInfo` remain unchanged
@@ -67,5 +68,13 @@ fn test_spoof() {
     
     let tx_hash = dispatcher.get_stored_tx_hash();
     assert(tx_hash == 1234, 'tx_hash should be mocked');
+    
+    // Cancel tx_info.transaction_hash mocking by setting the field to `None`
+    // All other fields of `TxInfo` remain unchanged
+    start_spoof(contract_address, TxInfoMockTrait::default());
+    dispatcher.store_tx_hash();
+    
+    let tx_hash = dispatcher.get_stored_tx_hash();
+    assert(tx_hash == tx_hash_before_mock, 'tx_hash should not be mocked anymore');
 }
 ```

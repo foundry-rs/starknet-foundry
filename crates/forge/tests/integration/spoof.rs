@@ -210,8 +210,7 @@ fn start_spoof_cancel_mock_by_setting_attribute_to_none() {
                 let transaction_hash = dispatcher.get_tx_hash();
                 assert(transaction_hash == 421, 'Invalid tx hash');
 
-                let mut tx_info_mock = TxInfoMockTrait::default();
-                start_spoof(contract_address, tx_info_mock);
+                start_spoof(contract_address, TxInfoMockTrait::default());
 
                 let transaction_hash = dispatcher.get_tx_hash();
                 assert(transaction_hash == tx_hash_before_mock, 'Invalid tx hash');
