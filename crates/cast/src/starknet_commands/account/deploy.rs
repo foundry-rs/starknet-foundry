@@ -4,9 +4,10 @@ use cast::helpers::constants::OZ_CLASS_HASH;
 use clap::Args;
 use starknet::accounts::AccountFactoryError;
 use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
-use starknet::core::types::FieldElement;
+use starknet::core::types::{FieldElement, StarknetError};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
+use starknet::providers::ProviderError::StarknetError as ProviderStarknetError;
 use starknet::signers::{LocalWallet, SigningKey};
 
 use cast::{chain_id_to_network_name, handle_rpc_error, handle_wait_for_tx, parse_number};
@@ -95,7 +96,13 @@ pub async fn deploy(
     let result = deployment.max_fee(max_fee).send().await;
 
     match result {
-        Err(AccountFactoryError::Provider(error)) => handle_rpc_error(error),
+        Err(AccountFactoryError::Provider(error)) => match error {
+            ProviderStarknetError(StarknetError::ClassHashNotFound) => Err(anyhow!(
+                "Provided class hash {} does not exist",
+                oz_class_hash
+            )),
+            _ => handle_rpc_error(error),
+        },
         Err(_) => Err(anyhow!("Unknown RPC error")),
         Ok(result) => {
             let return_value = InvokeResponse {

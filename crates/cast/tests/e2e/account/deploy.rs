@@ -187,7 +187,36 @@ pub async fn test_invalid_class_hash() {
 
     snapbox.assert().success().stderr_matches(indoc! {r#"
         command: account deploy
-        error: Provided class hash does not exist
+        error: Provided class hash 0x123 does not exist
+    "#});
+
+    fs::remove_dir_all(created_dir).unwrap();
+}
+
+#[tokio::test]
+pub async fn test_invalid_class_hash2() {
+    let (created_dir, accounts_file) = create_account("10", true).await;
+
+    let args = vec![
+        "--profile",
+        "my_account",
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "deploy",
+        "--name",
+        "my_account",
+        "--max-fee",
+        "10000000000000000",
+    ];
+
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(&created_dir)
+        .args(args);
+
+    snapbox.assert().success().stderr_matches(indoc! {r#"
+        command: account deploy
+        transaction_hash: [..]
     "#});
 
     fs::remove_dir_all(created_dir).unwrap();
