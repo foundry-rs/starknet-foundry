@@ -270,9 +270,7 @@ impl CairoHintProcessor<'_> {
                 Ok(())
             }
             "start_spoof" => {
-                let contract_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
-                    inputs[0].clone().to_be_bytes(),
-                )?)?);
+                let contract_address = contract_address_from_felt(&inputs[0]);
 
                 let version = inputs[1].is_one().then(|| inputs[2].clone());
                 let account_contract_address = inputs[3].is_one().then(|| inputs[4].clone());
@@ -301,9 +299,7 @@ impl CairoHintProcessor<'_> {
                 Ok(())
             }
             "stop_spoof" => {
-                let contract_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
-                    inputs[0].clone().to_be_bytes(),
-                )?)?);
+                let contract_address = contract_address_from_felt(&inputs[0]);
 
                 self.cheatnet_state.stop_spoof(contract_address);
                 Ok(())
