@@ -370,48 +370,51 @@ impl CheatableSyscallHandler<'_> {
 
         let mut new_tx_info = original_tx_info.to_owned();
 
-        if let Some(tx_info_mock) = self.cheatcode_state.spoofed_contracts.get(contract_address) {
-            let TxInfoMock {
-                version,
-                account_contract_address,
-                max_fee,
-                signature,
-                transaction_hash,
-                chain_id,
-                nonce,
-            } = tx_info_mock.to_owned();
+        let tx_info_mock = self
+            .cheatcode_state
+            .spoofed_contracts
+            .get(contract_address)
+            .unwrap();
+        let TxInfoMock {
+            version,
+            account_contract_address,
+            max_fee,
+            signature,
+            transaction_hash,
+            chain_id,
+            nonce,
+        } = tx_info_mock.to_owned();
 
-            if let Some(version) = version {
-                new_tx_info[0] = MaybeRelocatable::Int(version.clone());
-            };
-            if let Some(account_contract_address) = account_contract_address {
-                new_tx_info[1] = MaybeRelocatable::Int(account_contract_address.clone());
-            };
-            if let Some(max_fee) = max_fee {
-                new_tx_info[2] = MaybeRelocatable::Int(max_fee.clone());
-            };
+        if let Some(version) = version {
+            new_tx_info[0] = MaybeRelocatable::Int(version.clone());
+        };
+        if let Some(account_contract_address) = account_contract_address {
+            new_tx_info[1] = MaybeRelocatable::Int(account_contract_address.clone());
+        };
+        if let Some(max_fee) = max_fee {
+            new_tx_info[2] = MaybeRelocatable::Int(max_fee.clone());
+        };
 
-            if let Some(signature) = signature {
-                let signature_len = signature.len();
-                let signature_start_ptr = vm.add_memory_segment();
-                let signature_end_ptr = (signature_start_ptr + signature_len).unwrap();
-                let signature: Vec<MaybeRelocatable> =
-                    signature.iter().map(MaybeRelocatable::from).collect();
-                vm.load_data(signature_start_ptr, &signature).unwrap();
+        if let Some(signature) = signature {
+            let signature_len = signature.len();
+            let signature_start_ptr = vm.add_memory_segment();
+            let signature_end_ptr = (signature_start_ptr + signature_len).unwrap();
+            let signature: Vec<MaybeRelocatable> =
+                signature.iter().map(MaybeRelocatable::from).collect();
+            vm.load_data(signature_start_ptr, &signature).unwrap();
 
-                new_tx_info[3] = signature_start_ptr.into();
-                new_tx_info[4] = signature_end_ptr.into();
-            }
+            new_tx_info[3] = signature_start_ptr.into();
+            new_tx_info[4] = signature_end_ptr.into();
+        }
 
-            if let Some(transaction_hash) = transaction_hash {
-                new_tx_info[5] = MaybeRelocatable::Int(transaction_hash.clone());
-            };
-            if let Some(chain_id) = chain_id {
-                new_tx_info[6] = MaybeRelocatable::Int(chain_id.clone());
-            };
-            if let Some(nonce) = nonce {
-                new_tx_info[7] = MaybeRelocatable::Int(nonce.clone());
-            };
+        if let Some(transaction_hash) = transaction_hash {
+            new_tx_info[5] = MaybeRelocatable::Int(transaction_hash.clone());
+        };
+        if let Some(chain_id) = chain_id {
+            new_tx_info[6] = MaybeRelocatable::Int(chain_id.clone());
+        };
+        if let Some(nonce) = nonce {
+            new_tx_info[7] = MaybeRelocatable::Int(nonce.clone());
         };
 
         vm.load_data(ptr_cheated_tx_info, &new_tx_info).unwrap();
