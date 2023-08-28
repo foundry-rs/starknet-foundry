@@ -63,7 +63,7 @@ fn start_and_stop_spoof_single_attribute() {
                 let chain_id = dispatcher.get_chain_id();
                 assert(chain_id == chain_id_before_mock, 'Invalid chain_id');
                 let signature = dispatcher.get_signature();
-                assert(signature.len() == signature_before_mock.len(), 'Invalid signature');
+                assert(signature == signature_before_mock, 'Invalid signature');
 
                 stop_spoof(contract_address);
 
