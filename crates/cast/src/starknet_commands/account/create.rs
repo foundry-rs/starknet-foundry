@@ -116,6 +116,11 @@ pub async fn create(
         "deployed": false,
     });
 
+    if let Some(class_hash_) = class_hash {
+        items[&network_name][&config.account]["class_hash"] =
+            serde_json::Value::String(format!("{:#x}", parse_number(&class_hash_)?));
+    }
+
     if add_profile {
         match add_created_profile_to_configuration(&path_to_scarb_toml, config) {
             Ok(()) => {}
