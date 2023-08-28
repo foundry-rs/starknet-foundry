@@ -96,6 +96,7 @@ fn start_spoof_all_attributes_mocked() {
             use traits::Into;
             use starknet::ContractAddress;
             use starknet::ContractAddressIntoFelt252;
+            use starknet::Felt252TryIntoContractAddress;
             use array::SpanTrait;
             use snforge_std::{ declare, ContractClassTrait, start_spoof, TxInfoMock, TxInfoMockTrait };
 
@@ -118,12 +119,12 @@ fn start_spoof_all_attributes_mocked() {
 
                 let mut tx_info_mock = TxInfoMockTrait::default();
                 tx_info_mock.nonce = Option::Some(411);
-                tx_info_mock.account_contract_address = Option::Some(422);
+                tx_info_mock.account_contract_address = Option::Some(422.try_into().unwrap());
                 tx_info_mock.version = Option::Some(433);
                 tx_info_mock.transaction_hash = Option::Some(444);
                 tx_info_mock.chain_id = Option::Some(455);
                 tx_info_mock.max_fee = Option::Some(466_u128);
-                tx_info_mock.signature = Option::Some(array![477, 478]);
+                tx_info_mock.signature = Option::Some(array![477, 478].span());
 
                 start_spoof(contract_address, tx_info_mock);
 

@@ -13,6 +13,7 @@ use starknet::ClassHashIntoFelt252;
 use starknet::ContractAddressIntoFelt252;
 use starknet::Felt252TryIntoClassHash;
 use starknet::Felt252TryIntoContractAddress;
+use starknet::contract_address_const;
 
 #[derive(Drop, Clone)]
 struct ContractClass {
@@ -51,9 +52,9 @@ impl RevertedTransactionImpl of RevertedTransactionTrait {
 #[derive(Copy, Drop)]
 struct TxInfoMock {
     version: Option<felt252>,
-    account_contract_address: Option<felt252>,
+    account_contract_address: Option<ContractAddress>,
     max_fee: Option<u128>,
-    signature: Option<Array<felt252>>,
+    signature: Option<Span<felt252>>,
     transaction_hash: Option<felt252>,
     chain_id: Option<felt252>,
     nonce: Option<felt252>,
@@ -239,17 +240,18 @@ fn start_spoof(contract_address: ContractAddress, tx_info_mock: TxInfoMock) {
     } = tx_info_mock;
 
     let (is_version_set, version) = is_set_and_value(version, 0);
-    let (is_acc_address_set, account_contract_address) = is_set_and_value(account_contract_address, 0);
+
+    let (is_acc_address_set, account_contract_address) = is_set_and_value(account_contract_address, contract_address_const::<0>());
     let (is_max_fee_set, max_fee) = is_set_and_value(max_fee, 0_u128);
     let (is_tx_hash_set, transaction_hash) = is_set_and_value(transaction_hash, 0);
     let (is_chain_id_set, chain_id) = is_set_and_value(chain_id, 0);
     let (is_nonce_set, nonce) = is_set_and_value(nonce, 0);
-    let (is_signature_set, signature) = is_set_and_value(signature, ArrayTrait::new());
+    let (is_signature_set, signature) = is_set_and_value(signature, ArrayTrait::new().span());
 
     let mut inputs = array![
         contract_address_felt,
         is_version_set.into(), version,
-        is_acc_address_set.into(), account_contract_address,
+        is_acc_address_set.into(), account_contract_address.into(),
         is_max_fee_set.into(), max_fee.into(),
         is_tx_hash_set.into(), transaction_hash,
         is_chain_id_set.into(), chain_id,
