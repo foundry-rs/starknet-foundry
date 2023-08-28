@@ -279,7 +279,7 @@ impl CairoHintProcessor<'_> {
 
                 let signature_len = inputs[14]
                     .to_usize()
-                    .expect("Missing signature len in inputs");
+                    .expect("Failed to convert signature_len to usize");
                 let signature = inputs[13]
                     .is_one()
                     .then(|| Vec::from(&inputs[15..(15 + signature_len)]));
