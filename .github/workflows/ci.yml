@@ -11,7 +11,7 @@ jobs:
   test-forge-unit-and-integration:
     name: Test Forge / Unit and Integration Tests
     env:
-      SCARB_VERSION: 0.6.0
+      SCARB_VERSION: 0.7.0
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -28,9 +28,25 @@ jobs:
   test-forge-e2e:
     name: Test Forge / E2E Tests
     env:
-      SCARB_VERSION: 0.6.0
+      SCARB_VERSION: 0.7.0
     runs-on: ubuntu-latest
     steps:
+      # extract branch name
+      - name: Extract branch name
+        if: github.event_name != 'pull_request'
+        shell: bash
+        run: echo "BRANCH_NAME=$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_ENV
+        id: extract_branch
+
+      # extract branch name on pull request
+      - name: Print branch name
+        if: github.event_name == 'pull_request'
+        run: echo "BRANCH_NAME=$(echo $GITHUB_HEAD_REF)" >> $GITHUB_ENV
+
+      # print branch name
+      - name: Get branch name
+        run: echo 'The branch name is' $BRANCH_NAME
+
       - uses: actions/checkout@v3
         with:
           submodules: true
@@ -44,7 +60,7 @@ jobs:
   test-cheatnet:
     name: Test Cheatnet
     env:
-      SCARB_VERSION: 0.6.0
+      SCARB_VERSION: 0.7.0
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

@@ -1,5 +1,5 @@
 [package]
-name = "constructor_with_params"
+name = "constructor_with_params_v2"
 version = "0.1.0"
 
 [dependencies]

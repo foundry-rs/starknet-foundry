@@ -11,11 +11,13 @@ use thiserror::Error;
 pub mod declare;
 pub mod deploy;
 pub mod get_class_hash;
+pub mod l1_handler_execute;
 pub mod mock_call;
 pub mod prank;
 pub mod precalculate_address;
 pub mod roll;
 pub mod spoof;
+pub mod spy_events;
 pub mod warp;
 
 // All errors that can be thrown from the hint executor have to be added here,

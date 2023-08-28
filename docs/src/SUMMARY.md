@@ -45,8 +45,11 @@
   * [start_warp](appendix/cheatcodes/start_warp.md)
   * [stop_warp](appendix/cheatcodes/stop_warp.md)
   * [get_class_hash](appendix/cheatcodes/get_class_hash.md)
+  * [l1_handler_execute](appendix/cheatcodes/l1_handler_execute.md)
   * [start_mock_call](appendix/cheatcodes/start_mock_call.md)
   * [stop_mock_call](appendix/cheatcodes/stop_mock_call.md)
+  * [spy_events](appendix/cheatcodes/spy_events.md)
+
 * [Forge Library Functions References](appendix/forge-library.md)
     * [declare](appendix/forge-library/declare.md)
     * [precalculate_address](appendix/forge-library/precalculate_address.md)

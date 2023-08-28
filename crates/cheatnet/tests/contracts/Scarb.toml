@@ -9,7 +9,7 @@ sierra = true
 casm = true
 
 [dependencies]
-starknet = "2.1.0-rc2"
+starknet = "2.2.0"
 
 [tool.snforge]
 # exit_first = true

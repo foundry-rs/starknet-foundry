@@ -8,6 +8,7 @@
   * [`expect_events` cheatcode](#expectevents-cheatcode)
     * [Usage example](#usage-example)
   * [`spy_events` cheatcode](#spyevents-cheatcode)
+    * [Propositions to consider](#propositions-to-consider)
     * [Usage example](#usage-example-1)
 <!-- TOC -->
 

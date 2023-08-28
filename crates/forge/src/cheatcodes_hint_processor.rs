@@ -32,8 +32,12 @@ use cairo_lang_runner::{
     casm_run::{cell_ref_to_relocatable, extract_buffer, get_ptr},
     insert_value_to_cellref, CairoHintProcessor as OriginalCairoHintProcessor,
 };
+
+use cairo_lang_starknet::contract::starknet_keccak;
 use cairo_lang_utils::bigint::BigIntAsHex;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
+use cheatnet::cheatcodes::spy_events::SpyTarget;
+use cheatnet::conversions::contract_address_from_felt;
 
 mod file_operations;
 
@@ -382,7 +386,7 @@ impl CairoHintProcessor<'_> {
                 Ok(())
             }
             "get_class_hash" => {
-                let contract_address = contract_address_from_felt252(&inputs[0])?;
+                let contract_address = contract_address_from_felt(&inputs[0]);
 
                 match self.cheatnet_state.get_class_hash(contract_address) {
                     Ok(class_hash) => {
@@ -397,6 +401,33 @@ impl CairoHintProcessor<'_> {
                     Err(CheatcodeError::Unrecoverable(err)) => Err(err),
                 }
             }
+            "l1_handler_execute" => {
+                let contract_address = contract_address_from_felt(&inputs[0]);
+                let function_name = inputs[1].clone();
+                let from_address = inputs[2].clone();
+                let fee = inputs[3].clone();
+                let payload_length: usize = inputs[4]
+                    .clone()
+                    .to_usize()
+                    .expect("Payload length is expected to fit into usize type");
+
+                let payload = Vec::from(&inputs[5..inputs.len()]);
+
+                match self.cheatnet_state.l1_handler_execute(
+                    contract_address,
+                    &function_name,
+                    &from_address,
+                    &fee,
+                    &payload,
+                ) {
+                    Ok(()) => Ok(()),
+                    Err(CheatcodeError::Recoverable(panic_data)) => {
+                        write_cheatcode_panic(&mut buffer, &panic_data);
+                        Ok(())
+                    }
+                    Err(CheatcodeError::Unrecoverable(err)) => Err(err),
+                }
+            }
             "parse_txt" => {
                 let file_path = inputs[0].clone();
                 let parsed_content = file_operations::parse_txt(&file_path)?;
@@ -406,6 +437,51 @@ impl CairoHintProcessor<'_> {
                 Ok(())
             }
             "parse_json" => todo!(),
+            "spy_events" => {
+                let spy_on = match inputs.len() {
+                    0 => unreachable!("Serialized enum should always be longer than 0"),
+                    1 => SpyTarget::All,
+                    2 => SpyTarget::One(contract_address_from_felt(&inputs[1])),
+                    _ => {
+                        let addresses_length = inputs[1].to_usize().unwrap();
+                        let addresses = Vec::from(&inputs[2..(2 + addresses_length)])
+                            .iter()
+                            .map(contract_address_from_felt)
+                            .collect();
+
+                        SpyTarget::Multiple(addresses)
+                    }
+                };
+
+                let id = self.cheatnet_state.spy_events(spy_on);
+                buffer
+                    .write(Felt252::from(id))
+                    .expect("Failed to insert spy id");
+                Ok(())
+            }
+            "fetch_events" => {
+                let id = &inputs[0];
+                let (emitted_events_len, serialized_events) = self.cheatnet_state.fetch_events(id);
+
+                buffer
+                    .write(Felt252::from(emitted_events_len))
+                    .expect("Failed to insert serialized events length");
+                for felt in serialized_events {
+                    buffer
+                        .write(felt)
+                        .expect("Failed to insert serialized events");
+                }
+                Ok(())
+            }
+            "event_name_hash" => {
+                let name = inputs[0].clone();
+                let hash = starknet_keccak(as_cairo_short_string(&name).unwrap().as_bytes());
+
+                buffer
+                    .write(Felt252::from(hash))
+                    .expect("Failed to insert event name hash");
+                Ok(())
+            }
             _ => Err(anyhow!("Unknown cheatcode selector: {selector}")).map_err(Into::into),
         }?;
 
@@ -457,9 +533,9 @@ fn execute_syscall(
         &vm.get_integer(system_ptr).unwrap(),
     ))?;
 
-    return match selector {
+    match selector {
         DeprecatedSyscallSelector::CallContract => {
-            execute_call_contract(MemBuffer::new(vm, system_ptr), cheatnet_state);
+            execute_call_contract(MemBuffer::new(vm, system_ptr), cheatnet_state)?;
             Ok(())
         }
         DeprecatedSyscallSelector::Keccak => {
@@ -469,10 +545,13 @@ fn execute_syscall(
             "starknet syscalls (other than CallContract and Keccak) cannot be used in tests"
                 .to_string(),
         ))),
-    };
+    }
 }
 
-fn execute_call_contract(mut buffer: MemBuffer, cheatnet_state: &mut CheatnetState) {
+fn execute_call_contract(
+    mut buffer: MemBuffer,
+    cheatnet_state: &mut CheatnetState,
+) -> Result<(), HintError> {
     let _selector = buffer.next_felt252().unwrap();
     let gas_counter = buffer.next_usize().unwrap();
 
@@ -499,12 +578,14 @@ fn execute_call_contract(mut buffer: MemBuffer, cheatnet_state: &mut CheatnetSta
     let (result, exit_code) = match call_result {
         CallContractOutput::Success { ret_data } => (ret_data, 0),
         CallContractOutput::Panic { panic_data } => (panic_data, 1),
+        CallContractOutput::Error { msg } => return Err(HintError::CustomHint(Box::from(msg))),
     };
 
     buffer.write(gas_counter).unwrap();
     buffer.write(Felt252::from(exit_code)).unwrap();
 
     buffer.write_arr(result.iter()).unwrap();
+    Ok(())
 }
 
 fn print(inputs: Vec<Felt252>) {
@@ -525,10 +606,4 @@ fn write_cheatcode_panic(buffer: &mut MemBuffer, panic_data: &[Felt252]) {
     buffer
         .write_data(panic_data.iter())
         .expect("Failed to insert error in memory");
-}
-
-fn contract_address_from_felt252(felt: &Felt252) -> Result<ContractAddress, EnhancedHintError> {
-    Ok(ContractAddress(PatriciaKey::try_from(felt_to_stark_felt(
-        felt,
-    ))?))
 }

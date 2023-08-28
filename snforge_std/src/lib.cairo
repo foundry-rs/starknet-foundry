@@ -8,6 +8,8 @@ use cheatcodes::ContractClass;
 use cheatcodes::ContractClassTrait;
 use cheatcodes::TxInfoMock;
 use cheatcodes::TxInfoMockTrait;
+use cheatcodes::L1Handler;
+use cheatcodes::L1HandlerTrait;
 
 use cheatcodes::start_prank;
 use cheatcodes::stop_prank;
@@ -33,3 +35,13 @@ use file_operations::TxtParser;
 mod forge_print;
 
 use forge_print::PrintTrait;
+
+mod event;
+
+use event::SpyOn;
+use event::Event;
+use event::EventSpy;
+use event::EventFetcher;
+use event::EventAssertions;
+use event::spy_events;
+use event::event_name_hash;

@@ -8,6 +8,7 @@ use cairo_lang_filesystem::db::init_dev_corelib;
 use cairo_lang_starknet::allowed_libfuncs::{validate_compatible_sierra_version, ListSelector};
 use cairo_lang_starknet::casm_contract_class::CasmContractClass;
 use cairo_lang_starknet::contract_class::compile_contract_in_prepared_db;
+use cairo_lang_starknet::inline_macros::selector::SelectorMacro;
 use cairo_lang_starknet::plugin::StarkNetPlugin;
 use camino::Utf8PathBuf;
 use forge::scarb::StarknetContractArtifacts;
@@ -48,7 +49,8 @@ impl Contract {
 
         let db = &mut {
             RootDatabase::builder()
-                .with_semantic_plugin(Arc::new(StarkNetPlugin::default()))
+                .with_macro_plugin(Arc::new(StarkNetPlugin::default()))
+                .with_inline_macro_plugin(SelectorMacro::NAME, Arc::new(SelectorMacro))
                 .build()?
         };
         init_dev_corelib(db, corelib_path.into());

@@ -1,5 +1,5 @@
 [package]
-name = "map"
+name = "map_v1"
 version = "0.1.0"
 
 [dependencies]

@@ -167,3 +167,33 @@ Failure data:
 
 Tests: 0 passed, 1 failed, 0 skipped
 ```
+
+### Pranking the constructor
+
+Most of the cheatcodes like `prank`, `mock_call`, `warp`, `roll` do work in the constructor of the contracts.
+
+Let's say, that you have a contract that saves the caller address (deployer) in the constructor, and you want it to be pre-set to a certain value.
+
+To `prank` the constructor, you need to `start_prank` before it is invoked, with the right address. 
+To achieve this, you need to precalculate address of the contract using `precalculate_address` of `ContractClassTrait` on declared contract,
+and then use it in `start_prank` as an argument:
+
+
+```rust
+use snforge_std::{ declare, PreparedContract, ContractClassTrait, deploy, start_prank };
+
+#[test]
+fn prank_the_constructor() {
+    let contract = declare('HelloStarknet');
+    let constructor_arguments = @ArrayTrait::new();
+    
+    // Precalculate the address to obtain the contract address before the constructor call (deploy) itself
+    let contract_address = contract.precalculate_address(constructor_arguments); 
+    
+    // Change the caller address to 123 before the call to contract.deploy
+    start_prank(contract_address, 123.try_into().unwrap());
+    
+    // The constructor will have 123 set as the caller address 
+    contract.deploy(constructor_arguments).unwrap();
+}
+```
