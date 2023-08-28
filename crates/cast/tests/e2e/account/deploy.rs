@@ -194,7 +194,7 @@ pub async fn test_invalid_class_hash() {
 }
 
 #[tokio::test]
-pub async fn test_invalid_class_hash2() {
+pub async fn test_valid_class_hash() {
     let (created_dir, accounts_file) = create_account("10", true).await;
 
     let args = vec![
@@ -214,7 +214,7 @@ pub async fn test_invalid_class_hash2() {
         .current_dir(&created_dir)
         .args(args);
 
-    snapbox.assert().success().stderr_matches(indoc! {r#"
+    snapbox.assert().success().stdout_matches(indoc! {r#"
         command: account deploy
         transaction_hash: [..]
     "#});
