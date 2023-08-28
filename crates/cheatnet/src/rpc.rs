@@ -17,6 +17,7 @@ use std::{any::Any, collections::HashMap, sync::Arc};
 
 use crate::{
     constants::{build_block_context, build_transaction_context},
+    contract_print::{contract_print, PrintingResult},
     CheatnetState,
 };
 use blockifier::execution::entry_point::{handle_empty_constructor, Retdata};
@@ -369,6 +370,13 @@ impl HintProcessorLogic for CheatableSyscallHandler<'_> {
                 return self.execute_next_syscall_cheated(vm, hint);
             }
         }
+
+        match contract_print(vm, maybe_extended_hint) {
+            PrintingResult::Printed => return Ok(()),
+            PrintingResult::Passed => (),
+            PrintingResult::Err(err) => return Err(err),
+        }
+
         self.syscall_handler
             .execute_hint(vm, exec_scopes, hint_data, constants)
     }
