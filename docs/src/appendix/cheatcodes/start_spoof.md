@@ -63,9 +63,9 @@ fn test_spoof() {
     
     start_spoof(contract_address, tx_info);
     
-    dispatcher.store_tx_hash(13);
+    dispatcher.store_tx_hash();
     
     let tx_hash = dispatcher.get_stored_tx_hash();
-    assert(tx_hash == 1234, 'Wrong tx_hash'); // this assert passes
+    assert(tx_hash == 1234, 'tx_hash should be mocked');
 }
 ```
