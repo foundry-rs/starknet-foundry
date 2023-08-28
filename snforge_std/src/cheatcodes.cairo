@@ -48,7 +48,7 @@ impl RevertedTransactionImpl of RevertedTransactionTrait {
     }
 }
 
-#[derive(Drop)]
+#[derive(Copy, Drop)]
 struct TxInfoMock {
     version: Option<felt252>,
     account_contract_address: Option<felt252>,
