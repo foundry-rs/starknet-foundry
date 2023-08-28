@@ -169,38 +169,3 @@ fn copy_event(event: @Event) -> Event {
 
     Event { from, name, keys, data }
 }
-
-// Copied from corelib until it will be included in the release
-impl ArrayPartialEq<T, impl PartialEqImpl: PartialEq<T>> of PartialEq<Array<T>> {
-    fn eq(lhs: @Array<T>, rhs: @Array<T>) -> bool {
-        lhs.span() == rhs.span()
-    }
-    fn ne(lhs: @Array<T>, rhs: @Array<T>) -> bool {
-        !(lhs == rhs)
-    }
-}
-
-impl SpanPartialEq<T, impl PartialEqImpl: PartialEq<T>> of PartialEq<Span<T>> {
-    fn eq(lhs: @Span<T>, rhs: @Span<T>) -> bool {
-        if (*lhs).len() != (*rhs).len() {
-            return false;
-        }
-        let mut lhs_span = *lhs;
-        let mut rhs_span = *rhs;
-        loop {
-            match lhs_span.pop_front() {
-                Option::Some(lhs_v) => {
-                    if lhs_v != rhs_span.pop_front().unwrap() {
-                        break false;
-                    }
-                },
-                Option::None => {
-                    break true;
-                },
-            };
-        }
-    }
-    fn ne(lhs: @Span<T>, rhs: @Span<T>) -> bool {
-        !(lhs == rhs)
-    }
-}

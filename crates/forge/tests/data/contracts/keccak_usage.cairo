@@ -7,6 +7,7 @@ trait IHelloKeccak<TContractState> {
 mod HelloKeccak {
     use array::ArrayTrait;
     use starknet::syscalls::keccak_syscall;
+    use starknet::SyscallResultTrait;
 
     #[storage]
     struct Storage {}
