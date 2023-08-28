@@ -266,33 +266,23 @@ impl CairoHintProcessor<'_> {
                 Ok(())
             }
             "start_spoof" => {
-                fn make_option<T>(is_value_set: bool, value: T) -> Option<T> {
-                    if is_value_set {
-                        Option::Some(value)
-                    } else {
-                        Option::None
-                    }
-                };
-
                 let contract_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
                     inputs[0].clone().to_be_bytes(),
                 )?)?);
 
-                let version = make_option(inputs[1].clone().is_one(), inputs[2].clone());
-                let account_contract_address =
-                    make_option(inputs[3].clone().is_one(), inputs[4].clone());
-                let max_fee = make_option(inputs[5].clone().is_one(), inputs[6].clone());
-                let transaction_hash = make_option(inputs[7].clone().is_one(), inputs[8].clone());
-                let chain_id = make_option(inputs[9].clone().is_one(), inputs[10].clone());
-                let nonce = make_option(inputs[11].clone().is_one(), inputs[12].clone());
+                let version = inputs[1].is_one().then(|| inputs[2].clone());
+                let account_contract_address = inputs[3].is_one().then(|| inputs[4].clone());
+                let max_fee = inputs[5].is_one().then(|| inputs[6].clone());
+                let transaction_hash = inputs[7].is_one().then(|| inputs[8].clone());
+                let chain_id = inputs[9].is_one().then(|| inputs[10].clone());
+                let nonce = inputs[11].is_one().then(|| inputs[12].clone());
 
                 let signature_len = inputs[14]
                     .to_usize()
                     .expect("Missing signature len in inputs");
-                let signature = make_option(
-                    inputs[13].clone().is_one(),
-                    Vec::from(&inputs[15..(15 + signature_len)]),
-                );
+                let signature = inputs[13]
+                    .is_one()
+                    .then(|| Vec::from(&inputs[15..(15 + signature_len)]));
 
                 self.cheatnet_state.start_spoof(
                     contract_address,
