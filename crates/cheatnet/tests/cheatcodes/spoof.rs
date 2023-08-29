@@ -45,6 +45,7 @@ fn assert_all_mock_checker_getters(
     assert_success!(signature, expected_signature);
 }
 
+#[allow(clippy::type_complexity)]
 fn call_mock_checker_getters(
     state: &mut CheatnetState,
     contract_address: &ContractAddress,
