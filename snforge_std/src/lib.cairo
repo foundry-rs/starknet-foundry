@@ -32,12 +32,13 @@ mod forge_print;
 
 use forge_print::PrintTrait;
 
-mod event;
 
-use event::SpyOn;
-use event::Event;
-use event::EventSpy;
-use event::EventFetcher;
-use event::EventAssertions;
-use event::spy_events;
-use event::event_name_hash;
+mod events;
+
+use events::SpyOn;
+use events::Event;
+use events::EventSpy;
+use events::EventFetcher;
+use events::EventAssertions;
+use events::spy_events;
+use events::event_name_hash;
