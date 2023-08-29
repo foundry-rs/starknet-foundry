@@ -2,7 +2,6 @@ use crate::conversions::{class_hash_to_felt, contract_address_to_felt};
 use blockifier::execution::contract_class::{
     ContractClass as ContractClassBlockifier, ContractClassV1,
 };
-use blockifier::execution::errors::PreExecutionError::StateError;
 use blockifier::execution::execution_utils::stark_felt_to_felt;
 use blockifier::state::errors::StateError::StateReadError;
 use blockifier::state::state_api::StateResult;
@@ -13,8 +12,8 @@ use cairo_lang_utils::bigint::BigUintAsHex;
 use num_bigint::BigUint;
 use starknet::core::types::BlockTag::Latest;
 use starknet::core::types::{BlockId, ContractClass as ContractClassStarknet, FieldElement};
-use starknet::providers::jsonrpc::{HttpTransport, HttpTransportError, JsonRpcClientError};
-use starknet::providers::{JsonRpcClient, Provider, ProviderError};
+use starknet::providers::jsonrpc::{HttpTransport};
+use starknet::providers::{JsonRpcClient, Provider};
 use starknet_api::core::{ClassHash, ContractAddress, Nonce};
 use starknet_api::hash::{StarkFelt, StarkHash};
 use starknet_api::state::StorageKey;

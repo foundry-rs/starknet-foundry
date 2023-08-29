@@ -1,5 +1,5 @@
 use crate::constants::TEST_ACCOUNT_CONTRACT_ADDRESS;
-use crate::state::DictStateReader;
+use crate::state::CustomStateReader;
 use crate::{cheatcodes::EnhancedHintError, CheatnetState};
 use anyhow::Result;
 use blockifier::abi::abi_utils::selector_from_name;
@@ -33,7 +33,7 @@ impl CheatnetState {
         let contract_address = self.precalculate_address(class_hash, calldata);
         self.increment_deploy_salt_base();
 
-        let blockifier_state: &mut CachedState<DictStateReader> = &mut self.blockifier_state;
+        let blockifier_state: &mut CachedState<CustomStateReader> = &mut self.blockifier_state;
 
         let contract_class = blockifier_state
             .get_compiled_contract_class(class_hash)

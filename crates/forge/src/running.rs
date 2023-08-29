@@ -74,7 +74,7 @@ pub(crate) fn run_from_test_case(
     let mut cairo_hint_processor = CairoHintProcessor {
         original_cairo_hint_processor: core_cairo_hint_processor,
         contracts,
-        cheatnet_state: CheatnetState::new(predeployed_contracts),
+        cheatnet_state: CheatnetState::new(predeployed_contracts, false),
     };
 
     match runner.run_function(

@@ -1,5 +1,5 @@
 use crate::constants::build_block_context;
-use crate::state::DictStateReader;
+use crate::state::CustomStateReader;
 use crate::CheatnetState;
 use anyhow::{anyhow, Context, Result};
 use blockifier::execution::{
@@ -29,7 +29,7 @@ impl CheatnetState {
         paid_fee_on_l1: &Felt252,
         payload: &[Felt252],
     ) -> Result<(), CheatcodeError> {
-        let blockifier_state: &mut CachedState<DictStateReader> = &mut self.blockifier_state;
+        let blockifier_state: &mut CachedState<CustomStateReader> = &mut self.blockifier_state;
 
         let block_context = build_block_context();
 

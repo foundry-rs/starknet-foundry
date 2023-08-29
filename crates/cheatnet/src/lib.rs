@@ -1,30 +1,44 @@
-use blockifier::state::cached_state::CachedState;
+use crate::forking::state::ForkStateReader;
+use crate::forking::worker::Worker;
+use crate::state::CustomStateReader;
+use blockifier::state::cached_state::{CachedState, GlobalContractCache};
 use camino::Utf8PathBuf;
 use constants::build_testing_state;
 use starknet_api::hash::StarkFelt;
 use starknet_api::transaction::ContractAddressSalt;
-use state::{CheatcodeState, DictStateReader};
+use state::CheatcodeState;
 
 pub mod cheatcodes;
 pub mod constants;
 pub mod conversions;
+pub mod forking;
 pub mod panic_data;
 pub mod rpc;
 pub mod state;
-pub mod forking;
 
 pub struct CheatnetState {
     cheatcode_state: CheatcodeState,
-    blockifier_state: CachedState<DictStateReader>,
+    blockifier_state: CachedState<CustomStateReader>,
     pub deploy_salt_base: u32,
 }
 
 impl CheatnetState {
     #[must_use]
-    pub fn new(predeployed_contracts: &Utf8PathBuf) -> Self {
+    pub fn new(predeployed_contracts: &Utf8PathBuf, fork: bool) -> Self {
+        let dict_state_reader = build_testing_state(predeployed_contracts);
         CheatnetState {
             cheatcode_state: CheatcodeState::new(),
-            blockifier_state: build_testing_state(predeployed_contracts),
+            blockifier_state: CachedState::new(
+                if fork {
+                    CustomStateReader::ForkStateReader(ForkStateReader {
+                        dict_state_reader,
+                        worker: Worker::new("http://188.34.188.184:9545/rpc/v0.4"),
+                    })
+                } else {
+                    CustomStateReader::DictStateReader(dict_state_reader)
+                },
+                GlobalContractCache::default(),
+            ),
             deploy_salt_base: 0,
         }
     }
