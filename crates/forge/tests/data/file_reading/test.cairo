@@ -71,7 +71,6 @@ struct Test {
     array: Array<felt252>,
 }
 
-
 #[test]
 fn valid_content_and_same_content_no_matter_whitespaces() {
     let file = FileTrait::new('data/valid.txt');
