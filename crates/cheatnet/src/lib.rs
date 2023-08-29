@@ -7,6 +7,7 @@ use state::{CheatcodeState, DictStateReader};
 
 pub mod cheatcodes;
 pub mod constants;
+pub mod contract_print;
 pub mod conversions;
 pub mod panic_data;
 pub mod rpc;
