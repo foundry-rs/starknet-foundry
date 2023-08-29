@@ -10,7 +10,7 @@ fn file_reading() {
     let expected = indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
-        Collected 22 test(s) and 2 test file(s)
+        Collected 23 test(s) and 2 test file(s)
         Running 9 test(s) from file_reading package
         [PASS] file_reading::valid_content_and_same_content_no_matter_whitespaces
         [PASS] file_reading::serialization
@@ -51,7 +51,7 @@ fn file_reading() {
             Got an exception while executing a hint:
             Failed to parse data/too_large_number.txt file
         
-        Running 13 test(s) from test.cairo
+        Running 14 test(s) from test.cairo
         [PASS] test::valid_content_and_same_content_no_matter_whitespaces
         [PASS] test::serialization
         [PASS] test::json_serialization
@@ -66,6 +66,12 @@ fn file_reading() {
         [PASS] test::valid_content_different_folder
         [FAIL] test::non_existent
         
+        Failure data:
+            Got an exception while executing a hint:
+            No such file or directory (os error 2)
+        
+        [FAIL] test::json_non_existent
+
         Failure data:
             Got an exception while executing a hint:
             No such file or directory (os error 2)
@@ -100,7 +106,7 @@ fn file_reading() {
             Got an exception while executing a hint:
             Failed to parse data/too_large_number.txt file
         
-        Tests: 9 passed, 13 failed, 0 skipped
+        Tests: 9 passed, 14 failed, 0 skipped
     "#};
 
     // run from different directories to make sure cwd is always set to package directory

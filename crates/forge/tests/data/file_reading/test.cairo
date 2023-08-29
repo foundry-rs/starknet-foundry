@@ -158,6 +158,13 @@ fn non_existent() {
     assert(1 == 1, '');
 }
 
+#[test]
+#[should_panic]
+fn json_non_existent() {
+    let file = FileTrait::new('data/non_existent.json');
+    let content = read_json(@file);
+    assert(1 == 1, '');
+}
 
 #[test]
 fn invalid_quotes() {

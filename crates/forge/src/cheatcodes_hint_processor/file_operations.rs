@@ -124,15 +124,18 @@ mod tests {
         .to_owned();
         let result = json_values_sorted_by_keys(&string).unwrap();
         let expected_result = ["1", "2", "12", "43", "\"Joh\""].to_vec();
-        let result_length = expected_result.len();
 
-        let has_proper_values = result
-            .iter()
-            .zip(&expected_result)
-            .filter(|&(a, b)| a == b)
-            .count();
+        assert_eq!(result, expected_result);
 
-        assert_eq!(has_proper_values, result_length);
+        let string = r#"
+        {
+            "ad": "string",
+            "test": [1,2,3,4]
+        }"#
+        .to_owned();
+        let result = json_values_sorted_by_keys(&string).unwrap();
+        let expected_result = ["\"string\"", "4", "1", "2", "3", "4"];
+        assert_eq!(result, expected_result);
     }
     #[test]
     fn test_json_values_sorted_by_keys_invalid_data() {
@@ -149,19 +152,6 @@ mod tests {
         .to_owned();
         let result = json_values_sorted_by_keys(&string);
         assert!(result.is_err());
-    }
-    #[test]
-    fn test_json_values_sorted_by_keys_with_array() {
-        let string = r#"
-        {
-            "ad": "string",
-            "test": [1,2,3,4]
-        }"#
-        .to_owned();
-        let result = json_values_sorted_by_keys(&string).unwrap();
-        dbg!(&result);
-        let expected_result = ["\"string\"", "4", "1", "2", "3", "4"];
-        assert_eq!(result, expected_result);
     }
 
     #[test]
