@@ -49,6 +49,7 @@ pub(crate) fn run_from_test_case(
     case: &TestCase,
     contracts: &HashMap<String, StarknetContractArtifacts>,
     predeployed_contracts: &Utf8PathBuf,
+    fork: Option<String>
 ) -> Result<TestCaseSummary> {
     let available_gas = if let Some(available_gas) = &case.available_gas {
         Some(*available_gas)
@@ -74,7 +75,7 @@ pub(crate) fn run_from_test_case(
     let mut cairo_hint_processor = CairoHintProcessor {
         original_cairo_hint_processor: core_cairo_hint_processor,
         contracts,
-        cheatnet_state: CheatnetState::new(predeployed_contracts, false),
+        cheatnet_state: CheatnetState::new(predeployed_contracts, fork),
     };
 
     match runner.run_function(

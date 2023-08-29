@@ -24,15 +24,15 @@ pub struct CheatnetState {
 
 impl CheatnetState {
     #[must_use]
-    pub fn new(predeployed_contracts: &Utf8PathBuf, fork: bool) -> Self {
+    pub fn new(predeployed_contracts: &Utf8PathBuf, fork: Option<String>) -> Self {
         let dict_state_reader = build_testing_state(predeployed_contracts);
         CheatnetState {
             cheatcode_state: CheatcodeState::new(),
             blockifier_state: CachedState::new(
-                if fork {
+                if let Some(url) = fork {
                     CustomStateReader::ForkStateReader(ForkStateReader {
                         dict_state_reader,
-                        worker: Worker::new("http://188.34.188.184:9545/rpc/v0.4"),
+                        worker: Worker::new(&url),
                     })
                 } else {
                     CustomStateReader::DictStateReader(dict_state_reader)

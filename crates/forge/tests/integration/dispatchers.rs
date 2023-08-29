@@ -17,7 +17,6 @@ fn simple_call_and_invoke() {
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
         use snforge_std::{ declare, ContractClassTrait };
-        use starknet::contract_address_const;
 
         #[starknet::interface]
         trait IHelloStarknet<TContractState> {
@@ -29,9 +28,9 @@ fn simple_call_and_invoke() {
 
         #[test]
         fn call_and_invoke() {
-            let dispatcher = IHelloStarknetDispatcher {
-                contract_address: contract_address_const::<3216637956526895219277698311134811322769343974163380838558193911733621219342>()
-            };
+            let contract = declare('HelloStarknet');
+            let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+            let dispatcher = IHelloStarknetDispatcher { contract_address };
 
             let balance = dispatcher.get_balance();
             assert(balance == 0, 'balance == 0');
