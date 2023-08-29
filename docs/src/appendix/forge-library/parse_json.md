@@ -76,3 +76,7 @@ A {
     }
 }
 ```
+
+> 📝 **Note**
+>
+>Nested JSON values are sorted on the flatten format keys `(a.b.c)`.
