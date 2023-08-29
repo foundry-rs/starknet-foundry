@@ -4,9 +4,10 @@ use cast::helpers::constants::OZ_CLASS_HASH;
 use clap::Args;
 use starknet::accounts::AccountFactoryError;
 use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
-use starknet::core::types::FieldElement;
+use starknet::core::types::{FieldElement, StarknetError};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
+use starknet::providers::ProviderError::StarknetError as ProviderStarknetError;
 use starknet::signers::{LocalWallet, SigningKey};
 
 use cast::{chain_id_to_network_name, handle_rpc_error, handle_wait_for_tx, parse_number};
@@ -50,27 +51,33 @@ pub async fn deploy(
     if items[&network_name][&name].is_null() {
         bail!("Account with name {name} does not exist")
     }
+    let account = &items[&network_name][&name];
 
     let private_key = SigningKey::from_secret_scalar(
         parse_number(
-            items
-                .get(&network_name)
-                .and_then(|network| network.get(&name))
-                .and_then(|name| name.get("private_key"))
+            account
+                .get("private_key")
                 .and_then(serde_json::Value::as_str)
                 .ok_or_else(|| anyhow!("Couldn't get private key from accounts file"))?,
         )
         .context("Couldn't parse private key")?,
     );
 
-    let oz_class_hash: &str = if let Some(value) = &class_hash {
-        value
-    } else {
-        OZ_CLASS_HASH
+    let oz_class_hash = {
+        if let Some(class_hash_) = &class_hash {
+            class_hash_.as_str()
+        } else if let Some(class_hash_) = account
+            .get("class_hash")
+            .and_then(serde_json::Value::as_str)
+        {
+            class_hash_
+        } else {
+            OZ_CLASS_HASH
+        }
     };
 
     let factory = OpenZeppelinAccountFactory::new(
-        parse_number(oz_class_hash).context("Couldn't parse OpenZeppelin's account class hash")?,
+        parse_number(oz_class_hash).context("Couldn't parse account class hash")?,
         chain_id,
         LocalWallet::from_signing_key(private_key),
         provider,
@@ -79,10 +86,8 @@ pub async fn deploy(
 
     let deployment = factory.deploy(
         parse_number(
-            items
-                .get(&network_name)
-                .and_then(|network| network.get(&name))
-                .and_then(|name| name.get("salt"))
+            account
+                .get("salt")
                 .and_then(serde_json::Value::as_str)
                 .ok_or_else(|| anyhow!("Couldn't get salt from accounts file"))?,
         )
@@ -91,7 +96,13 @@ pub async fn deploy(
     let result = deployment.max_fee(max_fee).send().await;
 
     match result {
-        Err(AccountFactoryError::Provider(error)) => handle_rpc_error(error),
+        Err(AccountFactoryError::Provider(error)) => match error {
+            ProviderStarknetError(StarknetError::ClassHashNotFound) => Err(anyhow!(
+                "Provided class hash {} does not exist",
+                oz_class_hash
+            )),
+            _ => handle_rpc_error(error),
+        },
         Err(_) => Err(anyhow!("Unknown RPC error")),
         Ok(result) => {
             let return_value = InvokeResponse {
