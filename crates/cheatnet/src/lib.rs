@@ -11,7 +11,7 @@ pub mod conversions;
 pub mod panic_data;
 pub mod rpc;
 pub mod state;
-pub mod workers;
+pub mod forking;
 
 pub struct CheatnetState {
     cheatcode_state: CheatcodeState,
