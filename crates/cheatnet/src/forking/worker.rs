@@ -12,7 +12,7 @@ use cairo_lang_utils::bigint::BigUintAsHex;
 use num_bigint::BigUint;
 use starknet::core::types::BlockTag::Latest;
 use starknet::core::types::{BlockId, ContractClass as ContractClassStarknet, FieldElement};
-use starknet::providers::jsonrpc::{HttpTransport};
+use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider};
 use starknet_api::core::{ClassHash, ContractAddress, Nonce};
 use starknet_api::hash::{StarkFelt, StarkHash};

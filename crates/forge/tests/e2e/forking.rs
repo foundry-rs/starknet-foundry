@@ -1,12 +1,11 @@
-use crate::integration::common::running_tests::{run_fork_test_case};
+use crate::integration::common::running_tests::run_fork_test_case;
 use crate::{assert_passed, test_case};
 use indoc::indoc;
 
 #[test]
 fn simple_call_and_invoke() {
-    let test = test_case!(
-        indoc!(
-            r#"
+    let test = test_case!(indoc!(
+        r#"
         use array::ArrayTrait;
         use result::ResultTrait;
         use option::OptionTrait;
@@ -39,8 +38,7 @@ fn simple_call_and_invoke() {
             assert(balance == 102, 'balance == 102');
         }
     "#
-        ),
-    );
+    ),);
 
     let result = run_fork_test_case(&test);
 

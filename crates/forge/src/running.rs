@@ -49,7 +49,7 @@ pub(crate) fn run_from_test_case(
     case: &TestCase,
     contracts: &HashMap<String, StarknetContractArtifacts>,
     predeployed_contracts: &Utf8PathBuf,
-    fork: Option<String>
+    fork: Option<String>,
 ) -> Result<TestCaseSummary> {
     let available_gas = if let Some(available_gas) = &case.available_gas {
         Some(*available_gas)
