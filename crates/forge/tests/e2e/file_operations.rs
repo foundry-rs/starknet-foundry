@@ -51,7 +51,7 @@ fn file_reading() {
             Got an exception while executing a hint:
             Failed to parse data/too_large_number.txt file
         
-        Running 12 test(s) from test.cairo
+        Running 13 test(s) from test.cairo
         [PASS] test::valid_content_and_same_content_no_matter_whitespaces
         [PASS] test::serialization
         [PASS] test::json_serialization
@@ -59,7 +59,13 @@ fn file_reading() {
         
         Failure data:
             Got an exception while executing a hint:
-            Failed to parse data/json/invalid.json file
+            Parse JSON error: invalid type: integer `231232`, expected a map at line 1 column 6 , in file data/json/invalid.json
+        
+        [FAIL] test::json_with_array
+
+        Failure data:
+            Got an exception while executing a hint:
+            Failed to parse data/json/with_array.json file
 
         [PASS] test::json_deserialization
         [PASS] test::valid_content_different_folder
@@ -99,7 +105,7 @@ fn file_reading() {
             Got an exception while executing a hint:
             Failed to parse data/too_large_number.txt file
         
-        Tests: 8 passed, 13 failed, 0 skipped
+        Tests: 8 passed, 14 failed, 0 skipped
     "#};
 
     // run from different directories to make sure cwd is always set to package directory

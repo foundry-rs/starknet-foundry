@@ -2,6 +2,7 @@ use snforge_std::{FileTrait, read_txt, read_json, FileParser};
 use array::ArrayTrait;
 use option::OptionTrait;
 use serde::Serde;
+use snforge_std::PrintTrait;
 
 fn compare_with_expected_content(content: Array<felt252>) {
     let expected = array![
@@ -64,6 +65,12 @@ struct G {
     c: felt252,
 }
 
+#[derive(Serde, Destruct, Drop)]
+struct Test {
+    a: u8,
+    array: Array<felt252>,
+}
+
 
 #[test]
 fn valid_content_and_same_content_no_matter_whitespaces() {
@@ -78,6 +85,7 @@ fn valid_content_and_same_content_no_matter_whitespaces() {
     };
     assert(content.f == expected.f, '')
 }
+
 
 #[test]
 fn serialization() {
@@ -98,10 +106,19 @@ fn json_serialization() {
 }
 
 #[test]
+#[should_panic]
 fn invalid_json() {
     let file = FileTrait::new('data/json/invalid.json');
     let content = read_json(@file);
     assert(1 == 1, '');
+}
+
+#[test]
+fn json_with_array() {
+    let file = FileTrait::new('data/json/with_array.json');
+    let content = FileParser::<Test>::parse_json(@file).unwrap();
+    assert(*content.array[0] == 1, '');
+    assert(*content.array[1] == 23, '');
 }
 
 #[test]
@@ -141,6 +158,7 @@ fn non_existent() {
     let content = read_txt(@file);
     assert(1 == 1, '');
 }
+
 
 #[test]
 fn invalid_quotes() {

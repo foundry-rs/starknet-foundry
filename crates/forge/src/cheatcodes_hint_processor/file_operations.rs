@@ -2,7 +2,6 @@ use anyhow::{anyhow, Context};
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cheatnet::cheatcodes::EnhancedHintError;
-use cheatnet::cheatcodes::EnhancedHintError::FileParsing;
 use flatten_serde_json::flatten;
 use num_bigint::BigUint;
 use serde_json::{Map, Value};
@@ -22,7 +21,7 @@ pub(super) fn read_txt(file_path: &Felt252) -> Result<Vec<Felt252>, EnhancedHint
         .iter()
         .cloned()
         .collect::<Result<Vec<Felt252>, ()>>()
-        .map_err(|_| FileParsing {
+        .map_err(|_| EnhancedHintError::FileParsing {
             path: file_path_str,
         })
 }
@@ -31,9 +30,8 @@ pub(super) fn read_json(file_path: &Felt252) -> Result<Vec<Felt252>, EnhancedHin
     let file_path_str = as_cairo_short_string(file_path)
         .with_context(|| format!("Failed to convert {file_path} to str"))?;
     let content = std::fs::read_to_string(&file_path_str)?;
-    let split_content = json_values_sorted_by_keys(&content).map_err(|_| FileParsing {
-        path: file_path_str.clone(),
-    })?;
+    let split_content = json_values_sorted_by_keys(&content)
+        .map_err(|e| anyhow!(format!("{}, in file {}", e.to_string(), file_path_str)))?;
 
     let felts_in_results: Vec<Result<Felt252, ()>> = split_content
         .iter()
@@ -44,15 +42,14 @@ pub(super) fn read_json(file_path: &Felt252) -> Result<Vec<Felt252>, EnhancedHin
         .iter()
         .cloned()
         .collect::<Result<Vec<Felt252>, ()>>()
-        .map_err(|_| FileParsing {
+        .map_err(|_| EnhancedHintError::FileParsing {
             path: file_path_str,
         })
 }
 
 fn json_values_sorted_by_keys(content: &str) -> Result<Vec<String>, EnhancedHintError> {
-    let json: Map<String, Value> =
-        serde_json::from_str(content).map_err(|_| anyhow!("Wrong format"))?;
-
+    let json: Map<String, Value> = serde_json::from_str(content)
+        .map_err(|e| anyhow!(format!("Parse JSON error: {} ", e.to_string())))?;
     let data = flatten(&json);
 
     let mut keys: Vec<String> = data.keys().map(std::string::ToString::to_string).collect();
@@ -60,8 +57,21 @@ fn json_values_sorted_by_keys(content: &str) -> Result<Vec<String>, EnhancedHint
 
     Ok(keys
         .into_iter()
-        .map(|key| data.get(&key).unwrap().to_string())
+        .map(|key| parse_json_values(data.get(&key).unwrap()))
+        .flatten()
         .collect())
+}
+
+fn parse_json_values(value: &Value) -> Vec<String> {
+    match value {
+        Value::Array(vec) => {
+            let vec_len = vec.len().to_string();
+            let mut str_vec: Vec<String> = vec.iter().map(|e| e.to_string()).collect();
+            str_vec.insert(0, vec_len);
+            str_vec
+        }
+        value => vec![value.to_string()],
+    }
 }
 
 fn string_into_felt(string: &str) -> Result<Felt252, ()> {
@@ -76,7 +86,6 @@ fn string_into_felt(string: &str) -> Result<Felt252, ()> {
         let length = string.len();
         let first_char = string.chars().next();
         let last_char = string.chars().nth(length - 1);
-        dbg!(&string);
         if length >= 2
             && length - 2 <= 31
             && (first_char == Some('\'') || first_char == Some('\"'))
@@ -84,7 +93,6 @@ fn string_into_felt(string: &str) -> Result<Felt252, ()> {
             && string.is_ascii()
         {
             let bytes = string[1..length - 1].as_bytes();
-            dbg!(&bytes);
             Ok(Felt252::from_bytes_be(bytes))
         } else {
             Err(())
@@ -136,12 +144,24 @@ mod tests {
 
         let string = r#"
         {
-            "test": "string overflowing a short string"
+            "test": 'invalid json format'
         }"#
         .to_owned();
         let result = json_values_sorted_by_keys(&string);
-        dbg!(&result);
         assert!(result.is_err());
+    }
+    #[test]
+    fn test_json_values_sorted_by_keys_with_array() {
+        let string = r#"
+        {
+            "ad": "string",
+            "test": [1,2,3,4]
+        }"#
+        .to_owned();
+        let result = json_values_sorted_by_keys(&string).unwrap();
+        dbg!(&result);
+        let expected_result = ["\"string\"", "4", "1", "2", "3", "4"];
+        assert_eq!(result, expected_result);
     }
 
     #[test]
