@@ -43,6 +43,7 @@ pub async fn test_happy_case() {
     assert!(contents.contains("public_key"));
     assert!(contents.contains("address"));
     assert!(contents.contains("salt"));
+    assert!(contents.contains("class_hash"));
 
     fs::remove_dir_all(Utf8PathBuf::from(accounts_file).parent().unwrap()).unwrap();
 }
@@ -80,6 +81,7 @@ pub async fn test_happy_case_generate_salt() {
     assert!(contents.contains("public_key"));
     assert!(contents.contains("address"));
     assert!(contents.contains("salt"));
+    assert!(contents.contains("class_hash"));
 
     fs::remove_dir_all(Utf8PathBuf::from(accounts_file).parent().unwrap()).unwrap();
 }

@@ -162,6 +162,66 @@ async fn test_too_low_max_fee() {
     fs::remove_dir_all(created_dir).unwrap();
 }
 
+#[tokio::test]
+pub async fn test_invalid_class_hash() {
+    let (created_dir, accounts_file) = create_account("9", true).await;
+
+    let args = vec![
+        "--profile",
+        "my_account",
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "deploy",
+        "--name",
+        "my_account",
+        "--max-fee",
+        "10000000000000000",
+        "--class-hash",
+        "0x123",
+    ];
+
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(&created_dir)
+        .args(args);
+
+    snapbox.assert().success().stderr_matches(indoc! {r#"
+        command: account deploy
+        error: Provided class hash 0x123 does not exist
+    "#});
+
+    fs::remove_dir_all(created_dir).unwrap();
+}
+
+#[tokio::test]
+pub async fn test_valid_class_hash() {
+    let (created_dir, accounts_file) = create_account("10", true).await;
+
+    let args = vec![
+        "--profile",
+        "my_account",
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "deploy",
+        "--name",
+        "my_account",
+        "--max-fee",
+        "10000000000000000",
+    ];
+
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(&created_dir)
+        .args(args);
+
+    snapbox.assert().success().stdout_matches(indoc! {r#"
+        command: account deploy
+        transaction_hash: [..]
+    "#});
+
+    fs::remove_dir_all(created_dir).unwrap();
+}
+
 pub async fn create_account(salt: &str, add_profile: bool) -> (Utf8PathBuf, &str) {
     let created_dir = Utf8PathBuf::from(duplicate_directory_with_salt(
         CONTRACTS_DIR.to_string() + "/v1/balance",
