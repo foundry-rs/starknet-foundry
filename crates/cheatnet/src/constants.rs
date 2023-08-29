@@ -32,7 +32,6 @@ use starknet_api::{
 };
 
 use crate::state::DictStateReader;
-use crate::workers::worker::Worker;
 
 pub const TEST_SEQUENCER_ADDRESS: &str = "0x1000";
 pub const TEST_ERC20_CONTRACT_ADDRESS: &str = "0x1001";
@@ -191,7 +190,6 @@ pub fn build_testing_state(predeployed_contracts: &Utf8PathBuf) -> CachedState<D
             storage_view,
             address_to_class_hash,
             class_hash_to_class,
-            workers: vec![Worker::new("http://188.34.188.184:9545/rpc/v0.4")],
             ..Default::default()
         },
         GlobalContractCache::default(),
