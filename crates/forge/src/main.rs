@@ -29,9 +29,6 @@ struct Args {
     /// Stop test execution after first failed test
     #[arg(short = 'x', long)]
     exit_first: bool,
-
-    #[arg(short, long)]
-    fork: Option<String>,
 }
 
 fn load_predeployed_contracts() -> Result<TempDir> {
@@ -83,7 +80,6 @@ fn main_execution() -> Result<()> {
             args.test_name.clone(),
             args.exact,
             args.exit_first,
-            args.fork.clone(),
             &forge_config,
         );
 
