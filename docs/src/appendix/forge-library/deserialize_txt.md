@@ -1,9 +1,9 @@
-# `deserialize_txt`
+# `parse_txt`
 
 
-> `trait Parser<T, impl TSerde: Serde<T>> {
->     fn deserialize_txt(file: @File) -> Option<T>;
-> }` 
+> `trait FileParser<T, impl TSerde: Serde<T>> {
+>     fn parse_txt(file: @File) -> Option<T>;
+> }`
 
 Parses plain text file content and tries to deserialize it to type `T` that implements `Serde` trait.
 
@@ -22,9 +22,9 @@ struct MyStruct {
 }
 
 #[test]
-fn test_deserialize_txt() {
+fn test_parse_txt() {
     let file = FileTrait::new('data/file.txt');
-    let my_struct = Parser::<MyStruct>::deserialize_txt(@file).unwrap();
+    let my_struct = FileParser::<MyStruct>::parse_txt(@file).unwrap();
     // ...
 }
 ```

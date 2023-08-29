@@ -5,7 +5,9 @@
 * [`deploy`](forge-library/deploy.md)
 * [`print`](forge-library/print.md)
 * [`read_txt`](forge-library/read_txt.md)
-* [`deserialize_txt`](forge-library/deserialize_txt.md)
+* [`parse_txt`](forge-library/parse_txt.md)
+* [`read_json`](forge-library/read_json.md)
+* [`parse_json`](forge-library/parse_json.md)
 
 > ℹ️ **Info**
 > To use the library functions you need to add `snforge_std` package as a dependency in

@@ -60,7 +60,7 @@ fn json_values_sorted_by_keys(content: &str) -> Result<Vec<String>, EnhancedHint
 
     Ok(keys
         .into_iter()
-        .map(|key| data.get(&key).unwrap().to_string().replace('\"', "\'"))
+        .map(|key| data.get(&key).unwrap().to_string())
         .collect())
 }
 
@@ -76,14 +76,15 @@ fn string_into_felt(string: &str) -> Result<Felt252, ()> {
         let length = string.len();
         let first_char = string.chars().next();
         let last_char = string.chars().nth(length - 1);
-
+        dbg!(&string);
         if length >= 2
             && length - 2 <= 31
-            && first_char == Some('\'')
+            && (first_char == Some('\'') || first_char == Some('\"'))
             && first_char == last_char
             && string.is_ascii()
         {
             let bytes = string[1..length - 1].as_bytes();
+            dbg!(&bytes);
             Ok(Felt252::from_bytes_be(bytes))
         } else {
             Err(())
@@ -101,7 +102,7 @@ mod tests {
     use super::json_values_sorted_by_keys;
 
     #[test]
-    fn test_parse_json() {
+    fn test_json_values_sorted_by_keys() {
         let string = r#"
         {
             "name": "Joh",
@@ -114,7 +115,7 @@ mod tests {
         }"#
         .to_owned();
         let result = json_values_sorted_by_keys(&string).unwrap();
-        let expected_result = ["1", "2", "12", "43", "\'Joh\'"].to_vec();
+        let expected_result = ["1", "2", "12", "43", "\"Joh\""].to_vec();
         let result_length = expected_result.len();
 
         let has_proper_values = result
@@ -124,6 +125,23 @@ mod tests {
             .count();
 
         assert_eq!(has_proper_values, result_length);
+    }
+    #[test]
+    fn test_json_values_sorted_by_keys_invalid_data() {
+        let string = r#"
+        [1,2,'3232']"#
+            .to_owned();
+        let result = json_values_sorted_by_keys(&string);
+        assert!(result.is_err());
+
+        let string = r#"
+        {
+            "test": "string overflowing a short string"
+        }"#
+        .to_owned();
+        let result = json_values_sorted_by_keys(&string);
+        dbg!(&result);
+        assert!(result.is_err());
     }
 
     #[test]
@@ -160,8 +178,12 @@ mod tests {
     #[test]
     fn test_string_into_felt_shortstring_single_quotes() {
         let string = "\'1he5llo9\'";
+        let string2 = "\"1he5llo9\"";
+        let felt = string_into_felt(string);
+        let felt2 = string_into_felt(string2);
+        assert_eq!(felt, felt2);
         assert_eq!(
-            string_into_felt(string),
+            felt,
             Ok(Felt252::from_bytes_be(
                 string[1..string.len() - 1].as_bytes()
             ))

@@ -36,7 +36,7 @@ For example, this file content:
 will be parsed to the following array:
 > ⚠️ **Warning**
 >
->  JSON object is an unordered data, we had to somehow give it order. Therefore, the values in the array are sorted alphabetically by JSON key
+>  JSON object is an unordered data, To give it an order, the values in the array are sorted alphabetically by JSON key. Therefore, the values in the array are sorted alphabetically by JSON key.
 ```rust
 array![12, 1, '123', 1234]
 ```

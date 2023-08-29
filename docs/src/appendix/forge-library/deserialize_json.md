@@ -1,8 +1,8 @@
-# `deserialize_json`
+# `parse_json`
 
 
-> `trait Parser<T, impl TSerde: Serde<T>> {
->     fn deserialize_json(file: @File) -> Option<T>;
+> `trait FileParser<T, impl TSerde: Serde<T>> {
+>     fn parse_json(file: @File) -> Option<T>;
 > }` 
 
 Parses json file content and tries to deserialize it to type `T` that implements `Serde` trait.
@@ -12,7 +12,7 @@ Parses json file content and tries to deserialize it to type `T` that implements
 
 > ⚠️ **Warning**
 >
->  JSON object is an unordered data, we had to somehow give it order. Therefore, the values in the array are sorted alphabetically by JSON key. That means that in order to decode the JSON object correctly, you will need to define attributes of the struct with types that correspond to the values of the alphabetical order of the keys of the JSON.
+>  JSON object is an unordered data. To give it an order, the values in the array are sorted alphabetically by JSON key. That means that in order to decode the JSON object correctly, you will need to define attributes of the struct with types that correspond to the values of the alphabetical order of the keys of the JSON.
 ```rust
 use option::OptionTrait;
 use serde::Serde;
@@ -25,9 +25,9 @@ struct MyStruct {
 }
 
 #[test]
-fn test_deserialize_json() {
+fn test_parse_json() {
     let file = FileTrait::new('data/file.json');
-    let my_struct = Parser::<MyStruct>::deserialize_json(@file).unwrap();
+    let my_struct = FileParser::<MyStruct>::parse_json(@file).unwrap();
     // ...
 }
 ```
@@ -50,6 +50,22 @@ For example, this file content:
 could be parsed to the following struct:
 
 ```rust
+struct A {
+    ab: u8,
+    bc: u8,
+    cda: felt252,
+    d: B
+}
+
+struct B {
+    e: u32
+}
+```
+
+result:
+
+```rust
+
 A {
     ab: 12,
     bc: 1,

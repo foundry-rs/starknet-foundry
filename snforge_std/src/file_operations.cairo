@@ -53,17 +53,17 @@ fn read_json(file: @File) -> Array<felt252> {
     result
 }
 
-trait Parser<T, impl TSerde: Serde<T>> {
-    fn deserialize_txt(file: @File) -> Option<T>;
-    fn deserialize_json(file: @File) -> Option<T>;
+trait FileParser<T, impl TSerde: Serde<T>> {
+    fn parse_txt(file: @File) -> Option<T>;
+    fn parse_json(file: @File) -> Option<T>;
 }
 
-impl ParserImpl<T, impl TSerde: Serde<T>> of Parser<T> {
-    fn deserialize_txt(file: @File) -> Option<T> {
+impl FileParserImpl<T, impl TSerde: Serde<T>> of FileParser<T> {
+    fn parse_txt(file: @File) -> Option<T> {
         let mut content = cheatcode::<'read_txt'>(array![*file.path].span());
         Serde::<T>::deserialize(ref content)
     }
-    fn deserialize_json(file: @File) -> Option<T> {
+    fn parse_json(file: @File) -> Option<T> {
         let mut content = cheatcode::<'read_json'>(array![*file.path].span());
         Serde::<T>::deserialize(ref content)
     }
