@@ -4,6 +4,7 @@ use crate::state::CustomStateReader;
 use blockifier::state::cached_state::{CachedState, GlobalContractCache};
 use camino::Utf8PathBuf;
 use constants::build_testing_state;
+use starknet::core::types::BlockId;
 use starknet_api::hash::StarkFelt;
 use starknet_api::transaction::ContractAddressSalt;
 use state::CheatcodeState;
@@ -25,15 +26,15 @@ pub struct CheatnetState {
 
 impl CheatnetState {
     #[must_use]
-    pub fn new(predeployed_contracts: &Utf8PathBuf, fork: Option<String>) -> Self {
+    pub fn new(predeployed_contracts: &Utf8PathBuf, rpc_config: Option<(&str, BlockId)>) -> Self {
         let dict_state_reader = build_testing_state(predeployed_contracts);
         CheatnetState {
             cheatcode_state: CheatcodeState::new(),
             blockifier_state: CachedState::new(
-                if let Some(url) = fork {
+                if let Some((url, block_id)) = rpc_config {
                     CustomStateReader::ForkStateReader(ForkStateReader {
                         dict_state_reader,
-                        worker: Worker::new(&url),
+                        worker: Worker::new(url, block_id),
                     })
                 } else {
                     CustomStateReader::DictStateReader(dict_state_reader)

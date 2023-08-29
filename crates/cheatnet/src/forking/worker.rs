@@ -10,7 +10,6 @@ use cairo_lang_starknet::casm_contract_class::CasmContractClass;
 use cairo_lang_starknet::contract_class::{ContractClass, ContractEntryPoints};
 use cairo_lang_utils::bigint::BigUintAsHex;
 use num_bigint::BigUint;
-use starknet::core::types::BlockTag::Latest;
 use starknet::core::types::{BlockId, ContractClass as ContractClassStarknet, FieldElement};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider};
@@ -23,13 +22,15 @@ use url::Url;
 #[derive(Debug)]
 pub struct Worker {
     client: JsonRpcClient<HttpTransport>,
+    block_id: BlockId,
 }
 
 impl Worker {
     #[must_use]
-    pub fn new(url: &str) -> Self {
+    pub fn new(url: &str, block_id: BlockId) -> Self {
         Worker {
             client: JsonRpcClient::new(HttpTransport::new(Url::parse(url).unwrap())),
+            block_id,
         }
     }
 
@@ -37,7 +38,7 @@ impl Worker {
         let rt = Runtime::new().expect("Could not instantiate Runtime");
         match rt.block_on(
             self.client.get_nonce(
-                BlockId::Tag(Latest),
+                self.block_id,
                 FieldElement::from_bytes_be(
                     &contract_address_to_felt(contract_address).to_be_bytes(),
                 )
@@ -53,7 +54,7 @@ impl Worker {
         let rt = Runtime::new().expect("Could not instantiate Runtime");
         match rt.block_on(
             self.client.get_class_hash_at(
-                BlockId::Tag(Latest),
+                self.block_id,
                 FieldElement::from_bytes_be(
                     &contract_address_to_felt(contract_address).to_be_bytes(),
                 )
@@ -79,7 +80,7 @@ impl Worker {
                 .unwrap(),
                 FieldElement::from_bytes_be(&stark_felt_to_felt(*key.0.key()).to_be_bytes())
                     .unwrap(),
-                BlockId::Tag(Latest),
+                self.block_id,
             ),
         ) {
             Ok(value) => Ok(StarkFelt::from(value)),
@@ -93,7 +94,7 @@ impl Worker {
     ) -> StateResult<ContractClassBlockifier> {
         let rt = Runtime::new().expect("Could not instantiate Runtime");
         let contract_class = rt.block_on(self.client.get_class(
-            BlockId::Tag(Latest),
+            self.block_id,
             FieldElement::from_bytes_be(&class_hash_to_felt(*class_hash).to_be_bytes()).unwrap(),
         ));
 
