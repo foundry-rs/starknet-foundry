@@ -48,9 +48,11 @@ pub fn contract_print(
             "print" => {
                 for value in inputs {
                     if let Some(short_string) = as_cairo_short_string(&value) {
-                        println!("PRINT: {value} => {short_string}");
+                        println!(
+                            "original value: [{value}], converted to a string: [{short_string}]",
+                        );
                     } else {
-                        println!("PRINT: {value}");
+                        println!("original value: [{value}]");
                     }
                 }
                 return PrintingResult::Printed;
