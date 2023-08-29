@@ -57,12 +57,12 @@ fn json_values_sorted_by_keys(content: &str) -> Result<Vec<String>, EnhancedHint
 
     Ok(keys
         .into_iter()
-        .map(|key| parse_json_values(data.get(&key).unwrap()))
+        .map(|key| value_into_vec(data.get(&key).unwrap()))
         .flatten()
         .collect())
 }
 
-fn parse_json_values(value: &Value) -> Vec<String> {
+fn value_into_vec(value: &Value) -> Vec<String> {
     match value {
         Value::Array(vec) => {
             let vec_len = vec.len().to_string();
