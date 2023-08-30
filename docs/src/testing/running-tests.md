@@ -87,7 +87,7 @@ Running 1 test(s) from hello_workspaces package
 Tests: 1 passed, 0 failed, 0 skipped
 ```
 
-To specify package to test, pass a `--package package_name` (or `-p package_name` for short) flag, to select specific package. You can also run `snforge` from the package directory for the same effect.
+To specify a package to test, pass a `--package package_name` (or `-p package_name` for short) flag, to select the specific package. You can also run `snforge` from the package directory for the same effect.
 
 ```shell
 $ snforge --package addition
