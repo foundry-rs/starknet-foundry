@@ -71,7 +71,8 @@ jobs:
       - uses: software-mansion/setup-scarb@v1.0.1
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
-      - run: |
+      - name: Run Cheatnet tests
+        run: |
           echo CHEATNET_RPC_URL=${{ secrets.CHEATNET_RPC_URL }} >> .env
           cargo test -p cheatnet
 
