@@ -30,8 +30,7 @@ It is not possible to run tests without these installed.
 Tests can be run with:
 
 ```shell
-$ ./scripts/test_cast.sh
-$ ./scripts/test_forge.sh
+$ cargo test
 ```
 
 ## Formatting and Lints
@@ -39,7 +38,7 @@ $ ./scripts/test_forge.sh
 Starknet Foundry uses [rustfmt](https://github.com/rust-lang/rustfmt) for formatting. You can run the formatter with
 
 ```shell
-cargo fmt
+$ cargo fmt
 ```
 
 For linting, it uses [clippy](https://github.com/rust-lang/rust-clippy). You can run it with this command:

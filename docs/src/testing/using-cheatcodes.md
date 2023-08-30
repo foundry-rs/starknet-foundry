@@ -100,7 +100,7 @@ so it passes our validation.
 ### Pranking the Address
 
 ```rust
-use snforge_std::{ declare, PreparedContract, deploy, start_prank };
+use snforge_std::{ declare, ContractClassTrait, start_prank };
 
 #[test]
 fn call_and_invoke() {
@@ -180,7 +180,7 @@ and then use it in `start_prank` as an argument:
 
 
 ```rust
-use snforge_std::{ declare, PreparedContract, ContractClassTrait, deploy, start_prank };
+use snforge_std::{ declare, ContractClassTrait, start_prank };
 
 #[test]
 fn prank_the_constructor() {
