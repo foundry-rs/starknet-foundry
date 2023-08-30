@@ -92,7 +92,16 @@ fn assert_emitted_fails() {
 
     assert_failed!(result);
     assert_case_output_contains!(result, "test_expect_events_simple", "FirstEvent");
-    assert_case_output_contains!(result, "test_expect_events_simple", "event was not emitted");
+    assert_case_output_contains!(
+        result,
+        "test_expect_events_simple",
+        "event with matching data and"
+    );
+    assert_case_output_contains!(
+        result,
+        "test_expect_events_simple",
+        "keys was not emitted from"
+    );
 }
 
 #[test]
@@ -148,7 +157,12 @@ fn expect_three_events_while_two_emitted() {
     assert_case_output_contains!(
         result,
         "test_expect_three_events_while_two_emitted",
-        "event was not emitted"
+        "event with matching data and"
+    );
+    assert_case_output_contains!(
+        result,
+        "test_expect_three_events_while_two_emitted",
+        "keys was not emitted from"
     );
 }
 
@@ -245,15 +259,19 @@ fn event_emitted_wrong_data_asserted() {
 
     assert_failed!(result);
     assert_case_output_contains!(result, "test_assert_wrong_data", "FirstEvent");
-    assert_case_output_contains!(result, "test_assert_wrong_data", "event was emitted from");
     assert_case_output_contains!(
         result,
         "test_assert_wrong_data",
-        "1123343347349132833855871321423793552243395519676903121856829201345276603084"
+        "event with matching data and"
     );
     assert_case_output_contains!(
         result,
         "test_assert_wrong_data",
-        "but keys or data are different"
+        "keys was not emitted from"
+    );
+    assert_case_output_contains!(
+        result,
+        "test_assert_wrong_data",
+        "1123343347349132833855871321423793552243395519676903121856829201345276603084"
     );
 }
