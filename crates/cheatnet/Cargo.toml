@@ -30,6 +30,7 @@ url.workspace = true
 tokio.workspace = true
 num-bigint.workspace = true
 flate2 = "1.0.26"
+dotenv = "0.15.0"
 
 [dev-dependencies]
 ctor.workspace = true
