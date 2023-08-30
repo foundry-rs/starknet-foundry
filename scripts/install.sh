@@ -52,6 +52,7 @@ main() {
       '--help')           set -- "$@" '-h'   ;;
       '--no-modify-path') set -- "$@" '-p'   ;;
       '--version')        set -- "$@" '-v'   ;;
+      '--init')        set -- "$@" '-i'   ;;
       *)                  set -- "$@" "$arg" ;;
     esac
   done

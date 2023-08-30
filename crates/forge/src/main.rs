@@ -26,6 +26,9 @@ struct Args {
     #[arg(short, long)]
     exact: bool,
 
+    #[clap(short = 'i', long)]
+    init: bool,
+
     /// Stop test execution after first failed test
     #[arg(short = 'x', long)]
     exit_first: bool,
@@ -41,6 +44,18 @@ fn load_predeployed_contracts() -> Result<TempDir> {
 
 fn main_execution() -> Result<()> {
     let args = Args::parse();
+
+    if args.init {
+        Command::new("git")
+            .args([
+                "clone",
+                "https://github.com/foundry-rs/starknet_forge_template.git",
+                &args.test_name.clone().unwrap(),
+            ])
+            .output()
+            .unwrap();
+        return Ok(());
+    }
 
     let predeployed_contracts_dir = load_predeployed_contracts()?;
     let predeployed_contracts_path: PathBuf = predeployed_contracts_dir.path().into();
