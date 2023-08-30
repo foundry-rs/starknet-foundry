@@ -24,8 +24,10 @@ It is not possible to run tests without these installed.
 
 ## Running Tests
 
-> ⚠️ Make sure you run `./scripts/prepare_for_tests.sh` after setting up the development environment, otherwise the
-> tests will fail.
+> ⚠️ Make sure you run `./scripts/prepare_for_tests.sh`
+> and then set a global [Scarb](https://docs.swmansion.com/scarb/) version 
+> [compatible](https://github.com/foundry-rs/starknet-foundry/releases) with both `snforge` and `sncast`
+> after setting up the development environment, otherwise the tests will fail.
 
 Tests can be run with:
 
