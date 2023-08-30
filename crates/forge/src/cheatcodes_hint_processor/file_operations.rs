@@ -57,8 +57,7 @@ fn json_values_sorted_by_keys(content: &str) -> Result<Vec<String>, EnhancedHint
 
     Ok(keys
         .into_iter()
-        .map(|key| value_into_vec(data.get(&key).unwrap()))
-        .flatten()
+        .flat_map(|key| value_into_vec(data.get(&key).unwrap()))
         .collect())
 }
 
@@ -66,7 +65,8 @@ fn value_into_vec(value: &Value) -> Vec<String> {
     match value {
         Value::Array(vec) => {
             let vec_len = vec.len().to_string();
-            let mut str_vec: Vec<String> = vec.iter().map(|e| e.to_string()).collect();
+            let mut str_vec: Vec<String> =
+                vec.iter().map(std::string::ToString::to_string).collect();
             str_vec.insert(0, vec_len);
             str_vec
         }
