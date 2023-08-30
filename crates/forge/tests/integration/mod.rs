@@ -10,6 +10,7 @@ mod precalculate_address;
 mod pure_cairo;
 mod roll;
 mod should_panic;
+mod spoof;
 mod spy_events;
 mod syscalls;
 mod warp;

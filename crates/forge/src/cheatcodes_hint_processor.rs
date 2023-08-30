@@ -19,7 +19,7 @@ use cheatnet::{
     cheatcodes::{CheatcodeError, ContractArtifacts, EnhancedHintError},
     CheatnetState,
 };
-use num_traits::ToPrimitive;
+use num_traits::{One, ToPrimitive};
 use serde::Deserialize;
 use starknet_api::core::{ClassHash, ContractAddress, PatriciaKey};
 use starknet_api::hash::StarkFelt;
@@ -267,6 +267,41 @@ impl CairoHintProcessor<'_> {
 
                 self.cheatnet_state
                     .stop_mock_call(contract_address, &function_name);
+                Ok(())
+            }
+            "start_spoof" => {
+                let contract_address = contract_address_from_felt(&inputs[0]);
+
+                let version = inputs[1].is_one().then(|| inputs[2].clone());
+                let account_contract_address = inputs[3].is_one().then(|| inputs[4].clone());
+                let max_fee = inputs[5].is_one().then(|| inputs[6].clone());
+                let transaction_hash = inputs[7].is_one().then(|| inputs[8].clone());
+                let chain_id = inputs[9].is_one().then(|| inputs[10].clone());
+                let nonce = inputs[11].is_one().then(|| inputs[12].clone());
+
+                let signature_len = inputs[14]
+                    .to_usize()
+                    .expect("Failed to convert signature_len to usize");
+                let signature = inputs[13]
+                    .is_one()
+                    .then(|| Vec::from(&inputs[15..(15 + signature_len)]));
+
+                self.cheatnet_state.start_spoof(
+                    contract_address,
+                    version,
+                    account_contract_address,
+                    max_fee,
+                    signature,
+                    transaction_hash,
+                    chain_id,
+                    nonce,
+                );
+                Ok(())
+            }
+            "stop_spoof" => {
+                let contract_address = contract_address_from_felt(&inputs[0]);
+
+                self.cheatnet_state.stop_spoof(contract_address);
                 Ok(())
             }
             "declare" => {
