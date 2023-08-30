@@ -2,7 +2,7 @@ use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
 use camino::Utf8PathBuf;
 use indoc::{formatdoc, indoc};
 
-use crate::e2e::common::runner::{gen_current_branch, runner, setup_package};
+use crate::e2e::common::runner::{get_current_branch, runner, setup_package};
 use assert_fs::TempDir;
 use std::str::FromStr;
 
@@ -52,7 +52,7 @@ fn simple_package_with_git_dependency() {
     let temp = TempDir::new().unwrap();
     temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
         .unwrap();
-    let branch = gen_current_branch();
+    let branch = get_current_branch();
     let manifest_path = temp.child("Scarb.toml");
     manifest_path
         .write_str(&formatdoc!(
