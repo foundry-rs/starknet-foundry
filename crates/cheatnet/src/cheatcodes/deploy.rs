@@ -52,10 +52,12 @@ impl CheatnetState {
         self.increment_deploy_salt_base();
 
         let blockifier_state: &mut CachedState<DictStateReader> = &mut self.blockifier_state;
-        blockifier_state
-            .state
-            .address_to_class_hash
-            .insert(contract_address, *class_hash);
+        if predefined_contract_address.is_some() {
+            blockifier_state
+                .state
+                .address_to_class_hash
+                .insert(contract_address, *class_hash);
+        }
 
         let contract_class = blockifier_state
             .get_compiled_contract_class(class_hash)
