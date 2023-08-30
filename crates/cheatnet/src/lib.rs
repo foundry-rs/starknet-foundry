@@ -32,12 +32,12 @@ impl CheatnetState {
             cheatcode_state: CheatcodeState::new(),
             blockifier_state: CachedState::new(
                 if let Some((url, block_id)) = rpc_config {
-                    CustomStateReader::ForkStateReader(ForkStateReader {
+                    CustomStateReader(Box::new(ForkStateReader {
                         dict_state_reader,
                         worker: Worker::new(url, block_id),
-                    })
+                    }))
                 } else {
-                    CustomStateReader::DictStateReader(dict_state_reader)
+                    CustomStateReader(Box::new(dict_state_reader))
                 },
                 GlobalContractCache::default(),
             ),

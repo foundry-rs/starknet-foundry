@@ -1,5 +1,4 @@
 use crate::cheatcodes::spy_events::{Event, SpyTarget};
-use crate::forking::state::ForkStateReader;
 use blockifier::{
     execution::contract_class::ContractClass,
     state::{
@@ -17,11 +16,7 @@ use starknet_api::{
 };
 use std::collections::HashMap;
 
-#[allow(clippy::large_enum_variant)]
-pub enum CustomStateReader {
-    DictStateReader(DictStateReader),
-    ForkStateReader(ForkStateReader),
-}
+pub struct CustomStateReader(pub Box<dyn StateReader>);
 
 impl StateReader for CustomStateReader {
     fn get_storage_at(
@@ -29,59 +24,26 @@ impl StateReader for CustomStateReader {
         contract_address: ContractAddress,
         key: StorageKey,
     ) -> StateResult<StarkFelt> {
-        match self {
-            CustomStateReader::DictStateReader(reader) => {
-                reader.get_storage_at(contract_address, key)
-            }
-            CustomStateReader::ForkStateReader(fork_reader) => {
-                fork_reader.get_storage_at(contract_address, key)
-            }
-        }
+        self.0.get_storage_at(contract_address, key)
     }
 
     fn get_nonce_at(&mut self, contract_address: ContractAddress) -> StateResult<Nonce> {
-        match self {
-            CustomStateReader::DictStateReader(reader) => reader.get_nonce_at(contract_address),
-            CustomStateReader::ForkStateReader(fork_reader) => {
-                fork_reader.get_nonce_at(contract_address)
-            }
-        }
+        self.0.get_nonce_at(contract_address)
     }
 
     fn get_class_hash_at(&mut self, contract_address: ContractAddress) -> StateResult<ClassHash> {
-        match self {
-            CustomStateReader::DictStateReader(reader) => {
-                reader.get_class_hash_at(contract_address)
-            }
-            CustomStateReader::ForkStateReader(fork_reader) => {
-                fork_reader.get_class_hash_at(contract_address)
-            }
-        }
+        self.0.get_class_hash_at(contract_address)
     }
 
     fn get_compiled_contract_class(
         &mut self,
         class_hash: &ClassHash,
     ) -> StateResult<ContractClass> {
-        match self {
-            CustomStateReader::DictStateReader(reader) => {
-                reader.get_compiled_contract_class(class_hash)
-            }
-            CustomStateReader::ForkStateReader(fork_reader) => {
-                fork_reader.get_compiled_contract_class(class_hash)
-            }
-        }
+        self.0.get_compiled_contract_class(class_hash)
     }
 
     fn get_compiled_class_hash(&mut self, class_hash: ClassHash) -> StateResult<CompiledClassHash> {
-        match self {
-            CustomStateReader::DictStateReader(reader) => {
-                reader.get_compiled_class_hash(class_hash)
-            }
-            CustomStateReader::ForkStateReader(fork_reader) => fork_reader
-                .dict_state_reader
-                .get_compiled_class_hash(class_hash),
-        }
+        self.0.get_compiled_class_hash(class_hash)
     }
 }
 
