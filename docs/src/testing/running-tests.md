@@ -102,7 +102,7 @@ Running 1 test(s) from tests/test_simple.cairo
 Tests: 4 passed, 0 failed, 0 skipped
 ```
 
-You can also pass along `--workspace` flag to explicitly run tests for all packages in the workspace.
+You can also pass `--workspace` flag to explicitly run tests for all packages in the workspace.
 
 ```shell
 $ snforge --workspace
