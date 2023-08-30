@@ -14,5 +14,5 @@ fn init() {
         .arg("build")
         .output()
         .unwrap();
-    assert!(output.status.success())
+    assert!(output.status.success());
 }
