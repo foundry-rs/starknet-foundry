@@ -31,7 +31,20 @@ impl CheatnetState {
         let account_address = ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS));
         let entry_point_selector = selector_from_name("deploy_contract");
         let salt = self.get_salt();
+
         let contract_address = if let Some(contract_address) = predefined_contract_address {
+            if self
+                .blockifier_state
+                .state
+                .address_to_class_hash
+                .get(&contract_address)
+                .is_some()
+            {
+                return Err(CheatcodeError::Recoverable(vec![felt_from_short_string(
+                    "Address is already taken",
+                )]));
+            }
+
             contract_address
         } else {
             self.precalculate_address(class_hash, calldata)
@@ -39,6 +52,10 @@ impl CheatnetState {
         self.increment_deploy_salt_base();
 
         let blockifier_state: &mut CachedState<DictStateReader> = &mut self.blockifier_state;
+        blockifier_state
+            .state
+            .address_to_class_hash
+            .insert(contract_address, *class_hash);
 
         let contract_class = blockifier_state
             .get_compiled_contract_class(class_hash)
