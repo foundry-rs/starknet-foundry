@@ -35,7 +35,7 @@ impl Worker {
     }
 
     pub fn get_nonce(&self, contract_address: ContractAddress) -> StateResult<Nonce> {
-        let rt = Runtime::new().expect("Could not instantiate Runtime");
+        let rt = instantiate_runtime();
         match rt.block_on(
             self.client.get_nonce(
                 self.block_id,
@@ -51,7 +51,7 @@ impl Worker {
     }
 
     pub fn get_class_hash_at(&self, contract_address: ContractAddress) -> StateResult<ClassHash> {
-        let rt = Runtime::new().expect("Could not instantiate Runtime");
+        let rt = instantiate_runtime();
         match rt.block_on(
             self.client.get_class_hash_at(
                 self.block_id,
@@ -71,7 +71,7 @@ impl Worker {
         contract_address: ContractAddress,
         key: StorageKey,
     ) -> StateResult<StarkFelt> {
-        let rt = Runtime::new().expect("Could not instantiate Runtime");
+        let rt = instantiate_runtime();
         match rt.block_on(
             self.client.get_storage_at(
                 FieldElement::from_bytes_be(
@@ -92,7 +92,7 @@ impl Worker {
         &mut self,
         class_hash: &ClassHash,
     ) -> StateResult<ContractClassBlockifier> {
-        let rt = Runtime::new().expect("Could not instantiate Runtime");
+        let rt = instantiate_runtime();
         let contract_class = rt.block_on(self.client.get_class(
             self.block_id,
             FieldElement::from_bytes_be(&class_hash_to_felt(*class_hash).to_be_bytes()).unwrap(),
@@ -136,4 +136,8 @@ impl Worker {
             )),
         }
     }
+}
+
+fn instantiate_runtime() -> Runtime {
+    Runtime::new().expect("Could not instantiate Runtime")
 }
