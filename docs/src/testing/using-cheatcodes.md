@@ -6,7 +6,7 @@
 > using appropriate release tag.
 >```toml
 > [dependencies]
-> snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.4.0" }
+> snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.5.0" }
 > ```
 
 When testing smart contracts, often there are parts of code that are dependent on a specific blockchain state.
