@@ -1,7 +1,9 @@
 use crate::assert_success;
 use crate::common::state::create_cheatnet_fork_state;
 use cairo_felt::Felt252;
-use cheatnet::conversions::{class_hash_from_felt, contract_address_from_felt, felt_selector_from_name};
+use cheatnet::conversions::{
+    class_hash_from_felt, contract_address_from_felt, felt_selector_from_name,
+};
 use cheatnet::rpc::call_contract;
 use num_bigint::BigUint;
 use std::str::FromStr;
@@ -47,7 +49,7 @@ fn try_calling_nonexistent_contract() {
 }
 
 #[test]
-#[should_panic(expected="Class hash not found")]
+#[should_panic(expected = "Class hash not found")]
 fn try_deploying_undeclared_class() {
     let mut state = create_cheatnet_fork_state();
 
