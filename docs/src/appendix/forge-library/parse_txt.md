@@ -2,8 +2,9 @@
 
 
 > `trait FileParser<T, impl TSerde: Serde<T>> {
->     fn parse_txt(file: @File) -> Option<T>;
+>fn parse_txt(file: @File) -> Option<T>;
 > }`
+
 
 Parses plain text file content and tries to deserialize it to type `T` that implements `Serde` trait.
 
@@ -13,7 +14,7 @@ Parses plain text file content and tries to deserialize it to type `T` that impl
 ```rust
 use option::OptionTrait;
 use serde::Serde;
-use snforge_std::{ FileTrait, Parser };
+use snforge_std::{ FileTrait, FileParser };
 
 #[derive(Serde, Drop)]
 struct MyStruct {

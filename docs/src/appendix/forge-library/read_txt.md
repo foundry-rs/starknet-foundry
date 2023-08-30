@@ -2,7 +2,7 @@
 
 > `fn read_txt(file: @File) -> Array<felt252>`
 
-Parses plain text file content to an array of felts.
+Read and parses plain text file content to an array of felts.
 
 - `file` - a snapshot of an instance of the struct `File` that consists of the following fields:
   - `path` - Cairo shortstring representing a path to a file relative to a package root.

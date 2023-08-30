@@ -1,19 +1,19 @@
-# `parse_json`
+# `read_json`
 
-> `fn parse_json(file: @File) -> Array<felt252>`
+> `fn read_json(file: @File) -> Array<felt252>`
 
-Parses json file content to an array of felts.
+Read and parse json file content to an array of felts.
 
 - `file` - a snapshot of an instance of the struct `File` that consists of the following fields:
   - `path` - Cairo shortstring representing a path to a file relative to a package root.
 
 ```rust
-use snforge_std::{ FileTrait, parse_json };
+use snforge_std::{ FileTrait, read_json };
 
 #[test]
-fn test_parse_json() {
+fn test_read_json() {
     let file = FileTrait::new('data/file.json');
-    let content = parse_json(@file);
+    let content = read_json(@file);
     // ...
 }
 ```
