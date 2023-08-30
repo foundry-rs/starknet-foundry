@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::fmt::Debug;
+use std::path::PathBuf;
 
 use anyhow::{Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
@@ -77,7 +78,7 @@ struct TestsFromFile {
 #[must_use]
 pub fn collect_packages(
     metadata: &Metadata,
-    manifest_path: &Utf8PathBuf,
+    manifest_path: &PathBuf,
     package_name: &Option<String>,
     workspace: bool,
 ) -> Vec<PackageId> {

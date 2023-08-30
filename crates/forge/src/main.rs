@@ -82,8 +82,7 @@ fn main_execution() -> Result<()> {
         .output()
         .context("Failed to fetch manifest-path")?
         .stdout;
-    let manifest_path =
-        Utf8PathBuf::from(String::from_utf8_lossy(&manifest_path).as_ref().trim_end());
+    let manifest_path = PathBuf::from(String::from_utf8(manifest_path)?.trim_end());
 
     let packages = collect_packages(
         &scarb_metadata,
