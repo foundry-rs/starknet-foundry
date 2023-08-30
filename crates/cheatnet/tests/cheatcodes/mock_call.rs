@@ -226,7 +226,9 @@ fn mock_call_library_call_no_effect() {
     let contract_name = felt_from_short_string("MockChecker");
     let class_hash = state.declare(&contract_name, &contracts).unwrap();
 
-    let contract_address = state.deploy(&class_hash, &[Felt252::from(420)]).unwrap();
+    let contract_address = state
+        .deploy(&class_hash, &[Felt252::from(420)], None)
+        .unwrap();
 
     let lib_call_address = deploy_contract(&mut state, "MockCheckerLibCall", &[]);
 
@@ -267,7 +269,9 @@ fn mock_call_before_deployment() {
         &ret_data,
     );
 
-    let contract_address = state.deploy(&class_hash, &[Felt252::from(420)]).unwrap();
+    let contract_address = state
+        .deploy(&class_hash, &[Felt252::from(420)], None)
+        .unwrap();
 
     assert_eq!(precalculated_address, contract_address);
 
@@ -304,7 +308,7 @@ fn mock_call_in_constructor() {
 
     let contract_name = felt_from_short_string("HelloStarknet");
     let class_hash = state.declare(&contract_name, &contracts).unwrap();
-    let balance_contract_address = state.deploy(&class_hash, &[]).unwrap();
+    let balance_contract_address = state.deploy(&class_hash, &[], None).unwrap();
     let ret_data = vec![Felt252::from(223)];
     state.start_mock_call(
         balance_contract_address,
@@ -318,6 +322,7 @@ fn mock_call_in_constructor() {
         .deploy(
             &class_hash,
             &[contract_address_to_felt(balance_contract_address)],
+            None,
         )
         .unwrap();
 

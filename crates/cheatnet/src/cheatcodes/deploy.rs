@@ -25,12 +25,17 @@ impl CheatnetState {
         &mut self,
         class_hash: &ClassHash,
         calldata: &[Felt252],
+        predefined_contract_address: Option<ContractAddress>,
     ) -> Result<ContractAddress, CheatcodeError> {
         // Deploy a contract using syscall deploy.
         let account_address = ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS));
         let entry_point_selector = selector_from_name("deploy_contract");
         let salt = self.get_salt();
-        let contract_address = self.precalculate_address(class_hash, calldata);
+        let contract_address = if let Some(contract_address) = predefined_contract_address {
+            contract_address
+        } else {
+            self.precalculate_address(class_hash, calldata)
+        };
         self.increment_deploy_salt_base();
 
         let blockifier_state: &mut CachedState<DictStateReader> = &mut self.blockifier_state;

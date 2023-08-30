@@ -339,7 +339,7 @@ impl CairoHintProcessor<'_> {
                 let calldata_length = inputs[1].to_usize().unwrap();
                 let calldata = Vec::from(&inputs[2..(2 + calldata_length)]);
 
-                match self.cheatnet_state.deploy(&class_hash, &calldata) {
+                match self.cheatnet_state.deploy(&class_hash, &calldata, None) {
                     Ok(contract_address) => {
                         let felt_contract_address: Felt252 =
                             stark_felt_to_felt(*contract_address.0.key());

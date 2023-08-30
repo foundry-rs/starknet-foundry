@@ -382,7 +382,7 @@ fn spoof_in_constructor() {
         nonce,
     );
 
-    let contract_address = state.deploy(&class_hash, vec![].as_slice()).unwrap();
+    let contract_address = state.deploy(&class_hash, &[], None).unwrap();
 
     assert_eq!(precalculated_address, contract_address);
 

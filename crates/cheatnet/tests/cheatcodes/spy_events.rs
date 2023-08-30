@@ -266,8 +266,8 @@ fn check_if_there_is_no_interference() {
     let contract_name = felt_from_short_string("SpyEventsChecker");
     let class_hash = state.declare(&contract_name, &contracts).unwrap();
 
-    let spy_events_checker_address = state.deploy(&class_hash, &[]).unwrap();
-    let other_spy_events_checker_address = state.deploy(&class_hash, &[]).unwrap();
+    let spy_events_checker_address = state.deploy(&class_hash, &[], None).unwrap();
+    let other_spy_events_checker_address = state.deploy(&class_hash, &[], None).unwrap();
 
     let id1 = state.spy_events(SpyTarget::One(spy_events_checker_address));
     let id2 = state.spy_events(SpyTarget::One(other_spy_events_checker_address));
@@ -314,12 +314,14 @@ fn test_nested_calls() {
         .deploy(
             &class_hash,
             &[contract_address_to_felt(spy_events_checker_address)],
+            None,
         )
         .unwrap();
     let spy_events_checker_top_proxy_address = state
         .deploy(
             &class_hash,
             &[contract_address_to_felt(spy_events_checker_proxy_address)],
+            None,
         )
         .unwrap();
 
@@ -385,12 +387,14 @@ fn use_multiple_spies() {
         .deploy(
             &class_hash,
             &[contract_address_to_felt(spy_events_checker_address)],
+            None,
         )
         .unwrap();
     let spy_events_checker_top_proxy_address = state
         .deploy(
             &class_hash,
             &[contract_address_to_felt(spy_events_checker_proxy_address)],
+            None,
         )
         .unwrap();
 

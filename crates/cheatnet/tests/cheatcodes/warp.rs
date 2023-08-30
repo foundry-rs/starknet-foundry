@@ -53,7 +53,7 @@ fn warp_in_constructor() {
 
     state.start_warp(precalculated_address, Felt252::from(123_u128));
 
-    let contract_address = state.deploy(&class_hash, &[]).unwrap();
+    let contract_address = state.deploy(&class_hash, &[], None).unwrap();
 
     assert_eq!(precalculated_address, contract_address);
 
