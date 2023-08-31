@@ -68,6 +68,7 @@ use starknet_api::{
     transaction::{Calldata, TransactionVersion},
 };
 
+use crate::cheatcodes::spoof::TxInfoMock;
 use crate::cheatcodes::spy_events::Event;
 use blockifier::execution::syscalls::{
     DeployRequest, DeployResponse, LibraryCallRequest, SyscallRequest, SyscallRequestWrapper,
@@ -464,6 +465,68 @@ impl CheatableSyscallHandler<'_> {
         ptr_cheated_block_info
     }
 
+    fn get_cheated_tx_info_ptr(
+        &self,
+        vm: &mut VirtualMachine,
+        original_tx_info: &[MaybeRelocatable],
+        contract_address: &ContractAddress,
+    ) -> Relocatable {
+        // create a new segment with replaced tx info
+        let ptr_cheated_tx_info = vm.add_memory_segment();
+
+        let mut new_tx_info = original_tx_info.to_owned();
+
+        let tx_info_mock = self
+            .cheatcode_state
+            .spoofed_contracts
+            .get(contract_address)
+            .unwrap();
+        let TxInfoMock {
+            version,
+            account_contract_address,
+            max_fee,
+            signature,
+            transaction_hash,
+            chain_id,
+            nonce,
+        } = tx_info_mock.to_owned();
+
+        if let Some(version) = version {
+            new_tx_info[0] = MaybeRelocatable::Int(version.clone());
+        };
+        if let Some(account_contract_address) = account_contract_address {
+            new_tx_info[1] = MaybeRelocatable::Int(account_contract_address.clone());
+        };
+        if let Some(max_fee) = max_fee {
+            new_tx_info[2] = MaybeRelocatable::Int(max_fee.clone());
+        };
+
+        if let Some(signature) = signature {
+            let signature_len = signature.len();
+            let signature_start_ptr = vm.add_memory_segment();
+            let signature_end_ptr = (signature_start_ptr + signature_len).unwrap();
+            let signature: Vec<MaybeRelocatable> =
+                signature.iter().map(MaybeRelocatable::from).collect();
+            vm.load_data(signature_start_ptr, &signature).unwrap();
+
+            new_tx_info[3] = signature_start_ptr.into();
+            new_tx_info[4] = signature_end_ptr.into();
+        }
+
+        if let Some(transaction_hash) = transaction_hash {
+            new_tx_info[5] = MaybeRelocatable::Int(transaction_hash.clone());
+        };
+        if let Some(chain_id) = chain_id {
+            new_tx_info[6] = MaybeRelocatable::Int(chain_id.clone());
+        };
+        if let Some(nonce) = nonce {
+            new_tx_info[7] = MaybeRelocatable::Int(nonce.clone());
+        };
+
+        vm.load_data(ptr_cheated_tx_info, &new_tx_info).unwrap();
+        ptr_cheated_tx_info
+    }
+
     fn address_is_pranked(
         &mut self,
         _vm: &mut VirtualMachine,
@@ -494,6 +557,16 @@ impl CheatableSyscallHandler<'_> {
             .contains_key(contract_address)
     }
 
+    fn address_is_spoofed(
+        &mut self,
+        _vm: &mut VirtualMachine,
+        contract_address: &ContractAddress,
+    ) -> bool {
+        self.cheatcode_state
+            .spoofed_contracts
+            .contains_key(contract_address)
+    }
+
     fn address_is_cheated(
         &mut self,
         vm: &mut VirtualMachine,
@@ -505,6 +578,7 @@ impl CheatableSyscallHandler<'_> {
                 self.address_is_rolled(vm, contract_address)
                     || self.address_is_pranked(vm, contract_address)
                     || self.address_is_warped(vm, contract_address)
+                    || self.address_is_spoofed(vm, contract_address)
             }
             _ => false,
         }
@@ -576,6 +650,19 @@ impl CheatableSyscallHandler<'_> {
                     );
 
                     new_exec_info[0] = MaybeRelocatable::RelocatableValue(ptr_cheated_block_info);
+                }
+            }
+
+            if self.address_is_spoofed(vm, &contract_address) {
+                let data = vm.get_range(execution_info_ptr, 2)[1].clone();
+                if let MaybeRelocatable::RelocatableValue(tx_info_ptr) = data.unwrap().into_owned()
+                {
+                    let original_tx_info = vm.get_continuous_range(tx_info_ptr, 8).unwrap();
+
+                    let ptr_cheated_tx_info =
+                        self.get_cheated_tx_info_ptr(vm, &original_tx_info, &contract_address);
+
+                    new_exec_info[1] = MaybeRelocatable::RelocatableValue(ptr_cheated_tx_info);
                 }
             }
 

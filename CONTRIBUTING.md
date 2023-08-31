@@ -20,35 +20,43 @@ To run tests scripts, you have to install:
 - [asdf](https://asdf-vm.com/guide/getting-started.html)
 - [starknet-devnet](https://0xspaceshard.github.io/starknet-devnet/docs/intro)
 
-> ⚠️ Make sure you run `./scripts/prepare_for_tests.sh` after setting up the development environment, otherwise the
-> tests will fail.
+> ⚠️ Make sure you run `./scripts/prepare_for_tests.sh`
+> and then set [Scarb](https://docs.swmansion.com/scarb/) version 
+> [compatible](https://github.com/foundry-rs/starknet-foundry/releases) with both `snforge` and `sncast`
+> after setting up the development environment, otherwise the tests will fail.
 
 Before creating a contribution, make sure your code passes the following checks
 
 ```shell
-./scripts/test_forge.sh
-./scripts/test_cast.sh
-cargo fmt --check
-cargo lint
+$ cargo test
+$ cargo fmt --check
+$ cargo lint
 ```
 
 Otherwise, it won't be possible to merge your contribution.
 
-You can also run specific set of tests, by directly running `cargo test`.
+You can also run a specific set of tests, by directly running `cargo test`.
 
 For forge tests, make sure you are in `crates/forge` directory:
 ```shell
-forge $ cargo test --lib        # runs all unit tests
-forge $ cargo test integration  # runs all integration tests
-forge $ cargo test e2e          # runs all e2e tests
+$ cargo test --lib        # runs all unit tests
+$ cargo test integration  # runs all integration tests
+$ cargo test e2e          # runs all e2e tests
 ```
 
 Similarly, to run cast tests make sure you are in `crates/cast` directory:
 ```shell
-cast $ cargo test --lib        # runs lib unit tests
-cast $ cargo test helpers      # runs helpers unit tests
-cast $ cargo test integration  # runs all integration tests
-cast $ cargo test e2e          # runs all e2e tests
+$ cargo test --lib        # runs lib unit tests
+$ cargo test helpers      # runs helpers unit tests
+$ cargo test integration  # runs all integration tests
+$ cargo test e2e          # runs all e2e tests
+```
+
+Or to run cheatnet tests make sure you are in `crates/cheatnet` directory:
+```shell
+$ cargo test --lib        # runs lib unit tests
+$ cargo test cheatcodes   # runs all cheatcodes tests
+$ cargo test starknet     # runs all starknet tests
 ```
 
 ## Contributing

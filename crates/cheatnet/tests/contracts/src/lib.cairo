@@ -28,6 +28,11 @@ mod mock_checker_proxy;
 
 mod get_class_hash_checker;
 
+mod spoof_checker;
+mod constructor_spoof_checker;
+mod spoof_checker_library_call;
+mod spoof_checker_proxy;
+
 mod spy_events_checker;
 mod spy_events_order_checker;
 mod spy_events_lib_call;

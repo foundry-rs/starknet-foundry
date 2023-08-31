@@ -10,6 +10,10 @@ use cheatnet::{
 };
 use starknet_api::core::ContractAddress;
 
+// We've decided that the nonce should not change in tests
+// and should remain 0 at all times, this may be revised in the future.
+// For now to test nonce `spoof` should be used.
+
 fn check_nonce(state: &mut CheatnetState, contract_address: &ContractAddress) -> Felt252 {
     let write_nonce = felt_selector_from_name("write_nonce");
     let read_nonce = felt_selector_from_name("read_nonce");
@@ -24,8 +28,7 @@ fn check_nonce(state: &mut CheatnetState, contract_address: &ContractAddress) ->
 }
 
 #[test]
-#[ignore = "TODO(#292)"]
-fn nonce_increase_transactions() {
+fn nonce_transactions() {
     let mut state = create_cheatnet_state();
 
     let contract_address = deploy_contract(&mut state, "Noncer", &[]);
@@ -33,12 +36,12 @@ fn nonce_increase_transactions() {
     let old_nonce = check_nonce(&mut state, &contract_address);
     let new_nonce = check_nonce(&mut state, &contract_address);
 
-    assert_eq!(old_nonce + Felt252::from(1), new_nonce);
+    assert_eq!(old_nonce, Felt252::from(0));
+    assert_eq!(old_nonce, new_nonce);
 }
 
 #[test]
-#[ignore = "TODO(#292)"]
-fn nonce_increase_declare_deploy() {
+fn nonce_declare_deploy() {
     let mut state = create_cheatnet_state();
     let contract_address = deploy_contract(&mut state, "Noncer", &[]);
 
@@ -55,6 +58,7 @@ fn nonce_increase_declare_deploy() {
 
     let nonce3 = check_nonce(&mut state, &contract_address);
 
-    assert_eq!(nonce1 + Felt252::from(2), nonce2);
-    assert_eq!(nonce2 + Felt252::from(2), nonce3);
+    assert_eq!(nonce1, Felt252::from(0));
+    assert_eq!(nonce1, nonce2);
+    assert_eq!(nonce2, nonce3);
 }

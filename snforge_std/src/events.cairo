@@ -82,7 +82,8 @@ impl EventAssertionsImpl of EventAssertions {
                 panic(
                     array![
                         *events.at(i).name,
-                        'event was not emitted from',
+                        'event with matching data and',
+                        'keys was not emitted from',
                         (*events.at(i).from).into()
                     ]
                 );
@@ -102,21 +103,10 @@ fn assert_if_emitted(ref self: EventSpy, event: Event) -> bool {
         }
 
         if event_name_hash(event.name) == *self.events.at(j).name
-            && event.from == *emitted_events.at(j).from {
-            if @event.keys != emitted_events.at(j).keys
-                || @event.data != emitted_events.at(j).data {
-                panic(
-                    array![
-                        event.name,
-                        'event was emitted from',
-                        event.from.into(),
-                        'but keys or data are different'
-                    ]
-                );
-            }
-
+          && event.from == *emitted_events.at(j).from
+          && @event.keys == emitted_events.at(j).keys
+          && @event.data == emitted_events.at(j).data {
             remove_event(ref self, j);
-
             break true;
         }
 
