@@ -15,6 +15,7 @@ Parses json file content and tries to deserialize it to type `T` that implements
 >  JSON object is an unordered data. To give it an order, the values in the array are sorted alphabetically by JSON key.
 To properly decode a JSON object, make sure the order of struct attributes aligns with the alphabetical order of the JSON keys.
 >Nested JSON values are sorted on the flatten format keys `(a.b.c)`.
+
 ```rust
 use option::OptionTrait;
 use serde::Serde;
