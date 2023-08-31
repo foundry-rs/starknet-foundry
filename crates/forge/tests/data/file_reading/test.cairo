@@ -68,7 +68,9 @@ struct G {
 #[derive(Serde, Destruct, Drop)]
 struct Test {
     a: u8,
-    array: Array<felt252>,
+    array: Array<u32>,
+    mixed_array: Array<felt252>,
+    short_sting_array: Array<felt252>,
 }
 
 #[test]
@@ -118,6 +120,10 @@ fn json_with_array() {
     let content = FileParser::<Test>::parse_json(@file).unwrap();
     assert(*content.array[0] == 1, '');
     assert(*content.array[1] == 23, '');
+    assert(*content.mixed_array[0] == 1, '');
+    assert(*content.mixed_array[1] == 'test', '');
+    assert(*content.short_sting_array[0] == 'test', '');
+    assert(*content.short_sting_array[1] == 'test2', '');
 }
 
 #[test]

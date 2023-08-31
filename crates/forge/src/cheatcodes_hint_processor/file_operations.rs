@@ -130,11 +130,11 @@ mod tests {
         let string = r#"
         {
             "ad": "string",
-            "test": [1,2,3,4]
+            "test": ["1",2,"3",4]
         }"#
         .to_owned();
         let result = json_values_sorted_by_keys(&string).unwrap();
-        let expected_result = ["\"string\"", "4", "1", "2", "3", "4"];
+        let expected_result = ["\"string\"", "4", "\"1\"", "2", "\"3\"", "4"];
         assert_eq!(result, expected_result);
     }
     #[test]

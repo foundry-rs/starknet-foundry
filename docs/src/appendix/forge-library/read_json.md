@@ -45,7 +45,3 @@ will be parsed to the following array:
 ```rust
 array![12, 1, '123', 1234]
 ```
-
-> 📝 **Note**
->
->
