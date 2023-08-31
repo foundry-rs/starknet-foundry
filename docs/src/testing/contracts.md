@@ -7,7 +7,7 @@
 > using appropriate release tag.
 >```toml
 > [dependencies]
-> snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.4.0" }
+> snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.5.0" }
 > ```
 
 Using unit testing as much as possible is a good practice, as it makes your test suites run faster. However, when
@@ -53,7 +53,7 @@ Note that the name after `mod` will be used as the contract name for testing pur
 Let's write a test that will deploy the `HelloStarknet` contract and call some functions.
 
 ```rust
-use snforge_std::{ declare, PreparedContrac, deploy };
+use snforge_std::{ declare, ContractClassTrait };
 
 #[test]
 fn call_and_invoke() {
