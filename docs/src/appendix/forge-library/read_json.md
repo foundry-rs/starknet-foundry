@@ -7,6 +7,12 @@ Read and parse json file content to an array of felts.
 - `file` - a snapshot of an instance of the struct `File` that consists of the following fields:
   - `path` - Cairo shortstring representing a path to a file relative to a package root.
 
+> ⚠️ **Warning**
+>
+> JSON object is an unordered data, To give it an order, the values in the array are sorted
+> alphabetically by JSON key. Therefore, the values in the array are sorted alphabetically by JSON key.
+> Nested JSON values are sorted on the flatten format keys `(a.b.c)`.
+
 ```rust
 use snforge_std::{ FileTrait, read_json };
 
@@ -35,13 +41,11 @@ For example, this file content:
 }
 ```
 will be parsed to the following array:
-> ⚠️ **Warning**
->
->  JSON object is an unordered data, To give it an order, the values in the array are sorted alphabetically by JSON key. Therefore, the values in the array are sorted alphabetically by JSON key.
+
 ```rust
 array![12, 1, '123', 1234]
 ```
 
 > 📝 **Note**
 >
->Nested JSON values are sorted on the flatten format keys `(a.b.c)`.
+>

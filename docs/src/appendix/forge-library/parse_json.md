@@ -12,7 +12,9 @@ Parses json file content and tries to deserialize it to type `T` that implements
 
 > ⚠️ **Warning**
 >
->  JSON object is an unordered data. To give it an order, the values in the array are sorted alphabetically by JSON key. That means that in order to decode the JSON object correctly, you will need to define attributes of the struct with types that correspond to the values of the alphabetical order of the keys of the JSON.
+>  JSON object is an unordered data. To give it an order, the values in the array are sorted alphabetically by JSON key.
+To properly decode a JSON object, make sure the order of struct attributes aligns with the alphabetical order of the JSON keys.
+>Nested JSON values are sorted on the flatten format keys `(a.b.c)`.
 ```rust
 use option::OptionTrait;
 use serde::Serde;
@@ -52,9 +54,9 @@ could be parsed to the following struct:
 
 ```rust
 struct A {
-    ab: u8,
-    bc: u8,
-    cda: felt252,
+    a: u8,
+    b: u8,
+    c: felt252,
     d: B
 }
 
@@ -68,15 +70,11 @@ result:
 ```rust
 
 A {
-    ab: 12,
-    bc: 1,
-    cda: "123"
+    a: 12,
+    b: 1,
+    c: "123"
     d: B {
         e: 1234
     }
 }
 ```
-
-> 📝 **Note**
->
->Nested JSON values are sorted on the flatten format keys `(a.b.c)`.
