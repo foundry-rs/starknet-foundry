@@ -3,7 +3,8 @@ use camino::Utf8PathBuf;
 use clap::Parser;
 use include_dir::{include_dir, Dir};
 use scarb_metadata::MetadataCommand;
-use std::path::PathBuf;
+use std;
+use std::path::{Path, PathBuf};
 use tempfile::{tempdir, TempDir};
 
 use forge::run;
@@ -20,8 +21,8 @@ static PREDEPLOYED_CONTRACTS: Dir = include_dir!("crates/cheatnet/predeployed-co
 #[derive(Parser, Debug)]
 #[command(version)]
 struct Args {
-    /// Name used to filter tests
-    test_name: Option<String>,
+    /// Name used to filter tests and to create init destination dir
+    name: Option<String>,
     /// Use exact matches for `test_filter`
     #[arg(short, long)]
     exact: bool,
@@ -42,18 +43,41 @@ fn load_predeployed_contracts() -> Result<TempDir> {
     Ok(tmp_dir)
 }
 
+pub fn copy_recursively(
+    source: impl AsRef<Path>,
+    destination: impl AsRef<Path>,
+) -> std::io::Result<()> {
+    std::fs::create_dir_all(&destination)?;
+    for entry in std::fs::read_dir(source)? {
+        let entry = entry?;
+        let filetype = entry.file_type()?;
+        if filetype.is_dir() {
+            copy_recursively(entry.path(), destination.as_ref().join(entry.file_name()))?;
+        } else {
+            std::fs::copy(entry.path(), destination.as_ref().join(entry.file_name()))?;
+        }
+    }
+    Ok(())
+}
+
 fn main_execution() -> Result<()> {
     let args = Args::parse();
-
     if args.init {
-        Command::new("git")
-            .args([
-                "clone",
-                "https://github.com/foundry-rs/starknet_forge_template.git",
-                &args.test_name.clone().unwrap(),
-            ])
-            .output()
-            .unwrap();
+        let project_name = args.name.unwrap_or("starknet_forge_template".to_string());
+        let project_path = std::env::current_dir().unwrap().join(project_name);
+
+        if project_path.exists() {
+            bail!(
+                "Destination {} already exists, new project couldn't be created",
+                &project_path.display().to_string()
+            )
+        }
+
+        let template_path = project_root::get_project_root()
+            .unwrap()
+            .join("starknet_forge_template");
+        copy_recursively(template_path, project_path.display().to_string());
+
         return Ok(());
     }
 
@@ -92,7 +116,7 @@ fn main_execution() -> Result<()> {
         let target_name = target_name_for_package(&scarb_metadata, package)?;
         let corelib_path = corelib_for_package(&scarb_metadata, package)?;
         let runner_config = RunnerConfig::new(
-            args.test_name.clone(),
+            args.name.clone(),
             args.exact,
             args.exit_first,
             &forge_config,
