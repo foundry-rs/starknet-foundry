@@ -40,9 +40,9 @@ impl CheatnetState {
                 .get(&contract_address)
                 .is_some()
             {
-                return Err(CheatcodeError::Recoverable(vec![felt_from_short_string(
-                    "Address is already taken",
-                )]));
+                return Err(CheatcodeError::Unrecoverable(
+                    EnhancedHintError::from(CustomHint(Box::from("Address is already taken")))
+                ));
             }
 
             contract_address
