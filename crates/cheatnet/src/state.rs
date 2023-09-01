@@ -109,6 +109,34 @@ impl CheatcodeState {
             detected_events: vec![],
         }
     }
+
+    #[must_use]
+    pub fn address_is_pranked(&self, contract_address: &ContractAddress) -> bool {
+        self.pranked_contracts.contains_key(contract_address)
+    }
+
+    #[must_use]
+    pub fn address_is_warped(&self, contract_address: &ContractAddress) -> bool {
+        self.warped_contracts.contains_key(contract_address)
+    }
+
+    #[must_use]
+    pub fn address_is_rolled(&self, contract_address: &ContractAddress) -> bool {
+        self.rolled_contracts.contains_key(contract_address)
+    }
+
+    #[must_use]
+    pub fn address_is_spoofed(&self, contract_address: &ContractAddress) -> bool {
+        self.spoofed_contracts.contains_key(contract_address)
+    }
+
+    #[must_use]
+    pub fn address_is_cheated(&self, contract_address: &ContractAddress) -> bool {
+        self.address_is_rolled(contract_address)
+            || self.address_is_pranked(contract_address)
+            || self.address_is_warped(contract_address)
+            || self.address_is_spoofed(contract_address)
+    }
 }
 
 impl Default for CheatcodeState {

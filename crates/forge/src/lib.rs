@@ -81,14 +81,19 @@ fn collect_tests_from_directory(
     runner_config: &RunnerConfig,
 ) -> Result<Vec<TestsFromFile>> {
     let test_files = find_cairo_root_files_in_directory(package_path, lib_path)?;
-    internal_collect_tests(
-        package_path,
-        package_name,
-        linked_libraries,
-        &test_files,
-        corelib_path,
-        runner_config,
-    )
+    test_files
+        .par_iter()
+        .map(|tf| {
+            collect_tests_from_tree(
+                tf,
+                package_path,
+                package_name,
+                linked_libraries,
+                corelib_path,
+                runner_config,
+            )
+        })
+        .collect()
 }
 
 fn find_cairo_root_files_in_directory(
@@ -118,30 +123,6 @@ fn find_cairo_root_files_in_directory(
         }
     }
     Ok(test_files)
-}
-
-fn internal_collect_tests(
-    package_path: &Utf8PathBuf,
-    package_name: &str,
-    linked_libraries: &Option<Vec<LinkedLibrary>>,
-    test_roots: &[Utf8PathBuf],
-    corelib_path: &Utf8PathBuf,
-    runner_config: &RunnerConfig,
-) -> Result<Vec<TestsFromFile>> {
-    let tests: Result<Vec<TestsFromFile>> = test_roots
-        .par_iter()
-        .map(|tf| {
-            collect_tests_from_tree(
-                tf,
-                package_path,
-                package_name,
-                linked_libraries,
-                corelib_path,
-                runner_config,
-            )
-        })
-        .collect();
-    tests
 }
 
 fn collect_tests_from_tree(
