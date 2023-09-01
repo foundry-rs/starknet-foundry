@@ -45,7 +45,7 @@ pub fn deploy_contract(
     let contracts = get_contracts();
 
     let class_hash = state.declare(&contract, &contracts).unwrap();
-    state.deploy(&class_hash, calldata, None).unwrap()
+    state.deploy(&class_hash, calldata).unwrap()
 }
 
 pub fn call_contract_getter_by_name(

@@ -54,7 +54,7 @@ fn nonce_declare_deploy() {
 
     let nonce2 = check_nonce(&mut state, &contract_address);
 
-    state.deploy(&class_hash, &[], None).unwrap();
+    state.deploy(&class_hash, &[]).unwrap();
 
     let nonce3 = check_nonce(&mut state, &contract_address);
 

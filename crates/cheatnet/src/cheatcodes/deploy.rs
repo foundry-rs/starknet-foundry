@@ -1,19 +1,20 @@
 use crate::constants::TEST_ACCOUNT_CONTRACT_ADDRESS;
-use crate::state::DictStateReader;
 use crate::{cheatcodes::EnhancedHintError, CheatnetState};
 use anyhow::Result;
 use blockifier::abi::abi_utils::selector_from_name;
 use blockifier::execution::execution_utils::{felt_to_stark_felt, stark_felt_to_felt};
+use std::sync::Arc;
 
-use blockifier::state::cached_state::CachedState;
 use blockifier::state::state_api::StateReader;
 use cairo_felt::Felt252;
 use cairo_vm::vm::errors::hint_errors::HintError::CustomHint;
 use starknet::core::utils::get_selector_from_name;
 
-use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, PatriciaKey};
+use starknet_api::core::{
+    calculate_contract_address, ClassHash, ContractAddress, EntryPointSelector, PatriciaKey,
+};
 use starknet_api::hash::{StarkFelt, StarkHash};
-use starknet_api::transaction::ContractAddressSalt;
+use starknet_api::transaction::{Calldata, ContractAddressSalt};
 use starknet_api::{patricia_key, stark_felt};
 
 use super::CheatcodeError;
@@ -21,45 +22,31 @@ use crate::conversions::{felt_from_short_string, field_element_to_felt252};
 use crate::rpc::{call_contract, CallContractOutput};
 
 impl CheatnetState {
-    pub fn deploy(
+    pub fn deploy_at(
         &mut self,
         class_hash: &ClassHash,
         calldata: &[Felt252],
-        predefined_contract_address: Option<ContractAddress>,
+        salt: ContractAddressSalt,
+        contract_address: ContractAddress,
     ) -> Result<ContractAddress, CheatcodeError> {
         // Deploy a contract using syscall deploy.
         let account_address = ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS));
         let entry_point_selector = selector_from_name("deploy_contract");
-        let salt = self.get_salt();
 
-        let contract_address = if let Some(contract_address) = predefined_contract_address {
-            if self
-                .blockifier_state
-                .state
-                .address_to_class_hash
-                .get(&contract_address)
-                .is_some()
-            {
-                return Err(CheatcodeError::Unrecoverable(
-                    EnhancedHintError::from(CustomHint(Box::from("Address is already taken")))
-                ));
-            }
-
-            contract_address
-        } else {
-            self.precalculate_address(class_hash, calldata)
-        };
-        self.increment_deploy_salt_base();
-
-        let blockifier_state: &mut CachedState<DictStateReader> = &mut self.blockifier_state;
-        if predefined_contract_address.is_some() {
-            blockifier_state
-                .state
-                .address_to_class_hash
-                .insert(contract_address, *class_hash);
+        if self
+            .blockifier_state
+            .state
+            .address_to_class_hash
+            .get(&contract_address)
+            .is_some()
+        {
+            return Err(CheatcodeError::Unrecoverable(EnhancedHintError::from(
+                CustomHint(Box::from("Address is already taken")),
+            )));
         }
 
-        let contract_class = blockifier_state
+        let contract_class = self
+            .blockifier_state
             .get_compiled_contract_class(class_hash)
             .map_err::<EnhancedHintError, _>(From::from)?;
         if contract_class.constructor_selector().is_none() && !calldata.is_empty() {
@@ -85,7 +72,14 @@ impl CheatnetState {
         .unwrap_or_else(|err| panic!("Deploy txn failed: {err}"));
 
         match call_result {
-            CallContractOutput::Success { .. } => Ok(contract_address),
+            CallContractOutput::Success { .. } => {
+                self.blockifier_state
+                    .state
+                    .address_to_class_hash
+                    .insert(contract_address, *class_hash);
+
+                Ok(contract_address)
+            }
             CallContractOutput::Panic { panic_data } => {
                 Err(CheatcodeError::Recoverable(panic_data))
             }
@@ -93,6 +87,27 @@ impl CheatnetState {
                 EnhancedHintError::from(CustomHint(Box::from(msg))),
             )),
         }
+    }
+
+    pub fn deploy(
+        &mut self,
+        class_hash: &ClassHash,
+        calldata: &[Felt252],
+    ) -> Result<ContractAddress, CheatcodeError> {
+        let salt = self.get_salt();
+        let account_address = ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS));
+
+        let contract_address = calculate_contract_address(
+            salt,
+            *class_hash,
+            &Calldata(Arc::new(calldata.iter().map(felt_to_stark_felt).collect())),
+            account_address,
+        )
+        .unwrap();
+
+        self.increment_deploy_salt_base();
+
+        self.deploy_at(class_hash, calldata, salt, contract_address)
     }
 }
 
