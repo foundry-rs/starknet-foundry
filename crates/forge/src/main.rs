@@ -21,7 +21,7 @@ static PREDEPLOYED_CONTRACTS: Dir = include_dir!("crates/cheatnet/predeployed-co
 #[derive(Parser, Debug)]
 #[command(version)]
 struct Args {
-    /// Name used to filter tests and to create init destination dir
+    /// Name used to filter tests or project name during init
     name: Option<String>,
     /// Use exact matches for `test_filter`
     #[arg(short, long)]
