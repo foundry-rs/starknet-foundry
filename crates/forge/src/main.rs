@@ -3,9 +3,9 @@ use camino::Utf8PathBuf;
 use clap::Parser;
 use include_dir::{include_dir, Dir};
 use scarb_metadata::MetadataCommand;
-use std;
-use std::ffi::OsStr;
-use std::path::{Path, PathBuf};
+
+
+use std::path::{PathBuf};
 use tempfile::{tempdir, TempDir};
 
 use forge::run;

@@ -1,12 +1,12 @@
-use anyhow::{anyhow, bail, Context, Result};
-use camino::Utf8PathBuf;
-use clap::Parser;
-use include_dir::{include_dir, Dir};
-use scarb_metadata::MetadataCommand;
-use std;
+use anyhow::{bail, Result};
+
+
+
+
+
 use std::ffi::OsStr;
-use std::path::{Path, PathBuf};
-use tempfile::{tempdir, TempDir};
+use std::path::{Path};
+
 
 /// Returns `true` if the name contains non-ASCII characters.
 pub fn is_non_ascii_name(name: &str) -> bool {
@@ -45,7 +45,7 @@ fn copy_recursively(
 
 fn check_path(path: &Path) -> Result<()> {
     // warn if the path contains characters that will break `env::join_paths`
-    if let Err(_) = std::env::join_paths(std::slice::from_ref(&OsStr::new(path))) {
+    if std::env::join_paths(std::slice::from_ref(&OsStr::new(path))).is_err() {
         let path = path.to_string_lossy();
         bail!(format!(
             "the path `{path}` contains invalid PATH characters (usually `:`, `;`, or `\"`)\n\
@@ -108,5 +108,5 @@ pub fn init(name: Option<String>) -> Result<()> {
         .join("starknet_forge_template");
     copy_recursively(template_path, project_path.display().to_string())?;
 
-    return Ok(());
+    Ok(())
 }
