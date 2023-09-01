@@ -4,7 +4,6 @@ use cheatnet::forking::state::ForkStateReader;
 use cheatnet::forking::worker::Worker;
 use cheatnet::state::CustomStateReader;
 use cheatnet::CheatnetState;
-use dotenv::dotenv;
 use starknet::core::types::BlockId;
 use starknet::core::types::BlockTag::Latest;
 
@@ -19,7 +18,6 @@ pub fn create_cheatnet_state() -> CheatnetState {
 #[allow(clippy::module_name_repetitions)]
 pub fn create_cheatnet_fork_state() -> CheatnetState {
     let predeployed_contracts = Utf8PathBuf::from("predeployed-contracts");
-    dotenv().ok();
     let node_url =
         std::env::var("CHEATNET_RPC_URL").expect("CHEATNET_RPC_URL must be set in the .env file");
 
