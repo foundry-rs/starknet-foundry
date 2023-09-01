@@ -9,9 +9,8 @@ Read and parse json file content to an array of felts.
 
 > ⚠️ **Warning**
 >
-> JSON object is an unordered data, To give it an order, the values in the array are sorted
-> alphabetically by JSON key. Therefore, the values in the array are sorted alphabetically by JSON key.
-> Nested JSON values are sorted on the flatten format keys `(a.b.c)`.
+> A JSON object is an unordered data structure. To give it an order, the values in the array are sorted alphabetically by JSON keys. Therefore, the values in the array are sorted alphabetically by JSON key.
+> Nested JSON values are sorted by the flattened format keys `(a.b.c)`.
 
 ```rust
 use snforge_std::{ FileTrait, read_json };
@@ -24,7 +23,7 @@ fn test_read_json() {
 }
 ```
 
-- File content must have proper JSON Format with values satisfying the conditions:
+File content must have proper JSON Format with values satisfying the conditions:
   - integers in range of `[0, P)` where P is [`Cairo Prime`](https://book.cairo-lang.org/ch02-02-data-types.html?highlight=prime#felt-type)
   - strings of length `<=31`
   - array of integers or strings fulfilling the above conditions

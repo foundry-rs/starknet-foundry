@@ -12,9 +12,9 @@ Parses json file content and tries to deserialize it to type `T` that implements
 
 > ⚠️ **Warning**
 >
->  JSON object is an unordered data. To give it an order, the values in the array are sorted alphabetically by JSON key.
+>  A JSON object is an unordered data structure. To give it an order, the values in the array are sorted alphabetically by JSON keys.
 To properly decode a JSON object, make sure the order of struct attributes aligns with the alphabetical order of the JSON keys.
->Nested JSON values are sorted on the flatten format keys `(a.b.c)`.
+>Nested JSON values are sorted by the flattened format keys `(a.b.c)`.
 
 ```rust
 use option::OptionTrait;
@@ -35,10 +35,10 @@ fn test_parse_json() {
 }
 ```
 
-- File content must have proper JSON Format with values satisfying the conditions:
-    - integers in range of `[0, P)` where P is [`Cairo Prime`](https://book.cairo-lang.org/ch02-02-data-types.html?highlight=prime#felt-type)
-    - strings of length `<=31`
-    - array of integers or strings fulfilling the above conditions
+File content must have proper JSON Format with values satisfying the conditions:
+  - integers in range of `[0, P)` where P is [`Cairo Prime`](https://book.cairo-lang.org/ch02-02-data-types.html?highlight=prime#felt-type)
+  - strings of length `<=31`
+  - array of integers or strings fulfilling the above conditions
 
 For example, this file content:
 ```json
@@ -54,22 +54,6 @@ For example, this file content:
 could be parsed to the following struct:
 
 ```rust
-struct A {
-    a: u8,
-    b: u8,
-    c: felt252,
-    d: B
-}
-
-struct B {
-    e: u32
-}
-```
-
-result:
-
-```rust
-
 A {
     a: 12,
     b: 1,

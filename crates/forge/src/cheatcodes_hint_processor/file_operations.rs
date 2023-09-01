@@ -186,7 +186,7 @@ mod tests {
     }
 
     #[test]
-    fn test_string_into_felt_shortstring_single_quotes() {
+    fn test_string_into_felt_shortstring() {
         let string = "\'1he5llo9\'";
         let string2 = "\"1he5llo9\"";
         let felt = string_into_felt(string);
