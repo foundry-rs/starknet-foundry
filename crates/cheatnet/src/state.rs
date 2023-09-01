@@ -83,15 +83,6 @@ impl StateReader for DictStateReader {
         Ok(nonce)
     }
 
-    fn get_class_hash_at(&mut self, contract_address: ContractAddress) -> StateResult<ClassHash> {
-        let class_hash = self
-            .address_to_class_hash
-            .get(&contract_address)
-            .copied()
-            .unwrap_or_default();
-        Ok(class_hash)
-    }
-
     fn get_compiled_contract_class(
         &mut self,
         class_hash: &ClassHash,
@@ -101,6 +92,15 @@ impl StateReader for DictStateReader {
             Some(contract_class) => Ok(contract_class),
             _ => Err(StateError::UndeclaredClassHash(*class_hash)),
         }
+    }
+
+    fn get_class_hash_at(&mut self, contract_address: ContractAddress) -> StateResult<ClassHash> {
+        let class_hash = self
+            .address_to_class_hash
+            .get(&contract_address)
+            .copied()
+            .unwrap_or_default();
+        Ok(class_hash)
     }
 
     fn get_compiled_class_hash(
