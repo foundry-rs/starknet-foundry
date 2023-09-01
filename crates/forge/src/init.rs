@@ -1,30 +1,7 @@
 use anyhow::{bail, Result};
 
-
-
-
-
 use std::ffi::OsStr;
-use std::path::{Path};
-
-
-/// Returns `true` if the name contains non-ASCII characters.
-pub fn is_non_ascii_name(name: &str) -> bool {
-    name.chars().any(|ch| ch > '\x7f')
-}
-
-/// These names cannot be used on Windows, even with an extension.
-pub fn is_windows_reserved(name: &str) -> bool {
-    [
-        "con", "prn", "aux", "nul", "com1", "com2", "com3", "com4", "com5", "com6", "com7", "com8",
-        "com9", "lpt1", "lpt2", "lpt3", "lpt4", "lpt5", "lpt6", "lpt7", "lpt8", "lpt9",
-    ]
-    .contains(&name.to_ascii_lowercase().as_str())
-}
-
-pub fn is_reserved_keyword(name: &str) -> bool {
-    ["_"].contains(&name.to_ascii_lowercase().as_str())
-}
+use std::path::Path;
 
 fn copy_recursively(
     source: impl AsRef<Path>,
@@ -55,35 +32,54 @@ fn check_path(path: &Path) -> Result<()> {
     Ok(())
 }
 
-/// See also `util::toml::embedded::sanitize_name`
+/// Inspired by scarb package name validation
+/// https://github.com/software-mansion/scarb/blob/main/scarb/src/core/package/name.rs#L57
 fn check_name(name: &str) -> Result<()> {
-    if is_windows_reserved(name) {
-        if cfg!(windows) {
+    if name.is_empty() {
+        bail!("empty string cannot be used as package name");
+    }
+
+    if name == "_" {
+        bail!("underscore cannot be used as package name");
+    }
+
+    if !name.eq(&name.to_ascii_lowercase()) {
+        bail!(
+            "invalid package name: `{name}`\n\
+            note: usage of ASCII uppercase letters in the package name has been disallowed\n\
+            help: change package name to: {}",
+            name.to_ascii_lowercase()
+        )
+    }
+
+    let mut chars = name.chars();
+
+    // Validate first letter.
+    if let Some(ch) = chars.next() {
+        // A specific error for a potentially common case.
+        if ch.is_ascii_digit() {
             bail!(
-                "cannot use name `{}`, it is a reserved Windows filename",
-                name
+                "the name `{name}` cannot be used as a package name, \
+                names cannot start with a digit"
             );
-        } else {
-            bail!(format!(
-                "the name `{}` is a reserved Windows filename\n\
-                This package will not work on Windows platforms.",
-                name
-            ));
+        }
+
+        if !(ch.is_ascii_alphabetic() || ch == '_') {
+            bail!(
+                "invalid character `{ch}` in package name: `{name}`, \
+                the first character must be an ASCII lowercase letter or underscore"
+            )
         }
     }
-    if is_non_ascii_name(name) {
-        bail!(format!(
-            "the name `{}` contains non-ASCII characters.",
-            name
-        ));
-    }
 
-    if is_reserved_keyword(name) {
-        bail!(format!("the name `{}` is reserved keyword", name));
-    }
-
-    if name.chars().next().unwrap().is_numeric() {
-        bail!(format!("the name `{}` starts with digit.", name));
+    // Validate rest.
+    for ch in chars {
+        if !(ch.is_ascii_alphanumeric() || ch == '_') {
+            bail!(
+                "invalid character `{ch}` in package name: `{name}`, \
+                characters must be ASCII lowercase letters, ASCII numbers or underscore"
+            )
+        }
     }
 
     Ok(())
