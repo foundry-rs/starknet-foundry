@@ -3,12 +3,11 @@ use crate::common::state::create_cheatnet_state;
 use crate::common::{deploy_contract, get_contracts};
 use cairo_felt::Felt252;
 use cairo_vm::vm::errors::hint_errors::HintError;
-use cheatnet::cheatcodes::CheatcodeError::Unrecoverable;
-use cheatnet::cheatcodes::EnhancedHintError;
+use cheatnet::cheatcodes::{CheatcodeError, EnhancedHintError};
 use cheatnet::conversions::{
     contract_address_to_felt, felt_from_short_string, felt_selector_from_name,
 };
-use cheatnet::rpc::call_contract;
+use cheatnet::rpc::{call_contract, CallContractOutput};
 use starknet_api::core::ContractAddress;
 use starknet_api::transaction::ContractAddressSalt;
 
@@ -62,7 +61,7 @@ fn deploy_two_at_the_same_address() {
     );
 
     assert!(match result {
-        Err(Unrecoverable(EnhancedHintError::Hint(HintError::CustomHint(err)))) =>
+        Err(CheatcodeError::Unrecoverable(EnhancedHintError::Hint(HintError::CustomHint(err)))) =>
             err.as_ref() == "Address is already taken",
         _ => false,
     });
@@ -98,4 +97,71 @@ fn call_predefined_contract_from_proxy_contract() {
     .unwrap();
 
     assert_success!(output, vec![contract_address_to_felt(proxy_address)]);
+}
+
+#[test]
+fn deploy_contract_on_predefined_address_after_its_usage() {
+    let mut state = create_cheatnet_state();
+
+    let proxy_address = deploy_contract(&mut state, "SpyEventsCheckerProxy", &[Felt252::from(121)]);
+
+    let proxy_selector = felt_selector_from_name("emit_one_event");
+    let output = call_contract(
+        &proxy_address,
+        &proxy_selector,
+        &[Felt252::from(323)],
+        &mut state,
+    )
+    .unwrap();
+
+    assert!(match output {
+        CallContractOutput::Error { msg } =>
+            msg.contains("Requested contract address") && msg.contains("is not deployed"),
+        _ => false,
+    });
+
+    let contract = felt_from_short_string("SpyEventsChecker");
+    let contracts = get_contracts();
+
+    let class_hash = state.declare(&contract, &contracts).unwrap();
+    state
+        .deploy_at(
+            &class_hash,
+            &[],
+            ContractAddressSalt::default(),
+            ContractAddress::from(121_u8),
+        )
+        .unwrap();
+
+    let output = call_contract(
+        &proxy_address,
+        &proxy_selector,
+        &[Felt252::from(323)],
+        &mut state,
+    )
+    .unwrap();
+
+    assert_success!(output, vec![]);
+}
+
+#[test]
+fn try_to_deploy_at_0() {
+    let mut state = create_cheatnet_state();
+
+    let contract = felt_from_short_string("HelloStarknet");
+    let contracts = get_contracts();
+
+    let class_hash = state.declare(&contract, &contracts).unwrap();
+    let output = state.deploy_at(
+        &class_hash,
+        &[],
+        ContractAddressSalt::default(),
+        ContractAddress::from(0_u8),
+    );
+
+    assert!(match output {
+        Err(CheatcodeError::Unrecoverable(EnhancedHintError::Hint(HintError::CustomHint(msg)))) =>
+            msg.as_ref() == "Cannot deploy contract at address 0.",
+        _ => false,
+    });
 }

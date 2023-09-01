@@ -4,7 +4,7 @@ use anyhow::Result;
 use blockifier::abi::abi_utils::selector_from_name;
 use blockifier::execution::execution_utils::{felt_to_stark_felt, stark_felt_to_felt};
 
-use blockifier::state::state_api::StateReader;
+use blockifier::state::state_api::{State, StateReader};
 use cairo_felt::Felt252;
 use cairo_vm::vm::errors::hint_errors::HintError::CustomHint;
 use starknet::core::utils::get_selector_from_name;
@@ -30,16 +30,12 @@ impl CheatnetState {
         let account_address = ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS));
         let entry_point_selector = selector_from_name("deploy_contract");
 
-        if self
-            .blockifier_state
-            .state
-            .address_to_class_hash
-            .get(&contract_address)
-            .is_some()
-        {
-            return Err(CheatcodeError::Unrecoverable(EnhancedHintError::from(
-                CustomHint(Box::from("Address is already taken")),
-            )));
+        if let Ok(class_hash) = self.blockifier_state.get_class_hash_at(contract_address) {
+            if class_hash != ClassHash::default() {
+                return Err(CheatcodeError::Unrecoverable(EnhancedHintError::from(
+                    CustomHint(Box::from("Address is already taken")),
+                )));
+            }
         }
 
         let contract_class = self
@@ -69,14 +65,15 @@ impl CheatnetState {
         .unwrap_or_else(|err| panic!("Deploy txn failed: {err}"));
 
         match call_result {
-            CallContractOutput::Success { .. } => {
-                self.blockifier_state
-                    .state
-                    .address_to_class_hash
-                    .insert(contract_address, *class_hash);
-
-                Ok(contract_address)
-            }
+            CallContractOutput::Success { .. } => self
+                .blockifier_state
+                .set_class_hash_at(contract_address, *class_hash)
+                .map(|_| contract_address)
+                .map_err(|msg| {
+                    CheatcodeError::Unrecoverable(EnhancedHintError::from(CustomHint(Box::from(
+                        msg.to_string(),
+                    ))))
+                }),
             CallContractOutput::Panic { panic_data } => {
                 Err(CheatcodeError::Recoverable(panic_data))
             }
