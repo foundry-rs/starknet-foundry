@@ -3,18 +3,15 @@ use crate::{cheatcodes::EnhancedHintError, CheatnetState};
 use anyhow::Result;
 use blockifier::abi::abi_utils::selector_from_name;
 use blockifier::execution::execution_utils::{felt_to_stark_felt, stark_felt_to_felt};
-use std::sync::Arc;
 
 use blockifier::state::state_api::StateReader;
 use cairo_felt::Felt252;
 use cairo_vm::vm::errors::hint_errors::HintError::CustomHint;
 use starknet::core::utils::get_selector_from_name;
 
-use starknet_api::core::{
-    calculate_contract_address, ClassHash, ContractAddress, EntryPointSelector, PatriciaKey,
-};
+use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, PatriciaKey};
 use starknet_api::hash::{StarkFelt, StarkHash};
-use starknet_api::transaction::{Calldata, ContractAddressSalt};
+use starknet_api::transaction::ContractAddressSalt;
 use starknet_api::{patricia_key, stark_felt};
 
 use super::CheatcodeError;
@@ -95,15 +92,7 @@ impl CheatnetState {
         calldata: &[Felt252],
     ) -> Result<ContractAddress, CheatcodeError> {
         let salt = self.get_salt();
-        let account_address = ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS));
-
-        let contract_address = calculate_contract_address(
-            salt,
-            *class_hash,
-            &Calldata(Arc::new(calldata.iter().map(felt_to_stark_felt).collect())),
-            account_address,
-        )
-        .unwrap();
+        let contract_address = self.precalculate_address(class_hash, calldata);
 
         self.increment_deploy_salt_base();
 
