@@ -4,6 +4,7 @@ use clap::Parser;
 use include_dir::{include_dir, Dir};
 use scarb_metadata::MetadataCommand;
 use std;
+use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 use tempfile::{tempdir, TempDir};
 
@@ -15,6 +16,7 @@ use forge::scarb::{
     paths_for_package, target_name_for_package, try_get_starknet_artifacts_path,
 };
 use std::process::{Command, Stdio};
+mod init;
 
 static PREDEPLOYED_CONTRACTS: Dir = include_dir!("crates/cheatnet/predeployed-contracts");
 
@@ -43,43 +45,10 @@ fn load_predeployed_contracts() -> Result<TempDir> {
     Ok(tmp_dir)
 }
 
-pub fn copy_recursively(
-    source: impl AsRef<Path>,
-    destination: impl AsRef<Path>,
-) -> std::io::Result<()> {
-    std::fs::create_dir_all(&destination)?;
-    for entry in std::fs::read_dir(source)? {
-        let entry = entry?;
-        let filetype = entry.file_type()?;
-        if filetype.is_dir() {
-            copy_recursively(entry.path(), destination.as_ref().join(entry.file_name()))?;
-        } else {
-            std::fs::copy(entry.path(), destination.as_ref().join(entry.file_name()))?;
-        }
-    }
-    Ok(())
-}
-
 fn main_execution() -> Result<()> {
     let args = Args::parse();
     if args.init {
-        let project_name = args.name.unwrap_or("starknet_forge_template".to_string());
-        let project_path = std::env::current_dir().unwrap().join(project_name);
-
-        if project_path.exists() {
-            bail!(
-                "Destination {} already exists.\n
-                New project couldn't be created",
-                &project_path.display().to_string()
-            )
-        }
-
-        let template_path = project_root::get_project_root()
-            .unwrap()
-            .join("starknet_forge_template");
-        copy_recursively(template_path, project_path.display().to_string());
-
-        return Ok(());
+        return init::init(args.name);
     }
 
     let predeployed_contracts_dir = load_predeployed_contracts()?;
