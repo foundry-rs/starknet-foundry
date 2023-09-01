@@ -68,7 +68,8 @@ fn main_execution() -> Result<()> {
 
         if project_path.exists() {
             bail!(
-                "Destination {} already exists, new project couldn't be created",
+                "Destination {} already exists.\n
+                New project couldn't be created",
                 &project_path.display().to_string()
             )
         }
