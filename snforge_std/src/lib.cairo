@@ -6,10 +6,10 @@ use cheatcodes::contract_class::RevertedTransactionTrait;
 use cheatcodes::contract_class::ContractClass;
 use cheatcodes::contract_class::ContractClassTrait;
 
-use cheatcodes::spoof::TxInfoMock;
-use cheatcodes::spoof::TxInfoMockTrait;
-use cheatcodes::spoof::start_spoof;
-use cheatcodes::spoof::stop_spoof;
+use cheatcodes::tx_info::TxInfoMock;
+use cheatcodes::tx_info::TxInfoMockTrait;
+use cheatcodes::tx_info::start_spoof;
+use cheatcodes::tx_info::stop_spoof;
 
 use cheatcodes::l1_handler::L1Handler;
 use cheatcodes::l1_handler::L1HandlerTrait;
