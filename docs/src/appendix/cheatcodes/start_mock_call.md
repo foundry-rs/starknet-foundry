@@ -44,7 +44,7 @@ We can use `start_mock_call` in a test to change the data returned by `get_balan
 #[test]
 fn test_mock_call() {
     // ...
-    
+
     let mock_ret_data = 421;
     start_mock_call(contract_address, 'get_balance', mock_ret_data);
 
@@ -53,3 +53,63 @@ fn test_mock_call() {
     assert(balance == 421, 'Wrong balance'); // this assert passes
 }
 ```
+
+## Mocking non-existent functions
+
+It is also possible to simulate contract having a specific method by mocking a non-existent selector.
+
+Let's assume we have defined a interface to use a dispatcher, but this interface contains a function that is not actually defined in actually deployed contract:
+
+```rust
+// ...
+// Assume we define an interface like that, but it is incorrect.
+// That is IOtherContract used a different interface that did not define
+// `function_not_actually_implemented`.
+// 
+// Normally calling `function_not_actually_implemented` would fail.
+#[starknet::interface]
+impl IOtherContract<TContractState> {
+    fn function_implemented(self: @TContractState) -> felt252;
+    fn function_not_actually_implemented(self: @TContractState) -> felt252;
+}
+
+#[external(v0)]
+impl IContractImpl of IContract<ContractState> {
+    fn call_not_actually_implemented(self: @ContractState) -> felt252 {
+        // ...
+        let other_contract_dispatcher = IOtherContractDispatcher { contract_address };
+        let result = other_contract_dispatcher.function_not_actually_implemented();
+        
+        result
+    }
+}
+```
+
+This test would then fail, because `function_not_actually_implemented` does not exist.
+
+```rust
+#[test]
+fn test_mock_not_implemented() {
+    // ...
+
+    let result = dispatcher.call_not_actually_implemented();
+    // ...
+}
+```
+
+We can, however, mock this function, even though it is not implemented. This test will pass:
+
+```rust
+#[test]
+fn test_mock_not_implemented() {
+    // ...
+    
+    let mock_ret_data = 42;
+    start_mock_call(contract_address, 'function_not_actually_implemented', mock_ret_data);
+
+    let result = dispatcher.call_not_actually_implemented();
+    assert(result == 42, 'result != 42');
+    // ...
+}
+```
+
