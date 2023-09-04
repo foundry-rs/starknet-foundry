@@ -103,9 +103,9 @@ fn assert_if_emitted(ref self: EventSpy, event: Event) -> bool {
         }
 
         if event_name_hash(event.name) == *self.events.at(j).name
-          && event.from == *emitted_events.at(j).from
-          && @event.keys == emitted_events.at(j).keys
-          && @event.data == emitted_events.at(j).data {
+            && event.from == *emitted_events.at(j).from
+            && @event.keys == emitted_events.at(j).keys
+            && @event.data == emitted_events.at(j).data {
             remove_event(ref self, j);
             break true;
         }
