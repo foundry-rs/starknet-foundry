@@ -12,7 +12,7 @@ use snforge_std::ContractClassTrait;
 
 fn deploy_hello_starknet() -> ContractAddress {
     let contract = declare('HelloStarknet').unwrap();
-    let constructor_calldata = @ArrayTrait::new()
+    let constructor_calldata = @ArrayTrait::new();
     let contract_address = contract.deploy(constructor_calldata).unwrap();
 
     let contract_address: ContractAddress = contract_address.try_into().unwrap();
