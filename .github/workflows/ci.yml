@@ -45,7 +45,7 @@ jobs:
 
       # extract repository name and owner
       - name: Extract repo name
-        run: echo "REPO_NAME=$(echo $${{ github.repository }}.git)" >> $GITHUB_ENV
+        run: echo "REPO_NAME=$(echo ${{ github.repository }}.git)" >> $GITHUB_ENV
 
       # print repo name
       - name: Print repo name
