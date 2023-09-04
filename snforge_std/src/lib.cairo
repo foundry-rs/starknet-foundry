@@ -1,6 +1,7 @@
 mod cheatcodes;
 
 use cheatcodes::contract_class::declare;
+use cheatcodes::contract_class::get_class_hash;
 use cheatcodes::contract_class::RevertedTransaction;
 use cheatcodes::contract_class::RevertedTransactionTrait;
 use cheatcodes::contract_class::ContractClass;
@@ -30,7 +31,6 @@ use cheatcodes::start_warp;
 use cheatcodes::stop_warp;
 use cheatcodes::start_mock_call;
 use cheatcodes::stop_mock_call;
-use cheatcodes::get_class_hash;
 
 
 mod io;
