@@ -38,9 +38,9 @@ parity-scale-codec = "3.5.0"
 parity-scale-codec-derive = "3.1.4"
 num-bigint = "0.4.3"
 cairo-felt = "0.8.1"
-clap = { version = "4.2.7", features = ["derive"] }
+clap = { version = "4.3.23", features = ["derive"] }
 walkdir = "2.3.3"
-scarb-metadata = "1.7.0"
+scarb-metadata = { version = "1.7.0", features = ["packages_filter"]} 
 project-root = "0.2.2"
 console = "0.15.7"
 snapbox = "0.4.11"

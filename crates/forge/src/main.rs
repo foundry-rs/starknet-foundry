@@ -2,11 +2,12 @@ use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Parser;
 use include_dir::{include_dir, Dir};
-use scarb_metadata::MetadataCommand;
+use scarb_metadata::packages_filter::PackagesFilter;
+use scarb_metadata::{MetadataCommand, PackageId};
 use std::path::PathBuf;
 use tempfile::{tempdir, TempDir};
 
-use forge::{collect_packages, run};
+use forge::run;
 use forge::{pretty_printing, RunnerConfig};
 
 use forge::scarb::{
@@ -30,13 +31,8 @@ struct Args {
     #[arg(short = 'x', long)]
     exit_first: bool,
 
-    /// Run tests for specific package
-    #[arg(short = 'p', long)]
-    package: Option<String>,
-
-    /// Run tests for all packages in the workspace
-    #[arg(short, long)]
-    workspace: bool,
+    #[command(flatten)]
+    packages_filter: PackagesFilter,
 }
 
 fn load_predeployed_contracts() -> Result<TempDir> {
@@ -76,20 +72,13 @@ fn main_execution() -> Result<()> {
         )
     }
 
-    let manifest_path = Command::new("scarb")
-        .current_dir(current_dir)
-        .arg("manifest-path")
-        .output()
-        .context("Failed to fetch manifest-path")?
-        .stdout;
-    let manifest_path = PathBuf::from(String::from_utf8(manifest_path)?.trim_end());
-
-    let packages = collect_packages(
-        &scarb_metadata,
-        &manifest_path,
-        &args.package,
-        args.workspace,
-    );
+    let packages: Vec<PackageId> = args
+        .packages_filter
+        .match_many(&scarb_metadata)
+        .context("Failed to find any packages matching the specified filter")?
+        .iter()
+        .map(|package| package.id.clone())
+        .collect();
 
     for package in &packages {
         let forge_config = forge::scarb::config_from_scarb_for_package(&scarb_metadata, package)?;

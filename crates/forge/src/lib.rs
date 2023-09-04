@@ -1,12 +1,9 @@
 use std::collections::HashMap;
 use std::fmt::Debug;
-use std::path::PathBuf;
 
 use anyhow::{Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
-use itertools::Itertools;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
-use scarb_metadata::{Metadata, PackageId, PackageMetadata};
 use serde::Deserialize;
 use test_case_summary::TestCaseSummary;
 use walkdir::WalkDir;
@@ -73,48 +70,6 @@ struct TestsFromFile {
     sierra_program: Program,
     test_cases: Vec<TestCase>,
     relative_path: Utf8PathBuf,
-}
-
-#[must_use]
-pub fn collect_packages(
-    metadata: &Metadata,
-    manifest_path: &PathBuf,
-    package_name: &Option<String>,
-    workspace: bool,
-) -> Vec<PackageId> {
-    let workspace_members = &metadata.workspace.members;
-
-    let is_virtual_workspace = metadata
-        .packages
-        .iter()
-        .filter(|package| package.manifest_path == metadata.workspace.manifest_path)
-        .collect_vec()
-        .is_empty();
-
-    let package_filter: Box<dyn Fn(&PackageMetadata) -> bool> = {
-        if workspace {
-            Box::new(|_| true)
-        } else if let Some(package_name) = package_name {
-            // selected specific package
-            Box::new(|package| package.name == *package_name)
-        } else if metadata.workspace.manifest_path != *manifest_path {
-            // snforge command ran inside package
-            Box::new(|package| package.manifest_path == *manifest_path)
-        } else {
-            // snforge command ran in root directory
-            Box::new(|package| {
-                package.manifest_path == metadata.workspace.manifest_path || is_virtual_workspace
-            })
-        }
-    };
-
-    metadata
-        .packages
-        .iter()
-        .filter(|package| workspace_members.contains(&package.id))
-        .filter(|package| package_filter(package))
-        .map(|package| package.id.clone())
-        .collect_vec()
 }
 
 fn collect_tests_from_directory(
