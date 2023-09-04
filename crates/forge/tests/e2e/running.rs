@@ -4,7 +4,7 @@ use indoc::{formatdoc, indoc};
 
 use crate::e2e::common::runner::{get_current_branch, runner, setup_package};
 use assert_fs::TempDir;
-use std::str::FromStr;
+use std::{path::Path, str::FromStr};
 
 #[test]
 fn simple_package() {
@@ -438,6 +438,26 @@ fn exit_first_flag_takes_precedence() {
         [SKIP] without_prefix::five
         Tests: 8 passed, 1 failed, 2 skipped
         "#});
+}
+
+#[test]
+fn init_new_project_test() {
+    let temp = TempDir::new().unwrap();
+
+    let snapbox = runner();
+    snapbox
+        .current_dir(&temp)
+        .arg("--init")
+        .arg("test_name")
+        .assert()
+        .success();
+
+    let paths = std::fs::read_dir(temp.path().join(Path::new("test_name"))).unwrap();
+
+    for path in paths {
+        dbg!(path.unwrap().file_name());
+    }
+    dbg!(temp.display());
 }
 
 #[test]

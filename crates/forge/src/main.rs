@@ -4,8 +4,7 @@ use clap::Parser;
 use include_dir::{include_dir, Dir};
 use scarb_metadata::MetadataCommand;
 
-
-use std::path::{PathBuf};
+use std::path::PathBuf;
 use tempfile::{tempdir, TempDir};
 
 use forge::run;

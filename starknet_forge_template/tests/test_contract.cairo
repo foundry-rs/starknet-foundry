@@ -7,8 +7,8 @@ use starknet::Felt252TryIntoContractAddress;
 
 use snforge_std::{declare, ContractClassTrait};
 
-use starknet_forge_template::IHelloStarknetSafeDispatcher;
-use starknet_forge_template::IHelloStarknetSafeDispatcherTrait;
+use {{ PROJECT_NAME }}::IHelloStarknetSafeDispatcher;
+use {{ PROJECT_NAME }}::IHelloStarknetSafeDispatcherTrait;
 
 fn deploy_contract(name: felt252) -> ContractAddress {
     let contract = declare(name);

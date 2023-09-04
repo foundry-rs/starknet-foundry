@@ -1,23 +1,40 @@
 use anyhow::{bail, Result};
 
+use include_dir::{include_dir, Dir, DirEntry};
 use std::ffi::OsStr;
-use std::path::Path;
+use std::fs;
+use std::path::{Path, PathBuf};
 
-fn copy_recursively(
-    source: impl AsRef<Path>,
-    destination: impl AsRef<Path>,
-) -> std::io::Result<()> {
-    std::fs::create_dir_all(&destination)?;
-    for entry in std::fs::read_dir(source)? {
-        let entry = entry?;
-        let filetype = entry.file_type()?;
-        if filetype.is_dir() {
-            copy_recursively(entry.path(), destination.as_ref().join(entry.file_name()))?;
-        } else {
-            std::fs::copy(entry.path(), destination.as_ref().join(entry.file_name()))?;
+static TEMPLATE: Dir = include_dir!("starknet_forge_template");
+
+fn create_with_template(dir: &Dir<'_>, base_path: &PathBuf, project_name: &str) -> Result<()> {
+    fs::create_dir_all(base_path)?;
+
+    for entry in dir.entries() {
+        let path = base_path.join(entry.path());
+
+        match entry {
+            DirEntry::Dir(d) => {
+                fs::create_dir_all(&path)?;
+                create_with_template(d, base_path, project_name)?;
+            }
+            DirEntry::File(f) => {
+                let contents = f.contents();
+                let contents = replace_project_name(contents, project_name);
+
+                fs::write(path, contents)?;
+            }
         }
     }
+
     Ok(())
+}
+
+fn replace_project_name(contents: &[u8], project_name: &str) -> Vec<u8> {
+    // SAFETY: We control these files, and we know that they are UTF-8.
+    let contents = unsafe { std::str::from_utf8_unchecked(contents) };
+    let contents = contents.replace("{{ PROJECT_NAME }}", project_name);
+    contents.into_bytes()
 }
 
 fn check_path(path: &Path) -> Result<()> {
@@ -88,7 +105,7 @@ fn check_name(name: &str) -> Result<()> {
 pub fn init(name: Option<String>) -> Result<()> {
     let project_name = name.unwrap_or("starknet_forge_template".to_string());
     check_name(&project_name)?;
-    let project_path = std::env::current_dir().unwrap().join(project_name);
+    let project_path = std::env::current_dir().unwrap().join(&project_name);
     check_path(project_path.as_path())?;
 
     if project_path.exists() {
@@ -99,10 +116,7 @@ pub fn init(name: Option<String>) -> Result<()> {
         )
     }
 
-    let template_path = project_root::get_project_root()
-        .unwrap()
-        .join("starknet_forge_template");
-    copy_recursively(template_path, project_path.display().to_string())?;
+    create_with_template(&TEMPLATE, &project_path, &project_name)?;
 
     Ok(())
 }
