@@ -23,6 +23,7 @@ use cairo_lang_sierra::extensions::NamedType;
 use cairo_lang_sierra::program::{GenericArg, Program};
 use cairo_lang_sierra_generator::db::SierraGenGroup;
 use cairo_lang_sierra_generator::replace_ids::replace_sierra_ids_in_program;
+use cairo_lang_starknet::inline_macros::selector::SelectorMacro;
 use cairo_lang_starknet::plugin::StarkNetPlugin;
 use cairo_lang_syntax::attribute::structured::{Attribute, AttributeArg, AttributeArgVariant};
 use cairo_lang_syntax::node::ast;
@@ -115,13 +116,19 @@ pub fn find_all_tests(
         let Ok(module_items) = db.module_items(*module_id) else {
             continue;
         };
-        tests.extend(
-            module_items.iter().filter_map(|item| {
-                let ModuleItemId::FreeFunction(func_id) = item else { return None };
-                let Ok(attrs) = db.function_with_body_attributes(FunctionWithBodyId::Free(*func_id)) else { return None };
-                Some((*func_id, try_extract_test_config(db.upcast(), &attrs).unwrap()?))
-            }),
-        );
+        tests.extend(module_items.iter().filter_map(|item| {
+            let ModuleItemId::FreeFunction(func_id) = item else {
+                return None;
+            };
+            let Ok(attrs) = db.function_with_body_attributes(FunctionWithBodyId::Free(*func_id))
+            else {
+                return None;
+            };
+            Some((
+                *func_id,
+                try_extract_test_config(db.upcast(), &attrs).unwrap()?,
+            ))
+        }));
     }
     tests
 }
@@ -232,18 +239,24 @@ pub fn try_extract_test_config(
 
 /// Tries to extract the relevant expected panic values.
 fn extract_panic_values(db: &dyn SyntaxGroup, attr: &Attribute) -> Option<Vec<Felt252>> {
-    let [
-        AttributeArg {
-            variant: AttributeArgVariant::Named { name, value: panics, .. },
-            ..
-        }
-    ] = &attr.args[..] else {
+    let [AttributeArg {
+        variant:
+            AttributeArgVariant::Named {
+                name,
+                value: panics,
+                ..
+            },
+        ..
+    }] = &attr.args[..]
+    else {
         return None;
     };
     if name != "expected" {
         return None;
     }
-    let ast::Expr::Tuple(panics) = panics else { return None };
+    let ast::Expr::Tuple(panics) = panics else {
+        return None;
+    };
     panics
         .expressions(db)
         .elements(db)
@@ -287,8 +300,9 @@ pub fn collect_tests(
     let db = &mut {
         let mut b = RootDatabase::builder();
         b.with_cfg(CfgSet::from_iter([Cfg::name("test")]));
-        b.with_semantic_plugin(Arc::new(TestPlugin::default()));
-        b.with_semantic_plugin(Arc::new(StarkNetPlugin::default()));
+        b.with_macro_plugin(Arc::new(TestPlugin::default()));
+        b.with_macro_plugin(Arc::new(StarkNetPlugin::default()))
+            .with_inline_macro_plugin(SelectorMacro::NAME, Arc::new(SelectorMacro));
         b.build()?
     };
 
@@ -308,7 +322,10 @@ pub fn collect_tests(
         }
     }
 
-    if DiagnosticsReporter::stderr().check(db) {
+    if DiagnosticsReporter::stderr()
+        .with_extra_crates(&[main_crate_id])
+        .check(db)
+    {
         return Err(anyhow!(
             "Failed to add linked library, for a detailed information, please go through the logs \
              above"

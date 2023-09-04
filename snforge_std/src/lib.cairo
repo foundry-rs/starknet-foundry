@@ -1,11 +1,27 @@
 mod cheatcodes;
 
-use cheatcodes::declare;
+use cheatcodes::contract_class::declare;
+use cheatcodes::contract_class::get_class_hash;
+use cheatcodes::contract_class::RevertedTransaction;
+use cheatcodes::contract_class::RevertedTransactionTrait;
+use cheatcodes::contract_class::ContractClass;
+use cheatcodes::contract_class::ContractClassTrait;
 
-use cheatcodes::RevertedTransaction;
-use cheatcodes::RevertedTransactionTrait;
-use cheatcodes::ContractClass;
-use cheatcodes::ContractClassTrait;
+use cheatcodes::tx_info::TxInfoMock;
+use cheatcodes::tx_info::TxInfoMockTrait;
+use cheatcodes::tx_info::start_spoof;
+use cheatcodes::tx_info::stop_spoof;
+
+use cheatcodes::l1_handler::L1Handler;
+use cheatcodes::l1_handler::L1HandlerTrait;
+
+use cheatcodes::events::SpyOn;
+use cheatcodes::events::Event;
+use cheatcodes::events::EventSpy;
+use cheatcodes::events::EventFetcher;
+use cheatcodes::events::EventAssertions;
+use cheatcodes::events::spy_events;
+use cheatcodes::events::event_name_hash;
 
 use cheatcodes::start_prank;
 use cheatcodes::stop_prank;
@@ -15,17 +31,13 @@ use cheatcodes::start_warp;
 use cheatcodes::stop_warp;
 use cheatcodes::start_mock_call;
 use cheatcodes::stop_mock_call;
-use cheatcodes::get_class_hash;
 
 
-mod file_operations;
+mod io;
 
-use file_operations::File;
-use file_operations::FileTrait;
-use file_operations::parse_txt;
-use file_operations::TxtParser;
+use io::file_operations::File;
+use io::file_operations::FileTrait;
+use io::file_operations::parse_txt;
+use io::file_operations::TxtParser;
 
-
-mod forge_print;
-
-use forge_print::PrintTrait;
+use io::forge_print::PrintTrait;

@@ -18,7 +18,10 @@ fn complex_structure() {
         .current_dir(&temp)
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 16 test(s) and 4 test file(s)
+        .stdout_matches(indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+        Collected 16 test(s) and 4 test file(s)
         Running 12 test(s) from test_multiple package
         [PASS] test_multiple::test_simple
         [PASS] test_multiple::test_fob_in_lib

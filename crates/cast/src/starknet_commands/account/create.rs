@@ -2,7 +2,9 @@ use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use cast::helpers::constants::OZ_CLASS_HASH;
 use cast::helpers::response_structs::AccountCreateResponse;
-use cast::helpers::scarb_utils::{get_package_tool_sncast, get_scarb_manifest, CastConfig};
+use cast::helpers::scarb_utils::{
+    get_package_tool_sncast, get_scarb_manifest, get_scarb_metadata, CastConfig,
+};
 use cast::{chain_id_to_network_name, decode_chain_id, extract_or_generate_salt, parse_number};
 use clap::Args;
 use serde_json::json;
@@ -114,6 +116,11 @@ pub async fn create(
         "deployed": false,
     });
 
+    if let Some(class_hash_) = class_hash {
+        items[&network_name][&config.account]["class_hash"] =
+            serde_json::Value::String(format!("{:#x}", parse_number(&class_hash_)?));
+    }
+
     if add_profile {
         match add_created_profile_to_configuration(&path_to_scarb_toml, config) {
             Ok(()) => {}
@@ -153,18 +160,11 @@ pub fn add_created_profile_to_configuration(
     path_to_scarb_toml: &Option<Utf8PathBuf>,
     config: &CastConfig,
 ) -> Result<()> {
-    let manifest_path = path_to_scarb_toml.clone().unwrap_or_else(|| {
-        get_scarb_manifest().expect("Failed to obtain manifest path from scarb")
-    });
-    let metadata = scarb_metadata::MetadataCommand::new()
-        .inherit_stderr()
-        .manifest_path(&manifest_path)
-        .no_deps()
-        .exec()
-        .context(
-            "Failed to read Scarb.toml manifest file, not found in current nor parent directories",
-        )
-        .unwrap();
+    let manifest_path = match path_to_scarb_toml.clone() {
+        Some(path) => path,
+        None => get_scarb_manifest().context("Failed to obtain manifest path from scarb")?,
+    };
+    let metadata = get_scarb_metadata(&manifest_path)?;
 
     if let Ok(tool_sncast) = get_package_tool_sncast(&metadata) {
         let property = tool_sncast
@@ -197,16 +197,16 @@ pub fn add_created_profile_to_configuration(
         let mut config = toml::value::Table::new();
         config.insert("tool".to_string(), Value::Table(tool));
 
-        toml::to_string(&Value::Table(config)).unwrap()
+        toml::to_string(&Value::Table(config)).context("Couldn't convert toml to string")?
     };
 
     let mut scarb_toml = OpenOptions::new()
         .append(true)
         .open(manifest_path)
-        .expect("Couldn't open Scarb.toml");
+        .context("Couldn't open Scarb.toml")?;
     scarb_toml
         .write_all(format!("\n{toml_string}").as_bytes())
-        .expect("Couldn't write to the Scarb.toml");
+        .context("Couldn't write to the Scarb.toml")?;
 
     Ok(())
 }

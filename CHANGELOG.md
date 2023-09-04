@@ -4,26 +4,33 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [Unreleased]
+
+# [Unreleased]
 
 ### Forge
 
 #### Added
 
 - support for `keccak_syscall` syscall. It can be used directly in cairo tests
+- `l1_handler_execute` cheatcode
+- support for `roll`ing/`warp`ing/`prank`ing the constructor logic (precalculate address, prank, assert pranked state in constructor)
+- `spy_events` cheatcode
+- support for printing in contracts
+- `spoof` cheatcode
 
 ### Cast
 
 #### Added
 
-- Support for custom networks
-	- accounts created on custom networks are saved in `accounts-file` under network's chain_id
+- Support for custom networks - accounts created on custom networks are saved in `accounts-file` under network's
+  chain_id
 - `accounts-file` field in Scarb.toml profile
+- Include the class hash of an account contract in the `accounts-file`
 
 #### Removed
 
-- `--network` option together with the `network` field in Scarb.toml profile
-  - previously used as a validation factor; now networks are identified by their chain_id
+- `--network` option together with the `network` field in Scarb.toml profile — previously used as a validation factor;
+  now networks are identified by their chain_id
 
 ## [0.4.0] - 2023-08-17
 
@@ -39,7 +46,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `get_class_hash` cheatcode
 - `mock_call` cheatcode
 - `precalculate_address` cheatcode
-
 
 #### Changed
 
@@ -77,7 +83,7 @@ snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry", tag = "v
 
 #### Added
 
-- Added `--class-hash` flag to account create/deploy, allowing for custom openzeppelin account contract class hash 
+- Added `--class-hash` flag to account create/deploy, allowing for custom openzeppelin account contract class hash
 
 ## [0.3.0] - 2023-08-02
 

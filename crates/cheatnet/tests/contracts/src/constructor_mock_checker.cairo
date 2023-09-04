@@ -2,33 +2,33 @@ use starknet::ContractAddress;
 
 #[starknet::interface]
 trait IConstructorMockChecker<TContractState> {
-    fn get_stored_thing(ref self: TContractState) -> felt252;
-    fn get_constant_thing(ref self: TContractState) -> felt252;
+    fn get_constructor_balance(ref self: TContractState) -> felt252;
 }
 
 #[starknet::contract]
 mod ConstructorMockChecker {
-    use super::IConstructorMockChecker;
+    use starknet::ContractAddress;
+
+    #[starknet::interface]
+     trait IHelloStarknet<TContractState> {
+        fn get_balance(self: @TContractState) -> felt252;
+     }
 
     #[storage]
     struct Storage {
-        stored_thing: felt252,
+        constructor_balance: felt252
     }
 
     #[constructor]
-    fn constructor(ref self: ContractState) {
-        let const_thing = self.get_constant_thing();
-        self.stored_thing.write(const_thing);
+    fn constructor(ref self: ContractState, balance_contract_address: ContractAddress) {
+        let hello_starknet = IHelloStarknetDispatcher { contract_address: balance_contract_address };
+        self.constructor_balance.write(hello_starknet.get_balance());
     }
 
     #[external(v0)]
     impl IConstructorMockCheckerImpl of super::IConstructorMockChecker<ContractState> {
-        fn get_constant_thing(ref self: ContractState) -> felt252 {
-            13
-        }
-
-        fn get_stored_thing(ref self: ContractState) -> felt252 {
-            self.stored_thing.read()
+        fn get_constructor_balance(ref self: ContractState) -> felt252 {
+            self.constructor_balance.read()
         }
     }
 }

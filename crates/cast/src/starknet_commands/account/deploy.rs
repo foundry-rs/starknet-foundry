@@ -1,12 +1,13 @@
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use cast::helpers::constants::OZ_CLASS_HASH;
 use clap::Args;
 use starknet::accounts::AccountFactoryError;
 use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
-use starknet::core::types::FieldElement;
+use starknet::core::types::{FieldElement, StarknetError};
 use starknet::providers::jsonrpc::HttpTransport;
-use starknet::providers::{JsonRpcClient, Provider};
+use starknet::providers::JsonRpcClient;
+use starknet::providers::ProviderError::StarknetError as ProviderStarknetError;
 use starknet::signers::{LocalWallet, SigningKey};
 
 use cast::{chain_id_to_network_name, handle_rpc_error, handle_wait_for_tx, parse_number};
@@ -40,7 +41,7 @@ pub async fn deploy(
 ) -> Result<InvokeResponse> {
     let network_name = chain_id_to_network_name(chain_id);
 
-    let contents = std::fs::read_to_string(path.clone()).expect("Couldn't read accounts file");
+    let contents = std::fs::read_to_string(path.clone()).context("Couldn't read accounts file")?;
     let mut items: serde_json::Value = serde_json::from_str(&contents)
         .map_err(|_| anyhow!("Failed to parse accounts file at {path}"))?;
 
@@ -50,28 +51,34 @@ pub async fn deploy(
     if items[&network_name][&name].is_null() {
         bail!("Account with name {name} does not exist")
     }
+    let account = &items[&network_name][&name];
 
     let private_key = SigningKey::from_secret_scalar(
         parse_number(
-            items
-                .get(&network_name)
-                .and_then(|network| network.get(&name))
-                .and_then(|name| name.get("private_key"))
+            account
+                .get("private_key")
                 .and_then(serde_json::Value::as_str)
                 .ok_or_else(|| anyhow!("Couldn't get private key from accounts file"))?,
         )
-        .expect("Couldn't parse private key"),
+        .context("Couldn't parse private key")?,
     );
 
-    let oz_class_hash: &str = if let Some(value) = &class_hash {
-        value
-    } else {
-        OZ_CLASS_HASH
+    let oz_class_hash = {
+        if let Some(class_hash_) = &class_hash {
+            class_hash_.as_str()
+        } else if let Some(class_hash_) = account
+            .get("class_hash")
+            .and_then(serde_json::Value::as_str)
+        {
+            class_hash_
+        } else {
+            OZ_CLASS_HASH
+        }
     };
 
     let factory = OpenZeppelinAccountFactory::new(
-        parse_number(oz_class_hash).expect("Couldn't parse OpenZeppelin's account class hash"),
-        provider.chain_id().await.expect("Couldn't get chain id"),
+        parse_number(oz_class_hash).context("Couldn't parse account class hash")?,
+        chain_id,
         LocalWallet::from_signing_key(private_key),
         provider,
     )
@@ -79,19 +86,23 @@ pub async fn deploy(
 
     let deployment = factory.deploy(
         parse_number(
-            items
-                .get(&network_name)
-                .and_then(|network| network.get(&name))
-                .and_then(|name| name.get("salt"))
+            account
+                .get("salt")
                 .and_then(serde_json::Value::as_str)
                 .ok_or_else(|| anyhow!("Couldn't get salt from accounts file"))?,
         )
-        .expect("Couldn't parse salt"),
+        .context("Couldn't parse salt")?,
     );
     let result = deployment.max_fee(max_fee).send().await;
 
     match result {
-        Err(AccountFactoryError::Provider(error)) => handle_rpc_error(error),
+        Err(AccountFactoryError::Provider(error)) => match error {
+            ProviderStarknetError(StarknetError::ClassHashNotFound) => Err(anyhow!(
+                "Provided class hash {} does not exist",
+                oz_class_hash
+            )),
+            _ => handle_rpc_error(error),
+        },
         Err(_) => Err(anyhow!("Unknown RPC error")),
         Ok(result) => {
             let return_value = InvokeResponse {
@@ -110,7 +121,7 @@ pub async fn deploy(
 
             items[&network_name][&name]["deployed"] = serde_json::Value::from(true);
             std::fs::write(path, serde_json::to_string_pretty(&items).unwrap())
-                .expect("Couldn't write to accounts file");
+                .context("Couldn't write to accounts file")?;
 
             Ok(return_value)
         }

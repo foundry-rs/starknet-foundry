@@ -8,6 +8,7 @@ use state::{CheatcodeState, DictStateReader};
 pub mod cheatcodes;
 pub mod constants;
 pub mod conversions;
+pub mod execution;
 pub mod panic_data;
 pub mod rpc;
 pub mod state;

@@ -2,7 +2,7 @@ use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
 use camino::Utf8PathBuf;
 use indoc::{formatdoc, indoc};
 
-use crate::e2e::common::runner::{runner, setup_package};
+use crate::e2e::common::runner::{get_current_branch, runner, setup_package};
 use assert_fs::TempDir;
 use std::str::FromStr;
 
@@ -15,7 +15,10 @@ fn simple_package() {
         .current_dir(&temp)
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 11 test(s) and 5 test file(s)
+        .stdout_matches(indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+        Collected 11 test(s) and 5 test file(s)
         Running 1 test(s) from simple_package package
         [PASS] simple_package::test_fib
         Running 1 test(s) from tests/contract.cairo
@@ -49,10 +52,10 @@ fn simple_package_with_git_dependency() {
     let temp = TempDir::new().unwrap();
     temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
         .unwrap();
-
+    let branch = get_current_branch();
     let manifest_path = temp.child("Scarb.toml");
     manifest_path
-        .write_str(indoc!(
+        .write_str(&formatdoc!(
             r#"
             [package]
             name = "simple_package"
@@ -63,9 +66,10 @@ fn simple_package_with_git_dependency() {
             casm = true
 
             [dependencies]
-            starknet = "2.1.0"
-            snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git" }
-            "#,
+            starknet = "2.2.0"
+            snforge_std = {{ git = "https://github.com/foundry-rs/starknet-foundry.git", branch = "{}" }}
+            "#, branch.trim()
+
         ))
         .unwrap();
 
@@ -75,7 +79,11 @@ fn simple_package_with_git_dependency() {
         .current_dir(&temp)
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 11 test(s) and 5 test file(s)
+        .stdout_matches(indoc! {r#"
+        [..]Updating git repository[..]
+        [..]Compiling[..]
+        [..]Finished[..]
+        Collected 11 test(s) and 5 test file(s)
         Running 1 test(s) from simple_package package
         [PASS] simple_package::test_fib
         Running 1 test(s) from tests/contract.cairo
@@ -101,7 +109,7 @@ fn simple_package_with_git_dependency() {
         Running 1 test(s) from tests/without_prefix.cairo
         [PASS] without_prefix::five
         Tests: 9 passed, 2 failed, 0 skipped
-        "#});
+        "#}).stderr_matches("");
 }
 
 #[test]
@@ -135,7 +143,10 @@ fn with_filter() {
         .arg("two")
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 2 test(s) and 5 test file(s)
+        .stdout_matches(indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+        Collected 2 test(s) and 5 test file(s)
         Running 0 test(s) from simple_package package
         Running 0 test(s) from tests/contract.cairo
         Running 0 test(s) from tests/ext_function_test.cairo
@@ -158,7 +169,10 @@ fn with_exact_filter() {
         .arg("--exact")
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 1 test(s) and 5 test file(s)
+        .stdout_matches(indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+        Collected 1 test(s) and 5 test file(s)
         Running 0 test(s) from simple_package package
         Running 0 test(s) from tests/contract.cairo
         Running 0 test(s) from tests/ext_function_test.cairo
@@ -179,7 +193,10 @@ fn with_non_matching_filter() {
         .arg("qwerty")
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 0 test(s) and 5 test file(s)
+        .stdout_matches(indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+        Collected 0 test(s) and 5 test file(s)
         Running 0 test(s) from simple_package package
         Running 0 test(s) from tests/contract.cairo
         Running 0 test(s) from tests/ext_function_test.cairo
@@ -198,7 +215,10 @@ fn with_print() {
         .current_dir(&temp)
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 1 test(s) and 2 test file(s)
+        .stdout_matches(indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+        Collected 1 test(s) and 2 test file(s)
         Running 0 test(s) from print_test package
         Running 1 test(s) from tests/test_print.cairo
         original value: [123], converted to a string: [{]
@@ -235,7 +255,10 @@ fn with_panic_data_decoding() {
         .current_dir(&temp)
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 4 test(s) and 2 test file(s)
+        .stdout_matches(indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+        Collected 4 test(s) and 2 test file(s)
         Running 0 test(s) from panic_decoding package
         Running 4 test(s) from tests/test_panic_decoding.cairo
         [PASS] test_panic_decoding::test_simple
@@ -271,7 +294,7 @@ fn with_exit_first() {
             version = "0.1.0"
 
             [dependencies]
-            starknet = "2.1.0"
+            starknet = "2.2.0"
             snforge_std = {{ path = "{}" }}
 
             [[target.starknet-contract]]
@@ -296,7 +319,10 @@ fn with_exit_first() {
         .current_dir(&temp)
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 11 test(s) and 5 test file(s)
+        .stdout_matches(indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+        Collected 11 test(s) and 5 test file(s)
         Running 1 test(s) from simple_package package
         [PASS] simple_package::test_fib
         Running 1 test(s) from tests/contract.cairo
@@ -329,7 +355,10 @@ fn with_exit_first_flag() {
         .current_dir(&temp)
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 11 test(s) and 5 test file(s)
+        .stdout_matches(indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+        Collected 11 test(s) and 5 test file(s)
         Running 1 test(s) from simple_package package
         [PASS] simple_package::test_fib
         Running 1 test(s) from tests/contract.cairo
@@ -365,7 +394,7 @@ fn exit_first_flag_takes_precedence() {
             version = "0.1.0"
 
             [dependencies]
-            starknet = "2.1.0"
+            starknet = "2.2.0"
             snforge_std = { path = "../.." }
 
             [[target.starknet-contract]]
@@ -384,7 +413,10 @@ fn exit_first_flag_takes_precedence() {
         .arg("--exit-first")
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 11 test(s) and 5 test file(s)
+        .stdout_matches(indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+        Collected 11 test(s) and 5 test file(s)
         Running 1 test(s) from simple_package package
         [PASS] simple_package::test_fib
         Running 1 test(s) from tests/contract.cairo
@@ -417,7 +449,10 @@ fn using_corelib_names() {
         .current_dir(&temp)
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 4 test(s) and 5 test file(s)
+        .stdout_matches(indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+        Collected 4 test(s) and 5 test file(s)
         Running 0 test(s) from using_corelib_names package
         Running 1 test(s) from tests/bits.cairo
         [PASS] bits::test_names
@@ -444,6 +479,8 @@ fn should_panic() {
         .assert()
         .success()
         .stdout_matches(indoc! { r#"
+        [..]Compiling[..]
+        [..]Finished[..]
         Collected 6 test(s) and 2 test file(s)
         Running 0 test(s) from should_panic_test package
         Running 6 test(s) from tests/should_panic_test.cairo
@@ -468,5 +505,34 @@ fn should_panic() {
 
         [FAIL] should_panic_test::expected_panic_but_didnt
         Tests: 3 passed, 3 failed, 0 skipped
+        "#});
+}
+
+#[test]
+fn printing_in_contracts() {
+    let temp = setup_package("contract_printing");
+    let snapbox = runner();
+
+    snapbox
+        .current_dir(&temp)
+        .assert()
+        .success()
+        .stdout_matches(indoc! {r#"
+        [..]Compiling[..]
+        warn: libfunc `cheatcode` is not allowed in the libfuncs list `Default libfunc list`
+         --> contract: HelloStarknet
+        help: try compiling with the `experimental` list
+         --> Scarb.toml
+            [[target.starknet-contract]]
+            allowed-libfuncs-list.name = "experimental"
+        
+        [..]Finished[..]
+        Collected 2 test(s) and 2 test file(s)
+        Running 0 test(s) from contract_printing package
+        Running 2 test(s) from tests/test_contract.cairo
+        original value: [22405534230753963835153736737], converted to a string: [Hello world!]
+        [PASS] test_contract::test_increase_balance
+        [PASS] test_contract::test_cannot_increase_balance_with_zero_value
+        Tests: 2 passed, 0 failed, 0 skipped
         "#});
 }

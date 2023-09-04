@@ -1,5 +1,7 @@
 use cairo_felt::Felt252;
 use camino::Utf8PathBuf;
+use cheatnet::conversions::felt_selector_from_name;
+use cheatnet::rpc::call_contract;
 use cheatnet::{
     cheatcodes::ContractArtifacts, conversions::felt_from_short_string, rpc::CallContractOutput,
     CheatnetState,
@@ -19,6 +21,7 @@ pub fn recover_data(output: CallContractOutput) -> Vec<Felt252> {
     match output {
         CallContractOutput::Success { ret_data } => ret_data,
         CallContractOutput::Panic { panic_data } => panic_data,
+        CallContractOutput::Error { msg } => panic!("Call failed with message: {msg}"),
     }
 }
 
@@ -43,4 +46,15 @@ pub fn deploy_contract(
 
     let class_hash = state.declare(&contract, &contracts).unwrap();
     state.deploy(&class_hash, calldata).unwrap()
+}
+
+pub fn call_contract_getter_by_name(
+    state: &mut CheatnetState,
+    contract_address: &ContractAddress,
+    fn_name: &str,
+) -> CallContractOutput {
+    let selector = felt_selector_from_name(fn_name);
+    let result = call_contract(contract_address, &selector, vec![].as_slice(), state).unwrap();
+
+    result
 }

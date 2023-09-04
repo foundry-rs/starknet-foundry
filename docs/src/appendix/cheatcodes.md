@@ -9,6 +9,8 @@
 * [`get_class_hash`](cheatcodes/get_class_hash.md)
 * [`start_mock_call`](cheatcodes/start_mock_call.md)
 * [`stop_mock_call`](cheatcodes/stop_mock_call.md)
+* [`l1_handler_execute`](cheatcodes/l1_handler_execute.md)
+* [`spy_events`](cheatcodes/spy_events.md)
 
 > ℹ️ **Info**
 > To use cheatcodes you need to add `snforge_std` package as a dependency in
@@ -16,5 +18,5 @@
 > using appropriate release tag.
 >```toml
 > [dependencies]
-> snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.4.0" }
+> snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.5.0" }
 > ```

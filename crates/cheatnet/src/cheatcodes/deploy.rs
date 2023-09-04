@@ -1,46 +1,45 @@
-use crate::constants::{
-    build_block_context, build_invoke_transaction, TEST_ACCOUNT_CONTRACT_ADDRESS,
-};
-use crate::state::DictStateReader;
+use crate::constants::TEST_ACCOUNT_CONTRACT_ADDRESS;
 use crate::{cheatcodes::EnhancedHintError, CheatnetState};
-use anyhow::{Context, Result};
+use anyhow::Result;
 use blockifier::abi::abi_utils::selector_from_name;
-use blockifier::execution::execution_utils::felt_to_stark_felt;
+use blockifier::execution::execution_utils::{felt_to_stark_felt, stark_felt_to_felt};
 
-use blockifier::execution::entry_point::CallInfo;
-use blockifier::state::cached_state::CachedState;
-use blockifier::state::state_api::StateReader;
-use blockifier::transaction::account_transaction::AccountTransaction;
-use blockifier::transaction::transactions::{ExecutableTransaction, InvokeTransaction};
+use blockifier::state::state_api::{State, StateReader};
 use cairo_felt::Felt252;
+use cairo_vm::vm::errors::hint_errors::HintError::CustomHint;
+use starknet::core::utils::get_selector_from_name;
 
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector, PatriciaKey};
 use starknet_api::hash::{StarkFelt, StarkHash};
-use starknet_api::transaction::{
-    Calldata, ContractAddressSalt, InvokeTransactionV1, TransactionHash,
-};
+use starknet_api::transaction::ContractAddressSalt;
 use starknet_api::{patricia_key, stark_felt};
 
 use super::CheatcodeError;
-use crate::conversions::felt_from_short_string;
-use crate::panic_data::try_extract_panic_data;
+use crate::conversions::{felt_from_short_string, field_element_to_felt252};
+use crate::rpc::{call_contract, CallContractOutput};
 
 impl CheatnetState {
-    pub fn deploy(
+    pub fn deploy_at(
         &mut self,
         class_hash: &ClassHash,
         calldata: &[Felt252],
+        salt: ContractAddressSalt,
+        contract_address: ContractAddress,
     ) -> Result<ContractAddress, CheatcodeError> {
         // Deploy a contract using syscall deploy.
         let account_address = ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS));
-        let block_context = build_block_context();
         let entry_point_selector = selector_from_name("deploy_contract");
-        let salt = self.get_salt();
-        self.increment_deploy_salt_base();
 
-        let blockifier_state: &mut CachedState<DictStateReader> = &mut self.blockifier_state;
+        if let Ok(class_hash) = self.blockifier_state.get_class_hash_at(contract_address) {
+            if class_hash != ClassHash::default() {
+                return Err(CheatcodeError::Unrecoverable(EnhancedHintError::from(
+                    CustomHint(Box::from("Address is already taken")),
+                )));
+            }
+        }
 
-        let contract_class = blockifier_state
+        let contract_class = self
+            .blockifier_state
             .get_compiled_contract_class(class_hash)
             .map_err::<EnhancedHintError, _>(From::from)?;
         if contract_class.constructor_selector().is_none() && !calldata.is_empty() {
@@ -57,41 +56,44 @@ impl CheatnetState {
             &salt,
         );
 
-        let nonce = blockifier_state
-            .get_nonce_at(account_address)
-            .context("Failed to get nonce")
-            .map_err::<EnhancedHintError, _>(From::from)?;
-        let tx = build_invoke_transaction(execute_calldata, account_address);
-        let tx = InvokeTransactionV1 { nonce, ..tx };
-        let account_tx = AccountTransaction::Invoke(InvokeTransaction {
-            tx: starknet_api::transaction::InvokeTransaction::V1(tx),
-            tx_hash: TransactionHash::default(), // TODO(#358): Check if this is legit
-        });
+        let call_result = call_contract(
+            &account_address,
+            &field_element_to_felt252(&get_selector_from_name("__execute__").unwrap()),
+            execute_calldata.as_slice(),
+            self,
+        )
+        .unwrap_or_else(|err| panic!("Deploy txn failed: {err}"));
 
-        let tx_info = account_tx
-            .execute(blockifier_state, &block_context, true, true)
-            .unwrap_or_else(|e| panic!("Unparseable transaction error: {e:?}"));
-
-        if let Some(CallInfo { execution, .. }) = tx_info.execute_call_info {
-            let contract_address = execution
-                .retdata
-                .0
-                .get(0)
-                .expect("Failed to get contract_address from return_data");
-
-            let contract_address = ContractAddress::try_from(*contract_address)
-                .expect("Failed to cast contract address into the right struct");
-
-            return Ok(contract_address);
+        match call_result {
+            CallContractOutput::Success { .. } => self
+                .blockifier_state
+                .set_class_hash_at(contract_address, *class_hash)
+                .map(|_| contract_address)
+                .map_err(|msg| {
+                    CheatcodeError::Unrecoverable(EnhancedHintError::from(CustomHint(Box::from(
+                        msg.to_string(),
+                    ))))
+                }),
+            CallContractOutput::Panic { panic_data } => {
+                Err(CheatcodeError::Recoverable(panic_data))
+            }
+            CallContractOutput::Error { msg } => Err(CheatcodeError::Unrecoverable(
+                EnhancedHintError::from(CustomHint(Box::from(msg))),
+            )),
         }
+    }
 
-        let revert_error = tx_info
-            .revert_error
-            .expect("Unparseable tx info, {tx_info:?}");
-        let extracted_panic_data = try_extract_panic_data(&revert_error)
-            .expect("Unparseable error message, {revert_error}");
+    pub fn deploy(
+        &mut self,
+        class_hash: &ClassHash,
+        calldata: &[Felt252],
+    ) -> Result<ContractAddress, CheatcodeError> {
+        let salt = self.get_salt();
+        let contract_address = self.precalculate_address(class_hash, calldata);
 
-        Err(CheatcodeError::Recoverable(extracted_panic_data))
+        self.increment_deploy_salt_base();
+
+        self.deploy_at(class_hash, calldata, salt, contract_address)
     }
 }
 
@@ -101,7 +103,7 @@ fn create_execute_calldata(
     account_address: &ContractAddress,
     entry_point_selector: &EntryPointSelector,
     salt: &ContractAddressSalt,
-) -> Calldata {
+) -> Vec<Felt252> {
     let calldata_len = u128::try_from(calldata.len()).unwrap();
     let mut execute_calldata = vec![
         *account_address.0.key(),      // Contract address.
@@ -113,13 +115,15 @@ fn create_execute_calldata(
     ];
     let mut calldata: Vec<StarkFelt> = calldata.iter().map(felt_to_stark_felt).collect();
     execute_calldata.append(&mut calldata);
-    Calldata(execute_calldata.into())
+    return execute_calldata
+        .iter()
+        .map(|sf| stark_felt_to_felt(*sf))
+        .collect();
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
-    use std::sync::Arc;
 
     #[test]
     fn execute_calldata() {
@@ -132,16 +136,16 @@ mod test {
         );
         assert_eq!(
             calldata,
-            Calldata(Arc::new(vec![
-                StarkFelt::from(111_u32),
-                StarkFelt::from(222_u32),
-                StarkFelt::from(5_u32),
-                StarkFelt::from(123_u32),
-                StarkFelt::from(333_u32),
-                StarkFelt::from(2_u32),
-                StarkFelt::from(100_u32),
-                StarkFelt::from(200_u32),
-            ]))
+            vec![
+                Felt252::from(111_u32),
+                Felt252::from(222_u32),
+                Felt252::from(5_u32),
+                Felt252::from(123_u32),
+                Felt252::from(333_u32),
+                Felt252::from(2_u32),
+                Felt252::from(100_u32),
+                Felt252::from(200_u32),
+            ]
         );
     }
 
@@ -156,14 +160,14 @@ mod test {
         );
         assert_eq!(
             calldata,
-            Calldata(Arc::new(vec![
-                StarkFelt::from(111_u32),
-                StarkFelt::from(222_u32),
-                StarkFelt::from(3_u32),
-                StarkFelt::from(123_u32),
-                StarkFelt::from(333_u32),
-                StarkFelt::from(0_u32),
-            ]))
+            vec![
+                Felt252::from(111_u32),
+                Felt252::from(222_u32),
+                Felt252::from(3_u32),
+                Felt252::from(123_u32),
+                Felt252::from(333_u32),
+                Felt252::from(0_u32),
+            ]
         );
     }
 }

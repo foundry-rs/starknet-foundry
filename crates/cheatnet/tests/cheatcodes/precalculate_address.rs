@@ -10,11 +10,11 @@ fn precalculate_address_simple() {
     let contract_name = felt_from_short_string("HelloStarknet");
     let class_hash = state.declare(&contract_name, &contracts).unwrap();
 
-    let precalculated1 = state.precalculate_address(&class_hash, vec![].as_slice());
-    let actual1 = state.deploy(&class_hash, vec![].as_slice()).unwrap();
+    let precalculated1 = state.precalculate_address(&class_hash, &[]);
+    let actual1 = state.deploy(&class_hash, &[]).unwrap();
 
-    let precalculated2 = state.precalculate_address(&class_hash, vec![].as_slice());
-    let actual2 = state.deploy(&class_hash, vec![].as_slice()).unwrap();
+    let precalculated2 = state.precalculate_address(&class_hash, &[]);
+    let actual2 = state.deploy(&class_hash, &[]).unwrap();
 
     assert_eq!(precalculated1, actual1);
     assert_eq!(precalculated2, actual2);

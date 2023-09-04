@@ -203,7 +203,7 @@ pub fn dependencies_for_package(
     let dependencies = compilation_unit
         .components
         .iter()
-        .filter(|du| !du.source_path.to_string().contains("core/src"))
+        .filter(|du| &du.name != "core")
         .map(|cu| LinkedLibrary {
             name: cu.name.clone(),
             path: cu.source_root().to_owned().into_std_path_buf(),
@@ -251,7 +251,7 @@ mod tests {
                 casm = true
 
                 [dependencies]
-                starknet = "2.1.0"
+                starknet = "2.2.0"
                 snforge_std = {{ path = "{}" }}
                 "#,
                 package_name,
@@ -305,7 +305,7 @@ mod tests {
                 version = "0.1.0"
 
                 [dependencies]
-                starknet = "2.1.0"
+                starknet = "2.2.0"
                 snforge_std = {{ path = "{}" }}
 
                 [[target.starknet-contract]]
