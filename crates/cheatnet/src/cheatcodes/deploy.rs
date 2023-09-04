@@ -23,9 +23,11 @@ impl CheatnetState {
         &mut self,
         class_hash: &ClassHash,
         calldata: &[Felt252],
-        salt: ContractAddressSalt,
         contract_address: ContractAddress,
     ) -> Result<ContractAddress, CheatcodeError> {
+        let salt = self.get_salt();
+        self.increment_deploy_salt_base();
+
         // Deploy a contract using syscall deploy.
         let account_address = ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS));
         let entry_point_selector = selector_from_name("deploy_contract");
@@ -88,12 +90,9 @@ impl CheatnetState {
         class_hash: &ClassHash,
         calldata: &[Felt252],
     ) -> Result<ContractAddress, CheatcodeError> {
-        let salt = self.get_salt();
         let contract_address = self.precalculate_address(class_hash, calldata);
 
-        self.increment_deploy_salt_base();
-
-        self.deploy_at(class_hash, calldata, salt, contract_address)
+        self.deploy_at(class_hash, calldata, contract_address)
     }
 }
 
