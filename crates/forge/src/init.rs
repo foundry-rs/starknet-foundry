@@ -37,18 +37,6 @@ fn replace_project_name(contents: &[u8], project_name: &str) -> Vec<u8> {
     contents.into_bytes()
 }
 
-fn check_path(path: &Path) -> Result<()> {
-    // warn if the path contains characters that will break `env::join_paths`
-    if std::env::join_paths(std::slice::from_ref(&OsStr::new(path))).is_err() {
-        let path = path.to_string_lossy();
-        bail!(format!(
-            "the path `{path}` contains invalid PATH characters (usually `:`, `;`, or `\"`)\n\
-            It is recommended to use a different name to avoid problems."
-        ));
-    }
-    Ok(())
-}
-
 /// Inspired by [scarb](https://github.com/software-mansion/scarb/blob/main/scarb/src/core/package/name.rs#L57)
 /// package name validation
 fn check_name(name: &str) -> Result<()> {
@@ -106,7 +94,6 @@ pub fn init(name: Option<String>) -> Result<()> {
     let project_name = name.unwrap_or("starknet_forge_template".to_string());
     check_name(&project_name)?;
     let project_path = std::env::current_dir().unwrap().join(&project_name);
-    check_path(project_path.as_path())?;
 
     if project_path.exists() {
         bail!(

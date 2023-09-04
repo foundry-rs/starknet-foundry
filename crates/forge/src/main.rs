@@ -28,7 +28,7 @@ struct Args {
     #[arg(short, long)]
     exact: bool,
 
-    #[clap(short = 'i', long)]
+    #[clap(short, long)]
     init: bool,
 
     /// Stop test execution after first failed test
