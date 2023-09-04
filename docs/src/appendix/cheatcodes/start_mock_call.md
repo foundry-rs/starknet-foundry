@@ -2,9 +2,11 @@
 
 > `fn start_mock_call<T, impl TSerde: serde::Serde<T>, impl TDestruct: Destruct<T>>(contract_address: ContractAddress, function_name: felt252, ret_data: T)`
 
-Mocks contract call to a `function_name` of a contract at the given address. A call to function `function_name` will return data provided in `ret_data` argument. 
+Mocks contract call to a `function_name` of a contract at the given address. A call to function `function_name` will
+return data provided in `ret_data` argument.
 
-If there is a contract deployed at the given address, mocked function won't be executed. Address with no contract can be mocked as well.
+If there is a contract deployed at the given address, mocked function won't be executed. Address with no contract can be
+mocked as well.
 Mock can be canceled with [`stop_mock_call`](./stop_mock_call.md).
 
 - `contract_address` - target contract address
@@ -14,13 +16,13 @@ Mock can be canceled with [`stop_mock_call`](./stop_mock_call.md).
 > 📝 **Note**
 > Mocks do not have any effect on function calls withing the contract itself.
 > E.g. for a function withing a contract defined like this:
-> 
+>
 > ```rust
 > fn function_a(self: @ContractState) {
 >   function_b()
 > } 
 > ```
-> 
+>
 > Mocking `function_b` would have no effect.
 
 For contract implementation:
@@ -67,7 +69,8 @@ fn test_mock_call() {
 
 It is also possible to simulate contract having a specific method by mocking a non-existent selector.
 
-Let's assume we have defined a interface to use a dispatcher, but this interface contains a function that is not actually defined in actually deployed contract:
+Let's assume we have defined a interface to use a dispatcher, but this interface contains a function that is not
+actually defined in actually deployed contract:
 
 ```rust
 // ...
@@ -112,7 +115,7 @@ We can, however, mock this function, even though it is not implemented. This tes
 #[test]
 fn test_mock_not_implemented() {
     // ...
-    
+
     let mock_ret_data = 42;
     start_mock_call(contract_address, 'function_not_actually_implemented', mock_ret_data);
 
