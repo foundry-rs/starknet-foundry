@@ -8,7 +8,7 @@ use starknet::testing::cheatcode;
 
 #[derive(Drop, Copy)]
 struct File {
-    path: felt252  // relative path
+    path: felt252 // relative path
 }
 
 trait FileTrait {
