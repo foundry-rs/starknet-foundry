@@ -1,3 +1,5 @@
+I love starknet-foundry!!!!!!!!!!!!!!!!!!!!
+
 <img src="./docs/src/images/logo.png" alt="logo" width="120" align="right" />
 
 ## Starknet Foundry
