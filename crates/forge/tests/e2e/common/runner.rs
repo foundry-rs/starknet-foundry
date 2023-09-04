@@ -4,6 +4,7 @@ use camino::Utf8PathBuf;
 use indoc::formatdoc;
 use snapbox::cmd::{cargo_bin, Command as SnapboxCommand};
 use std::env;
+use std::env::VarError;
 use std::process::Command;
 use std::str::FromStr;
 
@@ -52,17 +53,22 @@ pub(crate) fn setup_package(package_name: &str) -> TempDir {
 }
 
 pub(crate) fn get_remote_url() -> String {
-    let output = Command::new("git")
-        .args(["remote", "get-url", "origin"])
-        .output()
-        .unwrap();
+    let name: &str = "REPO_NAME";
+    if let Ok(v) = env::var(name) {
+        v
+    } else {
+        let output = Command::new("git")
+            .args(["remote", "get-url", "origin"])
+            .output()
+            .unwrap();
 
-    String::from_utf8(output.stdout)
-        .unwrap()
-        .trim()
-        .strip_prefix("git@github.com:")
-        .unwrap()
-        .to_string()
+        String::from_utf8(output.stdout)
+            .unwrap()
+            .trim()
+            .strip_prefix("git@github.com:")
+            .unwrap()
+            .to_string()
+    }
 }
 
 /// In the context of GITHUB actions, get the source branch that triggered the workflow run.
