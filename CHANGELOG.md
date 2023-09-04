@@ -11,6 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
+- `deploy_at` function
+
+### Cast
+
+## [0.5.0] - 2023-08-30
+
+### Forge
+
+#### Added
+
 - support for `keccak_syscall` syscall. It can be used directly in cairo tests
 - `l1_handler_execute` cheatcode
 - support for `roll`ing/`warp`ing/`prank`ing the constructor logic (precalculate address, prank, assert pranked state in constructor)
