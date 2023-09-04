@@ -49,8 +49,8 @@ fn check_path(path: &Path) -> Result<()> {
     Ok(())
 }
 
-/// Inspired by scarb package name validation
-/// https://github.com/software-mansion/scarb/blob/main/scarb/src/core/package/name.rs#L57
+/// Inspired by [scarb](https://github.com/software-mansion/scarb/blob/main/scarb/src/core/package/name.rs#L57)
+/// package name validation
 fn check_name(name: &str) -> Result<()> {
     if name.is_empty() {
         bail!("empty string cannot be used as package name");
