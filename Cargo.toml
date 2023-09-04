@@ -39,7 +39,7 @@ cairo-lang-sierra-generator = "2.2.0"
 cairo-lang-syntax = "2.2.0"
 cairo-vm = "0.8.2"
 cairo-felt = "0.8.2"
-anyhow = "1.0.66"
+anyhow = "1.0.75"
 assert_fs = "1.0.13"
 camino = { version = "1.1.4", features = ["serde1"] }
 include_dir = "0.7.3"
