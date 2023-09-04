@@ -12,18 +12,14 @@ pub(super) fn read_txt(file_path: &Felt252) -> Result<Vec<Felt252>, EnhancedHint
     let content = std::fs::read_to_string(file_path_str.clone())?;
     let split_content: Vec<&str> = content.trim().split_ascii_whitespace().collect();
 
-    let felts_in_results: Vec<Result<Felt252, ()>> = split_content
+    split_content
         .iter()
-        .map(|&string| string_into_felt(string))
-        .collect();
-
-    felts_in_results
-        .iter()
-        .cloned()
-        .collect::<Result<Vec<Felt252>, ()>>()
-        .map_err(|_| EnhancedHintError::FileParsing {
-            path: file_path_str,
+        .map(|s| {
+            string_into_felt(s).map_err(|_| EnhancedHintError::FileParsing {
+                path: file_path_str.clone(),
+            })
         })
+        .collect()
 }
 
 pub(super) fn read_json(file_path: &Felt252) -> Result<Vec<Felt252>, EnhancedHintError> {
@@ -33,18 +29,14 @@ pub(super) fn read_json(file_path: &Felt252) -> Result<Vec<Felt252>, EnhancedHin
     let split_content = json_values_sorted_by_keys(&content)
         .map_err(|e| anyhow!(format!("{}, in file {}", e.to_string(), file_path_str)))?;
 
-    let felts_in_results: Vec<Result<Felt252, ()>> = split_content
+    split_content
         .iter()
-        .map(|string| string_into_felt(string))
-        .collect();
-
-    felts_in_results
-        .iter()
-        .cloned()
-        .collect::<Result<Vec<Felt252>, ()>>()
-        .map_err(|_| EnhancedHintError::FileParsing {
-            path: file_path_str,
+        .map(|s| {
+            string_into_felt(s).map_err(|_| EnhancedHintError::FileParsing {
+                path: file_path_str.clone(),
+            })
         })
+        .collect()
 }
 
 fn json_values_sorted_by_keys(content: &str) -> Result<Vec<String>, EnhancedHintError> {
