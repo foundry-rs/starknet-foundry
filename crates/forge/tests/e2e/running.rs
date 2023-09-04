@@ -2,7 +2,7 @@ use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
 use camino::Utf8PathBuf;
 use indoc::{formatdoc, indoc};
 
-use crate::e2e::common::runner::{gen_current_branch, runner, setup_package};
+use crate::e2e::common::runner::{get_current_branch, runner, setup_package};
 use assert_fs::TempDir;
 use std::str::FromStr;
 
@@ -52,7 +52,7 @@ fn simple_package_with_git_dependency() {
     let temp = TempDir::new().unwrap();
     temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
         .unwrap();
-    let branch = gen_current_branch();
+    let branch = get_current_branch();
     let manifest_path = temp.child("Scarb.toml");
     manifest_path
         .write_str(&formatdoc!(
@@ -505,5 +505,34 @@ fn should_panic() {
 
         [FAIL] should_panic_test::expected_panic_but_didnt
         Tests: 3 passed, 3 failed, 0 skipped
+        "#});
+}
+
+#[test]
+fn printing_in_contracts() {
+    let temp = setup_package("contract_printing");
+    let snapbox = runner();
+
+    snapbox
+        .current_dir(&temp)
+        .assert()
+        .success()
+        .stdout_matches(indoc! {r#"
+        [..]Compiling[..]
+        warn: libfunc `cheatcode` is not allowed in the libfuncs list `Default libfunc list`
+         --> contract: HelloStarknet
+        help: try compiling with the `experimental` list
+         --> Scarb.toml
+            [[target.starknet-contract]]
+            allowed-libfuncs-list.name = "experimental"
+        
+        [..]Finished[..]
+        Collected 2 test(s) and 2 test file(s)
+        Running 0 test(s) from contract_printing package
+        Running 2 test(s) from tests/test_contract.cairo
+        original value: [22405534230753963835153736737], converted to a string: [Hello world!]
+        [PASS] test_contract::test_increase_balance
+        [PASS] test_contract::test_cannot_increase_balance_with_zero_value
+        Tests: 2 passed, 0 failed, 0 skipped
         "#});
 }

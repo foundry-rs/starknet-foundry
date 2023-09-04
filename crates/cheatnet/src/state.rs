@@ -1,3 +1,4 @@
+use crate::cheatcodes;
 use crate::cheatcodes::spy_events::{Event, SpyTarget};
 use blockifier::{
     execution::contract_class::ContractClass,
@@ -8,6 +9,7 @@ use blockifier::{
     },
 };
 use cairo_felt::Felt252;
+use cheatcodes::spoof::TxInfoMock;
 use starknet_api::core::EntryPointSelector;
 use starknet_api::{
     core::{ClassHash, CompiledClassHash, ContractAddress, Nonce},
@@ -89,6 +91,7 @@ pub struct CheatcodeState {
     pub pranked_contracts: HashMap<ContractAddress, ContractAddress>,
     pub warped_contracts: HashMap<ContractAddress, Felt252>,
     pub mocked_functions: HashMap<ContractAddress, HashMap<EntryPointSelector, Vec<StarkFelt>>>,
+    pub spoofed_contracts: HashMap<ContractAddress, TxInfoMock>,
     pub spies: Vec<SpyTarget>,
     pub detected_events: Vec<Event>,
 }
@@ -101,9 +104,38 @@ impl CheatcodeState {
             pranked_contracts: HashMap::new(),
             warped_contracts: HashMap::new(),
             mocked_functions: HashMap::new(),
+            spoofed_contracts: HashMap::new(),
             spies: vec![],
             detected_events: vec![],
         }
+    }
+
+    #[must_use]
+    pub fn address_is_pranked(&self, contract_address: &ContractAddress) -> bool {
+        self.pranked_contracts.contains_key(contract_address)
+    }
+
+    #[must_use]
+    pub fn address_is_warped(&self, contract_address: &ContractAddress) -> bool {
+        self.warped_contracts.contains_key(contract_address)
+    }
+
+    #[must_use]
+    pub fn address_is_rolled(&self, contract_address: &ContractAddress) -> bool {
+        self.rolled_contracts.contains_key(contract_address)
+    }
+
+    #[must_use]
+    pub fn address_is_spoofed(&self, contract_address: &ContractAddress) -> bool {
+        self.spoofed_contracts.contains_key(contract_address)
+    }
+
+    #[must_use]
+    pub fn address_is_cheated(&self, contract_address: &ContractAddress) -> bool {
+        self.address_is_rolled(contract_address)
+            || self.address_is_pranked(contract_address)
+            || self.address_is_warped(contract_address)
+            || self.address_is_spoofed(contract_address)
     }
 }
 

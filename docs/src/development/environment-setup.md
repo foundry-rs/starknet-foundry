@@ -24,14 +24,15 @@ It is not possible to run tests without these installed.
 
 ## Running Tests
 
-> ⚠️ Make sure you run `./scripts/prepare_for_tests.sh` after setting up the development environment, otherwise the
-> tests will fail.
+> ⚠️ Make sure you run `./scripts/prepare_for_tests.sh`
+> and then set [Scarb](https://docs.swmansion.com/scarb/) version 
+> [compatible](https://github.com/foundry-rs/starknet-foundry/releases) with both `snforge` and `sncast`
+> after setting up the development environment, otherwise the tests will fail.
 
 Tests can be run with:
 
 ```shell
-$ ./scripts/test_cast.sh
-$ ./scripts/test_forge.sh
+$ cargo test
 ```
 
 ## Formatting and Lints
@@ -39,7 +40,7 @@ $ ./scripts/test_forge.sh
 Starknet Foundry uses [rustfmt](https://github.com/rust-lang/rustfmt) for formatting. You can run the formatter with
 
 ```shell
-cargo fmt
+$ cargo fmt
 ```
 
 For linting, it uses [clippy](https://github.com/rust-lang/rust-clippy). You can run it with this command:
