@@ -9,7 +9,7 @@ fn deploy_at_correct_address() {
     let test = test_case!(
         indoc!(
             r#"
-        use snforge_std::{ declare, ContractClass, ContractClassTrait };
+        use snforge_std::{ declare, ContractClassTrait };
         use array::ArrayTrait;
         use starknet::ContractAddress;
         
