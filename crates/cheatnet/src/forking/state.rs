@@ -25,7 +25,10 @@ impl StateReader for ForkStateReader {
             .get(&contract_storage_key)
         {
             Some(value) => Ok(*value),
-            None => self.worker.get_storage_at(contract_address, key),
+            None => Ok(self
+                .worker
+                .get_storage_at(contract_address, key)
+                .unwrap_or_default()),
         }
     }
 
@@ -47,7 +50,10 @@ impl StateReader for ForkStateReader {
             .get(&contract_address)
         {
             Some(class_hash) => Ok(*class_hash),
-            None => self.worker.get_class_hash_at(contract_address),
+            None => Ok(self
+                .worker
+                .get_class_hash_at(contract_address)
+                .unwrap_or_default()),
         }
     }
 

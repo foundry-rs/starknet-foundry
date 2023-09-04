@@ -3,7 +3,7 @@ use blockifier::execution::contract_class::{
     ContractClass as ContractClassBlockifier, ContractClassV1,
 };
 use blockifier::execution::execution_utils::stark_felt_to_felt;
-use blockifier::state::errors::StateError::StateReadError;
+use blockifier::state::errors::StateError::{StateReadError, UndeclaredClassHash};
 use blockifier::state::state_api::StateResult;
 use cairo_lang_starknet::abi::Contract;
 use cairo_lang_starknet::casm_contract_class::CasmContractClass;
@@ -96,8 +96,8 @@ impl Worker {
             FieldElement::from_bytes_be(&class_hash_to_felt(*class_hash).to_be_bytes()).unwrap(),
         ));
 
-        if let Err(error) = contract_class {
-            return Err(StateReadError(error.to_string()));
+        if contract_class.is_err() {
+            return Err(UndeclaredClassHash(*class_hash));
         }
 
         match contract_class.unwrap() {

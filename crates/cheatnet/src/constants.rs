@@ -170,6 +170,7 @@ pub fn build_testing_state(predeployed_contracts: &Utf8PathBuf) -> DictStateRead
         (test_account_address, test_account_class_hash),
         (test_erc20_address, test_erc20_class_hash),
     ]);
+    let address_to_nonce = HashMap::from([(test_account_address, Nonce(StarkFelt::from(0_u8)))]);
     let minter_var_address = get_storage_var_address("permitted_minter", &[])
         .expect("Failed to get permitted_minter storage address.");
     let storage_view = HashMap::from([
@@ -186,6 +187,7 @@ pub fn build_testing_state(predeployed_contracts: &Utf8PathBuf) -> DictStateRead
 
     DictStateReader {
         storage_view,
+        address_to_nonce,
         address_to_class_hash,
         class_hash_to_class,
         ..Default::default()
