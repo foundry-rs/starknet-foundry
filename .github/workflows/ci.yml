@@ -43,6 +43,14 @@ jobs:
         if: github.event_name == 'pull_request'
         run: echo "BRANCH_NAME=$(echo $GITHUB_HEAD_REF)" >> $GITHUB_ENV
 
+      # extract repository name and owner
+      - name: Extract repo name
+        run: echo "REPO_NAME=$(echo $${{ github.repository }}.git)" >> $GITHUB_ENV
+
+      # print repo name
+      - name: Print repo name
+        run: echo 'The repo name is' $REPO_NAME
+
       # print branch name
       - name: Get branch name
         run: echo 'The branch name is' $BRANCH_NAME
