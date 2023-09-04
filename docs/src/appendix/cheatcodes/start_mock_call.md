@@ -12,7 +12,16 @@ Mock can be canceled with [`stop_mock_call`](./stop_mock_call.md).
 - `ret_data` - data to return by the function `function_name`
 
 > 📝 **Note**
-> The inner call (i.e. when a contract calls a function from within itself) cannot be mocked.
+> Mocks do not have any effect on function calls withing the contract itself.
+> E.g. for a function withing a contract defined like this:
+> 
+> ```rust
+> fn function_a(self: @ContractState) {
+>   function_b()
+> } 
+> ```
+> 
+> Mocking `function_b` would have no effect.
 
 For contract implementation:
 
