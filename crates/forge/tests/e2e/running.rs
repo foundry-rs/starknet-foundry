@@ -452,12 +452,23 @@ fn init_new_project_test() {
         .assert()
         .success();
 
-    let paths = std::fs::read_dir(temp.path().join(Path::new("test_name"))).unwrap();
-
-    for path in paths {
-        dbg!(path.unwrap().file_name());
-    }
-    dbg!(temp.display());
+    let snapbox = runner();
+    snapbox
+        .current_dir(temp.child(Path::new("test_name")))
+        .arg("--exit-first")
+        .assert()
+        .success()
+        .stdout_matches(indoc! {r#"
+        [..]Updating git repository[..]
+        [..]Compiling test_name v0.1.0[..]
+        [..]Finished[..]
+        Collected 2 test(s) and 2 test file(s)
+        Running 0 test(s) from test_name package
+        Running 2 test(s) from tests/test_contract.cairo
+        [PASS] test_contract::test_increase_balance
+        [PASS] test_contract::test_cannot_increase_balance_with_zero_value
+        Tests: 2 passed, 0 failed, 0 skipped
+    "#});
 }
 
 #[test]
