@@ -1,3 +1,4 @@
+mod declare;
 mod deploy;
 mod get_class_hash;
 mod mock_call;
