@@ -1,8 +1,21 @@
 use std::collections::HashMap;
+use std::sync::Arc;
 
 use anyhow::Result;
-use cairo_vm::serde::deserialize_program::HintParams;
+use blockifier::execution::cairo1_execution::{initialize_execution_context, VmExecutionContext};
+use blockifier::execution::entry_point::{ExecutionResources, EntryPointExecutionContext, CallEntryPoint, CallType};
+use blockifier::execution::errors::PreExecutionError;
+use blockifier::execution::execution_utils::ReadOnlySegments;
+use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
+use blockifier::state::cached_state::{GlobalContractCache, CachedState};
+use blockifier::state::state_api::State;
+use cairo_vm::serde::deserialize_program::{HintParams, BuiltinName};
+use cairo_vm::types::relocatable::Relocatable;
+use cairo_vm::vm::vm_core::VirtualMachine;
 use cheatnet::CheatnetState;
+use cheatnet::constants::{build_testing_state, build_transaction_context, build_block_context};
+use cheatnet::conversions::felt_selector_from_name;
+use cheatnet::execution::syscalls::CheatableSyscallHandler;
 use itertools::chain;
 
 use cairo_lang_casm::hints::Hint;
@@ -10,8 +23,14 @@ use cairo_lang_casm::instructions::Instruction;
 use cairo_lang_runner::casm_run::hint_to_hint_params;
 use cairo_lang_runner::{CairoHintProcessor as CoreCairoHintProcessor, RunnerError};
 use cairo_lang_runner::{SierraCasmRunner, StarknetState};
-use cairo_vm::vm::runners::cairo_runner::RunResources;
+use cairo_vm::vm::runners::cairo_runner::{RunResources, CairoRunner};
 use camino::Utf8PathBuf;
+use starknet_api::core::{ContractAddress, EntryPointSelector};
+use starknet_api::deprecated_contract_class::EntryPointType;
+use starknet_api::hash::StarkHash;
+use starknet_api::transaction::Calldata;
+use starknet_api::{patricia_key, calldata};
+use starknet_api::core::PatriciaKey;
 use test_collector::TestCase;
 
 use crate::cheatcodes_hint_processor::CairoHintProcessor;
@@ -55,6 +74,7 @@ pub(crate) fn run_from_test_case(
     } else {
         Some(usize::MAX)
     };
+
     let func = runner.find_function(case.name.as_str())?;
     let initial_gas = runner.get_initial_available_gas(func, available_gas)?;
     let (entry_code, builtins) = runner.create_entry_code(func, &[], initial_gas)?;
@@ -65,16 +85,46 @@ pub(crate) fn run_from_test_case(
         footer.iter()
     );
     let (hints_dict, string_to_hint) = build_hints_dict(instructions.clone());
-    let core_cairo_hint_processor = CoreCairoHintProcessor {
-        runner: Some(runner),
-        starknet_state: StarknetState::default(),
-        string_to_hint,
-        run_resources: RunResources::default(),
+
+    let block_context = build_block_context();
+    let account_context = build_transaction_context();
+    let mut context = EntryPointExecutionContext::new(
+        block_context.clone(),
+        account_context,
+        block_context.invoke_tx_max_n_steps.try_into().unwrap(),
+    );
+    let test_selector = felt_selector_from_name("test_case");
+    let entry_point_selector =
+        EntryPointSelector(StarkHash::new(test_selector.to_be_bytes())?);
+    let mut entry_point = CallEntryPoint {
+        class_hash: None,
+        code_address: Some(ContractAddress::from(0_u8)),
+        entry_point_type: EntryPointType::External,
+        entry_point_selector: entry_point_selector,
+        calldata: Calldata(Arc::new(vec![])),
+        storage_address: ContractAddress(patricia_key!("0x112")),
+        caller_address: ContractAddress::default(),
+        call_type: CallType::Call,
+        initial_gas: u64::MAX,
     };
+
+    let mut blockifier_state = CachedState::new(build_testing_state(predeployed_contracts), GlobalContractCache::default());
+    let mut execution_resources = ExecutionResources::default();
+    let syscall_handler = SyscallHintProcessor::new(
+        &mut blockifier_state,
+        &mut execution_resources,
+        &mut context,
+        Relocatable { segment_index: 0, offset: 0,},
+        entry_point,
+        &string_to_hint,
+        ReadOnlySegments::default(),
+    );
     let mut cairo_hint_processor = CairoHintProcessor {
-        original_cairo_hint_processor: core_cairo_hint_processor,
+        original_cairo_hint_processor: syscall_handler,
         contracts,
         cheatnet_state: CheatnetState::new(predeployed_contracts),
+        hints: &string_to_hint,
+        run_resources: RunResources::new(0),
     };
 
     match runner.run_function(

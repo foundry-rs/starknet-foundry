@@ -6,6 +6,7 @@ use crate::scarb::StarknetContractArtifacts;
 use anyhow::{anyhow, Result};
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::execution_utils::{felt_to_stark_felt, stark_felt_to_felt};
+use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use cairo_felt::Felt252;
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
 use cairo_vm::hint_processor::hint_processor_definition::HintReference;
@@ -52,31 +53,30 @@ impl From<&StarknetContractArtifacts> for ContractArtifacts {
 }
 
 pub struct CairoHintProcessor<'a> {
-    pub original_cairo_hint_processor: OriginalCairoHintProcessor<'a>,
+    pub original_cairo_hint_processor: SyscallHintProcessor<'a>,
     pub contracts: &'a HashMap<String, StarknetContractArtifacts>,
+    pub hints: &'a HashMap<String, Hint>,
     pub cheatnet_state: CheatnetState,
+    pub run_resources: RunResources,
 }
 
 impl ResourceTracker for CairoHintProcessor<'_> {
     fn consumed(&self) -> bool {
-        self.original_cairo_hint_processor.run_resources.consumed()
+        self.run_resources.consumed()
     }
 
     fn consume_step(&mut self) {
         self.original_cairo_hint_processor
-            .run_resources
             .consume_step();
     }
 
     fn get_n_steps(&self) -> Option<usize> {
         self.original_cairo_hint_processor
-            .run_resources
             .get_n_steps()
     }
 
     fn run_resources(&self) -> &RunResources {
         self.original_cairo_hint_processor
-            .run_resources
             .run_resources()
     }
 }
@@ -133,7 +133,7 @@ impl HintProcessorLogic for CairoHintProcessor<'_> {
         _references: &[HintReference],
     ) -> Result<Box<dyn Any>, VirtualMachineError> {
         Ok(Box::new(
-            self.original_cairo_hint_processor.string_to_hint[hint_code].clone(),
+            self.hints[hint_code].clone(),
         ))
     }
 }
@@ -519,7 +519,7 @@ fn execute_syscall(
     exec_scopes: &mut ExecutionScopes,
     hint_data: &Box<dyn Any>,
     constants: &HashMap<String, Felt252>,
-    original_cairo_hint_processor: &mut OriginalCairoHintProcessor,
+    original_cairo_hint_processor: &mut SyscallHintProcessor,
 ) -> Result<(), HintError> {
     let (cell, offset) = extract_buffer(system);
     let system_ptr = get_ptr(vm, cell, &offset)?;
