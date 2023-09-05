@@ -1,6 +1,6 @@
 use crate::integration::common::runner::Contract;
 use crate::integration::common::running_tests::run_test_case;
-use crate::{assert_passed, test_case};
+use crate::{assert_case_output_contains, assert_failed, assert_passed, test_case};
 use indoc::indoc;
 use std::path::Path;
 
@@ -67,4 +67,40 @@ fn deploy_at_correct_address() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
+}
+
+#[test]
+fn deploy_two_at_the_same_address() {
+    let test = test_case!(
+        indoc!(
+            r#"
+        use snforge_std::{ declare, ContractClassTrait };
+        use starknet::ContractAddress;
+
+        #[test]
+        fn test_deploy_two_at_the_same_address() {
+            let contract_address = 123;
+        
+            let contract = declare('HelloStarknet');
+            let real_address = contract.deploy_at(@array![], contract_address.try_into().unwrap()).unwrap();
+            assert(real_address.into() == contract_address, 'addresses should be the same');
+            let real_address2 = contract.deploy_at(@array![], contract_address.try_into().unwrap()).unwrap();
+        }
+    "#
+        ),
+        Contract::from_code_path(
+            "HelloStarknet".to_string(),
+            Path::new("tests/data/contracts/hello_starknet.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test);
+
+    assert_failed!(result);
+    assert_case_output_contains!(
+        result,
+        "test_deploy_two_at_the_same_address",
+        "Address is already taken"
+    );
 }
