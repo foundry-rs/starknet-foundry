@@ -36,6 +36,8 @@ We must make sure our functions return specific types, that make retrieving esse
 we should be in a pretty good shape, for most commands we return specific structs (defined in `cast/src/helpers/response_structs.rs`),
 but let's double-check everything necessary is included there, and all importable commands are using such structs.
 
+The commands would have to be implemented in the same manner as forge's cheatcodes.
+
 ### sncast config
 We should allow for all flags passed to sncast to be propagated to the script. CastConfig should also be importable
 and usable from script if someone wishes so, but we should not require it. That means, we might have to review our subcommands
@@ -211,25 +213,39 @@ Picking those would ensure us that:
 An example deployment script could look like this:
 
 ```cairo
-// we might want to rename account functions to avoid confusion
+// we might need to rename account functions to avoid confusion
 use cast::starknet_commands::account::create::create as create_account
+use cast::starknet_commands::account::deploy::deploy as deploy_account
+use cast::{get_provider, get_account};
+use cast::starknet_commands::{declare, deploy, invoke, call};
 (...)
 
-fn make_account(...) -> Result<InvokeResponse> {
-  let user = create_account(...);
-  let prefund_account = invoke(...);
-  deploy_account(...);
+fn make_account(provider: &JsonRpcClient<HttpTransport>) -> Result<SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, LocalWallet>> {
+  let mut prefunder = get_account("user", &provider)?; // the user that will prefund new account 
+  let user = create_account("user1", &provider);
+  let prefund_account = invoke("0x123", "deposit", [1234, user.address], &prefunder);
+  deploy_account("user1", &provider);
+  get_account("user1", &provider)?
 }
 
 fn main() {
-  let user = make_account(...);
+  ler provider = get_provider("http://127.0.0.1:5050/rpc")?;
+  let user = make_account(provider);
+
+  let declared_contract = declare("mycontract", &user, "/path/to/Scarb.toml");
+  let contract = deploy(&declared_contract.class_hash, [], &user);
+
+  let dispatcher = DispatcherMyContract { contract.contract_address };
+
   skip_if_done(|| {
-        dispatcher.increase_balance(...);
+        dispatcher.increase_balance(5);
     });
   let get_balance = skip_if_done(|| {
-        dispatcher.get_balance(...);
+        dispatcher.get_balance();
     });
-}  
+
+  let called_balance = call(&contract.contract_address, "get_balance", [], "latest"); 
+}
 ```
 
 ### example state file
@@ -263,11 +279,16 @@ Its schema could look like this:
 }
 ```
 
-Having this, we could allow users to `--resume`, `--retry` or `--verify` transactions if something unexpected happens,
+Having this, we could allow users to `--retries` or `--verify` transactions if something unexpected happens,
 some transactions were rejected because of faulty script, too low user eth balance etc.
 
 If we were to implement dry run mode that runs by default, the state should only be written to a file when we pass `--broadcast`
 flag; otherwise the output should be directed to stdout.
+
+The file should be used to see, if given action/transaction was already taken - it should take under account the function
+name as well as its parameters, to distinguish functions from one another (eg. user creates two accounts, we should check
+state file records, one by one, and check if a function `account new` was already invoked with specified parameter `username` 
+(and others, if supplied)).
 
 ### Miscellaneous
 
@@ -275,11 +296,11 @@ There would be a new subcommand `script` that would be invoked with required par
 `*.s.cairo` extension. Proposed interface:
 
 - `--gas-multiplier` - relative percentage by which to multiply add gas estimates (perhaps passed directly to sncast)
-- `--boradcast` - boradcasts the transactions
+- `--broadcast` - broadcasts the transactions
 - `--no-state-file` - do not write to state file
-- `--to-state-file` - specify path to custom state file
+- `--state-file` - specify path to custom state file
 - `--log-file` - output logs to a file
-- `--silent` - do not output logs to stdout
+- `--quiet` - do not output logs to stdout
 - `--slow` - makes sure a transaction is sent, only after its previous one has been confirmed and succeeded (possible reuse of `--wait` flag)
 - `--verify` - find a matching broadcast in state file, and try to verify transactions
 - `--delay` - optional timeout to apply in between attempts in seconds (perhaps passed directly to sncast)
