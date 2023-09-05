@@ -39,7 +39,7 @@ For example, this file content:
     "c": "123"
 }
 ```
-will be parsed to the following array:
+will be read to the following array:
 
 ```rust
 array![12, 1, '123', 1234]
