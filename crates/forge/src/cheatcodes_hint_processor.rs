@@ -60,23 +60,24 @@ pub struct CairoHintProcessor<'a> {
     pub run_resources: RunResources,
 }
 
+// crates/blockifier/src/execution/syscalls/hint_processor.rs:472 (ResourceTracker for SyscallHintProcessor)
 impl ResourceTracker for CairoHintProcessor<'_> {
     fn consumed(&self) -> bool {
-        self.run_resources.consumed()
+        self.original_cairo_hint_processor.context.vm_run_resources.consumed()
     }
 
     fn consume_step(&mut self) {
-        self.original_cairo_hint_processor
-            .consume_step();
+        self.original_cairo_hint_processor.context.vm_run_resources.consume_step();
     }
 
     fn get_n_steps(&self) -> Option<usize> {
-        self.original_cairo_hint_processor
-            .get_n_steps()
+        self.original_cairo_hint_processor.context.vm_run_resources.get_n_steps()
     }
 
     fn run_resources(&self) -> &RunResources {
         self.original_cairo_hint_processor
+            .context
+            .vm_run_resources
             .run_resources()
     }
 }
@@ -528,19 +529,18 @@ fn execute_syscall(
     let selector = DeprecatedSyscallSelector::try_from(felt_to_stark_felt(
         &vm.get_integer(system_ptr).unwrap(),
     ))?;
-
     match selector {
         DeprecatedSyscallSelector::CallContract => {
             execute_call_contract(MemBuffer::new(vm, system_ptr), cheatnet_state)?;
             Ok(())
         }
-        DeprecatedSyscallSelector::Keccak => {
+        _ => {
             original_cairo_hint_processor.execute_hint(vm, exec_scopes, hint_data, constants)
         }
-        _ => Err(HintError::CustomHint(Box::from(
-            "starknet syscalls (other than CallContract and Keccak) cannot be used in tests"
-                .to_string(),
-        ))),
+        // _ => Err(HintError::CustomHint(Box::from(
+        //     "starknet syscalls (other than CallContract and Keccak) cannot be used in tests"
+        //         .to_string(),
+        // ))),
     }
 }
 
