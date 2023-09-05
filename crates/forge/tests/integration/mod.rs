@@ -1,6 +1,7 @@
 pub(crate) mod common;
 mod declare;
 mod deploy;
+mod deploy_at;
 mod dispatchers;
 mod get_class_hash;
 mod l1_handler_executor;

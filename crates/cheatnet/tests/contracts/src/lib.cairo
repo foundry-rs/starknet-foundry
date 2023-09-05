@@ -1,5 +1,6 @@
 mod hello_starknet;
 mod constructor_simple;
+mod constructor_simple2;
 mod erc20;
 
 mod timestamper;

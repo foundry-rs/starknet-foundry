@@ -1,28 +1,69 @@
-use anyhow::Context;
+use anyhow::{anyhow, Context};
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cheatnet::cheatcodes::EnhancedHintError;
-use cheatnet::cheatcodes::EnhancedHintError::FileParsing;
+use flatten_serde_json::flatten;
 use num_bigint::BigUint;
+use serde_json::{Map, Value};
 
-pub(super) fn parse_txt(file_path: &Felt252) -> Result<Vec<Felt252>, EnhancedHintError> {
+pub(super) fn read_txt(file_path: &Felt252) -> Result<Vec<Felt252>, EnhancedHintError> {
     let file_path_str = as_cairo_short_string(file_path)
         .with_context(|| format!("Failed to convert {file_path} to str"))?;
     let content = std::fs::read_to_string(file_path_str.clone())?;
     let split_content: Vec<&str> = content.trim().split_ascii_whitespace().collect();
 
-    let felts_in_results: Vec<Result<Felt252, ()>> = split_content
+    split_content
         .iter()
-        .map(|&string| string_into_felt(string))
-        .collect();
-
-    felts_in_results
-        .iter()
-        .cloned()
-        .collect::<Result<Vec<Felt252>, ()>>()
-        .map_err(|_| FileParsing {
-            path: file_path_str,
+        .map(|s| {
+            string_into_felt(s).map_err(|_| EnhancedHintError::FileParsing {
+                path: file_path_str.clone(),
+            })
         })
+        .collect()
+}
+
+pub(super) fn read_json(file_path: &Felt252) -> Result<Vec<Felt252>, EnhancedHintError> {
+    let file_path_str = as_cairo_short_string(file_path)
+        .with_context(|| format!("Failed to convert {file_path} to str"))?;
+    let content = std::fs::read_to_string(&file_path_str)?;
+    let split_content = json_values_sorted_by_keys(&content)
+        .map_err(|e| anyhow!(format!("{}, in file {}", e.to_string(), file_path_str)))?;
+
+    split_content
+        .iter()
+        .map(|s| {
+            string_into_felt(s).map_err(|_| EnhancedHintError::FileParsing {
+                path: file_path_str.clone(),
+            })
+        })
+        .collect()
+}
+
+fn json_values_sorted_by_keys(content: &str) -> Result<Vec<String>, EnhancedHintError> {
+    let json: Map<String, Value> = serde_json::from_str(content)
+        .map_err(|e| anyhow!(format!("Parse JSON error: {} ", e.to_string())))?;
+    let data = flatten(&json);
+
+    let mut keys: Vec<String> = data.keys().map(std::string::ToString::to_string).collect();
+    keys.sort_by_key(|a| a.to_lowercase());
+
+    Ok(keys
+        .into_iter()
+        .flat_map(|key| value_into_vec(data.get(&key).unwrap()))
+        .collect())
+}
+
+fn value_into_vec(value: &Value) -> Vec<String> {
+    match value {
+        Value::Array(vec) => {
+            let vec_len = vec.len().to_string();
+            let mut str_vec: Vec<String> =
+                vec.iter().map(std::string::ToString::to_string).collect();
+            str_vec.insert(0, vec_len);
+            str_vec
+        }
+        value => vec![value.to_string()],
+    }
 }
 
 fn string_into_felt(string: &str) -> Result<Felt252, ()> {
@@ -37,10 +78,9 @@ fn string_into_felt(string: &str) -> Result<Felt252, ()> {
         let length = string.len();
         let first_char = string.chars().next();
         let last_char = string.chars().nth(length - 1);
-
         if length >= 2
             && length - 2 <= 31
-            && first_char == Some('\'')
+            && (first_char == Some('\'') || first_char == Some('\"'))
             && first_char == last_char
             && string.is_ascii()
         {
@@ -58,6 +98,53 @@ mod tests {
     use cairo_felt::Felt252;
     use num_bigint::BigUint;
     use num_traits::One;
+
+    use super::json_values_sorted_by_keys;
+
+    #[test]
+    fn test_json_values_sorted_by_keys() {
+        let string = r#"
+        {
+            "name": "Joh",
+            "age": 43,
+            "a": {
+                "b": 1,
+                "c": 2
+            },
+            "ab": 12
+        }"#
+        .to_owned();
+        let result = json_values_sorted_by_keys(&string).unwrap();
+        let expected_result = ["1", "2", "12", "43", "\"Joh\""].to_vec();
+
+        assert_eq!(result, expected_result);
+
+        let string = r#"
+        {
+            "ad": "string",
+            "test": ["1",2,"3",4]
+        }"#
+        .to_owned();
+        let result = json_values_sorted_by_keys(&string).unwrap();
+        let expected_result = ["\"string\"", "4", "\"1\"", "2", "\"3\"", "4"];
+        assert_eq!(result, expected_result);
+    }
+    #[test]
+    fn test_json_values_sorted_by_keys_invalid_data() {
+        let string = r#"
+        [1,2,'3232']"#
+            .to_owned();
+        let result = json_values_sorted_by_keys(&string);
+        assert!(result.is_err());
+
+        let string = r#"
+        {
+            "test": 'invalid json format'
+        }"#
+        .to_owned();
+        let result = json_values_sorted_by_keys(&string);
+        assert!(result.is_err());
+    }
 
     #[test]
     fn test_string_into_felt_positive() {
@@ -91,10 +178,14 @@ mod tests {
     }
 
     #[test]
-    fn test_string_into_felt_shortstring_single_quotes() {
+    fn test_string_into_felt_shortstring() {
         let string = "\'1he5llo9\'";
+        let string2 = "\"1he5llo9\"";
+        let felt = string_into_felt(string);
+        let felt2 = string_into_felt(string2);
+        assert_eq!(felt, felt2);
         assert_eq!(
-            string_into_felt(string),
+            felt,
             Ok(Felt252::from_bytes_be(
                 string[1..string.len() - 1].as_bytes()
             ))

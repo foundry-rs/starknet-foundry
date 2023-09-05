@@ -3,7 +3,8 @@ members = [
     "crates/forge",
     "crates/test-collector",
     "crates/cast",
-    "crates/cheatnet"
+    "crates/cheatnet",
+    "crates/conversions"
 ]
 
 [workspace.package]
@@ -39,7 +40,7 @@ cairo-lang-sierra-generator = "2.2.0"
 cairo-lang-syntax = "2.2.0"
 cairo-vm = "0.8.2"
 cairo-felt = "0.8.2"
-anyhow = "1.0.66"
+anyhow = "1.0.75"
 assert_fs = "1.0.13"
 camino = { version = "1.1.4", features = ["serde1"] }
 include_dir = "0.7.3"
@@ -51,7 +52,7 @@ regex = "1.9.3"
 serde = { version = "1.0.163", features = ["derive"] }
 serde_json = "1.0.104"
 starknet = "0.5.0"
-tempfile = "3.6.0"
+tempfile = "3.8.0"
 thiserror = "1.0.43"
 ctor = "0.2.4"
 url = "2.4.0"
