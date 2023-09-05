@@ -10,7 +10,6 @@ use cheatnet::conversions::{
 };
 use cheatnet::rpc::{call_contract, CallContractOutput};
 use starknet_api::core::ContractAddress;
-use starknet_api::transaction::ContractAddressSalt;
 
 #[test]
 fn deploy_at_predefined_address() {
@@ -21,12 +20,7 @@ fn deploy_at_predefined_address() {
 
     let class_hash = state.declare(&contract, &contracts).unwrap();
     let contract_address = state
-        .deploy_at(
-            &class_hash,
-            &[],
-            ContractAddressSalt::default(),
-            ContractAddress::from(1_u8),
-        )
+        .deploy_at(&class_hash, &[], ContractAddress::from(1_u8))
         .unwrap();
 
     assert_eq!(contract_address, ContractAddress::from(1_u8));
@@ -46,20 +40,10 @@ fn deploy_two_at_the_same_address() {
 
     let class_hash = state.declare(&contract, &contracts).unwrap();
     state
-        .deploy_at(
-            &class_hash,
-            &[],
-            ContractAddressSalt::default(),
-            ContractAddress::from(1_u8),
-        )
+        .deploy_at(&class_hash, &[], ContractAddress::from(1_u8))
         .unwrap();
 
-    let result = state.deploy_at(
-        &class_hash,
-        &[],
-        ContractAddressSalt::default(),
-        ContractAddress::from(1_u8),
-    );
+    let result = state.deploy_at(&class_hash, &[], ContractAddress::from(1_u8));
 
     assert!(match result {
         Err(CheatcodeError::Unrecoverable(EnhancedHintError::Hint(HintError::CustomHint(err)))) =>
@@ -77,12 +61,7 @@ fn call_predefined_contract_from_proxy_contract() {
 
     let class_hash = state.declare(&contract, &contracts).unwrap();
     let prank_checker_address = state
-        .deploy_at(
-            &class_hash,
-            &[],
-            ContractAddressSalt::default(),
-            ContractAddress::from(1_u8),
-        )
+        .deploy_at(&class_hash, &[], ContractAddress::from(1_u8))
         .unwrap();
 
     assert_eq!(prank_checker_address, ContractAddress::from(1_u8));
@@ -126,12 +105,7 @@ fn deploy_contract_on_predefined_address_after_its_usage() {
 
     let class_hash = state.declare(&contract, &contracts).unwrap();
     state
-        .deploy_at(
-            &class_hash,
-            &[],
-            ContractAddressSalt::default(),
-            ContractAddress::from(121_u8),
-        )
+        .deploy_at(&class_hash, &[], ContractAddress::from(121_u8))
         .unwrap();
 
     let output = call_contract(
@@ -153,12 +127,7 @@ fn try_to_deploy_at_0() {
     let contracts = get_contracts();
 
     let class_hash = state.declare(&contract, &contracts).unwrap();
-    let output = state.deploy_at(
-        &class_hash,
-        &[],
-        ContractAddressSalt::default(),
-        ContractAddress::from(0_u8),
-    );
+    let output = state.deploy_at(&class_hash, &[], ContractAddress::from(0_u8));
 
     assert!(match output {
         Err(CheatcodeError::Unrecoverable(EnhancedHintError::Hint(HintError::CustomHint(msg)))) =>
