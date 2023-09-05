@@ -30,15 +30,42 @@ When implementing contracts, a function called `contract_state_for_testing` is c
 It can be used to obtain the state (storage) of the current (to be tested) contract. Since each test is a contract, now internal functions can be tested
 using the storage of the test.
 
-```rust
-use pkg::HelloStarknet::debtContractMemberStateTrait;
+For example for a contract:
+
+```cairo
+#[starknet::contract]
+mod Contract {
+    #[storage]
+    struct Storage {
+        balance: felt252, 
+        debt: felt252,
+    }
+    
+    //...
+    
+    #[generate_trait]
+    impl InternalImpl of InternalTrait {
+        fn internal_function(self: @ContractState) -> felt252 {
+            self.balance.read()
+        }
+    }
+}
+```
+
+we can set initial storage values (keep in mind it modifies the storage of the test) and call internal functions like this:
+
+```cairo
 use pkg::HelloStarknet::balanceContractMemberStateTrait;
+use pkg::HelloStarknet::debtContractMemberStateTrait;
 
 #[test]
-fn test_essa() {
+fn test_internal() {
     let mut state = HelloStarknet::contract_state_for_testing();
-    state.balance.read();
+
+    state.balance.write(10);
     state.debt.write(5);
+    
+    HelloStarknet::InternalImpl::internal_function(@state);
 }
 ```
 
@@ -46,4 +73,4 @@ fn test_essa() {
 
 We need to clearly communicate the changes to the users and explain to them that Starknet Forge is operating on
 execution layer (in fact, account layer) rather than on transaction layer. We need to put an emphasis on the fact
-that everything that they should treat tests as if they were happening in an `invoke` transaction.
+that tests should be treated as if they were happening in an `invoke` transaction.
