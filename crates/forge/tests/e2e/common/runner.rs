@@ -16,7 +16,7 @@ pub(crate) fn setup_package(package_name: &str) -> TempDir {
     let temp = TempDir::new().unwrap();
     temp.copy_from(
         format!("tests/data/{package_name}"),
-        &["**/*.cairo", "**/*.toml", "**/*.txt"],
+        &["**/*.cairo", "**/*.toml", "**/*.txt", "**/*.json"],
     )
     .unwrap();
 
