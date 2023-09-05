@@ -15,7 +15,7 @@ Mock can be canceled with [`stop_mock_call`](./stop_mock_call.md).
 
 > 📝 **Note**
 > Mocks do not have any effect on function calls withing the contract itself.
-> E.g. for a function withing a contract defined like this:
+> E.g. for a function within a contract defined like this:
 >
 > ```rust
 > fn function_a(self: @ContractState) {
@@ -69,8 +69,9 @@ fn test_mock_call() {
 
 It is also possible to simulate contract having a specific method by mocking a non-existent selector.
 
-Let's assume we have defined a interface to use a dispatcher, but this interface contains a function that is not
+Let's assume we have defined an interface to use a dispatcher, but this interface contains a function that is not
 actually defined in actually deployed contract:
+actually defined in a deployed contract:
 
 ```rust
 // ...
@@ -91,9 +92,7 @@ impl IContractImpl of IContract<ContractState> {
     fn call_not_actually_implemented(self: @ContractState) -> felt252 {
         // ...
         let other_contract_dispatcher = IOtherContractDispatcher { contract_address };
-        let result = other_contract_dispatcher.function_not_actually_implemented();
-        
-        result
+        other_contract_dispatcher.function_not_actually_implemented()
     }
 }
 ```
