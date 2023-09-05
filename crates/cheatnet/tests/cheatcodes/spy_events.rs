@@ -1,21 +1,18 @@
 use crate::common::state::create_cheatnet_state;
-use crate::common::{deploy_contract, get_contracts};
+use crate::common::{deploy_contract, felt_selector_from_name, get_contracts};
 use cairo_felt::Felt252;
 use cairo_lang_starknet::contract::starknet_keccak;
 use cairo_vm::hint_processor::hint_processor_utils::felt_to_usize;
 use cheatnet::cheatcodes::spy_events::{Event, SpyTarget};
-use cheatnet::conversions::{
-    class_hash_to_felt, contract_address_from_felt, contract_address_to_felt,
-    felt_from_short_string, felt_selector_from_name,
-};
 use cheatnet::rpc::call_contract;
+use conversions::StarknetConversions;
 use std::vec;
 
 fn felt_vec_to_event_vec(felts: &[Felt252]) -> Vec<Event> {
     let mut events = vec![];
     let mut i = 0;
     while i < felts.len() {
-        let from = contract_address_from_felt(&felts[i]);
+        let from = felts[i].to_contract_address();
         let name = &felts[i + 1];
         let keys_length = &felts[i + 2];
         let keys = &felts[i + 3..i + 3 + felt_to_usize(keys_length).unwrap()];
@@ -110,7 +107,7 @@ fn check_events_order() {
             Felt252::from(123),
             Felt252::from(234),
             Felt252::from(345),
-            contract_address_to_felt(spy_events_checker_address),
+            spy_events_checker_address.to_felt252(),
         ],
         &mut state,
     )
@@ -193,7 +190,7 @@ fn library_call_emits_event() {
     let mut state = create_cheatnet_state();
 
     let contracts = get_contracts();
-    let contract_name = felt_from_short_string("SpyEventsChecker");
+    let contract_name = "SpyEventsChecker".to_owned().to_felt252();
     let class_hash = state.declare(&contract_name, &contracts).unwrap();
     let contract_address = deploy_contract(&mut state, "SpyEventsLibCall", &[]);
 
@@ -203,7 +200,7 @@ fn library_call_emits_event() {
     call_contract(
         &contract_address,
         &selector,
-        &[Felt252::from(123), class_hash_to_felt(class_hash)],
+        &[Felt252::from(123), class_hash.to_felt252()],
         &mut state,
     )
     .unwrap();
@@ -263,7 +260,7 @@ fn check_if_there_is_no_interference() {
 
     let contracts = get_contracts();
 
-    let contract_name = felt_from_short_string("SpyEventsChecker");
+    let contract_name = "SpyEventsChecker".to_owned().to_felt252();
     let class_hash = state.declare(&contract_name, &contracts).unwrap();
 
     let spy_events_checker_address = state.deploy(&class_hash, &[]).unwrap();
@@ -307,19 +304,16 @@ fn test_nested_calls() {
 
     let contracts = get_contracts();
 
-    let contract_name = felt_from_short_string("SpyEventsCheckerProxy");
+    let contract_name = "SpyEventsCheckerProxy".to_owned().to_felt252();
     let class_hash = state.declare(&contract_name, &contracts).unwrap();
 
     let spy_events_checker_proxy_address = state
-        .deploy(
-            &class_hash,
-            &[contract_address_to_felt(spy_events_checker_address)],
-        )
+        .deploy(&class_hash, &[spy_events_checker_address.to_felt252()])
         .unwrap();
     let spy_events_checker_top_proxy_address = state
         .deploy(
             &class_hash,
-            &[contract_address_to_felt(spy_events_checker_proxy_address)],
+            &[spy_events_checker_proxy_address.to_felt252()],
         )
         .unwrap();
 
@@ -378,19 +372,16 @@ fn use_multiple_spies() {
 
     let contracts = get_contracts();
 
-    let contract_name = felt_from_short_string("SpyEventsCheckerProxy");
+    let contract_name = "SpyEventsCheckerProxy".to_owned().to_felt252();
     let class_hash = state.declare(&contract_name, &contracts).unwrap();
 
     let spy_events_checker_proxy_address = state
-        .deploy(
-            &class_hash,
-            &[contract_address_to_felt(spy_events_checker_address)],
-        )
+        .deploy(&class_hash, &[spy_events_checker_address.to_felt252()])
         .unwrap();
     let spy_events_checker_top_proxy_address = state
         .deploy(
             &class_hash,
-            &[contract_address_to_felt(spy_events_checker_proxy_address)],
+            &[spy_events_checker_proxy_address.to_felt252()],
         )
         .unwrap();
 

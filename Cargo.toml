@@ -3,7 +3,8 @@ members = [
     "crates/forge",
     "crates/test-collector",
     "crates/cast",
-    "crates/cheatnet"
+    "crates/cheatnet",
+    "crates/conversions"
 ]
 
 [workspace.package]

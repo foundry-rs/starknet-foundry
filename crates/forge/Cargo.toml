@@ -17,6 +17,7 @@ tempfile.workspace = true
 rayon.workspace = true
 test-collector = { path = "../test-collector" }
 cheatnet = { path = "../cheatnet" }
+conversions = { path = "../conversions" }
 cairo-lang-runner.workspace = true
 cairo-lang-casm.workspace = true
 cairo-lang-test-runner.workspace = true

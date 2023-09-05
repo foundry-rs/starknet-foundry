@@ -1,5 +1,5 @@
 [package]
-name = "cheatnet"
+name = "conversions"
 version = "1.0.0"
 edition = "2021"
 
@@ -26,11 +26,10 @@ thiserror.workspace = true
 serde_json.workspace = true
 serde.workspace = true
 num-traits.workspace = true
-conversions = { path = "../conversions" }
 
 [dev-dependencies]
 ctor.workspace = true
 indoc.workspace = true
 
 [lib]
-name = "cheatnet"
+name = "conversions"
