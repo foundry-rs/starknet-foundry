@@ -18,9 +18,9 @@ use starknet_api::{
 };
 use std::collections::HashMap;
 
-pub struct CustomStateReader(pub Box<dyn StateReader>);
+pub struct StateReaderProxy(pub Box<dyn StateReader>);
 
-impl StateReader for CustomStateReader {
+impl StateReader for StateReaderProxy {
     fn get_storage_at(
         &mut self,
         contract_address: ContractAddress,
