@@ -1,13 +1,13 @@
 use crate::common::{get_contracts, state::create_cheatnet_state};
 use cairo_felt::Felt252;
-use cheatnet::conversions::felt_from_short_string;
+use conversions::StarknetConversions;
 
 #[test]
 fn precalculate_address_simple() {
     let mut state = create_cheatnet_state();
 
     let contracts = get_contracts();
-    let contract_name = felt_from_short_string("HelloStarknet");
+    let contract_name = "HelloStarknet".to_owned().to_felt252();
     let class_hash = state.declare(&contract_name, &contracts).unwrap();
 
     let precalculated1 = state.precalculate_address(&class_hash, &[]);
@@ -26,7 +26,7 @@ fn precalculate_address_calldata() {
     let mut state = create_cheatnet_state();
 
     let contracts = get_contracts();
-    let contract_name = felt_from_short_string("ConstructorSimple");
+    let contract_name = "ConstructorSimple".to_owned().to_felt252();
     let class_hash = state.declare(&contract_name, &contracts).unwrap();
 
     let calldata1 = vec![Felt252::from(123)];
