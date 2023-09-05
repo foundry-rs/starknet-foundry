@@ -22,8 +22,7 @@ use cheatnet::{
 use conversions::StarknetConversions;
 use num_traits::{One, ToPrimitive};
 use serde::Deserialize;
-use starknet_api::core::{ClassHash, ContractAddress, PatriciaKey};
-use starknet_api::hash::StarkFelt;
+use starknet_api::core::ContractAddress;
 
 use cairo_lang_casm::hints::{Hint, StarknetHint};
 use cairo_lang_casm::operand::{CellRef, ResOperand};
@@ -184,64 +183,44 @@ impl CairoHintProcessor<'_> {
         let result_start = buffer.ptr;
 
         match selector {
-            "prepare" => todo!(),
             "start_roll" => {
-                let contract_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
-                    inputs[0].clone().to_be_bytes(),
-                )?)?);
+                let contract_address = inputs[0].to_contract_address();
                 let value = inputs[1].clone();
                 self.cheatnet_state.start_roll(contract_address, value);
                 Ok(())
             }
             "stop_roll" => {
-                let contract_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
-                    inputs[0].clone().to_be_bytes(),
-                )?)?);
-
+                let contract_address = inputs[0].to_contract_address();
                 self.cheatnet_state.stop_roll(contract_address);
                 Ok(())
             }
             "start_warp" => {
-                let contract_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
-                    inputs[0].clone().to_be_bytes(),
-                )?)?);
+                let contract_address = inputs[0].to_contract_address();
                 let value = inputs[1].clone();
                 self.cheatnet_state.start_warp(contract_address, value);
                 Ok(())
             }
             "stop_warp" => {
-                let contract_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
-                    inputs[0].clone().to_be_bytes(),
-                )?)?);
-
+                let contract_address = inputs[0].to_contract_address();
                 self.cheatnet_state.stop_warp(contract_address);
                 Ok(())
             }
             "start_prank" => {
-                let contract_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
-                    inputs[0].clone().to_be_bytes(),
-                )?)?);
-
-                let caller_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
-                    inputs[1].clone().to_be_bytes(),
-                )?)?);
+                let contract_address = inputs[0].to_contract_address();
+                let caller_address = inputs[1].to_contract_address();
 
                 self.cheatnet_state
                     .start_prank(contract_address, caller_address);
                 Ok(())
             }
             "stop_prank" => {
-                let contract_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
-                    inputs[0].clone().to_be_bytes(),
-                )?)?);
+                let contract_address = inputs[0].to_contract_address();
 
                 self.cheatnet_state.stop_prank(contract_address);
                 Ok(())
             }
             "start_mock_call" => {
-                let contract_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
-                    inputs[0].clone().to_be_bytes(),
-                )?)?);
+                let contract_address = inputs[0].to_contract_address();
                 let function_name = inputs[1].clone();
 
                 let ret_data_length = inputs[2]
@@ -260,9 +239,7 @@ impl CairoHintProcessor<'_> {
                 Ok(())
             }
             "stop_mock_call" => {
-                let contract_address = ContractAddress(PatriciaKey::try_from(StarkFelt::new(
-                    inputs[0].clone().to_be_bytes(),
-                )?)?);
+                let contract_address = inputs[0].to_contract_address();
                 let function_name = inputs[1].clone();
 
                 self.cheatnet_state
@@ -333,40 +310,33 @@ impl CairoHintProcessor<'_> {
                 }
             }
             "deploy" => {
-                let class_hash = inputs[0].clone();
-                let class_hash = ClassHash(StarkFelt::new(class_hash.to_be_bytes()).unwrap());
-
+                let class_hash = inputs[0].to_class_hash();
                 let calldata_length = inputs[1].to_usize().unwrap();
                 let calldata = Vec::from(&inputs[2..(2 + calldata_length)]);
 
-                match self.cheatnet_state.deploy(&class_hash, &calldata) {
-                    Ok(contract_address) => {
-                        let felt_contract_address: Felt252 =
-                            stark_felt_to_felt(*contract_address.0.key());
+                handle_deploy_result(
+                    self.cheatnet_state.deploy(&class_hash, &calldata),
+                    &mut buffer,
+                )
+            }
+            "deploy_at" => {
+                let class_hash = inputs[0].to_class_hash();
+                let calldata_length = inputs[1].to_usize().unwrap();
+                let calldata = Vec::from(&inputs[2..(2 + calldata_length)]);
+                let contract_address = inputs[2 + calldata_length].to_contract_address();
 
-                        buffer
-                            .write(Felt252::from(0))
-                            .expect("Failed to insert error code");
-                        buffer
-                            .write(felt_contract_address)
-                            .expect("Failed to insert deployed contract address");
-                        Ok(())
-                    }
-                    Err(CheatcodeError::Recoverable(panic_data)) => {
-                        write_cheatcode_panic(&mut buffer, &panic_data);
-                        Ok(())
-                    }
-                    Err(CheatcodeError::Unrecoverable(err)) => Err(err),
-                }
+                handle_deploy_result(
+                    self.cheatnet_state
+                        .deploy_at(&class_hash, &calldata, contract_address),
+                    &mut buffer,
+                )
             }
             "print" => {
                 print(inputs);
                 Ok(())
             }
             "precalculate_address" => {
-                let class_hash = inputs[0].clone();
-                let class_hash = ClassHash(StarkFelt::new(class_hash.to_be_bytes()).unwrap());
-
+                let class_hash = inputs[0].to_class_hash();
                 let calldata_length = inputs[1].to_usize().unwrap();
                 let calldata = Vec::from(&inputs[2..(2 + calldata_length)]);
 
@@ -374,7 +344,7 @@ impl CairoHintProcessor<'_> {
                     .cheatnet_state
                     .precalculate_address(&class_hash, &calldata);
 
-                let felt_contract_address: Felt252 = stark_felt_to_felt(*contract_address.0.key());
+                let felt_contract_address = contract_address.to_felt252();
                 buffer
                     .write(felt_contract_address)
                     .expect("Failed to insert a precalculated contract address");
@@ -496,6 +466,30 @@ impl CairoHintProcessor<'_> {
     }
 }
 
+fn handle_deploy_result(
+    deploy_result: Result<ContractAddress, CheatcodeError>,
+    buffer: &mut MemBuffer,
+) -> Result<(), EnhancedHintError> {
+    match deploy_result {
+        Ok(contract_address) => {
+            let felt_contract_address: Felt252 = contract_address.to_felt252();
+
+            buffer
+                .write(Felt252::from(0))
+                .expect("Failed to insert error code");
+            buffer
+                .write(felt_contract_address)
+                .expect("Failed to insert deployed contract address");
+            Ok(())
+        }
+        Err(CheatcodeError::Recoverable(panic_data)) => {
+            write_cheatcode_panic(buffer, &panic_data);
+            Ok(())
+        }
+        Err(CheatcodeError::Unrecoverable(err)) => Err(err),
+    }
+}
+
 #[allow(dead_code)]
 #[derive(Deserialize)]
 struct ScarbStarknetArtifacts {
@@ -559,12 +553,7 @@ fn execute_call_contract(
     let gas_counter = buffer.next_usize().unwrap();
 
     let contract_address = buffer.next_felt252().unwrap().into_owned();
-    let contract_address = ContractAddress(
-        PatriciaKey::try_from(
-            StarkFelt::new(contract_address.to_be_bytes()).expect("Felt conversion failed"),
-        )
-        .expect("PatriciaKey failed"),
-    );
+    let contract_address = contract_address.to_contract_address();
 
     let entry_point_selector = buffer.next_felt252().unwrap().into_owned();
 
