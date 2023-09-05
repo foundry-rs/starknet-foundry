@@ -1,3 +1,5 @@
+amend commit
+
 # Instruction For Creating New Starknet Forge Releases
 
 1. Bump Starknet Foundry version in the top-level `Cargo.toml` file

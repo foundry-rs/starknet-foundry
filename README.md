@@ -1,4 +1,5 @@
 I love starknet-foundry!!!!!!!!!!!!!!!!!!!!
+I love committing to open source!!!!!!!!!!!
 
 <img src="./docs/src/images/logo.png" alt="logo" width="120" align="right" />
 
