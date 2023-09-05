@@ -91,11 +91,11 @@ pub(crate) fn run_from_test_case(
     let test_selector = felt_selector_from_name("test_case");
     let entry_point_selector =
         EntryPointSelector(StarkHash::new(test_selector.to_be_bytes())?);
-    let entry_point = CallEntryPoint {
+    let  entry_point = CallEntryPoint {
         class_hash: None,
         code_address: Some(ContractAddress::from(0_u8)),
         entry_point_type: EntryPointType::External,
-        entry_point_selector: entry_point_selector,
+        entry_point_selector,
         calldata: Calldata(Arc::new(vec![])),
         storage_address: ContractAddress(patricia_key!("0x112")),
         caller_address: ContractAddress::default(),
