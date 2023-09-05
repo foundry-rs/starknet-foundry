@@ -74,7 +74,8 @@ We could have a flag to suppress outputting to stdout or to output with differen
 By default, the scripts could run in some kind of "dry run mode", meaning all the transactions would be simulated with 
 specific rpc calls (like `starknet_simulateTransactions`). An interesting idea would be to research an approach similar 
 to cheatnet - fork a runner and test the scripts against it (to be assessed if it is feasible). We could also provide 
-a way to show a trace of said transactions if required.
+a way to show a trace of said transactions if required. In later iterations, we could also provide a helper function
+that sets up the devnet to be used for dry running for users.
 
 The behaviour would be changed with `--broadcast` flag, that would actually execute needed transactions.
 
@@ -311,7 +312,7 @@ If it makes sense, some of the flags could be included in Scarb.toml config file
 ## Proposed steps/tasks
 
 MVP:
-  - allow for writing scripts using dispatchers and imported cast subcommand functions
+  - allow for writing scripts using dispatchers and imported cast subcommand functions:
     - no idempotency required at this stage
     - all cast subcommand functions return every information necessary (tx hashes, addresses etc) as importable structs
     - no cast subcommand requires CastConfig directly (eg as parameter)
@@ -331,3 +332,4 @@ next iteration:
 next iteration:
   - add support for flags from [Miscellaneous](#miscellaneous)
   - script tests
+  - helper for user to set up devnet for dry_running / tests
