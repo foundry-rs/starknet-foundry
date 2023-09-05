@@ -52,6 +52,10 @@ pub(crate) fn setup_package(package_name: &str) -> TempDir {
     temp
 }
 
+/// In context of GITHUB actions, get the repository name that triggered the workflow run.
+/// Locally returns current branch.
+///
+/// `REPO_NAME` environment variable is expected to be in format `<repo_owner>/<repo_name>.git`.
 pub(crate) fn get_remote_url() -> String {
     let name: &str = "REPO_NAME";
     if let Ok(v) = env::var(name) {
