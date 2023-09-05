@@ -28,9 +28,11 @@ trait ContractClassTrait {
     fn precalculate_address(
         self: @ContractClass, constructor_calldata: @Array::<felt252>
     ) -> ContractAddress;
+
     fn deploy(
         self: @ContractClass, constructor_calldata: @Array::<felt252>
     ) -> Result<ContractAddress, RevertedTransaction>;
+
     fn deploy_at(
         self: @ContractClass,
         constructor_calldata: @Array::<felt252>,

@@ -10,7 +10,6 @@ fn deploy_at_correct_address() {
         indoc!(
             r#"
         use snforge_std::{ declare, ContractClassTrait };
-        use array::ArrayTrait;
         use starknet::ContractAddress;
         
         #[starknet::interface]
@@ -19,14 +18,14 @@ fn deploy_at_correct_address() {
         }
 
         #[test]
-        fn test_deploy_error_handling() {
+        fn test_deploy_at() {
             let contract = declare('PrankChecker');
-            let prank_checker = contract.deploy(@ArrayTrait::new()).unwrap();
+            let prank_checker = contract.deploy(@array![]).unwrap();
         
             let contract = declare('Proxy');
             let deploy_at_address = 123;
 
-            let contract_address = contract.deploy_at(@ArrayTrait::new(), deploy_at_address.try_into().unwrap()).unwrap();
+            let contract_address = contract.deploy_at(@array![], deploy_at_address.try_into().unwrap()).unwrap();
             assert(deploy_at_address == contract_address.into(), 'addresses should be the same');
             
             let real_address = IProxyDispatcher{ contract_address }.get_caller_address(prank_checker);
