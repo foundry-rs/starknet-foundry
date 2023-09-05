@@ -1,30 +1,32 @@
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Ok, Result};
 
 use include_dir::{include_dir, Dir, DirEntry};
 use std::ffi::OsStr;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::process::{Command, Stdio};
+use toml_edit::{ArrayOfTables, Document, Item, Table};
 
 static TEMPLATE: Dir = include_dir!("starknet_forge_template");
 
-fn create_with_template(dir: &Dir<'_>, base_path: &PathBuf, project_name: &str) -> Result<()> {
-    fs::create_dir_all(base_path)?;
-
-    for entry in dir.entries() {
-        let path = base_path.join(entry.path());
-
-        match entry {
-            DirEntry::Dir(d) => {
-                fs::create_dir_all(&path)?;
-                create_with_template(d, base_path, project_name)?;
-            }
-            DirEntry::File(f) => {
-                let contents = f.contents();
+fn overwrite_files_from_template(
+    dir_to_overwrite: &str,
+    base_path: &PathBuf,
+    project_name: &str,
+) -> Result<()> {
+    let copy_form_dir = TEMPLATE.get_dir(dir_to_overwrite);
+    match copy_form_dir {
+        Some(dir) => {
+            for file in dir.files() {
+                fs::create_dir_all(base_path.join(Path::new(dir_to_overwrite)))?;
+                let path = base_path.join(file.path());
+                let contents = file.contents();
                 let contents = replace_project_name(contents, project_name);
 
                 fs::write(path, contents)?;
             }
         }
+        None => {}
     }
 
     Ok(())
@@ -37,73 +39,63 @@ fn replace_project_name(contents: &[u8], project_name: &str) -> Vec<u8> {
     contents.into_bytes()
 }
 
-/// Inspired by [scarb](https://github.com/software-mansion/scarb/blob/main/scarb/src/core/package/name.rs#L57)
-/// package name validation
-fn check_name(name: &str) -> Result<()> {
-    if name.is_empty() {
-        bail!("empty string cannot be used as package name");
-    }
+fn extend_scarb_toml(path: &PathBuf) -> Result<()> {
+    dbg!(&path);
+    let config_file = fs::read_to_string(path)?;
 
-    if name == "_" {
-        bail!("underscore cannot be used as package name");
-    }
+    let mut doc = config_file.parse::<Document>().expect("invalid document");
 
-    if !name.eq(&name.to_ascii_lowercase()) {
-        bail!(
-            "invalid package name: `{name}`\n\
-            note: usage of ASCII uppercase letters in the package name has been disallowed\n\
-            help: change package name to: {}",
-            name.to_ascii_lowercase()
-        )
-    }
+    let mut array = ArrayOfTables::new();
+    let mut table = Table::new();
+    let mut table2 = Table::new();
+    table.insert("casm", Item::Value(true.into()));
+    table2.insert("starknet-contract", Item::Table(table));
+    array.push(table2);
+    dbg!(&array);
 
-    let mut chars = name.chars();
-
-    // Validate first letter.
-    if let Some(ch) = chars.next() {
-        // A specific error for a potentially common case.
-        if ch.is_ascii_digit() {
-            bail!(
-                "the name `{name}` cannot be used as a package name, \
-                names cannot start with a digit"
-            );
-        }
-
-        if !(ch.is_ascii_alphabetic() || ch == '_') {
-            bail!(
-                "invalid character `{ch}` in package name: `{name}`, \
-                the first character must be an ASCII lowercase letter or underscore"
-            )
-        }
-    }
-
-    // Validate rest.
-    for ch in chars {
-        if !(ch.is_ascii_alphanumeric() || ch == '_') {
-            bail!(
-                "invalid character `{ch}` in package name: `{name}`, \
-                characters must be ASCII lowercase letters, ASCII numbers or underscore"
-            )
-        }
-    }
-
+    doc.insert("target", Item::ArrayOfTables(array));
+    fs::write(path, doc.to_string())?;
     Ok(())
 }
 
+// [[target.starknet-contract]]
+// casm = true
+
 pub fn init(name: Option<String>) -> Result<()> {
     let project_name = name.unwrap_or("starknet_forge_template".to_string());
-    check_name(&project_name)?;
-    let project_path = std::env::current_dir().unwrap().join(&project_name);
+    let project_path = std::env::current_dir()?.join(&project_name);
 
-    if project_path.exists() {
-        bail!(
-            "Destination {} already exists.\n
-            New project couldn't be created",
-            &project_path.display().to_string()
-        )
-    }
+    Command::new("scarb")
+        .current_dir(std::env::current_dir().context("Failed to get current directory")?)
+        .arg("new")
+        .arg(&project_path)
+        .stderr(Stdio::inherit())
+        .stdout(Stdio::inherit())
+        .output()
+        .context("Failed to initial new project")?;
 
-    create_with_template(&TEMPLATE, &project_path, &project_name)?;
+    Command::new("scarb")
+        .current_dir(&project_path)
+        .arg("add")
+        .arg("snforge_std")
+        .arg("--git")
+        .arg("https://github.com/foundry-rs/starknet-foundry.git")
+        .stderr(Stdio::inherit())
+        .stdout(Stdio::inherit())
+        .output()
+        .context("Failed to add snforge_std")?;
+
+    Command::new("scarb")
+        .current_dir(&project_path)
+        .arg("add")
+        .arg("starknet@2.2.0")
+        .stderr(Stdio::inherit())
+        .stdout(Stdio::inherit())
+        .output()
+        .context("Failed to add starknet")?;
+    extend_scarb_toml(&project_path.join("Scarb.toml"))?;
+    overwrite_files_from_template("src", &project_path, &project_name)?;
+    overwrite_files_from_template("tests", &project_path, &project_name)?;
 
     Ok(())
 }
