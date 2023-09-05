@@ -91,3 +91,7 @@ mod test {
         }
     }
 }
+
+fn some_random_function() -> String {
+    "Random string".to_string()
+}
