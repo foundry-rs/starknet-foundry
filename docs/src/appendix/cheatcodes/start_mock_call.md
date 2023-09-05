@@ -74,7 +74,8 @@ actually defined in actually deployed contract:
 
 ```rust
 // ...
-// Assume we define an interface like that, but it is incorrect.
+// Assume we define an interface like that. 
+// However, it contains a function that does not actually exist on the implementing contract.
 // That is IOtherContract used a different interface that did not define
 // `function_not_actually_implemented`.
 // 
