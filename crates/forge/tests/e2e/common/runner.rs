@@ -78,13 +78,13 @@ pub(crate) fn get_remote_url() -> String {
 /// Locally returns current branch.
 pub(crate) fn get_current_branch() -> String {
     let name: &str = "BRANCH_NAME";
-    match env::var(name) {
-        Ok(v) => v,
-        Err(_e) => {
-            let output = Command::new("git")
-                .args(["rev-parse", "--abbrev-ref", "HEAD"])
-                .output()
-                .unwrap();
+    if let Ok(v) = env::var(name) {
+        v
+    } else {
+        let output = Command::new("git")
+            .args(["rev-parse", "--abbrev-ref", "HEAD"])
+            .output()
+            .unwrap();
 
         String::from_utf8(output.stdout).unwrap().trim().to_string()
     }
