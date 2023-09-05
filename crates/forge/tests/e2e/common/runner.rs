@@ -4,7 +4,6 @@ use camino::Utf8PathBuf;
 use indoc::formatdoc;
 use snapbox::cmd::{cargo_bin, Command as SnapboxCommand};
 use std::env;
-use std::env::VarError;
 use std::process::Command;
 use std::str::FromStr;
 
