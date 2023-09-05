@@ -86,7 +86,6 @@ pub(crate) fn get_current_branch() -> String {
                 .output()
                 .unwrap();
 
-            String::from_utf8(output.stdout).unwrap()
-        }
+        String::from_utf8(output.stdout).unwrap().trim().to_string()
     }
 }

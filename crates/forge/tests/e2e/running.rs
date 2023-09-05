@@ -71,7 +71,7 @@ fn simple_package_with_git_dependency() {
             snforge_std = {{ git = "https://github.com/{}", branch = "{}" }}
             "#,
             remote_url,
-            branch.trim()
+            branch
         ))
         .unwrap();
 
