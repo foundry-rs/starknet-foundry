@@ -1,9 +1,11 @@
 use crate::{
     assert_success,
-    common::{deploy_contract, recover_data, state::create_cheatnet_state},
+    common::{
+        deploy_contract, felt_selector_from_name, recover_data, state::create_cheatnet_state,
+    },
 };
 use cairo_felt::Felt252;
-use cheatnet::{conversions::felt_selector_from_name, rpc::call_contract, CheatnetState};
+use cheatnet::{rpc::call_contract, CheatnetState};
 use starknet_api::core::ContractAddress;
 
 fn check_block(

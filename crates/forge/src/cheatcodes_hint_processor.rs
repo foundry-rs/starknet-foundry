@@ -19,6 +19,7 @@ use cheatnet::{
     cheatcodes::{CheatcodeError, ContractArtifacts, EnhancedHintError},
     CheatnetState,
 };
+use conversions::StarknetConversions;
 use num_traits::{One, ToPrimitive};
 use serde::Deserialize;
 use starknet_api::core::{ClassHash, ContractAddress, PatriciaKey};
@@ -37,7 +38,6 @@ use cairo_lang_starknet::contract::starknet_keccak;
 use cairo_lang_utils::bigint::BigIntAsHex;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cheatnet::cheatcodes::spy_events::SpyTarget;
-use cheatnet::conversions::contract_address_from_felt;
 
 mod file_operations;
 
@@ -270,7 +270,7 @@ impl CairoHintProcessor<'_> {
                 Ok(())
             }
             "start_spoof" => {
-                let contract_address = contract_address_from_felt(&inputs[0]);
+                let contract_address = inputs[0].to_contract_address();
 
                 let version = inputs[1].is_one().then(|| inputs[2].clone());
                 let account_contract_address = inputs[3].is_one().then(|| inputs[4].clone());
@@ -299,7 +299,7 @@ impl CairoHintProcessor<'_> {
                 Ok(())
             }
             "stop_spoof" => {
-                let contract_address = contract_address_from_felt(&inputs[0]);
+                let contract_address = inputs[0].to_contract_address();
 
                 self.cheatnet_state.stop_spoof(contract_address);
                 Ok(())
@@ -382,7 +382,7 @@ impl CairoHintProcessor<'_> {
                 Ok(())
             }
             "get_class_hash" => {
-                let contract_address = contract_address_from_felt(&inputs[0]);
+                let contract_address = inputs[0].to_contract_address();
 
                 match self.cheatnet_state.get_class_hash(contract_address) {
                     Ok(class_hash) => {
@@ -398,7 +398,7 @@ impl CairoHintProcessor<'_> {
                 }
             }
             "l1_handler_execute" => {
-                let contract_address = contract_address_from_felt(&inputs[0]);
+                let contract_address = inputs[0].to_contract_address();
                 let function_name = inputs[1].clone();
                 let from_address = inputs[2].clone();
                 let fee = inputs[3].clone();
@@ -444,12 +444,12 @@ impl CairoHintProcessor<'_> {
                 let spy_on = match inputs.len() {
                     0 => unreachable!("Serialized enum should always be longer than 0"),
                     1 => SpyTarget::All,
-                    2 => SpyTarget::One(contract_address_from_felt(&inputs[1])),
+                    2 => SpyTarget::One(inputs[1].to_contract_address()),
                     _ => {
                         let addresses_length = inputs[1].to_usize().unwrap();
                         let addresses = Vec::from(&inputs[2..(2 + addresses_length)])
                             .iter()
-                            .map(contract_address_from_felt)
+                            .map(Felt252::to_contract_address)
                             .collect();
 
                         SpyTarget::Multiple(addresses)
