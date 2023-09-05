@@ -18,6 +18,7 @@ use starknet_api::{
 };
 use std::collections::HashMap;
 
+#[allow(clippy::module_name_repetitions)]
 pub struct StateReaderProxy(pub Box<dyn StateReader>);
 
 impl StateReader for StateReaderProxy {

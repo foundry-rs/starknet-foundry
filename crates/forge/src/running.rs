@@ -13,7 +13,7 @@ use cairo_lang_runner::{SierraCasmRunner, StarknetState};
 use cairo_vm::vm::runners::cairo_runner::RunResources;
 use camino::Utf8PathBuf;
 use cheatnet::constants::build_testing_state;
-use cheatnet::state::CustomStateReader;
+use cheatnet::state::StateReaderProxy;
 use test_collector::TestCase;
 
 use crate::cheatcodes_hint_processor::CairoHintProcessor;
@@ -76,7 +76,7 @@ pub(crate) fn run_from_test_case(
     let mut cairo_hint_processor = CairoHintProcessor {
         original_cairo_hint_processor: core_cairo_hint_processor,
         contracts,
-        cheatnet_state: CheatnetState::new(CustomStateReader(Box::new(build_testing_state(
+        cheatnet_state: CheatnetState::new(StateReaderProxy(Box::new(build_testing_state(
             predeployed_contracts,
         )))),
     };
