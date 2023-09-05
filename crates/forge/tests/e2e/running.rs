@@ -2,7 +2,7 @@ use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
 use camino::Utf8PathBuf;
 use indoc::{formatdoc, indoc};
 
-use crate::e2e::common::runner::{get_current_branch, runner, setup_package};
+use crate::e2e::common::runner::{get_current_branch, get_remote_url, runner, setup_package};
 use assert_fs::TempDir;
 use std::str::FromStr;
 
@@ -52,6 +52,7 @@ fn simple_package_with_git_dependency() {
     let temp = TempDir::new().unwrap();
     temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
         .unwrap();
+    let remote_url = get_remote_url();
     let branch = get_current_branch();
     let manifest_path = temp.child("Scarb.toml");
     manifest_path
@@ -67,9 +68,10 @@ fn simple_package_with_git_dependency() {
 
             [dependencies]
             starknet = "2.2.0"
-            snforge_std = {{ git = "https://github.com/foundry-rs/starknet-foundry.git", branch = "{}" }}
-            "#, branch.trim()
-
+            snforge_std = {{ git = "https://github.com/{}", branch = "{}" }}
+            "#,
+            remote_url,
+            branch
         ))
         .unwrap();
 
