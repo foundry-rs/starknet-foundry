@@ -131,28 +131,6 @@ fn library_call_syscall() {
 }
 
 #[test]
-fn test_call_syscall_fail_in_test_fn() {
-    let test = test_case!(indoc!(
-        r#"
-        use starknet::{ get_block_timestamp };
-        #[test]
-        fn test_execute_disallowed_syscall() {
-            get_block_timestamp();
-        }
-    "#
-    ));
-
-    let result = run_test_case(&test);
-
-    assert_case_output_contains!(
-        result,
-        "test_execute_disallowed_syscall",
-        "starknet syscalls (other than CallContract and Keccak) cannot be used in tests"
-    );
-    assert_failed!(result);
-}
-
-#[test]
 fn test_keccak_syscall() {
     let test = test_case!(indoc!(
         r#"

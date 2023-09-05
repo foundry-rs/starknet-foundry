@@ -2,34 +2,29 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use anyhow::Result;
-use blockifier::execution::cairo1_execution::{initialize_execution_context, VmExecutionContext};
 use blockifier::execution::entry_point::{ExecutionResources, EntryPointExecutionContext, CallEntryPoint, CallType};
-use blockifier::execution::errors::PreExecutionError;
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::cached_state::{GlobalContractCache, CachedState};
-use blockifier::state::state_api::State;
-use cairo_vm::serde::deserialize_program::{HintParams, BuiltinName};
+use cairo_vm::serde::deserialize_program::HintParams;
 use cairo_vm::types::relocatable::Relocatable;
-use cairo_vm::vm::vm_core::VirtualMachine;
 use cheatnet::CheatnetState;
 use cheatnet::constants::{build_testing_state, build_transaction_context, build_block_context};
 use cheatnet::conversions::felt_selector_from_name;
-use cheatnet::execution::syscalls::CheatableSyscallHandler;
 use itertools::chain;
 
 use cairo_lang_casm::hints::Hint;
 use cairo_lang_casm::instructions::Instruction;
 use cairo_lang_runner::casm_run::hint_to_hint_params;
-use cairo_lang_runner::{CairoHintProcessor as CoreCairoHintProcessor, RunnerError};
-use cairo_lang_runner::{SierraCasmRunner, StarknetState};
-use cairo_vm::vm::runners::cairo_runner::{RunResources, CairoRunner};
+use cairo_lang_runner::RunnerError;
+use cairo_lang_runner::SierraCasmRunner;
+use cairo_vm::vm::runners::cairo_runner::RunResources;
 use camino::Utf8PathBuf;
 use starknet_api::core::{ContractAddress, EntryPointSelector};
 use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::hash::StarkHash;
 use starknet_api::transaction::Calldata;
-use starknet_api::{patricia_key, calldata};
+use starknet_api::patricia_key;
 use starknet_api::core::PatriciaKey;
 use test_collector::TestCase;
 
@@ -96,7 +91,7 @@ pub(crate) fn run_from_test_case(
     let test_selector = felt_selector_from_name("test_case");
     let entry_point_selector =
         EntryPointSelector(StarkHash::new(test_selector.to_be_bytes())?);
-    let mut entry_point = CallEntryPoint {
+    let entry_point = CallEntryPoint {
         class_hash: None,
         code_address: Some(ContractAddress::from(0_u8)),
         entry_point_type: EntryPointType::External,
@@ -114,7 +109,7 @@ pub(crate) fn run_from_test_case(
         &mut blockifier_state,
         &mut execution_resources,
         &mut context,
-        Relocatable { segment_index: 0, offset: 0,},
+        Relocatable { segment_index: 10, offset: 0,},
         entry_point,
         &string_to_hint,
         ReadOnlySegments::default(),

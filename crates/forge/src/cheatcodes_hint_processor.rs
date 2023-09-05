@@ -31,7 +31,7 @@ use cairo_lang_runner::casm_run::{extract_relocatable, vm_get_range, MemBuffer};
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{
     casm_run::{cell_ref_to_relocatable, extract_buffer, get_ptr},
-    insert_value_to_cellref, CairoHintProcessor as OriginalCairoHintProcessor,
+    insert_value_to_cellref 
 };
 
 use cairo_lang_starknet::contract::starknet_keccak;
