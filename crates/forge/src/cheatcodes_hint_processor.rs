@@ -21,8 +21,7 @@ use cheatnet::{
 };
 use num_traits::{One, ToPrimitive};
 use serde::Deserialize;
-use starknet_api::core::{ClassHash, ContractAddress, PatriciaKey};
-use starknet_api::hash::StarkFelt;
+use starknet_api::core::ContractAddress;
 
 use cairo_lang_casm::hints::{Hint, StarknetHint};
 use cairo_lang_casm::operand::{CellRef, ResOperand};
