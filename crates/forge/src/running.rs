@@ -109,7 +109,8 @@ pub(crate) fn run_from_test_case(
         &mut blockifier_state,
         &mut execution_resources,
         &mut context,
-        Relocatable { segment_index: 10, offset: 0,},
+        // This segment is created by SierraCasmRunner
+        Relocatable { segment_index: 10, offset: 0,}, 
         entry_point,
         &string_to_hint,
         ReadOnlySegments::default(),

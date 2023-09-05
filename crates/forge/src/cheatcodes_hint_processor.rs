@@ -537,10 +537,6 @@ fn execute_syscall(
         _ => {
             original_cairo_hint_processor.execute_hint(vm, exec_scopes, hint_data, constants)
         }
-        // _ => Err(HintError::CustomHint(Box::from(
-        //     "starknet syscalls (other than CallContract and Keccak) cannot be used in tests"
-        //         .to_string(),
-        // ))),
     }
 }
 

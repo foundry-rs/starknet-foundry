@@ -180,7 +180,7 @@ fn test_keccak_syscall_too_small_input() {
     assert_case_output_contains!(
         result,
         "test_execute_cairo_keccak",
-        "Invalid keccak input size"
+        "Invalid input length"
     );
 
     assert_failed!(result);
