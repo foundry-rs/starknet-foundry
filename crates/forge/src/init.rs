@@ -1,7 +1,7 @@
 use anyhow::{bail, Context, Ok, Result};
 
-use include_dir::{include_dir, Dir, DirEntry};
-use std::ffi::OsStr;
+use include_dir::{include_dir, Dir};
+
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
@@ -26,7 +26,12 @@ fn overwrite_files_from_template(
                 fs::write(path, contents)?;
             }
         }
-        None => {}
+        None => {
+            bail!(
+                "Directory {} doesn't exist in the template.",
+                dir_to_overwrite
+            )
+        }
     }
 
     Ok(())
