@@ -38,6 +38,7 @@ pub struct RunnerConfig {
     exact_match: bool,
     exit_first: bool,
     fuzzer_runs: u32,
+    builtins: Vec<String>,
 }
 
 impl RunnerConfig {
@@ -61,6 +62,16 @@ impl RunnerConfig {
             exact_match,
             exit_first: forge_config_from_scarb.exit_first || exit_first,
             fuzzer_runs: forge_config_from_scarb.fuzzer_runs.unwrap_or(fuzzer_runs),
+            builtins: vec![
+                "Pedersen".to_string(),
+                "RangeCheck".to_string(),
+                "Bitwise".to_string(),
+                "EcOp".to_string(),
+                "Poseidon".to_string(),
+                "SegmentArena".to_string(),
+                "GasBuiltin".to_string(),
+                "System".to_string(),
+            ],
         }
     }
 }
@@ -143,23 +154,12 @@ fn collect_tests_from_tree(
     corelib_path: &Utf8PathBuf,
     runner_config: &RunnerConfig,
 ) -> Result<TestsFromFile> {
-    let builtins = vec![
-        "Pedersen",
-        "RangeCheck",
-        "Bitwise",
-        "EcOp",
-        "Poseidon",
-        "SegmentArena",
-        "GasBuiltin",
-        "System",
-    ];
-
     let (sierra_program, tests_configs) = collect_tests(
         test_root.as_str(),
         None,
         package_name,
         linked_libraries.clone(),
-        Some(builtins.clone()),
+        Some(runner_config.builtins.iter().map(AsRef::as_ref).collect()),
         corelib_path.into(),
     )?;
 
@@ -337,17 +337,6 @@ fn run_tests_from_file(
             .filter(|pt| pt.debug_name == Some(SmolStr::from("felt252")))
             .collect::<Vec<_>>();
 
-        let builtins = [
-            "Pedersen",
-            "RangeCheck",
-            "Bitwise",
-            "EcOp",
-            "Poseidon",
-            "SegmentArena",
-            "GasBuiltin",
-            "System",
-        ];
-
         let result = if args.is_empty() {
             let result =
                 run_from_test_case(&runner, case, contracts, predeployed_contracts, vec![])?;
@@ -364,7 +353,7 @@ fn run_tests_from_file(
                 .filter(|pt| {
                     if let Some(name) = &pt.debug_name {
                         return name != &SmolStr::from("felt252")
-                            && !builtins.contains(&name.as_str());
+                            && !runner_config.builtins.contains(&name.to_string());
                     }
                     false
                 })
