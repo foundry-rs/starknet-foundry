@@ -84,4 +84,3 @@ pub fn execute_library_call(
 
     execute_inner_call(&mut entry_point, vm, syscall_handler, remaining_gas)
 }
-
