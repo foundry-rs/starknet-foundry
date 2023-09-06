@@ -738,7 +738,7 @@ dependencies = [
  "serde",
  "smol_str",
  "thiserror",
- "toml 0.7.6",
+ "toml",
 ]
 
 [[package]]
@@ -1096,7 +1096,7 @@ dependencies = [
  "tempfile",
  "test-case",
  "tokio",
- "toml 0.5.11",
+ "toml",
  "url",
  "which",
 ]
@@ -1130,9 +1130,13 @@ dependencies = [
  "cairo-lang-utils",
  "cairo-vm",
  "camino",
+ "conversions",
  "ctor",
+ "dotenv",
+ "flate2",
  "include_dir",
  "indoc",
+ "num-bigint",
  "num-traits 0.2.16",
  "regex",
  "serde",
@@ -1141,6 +1145,8 @@ dependencies = [
  "starknet_api",
  "tempfile",
  "thiserror",
+ "tokio",
+ "url",
 ]
 
 [[package]]
@@ -1242,6 +1248,33 @@ name = "const-fnv1a-hash"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32b13ea120a812beba79e34316b3942a857c86ec1593cb34f27bb28272ce2cca"
+
+[[package]]
+name = "conversions"
+version = "1.0.0"
+dependencies = [
+ "anyhow",
+ "assert_fs",
+ "blockifier",
+ "cairo-felt",
+ "cairo-lang-casm",
+ "cairo-lang-runner",
+ "cairo-lang-starknet",
+ "cairo-lang-utils",
+ "cairo-vm",
+ "camino",
+ "ctor",
+ "include_dir",
+ "indoc",
+ "num-traits 0.2.16",
+ "regex",
+ "serde",
+ "serde_json",
+ "starknet 0.5.0",
+ "starknet_api",
+ "tempfile",
+ "thiserror",
+]
 
 [[package]]
 name = "convert_case"
@@ -1556,6 +1589,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fea41bba32d969b513997752735605054bc0dfa92b4c56bf1189f2e174be7a10"
 
 [[package]]
+name = "dotenv"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "77c90badedccf4105eca100756a0b1289e191f6fcbdadd3cee1d2f614f97da8f"
+
+[[package]]
 name = "dyn-clone"
 version = "1.0.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1757,6 +1796,7 @@ dependencies = [
  "cheatnet",
  "clap",
  "console",
+ "conversions",
  "flatten-serde-json",
  "include_dir",
  "indoc",
@@ -4405,15 +4445,6 @@ dependencies = [
  "pin-project-lite",
  "tokio",
  "tracing",
-]
-
-[[package]]
-name = "toml"
-version = "0.5.11"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f4f7f0dd8d50a853a531c426359045b1998f04219d88799810762cd4ad314234"
-dependencies = [
- "serde",
 ]
 
 [[package]]

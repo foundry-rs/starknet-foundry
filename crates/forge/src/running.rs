@@ -26,6 +26,7 @@ use starknet_api::hash::StarkHash;
 use starknet_api::transaction::Calldata;
 use starknet_api::patricia_key;
 use starknet_api::core::PatriciaKey;
+use cheatnet::state::StateReaderProxy;
 use test_collector::TestCase;
 
 use crate::cheatcodes_hint_processor::CairoHintProcessor;
@@ -118,7 +119,9 @@ pub(crate) fn run_from_test_case(
     let mut cairo_hint_processor = CairoHintProcessor {
         original_cairo_hint_processor: syscall_handler,
         contracts,
-        cheatnet_state: CheatnetState::new(predeployed_contracts),
+        cheatnet_state: CheatnetState::new(StateReaderProxy(Box::new(build_testing_state(
+            predeployed_contracts,
+        )))),
         hints: &string_to_hint,
         run_resources: RunResources::new(0),
     };
