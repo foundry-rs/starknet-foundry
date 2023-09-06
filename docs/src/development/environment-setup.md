@@ -25,7 +25,8 @@ It is not possible to run tests without these installed.
 ## Forking tests
 
 To be able to run tests from `crates/cheatnet/tests/starknet/forking.rs`, you must have RPC node
-set up on the `integration` network.
+set up on the `integration` network. 
+See `.env.example` file in the root directory to see how your `.env` file should look like.
 
 > 📝 **Note**
 > This is only a temporary solution. We will use local node when `starknet-devnet-rs` supports RPC 0.4.0 specification.
