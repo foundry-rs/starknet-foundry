@@ -97,7 +97,7 @@ pub(crate) fn run_from_test_case(
         entry_point_type: EntryPointType::External,
         entry_point_selector,
         calldata: Calldata(Arc::new(vec![])),
-        storage_address: ContractAddress(patricia_key!("0x112")),
+        storage_address: ContractAddress(patricia_key!("0x0")),
         caller_address: ContractAddress::default(),
         call_type: CallType::Call,
         initial_gas: u64::MAX,
