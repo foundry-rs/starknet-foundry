@@ -10,7 +10,7 @@ use cairo_vm::serde::deserialize_program::HintParams;
 use cairo_vm::types::relocatable::Relocatable;
 use cheatnet::CheatnetState;
 use cheatnet::constants::{build_testing_state, build_transaction_context, build_block_context};
-use cheatnet::conversions::felt_selector_from_name;
+use conversions::StarknetConversions;
 use itertools::chain;
 
 use cairo_lang_casm::hints::Hint;
@@ -89,7 +89,7 @@ pub(crate) fn run_from_test_case(
         account_context,
         block_context.invoke_tx_max_n_steps.try_into().unwrap(),
     );
-    let test_selector = felt_selector_from_name("test_case");
+    let test_selector = String::from("test_case").to_felt252();
     let entry_point_selector =
         EntryPointSelector(StarkHash::new(test_selector.to_be_bytes())?);
     let  entry_point = CallEntryPoint {
