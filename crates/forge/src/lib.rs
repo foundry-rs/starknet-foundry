@@ -11,7 +11,8 @@ use test_case_summary::TestCaseSummary;
 use walkdir::WalkDir;
 
 use cairo_lang_runner::SierraCasmRunner;
-use cairo_lang_sierra::program::Program;
+use cairo_lang_sierra::ids::ConcreteTypeId;
+use cairo_lang_sierra::program::{Function, Program};
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use num_bigint::{BigUint, RandBigInt};
@@ -304,8 +305,6 @@ fn new_rng(seed: Option<u64>) -> Box<dyn RngCore> {
     }
 }
 
-// FIXME remove this
-#[allow(clippy::too_many_lines)]
 fn run_tests_from_file(
     tests: TestsFromFile,
     package_name: &str,
@@ -330,12 +329,7 @@ fn run_tests_from_file(
     for (i, case) in tests.test_cases.iter().enumerate() {
         let case_name = case.name.as_str();
         let function = runner.find_function(case_name)?;
-        let args = &function
-            .signature
-            .param_types
-            .iter()
-            .filter(|pt| pt.debug_name == Some(SmolStr::from("felt252")))
-            .collect::<Vec<_>>();
+        let args = args_for_function(function);
 
         let result = if args.is_empty() {
             let result =
@@ -348,18 +342,7 @@ fn run_tests_from_file(
                 runner_config.fuzzer_runs
             );
 
-            if args
-                .iter()
-                .filter(|pt| {
-                    if let Some(name) = &pt.debug_name {
-                        return name != &SmolStr::from("felt252")
-                            && !runner_config.builtins.contains(&name.to_string());
-                    }
-                    false
-                })
-                .count()
-                > 0
-            {
+            if contains_non_felt252_args(&args, &runner_config.builtins) {
                 bail!("Test {case_name} requires arguments that are not felt252 type");
             }
 
@@ -367,10 +350,7 @@ fn run_tests_from_file(
             let mut results = vec![];
 
             for _ in 1..runner_config.fuzzer_runs {
-                let args: Vec<Felt252> = args
-                    .iter()
-                    .map(|_| random_felt252_generator(&mut rng))
-                    .collect();
+                let args = random_felts_from_args(&args, &mut rng);
 
                 let result = run_from_test_case(
                     &runner,
@@ -425,6 +405,36 @@ fn run_tests_from_file(
         runner_exit_status: RunnerStatus::Default,
         relative_path: tests.relative_path,
     })
+}
+
+fn random_felts_from_args(
+    args: &Vec<&ConcreteTypeId>,
+    mut rng: &mut Box<dyn RngCore>,
+) -> Vec<Felt252> {
+    args.iter()
+        .map(|_| random_felt252_generator(&mut rng))
+        .collect()
+}
+
+fn contains_non_felt252_args(args: &Vec<&ConcreteTypeId>, builtins: &Vec<String>) -> bool {
+    args.iter()
+        .filter(|pt| {
+            if let Some(name) = &pt.debug_name {
+                return name != &SmolStr::from("felt252") && builtins.contains(&name.to_string());
+            }
+            false
+        })
+        .count()
+        > 0
+}
+
+fn args_for_function(function: &Function) -> Vec<&ConcreteTypeId> {
+    function
+        .signature
+        .param_types
+        .iter()
+        .filter(|pt| pt.debug_name == Some(SmolStr::from("felt252")))
+        .collect::<Vec<_>>()
 }
 
 fn filter_tests_by_name(
