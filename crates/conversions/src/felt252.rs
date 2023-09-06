@@ -14,7 +14,7 @@ impl StarknetConversions for Felt252 {
     }
 
     fn to_field_element(&self) -> FieldElement {
-        FieldElement::from_bytes_be(&self.to_bytes_be().try_into().unwrap()).unwrap()
+        FieldElement::from_bytes_be(&self.to_be_bytes()).unwrap()
     }
 
     fn to_stark_felt(&self) -> StarkFelt {
