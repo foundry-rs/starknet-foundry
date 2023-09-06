@@ -27,8 +27,8 @@ struct Args {
     /// Use exact matches for `test_filter`
     #[arg(short, long)]
     exact: bool,
-
-    #[clap(short, long)]
+    /// Create a new forge project with <name> in current directory
+    #[clap(long)]
     init: bool,
 
     /// Stop test execution after first failed test
