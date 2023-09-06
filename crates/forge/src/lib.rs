@@ -1,17 +1,24 @@
 use std::collections::HashMap;
 use std::fmt::Debug;
 
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
+use ark_std::iterable::Iterable;
+use cairo_felt::Felt252;
 use camino::{Utf8Path, Utf8PathBuf};
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use serde::Deserialize;
 use test_case_summary::TestCaseSummary;
 use walkdir::WalkDir;
 
-use cairo_lang_runner::SierraCasmRunner;
+use cairo_lang_runner::{SierraCasmRunner};
 use cairo_lang_sierra::program::Program;
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
+use num_bigint::{BigUint, RandBigInt};
+use num_traits::Zero;
+use rand::rngs::StdRng;
+use rand::{thread_rng, RngCore, SeedableRng};
+use smol_str::SmolStr;
 
 use crate::running::run_from_test_case;
 use crate::scarb::{ForgeConfig, StarknetContractArtifacts};
@@ -279,6 +286,23 @@ impl TestFileSummary {
     }
 }
 
+fn random_felt252_generator(rng: &mut dyn RngCore) -> Felt252 {
+    let low = BigUint::zero();
+    let high = Felt252::prime();
+
+    let random_uint: BigUint = rng.gen_biguint_range(&low, &high);
+    Felt252::from(random_uint)
+}
+
+fn new_rng(seed: Option<u64>) -> Box<dyn RngCore> {
+    match seed {
+        None => Box::new(thread_rng()),
+        Some(seed) => Box::new(StdRng::seed_from_u64(seed)),
+    }
+}
+
+// FIXME remove this
+#[allow(clippy::too_many_lines)]
 fn run_tests_from_file(
     tests: TestsFromFile,
     package_name: &str,
@@ -301,10 +325,93 @@ fn run_tests_from_file(
 
     let mut results = vec![];
     for (i, case) in tests.test_cases.iter().enumerate() {
-        let result = run_from_test_case(&runner, case, contracts, predeployed_contracts)?;
+        let case_name = case.name.as_str();
+        let function = runner.find_function(case_name)?;
+        let args = &function
+            .signature
+            .param_types
+            .iter()
+            .filter(|pt| pt.debug_name == Some(SmolStr::from("felt252")))
+            .collect::<Vec<_>>();
+
+        let builtins = [
+            "Pedersen",
+            "RangeCheck",
+            "Bitwise",
+            "EcOp",
+            "Poseidon",
+            "SegmentArena",
+            "GasBuiltin",
+            "System",
+        ];
+
+        let result = if args.is_empty() {
+            let result =
+                run_from_test_case(&runner, case, contracts, predeployed_contracts, vec![])?;
+            pretty_printing::print_test_result(&result);
+            result
+        } else {
+            let max_runs = 10;
+
+            println!("Running fuzzer for {case_name}, {max_runs} runs:");
+
+            if args
+                .iter()
+                .filter(|pt| {
+                    if let Some(name) = &pt.debug_name {
+                        return name != &SmolStr::from("felt252")
+                            && !builtins.contains(&name.as_str());
+                    }
+                    false
+                })
+                .count()
+                > 0
+            {
+                bail!("Test {case_name} requires arguments that are not felt252 type");
+            }
+
+            let mut rng = new_rng(None);
+            let mut results = vec![];
+
+            for _ in 1..max_runs {
+                let args: Vec<Felt252> = args
+                    .iter()
+                    .map(|_| random_felt252_generator(&mut rng))
+                    .collect();
+
+                let result = run_from_test_case(
+                    &runner,
+                    case,
+                    contracts,
+                    predeployed_contracts,
+                    args.clone(),
+                )?;
+                results.push((result.clone(), args));
+
+                if let TestCaseSummary::Failed { .. } = result {
+                    // Fuzz failed
+                    break;
+                }
+            }
+
+            let (result, args) = results
+                .last()
+                .expect("Test should always run at least once")
+                .clone();
+            let runs = results.len();
+
+            pretty_printing::print_test_result(&result);
+            if let TestCaseSummary::Failed { .. } = result {
+                println!("Fuzz test failed on arguments {args:?} after {runs} run(s)");
+            }
+
+            result
+        };
+
+        // let result = run_from_test_case(&runner, case, contracts, predeployed_contracts, args)?;
         results.push(result.clone());
 
-        pretty_printing::print_test_result(&result);
+        // pretty_printing::print_test_result(&result);
         if runner_config.exit_first {
             if let TestCaseSummary::Failed { .. } = result {
                 for case in &tests.test_cases[i + 1..] {
