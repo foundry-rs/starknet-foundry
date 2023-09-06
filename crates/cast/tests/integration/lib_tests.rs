@@ -2,7 +2,7 @@ use crate::helpers::constants::URL;
 use crate::helpers::fixtures::create_test_provider;
 
 use camino::Utf8PathBuf;
-use cast::{get_account, get_provider};
+use cast::{get_account_from_accounts_file, get_provider};
 use starknet::core::chain_id;
 use starknet::core::types::FieldElement;
 use std::fs;
@@ -33,7 +33,7 @@ async fn test_get_provider_empty_url() {
 #[test]
 fn test_get_account() {
     let provider = create_test_provider();
-    let account = get_account(
+    let account = get_account_from_accounts_file(
         "user1",
         &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
         &provider,
@@ -51,7 +51,7 @@ fn test_get_account() {
 #[test]
 fn test_get_account_no_file() {
     let provider = create_test_provider();
-    let account = get_account(
+    let account = get_account_from_accounts_file(
         "user1",
         &Utf8PathBuf::from("tests/data/accounts/nonexistentfile.json"),
         &provider,
@@ -64,7 +64,7 @@ fn test_get_account_no_file() {
 #[test]
 fn test_get_account_invalid_file() {
     let provider = create_test_provider();
-    let account = get_account(
+    let account = get_account_from_accounts_file(
         "user1",
         &Utf8PathBuf::from("tests/data/accounts/invalid_format.json"),
         &provider,
@@ -77,7 +77,7 @@ fn test_get_account_invalid_file() {
 #[test]
 fn test_get_account_wrong_chain_id() {
     let provider = create_test_provider();
-    let account = get_account(
+    let account = get_account_from_accounts_file(
         "user1",
         &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
         &provider,
@@ -93,7 +93,7 @@ fn test_get_account_wrong_chain_id() {
 #[test]
 fn test_get_account_no_account() {
     let provider = create_test_provider();
-    let account = get_account(
+    let account = get_account_from_accounts_file(
         "",
         &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
         &provider,
@@ -108,7 +108,7 @@ fn test_get_account_no_account() {
 #[test]
 fn test_get_account_no_user_for_network() {
     let provider = create_test_provider();
-    let account = get_account(
+    let account = get_account_from_accounts_file(
         "user10",
         &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
         &provider,
@@ -123,7 +123,7 @@ fn test_get_account_no_user_for_network() {
 #[test]
 fn test_get_account_failed_to_convert_field_elements() {
     let provider = create_test_provider();
-    let account1 = get_account(
+    let account1 = get_account_from_accounts_file(
         "with_wrong_private_key",
         &Utf8PathBuf::from("tests/data/accounts/faulty_accounts.json"),
         &provider,
@@ -134,7 +134,7 @@ fn test_get_account_failed_to_convert_field_elements() {
         .to_string()
         .contains("Failed to convert private key: privatekey to FieldElement"));
 
-    let account2 = get_account(
+    let account2 = get_account_from_accounts_file(
         "with_wrong_address",
         &Utf8PathBuf::from("tests/data/accounts/faulty_accounts.json"),
         &provider,

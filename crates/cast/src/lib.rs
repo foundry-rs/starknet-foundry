@@ -6,21 +6,12 @@ use rand::rngs::OsRng;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use starknet::core::types::{
-    BlockId,
-    BlockTag::{Latest, Pending},
-    FieldElement, MaybePendingTransactionReceipt,
-    MaybePendingTransactionReceipt::Receipt,
-    StarknetError,
-    TransactionReceipt::{Declare, Deploy, DeployAccount, Invoke, L1Handler},
-    TransactionStatus,
-};
 use starknet::core::utils::UdcUniqueness::{NotUnique, Unique};
 use starknet::core::utils::{UdcUniqueSettings, UdcUniqueness};
 use starknet::providers::jsonrpc::JsonRpcClientError;
 use starknet::providers::jsonrpc::JsonRpcClientError::RpcError;
 use starknet::providers::jsonrpc::RpcError::{Code, Unknown};
-use starknet::providers::ProviderError::{Other, StarknetError as ProviderStarknetError};
+use starknet::providers::ProviderError::Other;
 use starknet::{
     accounts::SingleOwnerAccount,
     providers::{
@@ -28,6 +19,18 @@ use starknet::{
         Provider, ProviderError,
     },
     signers::{LocalWallet, SigningKey},
+};
+use starknet::{
+    core::types::{
+        BlockId,
+        BlockTag::{Latest, Pending},
+        FieldElement, MaybePendingTransactionReceipt,
+        MaybePendingTransactionReceipt::Receipt,
+        StarknetError,
+        TransactionReceipt::{Declare, Deploy, DeployAccount, Invoke, L1Handler},
+        TransactionStatus,
+    },
+    providers::{MaybeUnknownErrorCode, StarknetErrorWithMessage},
 };
 use std::collections::HashMap;
 use std::fs;
@@ -95,7 +98,7 @@ pub fn decode_chain_id(chain_id: FieldElement) -> String {
     String::from_utf8(non_zero_bytes).unwrap_or_default()
 }
 
-pub fn get_account<'a>(
+pub fn get_account_from_accounts_file<'a>(
     name: &str,
     accounts_file_path: &Utf8PathBuf,
     provider: &'a JsonRpcClient<HttpTransport>,
@@ -150,7 +153,10 @@ pub async fn wait_for_tx(
                 maybe_receipt = Some(receipt);
                 break;
             }
-            Err(ProviderError::StarknetError(StarknetError::TransactionHashNotFound)) => {
+            Err(ProviderError::StarknetError(StarknetErrorWithMessage {
+                code: MaybeUnknownErrorCode::Known(StarknetError::TransactionHashNotFound),
+                message: _,
+            })) => {
                 println!("Waiting for transaction to be received. Retries left: {i}");
             }
             Err(err) => return Err(err.into()),
@@ -215,10 +221,9 @@ pub fn handle_rpc_error<T, G>(
     error: ProviderError<JsonRpcClientError<T>>,
 ) -> std::result::Result<G, Error> {
     match error {
-        Other(RpcError(Code(error))) | ProviderStarknetError(error) => {
-            Err(anyhow!(get_rpc_error_message(error)))
-        }
+        Other(RpcError(Code(error))) => Err(anyhow!(get_rpc_error_message(error))),
         Other(RpcError(Unknown(error))) => Err(anyhow!(error.message)),
+        ProviderError::StarknetError(error) => Err(anyhow!(error.message)),
         _ => Err(anyhow!("Unknown RPC error")),
     }
 }

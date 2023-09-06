@@ -99,3 +99,19 @@ $ sncast \
 command: account deploy
 transaction_hash: 0x20b20896ce63371ef015d66b4dd89bf18c5510a840b4a85a43a983caa6e2579
 ```
+
+### Using keystore and starkli account
+
+Accounts created and deployed with starkli can be used by specifying the `--keystore` argument.
+
+> 💡 **Info**
+> When passing the --keystore argument, --account argument should be a path to the starkli account JSON file.
+
+```shell
+$ sncast \
+    --url http://127.0.0.1:5050 \
+    --keystore path/to/keystore.json \
+    --account path/to/account.json  \
+    declare \
+    --contract-name my_contract
+```

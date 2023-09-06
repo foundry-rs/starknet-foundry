@@ -11,7 +11,7 @@ clap = { version = "4.3.0", features = ["derive"] }
 console = "0.15.7"
 serde = { version = "1.0.163", features = ["derive"] }
 serde_json = "1.0.96"
-starknet = "0.4.0"
+starknet = "0.5.0"
 tokio.workspace = true
 url.workspace = true
 rand = "0.8.5"
@@ -21,6 +21,7 @@ shellexpand = "3.1.0"
 toml = "0.5.2"
 project-root = "0.2.2"
 which = "4.4.0"
+rpassword = "7.2.0"
 
 [dev-dependencies]
 ctor.workspace = true

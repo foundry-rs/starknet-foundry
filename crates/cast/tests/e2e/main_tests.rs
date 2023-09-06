@@ -1,6 +1,14 @@
-use crate::helpers::constants::{ACCOUNT, ACCOUNT_FILE_PATH, MAP_CONTRACT_ADDRESS_V1, URL};
+use std::env;
+
+use crate::helpers::constants::{
+    ACCOUNT, ACCOUNT_FILE_PATH, CONTRACTS_DIR, MAP_CONTRACT_ADDRESS_V1, URL,
+};
+use crate::helpers::fixtures::duplicate_directory_with_salt;
 use crate::helpers::runner::runner;
+use cast::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
 use indoc::indoc;
+use snapbox::cmd::{cargo_bin, Command};
+use std::fs;
 
 #[tokio::test]
 async fn test_happy_case_from_scarb() {
@@ -20,7 +28,7 @@ async fn test_happy_case_from_scarb() {
 
     snapbox.assert().success().stderr_matches(indoc! {r#"
         command: call
-        error: There is no contract at the specified address
+        error: Contract not found
     "#});
 }
 
@@ -44,7 +52,7 @@ async fn test_happy_case_from_cli_no_scarb() {
 
     snapbox.assert().success().stderr_matches(indoc! {r#"
         command: call
-        error: There is no contract at the specified address
+        error: Contract not found
     "#});
 }
 
@@ -152,4 +160,119 @@ async fn test_missing_url() {
     snapbox.assert().stderr_matches(indoc! {r#"
         Error: RPC url not passed nor found in Scarb.toml
     "#});
+}
+
+#[tokio::test]
+async fn test_inexistent_keystore() {
+    let args = vec![
+        "--url",
+        URL,
+        "--keystore",
+        "inexistent_key.json",
+        "declare",
+        "--contract-name",
+        "my_contract",
+    ];
+
+    let snapbox = runner(&args);
+
+    snapbox.assert().stderr_matches(indoc! {r#"
+        Error: keystore file does not exist
+    "#});
+}
+
+#[tokio::test]
+async fn test_keystore_account_required() {
+    let args = vec![
+        "--url",
+        URL,
+        "--keystore",
+        "tests/data/keystore/my_key.json",
+        "declare",
+        "--contract-name",
+        "my_contract",
+    ];
+
+    let snapbox = runner(&args);
+
+    snapbox.assert().stderr_matches(indoc! {r#"
+        Error: --account is required when using keystore
+    "#});
+}
+
+#[tokio::test]
+async fn test_keystore_inexistent_account() {
+    let args = vec![
+        "--url",
+        URL,
+        "--keystore",
+        "tests/data/keystore/my_key.json",
+        "--account",
+        "inexistent_account",
+        "declare",
+        "--contract-name",
+        "my_contract",
+    ];
+
+    let snapbox = runner(&args);
+
+    snapbox.assert().stderr_matches(indoc! {r#"
+        Error: account file does not exist; [..]
+    "#});
+}
+
+#[tokio::test]
+async fn test_keystore_undeployed_account() {
+    let contract_path =
+        duplicate_directory_with_salt(CONTRACTS_DIR.to_string() + "/v1/map", "put", "8");
+
+    let args = vec![
+        "--url",
+        URL,
+        "--keystore",
+        "../../../keystore/my_key.json",
+        "--account",
+        "../../../keystore/my_account_undeployed.json",
+        "declare",
+        "--contract-name",
+        "Map",
+    ];
+
+    env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(&contract_path)
+        .args(args);
+
+    snapbox.assert().stderr_matches(indoc! {r#"
+        Error: [..] make sure the account is deployed
+    "#});
+
+    fs::remove_dir_all(contract_path).unwrap();
+}
+
+#[tokio::test]
+async fn test_keystore_declare() {
+    let contract_path =
+        duplicate_directory_with_salt(CONTRACTS_DIR.to_string() + "/v1/map", "put", "999");
+
+    let args = vec![
+        "--url",
+        URL,
+        "--keystore",
+        "../../../keystore/my_key.json",
+        "--account",
+        "../../../keystore/my_account.json",
+        "declare",
+        "--contract-name",
+        "Map",
+    ];
+
+    env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(&contract_path)
+        .args(args);
+
+    snapbox.assert().success().get_output().stderr.is_empty();
+
+    fs::remove_dir_all(contract_path).unwrap();
 }

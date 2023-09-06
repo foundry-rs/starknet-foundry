@@ -4,7 +4,7 @@ use crate::helpers::{
 };
 use camino::Utf8PathBuf;
 use cast::helpers::constants::DEFAULT_RETRIES;
-use cast::{get_account, handle_wait_for_tx, parse_number, wait_for_tx};
+use cast::{get_account_from_accounts_file, handle_wait_for_tx, parse_number, wait_for_tx};
 use starknet::core::types::FieldElement;
 use starknet::{contract::ContractFactory, core::chain_id};
 
@@ -25,7 +25,7 @@ async fn test_happy_path() {
 #[tokio::test]
 async fn test_rejected_transaction() {
     let provider = create_test_provider();
-    let account = get_account(
+    let account = get_account_from_accounts_file(
         ACCOUNT,
         &Utf8PathBuf::from(ACCOUNT_FILE_PATH),
         &provider,

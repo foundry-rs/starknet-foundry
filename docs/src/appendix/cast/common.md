@@ -26,10 +26,18 @@ Account name used to interact with the network, aliased in open zeppelin account
 
 Overrides account from `Scarb.toml`.
 
+If used with `--keystore`, should be a path to starkli account JSON file.
+
 ## `--accounts-file, -f <PATH_TO_ACCOUNTS_FILE>`
 Optional.
 
 Path to the open zeppelin accounts file holding accounts info. Defaults to `~/.starknet_accounts/starknet_open_zeppelin_accounts.json`.
+
+## `--keystore, -k <PATH_TO_KEYSTORE_FILE>`
+Optional.
+
+Path to keystore file.
+If specified, --account should be a path to starkli account JSON file.
 
 ## `--int-format, -i`
 Optional.

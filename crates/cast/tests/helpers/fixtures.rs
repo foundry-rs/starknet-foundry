@@ -1,6 +1,6 @@
 use crate::helpers::constants::{ACCOUNT_FILE_PATH, CONTRACTS_DIR, URL};
 use camino::Utf8PathBuf;
-use cast::{get_account, get_provider, parse_number};
+use cast::{get_account_from_accounts_file, get_provider, parse_number};
 use serde_json::{json, Value};
 use starknet::accounts::{Account, Call};
 use starknet::contract::ContractFactory;
@@ -18,7 +18,7 @@ use url::Url;
 pub async fn declare_contract(account: &str, path: &str) -> FieldElement {
     let provider = get_provider(URL).expect("Could not get the provider");
     let chain_id = provider.chain_id().await.expect("Could not get chain_id");
-    let account = get_account(
+    let account = get_account_from_accounts_file(
         account,
         &Utf8PathBuf::from(ACCOUNT_FILE_PATH),
         &provider,
@@ -58,7 +58,7 @@ pub async fn declare_deploy_contract(account: &str, path: &str) {
 
     let provider = get_provider(URL).expect("Could not get the provider");
     let chain_id = provider.chain_id().await.expect("Could not get chain_id");
-    let account = get_account(
+    let account = get_account_from_accounts_file(
         account,
         &Utf8PathBuf::from(ACCOUNT_FILE_PATH),
         &provider,
@@ -74,7 +74,7 @@ pub async fn declare_deploy_contract(account: &str, path: &str) {
 pub async fn invoke_map_contract(key: &str, value: &str, account: &str, contract_address: &str) {
     let provider = get_provider(URL).expect("Could not get the provider");
     let chain_id = provider.chain_id().await.expect("Could not get chain_id");
-    let account = get_account(
+    let account = get_account_from_accounts_file(
         account,
         &Utf8PathBuf::from(ACCOUNT_FILE_PATH),
         &provider,
@@ -106,7 +106,8 @@ pub async fn mint_token(recipient: &str, amount: f32) {
     );
     client
         .post("http://127.0.0.1:5055/mint")
-        .json(&json)
+        .header("Content-Type", "application/json")
+        .body(json.to_string())
         .send()
         .await
         .expect("Error occurred while minting tokens");
