@@ -29,7 +29,6 @@ Options:
   -p, --no-modify-path   Skip PATH variable modification
   -h, --help             Print help
   -v, --version          Specify Starknet Foundry version to install
-  --init                 Create a new foundry project
 
 For more information, check out https://foundry-rs.github.io/starknet-foundry/getting-started/installation.html
 EOF
