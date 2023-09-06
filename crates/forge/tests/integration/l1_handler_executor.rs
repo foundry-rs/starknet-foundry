@@ -70,6 +70,7 @@ fn l1_handler_executor() {
     let result = run(
         &test.path().unwrap(),
         &String::from("src"),
+        &[],
         &test.path().unwrap().join("src/lib.cairo"),
         &Some(test.linked_libraries()),
         &Default::default(),

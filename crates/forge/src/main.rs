@@ -3,7 +3,7 @@ use camino::Utf8PathBuf;
 use clap::Parser;
 use include_dir::{include_dir, Dir};
 use scarb_metadata::packages_filter::PackagesFilter;
-use scarb_metadata::{MetadataCommand, PackageId};
+use scarb_metadata::{MetadataCommand, PackageMetadata};
 use std::path::PathBuf;
 use tempfile::{tempdir, TempDir};
 
@@ -72,24 +72,29 @@ fn main_execution() -> Result<()> {
         )
     }
 
-    let packages: Vec<PackageId> = args
+    let packages: Vec<PackageMetadata> = args
         .packages_filter
         .match_many(&scarb_metadata)
-        .context("Failed to find any packages matching the specified filter")?
-        .iter()
-        .map(|package| package.id.clone())
-        .collect();
+        .context("Failed to find any packages matching the specified filter")?;
 
     for package in &packages {
-        let forge_config = forge::scarb::config_from_scarb_for_package(&scarb_metadata, package)?;
-        let (package_path, lib_path) = paths_for_package(&scarb_metadata, package)?;
+        let forge_config =
+            forge::scarb::config_from_scarb_for_package(&scarb_metadata, &package.id)?;
+        let (package_path, lib_path) = paths_for_package(&scarb_metadata, &package.id)?;
+
+        let subpackages: Vec<Utf8PathBuf> = scarb_metadata
+            .packages
+            .iter()
+            .map(|package| package.manifest_path.parent().unwrap().to_path_buf())
+            .filter(|path| path.starts_with(&package_path) && *path != package_path)
+            .collect();
 
         std::env::set_current_dir(package_path.clone())?;
 
-        let package_name = name_for_package(&scarb_metadata, package)?;
-        let dependencies = dependencies_for_package(&scarb_metadata, package)?;
-        let target_name = target_name_for_package(&scarb_metadata, package)?;
-        let corelib_path = corelib_for_package(&scarb_metadata, package)?;
+        let package_name = name_for_package(&scarb_metadata, &package.id)?;
+        let dependencies = dependencies_for_package(&scarb_metadata, &package.id)?;
+        let target_name = target_name_for_package(&scarb_metadata, &package.id)?;
+        let corelib_path = corelib_for_package(&scarb_metadata, &package.id)?;
         let runner_config = RunnerConfig::new(
             args.test_name.clone(),
             args.exact,
@@ -106,6 +111,7 @@ fn main_execution() -> Result<()> {
         run(
             &package_path,
             &package_name,
+            &subpackages,
             &lib_path,
             &Some(dependencies.clone()),
             &runner_config,

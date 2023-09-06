@@ -75,12 +75,13 @@ struct TestsFromFile {
 fn collect_tests_from_directory(
     package_path: &Utf8PathBuf,
     package_name: &str,
+    subpackages: &[Utf8PathBuf],
     lib_path: &Utf8PathBuf,
     linked_libraries: &Option<Vec<LinkedLibrary>>,
     corelib_path: &Utf8PathBuf,
     runner_config: &RunnerConfig,
 ) -> Result<Vec<TestsFromFile>> {
-    let test_files = find_cairo_root_files_in_directory(package_path, lib_path)?;
+    let test_files = find_cairo_root_files_in_directory(package_path, lib_path, subpackages)?;
     test_files
         .par_iter()
         .map(|tf| {
@@ -99,20 +100,21 @@ fn collect_tests_from_directory(
 fn find_cairo_root_files_in_directory(
     package_path: &Utf8PathBuf,
     lib_path: &Utf8PathBuf,
+    subpackages: &[Utf8PathBuf],
 ) -> Result<Vec<Utf8PathBuf>> {
     let mut test_files: Vec<Utf8PathBuf> = vec![lib_path.clone()];
     let src_path = lib_path.parent().with_context(|| {
         format!("Failed to get parent directory of a package at path = {lib_path}")
     })?;
-    let crates_path = src_path
-        .parent()
-        .with_context(|| format!("Failed to get root directory of a package at path = {lib_path}"))?
-        .join(Utf8PathBuf::from("crates"));
-
     for entry in WalkDir::new(package_path)
         .sort_by_file_name()
         .into_iter()
-        .filter_entry(|e| !e.path().starts_with(src_path) && !e.path().starts_with(&crates_path))
+        .filter_entry(|e| {
+            !e.path().starts_with(src_path)
+                && !subpackages
+                    .into_iter()
+                    .any(|path| e.path().starts_with(path))
+        })
     {
         let entry =
             entry.with_context(|| format!("Failed to read directory at path = {package_path}"))?;
@@ -188,6 +190,7 @@ fn collect_tests_from_tree(
 pub fn run(
     package_path: &Utf8PathBuf,
     package_name: &str,
+    subpackages: &[Utf8PathBuf],
     lib_path: &Utf8PathBuf,
     linked_libraries: &Option<Vec<LinkedLibrary>>,
     runner_config: &RunnerConfig,
@@ -198,6 +201,7 @@ pub fn run(
     let tests = collect_tests_from_directory(
         package_path,
         package_name,
+        subpackages,
         lib_path,
         linked_libraries,
         corelib_path,
@@ -372,7 +376,7 @@ mod tests {
         let tests_path = Utf8PathBuf::from_path_buf(temp.to_path_buf()).unwrap();
         let lib_path = tests_path.join("src/lib.cairo");
 
-        let tests = find_cairo_root_files_in_directory(&tests_path, &lib_path).unwrap();
+        let tests = find_cairo_root_files_in_directory(&tests_path, &lib_path, &[]).unwrap();
 
         assert!(!tests.is_empty());
     }
@@ -382,12 +386,10 @@ mod tests {
         let tests_path = Utf8PathBuf::from("aaee");
         let lib_path = Utf8PathBuf::from("asdfgdfg");
 
-        let result = find_cairo_root_files_in_directory(&tests_path, &lib_path);
+        let result = find_cairo_root_files_in_directory(&tests_path, &lib_path, &[]);
         let err = result.unwrap_err();
 
-        assert!(err
-            .to_string()
-            .contains("Failed to get root directory of a package at path"));
+        assert!(err.to_string().contains("Failed to read directory at path"));
     }
 
     #[test]
