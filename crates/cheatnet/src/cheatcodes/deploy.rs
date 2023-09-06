@@ -3,6 +3,7 @@ use crate::{cheatcodes::EnhancedHintError, CheatnetState};
 use anyhow::Result;
 use blockifier::abi::abi_utils::selector_from_name;
 use blockifier::execution::execution_utils::{felt_to_stark_felt, stark_felt_to_felt};
+use blockifier::transaction::constants::EXECUTE_ENTRY_POINT_NAME;
 
 use blockifier::state::state_api::{State, StateReader};
 use cairo_felt::Felt252;
@@ -60,7 +61,9 @@ impl CheatnetState {
 
         let call_result = call_contract(
             &account_address,
-            &get_selector_from_name("__execute__").unwrap().to_felt252(),
+            &get_selector_from_name(EXECUTE_ENTRY_POINT_NAME)
+                .unwrap()
+                .to_felt252(),
             execute_calldata.as_slice(),
             self,
         )

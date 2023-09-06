@@ -6,6 +6,7 @@ use crate::{
     constants::{build_block_context, build_transaction_context},
     execution::{
         entry_point::execute_call_entry_point, events::collect_emitted_events_from_spied_contracts,
+        gas::recover_gas_from_execution_resources,
     },
     CheatnetState,
 };
@@ -76,6 +77,10 @@ pub fn call_contract(
         &mut resources,
         &mut context,
     );
+
+    let gas = recover_gas_from_execution_resources(&block_context, &resources);
+    // TODO REPORT STEPS AND BUILTINS AS WELL
+    dbg!(&gas);
 
     match exec_result {
         Ok(call_info) => {

@@ -15,8 +15,8 @@ use blockifier::{
 };
 use cairo_felt::Felt252;
 use cairo_vm::vm::runners::builtin_runner::{
-    BITWISE_BUILTIN_NAME, EC_OP_BUILTIN_NAME, HASH_BUILTIN_NAME, OUTPUT_BUILTIN_NAME,
-    POSEIDON_BUILTIN_NAME, RANGE_CHECK_BUILTIN_NAME, SIGNATURE_BUILTIN_NAME,
+    BITWISE_BUILTIN_NAME, EC_OP_BUILTIN_NAME, HASH_BUILTIN_NAME, KECCAK_BUILTIN_NAME,
+    OUTPUT_BUILTIN_NAME, POSEIDON_BUILTIN_NAME, RANGE_CHECK_BUILTIN_NAME, SIGNATURE_BUILTIN_NAME,
 };
 use camino::Utf8PathBuf;
 use starknet_api::{
@@ -47,18 +47,46 @@ pub const TEST_FAULTY_ACCOUNT_CONTRACT_CLASS_HASH: &str = "0x113";
 pub const SECURITY_TEST_CLASS_HASH: &str = "0x114";
 pub const TEST_ERC20_CONTRACT_CLASS_HASH: &str = "0x1010";
 
+pub const STEP_RESOURCE_COST: f64 = 0.01_f64;
+
+// HOW TO FIND:
+// 1. https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/fee-mechanism/#general_case
+// 2. src/starkware/cairo/lang/instances.py::starknet_with_keccak_instance
 #[must_use]
 pub fn build_block_context() -> BlockContext {
     // blockifier::test_utils::create_for_account_testing
     let vm_resource_fee_cost = Arc::new(HashMap::from([
-        (constants::N_STEPS_RESOURCE.to_string(), 1_f64),
-        (HASH_BUILTIN_NAME.to_string(), 1_f64),
-        (RANGE_CHECK_BUILTIN_NAME.to_string(), 1_f64),
-        (SIGNATURE_BUILTIN_NAME.to_string(), 1_f64),
-        (BITWISE_BUILTIN_NAME.to_string(), 1_f64),
-        (POSEIDON_BUILTIN_NAME.to_string(), 1_f64),
-        (OUTPUT_BUILTIN_NAME.to_string(), 1_f64),
-        (EC_OP_BUILTIN_NAME.to_string(), 1_f64),
+        (constants::N_STEPS_RESOURCE.to_string(), STEP_RESOURCE_COST),
+        (HASH_BUILTIN_NAME.to_string(), 32_f64 * STEP_RESOURCE_COST),
+        (
+            RANGE_CHECK_BUILTIN_NAME.to_string(),
+            16_f64 * STEP_RESOURCE_COST,
+        ),
+        (
+            SIGNATURE_BUILTIN_NAME.to_string(),
+            2048_f64 * STEP_RESOURCE_COST,
+        ), // ECDSA
+        (
+            BITWISE_BUILTIN_NAME.to_string(),
+            64_f64 * STEP_RESOURCE_COST,
+        ),
+        (
+            POSEIDON_BUILTIN_NAME.to_string(),
+            32_f64 * STEP_RESOURCE_COST,
+        ),
+        (OUTPUT_BUILTIN_NAME.to_string(), 0_f64 * STEP_RESOURCE_COST),
+        (
+            EC_OP_BUILTIN_NAME.to_string(),
+            1024_f64 * STEP_RESOURCE_COST,
+        ),
+        (
+            KECCAK_BUILTIN_NAME.to_string(),
+            2048_f64 * STEP_RESOURCE_COST, // 2**11
+        ),
+        // (
+        //     SEGMENT_ARENA_BUILTIN_NAME.to_string(),
+        //     0_f64 * STEP_RESOURCE_COST,
+        // ), // BUILTIN COST NOT FOUND
     ]));
 
     BlockContext {
