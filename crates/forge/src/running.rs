@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use anyhow::Result;
+use cairo_felt::Felt252;
 use cairo_vm::serde::deserialize_program::HintParams;
 use cheatnet::CheatnetState;
 use itertools::chain;
@@ -8,10 +9,15 @@ use itertools::chain;
 use cairo_lang_casm::hints::Hint;
 use cairo_lang_casm::instructions::Instruction;
 use cairo_lang_runner::casm_run::hint_to_hint_params;
-use cairo_lang_runner::{CairoHintProcessor as CoreCairoHintProcessor, RunnerError};
+use cairo_lang_runner::{Arg, CairoHintProcessor as CoreCairoHintProcessor, RunnerError};
 use cairo_lang_runner::{SierraCasmRunner, StarknetState};
 use cairo_vm::vm::runners::cairo_runner::RunResources;
 use camino::Utf8PathBuf;
+use num_bigint::{BigUint, RandBigInt};
+use num_traits::Zero;
+use rand::rngs::{StdRng};
+use rand::{thread_rng, RngCore, SeedableRng};
+use smol_str::SmolStr;
 use test_collector::TestCase;
 
 use crate::cheatcodes_hint_processor::CairoHintProcessor;
@@ -44,6 +50,21 @@ fn build_hints_dict<'b>(
     (hints_dict, string_to_hint)
 }
 
+fn random_felt252_generator(rng: &mut dyn RngCore) -> Felt252 {
+    let low = BigUint::zero();
+    let high = Felt252::prime();
+
+    let random_uint: BigUint = rng.gen_biguint_range(&low, &high);
+    Felt252::from(random_uint)
+}
+
+fn new_rng(seed: Option<u64>) -> Box<dyn RngCore> {
+    match seed {
+        None => Box::new(thread_rng()),
+        Some(seed) => Box::new(StdRng::seed_from_u64(seed)),
+    }
+}
+
 pub(crate) fn run_from_test_case(
     runner: &SierraCasmRunner,
     case: &TestCase,
@@ -57,7 +78,17 @@ pub(crate) fn run_from_test_case(
     };
     let func = runner.find_function(case.name.as_str())?;
     let initial_gas = runner.get_initial_available_gas(func, available_gas)?;
-    let (entry_code, builtins) = runner.create_entry_code(func, &[], initial_gas)?;
+
+    let mut rng = new_rng(None);
+    let args: Vec<Arg> = func
+        .signature
+        .param_types
+        .iter()
+        .filter(|pt| pt.debug_name == Some(SmolStr::from("felt252")))
+        .map(|_| Arg::Value(random_felt252_generator(&mut rng)))
+        .collect();
+
+    let (entry_code, builtins) = runner.create_entry_code(func, &args, initial_gas)?;
     let footer = runner.create_code_footer();
     let instructions = chain!(
         entry_code.iter(),
