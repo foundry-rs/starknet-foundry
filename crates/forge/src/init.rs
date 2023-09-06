@@ -14,8 +14,8 @@ fn overwrite_files_from_template(
     base_path: &PathBuf,
     project_name: &str,
 ) -> Result<()> {
-    let copy_form_dir = TEMPLATE.get_dir(dir_to_overwrite);
-    match copy_form_dir {
+    let copy_from_dir = TEMPLATE.get_dir(dir_to_overwrite);
+    match copy_from_dir {
         Some(dir) => {
             for file in dir.files() {
                 fs::create_dir_all(base_path.join(Path::new(dir_to_overwrite)))?;
@@ -76,12 +76,16 @@ pub fn init(name: Option<String>) -> Result<()> {
         .output()
         .context("Failed to initial new project")?;
 
+    let version = env!("CARGO_PKG_VERSION");
+
     Command::new("scarb")
         .current_dir(&project_path)
         .arg("add")
         .arg("snforge_std")
         .arg("--git")
         .arg("https://github.com/foundry-rs/starknet-foundry.git")
+        .arg("--tag")
+        .arg(format!("v{}", version))
         .stderr(Stdio::inherit())
         .stdout(Stdio::inherit())
         .output()
