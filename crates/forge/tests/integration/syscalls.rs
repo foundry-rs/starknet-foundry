@@ -177,11 +177,7 @@ fn test_keccak_syscall_too_small_input() {
 
     let result = run_test_case(&test);
 
-    assert_case_output_contains!(
-        result,
-        "test_execute_cairo_keccak",
-        "Invalid input length"
-    );
+    assert_case_output_contains!(result, "test_execute_cairo_keccak", "Invalid input length");
 
     assert_failed!(result);
 }

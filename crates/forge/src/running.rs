@@ -2,14 +2,16 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use anyhow::Result;
-use blockifier::execution::entry_point::{ExecutionResources, EntryPointExecutionContext, CallEntryPoint, CallType};
+use blockifier::execution::entry_point::{
+    CallEntryPoint, CallType, EntryPointExecutionContext, ExecutionResources,
+};
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
-use blockifier::state::cached_state::{GlobalContractCache, CachedState};
+use blockifier::state::cached_state::{CachedState, GlobalContractCache};
 use cairo_vm::serde::deserialize_program::HintParams;
 use cairo_vm::types::relocatable::Relocatable;
+use cheatnet::constants::{build_block_context, build_testing_state, build_transaction_context};
 use cheatnet::CheatnetState;
-use cheatnet::constants::{build_testing_state, build_transaction_context, build_block_context};
 use conversions::StarknetConversions;
 use itertools::chain;
 
@@ -20,13 +22,13 @@ use cairo_lang_runner::RunnerError;
 use cairo_lang_runner::SierraCasmRunner;
 use cairo_vm::vm::runners::cairo_runner::RunResources;
 use camino::Utf8PathBuf;
+use cheatnet::state::StateReaderProxy;
+use starknet_api::core::PatriciaKey;
 use starknet_api::core::{ContractAddress, EntryPointSelector};
 use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::hash::StarkHash;
-use starknet_api::transaction::Calldata;
 use starknet_api::patricia_key;
-use starknet_api::core::PatriciaKey;
-use cheatnet::state::StateReaderProxy;
+use starknet_api::transaction::Calldata;
 use test_collector::TestCase;
 
 use crate::cheatcodes_hint_processor::CairoHintProcessor;
@@ -90,9 +92,8 @@ pub(crate) fn run_from_test_case(
         block_context.invoke_tx_max_n_steps.try_into().unwrap(),
     );
     let test_selector = String::from("test_case").to_felt252();
-    let entry_point_selector =
-        EntryPointSelector(StarkHash::new(test_selector.to_be_bytes())?);
-    let  entry_point = CallEntryPoint {
+    let entry_point_selector = EntryPointSelector(StarkHash::new(test_selector.to_be_bytes())?);
+    let entry_point = CallEntryPoint {
         class_hash: None,
         code_address: Some(ContractAddress::from(0_u8)),
         entry_point_type: EntryPointType::External,
@@ -104,14 +105,20 @@ pub(crate) fn run_from_test_case(
         initial_gas: u64::MAX,
     };
 
-    let mut blockifier_state = CachedState::new(build_testing_state(predeployed_contracts), GlobalContractCache::default());
+    let mut blockifier_state = CachedState::new(
+        build_testing_state(predeployed_contracts),
+        GlobalContractCache::default(),
+    );
     let mut execution_resources = ExecutionResources::default();
     let syscall_handler = SyscallHintProcessor::new(
         &mut blockifier_state,
         &mut execution_resources,
         &mut context,
         // This segment is created by SierraCasmRunner
-        Relocatable { segment_index: 10, offset: 0,}, 
+        Relocatable {
+            segment_index: 10,
+            offset: 0,
+        },
         entry_point,
         &string_to_hint,
         ReadOnlySegments::default(),

@@ -35,20 +35,18 @@ fn test_storage_access_from_tests() {
             assert(value == 10, 'Incorrect storage value');
         }
     "#
-    ),
-    );
+    ),);
 
     let result = run_test_case(&test);
 
     assert_passed!(result);
 }
 
-
-
 #[test]
 fn test_simple_syscalls() {
-    let test = test_case!(indoc!(
-        r#"
+    let test = test_case!(
+        indoc!(
+            r#"
         use starknet::info::{get_execution_info};
         use result::ResultTrait;
         use box::BoxTrait;
@@ -112,7 +110,7 @@ fn test_simple_syscalls() {
             assert(tx_info.nonce == dispatcher.get_nonce(), 'Incorrect nonce');
         }
     "#
-    ),
+        ),
         Contract::from_code_path(
             "SpoofChecker".to_string(),
             Path::new("tests/data/contracts/spoof_checker.cairo"),

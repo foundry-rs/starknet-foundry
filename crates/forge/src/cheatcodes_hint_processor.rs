@@ -31,7 +31,7 @@ use cairo_lang_runner::casm_run::{extract_relocatable, vm_get_range, MemBuffer};
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{
     casm_run::{cell_ref_to_relocatable, extract_buffer, get_ptr},
-    insert_value_to_cellref 
+    insert_value_to_cellref,
 };
 
 use cairo_lang_starknet::contract::starknet_keccak;
@@ -62,15 +62,24 @@ pub struct CairoHintProcessor<'a> {
 // crates/blockifier/src/execution/syscalls/hint_processor.rs:472 (ResourceTracker for SyscallHintProcessor)
 impl ResourceTracker for CairoHintProcessor<'_> {
     fn consumed(&self) -> bool {
-        self.original_cairo_hint_processor.context.vm_run_resources.consumed()
+        self.original_cairo_hint_processor
+            .context
+            .vm_run_resources
+            .consumed()
     }
 
     fn consume_step(&mut self) {
-        self.original_cairo_hint_processor.context.vm_run_resources.consume_step();
+        self.original_cairo_hint_processor
+            .context
+            .vm_run_resources
+            .consume_step();
     }
 
     fn get_n_steps(&self) -> Option<usize> {
-        self.original_cairo_hint_processor.context.vm_run_resources.get_n_steps()
+        self.original_cairo_hint_processor
+            .context
+            .vm_run_resources
+            .get_n_steps()
     }
 
     fn run_resources(&self) -> &RunResources {
@@ -132,9 +141,7 @@ impl HintProcessorLogic for CairoHintProcessor<'_> {
         _reference_ids: &HashMap<String, usize>,
         _references: &[HintReference],
     ) -> Result<Box<dyn Any>, VirtualMachineError> {
-        Ok(Box::new(
-            self.hints[hint_code].clone(),
-        ))
+        Ok(Box::new(self.hints[hint_code].clone()))
     }
 }
 
@@ -535,9 +542,7 @@ fn execute_syscall(
             execute_call_contract(MemBuffer::new(vm, system_ptr), cheatnet_state)?;
             Ok(())
         }
-        _ => {
-            original_cairo_hint_processor.execute_hint(vm, exec_scopes, hint_data, constants)
-        }
+        _ => original_cairo_hint_processor.execute_hint(vm, exec_scopes, hint_data, constants),
     }
 }
 
