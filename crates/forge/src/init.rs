@@ -39,27 +39,24 @@ fn replace_project_name(contents: &[u8], project_name: &str) -> Vec<u8> {
     contents.into_bytes()
 }
 
-fn extend_scarb_toml(path: &PathBuf) -> Result<()> {
-    dbg!(&path);
+fn add_target_to_toml(path: &PathBuf) -> Result<()> {
     let config_file = fs::read_to_string(path)?;
 
     let mut doc = config_file.parse::<Document>().expect("invalid document");
+    let mut array_of_tables = ArrayOfTables::new();
+    let mut casm = Table::new();
+    let mut contract = Table::new();
+    contract.set_implicit(true);
 
-    let mut array = ArrayOfTables::new();
-    let mut table = Table::new();
-    let mut table2 = Table::new();
-    table.insert("casm", Item::Value(true.into()));
-    table2.insert("starknet-contract", Item::Table(table));
-    array.push(table2);
-    dbg!(&array);
+    casm.insert("casm", Item::Value(true.into()));
+    array_of_tables.push(casm);
+    contract.insert("starknet-contract", Item::ArrayOfTables(array_of_tables));
+    doc.insert("target", Item::Table(contract));
 
-    doc.insert("target", Item::ArrayOfTables(array));
     fs::write(path, doc.to_string())?;
+
     Ok(())
 }
-
-// [[target.starknet-contract]]
-// casm = true
 
 pub fn init(name: Option<String>) -> Result<()> {
     let project_name = name.unwrap_or("starknet_forge_template".to_string());
@@ -93,7 +90,8 @@ pub fn init(name: Option<String>) -> Result<()> {
         .stdout(Stdio::inherit())
         .output()
         .context("Failed to add starknet")?;
-    extend_scarb_toml(&project_path.join("Scarb.toml"))?;
+
+    add_target_to_toml(&project_path.join("Scarb.toml"))?;
     overwrite_files_from_template("src", &project_path, &project_name)?;
     overwrite_files_from_template("tests", &project_path, &project_name)?;
 
