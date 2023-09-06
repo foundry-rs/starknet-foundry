@@ -1,29 +1,29 @@
-use blockifier::state::cached_state::CachedState;
-use camino::Utf8PathBuf;
-use constants::build_testing_state;
+use crate::state::StateReaderProxy;
+use blockifier::state::cached_state::{CachedState, GlobalContractCache};
 use starknet_api::hash::StarkFelt;
 use starknet_api::transaction::ContractAddressSalt;
-use state::{CheatcodeState, DictStateReader};
+use state::CheatcodeState;
 
 pub mod cheatcodes;
 pub mod constants;
 pub mod execution;
+pub mod forking;
 pub mod panic_data;
 pub mod rpc;
 pub mod state;
 
 pub struct CheatnetState {
     cheatcode_state: CheatcodeState,
-    blockifier_state: CachedState<DictStateReader>,
+    blockifier_state: CachedState<StateReaderProxy>,
     pub deploy_salt_base: u32,
 }
 
 impl CheatnetState {
     #[must_use]
-    pub fn new(predeployed_contracts: &Utf8PathBuf) -> Self {
+    pub fn new(state: StateReaderProxy) -> Self {
         CheatnetState {
             cheatcode_state: CheatcodeState::new(),
-            blockifier_state: build_testing_state(predeployed_contracts),
+            blockifier_state: CachedState::new(state, GlobalContractCache::default()),
             deploy_salt_base: 0,
         }
     }

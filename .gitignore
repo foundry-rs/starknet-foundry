@@ -4,3 +4,4 @@ pyproject.toml
 .tool-versions
 target
 .vscode/
+.env

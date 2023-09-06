@@ -19,3 +19,14 @@ macro_rules! assert_panic {
         })
     };
 }
+
+#[allow(clippy::module_name_repetitions)]
+#[macro_export]
+macro_rules! assert_error {
+    ($call_contract_output:expr,$expected_data:expr) => {
+        assert!(match $call_contract_output {
+            cheatnet::rpc::CallContractOutput::Error { msg } => msg == $expected_data,
+            _ => false,
+        })
+    };
+}
