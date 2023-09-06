@@ -1,6 +1,7 @@
 use anyhow::{bail, Context, Ok, Result};
 
 use include_dir::{include_dir, Dir};
+use regex::Regex;
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -91,10 +92,20 @@ pub fn init(name: Option<String>) -> Result<()> {
         .output()
         .context("Failed to add snforge_std")?;
 
+    let cmd = Command::new("scarb")
+        .current_dir(&project_path)
+        .arg("--version")
+        .output()
+        .context("Failed to add starknet")?;
+
+    let stdout = String::from_utf8(cmd.stdout).unwrap();
+    let re = Regex::new(r".*cairo:\s(?<starknet>[\w,\.]*)\s.*")?;
+    let versions = re.captures(&stdout).unwrap();
+
     Command::new("scarb")
         .current_dir(&project_path)
         .arg("add")
-        .arg("starknet@2.2.0")
+        .arg(format!("starknet@{}", &versions["starknet"]))
         .stderr(Stdio::inherit())
         .stdout(Stdio::inherit())
         .output()
