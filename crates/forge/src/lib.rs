@@ -10,7 +10,7 @@ use serde::Deserialize;
 use test_case_summary::TestCaseSummary;
 use walkdir::WalkDir;
 
-use cairo_lang_runner::{SierraCasmRunner};
+use cairo_lang_runner::SierraCasmRunner;
 use cairo_lang_sierra::program::Program;
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
@@ -37,6 +37,7 @@ pub struct RunnerConfig {
     test_name_filter: Option<String>,
     exact_match: bool,
     exit_first: bool,
+    fuzzer_runs: u32,
 }
 
 impl RunnerConfig {
@@ -52,12 +53,14 @@ impl RunnerConfig {
         test_name_filter: Option<String>,
         exact_match: bool,
         exit_first: bool,
+        fuzzer_runs: u32,
         forge_config_from_scarb: &ForgeConfig,
     ) -> Self {
         Self {
             test_name_filter,
             exact_match,
             exit_first: forge_config_from_scarb.exit_first || exit_first,
+            fuzzer_runs: forge_config_from_scarb.fuzzer_runs.unwrap_or(fuzzer_runs),
         }
     }
 }
@@ -351,9 +354,10 @@ fn run_tests_from_file(
             pretty_printing::print_test_result(&result);
             result
         } else {
-            let max_runs = 10;
-
-            println!("Running fuzzer for {case_name}, {max_runs} runs:");
+            println!(
+                "Running fuzzer for {case_name}, {} runs:",
+                runner_config.fuzzer_runs
+            );
 
             if args
                 .iter()
@@ -373,7 +377,7 @@ fn run_tests_from_file(
             let mut rng = new_rng(None);
             let mut results = vec![];
 
-            for _ in 1..max_runs {
+            for _ in 1..runner_config.fuzzer_runs {
                 let args: Vec<Felt252> = args
                     .iter()
                     .map(|_| random_felt252_generator(&mut rng))
@@ -402,7 +406,7 @@ fn run_tests_from_file(
 
             pretty_printing::print_test_result(&result);
             if let TestCaseSummary::Failed { .. } = result {
-                println!("Fuzz test failed on arguments {args:?} after {runs} run(s)");
+                println!("Fuzz test failed on argument(s) {args:?} after {runs} run(s)");
             }
 
             result

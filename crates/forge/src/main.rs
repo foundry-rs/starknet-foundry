@@ -29,6 +29,10 @@ struct Args {
     /// Stop test execution after first failed test
     #[arg(short = 'x', long)]
     exit_first: bool,
+
+    /// Number of fuzzer runs
+    #[arg(short, long)]
+    fuzzer_runs: Option<u32>,
 }
 
 fn load_predeployed_contracts() -> Result<TempDir> {
@@ -80,6 +84,7 @@ fn main_execution() -> Result<()> {
             args.test_name.clone(),
             args.exact,
             args.exit_first,
+            args.fuzzer_runs.unwrap_or(256),
             &forge_config,
         );
 
