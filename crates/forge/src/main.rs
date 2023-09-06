@@ -33,6 +33,10 @@ struct Args {
     /// Number of fuzzer runs
     #[arg(short, long)]
     fuzzer_runs: Option<u32>,
+
+    /// Seed for the fuzzer
+    #[arg(short, long)]
+    fuzzer_seed: Option<u64>,
 }
 
 fn load_predeployed_contracts() -> Result<TempDir> {
@@ -85,6 +89,7 @@ fn main_execution() -> Result<()> {
             args.exact,
             args.exit_first,
             args.fuzzer_runs.unwrap_or(256),
+            args.fuzzer_seed,
             &forge_config,
         );
 

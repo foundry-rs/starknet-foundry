@@ -39,6 +39,7 @@ pub struct RunnerConfig {
     exact_match: bool,
     exit_first: bool,
     fuzzer_runs: u32,
+    fuzzer_seed: Option<u64>,
     builtins: Vec<String>,
 }
 
@@ -56,13 +57,17 @@ impl RunnerConfig {
         exact_match: bool,
         exit_first: bool,
         fuzzer_runs: u32,
+        fuzzer_seed: Option<u64>,
         forge_config_from_scarb: &ForgeConfig,
     ) -> Self {
         Self {
             test_name_filter,
             exact_match,
             exit_first: forge_config_from_scarb.exit_first || exit_first,
+            // TODO test precedence
             fuzzer_runs: forge_config_from_scarb.fuzzer_runs.unwrap_or(fuzzer_runs),
+            // TODO test precedence
+            fuzzer_seed: forge_config_from_scarb.fuzzer_seed.or(fuzzer_seed),
             builtins: vec![
                 "Pedersen".to_string(),
                 "RangeCheck".to_string(),
@@ -346,7 +351,7 @@ fn run_tests_from_file(
                 bail!("Test {case_name} requires arguments that are not felt252 type");
             }
 
-            let mut rng = new_rng(None);
+            let mut rng = new_rng(runner_config.fuzzer_seed);
             let mut results = vec![];
 
             for _ in 1..runner_config.fuzzer_runs {
@@ -416,7 +421,7 @@ fn random_felts_from_args(
         .collect()
 }
 
-fn contains_non_felt252_args(args: &Vec<&ConcreteTypeId>, builtins: &Vec<String>) -> bool {
+fn contains_non_felt252_args(args: &Vec<&ConcreteTypeId>, builtins: &[String]) -> bool {
     args.iter()
         .filter(|pt| {
             if let Some(name) = &pt.debug_name {
