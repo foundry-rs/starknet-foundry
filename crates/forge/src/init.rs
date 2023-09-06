@@ -1,7 +1,7 @@
 use anyhow::{bail, Context, Ok, Result};
 
 use include_dir::{include_dir, Dir};
-use regex::Regex;
+use scarb_metadata::MetadataCommand;
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -92,20 +92,16 @@ pub fn init(name: Option<String>) -> Result<()> {
         .output()
         .context("Failed to add snforge_std")?;
 
-    let cmd = Command::new("scarb")
+    let scarb_metadata = MetadataCommand::new()
         .current_dir(&project_path)
-        .arg("--version")
-        .output()
-        .context("Failed to add starknet")?;
-
-    let stdout = String::from_utf8(cmd.stdout).unwrap();
-    let re = Regex::new(r".*cairo:\s(?<starknet>[\w,\.]*)\s.*")?;
-    let versions = re.captures(&stdout).unwrap();
+        .inherit_stderr()
+        .exec()?;
+    let cairo_version = scarb_metadata.app_version_info.cairo.version.to_string();
 
     Command::new("scarb")
         .current_dir(&project_path)
         .arg("add")
-        .arg(format!("starknet@{}", &versions["starknet"]))
+        .arg(format!("starknet@{}", cairo_version))
         .stderr(Stdio::inherit())
         .stdout(Stdio::inherit())
         .output()
