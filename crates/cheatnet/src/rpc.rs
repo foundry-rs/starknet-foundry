@@ -1,4 +1,5 @@
 use anyhow::Result;
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::panic_data::try_extract_panic_data;
@@ -27,6 +28,23 @@ pub enum CallContractOutput {
     Success { ret_data: Vec<Felt252> },
     Panic { panic_data: Vec<Felt252> },
     Error { msg: String },
+}
+
+#[derive(Debug, Clone)]
+pub struct ResourceReport {
+    pub gas: f64,
+    pub steps: usize,
+    pub bultins: HashMap<String, usize>,
+}
+
+impl ResourceReport {
+    fn new(gas: f64, resources: &ExecutionResources) -> Self {
+        Self {
+            gas,
+            steps: resources.vm_resources.n_steps,
+            bultins: resources.vm_resources.builtin_instance_counter.clone(),
+        }
+    }
 }
 
 // This does contract call without the transaction layer. This way `call_contract` can return data and modify state.
@@ -80,8 +98,9 @@ pub fn call_contract(
     );
 
     let gas = recover_gas_from_execution_resources(&block_context, &resources);
-    // TODO REPORT STEPS AND BUILTINS AS WELL
-    dbg!(&gas);
+    let resource_report = ResourceReport::new(gas, &resources);
+
+    dbg!(resource_report);
 
     match exec_result {
         Ok(call_info) => {

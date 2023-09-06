@@ -6,15 +6,17 @@ use blockifier::{
 };
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources as VmExecutionResources;
 
+#[must_use]
 pub fn recover_gas_from_execution_resources(
     block_context: &BlockContext,
     resources: &ExecutionResources,
 ) -> f64 {
     let resource_mapping = vm_execution_resources_to_resource_mapping(&resources.vm_resources);
-    calculate_l1_gas_by_vm_usage(&block_context, &resource_mapping)
+    calculate_l1_gas_by_vm_usage(block_context, &resource_mapping)
         .expect("Calculating gas failed, some resources were not included.")
 }
 
+#[must_use]
 fn vm_execution_resources_to_resource_mapping(
     execution_resources: &VmExecutionResources,
 ) -> ResourcesMapping {
