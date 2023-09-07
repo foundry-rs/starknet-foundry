@@ -387,10 +387,8 @@ fn run_tests_from_file(
             result
         };
 
-        // let result = run_from_test_case(&runner, case, contracts, predeployed_contracts, args)?;
         results.push(result.clone());
 
-        // pretty_printing::print_test_result(&result);
         if runner_config.exit_first {
             if let TestCaseSummary::Failed { .. } = result {
                 for case in &tests.test_cases[i + 1..] {

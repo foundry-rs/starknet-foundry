@@ -60,14 +60,6 @@ pub(crate) fn run_from_test_case(
     let func = runner.find_function(case.name.as_str())?;
     let initial_gas = runner.get_initial_available_gas(func, available_gas)?;
 
-    // let mut rng = new_rng(None);
-    // let args: Vec<Arg> = func
-    //     .signature
-    //     .param_types
-    //     .iter()
-    //     .filter(|pt| pt.debug_name == Some(SmolStr::from("felt252")))
-    //     .map(|_| Arg::Value(random_felt252_generator(&mut rng)))
-    //     .collect();
     let args: Vec<Arg> = args.into_iter().map(Arg::Value).collect();
 
     let (entry_code, builtins) = runner.create_entry_code(func, &args, initial_gas)?;
