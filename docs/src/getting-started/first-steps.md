@@ -3,16 +3,16 @@
 In this section we provide an overview of Starknet Foundry `forge` command line tool.
 We demonstrate how to create a new project, compile, and test it.
 
-To start a new project with Starknet Foundry, clone the template repository
+To start a new project with Starknet Foundry, run `--init` command:
 
 ```shell
-git clone https://github.com/foundry-rs/starknet_forge_template.git
+snforge --init project_name
 ```
 
 Let's check out the project structure
 
 ```shell
-$ cd starknet_forge_template
+$ cd project_name
 $ tree . -L 1
 .
 ├── README.md
@@ -27,11 +27,10 @@ $ tree . -L 1
 * `tests/` contains tests. Note that test can also be included in any file or directory.
 * `Scarb.toml` contains configuration of the project as well as of `snforge`, `sncast` etc.
 
-Ensures that `sierra` and `casm` codegen are enabled in the `Scarb.toml` file.
+Ensures that `casm` codegen are enabled in the `Scarb.toml` file.
 ```toml
 (...)
 [[target.starknet-contract]]
-sierra = true
 casm = true
 (...)
 ```
@@ -40,6 +39,9 @@ And run tests with `snforge`
 
 ```shell
 $ snforge
+[..]Updating[..]
+[..]Compiling[..]
+[..]Finished[..]
 Collected 2 test(s) and 2 test file(s)
 Running 0 test(s) from package_name package
 Running 2 test(s) from tests/test_contract.cairo
