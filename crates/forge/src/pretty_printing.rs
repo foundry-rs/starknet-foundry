@@ -1,6 +1,7 @@
 use crate::test_case_summary::TestCaseSummary;
-use crate::TestFileSummary;
+use crate::{RunnerConfig, TestFileSummary};
 use anyhow::Error;
+use cairo_felt::Felt252;
 use camino::Utf8PathBuf;
 use console::style;
 
@@ -58,4 +59,15 @@ pub(crate) fn print_test_result(test_result: &TestCaseSummary) {
     };
 
     println!("{result_header} {result_name}{result_message}");
+}
+
+pub fn print_fuzz_running(case_name: &str, runner_config: &RunnerConfig) {
+    println!(
+        "Running fuzzer for {case_name}, {} runs:",
+        runner_config.fuzzer_runs
+    );
+}
+
+pub fn print_fuzz_failed(args: &[Felt252], runs: usize) {
+    println!("Fuzz test failed on argument(s) {args:?} after {runs} run(s)");
 }

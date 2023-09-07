@@ -343,10 +343,7 @@ fn run_tests_from_file(
             pretty_printing::print_test_result(&result);
             result
         } else {
-            println!(
-                "Running fuzzer for {case_name}, {} runs:",
-                runner_config.fuzzer_runs
-            );
+            pretty_printing::print_fuzz_running(case_name, runner_config);
 
             if contains_non_felt252_args(&args, &builtins) {
                 bail!("Test {case_name} requires arguments that are not felt252 type");
@@ -384,7 +381,7 @@ fn run_tests_from_file(
 
             pretty_printing::print_test_result(&result);
             if let TestCaseSummary::Failed { .. } = result {
-                println!("Fuzz test failed on argument(s) {args:?} after {runs} run(s)");
+                pretty_printing::print_fuzz_failed(&args, runs);
             }
 
             result
