@@ -47,7 +47,7 @@ fn load_predeployed_contracts() -> Result<TempDir> {
 fn main_execution() -> Result<()> {
     let args = Args::parse();
     if args.init {
-        return init::init(args.name);
+        return init::run(args.name);
     }
 
     let predeployed_contracts_dir = load_predeployed_contracts()?;

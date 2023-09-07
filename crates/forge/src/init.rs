@@ -64,7 +64,7 @@ fn add_target_to_toml(path: &PathBuf) -> Result<()> {
     Ok(())
 }
 
-pub fn init(name: Option<String>) -> Result<()> {
+pub fn run(name: Option<String>) -> Result<()> {
     let project_name = name.unwrap_or("starknet_forge_template".to_string());
     let project_path = std::env::current_dir()?.join(&project_name);
 
