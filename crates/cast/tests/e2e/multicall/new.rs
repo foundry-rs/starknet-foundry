@@ -42,7 +42,7 @@ async fn test_happy_case_file() {
         std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
 
     assert!(stdout_str.contains("path: "));
-    assert!(stdout_str.contains("body: "));
+    assert!(stdout_str.contains("content: "));
     assert!(contents.contains(DEFAULT_MULTICALL_CONTENTS));
 }
 

@@ -31,6 +31,6 @@ pub fn new(output_path: &Utf8PathBuf, overwrite: bool) -> Result<MulticallNewRes
 
     Ok(MulticallNewResponse {
         path: output_path.clone(),
-        body: DEFAULT_MULTICALL_CONTENTS.to_string(),
+        content: DEFAULT_MULTICALL_CONTENTS.to_string(),
     })
 }
