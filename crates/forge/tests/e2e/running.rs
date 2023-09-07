@@ -453,11 +453,57 @@ fn init_new_project_test() {
         .arg("test_name")
         .assert()
         .success();
+    let manifest_path = temp.child("test_name/Scarb.toml");
+
+    let generated_toml = std::fs::read_to_string(&manifest_path.path()).unwrap();
+    let version = env!("CARGO_PKG_VERSION");
+    let expected_toml = formatdoc!(
+        r#"
+            [package]
+            name = "test_name"
+            version = "0.1.0"
+
+            # See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest.html
+
+            [dependencies]
+            snforge_std = {{ git = "https://github.com/foundry-rs/starknet-foundry", tag = "v{}" }}
+            starknet = "2.2.0"
+
+            [[target.starknet-contract]]
+            casm = true
+            # foo = {{ path = "vendor/foo" }}
+        "#,
+        version
+    );
+
+    assert_eq!(generated_toml, expected_toml);
+
+    let remote_url = get_remote_url();
+    let branch = get_current_branch();
+
+    manifest_path
+        .write_str(&formatdoc!(
+            r#"
+        [package]
+        name = "test_name"
+        version = "0.1.0"
+
+        [[target.starknet-contract]]
+        casm = true
+
+        [dependencies]
+        starknet = "2.2.0"
+        snforge_std = {{ git = "https://github.com/{}", branch = "{}" }}
+        "#,
+            remote_url,
+            branch
+        ))
+        .unwrap();
 
     let snapbox = runner();
+    // Check if template works with current version of snforge_std
     snapbox
         .current_dir(temp.child(Path::new("test_name")))
-        .arg("--exit-first")
         .assert()
         .success()
         .stdout_matches(indoc! {r#"
