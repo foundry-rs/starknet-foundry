@@ -17,9 +17,9 @@ pub mod state;
 
 pub fn recover_data(output: CallContractOutput) -> Vec<Felt252> {
     match output {
-        CallContractOutput::Success { ret_data } => ret_data,
-        CallContractOutput::Panic { panic_data } => panic_data,
-        CallContractOutput::Error { msg } => panic!("Call failed with message: {msg}"),
+        CallContractOutput::Success { ret_data, .. } => ret_data,
+        CallContractOutput::Panic { panic_data, .. } => panic_data,
+        CallContractOutput::Error { msg, .. } => panic!("Call failed with message: {msg}"),
     }
 }
 
@@ -43,7 +43,10 @@ pub fn deploy_contract(
     let contracts = get_contracts();
 
     let class_hash = state.declare(&contract, &contracts).unwrap();
-    state.deploy(&class_hash, calldata).unwrap()
+    state
+        .deploy(&class_hash, calldata)
+        .unwrap()
+        .contract_address
 }
 
 pub fn call_contract_getter_by_name(

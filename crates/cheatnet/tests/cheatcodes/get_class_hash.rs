@@ -9,7 +9,7 @@ fn get_class_hash_simple() {
     let contracts = get_contracts();
     let contract_name = "HelloStarknet".to_owned().to_felt252();
     let class_hash = state.declare(&contract_name, &contracts).unwrap();
-    let contract_address = state.deploy(&class_hash, &[]).unwrap();
+    let contract_address = state.deploy(&class_hash, &[]).unwrap().contract_address;
 
     assert_eq!(class_hash, state.get_class_hash(contract_address).unwrap());
 }
@@ -21,7 +21,7 @@ fn get_class_hash_upgrade() {
     let contracts = get_contracts();
     let contract_name = "GetClassHashCheckerUpg".to_owned().to_felt252();
     let class_hash = state.declare(&contract_name, &contracts).unwrap();
-    let contract_address = state.deploy(&class_hash, &[]).unwrap();
+    let contract_address = state.deploy(&class_hash, &[]).unwrap().contract_address;
 
     assert_eq!(class_hash, state.get_class_hash(contract_address).unwrap());
 

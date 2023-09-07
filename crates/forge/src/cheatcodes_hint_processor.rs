@@ -14,6 +14,7 @@ use cairo_vm::types::exec_scope::ExecutionScopes;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::vm_core::VirtualMachine;
+use cheatnet::cheatcodes::deploy::DeployPayload;
 use cheatnet::rpc::{call_contract, CallContractOutput};
 use cheatnet::{
     cheatcodes::{CheatcodeError, ContractArtifacts, EnhancedHintError},
@@ -22,7 +23,6 @@ use cheatnet::{
 use conversions::StarknetConversions;
 use num_traits::{One, ToPrimitive};
 use serde::Deserialize;
-use starknet_api::core::ContractAddress;
 
 use cairo_lang_casm::hints::{Hint, StarknetHint};
 use cairo_lang_casm::operand::{CellRef, ResOperand};
@@ -467,12 +467,12 @@ impl CairoHintProcessor<'_> {
 }
 
 fn handle_deploy_result(
-    deploy_result: Result<ContractAddress, CheatcodeError>,
+    deploy_result: Result<DeployPayload, CheatcodeError>,
     buffer: &mut MemBuffer,
 ) -> Result<(), EnhancedHintError> {
     match deploy_result {
-        Ok(contract_address) => {
-            let felt_contract_address: Felt252 = contract_address.to_felt252();
+        Ok(payload) => {
+            let felt_contract_address: Felt252 = payload.contract_address.to_felt252();
 
             buffer
                 .write(Felt252::from(0))
@@ -568,9 +568,9 @@ fn execute_call_contract(
     .unwrap_or_else(|err| panic!("Transaction execution error: {err}"));
 
     let (result, exit_code) = match call_result {
-        CallContractOutput::Success { ret_data } => (ret_data, 0),
-        CallContractOutput::Panic { panic_data } => (panic_data, 1),
-        CallContractOutput::Error { msg } => return Err(HintError::CustomHint(Box::from(msg))),
+        CallContractOutput::Success { ret_data, .. } => (ret_data, 0),
+        CallContractOutput::Panic { panic_data, .. } => (panic_data, 1),
+        CallContractOutput::Error { msg, .. } => return Err(HintError::CustomHint(Box::from(msg))),
     };
 
     buffer.write(gas_counter).unwrap();

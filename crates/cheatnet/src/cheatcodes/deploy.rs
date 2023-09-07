@@ -17,7 +17,13 @@ use starknet_api::transaction::ContractAddressSalt;
 use starknet_api::{patricia_key, stark_felt};
 
 use super::CheatcodeError;
-use crate::rpc::{call_contract, CallContractOutput};
+use crate::rpc::{call_contract, CallContractOutput, ResourceReport};
+
+#[allow(clippy::module_name_repetitions)]
+pub struct DeployPayload {
+    pub contract_address: ContractAddress,
+    pub resource_report: ResourceReport,
+}
 
 impl CheatnetState {
     pub fn deploy_at(
@@ -25,7 +31,7 @@ impl CheatnetState {
         class_hash: &ClassHash,
         calldata: &[Felt252],
         contract_address: ContractAddress,
-    ) -> Result<ContractAddress, CheatcodeError> {
+    ) -> Result<DeployPayload, CheatcodeError> {
         let salt = self.get_salt();
         self.increment_deploy_salt_base();
 
@@ -70,19 +76,31 @@ impl CheatnetState {
         .unwrap_or_else(|err| panic!("Deploy txn failed: {err}"));
 
         match call_result {
-            CallContractOutput::Success { .. } => self
-                .blockifier_state
-                .set_class_hash_at(contract_address, *class_hash)
-                .map(|_| contract_address)
-                .map_err(|msg| {
-                    CheatcodeError::Unrecoverable(EnhancedHintError::from(CustomHint(Box::from(
-                        msg.to_string(),
-                    ))))
-                }),
-            CallContractOutput::Panic { panic_data } => {
+            CallContractOutput::Success {
+                resource_report, ..
+            } => {
+                let result = self
+                    .blockifier_state
+                    .set_class_hash_at(contract_address, *class_hash)
+                    .map(|_| contract_address)
+                    .map_err(|msg| {
+                        CheatcodeError::Unrecoverable(EnhancedHintError::from(CustomHint(
+                            Box::from(msg.to_string()),
+                        )))
+                    });
+
+                match result {
+                    Ok(contract_address) => Ok(DeployPayload {
+                        contract_address,
+                        resource_report,
+                    }),
+                    Err(cheatcode_error) => Err(cheatcode_error),
+                }
+            }
+            CallContractOutput::Panic { panic_data, .. } => {
                 Err(CheatcodeError::Recoverable(panic_data))
             }
-            CallContractOutput::Error { msg } => Err(CheatcodeError::Unrecoverable(
+            CallContractOutput::Error { msg, .. } => Err(CheatcodeError::Unrecoverable(
                 EnhancedHintError::from(CustomHint(Box::from(msg))),
             )),
         }
@@ -92,7 +110,7 @@ impl CheatnetState {
         &mut self,
         class_hash: &ClassHash,
         calldata: &[Felt252],
-    ) -> Result<ContractAddress, CheatcodeError> {
+    ) -> Result<DeployPayload, CheatcodeError> {
         let contract_address = self.precalculate_address(class_hash, calldata);
 
         self.deploy_at(class_hash, calldata, contract_address)
