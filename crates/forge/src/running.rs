@@ -84,6 +84,7 @@ pub(crate) fn run_from_test_case(
     );
     let (hints_dict, string_to_hint) = build_hints_dict(instructions.clone());
 
+    // Losely inspired by crates/cheatnet/src/execution/cairo1_execution::execute_entry_point_call_cairo1
     let block_context = build_block_context();
     let account_context = build_transaction_context();
     let mut context = EntryPointExecutionContext::new(
