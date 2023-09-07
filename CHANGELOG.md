@@ -38,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - rename `parse_txt` trait to `read_txt`
 - support for printing in contracts
 - `spoof` cheatcode
+- snforge command-line flag `--init`
 
 ### Cast
 
