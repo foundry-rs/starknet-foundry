@@ -455,7 +455,7 @@ fn init_new_project_test() {
         .success();
     let manifest_path = temp.child("test_name/Scarb.toml");
 
-    let generated_toml = std::fs::read_to_string(&manifest_path.path()).unwrap();
+    let generated_toml = std::fs::read_to_string(manifest_path.path()).unwrap();
     let version = env!("CARGO_PKG_VERSION");
     let expected_toml = formatdoc!(
         r#"

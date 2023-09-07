@@ -10,9 +10,9 @@ use toml_edit::{ArrayOfTables, Document, Item, Table};
 
 static TEMPLATE: Dir = include_dir!("starknet_forge_template");
 
-fn overwrite_files_from_template(
+fn overwrite_files_from_scarb_template(
     dir_to_overwrite: &str,
-    base_path: &PathBuf,
+    base_path: &Path,
     project_name: &str,
 ) -> Result<()> {
     let copy_from_dir = TEMPLATE.get_dir(dir_to_overwrite).ok_or_else(|| {
@@ -35,8 +35,7 @@ fn overwrite_files_from_template(
 }
 
 fn replace_project_name(contents: &[u8], project_name: &str) -> Vec<u8> {
-    // SAFETY: We control these files, and we know that they are UTF-8.
-    let contents = unsafe { std::str::from_utf8_unchecked(contents) };
+    let contents = std::str::from_utf8(contents).expect("UTF-8 error");
     let contents = contents.replace("{{ PROJECT_NAME }}", project_name);
     contents.into_bytes()
 }
@@ -61,7 +60,7 @@ fn add_target_to_toml(path: &PathBuf) -> Result<()> {
 }
 
 pub fn run(project_name: &str) -> Result<()> {
-    let project_path = std::env::current_dir()?.join(&project_name);
+    let project_path = std::env::current_dir()?.join(project_name);
 
     Command::new("scarb")
         .current_dir(std::env::current_dir().context("Failed to get current directory")?)
@@ -81,7 +80,7 @@ pub fn run(project_name: &str) -> Result<()> {
         .arg("--git")
         .arg("https://github.com/foundry-rs/starknet-foundry.git")
         .arg("--tag")
-        .arg(format!("v{}", version))
+        .arg(format!("v{version}"))
         .stderr(Stdio::inherit())
         .stdout(Stdio::inherit())
         .output()
@@ -96,15 +95,15 @@ pub fn run(project_name: &str) -> Result<()> {
     Command::new("scarb")
         .current_dir(&project_path)
         .arg("add")
-        .arg(format!("starknet@{}", cairo_version))
+        .arg(format!("starknet@{cairo_version}"))
         .stderr(Stdio::inherit())
         .stdout(Stdio::inherit())
         .output()
         .context("Failed to add starknet")?;
 
     add_target_to_toml(&project_path.join("Scarb.toml"))?;
-    overwrite_files_from_template("src", &project_path, &project_name)?;
-    overwrite_files_from_template("tests", &project_path, &project_name)?;
+    overwrite_files_from_scarb_template("src", &project_path, project_name)?;
+    overwrite_files_from_scarb_template("tests", &project_path, project_name)?;
 
     Ok(())
 }
