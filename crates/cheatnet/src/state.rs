@@ -18,6 +18,38 @@ use starknet_api::{
 };
 use std::collections::HashMap;
 
+#[allow(clippy::module_name_repetitions)]
+pub struct StateReaderProxy(pub Box<dyn StateReader>);
+
+impl StateReader for StateReaderProxy {
+    fn get_storage_at(
+        &mut self,
+        contract_address: ContractAddress,
+        key: StorageKey,
+    ) -> StateResult<StarkFelt> {
+        self.0.get_storage_at(contract_address, key)
+    }
+
+    fn get_nonce_at(&mut self, contract_address: ContractAddress) -> StateResult<Nonce> {
+        self.0.get_nonce_at(contract_address)
+    }
+
+    fn get_class_hash_at(&mut self, contract_address: ContractAddress) -> StateResult<ClassHash> {
+        self.0.get_class_hash_at(contract_address)
+    }
+
+    fn get_compiled_contract_class(
+        &mut self,
+        class_hash: &ClassHash,
+    ) -> StateResult<ContractClass> {
+        self.0.get_compiled_contract_class(class_hash)
+    }
+
+    fn get_compiled_class_hash(&mut self, class_hash: ClassHash) -> StateResult<CompiledClassHash> {
+        self.0.get_compiled_class_hash(class_hash)
+    }
+}
+
 /// A simple implementation of `StateReader` using `HashMap`s as storage.
 #[derive(Debug, Default)]
 pub struct DictStateReader {
@@ -108,6 +140,34 @@ impl CheatcodeState {
             spies: vec![],
             detected_events: vec![],
         }
+    }
+
+    #[must_use]
+    pub fn address_is_pranked(&self, contract_address: &ContractAddress) -> bool {
+        self.pranked_contracts.contains_key(contract_address)
+    }
+
+    #[must_use]
+    pub fn address_is_warped(&self, contract_address: &ContractAddress) -> bool {
+        self.warped_contracts.contains_key(contract_address)
+    }
+
+    #[must_use]
+    pub fn address_is_rolled(&self, contract_address: &ContractAddress) -> bool {
+        self.rolled_contracts.contains_key(contract_address)
+    }
+
+    #[must_use]
+    pub fn address_is_spoofed(&self, contract_address: &ContractAddress) -> bool {
+        self.spoofed_contracts.contains_key(contract_address)
+    }
+
+    #[must_use]
+    pub fn address_is_cheated(&self, contract_address: &ContractAddress) -> bool {
+        self.address_is_rolled(contract_address)
+            || self.address_is_pranked(contract_address)
+            || self.address_is_warped(contract_address)
+            || self.address_is_spoofed(contract_address)
     }
 }
 

@@ -37,8 +37,8 @@ num-traits.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
+num-bigint.workspace = true
 smol_str = { version = "0.2.0", features = ["serde"] }
-num-bigint = "0.4"
 num-integer = "0.1"
 
 

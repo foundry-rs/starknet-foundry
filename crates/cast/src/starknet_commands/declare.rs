@@ -64,8 +64,7 @@ pub async fn declare(
         Some(path) => path,
         None => get_scarb_manifest().context("Failed to obtain manifest path from scarb")?,
     };
-    which::which("scarb")
-        .context("Cannot find `scarb` binary in PATH. Make sure you have Scarb installed https://github.com/software-mansion/scarb")?;
+
     let command_result = Command::new("scarb")
         .arg("--manifest-path")
         .arg(&manifest_path)
