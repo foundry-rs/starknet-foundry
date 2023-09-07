@@ -28,8 +28,15 @@ trait ContractClassTrait {
     fn precalculate_address(
         self: @ContractClass, constructor_calldata: @Array::<felt252>
     ) -> ContractAddress;
+
     fn deploy(
         self: @ContractClass, constructor_calldata: @Array::<felt252>
+    ) -> Result<ContractAddress, RevertedTransaction>;
+
+    fn deploy_at(
+        self: @ContractClass,
+        constructor_calldata: @Array::<felt252>,
+        contract_address: ContractAddress
     ) -> Result<ContractAddress, RevertedTransaction>;
 }
 
@@ -49,6 +56,39 @@ impl ContractClassImpl of ContractClassTrait {
         let mut inputs = _prepare_calldata(self.class_hash, constructor_calldata);
 
         let outputs = cheatcode::<'deploy'>(inputs.span());
+        let exit_code = *outputs[0];
+
+        if exit_code == 0 {
+            let result = *outputs[1];
+            Result::<ContractAddress, RevertedTransaction>::Ok(result.try_into().unwrap())
+        } else {
+            let panic_data_len_felt = *outputs[1];
+            let panic_data_len = panic_data_len_felt.try_into().unwrap();
+            let mut panic_data = array![];
+
+            let offset = 2;
+            let mut i = offset;
+            loop {
+                if panic_data_len + offset == i {
+                    break ();
+                }
+                panic_data.append(*outputs[i]);
+                i += 1;
+            };
+
+            Result::<ContractAddress, RevertedTransaction>::Err(RevertedTransaction { panic_data })
+        }
+    }
+
+    fn deploy_at(
+        self: @ContractClass,
+        constructor_calldata: @Array::<felt252>,
+        contract_address: ContractAddress
+    ) -> Result<ContractAddress, RevertedTransaction> {
+        let mut inputs = _prepare_calldata(self.class_hash, constructor_calldata);
+        inputs.append(contract_address.into());
+
+        let outputs = cheatcode::<'deploy_at'>(inputs.span());
         let exit_code = *outputs[0];
 
         if exit_code == 0 {

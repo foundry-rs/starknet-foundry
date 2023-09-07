@@ -2,14 +2,16 @@
 
 ```rust
 trait ContractClassTrait {
-    fn deploy(self: @ContractClass, constructor_calldata: @Array::<felt252>) -> Result<ContractAddress, RevertedTransaction>;
+    fn deploy(
+        self: @ContractClass, constructor_calldata: @Array::<felt252>
+    ) -> Result<ContractAddress, RevertedTransaction>;    
     // ...
 }
 ```
 
 Deploys a contract and returns its address.
 
-- `self` - an instance of `ContractClass` struct that can be obtained by invoking [declare](./declare.md).
+- `self` - an instance of `ContractClass` struct that can be obtained by invoking [declare](./declare.md)
 
 - `constructor_calldata` - snapshot of calldata for the constructor
 

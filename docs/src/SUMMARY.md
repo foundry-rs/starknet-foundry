@@ -56,6 +56,7 @@
     * [declare](appendix/forge-library/declare.md)
     * [precalculate_address](appendix/forge-library/precalculate_address.md)
     * [deploy](appendix/forge-library/deploy.md)
+    * [deploy_at](appendix/forge-library/deploy_at.md)
     * [print](appendix/forge-library/print.md)
     * [read_txt](appendix/forge-library/read_txt.md)
     * [read_json](appendix/forge-library/read_json.md)

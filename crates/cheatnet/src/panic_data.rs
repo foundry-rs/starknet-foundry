@@ -1,8 +1,9 @@
-use super::conversions::felt_from_short_string;
 use cairo_felt::Felt252;
+use conversions::StarknetConversions;
 use regex::Regex;
 
 #[allow(clippy::module_name_repetitions)]
+#[must_use]
 pub fn try_extract_panic_data(err: &str) -> Option<Vec<Felt252>> {
     let re = Regex::new(r#"(?m)^Got an exception while executing a hint: Custom Hint Error: Execution failed\. Failure reason: "(.*)"\.$"#)
         .expect("Could not create panic_data matching regex");
@@ -15,7 +16,7 @@ pub fn try_extract_panic_data(err: &str) -> Option<Vec<Felt252>> {
             let panic_data_felts: Vec<Felt252> = panic_data_match
                 .as_str()
                 .split(", ")
-                .map(felt_from_short_string)
+                .map(|s| s.to_owned().to_felt252())
                 .collect();
 
             return Some(panic_data_felts);

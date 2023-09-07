@@ -13,6 +13,7 @@ use blockifier::execution::{
     entry_point::{CallEntryPoint, CallType, EntryPointExecutionContext, ExecutionResources},
     errors::{EntryPointExecutionError, PreExecutionError},
 };
+use blockifier::state::errors::StateError;
 use cairo_felt::Felt252;
 use starknet_api::{
     core::{ContractAddress, EntryPointSelector},
@@ -128,6 +129,9 @@ pub fn call_contract(
         )) => {
             let address = contract_address.0.key().to_string();
             let msg = format!("Contract not deployed at address: {address}");
+            Ok(CallContractOutput::Error { msg })
+        }
+        Err(EntryPointExecutionError::StateError(StateError::StateReadError(msg))) => {
             Ok(CallContractOutput::Error { msg })
         }
         result => panic!("Unparseable result: {result:?}"),
