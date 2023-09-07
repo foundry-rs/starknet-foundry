@@ -1,4 +1,4 @@
-use anyhow::{bail, Context, Ok, Result};
+use anyhow::{anyhow, Context, Ok, Result};
 
 use include_dir::{include_dir, Dir};
 use scarb_metadata::MetadataCommand;
@@ -15,24 +15,20 @@ fn overwrite_files_from_template(
     base_path: &PathBuf,
     project_name: &str,
 ) -> Result<()> {
-    let copy_from_dir = TEMPLATE.get_dir(dir_to_overwrite);
-    match copy_from_dir {
-        Some(dir) => {
-            for file in dir.files() {
-                fs::create_dir_all(base_path.join(Path::new(dir_to_overwrite)))?;
-                let path = base_path.join(file.path());
-                let contents = file.contents();
-                let contents = replace_project_name(contents, project_name);
+    let copy_from_dir = TEMPLATE.get_dir(dir_to_overwrite).ok_or_else(|| {
+        anyhow!(
+            "Directory {} doesn't exist in the template.",
+            dir_to_overwrite
+        )
+    })?;
 
-                fs::write(path, contents)?;
-            }
-        }
-        None => {
-            bail!(
-                "Directory {} doesn't exist in the template.",
-                dir_to_overwrite
-            )
-        }
+    for file in copy_from_dir.files() {
+        fs::create_dir_all(base_path.join(Path::new(dir_to_overwrite)))?;
+        let path = base_path.join(file.path());
+        let contents = file.contents();
+        let contents = replace_project_name(contents, project_name);
+
+        fs::write(path, contents)?;
     }
 
     Ok(())
@@ -64,8 +60,7 @@ fn add_target_to_toml(path: &PathBuf) -> Result<()> {
     Ok(())
 }
 
-pub fn run(name: Option<String>) -> Result<()> {
-    let project_name = name.unwrap_or("starknet_forge_template".to_string());
+pub fn run(project_name: &str) -> Result<()> {
     let project_path = std::env::current_dir()?.join(&project_name);
 
     Command::new("scarb")
