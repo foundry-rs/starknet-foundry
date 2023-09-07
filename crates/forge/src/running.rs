@@ -12,7 +12,6 @@ use cairo_vm::serde::deserialize_program::HintParams;
 use cairo_vm::types::relocatable::Relocatable;
 use cheatnet::constants::{build_block_context, build_testing_state, build_transaction_context};
 use cheatnet::CheatnetState;
-use conversions::StarknetConversions;
 use itertools::chain;
 
 use cairo_lang_casm::hints::Hint;
@@ -23,6 +22,7 @@ use cairo_lang_runner::SierraCasmRunner;
 use cairo_vm::vm::runners::cairo_runner::RunResources;
 use camino::Utf8PathBuf;
 use cheatnet::state::StateReaderProxy;
+use starknet::core::utils::get_selector_from_name;
 use starknet_api::core::PatriciaKey;
 use starknet_api::core::{ContractAddress, EntryPointSelector};
 use starknet_api::deprecated_contract_class::EntryPointType;
@@ -92,8 +92,8 @@ pub(crate) fn run_from_test_case(
         account_context,
         block_context.invoke_tx_max_n_steps.try_into().unwrap(),
     );
-    let test_selector = String::from("test_case").to_felt252();
-    let entry_point_selector = EntryPointSelector(StarkHash::new(test_selector.to_be_bytes())?);
+    let test_selector = get_selector_from_name("TEST_CONTRACT_SELECTOR").unwrap();
+    let entry_point_selector = EntryPointSelector(StarkHash::new(test_selector.to_bytes_be())?);
     let entry_point = CallEntryPoint {
         class_hash: None,
         code_address: Some(ContractAddress::from(0_u8)),
