@@ -38,7 +38,6 @@ pub struct RunnerConfig {
     exit_first: bool,
     fuzzer_runs: u32,
     fuzzer_seed: Option<u64>,
-    builtins: Vec<String>,
 }
 
 impl RunnerConfig {
@@ -66,16 +65,6 @@ impl RunnerConfig {
             fuzzer_runs: forge_config_from_scarb.fuzzer_runs.unwrap_or(fuzzer_runs),
             // TODO test precedence
             fuzzer_seed: forge_config_from_scarb.fuzzer_seed.or(fuzzer_seed),
-            builtins: vec![
-                "Pedersen".to_string(),
-                "RangeCheck".to_string(),
-                "Bitwise".to_string(),
-                "EcOp".to_string(),
-                "Poseidon".to_string(),
-                "SegmentArena".to_string(),
-                "GasBuiltin".to_string(),
-                "System".to_string(),
-            ],
         }
     }
 }
@@ -158,12 +147,23 @@ fn collect_tests_from_tree(
     corelib_path: &Utf8PathBuf,
     runner_config: &RunnerConfig,
 ) -> Result<TestsFromFile> {
+    let builtins = vec![
+        "Pedersen",
+        "RangeCheck",
+        "Bitwise",
+        "EcOp",
+        "Poseidon",
+        "SegmentArena",
+        "GasBuiltin",
+        "System",
+    ];
+
     let (sierra_program, tests_configs) = collect_tests(
         test_root.as_str(),
         None,
         package_name,
         linked_libraries.clone(),
-        Some(runner_config.builtins.iter().map(AsRef::as_ref).collect()),
+        Some(builtins.clone()),
         corelib_path.into(),
     )?;
 
@@ -326,6 +326,17 @@ fn run_tests_from_file(
         let function = runner.find_function(case_name)?;
         let args = args_for_function(function);
 
+        let builtins = vec![
+            "Pedersen",
+            "RangeCheck",
+            "Bitwise",
+            "EcOp",
+            "Poseidon",
+            "SegmentArena",
+            "GasBuiltin",
+            "System",
+        ];
+
         let result = if args.is_empty() {
             let result =
                 run_from_test_case(&runner, case, contracts, predeployed_contracts, vec![])?;
@@ -337,7 +348,7 @@ fn run_tests_from_file(
                 runner_config.fuzzer_runs
             );
 
-            if contains_non_felt252_args(&args, &runner_config.builtins) {
+            if contains_non_felt252_args(&args, &builtins) {
                 bail!("Test {case_name} requires arguments that are not felt252 type");
             }
 
@@ -405,11 +416,11 @@ fn run_tests_from_file(
     })
 }
 
-fn contains_non_felt252_args(args: &Vec<&ConcreteTypeId>, builtins: &[String]) -> bool {
+fn contains_non_felt252_args(args: &Vec<&ConcreteTypeId>, builtins: &[&str]) -> bool {
     args.iter()
         .filter(|pt| {
             if let Some(name) = &pt.debug_name {
-                return name != &SmolStr::from("felt252") && builtins.contains(&name.to_string());
+                return name != &SmolStr::from("felt252") && builtins.contains(&name.as_str());
             }
             false
         })
