@@ -120,7 +120,10 @@ impl StateReader for ForkStateReader {
         }
     }
 
-    fn get_compiled_class_hash(&mut self, _class_hash: ClassHash) -> StateResult<CompiledClassHash> {
+    fn get_compiled_class_hash(
+        &mut self,
+        _class_hash: ClassHash,
+    ) -> StateResult<CompiledClassHash> {
         todo!()
     }
 }
