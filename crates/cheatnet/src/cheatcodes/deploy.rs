@@ -6,6 +6,7 @@ use blockifier::execution::execution_utils::{felt_to_stark_felt, stark_felt_to_f
 
 use blockifier::state::state_api::{State, StateReader};
 use cairo_felt::Felt252;
+use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_vm::vm::errors::hint_errors::HintError::CustomHint;
 use conversions::StarknetConversions;
 
@@ -45,9 +46,9 @@ impl CheatnetState {
             .get_compiled_contract_class(class_hash)
             .map_err::<EnhancedHintError, _>(From::from)?;
         if contract_class.constructor_selector().is_none() && !calldata.is_empty() {
-            return Err(CheatcodeError::Recoverable(vec![
-                "No constructor in contract".to_owned().to_felt252(),
-            ]));
+            return Err(CheatcodeError::Unrecoverable(EnhancedHintError::from(
+                CustomHint(Box::from("No constructor in contract")),
+            )));
         }
 
         let execute_calldata = create_execute_calldata(
@@ -77,6 +78,19 @@ impl CheatnetState {
                     ))))
                 }),
             CallContractOutput::Panic { panic_data } => {
+                let err_str = as_cairo_short_string(&panic_data[0]).unwrap();
+                for invalid_calldata_msg in [
+                    "Failed to deserialize param #",
+                    "Input too long for arguments",
+                    "INVALID_CALLDATA_LEN",
+                ] {
+                    if err_str.contains(invalid_calldata_msg) {
+                        return Err(CheatcodeError::Unrecoverable(EnhancedHintError::from(
+                            CustomHint(Box::from(err_str)),
+                        )));
+                    }
+                }
+
                 Err(CheatcodeError::Recoverable(panic_data))
             }
             CallContractOutput::Error { msg } => Err(CheatcodeError::Unrecoverable(

@@ -146,8 +146,8 @@ fn deploy_calldata_no_constructor() {
     let output = state.deploy(&class_hash, &[Felt252::from(123_321)]);
 
     assert!(match output {
-        Err(CheatcodeError::Recoverable(data)) =>
-            data[0] == "No constructor in contract".to_owned().to_felt252(),
+        Err(CheatcodeError::Unrecoverable(EnhancedHintError::Hint(HintError::CustomHint(msg)))) =>
+            msg.as_ref() == "No constructor in contract",
         _ => false,
     });
 }
@@ -166,8 +166,8 @@ fn deploy_missing_arguments_in_constructor() {
     dbg!(&output);
 
     assert!(match output {
-        Err(CheatcodeError::Recoverable(data)) =>
-            data[0] == "Failed to deserialize param #2".to_owned().to_felt252(),
+        Err(CheatcodeError::Unrecoverable(EnhancedHintError::Hint(HintError::CustomHint(msg)))) =>
+            msg.as_ref() == "Failed to deserialize param #2",
         _ => false,
     });
 }
@@ -187,8 +187,8 @@ fn deploy_too_many_arguments_in_constructor() {
     );
 
     assert!(match output {
-        Err(CheatcodeError::Recoverable(data)) =>
-            data[0] == "Input too long for arguments".to_owned().to_felt252(),
+        Err(CheatcodeError::Unrecoverable(EnhancedHintError::Hint(HintError::CustomHint(msg)))) =>
+            msg.as_ref() == "Input too long for arguments",
         _ => false,
     });
 }
