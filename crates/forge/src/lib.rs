@@ -349,7 +349,6 @@ fn run_tests_from_file(
                 bail!("Test {case_name} requires arguments that are not felt252 type");
             }
 
-            // let mut rng = new_rng(runner_config.fuzzer_seed);
             let mut results = vec![];
 
             for _ in 1..runner_config.fuzzer_runs {
