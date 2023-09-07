@@ -15,12 +15,9 @@ use cairo_lang_sierra::ids::ConcreteTypeId;
 use cairo_lang_sierra::program::{Function, Program};
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
-use num_bigint::{BigUint, RandBigInt};
-use num_traits::Zero;
-use rand::rngs::StdRng;
-use rand::{thread_rng, RngCore, SeedableRng};
 use smol_str::SmolStr;
 
+use crate::fuzzer::{Fuzzer, Random};
 use crate::running::run_from_test_case;
 use crate::scarb::{ForgeConfig, StarknetContractArtifacts};
 use test_collector::{collect_tests, LinkedLibrary, TestCase};
@@ -30,6 +27,7 @@ pub mod scarb;
 pub mod test_case_summary;
 
 mod cheatcodes_hint_processor;
+mod fuzzer;
 mod running;
 
 /// Configuration of the test runner
@@ -223,6 +221,11 @@ pub fn run(
 
     let mut tests_iterator = tests.into_iter();
 
+    let mut fuzzer = match runner_config.fuzzer_seed {
+        None => Random::new(),
+        Some(seed) => Random::from_seed(seed),
+    };
+
     let mut summaries = vec![];
     for tests_from_file in tests_iterator.by_ref() {
         let summary = run_tests_from_file(
@@ -231,6 +234,7 @@ pub fn run(
             runner_config,
             contracts,
             predeployed_contracts,
+            &mut fuzzer,
         )?;
         summaries.push(summary.clone());
         if summary.runner_exit_status == RunnerStatus::TestFailed {
@@ -295,27 +299,13 @@ impl TestFileSummary {
     }
 }
 
-fn random_felt252_generator(rng: &mut dyn RngCore) -> Felt252 {
-    let low = BigUint::zero();
-    let high = Felt252::prime();
-
-    let random_uint: BigUint = rng.gen_biguint_range(&low, &high);
-    Felt252::from(random_uint)
-}
-
-fn new_rng(seed: Option<u64>) -> Box<dyn RngCore> {
-    match seed {
-        None => Box::new(thread_rng()),
-        Some(seed) => Box::new(StdRng::seed_from_u64(seed)),
-    }
-}
-
 fn run_tests_from_file(
     tests: TestsFromFile,
     package_name: &str,
     runner_config: &RunnerConfig,
     contracts: &HashMap<String, StarknetContractArtifacts>,
     predeployed_contracts: &Utf8PathBuf,
+    fuzzer: &mut dyn Fuzzer,
 ) -> Result<TestFileSummary> {
     let runner = SierraCasmRunner::new(
         tests.sierra_program,
@@ -351,11 +341,14 @@ fn run_tests_from_file(
                 bail!("Test {case_name} requires arguments that are not felt252 type");
             }
 
-            let mut rng = new_rng(runner_config.fuzzer_seed);
+            // let mut rng = new_rng(runner_config.fuzzer_seed);
             let mut results = vec![];
 
             for _ in 1..runner_config.fuzzer_runs {
-                let args = random_felts_from_args(&args, &mut rng);
+                let args: Vec<Felt252> = args
+                    .iter()
+                    .flat_map(|_| fuzzer.next_argument("felt252"))
+                    .collect();
 
                 let result = run_from_test_case(
                     &runner,
@@ -410,15 +403,6 @@ fn run_tests_from_file(
         runner_exit_status: RunnerStatus::Default,
         relative_path: tests.relative_path,
     })
-}
-
-fn random_felts_from_args(
-    args: &Vec<&ConcreteTypeId>,
-    mut rng: &mut Box<dyn RngCore>,
-) -> Vec<Felt252> {
-    args.iter()
-        .map(|_| random_felt252_generator(&mut rng))
-        .collect()
 }
 
 fn contains_non_felt252_args(args: &Vec<&ConcreteTypeId>, builtins: &[String]) -> bool {
