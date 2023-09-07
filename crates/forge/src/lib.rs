@@ -468,6 +468,61 @@ mod tests {
     use test_collector::ExpectedTestResult;
 
     #[test]
+    fn runner_config_default_arguments() {
+        let config = RunnerConfig::new(None, false, false, None, None, &Default::default());
+        assert_eq!(
+            config,
+            RunnerConfig {
+                test_name_filter: None,
+                exact_match: false,
+                exit_first: false,
+                fuzzer_runs: 256,
+                fuzzer_seed: None,
+            }
+        );
+    }
+
+    #[test]
+    fn runner_config_just_scarb_arguments() {
+        let config_from_scarb = ForgeConfig {
+            exit_first: true,
+            fuzzer_runs: Some(1234),
+            fuzzer_seed: Some(500),
+        };
+        let config = RunnerConfig::new(None, false, false, None, None, &config_from_scarb);
+        assert_eq!(
+            config,
+            RunnerConfig {
+                test_name_filter: None,
+                exact_match: false,
+                exit_first: true,
+                fuzzer_runs: 1234,
+                fuzzer_seed: Some(500),
+            }
+        );
+    }
+
+    #[test]
+    fn runner_config_argument_precedence() {
+        let config_from_scarb = ForgeConfig {
+            exit_first: false,
+            fuzzer_runs: Some(1234),
+            fuzzer_seed: Some(1000),
+        };
+        let config = RunnerConfig::new(None, false, true, Some(100), Some(32), &config_from_scarb);
+        assert_eq!(
+            config,
+            RunnerConfig {
+                test_name_filter: None,
+                exact_match: false,
+                exit_first: true,
+                fuzzer_runs: 100,
+                fuzzer_seed: Some(32),
+            }
+        );
+    }
+
+    #[test]
     fn collecting_tests() {
         let temp = assert_fs::TempDir::new().unwrap();
         temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
