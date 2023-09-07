@@ -53,7 +53,7 @@ impl RunnerConfig {
         test_name_filter: Option<String>,
         exact_match: bool,
         exit_first: bool,
-        fuzzer_runs: u32,
+        fuzzer_runs: Option<u32>,
         fuzzer_seed: Option<u64>,
         forge_config_from_scarb: &ForgeConfig,
     ) -> Self {
@@ -61,10 +61,10 @@ impl RunnerConfig {
             test_name_filter,
             exact_match,
             exit_first: forge_config_from_scarb.exit_first || exit_first,
-            // TODO test precedence
-            fuzzer_runs: forge_config_from_scarb.fuzzer_runs.unwrap_or(fuzzer_runs),
-            // TODO test precedence
-            fuzzer_seed: forge_config_from_scarb.fuzzer_seed.or(fuzzer_seed),
+            fuzzer_runs: fuzzer_runs
+                .or(forge_config_from_scarb.fuzzer_runs)
+                .unwrap_or(256),
+            fuzzer_seed: fuzzer_seed.or(forge_config_from_scarb.fuzzer_seed),
         }
     }
 }

@@ -88,7 +88,7 @@ fn main_execution() -> Result<()> {
             args.test_name.clone(),
             args.exact,
             args.exit_first,
-            args.fuzzer_runs.unwrap_or(256),
+            args.fuzzer_runs,
             args.fuzzer_seed,
             &forge_config,
         );
