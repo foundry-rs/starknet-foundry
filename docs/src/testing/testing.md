@@ -25,8 +25,8 @@ Now run forge using a command:
 
 ```shell
 $ snforge
-Collected 1 test(s) and 1 test file(s)
-Running 1 test(s) from package_name package
+Collected 1 test(s) and 1 test file(s) from package_name package
+Running 1 inline test(s)
 [PASS] package_name::test_sum
 Tests: 1 passed, 0 failed, 0 skipped
 ```
@@ -63,8 +63,8 @@ fn failing() {
 
 ```shell
 $ snforge
-Collected 1 test(s) and 1 test file(s)
-Running 1 test(s) from package_name package
+Collected 1 test(s) and 1 test file(s) from package_name package
+Running 1 inline test(s)
 [FAIL] package_name::failing
 
 Failure data:
@@ -89,8 +89,8 @@ fn should_panic_check_data() {
 
 ```shell
 $ snforge
-Collected 1 test(s) and 1 test file(s)
-Running 1 test(s) from package_name package
+Collected 1 test(s) and 1 test file(s) from package_name package
+Running 1 inline test(s)
 [PASS] src::should_panic_check_data
 Tests: 1 passed, 0 failed, 0 skipped
 ```

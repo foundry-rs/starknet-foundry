@@ -4,8 +4,8 @@ To run tests with Forge, simply run the `snforge` command from the package direc
 
 ```shell
 $ snforge
-Collected 3 test(s) and 1 test file(s)
-Running 3 test(s) from package_name package
+Collected 3 test(s) and 1 test file(s) from package_name package
+Running 3 inline test(s)
 [PASS] package_name::executing
 [PASS] package_name::calling
 [PASS] package_name::calling_another
@@ -19,8 +19,8 @@ By default, any test name matching the filter will be run.
 
 ```shell
 $ snforge calling
-Collected 2 test(s) and 1 test file(s)
-Running 2 test(s) from package_name package
+Collected 2 test(s) and 1 test file(s) from package_name package
+Running 2 inline test(s)
 [PASS] package_name::calling
 [PASS] package_name::calling_another
 Tests: 2 passed, 0 failed, 0 skipped
@@ -33,8 +33,8 @@ Note, you have to use a fully qualified test name, including a module name.
 
 ```shell
 $ snforge package_name::calling --exact
-Collected 1 test(s) and 1 test file(s)
-Running 1 test(s) from package_name package
+Collected 1 test(s) and 1 test file(s) from package_name package
+Running 1 inline test(s)
 [PASS] package_name::calling
 Tests: 1 passed, 0 failed, 0 skipped
 ```
@@ -45,8 +45,8 @@ To stop the test execution after first failed test, you can pass an `--exit-firs
 
 ```shell
 $ snforge --exit-first
-Collected 6 test(s) and 1 test file(s)
-Running 6 test(s) from package_name package
+Collected 6 test(s) and 1 test file(s) from package_name package
+Running 6 inline test(s)
 [PASS] package_name::executing
 [PASS] package_name::calling
 [PASS] package_name::calling_another
@@ -60,11 +60,15 @@ Failure data:
 Tests: 3 passed, 1 failed, 2 skipped
 ```
 
-## Running tests in Scarb Workspace
+## Scarb workspaces support
 
-When running `snforge` in a Scarb workspace with a root package, it will only run tests inside the root package. When it's ran in a virtual workspace it will execute tests for all packages.  
+Forge supports Scarb Workspaces. To make sure you know how workspaces work, follow Scarb documentation [here](https://docs.swmansion.com/scarb/docs/reference/workspaces.html).
 
-For a project structure like this
+### Workspaces with root package
+
+When running `snforge` in a Scarb workspace with a root package, it will only run tests inside the root package.  
+
+I.e. for a project structure like this
 
 ```shell
 $ tree . -L 3
@@ -78,50 +82,64 @@ $ tree . -L 3
 │   └── fibonacci
 │       ├── Scarb.toml
 │       └── src
+└── tests
+    └── test.cairo
 └── src
     └── lib.cairo
+```
+
+only the tests in `./src` and `./tests` folders will be executed.
+
+
+```shell
+
 $ snforge
-Collected 1 test(s) and 1 test file(s)
-Running 1 test(s) from hello_workspaces package
+Collected 1 test(s) and 1 test file(s) from hello_workspaces package
+Running 1 inline test(s)
 [PASS] hello_workspaces::test_simple
 Tests: 1 passed, 0 failed, 0 skipped
 ```
 
-To specify a package to test, pass a `--package package_name` (or `-p package_name` for short) flag, to select the specific package. You can also run `snforge` from the package directory for the same effect.
+To specify a package to test, pass a `--package package_name` (or `-p package_name` for short) flag, to select the specific package. You can also run `snforge` from the package directory to achieve the same effect.
 
 ```shell
 $ snforge --package addition
-Collected 4 test(s) and 3 test file(s)
-Running 1 test(s) from addition package
+Collected 2 test(s) and 2 test file(s) from addition package
+Running 1 inline test(s)
 [PASS] addition::tests::it_works
-Running 2 test(s) from tests/nested/test_nested.cairo
-[PASS] test_nested::test_two
-[PASS] test_nested::test_two_and_two
 Running 1 test(s) from tests/test_simple.cairo
 [PASS] test_simple::simple_case
-Tests: 4 passed, 0 failed, 0 skipped
+Tests: 2 passed, 0 failed, 0 skipped
 ```
 
-You can also pass `--workspace` flag to explicitly run tests for all packages in the workspace.
+You can also pass `--workspace` flag to run tests for all packages in the workspace.
 
 ```shell
 $ snforge --workspace
-Collected 4 test(s) and 3 test file(s)
-Running 1 test(s) from addition package
+Collected 2 test(s) and 2 test file(s) from addition package
+Running 1 inline test(s)
 [PASS] addition::tests::it_works
-Running 2 test(s) from tests/nested/test_nested.cairo
-[PASS] test_nested::test_two
-[PASS] test_nested::test_two_and_two
 Running 1 test(s) from tests/test_simple.cairo
 [PASS] test_simple::simple_case
-Tests: 4 passed, 0 failed, 0 skipped
-Running 1 test(s) from fibonacci package
+Tests: 2 passed, 0 failed, 0 skipped
+
+
+Collected 1 test(s) and 1 test file(s) from fibonacci package
+Running 1 inline test(s)
 [PASS] fibonacci::tests::it_works
 Tests: 1 passed, 0 failed, 0 skipped
-Collected 3 test(s) and 2 test file(s)
-Running 1 test(s) from hello_workspaces package
+
+
+Collected 3 test(s) and 2 test file(s) from hello_workspaces package
+Running 1 inline test(s)
 [PASS] hello_workspaces::test_simple
 Tests: 1 passed, 0 failed, 0 skipped
 ```
 
-You can read more about Scarb Workspaces in Scarb docs [here](https://docs.swmansion.com/scarb/docs/reference/workspaces.html).
+`--package` and `--workspace` flags are mutually exclusive, adding both of them to a `snforge` command will result in an error.
+
+### Virtual workspaces
+
+Running `snforge` command in a virtual workspace (a workspace without a root package) will by default run tests for all the packages.
+
+To select a specific package to test, you can use the `--package` flag the same way as in regular workspaces.
