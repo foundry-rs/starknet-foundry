@@ -111,9 +111,7 @@ fn find_cairo_root_files_in_directory(
         .into_iter()
         .filter_entry(|e| {
             !e.path().starts_with(src_path)
-                && !subpackages
-                    .into_iter()
-                    .any(|path| e.path().starts_with(path))
+                && !subpackages.iter().any(|path| e.path().starts_with(path))
         })
     {
         let entry =

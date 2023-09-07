@@ -59,7 +59,7 @@ fn main_execution() -> Result<()> {
     let current_dir = std::env::current_dir().context("Failed to get current directory")?;
 
     let build_output = Command::new("scarb")
-        .current_dir(current_dir.clone())
+        .current_dir(current_dir)
         .arg("build")
         .stderr(Stdio::inherit())
         .stdout(Stdio::inherit())
