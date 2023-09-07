@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `spy_events` cheatcode
 - support for printing in contracts
 - `spoof` cheatcode
+- snforge command-line flag `--init`
 
 ### Cast
 
