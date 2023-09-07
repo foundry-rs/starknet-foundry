@@ -31,11 +31,11 @@ struct Args {
     exit_first: bool,
 
     /// Number of fuzzer runs
-    #[arg(short, long)]
+    #[arg(short = 'r', long)]
     fuzzer_runs: Option<u32>,
 
     /// Seed for the fuzzer
-    #[arg(short, long)]
+    #[arg(short = 's', long)]
     fuzzer_seed: Option<u64>,
 }
 
