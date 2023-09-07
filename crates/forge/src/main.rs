@@ -22,7 +22,7 @@ static PREDEPLOYED_CONTRACTS: Dir = include_dir!("crates/cheatnet/predeployed-co
 #[derive(Parser, Debug)]
 #[command(version)]
 struct Args {
-    /// Name used to filter tests or project name during init
+    /// Name used to filter tests
     test_name: Option<String>,
     /// Use exact matches for `test_filter`
     #[arg(short, long)]
@@ -46,8 +46,8 @@ fn load_predeployed_contracts() -> Result<TempDir> {
 
 fn main_execution() -> Result<()> {
     let args = Args::parse();
-    if args.init.is_some() {
-        return init::run(&args.init.unwrap());
+    if let Some(project_name) = args.init {
+        return init::run(project_name.as_str());
     }
 
     let predeployed_contracts_dir = load_predeployed_contracts()?;

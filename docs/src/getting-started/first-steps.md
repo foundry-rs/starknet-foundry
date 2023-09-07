@@ -27,7 +27,7 @@ $ tree . -L 1
 * `tests/` contains tests. Note that test can also be included in any file or directory.
 * `Scarb.toml` contains configuration of the project as well as of `snforge`, `sncast` etc.
 
-Ensures that `casm` codegen are enabled in the `Scarb.toml` file.
+Ensures that `casm` codegen is enabled in the `Scarb.toml` file.
 ```toml
 (...)
 [[target.starknet-contract]]
@@ -43,7 +43,7 @@ $ snforge
 [..]Compiling[..]
 [..]Finished[..]
 Collected 2 test(s) and 2 test file(s)
-Running 0 test(s) from package_name package
+Running 0 test(s) from project_name package
 Running 2 test(s) from tests/test_contract.cairo
 [PASS] test_contract::test_increase_balance
 [PASS] test_contract::test_cannot_increase_balance_with_zero_value
