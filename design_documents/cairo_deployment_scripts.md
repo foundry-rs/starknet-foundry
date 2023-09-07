@@ -87,7 +87,7 @@ log information.
 
 In case of failed transaction, in the "output" field in state file we could include an error message. After fixing the issue
 we should allow users to just re-run the script - all the previous (succeeded) transactions should not be replayed, the
-erroneous transaction should be retried and its output should be put into state file.
+erroneous transaction should be retried and its output should be put into [state file](#example-state-file).
 
 ### idempotency
 At the later stages we will want to have the script to be able to track the on chain state using a state file, which would 
