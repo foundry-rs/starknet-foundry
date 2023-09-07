@@ -2,8 +2,8 @@ use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Parser;
 use include_dir::{include_dir, Dir};
-use scarb_metadata::packages_filter::PackagesFilter;
 use scarb_metadata::{MetadataCommand, PackageMetadata};
+use scarb_ui::args::PackagesFilter;
 use std::path::PathBuf;
 use tempfile::{tempdir, TempDir};
 

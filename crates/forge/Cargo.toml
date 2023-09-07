@@ -40,7 +40,8 @@ num-bigint = "0.4.3"
 cairo-felt = "0.8.1"
 clap = { version = "4.3.23", features = ["derive"] }
 walkdir = "2.3.3"
-scarb-metadata = { version = "1.7.0", features = ["packages_filter"]} 
+scarb-ui = { git = "https://github.com/software-mansion/scarb.git", rev = "58cc88e" }
+scarb-metadata = { git = "https://github.com/software-mansion/scarb.git", rev = "58cc88e" }
 project-root = "0.2.2"
 console = "0.15.7"
 snapbox = "0.4.11"
@@ -52,7 +53,6 @@ ark-secp256k1 = "0.4.0"
 ark-secp256r1 = "0.4.0"
 openssl = { version = "0.10", features = ["vendored"] }
 which = "4.4.0"
-
 
 [lib]
 name = "forge"
