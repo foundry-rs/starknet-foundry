@@ -52,7 +52,7 @@ impl From<&StarknetContractArtifacts> for ContractArtifacts {
 }
 
 pub struct CairoHintProcessor<'a> {
-    pub original_cairo_hint_processor: SyscallHintProcessor<'a>,
+    pub blockifier_syscall_handler: SyscallHintProcessor<'a>,
     pub contracts: &'a HashMap<String, StarknetContractArtifacts>,
     pub hints: &'a HashMap<String, Hint>,
     pub cheatnet_state: CheatnetState,
@@ -62,28 +62,28 @@ pub struct CairoHintProcessor<'a> {
 // crates/blockifier/src/execution/syscalls/hint_processor.rs:472 (ResourceTracker for SyscallHintProcessor)
 impl ResourceTracker for CairoHintProcessor<'_> {
     fn consumed(&self) -> bool {
-        self.original_cairo_hint_processor
+        self.blockifier_syscall_handler
             .context
             .vm_run_resources
             .consumed()
     }
 
     fn consume_step(&mut self) {
-        self.original_cairo_hint_processor
+        self.blockifier_syscall_handler
             .context
             .vm_run_resources
             .consume_step();
     }
 
     fn get_n_steps(&self) -> Option<usize> {
-        self.original_cairo_hint_processor
+        self.blockifier_syscall_handler
             .context
             .vm_run_resources
             .get_n_steps()
     }
 
     fn run_resources(&self) -> &RunResources {
-        self.original_cairo_hint_processor
+        self.blockifier_syscall_handler
             .context
             .vm_run_resources
             .run_resources()
@@ -126,10 +126,10 @@ impl HintProcessorLogic for CairoHintProcessor<'_> {
                 exec_scopes,
                 hint_data,
                 constants,
-                &mut self.original_cairo_hint_processor,
+                &mut self.blockifier_syscall_handler,
             );
         }
-        self.original_cairo_hint_processor
+        self.blockifier_syscall_handler
             .execute_hint(vm, exec_scopes, hint_data, constants)
     }
 
@@ -528,7 +528,7 @@ fn execute_syscall(
     exec_scopes: &mut ExecutionScopes,
     hint_data: &Box<dyn Any>,
     constants: &HashMap<String, Felt252>,
-    original_cairo_hint_processor: &mut SyscallHintProcessor,
+    blockifier_syscall_handler: &mut SyscallHintProcessor,
 ) -> Result<(), HintError> {
     let (cell, offset) = extract_buffer(system);
     let system_ptr = get_ptr(vm, cell, &offset)?;
@@ -542,7 +542,7 @@ fn execute_syscall(
             execute_call_contract(MemBuffer::new(vm, system_ptr), cheatnet_state)?;
             Ok(())
         }
-        _ => original_cairo_hint_processor.execute_hint(vm, exec_scopes, hint_data, constants),
+        _ => blockifier_syscall_handler.execute_hint(vm, exec_scopes, hint_data, constants),
     }
 }
 

@@ -125,7 +125,7 @@ pub(crate) fn run_from_test_case(
         ReadOnlySegments::default(),
     );
     let mut cairo_hint_processor = CairoHintProcessor {
-        original_cairo_hint_processor: syscall_handler,
+        blockifier_syscall_handler: syscall_handler,
         contracts,
         cheatnet_state: CheatnetState::new(StateReaderProxy(Box::new(build_testing_state(
             predeployed_contracts,
