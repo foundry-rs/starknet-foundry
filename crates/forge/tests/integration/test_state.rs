@@ -81,7 +81,7 @@ fn test_simple_syscalls() {
             let exec_info = get_execution_info().unbox();
             assert(exec_info.caller_address.into() == 0, 'Incorrect caller address');
             assert(exec_info.contract_address.into() == 0, 'Incorrect contract address');
-            assert(exec_info.entry_point_selector.into() == 1515033776670125170357353230573218612959527887889480774359330962438924478531, 'Incorrect entry point selector');
+            assert(exec_info.entry_point_selector.into() == 'test_case', exec_info.entry_point_selector.into());
 
             let block_info = exec_info.block_info.unbox();
 
