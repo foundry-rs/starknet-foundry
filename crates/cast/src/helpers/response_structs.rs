@@ -1,3 +1,4 @@
+use camino::Utf8PathBuf;
 use serde::Serialize;
 use starknet::core::types::FieldElement;
 
@@ -28,4 +29,10 @@ pub struct AccountCreateResponse {
     pub address: FieldElement,
     pub max_fee: FieldElement,
     pub add_profile: String,
+}
+
+#[derive(Serialize)]
+pub struct MulticallNewResponse {
+    pub path: Utf8PathBuf,
+    pub body: String,
 }

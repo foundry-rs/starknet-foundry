@@ -1,6 +1,7 @@
 use anyhow::{bail, Result};
 use camino::Utf8PathBuf;
 use cast::helpers::constants::DEFAULT_MULTICALL_CONTENTS;
+use cast::helpers::response_structs::MulticallNewResponse;
 use clap::Args;
 
 #[derive(Args, Debug)]
@@ -15,22 +16,21 @@ pub struct New {
     pub overwrite: bool,
 }
 
-pub fn new(maybe_output_path: Option<Utf8PathBuf>, overwrite: bool) -> Result<String> {
-    if let Some(output_path) = maybe_output_path {
-        if output_path.exists() {
-            if !output_path.is_file() {
-                bail!("output file cannot be a directory");
-            }
-            if !overwrite {
-                bail!(
-                  "output file already exists, if you want to overwrite it, use the `--overwrite` flag"
-              );
-            }
+pub fn new(output_path: &Utf8PathBuf, overwrite: bool) -> Result<MulticallNewResponse> {
+    if output_path.exists() {
+        if !output_path.is_file() {
+            bail!("Output file cannot be a directory");
         }
-        std::fs::write(output_path.clone(), DEFAULT_MULTICALL_CONTENTS)?;
-        return Ok(format!(
-            "Multicall template successfully saved in {output_path}"
-        ));
+        if !overwrite {
+            bail!(
+                    "Output file already exists, if you want to overwrite it, use the `--overwrite` flag"
+                );
+        }
     }
-    Ok(DEFAULT_MULTICALL_CONTENTS.to_string())
+    std::fs::write(output_path.clone(), DEFAULT_MULTICALL_CONTENTS)?;
+
+    Ok(MulticallNewResponse {
+        path: output_path.clone(),
+        body: DEFAULT_MULTICALL_CONTENTS.to_string(),
+    })
 }
