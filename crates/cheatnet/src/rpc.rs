@@ -24,7 +24,7 @@ use starknet_api::{
     transaction::Calldata,
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ResourceReport {
     pub gas: f64,
     pub steps: usize,
@@ -41,6 +41,7 @@ impl ResourceReport {
     }
 }
 
+#[derive(Debug)]
 pub enum CallContractOutput {
     Success {
         ret_data: Vec<Felt252>,

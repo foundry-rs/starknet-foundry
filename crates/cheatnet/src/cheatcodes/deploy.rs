@@ -20,6 +20,7 @@ use super::CheatcodeError;
 use crate::rpc::{call_contract, CallContractOutput, ResourceReport};
 
 #[allow(clippy::module_name_repetitions)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct DeployPayload {
     pub contract_address: ContractAddress,
     pub resource_report: ResourceReport,
