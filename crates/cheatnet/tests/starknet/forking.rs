@@ -2,6 +2,7 @@ use crate::common::state::create_cheatnet_fork_state;
 use crate::common::{deploy_contract, felt_selector_from_name};
 use crate::{assert_error, assert_success};
 use cairo_felt::Felt252;
+use cairo_vm::vm::errors::hint_errors::HintError;
 use camino::Utf8PathBuf;
 use cheatnet::cheatcodes::{CheatcodeError, EnhancedHintError};
 use cheatnet::constants::build_testing_state;
@@ -15,7 +16,6 @@ use num_bigint::BigUint;
 use starknet::core::types::BlockId;
 use starknet_api::core::ContractAddress;
 use std::str::FromStr;
-use cairo_vm::vm::errors::hint_errors::HintError;
 
 #[test]
 fn fork_simple() {
