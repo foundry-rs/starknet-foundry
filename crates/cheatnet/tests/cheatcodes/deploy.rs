@@ -1,7 +1,6 @@
 use crate::assert_success;
 use crate::common::state::create_cheatnet_state;
 use crate::common::{deploy_contract, felt_selector_from_name, get_contracts};
-use blockifier::state::errors::StateError::UndeclaredClassHash;
 use cairo_felt::Felt252;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cheatnet::cheatcodes::{CheatcodeError, EnhancedHintError};
@@ -206,9 +205,8 @@ fn deploy_invalid_class_hash() {
     );
 
     assert!(match output {
-        Err(CheatcodeError::Unrecoverable(EnhancedHintError::State(UndeclaredClassHash(
-            class_hash2,
-        )))) => class_hash == class_hash2,
+        Err(CheatcodeError::Unrecoverable(EnhancedHintError::Hint(HintError::CustomHint(msg)))) =>
+            msg.as_ref().contains(class_hash.to_string().as_str()),
         _ => false,
     });
 }
