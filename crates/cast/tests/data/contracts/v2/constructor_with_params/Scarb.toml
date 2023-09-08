@@ -3,7 +3,7 @@ name = "constructor_with_params_v2"
 version = "0.1.0"
 
 [dependencies]
-starknet = ">=2.0.2"
+starknet = ">=2.2.0"
 
 [[target.starknet-contract]]
 casm = true

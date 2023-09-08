@@ -3,7 +3,7 @@ name = "build_fails_v2"
 version = "0.1.0"
 
 [dependencies]
-starknet = ">=2.0.2"
+starknet = ">=2.2.2"
 
 [[target.starknet-contract]]
 casm = true

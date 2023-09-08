@@ -4,7 +4,7 @@ set -e
 COMPILER_DIRECTORY="$(git rev-parse --show-toplevel)/crates/cast/tests/utils/compiler"
 CAIRO_REPO="https://github.com/starkware-libs/cairo/releases/download"
 
-SCARB_VERSIONS=("0.4.1" "0.5.2")
+SCARB_VERSIONS=("0.4.1" "0.7.0")
 DEVNET_VERSION="0.5.5"
 
 if ! which starknet-devnet > /dev/null 2>&1; then
@@ -54,6 +54,9 @@ for scarb_version in "${SCARB_VERSIONS[@]}"; do
 
   asdf local scarb "$scarb_version"
   compiler_version="v$(scarb --version | grep -e "cairo:" | awk '{print $2}')"
+
+  echo "Scarb version: $scarb_version"
+  echo "Compiler version: $compiler_version"
 
   if [ ! -x "$COMPILER_DIRECTORY/$compiler_version/cairo/bin/starknet-sierra-compile" ]; then
     if [[ $(uname -s) == 'Darwin' ]]; then

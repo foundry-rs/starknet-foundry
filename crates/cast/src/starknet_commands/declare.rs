@@ -87,7 +87,7 @@ pub async fn declare(
         );
     }
 
-    let metadata = scarb_metadata_1_4_2::MetadataCommand::new()
+    let metadata = scarb_metadata::MetadataCommand::new()
         .inherit_stderr()
         .exec()
         .context("Failed to obtain scarb metadata")?;

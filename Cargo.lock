@@ -1110,7 +1110,7 @@ dependencies = [
  "project-root",
  "rand",
  "reqwest",
- "scarb-metadata 1.4.2",
+ "scarb-metadata",
  "sealed_test",
  "serde",
  "serde_json",
@@ -1843,7 +1843,7 @@ dependencies = [
  "project-root",
  "rayon",
  "regex",
- "scarb-metadata 1.7.0",
+ "scarb-metadata",
  "scarb-ui",
  "schemars",
  "serde",
@@ -3509,18 +3509,6 @@ dependencies = [
 
 [[package]]
 name = "scarb-metadata"
-version = "1.4.2"
-source = "git+https://github.com/software-mansion/scarb.git?rev=4b87413#4b87413cc10611614434f9124b8044b4dd0ad7ed"
-dependencies = [
- "camino",
- "semver",
- "serde",
- "serde_json",
- "thiserror",
-]
-
-[[package]]
-name = "scarb-metadata"
 version = "1.7.0"
 source = "git+https://github.com/software-mansion/scarb.git?rev=58cc88e#58cc88efb4f8b9923735931e47d72912457ec321"
 dependencies = [
@@ -3542,7 +3530,7 @@ dependencies = [
  "console",
  "indicatif",
  "indoc",
- "scarb-metadata 1.7.0",
+ "scarb-metadata",
  "serde",
  "serde_json",
 ]

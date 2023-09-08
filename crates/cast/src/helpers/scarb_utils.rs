@@ -1,6 +1,6 @@
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
-use scarb_metadata_1_4_2;
+use scarb_metadata;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::process::{Command, Stdio};
@@ -66,11 +66,11 @@ pub fn get_scarb_manifest() -> Result<Utf8PathBuf> {
     Ok(path)
 }
 
-pub fn get_scarb_metadata(manifest_path: &Utf8PathBuf) -> Result<scarb_metadata_1_4_2::Metadata> {
+pub fn get_scarb_metadata(manifest_path: &Utf8PathBuf) -> Result<scarb_metadata::Metadata> {
     which::which("scarb")
         .context("Cannot find `scarb` binary in PATH. Make sure you have Scarb installed https://github.com/software-mansion/scarb")?;
 
-    scarb_metadata_1_4_2::MetadataCommand::new()
+    scarb_metadata::MetadataCommand::new()
         .inherit_stderr()
         .manifest_path(manifest_path)
         .no_deps()
@@ -109,7 +109,7 @@ pub fn parse_scarb_config(
     }
 }
 
-pub fn get_package_tool_sncast(metadata: &scarb_metadata_1_4_2::Metadata) -> Result<&Value> {
+pub fn get_package_tool_sncast(metadata: &scarb_metadata::Metadata) -> Result<&Value> {
     let first_package = metadata
         .packages
         .get(0)
@@ -140,9 +140,7 @@ mod tests {
     fn test_parse_scarb_config_happy_case_with_profile() {
         let config = parse_scarb_config(
             &Some(String::from("myprofile")),
-            &Some(Utf8PathBuf::from(
-                "tests/data/contracts/v1/balance/Scarb.toml",
-            )),
+            &Some(Utf8PathBuf::from("tests/data/contracts/v2/map/Scarb.toml")),
         )
         .unwrap();
 
@@ -154,7 +152,7 @@ mod tests {
     fn test_parse_scarb_config_happy_case_without_profile() {
         let config = parse_scarb_config(
             &None,
-            &Some(Utf8PathBuf::from("tests/data/contracts/v1/map/Scarb.toml")),
+            &Some(Utf8PathBuf::from("tests/data/contracts/v2/map/Scarb.toml")),
         )
         .unwrap();
         assert_eq!(config.account, String::from("user2"));
@@ -192,9 +190,7 @@ mod tests {
     fn test_parse_scarb_config_no_profile_found() {
         let config = parse_scarb_config(
             &Some(String::from("mariusz")),
-            &Some(Utf8PathBuf::from(
-                "tests/data/contracts/v1/balance/Scarb.toml",
-            )),
+            &Some(Utf8PathBuf::from("tests/data/contracts/v2/map/Scarb.toml")),
         )
         .unwrap_err();
         assert_eq!(
@@ -214,7 +210,7 @@ mod tests {
         assert!(config.account.is_empty());
     }
 
-    #[sealed_test(files = ["tests/data/contracts/v1/balance/Scarb.toml"])]
+    #[sealed_test(files = ["tests/data/contracts/v2/map/Scarb.toml"])]
     fn test_parse_scarb_config_no_profile_no_path() {
         let config = parse_scarb_config(&None, &None).unwrap();
 
@@ -222,7 +218,7 @@ mod tests {
         assert!(config.account.is_empty());
     }
 
-    #[sealed_test(files = ["tests/data/contracts/v1/balance/Scarb.toml"])]
+    #[sealed_test(files = ["tests/data/contracts/v2/map/Scarb.toml"])]
     fn test_parse_scarb_config_no_path() {
         let config = parse_scarb_config(&Some(String::from("myprofile")), &None).unwrap();
 
