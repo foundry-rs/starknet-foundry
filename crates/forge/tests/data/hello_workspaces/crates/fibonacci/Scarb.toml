@@ -11,6 +11,7 @@ snforge.workspace = true
 [dependencies]
 addition = { path = "../addition" }
 starknet.workspace = true
+snforge_std = { path = "../../../../../../../snforge_std" }
 
 [[target.starknet-contract]]
 sierra = true
