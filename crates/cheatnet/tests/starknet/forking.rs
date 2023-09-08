@@ -1,7 +1,6 @@
 use crate::common::state::create_cheatnet_fork_state;
 use crate::common::{deploy_contract, felt_selector_from_name};
 use crate::{assert_error, assert_success};
-use blockifier::state::errors::StateError;
 use cairo_felt::Felt252;
 use camino::Utf8PathBuf;
 use cheatnet::cheatcodes::{CheatcodeError, EnhancedHintError};
@@ -16,6 +15,7 @@ use num_bigint::BigUint;
 use starknet::core::types::BlockId;
 use starknet_api::core::ContractAddress;
 use std::str::FromStr;
+use cairo_vm::vm::errors::hint_errors::HintError;
 
 #[test]
 fn fork_simple() {
@@ -68,9 +68,8 @@ fn try_deploying_undeclared_class() {
     let class_hash = "1".to_owned().to_class_hash();
 
     assert!(match state.deploy(&class_hash, &[]) {
-        Err(CheatcodeError::Unrecoverable(EnhancedHintError::State(
-            StateError::UndeclaredClassHash(undeclared_class_hash),
-        ))) => undeclared_class_hash == class_hash,
+        Err(CheatcodeError::Unrecoverable(EnhancedHintError::Hint(HintError::CustomHint(msg)))) =>
+            msg.as_ref().contains(class_hash.to_string().as_str()),
         _ => false,
     });
 }
