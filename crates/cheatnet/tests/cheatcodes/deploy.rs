@@ -147,7 +147,8 @@ fn deploy_calldata_no_constructor() {
 
     assert!(match output {
         Err(CheatcodeError::Unrecoverable(EnhancedHintError::Hint(HintError::CustomHint(msg)))) =>
-            msg.as_ref() == "No constructor in contract",
+            msg.as_ref()
+                .contains("Cannot pass calldata to a contract with no constructor"),
         _ => false,
     });
 }

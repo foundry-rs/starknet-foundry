@@ -41,16 +41,6 @@ impl CheatnetState {
             }
         }
 
-        let contract_class = self
-            .blockifier_state
-            .get_compiled_contract_class(class_hash)
-            .map_err::<EnhancedHintError, _>(From::from)?;
-        if contract_class.constructor_selector().is_none() && !calldata.is_empty() {
-            return Err(CheatcodeError::Unrecoverable(EnhancedHintError::from(
-                CustomHint(Box::from("No constructor in contract")),
-            )));
-        }
-
         let execute_calldata = create_execute_calldata(
             calldata,
             class_hash,
