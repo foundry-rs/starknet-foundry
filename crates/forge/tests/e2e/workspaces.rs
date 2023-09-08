@@ -62,6 +62,27 @@ fn run_specific_package() {
 }
 
 #[test]
+fn run_specific_package2() {
+    let temp = assert_fs::TempDir::new().unwrap();
+    temp.copy_from("tests/data/hello_workspaces", &["**/*.cairo", "**/*.toml"])
+        .unwrap();
+
+    let snapbox = runner().arg("--package").arg("fibonacci");
+
+    snapbox
+        .current_dir(&temp)
+        .assert()
+        .success()
+        .stdout_matches(indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+        Collected 1 test(s) and 1 test file(s) from fibonacci package
+        Running 1 inline test(s)
+        [PASS] fibonacci::tests::it_works
+        Tests: 1 passed, 0 failed, 0 skipped
+        "#});
+}
+#[test]
 fn run_specific_package_and_name() {
     let temp = assert_fs::TempDir::new().unwrap();
     temp.copy_from("tests/data/hello_workspaces", &["**/*.cairo", "**/*.toml"])
@@ -195,7 +216,7 @@ fn run_for_entire_workspace_inside_package() {
     temp.copy_from("tests/data/hello_workspaces", &["**/*.cairo", "**/*.toml"])
         .unwrap();
 
-    let package_dir = temp.join(PathBuf::from("crates/addition"));
+    let package_dir = temp.join(PathBuf::from("crates/fibonacci"));
 
     let snapbox = runner().arg("--workspace");
 
@@ -204,8 +225,6 @@ fn run_for_entire_workspace_inside_package() {
         .assert()
         .success()
         .stdout_matches(indoc! {r#"
-        [..]Compiling[..]
-        [..]Finished[..]
         Collected 4 test(s) and 3 test file(s) from addition package
         Running 1 inline test(s)
         [PASS] addition::tests::it_works
