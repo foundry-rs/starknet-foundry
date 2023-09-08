@@ -11,8 +11,9 @@ use forge::run;
 use forge::{pretty_printing, RunnerConfig};
 
 use forge::scarb::{
-    corelib_for_package, dependencies_for_package, get_contracts_map, name_for_package,
-    paths_for_package, target_name_for_package, try_get_starknet_artifacts_path,
+    config_from_scarb_for_package, corelib_for_package, dependencies_for_package,
+    get_contracts_map, name_for_package, paths_for_package, target_name_for_package,
+    try_get_starknet_artifacts_path,
 };
 use std::process::{Command, Stdio};
 mod init;
@@ -85,8 +86,7 @@ fn main_execution() -> Result<()> {
         .context("Failed to find any packages matching the specified filter")?;
 
     for package in &packages {
-        let forge_config =
-            forge::scarb::config_from_scarb_for_package(&scarb_metadata, &package.id)?;
+        let forge_config = config_from_scarb_for_package(&scarb_metadata, &package.id)?;
         let (package_path, lib_path) = paths_for_package(&scarb_metadata, &package.id)?;
 
         let subpackages: Vec<Utf8PathBuf> = scarb_metadata
