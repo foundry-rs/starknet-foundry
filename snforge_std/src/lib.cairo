@@ -33,6 +33,9 @@ use cheatcodes::start_mock_call;
 use cheatcodes::stop_mock_call;
 
 
+use cheatcodes::setup_fork::ForkConfig;
+use cheatcodes::setup_fork::ForkTrait;
+
 mod io;
 
 use io::file_operations::File;

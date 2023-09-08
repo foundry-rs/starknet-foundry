@@ -60,7 +60,7 @@ while considering future expansion.
 5. Implement multifork, fetching utilizing multiple workers + controlling cheatcodes
 
 #### `setup_fork` Cheatcode
-`setup_fork` cheatcode allows to create fork inside a test. In the first version, it will be possible to create one fork per test.
+`setup_fork` cheatcode allows to create fork inside a test. In the first version, it will be possible to create one fork per test. To simplify keeps vars like fork_url in separate place, is possible to use envs instead of using url.
 
 ```cairo
 #[derive(Drop)]
@@ -71,13 +71,13 @@ enum Block {
 }
 
 struct ForkConfig {
-   url: ByteArray,
+   env_url_name: ByteArray,
    block: Block,
    ...
 }
 
 trait ContractClassTrait {
-    fn set_up(self: @ForkConfig>) -> ForkConfig;
+    fn set_up(self: @ForkConfig) -> ForkConfig;
 }
 ```
 

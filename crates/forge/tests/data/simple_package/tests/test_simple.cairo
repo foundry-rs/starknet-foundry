@@ -1,3 +1,5 @@
+use snforge_std::{ForkImpl, ForkConfig};
+
 #[test]
 fn test_simple() {
     assert(1 == 1, 'simple check');
@@ -27,4 +29,10 @@ fn test_failing() {
 #[test]
 fn test_another_failing() {
     assert(2 == 3, 'failing check');
+}
+
+#[test]
+fn test_another_failing() {
+    setup_fork("test", "ew")
+    assert(2 == 2, "setup_fork");
 }

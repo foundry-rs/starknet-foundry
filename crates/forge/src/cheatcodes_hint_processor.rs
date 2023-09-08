@@ -1,5 +1,6 @@
 use std::any::Any;
 use std::collections::HashMap;
+use std::env;
 use std::path::PathBuf;
 
 use crate::scarb::StarknetContractArtifacts;
@@ -22,6 +23,7 @@ use cheatnet::{
 use conversions::StarknetConversions;
 use num_traits::{One, ToPrimitive};
 use serde::Deserialize;
+use starknet::core::types::{BlockId, BlockTag};
 use starknet_api::core::ContractAddress;
 
 use cairo_lang_casm::hints::{Hint, StarknetHint};
@@ -453,6 +455,17 @@ impl CairoHintProcessor<'_> {
                 buffer
                     .write(Felt252::from(hash))
                     .expect("Failed to insert event name hash");
+                Ok(())
+            }
+            "setup_fork" => {
+                let env_name = inputs[0].clone().to_short_string();
+                let block = inputs[1].clone();
+
+                let fork_url =
+                    env::var(&env_name).map_err(|_| anyhow!("{} env doesn't exists", &env_name))?;
+
+                self.cheatnet_state
+                    .setup_fork(&fork_url, BlockId::Tag(BlockTag::Latest));
                 Ok(())
             }
             _ => Err(anyhow!("Unknown cheatcode selector: {selector}")).map_err(Into::into),
