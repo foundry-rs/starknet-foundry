@@ -151,6 +151,7 @@ fn run_inside_nested_package() {
         .success()
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
+        [..]Compiling[..]
         [..]Finished[..]
         Collected 4 test(s) and 3 test file(s) from addition package
         Running 1 inline test(s)
@@ -221,10 +222,13 @@ fn run_for_entire_workspace_inside_package() {
     let snapbox = runner().arg("--workspace");
 
     snapbox
-        .current_dir(&package_dir)
+        .current_dir(package_dir)
         .assert()
         .success()
         .stdout_matches(indoc! {r#"
+        [..]Compiling[..]
+        [..]Compiling[..]
+        [..]Finished[..]
         Collected 4 test(s) and 3 test file(s) from addition package
         Running 1 inline test(s)
         [PASS] addition::tests::it_works
