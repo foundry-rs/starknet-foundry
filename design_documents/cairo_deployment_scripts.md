@@ -19,7 +19,7 @@
 ## Context
 
 There should be a possibility to write a script in cairo, that would enable users to make transactions and send them 
-to chain. It should allow to declare and deploy contracts as well as apply state transitions on already deployed
+to starknet chain. It should allow to declare and deploy contracts as well as apply state transitions on already deployed
 contracts.
 
 ## Goal
@@ -32,9 +32,8 @@ This section is split into smaller subsections describing things we will need to
 
 ### sncast commands
 Specific sncast commands (declare, deploy, account) could be imported as regular functions to the scipts, and called as such.
-We must make sure our functions return specific types, that make retrieving essential information easier. At the moment 
-we should be in a pretty good shape, for most commands we return specific structs (defined in `cast/src/helpers/response_structs.rs`),
-but let's double-check everything necessary is included there, and all importable commands are using such structs.
+Our functions return specific types (structs defined in `cast/src/helpers/response_structs.rs`), that make retrieving
+essential information easier, so we should be good on that front.
 
 The commands would have to be implemented in the same manner as forge's cheatcodes.
 
@@ -255,28 +254,30 @@ Its schema could look like this:
 
 ```json
 {
-  "create_account": {
-    "arguments": {
-      "name": "whatever",
-      (...)
+  "version": 1,
+  "transactions" : {
+    "create_account": {
+      "arguments": {
+        "name": "whatever",
+        (...)
+      },
+      "output": {
+        "address": "0x123",
+        "max_fee": "0x321"
+      },
+      "status": "accepted",
+      "timestamp": (...)
     },
-    "output": {
-      "address": "0x123",
-      "max_fee": "0x321",
-    },
-    "status": "accepted",
-    "timestamp": (...),
-  },
-  "prefund_account": {
-    "arguments": {
-      ...
-    },
-    "output": {
-      "error": "..."
-    }
-  },
-  "status": "rejected",
-  "timestamp": (...),
+    "prefund_account": {
+      "arguments": {
+        (...)
+      },
+      "output": {
+        "error": "..."
+      },
+      "status": "rejected",
+      "timestamp": (...)
+  }
 }
 ```
 
