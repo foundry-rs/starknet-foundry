@@ -78,16 +78,17 @@ impl CheatnetState {
                     ))))
                 }),
             CallContractOutput::Panic { panic_data } => {
-                let err_str = as_cairo_short_string(&panic_data[0]).unwrap();
-                for invalid_calldata_msg in [
-                    "Failed to deserialize param #",
-                    "Input too long for arguments",
-                    "INVALID_CALLDATA_LEN",
-                ] {
-                    if err_str.contains(invalid_calldata_msg) {
-                        return Err(CheatcodeError::Unrecoverable(EnhancedHintError::from(
-                            CustomHint(Box::from(err_str)),
-                        )));
+                for panic_felt in &panic_data {
+                    let err_str = as_cairo_short_string(panic_felt).unwrap();
+                    for invalid_calldata_msg in [
+                        "Failed to deserialize param #",
+                        "Input too long for arguments",
+                    ] {
+                        if err_str.contains(invalid_calldata_msg) {
+                            return Err(CheatcodeError::Unrecoverable(EnhancedHintError::from(
+                                CustomHint(Box::from(err_str)),
+                            )));
+                        }
                     }
                 }
 
