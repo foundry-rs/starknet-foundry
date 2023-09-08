@@ -18,6 +18,8 @@ fn simple_package() {
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
+
+
         Collected 11 test(s) and 5 test file(s) from simple_package package
         Running 1 inline test(s)
         [PASS] simple_package::test_fib
@@ -85,6 +87,8 @@ fn simple_package_with_git_dependency() {
         [..]Updating git repository[..]
         [..]Compiling[..]
         [..]Finished[..]
+
+
         Collected 11 test(s) and 5 test file(s) from simple_package package
         Running 1 inline test(s)
         [PASS] simple_package::test_fib
@@ -148,6 +152,8 @@ fn with_filter() {
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
+
+
         Collected 2 test(s) and 5 test file(s) from simple_package package
         Running 0 inline test(s)
         Running 0 test(s) from tests/contract.cairo
@@ -174,6 +180,8 @@ fn with_exact_filter() {
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
+
+
         Collected 1 test(s) and 5 test file(s) from simple_package package
         Running 0 inline test(s)
         Running 0 test(s) from tests/contract.cairo
@@ -198,6 +206,8 @@ fn with_non_matching_filter() {
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
+
+
         Collected 0 test(s) and 5 test file(s) from simple_package package
         Running 0 inline test(s)
         Running 0 test(s) from tests/contract.cairo
@@ -220,6 +230,8 @@ fn with_print() {
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
+
+
         Collected 1 test(s) and 2 test file(s) from print_test package
         Running 0 inline test(s)
         Running 1 test(s) from tests/test_print.cairo
@@ -260,6 +272,8 @@ fn with_panic_data_decoding() {
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
+
+
         Collected 4 test(s) and 2 test file(s) from panic_decoding package
         Running 0 inline test(s)
         Running 4 test(s) from tests/test_panic_decoding.cairo
@@ -324,6 +338,8 @@ fn with_exit_first() {
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
+
+
         Collected 11 test(s) and 5 test file(s) from simple_package package
         Running 1 inline test(s)
         [PASS] simple_package::test_fib
@@ -360,6 +376,8 @@ fn with_exit_first_flag() {
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
+
+
         Collected 11 test(s) and 5 test file(s) from simple_package package
         Running 1 inline test(s)
         [PASS] simple_package::test_fib
@@ -418,6 +436,8 @@ fn exit_first_flag_takes_precedence() {
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
+
+
         Collected 11 test(s) and 5 test file(s) from simple_package package
         Running 1 inline test(s)
         [PASS] simple_package::test_fib
@@ -510,6 +530,8 @@ fn init_new_project_test() {
         [..]Updating git repository[..]
         [..]Compiling test_name v0.1.0[..]
         [..]Finished[..]
+
+
         Collected 2 test(s) and 2 test file(s) from test_name package
         Running 0 inline test(s)
         Running 2 test(s) from tests/test_contract.cairo
@@ -531,6 +553,8 @@ fn using_corelib_names() {
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
+
+
         Collected 4 test(s) and 5 test file(s) from using_corelib_names package
         Running 0 inline test(s)
         Running 1 test(s) from tests/bits.cairo
@@ -560,6 +584,8 @@ fn should_panic() {
         .stdout_matches(indoc! { r#"
         [..]Compiling[..]
         [..]Finished[..]
+
+
         Collected 6 test(s) and 2 test file(s) from should_panic_test package
         Running 0 inline test(s)
         Running 6 test(s) from tests/should_panic_test.cairo
@@ -606,6 +632,8 @@ fn printing_in_contracts() {
             allowed-libfuncs-list.name = "experimental"
         
         [..]Finished[..]
+
+
         Collected 2 test(s) and 2 test file(s) from contract_printing package
         Running 0 inline test(s)
         Running 2 test(s) from tests/test_contract.cairo

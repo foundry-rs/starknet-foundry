@@ -8,7 +8,7 @@ fn fib(a: felt252, b: felt252, n: felt252) -> felt252 {
 }
 
 #[starknet::contract]
-mod FibContract {
+mod FibonacciContract {
     use addition::add;
     use fibonacci::fib;
 
@@ -33,7 +33,8 @@ mod tests {
     }
 
     #[test]
-    fn essa() {
+    fn foreign_package_test() {
+        declare('AdditionContract');
         declare('FibContract');
     }
 }

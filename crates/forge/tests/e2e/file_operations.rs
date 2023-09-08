@@ -10,6 +10,8 @@ fn file_reading() {
     let expected = indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
+
+
         Collected 23 test(s) and 2 test file(s) from file_reading package
         Running 9 inline test(s)
         [PASS] file_reading::valid_content_and_same_content_no_matter_whitespaces

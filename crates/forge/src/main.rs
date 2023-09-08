@@ -84,7 +84,7 @@ fn main_execution() -> Result<()> {
         .match_many(&scarb_metadata)
         .context("Failed to find any packages matching the specified filter")?;
 
-    for (index, package) in packages.iter().enumerate() {
+    for package in &packages {
         let forge_config =
             forge::scarb::config_from_scarb_for_package(&scarb_metadata, &package.id)?;
         let (package_path, lib_path) = paths_for_package(&scarb_metadata, &package.id)?;
@@ -126,10 +126,6 @@ fn main_execution() -> Result<()> {
             &contracts,
             &predeployed_contracts,
         )?;
-
-        if index < packages.len() - 1 {
-            pretty_printing::print_separator();
-        }
     }
 
     // Explicitly close the temporary directories so we can handle the errors

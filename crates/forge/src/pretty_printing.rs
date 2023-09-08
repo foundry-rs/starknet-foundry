@@ -9,7 +9,7 @@ pub fn print_error_message(error: &Error) {
     println!("[{error_tag}] {error}");
 }
 
-pub fn print_separator() {
+pub(crate) fn print_separator() {
     print!("\n\n");
 }
 
