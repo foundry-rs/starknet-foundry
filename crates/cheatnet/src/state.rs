@@ -1,5 +1,6 @@
 use crate::cheatcodes;
 use crate::cheatcodes::spy_events::{Event, SpyTarget};
+use crate::forking::state::ForkStateReader;
 use blockifier::{
     execution::contract_class::ContractClass,
     state::{
@@ -18,35 +19,78 @@ use starknet_api::{
 };
 use std::collections::HashMap;
 
-#[allow(clippy::module_name_repetitions)]
-pub struct StateReaderProxy(pub Box<dyn StateReader>);
+#[derive(Debug)]
+pub struct ExtendedStateReader {
+    pub dict_state_reader: DictStateReader,
+    pub fork_state_reader: Option<ForkStateReader>,
+}
 
-impl StateReader for StateReaderProxy {
+impl StateReader for ExtendedStateReader {
     fn get_storage_at(
         &mut self,
         contract_address: ContractAddress,
         key: StorageKey,
     ) -> StateResult<StarkFelt> {
-        self.0.get_storage_at(contract_address, key)
+        self.dict_state_reader
+            .get_storage_at(contract_address, key)
+            .or_else(|_| {
+                self.fork_state_reader
+                    .as_mut()
+                    .map_or(Ok(StarkFelt::default()), |reader| {
+                        reader
+                            .get_storage_at(contract_address, key)
+                            .or(Ok(StarkFelt::default()))
+                    })
+            })
     }
 
     fn get_nonce_at(&mut self, contract_address: ContractAddress) -> StateResult<Nonce> {
-        self.0.get_nonce_at(contract_address)
+        self.dict_state_reader
+            .get_nonce_at(contract_address)
+            .or_else(|_| {
+                self.fork_state_reader
+                    .as_mut()
+                    .map_or(Ok(Nonce::default()), |reader| {
+                        reader
+                            .get_nonce_at(contract_address)
+                            .or(Ok(Nonce::default()))
+                    })
+            })
     }
 
     fn get_class_hash_at(&mut self, contract_address: ContractAddress) -> StateResult<ClassHash> {
-        self.0.get_class_hash_at(contract_address)
+        self.dict_state_reader
+            .get_class_hash_at(contract_address)
+            .or_else(|_| {
+                self.fork_state_reader
+                    .as_mut()
+                    .map_or(Ok(ClassHash::default()), |reader| {
+                        reader
+                            .get_class_hash_at(contract_address)
+                            .or(Ok(ClassHash::default()))
+                    })
+            })
     }
 
     fn get_compiled_contract_class(
         &mut self,
         class_hash: &ClassHash,
     ) -> StateResult<ContractClass> {
-        self.0.get_compiled_contract_class(class_hash)
+        self.dict_state_reader
+            .get_compiled_contract_class(class_hash)
+            .or_else(|_| {
+                self.fork_state_reader.as_mut().map_or(
+                    Err(StateError::UndeclaredClassHash(*class_hash)),
+                    |reader| reader.get_compiled_contract_class(class_hash),
+                )
+            })
     }
 
     fn get_compiled_class_hash(&mut self, class_hash: ClassHash) -> StateResult<CompiledClassHash> {
-        self.0.get_compiled_class_hash(class_hash)
+        Ok(self
+            .dict_state_reader
+            .get_compiled_class_hash(class_hash)
+            .unwrap_or_default())
     }
 }
 
@@ -67,21 +111,28 @@ impl StateReader for DictStateReader {
         key: StorageKey,
     ) -> StateResult<StarkFelt> {
         let contract_storage_key = (contract_address, key);
-        let value = self
-            .storage_view
+        self.storage_view
             .get(&contract_storage_key)
             .copied()
-            .unwrap_or_default();
-        Ok(value)
+            .ok_or(StateError::StateReadError(format!(
+                "Unable to get storage at address: {contract_address:?} and key: {key:?} form DictStateReader"
+            )))
     }
 
     fn get_nonce_at(&mut self, contract_address: ContractAddress) -> StateResult<Nonce> {
-        let nonce = self
-            .address_to_nonce
+        self.address_to_nonce
             .get(&contract_address)
             .copied()
-            .unwrap_or_default();
-        Ok(nonce)
+            .ok_or(StateError::StateReadError(format!(
+                "Unable to get nonce at {contract_address:?} from DictStateReader"
+            )))
+    }
+
+    fn get_class_hash_at(&mut self, contract_address: ContractAddress) -> StateResult<ClassHash> {
+        self.address_to_class_hash
+            .get(&contract_address)
+            .copied()
+            .ok_or(StateError::UnavailableContractAddress(contract_address))
     }
 
     fn get_compiled_contract_class(
@@ -95,19 +146,7 @@ impl StateReader for DictStateReader {
         }
     }
 
-    fn get_class_hash_at(&mut self, contract_address: ContractAddress) -> StateResult<ClassHash> {
-        let class_hash = self
-            .address_to_class_hash
-            .get(&contract_address)
-            .copied()
-            .unwrap_or_default();
-        Ok(class_hash)
-    }
-
-    fn get_compiled_class_hash(
-        &mut self,
-        class_hash: ClassHash,
-    ) -> StateResult<starknet_api::core::CompiledClassHash> {
+    fn get_compiled_class_hash(&mut self, class_hash: ClassHash) -> StateResult<CompiledClassHash> {
         let compiled_class_hash = self
             .class_hash_to_compiled_class_hash
             .get(&class_hash)

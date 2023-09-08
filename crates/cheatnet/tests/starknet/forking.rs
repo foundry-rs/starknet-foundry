@@ -7,9 +7,8 @@ use camino::Utf8PathBuf;
 use cheatnet::cheatcodes::{CheatcodeError, EnhancedHintError};
 use cheatnet::constants::build_testing_state;
 use cheatnet::forking::state::ForkStateReader;
-use cheatnet::forking::worker::Worker;
 use cheatnet::rpc::call_contract;
-use cheatnet::state::StateReaderProxy;
+use cheatnet::state::ExtendedStateReader;
 use cheatnet::CheatnetState;
 use conversions::StarknetConversions;
 use num_bigint::BigUint;
@@ -81,15 +80,15 @@ fn test_forking_at_block_number() {
     let node_url =
         std::env::var("CHEATNET_RPC_URL").expect("CHEATNET_RPC_URL must be set in the .env file");
 
-    let mut state_before_deploy = CheatnetState::new(StateReaderProxy(Box::new(ForkStateReader {
+    let mut state_before_deploy = CheatnetState::new(ExtendedStateReader {
         dict_state_reader: build_testing_state(&predeployed_contracts),
-        worker: Worker::new(&node_url, BlockId::Number(309_780)),
-    })));
+        fork_state_reader: Some(ForkStateReader::new(&node_url, BlockId::Number(309_780))),
+    });
 
-    let mut state_after_deploy = CheatnetState::new(StateReaderProxy(Box::new(ForkStateReader {
+    let mut state_after_deploy = CheatnetState::new(ExtendedStateReader {
         dict_state_reader: build_testing_state(&predeployed_contracts),
-        worker: Worker::new(&node_url, BlockId::Number(309_781)),
-    })));
+        fork_state_reader: Some(ForkStateReader::new(&node_url, BlockId::Number(309_781))),
+    });
 
     let contract_address = Felt252::from(
         BigUint::from_str(

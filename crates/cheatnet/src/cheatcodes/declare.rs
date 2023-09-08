@@ -3,7 +3,6 @@ use std::collections::HashMap;
 use crate::constants::{
     build_block_context, build_declare_transaction, TEST_ACCOUNT_CONTRACT_ADDRESS,
 };
-use crate::state::StateReaderProxy;
 use crate::{
     cheatcodes::{CheatcodeError, ContractArtifacts, EnhancedHintError},
     CheatnetState,
@@ -23,6 +22,7 @@ use starknet_api::hash::{StarkFelt, StarkHash};
 use starknet_api::patricia_key;
 use starknet_api::transaction::TransactionHash;
 
+use crate::state::ExtendedStateReader;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_starknet::casm_contract_class::CasmContractClass;
 use cairo_lang_starknet::contract_class::ContractClass;
@@ -34,7 +34,7 @@ impl CheatnetState {
         contract_name: &Felt252,
         contracts: &HashMap<String, ContractArtifacts>,
     ) -> Result<ClassHash, CheatcodeError> {
-        let blockifier_state: &mut CachedState<StateReaderProxy> = &mut self.blockifier_state;
+        let blockifier_state: &mut CachedState<ExtendedStateReader> = &mut self.blockifier_state;
 
         let contract_name_as_short_str = as_cairo_short_string(contract_name)
             .context("Converting contract name to short string failed")
