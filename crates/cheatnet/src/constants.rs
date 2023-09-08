@@ -2,7 +2,6 @@ use std::sync::Arc;
 use std::{collections::HashMap, fs, path::PathBuf};
 
 use blockifier::execution::contract_class::ContractClassV1;
-use blockifier::state::cached_state::GlobalContractCache;
 use blockifier::{
     abi::{abi_utils::get_storage_var_address, constants},
     block_context::BlockContext,
@@ -10,7 +9,6 @@ use blockifier::{
         contract_class::{ContractClass, ContractClassV0},
         execution_utils::felt_to_stark_felt,
     },
-    state::cached_state::CachedState,
     transaction::objects::AccountTransactionContext,
 };
 use cairo_felt::Felt252;
@@ -150,7 +148,7 @@ fn erc20_account_balance_key() -> StorageKey {
 // Deployed contracts are cairo 0 contracts
 // Account does not include validations
 #[must_use]
-pub fn build_testing_state(predeployed_contracts: &Utf8PathBuf) -> CachedState<DictStateReader> {
+pub fn build_testing_state(predeployed_contracts: &Utf8PathBuf) -> DictStateReader {
     let account_class = load_v1_contract_class(predeployed_contracts, "account_cairo1.casm.json");
     let erc20_class = load_v0_contract_class(
         predeployed_contracts,
@@ -173,6 +171,7 @@ pub fn build_testing_state(predeployed_contracts: &Utf8PathBuf) -> CachedState<D
         (test_account_address, test_account_class_hash),
         (test_erc20_address, test_erc20_class_hash),
     ]);
+    let address_to_nonce = HashMap::from([(test_account_address, Nonce(StarkFelt::from(0_u8)))]);
     let minter_var_address = get_storage_var_address("permitted_minter", &[])
         .expect("Failed to get permitted_minter storage address.");
     let storage_view = HashMap::from([
@@ -186,13 +185,12 @@ pub fn build_testing_state(predeployed_contracts: &Utf8PathBuf) -> CachedState<D
             *test_account_address.0.key(),
         ),
     ]);
-    CachedState::new(
-        DictStateReader {
-            storage_view,
-            address_to_class_hash,
-            class_hash_to_class,
-            ..Default::default()
-        },
-        GlobalContractCache::default(),
-    )
+
+    DictStateReader {
+        storage_view,
+        address_to_nonce,
+        address_to_class_hash,
+        class_hash_to_class,
+        ..Default::default()
+    }
 }

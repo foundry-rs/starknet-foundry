@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crate::constants::{
     build_block_context, build_declare_transaction, TEST_ACCOUNT_CONTRACT_ADDRESS,
 };
-use crate::state::DictStateReader;
+use crate::state::StateReaderProxy;
 use crate::{
     cheatcodes::{CheatcodeError, ContractArtifacts, EnhancedHintError},
     CheatnetState,
@@ -34,7 +34,7 @@ impl CheatnetState {
         contract_name: &Felt252,
         contracts: &HashMap<String, ContractArtifacts>,
     ) -> Result<ClassHash, CheatcodeError> {
-        let blockifier_state: &mut CachedState<DictStateReader> = &mut self.blockifier_state;
+        let blockifier_state: &mut CachedState<StateReaderProxy> = &mut self.blockifier_state;
 
         let contract_name_as_short_str = as_cairo_short_string(contract_name)
             .context("Converting contract name to short string failed")

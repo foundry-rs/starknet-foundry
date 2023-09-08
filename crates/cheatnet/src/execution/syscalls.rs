@@ -63,8 +63,8 @@ use starknet_api::{
 };
 use std::{any::Any, collections::HashMap};
 
+use super::calls::{execute_inner_call, execute_library_call};
 use super::execution_info::get_cheated_exec_info_ptr;
-use super::hint_processor::{execute_inner_call, execute_library_call};
 pub type SyscallSelector = DeprecatedSyscallSelector;
 
 #[derive(Debug)]

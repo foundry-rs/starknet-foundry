@@ -67,6 +67,9 @@ pub fn get_scarb_manifest() -> Result<Utf8PathBuf> {
 }
 
 pub fn get_scarb_metadata(manifest_path: &Utf8PathBuf) -> Result<scarb_metadata_1_4_2::Metadata> {
+    which::which("scarb")
+        .context("Cannot find `scarb` binary in PATH. Make sure you have Scarb installed https://github.com/software-mansion/scarb")?;
+
     scarb_metadata_1_4_2::MetadataCommand::new()
         .inherit_stderr()
         .manifest_path(manifest_path)

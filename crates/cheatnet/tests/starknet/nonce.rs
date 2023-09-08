@@ -1,13 +1,13 @@
 use crate::{
     assert_success,
-    common::{deploy_contract, get_contracts, recover_data, state::create_cheatnet_state},
+    common::{
+        deploy_contract, felt_selector_from_name, get_contracts, recover_data,
+        state::create_cheatnet_state,
+    },
 };
 use cairo_felt::Felt252;
-use cheatnet::{
-    conversions::{felt_from_short_string, felt_selector_from_name},
-    rpc::call_contract,
-    CheatnetState,
-};
+use cheatnet::{rpc::call_contract, CheatnetState};
+use conversions::StarknetConversions;
 use starknet_api::core::ContractAddress;
 
 // We've decided that the nonce should not change in tests
@@ -46,7 +46,7 @@ fn nonce_declare_deploy() {
     let contract_address = deploy_contract(&mut state, "Noncer", &[]);
 
     let contracts = get_contracts();
-    let contract_name = felt_from_short_string("HelloStarknet");
+    let contract_name = "HelloStarknet".to_owned().to_felt252();
 
     let nonce1 = check_nonce(&mut state, &contract_address);
 

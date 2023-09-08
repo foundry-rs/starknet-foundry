@@ -1,5 +1,6 @@
 mod hello_starknet;
 mod constructor_simple;
+mod constructor_simple2;
 mod erc20;
 
 mod timestamper;
@@ -38,3 +39,5 @@ mod spy_events_order_checker;
 mod spy_events_lib_call;
 mod constructor_spy_events_checker;
 mod spy_events_checker_proxy;
+
+mod forking_checker;

@@ -15,6 +15,7 @@ use forge::scarb::{
     paths_for_package, target_name_for_package, try_get_starknet_artifacts_path,
 };
 use std::process::{Command, Stdio};
+mod init;
 
 static PREDEPLOYED_CONTRACTS: Dir = include_dir!("crates/cheatnet/predeployed-contracts");
 
@@ -26,6 +27,9 @@ struct Args {
     /// Use exact matches for `test_filter`
     #[arg(short, long)]
     exact: bool,
+    /// Create a new forge project with <name> in current directory
+    #[clap(long)]
+    init: Option<String>,
 
     /// Stop test execution after first failed test
     #[arg(short = 'x', long)]
@@ -45,6 +49,9 @@ fn load_predeployed_contracts() -> Result<TempDir> {
 
 fn main_execution() -> Result<()> {
     let args = Args::parse();
+    if let Some(project_name) = args.init {
+        return init::run(project_name.as_str());
+    }
 
     let predeployed_contracts_dir = load_predeployed_contracts()?;
     let predeployed_contracts_path: PathBuf = predeployed_contracts_dir.path().into();

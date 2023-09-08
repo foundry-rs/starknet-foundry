@@ -1,15 +1,13 @@
 use crate::{
     assert_success,
-    common::{deploy_contract, get_contracts, recover_data, state::create_cheatnet_state},
+    common::{
+        deploy_contract, felt_selector_from_name, get_contracts, recover_data,
+        state::create_cheatnet_state,
+    },
 };
 use cairo_felt::Felt252;
-use cheatnet::{
-    conversions::{
-        class_hash_to_felt, contract_address_to_felt, felt_from_short_string,
-        felt_selector_from_name,
-    },
-    rpc::call_contract,
-};
+use cheatnet::rpc::call_contract;
+use conversions::StarknetConversions;
 
 #[test]
 fn warp_simple() {
@@ -47,7 +45,7 @@ fn warp_in_constructor() {
 
     let contracts = get_contracts();
 
-    let contract_name = felt_from_short_string("ConstructorWarpChecker");
+    let contract_name = "ConstructorWarpChecker".to_owned().to_felt252();
     let class_hash = state.declare(&contract_name, &contracts).unwrap();
     let precalculated_address = state.precalculate_address(&class_hash, &[]);
 
@@ -140,7 +138,7 @@ fn warp_proxy() {
     let output = call_contract(
         &proxy_address,
         &proxy_selector,
-        &[contract_address_to_felt(contract_address)],
+        &[contract_address.to_felt252()],
         &mut state,
     )
     .unwrap();
@@ -153,7 +151,7 @@ fn warp_library_call() {
     let mut state = create_cheatnet_state();
 
     let contracts = get_contracts();
-    let contract_name = felt_from_short_string("WarpChecker");
+    let contract_name = "WarpChecker".to_owned().to_felt252();
     let class_hash = state.declare(&contract_name, &contracts).unwrap();
 
     let lib_call_address = deploy_contract(&mut state, "WarpCheckerLibCall", &[]);
@@ -164,7 +162,7 @@ fn warp_library_call() {
     let output = call_contract(
         &lib_call_address,
         &lib_call_selector,
-        &[class_hash_to_felt(class_hash)],
+        &[class_hash.to_felt252()],
         &mut state,
     )
     .unwrap();

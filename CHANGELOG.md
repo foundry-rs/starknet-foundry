@@ -12,12 +12,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - Support for scarb workspaces.
+- `deploy_at` cheatcode
+
+### Cast
+
+#### Changed
+
+- fixed misleading error message when there was no scarb in PATH and `--path-to-scarb-toml` was passed
+- modified `multicall new` command output, to be in line with other commands outputs
+
+## [0.5.0] - 2023-08-30
+
+### Forge
+
+#### Added
+
 - support for `keccak_syscall` syscall. It can be used directly in cairo tests
 - `l1_handler_execute` cheatcode
 - support for `roll`ing/`warp`ing/`prank`ing the constructor logic (precalculate address, prank, assert pranked state in constructor)
 - `spy_events` cheatcode
+- Functions `read_json` and `FileParser<T>::parse_json` to load data from json files and deserialize it
+
+#### Changed
+
+- rename `TxtParser` trait to `FileParser`
+- rename `parse_txt` trait to `read_txt`
 - support for printing in contracts
 - `spoof` cheatcode
+- snforge command-line flag `--init`
 
 ### Cast
 
