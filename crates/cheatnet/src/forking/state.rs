@@ -20,15 +20,45 @@ use url::Url;
 
 #[derive(Debug)]
 pub struct ForkStateReader {
-    client: JsonRpcClient<HttpTransport>,
-    block_id: BlockId,
-    runtime: Runtime,
+    forks: Vec<ForkClient>,
+    current_fork_id: usize,
 }
 
 impl ForkStateReader {
     #[must_use]
     pub fn new(url: &str, block_id: BlockId) -> Self {
         ForkStateReader {
+            forks: vec![ForkClient::new(url, block_id)],
+            current_fork_id: 0,
+        }
+    }
+
+    pub fn add_fork_client(&mut self, url: &str, block_id: BlockId) -> usize {
+        self.forks.push(ForkClient::new(url, block_id));
+
+        self.forks.len() - 1
+    }
+
+    pub fn get_current_fork_client(&mut self) -> &ForkClient {
+        &self.forks[self.current_fork_id]
+    }
+
+    pub fn set_current_fork_id(&mut self, id: usize) {
+        self.current_fork_id = id;
+    }
+}
+
+#[derive(Debug)]
+pub struct ForkClient {
+    client: JsonRpcClient<HttpTransport>,
+    block_id: BlockId,
+    runtime: Runtime,
+}
+
+impl ForkClient {
+    #[must_use]
+    pub fn new(url: &str, block_id: BlockId) -> Self {
+        ForkClient {
             client: JsonRpcClient::new(HttpTransport::new(Url::parse(url).unwrap())),
             block_id,
             runtime: Runtime::new().expect("Could not instantiate Runtime"),
@@ -42,11 +72,14 @@ impl StateReader for ForkStateReader {
         contract_address: ContractAddress,
         key: StorageKey,
     ) -> StateResult<StarkFelt> {
-        match self.runtime.block_on(self.client.get_storage_at(
-            contract_address.to_field_element(),
-            key.0.key().to_field_element(),
-            self.block_id,
-        )) {
+        let fork_client = self.get_current_fork_client();
+        match fork_client
+            .runtime
+            .block_on(fork_client.client.get_storage_at(
+                contract_address.to_field_element(),
+                key.0.key().to_field_element(),
+                fork_client.block_id,
+            )) {
             Ok(value) => Ok(value.to_stark_felt()),
             Err(_) => Err(StateReadError(format!(
                 "Unable to get storage at address: {contract_address:?} and key: {key:?} form fork"
@@ -55,9 +88,11 @@ impl StateReader for ForkStateReader {
     }
 
     fn get_nonce_at(&mut self, contract_address: ContractAddress) -> StateResult<Nonce> {
-        match self.runtime.block_on(
-            self.client
-                .get_nonce(self.block_id, contract_address.to_field_element()),
+        let fork_client = self.get_current_fork_client();
+        match fork_client.runtime.block_on(
+            fork_client
+                .client
+                .get_nonce(fork_client.block_id, contract_address.to_field_element()),
         ) {
             Ok(nonce) => Ok(nonce.to_nonce()),
             Err(_) => Err(StateReadError(format!(
@@ -67,9 +102,11 @@ impl StateReader for ForkStateReader {
     }
 
     fn get_class_hash_at(&mut self, contract_address: ContractAddress) -> StateResult<ClassHash> {
-        match self.runtime.block_on(
-            self.client
-                .get_class_hash_at(self.block_id, contract_address.to_field_element()),
+        let fork_client = self.get_current_fork_client();
+        match fork_client.runtime.block_on(
+            fork_client
+                .client
+                .get_class_hash_at(fork_client.block_id, contract_address.to_field_element()),
         ) {
             Ok(class_hash) => Ok(class_hash.to_class_hash()),
             Err(_) => Err(StateReadError(format!(
@@ -82,9 +119,11 @@ impl StateReader for ForkStateReader {
         &mut self,
         class_hash: &ClassHash,
     ) -> StateResult<ContractClassBlockifier> {
-        let contract_class = self.runtime.block_on(
-            self.client
-                .get_class(self.block_id, class_hash.to_field_element()),
+        let fork_client = self.get_current_fork_client();
+        let contract_class = fork_client.runtime.block_on(
+            fork_client
+                .client
+                .get_class(fork_client.block_id, class_hash.to_field_element()),
         );
 
         if contract_class.is_err() {

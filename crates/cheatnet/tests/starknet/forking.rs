@@ -1,6 +1,7 @@
 use crate::common::state::create_cheatnet_fork_state;
 use crate::common::{deploy_contract, felt_selector_from_name};
 use crate::{assert_error, assert_success};
+use blockifier::state::cached_state::CachedState;
 use blockifier::state::errors::StateError;
 use cairo_felt::Felt252;
 use camino::Utf8PathBuf;
@@ -80,15 +81,11 @@ fn test_forking_at_block_number() {
     let node_url =
         std::env::var("CHEATNET_RPC_URL").expect("CHEATNET_RPC_URL must be set in the .env file");
 
-    let mut state_before_deploy = CheatnetState::new(ExtendedStateReader {
+    let mut state = CheatnetState::new(ExtendedStateReader {
         dict_state_reader: build_testing_state(&predeployed_contracts),
         fork_state_reader: Some(ForkStateReader::new(&node_url, BlockId::Number(309_780))),
     });
-
-    let mut state_after_deploy = CheatnetState::new(ExtendedStateReader {
-        dict_state_reader: build_testing_state(&predeployed_contracts),
-        fork_state_reader: Some(ForkStateReader::new(&node_url, BlockId::Number(309_781))),
-    });
+    let higher_block_fork_id = state.add_fork(&node_url, BlockId::Number(309_781));
 
     let contract_address = Felt252::from(
         BigUint::from_str(
@@ -99,15 +96,17 @@ fn test_forking_at_block_number() {
     .to_contract_address();
 
     let selector = felt_selector_from_name("get_balance");
-    let output =
-        call_contract(&contract_address, &selector, &[], &mut state_before_deploy).unwrap();
+    let output = call_contract(&contract_address, &selector, &[], &mut state).unwrap();
     assert_error!(
         output,
         "Contract not deployed at address: 0x071c8d74edc89330f314f3b1109059d68ebfa68874aa91e9c425a6378ffde00e"
     );
 
+    state.set_current_fork_id(higher_block_fork_id).unwrap();
+    state.blockifier_state = CachedState::from(state.blockifier_state.state);
+
     let selector = felt_selector_from_name("get_balance");
-    let output = call_contract(&contract_address, &selector, &[], &mut state_after_deploy).unwrap();
+    let output = call_contract(&contract_address, &selector, &[], &mut state).unwrap();
     assert_success!(output, vec![Felt252::from(0)]);
 }
 
