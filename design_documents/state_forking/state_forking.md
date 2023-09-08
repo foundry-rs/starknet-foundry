@@ -58,3 +58,47 @@ while considering future expansion.
 ### Further down the line
 4. Implement storing worker cache on disk, loading and clearing it
 5. Implement multifork, fetching utilizing multiple workers + controlling cheatcodes
+
+#### `setup_fork` Cheatcode
+`setup_fork` cheatcode allows to create fork inside a test. In the first version, it will be possible to create one fork per test.
+
+```cairo
+#[derive(Drop)]
+enum Block {
+    Last: (),
+    BlockId: felt252,
+
+}
+
+struct ForkConfig {
+   url: ByteArray,
+   block: Block,
+   ...
+}
+
+trait ContractClassTrait {
+    fn set_up(self: @ForkConfig>) -> ForkConfig;
+}
+```
+
+this version allows easily adding new attributes
+
+or
+
+```
+#[derive(Drop)]
+enum Block {
+    Last: (),
+    Number: felt252,
+}
+
+fn setup_fork(url: ByteArray, block: Block) -> ? {
+    ...
+}
+```
+
+#### Set globally
+To set up fork globally add config to toml file.
+
+
+#### Example Usage
