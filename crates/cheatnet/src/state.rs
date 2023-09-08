@@ -1,7 +1,6 @@
 use crate::cheatcodes;
 use crate::cheatcodes::spy_events::{Event, SpyTarget};
 use crate::forking::state::ForkStateReader;
-use blockifier::state::errors::StateError::UndeclaredClassHash;
 use blockifier::{
     execution::contract_class::ContractClass,
     state::{
@@ -80,11 +79,10 @@ impl StateReader for ExtendedStateReader {
         self.dict_state_reader
             .get_compiled_contract_class(class_hash)
             .or_else(|_| {
-                self.fork_state_reader
-                    .as_mut()
-                    .map_or(Err(UndeclaredClassHash(*class_hash)), |reader| {
-                        reader.get_compiled_contract_class(class_hash)
-                    })
+                self.fork_state_reader.as_mut().map_or(
+                    Err(StateError::UndeclaredClassHash(*class_hash)),
+                    |reader| reader.get_compiled_contract_class(class_hash),
+                )
             })
     }
 
@@ -116,14 +114,25 @@ impl StateReader for DictStateReader {
         self.storage_view
             .get(&contract_storage_key)
             .copied()
-            .ok_or(StateError::StateReadError(String::new()))
+            .ok_or(StateError::StateReadError(format!(
+                "Unable to get storage at address: {contract_address:?} and key: {key:?} form DictStateReader"
+            )))
     }
 
     fn get_nonce_at(&mut self, contract_address: ContractAddress) -> StateResult<Nonce> {
         self.address_to_nonce
             .get(&contract_address)
             .copied()
-            .ok_or(StateError::StateReadError(String::new()))
+            .ok_or(StateError::StateReadError(format!(
+                "Unable to get nonce at {contract_address:?} from DictStateReader"
+            )))
+    }
+
+    fn get_class_hash_at(&mut self, contract_address: ContractAddress) -> StateResult<ClassHash> {
+        self.address_to_class_hash
+            .get(&contract_address)
+            .copied()
+            .ok_or(StateError::UnavailableContractAddress(contract_address))
     }
 
     fn get_compiled_contract_class(
@@ -137,17 +146,7 @@ impl StateReader for DictStateReader {
         }
     }
 
-    fn get_class_hash_at(&mut self, contract_address: ContractAddress) -> StateResult<ClassHash> {
-        self.address_to_class_hash
-            .get(&contract_address)
-            .copied()
-            .ok_or(StateError::UnavailableContractAddress(contract_address))
-    }
-
-    fn get_compiled_class_hash(
-        &mut self,
-        class_hash: ClassHash,
-    ) -> StateResult<starknet_api::core::CompiledClassHash> {
+    fn get_compiled_class_hash(&mut self, class_hash: ClassHash) -> StateResult<CompiledClassHash> {
         let compiled_class_hash = self
             .class_hash_to_compiled_class_hash
             .get(&class_hash)

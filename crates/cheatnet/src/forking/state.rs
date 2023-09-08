@@ -47,8 +47,10 @@ impl StateReader for ForkStateReader {
             key.0.key().to_field_element(),
             self.block_id,
         )) {
-            Ok(value) => Ok(StarkFelt::from(value)),
-            Err(error) => Err(StateReadError(error.to_string())),
+            Ok(value) => Ok(value.to_stark_felt()),
+            Err(_) => Err(StateReadError(format!(
+                "Unable to get storage at address: {contract_address:?} and key: {key:?} form fork"
+            ))),
         }
     }
 
@@ -57,8 +59,10 @@ impl StateReader for ForkStateReader {
             self.client
                 .get_nonce(self.block_id, contract_address.to_field_element()),
         ) {
-            Ok(nonce) => Ok(Nonce(StarkFelt::from(nonce))),
-            Err(error) => Err(StateReadError(error.to_string())),
+            Ok(nonce) => Ok(nonce.to_nonce()),
+            Err(_) => Err(StateReadError(format!(
+                "Unable to get nonce at {contract_address:?} from fork"
+            ))),
         }
     }
 
@@ -68,7 +72,9 @@ impl StateReader for ForkStateReader {
                 .get_class_hash_at(self.block_id, contract_address.to_field_element()),
         ) {
             Ok(class_hash) => Ok(class_hash.to_class_hash()),
-            Err(error) => Err(StateReadError(error.to_string())),
+            Err(_) => Err(StateReadError(format!(
+                "Unable to get class hash at {contract_address:?} from fork"
+            ))),
         }
     }
 
@@ -124,6 +130,8 @@ impl StateReader for ForkStateReader {
         &mut self,
         _class_hash: ClassHash,
     ) -> StateResult<CompiledClassHash> {
-        todo!()
+        Err(StateReadError(
+            "Unable to get compiled class hash from the fork".to_string(),
+        ))
     }
 }
