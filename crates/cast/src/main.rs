@@ -219,6 +219,9 @@ async fn main() -> Result<()> {
                     create.salt,
                     create.add_profile,
                     create.class_hash,
+                    create.from_keystore,
+                    cli.keystore,
+                    cli.account.map(Utf8PathBuf::from),
                 )
                 .await;
 

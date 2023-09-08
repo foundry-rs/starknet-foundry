@@ -5,16 +5,19 @@ use cast::helpers::response_structs::AccountCreateResponse;
 use cast::helpers::scarb_utils::{
     get_package_tool_sncast, get_scarb_manifest, get_scarb_metadata, CastConfig,
 };
-use cast::{chain_id_to_network_name, decode_chain_id, extract_or_generate_salt, parse_number};
+use cast::{
+    chain_id_to_network_name, decode_chain_id, extract_or_generate_salt, get_chain_id,
+    get_keystore_password, parse_number,
+};
 use clap::Args;
 use serde_json::json;
 use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
-use starknet::core::types::FieldElement;
+use starknet::core::types::{FeeEstimate, FieldElement};
 use starknet::core::utils::get_contract_address;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
-use starknet::signers::{LocalWallet, SigningKey};
-use std::fs::OpenOptions;
+use starknet::signers::{LocalWallet, SigningKey, VerifyingKey};
+use std::fs::{self, OpenOptions};
 use std::io::Write;
 use toml::Value;
 
@@ -36,6 +39,10 @@ pub struct Create {
     /// Custom open zeppelin contract class hash of declared contract
     #[clap(short, long)]
     pub class_hash: Option<String>,
+
+    /// If passed, create account from keystore and starkli account JSON file
+    #[clap(short, long)]
+    pub from_keystore: bool,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -44,100 +51,53 @@ pub async fn create(
     provider: &JsonRpcClient<HttpTransport>,
     path_to_scarb_toml: Option<Utf8PathBuf>,
     chain_id: FieldElement,
-    maybe_salt: Option<FieldElement>,
+    salt: Option<FieldElement>,
     add_profile: bool,
     class_hash: Option<String>,
+    from_keystore: bool,
+    keystore_path: Option<Utf8PathBuf>,
+    account_path: Option<Utf8PathBuf>,
 ) -> Result<AccountCreateResponse> {
-    let private_key = SigningKey::from_random();
-    let public_key = private_key.verifying_key();
-    let salt = extract_or_generate_salt(maybe_salt);
-    let oz_class_hash: &str = if let Some(value) = &class_hash {
-        value
+    let (account_json, max_fee) = if from_keystore {
+        let keystore_path_ = keystore_path
+            .ok_or_else(|| anyhow!("--keystore must be passed when using --from-keystore"))?;
+        let account_path_ = account_path
+            .ok_or_else(|| anyhow!("--account must be passed when using --from-keystore"))?;
+        import_from_keystore(provider, keystore_path_, account_path_).await?
     } else {
-        OZ_CLASS_HASH
-    };
-
-    let address = get_contract_address(
-        salt,
-        parse_number(oz_class_hash)?,
-        &[public_key.scalar()],
-        FieldElement::ZERO,
-    );
-
-    let max_fee = {
-        let signer = LocalWallet::from_signing_key(private_key.clone());
-        let factory = OpenZeppelinAccountFactory::new(
-            parse_number(oz_class_hash)?,
-            chain_id,
-            signer,
-            provider,
-        )
-        .await?;
-        let deployment = factory.deploy(salt);
-
-        let fee_estimate = deployment.estimate_fee().await;
-
-        if let Err(err) = &fee_estimate {
-            if err
-                .to_string()
-                .contains("StarknetErrorCode.UNDECLARED_CLASS")
-            {
-                bail!("The class {oz_class_hash} is undeclared, try using --class-hash with a class hash that is already declared");
-            }
-        }
-
-        fee_estimate?.overall_fee
-    };
-
-    if !config.accounts_file.exists() {
-        std::fs::create_dir_all(config.accounts_file.clone().parent().unwrap())?;
-        std::fs::write(config.accounts_file.clone(), "{}")?;
-    }
-
-    let contents = std::fs::read_to_string(config.accounts_file.clone())?;
-    let mut items: serde_json::Value = serde_json::from_str(&contents)
-        .map_err(|_| anyhow!("Failed to parse accounts file at {}", config.accounts_file))?;
-
-    let network_name = chain_id_to_network_name(chain_id);
-
-    if !items[&network_name][&config.account].is_null() {
-        return Err(anyhow!(
-            "Account with name {} already exists in network with chain_id {}",
-            &config.account,
-            decode_chain_id(chain_id)
-        ));
-    }
-
-    items[&network_name][&config.account] = json!({
-        "private_key": format!("{:#x}", private_key.secret_scalar()),
-        "public_key": format!("{:#x}", public_key.scalar()),
-        "address": format!("{address:#x}"),
-        "salt": format!("{salt:#x}"),
-        "deployed": false,
-    });
-
-    if let Some(class_hash_) = class_hash {
-        items[&network_name][&config.account]["class_hash"] =
-            serde_json::Value::String(format!("{:#x}", parse_number(&class_hash_)?));
-    }
-
-    if add_profile {
-        match add_created_profile_to_configuration(&path_to_scarb_toml, config) {
-            Ok(()) => {}
-            Err(err) => return Err(anyhow!(err)),
+        let salt = extract_or_generate_salt(salt);
+        let class_hash = {
+            let ch = match &class_hash {
+                Some(class_hash) => class_hash,
+                None => OZ_CLASS_HASH,
+            };
+            parse_number(ch)?
         };
-    }
+        generate_account(provider, salt, class_hash).await?
+    };
 
-    std::fs::write(
-        config.accounts_file.clone(),
-        serde_json::to_string_pretty(&items).unwrap(),
+    let address = parse_number(
+        account_json["address"]
+            .as_str()
+            .ok_or_else(|| anyhow!("Invalid address"))?,
     )?;
 
-    println!("Account successfully created. Prefund generated address with at least {max_fee} tokens. It is good to send more in the case of higher demand, max_fee * 2 = {}", max_fee * 2);
-    let mut output = vec![
-        ("max_fee", format!("{max_fee:#x}")),
-        ("address", format!("{address:#x}")),
-    ];
+    write_account_to_accounts_file(
+        &path_to_scarb_toml,
+        &config.rpc_url,
+        &config.account,
+        &config.accounts_file,
+        chain_id,
+        account_json.clone(),
+        add_profile,
+    )?;
+
+    let mut output = vec![("address", format!("{address:#x}"))];
+    if account_json["deployed"] == json!(false) {
+        println!("Account successfully created. Prefund generated address with at least {max_fee} tokens. It is good to send more in the case of higher demand, max_fee * 2 = {}", max_fee * 2);
+        output.push(("max_fee", format!("{max_fee:#x}")));
+    }
+
     if add_profile {
         output.push((
             "add-profile",
@@ -154,6 +114,110 @@ pub async fn create(
             "--add-profile flag was not set. No profile added to Scarb.toml".to_string()
         },
     })
+}
+
+pub async fn import_from_keystore(
+    provider: &JsonRpcClient<HttpTransport>,
+    keystore_path: Utf8PathBuf,
+    account_path: Utf8PathBuf,
+) -> Result<(serde_json::Value, u64)> {
+    let account_info: serde_json::Value = serde_json::from_str(&fs::read_to_string(account_path)?)?;
+    let deployment = account_info
+        .get("deployment")
+        .ok_or_else(|| anyhow!("No deployment field in account JSON file"))?;
+
+    let deployed = match deployment.get("status").and_then(serde_json::Value::as_str) {
+        Some("deployed") => true,
+        Some("undeployed") => false,
+        _ => bail!("Unknown deployment status value"),
+    };
+
+    let salt: Option<FieldElement> = {
+        let salt = deployment.get("salt").and_then(serde_json::Value::as_str);
+        match (salt, deployed) {
+            (Some(salt), _) => Some(parse_number(salt)?),
+            (None, false) => bail!("No salt field in account JSON file"),
+            (None, true) => None,
+        }
+    };
+
+    let class_hash: FieldElement = {
+        let ch = deployment
+            .get("class_hash")
+            .and_then(serde_json::Value::as_str)
+            .ok_or_else(|| anyhow!("No class_hash field in account JSON file"))?;
+        parse_number(ch)?
+    };
+
+    let private_key = SigningKey::from_keystore(keystore_path, get_keystore_password()?.as_str())?;
+    let public_key: FieldElement = {
+        let pk = account_info
+            .get("variant")
+            .and_then(|v| v.get("public_key"))
+            .and_then(serde_json::Value::as_str)
+            .ok_or_else(|| anyhow::anyhow!("No public_key in account JSON file"))?;
+        parse_number(pk)?
+    };
+    if public_key != private_key.verifying_key().scalar() {
+        bail!("Public key mismatch");
+    }
+
+    let address: FieldElement = if let Some(salt) = salt {
+        get_contract_address(salt, class_hash, &[public_key], FieldElement::ZERO)
+    } else {
+        let address = deployment
+            .get("address")
+            .and_then(serde_json::Value::as_str)
+            .ok_or_else(|| anyhow::anyhow!("No address in account JSON file"))?;
+        parse_number(address)?
+    };
+
+    let max_fee = match salt {
+        Some(salt) => {
+            get_account_deployment_fee(&private_key, class_hash, salt, provider)
+                .await?
+                .overall_fee
+        }
+        None => 0,
+    };
+
+    let account_json = prepare_account_json(
+        &private_key,
+        &private_key.verifying_key(),
+        address,
+        deployed,
+        Some(class_hash),
+        salt,
+    );
+
+    Ok((account_json, max_fee))
+}
+
+async fn generate_account(
+    provider: &JsonRpcClient<HttpTransport>,
+    salt: FieldElement,
+    class_hash: FieldElement,
+) -> Result<(serde_json::Value, u64)> {
+    let private_key = SigningKey::from_random();
+    let public_key = private_key.verifying_key();
+
+    let address: FieldElement =
+        get_contract_address(salt, class_hash, &[public_key.scalar()], FieldElement::ZERO);
+
+    let account_json = prepare_account_json(
+        &private_key,
+        &public_key,
+        address,
+        false,
+        Some(class_hash),
+        Some(salt),
+    );
+
+    let max_fee = get_account_deployment_fee(&private_key, class_hash, salt, provider)
+        .await?
+        .overall_fee;
+
+    Ok((account_json, max_fee))
 }
 
 pub fn add_created_profile_to_configuration(
@@ -209,6 +273,101 @@ pub fn add_created_profile_to_configuration(
         .context("Couldn't write to the Scarb.toml")?;
 
     Ok(())
+}
+
+async fn get_account_deployment_fee(
+    private_key: &SigningKey,
+    class_hash: FieldElement,
+    salt: FieldElement,
+    provider: &JsonRpcClient<HttpTransport>,
+) -> Result<FeeEstimate> {
+    let signer = LocalWallet::from_signing_key(private_key.clone());
+    let chain_id = get_chain_id(provider).await?;
+    let factory = OpenZeppelinAccountFactory::new(class_hash, chain_id, signer, provider).await?;
+    let deployment = factory.deploy(salt);
+
+    let fee_estimate = deployment.estimate_fee().await;
+
+    if let Err(err) = &fee_estimate {
+        if err
+            .to_string()
+            .contains("StarknetErrorCode.UNDECLARED_CLASS")
+        {
+            bail!("The class {class_hash} is undeclared, try using --class-hash with a class hash that is already declared");
+        }
+    }
+
+    Ok(fee_estimate?)
+}
+
+fn write_account_to_accounts_file(
+    path_to_scarb_toml: &Option<Utf8PathBuf>,
+    rpc_url: &str,
+    account: &str,
+    accounts_file: &Utf8PathBuf,
+    chain_id: FieldElement,
+    account_json: serde_json::Value,
+    add_profile: bool,
+) -> Result<()> {
+    if !accounts_file.exists() {
+        std::fs::create_dir_all(accounts_file.clone().parent().unwrap())?;
+        std::fs::write(accounts_file.clone(), "{}")?;
+    }
+
+    let contents = std::fs::read_to_string(accounts_file.clone())?;
+    let mut items: serde_json::Value = serde_json::from_str(&contents)
+        .map_err(|_| anyhow!("Failed to parse accounts file at {}", accounts_file))?;
+
+    let network_name = chain_id_to_network_name(chain_id);
+
+    if !items[&network_name][account].is_null() {
+        bail!(
+            "Account with name {} already exists in network with chain_id {}",
+            account,
+            decode_chain_id(chain_id)
+        );
+    }
+    items[&network_name][account] = account_json;
+
+    if add_profile {
+        let config = CastConfig {
+            rpc_url: rpc_url.into(),
+            account: account.into(),
+            accounts_file: accounts_file.into(),
+        };
+        add_created_profile_to_configuration(path_to_scarb_toml, &config)?;
+    }
+
+    std::fs::write(
+        accounts_file.clone(),
+        serde_json::to_string_pretty(&items).unwrap(),
+    )?;
+    Ok(())
+}
+
+fn prepare_account_json(
+    private_key: &SigningKey,
+    public_key: &VerifyingKey,
+    address: FieldElement,
+    deployed: bool,
+    class_hash: Option<FieldElement>,
+    salt: Option<FieldElement>,
+) -> serde_json::Value {
+    let mut account_json = json!({
+        "private_key": format!("{:#x}", private_key.secret_scalar()),
+        "public_key": format!("{:#x}", public_key.scalar()),
+        "address": format!("{address:#x}"),
+        "deployed": deployed,
+    });
+
+    if let Some(salt) = salt {
+        account_json["salt"] = serde_json::Value::String(format!("{salt:#x}"));
+    }
+    if let Some(class_hash) = class_hash {
+        account_json["class_hash"] = serde_json::Value::String(format!("{class_hash:#x}"));
+    }
+
+    account_json
 }
 
 #[cfg(test)]
