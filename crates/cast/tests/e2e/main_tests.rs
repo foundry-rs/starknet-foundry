@@ -196,7 +196,7 @@ async fn test_keystore_account_required() {
     let snapbox = runner(&args);
 
     snapbox.assert().stderr_matches(indoc! {r#"
-        Error: --account is required when using keystore
+        Error: Path passed with --account cannot be empty!
     "#});
 }
 

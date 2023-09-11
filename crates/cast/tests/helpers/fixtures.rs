@@ -1,6 +1,6 @@
 use crate::helpers::constants::{ACCOUNT_FILE_PATH, CONTRACTS_DIR, URL};
 use camino::Utf8PathBuf;
-use cast::{get_account_from_accounts_file, get_provider, parse_number};
+use cast::{get_account, get_provider, parse_number};
 use serde_json::{json, Value};
 use starknet::accounts::{Account, Call};
 use starknet::contract::ContractFactory;
@@ -9,7 +9,7 @@ use starknet::core::types::FieldElement;
 use starknet::core::types::TransactionReceipt;
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
-use starknet::providers::{JsonRpcClient, Provider};
+use starknet::providers::JsonRpcClient;
 use std::collections::HashMap;
 use std::fs;
 use std::sync::Arc;
@@ -17,13 +17,13 @@ use url::Url;
 
 pub async fn declare_contract(account: &str, path: &str) -> FieldElement {
     let provider = get_provider(URL).expect("Could not get the provider");
-    let chain_id = provider.chain_id().await.expect("Could not get chain_id");
-    let account = get_account_from_accounts_file(
+    let account = get_account(
         account,
         &Utf8PathBuf::from(ACCOUNT_FILE_PATH),
         &provider,
-        chain_id,
+        &None,
     )
+    .await
     .expect("Could not get the account");
 
     let contract_definition: SierraClass = {
@@ -57,13 +57,13 @@ pub async fn declare_deploy_contract(account: &str, path: &str) {
     let class_hash = declare_contract(account, path).await;
 
     let provider = get_provider(URL).expect("Could not get the provider");
-    let chain_id = provider.chain_id().await.expect("Could not get chain_id");
-    let account = get_account_from_accounts_file(
+    let account = get_account(
         account,
         &Utf8PathBuf::from(ACCOUNT_FILE_PATH),
         &provider,
-        chain_id,
+        &None,
     )
+    .await
     .expect("Could not get the account");
 
     let factory = ContractFactory::new(class_hash, &account);
@@ -73,13 +73,13 @@ pub async fn declare_deploy_contract(account: &str, path: &str) {
 
 pub async fn invoke_map_contract(key: &str, value: &str, account: &str, contract_address: &str) {
     let provider = get_provider(URL).expect("Could not get the provider");
-    let chain_id = provider.chain_id().await.expect("Could not get chain_id");
-    let account = get_account_from_accounts_file(
+    let account = get_account(
         account,
         &Utf8PathBuf::from(ACCOUNT_FILE_PATH),
         &provider,
-        chain_id,
+        &None,
     )
+    .await
     .expect("Could not get the account");
 
     let call = Call {

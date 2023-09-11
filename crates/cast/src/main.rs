@@ -108,8 +108,8 @@ async fn main() -> Result<()> {
                 get_account(
                     &config.account,
                     &config.accounts_file,
-                    &cli.keystore,
                     &provider,
+                    &cli.keystore,
                 )
                 .await?,
             );

@@ -101,8 +101,8 @@ pub fn decode_chain_id(chain_id: FieldElement) -> String {
 pub async fn get_account<'a>(
     account: &str,
     accounts_file: &Utf8PathBuf,
-    keystore: &Option<Utf8PathBuf>,
     provider: &'a JsonRpcClient<HttpTransport>,
+    keystore: &Option<Utf8PathBuf>,
 ) -> Result<SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, LocalWallet>> {
     let chain_id = get_chain_id(provider).await?;
     let account = match keystore {
@@ -123,7 +123,7 @@ fn get_account_from_keystore<'a>(
         bail!("keystore file does not exist");
     }
     if account.is_empty() {
-        bail!("--account is required when using keystore");
+        bail!("Path passed with --account cannot be empty!");
     }
     let path_to_account = Utf8PathBuf::from(account);
     if !path_to_account.exists() {
@@ -132,9 +132,7 @@ fn get_account_from_keystore<'a>(
 
     let password = match env::var(KEYSTORE_PASSWORD_ENV_VAR) {
         Ok(password) => {
-            println!(
-                "Getting keystore password from {KEYSTORE_PASSWORD_ENV_VAR} evironment variable"
-            );
+            println!("{KEYSTORE_PASSWORD_ENV_VAR} environment variable found and will be used");
             password
         }
         _ => rpassword::prompt_password("Enter password: ")?,
@@ -154,7 +152,7 @@ fn get_account_from_keystore<'a>(
     Ok(SingleOwnerAccount::new(provider, signer, address, chain_id))
 }
 
-pub fn get_account_from_accounts_file<'a>(
+fn get_account_from_accounts_file<'a>(
     name: &str,
     accounts_file_path: &Utf8PathBuf,
     provider: &'a JsonRpcClient<HttpTransport>,
@@ -416,14 +414,22 @@ pub fn udc_uniqueness(unique: bool, account_address: FieldElement) -> UdcUniquen
 
 #[cfg(test)]
 mod tests {
-    use crate::{chain_id_to_network_name, extract_or_generate_salt, get_block_id, udc_uniqueness};
-    use starknet::core::types::{
-        BlockId,
-        BlockTag::{Latest, Pending},
-        FieldElement,
+    use crate::{
+        chain_id_to_network_name, extract_or_generate_salt, get_account_from_accounts_file,
+        get_block_id, udc_uniqueness,
     };
+    use camino::Utf8PathBuf;
     use starknet::core::utils::UdcUniqueSettings;
     use starknet::core::utils::UdcUniqueness::{NotUnique, Unique};
+    use starknet::{
+        core::types::{
+            BlockId,
+            BlockTag::{Latest, Pending},
+            FieldElement,
+        },
+        providers::{jsonrpc::HttpTransport, JsonRpcClient},
+    };
+    use url::Url;
 
     #[test]
     fn test_get_block_id() {
@@ -502,5 +508,22 @@ mod tests {
         );
         assert_eq!(network_name_goerli, "alpha-goerli");
         assert_eq!(network_name_katana, "KATANA");
+    }
+
+    #[test]
+    fn test_get_account_wrong_chain_id() {
+        let mock_url = Url::parse("https://example.net").unwrap();
+        let mock_provider = JsonRpcClient::new(HttpTransport::new(mock_url));
+        let account = get_account_from_accounts_file(
+            "user1",
+            &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
+            &mock_provider,
+            FieldElement::from_hex_be("0x435553544f4d5f434841494e5f4944")
+                .expect("Should convert from hex"),
+        );
+        let err = account.unwrap_err();
+        assert!(err
+            .to_string()
+            .contains("Account user1 not found under network CUSTOM_CHAIN_ID"));
     }
 }
