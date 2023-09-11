@@ -72,6 +72,6 @@ pub fn print_failures(all_failed_tests: &[TestCaseSummary]) {
 
     println!("\nFailures:");
     for name in failed_tests_names {
-        println!("{name}")
+        println!("{name}");
     }
 }
