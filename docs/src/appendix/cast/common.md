@@ -37,7 +37,7 @@ Path to the open zeppelin accounts file holding accounts info. Defaults to `~/.s
 Optional.
 
 Path to [keystore file](https://book.starkli.rs/signers#encrypted-keystores).
-If specified, --account should be a path to [starkli account JSON file](https://book.starkli.rs/accounts#accounts).
+When specified, the --account argument must be a path to [starkli account JSON file](https://book.starkli.rs/accounts#accounts).
 
 ## `--int-format, -i`
 Optional.
