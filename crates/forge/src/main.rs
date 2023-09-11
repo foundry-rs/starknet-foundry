@@ -14,7 +14,9 @@ use forge::scarb::{
     corelib_for_package, dependencies_for_package, get_contracts_map, name_for_package,
     paths_for_package, target_name_for_package, try_get_starknet_artifacts_path,
 };
+use forge::test_case_summary::TestCaseSummary;
 use std::process::{Command, Stdio};
+
 mod init;
 
 static PREDEPLOYED_CONTRACTS: Dir = include_dir!("crates/cheatnet/predeployed-contracts");
@@ -44,10 +46,10 @@ fn load_predeployed_contracts() -> Result<TempDir> {
     Ok(tmp_dir)
 }
 
-fn main_execution() -> Result<()> {
+fn main_execution() -> Result<bool> {
     let args = Args::parse();
     if let Some(project_name) = args.init {
-        return init::run(project_name.as_str());
+        return init::run(project_name.as_str()).map(|_| true);
     }
 
     let predeployed_contracts_dir = load_predeployed_contracts()?;
@@ -74,6 +76,7 @@ fn main_execution() -> Result<()> {
         )
     }
 
+    let mut tests_succeeded = true;
     for package in &scarb_metadata.workspace.members {
         let forge_config = forge::scarb::config_from_scarb_for_package(&scarb_metadata, package)?;
         let (package_path, lib_path) = paths_for_package(&scarb_metadata, package)?;
@@ -97,7 +100,7 @@ fn main_execution() -> Result<()> {
             .transpose()?
             .unwrap_or_default();
 
-        run(
+        let tests_summaries = run(
             &package_path,
             &package_name,
             &lib_path,
@@ -107,6 +110,14 @@ fn main_execution() -> Result<()> {
             &contracts,
             &predeployed_contracts,
         )?;
+
+        let failed_tests: Vec<TestCaseSummary> = tests_summaries
+            .into_iter()
+            .flat_map(|test_file_summary| test_file_summary.test_case_summaries)
+            .filter(|test_case_summary| matches!(test_case_summary, TestCaseSummary::Failed { .. }))
+            .collect();
+
+        tests_succeeded &= failed_tests.is_empty();
     }
 
     // Explicitly close the temporary directories so we can handle the errors
@@ -117,15 +128,16 @@ fn main_execution() -> Result<()> {
         )
     })?;
 
-    Ok(())
+    Ok(tests_succeeded)
 }
 
 fn main() {
     match main_execution() {
-        Ok(()) => std::process::exit(0),
+        Ok(true) => std::process::exit(0),
+        Ok(false) => std::process::exit(1),
         Err(error) => {
             pretty_printing::print_error_message(&error);
-            std::process::exit(1);
+            std::process::exit(2);
         }
     };
 }

@@ -114,20 +114,20 @@ fn file_reading() {
     snapbox
         .current_dir(&temp)
         .assert()
-        .success()
+        .code(1)
         .stdout_matches(expected);
 
     let snapbox = runner();
     snapbox
         .current_dir(temp.child("src"))
         .assert()
-        .success()
+        .code(1)
         .stdout_matches(expected);
 
     let snapbox = runner();
     snapbox
         .current_dir(temp.child("data"))
         .assert()
-        .success()
+        .code(1)
         .stdout_matches(expected);
 }

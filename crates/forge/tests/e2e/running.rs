@@ -14,7 +14,7 @@ fn simple_package() {
     snapbox
         .current_dir(&temp)
         .assert()
-        .success()
+        .failure()
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
@@ -80,7 +80,7 @@ fn simple_package_with_git_dependency() {
     snapbox
         .current_dir(&temp)
         .assert()
-        .success()
+        .code(1)
         .stdout_matches(indoc! {r#"
         [..]Updating git repository[..]
         [..]Compiling[..]
@@ -256,7 +256,7 @@ fn with_panic_data_decoding() {
     snapbox
         .current_dir(&temp)
         .assert()
-        .success()
+        .code(1)
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
@@ -320,7 +320,7 @@ fn with_exit_first() {
     snapbox
         .current_dir(&temp)
         .assert()
-        .success()
+        .code(1)
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
@@ -356,7 +356,7 @@ fn with_exit_first_flag() {
     snapbox
         .current_dir(&temp)
         .assert()
-        .success()
+        .code(1)
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
@@ -414,7 +414,7 @@ fn exit_first_flag_takes_precedence() {
         .current_dir(&temp)
         .arg("--exit-first")
         .assert()
-        .success()
+        .code(1)
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
@@ -556,7 +556,7 @@ fn should_panic() {
     snapbox
         .current_dir(&temp)
         .assert()
-        .success()
+        .code(1)
         .stdout_matches(indoc! { r#"
         [..]Compiling[..]
         [..]Finished[..]
