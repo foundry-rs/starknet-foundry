@@ -21,7 +21,7 @@ use cairo_lang_runner::RunnerError;
 use cairo_lang_runner::SierraCasmRunner;
 use cairo_vm::vm::runners::cairo_runner::RunResources;
 use camino::Utf8PathBuf;
-use cheatnet::state::StateReaderProxy;
+use cheatnet::state::ExtendedStateReader;
 use starknet::core::utils::get_selector_from_name;
 use starknet_api::core::PatriciaKey;
 use starknet_api::core::{ContractAddress, EntryPointSelector};
@@ -127,9 +127,10 @@ pub(crate) fn run_from_test_case(
     let mut cairo_hint_processor = CairoHintProcessor {
         blockifier_syscall_handler: syscall_handler,
         contracts,
-        cheatnet_state: CheatnetState::new(StateReaderProxy(Box::new(build_testing_state(
-            predeployed_contracts,
-        )))),
+        cheatnet_state: CheatnetState::new(ExtendedStateReader {
+            dict_state_reader: build_testing_state(predeployed_contracts),
+            fork_state_reader: None,
+        }),
         hints: &string_to_hint,
         run_resources: RunResources::default(),
     };

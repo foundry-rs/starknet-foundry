@@ -4,6 +4,7 @@ use starknet_api::{
     core::{ClassHash, ContractAddress},
     hash::{StarkFelt, StarkHash},
 };
+use starknet_api::core::Nonce;
 
 pub mod class_hash;
 pub mod contract_address;
@@ -11,6 +12,7 @@ pub mod felt252;
 pub mod field_element;
 pub mod short_string;
 pub mod stark_felt;
+pub mod nonce;
 
 pub trait StarknetConversions {
     fn to_felt252(&self) -> Felt252;
@@ -20,4 +22,5 @@ pub trait StarknetConversions {
     fn to_class_hash(&self) -> ClassHash;
     fn to_contract_address(&self) -> ContractAddress;
     fn to_short_string(&self) -> String;
+    fn to_nonce(&self) -> Nonce;
 }

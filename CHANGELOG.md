@@ -15,6 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
+#### Changed
+
+- fixed misleading error message when there was no scarb in PATH and `--path-to-scarb-toml` was passed
+- modified `multicall new` command output, to be in line with other commands outputs
+
 ## [0.5.0] - 2023-08-30
 
 ### Forge
@@ -33,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - rename `parse_txt` trait to `read_txt`
 - support for printing in contracts
 - `spoof` cheatcode
+- snforge command-line flag `--init`
 
 ### Cast
 
