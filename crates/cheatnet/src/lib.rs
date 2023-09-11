@@ -28,11 +28,6 @@ impl CheatnetState {
         }
     }
 
-    pub fn overwrite_blockifier_state(&mut self, state: ExtendedStateReader) -> &mut Self {
-        self.blockifier_state = CachedState::new(state, GlobalContractCache::default());
-        self
-    }
-
     pub fn increment_deploy_salt_base(&mut self) {
         self.deploy_salt_base += 1;
     }
