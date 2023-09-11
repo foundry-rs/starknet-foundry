@@ -1,15 +1,13 @@
-use crate::helpers::constants::{
-    ACCOUNT, CONTRACT_WITH_CONSTRUCTOR_CLASS_HASH_V1, CONTRACT_WITH_CONSTRUCTOR_CLASS_HASH_V2,
-    MAP_CLASS_HASH_V1, MAP_CLASS_HASH_V2,
-};
+use crate::helpers::constants::ACCOUNT;
 use crate::helpers::fixtures::{default_cli_args, get_transaction_hash, get_transaction_receipt};
 use crate::helpers::runner::runner;
 use indoc::indoc;
 use starknet::core::types::TransactionReceipt::Invoke;
+use std::env;
 use test_case::test_case;
 
-#[test_case(MAP_CLASS_HASH_V1, "user1" ; "when cairo1 contract")]
-#[test_case(MAP_CLASS_HASH_V2, "user2" ; "when cairo2 contract")]
+#[test_case(&env::var("MAP_V1_CLASS_HASH").expect("MAP_V1_CLASS_HASH not available in env!"), "user1" ; "when cairo1 contract")]
+#[test_case(&env::var("MAP_V2_CLASS_HASH").expect("MAP_V2_CLASS_HASH not available in env!"), "user2" ; "when cairo2 contract")]
 #[tokio::test]
 async fn test_happy_case(class_hash: &str, account: &str) {
     let mut args = default_cli_args();
@@ -37,8 +35,8 @@ async fn test_happy_case(class_hash: &str, account: &str) {
     assert!(matches!(receipt, Invoke(_)));
 }
 
-#[test_case(CONTRACT_WITH_CONSTRUCTOR_CLASS_HASH_V1, "user3" ; "when cairo1 contract")]
-#[test_case(CONTRACT_WITH_CONSTRUCTOR_CLASS_HASH_V2, "user4" ; "when cairo2 contract")]
+#[test_case(&env::var("WITH_CONSTRUCTOR_V1_CLASS_HASH").expect("CONTRACT_WITH_CONSTRUCTOR_V1_CLASS_HASH not available in env!"), "user3" ; "when cairo1 contract")]
+#[test_case(&env::var("WITH_CONSTRUCTOR_V2_CLASS_HASH").expect("CONTRACT_WITH_CONSTRUCTOR_V2_CLASS_HASH not available in env!"), "user4" ; "when cairo2 contract")]
 #[tokio::test]
 async fn test_happy_case_with_constructor(class_hash: &str, account: &str) {
     let mut args = default_cli_args();
@@ -63,8 +61,8 @@ async fn test_happy_case_with_constructor(class_hash: &str, account: &str) {
     assert!(matches!(receipt, Invoke(_)));
 }
 
-#[test_case(CONTRACT_WITH_CONSTRUCTOR_CLASS_HASH_V1, "user3" ; "when cairo1 contract")]
-#[test_case(CONTRACT_WITH_CONSTRUCTOR_CLASS_HASH_V2, "user4" ; "when cairo2 contract")]
+#[test_case(&env::var("WITH_CONSTRUCTOR_V1_CLASS_HASH").expect("CONTRACT_WITH_CONSTRUCTOR_V1_CLASS_HASH not available in env!"), "user3" ; "when cairo1 contract")]
+#[test_case(&env::var("WITH_CONSTRUCTOR_V2_CLASS_HASH").expect("CONTRACT_WITH_CONSTRUCTOR_V2_CLASS_HASH not available in env!"), "user4" ; "when cairo2 contract")]
 fn test_wrong_calldata(class_hash: &str, account: &str) {
     let mut args = default_cli_args();
     args.append(&mut vec![
@@ -101,8 +99,8 @@ async fn test_contract_not_declared() {
     assert!(output.contains("Class with hash 0x1 is not declared."));
 }
 
-#[test_case(MAP_CLASS_HASH_V1, "user1" ; "when cairo1 contract")]
-#[test_case(MAP_CLASS_HASH_V2, "user2" ; "when cairo2 contract")]
+#[test_case(&env::var("MAP_V1_CLASS_HASH").expect("MAP_V1_CLASS_HASH not available in env!"), "user1" ; "when cairo1 contract")]
+#[test_case(&env::var("MAP_V2_CLASS_HASH").expect("MAP_V2_CLASS_HASH not available in env!"), "user2" ; "when cairo2 contract")]
 fn test_contract_already_deployed(class_hash: &str, account: &str) {
     let mut args = default_cli_args();
     args.append(&mut vec![
@@ -122,8 +120,8 @@ fn test_contract_already_deployed(class_hash: &str, account: &str) {
     assert!(output.contains("StarknetErrorCode.CONTRACT_ADDRESS_UNAVAILABLE"));
 }
 
-#[test_case(MAP_CLASS_HASH_V1, "user1" ; "when cairo1 contract")]
-#[test_case(MAP_CLASS_HASH_V2, "user2" ; "when cairo2 contract")]
+#[test_case(&env::var("MAP_V1_CLASS_HASH").expect("MAP_V1_CLASS_HASH not available in env!"), "user1" ; "when cairo1 contract")]
+#[test_case(&env::var("MAP_V2_CLASS_HASH").expect("MAP_V2_CLASS_HASH not available in env!"), "user2" ; "when cairo2 contract")]
 fn test_too_low_max_fee(class_hash: &str, account: &str) {
     let mut args = default_cli_args();
     args.append(&mut vec![

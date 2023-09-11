@@ -1,5 +1,5 @@
 use crate::helpers::{
-    constants::{ACCOUNT, ACCOUNT_FILE_PATH, DECLARE_TRANSACTION_HASH, MAP_CLASS_HASH_V1},
+    constants::{ACCOUNT, ACCOUNT_FILE_PATH, DECLARE_TRANSACTION_HASH},
     fixtures::create_test_provider,
 };
 use camino::Utf8PathBuf;
@@ -7,6 +7,7 @@ use cast::{get_account, helpers::constants::DEFAULT_RETRIES};
 use cast::{handle_wait_for_tx, parse_number, wait_for_tx};
 use starknet::contract::ContractFactory;
 use starknet::core::types::FieldElement;
+use std::env;
 
 #[tokio::test]
 async fn test_happy_path() {
@@ -33,8 +34,10 @@ async fn test_rejected_transaction() {
     )
     .await
     .expect("Could not get the account");
+    let class_hash =
+        &env::var("MAP_V1_CLASS_HASH").expect("MAP_V1_CLASS_HASH not available in env!");
 
-    let factory = ContractFactory::new(parse_number(MAP_CLASS_HASH_V1).unwrap(), account);
+    let factory = ContractFactory::new(parse_number(class_hash).unwrap(), account);
     let deployment = factory
         .deploy(&Vec::new(), FieldElement::ONE, false)
         .max_fee(FieldElement::ONE);
