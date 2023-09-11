@@ -1,23 +1,20 @@
-use std::{env, fs};
-
 use crate::starknet_commands::account::Account;
 use crate::starknet_commands::{
     account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
 };
-use anyhow::{bail, Result};
+use anyhow::Result;
 use camino::Utf8PathBuf;
-use cast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, KEYSTORE_PASSWORD_ENV_VAR};
+use cast::helpers::constants::DEFAULT_ACCOUNTS_FILE;
 use cast::helpers::scarb_utils::{parse_scarb_config, CastConfig};
 use cast::{
-    account_file_exists, get_account_from_accounts_file, get_block_id, get_chain_id, get_provider,
+    account_file_exists, get_account, get_block_id, get_chain_id, get_provider,
     print_command_result,
 };
 use clap::{Parser, Subcommand};
 use starknet::accounts::SingleOwnerAccount;
-use starknet::core::types::FieldElement;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
-use starknet::signers::{LocalWallet, SigningKey};
+use starknet::signers::LocalWallet;
 
 mod starknet_commands;
 
@@ -37,7 +34,9 @@ struct Cli {
     #[clap(short = 'u', long = "url")]
     rpc_url: Option<String>,
 
-    /// Account name to be used for contract declaration; overrides account from Scarb.toml; should be a path if used with --keystore
+    /// Account to be used for contract declaration;
+    /// When using keystore (`--keystore`), this should be a path to account file    
+    /// When using accounts file, this should be an account name
     #[clap(short = 'a', long)]
     account: Option<String>,
 
@@ -104,7 +103,17 @@ async fn main() -> Result<()> {
                 &value.command,
                 starknet_commands::multicall::Commands::New(_)
             ) => {}
-        _ => account = Some(get_account(&cli, &config, &provider).await?),
+        _ => {
+            account = Some(
+                get_account(
+                    &config.account,
+                    &config.accounts_file,
+                    &cli.keystore,
+                    &provider,
+                )
+                .await?,
+            );
+        }
     }
 
     match cli.command {
@@ -112,7 +121,7 @@ async fn main() -> Result<()> {
             let mut result = starknet_commands::declare::declare(
                 &declare.contract,
                 declare.max_fee,
-                &mut account.unwrap(),
+                &mut account.expect("account should be present"),
                 &cli.path_to_scarb_toml,
                 cli.wait,
             )
@@ -128,7 +137,7 @@ async fn main() -> Result<()> {
                 deploy.salt,
                 deploy.unique,
                 deploy.max_fee,
-                &account.unwrap(),
+                &account.expect("account should be present"),
                 cli.wait,
             )
             .await;
@@ -157,7 +166,7 @@ async fn main() -> Result<()> {
                 &invoke.function,
                 invoke.calldata,
                 invoke.max_fee,
-                &mut account.unwrap(),
+                &mut account.expect("account should be present"),
                 cli.wait,
             )
             .await;
@@ -177,7 +186,7 @@ async fn main() -> Result<()> {
                 starknet_commands::multicall::Commands::Run(run) => {
                     let mut result = starknet_commands::multicall::run::run(
                         &run.path,
-                        &mut account.unwrap(),
+                        &mut account.expect("account should be present"),
                         run.max_fee,
                         cli.wait,
                     )
@@ -243,52 +252,4 @@ fn update_cast_config(config: &mut CastConfig, cli: &Cli) {
     let new_accounts_file = clone_or_else!(cli.accounts_file_path, config.accounts_file);
 
     config.accounts_file = Utf8PathBuf::from(shellexpand::tilde(&new_accounts_file).to_string());
-}
-
-async fn get_account<'a>(
-    cli: &Cli,
-    config: &'a CastConfig,
-    provider: &'a JsonRpcClient<HttpTransport>,
-) -> Result<SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, LocalWallet>> {
-    if let Some(keystore_path) = &cli.keystore {
-        if !keystore_path.exists() {
-            bail!("keystore file does not exist");
-        }
-        if cli.account.is_none() {
-            bail!("--account is required when using keystore");
-        }
-        let path_to_account = Utf8PathBuf::from(cli.account.as_ref().unwrap());
-        if !path_to_account.exists() {
-            bail!("account file does not exist; when using --keystore, --account argument should be a path to the starkli JSON account file");
-        }
-
-        let password = match env::var(KEYSTORE_PASSWORD_ENV_VAR) {
-            Ok(password) => {
-                println!("Getting keystore password from {KEYSTORE_PASSWORD_ENV_VAR} evironment variable");
-                password
-            }
-            _ => rpassword::prompt_password("Enter password: ")?,
-        };
-        let signer =
-            LocalWallet::from(SigningKey::from_keystore(keystore_path, password.as_str())?);
-
-        let account_info: serde_json::Value =
-            serde_json::from_str(&fs::read_to_string(path_to_account)?)?;
-        let address = FieldElement::from_hex_be(
-            account_info
-                .get("deployment")
-                .and_then(|deployment| deployment.get("address"))
-                .and_then(serde_json::Value::as_str)
-                .ok_or_else(|| anyhow::anyhow!("Failed to get address from account JSON file - make sure the account is deployed"))?
-        )?;
-
-        let chain_id = get_chain_id(provider).await?;
-        return Ok(SingleOwnerAccount::new(provider, signer, address, chain_id));
-    }
-
-    account_file_exists(&config.accounts_file)?;
-    let chain_id = get_chain_id(provider).await?;
-    let account =
-        get_account_from_accounts_file(&config.account, &config.accounts_file, provider, chain_id)?;
-    Ok(account)
 }

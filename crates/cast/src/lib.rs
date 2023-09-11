@@ -1,6 +1,6 @@
 use anyhow::{anyhow, bail, Context, Error, Result};
 use camino::Utf8PathBuf;
-use helpers::constants::{DEFAULT_RETRIES, UDC_ADDRESS};
+use helpers::constants::{DEFAULT_RETRIES, KEYSTORE_PASSWORD_ENV_VAR, UDC_ADDRESS};
 use primitive_types::U256;
 use rand::rngs::OsRng;
 use rand::RngCore;
@@ -33,9 +33,9 @@ use starknet::{
     providers::{MaybeUnknownErrorCode, StarknetErrorWithMessage},
 };
 use std::collections::HashMap;
-use std::fs;
 use std::thread::sleep;
 use std::time::Duration;
+use std::{env, fs};
 use url::Url;
 
 pub mod helpers;
@@ -98,12 +98,69 @@ pub fn decode_chain_id(chain_id: FieldElement) -> String {
     String::from_utf8(non_zero_bytes).unwrap_or_default()
 }
 
+pub async fn get_account<'a>(
+    account: &str,
+    accounts_file: &Utf8PathBuf,
+    keystore: &Option<Utf8PathBuf>,
+    provider: &'a JsonRpcClient<HttpTransport>,
+) -> Result<SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, LocalWallet>> {
+    let chain_id = get_chain_id(provider).await?;
+    let account = match keystore {
+        Some(keystore) => get_account_from_keystore(provider, chain_id, keystore, account)?,
+        None => get_account_from_accounts_file(account, accounts_file, provider, chain_id)?,
+    };
+
+    Ok(account)
+}
+
+fn get_account_from_keystore<'a>(
+    provider: &'a JsonRpcClient<HttpTransport>,
+    chain_id: FieldElement,
+    keystore_path: &Utf8PathBuf,
+    account: &str,
+) -> Result<SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, LocalWallet>> {
+    if !keystore_path.exists() {
+        bail!("keystore file does not exist");
+    }
+    if account.is_empty() {
+        bail!("--account is required when using keystore");
+    }
+    let path_to_account = Utf8PathBuf::from(account);
+    if !path_to_account.exists() {
+        bail!("account file does not exist; when using --keystore, --account argument should be a path to the starkli JSON account file");
+    }
+
+    let password = match env::var(KEYSTORE_PASSWORD_ENV_VAR) {
+        Ok(password) => {
+            println!(
+                "Getting keystore password from {KEYSTORE_PASSWORD_ENV_VAR} evironment variable"
+            );
+            password
+        }
+        _ => rpassword::prompt_password("Enter password: ")?,
+    };
+    let signer = LocalWallet::from(SigningKey::from_keystore(keystore_path, password.as_str())?);
+
+    let account_info: serde_json::Value =
+        serde_json::from_str(&fs::read_to_string(path_to_account)?)?;
+    let address = FieldElement::from_hex_be(
+        account_info
+            .get("deployment")
+            .and_then(|deployment| deployment.get("address"))
+            .and_then(serde_json::Value::as_str)
+            .ok_or_else(|| anyhow::anyhow!("Failed to get address from account JSON file - make sure the account is deployed"))?
+    )?;
+
+    Ok(SingleOwnerAccount::new(provider, signer, address, chain_id))
+}
+
 pub fn get_account_from_accounts_file<'a>(
     name: &str,
     accounts_file_path: &Utf8PathBuf,
     provider: &'a JsonRpcClient<HttpTransport>,
     chain_id: FieldElement,
 ) -> Result<SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, LocalWallet>> {
+    account_file_exists(accounts_file_path)?;
     let account_info = get_account_info(name, chain_id, accounts_file_path)?;
     let signer = LocalWallet::from(SigningKey::from_secret_scalar(
         FieldElement::from_hex_be(&account_info.private_key).with_context(|| {

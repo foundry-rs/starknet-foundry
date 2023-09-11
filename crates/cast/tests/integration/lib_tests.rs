@@ -58,7 +58,7 @@ fn test_get_account_no_file() {
         chain_id::TESTNET,
     );
     let err = account.unwrap_err();
-    assert!(err.to_string().contains("No such file or directory"));
+    assert!(err.to_string().contains("Accounts file tests/data/accounts/nonexistentfile.json does not exist!"));
 }
 
 #[test]

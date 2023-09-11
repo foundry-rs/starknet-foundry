@@ -3,8 +3,8 @@ use crate::helpers::{
     fixtures::create_test_provider,
 };
 use camino::Utf8PathBuf;
-use cast::helpers::constants::DEFAULT_RETRIES;
-use cast::{get_account_from_accounts_file, handle_wait_for_tx, parse_number, wait_for_tx};
+use cast::{get_account_from_accounts_file, helpers::constants::DEFAULT_RETRIES};
+use cast::{handle_wait_for_tx, parse_number, wait_for_tx};
 use starknet::core::types::FieldElement;
 use starknet::{contract::ContractFactory, core::chain_id};
 
