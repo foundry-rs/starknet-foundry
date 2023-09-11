@@ -19,14 +19,14 @@ Starknet RPC node url address.
 
 Overrides url from `Scarb.toml`.
 
-## `--account, -a <ACCOUNT_NAME`
+## `--account, -a <ACCOUNT_NAME>`
 Optional.
 
 Account name used to interact with the network, aliased in open zeppelin accounts file.
 
 Overrides account from `Scarb.toml`.
 
-If used with `--keystore`, should be a path to starkli account JSON file.
+If used with `--keystore`, should be a path to [starkli account JSON file](https://book.starkli.rs/accounts#accounts).
 
 ## `--accounts-file, -f <PATH_TO_ACCOUNTS_FILE>`
 Optional.
@@ -36,8 +36,8 @@ Path to the open zeppelin accounts file holding accounts info. Defaults to `~/.s
 ## `--keystore, -k <PATH_TO_KEYSTORE_FILE>`
 Optional.
 
-Path to keystore file.
-If specified, --account should be a path to starkli account JSON file.
+Path to [keystore file](https://book.starkli.rs/signers#encrypted-keystores).
+If specified, --account should be a path to [starkli account JSON file](https://book.starkli.rs/accounts#accounts).
 
 ## `--int-format, -i`
 Optional.
