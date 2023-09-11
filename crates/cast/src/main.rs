@@ -11,10 +11,6 @@ use cast::{
     print_command_result,
 };
 use clap::{Parser, Subcommand};
-use starknet::accounts::SingleOwnerAccount;
-use starknet::providers::jsonrpc::HttpTransport;
-use starknet::providers::JsonRpcClient;
-use starknet::signers::LocalWallet;
 
 mod starknet_commands;
 
@@ -94,34 +90,20 @@ async fn main() -> Result<()> {
     update_cast_config(&mut config, &cli);
 
     let provider = get_provider(&config.rpc_url)?;
-    let mut account: Option<SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>> = None;
-
-    match &cli.command {
-        Commands::Call(_) | Commands::Account(_) => {}
-        Commands::Multicall(value)
-            if matches!(
-                &value.command,
-                starknet_commands::multicall::Commands::New(_)
-            ) => {}
-        _ => {
-            account = Some(
-                get_account(
-                    &config.account,
-                    &config.accounts_file,
-                    &provider,
-                    &cli.keystore,
-                )
-                .await?,
-            );
-        }
-    }
 
     match cli.command {
         Commands::Declare(declare) => {
+            let account = get_account(
+                &config.account,
+                &config.accounts_file,
+                &provider,
+                &cli.keystore,
+            )
+            .await?;
             let mut result = starknet_commands::declare::declare(
                 &declare.contract,
                 declare.max_fee,
-                &mut account.expect("account should be present"),
+                &account,
                 &cli.path_to_scarb_toml,
                 cli.wait,
             )
@@ -131,13 +113,20 @@ async fn main() -> Result<()> {
             Ok(())
         }
         Commands::Deploy(deploy) => {
+            let account = get_account(
+                &config.account,
+                &config.accounts_file,
+                &provider,
+                &cli.keystore,
+            )
+            .await?;
             let mut result = starknet_commands::deploy::deploy(
                 deploy.class_hash,
                 deploy.constructor_calldata,
                 deploy.salt,
                 deploy.unique,
                 deploy.max_fee,
-                &account.expect("account should be present"),
+                &account,
                 cli.wait,
             )
             .await;
@@ -161,12 +150,19 @@ async fn main() -> Result<()> {
             Ok(())
         }
         Commands::Invoke(invoke) => {
+            let account = get_account(
+                &config.account,
+                &config.accounts_file,
+                &provider,
+                &cli.keystore,
+            )
+            .await?;
             let mut result = starknet_commands::invoke::invoke(
                 invoke.contract_address,
                 &invoke.function,
                 invoke.calldata,
                 invoke.max_fee,
-                &mut account.expect("account should be present"),
+                &account,
                 cli.wait,
             )
             .await;
@@ -191,9 +187,16 @@ async fn main() -> Result<()> {
                     }
                 }
                 starknet_commands::multicall::Commands::Run(run) => {
+                    let account = get_account(
+                        &config.account,
+                        &config.accounts_file,
+                        &provider,
+                        &cli.keystore,
+                    )
+                    .await?;
                     let mut result = starknet_commands::multicall::run::run(
                         &run.path,
-                        &mut account.expect("account should be present"),
+                        &account,
                         run.max_fee,
                         cli.wait,
                     )
