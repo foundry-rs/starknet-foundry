@@ -1807,6 +1807,7 @@ dependencies = [
  "clap",
  "console",
  "conversions",
+ "dotenv",
  "flatten-serde-json",
  "include_dir",
  "indoc",

@@ -15,6 +15,9 @@ use cheatcodes::tx_info::stop_spoof;
 use cheatcodes::l1_handler::L1Handler;
 use cheatcodes::l1_handler::L1HandlerTrait;
 
+use cheatcodes::fork::ForkConfig;
+use cheatcodes::fork::ForkTrait;
+
 use cheatcodes::events::SpyOn;
 use cheatcodes::events::Event;
 use cheatcodes::events::EventSpy;
@@ -31,10 +34,6 @@ use cheatcodes::start_warp;
 use cheatcodes::stop_warp;
 use cheatcodes::start_mock_call;
 use cheatcodes::stop_mock_call;
-
-
-use cheatcodes::setup_fork::ForkConfig;
-use cheatcodes::setup_fork::ForkTrait;
 
 mod io;
 

@@ -14,6 +14,7 @@ mod events;
 mod l1_handler;
 mod contract_class;
 mod tx_info;
+mod fork;
 
 
 fn start_roll(contract_address: ContractAddress, block_number: u64) {
