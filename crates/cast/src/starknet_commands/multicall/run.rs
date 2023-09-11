@@ -67,7 +67,7 @@ pub async fn run(
 
         match call_type.unwrap().as_str() {
             Some("deploy") => {
-                let deploy_call: DeployCall = toml::from_str(call.to_string().as_str())
+                let deploy_call: DeployCall = toml::from_str(toml::to_string(&call)?.as_str())
                     .map_err(|_| anyhow!("Failed to parse toml `deploy` call"))?;
 
                 let salt = extract_or_generate_salt(deploy_call.salt);
@@ -97,7 +97,7 @@ pub async fn run(
                 contracts.insert(deploy_call.id, contract_address.to_string());
             }
             Some("invoke") => {
-                let invoke_call: InvokeCall = toml::from_str(call.to_string().as_str())
+                let invoke_call: InvokeCall = toml::from_str(toml::to_string(&call)?.as_str())
                     .context("failed to parse toml `invoke` call")?;
                 let mut contract_address = &invoke_call.contract_address;
                 if let Some(addr) = contracts.get(&invoke_call.contract_address) {

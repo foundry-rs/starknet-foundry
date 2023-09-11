@@ -4,7 +4,7 @@ use crate::starknet_commands::{
 };
 use anyhow::Result;
 use camino::Utf8PathBuf;
-use cast::helpers::constants::DEFAULT_ACCOUNTS_FILE;
+use cast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
 use cast::helpers::scarb_utils::{parse_scarb_config, CastConfig};
 use cast::{
     account_file_exists, get_account, get_block_id, get_chain_id, get_provider,
@@ -177,11 +177,18 @@ async fn main() -> Result<()> {
         Commands::Multicall(multicall) => {
             match &multicall.command {
                 starknet_commands::multicall::Commands::New(new) => {
-                    let result = starknet_commands::multicall::new::new(
-                        new.output_path.clone(),
-                        new.overwrite,
-                    )?;
-                    println!("{result}");
+                    if let Some(output_path) = &new.output_path {
+                        let mut result =
+                            starknet_commands::multicall::new::new(output_path, new.overwrite);
+                        print_command_result(
+                            "multicall new",
+                            &mut result,
+                            cli.int_format,
+                            cli.json,
+                        )?;
+                    } else {
+                        println!("{DEFAULT_MULTICALL_CONTENTS}");
+                    }
                 }
                 starknet_commands::multicall::Commands::Run(run) => {
                     let mut result = starknet_commands::multicall::run::run(

@@ -1,5 +1,4 @@
 use crate::constants::build_block_context;
-use crate::state::StateReaderProxy;
 use crate::CheatnetState;
 use anyhow::{anyhow, Context, Result};
 use blockifier::execution::{
@@ -19,6 +18,7 @@ use starknet_api::transaction::{Calldata, Fee, TransactionHash};
 
 use super::{CheatcodeError, EnhancedHintError};
 use crate::panic_data::try_extract_panic_data;
+use crate::state::ExtendedStateReader;
 
 impl CheatnetState {
     pub fn l1_handler_execute(
@@ -29,7 +29,7 @@ impl CheatnetState {
         paid_fee_on_l1: &Felt252,
         payload: &[Felt252],
     ) -> Result<(), CheatcodeError> {
-        let blockifier_state: &mut CachedState<StateReaderProxy> = &mut self.blockifier_state;
+        let blockifier_state: &mut CachedState<ExtendedStateReader> = &mut self.blockifier_state;
 
         let block_context = build_block_context();
 
