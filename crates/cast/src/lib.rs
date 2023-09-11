@@ -1,26 +1,17 @@
 use anyhow::{anyhow, bail, Context, Error, Result};
 use camino::Utf8PathBuf;
-use helpers::constants::{DEFAULT_RETRIES, UDC_ADDRESS};
+use helpers::constants::{DEFAULT_RETRIES, KEYSTORE_PASSWORD_ENV_VAR, UDC_ADDRESS};
 use primitive_types::U256;
 use rand::rngs::OsRng;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use starknet::core::types::{
-    BlockId,
-    BlockTag::{Latest, Pending},
-    FieldElement, MaybePendingTransactionReceipt,
-    MaybePendingTransactionReceipt::Receipt,
-    StarknetError,
-    TransactionReceipt::{Declare, Deploy, DeployAccount, Invoke, L1Handler},
-    TransactionStatus,
-};
 use starknet::core::utils::UdcUniqueness::{NotUnique, Unique};
 use starknet::core::utils::{UdcUniqueSettings, UdcUniqueness};
 use starknet::providers::jsonrpc::JsonRpcClientError;
 use starknet::providers::jsonrpc::JsonRpcClientError::RpcError;
 use starknet::providers::jsonrpc::RpcError::{Code, Unknown};
-use starknet::providers::ProviderError::{Other, StarknetError as ProviderStarknetError};
+use starknet::providers::ProviderError::Other;
 use starknet::{
     accounts::SingleOwnerAccount,
     providers::{
@@ -29,10 +20,22 @@ use starknet::{
     },
     signers::{LocalWallet, SigningKey},
 };
+use starknet::{
+    core::types::{
+        BlockId,
+        BlockTag::{Latest, Pending},
+        FieldElement, MaybePendingTransactionReceipt,
+        MaybePendingTransactionReceipt::Receipt,
+        StarknetError,
+        TransactionReceipt::{Declare, Deploy, DeployAccount, Invoke, L1Handler},
+        TransactionStatus,
+    },
+    providers::{MaybeUnknownErrorCode, StarknetErrorWithMessage},
+};
 use std::collections::HashMap;
-use std::fs;
 use std::thread::sleep;
 use std::time::Duration;
+use std::{env, fs};
 use url::Url;
 
 pub mod helpers;
@@ -95,12 +98,67 @@ pub fn decode_chain_id(chain_id: FieldElement) -> String {
     String::from_utf8(non_zero_bytes).unwrap_or_default()
 }
 
-pub fn get_account<'a>(
+pub async fn get_account<'a>(
+    account: &str,
+    accounts_file: &Utf8PathBuf,
+    provider: &'a JsonRpcClient<HttpTransport>,
+    keystore: &Option<Utf8PathBuf>,
+) -> Result<SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, LocalWallet>> {
+    let chain_id = get_chain_id(provider).await?;
+    let account = match keystore {
+        Some(keystore) => get_account_from_keystore(provider, chain_id, keystore, account)?,
+        None => get_account_from_accounts_file(account, accounts_file, provider, chain_id)?,
+    };
+
+    Ok(account)
+}
+
+fn get_account_from_keystore<'a>(
+    provider: &'a JsonRpcClient<HttpTransport>,
+    chain_id: FieldElement,
+    keystore_path: &Utf8PathBuf,
+    account: &str,
+) -> Result<SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, LocalWallet>> {
+    if !keystore_path.exists() {
+        bail!("keystore file does not exist");
+    }
+    if account.is_empty() {
+        bail!("Path passed with --account cannot be empty!");
+    }
+    let path_to_account = Utf8PathBuf::from(account);
+    if !path_to_account.exists() {
+        bail!("account file does not exist; when using --keystore, --account argument should be a path to the starkli JSON account file");
+    }
+
+    let password = match env::var(KEYSTORE_PASSWORD_ENV_VAR) {
+        Ok(password) => {
+            println!("{KEYSTORE_PASSWORD_ENV_VAR} environment variable found and will be used");
+            password
+        }
+        _ => rpassword::prompt_password("Enter password: ")?,
+    };
+    let signer = LocalWallet::from(SigningKey::from_keystore(keystore_path, password.as_str())?);
+
+    let account_info: serde_json::Value =
+        serde_json::from_str(&fs::read_to_string(path_to_account)?)?;
+    let address = FieldElement::from_hex_be(
+        account_info
+            .get("deployment")
+            .and_then(|deployment| deployment.get("address"))
+            .and_then(serde_json::Value::as_str)
+            .ok_or_else(|| anyhow::anyhow!("Failed to get address from account JSON file - make sure the account is deployed"))?
+    )?;
+
+    Ok(SingleOwnerAccount::new(provider, signer, address, chain_id))
+}
+
+fn get_account_from_accounts_file<'a>(
     name: &str,
     accounts_file_path: &Utf8PathBuf,
     provider: &'a JsonRpcClient<HttpTransport>,
     chain_id: FieldElement,
 ) -> Result<SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, LocalWallet>> {
+    account_file_exists(accounts_file_path)?;
     let account_info = get_account_info(name, chain_id, accounts_file_path)?;
     let signer = LocalWallet::from(SigningKey::from_secret_scalar(
         FieldElement::from_hex_be(&account_info.private_key).with_context(|| {
@@ -150,7 +208,10 @@ pub async fn wait_for_tx(
                 maybe_receipt = Some(receipt);
                 break;
             }
-            Err(ProviderError::StarknetError(StarknetError::TransactionHashNotFound)) => {
+            Err(ProviderError::StarknetError(StarknetErrorWithMessage {
+                code: MaybeUnknownErrorCode::Known(StarknetError::TransactionHashNotFound),
+                message: _,
+            })) => {
                 println!("Waiting for transaction to be received. Retries left: {i}");
             }
             Err(err) => return Err(err.into()),
@@ -215,10 +276,9 @@ pub fn handle_rpc_error<T, G>(
     error: ProviderError<JsonRpcClientError<T>>,
 ) -> std::result::Result<G, Error> {
     match error {
-        Other(RpcError(Code(error))) | ProviderStarknetError(error) => {
-            Err(anyhow!(get_rpc_error_message(error)))
-        }
+        Other(RpcError(Code(error))) => Err(anyhow!(get_rpc_error_message(error))),
         Other(RpcError(Unknown(error))) => Err(anyhow!(error.message)),
+        ProviderError::StarknetError(error) => Err(anyhow!(error.message)),
         _ => Err(anyhow!("Unknown RPC error")),
     }
 }
@@ -354,14 +414,22 @@ pub fn udc_uniqueness(unique: bool, account_address: FieldElement) -> UdcUniquen
 
 #[cfg(test)]
 mod tests {
-    use crate::{chain_id_to_network_name, extract_or_generate_salt, get_block_id, udc_uniqueness};
-    use starknet::core::types::{
-        BlockId,
-        BlockTag::{Latest, Pending},
-        FieldElement,
+    use crate::{
+        chain_id_to_network_name, extract_or_generate_salt, get_account_from_accounts_file,
+        get_block_id, udc_uniqueness,
     };
+    use camino::Utf8PathBuf;
     use starknet::core::utils::UdcUniqueSettings;
     use starknet::core::utils::UdcUniqueness::{NotUnique, Unique};
+    use starknet::{
+        core::types::{
+            BlockId,
+            BlockTag::{Latest, Pending},
+            FieldElement,
+        },
+        providers::{jsonrpc::HttpTransport, JsonRpcClient},
+    };
+    use url::Url;
 
     #[test]
     fn test_get_block_id() {
@@ -440,5 +508,22 @@ mod tests {
         );
         assert_eq!(network_name_goerli, "alpha-goerli");
         assert_eq!(network_name_katana, "KATANA");
+    }
+
+    #[test]
+    fn test_get_account_wrong_chain_id() {
+        let mock_url = Url::parse("https://example.net").unwrap();
+        let mock_provider = JsonRpcClient::new(HttpTransport::new(mock_url));
+        let account = get_account_from_accounts_file(
+            "user1",
+            &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
+            &mock_provider,
+            FieldElement::from_hex_be("0x435553544f4d5f434841494e5f4944")
+                .expect("Should convert from hex"),
+        );
+        let err = account.unwrap_err();
+        assert!(err
+            .to_string()
+            .contains("Account user1 not found under network CUSTOM_CHAIN_ID"));
     }
 }
