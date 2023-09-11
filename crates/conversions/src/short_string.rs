@@ -1,11 +1,11 @@
 use super::StarknetConversions;
 use cairo_felt::Felt252;
 use starknet::core::types::FieldElement;
+use starknet_api::core::Nonce;
 use starknet_api::{
     core::{ClassHash, ContractAddress},
     hash::{StarkFelt, StarkHash},
 };
-use starknet_api::core::Nonce;
 
 impl StarknetConversions for String {
     fn to_felt252(&self) -> Felt252 {
