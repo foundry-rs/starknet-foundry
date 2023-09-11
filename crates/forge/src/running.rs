@@ -131,7 +131,7 @@ pub(crate) fn run_from_test_case(
             predeployed_contracts,
         )))),
         hints: &string_to_hint,
-        run_resources: RunResources::new(0),
+        run_resources: RunResources::default(),
     };
 
     match runner.run_function(
