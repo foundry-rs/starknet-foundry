@@ -2,11 +2,11 @@ use super::StarknetConversions;
 use blockifier::execution::execution_utils::stark_felt_to_felt;
 use cairo_felt::Felt252;
 use starknet::core::types::FieldElement;
+use starknet_api::core::Nonce;
 use starknet_api::{
     core::{ClassHash, ContractAddress},
     hash::{StarkFelt, StarkHash},
 };
-use starknet_api::core::Nonce;
 
 impl StarknetConversions for StarkFelt {
     fn to_felt252(&self) -> Felt252 {

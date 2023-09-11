@@ -1,18 +1,18 @@
 use cairo_felt::Felt252;
 use starknet::core::types::FieldElement;
+use starknet_api::core::Nonce;
 use starknet_api::{
     core::{ClassHash, ContractAddress},
     hash::{StarkFelt, StarkHash},
 };
-use starknet_api::core::Nonce;
 
 pub mod class_hash;
 pub mod contract_address;
 pub mod felt252;
 pub mod field_element;
+pub mod nonce;
 pub mod short_string;
 pub mod stark_felt;
-pub mod nonce;
 
 pub trait StarknetConversions {
     fn to_felt252(&self) -> Felt252;
