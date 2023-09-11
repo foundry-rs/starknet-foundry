@@ -4,6 +4,7 @@ use indoc::indoc;
 use crate::e2e::common::runner::{runner, setup_package};
 
 #[test]
+#[allow(clippy::too_many_lines)]
 fn file_reading() {
     let temp = setup_package("file_reading");
 
@@ -107,6 +108,22 @@ fn file_reading() {
             Failed to parse data/too_large_number.txt file
         
         Tests: 9 passed, 14 failed, 0 skipped
+        
+        Failures:
+            file_reading::non_existent
+            file_reading::invalid_quotes
+            file_reading::negative_number
+            file_reading::non_ascii
+            file_reading::not_number_without_quotes
+            file_reading::too_large_number
+            test::invalid_json
+            test::non_existent
+            test::json_non_existent
+            test::invalid_quotes
+            test::negative_number
+            test::non_ascii
+            test::not_number_without_quotes
+            test::too_large_number
     "#};
 
     // run from different directories to make sure cwd is always set to package directory
@@ -114,20 +131,20 @@ fn file_reading() {
     snapbox
         .current_dir(&temp)
         .assert()
-        .success()
+        .code(1)
         .stdout_matches(expected);
 
     let snapbox = runner();
     snapbox
         .current_dir(temp.child("src"))
         .assert()
-        .success()
+        .code(1)
         .stdout_matches(expected);
 
     let snapbox = runner();
     snapbox
         .current_dir(temp.child("data"))
         .assert()
-        .success()
+        .code(1)
         .stdout_matches(expected);
 }
