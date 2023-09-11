@@ -14,7 +14,7 @@ fn simple_package() {
     snapbox
         .current_dir(&temp)
         .assert()
-        .failure()
+        .code(1)
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
@@ -129,7 +129,7 @@ fn with_failing_scarb_build() {
 
     let snapbox = runner();
 
-    let result = snapbox.current_dir(&temp).assert().failure();
+    let result = snapbox.current_dir(&temp).assert().code(2);
 
     let stdout = String::from_utf8_lossy(&result.get_output().stdout);
     assert!(stdout.contains("Scarb build didn't succeed:"));
