@@ -61,6 +61,9 @@ pub(crate) fn print_test_result(test_result: &TestCaseSummary) {
 }
 
 pub fn print_failures(all_failed_tests: &[TestCaseSummary]) {
+    if all_failed_tests.is_empty() {
+        return;
+    }
     let failed_tests_names: Vec<&String> = all_failed_tests
         .iter()
         .map(|test_case_summary| match test_case_summary {
@@ -72,6 +75,6 @@ pub fn print_failures(all_failed_tests: &[TestCaseSummary]) {
 
     println!("\nFailures:");
     for name in failed_tests_names {
-        println!("{name}");
+        println!("    {name}");
     }
 }
