@@ -132,7 +132,7 @@ fn with_failing_scarb_build() {
     let result = snapbox.current_dir(&temp).assert().code(2);
 
     let stdout = String::from_utf8_lossy(&result.get_output().stdout);
-    assert!(stdout.contains("Scarb build didn't succeed:"));
+    assert!(stdout.contains("Scarb build did not succeed"));
 }
 
 #[test]

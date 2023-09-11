@@ -7,8 +7,8 @@ use scarb_metadata::MetadataCommand;
 use std::path::PathBuf;
 use tempfile::{tempdir, TempDir};
 
-use forge::run;
 use forge::{pretty_printing, RunnerConfig};
+use forge::{run, TestFileSummary};
 
 use forge::scarb::{
     corelib_for_package, dependencies_for_package, get_contracts_map, name_for_package,
@@ -46,10 +46,19 @@ fn load_predeployed_contracts() -> Result<TempDir> {
     Ok(tmp_dir)
 }
 
+fn extract_failed_tests(tests_summaries: Vec<TestFileSummary>) -> Vec<TestCaseSummary> {
+    tests_summaries
+        .into_iter()
+        .flat_map(|test_file_summary| test_file_summary.test_case_summaries)
+        .filter(|test_case_summary| matches!(test_case_summary, TestCaseSummary::Failed { .. }))
+        .collect()
+}
+
 fn main_execution() -> Result<bool> {
     let args = Args::parse();
     if let Some(project_name) = args.init {
-        return init::run(project_name.as_str()).map(|_| true);
+        init::run(project_name.as_str())?;
+        return Ok(true);
     }
 
     let predeployed_contracts_dir = load_predeployed_contracts()?;
@@ -70,13 +79,10 @@ fn main_execution() -> Result<bool> {
         .output()
         .context("Failed to build contracts with Scarb")?;
     if !build_output.status.success() {
-        bail!(
-            "Scarb build didn't succeed:\n\n{}",
-            String::from_utf8_lossy(&build_output.stdout)
-        )
+        bail!("Scarb build did not succeed")
     }
 
-    let mut tests_succeeded = true;
+    let mut all_failed_tests = vec![];
     for package in &scarb_metadata.workspace.members {
         let forge_config = forge::scarb::config_from_scarb_for_package(&scarb_metadata, package)?;
         let (package_path, lib_path) = paths_for_package(&scarb_metadata, package)?;
@@ -100,7 +106,7 @@ fn main_execution() -> Result<bool> {
             .transpose()?
             .unwrap_or_default();
 
-        let tests_summaries = run(
+        let tests_file_summaries = run(
             &package_path,
             &package_name,
             &lib_path,
@@ -111,13 +117,8 @@ fn main_execution() -> Result<bool> {
             &predeployed_contracts,
         )?;
 
-        let failed_tests: Vec<TestCaseSummary> = tests_summaries
-            .into_iter()
-            .flat_map(|test_file_summary| test_file_summary.test_case_summaries)
-            .filter(|test_case_summary| matches!(test_case_summary, TestCaseSummary::Failed { .. }))
-            .collect();
-
-        tests_succeeded &= failed_tests.is_empty();
+        let mut failed_tests = extract_failed_tests(tests_file_summaries);
+        all_failed_tests.append(&mut failed_tests);
     }
 
     // Explicitly close the temporary directories so we can handle the errors
@@ -128,7 +129,9 @@ fn main_execution() -> Result<bool> {
         )
     })?;
 
-    Ok(tests_succeeded)
+    pretty_printing::print_failures(&all_failed_tests);
+
+    Ok(all_failed_tests.is_empty())
 }
 
 fn main() {
