@@ -1,7 +1,7 @@
 # Library Functions References
 
-* [`declare`](forge-library/declare.md) - declares a contract and returns a struct on which `precalculate_address` and `deploy` can be called
-* [`precalculate_address`](forge-library/precalculate_address.md) - calculates a contract address that would be returned when calling `deploy`
+* [`declare`](forge-library/declare.md) - declares a contract and returns a struct on which [`precalculate_address`](forge-library/precalculate_address.md) and [`deploy`](forge-library/deploy.md) can be called
+* [`precalculate_address`](forge-library/precalculate_address.md) - calculates a contract address that would be returned when calling [`deploy`](forge-library/deploy.md)
 * [`deploy`](forge-library/deploy.md) - deploys a contract and returns its address
 * [`print`](forge-library/print.md) - displays test data
 * [`read_txt`](forge-library/read_txt.md) - reads and parses plain text file content into an array of felts
