@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - `deploy_at` cheatcode
+- printing failures summary at the end of an execution
+
+### Fixed
+
+- non-zero exit code is returned when any tests fail
 
 ### Cast
 

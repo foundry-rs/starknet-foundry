@@ -3,8 +3,6 @@ use crate::helpers::fixtures::create_test_provider;
 
 use camino::Utf8PathBuf;
 use cast::{get_account, get_provider};
-use starknet::core::chain_id;
-use starknet::core::types::FieldElement;
 use std::fs;
 use url::ParseError;
 
@@ -30,15 +28,16 @@ async fn test_get_provider_empty_url() {
         .contains("RPC url not passed nor found in Scarb.toml"));
 }
 
-#[test]
-fn test_get_account() {
+#[tokio::test]
+async fn test_get_account() {
     let provider = create_test_provider();
     let account = get_account(
         "user1",
         &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
         &provider,
-        chain_id::TESTNET,
-    );
+        &None,
+    )
+    .await;
 
     assert!(account.is_ok());
 
@@ -48,87 +47,78 @@ fn test_get_account() {
     assert_eq!(returned.trim(), expected.trim());
 }
 
-#[test]
-fn test_get_account_no_file() {
+#[tokio::test]
+async fn test_get_account_no_file() {
     let provider = create_test_provider();
     let account = get_account(
         "user1",
         &Utf8PathBuf::from("tests/data/accounts/nonexistentfile.json"),
         &provider,
-        chain_id::TESTNET,
-    );
+        &None,
+    )
+    .await;
     let err = account.unwrap_err();
-    assert!(err.to_string().contains("No such file or directory"));
+    assert!(err
+        .to_string()
+        .contains("Accounts file tests/data/accounts/nonexistentfile.json does not exist!"));
 }
 
-#[test]
-fn test_get_account_invalid_file() {
+#[tokio::test]
+async fn test_get_account_invalid_file() {
     let provider = create_test_provider();
     let account = get_account(
         "user1",
         &Utf8PathBuf::from("tests/data/accounts/invalid_format.json"),
         &provider,
-        chain_id::TESTNET,
-    );
+        &None,
+    )
+    .await;
     let err = account.unwrap_err();
     assert!(err.is::<serde_json::Error>());
 }
 
-#[test]
-fn test_get_account_wrong_chain_id() {
-    let provider = create_test_provider();
-    let account = get_account(
-        "user1",
-        &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
-        &provider,
-        FieldElement::from_hex_be("0x435553544f4d5f434841494e5f4944")
-            .expect("Should convert from hex"),
-    );
-    let err = account.unwrap_err();
-    assert!(err
-        .to_string()
-        .contains("Account user1 not found under network CUSTOM_CHAIN_ID"));
-}
-
-#[test]
-fn test_get_account_no_account() {
+#[tokio::test]
+async fn test_get_account_no_account() {
     let provider = create_test_provider();
     let account = get_account(
         "",
         &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
         &provider,
-        chain_id::TESTNET,
-    );
+        &None,
+    )
+    .await;
     let err = account.unwrap_err();
     assert!(err
         .to_string()
         .contains("Account name not passed nor found in Scarb.toml"));
 }
 
-#[test]
-fn test_get_account_no_user_for_network() {
+#[tokio::test]
+async fn test_get_account_no_user_for_network() {
     let provider = create_test_provider();
     let account = get_account(
         "user10",
         &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
         &provider,
-        chain_id::TESTNET,
-    );
+        &None,
+    )
+    .await;
     let err = account.unwrap_err();
     assert!(err
         .to_string()
         .contains("Account user10 not found under network alpha-goerli"));
 }
 
-#[test]
-fn test_get_account_failed_to_convert_field_elements() {
+#[tokio::test]
+async fn test_get_account_failed_to_convert_field_elements() {
     let provider = create_test_provider();
     let account1 = get_account(
         "with_wrong_private_key",
         &Utf8PathBuf::from("tests/data/accounts/faulty_accounts.json"),
         &provider,
-        chain_id::TESTNET,
-    );
+        &None,
+    )
+    .await;
     let err1 = account1.unwrap_err();
     assert!(err1
         .to_string()
@@ -138,8 +128,9 @@ fn test_get_account_failed_to_convert_field_elements() {
         "with_wrong_address",
         &Utf8PathBuf::from("tests/data/accounts/faulty_accounts.json"),
         &provider,
-        chain_id::TESTNET,
-    );
+        &None,
+    )
+    .await;
     let err2 = account2.unwrap_err();
     assert!(err2
         .to_string()

@@ -20,6 +20,7 @@ use smol_str::SmolStr;
 use crate::fuzzer::{Fuzzer, Random};
 use crate::running::run_from_test_case;
 use crate::scarb::{ForgeConfig, StarknetContractArtifacts};
+pub use crate::test_file_summary::TestFileSummary;
 use test_collector::{collect_tests, LinkedLibrary, TestCase};
 
 pub mod pretty_printing;
@@ -29,6 +30,7 @@ pub mod test_case_summary;
 mod cheatcodes_hint_processor;
 mod fuzzer;
 mod running;
+mod test_file_summary;
 
 /// Configuration of the test runner
 #[derive(Deserialize, Debug, PartialEq, Default)]
@@ -263,40 +265,6 @@ pub fn run(
 
     pretty_printing::print_test_summary(&summaries);
     Ok(summaries)
-}
-
-/// Summary of the test run in the file
-#[derive(Debug, PartialEq, Clone)]
-pub struct TestFileSummary {
-    /// Summaries of each test case in the file
-    pub test_case_summaries: Vec<TestCaseSummary>,
-    /// Status of the runner after executing tests in the file
-    pub runner_exit_status: RunnerStatus,
-    /// Relative path to the test file
-    pub relative_path: Utf8PathBuf,
-}
-
-impl TestFileSummary {
-    fn count_passed(&self) -> usize {
-        self.test_case_summaries
-            .iter()
-            .filter(|tu| matches!(tu, TestCaseSummary::Passed { .. }))
-            .count()
-    }
-
-    fn count_failed(&self) -> usize {
-        self.test_case_summaries
-            .iter()
-            .filter(|tu| matches!(tu, TestCaseSummary::Failed { .. }))
-            .count()
-    }
-
-    fn count_skipped(&self) -> usize {
-        self.test_case_summaries
-            .iter()
-            .filter(|tu| matches!(tu, TestCaseSummary::Skipped { .. }))
-            .count()
-    }
 }
 
 fn run_tests_from_file(
