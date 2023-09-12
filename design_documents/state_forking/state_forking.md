@@ -71,7 +71,7 @@ enum Block {
 }
 
 struct ForkConfig {
-   env_url_name: ByteArray,
+   url: felt252,
    block: Block,
    ...
 }

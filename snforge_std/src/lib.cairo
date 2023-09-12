@@ -17,6 +17,8 @@ use cheatcodes::l1_handler::L1HandlerTrait;
 
 use cheatcodes::fork::ForkConfig;
 use cheatcodes::fork::ForkTrait;
+use cheatcodes::fork::Tag;
+use cheatcodes::fork::BlockId;
 
 use cheatcodes::events::SpyOn;
 use cheatcodes::events::Event;

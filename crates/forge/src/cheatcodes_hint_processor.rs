@@ -459,13 +459,29 @@ impl CairoHintProcessor<'_> {
             }
             "setup_fork" => {
                 let env_name = inputs[0].clone().to_short_string();
-                let block = inputs[1].clone();
+                let block_type = inputs[1].clone().to_i8();
+                let block_value = inputs[2].clone();
+
+                let block_id = match block_type {
+                    // TODO: adds support for Hash
+                    // Some(0) => BlockId::Hash(block_value),
+                    Some(1) => BlockId::Number(block_value.to_u64().unwrap()),
+                    Some(2) => match block_value.to_u8().unwrap() {
+                        0 => BlockId::Tag(BlockTag::Latest),
+                        1 => BlockId::Tag(BlockTag::Pending),
+                        _ => {
+                            panic!("It should never happen");
+                        }
+                    },
+                    _ => {
+                        panic!("It should never happen");
+                    }
+                };
 
                 let fork_url =
                     env::var(&env_name).map_err(|_| anyhow!("{} env doesn't exists", &env_name))?;
 
-                self.cheatnet_state
-                    .setup_fork(&fork_url, BlockId::Tag(BlockTag::Latest));
+                self.cheatnet_state.setup_fork(&fork_url, block_id);
                 Ok(())
             }
             _ => Err(anyhow!("Unknown cheatcode selector: {selector}")).map_err(Into::into),
