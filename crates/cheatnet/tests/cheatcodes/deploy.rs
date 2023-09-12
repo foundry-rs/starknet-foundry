@@ -18,7 +18,8 @@ fn deploy_at_predefined_address() {
     let class_hash = state.declare(&contract, &contracts).unwrap();
     let contract_address = state
         .deploy_at(&class_hash, &[], ContractAddress::from(1_u8))
-        .unwrap();
+        .unwrap()
+        .contract_address;
 
     assert_eq!(contract_address, ContractAddress::from(1_u8));
 
@@ -59,7 +60,8 @@ fn call_predefined_contract_from_proxy_contract() {
     let class_hash = state.declare(&contract, &contracts).unwrap();
     let prank_checker_address = state
         .deploy_at(&class_hash, &[], ContractAddress::from(1_u8))
-        .unwrap();
+        .unwrap()
+        .contract_address;
 
     assert_eq!(prank_checker_address, ContractAddress::from(1_u8));
 
@@ -92,7 +94,7 @@ fn deploy_contract_on_predefined_address_after_its_usage() {
     .unwrap();
 
     assert!(match output {
-        CallContractOutput::Error { msg } =>
+        CallContractOutput::Error { msg, .. } =>
             msg.contains("Requested contract address") && msg.contains("is not deployed"),
         _ => false,
     });
@@ -162,8 +164,6 @@ fn deploy_missing_arguments_in_constructor() {
     let class_hash = state.declare(&contract, &contracts).unwrap();
 
     let output = state.deploy(&class_hash, &[Felt252::from(123_321)]);
-
-    dbg!(&output);
 
     assert!(match output {
         Err(CheatcodeError::Unrecoverable(EnhancedHintError::Hint(HintError::CustomHint(msg)))) =>

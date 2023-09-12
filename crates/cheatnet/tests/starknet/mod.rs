@@ -2,4 +2,5 @@
 mod block;
 mod forking;
 mod nonce;
+mod resources;
 mod timestamp;
