@@ -15,7 +15,7 @@ Tests: 3 passed, 0 failed, 0 skipped
 ## Filtering Tests
 
 You can pass a filter string after the `snforge` command to filter tests.
-By default, any test name matching the filter will be run.
+By default, any test with a module tree path matching the filter will be run.
 
 ```shell
 $ snforge calling

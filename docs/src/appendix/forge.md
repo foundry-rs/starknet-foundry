@@ -1,16 +1,27 @@
-# `snforge [test filter]`
+# `snforge`
 
 Run forge in the current directory
 
-## `[test filter]`
+## `[TEST_FILTER]`
 
-Passing a test filter will only run tests with a name containing this filter.
+Passing a test filter will only run tests with a module tree path containing this filter.
 
-## `--exact`
+## `-e`, `--exact`
 
 Will only run a test with a name exactly matching the test filter.
 Test filter must be a whole qualified test name e.g. `package_name::my_test` instead of just `my_test`.
 
-## `--exit-first`
+## `--init <NAME>`
+
+ Create a new directory and forge project named `<NAME>`.
+
+## `-x`, `--exit-first`
 
 Stop executing tests after the first failed test.
+
+## `-h`, `--help`
+Print help.
+
+## `-V`, `--version`
+
+Print version.
