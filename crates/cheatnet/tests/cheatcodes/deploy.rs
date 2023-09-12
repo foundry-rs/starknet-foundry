@@ -1,7 +1,6 @@
 use crate::assert_success;
 use crate::common::state::create_cheatnet_state;
 use crate::common::{deploy_contract, felt_selector_from_name, get_contracts};
-use blockifier::state::errors::StateError::UndeclaredClassHash;
 use cairo_felt::Felt252;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cheatnet::cheatcodes::{CheatcodeError, EnhancedHintError};
@@ -148,8 +147,9 @@ fn deploy_calldata_no_constructor() {
     let output = state.deploy(&class_hash, &[Felt252::from(123_321)]);
 
     assert!(match output {
-        Err(CheatcodeError::Recoverable(data)) =>
-            data[0] == "No constructor in contract".to_owned().to_felt252(),
+        Err(CheatcodeError::Unrecoverable(EnhancedHintError::Hint(HintError::CustomHint(msg)))) =>
+            msg.as_ref()
+                .contains("Cannot pass calldata to a contract with no constructor"),
         _ => false,
     });
 }
@@ -166,8 +166,8 @@ fn deploy_missing_arguments_in_constructor() {
     let output = state.deploy(&class_hash, &[Felt252::from(123_321)]);
 
     assert!(match output {
-        Err(CheatcodeError::Recoverable(data)) =>
-            data[0] == "Failed to deserialize param #2".to_owned().to_felt252(),
+        Err(CheatcodeError::Unrecoverable(EnhancedHintError::Hint(HintError::CustomHint(msg)))) =>
+            msg.as_ref() == "Failed to deserialize param #2",
         _ => false,
     });
 }
@@ -187,8 +187,8 @@ fn deploy_too_many_arguments_in_constructor() {
     );
 
     assert!(match output {
-        Err(CheatcodeError::Recoverable(data)) =>
-            data[0] == "Input too long for arguments".to_owned().to_felt252(),
+        Err(CheatcodeError::Unrecoverable(EnhancedHintError::Hint(HintError::CustomHint(msg)))) =>
+            msg.as_ref() == "Input too long for arguments",
         _ => false,
     });
 }
@@ -205,9 +205,8 @@ fn deploy_invalid_class_hash() {
     );
 
     assert!(match output {
-        Err(CheatcodeError::Unrecoverable(EnhancedHintError::State(UndeclaredClassHash(
-            class_hash2,
-        )))) => class_hash == class_hash2,
+        Err(CheatcodeError::Unrecoverable(EnhancedHintError::Hint(HintError::CustomHint(msg)))) =>
+            msg.as_ref().contains(class_hash.to_string().as_str()),
         _ => false,
     });
 }

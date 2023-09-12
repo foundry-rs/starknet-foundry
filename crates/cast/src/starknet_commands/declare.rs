@@ -55,7 +55,7 @@ pub struct Declare {
 pub async fn declare(
     contract_name: &str,
     max_fee: Option<FieldElement>,
-    account: &mut SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
+    account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     path_to_scarb_toml: &Option<Utf8PathBuf>,
     wait: bool,
 ) -> Result<DeclareResponse> {

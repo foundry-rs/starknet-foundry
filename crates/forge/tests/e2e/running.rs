@@ -4,7 +4,7 @@ use indoc::{formatdoc, indoc};
 
 use crate::e2e::common::runner::{get_current_branch, get_remote_url, runner, setup_package};
 use assert_fs::TempDir;
-use std::str::FromStr;
+use std::{path::Path, str::FromStr};
 
 #[test]
 fn simple_package() {
@@ -14,7 +14,7 @@ fn simple_package() {
     snapbox
         .current_dir(&temp)
         .assert()
-        .success()
+        .code(1)
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
@@ -44,6 +44,10 @@ fn simple_package() {
         Running 1 test(s) from tests/without_prefix.cairo
         [PASS] without_prefix::five
         Tests: 9 passed, 2 failed, 0 skipped
+        
+        Failures:
+            test_simple::test_failing
+            test_simple::test_another_failing
         "#});
 }
 
@@ -80,7 +84,7 @@ fn simple_package_with_git_dependency() {
     snapbox
         .current_dir(&temp)
         .assert()
-        .success()
+        .code(1)
         .stdout_matches(indoc! {r#"
         [..]Updating git repository[..]
         [..]Compiling[..]
@@ -111,6 +115,10 @@ fn simple_package_with_git_dependency() {
         Running 1 test(s) from tests/without_prefix.cairo
         [PASS] without_prefix::five
         Tests: 9 passed, 2 failed, 0 skipped
+        
+        Failures:
+            test_simple::test_failing
+            test_simple::test_another_failing
         "#}).stderr_matches("");
 }
 
@@ -129,10 +137,10 @@ fn with_failing_scarb_build() {
 
     let snapbox = runner();
 
-    let result = snapbox.current_dir(&temp).assert().failure();
+    let result = snapbox.current_dir(&temp).assert().code(2);
 
     let stdout = String::from_utf8_lossy(&result.get_output().stdout);
-    assert!(stdout.contains("Scarb build didn't succeed:"));
+    assert!(stdout.contains("Scarb build did not succeed"));
 }
 
 #[test]
@@ -256,7 +264,7 @@ fn with_panic_data_decoding() {
     snapbox
         .current_dir(&temp)
         .assert()
-        .success()
+        .code(1)
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
@@ -281,6 +289,10 @@ fn with_panic_data_decoding() {
 
         [PASS] test_panic_decoding::test_simple2
         Tests: 2 passed, 2 failed, 0 skipped
+        
+        Failures:
+            test_panic_decoding::test_panic_decoding
+            test_panic_decoding::test_panic_decoding2
         "#});
 }
 
@@ -320,7 +332,7 @@ fn with_exit_first() {
     snapbox
         .current_dir(&temp)
         .assert()
-        .success()
+        .code(1)
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
@@ -345,6 +357,9 @@ fn with_exit_first() {
         [SKIP] test_simple::test_another_failing
         [SKIP] without_prefix::five
         Tests: 8 passed, 1 failed, 2 skipped
+        
+        Failures:
+            test_simple::test_failing
         "#});
 }
 
@@ -356,7 +371,7 @@ fn with_exit_first_flag() {
     snapbox
         .current_dir(&temp)
         .assert()
-        .success()
+        .code(1)
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
@@ -381,6 +396,9 @@ fn with_exit_first_flag() {
         [SKIP] test_simple::test_another_failing
         [SKIP] without_prefix::five
         Tests: 8 passed, 1 failed, 2 skipped
+        
+        Failures:
+            test_simple::test_failing
         "#});
 }
 
@@ -414,7 +432,7 @@ fn exit_first_flag_takes_precedence() {
         .current_dir(&temp)
         .arg("--exit-first")
         .assert()
-        .success()
+        .code(1)
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
@@ -439,7 +457,87 @@ fn exit_first_flag_takes_precedence() {
         [SKIP] test_simple::test_another_failing
         [SKIP] without_prefix::five
         Tests: 8 passed, 1 failed, 2 skipped
+        
+        Failures:
+            test_simple::test_failing
         "#});
+}
+
+#[test]
+fn init_new_project_test() {
+    let temp = TempDir::new().unwrap();
+
+    let snapbox = runner();
+    snapbox
+        .current_dir(&temp)
+        .arg("--init")
+        .arg("test_name")
+        .assert()
+        .success();
+    let manifest_path = temp.child("test_name/Scarb.toml");
+
+    let generated_toml = std::fs::read_to_string(manifest_path.path()).unwrap();
+    let version = env!("CARGO_PKG_VERSION");
+    let expected_toml = formatdoc!(
+        r#"
+            [package]
+            name = "test_name"
+            version = "0.1.0"
+
+            # See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest.html
+
+            [dependencies]
+            snforge_std = {{ git = "https://github.com/foundry-rs/starknet-foundry", tag = "v{}" }}
+            starknet = "2.2.0"
+
+            [[target.starknet-contract]]
+            casm = true
+            # foo = {{ path = "vendor/foo" }}
+        "#,
+        version
+    );
+
+    assert_eq!(generated_toml, expected_toml);
+
+    let remote_url = get_remote_url();
+    let branch = get_current_branch();
+
+    manifest_path
+        .write_str(&formatdoc!(
+            r#"
+        [package]
+        name = "test_name"
+        version = "0.1.0"
+
+        [[target.starknet-contract]]
+        casm = true
+
+        [dependencies]
+        starknet = "2.2.0"
+        snforge_std = {{ git = "https://github.com/{}", branch = "{}" }}
+        "#,
+            remote_url,
+            branch
+        ))
+        .unwrap();
+
+    let snapbox = runner();
+    // Check if template works with current version of snforge_std
+    snapbox
+        .current_dir(temp.child(Path::new("test_name")))
+        .assert()
+        .success()
+        .stdout_matches(indoc! {r#"
+        [..]Updating git repository[..]
+        [..]Compiling test_name v0.1.0[..]
+        [..]Finished[..]
+        Collected 2 test(s) and 2 test file(s)
+        Running 0 test(s) from test_name package
+        Running 2 test(s) from tests/test_contract.cairo
+        [PASS] test_contract::test_increase_balance
+        [PASS] test_contract::test_cannot_increase_balance_with_zero_value
+        Tests: 2 passed, 0 failed, 0 skipped
+    "#});
 }
 
 #[test]
@@ -479,7 +577,7 @@ fn should_panic() {
     snapbox
         .current_dir(&temp)
         .assert()
-        .success()
+        .code(1)
         .stdout_matches(indoc! { r#"
         [..]Compiling[..]
         [..]Finished[..]
@@ -507,6 +605,11 @@ fn should_panic() {
 
         [FAIL] should_panic_test::expected_panic_but_didnt
         Tests: 3 passed, 3 failed, 0 skipped
+        
+        Failures:
+            should_panic_test::should_panic_with_non_matching_data
+            should_panic_test::didnt_expect_panic
+            should_panic_test::expected_panic_but_didnt
         "#});
 }
 

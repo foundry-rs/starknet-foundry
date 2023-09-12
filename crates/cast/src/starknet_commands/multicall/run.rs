@@ -48,7 +48,7 @@ struct InvokeCall {
 
 pub async fn run(
     path: &Utf8PathBuf,
-    account: &mut SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
+    account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     max_fee: Option<FieldElement>,
     wait: bool,
 ) -> Result<InvokeResponse> {
