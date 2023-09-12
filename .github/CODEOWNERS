@@ -1,9 +1,9 @@
 # Cast
-/crates/cast/              @foundry-rs/starknet-foundry-cast
+/crates/cast/               @foundry-rs/starknet-foundry-cast
 
 # Forge
-/crates/forge              @foundry-rs/starknet-foundry-forge
-/crates/test-collector/    @foundry-rs/starknet-foundry-forge
+/crates/forge               @foundry-rs/starknet-foundry-forge
+/crates/test-collector/     @foundry-rs/starknet-foundry-forge
 
 # Cheatable starknet
-/crates/cheatnet @foundry-rs/starknet-foundry-cheatable-net
+/crates/cheatnet            @foundry-rs/starknet-foundry-cheatable-net
