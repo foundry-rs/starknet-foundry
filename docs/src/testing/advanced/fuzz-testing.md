@@ -1,21 +1,24 @@
 # Fuzz Testing
 
 In many cases, a test needs to verify function behavior for multiple possible values.
-While it is possible to come up with this cases on your own, it is often impractical, especially when you want to test
+While it is possible to come up with these cases on your own, it is often impractical, especially when you want to test
 for a large number of possible arguments.
 
-Forge allows easily converting your tests to fuzz tests, so random values are generated automatically and injected into
-a test.
+> ℹ️**Info**
+> Currently, Forge only supports using randomly generated values for fuzzing.
+> This way of fuzzing doesn't support any kind of value generation based on code analysis, test coverage or results of
+> other fuzzer runs.
+> In the future, more advanced fuzzing execution modes will be added.
+
+## Random Fuzzing
 
 > ⚠️ **Warning**
 > Currently Forge only supports fuzz testing arguments with `felt252` type. Trying to use different argument types will
 > result in an error.
 
-## Converting Tests To Fuzz Tests
-
-To convert a test to a fuzz test, simply add arguments to the test function.
+To convert a test to a random fuzz test, simply add arguments to the test function.
 These arguments can then be used in the test body.
-The test will be run multiple times for multiple randomly generated values.
+The test will be run multiple times for different randomly generated values.
 
 ```cairo
 fn sum(a: felt252, b: felt252) -> felt252 {
@@ -40,7 +43,7 @@ Running fuzzer for package_name::test_sum, 256 runs:
 
 ## Configuring The Fuzzer
 
-It is possible to configure the number of runs of the fuzzer as well as its seed either by a command line argument:
+It is possible to configure the number of runs of the random fuzzer as well as its seed too by a command line argument:
 
 ```shell
 $ snforge --fuzzer-runs 1234 --fuzzer-seed 1111
