@@ -81,6 +81,8 @@ pub fn build_block_context() -> BlockContext {
             KECCAK_BUILTIN_NAME.to_string(),
             2048_f64 * STEP_RESOURCE_COST, // 2**11
         ),
+        // The gas estimation should panic in case it encounters a builtin that doesn't have a cost
+        // This builtin seems to be unused for cost estimation
         // (
         //     SEGMENT_ARENA_BUILTIN_NAME.to_string(),
         //     0_f64 * STEP_RESOURCE_COST,
