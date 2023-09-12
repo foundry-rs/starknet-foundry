@@ -7,7 +7,7 @@ use crate::{
     constants::{build_block_context, build_transaction_context},
     execution::{
         entry_point::execute_call_entry_point, events::collect_emitted_events_from_spied_contracts,
-        gas::recover_gas_from_execution_resources,
+        gas::gas_from_execution_resources,
     },
     CheatnetState,
 };
@@ -108,7 +108,7 @@ pub fn call_contract(
         &mut context,
     );
 
-    let gas = recover_gas_from_execution_resources(&block_context, &resources);
+    let gas = gas_from_execution_resources(&block_context, &resources);
     let resource_report = ResourceReport::new(gas, &resources);
 
     match exec_result {
