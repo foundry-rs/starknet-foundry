@@ -9,7 +9,7 @@ fn fuzzing() {
     snapbox
         .current_dir(&temp)
         .assert()
-        .success()
+        .code(1)
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
@@ -41,7 +41,7 @@ fn fuzzing_set_runs() {
         .current_dir(&temp)
         .args(["--fuzzer-runs", "10"])
         .assert()
-        .success()
+        .code(1)
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
@@ -73,7 +73,7 @@ fn fuzzing_set_seed() {
         .current_dir(&temp)
         .args(["--fuzzer-seed", "1234"])
         .assert()
-        .success()
+        .code(1)
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
