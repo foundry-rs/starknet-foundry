@@ -29,6 +29,9 @@ fn fuzzing() {
 
         Fuzz test failed on argument(s) [[..], [..]] after 1 run(s)
         Tests: 4 passed, 1 failed, 0 skipped
+        
+        Failures:
+            fuzzing::tests::failing_fuzz
         "#});
 }
 
@@ -61,6 +64,9 @@ fn fuzzing_set_runs() {
 
         Fuzz test failed on argument(s) [[..], [..]] after 1 run(s)
         Tests: 4 passed, 1 failed, 0 skipped
+        
+        Failures:
+            fuzzing::tests::failing_fuzz
         "#});
 }
 
@@ -93,5 +99,8 @@ fn fuzzing_set_seed() {
 
         Fuzz test failed on argument(s) [2394994055116509985312196570273447499427990317727499410986793707339898834933, 2221030839115559321431066648854854867047555445217530669564583917731160170757] after 1 run(s)
         Tests: 4 passed, 1 failed, 0 skipped
+        
+        Failures:
+            fuzzing::tests::failing_fuzz
         "#});
 }
