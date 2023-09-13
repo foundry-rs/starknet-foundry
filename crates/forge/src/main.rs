@@ -38,12 +38,22 @@ struct Args {
     exit_first: bool,
 
     /// Number of fuzzer runs
-    #[arg(short = 'r', long)]
+    #[arg(short = 'r', long, value_parser = validate_runs)]
     fuzzer_runs: Option<u32>,
 
     /// Seed for the fuzzer
     #[arg(short = 's', long)]
     fuzzer_seed: Option<u64>,
+}
+
+fn validate_runs(val: &str) -> Result<u32> {
+    let parsed_val: u32 = val
+        .parse()
+        .map_err(|_| anyhow!("Failed to parse {val} as u32"))?;
+    if parsed_val < 1 {
+        bail!("Value must be greater than or equal to 1")
+    }
+    Ok(parsed_val)
 }
 
 fn load_predeployed_contracts() -> Result<TempDir> {
