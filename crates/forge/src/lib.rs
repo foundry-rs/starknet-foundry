@@ -393,7 +393,7 @@ fn args_for_function(function: &Function) -> Vec<&ConcreteTypeId> {
         .param_types
         .iter()
         .filter(|pt| pt.debug_name == Some(SmolStr::from("felt252")))
-        .collect::<Vec<_>>()
+        .collect()
 }
 
 fn filter_tests_by_name(
