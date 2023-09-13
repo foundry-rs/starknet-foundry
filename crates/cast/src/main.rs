@@ -208,6 +208,18 @@ async fn main() -> Result<()> {
             Ok(())
         }
         Commands::Account(account) => match account.command {
+            account::Commands::Add(add) => {
+                let chain_id = get_chain_id(&provider).await?;
+                let mut result = starknet_commands::account::add::add(
+                    &config,
+                    &cli.path_to_scarb_toml,
+                    chain_id,
+                    &add,
+                );
+
+                print_command_result("account add", &mut result, cli.int_format, cli.json)?;
+                Ok(())
+            }
             account::Commands::Create(create) => {
                 let chain_id = get_chain_id(&provider).await?;
                 config.account = create.name;
