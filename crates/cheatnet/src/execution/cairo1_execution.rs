@@ -1,12 +1,12 @@
 use super::syscalls::CheatableSyscallHandler;
 use crate::state::CheatcodeState;
+use blockifier::execution::call_info::CallInfo;
 use blockifier::{
     execution::{
         cairo1_execution::{
             finalize_execution, initialize_execution_context, prepare_call_arguments,
             VmExecutionContext,
         },
-        call_info::{CallExecution, CallInfo, Retdata},
         contract_class::{ContractClassV1, EntryPointV1},
         entry_point::{
             CallEntryPoint, EntryPointExecutionContext, EntryPointExecutionResult,

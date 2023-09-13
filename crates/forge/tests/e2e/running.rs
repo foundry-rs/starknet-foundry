@@ -187,8 +187,10 @@ fn with_filter_matching_module() {
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
-        Collected 2 test(s) and 5 test file(s)
-        Running 0 test(s) from simple_package package
+        
+        
+        Collected 2 test(s) and 5 test file(s) from simple_package package
+        Running 0 inline test(s)
         Running 0 test(s) from tests/contract.cairo
         Running 2 test(s) from tests/ext_function_test.cairo
         [PASS] ext_function_test::test_my_test

@@ -1,6 +1,6 @@
 use super::cairo1_execution::execute_entry_point_call_cairo1;
 use crate::state::CheatcodeState;
-use blockifier::execution::entry_point::{CallExecution, Retdata};
+use blockifier::execution::call_info::{CallExecution, Retdata};
 use blockifier::{
     execution::{
         call_info::CallInfo,

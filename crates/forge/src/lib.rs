@@ -208,7 +208,6 @@ pub fn run(
         runner_config,
     )?;
 
-    pretty_printing::print_separator();
     pretty_printing::print_collected_tests_count(
         tests.iter().map(|tests| tests.test_cases.len()).sum(),
         tests.len(),
