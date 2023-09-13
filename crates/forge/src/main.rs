@@ -1,7 +1,6 @@
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Parser;
-use dotenv::dotenv;
 use include_dir::{include_dir, Dir};
 use scarb_metadata::MetadataCommand;
 
@@ -56,8 +55,6 @@ fn extract_failed_tests(tests_summaries: Vec<TestFileSummary>) -> Vec<TestCaseSu
 }
 
 fn main_execution() -> Result<bool> {
-    dotenv().ok();
-
     let args = Args::parse();
     if let Some(project_name) = args.init {
         init::run(project_name.as_str())?;

@@ -2,64 +2,40 @@ use array::ArrayTrait;
 use clone::Clone;
 use snforge_std::PrintTrait;
 use core::traits::Into;
+use serde::Serde;
 
 use starknet::testing::cheatcode;
 
-#[derive(Drop, Copy)]
-enum Tag {
-    Last: (),
+#[derive(Drop, Copy, Serde)]
+enum BlockTag {
+    Latest: (),
     Pending: (),
 }
 
-#[derive(Drop, Copy)]
+#[derive(Drop, Copy, Serde)]
 enum BlockId {
-    Tag: Tag,
+    Tag: BlockTag,
     Hash: felt252,
     Number: felt252,
 }
 
-#[derive(Drop, Clone, Copy)]
+#[derive(Drop, Clone)]
 struct ForkConfig {
-   url: felt252,
+   url: Array::<felt252>,
    block: BlockId,
 }
 
 trait ForkTrait {
-    fn set_up(self: ForkConfig) -> ForkConfig;
+    fn set_up(self: ForkConfig);
 }
 
 impl ForkImpl of ForkTrait {
-    fn set_up(self: ForkConfig) -> ForkConfig {
-        let mut inputs: Array::<felt252> = ArrayTrait::new();
+    fn set_up(self: ForkConfig) {
+        let mut inputs = array![];
 
-        inputs.append(self.url.clone().into());
-
-        match self.block {
-            BlockId::Tag(tag) => {
-                inputs.append(0.into());
-                match tag {
-                    Tag::Last(()) => {
-                        inputs.append(0.into());
-                    },
-                    Tag::Pending(()) => {
-                        inputs.append(1.into());
-                    },
-                }
-            },
-            BlockId::Hash(hash) => {
-                inputs.append(1.into());
-                let mut h = hash.clone();
-                inputs.append(h.into());
-            },
-            BlockId::Number(number) => {
-                inputs.append(2.into());
-                let mut n = number.clone();
-                inputs.append(n.into());
-            },
-        };
+        self.url.serialize(ref inputs);
+        self.block.serialize(ref inputs);
 
         cheatcode::<'setup_fork'>(inputs.span());
-
-        self
     }
 }

@@ -30,9 +30,3 @@ fn test_failing() {
 fn test_another_failing() {
     assert(2 == 3, 'failing check');
 }
-
-#[test]
-fn test_another_failing() {
-    setup_fork("test", "ew")
-    assert(2 == 2, "setup_fork");
-}

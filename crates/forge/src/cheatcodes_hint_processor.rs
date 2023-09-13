@@ -1,6 +1,5 @@
 use std::any::Any;
 use std::collections::HashMap;
-use std::env;
 use std::path::PathBuf;
 
 use crate::scarb::StarknetContractArtifacts;
@@ -26,7 +25,6 @@ use conversions::StarknetConversions;
 use num_traits::{One, ToPrimitive};
 use serde::Deserialize;
 use starknet::core::types::{BlockId, BlockTag};
-use starknet_api::core::ContractAddress;
 
 use cairo_lang_casm::hints::{Hint, StarknetHint};
 use cairo_lang_casm::operand::{CellRef, ResOperand};
@@ -41,6 +39,7 @@ use cairo_lang_starknet::contract::starknet_keccak;
 use cairo_lang_utils::bigint::BigIntAsHex;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cheatnet::cheatcodes::spy_events::SpyTarget;
+use itertools::Itertools;
 
 mod file_operations;
 
@@ -467,30 +466,25 @@ impl CairoHintProcessor<'_> {
                 Ok(())
             }
             "setup_fork" => {
-                let env_name = inputs[0].clone().to_short_string();
-                let block_type = inputs[1].clone().to_i8();
-                let block_value = inputs[2].clone();
+                let url_length = inputs[0].clone().to_usize().unwrap();
+                let split_url = Vec::from(&inputs[1..=url_length]);
+                let mut url = split_url
+                    .iter()
+                    .map(StarknetConversions::to_short_string)
+                    .join("");
 
-                let block_id = match block_type {
-                    // TODO: adds support for Hash
-                    // Some(0) => BlockId::Hash(block_value),
-                    Some(1) => BlockId::Number(block_value.to_u64().unwrap()),
-                    Some(2) => match block_value.to_u8().unwrap() {
+                let block_id = match inputs[url_length + 1].to_i8().unwrap() {
+                    0 => match inputs[url_length + 2].to_u8().unwrap() {
                         0 => BlockId::Tag(BlockTag::Latest),
                         1 => BlockId::Tag(BlockTag::Pending),
-                        _ => {
-                            panic!("It should never happen");
-                        }
+                        _ => unreachable!(),
                     },
-                    _ => {
-                        panic!("It should never happen");
-                    }
+                    1 => BlockId::Hash(inputs[url_length + 2].to_field_element()),
+                    2 => BlockId::Number(inputs[url_length + 2].to_u64().unwrap()),
+                    _ => unreachable!(),
                 };
 
-                let fork_url =
-                    env::var(&env_name).map_err(|_| anyhow!("{} env doesn't exists", &env_name))?;
-
-                self.cheatnet_state.setup_fork(&fork_url, block_id);
+                self.cheatnet_state.setup_fork(&url, block_id);
                 Ok(())
             }
             _ => Err(anyhow!("Unknown cheatcode selector: {selector}")).map_err(Into::into),
