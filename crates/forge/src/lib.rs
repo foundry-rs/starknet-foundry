@@ -379,15 +379,12 @@ fn run_tests_from_file(
 }
 
 fn contains_non_felt252_args(args: &Vec<&ConcreteTypeId>, builtins: &[&str]) -> bool {
-    args.iter()
-        .filter(|pt| {
-            if let Some(name) = &pt.debug_name {
-                return name != &SmolStr::from("felt252") && builtins.contains(&name.as_str());
-            }
-            false
-        })
-        .count()
-        > 0
+    args.iter().any(|pt| {
+        if let Some(name) = &pt.debug_name {
+            return name != &SmolStr::from("felt252") && !builtins.contains(&name.as_str());
+        }
+        false
+    })
 }
 
 fn args_for_function(function: &Function) -> Vec<&ConcreteTypeId> {
