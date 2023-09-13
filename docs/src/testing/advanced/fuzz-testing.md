@@ -2,7 +2,7 @@
 
 In many cases, a test needs to verify function behavior for multiple possible values.
 While it is possible to come up with these cases on your own, it is often impractical, especially when you want to test
-for a large number of possible arguments.
+against a large number of possible arguments.
 
 > ℹ️**Info**
 > Currently, Forge only supports using randomly generated values for fuzzing.
