@@ -313,7 +313,7 @@ fn run_tests_from_file(
 
             let mut results = vec![];
 
-            for _ in 1..runner_config.fuzzer_runs {
+            for _ in 1..=runner_config.fuzzer_runs {
                 let args: Vec<Felt252> = args
                     .iter()
                     .flat_map(|_| fuzzer.next_argument("felt252"))
