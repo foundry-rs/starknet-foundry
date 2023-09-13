@@ -15,6 +15,7 @@ use cairo_lang_sierra::ids::ConcreteTypeId;
 use cairo_lang_sierra::program::{Function, Program};
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
+use once_cell::sync::Lazy;
 use smol_str::SmolStr;
 
 use crate::fuzzer::{Fuzzer, Random};
@@ -33,6 +34,19 @@ mod running;
 mod test_file_summary;
 
 const FUZZER_RUNS_DEFAULT: u32 = 256;
+
+static BUILTINS: Lazy<Vec<&str>> = Lazy::new(|| {
+    vec![
+        "Pedersen",
+        "RangeCheck",
+        "Bitwise",
+        "EcOp",
+        "Poseidon",
+        "SegmentArena",
+        "GasBuiltin",
+        "System",
+    ]
+});
 
 /// Configuration of the test runner
 #[derive(Deserialize, Debug, PartialEq, Default)]
@@ -151,23 +165,12 @@ fn collect_tests_from_tree(
     corelib_path: &Utf8PathBuf,
     runner_config: &RunnerConfig,
 ) -> Result<TestsFromFile> {
-    let builtins = vec![
-        "Pedersen",
-        "RangeCheck",
-        "Bitwise",
-        "EcOp",
-        "Poseidon",
-        "SegmentArena",
-        "GasBuiltin",
-        "System",
-    ];
-
     let (sierra_program, tests_configs) = collect_tests(
         test_root.as_str(),
         None,
         package_name,
         linked_libraries.clone(),
-        Some(builtins.clone()),
+        Some(BUILTINS.clone()),
         corelib_path.into(),
     )?;
 
@@ -296,17 +299,6 @@ fn run_tests_from_file(
         let function = runner.find_function(case_name)?;
         let args = args_for_function(function);
 
-        let builtins = vec![
-            "Pedersen",
-            "RangeCheck",
-            "Bitwise",
-            "EcOp",
-            "Poseidon",
-            "SegmentArena",
-            "GasBuiltin",
-            "System",
-        ];
-
         let result = if args.is_empty() {
             let result =
                 run_from_test_case(&runner, case, contracts, predeployed_contracts, vec![])?;
@@ -315,7 +307,7 @@ fn run_tests_from_file(
         } else {
             pretty_printing::print_fuzz_running(case_name, runner_config);
 
-            if contains_non_felt252_args(&args, &builtins) {
+            if contains_non_felt252_args(&args, &BUILTINS) {
                 bail!("Test {case_name} requires arguments that are not felt252 type");
             }
 
