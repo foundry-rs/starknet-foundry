@@ -1,5 +1,6 @@
 use super::cairo1_execution::execute_entry_point_call_cairo1;
 use crate::state::CheatcodeState;
+use blockifier::execution::entry_point::{CallExecution, Retdata};
 use blockifier::{
     execution::{
         contract_class::ContractClass,
@@ -12,12 +13,14 @@ use blockifier::{
     },
     state::state_api::State,
 };
+use cairo_vm::vm::runners::cairo_runner::ExecutionResources as VmExecutionResources;
 use starknet_api::{
     core::ClassHash,
     deprecated_contract_class::EntryPointType,
     hash::StarkFelt,
     transaction::{Calldata, TransactionVersion},
 };
+use std::collections::HashSet;
 
 // blockifier/src/execution/entry_point.rs:180 (CallEntryPoint::execute)
 #[allow(clippy::module_name_repetitions)]
@@ -30,6 +33,9 @@ pub fn execute_call_entry_point(
 ) -> EntryPointExecutionResult<CallInfo> {
     // region: Modified blockifier code
     // We skip recursion depth validation here.
+    if let Some(ret_data) = get_ret_data_by_call_entry_point(&entry_point, cheatcode_state) {
+        return Ok(mocked_call_info(entry_point.clone(), ret_data.clone()));
+    }
     // endregion
 
     // Validate contract is deployed.
@@ -135,4 +141,36 @@ pub fn execute_constructor_entry_point(
         context,
     )
     // endregion
+}
+
+fn get_ret_data_by_call_entry_point<'a>(
+    call: &CallEntryPoint,
+    cheatcode_state: &'a CheatcodeState,
+) -> Option<&'a Vec<StarkFelt>> {
+    if let Some(contract_address) = call.code_address {
+        if let Some(contract_functions) = cheatcode_state.mocked_functions.get(&contract_address) {
+            let entrypoint_selector = call.entry_point_selector;
+
+            let ret_data = contract_functions.get(&entrypoint_selector);
+            return ret_data;
+        }
+    }
+    None
+}
+
+fn mocked_call_info(call: CallEntryPoint, ret_data: Vec<StarkFelt>) -> CallInfo {
+    CallInfo {
+        call,
+        execution: CallExecution {
+            retdata: Retdata(ret_data),
+            events: vec![],
+            l2_to_l1_messages: vec![],
+            failed: false,
+            gas_consumed: 0,
+        },
+        vm_resources: VmExecutionResources::default(),
+        inner_calls: vec![],
+        storage_read_values: vec![],
+        accessed_storage_keys: HashSet::new(),
+    }
 }
