@@ -1,15 +1,14 @@
 use crate::common::state::create_cheatnet_fork_state;
 use crate::common::{deploy_contract, felt_selector_from_name};
 use crate::{assert_error, assert_success};
-use blockifier::state::errors::StateError;
 use cairo_felt::Felt252;
+use cairo_vm::vm::errors::hint_errors::HintError;
 use camino::Utf8PathBuf;
 use cheatnet::cheatcodes::{CheatcodeError, EnhancedHintError};
 use cheatnet::constants::build_testing_state;
 use cheatnet::forking::state::ForkStateReader;
-use cheatnet::forking::worker::Worker;
 use cheatnet::rpc::call_contract;
-use cheatnet::state::StateReaderProxy;
+use cheatnet::state::ExtendedStateReader;
 use cheatnet::CheatnetState;
 use conversions::StarknetConversions;
 use num_bigint::BigUint;
@@ -68,9 +67,8 @@ fn try_deploying_undeclared_class() {
     let class_hash = "1".to_owned().to_class_hash();
 
     assert!(match state.deploy(&class_hash, &[]) {
-        Err(CheatcodeError::Unrecoverable(EnhancedHintError::State(
-            StateError::UndeclaredClassHash(undeclared_class_hash),
-        ))) => undeclared_class_hash == class_hash,
+        Err(CheatcodeError::Unrecoverable(EnhancedHintError::Hint(HintError::CustomHint(msg)))) =>
+            msg.as_ref().contains(class_hash.to_string().as_str()),
         _ => false,
     });
 }
@@ -81,15 +79,15 @@ fn test_forking_at_block_number() {
     let node_url =
         std::env::var("CHEATNET_RPC_URL").expect("CHEATNET_RPC_URL must be set in the .env file");
 
-    let mut state_before_deploy = CheatnetState::new(StateReaderProxy(Box::new(ForkStateReader {
+    let mut state_before_deploy = CheatnetState::new(ExtendedStateReader {
         dict_state_reader: build_testing_state(&predeployed_contracts),
-        worker: Worker::new(&node_url, BlockId::Number(309_780)),
-    })));
+        fork_state_reader: Some(ForkStateReader::new(&node_url, BlockId::Number(309_780))),
+    });
 
-    let mut state_after_deploy = CheatnetState::new(StateReaderProxy(Box::new(ForkStateReader {
+    let mut state_after_deploy = CheatnetState::new(ExtendedStateReader {
         dict_state_reader: build_testing_state(&predeployed_contracts),
-        worker: Worker::new(&node_url, BlockId::Number(309_781)),
-    })));
+        fork_state_reader: Some(ForkStateReader::new(&node_url, BlockId::Number(309_781))),
+    });
 
     let contract_address = Felt252::from(
         BigUint::from_str(

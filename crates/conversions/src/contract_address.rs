@@ -2,6 +2,7 @@ use super::StarknetConversions;
 use blockifier::execution::execution_utils::stark_felt_to_felt;
 use cairo_felt::Felt252;
 use starknet::core::types::FieldElement;
+use starknet_api::core::Nonce;
 use starknet_api::{
     core::{ClassHash, ContractAddress},
     hash::{StarkFelt, StarkHash},
@@ -34,5 +35,9 @@ impl StarknetConversions for ContractAddress {
 
     fn to_short_string(&self) -> String {
         self.to_felt252().to_short_string()
+    }
+
+    fn to_nonce(&self) -> Nonce {
+        self.to_felt252().to_nonce()
     }
 }

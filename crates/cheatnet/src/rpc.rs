@@ -1,91 +1,13 @@
 use anyhow::Result;
-// <<<<<<< HEAD
-// use cairo_vm::{
-//     hint_processor::hint_processor_definition::{HintProcessor, HintReference},
-//     serde::deserialize_program::ApTracking,
-//     types::{
-//         exec_scope::ExecutionScopes,
-//         relocatable::{MaybeRelocatable, Relocatable},
-//     },
-//     vm::{
-//         errors::{hint_errors::HintError, vm_errors::VirtualMachineError},
-//         runners::cairo_runner::{CairoArg, CairoRunner, RunResources},
-//         vm_core::VirtualMachine,
-//     },
-// };
-// use std::collections::HashSet;
-// use std::{any::Any, collections::HashMap, sync::Arc};
-//
-// use crate::{
-//     constants::{build_block_context, build_transaction_context},
-//     CheatnetState,
-// };
-// use blockifier::execution::call_info::{CallExecution, CallInfo, OrderedEvent, Retdata};
-// use blockifier::execution::entry_point::{handle_empty_constructor, ConstructorContext};
-// use blockifier::{
-//     abi::constants,
-//     execution::{
-//         execution_utils::ReadOnlySegment,
-//         syscalls::{
-//             hint_processor::{create_retdata_segment, write_segment, OUT_OF_GAS_ERROR},
-//             CallContractRequest, WriteResponseResult,
-//         },
-//     },
-//     transaction::transaction_utils::update_remaining_gas,
-// };
-// use blockifier::{
-//     execution::{
-//         cairo1_execution::{
-//             finalize_execution, initialize_execution_context, prepare_call_arguments,
-//             VmExecutionContext,
-//         },
-//         common_hints::HintExecutionResult,
-//         contract_class::{ContractClass, ContractClassV1, EntryPointV1},
-//         deprecated_syscalls::DeprecatedSyscallSelector,
-//         entry_point::{
-//             CallEntryPoint, CallType, EntryPointExecutionContext, EntryPointExecutionResult,
-//             ExecutionResources, FAULTY_CLASS_HASH,
-//         },
-//         errors::{EntryPointExecutionError, PreExecutionError, VirtualMachineExecutionError},
-//         execution_utils::{felt_to_stark_felt, stark_felt_to_felt, Args},
-//         syscalls::{
-//             hint_processor::{SyscallExecutionError, SyscallHintProcessor},
-//             EmptyRequest, GetExecutionInfoResponse,
-//         },
-//     },
-//     state::state_api::State,
-// };
-// use cairo_felt::Felt252;
-// use cairo_lang_casm::{
-//     hints::{Hint, StarknetHint},
-//     operand::{BinOpOperand, DerefOrImmediate, Operation, Register, ResOperand},
-// };
-// use cairo_vm::vm::runners::cairo_runner::ExecutionResources as VmExecutionResources;
-// use starknet_api::{
-//     core::{ClassHash, ContractAddress, EntryPointSelector},
-//     deprecated_contract_class::EntryPointType,
-//     hash::{StarkFelt, StarkHash},
-//     transaction::{Calldata, TransactionVersion},
-// };
-//
-// use crate::cheatcodes::spy_events::Event;
-// use blockifier::execution::syscalls::{
-//     DeployRequest, DeployResponse, LibraryCallRequest, SyscallRequest, SyscallRequestWrapper,
-//     SyscallResponse, SyscallResponseWrapper, SyscallResult,
-// };
-// use blockifier::state::errors::StateError;
-// use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
-// use cairo_vm::vm::runners::cairo_runner::ResourceTracker;
-// use starknet_api::core::calculate_contract_address;
-// =======
+use std::collections::HashMap;
 use std::sync::Arc;
-// >>>>>>> master
 
 use crate::panic_data::try_extract_panic_data;
 use crate::{
     constants::{build_block_context, build_transaction_context},
     execution::{
         entry_point::execute_call_entry_point, events::collect_emitted_events_from_spied_contracts,
+        gas::gas_from_execution_resources,
     },
     CheatnetState,
 };
@@ -102,14 +24,42 @@ use starknet_api::{
     transaction::Calldata,
 };
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct ResourceReport {
+    pub gas: f64,
+    pub steps: usize,
+    pub bultins: HashMap<String, usize>,
+}
+
+impl ResourceReport {
+    fn new(gas: f64, resources: &ExecutionResources) -> Self {
+        Self {
+            gas,
+            steps: resources.vm_resources.n_steps,
+            bultins: resources.vm_resources.builtin_instance_counter.clone(),
+        }
+    }
+}
+
+#[derive(Debug)]
 pub enum CallContractOutput {
-    Success { ret_data: Vec<Felt252> },
-    Panic { panic_data: Vec<Felt252> },
-    Error { msg: String },
+    Success {
+        ret_data: Vec<Felt252>,
+        resource_report: ResourceReport,
+    },
+    Panic {
+        panic_data: Vec<Felt252>,
+        resource_report: ResourceReport,
+    },
+    Error {
+        msg: String,
+        resource_report: ResourceReport,
+    },
 }
 
 // This does contract call without the transaction layer. This way `call_contract` can return data and modify state.
 // `call` and `invoke` on the transactional layer use such method under the hood.
+#[allow(clippy::too_many_lines)]
 pub fn call_contract(
     contract_address: &ContractAddress,
     entry_point_selector: &Felt252,
@@ -158,6 +108,9 @@ pub fn call_contract(
         &mut context,
     );
 
+    let gas = gas_from_execution_resources(&block_context, &resources);
+    let resource_report = ResourceReport::new(gas, &resources);
+
     match exec_result {
         Ok(call_info) => {
             if !cheatcode_state.spies.is_empty() {
@@ -175,6 +128,7 @@ pub fn call_contract(
 
             Ok(CallContractOutput::Success {
                 ret_data: return_data,
+                resource_report,
             })
         }
         Err(EntryPointExecutionError::ExecutionFailed { error_data }) => {
@@ -185,13 +139,20 @@ pub fn call_contract(
 
             Ok(CallContractOutput::Panic {
                 panic_data: err_data,
+                resource_report,
             })
         }
         Err(EntryPointExecutionError::VirtualMachineExecutionErrorWithTrace { trace, .. }) => {
             if let Some(panic_data) = try_extract_panic_data(&trace) {
-                Ok(CallContractOutput::Panic { panic_data })
+                Ok(CallContractOutput::Panic {
+                    panic_data,
+                    resource_report,
+                })
             } else {
-                Ok(CallContractOutput::Error { msg: trace })
+                Ok(CallContractOutput::Error {
+                    msg: trace,
+                    resource_report,
+                })
             }
         }
         Err(EntryPointExecutionError::PreExecutionError(
@@ -202,17 +163,26 @@ pub fn call_contract(
             let msg = format!(
                 "Entry point selector {selector_hash} not found in contract {contract_addr}"
             );
-            Ok(CallContractOutput::Error { msg })
+            Ok(CallContractOutput::Error {
+                msg,
+                resource_report,
+            })
         }
         Err(EntryPointExecutionError::PreExecutionError(
             PreExecutionError::UninitializedStorageAddress(contract_address),
         )) => {
             let address = contract_address.0.key().to_string();
             let msg = format!("Contract not deployed at address: {address}");
-            Ok(CallContractOutput::Error { msg })
+            Ok(CallContractOutput::Error {
+                msg,
+                resource_report,
+            })
         }
         Err(EntryPointExecutionError::StateError(StateError::StateReadError(msg))) => {
-            Ok(CallContractOutput::Error { msg })
+            Ok(CallContractOutput::Error {
+                msg,
+                resource_report,
+            })
         }
         result => panic!("Unparseable result: {result:?}"),
     }

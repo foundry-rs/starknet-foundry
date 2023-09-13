@@ -6,6 +6,7 @@ use crate::{
 use cairo_felt::Felt252;
 use cheatnet::rpc::call_contract;
 use conversions::StarknetConversions;
+use starknet_api::core::ContractAddress;
 
 #[test]
 fn mock_call_simple() {
@@ -221,7 +222,10 @@ fn mock_call_library_call_no_effect() {
     let contract_name = "MockChecker".to_owned().to_felt252();
     let class_hash = state.declare(&contract_name, &contracts).unwrap();
 
-    let contract_address = state.deploy(&class_hash, &[Felt252::from(420)]).unwrap();
+    let contract_address = state
+        .deploy(&class_hash, &[Felt252::from(420)])
+        .unwrap()
+        .contract_address;
 
     let lib_call_address = deploy_contract(&mut state, "MockCheckerLibCall", &[]);
 
@@ -262,7 +266,10 @@ fn mock_call_before_deployment() {
         &ret_data,
     );
 
-    let contract_address = state.deploy(&class_hash, &[Felt252::from(420)]).unwrap();
+    let contract_address = state
+        .deploy(&class_hash, &[Felt252::from(420)])
+        .unwrap()
+        .contract_address;
 
     assert_eq!(precalculated_address, contract_address);
 
@@ -299,7 +306,7 @@ fn mock_call_in_constructor() {
 
     let contract_name = "HelloStarknet".to_owned().to_felt252();
     let class_hash = state.declare(&contract_name, &contracts).unwrap();
-    let balance_contract_address = state.deploy(&class_hash, &[]).unwrap();
+    let balance_contract_address = state.deploy(&class_hash, &[]).unwrap().contract_address;
     let ret_data = vec![Felt252::from(223)];
     state.start_mock_call(
         balance_contract_address,
@@ -311,7 +318,8 @@ fn mock_call_in_constructor() {
     let class_hash = state.declare(&contract_name, &contracts).unwrap();
     let contract_address = state
         .deploy(&class_hash, &[balance_contract_address.to_felt252()])
-        .unwrap();
+        .unwrap()
+        .contract_address;
 
     let selector = felt_selector_from_name("get_constructor_balance");
 
@@ -348,6 +356,26 @@ fn mock_call_two_methods() {
     assert_success!(output, ret_data);
 
     let output = call_contract(&contract_address, &selector2, &[], &mut state).unwrap();
+
+    assert_success!(output, ret_data);
+}
+
+#[test]
+fn mock_call_nonexisting_contract() {
+    let mut state = create_cheatnet_state();
+
+    let selector = felt_selector_from_name("get_thing");
+    let ret_data = vec![Felt252::from(123)];
+
+    let contract_address = ContractAddress::from(218_u8);
+
+    state.start_mock_call(
+        contract_address,
+        &"get_thing".to_owned().to_felt252(),
+        &ret_data,
+    );
+
+    let output = call_contract(&contract_address, &selector, &[], &mut state).unwrap();
 
     assert_success!(output, ret_data);
 }

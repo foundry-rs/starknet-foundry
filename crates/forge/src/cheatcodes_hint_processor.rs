@@ -6,6 +6,7 @@ use crate::scarb::StarknetContractArtifacts;
 use anyhow::{anyhow, Result};
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::execution_utils::{felt_to_stark_felt, stark_felt_to_felt};
+use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use cairo_felt::Felt252;
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
 use cairo_vm::hint_processor::hint_processor_definition::HintReference;
@@ -14,6 +15,7 @@ use cairo_vm::types::exec_scope::ExecutionScopes;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::vm_core::VirtualMachine;
+use cheatnet::cheatcodes::deploy::DeployPayload;
 use cheatnet::rpc::{call_contract, CallContractOutput};
 use cheatnet::{
     cheatcodes::{CheatcodeError, ContractArtifacts, EnhancedHintError},
@@ -22,7 +24,6 @@ use cheatnet::{
 use conversions::StarknetConversions;
 use num_traits::{One, ToPrimitive};
 use serde::Deserialize;
-use starknet_api::core::ContractAddress;
 
 use cairo_lang_casm::hints::{Hint, StarknetHint};
 use cairo_lang_casm::operand::{CellRef, ResOperand};
@@ -30,7 +31,7 @@ use cairo_lang_runner::casm_run::{extract_relocatable, vm_get_range, MemBuffer};
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{
     casm_run::{cell_ref_to_relocatable, extract_buffer, get_ptr},
-    insert_value_to_cellref, CairoHintProcessor as OriginalCairoHintProcessor,
+    insert_value_to_cellref,
 };
 
 use cairo_lang_starknet::contract::starknet_keccak;
@@ -51,31 +52,40 @@ impl From<&StarknetContractArtifacts> for ContractArtifacts {
 }
 
 pub struct CairoHintProcessor<'a> {
-    pub original_cairo_hint_processor: OriginalCairoHintProcessor<'a>,
+    pub blockifier_syscall_handler: SyscallHintProcessor<'a>,
     pub contracts: &'a HashMap<String, StarknetContractArtifacts>,
+    pub hints: &'a HashMap<String, Hint>,
     pub cheatnet_state: CheatnetState,
+    pub run_resources: RunResources,
 }
 
+// crates/blockifier/src/execution/syscalls/hint_processor.rs:472 (ResourceTracker for SyscallHintProcessor)
 impl ResourceTracker for CairoHintProcessor<'_> {
     fn consumed(&self) -> bool {
-        self.original_cairo_hint_processor.run_resources.consumed()
+        self.blockifier_syscall_handler
+            .context
+            .vm_run_resources
+            .consumed()
     }
 
     fn consume_step(&mut self) {
-        self.original_cairo_hint_processor
-            .run_resources
+        self.blockifier_syscall_handler
+            .context
+            .vm_run_resources
             .consume_step();
     }
 
     fn get_n_steps(&self) -> Option<usize> {
-        self.original_cairo_hint_processor
-            .run_resources
+        self.blockifier_syscall_handler
+            .context
+            .vm_run_resources
             .get_n_steps()
     }
 
     fn run_resources(&self) -> &RunResources {
-        self.original_cairo_hint_processor
-            .run_resources
+        self.blockifier_syscall_handler
+            .context
+            .vm_run_resources
             .run_resources()
     }
 }
@@ -116,10 +126,10 @@ impl HintProcessorLogic for CairoHintProcessor<'_> {
                 exec_scopes,
                 hint_data,
                 constants,
-                &mut self.original_cairo_hint_processor,
+                &mut self.blockifier_syscall_handler,
             );
         }
-        self.original_cairo_hint_processor
+        self.blockifier_syscall_handler
             .execute_hint(vm, exec_scopes, hint_data, constants)
     }
 
@@ -131,9 +141,7 @@ impl HintProcessorLogic for CairoHintProcessor<'_> {
         _reference_ids: &HashMap<String, usize>,
         _references: &[HintReference],
     ) -> Result<Box<dyn Any>, VirtualMachineError> {
-        Ok(Box::new(
-            self.original_cairo_hint_processor.string_to_hint[hint_code].clone(),
-        ))
+        Ok(Box::new(self.hints[hint_code].clone()))
     }
 }
 
@@ -467,12 +475,12 @@ impl CairoHintProcessor<'_> {
 }
 
 fn handle_deploy_result(
-    deploy_result: Result<ContractAddress, CheatcodeError>,
+    deploy_result: Result<DeployPayload, CheatcodeError>,
     buffer: &mut MemBuffer,
 ) -> Result<(), EnhancedHintError> {
     match deploy_result {
-        Ok(contract_address) => {
-            let felt_contract_address: Felt252 = contract_address.to_felt252();
+        Ok(payload) => {
+            let felt_contract_address: Felt252 = payload.contract_address.to_felt252();
 
             buffer
                 .write(Felt252::from(0))
@@ -520,7 +528,7 @@ fn execute_syscall(
     exec_scopes: &mut ExecutionScopes,
     hint_data: &Box<dyn Any>,
     constants: &HashMap<String, Felt252>,
-    original_cairo_hint_processor: &mut OriginalCairoHintProcessor,
+    blockifier_syscall_handler: &mut SyscallHintProcessor,
 ) -> Result<(), HintError> {
     let (cell, offset) = extract_buffer(system);
     let system_ptr = get_ptr(vm, cell, &offset)?;
@@ -529,19 +537,12 @@ fn execute_syscall(
     let selector = DeprecatedSyscallSelector::try_from(felt_to_stark_felt(
         &vm.get_integer(system_ptr).unwrap(),
     ))?;
-
     match selector {
         DeprecatedSyscallSelector::CallContract => {
             execute_call_contract(MemBuffer::new(vm, system_ptr), cheatnet_state)?;
             Ok(())
         }
-        DeprecatedSyscallSelector::Keccak => {
-            original_cairo_hint_processor.execute_hint(vm, exec_scopes, hint_data, constants)
-        }
-        _ => Err(HintError::CustomHint(Box::from(
-            "starknet syscalls (other than CallContract and Keccak) cannot be used in tests"
-                .to_string(),
-        ))),
+        _ => blockifier_syscall_handler.execute_hint(vm, exec_scopes, hint_data, constants),
     }
 }
 
@@ -568,9 +569,9 @@ fn execute_call_contract(
     .unwrap_or_else(|err| panic!("Transaction execution error: {err}"));
 
     let (result, exit_code) = match call_result {
-        CallContractOutput::Success { ret_data } => (ret_data, 0),
-        CallContractOutput::Panic { panic_data } => (panic_data, 1),
-        CallContractOutput::Error { msg } => return Err(HintError::CustomHint(Box::from(msg))),
+        CallContractOutput::Success { ret_data, .. } => (ret_data, 0),
+        CallContractOutput::Panic { panic_data, .. } => (panic_data, 1),
+        CallContractOutput::Error { msg, .. } => return Err(HintError::CustomHint(Box::from(msg))),
     };
 
     buffer.write(gas_counter).unwrap();

@@ -1,4 +1,4 @@
-use crate::state::StateReaderProxy;
+use crate::state::ExtendedStateReader;
 use blockifier::state::cached_state::{CachedState, GlobalContractCache};
 use starknet_api::hash::StarkFelt;
 use starknet_api::transaction::ContractAddressSalt;
@@ -14,13 +14,13 @@ pub mod state;
 
 pub struct CheatnetState {
     cheatcode_state: CheatcodeState,
-    blockifier_state: CachedState<StateReaderProxy>,
+    blockifier_state: CachedState<ExtendedStateReader>,
     pub deploy_salt_base: u32,
 }
 
 impl CheatnetState {
     #[must_use]
-    pub fn new(state: StateReaderProxy) -> Self {
+    pub fn new(state: ExtendedStateReader) -> Self {
         CheatnetState {
             cheatcode_state: CheatcodeState::new(),
             blockifier_state: CachedState::new(state, GlobalContractCache::default()),
