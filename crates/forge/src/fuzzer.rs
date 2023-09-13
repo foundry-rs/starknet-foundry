@@ -4,10 +4,6 @@ use num_traits::Zero;
 use rand::rngs::StdRng;
 use rand::{thread_rng, RngCore, SeedableRng};
 
-pub trait Fuzzer {
-    fn next_argument(&mut self, type_name: &str) -> Vec<Felt252>;
-}
-
 pub struct Random {
     rng: Box<dyn RngCore>,
 }
@@ -26,17 +22,12 @@ impl Random {
     }
 }
 
-impl Fuzzer for Random {
-    fn next_argument(&mut self, type_name: &str) -> Vec<Felt252> {
-        assert_eq!(
-            type_name, "felt252",
-            "Types other than `felt252` are not supported by RandomFuzzer"
-        );
-
+impl Random {
+    pub fn next_argument(&mut self) -> Felt252 {
         let low = BigUint::zero();
         let high = Felt252::prime();
 
         let random_uint: BigUint = self.rng.gen_biguint_range(&low, &high);
-        vec![Felt252::from(random_uint)]
+        Felt252::from(random_uint)
     }
 }
