@@ -303,44 +303,21 @@ fn run_tests_from_file(
             let result =
                 run_from_test_case(&runner, case, contracts, predeployed_contracts, vec![])?;
             pretty_printing::print_test_result(&result);
+
             result
         } else {
             pretty_printing::print_fuzz_running(case_name, runner_config);
-
-            if contains_non_felt252_args(&args, &BUILTINS) {
-                bail!("Test {case_name} requires arguments that are not felt252 type");
-            }
-
-            let mut results = vec![];
-
-            for _ in 1..=runner_config.fuzzer_runs {
-                let args: Vec<Felt252> = args
-                    .iter()
-                    .flat_map(|_| fuzzer.next_argument("felt252"))
-                    .collect();
-
-                let result = run_from_test_case(
-                    &runner,
-                    case,
-                    contracts,
-                    predeployed_contracts,
-                    args.clone(),
-                )?;
-                results.push((result.clone(), args));
-
-                if let TestCaseSummary::Failed { .. } = result {
-                    // Fuzz failed
-                    break;
-                }
-            }
-
-            let (result, args) = results
-                .last()
-                .expect("Test should always run at least once")
-                .clone();
-            let runs = results.len();
-
+            let (result, args, runs) = run_test_case_with_fuzzing(
+                runner_config,
+                contracts,
+                predeployed_contracts,
+                fuzzer,
+                &runner,
+                case,
+                &args,
+            )?;
             pretty_printing::print_test_result(&result);
+
             if let TestCaseSummary::Failed { .. } = result {
                 pretty_printing::print_fuzz_failed(&args, runs);
             }
@@ -370,6 +347,48 @@ fn run_tests_from_file(
         runner_exit_status: RunnerStatus::Default,
         relative_path: tests.relative_path,
     })
+}
+
+fn run_test_case_with_fuzzing(
+    runner_config: &RunnerConfig,
+    contracts: &HashMap<String, StarknetContractArtifacts>,
+    predeployed_contracts: &Utf8PathBuf,
+    fuzzer: &mut dyn Fuzzer,
+    runner: &SierraCasmRunner,
+    case: &TestCase,
+    args: &Vec<&ConcreteTypeId>,
+) -> Result<(TestCaseSummary, Vec<Felt252>, usize)> {
+    if contains_non_felt252_args(args, &BUILTINS) {
+        bail!(
+            "Test {} requires arguments that are not felt252 type",
+            case.name.as_str()
+        );
+    }
+
+    let mut results = vec![];
+
+    for _ in 1..=runner_config.fuzzer_runs {
+        let args: Vec<Felt252> = args
+            .iter()
+            .flat_map(|_| fuzzer.next_argument("felt252"))
+            .collect();
+
+        let result =
+            run_from_test_case(runner, case, contracts, predeployed_contracts, args.clone())?;
+        results.push((result.clone(), args));
+
+        if let TestCaseSummary::Failed { .. } = result {
+            // Fuzz failed
+            break;
+        }
+    }
+
+    let (result, args) = results
+        .last()
+        .expect("Test should always run at least once")
+        .clone();
+    let runs = results.len();
+    Ok((result, args, runs))
 }
 
 fn contains_non_felt252_args(args: &Vec<&ConcreteTypeId>, builtins: &[&str]) -> bool {
