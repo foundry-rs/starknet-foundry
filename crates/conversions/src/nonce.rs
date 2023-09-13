@@ -1,9 +1,9 @@
+use crate::StarknetConversions;
 use blockifier::execution::execution_utils::stark_felt_to_felt;
 use cairo_felt::Felt252;
 use starknet::core::types::FieldElement;
 use starknet_api::core::{ClassHash, ContractAddress, Nonce};
 use starknet_api::hash::{StarkFelt, StarkHash};
-use crate::StarknetConversions;
 
 impl StarknetConversions for Nonce {
     fn to_felt252(&self) -> Felt252 {

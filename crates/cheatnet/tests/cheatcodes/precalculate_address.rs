@@ -11,10 +11,10 @@ fn precalculate_address_simple() {
     let class_hash = state.declare(&contract_name, &contracts).unwrap();
 
     let precalculated1 = state.precalculate_address(&class_hash, &[]);
-    let actual1 = state.deploy(&class_hash, &[]).unwrap();
+    let actual1 = state.deploy(&class_hash, &[]).unwrap().contract_address;
 
     let precalculated2 = state.precalculate_address(&class_hash, &[]);
-    let actual2 = state.deploy(&class_hash, &[]).unwrap();
+    let actual2 = state.deploy(&class_hash, &[]).unwrap().contract_address;
 
     assert_eq!(precalculated1, actual1);
     assert_eq!(precalculated2, actual2);
@@ -35,11 +35,17 @@ fn precalculate_address_calldata() {
     let precalculated1 = state.precalculate_address(&class_hash, &calldata1);
     let precalculated2 = state.precalculate_address(&class_hash, &calldata2);
 
-    let actual1 = state.deploy(&class_hash, &calldata1).unwrap();
+    let actual1 = state
+        .deploy(&class_hash, &calldata1)
+        .unwrap()
+        .contract_address;
 
     let precalculated2_post_deploy = state.precalculate_address(&class_hash, &calldata2);
 
-    let actual2 = state.deploy(&class_hash, &calldata2).unwrap();
+    let actual2 = state
+        .deploy(&class_hash, &calldata2)
+        .unwrap()
+        .contract_address;
 
     assert_eq!(precalculated1, actual1);
     assert_ne!(precalculated1, precalculated2);

@@ -30,13 +30,19 @@ struct Cli {
     #[clap(short = 'u', long = "url")]
     rpc_url: Option<String>,
 
-    /// Account name to be used for contract declaration; overrides account from Scarb.toml
+    /// Account to be used for contract declaration;
+    /// When using keystore (`--keystore`), this should be a path to account file    
+    /// When using accounts file, this should be an account name
     #[clap(short = 'a', long)]
     account: Option<String>,
 
     /// Path to the file holding accounts info
     #[clap(short = 'f', long = "accounts-file")]
     accounts_file_path: Option<Utf8PathBuf>,
+
+    /// Path to keystore file; if specified, --account should be a path to starkli JSON account file
+    #[clap(short = 'k', long)]
+    keystore: Option<Utf8PathBuf>,
 
     /// If passed, values will be displayed as integers, otherwise as hexes
     #[clap(short, long)]
@@ -87,29 +93,33 @@ async fn main() -> Result<()> {
 
     match cli.command {
         Commands::Declare(declare) => {
-            account_file_exists(&config.accounts_file)?;
-            let chain_id = get_chain_id(&provider).await?;
-            let mut account =
-                get_account(&config.account, &config.accounts_file, &provider, chain_id)?;
-
+            let account = get_account(
+                &config.account,
+                &config.accounts_file,
+                &provider,
+                &cli.keystore,
+            )
+            .await?;
             let mut result = starknet_commands::declare::declare(
                 &declare.contract,
                 declare.max_fee,
-                &mut account,
+                &account,
                 &cli.path_to_scarb_toml,
                 cli.wait,
             )
             .await;
 
             print_command_result("declare", &mut result, cli.int_format, cli.json)?;
-
             Ok(())
         }
         Commands::Deploy(deploy) => {
-            account_file_exists(&config.accounts_file)?;
-            let chain_id = get_chain_id(&provider).await?;
-            let account = get_account(&config.account, &config.accounts_file, &provider, chain_id)?;
-
+            let account = get_account(
+                &config.account,
+                &config.accounts_file,
+                &provider,
+                &cli.keystore,
+            )
+            .await?;
             let mut result = starknet_commands::deploy::deploy(
                 deploy.class_hash,
                 deploy.constructor_calldata,
@@ -120,8 +130,8 @@ async fn main() -> Result<()> {
                 cli.wait,
             )
             .await;
-            print_command_result("deploy", &mut result, cli.int_format, cli.json)?;
 
+            print_command_result("deploy", &mut result, cli.int_format, cli.json)?;
             Ok(())
         }
         Commands::Call(call) => {
@@ -135,26 +145,29 @@ async fn main() -> Result<()> {
                 block_id.as_ref(),
             )
             .await;
-            print_command_result("call", &mut result, cli.int_format, cli.json)?;
 
+            print_command_result("call", &mut result, cli.int_format, cli.json)?;
             Ok(())
         }
         Commands::Invoke(invoke) => {
-            account_file_exists(&config.accounts_file)?;
-            let chain_id = get_chain_id(&provider).await?;
-            let mut account =
-                get_account(&config.account, &config.accounts_file, &provider, chain_id)?;
+            let account = get_account(
+                &config.account,
+                &config.accounts_file,
+                &provider,
+                &cli.keystore,
+            )
+            .await?;
             let mut result = starknet_commands::invoke::invoke(
                 invoke.contract_address,
                 &invoke.function,
                 invoke.calldata,
                 invoke.max_fee,
-                &mut account,
+                &account,
                 cli.wait,
             )
             .await;
-            print_command_result("invoke", &mut result, cli.int_format, cli.json)?;
 
+            print_command_result("invoke", &mut result, cli.int_format, cli.json)?;
             Ok(())
         }
         Commands::Multicall(multicall) => {
@@ -174,13 +187,16 @@ async fn main() -> Result<()> {
                     }
                 }
                 starknet_commands::multicall::Commands::Run(run) => {
-                    account_file_exists(&config.accounts_file)?;
-                    let chain_id = get_chain_id(&provider).await?;
-                    let mut account =
-                        get_account(&config.account, &config.accounts_file, &provider, chain_id)?;
+                    let account = get_account(
+                        &config.account,
+                        &config.accounts_file,
+                        &provider,
+                        &cli.keystore,
+                    )
+                    .await?;
                     let mut result = starknet_commands::multicall::run::run(
                         &run.path,
-                        &mut account,
+                        &account,
                         run.max_fee,
                         cli.wait,
                     )
