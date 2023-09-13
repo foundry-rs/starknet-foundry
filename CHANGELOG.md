@@ -20,6 +20,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
+#### Added
+
+- support for starkli-style accounts, allowing the use of existing accounts
+
 #### Changed
 
 - fixed misleading error message when there was no scarb in PATH and `--path-to-scarb-toml` was passed
