@@ -23,7 +23,9 @@ jobs:
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
       - run: cargo test --release --lib -p forge
-      - run: cargo test --release integration -p forge
+      - run: |
+          echo CHEATNET_RPC_URL=${{ secrets.CHEATNET_RPC_URL }} >> .env
+          cargo test --release integration -p forge
 
   test-forge-e2e:
     name: Test Forge / E2E Tests
