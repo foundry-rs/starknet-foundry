@@ -730,4 +730,28 @@ mod tests {
             ]
         );
     }
+
+    #[test]
+    fn args_with_only_felt252() {
+        let typ = ConcreteTypeId {
+            id: 0,
+            debug_name: Some(SmolStr::from("felt252")),
+        };
+        let args = vec![&typ, &typ];
+        assert!(!contains_non_felt252_args(&args, &[]));
+    }
+
+    #[test]
+    fn args_with_not_felt252() {
+        let typ = ConcreteTypeId {
+            id: 0,
+            debug_name: Some(SmolStr::from("felt252")),
+        };
+        let typ2 = ConcreteTypeId {
+            id: 0,
+            debug_name: Some(SmolStr::from("Uint256")),
+        };
+        let args = vec![&typ, &typ, &typ2];
+        assert!(contains_non_felt252_args(&args, &[]));
+    }
 }
