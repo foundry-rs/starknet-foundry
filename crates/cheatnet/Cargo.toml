@@ -31,11 +31,11 @@ tokio.workspace = true
 num-bigint.workspace = true
 conversions = { path = "../conversions" }
 flate2 = "1.0.26"
-dotenv.workspace = true
 
 [dev-dependencies]
 ctor.workspace = true
 indoc.workspace = true
+dotenv.workspace = true
 
 [lib]
 name = "cheatnet"

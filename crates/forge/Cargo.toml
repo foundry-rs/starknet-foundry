@@ -55,6 +55,8 @@ openssl = { version = "0.10", features = ["vendored"] }
 which = "4.4.0"
 toml_edit = "0.9.1"
 flatten-serde-json = "0.1.0"
+
+[dev-dependencies]
 dotenv.workspace = true
 
 [lib]
