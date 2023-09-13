@@ -4,7 +4,8 @@ Run forge in the current directory
 
 ## `[TEST_FILTER]`
 
-Passing a test filter will only run tests with a module tree path containing this filter.
+Passing a test filter will only run tests with an [absolute module tree path](https://book.cairo-lang.org/ch06-03-paths-for-referring-to-an-item-in-the-module-tree.html?highlight=path#paths-for-referring-to-an-item-in-the-module-tree)
+containing this filter.
 
 ## `-e`, `--exact`
 

@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `deploy_at` cheatcode
 - printing failures summary at the end of an execution
-- filtering tests now uses a whole module tree path — it is possible to filter tests by module names, etc.
+- filtering tests now uses an absolute module tree path — it is possible to filter tests by module names, etc.
 
 ### Fixed
 
