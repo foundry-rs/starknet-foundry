@@ -3,7 +3,8 @@
 macro_rules! assert_success {
     ($call_contract_output:expr,$expected_data:expr) => {
         assert!(match $call_contract_output {
-            cheatnet::rpc::CallContractOutput::Success { ret_data } => ret_data == $expected_data,
+            cheatnet::rpc::CallContractOutput::Success { ret_data, .. } =>
+                ret_data == $expected_data,
             _ => false,
         })
     };
@@ -14,7 +15,8 @@ macro_rules! assert_success {
 macro_rules! assert_panic {
     ($call_contract_output:expr,$expected_data:expr) => {
         assert!(match $call_contract_output {
-            cheatnet::rpc::CallContractOutput::Panic { panic_data } => panic_data == $expected_data,
+            cheatnet::rpc::CallContractOutput::Panic { panic_data, .. } =>
+                panic_data == $expected_data,
             _ => false,
         })
     };
@@ -25,7 +27,7 @@ macro_rules! assert_panic {
 macro_rules! assert_error {
     ($call_contract_output:expr,$expected_data:expr) => {
         assert!(match $call_contract_output {
-            cheatnet::rpc::CallContractOutput::Error { msg } => msg == $expected_data,
+            cheatnet::rpc::CallContractOutput::Error { msg, .. } => msg == $expected_data,
             _ => false,
         })
     };

@@ -1,4 +1,5 @@
 use anyhow::Result;
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::panic_data::try_extract_panic_data;
@@ -6,6 +7,7 @@ use crate::{
     constants::{build_block_context, build_transaction_context},
     execution::{
         entry_point::execute_call_entry_point, events::collect_emitted_events_from_spied_contracts,
+        gas::gas_from_execution_resources,
     },
     CheatnetState,
 };
@@ -22,14 +24,42 @@ use starknet_api::{
     transaction::Calldata,
 };
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct ResourceReport {
+    pub gas: f64,
+    pub steps: usize,
+    pub bultins: HashMap<String, usize>,
+}
+
+impl ResourceReport {
+    fn new(gas: f64, resources: &ExecutionResources) -> Self {
+        Self {
+            gas,
+            steps: resources.vm_resources.n_steps,
+            bultins: resources.vm_resources.builtin_instance_counter.clone(),
+        }
+    }
+}
+
+#[derive(Debug)]
 pub enum CallContractOutput {
-    Success { ret_data: Vec<Felt252> },
-    Panic { panic_data: Vec<Felt252> },
-    Error { msg: String },
+    Success {
+        ret_data: Vec<Felt252>,
+        resource_report: ResourceReport,
+    },
+    Panic {
+        panic_data: Vec<Felt252>,
+        resource_report: ResourceReport,
+    },
+    Error {
+        msg: String,
+        resource_report: ResourceReport,
+    },
 }
 
 // This does contract call without the transaction layer. This way `call_contract` can return data and modify state.
 // `call` and `invoke` on the transactional layer use such method under the hood.
+#[allow(clippy::too_many_lines)]
 pub fn call_contract(
     contract_address: &ContractAddress,
     entry_point_selector: &Felt252,
@@ -78,6 +108,9 @@ pub fn call_contract(
         &mut context,
     );
 
+    let gas = gas_from_execution_resources(&block_context, &resources);
+    let resource_report = ResourceReport::new(gas, &resources);
+
     match exec_result {
         Ok(call_info) => {
             if !cheatcode_state.spies.is_empty() {
@@ -95,6 +128,7 @@ pub fn call_contract(
 
             Ok(CallContractOutput::Success {
                 ret_data: return_data,
+                resource_report,
             })
         }
         Err(EntryPointExecutionError::ExecutionFailed { error_data }) => {
@@ -105,13 +139,20 @@ pub fn call_contract(
 
             Ok(CallContractOutput::Panic {
                 panic_data: err_data,
+                resource_report,
             })
         }
         Err(EntryPointExecutionError::VirtualMachineExecutionErrorWithTrace { trace, .. }) => {
             if let Some(panic_data) = try_extract_panic_data(&trace) {
-                Ok(CallContractOutput::Panic { panic_data })
+                Ok(CallContractOutput::Panic {
+                    panic_data,
+                    resource_report,
+                })
             } else {
-                Ok(CallContractOutput::Error { msg: trace })
+                Ok(CallContractOutput::Error {
+                    msg: trace,
+                    resource_report,
+                })
             }
         }
         Err(EntryPointExecutionError::PreExecutionError(
@@ -122,17 +163,26 @@ pub fn call_contract(
             let msg = format!(
                 "Entry point selector {selector_hash} not found in contract {contract_addr}"
             );
-            Ok(CallContractOutput::Error { msg })
+            Ok(CallContractOutput::Error {
+                msg,
+                resource_report,
+            })
         }
         Err(EntryPointExecutionError::PreExecutionError(
             PreExecutionError::UninitializedStorageAddress(contract_address),
         )) => {
             let address = contract_address.0.key().to_string();
             let msg = format!("Contract not deployed at address: {address}");
-            Ok(CallContractOutput::Error { msg })
+            Ok(CallContractOutput::Error {
+                msg,
+                resource_report,
+            })
         }
         Err(EntryPointExecutionError::StateError(StateError::StateReadError(msg))) => {
-            Ok(CallContractOutput::Error { msg })
+            Ok(CallContractOutput::Error {
+                msg,
+                resource_report,
+            })
         }
         result => panic!("Unparseable result: {result:?}"),
     }
