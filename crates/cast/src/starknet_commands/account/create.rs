@@ -26,7 +26,7 @@ pub struct Create {
     pub salt: Option<FieldElement>,
 
     /// If passed, a profile with corresponding data will be created in Scarb.toml
-    #[clap(short, long)]
+    #[clap(long)]
     pub add_profile: bool,
     // TODO (#253): think about supporting different account providers
     /// Custom open zeppelin contract class hash of declared contract

@@ -10,19 +10,24 @@ use starknet::signers::SigningKey;
 #[derive(Args, Debug)]
 #[command(about = "Add an account to the accounts file")]
 pub struct Add {
+    /// Address of the account
     #[clap(short, long)]
     pub address: FieldElement,
 
+    /// Class hash of the account
     #[clap(short, long)]
     pub class_hash: Option<FieldElement>,
 
+    /// Account deployment status
     #[clap(short, long)]
     pub deployed: bool,
 
-    #[clap(short, long)]
+    /// Account private key
+    #[clap(long)]
     pub private_key: FieldElement,
 
-    #[clap(short, long)]
+    /// Account public key
+    #[clap(long)]
     pub public_key: Option<FieldElement>,
 
     /// Salt for the address
@@ -30,7 +35,7 @@ pub struct Add {
     pub salt: Option<FieldElement>,
 
     /// If passed, a profile with corresponding data will be created in Scarb.toml
-    #[clap(short, long)]
+    #[clap(long)]
     pub add_profile: bool,
 }
 
