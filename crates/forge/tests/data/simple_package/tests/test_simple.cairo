@@ -1,5 +1,3 @@
-use snforge_std::{ForkImpl, ForkConfig};
-
 #[test]
 fn test_simple() {
     assert(1 == 1, 'simple check');
