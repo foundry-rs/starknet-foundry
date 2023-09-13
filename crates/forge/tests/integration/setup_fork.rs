@@ -58,6 +58,10 @@ fn fork_simple_cheatcode() {
 
 #[test]
 fn fork_simple_decorator() {
+    dotenv().ok();
+    let node_url =
+        std::env::var("CHEATNET_RPC_URL").expect("CHEATNET_RPC_URL must be set in the .env file");
+
     let test = test_case!(formatdoc!(
         r#"
             use result::ResultTrait;
@@ -76,7 +80,7 @@ fn fork_simple_decorator() {
             }}
 
             #[test]
-            #[fork(url: ('http://188.34.188.184:9545/rpc/', 'v0.4'), block_number: 311695)]
+            #[fork(url: ('{}', '{}'), block_number: 311695)]
             fn test_fork_simple() {{
                 let dispatcher = IHelloStarknetDispatcher {{
                     contract_address: contract_address_const::<3216637956526895219277698311134811322769343974163380838558193911733621219342>()
@@ -90,7 +94,9 @@ fn fork_simple_decorator() {
                 let balance = dispatcher.get_balance();
                 assert(balance == 102, 'Balance should be 102');
             }}
-        "#
+        "#,
+        node_url[..31].to_string(),
+        node_url[31..].to_string()
     ).as_str());
 
     let result = run_test_case(&test);
