@@ -43,7 +43,7 @@ Running fuzzer for package_name::test_sum, 256 runs:
 
 ## Configuring The Fuzzer
 
-It is possible to configure the number of runs of the random fuzzer as well as its seed too by a command line argument:
+It is possible to configure the number of runs of the random fuzzer as well as its seed too with command line arguments:
 
 ```shell
 $ snforge --fuzzer-runs 1234 --fuzzer-seed 1111
