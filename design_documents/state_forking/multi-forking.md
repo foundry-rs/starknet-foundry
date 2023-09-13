@@ -25,8 +25,8 @@ which consists of `DictStateReader` and `ForkStateReader`.
 (like AccountTransaction.execute or execute_call_entry_point) requires `CachedState`.
 `CachedState` is native blockifier struct, so we can't change its implementation to meet our requirements.
 
-Instead of changing it we should modify the blockifier's interface to require `State` trait (which would abstract `CachedState`'s interface).
-When blockifier will accept `State` trait we should be able to implement Multi-forking.
+Instead of changing it we should modify the blockifier's interface to require new `StateCache` trait (which would abstract `CachedState`'s interface).
+When blockifier will accept `StateCache` trait we should be able to implement Multi-forking.
 
 ## Interacting with multiple forks (Cheatnet side)
 
@@ -45,7 +45,7 @@ Let's split common fork interaction into parts:
   - `B` is not
 
 The most tricky part would be playing on top of the merged `shared_state` with one of the `forks_states`. We can do it
-by simply implementing `StateReader` for the `State`. It would search for a contract in the following order:
+by simply implementing `StateReader` for the `StateCache`. It would search for a contract in the following order:
 
 - check if contract is available in the `shared_state` - if so return it
 - check if contract is available in the local `DisctStateReader` of the `ExtendedStateReader` - if so return it
@@ -54,6 +54,6 @@ by simply implementing `StateReader` for the `State`. It would search for a cont
 
 ## Required actions
 
-- make a PR to blockifier which will extract `State` trait from the `CachedState` struct
+- make a PR to blockifier which will extract `StateCache` trait from the `CachedState` struct
 - change `CheatnetState` fields to implement proposed solution
 - add control cheatcodes
