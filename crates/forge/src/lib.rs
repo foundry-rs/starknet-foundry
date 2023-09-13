@@ -754,4 +754,18 @@ mod tests {
         let args = vec![&typ, &typ, &typ2];
         assert!(contains_non_felt252_args(&args, &[]));
     }
+
+    #[test]
+    fn args_with_not_felt252_type_builtins() {
+        let typ = ConcreteTypeId {
+            id: 0,
+            debug_name: Some(SmolStr::from("felt252")),
+        };
+        let typ2 = ConcreteTypeId {
+            id: 0,
+            debug_name: Some(SmolStr::from("GasBuiltin")),
+        };
+        let args = vec![&typ, &typ, &typ2];
+        assert!(!contains_non_felt252_args(&args, &["GasBuiltin"]));
+    }
 }
