@@ -104,3 +104,19 @@ fn fuzzing_set_seed() {
             fuzzing::tests::failing_fuzz
         "#});
 }
+
+#[test]
+fn fuzzing_incorrect_runs() {
+    let temp = setup_package("fuzzing");
+    let snapbox = runner();
+
+    snapbox
+        .current_dir(&temp)
+        .args(["--fuzzer-runs", "0"])
+        .assert()
+        .stderr_matches(indoc! {r#"
+        error: invalid value '0' for '--fuzzer-runs <FUZZER_RUNS>': Number of fuzzer runs must be greater than or equal to 1
+
+        For more information, try '--help'.
+        "#});
+}
