@@ -1,22 +1,18 @@
-use anyhow::{anyhow, bail, Context, Result};
+use crate::starknet_commands::account::{prepare_account_json, write_account_to_accounts_file};
+use anyhow::{anyhow, bail, Result};
 use camino::Utf8PathBuf;
 use cast::helpers::constants::OZ_CLASS_HASH;
 use cast::helpers::response_structs::AccountCreateResponse;
-use cast::helpers::scarb_utils::{
-    get_package_tool_sncast, get_scarb_manifest, get_scarb_metadata, CastConfig,
-};
-use cast::{chain_id_to_network_name, decode_chain_id, extract_or_generate_salt, parse_number};
+use cast::helpers::scarb_utils::CastConfig;
+use cast::{extract_or_generate_salt, get_chain_id, parse_number};
 use clap::Args;
 use serde_json::json;
 use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
-use starknet::core::types::FieldElement;
+use starknet::core::types::{FeeEstimate, FieldElement};
 use starknet::core::utils::get_contract_address;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::{LocalWallet, SigningKey};
-use std::fs::OpenOptions;
-use std::io::Write;
-use toml::Value;
 
 #[derive(Args, Debug)]
 #[command(about = "Create an account with all important secrets")]
@@ -44,100 +40,44 @@ pub async fn create(
     provider: &JsonRpcClient<HttpTransport>,
     path_to_scarb_toml: Option<Utf8PathBuf>,
     chain_id: FieldElement,
-    maybe_salt: Option<FieldElement>,
+    salt: Option<FieldElement>,
     add_profile: bool,
     class_hash: Option<String>,
 ) -> Result<AccountCreateResponse> {
-    let private_key = SigningKey::from_random();
-    let public_key = private_key.verifying_key();
-    let salt = extract_or_generate_salt(maybe_salt);
-    let oz_class_hash: &str = if let Some(value) = &class_hash {
-        value
-    } else {
-        OZ_CLASS_HASH
-    };
-
-    let address = get_contract_address(
-        salt,
-        parse_number(oz_class_hash)?,
-        &[public_key.scalar()],
-        FieldElement::ZERO,
-    );
-
-    let max_fee = {
-        let signer = LocalWallet::from_signing_key(private_key.clone());
-        let factory = OpenZeppelinAccountFactory::new(
-            parse_number(oz_class_hash)?,
-            chain_id,
-            signer,
-            provider,
-        )
-        .await?;
-        let deployment = factory.deploy(salt);
-
-        let fee_estimate = deployment.estimate_fee().await;
-
-        if let Err(err) = &fee_estimate {
-            if err
-                .to_string()
-                .contains("StarknetErrorCode.UNDECLARED_CLASS")
-            {
-                bail!("The class {oz_class_hash} is undeclared, try using --class-hash with a class hash that is already declared");
-            }
-        }
-
-        fee_estimate?.overall_fee
-    };
-
-    if !config.accounts_file.exists() {
-        std::fs::create_dir_all(config.accounts_file.clone().parent().unwrap())?;
-        std::fs::write(config.accounts_file.clone(), "{}")?;
-    }
-
-    let contents = std::fs::read_to_string(config.accounts_file.clone())?;
-    let mut items: serde_json::Value = serde_json::from_str(&contents)
-        .map_err(|_| anyhow!("Failed to parse accounts file at {}", config.accounts_file))?;
-
-    let network_name = chain_id_to_network_name(chain_id);
-
-    if !items[&network_name][&config.account].is_null() {
-        return Err(anyhow!(
-            "Account with name {} already exists in network with chain_id {}",
-            &config.account,
-            decode_chain_id(chain_id)
-        ));
-    }
-
-    items[&network_name][&config.account] = json!({
-        "private_key": format!("{:#x}", private_key.secret_scalar()),
-        "public_key": format!("{:#x}", public_key.scalar()),
-        "address": format!("{address:#x}"),
-        "salt": format!("{salt:#x}"),
-        "deployed": false,
-    });
-
-    if let Some(class_hash_) = class_hash {
-        items[&network_name][&config.account]["class_hash"] =
-            serde_json::Value::String(format!("{:#x}", parse_number(&class_hash_)?));
-    }
-
-    if add_profile {
-        match add_created_profile_to_configuration(&path_to_scarb_toml, config) {
-            Ok(()) => {}
-            Err(err) => return Err(anyhow!(err)),
+    let (account_json, max_fee) = {
+        let salt = extract_or_generate_salt(salt);
+        let class_hash = {
+            let ch = match &class_hash {
+                Some(class_hash) => class_hash,
+                None => OZ_CLASS_HASH,
+            };
+            parse_number(ch)?
         };
-    }
+        generate_account(provider, salt, class_hash).await?
+    };
 
-    std::fs::write(
-        config.accounts_file.clone(),
-        serde_json::to_string_pretty(&items).unwrap(),
+    let address = parse_number(
+        account_json["address"]
+            .as_str()
+            .ok_or_else(|| anyhow!("Invalid address"))?,
     )?;
 
-    println!("Account successfully created. Prefund generated address with at least {max_fee} tokens. It is good to send more in the case of higher demand, max_fee * 2 = {}", max_fee * 2);
-    let mut output = vec![
-        ("max_fee", format!("{max_fee:#x}")),
-        ("address", format!("{address:#x}")),
-    ];
+    write_account_to_accounts_file(
+        &path_to_scarb_toml,
+        &config.rpc_url,
+        &config.account,
+        &config.accounts_file,
+        chain_id,
+        account_json.clone(),
+        add_profile,
+    )?;
+
+    let mut output = vec![("address", format!("{address:#x}"))];
+    if account_json["deployed"] == json!(false) {
+        println!("Account successfully created. Prefund generated address with at least {max_fee} tokens. It is good to send more in the case of higher demand, max_fee * 2 = {}", max_fee * 2);
+        output.push(("max_fee", format!("{max_fee:#x}")));
+    }
+
     if add_profile {
         output.push((
             "add-profile",
@@ -156,69 +96,64 @@ pub async fn create(
     })
 }
 
-pub fn add_created_profile_to_configuration(
-    path_to_scarb_toml: &Option<Utf8PathBuf>,
-    config: &CastConfig,
-) -> Result<()> {
-    let manifest_path = match path_to_scarb_toml.clone() {
-        Some(path) => path,
-        None => get_scarb_manifest().context("Failed to obtain manifest path from scarb")?,
-    };
-    let metadata = get_scarb_metadata(&manifest_path)?;
+async fn generate_account(
+    provider: &JsonRpcClient<HttpTransport>,
+    salt: FieldElement,
+    class_hash: FieldElement,
+) -> Result<(serde_json::Value, u64)> {
+    let private_key = SigningKey::from_random();
 
-    if let Ok(tool_sncast) = get_package_tool_sncast(&metadata) {
-        let property = tool_sncast
-            .get(&config.account)
-            .and_then(|profile_| profile_.get("account"));
-        if property.is_some() {
-            bail!(
-                "Failed to add {} profile to the Scarb.toml. Profile already exists",
-                config.account
-            );
+    let address: FieldElement = get_contract_address(
+        salt,
+        class_hash,
+        &[private_key.verifying_key().scalar()],
+        FieldElement::ZERO,
+    );
+
+    let account_json =
+        prepare_account_json(&private_key, address, false, Some(class_hash), Some(salt));
+
+    let max_fee = get_account_deployment_fee(&private_key, class_hash, salt, provider)
+        .await?
+        .overall_fee;
+
+    Ok((account_json, max_fee))
+}
+
+async fn get_account_deployment_fee(
+    private_key: &SigningKey,
+    class_hash: FieldElement,
+    salt: FieldElement,
+    provider: &JsonRpcClient<HttpTransport>,
+) -> Result<FeeEstimate> {
+    let signer = LocalWallet::from_signing_key(private_key.clone());
+    let chain_id = get_chain_id(provider).await?;
+    let factory = OpenZeppelinAccountFactory::new(class_hash, chain_id, signer, provider).await?;
+    let deployment = factory.deploy(salt);
+
+    let fee_estimate = deployment.estimate_fee().await;
+
+    if let Err(err) = &fee_estimate {
+        if err
+            .to_string()
+            .contains("StarknetErrorCode.UNDECLARED_CLASS")
+        {
+            bail!("The class {class_hash} is undeclared, try using --class-hash with a class hash that is already declared");
         }
     }
 
-    let toml_string = {
-        let mut tool_sncast = toml::value::Table::new();
-        let mut new_profile = toml::value::Table::new();
-
-        new_profile.insert("url".to_string(), Value::String(config.rpc_url.clone()));
-        new_profile.insert("account".to_string(), Value::String(config.account.clone()));
-        new_profile.insert(
-            "accounts-file".to_string(),
-            Value::String(config.accounts_file.to_string()),
-        );
-
-        tool_sncast.insert(config.account.clone(), Value::Table(new_profile));
-
-        let mut tool = toml::value::Table::new();
-        tool.insert("sncast".to_string(), Value::Table(tool_sncast));
-
-        let mut config = toml::value::Table::new();
-        config.insert("tool".to_string(), Value::Table(tool));
-
-        toml::to_string(&Value::Table(config)).context("Couldn't convert toml to string")?
-    };
-
-    let mut scarb_toml = OpenOptions::new()
-        .append(true)
-        .open(manifest_path)
-        .context("Couldn't open Scarb.toml")?;
-    scarb_toml
-        .write_all(format!("\n{toml_string}").as_bytes())
-        .context("Couldn't write to the Scarb.toml")?;
-
-    Ok(())
+    Ok(fee_estimate?)
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::starknet_commands::account::create::add_created_profile_to_configuration;
     use cast::helpers::constants::DEFAULT_ACCOUNTS_FILE;
     use cast::helpers::scarb_utils::CastConfig;
     use sealed_test::prelude::rusty_fork_test;
     use sealed_test::prelude::sealed_test;
     use std::fs;
+
+    use crate::starknet_commands::account::add_created_profile_to_configuration;
 
     #[sealed_test(files = ["tests/data/contracts/v1/balance/Scarb.toml"])]
     fn test_add_created_profile_to_configuration_happy_case() {
