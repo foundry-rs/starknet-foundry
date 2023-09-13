@@ -473,11 +473,13 @@ mod tests {
                     name: "crate2::run_other_thing".to_string(),
                     available_gas: None,
                     expected_result: ExpectedTestResult::Success,
+                    fork_config: None
                 },
                 TestCase {
                     name: "outer::crate2::run_other_thing".to_string(),
                     available_gas: None,
                     expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
                 },
             ]
         );
