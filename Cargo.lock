@@ -4216,6 +4216,7 @@ dependencies = [
  "cairo-lang-test-runner",
  "cairo-lang-utils",
  "cairo-vm",
+ "conversions",
  "itertools 0.11.0",
  "num-bigint",
  "num-integer",

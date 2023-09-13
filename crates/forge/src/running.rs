@@ -21,7 +21,10 @@ use cairo_lang_runner::RunnerError;
 use cairo_lang_runner::SierraCasmRunner;
 use cairo_vm::vm::runners::cairo_runner::RunResources;
 use camino::Utf8PathBuf;
+use cheatnet::forking::state::ForkStateReader;
 use cheatnet::state::ExtendedStateReader;
+use num_traits::ToPrimitive;
+use starknet::core::types::BlockId;
 use starknet::core::utils::get_selector_from_name;
 use starknet_api::core::PatriciaKey;
 use starknet_api::core::{ContractAddress, EntryPointSelector};
@@ -129,7 +132,12 @@ pub(crate) fn run_from_test_case(
         contracts,
         cheatnet_state: CheatnetState::new(ExtendedStateReader {
             dict_state_reader: build_testing_state(predeployed_contracts),
-            fork_state_reader: None,
+            fork_state_reader: case.fork_config.as_ref().map(|fork_config| {
+                ForkStateReader::new(
+                    &fork_config.url,
+                    BlockId::Number(fork_config.block_number.to_u64().unwrap()),
+                )
+            }),
         }),
         hints: &string_to_hint,
         run_resources: RunResources::default(),

@@ -31,6 +31,7 @@ use cairo_lang_syntax::node::db::SyntaxGroup;
 use cairo_lang_test_runner::plugin::TestPlugin;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use cairo_lang_utils::OptionHelper;
+use conversions::StarknetConversions;
 use itertools::Itertools;
 use num_traits::ToPrimitive;
 use project::{setup_single_file_project, PHANTOM_PACKAGE_NAME_PREFIX};
@@ -94,6 +95,12 @@ pub enum ExpectedTestResult {
     Panics(ExpectedPanicValue),
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct ForkConfig {
+    pub url: String,
+    pub block_number: Felt252,
+}
+
 /// The configuration for running a single test.
 #[derive(Debug)]
 pub struct SingleTestConfig {
@@ -103,6 +110,8 @@ pub struct SingleTestConfig {
     pub expected_result: ExpectedTestResult,
     /// Should the test be ignored.
     pub ignored: bool,
+    /// The configuration of forked network.
+    pub fork_config: Option<ForkConfig>,
 }
 
 /// Finds the tests in the requested crates.
@@ -135,6 +144,7 @@ pub fn find_all_tests(
 
 /// Extracts the configuration of a tests from attributes, or returns the diagnostics if the
 /// attributes are set illegally.
+#[allow(clippy::too_many_lines)]
 pub fn try_extract_test_config(
     db: &dyn SyntaxGroup,
     attrs: &[Attribute],
@@ -145,6 +155,7 @@ pub fn try_extract_test_config(
         .iter()
         .find(|attr| attr.id.as_str() == "available_gas");
     let should_panic_attr = attrs.iter().find(|attr| attr.id.as_str() == "should_panic");
+    let fork_attr = attrs.iter().find(|attr| attr.id.as_str() == "fork");
     let mut diagnostics = vec![];
     if let Some(attr) = test_attr {
         if !attr.args.is_empty() {
@@ -154,9 +165,14 @@ pub fn try_extract_test_config(
             });
         }
     } else {
-        for attr in [ignore_attr, available_gas_attr, should_panic_attr]
-            .into_iter()
-            .flatten()
+        for attr in [
+            ignore_attr,
+            available_gas_attr,
+            should_panic_attr,
+            fork_attr,
+        ]
+        .into_iter()
+        .flatten()
         {
             diagnostics.push(PluginDiagnostic {
                 stable_ptr: attr.id_stable_ptr.untyped(),
@@ -215,6 +231,23 @@ pub fn try_extract_test_config(
     } else {
         (false, None)
     };
+    let fork_config = if let Some(attr) = fork_attr {
+        if attr.args.is_empty() {
+            None
+        } else {
+            extract_fork_config(db, attr).on_none(|| {
+                diagnostics.push(PluginDiagnostic {
+                    stable_ptr: attr.args_stable_ptr.untyped(),
+                    message: "Expected fork config must be of the form `url: <tuple of \
+                                  felts>, block_number: <felt>`."
+                        .into(),
+                });
+            })
+        }
+    } else {
+        None
+    };
+
     if !diagnostics.is_empty() {
         return Err(diagnostics);
     }
@@ -233,6 +266,7 @@ pub fn try_extract_test_config(
                 ExpectedTestResult::Success
             },
             ignored,
+            fork_config,
         })
     })
 }
@@ -273,6 +307,63 @@ fn extract_panic_values(db: &dyn SyntaxGroup, attr: &Attribute) -> Option<Vec<Fe
         .collect::<Option<Vec<_>>>()
 }
 
+/// Tries to extract the `node_url` and `block_number`.
+fn extract_fork_config(db: &dyn SyntaxGroup, attr: &Attribute) -> Option<ForkConfig> {
+    let [AttributeArg {
+        variant:
+            AttributeArgVariant::Named {
+                name: url_arg_name,
+                value: url,
+                ..
+            },
+        ..
+    }, AttributeArg {
+        variant:
+            AttributeArgVariant::Named {
+                name: block_number_arg_name,
+                value: block_number,
+                ..
+            },
+        ..
+    }] = &attr.args[..]
+    else {
+        return None;
+    };
+
+    if url_arg_name != "url" {
+        return None;
+    }
+    let ast::Expr::Tuple(url_arr) = url else {
+        return None;
+    };
+    let split_url = url_arr
+        .expressions(db)
+        .elements(db)
+        .into_iter()
+        .map(|value| match value {
+            ast::Expr::ShortString(literal) => {
+                Some(literal.numeric_value(db).unwrap_or_default().into())
+            }
+            _ => None,
+        })
+        .collect::<Option<Vec<Felt252>>>();
+    let url = split_url
+        .unwrap()
+        .iter()
+        .map(StarknetConversions::to_short_string)
+        .join("");
+
+    if block_number_arg_name != "block_number" {
+        return None;
+    }
+    let ast::Expr::Literal(block_number_value) = block_number else {
+        return None;
+    };
+    let block_number = Felt252::from(block_number_value.numeric_value(db).unwrap());
+
+    Some(ForkConfig { url, block_number })
+}
+
 /// Represents a dependency of a Cairo project
 #[derive(Debug, Clone)]
 pub struct LinkedLibrary {
@@ -285,6 +376,7 @@ pub struct TestCase {
     pub name: String,
     pub available_gas: Option<usize>,
     pub expected_result: ExpectedTestResult,
+    pub fork_config: Option<ForkConfig>,
 }
 
 // returns tuple[sierra if no output_path, list[test_name, test_config]]
@@ -369,6 +461,7 @@ pub fn collect_tests(
             name: test_name.replace(PHANTOM_PACKAGE_NAME_PREFIX, ""),
             available_gas: config.available_gas,
             expected_result: config.expected_result,
+            fork_config: config.fork_config,
         })
         .collect();
 
