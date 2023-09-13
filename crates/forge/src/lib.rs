@@ -32,6 +32,8 @@ mod fuzzer;
 mod running;
 mod test_file_summary;
 
+const FUZZER_RUNS_DEFAULT: u32 = 256;
+
 /// Configuration of the test runner
 #[derive(Deserialize, Debug, PartialEq, Default)]
 pub struct RunnerConfig {
@@ -65,7 +67,7 @@ impl RunnerConfig {
             exit_first: forge_config_from_scarb.exit_first || exit_first,
             fuzzer_runs: fuzzer_runs
                 .or(forge_config_from_scarb.fuzzer_runs)
-                .unwrap_or(256),
+                .unwrap_or(FUZZER_RUNS_DEFAULT),
             fuzzer_seed: fuzzer_seed.or(forge_config_from_scarb.fuzzer_seed),
         }
     }
@@ -438,7 +440,7 @@ mod tests {
                 test_name_filter: None,
                 exact_match: false,
                 exit_first: false,
-                fuzzer_runs: 256,
+                fuzzer_runs: FUZZER_RUNS_DEFAULT,
                 fuzzer_seed: None,
             }
         );
