@@ -1,4 +1,4 @@
-use crate::helpers::constants::{ACCOUNT, ACCOUNT_FILE_PATH, URL};
+use crate::helpers::constants::{ACCOUNT, ACCOUNT_FILE_PATH, CONTRACTS_DIR, URL};
 use crate::helpers::fixtures::duplicate_directory_with_salt;
 use crate::helpers::runner::runner;
 use cast::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
