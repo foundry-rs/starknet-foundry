@@ -133,3 +133,78 @@ fn test_simple_syscalls() {
 
     assert_passed!(result);
 }
+
+#[test]
+fn test_library_calls() {
+    let test = test_case!(
+        indoc!(
+            r#"
+        use result::ResultTrait;
+        use starknet::ClassHash;
+        use starknet::library_call_syscall;
+        use snforge_std::{ declare };
+
+        #[starknet::interface]
+        trait ILibraryContract<TContractState> {
+            fn get_value(
+                self: @TContractState,
+            ) -> felt252;
+
+            fn set_value(
+                ref self: TContractState,
+                number: felt252
+            );
+        }
+
+        #[test]
+        fn test_get_execution_info() {
+            let class_hash = declare('LibraryContract').class_hash;
+            let lib_dispatcher = ILibraryContractSafeLibraryDispatcher { class_hash };
+            let value = lib_dispatcher.get_value().unwrap();
+            assert(value == 0, 'Incorrect state');
+            lib_dispatcher.set_value(10)
+            let value = lib_dispatcher.get_value().unwrap();
+            assert(value == 10, 'Incorrect state');
+        }
+    "#
+        ),
+
+        Contract::new(
+            "LibraryContract",
+            indoc!(
+                r#"
+                #[starknet::contract]
+                mod LibraryContract {
+                    use result::ResultTrait;
+                    use starknet::ClassHash;
+                    use starknet::library_call_syscall;
+
+                    #[storage]
+                    struct Storage {
+                        value: felt252
+                    }
+
+                    #[external(v0)]
+                    fn get_value(
+                        self: @ContractState,
+                    ) -> felt252 {
+                       self.value.read()
+                    }
+
+                    #[external(v0)]
+                    fn set_value(
+                        ref self: ContractState,
+                        number: felt252
+                    ) {
+                       self.value.write(number);
+                    }
+                }
+                "#
+            )
+        )
+    );
+
+    let result = run_test_case(&test);
+
+    assert_passed!(result);
+}
