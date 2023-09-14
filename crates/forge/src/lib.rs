@@ -298,7 +298,7 @@ fn run_tests_from_file(
 
             result
         } else {
-            let (result, runs) = run_test_case_with_fuzzing(
+            let (result, runs) = run_with_fuzzing(
                 runner_config,
                 contracts,
                 predeployed_contracts,
@@ -337,7 +337,7 @@ fn run_tests_from_file(
     })
 }
 
-fn run_test_case_with_fuzzing(
+fn run_with_fuzzing(
     runner_config: &RunnerConfig,
     contracts: &HashMap<String, StarknetContractArtifacts>,
     predeployed_contracts: &Utf8PathBuf,
