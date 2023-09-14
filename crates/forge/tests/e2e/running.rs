@@ -44,7 +44,8 @@ fn simple_package() {
         Running 1 test(s) from tests/without_prefix.cairo
         [PASS] without_prefix::five
         Tests: 9 passed, 2 failed, 0 skipped
-        
+        Fuzzer seed: [..]
+
         Failures:
             test_simple::test_failing
             test_simple::test_another_failing
@@ -115,6 +116,7 @@ fn simple_package_with_git_dependency() {
         Running 1 test(s) from tests/without_prefix.cairo
         [PASS] without_prefix::five
         Tests: 9 passed, 2 failed, 0 skipped
+        Fuzzer seed: [..]
         
         Failures:
             test_simple::test_failing
@@ -165,6 +167,7 @@ fn with_filter() {
         [PASS] test_simple::test_two_and_two
         Running 0 test(s) from tests/without_prefix.cairo
         Tests: 2 passed, 0 failed, 0 skipped
+        Fuzzer seed: [..]
         "#});
 }
 
@@ -190,6 +193,7 @@ fn with_exact_filter() {
         [PASS] test_simple::test_two
         Running 0 test(s) from tests/without_prefix.cairo
         Tests: 1 passed, 0 failed, 0 skipped
+        Fuzzer seed: [..]
         "#});
 }
 
@@ -213,6 +217,7 @@ fn with_non_matching_filter() {
         Running 0 test(s) from tests/test_simple.cairo
         Running 0 test(s) from tests/without_prefix.cairo
         Tests: 0 passed, 0 failed, 0 skipped
+        Fuzzer seed: [..]
         "#});
 }
 
@@ -253,6 +258,7 @@ fn with_print() {
         original value: [439721161573], converted to a string: [false]
         [PASS] test_print::test_print
         Tests: 1 passed, 0 failed, 0 skipped
+        Fuzzer seed: [..]
         "#});
 }
 
@@ -289,6 +295,7 @@ fn with_panic_data_decoding() {
 
         [PASS] test_panic_decoding::test_simple2
         Tests: 2 passed, 2 failed, 0 skipped
+        Fuzzer seed: [..]
         
         Failures:
             test_panic_decoding::test_panic_decoding
@@ -357,6 +364,7 @@ fn with_exit_first() {
         [SKIP] test_simple::test_another_failing
         [SKIP] without_prefix::five
         Tests: 8 passed, 1 failed, 2 skipped
+        Fuzzer seed: [..]
         
         Failures:
             test_simple::test_failing
@@ -396,6 +404,7 @@ fn with_exit_first_flag() {
         [SKIP] test_simple::test_another_failing
         [SKIP] without_prefix::five
         Tests: 8 passed, 1 failed, 2 skipped
+        Fuzzer seed: [..]
         
         Failures:
             test_simple::test_failing
@@ -457,7 +466,8 @@ fn exit_first_flag_takes_precedence() {
         [SKIP] test_simple::test_another_failing
         [SKIP] without_prefix::five
         Tests: 8 passed, 1 failed, 2 skipped
-        
+        Fuzzer seed: [..]
+
         Failures:
             test_simple::test_failing
         "#});
@@ -537,6 +547,7 @@ fn init_new_project_test() {
         [PASS] test_contract::test_increase_balance
         [PASS] test_contract::test_cannot_increase_balance_with_zero_value
         Tests: 2 passed, 0 failed, 0 skipped
+        Fuzzer seed: [..]
     "#});
 }
 
@@ -563,6 +574,7 @@ fn using_corelib_names() {
         Running 1 test(s) from tests/types.cairo
         [PASS] types::test_names
         Tests: 4 passed, 0 failed, 0 skipped
+        Fuzzer seed: [..]
         "#});
 }
 
@@ -605,6 +617,7 @@ fn should_panic() {
 
         [FAIL] should_panic_test::expected_panic_but_didnt
         Tests: 3 passed, 3 failed, 0 skipped
+        Fuzzer seed: [..]
         
         Failures:
             should_panic_test::should_panic_with_non_matching_data
@@ -639,5 +652,6 @@ fn printing_in_contracts() {
         [PASS] test_contract::test_increase_balance
         [PASS] test_contract::test_cannot_increase_balance_with_zero_value
         Tests: 2 passed, 0 failed, 0 skipped
+        Fuzzer seed: [..]
         "#});
 }

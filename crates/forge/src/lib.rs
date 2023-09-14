@@ -227,6 +227,11 @@ pub fn run(
 
     let mut tests_iterator = tests.into_iter();
 
+    let mut fuzzer = match runner_config.fuzzer_seed {
+        None => fuzzer::Random::new(),
+        Some(seed) => fuzzer::Random::from_seed(seed),
+    };
+
     let mut summaries = vec![];
     for tests_from_file in tests_iterator.by_ref() {
         let summary = run_tests_from_file(
@@ -235,6 +240,7 @@ pub fn run(
             runner_config,
             contracts,
             predeployed_contracts,
+            &mut fuzzer,
         )?;
         summaries.push(summary.clone());
         if summary.runner_exit_status == RunnerStatus::TestFailed {
@@ -262,6 +268,7 @@ pub fn run(
     }
 
     pretty_printing::print_test_summary(&summaries);
+    pretty_printing::print_fuzzer_seed(fuzzer.seed());
     Ok(summaries)
 }
 
@@ -271,6 +278,7 @@ fn run_tests_from_file(
     runner_config: &RunnerConfig,
     contracts: &HashMap<String, StarknetContractArtifacts>,
     predeployed_contracts: &Utf8PathBuf,
+    fuzzer: &mut fuzzer::Random,
 ) -> Result<TestFileSummary> {
     let runner = SierraCasmRunner::new(
         tests.sierra_program,
@@ -305,6 +313,7 @@ fn run_tests_from_file(
                 &runner,
                 case,
                 &args,
+                fuzzer,
             )?;
             pretty_printing::print_test_result(&result, Some(runs));
 
@@ -344,6 +353,7 @@ fn run_with_fuzzing(
     runner: &SierraCasmRunner,
     case: &TestCase,
     args: &Vec<&ConcreteTypeId>,
+    fuzzer: &mut fuzzer::Random,
 ) -> Result<(TestCaseSummary, u32)> {
     if contains_non_felt252_args(args, &BUILTINS) {
         bail!(
@@ -352,15 +362,10 @@ fn run_with_fuzzing(
         );
     }
 
-    let mut random_fuzzer = match runner_config.fuzzer_seed {
-        None => fuzzer::Random::new(),
-        Some(seed) => fuzzer::Random::from_seed(seed),
-    };
-
     let mut results = vec![];
 
     for _ in 1..=runner_config.fuzzer_runs {
-        let args: Vec<Felt252> = args.iter().map(|_| random_fuzzer.next_felt252()).collect();
+        let args: Vec<Felt252> = args.iter().map(|_| fuzzer.next_felt252()).collect();
 
         let result =
             run_from_test_case(runner, case, contracts, predeployed_contracts, args.clone())?;

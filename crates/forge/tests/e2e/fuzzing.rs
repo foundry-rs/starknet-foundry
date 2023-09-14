@@ -25,6 +25,7 @@ fn fuzzing() {
             original value: [593979512822486835600413552099926114], converted to a string: [result == a + b]
 
         Tests: 4 passed, 1 failed, 0 skipped
+        Fuzzer seed: [..]
 
         Failures:
             fuzzing::tests::failing_fuzz
@@ -56,6 +57,7 @@ fn fuzzing_set_runs() {
             original value: [593979512822486835600413552099926114], converted to a string: [result == a + b]
 
         Tests: 4 passed, 1 failed, 0 skipped
+        Fuzzer seed: [..]
 
         Failures:
             fuzzing::tests::failing_fuzz
@@ -81,12 +83,13 @@ fn fuzzing_set_seed() {
         [PASS] fuzzing::tests::fuzzed_argument (fuzzer runs = 256)
         [PASS] fuzzing::tests::fuzzed_both_arguments (fuzzer runs = 256)
         [PASS] fuzzing::tests::passing
-        [FAIL] fuzzing::tests::failing_fuzz (fuzzer runs = 1, arguments = [2747212248768723701292547667432253102957931518300200682643074373162842712217, 2464267667796943162905983180301451257796003176364505486980188124687118920211])
+        [FAIL] fuzzing::tests::failing_fuzz (fuzzer runs = 1, arguments = [2176913491924129583795008547758153887527303407267805286823327310126940911830, 2350787482052932408706155311404918127641790603096372587257662840043562009418])
 
         Failure data:
             original value: [593979512822486835600413552099926114], converted to a string: [result == a + b]
 
         Tests: 4 passed, 1 failed, 0 skipped
+        Fuzzer seed: [..]
 
         Failures:
             fuzzing::tests::failing_fuzz

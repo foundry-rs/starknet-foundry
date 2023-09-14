@@ -38,6 +38,10 @@ pub(crate) fn print_test_summary(summaries: &[TestFileSummary]) {
     );
 }
 
+pub(crate) fn print_fuzzer_seed(seed: u64) {
+    println!("{}: {seed}", style("Fuzzer seed").bold());
+}
+
 pub(crate) fn print_test_result(test_result: &TestCaseSummary, fuzzer_runs: Option<u32>) {
     let result_header = match test_result {
         TestCaseSummary::Passed { .. } => format!("[{}]", style("PASS").green()),
