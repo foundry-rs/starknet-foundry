@@ -4,14 +4,19 @@ use crate::starknet_commands::account::deploy::Deploy;
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use cast::{
-    chain_id_to_network_name, decode_chain_id,
+    chain_id_to_network_name, decode_chain_id, get_chain_id,
     helpers::scarb_utils::{
         get_package_tool_sncast, get_scarb_manifest, get_scarb_metadata, CastConfig,
     },
 };
 use clap::{Args, Subcommand};
 use serde_json::json;
-use starknet::{core::types::FieldElement, signers::SigningKey};
+use starknet::{
+    accounts::{AccountFactory, OpenZeppelinAccountFactory},
+    core::types::{FeeEstimate, FieldElement},
+    providers::{jsonrpc::HttpTransport, JsonRpcClient},
+    signers::{LocalWallet, SigningKey},
+};
 use std::{fs::OpenOptions, io::Write};
 use toml::Value;
 
@@ -155,6 +160,31 @@ pub fn add_created_profile_to_configuration(
         .context("Couldn't write to the Scarb.toml")?;
 
     Ok(())
+}
+
+async fn get_account_deployment_fee(
+    private_key: &SigningKey,
+    class_hash: FieldElement,
+    salt: FieldElement,
+    provider: &JsonRpcClient<HttpTransport>,
+) -> Result<FeeEstimate> {
+    let signer = LocalWallet::from_signing_key(private_key.clone());
+    let chain_id = get_chain_id(provider).await?;
+    let factory = OpenZeppelinAccountFactory::new(class_hash, chain_id, signer, provider).await?;
+    let deployment = factory.deploy(salt);
+
+    let fee_estimate = deployment.estimate_fee().await;
+
+    if let Err(err) = &fee_estimate {
+        if err
+            .to_string()
+            .contains("StarknetErrorCode.UNDECLARED_CLASS")
+        {
+            bail!("The class {class_hash} is undeclared, try using --class-hash with a class hash that is already declared");
+        }
+    }
+
+    Ok(fee_estimate?)
 }
 
 #[cfg(test)]

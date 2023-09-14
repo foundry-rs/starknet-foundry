@@ -215,6 +215,8 @@ async fn main() -> Result<()> {
                     &cli.path_to_scarb_toml,
                     chain_id,
                     &add,
+                    cli.keystore,
+                    cli.account.map(Utf8PathBuf::from),
                 );
 
                 print_command_result("account add", &mut result, cli.int_format, cli.json)?;
@@ -231,9 +233,6 @@ async fn main() -> Result<()> {
                     create.salt,
                     create.add_profile,
                     create.class_hash,
-                    create.from_keystore,
-                    cli.keystore,
-                    cli.account.map(Utf8PathBuf::from),
                 )
                 .await;
 
