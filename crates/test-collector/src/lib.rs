@@ -99,9 +99,9 @@ pub enum ExpectedTestResult {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct ForkConfig {
-    pub url: String,
-    pub block_id: BlockId,
+pub enum Fork {
+    Id(String),
+    Config(String, BlockId),
 }
 
 /// The configuration for running a single test.
@@ -114,7 +114,7 @@ pub struct SingleTestConfig {
     /// Should the test be ignored.
     pub ignored: bool,
     /// The configuration of forked network.
-    pub fork_config: Option<ForkConfig>,
+    pub fork_config: Option<Fork>,
 }
 
 /// Finds the tests in the requested crates.
@@ -310,8 +310,30 @@ fn extract_panic_values(db: &dyn SyntaxGroup, attr: &Attribute) -> Option<Vec<Fe
         .collect::<Option<Vec<_>>>()
 }
 
-/// Tries to extract the `url` and `block_number`.
-fn extract_fork_config(db: &dyn SyntaxGroup, attr: &Attribute) -> Option<ForkConfig> {
+/// Tries to extract the fork configuration.
+fn extract_fork_config(db: &dyn SyntaxGroup, attr: &Attribute) -> Option<Fork> {
+    if attr.args.is_empty() {
+        return None;
+    }
+
+    match &attr.args[0].variant {
+        AttributeArgVariant::Unnamed { value: fork_id, .. } => {
+            extract_fork_config_from_id(fork_id, db)
+        }
+        _ => extract_fork_config_from_args(db, attr),
+    }
+}
+
+fn extract_fork_config_from_id(id: &ast::Expr, db: &dyn SyntaxGroup) -> Option<Fork> {
+    let ast::Expr::String(url_str) = id else {
+        return None;
+    };
+    let url = url_str.string_value(db)?;
+
+    Some(Fork::Id(url))
+}
+
+fn extract_fork_config_from_args(db: &dyn SyntaxGroup, attr: &Attribute) -> Option<Fork> {
     let [AttributeArg {
         variant:
             AttributeArgVariant::Named {
@@ -397,10 +419,7 @@ fn extract_fork_config(db: &dyn SyntaxGroup, attr: &Attribute) -> Option<ForkCon
         return None;
     }
 
-    Some(ForkConfig {
-        url,
-        block_id: block_id[0].unwrap(),
-    })
+    Some(Fork::Config(url, block_id[0].unwrap()))
 }
 
 /// Represents a dependency of a Cairo project
@@ -415,7 +434,7 @@ pub struct TestCase {
     pub name: String,
     pub available_gas: Option<usize>,
     pub expected_result: ExpectedTestResult,
-    pub fork_config: Option<ForkConfig>,
+    pub fork_config: Option<Fork>,
 }
 
 // returns tuple[sierra if no output_path, list[test_name, test_config]]
