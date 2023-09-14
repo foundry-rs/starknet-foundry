@@ -80,7 +80,7 @@ fn fork_simple_decorator() {
             }}
 
             #[test]
-            #[fork(url: ('{}', '{}'), block_number: 311695)]
+            #[fork(url: "{}", block_number: 311695)]
             fn test_fork_simple() {{
                 let dispatcher = IHelloStarknetDispatcher {{
                     contract_address: contract_address_const::<3216637956526895219277698311134811322769343974163380838558193911733621219342>()
@@ -95,8 +95,7 @@ fn fork_simple_decorator() {
                 assert(balance == 102, 'Balance should be 102');
             }}
         "#,
-        node_url[..31].to_string(),
-        node_url[31..].to_string()
+        node_url
     ).as_str());
 
     let result = run_test_case(&test);

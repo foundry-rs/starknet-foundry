@@ -31,7 +31,6 @@ use cairo_lang_syntax::node::db::SyntaxGroup;
 use cairo_lang_test_runner::plugin::TestPlugin;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use cairo_lang_utils::OptionHelper;
-use conversions::StarknetConversions;
 use itertools::Itertools;
 use num_traits::ToPrimitive;
 use project::{setup_single_file_project, PHANTOM_PACKAGE_NAME_PREFIX};
@@ -333,25 +332,10 @@ fn extract_fork_config(db: &dyn SyntaxGroup, attr: &Attribute) -> Option<ForkCon
     if url_arg_name != "url" {
         return None;
     }
-    let ast::Expr::Tuple(url_arr) = url else {
+    let ast::Expr::String(url_str) = url else {
         return None;
     };
-    let split_url = url_arr
-        .expressions(db)
-        .elements(db)
-        .into_iter()
-        .map(|value| match value {
-            ast::Expr::ShortString(literal) => {
-                Some(literal.numeric_value(db).unwrap_or_default().into())
-            }
-            _ => None,
-        })
-        .collect::<Option<Vec<Felt252>>>();
-    let url = split_url
-        .unwrap()
-        .iter()
-        .map(StarknetConversions::to_short_string)
-        .join("");
+    let url = url_str.string_value(db)?;
 
     if block_number_arg_name != "block_number" {
         return None;
