@@ -15,7 +15,8 @@ Tests: 3 passed, 0 failed, 0 skipped
 ## Filtering Tests
 
 You can pass a filter string after the `snforge` command to filter tests.
-By default, any test name matching the filter will be run.
+By default, any test with an [absolute module tree path](https://book.cairo-lang.org/ch06-03-paths-for-referring-to-an-item-in-the-module-tree.html?highlight=path#paths-for-referring-to-an-item-in-the-module-tree)
+ matching the filter will be run.
 
 ```shell
 $ snforge calling

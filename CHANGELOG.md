@@ -7,13 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # [Unreleased]
 
-### Forge
+### Cast
 
 #### Added
 
+- `account add` command for importing accounts to the accounts file
+
+#### Changed
+
+- `--add-profile` no longer accepts `-a` for short
+
+
+# [0.6.0] - 2023-09-13
+
+### Forge
+
+#### Added
 - `deploy_at` cheatcode
+- printing failures summary at the end of an execution
+- filtering tests now uses an absolute module tree path — it is possible to filter tests by module names, etc.
+
+### Fixed
+
+- non-zero exit code is returned when any tests fail
+- mock_call works with dispatchers if contract does not exists
 
 ### Cast
+
+#### Added
+
+- support for starkli-style accounts, allowing the use of existing accounts
 
 #### Changed
 
