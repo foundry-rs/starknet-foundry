@@ -12,8 +12,8 @@ use forge::{run, TestFileSummary};
 
 use forge::scarb::{
     config_from_scarb_for_package, corelib_for_package, dependencies_for_package,
-    get_contracts_map, name_for_package, paths_for_package, target_name_for_package,
-    try_get_starknet_artifacts_path,
+    get_contracts_map, name_for_package, paths_for_package, target_dir_for_package,
+    target_name_for_package, try_get_starknet_artifacts_path,
 };
 use forge::test_case_summary::TestCaseSummary;
 use std::process::{Command, Stdio};
@@ -74,19 +74,6 @@ fn main_execution() -> Result<bool> {
 
     let scarb_metadata = MetadataCommand::new().inherit_stderr().exec()?;
 
-    let current_dir = std::env::current_dir().context("Failed to get current directory")?;
-
-    let build_output = Command::new("scarb")
-        .current_dir(current_dir)
-        .arg("build")
-        .stderr(Stdio::inherit())
-        .stdout(Stdio::inherit())
-        .output()
-        .context("Failed to build contracts with Scarb")?;
-    if !build_output.status.success() {
-        bail!("Scarb build did not succeed")
-    }
-
     let packages: Vec<PackageMetadata> = args
         .packages_filter
         .match_many(&scarb_metadata)
@@ -96,6 +83,22 @@ fn main_execution() -> Result<bool> {
     for package in &packages {
         let forge_config = config_from_scarb_for_package(&scarb_metadata, &package.id)?;
         let (package_path, lib_path) = paths_for_package(&scarb_metadata, &package.id)?;
+        std::env::set_current_dir(package_path.clone())?;
+
+        let target_dir = target_dir_for_package(&package_path)?; // TODO
+
+        let current_dir = std::env::current_dir().context("Failed to get current directory")?;
+
+        let build_output = Command::new("scarb")
+            .current_dir(current_dir)
+            .arg("build")
+            .stderr(Stdio::inherit())
+            .stdout(Stdio::inherit())
+            .output()
+            .context("Failed to build contracts with Scarb")?;
+        if !build_output.status.success() {
+            bail!("Scarb build did not succeed")
+        }
 
         let subpackages: Vec<Utf8PathBuf> = scarb_metadata
             .packages
@@ -103,8 +106,6 @@ fn main_execution() -> Result<bool> {
             .map(|package| package.manifest_path.parent().unwrap().to_path_buf())
             .filter(|path| path.starts_with(&package_path) && *path != package_path)
             .collect();
-
-        std::env::set_current_dir(package_path.clone())?;
 
         let package_name = name_for_package(&scarb_metadata, &package.id)?;
         let dependencies = dependencies_for_package(&scarb_metadata, &package.id)?;
@@ -116,8 +117,7 @@ fn main_execution() -> Result<bool> {
             args.exit_first,
             &forge_config,
         );
-
-        let contracts_path = try_get_starknet_artifacts_path(&package_path, &target_name)?;
+        let contracts_path = try_get_starknet_artifacts_path(&target_dir, &target_name)?;
         let contracts = contracts_path
             .map(|path| get_contracts_map(&path))
             .transpose()?

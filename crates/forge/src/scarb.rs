@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Context, Result};
 use camino::Utf8PathBuf;
-use scarb_metadata::{CompilationUnitMetadata, Metadata, PackageId};
+use scarb_metadata::{CompilationUnitMetadata, Metadata, MetadataCommand, PackageId};
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs;
@@ -69,10 +69,10 @@ fn artifacts_for_package(path: &Utf8PathBuf) -> Result<StarknetArtifacts> {
 /// * `path` - A path to the Scarb package
 /// * `target_name` - A name of the target that is being built by Scarb
 pub fn try_get_starknet_artifacts_path(
-    path: &Utf8PathBuf,
+    target_dir: &Utf8PathBuf,
     target_name: &str,
 ) -> Result<Option<Utf8PathBuf>> {
-    let path = path.join("target/dev");
+    let path = target_dir.join("dev");
     let paths = fs::read_dir(path);
     let Ok(mut paths) = paths else {
         return Ok(None);
@@ -179,10 +179,19 @@ pub fn paths_for_package(
         .ok_or_else(|| anyhow!("Failed to find metadata for package = {package}"))?;
 
     let package_path = package.root.clone();
-
     let lib_path = compilation_unit.target.source_path.clone();
 
     Ok((package_path, lib_path))
+}
+
+pub fn target_dir_for_package(package_path: &Utf8PathBuf) -> Result<Utf8PathBuf> {
+    let scarb_metadata = MetadataCommand::new().inherit_stderr().exec()?;
+
+    let target_dir = scarb_metadata
+        .target_dir
+        .unwrap_or_else(|| package_path.join("target/dev"));
+
+    Ok(target_dir)
 }
 
 /// Get a name of the given package
@@ -274,7 +283,7 @@ mod tests {
         assert!(build_output.status.success());
 
         let result = try_get_starknet_artifacts_path(
-            &Utf8PathBuf::from_path_buf(temp.to_path_buf()).unwrap(),
+            &Utf8PathBuf::from_path_buf(temp.to_path_buf().join("target")).unwrap(),
             "simple_package",
         );
         let path = result.unwrap().unwrap();
@@ -325,7 +334,7 @@ mod tests {
         assert!(build_output.status.success());
 
         let result = try_get_starknet_artifacts_path(
-            &Utf8PathBuf::from_path_buf(temp.to_path_buf()).unwrap(),
+            &Utf8PathBuf::from_path_buf(temp.to_path_buf().join("target")).unwrap(),
             "essa",
         );
         let path = result.unwrap().unwrap();
@@ -358,7 +367,7 @@ mod tests {
         assert!(build_output.status.success());
 
         let result = try_get_starknet_artifacts_path(
-            &Utf8PathBuf::from_path_buf(temp.to_path_buf()).unwrap(),
+            &Utf8PathBuf::from_path_buf(temp.to_path_buf().join("target")).unwrap(),
             "panic_decoding",
         );
         let path = result.unwrap();
@@ -370,7 +379,7 @@ mod tests {
         let temp = setup_package("simple_package");
 
         let result = try_get_starknet_artifacts_path(
-            &Utf8PathBuf::from_path_buf(temp.to_path_buf()).unwrap(),
+            &Utf8PathBuf::from_path_buf(temp.to_path_buf().join("target")).unwrap(),
             "simple_package",
         );
         let path = result.unwrap();
