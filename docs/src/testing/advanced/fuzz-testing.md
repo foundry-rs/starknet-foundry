@@ -12,10 +12,6 @@ against a large number of possible arguments.
 
 ## Random Fuzzing
 
-> ⚠️ **Warning**
-> Currently Forge only supports fuzz testing arguments with `felt252` type. Trying to use different argument types will
-> result in an error.
-
 To convert a test to a random fuzz test, simply add arguments to the test function.
 These arguments can then be used in the test body.
 The test will be run multiple times for different randomly generated values.
@@ -40,6 +36,10 @@ Running 1 test(s) from package_name package
 Running fuzzer for package_name::test_sum, 256 runs:
 [PASS] package_name::test_sum
 ```
+
+> ⚠️ **Warning**
+> Currently Forge only supports fuzz testing arguments with `felt252` type. Trying to use different argument types will
+> result in an error.
 
 ## Configuring The Fuzzer
 
