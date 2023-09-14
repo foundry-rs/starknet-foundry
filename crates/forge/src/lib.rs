@@ -347,7 +347,7 @@ fn run_test_case_with_fuzzing(
 ) -> Result<(TestCaseSummary, u32)> {
     if contains_non_felt252_args(args, &BUILTINS) {
         bail!(
-            "Test {} requires arguments that are not felt252 type",
+            "Fuzzer only supports felt252 arguments, and test {} defines arguments that are not felt252 type",
             case.name.as_str()
         );
     }
