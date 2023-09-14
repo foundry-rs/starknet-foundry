@@ -80,7 +80,7 @@ fn fork_simple_decorator() {
             }}
 
             #[test]
-            #[fork(url: "{}", block_number: 311695)]
+            #[fork(url: "{}", block_id: BlockId::Tag(BlockTag::Latest(())))]
             fn test_fork_simple() {{
                 let dispatcher = IHelloStarknetDispatcher {{
                     contract_address: contract_address_const::<3216637956526895219277698311134811322769343974163380838558193911733621219342>()

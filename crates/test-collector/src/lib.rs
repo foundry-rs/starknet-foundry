@@ -27,14 +27,18 @@ use cairo_lang_starknet::inline_macros::selector::SelectorMacro;
 use cairo_lang_starknet::plugin::StarkNetPlugin;
 use cairo_lang_syntax::attribute::structured::{Attribute, AttributeArg, AttributeArgVariant};
 use cairo_lang_syntax::node::ast;
+use cairo_lang_syntax::node::ast::ArgClause;
 use cairo_lang_syntax::node::db::SyntaxGroup;
+use cairo_lang_syntax::node::helpers::GetIdentifier;
 use cairo_lang_test_runner::plugin::TestPlugin;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use cairo_lang_utils::OptionHelper;
+use conversions::StarknetConversions;
 use itertools::Itertools;
 use num_traits::ToPrimitive;
 use project::{setup_single_file_project, PHANTOM_PACKAGE_NAME_PREFIX};
 use smol_str::SmolStr;
+use starknet::core::types::{BlockId, BlockTag};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -97,7 +101,7 @@ pub enum ExpectedTestResult {
 #[derive(Debug, Clone, PartialEq)]
 pub struct ForkConfig {
     pub url: String,
-    pub block_number: Felt252,
+    pub block_id: BlockId,
 }
 
 /// The configuration for running a single test.
@@ -237,8 +241,8 @@ pub fn try_extract_test_config(
             extract_fork_config(db, attr).on_none(|| {
                 diagnostics.push(PluginDiagnostic {
                     stable_ptr: attr.args_stable_ptr.untyped(),
-                    message: "Expected fork config must be of the form `url: <tuple of \
-                                  felts>, block_number: <felt>`."
+                    message: "Expected fork config must be of the form `url: <double quote \
+                                  string>, block_id: <snforge_std::BlockId>`."
                         .into(),
                 });
             })
@@ -306,7 +310,7 @@ fn extract_panic_values(db: &dyn SyntaxGroup, attr: &Attribute) -> Option<Vec<Fe
         .collect::<Option<Vec<_>>>()
 }
 
-/// Tries to extract the `node_url` and `block_number`.
+/// Tries to extract the `url` and `block_number`.
 fn extract_fork_config(db: &dyn SyntaxGroup, attr: &Attribute) -> Option<ForkConfig> {
     let [AttributeArg {
         variant:
@@ -319,8 +323,8 @@ fn extract_fork_config(db: &dyn SyntaxGroup, attr: &Attribute) -> Option<ForkCon
     }, AttributeArg {
         variant:
             AttributeArgVariant::Named {
-                name: block_number_arg_name,
-                value: block_number,
+                name: block_id_arg_name,
+                value: block_id,
                 ..
             },
         ..
@@ -337,15 +341,66 @@ fn extract_fork_config(db: &dyn SyntaxGroup, attr: &Attribute) -> Option<ForkCon
     };
     let url = url_str.string_value(db)?;
 
-    if block_number_arg_name != "block_number" {
+    if block_id_arg_name != "block_id" {
         return None;
     }
-    let ast::Expr::Literal(block_number_value) = block_number else {
+    let ast::Expr::FunctionCall(block_id) = block_id else {
         return None;
     };
-    let block_number = Felt252::from(block_number_value.numeric_value(db).unwrap());
 
-    Some(ForkConfig { url, block_number })
+    let block_id_type = block_id
+        .path(db)
+        .elements(db)
+        .last()
+        .unwrap()
+        .identifier(db)
+        .to_string();
+
+    let block_id = block_id
+        .arguments(db)
+        .args(db)
+        .elements(db)
+        .into_iter()
+        .map(|arg| match arg.arg_clause(db) {
+            ArgClause::Unnamed(unnamed_arg_clause) => Some(unnamed_arg_clause.value(db)),
+            _ => None,
+        })
+        .map(|arg| match arg {
+            Some(ast::Expr::Literal(value)) => match block_id_type.as_str() {
+                "Number" => Some(BlockId::Number(
+                    u64::try_from(value.numeric_value(db).unwrap()).unwrap(),
+                )),
+                "Hash" => Some(BlockId::Hash(
+                    Felt252::from(value.numeric_value(db).unwrap()).to_field_element(),
+                )),
+                _ => None,
+            },
+            Some(ast::Expr::FunctionCall(block_tag)) => {
+                let tag = block_tag
+                    .path(db)
+                    .elements(db)
+                    .last()
+                    .unwrap()
+                    .identifier(db)
+                    .to_string();
+                match tag.as_str() {
+                    "Latest" => Some(BlockId::Tag(BlockTag::Latest)),
+                    "Pending" => Some(BlockId::Tag(BlockTag::Pending)),
+                    _ => None,
+                }
+            }
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+
+    if block_id.len() != 1 || block_id[0].is_none() {
+        return None;
+    }
+
+    Some(ForkConfig {
+        url,
+        block_id: block_id[0].unwrap(),
+    })
 }
 
 /// Represents a dependency of a Cairo project
