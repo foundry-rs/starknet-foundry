@@ -289,7 +289,7 @@ fn run_tests_from_file(
     for (i, case) in tests.test_cases.iter().enumerate() {
         let case_name = case.name.as_str();
         let function = runner.find_function(case_name)?;
-        let args = args_for_function(function);
+        let args = function_args(function);
 
         let result = if args.is_empty() {
             let result =
@@ -389,7 +389,7 @@ fn contains_non_felt252_args(args: &Vec<&ConcreteTypeId>, builtins: &[&str]) -> 
     })
 }
 
-fn args_for_function(function: &Function) -> Vec<&ConcreteTypeId> {
+fn function_args(function: &Function) -> Vec<&ConcreteTypeId> {
     function
         .signature
         .param_types
