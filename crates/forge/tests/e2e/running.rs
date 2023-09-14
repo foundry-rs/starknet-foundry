@@ -172,6 +172,31 @@ fn with_filter() {
 }
 
 #[test]
+fn with_filter_matching_module() {
+    let temp = setup_package("simple_package");
+    let snapbox = runner();
+
+    snapbox
+        .current_dir(&temp)
+        .arg("ext_function_test::")
+        .assert()
+        .success()
+        .stdout_matches(indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+        Collected 2 test(s) and 5 test file(s)
+        Running 0 test(s) from simple_package package
+        Running 0 test(s) from tests/contract.cairo
+        Running 2 test(s) from tests/ext_function_test.cairo
+        [PASS] ext_function_test::test_my_test
+        [PASS] ext_function_test::test_simple
+        Running 0 test(s) from tests/test_simple.cairo
+        Running 0 test(s) from tests/without_prefix.cairo
+        Tests: 2 passed, 0 failed, 0 skipped
+        "#});
+}
+
+#[test]
 fn with_exact_filter() {
     let temp = setup_package("simple_package");
     let snapbox = runner();
