@@ -363,7 +363,7 @@ fn run_test_case_with_fuzzing(
     let mut results = vec![];
 
     for _ in 1..=runner_config.fuzzer_runs {
-        let args: Vec<Felt252> = args.iter().map(|_| random_fuzzer.next_argument()).collect();
+        let args: Vec<Felt252> = args.iter().map(|_| random_fuzzer.next_felt252()).collect();
 
         let result =
             run_from_test_case(runner, case, contracts, predeployed_contracts, args.clone())?;

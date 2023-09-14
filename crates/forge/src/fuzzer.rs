@@ -23,7 +23,7 @@ impl Random {
 }
 
 impl Random {
-    pub fn next_argument(&mut self) -> Felt252 {
+    pub fn next_felt252(&mut self) -> Felt252 {
         let low = BigUint::zero();
         let high = Felt252::prime();
 
