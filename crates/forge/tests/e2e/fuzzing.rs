@@ -16,20 +16,16 @@ fn fuzzing() {
         Collected 5 test(s) and 1 test file(s)
         Running 5 test(s) from fuzzing package
         [PASS] fuzzing::tests::adding
-        Running fuzzer for fuzzing::tests::fuzzed_argument, 256 runs:
-        [PASS] fuzzing::tests::fuzzed_argument
-        Running fuzzer for fuzzing::tests::fuzzed_both_arguments, 256 runs:
-        [PASS] fuzzing::tests::fuzzed_both_arguments
+        [PASS] fuzzing::tests::fuzzed_argument (fuzzer runs = 256)
+        [PASS] fuzzing::tests::fuzzed_both_arguments (fuzzer runs = 256)
         [PASS] fuzzing::tests::passing
-        Running fuzzer for fuzzing::tests::failing_fuzz, 256 runs:
-        [FAIL] fuzzing::tests::failing_fuzz
+        [FAIL] fuzzing::tests::failing_fuzz (fuzzer runs = 1, arguments = [[..], [..]])
 
         Failure data:
             original value: [593979512822486835600413552099926114], converted to a string: [result == a + b]
 
-        Fuzz test failed on argument(s) [[..], [..]] after 1 run(s)
         Tests: 4 passed, 1 failed, 0 skipped
-        
+
         Failures:
             fuzzing::tests::failing_fuzz
         "#});
@@ -51,20 +47,16 @@ fn fuzzing_set_runs() {
         Collected 5 test(s) and 1 test file(s)
         Running 5 test(s) from fuzzing package
         [PASS] fuzzing::tests::adding
-        Running fuzzer for fuzzing::tests::fuzzed_argument, 10 runs:
-        [PASS] fuzzing::tests::fuzzed_argument
-        Running fuzzer for fuzzing::tests::fuzzed_both_arguments, 10 runs:
-        [PASS] fuzzing::tests::fuzzed_both_arguments
+        [PASS] fuzzing::tests::fuzzed_argument (fuzzer runs = 10)
+        [PASS] fuzzing::tests::fuzzed_both_arguments (fuzzer runs = 10)
         [PASS] fuzzing::tests::passing
-        Running fuzzer for fuzzing::tests::failing_fuzz, 10 runs:
-        [FAIL] fuzzing::tests::failing_fuzz
+        [FAIL] fuzzing::tests::failing_fuzz (fuzzer runs = 1, arguments = [[..], [..]])
 
         Failure data:
             original value: [593979512822486835600413552099926114], converted to a string: [result == a + b]
 
-        Fuzz test failed on argument(s) [[..], [..]] after 1 run(s)
         Tests: 4 passed, 1 failed, 0 skipped
-        
+
         Failures:
             fuzzing::tests::failing_fuzz
         "#});
@@ -86,20 +78,16 @@ fn fuzzing_set_seed() {
         Collected 5 test(s) and 1 test file(s)
         Running 5 test(s) from fuzzing package
         [PASS] fuzzing::tests::adding
-        Running fuzzer for fuzzing::tests::fuzzed_argument, 256 runs:
-        [PASS] fuzzing::tests::fuzzed_argument
-        Running fuzzer for fuzzing::tests::fuzzed_both_arguments, 256 runs:
-        [PASS] fuzzing::tests::fuzzed_both_arguments
+        [PASS] fuzzing::tests::fuzzed_argument (fuzzer runs = 256)
+        [PASS] fuzzing::tests::fuzzed_both_arguments (fuzzer runs = 256)
         [PASS] fuzzing::tests::passing
-        Running fuzzer for fuzzing::tests::failing_fuzz, 256 runs:
-        [FAIL] fuzzing::tests::failing_fuzz
+        [FAIL] fuzzing::tests::failing_fuzz (fuzzer runs = 1, arguments = [2747212248768723701292547667432253102957931518300200682643074373162842712217, 2464267667796943162905983180301451257796003176364505486980188124687118920211])
 
         Failure data:
             original value: [593979512822486835600413552099926114], converted to a string: [result == a + b]
 
-        Fuzz test failed on argument(s) [2747212248768723701292547667432253102957931518300200682643074373162842712217, 2464267667796943162905983180301451257796003176364505486980188124687118920211] after 1 run(s)
         Tests: 4 passed, 1 failed, 0 skipped
-        
+
         Failures:
             fuzzing::tests::failing_fuzz
         "#});

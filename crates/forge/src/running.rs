@@ -78,9 +78,9 @@ pub(crate) fn run_from_test_case(
     let func = runner.find_function(case.name.as_str())?;
     let initial_gas = runner.get_initial_available_gas(func, available_gas)?;
 
-    let args: Vec<Arg> = args.into_iter().map(Arg::Value).collect();
+    let runner_args: Vec<Arg> = args.clone().into_iter().map(Arg::Value).collect();
 
-    let (entry_code, builtins) = runner.create_entry_code(func, &args, initial_gas)?;
+    let (entry_code, builtins) = runner.create_entry_code(func, &runner_args, initial_gas)?;
     let footer = runner.create_code_footer();
     let instructions = chain!(
         entry_code.iter(),
@@ -147,7 +147,7 @@ pub(crate) fn run_from_test_case(
         instructions,
         builtins,
     ) {
-        Ok(result) => Ok(TestCaseSummary::from_run_result(result, case)),
+        Ok(result) => Ok(TestCaseSummary::from_run_result(result, case, args)),
 
         // CairoRunError comes from VirtualMachineError which may come from HintException that originates in the cheatcode processor
         Err(RunnerError::CairoRunError(error)) => Ok(TestCaseSummary::Failed {
@@ -157,6 +157,7 @@ pub(crate) fn run_from_test_case(
                 "\n    {}\n",
                 error.to_string().replace(" Custom Hint Error: ", "\n    ")
             )),
+            arguments: args,
         }),
 
         Err(err) => Err(err.into()),

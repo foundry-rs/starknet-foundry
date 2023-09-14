@@ -250,7 +250,7 @@ pub fn run(
             .collect();
 
         for test_case_summary in &skipped {
-            pretty_printing::print_test_result(test_case_summary);
+            pretty_printing::print_test_result(test_case_summary, None);
         }
 
         let file_summary = TestFileSummary {
@@ -294,12 +294,11 @@ fn run_tests_from_file(
         let result = if args.is_empty() {
             let result =
                 run_from_test_case(&runner, case, contracts, predeployed_contracts, vec![])?;
-            pretty_printing::print_test_result(&result);
+            pretty_printing::print_test_result(&result, None);
 
             result
         } else {
-            pretty_printing::print_fuzz_running(case_name, runner_config);
-            let (result, args, runs) = run_test_case_with_fuzzing(
+            let (result, runs) = run_test_case_with_fuzzing(
                 runner_config,
                 contracts,
                 predeployed_contracts,
@@ -307,11 +306,9 @@ fn run_tests_from_file(
                 case,
                 &args,
             )?;
-            pretty_printing::print_test_result(&result);
+            pretty_printing::print_test_result(&result, Some(runs));
 
-            if let TestCaseSummary::Failed { .. } = result {
-                pretty_printing::print_fuzz_failed(&args, runs);
-            }
+            if let TestCaseSummary::Failed { .. } = result {}
 
             result
         };
@@ -322,7 +319,7 @@ fn run_tests_from_file(
             if let TestCaseSummary::Failed { .. } = result {
                 for case in &tests.test_cases[i + 1..] {
                     let skipped_result = TestCaseSummary::skipped(case);
-                    pretty_printing::print_test_result(&skipped_result);
+                    pretty_printing::print_test_result(&skipped_result, None);
                     results.push(skipped_result);
                 }
                 return Ok(TestFileSummary {
@@ -347,7 +344,7 @@ fn run_test_case_with_fuzzing(
     runner: &SierraCasmRunner,
     case: &TestCase,
     args: &Vec<&ConcreteTypeId>,
-) -> Result<(TestCaseSummary, Vec<Felt252>, usize)> {
+) -> Result<(TestCaseSummary, u32)> {
     if contains_non_felt252_args(args, &BUILTINS) {
         bail!(
             "Test {} requires arguments that are not felt252 type",
@@ -367,7 +364,7 @@ fn run_test_case_with_fuzzing(
 
         let result =
             run_from_test_case(runner, case, contracts, predeployed_contracts, args.clone())?;
-        results.push((result.clone(), args));
+        results.push(result.clone());
 
         if let TestCaseSummary::Failed { .. } = result {
             // Fuzz failed
@@ -375,12 +372,12 @@ fn run_test_case_with_fuzzing(
         }
     }
 
-    let (result, args) = results
+    let result = results
         .last()
         .expect("Test should always run at least once")
         .clone();
-    let runs = results.len();
-    Ok((result, args, runs))
+    let runs = u32::try_from(results.len())?;
+    Ok((result, runs))
 }
 
 fn contains_non_felt252_args(args: &Vec<&ConcreteTypeId>, builtins: &[&str]) -> bool {

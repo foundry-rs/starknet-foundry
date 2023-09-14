@@ -1,7 +1,6 @@
 use crate::test_case_summary::TestCaseSummary;
-use crate::{RunnerConfig, TestFileSummary};
+use crate::TestFileSummary;
 use anyhow::Error;
-use cairo_felt::Felt252;
 use camino::Utf8PathBuf;
 use console::style;
 
@@ -39,7 +38,7 @@ pub(crate) fn print_test_summary(summaries: &[TestFileSummary]) {
     );
 }
 
-pub(crate) fn print_test_result(test_result: &TestCaseSummary) {
+pub(crate) fn print_test_result(test_result: &TestCaseSummary, fuzzer_runs: Option<u32>) {
     let result_header = match test_result {
         TestCaseSummary::Passed { .. } => format!("[{}]", style("PASS").green()),
         TestCaseSummary::Failed { .. } => format!("[{}]", style("FAIL").red()),
@@ -58,7 +57,19 @@ pub(crate) fn print_test_result(test_result: &TestCaseSummary) {
         _ => String::new(),
     };
 
-    println!("{result_header} {result_name}{result_message}");
+    let fuzzer_runs = match fuzzer_runs {
+        None => String::new(),
+        Some(runs) => {
+            if matches!(test_result, TestCaseSummary::Failed { .. }) {
+                let arguments = test_result.arguments();
+                format!(" (fuzzer runs = {runs}, arguments = {arguments:?})")
+            } else {
+                format!(" (fuzzer runs = {runs})")
+            }
+        }
+    };
+
+    println!("{result_header} {result_name}{fuzzer_runs}{result_message}");
 }
 
 pub fn print_failures(all_failed_tests: &[TestCaseSummary]) {
@@ -78,15 +89,4 @@ pub fn print_failures(all_failed_tests: &[TestCaseSummary]) {
     for name in failed_tests_names {
         println!("    {name}");
     }
-}
-
-pub fn print_fuzz_running(case_name: &str, runner_config: &RunnerConfig) {
-    println!(
-        "Running fuzzer for {case_name}, {} runs:",
-        runner_config.fuzzer_runs
-    );
-}
-
-pub fn print_fuzz_failed(args: &[Felt252], runs: usize) {
-    println!("Fuzz test failed on argument(s) {args:?} after {runs} run(s)");
 }
