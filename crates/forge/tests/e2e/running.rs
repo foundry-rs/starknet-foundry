@@ -193,6 +193,7 @@ fn with_filter_matching_module() {
         Running 0 test(s) from tests/test_simple.cairo
         Running 0 test(s) from tests/without_prefix.cairo
         Tests: 2 passed, 0 failed, 0 skipped
+        Fuzzer seed: [..]
         "#});
 }
 
