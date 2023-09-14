@@ -10,15 +10,24 @@ use starknet::core::utils::get_contract_address;
 use starknet::signers::SigningKey;
 use std::fs;
 
-#[derive(Args, Debug)]
+#[derive(Args, Debug, Default)]
 #[command(about = "Add an account to the accounts file")]
 pub struct Add {
-    /// Address of the account
+    /// Name of the account to be added
     #[clap(short, long)]
+    pub name: String,
+
+    /// Address of the account
+    #[clap(
+        short,
+        long,
+        default_value = "0",
+        required_unless_present = "from_keystore"
+    )]
     pub address: FieldElement,
 
     /// Class hash of the account
-    #[clap(short, long)]
+    #[clap(long, visible_alias = "ch")]
     pub class_hash: Option<FieldElement>,
 
     /// Account deployment status
@@ -26,11 +35,16 @@ pub struct Add {
     pub deployed: bool,
 
     /// Account private key
-    #[clap(long)]
+    #[clap(
+        long,
+        visible_alias = "priv",
+        default_value = "0",
+        required_unless_present = "from_keystore"
+    )]
     pub private_key: FieldElement,
 
     /// Account public key
-    #[clap(long)]
+    #[clap(long, visible_alias = "pub")]
     pub public_key: Option<FieldElement>,
 
     /// Salt for the address
@@ -42,7 +56,7 @@ pub struct Add {
     pub add_profile: bool,
 
     /// If passed, import account from keystore and starkli account JSON file
-    #[clap(short, long)]
+    #[clap(short, long, conflicts_with_all = ["address", "class_hash", "deployed", "private_key", "public_key", "salt"])]
     pub from_keystore: bool,
 }
 
@@ -82,7 +96,7 @@ pub fn add(
     write_account_to_accounts_file(
         path_to_scarb_toml,
         &config.rpc_url,
-        &config.account,
+        &add.name,
         &config.accounts_file,
         chain_id,
         account_json.clone(),
@@ -157,4 +171,59 @@ fn import_from_keystore(
         prepare_account_json(&private_key, address, deployed, Some(class_hash), salt);
 
     Ok(account_json)
+}
+
+#[cfg(test)]
+mod tests {
+    use std::env;
+
+    use crate::starknet_commands::account::add::import_from_keystore;
+    use camino::Utf8PathBuf;
+    use cast::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
+    use serde_json::json;
+
+    #[test]
+    fn test_import_from_keystore() {
+        let keystore_path = Utf8PathBuf::from("tests/data/keystore/my_key.json");
+        let account_path = Utf8PathBuf::from("tests/data/keystore/my_account.json");
+
+        env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+        let account_json = import_from_keystore(keystore_path, account_path).unwrap();
+
+        assert_eq!(
+            account_json,
+            json!(
+                {
+                    "address": "0xcce3217e4aea0ab738b55446b1b378750edfca617db549fda1ede28435206c",
+                    "class_hash": "0x646a72e2aab2fca75d713fbe4a58f2d12cbd64105621b89dc9ce7045b5bf02b",
+                    "deployed": true,
+                    "private_key": "0x55ae34c86281fbd19292c7e3bfdfceb4",
+                    "public_key": "0xe2d3d7080bfc665e0060a06e8e95c3db3ff78a1fec4cc81ddc87e49a12e0a",
+                }
+            )
+        );
+    }
+
+    #[test]
+    fn test_import_from_keystore_undeployed() {
+        let keystore_path = Utf8PathBuf::from("tests/data/keystore/my_key.json");
+        let account_path = Utf8PathBuf::from("tests/data/keystore/my_account_undeployed.json");
+
+        env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+        let account_json = import_from_keystore(keystore_path, account_path).unwrap();
+
+        assert_eq!(
+            account_json,
+            json!(
+                {
+                    "address": "0xcce3217e4aea0ab738b55446b1b378750edfca617db549fda1ede28435206c",
+                    "class_hash": "0x646a72e2aab2fca75d713fbe4a58f2d12cbd64105621b89dc9ce7045b5bf02b",
+                    "deployed": false,
+                    "private_key": "0x55ae34c86281fbd19292c7e3bfdfceb4",
+                    "public_key": "0xe2d3d7080bfc665e0060a06e8e95c3db3ff78a1fec4cc81ddc87e49a12e0a",
+                    "salt": "0x14df438ac6825165c7a0af29decd5892528b763a333f93a5f6b12980dbddd9f",
+                }
+            )
+        );
+    }
 }

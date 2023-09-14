@@ -2,10 +2,11 @@ use crate::helpers::constants::{CONTRACTS_DIR, URL};
 use crate::helpers::fixtures::duplicate_directory_with_salt;
 use crate::helpers::runner::runner;
 use camino::Utf8PathBuf;
+use cast::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
 use indoc::indoc;
 use serde_json::json;
 use snapbox::cmd::{cargo_bin, Command};
-use std::fs;
+use std::{env, fs};
 
 #[tokio::test]
 pub async fn test_happy_case() {
@@ -17,10 +18,10 @@ pub async fn test_happy_case() {
         URL,
         "--accounts-file",
         accounts_file,
-        "--account",
-        "my_account_add",
         "account",
         "add",
+        "--name",
+        "my_account_add",
         "--address",
         "0x123",
         "--private-key",
@@ -49,7 +50,7 @@ pub async fn test_happy_case() {
                     "public_key": "0x5f679dacd8278105bd3b84a15548fe84079068276b0e84d6cc093eb5430f063"
                   }
                 }
-              }
+            }
         )
     );
 
@@ -70,10 +71,10 @@ pub async fn test_happy_case_add_profile() {
         URL,
         "--accounts-file",
         accounts_file,
-        "--account",
-        "my_account_add",
         "account",
         "add",
+        "--name",
+        "my_account_add",
         "--address",
         "0x1",
         "--private-key",
@@ -115,7 +116,7 @@ pub async fn test_happy_case_add_profile() {
                     "salt": "0x3",
                   }
                 }
-              }
+            }
         )
     );
 
@@ -125,4 +126,59 @@ pub async fn test_happy_case_add_profile() {
     assert!(contents.contains("account = \"my_account_add\""));
 
     fs::remove_dir_all(current_dir).unwrap();
+}
+
+#[tokio::test]
+pub async fn test_happy_case_from_keystore() {
+    let accounts_file = "./tmp/accounts.json";
+    _ = fs::remove_file(accounts_file);
+
+    let keystore_path = "tests/data/keystore/my_key.json";
+    let account_path = "tests/data/keystore/my_account.json";
+    env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+
+    let args = vec![
+        "--url",
+        URL,
+        "--accounts-file",
+        accounts_file,
+        "--keystore",
+        keystore_path,
+        "--acc",
+        account_path,
+        "account",
+        "add",
+        "--name",
+        "account_from_keystore",
+        "--from-keystore",
+    ];
+
+    let snapbox = runner(&args);
+
+    snapbox.assert().stdout_matches(indoc! {r#"
+        KEYSTORE_PASSWORD environment variable found and will be used
+        command: account add
+        add_profile: --add-profile flag was not set. No profile added to Scarb.toml
+    "#});
+
+    let contents = fs::read_to_string(accounts_file).expect("Unable to read created file");
+    let contents_json: serde_json::Value = serde_json::from_str(&contents).unwrap();
+    assert_eq!(
+        contents_json,
+        json!(
+            {
+                "alpha-goerli": {
+                  "account_from_keystore": {
+                    "address": "0xcce3217e4aea0ab738b55446b1b378750edfca617db549fda1ede28435206c",
+                    "class_hash": "0x646a72e2aab2fca75d713fbe4a58f2d12cbd64105621b89dc9ce7045b5bf02b",
+                    "deployed": true,
+                    "private_key": "0x55ae34c86281fbd19292c7e3bfdfceb4",
+                    "public_key": "0xe2d3d7080bfc665e0060a06e8e95c3db3ff78a1fec4cc81ddc87e49a12e0a"
+                  }
+                }
+            }
+        )
+    );
+
+    fs::remove_dir_all(Utf8PathBuf::from(accounts_file).parent().unwrap()).unwrap();
 }

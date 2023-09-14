@@ -27,13 +27,13 @@ struct Cli {
     path_to_scarb_toml: Option<Utf8PathBuf>,
 
     /// RPC provider url address; overrides url from Scarb.toml
-    #[clap(short = 'u', long = "url")]
+    #[clap(short, long = "url")]
     rpc_url: Option<String>,
 
     /// Account to be used for contract declaration;
     /// When using keystore (`--keystore`), this should be a path to account file    
     /// When using accounts file, this should be an account name
-    #[clap(short = 'a', long)]
+    #[clap(long, visible_alias = "acc", global = true)]
     account: Option<String>,
 
     /// Path to the file holding accounts info
@@ -41,7 +41,7 @@ struct Cli {
     accounts_file_path: Option<Utf8PathBuf>,
 
     /// Path to keystore file; if specified, --account should be a path to starkli JSON account file
-    #[clap(short = 'k', long)]
+    #[clap(short, long, global = true)]
     keystore: Option<Utf8PathBuf>,
 
     /// If passed, values will be displayed as integers, otherwise as hexes
