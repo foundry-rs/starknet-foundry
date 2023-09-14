@@ -1,5 +1,5 @@
 [package]
-name = "fibonacci"
+name = "fibonacci2"
 version.workspace = true
 
 [scripts]
@@ -9,11 +9,11 @@ test.workspace = true
 snforge.workspace = true
 
 [dependencies]
-addition = { path = "../addition" }
+subtraction = { path = "../subtraction" }
 starknet.workspace = true
 snforge_std.workspace = true
 
 [[target.starknet-contract]]
 sierra = true
 casm = true
-build-external-contracts = ["addition::AdditionContract"]
+build-external-contracts = ["subtraction::SubtractionContract"]

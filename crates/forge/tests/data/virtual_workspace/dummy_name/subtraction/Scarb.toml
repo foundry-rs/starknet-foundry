@@ -1,5 +1,5 @@
 [package]
-name = "addition"
+name = "subtraction"
 version.workspace = true
 
 [dependencies]

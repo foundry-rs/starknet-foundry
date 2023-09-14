@@ -85,7 +85,7 @@ fn main_execution() -> Result<bool> {
         let (package_path, lib_path) = paths_for_package(&scarb_metadata, &package.id)?;
         std::env::set_current_dir(package_path.clone())?;
 
-        let target_dir = target_dir_for_package(&package_path)?; // TODO
+        let target_dir = target_dir_for_package(&package_path)?; // TODO(#671)
 
         let current_dir = std::env::current_dir().context("Failed to get current directory")?;
 

@@ -344,13 +344,29 @@ fn virtual_workspace() {
         .stdout_matches(indoc! {r#"
         warn: workspace members definition matched path [..]/dummy_name/not_collected_too.cairo/Scarb.toml`, which misses a manifest file
         [..]Compiling[..]
+        [..]Finished[..]
+        
+        
+        Collected 4 test(s) and 1 test file(s) from fibonacci2 package
+        Running 4 inline test(s)
+        [PASS] fibonacci2::tests::it_works
+        [PASS] fibonacci2::tests::contract_test
+        [FAIL] fibonacci2::tests::failing_test
+        
+        Failure data:
+            original value: [0], converted to a string: []
+        
+        [SKIP] fibonacci2::tests::skipped_test
+        Tests: 2 passed, 1 failed, 1 skipped
+        warn: workspace members definition matched path [..]/dummy_name/not_collected_too.cairo/Scarb.toml`, which misses a manifest file
+        [..]Compiling[..]
         [..]Compiling[..]
         [..]Finished[..]
 
 
-        Collected 5 test(s) and 3 test file(s) from addition package
+        Collected 5 test(s) and 3 test file(s) from subtraction package
         Running 1 inline test(s)
-        [PASS] addition::tests::it_works
+        [PASS] subtraction::tests::it_works
         Running 2 test(s) from tests/nested/test_nested.cairo
         [PASS] test_nested::test_two
         [PASS] test_nested::test_two_and_two
@@ -358,32 +374,16 @@ fn virtual_workspace() {
         [PASS] test_simple::simple_case
         [PASS] test_simple::contract_test
         Tests: 5 passed, 0 failed, 0 skipped
-        warn: workspace members definition matched path [..]/dummy_name/not_collected_too.cairo/Scarb.toml`, which misses a manifest file
-        [..]Compiling[..]
-        [..]Finished[..]
-        
-        
-        Collected 4 test(s) and 1 test file(s) from fibonacci package
-        Running 4 inline test(s)
-        [PASS] fibonacci::tests::it_works
-        [PASS] fibonacci::tests::contract_test
-        [FAIL] fibonacci::tests::failing_test
-        
-        Failure data:
-            original value: [0], converted to a string: []
-        
-        [SKIP] fibonacci::tests::skipped_test
-        Tests: 2 passed, 1 failed, 1 skipped
         
         Failures:
-            fibonacci::tests::failing_test
+            fibonacci2::tests::failing_test
         "#});
 }
 
 #[test]
 fn virtual_workspace_specify_package() {
     let temp = setup_virtual_workspace();
-    let snapbox = runner().arg("--package").arg("addition");
+    let snapbox = runner().arg("--package").arg("subtraction");
 
     snapbox
         .current_dir(&temp)
@@ -396,9 +396,9 @@ fn virtual_workspace_specify_package() {
         [..]Finished[..]
 
 
-        Collected 5 test(s) and 3 test file(s) from addition package
+        Collected 5 test(s) and 3 test file(s) from subtraction package
         Running 1 inline test(s)
-        [PASS] addition::tests::it_works
+        [PASS] subtraction::tests::it_works
         Running 2 test(s) from tests/nested/test_nested.cairo
         [PASS] test_nested::test_two
         [PASS] test_nested::test_two_and_two

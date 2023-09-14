@@ -1,23 +1,23 @@
-use addition::add;
+use subtraction::subtract;
 
 fn fib(a: felt252, b: felt252, n: felt252) -> felt252 {
     match n {
         0 => a,
-        _ => fib(b, add(a, b), n - 1),
+        _ => fib(b, subtract(a, -b), n - 1),
     }
 }
 
 #[starknet::contract]
 mod FibonacciContract {
-    use addition::add;
-    use fibonacci::fib;
+    use subtraction::subtract;
+    use super::fib;
 
     #[storage]
     struct Storage {}
 
     #[external(v0)]
     fn answer(ref self: ContractState) -> felt252 {
-        add(fib(0, 1, 16), fib(0, 1, 8))
+        subtract(fib(0, 1, 16), fib(0, 1, 8))
     }
 }
 
@@ -35,7 +35,7 @@ mod tests {
     #[test]
     fn contract_test() {
         declare('FibonacciContract');
-        declare('AdditionContract');
+        declare('SubtractionContract');
     }
 
     #[test]
