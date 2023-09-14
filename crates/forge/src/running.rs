@@ -132,10 +132,7 @@ pub(crate) fn run_from_test_case(
             dict_state_reader: build_testing_state(predeployed_contracts),
             fork_state_reader: match &case.fork_config {
                 Some(Fork::Config(url, block_id)) => Some(ForkStateReader::new(url, *block_id)),
-                Some(Fork::Id(id)) => {
-                    let xd = id;
-                    None
-                },
+                Some(Fork::Id(_)) => None,
                 _ => None,
             },
         }),

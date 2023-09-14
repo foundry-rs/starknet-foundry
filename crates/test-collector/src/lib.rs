@@ -27,7 +27,6 @@ use cairo_lang_starknet::inline_macros::selector::SelectorMacro;
 use cairo_lang_starknet::plugin::StarkNetPlugin;
 use cairo_lang_syntax::attribute::structured::{Attribute, AttributeArg, AttributeArgVariant};
 use cairo_lang_syntax::node::ast;
-use cairo_lang_syntax::node::ast::ArgClause;
 use cairo_lang_syntax::node::db::SyntaxGroup;
 use cairo_lang_syntax::node::helpers::GetIdentifier;
 use cairo_lang_test_runner::plugin::TestPlugin;
@@ -384,7 +383,7 @@ fn extract_fork_config_from_args(db: &dyn SyntaxGroup, attr: &Attribute) -> Opti
         .elements(db)
         .into_iter()
         .map(|arg| match arg.arg_clause(db) {
-            ArgClause::Unnamed(unnamed_arg_clause) => Some(unnamed_arg_clause.value(db)),
+            ast::ArgClause::Unnamed(unnamed_arg_clause) => Some(unnamed_arg_clause.value(db)),
             _ => None,
         })
         .map(|arg| match arg {
@@ -397,9 +396,8 @@ fn extract_fork_config_from_args(db: &dyn SyntaxGroup, attr: &Attribute) -> Opti
                 )),
                 _ => None,
             },
-            Some(ast::Expr::FunctionCall(block_tag)) => {
+            Some(ast::Expr::Path(block_tag)) => {
                 let tag = block_tag
-                    .path(db)
                     .elements(db)
                     .last()
                     .unwrap()

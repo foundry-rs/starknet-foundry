@@ -8,8 +8,8 @@ use starknet::testing::cheatcode;
 
 #[derive(Drop, Copy, Serde)]
 enum BlockTag {
-    Latest: (),
-    Pending: (),
+    Latest,
+    Pending,
 }
 
 #[derive(Drop, Copy, Serde)]
@@ -19,7 +19,7 @@ enum BlockId {
     Number: felt252,
 }
 
-#[derive(Drop, Clone)]
+#[derive(Drop, Clone, Serde)]
 struct ForkConfig {
    url: Array::<felt252>,
    block: BlockId,
@@ -32,9 +32,7 @@ trait ForkTrait {
 impl ForkImpl of ForkTrait {
     fn set_up(self: ForkConfig) {
         let mut inputs = array![];
-
-        self.url.serialize(ref inputs);
-        self.block.serialize(ref inputs);
+        self.serialize(ref inputs);
 
         cheatcode::<'setup_fork'>(inputs.span());
     }
