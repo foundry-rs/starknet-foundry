@@ -43,7 +43,7 @@ Do the following to start interacting with the Starknet:
 
     ```shell
     $ sncast \
-      --url http://127.0.0.1:5050
+      --url http://127.0.0.1:5050 \
       account deploy
       --name some-name \
       --max-fee 864600000000
