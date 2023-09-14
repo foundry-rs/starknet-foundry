@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 use std::fmt::Debug;
+use std::sync::RwLock;
+use std::time::Instant;
 
 use anyhow::{Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
@@ -193,6 +195,9 @@ pub fn run(
     contracts: &HashMap<String, StarknetContractArtifacts>,
     predeployed_contracts: &Utf8PathBuf,
 ) -> Result<Vec<TestFileSummary>> {
+
+    let start = Instant::now();
+
     let tests = collect_tests_from_directory(
         package_path,
         package_name,
@@ -202,12 +207,17 @@ pub fn run(
         runner_config,
     )?;
 
+    let duration = start.elapsed();
+    println!("Time elapsed collect_tests_from_directory: {:?}", duration);
+
     pretty_printing::print_collected_tests_count(
         tests.iter().map(|tests| tests.test_cases.len()).sum(),
         tests.len(),
     );
 
     let mut tests_iterator = tests.into_iter();
+
+    let start = Instant::now();
 
     let mut summaries = vec![];
     for tests_from_file in tests_iterator.by_ref() {
@@ -223,6 +233,9 @@ pub fn run(
             break;
         }
     }
+
+    let duration = start.elapsed();
+    println!("Time elapsed run_tests_from_file: {:?}", duration);
 
     for tests_from_file in tests_iterator {
         let skipped: Vec<TestCaseSummary> = tests_from_file
@@ -267,27 +280,30 @@ fn run_tests_from_file(
         tests.test_cases.len(),
     );
 
-    let mut results = vec![];
-    for (i, case) in tests.test_cases.iter().enumerate() {
-        let result = run_from_test_case(&runner, case, contracts, predeployed_contracts)?;
-        results.push(result.clone());
-
-        pretty_printing::print_test_result(&result);
+    let skip_tests_lock = RwLock::new(false);
+    let results = tests.test_cases.par_iter().map(|case| {
         if runner_config.exit_first {
-            if let TestCaseSummary::Failed { .. } = result {
-                for case in &tests.test_cases[i + 1..] {
-                    let skipped_result = TestCaseSummary::skipped(case);
-                    pretty_printing::print_test_result(&skipped_result);
-                    results.push(skipped_result);
-                }
-                return Ok(TestFileSummary {
-                    test_case_summaries: results,
-                    runner_exit_status: RunnerStatus::TestFailed,
-                    relative_path: tests.relative_path,
-                });
+            if *skip_tests_lock.read().unwrap() {
+                let skipped_result = TestCaseSummary::skipped(case);
+                pretty_printing::print_test_result(&skipped_result);
+                return skipped_result;
             }
         }
-    }
+
+        let result = run_from_test_case(&runner, case, contracts, predeployed_contracts).unwrap();
+
+        pretty_printing::print_test_result(&result);
+
+        if runner_config.exit_first {
+            if let TestCaseSummary::Failed { .. } = result {
+                let mut skip_tests = skip_tests_lock.write().unwrap();
+                *skip_tests = true;
+            }
+        }
+
+        result
+    }).collect();
+
     Ok(TestFileSummary {
         test_case_summaries: results,
         runner_exit_status: RunnerStatus::Default,
