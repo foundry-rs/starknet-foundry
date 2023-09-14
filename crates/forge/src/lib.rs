@@ -195,7 +195,6 @@ pub fn run(
     contracts: &HashMap<String, StarknetContractArtifacts>,
     predeployed_contracts: &Utf8PathBuf,
 ) -> Result<Vec<TestFileSummary>> {
-
     let start = Instant::now();
 
     let tests = collect_tests_from_directory(
@@ -281,28 +280,33 @@ fn run_tests_from_file(
     );
 
     let skip_tests_lock = RwLock::new(false);
-    let results = tests.test_cases.par_iter().map(|case| {
-        if runner_config.exit_first {
-            if *skip_tests_lock.read().unwrap() {
-                let skipped_result = TestCaseSummary::skipped(case);
-                pretty_printing::print_test_result(&skipped_result);
-                return skipped_result;
+    let results = tests
+        .test_cases
+        .par_iter()
+        .map(|case| {
+            if runner_config.exit_first {
+                if *skip_tests_lock.read().unwrap() {
+                    let skipped_result = TestCaseSummary::skipped(case);
+                    pretty_printing::print_test_result(&skipped_result);
+                    return skipped_result;
+                }
             }
-        }
 
-        let result = run_from_test_case(&runner, case, contracts, predeployed_contracts).unwrap();
+            let result =
+                run_from_test_case(&runner, case, contracts, predeployed_contracts).unwrap();
 
-        pretty_printing::print_test_result(&result);
+            pretty_printing::print_test_result(&result);
 
-        if runner_config.exit_first {
-            if let TestCaseSummary::Failed { .. } = result {
-                let mut skip_tests = skip_tests_lock.write().unwrap();
-                *skip_tests = true;
+            if runner_config.exit_first {
+                if let TestCaseSummary::Failed { .. } = result {
+                    let mut skip_tests = skip_tests_lock.write().unwrap();
+                    *skip_tests = true;
+                }
             }
-        }
 
-        result
-    }).collect();
+            result
+        })
+        .collect();
 
     Ok(TestFileSummary {
         test_case_summaries: results,
