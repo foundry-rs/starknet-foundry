@@ -24,7 +24,7 @@ $ tree . -L 1
 ```
 
 * `src/` contains source code of all your contracts.
-* `tests/` contains tests. Note that test can also be included in any file or directory.
+* `tests/` contains tests.
 * `Scarb.toml` contains configuration of the project as well as of `snforge`, `sncast` etc.
 
 Ensures that `casm` codegen is enabled in the `Scarb.toml` file.

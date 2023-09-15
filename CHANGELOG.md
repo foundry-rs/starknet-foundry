@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Support for scarb workspaces.
 
+### Changed
+
+- Tests are collected only from `tests` folder and a package tree
+
 ## [0.6.0] - 2023-09-13
 
 ### Forge
