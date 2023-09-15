@@ -1,15 +1,25 @@
 use crate::starknet_commands::account::{prepare_account_json, write_account_to_accounts_file};
 use anyhow::{ensure, Result};
 use camino::Utf8PathBuf;
+use cast::get_chain_id;
 use cast::helpers::response_structs::AccountAddResponse;
 use cast::helpers::scarb_utils::CastConfig;
 use clap::Args;
-use starknet::core::types::FieldElement;
+use starknet::core::types::BlockTag::Latest;
+use starknet::core::types::{BlockId, FieldElement};
+use starknet::providers::{
+    jsonrpc::{HttpTransport, JsonRpcClient},
+    Provider,
+};
 use starknet::signers::SigningKey;
 
 #[derive(Args, Debug)]
 #[command(about = "Add an account to the accounts file")]
 pub struct Add {
+    /// Name of the account to be added
+    #[clap(short, long)]
+    pub name: String,
+
     /// Address of the account
     #[clap(short, long)]
     pub address: FieldElement,
@@ -19,6 +29,7 @@ pub struct Add {
     pub class_hash: Option<FieldElement>,
 
     /// Account deployment status
+    /// If not passed, sncast will check whether the account is deployed or not
     #[clap(short, long)]
     pub deployed: bool,
 
@@ -39,11 +50,10 @@ pub struct Add {
     pub add_profile: bool,
 }
 
-#[allow(clippy::too_many_arguments)]
-pub fn add(
+pub async fn add(
     config: &CastConfig,
     path_to_scarb_toml: &Option<Utf8PathBuf>,
-    chain_id: FieldElement,
+    provider: &JsonRpcClient<HttpTransport>,
     add: &Add,
 ) -> Result<AccountAddResponse> {
     let private_key = &SigningKey::from_secret_scalar(add.private_key);
@@ -54,18 +64,27 @@ pub fn add(
         );
     }
 
-    let account_json = prepare_account_json(
-        private_key,
-        add.address,
-        add.deployed,
-        add.class_hash,
-        add.salt,
-    );
+    let deployed = if add.deployed {
+        true
+    } else if provider
+        .get_class_hash_at(BlockId::Tag(Latest), add.address)
+        .await
+        .is_ok()
+    {
+        println!("Contract detected as deployed on chain");
+        true
+    } else {
+        false
+    };
 
+    let account_json =
+        prepare_account_json(private_key, add.address, deployed, add.class_hash, add.salt);
+
+    let chain_id = get_chain_id(provider).await?;
     write_account_to_accounts_file(
         path_to_scarb_toml,
         &config.rpc_url,
-        &config.account,
+        &add.name,
         &config.accounts_file,
         chain_id,
         account_json.clone(),
