@@ -189,7 +189,7 @@ pub fn target_dir_for_package(package_path: &Utf8PathBuf) -> Result<Utf8PathBuf>
 
     let target_dir = scarb_metadata
         .target_dir
-        .unwrap_or_else(|| package_path.join("target/dev"));
+        .unwrap_or_else(|| package_path.join("target"));
 
     Ok(target_dir)
 }
