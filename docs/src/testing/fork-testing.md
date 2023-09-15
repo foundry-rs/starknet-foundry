@@ -3,30 +3,35 @@
 Forge supports testing in a forked environment. Each test can fork the state of a specified real
 network and perform actions on top of it.
 
-> ⚠️ **Warning**
+> 📝 **Note**
 > 
-> Calls to the nodes are not cached at the moment, so you can expect test not to be as fast
-> as they can. We will improve it in the future.
+> Actions are performed on to of the `forked` state which means real network is not affected.
+
+
+> ⚠️ **Warning**
+>
+> Calls to the nodes are not cached between test cases at the moment, so you can expect fork
+> tests to be a bit slower than regular ones. Optimisations are well on their way though!
 
 There are two ways of configuring a fork:
 - by specifying `url` and `block_id` parameters in the `#[fork(...)]` attribute
-- or by passing fork name to the `#[frok(...)` attribute
+- or by passing fork name defined in your `Scarb.toml` to the `#[fork(...)` attribute
 
-## Configure fork in the attribute
+## Configure a fork in the attribute
 
 It is possible to pass `url` and `block_id` arguments to the `fork` attribute.
 
 ```rust
-use snforge_std::{ BlockTag, BlockId };
+use snforge_std::BlockId;
 
 #[test]
-#[fork(url: "http://your.rpc.url", block_id: BlockId::Tag(BlockTag::Latest))]
+#[fork(url: "http://your.rpc.url", block_id: BlockId::Number(123))]
 fn test_using_forked_state() {
     // ...
 }
 ```
 
-Once such a configuration is passed, it is possible to call any state defined on the network.
+Once such a configuration is passed, it is possible to use state and contracts defined on the specified network.
 
 ## Configure forks in the `Scarb.toml`
 
@@ -41,16 +46,22 @@ url = "http://your.rpc.url"
 block_id.tag = "Latest"
 
 [[tool.snforge.fork]]
-name = "SOME_OTHER_NAME"
+name = "SOME_SECOND_NAME"
 url = "http://your.second.rpc.url"
 block_id.tag = "Pending"
+
+[[tool.snforge.fork]]
+name = "SOME_THIRD_NAME"
+url = "http://your.third.rpc.url"
+block_id.number = "123"
+
+[[tool.snforge.fork]]
+name = "SOME_FOURTH_NAME"
+url = "http://your.fourth.rpc.url"
+block_id.hash = "0x123"
 ```
 
-There are two more variants of the `block_id` field:
-- `block_id.number = "1"`
-- `block_id.hash = "2"`
-
-From this moment forks can be set by name in the `fork` attribute.
+From this moment forks can be set using their name in the `fork` attribute.
 
 ```rust
 #[test]
@@ -60,8 +71,10 @@ fn test_using_first_fork() {
 }
 
 #[test]
-#[fork("SOME_OTHER_NAME")]
+#[fork("SOME_SECOND_NAME")]
 fn test_using_second_fork() {
     // ...
 }
+
+// ...
 ```
