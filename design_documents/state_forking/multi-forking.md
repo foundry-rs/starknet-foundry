@@ -21,12 +21,13 @@ We have to keep:
 which consists of `DictStateReader` and `ForkStateReader`. 
 - `current_fork_id` - variable defining which fork is currently in use.
 
-`blockifier_state` is currently represented as a `CachedState<ExtendedStateReader>` because many blockifier methods 
-(like AccountTransaction.execute or execute_call_entry_point) requires `CachedState`.
+`blockifier_state` is currently represented as a `CachedState<ExtendedStateReader>` because some blockifier methods 
+(like AccountTransaction.execute) requires `CachedState`.
 `CachedState` is native blockifier struct, so we can't change its implementation to meet our requirements.
 
-Instead of changing it we should modify the blockifier's interface to require new `StateCache` trait (which would abstract `CachedState`'s interface).
-When blockifier will accept `StateCache` trait we should be able to implement Multi-forking.
+It appears that since our tests are contracts we can abandon `CachedState` and `AccountTransaction.execute`.
+We would have to verify this idea, but if it is double we could create some class that implements `State` trait from blockifier
+and keep it as a `blockifier_state`.
 
 ## Interacting with multiple forks (Cheatnet side)
 
@@ -54,6 +55,7 @@ by simply implementing `StateReader` for the `StateCache`. It would search for a
 
 ## Required actions
 
-- make a PR to blockifier which will extract `StateCache` trait from the `CachedState` struct
+- verify if it is possible to get rid of methods using `CachedState`
+- create `StarknetState` (name can be changed) struct which will implement `State` trait
 - change `CheatnetState` fields to implement proposed solution
 - add control cheatcodes
