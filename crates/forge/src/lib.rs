@@ -54,7 +54,7 @@ impl RunnerConfig {
             test_name_filter,
             exact_match,
             exit_first: forge_config_from_scarb.exit_first || exit_first,
-            predefined_forks: forge_config_from_scarb.predefined_forks.clone(),
+            predefined_forks: forge_config_from_scarb.fork.clone(),
         }
     }
 }

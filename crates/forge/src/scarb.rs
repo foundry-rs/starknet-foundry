@@ -43,7 +43,7 @@ pub struct ForgeConfig {
     #[serde(default)]
     /// Should runner exit after first failed test
     pub exit_first: bool,
-    pub predefined_forks: Option<Vec<PredefinedFork>>,
+    pub fork: Option<Vec<PredefinedFork>>,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Default, Clone)]
@@ -261,6 +261,21 @@ mod tests {
                 [dependencies]
                 starknet = "2.2.0"
                 snforge_std = {{ path = "{}" }}
+
+                [[tool.snforge.fork]]
+                name = "FIRST_FORK_NAME"
+                url = "http://some.rpc.url"
+                block_id.number = "1"
+
+                [[tool.snforge.fork]]
+                name = "SECOND_FORK_NAME"
+                url = "http://some.rpc.url"
+                block_id.hash = "1"
+
+                [[tool.snforge.fork]]
+                name = "THIRD_FORK_NAME"
+                url = "http://some.rpc.url"
+                block_id.tag = "Latest"
                 "#,
                 package_name,
                 snforge_std_path
@@ -578,7 +593,23 @@ mod tests {
             config,
             ForgeConfig {
                 exit_first: false,
-                predefined_forks: Default::default()
+                fork: Some(vec![
+                    PredefinedFork {
+                        name: "FIRST_FORK_NAME".to_string(),
+                        url: "http://some.rpc.url".to_string(),
+                        block_id: HashMap::from([("number".to_string(), "1".to_string())]),
+                    },
+                    PredefinedFork {
+                        name: "SECOND_FORK_NAME".to_string(),
+                        url: "http://some.rpc.url".to_string(),
+                        block_id: HashMap::from([("hash".to_string(), "1".to_string())]),
+                    },
+                    PredefinedFork {
+                        name: "THIRD_FORK_NAME".to_string(),
+                        url: "http://some.rpc.url".to_string(),
+                        block_id: HashMap::from([("tag".to_string(), "Latest".to_string())]),
+                    }
+                ])
             }
         );
     }

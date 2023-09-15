@@ -106,7 +106,7 @@ fn fork_aliased_decorator() {
             false,
             &ForgeConfig {
                 exit_first: false,
-                predefined_forks: Some(vec![PredefinedFork {
+                fork: Some(vec![PredefinedFork {
                     name: "FORK_NAME_FROM_SCARB_TOML".to_string(),
                     url: node_url,
                     block_id: HashMap::from([("tag".to_string(), "Latest".to_string())]),
