@@ -140,7 +140,7 @@ mod tests {
     fn test_parse_scarb_config_happy_case_with_profile() {
         let config = parse_scarb_config(
             &Some(String::from("myprofile")),
-            &Some(Utf8PathBuf::from("tests/data/contracts/v2/map/Scarb.toml")),
+            &Some(Utf8PathBuf::from("tests/data/contracts/v1/map/Scarb.toml")),
         )
         .unwrap();
 
@@ -152,7 +152,7 @@ mod tests {
     fn test_parse_scarb_config_happy_case_without_profile() {
         let config = parse_scarb_config(
             &None,
-            &Some(Utf8PathBuf::from("tests/data/contracts/v2/map/Scarb.toml")),
+            &Some(Utf8PathBuf::from("tests/data/contracts/v1/map/Scarb.toml")),
         )
         .unwrap();
         assert_eq!(config.account, String::from("user2"));
@@ -190,7 +190,7 @@ mod tests {
     fn test_parse_scarb_config_no_profile_found() {
         let config = parse_scarb_config(
             &Some(String::from("mariusz")),
-            &Some(Utf8PathBuf::from("tests/data/contracts/v2/map/Scarb.toml")),
+            &Some(Utf8PathBuf::from("tests/data/contracts/v1/map/Scarb.toml")),
         )
         .unwrap_err();
         assert_eq!(
@@ -210,7 +210,7 @@ mod tests {
         assert!(config.account.is_empty());
     }
 
-    #[sealed_test(files = ["tests/data/contracts/v2/map/Scarb.toml"])]
+    #[sealed_test(files = ["tests/data/contracts/v1/map/Scarb.toml"])]
     fn test_parse_scarb_config_no_profile_no_path() {
         let config = parse_scarb_config(&None, &None).unwrap();
 
@@ -218,7 +218,7 @@ mod tests {
         assert!(config.account.is_empty());
     }
 
-    #[sealed_test(files = ["tests/data/contracts/v2/map/Scarb.toml"])]
+    #[sealed_test(files = ["tests/data/contracts/v1/map/Scarb.toml"])]
     fn test_parse_scarb_config_no_path() {
         let config = parse_scarb_config(&Some(String::from("myprofile")), &None).unwrap();
 
