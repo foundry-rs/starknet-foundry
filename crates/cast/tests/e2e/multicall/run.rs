@@ -89,7 +89,7 @@ async fn test_invoke_fail() {
         std::str::from_utf8(&out.stderr).expect("failed to convert command output to string");
 
     assert!(out.stdout.is_empty());
-    assert!(stderr_str.contains("There is no contract at the specified address"));
+    assert!(stderr_str.contains("Contract not found"));
 }
 
 #[tokio::test]
@@ -108,6 +108,6 @@ async fn test_deploy_success_invoke_fails() {
     let snapbox = runner(&args);
     snapbox.assert().success().stderr_matches(indoc! {r#"
         command: multicall run
-        error: There is no contract at the specified address
+        error: Contract not found
     "#});
 }

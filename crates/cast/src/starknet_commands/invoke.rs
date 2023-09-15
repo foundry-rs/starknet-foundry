@@ -36,7 +36,7 @@ pub async fn invoke(
     entry_point_name: &str,
     calldata: Vec<FieldElement>,
     max_fee: Option<FieldElement>,
-    account: &mut SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
+    account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     wait: bool,
 ) -> Result<InvokeResponse> {
     let call = Call {

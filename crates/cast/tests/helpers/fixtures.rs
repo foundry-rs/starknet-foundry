@@ -9,7 +9,7 @@ use starknet::core::types::FieldElement;
 use starknet::core::types::TransactionReceipt;
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
-use starknet::providers::{JsonRpcClient, Provider};
+use starknet::providers::JsonRpcClient;
 use std::collections::HashMap;
 use std::fs;
 use std::sync::Arc;
@@ -17,13 +17,13 @@ use url::Url;
 
 pub async fn declare_contract(account: &str, path: &str) -> FieldElement {
     let provider = get_provider(URL).expect("Could not get the provider");
-    let chain_id = provider.chain_id().await.expect("Could not get chain_id");
     let account = get_account(
         account,
         &Utf8PathBuf::from(ACCOUNT_FILE_PATH),
         &provider,
-        chain_id,
+        &None,
     )
+    .await
     .expect("Could not get the account");
 
     let contract_definition: SierraClass = {
@@ -57,13 +57,13 @@ pub async fn declare_deploy_contract(account: &str, path: &str) {
     let class_hash = declare_contract(account, path).await;
 
     let provider = get_provider(URL).expect("Could not get the provider");
-    let chain_id = provider.chain_id().await.expect("Could not get chain_id");
     let account = get_account(
         account,
         &Utf8PathBuf::from(ACCOUNT_FILE_PATH),
         &provider,
-        chain_id,
+        &None,
     )
+    .await
     .expect("Could not get the account");
 
     let factory = ContractFactory::new(class_hash, &account);
@@ -73,13 +73,13 @@ pub async fn declare_deploy_contract(account: &str, path: &str) {
 
 pub async fn invoke_map_contract(key: &str, value: &str, account: &str, contract_address: &str) {
     let provider = get_provider(URL).expect("Could not get the provider");
-    let chain_id = provider.chain_id().await.expect("Could not get chain_id");
     let account = get_account(
         account,
         &Utf8PathBuf::from(ACCOUNT_FILE_PATH),
         &provider,
-        chain_id,
+        &None,
     )
+    .await
     .expect("Could not get the account");
 
     let call = Call {
@@ -106,7 +106,8 @@ pub async fn mint_token(recipient: &str, amount: f32) {
     );
     client
         .post("http://127.0.0.1:5055/mint")
-        .json(&json)
+        .header("Content-Type", "application/json")
+        .body(json.to_string())
         .send()
         .await
         .expect("Error occurred while minting tokens");

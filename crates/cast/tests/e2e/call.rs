@@ -71,7 +71,7 @@ async fn test_contract_does_not_exist() {
 
     snapbox.assert().stderr_matches(indoc! {r#"
         command: call
-        error: There is no contract at the specified address
+        error: Contract not found
     "#});
 }
 
@@ -91,7 +91,7 @@ fn test_wrong_function_name(contract_address: &str) {
 
     snapbox.assert().stderr_matches(indoc! {r#"
         command: call
-        error: An error occurred in the called contract
+        error: Contract error
     "#});
 }
 
