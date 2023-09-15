@@ -37,7 +37,7 @@ struct Args {
     exit_first: bool,
 
     /// Number of fuzzer runs
-    #[arg(short = 'r', long, value_parser = validate_runs)]
+    #[arg(short = 'r', long, value_parser = validate_fuzzer_runs_value)]
     fuzzer_runs: Option<u32>,
 
     /// Seed for the fuzzer
@@ -45,7 +45,7 @@ struct Args {
     fuzzer_seed: Option<u64>,
 }
 
-fn validate_runs(val: &str) -> Result<u32> {
+fn validate_fuzzer_runs_value(val: &str) -> Result<u32> {
     let parsed_val: u32 = val
         .parse()
         .map_err(|_| anyhow!("Failed to parse {val} as u32"))?;

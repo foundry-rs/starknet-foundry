@@ -1,6 +1,5 @@
 use cairo_felt::Felt252;
 use num_bigint::{BigUint, RandBigInt};
-use num_traits::Zero;
 use rand::rngs::StdRng;
 use rand::{thread_rng, RngCore, SeedableRng};
 
@@ -28,11 +27,8 @@ impl Random {
 }
 
 impl Random {
-    pub fn next_felt252(&mut self) -> Felt252 {
-        let low = BigUint::zero();
-        let high = Felt252::prime();
-
-        let random_uint: BigUint = self.rng.gen_biguint_range(&low, &high);
+    pub fn next_felt252(&mut self, low: &BigUint, high: &BigUint) -> Felt252 {
+        let random_uint: BigUint = self.rng.gen_biguint_range(low, high);
         Felt252::from(random_uint)
     }
 
@@ -44,6 +40,7 @@ impl Random {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use num_traits::Zero;
 
     #[test]
     fn seed_is_set() {
@@ -55,11 +52,14 @@ mod tests {
     #[test]
     fn using_seed_consistent_result() {
         let mut fuzzer = Random::new();
-        let values: Vec<Felt252> = (1..100).map(|_| fuzzer.next_felt252()).collect();
+        let low = BigUint::zero();
+        let high = Felt252::prime();
+        let values: Vec<Felt252> = (1..100).map(|_| fuzzer.next_felt252(&low, &high)).collect();
 
         let mut fuzzer_from_seed = Random::from_seed(fuzzer.seed);
-        let values_from_seed: Vec<Felt252> =
-            (1..100).map(|_| fuzzer_from_seed.next_felt252()).collect();
+        let values_from_seed: Vec<Felt252> = (1..100)
+            .map(|_| fuzzer_from_seed.next_felt252(&low, &high))
+            .collect();
 
         assert_eq!(values, values_from_seed);
     }

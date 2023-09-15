@@ -15,6 +15,8 @@ use cairo_lang_sierra::ids::ConcreteTypeId;
 use cairo_lang_sierra::program::{Function, Program};
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
+use num_bigint::BigUint;
+use num_traits::Zero;
 use once_cell::sync::Lazy;
 use smol_str::SmolStr;
 
@@ -364,8 +366,13 @@ fn run_with_fuzzing(
 
     let mut results = vec![];
 
+    let low = BigUint::zero();
+    let high = Felt252::prime();
     for _ in 1..=runner_config.fuzzer_runs {
-        let args: Vec<Felt252> = args.iter().map(|_| fuzzer.next_felt252()).collect();
+        let args: Vec<Felt252> = args
+            .iter()
+            .map(|_| fuzzer.next_felt252(&low, &high))
+            .collect();
 
         let result =
             run_from_test_case(runner, case, contracts, predeployed_contracts, args.clone())?;
