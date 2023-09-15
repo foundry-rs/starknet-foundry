@@ -25,15 +25,14 @@ static PREDEPLOYED_CONTRACTS: Dir = include_dir!("crates/cheatnet/predeployed-co
 #[command(version)]
 struct Args {
     /// Name used to filter tests
-    test_name: Option<String>,
+    test_filter: Option<String>,
     /// Use exact matches for `test_filter`
     #[arg(short, long)]
     exact: bool,
-    /// Create a new forge project with <name> in current directory
-    #[clap(long)]
+    /// Create a new directory and forge project named <NAME>
+    #[arg(long, value_name = "NAME")]
     init: Option<String>,
-
-    /// Stop test execution after first failed test
+    /// Stop test execution after the first failed test
     #[arg(short = 'x', long)]
     exit_first: bool,
 }
@@ -94,7 +93,7 @@ fn main_execution() -> Result<bool> {
         let target_name = target_name_for_package(&scarb_metadata, package)?;
         let corelib_path = corelib_for_package(&scarb_metadata, package)?;
         let runner_config = RunnerConfig::new(
-            args.test_name.clone(),
+            args.test_filter.clone(),
             args.exact,
             args.exit_first,
             &forge_config,
