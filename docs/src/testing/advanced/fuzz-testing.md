@@ -14,7 +14,7 @@ against a large number of possible arguments.
 
 To convert a test to a random fuzz test, simply add arguments to the test function.
 These arguments can then be used in the test body.
-The test will be run many times for different randomly generated values.
+The test will be run many times against different randomly generated values.
 
 ```rust
 fn sum(a: felt252, b: felt252) -> felt252 {

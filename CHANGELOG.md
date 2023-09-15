@@ -6,11 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 # [Unreleased]
+
+### Forge
+
+#### Added
+
+- Initial version of fuzz testing with randomly generated values 
+
 # [0.6.0] - 2023-09-13
 
 ### Forge
 
 #### Added
+
 - `deploy_at` cheatcode
 - printing failures summary at the end of an execution
 - filtering tests now uses an absolute module tree path — it is possible to filter tests by module names, etc.
@@ -42,7 +50,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - support for `roll`ing/`warp`ing/`prank`ing the constructor logic (precalculate address, prank, assert pranked state in constructor)
 - `spy_events` cheatcode
 - Functions `read_json` and `FileParser<T>::parse_json` to load data from json files and deserialize it
-- Initial version of fuzz testing with randomly generated values 
 
 #### Changed
 
