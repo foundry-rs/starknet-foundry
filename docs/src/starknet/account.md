@@ -115,3 +115,20 @@ $ sncast \
     declare \
     --contract-name my_contract
 ```
+
+#### Importing an account
+
+To import an account into the file holding the accounts info (`~/.starknet_accounts/starknet_open_zeppelin_accounts.json` by deafult), use the `account add` command.
+
+```shell
+$ sncast \
+    --url http://127.0.0.1:5050 \
+    account add \
+    --name my_imported_account \
+    --address 0x1 \
+    --private-key 0x2 \
+    --class-hash 0x3 \
+    --deployed
+```
+
+For a detailed CLI description, see [account add command reference](../appendix/cast/account/add.md).

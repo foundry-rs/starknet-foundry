@@ -209,15 +209,15 @@ async fn main() -> Result<()> {
         }
         Commands::Account(account) => match account.command {
             account::Commands::Add(add) => {
-                let chain_id = get_chain_id(&provider).await?;
                 let mut result = starknet_commands::account::add::add(
                     &config,
                     &cli.path_to_scarb_toml,
-                    chain_id,
+                    &provider,
                     &add,
                     cli.keystore,
                     cli.account.map(Utf8PathBuf::from),
-                );
+                )
+                .await;
 
                 print_command_result("account add", &mut result, cli.int_format, cli.json)?;
                 Ok(())
