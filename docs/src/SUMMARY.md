@@ -22,9 +22,9 @@
 * [Advanced Testing](testing/advanced-testing.md)
     * [Fuzz Testing](testing/advanced/fuzz-testing.md)
 
-# Interacting with Starknet
+# Cast Overview
 
-* [Overview](starknet/index.md)
+* [Outline](starknet/index.md)
 * [Creating And Deploying Accounts](starknet/account.md)
 * [Declaring New Contracts](starknet/declare.md)
 * [Deploying New Contracts](starknet/deploy.md)
