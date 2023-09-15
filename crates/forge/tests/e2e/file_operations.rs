@@ -54,7 +54,7 @@ fn file_reading() {
             Got an exception while executing a hint:
             Failed to parse data/too_large_number.txt file
         
-        Running 14 test(s) from test.cairo
+        Running 14 test(s) from tests/test.cairo
         [PASS] test::valid_content_and_same_content_no_matter_whitespaces
         [PASS] test::serialization
         [PASS] test::json_serialization

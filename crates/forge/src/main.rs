@@ -100,13 +100,6 @@ fn main_execution() -> Result<bool> {
             bail!("Scarb build did not succeed")
         }
 
-        let subpackages: Vec<Utf8PathBuf> = scarb_metadata
-            .packages
-            .iter()
-            .map(|package| package.manifest_path.parent().unwrap().to_path_buf())
-            .filter(|path| path.starts_with(&package_path) && *path != package_path)
-            .collect();
-
         let package_name = name_for_package(&scarb_metadata, &package.id)?;
         let dependencies = dependencies_for_package(&scarb_metadata, &package.id)?;
         let target_name = target_name_for_package(&scarb_metadata, &package.id)?;
@@ -126,7 +119,6 @@ fn main_execution() -> Result<bool> {
         let tests_file_summaries = run(
             &package_path,
             &package_name,
-            &subpackages,
             &lib_path,
             &Some(dependencies.clone()),
             &runner_config,
