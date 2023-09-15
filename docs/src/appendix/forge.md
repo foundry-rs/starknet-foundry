@@ -20,6 +20,14 @@ Test filter must be a whole qualified test name e.g. `package_name::my_test` ins
 
 Stop executing tests after the first failed test.
 
+## `-r`, `--fuzzer-runs` `<FUZZER_RUNS>`  
+
+Number of fuzzer runs.
+
+##  `-s`, `--fuzzer-seed` `<FUZZER_SEED>`  
+
+Seed for the fuzzer.
+
 ## `-h`, `--help`
 Print help.
 
