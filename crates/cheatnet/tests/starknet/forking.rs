@@ -80,12 +80,12 @@ fn test_forking_at_block_number() {
 
     let mut state_before_deploy = CheatnetState::new(ExtendedStateReader {
         dict_state_reader: build_testing_state(&predeployed_contracts),
-        fork_state_reader: Some(ForkStateReader::new(&node_url, BlockId::Number(309_780))),
+        fork_state_reader: Some(ForkStateReader::new(node_url, BlockId::Number(309_780))),
     });
 
     let mut state_after_deploy = CheatnetState::new(ExtendedStateReader {
         dict_state_reader: build_testing_state(&predeployed_contracts),
-        fork_state_reader: Some(ForkStateReader::new(&node_url, BlockId::Number(309_781))),
+        fork_state_reader: Some(ForkStateReader::new(node_url, BlockId::Number(309_781))),
     });
 
     let contract_address = Felt252::from(
@@ -202,7 +202,7 @@ fn call_forked_contract_from_constructor() {
     let output = call_contract(
         &contract_address,
         &selector,
-        &[forked_class_hash.clone()],
+        &[forked_class_hash],
         &mut state,
     )
     .unwrap();

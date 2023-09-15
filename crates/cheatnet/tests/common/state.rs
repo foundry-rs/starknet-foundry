@@ -23,6 +23,6 @@ pub fn create_cheatnet_fork_state() -> CheatnetState {
 
     CheatnetState::new(ExtendedStateReader {
         dict_state_reader: build_testing_state(&predeployed_contracts),
-        fork_state_reader: Some(ForkStateReader::new(&node_url, BlockId::Tag(Latest))),
+        fork_state_reader: Some(ForkStateReader::new(node_url, BlockId::Tag(Latest))),
     })
 }
