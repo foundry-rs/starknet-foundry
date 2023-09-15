@@ -63,13 +63,15 @@ Tests: 3 passed, 1 failed, 2 skipped
 
 ## Scarb workspaces support
 
-Forge supports Scarb Workspaces. To make sure you know how workspaces work, follow Scarb documentation [here](https://docs.swmansion.com/scarb/docs/reference/workspaces.html).
+Forge supports Scarb Workspaces.
+To make sure you know how workspaces work,
+check Scarb documentation [here](https://docs.swmansion.com/scarb/docs/reference/workspaces.html).
 
 ### Workspaces with root package
 
 When running `snforge` in a Scarb workspace with a root package, it will only run tests inside the root package.  
 
-I.e. for a project structure like this
+I.e., for a project structure like this
 
 ```shell
 $ tree . -L 3
@@ -101,7 +103,8 @@ Running 1 inline test(s)
 Tests: 1 passed, 0 failed, 0 skipped
 ```
 
-To specify a package to test, pass a `--package package_name` (or `-p package_name` for short) flag, to select the specific package. You can also run `snforge` from the package directory to achieve the same effect.
+To select the specific package to test, pass a `--package package_name` (or `-p package_name` for short) flag.
+You can also run `snforge` from the package directory to achieve the same effect.
 
 ```shell
 $ snforge --package addition
@@ -141,6 +144,9 @@ Tests: 1 passed, 0 failed, 0 skipped
 
 ### Virtual workspaces
 
-Running `snforge` command in a virtual workspace (a workspace without a root package) will by default run tests for all the packages.
+Running `snforge` command in a virtual workspace (a workspace without a root package)
+outside any package will by default run tests for all the packages. 
+Using the `--workspace` flag has the same effect.
 
-To select a specific package to test, you can use the `--package` flag the same way as in regular workspaces.
+To select a specific package to test,
+you can use the `--package` flag the same way as in regular workspaces or run `snforge` from the package directory.

@@ -80,8 +80,8 @@ fn call_and_invoke() {
 
 ```shell
 $ snforge
-Collected 1 test(s) and 1 test file(s)
-Running 1 test(s) from using_dispatchers
+Collected 1 test(s) and 1 test file(s) from using_dispatchers package
+Running 1 inline test(s)
 [PASS] using_dispatchers::call_and_invoke
 Tests: 1 passed, 0 failed, 0 skipped
 ```
