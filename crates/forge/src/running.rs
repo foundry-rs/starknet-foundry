@@ -23,6 +23,8 @@ use cairo_vm::vm::runners::cairo_runner::RunResources;
 use camino::Utf8PathBuf;
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::state::ExtendedStateReader;
+use conversions::StarknetConversions;
+use starknet::core::types::{BlockId, BlockTag};
 use starknet::core::utils::get_selector_from_name;
 use starknet_api::core::PatriciaKey;
 use starknet_api::core::{ContractAddress, EntryPointSelector};
@@ -33,6 +35,7 @@ use starknet_api::transaction::Calldata;
 use test_collector::{Fork, TestCase};
 
 use crate::cheatcodes_hint_processor::CairoHintProcessor;
+use crate::scarb;
 use crate::scarb::StarknetContractArtifacts;
 use crate::test_case_summary::TestCaseSummary;
 
@@ -62,9 +65,11 @@ fn build_hints_dict<'b>(
     (hints_dict, string_to_hint)
 }
 
+#[allow(clippy::too_many_lines)]
 pub(crate) fn run_from_test_case(
     runner: &SierraCasmRunner,
     case: &TestCase,
+    global_forks: Option<&Vec<scarb::Fork>>,
     contracts: &HashMap<String, StarknetContractArtifacts>,
     predeployed_contracts: &Utf8PathBuf,
 ) -> Result<TestCaseSummary> {
@@ -132,7 +137,30 @@ pub(crate) fn run_from_test_case(
             dict_state_reader: build_testing_state(predeployed_contracts),
             fork_state_reader: match &case.fork_config {
                 Some(Fork::Config(url, block_id)) => Some(ForkStateReader::new(url, *block_id)),
-                Some(Fork::Id(_)) => None,
+                Some(Fork::Id(name)) => {
+                    let fork = global_forks.unwrap().iter().find(|fork| &fork.name == name);
+                    if let Some(fork) = fork {
+                        let block_id = fork
+                            .block_id
+                            .iter()
+                            .map(|(id_type, value)| match id_type.as_str() {
+                                "number" => BlockId::Number(value.parse().unwrap()),
+                                "hash" => BlockId::Hash(value.to_field_element()),
+                                "tag" => match value.as_str() {
+                                    "Latest" => BlockId::Tag(BlockTag::Latest),
+                                    "Pending" => BlockId::Tag(BlockTag::Pending),
+                                    _ => unreachable!(),
+                                },
+                                _ => unreachable!(),
+                            })
+                            .collect::<Vec<_>>();
+                        let block_id = block_id[0];
+
+                        Some(ForkStateReader::new(&fork.url, block_id))
+                    } else {
+                        None
+                    }
+                }
                 _ => None,
             },
         }),

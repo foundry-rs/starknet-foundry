@@ -32,6 +32,7 @@ pub struct RunnerConfig {
     test_name_filter: Option<String>,
     exact_match: bool,
     exit_first: bool,
+    forks: Option<Vec<scarb::Fork>>,
 }
 
 impl RunnerConfig {
@@ -53,6 +54,7 @@ impl RunnerConfig {
             test_name_filter,
             exact_match,
             exit_first: forge_config_from_scarb.exit_first || exit_first,
+            forks: forge_config_from_scarb.forks.clone(),
         }
     }
 }
@@ -269,7 +271,13 @@ fn run_tests_from_file(
 
     let mut results = vec![];
     for (i, case) in tests.test_cases.iter().enumerate() {
-        let result = run_from_test_case(&runner, case, contracts, predeployed_contracts)?;
+        let result = run_from_test_case(
+            &runner,
+            case,
+            runner_config.forks.as_ref(),
+            contracts,
+            predeployed_contracts,
+        )?;
         results.push(result.clone());
 
         pretty_printing::print_test_result(&result);
