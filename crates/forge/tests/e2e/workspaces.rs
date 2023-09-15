@@ -342,7 +342,6 @@ fn virtual_workspace() {
         .assert()
         .code(1)
         .stdout_matches(indoc! {r#"
-        warn: workspace members definition matched path [..]/dummy_name/not_collected_too.cairo/Scarb.toml`, which misses a manifest file
         [..]Compiling[..]
         [..]Finished[..]
         
@@ -358,7 +357,6 @@ fn virtual_workspace() {
         
         [SKIP] fibonacci2::tests::skipped_test
         Tests: 2 passed, 1 failed, 1 skipped
-        warn: workspace members definition matched path [..]/dummy_name/not_collected_too.cairo/Scarb.toml`, which misses a manifest file
         [..]Compiling[..]
         [..]Compiling[..]
         [..]Finished[..]
@@ -390,7 +388,6 @@ fn virtual_workspace_specify_package() {
         .assert()
         .success()
         .stdout_matches(indoc! {r#"
-        warn: workspace members definition matched path [..]/dummy_name/not_collected_too.cairo/Scarb.toml`, which misses a manifest file
         [..]Compiling[..]
         [..]Compiling[..]
         [..]Finished[..]
