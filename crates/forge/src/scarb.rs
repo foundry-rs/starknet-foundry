@@ -43,11 +43,11 @@ pub struct ForgeConfig {
     #[serde(default)]
     /// Should runner exit after first failed test
     pub exit_first: bool,
-    pub forks: Option<Vec<Fork>>,
+    pub predefined_forks: Option<Vec<PredefinedFork>>,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Default, Clone)]
-pub struct Fork {
+pub struct PredefinedFork {
     pub name: String,
     pub url: String,
     pub block_id: HashMap<String, String>,
@@ -578,7 +578,7 @@ mod tests {
             config,
             ForgeConfig {
                 exit_first: false,
-                forks: Default::default()
+                predefined_forks: Default::default()
             }
         );
     }

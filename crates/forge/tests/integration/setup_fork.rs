@@ -3,7 +3,7 @@ use crate::integration::common::running_tests::run_test_case;
 use crate::{assert_passed, test_case};
 use camino::Utf8PathBuf;
 use dotenv::dotenv;
-use forge::scarb::{ForgeConfig, Fork};
+use forge::scarb::{ForgeConfig, PredefinedFork};
 use forge::{run, RunnerConfig};
 use indoc::formatdoc;
 use std::collections::HashMap;
@@ -160,7 +160,7 @@ fn fork_aliased_decorator() {
             false,
             &ForgeConfig {
                 exit_first: false,
-                forks: Some(vec![Fork {
+                predefined_forks: Some(vec![PredefinedFork {
                     name: "FORK_NAME_FROM_SCARB_TOML".to_string(),
                     url: node_url,
                     block_id: HashMap::from([("tag".to_string(), "Latest".to_string())]),

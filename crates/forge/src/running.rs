@@ -35,8 +35,7 @@ use starknet_api::transaction::Calldata;
 use test_collector::{Fork, TestCase};
 
 use crate::cheatcodes_hint_processor::CairoHintProcessor;
-use crate::scarb;
-use crate::scarb::StarknetContractArtifacts;
+use crate::scarb::{PredefinedFork, StarknetContractArtifacts};
 use crate::test_case_summary::TestCaseSummary;
 
 /// Builds `hints_dict` required in `cairo_vm::types::program::Program` from instructions.
@@ -65,11 +64,10 @@ fn build_hints_dict<'b>(
     (hints_dict, string_to_hint)
 }
 
-#[allow(clippy::too_many_lines)]
 pub(crate) fn run_from_test_case(
     runner: &SierraCasmRunner,
     case: &TestCase,
-    global_forks: Option<&Vec<scarb::Fork>>,
+    predefined_forks: Option<&Vec<PredefinedFork>>,
     contracts: &HashMap<String, StarknetContractArtifacts>,
     predeployed_contracts: &Utf8PathBuf,
 ) -> Result<TestCaseSummary> {
@@ -137,30 +135,7 @@ pub(crate) fn run_from_test_case(
             dict_state_reader: build_testing_state(predeployed_contracts),
             fork_state_reader: match &case.fork_config {
                 Some(Fork::Config(url, block_id)) => Some(ForkStateReader::new(url, *block_id)),
-                Some(Fork::Id(name)) => {
-                    let fork = global_forks.unwrap().iter().find(|fork| &fork.name == name);
-                    if let Some(fork) = fork {
-                        let block_id = fork
-                            .block_id
-                            .iter()
-                            .map(|(id_type, value)| match id_type.as_str() {
-                                "number" => BlockId::Number(value.parse().unwrap()),
-                                "hash" => BlockId::Hash(value.to_field_element()),
-                                "tag" => match value.as_str() {
-                                    "Latest" => BlockId::Tag(BlockTag::Latest),
-                                    "Pending" => BlockId::Tag(BlockTag::Pending),
-                                    _ => unreachable!(),
-                                },
-                                _ => unreachable!(),
-                            })
-                            .collect::<Vec<_>>();
-                        let block_id = block_id[0];
-
-                        Some(ForkStateReader::new(&fork.url, block_id))
-                    } else {
-                        None
-                    }
-                }
+                Some(Fork::Id(name)) => extract_fork_when_id_passed(predefined_forks, name),
                 _ => None,
             },
         }),
@@ -189,4 +164,33 @@ pub(crate) fn run_from_test_case(
 
         Err(err) => Err(err.into()),
     }
+}
+
+fn extract_fork_when_id_passed(
+    predefined_forks: Option<&Vec<PredefinedFork>>,
+    fork_alias: &str,
+) -> Option<ForkStateReader> {
+    let fork = predefined_forks?
+        .iter()
+        .find(|fork| fork.name == fork_alias);
+
+    let block_id = fork?
+        .block_id
+        .iter()
+        .map(|(id_type, value)| match id_type.as_str() {
+            "number" => Some(BlockId::Number(value.parse().unwrap())),
+            "hash" => Some(BlockId::Hash(value.to_field_element())),
+            "tag" => match value.as_str() {
+                "Latest" => Some(BlockId::Tag(BlockTag::Latest)),
+                "Pending" => Some(BlockId::Tag(BlockTag::Pending)),
+                _ => None,
+            },
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+    let [Some(block_id)] = block_id[..] else {
+        return None;
+    };
+
+    Some(ForkStateReader::new(&fork?.url, block_id))
 }
