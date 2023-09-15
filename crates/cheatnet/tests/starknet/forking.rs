@@ -76,8 +76,7 @@ fn try_deploying_undeclared_class() {
 #[test]
 fn test_forking_at_block_number() {
     let predeployed_contracts = Utf8PathBuf::from("predeployed-contracts");
-    let node_url =
-        std::env::var("CHEATNET_RPC_URL").expect("CHEATNET_RPC_URL must be set in the .env file");
+    let node_url = "http://188.34.188.184:9545/rpc/v0.4";
 
     let mut state_before_deploy = CheatnetState::new(ExtendedStateReader {
         dict_state_reader: build_testing_state(&predeployed_contracts),
