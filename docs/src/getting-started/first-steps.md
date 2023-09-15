@@ -29,10 +29,10 @@ $ tree . -L 1
 
 Ensures that `casm` codegen is enabled in the `Scarb.toml` file.
 ```toml
-(...)
+# ...
 [[target.starknet-contract]]
 casm = true
-(...)
+# ...
 ```
 
 And run tests with `snforge`

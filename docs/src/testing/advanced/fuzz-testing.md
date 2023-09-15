@@ -16,7 +16,7 @@ To convert a test to a random fuzz test, simply add arguments to the test functi
 These arguments can then be used in the test body.
 The test will be run many times for different randomly generated values.
 
-```cairo
+```rust
 fn sum(a: felt252, b: felt252) -> felt252 {
     return a + b;
 }
@@ -31,8 +31,8 @@ Then run `snforge` like usual.
 
 ```shell
 $ snforge
-Collected 1 test(s) and 1 test file(s)
-Running 1 test(s) from package_name package
+Collected 1 test(s) and 1 test file(s) from package_name package
+Running 1 inline test(s)
 Fuzzer seed: [..]
 [PASS] package_name::test_sum
 ```
@@ -56,4 +56,5 @@ Or in `Scarb.toml` file:
 [tool.snforge]
 fuzzer_runs = 1234
 fuzzer_seed = 1111
+# ...
 ```
