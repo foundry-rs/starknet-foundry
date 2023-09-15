@@ -146,7 +146,7 @@ Tests: 1 passed, 0 failed, 0 skipped
 
 Running `snforge` command in a virtual workspace (a workspace without a root package)
 outside any package will by default run tests for all the packages. 
-Using the `--workspace` flag has the same effect.
+It is equivalent to running `snforge` with the `--workspace` flag.
 
 To select a specific package to test,
 you can use the `--package` flag the same way as in regular workspaces or run `snforge` from the package directory.
