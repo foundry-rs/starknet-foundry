@@ -16,7 +16,6 @@ pub mod mock_call;
 pub mod prank;
 pub mod precalculate_address;
 pub mod roll;
-pub mod setup_fork;
 pub mod spoof;
 pub mod spy_events;
 pub mod warp;

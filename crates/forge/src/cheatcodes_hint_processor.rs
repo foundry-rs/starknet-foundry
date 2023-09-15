@@ -24,7 +24,6 @@ use cheatnet::{
 use conversions::StarknetConversions;
 use num_traits::{One, ToPrimitive};
 use serde::Deserialize;
-use starknet::core::types::{BlockId, BlockTag};
 
 use cairo_lang_casm::hints::{Hint, StarknetHint};
 use cairo_lang_casm::operand::{CellRef, ResOperand};
@@ -39,7 +38,6 @@ use cairo_lang_starknet::contract::starknet_keccak;
 use cairo_lang_utils::bigint::BigIntAsHex;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cheatnet::cheatcodes::spy_events::SpyTarget;
-use itertools::Itertools;
 
 mod file_operations;
 
@@ -463,28 +461,6 @@ impl CairoHintProcessor<'_> {
                 buffer
                     .write(Felt252::from(hash))
                     .expect("Failed to insert event name hash");
-                Ok(())
-            }
-            "setup_fork" => {
-                let url_length = inputs[0].clone().to_usize().unwrap();
-                let split_url = Vec::from(&inputs[1..=url_length]);
-                let mut url = split_url
-                    .iter()
-                    .map(StarknetConversions::to_short_string)
-                    .join("");
-
-                let block_id = match inputs[url_length + 1].to_i8().unwrap() {
-                    0 => match inputs[url_length + 2].to_u8().unwrap() {
-                        0 => BlockId::Tag(BlockTag::Latest),
-                        1 => BlockId::Tag(BlockTag::Pending),
-                        _ => unreachable!(),
-                    },
-                    1 => BlockId::Hash(inputs[url_length + 2].to_field_element()),
-                    2 => BlockId::Number(inputs[url_length + 2].to_u64().unwrap()),
-                    _ => unreachable!(),
-                };
-
-                self.cheatnet_state.setup_fork(&url, block_id);
                 Ok(())
             }
             _ => Err(anyhow!("Unknown cheatcode selector: {selector}")).map_err(Into::into),

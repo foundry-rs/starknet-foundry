@@ -15,8 +15,6 @@ use cheatcodes::tx_info::stop_spoof;
 use cheatcodes::l1_handler::L1Handler;
 use cheatcodes::l1_handler::L1HandlerTrait;
 
-use cheatcodes::fork::ForkConfig;
-use cheatcodes::fork::ForkTrait;
 use cheatcodes::fork::BlockTag;
 use cheatcodes::fork::BlockId;
 
