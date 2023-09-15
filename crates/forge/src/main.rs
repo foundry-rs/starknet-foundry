@@ -107,6 +107,7 @@ fn main_execution() -> Result<bool> {
             args.exit_first,
             &forge_config,
         );
+
         let contracts_path = try_get_starknet_artifacts_path(&target_dir, &target_name)?;
         let contracts = contracts_path
             .map(|path| get_contracts_map(&path))
