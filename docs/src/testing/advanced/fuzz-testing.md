@@ -33,6 +33,7 @@ Then run `snforge` like usual.
 $ snforge
 Collected 1 test(s) and 1 test file(s)
 Running 1 test(s) from package_name package
+Fuzzer seed: [..]
 [PASS] package_name::test_sum
 ```
 
