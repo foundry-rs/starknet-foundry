@@ -183,9 +183,9 @@ fn extract_fork_when_id_passed(
             "tag" => match value.as_str() {
                 "Latest" => Some(BlockId::Tag(BlockTag::Latest)),
                 "Pending" => Some(BlockId::Tag(BlockTag::Pending)),
-                _ => None,
+                _ => unreachable!(),
             },
-            _ => None,
+            _ => unreachable!(),
         })
         .collect::<Vec<_>>();
     let [Some(block_id)] = block_id[..] else {
