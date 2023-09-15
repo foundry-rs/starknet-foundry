@@ -74,7 +74,7 @@ struct TestsFromFile {
     relative_path: Utf8PathBuf,
 }
 
-fn collect_tests_for_package(
+fn collect_tests_from_package(
     package_path: &Utf8PathBuf,
     package_name: &str,
     lib_path: &Utf8PathBuf,
@@ -186,7 +186,7 @@ pub fn run(
     contracts: &HashMap<String, StarknetContractArtifacts>,
     predeployed_contracts: &Utf8PathBuf,
 ) -> Result<Vec<TestFileSummary>> {
-    let tests = collect_tests_for_package(
+    let tests = collect_tests_from_package(
         package_path,
         package_name,
         lib_path,
