@@ -1,3 +1,4 @@
+use crate::forking::cache::ForkCache;
 use blockifier::execution::contract_class::{
     ContractClass as ContractClassBlockifier, ContractClassV1,
 };
@@ -9,7 +10,7 @@ use cairo_lang_starknet::contract_class::{ContractClass, ContractEntryPoints};
 use cairo_lang_utils::bigint::BigUintAsHex;
 use conversions::StarknetConversions;
 use num_bigint::BigUint;
-use starknet::core::types::{BlockId, ContractClass as ContractClassStarknet};
+use starknet::core::types::{BlockId, ContractClass as ContractClassStarknet, FieldElement};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider};
 use starknet_api::core::{ClassHash, CompiledClassHash, ContractAddress, Nonce};
@@ -23,6 +24,7 @@ pub struct ForkStateReader {
     client: JsonRpcClient<HttpTransport>,
     block_id: BlockId,
     runtime: Runtime,
+    pub cache: ForkCache,
 }
 
 impl ForkStateReader {
@@ -32,6 +34,7 @@ impl ForkStateReader {
             client: JsonRpcClient::new(HttpTransport::new(Url::parse(url).unwrap())),
             block_id,
             runtime: Runtime::new().expect("Could not instantiate Runtime"),
+            cache: ForkCache::load(url, block_id),
         }
     }
 }
@@ -42,12 +45,26 @@ impl StateReader for ForkStateReader {
         contract_address: ContractAddress,
         key: StorageKey,
     ) -> StateResult<StarkFelt> {
+        let cache_key = (
+            "get_storage_at".to_string(),
+            vec![
+                contract_address.to_felt252().to_string(),
+                key.0.key().to_string(),
+            ],
+        );
+        if let Some(hit) = self.cache.cached_calls.get(&cache_key) {
+            return Ok(FieldElement::from_dec_str(hit).unwrap().to_stark_felt());
+        }
+
         match self.runtime.block_on(self.client.get_storage_at(
             contract_address.to_field_element(),
             key.0.key().to_field_element(),
             self.block_id,
         )) {
-            Ok(value) => Ok(value.to_stark_felt()),
+            Ok(value) => {
+                self.cache.cache_writes.insert(cache_key, value.to_string());
+                Ok(value.to_stark_felt())
+            }
             Err(_) => Err(StateReadError(format!(
                 "Unable to get storage at address: {contract_address:?} and key: {key:?} form fork"
             ))),

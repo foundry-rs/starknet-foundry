@@ -44,6 +44,14 @@ fn fork_simple() {
     let selector = felt_selector_from_name("get_balance");
     let output = call_contract(&contract_address, &selector, &[], &mut state).unwrap();
     assert_success!(output, vec![Felt252::from(102)]);
+
+    state
+        .blockifier_state
+        .state
+        .fork_state_reader
+        .unwrap()
+        .cache
+        .save();
 }
 
 #[test]

@@ -32,6 +32,8 @@ num-bigint.workspace = true
 conversions = { path = "../conversions" }
 flate2 = "1.0.26"
 dotenv = "0.15.0"
+bincode = "2.0.0-rc.3"
+fs2 = "0.4.3"
 
 [dev-dependencies]
 ctor.workspace = true
