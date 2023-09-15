@@ -21,6 +21,8 @@ fn complex_structure() {
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
+
+
         Collected 16 test(s) and 4 test file(s) from test_multiple package
         Running 12 inline test(s)
         [PASS] test_multiple::test_simple

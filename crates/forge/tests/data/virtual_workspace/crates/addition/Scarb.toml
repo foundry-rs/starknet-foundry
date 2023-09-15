@@ -1,5 +1,0 @@
-[package]
-name = "addition"
-version.workspace = true
-
-[lib]

@@ -8,7 +8,7 @@ fn fib(a: felt252, b: felt252, n: felt252) -> felt252 {
 }
 
 #[starknet::contract]
-mod FibContract {
+mod FibonacciContract {
     use addition::add;
     use fibonacci::fib;
 
@@ -24,10 +24,27 @@ mod FibContract {
 #[cfg(test)]
 mod tests {
     use super::fib;
+    use snforge_std::declare;
 
     #[test]
     #[available_gas(100000)]
     fn it_works() {
         assert(fib(0, 1, 16) == 987, 'it works!');
+    }
+
+    #[test]
+    fn contract_test() {
+        declare('FibonacciContract');
+        declare('AdditionContract');
+    }
+
+    #[test]
+    fn failing_test() {
+        assert(1 == 2, '');
+    }
+
+    #[test]
+    fn skipped_test() {
+        assert(1 == 1, '');
     }
 }

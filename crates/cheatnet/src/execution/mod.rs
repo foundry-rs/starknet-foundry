@@ -6,4 +6,5 @@ pub mod entry_point;
 pub mod events;
 #[allow(clippy::module_name_repetitions)]
 pub mod execution_info;
+pub mod gas;
 pub mod syscalls;

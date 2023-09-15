@@ -3,9 +3,11 @@ use crate::{cheatcodes::EnhancedHintError, CheatnetState};
 use anyhow::Result;
 use blockifier::abi::abi_utils::selector_from_name;
 use blockifier::execution::execution_utils::{felt_to_stark_felt, stark_felt_to_felt};
+use blockifier::transaction::constants::EXECUTE_ENTRY_POINT_NAME;
 
 use blockifier::state::state_api::{State, StateReader};
 use cairo_felt::Felt252;
+use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_vm::vm::errors::hint_errors::HintError::CustomHint;
 use conversions::StarknetConversions;
 
@@ -16,7 +18,14 @@ use starknet_api::transaction::ContractAddressSalt;
 use starknet_api::{patricia_key, stark_felt};
 
 use super::CheatcodeError;
-use crate::rpc::{call_contract, CallContractOutput};
+use crate::rpc::{call_contract, CallContractOutput, ResourceReport};
+
+#[allow(clippy::module_name_repetitions)]
+#[derive(Debug, Clone, PartialEq)]
+pub struct DeployPayload {
+    pub contract_address: ContractAddress,
+    pub resource_report: ResourceReport,
+}
 
 impl CheatnetState {
     pub fn deploy_at(
@@ -24,7 +33,7 @@ impl CheatnetState {
         class_hash: &ClassHash,
         calldata: &[Felt252],
         contract_address: ContractAddress,
-    ) -> Result<ContractAddress, CheatcodeError> {
+    ) -> Result<DeployPayload, CheatcodeError> {
         let salt = self.get_salt();
         self.increment_deploy_salt_base();
 
@@ -40,16 +49,6 @@ impl CheatnetState {
             }
         }
 
-        let contract_class = self
-            .blockifier_state
-            .get_compiled_contract_class(class_hash)
-            .map_err::<EnhancedHintError, _>(From::from)?;
-        if contract_class.constructor_selector().is_none() && !calldata.is_empty() {
-            return Err(CheatcodeError::Recoverable(vec![
-                "No constructor in contract".to_owned().to_felt252(),
-            ]));
-        }
-
         let execute_calldata = create_execute_calldata(
             calldata,
             class_hash,
@@ -60,26 +59,57 @@ impl CheatnetState {
 
         let call_result = call_contract(
             &account_address,
-            &get_selector_from_name("__execute__").unwrap().to_felt252(),
+            &get_selector_from_name(EXECUTE_ENTRY_POINT_NAME)
+                .unwrap()
+                .to_felt252(),
             execute_calldata.as_slice(),
             self,
         )
         .unwrap_or_else(|err| panic!("Deploy txn failed: {err}"));
 
         match call_result {
-            CallContractOutput::Success { .. } => self
-                .blockifier_state
-                .set_class_hash_at(contract_address, *class_hash)
-                .map(|_| contract_address)
-                .map_err(|msg| {
-                    CheatcodeError::Unrecoverable(EnhancedHintError::from(CustomHint(Box::from(
-                        msg.to_string(),
-                    ))))
-                }),
-            CallContractOutput::Panic { panic_data } => {
+            CallContractOutput::Success {
+                resource_report, ..
+            } => {
+                let result = self
+                    .blockifier_state
+                    .set_class_hash_at(contract_address, *class_hash)
+                    .map(|_| contract_address)
+                    .map_err(|msg| {
+                        CheatcodeError::Unrecoverable(EnhancedHintError::from(CustomHint(
+                            Box::from(msg.to_string()),
+                        )))
+                    });
+
+                match result {
+                    Ok(contract_address) => Ok(DeployPayload {
+                        contract_address,
+                        resource_report,
+                    }),
+                    Err(cheatcode_error) => Err(cheatcode_error),
+                }
+            }
+            CallContractOutput::Panic { panic_data, .. } => {
+                let panic_data_str = panic_data
+                    .iter()
+                    .map(|x| as_cairo_short_string(x).unwrap())
+                    .collect::<Vec<String>>()
+                    .join("\n");
+
+                for invalid_calldata_msg in [
+                    "Failed to deserialize param #",
+                    "Input too long for arguments",
+                ] {
+                    if panic_data_str.contains(invalid_calldata_msg) {
+                        return Err(CheatcodeError::Unrecoverable(EnhancedHintError::from(
+                            CustomHint(Box::from(panic_data_str)),
+                        )));
+                    }
+                }
+
                 Err(CheatcodeError::Recoverable(panic_data))
             }
-            CallContractOutput::Error { msg } => Err(CheatcodeError::Unrecoverable(
+            CallContractOutput::Error { msg, .. } => Err(CheatcodeError::Unrecoverable(
                 EnhancedHintError::from(CustomHint(Box::from(msg))),
             )),
         }
@@ -89,7 +119,7 @@ impl CheatnetState {
         &mut self,
         class_hash: &ClassHash,
         calldata: &[Felt252],
-    ) -> Result<ContractAddress, CheatcodeError> {
+    ) -> Result<DeployPayload, CheatcodeError> {
         let contract_address = self.precalculate_address(class_hash, calldata);
 
         self.deploy_at(class_hash, calldata, contract_address)

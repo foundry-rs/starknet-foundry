@@ -9,17 +9,13 @@ pub fn print_error_message(error: &Error) {
     println!("[{error_tag}] {error}");
 }
 
-pub fn print_separator() {
-    print!("\n\n");
-}
-
 pub(crate) fn print_collected_tests_count(
     tests_num: usize,
     tests_files_num: usize,
     package_name: &str,
 ) {
     let plain_text = format!(
-        "Collected {tests_num} test(s) and {tests_files_num} test file(s) from {package_name} package"
+        "\n\nCollected {tests_num} test(s) and {tests_files_num} test file(s) from {package_name} package"
     );
     println!("{}", style(plain_text).bold());
 }
@@ -68,4 +64,23 @@ pub(crate) fn print_test_result(test_result: &TestCaseSummary) {
     };
 
     println!("{result_header} {result_name}{result_message}");
+}
+
+pub fn print_failures(all_failed_tests: &[TestCaseSummary]) {
+    if all_failed_tests.is_empty() {
+        return;
+    }
+    let failed_tests_names: Vec<&String> = all_failed_tests
+        .iter()
+        .map(|test_case_summary| match test_case_summary {
+            TestCaseSummary::Passed { name, .. }
+            | TestCaseSummary::Failed { name, .. }
+            | TestCaseSummary::Skipped { name, .. } => name,
+        })
+        .collect();
+
+    println!("\nFailures:");
+    for name in failed_tests_names {
+        println!("    {name}");
+    }
 }

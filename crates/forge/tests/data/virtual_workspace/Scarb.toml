@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "crates/*",
+    "dummy_name/*",
 ]
 
 [workspace.scripts]
@@ -11,9 +11,10 @@ exit_first = true
 
 [workspace.dependencies]
 starknet = "2.2.0"
+snforge_std = { path = "../../../../../snforge_std" }
 
 [workspace.package]
-version = "0.2.0"
+version = "0.1.0"
 
 [scripts]
 test.workspace = true

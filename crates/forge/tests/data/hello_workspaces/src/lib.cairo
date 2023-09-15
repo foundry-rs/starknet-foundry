@@ -16,4 +16,3 @@ mod FibContract {
 fn test_simple() {
     assert(1 == 1, 1);
 }
-

@@ -14,10 +14,12 @@ fn simple_package() {
     snapbox
         .current_dir(&temp)
         .assert()
-        .success()
+        .code(1)
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
+
+
         Collected 11 test(s) and 5 test file(s) from simple_package package
         Running 1 inline test(s)
         [PASS] simple_package::test_fib
@@ -44,6 +46,10 @@ fn simple_package() {
         Running 1 test(s) from tests/without_prefix.cairo
         [PASS] without_prefix::five
         Tests: 9 passed, 2 failed, 0 skipped
+        
+        Failures:
+            test_simple::test_failing
+            test_simple::test_another_failing
         "#});
 }
 
@@ -80,11 +86,13 @@ fn simple_package_with_git_dependency() {
     snapbox
         .current_dir(&temp)
         .assert()
-        .success()
+        .code(1)
         .stdout_matches(indoc! {r#"
         [..]Updating git repository[..]
         [..]Compiling[..]
         [..]Finished[..]
+
+
         Collected 11 test(s) and 5 test file(s) from simple_package package
         Running 1 inline test(s)
         [PASS] simple_package::test_fib
@@ -111,6 +119,10 @@ fn simple_package_with_git_dependency() {
         Running 1 test(s) from tests/without_prefix.cairo
         [PASS] without_prefix::five
         Tests: 9 passed, 2 failed, 0 skipped
+        
+        Failures:
+            test_simple::test_failing
+            test_simple::test_another_failing
         "#}).stderr_matches("");
 }
 
@@ -129,10 +141,10 @@ fn with_failing_scarb_build() {
 
     let snapbox = runner();
 
-    let result = snapbox.current_dir(&temp).assert().failure();
+    let result = snapbox.current_dir(&temp).assert().code(2);
 
     let stdout = String::from_utf8_lossy(&result.get_output().stdout);
-    assert!(stdout.contains("Scarb build didn't succeed:"));
+    assert!(stdout.contains("Scarb build did not succeed"));
 }
 
 #[test]
@@ -148,6 +160,8 @@ fn with_filter() {
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
+
+
         Collected 2 test(s) and 5 test file(s) from simple_package package
         Running 0 inline test(s)
         Running 0 test(s) from tests/contract.cairo
@@ -155,6 +169,33 @@ fn with_filter() {
         Running 2 test(s) from tests/test_simple.cairo
         [PASS] test_simple::test_two
         [PASS] test_simple::test_two_and_two
+        Running 0 test(s) from tests/without_prefix.cairo
+        Tests: 2 passed, 0 failed, 0 skipped
+        "#});
+}
+
+#[test]
+fn with_filter_matching_module() {
+    let temp = setup_package("simple_package");
+    let snapbox = runner();
+
+    snapbox
+        .current_dir(&temp)
+        .arg("ext_function_test::")
+        .assert()
+        .success()
+        .stdout_matches(indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+        
+        
+        Collected 2 test(s) and 5 test file(s) from simple_package package
+        Running 0 inline test(s)
+        Running 0 test(s) from tests/contract.cairo
+        Running 2 test(s) from tests/ext_function_test.cairo
+        [PASS] ext_function_test::test_my_test
+        [PASS] ext_function_test::test_simple
+        Running 0 test(s) from tests/test_simple.cairo
         Running 0 test(s) from tests/without_prefix.cairo
         Tests: 2 passed, 0 failed, 0 skipped
         "#});
@@ -174,6 +215,8 @@ fn with_exact_filter() {
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
+
+
         Collected 1 test(s) and 5 test file(s) from simple_package package
         Running 0 inline test(s)
         Running 0 test(s) from tests/contract.cairo
@@ -198,6 +241,8 @@ fn with_non_matching_filter() {
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
+
+
         Collected 0 test(s) and 5 test file(s) from simple_package package
         Running 0 inline test(s)
         Running 0 test(s) from tests/contract.cairo
@@ -220,6 +265,8 @@ fn with_print() {
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
+
+
         Collected 1 test(s) and 2 test file(s) from print_test package
         Running 0 inline test(s)
         Running 1 test(s) from tests/test_print.cairo
@@ -256,10 +303,12 @@ fn with_panic_data_decoding() {
     snapbox
         .current_dir(&temp)
         .assert()
-        .success()
+        .code(1)
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
+
+
         Collected 4 test(s) and 2 test file(s) from panic_decoding package
         Running 0 inline test(s)
         Running 4 test(s) from tests/test_panic_decoding.cairo
@@ -281,6 +330,10 @@ fn with_panic_data_decoding() {
 
         [PASS] test_panic_decoding::test_simple2
         Tests: 2 passed, 2 failed, 0 skipped
+        
+        Failures:
+            test_panic_decoding::test_panic_decoding
+            test_panic_decoding::test_panic_decoding2
         "#});
 }
 
@@ -320,10 +373,12 @@ fn with_exit_first() {
     snapbox
         .current_dir(&temp)
         .assert()
-        .success()
+        .code(1)
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
+
+
         Collected 11 test(s) and 5 test file(s) from simple_package package
         Running 1 inline test(s)
         [PASS] simple_package::test_fib
@@ -345,6 +400,9 @@ fn with_exit_first() {
         [SKIP] test_simple::test_another_failing
         [SKIP] without_prefix::five
         Tests: 8 passed, 1 failed, 2 skipped
+        
+        Failures:
+            test_simple::test_failing
         "#});
 }
 
@@ -356,10 +414,12 @@ fn with_exit_first_flag() {
     snapbox
         .current_dir(&temp)
         .assert()
-        .success()
+        .code(1)
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
+
+
         Collected 11 test(s) and 5 test file(s) from simple_package package
         Running 1 inline test(s)
         [PASS] simple_package::test_fib
@@ -381,6 +441,9 @@ fn with_exit_first_flag() {
         [SKIP] test_simple::test_another_failing
         [SKIP] without_prefix::five
         Tests: 8 passed, 1 failed, 2 skipped
+        
+        Failures:
+            test_simple::test_failing
         "#});
 }
 
@@ -414,10 +477,12 @@ fn exit_first_flag_takes_precedence() {
         .current_dir(&temp)
         .arg("--exit-first")
         .assert()
-        .success()
+        .code(1)
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
+
+
         Collected 11 test(s) and 5 test file(s) from simple_package package
         Running 1 inline test(s)
         [PASS] simple_package::test_fib
@@ -439,6 +504,9 @@ fn exit_first_flag_takes_precedence() {
         [SKIP] test_simple::test_another_failing
         [SKIP] without_prefix::five
         Tests: 8 passed, 1 failed, 2 skipped
+        
+        Failures:
+            test_simple::test_failing
         "#});
 }
 
@@ -510,6 +578,8 @@ fn init_new_project_test() {
         [..]Updating git repository[..]
         [..]Compiling test_name v0.1.0[..]
         [..]Finished[..]
+
+
         Collected 2 test(s) and 2 test file(s) from test_name package
         Running 0 inline test(s)
         Running 2 test(s) from tests/test_contract.cairo
@@ -531,6 +601,8 @@ fn using_corelib_names() {
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
+
+
         Collected 4 test(s) and 5 test file(s) from using_corelib_names package
         Running 0 inline test(s)
         Running 1 test(s) from tests/bits.cairo
@@ -556,10 +628,12 @@ fn should_panic() {
     snapbox
         .current_dir(&temp)
         .assert()
-        .success()
+        .code(1)
         .stdout_matches(indoc! { r#"
         [..]Compiling[..]
         [..]Finished[..]
+
+
         Collected 6 test(s) and 2 test file(s) from should_panic_test package
         Running 0 inline test(s)
         Running 6 test(s) from tests/should_panic_test.cairo
@@ -584,6 +658,11 @@ fn should_panic() {
 
         [FAIL] should_panic_test::expected_panic_but_didnt
         Tests: 3 passed, 3 failed, 0 skipped
+        
+        Failures:
+            should_panic_test::should_panic_with_non_matching_data
+            should_panic_test::didnt_expect_panic
+            should_panic_test::expected_panic_but_didnt
         "#});
 }
 
@@ -606,6 +685,8 @@ fn printing_in_contracts() {
             allowed-libfuncs-list.name = "experimental"
         
         [..]Finished[..]
+
+
         Collected 2 test(s) and 2 test file(s) from contract_printing package
         Running 0 inline test(s)
         Running 2 test(s) from tests/test_contract.cairo

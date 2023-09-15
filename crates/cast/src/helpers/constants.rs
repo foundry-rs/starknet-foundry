@@ -22,3 +22,5 @@ pub const DEFAULT_RETRIES: u8 = 12;
 
 #[allow(dead_code)]
 pub const DEFAULT_ACCOUNTS_FILE: &str = "~/.starknet_accounts/starknet_open_zeppelin_accounts.json";
+
+pub const KEYSTORE_PASSWORD_ENV_VAR: &str = "KEYSTORE_PASSWORD";
