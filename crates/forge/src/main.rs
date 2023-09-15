@@ -87,10 +87,7 @@ fn main_execution() -> Result<bool> {
 
         let target_dir = target_dir_for_package(&package_path)?; // TODO(#671)
 
-        let current_dir = std::env::current_dir().context("Failed to get current directory")?;
-
         let build_output = Command::new("scarb")
-            .current_dir(current_dir)
             .arg("build")
             .stderr(Stdio::inherit())
             .stdout(Stdio::inherit())
