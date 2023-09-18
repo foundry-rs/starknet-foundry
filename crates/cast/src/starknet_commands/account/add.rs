@@ -6,7 +6,7 @@ use cast::helpers::response_structs::AccountAddResponse;
 use cast::helpers::scarb_utils::CastConfig;
 use cast::{get_keystore_password, parse_number};
 use clap::Args;
-use starknet::core::types::BlockTag::Latest;
+use starknet::core::types::BlockTag::Pending;
 use starknet::core::types::{BlockId, FieldElement};
 use starknet::core::utils::get_contract_address;
 use starknet::providers::{
@@ -95,7 +95,7 @@ pub async fn add(
 
         let deployed = add.deployed
             || provider
-                .get_class_hash_at(BlockId::Tag(Latest), add.address)
+                .get_class_hash_at(BlockId::Tag(Pending), add.address)
                 .await
                 .map_or(false, |_| {
                     println!("Contract detected as deployed on chain");
