@@ -1,5 +1,5 @@
 use crate::starknet_commands::account::{prepare_account_json, write_account_to_accounts_file};
-use anyhow::{anyhow, bail, ensure, Result};
+use anyhow::{anyhow, bail, ensure, Context, Result};
 use camino::Utf8PathBuf;
 use cast::get_chain_id;
 use cast::helpers::response_structs::AccountAddResponse;
@@ -80,7 +80,10 @@ pub async fn add(
             .ok_or_else(|| anyhow!("--keystore must be passed when using --from-keystore"))?;
         let account_path_ = account_path
             .ok_or_else(|| anyhow!("--account must be passed when using --from-keystore"))?;
-        import_from_keystore(keystore_path_, account_path_)?
+        import_from_keystore(&keystore_path_, &account_path_).context(format!(
+            "Couldn't import account from keystore at path {} and account JSON file at path {}",
+            keystore_path_, account_path_
+        ))?
     } else {
         let private_key = &SigningKey::from_secret_scalar(add.private_key);
         if let Some(public_key) = &add.public_key {
@@ -123,8 +126,8 @@ pub async fn add(
 }
 
 fn import_from_keystore(
-    keystore_path: Utf8PathBuf,
-    account_path: Utf8PathBuf,
+    keystore_path: &Utf8PathBuf,
+    account_path: &Utf8PathBuf,
 ) -> Result<serde_json::Value> {
     let account_info: serde_json::Value = serde_json::from_str(&fs::read_to_string(account_path)?)?;
     let deployment = account_info
@@ -198,7 +201,7 @@ mod tests {
         let account_path = Utf8PathBuf::from("tests/data/keystore/my_account.json");
 
         env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
-        let account_json = import_from_keystore(keystore_path, account_path).unwrap();
+        let account_json = import_from_keystore(&keystore_path, &account_path).unwrap();
 
         assert_eq!(
             account_json,
@@ -220,7 +223,7 @@ mod tests {
         let account_path = Utf8PathBuf::from("tests/data/keystore/my_account_undeployed.json");
 
         env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
-        let account_json = import_from_keystore(keystore_path, account_path).unwrap();
+        let account_json = import_from_keystore(&keystore_path, &account_path).unwrap();
 
         assert_eq!(
             account_json,
