@@ -2,9 +2,10 @@ use crate::helpers::constants::{CONTRACTS_DIR, DEVNET_OZ_CLASS_HASH, URL};
 use crate::helpers::fixtures::{default_cli_args, duplicate_directory_with_salt};
 use crate::helpers::runner::runner;
 use camino::Utf8PathBuf;
+use cast::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
 use indoc::indoc;
 use snapbox::cmd::{cargo_bin, Command};
-use std::fs;
+use std::{env, fs};
 
 #[tokio::test]
 pub async fn test_happy_case() {
@@ -233,4 +234,45 @@ pub async fn test_account_already_exists() {
         command: account create
         error: Account with name user1 already exists in network with chain_id SN_GOERLI
     "#});
+}
+
+#[tokio::test]
+pub async fn test_happy_case_keystore() {
+    let keystore_path = "my_key.json";
+    let account_path = "my_account.json";
+    _ = fs::remove_file(keystore_path);
+    _ = fs::remove_file(account_path);
+    env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+
+    let args = vec![
+        "--url",
+        URL,
+        "account",
+        "create",
+        "--keystore",
+        keystore_path,
+        "--account",
+        account_path,
+        "--class-hash",
+        DEVNET_OZ_CLASS_HASH,
+    ];
+
+    let snapbox = runner(&args);
+
+    snapbox.assert().stdout_matches(indoc! {r#"
+        KEYSTORE_PASSWORD environment variable found and will be used
+        Account successfully created[..]
+        command: account create
+        add_profile: --add-profile flag was not set. No profile added to Scarb.toml
+        address: 0x[..]
+        max_fee: 0x[..]
+    "#});
+
+    let contents = fs::read_to_string(account_path).expect("Unable to read created file");
+    assert!(contents.contains("\"deployment\": {"));
+    assert!(contents.contains("\"variant\": {"));
+    assert!(contents.contains("\"version\": 1"));
+
+    _ = fs::remove_file(keystore_path);
+    _ = fs::remove_file(account_path);
 }
