@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - `account add` command for importing accounts to the accounts file
+- `account create --keystore` command for creating openzeppelin accounts with keystore
 
 ## [0.6.0] - 2023-09-13
 
