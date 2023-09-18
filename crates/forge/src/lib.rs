@@ -302,7 +302,7 @@ fn run_tests_from_file(
     for (i, case) in tests.test_cases.iter().enumerate() {
         let case_name = case.name.as_str();
         let function = runner.find_function(case_name)?;
-        let args = function_args(function);
+        let args = function_args(function, &BUILTINS);
 
         let result = if args.is_empty() {
             let result =
@@ -359,7 +359,7 @@ fn run_with_fuzzing(
     args: &Vec<&ConcreteTypeId>,
     fuzzer: &mut fuzzer::Random,
 ) -> Result<(TestCaseSummary, u32)> {
-    if contains_non_felt252_args(args, &BUILTINS) {
+    if contains_non_felt252_args(args) {
         bail!(
             "Fuzzer only supports felt252 arguments, and test {} defines arguments that are not felt252 type",
             case.name.as_str()
@@ -394,21 +394,26 @@ fn run_with_fuzzing(
     Ok((result, runs))
 }
 
-fn contains_non_felt252_args(args: &Vec<&ConcreteTypeId>, builtins: &[&str]) -> bool {
+fn contains_non_felt252_args(args: &Vec<&ConcreteTypeId>) -> bool {
     args.iter().any(|pt| {
         if let Some(name) = &pt.debug_name {
-            return name != &SmolStr::from("felt252") && !builtins.contains(&name.as_str());
+            return name != &SmolStr::from("felt252");
         }
         false
     })
 }
 
-fn function_args(function: &Function) -> Vec<&ConcreteTypeId> {
+fn function_args<'a>(function: &'a Function, builtins: &[&str]) -> Vec<&'a ConcreteTypeId> {
+    let builtins: Vec<_> = builtins
+        .iter()
+        .map(|builtin| Some(SmolStr::new(builtin)))
+        .collect();
+
     function
         .signature
         .param_types
         .iter()
-        .filter(|pt| pt.debug_name == Some(SmolStr::from("felt252")))
+        .filter(|pt| !builtins.contains(&pt.debug_name))
         .collect()
 }
 
@@ -756,7 +761,7 @@ mod tests {
             debug_name: Some(SmolStr::from("felt252")),
         };
         let args = vec![&typ, &typ];
-        assert!(!contains_non_felt252_args(&args, &[]));
+        assert!(!contains_non_felt252_args(&args));
     }
 
     #[test]
@@ -770,20 +775,6 @@ mod tests {
             debug_name: Some(SmolStr::from("Uint256")),
         };
         let args = vec![&typ, &typ, &typ2];
-        assert!(contains_non_felt252_args(&args, &[]));
-    }
-
-    #[test]
-    fn args_with_not_felt252_type_builtins() {
-        let typ = ConcreteTypeId {
-            id: 0,
-            debug_name: Some(SmolStr::from("felt252")),
-        };
-        let typ2 = ConcreteTypeId {
-            id: 0,
-            debug_name: Some(SmolStr::from("GasBuiltin")),
-        };
-        let args = vec![&typ, &typ, &typ2];
-        assert!(!contains_non_felt252_args(&args, &["GasBuiltin"]));
+        assert!(contains_non_felt252_args(&args));
     }
 }
