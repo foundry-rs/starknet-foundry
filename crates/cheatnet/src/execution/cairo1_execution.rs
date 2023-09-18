@@ -1,5 +1,6 @@
 use super::syscalls::CheatableSyscallHandler;
 use crate::state::CheatcodeState;
+use blockifier::execution::call_info::CallInfo;
 use blockifier::{
     execution::{
         cairo1_execution::{
@@ -8,7 +9,7 @@ use blockifier::{
         },
         contract_class::{ContractClassV1, EntryPointV1},
         entry_point::{
-            CallEntryPoint, CallInfo, EntryPointExecutionContext, EntryPointExecutionResult,
+            CallEntryPoint, EntryPointExecutionContext, EntryPointExecutionResult,
             ExecutionResources,
         },
         errors::{EntryPointExecutionError, VirtualMachineExecutionError},

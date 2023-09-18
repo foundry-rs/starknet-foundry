@@ -15,7 +15,7 @@ starknet = "0.5.0"
 tokio.workspace = true
 url.workspace = true
 rand = "0.8.5"
-scarb-metadata = "1.4.2"
+scarb-metadata = "=1.4.2"
 primitive-types = "0.12.1"
 shellexpand = "3.1.0"
 toml = "0.7.6"
