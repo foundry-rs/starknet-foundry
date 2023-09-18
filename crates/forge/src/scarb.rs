@@ -184,12 +184,12 @@ pub fn paths_for_package(
     Ok((package_path, lib_path))
 }
 
-pub fn target_dir_for_package(package_path: &Utf8PathBuf) -> Result<Utf8PathBuf> {
+pub fn target_dir_for_package(workspace_root: &Utf8PathBuf) -> Result<Utf8PathBuf> {
     let scarb_metadata = MetadataCommand::new().inherit_stderr().exec()?;
 
     let target_dir = scarb_metadata
         .target_dir
-        .unwrap_or_else(|| package_path.join("target"));
+        .unwrap_or_else(|| workspace_root.join("target"));
 
     Ok(target_dir)
 }

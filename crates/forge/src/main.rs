@@ -86,7 +86,7 @@ fn main_execution() -> Result<bool> {
         std::env::set_current_dir(package_path.clone())?;
 
         // TODO(#671)
-        let target_dir = target_dir_for_package(&package_path)?;
+        let target_dir = target_dir_for_package(&scarb_metadata.workspace.root)?;
 
         let build_output = Command::new("scarb")
             .arg("build")
