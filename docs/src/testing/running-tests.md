@@ -71,7 +71,7 @@ check Scarb documentation [here](https://docs.swmansion.com/scarb/docs/reference
 
 When running `snforge` in a Scarb workspace with a root package, it will only run tests inside the root package.  
 
-I.e., for a project structure like this
+For a project structure like this
 
 ```shell
 $ tree . -L 3
