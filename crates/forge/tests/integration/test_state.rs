@@ -133,3 +133,35 @@ fn test_simple_syscalls() {
 
     assert_passed!(result);
 }
+
+#[test]
+fn test_inconsistent_syscall_pointers() {
+    let test = test_case!(
+        indoc!(
+            r#"
+        
+        use starknet::ContractAddress;
+        use starknet::info::get_block_number;
+        use snforge_std::start_mock_call;
+
+        #[starknet::interface]
+        trait IContract<TContractState> {
+            fn get_value(self: @TContractState, arg: ContractAddress) -> u128;
+        }
+
+        #[test]
+        fn test_deploy_error_handling() {
+            let address = 'address'.try_into().unwrap();
+            start_mock_call(address, 'get_value', 55);
+            let contract = IContractDispatcher { contract_address: address };
+            let value = contract.get_value(address);
+            let block_number = get_block_number();
+        }
+    "#
+        ),
+    );
+
+    let result = run_test_case(&test);
+
+    assert_passed!(result);
+}
