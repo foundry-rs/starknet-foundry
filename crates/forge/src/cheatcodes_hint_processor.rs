@@ -542,6 +542,14 @@ fn execute_syscall(
             execute_call_contract(MemBuffer::new(vm, system_ptr), cheatnet_state)?;
             Ok(())
         }
+        DeprecatedSyscallSelector::Deploy => Err(HintError::CustomHint(Box::from(
+            "Use snforge_std::ContractClass::deploy instead of deploy_syscall"
+                .to_string(),
+        ))),
+        DeprecatedSyscallSelector::ReplaceClass => Err(HintError::CustomHint(Box::from(
+            "Replace class can't be used in tests"
+                .to_string(),
+        ))),
         _ => blockifier_syscall_handler.execute_hint(vm, exec_scopes, hint_data, constants),
     }
 }

@@ -2,7 +2,7 @@ use std::path::Path;
 
 use crate::integration::common::runner::Contract;
 use crate::integration::common::running_tests::run_test_case;
-use crate::{assert_passed, test_case};
+use crate::{assert_passed, test_case, assert_failed, assert_case_output_contains};
 use indoc::indoc;
 
 #[test]
@@ -207,4 +207,41 @@ fn test_library_calls() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
+}
+
+
+#[test]
+fn test_disabled_syscalls() {
+    let test = test_case!(
+        indoc!(
+            r#"
+        use result::ResultTrait;
+        use starknet::{ClassHash, deploy_syscall, replace_class_syscall};
+        use snforge_std::declare;
+        
+        #[test]
+        fn test_replace_class() {
+            let value : ClassHash = 'xd'.try_into().unwrap();
+            replace_class_syscall(value);
+        }
+
+        #[test]
+        fn test_deploy() {
+            let class_hash = declare('HelloStarknet').class_hash;
+            deploy_syscall(class_hash, 98435723905, ArrayTrait::new().span(), false);
+        }
+    "#
+        ),
+        Contract::from_code_path(
+            "HelloStarknet".to_string(),
+            Path::new("tests/data/contracts/hello_starknet.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test);
+
+    assert_failed!(result);
+    assert_case_output_contains!(result, "test_replace_class", "Replace class can't be used in tests");
+    assert_case_output_contains!(result, "test_deploy", "Use snforge_std::ContractClass::deploy instead of deploy_syscall");
 }
