@@ -1,4 +1,5 @@
 [workspace]
+resolver = "2"
 members = [
     "crates/forge",
     "crates/test-collector",
@@ -8,7 +9,6 @@ members = [
 ]
 
 [workspace.package]
-name = "starknet-foundry"
 version = "0.6.0"
 edition = "2021"
 repository = "https://github.com/foundry-rs/starknet-foundry"
