@@ -80,10 +80,8 @@ pub async fn add(
             .ok_or_else(|| anyhow!("--keystore must be passed when using --from-keystore"))?;
         let account_path_ = account_path
             .ok_or_else(|| anyhow!("--account must be passed when using --from-keystore"))?;
-        import_from_keystore(&keystore_path_, &account_path_).context(format!(
-            "Couldn't import account from keystore at path {} and account JSON file at path {}",
-            keystore_path_, account_path_
-        ))?
+        import_from_keystore(&keystore_path_, &account_path_)
+            .context(format!("Couldn't import account from keystore at path {keystore_path_} and account JSON file at path {account_path_}"))?
     } else {
         let private_key = &SigningKey::from_secret_scalar(add.private_key);
         if let Some(public_key) = &add.public_key {
