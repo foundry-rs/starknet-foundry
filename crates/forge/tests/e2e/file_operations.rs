@@ -108,7 +108,6 @@ fn file_reading() {
             Failed to parse data/too_large_number.txt file
         
         Tests: 9 passed, 14 failed, 0 skipped
-        Fuzzer seed: [..]
         
         Failures:
             file_reading::non_existent

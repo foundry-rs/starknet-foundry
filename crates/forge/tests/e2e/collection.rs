@@ -43,6 +43,5 @@ fn complex_structure() {
         [PASS] fibfabfob::test_fob
         [PASS] fibfabfob::test_fab
         Tests: 16 passed, 0 failed, 0 skipped
-        Fuzzer seed: [..]
         "#});
 }

@@ -6,6 +6,7 @@ use rand::{thread_rng, RngCore, SeedableRng};
 pub struct Random {
     rng: StdRng,
     seed: u64,
+    pub was_fuzzed: bool,
 }
 
 impl Random {
@@ -15,13 +16,18 @@ impl Random {
 
         let rng = StdRng::seed_from_u64(seed);
 
-        Random { rng, seed }
+        Random {
+            rng,
+            seed,
+            was_fuzzed: false,
+        }
     }
 
     pub fn from_seed(seed: u64) -> Self {
         Random {
             rng: StdRng::seed_from_u64(seed),
             seed,
+            was_fuzzed: false,
         }
     }
 }

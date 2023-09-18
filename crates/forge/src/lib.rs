@@ -270,7 +270,10 @@ pub fn run(
     }
 
     pretty_printing::print_test_summary(&summaries);
-    pretty_printing::print_fuzzer_seed(fuzzer.seed());
+    if fuzzer.was_fuzzed {
+        pretty_printing::print_fuzzer_seed(fuzzer.seed());
+    }
+
     Ok(summaries)
 }
 
@@ -308,6 +311,7 @@ fn run_tests_from_file(
 
             result
         } else {
+            fuzzer.was_fuzzed = true;
             let (result, runs) = run_with_fuzzing(
                 runner_config,
                 contracts,
@@ -318,8 +322,6 @@ fn run_tests_from_file(
                 fuzzer,
             )?;
             pretty_printing::print_test_result(&result, Some(runs));
-
-            if let TestCaseSummary::Failed { .. } = result {}
 
             result
         };
