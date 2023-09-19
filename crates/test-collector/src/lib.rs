@@ -29,12 +29,12 @@ use cairo_lang_syntax::attribute::structured::{Attribute, AttributeArg, Attribut
 use cairo_lang_syntax::node::ast;
 use cairo_lang_syntax::node::db::SyntaxGroup;
 use cairo_lang_syntax::node::helpers::GetIdentifier;
-use cairo_lang_test_runner::plugin::TestPlugin;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use cairo_lang_utils::OptionHelper;
 use conversions::StarknetConversions;
 use itertools::Itertools;
 use num_traits::ToPrimitive;
+use plugin::TestPlugin;
 use project::{setup_single_file_project, PHANTOM_PACKAGE_NAME_PREFIX};
 use smol_str::SmolStr;
 use starknet::core::types::{BlockId, BlockTag};
@@ -42,6 +42,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+mod plugin;
 #[allow(clippy::module_name_repetitions)]
 mod project;
 pub mod sierra_casm_generator;
