@@ -41,7 +41,7 @@ Fuzzer seed: [..]
 > Currently Forge only supports fuzz testing arguments with `felt252` type. Trying to use different argument types will
 > result in an error.
 
-## Configuring The Fuzzer
+## Fuzzer Configuration
 
 It is possible to configure the number of runs of the random fuzzer as well as its seed too with command line arguments:
 

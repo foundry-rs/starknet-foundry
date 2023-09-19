@@ -36,7 +36,7 @@ Tests: 1 passed, 0 failed, 0 skipped
 Forge considers all functions in your project marked with `#[test]` attribute as tests.
 By default, test functions run without any arguments.
 However, adding any arguments to function signature will enable [fuzz testing](./advanced/fuzz-testing.md) for this
-function.
+test case.
 
 Starknet Forge will collect tests only from these places:
 

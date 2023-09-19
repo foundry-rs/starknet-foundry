@@ -15,7 +15,7 @@ pub struct FuzzerRunParams {
     /// Number of arguments
     args_number: usize,
     /// Total number of runs
-    runs_all: u32,
+    runs_number: u32,
     /// Number of already executed runs
     runs_executed: u32,
     /// Runs in which arguments have min value e.g. `run_with_min_value[0] = 5`
@@ -61,32 +61,31 @@ impl Random {
 impl Random {
     pub fn set_fuzzer_run_params(
         &mut self,
-        fuzzer_runs: u32,
+        runs_number: u32,
         args_number: usize,
         low: BigUint,
         high: BigUint,
     ) {
-        // sanity checks
         assert!(low < high);
-        assert!(fuzzer_runs >= 3);
+        assert!(runs_number >= 3);
 
         self.fuzzer_run_params.runs_executed = 0;
         self.fuzzer_run_params.low = low;
         self.fuzzer_run_params.high = high;
-        self.fuzzer_run_params.runs_all = fuzzer_runs;
+        self.fuzzer_run_params.runs_number = runs_number;
         self.fuzzer_run_params.args_number = args_number;
 
         let runs_with_min_value: Vec<u32> = vec![0; self.fuzzer_run_params.args_number]
             .into_iter()
-            .map(|_| self.rng.gen_range(1..=self.fuzzer_run_params.runs_all))
+            .map(|_| self.rng.gen_range(1..=self.fuzzer_run_params.runs_number))
             .collect();
         let runs_with_max_value: Vec<u32> = vec![0; self.fuzzer_run_params.args_number]
             .into_iter()
             .zip(&runs_with_min_value)
             .map(|(_, &run_with_min)| {
-                let run_with_max = self.rng.gen_range(1..=self.fuzzer_run_params.runs_all);
+                let run_with_max = self.rng.gen_range(1..=self.fuzzer_run_params.runs_number);
                 if run_with_max == run_with_min {
-                    run_with_min + 1 % fuzzer_runs
+                    run_with_min + 1 % runs_number
                 } else {
                     run_with_max
                 }
@@ -98,8 +97,7 @@ impl Random {
     }
 
     pub fn next_felt252_args(&mut self) -> Vec<Felt252> {
-        // sanity check
-        assert!(self.fuzzer_run_params.runs_executed < self.fuzzer_run_params.runs_all);
+        assert!(self.fuzzer_run_params.runs_executed < self.fuzzer_run_params.runs_number);
 
         self.fuzzer_run_params.runs_executed += 1;
         let current_run = self.fuzzer_run_params.runs_executed;
@@ -176,7 +174,6 @@ mod tests {
         for _ in 1..=fuzzer_runs {
             let values = fuzzer.next_felt252_args();
             for (i, value) in values.iter().enumerate() {
-                // sanity check
                 assert!(*value >= low && *value < high);
                 if *value == low {
                     min_used[i] = true;

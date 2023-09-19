@@ -19,8 +19,7 @@
 * [Testing Smart Contracts](testing/contracts.md)
 * [Using Cheatcodes](testing/using-cheatcodes.md)
 * [Debugging](testing/debugging.md)
-* [Advanced Testing](testing/advanced-testing.md)
-    * [Fuzz Testing](testing/advanced/fuzz-testing.md)
+* [Fuzz Testing](testing/fuzz-testing.md)
 
 # Cast Overview
 
