@@ -68,7 +68,7 @@ pub async fn create(
             bail!("--add-profile is not supported for keystore");
         }
         let account_path_ =
-            account_path.ok_or_else(|| anyhow!("--account must be passed when using -keystore"))?;
+            account_path.ok_or_else(|| anyhow!("--account must be passed when using --keystore"))?;
 
         let private_key = parse_number(
             account_json["private_key"]
