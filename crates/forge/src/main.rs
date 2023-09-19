@@ -36,7 +36,7 @@ struct Args {
     /// Stop test execution after the first failed test
     #[arg(short = 'x', long)]
     exit_first: bool,
-  
+
     #[command(flatten)]
     packages_filter: PackagesFilter,
 
