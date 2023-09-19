@@ -1104,6 +1104,7 @@ dependencies = [
  "clap",
  "console",
  "ctor",
+ "dotenv",
  "fs_extra",
  "indoc",
  "primitive-types",
