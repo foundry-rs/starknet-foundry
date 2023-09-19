@@ -354,15 +354,17 @@ fn run_with_fuzzing(
         );
     }
 
+    fuzzer.set_fuzzer_run_params(
+        runner_config.fuzzer_runs,
+        args.len(),
+        BigUint::zero(),
+        Felt252::prime(),
+    );
+
     let mut results = vec![];
 
-    let low = BigUint::zero();
-    let high = Felt252::prime();
     for _ in 1..=runner_config.fuzzer_runs {
-        let args: Vec<Felt252> = args
-            .iter()
-            .map(|_| fuzzer.next_felt252(&low, &high))
-            .collect();
+        let args = fuzzer.next_felt252_args();
 
         let result =
             run_from_test_case(runner, case, contracts, predeployed_contracts, args.clone())?;

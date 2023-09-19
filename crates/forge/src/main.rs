@@ -53,8 +53,8 @@ fn validate_fuzzer_runs_value(val: &str) -> Result<u32> {
     let parsed_val: u32 = val
         .parse()
         .map_err(|_| anyhow!("Failed to parse {val} as u32"))?;
-    if parsed_val < 1 {
-        bail!("Number of fuzzer runs must be greater than or equal to 1")
+    if parsed_val < 3 {
+        bail!("Number of fuzzer runs must be greater than or equal to 3")
     }
     Ok(parsed_val)
 }
