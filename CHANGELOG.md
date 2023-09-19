@@ -7,15 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1] - 2023-09-19
+
 ### Forge
 
 #### Added
 
-- Support for scarb workspaces.
+- support for scarb workspaces
 
 ### Changed
 
-- Tests are collected only from `tests` folder and a package tree
+- tests are collected only from `tests` folder and a package tree
 
 ## [0.6.0] - 2023-09-13
 
