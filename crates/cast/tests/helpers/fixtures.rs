@@ -13,6 +13,7 @@ use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use std::collections::HashMap;
+use std::env;
 use std::fs;
 use std::fs::OpenOptions;
 use std::io::Write;
@@ -244,4 +245,11 @@ fn write_devnet_env(key: &str, value: &FieldElement) {
 pub fn convert_to_hex(value: &str) -> String {
     let dec = U256::from_dec_str(value).expect("Invalid decimal string");
     format!("{dec:#x}")
+}
+
+pub fn from_env(name: &str) -> Result<String, String> {
+    match env::var(name) {
+        Ok(value) => Ok(value),
+        Err(_) => Err(format!("Variable {name} not available in env!")),
+    }
 }

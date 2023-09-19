@@ -1,11 +1,10 @@
-use crate::helpers::fixtures::{default_cli_args, invoke_map_contract};
+use crate::helpers::fixtures::{default_cli_args, from_env, invoke_map_contract};
 use crate::helpers::runner::runner;
 use indoc::indoc;
-use std::env;
 use test_case::test_case;
 
-#[test_case(&env::var("CAST_MAP_V1_ADDRESS").expect("CAST_MAP_V1_ADDRESS not available in env!") ; "when cairo1 contract")]
-#[test_case(&env::var("CAST_MAP_V2_ADDRESS").expect("CAST_MAP_V2_ADDRESS not available in env!") ; "when cairo2 contract")]
+#[test_case(from_env("CAST_MAP_V1_ADDRESS").unwrap().as_str() ; "when cairo1 contract")]
+#[test_case(from_env("CAST_MAP_V2_ADDRESS").unwrap().as_str() ; "when cairo2 contract")]
 fn test_happy_case(contract_address: &str) {
     let mut args = default_cli_args();
     args.append(&mut vec![
@@ -31,8 +30,8 @@ fn test_happy_case(contract_address: &str) {
     "#});
 }
 
-#[test_case(&env::var("CAST_MAP_V1_ADDRESS").expect("CAST_MAP_V1_ADDRESS not available in env!"), "user1" ; "when cairo1 contract")]
-#[test_case(&env::var("CAST_MAP_V2_ADDRESS").expect("CAST_MAP_V2_ADDRESS not available in env!"), "user2" ; "when cairo2 contract")]
+#[test_case(from_env("CAST_MAP_V1_ADDRESS").unwrap().as_str(), "user1" ; "when cairo1 contract")]
+#[test_case(from_env("CAST_MAP_V2_ADDRESS").unwrap().as_str(), "user2" ; "when cairo2 contract")]
 #[tokio::test]
 async fn test_call_after_storage_changed(contract_address: &str, account: &str) {
     invoke_map_contract("0x2", "0x3", account, contract_address).await;
@@ -75,8 +74,8 @@ async fn test_contract_does_not_exist() {
     "#});
 }
 
-#[test_case(&env::var("CAST_MAP_V1_ADDRESS").expect("CAST_MAP_V1_ADDRESS not available in env!") ; "when cairo1 contract")]
-#[test_case(&env::var("CAST_MAP_V2_ADDRESS").expect("CAST_MAP_V2_ADDRESS not available in env!") ; "when cairo2 contract")]
+#[test_case(from_env("CAST_MAP_V1_ADDRESS").unwrap().as_str() ; "when cairo1 contract")]
+#[test_case(from_env("CAST_MAP_V2_ADDRESS").unwrap().as_str() ; "when cairo2 contract")]
 fn test_wrong_function_name(contract_address: &str) {
     let mut args = default_cli_args();
     args.append(&mut vec![
@@ -95,8 +94,8 @@ fn test_wrong_function_name(contract_address: &str) {
     "#});
 }
 
-#[test_case(&env::var("CAST_MAP_V1_ADDRESS").expect("CAST_MAP_V1_ADDRESS not available in env!") ; "when cairo1 contract")]
-#[test_case(&env::var("CAST_MAP_V2_ADDRESS").expect("CAST_MAP_V2_ADDRESS not available in env!") ; "when cairo2 contract")]
+#[test_case(from_env("CAST_MAP_V1_ADDRESS").unwrap().as_str() ; "when cairo1 contract")]
+#[test_case(from_env("CAST_MAP_V2_ADDRESS").unwrap().as_str() ; "when cairo2 contract")]
 fn test_wrong_calldata(contract_address: &str) {
     let mut args = default_cli_args();
     args.append(&mut vec![
@@ -119,12 +118,12 @@ fn test_wrong_calldata(contract_address: &str) {
 
 #[tokio::test]
 async fn test_invalid_selector() {
-    let address = &env::var("CAST_MAP_V2_ADDRESS").expect("CAST_MAP_V2_ADDRESS not available in env!");
+    let address = from_env("CAST_MAP_V2_ADDRESS").unwrap();
     let mut args = default_cli_args();
     args.append(&mut vec![
         "call",
         "--contract-address",
-        address,
+        &address,
         "--function",
         "ą",
         "--calldata",
