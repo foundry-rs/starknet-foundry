@@ -75,6 +75,11 @@ fn test_simple_syscalls() {
             fn get_block_timestamp(ref self: TContractState) -> u64;
         }
 
+     #[starknet::interface]
+        trait ISequencerAddressChecker<TContractState> {
+            fn get_sequencer_address(self: @TContractState) -> ContractAddress;
+        }
+
         #[test]
         fn test_get_execution_info() {
             let exec_info = get_execution_info().unbox();
@@ -92,9 +97,14 @@ fn test_simple_syscalls() {
             let contract_warp = declare('WarpChecker');
             let contract_address_warp = contract_warp.deploy(@ArrayTrait::new()).unwrap();
             let dispatcher_warp = IWarpCheckerDispatcher { contract_address: contract_address_warp };
+            
+            let contract_sequencer_add = declare('SequencerAddressChecker');
+            let contract_sequencer_add_address = contract_sequencer_add.deploy(@ArrayTrait::new()).unwrap();
+            let dispatcher_sequencer_add = ISequencerAddressCheckerDispatcher { contract_address: contract_sequencer_add_address };
 
             assert(dispatcher_roll.get_block_number() == block_info.block_number, 'Invalid block number');
             assert(dispatcher_warp.get_block_timestamp() == block_info.block_timestamp, 'Invalid block timestamp');
+            assert(dispatcher_sequencer_add.get_sequencer_address() == block_info.sequencer_address, 'Invalid block timestamp');
             // assert("12312" == block)
 
             let contract = declare('SpoofChecker');
@@ -126,7 +136,28 @@ fn test_simple_syscalls() {
             "WarpChecker".to_string(),
             Path::new("tests/data/contracts/warp_checker.cairo"),
         )
-        .unwrap()
+        .unwrap(),
+        Contract::new(
+            "SequencerAddressChecker",
+            indoc!(
+                r#"
+                #[starknet::contract]
+                mod SequencerAddressChecker {
+                    use result::ResultTrait;
+                    use starknet::{ ClassHash, library_call_syscall, ContractAddress};
+
+                    #[storage]
+                    struct Storage {
+                    }
+
+                    #[external(v0)]
+                    fn get_sequencer_address(ref self: ContractState) -> ContractAddress {
+                        starknet::get_block_info().unbox().sequencer_address
+                    }
+                }
+                "#
+            )
+        )
     );
 
     let result = run_test_case(&test);
@@ -140,8 +171,7 @@ fn test_library_calls() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use starknet::ClassHash;
-        use starknet::library_call_syscall;
+        use starknet::{ ClassHash, library_call_syscall, ContractAddress };
         use snforge_std::{ declare };
 
         #[starknet::interface]
@@ -162,7 +192,7 @@ fn test_library_calls() {
             let lib_dispatcher = ILibraryContractSafeLibraryDispatcher { class_hash };
             let value = lib_dispatcher.get_value().unwrap();
             assert(value == 0, 'Incorrect state');
-            lib_dispatcher.set_value(10)
+            lib_dispatcher.set_value(10);
             let value = lib_dispatcher.get_value().unwrap();
             assert(value == 10, 'Incorrect state');
         }
@@ -208,7 +238,6 @@ fn test_library_calls() {
 
     assert_passed!(result);
 }
-
 
 #[test]
 fn test_disabled_syscalls() {
