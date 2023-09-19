@@ -75,6 +75,7 @@ pub fn run(project_name: &str) -> Result<()> {
 
     Command::new("scarb")
         .current_dir(&project_path)
+        .arg("--offline")
         .arg("add")
         .arg("snforge_std")
         .arg("--git")
@@ -94,6 +95,7 @@ pub fn run(project_name: &str) -> Result<()> {
 
     Command::new("scarb")
         .current_dir(&project_path)
+        .arg("--offline")
         .arg("add")
         .arg(format!("starknet@{cairo_version}"))
         .stderr(Stdio::inherit())
