@@ -9,14 +9,20 @@ pub fn print_error_message(error: &Error) {
     println!("[{error_tag}] {error}");
 }
 
-pub(crate) fn print_collected_tests_count(tests_num: usize, tests_files_num: usize) {
-    let plain_text = format!("Collected {tests_num} test(s) and {tests_files_num} test file(s)");
+pub(crate) fn print_collected_tests_count(
+    tests_num: usize,
+    tests_files_num: usize,
+    package_name: &str,
+) {
+    let plain_text = format!(
+        "\n\nCollected {tests_num} test(s) and {tests_files_num} test file(s) from {package_name} package"
+    );
     println!("{}", style(plain_text).bold());
 }
 
-pub(crate) fn print_running_tests(test_file: &Utf8PathBuf, package_name: &str, tests_num: usize) {
+pub(crate) fn print_running_tests(test_file: &Utf8PathBuf, tests_num: usize) {
     let plain_text = if test_file == "src/lib.cairo" {
-        format!("Running {tests_num} test(s) from {package_name} package")
+        format!("Running {tests_num} inline test(s)")
     } else {
         format!("Running {tests_num} test(s) from {test_file}")
     };

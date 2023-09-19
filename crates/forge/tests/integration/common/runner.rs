@@ -86,7 +86,7 @@ pub struct TestCase {
 }
 
 impl<'a> TestCase {
-    pub const TEST_PATH: &'a str = "test_case.cairo";
+    pub const TEST_PATH: &'a str = "tests/test_case.cairo";
     const PACKAGE_NAME: &'a str = "my_package";
 
     pub fn from(test_code: &str, contracts: Vec<Contract>) -> Result<Self> {

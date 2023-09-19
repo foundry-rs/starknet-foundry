@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
+- Tests are collected only from `tests` folder and a package tree
 - Initial version of fuzz testing with randomly generated values 
 
 # [0.6.0] - 2023-09-13

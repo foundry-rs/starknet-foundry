@@ -1,0 +1,27 @@
+[workspace]
+members = [
+    "dummy_name/*",
+]
+
+[workspace.scripts]
+test = "snforge"
+
+[workspace.tool.snforge]
+exit_first = true
+
+[workspace.dependencies]
+starknet = "2.2.0"
+snforge_std = { path = "../../../../../snforge_std" }
+
+[workspace.package]
+version = "0.1.0"
+
+[scripts]
+test.workspace = true
+
+[tool]
+snforge.workspace = true
+
+[[target.starknet-contract]]
+sierra = true
+casm = true

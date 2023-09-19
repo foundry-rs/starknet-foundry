@@ -105,7 +105,7 @@ struct TestsFromFile {
     relative_path: Utf8PathBuf,
 }
 
-fn collect_tests_from_directory(
+fn collect_tests_from_package(
     package_path: &Utf8PathBuf,
     package_name: &str,
     lib_path: &Utf8PathBuf,
@@ -113,7 +113,7 @@ fn collect_tests_from_directory(
     corelib_path: &Utf8PathBuf,
     runner_config: &RunnerConfig,
 ) -> Result<Vec<TestsFromFile>> {
-    let test_files = find_cairo_root_files_in_directory(package_path, lib_path)?;
+    let test_files = find_test_files(package_path, lib_path)?;
     test_files
         .par_iter()
         .map(|tf| {
@@ -129,30 +129,23 @@ fn collect_tests_from_directory(
         .collect()
 }
 
-fn find_cairo_root_files_in_directory(
-    package_path: &Utf8PathBuf,
-    lib_path: &Utf8PathBuf,
-) -> Result<Vec<Utf8PathBuf>> {
+fn find_test_files(package_path: &Utf8PathBuf, lib_path: &Utf8PathBuf) -> Result<Vec<Utf8PathBuf>> {
     let mut test_files: Vec<Utf8PathBuf> = vec![lib_path.clone()];
-    let src_path = lib_path.parent().with_context(|| {
-        format!("Failed to get parent directory of a package at path = {lib_path}")
-    })?;
+    let tests_folder_path = package_path.join("tests");
 
-    for entry in WalkDir::new(package_path)
-        .sort_by_file_name()
-        .into_iter()
-        .filter_entry(|e| !e.path().starts_with(src_path))
-    {
-        let entry =
-            entry.with_context(|| format!("Failed to read directory at path = {package_path}"))?;
-        let path = entry.path();
+    if tests_folder_path.try_exists()? {
+        for entry in WalkDir::new(tests_folder_path).sort_by_file_name() {
+            let entry = entry
+                .with_context(|| format!("Failed to read directory at path = {package_path}"))?;
+            let path = entry.path();
 
-        if path.is_file() && path.extension().unwrap_or_default() == "cairo" {
-            test_files.push(
-                Utf8Path::from_path(path)
-                    .with_context(|| format!("Failed to convert path = {path:?} to utf-8"))?
-                    .to_path_buf(),
-            );
+            if path.is_file() && path.extension().unwrap_or_default() == "cairo" {
+                test_files.push(
+                    Utf8Path::from_path(path)
+                        .with_context(|| format!("Failed to convert path = {path:?} to utf-8"))?
+                        .to_path_buf(),
+                );
+            }
         }
     }
     Ok(test_files)
@@ -213,7 +206,7 @@ pub fn run(
     contracts: &HashMap<String, StarknetContractArtifacts>,
     predeployed_contracts: &Utf8PathBuf,
 ) -> Result<Vec<TestFileSummary>> {
-    let tests = collect_tests_from_directory(
+    let tests = collect_tests_from_package(
         package_path,
         package_name,
         lib_path,
@@ -225,6 +218,7 @@ pub fn run(
     pretty_printing::print_collected_tests_count(
         tests.iter().map(|tests| tests.test_cases.len()).sum(),
         tests.len(),
+        package_name,
     );
 
     let mut tests_iterator = tests.into_iter();
@@ -238,7 +232,6 @@ pub fn run(
     for tests_from_file in tests_iterator.by_ref() {
         let summary = run_tests_from_file(
             tests_from_file,
-            package_name,
             runner_config,
             contracts,
             predeployed_contracts,
@@ -279,7 +272,6 @@ pub fn run(
 
 fn run_tests_from_file(
     tests: TestsFromFile,
-    package_name: &str,
     runner_config: &RunnerConfig,
     contracts: &HashMap<String, StarknetContractArtifacts>,
     predeployed_contracts: &Utf8PathBuf,
@@ -292,11 +284,7 @@ fn run_tests_from_file(
     )
     .context("Failed setting up runner.")?;
 
-    pretty_printing::print_running_tests(
-        &tests.relative_path,
-        package_name,
-        tests.test_cases.len(),
-    );
+    pretty_printing::print_running_tests(&tests.relative_path, tests.test_cases.len());
 
     let mut results = vec![];
     for (i, case) in tests.test_cases.iter().enumerate() {
@@ -504,20 +492,9 @@ mod tests {
         let tests_path = Utf8PathBuf::from_path_buf(temp.to_path_buf()).unwrap();
         let lib_path = tests_path.join("src/lib.cairo");
 
-        let tests = find_cairo_root_files_in_directory(&tests_path, &lib_path).unwrap();
+        let tests = find_test_files(&tests_path, &lib_path).unwrap();
 
         assert!(!tests.is_empty());
-    }
-
-    #[test]
-    fn collecting_tests_err_on_invalid_dir() {
-        let tests_path = Utf8PathBuf::from("aaee");
-        let lib_path = Utf8PathBuf::from("asdfgdfg");
-
-        let result = find_cairo_root_files_in_directory(&tests_path, &lib_path);
-        let err = result.unwrap_err();
-
-        assert!(err.to_string().contains("Failed to read directory at path"));
     }
 
     #[test]
