@@ -45,26 +45,26 @@ and if some of them requires it directly (`account create` is one), we should tr
 ### interacting with contract
 We will use contracts dispatchers to be able to call/invoke its functions directly 
 (e.g. if contract named `mycontract` has a function `myfunction`, we should be able to just do `mycontract.myfunction();`).
-Later on we could also support our subcommands (`invoke`, `call`) to call/invoke contracts without dispatchers.
+We should also support our subcommands (`invoke`, `call`) to call/invoke so dispatchers are able to use them, and for calling/invoking 
+contracts without dispatchers.
 
 ### running the script
 The script would essentially run an entrypoint function - `main`. Inside our script subcommand, we will have to compile 
-the cairo script file using `scarb build`, and then run it using `scarb cairo-run`. 
+the cairo script file using a custom builder/extension, and then run it using some form of a custom runner - all similarly
+to how it is done in snforge.
 The main function would be required in the deployment script, and we should return an error if it is not found.
-
-In order to build the script, there'll need to be a `Scarb.toml` file present in the working directory. We should either:
-- look for a Scarb.toml in the same directory script is (this is scarb's default behaviour - we just must make sure scarb
-command is executed from this directory - Command::new(...).current_dir(...) should do); if does not exist we could just create it
-- create a hidden Scarb.toml with a custom name (eg `.script_name.toml`) and override path to scarb toml using scarb flag;
-if a file does not exist let's just create it
-
-Option 1 is probably more in line with scarb ethos, but the option 2 would probably be more practical for us as it would allow
-for multiple Scarb.toml files in one directory, where multiple scripts could reside + Scarb.toml file present in cwd would not
-confuse sncast subcommands (eg declare also looks for Scarb.toml in cwd, which could lead to errors/user confusion).
 
 The deployment script could then be run like so:
 ```bash
 $ sncast script /path/to/myscript.s.cairo
+```
+
+In later versions, if needed, we might want to also allow to mark an entrypoint function with:
+```cairo
+#[script]
+fn some_script {
+  ...
+}
 ```
 
 Log info should be outputted to stdout and optionally written to some log file. 
@@ -76,7 +76,8 @@ to cheatnet - fork a runner and test the scripts against it (to be assessed if i
 a way to show a trace of said transactions if required. In later iterations, we could also provide a helper function
 that sets up the devnet to be used for dry running for users.
 
-The behaviour would be changed with `--broadcast` flag, that would actually execute needed transactions.
+The behaviour would be changed with `--broadcast` flag, that would actually execute needed transactions. We should also
+include a warning message about potential incurring cost.
 
 ### error handling
 If the transaction fails, we should put all the relevant info about it to the state file, output log information and stop
@@ -84,7 +85,9 @@ script execution.
 If the script fails (for any reason that is not connected to transactions - eg rpc node down), we should output relevant
 log information.
 
-In case of failed transaction, in the "output" field in state file we could include an error message. After fixing the issue
+In case of failed transaction, we should allow to:
+- let the users handle the errors in cairo with Result
+- let the script fail - in the "output" field in state file we should then include an error message. After fixing the issue
 we should allow users to just re-run the script - all the previous (succeeded) transactions should not be replayed, the
 erroneous transaction should be retried and its output should be put into [state file](#example-state-file).
 
@@ -304,9 +307,11 @@ There would be a new subcommand `script` that would be invoked with required par
 - `--log-file` - output logs to a file
 - `--quiet` - do not output logs to stdout
 - `--slow` - makes sure a transaction is sent, only after its previous one has been confirmed and succeeded (possible reuse of `--wait` flag)
-- `--verify` - find a matching broadcast in state file, and try to verify transactions
+- `--verify` - find a matching broadcast in state file, and try to verify transactions against the chain (basically getting
+the transaction receipt and checking its status etc)
 - `--delay` - optional timeout to apply in between attempts in seconds (perhaps passed directly to sncast)
 - `--retries` - number of attempts for retrying (perhaps passed directly to sncast)
+- `--replay` - do a clean run of script, every transaction would be re-done
 
 If it makes sense, some of the flags could be included in Scarb.toml config file.
 
