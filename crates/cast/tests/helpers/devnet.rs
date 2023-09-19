@@ -69,22 +69,22 @@ fn start_devnet() {
     rt.block_on(declare_deploy_contract(
         "user1",
         "/v1/map/target/dev/map_v1_Map",
-        "MAP_V1",
+        "CAST_MAP_V1",
     ));
     rt.block_on(declare_deploy_contract(
         "user2",
         "/v2/map/target/dev/map_v2_Map",
-        "MAP_V2",
+        "CAST_MAP_V2",
     ));
     rt.block_on(declare_contract(
         "user3",
         "/v1/constructor_with_params/target/dev/constructor_with_params_v1_ConstructorWithParams",
-        "WITH_CONSTRUCTOR_V1",
+        "CAST_WITH_CONSTRUCTOR_V1",
     ));
     rt.block_on(declare_contract(
         "user4",
         "/v2/constructor_with_params/target/dev/constructor_with_params_v2_ConstructorWithParams",
-        "WITH_CONSTRUCTOR_V2",
+        "CAST_WITH_CONSTRUCTOR_V2",
     ));
     dotenv::from_filename(DEVNET_ENV_FILE).unwrap();
 }

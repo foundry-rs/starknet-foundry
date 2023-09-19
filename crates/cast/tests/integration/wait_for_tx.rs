@@ -35,7 +35,7 @@ async fn test_rejected_transaction() {
     .await
     .expect("Could not get the account");
     let class_hash =
-        &env::var("MAP_V1_CLASS_HASH").expect("MAP_V1_CLASS_HASH not available in env!");
+        &env::var("CAST_MAP_V1_CLASS_HASH").expect("CAST_MAP_V1_CLASS_HASH not available in env!");
 
     let factory = ContractFactory::new(parse_number(class_hash).unwrap(), account);
     let deployment = factory

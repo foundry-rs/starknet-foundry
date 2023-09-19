@@ -8,8 +8,8 @@ use starknet::core::types::TransactionReceipt::Invoke;
 use std::env;
 use test_case::test_case;
 
-#[test_case(&env::var("MAP_V1_ADDRESS").expect("MAP_V1_ADDRESS not available in env!"), "user1" ; "when cairo1 contract")]
-#[test_case(&env::var("MAP_V2_ADDRESS").expect("MAP_V2_ADDRESS not available in env!"), "user2" ; "when cairo2 contract")]
+#[test_case(&env::var("CAST_MAP_V1_ADDRESS").expect("CAST_MAP_V1_ADDRESS not available in env!"), "user1" ; "when cairo1 contract")]
+#[test_case(&env::var("CAST_MAP_V2_ADDRESS").expect("CAST_MAP_V2_ADDRESS not available in env!"), "user2" ; "when cairo2 contract")]
 #[tokio::test]
 async fn test_happy_case(contract_address: &str, account: &str) {
     let mut args = default_cli_args();
@@ -59,8 +59,8 @@ async fn test_contract_does_not_exist() {
     "#});
 }
 
-#[test_case(&env::var("MAP_V1_ADDRESS").expect("MAP_V1_ADDRESS not available in env!"), "user1" ; "when cairo1 contract")]
-#[test_case(&env::var("MAP_V2_ADDRESS").expect("MAP_V2_ADDRESS not available in env!"), "user2" ; "when cairo2 contract")]
+#[test_case(&env::var("CAST_MAP_V1_ADDRESS").expect("CAST_MAP_V1_ADDRESS not available in env!"), "user1" ; "when cairo1 contract")]
+#[test_case(&env::var("CAST_MAP_V2_ADDRESS").expect("CAST_MAP_V2_ADDRESS not available in env!"), "user2" ; "when cairo2 contract")]
 fn test_wrong_function_name(contract_address: &str, account: &str) {
     let mut args = default_cli_args();
     args.append(&mut vec![
@@ -81,8 +81,8 @@ fn test_wrong_function_name(contract_address: &str, account: &str) {
     "#});
 }
 
-#[test_case(&env::var("MAP_V1_ADDRESS").expect("MAP_V1_ADDRESS not available in env!"), "user1" ; "when cairo1 contract")]
-#[test_case(&env::var("MAP_V2_ADDRESS").expect("MAP_V2_ADDRESS not available in env!"), "user2" ; "when cairo2 contract")]
+#[test_case(&env::var("CAST_MAP_V1_ADDRESS").expect("CAST_MAP_V1_ADDRESS not available in env!"), "user1" ; "when cairo1 contract")]
+#[test_case(&env::var("CAST_MAP_V2_ADDRESS").expect("CAST_MAP_V2_ADDRESS not available in env!"), "user2" ; "when cairo2 contract")]
 fn test_wrong_calldata(contract_address: &str, account: &str) {
     let mut args = default_cli_args();
     args.append(&mut vec![
@@ -108,8 +108,8 @@ fn test_wrong_calldata(contract_address: &str, account: &str) {
     assert!(stderr_str.contains(&convert_to_hex(contract_address)));
 }
 
-#[test_case(&env::var("MAP_V1_ADDRESS").expect("MAP_V1_ADDRESS not available in env!"), "user1" ; "when cairo1 contract")]
-#[test_case(&env::var("MAP_V2_ADDRESS").expect("MAP_V2_ADDRESS not available in env!"), "user2" ; "when cairo2 contract")]
+#[test_case(&env::var("CAST_MAP_V1_ADDRESS").expect("CAST_MAP_V1_ADDRESS not available in env!"), "user1" ; "when cairo1 contract")]
+#[test_case(&env::var("CAST_MAP_V2_ADDRESS").expect("CAST_MAP_V2_ADDRESS not available in env!"), "user2" ; "when cairo2 contract")]
 fn test_too_low_max_fee(contract_address: &str, account: &str) {
     let mut args = default_cli_args();
     args.append(&mut vec![

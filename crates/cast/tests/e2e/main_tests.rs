@@ -55,7 +55,7 @@ async fn test_happy_case_from_cli_no_scarb() {
 
 #[tokio::test]
 async fn test_happy_case_from_cli_with_scarb() {
-    let address = env::var("MAP_V1_ADDRESS").expect("MAP_V1_ADDRESS not available in env!");
+    let address = env::var("CAST_MAP_V1_ADDRESS").expect("CAST_MAP_V1_ADDRESS not available in env!");
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
@@ -91,7 +91,7 @@ async fn test_happy_case_from_cli_with_scarb() {
 
 #[tokio::test]
 async fn test_happy_case_mixed() {
-    let address = env::var("MAP_V1_ADDRESS").expect("MAP_V1_ADDRESS not available in env!");
+    let address = env::var("CAST_MAP_V1_ADDRESS").expect("CAST_MAP_V1_ADDRESS not available in env!");
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
