@@ -550,7 +550,10 @@ fn execute_syscall(
             "Replace class can't be used in tests"
                 .to_string(),
         ))),
-        _ => blockifier_syscall_handler.execute_hint(vm, exec_scopes, hint_data, constants),
+        DeprecatedSyscallSelector::GetBlockHash => Err(HintError::CustomHint(Box::from(
+            "Get block hash is temporarily disabled in tests: https://github.com/foundry-rs/starknet-foundry/issues/686"
+                .to_string(),
+        ))),        _ => blockifier_syscall_handler.execute_hint(vm, exec_scopes, hint_data, constants),
     }
 }
 

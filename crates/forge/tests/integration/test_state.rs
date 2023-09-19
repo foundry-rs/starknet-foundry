@@ -47,12 +47,11 @@ fn test_simple_syscalls() {
     let test = test_case!(
         indoc!(
             r#"
-        use starknet::info::{get_execution_info};
+        use starknet::info::{get_execution_info, TxInfo};
         use result::ResultTrait;
         use box::BoxTrait;
-        use starknet::info::TxInfo;
         use serde::Serde;
-        use starknet::ContractAddress;
+        use starknet::{ContractAddress, get_block_hash_syscall};
         use array::SpanTrait;
         use snforge_std::{ declare, ContractClassTrait };
 
@@ -216,7 +215,7 @@ fn test_disabled_syscalls() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use starknet::{ClassHash, deploy_syscall, replace_class_syscall};
+        use starknet::{ClassHash, deploy_syscall, replace_class_syscall, get_block_hash_syscall};
         use snforge_std::declare;
         
         #[test]
@@ -229,6 +228,11 @@ fn test_disabled_syscalls() {
         fn test_deploy() {
             let class_hash = declare('HelloStarknet').class_hash;
             deploy_syscall(class_hash, 98435723905, ArrayTrait::new().span(), false);
+        }
+
+        #[test]
+        fn test_get_block_hash() {
+            get_block_hash_syscall(15).unwrap();
         }
     "#
         ),
@@ -244,4 +248,5 @@ fn test_disabled_syscalls() {
     assert_failed!(result);
     assert_case_output_contains!(result, "test_replace_class", "Replace class can't be used in tests");
     assert_case_output_contains!(result, "test_deploy", "Use snforge_std::ContractClass::deploy instead of deploy_syscall");
+    assert_case_output_contains!(result, "test_get_block_hash", "temporarily disabled");
 }
