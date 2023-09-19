@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Context, Result};
 use camino::Utf8PathBuf;
-use scarb_metadata::{CompilationUnitMetadata, Metadata, MetadataCommand, PackageId};
+use scarb_metadata::{CompilationUnitMetadata, Metadata, PackageId};
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs;
@@ -167,11 +167,11 @@ pub fn corelib_for_package(metadata: &Metadata, package: &PackageId) -> Result<U
     Ok(Utf8PathBuf::from(corelib.source_root()))
 }
 
-/// Get the top-level and main file paths for the given package
+/// Get the top-level, main file and target directory paths for the given package
 pub fn paths_for_package(
     metadata: &Metadata,
     package: &PackageId,
-) -> Result<(Utf8PathBuf, Utf8PathBuf)> {
+) -> Result<(Utf8PathBuf, Utf8PathBuf, Utf8PathBuf)> {
     let compilation_unit = compilation_unit_for_package(metadata, package)?;
 
     let package = metadata
@@ -180,18 +180,12 @@ pub fn paths_for_package(
 
     let package_path = package.root.clone();
     let lib_path = compilation_unit.target.source_path.clone();
-
-    Ok((package_path, lib_path))
-}
-
-pub fn target_dir_for_package(workspace_root: &Utf8PathBuf) -> Result<Utf8PathBuf> {
-    let scarb_metadata = MetadataCommand::new().inherit_stderr().exec()?;
-
-    let target_dir = scarb_metadata
+    let target_dir = metadata
         .target_dir
-        .unwrap_or_else(|| workspace_root.join("target"));
+        .clone()
+        .unwrap_or(metadata.workspace.root.join("target"));
 
-    Ok(target_dir)
+    Ok((package_path, lib_path, target_dir))
 }
 
 /// Get a name of the given package
@@ -487,12 +481,14 @@ mod tests {
             .exec()
             .unwrap();
 
-        let (package_path, lib_path) =
+        let (package_path, lib_path, target_dir) =
             paths_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0]).unwrap();
-
+        println!("{target_dir}");
         assert!(package_path.is_dir());
         assert!(lib_path.ends_with(Utf8PathBuf::from("src/lib.cairo")));
-        assert!(lib_path.starts_with(package_path));
+        assert!(lib_path.starts_with(package_path.clone()));
+        assert!(target_dir.ends_with("target"));
+        assert!(target_dir.starts_with(package_path));
     }
 
     #[test]

@@ -12,8 +12,8 @@ use forge::{run, TestFileSummary};
 
 use forge::scarb::{
     config_from_scarb_for_package, corelib_for_package, dependencies_for_package,
-    get_contracts_map, name_for_package, paths_for_package, target_dir_for_package,
-    target_name_for_package, try_get_starknet_artifacts_path,
+    get_contracts_map, name_for_package, paths_for_package, target_name_for_package,
+    try_get_starknet_artifacts_path,
 };
 use forge::test_case_summary::TestCaseSummary;
 use std::process::{Command, Stdio};
@@ -72,6 +72,17 @@ fn main_execution() -> Result<bool> {
     which::which("scarb")
         .context("Cannot find `scarb` binary in PATH. Make sure you have Scarb installed https://github.com/software-mansion/scarb")?;
 
+    // TODO call with the same flag as forge (--workspace or --package package_name)
+    let build_output = Command::new("scarb")
+        .arg("build")
+        .stderr(Stdio::inherit())
+        .stdout(Stdio::inherit())
+        .output()
+        .context("Failed to build contracts with Scarb")?;
+    if !build_output.status.success() {
+        bail!("Scarb build did not succeed")
+    }
+
     let scarb_metadata = MetadataCommand::new().inherit_stderr().exec()?;
 
     let packages: Vec<PackageMetadata> = args
@@ -82,21 +93,8 @@ fn main_execution() -> Result<bool> {
     let mut all_failed_tests = vec![];
     for package in &packages {
         let forge_config = config_from_scarb_for_package(&scarb_metadata, &package.id)?;
-        let (package_path, lib_path) = paths_for_package(&scarb_metadata, &package.id)?;
+        let (package_path, lib_path, target_dir) = paths_for_package(&scarb_metadata, &package.id)?;
         std::env::set_current_dir(package_path.clone())?;
-
-        // TODO(#671)
-        let target_dir = target_dir_for_package(&scarb_metadata.workspace.root)?;
-
-        let build_output = Command::new("scarb")
-            .arg("build")
-            .stderr(Stdio::inherit())
-            .stdout(Stdio::inherit())
-            .output()
-            .context("Failed to build contracts with Scarb")?;
-        if !build_output.status.success() {
-            bail!("Scarb build did not succeed")
-        }
 
         let package_name = name_for_package(&scarb_metadata, &package.id)?;
         let dependencies = dependencies_for_package(&scarb_metadata, &package.id)?;
