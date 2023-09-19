@@ -27,6 +27,17 @@ It is possible to pass `url` and `block_id` arguments to the `fork` attribute:
 ```rust
 use snforge_std::BlockId;
 
+// enum BlockTag {
+//     Latest,
+//     Pending,
+// }
+
+// enum BlockId {
+//     Tag: BlockTag,
+//     Hash: felt252,
+//     Number: felt252,
+// }
+
 #[test]
 #[fork(url: "http://your.rpc.url", block_id: BlockId::Number(123))]
 fn test_using_forked_state() {
