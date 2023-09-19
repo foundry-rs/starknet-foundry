@@ -1,7 +1,6 @@
 use crate::cheatcodes::spy_events::Event;
 use crate::state::CheatcodeState;
-use blockifier::execution::entry_point::CallInfo;
-use blockifier::execution::entry_point::OrderedEvent;
+use blockifier::execution::call_info::{CallInfo, OrderedEvent};
 use blockifier::execution::execution_utils::stark_felt_to_felt;
 use cairo_felt::Felt252;
 use starknet_api::core::ContractAddress;

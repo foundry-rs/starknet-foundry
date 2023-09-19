@@ -20,7 +20,16 @@ Test filter must be a whole qualified test name e.g. `package_name::my_test` ins
 
 Stop executing tests after the first failed test.
 
+## `-p`, `--package`
+
+Packages to run this command on, can be a concrete package name (`foobar`) or a prefix glob (`foo*`).
+
+## `-w`, `--workspace`
+
+Run tests for all packages in the workspace.
+
 ## `-h`, `--help`
+
 Print help.
 
 ## `-V`, `--version`
