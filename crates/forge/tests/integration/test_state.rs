@@ -2,7 +2,7 @@ use std::path::Path;
 
 use crate::integration::common::runner::Contract;
 use crate::integration::common::running_tests::run_test_case;
-use crate::{assert_passed, test_case, assert_failed, assert_case_output_contains};
+use crate::{assert_case_output_contains, assert_failed, assert_passed, test_case};
 use indoc::indoc;
 
 #[test]
@@ -198,7 +198,6 @@ fn test_library_calls() {
         }
     "#
         ),
-
         Contract::new(
             "LibraryContract",
             indoc!(
@@ -276,8 +275,16 @@ fn test_disabled_syscalls() {
     let result = run_test_case(&test);
 
     assert_failed!(result);
-    assert_case_output_contains!(result, "test_replace_class", "Replace class can't be used in tests");
-    assert_case_output_contains!(result, "test_deploy", "Use snforge_std::ContractClass::deploy instead of deploy_syscall");
+    assert_case_output_contains!(
+        result,
+        "test_replace_class",
+        "Replace class can't be used in tests"
+    );
+    assert_case_output_contains!(
+        result,
+        "test_deploy",
+        "Use snforge_std::ContractClass::deploy instead of deploy_syscall"
+    );
     assert_case_output_contains!(result, "test_get_block_hash", "temporarily disabled");
 }
 
