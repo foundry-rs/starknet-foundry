@@ -95,6 +95,7 @@ fn test_simple_syscalls() {
 
             assert(dispatcher_roll.get_block_number() == block_info.block_number, 'Invalid block number');
             assert(dispatcher_warp.get_block_timestamp() == block_info.block_timestamp, 'Invalid block timestamp');
+            // assert("12312" == block)
 
             let contract = declare('SpoofChecker');
             let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
@@ -249,4 +250,65 @@ fn test_disabled_syscalls() {
     assert_case_output_contains!(result, "test_replace_class", "Replace class can't be used in tests");
     assert_case_output_contains!(result, "test_deploy", "Use snforge_std::ContractClass::deploy instead of deploy_syscall");
     assert_case_output_contains!(result, "test_get_block_hash", "temporarily disabled");
+}
+
+#[test]
+fn test_cant_call_test_contract() {
+    let test = test_case!(
+        indoc!(
+            r#"
+        use result::ResultTrait;
+        use starknet::{ClassHash, deploy_syscall, replace_class_syscall, get_block_hash_syscall};
+        use snforge_std::{ declare, ContractClassTrait };
+
+        #[starknet::interface]
+        trait ICallsBack<TContractState> {
+            fn call_back(ref self: TContractState);
+        }
+
+        #[test]
+        fn test_calling_test_fails() {
+            let contract = declare('CallsBack');
+            let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+            let dispatcher = ICallsBackDispatcher { contract_address: contract_address };
+            dispatcher.call_back();
+        }
+    "#
+        ),
+        Contract::new(
+            "CallsBack",
+            indoc!(
+                r#"
+                #[starknet::contract]
+                mod CallsBack {
+                    use result::ResultTrait;
+                    use starknet::ClassHash;
+                    use starknet::library_call_syscall;
+
+                    #[storage]
+                    struct Storage {
+                    }
+
+                    #[starknet::interface]
+                    trait IDontExist<TContractState> {
+                        fn test_calling_test_fails(ref self: TContractState);
+                    }
+        
+
+                    #[external(v0)]
+                    fn call_back(ref self: ContractState) {
+                        let address = 0.try_into().unwrap();
+                        let dispatcher = IDontExistDispatcher{contract_address: address};
+                        dispatcher.test_calling_test_fails();
+                    }
+                }
+                "#
+            )
+        )
+    );
+
+    let result = run_test_case(&test);
+
+    assert_failed!(result);
+    assert_case_output_contains!(result, "test_calling_test_fails", "not deployed");
 }
