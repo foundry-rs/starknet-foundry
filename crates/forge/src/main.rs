@@ -16,6 +16,7 @@ use forge::scarb::{
     target_name_for_package, try_get_starknet_artifacts_path,
 };
 use forge::test_case_summary::TestCaseSummary;
+use rand::{thread_rng, RngCore};
 use std::process::{Command, Stdio};
 
 mod init;
@@ -97,6 +98,8 @@ fn main_execution() -> Result<bool> {
         .match_many(&scarb_metadata)
         .context("Failed to find any packages matching the specified filter")?;
 
+    let fuzzer_seed = args.fuzzer_seed.unwrap_or_else(|| thread_rng().next_u64());
+
     let mut all_failed_tests = vec![];
     for package in &packages {
         let forge_config = config_from_scarb_for_package(&scarb_metadata, &package.id)?;
@@ -144,6 +147,7 @@ fn main_execution() -> Result<bool> {
             &corelib_path,
             &contracts,
             &predeployed_contracts,
+            fuzzer_seed,
         )?;
 
         let mut failed_tests = extract_failed_tests(tests_file_summaries);

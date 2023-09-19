@@ -91,7 +91,7 @@ fn fuzzing_set_seed() {
         [PASS] fuzzing::tests::fuzzed_argument (fuzzer runs = 256)
         [PASS] fuzzing::tests::fuzzed_both_arguments (fuzzer runs = 256)
         [PASS] fuzzing::tests::passing
-        [FAIL] fuzzing::tests::failing_fuzz (fuzzer runs = 1, arguments = [2594763843086542665495341474989303704651850698040400334569509477360293676694, 2388197721991171123463468792146990070067523446881923317702346893749825398446])
+        [FAIL] fuzzing::tests::failing_fuzz (fuzzer runs = 1, arguments = [341193006617052062735469547906266761132387087565883400330245273769314796067, 527032148587025968655727080236627006840087681556560587927394687076297616261])
 
         Failure data:
             original value: [593979512822486835600413552099926114], converted to a string: [result == a + b]

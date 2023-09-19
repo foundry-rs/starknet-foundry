@@ -20,6 +20,7 @@ use num_traits::Zero;
 use once_cell::sync::Lazy;
 use smol_str::SmolStr;
 
+use crate::fuzzer::RandomFuzzer;
 use crate::running::run_from_test_case;
 use crate::scarb::{ForgeConfig, StarknetContractArtifacts};
 pub use crate::test_file_summary::TestFileSummary;
@@ -205,6 +206,7 @@ pub fn run(
     corelib_path: &Utf8PathBuf,
     contracts: &HashMap<String, StarknetContractArtifacts>,
     predeployed_contracts: &Utf8PathBuf,
+    fuzzer_seed: u64,
 ) -> Result<Vec<TestFileSummary>> {
     let tests = collect_tests_from_package(
         package_path,
@@ -223,20 +225,20 @@ pub fn run(
 
     let mut tests_iterator = tests.into_iter();
 
-    let mut fuzzer = match runner_config.fuzzer_seed {
-        None => fuzzer::Random::new(),
-        Some(seed) => fuzzer::Random::from_seed(seed),
-    };
-
+    let mut fuzzing_happened = false;
     let mut summaries = vec![];
+
     for tests_from_file in tests_iterator.by_ref() {
-        let summary = run_tests_from_file(
+        let (summary, was_fuzzed) = run_tests_from_file(
             tests_from_file,
             runner_config,
             contracts,
             predeployed_contracts,
-            &mut fuzzer,
+            fuzzer_seed,
         )?;
+
+        fuzzing_happened |= was_fuzzed;
+
         summaries.push(summary.clone());
         if summary.runner_exit_status == RunnerStatus::TestFailed {
             break;
@@ -263,8 +265,8 @@ pub fn run(
     }
 
     pretty_printing::print_test_summary(&summaries);
-    if fuzzer.was_fuzzed {
-        pretty_printing::print_fuzzer_seed(fuzzer.seed());
+    if fuzzing_happened {
+        pretty_printing::print_test_seed(fuzzer_seed);
     }
 
     Ok(summaries)
@@ -275,8 +277,8 @@ fn run_tests_from_file(
     runner_config: &RunnerConfig,
     contracts: &HashMap<String, StarknetContractArtifacts>,
     predeployed_contracts: &Utf8PathBuf,
-    fuzzer: &mut fuzzer::Random,
-) -> Result<TestFileSummary> {
+    fuzzer_seed: u64,
+) -> Result<(TestFileSummary, bool)> {
     let runner = SierraCasmRunner::new(
         tests.sierra_program,
         Some(MetadataComputationConfig::default()),
@@ -286,7 +288,9 @@ fn run_tests_from_file(
 
     pretty_printing::print_running_tests(&tests.relative_path, tests.test_cases.len());
 
+    let mut was_fuzzed = false;
     let mut results = vec![];
+
     for (i, case) in tests.test_cases.iter().enumerate() {
         let case_name = case.name.as_str();
         let function = runner.find_function(case_name)?;
@@ -299,7 +303,7 @@ fn run_tests_from_file(
 
             result
         } else {
-            fuzzer.was_fuzzed = true;
+            was_fuzzed = true;
             let (result, runs) = run_with_fuzzing(
                 runner_config,
                 contracts,
@@ -307,7 +311,7 @@ fn run_tests_from_file(
                 &runner,
                 case,
                 &args,
-                fuzzer,
+                fuzzer_seed,
             )?;
             pretty_printing::print_test_result(&result, Some(runs));
 
@@ -323,19 +327,25 @@ fn run_tests_from_file(
                     pretty_printing::print_test_result(&skipped_result, None);
                     results.push(skipped_result);
                 }
-                return Ok(TestFileSummary {
-                    test_case_summaries: results,
-                    runner_exit_status: RunnerStatus::TestFailed,
-                    relative_path: tests.relative_path,
-                });
+                return Ok((
+                    TestFileSummary {
+                        test_case_summaries: results,
+                        runner_exit_status: RunnerStatus::TestFailed,
+                        relative_path: tests.relative_path,
+                    },
+                    was_fuzzed,
+                ));
             }
         }
     }
-    Ok(TestFileSummary {
-        test_case_summaries: results,
-        runner_exit_status: RunnerStatus::Default,
-        relative_path: tests.relative_path,
-    })
+    Ok((
+        TestFileSummary {
+            test_case_summaries: results,
+            runner_exit_status: RunnerStatus::Default,
+            relative_path: tests.relative_path,
+        },
+        was_fuzzed,
+    ))
 }
 
 fn run_with_fuzzing(
@@ -345,7 +355,7 @@ fn run_with_fuzzing(
     runner: &SierraCasmRunner,
     case: &TestCase,
     args: &Vec<&ConcreteTypeId>,
-    fuzzer: &mut fuzzer::Random,
+    fuzzer_seed: u64,
 ) -> Result<(TestCaseSummary, u32)> {
     if contains_non_felt252_args(args) {
         bail!(
@@ -354,7 +364,8 @@ fn run_with_fuzzing(
         );
     }
 
-    fuzzer.set_fuzzer_run_params(
+    let mut fuzzer = RandomFuzzer::new(
+        fuzzer_seed,
         runner_config.fuzzer_runs,
         args.len(),
         BigUint::zero(),

@@ -44,7 +44,7 @@ pub(crate) fn print_test_summary(summaries: &[TestFileSummary]) {
     );
 }
 
-pub(crate) fn print_fuzzer_seed(seed: u64) {
+pub(crate) fn print_test_seed(seed: u64) {
     println!("{}: {seed}", style("Fuzzer seed").bold());
 }
 

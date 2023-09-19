@@ -2,7 +2,7 @@ use cairo_felt::Felt252;
 use num_bigint::{BigUint, RandBigInt};
 use num_traits::One;
 use rand::rngs::StdRng;
-use rand::{thread_rng, Rng, RngCore, SeedableRng};
+use rand::{Rng, SeedableRng};
 use std::default::Default;
 
 #[derive(Default)]
@@ -26,40 +26,32 @@ pub struct FuzzerRunParams {
     runs_with_max_value: Vec<u32>,
 }
 
-pub struct Random {
+#[allow(clippy::module_name_repetitions)]
+pub struct RandomFuzzer {
     rng: StdRng,
-    seed: u64,
     fuzzer_run_params: FuzzerRunParams,
-    pub was_fuzzed: bool,
 }
 
-impl Random {
-    pub fn new() -> Self {
-        let mut seed_rng = thread_rng();
-        let seed = seed_rng.next_u64();
-
+impl RandomFuzzer {
+    pub fn new(
+        seed: u64,
+        runs_number: u32,
+        args_number: usize,
+        low: BigUint,
+        high: BigUint,
+    ) -> Self {
         let rng = StdRng::seed_from_u64(seed);
 
-        Random {
+        let mut fuzzer = RandomFuzzer {
             rng,
-            seed,
             fuzzer_run_params: FuzzerRunParams::default(),
-            was_fuzzed: false,
-        }
+        };
+        fuzzer.set_fuzzer_run_params(runs_number, args_number, low, high);
+
+        fuzzer
     }
 
-    pub fn from_seed(seed: u64) -> Self {
-        Random {
-            rng: StdRng::seed_from_u64(seed),
-            seed,
-            fuzzer_run_params: FuzzerRunParams::default(),
-            was_fuzzed: false,
-        }
-    }
-}
-
-impl Random {
-    pub fn set_fuzzer_run_params(
+    fn set_fuzzer_run_params(
         &mut self,
         runs_number: u32,
         args_number: usize,
@@ -123,10 +115,6 @@ impl Random {
 
         args_values
     }
-
-    pub fn seed(&self) -> u64 {
-        self.seed
-    }
 }
 
 #[cfg(test)]
@@ -134,36 +122,30 @@ mod tests {
     use super::*;
     use cairo_felt::Felt252;
     use num_traits::Zero;
-
-    #[test]
-    fn seed_is_set() {
-        let fuzzer = Random::from_seed(12345);
-        assert_eq!(fuzzer.seed, 12345);
-        assert_eq!(fuzzer.seed, fuzzer.seed());
-    }
+    use rand::{thread_rng, RngCore};
 
     #[test]
     fn using_seed_consistent_result() {
-        let mut fuzzer = Random::new();
-        fuzzer.set_fuzzer_run_params(3, 5, BigUint::zero(), Felt252::prime());
+        let seed = thread_rng().next_u64();
+        let mut fuzzer = RandomFuzzer::new(seed, 3, 5, BigUint::zero(), Felt252::prime());
         let values = fuzzer.next_felt252_args();
 
-        let mut fuzzer_from_seed = Random::from_seed(fuzzer.seed);
-        fuzzer_from_seed.set_fuzzer_run_params(3, 5, BigUint::zero(), Felt252::prime());
-        let values_from_seed = fuzzer_from_seed.next_felt252_args();
+        let mut fuzzer = RandomFuzzer::new(seed, 3, 5, BigUint::zero(), Felt252::prime());
+        let values_from_seed = fuzzer.next_felt252_args();
 
         assert_eq!(values, values_from_seed);
     }
 
     #[test]
     fn min_and_max_used_at_least_once_for_each_arg() {
-        let fuzzer_runs = 100;
+        let seed = thread_rng().next_u64();
+        let runs_number = 100;
         let args_number = 10;
         let low = BigUint::from(420u16);
         let high = BigUint::from(2137u16);
 
-        let mut fuzzer = Random::new();
-        fuzzer.set_fuzzer_run_params(fuzzer_runs, args_number, low.clone(), high.clone());
+        let mut fuzzer =
+            RandomFuzzer::new(seed, runs_number, args_number, low.clone(), high.clone());
 
         let low = Felt252::from(low);
         let high = Felt252::from(high);
@@ -171,7 +153,7 @@ mod tests {
         let mut min_used = vec![false; args_number];
         let mut max_used = vec![false; args_number];
 
-        for _ in 1..=fuzzer_runs {
+        for _ in 1..=runs_number {
             let values = fuzzer.next_felt252_args();
             for (i, value) in values.iter().enumerate() {
                 assert!(*value >= low && *value < high);
