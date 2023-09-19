@@ -4,7 +4,7 @@ Forge supports testing in a forked environment. Each test can fork the state of 
 network and perform actions on top of it.
 
 > 📝 **Note**
-> 
+>
 > Actions are performed on to of the `forked` state which means real network is not affected.
 
 
@@ -19,7 +19,10 @@ There are two ways of configuring a fork:
 
 ## Configure a fork in the attribute
 
-It is possible to pass `url` and `block_id` arguments to the `fork` attribute.
+It is possible to pass `url` and `block_id` arguments to the `fork` attribute:
+- `url` - short string
+- `block_id` - `BlockId` enum
+
 
 ```rust
 use snforge_std::BlockId;

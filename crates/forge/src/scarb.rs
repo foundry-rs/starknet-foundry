@@ -1,8 +1,9 @@
 use anyhow::{anyhow, Context, Result};
 use camino::Utf8PathBuf;
+use itertools::Itertools;
 use scarb_metadata::{CompilationUnitMetadata, Metadata, PackageId};
 use serde::Deserialize;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::fs;
 use test_collector::LinkedLibrary;
 
@@ -229,7 +230,7 @@ fn validate_fork_config(config: Result<ForgeConfig>) -> Result<ForgeConfig> {
     }) = &config
     {
         let names: Vec<String> = forks.iter().map(|fork| fork.name.clone()).collect();
-        let removed_duplicated_names: HashSet<String> = names.iter().cloned().collect();
+        let removed_duplicated_names: Vec<String> = names.clone().into_iter().unique().collect();
 
         if names.len() != removed_duplicated_names.len() {
             return Err(anyhow!("Some fork names are duplicated"));

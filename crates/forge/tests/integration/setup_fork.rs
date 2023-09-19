@@ -10,7 +10,8 @@ use std::collections::HashMap;
 
 #[test]
 fn fork_simple_decorator() {
-    dotenv().ok();
+    dotenv().ok().unwrap();
+
     let node_url =
         std::env::var("CHEATNET_RPC_URL").expect("CHEATNET_RPC_URL must be set in the .env file");
 
