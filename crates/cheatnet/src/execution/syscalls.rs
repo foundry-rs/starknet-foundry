@@ -85,7 +85,7 @@ impl SyscallResponse for SingleSegmentResponse {
 pub fn call_contract_syscall(
     request: CallContractRequest,
     vm: &mut VirtualMachine,
-    syscall_handler: &mut CheatableSyscallHandler<'_>, // Modified parameter type
+    syscall_handler: &mut CheatableSyscallHandler<'_, '_>, // Modified parameter type
     remaining_gas: &mut u64,
 ) -> SyscallResult<SingleSegmentResponse> {
     let storage_address = request.contract_address;
@@ -109,13 +109,13 @@ pub fn call_contract_syscall(
     // endregion
 }
 
-pub struct CheatableSyscallHandler<'a> {
-    pub syscall_handler: SyscallHintProcessor<'a>,
+pub struct CheatableSyscallHandler<'a, 'b> {
+    pub syscall_handler: &'a mut SyscallHintProcessor<'b>,
     pub cheatcode_state: &'a CheatcodeState,
 }
 
 // crates/blockifier/src/execution/syscalls/hint_processor.rs:472 (ResourceTracker for SyscallHintProcessor)
-impl ResourceTracker for CheatableSyscallHandler<'_> {
+impl ResourceTracker for CheatableSyscallHandler<'_, '_> {
     fn consumed(&self) -> bool {
         self.syscall_handler.context.vm_run_resources.consumed()
     }
@@ -136,7 +136,7 @@ impl ResourceTracker for CheatableSyscallHandler<'_> {
     }
 }
 
-impl HintProcessorLogic for CheatableSyscallHandler<'_> {
+impl HintProcessorLogic for CheatableSyscallHandler<'_, '_> {
     fn execute_hint(
         &mut self,
         vm: &mut VirtualMachine,
@@ -211,7 +211,7 @@ fn felt_from_ptr_immutable(
     Ok(felt)
 }
 
-impl CheatableSyscallHandler<'_> {
+impl CheatableSyscallHandler<'_, '_> {
     fn execute_next_syscall_cheated(
         &mut self,
         vm: &mut VirtualMachine,
@@ -311,7 +311,7 @@ impl CheatableSyscallHandler<'_> {
         ExecuteCallback: FnOnce(
             Request,
             &mut VirtualMachine,
-            &mut CheatableSyscallHandler<'_>,
+            &mut CheatableSyscallHandler<'_, '_>,
             &mut u64, // Remaining gas.
         ) -> SyscallResult<Response>,
     {
@@ -372,7 +372,7 @@ impl CheatableSyscallHandler<'_> {
 fn deploy_syscall(
     request: DeployRequest,
     vm: &mut VirtualMachine,
-    syscall_handler: &mut CheatableSyscallHandler<'_>, // Modified parameter type
+    syscall_handler: &mut CheatableSyscallHandler<'_, '_>, // Modified parameter type
     remaining_gas: &mut u64,
 ) -> SyscallResult<DeployResponse> {
     let deployer_address = syscall_handler.syscall_handler.storage_address();
@@ -457,7 +457,7 @@ pub fn execute_deployment(
 pub fn library_call_syscall(
     request: LibraryCallRequest,
     vm: &mut VirtualMachine,
-    syscall_handler: &mut CheatableSyscallHandler<'_>, // Modified parameter type
+    syscall_handler: &mut CheatableSyscallHandler<'_, '_>, // Modified parameter type
     remaining_gas: &mut u64,
 ) -> SyscallResult<SingleSegmentResponse> {
     let call_to_external = true;

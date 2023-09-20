@@ -13,9 +13,9 @@ fn test_storage_access_from_tests() {
         mod Contract {
             #[storage]
             struct Storage {
-                balance: felt252, 
+                balance: felt252,
             }
-            
+
             #[generate_trait]
             impl InternalImpl of InternalTrait {
                 fn internal_function(self: @ContractState) -> felt252 {
@@ -30,7 +30,7 @@ fn test_storage_access_from_tests() {
         fn test_internal() {
             let mut state = Contract::contract_state_for_testing();
             state.balance.write(10);
-            
+
             let value = Contract::InternalImpl::internal_function(@state);
             assert(value == 10, 'Incorrect storage value');
         }
@@ -97,7 +97,7 @@ fn test_simple_syscalls() {
             let contract_warp = declare('WarpChecker');
             let contract_address_warp = contract_warp.deploy(@ArrayTrait::new()).unwrap();
             let dispatcher_warp = IWarpCheckerDispatcher { contract_address: contract_address_warp };
-            
+
             let contract_sequencer_add = declare('SequencerAddressChecker');
             let contract_sequencer_add_address = contract_sequencer_add.deploy(@ArrayTrait::new()).unwrap();
             let dispatcher_sequencer_add = ISequencerAddressCheckerDispatcher { contract_address: contract_sequencer_add_address };
@@ -230,7 +230,7 @@ fn test_disabled_syscalls() {
         use result::ResultTrait;
         use starknet::{ClassHash, deploy_syscall, replace_class_syscall, get_block_hash_syscall};
         use snforge_std::declare;
-        
+
         #[test]
         fn test_replace_class() {
             let value : ClassHash = 'xd'.try_into().unwrap();
@@ -313,7 +313,7 @@ fn test_cant_call_test_contract() {
                     trait IDontExist<TContractState> {
                         fn test_calling_test_fails(ref self: TContractState);
                     }
-        
+
 
                     #[external(v0)]
                     fn call_back(ref self: ContractState, address: ContractAddress) {
@@ -330,4 +330,97 @@ fn test_cant_call_test_contract() {
 
     assert_failed!(result);
     assert_case_output_contains!(result, "test_calling_test_fails", "not deployed");
+}
+
+#[test]
+fn test_simple_cheatcodes() {
+    let test = test_case!(
+        indoc!(
+            r#"
+        use starknet::get_caller_address;
+        use result::ResultTrait;
+        use box::BoxTrait;
+        use serde::Serde;
+        use starknet::ContractAddress;
+        use array::SpanTrait;
+        use starknet::ContractAddressIntoFelt252;
+        use snforge_std::{ start_prank, stop_prank, test_address };
+        use snforge_std::PrintTrait;
+
+        #[test]
+        fn test_prank_test_state() {
+            let felt252: felt252 = 123;
+            felt252.print();
+
+            let caller_addr_before = get_caller_address();
+
+            let target_caller_address: ContractAddress = (123_felt252).try_into().unwrap();
+
+            let test_address: ContractAddress = test_address();
+
+            start_prank(test_address, target_caller_address);
+
+            let caller_addr_after = get_caller_address();
+            assert(caller_addr_after==target_caller_address, caller_addr_after.into());
+
+            stop_prank(test_address);
+
+            let caller_addr_after = get_caller_address();
+            assert(caller_addr_after==caller_addr_before, caller_addr_before.into());
+        }
+    "#
+        )
+    );
+
+    let result = run_test_case(&test);
+
+    assert_passed!(result);
+}
+
+#[test]
+fn test_spy_events_simple() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use array::ArrayTrait;
+            use result::ResultTrait;
+            use starknet::ContractAddress;
+            use starknet::syscalls::emit_event_syscall;
+            use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpy, EventFetcher,
+                event_name_hash, EventAssertions, SpyOn, test_address };
+
+            #[event]
+            #[derive(Drop, starknet::Event)]
+            enum Event {
+                FirstEvent: FirstEvent,
+            }
+
+            #[derive(Drop, starknet::Event)]
+            struct FirstEvent {
+                some_data: felt252
+            }
+
+            #[event]
+            fn Transfer(value: felt252) {}
+
+            #[test]
+            fn test_expect_events_simple() {
+                let contract_address = test_address();
+                let mut spy = spy_events(SpyOn::One(contract_address));
+                assert(spy._id == 0, 'Id should be 0');
+
+                // Transfer(1);
+
+                spy.assert_emitted(@array![
+                    snforge_std::Event { from: contract_address, name: 'FirstEvent', keys: array![], data: array![123] }
+                ]);
+                assert(spy.events.len() == 0, 'There should be no events');
+            }
+        "#
+        ),
+    );
+
+    let result = run_test_case(&test);
+
+    assert_passed!(result);
 }

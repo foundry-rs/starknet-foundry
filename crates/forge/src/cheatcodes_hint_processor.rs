@@ -38,6 +38,7 @@ use cairo_lang_starknet::contract::starknet_keccak;
 use cairo_lang_utils::bigint::BigIntAsHex;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cheatnet::cheatcodes::spy_events::SpyTarget;
+use cheatnet::execution::syscalls::CheatableSyscallHandler;
 
 mod file_operations;
 
@@ -129,7 +130,12 @@ impl HintProcessorLogic for CairoHintProcessor<'_> {
                 &mut self.blockifier_syscall_handler,
             );
         }
-        self.blockifier_syscall_handler
+
+        let mut cheatable_syscall_handler = CheatableSyscallHandler {
+            syscall_handler: &mut self.blockifier_syscall_handler,
+            cheatcode_state: &self.cheatnet_state.cheatcode_state
+        };
+        cheatable_syscall_handler
             .execute_hint(vm, exec_scopes, hint_data, constants)
     }
 
@@ -537,11 +543,17 @@ fn execute_syscall(
     let selector = DeprecatedSyscallSelector::try_from(felt_to_stark_felt(
         &vm.get_integer(system_ptr).unwrap(),
     ))?;
+
+    let mut cheatable_syscall_handler = CheatableSyscallHandler {
+        syscall_handler: blockifier_syscall_handler,
+        cheatcode_state: &cheatnet_state.cheatcode_state
+    };
+
     match selector {
         DeprecatedSyscallSelector::CallContract => {
             execute_call_contract(MemBuffer::new(vm, system_ptr), cheatnet_state)?;
             Ok(())
-        }
+        },
         DeprecatedSyscallSelector::Deploy => Err(HintError::CustomHint(Box::from(
             "Use snforge_std::ContractClass::deploy instead of deploy_syscall"
                 .to_string(),
@@ -553,7 +565,8 @@ fn execute_syscall(
         DeprecatedSyscallSelector::GetBlockHash => Err(HintError::CustomHint(Box::from(
             "Get block hash is temporarily disabled in tests: https://github.com/foundry-rs/starknet-foundry/issues/686"
                 .to_string(),
-        ))),        _ => blockifier_syscall_handler.execute_hint(vm, exec_scopes, hint_data, constants),
+        ))),
+        _ => cheatable_syscall_handler.execute_hint(vm, exec_scopes, hint_data, constants),
     }
 }
 
