@@ -1,11 +1,12 @@
 use anyhow::{anyhow, Context, Ok, Result};
 
 use include_dir::{include_dir, Dir};
-use scarb_metadata::MetadataCommand;
 
+use regex::Regex;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
+use std::str::from_utf8;
 use toml_edit::{ArrayOfTables, Document, Item, Table};
 
 static TEMPLATE: Dir = include_dir!("starknet_forge_template");
@@ -75,6 +76,7 @@ pub fn run(project_name: &str) -> Result<()> {
 
     Command::new("scarb")
         .current_dir(&project_path)
+        .arg("--offline")
         .arg("add")
         .arg("snforge_std")
         .arg("--git")
@@ -86,14 +88,33 @@ pub fn run(project_name: &str) -> Result<()> {
         .output()
         .context("Failed to add snforge_std")?;
 
-    let scarb_metadata = MetadataCommand::new()
-        .current_dir(&project_path)
-        .inherit_stderr()
-        .exec()?;
-    let cairo_version = scarb_metadata.app_version_info.cairo.version.to_string();
+    let scarb_version = Command::new("scarb")
+        .arg("--version")
+        .stderr(Stdio::inherit())
+        .output()
+        .context("Failed to execute `scarb --version`")?;
+    let version_output = from_utf8(&scarb_version.stdout)
+        .context("Failed to parse `scarb --version` output to UTF-8")?;
+
+    let cairo_plus_version_regex = Regex::new(r"cairo:?\s*[0-9]+.[0-9]+.[0-9]+")
+        .expect("Could not create cairo plus version matching regex");
+    let cairo_plus_version_range = cairo_plus_version_regex
+        .find(version_output)
+        .context("Failed to find cairo plus version in `scarb --version` output")?
+        .range();
+    let cairo_plus_version = &version_output.to_owned()[cairo_plus_version_range];
+
+    let cairo_version_regex =
+        Regex::new(r"[0-9]+.[0-9]+.[0-9]+").expect("Could not create cairo version matching regex");
+    let cairo_version_range = cairo_version_regex
+        .find(cairo_plus_version)
+        .expect("Could not find cairo version")
+        .range();
+    let cairo_version = &cairo_plus_version[cairo_version_range];
 
     Command::new("scarb")
         .current_dir(&project_path)
+        .arg("--offline")
         .arg("add")
         .arg(format!("starknet@{cairo_version}"))
         .stderr(Stdio::inherit())
