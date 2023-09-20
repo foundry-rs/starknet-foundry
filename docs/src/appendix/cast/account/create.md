@@ -18,7 +18,7 @@ Optional.
 
 Salt for the account address. If omitted random one will be generated.
 
-## `--add-profile, -a`
+## `--add-profile`
 Optional.
 
 If passed, a profile with corresponding data will be added to Scarb.toml.

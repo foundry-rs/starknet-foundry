@@ -32,6 +32,11 @@ pub struct AccountCreateResponse {
 }
 
 #[derive(Serialize)]
+pub struct AccountAddResponse {
+    pub add_profile: String,
+}
+
+#[derive(Serialize)]
 pub struct MulticallNewResponse {
     pub path: Utf8PathBuf,
     pub content: String,

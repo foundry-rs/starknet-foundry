@@ -24,6 +24,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Tests are collected only from `tests` folder and a package tree
 
+### Cast
+
+#### Added
+
+- `account add` command for importing accounts to the accounts file
+
 ## [0.6.0] - 2023-09-13
 
 ### Forge
