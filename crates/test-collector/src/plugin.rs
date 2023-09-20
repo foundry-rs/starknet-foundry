@@ -8,6 +8,7 @@ use crate::try_extract_test_config;
 /// Plugin to create diagnostics for tests attributes.
 #[derive(Debug, Default)]
 #[non_exhaustive]
+#[allow(clippy::module_name_repetitions)]
 pub struct TestPlugin;
 
 impl MacroPlugin for TestPlugin {
