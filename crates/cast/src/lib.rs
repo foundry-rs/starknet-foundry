@@ -74,6 +74,16 @@ fn get_account_info(name: &str, chain_id: FieldElement, path: &Utf8PathBuf) -> R
     account.ok_or_else(|| anyhow!("Account {} not found under network {}", name, network_name))
 }
 
+pub fn get_keystore_password() -> std::io::Result<String> {
+    match env::var(KEYSTORE_PASSWORD_ENV_VAR) {
+        Ok(password) => {
+            println!("{KEYSTORE_PASSWORD_ENV_VAR} environment variable found and will be used");
+            Ok(password)
+        }
+        _ => rpassword::prompt_password("Enter password: "),
+    }
+}
+
 #[must_use]
 pub fn chain_id_to_network_name(chain_id: FieldElement) -> String {
     let decoded = decode_chain_id(chain_id);
@@ -130,14 +140,7 @@ fn get_account_from_keystore<'a>(
         bail!("account file does not exist; when using --keystore, --account argument should be a path to the starkli JSON account file");
     }
 
-    let password = match env::var(KEYSTORE_PASSWORD_ENV_VAR) {
-        Ok(password) => {
-            println!("{KEYSTORE_PASSWORD_ENV_VAR} environment variable found and will be used");
-            password
-        }
-        _ => rpassword::prompt_password("Enter password: ")?,
-    };
-    let signer = LocalWallet::from(SigningKey::from_keystore(keystore_path, password.as_str())?);
+    let signer = LocalWallet::from(SigningKey::from_keystore(keystore_path, get_keystore_password()?.as_str())?);
 
     let account_info: serde_json::Value =
         serde_json::from_str(&fs::read_to_string(path_to_account)?)?;

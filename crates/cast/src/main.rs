@@ -41,7 +41,7 @@ struct Cli {
     accounts_file_path: Option<Utf8PathBuf>,
 
     /// Path to keystore file; if specified, --account should be a path to starkli JSON account file
-    #[clap(short = 'k', long)]
+    #[clap(short, long)]
     keystore: Option<Utf8PathBuf>,
 
     /// If passed, values will be displayed as integers, otherwise as hexes
