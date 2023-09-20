@@ -9,9 +9,6 @@ use std::collections::HashMap;
 
 #[test]
 fn fork_simple_decorator() {
-    let node_url =
-        std::env::var("CHEATNET_RPC_URL").expect("CHEATNET_RPC_URL must be set in the .env file");
-
     let test = test_case!(formatdoc!(
         r#"
             use result::ResultTrait;
@@ -45,7 +42,7 @@ fn fork_simple_decorator() {
                 assert(balance == 102, 'Balance should be 102');
             }}
         "#,
-        node_url
+        "http://188.34.188.184:9545/rpc/v0.4"
     ).as_str());
 
     let result = run_test_case(&test);
@@ -55,9 +52,6 @@ fn fork_simple_decorator() {
 
 #[test]
 fn fork_aliased_decorator() {
-    let node_url =
-        std::env::var("CHEATNET_RPC_URL").expect("CHEATNET_RPC_URL must be set in the .env file");
-
     let test = test_case!(formatdoc!(
         r#"
             use result::ResultTrait;
@@ -105,7 +99,7 @@ fn fork_aliased_decorator() {
                 exit_first: false,
                 fork: Some(vec![PredefinedFork {
                     name: "FORK_NAME_FROM_SCARB_TOML".to_string(),
-                    url: node_url,
+                    url: "http://188.34.188.184:9545/rpc/v0.4".to_string(),
                     block_id: HashMap::from([("tag".to_string(), "Latest".to_string())]),
                 }]),
             },
