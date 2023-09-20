@@ -33,7 +33,7 @@ pub struct Add {
     pub address: FieldElement,
 
     /// Class hash of the account
-    #[clap(long, visible_alias = "ch")]
+    #[clap(short, long)]
     pub class_hash: Option<FieldElement>,
 
     /// Account deployment status

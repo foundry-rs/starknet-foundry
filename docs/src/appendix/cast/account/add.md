@@ -8,7 +8,7 @@ which is `~/.starknet_accounts/starknet_open_zeppelin_accounts.json` by default.
 
 * [`url`](../common.md#--url--u-rpc_url)
 
-## `--address, -addr <ADDRESS>`
+## `--address, --addr <ADDRESS>`
 Required.
 
 Address of the account.
@@ -24,12 +24,12 @@ Optional.
 Specify account deployment status as deployed.
 If not passed, sncast will check whether the account is deployed or not.
 
-## `--private-key <PRIVATE_KEY>`
+## `--private-key, --priv <PRIVATE_KEY>`
 Required.
 
 Account private key.
 
-## `--public-key <PUBLIC_KEY>`
+## `--public-key, --pub <PUBLIC_KEY>`
 Optional.
 
 Account public key.
