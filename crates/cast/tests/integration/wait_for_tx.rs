@@ -1,6 +1,6 @@
 use crate::helpers::{
-    constants::{ACCOUNT, ACCOUNT_FILE_PATH, DECLARE_TRANSACTION_HASH, MAP_CLASS_HASH_V1},
-    fixtures::create_test_provider,
+    constants::{ACCOUNT, ACCOUNT_FILE_PATH, DECLARE_TRANSACTION_HASH},
+    fixtures::{create_test_provider, from_env},
 };
 use camino::Utf8PathBuf;
 use cast::{get_account, helpers::constants::DEFAULT_RETRIES};
@@ -33,8 +33,9 @@ async fn test_rejected_transaction() {
     )
     .await
     .expect("Could not get the account");
+    let class_hash = from_env("CAST_MAP_V1_CLASS_HASH").unwrap();
 
-    let factory = ContractFactory::new(parse_number(MAP_CLASS_HASH_V1).unwrap(), account);
+    let factory = ContractFactory::new(parse_number(&class_hash).unwrap(), account);
     let deployment = factory
         .deploy(&Vec::new(), FieldElement::ONE, false)
         .max_fee(FieldElement::ONE);

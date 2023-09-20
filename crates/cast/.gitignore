@@ -3,3 +3,4 @@ tests/utils/cairo
 tests/utils/scarb*
 /tests/data/contracts/**/*.tool-versions
 /tests/utils/compiler/
+.env*
