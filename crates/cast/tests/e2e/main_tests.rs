@@ -1,13 +1,10 @@
-use std::env;
-
-use crate::helpers::constants::{
-    ACCOUNT, ACCOUNT_FILE_PATH, CONTRACTS_DIR, MAP_CONTRACT_ADDRESS_V1, URL,
-};
-use crate::helpers::fixtures::duplicate_directory_with_salt;
+use crate::helpers::constants::{ACCOUNT, ACCOUNT_FILE_PATH, CONTRACTS_DIR, URL};
+use crate::helpers::fixtures::{duplicate_directory_with_salt, from_env};
 use crate::helpers::runner::runner;
 use cast::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
 use indoc::indoc;
 use snapbox::cmd::{cargo_bin, Command};
+use std::env;
 use std::fs;
 
 #[tokio::test]
@@ -58,6 +55,7 @@ async fn test_happy_case_from_cli_no_scarb() {
 
 #[tokio::test]
 async fn test_happy_case_from_cli_with_scarb() {
+    let address = from_env("CAST_MAP_V1_ADDRESS").unwrap();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
@@ -72,7 +70,7 @@ async fn test_happy_case_from_cli_with_scarb() {
         ACCOUNT,
         "call",
         "--contract-address",
-        MAP_CONTRACT_ADDRESS_V1,
+        &address,
         "--function",
         "get",
         "--calldata",
@@ -93,6 +91,7 @@ async fn test_happy_case_from_cli_with_scarb() {
 
 #[tokio::test]
 async fn test_happy_case_mixed() {
+    let address = from_env("CAST_MAP_V1_ADDRESS").unwrap();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
@@ -105,7 +104,7 @@ async fn test_happy_case_mixed() {
         ACCOUNT,
         "call",
         "--contract-address",
-        MAP_CONTRACT_ADDRESS_V1,
+        &address,
         "--function",
         "get",
         "--calldata",

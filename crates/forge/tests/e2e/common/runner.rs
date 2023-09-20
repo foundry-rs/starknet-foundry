@@ -51,6 +51,117 @@ pub(crate) fn setup_package(package_name: &str) -> TempDir {
     temp
 }
 
+pub(crate) fn setup_hello_workspace() -> TempDir {
+    let temp = TempDir::new().unwrap();
+    temp.copy_from("tests/data/hello_workspaces", &["**/*.cairo", "**/*.toml"])
+        .unwrap();
+
+    let snforge_std_path = Utf8PathBuf::from_str("../../snforge_std")
+        .unwrap()
+        .canonicalize_utf8()
+        .unwrap()
+        .to_string()
+        .replace('\\', "/");
+
+    let manifest_path = temp.child("Scarb.toml");
+    manifest_path
+        .write_str(&formatdoc!(
+            r#"
+                [workspace]
+                members = [
+                    "crates/*",
+                ]
+                
+                [workspace.scripts]
+                test = "snforge"
+                
+                [workspace.tool.snforge]
+                exit_first = true
+                
+                [workspace.dependencies]
+                starknet = "2.2.0"
+                snforge_std = {{ path = "{}" }}
+                
+                [workspace.package]
+                version = "0.1.0"
+                
+                [package]
+                name = "hello_workspaces"
+                version.workspace = true
+                
+                [scripts]
+                test.workspace = true
+                
+                [tool]
+                snforge.workspace = true
+                
+                [dependencies]
+                starknet.workspace = true
+                fibonacci = {{ path = "crates/fibonacci" }}
+                addition = {{ path = "crates/addition" }}
+                
+                [[target.starknet-contract]]
+                sierra = true
+                casm = true
+                "#,
+            snforge_std_path
+        ))
+        .unwrap();
+
+    temp
+}
+
+pub(crate) fn setup_virtual_workspace() -> TempDir {
+    let temp = TempDir::new().unwrap();
+    temp.copy_from("tests/data/virtual_workspace", &["**/*.cairo", "**/*.toml"])
+        .unwrap();
+
+    let snforge_std_path = Utf8PathBuf::from_str("../../snforge_std")
+        .unwrap()
+        .canonicalize_utf8()
+        .unwrap()
+        .to_string()
+        .replace('\\', "/");
+
+    let manifest_path = temp.child("Scarb.toml");
+    manifest_path
+        .write_str(&formatdoc!(
+            r#"
+                [workspace]
+                members = [
+                    "dummy_name/*",
+                ]
+                
+                [workspace.scripts]
+                test = "snforge"
+                
+                [workspace.tool.snforge]
+                exit_first = true
+                
+                [workspace.dependencies]
+                starknet = "2.2.0"
+                snforge_std = {{ path = "{}" }}
+                
+                [workspace.package]
+                version = "0.1.0"
+                
+                [scripts]
+                test.workspace = true
+                
+                [tool]
+                snforge.workspace = true
+                
+                [[target.starknet-contract]]
+                sierra = true
+                casm = true
+                "#,
+            snforge_std_path
+        ))
+        .unwrap();
+
+    temp
+}
+
 /// In context of GITHUB actions, get the repository name that triggered the workflow run.
 /// Locally returns current branch.
 ///

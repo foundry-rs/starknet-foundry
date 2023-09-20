@@ -2,8 +2,8 @@ use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Parser;
 use include_dir::{include_dir, Dir};
-use scarb_metadata::MetadataCommand;
-
+use scarb_metadata::{MetadataCommand, PackageMetadata};
+use scarb_ui::args::PackagesFilter;
 use std::path::PathBuf;
 use tempfile::{tempdir, TempDir};
 
@@ -11,8 +11,9 @@ use forge::{pretty_printing, RunnerConfig};
 use forge::{run, TestFileSummary};
 
 use forge::scarb::{
-    corelib_for_package, dependencies_for_package, get_contracts_map, name_for_package,
-    paths_for_package, target_name_for_package, try_get_starknet_artifacts_path,
+    config_from_scarb_for_package, corelib_for_package, dependencies_for_package,
+    get_contracts_map, name_for_package, paths_for_package, target_dir_for_package,
+    target_name_for_package, try_get_starknet_artifacts_path,
 };
 use forge::test_case_summary::TestCaseSummary;
 use std::process::{Command, Stdio};
@@ -35,6 +36,9 @@ struct Args {
     /// Stop test execution after the first failed test
     #[arg(short = 'x', long)]
     exit_first: bool,
+
+    #[command(flatten)]
+    packages_filter: PackagesFilter,
 }
 
 fn load_predeployed_contracts() -> Result<TempDir> {
@@ -70,28 +74,34 @@ fn main_execution() -> Result<bool> {
 
     let scarb_metadata = MetadataCommand::new().inherit_stderr().exec()?;
 
-    let build_output = Command::new("scarb")
-        .current_dir(std::env::current_dir().context("Failed to get current directory")?)
-        .arg("build")
-        .stderr(Stdio::inherit())
-        .stdout(Stdio::inherit())
-        .output()
-        .context("Failed to build contracts with Scarb")?;
-    if !build_output.status.success() {
-        bail!("Scarb build did not succeed")
-    }
+    let packages: Vec<PackageMetadata> = args
+        .packages_filter
+        .match_many(&scarb_metadata)
+        .context("Failed to find any packages matching the specified filter")?;
 
     let mut all_failed_tests = vec![];
-    for package in &scarb_metadata.workspace.members {
-        let forge_config = forge::scarb::config_from_scarb_for_package(&scarb_metadata, package)?;
-        let (package_path, lib_path) = paths_for_package(&scarb_metadata, package)?;
-
+    for package in &packages {
+        let forge_config = config_from_scarb_for_package(&scarb_metadata, &package.id)?;
+        let (package_path, lib_path) = paths_for_package(&scarb_metadata, &package.id)?;
         std::env::set_current_dir(package_path.clone())?;
 
-        let package_name = name_for_package(&scarb_metadata, package)?;
-        let dependencies = dependencies_for_package(&scarb_metadata, package)?;
-        let target_name = target_name_for_package(&scarb_metadata, package)?;
-        let corelib_path = corelib_for_package(&scarb_metadata, package)?;
+        // TODO(#671)
+        let target_dir = target_dir_for_package(&scarb_metadata.workspace.root)?;
+
+        let build_output = Command::new("scarb")
+            .arg("build")
+            .stderr(Stdio::inherit())
+            .stdout(Stdio::inherit())
+            .output()
+            .context("Failed to build contracts with Scarb")?;
+        if !build_output.status.success() {
+            bail!("Scarb build did not succeed")
+        }
+
+        let package_name = name_for_package(&scarb_metadata, &package.id)?;
+        let dependencies = dependencies_for_package(&scarb_metadata, &package.id)?;
+        let target_name = target_name_for_package(&scarb_metadata, &package.id)?;
+        let corelib_path = corelib_for_package(&scarb_metadata, &package.id)?;
         let runner_config = RunnerConfig::new(
             args.test_filter.clone(),
             args.exact,
@@ -99,7 +109,7 @@ fn main_execution() -> Result<bool> {
             &forge_config,
         );
 
-        let contracts_path = try_get_starknet_artifacts_path(&package_path, &target_name)?;
+        let contracts_path = try_get_starknet_artifacts_path(&target_dir, &target_name)?;
         let contracts = contracts_path
             .map(|path| get_contracts_map(&path))
             .transpose()?

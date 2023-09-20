@@ -4,11 +4,11 @@ use crate::execution::{
 };
 use crate::state::CheatcodeState;
 use anyhow::Result;
-use blockifier::execution::entry_point::ConstructorContext;
 use blockifier::execution::syscalls::{
     DeployRequest, DeployResponse, LibraryCallRequest, SyscallRequest, SyscallRequestWrapper,
     SyscallResponse, SyscallResponseWrapper, SyscallResult,
 };
+use blockifier::execution::{call_info::CallInfo, entry_point::ConstructorContext};
 use blockifier::state::errors::StateError;
 use blockifier::{
     abi::constants,
@@ -26,8 +26,8 @@ use blockifier::{
         common_hints::HintExecutionResult,
         deprecated_syscalls::DeprecatedSyscallSelector,
         entry_point::{
-            CallEntryPoint, CallInfo, CallType, EntryPointExecutionContext,
-            EntryPointExecutionResult, ExecutionResources,
+            CallEntryPoint, CallType, EntryPointExecutionContext, EntryPointExecutionResult,
+            ExecutionResources,
         },
         execution_utils::felt_to_stark_felt,
         syscalls::{
