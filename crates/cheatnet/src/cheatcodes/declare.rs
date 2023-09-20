@@ -24,9 +24,9 @@ use starknet_api::transaction::TransactionHash;
 
 use crate::state::ExtendedStateReader;
 use cairo_lang_runner::short_string::as_cairo_short_string;
-use cairo_lang_starknet::casm_contract_class::CasmContractClass;
 use cairo_lang_starknet::contract_class::ContractClass;
-use starknet::core::types::contract::CompiledClass;
+use serde_json::Value;
+use starknet::core::types::FlattenedSierraClass;
 
 impl CheatnetState {
     pub fn declare(
@@ -43,23 +43,12 @@ impl CheatnetState {
             format!("Failed to get contract artifact for name = {contract_name_as_short_str}. Make sure starknet target is correctly defined in Scarb.toml file.")
         }).map_err::<EnhancedHintError, _>(From::from)?;
 
-        let sierra_contract_class: ContractClass = serde_json::from_str(&contract_artifact.sierra)
-            .unwrap_or_else(|_| {
-                panic!("Failed to parse json from artifact = {contract_artifact:?}")
-            });
-
-        let casm_contract_class =
-            CasmContractClass::from_contract_class(sierra_contract_class, true)
-                .expect("Sierra to casm failed");
-        let casm_serialized = serde_json::to_string_pretty(&casm_contract_class)
-            .expect("Failed to serialize contract to casm");
-
-        let contract_class = ContractClassV1::try_from_json_string(&casm_serialized)
+        let contract_class = ContractClassV1::try_from_json_string(&contract_artifact.casm)
             .expect("Failed to read contract class from json");
         let contract_class = BlockifierContractClass::V1(contract_class);
 
         let class_hash =
-            get_class_hash(casm_serialized.as_str()).expect("Failed to get class hash");
+            get_class_hash(contract_artifact.sierra.as_str()).expect("Failed to get class hash");
 
         let nonce = blockifier_state
             .get_nonce_at(ContractAddress(patricia_key!(
@@ -96,9 +85,15 @@ impl CheatnetState {
     }
 }
 
-fn get_class_hash(casm_contract: &str) -> Result<ClassHash> {
-    let compiled_class = serde_json::from_str::<CompiledClass>(casm_contract)?;
-    let class_hash = compiled_class.class_hash()?;
+fn get_class_hash(sierra_contract: &str) -> Result<ClassHash> {
+    let sierra_class: ContractClass = serde_json::from_str(sierra_contract)?;
+    let abi_flattened = sierra_class.abi.unwrap().json();
+    let mut sierra_contract_map: HashMap<String, Value> = serde_json::from_str(sierra_contract)?;
+    sierra_contract_map.insert("abi".to_string(), Value::String(abi_flattened));
+    let sierra_contract = serde_json::to_string_pretty(&sierra_contract_map)?;
+
+    let sierra_class: FlattenedSierraClass = serde_json::from_str(&sierra_contract)?;
+    let class_hash = sierra_class.class_hash();
     let class_hash = StarkFelt::new(class_hash.to_bytes_be())?;
     Ok(ClassHash(class_hash))
 }
