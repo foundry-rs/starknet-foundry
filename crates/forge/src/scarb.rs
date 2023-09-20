@@ -733,14 +733,11 @@ mod tests {
             .current_dir(temp.path())
             .exec()
             .unwrap();
+        let err =
+            config_from_scarb_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
+                .unwrap_err();
 
-        assert!(match config_from_scarb_for_package(
-            &scarb_metadata,
-            &scarb_metadata.workspace.members[0]
-        ) {
-            Ok(_) => false,
-            Err(message) => message.to_string() == "Some fork names are duplicated",
-        });
+        assert!(err.to_string().contains("Some fork names are duplicated"));
     }
 
     #[test]
@@ -766,14 +763,12 @@ mod tests {
             .current_dir(temp.path())
             .exec()
             .unwrap();
-
-        assert!(match config_from_scarb_for_package(
-            &scarb_metadata,
-            &scarb_metadata.workspace.members[0]
-        ) {
-            Ok(_) => false,
-            Err(message) => message.to_string() == "block_id should be set once per fork",
-        });
+        let err =
+            config_from_scarb_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
+                .unwrap_err();
+        assert!(err
+            .to_string()
+            .contains("block_id should be set once per fork"));
     }
 
     #[test]
@@ -799,14 +794,12 @@ mod tests {
             .exec()
             .unwrap();
 
-        assert!(match config_from_scarb_for_package(
-            &scarb_metadata,
-            &scarb_metadata.workspace.members[0]
-        ) {
-            Ok(_) => false,
-            Err(message) =>
-                message.to_string() == "block_id has only three variants: number, hash and tag",
-        });
+        let err =
+            config_from_scarb_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
+                .unwrap_err();
+        assert!(err
+            .to_string()
+            .contains("block_id has only three variants: number, hash and tag"));
     }
 
     #[test]
@@ -832,13 +825,11 @@ mod tests {
             .exec()
             .unwrap();
 
-        assert!(match config_from_scarb_for_package(
-            &scarb_metadata,
-            &scarb_metadata.workspace.members[0]
-        ) {
-            Ok(_) => false,
-            Err(message) =>
-                message.to_string() == "block_id.tag has only two variants: Latest or Pending",
-        });
+        let err =
+            config_from_scarb_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
+                .unwrap_err();
+        assert!(err
+            .to_string()
+            .contains("block_id.tag has only two variants: Latest or Pending"));
     }
 }
