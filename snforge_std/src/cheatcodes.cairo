@@ -6,7 +6,8 @@ use serde::Serde;
 
 use starknet::{
     testing::cheatcode, ClassHash, ContractAddress, ClassHashIntoFelt252,
-    ContractAddressIntoFelt252, Felt252TryIntoClassHash, Felt252TryIntoContractAddress
+    ContractAddressIntoFelt252, Felt252TryIntoClassHash, Felt252TryIntoContractAddress,
+    contract_address_const
 };
 
 
@@ -16,6 +17,9 @@ mod contract_class;
 mod tx_info;
 mod fork;
 
+fn test_address() -> ContractAddress {
+    contract_address_const::<469394814521890341860918960550914>()
+}
 
 fn start_roll(contract_address: ContractAddress, block_number: u64) {
     let contract_address_felt: felt252 = contract_address.into();
