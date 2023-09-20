@@ -36,7 +36,7 @@ use crate::scarb::StarknetContractArtifacts;
 use crate::test_case_summary::TestCaseSummary;
 
 // snforge_std/src/cheatcodes.cairo::TEST
-const TEST_ADDRESS : &str = "0x01724987234973219347210837402";
+const TEST_ADDRESS: &str = "0x01724987234973219347210837402";
 
 /// Builds `hints_dict` required in `cairo_vm::types::program::Program` from instructions.
 fn build_hints_dict<'b>(
