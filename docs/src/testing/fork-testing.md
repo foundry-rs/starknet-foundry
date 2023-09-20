@@ -11,7 +11,7 @@ network and perform actions on top of it.
 > ⚠️ **Warning**
 >
 > Calls to the nodes are not cached between test cases at the moment, so you can expect fork
-> tests to be a bit slower than regular ones. Optimisations are well on their way though!
+> tests to be slower than regular ones. Optimisations are well on their way though!
 
 There are two ways of configuring a fork:
 - by specifying `url` and `block_id` parameters in the `#[fork(...)]` attribute
