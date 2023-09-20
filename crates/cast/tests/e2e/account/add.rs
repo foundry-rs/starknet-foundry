@@ -240,7 +240,7 @@ pub async fn test_happy_case_from_keystore() {
         accounts_file,
         "--keystore",
         keystore_path,
-        "--acc",
+        "--account",
         account_path,
         "account",
         "add",

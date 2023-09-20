@@ -15,7 +15,7 @@ use starknet::signers::LocalWallet;
 #[command(about = "Invoke a contract on Starknet")]
 pub struct Invoke {
     /// Address of contract to invoke
-    #[clap(short = 'a', long)]
+    #[clap(long, visible_alias = "addr")]
     pub contract_address: FieldElement,
 
     /// Name of the function to invoke
