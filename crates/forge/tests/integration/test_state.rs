@@ -105,7 +105,6 @@ fn test_simple_syscalls() {
             assert(dispatcher_roll.get_block_number() == block_info.block_number, 'Invalid block number');
             assert(dispatcher_warp.get_block_timestamp() == block_info.block_timestamp, 'Invalid block timestamp');
             assert(dispatcher_sequencer_add.get_sequencer_address() == block_info.sequencer_address, 'Invalid block timestamp');
-            // assert("12312" == block)
 
             let contract = declare('SpoofChecker');
             let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
