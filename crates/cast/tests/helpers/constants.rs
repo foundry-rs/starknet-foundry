@@ -17,5 +17,3 @@ pub const DEVNET_OZ_CLASS_HASH: &str =
     "0x646a72e2aab2fca75d713fbe4a58f2d12cbd64105621b89dc9ce7045b5bf02b";
 pub const DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS: &str =
     "0x98459bc7e9740d1b55e5d04c3942badca974f327f7e1bb9d10737c87ea0aec";
-
-pub const MULTICALL_CONFIGS_DIR: &str = "crates/cast/tests/data/multicall_configs";
