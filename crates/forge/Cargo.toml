@@ -59,7 +59,6 @@ flatten-serde-json = "0.1.0"
 
 [dev-dependencies]
 ctor.workspace = true
-dotenv.workspace = true
 
 [lib]
 name = "forge"
