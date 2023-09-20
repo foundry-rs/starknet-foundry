@@ -101,7 +101,7 @@ impl RandomFuzzer {
     pub fn next_felt252_args(&mut self) -> Vec<Felt252> {
         assert!(self.run_params.executed_runs < self.run_params.total_runs);
 
-        self.run_params.executed_runs += 1;
+        self.next_run();
 
         (0..self.run_params.arguments_number)
             .map(|arg_number| {
@@ -115,6 +115,10 @@ impl RandomFuzzer {
                 })
             })
             .collect()
+    }
+
+    fn next_run(&mut self) {
+        self.run_params.executed_runs += 1;
     }
 
     fn is_run_with_min_value_for_arg(&self, arg_number: usize) -> bool {
