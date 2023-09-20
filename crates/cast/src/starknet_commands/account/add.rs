@@ -28,17 +28,18 @@ pub struct Add {
         visible_alias = "addr",
         long,
         default_value = "0",
-        required_unless_present = "from_keystore"
+        required_unless_present = "keystore",
+        conflicts_with = "keystore"
     )]
     pub address: FieldElement,
 
     /// Class hash of the account
-    #[clap(short, long)]
+    #[clap(short, long, conflicts_with = "keystore")]
     pub class_hash: Option<FieldElement>,
 
     /// Account deployment status
     /// If not passed, sncast will check whether the account is deployed or not
-    #[clap(short, long)]
+    #[clap(short, long, conflicts_with = "keystore")]
     pub deployed: bool,
 
     /// Account private key
@@ -46,7 +47,8 @@ pub struct Add {
         long,
         visible_alias = "priv",
         default_value = "0",
-        required_unless_present = "from_keystore"
+        required_unless_present = "keystore",
+        conflicts_with = "keystore"
     )]
     pub private_key: FieldElement,
 
@@ -55,16 +57,12 @@ pub struct Add {
     pub public_key: Option<FieldElement>,
 
     /// Salt for the address
-    #[clap(short, long)]
+    #[clap(short, long, conflicts_with = "keystore")]
     pub salt: Option<FieldElement>,
 
     /// If passed, a profile with corresponding data will be created in Scarb.toml
     #[clap(long)]
     pub add_profile: bool,
-
-    /// If passed, import account from keystore and starkli account JSON file
-    #[clap(short, long, conflicts_with_all = ["address", "class_hash", "deployed", "private_key", "public_key", "salt"])]
-    pub from_keystore: bool,
 }
 
 pub async fn add(
@@ -75,11 +73,11 @@ pub async fn add(
     keystore_path: Option<Utf8PathBuf>,
     account_path: Option<Utf8PathBuf>,
 ) -> Result<AccountAddResponse> {
-    let account_json = if add.from_keystore {
+    let account_json = if keystore_path.is_some() {
         let keystore_path_ = keystore_path
-            .ok_or_else(|| anyhow!("--keystore must be passed when using --from-keystore"))?;
+            .ok_or_else(|| anyhow!("--keystore must be passed when using --keystore"))?;
         let account_path_ = account_path
-            .ok_or_else(|| anyhow!("--account must be passed when using --from-keystore"))?;
+            .ok_or_else(|| anyhow!("--account must be passed when using --keystore"))?;
         import_from_keystore(&keystore_path_, &account_path_)
             .context(format!("Couldn't import account from keystore at path {keystore_path_} and account JSON file at path {account_path_}"))?
     } else {

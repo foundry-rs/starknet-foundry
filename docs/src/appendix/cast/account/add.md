@@ -44,3 +44,16 @@ Salt for the account address.
 Optional.
 
 If passed, a profile with corresponding data will be added to Scarb.toml.
+
+## `--keystore, -k <PATH_TO_KEYSTORE_FILE>`
+Optional.
+
+Import the account from keystore file and starkli account json file.
+
+Path to [keystore file](https://book.starkli.rs/signers#encrypted-keystores).
+When specified, the --account argument must be a path to [starkli account JSON file](https://book.starkli.rs/accounts#accounts).
+
+## `--account, -a <ACCOUNT_NAME>`
+Optional.
+
+If used with `--keystore`, a path to [starkli account JSON file](https://book.starkli.rs/accounts#accounts).

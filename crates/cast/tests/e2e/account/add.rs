@@ -238,15 +238,14 @@ pub async fn test_happy_case_from_keystore() {
         URL,
         "--accounts-file",
         accounts_file,
-        "--keystore",
-        keystore_path,
-        "--account",
-        account_path,
         "account",
         "add",
         "--name",
         "account_from_keystore",
-        "--from-keystore",
+        "--keystore",
+        keystore_path,
+        "--account",
+        account_path,
     ];
 
     let snapbox = runner(&args);
