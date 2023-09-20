@@ -21,7 +21,7 @@ pub struct Add {
     pub name: String,
 
     /// Address of the account
-    #[clap(short, long)]
+    #[clap(long, visible_alias = "addr")]
     pub address: FieldElement,
 
     /// Class hash of the account
@@ -60,7 +60,7 @@ pub async fn add(
     if let Some(public_key) = &add.public_key {
         ensure!(
             public_key == &private_key.verifying_key().scalar(),
-            "public key mismatch"
+            "The private key does not match the public key"
         );
     }
 
