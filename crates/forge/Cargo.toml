@@ -58,7 +58,6 @@ toml_edit = "0.9.1"
 flatten-serde-json = "0.1.0"
 
 [dev-dependencies]
-ctor.workspace = true
 
 [lib]
 name = "forge"
