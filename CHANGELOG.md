@@ -13,9 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Support for scarb workspaces.
 
-### Changed
+#### Changed
 
 - Tests are collected only from `tests` folder and a package tree
+- Performance improvement: tests from `tests` folder are packed into a single phantom package
 
 ### Cast
 

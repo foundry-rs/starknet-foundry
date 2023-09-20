@@ -1,7 +1,11 @@
 use std::collections::HashMap;
 use std::fmt::Debug;
+use std::fs::OpenOptions;
+use std::io::Write;
 
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
+use assert_fs::fixture::{FileTouch, PathChild};
+use assert_fs::TempDir;
 use camino::{Utf8Path, Utf8PathBuf};
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use serde::Deserialize;
@@ -82,24 +86,43 @@ fn collect_tests_from_package(
     corelib_path: &Utf8PathBuf,
     runner_config: &RunnerConfig,
 ) -> Result<Vec<TestsFromFile>> {
-    let test_files = find_test_files(package_path, lib_path)?;
-    test_files
+    let test_files_from_tests_folder = find_test_files_from_tests_folder(package_path)?;
+    let (common_test_file_dir, packed_test_file) =
+        pack_tests_into_one_file(&test_files_from_tests_folder, package_path)?;
+    let common_test_file_dir_path = Utf8PathBuf::from_path_buf(common_test_file_dir.to_path_buf())
+        .map_err(|_| anyhow!("Failed to convert common test file dir to Utf8PathBuf"))?;
+
+    let all_test_roots = vec![
+        (lib_path, package_path),
+        (&packed_test_file, &common_test_file_dir_path),
+    ];
+    let tests_from_files = all_test_roots
         .par_iter()
-        .map(|tf| {
+        .map(|(test_file, prefix_path)| {
             collect_tests_from_tree(
-                tf,
-                package_path,
+                test_file,
+                prefix_path,
                 package_name,
                 linked_libraries,
                 corelib_path,
                 runner_config,
             )
         })
-        .collect()
+        .collect();
+
+    let common_test_file_path = common_test_file_dir.path().to_owned().clone();
+    common_test_file_dir.close().with_context(|| {
+        anyhow!(
+            "Failed to close temporary directory = {} with common test file. The file might have not been released from filesystem",
+            common_test_file_path.display()
+        )
+    })?;
+
+    tests_from_files
 }
 
-fn find_test_files(package_path: &Utf8PathBuf, lib_path: &Utf8PathBuf) -> Result<Vec<Utf8PathBuf>> {
-    let mut test_files: Vec<Utf8PathBuf> = vec![lib_path.clone()];
+fn find_test_files_from_tests_folder(package_path: &Utf8PathBuf) -> Result<Vec<Utf8PathBuf>> {
+    let mut test_files: Vec<Utf8PathBuf> = vec![];
     let tests_folder_path = package_path.join("tests");
 
     if tests_folder_path.try_exists()? {
@@ -120,9 +143,45 @@ fn find_test_files(package_path: &Utf8PathBuf, lib_path: &Utf8PathBuf) -> Result
     Ok(test_files)
 }
 
+fn pack_tests_into_one_file(
+    test_files_from_tests_folder: &[Utf8PathBuf],
+    package_path: &Utf8PathBuf,
+) -> Result<(TempDir, Utf8PathBuf)> {
+    let tmp_dir = TempDir::new()?;
+    let common_tests_file = tmp_dir.child("tests.cairo");
+    common_tests_file.touch()?;
+    let mut common_test_file_handle = OpenOptions::new()
+        .append(true)
+        .open(&common_tests_file)
+        .expect("Unable to open common test file");
+
+    for file in test_files_from_tests_folder {
+        let content = std::fs::read_to_string(file)?;
+        let mod_name = file
+            .strip_prefix(package_path.join("tests"))
+            .expect("Each test file path should start with package path")
+            .to_string()
+            .strip_suffix(".cairo")
+            .expect("Each test file path should have .cairo extension")
+            .replace(['/', '\\'], "_");
+
+        write!(
+            &mut common_test_file_handle,
+            "\nmod {mod_name} {{\n{content}}}"
+        )
+        .expect("Failed to write to common test file");
+    }
+
+    Ok((
+        tmp_dir,
+        Utf8PathBuf::from_path_buf(common_tests_file.to_path_buf())
+            .map_err(|_| anyhow!("Failed to convert common test file path to Utf8PathBuf"))?,
+    ))
+}
+
 fn collect_tests_from_tree(
     test_root: &Utf8PathBuf,
-    package_path: &Utf8PathBuf,
+    prefix_path: &Utf8PathBuf,
     package_name: &str,
     linked_libraries: &Option<Vec<LinkedLibrary>>,
     corelib_path: &Utf8PathBuf,
@@ -154,7 +213,10 @@ fn collect_tests_from_tree(
         tests_configs
     };
 
-    let relative_path = test_root.strip_prefix(package_path)?.to_path_buf();
+    let relative_path = test_root
+        .strip_prefix(prefix_path)
+        .expect("Test root should be always prefixed with prefix path")
+        .to_path_buf();
 
     Ok(TestsFromFile {
         sierra_program,
@@ -313,9 +375,8 @@ mod tests {
         temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
             .unwrap();
         let tests_path = Utf8PathBuf::from_path_buf(temp.to_path_buf()).unwrap();
-        let lib_path = tests_path.join("src/lib.cairo");
 
-        let tests = find_test_files(&tests_path, &lib_path).unwrap();
+        let tests = find_test_files_from_tests_folder(&tests_path).unwrap();
 
         assert!(!tests.is_empty());
     }
