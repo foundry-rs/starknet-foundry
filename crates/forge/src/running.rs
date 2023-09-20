@@ -35,6 +35,9 @@ use crate::cheatcodes_hint_processor::CairoHintProcessor;
 use crate::scarb::StarknetContractArtifacts;
 use crate::test_case_summary::TestCaseSummary;
 
+// snforge_std/src/cheatcodes.cairo::TEST
+const TEST_ADDRESS: &str = "0x01724987234973219347210837402";
+
 /// Builds `hints_dict` required in `cairo_vm::types::program::Program` from instructions.
 fn build_hints_dict<'b>(
     instructions: impl Iterator<Item = &'b Instruction>,
@@ -96,11 +99,11 @@ pub(crate) fn run_from_test_case(
     let entry_point_selector = EntryPointSelector(StarkHash::new(test_selector.to_bytes_be())?);
     let entry_point = CallEntryPoint {
         class_hash: None,
-        code_address: Some(ContractAddress::from(0_u8)),
+        code_address: Some(ContractAddress(patricia_key!(TEST_ADDRESS))),
         entry_point_type: EntryPointType::External,
         entry_point_selector,
         calldata: Calldata(Arc::new(vec![])),
-        storage_address: ContractAddress(patricia_key!("0x0")),
+        storage_address: ContractAddress(patricia_key!(TEST_ADDRESS)),
         caller_address: ContractAddress::default(),
         call_type: CallType::Call,
         initial_gas: u64::MAX,
