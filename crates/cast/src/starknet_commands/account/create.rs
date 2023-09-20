@@ -67,6 +67,7 @@ pub async fn create(
         &config.rpc_url,
         &config.account,
         &config.accounts_file,
+        &config.keystore,
         chain_id,
         account_json.clone(),
         add_profile,
