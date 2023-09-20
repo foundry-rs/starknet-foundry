@@ -2,7 +2,6 @@ use crate::integration::common::corelib::{corelib_path, predeployed_contracts};
 use crate::integration::common::running_tests::run_test_case;
 use crate::{assert_passed, test_case};
 use camino::Utf8PathBuf;
-use dotenv::dotenv;
 use forge::scarb::{ForgeConfig, PredefinedFork};
 use forge::{run, RunnerConfig};
 use indoc::formatdoc;
@@ -10,8 +9,6 @@ use std::collections::HashMap;
 
 #[test]
 fn fork_simple_decorator() {
-    dotenv().ok().unwrap();
-
     let node_url =
         std::env::var("CHEATNET_RPC_URL").expect("CHEATNET_RPC_URL must be set in the .env file");
 
@@ -58,7 +55,6 @@ fn fork_simple_decorator() {
 
 #[test]
 fn fork_aliased_decorator() {
-    dotenv().ok().unwrap();
     let node_url =
         std::env::var("CHEATNET_RPC_URL").expect("CHEATNET_RPC_URL must be set in the .env file");
 
