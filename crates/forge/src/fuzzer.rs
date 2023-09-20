@@ -18,11 +18,11 @@ pub struct RunParams {
     executed_runs: u32,
     /// Run in which an argument has a min value
     /// e.g. `run_with_min_value_argument[0] = 5`
-    /// means that the first argument has the lowest possible value in 5th run
+    /// means that the first argument will have the lowest possible value in 5th run
     run_with_min_value_for_argument: Vec<u32>,
     /// Run in which argument has a max value
     /// e.g. `run_with_max_value_for_argument[0] = 5`
-    /// means that the first argument has the highest possible value in 5th run
+    /// means that the first argument will have the highest possible value in 5th run
     run_with_max_value_for_argument: Vec<u32>,
 }
 
