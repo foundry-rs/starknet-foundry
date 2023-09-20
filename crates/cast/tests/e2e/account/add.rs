@@ -277,3 +277,47 @@ pub async fn test_happy_case_from_keystore() {
 
     fs::remove_dir_all(Utf8PathBuf::from(accounts_file).parent().unwrap()).unwrap();
 }
+
+#[tokio::test]
+pub async fn test_from_keystore_missing_account() {
+    let args = vec![
+        "--url",
+        URL,
+        "account",
+        "add",
+        "--name",
+        "account_from_keystore",
+        "--keystore",
+        "my_key.json",
+    ];
+
+    let snapbox = runner(&args);
+    snapbox.assert().stderr_matches(indoc! {r#"
+        command: account add
+        error: --account must be passed when using --keystore
+    "#});
+}
+
+#[tokio::test]
+pub async fn test_from_keystore_arguments_conflict() {
+    let args = vec![
+        "--url",
+        URL,
+        "account",
+        "add",
+        "--name",
+        "account_from_keystore",
+        "--keystore",
+        "my_key.json",
+        "--account",
+        "my_account.json",
+        "--private-key",
+        "0x123",
+    ];
+
+    let snapbox = runner(&args);
+    snapbox.assert().stderr_matches(indoc! {r#"
+        error: the argument '--keystore <KEYSTORE>' cannot be used with '--private-key <PRIVATE_KEY>'
+        ...
+    "#});
+}
