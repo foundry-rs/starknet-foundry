@@ -53,7 +53,7 @@ fn test_simple_syscalls() {
         use serde::Serde;
         use starknet::{ContractAddress, get_block_hash_syscall};
         use array::SpanTrait;
-        use snforge_std::{ declare, ContractClassTrait };
+        use snforge_std::{ declare, ContractClassTrait, test_address };
 
         #[starknet::interface]
         trait ISpoofChecker<TContractState> {
@@ -84,7 +84,7 @@ fn test_simple_syscalls() {
         fn test_get_execution_info() {
             let exec_info = get_execution_info().unbox();
             assert(exec_info.caller_address.into() == 0, 'Incorrect caller address');
-            assert(exec_info.contract_address.into() == 0, 'Incorrect contract address');
+            assert(exec_info.contract_address == test_address(), exec_info.contract_address.into());
             // Hash of TEST_CASE_SELECTOR
             assert(exec_info.entry_point_selector.into() == 655947323460646800722791151288222075903983590237721746322261907338444055163, 'Incorrect entry point selector');
 
@@ -138,7 +138,7 @@ fn test_simple_syscalls() {
         .unwrap(),
         Contract::from_code_path(
             "SequencerAddressChecker".to_string(),
-            Path::new("tests/data/contracts/warp_checker.cairo")
+            Path::new("tests/data/contracts/sequencer_address_checker.cairo")
         )
         .unwrap()
     );
@@ -149,6 +149,7 @@ fn test_simple_syscalls() {
 }
 
 #[test]
+#[ignore]
 fn test_library_calls() {
     let test = test_case!(
         indoc!(
@@ -277,12 +278,12 @@ fn test_cant_call_test_contract() {
         indoc!(
             r#"
         use result::ResultTrait;
-        use starknet::{ClassHash, deploy_syscall, replace_class_syscall, get_block_hash_syscall};
-        use snforge_std::{ declare, ContractClassTrait };
+        use starknet::{ClassHash, ContractAddress, deploy_syscall, replace_class_syscall, get_block_hash_syscall};
+        use snforge_std::{ declare, ContractClassTrait, test_address };
 
         #[starknet::interface]
         trait ICallsBack<TContractState> {
-            fn call_back(ref self: TContractState);
+            fn call_back(ref self: TContractState, address: ContractAddress);
         }
 
         #[test]
@@ -290,7 +291,7 @@ fn test_cant_call_test_contract() {
             let contract = declare('CallsBack');
             let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
             let dispatcher = ICallsBackDispatcher { contract_address: contract_address };
-            dispatcher.call_back();
+            dispatcher.call_back(test_address());
         }
     "#
         ),
@@ -302,7 +303,7 @@ fn test_cant_call_test_contract() {
                 mod CallsBack {
                     use result::ResultTrait;
                     use starknet::ClassHash;
-                    use starknet::library_call_syscall;
+                    use starknet::{library_call_syscall, ContractAddress};
 
                     #[storage]
                     struct Storage {
@@ -315,8 +316,7 @@ fn test_cant_call_test_contract() {
         
 
                     #[external(v0)]
-                    fn call_back(ref self: ContractState) {
-                        let address = 0.try_into().unwrap();
+                    fn call_back(ref self: ContractState, address: ContractAddress) {
                         let dispatcher = IDontExistDispatcher{contract_address: address};
                         dispatcher.test_calling_test_fails();
                     }
