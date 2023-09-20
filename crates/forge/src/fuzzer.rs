@@ -51,10 +51,10 @@ impl RunParams {
         assert!(low < high);
         assert!(total_runs >= 3);
 
-        let run_with_min_value_argument: Vec<u32> = (0..arguments_number)
+        let run_with_min_value_for_argument: Vec<u32> = (0..arguments_number)
             .map(|_| rng.gen_range(1..=total_runs))
             .collect();
-        let run_with_max_value_for_argument: Vec<u32> = run_with_min_value_argument
+        let run_with_max_value_for_argument: Vec<u32> = run_with_min_value_for_argument
             .iter()
             .map(|&run_with_min| {
                 let run_with_max = rng.gen_range(1..=total_runs);
@@ -72,7 +72,7 @@ impl RunParams {
             arguments_number,
             total_runs,
             executed_runs: 0,
-            run_with_min_value_for_argument: run_with_min_value_argument,
+            run_with_min_value_for_argument,
             run_with_max_value_for_argument,
         }
     }
