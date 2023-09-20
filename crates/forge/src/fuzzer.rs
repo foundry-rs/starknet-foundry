@@ -6,30 +6,31 @@ use rand::{Rng, SeedableRng};
 use std::default::Default;
 
 #[derive(Default)]
-#[allow(clippy::module_name_repetitions)]
-pub struct FuzzerRunParams {
+pub struct RunParams {
     /// Inclusive value
     low: BigUint,
     /// Exclusive value
     high: BigUint,
     /// Number of arguments
-    args_number: usize,
+    arguments_number: usize,
     /// Total number of runs
-    runs_number: u32,
+    total_runs: u32,
     /// Number of already executed runs
-    runs_executed: u32,
-    /// Runs in which arguments have min value e.g. `runs_with_min_value[0] = 5`
+    executed_runs: u32,
+    /// Run in which an argument has a min value
+    /// e.g. `run_with_min_value_argument[0] = 5`
     /// means that the first argument has the lowest possible value in 5th run
-    runs_with_min_value: Vec<u32>,
-    /// Runs in which arguments have max value e.g. `runs_with_max_value[0] = 5`
+    run_with_min_value_argument: Vec<u32>,
+    /// Run in which argument has a max value
+    /// e.g. `run_with_max_value_for_argument[0] = 5`
     /// means that the first argument has the highest possible value in 5th run
-    runs_with_max_value: Vec<u32>,
+    run_with_max_value_for_argument: Vec<u32>,
 }
 
 #[allow(clippy::module_name_repetitions)]
 pub struct RandomFuzzer {
     rng: StdRng,
-    fuzzer_run_params: FuzzerRunParams,
+    run_params: RunParams,
 }
 
 impl RandomFuzzer {
@@ -44,7 +45,7 @@ impl RandomFuzzer {
 
         let mut fuzzer = RandomFuzzer {
             rng,
-            fuzzer_run_params: FuzzerRunParams::default(),
+            run_params: RunParams::default(),
         };
         fuzzer.set_fuzzer_run_params(runs_number, args_number, low, high);
 
@@ -61,21 +62,19 @@ impl RandomFuzzer {
         assert!(low < high);
         assert!(runs_number >= 3);
 
-        self.fuzzer_run_params.runs_executed = 0;
-        self.fuzzer_run_params.low = low;
-        self.fuzzer_run_params.high = high;
-        self.fuzzer_run_params.runs_number = runs_number;
-        self.fuzzer_run_params.args_number = args_number;
+        self.run_params.executed_runs = 0;
+        self.run_params.low = low;
+        self.run_params.high = high;
+        self.run_params.total_runs = runs_number;
+        self.run_params.arguments_number = args_number;
 
-        let runs_with_min_value: Vec<u32> = vec![0; self.fuzzer_run_params.args_number]
-            .into_iter()
-            .map(|_| self.rng.gen_range(1..=self.fuzzer_run_params.runs_number))
+        let runs_with_min_value: Vec<u32> = (0..self.run_params.arguments_number)
+            .map(|_| self.rng.gen_range(1..=self.run_params.total_runs))
             .collect();
-        let runs_with_max_value: Vec<u32> = vec![0; self.fuzzer_run_params.args_number]
-            .into_iter()
-            .zip(&runs_with_min_value)
-            .map(|(_, &run_with_min)| {
-                let run_with_max = self.rng.gen_range(1..=self.fuzzer_run_params.runs_number);
+        let runs_with_max_value: Vec<u32> = runs_with_min_value
+            .iter()
+            .map(|&run_with_min| {
+                let run_with_max = self.rng.gen_range(1..=self.run_params.total_runs);
                 if run_with_max == run_with_min {
                     run_with_min + 1 % runs_number
                 } else {
@@ -84,36 +83,32 @@ impl RandomFuzzer {
             })
             .collect();
 
-        self.fuzzer_run_params.runs_with_max_value = runs_with_max_value;
-        self.fuzzer_run_params.runs_with_min_value = runs_with_min_value;
+        self.run_params.run_with_max_value_for_argument = runs_with_max_value;
+        self.run_params.run_with_min_value_argument = runs_with_min_value;
     }
 
     pub fn next_felt252_args(&mut self) -> Vec<Felt252> {
-        assert!(self.fuzzer_run_params.runs_executed < self.fuzzer_run_params.runs_number);
+        assert!(self.run_params.executed_runs < self.run_params.total_runs);
 
-        self.fuzzer_run_params.runs_executed += 1;
-        let current_run = self.fuzzer_run_params.runs_executed;
+        self.run_params.executed_runs += 1;
+        let current_run = self.run_params.executed_runs;
 
-        let args_values: Vec<Felt252> = vec![0; self.fuzzer_run_params.args_number]
-            .into_iter()
-            .enumerate()
-            .map(|(i, _)| {
+        (0..self.run_params.arguments_number)
+            .map(|arg_number| {
                 Felt252::from(
-                    if self.fuzzer_run_params.runs_with_min_value[i] == current_run {
-                        self.fuzzer_run_params.low.clone()
-                    } else if self.fuzzer_run_params.runs_with_max_value[i] == current_run {
-                        self.fuzzer_run_params.high.clone() - BigUint::one()
+                    if self.run_params.run_with_min_value_argument[arg_number] == current_run {
+                        self.run_params.low.clone()
+                    } else if self.run_params.run_with_max_value_for_argument[arg_number]
+                        == current_run
+                    {
+                        self.run_params.high.clone() - BigUint::one()
                     } else {
-                        self.rng.gen_biguint_range(
-                            &self.fuzzer_run_params.low,
-                            &self.fuzzer_run_params.high,
-                        )
+                        self.rng
+                            .gen_biguint_range(&self.run_params.low, &self.run_params.high)
                     },
                 )
             })
-            .collect();
-
-        args_values
+            .collect()
     }
 }
 
