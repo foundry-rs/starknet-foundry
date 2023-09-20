@@ -18,10 +18,10 @@ pub struct FuzzerRunParams {
     runs_number: u32,
     /// Number of already executed runs
     runs_executed: u32,
-    /// Runs in which arguments have min value e.g. `run_with_min_value[0] = 5`
+    /// Runs in which arguments have min value e.g. `runs_with_min_value[0] = 5`
     /// means that the first argument has the lowest possible value in 5th run
     runs_with_min_value: Vec<u32>,
-    /// Runs in which arguments have max value e.g. `run_with_min_value[0] = 5`
+    /// Runs in which arguments have max value e.g. `runs_with_max_value[0] = 5`
     /// means that the first argument has the highest possible value in 5th run
     runs_with_max_value: Vec<u32>,
 }
