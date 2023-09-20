@@ -11,6 +11,7 @@ pub struct CastConfig {
     pub rpc_url: String,
     pub account: String,
     pub accounts_file: Utf8PathBuf,
+    pub keystore: Utf8PathBuf,
 }
 
 impl CastConfig {
@@ -24,6 +25,7 @@ impl CastConfig {
             rpc_url: get_property(tool, "url"),
             account: get_property(tool, "account"),
             accounts_file: get_property(tool, "accounts-file"),
+            keystore: get_property(tool, "keystore"),
         })
     }
 }

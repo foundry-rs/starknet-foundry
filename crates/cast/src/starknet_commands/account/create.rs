@@ -1,12 +1,12 @@
 use crate::starknet_commands::account::{
-    get_account_deployment_fee, prepare_account_json, write_account_to_accounts_file,
+    add_created_profile_to_configuration, prepare_account_json, write_account_to_accounts_file,
 };
 use anyhow::{anyhow, bail, Result};
 use camino::Utf8PathBuf;
 use cast::helpers::constants::OZ_CLASS_HASH;
 use cast::helpers::response_structs::AccountCreateResponse;
 use cast::helpers::scarb_utils::CastConfig;
-use cast::{extract_or_generate_salt, get_keystore_password, get_chain_id, parse_number};
+use cast::{extract_or_generate_salt, get_chain_id, get_test_keystore_password, parse_number};
 use clap::Args;
 use serde_json::json;
 use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
@@ -20,7 +20,7 @@ use starknet::signers::{LocalWallet, SigningKey};
 #[command(about = "Create an account with all important secrets")]
 pub struct Create {
     /// Account name under which account information is going to be saved
-    #[clap(short, long, default_value = "", required_unless_present = "keystore")]
+    #[clap(short, long, default_value = "")]
     pub name: String,
 
     /// Salt for the address
@@ -65,11 +65,8 @@ pub async fn create(
     )?;
 
     if let Some(keystore_path_) = &keystore_path {
-        if add_profile {
-            bail!("--add-profile is not supported for keystore");
-        }
-        let account_path_ =
-            account_path.ok_or_else(|| anyhow!("--account must be passed when using -keystore"))?;
+        let account_path_ = account_path
+            .ok_or_else(|| anyhow!("--account must be passed when using --keystore"))?;
 
         let private_key = parse_number(
             account_json["private_key"]
@@ -82,6 +79,9 @@ pub async fn create(
             class_hash,
             keystore_path_,
             &account_path_,
+            add_profile,
+            config,
+            &path_to_scarb_toml,
         )?;
     } else {
         write_account_to_accounts_file(
@@ -89,6 +89,7 @@ pub async fn create(
             &config.rpc_url,
             &config.account,
             &config.accounts_file,
+            &config.keystore,
             chain_id,
             account_json.clone(),
             add_profile,
@@ -166,15 +167,20 @@ async fn get_account_deployment_fee(
     }
 
     Ok(fee_estimate?)
+}
 
+#[allow(clippy::too_many_arguments)]
 fn create_to_keystore(
     private_key: FieldElement,
     salt: FieldElement,
     class_hash: FieldElement,
     keystore_path: &Utf8PathBuf,
     account_path: &Utf8PathBuf,
+    add_profile: bool,
+    config: &CastConfig,
+    path_to_scarb_toml: &Option<Utf8PathBuf>,
 ) -> Result<()> {
-    let password = get_keystore_password()?;
+    let password = get_test_keystore_password()?;
     let private_key = SigningKey::from_secret_scalar(private_key);
     private_key.save_as_keystore(keystore_path, &password)?;
 
@@ -192,6 +198,9 @@ fn create_to_keystore(
         }
     });
 
+    if add_profile {
+        add_created_profile_to_configuration(path_to_scarb_toml, config)?;
+    }
     write_account_to_file(&oz_account_json, account_path)
 }
 

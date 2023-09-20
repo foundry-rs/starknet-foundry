@@ -35,7 +35,7 @@ async fn test_get_account() {
         "user1",
         &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
         &provider,
-        &None,
+        &Utf8PathBuf::default(),
     )
     .await;
 
@@ -54,7 +54,7 @@ async fn test_get_account_no_file() {
         "user1",
         &Utf8PathBuf::from("tests/data/accounts/nonexistentfile.json"),
         &provider,
-        &None,
+        &Utf8PathBuf::default(),
     )
     .await;
     let err = account.unwrap_err();
@@ -70,7 +70,7 @@ async fn test_get_account_invalid_file() {
         "user1",
         &Utf8PathBuf::from("tests/data/accounts/invalid_format.json"),
         &provider,
-        &None,
+        &Utf8PathBuf::default(),
     )
     .await;
     let err = account.unwrap_err();
@@ -84,7 +84,7 @@ async fn test_get_account_no_account() {
         "",
         &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
         &provider,
-        &None,
+        &Utf8PathBuf::default(),
     )
     .await;
     let err = account.unwrap_err();
@@ -100,7 +100,7 @@ async fn test_get_account_no_user_for_network() {
         "user10",
         &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
         &provider,
-        &None,
+        &Utf8PathBuf::default(),
     )
     .await;
     let err = account.unwrap_err();
@@ -116,7 +116,7 @@ async fn test_get_account_failed_to_convert_field_elements() {
         "with_wrong_private_key",
         &Utf8PathBuf::from("tests/data/accounts/faulty_accounts.json"),
         &provider,
-        &None,
+        &Utf8PathBuf::default(),
     )
     .await;
     let err1 = account1.unwrap_err();
@@ -128,7 +128,7 @@ async fn test_get_account_failed_to_convert_field_elements() {
         "with_wrong_address",
         &Utf8PathBuf::from("tests/data/accounts/faulty_accounts.json"),
         &provider,
-        &None,
+        &Utf8PathBuf::default(),
     )
     .await;
     let err2 = account2.unwrap_err();
