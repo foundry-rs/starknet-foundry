@@ -368,8 +368,8 @@ fn run_with_fuzzing(
         fuzzer_seed,
         runner_config.fuzzer_runs,
         args.len(),
-        BigUint::zero(),
-        Felt252::prime(),
+        &BigUint::zero(),
+        &Felt252::prime(),
     );
 
     let mut results = vec![];
