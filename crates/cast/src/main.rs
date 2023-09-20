@@ -27,13 +27,13 @@ struct Cli {
     path_to_scarb_toml: Option<Utf8PathBuf>,
 
     /// RPC provider url address; overrides url from Scarb.toml
-    #[clap(short, long = "url")]
+    #[clap(short = 'u', long = "url")]
     rpc_url: Option<String>,
 
     /// Account to be used for contract declaration;
     /// When using keystore (`--keystore`), this should be a path to account file    
     /// When using accounts file, this should be an account name
-    #[clap(long, visible_alias = "acc", global = true)]
+    #[clap(short, long, global = true)]
     account: Option<String>,
 
     /// Path to the file holding accounts info
