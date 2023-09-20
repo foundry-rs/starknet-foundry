@@ -140,9 +140,9 @@ It is possible to create an openzeppelin account with keystore in a similar way 
 ```shell
 $ sncast \
     --url http://127.0.0.1:5050 \
-    account create \
     --keystore my_key.json \
     --account my_account.json \
+    account create \
 ```
 
-The above command will generate a keystore file containing the private key, as well as an account file containing the openzeppelin account info.
+The command above will generate a keystore file containing the private key, as well as an account file containing the openzeppelin account info.
