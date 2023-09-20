@@ -137,27 +137,11 @@ fn test_simple_syscalls() {
             Path::new("tests/data/contracts/warp_checker.cairo"),
         )
         .unwrap(),
-        Contract::new(
-            "SequencerAddressChecker",
-            indoc!(
-                r#"
-                #[starknet::contract]
-                mod SequencerAddressChecker {
-                    use result::ResultTrait;
-                    use starknet::{ ClassHash, library_call_syscall, ContractAddress};
-
-                    #[storage]
-                    struct Storage {
-                    }
-
-                    #[external(v0)]
-                    fn get_sequencer_address(ref self: ContractState) -> ContractAddress {
-                        starknet::get_block_info().unbox().sequencer_address
-                    }
-                }
-                "#
-            )
+        Contract::from_code_path(
+            "SequencerAddressChecker".to_string(),
+            Path::new("tests/data/contracts/warp_checker.cairo")
         )
+        .unwrap()
     );
 
     let result = run_test_case(&test);
