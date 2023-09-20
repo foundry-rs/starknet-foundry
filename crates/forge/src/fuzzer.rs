@@ -87,13 +87,13 @@ pub struct RandomFuzzer {
 impl RandomFuzzer {
     pub fn new(
         seed: u64,
-        runs_number: u32,
-        args_number: usize,
+        total_runs: u32,
+        arguments_number: usize,
         low: &BigUint,
         high: &BigUint,
     ) -> Self {
         let mut rng = StdRng::seed_from_u64(seed);
-        let run_params = RunParams::from(&mut rng, runs_number, args_number, low, high);
+        let run_params = RunParams::from(&mut rng, total_runs, arguments_number, low, high);
 
         RandomFuzzer { rng, run_params }
     }
