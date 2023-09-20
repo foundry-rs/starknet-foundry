@@ -1,0 +1,19 @@
+[package]
+name = "fibonacci2"
+version.workspace = true
+
+[scripts]
+test.workspace = true
+
+[tool]
+snforge.workspace = true
+
+[dependencies]
+subtraction = { path = "../subtraction" }
+starknet.workspace = true
+snforge_std.workspace = true
+
+[[target.starknet-contract]]
+sierra = true
+casm = true
+build-external-contracts = ["subtraction::SubtractionContract"]

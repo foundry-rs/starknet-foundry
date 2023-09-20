@@ -178,6 +178,53 @@ pub async fn test_detect_deployed() {
 }
 
 #[tokio::test]
+pub async fn test_invalid_public_key() {
+    let args = vec![
+        "--url",
+        URL,
+        "account",
+        "add",
+        "--name",
+        "my_account_add",
+        "--address",
+        "0x123",
+        "--private-key",
+        "0x456",
+        "--public-key",
+        "0x457",
+        "--deployed",
+    ];
+
+    let snapbox = runner(&args);
+
+    snapbox.assert().stderr_matches(indoc! {r#"
+        command: account add
+        error: The private key does not match the public key
+    "#});
+}
+
+#[tokio::test]
+pub async fn test_missing_arguments() {
+    let args = vec![
+        "--url",
+        URL,
+        "account",
+        "add",
+        "--name",
+        "my_account_add",
+        "--deployed",
+    ];
+
+    let snapbox = runner(&args);
+    snapbox.assert().stderr_matches(indoc! {r#"
+        error: the following required arguments were not provided:
+          --address <ADDRESS>
+          --private-key <PRIVATE_KEY>
+        ...
+    "#});
+}
+
+#[tokio::test]
 pub async fn test_happy_case_from_keystore() {
     let accounts_file = "./tmp/accounts.json";
     _ = fs::remove_file(accounts_file);

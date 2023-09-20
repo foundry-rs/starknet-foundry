@@ -25,7 +25,7 @@ pub struct Add {
 
     /// Address of the account
     #[clap(
-        short,
+        visible_alias = "addr",
         long,
         default_value = "0",
         required_unless_present = "from_keystore"
@@ -87,7 +87,7 @@ pub async fn add(
         if let Some(public_key) = &add.public_key {
             ensure!(
                 public_key == &private_key.verifying_key().scalar(),
-                "public key mismatch"
+                "The private key does not match the public key"
             );
         }
 

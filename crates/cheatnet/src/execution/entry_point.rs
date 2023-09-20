@@ -1,11 +1,12 @@
 use super::cairo1_execution::execute_entry_point_call_cairo1;
 use crate::state::CheatcodeState;
-use blockifier::execution::entry_point::{CallExecution, Retdata};
+use blockifier::execution::call_info::{CallExecution, Retdata};
 use blockifier::{
     execution::{
+        call_info::CallInfo,
         contract_class::ContractClass,
         entry_point::{
-            handle_empty_constructor, CallEntryPoint, CallInfo, CallType, ConstructorContext,
+            handle_empty_constructor, CallEntryPoint, CallType, ConstructorContext,
             EntryPointExecutionContext, EntryPointExecutionResult, ExecutionResources,
             FAULTY_CLASS_HASH,
         },

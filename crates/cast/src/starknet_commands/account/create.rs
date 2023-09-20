@@ -103,6 +103,7 @@ async fn generate_account(
     class_hash: FieldElement,
 ) -> Result<(serde_json::Value, u64)> {
     let private_key = SigningKey::from_random();
+
     let address: FieldElement = get_contract_address(
         salt,
         class_hash,

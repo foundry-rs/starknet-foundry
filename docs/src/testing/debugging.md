@@ -45,8 +45,8 @@ Running tests will include prints in the output:
 
 ```shell
 $ snforge
-Collected 1 test(s) and 2 test file(s)
-Running 0 test(s) from package_name package
+Collected 1 test(s) and 2 test file(s) from package_name package
+Running 0 inline test(s)
 Running 1 test(s) from tests/test_print.cairo
 original value: [1794026292945241370577200538206453096157964090], converted to a string: [Print short string:]
 original value: [2019423207056158060135], converted to a string: [my string]
@@ -140,8 +140,8 @@ help: try compiling with the `experimental` list
     allowed-libfuncs-list.name = "experimental"
 
     Finished release target(s) in 2 seconds
-Collected 2 test(s) and 2 test file(s)
-Running 0 test(s) from package_name package
+Collected 2 test(s) and 2 test file(s) from package_name package
+Running 0 inline test(s)
 Running 1 test(s) from tests/test_contract.cairo
 original value: [1882356686041040905424961122938381530884043578], converted to a string: [The new balance is:]
 original value: [42], converted to a string: [*]
