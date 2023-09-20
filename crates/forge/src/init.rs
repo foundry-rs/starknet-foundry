@@ -96,21 +96,15 @@ pub fn run(project_name: &str) -> Result<()> {
     let version_output = from_utf8(&scarb_version.stdout)
         .context("Failed to parse `scarb --version` output to UTF-8")?;
 
-    let cairo_plus_version_regex = Regex::new(r"cairo:?\s*[0-9]+.[0-9]+.[0-9]+")
-        .expect("Could not create cairo plus version matching regex");
-    let cairo_plus_version_range = cairo_plus_version_regex
-        .find(version_output)
-        .context("Failed to find cairo plus version in `scarb --version` output")?
-        .range();
-    let cairo_plus_version = &version_output.to_owned()[cairo_plus_version_range];
-
-    let cairo_version_regex =
-        Regex::new(r"[0-9]+.[0-9]+.[0-9]+").expect("Could not create cairo version matching regex");
-    let cairo_version_range = cairo_version_regex
-        .find(cairo_plus_version)
+    let cairo_version_regex = Regex::new(r"(?:cairo:?\s*)([0-9]+.[0-9]+.[0-9]+)")
+        .expect("Could not create cairo version matching regex");
+    let cairo_version_capture = cairo_version_regex
+        .captures(version_output)
+        .expect("Could not find cairo version");
+    let cairo_version = cairo_version_capture
+        .get(1)
         .expect("Could not find cairo version")
-        .range();
-    let cairo_version = &cairo_plus_version[cairo_version_range];
+        .as_str();
 
     Command::new("scarb")
         .current_dir(&project_path)
