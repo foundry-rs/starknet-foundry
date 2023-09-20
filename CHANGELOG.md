@@ -22,7 +22,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - `account add` command for importing accounts to the accounts file
+
+### Changed
+
 - `--add-profile` no longer accepts `-a` for short
+- `--contract-address` in `sncast call` and `sncast invoke` accepts `--addr` instead of `-a`
 
 ## [0.6.0] - 2023-09-13
 

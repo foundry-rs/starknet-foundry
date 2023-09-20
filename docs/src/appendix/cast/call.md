@@ -1,7 +1,7 @@
 # `call`
 Call a smart contract on Starknet with the given parameters.
 
-## `--contract-address, -a <CONTRACT_ADDRESS>`
+## `--contract-address, --addr <CONTRACT_ADDRESS>`
 Required.
 
 The address of the contract being called in hex (prefixed with '0x') or decimal representation.

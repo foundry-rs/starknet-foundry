@@ -131,4 +131,15 @@ $ sncast \
     --deployed
 ```
 
+You can also import an OZ account from the keystore and starkli account file.
+
+```shell
+$ sncast \
+    --url http://127.0.0.1:5050 \
+    account add \
+    --name my_imported_account \
+    --keystore my_key.json \
+    --account my_account.json
+```
+
 For a detailed CLI description, see [account add command reference](../appendix/cast/account/add.md).
