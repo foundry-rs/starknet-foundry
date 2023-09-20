@@ -97,7 +97,7 @@ async fn main() -> Result<()> {
                 &config.account,
                 &config.accounts_file,
                 &provider,
-                &cli.keystore,
+                &config.keystore,
             )
             .await?;
             let mut result = starknet_commands::declare::declare(
@@ -117,7 +117,7 @@ async fn main() -> Result<()> {
                 &config.account,
                 &config.accounts_file,
                 &provider,
-                &cli.keystore,
+                &config.keystore,
             )
             .await?;
             let mut result = starknet_commands::deploy::deploy(
@@ -154,7 +154,7 @@ async fn main() -> Result<()> {
                 &config.account,
                 &config.accounts_file,
                 &provider,
-                &cli.keystore,
+                &config.keystore,
             )
             .await?;
             let mut result = starknet_commands::invoke::invoke(
@@ -191,7 +191,7 @@ async fn main() -> Result<()> {
                         &config.account,
                         &config.accounts_file,
                         &provider,
-                        &cli.keystore,
+                        &config.keystore,
                     )
                     .await?;
                     let mut result = starknet_commands::multicall::run::run(
@@ -224,7 +224,9 @@ async fn main() -> Result<()> {
             }
             account::Commands::Create(create) => {
                 let chain_id = get_chain_id(&provider).await?;
-                config.account = create.name;
+                if cli.keystore.is_none() {
+                    config.account = create.name;
+                }
                 let mut result = starknet_commands::account::create::create(
                     &config,
                     &provider,
@@ -271,6 +273,7 @@ fn update_cast_config(config: &mut CastConfig, cli: &Cli) {
 
     config.rpc_url = clone_or_else!(cli.rpc_url, config.rpc_url);
     config.account = clone_or_else!(cli.account, config.account);
+    config.keystore = clone_or_else!(cli.keystore, config.keystore);
 
     if config.accounts_file == Utf8PathBuf::default() {
         config.accounts_file = Utf8PathBuf::from(DEFAULT_ACCOUNTS_FILE);
