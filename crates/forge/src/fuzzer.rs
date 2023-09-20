@@ -91,24 +91,29 @@ impl RandomFuzzer {
         assert!(self.run_params.executed_runs < self.run_params.total_runs);
 
         self.run_params.executed_runs += 1;
-        let current_run = self.run_params.executed_runs;
 
         (0..self.run_params.arguments_number)
             .map(|arg_number| {
-                Felt252::from(
-                    if self.run_params.run_with_min_value_argument[arg_number] == current_run {
-                        self.run_params.low.clone()
-                    } else if self.run_params.run_with_max_value_for_argument[arg_number]
-                        == current_run
-                    {
-                        self.run_params.high.clone() - BigUint::one()
-                    } else {
-                        self.rng
-                            .gen_biguint_range(&self.run_params.low, &self.run_params.high)
-                    },
-                )
+                Felt252::from(if self.is_run_with_min_value_for_arg(arg_number) {
+                    self.run_params.low.clone()
+                } else if self.is_run_with_max_value_for_arg(arg_number) {
+                    self.run_params.high.clone() - BigUint::one()
+                } else {
+                    self.rng
+                        .gen_biguint_range(&self.run_params.low, &self.run_params.high)
+                })
             })
             .collect()
+    }
+
+    fn is_run_with_min_value_for_arg(&self, arg_number: usize) -> bool {
+        let current_run = self.run_params.executed_runs;
+        self.run_params.run_with_min_value_argument[arg_number] == current_run
+    }
+
+    fn is_run_with_max_value_for_arg(&self, arg_number: usize) -> bool {
+        let current_run = self.run_params.executed_runs;
+        self.run_params.run_with_max_value_for_argument[arg_number] == current_run
     }
 }
 
