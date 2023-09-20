@@ -5,7 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-# [Unreleased]
+## [Unreleased]
+
+### Forge
+
+#### Added
+
+- Support for scarb workspaces.
+
+### Changed
+
+- Tests are collected only from `tests` folder and a package tree
 
 ### Cast
 
@@ -13,11 +23,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `account add` command for importing accounts to the accounts file
 
-# [0.6.0] - 2023-09-13
+## [0.6.0] - 2023-09-13
 
 ### Forge
 
 #### Added
+
 - `deploy_at` cheatcode
 - printing failures summary at the end of an execution
 - filtering tests now uses an absolute module tree path — it is possible to filter tests by module names, etc.

@@ -95,6 +95,7 @@ pub fn build_block_context() -> BlockContext {
         block_timestamp: BlockTimestamp::default(),
         sequencer_address: ContractAddress(patricia_key!(TEST_SEQUENCER_ADDRESS)),
         fee_token_address: ContractAddress(patricia_key!(TEST_ERC20_CONTRACT_ADDRESS)),
+        deprecated_fee_token_address: ContractAddress(patricia_key!(TEST_ERC20_CONTRACT_ADDRESS)),
         vm_resource_fee_cost,
         gas_price: 100 * u128::pow(10, 9),
         invoke_tx_max_n_steps: 1_000_000,
