@@ -77,7 +77,7 @@ fn read_invalid_felt252() {
 fn read_invalid_short_string() {
     let value =
         "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-    env::set_var("MY_ENV_VAR", &value);
+    env::set_var("MY_ENV_VAR", value);
 
     let test = test_case!(indoc!(
         r#"
