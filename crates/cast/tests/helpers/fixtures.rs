@@ -201,6 +201,7 @@ pub fn duplicate_directory_with_salt(src_path: String, to_be_salted: &str, salt:
     let src_dir = Utf8PathBuf::from(src_path);
     let dest_dir = Utf8PathBuf::from(&dest_path);
 
+    _ = fs::remove_dir_all(&dest_dir);
     fs::create_dir_all(&dest_dir).expect("Unable to create directory");
 
     fs_extra::dir::copy(
