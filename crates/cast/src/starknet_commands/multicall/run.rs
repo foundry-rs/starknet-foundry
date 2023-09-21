@@ -31,7 +31,7 @@ pub struct Run {
 struct DeployCall {
     call_type: String,
     class_hash: FieldElement,
-    inputs: Vec<FieldElement>,
+    inputs: Vec<String>,
     unique: bool,
     salt: Option<FieldElement>,
     id: String,
@@ -77,10 +77,9 @@ pub async fn run(
                     FieldElement::from(u8::from(deploy_call.unique)),
                     deploy_call.inputs.len().into(),
                 ];
-                deploy_call
-                    .inputs
-                    .iter()
-                    .for_each(|item| calldata.push(*item));
+
+                let parsed_inputs = parse_inputs(&deploy_call.inputs, &contracts)?;
+                calldata.extend(&parsed_inputs);
 
                 parsed_calls.push(Call {
                     to: parse_number(UDC_ADDRESS)?,
@@ -92,7 +91,7 @@ pub async fn run(
                     salt,
                     deploy_call.class_hash,
                     &udc_uniqueness(deploy_call.unique, account.address()),
-                    &deploy_call.inputs,
+                    &parsed_inputs
                 );
                 contracts.insert(deploy_call.id, contract_address.to_string());
             }
@@ -104,14 +103,7 @@ pub async fn run(
                     contract_address = addr;
                 }
 
-                let mut calldata = Vec::new();
-                for input in invoke_call.inputs {
-                    let current_input = contracts.get(&input).unwrap_or(&input);
-                    calldata.push(
-                        parse_number(current_input)
-                            .context("Unable to parse input to FieldElement")?,
-                    );
-                }
+                let calldata = parse_inputs(&invoke_call.inputs, &contracts)?;
 
                 parsed_calls.push(Call {
                     to: parse_number(contract_address)
@@ -128,4 +120,17 @@ pub async fn run(
     }
 
     execute_calls(account, parsed_calls, max_fee, wait).await
+}
+
+fn parse_inputs(inputs: &Vec<String>, contracts: &HashMap<String, String>) -> Result<Vec<FieldElement>> {
+    let mut parsed_inputs = Vec::new();
+    for input in inputs {
+        let current_input = contracts.get(input).unwrap_or(input);
+        parsed_inputs.push(
+            parse_number(current_input)
+                .context("Unable to parse input to FieldElement")?,
+        );
+    }
+
+    Ok(parsed_inputs)
 }
