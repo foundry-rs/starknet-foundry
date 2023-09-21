@@ -133,15 +133,15 @@ pub fn add_created_profile_to_configuration(
 
         new_profile.insert("url".to_string(), Value::String(config.rpc_url.clone()));
         new_profile.insert("account".to_string(), Value::String(config.account.clone()));
-        if config.keystore != Utf8PathBuf::default() {
-            new_profile.insert(
-                "keystore".to_string(),
-                Value::String(config.keystore.to_string()),
-            );
-        } else {
+        if config.keystore == Utf8PathBuf::default() {
             new_profile.insert(
                 "accounts-file".to_string(),
                 Value::String(config.accounts_file.to_string()),
+            );
+        } else {
+            new_profile.insert(
+                "keystore".to_string(),
+                Value::String(config.keystore.to_string()),
             );
         }
 
