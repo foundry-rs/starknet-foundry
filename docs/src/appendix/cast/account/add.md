@@ -8,7 +8,7 @@ which is `~/.starknet_accounts/starknet_open_zeppelin_accounts.json` by default.
 
 * [`url`](../common.md#--url--u-rpc_url)
 
-## `--address, -addr <ADDRESS>`
+## `--address, -a <ADDRESS>`
 Required.
 
 Address of the account.

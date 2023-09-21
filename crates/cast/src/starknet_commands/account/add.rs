@@ -21,7 +21,7 @@ pub struct Add {
     pub name: String,
 
     /// Address of the account
-    #[clap(long, visible_alias = "addr")]
+    #[clap(short, long)]
     pub address: FieldElement,
 
     /// Class hash of the account

@@ -38,7 +38,7 @@ struct Cli {
     accounts_file_path: Option<Utf8PathBuf>,
 
     /// Path to keystore file; if specified, --account should be a path to starkli JSON account file
-    #[clap(short = 'k', long)]
+    #[clap(short, long)]
     keystore: Option<Utf8PathBuf>,
 
     /// If passed, values will be displayed as integers, otherwise as hexes
@@ -219,7 +219,9 @@ async fn main() -> Result<()> {
             }
             account::Commands::Create(create) => {
                 let chain_id = get_chain_id(&provider).await?;
-                config.account = create.name;
+                if cli.keystore.is_none() {
+                    config.account = create.name;
+                }
                 let mut result = starknet_commands::account::create::create(
                     &config,
                     &provider,
@@ -228,6 +230,8 @@ async fn main() -> Result<()> {
                     create.salt,
                     create.add_profile,
                     create.class_hash,
+                    cli.keystore,
+                    cli.account.map(Utf8PathBuf::from),
                 )
                 .await;
 
