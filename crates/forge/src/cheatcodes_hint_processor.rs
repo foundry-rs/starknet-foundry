@@ -1,5 +1,6 @@
 use std::any::Any;
 use std::collections::HashMap;
+use std::env;
 use std::path::PathBuf;
 
 use crate::scarb::StarknetContractArtifacts;
@@ -34,6 +35,7 @@ use cairo_lang_runner::{
     insert_value_to_cellref,
 };
 
+use crate::cheatcodes_hint_processor::file_operations::string_into_felt;
 use cairo_lang_starknet::contract::starknet_keccak;
 use cairo_lang_utils::bigint::BigIntAsHex;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
@@ -357,6 +359,22 @@ impl CairoHintProcessor<'_> {
                     .write(felt_contract_address)
                     .expect("Failed to insert a precalculated contract address");
 
+                Ok(())
+            }
+            "read_env_var" => {
+                let name = inputs[0].clone();
+                let name = as_cairo_short_string(&name)
+                    .unwrap_or_else(|| panic!("Failed to parse value = {name} as short string"));
+
+                let env_var = env::var(&name)
+                    .unwrap_or_else(|_| panic!("Failed to read from env var = {name}"));
+
+                let parsed_env_var = string_into_felt(&env_var)
+                    .unwrap_or_else(|_| panic!("Failed to parse value = {env_var} to felt"));
+
+                buffer
+                    .write(parsed_env_var)
+                    .expect("Failed to insert parsed env var");
                 Ok(())
             }
             "get_class_hash" => {
