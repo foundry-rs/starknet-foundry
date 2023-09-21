@@ -24,18 +24,17 @@ It is possible to pass `url` and `block_id` arguments to the `fork` attribute:
 - `block_id` - `BlockId` enum
 
 ```rust
-enum BlockTag {
-    Latest,
-    Pending,
-}
-
 enum BlockId {
     Tag: BlockTag,
     Hash: felt252,
     Number: felt252,
 }
-```
 
+enum BlockTag {
+    Latest,
+    Pending,
+}
+```
 
 ```rust
 use snforge_std::BlockId;
