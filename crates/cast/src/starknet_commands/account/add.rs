@@ -1,4 +1,6 @@
-use crate::starknet_commands::account::{prepare_account_json, write_account_to_accounts_file};
+use crate::starknet_commands::account::{
+    add_created_profile_to_configuration, prepare_account_json, write_account_to_accounts_file,
+};
 use anyhow::{ensure, Result};
 use camino::Utf8PathBuf;
 use cast::get_chain_id;
@@ -51,7 +53,9 @@ pub struct Add {
 }
 
 pub async fn add(
-    config: &CastConfig,
+    rpc_url: &str,
+    account: &str,
+    accounts_file: &Utf8PathBuf,
     path_to_scarb_toml: &Option<Utf8PathBuf>,
     provider: &JsonRpcClient<HttpTransport>,
     add: &Add,
@@ -81,16 +85,17 @@ pub async fn add(
         prepare_account_json(private_key, add.address, deployed, add.class_hash, add.salt);
 
     let chain_id = get_chain_id(provider).await?;
-    write_account_to_accounts_file(
-        path_to_scarb_toml,
-        &config.rpc_url,
-        &add.name,
-        &config.accounts_file,
-        &config.keystore,
-        chain_id,
-        account_json.clone(),
-        add.add_profile,
-    )?;
+    write_account_to_accounts_file(account, accounts_file, chain_id, account_json.clone())?;
+
+    if add.add_profile {
+        let config = CastConfig {
+            rpc_url: rpc_url.into(),
+            account: account.into(),
+            accounts_file: accounts_file.into(),
+            keystore: Utf8PathBuf::default(),
+        };
+        add_created_profile_to_configuration(path_to_scarb_toml, &config)?;
+    }
 
     Ok(AccountAddResponse {
         add_profile: if add.add_profile {

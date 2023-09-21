@@ -2,7 +2,7 @@ use crate::helpers::constants::{CONTRACTS_DIR, DEVNET_OZ_CLASS_HASH, URL};
 use crate::helpers::fixtures::{default_cli_args, duplicate_directory_with_salt};
 use crate::helpers::runner::runner;
 use camino::Utf8PathBuf;
-use cast::helpers::constants::TEST_KEYSTORE_PASSWORD_ENV_VAR;
+use cast::helpers::constants::CREATE_KEYSTORE_PASSWORD_ENV_VAR;
 use indoc::indoc;
 use snapbox::cmd::{cargo_bin, Command};
 use std::{env, fs};
@@ -242,7 +242,7 @@ pub async fn test_happy_case_keystore() {
     let account_path = "my_account.json";
     _ = fs::remove_file(keystore_path);
     _ = fs::remove_file(account_path);
-    env::set_var(TEST_KEYSTORE_PASSWORD_ENV_VAR, "123");
+    env::set_var(CREATE_KEYSTORE_PASSWORD_ENV_VAR, "123");
 
     let args = vec![
         "--url",
@@ -260,7 +260,7 @@ pub async fn test_happy_case_keystore() {
     let snapbox = runner(&args);
 
     snapbox.assert().stdout_matches(indoc! {r#"
-        TEST_KEYSTORE_PASSWORD environment variable for testing found and will be used
+        CREATE_KEYSTORE_PASSWORD environment variable found and will be used for keystore password
         Account successfully created[..]
         command: account create
         add_profile: --add-profile flag was not set. No profile added to Scarb.toml
@@ -287,7 +287,7 @@ pub async fn test_happy_case_keystore_add_profile() {
     let keystore_path = "my_key.json";
     let account_path = "my_account.json";
     let accounts_file = "accounts.json";
-    env::set_var(TEST_KEYSTORE_PASSWORD_ENV_VAR, "123");
+    env::set_var(CREATE_KEYSTORE_PASSWORD_ENV_VAR, "123");
 
     let args = vec![
         "--url",
@@ -330,7 +330,7 @@ pub async fn test_happy_case_keystore_add_profile() {
         fs::read_to_string(current_dir.join("Scarb.toml")).expect("Unable to read Scarb.toml");
     assert!(contents.contains(r#"[tool.sncast.my_account]"#));
     assert!(contents.contains(r#"account = "my_account.json""#));
-    assert!(contents.contains(r#"accounts-file = "accounts.json""#));
+    assert!(!contents.contains(r#"accounts-file = "accounts.json""#));
     assert!(contents.contains(r#"keystore = "my_key.json""#));
     assert!(contents.contains(r#"url = "http://127.0.0.1:5055/rpc""#));
 
@@ -341,7 +341,7 @@ pub async fn test_happy_case_keystore_add_profile() {
 pub async fn test_keystore_without_account() {
     let keystore_path = "my_key.json";
     _ = fs::remove_file(keystore_path);
-    env::set_var(TEST_KEYSTORE_PASSWORD_ENV_VAR, "123");
+    env::set_var(CREATE_KEYSTORE_PASSWORD_ENV_VAR, "123");
 
     let args = vec![
         "--url",

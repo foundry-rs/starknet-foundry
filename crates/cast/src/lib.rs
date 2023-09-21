@@ -1,8 +1,6 @@
 use anyhow::{anyhow, bail, Context, Error, Result};
 use camino::Utf8PathBuf;
-use helpers::constants::{
-    DEFAULT_RETRIES, KEYSTORE_PASSWORD_ENV_VAR, TEST_KEYSTORE_PASSWORD_ENV_VAR, UDC_ADDRESS,
-};
+use helpers::constants::{DEFAULT_RETRIES, KEYSTORE_PASSWORD_ENV_VAR, UDC_ADDRESS};
 use primitive_types::U256;
 use rand::rngs::OsRng;
 use rand::RngCore;
@@ -76,23 +74,10 @@ fn get_account_info(name: &str, chain_id: FieldElement, path: &Utf8PathBuf) -> R
     account.ok_or_else(|| anyhow!("Account {} not found under network {}", name, network_name))
 }
 
-pub fn get_keystore_password() -> std::io::Result<String> {
-    match env::var(KEYSTORE_PASSWORD_ENV_VAR) {
+pub fn get_keystore_password(env_var: &str) -> std::io::Result<String> {
+    match env::var(env_var) {
         Ok(password) => {
-            println!("{KEYSTORE_PASSWORD_ENV_VAR} environment variable found and will be used");
-            Ok(password)
-        }
-        _ => rpassword::prompt_password("Enter password: "),
-    }
-}
-
-pub fn get_test_keystore_password() -> std::io::Result<String> {
-    // prompt password, unless test environment variable found
-    match env::var(TEST_KEYSTORE_PASSWORD_ENV_VAR) {
-        Ok(password) => {
-            println!(
-                "{TEST_KEYSTORE_PASSWORD_ENV_VAR} environment variable for testing found and will be used"
-            );
+            println!("{env_var} environment variable found and will be used for keystore password");
             Ok(password)
         }
         _ => rpassword::prompt_password("Enter password: "),
@@ -157,7 +142,7 @@ fn get_account_from_keystore<'a>(
 
     let signer = LocalWallet::from(SigningKey::from_keystore(
         keystore_path,
-        get_keystore_password()?.as_str(),
+        get_keystore_password(KEYSTORE_PASSWORD_ENV_VAR)?.as_str(),
     )?);
 
     let account_info: serde_json::Value =

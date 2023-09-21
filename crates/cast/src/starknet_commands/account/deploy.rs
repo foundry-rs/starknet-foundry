@@ -1,6 +1,6 @@
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
-use cast::helpers::constants::OZ_CLASS_HASH;
+use cast::helpers::constants::{CREATE_KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH};
 use clap::Args;
 use serde_json::Map;
 use starknet::accounts::AccountFactoryError;
@@ -23,8 +23,8 @@ use cast::helpers::response_structs::InvokeResponse;
 #[command(about = "Deploy an account to the Starknet")]
 pub struct Deploy {
     /// Name of the account to be deployed
-    #[clap(short, long, default_value = "")]
-    pub name: String,
+    #[clap(short, long)]
+    pub name: Option<String>,
 
     /// Max fee for the transaction
     #[clap(short, long)]
@@ -92,13 +92,12 @@ async fn deploy_from_keystore(
     let mut items: Map<String, serde_json::Value> = serde_json::from_str(&contents)
         .map_err(|_| anyhow!("Failed to parse account file at {account_path}"))?;
 
-    if items["deployment"].is_null() {
-        bail!("No deployment field in account JSON file");
-    }
-
-    let status = items
+    let deployment = items
         .get("deployment")
-        .and_then(|deployment| deployment.get("status"))
+        .ok_or_else(|| anyhow!("No deployment field in account JSON file"))?;
+
+    let status = deployment
+        .get("status")
         .and_then(serde_json::Value::as_str)
         .ok_or_else(|| anyhow::anyhow!("Failed to get status from account JSON file"))?;
 
@@ -107,21 +106,22 @@ async fn deploy_from_keystore(
     }
 
     let salt = FieldElement::from_hex_be(
-        items
-            .get("deployment")
-            .and_then(|deployment| deployment.get("salt"))
+        deployment
+            .get("salt")
             .and_then(serde_json::Value::as_str)
             .ok_or_else(|| anyhow::anyhow!("Failed to get salt from account JSON file"))?,
     )?;
     let oz_class_hash = FieldElement::from_hex_be(
-        items
-            .get("deployment")
-            .and_then(|deployment| deployment.get("class_hash"))
+        deployment
+            .get("class_hash")
             .and_then(serde_json::Value::as_str)
             .ok_or_else(|| anyhow::anyhow!("Failed to get salt from account JSON file"))?,
     )?;
 
-    let private_key = SigningKey::from_keystore(keystore_path, get_keystore_password()?.as_str())?;
+    let private_key = SigningKey::from_keystore(
+        keystore_path,
+        get_keystore_password(CREATE_KEYSTORE_PASSWORD_ENV_VAR)?.as_str(),
+    )?;
     let public_key: FieldElement = {
         let pk = items
             .get("variant")

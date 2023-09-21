@@ -59,14 +59,10 @@ pub fn prepare_account_json(
 
 #[allow(clippy::too_many_arguments)]
 pub fn write_account_to_accounts_file(
-    path_to_scarb_toml: &Option<Utf8PathBuf>,
-    rpc_url: &str,
     account: &str,
     accounts_file: &Utf8PathBuf,
-    keystore: &Utf8PathBuf,
     chain_id: FieldElement,
     account_json: serde_json::Value,
-    add_profile: bool,
 ) -> Result<()> {
     if !accounts_file.exists() {
         std::fs::create_dir_all(accounts_file.clone().parent().unwrap())?;
@@ -87,16 +83,6 @@ pub fn write_account_to_accounts_file(
         );
     }
     items[&network_name][account] = account_json;
-
-    if add_profile {
-        let config = CastConfig {
-            rpc_url: rpc_url.into(),
-            account: account.into(),
-            accounts_file: accounts_file.into(),
-            keystore: keystore.into(),
-        };
-        add_created_profile_to_configuration(path_to_scarb_toml, &config)?;
-    }
 
     std::fs::write(
         accounts_file.clone(),
