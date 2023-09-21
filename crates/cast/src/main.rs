@@ -6,10 +6,7 @@ use anyhow::Result;
 use camino::Utf8PathBuf;
 use cast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
 use cast::helpers::scarb_utils::{parse_scarb_config, CastConfig};
-use cast::{
-    account_file_exists, get_account, get_block_id, get_chain_id, get_provider,
-    print_command_result,
-};
+use cast::{get_account, get_block_id, get_chain_id, get_provider, print_command_result};
 use clap::{Parser, Subcommand};
 
 mod starknet_commands;
@@ -242,8 +239,10 @@ async fn main() -> Result<()> {
                 Ok(())
             }
             account::Commands::Deploy(deploy) => {
-                account_file_exists(&config.accounts_file)?;
                 let chain_id = get_chain_id(&provider).await?;
+                let keystore_path = Some(config.keystore).filter(|p| *p != Utf8PathBuf::default());
+                let account_path =
+                    Some(Utf8PathBuf::from(config.account)).filter(|p| *p != String::default());
                 let mut result = starknet_commands::account::deploy::deploy(
                     &provider,
                     config.accounts_file,
@@ -252,6 +251,8 @@ async fn main() -> Result<()> {
                     deploy.max_fee,
                     cli.wait,
                     deploy.class_hash,
+                    keystore_path,
+                    account_path,
                 )
                 .await;
 
