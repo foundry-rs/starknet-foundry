@@ -43,7 +43,7 @@ struct InvokeCall {
     call_type: String,
     contract_address: String,
     function: String,
-    inputs: Vec<FieldElement>,
+    inputs: Vec<String>,
 }
 
 pub async fn run(
@@ -104,11 +104,20 @@ pub async fn run(
                     contract_address = addr;
                 }
 
+                let mut calldata = Vec::new();
+                for input in invoke_call.inputs {
+                    let current_input = contracts.get(&input).unwrap_or(&input);
+                    calldata.push(
+                        parse_number(current_input)
+                            .context("Unable to parse input to FieldElement")?,
+                    );
+                }
+
                 parsed_calls.push(Call {
                     to: parse_number(contract_address)
                         .context("Unable to parse contract address to FieldElement")?,
                     selector: get_selector_from_name(&invoke_call.function)?,
-                    calldata: invoke_call.inputs,
+                    calldata,
                 });
             }
             Some(unsupported) => {
