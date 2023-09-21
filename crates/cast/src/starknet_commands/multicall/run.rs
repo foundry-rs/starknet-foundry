@@ -91,7 +91,7 @@ pub async fn run(
                     salt,
                     deploy_call.class_hash,
                     &udc_uniqueness(deploy_call.unique, account.address()),
-                    &parsed_inputs
+                    &parsed_inputs,
                 );
                 contracts.insert(deploy_call.id, contract_address.to_string());
             }
@@ -122,14 +122,15 @@ pub async fn run(
     execute_calls(account, parsed_calls, max_fee, wait).await
 }
 
-fn parse_inputs(inputs: &Vec<String>, contracts: &HashMap<String, String>) -> Result<Vec<FieldElement>> {
+fn parse_inputs(
+    inputs: &Vec<String>,
+    contracts: &HashMap<String, String>,
+) -> Result<Vec<FieldElement>> {
     let mut parsed_inputs = Vec::new();
     for input in inputs {
         let current_input = contracts.get(input).unwrap_or(input);
-        parsed_inputs.push(
-            parse_number(current_input)
-                .context("Unable to parse input to FieldElement")?,
-        );
+        parsed_inputs
+            .push(parse_number(current_input).context("Unable to parse input to FieldElement")?);
     }
 
     Ok(parsed_inputs)
