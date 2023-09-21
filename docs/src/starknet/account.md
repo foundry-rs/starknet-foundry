@@ -133,7 +133,7 @@ $ sncast \
 
 For a detailed CLI description, see [account add command reference](../appendix/cast/account/add.md).
 
-### Creating account with keystore
+### Creating an account with starkli-style keystore
 
 It is possible to create an openzeppelin account with keystore in a similar way [starkli](https://book.starkli.rs/accounts#accounts) does.
 
