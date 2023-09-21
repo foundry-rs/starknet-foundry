@@ -9,6 +9,7 @@ mod mock_call;
 mod prank;
 mod precalculate_address;
 mod pure_cairo;
+mod read_env_var;
 mod roll;
 mod should_panic;
 mod spoof;
