@@ -1,7 +1,7 @@
-use std::env;
 use crate::integration::common::running_tests::run_test_case;
 use crate::{assert_passed, test_case};
 use indoc::indoc;
+use std::env;
 
 #[test]
 fn read_short_string() {
