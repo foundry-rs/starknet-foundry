@@ -38,7 +38,6 @@ inputs = ["0x123", "234"]
 [[call]]
 call_type = "deploy"
 class_hash = "0x2bb3d35dba2984b3d0cd0901b4e7de5411daff6bff5e072060bcfadbbd257b1"
-inputs = ["map_contract", "0x123", "234"]
-id = "constructor-params"
+inputs = ["0x123", "map_contract"]
 unique = false
 ```
