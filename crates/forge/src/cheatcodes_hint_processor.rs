@@ -4,7 +4,7 @@ use std::env;
 use std::path::PathBuf;
 
 use crate::scarb::StarknetContractArtifacts;
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::execution_utils::{felt_to_stark_felt, stark_felt_to_felt};
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
@@ -363,14 +363,15 @@ impl CairoHintProcessor<'_> {
             }
             "read_env_var" => {
                 let name = inputs[0].clone();
-                let name = as_cairo_short_string(&name)
-                    .unwrap_or_else(|| panic!("Failed to parse value = {name} as short string"));
+                let name = as_cairo_short_string(&name).unwrap_or_else(|| {
+                    panic!("Failed to parse read_env_var argument = {name} as short string")
+                });
 
                 let env_var = env::var(&name)
-                    .unwrap_or_else(|_| panic!("Failed to read from env var = {name}"));
+                    .with_context(|| format!("Failed to read from env var = {name}"))?;
 
                 let parsed_env_var = string_into_felt(&env_var)
-                    .unwrap_or_else(|_| panic!("Failed to parse value = {env_var} to felt"));
+                    .with_context(|| format!("Failed to parse value = {env_var} to felt"))?;
 
                 buffer
                     .write(parsed_env_var)
