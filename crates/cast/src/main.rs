@@ -222,9 +222,6 @@ async fn main() -> Result<()> {
             }
             account::Commands::Create(create) => {
                 let chain_id = get_chain_id(&provider).await?;
-                if cli.keystore.is_none() {
-                    config.account = create.name;
-                }
                 let mut result = starknet_commands::account::create::create(
                     &config,
                     &provider,
