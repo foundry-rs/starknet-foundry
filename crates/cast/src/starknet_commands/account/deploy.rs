@@ -48,8 +48,9 @@ pub async fn deploy(
     account_path: Option<Utf8PathBuf>,
 ) -> Result<InvokeResponse> {
     if let Some(keystore_path_) = keystore_path {
-        let account_path_ = account_path
-            .ok_or_else(|| anyhow!("--account must be passed when using --keystore"))?;
+        let account_path_ = account_path.ok_or_else(|| {
+            anyhow!("--account must be passed and be a path when using --keystore")
+        })?;
 
         deploy_from_keystore(
             provider,

@@ -145,4 +145,4 @@ $ sncast \
     account create
 ```
 
-The command above will generate a keystore file containing the private key, as well as an account file containing the openzeppelin account info.
+The command above will generate a keystore file containing the private key, as well as an account file containing the openzeppelin account info that can later be used with starkli.

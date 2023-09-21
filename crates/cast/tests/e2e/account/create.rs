@@ -358,7 +358,7 @@ pub async fn test_keystore_without_account() {
 
     snapbox.assert().stderr_matches(indoc! {r#"
         command: account create
-        error: --account must be passed when using --keystore
+        error: --account must be passed and be a path when using --keystore
     "#});
 
     _ = fs::remove_file(keystore_path);
