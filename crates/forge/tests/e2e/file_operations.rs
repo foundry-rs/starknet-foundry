@@ -150,3 +150,26 @@ fn file_reading() {
         .code(1)
         .stdout_matches(expected);
 }
+
+#[test]
+fn env_var_reading() {
+    let temp = setup_package("env_var_reading");
+    let snapbox = runner();
+
+    snapbox
+        .current_dir(&temp)
+        .env("FELT_ENV_VAR", "987654321")
+        .env("STRING_ENV_VAR", "'abcde'")
+        .assert()
+        .code(0)
+        .stdout_matches(indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 1 test(s) and 1 test file(s) from env_var_reading package
+        Running 1 inline test(s)
+        [PASS] env_var_reading::reading_env_vars
+        Tests: 1 passed, 0 failed, 0 skipped
+        "#});
+}

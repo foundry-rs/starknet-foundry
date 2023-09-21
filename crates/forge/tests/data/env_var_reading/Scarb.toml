@@ -1,0 +1,6 @@
+[package]
+name = "env_var_reading"
+version = "0.1.0"
+
+[dependencies]
+snforge_std = { path = "../../../../../snforge_std" }
