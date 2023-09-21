@@ -66,7 +66,7 @@ fn value_into_vec(value: &Value) -> Vec<String> {
     }
 }
 
-fn string_into_felt(string: &str) -> Result<Felt252, ()> {
+pub(super) fn string_into_felt(string: &str) -> Result<Felt252, ()> {
     if let Ok(number) = string.parse::<BigUint>() {
         // By default it is replaced with 0 in this case
         if number < Felt252::prime() {
