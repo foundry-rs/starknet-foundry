@@ -1,5 +1,3 @@
-use std::fs;
-
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use cast::helpers::constants::OZ_CLASS_HASH;
@@ -25,7 +23,7 @@ use cast::helpers::response_structs::InvokeResponse;
 #[command(about = "Deploy an account to the Starknet")]
 pub struct Deploy {
     /// Name of the account to be deployed
-    #[clap(short, long)]
+    #[clap(short, long, default_value = "")]
     pub name: String,
 
     /// Max fee for the transaction
@@ -63,6 +61,9 @@ pub async fn deploy(
         )
         .await
     } else {
+        if name == String::default() {
+            bail!("No --name value passed")
+        }
         account_file_exists(&accounts_file)?;
         deploy_from_accounts_file(
             provider,
@@ -93,21 +94,26 @@ async fn deploy_from_keystore(
     if items["deployment"].is_null() {
         bail!("No deployment field in account JSON file");
     }
-    if items["deployment"] == "deployed" {
+
+    let status = items
+        .get("deployment")
+        .and_then(|deployment| deployment.get("status"))
+        .and_then(serde_json::Value::as_str)
+        .ok_or_else(|| anyhow::anyhow!("Failed to get status from account JSON file"))?;
+
+    if status == "deployed" {
         bail!("Account already deployed");
     }
 
-    let account_info: serde_json::Value =
-        serde_json::from_str(&fs::read_to_string(&account_path)?)?;
     let salt = FieldElement::from_hex_be(
-        account_info
+        items
             .get("deployment")
             .and_then(|deployment| deployment.get("salt"))
             .and_then(serde_json::Value::as_str)
             .ok_or_else(|| anyhow::anyhow!("Failed to get salt from account JSON file"))?,
     )?;
     let oz_class_hash = FieldElement::from_hex_be(
-        account_info
+        items
             .get("deployment")
             .and_then(|deployment| deployment.get("class_hash"))
             .and_then(serde_json::Value::as_str)
@@ -115,6 +121,17 @@ async fn deploy_from_keystore(
     )?;
 
     let private_key = SigningKey::from_keystore(keystore_path, get_keystore_password()?.as_str())?;
+    let public_key: FieldElement = {
+        let pk = items
+            .get("variant")
+            .and_then(|v| v.get("public_key"))
+            .and_then(serde_json::Value::as_str)
+            .ok_or_else(|| anyhow::anyhow!("No public_key in account JSON file"))?;
+        parse_number(pk)?
+    };
+    if public_key != private_key.verifying_key().scalar() {
+        bail!("Public key and private key from keystore do not match");
+    }
 
     items["deployment"]["status"] = serde_json::Value::from("deployed");
     items.get_mut("deployment").and_then(|deployment| {
@@ -123,13 +140,15 @@ async fn deploy_from_keystore(
             .expect("should be an object")
             .remove("salt")
     });
-    items["deployment"]["address"] = get_contract_address(
-        salt,
-        oz_class_hash,
-        &[private_key.verifying_key().scalar()],
-        FieldElement::ZERO,
+    items["deployment"]["address"] = format!(
+        "{:#x}",
+        get_contract_address(
+            salt,
+            oz_class_hash,
+            &[private_key.verifying_key().scalar()],
+            FieldElement::ZERO,
+        )
     )
-    .to_string()
     .into();
 
     let result = deploy_oz_account(
