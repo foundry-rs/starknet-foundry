@@ -1,9 +1,8 @@
 use cairo_felt::Felt252;
 use num_bigint::{BigUint, RandBigInt};
-use num_traits::{One, Zero};
+use num_traits::One;
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
-use std::default::Default;
 
 pub struct RunParams {
     /// Inclusive value
@@ -24,20 +23,6 @@ pub struct RunParams {
     /// e.g. `run_with_max_value_for_argument[0] = 5`
     /// means that the first argument will have the highest possible value in 5th run
     run_with_max_value_for_argument: Vec<u32>,
-}
-
-impl Default for RunParams {
-    fn default() -> Self {
-        Self {
-            low: BigUint::zero(),
-            high: Felt252::prime(),
-            arguments_number: 0,
-            total_runs: 256,
-            executed_runs: 0,
-            run_with_min_value_for_argument: vec![],
-            run_with_max_value_for_argument: vec![],
-        }
-    }
 }
 
 impl RunParams {
@@ -138,6 +123,20 @@ mod tests {
     use cairo_felt::Felt252;
     use num_traits::Zero;
     use rand::{thread_rng, RngCore};
+
+    impl Default for RunParams {
+        fn default() -> Self {
+            Self {
+                low: BigUint::zero(),
+                high: Felt252::prime(),
+                arguments_number: 0,
+                total_runs: 256,
+                executed_runs: 0,
+                run_with_min_value_for_argument: vec![],
+                run_with_max_value_for_argument: vec![],
+            }
+        }
+    }
 
     #[test]
     fn run_with_max_value() {
