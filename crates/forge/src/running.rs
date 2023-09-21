@@ -69,6 +69,7 @@ pub(crate) fn run_from_test_case(
     case: &TestCase,
     contracts: &HashMap<String, StarknetContractArtifacts>,
     predeployed_contracts: &Utf8PathBuf,
+    environment_variables: &HashMap<String, String>,
 ) -> Result<TestCaseSummary> {
     let available_gas = if let Some(available_gas) = &case.available_gas {
         Some(*available_gas)
@@ -136,6 +137,7 @@ pub(crate) fn run_from_test_case(
         }),
         hints: &string_to_hint,
         run_resources: RunResources::default(),
+        environment_variables,
     };
 
     match runner.run_function(

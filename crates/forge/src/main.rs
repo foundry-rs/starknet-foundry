@@ -4,10 +4,11 @@ use clap::Parser;
 use include_dir::{include_dir, Dir};
 use scarb_metadata::{MetadataCommand, PackageMetadata};
 use scarb_ui::args::PackagesFilter;
+use std::env;
 use std::path::PathBuf;
 use tempfile::{tempdir, TempDir};
 
-use forge::{pretty_printing, RunnerConfig};
+use forge::{pretty_printing, RunnerConfig, RunnerParams};
 use forge::{run, TestFileSummary};
 
 use forge::scarb::{
@@ -83,7 +84,7 @@ fn main_execution() -> Result<bool> {
     for package in &packages {
         let forge_config = config_from_scarb_for_package(&scarb_metadata, &package.id)?;
         let (package_path, lib_path) = paths_for_package(&scarb_metadata, &package.id)?;
-        std::env::set_current_dir(package_path.clone())?;
+        env::set_current_dir(package_path.clone())?;
 
         // TODO(#671)
         let target_dir = target_dir_for_package(&scarb_metadata.workspace.root)?;
@@ -115,15 +116,20 @@ fn main_execution() -> Result<bool> {
             .transpose()?
             .unwrap_or_default();
 
+        let runner_params = RunnerParams::new(
+            corelib_path,
+            contracts,
+            predeployed_contracts.clone(),
+            env::vars().collect(),
+        );
+
         let tests_file_summaries = run(
             &package_path,
             &package_name,
             &lib_path,
             &Some(dependencies.clone()),
             &runner_config,
-            &corelib_path,
-            &contracts,
-            &predeployed_contracts,
+            &runner_params,
         )?;
 
         let mut failed_tests = extract_failed_tests(tests_file_summaries);

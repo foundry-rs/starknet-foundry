@@ -3,13 +3,10 @@ use crate::{assert_case_output_contains, assert_failed, assert_passed, test_case
 use cairo_felt::Felt252;
 use indoc::indoc;
 use num_bigint::BigUint;
-use std::env;
 
 #[test]
 fn read_short_string() {
-    env::set_var("MY_ENV_VAR", "'env_var_value'");
-
-    let test = test_case!(indoc!(
+    let mut test = test_case!(indoc!(
         r#"
         use snforge_std::read_env_var;
 
@@ -20,6 +17,7 @@ fn read_short_string() {
         }
     "#
     ));
+    test.set_env("MY_ENV_VAR", "'env_var_value'");
 
     let result = run_test_case(&test);
 
@@ -28,9 +26,7 @@ fn read_short_string() {
 
 #[test]
 fn read_felt252() {
-    env::set_var("MY_ENV_VAR", "1234567");
-
-    let test = test_case!(indoc!(
+    let mut test = test_case!(indoc!(
         r#"
         use snforge_std::read_env_var;
 
@@ -41,6 +37,7 @@ fn read_felt252() {
         }
     "#
     ));
+    test.set_env("MY_ENV_VAR", "1234567");
 
     let result = run_test_case(&test);
 
@@ -49,10 +46,7 @@ fn read_felt252() {
 
 #[test]
 fn read_invalid_felt252() {
-    let value = (Felt252::prime() + BigUint::from(1_u32)).to_string();
-    env::set_var("MY_ENV_VAR", &value);
-
-    let test = test_case!(indoc!(
+    let mut test = test_case!(indoc!(
         r#"
         use snforge_std::read_env_var;
 
@@ -62,6 +56,9 @@ fn read_invalid_felt252() {
         }
     "#
     ));
+
+    let value = (Felt252::prime() + BigUint::from(1_u32)).to_string();
+    test.set_env("MY_ENV_VAR", &value);
 
     let result = run_test_case(&test);
 
@@ -75,11 +72,7 @@ fn read_invalid_felt252() {
 
 #[test]
 fn read_invalid_short_string() {
-    let value =
-        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-    env::set_var("MY_ENV_VAR", value);
-
-    let test = test_case!(indoc!(
+    let mut test = test_case!(indoc!(
         r#"
         use snforge_std::read_env_var;
 
@@ -89,6 +82,10 @@ fn read_invalid_short_string() {
         }
     "#
     ));
+
+    let value =
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    test.set_env("MY_ENV_VAR", value);
 
     let result = run_test_case(&test);
 

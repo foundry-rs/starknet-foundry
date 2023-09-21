@@ -74,6 +74,31 @@ struct TestsFromFile {
     relative_path: Utf8PathBuf,
 }
 
+// TODO better name
+pub struct RunnerParams {
+    corelib_path: Utf8PathBuf,
+    contracts: HashMap<String, StarknetContractArtifacts>,
+    predeployed_contracts: Utf8PathBuf,
+    environment_variables: HashMap<String, String>,
+}
+
+impl RunnerParams {
+    #[must_use]
+    pub fn new(
+        corelib_path: Utf8PathBuf,
+        contracts: HashMap<String, StarknetContractArtifacts>,
+        predeployed_contracts: Utf8PathBuf,
+        environment_variables: HashMap<String, String>,
+    ) -> Self {
+        Self {
+            corelib_path,
+            contracts,
+            predeployed_contracts,
+            environment_variables,
+        }
+    }
+}
+
 fn collect_tests_from_package(
     package_path: &Utf8PathBuf,
     package_name: &str,
@@ -175,23 +200,21 @@ fn collect_tests_from_tree(
 /// * `contracts` - Map with names of contract used in tests and corresponding sierra and casm artifacts
 /// * `predeployed_contracts` - Absolute path to predeployed contracts used by starknet state e.g. account contracts
 ///
-#[allow(clippy::implicit_hasher, clippy::too_many_arguments)]
+#[allow(clippy::implicit_hasher)]
 pub fn run(
     package_path: &Utf8PathBuf,
     package_name: &str,
     lib_path: &Utf8PathBuf,
     linked_libraries: &Option<Vec<LinkedLibrary>>,
     runner_config: &RunnerConfig,
-    corelib_path: &Utf8PathBuf,
-    contracts: &HashMap<String, StarknetContractArtifacts>,
-    predeployed_contracts: &Utf8PathBuf,
+    runner_params: &RunnerParams,
 ) -> Result<Vec<TestFileSummary>> {
     let tests = collect_tests_from_package(
         package_path,
         package_name,
         lib_path,
         linked_libraries,
-        corelib_path,
+        &runner_params.corelib_path,
         runner_config,
     )?;
 
@@ -205,12 +228,7 @@ pub fn run(
 
     let mut summaries = vec![];
     for tests_from_file in tests_iterator.by_ref() {
-        let summary = run_tests_from_file(
-            tests_from_file,
-            runner_config,
-            contracts,
-            predeployed_contracts,
-        )?;
+        let summary = run_tests_from_file(tests_from_file, runner_config, runner_params)?;
         summaries.push(summary.clone());
         if summary.runner_exit_status == RunnerStatus::TestFailed {
             break;
@@ -243,8 +261,7 @@ pub fn run(
 fn run_tests_from_file(
     tests: TestsFromFile,
     runner_config: &RunnerConfig,
-    contracts: &HashMap<String, StarknetContractArtifacts>,
-    predeployed_contracts: &Utf8PathBuf,
+    runner_params: &RunnerParams,
 ) -> Result<TestFileSummary> {
     let runner = SierraCasmRunner::new(
         tests.sierra_program,
@@ -257,7 +274,13 @@ fn run_tests_from_file(
 
     let mut results = vec![];
     for (i, case) in tests.test_cases.iter().enumerate() {
-        let result = run_from_test_case(&runner, case, contracts, predeployed_contracts)?;
+        let result = run_from_test_case(
+            &runner,
+            case,
+            &runner_params.contracts,
+            &runner_params.predeployed_contracts,
+            &runner_params.environment_variables,
+        )?;
         results.push(result.clone());
 
         pretty_printing::print_test_result(&result);

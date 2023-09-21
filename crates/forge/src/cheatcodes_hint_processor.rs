@@ -1,6 +1,5 @@
 use std::any::Any;
 use std::collections::HashMap;
-use std::env;
 use std::path::PathBuf;
 
 use crate::scarb::StarknetContractArtifacts;
@@ -59,6 +58,7 @@ pub struct CairoHintProcessor<'a> {
     pub hints: &'a HashMap<String, Hint>,
     pub cheatnet_state: CheatnetState,
     pub run_resources: RunResources,
+    pub environment_variables: &'a HashMap<String, String>,
 }
 
 // crates/blockifier/src/execution/syscalls/hint_processor.rs:472 (ResourceTracker for SyscallHintProcessor)
@@ -118,6 +118,7 @@ impl HintProcessorLogic for CairoHintProcessor<'_> {
                 output_start,
                 output_end,
                 self.contracts,
+                self.environment_variables,
             );
         }
         if let Some(Hint::Starknet(StarknetHint::SystemCall { system })) = maybe_extended_hint {
@@ -159,6 +160,7 @@ impl CairoHintProcessor<'_> {
         output_start: &CellRef,
         output_end: &CellRef,
         contracts: &HashMap<String, StarknetContractArtifacts>,
+        environment_variables: &HashMap<String, String>,
     ) -> Result<(), HintError> {
         // Parse the selector.
         let selector = &selector.value.to_bytes_be().1;
@@ -175,11 +177,24 @@ impl CairoHintProcessor<'_> {
             HintError::CustomHint(Box::from("Failed to read input data".to_string()))
         })?;
 
-        self.match_cheatcode_by_selector(vm, selector, inputs, output_start, output_end, contracts)
-            .map_err(Into::into)
+        self.match_cheatcode_by_selector(
+            vm,
+            selector,
+            inputs,
+            output_start,
+            output_end,
+            contracts,
+            environment_variables,
+        )
+        .map_err(Into::into)
     }
 
-    #[allow(unused, clippy::too_many_lines, clippy::trivially_copy_pass_by_ref)]
+    #[allow(
+        unused,
+        clippy::too_many_lines,
+        clippy::trivially_copy_pass_by_ref,
+        clippy::too_many_arguments
+    )]
     fn match_cheatcode_by_selector(
         &mut self,
         vm: &mut VirtualMachine,
@@ -188,6 +203,7 @@ impl CairoHintProcessor<'_> {
         output_start: &CellRef,
         output_end: &CellRef,
         contracts: &HashMap<String, StarknetContractArtifacts>,
+        environment_variables: &HashMap<String, String>,
     ) -> Result<(), EnhancedHintError> {
         let mut buffer = MemBuffer::new_segment(vm);
         let result_start = buffer.ptr;
@@ -367,10 +383,11 @@ impl CairoHintProcessor<'_> {
                     panic!("Failed to parse read_env_var argument = {name} as short string")
                 });
 
-                let env_var = env::var(&name)
+                let env_var = environment_variables
+                    .get(&name)
                     .with_context(|| format!("Failed to read from env var = {name}"))?;
 
-                let parsed_env_var = string_into_felt(&env_var)
+                let parsed_env_var = string_into_felt(env_var)
                     .with_context(|| format!("Failed to parse value = {env_var} to felt"))?;
 
                 buffer
