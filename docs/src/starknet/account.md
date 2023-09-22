@@ -132,3 +132,17 @@ $ sncast \
 ```
 
 For a detailed CLI description, see [account add command reference](../appendix/cast/account/add.md).
+
+### Creating an account with starkli-style keystore
+
+It is possible to create an openzeppelin account with keystore in a similar way [starkli](https://book.starkli.rs/accounts#accounts) does.
+
+```shell
+$ sncast \
+    --url http://127.0.0.1:5050 \
+    --keystore my_key.json \
+    --account my_account.json \
+    account create
+```
+
+The command above will generate a keystore file containing the private key, as well as an account file containing the openzeppelin account info that can later be used with starkli.
