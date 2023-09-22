@@ -126,7 +126,7 @@ impl StateReader for ForkStateReader {
 
                 let contract_class = contract_class_result.unwrap();
                 self.cache
-                    .cache_get_compiled_contract_class(class_hash, contract_class.clone());
+                    .cache_get_compiled_contract_class(class_hash, &contract_class);
                 contract_class
             };
 

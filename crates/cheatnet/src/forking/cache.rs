@@ -35,16 +35,12 @@ impl ForkCacheContent {
         }
     }
     fn from_str(serialized: &str) -> Self {
-        serde_json::from_str(serialized).expect("Could not deserialize json cache")
-    }
-
-    fn to_string(&self) -> String {
-        serde_json::to_string(self).expect("Could not serialize json cache")
+        serde_json::from_str(serialized).expect("Could not deserialize cache from json")
     }
 
     fn apply(&mut self, other: &Self) {
         // storage_at
-        for (other_contract_address, other_storage) in other.storage_at.iter() {
+        for (other_contract_address, other_storage) in &other.storage_at {
             if let Some(self_contract_storage) = self.storage_at.get(other_contract_address) {
                 let mut new_storage = self_contract_storage.clone();
                 new_storage.extend(other_storage.clone());
@@ -68,6 +64,13 @@ impl ForkCacheContent {
     }
 }
 
+impl ToString for ForkCacheContent {
+    fn to_string(&self) -> String {
+        serde_json::to_string(self).expect("Could not serialize json cache")
+    }
+}
+
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug)]
 pub struct ForkCache {
     fork_cache_content: ForkCacheContent,
@@ -97,47 +100,50 @@ fn block_id_to_string(block_id: BlockId) -> String {
 impl ForkCache {
     #[must_use]
     pub(crate) fn load_or_new(url: &str, block_id: BlockId, cache_dir: Option<&str>) -> Self {
-        let (fork_cache_content, cache_file) = match block_id {
-            BlockId::Tag(_) => (ForkCacheContent::new(), None),
-            _ => {
-                let cache_dir = cache_dir.unwrap_or_else(|| panic!("cache_dir has to be provided if working at a concrete block_number/block_hash"));
-                let url = Url::parse(url).expect("Failed to parse URL");
-                let url_str = url.as_str();
-                let re = Regex::new(r"[^a-zA-Z0-9]").unwrap();
+        let (fork_cache_content, cache_file) = if let BlockId::Tag(_) = block_id {
+            (ForkCacheContent::new(), None)
+        } else {
+            let cache_dir = cache_dir.unwrap_or_else(|| {
+                panic!(
+                    "cache_dir has to be provided if working at a concrete block_number/block_hash"
+                )
+            });
+            let url = Url::parse(url).expect("Failed to parse URL");
+            let url_str = url.as_str();
+            let re = Regex::new(r"[^a-zA-Z0-9]").unwrap();
 
-                // Use the replace_all method to replace non-alphanumeric characters with underscores
-                let sanitized_path = re.replace_all(url_str, "_").to_string();
+            // Use the replace_all method to replace non-alphanumeric characters with underscores
+            let sanitized_path = re.replace_all(url_str, "_").to_string();
 
-                let cache_file_path = Utf8PathBuf::from(cache_dir)
-                    .join(sanitized_path + "_" + block_id_to_string(block_id).as_str() + ".json");
+            let cache_file_path = Utf8PathBuf::from(cache_dir)
+                .join(sanitized_path + "_" + block_id_to_string(block_id).as_str() + ".json");
 
-                fs::create_dir_all(cache_file_path.parent().unwrap()).unwrap();
-                let mut file = OpenOptions::new()
-                    .write(true)
-                    .read(true)
-                    .create(true)
-                    .open(&cache_file_path)
-                    .unwrap();
+            fs::create_dir_all(cache_file_path.parent().unwrap()).unwrap();
+            let mut file = OpenOptions::new()
+                .write(true)
+                .read(true)
+                .create(true)
+                .open(&cache_file_path)
+                .unwrap();
 
-                let mut cache_file_content: String = "".to_string();
-                file.read_to_string(&mut cache_file_content)
-                    .expect("Could not read cache file: {path}");
+            let mut cache_file_content: String = String::new();
+            file.read_to_string(&mut cache_file_content)
+                .expect("Could not read cache file: {path}");
 
-                // File was just created
-                let fork_cache_content = if cache_file_content == "" {
-                    ForkCacheContent::new()
-                } else {
-                    ForkCacheContent::from_str(cache_file_content.as_str())
-                };
+            // File was just created
+            let fork_cache_content = if cache_file_content.is_empty() {
+                ForkCacheContent::new()
+            } else {
+                ForkCacheContent::from_str(cache_file_content.as_str())
+            };
 
-                (fork_cache_content, Some(cache_file_path.to_string()))
-            }
+            (fork_cache_content, Some(cache_file_path.to_string()))
         };
 
         ForkCache {
-            block_id,
             fork_cache_content,
             cache_file,
+            block_id,
         }
     }
 
@@ -157,12 +163,12 @@ impl ForkCache {
         let cache_file_content =
             fs::read_to_string(cache_file).expect("Should have been able to read the cache");
 
-        let output = if cache_file_content != "".to_string() {
+        let output = if cache_file_content.is_empty() {
+            self.fork_cache_content.to_string()
+        } else {
             let mut fs_fork_cache_content = ForkCacheContent::from_str(cache_file_content.as_str());
             fs_fork_cache_content.apply(&self.fork_cache_content);
             fs_fork_cache_content.to_string()
-        } else {
-            self.fork_cache_content.to_string()
         };
 
         file.write_all(output.as_bytes())
@@ -187,7 +193,7 @@ impl ForkCache {
 
         Some(
             FieldElement::from_hex_be(cache_hit)
-                .expect(format!("Could not parse {cache_hit}").as_str())
+                .unwrap_or_else(|_| panic!("Could not parse {cache_hit}"))
                 .to_stark_felt(),
         )
     }
@@ -216,14 +222,14 @@ impl ForkCache {
             .storage_at
             .get_mut(&contract_address_str)
             .unwrap()
-            .insert(storage_key_str.clone(), value_str.clone());
+            .insert(storage_key_str, value_str);
     }
 
     pub(crate) fn get_nonce_at(&self, address: ContractAddress) -> Option<Nonce> {
         self.fork_cache_content
             .nonce_at
             .get(&address.to_felt252().to_string())
-            .map(|cache_hit| cache_hit.to_nonce())
+            .map(StarknetConversions::to_nonce)
     }
 
     pub(crate) fn cache_get_nonce_at(&mut self, contract_address: ContractAddress, nonce: Nonce) {
@@ -239,7 +245,7 @@ impl ForkCache {
         self.fork_cache_content
             .nonce_at
             .get(&contract_address.to_felt252().to_string())
-            .map(|cache_hit| cache_hit.to_class_hash())
+            .map(StarknetConversions::to_class_hash)
     }
 
     pub(crate) fn cache_get_class_hash_at(
@@ -271,7 +277,7 @@ impl ForkCache {
     pub(crate) fn cache_get_compiled_contract_class(
         &mut self,
         class_hash: &ClassHash,
-        contract_class: ContractClass,
+        contract_class: &ContractClass,
     ) {
         let class_hash_str = class_hash.to_felt252().to_string();
         let contract_class_str = serde_json::to_string(&contract_class)
