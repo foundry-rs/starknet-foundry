@@ -28,6 +28,14 @@ Packages to run this command on, can be a concrete package name (`foobar`) or a 
 
 Run tests for all packages in the workspace.
 
+## `-r`, `--fuzzer-runs` `<FUZZER_RUNS>`  
+
+Number of fuzzer runs.
+
+##  `-s`, `--fuzzer-seed` `<FUZZER_SEED>`  
+
+Seed for the fuzzer.
+
 ## `-h`, `--help`
 
 Print help.
