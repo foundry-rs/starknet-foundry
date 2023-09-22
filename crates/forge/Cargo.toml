@@ -40,7 +40,6 @@ parity-scale-codec-derive = "3.1.4"
 num-bigint.workspace = true
 cairo-felt = "0.8.1"
 clap = { version = "4.3.23", features = ["derive"] }
-walkdir = "2.3.3"
 scarb-ui = { git = "https://github.com/software-mansion/scarb.git", rev = "58cc88e" }
 scarb-metadata = { git = "https://github.com/software-mansion/scarb.git", rev = "58cc88e" }
 project-root = "0.2.2"

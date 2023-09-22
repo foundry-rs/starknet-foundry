@@ -1858,7 +1858,6 @@ dependencies = [
  "test-collector",
  "thiserror",
  "toml_edit 0.9.1",
- "walkdir",
  "which",
 ]
 
@@ -4298,6 +4297,7 @@ dependencies = [
  "num-bigint",
  "num-integer",
  "num-traits 0.2.16",
+ "once_cell",
  "rayon",
  "serde",
  "serde_json",

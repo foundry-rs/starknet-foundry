@@ -33,7 +33,8 @@ use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use cairo_lang_utils::OptionHelper;
 use itertools::Itertools;
 use num_traits::ToPrimitive;
-use project::{setup_single_file_project, PHANTOM_PACKAGE_NAME_PREFIX};
+use once_cell::sync::Lazy;
+use project::setup_single_file_project;
 use smol_str::SmolStr;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -42,6 +43,10 @@ use std::sync::Arc;
 #[allow(clippy::module_name_repetitions)]
 mod project;
 pub mod sierra_casm_generator;
+
+const TEST_PACKAGE_NAME_PREFIX: &str = "___TEST_PACKAGE_NAME_PREFIX___";
+pub static TEST_PACKAGE_NAME: Lazy<String> =
+    Lazy::new(|| format!("{TEST_PACKAGE_NAME_PREFIX}tests"));
 
 pub fn build_project_config(
     source_root: &Path,
@@ -291,8 +296,8 @@ pub struct TestCase {
 pub fn collect_tests(
     input_path: &str,
     output_path: Option<&str>,
-    package_name: &str,
-    linked_libraries: Option<Vec<LinkedLibrary>>,
+    crate_name: &str,
+    linked_libraries: &Vec<LinkedLibrary>,
     builtins: Option<Vec<&str>>,
     corelib_path: PathBuf,
 ) -> Result<(Program, Vec<TestCase>)> {
@@ -308,18 +313,12 @@ pub fn collect_tests(
 
     init_dev_corelib(db, corelib_path);
 
-    let main_crate_id = setup_single_file_project(db, Path::new(&input_path), package_name)
+    let main_crate_id = setup_single_file_project(db, Path::new(&input_path), crate_name)
         .with_context(|| format!("Failed to setup project for path({input_path})"))?;
 
-    if let Some(linked_libraries) = linked_libraries {
-        for linked_library in linked_libraries {
-            setup_project_without_cairo_project_toml(
-                db,
-                &linked_library.path,
-                &linked_library.name,
-            )
+    for linked_library in linked_libraries {
+        setup_project_without_cairo_project_toml(db, &linked_library.path, &linked_library.name)
             .with_context(|| format!("Failed to add linked library ({})", linked_library.name))?;
-        }
     }
 
     if DiagnosticsReporter::stderr()
@@ -366,7 +365,7 @@ pub fn collect_tests(
         .collect_vec()
         .into_iter()
         .map(|(test_name, config)| TestCase {
-            name: test_name.replace(PHANTOM_PACKAGE_NAME_PREFIX, ""),
+            name: test_name.replace(TEST_PACKAGE_NAME_PREFIX, ""),
             available_gas: config.available_gas,
             expected_result: config.expected_result,
         })
