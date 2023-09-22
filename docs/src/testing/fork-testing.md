@@ -17,7 +17,7 @@ There are two ways of configuring a fork:
 - by specifying `url` and `block_id` parameters in the `#[fork(...)]` attribute
 - or by passing a fork name defined in your `Scarb.toml` to the `#[fork(...)]` attribute
 
-## Configure a Fork in the attribute
+## Configure a fork in the attribute
 
 It is possible to pass `url` and `block_id` arguments to the `fork` attribute:
 - `url` - RPC URL (short string)
