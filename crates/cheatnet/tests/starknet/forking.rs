@@ -122,7 +122,7 @@ fn test_forking_at_block_number() {
     let selector = felt_selector_from_name("get_balance");
     let output = call_contract(&contract_address, &selector, &[], &mut state_after_deploy).unwrap();
     assert_success!(output, vec![Felt252::from(0)]);
-    purge_cache("./.testing_cache")
+    purge_cache("./.testing_cache");
 }
 
 #[test]
@@ -230,7 +230,7 @@ fn using_specified_block_nb_is_cached() {
     let cache_dir = TempDir::new().unwrap();
     let run_test = || {
         let mut state = create_cheatnet_fork_state_at(
-            BlockId::Number(312646_u64),
+            BlockId::Number(312_646),
             cache_dir.path().to_str().unwrap(),
         );
         let contract_address = Felt252::from(
@@ -330,14 +330,8 @@ fn using_block_tag_is_not_cached() {
 
 #[test]
 fn test_cache_merging() {
-    let cache_dir = TempDir::new().unwrap();
-    let contract_1_address =
-        "3216637956526895219277698311134811322769343974163380838558193911733621219342";
-    let contract_2_address =
-        "3221247681918684045050855759557788124640099286968827281606334752803016107426";
-
     fn run_test(cache_dir: &str, contract_address: &str, balance: u64) {
-        let mut state = create_cheatnet_fork_state_at(BlockId::Number(312767_u64), cache_dir);
+        let mut state = create_cheatnet_fork_state_at(BlockId::Number(312_767), cache_dir);
         let contract_address =
             Felt252::from(BigUint::from_str(contract_address).unwrap()).to_contract_address();
 
@@ -345,6 +339,12 @@ fn test_cache_merging() {
         let output = call_contract(&contract_address, &selector, &[], &mut state).unwrap();
         assert_success!(output, vec![Felt252::from(balance)]);
     }
+
+    let cache_dir = TempDir::new().unwrap();
+    let contract_1_address =
+        "3216637956526895219277698311134811322769343974163380838558193911733621219342";
+    let contract_2_address =
+        "3221247681918684045050855759557788124640099286968827281606334752803016107426";
 
     let assert_cache = || {
         // Assertions
