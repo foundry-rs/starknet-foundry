@@ -140,10 +140,15 @@ pub fn config_from_scarb_for_package(
         .get_package(package)
         .ok_or_else(|| anyhow!("Failed to find metadata for package = {package}"))?
         .tool_metadata("snforge");
-
     let config = raw_metadata.map_or_else(
         || Ok(Default::default()),
-        |raw_metadata| Ok(serde_json::from_value(raw_metadata.clone())?),
+        |raw_metadata| {
+            let mut config: ForgeConfig = serde_json::from_value(raw_metadata.clone())?;
+            if config.fork.is_empty() {
+                config.fork = vec![];
+            };
+            Ok(config)
+        },
     );
 
     validate_fork_config(config)
