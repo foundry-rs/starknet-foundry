@@ -35,7 +35,7 @@ use starknet_api::transaction::Calldata;
 use test_collector::{Fork, TestCase};
 
 use crate::cheatcodes_hint_processor::CairoHintProcessor;
-use crate::scarb::{PredefinedFork, StarknetContractArtifacts};
+use crate::scarb::{ForkTargets, StarknetContractArtifacts};
 use crate::test_case_summary::TestCaseSummary;
 
 // snforge_std/src/cheatcodes.cairo::TEST
@@ -70,7 +70,7 @@ fn build_hints_dict<'b>(
 pub(crate) fn run_from_test_case(
     runner: &SierraCasmRunner,
     case: &TestCase,
-    predefined_forks: Option<&Vec<PredefinedFork>>,
+    fork_targets: &Vec<ForkTargets>,
     contracts: &HashMap<String, StarknetContractArtifacts>,
     predeployed_contracts: &Utf8PathBuf,
 ) -> Result<TestCaseSummary> {
@@ -138,7 +138,7 @@ pub(crate) fn run_from_test_case(
             dict_state_reader: build_testing_state(predeployed_contracts),
             fork_state_reader: match &case.fork_config {
                 Some(Fork::Config(url, block_id)) => Some(ForkStateReader::new(url, *block_id)),
-                Some(Fork::Id(name)) => extract_fork_when_id_passed(predefined_forks, name),
+                Some(Fork::Id(name)) => extract_fork_when_id_passed(fork_targets, name),
                 _ => None,
             },
         }),
@@ -170,12 +170,10 @@ pub(crate) fn run_from_test_case(
 }
 
 fn extract_fork_when_id_passed(
-    predefined_forks: Option<&Vec<PredefinedFork>>,
+    fork_targets: &Vec<ForkTargets>,
     fork_alias: &str,
 ) -> Option<ForkStateReader> {
-    let fork = predefined_forks?
-        .iter()
-        .find(|fork| fork.name == fork_alias);
+    let fork = fork_targets.iter().find(|fork| fork.name == fork_alias);
 
     let block_id = fork?
         .block_id

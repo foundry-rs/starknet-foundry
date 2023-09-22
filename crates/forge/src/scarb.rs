@@ -44,11 +44,11 @@ pub struct ForgeConfig {
     #[serde(default)]
     /// Should runner exit after first failed test
     pub exit_first: bool,
-    pub fork: Option<Vec<PredefinedFork>>,
+    pub fork: Vec<ForkTargets>,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Default, Clone)]
-pub struct PredefinedFork {
+pub struct ForkTargets {
     pub name: String,
     pub url: String,
     pub block_id: HashMap<String, String>,
@@ -234,10 +234,7 @@ pub fn dependencies_for_package(
 }
 
 fn validate_fork_config(config: Result<ForgeConfig>) -> Result<ForgeConfig> {
-    if let Ok(ForgeConfig {
-        fork: Some(forks), ..
-    }) = &config
-    {
+    if let Ok(ForgeConfig { fork: forks, .. }) = &config {
         let names: Vec<String> = forks.iter().map(|fork| fork.name.clone()).collect();
         let removed_duplicated_names: Vec<String> = names.clone().into_iter().unique().collect();
 
@@ -641,17 +638,17 @@ mod tests {
             ForgeConfig {
                 exit_first: false,
                 fork: Some(vec![
-                    PredefinedFork {
+                    ForkTargets {
                         name: "FIRST_FORK_NAME".to_string(),
                         url: "http://some.rpc.url".to_string(),
                         block_id: HashMap::from([("number".to_string(), "1".to_string())]),
                     },
-                    PredefinedFork {
+                    ForkTargets {
                         name: "SECOND_FORK_NAME".to_string(),
                         url: "http://some.rpc.url".to_string(),
                         block_id: HashMap::from([("hash".to_string(), "1".to_string())]),
                     },
-                    PredefinedFork {
+                    ForkTargets {
                         name: "THIRD_FORK_NAME".to_string(),
                         url: "http://some.rpc.url".to_string(),
                         block_id: HashMap::from([("tag".to_string(), "Latest".to_string())]),

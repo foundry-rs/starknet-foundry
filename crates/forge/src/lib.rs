@@ -14,7 +14,7 @@ use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 
 use crate::running::run_from_test_case;
-use crate::scarb::{ForgeConfig, PredefinedFork, StarknetContractArtifacts};
+use crate::scarb::{ForgeConfig, ForkTargets, StarknetContractArtifacts};
 pub use crate::test_file_summary::TestFileSummary;
 use test_collector::{collect_tests, LinkedLibrary, TestCase};
 
@@ -32,7 +32,7 @@ pub struct RunnerConfig {
     test_name_filter: Option<String>,
     exact_match: bool,
     exit_first: bool,
-    predefined_forks: Option<Vec<PredefinedFork>>,
+    fork_targets: Vec<ForkTargets>,
 }
 
 impl RunnerConfig {
@@ -54,7 +54,7 @@ impl RunnerConfig {
             test_name_filter,
             exact_match,
             exit_first: forge_config_from_scarb.exit_first || exit_first,
-            predefined_forks: forge_config_from_scarb.fork.clone(),
+            fork_targets: forge_config_from_scarb.fork.clone(),
         }
     }
 }
@@ -262,7 +262,7 @@ fn run_tests_from_file(
         let result = run_from_test_case(
             &runner,
             case,
-            runner_config.predefined_forks.as_ref(),
+            runner_config.fork_targets.as_ref(),
             contracts,
             predeployed_contracts,
         )?;
