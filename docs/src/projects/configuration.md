@@ -8,10 +8,10 @@ It is possible to configure forge for all test runs through `Scarb.toml`.
 Instead of passing arguments in the command line, set them directly in the file.
 
 ```toml
-(...)
+# ...
 [tool.snforge]
 exit_first = true
-(...)
+# ...
 ```
 
 Forge automatically looks for `Scarb.toml` in the directory you are running the tests in or in any of its parents.
@@ -27,12 +27,12 @@ by either supplying cast with those parameters directly [see more detailed CLI d
 or you can put them into `Scarb.toml` file:
 
 ```toml
-(...)
+# ...
 [tool.sncast.myprofile]
 account = "user"
 accounts-file = "~/my_accounts.json"
 url = "http://127.0.0.1:5050/rpc"
-(...)
+# ...
 ```
 
 With `Scarb.toml` configured this way, we can just pass `--profile myprofile` argument to make sure cast uses parameters
@@ -67,12 +67,12 @@ You can have multiple profiles defined in the `Scarb.toml`.
 If you don't need multiple profiles, you can define the parameters without specifying one:
 
 ```toml
-(...)
+# ...
 [tool.sncast]
 account = "user123"
 accounts-file = "~/my_accounts.json"
 url = "http://127.0.0.1:5050/rpc"
-(...)
+# ...
 ```
 
 That way, you can omit passing `--profile` parameter:

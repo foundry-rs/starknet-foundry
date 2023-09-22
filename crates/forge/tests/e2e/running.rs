@@ -46,7 +46,7 @@ fn simple_package() {
         Running 1 test(s) from tests/without_prefix.cairo
         [PASS] without_prefix::five
         Tests: 9 passed, 2 failed, 0 skipped
-        
+
         Failures:
             test_simple::test_failing
             test_simple::test_another_failing
@@ -504,7 +504,7 @@ fn exit_first_flag_takes_precedence() {
         [SKIP] test_simple::test_another_failing
         [SKIP] without_prefix::five
         Tests: 8 passed, 1 failed, 2 skipped
-        
+
         Failures:
             test_simple::test_failing
         "#});
