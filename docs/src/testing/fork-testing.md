@@ -20,8 +20,8 @@ There are two ways of configuring a fork:
 ## Configure a Fork in the attribute
 
 It is possible to pass `url` and `block_id` arguments to the `fork` attribute:
-- `url` - short string
-- `block_id` - `BlockId` enum
+- `url` - RPC URL (short string)
+- `block_id` - id of block which will be pin to fork (`BlockId` enum)
 
 ```rust
 enum BlockId {
@@ -48,7 +48,7 @@ fn test_using_forked_state() {
 
 Once such a configuration is passed, it is possible to use state and contracts defined on the specified network.
 
-## Configure forks in the `Scarb.toml`
+## Configure fork in the `Scarb.toml`
 
 Although passing named arguments works fine, you have to copy-paste it each time you want to use
 the same fork in tests.
