@@ -3,6 +3,7 @@ use camino::Utf8PathBuf;
 use scarb_metadata;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::env;
 use std::process::{Command, Stdio};
 use std::str::FromStr;
 
@@ -11,6 +12,7 @@ pub struct CastConfig {
     pub rpc_url: String,
     pub account: String,
     pub accounts_file: Utf8PathBuf,
+    pub keystore: Utf8PathBuf,
 }
 
 impl CastConfig {
@@ -24,6 +26,7 @@ impl CastConfig {
             rpc_url: get_property(tool, "url"),
             account: get_property(tool, "account"),
             accounts_file: get_property(tool, "accounts-file"),
+            keystore: get_property(tool, "keystore"),
         })
     }
 }
@@ -76,7 +79,7 @@ pub fn get_scarb_metadata(manifest_path: &Utf8PathBuf) -> Result<scarb_metadata:
         .no_deps()
         .exec()
         .context(
-            "Failed to read Scarb.toml manifest file, not found in current nor parent directories",
+            format!("Failed to read Scarb.toml manifest file, not found in current nor parent directories, {}", env::current_dir().unwrap().into_os_string().into_string().unwrap()),
         )
 }
 
