@@ -7,7 +7,7 @@ use cast::get_chain_id;
 use cast::helpers::response_structs::AccountAddResponse;
 use cast::helpers::scarb_utils::CastConfig;
 use clap::Args;
-use starknet::core::types::BlockTag::Latest;
+use starknet::core::types::BlockTag::Pending;
 use starknet::core::types::{BlockId, FieldElement};
 use starknet::providers::{
     jsonrpc::{HttpTransport, JsonRpcClient},
@@ -71,7 +71,7 @@ pub async fn add(
     let deployed = if add.deployed {
         true
     } else if provider
-        .get_class_hash_at(BlockId::Tag(Latest), add.address)
+        .get_class_hash_at(BlockId::Tag(Pending), add.address)
         .await
         .is_ok()
     {

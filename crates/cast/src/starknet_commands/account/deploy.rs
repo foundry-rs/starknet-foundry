@@ -5,11 +5,14 @@ use clap::Args;
 use serde_json::Map;
 use starknet::accounts::AccountFactoryError;
 use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
-use starknet::core::types::{FieldElement, StarknetError};
+use starknet::core::types::BlockTag::Pending;
+use starknet::core::types::{BlockId, FieldElement, StarknetError};
 use starknet::core::utils::get_contract_address;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::ProviderError::{self};
-use starknet::providers::{JsonRpcClient, MaybeUnknownErrorCode, StarknetErrorWithMessage};
+use starknet::providers::{
+    JsonRpcClient, MaybeUnknownErrorCode, Provider, StarknetErrorWithMessage,
+};
 use starknet::signers::{LocalWallet, SigningKey};
 
 use cast::{
@@ -134,6 +137,35 @@ async fn deploy_from_keystore(
         bail!("Public key and private key from keystore do not match");
     }
 
+    let address = get_contract_address(
+        salt,
+        oz_class_hash,
+        &[private_key.verifying_key().scalar()],
+        FieldElement::ZERO,
+    );
+
+    let result = if provider
+        .get_class_hash_at(BlockId::Tag(Pending), address)
+        .await
+        .is_ok()
+    {
+        println!("Account already deployed, adjusting the account file");
+        InvokeResponse {
+            transaction_hash: FieldElement::ZERO,
+        }
+    } else {
+        deploy_oz_account(
+            provider,
+            oz_class_hash,
+            private_key,
+            salt,
+            chain_id,
+            max_fee,
+            wait,
+        )
+        .await?
+    };
+
     items["deployment"]["status"] = serde_json::Value::from("deployed");
     items.get_mut("deployment").and_then(|deployment| {
         deployment
@@ -141,27 +173,7 @@ async fn deploy_from_keystore(
             .expect("should be an object")
             .remove("salt")
     });
-    items["deployment"]["address"] = format!(
-        "{:#x}",
-        get_contract_address(
-            salt,
-            oz_class_hash,
-            &[private_key.verifying_key().scalar()],
-            FieldElement::ZERO,
-        )
-    )
-    .into();
-
-    let result = deploy_oz_account(
-        provider,
-        oz_class_hash,
-        private_key,
-        salt,
-        chain_id,
-        max_fee,
-        wait,
-    )
-    .await?;
+    items["deployment"]["address"] = format!("{address:#x}").into();
 
     std::fs::write(&account_path, serde_json::to_string_pretty(&items).unwrap())
         .context("Couldn't write to account file")?;
