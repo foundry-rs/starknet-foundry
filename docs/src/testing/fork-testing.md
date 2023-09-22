@@ -15,7 +15,7 @@ network and perform actions on top of it.
 
 There are two ways of configuring a fork:
 - by specifying `url` and `block_id` parameters in the `#[fork(...)]` attribute
-- or by passing fork name defined in your `Scarb.toml` to the `#[fork(...)` attribute
+- or by passing a fork name defined in your `Scarb.toml` to the `#[fork(...)]` attribute
 
 ## Configure a Fork in the attribute
 
