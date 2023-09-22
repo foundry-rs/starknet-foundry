@@ -273,7 +273,6 @@ pub fn run(
 
     pretty_printing::print_collected_tests_count(
         tests.iter().map(|tests| tests.test_cases.len()).sum(),
-        tests.len(),
         package_name,
     );
 

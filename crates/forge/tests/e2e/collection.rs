@@ -23,8 +23,8 @@ fn complex_structure() {
         [..]Finished[..]
 
 
-        Collected 15 test(s) and 3 test file(s) from test_multiple package
-        Running 12 inline test(s)
+        Collected 15 test(s) from test_multiple package
+        Running 12 test(s) from src directory
         [PASS] test_multiple::test_simple
         [PASS] test_multiple::test_fob_in_lib
         [PASS] test_multiple::test_fib_in_lib
@@ -37,11 +37,10 @@ fn complex_structure() {
         [PASS] test_multiple::fab::fab_impl::test_fab
         [PASS] test_multiple::fab::fab_impl::test_how_does_this_work
         [PASS] test_multiple::fab::fab_impl::test_super
-        Running 0 test(s) from tests/fab.cairo
-        Running 3 test(s) from tests/fibfabfob.cairo
-        [PASS] fibfabfob::test_fib
-        [PASS] fibfabfob::test_fob
-        [PASS] fibfabfob::test_fab
+        Running 3 test(s) from tests directory
+        [PASS] tests::fibfabfob::test_fib
+        [PASS] tests::fibfabfob::test_fob
+        [PASS] tests::fibfabfob::test_fab
         Tests: 15 passed, 0 failed, 0 skipped
         "#});
 }
