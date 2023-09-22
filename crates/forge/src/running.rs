@@ -71,7 +71,7 @@ fn build_hints_dict<'b>(
 pub(crate) fn run_from_test_case(
     runner: &SierraCasmRunner,
     case: &TestCase,
-    fork_targets: &Vec<ForkTargets>,
+    fork_targets: &[ForkTargets],
     contracts: &HashMap<String, StarknetContractArtifacts>,
     predeployed_contracts: &Utf8PathBuf,
     args: Vec<Felt252>,
@@ -176,7 +176,7 @@ pub(crate) fn run_from_test_case(
 }
 
 fn extract_fork_when_id_passed(
-    fork_targets: &Vec<ForkTargets>,
+    fork_targets: &[ForkTargets],
     fork_alias: &str,
 ) -> Option<ForkStateReader> {
     let fork = fork_targets.iter().find(|fork| fork.name == fork_alias);
