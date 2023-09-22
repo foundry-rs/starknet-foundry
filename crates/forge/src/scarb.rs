@@ -44,6 +44,10 @@ pub struct ForgeConfig {
     #[serde(default)]
     /// Should runner exit after first failed test
     pub exit_first: bool,
+    /// How many runs should fuzzer execute
+    pub fuzzer_runs: Option<u32>,
+    /// Seed to be used by fuzzer
+    pub fuzzer_seed: Option<u64>,
     pub fork: Vec<ForkTargets>,
 }
 
@@ -637,7 +641,7 @@ mod tests {
             config,
             ForgeConfig {
                 exit_first: false,
-                fork: Some(vec![
+                fork: vec![
                     ForkTargets {
                         name: "FIRST_FORK_NAME".to_string(),
                         url: "http://some.rpc.url".to_string(),
@@ -653,7 +657,9 @@ mod tests {
                         url: "http://some.rpc.url".to_string(),
                         block_id: HashMap::from([("tag".to_string(), "Latest".to_string())]),
                     }
-                ])
+                ],
+                fuzzer_runs: None,
+                fuzzer_seed: None,
             }
         );
     }

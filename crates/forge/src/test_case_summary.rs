@@ -15,6 +15,8 @@ pub enum TestCaseSummary {
         run_result: RunResult,
         /// Message to be printed after the test case run
         msg: Option<String>,
+        /// Arguments used in the test case run
+        arguments: Vec<Felt252>,
     },
     /// Test case failed
     Failed {
@@ -24,6 +26,8 @@ pub enum TestCaseSummary {
         run_result: Option<RunResult>,
         /// Message returned by the test case run
         msg: Option<String>,
+        /// Arguments used in the test case run
+        arguments: Vec<Felt252>,
     },
     /// Test case skipped (did not run)
     Skipped {
@@ -33,8 +37,22 @@ pub enum TestCaseSummary {
 }
 
 impl TestCaseSummary {
+    pub(crate) fn arguments(&self) -> Vec<Felt252> {
+        match self {
+            TestCaseSummary::Failed { arguments, .. }
+            | TestCaseSummary::Passed { arguments, .. } => arguments.clone(),
+            TestCaseSummary::Skipped { .. } => vec![],
+        }
+    }
+}
+
+impl TestCaseSummary {
     #[must_use]
-    pub(crate) fn from_run_result(run_result: RunResult, test_case: &TestCase) -> Self {
+    pub(crate) fn from_run_result(
+        run_result: RunResult,
+        test_case: &TestCase,
+        arguments: Vec<Felt252>,
+    ) -> Self {
         let name = test_case.name.to_string();
         let msg = extract_result_data(&run_result, &test_case.expected_result);
         match run_result.clone().value {
@@ -43,11 +61,13 @@ impl TestCaseSummary {
                     name,
                     msg,
                     run_result,
+                    arguments,
                 },
                 ExpectedTestResult::Panics(_) => TestCaseSummary::Failed {
                     name,
                     msg,
                     run_result: Some(run_result),
+                    arguments,
                 },
             },
             RunResultValue::Panic(value) => match &test_case.expected_result {
@@ -55,6 +75,7 @@ impl TestCaseSummary {
                     name,
                     msg,
                     run_result: Some(run_result),
+                    arguments,
                 },
                 ExpectedTestResult::Panics(panic_expectation) => match panic_expectation {
                     ExpectedPanicValue::Exact(expected) if &value != expected => {
@@ -62,12 +83,14 @@ impl TestCaseSummary {
                             name,
                             msg,
                             run_result: Some(run_result),
+                            arguments,
                         }
                     }
                     _ => TestCaseSummary::Passed {
                         name,
                         msg,
                         run_result,
+                        arguments,
                     },
                 },
             },

@@ -8,6 +8,7 @@ use blockifier::execution::entry_point::{
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::cached_state::{CachedState, GlobalContractCache};
+use cairo_felt::Felt252;
 use cairo_vm::serde::deserialize_program::HintParams;
 use cairo_vm::types::relocatable::Relocatable;
 use cheatnet::constants::{build_block_context, build_testing_state, build_transaction_context};
@@ -17,8 +18,8 @@ use itertools::chain;
 use cairo_lang_casm::hints::Hint;
 use cairo_lang_casm::instructions::Instruction;
 use cairo_lang_runner::casm_run::hint_to_hint_params;
-use cairo_lang_runner::RunnerError;
 use cairo_lang_runner::SierraCasmRunner;
+use cairo_lang_runner::{Arg, RunnerError};
 use cairo_vm::vm::runners::cairo_runner::RunResources;
 use camino::Utf8PathBuf;
 use cheatnet::forking::state::ForkStateReader;
@@ -73,6 +74,7 @@ pub(crate) fn run_from_test_case(
     fork_targets: &Vec<ForkTargets>,
     contracts: &HashMap<String, StarknetContractArtifacts>,
     predeployed_contracts: &Utf8PathBuf,
+    args: Vec<Felt252>,
 ) -> Result<TestCaseSummary> {
     let available_gas = if let Some(available_gas) = &case.available_gas {
         Some(*available_gas)
@@ -82,7 +84,10 @@ pub(crate) fn run_from_test_case(
 
     let func = runner.find_function(case.name.as_str())?;
     let initial_gas = runner.get_initial_available_gas(func, available_gas)?;
-    let (entry_code, builtins) = runner.create_entry_code(func, &[], initial_gas)?;
+
+    let runner_args: Vec<Arg> = args.clone().into_iter().map(Arg::Value).collect();
+
+    let (entry_code, builtins) = runner.create_entry_code(func, &runner_args, initial_gas)?;
     let footer = runner.create_code_footer();
     let instructions = chain!(
         entry_code.iter(),
@@ -153,7 +158,7 @@ pub(crate) fn run_from_test_case(
         instructions,
         builtins,
     ) {
-        Ok(result) => Ok(TestCaseSummary::from_run_result(result, case)),
+        Ok(result) => Ok(TestCaseSummary::from_run_result(result, case, args)),
 
         // CairoRunError comes from VirtualMachineError which may come from HintException that originates in the cheatcode processor
         Err(RunnerError::CairoRunError(error)) => Ok(TestCaseSummary::Failed {
@@ -163,6 +168,7 @@ pub(crate) fn run_from_test_case(
                 "\n    {}\n",
                 error.to_string().replace(" Custom Hint Error: ", "\n    ")
             )),
+            arguments: args,
         }),
 
         Err(err) => Err(err.into()),

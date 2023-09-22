@@ -554,13 +554,7 @@ fn validate_tests(
                 filtered_params.push(param_str.to_string());
             }
         }
-        if !filtered_params.is_empty() {
-            anyhow::bail!(format!(
-                "Invalid number of parameters for test {}: expected 0, got {}",
-                test.name,
-                func.params.len()
-            ));
-        }
+
         let signature = &func.signature;
         let ret_types = &signature.ret_types;
         let tp = &ret_types[ret_types.len() - 1];

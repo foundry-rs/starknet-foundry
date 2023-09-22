@@ -97,6 +97,8 @@ fn fork_aliased_decorator() {
             None,
             false,
             false,
+            Some(1234),
+            Some(500),
             &ForgeConfig {
                 exit_first: false,
                 fork: vec![ForkTargets {
@@ -104,11 +106,14 @@ fn fork_aliased_decorator() {
                     url: CHEATNET_RPC_URL.to_string(),
                     block_id: HashMap::from([("tag".to_string(), "Latest".to_string())]),
                 }],
+                fuzzer_runs: Some(1234),
+                fuzzer_seed: Some(500),
             },
         ),
         &corelib_path(),
         &test.contracts(&corelib_path()).unwrap(),
         &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
+        500,
     )
     .unwrap();
 
