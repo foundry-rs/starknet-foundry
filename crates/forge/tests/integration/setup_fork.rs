@@ -7,6 +7,8 @@ use forge::{run, RunnerConfig};
 use indoc::formatdoc;
 use std::collections::HashMap;
 
+static CHEATNET_RPC_URL: &str = "http://188.34.188.184:9545/rpc/v0.4";
+
 #[test]
 fn fork_simple_decorator() {
     let test = test_case!(formatdoc!(
@@ -42,7 +44,7 @@ fn fork_simple_decorator() {
                 assert(balance == 102, 'Balance should be 102');
             }}
         "#,
-        "http://188.34.188.184:9545/rpc/v0.4"
+        CHEATNET_RPC_URL
     ).as_str());
 
     let result = run_test_case(&test);
@@ -99,7 +101,7 @@ fn fork_aliased_decorator() {
                 exit_first: false,
                 fork: vec![ForkTargets {
                     name: "FORK_NAME_FROM_SCARB_TOML".to_string(),
-                    url: "http://188.34.188.184:9545/rpc/v0.4".to_string(),
+                    url: CHEATNET_RPC_URL.to_string(),
                     block_id: HashMap::from([("tag".to_string(), "Latest".to_string())]),
                 }],
             },
