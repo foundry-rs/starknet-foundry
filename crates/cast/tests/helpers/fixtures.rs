@@ -1,6 +1,8 @@
-use crate::helpers::constants::{ACCOUNT_FILE_PATH, CONTRACTS_DIR, URL};
+use crate::helpers::constants::{ACCOUNT_FILE_PATH, CONTRACTS_DIR, DEVNET_ENV_FILE, URL};
 use camino::Utf8PathBuf;
+use cast::helpers::constants::UDC_ADDRESS;
 use cast::{get_account, get_provider, parse_number};
+use primitive_types::U256;
 use serde_json::{json, Value};
 use starknet::accounts::{Account, Call};
 use starknet::contract::ContractFactory;
@@ -11,17 +13,20 @@ use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use std::collections::HashMap;
+use std::env;
 use std::fs;
+use std::fs::OpenOptions;
+use std::io::Write;
 use std::sync::Arc;
 use url::Url;
 
-pub async fn declare_contract(account: &str, path: &str) -> FieldElement {
+pub async fn declare_contract(account: &str, path: &str, shortname: &str) -> FieldElement {
     let provider = get_provider(URL).expect("Could not get the provider");
     let account = get_account(
         account,
         &Utf8PathBuf::from(ACCOUNT_FILE_PATH),
         &provider,
-        &None,
+        &Utf8PathBuf::default(),
     )
     .await
     .expect("Could not get the account");
@@ -50,25 +55,44 @@ pub async fn declare_contract(account: &str, path: &str) -> FieldElement {
         casm_class_hash,
     );
 
-    declaration.send().await.unwrap().class_hash
+    let hash = declaration.send().await.unwrap().class_hash;
+    write_devnet_env(format!("{shortname}_CLASS_HASH").as_str(), &hash);
+    hash
 }
 
-pub async fn declare_deploy_contract(account: &str, path: &str) {
-    let class_hash = declare_contract(account, path).await;
+pub async fn declare_deploy_contract(account: &str, path: &str, shortname: &str) {
+    let class_hash = declare_contract(account, path, shortname).await;
 
     let provider = get_provider(URL).expect("Could not get the provider");
     let account = get_account(
         account,
         &Utf8PathBuf::from(ACCOUNT_FILE_PATH),
         &provider,
-        &None,
+        &Utf8PathBuf::default(),
     )
     .await
     .expect("Could not get the account");
 
     let factory = ContractFactory::new(class_hash, &account);
     let deployment = factory.deploy(Vec::new(), FieldElement::ONE, true);
-    deployment.send().await.unwrap();
+
+    let transaction_hash = deployment.send().await.unwrap().transaction_hash;
+    let receipt = get_transaction_receipt(transaction_hash).await;
+    let mut address = None;
+    match receipt {
+        TransactionReceipt::Invoke(invoke_receipt) => {
+            for event in invoke_receipt.events {
+                if event.from_address == FieldElement::from_hex_be(UDC_ADDRESS).unwrap() {
+                    address = event.data.first().copied();
+                    break;
+                }
+            }
+        }
+        _ => {
+            panic!("Unexpected TransactionReceipt variant");
+        }
+    };
+    write_devnet_env(format!("{shortname}_ADDRESS").as_str(), &address.unwrap());
 }
 
 pub async fn invoke_map_contract(key: &str, value: &str, account: &str, contract_address: &str) {
@@ -77,7 +101,7 @@ pub async fn invoke_map_contract(key: &str, value: &str, account: &str, contract
         account,
         &Utf8PathBuf::from(ACCOUNT_FILE_PATH),
         &provider,
-        &None,
+        &Utf8PathBuf::default(),
     )
     .await
     .expect("Could not get the account");
@@ -177,6 +201,7 @@ pub fn duplicate_directory_with_salt(src_path: String, to_be_salted: &str, salt:
     let src_dir = Utf8PathBuf::from(src_path);
     let dest_dir = Utf8PathBuf::from(&dest_path);
 
+    _ = fs::remove_dir_all(&dest_dir);
     fs::create_dir_all(&dest_dir).expect("Unable to create directory");
 
     fs_extra::dir::copy(
@@ -199,4 +224,33 @@ pub fn duplicate_directory_with_salt(src_path: String, to_be_salted: &str, salt:
         .expect("Unable to change contract code");
 
     dest_path
+}
+
+pub fn remove_devnet_env() {
+    if Utf8PathBuf::from(DEVNET_ENV_FILE).is_file() {
+        fs::remove_file(DEVNET_ENV_FILE).unwrap();
+    }
+}
+
+fn write_devnet_env(key: &str, value: &FieldElement) {
+    let mut file = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(DEVNET_ENV_FILE)
+        .unwrap();
+
+    writeln!(file, "{key}={value}").unwrap();
+}
+
+#[must_use]
+pub fn convert_to_hex(value: &str) -> String {
+    let dec = U256::from_dec_str(value).expect("Invalid decimal string");
+    format!("{dec:#x}")
+}
+
+pub fn from_env(name: &str) -> Result<String, String> {
+    match env::var(name) {
+        Ok(value) => Ok(value),
+        Err(_) => Err(format!("Variable {name} not available in env!")),
+    }
 }

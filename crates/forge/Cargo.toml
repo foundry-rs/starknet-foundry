@@ -39,9 +39,10 @@ parity-scale-codec = "3.5.0"
 parity-scale-codec-derive = "3.1.4"
 num-bigint.workspace = true
 cairo-felt = "0.8.1"
-clap = { version = "4.2.7", features = ["derive"] }
+clap = { version = "4.3.23", features = ["derive"] }
 walkdir = "2.3.3"
-scarb-metadata = "1.4.2"
+scarb-ui = { git = "https://github.com/software-mansion/scarb.git", rev = "58cc88e" }
+scarb-metadata = { git = "https://github.com/software-mansion/scarb.git", rev = "58cc88e" }
 project-root = "0.2.2"
 console = "0.15.7"
 snapbox = "0.4.11"
@@ -55,6 +56,8 @@ openssl = { version = "0.10", features = ["vendored"] }
 which = "4.4.0"
 toml_edit = "0.9.1"
 flatten-serde-json = "0.1.0"
+rand = "0.8.5"
+smol_str = "0.2.0"
 
 [lib]
 name = "forge"

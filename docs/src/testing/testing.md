@@ -25,8 +25,8 @@ Now run forge using a command:
 
 ```shell
 $ snforge
-Collected 1 test(s) and 1 test file(s)
-Running 1 test(s) from package_name package
+Collected 1 test(s) and 1 test file(s) from package_name package
+Running 1 inline test(s)
 [PASS] package_name::test_sum
 Tests: 1 passed, 0 failed, 0 skipped
 ```
@@ -34,12 +34,14 @@ Tests: 1 passed, 0 failed, 0 skipped
 ## Test collecting
 
 Forge considers all functions in your project marked with `#[test]` attribute as tests.
-Test functions cannot return any values and cannot take any arguments.
+By default, test functions run without any arguments.
+However, adding any arguments to function signature will enable [fuzz testing](./advanced/fuzz-testing.md) for this
+test case.
 
 Starknet Forge will collect tests only from these places:
 
 - any files reachable from the package root (declared as `mod` in `lib.cairo` or its children)
-- files outside the package, including files in directories
+- files inside the `tests` directory
 
 ## Failing tests
 
@@ -63,8 +65,8 @@ fn failing() {
 
 ```shell
 $ snforge
-Collected 1 test(s) and 1 test file(s)
-Running 1 test(s) from package_name package
+Collected 1 test(s) and 1 test file(s) from package_name package
+Running 1 inline test(s)
 [FAIL] package_name::failing
 
 Failure data:
@@ -75,9 +77,12 @@ Tests: 0 passed, 1 failed, 0 skipped
 
 ## Expected failures
 
-Sometimes you want to mark a test as expected to fail. This is useful when you want to verify that an action fails as expected.
+Sometimes you want to mark a test as expected to fail. This is useful when you want to verify that an action fails as
+expected.
 
-To mark a test as expected to fail, use the `#[should_panic]` attribute. You can pass the expected failure message as an argument to the attribute to verify that the test fails with the expected message with `#[should_panic(expected: ('panic message', 'eventual second message',))]`.
+To mark a test as expected to fail, use the `#[should_panic]` attribute. You can pass the expected failure message as an
+argument to the attribute to verify that the test fails with the expected message
+with `#[should_panic(expected: ('panic message', 'eventual second message',))]`.
 
 ```rust
 #[test]
@@ -89,8 +94,8 @@ fn should_panic_check_data() {
 
 ```shell
 $ snforge
-Collected 1 test(s) and 1 test file(s)
-Running 1 test(s) from package_name package
+Collected 1 test(s) and 1 test file(s) from package_name package
+Running 1 inline test(s)
 [PASS] src::should_panic_check_data
 Tests: 1 passed, 0 failed, 0 skipped
 ```

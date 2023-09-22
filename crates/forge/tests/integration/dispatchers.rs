@@ -577,7 +577,7 @@ fn nonexistent_method_call() {
     assert_case_output_contains!(
         result,
         "test_nonexistent_method_call",
-        "Entry point selector 0x01fdb214e1495025fa4baf660d34f03c0d8b5037cf10311d2a3202a806aa9485 not found in contract 0x0727a198cf6adcce513eb543664d87f6cd04e3a74a7661416a2f9e7da305d9e2"
+        "Entry point selector 0x01fdb214e1495025fa4baf660d34f03c0d8b5037cf10311d2a3202a806aa9485 not found in contract 0x00de051f30e9666abb4facfd77c48e4a64c2e30738292a6f5e217ff9cda5fee5"
     );
 }
 

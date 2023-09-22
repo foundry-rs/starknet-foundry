@@ -9,14 +9,20 @@ pub fn print_error_message(error: &Error) {
     println!("[{error_tag}] {error}");
 }
 
-pub(crate) fn print_collected_tests_count(tests_num: usize, tests_files_num: usize) {
-    let plain_text = format!("Collected {tests_num} test(s) and {tests_files_num} test file(s)");
+pub(crate) fn print_collected_tests_count(
+    tests_num: usize,
+    tests_files_num: usize,
+    package_name: &str,
+) {
+    let plain_text = format!(
+        "\n\nCollected {tests_num} test(s) and {tests_files_num} test file(s) from {package_name} package"
+    );
     println!("{}", style(plain_text).bold());
 }
 
-pub(crate) fn print_running_tests(test_file: &Utf8PathBuf, package_name: &str, tests_num: usize) {
+pub(crate) fn print_running_tests(test_file: &Utf8PathBuf, tests_num: usize) {
     let plain_text = if test_file == "src/lib.cairo" {
-        format!("Running {tests_num} test(s) from {package_name} package")
+        format!("Running {tests_num} inline test(s)")
     } else {
         format!("Running {tests_num} test(s) from {test_file}")
     };
@@ -38,7 +44,11 @@ pub(crate) fn print_test_summary(summaries: &[TestFileSummary]) {
     );
 }
 
-pub(crate) fn print_test_result(test_result: &TestCaseSummary) {
+pub(crate) fn print_test_seed(seed: u64) {
+    println!("{}: {seed}", style("Fuzzer seed").bold());
+}
+
+pub(crate) fn print_test_result(test_result: &TestCaseSummary, fuzzer_runs: Option<u32>) {
     let result_header = match test_result {
         TestCaseSummary::Passed { .. } => format!("[{}]", style("PASS").green()),
         TestCaseSummary::Failed { .. } => format!("[{}]", style("FAIL").red()),
@@ -57,7 +67,19 @@ pub(crate) fn print_test_result(test_result: &TestCaseSummary) {
         _ => String::new(),
     };
 
-    println!("{result_header} {result_name}{result_message}");
+    let fuzzer_runs = match fuzzer_runs {
+        None => String::new(),
+        Some(runs) => {
+            if matches!(test_result, TestCaseSummary::Failed { .. }) {
+                let arguments = test_result.arguments();
+                format!(" (fuzzer runs = {runs}, arguments = {arguments:?})")
+            } else {
+                format!(" (fuzzer runs = {runs})")
+            }
+        }
+    };
+
+    println!("{result_header} {result_name}{fuzzer_runs}{result_message}");
 }
 
 pub fn print_failures(all_failed_tests: &[TestCaseSummary]) {
