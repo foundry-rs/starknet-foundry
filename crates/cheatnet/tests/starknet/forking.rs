@@ -84,45 +84,49 @@ fn try_deploying_undeclared_class() {
 fn test_forking_at_block_number() {
     let predeployed_contracts = Utf8PathBuf::from("predeployed-contracts");
     let node_url = "http://188.34.188.184:9545/rpc/v0.4";
+    let cache_dir = TempDir::new().unwrap();
 
-    let mut state_before_deploy = CheatnetState::new(ExtendedStateReader {
-        dict_state_reader: build_testing_state(&predeployed_contracts),
-        fork_state_reader: Some(ForkStateReader::new(
-            node_url,
-            BlockId::Number(309_780),
-            Some("./.testing_cache"),
-        )),
-    });
+    {
+        let mut state_before_deploy = CheatnetState::new(ExtendedStateReader {
+            dict_state_reader: build_testing_state(&predeployed_contracts),
+            fork_state_reader: Some(ForkStateReader::new(
+                node_url,
+                BlockId::Number(309_780),
+                Some(cache_dir.path().to_str().unwrap()),
+            )),
+        });
 
-    let mut state_after_deploy = CheatnetState::new(ExtendedStateReader {
-        dict_state_reader: build_testing_state(&predeployed_contracts),
-        fork_state_reader: Some(ForkStateReader::new(
-            node_url,
-            BlockId::Number(309_781),
-            Some("./.testing_cache"),
-        )),
-    });
+        let mut state_after_deploy = CheatnetState::new(ExtendedStateReader {
+            dict_state_reader: build_testing_state(&predeployed_contracts),
+            fork_state_reader: Some(ForkStateReader::new(
+                node_url,
+                BlockId::Number(309_781),
+                Some(cache_dir.path().to_str().unwrap()),
+            )),
+        });
 
-    let contract_address = Felt252::from(
-        BigUint::from_str(
-            "3216637956526895219277698311134811322769343974163380838558193911733621219342",
+        let contract_address = Felt252::from(
+            BigUint::from_str(
+                "3216637956526895219277698311134811322769343974163380838558193911733621219342",
+            )
+            .unwrap(),
         )
-        .unwrap(),
-    )
-    .to_contract_address();
+        .to_contract_address();
 
-    let selector = felt_selector_from_name("get_balance");
-    let output =
-        call_contract(&contract_address, &selector, &[], &mut state_before_deploy).unwrap();
-    assert_error!(
+        let selector = felt_selector_from_name("get_balance");
+        let output =
+            call_contract(&contract_address, &selector, &[], &mut state_before_deploy).unwrap();
+        assert_error!(
         output,
         "Contract not deployed at address: 0x071c8d74edc89330f314f3b1109059d68ebfa68874aa91e9c425a6378ffde00e"
     );
 
-    let selector = felt_selector_from_name("get_balance");
-    let output = call_contract(&contract_address, &selector, &[], &mut state_after_deploy).unwrap();
-    assert_success!(output, vec![Felt252::from(0)]);
-    purge_cache("./.testing_cache");
+        let selector = felt_selector_from_name("get_balance");
+        let output =
+            call_contract(&contract_address, &selector, &[], &mut state_after_deploy).unwrap();
+        assert_success!(output, vec![Felt252::from(0)]);
+    }
+    purge_cache(cache_dir.path().to_str().unwrap());
 }
 
 #[test]
