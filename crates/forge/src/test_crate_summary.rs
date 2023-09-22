@@ -1,19 +1,18 @@
 use crate::test_case_summary::TestCaseSummary;
-use crate::RunnerStatus;
-use camino::Utf8PathBuf;
+use crate::{RunnerStatus, TestCrateType};
 
 /// Summary of the test run in the file
 #[derive(Debug, PartialEq, Clone)]
-pub struct TestFileSummary {
+pub struct TestCrateSummary {
     /// Summaries of each test case in the file
     pub test_case_summaries: Vec<TestCaseSummary>,
     /// Status of the runner after executing tests in the file
     pub runner_exit_status: RunnerStatus,
-    /// Relative path to the test file
-    pub relative_path: Utf8PathBuf,
+    /// Type of the test crate
+    pub test_crate_type: TestCrateType,
 }
 
-impl TestFileSummary {
+impl TestCrateSummary {
     pub(crate) fn count_passed(&self) -> usize {
         self.test_case_summaries
             .iter()
