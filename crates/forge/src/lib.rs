@@ -283,7 +283,7 @@ pub fn run(
     let mut summaries = vec![];
 
     for tests_from_crate in tests_iterator.by_ref() {
-        let (summary, was_fuzzed) = run_tests_from_file(
+        let (summary, was_fuzzed) = run_tests_from_crate(
             tests_from_crate,
             runner_config,
             contracts,
@@ -326,7 +326,7 @@ pub fn run(
     Ok(summaries)
 }
 
-fn run_tests_from_file(
+fn run_tests_from_crate(
     tests: TestsFromCrate,
     runner_config: &RunnerConfig,
     contracts: &HashMap<String, StarknetContractArtifacts>,
