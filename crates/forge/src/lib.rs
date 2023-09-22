@@ -7,48 +7,49 @@ use cairo_felt::Felt252;
 use camino::{Utf8Path, Utf8PathBuf};
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use serde::Deserialize;
-use test_case_summary::TestCaseSummary;
+use test_runner::test_case_summary::TestCaseSummary;
 use walkdir::WalkDir;
 
-use cairo_lang_runner::SierraCasmRunner;
 use cairo_lang_sierra::ids::ConcreteTypeId;
-use cairo_lang_sierra::program::{Function, Program};
-use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
-use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
+use cairo_lang_sierra::program::Program;
 use num_bigint::BigUint;
 use num_traits::Zero;
-use once_cell::sync::Lazy;
 use smol_str::SmolStr;
+use test_runner::Runner;
 
 use crate::fuzzer::RandomFuzzer;
-use crate::running::run_from_test_case;
 use crate::scarb::{ForgeConfig, StarknetContractArtifacts};
 pub use crate::test_file_summary::TestFileSummary;
+use cheatnet::cheatcodes::ContractArtifacts;
 use test_collector::{collect_tests, LinkedLibrary, TestCase};
 
 pub mod pretty_printing;
 pub mod scarb;
-pub mod test_case_summary;
 
-mod cheatcodes_hint_processor;
 mod fuzzer;
-mod running;
 mod test_file_summary;
 
 const FUZZER_RUNS_DEFAULT: u32 = 256;
 
-static BUILTINS: Lazy<Vec<&str>> = Lazy::new(|| {
-    vec![
-        "Pedersen",
-        "RangeCheck",
-        "Bitwise",
-        "EcOp",
-        "Poseidon",
-        "SegmentArena",
-        "GasBuiltin",
-        "System",
-    ]
-});
+// TODO(#41) Remove after we have a separate scarb package
+impl From<&StarknetContractArtifacts> for ContractArtifacts {
+    fn from(artifacts: &StarknetContractArtifacts) -> Self {
+        ContractArtifacts {
+            sierra: artifacts.sierra.clone(),
+            casm: artifacts.casm.clone(),
+        }
+    }
+}
+
+fn map_to_cheatnet_contracts(
+    contracts: &HashMap<String, StarknetContractArtifacts>,
+) -> HashMap<String, ContractArtifacts> {
+    contracts
+        .iter()
+        .map(|(k, v)| (k.clone(), ContractArtifacts::from(v)))
+        .collect()
+}
+// END: TODO(#41)
 
 /// Configuration of the test runner
 #[derive(Deserialize, Debug, PartialEq, Default)]
@@ -165,7 +166,6 @@ fn collect_tests_from_tree(
         None,
         package_name,
         linked_libraries.clone(),
-        Some(BUILTINS.clone()),
         corelib_path.into(),
     )?;
 
@@ -279,12 +279,7 @@ fn run_tests_from_file(
     predeployed_contracts: &Utf8PathBuf,
     fuzzer_seed: u64,
 ) -> Result<(TestFileSummary, bool)> {
-    let runner = SierraCasmRunner::new(
-        tests.sierra_program,
-        Some(MetadataComputationConfig::default()),
-        OrderedHashMap::default(),
-    )
-    .context("Failed setting up runner.")?;
+    let runner = Runner::new(tests.sierra_program);
 
     pretty_printing::print_running_tests(&tests.relative_path, tests.test_cases.len());
 
@@ -293,12 +288,15 @@ fn run_tests_from_file(
 
     for (i, case) in tests.test_cases.iter().enumerate() {
         let case_name = case.name.as_str();
-        let function = runner.find_function(case_name)?;
-        let args = function_args(function, &BUILTINS);
+        let args = runner.get_test_case_args(case_name);
 
         let result = if args.is_empty() {
-            let result =
-                run_from_test_case(&runner, case, contracts, predeployed_contracts, vec![])?;
+            let result = runner.run_from_test_case(
+                case,
+                &map_to_cheatnet_contracts(contracts),
+                predeployed_contracts,
+                vec![],
+            )?;
             pretty_printing::print_test_result(&result, None);
 
             result
@@ -352,9 +350,9 @@ fn run_with_fuzzing(
     runner_config: &RunnerConfig,
     contracts: &HashMap<String, StarknetContractArtifacts>,
     predeployed_contracts: &Utf8PathBuf,
-    runner: &SierraCasmRunner,
+    runner: &Runner,
     case: &TestCase,
-    args: &Vec<&ConcreteTypeId>,
+    args: &Vec<ConcreteTypeId>,
     fuzzer_seed: u64,
 ) -> Result<(TestCaseSummary, u32)> {
     if contains_non_felt252_args(args) {
@@ -377,8 +375,12 @@ fn run_with_fuzzing(
     for _ in 1..=runner_config.fuzzer_runs {
         let args = fuzzer.next_felt252_args();
 
-        let result =
-            run_from_test_case(runner, case, contracts, predeployed_contracts, args.clone())?;
+        let result = runner.run_from_test_case(
+            case,
+            &map_to_cheatnet_contracts(contracts),
+            predeployed_contracts,
+            args.clone(),
+        )?;
         results.push(result.clone());
 
         if let TestCaseSummary::Failed { .. } = result {
@@ -395,27 +397,13 @@ fn run_with_fuzzing(
     Ok((result, runs))
 }
 
-fn contains_non_felt252_args(args: &Vec<&ConcreteTypeId>) -> bool {
+fn contains_non_felt252_args(args: &Vec<ConcreteTypeId>) -> bool {
     args.iter().any(|pt| {
         if let Some(name) = &pt.debug_name {
             return name != &SmolStr::from("felt252");
         }
         false
     })
-}
-
-fn function_args<'a>(function: &'a Function, builtins: &[&str]) -> Vec<&'a ConcreteTypeId> {
-    let builtins: Vec<_> = builtins
-        .iter()
-        .map(|builtin| Some(SmolStr::new(builtin)))
-        .collect();
-
-    function
-        .signature
-        .param_types
-        .iter()
-        .filter(|pt| !builtins.contains(&pt.debug_name))
-        .collect()
 }
 
 fn filter_tests_by_name(
@@ -750,7 +738,7 @@ mod tests {
             id: 0,
             debug_name: Some(SmolStr::from("felt252")),
         };
-        let args = vec![&typ, &typ];
+        let args = vec![typ.clone(), typ.clone()];
         assert!(!contains_non_felt252_args(&args));
     }
 
@@ -764,7 +752,7 @@ mod tests {
             id: 0,
             debug_name: Some(SmolStr::from("Uint256")),
         };
-        let args = vec![&typ, &typ, &typ2];
+        let args = vec![typ.clone(), typ.clone(), typ2];
         assert!(contains_non_felt252_args(&args));
     }
 }

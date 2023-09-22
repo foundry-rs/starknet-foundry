@@ -15,9 +15,9 @@ use forge::scarb::{
     get_contracts_map, name_for_package, paths_for_package, target_dir_for_package,
     target_name_for_package, try_get_starknet_artifacts_path,
 };
-use forge::test_case_summary::TestCaseSummary;
 use rand::{thread_rng, RngCore};
 use std::process::{Command, Stdio};
+use test_runner::test_case_summary::TestCaseSummary;
 
 mod init;
 

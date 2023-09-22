@@ -33,6 +33,7 @@ use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use cairo_lang_utils::OptionHelper;
 use itertools::Itertools;
 use num_traits::ToPrimitive;
+use once_cell::sync::Lazy;
 use project::{setup_single_file_project, PHANTOM_PACKAGE_NAME_PREFIX};
 use smol_str::SmolStr;
 use std::fs;
@@ -273,6 +274,19 @@ fn extract_panic_values(db: &dyn SyntaxGroup, attr: &Attribute) -> Option<Vec<Fe
         .collect::<Option<Vec<_>>>()
 }
 
+pub static BUILTINS: Lazy<Vec<&str>> = Lazy::new(|| {
+    vec![
+        "Pedersen",
+        "RangeCheck",
+        "Bitwise",
+        "EcOp",
+        "Poseidon",
+        "SegmentArena",
+        "GasBuiltin",
+        "System",
+    ]
+});
+
 /// Represents a dependency of a Cairo project
 #[derive(Debug, Clone)]
 pub struct LinkedLibrary {
@@ -293,9 +307,13 @@ pub fn collect_tests(
     output_path: Option<&str>,
     package_name: &str,
     linked_libraries: Option<Vec<LinkedLibrary>>,
-    builtins: Option<Vec<&str>>,
     corelib_path: PathBuf,
 ) -> Result<(Program, Vec<TestCase>)> {
+    let builtins = BUILTINS
+        .iter()
+        .map(|s| (*s).to_string())
+        .collect::<Vec<_>>();
+
     // code taken from crates/cairo-lang-test-runner/src/lib.rs
     let db = &mut {
         let mut b = RootDatabase::builder();
@@ -373,10 +391,6 @@ pub fn collect_tests(
         .collect();
 
     let sierra_program = replace_sierra_ids_in_program(db, &sierra_program);
-
-    let builtins = builtins.map_or_else(Vec::new, |builtins| {
-        builtins.iter().map(|s| (*s).to_string()).collect()
-    });
 
     validate_tests(sierra_program.clone(), &collected_tests, &builtins)?;
 

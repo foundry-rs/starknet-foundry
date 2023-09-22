@@ -1,8 +1,8 @@
-use crate::test_case_summary::TestCaseSummary;
 use crate::TestFileSummary;
 use anyhow::Error;
 use camino::Utf8PathBuf;
 use console::style;
+use test_runner::test_case_summary::TestCaseSummary;
 
 pub fn print_error_message(error: &Error) {
     let error_tag = style("ERROR").red();

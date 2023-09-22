@@ -2,7 +2,6 @@ use std::any::Any;
 use std::collections::HashMap;
 use std::path::PathBuf;
 
-use crate::scarb::StarknetContractArtifacts;
 use anyhow::{anyhow, Result};
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::execution_utils::{felt_to_stark_felt, stark_felt_to_felt};
@@ -41,19 +40,9 @@ use cheatnet::cheatcodes::spy_events::SpyTarget;
 
 mod file_operations;
 
-// TODO(#41) Remove after we have a separate scarb package
-impl From<&StarknetContractArtifacts> for ContractArtifacts {
-    fn from(artifacts: &StarknetContractArtifacts) -> Self {
-        ContractArtifacts {
-            sierra: artifacts.sierra.clone(),
-            casm: artifacts.casm.clone(),
-        }
-    }
-}
-
 pub struct CairoHintProcessor<'a> {
     pub blockifier_syscall_handler: SyscallHintProcessor<'a>,
-    pub contracts: &'a HashMap<String, StarknetContractArtifacts>,
+    pub contracts: &'a HashMap<String, ContractArtifacts>,
     pub hints: &'a HashMap<String, Hint>,
     pub cheatnet_state: CheatnetState,
     pub run_resources: RunResources,
@@ -156,7 +145,7 @@ impl CairoHintProcessor<'_> {
         input_end: &ResOperand,
         output_start: &CellRef,
         output_end: &CellRef,
-        contracts: &HashMap<String, StarknetContractArtifacts>,
+        contracts: &HashMap<String, ContractArtifacts>,
     ) -> Result<(), HintError> {
         // Parse the selector.
         let selector = &selector.value.to_bytes_be().1;
@@ -185,7 +174,7 @@ impl CairoHintProcessor<'_> {
         inputs: Vec<Felt252>,
         output_start: &CellRef,
         output_end: &CellRef,
-        contracts: &HashMap<String, StarknetContractArtifacts>,
+        contracts: &HashMap<String, ContractArtifacts>,
     ) -> Result<(), EnhancedHintError> {
         let mut buffer = MemBuffer::new_segment(vm);
         let result_start = buffer.ptr;
@@ -292,14 +281,7 @@ impl CairoHintProcessor<'_> {
             "declare" => {
                 let contract_name = inputs[0].clone();
 
-                match self.cheatnet_state.declare(
-                    &contract_name,
-                    // TODO(#41) Remove after we have a separate scarb package
-                    &contracts
-                        .iter()
-                        .map(|(k, v)| (k.clone(), ContractArtifacts::from(v)))
-                        .collect(),
-                ) {
+                match self.cheatnet_state.declare(&contract_name, contracts) {
                     Ok(class_hash) => {
                         let felt_class_hash = stark_felt_to_felt(class_hash.0);
 

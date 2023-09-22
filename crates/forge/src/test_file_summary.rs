@@ -1,6 +1,6 @@
-use crate::test_case_summary::TestCaseSummary;
 use crate::RunnerStatus;
 use camino::Utf8PathBuf;
+use test_runner::test_case_summary::TestCaseSummary;
 
 /// Summary of the test run in the file
 #[derive(Debug, PartialEq, Clone)]

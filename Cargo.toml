@@ -5,7 +5,8 @@ members = [
     "crates/test-collector",
     "crates/cast",
     "crates/cheatnet",
-    "crates/conversions"
+    "crates/conversions",
+    "crates/test-runner",
 ]
 
 [workspace.package]

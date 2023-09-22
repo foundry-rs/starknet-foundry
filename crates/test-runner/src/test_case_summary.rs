@@ -37,7 +37,8 @@ pub enum TestCaseSummary {
 }
 
 impl TestCaseSummary {
-    pub(crate) fn arguments(&self) -> Vec<Felt252> {
+    #[must_use]
+    pub fn arguments(&self) -> Vec<Felt252> {
         match self {
             TestCaseSummary::Failed { arguments, .. }
             | TestCaseSummary::Passed { arguments, .. } => arguments.clone(),
@@ -48,7 +49,7 @@ impl TestCaseSummary {
 
 impl TestCaseSummary {
     #[must_use]
-    pub(crate) fn from_run_result(
+    pub fn from_run_result(
         run_result: RunResult,
         test_case: &TestCase,
         arguments: Vec<Felt252>,
@@ -98,7 +99,7 @@ impl TestCaseSummary {
     }
 
     #[must_use]
-    pub(crate) fn skipped(test_case: &TestCase) -> Self {
+    pub fn skipped(test_case: &TestCase) -> Self {
         Self::Skipped {
             name: test_case.name.to_string(),
         }
