@@ -36,7 +36,7 @@ use starknet_api::transaction::Calldata;
 use test_collector::{Fork, TestCase};
 
 use crate::cheatcodes_hint_processor::CairoHintProcessor;
-use crate::scarb::{ForkTargets, StarknetContractArtifacts};
+use crate::scarb::{ForkTarget, StarknetContractArtifacts};
 use crate::test_case_summary::TestCaseSummary;
 
 // snforge_std/src/cheatcodes.cairo::TEST
@@ -71,7 +71,7 @@ fn build_hints_dict<'b>(
 pub(crate) fn run_from_test_case(
     runner: &SierraCasmRunner,
     case: &TestCase,
-    fork_targets: &[ForkTargets],
+    fork_targets: &[ForkTarget],
     contracts: &HashMap<String, StarknetContractArtifacts>,
     predeployed_contracts: &Utf8PathBuf,
     args: Vec<Felt252>,
@@ -176,7 +176,7 @@ pub(crate) fn run_from_test_case(
 }
 
 fn extract_fork_when_id_passed(
-    fork_targets: &[ForkTargets],
+    fork_targets: &[ForkTarget],
     fork_alias: &str,
 ) -> Option<ForkStateReader> {
     let fork = fork_targets.iter().find(|fork| fork.name == fork_alias);

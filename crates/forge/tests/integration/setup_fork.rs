@@ -2,7 +2,7 @@ use crate::integration::common::corelib::{corelib_path, predeployed_contracts};
 use crate::integration::common::running_tests::run_test_case;
 use crate::{assert_passed, test_case};
 use camino::Utf8PathBuf;
-use forge::scarb::{ForgeConfig, ForkTargets};
+use forge::scarb::{ForgeConfig, ForkTarget};
 use forge::{run, RunnerConfig};
 use indoc::formatdoc;
 use std::collections::HashMap;
@@ -101,7 +101,7 @@ fn fork_aliased_decorator() {
             Some(500),
             &ForgeConfig {
                 exit_first: false,
-                fork: vec![ForkTargets {
+                fork: vec![ForkTarget {
                     name: "FORK_NAME_FROM_SCARB_TOML".to_string(),
                     url: CHEATNET_RPC_URL.to_string(),
                     block_id: HashMap::from([("tag".to_string(), "Latest".to_string())]),

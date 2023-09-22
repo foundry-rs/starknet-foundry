@@ -22,7 +22,7 @@ use smol_str::SmolStr;
 
 use crate::fuzzer::RandomFuzzer;
 use crate::running::run_from_test_case;
-use crate::scarb::{ForgeConfig, ForkTargets, StarknetContractArtifacts};
+use crate::scarb::{ForgeConfig, ForkTarget, StarknetContractArtifacts};
 pub use crate::test_file_summary::TestFileSummary;
 use test_collector::{collect_tests, LinkedLibrary, TestCase};
 
@@ -56,7 +56,7 @@ pub struct RunnerConfig {
     test_name_filter: Option<String>,
     exact_match: bool,
     exit_first: bool,
-    fork_targets: Vec<ForkTargets>,
+    fork_targets: Vec<ForkTarget>,
     fuzzer_runs: u32,
     fuzzer_seed: Option<u64>,
 }

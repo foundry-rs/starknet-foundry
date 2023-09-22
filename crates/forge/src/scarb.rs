@@ -48,11 +48,13 @@ pub struct ForgeConfig {
     pub fuzzer_runs: Option<u32>,
     /// Seed to be used by fuzzer
     pub fuzzer_seed: Option<u64>,
-    pub fork: Vec<ForkTargets>,
+
+    #[serde(default)]
+    pub fork: Vec<ForkTarget>,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Default, Clone)]
-pub struct ForkTargets {
+pub struct ForkTarget {
     pub name: String,
     pub url: String,
     pub block_id: HashMap<String, String>,
@@ -142,15 +144,8 @@ pub fn config_from_scarb_for_package(
         .tool_metadata("snforge");
     let config = raw_metadata.map_or_else(
         || Ok(Default::default()),
-        |raw_metadata| {
-            let mut config: ForgeConfig = serde_json::from_value(raw_metadata.clone())?;
-            if config.fork.is_empty() {
-                config.fork = vec![];
-            };
-            Ok(config)
-        },
+        |raw_metadata| Ok(serde_json::from_value(raw_metadata.clone())?),
     );
-
     validate_fork_config(config)
 }
 
@@ -647,17 +642,17 @@ mod tests {
             ForgeConfig {
                 exit_first: false,
                 fork: vec![
-                    ForkTargets {
+                    ForkTarget {
                         name: "FIRST_FORK_NAME".to_string(),
                         url: "http://some.rpc.url".to_string(),
                         block_id: HashMap::from([("number".to_string(), "1".to_string())]),
                     },
-                    ForkTargets {
+                    ForkTarget {
                         name: "SECOND_FORK_NAME".to_string(),
                         url: "http://some.rpc.url".to_string(),
                         block_id: HashMap::from([("hash".to_string(), "1".to_string())]),
                     },
-                    ForkTargets {
+                    ForkTarget {
                         name: "THIRD_FORK_NAME".to_string(),
                         url: "http://some.rpc.url".to_string(),
                         block_id: HashMap::from([("tag".to_string(), "Latest".to_string())]),
