@@ -148,6 +148,8 @@ impl ForkCache {
             .unwrap_or_else(|| panic!("No cache_file to save to"));
         let mut file = OpenOptions::new()
             .write(true)
+            .read(true)
+            .create(true)
             .open(cache_file.clone())
             .unwrap();
 
