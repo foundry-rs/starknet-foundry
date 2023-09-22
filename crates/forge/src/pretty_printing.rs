@@ -44,7 +44,11 @@ pub(crate) fn print_test_summary(summaries: &[TestFileSummary]) {
     );
 }
 
-pub(crate) fn print_test_result(test_result: &TestCaseSummary) {
+pub(crate) fn print_test_seed(seed: u64) {
+    println!("{}: {seed}", style("Fuzzer seed").bold());
+}
+
+pub(crate) fn print_test_result(test_result: &TestCaseSummary, fuzzer_runs: Option<u32>) {
     let result_header = match test_result {
         TestCaseSummary::Passed { .. } => format!("[{}]", style("PASS").green()),
         TestCaseSummary::Failed { .. } => format!("[{}]", style("FAIL").red()),
@@ -63,7 +67,19 @@ pub(crate) fn print_test_result(test_result: &TestCaseSummary) {
         _ => String::new(),
     };
 
-    println!("{result_header} {result_name}{result_message}");
+    let fuzzer_runs = match fuzzer_runs {
+        None => String::new(),
+        Some(runs) => {
+            if matches!(test_result, TestCaseSummary::Failed { .. }) {
+                let arguments = test_result.arguments();
+                format!(" (fuzzer runs = {runs}, arguments = {arguments:?})")
+            } else {
+                format!(" (fuzzer runs = {runs})")
+            }
+        }
+    };
+
+    println!("{result_header} {result_name}{fuzzer_runs}{result_message}");
 }
 
 pub fn print_failures(all_failed_tests: &[TestCaseSummary]) {
