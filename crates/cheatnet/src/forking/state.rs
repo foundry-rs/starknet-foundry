@@ -24,17 +24,17 @@ pub struct ForkStateReader {
     client: JsonRpcClient<HttpTransport>,
     block_id: BlockId,
     runtime: Runtime,
-    pub cache: ForkCache,
+    cache: ForkCache,
 }
 
 impl ForkStateReader {
     #[must_use]
-    pub fn new(url: &str, block_id: BlockId) -> Self {
+    pub fn new(url: &str, block_id: BlockId, cache_dir: Option<&str>) -> Self {
         ForkStateReader {
             client: JsonRpcClient::new(HttpTransport::new(Url::parse(url).unwrap())),
             block_id,
             runtime: Runtime::new().expect("Could not instantiate Runtime"),
-            cache: ForkCache::load(url, block_id),
+            cache: ForkCache::load_or_new(url, block_id, cache_dir),
         }
     }
 }

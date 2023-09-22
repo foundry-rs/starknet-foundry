@@ -12,6 +12,7 @@ use crate::common::scarb::{get_contracts_map, try_get_starknet_artifacts_path};
 static TARGET_NAME: &str = "cheatnet_testing_contracts";
 
 pub mod assertions;
+pub mod cache;
 pub mod scarb;
 pub mod state;
 

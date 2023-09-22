@@ -1,5 +1,6 @@
 use camino::Utf8PathBuf;
 use conversions::StarknetConversions;
+use fs2::FileExt;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use starknet::core::types::{BlockId, BlockTag, ContractClass, FieldElement};
@@ -42,6 +43,7 @@ impl ForkCacheContent {
     }
 
     fn apply(&mut self, other: &Self) {
+        // storage_at
         for (other_contract_address, other_storage) in other.storage_at.iter() {
             if let Some(self_contract_storage) = self.storage_at.get(other_contract_address) {
                 let mut new_storage = self_contract_storage.clone();
@@ -53,13 +55,32 @@ impl ForkCacheContent {
                     .insert(other_contract_address.clone(), other_storage.clone());
             }
         }
+        // nonce_at
+        self.nonce_at.extend(other.nonce_at.clone());
+        // class_hash_at
+        self.class_hash_at.extend(other.class_hash_at.clone());
+        // compiled_contract_class
+        self.compiled_contract_class
+            .extend(other.compiled_contract_class.clone());
+        // compiled_class_hash
+        self.compiled_class_hash
+            .extend(other.compiled_class_hash.clone());
     }
 }
 
 #[derive(Debug)]
 pub struct ForkCache {
     fork_cache_content: ForkCacheContent,
-    cache_file: String,
+    cache_file: Option<String>,
+    block_id: BlockId,
+}
+
+impl Drop for ForkCache {
+    fn drop(&mut self) {
+        if !matches!(self.block_id, BlockId::Tag(_)) {
+            self.save();
+        }
+    }
 }
 
 fn block_id_to_string(block_id: BlockId) -> String {
@@ -75,51 +96,65 @@ fn block_id_to_string(block_id: BlockId) -> String {
 
 impl ForkCache {
     #[must_use]
-    pub(crate) fn load(url: &str, block_id: BlockId) -> Self {
-        let url = Url::parse(url).expect("Failed to parse URL");
-        let url_str = url.as_str();
-        let re = Regex::new(r"[^a-zA-Z0-9]").unwrap();
+    pub(crate) fn load_or_new(url: &str, block_id: BlockId, cache_dir: Option<&str>) -> Self {
+        let (fork_cache_content, cache_file) = match block_id {
+            BlockId::Tag(_) => (ForkCacheContent::new(), None),
+            _ => {
+                let cache_dir = cache_dir.unwrap_or_else(|| panic!("cache_dir has to be provided if working at a concrete block_number/block_hash"));
+                let url = Url::parse(url).expect("Failed to parse URL");
+                let url_str = url.as_str();
+                let re = Regex::new(r"[^a-zA-Z0-9]").unwrap();
 
-        // Use the replace_all method to replace non-alphanumeric characters with underscores
-        let sanitized_path = re.replace_all(url_str, "_").to_string();
+                // Use the replace_all method to replace non-alphanumeric characters with underscores
+                let sanitized_path = re.replace_all(url_str, "_").to_string();
 
-        let path = Utf8PathBuf::from("./.snforge_cache")
-            .join(sanitized_path + "_" + block_id_to_string(block_id).as_str() + ".json");
+                let cache_file_path = Utf8PathBuf::from(cache_dir)
+                    .join(sanitized_path + "_" + block_id_to_string(block_id).as_str() + ".json");
 
-        fs::create_dir_all(path.parent().unwrap()).unwrap();
-        let mut file = OpenOptions::new()
-            .write(true)
-            .read(true)
-            .create(true)
-            .open(&path)
-            .unwrap();
+                fs::create_dir_all(cache_file_path.parent().unwrap()).unwrap();
+                let mut file = OpenOptions::new()
+                    .write(true)
+                    .read(true)
+                    .create(true)
+                    .open(&cache_file_path)
+                    .unwrap();
 
-        let mut cache_file_content: String = "".to_string();
-        file.read_to_string(&mut cache_file_content)
-            .expect("Could not read cache file: {path}");
+                let mut cache_file_content: String = "".to_string();
+                file.read_to_string(&mut cache_file_content)
+                    .expect("Could not read cache file: {path}");
 
-        let fork_cache_content = if cache_file_content == "" {
-            ForkCacheContent::new()
-        } else {
-            ForkCacheContent::from_str(cache_file_content.as_str())
+                // File was just created
+                let fork_cache_content = if cache_file_content == "" {
+                    ForkCacheContent::new()
+                } else {
+                    ForkCacheContent::from_str(cache_file_content.as_str())
+                };
+
+                (fork_cache_content, Some(cache_file_path.to_string()))
+            }
         };
 
         ForkCache {
+            block_id,
             fork_cache_content,
-            cache_file: path.to_string(),
+            cache_file,
         }
     }
 
-    pub fn save(&self) {
+    fn save(&self) {
+        let cache_file = self
+            .cache_file
+            .clone()
+            .unwrap_or_else(|| panic!("No cache_file to save to"));
         let mut file = OpenOptions::new()
             .write(true)
-            .open(&self.cache_file)
+            .open(cache_file.clone())
             .unwrap();
 
         file.lock_exclusive().expect("Could not lock on cache file");
 
         let cache_file_content =
-            fs::read_to_string(&self.cache_file).expect("Should have been able to read the cache");
+            fs::read_to_string(cache_file).expect("Should have been able to read the cache");
 
         let output = if cache_file_content != "".to_string() {
             let mut fs_fork_cache_content = ForkCacheContent::from_str(cache_file_content.as_str());
