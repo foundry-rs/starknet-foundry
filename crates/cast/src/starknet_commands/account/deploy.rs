@@ -1,6 +1,6 @@
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
-use cast::helpers::constants::{CREATE_KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH};
+use cast::helpers::constants::{KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH};
 use clap::Args;
 use serde_json::Map;
 use starknet::accounts::AccountFactoryError;
@@ -118,12 +118,15 @@ async fn deploy_from_keystore(
         deployment
             .get("class_hash")
             .and_then(serde_json::Value::as_str)
-            .ok_or_else(|| anyhow::anyhow!("Failed to get salt from account JSON file"))?,
+            .ok_or_else(|| anyhow::anyhow!("Failed to get class_hash from account JSON file"))?,
     )?;
 
+    if !keystore_path.exists() {
+        bail!("Couldn't read keystore file");
+    }
     let private_key = SigningKey::from_keystore(
         keystore_path,
-        get_keystore_password(CREATE_KEYSTORE_PASSWORD_ENV_VAR)?.as_str(),
+        get_keystore_password(KEYSTORE_PASSWORD_ENV_VAR)?.as_str(),
     )?;
     let public_key: FieldElement = {
         let pk = items

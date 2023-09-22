@@ -6,6 +6,7 @@ use cast::helpers::constants::CREATE_KEYSTORE_PASSWORD_ENV_VAR;
 use indoc::indoc;
 use snapbox::cmd::{cargo_bin, Command};
 use std::{env, fs};
+use test_case::test_case;
 
 #[tokio::test]
 pub async fn test_happy_case() {
@@ -362,4 +363,29 @@ pub async fn test_keystore_without_account() {
     "#});
 
     _ = fs::remove_file(keystore_path);
+}
+
+#[test_case("tests/data/keystore/my_key.json", "tests/data/keystore/my_account_new.json", "error: Keystore file tests/data/keystore/my_key.json already exists" ; "when keystore exists")]
+#[test_case("tests/data/keystore/my_key_new.json", "tests/data/keystore/my_account.json", "error: Account file tests/data/keystore/my_account.json already exists" ; "when account exists")]
+pub fn test_keystore_already_exists(keystore_path: &str, account_path: &str, error: &str) {
+    let args = vec![
+        "--url",
+        URL,
+        "--keystore",
+        keystore_path,
+        "--account",
+        account_path,
+        "account",
+        "create",
+        "--class-hash",
+        DEVNET_OZ_CLASS_HASH,
+    ];
+
+    let snapbox = Command::new(cargo_bin!("sncast")).args(args);
+    let bdg = snapbox.assert();
+    let out = bdg.get_output();
+    let stderr_str =
+        std::str::from_utf8(&out.stderr).expect("failed to convert command output to string");
+
+    assert!(stderr_str.contains(error));
 }

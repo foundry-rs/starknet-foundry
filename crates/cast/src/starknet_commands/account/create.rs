@@ -172,6 +172,12 @@ fn create_to_keystore(
     keystore_path: &Utf8PathBuf,
     account_path: &Utf8PathBuf,
 ) -> Result<()> {
+    if keystore_path.exists() {
+        bail!("Keystore file {keystore_path} already exists");
+    }
+    if account_path.exists() {
+        bail!("Account file {account_path} already exists");
+    }
     let password = get_keystore_password(CREATE_KEYSTORE_PASSWORD_ENV_VAR)?;
     let private_key = SigningKey::from_secret_scalar(private_key);
     private_key.save_as_keystore(keystore_path, &password)?;
@@ -197,10 +203,6 @@ fn write_account_to_file(
     account_json: &serde_json::Value,
     account_file: &Utf8PathBuf,
 ) -> Result<()> {
-    if account_file.exists() {
-        bail!("Account file {} already exists", account_file);
-    }
-
     std::fs::create_dir_all(account_file.clone().parent().unwrap())?;
     std::fs::write(
         account_file.clone(),

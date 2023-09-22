@@ -381,3 +381,102 @@ pub async fn test_keystore_key_mismatch() {
 
     _ = fs::remove_file(account_path);
 }
+
+#[test_case("tests/data/keystore/my_key_inexistent.json", "tests/data/keystore/my_account_undeployed.json", "error: Couldn't read keystore file" ; "when inexistent keystore")]
+#[test_case("tests/data/keystore/my_key.json", "tests/data/keystore/my_account_inexistent.json", "error: Couldn't read account file" ; "when inexistent account")]
+pub fn test_deploy_keystore_inexistent_file(keystore_path: &str, account_path: &str, error: &str) {
+    env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+    let args = vec![
+        "--url",
+        URL,
+        "--keystore",
+        keystore_path,
+        "--account",
+        account_path,
+        "account",
+        "deploy",
+        "--max-fee",
+        "10000000000000000",
+        "--class-hash",
+        DEVNET_OZ_CLASS_HASH,
+    ];
+
+    let snapbox = Command::new(cargo_bin!("sncast")).args(args);
+    let bdg = snapbox.assert();
+    let out = bdg.get_output();
+    let stderr_str =
+        std::str::from_utf8(&out.stderr).expect("failed to convert command output to string");
+
+    assert!(stderr_str.contains(error));
+}
+
+#[tokio::test]
+pub async fn test_deploy_keystore_no_status() {
+    let keystore_path = "tests/data/keystore/my_key.json";
+    let account_path = "tests/data/keystore/my_account_invalid.json";
+    env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+    let args = vec![
+        "--url",
+        URL,
+        "--keystore",
+        keystore_path,
+        "--account",
+        account_path,
+        "account",
+        "deploy",
+        "--max-fee",
+        "10000000000000000",
+        "--class-hash",
+        DEVNET_OZ_CLASS_HASH,
+    ];
+
+    let snapbox = Command::new(cargo_bin!("sncast")).args(args);
+    snapbox.assert().stderr_matches(indoc! {r#"
+        command: account deploy
+        error: Failed to get status from account JSON file
+    "#});
+}
+
+#[tokio::test]
+pub async fn test_deploy_keystore_other_args() {
+    let keystore_path = "tests/data/keystore/my_key.json";
+    let account_path = "tests/data/keystore/my_account_copy.json";
+
+    fs::copy(
+        "tests/data/keystore/my_account_undeployed.json",
+        account_path,
+    )
+    .unwrap();
+    env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+
+    let args = vec![
+        "--url",
+        URL,
+        "--json",
+        "--accounts-file",
+        "accounts.json",
+        "--keystore",
+        keystore_path,
+        "--account",
+        account_path,
+        "account",
+        "deploy",
+        "--name",
+        "some-name",
+        "--max-fee",
+        "10000000000000000",
+        "--class-hash",
+        DEVNET_OZ_CLASS_HASH,
+    ];
+
+    let snapbox = Command::new(cargo_bin!("sncast")).args(args);
+    snapbox.assert().stdout_matches(indoc! {r#"
+        KEYSTORE_PASSWORD environment variable found and will be used for keystore password
+        {
+          "command": "account deploy",
+          "transaction_hash": "0x[..]"
+        }
+    "#});
+
+    _ = fs::remove_file(account_path);
+}
