@@ -275,3 +275,48 @@ fn event_emitted_wrong_data_asserted() {
         "1781147065842938658345753187697595598580215656255375315778674017239939008146"
     );
 }
+
+#[test]
+fn emit_unnamed_event() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use array::ArrayTrait;
+            use result::ResultTrait;
+            use traits::Into;
+            use starknet::contract_address_const;
+            use starknet::ContractAddress;
+            use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpy, EventFetcher,
+                event_name_hash, EventAssertions, Event, UnnamedEvent, SpyOn };
+
+            #[starknet::interface]
+            trait ISpyEventsChecker<TContractState> {
+                fn emit_event_syscall(ref self: TContractState, some_data: felt252);
+            }
+
+            #[test]
+            fn test_expect_three_events_while_two_emitted() {
+                let contract = declare('SpyEventsChecker');
+                let contract_address = contract.deploy(@array![]).unwrap();
+                let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
+
+                let mut spy = spy_events(SpyOn::One(contract_address));
+                dispatcher.emit_event_syscall(456);
+
+                spy.assert_emitted(@array![
+                    Event::Unnamed(UnnamedEvent { from: contract_address, keys: array![], data: array![456] }),
+                ]);
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "SpyEventsChecker".to_string(),
+            Path::new("tests/data/contracts/spy_events_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test);
+
+    assert_passed!(result);
+}
