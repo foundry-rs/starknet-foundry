@@ -6,7 +6,7 @@ use serde::Serde;
 
 use starknet::testing::cheatcode;
 
-fn read_env_var(name: felt252) -> felt252 {
+fn var(name: felt252) -> felt252 {
     let outputs = cheatcode::<'read_env_var'>(array![name].span());
     *outputs[0]
 }
