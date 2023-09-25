@@ -8,11 +8,11 @@ use num_bigint::BigUint;
 fn read_short_string() {
     let mut test = test_case!(indoc!(
         r#"
-        use snforge_std::read_env_var;
+        use snforge_std::env::var;
 
         #[test]
         fn test_read_short_string() {
-            let result = read_env_var('MY_ENV_VAR');
+            let result = var('MY_ENV_VAR');
             assert(result == 'env_var_value', 'failed reading env var');
         }
     "#
@@ -28,11 +28,11 @@ fn read_short_string() {
 fn read_felt252() {
     let mut test = test_case!(indoc!(
         r#"
-        use snforge_std::read_env_var;
+        use snforge_std::env::var;
 
         #[test]
         fn test_read_felt252() {
-            let result = read_env_var('MY_ENV_VAR');
+            let result = var('MY_ENV_VAR');
             assert(result == 1234567, 'failed reading env var');
         }
     "#
@@ -48,11 +48,11 @@ fn read_felt252() {
 fn read_invalid_felt252() {
     let mut test = test_case!(indoc!(
         r#"
-        use snforge_std::read_env_var;
+        use snforge_std::env::var;
 
         #[test]
         fn test_read_invalid_felt252() {
-            let result = read_env_var('MY_ENV_VAR');
+            let result = var('MY_ENV_VAR');
         }
     "#
     ));
@@ -74,11 +74,11 @@ fn read_invalid_felt252() {
 fn read_invalid_short_string() {
     let mut test = test_case!(indoc!(
         r#"
-        use snforge_std::read_env_var;
+        use snforge_std::env::var;
 
         #[test]
         fn test_read_invalid_short_string() {
-            let result = read_env_var('MY_ENV_VAR');
+            let result = var('MY_ENV_VAR');
         }
     "#
     ));
@@ -101,11 +101,11 @@ fn read_invalid_short_string() {
 fn read_non_existent() {
     let test = test_case!(indoc!(
         r#"
-        use snforge_std::read_env_var;
+        use snforge_std::env::var;
 
         #[test]
         fn test_read_invalid_short_string() {
-            let result = read_env_var('MY_ENV_VAR');
+            let result = var('MY_ENV_VAR');
         }
     "#
     ));
