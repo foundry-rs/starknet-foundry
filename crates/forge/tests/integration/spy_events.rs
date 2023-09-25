@@ -59,7 +59,7 @@ fn assert_emitted_fails() {
             use result::ResultTrait;
             use starknet::ContractAddress;
             use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpy, EventFetcher,
-                event_name_hash, EventAssertions, Event, NamedEvent SpyOn };
+                event_name_hash, EventAssertions, Event, NamedEvent, SpyOn };
 
             #[starknet::interface]
             trait ISpyEventsChecker<TContractState> {
