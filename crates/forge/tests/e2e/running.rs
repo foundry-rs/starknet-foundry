@@ -25,7 +25,6 @@ fn simple_package() {
         [PASS] simple_package::test_fib
         Running 10 test(s) from tests directory
         [PASS] tests::contract::call_and_invoke
-        [PASS] tests::without_prefix::five
         [PASS] tests::ext_function_test::test_my_test
         [PASS] tests::ext_function_test::test_simple
         [PASS] tests::test_simple::test_simple
@@ -42,6 +41,7 @@ fn simple_package() {
         Failure data:
             original value: [8111420071579136082810415440747], converted to a string: [failing check]
         
+        [PASS] tests::without_prefix::five
         Tests: 9 passed, 2 failed, 0 skipped
         
         Failures:
@@ -95,7 +95,6 @@ fn simple_package_with_git_dependency() {
         [PASS] simple_package::test_fib
         Running 10 test(s) from tests directory
         [PASS] tests::contract::call_and_invoke
-        [PASS] tests::without_prefix::five
         [PASS] tests::ext_function_test::test_my_test
         [PASS] tests::ext_function_test::test_simple
         [PASS] tests::test_simple::test_simple
@@ -112,6 +111,7 @@ fn simple_package_with_git_dependency() {
         Failure data:
             original value: [8111420071579136082810415440747], converted to a string: [failing check]
         
+        [PASS] tests::without_prefix::five
         Tests: 9 passed, 2 failed, 0 skipped
         
         Failures:
@@ -366,7 +366,6 @@ fn with_exit_first() {
         [PASS] simple_package::test_fib
         Running 10 test(s) from tests directory
         [PASS] tests::contract::call_and_invoke
-        [PASS] tests::without_prefix::five
         [PASS] tests::ext_function_test::test_my_test
         [PASS] tests::ext_function_test::test_simple
         [PASS] tests::test_simple::test_simple
@@ -379,7 +378,8 @@ fn with_exit_first() {
             original value: [8111420071579136082810415440747], converted to a string: [failing check]
         
         [SKIP] tests::test_simple::test_another_failing
-        Tests: 9 passed, 1 failed, 1 skipped
+        [SKIP] tests::without_prefix::five
+        Tests: 8 passed, 1 failed, 2 skipped
         
         Failures:
             tests::test_simple::test_failing
@@ -405,7 +405,6 @@ fn with_exit_first_flag() {
         [PASS] simple_package::test_fib
         Running 10 test(s) from tests directory
         [PASS] tests::contract::call_and_invoke
-        [PASS] tests::without_prefix::five
         [PASS] tests::ext_function_test::test_my_test
         [PASS] tests::ext_function_test::test_simple
         [PASS] tests::test_simple::test_simple
@@ -418,7 +417,8 @@ fn with_exit_first_flag() {
             original value: [8111420071579136082810415440747], converted to a string: [failing check]
         
         [SKIP] tests::test_simple::test_another_failing
-        Tests: 9 passed, 1 failed, 1 skipped
+        [SKIP] tests::without_prefix::five
+        Tests: 8 passed, 1 failed, 2 skipped
         
         Failures:
             tests::test_simple::test_failing
@@ -466,7 +466,6 @@ fn exit_first_flag_takes_precedence() {
         [PASS] simple_package::test_fib
         Running 10 test(s) from tests directory
         [PASS] tests::contract::call_and_invoke
-        [PASS] tests::without_prefix::five
         [PASS] tests::ext_function_test::test_my_test
         [PASS] tests::ext_function_test::test_simple
         [PASS] tests::test_simple::test_simple
@@ -479,7 +478,8 @@ fn exit_first_flag_takes_precedence() {
             original value: [8111420071579136082810415440747], converted to a string: [failing check]
         
         [SKIP] tests::test_simple::test_another_failing
-        Tests: 9 passed, 1 failed, 1 skipped
+        [SKIP] tests::without_prefix::five
+        Tests: 8 passed, 1 failed, 2 skipped
         
         Failures:
             tests::test_simple::test_failing
@@ -583,9 +583,9 @@ fn using_corelib_names() {
         Running 0 test(s) from src directory
         Running 4 test(s) from tests directory
         [PASS] tests::bits::test_names
-        [PASS] tests::types::test_names
         [PASS] tests::math::test_names
         [PASS] tests::test::test_names
+        [PASS] tests::types::test_names
         Tests: 4 passed, 0 failed, 0 skipped
         "#});
 }

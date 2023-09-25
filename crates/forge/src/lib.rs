@@ -21,6 +21,7 @@ use num_bigint::BigUint;
 use num_traits::Zero;
 use once_cell::sync::Lazy;
 use smol_str::SmolStr;
+use walkdir::WalkDir;
 
 use crate::fuzzer::RandomFuzzer;
 use crate::running::run_from_test_case;
@@ -186,7 +187,10 @@ fn pack_tests_into_one_file(package_path: &Utf8PathBuf) -> Result<Option<TempDir
     tests_lib_path.touch()?;
 
     let mut content = String::new();
-    for entry in std::fs::read_dir(&tests_folder_path)? {
+    for entry in WalkDir::new(&tests_folder_path)
+        .max_depth(1)
+        .sort_by_file_name()
+    {
         let entry = entry
             .with_context(|| format!("Failed to read directory at path = {tests_folder_path}"))?;
         let path = entry.path();
