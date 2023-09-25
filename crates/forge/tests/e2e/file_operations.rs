@@ -14,7 +14,7 @@ fn file_reading() {
 
 
         Collected 23 test(s) from file_reading package
-        Running 9 test(s) from src directory
+        Running 9 test(s) from src/
         [PASS] file_reading::valid_content_and_same_content_no_matter_whitespaces
         [PASS] file_reading::serialization
         [PASS] file_reading::valid_content_different_folder
@@ -54,7 +54,7 @@ fn file_reading() {
             Got an exception while executing a hint:
             Failed to parse data/too_large_number.txt file
         
-        Running 14 test(s) from tests directory
+        Running 14 test(s) from tests/
         [PASS] tests::test::valid_content_and_same_content_no_matter_whitespaces
         [PASS] tests::test::serialization
         [PASS] tests::test::json_serialization

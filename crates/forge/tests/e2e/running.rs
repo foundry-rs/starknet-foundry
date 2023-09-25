@@ -21,9 +21,9 @@ fn simple_package() {
 
 
         Collected 11 test(s) from simple_package package
-        Running 1 test(s) from src directory
+        Running 1 test(s) from src/
         [PASS] simple_package::test_fib
-        Running 10 test(s) from tests directory
+        Running 10 test(s) from tests/
         [PASS] tests::contract::call_and_invoke
         [PASS] tests::ext_function_test::test_my_test
         [PASS] tests::ext_function_test::test_simple
@@ -91,9 +91,9 @@ fn simple_package_with_git_dependency() {
 
 
         Collected 11 test(s) from simple_package package
-        Running 1 test(s) from src directory
+        Running 1 test(s) from src/
         [PASS] simple_package::test_fib
-        Running 10 test(s) from tests directory
+        Running 10 test(s) from tests/
         [PASS] tests::contract::call_and_invoke
         [PASS] tests::ext_function_test::test_my_test
         [PASS] tests::ext_function_test::test_simple
@@ -157,8 +157,8 @@ fn with_filter() {
 
 
         Collected 2 test(s) from simple_package package
-        Running 0 test(s) from src directory
-        Running 2 test(s) from tests directory
+        Running 0 test(s) from src/
+        Running 2 test(s) from tests/
         [PASS] tests::test_simple::test_two
         [PASS] tests::test_simple::test_two_and_two
         Tests: 2 passed, 0 failed, 0 skipped
@@ -181,8 +181,8 @@ fn with_filter_matching_module() {
         
         
         Collected 2 test(s) from simple_package package
-        Running 0 test(s) from src directory
-        Running 2 test(s) from tests directory
+        Running 0 test(s) from src/
+        Running 2 test(s) from tests/
         [PASS] tests::ext_function_test::test_my_test
         [PASS] tests::ext_function_test::test_simple
         Tests: 2 passed, 0 failed, 0 skipped
@@ -206,8 +206,8 @@ fn with_exact_filter() {
 
 
         Collected 1 test(s) from simple_package package
-        Running 0 test(s) from src directory
-        Running 1 test(s) from tests directory
+        Running 0 test(s) from src/
+        Running 1 test(s) from tests/
         [PASS] tests::test_simple::test_two
         Tests: 1 passed, 0 failed, 0 skipped
         "#});
@@ -229,8 +229,8 @@ fn with_non_matching_filter() {
 
 
         Collected 0 test(s) from simple_package package
-        Running 0 test(s) from src directory
-        Running 0 test(s) from tests directory
+        Running 0 test(s) from src/
+        Running 0 test(s) from tests/
         Tests: 0 passed, 0 failed, 0 skipped
         "#});
 }
@@ -250,8 +250,8 @@ fn with_print() {
 
 
         Collected 1 test(s) from print_test package
-        Running 0 test(s) from src directory
-        Running 1 test(s) from tests directory
+        Running 0 test(s) from src/
+        Running 1 test(s) from tests/
         original value: [123], converted to a string: [{]
         original value: [3618502788666131213697322783095070105623107215331596699973092056135872020480]
         original value: [6381921], converted to a string: [aaa]
@@ -292,8 +292,8 @@ fn with_panic_data_decoding() {
 
 
         Collected 4 test(s) from panic_decoding package
-        Running 0 test(s) from src directory
-        Running 4 test(s) from tests directory
+        Running 0 test(s) from src/
+        Running 4 test(s) from tests/
         [PASS] tests::test_panic_decoding::test_simple
         [FAIL] tests::test_panic_decoding::test_panic_decoding
         
@@ -362,9 +362,9 @@ fn with_exit_first() {
 
 
         Collected 11 test(s) from simple_package package
-        Running 1 test(s) from src directory
+        Running 1 test(s) from src/
         [PASS] simple_package::test_fib
-        Running 10 test(s) from tests directory
+        Running 10 test(s) from tests/
         [PASS] tests::contract::call_and_invoke
         [PASS] tests::ext_function_test::test_my_test
         [PASS] tests::ext_function_test::test_simple
@@ -401,9 +401,9 @@ fn with_exit_first_flag() {
 
 
         Collected 11 test(s) from simple_package package
-        Running 1 test(s) from src directory
+        Running 1 test(s) from src/
         [PASS] simple_package::test_fib
-        Running 10 test(s) from tests directory
+        Running 10 test(s) from tests/
         [PASS] tests::contract::call_and_invoke
         [PASS] tests::ext_function_test::test_my_test
         [PASS] tests::ext_function_test::test_simple
@@ -462,9 +462,9 @@ fn exit_first_flag_takes_precedence() {
 
 
         Collected 11 test(s) from simple_package package
-        Running 1 test(s) from src directory
+        Running 1 test(s) from src/
         [PASS] simple_package::test_fib
-        Running 10 test(s) from tests directory
+        Running 10 test(s) from tests/
         [PASS] tests::contract::call_and_invoke
         [PASS] tests::ext_function_test::test_my_test
         [PASS] tests::ext_function_test::test_simple
@@ -557,8 +557,8 @@ fn init_new_project_test() {
 
 
         Collected 2 test(s) from test_name package
-        Running 0 test(s) from src directory
-        Running 2 test(s) from tests directory
+        Running 0 test(s) from src/
+        Running 2 test(s) from tests/
         [PASS] tests::test_contract::test_increase_balance
         [PASS] tests::test_contract::test_cannot_increase_balance_with_zero_value
         Tests: 2 passed, 0 failed, 0 skipped
@@ -580,8 +580,8 @@ fn using_corelib_names() {
 
 
         Collected 4 test(s) from using_corelib_names package
-        Running 0 test(s) from src directory
-        Running 4 test(s) from tests directory
+        Running 0 test(s) from src/
+        Running 4 test(s) from tests/
         [PASS] tests::bits::test_names
         [PASS] tests::math::test_names
         [PASS] tests::test::test_names
@@ -608,8 +608,8 @@ fn should_panic() {
 
 
         Collected 6 test(s) from should_panic_test package
-        Running 0 test(s) from src directory
-        Running 6 test(s) from tests directory
+        Running 0 test(s) from src/
+        Running 6 test(s) from tests/
         [PASS] tests::should_panic_test::should_panic_no_data
         
         Success data:
@@ -661,8 +661,8 @@ fn printing_in_contracts() {
 
 
         Collected 2 test(s) from contract_printing package
-        Running 0 test(s) from src directory
-        Running 2 test(s) from tests directory
+        Running 0 test(s) from src/
+        Running 2 test(s) from tests/
         original value: [22405534230753963835153736737], converted to a string: [Hello world!]
         [PASS] tests::test_contract::test_increase_balance
         [PASS] tests::test_contract::test_cannot_increase_balance_with_zero_value

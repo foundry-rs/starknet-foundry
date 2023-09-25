@@ -16,8 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Changed
 
-- Tests are collected only from `tests` folder and a package tree
-- Performance improvement: tests from `tests` folder are packed into a single phantom package
+- Tests are collected only from a package tree and `tests` folder:
+  - If there is a `lib.cairo` file in `tests` folder - treat it as an entrypoint to the `tests` package from which tests are collected
+  - Otherwise, all test files matching `tests/*.cairo` regex are treated as modules and added to a single virtual `lib.cairo`
+- Performance improvement: tests matching `tests/*.cairo` folder are packed into a single phantom package
 
 ### Cast
 

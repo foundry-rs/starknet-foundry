@@ -16,7 +16,7 @@ fn fuzzing() {
         
         
         Collected 5 test(s) from fuzzing package
-        Running 5 test(s) from src directory
+        Running 5 test(s) from src/
         [PASS] fuzzing::tests::adding
         [PASS] fuzzing::tests::fuzzed_argument (fuzzer runs = 256)
         [PASS] fuzzing::tests::fuzzed_both_arguments (fuzzer runs = 256)
@@ -26,7 +26,7 @@ fn fuzzing() {
         Failure data:
             original value: [593979512822486835600413552099926114], converted to a string: [result == a + b]
 
-        Running 0 test(s) from tests directory
+        Running 0 test(s) from tests/
         Tests: 4 passed, 1 failed, 0 skipped
         Fuzzer seed: [..]
 
@@ -51,7 +51,7 @@ fn fuzzing_set_runs() {
         
         
         Collected 5 test(s) from fuzzing package
-        Running 5 test(s) from src directory
+        Running 5 test(s) from src/
         [PASS] fuzzing::tests::adding
         [PASS] fuzzing::tests::fuzzed_argument (fuzzer runs = 10)
         [PASS] fuzzing::tests::fuzzed_both_arguments (fuzzer runs = 10)
@@ -61,7 +61,7 @@ fn fuzzing_set_runs() {
         Failure data:
             original value: [593979512822486835600413552099926114], converted to a string: [result == a + b]
 
-        Running 0 test(s) from tests directory
+        Running 0 test(s) from tests/
         Tests: 4 passed, 1 failed, 0 skipped
         Fuzzer seed: [..]
 
@@ -86,7 +86,7 @@ fn fuzzing_set_seed() {
         
         
         Collected 5 test(s) from fuzzing package
-        Running 5 test(s) from src directory
+        Running 5 test(s) from src/
         [PASS] fuzzing::tests::adding
         [PASS] fuzzing::tests::fuzzed_argument (fuzzer runs = 256)
         [PASS] fuzzing::tests::fuzzed_both_arguments (fuzzer runs = 256)
@@ -96,7 +96,7 @@ fn fuzzing_set_seed() {
         Failure data:
             original value: [593979512822486835600413552099926114], converted to a string: [result == a + b]
 
-        Running 0 test(s) from tests directory
+        Running 0 test(s) from tests/
         Tests: 4 passed, 1 failed, 0 skipped
         Fuzzer seed: 1234
 
@@ -136,8 +136,8 @@ fn fuzzing_incorrect_function_args() {
         
         
         Collected 2 test(s) from fuzzing package
-        Running 0 test(s) from src directory
-        Running 2 test(s) from tests directory
+        Running 0 test(s) from src/
+        Running 2 test(s) from tests/
         [PASS] tests::incorrect_args::correct_args (fuzzer runs = 256)
         [ERROR] Fuzzer only supports felt252 arguments, and test tests::incorrect_args::incorrect_args defines arguments that are not felt252 type
         "#});

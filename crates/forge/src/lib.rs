@@ -117,6 +117,12 @@ pub enum TestCrateType {
     Tests,
 }
 
+struct TestCrate {
+    crate_root: Utf8PathBuf,
+    crate_name: String,
+    crate_type: TestCrateType,
+}
+
 fn collect_tests_from_package(
     package_path: &Utf8PathBuf,
     package_name: &str,
@@ -125,16 +131,29 @@ fn collect_tests_from_package(
     corelib_path: &Utf8PathBuf,
     runner_config: &RunnerConfig,
 ) -> Result<Vec<TestsFromCrate>> {
-    let maybe_tests_tmp_dir = pack_tests_into_one_file(package_path)?;
+    let tests_folder_path = package_path.join("tests");
+    let maybe_tests_tmp_dir = if tests_folder_path.try_exists()? {
+        Some(pack_tests_into_one_file(package_path)?)
+    } else {
+        None
+    };
 
-    let mut all_test_roots = vec![(lib_path.clone(), package_name, TestCrateType::Lib)];
+    let mut all_test_roots = vec![TestCrate {
+        crate_root: lib_path.clone(),
+        crate_name: package_name.to_string(),
+        crate_type: TestCrateType::Lib,
+    }];
 
     if let Some(tests_tmp_dir) = &maybe_tests_tmp_dir {
         let tests_tmp_dir_path = Utf8PathBuf::from_path_buf(tests_tmp_dir.to_path_buf().clone())
             .map_err(|_| anyhow!("Failed to convert tests temporary directory to Utf8PathBuf"))?;
         let tests_lib_path = tests_tmp_dir_path.join("lib.cairo");
 
-        all_test_roots.push((tests_lib_path, &TEST_PACKAGE_NAME, TestCrateType::Tests));
+        all_test_roots.push(TestCrate {
+            crate_root: tests_lib_path,
+            crate_name: TEST_PACKAGE_NAME.clone(),
+            crate_type: TestCrateType::Tests,
+        });
 
         linked_libraries.push(LinkedLibrary {
             name: TEST_PACKAGE_NAME.to_string(),
@@ -144,36 +163,18 @@ fn collect_tests_from_package(
 
     let tests_from_files = all_test_roots
         .par_iter()
-        .map(|(test_root, crate_name, crate_type)| {
-            collect_tests_from_tree(
-                test_root,
-                crate_name,
-                *crate_type,
-                &linked_libraries,
-                corelib_path,
-                runner_config,
-            )
+        .map(|test_crate| {
+            collect_tests_from_tree(test_crate, &linked_libraries, corelib_path, runner_config)
         })
         .collect();
 
-    if let Some(tests_tmp_dir) = maybe_tests_tmp_dir {
-        let path = tests_tmp_dir.path().to_path_buf();
-        tests_tmp_dir.close().with_context(|| {
-            anyhow!(
-            "Failed to close temporary directory = {} with test files. The files might have not been released from filesystem",
-            path.display()
-        )
-        })?;
-    }
+    try_close_tmp_dir(maybe_tests_tmp_dir)?;
 
     tests_from_files
 }
 
-fn pack_tests_into_one_file(package_path: &Utf8PathBuf) -> Result<Option<TempDir>> {
+fn pack_tests_into_one_file(package_path: &Utf8PathBuf) -> Result<TempDir> {
     let tests_folder_path = package_path.join("tests");
-    if !tests_folder_path.try_exists()? {
-        return Ok(None);
-    }
 
     let tmp_dir = TempDir::new()?;
     tmp_dir
@@ -182,7 +183,7 @@ fn pack_tests_into_one_file(package_path: &Utf8PathBuf) -> Result<Option<TempDir
 
     let tests_lib_path = tmp_dir.child("lib.cairo");
     if tests_lib_path.try_exists()? {
-        return Ok(Some(tmp_dir));
+        return Ok(tmp_dir);
     }
     tests_lib_path.touch()?;
 
@@ -209,37 +210,48 @@ fn pack_tests_into_one_file(package_path: &Utf8PathBuf) -> Result<Option<TempDir
     }
 
     std::fs::write(tests_lib_path, content).context("Failed to write to tests lib file")?;
-    Ok(Some(tmp_dir))
+    Ok(tmp_dir)
 }
 
 fn collect_tests_from_tree(
-    test_root: &Utf8PathBuf,
-    crate_name: &str,
-    crate_type: TestCrateType,
+    test_crate: &TestCrate,
     linked_libraries: &Vec<LinkedLibrary>,
     corelib_path: &Utf8PathBuf,
     runner_config: &RunnerConfig,
 ) -> Result<TestsFromCrate> {
-    let (sierra_program, tests_configs) = collect_tests(
-        test_root.as_str(),
+    let (sierra_program, test_cases) = collect_tests(
+        test_crate.crate_root.as_str(),
         None,
-        crate_name,
+        &test_crate.crate_name,
         linked_libraries,
         Some(BUILTINS.clone()),
         corelib_path.into(),
     )?;
 
     let test_cases = if let Some(test_name_filter) = &runner_config.test_name_filter {
-        filter_tests_by_name(test_name_filter, runner_config.exact_match, tests_configs)
+        filter_tests_by_name(test_name_filter, runner_config.exact_match, test_cases)
     } else {
-        tests_configs
+        test_cases
     };
 
     Ok(TestsFromCrate {
         sierra_program,
         test_cases,
-        test_crate_type: crate_type,
+        test_crate_type: test_crate.crate_type,
     })
+}
+
+fn try_close_tmp_dir(maybe_tmp_dir: Option<TempDir>) -> Result<()> {
+    if let Some(tmp_dir) = maybe_tmp_dir {
+        let path = tmp_dir.path().to_path_buf();
+        tmp_dir.close().with_context(|| {
+            anyhow!(
+            "Failed to close temporary directory = {} with test files. The files might have not been released from filesystem",
+            path.display()
+        )
+        })?;
+    };
+    Ok(())
 }
 
 /// Run the tests in the package at the given path

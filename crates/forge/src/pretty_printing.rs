@@ -18,7 +18,7 @@ pub(crate) fn print_running_tests(test_crate_file: TestCrateType, tests_num: usi
         TestCrateType::Lib => "src",
         TestCrateType::Tests => "tests",
     };
-    let plain_text = format!("Running {tests_num} test(s) from {dir_name} directory");
+    let plain_text = format!("Running {tests_num} test(s) from {dir_name}/");
 
     println!("{}", style(plain_text).bold());
 }

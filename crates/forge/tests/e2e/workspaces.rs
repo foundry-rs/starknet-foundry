@@ -19,9 +19,9 @@ fn root_workspace_without_arguments() {
 
 
         Collected 3 test(s) from hello_workspaces package
-        Running 1 test(s) from src directory
+        Running 1 test(s) from src/
         [PASS] hello_workspaces::test_simple
-        Running 2 test(s) from tests directory
+        Running 2 test(s) from tests/
         [FAIL] tests::test_failing::test_failing
         
         Failure data:
@@ -51,9 +51,9 @@ fn root_workspace_specific_package() {
 
 
         Collected 5 test(s) from addition package
-        Running 1 test(s) from src directory
+        Running 1 test(s) from src/
         [PASS] addition::tests::it_works
-        Running 4 test(s) from tests directory
+        Running 4 test(s) from tests/
         [PASS] tests::nested::simple_case
         [PASS] tests::nested::contract_test
         [PASS] tests::nested::test_nested::test_two
@@ -78,10 +78,10 @@ fn root_workspace_specific_package2() {
 
 
         Collected 7 test(s) from fibonacci package
-        Running 2 test(s) from src directory
+        Running 2 test(s) from src/
         [PASS] fibonacci::tests::it_works
         [PASS] fibonacci::tests::contract_test
-        Running 5 test(s) from tests directory
+        Running 5 test(s) from tests/
         [PASS] tests::lib_test
         [PASS] tests::abc::abc_test
         [PASS] tests::abc::efg::efg_test
@@ -114,8 +114,8 @@ fn root_workspace_specific_package_and_name() {
 
 
         Collected 1 test(s) from addition package
-        Running 0 test(s) from src directory
-        Running 1 test(s) from tests directory
+        Running 0 test(s) from src/
+        Running 1 test(s) from tests/
         [PASS] tests::nested::simple_case
         Tests: 1 passed, 0 failed, 0 skipped
         "#});
@@ -136,9 +136,9 @@ fn root_workspace_specify_root_package() {
 
 
         Collected 3 test(s) from hello_workspaces package
-        Running 1 test(s) from src directory
+        Running 1 test(s) from src/
         [PASS] hello_workspaces::test_simple
-        Running 2 test(s) from tests directory
+        Running 2 test(s) from tests/
         [FAIL] tests::test_failing::test_failing
         
         Failure data:
@@ -170,9 +170,9 @@ fn root_workspace_inside_nested_package() {
 
 
         Collected 5 test(s) from addition package
-        Running 1 test(s) from src directory
+        Running 1 test(s) from src/
         [PASS] addition::tests::it_works
-        Running 4 test(s) from tests directory
+        Running 4 test(s) from tests/
         [PASS] tests::nested::simple_case
         [PASS] tests::nested::contract_test
         [PASS] tests::nested::test_nested::test_two
@@ -197,9 +197,9 @@ fn root_workspace_for_entire_workspace() {
         
         
         Collected 5 test(s) from addition package
-        Running 1 test(s) from src directory
+        Running 1 test(s) from src/
         [PASS] addition::tests::it_works
-        Running 4 test(s) from tests directory
+        Running 4 test(s) from tests/
         [PASS] tests::nested::simple_case
         [PASS] tests::nested::contract_test
         [PASS] tests::nested::test_nested::test_two
@@ -211,10 +211,10 @@ fn root_workspace_for_entire_workspace() {
         
         
         Collected 7 test(s) from fibonacci package
-        Running 2 test(s) from src directory
+        Running 2 test(s) from src/
         [PASS] fibonacci::tests::it_works
         [PASS] fibonacci::tests::contract_test
-        Running 5 test(s) from tests directory
+        Running 5 test(s) from tests/
         [PASS] tests::lib_test
         [PASS] tests::abc::abc_test
         [PASS] tests::abc::efg::efg_test
@@ -230,9 +230,9 @@ fn root_workspace_for_entire_workspace() {
         
         
         Collected 3 test(s) from hello_workspaces package
-        Running 1 test(s) from src directory
+        Running 1 test(s) from src/
         [PASS] hello_workspaces::test_simple
-        Running 2 test(s) from tests directory
+        Running 2 test(s) from tests/
         [FAIL] tests::test_failing::test_failing
         
         Failure data:
@@ -264,9 +264,9 @@ fn root_workspace_for_entire_workspace_inside_package() {
         
         
         Collected 5 test(s) from addition package
-        Running 1 test(s) from src directory
+        Running 1 test(s) from src/
         [PASS] addition::tests::it_works
-        Running 4 test(s) from tests directory
+        Running 4 test(s) from tests/
         [PASS] tests::nested::simple_case
         [PASS] tests::nested::contract_test
         [PASS] tests::nested::test_nested::test_two
@@ -278,10 +278,10 @@ fn root_workspace_for_entire_workspace_inside_package() {
         
         
         Collected 7 test(s) from fibonacci package
-        Running 2 test(s) from src directory
+        Running 2 test(s) from src/
         [PASS] fibonacci::tests::it_works
         [PASS] fibonacci::tests::contract_test
-        Running 5 test(s) from tests directory
+        Running 5 test(s) from tests/
         [PASS] tests::lib_test
         [PASS] tests::abc::abc_test
         [PASS] tests::abc::efg::efg_test
@@ -297,9 +297,9 @@ fn root_workspace_for_entire_workspace_inside_package() {
         
         
         Collected 3 test(s) from hello_workspaces package
-        Running 1 test(s) from src directory
+        Running 1 test(s) from src/
         [PASS] hello_workspaces::test_simple
-        Running 2 test(s) from tests directory
+        Running 2 test(s) from tests/
         [FAIL] tests::test_failing::test_failing
         
         Failure data:
@@ -353,10 +353,10 @@ fn virtual_workspace_without_arguments() {
         
         
         Collected 7 test(s) from fibonacci2 package
-        Running 2 test(s) from src directory
+        Running 2 test(s) from src/
         [PASS] fibonacci2::tests::it_works
         [PASS] fibonacci2::tests::contract_test
-        Running 5 test(s) from tests directory
+        Running 5 test(s) from tests/
         [PASS] tests::lib_test
         [PASS] tests::abc::abc_test
         [PASS] tests::abc::efg::efg_test
@@ -373,9 +373,9 @@ fn virtual_workspace_without_arguments() {
 
 
         Collected 5 test(s) from subtraction package
-        Running 1 test(s) from src directory
+        Running 1 test(s) from src/
         [PASS] subtraction::tests::it_works
-        Running 4 test(s) from tests directory
+        Running 4 test(s) from tests/
         [PASS] tests::nested::simple_case
         [PASS] tests::nested::contract_test
         [PASS] tests::nested::test_nested::test_two
@@ -403,9 +403,9 @@ fn virtual_workspace_specify_package() {
 
 
         Collected 5 test(s) from subtraction package
-        Running 1 test(s) from src directory
+        Running 1 test(s) from src/
         [PASS] subtraction::tests::it_works
-        Running 4 test(s) from tests directory
+        Running 4 test(s) from tests/
         [PASS] tests::nested::simple_case
         [PASS] tests::nested::contract_test
         [PASS] tests::nested::test_nested::test_two
@@ -429,10 +429,10 @@ fn virtual_workspace_specific_package2() {
         
         
         Collected 7 test(s) from fibonacci2 package
-        Running 2 test(s) from src directory
+        Running 2 test(s) from src/
         [PASS] fibonacci2::tests::it_works
         [PASS] fibonacci2::tests::contract_test
-        Running 5 test(s) from tests directory
+        Running 5 test(s) from tests/
         [PASS] tests::lib_test
         [PASS] tests::abc::abc_test
         [PASS] tests::abc::efg::efg_test
@@ -465,8 +465,8 @@ fn virtual_workspace_specific_package_and_name() {
 
 
         Collected 1 test(s) from subtraction package
-        Running 0 test(s) from src directory
-        Running 1 test(s) from tests directory
+        Running 0 test(s) from src/
+        Running 1 test(s) from tests/
         [PASS] tests::nested::simple_case
         Tests: 1 passed, 0 failed, 0 skipped
         "#});
@@ -490,9 +490,9 @@ fn virtual_workspace_inside_nested_package() {
 
 
         Collected 5 test(s) from subtraction package
-        Running 1 test(s) from src directory
+        Running 1 test(s) from src/
         [PASS] subtraction::tests::it_works
-        Running 4 test(s) from tests directory
+        Running 4 test(s) from tests/
         [PASS] tests::nested::simple_case
         [PASS] tests::nested::contract_test
         [PASS] tests::nested::test_nested::test_two
@@ -516,10 +516,10 @@ fn virtual_workspace_for_entire_workspace() {
         
         
         Collected 7 test(s) from fibonacci2 package
-        Running 2 test(s) from src directory
+        Running 2 test(s) from src/
         [PASS] fibonacci2::tests::it_works
         [PASS] fibonacci2::tests::contract_test
-        Running 5 test(s) from tests directory
+        Running 5 test(s) from tests/
         [PASS] tests::lib_test
         [PASS] tests::abc::abc_test
         [PASS] tests::abc::efg::efg_test
@@ -536,9 +536,9 @@ fn virtual_workspace_for_entire_workspace() {
 
 
         Collected 5 test(s) from subtraction package
-        Running 1 test(s) from src directory
+        Running 1 test(s) from src/
         [PASS] subtraction::tests::it_works
-        Running 4 test(s) from tests directory
+        Running 4 test(s) from tests/
         [PASS] tests::nested::simple_case
         [PASS] tests::nested::contract_test
         [PASS] tests::nested::test_nested::test_two
@@ -566,10 +566,10 @@ fn virtual_workspace_for_entire_workspace_inside_package() {
         
         
         Collected 7 test(s) from fibonacci2 package
-        Running 2 test(s) from src directory
+        Running 2 test(s) from src/
         [PASS] fibonacci2::tests::it_works
         [PASS] fibonacci2::tests::contract_test
-        Running 5 test(s) from tests directory
+        Running 5 test(s) from tests/
         [PASS] tests::lib_test
         [PASS] tests::abc::abc_test
         [PASS] tests::abc::efg::efg_test
@@ -586,9 +586,9 @@ fn virtual_workspace_for_entire_workspace_inside_package() {
 
 
         Collected 5 test(s) from subtraction package
-        Running 1 test(s) from src directory
+        Running 1 test(s) from src/
         [PASS] subtraction::tests::it_works
-        Running 4 test(s) from tests directory
+        Running 4 test(s) from tests/
         [PASS] tests::nested::simple_case
         [PASS] tests::nested::contract_test
         [PASS] tests::nested::test_nested::test_two

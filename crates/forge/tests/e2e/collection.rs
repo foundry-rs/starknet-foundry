@@ -24,7 +24,7 @@ fn complex_structure() {
 
 
         Collected 15 test(s) from test_multiple package
-        Running 12 test(s) from src directory
+        Running 12 test(s) from src/
         [PASS] test_multiple::test_simple
         [PASS] test_multiple::test_fob_in_lib
         [PASS] test_multiple::test_fib_in_lib
@@ -37,7 +37,7 @@ fn complex_structure() {
         [PASS] test_multiple::fab::fab_impl::test_fab
         [PASS] test_multiple::fab::fab_impl::test_how_does_this_work
         [PASS] test_multiple::fab::fab_impl::test_super
-        Running 3 test(s) from tests directory
+        Running 3 test(s) from tests/
         [PASS] tests::fibfabfob::test_fib
         [PASS] tests::fibfabfob::test_fob
         [PASS] tests::fibfabfob::test_fab
