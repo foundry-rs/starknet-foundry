@@ -1,10 +1,12 @@
-use crate::starknet_commands::account::{prepare_account_json, write_account_to_accounts_file};
+use crate::starknet_commands::account::{
+    add_created_profile_to_configuration, prepare_account_json, write_account_to_accounts_file,
+};
 use anyhow::{anyhow, bail, Result};
 use camino::Utf8PathBuf;
-use cast::helpers::constants::OZ_CLASS_HASH;
+use cast::helpers::constants::{CREATE_KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH};
 use cast::helpers::response_structs::AccountCreateResponse;
 use cast::helpers::scarb_utils::CastConfig;
-use cast::{extract_or_generate_salt, get_chain_id, parse_number};
+use cast::{extract_or_generate_salt, get_chain_id, get_keystore_password, parse_number};
 use clap::Args;
 use serde_json::json;
 use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
@@ -19,7 +21,7 @@ use starknet::signers::{LocalWallet, SigningKey};
 pub struct Create {
     /// Account name under which account information is going to be saved
     #[clap(short, long)]
-    pub name: String,
+    pub name: Option<String>,
 
     /// Salt for the address
     #[clap(short, long)]
@@ -36,7 +38,10 @@ pub struct Create {
 
 #[allow(clippy::too_many_arguments)]
 pub async fn create(
-    config: &CastConfig,
+    rpc_url: &str,
+    account: &str,
+    accounts_file: &Utf8PathBuf,
+    keystore: &Utf8PathBuf,
     provider: &JsonRpcClient<HttpTransport>,
     path_to_scarb_toml: Option<Utf8PathBuf>,
     chain_id: FieldElement,
@@ -44,17 +49,15 @@ pub async fn create(
     add_profile: bool,
     class_hash: Option<String>,
 ) -> Result<AccountCreateResponse> {
-    let (account_json, max_fee) = {
-        let salt = extract_or_generate_salt(salt);
-        let class_hash = {
-            let ch = match &class_hash {
-                Some(class_hash) => class_hash,
-                None => OZ_CLASS_HASH,
-            };
-            parse_number(ch)?
+    let salt = extract_or_generate_salt(salt);
+    let class_hash = {
+        let ch = match &class_hash {
+            Some(class_hash) => class_hash,
+            None => OZ_CLASS_HASH,
         };
-        generate_account(provider, salt, class_hash).await?
+        parse_number(ch)?
     };
+    let (account_json, max_fee) = generate_account(provider, salt, class_hash).await?;
 
     let address = parse_number(
         account_json["address"]
@@ -62,15 +65,31 @@ pub async fn create(
             .ok_or_else(|| anyhow!("Invalid address"))?,
     )?;
 
-    write_account_to_accounts_file(
-        &path_to_scarb_toml,
-        &config.rpc_url,
-        &config.account,
-        &config.accounts_file,
-        chain_id,
-        account_json.clone(),
-        add_profile,
-    )?;
+    if keystore == &Utf8PathBuf::default() {
+        write_account_to_accounts_file(account, accounts_file, chain_id, account_json.clone())?;
+    } else {
+        let account_path = Utf8PathBuf::from(&account);
+        if account_path == Utf8PathBuf::default() {
+            bail!("--account must be passed and be a path when using --keystore");
+        }
+
+        let private_key = parse_number(
+            account_json["private_key"]
+                .as_str()
+                .ok_or_else(|| anyhow!("Invalid private_key"))?,
+        )?;
+        create_to_keystore(private_key, salt, class_hash, keystore, &account_path)?;
+    }
+
+    if add_profile {
+        let config = CastConfig {
+            rpc_url: rpc_url.into(),
+            account: account.into(),
+            accounts_file: accounts_file.into(),
+            keystore: keystore.into(),
+        };
+        add_created_profile_to_configuration(&path_to_scarb_toml, &config)?;
+    }
 
     let mut output = vec![("address", format!("{address:#x}"))];
     if account_json["deployed"] == json!(false) {
@@ -143,4 +162,51 @@ async fn get_account_deployment_fee(
     }
 
     Ok(fee_estimate?)
+}
+
+#[allow(clippy::too_many_arguments)]
+fn create_to_keystore(
+    private_key: FieldElement,
+    salt: FieldElement,
+    class_hash: FieldElement,
+    keystore_path: &Utf8PathBuf,
+    account_path: &Utf8PathBuf,
+) -> Result<()> {
+    if keystore_path.exists() {
+        bail!("Keystore file {keystore_path} already exists");
+    }
+    if account_path.exists() {
+        bail!("Account file {account_path} already exists");
+    }
+    let password = get_keystore_password(CREATE_KEYSTORE_PASSWORD_ENV_VAR)?;
+    let private_key = SigningKey::from_secret_scalar(private_key);
+    private_key.save_as_keystore(keystore_path, &password)?;
+
+    let oz_account_json = json!({
+        "version": 1,
+        "variant": {
+            "type": "open_zeppelin",
+            "version": 1,
+            "public_key": format!("{:#x}", private_key.verifying_key().scalar()),
+        },
+        "deployment": {
+            "status": "undeployed",
+            "class_hash": format!("{class_hash:#x}"),
+            "salt": format!("{salt:#x}"),
+        }
+    });
+
+    write_account_to_file(&oz_account_json, account_path)
+}
+
+fn write_account_to_file(
+    account_json: &serde_json::Value,
+    account_file: &Utf8PathBuf,
+) -> Result<()> {
+    std::fs::create_dir_all(account_file.clone().parent().unwrap())?;
+    std::fs::write(
+        account_file.clone(),
+        serde_json::to_string_pretty(&account_json).unwrap(),
+    )?;
+    Ok(())
 }
