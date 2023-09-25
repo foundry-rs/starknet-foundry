@@ -6,9 +6,59 @@ use starknet_api::core::ContractAddress;
 /// Represents an emitted event. It is used in the `CheatnetState` to keep track of events
 /// emitted in the `cheatnet::src::rpc::call_contract`
 #[derive(Debug, PartialEq, Clone)]
-pub struct Event {
+pub enum Event {
+    Named(NamedEvent),
+    Unnamed(UnnamedEvent),
+}
+
+impl Event {
+    #[must_use]
+    pub fn from(&self) -> ContractAddress {
+        match self {
+            Event::Unnamed(UnnamedEvent { from, .. }) | Event::Named(NamedEvent { from, .. }) => {
+                *from
+            }
+        }
+    }
+
+    #[must_use]
+    pub fn name(&self) -> Option<Felt252> {
+        match self {
+            Event::Named(NamedEvent { name, .. }) => Some(name.clone()),
+            Event::Unnamed(_) => None,
+        }
+    }
+
+    #[must_use]
+    pub fn keys(&self) -> Vec<Felt252> {
+        match self {
+            Event::Unnamed(UnnamedEvent { keys, .. }) | Event::Named(NamedEvent { keys, .. }) => {
+                keys.clone()
+            }
+        }
+    }
+
+    #[must_use]
+    pub fn data(&self) -> Vec<Felt252> {
+        match self {
+            Event::Unnamed(UnnamedEvent { data, .. }) | Event::Named(NamedEvent { data, .. }) => {
+                data.clone()
+            }
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct NamedEvent {
     pub from: ContractAddress,
     pub name: Felt252,
+    pub keys: Vec<Felt252>,
+    pub data: Vec<Felt252>,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct UnnamedEvent {
+    pub from: ContractAddress,
     pub keys: Vec<Felt252>,
     pub data: Vec<Felt252>,
 }
@@ -47,13 +97,19 @@ impl CheatnetState {
             .iter()
             .map(|event| {
                 let mut flattened_event = vec![];
-                if spy_on.does_spy(event.from) {
-                    flattened_event.push(Felt252::from_bytes_be(event.from.0.key().bytes()));
-                    flattened_event.push(event.name.clone());
-                    flattened_event.push(Felt252::from(event.keys.len()));
-                    flattened_event.append(&mut event.keys.clone());
-                    flattened_event.push(Felt252::from(event.data.len()));
-                    flattened_event.append(&mut event.data.clone());
+                if spy_on.does_spy(event.from()) {
+                    match event {
+                        Event::Named(_) => flattened_event.push(Felt252::from(0)),
+                        Event::Unnamed(_) => flattened_event.push(Felt252::from(1)),
+                    };
+                    flattened_event.push(Felt252::from_bytes_be(event.from().0.key().bytes()));
+                    if let Some(name) = event.name() {
+                        flattened_event.append(&mut vec![name.clone()]);
+                    };
+                    flattened_event.push(Felt252::from(event.keys().len()));
+                    flattened_event.append(&mut event.keys().clone());
+                    flattened_event.push(Felt252::from(event.data().len()));
+                    flattened_event.append(&mut event.data().clone());
 
                     spied_events_len += 1;
                 } else {

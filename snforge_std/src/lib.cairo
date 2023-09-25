@@ -17,6 +17,8 @@ use cheatcodes::l1_handler::L1HandlerTrait;
 
 use cheatcodes::events::SpyOn;
 use cheatcodes::events::Event;
+use cheatcodes::events::NamedEvent;
+use cheatcodes::events::UnnamedEvent;
 use cheatcodes::events::EventSpy;
 use cheatcodes::events::EventFetcher;
 use cheatcodes::events::EventAssertions;

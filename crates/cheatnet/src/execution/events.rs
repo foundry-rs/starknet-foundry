@@ -1,8 +1,8 @@
-use crate::cheatcodes::spy_events::Event;
+use crate::cheatcodes::spy_events::{Event, NamedEvent, UnnamedEvent};
 use crate::state::CheatcodeState;
 use blockifier::execution::call_info::{CallInfo, OrderedEvent};
-use blockifier::execution::execution_utils::stark_felt_to_felt;
 use cairo_felt::Felt252;
+use conversions::StarknetConversions;
 use starknet_api::core::ContractAddress;
 
 pub fn collect_emitted_events_from_spied_contracts(
@@ -45,25 +45,36 @@ pub fn collect_emitted_events_from_spied_contracts(
     // event name is removed from the keys (it is located under the first index)
     all_events
         .iter()
-        .map(|(address, ordered_event)| Event {
-            from: *address,
-            name: stark_felt_to_felt(ordered_event.event.keys[0].0),
-            keys: {
-                let keys: Vec<Felt252> = ordered_event
-                    .event
-                    .keys
-                    .iter()
-                    .map(|key| stark_felt_to_felt(key.0))
-                    .collect();
-                Vec::from(&keys[1..])
-            },
-            data: ordered_event
+        .map(|(address, ordered_event)| {
+            let keys: Vec<Felt252> = ordered_event
+                .event
+                .keys
+                .iter()
+                .map(|key| key.0.to_felt252())
+                .collect();
+
+            let data: Vec<Felt252> = ordered_event
                 .event
                 .data
                 .0
                 .iter()
-                .map(|data| stark_felt_to_felt(*data))
-                .collect(),
+                .map(StarknetConversions::to_felt252)
+                .collect();
+
+            return if let Some(name) = keys.get(0) {
+                Event::Named(NamedEvent {
+                    from: *address,
+                    name: name.clone(),
+                    keys: keys[1..].to_owned(),
+                    data,
+                })
+            } else {
+                Event::Unnamed(UnnamedEvent {
+                    from: *address,
+                    keys,
+                    data,
+                })
+            };
         })
         .collect::<Vec<Event>>()
 }

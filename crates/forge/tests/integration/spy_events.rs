@@ -13,7 +13,7 @@ fn spy_events_simple() {
             use result::ResultTrait;
             use starknet::ContractAddress;
             use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpy, EventFetcher,
-                event_name_hash, EventAssertions, Event, SpyOn };
+                event_name_hash, EventAssertions, Event, NamedEvent, SpyOn };
 
             #[starknet::interface]
             trait ISpyEventsChecker<TContractState> {
@@ -32,7 +32,7 @@ fn spy_events_simple() {
                 dispatcher.emit_one_event(123);
 
                 spy.assert_emitted(@array![
-                    Event { from: contract_address, name: 'FirstEvent', keys: array![], data: array![123] }
+                    Event::Named(NamedEvent { from: contract_address, name: 'FirstEvent', keys: array![], data: array![123] })
                 ]);
                 assert(spy.events.len() == 0, 'There should be no events');
             }
@@ -59,7 +59,7 @@ fn assert_emitted_fails() {
             use result::ResultTrait;
             use starknet::ContractAddress;
             use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpy, EventFetcher,
-                event_name_hash, EventAssertions, Event, SpyOn };
+                event_name_hash, EventAssertions, Event, NamedEvent SpyOn };
 
             #[starknet::interface]
             trait ISpyEventsChecker<TContractState> {
@@ -76,7 +76,7 @@ fn assert_emitted_fails() {
                 dispatcher.do_not_emit();
 
                 spy.assert_emitted(@array![
-                    Event { from: contract_address, name: 'FirstEvent', keys: array![], data: array![] }
+                    Event::Named(NamedEvent { from: contract_address, name: 'FirstEvent', keys: array![], data: array![] })
                 ]);
             }
         "#
@@ -115,7 +115,7 @@ fn expect_three_events_while_two_emitted() {
             use starknet::contract_address_const;
             use starknet::ContractAddress;
             use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpy, EventFetcher,
-                event_name_hash, EventAssertions, Event, SpyOn };
+                event_name_hash, EventAssertions, Event, NamedEvent, SpyOn };
 
             #[starknet::interface]
             trait ISpyEventsChecker<TContractState> {
@@ -132,9 +132,9 @@ fn expect_three_events_while_two_emitted() {
                 dispatcher.emit_two_events(456, contract_address_const::<789>());
 
                 spy.assert_emitted(@array![
-                    Event { from: contract_address, name: 'FirstEvent', keys: array![], data: array![456] },
-                    Event { from: contract_address, name: 'SecondEvent', keys: array![789], data: array![456] },
-                    Event { from: contract_address, name: 'ThirdEvent', keys: array![], data: array![] },
+                    Event::Named(NamedEvent { from: contract_address, name: 'FirstEvent', keys: array![], data: array![456] }),
+                    Event::Named(NamedEvent { from: contract_address, name: 'SecondEvent', keys: array![789], data: array![456] }),
+                    Event::Named(NamedEvent { from: contract_address, name: 'ThirdEvent', keys: array![], data: array![] }),
                 ]);
             }
         "#
@@ -177,7 +177,7 @@ fn expect_two_events_while_three_emitted() {
             use starknet::contract_address_const;
             use starknet::ContractAddress;
             use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpy, EventFetcher,
-                event_name_hash, EventAssertions, Event, SpyOn };
+                event_name_hash, EventAssertions, Event, NamedEvent, SpyOn };
 
             #[starknet::interface]
             trait ISpyEventsChecker<TContractState> {
@@ -199,8 +199,8 @@ fn expect_two_events_while_three_emitted() {
                 dispatcher.emit_three_events(456, contract_address_const::<789>(), u256 { low: 1, high: 0 });
 
                 spy.assert_emitted(@array![
-                    Event { from: contract_address, name: 'FirstEvent', keys: array![], data: array![456] },
-                    Event { from: contract_address, name: 'ThirdEvent', keys: array![], data: array![456, 789, 1, 0] },
+                    Event::Named(NamedEvent { from: contract_address, name: 'FirstEvent', keys: array![], data: array![456] }),
+                    Event::Named(NamedEvent { from: contract_address, name: 'ThirdEvent', keys: array![], data: array![456, 789, 1, 0] }),
                 ]);
             }
         "#
@@ -226,7 +226,7 @@ fn event_emitted_wrong_data_asserted() {
             use result::ResultTrait;
             use starknet::ContractAddress;
             use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpy, EventFetcher,
-                event_name_hash, EventAssertions, Event, SpyOn };
+                event_name_hash, EventAssertions, Event, NamedEvent, SpyOn };
 
             #[starknet::interface]
             trait ISpyEventsChecker<TContractState> {
@@ -243,7 +243,7 @@ fn event_emitted_wrong_data_asserted() {
                 dispatcher.emit_one_event(123);
 
                 spy.assert_emitted(@array![
-                    Event { from: contract_address, name: 'FirstEvent', keys: array![], data: array![124] }
+                    Event::Named(NamedEvent { from: contract_address, name: 'FirstEvent', keys: array![], data: array![124] })
                 ]);
             }
         "#

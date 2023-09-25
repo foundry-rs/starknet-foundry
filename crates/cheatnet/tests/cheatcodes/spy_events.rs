@@ -3,7 +3,7 @@ use crate::common::{deploy_contract, felt_selector_from_name, get_contracts};
 use cairo_felt::Felt252;
 use cairo_lang_starknet::contract::starknet_keccak;
 use cairo_vm::hint_processor::hint_processor_utils::felt_to_usize;
-use cheatnet::cheatcodes::spy_events::{Event, SpyTarget};
+use cheatnet::cheatcodes::spy_events::{Event, NamedEvent, SpyTarget, UnnamedEvent};
 use cheatnet::rpc::call_contract;
 use conversions::StarknetConversions;
 use std::vec;
@@ -13,21 +13,33 @@ fn felt_vec_to_event_vec(felts: &[Felt252]) -> Vec<Event> {
     let mut i = 0;
     while i < felts.len() {
         let from = felts[i].to_contract_address();
-        let name = &felts[i + 1];
+        let name = match felts[i + 1].to_string().as_str() {
+            "0" => {
+                i += 1;
+                Some(&felts[i + 1])
+            }
+            "1" => None,
+            _ => unreachable!(),
+        };
         let keys_length = &felts[i + 2];
-        let keys = &felts[i + 3..i + 3 + felt_to_usize(keys_length).unwrap()];
+        let keys = Vec::from(&felts[i + 3..i + 3 + felt_to_usize(keys_length).unwrap()]);
         let data_length = &felts[i + 3 + felt_to_usize(keys_length).unwrap()];
-        let data = &felts[i + 3 + felt_to_usize(keys_length).unwrap() + 1
-            ..i + 3
-                + felt_to_usize(keys_length).unwrap()
-                + 1
-                + felt_to_usize(data_length).unwrap()];
+        let data = Vec::from(
+            &felts[i + 3 + felt_to_usize(keys_length).unwrap() + 1
+                ..i + 3
+                    + felt_to_usize(keys_length).unwrap()
+                    + 1
+                    + felt_to_usize(data_length).unwrap()],
+        );
 
-        events.push(Event {
-            from,
-            name: name.clone(),
-            keys: Vec::from(keys),
-            data: Vec::from(data),
+        events.push(match name {
+            Some(name) => Event::Named(NamedEvent {
+                from,
+                name: name.clone(),
+                keys,
+                data,
+            }),
+            None => Event::Unnamed(UnnamedEvent { from, keys, data }),
         });
 
         i = i + 3 + felt_to_usize(keys_length).unwrap() + 1 + felt_to_usize(data_length).unwrap();
@@ -64,12 +76,12 @@ fn spy_events_complex() {
     );
     assert_eq!(
         events[0],
-        Event {
+        Event::Named(NamedEvent {
             from: contract_address,
             name: starknet_keccak("FirstEvent".as_ref()).into(),
             keys: vec![],
             data: vec![Felt252::from(123)]
-        },
+        }),
         "Wrong event"
     );
 
@@ -119,32 +131,32 @@ fn check_events_order() {
     assert_eq!(length, 3, "There should be three events");
     assert_eq!(
         events[0],
-        Event {
+        Event::Named(NamedEvent {
             from: spy_events_order_checker_address,
             name: starknet_keccak("SecondEvent".as_ref()).into(),
             keys: vec![],
             data: vec![Felt252::from(123)]
-        },
+        }),
         "Wrong first event"
     );
     assert_eq!(
         events[1],
-        Event {
+        Event::Named(NamedEvent {
             from: spy_events_order_checker_address,
             name: starknet_keccak("ThirdEvent".as_ref()).into(),
             keys: vec![],
             data: vec![Felt252::from(345)]
-        },
+        }),
         "Wrong second event"
     );
     assert_eq!(
         events[2],
-        Event {
+        Event::Named(NamedEvent {
             from: spy_events_checker_address,
             name: starknet_keccak("FirstEvent".as_ref()).into(),
             keys: vec![],
             data: vec![Felt252::from(234)]
-        },
+        }),
         "Wrong third event"
     );
 }
@@ -175,12 +187,12 @@ fn duplicate_spies_on_one_address() {
     assert_eq!(length2, 0, "There should be no events");
     assert_eq!(
         events1[0],
-        Event {
+        Event::Named(NamedEvent {
             from: contract_address,
             name: starknet_keccak("FirstEvent".as_ref()).into(),
             keys: vec![],
             data: vec![Felt252::from(123)]
-        },
+        }),
         "Wrong event"
     );
 }
@@ -211,12 +223,12 @@ fn library_call_emits_event() {
     assert_eq!(length, 1, "There should be one event");
     assert_eq!(
         events[0],
-        Event {
+        Event::Named(NamedEvent {
             from: contract_address,
             name: starknet_keccak("FirstEvent".as_ref()).into(),
             keys: vec![],
             data: vec![Felt252::from(123)]
-        },
+        }),
         "Wrong event"
     );
 }
@@ -244,12 +256,12 @@ fn event_emitted_in_constructor() {
     );
     assert_eq!(
         events[0],
-        Event {
+        Event::Named(NamedEvent {
             from: contract_address,
             name: starknet_keccak("FirstEvent".as_ref()).into(),
             keys: vec![],
             data: vec![Felt252::from(123)]
-        },
+        }),
         "Wrong event"
     );
 }
@@ -286,12 +298,12 @@ fn check_if_there_is_no_interference() {
     assert_eq!(length2, 0, "There should be no events");
     assert_eq!(
         events1[0],
-        Event {
+        Event::Named(NamedEvent {
             from: spy_events_checker_address,
             name: starknet_keccak("FirstEvent".as_ref()).into(),
             keys: vec![],
             data: vec![Felt252::from(123)]
-        },
+        }),
         "Wrong event"
     );
 }
@@ -336,32 +348,32 @@ fn test_nested_calls() {
     assert_eq!(length, 3, "There should be three events");
     assert_eq!(
         events[0],
-        Event {
+        Event::Named(NamedEvent {
             from: spy_events_checker_top_proxy_address,
             name: starknet_keccak("FirstEvent".as_ref()).into(),
             keys: vec![],
             data: vec![Felt252::from(123)]
-        },
+        }),
         "Wrong first event"
     );
     assert_eq!(
         events[1],
-        Event {
+        Event::Named(NamedEvent {
             from: spy_events_checker_proxy_address,
             name: starknet_keccak("FirstEvent".as_ref()).into(),
             keys: vec![],
             data: vec![Felt252::from(123)]
-        },
+        }),
         "Wrong second event"
     );
     assert_eq!(
         events[2],
-        Event {
+        Event::Named(NamedEvent {
             from: spy_events_checker_address,
             name: starknet_keccak("FirstEvent".as_ref()).into(),
             keys: vec![],
             data: vec![Felt252::from(123)]
-        },
+        }),
         "Wrong third event"
     );
 }
@@ -415,32 +427,32 @@ fn use_multiple_spies() {
 
     assert_eq!(
         events1[0],
-        Event {
+        Event::Named(NamedEvent {
             from: spy_events_checker_address,
             name: starknet_keccak("FirstEvent".as_ref()).into(),
             keys: vec![],
             data: vec![Felt252::from(123)]
-        },
+        }),
         "Wrong spy_events_checker event"
     );
     assert_eq!(
         events2[0],
-        Event {
+        Event::Named(NamedEvent {
             from: spy_events_checker_proxy_address,
             name: starknet_keccak("FirstEvent".as_ref()).into(),
             keys: vec![],
             data: vec![Felt252::from(123)]
-        },
+        }),
         "Wrong spy_events_checker_proxy event"
     );
     assert_eq!(
         events3[0],
-        Event {
+        Event::Named(NamedEvent {
             from: spy_events_checker_top_proxy_address,
             name: starknet_keccak("FirstEvent".as_ref()).into(),
             keys: vec![],
             data: vec![Felt252::from(123)]
-        },
+        }),
         "Wrong spy_events_checker_top_proxy event"
     );
 }
@@ -467,8 +479,12 @@ fn spy_events_emitted_by_emit_events_syscall() {
 
     assert_eq!(length, 1, "There should be one event");
     assert_eq!(
-        events.len(),
-        length,
-        "Length after serialization should be the same"
+        events[0],
+        Event::Unnamed(UnnamedEvent {
+            from: contract_address,
+            keys: vec![],
+            data: vec![Felt252::from(123)]
+        }),
+        "Wrong spy_events_checker event"
     );
 }

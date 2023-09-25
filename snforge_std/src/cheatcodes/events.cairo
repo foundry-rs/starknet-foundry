@@ -28,10 +28,54 @@ fn event_name_hash(name: felt252) -> felt252 {
     *output[0]
 }
 
-#[derive(Drop, Clone, Serde)]
-struct Event {
+#[derive(Drop, Clone, Serde, PartialEq)]
+enum Event {
+    Named: NamedEvent,
+    Unnamed: UnnamedEvent
+}
+
+#[generate_trait]
+impl EventImpl of EventTrait {
+    fn from(self: Event) -> ContractAddress {
+        match self {
+            Event::Named(NamedEvent { from, .. }) => from,
+            Event::Unnamed(UnnamedEvent { from, .. }) => from,
+        }
+    }
+
+    fn name(self: Event) -> Option<felt252> {
+        match self {
+            Event::Named(NamedEvent { name, .. }) => Option::Some(name),
+            Event::Unnamed(UnnamedEvent { from, .. }) => Option::None,
+        }
+    }
+
+    fn keys(self: Event) -> Array<felt252> {
+        match self {
+            Event::Named(NamedEvent { keys, .. }) => keys,
+            Event::Unnamed(UnnamedEvent { keys, .. }) => keys,
+        }
+    }
+
+    fn data(self: Event) -> Array<felt252> {
+        match self {
+            Event::Named(NamedEvent { data, .. }) => data,
+            Event::Unnamed(UnnamedEvent { data, .. }) => data,
+        }
+    }
+}
+
+#[derive(Drop, Clone, Serde, PartialEq)]
+struct NamedEvent {
     from: ContractAddress,
     name: felt252,
+    keys: Array<felt252>,
+    data: Array<felt252>
+}
+
+#[derive(Drop, Clone, Serde, PartialEq)]
+struct UnnamedEvent {
+    from: ContractAddress,
     keys: Array<felt252>,
     data: Array<felt252>
 }
@@ -76,15 +120,20 @@ impl EventAssertionsImpl of EventAssertions {
                 break;
             }
 
-            let emitted = assert_if_emitted(ref self, copy_event(events.at(i)));
+            let emitted = assert_if_emitted(ref self, events.at(i).clone());
 
             if !emitted {
+                let name = match events.at(i) {
+                    Event::Named(NamedEvent { name, ..}) => *name,
+                    Event::Unnamed(_) => 'Unnamed'
+                };
+
                 panic(
                     array![
-                        *events.at(i).name,
+                        name,
                         'event with matching data and',
                         'keys was not emitted from',
-                        (*events.at(i).from).into()
+                        (events.at(i).clone().from()).into()
                     ]
                 );
             }
@@ -102,10 +151,16 @@ fn assert_if_emitted(ref self: EventSpy, event: Event) -> bool {
             break false;
         }
 
-        if event_name_hash(event.name) == *self.events.at(j).name
-            && event.from == *emitted_events.at(j).from
-            && @event.keys == emitted_events.at(j).keys
-            && @event.data == emitted_events.at(j).data {
+        let emitted = match event.clone() {
+            Event::Named(named_event) => {
+                let mut cloned_event = named_event.clone();
+                cloned_event.name = event_name_hash(cloned_event.name);
+                Event::Named(cloned_event) == emitted_events.at(j).clone()
+            },
+            Event::Unnamed(unnamed_event) => Event::Unnamed(unnamed_event) == emitted_events.at(j).clone()
+        };
+
+        if emitted {
             remove_event(ref self, j);
             break true;
         }
@@ -124,38 +179,9 @@ fn remove_event(ref self: EventSpy, index: usize) {
         }
 
         if k != index {
-            emitted_events_deleted_event.append(copy_event(emitted_events.at(k)));
+            emitted_events_deleted_event.append(emitted_events.at(k).clone());
         }
         k += 1;
     };
     self.events = emitted_events_deleted_event;
-}
-
-fn copy_event(event: @Event) -> Event {
-    let from = *event.from;
-    let name = *event.name;
-
-    let mut keys = array![];
-    let mut i = 0;
-    loop {
-        if i >= event.keys.len() {
-            break;
-        }
-
-        keys.append(*event.keys.at(i));
-        i += 1;
-    };
-
-    let mut data = array![];
-    i = 0;
-    loop {
-        if i >= event.data.len() {
-            break;
-        }
-
-        data.append(*event.data.at(i));
-        i += 1;
-    };
-
-    Event { from, name, keys, data }
 }
