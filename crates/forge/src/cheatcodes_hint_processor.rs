@@ -131,12 +131,7 @@ impl HintProcessorLogic for CairoHintProcessor<'_> {
             );
         }
 
-        let mut cheatable_syscall_handler = CheatableSyscallHandler {
-            syscall_handler: &mut self.blockifier_syscall_handler,
-            cheatcode_state: &self.cheatnet_state.cheatcode_state
-        };
-        cheatable_syscall_handler
-            .execute_hint(vm, exec_scopes, hint_data, constants)
+        self.blockifier_syscall_handler.execute_hint(vm, exec_scopes, hint_data, constants)
     }
 
     /// Trait function to store hint in the hint processor by string.
@@ -546,7 +541,7 @@ fn execute_syscall(
 
     let mut cheatable_syscall_handler = CheatableSyscallHandler {
         syscall_handler: blockifier_syscall_handler,
-        cheatcode_state: &cheatnet_state.cheatcode_state
+        cheatcode_state: &cheatnet_state.cheatcode_state,
     };
 
     match selector {

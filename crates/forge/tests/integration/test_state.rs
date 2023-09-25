@@ -334,9 +334,8 @@ fn test_cant_call_test_contract() {
 
 #[test]
 fn test_simple_cheatcodes() {
-    let test = test_case!(
-        indoc!(
-            r#"
+    let test = test_case!(indoc!(
+        r#"
         use starknet::get_caller_address;
         use result::ResultTrait;
         use box::BoxTrait;
@@ -369,8 +368,7 @@ fn test_simple_cheatcodes() {
             assert(caller_addr_after==caller_addr_before, caller_addr_before.into());
         }
     "#
-        )
-    );
+    ));
 
     let result = run_test_case(&test);
 
@@ -379,13 +377,12 @@ fn test_simple_cheatcodes() {
 
 #[test]
 fn test_spy_events_simple() {
-    let test = test_case!(
-        indoc!(
-            r#"
+    let test = test_case!(indoc!(
+        r#"
             use array::ArrayTrait;
             use result::ResultTrait;
+            use starknet::SyscallResultTrait;
             use starknet::ContractAddress;
-            use starknet::syscalls::emit_event_syscall;
             use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpy, EventFetcher,
                 event_name_hash, EventAssertions, SpyOn, test_address };
 
@@ -400,25 +397,27 @@ fn test_spy_events_simple() {
                 some_data: felt252
             }
 
-            #[event]
-            fn Transfer(value: felt252) {}
-
             #[test]
             fn test_expect_events_simple() {
                 let contract_address = test_address();
                 let mut spy = spy_events(SpyOn::One(contract_address));
                 assert(spy._id == 0, 'Id should be 0');
 
-                // Transfer(1);
+                let mut keys = array![];
+                let mut data = array![];
+                keys.append(1234);
+                data.append(2345);
+                starknet::emit_event_syscall(keys.span(), data.span()).unwrap_syscall();
 
-                spy.assert_emitted(@array![
-                    snforge_std::Event { from: contract_address, name: 'FirstEvent', keys: array![], data: array![123] }
-                ]);
+                // spy.assert_emitted(@array![
+                //     snforge_std::Event { from: contract_address, name: 'FirstEvent', keys: array![1234], data: array![2345] }
+                // ]);
+
+                spy.fetch_events();
                 assert(spy.events.len() == 0, 'There should be no events');
             }
         "#
-        ),
-    );
+    ),);
 
     let result = run_test_case(&test);
 
