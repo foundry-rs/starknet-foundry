@@ -377,10 +377,10 @@ impl CairoHintProcessor<'_> {
 
                 Ok(())
             }
-            "read_env_var" => {
+            "var" => {
                 let name = inputs[0].clone();
                 let name = as_cairo_short_string(&name).unwrap_or_else(|| {
-                    panic!("Failed to parse read_env_var argument = {name} as short string")
+                    panic!("Failed to parse var argument = {name} as short string")
                 });
 
                 let env_var = environment_variables
