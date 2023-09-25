@@ -74,7 +74,7 @@ fn file_reading() {
             No such file or directory (os error 2)
         
         [FAIL] tests::test::json_non_existent
-        
+
         Failure data:
             Got an exception while executing a hint:
             No such file or directory (os error 2)
