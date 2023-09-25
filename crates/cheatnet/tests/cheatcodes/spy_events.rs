@@ -12,8 +12,9 @@ fn felt_vec_to_event_vec(felts: &[Felt252]) -> Vec<Event> {
     let mut events = vec![];
     let mut i = 0;
     while i < felts.len() {
-        let from = felts[i].to_contract_address();
-        let name = match felts[i + 1].to_string().as_str() {
+        let variant = &felts[i];
+        let from = felts[i+1].to_contract_address();
+        let name = match variant.to_string().as_str() {
             "0" => {
                 i += 1;
                 Some(&felts[i + 1])
