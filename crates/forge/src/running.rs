@@ -141,13 +141,7 @@ pub(crate) fn run_from_test_case(
         contracts,
         cheatnet_state: CheatnetState::new(ExtendedStateReader {
             dict_state_reader: build_testing_state(predeployed_contracts),
-            fork_state_reader: match &case.fork_config {
-                Some(ForkConfig::Params(url, block_id)) => {
-                    Some(ForkStateReader::new(url, *block_id))
-                }
-                Some(ForkConfig::Id(name)) => extract_fork_when_id_passed(fork_targets, name),
-                _ => None,
-            },
+            fork_state_reader: get_fork_state_reader(fork_targets, &case.fork_config),
         }),
         hints: &string_to_hint,
         run_resources: RunResources::default(),
@@ -174,6 +168,17 @@ pub(crate) fn run_from_test_case(
         }),
 
         Err(err) => Err(err.into()),
+    }
+}
+
+fn get_fork_state_reader(
+    fork_targets: &[ForkTarget],
+    fork_config: &Option<ForkConfig>,
+) -> Option<ForkStateReader> {
+    match &fork_config {
+        Some(ForkConfig::Params(url, block_id)) => Some(ForkStateReader::new(url, *block_id)),
+        Some(ForkConfig::Id(name)) => extract_fork_when_id_passed(fork_targets, name),
+        _ => None,
     }
 }
 
