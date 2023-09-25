@@ -444,3 +444,31 @@ fn use_multiple_spies() {
         "Wrong spy_events_checker_top_proxy event"
     );
 }
+
+#[test]
+fn spy_events_emitted_by_emit_events_syscall() {
+    let mut state = create_cheatnet_state();
+
+    let contract_address = deploy_contract(&mut state, "SpyEventsChecker", &[]);
+
+    let id = state.spy_events(SpyTarget::All);
+
+    let selector = felt_selector_from_name("emit_event_syscall");
+    call_contract(
+        &contract_address,
+        &selector,
+        &[Felt252::from(123)],
+        &mut state,
+    )
+    .unwrap();
+
+    let (length, serialized_events) = state.fetch_events(&Felt252::from(id));
+    let events = felt_vec_to_event_vec(&serialized_events);
+
+    assert_eq!(length, 1, "There should be one event");
+    assert_eq!(
+        events.len(),
+        length,
+        "Length after serialization should be the same"
+    );
+}
