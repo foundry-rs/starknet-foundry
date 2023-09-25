@@ -96,3 +96,25 @@ fn read_invalid_short_string() {
         &format!("Failed to parse value = {value} to felt")
     );
 }
+
+#[test]
+fn read_non_existent() {
+    let test = test_case!(indoc!(
+        r#"
+        use snforge_std::read_env_var;
+
+        #[test]
+        fn test_read_invalid_short_string() {
+            let result = read_env_var('MY_ENV_VAR');
+        }
+    "#
+    ));
+    let result = run_test_case(&test);
+
+    assert_failed!(result);
+    assert_case_output_contains!(
+        result,
+        "test_read_invalid_short_string",
+        &format!("Failed to read from env var = MY_ENV_VAR")
+    );
+}
