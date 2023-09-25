@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - Support for scarb workspaces.
-- `read_env_var` library function
+- `var` library function
 
 ### Changed
 
