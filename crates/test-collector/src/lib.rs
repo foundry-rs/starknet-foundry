@@ -33,7 +33,6 @@ use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use cairo_lang_utils::OptionHelper;
 use itertools::Itertools;
 use num_traits::ToPrimitive;
-use once_cell::sync::Lazy;
 use project::setup_single_file_project;
 use smol_str::SmolStr;
 use std::fs;
@@ -43,10 +42,6 @@ use std::sync::Arc;
 #[allow(clippy::module_name_repetitions)]
 mod project;
 pub mod sierra_casm_generator;
-
-const TEST_PACKAGE_NAME_PREFIX: &str = "___TEST_PACKAGE_NAME_PREFIX___";
-pub static TEST_PACKAGE_NAME: Lazy<String> =
-    Lazy::new(|| format!("{TEST_PACKAGE_NAME_PREFIX}tests"));
 
 pub fn build_project_config(
     source_root: &Path,
@@ -365,7 +360,7 @@ pub fn collect_tests(
         .collect_vec()
         .into_iter()
         .map(|(test_name, config)| TestCase {
-            name: test_name.replace(TEST_PACKAGE_NAME_PREFIX, ""),
+            name: test_name,
             available_gas: config.available_gas,
             expected_result: config.expected_result,
         })

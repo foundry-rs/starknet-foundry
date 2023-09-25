@@ -27,7 +27,7 @@ use crate::fuzzer::RandomFuzzer;
 use crate::running::run_from_test_case;
 use crate::scarb::{ForgeConfig, StarknetContractArtifacts};
 pub use crate::test_crate_summary::TestCrateSummary;
-use test_collector::{collect_tests, LinkedLibrary, TestCase, TEST_PACKAGE_NAME};
+use test_collector::{collect_tests, LinkedLibrary, TestCase};
 
 pub mod pretty_printing;
 pub mod scarb;
@@ -151,12 +151,12 @@ fn collect_tests_from_package(
 
         all_test_roots.push(TestCrate {
             crate_root: tests_lib_path,
-            crate_name: TEST_PACKAGE_NAME.clone(),
+            crate_name: "tests".to_string(),
             crate_type: TestCrateType::Tests,
         });
 
         linked_libraries.push(LinkedLibrary {
-            name: TEST_PACKAGE_NAME.to_string(),
+            name: "tests".to_string(),
             path: PathBuf::from(tests_tmp_dir_path),
         });
     }
