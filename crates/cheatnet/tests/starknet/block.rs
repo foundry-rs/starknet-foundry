@@ -5,8 +5,6 @@ use crate::{
     },
 };
 use cairo_felt::Felt252;
-use cairo_lang_runner::short_string::as_cairo_short_string;
-use cheatnet::rpc::CallContractOutput;
 use cheatnet::{rpc::call_contract, CheatnetState};
 use starknet_api::core::ContractAddress;
 
