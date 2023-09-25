@@ -33,7 +33,7 @@ use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::hash::StarkHash;
 use starknet_api::patricia_key;
 use starknet_api::transaction::Calldata;
-use test_collector::{Fork, TestCase};
+use test_collector::{ForkConfig, TestCase};
 
 use crate::cheatcodes_hint_processor::CairoHintProcessor;
 use crate::scarb::{ForkTarget, StarknetContractArtifacts};
@@ -142,8 +142,10 @@ pub(crate) fn run_from_test_case(
         cheatnet_state: CheatnetState::new(ExtendedStateReader {
             dict_state_reader: build_testing_state(predeployed_contracts),
             fork_state_reader: match &case.fork_config {
-                Some(Fork::Config(url, block_id)) => Some(ForkStateReader::new(url, *block_id)),
-                Some(Fork::Id(name)) => extract_fork_when_id_passed(fork_targets, name),
+                Some(ForkConfig::Params(url, block_id)) => {
+                    Some(ForkStateReader::new(url, *block_id))
+                }
+                Some(ForkConfig::Id(name)) => extract_fork_when_id_passed(fork_targets, name),
                 _ => None,
             },
         }),
