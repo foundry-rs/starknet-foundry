@@ -78,12 +78,12 @@ However, when running this test, we will get a failure with a message
 
 ```shell
 $ snforge
-Collected 1 test(s) and 1 test file(s) from package_name package
-Running 1 inline test(s)
+Collected 1 test(s) from package_name package
+Running 1 test(s) from src/
 [FAIL] package_name::call_and_invoke
 
 Failure data:
-    original value: [1234], converted to a string: [user is not allowed]
+    original value: [2619239621329578143946475627394146418642347364], converted to a string: [user is not allowed]
 
 Tests: 0 passed, 1 failed, 0 skipped
 ```
@@ -125,8 +125,8 @@ The test will now pass without an error
 
 ```shell
 $ snforge
-Collected 1 test(s) and 1 test file(s) from package_name package
-Running 1 inline test(s)
+Collected 1 test(s) from package_name package
+Running 1 test(s) from src/
 [PASS] package_name::call_and_invoke
 Tests: 1 passed, 0 failed, 0 skipped
 ```
@@ -158,12 +158,12 @@ fn call_and_invoke() {
 
 ```shell
 $ snforge
-Collected 1 test(s) and 1 test file(s) from package_name package
-Running 1 inline test(s)
+Collected 1 test(s) from package_name package
+Running 1 test(s) from src/
 [FAIL] package_name::call_and_invoke
 
 Failure data:
-    original value: [1234], converted to a string: [user is not allowed]
+    original value: [2619239621329578143946475627394146418642347364], converted to a string: [user is not allowed]
 
 Tests: 0 passed, 1 failed, 0 skipped
 ```
