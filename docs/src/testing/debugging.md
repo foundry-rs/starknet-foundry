@@ -143,6 +143,7 @@ Running 1 test(s) from tests/
 original value: [1882356686041040905424961122938381530884043578], converted to a string: [The new balance is:]
 original value: [42], converted to a string: [*]
 [PASS] tests::test_contract::test_increase_balance
+Tests: 1 passed, 0 failed, 0 skipped
 ```
 
 **Note**: 

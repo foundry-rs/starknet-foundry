@@ -147,6 +147,9 @@ Failure data:
     original value: [75047462256968], converted to a string: [DAYTAH]
 
 Tests: 0 passed, 1 failed, 0 skipped
+
+Failures:
+    package_name::failing
 ```
 
 ### `SafeDispatcher`

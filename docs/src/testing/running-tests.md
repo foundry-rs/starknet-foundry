@@ -137,7 +137,7 @@ Running 1 test(s) from src/
 Tests: 1 passed, 0 failed, 0 skipped
 
 
-Collected 3 test(s) from hello_workspaces package
+Collected 1 test(s) from hello_workspaces package
 Running 1 test(s) from src/
 [PASS] hello_workspaces::test_simple
 Tests: 1 passed, 0 failed, 0 skipped

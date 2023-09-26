@@ -86,6 +86,9 @@ Failure data:
     original value: [2619239621329578143946475627394146418642347364], converted to a string: [user is not allowed]
 
 Tests: 0 passed, 1 failed, 0 skipped
+
+Failures:
+    package_name::call_and_invoke
 ```
 
 Our user validation is not letting us call the contract, because the default caller address is not `123`.
@@ -166,6 +169,9 @@ Failure data:
     original value: [2619239621329578143946475627394146418642347364], converted to a string: [user is not allowed]
 
 Tests: 0 passed, 1 failed, 0 skipped
+
+Failures:
+    package_name::call_and_invoke
 ```
 
 ### Pranking the constructor
