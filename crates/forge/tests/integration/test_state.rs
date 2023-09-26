@@ -273,6 +273,28 @@ fn test_disabled_syscalls() {
 }
 
 #[test]
+fn test_get_block_hash() {
+    let test = test_case!(indoc!(
+        r#"
+        use result::ResultTrait;
+        use box::BoxTrait;
+        use starknet::{get_block_hash_syscall, get_block_info};
+
+        #[test]
+        fn test_get_block_hash() {
+            let block_info = get_block_info().unbox();
+            let hash = get_block_hash_syscall(block_info.block_number - 10).unwrap();
+            assert(hash == 0, 'Hash not zero');
+        }
+    "#
+    ));
+
+    let result = run_test_case(&test);
+
+    assert_passed!(result);
+}
+
+#[test]
 fn test_cant_call_test_contract() {
     let test = test_case!(
         indoc!(
