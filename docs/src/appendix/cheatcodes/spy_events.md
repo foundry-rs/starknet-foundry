@@ -45,9 +45,8 @@ trait EventAssertions {
 ### Complex one in which user asserts manually
 
 ```rust
-use snforge_std::cheatcodes::contract_class::{declare, ContractClassTrait};
-use snforge_std::cheatcodes::events::{spy_events, SpyOn, EventSpy, EventFetcher
-    event_name_hash, Event}
+use snforge_std::{declare, ContractClassTrait, spy_events, SpyOn, EventSpy, EventFetcher
+    event_name_hash, Event};
     
 #[starknet::interface]
 trait ISpyEventsChecker<TContractState> {
@@ -97,8 +96,7 @@ Let's go through important parts of the provided code:
 ### Simple one in which user asserts with `assert_emitted` method
 
 ```rust
-use snforge_std::cheatcodes::contract_class::{declare, ContractClassTrait};
-use snforge_std::cheatcodes::events::{spy_events, SpyOn, EventSpy, EventFetcher
+use snforge_std::{declare, ContractClassTrait, spy_events, SpyOn, EventSpy, EventFetcher
     event_name_hash, Event};
     
 #[starknet::interface]
@@ -139,8 +137,7 @@ The flow is much simpler (thanks to `EventAssertions` trait). Let's go through i
 Sometimes it is easier to split events between multiple spies. Let's do it.
 
 ```rust
-use snforge_std::cheatcodes::contract_class::{declare, ContractClassTrait};
-use snforge_std::cheatcodes::events::{spy_events, SpyOn, EventSpy, EventFetcher
+use snforge_std::{declare, ContractClassTrait, spy_events, SpyOn, EventSpy, EventFetcher
     event_name_hash, Event};
     
 #[starknet::interface]

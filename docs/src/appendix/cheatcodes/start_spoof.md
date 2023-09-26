@@ -50,7 +50,7 @@ impl IContractImpl of IContract<ContractState> {
 ```
 
 ```rust
-use snforge_std::cheatcodes::start_spoof;
+use snforge_std::start_spoof;
 
 #[test]
 fn test_spoof() {

@@ -20,7 +20,7 @@ Calculate an address of a contract in advance that would be returned when callin
 ```rust
 use array::ArrayTrait;
 use result::ResultTrait;
-use snforge_std::cheatcodes::contract_class::{ declare, ContractClassTrait };
+use snforge_std::{ declare, ContractClassTrait };
 
 #[test]
 fn test_deploy() {

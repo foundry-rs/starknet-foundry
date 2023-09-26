@@ -100,8 +100,7 @@ so it passes our validation.
 ### Pranking the Address
 
 ```rust
-use snforge_std::cheatcodes::contract_class::{ declare, ContractClassTrait};
-use snforge_std::cheatcodes::start_prank;
+use snforge_std::{ declare, ContractClassTrait, start_prank};
 
 #[test]
 fn call_and_invoke() {
@@ -140,7 +139,7 @@ In case of the `start_prank`, we can cancel the address change
 using [`stop_prank`](../appendix/cheatcodes/stop_prank.md)
 
 ```rust
-use snforge_std::cheatcodes::stop_prank;
+use snforge_std::stop_prank;
 
 #[test]
 fn call_and_invoke() {
@@ -181,8 +180,7 @@ and then use it in `start_prank` as an argument:
 
 
 ```rust
-use snforge_std::cheatcodes::contract_class::{ declare, ContractClassTrait, start_prank };
-use snforge_std::cheatcodes::start_prank;
+use snforge_std::{ declare, ContractClassTrait, start_prank };
 
 #[test]
 fn prank_the_constructor() {

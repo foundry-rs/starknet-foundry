@@ -7,7 +7,7 @@ Cancels the [`start_spoof`](./start_spoof.md) for the contract at the given addr
 - `contract_address` - target contract address
 
 ```rust
-use snforge_std::cheatcodes::stop_spoof;
+use snforge_std::stop_spoof;
 
 #[test]
 fn test_spoof() {
