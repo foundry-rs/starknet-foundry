@@ -3,7 +3,6 @@ use std::fmt::Debug;
 
 use anyhow::{Context, Result};
 use ark_std::iterable::Iterable;
-use cairo_felt::Felt252;
 use camino::{Utf8Path, Utf8PathBuf};
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use serde::Deserialize;
@@ -15,8 +14,6 @@ use cairo_lang_sierra::ids::ConcreteTypeId;
 use cairo_lang_sierra::program::{Function, Program};
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
-use num_bigint::BigUint;
-use num_traits::Zero;
 use once_cell::sync::Lazy;
 use smol_str::SmolStr;
 
@@ -376,13 +373,7 @@ fn run_with_fuzzing(
         .map(|arg| arg.debug_name.as_ref().unwrap().as_str())
         .collect();
 
-    let mut fuzzer = RandomFuzzer::new(
-        fuzzer_seed,
-        runner_config.fuzzer_runs,
-        &args,
-        &BigUint::zero(),
-        &Felt252::prime(),
-    );
+    let mut fuzzer = RandomFuzzer::new(fuzzer_seed, runner_config.fuzzer_runs, &args);
 
     let mut results = vec![];
 

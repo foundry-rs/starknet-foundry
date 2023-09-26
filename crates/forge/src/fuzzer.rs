@@ -128,14 +128,7 @@ pub struct RunParams {
 }
 
 impl RunParams {
-    pub fn from(
-        rng: &mut StdRng,
-        total_runs: u32,
-        arguments: &[&str],
-        low: &BigUint,
-        high: &BigUint,
-    ) -> Self {
-        assert!(low < high);
+    pub fn from(rng: &mut StdRng, total_runs: u32, arguments: &[&str]) -> Self {
         assert!(total_runs >= 3);
 
         let arguments_number = arguments.len();
@@ -176,15 +169,9 @@ pub struct RandomFuzzer {
 }
 
 impl RandomFuzzer {
-    pub fn new(
-        seed: u64,
-        total_runs: u32,
-        arguments: &[&str],
-        low: &BigUint,
-        high: &BigUint,
-    ) -> Self {
+    pub fn new(seed: u64, total_runs: u32, arguments: &[&str]) -> Self {
         let mut rng = StdRng::seed_from_u64(seed);
-        let run_params = RunParams::from(&mut rng, total_runs, arguments, low, high);
+        let run_params = RunParams::from(&mut rng, total_runs, arguments);
 
         RandomFuzzer { rng, run_params }
     }
@@ -194,20 +181,19 @@ impl RandomFuzzer {
 
         self.next_run();
 
-        self.run_params
-            .arguments
-            .iter()
-            .enumerate()
-            .flat_map(|(index, value)| {
-                if self.is_run_with_min_value_for_arg(index) {
-                    value.min()
-                } else if self.is_run_with_max_value_for_arg(index) {
-                    value.max()
-                } else {
-                    value.gen(&mut self.rng.clone())
-                }
-            })
-            .collect()
+        let mut args = vec![];
+
+        for (index, argument) in self.run_params.arguments.iter().enumerate() {
+            if self.is_run_with_min_value_for_arg(index) {
+                args.extend(argument.min());
+            } else if self.is_run_with_max_value_for_arg(index) {
+                args.extend(argument.max());
+            } else {
+                args.extend(argument.gen(&mut self.rng));
+            }
+        }
+
+        args
     }
 
     fn next_run(&mut self) {
@@ -228,9 +214,8 @@ impl RandomFuzzer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use cairo_felt::Felt252;
-    use num_traits::Zero;
     use rand::{thread_rng, RngCore};
+    use std::ops::Sub;
 
     impl Default for RunParams {
         fn default() -> Self {
@@ -283,22 +268,10 @@ mod tests {
     #[test]
     fn using_seed_consistent_result() {
         let seed = thread_rng().next_u64();
-        let mut fuzzer = RandomFuzzer::new(
-            seed,
-            3,
-            &["felt252", "felt252", "felt252"],
-            &BigUint::zero(),
-            &Felt252::prime(),
-        );
+        let mut fuzzer = RandomFuzzer::new(seed, 3, &["felt252", "felt252", "felt252"]);
         let values = fuzzer.next_args();
 
-        let mut fuzzer = RandomFuzzer::new(
-            seed,
-            3,
-            &["felt252", "felt252", "felt252"],
-            &BigUint::zero(),
-            &Felt252::prime(),
-        );
+        let mut fuzzer = RandomFuzzer::new(seed, 3, &["felt252", "felt252", "felt252"]);
         let values_from_seed = fuzzer.next_args();
 
         assert_eq!(values, values_from_seed);
@@ -307,16 +280,11 @@ mod tests {
     #[test]
     fn min_and_max_used_at_least_once_for_each_arg() {
         let seed = thread_rng().next_u64();
-        let runs_number = 100;
-        let low = BigUint::from(420u16);
-        let high = BigUint::from(2137u16);
+        let runs_number = 10;
         let arguments = vec!["felt252", "felt252", "felt252"];
         let args_number = arguments.len();
 
-        let mut fuzzer = RandomFuzzer::new(seed, runs_number, &arguments, &low, &high);
-
-        let low = Felt252::from(low);
-        let high = Felt252::from(high);
+        let mut fuzzer = RandomFuzzer::new(seed, runs_number, &arguments);
 
         let mut min_used = vec![false; args_number];
         let mut max_used = vec![false; args_number];
