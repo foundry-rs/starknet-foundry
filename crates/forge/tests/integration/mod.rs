@@ -10,6 +10,7 @@ mod prank;
 mod precalculate_address;
 mod pure_cairo;
 mod roll;
+mod setup_fork;
 mod should_panic;
 mod spoof;
 mod spy_events;

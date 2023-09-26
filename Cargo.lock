@@ -1160,6 +1160,8 @@ dependencies = [
  "ctor",
  "fs2",
  "glob",
+ "dotenv",
+ "flate2",
  "include_dir",
  "indoc",
  "num-bigint",
@@ -4312,6 +4314,7 @@ dependencies = [
  "cairo-lang-test-runner",
  "cairo-lang-utils",
  "cairo-vm",
+ "conversions",
  "itertools 0.11.0",
  "num-bigint",
  "num-integer",
@@ -4320,6 +4323,7 @@ dependencies = [
  "serde",
  "serde_json",
  "smol_str",
+ "starknet",
  "thiserror",
 ]
 
