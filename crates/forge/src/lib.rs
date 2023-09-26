@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::fmt::Debug;
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result};
 use ark_std::iterable::Iterable;
 use cairo_felt::Felt252;
 use camino::{Utf8Path, Utf8PathBuf};
@@ -51,13 +51,25 @@ static BUILTINS: Lazy<Vec<&str>> = Lazy::new(|| {
 });
 
 /// Configuration of the test runner
-#[derive(Deserialize, Debug, PartialEq, Default)]
+#[derive(Deserialize, Debug, PartialEq)]
 pub struct RunnerConfig {
     test_name_filter: Option<String>,
     exact_match: bool,
     exit_first: bool,
     fuzzer_runs: u32,
     fuzzer_seed: Option<u64>,
+}
+
+impl Default for RunnerConfig {
+    fn default() -> Self {
+        Self {
+            test_name_filter: None,
+            exact_match: false,
+            exit_first: false,
+            fuzzer_runs: 256,
+            fuzzer_seed: Some(12345),
+        }
+    }
 }
 
 impl RunnerConfig {
@@ -357,17 +369,17 @@ fn run_with_fuzzing(
     args: &Vec<&ConcreteTypeId>,
     fuzzer_seed: u64,
 ) -> Result<(TestCaseSummary, u32)> {
-    if contains_non_felt252_args(args) {
-        bail!(
-            "Fuzzer only supports felt252 arguments, and test {} defines arguments that are not felt252 type",
-            case.name.as_str()
-        );
-    }
+    dbg!(args);
+    // TODO change unwrap
+    let args: Vec<&str> = args
+        .iter()
+        .map(|arg| arg.debug_name.as_ref().unwrap().as_str())
+        .collect();
 
     let mut fuzzer = RandomFuzzer::new(
         fuzzer_seed,
         runner_config.fuzzer_runs,
-        &[],
+        &args,
         &BigUint::zero(),
         &Felt252::prime(),
     );
@@ -375,7 +387,7 @@ fn run_with_fuzzing(
     let mut results = vec![];
 
     for _ in 1..=runner_config.fuzzer_runs {
-        let args = fuzzer.next_felt252_args();
+        let args = fuzzer.next_args();
 
         let result =
             run_from_test_case(runner, case, contracts, predeployed_contracts, args.clone())?;
@@ -393,15 +405,6 @@ fn run_with_fuzzing(
         .clone();
     let runs = u32::try_from(results.len())?;
     Ok((result, runs))
-}
-
-fn contains_non_felt252_args(args: &Vec<&ConcreteTypeId>) -> bool {
-    args.iter().any(|pt| {
-        if let Some(name) = &pt.debug_name {
-            return name != &SmolStr::from("felt252");
-        }
-        false
-    })
 }
 
 fn function_args<'a>(function: &'a Function, builtins: &[&str]) -> Vec<&'a ConcreteTypeId> {
@@ -742,29 +745,5 @@ mod tests {
                 },
             ]
         );
-    }
-
-    #[test]
-    fn args_with_only_felt252() {
-        let typ = ConcreteTypeId {
-            id: 0,
-            debug_name: Some(SmolStr::from("felt252")),
-        };
-        let args = vec![&typ, &typ];
-        assert!(!contains_non_felt252_args(&args));
-    }
-
-    #[test]
-    fn args_with_not_felt252() {
-        let typ = ConcreteTypeId {
-            id: 0,
-            debug_name: Some(SmolStr::from("felt252")),
-        };
-        let typ2 = ConcreteTypeId {
-            id: 0,
-            debug_name: Some(SmolStr::from("Uint256")),
-        };
-        let args = vec![&typ, &typ, &typ2];
-        assert!(contains_non_felt252_args(&args));
     }
 }

@@ -20,6 +20,8 @@ trait Argument {
     fn low(&self) -> BigUint;
     fn high(&self) -> BigUint;
     fn gen(&self, rng: &mut StdRng) -> Vec<Felt252>;
+    fn min(&self) -> Vec<Felt252>;
+    fn max(&self) -> Vec<Felt252>;
 }
 
 impl Argument for CairoType {
@@ -57,12 +59,40 @@ impl Argument for CairoType {
             }
             CairoType::U256 => {
                 let val = rng.gen_biguint_range(&self.low(), &self.high());
-                let low = val.mod_floor(&BigUint::from(2_u32).pow(128));
-                let high = val.shr(128);
-                vec![Felt252::from(low), Felt252::from(high)]
+                u256_to_felt252(val)
             }
         }
     }
+
+    fn min(&self) -> Vec<Felt252> {
+        match self {
+            CairoType::U8
+            | CairoType::U16
+            | CairoType::U32
+            | CairoType::U64
+            | CairoType::U128
+            | CairoType::Felt252 => vec![Felt252::from(self.low())],
+            CairoType::U256 => vec![Felt252::from(self.low()), Felt252::from(self.low())],
+        }
+    }
+
+    fn max(&self) -> Vec<Felt252> {
+        match self {
+            CairoType::U8
+            | CairoType::U16
+            | CairoType::U32
+            | CairoType::U64
+            | CairoType::U128
+            | CairoType::Felt252 => vec![Felt252::from(self.high())],
+            CairoType::U256 => u256_to_felt252(self.high()),
+        }
+    }
+}
+
+fn u256_to_felt252(val: BigUint) -> Vec<Felt252> {
+    let low = val.mod_floor(&BigUint::from(2_u32).pow(128));
+    let high = val.shr(128);
+    vec![Felt252::from(low), Felt252::from(high)]
 }
 
 impl CairoType {
@@ -73,7 +103,7 @@ impl CairoType {
             "u32" => Self::U32,
             "u64" => Self::U64,
             "u128" => Self::U128,
-            "u256" => Self::U256,
+            "u256" | "core::integer::u256" => Self::U256,
             "felt252" => Self::Felt252,
             _ => panic!(), // TODO add better handling
         }
@@ -81,12 +111,6 @@ impl CairoType {
 }
 
 pub struct RunParams {
-    /// Inclusive value
-    low: BigUint,
-    /// Exclusive value
-    high: BigUint,
-    /// Number of arguments
-    arguments_number: usize,
     /// Arguments
     arguments: Vec<CairoType>,
     /// Total number of runs
@@ -136,9 +160,6 @@ impl RunParams {
             .collect();
 
         Self {
-            low: low.clone(),
-            high: high.clone(),
-            arguments_number,
             arguments,
             total_runs,
             executed_runs: 0,
@@ -168,21 +189,23 @@ impl RandomFuzzer {
         RandomFuzzer { rng, run_params }
     }
 
-    pub fn next_felt252_args(&mut self) -> Vec<Felt252> {
+    pub fn next_args(&mut self) -> Vec<Felt252> {
         assert!(self.run_params.executed_runs < self.run_params.total_runs);
 
         self.next_run();
 
-        (0..self.run_params.arguments_number)
-            .map(|arg_number| {
-                Felt252::from(if self.is_run_with_min_value_for_arg(arg_number) {
-                    self.run_params.low.clone()
-                } else if self.is_run_with_max_value_for_arg(arg_number) {
-                    self.run_params.high.clone() - BigUint::one()
+        self.run_params
+            .arguments
+            .iter()
+            .enumerate()
+            .flat_map(|(index, value)| {
+                if self.is_run_with_min_value_for_arg(index) {
+                    value.min()
+                } else if self.is_run_with_max_value_for_arg(index) {
+                    value.max()
                 } else {
-                    self.rng
-                        .gen_biguint_range(&self.run_params.low, &self.run_params.high)
-                })
+                    value.gen(&mut self.rng.clone())
+                }
             })
             .collect()
     }
@@ -212,9 +235,6 @@ mod tests {
     impl Default for RunParams {
         fn default() -> Self {
             Self {
-                low: BigUint::zero(),
-                high: Felt252::prime(),
-                arguments_number: 0,
                 arguments: vec![],
                 total_runs: 256,
                 executed_runs: 0,
@@ -229,7 +249,6 @@ mod tests {
         let run_params = RunParams {
             run_with_max_value_for_argument: vec![1],
             run_with_min_value_for_argument: vec![2],
-            arguments_number: 1,
             total_runs: 10,
             ..Default::default()
         };
@@ -239,7 +258,7 @@ mod tests {
         };
 
         assert!(!fuzzer.is_run_with_max_value_for_arg(0));
-        fuzzer.next_felt252_args();
+        fuzzer.next_args();
         assert!(fuzzer.is_run_with_max_value_for_arg(0));
     }
 
@@ -248,7 +267,6 @@ mod tests {
         let run_params = RunParams {
             run_with_max_value_for_argument: vec![2],
             run_with_min_value_for_argument: vec![1],
-            arguments_number: 1,
             total_runs: 10,
             ..Default::default()
         };
@@ -258,7 +276,7 @@ mod tests {
         };
 
         assert!(!fuzzer.is_run_with_min_value_for_arg(0));
-        fuzzer.next_felt252_args();
+        fuzzer.next_args();
         assert!(fuzzer.is_run_with_min_value_for_arg(0));
     }
 
@@ -268,20 +286,20 @@ mod tests {
         let mut fuzzer = RandomFuzzer::new(
             seed,
             3,
-            &vec!["felt252", "felt252", "felt252"],
+            &["felt252", "felt252", "felt252"],
             &BigUint::zero(),
             &Felt252::prime(),
         );
-        let values = fuzzer.next_felt252_args();
+        let values = fuzzer.next_args();
 
         let mut fuzzer = RandomFuzzer::new(
             seed,
             3,
-            &vec!["felt252", "felt252", "felt252"],
+            &["felt252", "felt252", "felt252"],
             &BigUint::zero(),
             &Felt252::prime(),
         );
-        let values_from_seed = fuzzer.next_felt252_args();
+        let values_from_seed = fuzzer.next_args();
 
         assert_eq!(values, values_from_seed);
     }
@@ -304,7 +322,7 @@ mod tests {
         let mut max_used = vec![false; args_number];
 
         for _ in 1..=runs_number {
-            let values = fuzzer.next_felt252_args();
+            let values = fuzzer.next_args();
             for (i, value) in values.iter().enumerate() {
                 assert!(*value >= low && *value < high);
                 if *value == low {

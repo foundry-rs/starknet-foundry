@@ -41,4 +41,10 @@ mod tests {
         let result = always_five(a, b);
         assert(result == a + b, 'result == a + b');
     }
+
+    #[test]
+    fn uint128_arg(a: u128) {
+        let x: u256 = a + 5_u256;
+        assert(x == a + 5_u128, 'x != a + 5_u128')
+    }
 }
