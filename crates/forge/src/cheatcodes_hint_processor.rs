@@ -131,7 +131,8 @@ impl HintProcessorLogic for CairoHintProcessor<'_> {
             );
         }
 
-        self.blockifier_syscall_handler.execute_hint(vm, exec_scopes, hint_data, constants)
+        self.blockifier_syscall_handler
+            .execute_hint(vm, exec_scopes, hint_data, constants)
     }
 
     /// Trait function to store hint in the hint processor by string.

@@ -51,6 +51,50 @@ fn spy_events_simple() {
 }
 
 #[test]
+fn spy_events_emit_event_syscall() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use array::ArrayTrait;
+            use result::ResultTrait;
+            use starknet::ContractAddress;
+            use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpy, EventFetcher,
+                event_name_hash, EventAssertions, Event, SpyOn };
+
+            #[starknet::interface]
+            trait ISpyEventsChecker<TContractState> {
+                fn emit_event_syscall(ref self: TContractState, some_data: felt252);
+            }
+
+            #[test]
+            fn test_expect_events_simple() {
+                let contract = declare('SpyEventsChecker');
+                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+                let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
+
+                let mut spy = spy_events(SpyOn::One(contract_address));
+                assert(spy._id == 0, 'Id should be 0');
+
+                dispatcher.emit_event_syscall(123);
+
+                spy.fetch_events();
+                assert(spy.events.len() == 1, 'There should be 1 event');
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "SpyEventsChecker".to_string(),
+            Path::new("tests/data/contracts/spy_events_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test);
+
+    assert_passed!(result);
+}
+
+#[test]
 fn assert_emitted_fails() {
     let test = test_case!(
         indoc!(

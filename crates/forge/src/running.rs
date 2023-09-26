@@ -22,6 +22,7 @@ use cairo_lang_runner::SierraCasmRunner;
 use cairo_lang_runner::{Arg, RunnerError};
 use cairo_vm::vm::runners::cairo_runner::RunResources;
 use camino::Utf8PathBuf;
+use cheatnet::execution::events::collect_emitted_events_from_spied_test;
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::state::ExtendedStateReader;
 use conversions::StarknetConversions;
@@ -154,8 +155,28 @@ pub(crate) fn run_from_test_case(
         instructions,
         builtins,
     ) {
-        Ok(result) => Ok(TestCaseSummary::from_run_result(result, case, args)),
+        Ok(result) => {
+            if !cairo_hint_processor
+                .cheatnet_state
+                .cheatcode_state
+                .spies
+                .is_empty()
+            {
+                let mut events = collect_emitted_events_from_spied_test(
+                    &result,
+                    &mut cairo_hint_processor.cheatnet_state.cheatcode_state,
+                    &mut cairo_hint_processor.blockifier_syscall_handler,
+                    ContractAddress(patricia_key!(TEST_ADDRESS)),
+                );
+                cairo_hint_processor
+                    .cheatnet_state
+                    .cheatcode_state
+                    .detected_events
+                    .append(&mut events);
+            }
 
+            Ok(TestCaseSummary::from_run_result(result, case, args))
+        }
         // CairoRunError comes from VirtualMachineError which may come from HintException that originates in the cheatcode processor
         Err(RunnerError::CairoRunError(error)) => Ok(TestCaseSummary::Failed {
             name: case.name.clone(),

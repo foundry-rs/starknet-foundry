@@ -386,17 +386,6 @@ fn test_spy_events_simple() {
             use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpy, EventFetcher,
                 event_name_hash, EventAssertions, SpyOn, test_address };
 
-            #[event]
-            #[derive(Drop, starknet::Event)]
-            enum Event {
-                FirstEvent: FirstEvent,
-            }
-
-            #[derive(Drop, starknet::Event)]
-            struct FirstEvent {
-                some_data: felt252
-            }
-
             #[test]
             fn test_expect_events_simple() {
                 let contract_address = test_address();
@@ -409,12 +398,8 @@ fn test_spy_events_simple() {
                 data.append(2345);
                 starknet::emit_event_syscall(keys.span(), data.span()).unwrap_syscall();
 
-                // spy.assert_emitted(@array![
-                //     snforge_std::Event { from: contract_address, name: 'FirstEvent', keys: array![1234], data: array![2345] }
-                // ]);
-
                 spy.fetch_events();
-                assert(spy.events.len() == 0, 'There should be no events');
+                assert(spy.events.len() == 1, 'There should be 1 event');
             }
         "#
     ),);
