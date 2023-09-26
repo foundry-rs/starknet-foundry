@@ -11,57 +11,74 @@ jobs:
   test-forge-unit-and-integration:
     name: Test Forge / Unit and Integration Tests
     env:
-      SCARB_VERSION: 0.6.0-alpha.2
+      SCARB_VERSION: 0.7.0
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: true
       - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@dd05243424bd5c0e585e4b55eb2d7615cdd32f1f
-        with:
-          workspaces: starknet-foundry
-      - uses: software-mansion/setup-scarb@v1.0.1
+      - uses: Swatinem/rust-cache@v2
+      - uses: software-mansion/setup-scarb@v1.3.0
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
-      - run: cargo test --lib -p forge
-      - run: cargo test integration -p forge
+      - run: cargo test --release --lib -p forge
+      - run: cargo test --release integration -p forge
 
   test-forge-e2e:
     name: Test Forge / E2E Tests
     env:
-      SCARB_VERSION: 0.6.0-alpha.2
+      SCARB_VERSION: 0.7.0
     runs-on: ubuntu-latest
     steps:
+      - name: Extract branch name
+        if: github.event_name != 'pull_request'
+        run: echo "BRANCH_NAME=$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_ENV
+
+      - name: Extract branch name on pull request
+        if: github.event_name == 'pull_request'
+        run: echo "BRANCH_NAME=$(echo $GITHUB_HEAD_REF)" >> $GITHUB_ENV
+
+      - name: Extract repo name and owner
+        if: github.event_name != 'pull_request'
+        run: echo "REPO_NAME=$(echo ${{ github.repository }}.git)" >> $GITHUB_ENV
+
+      - name: Extract repo name and owner on pull request
+        if: github.event_name == 'pull_request'
+        run: echo "REPO_NAME=$(echo ${{ github.event.pull_request.head.repo.full_name }}.git)" >> $GITHUB_ENV
+
+      - name: Print repo name
+        run: echo 'The repo name is' $REPO_NAME
+
+      - name: Get branch name
+        run: echo 'The branch name is' $BRANCH_NAME
+
       - uses: actions/checkout@v3
         with:
           submodules: true
       - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@dd05243424bd5c0e585e4b55eb2d7615cdd32f1f
-        with:
-          workspaces: starknet-foundry
-      - uses: software-mansion/setup-scarb@v1.0.1
+      - uses: Swatinem/rust-cache@v2
+      - uses: software-mansion/setup-scarb@v1.3.0
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
-      - run: cargo test e2e -p forge
+      - run: cargo test --release e2e -p forge
 
   test-cheatnet:
     name: Test Cheatnet
     env:
-      SCARB_VERSION: 0.6.0-alpha.2
+      SCARB_VERSION: 0.7.0
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: true
       - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@dd05243424bd5c0e585e4b55eb2d7615cdd32f1f
-        with:
-          workspaces: starknet-foundry
-      - uses: software-mansion/setup-scarb@v1.0.1
+      - uses: Swatinem/rust-cache@v2
+      - uses: software-mansion/setup-scarb@v1.3.0
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
-      - run: cargo test -p cheatable-starknet
+      - name: Run Cheatnet tests
+        run: cargo test -p cheatnet
 
   test-cast:
     name: Test Cast
@@ -75,9 +92,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@0e66bd3e6b38ec0ad5312288c83e47c143e6b09e
         with:
           toolchain: stable
-      - uses: Swatinem/rust-cache@dd05243424bd5c0e585e4b55eb2d7615cdd32f1f
-        with:
-          workspaces: starknet-foundry
+      - uses: Swatinem/rust-cache@v2
       - uses: actions/setup-python@v4
         with:
           python-version: '3.9'
@@ -95,7 +110,7 @@ jobs:
         run: |
           ./scripts/prepare_for_tests.sh
       - name: Run tests
-        run: cargo test -p cast
+        run: cargo test --release -p cast
 
   rustfmt:
     runs-on: ubuntu-latest
@@ -106,17 +121,15 @@ jobs:
       - uses: dtolnay/rust-toolchain@0e66bd3e6b38ec0ad5312288c83e47c143e6b09e
         with:
           toolchain: stable
-      - uses: Swatinem/rust-cache@dd05243424bd5c0e585e4b55eb2d7615cdd32f1f
-        with:
-          workspaces: starknet-foundry
+      - uses: Swatinem/rust-cache@v2
       - name: Check forge formatting
         run: cargo fmt --check -p forge
       - name: Check cast formatting
         run: cargo fmt --check -p cast
       - name: Check test-collector formatting
         run: cargo fmt --check -p test-collector
-      - name: Check cheatable-starknet formatting
-        run: cargo fmt --check -p cheatable-starknet
+      - name: Check cheatnet formatting
+        run: cargo fmt --check -p cheatnet
 
   clippy:
     runs-on: ubuntu-latest
@@ -130,7 +143,5 @@ jobs:
       - uses: dtolnay/rust-toolchain@0e66bd3e6b38ec0ad5312288c83e47c143e6b09e
         with:
           toolchain: stable
-      - uses: Swatinem/rust-cache@dd05243424bd5c0e585e4b55eb2d7615cdd32f1f
-        with:
-          workspaces: starknet-foundry
+      - uses: Swatinem/rust-cache@v2
       - run: cargo lint

@@ -1,12 +1,14 @@
-use crate::helpers::constants::{ACCOUNT, MAP_CONTRACT_ADDRESS_V1, MAP_CONTRACT_ADDRESS_V2};
-use crate::helpers::fixtures::{default_cli_args, get_transaction_hash, get_transaction_receipt};
+use crate::helpers::constants::ACCOUNT;
+use crate::helpers::fixtures::{
+    convert_to_hex, default_cli_args, from_env, get_transaction_hash, get_transaction_receipt,
+};
 use crate::helpers::runner::runner;
 use indoc::indoc;
 use starknet::core::types::TransactionReceipt::Invoke;
 use test_case::test_case;
 
-#[test_case(MAP_CONTRACT_ADDRESS_V1, "user1" ; "when cairo1 contract")]
-#[test_case(MAP_CONTRACT_ADDRESS_V2, "user2" ; "when cairo2 contract")]
+#[test_case(from_env("CAST_MAP_V1_ADDRESS").unwrap().as_str(), "user1" ; "when cairo1 contract")]
+#[test_case(from_env("CAST_MAP_V2_ADDRESS").unwrap().as_str(), "user2" ; "when cairo2 contract")]
 #[tokio::test]
 async fn test_happy_case(contract_address: &str, account: &str) {
     let mut args = default_cli_args();
@@ -52,12 +54,12 @@ async fn test_contract_does_not_exist() {
 
     snapbox.assert().stderr_matches(indoc! {r#"
         command: invoke
-        error: There is no contract at the specified address
+        error: Contract not found
     "#});
 }
 
-#[test_case(MAP_CONTRACT_ADDRESS_V1, "user1" ; "when cairo1 contract")]
-#[test_case(MAP_CONTRACT_ADDRESS_V2, "user2" ; "when cairo2 contract")]
+#[test_case(from_env("CAST_MAP_V1_ADDRESS").unwrap().as_str(), "user1" ; "when cairo1 contract")]
+#[test_case(from_env("CAST_MAP_V2_ADDRESS").unwrap().as_str(), "user2" ; "when cairo2 contract")]
 fn test_wrong_function_name(contract_address: &str, account: &str) {
     let mut args = default_cli_args();
     args.append(&mut vec![
@@ -74,12 +76,12 @@ fn test_wrong_function_name(contract_address: &str, account: &str) {
 
     snapbox.assert().stderr_matches(indoc! {r#"
         command: invoke
-        error: An error occurred in the called contract
+        error: Contract error
     "#});
 }
 
-#[test_case(MAP_CONTRACT_ADDRESS_V1, "user1" ; "when cairo1 contract")]
-#[test_case(MAP_CONTRACT_ADDRESS_V2, "user2" ; "when cairo2 contract")]
+#[test_case(from_env("CAST_MAP_V1_ADDRESS").unwrap().as_str(), "user1" ; "when cairo1 contract")]
+#[test_case(from_env("CAST_MAP_V2_ADDRESS").unwrap().as_str(), "user2" ; "when cairo2 contract")]
 fn test_wrong_calldata(contract_address: &str, account: &str) {
     let mut args = default_cli_args();
     args.append(&mut vec![
@@ -102,11 +104,11 @@ fn test_wrong_calldata(contract_address: &str, account: &str) {
         std::str::from_utf8(&out.stderr).expect("failed to convert command output to string");
 
     assert!(stderr_str.contains("Error in the called contract"));
-    assert!(stderr_str.contains(contract_address));
+    assert!(stderr_str.contains(&convert_to_hex(contract_address)));
 }
 
-#[test_case(MAP_CONTRACT_ADDRESS_V1, "user1" ; "when cairo1 contract")]
-#[test_case(MAP_CONTRACT_ADDRESS_V2, "user2" ; "when cairo2 contract")]
+#[test_case(from_env("CAST_MAP_V1_ADDRESS").unwrap().as_str(), "user1" ; "when cairo1 contract")]
+#[test_case(from_env("CAST_MAP_V2_ADDRESS").unwrap().as_str(), "user2" ; "when cairo2 contract")]
 fn test_too_low_max_fee(contract_address: &str, account: &str) {
     let mut args = default_cli_args();
     args.append(&mut vec![

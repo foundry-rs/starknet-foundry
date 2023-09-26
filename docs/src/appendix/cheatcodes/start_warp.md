@@ -12,15 +12,14 @@ For contract implementation:
 
 ```rust
 // ...
+#[storage]
+struct Storage {
+    // ...
+    stored_block_timestamp: u64
+}
+
 #[external(v0)]
 impl IContractImpl of IContract<ContractState> {
-    #[storage]
-    struct Storage {
-        // ...
-
-        stored_block_timestamp: u64
-    }
-    
     fn set_block_timestamp(ref self: ContractState) {
         self.stored_block_timestamp.write(starknet::get_block_timestamp());
     }
@@ -35,6 +34,8 @@ impl IContractImpl of IContract<ContractState> {
 We can use `start_warp` in a test to change the block timestamp for a given contract:
 
 ```rust
+use snforge_std::start_warp;
+
 #[test]
 fn test_warp() {
     // ...

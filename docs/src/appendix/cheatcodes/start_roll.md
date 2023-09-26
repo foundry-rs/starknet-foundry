@@ -12,15 +12,14 @@ For contract implementation:
 
 ```rust
 // ...
+#[storage]
+struct Storage {
+    // ...
+    stored_block_number: u64
+}
+
 #[external(v0)]
 impl IContractImpl of IContract<ContractState> {
-    #[storage]
-    struct Storage {
-        // ...
-
-        stored_block_number: u64
-    }
-    
     fn set_block_number(ref self: ContractState) {
         self.stored_block_number.write(starknet::get_block_info().unbox().block_number);
     }
@@ -35,6 +34,8 @@ impl IContractImpl of IContract<ContractState> {
 We can use `start_roll` in a test to change the block number for a given contract:
 
 ```rust
+use snforge_std::start_roll;
+
 #[test]
 fn test_roll() {
     // ...

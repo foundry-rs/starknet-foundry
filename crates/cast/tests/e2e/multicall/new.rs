@@ -41,7 +41,8 @@ async fn test_happy_case_file() {
     let stdout_str =
         std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
 
-    assert!(stdout_str.contains("Multicall template successfully saved in"));
+    assert!(stdout_str.contains("path: "));
+    assert!(stdout_str.contains("content: "));
     assert!(contents.contains(DEFAULT_MULTICALL_CONTENTS));
 }
 
@@ -91,5 +92,5 @@ async fn test_file_invalid_path() {
     let stderr_str =
         std::str::from_utf8(&out.stderr).expect("failed to convert command output to string");
     assert!(stdout_str.is_empty());
-    assert!(stderr_str.contains("output file cannot be a directory"));
+    assert!(stderr_str.contains("Output file cannot be a directory"));
 }

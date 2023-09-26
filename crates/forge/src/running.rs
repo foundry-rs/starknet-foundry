@@ -1,23 +1,43 @@
 use std::collections::HashMap;
+use std::sync::Arc;
 
 use anyhow::Result;
+use blockifier::execution::entry_point::{
+    CallEntryPoint, CallType, EntryPointExecutionContext, ExecutionResources,
+};
+use blockifier::execution::execution_utils::ReadOnlySegments;
+use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
+use blockifier::state::cached_state::{CachedState, GlobalContractCache};
+use cairo_felt::Felt252;
 use cairo_vm::serde::deserialize_program::HintParams;
-use cheatable_starknet::constants::build_testing_state;
-use cheatable_starknet::CheatedState;
+use cairo_vm::types::relocatable::Relocatable;
+use cheatnet::constants::{build_block_context, build_testing_state, build_transaction_context};
+use cheatnet::CheatnetState;
 use itertools::chain;
 
 use cairo_lang_casm::hints::Hint;
 use cairo_lang_casm::instructions::Instruction;
 use cairo_lang_runner::casm_run::hint_to_hint_params;
-use cairo_lang_runner::{CairoHintProcessor as CoreCairoHintProcessor, RunnerError};
-use cairo_lang_runner::{SierraCasmRunner, StarknetState};
+use cairo_lang_runner::SierraCasmRunner;
+use cairo_lang_runner::{Arg, RunnerError};
 use cairo_vm::vm::runners::cairo_runner::RunResources;
 use camino::Utf8PathBuf;
+use cheatnet::state::ExtendedStateReader;
+use starknet::core::utils::get_selector_from_name;
+use starknet_api::core::PatriciaKey;
+use starknet_api::core::{ContractAddress, EntryPointSelector};
+use starknet_api::deprecated_contract_class::EntryPointType;
+use starknet_api::hash::StarkHash;
+use starknet_api::patricia_key;
+use starknet_api::transaction::Calldata;
 use test_collector::TestCase;
 
 use crate::cheatcodes_hint_processor::CairoHintProcessor;
 use crate::scarb::StarknetContractArtifacts;
 use crate::test_case_summary::TestCaseSummary;
+
+// snforge_std/src/cheatcodes.cairo::TEST
+const TEST_ADDRESS: &str = "0x01724987234973219347210837402";
 
 /// Builds `hints_dict` required in `cairo_vm::types::program::Program` from instructions.
 fn build_hints_dict<'b>(
@@ -50,15 +70,20 @@ pub(crate) fn run_from_test_case(
     case: &TestCase,
     contracts: &HashMap<String, StarknetContractArtifacts>,
     predeployed_contracts: &Utf8PathBuf,
+    args: Vec<Felt252>,
 ) -> Result<TestCaseSummary> {
     let available_gas = if let Some(available_gas) = &case.available_gas {
         Some(*available_gas)
     } else {
         Some(usize::MAX)
     };
+
     let func = runner.find_function(case.name.as_str())?;
     let initial_gas = runner.get_initial_available_gas(func, available_gas)?;
-    let (entry_code, builtins) = runner.create_entry_code(func, &[], initial_gas)?;
+
+    let runner_args: Vec<Arg> = args.clone().into_iter().map(Arg::Value).collect();
+
+    let (entry_code, builtins) = runner.create_entry_code(func, &runner_args, initial_gas)?;
     let footer = runner.create_code_footer();
     let instructions = chain!(
         entry_code.iter(),
@@ -66,17 +91,56 @@ pub(crate) fn run_from_test_case(
         footer.iter()
     );
     let (hints_dict, string_to_hint) = build_hints_dict(instructions.clone());
-    let core_cairo_hint_processor = CoreCairoHintProcessor {
-        runner: Some(runner),
-        starknet_state: StarknetState::default(),
-        string_to_hint,
-        run_resources: RunResources::default(),
+
+    // Losely inspired by crates/cheatnet/src/execution/cairo1_execution::execute_entry_point_call_cairo1
+    let block_context = build_block_context();
+    let account_context = build_transaction_context();
+    let mut context = EntryPointExecutionContext::new(
+        block_context.clone(),
+        account_context,
+        block_context.invoke_tx_max_n_steps.try_into().unwrap(),
+    );
+    let test_selector = get_selector_from_name("TEST_CONTRACT_SELECTOR").unwrap();
+    let entry_point_selector = EntryPointSelector(StarkHash::new(test_selector.to_bytes_be())?);
+    let entry_point = CallEntryPoint {
+        class_hash: None,
+        code_address: Some(ContractAddress(patricia_key!(TEST_ADDRESS))),
+        entry_point_type: EntryPointType::External,
+        entry_point_selector,
+        calldata: Calldata(Arc::new(vec![])),
+        storage_address: ContractAddress(patricia_key!(TEST_ADDRESS)),
+        caller_address: ContractAddress::default(),
+        call_type: CallType::Call,
+        initial_gas: u64::MAX,
     };
+
+    let mut blockifier_state = CachedState::new(
+        build_testing_state(predeployed_contracts),
+        GlobalContractCache::default(),
+    );
+    let mut execution_resources = ExecutionResources::default();
+    let syscall_handler = SyscallHintProcessor::new(
+        &mut blockifier_state,
+        &mut execution_resources,
+        &mut context,
+        // This segment is created by SierraCasmRunner
+        Relocatable {
+            segment_index: 10,
+            offset: 0,
+        },
+        entry_point,
+        &string_to_hint,
+        ReadOnlySegments::default(),
+    );
     let mut cairo_hint_processor = CairoHintProcessor {
-        original_cairo_hint_processor: core_cairo_hint_processor,
-        blockifier_state: build_testing_state(predeployed_contracts),
+        blockifier_syscall_handler: syscall_handler,
         contracts,
-        cheated_state: CheatedState::new(),
+        cheatnet_state: CheatnetState::new(ExtendedStateReader {
+            dict_state_reader: build_testing_state(predeployed_contracts),
+            fork_state_reader: None,
+        }),
+        hints: &string_to_hint,
+        run_resources: RunResources::default(),
     };
 
     match runner.run_function(
@@ -86,7 +150,7 @@ pub(crate) fn run_from_test_case(
         instructions,
         builtins,
     ) {
-        Ok(result) => Ok(TestCaseSummary::from_run_result(result, case)),
+        Ok(result) => Ok(TestCaseSummary::from_run_result(result, case, args)),
 
         // CairoRunError comes from VirtualMachineError which may come from HintException that originates in the cheatcode processor
         Err(RunnerError::CairoRunError(error)) => Ok(TestCaseSummary::Failed {
@@ -96,6 +160,7 @@ pub(crate) fn run_from_test_case(
                 "\n    {}\n",
                 error.to_string().replace(" Custom Hint Error: ", "\n    ")
             )),
+            arguments: args,
         }),
 
         Err(err) => Err(err.into()),

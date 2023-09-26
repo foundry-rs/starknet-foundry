@@ -8,6 +8,7 @@ use cairo_lang_filesystem::db::init_dev_corelib;
 use cairo_lang_starknet::allowed_libfuncs::{validate_compatible_sierra_version, ListSelector};
 use cairo_lang_starknet::casm_contract_class::CasmContractClass;
 use cairo_lang_starknet::contract_class::compile_contract_in_prepared_db;
+use cairo_lang_starknet::inline_macros::selector::SelectorMacro;
 use cairo_lang_starknet::plugin::StarkNetPlugin;
 use camino::Utf8PathBuf;
 use forge::scarb::StarknetContractArtifacts;
@@ -48,7 +49,8 @@ impl Contract {
 
         let db = &mut {
             RootDatabase::builder()
-                .with_semantic_plugin(Arc::new(StarkNetPlugin::default()))
+                .with_macro_plugin(Arc::new(StarkNetPlugin::default()))
+                .with_inline_macro_plugin(SelectorMacro::NAME, Arc::new(SelectorMacro))
                 .build()?
         };
         init_dev_corelib(db, corelib_path.into());
@@ -84,7 +86,7 @@ pub struct TestCase {
 }
 
 impl<'a> TestCase {
-    pub const TEST_PATH: &'a str = "test_case.cairo";
+    pub const TEST_PATH: &'a str = "tests/test_case.cairo";
     const PACKAGE_NAME: &'a str = "my_package";
 
     pub fn from(test_code: &str, contracts: Vec<Contract>) -> Result<Self> {
@@ -104,7 +106,7 @@ impl<'a> TestCase {
     }
 
     pub fn linked_libraries(&self) -> Vec<LinkedLibrary> {
-        let cheatcodes_path = PathBuf::from_str("../../cheatcodes")
+        let snforge_std_path = PathBuf::from_str("../../snforge_std")
             .unwrap()
             .canonicalize()
             .unwrap();
@@ -114,8 +116,8 @@ impl<'a> TestCase {
                 path: self.dir.path().join("src"),
             },
             LinkedLibrary {
-                name: "cheatcodes".to_string(),
-                path: cheatcodes_path.join("src"),
+                name: "snforge_std".to_string(),
+                path: snforge_std_path.join("src"),
             },
         ]
     }

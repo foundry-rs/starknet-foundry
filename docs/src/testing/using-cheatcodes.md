@@ -1,5 +1,14 @@
 # Using Cheatcodes
 
+> ℹ️ **Info**
+> To use cheatcodes you need to add `snforge_std` package as a dependency in
+> your [`Scarb.toml`](https://docs.swmansion.com/scarb/docs/guides/dependencies.html#adding-a-dependency) 
+> using appropriate release tag.
+>```toml
+> [dependencies]
+> snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.5.0" }
+> ```
+
 When testing smart contracts, often there are parts of code that are dependent on a specific blockchain state.
 Instead of trying to replicate these conditions in tests, you can emulate them
 using [cheatcodes](../appendix/cheatcodes.md).
@@ -69,8 +78,8 @@ However, when running this test, we will get a failure with a message
 
 ```shell
 $ snforge
-Collected 1 test(s) and 1 test file(s)
-Running 1 test(s) from package_name package
+Collected 1 test(s) and 1 test file(s) from package_name package
+Running 1 inline test(s)
 [FAIL] package_name::call_and_invoke
 
 Failure data:
@@ -91,11 +100,12 @@ so it passes our validation.
 ### Pranking the Address
 
 ```rust
+use snforge_std::{ declare, ContractClassTrait, start_prank };
+
 #[test]
 fn call_and_invoke() {
-    let class_hash = declare('HelloStarknet');
-    let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
-    let contract_address = deploy(prepared).unwrap();
+    let contract = declare('HelloStarknet');
+    let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
     let dispatcher = IHelloStarknetDispatcher { contract_address };
     
     let balance = dispatcher.get_balance();
@@ -115,8 +125,8 @@ The test will now pass without an error
 
 ```shell
 $ snforge
-Collected 1 test(s) and 1 test file(s)
-Running 1 test(s) from package_name package
+Collected 1 test(s) and 1 test file(s) from package_name package
+Running 1 inline test(s)
 [PASS] package_name::call_and_invoke
 Tests: 1 passed, 0 failed, 0 skipped
 ```
@@ -129,6 +139,8 @@ In case of the `start_prank`, we can cancel the address change
 using [`stop_prank`](../appendix/cheatcodes/stop_prank.md)
 
 ```rust
+use snforge_std::stop_prank;
+
 #[test]
 fn call_and_invoke() {
     // ...
@@ -146,12 +158,42 @@ fn call_and_invoke() {
 
 ```shell
 $ snforge
-Collected 1 test(s) and 1 test file(s)
-Running 1 test(s) from package_name package
+Collected 1 test(s) and 1 test file(s) from package_name package
+Running 1 inline test(s)
 [FAIL] package_name::call_and_invoke
 
 Failure data:
     original value: [1234], converted to a string: [user is not allowed]
 
 Tests: 0 passed, 1 failed, 0 skipped
+```
+
+### Pranking the constructor
+
+Most of the cheatcodes like `prank`, `mock_call`, `warp`, `roll` do work in the constructor of the contracts.
+
+Let's say, that you have a contract that saves the caller address (deployer) in the constructor, and you want it to be pre-set to a certain value.
+
+To `prank` the constructor, you need to `start_prank` before it is invoked, with the right address. 
+To achieve this, you need to precalculate address of the contract using `precalculate_address` of `ContractClassTrait` on declared contract,
+and then use it in `start_prank` as an argument:
+
+
+```rust
+use snforge_std::{ declare, ContractClassTrait, start_prank };
+
+#[test]
+fn prank_the_constructor() {
+    let contract = declare('HelloStarknet');
+    let constructor_arguments = @ArrayTrait::new();
+    
+    // Precalculate the address to obtain the contract address before the constructor call (deploy) itself
+    let contract_address = contract.precalculate_address(constructor_arguments); 
+    
+    // Change the caller address to 123 before the call to contract.deploy
+    start_prank(contract_address, 123.try_into().unwrap());
+    
+    // The constructor will have 123 set as the caller address 
+    contract.deploy(constructor_arguments).unwrap();
+}
 ```

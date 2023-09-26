@@ -8,10 +8,10 @@ It is possible to configure forge for all test runs through `Scarb.toml`.
 Instead of passing arguments in the command line, set them directly in the file.
 
 ```toml
-(...)
+# ...
 [tool.snforge]
 exit_first = true
-(...)
+# ...
 ```
 
 Forge automatically looks for `Scarb.toml` in the directory you are running the tests in or in any of its parents.
@@ -21,18 +21,18 @@ Forge automatically looks for `Scarb.toml` in the directory you are running the 
 ### Defining Profiles in `Scarb.toml`
 
 To be able to work with the network, you need to supply cast with a few parameters —
-namely the network name, rpc node url and an account name that should be used to interact with it.
+namely the rpc node url and an account name that should be used to interact with it.
 This can be done
 by either supplying cast with those parameters directly [see more detailed CLI description,](../appendix/cast.md)
 or you can put them into `Scarb.toml` file:
 
 ```toml
-(...)
+# ...
 [tool.sncast.myprofile]
 account = "user"
-network = "testnet"
+accounts-file = "~/my_accounts.json"
 url = "http://127.0.0.1:5050/rpc"
-(...)
+# ...
 ```
 
 With `Scarb.toml` configured this way, we can just pass `--profile myprofile` argument to make sure cast uses parameters
@@ -67,12 +67,12 @@ You can have multiple profiles defined in the `Scarb.toml`.
 If you don't need multiple profiles, you can define the parameters without specifying one:
 
 ```toml
-(...)
+# ...
 [tool.sncast]
 account = "user123"
-network = "testnet"
+accounts-file = "~/my_accounts.json"
 url = "http://127.0.0.1:5050/rpc"
-(...)
+# ...
 ```
 
 That way, you can omit passing `--profile` parameter:

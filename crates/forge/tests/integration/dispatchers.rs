@@ -1,12 +1,9 @@
 use crate::integration::common::runner::Contract;
-use crate::{assert_passed, test_case};
-use camino::Utf8PathBuf;
+use crate::integration::common::running_tests::run_test_case;
+use crate::{assert_case_output_contains, assert_failed, assert_passed, test_case};
+use indoc::indoc;
 use std::path::Path;
 use std::string::ToString;
-
-use crate::integration::common::corelib::{corelib_path, predeployed_contracts};
-use forge::run;
-use indoc::indoc;
 
 #[test]
 fn simple_call_and_invoke() {
@@ -19,8 +16,8 @@ fn simple_call_and_invoke() {
         use traits::TryInto;
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
-        use cheatcodes::{ declare, PreparedContract, deploy };
-            
+        use snforge_std::{ declare, ContractClassTrait };
+
         #[starknet::interface]
         trait IHelloStarknet<TContractState> {
             fn increase_balance(ref self: TContractState, amount: felt252);
@@ -31,9 +28,8 @@ fn simple_call_and_invoke() {
 
         #[test]
         fn call_and_invoke() {
-            let class_hash = declare('HelloStarknet');
-            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
-            let contract_address = deploy(prepared).unwrap();
+            let contract = declare('HelloStarknet');
+            let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
             let dispatcher = IHelloStarknetDispatcher { contract_address };
 
             let balance = dispatcher.get_balance();
@@ -53,17 +49,7 @@ fn simple_call_and_invoke() {
         .unwrap()
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
@@ -79,8 +65,7 @@ fn advanced_types() {
         use traits::TryInto;
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
-        use cheatcodes::{ declare, PreparedContract, deploy, start_prank };
-            
+        use snforge_std::{ declare, ContractClassTrait, start_prank };
 
         #[starknet::interface]
         trait IERC20<TContractState> {
@@ -111,9 +96,8 @@ fn advanced_types() {
             calldata.append(0);         // initial supply high
             calldata.append(1234);      // recipient
         
-            let class_hash = declare('ERC20');
-            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @calldata };
-            let contract_address = deploy(prepared).unwrap();
+            let contract = declare('ERC20');
+            let contract_address = contract.deploy(@calldata).unwrap();
             let dispatcher = IERC20Dispatcher { contract_address };
             let user_address: ContractAddress = 1234.try_into().unwrap();
             let other_user_address: ContractAddress = 9999.try_into().unwrap();
@@ -138,17 +122,7 @@ fn advanced_types() {
         .unwrap()
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
@@ -164,8 +138,8 @@ fn handling_errors() {
         use traits::TryInto;
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
-        use cheatcodes::{ declare, PreparedContract, deploy };
-            
+        use snforge_std::{ declare, ContractClassTrait };
+
         #[starknet::interface]
         trait IHelloStarknet<TContractState> {
             fn increase_balance(ref self: TContractState, amount: felt252);
@@ -176,9 +150,8 @@ fn handling_errors() {
 
         #[test]
         fn handling_errors() {
-            let class_hash = declare('HelloStarknet');
-            let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
-            let contract_address = deploy(prepared).unwrap();
+            let contract = declare('HelloStarknet');
+            let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
             let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
         
         
@@ -216,17 +189,7 @@ fn handling_errors() {
         .unwrap()
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
@@ -242,13 +205,13 @@ fn serding() {
         use traits::TryInto;
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
-        use cheatcodes::{ declare, PreparedContract, deploy };
-        
+        use snforge_std::{ declare, ContractClassTrait };
+
         #[derive(Drop, Serde)]
         struct NestedStruct {
             d: felt252,
         }
-        
+
         #[derive(Drop, Serde)]
         struct CustomStruct {
             a: felt252,
@@ -273,11 +236,8 @@ fn serding() {
         
         #[test]
         fn test_serding() {
-            let class_hash = declare('Serding');
-            let prepared = PreparedContract {
-                class_hash, constructor_calldata: @ArrayTrait::new()
-            };
-            let contract_address = deploy(prepared).unwrap();
+            let contract = declare('Serding');
+            let contract_address = contract.deploy( @ArrayTrait::new()).unwrap();
         
             let dispatcher = ISerdingDispatcher {
                 contract_address
@@ -301,17 +261,7 @@ fn serding() {
         .unwrap()
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }
@@ -328,7 +278,8 @@ fn proxy_storage() {
         use traits::TryInto;
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
-        use cheatcodes::{ declare, PreparedContract, deploy };
+        use snforge_std::{ declare, ContractClassTrait };
+
         
         #[derive(Drop, Serde, PartialEq, Copy)]
         struct NestedStruct {
@@ -343,9 +294,8 @@ fn proxy_storage() {
         }
         
         fn deploy_contract(name: felt252) -> ContractAddress {
-            let class_hash = declare(name);
-            let prepared = PreparedContract { class_hash, constructor_calldata: @ArrayTrait::new() };
-            deploy(prepared).unwrap()
+            let contract = declare(name);
+            contract.deploy(@ArrayTrait::new()).unwrap()
         }
         
         
@@ -464,17 +414,374 @@ fn proxy_storage() {
         )
     );
 
-    let result = run(
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
-        &Default::default(),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-    )
-    .unwrap();
+    let result = run_test_case(&test);
 
     assert_passed!(result);
+}
+
+#[test]
+#[allow(clippy::too_many_lines)]
+fn proxy_dispatcher_panic() {
+    let test = test_case!(
+        indoc!(
+            r#"
+        use array::ArrayTrait;
+        use result::ResultTrait;
+        use option::OptionTrait;
+        use traits::TryInto;
+        use traits::Into;
+        use starknet::ContractAddress;
+        use starknet::Felt252TryIntoContractAddress;
+        use snforge_std::{ declare, ContractClassTrait };
+
+        fn deploy_contract(name: felt252, constructor_calldata: @Array<felt252>) -> ContractAddress {
+            let contract = declare(name);
+            contract.deploy(constructor_calldata).unwrap()
+        }
+        
+        #[starknet::interface]
+        trait ICaller<T> {
+            fn invoke_executor(ref self: T);
+        }
+        
+        #[test]
+        fn test_proxy_storage() {
+            let executor_address = deploy_contract('Executor', @ArrayTrait::new());
+            let caller_constructor_calldata: Array<felt252> = array![executor_address.into()]; 
+            let caller_address = deploy_contract('Caller', @caller_constructor_calldata);
+        
+            let caller_dispatcher = ICallerSafeDispatcher { contract_address: caller_address };
+        
+            match caller_dispatcher.invoke_executor() {
+                Result::Ok(_) => panic_with_felt252('should have panicked'),
+                Result::Err(x) => assert(*x.at(0) == 'panic_msg', 'wrong panic msg')
+            }
+        }
+    "#
+        ),
+        Contract::new(
+            "Caller",
+            indoc!(
+                r#"
+            #[starknet::contract]
+            mod Caller {
+                use result::ResultTrait;
+                use starknet::ContractAddress;
+            
+                #[starknet::interface]
+                trait IExecutor<T> {
+                    fn invoke_with_panic(self: @T);
+                }
+            
+                #[storage]
+                struct Storage {
+                    executor_address: ContractAddress
+                }
+            
+                #[constructor]
+                fn constructor(ref self: ContractState, executor_address: ContractAddress) {
+                    self.executor_address.write(executor_address);
+                }
+                
+                #[external(v0)]
+                fn invoke_executor(
+                    self: @ContractState,
+                ) {
+                    let dispatcher = IExecutorDispatcher { contract_address: self.executor_address.read() };
+                    dispatcher.invoke_with_panic()
+                }
+            }
+            "#
+            )
+        ),
+        Contract::new(
+            "Executor",
+            indoc!(
+                r#"
+            #[starknet::contract]
+            mod Executor {
+                #[storage]
+                struct Storage {}
+            
+                #[external(v0)]
+                fn invoke_with_panic(ref self: ContractState){
+                    panic_with_felt252('panic_msg');
+                }
+            }
+            "#
+            )
+        )
+    );
+
+    let result = run_test_case(&test);
+
+    assert_passed!(result);
+}
+
+#[test]
+fn nonexistent_method_call() {
+    let test = test_case!(
+        indoc!(
+            r#"
+        use array::ArrayTrait;
+        use result::ResultTrait;
+        use option::OptionTrait;
+        use traits::TryInto;
+        use traits::Into;
+        use starknet::ContractAddress;
+        use starknet::Felt252TryIntoContractAddress;
+        use snforge_std::{ declare, ContractClassTrait };
+        
+
+        fn deploy_contract(name: felt252, constructor_calldata: @Array<felt252>) -> ContractAddress {
+            let contract = declare(name);
+            contract.deploy(constructor_calldata).unwrap()
+        }
+        
+        #[starknet::interface]
+        trait ICaller<T> {
+            fn invoke_nonexistent(ref self: T);
+        }
+        
+        #[test]
+        fn test_nonexistent_method_call() {
+            let contract_address = deploy_contract('Contract', @ArrayTrait::new());
+        
+            let caller_dispatcher = ICallerSafeDispatcher { contract_address };
+        
+            match caller_dispatcher.invoke_nonexistent() {
+                Result::Ok(_) => panic_with_felt252('should have panicked'),
+                Result::Err(x) => assert(*x.at(0) == 'panic_msg', 'wrong panic msg')
+            }
+        }
+    "#
+        ),
+        Contract::new(
+            "Contract",
+            indoc!(
+                r#"
+            #[starknet::contract]
+            mod Contract {
+                #[storage]
+                struct Storage {
+                }
+            }
+            "#
+            )
+        )
+    );
+
+    let result = run_test_case(&test);
+
+    assert_failed!(result);
+    assert_case_output_contains!(
+        result,
+        "test_nonexistent_method_call",
+        "Entry point selector 0x01fdb214e1495025fa4baf660d34f03c0d8b5037cf10311d2a3202a806aa9485 not found in contract 0x00de051f30e9666abb4facfd77c48e4a64c2e30738292a6f5e217ff9cda5fee5"
+    );
+}
+
+#[test]
+fn nonexistent_libcall_function() {
+    let test = test_case!(
+        indoc!(
+            r#"
+        use array::ArrayTrait;
+        use result::ResultTrait;
+        use option::OptionTrait;
+        use traits::TryInto;
+        use traits::Into;
+        use starknet::ContractAddress;
+        use starknet::Felt252TryIntoContractAddress;
+        use starknet::ClassHash;
+        use snforge_std::{ declare, ContractClassTrait };
+        
+        fn deploy_contract(name: felt252) -> ContractAddress {
+            let contract = declare(name);
+            contract.deploy(@ArrayTrait::new()).unwrap()
+        }
+        
+        #[starknet::interface]
+        trait IContract<T> {
+            fn invoke_nonexistent_libcall_from_contract(ref self: T, class_hash: ClassHash);
+        }
+
+        #[test]
+        fn test_nonexistent_libcall() {
+            let class = declare('Contract');
+            let contract_address = deploy_contract('LibCaller');
+            
+            let dispatcher = IContractDispatcher { contract_address };
+            dispatcher.invoke_nonexistent_libcall_from_contract(class.class_hash);
+        }
+        "#
+        ),
+        Contract::new(
+            "LibCaller",
+            indoc!(
+                r#"
+                #[starknet::contract]
+                mod Contract {
+                    use starknet::ClassHash;
+                    use result::ResultTrait;
+                    use array::ArrayTrait;
+                    
+                    #[storage]
+                    struct Storage {}
+                    
+                    #[starknet::interface]
+                    trait ICaller<T> {
+                        fn invoke_nonexistent(ref self: T);
+                    }
+                    
+                    #[external(v0)]
+                    fn invoke_nonexistent_libcall_from_contract(ref self: ContractState, class_hash: ClassHash) {
+                        let lib_dispatcher = ICallerSafeLibraryDispatcher { class_hash };
+                        
+                        match lib_dispatcher.invoke_nonexistent() {
+                            Result::Ok(_) => panic_with_felt252('should have panicked'),
+                            Result::Err(x) => assert(*x.at(0) == 'panic_msg', 'wrong panic msg')
+                        }
+                    }
+                }
+                "#
+            )
+        ),
+        Contract::new(
+            "Contract",
+            indoc!(
+                r#"
+            #[starknet::contract]
+            mod Contract {
+                #[storage]
+                struct Storage {
+                }
+            }
+            "#
+            )
+        )
+    );
+
+    let result = run_test_case(&test);
+
+    assert_failed!(result);
+    assert_case_output_contains!(
+        result,
+        "test_nonexistent_libcall",
+        "Entry point EntryPointSelector(StarkFelt(\"0x01fdb214e1495025fa4baf660d34f03c0d8b5037cf10311d2a3202a806aa9485\")) not found in contract"
+    );
+}
+
+#[test]
+fn undeclared_class_call() {
+    let test = test_case!(indoc!(
+        r#"
+        use starknet::ContractAddress;
+        use traits::TryInto;
+        use option::OptionTrait;
+        
+        #[starknet::interface]
+        trait IContract<T> {
+            fn invoke_nonexistent(ref self: T);
+        }
+
+        #[test]
+        fn test_undeclared_call() {
+            let dispatcher = IContractDispatcher { contract_address: 5.try_into().unwrap() };
+            dispatcher.invoke_nonexistent();
+        }
+        "#
+    ));
+
+    let result = run_test_case(&test);
+
+    assert_failed!(result);
+    assert_case_output_contains!(
+        result,
+        "test_undeclared_call",
+        "Contract not deployed at address: 0x0000000000000000000000000000000000000000000000000000000000000005"
+    );
+}
+
+#[test]
+fn nonexistent_class_libcall() {
+    let test = test_case!(
+        indoc!(
+            r#"
+        use array::ArrayTrait;
+        use result::ResultTrait;
+        use option::OptionTrait;
+        use starknet::ContractAddress;
+        use starknet::ClassHash;
+        use snforge_std::{ declare, ContractClassTrait };
+        
+        fn deploy_contract(name: felt252) -> ContractAddress {
+            let contract = declare(name);
+            contract.deploy(@ArrayTrait::new()).unwrap()
+        }
+        
+        #[starknet::interface]
+        trait IContract<T> {
+            fn invoke_nonexistent_libcall_from_contract(ref self: T);
+        }
+
+        #[test]
+        fn test_nonexistent_libcall() {
+            let contract_address = deploy_contract('LibCaller');
+            let dispatcher = IContractDispatcher { contract_address };
+            dispatcher.invoke_nonexistent_libcall_from_contract();
+        }
+        "#
+        ),
+        Contract::new(
+            "LibCaller",
+            indoc!(
+                r#"
+                #[starknet::contract]
+                mod Contract {
+                    use starknet::class_hash::class_hash_try_from_felt252;
+                    use starknet::ClassHash;
+                    use result::ResultTrait;
+                    use array::ArrayTrait;
+                    use traits::TryInto;
+                    use option::OptionTrait;
+                    
+                    #[storage]
+                    struct Storage {}
+                    
+                    #[starknet::interface]
+                    trait ICaller<T> {
+                        fn invoke_nonexistent(ref self: T);
+                    }
+                    
+                    #[external(v0)]
+                    fn invoke_nonexistent_libcall_from_contract(ref self: ContractState) {
+                        let target_class_hash: ClassHash = class_hash_try_from_felt252(5_felt252).unwrap();
+                        let lib_dispatcher = ICallerSafeLibraryDispatcher { class_hash: target_class_hash  };
+                        lib_dispatcher.invoke_nonexistent();
+                    }
+                }
+                "#
+            )
+        ),
+        Contract::new(
+            "Contract",
+            indoc!(
+                r#"
+            #[starknet::contract]
+            mod Contract {
+                #[storage]
+                struct Storage {
+                }
+            }
+            "#
+            )
+        )
+    );
+
+    let result = run_test_case(&test);
+
+    assert_failed!(result);
+    assert_case_output_contains!(result, "test_nonexistent_libcall", "Class with hash");
+    assert_case_output_contains!(result, "test_nonexistent_libcall", "is not declared.");
 }

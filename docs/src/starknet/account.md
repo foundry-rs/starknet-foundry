@@ -20,7 +20,6 @@ Do the following to start interacting with the Starknet:
     ```shell
     $ sncast \
       --url http://127.0.0.1:5050 \
-      --network testnet \
       account create \
       --name some-name
       
@@ -44,8 +43,7 @@ Do the following to start interacting with the Starknet:
 
     ```shell
     $ sncast \
-      --url http://127.0.0.1:5050
-      --network testnet \
+      --url http://127.0.0.1:5050 \
       account deploy
       --name some-name \
       --max-fee 864600000000
@@ -54,7 +52,7 @@ Do the following to start interacting with the Starknet:
     transaction_hash: 0x20b20896ce63371ef015d66b4dd89bf18c5510a840b4a85a43a983caa6e2579
     ```
   
-    Note that you don't have to pass `url` and `network` parameters if `add-profile` flag
+    Note that you don't have to pass `url`, `accounts-file` and `network` parameters if `add-profile` flag
     was set in the `account create` command. Just pass `profile` argument with the account name.
     
     For a detailed CLI description, see [account deploy command reference](../appendix/cast/account/deploy.md).
@@ -101,3 +99,50 @@ $ sncast \
 command: account deploy
 transaction_hash: 0x20b20896ce63371ef015d66b4dd89bf18c5510a840b4a85a43a983caa6e2579
 ```
+
+### Using keystore and starkli account
+
+Accounts created and deployed with [starkli](https://book.starkli.rs/accounts#accounts) can be used by specifying the [`--keystore` argument](../appendix/cast/common.md#--keystore--k-path_to_keystore_file).
+
+> 💡 **Info**
+> When passing the `--keystore` argument, `--account` argument must be a path to the starkli account JSON file.
+
+```shell
+$ sncast \
+    --url http://127.0.0.1:5050 \
+    --keystore path/to/keystore.json \
+    --account path/to/account.json  \
+    declare \
+    --contract-name my_contract
+```
+
+#### Importing an account
+
+To import an account into the file holding the accounts info (`~/.starknet_accounts/starknet_open_zeppelin_accounts.json` by deafult), use the `account add` command.
+
+```shell
+$ sncast \
+    --url http://127.0.0.1:5050 \
+    account add \
+    --name my_imported_account \
+    --address 0x1 \
+    --private-key 0x2 \
+    --class-hash 0x3 \
+    --deployed
+```
+
+For a detailed CLI description, see [account add command reference](../appendix/cast/account/add.md).
+
+### Creating an account with starkli-style keystore
+
+It is possible to create an openzeppelin account with keystore in a similar way [starkli](https://book.starkli.rs/accounts#accounts) does.
+
+```shell
+$ sncast \
+    --url http://127.0.0.1:5050 \
+    --keystore my_key.json \
+    --account my_account.json \
+    account create
+```
+
+The command above will generate a keystore file containing the private key, as well as an account file containing the openzeppelin account info that can later be used with starkli.

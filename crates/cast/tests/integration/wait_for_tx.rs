@@ -1,10 +1,10 @@
 use crate::helpers::{
-    constants::{ACCOUNT, ACCOUNT_FILE_PATH, DECLARE_TRANSACTION_HASH, MAP_CLASS_HASH_V1, NETWORK},
-    fixtures::create_test_provider,
+    constants::{ACCOUNT, ACCOUNT_FILE_PATH, DECLARE_TRANSACTION_HASH},
+    fixtures::{create_test_provider, from_env},
 };
 use camino::Utf8PathBuf;
-use cast::helpers::constants::DEFAULT_RETRIES;
-use cast::{get_account, handle_wait_for_tx, parse_number, wait_for_tx};
+use cast::{get_account, helpers::constants::DEFAULT_RETRIES};
+use cast::{handle_wait_for_tx, parse_number, wait_for_tx};
 use starknet::contract::ContractFactory;
 use starknet::core::types::FieldElement;
 
@@ -18,7 +18,7 @@ async fn test_happy_path() {
     )
     .await;
 
-    assert!(matches!(res, Ok(_)));
+    assert!(res.is_ok());
     assert!(matches!(res.unwrap(), "Transaction accepted"));
 }
 
@@ -29,11 +29,13 @@ async fn test_rejected_transaction() {
         ACCOUNT,
         &Utf8PathBuf::from(ACCOUNT_FILE_PATH),
         &provider,
-        NETWORK,
+        &Utf8PathBuf::default(),
     )
+    .await
     .expect("Could not get the account");
+    let class_hash = from_env("CAST_MAP_V1_CLASS_HASH").unwrap();
 
-    let factory = ContractFactory::new(parse_number(MAP_CLASS_HASH_V1).unwrap(), account);
+    let factory = ContractFactory::new(parse_number(&class_hash).unwrap(), account);
     let deployment = factory
         .deploy(&Vec::new(), FieldElement::ONE, false)
         .max_fee(FieldElement::ONE);

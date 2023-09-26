@@ -18,8 +18,13 @@ fn complex_structure() {
         .current_dir(&temp)
         .assert()
         .success()
-        .stdout_matches(indoc! {r#"Collected 16 test(s) and 4 test file(s)
-        Running 12 test(s) from test_multiple package
+        .stdout_matches(indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 15 test(s) and 3 test file(s) from test_multiple package
+        Running 12 inline test(s)
         [PASS] test_multiple::test_simple
         [PASS] test_multiple::test_fob_in_lib
         [PASS] test_multiple::test_fib_in_lib
@@ -32,13 +37,11 @@ fn complex_structure() {
         [PASS] test_multiple::fab::fab_impl::test_fab
         [PASS] test_multiple::fab::fab_impl::test_how_does_this_work
         [PASS] test_multiple::fab::fab_impl::test_super
-        Running 1 test(s) from fob.cairo
-        [PASS] fob::test_fob
         Running 0 test(s) from tests/fab.cairo
         Running 3 test(s) from tests/fibfabfob.cairo
         [PASS] fibfabfob::test_fib
         [PASS] fibfabfob::test_fob
         [PASS] fibfabfob::test_fab
-        Tests: 16 passed, 0 failed, 0 skipped
+        Tests: 15 passed, 0 failed, 0 skipped
         "#});
 }

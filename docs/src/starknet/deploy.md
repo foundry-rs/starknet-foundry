@@ -17,7 +17,6 @@ After [declaring your contract](./declare.md), you can deploy it the following w
 ```shell
 $ sncast \
     --account myuser \
-    --network testnet \
     --url http://127.0.0.1:5050/rpc \
     deploy \
     --class-hash 0x8448a68b5ea1affc45e3fd4b8b480ea36a51dc34e337a16d2567d32d0c6f8a

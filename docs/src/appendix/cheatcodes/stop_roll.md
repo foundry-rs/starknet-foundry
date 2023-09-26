@@ -7,6 +7,8 @@ Cancels the [`start_roll`](./start_roll.md) for the contract at the given addres
 - `contract_address` - target contract address
 
 ```rust
+use snforge_std::stop_roll;
+
 #[test]
 fn test_roll() {
     // ...

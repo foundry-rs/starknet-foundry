@@ -1,8 +1,8 @@
-use crate::helpers::constants::UDC_ADDRESS;
-use crate::helpers::response_structs::InvokeResponse;
 use crate::starknet_commands::invoke::execute_calls;
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use camino::Utf8PathBuf;
+use cast::helpers::constants::UDC_ADDRESS;
+use cast::helpers::response_structs::InvokeResponse;
 use cast::{extract_or_generate_salt, parse_number, udc_uniqueness};
 use clap::Args;
 use serde::Deserialize;
@@ -31,7 +31,7 @@ pub struct Run {
 struct DeployCall {
     call_type: String,
     class_hash: FieldElement,
-    inputs: Vec<FieldElement>,
+    inputs: Vec<String>,
     unique: bool,
     salt: Option<FieldElement>,
     id: String,
@@ -43,12 +43,12 @@ struct InvokeCall {
     call_type: String,
     contract_address: String,
     function: String,
-    inputs: Vec<FieldElement>,
+    inputs: Vec<String>,
 }
 
 pub async fn run(
     path: &Utf8PathBuf,
-    account: &mut SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
+    account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     max_fee: Option<FieldElement>,
     wait: bool,
 ) -> Result<InvokeResponse> {
@@ -67,7 +67,7 @@ pub async fn run(
 
         match call_type.unwrap().as_str() {
             Some("deploy") => {
-                let deploy_call: DeployCall = toml::from_str(call.to_string().as_str())
+                let deploy_call: DeployCall = toml::from_str(toml::to_string(&call)?.as_str())
                     .map_err(|_| anyhow!("Failed to parse toml `deploy` call"))?;
 
                 let salt = extract_or_generate_salt(deploy_call.salt);
@@ -77,10 +77,9 @@ pub async fn run(
                     FieldElement::from(u8::from(deploy_call.unique)),
                     deploy_call.inputs.len().into(),
                 ];
-                deploy_call
-                    .inputs
-                    .iter()
-                    .for_each(|item| calldata.push(*item));
+
+                let parsed_inputs = parse_inputs(&deploy_call.inputs, &contracts)?;
+                calldata.extend(&parsed_inputs);
 
                 parsed_calls.push(Call {
                     to: parse_number(UDC_ADDRESS)?,
@@ -92,23 +91,25 @@ pub async fn run(
                     salt,
                     deploy_call.class_hash,
                     &udc_uniqueness(deploy_call.unique, account.address()),
-                    &deploy_call.inputs,
+                    &parsed_inputs,
                 );
                 contracts.insert(deploy_call.id, contract_address.to_string());
             }
             Some("invoke") => {
-                let invoke_call: InvokeCall = toml::from_str(call.to_string().as_str())
-                    .expect("failed to parse toml `invoke` call");
+                let invoke_call: InvokeCall = toml::from_str(toml::to_string(&call)?.as_str())
+                    .context("failed to parse toml `invoke` call")?;
                 let mut contract_address = &invoke_call.contract_address;
                 if let Some(addr) = contracts.get(&invoke_call.contract_address) {
                     contract_address = addr;
                 }
 
+                let calldata = parse_inputs(&invoke_call.inputs, &contracts)?;
+
                 parsed_calls.push(Call {
                     to: parse_number(contract_address)
-                        .expect("Unable to parse contract address to FieldElement"),
+                        .context("Unable to parse contract address to FieldElement")?,
                     selector: get_selector_from_name(&invoke_call.function)?,
-                    calldata: invoke_call.inputs,
+                    calldata,
                 });
             }
             Some(unsupported) => {
@@ -119,4 +120,18 @@ pub async fn run(
     }
 
     execute_calls(account, parsed_calls, max_fee, wait).await
+}
+
+fn parse_inputs(
+    inputs: &Vec<String>,
+    contracts: &HashMap<String, String>,
+) -> Result<Vec<FieldElement>> {
+    let mut parsed_inputs = Vec::new();
+    for input in inputs {
+        let current_input = contracts.get(input).unwrap_or(input);
+        parsed_inputs
+            .push(parse_number(current_input).context("Unable to parse input to FieldElement")?);
+    }
+
+    Ok(parsed_inputs)
 }

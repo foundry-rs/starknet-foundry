@@ -1,5 +1,15 @@
 # Testing Smart Contracts
 
+> ℹ️ **Info**
+> To use the library functions designed for testing smart contracts,
+> you need to add `snforge_std` package as a dependency in
+> your [`Scarb.toml`](https://docs.swmansion.com/scarb/docs/guides/dependencies.html#adding-a-dependency) 
+> using appropriate release tag.
+>```toml
+> [dependencies]
+> snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.5.0" }
+> ```
+
 Using unit testing as much as possible is a good practice, as it makes your test suites run faster. However, when
 writing smart contracts, you often want to test their interactions with the blockchain state and with other contracts.
 
@@ -43,12 +53,13 @@ Note that the name after `mod` will be used as the contract name for testing pur
 Let's write a test that will deploy the `HelloStarknet` contract and call some functions.
 
 ```rust
+use snforge_std::{ declare, ContractClassTrait };
+
 #[test]
 fn call_and_invoke() {
     // First declare and deploy a contract
-    let class_hash = declare('HelloStarknet');
-    let prepared = PreparedContract { class_hash: class_hash, constructor_calldata: @ArrayTrait::new() };
-    let contract_address = deploy(prepared).unwrap();
+    let contract = declare('HelloStarknet');
+    let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
     
     // Create a Dispatcher object that will allow interacting with the deployed contract
     let dispatcher = IHelloStarknetDispatcher { contract_address };
@@ -69,8 +80,8 @@ fn call_and_invoke() {
 
 ```shell
 $ snforge
-Collected 1 test(s) and 1 test file(s)
-Running 1 test(s) from using_dispatchers
+Collected 1 test(s) and 1 test file(s) from using_dispatchers package
+Running 1 inline test(s)
 [PASS] using_dispatchers::call_and_invoke
 Tests: 1 passed, 0 failed, 0 skipped
 ```
@@ -118,7 +129,7 @@ If we called this function in a test, it would result in a failure.
 fn failing() {
     // ...
 
-    let contract_address = deploy(prepared).unwrap();
+    let contract_address = contract.deploy(@calldata).unwrap();
     let dispatcher = IHelloStarknetDispatcher { contract_address };
 
     dispatcher.do_a_panic();
@@ -127,8 +138,8 @@ fn failing() {
 
 ```shell
 $ snforge
-Collected 1 test(s) and 1 test file(s)
-Running 1 test(s) from package_name package
+Collected 1 test(s) and 1 test file(s) from package_name package
+Running 1 inline test(s)
 [FAIL] package_name::failing
 
 Failure data:
@@ -147,7 +158,7 @@ Using `SafeDispatcher` we can test that the function in fact panics with an expe
 fn handling_errors() {
     // ...
     
-    let contract_address = deploy(prepared).unwrap();
+    let contract_address = contract.deploy(@calldata).unwrap();
     let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
 
     match safe_dispatcher.do_a_panic() {
@@ -164,8 +175,8 @@ Now the test passes as expected.
 
 ```shell
 $ snforge
-Collected 1 test(s) and 1 test file(s)
-Running 1 test(s) from package_name package
+Collected 1 test(s) and 1 test file(s) from package_name package
+Running 1 inline test(s)
 [PASS] package_name::handling_errors
 Tests: 1 passed, 0 failed, 0 skipped
 ```

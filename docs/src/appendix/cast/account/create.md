@@ -6,7 +6,6 @@ which is `~/.starknet_accounts/starknet_open_zeppelin_accounts.json` by default.
 
 ## Required common arguments - passed by CLI or specified in Scarb.toml
 
-* [`network`](../common.md#--network--n-network_name)
 * [`url`](../common.md#--url--u-rpc_url)
 
 ## `--name, -n <ACCOUNT_NAME>`
@@ -19,7 +18,7 @@ Optional.
 
 Salt for the account address. If omitted random one will be generated.
 
-## `--add-profile, -a`
+## `--add-profile`
 Optional.
 
 If passed, a profile with corresponding data will be added to Scarb.toml.

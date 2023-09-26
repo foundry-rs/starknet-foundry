@@ -9,8 +9,24 @@ permissions:
   contents: write
 
 jobs:
+  verify-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Get version from Cargo.toml
+        id: lookupVersion
+        uses: mikefarah/yq@6609ed76ecb69f9d8254345292d90ea72f641715
+        with:
+          cmd: yq -oy '"v" + .workspace.package.version' 'Cargo.toml'
+
+      - name: Version check
+        if: steps.lookupVersion.outputs.result != github.ref_name
+        run: echo "Project version in Cargo.toml does not match the tag" && exit 1
+
   build-binaries:
     name: Build ${{ matrix.target }}
+    needs: verify-version
     runs-on: ${{ matrix.os }}
     continue-on-error: true
 
@@ -111,7 +127,7 @@ jobs:
 
       - name: Draft GitHub release
         id: draft-release
-        uses: taiki-e/create-gh-release-action@3b8000942cbb1a3a131e78f4d3ccfe1575c2c278
+        uses: taiki-e/create-gh-release-action@ea43e4812edfe53e49bb607b888db360c7c17a6e
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           title: $version
