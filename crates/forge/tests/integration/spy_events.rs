@@ -20,6 +20,25 @@ fn spy_events_simple() {
                 fn emit_one_event(ref self: TContractState, some_data: felt252);
             }
 
+            #[starknet::contract]
+            mod SpyEventsChecker {
+                use starknet::ContractAddress;
+
+                #[storage]
+                struct Storage {}
+
+                #[event]
+                #[derive(Drop, starknet::Event)]
+                enum Event {
+                    FirstEvent: FirstEvent
+                }
+
+                #[derive(Drop, starknet::Event)]
+                struct FirstEvent {
+                    some_data: felt252
+                }
+            }
+
             #[test]
             fn test_expect_events_simple() {
                 let contract = declare('SpyEventsChecker');
@@ -32,7 +51,9 @@ fn spy_events_simple() {
                 dispatcher.emit_one_event(123);
 
                 spy.assert_emitted(@array![
-                    Event { from: contract_address, name: 'FirstEvent', keys: array![], data: array![123] }
+                    SpyEventsChecker::Event::FirstEvent(
+                        SpyEventsChecker::FirstEvent { some_data: 123 }
+                    )
                 ]);
                 assert(spy.events.len() == 0, 'There should be no events');
             }

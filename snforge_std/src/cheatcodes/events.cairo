@@ -30,8 +30,6 @@ fn event_name_hash(name: felt252) -> felt252 {
 
 #[derive(Drop, Clone, Serde)]
 struct Event {
-    from: ContractAddress,
-    name: felt252,
     keys: Array<felt252>,
     data: Array<felt252>
 }
@@ -62,12 +60,14 @@ impl EventFetcherImpl of EventFetcher {
     }
 }
 
-trait EventAssertions {
-    fn assert_emitted(ref self: EventSpy, events: @Array<Event>);
+trait EventAssertions<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>> {
+    fn assert_emitted(ref self: EventSpy, events: @Array<T>);
 }
 
-impl EventAssertionsImpl of EventAssertions {
-    fn assert_emitted(ref self: EventSpy, events: @Array<Event>) {
+impl EventAssertionsImpl<
+    T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>
+> of EventAssertions<T> {
+    fn assert_emitted(ref self: EventSpy, events: @Array<T>) {
         self.fetch_events();
 
         let mut i = 0;
@@ -76,17 +76,10 @@ impl EventAssertionsImpl of EventAssertions {
                 break;
             }
 
-            let emitted = assert_if_emitted(ref self, copy_event(events.at(i)));
+            let emitted = assert_if_emitted(ref self, events.at(i));
 
             if !emitted {
-                panic(
-                    array![
-                        *events.at(i).name,
-                        'event with matching data and',
-                        'keys was not emitted from',
-                        (*events.at(i).from).into()
-                    ]
-                );
+                panic(array!['Event with matching data and', 'keys was not emitted',]);
             }
 
             i += 1;
@@ -94,7 +87,9 @@ impl EventAssertionsImpl of EventAssertions {
     }
 }
 
-fn assert_if_emitted(ref self: EventSpy, event: Event) -> bool {
+fn assert_if_emitted<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>>(
+    ref self: EventSpy, event: @T
+) -> bool {
     let emitted_events = @self.events;
     let mut j = 0;
     return loop {
@@ -102,10 +97,11 @@ fn assert_if_emitted(ref self: EventSpy, event: Event) -> bool {
             break false;
         }
 
-        if event_name_hash(event.name) == *self.events.at(j).name
-            && event.from == *emitted_events.at(j).from
-            && @event.keys == emitted_events.at(j).keys
-            && @event.data == emitted_events.at(j).data {
+        let mut keys = array![];
+        let mut data = array![];
+        event.append_keys_and_data(ref keys, ref data);
+
+        if keys == emitted_events.at(j).keys.clone() && data == emitted_events.at(j).data.clone() {
             remove_event(ref self, j);
             break true;
         }
@@ -124,38 +120,9 @@ fn remove_event(ref self: EventSpy, index: usize) {
         }
 
         if k != index {
-            emitted_events_deleted_event.append(copy_event(emitted_events.at(k)));
+            emitted_events_deleted_event.append(emitted_events.at(k).clone());
         }
         k += 1;
     };
     self.events = emitted_events_deleted_event;
-}
-
-fn copy_event(event: @Event) -> Event {
-    let from = *event.from;
-    let name = *event.name;
-
-    let mut keys = array![];
-    let mut i = 0;
-    loop {
-        if i >= event.keys.len() {
-            break;
-        }
-
-        keys.append(*event.keys.at(i));
-        i += 1;
-    };
-
-    let mut data = array![];
-    i = 0;
-    loop {
-        if i >= event.data.len() {
-            break;
-        }
-
-        data.append(*event.data.at(i));
-        i += 1;
-    };
-
-    Event { from, name, keys, data }
 }

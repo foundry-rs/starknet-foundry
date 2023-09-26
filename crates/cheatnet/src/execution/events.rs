@@ -47,16 +47,13 @@ pub fn collect_emitted_events_from_spied_contracts(
         .iter()
         .map(|(address, ordered_event)| Event {
             from: *address,
-            name: stark_felt_to_felt(ordered_event.event.keys[0].0),
-            keys: {
-                let keys: Vec<Felt252> = ordered_event
+            keys:
+                ordered_event
                     .event
                     .keys
                     .iter()
                     .map(|key| stark_felt_to_felt(key.0))
-                    .collect();
-                Vec::from(&keys[1..])
-            },
+                    .collect(),
             data: ordered_event
                 .event
                 .data
