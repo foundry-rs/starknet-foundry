@@ -60,3 +60,4 @@ url = "2.4.0"
 tokio = { version = "1.28.2", features = ["full"] }
 num-bigint = { version = "0.4.4", features = ["rand"] }
 walkdir = "2.4.0"
+dotenv = "0.15.0"

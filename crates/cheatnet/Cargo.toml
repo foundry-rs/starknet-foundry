@@ -35,6 +35,7 @@ flate2 = "1.0.26"
 [dev-dependencies]
 ctor.workspace = true
 indoc.workspace = true
+dotenv.workspace = true
 
 [lib]
 name = "cheatnet"
