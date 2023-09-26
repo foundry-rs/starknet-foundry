@@ -177,12 +177,12 @@ fn get_fork_state_reader(
 ) -> Option<ForkStateReader> {
     match &fork_config {
         Some(ForkConfig::Params(url, block_id)) => Some(ForkStateReader::new(url, *block_id)),
-        Some(ForkConfig::Id(name)) => extract_fork_when_id_passed(fork_targets, name),
+        Some(ForkConfig::Id(name)) => find_params_and_build_fork_state_reader(fork_targets, name),
         _ => None,
     }
 }
 
-fn extract_fork_when_id_passed(
+fn find_params_and_build_fork_state_reader(
     fork_targets: &[ForkTarget],
     fork_alias: &str,
 ) -> Option<ForkStateReader> {
