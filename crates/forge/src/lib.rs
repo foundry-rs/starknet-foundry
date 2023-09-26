@@ -367,7 +367,7 @@ fn run_with_fuzzing(
     let mut fuzzer = RandomFuzzer::new(
         fuzzer_seed,
         runner_config.fuzzer_runs,
-        args.len(),
+        &[],
         &BigUint::zero(),
         &Felt252::prime(),
     );
