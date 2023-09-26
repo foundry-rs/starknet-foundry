@@ -566,6 +566,25 @@ mod tests {
     }
 
     #[test]
+    fn collecting_tests() {
+        let temp = TempDir::new().unwrap();
+        temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
+            .unwrap();
+        let package_path = Utf8PathBuf::from_path_buf(temp.to_path_buf()).unwrap();
+
+        let tests = pack_tests_into_one_file(&package_path).unwrap();
+        let virtual_lib_path = tests.join("lib.cairo");
+        let virtual_lib_u8_content = std::fs::read(&virtual_lib_path).unwrap();
+        let virtual_lib_content = std::str::from_utf8(&virtual_lib_u8_content).unwrap();
+
+        assert!(virtual_lib_path.try_exists().unwrap());
+        assert!(virtual_lib_content.contains("mod contract;"));
+        assert!(virtual_lib_content.contains("mod ext_function_test;"));
+        assert!(virtual_lib_content.contains("mod test_simple;"));
+        assert!(virtual_lib_content.contains("mod without_prefix;"));
+    }
+
+    #[test]
     fn filtering_tests() {
         let mocked_tests: Vec<TestCase> = vec![
             TestCase {
