@@ -46,7 +46,7 @@ impl EventImpl of EventTrait {
     fn name(self: Event) -> Option<felt252> {
         match self {
             Event::Named(NamedEvent { name, .. }) => Option::Some(name),
-            Event::Unnamed(UnnamedEvent { from, .. }) => Option::None,
+            Event::Unnamed(_) => Option::None,
         }
     }
 
