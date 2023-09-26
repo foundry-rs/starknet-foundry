@@ -2,7 +2,6 @@ use crate::cheatcodes::spy_events::Event;
 use crate::state::CheatcodeState;
 use blockifier::execution::call_info::{CallInfo, OrderedEvent};
 use blockifier::execution::execution_utils::stark_felt_to_felt;
-use cairo_felt::Felt252;
 use starknet_api::core::ContractAddress;
 
 pub fn collect_emitted_events_from_spied_contracts(
@@ -47,13 +46,12 @@ pub fn collect_emitted_events_from_spied_contracts(
         .iter()
         .map(|(address, ordered_event)| Event {
             from: *address,
-            keys:
-                ordered_event
-                    .event
-                    .keys
-                    .iter()
-                    .map(|key| stark_felt_to_felt(key.0))
-                    .collect(),
+            keys: ordered_event
+                .event
+                .keys
+                .iter()
+                .map(|key| stark_felt_to_felt(key.0))
+                .collect(),
             data: ordered_event
                 .event
                 .data

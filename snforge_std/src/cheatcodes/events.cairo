@@ -30,6 +30,7 @@ fn event_name_hash(name: felt252) -> felt252 {
 
 #[derive(Drop, Clone, Serde)]
 struct Event {
+    from: ContractAddress,
     keys: Array<felt252>,
     data: Array<felt252>
 }
