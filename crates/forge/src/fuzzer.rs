@@ -4,7 +4,7 @@ use num_integer::Integer;
 use num_traits::{One, Zero};
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
-use std::ops::{Shl, Shr};
+use std::ops::{Shl, Shr, Sub};
 
 enum CairoType {
     U8,
@@ -41,7 +41,7 @@ impl Argument for CairoType {
                 let max = max.shl(256);
                 max - BigUint::one()
             }
-            CairoType::Felt252 => Felt252::prime(),
+            CairoType::Felt252 => Felt252::prime().sub(BigUint::one()),
         }
     }
 
@@ -292,10 +292,9 @@ mod tests {
         for _ in 1..=runs_number {
             let values = fuzzer.next_args();
             for (i, value) in values.iter().enumerate() {
-                assert!(*value >= low && *value < high);
-                if *value == low {
+                if *value == CairoType::Felt252.min()[0] {
                     min_used[i] = true;
-                } else if *value == high.clone() - Felt252::one() {
+                } else if *value == CairoType::Felt252.max()[0] {
                     max_used[i] = true;
                 }
             }
