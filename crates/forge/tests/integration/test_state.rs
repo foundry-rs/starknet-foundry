@@ -242,11 +242,6 @@ fn test_disabled_syscalls() {
             let class_hash = declare('HelloStarknet').class_hash;
             deploy_syscall(class_hash, 98435723905, ArrayTrait::new().span(), false);
         }
-
-        #[test]
-        fn test_get_block_hash() {
-            get_block_hash_syscall(15).unwrap();
-        }
     "#
         ),
         Contract::from_code_path(
@@ -269,7 +264,6 @@ fn test_disabled_syscalls() {
         "test_deploy",
         "Use snforge_std::ContractClass::deploy instead of deploy_syscall"
     );
-    assert_case_output_contains!(result, "test_get_block_hash", "temporarily disabled");
 }
 
 #[test]
