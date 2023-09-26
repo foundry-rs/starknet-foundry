@@ -53,7 +53,7 @@ Note that the name after `mod` will be used as the contract name for testing pur
 Let's write a test that will deploy the `HelloStarknet` contract and call some functions.
 
 ```rust
-use snforge_std::{ declare, ContractClassTrait };
+use snforge_std::contract_class::{ declare, ContractClassTrait };
 
 #[test]
 fn call_and_invoke() {

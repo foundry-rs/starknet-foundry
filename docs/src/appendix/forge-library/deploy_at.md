@@ -22,7 +22,7 @@ use array::ArrayTrait;
 use result::ResultTrait;
 use traits::TryInto;
 
-use snforge_std::{ declare, ContractClassTrait };
+use snforge_std::cheatcodes::contract_class::{ declare, ContractClassTrait };
 
 
 #[test]

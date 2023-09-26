@@ -18,7 +18,7 @@ Here's a test with example use of print method:
 ```rust
 // Make sure to import Starknet Foundry PrintTrait
 use array::ArrayTrait;
-use snforge_std::PrintTrait;
+use snforge_std::io::forge_print::PrintTrait;
 
 #[test]
 fn test_print() {
@@ -88,7 +88,7 @@ trait IHelloStarknet<TContractState> {
 #[starknet::contract]
 mod HelloStarknet {
     // Note: PrintTrait has to be imported
-    use snforge_std::PrintTrait;
+    use snforge_std::io::forge_print::PrintTrait;
 
     #[storage]
     struct Storage {

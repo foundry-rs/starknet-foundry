@@ -34,7 +34,7 @@ impl IContractImpl of IContract<ContractState> {
 We can use `start_prank` in a test to change the caller address for a given contract:
 
 ```rust
-use snforge_std::start_prank;
+use snforge_std::cheatcodes::start_prank;
 
 #[test]
 fn test_prank() {

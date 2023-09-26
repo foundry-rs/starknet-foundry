@@ -22,7 +22,7 @@ impl IUpgradeableImpl of super::IUpgradeable<ContractState> {
 We can use `get_class_hash` to check if it upgraded properly:
 
 ```rust
-use snforge_std::get_class_hash;
+use snforge_std::cheatcodes::contract_class::get_class_hash;
 
 #[test]
 fn test_get_class_hash() {

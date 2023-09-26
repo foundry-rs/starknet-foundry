@@ -51,7 +51,7 @@ We can use `execute` method to test the execution of the `#[l1_handler]` functio
 not available through contracts dispatcher:
 
 ```rust
-use snforge_std::L1Handler;
+use snforge_std::cheatcodes::l1_handler::L1Handler;
 
 #[test]
 fn test_l1_handler_execute() {

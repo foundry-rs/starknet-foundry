@@ -19,7 +19,7 @@ Deploys a contract and returns its address.
 use array::ArrayTrait;
 use result::ResultTrait;
 
-use snforge_std::{ declare, ContractClassTrait };
+use snforge_std::cheatcodes::contract_class::{ declare, ContractClassTrait };
 
 
 #[test]

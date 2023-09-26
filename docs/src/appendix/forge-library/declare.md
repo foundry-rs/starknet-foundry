@@ -16,7 +16,7 @@ struct ContractClass {
 
 ```rust
 use result::ResultTrait;
-use snforge_std::declare;
+use snforge_std::cheatcodes::contract_class::declare;
 
 #[test]
 fn test_declare() {
