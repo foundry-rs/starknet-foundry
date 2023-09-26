@@ -366,7 +366,6 @@ fn run_with_fuzzing(
     args: &Vec<&ConcreteTypeId>,
     fuzzer_seed: u64,
 ) -> Result<(TestCaseSummary, u32)> {
-    dbg!(args);
     // TODO change unwrap
     let args: Vec<&str> = args
         .iter()
