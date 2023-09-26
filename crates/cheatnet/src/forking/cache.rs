@@ -38,7 +38,7 @@ impl ForkCacheContent {
         serde_json::from_str(serialized).expect("Could not deserialize cache from json")
     }
 
-    fn apply(&mut self, other: &Self) {
+    fn extend(&mut self, other: &Self) {
         // storage_at
         for (other_contract_address, other_storage) in &other.storage_at {
             if let Some(self_contract_storage) = self.storage_at.get(other_contract_address) {
@@ -152,7 +152,7 @@ impl ForkCache {
             self.fork_cache_content.to_string()
         } else {
             let mut fs_fork_cache_content = ForkCacheContent::from_str(cache_file_content.as_str());
-            fs_fork_cache_content.apply(&self.fork_cache_content);
+            fs_fork_cache_content.extend(&self.fork_cache_content);
             fs_fork_cache_content.to_string()
         };
 
@@ -193,15 +193,10 @@ impl ForkCache {
         let storage_key_str = key.0.key().to_felt252().to_string();
         let value_str = value.to_felt252().to_string();
 
-        if !self
-            .fork_cache_content
+        self.fork_cache_content
             .storage_at
-            .contains_key(&contract_address_str)
-        {
-            self.fork_cache_content
-                .storage_at
-                .insert(contract_address_str.clone(), HashMap::new());
-        };
+            .entry(contract_address_str.clone())
+            .or_insert_with(HashMap::new);
 
         self.fork_cache_content
             .storage_at

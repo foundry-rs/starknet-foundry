@@ -117,9 +117,9 @@ fn test_forking_at_block_number() {
         let output =
             call_contract(&contract_address, &selector, &[], &mut state_before_deploy).unwrap();
         assert_error!(
-        output,
-        "Contract not deployed at address: 0x071c8d74edc89330f314f3b1109059d68ebfa68874aa91e9c425a6378ffde00e"
-    );
+            output,
+            "Contract not deployed at address: 0x071c8d74edc89330f314f3b1109059d68ebfa68874aa91e9c425a6378ffde00e"
+        );
 
         let selector = felt_selector_from_name("get_balance");
         let output =
