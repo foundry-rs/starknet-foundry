@@ -149,6 +149,50 @@ fn test_simple_syscalls() {
 }
 
 #[test]
+fn test_get_block_hash_syscall() {
+    let test = test_case!(
+        indoc!(
+            r#"
+        use starknet::info::{get_execution_info, TxInfo};
+        use result::ResultTrait;
+        use box::BoxTrait;
+        use serde::Serde;
+        use starknet::{ContractAddress, get_block_hash_syscall};
+        use array::SpanTrait;
+        use snforge_std::{ declare, ContractClassTrait, test_address };
+
+        #[starknet::interface]
+        trait BlockHashChecker<TContractState> {
+            fn write_block(ref self: TContractState);
+            fn read_block_hash(self: @TContractState) -> felt252;
+        }
+
+        #[test]
+        fn test_get_block_hash() {
+            let block_hash_checker = declare('BlockHashChecker');
+            let block_hash_checker_address = block_hash_checker.deploy(@ArrayTrait::new()).unwrap();
+            let block_hash_checker_dispatcher = BlockHashCheckerDispatcher { contract_address: block_hash_checker_address };
+            
+            block_hash_checker_dispatcher.write_block();
+            
+            let stored_blk_hash = block_hash_checker_dispatcher.read_block_hash();
+            assert(stored_blk_hash == 0, 'Wrong stored blk hash');
+        }
+    "#
+        ),
+        Contract::from_code_path(
+            "BlockHashChecker".to_string(),
+            Path::new("tests/data/contracts/block_hash_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test);
+
+    assert_passed!(result);
+}
+
+#[test]
 #[ignore]
 fn test_library_calls() {
     let test = test_case!(
