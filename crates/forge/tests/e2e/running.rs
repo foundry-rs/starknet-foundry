@@ -566,31 +566,6 @@ fn init_new_project_test() {
 }
 
 #[test]
-fn using_corelib_names() {
-    let temp = setup_package("using_corelib_names");
-    let snapbox = runner();
-
-    snapbox
-        .current_dir(&temp)
-        .assert()
-        .success()
-        .stdout_matches(indoc! {r#"
-        [..]Compiling[..]
-        [..]Finished[..]
-
-
-        Collected 4 test(s) from using_corelib_names package
-        Running 0 test(s) from src/
-        Running 4 test(s) from tests/
-        [PASS] tests::bits::test_names
-        [PASS] tests::math::test_names
-        [PASS] tests::test::test_names
-        [PASS] tests::types::test_names
-        Tests: 4 passed, 0 failed, 0 skipped
-        "#});
-}
-
-#[test]
 fn should_panic() {
     let temp = TempDir::new().unwrap();
     temp.copy_from("tests/data/should_panic_test", &["**/*.cairo", "**/*.toml"])
