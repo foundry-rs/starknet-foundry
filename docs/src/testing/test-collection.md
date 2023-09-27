@@ -1,4 +1,4 @@
-## Test collection
+## Test Collection
 
 Forge considers all functions in your project marked with `#[test]` attribute as tests.
 By default, test functions run without any arguments.
@@ -85,7 +85,7 @@ mod utils;
 
 tests from `tests/test_contract.cairo`, `tests/common.cairo` and `tests/common/utils.cairo` will be collected.
 
-### Common test modules
+### Sharing Code Between Tests
 
 Sometimes you may want a share some code between tests to organize them. 
 The package structure of tests makes it easy! 
