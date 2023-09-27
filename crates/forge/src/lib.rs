@@ -74,7 +74,6 @@ struct TestsFromFile {
     relative_path: Utf8PathBuf,
 }
 
-// TODO better name
 pub struct RunnerParams {
     corelib_path: Utf8PathBuf,
     contracts: HashMap<String, StarknetContractArtifacts>,
