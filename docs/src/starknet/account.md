@@ -86,7 +86,9 @@ $ sncast \
     --name some-name \
     --network alpha-goerli
   
-Account successfully removed.
+Account successfully removed
+command: account delete
+address: 0x5be82c8a14f62ff390b8f67480a09ce53cca0e5daccbdd91031964fc9046b42
 ```
 
 ### Custom account contract
