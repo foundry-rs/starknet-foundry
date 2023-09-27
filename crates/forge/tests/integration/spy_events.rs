@@ -420,7 +420,16 @@ fn event_emitted_wrong_data_asserted() {
         "test_assert_wrong_data",
         "Event with matching data and"
     );
-    assert_case_output_contains!(result, "test_assert_wrong_data", "keys was not emitted");
+    assert_case_output_contains!(
+        result,
+        "test_assert_wrong_data",
+        "keys was not emitted from"
+    );
+    assert_case_output_contains!(
+        result,
+        "test_assert_wrong_data",
+        "2840291908834152590840431343062040185517446857039536029244055137616771589522"
+    );
 }
 
 #[test]
