@@ -6,7 +6,7 @@ trait IHelloStarknet<TContractState> {
 
 #[starknet::contract]
 mod HelloStarknet {
-    use snforge_std::fs::PrintTrait;
+    use snforge_std::PrintTrait;
 
     #[storage]
     struct Storage {

@@ -1,5 +1,5 @@
 use array::ArrayTrait;
-use snforge_std::fs::PrintTrait;
+use snforge_std::PrintTrait;
 
 #[test]
 fn test_print() {
