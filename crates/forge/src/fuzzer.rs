@@ -1,3 +1,5 @@
+use anyhow::anyhow;
+use anyhow::Result;
 use cairo_felt::Felt252;
 use num_bigint::{BigUint, RandBigInt};
 use num_integer::Integer;
@@ -6,6 +8,7 @@ use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 use std::ops::{Shl, Shr, Sub};
 
+#[derive(Debug, Clone)]
 enum CairoType {
     U8,
     U16,
@@ -96,20 +99,23 @@ fn u256_to_felt252(val: BigUint) -> Vec<Felt252> {
 }
 
 impl CairoType {
-    fn from_name(name: &str) -> Self {
+    fn from_name(name: &str) -> Result<Self> {
         match name {
-            "u8" => Self::U8,
-            "u16" => Self::U16,
-            "u32" => Self::U32,
-            "u64" => Self::U64,
-            "u128" => Self::U128,
-            "u256" | "core::integer::u256" => Self::U256,
-            "felt252" => Self::Felt252,
-            _ => panic!(), // TODO add better handling
+            "u8" => Ok(Self::U8),
+            "u16" => Ok(Self::U16),
+            "u32" => Ok(Self::U32),
+            "u64" => Ok(Self::U64),
+            "u128" => Ok(Self::U128),
+            "u256" | "core::integer::u256" => Ok(Self::U256),
+            "felt252" => Ok(Self::Felt252),
+            _ => Err(anyhow!(
+                "Tried to construct CairoType from unsupported type"
+            )),
         }
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct RunParams {
     /// Arguments
     arguments: Vec<CairoType>,
@@ -128,14 +134,14 @@ pub struct RunParams {
 }
 
 impl RunParams {
-    pub fn from(rng: &mut StdRng, total_runs: u32, arguments: &[&str]) -> Self {
+    pub fn from(rng: &mut StdRng, total_runs: u32, arguments: &[&str]) -> Result<Self> {
         assert!(total_runs >= 3);
 
         let arguments_number = arguments.len();
         let arguments = arguments
             .iter()
             .map(|arg| CairoType::from_name(arg))
-            .collect();
+            .collect::<Result<Vec<_>>>()?;
 
         let run_with_min_value_for_argument: Vec<u32> = (0..arguments_number)
             .map(|_| rng.gen_range(1..=total_runs))
@@ -152,16 +158,17 @@ impl RunParams {
             })
             .collect();
 
-        Self {
+        Ok(Self {
             arguments,
             total_runs,
             executed_runs: 0,
             run_with_min_value_for_argument,
             run_with_max_value_for_argument,
-        }
+        })
     }
 }
 
+#[derive(Debug, Clone)]
 #[allow(clippy::module_name_repetitions)]
 pub struct RandomFuzzer {
     rng: StdRng,
@@ -169,11 +176,11 @@ pub struct RandomFuzzer {
 }
 
 impl RandomFuzzer {
-    pub fn new(seed: u64, total_runs: u32, arguments: &[&str]) -> Self {
+    pub fn create(seed: u64, total_runs: u32, arguments: &[&str]) -> Result<Self> {
         let mut rng = StdRng::seed_from_u64(seed);
-        let run_params = RunParams::from(&mut rng, total_runs, arguments);
+        let run_params = RunParams::from(&mut rng, total_runs, arguments)?;
 
-        RandomFuzzer { rng, run_params }
+        Ok(RandomFuzzer { rng, run_params })
     }
 
     pub fn next_args(&mut self) -> Vec<Felt252> {
@@ -298,10 +305,10 @@ mod tests {
     #[test]
     fn using_seed_consistent_result() {
         let seed = thread_rng().next_u64();
-        let mut fuzzer = RandomFuzzer::new(seed, 3, &["felt252", "felt252", "felt252"]);
+        let mut fuzzer = RandomFuzzer::create(seed, 3, &["felt252", "felt252", "felt252"]).unwrap();
         let values = fuzzer.next_args();
 
-        let mut fuzzer = RandomFuzzer::new(seed, 3, &["felt252", "felt252", "felt252"]);
+        let mut fuzzer = RandomFuzzer::create(seed, 3, &["felt252", "felt252", "felt252"]).unwrap();
         let values_from_seed = fuzzer.next_args();
 
         assert_eq!(values, values_from_seed);
@@ -314,7 +321,7 @@ mod tests {
         let arguments = vec!["felt252", "felt252", "felt252"];
         let args_number = arguments.len();
 
-        let mut fuzzer = RandomFuzzer::new(seed, runs_number, &arguments);
+        let mut fuzzer = RandomFuzzer::create(seed, runs_number, &arguments).unwrap();
 
         let mut min_used = vec![false; args_number];
         let mut max_used = vec![false; args_number];
@@ -332,5 +339,16 @@ mod tests {
 
         assert_eq!(min_used, vec![true; args_number]);
         assert_eq!(max_used, vec![true; args_number]);
+    }
+
+    #[test]
+    fn create_fuzzer_from_invalid_arguments() {
+        let result = RandomFuzzer::create(1234, 512, &["felt252", "invalid", "args"]);
+        let err = result.unwrap_err();
+
+        assert_eq!(
+            err.to_string(),
+            "Tried to construct CairoType from unsupported type"
+        );
     }
 }

@@ -372,7 +372,7 @@ fn run_with_fuzzing(
         .map(|arg| arg.debug_name.as_ref().unwrap().as_str())
         .collect();
 
-    let mut fuzzer = RandomFuzzer::new(fuzzer_seed, runner_config.fuzzer_runs, &args);
+    let mut fuzzer = RandomFuzzer::create(fuzzer_seed, runner_config.fuzzer_runs, &args)?;
 
     let mut results = vec![];
 
