@@ -45,6 +45,9 @@ Starknet Forge will collect tests only from these places:
 
 ## The *tests* Directory
 
+Forge collects tests from `tests` directory.
+Depending on the presence of `tests/lib.cairo` file, the behavior of the test collector will be different.
+
 ### With *tests/lib.cairo*
 
 If there is a `lib.cairo` file in `tests` folder,
