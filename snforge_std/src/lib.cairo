@@ -36,6 +36,6 @@ use cheatcodes::stop_warp;
 use cheatcodes::start_mock_call;
 use cheatcodes::stop_mock_call;
 
-mod io;
+mod fs;
 
 mod env;

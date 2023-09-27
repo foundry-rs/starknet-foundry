@@ -10,7 +10,7 @@ fn always_five(a: felt252, b: felt252) -> felt252{
 mod tests {
     use super::adder;
     use super::always_five;
-    use snforge_std::io::PrintTrait;
+    use snforge_std::fs::PrintTrait;
 
     #[test]
     fn adding() {
