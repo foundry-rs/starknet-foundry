@@ -8,6 +8,7 @@
 * [`parse_txt`](forge-library/parse_txt.md) - parses plain text file content and tries to deserialize it into the specified type
 * [`read_json`](forge-library/read_json.md) - reads and parses json file content into an array of felts
 * [`parse_json`](forge-library/parse_json.md) - parses json file content and tries to deserialize it into the specified type
+* [`env`](forge-library/env.md) - module containing functions for interacting with the system environment
 
 > ℹ️ **Info**
 > To use the library functions you need to add `snforge_std` package as a dependency in

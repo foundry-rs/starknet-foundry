@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 use crate::scarb::StarknetContractArtifacts;
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use blockifier::abi::constants::GET_BLOCK_HASH_GAS_COST;
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::execution_utils::{
@@ -41,6 +41,7 @@ use cairo_lang_runner::{
     insert_value_to_cellref,
 };
 
+use crate::cheatcodes_hint_processor::file_operations::string_into_felt;
 use cairo_lang_starknet::contract::starknet_keccak;
 use cairo_lang_utils::bigint::BigIntAsHex;
 use cairo_vm::types::relocatable::Relocatable;
@@ -67,6 +68,7 @@ pub struct CairoHintProcessor<'a> {
     pub hints: &'a HashMap<String, Hint>,
     pub cheatnet_state: CheatnetState,
     pub run_resources: RunResources,
+    pub environment_variables: &'a HashMap<String, String>,
 }
 
 // crates/blockifier/src/execution/syscalls/hint_processor.rs:472 (ResourceTracker for SyscallHintProcessor)
@@ -126,6 +128,7 @@ impl HintProcessorLogic for CairoHintProcessor<'_> {
                 output_start,
                 output_end,
                 self.contracts,
+                self.environment_variables,
             );
         }
         if let Some(Hint::Starknet(StarknetHint::SystemCall { system })) = maybe_extended_hint {
@@ -167,6 +170,7 @@ impl CairoHintProcessor<'_> {
         output_start: &CellRef,
         output_end: &CellRef,
         contracts: &HashMap<String, StarknetContractArtifacts>,
+        environment_variables: &HashMap<String, String>,
     ) -> Result<(), HintError> {
         // Parse the selector.
         let selector = &selector.value.to_bytes_be().1;
@@ -183,11 +187,24 @@ impl CairoHintProcessor<'_> {
             HintError::CustomHint(Box::from("Failed to read input data".to_string()))
         })?;
 
-        self.match_cheatcode_by_selector(vm, selector, inputs, output_start, output_end, contracts)
-            .map_err(Into::into)
+        self.match_cheatcode_by_selector(
+            vm,
+            selector,
+            inputs,
+            output_start,
+            output_end,
+            contracts,
+            environment_variables,
+        )
+        .map_err(Into::into)
     }
 
-    #[allow(unused, clippy::too_many_lines, clippy::trivially_copy_pass_by_ref)]
+    #[allow(
+        unused,
+        clippy::too_many_lines,
+        clippy::trivially_copy_pass_by_ref,
+        clippy::too_many_arguments
+    )]
     fn match_cheatcode_by_selector(
         &mut self,
         vm: &mut VirtualMachine,
@@ -196,6 +213,7 @@ impl CairoHintProcessor<'_> {
         output_start: &CellRef,
         output_end: &CellRef,
         contracts: &HashMap<String, StarknetContractArtifacts>,
+        environment_variables: &HashMap<String, String>,
     ) -> Result<(), EnhancedHintError> {
         let mut buffer = MemBuffer::new_segment(vm);
         let result_start = buffer.ptr;
@@ -367,6 +385,24 @@ impl CairoHintProcessor<'_> {
                     .write(felt_contract_address)
                     .expect("Failed to insert a precalculated contract address");
 
+                Ok(())
+            }
+            "var" => {
+                let name = inputs[0].clone();
+                let name = as_cairo_short_string(&name).unwrap_or_else(|| {
+                    panic!("Failed to parse var argument = {name} as short string")
+                });
+
+                let env_var = environment_variables
+                    .get(&name)
+                    .with_context(|| format!("Failed to read from env var = {name}"))?;
+
+                let parsed_env_var = string_into_felt(env_var)
+                    .with_context(|| format!("Failed to parse value = {env_var} to felt"))?;
+
+                buffer
+                    .write(parsed_env_var)
+                    .expect("Failed to insert parsed env var");
                 Ok(())
             }
             "get_class_hash" => {

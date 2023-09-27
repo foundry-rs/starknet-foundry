@@ -63,6 +63,8 @@
     * [read_json](appendix/forge-library/read_json.md)
     * [parse_txt](appendix/forge-library/parse_txt.md)
     * [parse_json](appendix/forge-library/parse_json.md)
+    * [env](appendix/forge-library/env.md)
+        * [var](appendix/forge-library/env/var.md)
 * [Cast Commands](appendix/cast.md)
     * [common flags](appendix/cast/common.md)
     * [account](appendix/cast/account/account.md)
