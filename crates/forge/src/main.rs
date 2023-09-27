@@ -9,7 +9,7 @@ use std::path::PathBuf;
 use tempfile::{tempdir, TempDir};
 
 use forge::{pretty_printing, RunnerConfig, RunnerParams};
-use forge::{run, TestFileSummary};
+use forge::{run, TestCrateSummary};
 
 use forge::scarb::{
     config_from_scarb_for_package, corelib_for_package, dependencies_for_package,
@@ -68,7 +68,7 @@ fn load_predeployed_contracts() -> Result<TempDir> {
     Ok(tmp_dir)
 }
 
-fn extract_failed_tests(tests_summaries: Vec<TestFileSummary>) -> Vec<TestCaseSummary> {
+fn extract_failed_tests(tests_summaries: Vec<TestCrateSummary>) -> Vec<TestCaseSummary> {
     tests_summaries
         .into_iter()
         .flat_map(|test_file_summary| test_file_summary.test_case_summaries)
@@ -147,7 +147,7 @@ fn main_execution() -> Result<bool> {
             &package_path,
             &package_name,
             &lib_path,
-            &Some(dependencies.clone()),
+            dependencies,
             &runner_config,
             &runner_params,
         )?;

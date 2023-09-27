@@ -92,7 +92,7 @@ fn fork_aliased_decorator() {
         &test.path().unwrap(),
         &String::from("src"),
         &test.path().unwrap().join("src/lib.cairo"),
-        &Some(test.linked_libraries()),
+        test.linked_libraries(),
         &RunnerConfig::new(
             None,
             false,

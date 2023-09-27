@@ -16,9 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `var` library function for reading environmental variables
 - `#[fork(...)]` attribute allowing testing against a network fork
 
-### Changed
+#### Changed
 
-- Tests are collected only from `tests` folder and a package tree
+- Tests are collected only from a package tree (`src/lib.cairo` as an entrypoint) and `tests` folder:
+  - If there is a `lib.cairo` file in `tests` folder, then it is treated as an entrypoint to the `tests` package from which tests are collected
+  - Otherwise, all test files matching `tests/*.cairo` regex are treated as modules and added to a single virtual `lib.cairo`, which is treated as described above
 
 ### Cast
 
