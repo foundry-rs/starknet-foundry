@@ -68,6 +68,7 @@ impl Default for RunnerConfig {
             test_name_filter: None,
             exact_match: false,
             exit_first: false,
+            fork_targets: vec![],
             fuzzer_runs: 256,
             fuzzer_seed: 12345,
         }
