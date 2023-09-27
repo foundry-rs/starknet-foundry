@@ -115,6 +115,6 @@ fn read_non_existent() {
     assert_case_output_contains!(
         result,
         "test_read_invalid_short_string",
-        &format!("Failed to read from env var = MY_ENV_VAR")
+        "Failed to read from env var = MY_ENV_VAR"
     );
 }
