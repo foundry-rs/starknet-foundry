@@ -21,6 +21,7 @@
 * [Using Cheatcodes](testing/using-cheatcodes.md)
 * [Debugging](testing/debugging.md)
 * [Fuzz Testing](testing/fuzz-testing.md)
+* [Test collection](testing/test-collection.md)
 
 # Cast Overview
 
