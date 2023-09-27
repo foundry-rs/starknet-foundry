@@ -44,7 +44,7 @@ and if some of them requires it directly (`account create` is one), we should tr
 
 ### interacting with contract
 We will use contracts dispatchers to be able to call/invoke its functions directly 
-(e.g. if contract named `mycontract` has a function `myfunction`, we should be able to just do `mycontract.myfunction();`).
+(e.g. if contract named `mycontract` has a function `myfunction`, we should be able to just do `mycontractDispatcher.myfunction();`).
 We should also support our subcommands (`invoke`, `call`) to call/invoke so dispatchers are able to use them, and for calling/invoking 
 contracts without dispatchers.
 
@@ -99,6 +99,12 @@ we must ensure idempotency of calls to the network.
 The proposed solution would be to use an external json file, that holds hashes of transactions that were already performed.
 While executing a command we could first check this file to see if given transaction exists/succeeded, and based on this
 either perform and an action (make a transaction) or skip it and proceed to the next thing in script.
+
+Each transaction request would have its id in the state file, in a form of `Hash(function_name, arguments, address)`.
+If the id changes the transaction from state file should be re-executed.
+
+At each invocation the script generates the list of transactions to make, and compares it with state file - if any transaction id
+has changed or is missing, this transaction (and each next one from the list) should be (re)executed. 
 
 To achieve this there are a few possible solutions:
 - adjust our existing cast subcommand functions to handle checking the file
@@ -212,6 +218,8 @@ Picking those would ensure us that:
   - idempotency is achieved
   - it is quite easy to write a script
 
+
+
 ### example script
 An example deployment script could look like this:
 
@@ -259,7 +267,8 @@ Its schema could look like this:
 {
   "version": 1,
   "transactions" : {
-    "create_account": {
+    "<create_account_id>": {
+      "name": "create_account",
       "arguments": {
         "name": "whatever",
         (...)
@@ -271,7 +280,8 @@ Its schema could look like this:
       "status": "accepted",
       "timestamp": (...)
     },
-    "prefund_account": {
+    "<prefund_account_id>": {
+      "name": "prefound_account",
       "arguments": {
         (...)
       },
