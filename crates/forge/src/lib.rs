@@ -174,7 +174,7 @@ fn collect_tests_from_package(
     }];
 
     if let Some(tests_tmp_dir) = &maybe_tests_tmp_dir {
-        let tests_tmp_dir_path = Utf8PathBuf::from_path_buf(tests_tmp_dir.to_path_buf().clone())
+        let tests_tmp_dir_path = Utf8PathBuf::from_path_buf(tests_tmp_dir.to_path_buf())
             .map_err(|_| anyhow!("Failed to convert tests temporary directory to Utf8PathBuf"))?;
         let tests_lib_path = tests_tmp_dir_path.join("lib.cairo");
 

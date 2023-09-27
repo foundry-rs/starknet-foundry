@@ -68,6 +68,7 @@ fn build_hints_dict<'b>(
     (hints_dict, string_to_hint)
 }
 
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn run_from_test_case(
     package_root: &Utf8PathBuf,
     runner: &SierraCasmRunner,
