@@ -535,8 +535,18 @@ mod tests {
     use test_collector::ExpectedTestResult;
 
     #[test]
+    fn fuzzer_default_seed() {
+        let config = RunnerConfig::new(None, false, false, None, None, &Default::default());
+        let config2 = RunnerConfig::new(None, false, false, None, None, &Default::default());
+
+        assert_ne!(config.fuzzer_seed, 0);
+        assert_ne!(config2.fuzzer_seed, 0);
+        assert_ne!(config.fuzzer_seed, config2.fuzzer_seed);
+    }
+
+    #[test]
     fn runner_config_default_arguments() {
-        let config = RunnerConfig::new(None, false, false, None, Some(1234), &Default::default());
+        let config = RunnerConfig::new(None, false, false, None, None, &Default::default());
         assert_eq!(
             config,
             RunnerConfig {
@@ -545,7 +555,7 @@ mod tests {
                 exit_first: false,
                 fork_targets: vec![],
                 fuzzer_runs: FUZZER_RUNS_DEFAULT,
-                fuzzer_seed: 1234,
+                fuzzer_seed: config.fuzzer_seed,
             }
         );
     }
