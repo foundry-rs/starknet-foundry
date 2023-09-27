@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+#### Added
+
+- `account delete` command for removing accounts from the accounts file
+
 
 ## [0.7.1] - 2023-09-13
 

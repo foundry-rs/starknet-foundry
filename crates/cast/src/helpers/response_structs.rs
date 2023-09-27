@@ -37,6 +37,11 @@ pub struct AccountAddResponse {
 }
 
 #[derive(Serialize)]
+pub struct AccountDeleteResponse {
+    pub address: FieldElement,
+}
+
+#[derive(Serialize)]
 pub struct MulticallNewResponse {
     pub path: Utf8PathBuf,
     pub content: String,

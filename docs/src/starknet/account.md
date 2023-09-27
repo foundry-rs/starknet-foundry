@@ -6,6 +6,8 @@ entire account management flow with the `sncast account create` and `sncast acco
 Difference between those two commands is that the first one creates account information (private key, address and more)
 and the second one deploys it to the network. After deployment, account can be used to interact with Starknet.
 
+Also, you can use  `sncast account delete` command to delete account information from accounts file.
+
 > 💡 **Info**
 > Currently, only OpenZeppelin account creation is supported.
 
@@ -72,6 +74,19 @@ Account successfully created. Prefund generated address with at least 4323000000
 command: account create
 max_fee: 0x64a7168300
 address: 0x7a949e83b243068d0cbedd8d5b8b32fafea66c54de23c40e68b126b5c845b61
+```
+### `account delete`
+
+Delete an account from `accounts-file`.
+
+```shell
+$ sncast \
+    --accounts-file my-account-file.json \
+    account delete \
+    --name some-name \
+    --network alpha-goerli
+  
+Account successfully removed.
 ```
 
 ### Custom account contract

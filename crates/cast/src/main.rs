@@ -7,7 +7,7 @@ use anyhow::{anyhow, Result};
 use camino::Utf8PathBuf;
 use cast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
 use cast::helpers::scarb_utils::{parse_scarb_config, CastConfig};
-use cast::{get_account, get_block_id, get_chain_id, get_provider, print_command_result};
+use cast::{get_account, get_block_id, get_chain_id, get_provider, print_command_result, chain_id_to_network_name};
 use clap::{Parser, Subcommand};
 
 mod starknet_commands;
@@ -270,6 +270,26 @@ async fn main() -> Result<()> {
                 .await;
 
                 print_command_result("account deploy", &mut result, cli.int_format, cli.json)?;
+                Ok(())
+            },
+            account::Commands::Delete(delete) => {
+                config.account = delete
+                        .name
+                        .ok_or_else(|| anyhow!("required argument --name not provided"))?;
+                let network_name = 
+                    match delete.network {
+                        Some(_) => delete.network.unwrap_or_default(),
+                        None => chain_id_to_network_name(get_chain_id(&provider).await?),
+                    };
+
+                let mut result = starknet_commands::account::delete::delete(
+                    config.account,
+                    &config.accounts_file,
+                    network_name,
+                )
+                .await;
+    
+                print_command_result("account delete", &mut result, cli.int_format, cli.json)?;
                 Ok(())
             }
         },
