@@ -46,7 +46,7 @@ trait EventAssertions {
 
 ```rust
 use snforge_std::{declare, ContractClassTrait, spy_events, SpyOn, EventSpy, EventFetcher
-    event_name_hash, Event}
+    event_name_hash, Event};
     
 #[starknet::interface]
 trait ISpyEventsChecker<TContractState> {
@@ -97,7 +97,7 @@ Let's go through important parts of the provided code:
 
 ```rust
 use snforge_std::{declare, ContractClassTrait, spy_events, SpyOn, EventSpy, EventFetcher
-    event_name_hash, Event, EventAssertions}
+    event_name_hash, Event, EventAssertions};
     
 #[starknet::interface]
 trait ISpyEventsChecker<TContractState> {
@@ -138,7 +138,7 @@ Sometimes it is easier to split events between multiple spies. Let's do it.
 
 ```rust
 use snforge_std::{declare, ContractClassTrait, spy_events, SpyOn, EventSpy, EventFetcher
-    event_name_hash, Event, EventAssertions}
+    event_name_hash, Event, EventAssertions};
     
 #[starknet::interface]
 trait ISpyEventsChecker<TContractState> {

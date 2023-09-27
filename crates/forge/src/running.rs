@@ -8,6 +8,7 @@ use blockifier::execution::entry_point::{
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::cached_state::{CachedState, GlobalContractCache};
+use cairo_felt::Felt252;
 use cairo_vm::serde::deserialize_program::HintParams;
 use cairo_vm::types::relocatable::Relocatable;
 use cheatnet::constants::{build_block_context, build_testing_state, build_transaction_context};
@@ -17,11 +18,14 @@ use itertools::chain;
 use cairo_lang_casm::hints::Hint;
 use cairo_lang_casm::instructions::Instruction;
 use cairo_lang_runner::casm_run::hint_to_hint_params;
-use cairo_lang_runner::RunnerError;
 use cairo_lang_runner::SierraCasmRunner;
+use cairo_lang_runner::{Arg, RunnerError};
 use cairo_vm::vm::runners::cairo_runner::RunResources;
 use camino::Utf8PathBuf;
+use cheatnet::forking::state::ForkStateReader;
 use cheatnet::state::ExtendedStateReader;
+use conversions::StarknetConversions;
+use starknet::core::types::{BlockId, BlockTag};
 use starknet::core::utils::get_selector_from_name;
 use starknet_api::core::PatriciaKey;
 use starknet_api::core::{ContractAddress, EntryPointSelector};
@@ -29,10 +33,10 @@ use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::hash::StarkHash;
 use starknet_api::patricia_key;
 use starknet_api::transaction::Calldata;
-use test_collector::TestCase;
+use test_collector::{ForkConfig, TestCase};
 
 use crate::cheatcodes_hint_processor::CairoHintProcessor;
-use crate::scarb::StarknetContractArtifacts;
+use crate::scarb::{ForkTarget, StarknetContractArtifacts};
 use crate::test_case_summary::TestCaseSummary;
 
 // snforge_std/src/cheatcodes.cairo::TEST
@@ -67,8 +71,10 @@ fn build_hints_dict<'b>(
 pub(crate) fn run_from_test_case(
     runner: &SierraCasmRunner,
     case: &TestCase,
+    fork_targets: &[ForkTarget],
     contracts: &HashMap<String, StarknetContractArtifacts>,
     predeployed_contracts: &Utf8PathBuf,
+    args: Vec<Felt252>,
     environment_variables: &HashMap<String, String>,
 ) -> Result<TestCaseSummary> {
     let available_gas = if let Some(available_gas) = &case.available_gas {
@@ -79,7 +85,10 @@ pub(crate) fn run_from_test_case(
 
     let func = runner.find_function(case.name.as_str())?;
     let initial_gas = runner.get_initial_available_gas(func, available_gas)?;
-    let (entry_code, builtins) = runner.create_entry_code(func, &[], initial_gas)?;
+
+    let runner_args: Vec<Arg> = args.clone().into_iter().map(Arg::Value).collect();
+
+    let (entry_code, builtins) = runner.create_entry_code(func, &runner_args, initial_gas)?;
     let footer = runner.create_code_footer();
     let instructions = chain!(
         entry_code.iter(),
@@ -133,7 +142,7 @@ pub(crate) fn run_from_test_case(
         contracts,
         cheatnet_state: CheatnetState::new(ExtendedStateReader {
             dict_state_reader: build_testing_state(predeployed_contracts),
-            fork_state_reader: None,
+            fork_state_reader: get_fork_state_reader(fork_targets, &case.fork_config),
         }),
         hints: &string_to_hint,
         run_resources: RunResources::default(),
@@ -147,7 +156,7 @@ pub(crate) fn run_from_test_case(
         instructions,
         builtins,
     ) {
-        Ok(result) => Ok(TestCaseSummary::from_run_result(result, case)),
+        Ok(result) => Ok(TestCaseSummary::from_run_result(result, case, args)),
 
         // CairoRunError comes from VirtualMachineError which may come from HintException that originates in the cheatcode processor
         Err(RunnerError::CairoRunError(error)) => Ok(TestCaseSummary::Failed {
@@ -157,8 +166,47 @@ pub(crate) fn run_from_test_case(
                 "\n    {}\n",
                 error.to_string().replace(" Custom Hint Error: ", "\n    ")
             )),
+            arguments: args,
         }),
 
         Err(err) => Err(err.into()),
     }
+}
+
+fn get_fork_state_reader(
+    fork_targets: &[ForkTarget],
+    fork_config: &Option<ForkConfig>,
+) -> Option<ForkStateReader> {
+    match &fork_config {
+        Some(ForkConfig::Params(url, block_id)) => Some(ForkStateReader::new(url, *block_id, None)),
+        Some(ForkConfig::Id(name)) => find_params_and_build_fork_state_reader(fork_targets, name),
+        _ => None,
+    }
+}
+
+fn find_params_and_build_fork_state_reader(
+    fork_targets: &[ForkTarget],
+    fork_alias: &str,
+) -> Option<ForkStateReader> {
+    let fork = fork_targets.iter().find(|fork| fork.name == fork_alias);
+
+    let block_id = fork?
+        .block_id
+        .iter()
+        .map(|(id_type, value)| match id_type.as_str() {
+            "number" => Some(BlockId::Number(value.parse().unwrap())),
+            "hash" => Some(BlockId::Hash(value.to_field_element())),
+            "tag" => match value.as_str() {
+                "Latest" => Some(BlockId::Tag(BlockTag::Latest)),
+                "Pending" => Some(BlockId::Tag(BlockTag::Pending)),
+                _ => unreachable!(),
+            },
+            _ => unreachable!(),
+        })
+        .collect::<Vec<_>>();
+    let [Some(block_id)] = block_id[..] else {
+        return None;
+    };
+
+    Some(ForkStateReader::new(&fork?.url, block_id, None))
 }

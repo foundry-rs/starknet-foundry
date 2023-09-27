@@ -5,14 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+# [Unreleased]
 
 ### Forge
 
 #### Added
 
-- Support for scarb workspaces.
+- Support for scarb workspaces
+- Initial version of fuzz testing with randomly generated values
 - `var` library function for reading environmental variables
+- `#[fork(...)]` attribute allowing testing against a network fork
 
 ### Changed
 
@@ -23,6 +25,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - `account add` command for importing accounts to the accounts file
+- `account create` command for creating openzeppelin accounts with starkli-style keystore
+- `account deploy` command for deploying openzeppelin accounts with starkli-style keystore
+
+### Changed
+
+- `--add-profile` no longer accepts `-a` for short
 - allow the `id` property in multicalls to be referenced in the inputs of `deploy` and `invoke` calls
 
 ## [0.6.0] - 2023-09-13

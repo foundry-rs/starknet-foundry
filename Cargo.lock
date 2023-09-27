@@ -1158,11 +1158,14 @@ dependencies = [
  "camino",
  "conversions",
  "ctor",
- "flate2",
+ "dotenv",
+ "fs2",
+ "glob",
  "include_dir",
  "indoc",
  "num-bigint",
  "num-traits 0.2.16",
+ "rayon",
  "regex",
  "serde",
  "serde_json",
@@ -1842,6 +1845,7 @@ dependencies = [
  "parity-scale-codec",
  "parity-scale-codec-derive",
  "project-root",
+ "rand",
  "rayon",
  "regex",
  "scarb-metadata 1.7.0",
@@ -1849,6 +1853,7 @@ dependencies = [
  "schemars",
  "serde",
  "serde_json",
+ "smol_str",
  "snapbox",
  "starknet",
  "starknet_api",
@@ -1867,6 +1872,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a62bc1cf6f830c2ec14a513a9fb124d0a213a629668a4186f329db21fe045652"
 dependencies = [
  "percent-encoding",
+]
+
+[[package]]
+name = "fs2"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9564fc758e15025b46aa6643b1b77d047d1a56a1aea6e01002ac0c7026876213"
+dependencies = [
+ "libc",
+ "winapi",
 ]
 
 [[package]]
@@ -2005,6 +2020,12 @@ name = "gimli"
 version = "0.27.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b6c80984affa11d98d1b88b66ac8853f143217b399d3c74116778ff8fdb4ed2e"
+
+[[package]]
+name = "glob"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d2fabcfbdc87f4758337ca535fb41a6d701b65693ce38287d856d1674551ec9b"
 
 [[package]]
 name = "globset"
@@ -4292,6 +4313,7 @@ dependencies = [
  "cairo-lang-test-runner",
  "cairo-lang-utils",
  "cairo-vm",
+ "conversions",
  "itertools 0.11.0",
  "num-bigint",
  "num-integer",
@@ -4300,6 +4322,7 @@ dependencies = [
  "serde",
  "serde_json",
  "smol_str",
+ "starknet",
  "thiserror",
 ]
 

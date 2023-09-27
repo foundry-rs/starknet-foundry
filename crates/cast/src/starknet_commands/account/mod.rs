@@ -57,14 +57,12 @@ pub fn prepare_account_json(
     account_json
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn write_account_to_accounts_file(
-    path_to_scarb_toml: &Option<Utf8PathBuf>,
-    rpc_url: &str,
     account: &str,
     accounts_file: &Utf8PathBuf,
     chain_id: FieldElement,
     account_json: serde_json::Value,
-    add_profile: bool,
 ) -> Result<()> {
     if !accounts_file.exists() {
         std::fs::create_dir_all(accounts_file.clone().parent().unwrap())?;
@@ -85,15 +83,6 @@ pub fn write_account_to_accounts_file(
         );
     }
     items[&network_name][account] = account_json;
-
-    if add_profile {
-        let config = CastConfig {
-            rpc_url: rpc_url.into(),
-            account: account.into(),
-            accounts_file: accounts_file.into(),
-        };
-        add_created_profile_to_configuration(path_to_scarb_toml, &config)?;
-    }
 
     std::fs::write(
         accounts_file.clone(),
@@ -130,12 +119,21 @@ pub fn add_created_profile_to_configuration(
 
         new_profile.insert("url".to_string(), Value::String(config.rpc_url.clone()));
         new_profile.insert("account".to_string(), Value::String(config.account.clone()));
-        new_profile.insert(
-            "accounts-file".to_string(),
-            Value::String(config.accounts_file.to_string()),
-        );
+        if config.keystore == Utf8PathBuf::default() {
+            new_profile.insert(
+                "accounts-file".to_string(),
+                Value::String(config.accounts_file.to_string()),
+            );
+        } else {
+            new_profile.insert(
+                "keystore".to_string(),
+                Value::String(config.keystore.to_string()),
+            );
+        }
 
-        tool_sncast.insert(config.account.clone(), Value::Table(new_profile));
+        let account_path = Utf8PathBuf::from(&config.account);
+        let profile_name = account_path.file_stem().unwrap_or(&config.account);
+        tool_sncast.insert(profile_name.into(), Value::Table(new_profile));
 
         let mut tool = toml::value::Table::new();
         tool.insert("sncast".to_string(), Value::Table(tool_sncast));
@@ -159,6 +157,7 @@ pub fn add_created_profile_to_configuration(
 
 #[cfg(test)]
 mod tests {
+    use camino::Utf8PathBuf;
     use cast::helpers::constants::DEFAULT_ACCOUNTS_FILE;
     use cast::helpers::scarb_utils::CastConfig;
     use sealed_test::prelude::rusty_fork_test;
@@ -173,6 +172,7 @@ mod tests {
             rpc_url: String::from("http://some-url"),
             account: String::from("some-name"),
             accounts_file: "accounts".into(),
+            keystore: Utf8PathBuf::default(),
         };
         let res = add_created_profile_to_configuration(&None, &config);
 
@@ -191,6 +191,7 @@ mod tests {
             rpc_url: String::from("http://some-url"),
             account: String::from("myprofile"),
             accounts_file: DEFAULT_ACCOUNTS_FILE.into(),
+            keystore: Utf8PathBuf::default(),
         };
         let res = add_created_profile_to_configuration(&None, &config);
 

@@ -17,6 +17,7 @@ use forge::scarb::{
     target_name_for_package, try_get_starknet_artifacts_path,
 };
 use forge::test_case_summary::TestCaseSummary;
+use rand::{thread_rng, RngCore};
 use std::process::{Command, Stdio};
 
 mod init;
@@ -40,6 +41,24 @@ struct Args {
 
     #[command(flatten)]
     packages_filter: PackagesFilter,
+
+    /// Number of fuzzer runs
+    #[arg(short = 'r', long, value_parser = validate_fuzzer_runs_value)]
+    fuzzer_runs: Option<u32>,
+
+    /// Seed for the fuzzer
+    #[arg(short = 's', long)]
+    fuzzer_seed: Option<u64>,
+}
+
+fn validate_fuzzer_runs_value(val: &str) -> Result<u32> {
+    let parsed_val: u32 = val
+        .parse()
+        .map_err(|_| anyhow!("Failed to parse {val} as u32"))?;
+    if parsed_val < 3 {
+        bail!("Number of fuzzer runs must be greater than or equal to 3")
+    }
+    Ok(parsed_val)
 }
 
 fn load_predeployed_contracts() -> Result<TempDir> {
@@ -80,6 +99,8 @@ fn main_execution() -> Result<bool> {
         .match_many(&scarb_metadata)
         .context("Failed to find any packages matching the specified filter")?;
 
+    let fuzzer_seed = args.fuzzer_seed.unwrap_or_else(|| thread_rng().next_u64());
+
     let mut all_failed_tests = vec![];
     for package in &packages {
         let forge_config = config_from_scarb_for_package(&scarb_metadata, &package.id)?;
@@ -107,6 +128,8 @@ fn main_execution() -> Result<bool> {
             args.test_filter.clone(),
             args.exact,
             args.exit_first,
+            args.fuzzer_runs,
+            args.fuzzer_seed,
             &forge_config,
         );
 
@@ -130,6 +153,7 @@ fn main_execution() -> Result<bool> {
             &Some(dependencies.clone()),
             &runner_config,
             &runner_params,
+            fuzzer_seed,
         )?;
 
         let mut failed_tests = extract_failed_tests(tests_file_summaries);

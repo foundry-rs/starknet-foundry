@@ -14,7 +14,7 @@ pub mod state;
 
 pub struct CheatnetState {
     cheatcode_state: CheatcodeState,
-    blockifier_state: CachedState<ExtendedStateReader>,
+    pub blockifier_state: CachedState<ExtendedStateReader>,
     pub deploy_salt_base: u32,
 }
 
