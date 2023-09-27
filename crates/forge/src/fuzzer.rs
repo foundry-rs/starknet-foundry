@@ -109,7 +109,7 @@ impl CairoType {
             "u256" | "core::integer::u256" => Ok(Self::U256),
             "felt252" => Ok(Self::Felt252),
             _ => Err(anyhow!(
-                "Tried to construct CairoType from unsupported type"
+                "Tried to use incorrect type for fuzzing. Type = {name} is not supported"
             )),
         }
     }
@@ -348,7 +348,7 @@ mod tests {
 
         assert_eq!(
             err.to_string(),
-            "Tried to construct CairoType from unsupported type"
+            "Tried to use incorrect type for fuzzing. Type = invalid is not supported"
         );
     }
 }
