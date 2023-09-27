@@ -17,8 +17,8 @@ fn env_var_reading() {
         [..]Finished[..]
 
 
-        Collected 1 test(s) and 1 test file(s) from env package
-        Running 1 inline test(s)
+        Collected 1 test(s) from env package
+        Running 1 test(s) from src/
         [PASS] env::reading_env_vars
         Tests: 1 passed, 0 failed, 0 skipped
         "#});
