@@ -228,6 +228,37 @@ mod tests {
         }
     }
 
+    fn all_values_different(vec1: &[Felt252], vec2: &[Felt252]) -> bool {
+        vec1.iter().zip(vec2).all(|(i, j)| {
+            i.to_biguint() != j.to_biguint()
+                && i.to_biguint() != BigUint::zero()
+                && j.to_biguint() != BigUint::zero()
+        })
+    }
+
+    #[test]
+    fn fuzzer_generates_different_values() {
+        let run_params = RunParams {
+            run_with_max_value_for_argument: vec![3, 3, 3],
+            run_with_min_value_for_argument: vec![4, 4, 4],
+            arguments: vec![CairoType::Felt252, CairoType::U256, CairoType::U32],
+            total_runs: 10,
+            ..Default::default()
+        };
+        let mut fuzzer = RandomFuzzer {
+            rng: StdRng::seed_from_u64(1234),
+            run_params,
+        };
+
+        let args1 = fuzzer.next_args();
+        let args2 = fuzzer.next_args();
+        let args3 = fuzzer.next_args();
+
+        assert!(all_values_different(&args1, &args2));
+        assert!(all_values_different(&args1, &args3));
+        assert!(all_values_different(&args2, &args3));
+    }
+
     #[test]
     fn run_with_max_value() {
         let run_params = RunParams {
