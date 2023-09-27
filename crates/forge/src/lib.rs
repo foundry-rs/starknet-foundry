@@ -18,6 +18,7 @@ use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use num_bigint::BigUint;
 use num_traits::Zero;
 use once_cell::sync::Lazy;
+use rand::{thread_rng, RngCore};
 use smol_str::SmolStr;
 
 use crate::fuzzer::RandomFuzzer;
@@ -58,7 +59,7 @@ pub struct RunnerConfig {
     exit_first: bool,
     fork_targets: Vec<ForkTarget>,
     fuzzer_runs: u32,
-    fuzzer_seed: Option<u64>,
+    fuzzer_seed: u64,
 }
 
 impl RunnerConfig {
@@ -86,7 +87,9 @@ impl RunnerConfig {
             fuzzer_runs: fuzzer_runs
                 .or(forge_config_from_scarb.fuzzer_runs)
                 .unwrap_or(FUZZER_RUNS_DEFAULT),
-            fuzzer_seed: fuzzer_seed.or(forge_config_from_scarb.fuzzer_seed),
+            fuzzer_seed: fuzzer_seed
+                .or(forge_config_from_scarb.fuzzer_seed)
+                .unwrap_or_else(|| thread_rng().next_u64()),
         }
     }
 }
@@ -230,7 +233,6 @@ pub fn run(
     linked_libraries: &Option<Vec<LinkedLibrary>>,
     runner_config: &RunnerConfig,
     runner_params: &RunnerParams,
-    fuzzer_seed: u64,
 ) -> Result<Vec<TestFileSummary>> {
     let tests = collect_tests_from_package(
         package_path,
@@ -253,13 +255,8 @@ pub fn run(
     let mut summaries = vec![];
 
     for tests_from_file in tests_iterator.by_ref() {
-        let (summary, was_fuzzed) = run_tests_from_file(
-            tests_from_file,
-            runner_config,
-            &runner_params.contracts,
-            &runner_params.predeployed_contracts,
-            &runner_params.fuzzer_seed,
-        )?;
+        let (summary, was_fuzzed) =
+            run_tests_from_file(tests_from_file, runner_config, runner_params)?;
 
         fuzzing_happened |= was_fuzzed;
 
@@ -290,7 +287,7 @@ pub fn run(
 
     pretty_printing::print_test_summary(&summaries);
     if fuzzing_happened {
-        pretty_printing::print_test_seed(fuzzer_seed);
+        pretty_printing::print_test_seed(runner_config.fuzzer_seed);
     }
 
     Ok(summaries)
@@ -300,7 +297,7 @@ fn run_tests_from_file(
     tests: TestsFromFile,
     runner_config: &RunnerConfig,
     runner_params: &RunnerParams,
-) -> Result<TestFileSummary, bool> {
+) -> Result<(TestFileSummary, bool)> {
     let runner = SierraCasmRunner::new(
         tests.sierra_program,
         Some(MetadataComputationConfig::default()),
@@ -326,21 +323,15 @@ fn run_tests_from_file(
                 &runner_params.contracts,
                 &runner_params.predeployed_contracts,
                 vec![],
+                &runner_params.environment_variables,
             )?;
             pretty_printing::print_test_result(&result, None);
 
             result
         } else {
             was_fuzzed = true;
-            let (result, runs) = run_with_fuzzing(
-                runner_config,
-                contracts,
-                predeployed_contracts,
-                &runner,
-                case,
-                &args,
-                fuzzer_seed,
-            )?;
+            let (result, runs) =
+                run_with_fuzzing(runner_config, runner_params, &runner, case, &args)?;
             pretty_printing::print_test_result(&result, Some(runs));
 
             result
@@ -378,12 +369,10 @@ fn run_tests_from_file(
 
 fn run_with_fuzzing(
     runner_config: &RunnerConfig,
-    contracts: &HashMap<String, StarknetContractArtifacts>,
-    predeployed_contracts: &Utf8PathBuf,
+    runner_params: &RunnerParams,
     runner: &SierraCasmRunner,
     case: &TestCase,
     args: &Vec<&ConcreteTypeId>,
-    fuzzer_seed: u64,
 ) -> Result<(TestCaseSummary, u32)> {
     if contains_non_felt252_args(args) {
         bail!(
@@ -393,7 +382,7 @@ fn run_with_fuzzing(
     }
 
     let mut fuzzer = RandomFuzzer::new(
-        fuzzer_seed,
+        runner_config.fuzzer_seed,
         runner_config.fuzzer_runs,
         args.len(),
         &BigUint::zero(),
@@ -409,9 +398,10 @@ fn run_with_fuzzing(
             runner,
             case,
             runner_config.fork_targets.as_ref(),
-            contracts,
-            predeployed_contracts,
+            &runner_params.contracts,
+            &runner_params.predeployed_contracts,
             args.clone(),
+            &runner_params.environment_variables,
         )?;
         results.push(result.clone());
 
@@ -478,7 +468,7 @@ mod tests {
 
     #[test]
     fn runner_config_default_arguments() {
-        let config = RunnerConfig::new(None, false, false, None, None, &Default::default());
+        let config = RunnerConfig::new(None, false, false, None, Some(1234), &Default::default());
         assert_eq!(
             config,
             RunnerConfig {
@@ -487,7 +477,7 @@ mod tests {
                 exit_first: false,
                 fork_targets: vec![],
                 fuzzer_runs: FUZZER_RUNS_DEFAULT,
-                fuzzer_seed: None,
+                fuzzer_seed: 1234,
             }
         );
     }
@@ -509,7 +499,7 @@ mod tests {
                 exit_first: true,
                 fork_targets: vec![],
                 fuzzer_runs: 1234,
-                fuzzer_seed: Some(500),
+                fuzzer_seed: 500,
             }
         );
     }
@@ -531,7 +521,7 @@ mod tests {
                 exit_first: true,
                 fork_targets: vec![],
                 fuzzer_runs: 100,
-                fuzzer_seed: Some(32),
+                fuzzer_seed: 32,
             }
         );
     }
