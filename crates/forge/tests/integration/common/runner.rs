@@ -83,6 +83,7 @@ impl Contract {
 pub struct TestCase {
     dir: TempDir,
     contracts: Vec<Contract>,
+    enviroment_variables: HashMap<String, String>,
 }
 
 impl<'a> TestCase {
@@ -97,7 +98,19 @@ impl<'a> TestCase {
 
         dir.child("src/lib.cairo").touch().unwrap();
 
-        Ok(Self { dir, contracts })
+        Ok(Self {
+            dir,
+            contracts,
+            enviroment_variables: HashMap::new(),
+        })
+    }
+
+    pub fn set_env(&mut self, key: &str, value: &str) {
+        self.enviroment_variables.insert(key.into(), value.into());
+    }
+
+    pub fn env(&self) -> &HashMap<String, String> {
+        &self.enviroment_variables
     }
 
     pub fn path(&self) -> Result<Utf8PathBuf> {
