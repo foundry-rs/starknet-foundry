@@ -1,7 +1,7 @@
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
-use cast::{parse_number};
 use cast::helpers::response_structs::AccountDeleteResponse;
+use cast::parse_number;
 use clap::Args;
 use serde_json::Map;
 use serde_json::Value;
@@ -19,11 +19,7 @@ pub struct Delete {
 }
 
 #[allow(clippy::too_many_arguments)]
-pub async fn delete(
-    name: String,
-    path: &Utf8PathBuf,
-    network_name: String,
-) -> Result<AccountDeleteResponse> {
+pub fn delete(name: &str, path: &Utf8PathBuf, network_name: &str) -> Result<AccountDeleteResponse> {
     let contents = std::fs::read_to_string(path.clone()).context("Couldn't read accounts file")?;
     let items: serde_json::Value = serde_json::from_str(&contents)
         .map_err(|_| anyhow!("Failed to parse accounts file at {path}"))?;
@@ -41,25 +37,21 @@ pub async fn delete(
             .ok_or_else(|| anyhow!("Invalid address"))?,
     )?;
 
-    let mut items: Map<String, Value> = serde_json::from_str(&contents)
-    .expect("failed to read file");
+    let mut items: Map<String, Value> =
+        serde_json::from_str(&contents).expect("failed to read file");
 
     // get to the nested object "nested"
-    let nested = items.get_mut(&network_name)
-    .expect("should exist")
-    .as_object_mut()
-    .expect("should be an object");
+    let nested = items
+        .get_mut(network_name)
+        .expect("should exist")
+        .as_object_mut()
+        .expect("should be an object");
 
     // now remove the child from there
-    nested.remove(&name);
+    nested.remove(name);
 
-    std::fs::write(
-        path.clone(),
-        serde_json::to_string_pretty(&items).unwrap(),
-    )?;
+    std::fs::write(path.clone(), serde_json::to_string_pretty(&items).unwrap())?;
 
     println!("Account successfully removed");
-    Ok(AccountDeleteResponse {
-        address,
-    })
+    Ok(AccountDeleteResponse { address })
 }
