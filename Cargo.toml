@@ -47,6 +47,7 @@ include_dir = "0.7.3"
 indoc = "2"
 itertools = "0.11.0"
 num-traits = "0.2.16"
+once_cell = "1.18.0"
 rayon = "1.7"
 regex = "1.9.3"
 serde = { version = "1.0.163", features = ["derive"] }
@@ -57,5 +58,6 @@ thiserror = "1.0.48"
 ctor = "0.2.4"
 url = "2.4.0"
 tokio = { version = "1.28.2", features = ["full"] }
-num-bigint = "0.4.4"
+num-bigint = { version = "0.4.4", features = ["rand"] }
+walkdir = "2.4.0"
 dotenv = "0.15.0"

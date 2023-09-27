@@ -19,7 +19,7 @@ To properly decode a JSON object, make sure the order of struct attributes align
 ```rust
 use option::OptionTrait;
 use serde::Serde;
-use snforge_std::{ FileTrait, Parser };
+use snforge_std::io::{ FileTrait, FileParser };
 
 #[derive(Serde, Drop)]
 struct MyStruct {

@@ -24,7 +24,7 @@ fn test_storage_access_from_tests() {
             }
         }
 
-        use ___PREFIX_FOR_PACKAGE___test_case::Contract::balance::InternalContractMemberStateTrait;
+        use tests::test_case::Contract::balanceContractMemberStateTrait;
 
         #[test]
         fn test_internal() {

@@ -14,7 +14,7 @@ Parses plain text file content and tries to deserialize it to type `T` that impl
 ```rust
 use option::OptionTrait;
 use serde::Serde;
-use snforge_std::{ FileTrait, FileParser };
+use snforge_std::io::{ FileTrait, FileParser };
 
 #[derive(Serde, Drop)]
 struct MyStruct {

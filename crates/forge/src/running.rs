@@ -176,7 +176,7 @@ fn get_fork_state_reader(
     fork_config: &Option<ForkConfig>,
 ) -> Option<ForkStateReader> {
     match &fork_config {
-        Some(ForkConfig::Params(url, block_id)) => Some(ForkStateReader::new(url, *block_id)),
+        Some(ForkConfig::Params(url, block_id)) => Some(ForkStateReader::new(url, *block_id, None)),
         Some(ForkConfig::Id(name)) => find_params_and_build_fork_state_reader(fork_targets, name),
         _ => None,
     }
@@ -206,5 +206,5 @@ fn find_params_and_build_fork_state_reader(
         return None;
     };
 
-    Some(ForkStateReader::new(&fork?.url, block_id))
+    Some(ForkStateReader::new(&fork?.url, block_id, None))
 }

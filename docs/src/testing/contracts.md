@@ -80,8 +80,8 @@ fn call_and_invoke() {
 
 ```shell
 $ snforge
-Collected 1 test(s) and 1 test file(s) from using_dispatchers package
-Running 1 inline test(s)
+Collected 1 test(s) from using_dispatchers package
+Running 1 test(s) from src/
 [PASS] using_dispatchers::call_and_invoke
 Tests: 1 passed, 0 failed, 0 skipped
 ```
@@ -138,8 +138,8 @@ fn failing() {
 
 ```shell
 $ snforge
-Collected 1 test(s) and 1 test file(s) from package_name package
-Running 1 inline test(s)
+Collected 1 test(s) from package_name package
+Running 1 test(s) from src/
 [FAIL] package_name::failing
 
 Failure data:
@@ -147,6 +147,9 @@ Failure data:
     original value: [75047462256968], converted to a string: [DAYTAH]
 
 Tests: 0 passed, 1 failed, 0 skipped
+
+Failures:
+    package_name::failing
 ```
 
 ### `SafeDispatcher`
@@ -175,8 +178,8 @@ Now the test passes as expected.
 
 ```shell
 $ snforge
-Collected 1 test(s) and 1 test file(s) from package_name package
-Running 1 inline test(s)
+Collected 1 test(s) from package_name package
+Running 1 test(s) from src/
 [PASS] package_name::handling_errors
 Tests: 1 passed, 0 failed, 0 skipped
 ```
