@@ -4,7 +4,7 @@ In many cases, a test needs to verify function behavior for multiple possible va
 While it is possible to come up with these cases on your own, it is often impractical, especially when you want to test
 against a large number of possible arguments.
 
-> ℹ️**Info**
+> ℹ️ **Info**
 > Currently, Forge fuzzer only supports using randomly generated values.
 > This way of fuzzing doesn't support any kind of value generation based on code analysis, test coverage or results of
 > other fuzzer runs.
