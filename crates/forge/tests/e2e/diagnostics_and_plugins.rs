@@ -9,8 +9,8 @@ fn print_error_if_attributes_incorrect() {
 
     snapbox
         .current_dir(&temp)
-        .arg("fork::")
         .assert()
+        .code(1)
         .stderr_matches(indoc!
         {r#"error: Plugin diagnostic: Expected fork config must be of the form `url: <double quote string>, block_id: <snforge_std::BlockId>`.
         --> test_fork.cairo:2:7
