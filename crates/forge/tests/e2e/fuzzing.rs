@@ -138,3 +138,25 @@ fn fuzzing_incorrect_runs() {
         For more information, try '--help'.
         "#});
 }
+
+#[test]
+fn fuzzing_incorrect_function_args() {
+    let temp = setup_package("fuzzing");
+    let snapbox = runner().arg("incorrect_args");
+
+    snapbox
+        .current_dir(&temp)
+        .assert()
+        .code(2)
+        .stdout_matches(indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 2 test(s) from fuzzing package
+        Running 0 test(s) from src/
+        Running 2 test(s) from tests/
+        [PASS] tests::incorrect_args::correct_args (fuzzer runs = 256)
+        [ERROR] Tried to construct CairoType from unsupported type
+        "#});
+}
