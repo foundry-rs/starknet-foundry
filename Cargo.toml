@@ -57,4 +57,5 @@ thiserror = "1.0.48"
 ctor = "0.2.4"
 url = "2.4.0"
 tokio = { version = "1.28.2", features = ["full"] }
-num-bigint = { version = "0.4.4", features = ["rand"] }
+num-bigint = "0.4.4"
+dotenv = "0.15.0"
