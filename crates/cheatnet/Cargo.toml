@@ -30,11 +30,15 @@ url.workspace = true
 tokio.workspace = true
 num-bigint.workspace = true
 conversions = { path = "../conversions" }
-flate2 = "1.0.26"
+fs2 = "0.4.3"
 
 [dev-dependencies]
 ctor.workspace = true
 indoc.workspace = true
+dotenv.workspace = true
+rayon.workspace = true
+glob = "0.3.1"
+
 
 [lib]
 name = "cheatnet"
