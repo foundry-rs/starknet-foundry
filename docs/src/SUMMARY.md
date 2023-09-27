@@ -17,9 +17,11 @@
 * [Running Tests](testing/running-tests.md)
 * [Writing Tests](testing/testing.md)
 * [Testing Smart Contracts](testing/contracts.md)
+* [Fork Testing](testing/fork-testing.md)
 * [Using Cheatcodes](testing/using-cheatcodes.md)
 * [Debugging](testing/debugging.md)
 * [Fuzz Testing](testing/fuzz-testing.md)
+* [Test Collection](testing/test-collection.md)
 
 # Cast Overview
 
@@ -61,6 +63,8 @@
     * [read_json](appendix/forge-library/read_json.md)
     * [parse_txt](appendix/forge-library/parse_txt.md)
     * [parse_json](appendix/forge-library/parse_json.md)
+    * [env](appendix/forge-library/env.md)
+        * [var](appendix/forge-library/env/var.md)
 * [Cast Commands](appendix/cast.md)
     * [common flags](appendix/cast/common.md)
     * [account](appendix/cast/account/account.md)

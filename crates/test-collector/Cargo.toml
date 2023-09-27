@@ -40,7 +40,8 @@ thiserror.workspace = true
 num-bigint.workspace = true
 smol_str = { version = "0.2.0", features = ["serde"] }
 num-integer = "0.1"
-
+conversions = { path = "../conversions" }
+starknet.workspace = true
 
 [lib]
 name = "test_collector"

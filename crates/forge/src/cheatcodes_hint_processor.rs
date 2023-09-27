@@ -3,10 +3,17 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 use crate::scarb::StarknetContractArtifacts;
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
+use blockifier::abi::constants::GET_BLOCK_HASH_GAS_COST;
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
-use blockifier::execution::execution_utils::{felt_to_stark_felt, stark_felt_to_felt};
+use blockifier::execution::execution_utils::{
+    felt_to_stark_felt, stark_felt_from_ptr, stark_felt_to_felt,
+};
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
+use blockifier::execution::syscalls::{
+    GetBlockHashRequest, GetBlockHashResponse, SyscallRequest, SyscallRequestWrapper,
+    SyscallResponse, SyscallResponseWrapper,
+};
 use cairo_felt::Felt252;
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
 use cairo_vm::hint_processor::hint_processor_definition::HintReference;
@@ -34,10 +41,14 @@ use cairo_lang_runner::{
     insert_value_to_cellref,
 };
 
+use crate::cheatcodes_hint_processor::file_operations::string_into_felt;
 use cairo_lang_starknet::contract::starknet_keccak;
 use cairo_lang_utils::bigint::BigIntAsHex;
+use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cheatnet::cheatcodes::spy_events::SpyTarget;
+use starknet_api::block::BlockHash;
+use starknet_api::hash::StarkFelt;
 
 mod file_operations;
 
@@ -57,6 +68,7 @@ pub struct CairoHintProcessor<'a> {
     pub hints: &'a HashMap<String, Hint>,
     pub cheatnet_state: CheatnetState,
     pub run_resources: RunResources,
+    pub environment_variables: &'a HashMap<String, String>,
 }
 
 // crates/blockifier/src/execution/syscalls/hint_processor.rs:472 (ResourceTracker for SyscallHintProcessor)
@@ -116,6 +128,7 @@ impl HintProcessorLogic for CairoHintProcessor<'_> {
                 output_start,
                 output_end,
                 self.contracts,
+                self.environment_variables,
             );
         }
         if let Some(Hint::Starknet(StarknetHint::SystemCall { system })) = maybe_extended_hint {
@@ -157,6 +170,7 @@ impl CairoHintProcessor<'_> {
         output_start: &CellRef,
         output_end: &CellRef,
         contracts: &HashMap<String, StarknetContractArtifacts>,
+        environment_variables: &HashMap<String, String>,
     ) -> Result<(), HintError> {
         // Parse the selector.
         let selector = &selector.value.to_bytes_be().1;
@@ -173,11 +187,24 @@ impl CairoHintProcessor<'_> {
             HintError::CustomHint(Box::from("Failed to read input data".to_string()))
         })?;
 
-        self.match_cheatcode_by_selector(vm, selector, inputs, output_start, output_end, contracts)
-            .map_err(Into::into)
+        self.match_cheatcode_by_selector(
+            vm,
+            selector,
+            inputs,
+            output_start,
+            output_end,
+            contracts,
+            environment_variables,
+        )
+        .map_err(Into::into)
     }
 
-    #[allow(unused, clippy::too_many_lines, clippy::trivially_copy_pass_by_ref)]
+    #[allow(
+        unused,
+        clippy::too_many_lines,
+        clippy::trivially_copy_pass_by_ref,
+        clippy::too_many_arguments
+    )]
     fn match_cheatcode_by_selector(
         &mut self,
         vm: &mut VirtualMachine,
@@ -186,6 +213,7 @@ impl CairoHintProcessor<'_> {
         output_start: &CellRef,
         output_end: &CellRef,
         contracts: &HashMap<String, StarknetContractArtifacts>,
+        environment_variables: &HashMap<String, String>,
     ) -> Result<(), EnhancedHintError> {
         let mut buffer = MemBuffer::new_segment(vm);
         let result_start = buffer.ptr;
@@ -357,6 +385,24 @@ impl CairoHintProcessor<'_> {
                     .write(felt_contract_address)
                     .expect("Failed to insert a precalculated contract address");
 
+                Ok(())
+            }
+            "var" => {
+                let name = inputs[0].clone();
+                let name = as_cairo_short_string(&name).unwrap_or_else(|| {
+                    panic!("Failed to parse var argument = {name} as short string")
+                });
+
+                let env_var = environment_variables
+                    .get(&name)
+                    .with_context(|| format!("Failed to read from env var = {name}"))?;
+
+                let parsed_env_var = string_into_felt(env_var)
+                    .with_context(|| format!("Failed to parse value = {env_var} to felt"))?;
+
+                buffer
+                    .write(parsed_env_var)
+                    .expect("Failed to insert parsed env var");
                 Ok(())
             }
             "get_class_hash" => {
@@ -543,18 +589,38 @@ fn execute_syscall(
             Ok(())
         }
         DeprecatedSyscallSelector::Deploy => Err(HintError::CustomHint(Box::from(
-            "Use snforge_std::ContractClass::deploy instead of deploy_syscall"
-                .to_string(),
+            "Use snforge_std::ContractClass::deploy instead of deploy_syscall".to_string(),
         ))),
         DeprecatedSyscallSelector::ReplaceClass => Err(HintError::CustomHint(Box::from(
-            "Replace class can't be used in tests"
-                .to_string(),
+            "Replace class can't be used in tests".to_string(),
         ))),
-        DeprecatedSyscallSelector::GetBlockHash => Err(HintError::CustomHint(Box::from(
-            "Get block hash is temporarily disabled in tests: https://github.com/foundry-rs/starknet-foundry/issues/686"
-                .to_string(),
-        ))),        _ => blockifier_syscall_handler.execute_hint(vm, exec_scopes, hint_data, constants),
+        DeprecatedSyscallSelector::GetBlockHash => {
+            execute_get_block_hash(vm, &mut system_ptr.clone(), cheatnet_state)?;
+            Ok(())
+        }
+        _ => blockifier_syscall_handler.execute_hint(vm, exec_scopes, hint_data, constants),
     }
+}
+
+fn execute_get_block_hash(
+    vm: &mut VirtualMachine,
+    system_ptr: &mut Relocatable,
+    _cheatnet_state: &CheatnetState,
+) -> Result<(), HintError> {
+    let _selector = stark_felt_from_ptr(vm, system_ptr)?;
+    let SyscallRequestWrapper {
+        gas_counter,
+        request: _,
+    } = SyscallRequestWrapper::<GetBlockHashRequest>::read(vm, system_ptr)?;
+
+    let sc_response = SyscallResponseWrapper::Success {
+        gas_counter: gas_counter - GET_BLOCK_HASH_GAS_COST,
+        response: GetBlockHashResponse {
+            block_hash: BlockHash(StarkFelt::from(0_u32)),
+        },
+    };
+    sc_response.write(vm, system_ptr)?;
+    Ok(())
 }
 
 fn execute_call_contract(

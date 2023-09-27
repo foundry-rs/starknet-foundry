@@ -13,10 +13,10 @@ fn fuzzing() {
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
-
-
-        Collected 11 test(s) and 1 test file(s) from fuzzing package
-        Running 11 inline test(s)
+        
+        
+        Collected 11 test(s) from fuzzing package
+        Running 11 test(s) from src/
         [PASS] fuzzing::tests::adding
         [PASS] fuzzing::tests::fuzzed_argument (fuzzer runs = 256)
         [PASS] fuzzing::tests::fuzzed_both_arguments (fuzzer runs = 256)
@@ -32,6 +32,7 @@ fn fuzzing() {
         [PASS] fuzzing::tests::uint64_arg (fuzzer runs = 256)
         [PASS] fuzzing::tests::uint128_arg (fuzzer runs = 256)
         [PASS] fuzzing::tests::uint256_arg (fuzzer runs = 256)
+        Running 0 test(s) from tests/
         Tests: 10 passed, 1 failed, 0 skipped
         Fuzzer seed: [..]
 
@@ -53,10 +54,10 @@ fn fuzzing_set_runs() {
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
-
-
-        Collected 11 test(s) and 1 test file(s) from fuzzing package
-        Running 11 inline test(s)
+        
+        
+        Collected 11 test(s) from fuzzing package
+        Running 11 test(s) from src/
         [PASS] fuzzing::tests::adding
         [PASS] fuzzing::tests::fuzzed_argument (fuzzer runs = 10)
         [PASS] fuzzing::tests::fuzzed_both_arguments (fuzzer runs = 10)
@@ -72,6 +73,7 @@ fn fuzzing_set_runs() {
         [PASS] fuzzing::tests::uint64_arg (fuzzer runs = 10)
         [PASS] fuzzing::tests::uint128_arg (fuzzer runs = 10)
         [PASS] fuzzing::tests::uint256_arg (fuzzer runs = 10)
+        Running 0 test(s) from tests/
         Tests: 10 passed, 1 failed, 0 skipped
         Fuzzer seed: [..]
 
@@ -95,8 +97,8 @@ fn fuzzing_set_seed() {
         [..]Finished[..]
         
         
-        Collected 11 test(s) and 1 test file(s) from fuzzing package
-        Running 11 inline test(s)
+        Collected 11 test(s) from fuzzing package
+        Running 11 test(s) from src/
         [PASS] fuzzing::tests::adding
         [PASS] fuzzing::tests::fuzzed_argument (fuzzer runs = 256)
         [PASS] fuzzing::tests::fuzzed_both_arguments (fuzzer runs = 256)
@@ -112,8 +114,9 @@ fn fuzzing_set_seed() {
         [PASS] fuzzing::tests::uint64_arg (fuzzer runs = 256)
         [PASS] fuzzing::tests::uint128_arg (fuzzer runs = 256)
         [PASS] fuzzing::tests::uint256_arg (fuzzer runs = 256)
+        Running 0 test(s) from tests/
         Tests: 10 passed, 1 failed, 0 skipped
-        Fuzzer seed: [..]
+        Fuzzer seed: 1234
 
         Failures:
             fuzzing::tests::failing_fuzz

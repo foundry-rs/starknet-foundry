@@ -15,6 +15,7 @@ mod events;
 mod l1_handler;
 mod contract_class;
 mod tx_info;
+mod fork;
 
 fn test_address() -> ContractAddress {
     contract_address_const::<469394814521890341860918960550914>()

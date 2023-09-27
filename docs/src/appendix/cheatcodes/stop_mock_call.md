@@ -8,6 +8,8 @@ Cancels the [`start_mock_call`](./start_mock_call.md) for the function `function
 - `function_name` - name of the function
 
 ```rust
+use snforge_std::stop_mock_call;
+
 #[test]
 fn test_mock_call() {
     // ...

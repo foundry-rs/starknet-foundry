@@ -12,7 +12,7 @@ use cairo_lang_starknet::inline_macros::selector::SelectorMacro;
 use cairo_lang_starknet::plugin::StarkNetPlugin;
 use camino::Utf8PathBuf;
 use forge::scarb::StarknetContractArtifacts;
-use forge::TestFileSummary;
+use forge::{TestCrateSummary, TestCrateType};
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -83,6 +83,7 @@ impl Contract {
 pub struct TestCase {
     dir: TempDir,
     contracts: Vec<Contract>,
+    enviroment_variables: HashMap<String, String>,
 }
 
 impl<'a> TestCase {
@@ -97,7 +98,19 @@ impl<'a> TestCase {
 
         dir.child("src/lib.cairo").touch().unwrap();
 
-        Ok(Self { dir, contracts })
+        Ok(Self {
+            dir,
+            contracts,
+            enviroment_variables: HashMap::new(),
+        })
+    }
+
+    pub fn set_env(&mut self, key: &str, value: &str) {
+        self.enviroment_variables.insert(key.into(), value.into());
+    }
+
+    pub fn env(&self) -> &HashMap<String, String> {
+        &self.enviroment_variables
     }
 
     pub fn path(&self) -> Result<Utf8PathBuf> {
@@ -138,10 +151,10 @@ impl<'a> TestCase {
             .collect()
     }
 
-    pub fn find_test_result(results: &[TestFileSummary]) -> &TestFileSummary {
+    pub fn find_test_result(results: &[TestCrateSummary]) -> &TestCrateSummary {
         results
             .iter()
-            .find(|r| r.relative_path.ends_with(TestCase::TEST_PATH))
+            .find(|r| r.test_crate_type == TestCrateType::Tests)
             .unwrap()
     }
 }
