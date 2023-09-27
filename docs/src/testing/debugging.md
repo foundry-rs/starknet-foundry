@@ -18,7 +18,7 @@ Here's a test with example use of print method:
 ```rust
 // Make sure to import Starknet Foundry PrintTrait
 use array::ArrayTrait;
-use snforge_std::PrintTrait;
+use snforge_std::io::PrintTrait;
 
 #[test]
 fn test_print() {
@@ -45,9 +45,9 @@ Running tests will include prints in the output:
 
 ```shell
 $ snforge
-Collected 1 test(s) and 2 test file(s) from package_name package
-Running 0 inline test(s)
-Running 1 test(s) from tests/test_print.cairo
+Collected 1 test(s) from package_name package
+Running 0 test(s) from src/
+Running 1 test(s) from tests/
 original value: [1794026292945241370577200538206453096157964090], converted to a string: [Print short string:]
 original value: [2019423207056158060135], converted to a string: [my string]
 original value: [6373661751074312243962081276474], converted to a string: [Print number:]
@@ -58,7 +58,7 @@ original value: [2], converted to a string: []
 original value: [3], converted to a string: []
 original value: [379899844591278365831020], converted to a string: [Print bool:]
 original value: [439721161573], converted to a string: [false]
-[PASS] test_print::test_print
+[PASS] tests::test_print::test_print
 Tests: 1 passed, 0 failed, 0 skipped
 ```
 
@@ -71,11 +71,6 @@ just `original value` is printed.
 > - Make sure to remove all of the prints before compiling the final version of your contract. 
 > - This feature is highly experimental and breaking changes are to be expected.
 
-To allow printing in tests you have to add the following line to your `Scarb.toml`:
-```toml
-[[target.starknet-contract]]
-allowed-libfuncs-deny = false
-```
 Here is an example contract:
 
 ```rust
@@ -88,7 +83,7 @@ trait IHelloStarknet<TContractState> {
 #[starknet::contract]
 mod HelloStarknet {
     // Note: PrintTrait has to be imported
-    use snforge_std::PrintTrait;
+    use snforge_std::io::PrintTrait;
 
     #[storage]
     struct Storage {
@@ -140,12 +135,15 @@ help: try compiling with the `experimental` list
     allowed-libfuncs-list.name = "experimental"
 
     Finished release target(s) in 2 seconds
-Collected 2 test(s) and 2 test file(s) from package_name package
-Running 0 inline test(s)
-Running 1 test(s) from tests/test_contract.cairo
+
+
+Collected 2 test(s) from package_name package
+Running 0 test(s) from src/
+Running 1 test(s) from tests/
 original value: [1882356686041040905424961122938381530884043578], converted to a string: [The new balance is:]
 original value: [42], converted to a string: [*]
-[PASS] test_contract::test_increase_balance
+[PASS] tests::test_contract::test_increase_balance
+Tests: 1 passed, 0 failed, 0 skipped
 ```
 
 **Note**: 

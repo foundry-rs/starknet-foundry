@@ -50,6 +50,8 @@ impl IContractImpl of IContract<ContractState> {
 We can use `start_mock_call` in a test to change the data returned by `get_balance` for a given contract:
 
 ```rust
+use snforge_std::start_mock_call;
+
 #[test]
 fn test_mock_call() {
     // ...

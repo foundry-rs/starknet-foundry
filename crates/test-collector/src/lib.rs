@@ -28,17 +28,21 @@ use cairo_lang_starknet::plugin::StarkNetPlugin;
 use cairo_lang_syntax::attribute::structured::{Attribute, AttributeArg, AttributeArgVariant};
 use cairo_lang_syntax::node::ast;
 use cairo_lang_syntax::node::db::SyntaxGroup;
-use cairo_lang_test_runner::plugin::TestPlugin;
+use cairo_lang_syntax::node::helpers::GetIdentifier;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use cairo_lang_utils::OptionHelper;
+use conversions::StarknetConversions;
 use itertools::Itertools;
 use num_traits::ToPrimitive;
-use project::{setup_single_file_project, PHANTOM_PACKAGE_NAME_PREFIX};
+use plugin::TestPlugin;
+use project::setup_single_file_project;
 use smol_str::SmolStr;
+use starknet::core::types::{BlockId, BlockTag};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+mod plugin;
 #[allow(clippy::module_name_repetitions)]
 mod project;
 pub mod sierra_casm_generator;
@@ -94,6 +98,12 @@ pub enum ExpectedTestResult {
     Panics(ExpectedPanicValue),
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum ForkConfig {
+    Id(String),
+    Params(String, BlockId),
+}
+
 /// The configuration for running a single test.
 #[derive(Debug)]
 pub struct SingleTestConfig {
@@ -103,6 +113,8 @@ pub struct SingleTestConfig {
     pub expected_result: ExpectedTestResult,
     /// Should the test be ignored.
     pub ignored: bool,
+    /// The configuration of forked network.
+    pub fork_config: Option<ForkConfig>,
 }
 
 /// Finds the tests in the requested crates.
@@ -135,6 +147,7 @@ pub fn find_all_tests(
 
 /// Extracts the configuration of a tests from attributes, or returns the diagnostics if the
 /// attributes are set illegally.
+#[allow(clippy::too_many_lines)]
 pub fn try_extract_test_config(
     db: &dyn SyntaxGroup,
     attrs: &[Attribute],
@@ -145,6 +158,7 @@ pub fn try_extract_test_config(
         .iter()
         .find(|attr| attr.id.as_str() == "available_gas");
     let should_panic_attr = attrs.iter().find(|attr| attr.id.as_str() == "should_panic");
+    let fork_attr = attrs.iter().find(|attr| attr.id.as_str() == "fork");
     let mut diagnostics = vec![];
     if let Some(attr) = test_attr {
         if !attr.args.is_empty() {
@@ -154,9 +168,14 @@ pub fn try_extract_test_config(
             });
         }
     } else {
-        for attr in [ignore_attr, available_gas_attr, should_panic_attr]
-            .into_iter()
-            .flatten()
+        for attr in [
+            ignore_attr,
+            available_gas_attr,
+            should_panic_attr,
+            fork_attr,
+        ]
+        .into_iter()
+        .flatten()
         {
             diagnostics.push(PluginDiagnostic {
                 stable_ptr: attr.id_stable_ptr.untyped(),
@@ -215,6 +234,23 @@ pub fn try_extract_test_config(
     } else {
         (false, None)
     };
+    let fork_config = if let Some(attr) = fork_attr {
+        if attr.args.is_empty() {
+            None
+        } else {
+            extract_fork_config(db, attr).on_none(|| {
+                diagnostics.push(PluginDiagnostic {
+                    stable_ptr: attr.args_stable_ptr.untyped(),
+                    message: "Expected fork config must be of the form `url: <double quote \
+                                  string>, block_id: <snforge_std::BlockId>`."
+                        .into(),
+                });
+            })
+        }
+    } else {
+        None
+    };
+
     if !diagnostics.is_empty() {
         return Err(diagnostics);
     }
@@ -233,6 +269,7 @@ pub fn try_extract_test_config(
                 ExpectedTestResult::Success
             },
             ignored,
+            fork_config,
         })
     })
 }
@@ -273,6 +310,117 @@ fn extract_panic_values(db: &dyn SyntaxGroup, attr: &Attribute) -> Option<Vec<Fe
         .collect::<Option<Vec<_>>>()
 }
 
+/// Tries to extract the fork configuration.
+fn extract_fork_config(db: &dyn SyntaxGroup, attr: &Attribute) -> Option<ForkConfig> {
+    if attr.args.is_empty() {
+        return None;
+    }
+
+    match &attr.args[0].variant {
+        AttributeArgVariant::Unnamed { value: fork_id, .. } => {
+            extract_fork_config_from_id(fork_id, db)
+        }
+        _ => extract_fork_config_from_args(db, attr),
+    }
+}
+
+fn extract_fork_config_from_id(id: &ast::Expr, db: &dyn SyntaxGroup) -> Option<ForkConfig> {
+    let ast::Expr::String(url_str) = id else {
+        return None;
+    };
+    let url = url_str.string_value(db)?;
+
+    Some(ForkConfig::Id(url))
+}
+
+fn extract_fork_config_from_args(db: &dyn SyntaxGroup, attr: &Attribute) -> Option<ForkConfig> {
+    let [AttributeArg {
+        variant:
+            AttributeArgVariant::Named {
+                name: url_arg_name,
+                value: url,
+                ..
+            },
+        ..
+    }, AttributeArg {
+        variant:
+            AttributeArgVariant::Named {
+                name: block_id_arg_name,
+                value: block_id,
+                ..
+            },
+        ..
+    }] = &attr.args[..]
+    else {
+        return None;
+    };
+
+    if url_arg_name != "url" {
+        return None;
+    }
+    let ast::Expr::String(url_str) = url else {
+        return None;
+    };
+    let url = url_str.string_value(db)?;
+
+    if block_id_arg_name != "block_id" {
+        return None;
+    }
+    let ast::Expr::FunctionCall(block_id) = block_id else {
+        return None;
+    };
+
+    let block_id_type = block_id
+        .path(db)
+        .elements(db)
+        .last()
+        .unwrap()
+        .identifier(db)
+        .to_string();
+
+    let block_id = block_id
+        .arguments(db)
+        .args(db)
+        .elements(db)
+        .into_iter()
+        .map(|arg| match arg.arg_clause(db) {
+            ast::ArgClause::Unnamed(unnamed_arg_clause) => Some(unnamed_arg_clause.value(db)),
+            _ => None,
+        })
+        .map(|arg| match arg {
+            Some(ast::Expr::Literal(value)) => match block_id_type.as_str() {
+                "Number" => Some(BlockId::Number(
+                    u64::try_from(value.numeric_value(db).unwrap()).unwrap(),
+                )),
+                "Hash" => Some(BlockId::Hash(
+                    Felt252::from(value.numeric_value(db).unwrap()).to_field_element(),
+                )),
+                _ => None,
+            },
+            Some(ast::Expr::Path(block_tag)) => {
+                let tag = block_tag
+                    .elements(db)
+                    .last()
+                    .unwrap()
+                    .identifier(db)
+                    .to_string();
+                match tag.as_str() {
+                    "Latest" => Some(BlockId::Tag(BlockTag::Latest)),
+                    "Pending" => Some(BlockId::Tag(BlockTag::Pending)),
+                    _ => None,
+                }
+            }
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+
+    if block_id.len() != 1 || block_id[0].is_none() {
+        return None;
+    }
+
+    Some(ForkConfig::Params(url, block_id[0].unwrap()))
+}
+
 /// Represents a dependency of a Cairo project
 #[derive(Debug, Clone)]
 pub struct LinkedLibrary {
@@ -285,14 +433,15 @@ pub struct TestCase {
     pub name: String,
     pub available_gas: Option<usize>,
     pub expected_result: ExpectedTestResult,
+    pub fork_config: Option<ForkConfig>,
 }
 
 // returns tuple[sierra if no output_path, list[test_name, test_config]]
 pub fn collect_tests(
     input_path: &str,
     output_path: Option<&str>,
-    package_name: &str,
-    linked_libraries: Option<Vec<LinkedLibrary>>,
+    crate_name: &str,
+    linked_libraries: &Vec<LinkedLibrary>,
     builtins: Option<Vec<&str>>,
     corelib_path: PathBuf,
 ) -> Result<(Program, Vec<TestCase>)> {
@@ -308,18 +457,12 @@ pub fn collect_tests(
 
     init_dev_corelib(db, corelib_path);
 
-    let main_crate_id = setup_single_file_project(db, Path::new(&input_path), package_name)
+    let main_crate_id = setup_single_file_project(db, Path::new(&input_path), crate_name)
         .with_context(|| format!("Failed to setup project for path({input_path})"))?;
 
-    if let Some(linked_libraries) = linked_libraries {
-        for linked_library in linked_libraries {
-            setup_project_without_cairo_project_toml(
-                db,
-                &linked_library.path,
-                &linked_library.name,
-            )
+    for linked_library in linked_libraries {
+        setup_project_without_cairo_project_toml(db, &linked_library.path, &linked_library.name)
             .with_context(|| format!("Failed to add linked library ({})", linked_library.name))?;
-        }
     }
 
     if DiagnosticsReporter::stderr()
@@ -366,9 +509,10 @@ pub fn collect_tests(
         .collect_vec()
         .into_iter()
         .map(|(test_name, config)| TestCase {
-            name: test_name.replace(PHANTOM_PACKAGE_NAME_PREFIX, ""),
+            name: test_name,
             available_gas: config.available_gas,
             expected_result: config.expected_result,
+            fork_config: config.fork_config,
         })
         .collect();
 

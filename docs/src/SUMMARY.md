@@ -17,9 +17,11 @@
 * [Running Tests](testing/running-tests.md)
 * [Writing Tests](testing/testing.md)
 * [Testing Smart Contracts](testing/contracts.md)
+* [Fork Testing](testing/fork-testing.md)
 * [Using Cheatcodes](testing/using-cheatcodes.md)
 * [Debugging](testing/debugging.md)
 * [Fuzz Testing](testing/fuzz-testing.md)
+* [Test Collection](testing/test-collection.md)
 
 # Cast Overview
 
