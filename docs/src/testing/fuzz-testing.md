@@ -31,10 +31,11 @@ Then run `snforge` like usual.
 
 ```shell
 $ snforge
-Collected 1 test(s) and 1 test file(s) from package_name package
-Running 1 inline test(s)
-Fuzzer seed: [..]
+Collected 1 test(s) from package_name package
+Running 1 test(s) from src/
 [PASS] package_name::test_sum
+Tests: 1 passed, 0 failed, 0 skipped
+Fuzzer seed: [..]
 ```
 
 > ⚠️ **Warning**
