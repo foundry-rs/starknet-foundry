@@ -7,11 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+## [0.7.1] - 2023-09-13
+
 ### Forge
 
 #### Added
 
 - `var` library function for reading environmental variables
+
+### Fixed
+- Using any concrete `block_id` when using forking mode, would lead to crashes 
 
 ## [0.7.0] - 2023-09-13
 
