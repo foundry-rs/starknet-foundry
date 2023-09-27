@@ -453,11 +453,15 @@ fn run_with_fuzzing(
     case: &TestCase,
     args: &Vec<&ConcreteTypeId>,
 ) -> Result<(TestCaseSummary, u32)> {
-    // TODO change unwrap
-    let args: Vec<&str> = args
+    let args = args
         .iter()
-        .map(|arg| arg.debug_name.as_ref().unwrap().as_str())
-        .collect();
+        .map(|arg| {
+            arg.debug_name
+                .as_ref()
+                .ok_or_else(|| anyhow!("Type does not have a debug name"))
+                .map(smol_str::SmolStr::as_str)
+        })
+        .collect::<Result<Vec<_>>>()?;
 
     let mut fuzzer =
         RandomFuzzer::create(runner_config.fuzzer_seed, runner_config.fuzzer_runs, &args)?;
