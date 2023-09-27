@@ -4,9 +4,16 @@ use std::path::PathBuf;
 
 use crate::scarb::StarknetContractArtifacts;
 use anyhow::{anyhow, Context, Result};
+use blockifier::abi::constants::GET_BLOCK_HASH_GAS_COST;
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
-use blockifier::execution::execution_utils::{felt_to_stark_felt, stark_felt_to_felt};
+use blockifier::execution::execution_utils::{
+    felt_to_stark_felt, stark_felt_from_ptr, stark_felt_to_felt,
+};
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
+use blockifier::execution::syscalls::{
+    GetBlockHashRequest, GetBlockHashResponse, SyscallRequest, SyscallRequestWrapper,
+    SyscallResponse, SyscallResponseWrapper,
+};
 use cairo_felt::Felt252;
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
 use cairo_vm::hint_processor::hint_processor_definition::HintReference;
@@ -37,8 +44,11 @@ use cairo_lang_runner::{
 use crate::cheatcodes_hint_processor::file_operations::string_into_felt;
 use cairo_lang_starknet::contract::starknet_keccak;
 use cairo_lang_utils::bigint::BigIntAsHex;
+use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cheatnet::cheatcodes::spy_events::SpyTarget;
+use starknet_api::block::BlockHash;
+use starknet_api::hash::StarkFelt;
 
 mod file_operations;
 
@@ -579,18 +589,38 @@ fn execute_syscall(
             Ok(())
         }
         DeprecatedSyscallSelector::Deploy => Err(HintError::CustomHint(Box::from(
-            "Use snforge_std::ContractClass::deploy instead of deploy_syscall"
-                .to_string(),
+            "Use snforge_std::ContractClass::deploy instead of deploy_syscall".to_string(),
         ))),
         DeprecatedSyscallSelector::ReplaceClass => Err(HintError::CustomHint(Box::from(
-            "Replace class can't be used in tests"
-                .to_string(),
+            "Replace class can't be used in tests".to_string(),
         ))),
-        DeprecatedSyscallSelector::GetBlockHash => Err(HintError::CustomHint(Box::from(
-            "Get block hash is temporarily disabled in tests: https://github.com/foundry-rs/starknet-foundry/issues/686"
-                .to_string(),
-        ))),        _ => blockifier_syscall_handler.execute_hint(vm, exec_scopes, hint_data, constants),
+        DeprecatedSyscallSelector::GetBlockHash => {
+            execute_get_block_hash(vm, &mut system_ptr.clone(), cheatnet_state)?;
+            Ok(())
+        }
+        _ => blockifier_syscall_handler.execute_hint(vm, exec_scopes, hint_data, constants),
     }
+}
+
+fn execute_get_block_hash(
+    vm: &mut VirtualMachine,
+    system_ptr: &mut Relocatable,
+    _cheatnet_state: &CheatnetState,
+) -> Result<(), HintError> {
+    let _selector = stark_felt_from_ptr(vm, system_ptr)?;
+    let SyscallRequestWrapper {
+        gas_counter,
+        request: _,
+    } = SyscallRequestWrapper::<GetBlockHashRequest>::read(vm, system_ptr)?;
+
+    let sc_response = SyscallResponseWrapper::Success {
+        gas_counter: gas_counter - GET_BLOCK_HASH_GAS_COST,
+        response: GetBlockHashResponse {
+            block_hash: BlockHash(StarkFelt::from(0_u32)),
+        },
+    };
+    sc_response.write(vm, system_ptr)?;
+    Ok(())
 }
 
 fn execute_call_contract(
