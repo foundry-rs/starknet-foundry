@@ -1,7 +1,7 @@
 use crate::cheatcodes::spy_events::Event;
 use crate::state::CheatcodeState;
 use blockifier::execution::call_info::{CallInfo, OrderedEvent};
-use blockifier::execution::execution_utils::stark_felt_to_felt;
+use conversions::StarknetConversions;
 use starknet_api::core::ContractAddress;
 
 pub fn collect_emitted_events_from_spied_contracts(
@@ -50,14 +50,14 @@ pub fn collect_emitted_events_from_spied_contracts(
                 .event
                 .keys
                 .iter()
-                .map(|key| stark_felt_to_felt(key.0))
+                .map(|key| key.0.to_felt252())
                 .collect(),
             data: ordered_event
                 .event
                 .data
                 .0
                 .iter()
-                .map(|data| stark_felt_to_felt(*data))
+                .map(StarknetConversions::to_felt252)
                 .collect(),
         })
         .collect::<Vec<Event>>()
