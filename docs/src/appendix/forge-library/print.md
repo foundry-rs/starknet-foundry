@@ -14,7 +14,7 @@ The trait is implemented for types:
 
 ```rust
 use array::ArrayTrait;
-use snforge_std::PrintTrait;
+use snforge_std::io::PrintTrait;
 use starknet::contract_address_const;
 
 #[test]

@@ -1,14 +1,16 @@
 use std::collections::HashMap;
 use std::fmt::Debug;
+use std::path::PathBuf;
 
-use anyhow::{bail, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use ark_std::iterable::Iterable;
+use assert_fs::fixture::{FileTouch, PathChild, PathCopy};
+use assert_fs::TempDir;
 use cairo_felt::Felt252;
-use camino::{Utf8Path, Utf8PathBuf};
+use camino::Utf8PathBuf;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use serde::Deserialize;
 use test_case_summary::TestCaseSummary;
-use walkdir::WalkDir;
 
 use cairo_lang_runner::SierraCasmRunner;
 use cairo_lang_sierra::ids::ConcreteTypeId;
@@ -19,11 +21,12 @@ use num_bigint::BigUint;
 use num_traits::Zero;
 use once_cell::sync::Lazy;
 use smol_str::SmolStr;
+use walkdir::WalkDir;
 
 use crate::fuzzer::RandomFuzzer;
 use crate::running::run_from_test_case;
 use crate::scarb::{ForgeConfig, ForkTarget, StarknetContractArtifacts};
-pub use crate::test_file_summary::TestFileSummary;
+pub use crate::test_crate_summary::TestCrateSummary;
 use test_collector::{collect_tests, LinkedLibrary, TestCase};
 
 pub mod pretty_printing;
@@ -33,7 +36,7 @@ pub mod test_case_summary;
 mod cheatcodes_hint_processor;
 mod fuzzer;
 mod running;
-mod test_file_summary;
+mod test_crate_summary;
 
 const FUZZER_RUNS_DEFAULT: u32 = 256;
 
@@ -102,88 +105,155 @@ pub enum RunnerStatus {
     DidNotRun,
 }
 
-struct TestsFromFile {
+struct TestsFromCrate {
     sierra_program: Program,
     test_cases: Vec<TestCase>,
-    relative_path: Utf8PathBuf,
+    test_crate_type: TestCrateType,
+}
+
+#[derive(Debug, PartialEq, Clone, Copy)]
+pub enum TestCrateType {
+    /// Tests collected from the package
+    Lib,
+    /// Tests collected from the tests folder
+    Tests,
+}
+
+struct TestCrate {
+    crate_root: Utf8PathBuf,
+    crate_name: String,
+    crate_type: TestCrateType,
 }
 
 fn collect_tests_from_package(
     package_path: &Utf8PathBuf,
     package_name: &str,
     lib_path: &Utf8PathBuf,
-    linked_libraries: &Option<Vec<LinkedLibrary>>,
+    mut linked_libraries: Vec<LinkedLibrary>,
     corelib_path: &Utf8PathBuf,
     runner_config: &RunnerConfig,
-) -> Result<Vec<TestsFromFile>> {
-    let test_files = find_test_files(package_path, lib_path)?;
-    test_files
+) -> Result<Vec<TestsFromCrate>> {
+    let tests_folder_path = package_path.join("tests");
+    let maybe_tests_tmp_dir = if tests_folder_path.try_exists()? {
+        Some(pack_tests_into_one_file(package_path)?)
+    } else {
+        None
+    };
+
+    let mut all_test_roots = vec![TestCrate {
+        crate_root: lib_path.clone(),
+        crate_name: package_name.to_string(),
+        crate_type: TestCrateType::Lib,
+    }];
+
+    if let Some(tests_tmp_dir) = &maybe_tests_tmp_dir {
+        let tests_tmp_dir_path = Utf8PathBuf::from_path_buf(tests_tmp_dir.to_path_buf().clone())
+            .map_err(|_| anyhow!("Failed to convert tests temporary directory to Utf8PathBuf"))?;
+        let tests_lib_path = tests_tmp_dir_path.join("lib.cairo");
+
+        all_test_roots.push(TestCrate {
+            crate_root: tests_lib_path,
+            crate_name: "tests".to_string(),
+            crate_type: TestCrateType::Tests,
+        });
+
+        linked_libraries.push(LinkedLibrary {
+            name: "tests".to_string(),
+            path: PathBuf::from(tests_tmp_dir_path),
+        });
+    }
+
+    let tests_from_files = all_test_roots
         .par_iter()
-        .map(|tf| {
-            collect_tests_from_tree(
-                tf,
-                package_path,
-                package_name,
-                linked_libraries,
-                corelib_path,
-                runner_config,
-            )
+        .map(|test_crate| {
+            collect_tests_from_tree(test_crate, &linked_libraries, corelib_path, runner_config)
         })
-        .collect()
+        .collect();
+
+    try_close_tmp_dir(maybe_tests_tmp_dir)?;
+
+    tests_from_files
 }
 
-fn find_test_files(package_path: &Utf8PathBuf, lib_path: &Utf8PathBuf) -> Result<Vec<Utf8PathBuf>> {
-    let mut test_files: Vec<Utf8PathBuf> = vec![lib_path.clone()];
+fn pack_tests_into_one_file(package_path: &Utf8PathBuf) -> Result<TempDir> {
     let tests_folder_path = package_path.join("tests");
 
-    if tests_folder_path.try_exists()? {
-        for entry in WalkDir::new(tests_folder_path).sort_by_file_name() {
-            let entry = entry
-                .with_context(|| format!("Failed to read directory at path = {package_path}"))?;
-            let path = entry.path();
+    let tmp_dir = TempDir::new()?;
+    tmp_dir
+        .copy_from(&tests_folder_path, &["**/*.cairo"])
+        .context("Unable to copy files to temporary directory")?;
 
-            if path.is_file() && path.extension().unwrap_or_default() == "cairo" {
-                test_files.push(
-                    Utf8Path::from_path(path)
-                        .with_context(|| format!("Failed to convert path = {path:?} to utf-8"))?
-                        .to_path_buf(),
-                );
-            }
+    let tests_lib_path = tmp_dir.child("lib.cairo");
+    if tests_lib_path.try_exists()? {
+        return Ok(tmp_dir);
+    }
+    tests_lib_path.touch()?;
+
+    let mut content = String::new();
+    for entry in WalkDir::new(&tests_folder_path)
+        .max_depth(1)
+        .sort_by_file_name()
+    {
+        let entry = entry
+            .with_context(|| format!("Failed to read directory at path = {tests_folder_path}"))?;
+        let path = entry.path();
+
+        if path.is_file() && path.extension().unwrap_or_default() == "cairo" {
+            let mod_name = path
+                .strip_prefix(&tests_folder_path)
+                .expect("Each test file path should start with package path")
+                .to_str()
+                .context("Unable to convert test file path to string")?
+                .strip_suffix(".cairo")
+                .expect("Each test file path should have .cairo extension");
+
+            content.push_str(&format!("mod {mod_name};\n"));
         }
     }
-    Ok(test_files)
+
+    std::fs::write(tests_lib_path, content).context("Failed to write to tests lib file")?;
+    Ok(tmp_dir)
 }
 
 fn collect_tests_from_tree(
-    test_root: &Utf8PathBuf,
-    package_path: &Utf8PathBuf,
-    package_name: &str,
-    linked_libraries: &Option<Vec<LinkedLibrary>>,
+    test_crate: &TestCrate,
+    linked_libraries: &Vec<LinkedLibrary>,
     corelib_path: &Utf8PathBuf,
     runner_config: &RunnerConfig,
-) -> Result<TestsFromFile> {
-    let (sierra_program, tests_configs) = collect_tests(
-        test_root.as_str(),
+) -> Result<TestsFromCrate> {
+    let (sierra_program, test_cases) = collect_tests(
+        test_crate.crate_root.as_str(),
         None,
-        package_name,
-        linked_libraries.clone(),
+        &test_crate.crate_name,
+        linked_libraries,
         Some(BUILTINS.clone()),
         corelib_path.into(),
     )?;
 
     let test_cases = if let Some(test_name_filter) = &runner_config.test_name_filter {
-        filter_tests_by_name(test_name_filter, runner_config.exact_match, tests_configs)
+        filter_tests_by_name(test_name_filter, runner_config.exact_match, test_cases)
     } else {
-        tests_configs
+        test_cases
     };
 
-    let relative_path = test_root.strip_prefix(package_path)?.to_path_buf();
-
-    Ok(TestsFromFile {
+    Ok(TestsFromCrate {
         sierra_program,
         test_cases,
-        relative_path,
+        test_crate_type: test_crate.crate_type,
     })
+}
+
+fn try_close_tmp_dir(maybe_tmp_dir: Option<TempDir>) -> Result<()> {
+    if let Some(tmp_dir) = maybe_tmp_dir {
+        let path = tmp_dir.path().to_path_buf();
+        tmp_dir.close().with_context(|| {
+            anyhow!(
+            "Failed to close temporary directory = {} with test files. The files might have not been released from filesystem",
+            path.display()
+        )
+        })?;
+    };
+    Ok(())
 }
 
 /// Run the tests in the package at the given path
@@ -203,13 +273,13 @@ pub fn run(
     package_path: &Utf8PathBuf,
     package_name: &str,
     lib_path: &Utf8PathBuf,
-    linked_libraries: &Option<Vec<LinkedLibrary>>,
+    linked_libraries: Vec<LinkedLibrary>,
     runner_config: &RunnerConfig,
     corelib_path: &Utf8PathBuf,
     contracts: &HashMap<String, StarknetContractArtifacts>,
     predeployed_contracts: &Utf8PathBuf,
     fuzzer_seed: u64,
-) -> Result<Vec<TestFileSummary>> {
+) -> Result<Vec<TestCrateSummary>> {
     let tests = collect_tests_from_package(
         package_path,
         package_name,
@@ -221,7 +291,6 @@ pub fn run(
 
     pretty_printing::print_collected_tests_count(
         tests.iter().map(|tests| tests.test_cases.len()).sum(),
-        tests.len(),
         package_name,
     );
 
@@ -230,9 +299,9 @@ pub fn run(
     let mut fuzzing_happened = false;
     let mut summaries = vec![];
 
-    for tests_from_file in tests_iterator.by_ref() {
-        let (summary, was_fuzzed) = run_tests_from_file(
-            tests_from_file,
+    for tests_from_crate in tests_iterator.by_ref() {
+        let (summary, was_fuzzed) = run_tests_from_crate(
+            tests_from_crate,
             runner_config,
             contracts,
             predeployed_contracts,
@@ -258,10 +327,10 @@ pub fn run(
             pretty_printing::print_test_result(test_case_summary, None);
         }
 
-        let file_summary = TestFileSummary {
+        let file_summary = TestCrateSummary {
             test_case_summaries: skipped,
             runner_exit_status: RunnerStatus::DidNotRun,
-            relative_path: tests_from_file.relative_path,
+            test_crate_type: tests_from_file.test_crate_type,
         };
         summaries.push(file_summary);
     }
@@ -274,13 +343,13 @@ pub fn run(
     Ok(summaries)
 }
 
-fn run_tests_from_file(
-    tests: TestsFromFile,
+fn run_tests_from_crate(
+    tests: TestsFromCrate,
     runner_config: &RunnerConfig,
     contracts: &HashMap<String, StarknetContractArtifacts>,
     predeployed_contracts: &Utf8PathBuf,
     fuzzer_seed: u64,
-) -> Result<(TestFileSummary, bool)> {
+) -> Result<(TestCrateSummary, bool)> {
     let runner = SierraCasmRunner::new(
         tests.sierra_program,
         Some(MetadataComputationConfig::default()),
@@ -288,7 +357,7 @@ fn run_tests_from_file(
     )
     .context("Failed setting up runner.")?;
 
-    pretty_printing::print_running_tests(&tests.relative_path, tests.test_cases.len());
+    pretty_printing::print_running_tests(tests.test_crate_type, tests.test_cases.len());
 
     let mut was_fuzzed = false;
     let mut results = vec![];
@@ -336,10 +405,10 @@ fn run_tests_from_file(
                     results.push(skipped_result);
                 }
                 return Ok((
-                    TestFileSummary {
+                    TestCrateSummary {
                         test_case_summaries: results,
                         runner_exit_status: RunnerStatus::TestFailed,
-                        relative_path: tests.relative_path,
+                        test_crate_type: tests.test_crate_type,
                     },
                     was_fuzzed,
                 ));
@@ -347,10 +416,10 @@ fn run_tests_from_file(
         }
     }
     Ok((
-        TestFileSummary {
+        TestCrateSummary {
             test_case_summaries: results,
             runner_exit_status: RunnerStatus::Default,
-            relative_path: tests.relative_path,
+            test_crate_type: tests.test_crate_type,
         },
         was_fuzzed,
     ))
@@ -453,7 +522,6 @@ fn filter_tests_by_name(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use assert_fs::fixture::PathCopy;
     use test_collector::ExpectedTestResult;
 
     #[test]
@@ -518,15 +586,21 @@ mod tests {
 
     #[test]
     fn collecting_tests() {
-        let temp = assert_fs::TempDir::new().unwrap();
+        let temp = TempDir::new().unwrap();
         temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
             .unwrap();
-        let tests_path = Utf8PathBuf::from_path_buf(temp.to_path_buf()).unwrap();
-        let lib_path = tests_path.join("src/lib.cairo");
+        let package_path = Utf8PathBuf::from_path_buf(temp.to_path_buf()).unwrap();
 
-        let tests = find_test_files(&tests_path, &lib_path).unwrap();
+        let tests = pack_tests_into_one_file(&package_path).unwrap();
+        let virtual_lib_path = tests.join("lib.cairo");
+        let virtual_lib_u8_content = std::fs::read(&virtual_lib_path).unwrap();
+        let virtual_lib_content = std::str::from_utf8(&virtual_lib_u8_content).unwrap();
 
-        assert!(!tests.is_empty());
+        assert!(virtual_lib_path.try_exists().unwrap());
+        assert!(virtual_lib_content.contains("mod contract;"));
+        assert!(virtual_lib_content.contains("mod ext_function_test;"));
+        assert!(virtual_lib_content.contains("mod test_simple;"));
+        assert!(virtual_lib_content.contains("mod without_prefix;"));
     }
 
     #[test]
