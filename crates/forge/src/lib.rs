@@ -174,7 +174,7 @@ fn collect_tests_from_package(
     }];
 
     if let Some(tests_tmp_dir) = &maybe_tests_tmp_dir {
-        let tests_tmp_dir_path = Utf8PathBuf::from_path_buf(tests_tmp_dir.to_path_buf().clone())
+        let tests_tmp_dir_path = Utf8PathBuf::from_path_buf(tests_tmp_dir.to_path_buf())
             .map_err(|_| anyhow!("Failed to convert tests temporary directory to Utf8PathBuf"))?;
         let tests_lib_path = tests_tmp_dir_path.join("lib.cairo");
 
@@ -297,6 +297,7 @@ fn try_close_tmp_dir(maybe_tmp_dir: Option<TempDir>) -> Result<()> {
 ///
 #[allow(clippy::implicit_hasher)]
 pub fn run(
+    package_root: &Utf8PathBuf,
     package_path: &Utf8PathBuf,
     package_name: &str,
     lib_path: &Utf8PathBuf,
@@ -325,7 +326,7 @@ pub fn run(
 
     for tests_from_crate in tests_iterator.by_ref() {
         let (summary, was_fuzzed) =
-            run_tests_from_crate(tests_from_crate, runner_config, runner_params)?;
+            run_tests_from_crate(package_root, tests_from_crate, runner_config, runner_params)?;
 
         fuzzing_happened |= was_fuzzed;
 
@@ -363,6 +364,7 @@ pub fn run(
 }
 
 fn run_tests_from_crate(
+    package_root: &Utf8PathBuf,
     tests: TestsFromCrate,
     runner_config: &RunnerConfig,
     runner_params: &RunnerParams,
@@ -386,6 +388,7 @@ fn run_tests_from_crate(
 
         let result = if args.is_empty() {
             let result = run_from_test_case(
+                package_root,
                 &runner,
                 case,
                 runner_config.fork_targets.as_ref(),
@@ -399,8 +402,14 @@ fn run_tests_from_crate(
             result
         } else {
             was_fuzzed = true;
-            let (result, runs) =
-                run_with_fuzzing(runner_config, runner_params, &runner, case, &args)?;
+            let (result, runs) = run_with_fuzzing(
+                package_root,
+                runner_config,
+                runner_params,
+                &runner,
+                case,
+                &args,
+            )?;
             pretty_printing::print_test_result(&result, Some(runs));
 
             result
@@ -437,6 +446,7 @@ fn run_tests_from_crate(
 }
 
 fn run_with_fuzzing(
+    package_root: &Utf8PathBuf,
     runner_config: &RunnerConfig,
     runner_params: &RunnerParams,
     runner: &SierraCasmRunner,
@@ -464,6 +474,7 @@ fn run_with_fuzzing(
         let args = fuzzer.next_felt252_args();
 
         let result = run_from_test_case(
+            package_root,
             runner,
             case,
             runner_config.fork_targets.as_ref(),
