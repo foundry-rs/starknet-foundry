@@ -35,7 +35,6 @@ use conversions::StarknetConversions;
 use itertools::Itertools;
 use num_traits::ToPrimitive;
 use plugin::TestPlugin;
-use project::setup_single_file_project;
 use smol_str::SmolStr;
 use starknet::core::types::{BlockId, BlockTag};
 use std::fs;
@@ -43,8 +42,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 mod plugin;
-#[allow(clippy::module_name_repetitions)]
-mod project;
+
 pub mod sierra_casm_generator;
 
 pub fn build_project_config(
@@ -441,7 +439,7 @@ pub fn collect_tests(
     input_path: &str,
     output_path: Option<&str>,
     crate_name: &str,
-    linked_libraries: &Vec<LinkedLibrary>,
+    linked_libraries: &[LinkedLibrary],
     builtins: Option<Vec<&str>>,
     corelib_path: PathBuf,
 ) -> Result<(Program, Vec<TestCase>)> {
@@ -457,18 +455,23 @@ pub fn collect_tests(
 
     init_dev_corelib(db, corelib_path);
 
-    let main_crate_id = setup_single_file_project(db, Path::new(&input_path), crate_name)
-        .with_context(|| format!("Failed to setup project for path({input_path})"))?;
+    let main_crate_ids =
+        setup_project_without_cairo_project_toml(db, Path::new(&input_path), crate_name)
+            .with_context(|| format!("Failed to setup project for path({input_path})"))?;
+
+    assert_eq!(
+        main_crate_ids.len(),
+        1,
+        "Only main crate id should be in main_crate_ids"
+    );
+    let main_crate_id = main_crate_ids[0];
 
     for linked_library in linked_libraries {
         setup_project_without_cairo_project_toml(db, &linked_library.path, &linked_library.name)
             .with_context(|| format!("Failed to add linked library ({})", linked_library.name))?;
     }
 
-    if DiagnosticsReporter::stderr()
-        .with_extra_crates(&[main_crate_id])
-        .check(db)
-    {
+    if DiagnosticsReporter::stderr().check(db) {
         return Err(anyhow!(
             "Failed to add linked library, for a detailed information, please go through the logs \
              above"
