@@ -215,7 +215,6 @@ impl RandomFuzzer {
 mod tests {
     use super::*;
     use rand::{thread_rng, RngCore};
-    use std::ops::Sub;
 
     impl Default for RunParams {
         fn default() -> Self {
