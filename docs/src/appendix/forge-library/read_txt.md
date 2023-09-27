@@ -8,7 +8,7 @@ Read and parses plain text file content to an array of felts.
   - `path` - Cairo shortstring representing a path to a file relative to a package root.
 
 ```rust
-use snforge_std::{ FileTrait, read_txt };
+use snforge_std::io::{ FileTrait, read_txt };
 
 #[test]
 fn test_read_txt() {

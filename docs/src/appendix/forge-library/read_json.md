@@ -13,7 +13,7 @@ Read and parse json file content to an array of felts.
 > Nested JSON values are sorted by the flattened format keys `(a.b.c)`.
 
 ```rust
-use snforge_std::{ FileTrait, read_json };
+use snforge_std::io::{ FileTrait, read_json };
 
 #[test]
 fn test_read_json() {
