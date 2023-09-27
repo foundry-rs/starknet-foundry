@@ -51,8 +51,11 @@ fn spy_events_simple() {
                 dispatcher.emit_one_event(123);
 
                 spy.assert_emitted(@array![
-                    SpyEventsChecker::Event::FirstEvent(
-                        SpyEventsChecker::FirstEvent { some_data: 123 }
+                    (
+                        contract_address,
+                        SpyEventsChecker::Event::FirstEvent(
+                            SpyEventsChecker::FirstEvent { some_data: 123 }
+                        )
                     )
                 ]);
                 assert(spy.events.len() == 0, 'There should be no events');
@@ -116,8 +119,11 @@ fn assert_emitted_fails() {
                 dispatcher.do_not_emit();
 
                 spy.assert_emitted(@array![
-                    SpyEventsChecker::Event::FirstEvent(
-                        SpyEventsChecker::FirstEvent { some_data: 123 }
+                    (
+                        contract_address,
+                        SpyEventsChecker::Event::FirstEvent(
+                            SpyEventsChecker::FirstEvent { some_data: 123 }
+                        )
                     )
                 ]);
             }
@@ -208,14 +214,23 @@ fn expect_three_events_while_two_emitted() {
                 dispatcher.emit_two_events(some_data, some_more_data);
 
                 spy.assert_emitted(@array![
-                    SpyEventsChecker::Event::FirstEvent(
-                        SpyEventsChecker::FirstEvent { some_data }
+                    (
+                        contract_address,
+                        SpyEventsChecker::Event::FirstEvent(
+                            SpyEventsChecker::FirstEvent { some_data }
+                        )
                     ),
-                    SpyEventsChecker::Event::SecondEvent(
-                        SpyEventsChecker::SecondEvent { some_data, some_more_data }
+                    (
+                        contract_address,
+                        SpyEventsChecker::Event::SecondEvent(
+                            SpyEventsChecker::SecondEvent { some_data, some_more_data }
+                        )
                     ),
-                    SpyEventsChecker::Event::ThirdEvent(
-                        SpyEventsChecker::ThirdEvent { some_data, some_more_data, even_more_data }
+                    (
+                        contract_address,
+                        SpyEventsChecker::Event::ThirdEvent(
+                            SpyEventsChecker::ThirdEvent { some_data, some_more_data, even_more_data }
+                        )
                     )
                 ]);
             }
@@ -307,11 +322,17 @@ fn expect_two_events_while_three_emitted() {
                 dispatcher.emit_three_events(some_data, some_more_data, even_more_data);
 
                 spy.assert_emitted(@array![
-                    SpyEventsChecker::Event::FirstEvent(
-                        SpyEventsChecker::FirstEvent { some_data }
+                    (
+                        contract_address,
+                        SpyEventsChecker::Event::FirstEvent(
+                            SpyEventsChecker::FirstEvent { some_data }
+                        ),
                     ),
-                    SpyEventsChecker::Event::ThirdEvent(
-                        SpyEventsChecker::ThirdEvent { some_data, some_more_data, even_more_data }
+                    (
+                        contract_address,
+                        SpyEventsChecker::Event::ThirdEvent(
+                            SpyEventsChecker::ThirdEvent { some_data, some_more_data, even_more_data }
+                        )
                     )
                 ]);
             }
@@ -374,9 +395,12 @@ fn event_emitted_wrong_data_asserted() {
                 dispatcher.emit_one_event(123);
 
                 spy.assert_emitted(@array![
-                    SpyEventsChecker::Event::FirstEvent(
-                        SpyEventsChecker::FirstEvent { some_data: 124 }
-                    ),
+                    (
+                        contract_address,
+                        SpyEventsChecker::Event::FirstEvent(
+                            SpyEventsChecker::FirstEvent { some_data: 124 }
+                        ),
+                    )
                 ]);
             }
         "#
