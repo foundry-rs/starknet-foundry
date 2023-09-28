@@ -15,8 +15,8 @@ fn fuzzing() {
         [..]Finished[..]
         
         
-        Collected 5 test(s) from fuzzing package
-        Running 5 test(s) from src/
+        Collected 6 test(s) from fuzzing package
+        Running 6 test(s) from src/
         [PASS] fuzzing::tests::adding
         [PASS] fuzzing::tests::fuzzed_argument (fuzzer runs = 256)
         [PASS] fuzzing::tests::fuzzed_both_arguments (fuzzer runs = 256)
@@ -26,8 +26,9 @@ fn fuzzing() {
         Failure data:
             original value: [593979512822486835600413552099926114], converted to a string: [result == a + b]
 
+        [PASS] fuzzing::tests::custom_fuzzer_config (fuzzer runs = 10, fuzzer seed = 100)
         Running 0 test(s) from tests/
-        Tests: 4 passed, 1 failed, 0 skipped
+        Tests: 5 passed, 1 failed, 0 skipped
         Fuzzer seed: [..]
 
         Failures:
@@ -50,8 +51,8 @@ fn fuzzing_set_runs() {
         [..]Finished[..]
         
         
-        Collected 5 test(s) from fuzzing package
-        Running 5 test(s) from src/
+        Collected 6 test(s) from fuzzing package
+        Running 6 test(s) from src/
         [PASS] fuzzing::tests::adding
         [PASS] fuzzing::tests::fuzzed_argument (fuzzer runs = 10)
         [PASS] fuzzing::tests::fuzzed_both_arguments (fuzzer runs = 10)
@@ -61,8 +62,9 @@ fn fuzzing_set_runs() {
         Failure data:
             original value: [593979512822486835600413552099926114], converted to a string: [result == a + b]
 
+        [PASS] fuzzing::tests::custom_fuzzer_config (fuzzer runs = 10, fuzzer seed = 100)
         Running 0 test(s) from tests/
-        Tests: 4 passed, 1 failed, 0 skipped
+        Tests: 5 passed, 1 failed, 0 skipped
         Fuzzer seed: [..]
 
         Failures:
@@ -85,8 +87,8 @@ fn fuzzing_set_seed() {
         [..]Finished[..]
         
         
-        Collected 5 test(s) from fuzzing package
-        Running 5 test(s) from src/
+        Collected 6 test(s) from fuzzing package
+        Running 6 test(s) from src/
         [PASS] fuzzing::tests::adding
         [PASS] fuzzing::tests::fuzzed_argument (fuzzer runs = 256)
         [PASS] fuzzing::tests::fuzzed_both_arguments (fuzzer runs = 256)
@@ -96,8 +98,9 @@ fn fuzzing_set_seed() {
         Failure data:
             original value: [593979512822486835600413552099926114], converted to a string: [result == a + b]
 
+        [PASS] fuzzing::tests::custom_fuzzer_config (fuzzer runs = 10, fuzzer seed = 100)
         Running 0 test(s) from tests/
-        Tests: 4 passed, 1 failed, 0 skipped
+        Tests: 5 passed, 1 failed, 0 skipped
         Fuzzer seed: 1234
 
         Failures:

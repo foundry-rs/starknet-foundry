@@ -41,4 +41,11 @@ mod tests {
         let result = always_five(a, b);
         assert(result == a + b, 'result == a + b');
     }
+
+    #[test]
+    #[fuzzer(runs: 10, seed: 100)]
+    fn custom_fuzzer_config(b: felt252) {
+        let result = adder(2, b);
+        assert(result == 2 + b, '2 + b == 2 + b');
+    }
 }
