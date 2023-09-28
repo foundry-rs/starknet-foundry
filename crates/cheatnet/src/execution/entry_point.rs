@@ -22,6 +22,7 @@ use starknet_api::{
     transaction::{Calldata, TransactionVersion},
 };
 use std::collections::HashSet;
+use blockifier::execution::deprecated_execution::execute_entry_point_call;
 
 // blockifier/src/execution/entry_point.rs:180 (CallEntryPoint::execute)
 #[allow(clippy::module_name_repetitions)]
@@ -67,7 +68,13 @@ pub fn execute_call_entry_point(
 
     // Region: Modified blockifier code
     let result = match contract_class {
-        ContractClass::V0(_) => panic!("Cairo 0 classes are not supported"),
+        ContractClass::V0(deprecated_class) => execute_entry_point_call(
+            entry_point.clone(),
+            deprecated_class,
+            state,
+            resources,
+            context
+        ),
         ContractClass::V1(contract_class) => execute_entry_point_call_cairo1(
             entry_point.clone(),
             &contract_class,

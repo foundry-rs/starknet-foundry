@@ -15,38 +15,27 @@ static CHEATNET_RPC_URL: &str = "http://188.34.188.184:9545/rpc/v0.4";
 fn fork_simple_decorator() {
     let test = test_case!(formatdoc!(
         r#"
-            use result::ResultTrait;
-            use array::ArrayTrait;
-            use option::OptionTrait;
-            use traits::TryInto;
-            use starknet::ContractAddress;
-            use starknet::Felt252TryIntoContractAddress;
             use starknet::contract_address_const;
-            use snforge_std::{{ BlockTag, BlockId }};
+            use debug::PrintTrait;
 
             #[starknet::interface]
-            trait IHelloStarknet<TContractState> {{
-                fn increase_balance(ref self: TContractState, amount: felt252);
-                fn get_balance(self: @TContractState) -> felt252;
+            trait IERC20Camel<TState> {{
+                fn totalSupply(self: @TState) -> u256;
             }}
 
             #[test]
-            #[fork(url: "{}", block_id: BlockId::Number(313388))]
-            fn test_fork_simple() {{
-                let dispatcher = IHelloStarknetDispatcher {{
-                    contract_address: contract_address_const::<3216637956526895219277698311134811322769343974163380838558193911733621219342>()
+            #[fork(url: "https://starknet-mainnet.g.alchemy.com/v2/QIsxx87h6WcoewSQUsGXFFmEMgLU8GfW", block_id: BlockId::Tag(BlockTag::Latest))]
+            fn test_timestamp() {{
+                let address = contract_address_const::<0x053c91253bc9682c04929ca02ed00b3e423f6710d2ee7e0d5ebb06f3ecf368a8>();
+
+                let dispatcher = IERC20CamelDispatcher {{
+                    contract_address: address
                 }};
 
-                let balance = dispatcher.get_balance();
-                assert(balance == 2, 'Balance should be 2');
-
-                dispatcher.increase_balance(100);
-
-                let balance = dispatcher.get_balance();
-                assert(balance == 102, 'Balance should be 102');
+                let total_supply = dispatcher.totalSupply();
+                total_supply.print();
             }}
-        "#,
-        CHEATNET_RPC_URL
+        "#
     ).as_str());
 
     let result = run_test_case(&test);
