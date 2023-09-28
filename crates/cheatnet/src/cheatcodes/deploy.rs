@@ -60,13 +60,13 @@ pub fn deploy_at(
     );
 
     let call_result = call_contract(
+        blockifier_state,
+        cheatnet_state,
         &account_address,
         &get_selector_from_name(EXECUTE_ENTRY_POINT_NAME)
             .unwrap()
             .to_felt252(),
         execute_calldata.as_slice(),
-        cheatnet_state,
-        blockifier_state,
     )
     .unwrap_or_else(|err| panic!("Deploy txn failed: {err}"));
 
