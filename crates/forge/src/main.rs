@@ -98,6 +98,7 @@ fn main_execution() -> Result<bool> {
         .match_many(&scarb_metadata)
         .context("Failed to find any packages matching the specified filter")?;
 
+    let package_root = &scarb_metadata.workspace.root;
     let mut all_failed_tests = vec![];
     for package in &packages {
         let forge_config = config_from_scarb_for_package(&scarb_metadata, &package.id)?;
@@ -144,6 +145,7 @@ fn main_execution() -> Result<bool> {
         );
 
         let tests_file_summaries = run(
+            package_root,
             &package_path,
             &package_name,
             &lib_path,
