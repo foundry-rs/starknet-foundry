@@ -6,7 +6,6 @@ use rand::prelude::StdRng;
 use rand::SeedableRng;
 
 #[derive(Debug, Clone)]
-#[allow(clippy::module_name_repetitions)]
 pub struct Random {
     rng: StdRng,
     run_params: RunParams,
