@@ -30,16 +30,14 @@ fn event_name_hash(name: felt252) -> felt252 {
 
 #[derive(Drop, Clone, Serde)]
 struct Event {
-    from: ContractAddress,
-    name: felt252,
     keys: Array<felt252>,
     data: Array<felt252>
 }
 
-#[derive(Drop, Clone, Serde)]
+#[derive(Drop, Serde)]
 struct EventSpy {
     _id: felt252,
-    events: Array<Event>,
+    events: Array<(ContractAddress, Event)>,
 }
 
 trait EventFetcher {
@@ -49,25 +47,28 @@ trait EventFetcher {
 impl EventFetcherImpl of EventFetcher {
     fn fetch_events(ref self: EventSpy) {
         let mut output = cheatcode::<'fetch_events'>(array![self._id].span());
-        let events = Serde::<Array<Event>>::deserialize(ref output).unwrap();
+        let events = Serde::<Array<(ContractAddress, Event)>>::deserialize(ref output).unwrap();
 
         let mut i = 0;
         loop {
             if i >= events.len() {
                 break;
             }
-            self.events.append(events.at(i).clone());
+            let (from, event) = events.at(i);
+            self.events.append((*from, event.clone()));
             i += 1;
         }
     }
 }
 
-trait EventAssertions {
-    fn assert_emitted(ref self: EventSpy, events: @Array<Event>);
+trait EventAssertions<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>> {
+    fn assert_emitted(ref self: EventSpy, events: @Array<(ContractAddress, T)>);
 }
 
-impl EventAssertionsImpl of EventAssertions {
-    fn assert_emitted(ref self: EventSpy, events: @Array<Event>) {
+impl EventAssertionsImpl<
+    T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>
+> of EventAssertions<T> {
+    fn assert_emitted(ref self: EventSpy, events: @Array<(ContractAddress, T)>) {
         self.fetch_events();
 
         let mut i = 0;
@@ -76,15 +77,13 @@ impl EventAssertionsImpl of EventAssertions {
                 break;
             }
 
-            let emitted = assert_if_emitted(ref self, copy_event(events.at(i)));
+            let (from, event) = events.at(i);
+            let emitted = assert_if_emitted(ref self, from, event);
 
             if !emitted {
                 panic(
                     array![
-                        *events.at(i).name,
-                        'event with matching data and',
-                        'keys was not emitted from',
-                        (*events.at(i).from).into()
+                        'Event with matching data and', 'keys was not emitted from', (*from).into()
                     ]
                 );
             }
@@ -94,18 +93,23 @@ impl EventAssertionsImpl of EventAssertions {
     }
 }
 
-fn assert_if_emitted(ref self: EventSpy, event: Event) -> bool {
+fn assert_if_emitted<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>>(
+    ref self: EventSpy, expected_from: @ContractAddress, expected_event: @T
+) -> bool {
     let emitted_events = @self.events;
+
+    let mut expected_keys = array![];
+    let mut expected_data = array![];
+    expected_event.append_keys_and_data(ref expected_keys, ref expected_data);
+
     let mut j = 0;
     return loop {
         if j >= emitted_events.len() {
             break false;
         }
+        let (from, event) = emitted_events.at(j);
 
-        if event_name_hash(event.name) == *self.events.at(j).name
-            && event.from == *emitted_events.at(j).from
-            && @event.keys == emitted_events.at(j).keys
-            && @event.data == emitted_events.at(j).data {
+        if from == expected_from && event.keys == @expected_keys && event.data == @expected_data {
             remove_event(ref self, j);
             break true;
         }
@@ -124,38 +128,35 @@ fn remove_event(ref self: EventSpy, index: usize) {
         }
 
         if k != index {
-            emitted_events_deleted_event.append(copy_event(emitted_events.at(k)));
+            let (from, event) = emitted_events.at(k);
+            emitted_events_deleted_event.append((*from, event.clone()));
         }
         k += 1;
     };
     self.events = emitted_events_deleted_event;
 }
 
-fn copy_event(event: @Event) -> Event {
-    let from = *event.from;
-    let name = *event.name;
+impl EventTraitImpl of starknet::Event<Event> {
+    fn append_keys_and_data(self: @Event, ref keys: Array<felt252>, ref data: Array<felt252>) {
+        array_extend(ref keys, self.keys);
+        array_extend(ref data, self.data);
+    }
 
-    let mut keys = array![];
+    fn deserialize(ref keys: Span<felt252>, ref data: Span<felt252>) -> Option<Event> {
+        Option::None
+    }
+}
+
+fn array_extend<T, impl TCopy: Copy<T>, impl TDrop: Drop<T>>(
+    ref array: Array<T>, other: @Array<T>
+) {
     let mut i = 0;
     loop {
-        if i >= event.keys.len() {
+        if i == other.len() {
             break;
         }
+        array.append(*other.at(i));
 
-        keys.append(*event.keys.at(i));
         i += 1;
     };
-
-    let mut data = array![];
-    i = 0;
-    loop {
-        if i >= event.data.len() {
-            break;
-        }
-
-        data.append(*event.data.at(i));
-        i += 1;
-    };
-
-    Event { from, name, keys, data }
 }

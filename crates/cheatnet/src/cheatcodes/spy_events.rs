@@ -1,6 +1,7 @@
 use crate::CheatnetState;
 use cairo_felt::Felt252;
 use cairo_vm::hint_processor::hint_processor_utils::felt_to_usize;
+use conversions::StarknetConversions;
 use starknet_api::core::ContractAddress;
 
 /// Represents an emitted event. It is used in the `CheatnetState` to keep track of events
@@ -8,7 +9,6 @@ use starknet_api::core::ContractAddress;
 #[derive(Debug, PartialEq, Clone)]
 pub struct Event {
     pub from: ContractAddress,
-    pub name: Felt252,
     pub keys: Vec<Felt252>,
     pub data: Vec<Felt252>,
 }
@@ -48,8 +48,7 @@ impl CheatnetState {
             .map(|event| {
                 let mut flattened_event = vec![];
                 if spy_on.does_spy(event.from) {
-                    flattened_event.push(Felt252::from_bytes_be(event.from.0.key().bytes()));
-                    flattened_event.push(event.name.clone());
+                    flattened_event.push(event.from.to_felt252());
                     flattened_event.push(Felt252::from(event.keys.len()));
                     flattened_event.append(&mut event.keys.clone());
                     flattened_event.push(Felt252::from(event.data.len()));

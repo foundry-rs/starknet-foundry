@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - `#fuzzer` attribute to specify fuzzer configuration for a single test case. 
+- Spying events interface is updated to enable the use of events defined inside contracts in assertions
 
 ## [0.7.1] - 2023-09-27
 

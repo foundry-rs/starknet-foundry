@@ -13,24 +13,22 @@ fn felt_vec_to_event_vec(felts: &[Felt252]) -> Vec<Event> {
     let mut i = 0;
     while i < felts.len() {
         let from = felts[i].to_contract_address();
-        let name = &felts[i + 1];
-        let keys_length = &felts[i + 2];
-        let keys = &felts[i + 3..i + 3 + felt_to_usize(keys_length).unwrap()];
-        let data_length = &felts[i + 3 + felt_to_usize(keys_length).unwrap()];
-        let data = &felts[i + 3 + felt_to_usize(keys_length).unwrap() + 1
-            ..i + 3
+        let keys_length = &felts[i + 1];
+        let keys = &felts[i + 2..i + 2 + felt_to_usize(keys_length).unwrap()];
+        let data_length = &felts[i + 2 + felt_to_usize(keys_length).unwrap()];
+        let data = &felts[i + 2 + felt_to_usize(keys_length).unwrap() + 1
+            ..i + 2
                 + felt_to_usize(keys_length).unwrap()
                 + 1
                 + felt_to_usize(data_length).unwrap()];
 
         events.push(Event {
             from,
-            name: name.clone(),
             keys: Vec::from(keys),
             data: Vec::from(data),
         });
 
-        i = i + 3 + felt_to_usize(keys_length).unwrap() + 1 + felt_to_usize(data_length).unwrap();
+        i = i + 2 + felt_to_usize(keys_length).unwrap() + 1 + felt_to_usize(data_length).unwrap();
     }
 
     events
@@ -66,8 +64,7 @@ fn spy_events_complex() {
         events[0],
         Event {
             from: contract_address,
-            name: starknet_keccak("FirstEvent".as_ref()).into(),
-            keys: vec![],
+            keys: vec![starknet_keccak("FirstEvent".as_ref()).into()],
             data: vec![Felt252::from(123)]
         },
         "Wrong event"
@@ -121,8 +118,7 @@ fn check_events_order() {
         events[0],
         Event {
             from: spy_events_order_checker_address,
-            name: starknet_keccak("SecondEvent".as_ref()).into(),
-            keys: vec![],
+            keys: vec![starknet_keccak("SecondEvent".as_ref()).into()],
             data: vec![Felt252::from(123)]
         },
         "Wrong first event"
@@ -131,8 +127,7 @@ fn check_events_order() {
         events[1],
         Event {
             from: spy_events_order_checker_address,
-            name: starknet_keccak("ThirdEvent".as_ref()).into(),
-            keys: vec![],
+            keys: vec![starknet_keccak("ThirdEvent".as_ref()).into()],
             data: vec![Felt252::from(345)]
         },
         "Wrong second event"
@@ -141,8 +136,7 @@ fn check_events_order() {
         events[2],
         Event {
             from: spy_events_checker_address,
-            name: starknet_keccak("FirstEvent".as_ref()).into(),
-            keys: vec![],
+            keys: vec![starknet_keccak("FirstEvent".as_ref()).into()],
             data: vec![Felt252::from(234)]
         },
         "Wrong third event"
@@ -177,8 +171,7 @@ fn duplicate_spies_on_one_address() {
         events1[0],
         Event {
             from: contract_address,
-            name: starknet_keccak("FirstEvent".as_ref()).into(),
-            keys: vec![],
+            keys: vec![starknet_keccak("FirstEvent".as_ref()).into()],
             data: vec![Felt252::from(123)]
         },
         "Wrong event"
@@ -213,8 +206,7 @@ fn library_call_emits_event() {
         events[0],
         Event {
             from: contract_address,
-            name: starknet_keccak("FirstEvent".as_ref()).into(),
-            keys: vec![],
+            keys: vec![starknet_keccak("FirstEvent".as_ref()).into()],
             data: vec![Felt252::from(123)]
         },
         "Wrong event"
@@ -246,8 +238,7 @@ fn event_emitted_in_constructor() {
         events[0],
         Event {
             from: contract_address,
-            name: starknet_keccak("FirstEvent".as_ref()).into(),
-            keys: vec![],
+            keys: vec![starknet_keccak("FirstEvent".as_ref()).into()],
             data: vec![Felt252::from(123)]
         },
         "Wrong event"
@@ -288,8 +279,7 @@ fn check_if_there_is_no_interference() {
         events1[0],
         Event {
             from: spy_events_checker_address,
-            name: starknet_keccak("FirstEvent".as_ref()).into(),
-            keys: vec![],
+            keys: vec![starknet_keccak("FirstEvent".as_ref()).into()],
             data: vec![Felt252::from(123)]
         },
         "Wrong event"
@@ -338,8 +328,7 @@ fn test_nested_calls() {
         events[0],
         Event {
             from: spy_events_checker_top_proxy_address,
-            name: starknet_keccak("FirstEvent".as_ref()).into(),
-            keys: vec![],
+            keys: vec![starknet_keccak("FirstEvent".as_ref()).into()],
             data: vec![Felt252::from(123)]
         },
         "Wrong first event"
@@ -348,8 +337,7 @@ fn test_nested_calls() {
         events[1],
         Event {
             from: spy_events_checker_proxy_address,
-            name: starknet_keccak("FirstEvent".as_ref()).into(),
-            keys: vec![],
+            keys: vec![starknet_keccak("FirstEvent".as_ref()).into()],
             data: vec![Felt252::from(123)]
         },
         "Wrong second event"
@@ -358,8 +346,7 @@ fn test_nested_calls() {
         events[2],
         Event {
             from: spy_events_checker_address,
-            name: starknet_keccak("FirstEvent".as_ref()).into(),
-            keys: vec![],
+            keys: vec![starknet_keccak("FirstEvent".as_ref()).into()],
             data: vec![Felt252::from(123)]
         },
         "Wrong third event"
@@ -417,8 +404,7 @@ fn use_multiple_spies() {
         events1[0],
         Event {
             from: spy_events_checker_address,
-            name: starknet_keccak("FirstEvent".as_ref()).into(),
-            keys: vec![],
+            keys: vec![starknet_keccak("FirstEvent".as_ref()).into()],
             data: vec![Felt252::from(123)]
         },
         "Wrong spy_events_checker event"
@@ -427,8 +413,7 @@ fn use_multiple_spies() {
         events2[0],
         Event {
             from: spy_events_checker_proxy_address,
-            name: starknet_keccak("FirstEvent".as_ref()).into(),
-            keys: vec![],
+            keys: vec![starknet_keccak("FirstEvent".as_ref()).into()],
             data: vec![Felt252::from(123)]
         },
         "Wrong spy_events_checker_proxy event"
@@ -437,10 +422,41 @@ fn use_multiple_spies() {
         events3[0],
         Event {
             from: spy_events_checker_top_proxy_address,
-            name: starknet_keccak("FirstEvent".as_ref()).into(),
-            keys: vec![],
+            keys: vec![starknet_keccak("FirstEvent".as_ref()).into()],
             data: vec![Felt252::from(123)]
         },
         "Wrong spy_events_checker_top_proxy event"
+    );
+}
+
+#[test]
+fn test_emitted_by_emit_events_syscall() {
+    let mut state = create_cheatnet_state();
+
+    let contract_address = deploy_contract(&mut state, "SpyEventsChecker", &[]);
+
+    let id = state.spy_events(SpyTarget::All);
+
+    let selector = felt_selector_from_name("emit_event_syscall");
+    call_contract(
+        &contract_address,
+        &selector,
+        &[Felt252::from(123), Felt252::from(456)],
+        &mut state,
+    )
+    .unwrap();
+
+    let (length, serialized_events) = state.fetch_events(&Felt252::from(id));
+    let events = felt_vec_to_event_vec(&serialized_events);
+
+    assert_eq!(length, 1, "There should be one event");
+    assert_eq!(
+        events[0],
+        Event {
+            from: contract_address,
+            keys: vec![Felt252::from(123)],
+            data: vec![Felt252::from(456)]
+        },
+        "Wrong spy_events_checker event"
     );
 }
