@@ -29,7 +29,7 @@ fn fuzzer_different_types() {
         r#"
         #[test]
         fn uint8_arg(a: u8) {
-            if a == 0_u8 {
+            if a <= 5_u8 {
                 assert(2 == 2, '2 == 2');
             } else {
                 let x = a - 5_u8;
@@ -39,7 +39,7 @@ fn fuzzer_different_types() {
 
         #[test]
         fn uint16_arg(a: u16) {
-            if a == 0_u16 {
+            if a <= 5_u16 {
                 assert(2 == 2, '2 == 2');
             } else {
                 let x = a - 5_u16;
@@ -49,7 +49,7 @@ fn fuzzer_different_types() {
 
         #[test]
         fn uint32_arg(a: u32) {
-            if a == 0_u32 {
+            if a <= 5_u32 {
                 assert(2 == 2, '2 == 2');
             } else {
                 let x = a - 5_u32;
@@ -59,7 +59,7 @@ fn fuzzer_different_types() {
 
         #[test]
         fn uint64_arg(a: u64) {
-            if a == 0_u64 {
+            if a <= 5_u64 {
                 assert(2 == 2, '2 == 2');
             } else {
                 let x = a - 5_u64;
@@ -69,7 +69,7 @@ fn fuzzer_different_types() {
 
         #[test]
         fn uint128_arg(a: u128) {
-            if a == 0_u128 {
+            if a <= 5_u128 {
                 assert(2 == 2, '2 == 2');
             } else {
                 let x = a - 5_u128;
@@ -79,7 +79,7 @@ fn fuzzer_different_types() {
 
         #[test]
         fn uint256_arg(a: u256) {
-            if a == 0_u256 {
+            if a <= 5_u256 {
                 assert(2 == 2, '2 == 2');
             } else {
                 let x = a - 5_u256;
