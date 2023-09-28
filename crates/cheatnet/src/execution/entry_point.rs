@@ -1,6 +1,7 @@
 use super::cairo1_execution::execute_entry_point_call_cairo1;
 use crate::state::CheatcodeState;
 use blockifier::execution::call_info::{CallExecution, Retdata};
+use blockifier::execution::deprecated_execution::execute_entry_point_call;
 use blockifier::{
     execution::{
         call_info::CallInfo,
@@ -22,7 +23,6 @@ use starknet_api::{
     transaction::{Calldata, TransactionVersion},
 };
 use std::collections::HashSet;
-use blockifier::execution::deprecated_execution::execute_entry_point_call;
 
 // blockifier/src/execution/entry_point.rs:180 (CallEntryPoint::execute)
 #[allow(clippy::module_name_repetitions)]
@@ -73,7 +73,7 @@ pub fn execute_call_entry_point(
             deprecated_class,
             state,
             resources,
-            context
+            context,
         ),
         ContractClass::V1(contract_class) => execute_entry_point_call_cairo1(
             entry_point.clone(),

@@ -15,7 +15,9 @@ use starknet::core::types::{BlockId, ContractClass as ContractClassStarknet};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider};
 use starknet_api::core::{ClassHash, CompiledClassHash, ContractAddress, Nonce};
-use starknet_api::deprecated_contract_class::{ContractClass as DeprecatedContractClass, ContractClassAbiEntry, EntryPoint, EntryPointType, Program};
+use starknet_api::deprecated_contract_class::{
+    ContractClass as DeprecatedContractClass, ContractClassAbiEntry, EntryPoint, EntryPointType,
+};
 use starknet_api::hash::StarkFelt;
 use starknet_api::state::StorageKey;
 use std::collections::HashMap;
@@ -170,22 +172,20 @@ impl StateReader for ForkStateReader {
                     )
                     .unwrap();
                 let converted_abi: Option<Vec<ContractClassAbiEntry>> =
-                    serde_json::from_str(
-                        &serde_json::to_string(&legacy_class.abi).unwrap(),
-                    )
-                    .unwrap();
+                    serde_json::from_str(&serde_json::to_string(&legacy_class.abi).unwrap())
+                        .unwrap();
 
                 let mut decoder = GzDecoder::new(&legacy_class.program[..]);
                 let mut converted_program = String::new();
                 decoder.read_to_string(&mut converted_program).unwrap();
 
-                let deprecated_contract_class = DeprecatedContractClass {
-                    abi: converted_abi,
-                    program: serde_json::from_str(&converted_program).unwrap(),
-                    entry_points_by_type: converted_entry_points,
-                };
                 Ok(ContractClassBlockifier::V0(
-                    ContractClassV0::try_from(deprecated_contract_class).unwrap(),
+                    ContractClassV0::try_from(DeprecatedContractClass {
+                        abi: converted_abi,
+                        program: serde_json::from_str(&converted_program).unwrap(),
+                        entry_points_by_type: converted_entry_points,
+                    })
+                    .unwrap(),
                 ))
             }
         }
