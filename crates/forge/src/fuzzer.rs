@@ -136,13 +136,12 @@ impl RunParams {
     pub fn from(rng: &mut StdRng, total_runs: u32, arguments: &[&str]) -> Result<Self> {
         assert!(total_runs >= 3);
 
-        let arguments_number = arguments.len();
         let arguments = arguments
             .iter()
             .map(|arg| CairoType::from_name(arg))
             .collect::<Result<Vec<_>>>()?;
 
-        let run_with_min_value_for_argument: Vec<u32> = (0..arguments_number)
+        let run_with_min_value_for_argument: Vec<u32> = (0..arguments.len())
             .map(|_| rng.gen_range(1..=total_runs))
             .collect();
         let run_with_max_value_for_argument: Vec<u32> = run_with_min_value_for_argument
