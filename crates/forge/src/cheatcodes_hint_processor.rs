@@ -149,8 +149,12 @@ impl HintProcessorLogic for CheatcodesSyscallHandler<'_> {
                 &mut self.cheatable_syscall_handler.syscall_handler,
             );
         }
-        self.cheatable_syscall_handler.syscall_handler
-            .execute_hint(vm, exec_scopes, hint_data, constants)
+        self.cheatable_syscall_handler.syscall_handler.execute_hint(
+            vm,
+            exec_scopes,
+            hint_data,
+            constants,
+        )
     }
 
     /// Trait function to store hint in the hint processor by string.

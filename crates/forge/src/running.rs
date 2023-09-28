@@ -12,8 +12,8 @@ use cairo_felt::Felt252;
 use cairo_vm::serde::deserialize_program::HintParams;
 use cairo_vm::types::relocatable::Relocatable;
 use cheatnet::constants::{build_block_context, build_testing_state, build_transaction_context};
-use cheatnet::CheatnetState;
 use cheatnet::execution::syscalls::CheatableSyscallHandler;
+use cheatnet::CheatnetState;
 use itertools::chain;
 
 use cairo_lang_casm::hints::Hint;
@@ -24,7 +24,7 @@ use cairo_lang_runner::{Arg, RunnerError};
 use cairo_vm::vm::runners::cairo_runner::RunResources;
 use camino::Utf8PathBuf;
 use cheatnet::forking::state::ForkStateReader;
-use cheatnet::state::{ExtendedStateReader, CheatcodeState};
+use cheatnet::state::{CheatcodeState, ExtendedStateReader};
 use conversions::StarknetConversions;
 use starknet::core::types::{BlockId, BlockTag};
 use starknet::core::utils::get_selector_from_name;
@@ -68,7 +68,6 @@ fn build_hints_dict<'b>(
     }
     (hints_dict, string_to_hint)
 }
-
 
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn run_from_test_case(
@@ -147,7 +146,7 @@ pub(crate) fn run_from_test_case(
     };
 
     let mut cheatcodes_hint_processor = CheatcodesSyscallHandler {
-        cheatable_syscall_handler: cheatable_syscall_handler,
+        cheatable_syscall_handler,
         contracts,
         cheatnet_state: CheatnetState::new(ExtendedStateReader {
             dict_state_reader: build_testing_state(predeployed_contracts),
