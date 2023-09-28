@@ -157,7 +157,7 @@ The flow is much simpler (thanks to `EventAssertions` trait). Let's go through i
 
 - When contract is called we don't have to call `fetch_events` on the spy (it is done inside
   the `assert_emitted` method).
-- `assert_emitted` takes the array snapshot of tuples `(ContractAddress, events)` we expect were emitted.
+- `assert_emitted` takes the array snapshot of tuples `(ContractAddress, event)` we expect were emitted.
 
 > 📝 **Note**
 > We can pass events defined in the contract and construct them like in the `self.emit` method!
