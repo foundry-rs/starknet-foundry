@@ -458,7 +458,7 @@ fn run_with_fuzzing(
         .map(|arg| {
             arg.debug_name
                 .as_ref()
-                .ok_or_else(|| anyhow!("Type does not have a debug name"))
+                .ok_or_else(|| anyhow!("Type {arg:?} does not have a debug name"))
                 .map(smol_str::SmolStr::as_str)
         })
         .collect::<Result<Vec<_>>>()?;
