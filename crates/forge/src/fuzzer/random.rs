@@ -82,6 +82,11 @@ mod tests {
         })
     }
 
+    /// Verify that generated values are actually different between `next_args()` calls
+    ///
+    /// This test has been added after realizing that due to a logic bug (`rng` was being copied
+    /// between calls), we were generating random values but same for each run. This tests
+    /// will prevent future cases like this.
     #[test]
     fn fuzzer_generates_different_values() {
         let run_params = RunParams {
