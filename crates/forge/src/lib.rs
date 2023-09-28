@@ -21,7 +21,6 @@ use rand::{thread_rng, RngCore};
 use smol_str::SmolStr;
 use walkdir::WalkDir;
 
-use crate::fuzzer::RandomFuzzer;
 use crate::running::run_from_test_case;
 use crate::scarb::{ForgeConfig, ForkTarget, StarknetContractArtifacts};
 pub use crate::test_crate_summary::TestCrateSummary;
@@ -451,7 +450,7 @@ fn run_with_fuzzing(
         .collect::<Result<Vec<_>>>()?;
 
     let mut fuzzer =
-        RandomFuzzer::create(runner_config.fuzzer_seed, runner_config.fuzzer_runs, &args)?;
+        fuzzer::Random::create(runner_config.fuzzer_seed, runner_config.fuzzer_runs, &args)?;
 
     let mut results = vec![];
 
