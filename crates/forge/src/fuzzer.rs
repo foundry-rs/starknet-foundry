@@ -327,6 +327,9 @@ mod tests {
         for _ in 1..=runs_number {
             let values = fuzzer.next_args();
             for (i, value) in values.iter().enumerate() {
+                assert!(
+                    *value >= CairoType::Felt252.min()[0] && *value <= CairoType::Felt252.max()[0]
+                );
                 if *value == CairoType::Felt252.min()[0] {
                     min_used[i] = true;
                 } else if *value == CairoType::Felt252.max()[0] {
