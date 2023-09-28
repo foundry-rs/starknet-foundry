@@ -1,8 +1,8 @@
 use crate::integration::common::corelib::{corelib_path, predeployed_contracts};
 use crate::integration::common::runner::TestCase;
 use camino::Utf8PathBuf;
-use forge::TestCrateSummary;
-use forge::{run, RunnerParams};
+use forge::{run, RunnerConfig, RunnerParams, TestCrateSummary};
+use std::default::Default;
 
 pub fn run_test_case(test: &TestCase) -> Vec<TestCrateSummary> {
     run(
@@ -10,7 +10,14 @@ pub fn run_test_case(test: &TestCase) -> Vec<TestCrateSummary> {
         &String::from("src"),
         &test.path().unwrap().join("src/lib.cairo"),
         test.linked_libraries(),
-        &Default::default(),
+        &RunnerConfig::new(
+            None,
+            false,
+            false,
+            Some(256),
+            Some(12345),
+            &Default::default(),
+        ),
         &RunnerParams::new(
             corelib_path(),
             test.contracts(&corelib_path()).unwrap(),

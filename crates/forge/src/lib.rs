@@ -62,19 +62,6 @@ pub struct RunnerConfig {
     fuzzer_seed: u64,
 }
 
-impl Default for RunnerConfig {
-    fn default() -> Self {
-        Self {
-            test_name_filter: None,
-            exact_match: false,
-            exit_first: false,
-            fork_targets: vec![],
-            fuzzer_runs: 256,
-            fuzzer_seed: 12345,
-        }
-    }
-}
-
 impl RunnerConfig {
     /// Creates a new `RunnerConfig` from given arguments
     ///
