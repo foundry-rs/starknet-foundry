@@ -1,4 +1,4 @@
-use snforge_std::io::{FileTrait, read_txt, FileParser};
+use snforge_std::fs::{FileTrait, read_txt, FileParser};
 use array::ArrayTrait;
 use option::OptionTrait;
 use serde::Serde;
