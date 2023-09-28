@@ -27,7 +27,6 @@ use cheatnet::execution::syscalls::CheatableSyscallHandler;
 use cheatnet::rpc::{call_contract, CallContractOutput};
 use cheatnet::{
     cheatcodes::{CheatcodeError, ContractArtifacts, EnhancedHintError},
-    CheatnetState,
 };
 use conversions::StarknetConversions;
 use num_traits::{One, ToPrimitive};
@@ -69,7 +68,7 @@ pub struct CheatcodesSyscallHandler<'a> {
     pub cheatable_syscall_handler: CheatableSyscallHandler<'a>,
     pub contracts: &'a HashMap<String, StarknetContractArtifacts>,
     pub hints: &'a HashMap<String, Hint>,
-    pub cheatnet_state: CheatnetState,
+    // pub cheatnet_state: CheatnetState,
     pub run_resources: RunResources,
     pub environment_variables: &'a HashMap<String, String>,
 }
@@ -637,6 +636,7 @@ fn execute_get_block_hash(
 fn execute_call_contract(
     mut buffer: MemBuffer,
     cheatnet_state: &mut CheatnetState,
+    blockifier_state: &mut CachedState<ExtendedStateReader>,
 ) -> Result<(), HintError> {
     let _selector = buffer.next_felt252().unwrap();
     let gas_counter = buffer.next_usize().unwrap();
@@ -653,6 +653,7 @@ fn execute_call_contract(
         &entry_point_selector,
         &calldata,
         cheatnet_state,
+        blockifier_state,
     )
     .unwrap_or_else(|err| panic!("Transaction execution error: {err}"));
 

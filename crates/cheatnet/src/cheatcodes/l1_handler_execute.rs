@@ -1,4 +1,4 @@
-use crate::constants::build_block_context;
+use crate::{constants::build_block_context, state::BlockifierState};
 use crate::CheatnetState;
 use anyhow::{anyhow, Context, Result};
 use blockifier::execution::{
@@ -20,7 +20,7 @@ use super::{CheatcodeError, EnhancedHintError};
 use crate::panic_data::try_extract_panic_data;
 use crate::state::ExtendedStateReader;
 
-impl CheatnetState {
+impl BlockifierState {
     pub fn l1_handler_execute(
         &mut self,
         contract_address: ContractAddress,

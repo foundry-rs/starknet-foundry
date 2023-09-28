@@ -1,19 +1,21 @@
+use blockifier::state::cached_state::{CachedState, GlobalContractCache};
 use camino::Utf8PathBuf;
 use cheatnet::constants::build_testing_state;
 use cheatnet::forking::state::ForkStateReader;
-use cheatnet::state::ExtendedStateReader;
-use cheatnet::CheatnetState;
+use cheatnet::state::{ExtendedStateReader, CheatnetState};
 use starknet::core::types::BlockId;
 use starknet::core::types::BlockTag::Latest;
+
 
 #[allow(clippy::module_name_repetitions)]
 pub fn create_cheatnet_state() -> CheatnetState {
     let predeployed_contracts = Utf8PathBuf::from("predeployed-contracts");
 
-    CheatnetState::new(ExtendedStateReader {
+    let cheatnet_state = CheatnetState::new(ExtendedStateReader {
         dict_state_reader: build_testing_state(&predeployed_contracts),
         fork_state_reader: None,
-    })
+    });
+    cheatnet_state
 }
 
 #[allow(clippy::module_name_repetitions)]
@@ -21,10 +23,11 @@ pub fn create_cheatnet_fork_state() -> CheatnetState {
     let predeployed_contracts = Utf8PathBuf::from("predeployed-contracts");
     let node_url = "http://188.34.188.184:9545/rpc/v0.4";
 
-    CheatnetState::new(ExtendedStateReader {
+    let cheatnet_state = CheatnetState::new(ExtendedStateReader {
         dict_state_reader: build_testing_state(&predeployed_contracts),
         fork_state_reader: Some(ForkStateReader::new(node_url, BlockId::Tag(Latest), None)),
-    })
+    });
+    cheatnet_state
 }
 
 #[allow(clippy::module_name_repetitions)]

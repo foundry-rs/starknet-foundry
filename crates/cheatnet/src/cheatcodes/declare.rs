@@ -22,13 +22,13 @@ use starknet_api::hash::{StarkFelt, StarkHash};
 use starknet_api::patricia_key;
 use starknet_api::transaction::TransactionHash;
 
-use crate::state::ExtendedStateReader;
+use crate::state::{ExtendedStateReader, BlockifierState};
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_starknet::contract_class::ContractClass;
 use serde_json::Value;
 use starknet::core::types::FlattenedSierraClass;
 
-impl CheatnetState {
+impl BlockifierState {
     pub fn declare(
         &mut self,
         contract_name: &Felt252,

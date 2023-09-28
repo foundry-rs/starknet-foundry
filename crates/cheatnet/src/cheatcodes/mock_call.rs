@@ -1,6 +1,8 @@
 use crate::CheatnetState;
+use crate::state::ExtendedStateReader;
 use blockifier::abi::abi_utils::selector_from_name;
 use blockifier::execution::execution_utils::felt_to_stark_felt;
+use blockifier::state::cached_state::CachedState;
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use starknet_api::core::ContractAddress;
@@ -19,7 +21,6 @@ impl CheatnetState {
         let function_name = selector_from_name(&as_cairo_short_string(function_name).unwrap());
 
         let contract_mocked_functions = self
-            .cheatcode_state
             .mocked_functions
             .entry(contract_address)
             .or_insert_with(HashMap::new);
@@ -31,7 +32,6 @@ impl CheatnetState {
         let function_name = selector_from_name(&as_cairo_short_string(function_name).unwrap());
 
         if let std::collections::hash_map::Entry::Occupied(mut e) = self
-            .cheatcode_state
             .mocked_functions
             .entry(contract_address)
         {

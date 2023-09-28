@@ -1,6 +1,8 @@
 use crate::cheatcodes;
 use crate::cheatcodes::spy_events::{Event, SpyTarget};
+use crate::constants::build_testing_state;
 use crate::forking::state::ForkStateReader;
+use blockifier::state::cached_state::{CachedState, GlobalContractCache};
 use blockifier::{
     execution::contract_class::ContractClass,
     state::{
@@ -12,6 +14,7 @@ use blockifier::{
 use cairo_felt::Felt252;
 use cheatcodes::spoof::TxInfoMock;
 use starknet_api::core::EntryPointSelector;
+use starknet_api::transaction::ContractAddressSalt;
 use starknet_api::{
     core::{ClassHash, CompiledClassHash, ContractAddress, Nonce},
     hash::StarkFelt,
@@ -24,6 +27,13 @@ pub struct ExtendedStateReader {
     pub dict_state_reader: DictStateReader,
     pub fork_state_reader: Option<ForkStateReader>,
 }
+
+// Equivalent type to CachedState<ExtendedStateReader>
+#[derive(Debug)]
+pub struct BlockifierState {
+    pub blockifier_state: CachedState<ExtendedStateReader>,
+}
+
 
 impl StateReader for ExtendedStateReader {
     fn get_storage_at(
@@ -157,7 +167,7 @@ impl StateReader for DictStateReader {
 }
 
 #[allow(clippy::module_name_repetitions)]
-pub struct CheatcodeState {
+pub struct CheatnetState {
     pub rolled_contracts: HashMap<ContractAddress, Felt252>,
     pub pranked_contracts: HashMap<ContractAddress, ContractAddress>,
     pub warped_contracts: HashMap<ContractAddress, Felt252>,
@@ -165,12 +175,13 @@ pub struct CheatcodeState {
     pub spoofed_contracts: HashMap<ContractAddress, TxInfoMock>,
     pub spies: Vec<SpyTarget>,
     pub detected_events: Vec<Event>,
+    pub deploy_salt_base: u32,
 }
 
-impl CheatcodeState {
+impl CheatnetState {
     #[must_use]
-    pub fn new() -> Self {
-        CheatcodeState {
+    pub fn new(state: ExtendedStateReader) -> Self {
+        CheatnetState {
             rolled_contracts: HashMap::new(),
             pranked_contracts: HashMap::new(),
             warped_contracts: HashMap::new(),
@@ -178,7 +189,17 @@ impl CheatcodeState {
             spoofed_contracts: HashMap::new(),
             spies: vec![],
             detected_events: vec![],
+            deploy_salt_base: 0,
         }
+    }
+
+    pub fn increment_deploy_salt_base(&mut self) {
+        self.deploy_salt_base += 1;
+    }
+
+    #[must_use]
+    pub fn get_salt(&self) -> ContractAddressSalt {
+        ContractAddressSalt(StarkFelt::from(self.deploy_salt_base))
     }
 
     #[must_use]
@@ -210,8 +231,11 @@ impl CheatcodeState {
     }
 }
 
-impl Default for CheatcodeState {
-    fn default() -> Self {
-        Self::new()
-    }
-}
+// impl Default for CheatnetState {
+//     fn default() -> Self {
+//         Self::new(ExtendedStateReader { 
+//             dict_state_reader: build_testing_state(predeployed_contracts), 
+//             fork_state_reader: None 
+//         })
+//     }
+// }

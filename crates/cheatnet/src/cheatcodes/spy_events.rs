@@ -32,17 +32,16 @@ impl SpyTarget {
 
 impl CheatnetState {
     pub fn spy_events(&mut self, spy_on: SpyTarget) -> usize {
-        self.cheatcode_state.spies.push(spy_on);
-        self.cheatcode_state.spies.len() - 1
+        self.spies.push(spy_on);
+        self.spies.len() - 1
     }
 
     pub fn fetch_events(&mut self, id: &Felt252) -> (usize, Vec<Felt252>) {
-        let spy_on = &mut self.cheatcode_state.spies[felt_to_usize(id).unwrap()];
+        let spy_on = &mut self.spies[felt_to_usize(id).unwrap()];
         let mut spied_events_len = 0;
         let mut unconsumed_emitted_events: Vec<Event> = vec![];
 
         let serialized_events: Vec<Vec<Felt252>> = self
-            .cheatcode_state
             .detected_events
             .iter()
             .map(|event| {
@@ -63,7 +62,7 @@ impl CheatnetState {
             })
             .collect();
 
-        self.cheatcode_state.detected_events = unconsumed_emitted_events;
+        self.detected_events = unconsumed_emitted_events;
         (spied_events_len, serialized_events.concat())
     }
 }
