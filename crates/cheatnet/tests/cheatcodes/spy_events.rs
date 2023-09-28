@@ -7,6 +7,7 @@ use cheatnet::cheatcodes::spy_events::{Event, SpyTarget};
 use cheatnet::rpc::call_contract;
 use conversions::StarknetConversions;
 use std::vec;
+use cheatnet::cheatcodes::deploy::deploy;
 
 fn felt_vec_to_event_vec(felts: &[Felt252]) -> Vec<Event> {
     let mut events = vec![];
@@ -38,22 +39,21 @@ fn felt_vec_to_event_vec(felts: &[Felt252]) -> Vec<Event> {
 
 #[test]
 fn spy_events_complex() {
-    let mut state = create_cheatnet_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
 
-    let contract_address = deploy_contract(&mut state, "SpyEventsChecker", &[]);
+    let contract_address = deploy_contract(&mut blockifier_state, &mut cheatnet_state, "SpyEventsChecker", &[]);
 
-    let id = state.spy_events(SpyTarget::All);
+    let id = cheatnet_state.spy_events(SpyTarget::All);
 
     let selector = felt_selector_from_name("emit_one_event");
-    call_contract(
+    call_contract(&mut blockifier_state, &mut cheatnet_state,
         &contract_address,
         &selector,
         &[Felt252::from(123)],
-        &mut state,
     )
     .unwrap();
 
-    let (length, serialized_events) = state.fetch_events(&Felt252::from(id));
+    let (length, serialized_events) = cheatnet_state.fetch_events(&Felt252::from(id));
     let events = felt_vec_to_event_vec(&serialized_events);
 
     assert_eq!(length, 1, "There should be one event");
@@ -74,33 +74,33 @@ fn spy_events_complex() {
     );
 
     let selector = felt_selector_from_name("emit_one_event");
-    call_contract(
+    call_contract(&mut blockifier_state, &mut cheatnet_state,
         &contract_address,
         &selector,
         &[Felt252::from(123)],
-        &mut state,
     )
     .unwrap();
 
-    let (length, _) = state.fetch_events(&Felt252::from(id));
+    let (length, _) = cheatnet_state.fetch_events(&Felt252::from(id));
     assert_eq!(length, 1, "There should be one new event");
 
-    let (length, _) = state.fetch_events(&Felt252::from(id));
+    let (length, _) = cheatnet_state.fetch_events(&Felt252::from(id));
     assert_eq!(length, 0, "There should be no new events");
 }
 
 #[test]
 fn check_events_order() {
-    let mut state = create_cheatnet_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
 
-    let spy_events_checker_address = deploy_contract(&mut state, "SpyEventsChecker", &[]);
+    let spy_events_checker_address = deploy_contract(&mut blockifier_state, &mut cheatnet_state, "SpyEventsChecker", &[]);
     let spy_events_order_checker_address =
-        deploy_contract(&mut state, "SpyEventsOrderChecker", &[]);
+        deploy_contract(&mut blockifier_state, &mut cheatnet_state, "SpyEventsOrderChecker", &[]);
 
-    let id = state.spy_events(SpyTarget::All);
+    let id = cheatnet_state.spy_events(SpyTarget::All);
 
     let selector = felt_selector_from_name("emit_and_call_another");
     call_contract(
+        &mut blockifier_state, &mut cheatnet_state,
         &spy_events_order_checker_address,
         &selector,
         &[
@@ -109,11 +109,10 @@ fn check_events_order() {
             Felt252::from(345),
             spy_events_checker_address.to_felt252(),
         ],
-        &mut state,
     )
     .unwrap();
 
-    let (length, serialized_events) = state.fetch_events(&Felt252::from(id));
+    let (length, serialized_events) = cheatnet_state.fetch_events(&Felt252::from(id));
     let events = felt_vec_to_event_vec(&serialized_events);
 
     assert_eq!(length, 3, "There should be three events");
@@ -151,24 +150,23 @@ fn check_events_order() {
 
 #[test]
 fn duplicate_spies_on_one_address() {
-    let mut state = create_cheatnet_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
 
-    let contract_address = deploy_contract(&mut state, "SpyEventsChecker", &[]);
+    let contract_address = deploy_contract(&mut blockifier_state, &mut cheatnet_state, "SpyEventsChecker", &[]);
 
-    let id1 = state.spy_events(SpyTarget::One(contract_address));
-    let id2 = state.spy_events(SpyTarget::One(contract_address));
+    let id1 = cheatnet_state.spy_events(SpyTarget::One(contract_address));
+    let id2 = cheatnet_state.spy_events(SpyTarget::One(contract_address));
 
     let selector = felt_selector_from_name("emit_one_event");
-    call_contract(
+    call_contract(&mut blockifier_state, &mut cheatnet_state,
         &contract_address,
         &selector,
         &[Felt252::from(123)],
-        &mut state,
     )
     .unwrap();
 
-    let (length1, serialized_events1) = state.fetch_events(&Felt252::from(id1));
-    let (length2, _) = state.fetch_events(&Felt252::from(id2));
+    let (length1, serialized_events1) = cheatnet_state.fetch_events(&Felt252::from(id1));
+    let (length2, _) = cheatnet_state.fetch_events(&Felt252::from(id2));
     let events1 = felt_vec_to_event_vec(&serialized_events1);
 
     assert_eq!(length1, 1, "There should be one event");
@@ -187,25 +185,25 @@ fn duplicate_spies_on_one_address() {
 
 #[test]
 fn library_call_emits_event() {
-    let mut state = create_cheatnet_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
 
     let contracts = get_contracts();
     let contract_name = "SpyEventsChecker".to_owned().to_felt252();
-    let class_hash = state.declare(&contract_name, &contracts).unwrap();
-    let contract_address = deploy_contract(&mut state, "SpyEventsLibCall", &[]);
+    let class_hash = blockifier_state.declare(&contract_name, &contracts).unwrap();
+    let contract_address = deploy_contract(&mut blockifier_state, &mut cheatnet_state, "SpyEventsLibCall", &[]);
 
-    let id = state.spy_events(SpyTarget::All);
+    let id = cheatnet_state.spy_events(SpyTarget::All);
 
     let selector = felt_selector_from_name("call_lib_call");
     call_contract(
+        &mut blockifier_state, &mut cheatnet_state,
         &contract_address,
         &selector,
         &[Felt252::from(123), class_hash.to_felt252()],
-        &mut state,
     )
     .unwrap();
 
-    let (length, serialized_events) = state.fetch_events(&Felt252::from(id));
+    let (length, serialized_events) = cheatnet_state.fetch_events(&Felt252::from(id));
     let events = felt_vec_to_event_vec(&serialized_events);
 
     assert_eq!(length, 1, "There should be one event");
@@ -223,17 +221,17 @@ fn library_call_emits_event() {
 
 #[test]
 fn event_emitted_in_constructor() {
-    let mut state = create_cheatnet_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
 
-    let id = state.spy_events(SpyTarget::All);
+    let id = cheatnet_state.spy_events(SpyTarget::All);
 
     let contract_address = deploy_contract(
-        &mut state,
+        &mut blockifier_state, &mut cheatnet_state,
         "ConstructorSpyEventsChecker",
         &[Felt252::from(123)],
     );
 
-    let (length, serialized_events) = state.fetch_events(&Felt252::from(id));
+    let (length, serialized_events) = cheatnet_state.fetch_events(&Felt252::from(id));
     let events = felt_vec_to_event_vec(&serialized_events);
 
     assert_eq!(length, 1, "There should be one event");
@@ -256,30 +254,30 @@ fn event_emitted_in_constructor() {
 
 #[test]
 fn check_if_there_is_no_interference() {
-    let mut state = create_cheatnet_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
 
     let contracts = get_contracts();
 
     let contract_name = "SpyEventsChecker".to_owned().to_felt252();
-    let class_hash = state.declare(&contract_name, &contracts).unwrap();
+    let class_hash = blockifier_state.declare(&contract_name, &contracts).unwrap();
 
-    let spy_events_checker_address = state.deploy(&class_hash, &[]).unwrap().contract_address;
-    let other_spy_events_checker_address = state.deploy(&class_hash, &[]).unwrap().contract_address;
+    let spy_events_checker_address = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[]).unwrap().contract_address;
+    let other_spy_events_checker_address = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[]).unwrap().contract_address;
 
-    let id1 = state.spy_events(SpyTarget::One(spy_events_checker_address));
-    let id2 = state.spy_events(SpyTarget::One(other_spy_events_checker_address));
+    let id1 = cheatnet_state.spy_events(SpyTarget::One(spy_events_checker_address));
+    let id2 = cheatnet_state.spy_events(SpyTarget::One(other_spy_events_checker_address));
 
     let selector = felt_selector_from_name("emit_one_event");
     call_contract(
+        &mut blockifier_state,&mut cheatnet_state,
         &spy_events_checker_address,
         &selector,
         &[Felt252::from(123)],
-        &mut state,
     )
     .unwrap();
 
-    let (length1, serialized_events1) = state.fetch_events(&Felt252::from(id1));
-    let (length2, _) = state.fetch_events(&Felt252::from(id2));
+    let (length1, serialized_events1) = cheatnet_state.fetch_events(&Felt252::from(id1));
+    let (length2, _) = cheatnet_state.fetch_events(&Felt252::from(id2));
     let events1 = felt_vec_to_event_vec(&serialized_events1);
 
     assert_eq!(length1, 1, "There should be one event");
@@ -298,39 +296,37 @@ fn check_if_there_is_no_interference() {
 
 #[test]
 fn test_nested_calls() {
-    let mut state = create_cheatnet_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
 
-    let spy_events_checker_address = deploy_contract(&mut state, "SpyEventsChecker", &[]);
+    let spy_events_checker_address = deploy_contract(&mut blockifier_state, &mut cheatnet_state, "SpyEventsChecker", &[]);
 
     let contracts = get_contracts();
 
     let contract_name = "SpyEventsCheckerProxy".to_owned().to_felt252();
-    let class_hash = state.declare(&contract_name, &contracts).unwrap();
+    let class_hash = blockifier_state.declare(&contract_name, &contracts).unwrap();
 
-    let spy_events_checker_proxy_address = state
-        .deploy(&class_hash, &[spy_events_checker_address.to_felt252()])
+    let spy_events_checker_proxy_address = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[spy_events_checker_address.to_felt252()])
         .unwrap()
         .contract_address;
-    let spy_events_checker_top_proxy_address = state
-        .deploy(
+    let spy_events_checker_top_proxy_address = deploy(&mut blockifier_state, &mut cheatnet_state,
             &class_hash,
             &[spy_events_checker_proxy_address.to_felt252()],
         )
         .unwrap()
         .contract_address;
 
-    let id = state.spy_events(SpyTarget::All);
+    let id = cheatnet_state.spy_events(SpyTarget::All);
 
     let selector = felt_selector_from_name("emit_one_event");
     call_contract(
+        &mut blockifier_state, &mut cheatnet_state,
         &spy_events_checker_top_proxy_address,
         &selector,
         &[Felt252::from(123)],
-        &mut state,
     )
     .unwrap();
 
-    let (length, serialized_events) = state.fetch_events(&Felt252::from(id));
+    let (length, serialized_events) = cheatnet_state.fetch_events(&Felt252::from(id));
     let events = felt_vec_to_event_vec(&serialized_events);
 
     assert_eq!(length, 3, "There should be three events");
@@ -368,43 +364,41 @@ fn test_nested_calls() {
 
 #[test]
 fn use_multiple_spies() {
-    let mut state = create_cheatnet_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
 
-    let spy_events_checker_address = deploy_contract(&mut state, "SpyEventsChecker", &[]);
+    let spy_events_checker_address = deploy_contract(&mut blockifier_state, &mut cheatnet_state, "SpyEventsChecker", &[]);
 
     let contracts = get_contracts();
 
     let contract_name = "SpyEventsCheckerProxy".to_owned().to_felt252();
-    let class_hash = state.declare(&contract_name, &contracts).unwrap();
+    let class_hash = blockifier_state.declare(&contract_name, &contracts).unwrap();
 
-    let spy_events_checker_proxy_address = state
-        .deploy(&class_hash, &[spy_events_checker_address.to_felt252()])
+    let spy_events_checker_proxy_address = deploy(&mut blockifier_state, &mut cheatnet_state,&class_hash, &[spy_events_checker_address.to_felt252()])
         .unwrap()
         .contract_address;
-    let spy_events_checker_top_proxy_address = state
-        .deploy(
+    let spy_events_checker_top_proxy_address = deploy(&mut blockifier_state, &mut cheatnet_state,
             &class_hash,
             &[spy_events_checker_proxy_address.to_felt252()],
         )
         .unwrap()
         .contract_address;
 
-    let id1 = state.spy_events(SpyTarget::One(spy_events_checker_address));
-    let id2 = state.spy_events(SpyTarget::One(spy_events_checker_proxy_address));
-    let id3 = state.spy_events(SpyTarget::One(spy_events_checker_top_proxy_address));
+    let id1 = cheatnet_state.spy_events(SpyTarget::One(spy_events_checker_address));
+    let id2 = cheatnet_state.spy_events(SpyTarget::One(spy_events_checker_proxy_address));
+    let id3 = cheatnet_state.spy_events(SpyTarget::One(spy_events_checker_top_proxy_address));
 
     let selector = felt_selector_from_name("emit_one_event");
     call_contract(
+        &mut blockifier_state, &mut cheatnet_state,
         &spy_events_checker_top_proxy_address,
         &selector,
         &[Felt252::from(123)],
-        &mut state,
     )
     .unwrap();
 
-    let (length1, serialized_events1) = state.fetch_events(&Felt252::from(id1));
-    let (length2, serialized_events2) = state.fetch_events(&Felt252::from(id2));
-    let (length3, serialized_events3) = state.fetch_events(&Felt252::from(id3));
+    let (length1, serialized_events1) = cheatnet_state.fetch_events(&Felt252::from(id1));
+    let (length2, serialized_events2) = cheatnet_state.fetch_events(&Felt252::from(id2));
+    let (length3, serialized_events3) = cheatnet_state.fetch_events(&Felt252::from(id3));
     let events1 = felt_vec_to_event_vec(&serialized_events1);
     let events2 = felt_vec_to_event_vec(&serialized_events2);
     let events3 = felt_vec_to_event_vec(&serialized_events3);

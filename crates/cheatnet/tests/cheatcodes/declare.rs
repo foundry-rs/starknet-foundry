@@ -6,28 +6,28 @@ use conversions::StarknetConversions;
 
 #[test]
 fn declare_simple() {
-    let mut state = create_cheatnet_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
 
     let contract = "HelloStarknet".to_owned().to_felt252();
     let contracts = get_contracts();
 
-    let class_hash = state.declare(&contract, &contracts).unwrap();
+    let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
 
     assert_ne!(class_hash, Felt252::from(0).to_class_hash());
 }
 
 #[test]
 fn declare_multiple() {
-    let mut state = create_cheatnet_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
 
     let contract = "HelloStarknet".to_owned().to_felt252();
     let contracts = get_contracts();
 
-    let class_hash = state.declare(&contract, &contracts).unwrap();
+    let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
 
     let contract = "ConstructorSimple".to_owned().to_felt252();
 
-    let class_hash2 = state.declare(&contract, &contracts).unwrap();
+    let class_hash2 = blockifier_state.declare(&contract, &contracts).unwrap();
 
     assert_ne!(class_hash, Felt252::from(0).to_class_hash());
     assert_ne!(class_hash2, Felt252::from(0).to_class_hash());
@@ -36,17 +36,17 @@ fn declare_multiple() {
 
 #[test]
 fn declare_same_contract() {
-    let mut state = create_cheatnet_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
 
     let contract = "HelloStarknet".to_owned().to_felt252();
     let contracts = get_contracts();
 
-    let class_hash = state.declare(&contract, &contracts).unwrap();
+    let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
     assert_ne!(class_hash, Felt252::from(0).to_class_hash());
 
     let contract = "HelloStarknet".to_owned().to_felt252();
 
-    let output = state.declare(&contract, &contracts);
+    let output = blockifier_state.declare(&contract, &contracts);
 
     assert!(match output {
         Err(CheatcodeError::Unrecoverable(EnhancedHintError::Anyhow(msg))) => {
@@ -58,12 +58,12 @@ fn declare_same_contract() {
 
 #[test]
 fn declare_non_existant() {
-    let mut state = create_cheatnet_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
 
     let contract = "GoodbyeStarknet".to_owned().to_felt252();
     let contracts = get_contracts();
 
-    let output = state.declare(&contract, &contracts);
+    let output = blockifier_state.declare(&contract, &contracts);
 
     assert!(match output {
         Err(CheatcodeError::Unrecoverable(EnhancedHintError::Anyhow(msg))) => {

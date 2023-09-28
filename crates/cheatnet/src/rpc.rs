@@ -64,11 +64,11 @@ pub enum CallContractOutput {
 // `call` and `invoke` on the transactional layer use such method under the hood.
 #[allow(clippy::too_many_lines)]
 pub fn call_contract(
+    blockifier_state: &mut BlockifierState,
+    cheatnet_state: &mut CheatnetState,
     contract_address: &ContractAddress,
     entry_point_selector: &Felt252,
     calldata: &[Felt252],
-    cheatnet_state: &mut CheatnetState,
-    blockifier_state: &mut BlockifierState,
 ) -> Result<CallContractOutput> {
     let entry_point_selector =
         EntryPointSelector(StarkHash::new(entry_point_selector.to_be_bytes())?);
