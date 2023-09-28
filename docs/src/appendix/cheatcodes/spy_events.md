@@ -107,7 +107,8 @@ Let's go through important parts of the provided code:
   From this moment all events emitted by the `SpyEventsChecker` contract will be spied.
 - We have to call `fetch_events` method on the created spy to load emitted events into it.
 - When events are fetched they are loaded into the `events` property of our spy and we can assert them.
-- If the event is emitted by calling `self.emit` method, its hashed name is saved under the `keys.at(0)`  
+- If the event is emitted by calling `self.emit` method, its hashed name is saved under the `keys.at(0)`
+(this way Starknet handles events)
 
 > 📝 **Note**
 > To assert the `name` property we have to hash a shortstring with the `event_name_hash` cheatcode.
