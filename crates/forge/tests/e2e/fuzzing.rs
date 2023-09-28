@@ -138,10 +138,11 @@ fn fuzzing_incorrect_function_args() {
         [..]Finished[..]
         
         
-        Collected 2 test(s) from fuzzing package
+        Collected 3 test(s) from fuzzing package
         Running 0 test(s) from src/
-        Running 2 test(s) from tests/
+        Running 3 test(s) from tests/
         [PASS] tests::incorrect_args::correct_args (fuzzer runs = 256)
+        [PASS] tests::incorrect_args::incorrect_attribute_ignored (fuzzer runs = 256)
         [ERROR] Fuzzer only supports felt252 arguments, and test tests::incorrect_args::incorrect_args defines arguments that are not felt252 type
         "#});
 }

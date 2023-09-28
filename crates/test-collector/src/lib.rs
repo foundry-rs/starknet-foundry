@@ -370,10 +370,10 @@ fn extract_fuzzer_config(db: &dyn SyntaxGroup, attr: &Attribute) -> Option<Fuzze
     let fuzzer_runs = extract_numeric_value(db, fuzzer_runs)?.to_u32()?;
     let fuzzer_seed = extract_numeric_value(db, fuzzer_seed)?.to_u64()?;
 
-    return Some(FuzzerConfig {
+    Some(FuzzerConfig {
         fuzzer_runs,
         fuzzer_seed,
-    });
+    })
 }
 
 fn extract_numeric_value(db: &dyn SyntaxGroup, expr: &ast::Expr) -> Option<BigInt> {
