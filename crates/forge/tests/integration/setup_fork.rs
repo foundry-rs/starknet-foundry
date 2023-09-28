@@ -3,9 +3,11 @@ use crate::integration::common::running_tests::run_test_case;
 use crate::{assert_passed, test_case};
 use camino::Utf8PathBuf;
 use forge::scarb::{ForgeConfig, ForkTarget};
-use forge::{run, RunnerConfig};
+use forge::{run, RunnerConfig, RunnerParams};
 use indoc::formatdoc;
 use std::collections::HashMap;
+use std::path::PathBuf;
+use tempfile::tempdir;
 
 static CHEATNET_RPC_URL: &str = "http://188.34.188.184:9545/rpc/v0.4";
 
@@ -29,7 +31,7 @@ fn fork_simple_decorator() {
             }}
 
             #[test]
-            #[fork(url: "{}", block_id: BlockId::Tag(BlockTag::Latest))]
+            #[fork(url: "{}", block_id: BlockId::Number(313388))]
             fn test_fork_simple() {{
                 let dispatcher = IHelloStarknetDispatcher {{
                     contract_address: contract_address_const::<3216637956526895219277698311134811322769343974163380838558193911733621219342>()
@@ -89,6 +91,7 @@ fn fork_aliased_decorator() {
     ).as_str());
 
     let result = run(
+        &Utf8PathBuf::from_path_buf(PathBuf::from(tempdir().unwrap().path())).unwrap(),
         &test.path().unwrap(),
         &String::from("src"),
         &test.path().unwrap().join("src/lib.cairo"),
@@ -110,10 +113,12 @@ fn fork_aliased_decorator() {
                 fuzzer_seed: Some(500),
             },
         ),
-        &corelib_path(),
-        &test.contracts(&corelib_path()).unwrap(),
-        &Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-        500,
+        &RunnerParams::new(
+            corelib_path(),
+            test.contracts(&corelib_path()).unwrap(),
+            Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
+            Default::default(),
+        ),
     )
     .unwrap();
 

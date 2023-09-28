@@ -4,10 +4,11 @@ use clap::Parser;
 use include_dir::{include_dir, Dir};
 use scarb_metadata::{MetadataCommand, PackageMetadata};
 use scarb_ui::args::PackagesFilter;
+use std::env;
 use std::path::PathBuf;
 use tempfile::{tempdir, TempDir};
 
-use forge::{pretty_printing, RunnerConfig};
+use forge::{pretty_printing, RunnerConfig, RunnerParams};
 use forge::{run, TestCrateSummary};
 
 use forge::scarb::{
@@ -16,7 +17,6 @@ use forge::scarb::{
     target_name_for_package, try_get_starknet_artifacts_path,
 };
 use forge::test_case_summary::TestCaseSummary;
-use rand::{thread_rng, RngCore};
 use std::process::{Command, Stdio};
 
 mod init;
@@ -98,13 +98,12 @@ fn main_execution() -> Result<bool> {
         .match_many(&scarb_metadata)
         .context("Failed to find any packages matching the specified filter")?;
 
-    let fuzzer_seed = args.fuzzer_seed.unwrap_or_else(|| thread_rng().next_u64());
-
+    let package_root = &scarb_metadata.workspace.root;
     let mut all_failed_tests = vec![];
     for package in &packages {
         let forge_config = config_from_scarb_for_package(&scarb_metadata, &package.id)?;
         let (package_path, lib_path) = paths_for_package(&scarb_metadata, &package.id)?;
-        std::env::set_current_dir(package_path.clone())?;
+        env::set_current_dir(package_path.clone())?;
 
         // TODO(#671)
         let target_dir = target_dir_for_package(&scarb_metadata.workspace.root)?;
@@ -138,16 +137,21 @@ fn main_execution() -> Result<bool> {
             .transpose()?
             .unwrap_or_default();
 
+        let runner_params = RunnerParams::new(
+            corelib_path,
+            contracts,
+            predeployed_contracts.clone(),
+            env::vars().collect(),
+        );
+
         let tests_file_summaries = run(
+            package_root,
             &package_path,
             &package_name,
             &lib_path,
             dependencies,
             &runner_config,
-            &corelib_path,
-            &contracts,
-            &predeployed_contracts,
-            fuzzer_seed,
+            &runner_params,
         )?;
 
         let mut failed_tests = extract_failed_tests(tests_file_summaries);

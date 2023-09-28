@@ -68,13 +68,16 @@ fn build_hints_dict<'b>(
     (hints_dict, string_to_hint)
 }
 
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn run_from_test_case(
+    package_root: &Utf8PathBuf,
     runner: &SierraCasmRunner,
     case: &TestCase,
     fork_targets: &[ForkTarget],
     contracts: &HashMap<String, StarknetContractArtifacts>,
     predeployed_contracts: &Utf8PathBuf,
     args: Vec<Felt252>,
+    environment_variables: &HashMap<String, String>,
 ) -> Result<TestCaseSummary> {
     let available_gas = if let Some(available_gas) = &case.available_gas {
         Some(*available_gas)
@@ -141,10 +144,11 @@ pub(crate) fn run_from_test_case(
         contracts,
         cheatnet_state: CheatnetState::new(ExtendedStateReader {
             dict_state_reader: build_testing_state(predeployed_contracts),
-            fork_state_reader: get_fork_state_reader(fork_targets, &case.fork_config),
+            fork_state_reader: get_fork_state_reader(package_root, fork_targets, &case.fork_config),
         }),
         hints: &string_to_hint,
         run_resources: RunResources::default(),
+        environment_variables,
     };
 
     match runner.run_function(
@@ -172,17 +176,25 @@ pub(crate) fn run_from_test_case(
 }
 
 fn get_fork_state_reader(
+    package_root: &Utf8PathBuf,
     fork_targets: &[ForkTarget],
     fork_config: &Option<ForkConfig>,
 ) -> Option<ForkStateReader> {
     match &fork_config {
-        Some(ForkConfig::Params(url, block_id)) => Some(ForkStateReader::new(url, *block_id, None)),
-        Some(ForkConfig::Id(name)) => find_params_and_build_fork_state_reader(fork_targets, name),
+        Some(ForkConfig::Params(url, block_id)) => Some(ForkStateReader::new(
+            url,
+            *block_id,
+            Some(package_root.join(".snfoundry_cache").as_ref()),
+        )),
+        Some(ForkConfig::Id(name)) => {
+            find_params_and_build_fork_state_reader(package_root, fork_targets, name)
+        }
         _ => None,
     }
 }
 
 fn find_params_and_build_fork_state_reader(
+    package_root: &Utf8PathBuf,
     fork_targets: &[ForkTarget],
     fork_alias: &str,
 ) -> Option<ForkStateReader> {
@@ -206,5 +218,9 @@ fn find_params_and_build_fork_state_reader(
         return None;
     };
 
-    Some(ForkStateReader::new(&fork?.url, block_id, None))
+    Some(ForkStateReader::new(
+        &fork?.url,
+        block_id,
+        Some(package_root.join(".snfoundry_cache").as_ref()),
+    ))
 }

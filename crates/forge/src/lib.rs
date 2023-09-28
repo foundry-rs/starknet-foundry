@@ -20,6 +20,7 @@ use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use num_bigint::BigUint;
 use num_traits::Zero;
 use once_cell::sync::Lazy;
+use rand::{thread_rng, RngCore};
 use smol_str::SmolStr;
 use walkdir::WalkDir;
 
@@ -61,7 +62,7 @@ pub struct RunnerConfig {
     exit_first: bool,
     fork_targets: Vec<ForkTarget>,
     fuzzer_runs: u32,
-    fuzzer_seed: Option<u64>,
+    fuzzer_seed: u64,
 }
 
 impl RunnerConfig {
@@ -89,7 +90,9 @@ impl RunnerConfig {
             fuzzer_runs: fuzzer_runs
                 .or(forge_config_from_scarb.fuzzer_runs)
                 .unwrap_or(FUZZER_RUNS_DEFAULT),
-            fuzzer_seed: fuzzer_seed.or(forge_config_from_scarb.fuzzer_seed),
+            fuzzer_seed: fuzzer_seed
+                .or(forge_config_from_scarb.fuzzer_seed)
+                .unwrap_or_else(|| thread_rng().next_u64()),
         }
     }
 }
@@ -125,6 +128,30 @@ struct TestCrate {
     crate_type: TestCrateType,
 }
 
+pub struct RunnerParams {
+    corelib_path: Utf8PathBuf,
+    contracts: HashMap<String, StarknetContractArtifacts>,
+    predeployed_contracts: Utf8PathBuf,
+    environment_variables: HashMap<String, String>,
+}
+
+impl RunnerParams {
+    #[must_use]
+    pub fn new(
+        corelib_path: Utf8PathBuf,
+        contracts: HashMap<String, StarknetContractArtifacts>,
+        predeployed_contracts: Utf8PathBuf,
+        environment_variables: HashMap<String, String>,
+    ) -> Self {
+        Self {
+            corelib_path,
+            contracts,
+            predeployed_contracts,
+            environment_variables,
+        }
+    }
+}
+
 fn collect_tests_from_package(
     package_path: &Utf8PathBuf,
     package_name: &str,
@@ -147,7 +174,7 @@ fn collect_tests_from_package(
     }];
 
     if let Some(tests_tmp_dir) = &maybe_tests_tmp_dir {
-        let tests_tmp_dir_path = Utf8PathBuf::from_path_buf(tests_tmp_dir.to_path_buf().clone())
+        let tests_tmp_dir_path = Utf8PathBuf::from_path_buf(tests_tmp_dir.to_path_buf())
             .map_err(|_| anyhow!("Failed to convert tests temporary directory to Utf8PathBuf"))?;
         let tests_lib_path = tests_tmp_dir_path.join("lib.cairo");
 
@@ -268,24 +295,22 @@ fn try_close_tmp_dir(maybe_tmp_dir: Option<TempDir>) -> Result<()> {
 /// * `contracts` - Map with names of contract used in tests and corresponding sierra and casm artifacts
 /// * `predeployed_contracts` - Absolute path to predeployed contracts used by starknet state e.g. account contracts
 ///
-#[allow(clippy::implicit_hasher, clippy::too_many_arguments)]
+#[allow(clippy::implicit_hasher)]
 pub fn run(
+    package_root: &Utf8PathBuf,
     package_path: &Utf8PathBuf,
     package_name: &str,
     lib_path: &Utf8PathBuf,
     linked_libraries: Vec<LinkedLibrary>,
     runner_config: &RunnerConfig,
-    corelib_path: &Utf8PathBuf,
-    contracts: &HashMap<String, StarknetContractArtifacts>,
-    predeployed_contracts: &Utf8PathBuf,
-    fuzzer_seed: u64,
+    runner_params: &RunnerParams,
 ) -> Result<Vec<TestCrateSummary>> {
     let tests = collect_tests_from_package(
         package_path,
         package_name,
         lib_path,
         linked_libraries,
-        corelib_path,
+        &runner_params.corelib_path,
         runner_config,
     )?;
 
@@ -300,13 +325,8 @@ pub fn run(
     let mut summaries = vec![];
 
     for tests_from_crate in tests_iterator.by_ref() {
-        let (summary, was_fuzzed) = run_tests_from_crate(
-            tests_from_crate,
-            runner_config,
-            contracts,
-            predeployed_contracts,
-            fuzzer_seed,
-        )?;
+        let (summary, was_fuzzed) =
+            run_tests_from_crate(package_root, tests_from_crate, runner_config, runner_params)?;
 
         fuzzing_happened |= was_fuzzed;
 
@@ -337,18 +357,17 @@ pub fn run(
 
     pretty_printing::print_test_summary(&summaries);
     if fuzzing_happened {
-        pretty_printing::print_test_seed(fuzzer_seed);
+        pretty_printing::print_test_seed(runner_config.fuzzer_seed);
     }
 
     Ok(summaries)
 }
 
 fn run_tests_from_crate(
+    package_root: &Utf8PathBuf,
     tests: TestsFromCrate,
     runner_config: &RunnerConfig,
-    contracts: &HashMap<String, StarknetContractArtifacts>,
-    predeployed_contracts: &Utf8PathBuf,
-    fuzzer_seed: u64,
+    runner_params: &RunnerParams,
 ) -> Result<(TestCrateSummary, bool)> {
     let runner = SierraCasmRunner::new(
         tests.sierra_program,
@@ -369,12 +388,14 @@ fn run_tests_from_crate(
 
         let result = if args.is_empty() {
             let result = run_from_test_case(
+                package_root,
                 &runner,
                 case,
                 runner_config.fork_targets.as_ref(),
-                contracts,
-                predeployed_contracts,
+                &runner_params.contracts,
+                &runner_params.predeployed_contracts,
                 vec![],
+                &runner_params.environment_variables,
             )?;
             pretty_printing::print_test_result(&result, None);
 
@@ -382,13 +403,12 @@ fn run_tests_from_crate(
         } else {
             was_fuzzed = true;
             let (result, runs) = run_with_fuzzing(
+                package_root,
                 runner_config,
-                contracts,
-                predeployed_contracts,
+                runner_params,
                 &runner,
                 case,
                 &args,
-                fuzzer_seed,
             )?;
             pretty_printing::print_test_result(&result, Some(runs));
 
@@ -426,13 +446,12 @@ fn run_tests_from_crate(
 }
 
 fn run_with_fuzzing(
+    package_root: &Utf8PathBuf,
     runner_config: &RunnerConfig,
-    contracts: &HashMap<String, StarknetContractArtifacts>,
-    predeployed_contracts: &Utf8PathBuf,
+    runner_params: &RunnerParams,
     runner: &SierraCasmRunner,
     case: &TestCase,
     args: &Vec<&ConcreteTypeId>,
-    fuzzer_seed: u64,
 ) -> Result<(TestCaseSummary, u32)> {
     if contains_non_felt252_args(args) {
         bail!(
@@ -442,7 +461,7 @@ fn run_with_fuzzing(
     }
 
     let mut fuzzer = RandomFuzzer::new(
-        fuzzer_seed,
+        runner_config.fuzzer_seed,
         runner_config.fuzzer_runs,
         args.len(),
         &BigUint::zero(),
@@ -455,12 +474,14 @@ fn run_with_fuzzing(
         let args = fuzzer.next_felt252_args();
 
         let result = run_from_test_case(
+            package_root,
             runner,
             case,
             runner_config.fork_targets.as_ref(),
-            contracts,
-            predeployed_contracts,
+            &runner_params.contracts,
+            &runner_params.predeployed_contracts,
             args.clone(),
+            &runner_params.environment_variables,
         )?;
         results.push(result.clone());
 
@@ -525,6 +546,16 @@ mod tests {
     use test_collector::ExpectedTestResult;
 
     #[test]
+    fn fuzzer_default_seed() {
+        let config = RunnerConfig::new(None, false, false, None, None, &Default::default());
+        let config2 = RunnerConfig::new(None, false, false, None, None, &Default::default());
+
+        assert_ne!(config.fuzzer_seed, 0);
+        assert_ne!(config2.fuzzer_seed, 0);
+        assert_ne!(config.fuzzer_seed, config2.fuzzer_seed);
+    }
+
+    #[test]
     fn runner_config_default_arguments() {
         let config = RunnerConfig::new(None, false, false, None, None, &Default::default());
         assert_eq!(
@@ -535,7 +566,7 @@ mod tests {
                 exit_first: false,
                 fork_targets: vec![],
                 fuzzer_runs: FUZZER_RUNS_DEFAULT,
-                fuzzer_seed: None,
+                fuzzer_seed: config.fuzzer_seed,
             }
         );
     }
@@ -557,7 +588,7 @@ mod tests {
                 exit_first: true,
                 fork_targets: vec![],
                 fuzzer_runs: 1234,
-                fuzzer_seed: Some(500),
+                fuzzer_seed: 500,
             }
         );
     }
@@ -579,7 +610,7 @@ mod tests {
                 exit_first: true,
                 fork_targets: vec![],
                 fuzzer_runs: 100,
-                fuzzer_seed: Some(32),
+                fuzzer_seed: 32,
             }
         );
     }
