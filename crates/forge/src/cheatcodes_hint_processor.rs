@@ -63,7 +63,7 @@ impl From<&StarknetContractArtifacts> for ContractArtifacts {
     }
 }
 
-// This hint processor provides an implementation logic for functions from std_forge library.
+// This hint processor provides an implementation logic for functions from snforge_std library.
 // If cannot execute a hint it falls back to the CheatableSyscallHandler
 pub struct CheatcodesSyscallHandler<'a> {
     pub cheatable_syscall_handler: CheatableSyscallHandler<'a>,
