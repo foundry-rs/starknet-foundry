@@ -21,6 +21,7 @@ fn simple_declare() {
             fn increase_balance(ref self: TContractState, amount: felt252);
             fn decrease_balance(ref self: TContractState, amount: felt252);
             fn get_balance(self: @TContractState) -> felt252;
+            fn interact_with_state(self: @TContractState) -> (felt252, felt252, felt252);
         }
 
         #[test]
@@ -39,6 +40,8 @@ fn simple_declare() {
             start_prank(contract_address, 1234.try_into().unwrap());
             start_roll(contract_address, 234);
             start_warp(contract_address, 123);
+
+            let (x, y, z) = dispatcher.interact_with_state();
         }
         "#
         ),
@@ -48,6 +51,13 @@ fn simple_declare() {
                 r#"
                 #[starknet::contract]
                 mod HelloStarknet {
+                    use box::BoxTrait;
+                    use starknet::ContractAddressIntoFelt252;
+                    use starknet::ContractAddress;
+                    use integer::U64IntoFelt252;
+                    use option::Option;
+                    use traits::Into;
+
                     #[storage]
                     struct Storage {
                         balance: felt252,
@@ -69,6 +79,15 @@ fn simple_declare() {
                     #[external(v0)]
                     fn get_balance(self: @ContractState) -> felt252 {
                         self.balance.read()
+                    }
+
+                    #[external(v0)]
+                    fn interact_with_state(self: @ContractState) -> (felt252, felt252, felt252) {
+                        let caller_address: felt252 = starknet::get_caller_address().into();
+                        let block_number = starknet::get_block_info().unbox().block_number;
+                        let block_timestamp = starknet::get_block_info().unbox().block_timestamp;
+
+                        (caller_address, block_number.into(), block_timestamp.into())
                     }
                 }
                 "#
