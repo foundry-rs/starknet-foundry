@@ -27,6 +27,7 @@ pub struct Contract {
 }
 
 impl Contract {
+    #[must_use]
     pub fn new(name: &str, code: &str) -> Self {
         Self {
             name: name.to_string(),
@@ -109,6 +110,7 @@ impl<'a> TestCase {
         self.enviroment_variables.insert(key.into(), value.into());
     }
 
+    #[must_use]
     pub fn env(&self) -> &HashMap<String, String> {
         &self.enviroment_variables
     }
@@ -118,6 +120,7 @@ impl<'a> TestCase {
             .map_err(|_| anyhow!("Failed to convert TestCase path to Utf8PathBuf"))
     }
 
+    #[must_use]
     pub fn linked_libraries(&self) -> Vec<LinkedLibrary> {
         let snforge_std_path = PathBuf::from_str("../../snforge_std")
             .unwrap()
@@ -151,6 +154,7 @@ impl<'a> TestCase {
             .collect()
     }
 
+    #[must_use]
     pub fn find_test_result(results: &[TestCrateSummary]) -> &TestCrateSummary {
         results
             .iter()
@@ -162,11 +166,11 @@ impl<'a> TestCase {
 #[macro_export]
 macro_rules! test_case {
     ( $test_code:expr ) => ({
-        use $crate::integration::common::runner::TestCase;
+        use $crate::runner::TestCase;
         TestCase::from($test_code, vec![]).unwrap()
     });
     ( $test_code:expr, $( $contract:expr ),*) => ({
-        use $crate::integration::common::runner::TestCase;
+        use $crate::runner::TestCase;
 
         let contracts = vec![$($contract,)*];
         TestCase::from($test_code, contracts).unwrap()
@@ -177,7 +181,7 @@ macro_rules! test_case {
 macro_rules! assert_passed {
     ($result:expr) => {{
         use forge::test_case_summary::TestCaseSummary;
-        use $crate::integration::common::runner::TestCase;
+        use $crate::runner::TestCase;
 
         let result = TestCase::find_test_result(&$result);
         assert!(
@@ -199,7 +203,7 @@ macro_rules! assert_failed {
     ($result:expr) => {{
         use forge::test_case_summary::TestCaseSummary;
 
-        use $crate::integration::common::runner::TestCase;
+        use $crate::runner::TestCase;
 
         let result = TestCase::find_test_result(&$result);
         assert!(
@@ -221,7 +225,7 @@ macro_rules! assert_case_output_contains {
     ($result:expr, $test_case_name:expr, $asserted_msg:expr) => {{
         use forge::test_case_summary::TestCaseSummary;
 
-        use $crate::integration::common::runner::TestCase;
+        use $crate::runner::TestCase;
 
         let test_case_name = $test_case_name;
         let test_name_suffix = format!("::{test_case_name}");
