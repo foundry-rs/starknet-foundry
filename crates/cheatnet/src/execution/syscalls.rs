@@ -109,6 +109,10 @@ pub fn call_contract_syscall(
     // endregion
 }
 
+// This hint processor modifies the standard syscalls implementation to react upon changes
+// introduced by cheatcodes that e.g. returns mocked data
+// If it cannot execute a cheatcode it falls back to SyscallHintProcessor, which provides standard implementation of
+// hints from blockifier
 pub struct CheatableSyscallHandler<'a> {
     pub syscall_handler: SyscallHintProcessor<'a>,
     pub cheatcode_state: &'a CheatcodeState,

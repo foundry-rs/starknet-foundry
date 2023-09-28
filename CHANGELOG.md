@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Changed
+
+- Spying events interface is updated to enable the use of events defined inside contracts in assertions
+
 
 ## [0.7.1] - 2023-09-27
 
