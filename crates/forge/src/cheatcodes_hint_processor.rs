@@ -23,6 +23,7 @@ use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use cheatnet::cheatcodes::deploy::DeployPayload;
+use cheatnet::execution::syscalls::CheatableSyscallHandler;
 use cheatnet::rpc::{call_contract, CallContractOutput};
 use cheatnet::{
     cheatcodes::{CheatcodeError, ContractArtifacts, EnhancedHintError},
@@ -62,8 +63,10 @@ impl From<&StarknetContractArtifacts> for ContractArtifacts {
     }
 }
 
-pub struct CairoHintProcessor<'a> {
-    pub blockifier_syscall_handler: SyscallHintProcessor<'a>,
+// This hint processor provides an implementation logic for functions from std_forge library.
+// If cannot execute a hint it falls back to the CheatableSyscallHandler
+pub struct CheatcodesSyscallHandler<'a> {
+    pub cheatable_syscall_handler: CheatableSyscallHandler<'a>,
     pub contracts: &'a HashMap<String, StarknetContractArtifacts>,
     pub hints: &'a HashMap<String, Hint>,
     pub cheatnet_state: CheatnetState,
@@ -72,37 +75,41 @@ pub struct CairoHintProcessor<'a> {
 }
 
 // crates/blockifier/src/execution/syscalls/hint_processor.rs:472 (ResourceTracker for SyscallHintProcessor)
-impl ResourceTracker for CairoHintProcessor<'_> {
+impl ResourceTracker for CheatcodesSyscallHandler<'_> {
     fn consumed(&self) -> bool {
-        self.blockifier_syscall_handler
+        self.cheatable_syscall_handler
+            .syscall_handler
             .context
             .vm_run_resources
             .consumed()
     }
 
     fn consume_step(&mut self) {
-        self.blockifier_syscall_handler
+        self.cheatable_syscall_handler
+            .syscall_handler
             .context
             .vm_run_resources
             .consume_step();
     }
 
     fn get_n_steps(&self) -> Option<usize> {
-        self.blockifier_syscall_handler
+        self.cheatable_syscall_handler
+            .syscall_handler
             .context
             .vm_run_resources
             .get_n_steps()
     }
 
     fn run_resources(&self) -> &RunResources {
-        self.blockifier_syscall_handler
+        self.cheatable_syscall_handler
+            .syscall_handler
             .context
             .vm_run_resources
             .run_resources()
     }
 }
 
-impl HintProcessorLogic for CairoHintProcessor<'_> {
+impl HintProcessorLogic for CheatcodesSyscallHandler<'_> {
     fn execute_hint(
         &mut self,
         vm: &mut VirtualMachine,
@@ -139,10 +146,10 @@ impl HintProcessorLogic for CairoHintProcessor<'_> {
                 exec_scopes,
                 hint_data,
                 constants,
-                &mut self.blockifier_syscall_handler,
+                &mut self.cheatable_syscall_handler.syscall_handler,
             );
         }
-        self.blockifier_syscall_handler
+        self.cheatable_syscall_handler.syscall_handler
             .execute_hint(vm, exec_scopes, hint_data, constants)
     }
 
@@ -158,7 +165,7 @@ impl HintProcessorLogic for CairoHintProcessor<'_> {
     }
 }
 
-impl CairoHintProcessor<'_> {
+impl CheatcodesSyscallHandler<'_> {
     #[allow(clippy::trivially_copy_pass_by_ref, clippy::too_many_arguments)]
     pub fn execute_cheatcode_hint(
         &mut self,

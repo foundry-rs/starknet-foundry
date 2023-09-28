@@ -13,6 +13,7 @@ use cairo_vm::serde::deserialize_program::HintParams;
 use cairo_vm::types::relocatable::Relocatable;
 use cheatnet::constants::{build_block_context, build_testing_state, build_transaction_context};
 use cheatnet::CheatnetState;
+use cheatnet::execution::syscalls::CheatableSyscallHandler;
 use itertools::chain;
 
 use cairo_lang_casm::hints::Hint;
@@ -23,7 +24,7 @@ use cairo_lang_runner::{Arg, RunnerError};
 use cairo_vm::vm::runners::cairo_runner::RunResources;
 use camino::Utf8PathBuf;
 use cheatnet::forking::state::ForkStateReader;
-use cheatnet::state::ExtendedStateReader;
+use cheatnet::state::{ExtendedStateReader, CheatcodeState};
 use conversions::StarknetConversions;
 use starknet::core::types::{BlockId, BlockTag};
 use starknet::core::utils::get_selector_from_name;
@@ -35,7 +36,7 @@ use starknet_api::patricia_key;
 use starknet_api::transaction::Calldata;
 use test_collector::{ForkConfig, TestCase};
 
-use crate::cheatcodes_hint_processor::CairoHintProcessor;
+use crate::cheatcodes_hint_processor::CheatcodesSyscallHandler;
 use crate::scarb::{ForkTarget, StarknetContractArtifacts};
 use crate::test_case_summary::TestCaseSummary;
 
@@ -67,6 +68,7 @@ fn build_hints_dict<'b>(
     }
     (hints_dict, string_to_hint)
 }
+
 
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn run_from_test_case(
@@ -139,8 +141,13 @@ pub(crate) fn run_from_test_case(
         &string_to_hint,
         ReadOnlySegments::default(),
     );
-    let mut cairo_hint_processor = CairoHintProcessor {
-        blockifier_syscall_handler: syscall_handler,
+    let cheatable_syscall_handler = CheatableSyscallHandler {
+        syscall_handler,
+        cheatcode_state: &CheatcodeState::new(),
+    };
+
+    let mut cheatcodes_hint_processor = CheatcodesSyscallHandler {
+        cheatable_syscall_handler: cheatable_syscall_handler,
         contracts,
         cheatnet_state: CheatnetState::new(ExtendedStateReader {
             dict_state_reader: build_testing_state(predeployed_contracts),
@@ -153,7 +160,7 @@ pub(crate) fn run_from_test_case(
 
     match runner.run_function(
         runner.find_function(case.name.as_str())?,
-        &mut cairo_hint_processor,
+        &mut cheatcodes_hint_processor,
         hints_dict,
         instructions,
         builtins,
