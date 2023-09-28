@@ -6,7 +6,7 @@ use num_integer::Integer;
 use num_traits::{One, Zero};
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
-use std::ops::{Shl, Shr, Sub};
+use std::ops::{Add, Shl, Shr, Sub};
 
 #[derive(Debug, Clone)]
 enum CairoType {
@@ -34,17 +34,16 @@ impl Argument for CairoType {
 
     fn high(&self) -> BigUint {
         match self {
-            CairoType::U8 => BigUint::from(u8::MAX),
-            CairoType::U16 => BigUint::from(u16::MAX),
-            CairoType::U32 => BigUint::from(u32::MAX),
-            CairoType::U64 => BigUint::from(u64::MAX),
-            CairoType::U128 => BigUint::from(u128::MAX),
+            CairoType::U8 => BigUint::from(u8::MAX).add(BigUint::one()),
+            CairoType::U16 => BigUint::from(u16::MAX).add(BigUint::one()),
+            CairoType::U32 => BigUint::from(u32::MAX).add(BigUint::one()),
+            CairoType::U64 => BigUint::from(u64::MAX).add(BigUint::one()),
+            CairoType::U128 => BigUint::from(u128::MAX).add(BigUint::one()),
             CairoType::U256 => {
                 let max = BigUint::from(1_u32);
-                let max = max.shl(256);
-                max - BigUint::one()
+                max.shl(256)
             }
-            CairoType::Felt252 => Felt252::prime().sub(BigUint::one()),
+            CairoType::Felt252 => Felt252::prime(),
         }
     }
 
@@ -86,8 +85,8 @@ impl Argument for CairoType {
             | CairoType::U32
             | CairoType::U64
             | CairoType::U128
-            | CairoType::Felt252 => vec![Felt252::from(self.high())],
-            CairoType::U256 => u256_to_felt252(self.high()),
+            | CairoType::Felt252 => vec![Felt252::from(self.high().sub(BigUint::one()))],
+            CairoType::U256 => u256_to_felt252(self.high().sub(BigUint::one())),
         }
     }
 }
