@@ -1,11 +1,10 @@
 use std::collections::HashMap;
 use std::fmt::Debug;
 
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{anyhow, Context, Result};
 use ark_std::iterable::Iterable;
 use assert_fs::fixture::{FileTouch, PathChild, PathCopy};
 use assert_fs::TempDir;
-use cairo_felt::Felt252;
 use camino::Utf8PathBuf;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use serde::Deserialize;
@@ -16,8 +15,6 @@ use cairo_lang_sierra::ids::ConcreteTypeId;
 use cairo_lang_sierra::program::{Function, Program};
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
-use num_bigint::BigUint;
-use num_traits::Zero;
 use once_cell::sync::Lazy;
 use rand::{thread_rng, RngCore};
 use smol_str::SmolStr;
@@ -27,6 +24,7 @@ use crate::fuzzer::RandomFuzzer;
 use crate::running::run_from_test_case;
 use crate::scarb::{ForgeConfig, ForkTarget, StarknetContractArtifacts};
 pub use crate::test_crate_summary::TestCrateSummary;
+
 use test_collector::{collect_tests, LinkedLibrary, TestCase};
 
 pub mod pretty_printing;
@@ -54,7 +52,7 @@ static BUILTINS: Lazy<Vec<&str>> = Lazy::new(|| {
 });
 
 /// Configuration of the test runner
-#[derive(Deserialize, Debug, PartialEq, Default)]
+#[derive(Deserialize, Debug, PartialEq)]
 pub struct RunnerConfig {
     test_name_filter: Option<String>,
     exact_match: bool,
@@ -446,25 +444,23 @@ fn run_with_fuzzing(
     case: &TestCase,
     args: &Vec<&ConcreteTypeId>,
 ) -> Result<(TestCaseSummary, u32)> {
-    if contains_non_felt252_args(args) {
-        bail!(
-            "Fuzzer only supports felt252 arguments, and test {} defines arguments that are not felt252 type",
-            case.name.as_str()
-        );
-    }
+    let args = args
+        .iter()
+        .map(|arg| {
+            arg.debug_name
+                .as_ref()
+                .ok_or_else(|| anyhow!("Type {arg:?} does not have a debug name"))
+                .map(smol_str::SmolStr::as_str)
+        })
+        .collect::<Result<Vec<_>>>()?;
 
-    let mut fuzzer = RandomFuzzer::new(
-        runner_config.fuzzer_seed,
-        runner_config.fuzzer_runs,
-        args.len(),
-        &BigUint::zero(),
-        &Felt252::prime(),
-    );
+    let mut fuzzer =
+        RandomFuzzer::create(runner_config.fuzzer_seed, runner_config.fuzzer_runs, &args)?;
 
     let mut results = vec![];
 
     for _ in 1..=runner_config.fuzzer_runs {
-        let args = fuzzer.next_felt252_args();
+        let args = fuzzer.next_args();
 
         let result = run_from_test_case(
             package_root,
@@ -490,15 +486,6 @@ fn run_with_fuzzing(
         .clone();
     let runs = u32::try_from(results.len())?;
     Ok((result, runs))
-}
-
-fn contains_non_felt252_args(args: &Vec<&ConcreteTypeId>) -> bool {
-    args.iter().any(|pt| {
-        if let Some(name) = &pt.debug_name {
-            return name != &SmolStr::from("felt252");
-        }
-        false
-    })
 }
 
 fn function_args<'a>(function: &'a Function, builtins: &[&str]) -> Vec<&'a ConcreteTypeId> {
@@ -888,29 +875,5 @@ mod tests {
                 },
             ]
         );
-    }
-
-    #[test]
-    fn args_with_only_felt252() {
-        let typ = ConcreteTypeId {
-            id: 0,
-            debug_name: Some(SmolStr::from("felt252")),
-        };
-        let args = vec![&typ, &typ];
-        assert!(!contains_non_felt252_args(&args));
-    }
-
-    #[test]
-    fn args_with_not_felt252() {
-        let typ = ConcreteTypeId {
-            id: 0,
-            debug_name: Some(SmolStr::from("felt252")),
-        };
-        let typ2 = ConcreteTypeId {
-            id: 0,
-            debug_name: Some(SmolStr::from("Uint256")),
-        };
-        let args = vec![&typ, &typ, &typ2];
-        assert!(contains_non_felt252_args(&args));
     }
 }

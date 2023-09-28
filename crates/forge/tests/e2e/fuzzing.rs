@@ -15,8 +15,8 @@ fn fuzzing() {
         [..]Finished[..]
         
         
-        Collected 5 test(s) from fuzzing package
-        Running 5 test(s) from src/
+        Collected 11 test(s) from fuzzing package
+        Running 11 test(s) from src/
         [PASS] fuzzing::tests::adding
         [PASS] fuzzing::tests::fuzzed_argument (fuzzer runs = 256)
         [PASS] fuzzing::tests::fuzzed_both_arguments (fuzzer runs = 256)
@@ -26,8 +26,14 @@ fn fuzzing() {
         Failure data:
             original value: [593979512822486835600413552099926114], converted to a string: [result == a + b]
 
+        [PASS] fuzzing::tests::uint8_arg (fuzzer runs = 256)
+        [PASS] fuzzing::tests::uint16_arg (fuzzer runs = 256)
+        [PASS] fuzzing::tests::uint32_arg (fuzzer runs = 256)
+        [PASS] fuzzing::tests::uint64_arg (fuzzer runs = 256)
+        [PASS] fuzzing::tests::uint128_arg (fuzzer runs = 256)
+        [PASS] fuzzing::tests::uint256_arg (fuzzer runs = 256)
         Running 0 test(s) from tests/
-        Tests: 4 passed, 1 failed, 0 skipped
+        Tests: 10 passed, 1 failed, 0 skipped
         Fuzzer seed: [..]
 
         Failures:
@@ -50,8 +56,8 @@ fn fuzzing_set_runs() {
         [..]Finished[..]
         
         
-        Collected 5 test(s) from fuzzing package
-        Running 5 test(s) from src/
+        Collected 11 test(s) from fuzzing package
+        Running 11 test(s) from src/
         [PASS] fuzzing::tests::adding
         [PASS] fuzzing::tests::fuzzed_argument (fuzzer runs = 10)
         [PASS] fuzzing::tests::fuzzed_both_arguments (fuzzer runs = 10)
@@ -61,8 +67,14 @@ fn fuzzing_set_runs() {
         Failure data:
             original value: [593979512822486835600413552099926114], converted to a string: [result == a + b]
 
+        [PASS] fuzzing::tests::uint8_arg (fuzzer runs = 10)
+        [PASS] fuzzing::tests::uint16_arg (fuzzer runs = 10)
+        [PASS] fuzzing::tests::uint32_arg (fuzzer runs = 10)
+        [PASS] fuzzing::tests::uint64_arg (fuzzer runs = 10)
+        [PASS] fuzzing::tests::uint128_arg (fuzzer runs = 10)
+        [PASS] fuzzing::tests::uint256_arg (fuzzer runs = 10)
         Running 0 test(s) from tests/
-        Tests: 4 passed, 1 failed, 0 skipped
+        Tests: 10 passed, 1 failed, 0 skipped
         Fuzzer seed: [..]
 
         Failures:
@@ -85,8 +97,8 @@ fn fuzzing_set_seed() {
         [..]Finished[..]
         
         
-        Collected 5 test(s) from fuzzing package
-        Running 5 test(s) from src/
+        Collected 11 test(s) from fuzzing package
+        Running 11 test(s) from src/
         [PASS] fuzzing::tests::adding
         [PASS] fuzzing::tests::fuzzed_argument (fuzzer runs = 256)
         [PASS] fuzzing::tests::fuzzed_both_arguments (fuzzer runs = 256)
@@ -96,8 +108,14 @@ fn fuzzing_set_seed() {
         Failure data:
             original value: [593979512822486835600413552099926114], converted to a string: [result == a + b]
 
+        [PASS] fuzzing::tests::uint8_arg (fuzzer runs = 256)
+        [PASS] fuzzing::tests::uint16_arg (fuzzer runs = 256)
+        [PASS] fuzzing::tests::uint32_arg (fuzzer runs = 256)
+        [PASS] fuzzing::tests::uint64_arg (fuzzer runs = 256)
+        [PASS] fuzzing::tests::uint128_arg (fuzzer runs = 256)
+        [PASS] fuzzing::tests::uint256_arg (fuzzer runs = 256)
         Running 0 test(s) from tests/
-        Tests: 4 passed, 1 failed, 0 skipped
+        Tests: 10 passed, 1 failed, 0 skipped
         Fuzzer seed: 1234
 
         Failures:
@@ -134,12 +152,12 @@ fn fuzzing_incorrect_function_args() {
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
-        
-        
+
+
         Collected 2 test(s) from fuzzing package
         Running 0 test(s) from src/
         Running 2 test(s) from tests/
         [PASS] tests::incorrect_args::correct_args (fuzzer runs = 256)
-        [ERROR] Fuzzer only supports felt252 arguments, and test tests::incorrect_args::incorrect_args defines arguments that are not felt252 type
+        [ERROR] Tried to use incorrect type for fuzzing. Type = tests::incorrect_args::MyStruct is not supported
         "#});
 }
