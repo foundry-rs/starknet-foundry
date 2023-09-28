@@ -1,12 +1,12 @@
-use criterion::{criterion_group, criterion_main, Criterion};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use indoc::indoc;
 use std::time::Duration;
-use utils::runner::Contract;
+use utils::runner::{Contract, TestCase};
 use utils::running_tests::run_test_case;
 use utils::{assert_passed, test_case};
 
-fn simple_declare() {
-    let test = test_case!(
+fn setup_test() -> TestCase {
+    test_case!(
         indoc!(
             r#"
         use result::ResultTrait;
@@ -93,17 +93,26 @@ fn simple_declare() {
                 "#
             )
         )
-    );
+    )
+}
+
+fn simple_declare(test: &TestCase) {
     let result = run_test_case(&test);
 
     assert_passed!(result);
 }
 
 fn criterion_benchmark(c: &mut Criterion) {
+    let test = setup_test();
+
     let mut group = c.benchmark_group("declare-group");
     group.sample_size(10);
     group.measurement_time(Duration::from_secs(30));
-    group.bench_function("declare_simple", |b| b.iter(simple_declare));
+    group.bench_with_input(
+        BenchmarkId::new("declare_simple", format!("{test:?}")),
+        &test,
+        |b, s| b.iter(|| simple_declare(s)),
+    );
     group.finish();
 }
 
