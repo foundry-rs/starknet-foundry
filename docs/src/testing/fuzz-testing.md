@@ -59,3 +59,13 @@ fuzzer_runs = 1234
 fuzzer_seed = 1111
 # ...
 ```
+
+It is also possible to specify custom fuzzer configuration for a single test case, using a `#fuzzer` attribute.
+
+```rust
+#[test]
+#[fuzzer(runs: 22, seed: 38)]
+fn test_sum(x: felt252, y: felt252) {
+    assert(sum(x, y) == x + y, 'sum incorrect');
+}
+```

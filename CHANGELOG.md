@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Added
+
+- `#fuzzer` attribute to specify fuzzer configuration for a single test case. 
 
 ## [0.7.1] - 2023-09-27
 
