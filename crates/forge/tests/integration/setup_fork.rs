@@ -1,7 +1,3 @@
-use crate::integration::common::running_tests::run_test_case;
-use crate::{assert_passed, test_case};
-
-use crate::integration::common::corelib::{corelib_path, predeployed_contracts};
 use camino::Utf8PathBuf;
 use forge::scarb::{ForgeConfig, ForkTarget};
 use forge::{run, CancellationTokens, RunnerConfig, RunnerParams};
@@ -11,6 +7,9 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use tempfile::tempdir;
 use tokio::runtime::Runtime;
+use utils::corelib::{corelib_path, predeployed_contracts};
+use utils::running_tests::run_test_case;
+use utils::{assert_passed, test_case};
 
 static CHEATNET_RPC_URL: &str = "http://188.34.188.184:9545/rpc/v0.4";
 

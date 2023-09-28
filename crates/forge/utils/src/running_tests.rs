@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
-use crate::integration::common::corelib::{corelib_path, predeployed_contracts};
-use crate::integration::common::runner::TestCase;
+use crate::corelib::{corelib_path, predeployed_contracts};
+use crate::runner::TestCase;
 use camino::Utf8PathBuf;
 
 use forge::{run, CancellationTokens, RunnerConfig, RunnerParams, TestCrateSummary};

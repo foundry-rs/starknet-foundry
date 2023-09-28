@@ -1,9 +1,8 @@
-use std::path::Path;
-
-use crate::integration::common::runner::Contract;
-use crate::integration::common::running_tests::run_test_case;
-use crate::{assert_case_output_contains, assert_failed, assert_passed, test_case};
 use indoc::indoc;
+use std::path::Path;
+use utils::runner::Contract;
+use utils::running_tests::run_test_case;
+use utils::{assert_case_output_contains, assert_failed, assert_passed, test_case};
 
 #[test]
 fn test_storage_access_from_tests() {

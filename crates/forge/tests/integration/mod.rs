@@ -1,5 +1,4 @@
 mod cheat_fork;
-pub(crate) mod common;
 mod declare;
 mod deploy;
 mod deploy_at;

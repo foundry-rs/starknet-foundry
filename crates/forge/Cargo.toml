@@ -68,3 +68,11 @@ name = "forge"
 [[bin]]
 name = "snforge"
 path = "src/main.rs"
+
+[dev-dependencies]
+criterion = { version = "0.5.1", features = ["html_reports"] }
+utils = { path = "utils" }
+
+[[bench]]
+name = "my_benchmark"
+harness = false
