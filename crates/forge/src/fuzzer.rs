@@ -6,7 +6,8 @@ use rand::Rng;
 mod arguments;
 mod random;
 
-pub use random::Random;
+#[allow(clippy::module_name_repetitions)]
+pub use random::RandomFuzzer;
 
 #[derive(Debug, Clone)]
 pub struct RunParams {

@@ -5,13 +5,14 @@ use cairo_felt::Felt252;
 use rand::prelude::StdRng;
 use rand::SeedableRng;
 
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Clone)]
-pub struct Random {
+pub struct RandomFuzzer {
     rng: StdRng,
     run_params: RunParams,
 }
 
-impl Random {
+impl RandomFuzzer {
     pub fn create(seed: u64, total_runs: u32, arguments: &[&str]) -> Result<Self> {
         let mut rng = StdRng::seed_from_u64(seed);
         let run_params = RunParams::from(&mut rng, total_runs, arguments)?;
@@ -96,7 +97,7 @@ mod tests {
             total_runs: 10,
             ..Default::default()
         };
-        let mut fuzzer = Random {
+        let mut fuzzer = RandomFuzzer {
             rng: StdRng::seed_from_u64(1234),
             run_params,
         };
@@ -118,7 +119,7 @@ mod tests {
             total_runs: 10,
             ..Default::default()
         };
-        let mut fuzzer = Random {
+        let mut fuzzer = RandomFuzzer {
             rng: StdRng::seed_from_u64(1234),
             run_params,
         };
@@ -136,7 +137,7 @@ mod tests {
             total_runs: 10,
             ..Default::default()
         };
-        let mut fuzzer = Random {
+        let mut fuzzer = RandomFuzzer {
             rng: StdRng::seed_from_u64(1234),
             run_params,
         };
@@ -149,10 +150,10 @@ mod tests {
     #[test]
     fn using_seed_consistent_result() {
         let seed = thread_rng().next_u64();
-        let mut fuzzer = Random::create(seed, 3, &["felt252", "felt252", "felt252"]).unwrap();
+        let mut fuzzer = RandomFuzzer::create(seed, 3, &["felt252", "felt252", "felt252"]).unwrap();
         let values = fuzzer.next_args();
 
-        let mut fuzzer = Random::create(seed, 3, &["felt252", "felt252", "felt252"]).unwrap();
+        let mut fuzzer = RandomFuzzer::create(seed, 3, &["felt252", "felt252", "felt252"]).unwrap();
         let values_from_seed = fuzzer.next_args();
 
         assert_eq!(values, values_from_seed);
@@ -165,7 +166,7 @@ mod tests {
         let arguments = vec!["felt252", "felt252", "felt252"];
         let args_number = arguments.len();
 
-        let mut fuzzer = Random::create(seed, runs_number, &arguments).unwrap();
+        let mut fuzzer = RandomFuzzer::create(seed, runs_number, &arguments).unwrap();
 
         let mut min_used = vec![false; args_number];
         let mut max_used = vec![false; args_number];
@@ -190,7 +191,7 @@ mod tests {
 
     #[test]
     fn create_fuzzer_from_invalid_arguments() {
-        let result = Random::create(1234, 512, &["felt252", "invalid", "args"]);
+        let result = RandomFuzzer::create(1234, 512, &["felt252", "invalid", "args"]);
         let err = result.unwrap_err();
 
         assert_eq!(
