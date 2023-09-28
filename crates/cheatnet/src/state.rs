@@ -180,7 +180,7 @@ pub struct CheatnetState {
 
 impl CheatnetState {
     #[must_use]
-    pub fn new(state: ExtendedStateReader) -> Self {
+    pub fn new() -> Self {
         CheatnetState {
             rolled_contracts: HashMap::new(),
             pranked_contracts: HashMap::new(),
