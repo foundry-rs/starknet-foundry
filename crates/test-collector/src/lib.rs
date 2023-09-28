@@ -123,7 +123,7 @@ pub struct SingleTestConfig {
     /// The configuration of forked network.
     pub fork_config: Option<ForkConfig>,
     /// Custom fuzzing configuration
-    pub fuzzer_config: Option<FuzzerConfig>
+    pub fuzzer_config: Option<FuzzerConfig>,
 }
 
 /// Finds the tests in the requested crates.
@@ -286,7 +286,7 @@ pub fn try_extract_test_config(
             },
             ignored,
             fork_config,
-            fuzzer_config
+            fuzzer_config,
         })
     })
 }
@@ -366,7 +366,7 @@ fn extract_fuzzer_config(db: &dyn SyntaxGroup, attr: &Attribute) -> Option<Fuzze
     if fuzzer_runs_name != "runs" || fuzzer_seed_name != "seed" {
         return None;
     };
-    
+
     let fuzzer_runs = extract_numeric_value(db, fuzzer_runs)?.to_u32()?;
     let fuzzer_seed = extract_numeric_value(db, fuzzer_seed)?.to_u64()?;
 
@@ -378,12 +378,11 @@ fn extract_fuzzer_config(db: &dyn SyntaxGroup, attr: &Attribute) -> Option<Fuzze
 
 fn extract_numeric_value(db: &dyn SyntaxGroup, expr: &ast::Expr) -> Option<BigInt> {
     let ast::Expr::Literal(literal) = expr else {
-        return None; 
+        return None;
     };
 
     literal.numeric_value(db)
 }
-
 
 fn extract_fork_config_from_id(id: &ast::Expr, db: &dyn SyntaxGroup) -> Option<ForkConfig> {
     let ast::Expr::String(url_str) = id else {
@@ -495,7 +494,7 @@ pub struct TestCase {
     pub available_gas: Option<usize>,
     pub expected_result: ExpectedTestResult,
     pub fork_config: Option<ForkConfig>,
-    pub fuzzer_config: Option<FuzzerConfig>
+    pub fuzzer_config: Option<FuzzerConfig>,
 }
 
 // returns tuple[sierra if no output_path, list[test_name, test_config]]

@@ -644,6 +644,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::too_many_lines)]
     fn filtering_tests() {
         let mocked_tests: Vec<TestCase> = vec![
             TestCase {
