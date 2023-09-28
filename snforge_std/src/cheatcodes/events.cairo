@@ -152,7 +152,7 @@ fn array_extend<T, impl TCopy: Copy<T>, impl TDrop: Drop<T>>(
 ) {
     let mut i = 0;
     loop {
-        if i == array.len() {
+        if i == other.len() {
             break;
         }
         array.append(*other.at(i));
