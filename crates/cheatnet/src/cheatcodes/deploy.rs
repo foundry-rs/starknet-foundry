@@ -29,8 +29,8 @@ pub struct DeployPayload {
 }
 
 pub fn deploy_at(
-    cheatnet_state: &mut CheatnetState,
     blockifier_state: &mut BlockifierState,
+    cheatnet_state: &mut CheatnetState,
     class_hash: &ClassHash,
     calldata: &[Felt252],
     contract_address: ContractAddress,
@@ -120,14 +120,14 @@ pub fn deploy_at(
 }
 
 pub fn deploy(
-    cheatnet_state: &mut CheatnetState,
     blockifier_state: &mut BlockifierState,
+    cheatnet_state: &mut CheatnetState,
     class_hash: &ClassHash,
     calldata: &[Felt252],
 ) -> Result<DeployPayload, CheatcodeError> {
     let contract_address = cheatnet_state.precalculate_address(class_hash, calldata);
 
-    deploy_at(cheatnet_state, blockifier_state, class_hash, calldata, contract_address)
+    deploy_at(blockifier_state, cheatnet_state,class_hash, calldata, contract_address)
 }
 
 fn create_execute_calldata(

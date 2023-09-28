@@ -31,7 +31,17 @@ pub struct ExtendedStateReader {
 // Equivalent type to CachedState<ExtendedStateReader>
 #[derive(Debug)]
 pub struct BlockifierState {
-    pub blockifier_state: CachedState<ExtendedStateReader>,
+    pub blockifier_state: CachedState<ExtendedStateReader>, // TODO allow type coercion
+}
+
+impl BlockifierState {
+    pub fn new(state: ExtendedStateReader) -> Self {
+        BlockifierState {
+            blockifier_state: CachedState::new(
+                state, GlobalContractCache::default()
+        )
+      }
+    }
 }
 
 
