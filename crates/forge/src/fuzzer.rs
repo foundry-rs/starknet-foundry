@@ -44,7 +44,7 @@ impl RunParams {
             .map(|&run_with_min| {
                 let run_with_max = rng.gen_range(1..=total_runs);
                 if run_with_max == run_with_min {
-                    run_with_min + 1 % total_runs
+                    run_with_min % total_runs + 1
                 } else {
                     run_with_max
                 }

@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use std::fmt::Debug;
-use std::path::PathBuf;
 
 use anyhow::{anyhow, Context, Result};
 use ark_std::iterable::Iterable;
@@ -153,20 +152,20 @@ impl RunnerParams {
 fn collect_tests_from_package(
     package_path: &Utf8PathBuf,
     package_name: &str,
-    lib_path: &Utf8PathBuf,
-    mut linked_libraries: Vec<LinkedLibrary>,
+    package_source_dir_path: &Utf8PathBuf,
+    linked_libraries: &[LinkedLibrary],
     corelib_path: &Utf8PathBuf,
     runner_config: &RunnerConfig,
 ) -> Result<Vec<TestsFromCrate>> {
-    let tests_folder_path = package_path.join("tests");
-    let maybe_tests_tmp_dir = if tests_folder_path.try_exists()? {
+    let tests_dir_path = package_path.join("tests");
+    let maybe_tests_tmp_dir = if tests_dir_path.try_exists()? {
         Some(pack_tests_into_one_file(package_path)?)
     } else {
         None
     };
 
     let mut all_test_roots = vec![TestCrate {
-        crate_root: lib_path.clone(),
+        crate_root: package_source_dir_path.clone(),
         crate_name: package_name.to_string(),
         crate_type: TestCrateType::Lib,
     }];
@@ -174,24 +173,18 @@ fn collect_tests_from_package(
     if let Some(tests_tmp_dir) = &maybe_tests_tmp_dir {
         let tests_tmp_dir_path = Utf8PathBuf::from_path_buf(tests_tmp_dir.to_path_buf())
             .map_err(|_| anyhow!("Failed to convert tests temporary directory to Utf8PathBuf"))?;
-        let tests_lib_path = tests_tmp_dir_path.join("lib.cairo");
 
         all_test_roots.push(TestCrate {
-            crate_root: tests_lib_path,
+            crate_root: tests_tmp_dir_path.clone(),
             crate_name: "tests".to_string(),
             crate_type: TestCrateType::Tests,
-        });
-
-        linked_libraries.push(LinkedLibrary {
-            name: "tests".to_string(),
-            path: PathBuf::from(tests_tmp_dir_path),
         });
     }
 
     let tests_from_files = all_test_roots
         .par_iter()
         .map(|test_crate| {
-            collect_tests_from_tree(test_crate, &linked_libraries, corelib_path, runner_config)
+            collect_tests_from_tree(test_crate, linked_libraries, corelib_path, runner_config)
         })
         .collect();
 
@@ -242,7 +235,7 @@ fn pack_tests_into_one_file(package_path: &Utf8PathBuf) -> Result<TempDir> {
 
 fn collect_tests_from_tree(
     test_crate: &TestCrate,
-    linked_libraries: &Vec<LinkedLibrary>,
+    linked_libraries: &[LinkedLibrary],
     corelib_path: &Utf8PathBuf,
     runner_config: &RunnerConfig,
 ) -> Result<TestsFromCrate> {
@@ -298,15 +291,15 @@ pub fn run(
     package_root: &Utf8PathBuf,
     package_path: &Utf8PathBuf,
     package_name: &str,
-    lib_path: &Utf8PathBuf,
-    linked_libraries: Vec<LinkedLibrary>,
+    package_source_dir_path: &Utf8PathBuf,
+    linked_libraries: &[LinkedLibrary],
     runner_config: &RunnerConfig,
     runner_params: &RunnerParams,
 ) -> Result<Vec<TestCrateSummary>> {
     let tests = collect_tests_from_package(
         package_path,
         package_name,
-        lib_path,
+        package_source_dir_path,
         linked_libraries,
         &runner_params.corelib_path,
         runner_config,

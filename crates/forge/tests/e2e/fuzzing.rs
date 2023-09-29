@@ -132,6 +132,7 @@ fn fuzzing_incorrect_runs() {
         .current_dir(&temp)
         .args(["--fuzzer-runs", "0"])
         .assert()
+        .code(2)
         .stderr_matches(indoc! {r#"
         error: invalid value '0' for '--fuzzer-runs <FUZZER_RUNS>': Number of fuzzer runs must be greater than or equal to 3
 
