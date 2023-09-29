@@ -440,15 +440,12 @@ async fn run_with_fuzzing(
 
     let mut results = vec![];
 
-    let runner1 = Arc::new(runner.clone());
     for _ in 1..=fuzzer_runs {
         results.push(task::spawn({
-            let runner1 = runner1.clone();
+            let runner = runner.clone();
             let case = Arc::new(case.clone());
             let contracts_arc = Arc::new(contracts.clone());
             let predeployed_contracts_arc = Arc::new(predeployed_contracts.clone());
-            let fuzzer_runs = fuzzer_runs.clone();
-            let c = case.clone();
             let args = fuzzer.next_felt252_args();
             let cancellation_token = cancellation_token.clone();
             async move {
@@ -459,7 +456,7 @@ async fn run_with_fuzzing(
 
                     },
                     result = run_from_test_case(
-                        &runner1,
+                        &runner,
                         &case,
                         &contracts_arc,
                         &predeployed_contracts_arc,
@@ -468,11 +465,6 @@ async fn run_with_fuzzing(
                         result.unwrap()
                     },
                 }
-
-                // if let TestCaseSummary::Failed { .. } = result {
-                //     // Fuzz failed
-                //     break;
-                // }
             }
         }))
     }
