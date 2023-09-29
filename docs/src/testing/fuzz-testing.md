@@ -44,7 +44,17 @@ Fuzzer seed: [..]
 
 ## Fuzzer Configuration
 
-It is possible to configure the number of runs of the random fuzzer as well as its seed too with command line arguments:
+It is possible to configure the number of runs of the random fuzzer as well as its seed for a specific test case:
+
+```rust
+#[test]
+#[fuzzer(runs: 22, seed: 38)]
+fn test_sum(x: felt252, y: felt252) {
+    assert(sum(x, y) == x + y, 'sum incorrect');
+}
+```
+
+It is also possible to configure it globally, via command line arguments.
 
 ```shell
 $ snforge --fuzzer-runs 1234 --fuzzer-seed 1111
@@ -58,14 +68,4 @@ Or in `Scarb.toml` file:
 fuzzer_runs = 1234
 fuzzer_seed = 1111
 # ...
-```
-
-It is also possible to specify custom fuzzer configuration for a single test case, using a `#fuzzer` attribute.
-
-```rust
-#[test]
-#[fuzzer(runs: 22, seed: 38)]
-fn test_sum(x: felt252, y: felt252) {
-    assert(sum(x, y) == x + y, 'sum incorrect');
-}
 ```
