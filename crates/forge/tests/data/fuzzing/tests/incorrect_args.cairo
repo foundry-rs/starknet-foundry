@@ -12,20 +12,6 @@ fn correct_args(b: felt252) {
 }
 
 #[test]
-#[fuzzer(test: 10)]
-fn incorrect_fuzzer_arg(b: felt252) {
-    let result = adder(2, b);
-    assert(result == 2 + b, '2 + b == 2 + b');
-}
-
-#[test]
-#[fuzzer()]
-fn missing_fuzzer_args(b: felt252) {
-    let result = adder(2, b);
-    assert(result == 2 + b, '2 + b == 2 + b');
-}
-
-#[test]
 fn incorrect_args(b: felt252, a: MyStruct) {
     let result = adder(2, b);
     assert(result == 2 + b, '2 + b == 2 + b');

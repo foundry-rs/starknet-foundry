@@ -49,6 +49,7 @@ mod tests {
         assert(result == 2 + b, '2 + b == 2 + b');
     }
 
+    #[test]
     fn uint8_arg(a: u8) {
         if a <= 5_u8 {
             assert(2 == 2, '2 == 2');
