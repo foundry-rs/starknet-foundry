@@ -224,7 +224,13 @@ pub fn try_extract_test_config(
         None
     };
     let fuzzer_config = if let Some(attr) = fuzzer_attr {
-        extract_fuzzer_config(db, attr)
+        extract_fuzzer_config(db, attr).on_none(|| {
+            diagnostics.push(PluginDiagnostic {
+                stable_ptr: attr.args_stable_ptr.untyped(),
+                message: "Expected fuzzer config must be of the form `runs: <u32>, seed: <u64>`"
+                    .into(),
+            });
+        })
     } else {
         None
     };
