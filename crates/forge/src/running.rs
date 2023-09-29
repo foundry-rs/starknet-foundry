@@ -65,7 +65,7 @@ fn build_hints_dict<'b>(
     (hints_dict, string_to_hint)
 }
 
-pub(crate) fn run_from_test_case(
+pub(crate) async fn run_from_test_case(
     runner: &SierraCasmRunner,
     case: &TestCase,
     contracts: &HashMap<String, StarknetContractArtifacts>,

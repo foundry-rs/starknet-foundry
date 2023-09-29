@@ -58,6 +58,8 @@ toml_edit = "0.9.1"
 flatten-serde-json = "0.1.0"
 rand = "0.8.5"
 smol_str = "0.2.0"
+tokio.workspace = true
+tokio-util = "0.7.9"
 
 [lib]
 name = "forge"

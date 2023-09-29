@@ -1,13 +1,17 @@
-use std::collections::HashMap;
-use std::fmt::Debug;
-
 use anyhow::{bail, Context, Result};
 use ark_std::iterable::Iterable;
 use cairo_felt::Felt252;
 use camino::{Utf8Path, Utf8PathBuf};
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use serde::Deserialize;
+use std::collections::HashMap;
+use std::fmt::Debug;
+use std::sync::Arc;
 use test_case_summary::TestCaseSummary;
+use tokio_util::sync::CancellationToken;
+
+use tokio::task;
+
 use walkdir::WalkDir;
 
 use cairo_lang_runner::SierraCasmRunner;
@@ -197,7 +201,7 @@ fn collect_tests_from_tree(
 /// * `predeployed_contracts` - Absolute path to predeployed contracts used by starknet state e.g. account contracts
 ///
 #[allow(clippy::implicit_hasher, clippy::too_many_arguments)]
-pub fn run(
+pub async fn run(
     package_path: &Utf8PathBuf,
     package_name: &str,
     lib_path: &Utf8PathBuf,
@@ -207,6 +211,7 @@ pub fn run(
     contracts: &HashMap<String, StarknetContractArtifacts>,
     predeployed_contracts: &Utf8PathBuf,
     fuzzer_seed: u64,
+    cancellation_token: Arc<CancellationToken>,
 ) -> Result<Vec<TestFileSummary>> {
     let tests = collect_tests_from_package(
         package_path,
@@ -235,10 +240,11 @@ pub fn run(
             contracts,
             predeployed_contracts,
             fuzzer_seed,
-        )?;
+            cancellation_token.clone(),
+        )
+        .await?;
 
         fuzzing_happened |= was_fuzzed;
-
         summaries.push(summary.clone());
         if summary.runner_exit_status == RunnerStatus::TestFailed {
             break;
@@ -271,65 +277,117 @@ pub fn run(
 
     Ok(summaries)
 }
+async fn run_p_test(
+    case: Arc<TestCase>,
+    runner: Arc<SierraCasmRunner>,
+    contracts_arc: Arc<HashMap<String, StarknetContractArtifacts>>,
+    predeployed_contracts_arc: Arc<Utf8PathBuf>,
+    fuzzer_runs: u32,
+    args: Vec<ConcreteTypeId>,
+    fuzzer_seed: u64,
+    cancellation_token: Arc<CancellationToken>,
+) -> (TestCaseSummary, Option<u32>) {
+    if args.is_empty() {
+        let result = run_from_test_case(
+            &runner,
+            &case,
+            &contracts_arc,
+            &predeployed_contracts_arc,
+            vec![],
+        )
+        .await
+        .unwrap();
 
-fn run_tests_from_file(
+        // pretty_printing::print_test_result(&result, None);
+        (result, None)
+    } else {
+        let result = run_with_fuzzing(
+            fuzzer_runs,
+            &contracts_arc,
+            &predeployed_contracts_arc,
+            &runner,
+            &case,
+            &args,
+            fuzzer_seed,
+            cancellation_token.clone(),
+        )
+        .await;
+
+        result.unwrap()
+    }
+}
+
+async fn run_tests_from_file(
     tests: TestsFromFile,
     runner_config: &RunnerConfig,
     contracts: &HashMap<String, StarknetContractArtifacts>,
     predeployed_contracts: &Utf8PathBuf,
     fuzzer_seed: u64,
+    cancellation_token: Arc<CancellationToken>,
 ) -> Result<(TestFileSummary, bool)> {
-    let runner = SierraCasmRunner::new(
-        tests.sierra_program,
-        Some(MetadataComputationConfig::default()),
-        OrderedHashMap::default(),
-    )
-    .context("Failed setting up runner.")?;
+    let runner = Arc::new(
+        SierraCasmRunner::new(
+            tests.sierra_program,
+            Some(MetadataComputationConfig::default()),
+            OrderedHashMap::default(),
+        )
+        .context("Failed setting up runner.")?,
+    );
 
     pretty_printing::print_running_tests(&tests.relative_path, tests.test_cases.len());
 
     let mut was_fuzzed = false;
-    let mut results = vec![];
+    let mut tasks = vec![];
+    let test_cases = Arc::new(tests.test_cases);
+    let contracts_arc = Arc::new(contracts.clone());
+    let predeployed_contracts_arc = Arc::new(predeployed_contracts.clone());
 
-    for (i, case) in tests.test_cases.iter().enumerate() {
+    test_cases.iter().for_each(|case| {
         let case_name = case.name.as_str();
-        let function = runner.find_function(case_name)?;
+
+        let function = runner.find_function(case_name).unwrap();
         let args = function_args(function, &BUILTINS);
 
-        let result = if args.is_empty() {
-            let result =
-                run_from_test_case(&runner, case, contracts, predeployed_contracts, vec![])?;
-            pretty_printing::print_test_result(&result, None);
-
-            result
-        } else {
-            was_fuzzed = true;
-            let (result, runs) = run_with_fuzzing(
-                runner_config,
-                contracts,
-                predeployed_contracts,
-                &runner,
-                case,
-                &args,
-                fuzzer_seed,
-            )?;
-            pretty_printing::print_test_result(&result, Some(runs));
-
-            result
-        };
-
-        results.push(result.clone());
-
-        if runner_config.exit_first {
-            if let TestCaseSummary::Failed { .. } = result {
-                for case in &tests.test_cases[i + 1..] {
-                    let skipped_result = TestCaseSummary::skipped(case);
-                    pretty_printing::print_test_result(&skipped_result, None);
-                    results.push(skipped_result);
+        let task = task::spawn({
+            let case = Arc::new(case.clone());
+            let c = case.clone();
+            let runner = runner.clone();
+            let contracts_arc = contracts_arc.clone();
+            let predeployed_contracts_arc = predeployed_contracts_arc.clone();
+            let fuzzer_runs = runner_config.fuzzer_runs.clone();
+            let args: Vec<ConcreteTypeId> = args.into_iter().map(|e| e.clone()).collect();
+            let cancellation_token = cancellation_token.clone();
+            async move {
+                tokio::select! {
+                    _ = cancellation_token.cancelled() => {
+                        // The token was cancelled
+                        dbg!(&c);
+                       (TestCaseSummary::skipped(&c), None)
+                    },
+                    result = run_p_test(case, runner,contracts_arc,predeployed_contracts_arc, fuzzer_runs,args,fuzzer_seed, cancellation_token.clone()) => {
+                        result
+                    },
                 }
+            }
+        });
+
+        tasks.push(task);
+
+        was_fuzzed = true;
+    });
+
+    let mut results = vec![];
+
+    for thread in tasks {
+        let (result, runs) = thread.await.unwrap();
+        if runner_config.exit_first {
+            if let TestCaseSummary::Failed { .. } = &result {
+                cancellation_token.cancel();
+                pretty_printing::print_test_result(&result, None);
+
                 return Ok((
                     TestFileSummary {
-                        test_case_summaries: results,
+                        test_case_summaries: vec![result],
                         runner_exit_status: RunnerStatus::TestFailed,
                         relative_path: tests.relative_path,
                     },
@@ -337,10 +395,17 @@ fn run_tests_from_file(
                 ));
             }
         }
+        results.push((result, runs));
     }
+    //     }
+    // });
+
     Ok((
         TestFileSummary {
-            test_case_summaries: results,
+            test_case_summaries: results
+                .iter()
+                .map(|(result, _runs)| result.clone())
+                .collect(),
             runner_exit_status: RunnerStatus::Default,
             relative_path: tests.relative_path,
         },
@@ -348,15 +413,16 @@ fn run_tests_from_file(
     ))
 }
 
-fn run_with_fuzzing(
-    runner_config: &RunnerConfig,
+async fn run_with_fuzzing(
+    fuzzer_runs: u32,
     contracts: &HashMap<String, StarknetContractArtifacts>,
     predeployed_contracts: &Utf8PathBuf,
-    runner: &SierraCasmRunner,
+    runner: &Arc<SierraCasmRunner>,
     case: &TestCase,
-    args: &Vec<&ConcreteTypeId>,
+    args: &Vec<ConcreteTypeId>,
     fuzzer_seed: u64,
-) -> Result<(TestCaseSummary, u32)> {
+    cancellation_token: Arc<CancellationToken>,
+) -> Result<(TestCaseSummary, Option<u32>)> {
     if contains_non_felt252_args(args) {
         bail!(
             "Fuzzer only supports felt252 arguments, and test {} defines arguments that are not felt252 type",
@@ -366,7 +432,7 @@ fn run_with_fuzzing(
 
     let mut fuzzer = RandomFuzzer::new(
         fuzzer_seed,
-        runner_config.fuzzer_runs,
+        fuzzer_runs,
         args.len(),
         &BigUint::zero(),
         &Felt252::prime(),
@@ -374,28 +440,58 @@ fn run_with_fuzzing(
 
     let mut results = vec![];
 
-    for _ in 1..=runner_config.fuzzer_runs {
-        let args = fuzzer.next_felt252_args();
+    let runner1 = Arc::new(runner.clone());
+    for _ in 1..=fuzzer_runs {
+        results.push(task::spawn({
+            let runner1 = runner1.clone();
+            let case = Arc::new(case.clone());
+            let contracts_arc = Arc::new(contracts.clone());
+            let predeployed_contracts_arc = Arc::new(predeployed_contracts.clone());
+            let fuzzer_runs = fuzzer_runs.clone();
+            let c = case.clone();
+            let args = fuzzer.next_felt252_args();
+            let cancellation_token = cancellation_token.clone();
+            async move {
+                tokio::select! {
+                    _ = cancellation_token.cancelled() => {
+                        // The token was cancelled
+                        TestCaseSummary::Failed { name: "fuzzing".to_string(), run_result: None, msg: None, arguments: vec![] }
 
-        let result =
-            run_from_test_case(runner, case, contracts, predeployed_contracts, args.clone())?;
-        results.push(result.clone());
+                    },
+                    result = run_from_test_case(
+                        &runner1,
+                        &case,
+                        &contracts_arc,
+                        &predeployed_contracts_arc,
+                        args.clone(),
+                    ) => {
+                        result.unwrap()
+                    },
+                }
 
-        if let TestCaseSummary::Failed { .. } = result {
-            // Fuzz failed
-            break;
-        }
+                // if let TestCaseSummary::Failed { .. } = result {
+                //     // Fuzz failed
+                //     break;
+                // }
+            }
+        }))
     }
 
-    let result = results
+    let mut res = vec![];
+    for r in results {
+        let a = r.await.unwrap();
+        res.push(a);
+    }
+
+    let result = res
         .last()
         .expect("Test should always run at least once")
         .clone();
-    let runs = u32::try_from(results.len())?;
-    Ok((result, runs))
+    let runs = u32::try_from(res.len())?;
+    Ok((result, Some(runs)))
 }
 
-fn contains_non_felt252_args(args: &Vec<&ConcreteTypeId>) -> bool {
+fn contains_non_felt252_args(args: &Vec<ConcreteTypeId>) -> bool {
     args.iter().any(|pt| {
         if let Some(name) = &pt.debug_name {
             return name != &SmolStr::from("felt252");

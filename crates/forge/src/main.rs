@@ -5,6 +5,7 @@ use include_dir::{include_dir, Dir};
 use scarb_metadata::{MetadataCommand, PackageMetadata};
 use scarb_ui::args::PackagesFilter;
 use std::path::PathBuf;
+use std::sync::Arc;
 use tempfile::{tempdir, TempDir};
 
 use forge::{pretty_printing, RunnerConfig};
@@ -18,7 +19,8 @@ use forge::scarb::{
 use forge::test_case_summary::TestCaseSummary;
 use rand::{thread_rng, RngCore};
 use std::process::{Command, Stdio};
-
+use tokio::select;
+use tokio_util::sync::CancellationToken;
 mod init;
 
 static PREDEPLOYED_CONTRACTS: Dir = include_dir!("crates/cheatnet/predeployed-contracts");
@@ -76,7 +78,11 @@ fn extract_failed_tests(tests_summaries: Vec<TestFileSummary>) -> Vec<TestCaseSu
         .collect()
 }
 
-fn main_execution() -> Result<bool> {
+#[tokio::main]
+async fn main_execution() -> Result<bool> {
+    let token = CancellationToken::new();
+    let cancellation_token = Arc::new(token.clone());
+
     let args = Args::parse();
     if let Some(project_name) = args.init {
         init::run(project_name.as_str())?;
@@ -101,6 +107,7 @@ fn main_execution() -> Result<bool> {
     let fuzzer_seed = args.fuzzer_seed.unwrap_or_else(|| thread_rng().next_u64());
 
     let mut all_failed_tests = vec![];
+
     for package in &packages {
         let forge_config = config_from_scarb_for_package(&scarb_metadata, &package.id)?;
         let (package_path, lib_path) = paths_for_package(&scarb_metadata, &package.id)?;
@@ -119,7 +126,7 @@ fn main_execution() -> Result<bool> {
             bail!("Scarb build did not succeed")
         }
 
-        let package_name = name_for_package(&scarb_metadata, &package.id)?;
+        let package_name = Arc::new(name_for_package(&scarb_metadata, &package.id)?);
         let dependencies = dependencies_for_package(&scarb_metadata, &package.id)?;
         let target_name = target_name_for_package(&scarb_metadata, &package.id)?;
         let corelib_path = corelib_for_package(&scarb_metadata, &package.id)?;
@@ -137,20 +144,22 @@ fn main_execution() -> Result<bool> {
             .map(|path| get_contracts_map(&path))
             .transpose()?
             .unwrap_or_default();
-
+        let dependencies = &Some(dependencies.clone());
         let tests_file_summaries = run(
             &package_path,
             &package_name,
             &lib_path,
-            &Some(dependencies.clone()),
+            dependencies,
             &runner_config,
             &corelib_path,
             &contracts,
             &predeployed_contracts,
             fuzzer_seed,
-        )?;
+            cancellation_token.clone(),
+        )
+        .await;
 
-        let mut failed_tests = extract_failed_tests(tests_file_summaries);
+        let mut failed_tests = extract_failed_tests(tests_file_summaries.unwrap());
         all_failed_tests.append(&mut failed_tests);
     }
 
