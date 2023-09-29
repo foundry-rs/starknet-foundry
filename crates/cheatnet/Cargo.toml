@@ -31,6 +31,7 @@ tokio.workspace = true
 num-bigint.workspace = true
 conversions.workspace = true
 fs2 = "0.4.3"
+flate2 = "1.0.27"
 
 [dev-dependencies]
 ctor.workspace = true
