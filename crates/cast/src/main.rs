@@ -239,6 +239,7 @@ async fn main() -> Result<()> {
                     create.salt,
                     create.add_profile,
                     create.class_hash,
+                    create.hex_format,
                 )
                 .await;
 

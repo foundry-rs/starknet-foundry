@@ -34,6 +34,10 @@ pub struct Create {
     /// Custom open zeppelin contract class hash of declared contract
     #[clap(short, long)]
     pub class_hash: Option<String>,
+
+    /// Show `max_fee` in hex format
+    #[clap(long)]
+    pub hex_format: bool,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -48,6 +52,7 @@ pub async fn create(
     salt: Option<FieldElement>,
     add_profile: bool,
     class_hash: Option<String>,
+    hex_format: bool,
 ) -> Result<AccountCreateResponse> {
     let salt = extract_or_generate_salt(salt);
     let class_hash = {
@@ -94,7 +99,12 @@ pub async fn create(
     let mut output = vec![("address", format!("{address:#x}"))];
     if account_json["deployed"] == json!(false) {
         println!("Account successfully created. Prefund generated address with at least {max_fee} tokens. It is good to send more in the case of higher demand, max_fee * 2 = {}", max_fee * 2);
-        output.push(("max_fee", format!("{max_fee:#x}")));
+        let max_fee_str = if hex_format {
+            format!("{max_fee:#x}")
+        } else {
+            format!("{max_fee:#}")
+        };
+        output.push(("max_fee", max_fee_str));
     }
 
     if add_profile {
