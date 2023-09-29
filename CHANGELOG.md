@@ -13,8 +13,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `account delete` command for removing accounts from the accounts file
 
+### Forge
 
-## [0.7.1] - 2023-09-13
+#### Added
+
+- Support for `u8`, `u16`, `u32`, `u64`, `u128`, `u256` types to fuzzer
+
+#### Changed
+
+- Spying events interface is updated to enable the use of events defined inside contracts in assertions
+
+## [0.7.1] - 2023-09-27
 
 ### Forge
 
@@ -25,7 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Using any concrete `block_id` when using forking mode, would lead to crashes 
 
-## [0.7.0] - 2023-09-13
+## [0.7.0] - 2023-09-27
 
 ### Forge
 

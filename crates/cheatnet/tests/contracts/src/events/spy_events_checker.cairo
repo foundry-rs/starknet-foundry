@@ -13,11 +13,13 @@ trait ISpyEventsChecker<TContractState> {
         some_more_data: ContractAddress,
         even_more_data: u256
     );
+    fn emit_event_syscall(ref self: TContractState, some_key: felt252, some_data: felt252);
 }
 
 #[starknet::contract]
 mod SpyEventsChecker {
     use starknet::ContractAddress;
+    use starknet::SyscallResultTrait;
 
     #[storage]
     struct Storage {}
@@ -73,6 +75,10 @@ mod SpyEventsChecker {
             self.emit(Event::FirstEvent(FirstEvent { some_data }));
             self.emit(Event::SecondEvent(SecondEvent { some_data, some_more_data }));
             self.emit(Event::ThirdEvent(ThirdEvent { some_data, some_more_data, even_more_data }));
+        }
+
+        fn emit_event_syscall(ref self: ContractState, some_key: felt252, some_data: felt252) {
+            starknet::emit_event_syscall(array![some_key].span(), array![some_data].span()).unwrap_syscall();
         }
     }
 }
