@@ -9,10 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Added
+
+- Support for `u8`, `u16`, `u32`, `u64`, `u128`, `u256` types to fuzzer
+
 #### Changed
 
 - Spying events interface is updated to enable the use of events defined inside contracts in assertions
-
 
 ## [0.7.1] - 2023-09-27
 
@@ -21,7 +24,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - `var` library function for reading environmental variables
-- Support for `u8`, `u16`, `u32`, `u64`, `u128`, `u256` types to fuzzer
 
 ### Fixed
 - Using any concrete `block_id` when using forking mode, would lead to crashes 
