@@ -286,9 +286,9 @@ async fn run_p_test(
     args: Vec<ConcreteTypeId>,
     fuzzer_seed: u64,
     cancellation_token: Arc<CancellationToken>,
-) -> (TestCaseSummary, Option<u32>) {
+) -> Result<(TestCaseSummary, Option<u32>)> {
     if args.is_empty() {
-        let result = run_from_test_case(
+        match run_from_test_case(
             &runner,
             &case,
             &contracts_arc,
@@ -296,10 +296,13 @@ async fn run_p_test(
             vec![],
         )
         .await
-        .unwrap();
+        {
+            Ok(result) => Ok((result, None)),
+            Err(e) => Err(e),
+        }
 
         // pretty_printing::print_test_result(&result, None);
-        (result, None)
+        // result
     } else {
         let result = run_with_fuzzing(
             fuzzer_runs,
@@ -313,7 +316,7 @@ async fn run_p_test(
         )
         .await;
 
-        result.unwrap()
+        result
     }
 }
 
@@ -362,7 +365,7 @@ async fn run_tests_from_file(
                     _ = cancellation_token.cancelled() => {
                         // The token was cancelled
                         dbg!(&c);
-                       (TestCaseSummary::skipped(&c), None)
+                       Ok((TestCaseSummary::skipped(&c), None))
                     },
                     result = run_p_test(case, runner,contracts_arc,predeployed_contracts_arc, fuzzer_runs,args,fuzzer_seed, cancellation_token.clone()) => {
                         result
@@ -379,7 +382,7 @@ async fn run_tests_from_file(
     let mut results = vec![];
 
     for thread in tasks {
-        let (result, runs) = thread.await.unwrap();
+        let (result, runs) = thread.await.unwrap()?;
         if runner_config.exit_first {
             if let TestCaseSummary::Failed { .. } = &result {
                 cancellation_token.cancel();

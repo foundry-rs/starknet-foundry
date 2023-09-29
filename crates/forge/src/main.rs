@@ -157,9 +157,9 @@ async fn main_execution() -> Result<bool> {
             fuzzer_seed,
             cancellation_token.clone(),
         )
-        .await;
+        .await?;
 
-        let mut failed_tests = extract_failed_tests(tests_file_summaries.unwrap());
+        let mut failed_tests = extract_failed_tests(tests_file_summaries);
         all_failed_tests.append(&mut failed_tests);
     }
 
