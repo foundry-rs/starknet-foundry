@@ -308,8 +308,8 @@ async fn run_p_test(
             fuzzer_runs,
             &contracts_arc,
             &predeployed_contracts_arc,
-            &runner,
-            &case,
+            runner,
+            case,
             &args,
             fuzzer_seed,
             cancellation_token.clone(),
@@ -419,8 +419,8 @@ async fn run_with_fuzzing(
     fuzzer_runs: u32,
     contracts: &HashMap<String, StarknetContractArtifacts>,
     predeployed_contracts: &Utf8PathBuf,
-    runner: &Arc<SierraCasmRunner>,
-    case: &TestCase,
+    runner: Arc<SierraCasmRunner>,
+    case: Arc<TestCase>,
     args: &Vec<ConcreteTypeId>,
     fuzzer_seed: u64,
     cancellation_token: Arc<CancellationToken>,
@@ -430,7 +430,7 @@ async fn run_with_fuzzing(
     if contains_non_felt252_args(args) {
         bail!(
             "Fuzzer only supports felt252 arguments, and test {} defines arguments that are not felt252 type",
-            case.name.as_str()
+            &case.name.as_str()
         );
     }
 
@@ -447,8 +447,8 @@ async fn run_with_fuzzing(
     (1..fuzzer_runs).into_iter().for_each(|_| {
         let args = fuzzer.next_felt252_args();
         tasks.push(task::spawn({
+            let case = case.clone();
             let runner = runner.clone();
-            let case = Arc::new(case.clone());
             let contracts_arc = Arc::new(contracts.clone());
             let predeployed_contracts_arc = Arc::new(predeployed_contracts.clone());
             let args = args.clone();
