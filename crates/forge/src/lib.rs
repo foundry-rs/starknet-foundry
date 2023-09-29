@@ -398,10 +398,9 @@ async fn run_tests_from_file(
                 ));
             }
         }
+        pretty_printing::print_test_result(&result, runs);
         results.push((result, runs));
     }
-    //     }
-    // });
 
     Ok((
         TestFileSummary {
@@ -426,6 +425,8 @@ async fn run_with_fuzzing(
     fuzzer_seed: u64,
     cancellation_token: Arc<CancellationToken>,
 ) -> Result<(TestCaseSummary, Option<u32>)> {
+    let token = CancellationToken::new();
+
     if contains_non_felt252_args(args) {
         bail!(
             "Fuzzer only supports felt252 arguments, and test {} defines arguments that are not felt252 type",
@@ -441,22 +442,26 @@ async fn run_with_fuzzing(
         &Felt252::prime(),
     );
 
-    let mut results = vec![];
+    let mut tasks = vec![];
 
-    for _ in 1..=fuzzer_runs {
-        results.push(task::spawn({
+    (1..fuzzer_runs).into_iter().for_each(|_| {
+        let args = fuzzer.next_felt252_args();
+        tasks.push(task::spawn({
             let runner = runner.clone();
             let case = Arc::new(case.clone());
             let contracts_arc = Arc::new(contracts.clone());
             let predeployed_contracts_arc = Arc::new(predeployed_contracts.clone());
-            let args = fuzzer.next_felt252_args();
+            let args = args.clone();
             let cancellation_token = cancellation_token.clone();
+            let cancellation_fuzzing_token = Arc::new(token.clone());
             async move {
                 tokio::select! {
                     _ = cancellation_token.cancelled() => {
                         // The token was cancelled
-                        TestCaseSummary::Failed { name: "fuzzing".to_string(), run_result: None, msg: None, arguments: vec![] }
-
+                        Ok(TestCaseSummary::Failed { name: "fuzzing".to_string(), run_result: None, msg: None, arguments: vec![] })
+                    },
+                    _ = cancellation_fuzzing_token.cancelled() => {
+                        Ok(TestCaseSummary::Failed { name: "fuzzing".to_string(), run_result: None, msg: None, arguments: vec![] })
                     },
                     result = run_from_test_case(
                         &runner,
@@ -465,24 +470,37 @@ async fn run_with_fuzzing(
                         &predeployed_contracts_arc,
                         args.clone(),
                     ) => {
-                        result.unwrap()
+                        result
                     },
                 }
             }
         }))
+    });
+
+    let mut results = vec![];
+    for task in tasks {
+        let result = match task.await? {
+            Ok(result) => result,
+            Err(e) => {
+                token.cancel();
+                return Err(e);
+            }
+        };
+        if let TestCaseSummary::Failed { .. } = &result {
+            if results.is_empty() {
+                token.cancel();
+                results.push(result);
+            }
+        } else {
+            results.push(result);
+        }
     }
 
-    let mut res = vec![];
-    for r in results {
-        let a = r.await.unwrap();
-        res.push(a);
-    }
-
-    let result = res
+    let result = results
         .last()
         .expect("Test should always run at least once")
         .clone();
-    let runs = u32::try_from(res.len())?;
+    let runs = u32::try_from(results.len())?;
     Ok((result, Some(runs)))
 }
 
