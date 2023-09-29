@@ -194,9 +194,9 @@ pub fn paths_for_package(
         .ok_or_else(|| anyhow!("Failed to find metadata for package = {package}"))?;
 
     let package_path = package.root.clone();
-    let lib_path = compilation_unit.target.source_path.clone();
+    let package_source_dir_path = compilation_unit.target.source_root();
 
-    Ok((package_path, lib_path))
+    Ok((package_path, Utf8PathBuf::from(package_source_dir_path)))
 }
 
 pub fn target_dir_for_package(workspace_root: &Utf8PathBuf) -> Result<Utf8PathBuf> {
@@ -549,12 +549,13 @@ mod tests {
             .exec()
             .unwrap();
 
-        let (package_path, lib_path) =
+        let (package_path, package_source_dir_path) =
             paths_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0]).unwrap();
 
         assert!(package_path.is_dir());
-        assert!(lib_path.ends_with(Utf8PathBuf::from("src/lib.cairo")));
-        assert!(lib_path.starts_with(package_path));
+        assert!(package_source_dir_path.is_dir());
+        assert_eq!(package_source_dir_path, package_path.join("src"));
+        assert!(package_source_dir_path.starts_with(package_path));
     }
 
     #[test]

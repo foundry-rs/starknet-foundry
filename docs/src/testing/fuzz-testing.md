@@ -4,7 +4,7 @@ In many cases, a test needs to verify function behavior for multiple possible va
 While it is possible to come up with these cases on your own, it is often impractical, especially when you want to test
 against a large number of possible arguments.
 
-> ℹ️**Info**
+> ℹ️ **Info**
 > Currently, Forge fuzzer only supports using randomly generated values.
 > This way of fuzzing doesn't support any kind of value generation based on code analysis, test coverage or results of
 > other fuzzer runs.
@@ -38,9 +38,19 @@ Tests: 1 passed, 0 failed, 0 skipped
 Fuzzer seed: [..]
 ```
 
-> ⚠️ **Warning**
-> Currently Forge only supports fuzz testing arguments with `felt252` type. Trying to use different argument types will
-> result in an error.
+## Types Supported by the Fuzzer
+
+Fuzzer currently supports generating values of these types
+
+- `u8`
+- `u16`
+- `u32`
+- `u64`
+- `u128`
+- `u256`
+- `felt252`
+
+Trying to use arguments of different type in test definition will result in an error.
 
 ## Fuzzer Configuration
 

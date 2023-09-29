@@ -102,7 +102,8 @@ fn main_execution() -> Result<bool> {
     let mut all_failed_tests = vec![];
     for package in &packages {
         let forge_config = config_from_scarb_for_package(&scarb_metadata, &package.id)?;
-        let (package_path, lib_path) = paths_for_package(&scarb_metadata, &package.id)?;
+        let (package_path, package_source_dir_path) =
+            paths_for_package(&scarb_metadata, &package.id)?;
         env::set_current_dir(package_path.clone())?;
 
         // TODO(#671)
@@ -148,8 +149,8 @@ fn main_execution() -> Result<bool> {
             package_root,
             &package_path,
             &package_name,
-            &lib_path,
-            dependencies,
+            &package_source_dir_path,
+            &dependencies,
             &runner_config,
             &runner_params,
         )?;
