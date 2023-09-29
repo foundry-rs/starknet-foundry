@@ -54,7 +54,7 @@ fn test_sum(x: felt252, y: felt252) {
 }
 ```
 
-It is also possible to configure it globally, via command line arguments.
+It can also be configured globally, via command line arguments:
 
 ```shell
 $ snforge --fuzzer-runs 1234 --fuzzer-seed 1111
