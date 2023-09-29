@@ -304,8 +304,6 @@ async fn run_p_test(
         // pretty_printing::print_test_result(&result, None);
         // result
     } else {
-        
-
         run_with_fuzzing(
             fuzzer_runs,
             &contracts_arc,
@@ -376,13 +374,15 @@ async fn run_tests_from_file(
 
         tasks.push(task);
 
-        was_fuzzed = true;
     });
 
     let mut results = vec![];
 
     for thread in tasks {
         let (result, runs) = thread.await.unwrap()?;
+        if let Some(_) = runs {
+            was_fuzzed = true;
+        }
         if runner_config.exit_first {
             if let TestCaseSummary::Failed { .. } = &result {
                 cancellation_token.cancel();
@@ -474,7 +474,7 @@ async fn run_with_fuzzing(
                     },
                 }
             }
-        }))
+        }));
     });
 
     let mut results = vec![];
@@ -500,7 +500,7 @@ async fn run_with_fuzzing(
         .last()
         .expect("Test should always run at least once")
         .clone();
-    let runs = u32::try_from(results.len())?;
+    let runs = u32::try_from(results.len() + 1)?;
     Ok((result, Some(runs)))
 }
 
@@ -859,7 +859,8 @@ mod tests {
             id: 0,
             debug_name: Some(SmolStr::from("felt252")),
         };
-        let args = vec![&typ, &typ];
+        let typ_cloned = typ.clone();
+        let args = vec![typ, typ_cloned];
         assert!(!contains_non_felt252_args(&args));
     }
 
@@ -869,11 +870,12 @@ mod tests {
             id: 0,
             debug_name: Some(SmolStr::from("felt252")),
         };
+        let typ_cloned = typ.clone();
         let typ2 = ConcreteTypeId {
             id: 0,
             debug_name: Some(SmolStr::from("Uint256")),
         };
-        let args = vec![&typ, &typ, &typ2];
+        let args = vec![typ, typ_cloned, typ2];
         assert!(contains_non_felt252_args(&args));
     }
 }
