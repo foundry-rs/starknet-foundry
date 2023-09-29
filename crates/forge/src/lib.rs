@@ -304,7 +304,9 @@ async fn run_p_test(
         // pretty_printing::print_test_result(&result, None);
         // result
     } else {
-        let result = run_with_fuzzing(
+        
+
+        run_with_fuzzing(
             fuzzer_runs,
             &contracts_arc,
             &predeployed_contracts_arc,
@@ -314,9 +316,7 @@ async fn run_p_test(
             fuzzer_seed,
             cancellation_token.clone(),
         )
-        .await;
-
-        result
+        .await
     }
 }
 
@@ -357,8 +357,8 @@ async fn run_tests_from_file(
             let runner = runner.clone();
             let contracts_arc = contracts_arc.clone();
             let predeployed_contracts_arc = predeployed_contracts_arc.clone();
-            let fuzzer_runs = runner_config.fuzzer_runs.clone();
-            let args: Vec<ConcreteTypeId> = args.into_iter().map(|e| e.clone()).collect();
+            let fuzzer_runs = runner_config.fuzzer_runs;
+            let args: Vec<ConcreteTypeId> = args.into_iter().cloned().collect();
             let cancellation_token = cancellation_token.clone();
             async move {
                 tokio::select! {
@@ -444,7 +444,7 @@ async fn run_with_fuzzing(
 
     let mut tasks = vec![];
 
-    (1..fuzzer_runs).into_iter().for_each(|_| {
+    (1..fuzzer_runs).for_each(|_| {
         let args = fuzzer.next_felt252_args();
         tasks.push(task::spawn({
             let case = case.clone();
