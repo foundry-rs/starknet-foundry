@@ -7,7 +7,7 @@ use serde_json::Map;
 use serde_json::Value;
 
 #[derive(Args, Debug)]
-#[command(about = "Delete an account with all important secrets")]
+#[command(about = "Delete an account information from the accounts file")]
 pub struct Delete {
     /// Name of the account to be deployed
     #[clap(short, long)]
