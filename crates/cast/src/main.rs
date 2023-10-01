@@ -1,4 +1,5 @@
 use crate::starknet_commands::account::Account;
+use crate::starknet_commands::show_config::{show_config, ShowConfig};
 use crate::starknet_commands::{
     account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
 };
@@ -7,7 +8,10 @@ use anyhow::{anyhow, Result};
 use camino::Utf8PathBuf;
 use cast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
 use cast::helpers::scarb_utils::{parse_scarb_config, CastConfig};
-use cast::{get_account, get_block_id, get_chain_id, get_provider, print_command_result};
+use cast::{
+    chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_provider,
+    print_command_result,
+};
 use clap::{Parser, Subcommand};
 
 mod starknet_commands;
@@ -77,6 +81,9 @@ enum Commands {
 
     /// Create and deploy an account
     Account(Account),
+
+    /// Show current configuration being used
+    ShowConfig(ShowConfig),
 }
 
 #[tokio::main]
@@ -273,6 +280,19 @@ async fn main() -> Result<()> {
                 Ok(())
             }
         },
+        Commands::ShowConfig(_) => {
+            let chain_id = get_chain_id(&provider).await?;
+            let chain_id = chain_id_to_network_name(chain_id);
+            let mut result = show_config(
+                config,
+                cli.profile.unwrap_or_default(),
+                cli.path_to_scarb_toml.unwrap_or_default(),
+                chain_id,
+            )
+            .await;
+            print_command_result("show-config", &mut result, cli.int_format, cli.json)?;
+            Ok(())
+        }
     }
 }
 
