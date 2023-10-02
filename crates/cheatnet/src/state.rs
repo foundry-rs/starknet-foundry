@@ -236,12 +236,3 @@ impl CheatnetState {
             || self.address_is_spoofed(contract_address)
     }
 }
-
-// impl Default for CheatnetState {
-//     fn default() -> Self {
-//         Self::new(ExtendedStateReader {
-//             dict_state_reader: build_testing_state(predeployed_contracts),
-//             fork_state_reader: None
-//         })
-//     }
-// }
