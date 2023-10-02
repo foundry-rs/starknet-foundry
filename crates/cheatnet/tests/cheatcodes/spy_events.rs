@@ -507,18 +507,20 @@ fn use_multiple_spies() {
 
 #[test]
 fn test_emitted_by_emit_events_syscall() {
-    let mut state = create_cheatnet_state();
+    let mut cached_state = create_cached_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
-    let contract_address = deploy_contract(&mut state, "SpyEventsChecker", &[]);
+    let contract_address = deploy_contract(&mut blockifier_state, &mut cheatnet_state, "SpyEventsChecker", &[]);
 
     let id = state.spy_events(SpyTarget::All);
 
     let selector = felt_selector_from_name("emit_event_syscall");
     call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
         &contract_address,
         &selector,
         &[Felt252::from(123), Felt252::from(456)],
-        &mut state,
     )
     .unwrap();
 
