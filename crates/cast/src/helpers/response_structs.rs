@@ -50,4 +50,5 @@ pub struct ShowConfigResponse {
     pub account: String,
     pub scarb_path: Utf8PathBuf,
     pub account_file_path: Utf8PathBuf,
+    pub keystore: Utf8PathBuf,
 }

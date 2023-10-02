@@ -282,12 +282,12 @@ async fn main() -> Result<()> {
         },
         Commands::ShowConfig(_) => {
             let chain_id = get_chain_id(&provider).await?;
-            let chain_id = chain_id_to_network_name(chain_id);
+            let chain_id_str = chain_id_to_network_name(chain_id);
             let mut result = show_config(
                 config,
                 cli.profile.unwrap_or_default(),
                 cli.path_to_scarb_toml.unwrap_or_default(),
-                chain_id,
+                chain_id_str,
             )
             .await;
             print_command_result("show-config", &mut result, cli.int_format, cli.json)?;

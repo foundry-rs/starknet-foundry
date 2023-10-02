@@ -22,5 +22,6 @@ pub async fn show_config(
         rpc_url: cast_config.rpc_url,
         account: cast_config.account,
         account_file_path: cast_config.accounts_file,
+        keystore: cast_config.keystore,
     })
 }
