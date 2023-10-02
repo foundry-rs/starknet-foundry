@@ -1,8 +1,8 @@
+use super::CheatcodeError;
 use crate::state::BlockifierState;
 use anyhow::Result;
 use cairo_felt::Felt252;
 use starknet_api::core::ContractAddress;
-use super::CheatcodeError;
 
 impl BlockifierState<'_> {
     pub fn l1_handler_execute(

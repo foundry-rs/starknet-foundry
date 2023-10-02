@@ -140,7 +140,7 @@ impl HintProcessorLogic for CheatcodesSyscallHandler<'_> {
             return execute_syscall(
                 system,
                 vm,
-                &mut self.cheatable_syscall_handler.cheatnet_state,
+                self.cheatable_syscall_handler.cheatnet_state,
                 exec_scopes,
                 hint_data,
                 constants,
@@ -380,7 +380,7 @@ impl CheatcodesSyscallHandler<'_> {
                 handle_deploy_result(
                     deploy(
                         &mut blockifier_state,
-                        &mut self.cheatable_syscall_handler.cheatnet_state,
+                        self.cheatable_syscall_handler.cheatnet_state,
                         &class_hash,
                         &calldata,
                     ),
@@ -399,7 +399,7 @@ impl CheatcodesSyscallHandler<'_> {
                 handle_deploy_result(
                     deploy_at(
                         &mut blockifier_state,
-                        &mut self.cheatable_syscall_handler.cheatnet_state,
+                        self.cheatable_syscall_handler.cheatnet_state,
                         &class_hash,
                         &calldata,
                         contract_address,

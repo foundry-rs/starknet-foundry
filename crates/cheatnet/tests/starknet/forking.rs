@@ -118,7 +118,7 @@ fn test_forking_at_block_number() {
     let cache_dir = TempDir::new().unwrap();
 
     {
-        let mut cheatnet_state = CheatnetState::new();
+        let mut cheatnet_state = CheatnetState::default();
         let mut cached_state_before_delopy = CachedState::new(
             ExtendedStateReader {
                 dict_state_reader: build_testing_state(&predeployed_contracts),

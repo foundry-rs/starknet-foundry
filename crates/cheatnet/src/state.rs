@@ -171,6 +171,7 @@ impl StateReader for DictStateReader {
 }
 
 #[allow(clippy::module_name_repetitions)]
+#[derive(Default)]
 pub struct CheatnetState {
     pub rolled_contracts: HashMap<ContractAddress, Felt252>,
     pub pranked_contracts: HashMap<ContractAddress, ContractAddress>,
@@ -183,20 +184,6 @@ pub struct CheatnetState {
 }
 
 impl CheatnetState {
-    #[must_use]
-    pub fn new() -> Self {
-        CheatnetState {
-            rolled_contracts: HashMap::new(),
-            pranked_contracts: HashMap::new(),
-            warped_contracts: HashMap::new(),
-            mocked_functions: HashMap::new(),
-            spoofed_contracts: HashMap::new(),
-            spies: vec![],
-            detected_events: vec![],
-            deploy_salt_base: 0,
-        }
-    }
-
     pub fn increment_deploy_salt_base(&mut self) {
         self.deploy_salt_base += 1;
     }

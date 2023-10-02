@@ -48,6 +48,6 @@ pub fn create_fork_cached_state_at(
 #[allow(clippy::module_name_repetitions)]
 pub fn create_cheatnet_state(state: &mut dyn State) -> (BlockifierState, CheatnetState) {
     let blockifier_state = BlockifierState::from(state);
-    let cheatnet_state = CheatnetState::new();
+    let cheatnet_state = CheatnetState::default();
     (blockifier_state, cheatnet_state)
 }

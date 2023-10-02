@@ -510,7 +510,12 @@ fn test_emitted_by_emit_events_syscall() {
     let mut cached_state = create_cached_state();
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
-    let contract_address = deploy_contract(&mut blockifier_state, &mut cheatnet_state, "SpyEventsChecker", &[]);
+    let contract_address = deploy_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        "SpyEventsChecker",
+        &[],
+    );
 
     let id = cheatnet_state.spy_events(SpyTarget::All);
 

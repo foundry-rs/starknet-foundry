@@ -144,7 +144,7 @@ pub(crate) fn run_from_test_case(
 
     let cheatable_syscall_handler = CheatableSyscallHandler {
         syscall_handler,
-        cheatnet_state: &mut CheatnetState::new(),
+        cheatnet_state: &mut CheatnetState::default(),
     };
 
     let mut cheatcodes_hint_processor = CheatcodesSyscallHandler {
