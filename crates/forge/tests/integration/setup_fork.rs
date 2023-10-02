@@ -5,7 +5,8 @@ use camino::Utf8PathBuf;
 use forge::scarb::{ForgeConfig, ForkTarget};
 use forge::{run, RunnerConfig, RunnerParams};
 use indoc::formatdoc;
-use std::collections::HashMap;
+use starknet::core::types::BlockId;
+use starknet::core::types::BlockTag::Latest;
 use std::path::PathBuf;
 use tempfile::tempdir;
 
@@ -107,7 +108,7 @@ fn fork_aliased_decorator() {
                 fork: vec![ForkTarget {
                     name: "FORK_NAME_FROM_SCARB_TOML".to_string(),
                     url: CHEATNET_RPC_URL.to_string(),
-                    block_id: HashMap::from([("tag".to_string(), "Latest".to_string())]),
+                    block_id: BlockId::Tag(Latest),
                 }],
                 fuzzer_runs: Some(1234),
                 fuzzer_seed: Some(500),

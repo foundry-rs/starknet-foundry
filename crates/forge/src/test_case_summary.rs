@@ -1,9 +1,11 @@
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{RunResult, RunResultValue};
+use starknet::core::types::BlockId;
 use std::option::Option;
 use test_collector::{ExpectedPanicValue, ExpectedTestResult, TestCase};
 
+pub(crate) type Url = String;
 /// Summary of running a single test case
 #[derive(Debug, PartialEq, Clone)]
 pub enum TestCaseSummary {
@@ -17,6 +19,8 @@ pub enum TestCaseSummary {
         msg: Option<String>,
         /// Arguments used in the test case run
         arguments: Vec<Felt252>,
+        /// Fork params for the test case
+        fork_params: Option<(Url, BlockId)>,
     },
     /// Test case failed
     Failed {
@@ -28,6 +32,8 @@ pub enum TestCaseSummary {
         msg: Option<String>,
         /// Arguments used in the test case run
         arguments: Vec<Felt252>,
+        /// Fork params for the test case
+        fork_params: Option<(Url, BlockId)>,
     },
     /// Test case skipped (did not run)
     Skipped {
@@ -44,6 +50,22 @@ impl TestCaseSummary {
             TestCaseSummary::Skipped { .. } => vec![],
         }
     }
+
+    pub(crate) fn name(&self) -> &String {
+        match self {
+            TestCaseSummary::Skipped { name }
+            | TestCaseSummary::Failed { name, .. }
+            | TestCaseSummary::Passed { name, .. } => name,
+        }
+    }
+
+    pub(crate) fn fork_params(&self) -> Option<&(Url, BlockId)> {
+        match self {
+            TestCaseSummary::Failed { fork_params, .. }
+            | TestCaseSummary::Passed { fork_params, .. } => fork_params.as_ref(),
+            TestCaseSummary::Skipped { .. } => None,
+        }
+    }
 }
 
 impl TestCaseSummary {
@@ -52,6 +74,7 @@ impl TestCaseSummary {
         run_result: RunResult,
         test_case: &TestCase,
         arguments: Vec<Felt252>,
+        fork_params: Option<(Url, BlockId)>,
     ) -> Self {
         let name = test_case.name.to_string();
         let msg = extract_result_data(&run_result, &test_case.expected_result);
@@ -62,12 +85,14 @@ impl TestCaseSummary {
                     msg,
                     run_result,
                     arguments,
+                    fork_params,
                 },
                 ExpectedTestResult::Panics(_) => TestCaseSummary::Failed {
                     name,
                     msg,
                     run_result: Some(run_result),
                     arguments,
+                    fork_params,
                 },
             },
             RunResultValue::Panic(value) => match &test_case.expected_result {
@@ -76,6 +101,7 @@ impl TestCaseSummary {
                     msg,
                     run_result: Some(run_result),
                     arguments,
+                    fork_params,
                 },
                 ExpectedTestResult::Panics(panic_expectation) => match panic_expectation {
                     ExpectedPanicValue::Exact(expected) if &value != expected => {
@@ -84,6 +110,7 @@ impl TestCaseSummary {
                             msg,
                             run_result: Some(run_result),
                             arguments,
+                            fork_params,
                         }
                     }
                     _ => TestCaseSummary::Passed {
@@ -91,6 +118,7 @@ impl TestCaseSummary {
                         msg,
                         run_result,
                         arguments,
+                        fork_params,
                     },
                 },
             },

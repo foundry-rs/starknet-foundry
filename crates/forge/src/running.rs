@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use blockifier::execution::entry_point::{
     CallEntryPoint, CallType, EntryPointExecutionContext, ExecutionResources,
 };
@@ -24,8 +24,7 @@ use cairo_vm::vm::runners::cairo_runner::RunResources;
 use camino::Utf8PathBuf;
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::state::{CheatnetState, ExtendedStateReader};
-use conversions::StarknetConversions;
-use starknet::core::types::{BlockId, BlockTag};
+use starknet::core::types::BlockId;
 use starknet::core::utils::get_selector_from_name;
 use starknet_api::core::PatriciaKey;
 use starknet_api::core::{ContractAddress, EntryPointSelector};
@@ -37,10 +36,11 @@ use test_collector::{ForkConfig, TestCase};
 
 use crate::cheatcodes_hint_processor::CheatcodesSyscallHandler;
 use crate::scarb::{ForkTarget, StarknetContractArtifacts};
-use crate::test_case_summary::TestCaseSummary;
+use crate::test_case_summary::{TestCaseSummary, Url};
 
-// snforge_std/src/cheatcodes.cairo::TEST
+// snforge_std/src/cheatcodes.cairo::test_address
 const TEST_ADDRESS: &str = "0x01724987234973219347210837402";
+const CACHE_FILE_NAME: &str = ".snfoundry_cache";
 
 /// Builds `hints_dict` required in `cairo_vm::types::program::Program` from instructions.
 fn build_hints_dict<'b>(
@@ -70,7 +70,7 @@ fn build_hints_dict<'b>(
 
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn run_from_test_case(
-    package_root: &Utf8PathBuf,
+    workspace_root: &Utf8PathBuf,
     runner: &SierraCasmRunner,
     case: &TestCase,
     fork_targets: &[ForkTarget],
@@ -84,6 +84,7 @@ pub(crate) fn run_from_test_case(
     } else {
         Some(usize::MAX)
     };
+    let fork_params = extract_fork_params(fork_targets, &case.fork_config)?;
 
     let func = runner.find_function(case.name.as_str())?;
     let initial_gas = runner.get_initial_available_gas(func, available_gas)?;
@@ -123,7 +124,7 @@ pub(crate) fn run_from_test_case(
 
     let state_reader = ExtendedStateReader {
         dict_state_reader: build_testing_state(predeployed_contracts),
-        fork_state_reader: get_fork_state_reader(package_root, fork_targets, &case.fork_config),
+        fork_state_reader: get_fork_state_reader(workspace_root, fork_params.as_ref()),
     };
     let mut blockifier_state = CachedState::new(state_reader, GlobalContractCache::default());
     let mut execution_resources = ExecutionResources::default();
@@ -162,7 +163,12 @@ pub(crate) fn run_from_test_case(
         instructions,
         builtins,
     ) {
-        Ok(result) => Ok(TestCaseSummary::from_run_result(result, case, args)),
+        Ok(result) => Ok(TestCaseSummary::from_run_result(
+            result,
+            case,
+            args,
+            fork_params,
+        )),
 
         // CairoRunError comes from VirtualMachineError which may come from HintException that originates in the cheatcode processor
         Err(RunnerError::CairoRunError(error)) => Ok(TestCaseSummary::Failed {
@@ -173,6 +179,7 @@ pub(crate) fn run_from_test_case(
                 error.to_string().replace(" Custom Hint Error: ", "\n    ")
             )),
             arguments: args,
+            fork_params,
         }),
 
         Err(err) => Err(err.into()),
@@ -180,51 +187,38 @@ pub(crate) fn run_from_test_case(
 }
 
 fn get_fork_state_reader(
-    package_root: &Utf8PathBuf,
-    fork_targets: &[ForkTarget],
-    fork_config: &Option<ForkConfig>,
+    workspace_root: &Utf8PathBuf,
+    fork_params: Option<&(Url, BlockId)>,
 ) -> Option<ForkStateReader> {
-    match &fork_config {
-        Some(ForkConfig::Params(url, block_id)) => Some(ForkStateReader::new(
+    fork_params.map(|(url, block_id)| {
+        ForkStateReader::new(
             url,
             *block_id,
-            Some(package_root.join(".snfoundry_cache").as_ref()),
-        )),
-        Some(ForkConfig::Id(name)) => {
-            find_params_and_build_fork_state_reader(package_root, fork_targets, name)
-        }
-        _ => None,
-    }
+            Some(workspace_root.join(CACHE_FILE_NAME).as_ref()),
+        )
+    })
 }
 
-fn find_params_and_build_fork_state_reader(
-    package_root: &Utf8PathBuf,
+pub(crate) fn extract_fork_params(
     fork_targets: &[ForkTarget],
-    fork_alias: &str,
-) -> Option<ForkStateReader> {
-    let fork = fork_targets.iter().find(|fork| fork.name == fork_alias);
-
-    let block_id = fork?
-        .block_id
-        .iter()
-        .map(|(id_type, value)| match id_type.as_str() {
-            "number" => Some(BlockId::Number(value.parse().unwrap())),
-            "hash" => Some(BlockId::Hash(value.to_field_element())),
-            "tag" => match value.as_str() {
-                "Latest" => Some(BlockId::Tag(BlockTag::Latest)),
-                "Pending" => Some(BlockId::Tag(BlockTag::Pending)),
-                _ => unreachable!(),
-            },
-            _ => unreachable!(),
-        })
-        .collect::<Vec<_>>();
-    let [Some(block_id)] = block_id[..] else {
-        return None;
+    fork_config: &Option<ForkConfig>,
+) -> Result<Option<(Url, BlockId)>> {
+    let result = match fork_config {
+        Some(ForkConfig::Id(name)) => {
+            let fork_target = fork_targets
+                .iter()
+                .find(|fork| fork.name == *name)
+                .ok_or_else(|| {
+                    anyhow!(
+                        "The fork name used in `#[fork({name})]` attribute is not present in the Scarb.toml. \
+                        Make sure to include a fork configuration with a matching name in your Scarb.toml."
+                    )
+                })?;
+            Some((fork_target.url.clone(), fork_target.block_id))
+        }
+        Some(ForkConfig::Params(url, block_id)) => Some((url.clone(), *block_id)),
+        None => None,
     };
 
-    Some(ForkStateReader::new(
-        &fork?.url,
-        block_id,
-        Some(package_root.join(".snfoundry_cache").as_ref()),
-    ))
+    Ok(result)
 }

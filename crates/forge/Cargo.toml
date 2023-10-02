@@ -43,6 +43,8 @@ console.workspace = true
 rand.workspace = true
 project-root.workspace = true
 which.workspace = true
+tokio.workspace = true
+url.workspace = true
 schemars = { version = "0.8.12", features = ["preserve_order"] }
 parity-scale-codec = "3.5.0"
 parity-scale-codec-derive = "3.1.4"

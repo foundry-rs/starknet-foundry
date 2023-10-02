@@ -1851,7 +1851,9 @@ dependencies = [
  "tempfile",
  "test-collector",
  "thiserror",
+ "tokio",
  "toml_edit 0.9.1",
+ "url",
  "walkdir",
  "which",
 ]

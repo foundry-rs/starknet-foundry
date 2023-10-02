@@ -288,7 +288,7 @@ fn try_close_tmp_dir(maybe_tmp_dir: Option<TempDir>) -> Result<()> {
 ///
 #[allow(clippy::implicit_hasher)]
 pub fn run(
-    package_root: &Utf8PathBuf,
+    workspace_root: &Utf8PathBuf,
     package_path: &Utf8PathBuf,
     package_name: &str,
     package_source_dir_path: &Utf8PathBuf,
@@ -316,8 +316,12 @@ pub fn run(
     let mut summaries = vec![];
 
     for tests_from_crate in tests_iterator.by_ref() {
-        let (summary, was_fuzzed) =
-            run_tests_from_crate(package_root, tests_from_crate, runner_config, runner_params)?;
+        let (summary, was_fuzzed) = run_tests_from_crate(
+            workspace_root,
+            tests_from_crate,
+            runner_config,
+            runner_params,
+        )?;
 
         fuzzing_happened |= was_fuzzed;
 
@@ -355,7 +359,7 @@ pub fn run(
 }
 
 fn run_tests_from_crate(
-    package_root: &Utf8PathBuf,
+    workspace_root: &Utf8PathBuf,
     tests: TestsFromCrate,
     runner_config: &RunnerConfig,
     runner_params: &RunnerParams,
@@ -379,7 +383,7 @@ fn run_tests_from_crate(
 
         let result = if args.is_empty() {
             let result = run_from_test_case(
-                package_root,
+                workspace_root,
                 &runner,
                 case,
                 runner_config.fork_targets.as_ref(),
@@ -394,7 +398,7 @@ fn run_tests_from_crate(
         } else {
             was_fuzzed = true;
             let (result, runs) = run_with_fuzzing(
-                package_root,
+                workspace_root,
                 runner_config,
                 runner_params,
                 &runner,
@@ -437,7 +441,7 @@ fn run_tests_from_crate(
 }
 
 fn run_with_fuzzing(
-    package_root: &Utf8PathBuf,
+    workspace_root: &Utf8PathBuf,
     runner_config: &RunnerConfig,
     runner_params: &RunnerParams,
     runner: &SierraCasmRunner,
@@ -463,7 +467,7 @@ fn run_with_fuzzing(
         let args = fuzzer.next_args();
 
         let result = run_from_test_case(
-            package_root,
+            workspace_root,
             runner,
             case,
             runner_config.fork_targets.as_ref(),
