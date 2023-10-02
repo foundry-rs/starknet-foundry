@@ -31,6 +31,8 @@ impl BlockifierState<'_> {
     ) -> Result<(), CheatcodeError> {
         anyhow!("l1_handler_execute is temporarily not supported in this version, use a different version of starknet foundry");
         Ok(())
+        // TODO this will not work with the current design as transactions cannot be executed on State trait. We should make it work.
+
         // let blockifier_state: &mut CachedState<ExtendedStateReader> = &mut self.blockifier_state;
 
         // let block_context = build_block_context();
