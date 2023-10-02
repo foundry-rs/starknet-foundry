@@ -37,14 +37,4 @@ mod tests {
         declare('FibonacciContract');
         declare('SubtractionContract');
     }
-
-    #[test]
-    fn failing_test() {
-        assert(1 == 2, '');
-    }
-
-    #[test]
-    fn skipped_test() {
-        assert(1 == 1, '');
-    }
 }

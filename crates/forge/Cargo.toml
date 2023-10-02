@@ -27,6 +27,7 @@ cairo-lang-utils.workspace = true
 cairo-lang-starknet.workspace = true
 cairo-lang-compiler.workspace = true
 cairo-lang-filesystem.workspace = true
+cairo-felt.workspace = true
 itertools.workspace = true
 regex.workspace = true
 serde_json.workspace = true
@@ -34,32 +35,32 @@ serde.workspace = true
 starknet.workspace = true
 thiserror.workspace = true
 num-traits.workspace = true
+once_cell.workspace = true
+walkdir.workspace = true
+num-bigint.workspace = true
+clap.workspace = true
+console.workspace = true
+rand.workspace = true
+project-root.workspace = true
+which.workspace = true
 schemars = { version = "0.8.12", features = ["preserve_order"] }
 parity-scale-codec = "3.5.0"
 parity-scale-codec-derive = "3.1.4"
-num-bigint.workspace = true
-cairo-felt = "0.8.1"
-clap = { version = "4.3.23", features = ["derive"] }
-walkdir = "2.3.3"
 scarb-ui = { git = "https://github.com/software-mansion/scarb.git", rev = "58cc88e" }
 scarb-metadata = { git = "https://github.com/software-mansion/scarb.git", rev = "58cc88e" }
-project-root = "0.2.2"
-console = "0.15.7"
 snapbox = "0.4.11"
-once_cell = "1.18.0"
 cairo-vm = "0.8.1"
 ark-ff = "0.4.0-alpha.7"
 ark-std = "0.4.0"
 ark-secp256k1 = "0.4.0"
 ark-secp256r1 = "0.4.0"
 openssl = { version = "0.10", features = ["vendored"] }
-which = "4.4.0"
 toml_edit = "0.9.1"
 flatten-serde-json = "0.1.0"
-rand = "0.8.5"
 smol_str = "0.2.0"
 tokio.workspace = true
 tokio-util = "0.7.9"
+num-integer = "0.1.45"
 
 [lib]
 name = "forge"

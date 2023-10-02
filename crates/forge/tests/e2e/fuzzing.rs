@@ -15,8 +15,8 @@ fn fuzzing() {
         [..]Finished[..]
         
         
-        Collected 5 test(s) and 2 test file(s) from fuzzing package
-        Running 5 inline test(s)
+        Collected 11 test(s) from fuzzing package
+        Running 11 test(s) from src/
         [PASS] fuzzing::tests::adding
         [PASS] fuzzing::tests::fuzzed_argument (fuzzer runs = 256)
         [PASS] fuzzing::tests::fuzzed_both_arguments (fuzzer runs = 256)
@@ -26,8 +26,14 @@ fn fuzzing() {
         Failure data:
             original value: [593979512822486835600413552099926114], converted to a string: [result == a + b]
 
-        Running 0 test(s) from tests/incorrect_args.cairo
-        Tests: 4 passed, 1 failed, 0 skipped
+        [PASS] fuzzing::tests::uint8_arg (fuzzer runs = 256)
+        [PASS] fuzzing::tests::uint16_arg (fuzzer runs = 256)
+        [PASS] fuzzing::tests::uint32_arg (fuzzer runs = 256)
+        [PASS] fuzzing::tests::uint64_arg (fuzzer runs = 256)
+        [PASS] fuzzing::tests::uint128_arg (fuzzer runs = 256)
+        [PASS] fuzzing::tests::uint256_arg (fuzzer runs = 256)
+        Running 0 test(s) from tests/
+        Tests: 10 passed, 1 failed, 0 skipped
         Fuzzer seed: [..]
 
         Failures:
@@ -50,8 +56,8 @@ fn fuzzing_set_runs() {
         [..]Finished[..]
         
         
-        Collected 5 test(s) and 2 test file(s) from fuzzing package
-        Running 5 inline test(s)
+        Collected 11 test(s) from fuzzing package
+        Running 11 test(s) from src/
         [PASS] fuzzing::tests::adding
         [PASS] fuzzing::tests::fuzzed_argument (fuzzer runs = 10)
         [PASS] fuzzing::tests::fuzzed_both_arguments (fuzzer runs = 10)
@@ -61,8 +67,14 @@ fn fuzzing_set_runs() {
         Failure data:
             original value: [593979512822486835600413552099926114], converted to a string: [result == a + b]
 
-        Running 0 test(s) from tests/incorrect_args.cairo
-        Tests: 4 passed, 1 failed, 0 skipped
+        [PASS] fuzzing::tests::uint8_arg (fuzzer runs = 10)
+        [PASS] fuzzing::tests::uint16_arg (fuzzer runs = 10)
+        [PASS] fuzzing::tests::uint32_arg (fuzzer runs = 10)
+        [PASS] fuzzing::tests::uint64_arg (fuzzer runs = 10)
+        [PASS] fuzzing::tests::uint128_arg (fuzzer runs = 10)
+        [PASS] fuzzing::tests::uint256_arg (fuzzer runs = 10)
+        Running 0 test(s) from tests/
+        Tests: 10 passed, 1 failed, 0 skipped
         Fuzzer seed: [..]
 
         Failures:
@@ -85,8 +97,8 @@ fn fuzzing_set_seed() {
         [..]Finished[..]
         
         
-        Collected 5 test(s) and 2 test file(s) from fuzzing package
-        Running 5 inline test(s)
+        Collected 11 test(s) from fuzzing package
+        Running 11 test(s) from src/
         [PASS] fuzzing::tests::adding
         [PASS] fuzzing::tests::fuzzed_argument (fuzzer runs = 256)
         [PASS] fuzzing::tests::fuzzed_both_arguments (fuzzer runs = 256)
@@ -96,9 +108,15 @@ fn fuzzing_set_seed() {
         Failure data:
             original value: [593979512822486835600413552099926114], converted to a string: [result == a + b]
 
-        Running 0 test(s) from tests/incorrect_args.cairo
-        Tests: 4 passed, 1 failed, 0 skipped
-        Fuzzer seed: [..]
+        [PASS] fuzzing::tests::uint8_arg (fuzzer runs = 256)
+        [PASS] fuzzing::tests::uint16_arg (fuzzer runs = 256)
+        [PASS] fuzzing::tests::uint32_arg (fuzzer runs = 256)
+        [PASS] fuzzing::tests::uint64_arg (fuzzer runs = 256)
+        [PASS] fuzzing::tests::uint128_arg (fuzzer runs = 256)
+        [PASS] fuzzing::tests::uint256_arg (fuzzer runs = 256)
+        Running 0 test(s) from tests/
+        Tests: 10 passed, 1 failed, 0 skipped
+        Fuzzer seed: 1234
 
         Failures:
             fuzzing::tests::failing_fuzz
@@ -114,6 +132,7 @@ fn fuzzing_incorrect_runs() {
         .current_dir(&temp)
         .args(["--fuzzer-runs", "0"])
         .assert()
+        .code(2)
         .stderr_matches(indoc! {r#"
         error: invalid value '0' for '--fuzzer-runs <FUZZER_RUNS>': Number of fuzzer runs must be greater than or equal to 3
 
@@ -133,12 +152,12 @@ fn fuzzing_incorrect_function_args() {
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
-        
-        
-        Collected 2 test(s) and 2 test file(s) from fuzzing package
-        Running 0 inline test(s)
-        Running 2 test(s) from tests/incorrect_args.cairo
-        [PASS] incorrect_args::correct_args (fuzzer runs = 256)
-        [ERROR] Fuzzer only supports felt252 arguments, and test incorrect_args::incorrect_args defines arguments that are not felt252 type
+
+
+        Collected 2 test(s) from fuzzing package
+        Running 0 test(s) from src/
+        Running 2 test(s) from tests/
+        [PASS] tests::incorrect_args::correct_args (fuzzer runs = 256)
+        [ERROR] Tried to use incorrect type for fuzzing. Type = tests::incorrect_args::MyStruct is not supported
         "#});
 }

@@ -18,30 +18,19 @@ fn test_sum() {
 }
 ```
 
-It is a common practice to keep your unit tests in the same file as the tested code. If you prefer, you can also put
-test code in a separate file anywhere in the project directory.
+It is a common practice to keep your unit tests in the same file as the tested code. 
+When it comes to integration tests, you can keep them in separate files in the `tests` directory.
+You can find a detailed explanation of how Forge collects tests [here](test-collection.md).
 
 Now run forge using a command:
 
 ```shell
 $ snforge
-Collected 1 test(s) and 1 test file(s) from package_name package
-Running 1 inline test(s)
+Collected 1 test(s) from package_name package
+Running 1 test(s) from src/
 [PASS] package_name::test_sum
 Tests: 1 passed, 0 failed, 0 skipped
 ```
-
-## Test collecting
-
-Forge considers all functions in your project marked with `#[test]` attribute as tests.
-By default, test functions run without any arguments.
-However, adding any arguments to function signature will enable [fuzz testing](./advanced/fuzz-testing.md) for this
-test case.
-
-Starknet Forge will collect tests only from these places:
-
-- any files reachable from the package root (declared as `mod` in `lib.cairo` or its children)
-- files inside the `tests` directory
 
 ## Failing tests
 
@@ -65,14 +54,17 @@ fn failing() {
 
 ```shell
 $ snforge
-Collected 1 test(s) and 1 test file(s) from package_name package
-Running 1 inline test(s)
+Collected 1 test(s) from package_name package
+Running 1 test(s) from src/
 [FAIL] package_name::failing
 
 Failure data:
     [6381921], converted to a string: [aaa]
 
 Tests: 0 passed, 1 failed, 0 skipped
+
+Failures:
+    package_name::failing
 ```
 
 ## Expected failures
@@ -94,8 +86,8 @@ fn should_panic_check_data() {
 
 ```shell
 $ snforge
-Collected 1 test(s) and 1 test file(s) from package_name package
-Running 1 inline test(s)
+Collected 1 test(s) from package_name package
+Running 1 test(s) from src/
 [PASS] src::should_panic_check_data
 Tests: 1 passed, 0 failed, 0 skipped
 ```

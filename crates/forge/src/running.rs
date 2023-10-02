@@ -12,6 +12,7 @@ use cairo_felt::Felt252;
 use cairo_vm::serde::deserialize_program::HintParams;
 use cairo_vm::types::relocatable::Relocatable;
 use cheatnet::constants::{build_block_context, build_testing_state, build_transaction_context};
+use cheatnet::execution::syscalls::CheatableSyscallHandler;
 use cheatnet::CheatnetState;
 use itertools::chain;
 
@@ -22,7 +23,10 @@ use cairo_lang_runner::SierraCasmRunner;
 use cairo_lang_runner::{Arg, RunnerError};
 use cairo_vm::vm::runners::cairo_runner::RunResources;
 use camino::Utf8PathBuf;
-use cheatnet::state::ExtendedStateReader;
+use cheatnet::forking::state::ForkStateReader;
+use cheatnet::state::{CheatcodeState, ExtendedStateReader};
+use conversions::StarknetConversions;
+use starknet::core::types::{BlockId, BlockTag};
 use starknet::core::utils::get_selector_from_name;
 use starknet_api::core::PatriciaKey;
 use starknet_api::core::{ContractAddress, EntryPointSelector};
@@ -30,11 +34,12 @@ use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::hash::StarkHash;
 use starknet_api::patricia_key;
 use starknet_api::transaction::Calldata;
-use test_collector::TestCase;
+use test_collector::{ForkConfig, TestCase};
 
-use crate::cheatcodes_hint_processor::CairoHintProcessor;
-use crate::scarb::StarknetContractArtifacts;
+use crate::cheatcodes_hint_processor::CheatcodesSyscallHandler;
+use crate::scarb::{ForkTarget, StarknetContractArtifacts};
 use crate::test_case_summary::TestCaseSummary;
+use crate::{RunnerConfig, RunnerParams};
 
 // snforge_std/src/cheatcodes.cairo::TEST
 const TEST_ADDRESS: &str = "0x01724987234973219347210837402";
@@ -66,12 +71,16 @@ fn build_hints_dict<'b>(
 }
 
 pub(crate) async fn run_from_test_case(
-    runner: &SierraCasmRunner,
+    package_root: Arc<Utf8PathBuf>,
+    runner: Arc<SierraCasmRunner>,
     case: &TestCase,
-    contracts: &HashMap<String, StarknetContractArtifacts>,
-    predeployed_contracts: &Utf8PathBuf,
+    runner_config: Arc<RunnerConfig>,
+    runner_params: Arc<RunnerParams>,
     args: Vec<Felt252>,
 ) -> Result<TestCaseSummary> {
+    let contracts: &HashMap<String, StarknetContractArtifacts> = &runner_params.contracts.clone();
+    let predeployed_contracts = &runner_params.predeployed_contracts;
+    let environment_variables = &runner_params.environment_variables;
     let available_gas = if let Some(available_gas) = &case.available_gas {
         Some(*available_gas)
     } else {
@@ -132,20 +141,29 @@ pub(crate) async fn run_from_test_case(
         &string_to_hint,
         ReadOnlySegments::default(),
     );
-    let mut cairo_hint_processor = CairoHintProcessor {
-        blockifier_syscall_handler: syscall_handler,
+    let cheatable_syscall_handler = CheatableSyscallHandler {
+        syscall_handler,
+        cheatcode_state: &CheatcodeState::new(),
+    };
+    let mut cheatcodes_hint_processor = CheatcodesSyscallHandler {
+        cheatable_syscall_handler,
         contracts,
         cheatnet_state: CheatnetState::new(ExtendedStateReader {
             dict_state_reader: build_testing_state(predeployed_contracts),
-            fork_state_reader: None,
+            fork_state_reader: get_fork_state_reader(
+                &package_root,
+                runner_config.fork_targets.as_ref(),
+                &case.fork_config,
+            ),
         }),
         hints: &string_to_hint,
         run_resources: RunResources::default(),
+        environment_variables,
     };
 
     match runner.run_function(
         runner.find_function(case.name.as_str())?,
-        &mut cairo_hint_processor,
+        &mut cheatcodes_hint_processor,
         hints_dict,
         instructions,
         builtins,
@@ -165,4 +183,54 @@ pub(crate) async fn run_from_test_case(
 
         Err(err) => Err(err.into()),
     }
+}
+
+fn get_fork_state_reader(
+    package_root: &Utf8PathBuf,
+    fork_targets: &[ForkTarget],
+    fork_config: &Option<ForkConfig>,
+) -> Option<ForkStateReader> {
+    match &fork_config {
+        Some(ForkConfig::Params(url, block_id)) => Some(ForkStateReader::new(
+            url,
+            *block_id,
+            Some(package_root.join(".snfoundry_cache").as_ref()),
+        )),
+        Some(ForkConfig::Id(name)) => {
+            find_params_and_build_fork_state_reader(package_root, fork_targets, name)
+        }
+        _ => None,
+    }
+}
+
+fn find_params_and_build_fork_state_reader(
+    package_root: &Utf8PathBuf,
+    fork_targets: &[ForkTarget],
+    fork_alias: &str,
+) -> Option<ForkStateReader> {
+    let fork = fork_targets.iter().find(|fork| fork.name == fork_alias);
+
+    let block_id = fork?
+        .block_id
+        .iter()
+        .map(|(id_type, value)| match id_type.as_str() {
+            "number" => Some(BlockId::Number(value.parse().unwrap())),
+            "hash" => Some(BlockId::Hash(value.to_field_element())),
+            "tag" => match value.as_str() {
+                "Latest" => Some(BlockId::Tag(BlockTag::Latest)),
+                "Pending" => Some(BlockId::Tag(BlockTag::Pending)),
+                _ => unreachable!(),
+            },
+            _ => unreachable!(),
+        })
+        .collect::<Vec<_>>();
+    let [Some(block_id)] = block_id[..] else {
+        return None;
+    };
+
+    Some(ForkStateReader::new(
+        &fork?.url,
+        block_id,
+        Some(package_root.join(".snfoundry_cache").as_ref()),
+    ))
 }

@@ -15,6 +15,9 @@ use cheatcodes::tx_info::stop_spoof;
 use cheatcodes::l1_handler::L1Handler;
 use cheatcodes::l1_handler::L1HandlerTrait;
 
+use cheatcodes::fork::BlockTag;
+use cheatcodes::fork::BlockId;
+
 use cheatcodes::events::SpyOn;
 use cheatcodes::events::Event;
 use cheatcodes::events::EventSpy;
@@ -33,13 +36,10 @@ use cheatcodes::stop_warp;
 use cheatcodes::start_mock_call;
 use cheatcodes::stop_mock_call;
 
+mod forge_print;
 
-mod io;
+use forge_print::PrintTrait;
 
-use io::file_operations::File;
-use io::file_operations::FileTrait;
-use io::file_operations::read_txt;
-use io::file_operations::read_json;
-use io::file_operations::FileParser;
+mod fs;
 
-use io::forge_print::PrintTrait;
+mod env;
