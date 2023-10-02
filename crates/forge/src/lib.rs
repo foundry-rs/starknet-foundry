@@ -438,7 +438,7 @@ async fn run_with_fuzzing(
 
     let mut tasks = vec![];
 
-    (1..fuzzer_runs).for_each(|_| {
+    (1..fuzzer_runs + 1).for_each(|_| {
         let args = fuzzer.next_felt252_args();
         tasks.push(task::spawn({
             let case = case.clone();
@@ -480,6 +480,7 @@ async fn run_with_fuzzing(
                 return Err(e);
             }
         };
+
         if let TestCaseSummary::Failed { .. } = &result {
             if results.is_empty() {
                 token.cancel();
@@ -494,7 +495,7 @@ async fn run_with_fuzzing(
         .last()
         .expect("Test should always run at least once")
         .clone();
-    let runs = u32::try_from(results.len() + 1)?;
+    let runs = u32::try_from(results.len())?;
     Ok((result, Some(runs)))
 }
 
