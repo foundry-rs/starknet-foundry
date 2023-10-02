@@ -89,7 +89,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: true
-      - uses: dtolnay/rust-toolchain@0e66bd3e6b38ec0ad5312288c83e47c143e6b09e
+      - uses: dtolnay/rust-toolchain@439cf607258077187679211f12aa6f19af4a0af7
         with:
           toolchain: stable
       - uses: Swatinem/rust-cache@v2
@@ -118,7 +118,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: true
-      - uses: dtolnay/rust-toolchain@0e66bd3e6b38ec0ad5312288c83e47c143e6b09e
+      - uses: dtolnay/rust-toolchain@439cf607258077187679211f12aa6f19af4a0af7
         with:
           toolchain: stable
       - uses: Swatinem/rust-cache@v2
@@ -140,7 +140,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: true
-      - uses: dtolnay/rust-toolchain@0e66bd3e6b38ec0ad5312288c83e47c143e6b09e
+      - uses: dtolnay/rust-toolchain@439cf607258077187679211f12aa6f19af4a0af7
         with:
           toolchain: stable
       - uses: Swatinem/rust-cache@v2
