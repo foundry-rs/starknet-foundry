@@ -1,13 +1,10 @@
 use anyhow::Result;
-use blockifier::state::cached_state::CachedState;
-use blockifier::state::state_api::State;
-use starknet::core::types::BlockId;
 use std::collections::HashMap;
 use std::ops::DerefMut;
 use std::sync::Arc;
 
 use crate::panic_data::try_extract_panic_data;
-use crate::state::{BlockifierState, ExtendedStateReader};
+use crate::state::BlockifierState;
 use crate::{
     constants::{build_block_context, build_transaction_context},
     execution::{

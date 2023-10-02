@@ -1,8 +1,6 @@
-use crate::state::ExtendedStateReader;
 use crate::CheatnetState;
 use blockifier::abi::abi_utils::selector_from_name;
 use blockifier::execution::execution_utils::felt_to_stark_felt;
-use blockifier::state::cached_state::CachedState;
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use starknet_api::core::ContractAddress;

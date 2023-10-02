@@ -14,7 +14,6 @@ use blockifier::execution::syscalls::{
     GetBlockHashRequest, GetBlockHashResponse, SyscallRequest, SyscallRequestWrapper,
     SyscallResponse, SyscallResponseWrapper,
 };
-use blockifier::state::cached_state::CachedState;
 use cairo_felt::Felt252;
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
 use cairo_vm::hint_processor::hint_processor_definition::HintReference;
@@ -27,7 +26,7 @@ use cheatnet::cheatcodes::deploy::{deploy, deploy_at, DeployPayload};
 use cheatnet::cheatcodes::{CheatcodeError, ContractArtifacts, EnhancedHintError};
 use cheatnet::execution::syscalls::CheatableSyscallHandler;
 use cheatnet::rpc::{call_contract, CallContractOutput};
-use cheatnet::state::{BlockifierState, CheatnetState, ExtendedStateReader};
+use cheatnet::state::{BlockifierState, CheatnetState};
 use conversions::StarknetConversions;
 use num_traits::{One, ToPrimitive};
 use serde::Deserialize;

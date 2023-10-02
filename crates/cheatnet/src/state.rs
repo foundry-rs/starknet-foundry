@@ -1,8 +1,6 @@
 use crate::cheatcodes;
 use crate::cheatcodes::spy_events::{Event, SpyTarget};
-use crate::constants::build_testing_state;
 use crate::forking::state::ForkStateReader;
-use blockifier::state::cached_state::{CachedState, GlobalContractCache};
 use blockifier::state::state_api::State;
 use blockifier::{
     execution::contract_class::ContractClass,

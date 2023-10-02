@@ -1,36 +1,19 @@
-use crate::CheatnetState;
-use crate::{constants::build_block_context, state::BlockifierState};
-use anyhow::{anyhow, Context, Result};
-use blockifier::execution::{
-    errors::EntryPointExecutionError,
-    execution_utils::{felt_to_stark_felt, felts_as_str},
-};
-use blockifier::state::cached_state::CachedState;
-use blockifier::transaction::{
-    errors::TransactionExecutionError,
-    transactions::{ExecutableTransaction, L1HandlerTransaction},
-};
+use crate::state::BlockifierState;
+use anyhow::Result;
 use cairo_felt::Felt252;
-use cairo_lang_starknet::contract::starknet_keccak;
-use starknet_api::core::{ContractAddress, EntryPointSelector};
-use starknet_api::hash::StarkFelt;
-use starknet_api::transaction::{Calldata, Fee, TransactionHash};
-
-use super::{CheatcodeError, EnhancedHintError};
-use crate::panic_data::try_extract_panic_data;
-use crate::state::ExtendedStateReader;
+use starknet_api::core::ContractAddress;
+use super::CheatcodeError;
 
 impl BlockifierState<'_> {
     pub fn l1_handler_execute(
         &mut self,
-        contract_address: ContractAddress,
-        function_name: &Felt252,
-        from_address: &Felt252,
-        paid_fee_on_l1: &Felt252,
-        payload: &[Felt252],
+        _contract_address: ContractAddress,
+        _function_name: &Felt252,
+        _from_address: &Felt252,
+        _paid_fee_on_l1: &Felt252,
+        _payload: &[Felt252],
     ) -> Result<(), CheatcodeError> {
-        anyhow!("l1_handler_execute is temporarily not supported in this version, use a different version of starknet foundry");
-        Ok(())
+        panic!("l1_handler_execute is temporarily not supported in this version, use a different version of starknet foundry");
         // TODO this will not work with the current design as transactions cannot be executed on State trait. We should make it work.
 
         // let blockifier_state: &mut CachedState<ExtendedStateReader> = &mut self.blockifier_state;
@@ -98,21 +81,21 @@ impl BlockifierState<'_> {
     }
 }
 
-/// Converts a felt252 into Fee.
-fn fee_from_felt252(fee: &Felt252) -> Result<Fee> {
-    // cairo-felt is not including leading 0 when using `to_bytes_be`.
-    let mut fee_bytes = fee.to_bytes_be();
-    if fee_bytes.len() > 16 {
-        return Err(anyhow!("Felt252 value too large for u128 value"));
-    }
+// /// Converts a felt252 into Fee.
+// fn fee_from_felt252(fee: &Felt252) -> Result<Fee> {
+//     // cairo-felt is not including leading 0 when using `to_bytes_be`.
+//     let mut fee_bytes = fee.to_bytes_be();
+//     if fee_bytes.len() > 16 {
+//         return Err(anyhow!("Felt252 value too large for u128 value"));
+//     }
 
-    if fee_bytes.len() < 16 {
-        let leading_zeros = vec![0; 16 - fee_bytes.len()];
-        fee_bytes.splice(0..0, leading_zeros);
-    }
+//     if fee_bytes.len() < 16 {
+//         let leading_zeros = vec![0; 16 - fee_bytes.len()];
+//         fee_bytes.splice(0..0, leading_zeros);
+//     }
 
-    // Unwrap here because we ensured above that we always have a 16 bytes buffer.
-    Ok(Fee(u128::from_be_bytes(
-        fee_bytes[0..16].try_into().unwrap(),
-    )))
-}
+//     // Unwrap here because we ensured above that we always have a 16 bytes buffer.
+//     Ok(Fee(u128::from_be_bytes(
+//         fee_bytes[0..16].try_into().unwrap(),
+//     )))
+// }

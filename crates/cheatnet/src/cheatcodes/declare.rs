@@ -1,8 +1,7 @@
 use std::collections::HashMap;
-use std::ops::{Deref, DerefMut};
+use std::ops::DerefMut;
 
 use crate::cheatcodes::{CheatcodeError, ContractArtifacts, EnhancedHintError};
-use crate::constants::{build_declare_transaction, TEST_ACCOUNT_CONTRACT_ADDRESS};
 use anyhow::{Context, Result};
 use blockifier::execution::contract_class::{
     ContractClass as BlockifierContractClass, ContractClassV1,
@@ -10,9 +9,8 @@ use blockifier::execution::contract_class::{
 use blockifier::state::state_api::State;
 use cairo_felt::Felt252;
 use serde_json;
-use starknet_api::core::{ClassHash, ContractAddress, PatriciaKey};
-use starknet_api::hash::{StarkFelt, StarkHash};
-use starknet_api::patricia_key;
+use starknet_api::core::ClassHash;
+use starknet_api::hash::StarkFelt;
 
 use crate::state::BlockifierState;
 use cairo_lang_runner::short_string::as_cairo_short_string;
@@ -42,11 +40,11 @@ impl BlockifierState<'_> {
         let class_hash =
             get_class_hash(contract_artifact.sierra.as_str()).expect("Failed to get class hash");
 
-        let nonce = blockifier_state
-            .get_nonce_at(ContractAddress(patricia_key!(
-                TEST_ACCOUNT_CONTRACT_ADDRESS
-            )))
-            .expect("Failed to get nonce");
+        // let nonce = blockifier_state
+        //     .get_nonce_at(ContractAddress(patricia_key!(
+        //         TEST_ACCOUNT_CONTRACT_ADDRESS
+        //     )))
+        //     .expect("Failed to get nonce");
 
         // let declare_tx = build_declare_transaction(
         //     nonce,
