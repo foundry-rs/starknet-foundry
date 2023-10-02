@@ -94,8 +94,8 @@ fn fork_aliased_decorator() {
         &Utf8PathBuf::from_path_buf(PathBuf::from(tempdir().unwrap().path())).unwrap(),
         &test.path().unwrap(),
         &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        test.linked_libraries(),
+        &test.path().unwrap().join("src"),
+        &test.linked_libraries(),
         &RunnerConfig::new(
             None,
             false,
@@ -121,6 +121,36 @@ fn fork_aliased_decorator() {
         ),
     )
     .unwrap();
+
+    assert_passed!(result);
+}
+
+#[test]
+fn fork_cairo0_contract() {
+    let test = test_case!(formatdoc!(
+        r#"
+            use starknet::contract_address_const;
+
+            #[starknet::interface]
+            trait IERC20Camel<TState> {{
+                fn totalSupply(self: @TState) -> u256;
+            }}
+
+            #[test]
+            #[fork(url: "{}", block_id: BlockId::Number(313494))]
+            fn test_timestamp() {{
+                let contract_address = contract_address_const::<0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7>();
+
+                let dispatcher = IERC20CamelDispatcher {{ contract_address }};
+
+                let total_supply = dispatcher.totalSupply();
+                assert(total_supply == 1368798332311330795498, 'Wrong total supply');
+            }}
+        "#,
+        CHEATNET_RPC_URL
+    ).as_str());
+
+    let result = run_test_case(&test);
 
     assert_passed!(result);
 }

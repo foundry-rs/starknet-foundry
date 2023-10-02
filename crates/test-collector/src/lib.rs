@@ -3,18 +3,15 @@ use anyhow::{anyhow, Context, Result};
 use cairo_felt::Felt252;
 use cairo_lang_compiler::db::RootDatabase;
 use cairo_lang_compiler::diagnostics::DiagnosticsReporter;
-use cairo_lang_compiler::project::{
-    get_main_crate_ids_from_project, update_crate_roots_from_project_config, ProjectError,
-};
 use cairo_lang_debug::DebugWithDb;
 use cairo_lang_defs::ids::{FreeFunctionId, FunctionWithBodyId, ModuleItemId};
 use cairo_lang_defs::plugin::PluginDiagnostic;
 use cairo_lang_diagnostics::ToOption;
 use cairo_lang_filesystem::cfg::{Cfg, CfgSet};
-use cairo_lang_filesystem::db::init_dev_corelib;
-use cairo_lang_filesystem::ids::CrateId;
+use cairo_lang_filesystem::db::FilesGroup;
+use cairo_lang_filesystem::ids::{CrateId, CrateLongId, Directory};
 use cairo_lang_lowering::ids::ConcreteFunctionWithBodyId;
-use cairo_lang_project::{DeserializationError, ProjectConfig, ProjectConfigContent};
+use cairo_lang_project::{ProjectConfig, ProjectConfigContent};
 use cairo_lang_semantic::db::SemanticGroup;
 use cairo_lang_semantic::items::functions::GenericFunctionId;
 use cairo_lang_semantic::{ConcreteFunction, FunctionLongId};
@@ -35,50 +32,15 @@ use conversions::StarknetConversions;
 use itertools::Itertools;
 use num_traits::ToPrimitive;
 use plugin::TestPlugin;
-use project::setup_single_file_project;
 use smol_str::SmolStr;
 use starknet::core::types::{BlockId, BlockTag};
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::Arc;
 
 mod plugin;
-#[allow(clippy::module_name_repetitions)]
-mod project;
+
 pub mod sierra_casm_generator;
-
-pub fn build_project_config(
-    source_root: &Path,
-    crate_name: &str,
-) -> Result<ProjectConfig, DeserializationError> {
-    let base_path: PathBuf = source_root
-        .to_str()
-        .ok_or(DeserializationError::PathError)?
-        .into();
-    let crate_roots = OrderedHashMap::from([(SmolStr::from(crate_name), base_path.clone())]);
-    Ok(ProjectConfig {
-        base_path,
-        content: ProjectConfigContent { crate_roots },
-        corelib: None,
-    })
-}
-
-pub fn setup_project_without_cairo_project_toml(
-    db: &mut dyn SemanticGroup,
-    path: &Path,
-    crate_name: &str,
-) -> Result<Vec<CrateId>, ProjectError> {
-    assert!(path.is_dir(), "Project path must be a directory");
-
-    match build_project_config(path, crate_name) {
-        Ok(config) => {
-            let main_crate_ids = get_main_crate_ids_from_project(db, &config);
-            update_crate_roots_from_project_config(db, config);
-            Ok(main_crate_ids)
-        }
-        _ => Err(ProjectError::LoadProjectError),
-    }
-}
 
 /// Expectation for a panic case.
 #[derive(Debug, Clone, PartialEq)]
@@ -436,15 +398,27 @@ pub struct TestCase {
     pub fork_config: Option<ForkConfig>,
 }
 
-// returns tuple[sierra if no output_path, list[test_name, test_config]]
 pub fn collect_tests(
-    input_path: &str,
+    crate_root: &str,
     output_path: Option<&str>,
     crate_name: &str,
-    linked_libraries: &Vec<LinkedLibrary>,
+    linked_libraries: &[LinkedLibrary],
     builtins: Option<Vec<&str>>,
     corelib_path: PathBuf,
 ) -> Result<(Program, Vec<TestCase>)> {
+    let mut crate_roots: OrderedHashMap<SmolStr, PathBuf> = linked_libraries
+        .iter()
+        .cloned()
+        .map(|source_root| (source_root.name.into(), source_root.path.clone()))
+        .collect();
+    crate_roots.insert(crate_name.into(), PathBuf::from(crate_root));
+
+    let project_config = ProjectConfig {
+        base_path: crate_root.into(),
+        corelib: Some(Directory::Real(corelib_path)),
+        content: ProjectConfigContent { crate_roots },
+    };
+
     // code taken from crates/cairo-lang-test-runner/src/lib.rs
     let db = &mut {
         let mut b = RootDatabase::builder();
@@ -452,23 +426,13 @@ pub fn collect_tests(
         b.with_macro_plugin(Arc::new(TestPlugin::default()));
         b.with_macro_plugin(Arc::new(StarkNetPlugin::default()))
             .with_inline_macro_plugin(SelectorMacro::NAME, Arc::new(SelectorMacro));
+        b.with_project_config(project_config);
         b.build()?
     };
 
-    init_dev_corelib(db, corelib_path);
+    let main_crate_id = db.intern_crate(CrateLongId::Real(SmolStr::from(crate_name)));
 
-    let main_crate_id = setup_single_file_project(db, Path::new(&input_path), crate_name)
-        .with_context(|| format!("Failed to setup project for path({input_path})"))?;
-
-    for linked_library in linked_libraries {
-        setup_project_without_cairo_project_toml(db, &linked_library.path, &linked_library.name)
-            .with_context(|| format!("Failed to add linked library ({})", linked_library.name))?;
-    }
-
-    if DiagnosticsReporter::stderr()
-        .with_extra_crates(&[main_crate_id])
-        .check(db)
-    {
+    if DiagnosticsReporter::stderr().check(db) {
         return Err(anyhow!(
             "Failed to add linked library, for a detailed information, please go through the logs \
              above"

@@ -1,6 +1,6 @@
 use crate::forking::cache::ForkCache;
 use blockifier::execution::contract_class::{
-    ContractClass as ContractClassBlockifier, ContractClassV1,
+    ContractClass as ContractClassBlockifier, ContractClassV0, ContractClassV1,
 };
 use blockifier::state::errors::StateError::{StateReadError, UndeclaredClassHash};
 use blockifier::state::state_api::{StateReader, StateResult};
@@ -9,13 +9,19 @@ use cairo_lang_starknet::casm_contract_class::CasmContractClass;
 use cairo_lang_starknet::contract_class::{ContractClass, ContractEntryPoints};
 use cairo_lang_utils::bigint::BigUintAsHex;
 use conversions::StarknetConversions;
+use flate2::read::GzDecoder;
 use num_bigint::BigUint;
 use starknet::core::types::{BlockId, ContractClass as ContractClassStarknet};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider};
 use starknet_api::core::{ClassHash, CompiledClassHash, ContractAddress, Nonce};
+use starknet_api::deprecated_contract_class::{
+    ContractClass as DeprecatedContractClass, ContractClassAbiEntry, EntryPoint, EntryPointType,
+};
 use starknet_api::hash::StarkFelt;
 use starknet_api::state::StorageKey;
+use std::collections::HashMap;
+use std::io::Read;
 use tokio::runtime::Runtime;
 use url::Url;
 
@@ -159,9 +165,29 @@ impl StateReader for ForkStateReader {
                     ContractClassV1::try_from(casm_contract_class).unwrap(),
                 ))
             }
-            ContractClassStarknet::Legacy(_) => Err(StateReadError(
-                "Cairo 0 contracts are not supported".to_string(),
-            )),
+            ContractClassStarknet::Legacy(legacy_class) => {
+                let converted_entry_points: HashMap<EntryPointType, Vec<EntryPoint>> =
+                    serde_json::from_str(
+                        &serde_json::to_string(&legacy_class.entry_points_by_type).unwrap(),
+                    )
+                    .unwrap();
+                let converted_abi: Option<Vec<ContractClassAbiEntry>> =
+                    serde_json::from_str(&serde_json::to_string(&legacy_class.abi).unwrap())
+                        .unwrap();
+
+                let mut decoder = GzDecoder::new(&legacy_class.program[..]);
+                let mut converted_program = String::new();
+                decoder.read_to_string(&mut converted_program).unwrap();
+
+                Ok(ContractClassBlockifier::V0(
+                    ContractClassV0::try_from(DeprecatedContractClass {
+                        abi: converted_abi,
+                        program: serde_json::from_str(&converted_program).unwrap(),
+                        entry_points_by_type: converted_entry_points,
+                    })
+                    .unwrap(),
+                ))
+            }
         }
     }
 
