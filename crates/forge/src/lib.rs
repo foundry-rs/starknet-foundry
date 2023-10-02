@@ -376,7 +376,7 @@ async fn run_tests_from_file(
 
     for thread in tasks {
         let (result, runs) = thread.await.unwrap()?;
-        if let Some(_) = runs {
+        if runs.is_some() {
             was_fuzzed = true;
         }
         if runner_config.exit_first {
