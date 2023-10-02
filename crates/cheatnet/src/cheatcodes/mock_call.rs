@@ -19,7 +19,6 @@ impl CheatnetState {
         let function_name = selector_from_name(&as_cairo_short_string(function_name).unwrap());
 
         let contract_mocked_functions = self
-            .cheatcode_state
             .mocked_functions
             .entry(contract_address)
             .or_insert_with(HashMap::new);
@@ -30,10 +29,8 @@ impl CheatnetState {
     pub fn stop_mock_call(&mut self, contract_address: ContractAddress, function_name: &Felt252) {
         let function_name = selector_from_name(&as_cairo_short_string(function_name).unwrap());
 
-        if let std::collections::hash_map::Entry::Occupied(mut e) = self
-            .cheatcode_state
-            .mocked_functions
-            .entry(contract_address)
+        if let std::collections::hash_map::Entry::Occupied(mut e) =
+            self.mocked_functions.entry(contract_address)
         {
             let contract_mocked_functions = e.get_mut();
             contract_mocked_functions.remove(&function_name);
