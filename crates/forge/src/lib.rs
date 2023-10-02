@@ -246,9 +246,6 @@ pub async fn run(
 
         fuzzing_happened |= was_fuzzed;
         summaries.push(summary.clone());
-        if summary.runner_exit_status == RunnerStatus::TestFailed {
-            break;
-        }
     }
 
     for tests_from_file in tests_iterator {
@@ -362,7 +359,6 @@ async fn run_tests_from_file(
                 tokio::select! {
                     _ = cancellation_token.cancelled() => {
                         // The token was cancelled
-                        dbg!(&c);
                        Ok((TestCaseSummary::skipped(&c), None))
                     },
                     result = run_p_test(case, runner,contracts_arc,predeployed_contracts_arc, fuzzer_runs,args,fuzzer_seed, cancellation_token.clone()) => {
@@ -386,16 +382,14 @@ async fn run_tests_from_file(
         if runner_config.exit_first {
             if let TestCaseSummary::Failed { .. } = &result {
                 cancellation_token.cancel();
-                pretty_printing::print_test_result(&result, None);
-
-                return Ok((
-                    TestFileSummary {
-                        test_case_summaries: vec![result],
-                        runner_exit_status: RunnerStatus::TestFailed,
-                        relative_path: tests.relative_path,
-                    },
-                    was_fuzzed,
-                ));
+                // return Ok((
+                //     TestFileSummary {
+                //         test_case_summaries: vec![result],
+                //         runner_exit_status: RunnerStatus::TestFailed,
+                //         relative_path: tests.relative_path,
+                //     },
+                //     was_fuzzed,
+                // ));
             }
         }
         pretty_printing::print_test_result(&result, runs);

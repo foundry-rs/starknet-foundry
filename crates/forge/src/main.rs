@@ -19,7 +19,6 @@ use forge::scarb::{
 use forge::test_case_summary::TestCaseSummary;
 use rand::{thread_rng, RngCore};
 use std::process::{Command, Stdio};
-use tokio::select;
 use tokio_util::sync::CancellationToken;
 mod init;
 
