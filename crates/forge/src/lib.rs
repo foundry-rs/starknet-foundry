@@ -17,7 +17,6 @@ use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use once_cell::sync::Lazy;
 use rand::{thread_rng, RngCore};
-use rayon::iter::IntoParallelIterator;
 use smol_str::SmolStr;
 use walkdir::WalkDir;
 
@@ -197,15 +196,13 @@ impl RunnerParams {
     }
 }
 
-fn collect_tests_from_package(
+fn collect_test_crates(
     package_path: &Utf8PathBuf,
     package_name: &str,
     package_source_dir_path: &Utf8PathBuf,
-    runner_params: &RunnerParams,
-    runner_config: &RunnerConfig,
-) -> Result<Vec<TestsFromCrate>> {
+    temp_dir: &TempDir,
+) -> Result<Vec<TestCrate>> {
     let tests_dir_path = package_path.join("tests");
-    let temp_dir = TempDir::new()?;
 
     let test_dir_crate = if tests_dir_path.exists() {
         let lib_path = tests_dir_path.join("lib.cairo");
@@ -216,7 +213,7 @@ fn collect_tests_from_package(
                 crate_type: TestCrateType::Tests,
             })
         } else {
-            Some(pack_tests_into_one_file(&temp_dir, &tests_dir_path)?)
+            Some(pack_tests_into_one_file(temp_dir, &tests_dir_path)?)
         }
     } else {
         None
@@ -231,25 +228,33 @@ fn collect_tests_from_package(
         test_crates.push(test_dir_crate);
     }
 
-    let tests_from_crates = test_crates
+    Ok(test_crates)
+}
+
+fn compile_tests_from_test_crates(
+    test_crates: &Vec<TestCrate>,
+    runner_params: &RunnerParams,
+) -> Result<Vec<TestsFromCrate>> {
+    test_crates
         .par_iter()
         .map(|test_crate| {
             test_crate.compile_tests(&runner_params.linked_libraries, &runner_params.corelib_path)
         })
-        .collect::<Result<Vec<TestsFromCrate>>>()?;
+        .collect()
+}
 
-    let tests_from_crates = if let Some(test_name_filter) = &runner_config.test_name_filter {
+fn filter_tests_from_crates(
+    tests_from_crates: Vec<TestsFromCrate>,
+    runner_config: &RunnerConfig,
+) -> Vec<TestsFromCrate> {
+    if let Some(test_name_filter) = &runner_config.test_name_filter {
         tests_from_crates
-            .into_par_iter()
+            .into_iter()
             .map(|tc| tc.filter_by_name(test_name_filter, runner_config.exact_match))
             .collect()
     } else {
         tests_from_crates
-    };
-
-    try_close_tmp_dir(temp_dir)?;
-
-    Ok(tests_from_crates)
+    }
 }
 
 fn pack_tests_into_one_file(
@@ -334,13 +339,18 @@ pub fn run(
     runner_config: &RunnerConfig,
     runner_params: &RunnerParams,
 ) -> Result<Vec<TestCrateSummary>> {
-    let tests = collect_tests_from_package(
+    let temp_dir = TempDir::new()?;
+
+    let test_crates = collect_test_crates(
         package_path,
         package_name,
         package_source_dir_path,
-        runner_params,
-        runner_config,
+        &temp_dir,
     )?;
+    let tests = compile_tests_from_test_crates(&test_crates, runner_params)?;
+    let tests = filter_tests_from_crates(tests, runner_config);
+
+    try_close_tmp_dir(temp_dir)?;
 
     pretty_printing::print_collected_tests_count(
         tests.iter().map(|tests| tests.test_cases.len()).sum(),
