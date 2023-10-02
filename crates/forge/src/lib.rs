@@ -31,10 +31,10 @@ pub mod pretty_printing;
 pub mod scarb;
 pub mod test_case_summary;
 
-mod test_execution_syscall_handler;
 mod fuzzer;
 mod running;
 mod test_crate_summary;
+mod test_execution_syscall_handler;
 
 const FUZZER_RUNS_DEFAULT: u32 = 256;
 
