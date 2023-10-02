@@ -26,7 +26,7 @@ fn fuzzing() {
         Failure data:
             original value: [593979512822486835600413552099926114], converted to a string: [result == a + b]
 
-        [PASS] fuzzing::tests::custom_fuzzer_config (fuzzer runs = 10, fuzzer seed = 100)
+        [PASS] fuzzing::tests::custom_fuzzer_config (fuzzer runs = 10)
         [PASS] fuzzing::tests::uint8_arg (fuzzer runs = 256)
         [PASS] fuzzing::tests::uint16_arg (fuzzer runs = 256)
         [PASS] fuzzing::tests::uint32_arg (fuzzer runs = 256)
@@ -68,7 +68,7 @@ fn fuzzing_set_runs() {
         Failure data:
             original value: [593979512822486835600413552099926114], converted to a string: [result == a + b]
 
-        [PASS] fuzzing::tests::custom_fuzzer_config (fuzzer runs = 10, fuzzer seed = 100)
+        [PASS] fuzzing::tests::custom_fuzzer_config (fuzzer runs = 10)
         [PASS] fuzzing::tests::uint8_arg (fuzzer runs = 10)
         [PASS] fuzzing::tests::uint16_arg (fuzzer runs = 10)
         [PASS] fuzzing::tests::uint32_arg (fuzzer runs = 10)
@@ -110,7 +110,7 @@ fn fuzzing_set_seed() {
         Failure data:
             original value: [593979512822486835600413552099926114], converted to a string: [result == a + b]
 
-        [PASS] fuzzing::tests::custom_fuzzer_config (fuzzer runs = 10, fuzzer seed = 100)
+        [PASS] fuzzing::tests::custom_fuzzer_config (fuzzer runs = 10)
         [PASS] fuzzing::tests::uint8_arg (fuzzer runs = 256)
         [PASS] fuzzing::tests::uint16_arg (fuzzer runs = 256)
         [PASS] fuzzing::tests::uint32_arg (fuzzer runs = 256)

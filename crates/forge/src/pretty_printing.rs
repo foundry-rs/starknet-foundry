@@ -41,11 +41,7 @@ pub(crate) fn print_test_seed(seed: u64) {
     println!("{}: {seed}", style("Fuzzer seed").bold());
 }
 
-pub(crate) fn print_test_result(
-    test_result: &TestCaseSummary,
-    fuzzer_runs: Option<u32>,
-    fuzzer_seed: Option<u64>,
-) {
+pub(crate) fn print_test_result(test_result: &TestCaseSummary, fuzzer_runs: Option<u32>) {
     let result_header = match test_result {
         TestCaseSummary::Passed { .. } => format!("[{}]", style("PASS").green()),
         TestCaseSummary::Failed { .. } => format!("[{}]", style("FAIL").red()),
@@ -67,16 +63,11 @@ pub(crate) fn print_test_result(
     let fuzzer_report = match fuzzer_runs {
         None => String::new(),
         Some(runs) => {
-            let fuzzer_seed_string = match fuzzer_seed {
-                Some(seed) => format!(", fuzzer seed = {seed}"),
-                None => String::new(),
-            };
-
             if matches!(test_result, TestCaseSummary::Failed { .. }) {
                 let arguments = test_result.arguments();
-                format!(" (fuzzer runs = {runs}{fuzzer_seed_string}, arguments = {arguments:?})")
+                format!(" (fuzzer runs = {runs}, arguments = {arguments:?})")
             } else {
-                format!(" (fuzzer runs = {runs}{fuzzer_seed_string})")
+                format!(" (fuzzer runs = {runs})")
             }
         }
     };
