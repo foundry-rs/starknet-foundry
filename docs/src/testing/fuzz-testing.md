@@ -33,7 +33,7 @@ Then run `snforge` like usual.
 $ snforge
 Collected 1 test(s) from package_name package
 Running 1 test(s) from src/
-[PASS] package_name::test_sum
+[PASS] package_name::test_sum (fuzzer runs = 256)
 Tests: 1 passed, 0 failed, 0 skipped
 Fuzzer seed: [..]
 ```
