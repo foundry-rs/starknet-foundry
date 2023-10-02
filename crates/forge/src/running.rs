@@ -36,7 +36,7 @@ use test_collector::{ForkConfig, TestCase};
 
 use crate::cheatcodes_hint_processor::CheatcodesSyscallHandler;
 use crate::scarb::{ForkTarget, StarknetContractArtifacts};
-use crate::test_case_summary::{TestCaseSummary, Url};
+use crate::test_case_summary::TestCaseSummary;
 
 // snforge_std/src/cheatcodes.cairo::test_address
 const TEST_ADDRESS: &str = "0x01724987234973219347210837402";
@@ -188,7 +188,7 @@ pub(crate) fn run_from_test_case(
 
 fn get_fork_state_reader(
     workspace_root: &Utf8PathBuf,
-    fork_params: Option<&(Url, BlockId)>,
+    fork_params: Option<&(String, BlockId)>,
 ) -> Option<ForkStateReader> {
     fork_params.map(|(url, block_id)| {
         ForkStateReader::new(
@@ -202,7 +202,7 @@ fn get_fork_state_reader(
 pub(crate) fn extract_fork_params(
     fork_targets: &[ForkTarget],
     fork_config: &Option<ForkConfig>,
-) -> Result<Option<(Url, BlockId)>> {
+) -> Result<Option<(String, BlockId)>> {
     let result = match fork_config {
         Some(ForkConfig::Id(name)) => {
             let fork_target = fork_targets

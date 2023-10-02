@@ -339,7 +339,7 @@ pub fn run(
             .collect();
 
         for test_case_summary in &skipped {
-            pretty_printing::print_test_result(test_case_summary, None);
+            pretty_printing::print_test_result(test_case_summary, None)?;
         }
 
         let file_summary = TestCrateSummary {
@@ -392,7 +392,7 @@ fn run_tests_from_crate(
                 vec![],
                 &runner_params.environment_variables,
             )?;
-            pretty_printing::print_test_result(&result, None);
+            pretty_printing::print_test_result(&result, None)?;
 
             result
         } else {
@@ -405,7 +405,7 @@ fn run_tests_from_crate(
                 case,
                 &args,
             )?;
-            pretty_printing::print_test_result(&result, Some(runs));
+            pretty_printing::print_test_result(&result, Some(runs))?;
 
             result
         };
@@ -416,7 +416,7 @@ fn run_tests_from_crate(
             if let TestCaseSummary::Failed { .. } = result {
                 for case in &tests.test_cases[i + 1..] {
                     let skipped_result = TestCaseSummary::skipped(case);
-                    pretty_printing::print_test_result(&skipped_result, None);
+                    pretty_printing::print_test_result(&skipped_result, None)?;
                     results.push(skipped_result);
                 }
                 return Ok((
