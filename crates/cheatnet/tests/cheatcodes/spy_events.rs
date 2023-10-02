@@ -512,7 +512,7 @@ fn test_emitted_by_emit_events_syscall() {
 
     let contract_address = deploy_contract(&mut blockifier_state, &mut cheatnet_state, "SpyEventsChecker", &[]);
 
-    let id = state.spy_events(SpyTarget::All);
+    let id = cheatnet_state.spy_events(SpyTarget::All);
 
     let selector = felt_selector_from_name("emit_event_syscall");
     call_contract(
@@ -524,7 +524,7 @@ fn test_emitted_by_emit_events_syscall() {
     )
     .unwrap();
 
-    let (length, serialized_events) = state.fetch_events(&Felt252::from(id));
+    let (length, serialized_events) = cheatnet_state.fetch_events(&Felt252::from(id));
     let events = felt_vec_to_event_vec(&serialized_events);
 
     assert_eq!(length, 1, "There should be one event");
