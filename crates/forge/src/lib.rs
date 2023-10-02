@@ -139,7 +139,7 @@ pub enum TestCrateType {
     Tests,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 struct TestCrate {
     crate_root: Utf8PathBuf,
     crate_name: String,
@@ -640,6 +640,31 @@ mod tests {
                 fuzzer_seed: 32,
             }
         );
+    }
+
+    #[test]
+    fn collecting_test_crates() {
+        let temp = TempDir::new().unwrap();
+        temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
+            .unwrap();
+        let package_path = Utf8PathBuf::from_path_buf(temp.to_path_buf()).unwrap();
+
+        let test_crates = collect_test_crates(
+            &package_path,
+            "simple_package",
+            &package_path,
+            &TempDir::new().unwrap(),
+        )
+        .unwrap();
+
+        assert!(test_crates.contains(&TestCrate {
+            crate_root: package_path,
+            crate_name: "simple_package".to_string(),
+            crate_type: TestCrateType::Lib,
+        }));
+        assert!(test_crates
+            .iter()
+            .any(|tc| tc.crate_name == "tests" && tc.crate_type == TestCrateType::Tests));
     }
 
     #[test]
