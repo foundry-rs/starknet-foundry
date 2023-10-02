@@ -115,7 +115,7 @@ pub fn call_contract_syscall(
 // hints from blockifier
 pub struct CheatableSyscallHandler<'a> {
     pub syscall_handler: SyscallHintProcessor<'a>,
-    pub cheatnet_state: &'a CheatnetState,
+    pub cheatnet_state: &'a mut CheatnetState,
 }
 
 // crates/blockifier/src/execution/syscalls/hint_processor.rs:472 (ResourceTracker for SyscallHintProcessor)
@@ -432,7 +432,7 @@ pub fn execute_deployment(
     ctor_context: ConstructorContext,
     constructor_calldata: Calldata,
     remaining_gas: u64,
-    cheatnet_state: &CheatnetState,
+    cheatnet_state: &mut CheatnetState,
 ) -> EntryPointExecutionResult<CallInfo> {
     // Address allocation in the state is done before calling the constructor, so that it is
     // visible from it.

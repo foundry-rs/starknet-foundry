@@ -1,4 +1,4 @@
-use crate::common::get_contracts;
+use crate::common::{get_contracts, state::create_cached_state};
 use crate::common::state::create_cheatnet_state;
 use cairo_felt::Felt252;
 use cheatnet::cheatcodes::{CheatcodeError, EnhancedHintError};
@@ -6,7 +6,7 @@ use conversions::StarknetConversions;
 
 #[test]
 fn declare_simple() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contract = "HelloStarknet".to_owned().to_felt252();
     let contracts = get_contracts();
@@ -18,7 +18,7 @@ fn declare_simple() {
 
 #[test]
 fn declare_multiple() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contract = "HelloStarknet".to_owned().to_felt252();
     let contracts = get_contracts();
@@ -36,7 +36,7 @@ fn declare_multiple() {
 
 #[test]
 fn declare_same_contract() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contract = "HelloStarknet".to_owned().to_felt252();
     let contracts = get_contracts();
@@ -58,7 +58,7 @@ fn declare_same_contract() {
 
 #[test]
 fn declare_non_existant() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contract = "GoodbyeStarknet".to_owned().to_felt252();
     let contracts = get_contracts();

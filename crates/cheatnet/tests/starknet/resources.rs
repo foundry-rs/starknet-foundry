@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::common::{
-    deploy_contract, felt_selector_from_name, get_contracts, state::create_cheatnet_state,
+    deploy_contract, felt_selector_from_name, get_contracts, state::{create_cheatnet_state, create_cached_state},
 };
 use cairo_felt::Felt252;
 use cheatnet::rpc::{call_contract, CallContractOutput, ResourceReport};
@@ -11,7 +11,7 @@ use cheatnet::cheatcodes::deploy::deploy;
 
 #[test]
 fn call_resources_simple() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contract_address = deploy_contract(&mut blockifier_state, &mut cheatnet_state, "HelloStarknet", &[]);
 
@@ -42,7 +42,7 @@ fn call_resources_simple() {
 
 #[test]
 fn deploy_resources_simple() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contracts = get_contracts();
 

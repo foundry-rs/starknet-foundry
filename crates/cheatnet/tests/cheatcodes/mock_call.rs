@@ -1,3 +1,4 @@
+use crate::common::state::create_cached_state;
 use crate::common::{felt_selector_from_name, recover_data};
 use crate::{
     assert_success,
@@ -11,7 +12,7 @@ use cheatnet::cheatcodes::deploy::deploy;
 
 #[test]
 fn mock_call_simple() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contract_address = deploy_contract(&mut blockifier_state, &mut cheatnet_state, "MockChecker", &[Felt252::from(420)]);
 
@@ -31,7 +32,7 @@ fn mock_call_simple() {
 
 #[test]
 fn mock_call_stop() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contract_address = deploy_contract(&mut blockifier_state, &mut cheatnet_state, "MockChecker", &[Felt252::from(420)]);
 
@@ -57,7 +58,7 @@ fn mock_call_stop() {
 
 #[test]
 fn mock_call_stop_no_start() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contract_address = deploy_contract(&mut blockifier_state, &mut cheatnet_state, "MockChecker", &[Felt252::from(420)]);
 
@@ -72,7 +73,7 @@ fn mock_call_stop_no_start() {
 
 #[test]
 fn mock_call_double() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contract_address = deploy_contract(&mut blockifier_state, &mut cheatnet_state, "MockChecker", &[Felt252::from(420)]);
 
@@ -105,7 +106,7 @@ fn mock_call_double() {
 
 #[test]
 fn mock_call_double_call() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contract_address = deploy_contract(&mut blockifier_state, &mut cheatnet_state, "MockChecker", &[Felt252::from(420)]);
 
@@ -129,7 +130,7 @@ fn mock_call_double_call() {
 
 #[test]
 fn mock_call_proxy() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contract_address = deploy_contract(&mut blockifier_state, &mut cheatnet_state, "MockChecker", &[Felt252::from(420)]);
     let selector = felt_selector_from_name("get_thing");
@@ -159,7 +160,7 @@ fn mock_call_proxy() {
 
 #[test]
 fn mock_call_proxy_with_other_syscall() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contract_address = deploy_contract(&mut blockifier_state, &mut cheatnet_state, "MockChecker", &[Felt252::from(420)]);
     let selector = felt_selector_from_name("get_thing");
@@ -189,7 +190,7 @@ fn mock_call_proxy_with_other_syscall() {
 
 #[test]
 fn mock_call_inner_call_no_effect() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contract_address = deploy_contract(&mut blockifier_state, &mut cheatnet_state, "MockChecker", &[Felt252::from(420)]);
 
@@ -215,7 +216,7 @@ fn mock_call_inner_call_no_effect() {
 
 #[test]
 fn mock_call_library_call_no_effect() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contracts = get_contracts();
     let contract_name = "MockChecker".to_owned().to_felt252();
@@ -247,7 +248,7 @@ fn mock_call_library_call_no_effect() {
 
 #[test]
 fn mock_call_before_deployment() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contracts = get_contracts();
     let contract_name = "MockChecker".to_owned().to_felt252();
@@ -276,7 +277,7 @@ fn mock_call_before_deployment() {
 
 #[test]
 fn mock_call_not_implemented() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contract_address = deploy_contract(&mut blockifier_state, &mut cheatnet_state, "MockChecker", &[Felt252::from(420)]);
 
@@ -296,7 +297,7 @@ fn mock_call_not_implemented() {
 
 #[test]
 fn mock_call_in_constructor() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contracts = get_contracts();
 
@@ -326,7 +327,7 @@ fn mock_call_in_constructor() {
 
 #[test]
 fn mock_call_two_methods() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contract_address = deploy_contract(&mut blockifier_state, &mut cheatnet_state, "MockChecker", &[Felt252::from(420)]);
 
@@ -357,7 +358,7 @@ fn mock_call_two_methods() {
 
 #[test]
 fn mock_call_nonexisting_contract() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let selector = felt_selector_from_name("get_thing");
     let ret_data = vec![Felt252::from(123)];

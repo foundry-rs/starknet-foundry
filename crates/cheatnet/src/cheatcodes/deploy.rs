@@ -1,3 +1,5 @@
+use std::ops::DerefMut;
+
 use crate::constants::TEST_ACCOUNT_CONTRACT_ADDRESS;
 use crate::state::BlockifierState;
 use crate::{cheatcodes::EnhancedHintError, CheatnetState};
@@ -6,7 +8,7 @@ use blockifier::abi::abi_utils::selector_from_name;
 use blockifier::execution::execution_utils::{felt_to_stark_felt, stark_felt_to_felt};
 use blockifier::transaction::constants::EXECUTE_ENTRY_POINT_NAME;
 
-use blockifier::state::state_api::{State, StateReader};
+use blockifier::state::state_api::State;
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_vm::vm::errors::hint_errors::HintError::CustomHint;
@@ -42,8 +44,8 @@ pub fn deploy_at(
     let account_address = ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS));
     let entry_point_selector = selector_from_name("deploy_contract");
 
-    let blockifer_state_raw: &mut dyn State = &mut blockifier_state.blockifier_state; 
-    if let Ok(class_hash) = blockifer_state_raw.get_class_hash_at(contract_address) {
+    let blockifier_state_raw: &mut dyn State = blockifier_state.blockifier_state.deref_mut();
+    if let Ok(class_hash) = blockifier_state_raw.get_class_hash_at(contract_address) {
         if class_hash != ClassHash::default() {
             return Err(CheatcodeError::Unrecoverable(EnhancedHintError::from(
                 CustomHint(Box::from("Address is already taken")),

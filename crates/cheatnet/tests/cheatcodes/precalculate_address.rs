@@ -1,11 +1,11 @@
-use crate::common::{get_contracts, state::create_cheatnet_state};
+use crate::common::{get_contracts, state::{create_cheatnet_state, create_cached_state}};
 use cairo_felt::Felt252;
 use conversions::StarknetConversions;
 use cheatnet::cheatcodes::deploy::deploy;
 
 #[test]
 fn precalculate_address_simple() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contracts = get_contracts();
     let contract_name = "HelloStarknet".to_owned().to_felt252();
@@ -24,7 +24,7 @@ fn precalculate_address_simple() {
 
 #[test]
 fn precalculate_address_calldata() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contracts = get_contracts();
     let contract_name = "ConstructorSimple".to_owned().to_felt252();

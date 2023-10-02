@@ -2,7 +2,7 @@ use crate::{
     assert_success,
     common::{
         call_contract_getter_by_name, deploy_contract, felt_selector_from_name, get_contracts,
-        recover_data, state::create_cheatnet_state,
+        recover_data, state::{create_cheatnet_state, create_cached_state},
     },
 };
 use cairo_felt::Felt252;
@@ -84,7 +84,7 @@ fn call_mock_checker_getters(
 
 #[test]
 fn spoof_simple() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contract_address = deploy_contract(&mut blockifier_state, &mut cheatnet_state, "SpoofChecker", vec![].as_slice());
 
@@ -132,7 +132,7 @@ fn spoof_simple() {
 
 #[test]
 fn start_spoof_multiple_times() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contract_address = deploy_contract(&mut blockifier_state, &mut cheatnet_state, "SpoofChecker", vec![].as_slice());
 
@@ -226,7 +226,7 @@ fn start_spoof_multiple_times() {
 
 #[test]
 fn spoof_start_stop() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contract_address = deploy_contract(&mut blockifier_state, &mut cheatnet_state, "SpoofChecker", vec![].as_slice());
 
@@ -288,7 +288,7 @@ fn spoof_start_stop() {
 
 #[test]
 fn spoof_stop_no_effect() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contract_address = deploy_contract(&mut blockifier_state, &mut cheatnet_state, "SpoofChecker", vec![].as_slice());
 
@@ -319,7 +319,7 @@ fn spoof_stop_no_effect() {
 
 #[test]
 fn spoof_with_other_syscall() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contract_address = deploy_contract(&mut blockifier_state, &mut cheatnet_state, "SpoofChecker", vec![].as_slice());
 
@@ -352,7 +352,7 @@ fn spoof_with_other_syscall() {
 
 #[test]
 fn spoof_in_constructor() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contracts = get_contracts();
 
@@ -393,7 +393,7 @@ fn spoof_in_constructor() {
 
 #[test]
 fn spoof_proxy() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contract_address = deploy_contract(&mut blockifier_state, &mut cheatnet_state, "SpoofChecker", vec![].as_slice());
 
@@ -437,7 +437,7 @@ fn spoof_proxy() {
 
 #[test]
 fn spoof_library_call() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contracts = get_contracts();
     let contract_name = "SpoofChecker".to_owned().to_felt252();

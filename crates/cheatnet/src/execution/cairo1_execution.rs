@@ -30,7 +30,7 @@ pub fn execute_entry_point_call_cairo1(
     call: CallEntryPoint,
     contract_class: &ContractClassV1,
     state: &mut dyn State,
-    cheatnet_state: &CheatnetState, // Added parameter
+    cheatnet_state: &mut CheatnetState, // Added parameter
     resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
 ) -> EntryPointExecutionResult<CallInfo> {

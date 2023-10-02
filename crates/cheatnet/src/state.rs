@@ -3,6 +3,7 @@ use crate::cheatcodes::spy_events::{Event, SpyTarget};
 use crate::constants::build_testing_state;
 use crate::forking::state::ForkStateReader;
 use blockifier::state::cached_state::{CachedState, GlobalContractCache};
+use blockifier::state::state_api::State;
 use blockifier::{
     execution::contract_class::ContractClass,
     state::{
@@ -28,18 +29,14 @@ pub struct ExtendedStateReader {
     pub fork_state_reader: Option<ForkStateReader>,
 }
 
-// Equivalent type to CachedState<ExtendedStateReader>
-#[derive(Debug)]
-pub struct BlockifierState {
-    pub blockifier_state: CachedState<ExtendedStateReader>, // TODO allow type coercion
+pub struct BlockifierState<'a> {
+    pub blockifier_state: &'a mut dyn State,
 }
 
-impl BlockifierState {
-    pub fn new(state: ExtendedStateReader) -> Self {
+impl<'a> BlockifierState<'a> {
+    pub fn from(state: &'a mut dyn State) -> Self {
         BlockifierState {
-            blockifier_state: CachedState::new(
-                state, GlobalContractCache::default()
-        )
+            blockifier_state: state
       }
     }
 }

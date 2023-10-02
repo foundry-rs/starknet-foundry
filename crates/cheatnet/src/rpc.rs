@@ -1,7 +1,9 @@
 use anyhow::Result;
 use blockifier::state::cached_state::CachedState;
+use blockifier::state::state_api::State;
 use starknet::core::types::BlockId;
 use std::collections::HashMap;
+use std::ops::DerefMut;
 use std::sync::Arc;
 
 use crate::panic_data::try_extract_panic_data;
@@ -103,7 +105,7 @@ pub fn call_contract(
 
     let exec_result = execute_call_entry_point(
         &mut entry_point,
-        &mut blockifier_state.blockifier_state,
+        blockifier_state.blockifier_state.deref_mut(),
         cheatnet_state,
         &mut resources,
         &mut context,

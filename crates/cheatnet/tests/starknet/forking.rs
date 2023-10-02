@@ -1,4 +1,4 @@
-use crate::common::state::{create_cheatnet_fork_state, create_cheatnet_fork_state_at};
+use crate::common::state::{create_cheatnet_state, create_fork_cached_state};
 use crate::common::{deploy_contract, felt_selector_from_name};
 use crate::{assert_error, assert_success};
 use cairo_felt::Felt252;
@@ -25,7 +25,8 @@ use tempfile::TempDir;
 
 #[test]
 fn fork_simple() {
-    let (mut blockifier_state, mut cheatnet_state)  = create_cheatnet_fork_state();
+    let mut cached_fork_state = create_fork_cached_state();
+    let (mut blockifier_state, mut cheatnet_state)  = create_cheatnet_state(&mut cached_fork_state);
 
     let contract_address = Felt252::from(
         BigUint::from_str(
@@ -55,7 +56,8 @@ fn fork_simple() {
 
 #[test]
 fn try_calling_nonexistent_contract() {
-    let (mut blockifier_state, mut cheatnet_state)  = create_cheatnet_fork_state();
+    let mut cached_fork_state = create_fork_cached_state();
+    let (mut blockifier_state, mut cheatnet_state)  = create_cheatnet_state(&mut cached_fork_state);
 
     let contract_address = ContractAddress::from(1_u8);
     let selector = felt_selector_from_name("get_balance");
@@ -69,7 +71,8 @@ fn try_calling_nonexistent_contract() {
 
 #[test]
 fn try_deploying_undeclared_class() {
-    let (mut blockifier_state, mut cheatnet_state)  = create_cheatnet_fork_state();
+    let mut cached_fork_state = create_fork_cached_state();
+    let (mut blockifier_state, mut cheatnet_state)  = create_cheatnet_state(&mut cached_fork_state);
 
     let class_hash = "1".to_owned().to_class_hash();
 
@@ -88,7 +91,7 @@ fn test_forking_at_block_number() {
 
     {
         let mut cheatnet_state = CheatnetState::new();
-        let mut state_before_deploy = BlockifierState::new(ExtendedStateReader {
+        let mut state_before_deploy = BlockifierState::from(ExtendedStateReader {
             dict_state_reader: build_testing_state(&predeployed_contracts),
             fork_state_reader: Some(ForkStateReader::new(
                 node_url,
@@ -97,7 +100,7 @@ fn test_forking_at_block_number() {
             )),
         });
 
-        let mut state_after_deploy = BlockifierState::new(ExtendedStateReader {
+        let mut state_after_deploy = BlockifierState::from(ExtendedStateReader {
             dict_state_reader: build_testing_state(&predeployed_contracts),
             fork_state_reader: Some(ForkStateReader::new(
                 node_url,

@@ -2,7 +2,7 @@ use crate::{
     assert_success,
     common::{
         deploy_contract, felt_selector_from_name, get_contracts, recover_data,
-        state::create_cheatnet_state,
+        state::{create_cheatnet_state, create_cached_state},
     },
 };
 use cairo_felt::Felt252;
@@ -31,7 +31,7 @@ fn check_nonce(blockifier_state: &mut BlockifierState, cheatnet_state: &mut Chea
 
 #[test]
 fn nonce_transactions() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contract_address = deploy_contract(&mut blockifier_state, &mut cheatnet_state, "Noncer", &[]);
 
@@ -44,7 +44,7 @@ fn nonce_transactions() {
 
 #[test]
 fn nonce_declare_deploy() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
     let contract_address = deploy_contract(&mut blockifier_state, &mut cheatnet_state, "Noncer", &[]);
 
     let contracts = get_contracts();

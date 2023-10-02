@@ -2,7 +2,7 @@ use crate::{
     assert_success,
     common::{
         deploy_contract, felt_selector_from_name, get_contracts, recover_data,
-        state::create_cheatnet_state,
+        state::{create_cheatnet_state, create_cached_state},
     },
 };
 use cairo_felt::Felt252;
@@ -12,7 +12,7 @@ use cheatnet::cheatcodes::deploy::deploy;
 
 #[test]
 fn roll_simple() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contract_address = deploy_contract(&mut blockifier_state, &mut cheatnet_state, "RollChecker", &[]);
 
@@ -27,7 +27,7 @@ fn roll_simple() {
 
 #[test]
 fn roll_with_other_syscall() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contract_address = deploy_contract(&mut blockifier_state, &mut cheatnet_state, "RollChecker", &[]);
 
@@ -42,7 +42,7 @@ fn roll_with_other_syscall() {
 
 #[test]
 fn roll_in_constructor() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contracts = get_contracts();
 
@@ -65,7 +65,7 @@ fn roll_in_constructor() {
 
 #[test]
 fn roll_stop() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contract_address = deploy_contract(&mut blockifier_state, &mut cheatnet_state, "RollChecker", &[]);
 
@@ -93,7 +93,7 @@ fn roll_stop() {
 
 #[test]
 fn roll_double() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contract_address = deploy_contract(&mut blockifier_state, &mut cheatnet_state, "RollChecker", &[]);
 
@@ -122,7 +122,7 @@ fn roll_double() {
 
 #[test]
 fn roll_proxy() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contract_address = deploy_contract(&mut blockifier_state, &mut cheatnet_state, "RollChecker", &[]);
 
@@ -148,7 +148,7 @@ fn roll_proxy() {
 
 #[test]
 fn roll_library_call() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contracts = get_contracts();
     let contract_name = "RollChecker".to_owned().to_felt252();

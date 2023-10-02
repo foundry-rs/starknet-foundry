@@ -14,6 +14,7 @@ use blockifier::execution::syscalls::{
     GetBlockHashRequest, GetBlockHashResponse, SyscallRequest, SyscallRequestWrapper,
     SyscallResponse, SyscallResponseWrapper,
 };
+use blockifier::state::cached_state::CachedState;
 use cairo_felt::Felt252;
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
 use cairo_vm::hint_processor::hint_processor_definition::HintReference;
@@ -22,9 +23,10 @@ use cairo_vm::types::exec_scope::ExecutionScopes;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::vm_core::VirtualMachine;
-use cheatnet::cheatcodes::deploy::DeployPayload;
+use cheatnet::cheatcodes::deploy::{DeployPayload, deploy, deploy_at};
 use cheatnet::execution::syscalls::CheatableSyscallHandler;
 use cheatnet::rpc::{call_contract, CallContractOutput};
+use cheatnet::state::{ExtendedStateReader, BlockifierState, CheatnetState};
 use cheatnet::{
     cheatcodes::{CheatcodeError, ContractArtifacts, EnhancedHintError},
 };
@@ -141,7 +143,7 @@ impl HintProcessorLogic for CheatcodesSyscallHandler<'_> {
             return execute_syscall(
                 system,
                 vm,
-                &mut self.cheatnet_state,
+                &mut self.cheatable_syscall_handler.cheatnet_state,
                 exec_scopes,
                 hint_data,
                 constants,
@@ -232,37 +234,37 @@ impl CheatcodesSyscallHandler<'_> {
             "start_roll" => {
                 let contract_address = inputs[0].to_contract_address();
                 let value = inputs[1].clone();
-                self.cheatnet_state.start_roll(contract_address, value);
+                self.cheatable_syscall_handler.cheatnet_state.start_roll(contract_address, value);
                 Ok(())
             }
             "stop_roll" => {
                 let contract_address = inputs[0].to_contract_address();
-                self.cheatnet_state.stop_roll(contract_address);
+                self.cheatable_syscall_handler.cheatnet_state.stop_roll(contract_address);
                 Ok(())
             }
             "start_warp" => {
                 let contract_address = inputs[0].to_contract_address();
                 let value = inputs[1].clone();
-                self.cheatnet_state.start_warp(contract_address, value);
+                self.cheatable_syscall_handler.cheatnet_state.start_warp(contract_address, value);
                 Ok(())
             }
             "stop_warp" => {
                 let contract_address = inputs[0].to_contract_address();
-                self.cheatnet_state.stop_warp(contract_address);
+                self.cheatable_syscall_handler.cheatnet_state.stop_warp(contract_address);
                 Ok(())
             }
             "start_prank" => {
                 let contract_address = inputs[0].to_contract_address();
                 let caller_address = inputs[1].to_contract_address();
 
-                self.cheatnet_state
+                self.cheatable_syscall_handler.cheatnet_state
                     .start_prank(contract_address, caller_address);
                 Ok(())
             }
             "stop_prank" => {
                 let contract_address = inputs[0].to_contract_address();
 
-                self.cheatnet_state.stop_prank(contract_address);
+                self.cheatable_syscall_handler.cheatnet_state.stop_prank(contract_address);
                 Ok(())
             }
             "start_mock_call" => {
@@ -280,7 +282,7 @@ impl CheatcodesSyscallHandler<'_> {
                     .cloned()
                     .collect::<Vec<_>>();
 
-                self.cheatnet_state
+                self.cheatable_syscall_handler.cheatnet_state
                     .start_mock_call(contract_address, &function_name, &ret_data);
                 Ok(())
             }
@@ -288,7 +290,7 @@ impl CheatcodesSyscallHandler<'_> {
                 let contract_address = inputs[0].to_contract_address();
                 let function_name = inputs[1].clone();
 
-                self.cheatnet_state
+                self.cheatable_syscall_handler.cheatnet_state
                     .stop_mock_call(contract_address, &function_name);
                 Ok(())
             }
@@ -309,7 +311,7 @@ impl CheatcodesSyscallHandler<'_> {
                     .is_one()
                     .then(|| Vec::from(&inputs[15..(15 + signature_len)]));
 
-                self.cheatnet_state.start_spoof(
+                self.cheatable_syscall_handler.cheatnet_state.start_spoof(
                     contract_address,
                     version,
                     account_contract_address,
@@ -324,13 +326,14 @@ impl CheatcodesSyscallHandler<'_> {
             "stop_spoof" => {
                 let contract_address = inputs[0].to_contract_address();
 
-                self.cheatnet_state.stop_spoof(contract_address);
+                self.cheatable_syscall_handler.cheatnet_state.stop_spoof(contract_address);
                 Ok(())
             }
             "declare" => {
                 let contract_name = inputs[0].clone();
+                let mut blockifier_state = BlockifierState::from(self.cheatable_syscall_handler.syscall_handler.state); 
 
-                match self.cheatnet_state.declare(
+                match blockifier_state.declare(
                     &contract_name,
                     // TODO(#41) Remove after we have a separate scarb package
                     &contracts
@@ -359,9 +362,9 @@ impl CheatcodesSyscallHandler<'_> {
                 let class_hash = inputs[0].to_class_hash();
                 let calldata_length = inputs[1].to_usize().unwrap();
                 let calldata = Vec::from(&inputs[2..(2 + calldata_length)]);
-
+                let mut blockifier_state = BlockifierState::from(self.cheatable_syscall_handler.syscall_handler.state);
                 handle_deploy_result(
-                    self.cheatnet_state.deploy(&class_hash, &calldata),
+                    deploy(&mut blockifier_state, &mut self.cheatable_syscall_handler.cheatnet_state, &class_hash, &calldata),
                     &mut buffer,
                 )
             }
@@ -371,9 +374,10 @@ impl CheatcodesSyscallHandler<'_> {
                 let calldata = Vec::from(&inputs[2..(2 + calldata_length)]);
                 let contract_address = inputs[2 + calldata_length].to_contract_address();
 
+                let mut blockifier_state = BlockifierState::from(self.cheatable_syscall_handler.syscall_handler.state);
+
                 handle_deploy_result(
-                    self.cheatnet_state
-                        .deploy_at(&class_hash, &calldata, contract_address),
+                    deploy_at(&mut blockifier_state, &mut self.cheatable_syscall_handler.cheatnet_state, &class_hash, &calldata, contract_address),
                     &mut buffer,
                 )
             }
@@ -386,8 +390,8 @@ impl CheatcodesSyscallHandler<'_> {
                 let calldata_length = inputs[1].to_usize().unwrap();
                 let calldata = Vec::from(&inputs[2..(2 + calldata_length)]);
 
-                let contract_address = self
-                    .cheatnet_state
+
+                let contract_address = self.cheatable_syscall_handler.cheatnet_state
                     .precalculate_address(&class_hash, &calldata);
 
                 let felt_contract_address = contract_address.to_felt252();
@@ -417,8 +421,10 @@ impl CheatcodesSyscallHandler<'_> {
             }
             "get_class_hash" => {
                 let contract_address = inputs[0].to_contract_address();
+                
+                let mut blockifier_state = BlockifierState::from(self.cheatable_syscall_handler.syscall_handler.state);
 
-                match self.cheatnet_state.get_class_hash(contract_address) {
+                match blockifier_state.get_class_hash(contract_address) {
                     Ok(class_hash) => {
                         let felt_class_hash = stark_felt_to_felt(class_hash.0);
 
@@ -443,7 +449,9 @@ impl CheatcodesSyscallHandler<'_> {
 
                 let payload = Vec::from(&inputs[5..inputs.len()]);
 
-                match self.cheatnet_state.l1_handler_execute(
+                let mut blockifier_state = BlockifierState::from(self.cheatable_syscall_handler.syscall_handler.state);
+
+                match blockifier_state.l1_handler_execute(
                     contract_address,
                     &function_name,
                     &from_address,
@@ -490,7 +498,7 @@ impl CheatcodesSyscallHandler<'_> {
                     }
                 };
 
-                let id = self.cheatnet_state.spy_events(spy_on);
+                let id = self.cheatable_syscall_handler.cheatnet_state.spy_events(spy_on);
                 buffer
                     .write(Felt252::from(id))
                     .expect("Failed to insert spy id");
@@ -498,7 +506,7 @@ impl CheatcodesSyscallHandler<'_> {
             }
             "fetch_events" => {
                 let id = &inputs[0];
-                let (emitted_events_len, serialized_events) = self.cheatnet_state.fetch_events(id);
+                let (emitted_events_len, serialized_events) = self.cheatable_syscall_handler.cheatnet_state.fetch_events(id);
 
                 buffer
                     .write(Felt252::from(emitted_events_len))
@@ -593,9 +601,11 @@ fn execute_syscall(
     let selector = DeprecatedSyscallSelector::try_from(felt_to_stark_felt(
         &vm.get_integer(system_ptr).unwrap(),
     ))?;
+    let mut blockifier_state = BlockifierState::from(blockifier_syscall_handler.state);
+
     match selector {
         DeprecatedSyscallSelector::CallContract => {
-            execute_call_contract(MemBuffer::new(vm, system_ptr), cheatnet_state)?;
+            execute_call_contract(MemBuffer::new(vm, system_ptr), cheatnet_state, &mut blockifier_state)?;
             Ok(())
         }
         DeprecatedSyscallSelector::Deploy => Err(HintError::CustomHint(Box::from(
@@ -636,7 +646,7 @@ fn execute_get_block_hash(
 fn execute_call_contract(
     mut buffer: MemBuffer,
     cheatnet_state: &mut CheatnetState,
-    blockifier_state: &mut CachedState<ExtendedStateReader>,
+    blockifier_state: &mut BlockifierState,
 ) -> Result<(), HintError> {
     let _selector = buffer.next_felt252().unwrap();
     let gas_counter = buffer.next_usize().unwrap();
@@ -649,11 +659,11 @@ fn execute_call_contract(
     let calldata = buffer.next_arr().unwrap();
 
     let call_result = call_contract(
+        blockifier_state,
+        cheatnet_state,
         &contract_address,
         &entry_point_selector,
         &calldata,
-        cheatnet_state,
-        blockifier_state,
     )
     .unwrap_or_else(|err| panic!("Transaction execution error: {err}"));
 

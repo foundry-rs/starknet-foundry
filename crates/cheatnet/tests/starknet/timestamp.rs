@@ -1,7 +1,7 @@
 use crate::{
     assert_success,
     common::{
-        deploy_contract, felt_selector_from_name, recover_data, state::create_cheatnet_state,
+        deploy_contract, felt_selector_from_name, recover_data, state::{create_cheatnet_state, create_cached_state},
     },
 };
 use cairo_felt::Felt252;
@@ -23,7 +23,7 @@ fn check_timestamp(blockifier_state: &mut BlockifierState, cheatnet_state: &mut 
 
 #[test]
 fn timestamp_does_not_decrease() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contract_address = deploy_contract(&mut blockifier_state, &mut cheatnet_state, "Timestamper", &[]);
 

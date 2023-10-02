@@ -28,7 +28,7 @@ use std::collections::HashSet;
 pub fn execute_call_entry_point(
     entry_point: &mut CallEntryPoint, // Instead of 'self'
     state: &mut dyn State,
-    cheatnet_state: &CheatnetState, // Added parameter
+    cheatnet_state: &mut CheatnetState, // Added parameter
     resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
 ) -> EntryPointExecutionResult<CallInfo> {
@@ -113,7 +113,7 @@ pub fn execute_constructor_entry_point(
     ctor_context: ConstructorContext,
     calldata: Calldata,
     remaining_gas: u64,
-    cheatnet_state: &CheatnetState,
+    cheatnet_state: &mut CheatnetState,
 ) -> EntryPointExecutionResult<CallInfo> {
     // Ensure the class is declared (by reading it).
     let contract_class = state.get_compiled_contract_class(&ctor_context.class_hash)?;

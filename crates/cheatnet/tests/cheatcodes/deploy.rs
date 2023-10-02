@@ -1,5 +1,5 @@
 use crate::assert_success;
-use crate::common::state::create_cheatnet_state;
+use crate::common::state::{create_cheatnet_state, create_cached_state};
 use crate::common::{deploy_contract, felt_selector_from_name, get_contracts};
 use cairo_felt::Felt252;
 use cairo_vm::vm::errors::hint_errors::HintError;
@@ -11,7 +11,8 @@ use starknet_api::core::ContractAddress;
 
 #[test]
 fn deploy_at_predefined_address() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contract = "HelloStarknet".to_owned().to_felt252();
     let contracts = get_contracts();
@@ -31,7 +32,7 @@ fn deploy_at_predefined_address() {
 
 #[test]
 fn deploy_two_at_the_same_address() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contract = "HelloStarknet".to_owned().to_felt252();
     let contracts = get_contracts();
@@ -50,7 +51,7 @@ fn deploy_two_at_the_same_address() {
 
 #[test]
 fn call_predefined_contract_from_proxy_contract() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contract = "PrankChecker".to_owned().to_felt252();
     let contracts = get_contracts();
@@ -77,7 +78,7 @@ fn call_predefined_contract_from_proxy_contract() {
 
 #[test]
 fn deploy_contract_on_predefined_address_after_its_usage() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let proxy_address = deploy_contract(&mut blockifier_state, &mut cheatnet_state, "SpyEventsCheckerProxy", &[Felt252::from(121)]);
 
@@ -115,7 +116,7 @@ fn deploy_contract_on_predefined_address_after_its_usage() {
 
 #[test]
 fn try_to_deploy_at_0() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contract = "HelloStarknet".to_owned().to_felt252();
     let contracts = get_contracts();
@@ -132,7 +133,7 @@ fn try_to_deploy_at_0() {
 
 #[test]
 fn deploy_calldata_no_constructor() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contract = "HelloStarknet".to_owned().to_felt252();
     let contracts = get_contracts();
@@ -151,7 +152,7 @@ fn deploy_calldata_no_constructor() {
 
 #[test]
 fn deploy_missing_arguments_in_constructor() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contract = "ConstructorSimple2".to_owned().to_felt252();
     let contracts = get_contracts();
@@ -169,7 +170,7 @@ fn deploy_missing_arguments_in_constructor() {
 
 #[test]
 fn deploy_too_many_arguments_in_constructor() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contract = "ConstructorSimple".to_owned().to_felt252();
     let contracts = get_contracts();
@@ -191,7 +192,7 @@ fn deploy_too_many_arguments_in_constructor() {
 
 #[test]
 fn deploy_invalid_class_hash() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let class_hash = "Invalid ClassHash".to_owned().to_class_hash();
 
@@ -210,7 +211,7 @@ fn deploy_invalid_class_hash() {
 
 #[test]
 fn deploy_invokes_constructor() {
-    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state();
+    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contract_address = deploy_contract(&mut blockifier_state, &mut cheatnet_state, "ConstructorSimple", &[Felt252::from(123)]);
 
