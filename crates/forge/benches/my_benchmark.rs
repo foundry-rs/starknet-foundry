@@ -5,7 +5,7 @@ use utils::runner::{Contract, TestCase};
 use utils::running_tests::run_test_case;
 use utils::{assert_passed, test_case};
 
-fn setup_test() -> TestCase {
+fn setup_declare_and_interact() -> TestCase {
     test_case!(
         indoc!(
             r#"
@@ -25,7 +25,7 @@ fn setup_test() -> TestCase {
         }
 
         #[test]
-        fn test_declare_simple() {
+        fn declare_and_interact() {
             assert(1 == 1, 'simple check');
             let contract = declare('HelloStarknet');
             let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
@@ -96,22 +96,22 @@ fn setup_test() -> TestCase {
     )
 }
 
-fn simple_declare(test: &TestCase) {
+fn declare_and_interact(test: &TestCase) {
     let result = run_test_case(&test);
 
     assert_passed!(result);
 }
 
 fn criterion_benchmark(c: &mut Criterion) {
-    let test = setup_test();
+    let test = setup_declare_and_interact();
 
-    let mut group = c.benchmark_group("declare-group");
+    let mut group = c.benchmark_group("forge-benchmark-group");
     group.sample_size(10);
     group.measurement_time(Duration::from_secs(30));
     group.bench_with_input(
-        BenchmarkId::new("declare_simple", format!("{test:?}")),
+        BenchmarkId::new("declare_and_interact", format!("{test:?}")),
         &test,
-        |b, s| b.iter(|| simple_declare(s)),
+        |b, s| b.iter(|| declare_and_interact(s)),
     );
     group.finish();
 }
