@@ -1,10 +1,8 @@
 use std::collections::HashMap;
 use std::ops::{Deref, DerefMut};
 
-use crate::constants::{
-    build_declare_transaction, TEST_ACCOUNT_CONTRACT_ADDRESS,
-};
 use crate::cheatcodes::{CheatcodeError, ContractArtifacts, EnhancedHintError};
+use crate::constants::{build_declare_transaction, TEST_ACCOUNT_CONTRACT_ADDRESS};
 use anyhow::{Context, Result};
 use blockifier::execution::contract_class::{
     ContractClass as BlockifierContractClass, ContractClassV1,
@@ -63,12 +61,14 @@ impl BlockifierState<'_> {
         // )
         // .unwrap_or_else(|err| panic!("Unable to build transaction {err:?}"));
         // TODO make it correct with compiled class hash
-        blockifier_state.set_contract_class(&class_hash, contract_class).map_err(EnhancedHintError::from)?;
+        blockifier_state
+            .set_contract_class(&class_hash, contract_class)
+            .map_err(EnhancedHintError::from)?;
 
         // match blockifier_state.get_compiled_contract_class(&class_hash) {
         //     Err(StateError::UndeclaredClassHash(_)) => {
         //         // Class is undeclared; declare it.
-                
+
         //         Ok(class_hash)
         //         // blockifier_state.set_compiled_class_hash(class_hash, *compiled_class_hash)?;
         //     }

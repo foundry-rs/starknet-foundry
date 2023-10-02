@@ -20,13 +20,13 @@ pub mod state;
 
 // impl CheatnetState {
 //     #[must_use]
-    // pub fn new(state: ExtendedStateReader) -> Self {
-    //     CheatnetState {
-    //         cheatcode_state: CheatnetState::new(),
-    //         blockifier_state: CachedState::new(state, GlobalContractCache::default()),
-    //         deploy_salt_base: 0,
-    //     }
-    // }
+// pub fn new(state: ExtendedStateReader) -> Self {
+//     CheatnetState {
+//         cheatcode_state: CheatnetState::new(),
+//         blockifier_state: CachedState::new(state, GlobalContractCache::default()),
+//         deploy_salt_base: 0,
+//     }
+// }
 
 //     pub fn increment_deploy_salt_base(&mut self) {
 //         self.deploy_salt_base += 1;

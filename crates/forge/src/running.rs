@@ -128,7 +128,6 @@ pub(crate) fn run_from_test_case(
     let mut blockifier_state = CachedState::new(state_reader, GlobalContractCache::default());
     let mut execution_resources = ExecutionResources::default();
 
-
     let syscall_handler = SyscallHintProcessor::new(
         &mut blockifier_state,
         &mut execution_resources,

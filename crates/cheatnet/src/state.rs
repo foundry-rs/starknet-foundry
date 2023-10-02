@@ -36,11 +36,10 @@ pub struct BlockifierState<'a> {
 impl<'a> BlockifierState<'a> {
     pub fn from(state: &'a mut dyn State) -> Self {
         BlockifierState {
-            blockifier_state: state
-      }
+            blockifier_state: state,
+        }
     }
 }
-
 
 impl StateReader for ExtendedStateReader {
     fn get_storage_at(
@@ -240,9 +239,9 @@ impl CheatnetState {
 
 // impl Default for CheatnetState {
 //     fn default() -> Self {
-//         Self::new(ExtendedStateReader { 
-//             dict_state_reader: build_testing_state(predeployed_contracts), 
-//             fork_state_reader: None 
+//         Self::new(ExtendedStateReader {
+//             dict_state_reader: build_testing_state(predeployed_contracts),
+//             fork_state_reader: None
 //         })
 //     }
 // }

@@ -1,13 +1,13 @@
-use crate::common::state::{create_cheatnet_state, create_cached_state};
+use crate::common::state::{create_cached_state, create_cheatnet_state};
 use crate::common::{deploy_contract, felt_selector_from_name, get_contracts};
 use cairo_felt::Felt252;
 use cairo_lang_starknet::contract::starknet_keccak;
 use cairo_vm::hint_processor::hint_processor_utils::felt_to_usize;
+use cheatnet::cheatcodes::deploy::deploy;
 use cheatnet::cheatcodes::spy_events::{Event, SpyTarget};
 use cheatnet::rpc::call_contract;
 use conversions::StarknetConversions;
 use std::vec;
-use cheatnet::cheatcodes::deploy::deploy;
 
 fn felt_vec_to_event_vec(felts: &[Felt252]) -> Vec<Event> {
     let mut events = vec![];
@@ -39,14 +39,22 @@ fn felt_vec_to_event_vec(felts: &[Felt252]) -> Vec<Event> {
 
 #[test]
 fn spy_events_complex() {
-    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
+    let mut cached_state = create_cached_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
-    let contract_address = deploy_contract(&mut blockifier_state, &mut cheatnet_state, "SpyEventsChecker", &[]);
+    let contract_address = deploy_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        "SpyEventsChecker",
+        &[],
+    );
 
     let id = cheatnet_state.spy_events(SpyTarget::All);
 
     let selector = felt_selector_from_name("emit_one_event");
-    call_contract(&mut blockifier_state, &mut cheatnet_state,
+    call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
         &contract_address,
         &selector,
         &[Felt252::from(123)],
@@ -74,7 +82,9 @@ fn spy_events_complex() {
     );
 
     let selector = felt_selector_from_name("emit_one_event");
-    call_contract(&mut blockifier_state, &mut cheatnet_state,
+    call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
         &contract_address,
         &selector,
         &[Felt252::from(123)],
@@ -90,17 +100,28 @@ fn spy_events_complex() {
 
 #[test]
 fn check_events_order() {
-    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
+    let mut cached_state = create_cached_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
-    let spy_events_checker_address = deploy_contract(&mut blockifier_state, &mut cheatnet_state, "SpyEventsChecker", &[]);
-    let spy_events_order_checker_address =
-        deploy_contract(&mut blockifier_state, &mut cheatnet_state, "SpyEventsOrderChecker", &[]);
+    let spy_events_checker_address = deploy_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        "SpyEventsChecker",
+        &[],
+    );
+    let spy_events_order_checker_address = deploy_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        "SpyEventsOrderChecker",
+        &[],
+    );
 
     let id = cheatnet_state.spy_events(SpyTarget::All);
 
     let selector = felt_selector_from_name("emit_and_call_another");
     call_contract(
-        &mut blockifier_state, &mut cheatnet_state,
+        &mut blockifier_state,
+        &mut cheatnet_state,
         &spy_events_order_checker_address,
         &selector,
         &[
@@ -150,15 +171,23 @@ fn check_events_order() {
 
 #[test]
 fn duplicate_spies_on_one_address() {
-    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
+    let mut cached_state = create_cached_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
-    let contract_address = deploy_contract(&mut blockifier_state, &mut cheatnet_state, "SpyEventsChecker", &[]);
+    let contract_address = deploy_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        "SpyEventsChecker",
+        &[],
+    );
 
     let id1 = cheatnet_state.spy_events(SpyTarget::One(contract_address));
     let id2 = cheatnet_state.spy_events(SpyTarget::One(contract_address));
 
     let selector = felt_selector_from_name("emit_one_event");
-    call_contract(&mut blockifier_state, &mut cheatnet_state,
+    call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
         &contract_address,
         &selector,
         &[Felt252::from(123)],
@@ -185,18 +214,27 @@ fn duplicate_spies_on_one_address() {
 
 #[test]
 fn library_call_emits_event() {
-    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
+    let mut cached_state = create_cached_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contracts = get_contracts();
     let contract_name = "SpyEventsChecker".to_owned().to_felt252();
-    let class_hash = blockifier_state.declare(&contract_name, &contracts).unwrap();
-    let contract_address = deploy_contract(&mut blockifier_state, &mut cheatnet_state, "SpyEventsLibCall", &[]);
+    let class_hash = blockifier_state
+        .declare(&contract_name, &contracts)
+        .unwrap();
+    let contract_address = deploy_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        "SpyEventsLibCall",
+        &[],
+    );
 
     let id = cheatnet_state.spy_events(SpyTarget::All);
 
     let selector = felt_selector_from_name("call_lib_call");
     call_contract(
-        &mut blockifier_state, &mut cheatnet_state,
+        &mut blockifier_state,
+        &mut cheatnet_state,
         &contract_address,
         &selector,
         &[Felt252::from(123), class_hash.to_felt252()],
@@ -221,12 +259,14 @@ fn library_call_emits_event() {
 
 #[test]
 fn event_emitted_in_constructor() {
-    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
+    let mut cached_state = create_cached_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let id = cheatnet_state.spy_events(SpyTarget::All);
 
     let contract_address = deploy_contract(
-        &mut blockifier_state, &mut cheatnet_state,
+        &mut blockifier_state,
+        &mut cheatnet_state,
         "ConstructorSpyEventsChecker",
         &[Felt252::from(123)],
     );
@@ -254,22 +294,32 @@ fn event_emitted_in_constructor() {
 
 #[test]
 fn check_if_there_is_no_interference() {
-    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
+    let mut cached_state = create_cached_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contracts = get_contracts();
 
     let contract_name = "SpyEventsChecker".to_owned().to_felt252();
-    let class_hash = blockifier_state.declare(&contract_name, &contracts).unwrap();
+    let class_hash = blockifier_state
+        .declare(&contract_name, &contracts)
+        .unwrap();
 
-    let spy_events_checker_address = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[]).unwrap().contract_address;
-    let other_spy_events_checker_address = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[]).unwrap().contract_address;
+    let spy_events_checker_address =
+        deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[])
+            .unwrap()
+            .contract_address;
+    let other_spy_events_checker_address =
+        deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[])
+            .unwrap()
+            .contract_address;
 
     let id1 = cheatnet_state.spy_events(SpyTarget::One(spy_events_checker_address));
     let id2 = cheatnet_state.spy_events(SpyTarget::One(other_spy_events_checker_address));
 
     let selector = felt_selector_from_name("emit_one_event");
     call_contract(
-        &mut blockifier_state,&mut cheatnet_state,
+        &mut blockifier_state,
+        &mut cheatnet_state,
         &spy_events_checker_address,
         &selector,
         &[Felt252::from(123)],
@@ -296,30 +346,46 @@ fn check_if_there_is_no_interference() {
 
 #[test]
 fn test_nested_calls() {
-    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
+    let mut cached_state = create_cached_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
-    let spy_events_checker_address = deploy_contract(&mut blockifier_state, &mut cheatnet_state, "SpyEventsChecker", &[]);
+    let spy_events_checker_address = deploy_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        "SpyEventsChecker",
+        &[],
+    );
 
     let contracts = get_contracts();
 
     let contract_name = "SpyEventsCheckerProxy".to_owned().to_felt252();
-    let class_hash = blockifier_state.declare(&contract_name, &contracts).unwrap();
+    let class_hash = blockifier_state
+        .declare(&contract_name, &contracts)
+        .unwrap();
 
-    let spy_events_checker_proxy_address = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[spy_events_checker_address.to_felt252()])
-        .unwrap()
-        .contract_address;
-    let spy_events_checker_top_proxy_address = deploy(&mut blockifier_state, &mut cheatnet_state,
-            &class_hash,
-            &[spy_events_checker_proxy_address.to_felt252()],
-        )
-        .unwrap()
-        .contract_address;
+    let spy_events_checker_proxy_address = deploy(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &class_hash,
+        &[spy_events_checker_address.to_felt252()],
+    )
+    .unwrap()
+    .contract_address;
+    let spy_events_checker_top_proxy_address = deploy(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &class_hash,
+        &[spy_events_checker_proxy_address.to_felt252()],
+    )
+    .unwrap()
+    .contract_address;
 
     let id = cheatnet_state.spy_events(SpyTarget::All);
 
     let selector = felt_selector_from_name("emit_one_event");
     call_contract(
-        &mut blockifier_state, &mut cheatnet_state,
+        &mut blockifier_state,
+        &mut cheatnet_state,
         &spy_events_checker_top_proxy_address,
         &selector,
         &[Felt252::from(123)],
@@ -364,24 +430,39 @@ fn test_nested_calls() {
 
 #[test]
 fn use_multiple_spies() {
-    let mut cached_state = create_cached_state(); let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
+    let mut cached_state = create_cached_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
-    let spy_events_checker_address = deploy_contract(&mut blockifier_state, &mut cheatnet_state, "SpyEventsChecker", &[]);
+    let spy_events_checker_address = deploy_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        "SpyEventsChecker",
+        &[],
+    );
 
     let contracts = get_contracts();
 
     let contract_name = "SpyEventsCheckerProxy".to_owned().to_felt252();
-    let class_hash = blockifier_state.declare(&contract_name, &contracts).unwrap();
+    let class_hash = blockifier_state
+        .declare(&contract_name, &contracts)
+        .unwrap();
 
-    let spy_events_checker_proxy_address = deploy(&mut blockifier_state, &mut cheatnet_state,&class_hash, &[spy_events_checker_address.to_felt252()])
-        .unwrap()
-        .contract_address;
-    let spy_events_checker_top_proxy_address = deploy(&mut blockifier_state, &mut cheatnet_state,
-            &class_hash,
-            &[spy_events_checker_proxy_address.to_felt252()],
-        )
-        .unwrap()
-        .contract_address;
+    let spy_events_checker_proxy_address = deploy(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &class_hash,
+        &[spy_events_checker_address.to_felt252()],
+    )
+    .unwrap()
+    .contract_address;
+    let spy_events_checker_top_proxy_address = deploy(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &class_hash,
+        &[spy_events_checker_proxy_address.to_felt252()],
+    )
+    .unwrap()
+    .contract_address;
 
     let id1 = cheatnet_state.spy_events(SpyTarget::One(spy_events_checker_address));
     let id2 = cheatnet_state.spy_events(SpyTarget::One(spy_events_checker_proxy_address));
@@ -389,7 +470,8 @@ fn use_multiple_spies() {
 
     let selector = felt_selector_from_name("emit_one_event");
     call_contract(
-        &mut blockifier_state, &mut cheatnet_state,
+        &mut blockifier_state,
+        &mut cheatnet_state,
         &spy_events_checker_top_proxy_address,
         &selector,
         &[Felt252::from(123)],

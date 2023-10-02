@@ -82,9 +82,9 @@ pub fn deploy_at(
                 .set_class_hash_at(contract_address, *class_hash)
                 .map(|_| contract_address)
                 .map_err(|msg| {
-                    CheatcodeError::Unrecoverable(EnhancedHintError::from(CustomHint(
-                        Box::from(msg.to_string()),
-                    )))
+                    CheatcodeError::Unrecoverable(EnhancedHintError::from(CustomHint(Box::from(
+                        msg.to_string(),
+                    ))))
                 });
 
             match result {
@@ -129,7 +129,13 @@ pub fn deploy(
 ) -> Result<DeployPayload, CheatcodeError> {
     let contract_address = cheatnet_state.precalculate_address(class_hash, calldata);
 
-    deploy_at(blockifier_state, cheatnet_state,class_hash, calldata, contract_address)
+    deploy_at(
+        blockifier_state,
+        cheatnet_state,
+        class_hash,
+        calldata,
+        contract_address,
+    )
 }
 
 fn create_execute_calldata(

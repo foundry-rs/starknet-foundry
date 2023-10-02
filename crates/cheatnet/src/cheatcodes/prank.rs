@@ -12,7 +12,6 @@ impl CheatnetState {
     }
 
     pub fn stop_prank(&mut self, contract_address: ContractAddress) {
-        self.pranked_contracts
-            .remove(&contract_address);
+        self.pranked_contracts.remove(&contract_address);
     }
 }

@@ -1,5 +1,5 @@
-use crate::{constants::build_block_context, state::BlockifierState};
 use crate::CheatnetState;
+use crate::{constants::build_block_context, state::BlockifierState};
 use anyhow::{anyhow, Context, Result};
 use blockifier::execution::{
     errors::EntryPointExecutionError,

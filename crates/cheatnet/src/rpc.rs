@@ -7,7 +7,7 @@ use std::ops::DerefMut;
 use std::sync::Arc;
 
 use crate::panic_data::try_extract_panic_data;
-use crate::state::{ExtendedStateReader, BlockifierState};
+use crate::state::{BlockifierState, ExtendedStateReader};
 use crate::{
     constants::{build_block_context, build_transaction_context},
     execution::{
