@@ -40,7 +40,7 @@ use cairo_lang_runner::{
     insert_value_to_cellref,
 };
 
-use crate::cheatcodes_hint_processor::file_operations::string_into_felt;
+use crate::test_execution_syscall_handler::file_operations::string_into_felt;
 use cairo_lang_starknet::contract::starknet_keccak;
 use cairo_lang_utils::bigint::BigIntAsHex;
 use cairo_vm::types::relocatable::Relocatable;
@@ -63,7 +63,7 @@ impl From<&StarknetContractArtifacts> for ContractArtifacts {
 
 // This hint processor provides an implementation logic for functions from snforge_std library.
 // If cannot execute a hint it falls back to the CheatableSyscallHandler
-pub struct CheatcodesSyscallHandler<'a> {
+pub struct TestExecutionSyscallHandler<'a> {
     pub cheatable_syscall_handler: CheatableSyscallHandler<'a>,
     pub contracts: &'a HashMap<String, StarknetContractArtifacts>,
     pub hints: &'a HashMap<String, Hint>,
@@ -73,7 +73,7 @@ pub struct CheatcodesSyscallHandler<'a> {
 }
 
 // crates/blockifier/src/execution/syscalls/hint_processor.rs:472 (ResourceTracker for SyscallHintProcessor)
-impl ResourceTracker for CheatcodesSyscallHandler<'_> {
+impl ResourceTracker for TestExecutionSyscallHandler<'_> {
     fn consumed(&self) -> bool {
         self.cheatable_syscall_handler
             .syscall_handler
@@ -107,7 +107,7 @@ impl ResourceTracker for CheatcodesSyscallHandler<'_> {
     }
 }
 
-impl HintProcessorLogic for CheatcodesSyscallHandler<'_> {
+impl HintProcessorLogic for TestExecutionSyscallHandler<'_> {
     fn execute_hint(
         &mut self,
         vm: &mut VirtualMachine,
@@ -167,7 +167,7 @@ impl HintProcessorLogic for CheatcodesSyscallHandler<'_> {
     }
 }
 
-impl CheatcodesSyscallHandler<'_> {
+impl TestExecutionSyscallHandler<'_> {
     #[allow(clippy::trivially_copy_pass_by_ref, clippy::too_many_arguments)]
     pub fn execute_cheatcode_hint(
         &mut self,
