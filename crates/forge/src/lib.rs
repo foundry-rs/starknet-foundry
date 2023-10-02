@@ -33,7 +33,7 @@ pub mod test_case_summary;
 
 mod cheatcodes_hint_processor;
 mod fuzzer;
-mod running;
+pub mod running;
 mod test_crate_summary;
 
 const FUZZER_RUNS_DEFAULT: u32 = 256;

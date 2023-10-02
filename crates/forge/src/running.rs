@@ -40,7 +40,7 @@ use crate::test_case_summary::{TestCaseSummary, Url};
 
 // snforge_std/src/cheatcodes.cairo::test_address
 const TEST_ADDRESS: &str = "0x01724987234973219347210837402";
-const CACHE_FILE_NAME: &str = ".snfoundry_cache";
+pub const CACHE_DIR_NAME: &str = ".snfoundry_cache";
 
 /// Builds `hints_dict` required in `cairo_vm::types::program::Program` from instructions.
 fn build_hints_dict<'b>(
@@ -194,7 +194,7 @@ fn get_fork_state_reader(
         ForkStateReader::new(
             url,
             *block_id,
-            Some(workspace_root.join(CACHE_FILE_NAME).as_ref()),
+            Some(workspace_root.join(CACHE_DIR_NAME).as_ref()),
         )
     })
 }
