@@ -4,8 +4,8 @@ use clap::Parser;
 use include_dir::{include_dir, Dir};
 use scarb_metadata::{MetadataCommand, PackageMetadata};
 use scarb_ui::args::PackagesFilter;
-use std::env;
 use std::path::PathBuf;
+use std::{env, fs};
 use tempfile::{tempdir, TempDir};
 
 use forge::{pretty_printing, RunnerConfig, RunnerParams};
@@ -22,6 +22,7 @@ use std::process::{Command, Stdio};
 mod init;
 
 static PREDEPLOYED_CONTRACTS: Dir = include_dir!("crates/cheatnet/predeployed-contracts");
+static CACHE_DIR: &str = ".snfoundry_cache";
 
 #[derive(Parser, Debug)]
 #[command(version)]
@@ -48,6 +49,9 @@ struct Args {
     /// Seed for the fuzzer
     #[arg(short = 's', long)]
     fuzzer_seed: Option<u64>,
+
+    #[arg(short, long)]
+    clean_cache: bool,
 }
 
 fn validate_fuzzer_runs_value(val: &str) -> Result<u32> {
@@ -58,6 +62,14 @@ fn validate_fuzzer_runs_value(val: &str) -> Result<u32> {
         bail!("Number of fuzzer runs must be greater than or equal to 3")
     }
     Ok(parsed_val)
+}
+
+fn clean_cache(package_root: &Utf8PathBuf) -> Result<()> {
+    let cache_dir = package_root.join(CACHE_DIR);
+    if cache_dir.exists() {
+        fs::remove_dir_all(cache_dir)?;
+    }
+    Ok(())
 }
 
 fn load_predeployed_contracts() -> Result<TempDir> {
@@ -99,6 +111,11 @@ fn main_execution() -> Result<bool> {
         .context("Failed to find any packages matching the specified filter")?;
 
     let package_root = &scarb_metadata.workspace.root;
+
+    if args.clean_cache {
+        clean_cache(package_root).context("Failed to clean snforge cache")?;
+    }
+
     let mut all_failed_tests = vec![];
     for package in &packages {
         let forge_config = config_from_scarb_for_package(&scarb_metadata, &package.id)?;
