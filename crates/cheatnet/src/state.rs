@@ -27,6 +27,7 @@ pub struct ExtendedStateReader {
     pub fork_state_reader: Option<ForkStateReader>,
 }
 
+#[allow(clippy::module_name_repetitions)]
 pub struct BlockifierState<'a> {
     pub blockifier_state: &'a mut dyn State,
 }

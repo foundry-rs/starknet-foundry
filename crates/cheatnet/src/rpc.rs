@@ -1,6 +1,5 @@
 use anyhow::Result;
 use std::collections::HashMap;
-use std::ops::DerefMut;
 use std::sync::Arc;
 
 use crate::panic_data::try_extract_panic_data;
@@ -102,7 +101,7 @@ pub fn call_contract(
 
     let exec_result = execute_call_entry_point(
         &mut entry_point,
-        blockifier_state.blockifier_state.deref_mut(),
+        blockifier_state.blockifier_state,
         cheatnet_state,
         &mut resources,
         &mut context,

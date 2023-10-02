@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::ops::DerefMut;
 
 use crate::cheatcodes::{CheatcodeError, ContractArtifacts, EnhancedHintError};
 use anyhow::{Context, Result};
@@ -24,7 +23,7 @@ impl BlockifierState<'_> {
         contract_name: &Felt252,
         contracts: &HashMap<String, ContractArtifacts>,
     ) -> Result<ClassHash, CheatcodeError> {
-        let blockifier_state: &mut dyn State = self.blockifier_state.deref_mut();
+        let blockifier_state: &mut dyn State = self.blockifier_state as &mut dyn State;
 
         let contract_name_as_short_str = as_cairo_short_string(contract_name)
             .context("Converting contract name to short string failed")

@@ -1,5 +1,3 @@
-use std::ops::DerefMut;
-
 use crate::{
     cheatcodes::{CheatcodeError, EnhancedHintError},
     state::BlockifierState,
@@ -13,7 +11,7 @@ impl BlockifierState<'_> {
         &mut self,
         contract_address: ContractAddress,
     ) -> Result<ClassHash, CheatcodeError> {
-        let blockifier_state_raw: &mut dyn State = self.blockifier_state.deref_mut();
+        let blockifier_state_raw: &mut dyn State = self.blockifier_state;
         match blockifier_state_raw.get_class_hash_at(contract_address) {
             Ok(class_hash) => Ok(class_hash),
             Err(e) => Err(CheatcodeError::Unrecoverable(EnhancedHintError::State(e))),

@@ -1,5 +1,3 @@
-use std::ops::DerefMut;
-
 use crate::constants::TEST_ACCOUNT_CONTRACT_ADDRESS;
 use crate::state::BlockifierState;
 use crate::{cheatcodes::EnhancedHintError, CheatnetState};
@@ -30,6 +28,7 @@ pub struct DeployPayload {
     pub resource_report: ResourceReport,
 }
 
+#[allow(clippy::module_name_repetitions)]
 pub fn deploy_at(
     blockifier_state: &mut BlockifierState,
     cheatnet_state: &mut CheatnetState,
@@ -44,7 +43,7 @@ pub fn deploy_at(
     let account_address = ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS));
     let entry_point_selector = selector_from_name("deploy_contract");
 
-    let blockifier_state_raw: &mut dyn State = blockifier_state.blockifier_state.deref_mut();
+    let blockifier_state_raw: &mut dyn State = blockifier_state.blockifier_state as &mut dyn State;
     if let Ok(class_hash) = blockifier_state_raw.get_class_hash_at(contract_address) {
         if class_hash != ClassHash::default() {
             return Err(CheatcodeError::Unrecoverable(EnhancedHintError::from(
@@ -121,6 +120,7 @@ pub fn deploy_at(
     }
 }
 
+#[allow(clippy::module_name_repetitions)]
 pub fn deploy(
     blockifier_state: &mut BlockifierState,
     cheatnet_state: &mut CheatnetState,
