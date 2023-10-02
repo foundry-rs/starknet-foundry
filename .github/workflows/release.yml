@@ -127,7 +127,7 @@ jobs:
 
       - name: Draft GitHub release
         id: draft-release
-        uses: taiki-e/create-gh-release-action@ea43e4812edfe53e49bb607b888db360c7c17a6e
+        uses: taiki-e/create-gh-release-action@9762dfdfe60a96b3fef6c4a0aaafd9840f1195b7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           title: $version
