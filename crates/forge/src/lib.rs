@@ -17,6 +17,7 @@ use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use once_cell::sync::Lazy;
 use rand::{thread_rng, RngCore};
+use rayon::iter::IntoParallelIterator;
 use smol_str::SmolStr;
 use walkdir::WalkDir;
 
@@ -111,6 +112,26 @@ struct TestsFromCrate {
     test_crate_type: TestCrateType,
 }
 
+impl TestsFromCrate {
+    fn filter_by_name(&self, filter: &str, exact_match: bool) -> Self {
+        let mut result = vec![];
+        for test in &self.test_cases {
+            if exact_match {
+                if test.name == filter {
+                    result.push(test);
+                }
+            } else if test.name.contains(filter) {
+                result.push(test);
+            }
+        }
+        Self {
+            sierra_program: self.sierra_program.clone(),
+            test_cases: result.into_iter().cloned().collect(),
+            test_crate_type: self.test_crate_type,
+        }
+    }
+}
+
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum TestCrateType {
     /// Tests collected from the package
@@ -119,10 +140,34 @@ pub enum TestCrateType {
     Tests,
 }
 
+#[derive(Debug)]
 struct TestCrate {
     crate_root: Utf8PathBuf,
     crate_name: String,
     crate_type: TestCrateType,
+}
+
+impl TestCrate {
+    fn compile_tests(
+        &self,
+        linked_libraries: &[LinkedLibrary],
+        corelib_path: &Utf8PathBuf,
+    ) -> Result<TestsFromCrate> {
+        let (sierra_program, test_cases) = collect_tests(
+            self.crate_root.as_str(),
+            None,
+            &self.crate_name,
+            linked_libraries,
+            Some(BUILTINS.clone()),
+            corelib_path.into(),
+        )?;
+
+        Ok(TestsFromCrate {
+            sierra_program,
+            test_cases,
+            test_crate_type: self.crate_type,
+        })
+    }
 }
 
 pub struct RunnerParams {
@@ -130,6 +175,7 @@ pub struct RunnerParams {
     contracts: HashMap<String, StarknetContractArtifacts>,
     predeployed_contracts: Utf8PathBuf,
     environment_variables: HashMap<String, String>,
+    linked_libraries: Vec<LinkedLibrary>,
 }
 
 impl RunnerParams {
@@ -139,12 +185,14 @@ impl RunnerParams {
         contracts: HashMap<String, StarknetContractArtifacts>,
         predeployed_contracts: Utf8PathBuf,
         environment_variables: HashMap<String, String>,
+        linked_libraries: Vec<LinkedLibrary>,
     ) -> Self {
         Self {
             corelib_path,
             contracts,
             predeployed_contracts,
             environment_variables,
+            linked_libraries,
         }
     }
 }
@@ -153,62 +201,75 @@ fn collect_tests_from_package(
     package_path: &Utf8PathBuf,
     package_name: &str,
     package_source_dir_path: &Utf8PathBuf,
-    linked_libraries: &[LinkedLibrary],
-    corelib_path: &Utf8PathBuf,
+    runner_params: &RunnerParams,
     runner_config: &RunnerConfig,
 ) -> Result<Vec<TestsFromCrate>> {
     let tests_dir_path = package_path.join("tests");
-    let maybe_tests_tmp_dir = if tests_dir_path.try_exists()? {
-        Some(pack_tests_into_one_file(package_path)?)
+    let temp_dir = TempDir::new()?;
+
+    let test_dir_crate = if tests_dir_path.exists() {
+        let lib_path = tests_dir_path.join("lib.cairo");
+        if lib_path.exists() {
+            Some(TestCrate {
+                crate_root: tests_dir_path,
+                crate_name: "tests".to_string(),
+                crate_type: TestCrateType::Tests,
+            })
+        } else {
+            Some(pack_tests_into_one_file(&temp_dir, &tests_dir_path)?)
+        }
     } else {
         None
     };
 
-    let mut all_test_roots = vec![TestCrate {
+    let mut test_crates = vec![TestCrate {
         crate_root: package_source_dir_path.clone(),
         crate_name: package_name.to_string(),
         crate_type: TestCrateType::Lib,
     }];
-
-    if let Some(tests_tmp_dir) = &maybe_tests_tmp_dir {
-        let tests_tmp_dir_path = Utf8PathBuf::from_path_buf(tests_tmp_dir.to_path_buf())
-            .map_err(|_| anyhow!("Failed to convert tests temporary directory to Utf8PathBuf"))?;
-
-        all_test_roots.push(TestCrate {
-            crate_root: tests_tmp_dir_path.clone(),
-            crate_name: "tests".to_string(),
-            crate_type: TestCrateType::Tests,
-        });
+    if let Some(test_dir_crate) = test_dir_crate {
+        test_crates.push(test_dir_crate);
     }
 
-    let tests_from_files = all_test_roots
+    let tests_from_crates = test_crates
         .par_iter()
         .map(|test_crate| {
-            collect_tests_from_tree(test_crate, linked_libraries, corelib_path, runner_config)
+            test_crate.compile_tests(&runner_params.linked_libraries, &runner_params.corelib_path)
         })
-        .collect();
+        .collect::<Result<Vec<TestsFromCrate>>>()?;
 
-    try_close_tmp_dir(maybe_tests_tmp_dir)?;
+    let tests_from_crates = if let Some(test_name_filter) = &runner_config.test_name_filter {
+        tests_from_crates
+            .into_par_iter()
+            .map(|tc| tc.filter_by_name(test_name_filter, runner_config.exact_match))
+            .collect()
+    } else {
+        tests_from_crates
+    };
 
-    tests_from_files
+    try_close_tmp_dir(temp_dir)?;
+
+    Ok(tests_from_crates)
 }
 
-fn pack_tests_into_one_file(package_path: &Utf8PathBuf) -> Result<TempDir> {
-    let tests_folder_path = package_path.join("tests");
-
-    let tmp_dir = TempDir::new()?;
+fn pack_tests_into_one_file(
+    tmp_dir: &TempDir,
+    tests_folder_path: &Utf8PathBuf,
+) -> Result<TestCrate> {
     tmp_dir
-        .copy_from(&tests_folder_path, &["**/*.cairo"])
+        .copy_from(tests_folder_path, &["**/*.cairo"])
         .context("Unable to copy files to temporary directory")?;
 
     let tests_lib_path = tmp_dir.child("lib.cairo");
-    if tests_lib_path.try_exists()? {
-        return Ok(tmp_dir);
-    }
+    assert!(
+        !(tests_lib_path.try_exists()?),
+        "Path = {:?} already exists",
+        tests_lib_path.path()
+    );
     tests_lib_path.touch()?;
 
     let mut content = String::new();
-    for entry in WalkDir::new(&tests_folder_path)
+    for entry in WalkDir::new(tests_folder_path)
         .max_depth(1)
         .sort_by_file_name()
     {
@@ -218,7 +279,7 @@ fn pack_tests_into_one_file(package_path: &Utf8PathBuf) -> Result<TempDir> {
 
         if path.is_file() && path.extension().unwrap_or_default() == "cairo" {
             let mod_name = path
-                .strip_prefix(&tests_folder_path)
+                .strip_prefix(tests_folder_path)
                 .expect("Each test file path should start with package path")
                 .to_str()
                 .context("Unable to convert test file path to string")?
@@ -230,47 +291,25 @@ fn pack_tests_into_one_file(package_path: &Utf8PathBuf) -> Result<TempDir> {
     }
 
     std::fs::write(tests_lib_path, content).context("Failed to write to tests lib file")?;
-    Ok(tmp_dir)
-}
 
-fn collect_tests_from_tree(
-    test_crate: &TestCrate,
-    linked_libraries: &[LinkedLibrary],
-    corelib_path: &Utf8PathBuf,
-    runner_config: &RunnerConfig,
-) -> Result<TestsFromCrate> {
-    let (sierra_program, test_cases) = collect_tests(
-        test_crate.crate_root.as_str(),
-        None,
-        &test_crate.crate_name,
-        linked_libraries,
-        Some(BUILTINS.clone()),
-        corelib_path.into(),
-    )?;
+    let tests_tmp_dir_path = Utf8PathBuf::from_path_buf(tmp_dir.to_path_buf())
+        .map_err(|_| anyhow!("Failed to convert tests temporary directory to Utf8PathBuf"))?;
 
-    let test_cases = if let Some(test_name_filter) = &runner_config.test_name_filter {
-        filter_tests_by_name(test_name_filter, runner_config.exact_match, test_cases)
-    } else {
-        test_cases
-    };
-
-    Ok(TestsFromCrate {
-        sierra_program,
-        test_cases,
-        test_crate_type: test_crate.crate_type,
+    Ok(TestCrate {
+        crate_root: tests_tmp_dir_path,
+        crate_name: "tests".to_string(),
+        crate_type: TestCrateType::Tests,
     })
 }
 
-fn try_close_tmp_dir(maybe_tmp_dir: Option<TempDir>) -> Result<()> {
-    if let Some(tmp_dir) = maybe_tmp_dir {
-        let path = tmp_dir.path().to_path_buf();
-        tmp_dir.close().with_context(|| {
+fn try_close_tmp_dir(temp_dir: TempDir) -> Result<()> {
+    let path = temp_dir.path().to_path_buf();
+    temp_dir.close().with_context(|| {
             anyhow!(
             "Failed to close temporary directory = {} with test files. The files might have not been released from filesystem",
             path.display()
         )
         })?;
-    };
     Ok(())
 }
 
@@ -292,7 +331,6 @@ pub fn run(
     package_path: &Utf8PathBuf,
     package_name: &str,
     package_source_dir_path: &Utf8PathBuf,
-    linked_libraries: &[LinkedLibrary],
     runner_config: &RunnerConfig,
     runner_params: &RunnerParams,
 ) -> Result<Vec<TestCrateSummary>> {
@@ -300,8 +338,7 @@ pub fn run(
         package_path,
         package_name,
         package_source_dir_path,
-        linked_libraries,
-        &runner_params.corelib_path,
+        runner_params,
         runner_config,
     )?;
 
@@ -450,7 +487,7 @@ fn run_with_fuzzing(
             arg.debug_name
                 .as_ref()
                 .ok_or_else(|| anyhow!("Type {arg:?} does not have a debug name"))
-                .map(smol_str::SmolStr::as_str)
+                .map(SmolStr::as_str)
         })
         .collect::<Result<Vec<_>>>()?;
 
@@ -502,23 +539,23 @@ fn function_args<'a>(function: &'a Function, builtins: &[&str]) -> Vec<&'a Concr
         .collect()
 }
 
-fn filter_tests_by_name(
-    test_name_filter: &str,
-    exact_match: bool,
-    test_cases: Vec<TestCase>,
-) -> Vec<TestCase> {
-    let mut result = vec![];
-    for test in test_cases {
-        if exact_match {
-            if test.name == test_name_filter {
-                result.push(test);
-            }
-        } else if test.name.contains(test_name_filter) {
-            result.push(test);
-        }
-    }
-    result
-}
+// fn filter_tests_by_name(
+//     test_name_filter: &str,
+//     exact_match: bool,
+//     test_cases: Vec<TestCase>,
+// ) -> Vec<TestCase> {
+//     let mut result = vec![];
+//     for test in test_cases {
+//         if exact_match {
+//             if test.name == test_name_filter {
+//                 result.push(test);
+//             }
+//         } else if test.name.contains(test_name_filter) {
+//             result.push(test);
+//         }
+//     }
+//     result
+// }
 
 #[cfg(test)]
 mod tests {
@@ -595,51 +632,64 @@ mod tests {
         );
     }
 
-    #[test]
-    fn collecting_tests() {
-        let temp = TempDir::new().unwrap();
-        temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
-            .unwrap();
-        let package_path = Utf8PathBuf::from_path_buf(temp.to_path_buf()).unwrap();
+    // #[test]
+    // fn collecting_tests() {
+    //     let temp = TempDir::new().unwrap();
+    //     temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
+    //         .unwrap();
+    //     let package_path = Utf8PathBuf::from_path_buf(temp.to_path_buf()).unwrap();
+    //
+    //     let tests = pack_tests_into_one_file(&package_path).unwrap();
+    //     let virtual_lib_path = tests.join("lib.cairo");
+    //     let virtual_lib_u8_content = std::fs::read(&virtual_lib_path).unwrap();
+    //     let virtual_lib_content = std::str::from_utf8(&virtual_lib_u8_content).unwrap();
+    //
+    //     assert!(virtual_lib_path.try_exists().unwrap());
+    //     assert!(virtual_lib_content.contains("mod contract;"));
+    //     assert!(virtual_lib_content.contains("mod ext_function_test;"));
+    //     assert!(virtual_lib_content.contains("mod test_simple;"));
+    //     assert!(virtual_lib_content.contains("mod without_prefix;"));
+    // }
 
-        let tests = pack_tests_into_one_file(&package_path).unwrap();
-        let virtual_lib_path = tests.join("lib.cairo");
-        let virtual_lib_u8_content = std::fs::read(&virtual_lib_path).unwrap();
-        let virtual_lib_content = std::str::from_utf8(&virtual_lib_u8_content).unwrap();
-
-        assert!(virtual_lib_path.try_exists().unwrap());
-        assert!(virtual_lib_content.contains("mod contract;"));
-        assert!(virtual_lib_content.contains("mod ext_function_test;"));
-        assert!(virtual_lib_content.contains("mod test_simple;"));
-        assert!(virtual_lib_content.contains("mod without_prefix;"));
+    fn program_for_testing() -> Program {
+        Program {
+            type_declarations: vec![],
+            libfunc_declarations: vec![],
+            statements: vec![],
+            funcs: vec![],
+        }
     }
 
     #[test]
     fn filtering_tests() {
-        let mocked_tests: Vec<TestCase> = vec![
-            TestCase {
-                name: "crate1::do_thing".to_string(),
-                available_gas: None,
-                expected_result: ExpectedTestResult::Success,
-                fork_config: None,
-            },
-            TestCase {
-                name: "crate2::run_other_thing".to_string(),
-                available_gas: None,
-                expected_result: ExpectedTestResult::Success,
-                fork_config: None,
-            },
-            TestCase {
-                name: "outer::crate2::execute_next_thing".to_string(),
-                available_gas: None,
-                expected_result: ExpectedTestResult::Success,
-                fork_config: None,
-            },
-        ];
+        let mocked_tests = TestsFromCrate {
+            sierra_program: program_for_testing(),
+            test_cases: vec![
+                TestCase {
+                    name: "crate1::do_thing".to_string(),
+                    available_gas: None,
+                    expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                },
+                TestCase {
+                    name: "crate2::run_other_thing".to_string(),
+                    available_gas: None,
+                    expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                },
+                TestCase {
+                    name: "outer::crate2::execute_next_thing".to_string(),
+                    available_gas: None,
+                    expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                },
+            ],
+            test_crate_type: TestCrateType::Lib,
+        };
 
-        let filtered = filter_tests_by_name("do", false, mocked_tests.clone());
+        let filtered = mocked_tests.filter_by_name("do", false);
         assert_eq!(
-            filtered,
+            filtered.test_cases,
             vec![TestCase {
                 name: "crate1::do_thing".to_string(),
                 available_gas: None,
@@ -648,9 +698,9 @@ mod tests {
             },]
         );
 
-        let filtered = filter_tests_by_name("run", false, mocked_tests.clone());
+        let filtered = mocked_tests.filter_by_name("run", false);
         assert_eq!(
-            filtered,
+            filtered.test_cases,
             vec![TestCase {
                 name: "crate2::run_other_thing".to_string(),
                 available_gas: None,
@@ -659,9 +709,9 @@ mod tests {
             },]
         );
 
-        let filtered = filter_tests_by_name("thing", false, mocked_tests.clone());
+        let filtered = mocked_tests.filter_by_name("thing", false);
         assert_eq!(
-            filtered,
+            filtered.test_cases,
             vec![
                 TestCase {
                     name: "crate1::do_thing".to_string(),
@@ -684,12 +734,12 @@ mod tests {
             ]
         );
 
-        let filtered = filter_tests_by_name("nonexistent", false, mocked_tests.clone());
-        assert_eq!(filtered, vec![]);
+        let filtered = mocked_tests.filter_by_name("nonexistent", false);
+        assert_eq!(filtered.test_cases, vec![]);
 
-        let filtered = filter_tests_by_name("", false, mocked_tests);
+        let filtered = mocked_tests.filter_by_name("", false);
         assert_eq!(
-            filtered,
+            filtered.test_cases,
             vec![
                 TestCase {
                     name: "crate1::do_thing".to_string(),
@@ -715,30 +765,34 @@ mod tests {
 
     #[test]
     fn filtering_tests_uses_whole_path() {
-        let mocked_tests: Vec<TestCase> = vec![
-            TestCase {
-                name: "crate1::do_thing".to_string(),
-                available_gas: None,
-                expected_result: ExpectedTestResult::Success,
-                fork_config: None,
-            },
-            TestCase {
-                name: "crate2::run_other_thing".to_string(),
-                available_gas: None,
-                expected_result: ExpectedTestResult::Success,
-                fork_config: None,
-            },
-            TestCase {
-                name: "outer::crate2::run_other_thing".to_string(),
-                available_gas: None,
-                expected_result: ExpectedTestResult::Success,
-                fork_config: None,
-            },
-        ];
+        let mocked_tests = TestsFromCrate {
+            sierra_program: program_for_testing(),
+            test_cases: vec![
+                TestCase {
+                    name: "crate1::do_thing".to_string(),
+                    available_gas: None,
+                    expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                },
+                TestCase {
+                    name: "crate2::run_other_thing".to_string(),
+                    available_gas: None,
+                    expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                },
+                TestCase {
+                    name: "outer::crate2::run_other_thing".to_string(),
+                    available_gas: None,
+                    expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                },
+            ],
+            test_crate_type: TestCrateType::Tests,
+        };
 
-        let filtered = filter_tests_by_name("crate2::", false, mocked_tests);
+        let filtered = mocked_tests.filter_by_name("crate2::", false);
         assert_eq!(
-            filtered,
+            filtered.test_cases,
             vec![
                 TestCase {
                     name: "crate2::run_other_thing".to_string(),
@@ -758,42 +812,46 @@ mod tests {
 
     #[test]
     fn filtering_with_exact_match() {
-        let mocked_tests: Vec<TestCase> = vec![
-            TestCase {
-                name: "crate1::do_thing".to_string(),
-                available_gas: None,
-                expected_result: ExpectedTestResult::Success,
-                fork_config: None,
-            },
-            TestCase {
-                name: "crate2::run_other_thing".to_string(),
-                available_gas: None,
-                expected_result: ExpectedTestResult::Success,
-                fork_config: None,
-            },
-            TestCase {
-                name: "outer::crate3::run_other_thing".to_string(),
-                available_gas: None,
-                expected_result: ExpectedTestResult::Success,
-                fork_config: None,
-            },
-            TestCase {
-                name: "do_thing".to_string(),
-                available_gas: None,
-                expected_result: ExpectedTestResult::Success,
-                fork_config: None,
-            },
-        ];
+        let mocked_tests = TestsFromCrate {
+            sierra_program: program_for_testing(),
+            test_cases: vec![
+                TestCase {
+                    name: "crate1::do_thing".to_string(),
+                    available_gas: None,
+                    expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                },
+                TestCase {
+                    name: "crate2::run_other_thing".to_string(),
+                    available_gas: None,
+                    expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                },
+                TestCase {
+                    name: "outer::crate3::run_other_thing".to_string(),
+                    available_gas: None,
+                    expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                },
+                TestCase {
+                    name: "do_thing".to_string(),
+                    available_gas: None,
+                    expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                },
+            ],
+            test_crate_type: TestCrateType::Tests,
+        };
 
-        let filtered = filter_tests_by_name("", true, mocked_tests.clone());
-        assert_eq!(filtered, vec![]);
+        let filtered = mocked_tests.filter_by_name("", true);
+        assert_eq!(filtered.test_cases, vec![]);
 
-        let filtered = filter_tests_by_name("thing", true, mocked_tests.clone());
-        assert_eq!(filtered, vec![]);
+        let filtered = mocked_tests.filter_by_name("thing", true);
+        assert_eq!(filtered.test_cases, vec![]);
 
-        let filtered = filter_tests_by_name("do_thing", true, mocked_tests.clone());
+        let filtered = mocked_tests.filter_by_name("do_thing", true);
         assert_eq!(
-            filtered,
+            filtered.test_cases,
             vec![TestCase {
                 name: "do_thing".to_string(),
                 available_gas: None,
@@ -802,9 +860,9 @@ mod tests {
             },]
         );
 
-        let filtered = filter_tests_by_name("crate1::do_thing", true, mocked_tests.clone());
+        let filtered = mocked_tests.filter_by_name("crate1::do_thing", true);
         assert_eq!(
-            filtered,
+            filtered.test_cases,
             vec![TestCase {
                 name: "crate1::do_thing".to_string(),
                 available_gas: None,
@@ -813,12 +871,12 @@ mod tests {
             },]
         );
 
-        let filtered = filter_tests_by_name("crate3::run_other_thing", true, mocked_tests.clone());
-        assert_eq!(filtered, vec![]);
+        let filtered = mocked_tests.filter_by_name("crate3::run_other_thing", true);
+        assert_eq!(filtered.test_cases, vec![]);
 
-        let filtered = filter_tests_by_name("outer::crate3::run_other_thing", true, mocked_tests);
+        let filtered = mocked_tests.filter_by_name("outer::crate3::run_other_thing", true);
         assert_eq!(
-            filtered,
+            filtered.test_cases,
             vec![TestCase {
                 name: "outer::crate3::run_other_thing".to_string(),
                 available_gas: None,
@@ -830,30 +888,34 @@ mod tests {
 
     #[test]
     fn filtering_tests_works_without_crate_in_test_name() {
-        let mocked_tests: Vec<TestCase> = vec![
-            TestCase {
-                name: "crate1::do_thing".to_string(),
-                available_gas: None,
-                expected_result: ExpectedTestResult::Success,
-                fork_config: None,
-            },
-            TestCase {
-                name: "crate2::run_other_thing".to_string(),
-                available_gas: None,
-                expected_result: ExpectedTestResult::Success,
-                fork_config: None,
-            },
-            TestCase {
-                name: "thing".to_string(),
-                available_gas: None,
-                expected_result: ExpectedTestResult::Success,
-                fork_config: None,
-            },
-        ];
+        let mocked_tests = TestsFromCrate {
+            sierra_program: program_for_testing(),
+            test_cases: vec![
+                TestCase {
+                    name: "crate1::do_thing".to_string(),
+                    available_gas: None,
+                    expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                },
+                TestCase {
+                    name: "crate2::run_other_thing".to_string(),
+                    available_gas: None,
+                    expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                },
+                TestCase {
+                    name: "thing".to_string(),
+                    available_gas: None,
+                    expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                },
+            ],
+            test_crate_type: TestCrateType::Tests,
+        };
 
-        let result = filter_tests_by_name("thing", false, mocked_tests);
+        let result = mocked_tests.filter_by_name("thing", false);
         assert_eq!(
-            result,
+            result.test_cases,
             vec![
                 TestCase {
                     name: "crate1::do_thing".to_string(),

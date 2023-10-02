@@ -143,6 +143,7 @@ fn main_execution() -> Result<bool> {
             contracts,
             predeployed_contracts.clone(),
             env::vars().collect(),
+            dependencies,
         );
 
         let tests_file_summaries = run(
@@ -150,7 +151,6 @@ fn main_execution() -> Result<bool> {
             &package_path,
             &package_name,
             &package_source_dir_path,
-            &dependencies,
             &runner_config,
             &runner_params,
         )?;
