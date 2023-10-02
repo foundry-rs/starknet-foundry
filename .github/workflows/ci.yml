@@ -19,7 +19,7 @@ jobs:
           submodules: true
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      - uses: software-mansion/setup-scarb@v1.3.0
+      - uses: software-mansion/setup-scarb@v1.3.1
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
       - run: cargo test --release --lib -p forge
@@ -58,7 +58,7 @@ jobs:
           submodules: true
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      - uses: software-mansion/setup-scarb@v1.3.0
+      - uses: software-mansion/setup-scarb@v1.3.1
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
       - run: cargo test --release e2e -p forge
@@ -74,7 +74,7 @@ jobs:
           submodules: true
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      - uses: software-mansion/setup-scarb@v1.3.0
+      - uses: software-mansion/setup-scarb@v1.3.1
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
       - name: Run Cheatnet tests
