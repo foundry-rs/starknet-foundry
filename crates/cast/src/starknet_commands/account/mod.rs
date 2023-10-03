@@ -1,5 +1,6 @@
 use crate::starknet_commands::account::add::Add;
 use crate::starknet_commands::account::create::Create;
+use crate::starknet_commands::account::delete::Delete;
 use crate::starknet_commands::account::deploy::Deploy;
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
@@ -17,6 +18,7 @@ use toml::Value;
 
 pub mod add;
 pub mod create;
+pub mod delete;
 pub mod deploy;
 
 #[derive(Args)]
@@ -31,6 +33,7 @@ pub enum Commands {
     Add(Add),
     Create(Create),
     Deploy(Deploy),
+    Delete(Delete),
 }
 
 pub fn prepare_account_json(
