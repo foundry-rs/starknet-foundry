@@ -12,13 +12,15 @@ pub(crate) fn runner() -> SnapboxCommand {
     snapbox
 }
 
-pub(crate) fn setup_package(package_name: &str) -> TempDir {
+pub(crate) static BASE_FILE_PATTERNS: &[&str] = &["**/*.cairo", "**/*.toml", "**/*.txt"];
+
+pub(crate) fn setup_package_with_file_patterns(
+    package_name: &str,
+    file_patterns: &[&str],
+) -> TempDir {
     let temp = TempDir::new().unwrap();
-    temp.copy_from(
-        format!("tests/data/{package_name}"),
-        &["**/*.cairo", "**/*.toml", "**/*.txt", "**/*.json"],
-    )
-    .unwrap();
+    temp.copy_from(format!("tests/data/{package_name}"), file_patterns)
+        .unwrap();
 
     let snforge_std_path = Utf8PathBuf::from_str("../../snforge_std")
         .unwrap()
@@ -49,6 +51,10 @@ pub(crate) fn setup_package(package_name: &str) -> TempDir {
         .unwrap();
 
     temp
+}
+
+pub(crate) fn setup_package(package_name: &str) -> TempDir {
+    setup_package_with_file_patterns(package_name, BASE_FILE_PATTERNS)
 }
 
 pub(crate) fn setup_hello_workspace() -> TempDir {
