@@ -48,7 +48,7 @@ parity-scale-codec = "3.5.0"
 parity-scale-codec-derive = "3.1.4"
 scarb-ui = { git = "https://github.com/software-mansion/scarb.git", rev = "58cc88e" }
 scarb-metadata = { git = "https://github.com/software-mansion/scarb.git", rev = "58cc88e" }
-snapbox = "0.4.11"
+snapbox = "0.4.13"
 cairo-vm = "0.8.1"
 ark-ff = "0.4.0-alpha.7"
 ark-std = "0.4.0"

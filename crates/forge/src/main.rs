@@ -79,9 +79,6 @@ fn extract_failed_tests(tests_summaries: Vec<TestCrateSummary>) -> Vec<TestCaseS
 
 #[tokio::main]
 async fn main_execution() -> Result<bool> {
-    let token = CancellationToken::new();
-    let cancellation_token = Arc::new(token.clone());
-
     let args = Args::parse();
     if let Some(project_name) = args.init {
         init::run(project_name.as_str())?;
@@ -107,6 +104,8 @@ async fn main_execution() -> Result<bool> {
     let mut all_failed_tests = vec![];
 
     for package in &packages {
+        let token = CancellationToken::new();
+        let cancellation_token = Arc::new(token.clone());
         let forge_config = config_from_scarb_for_package(&scarb_metadata, &package.id)?;
         let (package_path, package_source_dir_path) =
             paths_for_package(&scarb_metadata, &package.id)?;

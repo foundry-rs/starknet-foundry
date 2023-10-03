@@ -35,10 +35,10 @@ pub mod pretty_printing;
 pub mod scarb;
 pub mod test_case_summary;
 
-mod cheatcodes_hint_processor;
 mod fuzzer;
 mod running;
 mod test_crate_summary;
+mod test_execution_syscall_handler;
 
 const FUZZER_RUNS_DEFAULT: u32 = 256;
 
@@ -371,6 +371,7 @@ async fn run_p_test(
     args: Vec<ConcreteTypeId>,
     cancellation_token: Arc<CancellationToken>,
 ) -> Result<(TestCaseSummary, Option<u32>)> {
+    let exit_first = runner_config.exit_first;
     if args.is_empty() {
         match blocking_run_from_test(
             package_root,
@@ -382,7 +383,14 @@ async fn run_p_test(
         )
         .await
         {
-            Ok(result) => Ok((result, None)),
+            Ok(result) => {
+                if exit_first {
+                    if let TestCaseSummary::Failed { .. } = &result {
+                        cancellation_token.cancel();
+                    }
+                }
+                Ok((result, None))
+            }
             Err(e) => Err(e),
         }
 
@@ -461,19 +469,7 @@ async fn run_tests_from_crate(
         if runs.is_some() {
             was_fuzzed = true;
         }
-        if runner_config.exit_first {
-            if let TestCaseSummary::Failed { .. } = &result {
-                cancellation_token.cancel();
-                // return Ok((
-                //     TestFileSummary {
-                //         test_case_summaries: vec![result],
-                //         runner_exit_status: RunnerStatus::TestFailed,
-                //         relative_path: tests.relative_path,
-                //     },
-                //     was_fuzzed,
-                // ));
-            }
-        }
+
         pretty_printing::print_test_result(&result, runs);
         results.push((result, runs));
     }
@@ -567,6 +563,9 @@ async fn run_with_fuzzing(
         if let TestCaseSummary::Failed { .. } = &result {
             if results.is_empty() {
                 token.cancel();
+                if runner_config.exit_first {
+                    cancellation_token.cancel();
+                };
                 results.push(result);
             }
         } else {

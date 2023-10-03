@@ -1,5 +1,5 @@
 use super::syscalls::CheatableSyscallHandler;
-use crate::state::CheatcodeState;
+use crate::state::CheatnetState;
 use blockifier::execution::call_info::CallInfo;
 use blockifier::{
     execution::{
@@ -30,7 +30,7 @@ pub fn execute_entry_point_call_cairo1(
     call: CallEntryPoint,
     contract_class: &ContractClassV1,
     state: &mut dyn State,
-    cheatcode_state: &CheatcodeState, // Added parameter
+    cheatnet_state: &mut CheatnetState, // Added parameter
     resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
 ) -> EntryPointExecutionResult<CallInfo> {
@@ -58,7 +58,7 @@ pub fn execute_entry_point_call_cairo1(
     // region: Modified blockifier code
     let mut cheatable_syscall_handler = CheatableSyscallHandler {
         syscall_handler,
-        cheatcode_state,
+        cheatnet_state,
     };
 
     // Execute.

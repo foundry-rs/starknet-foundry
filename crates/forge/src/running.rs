@@ -14,7 +14,6 @@ use cairo_vm::serde::deserialize_program::HintParams;
 use cairo_vm::types::relocatable::Relocatable;
 use cheatnet::constants::{build_block_context, build_testing_state, build_transaction_context};
 use cheatnet::execution::syscalls::CheatableSyscallHandler;
-use cheatnet::CheatnetState;
 use itertools::chain;
 
 use cairo_lang_casm::hints::Hint;
@@ -25,7 +24,7 @@ use cairo_lang_runner::{Arg, RunnerError};
 use cairo_vm::vm::runners::cairo_runner::RunResources;
 use camino::Utf8PathBuf;
 use cheatnet::forking::state::ForkStateReader;
-use cheatnet::state::{CheatcodeState, ExtendedStateReader};
+use cheatnet::state::{CheatnetState, ExtendedStateReader};
 use conversions::StarknetConversions;
 use starknet::core::types::{BlockId, BlockTag};
 use starknet::core::utils::get_selector_from_name;
@@ -37,9 +36,9 @@ use starknet_api::patricia_key;
 use starknet_api::transaction::Calldata;
 use test_collector::{ForkConfig, TestCase};
 
-use crate::cheatcodes_hint_processor::CheatcodesSyscallHandler;
 use crate::scarb::{ForkTarget, StarknetContractArtifacts};
 use crate::test_case_summary::TestCaseSummary;
+use crate::test_execution_syscall_handler::TestExecutionSyscallHandler;
 use crate::{RunnerConfig, RunnerParams};
 
 // snforge_std/src/cheatcodes.cairo::TEST
@@ -102,6 +101,7 @@ pub(crate) fn run_from_test_case(
     runner_params: Arc<RunnerParams>,
     args: Vec<Felt252>,
 ) -> Result<TestCaseSummary> {
+    let fork_targets = runner_config.fork_targets.as_ref();
     let contracts: &HashMap<String, StarknetContractArtifacts> = &runner_params.contracts.clone();
     let predeployed_contracts = &runner_params.predeployed_contracts;
     let environment_variables = &runner_params.environment_variables;
@@ -147,11 +147,13 @@ pub(crate) fn run_from_test_case(
         initial_gas: u64::MAX,
     };
 
-    let mut blockifier_state = CachedState::new(
-        build_testing_state(predeployed_contracts),
-        GlobalContractCache::default(),
-    );
+    let state_reader = ExtendedStateReader {
+        dict_state_reader: build_testing_state(predeployed_contracts),
+        fork_state_reader: get_fork_state_reader(&package_root, fork_targets, &case.fork_config),
+    };
+    let mut blockifier_state = CachedState::new(state_reader, GlobalContractCache::default());
     let mut execution_resources = ExecutionResources::default();
+
     let syscall_handler = SyscallHintProcessor::new(
         &mut blockifier_state,
         &mut execution_resources,
@@ -165,21 +167,15 @@ pub(crate) fn run_from_test_case(
         &string_to_hint,
         ReadOnlySegments::default(),
     );
+
     let cheatable_syscall_handler = CheatableSyscallHandler {
         syscall_handler,
-        cheatcode_state: &CheatcodeState::new(),
+        cheatnet_state: &mut CheatnetState::default(),
     };
-    let mut cheatcodes_hint_processor = CheatcodesSyscallHandler {
+
+    let mut cheatcodes_hint_processor = TestExecutionSyscallHandler {
         cheatable_syscall_handler,
         contracts,
-        cheatnet_state: CheatnetState::new(ExtendedStateReader {
-            dict_state_reader: build_testing_state(predeployed_contracts),
-            fork_state_reader: get_fork_state_reader(
-                &package_root,
-                runner_config.fork_targets.as_ref(),
-                &case.fork_config,
-            ),
-        }),
         hints: &string_to_hint,
         run_resources: RunResources::default(),
         environment_variables,
