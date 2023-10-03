@@ -50,6 +50,7 @@ struct Args {
     #[arg(short = 's', long)]
     fuzzer_seed: Option<u64>,
 
+    /// Clean forge cache directory
     #[arg(short, long)]
     clean_cache: bool,
 }
