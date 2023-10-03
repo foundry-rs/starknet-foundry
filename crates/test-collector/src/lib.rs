@@ -30,6 +30,7 @@ use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use cairo_lang_utils::OptionHelper;
 use conversions::StarknetConversions;
 use itertools::Itertools;
+use num_bigint::BigInt;
 use num_traits::ToPrimitive;
 use plugin::TestPlugin;
 use smol_str::SmolStr;
@@ -87,6 +88,12 @@ fn fork_config_from_raw_fork_config(
     Ok(result)
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct FuzzerConfig {
+    pub fuzzer_runs: u32,
+    pub fuzzer_seed: u64,
+}
+
 /// The configuration for running a single test.
 #[derive(Debug)]
 pub struct SingleTestConfig {
@@ -98,6 +105,8 @@ pub struct SingleTestConfig {
     pub ignored: bool,
     /// The configuration of forked network.
     pub fork_config: Option<ForkConfig>,
+    /// Custom fuzzing configuration
+    pub fuzzer_config: Option<FuzzerConfig>,
 }
 
 /// Finds the tests in the requested crates.
@@ -142,6 +151,7 @@ pub fn try_extract_test_config(
         .find(|attr| attr.id.as_str() == "available_gas");
     let should_panic_attr = attrs.iter().find(|attr| attr.id.as_str() == "should_panic");
     let fork_attr = attrs.iter().find(|attr| attr.id.as_str() == "fork");
+    let fuzzer_attr = attrs.iter().find(|attr| attr.id.as_str() == "fuzzer");
     let mut diagnostics = vec![];
     if let Some(attr) = test_attr {
         if !attr.args.is_empty() {
@@ -156,6 +166,7 @@ pub fn try_extract_test_config(
             available_gas_attr,
             should_panic_attr,
             fork_attr,
+            fuzzer_attr,
         ]
         .into_iter()
         .flatten()
@@ -244,6 +255,17 @@ pub fn try_extract_test_config(
     } else {
         None
     };
+    let fuzzer_config = if let Some(attr) = fuzzer_attr {
+        extract_fuzzer_config(db, attr).on_none(|| {
+            diagnostics.push(PluginDiagnostic {
+                stable_ptr: attr.args_stable_ptr.untyped(),
+                message: "Expected fuzzer config must be of the form `runs: <u32>, seed: <u64>`"
+                    .into(),
+            });
+        })
+    } else {
+        None
+    };
 
     if !diagnostics.is_empty() {
         return Err(diagnostics);
@@ -264,6 +286,7 @@ pub fn try_extract_test_config(
             },
             ignored,
             fork_config,
+            fuzzer_config,
         })
     })
 }
@@ -316,6 +339,49 @@ fn extract_fork_config(db: &dyn SyntaxGroup, attr: &Attribute) -> Option<RawFork
         }
         _ => extract_fork_config_from_args(db, attr),
     }
+}
+
+fn extract_fuzzer_config(db: &dyn SyntaxGroup, attr: &Attribute) -> Option<FuzzerConfig> {
+    let [AttributeArg {
+        variant:
+            AttributeArgVariant::Named {
+                name: fuzzer_runs_name,
+                value: fuzzer_runs,
+                ..
+            },
+        ..
+    }, AttributeArg {
+        variant:
+            AttributeArgVariant::Named {
+                name: fuzzer_seed_name,
+                value: fuzzer_seed,
+                ..
+            },
+        ..
+    }] = &attr.args[..]
+    else {
+        return None;
+    };
+
+    if fuzzer_runs_name != "runs" || fuzzer_seed_name != "seed" {
+        return None;
+    };
+
+    let fuzzer_runs = extract_numeric_value(db, fuzzer_runs)?.to_u32()?;
+    let fuzzer_seed = extract_numeric_value(db, fuzzer_seed)?.to_u64()?;
+
+    Some(FuzzerConfig {
+        fuzzer_runs,
+        fuzzer_seed,
+    })
+}
+
+fn extract_numeric_value(db: &dyn SyntaxGroup, expr: &ast::Expr) -> Option<BigInt> {
+    let ast::Expr::Literal(literal) = expr else {
+        return None;
+    };
+
+    literal.numeric_value(db)
 }
 
 fn extract_fork_config_from_id(id: &ast::Expr, db: &dyn SyntaxGroup) -> Option<RawForkConfig> {
@@ -428,6 +494,7 @@ pub struct TestCase {
     pub available_gas: Option<usize>,
     pub expected_result: ExpectedTestResult,
     pub fork_config: Option<ForkConfig>,
+    pub fuzzer_config: Option<FuzzerConfig>,
 }
 
 pub fn collect_tests(
@@ -509,6 +576,7 @@ pub fn collect_tests(
             available_gas: config.available_gas,
             expected_result: config.expected_result,
             fork_config: config.fork_config,
+            fuzzer_config: config.fuzzer_config,
         })
         .collect();
 

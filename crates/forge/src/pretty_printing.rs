@@ -67,7 +67,7 @@ pub(crate) fn print_test_result(
     let fork_params = test_result.fork_params();
     let block_message = get_block_message(fork_params)?;
 
-    let fuzzer_runs = match fuzzer_runs {
+    let fuzzer_report = match fuzzer_runs {
         None => String::new(),
         Some(runs) => {
             if matches!(test_result, TestCaseSummary::Failed { .. }) {
@@ -79,7 +79,7 @@ pub(crate) fn print_test_result(
         }
     };
 
-    println!("{result_header} {result_name}{fuzzer_runs}{block_message}{result_message}");
+    println!("{result_header} {result_name}{fuzzer_report}{block_message}{result_message}");
     Ok(())
 }
 

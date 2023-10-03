@@ -35,9 +35,9 @@ use starknet_api::transaction::Calldata;
 use test_collector::{ForkConfig, TestCase};
 use url::Url;
 
-use crate::cheatcodes_hint_processor::CheatcodesSyscallHandler;
 use crate::scarb::{ForkTarget, StarknetContractArtifacts};
 use crate::test_case_summary::TestCaseSummary;
+use crate::test_execution_syscall_handler::TestExecutionSyscallHandler;
 
 // snforge_std/src/cheatcodes.cairo::test_address
 const TEST_ADDRESS: &str = "0x01724987234973219347210837402";
@@ -149,7 +149,7 @@ pub(crate) fn run_from_test_case(
         cheatnet_state: &mut CheatnetState::default(),
     };
 
-    let mut cheatcodes_hint_processor = CheatcodesSyscallHandler {
+    let mut cheatcodes_hint_processor = TestExecutionSyscallHandler {
         cheatable_syscall_handler,
         contracts,
         hints: &string_to_hint,

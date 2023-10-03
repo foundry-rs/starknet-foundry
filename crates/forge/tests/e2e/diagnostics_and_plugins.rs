@@ -33,6 +33,16 @@ fn print_error_if_attributes_incorrect() {
             #[fork(url: "unparsable_url", block_id: BlockId::Number(1))]
                   ^***************************************************^
             
+            error: Plugin diagnostic: Expected fuzzer config must be of the form `runs: <u32>, seed: <u64>`
+             --> test_fuzzer.cairo:2:9
+            #[fuzzer(test: 10)]
+                    ^********^
+            
+            error: Plugin diagnostic: Expected fuzzer config must be of the form `runs: <u32>, seed: <u64>`
+             --> test_fuzzer.cairo:8:9
+            #[fuzzer()]
+                    ^^
+            
             error: Plugin diagnostic: Expected panic must be of the form `expected = <tuple of felts>`.
              --> test_should_panic.cairo:2:15
             #[should_panic(url: "https://test.com")]
