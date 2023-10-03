@@ -1,40 +1,29 @@
 use std::collections::HashMap;
 
-use crate::constants::{
-    build_block_context, build_declare_transaction, TEST_ACCOUNT_CONTRACT_ADDRESS,
-};
-use crate::{
-    cheatcodes::{CheatcodeError, ContractArtifacts, EnhancedHintError},
-    CheatnetState,
-};
-use anyhow::{anyhow, Context, Result};
+use crate::cheatcodes::{CheatcodeError, ContractArtifacts, EnhancedHintError};
+use anyhow::{Context, Result};
 use blockifier::execution::contract_class::{
     ContractClass as BlockifierContractClass, ContractClassV1,
 };
-use blockifier::state::cached_state::CachedState;
-use blockifier::state::state_api::StateReader;
-use blockifier::transaction::account_transaction::AccountTransaction;
-use blockifier::transaction::transactions::{DeclareTransaction, ExecutableTransaction};
+use blockifier::state::state_api::State;
 use cairo_felt::Felt252;
 use serde_json;
-use starknet_api::core::{ClassHash, ContractAddress, PatriciaKey};
-use starknet_api::hash::{StarkFelt, StarkHash};
-use starknet_api::patricia_key;
-use starknet_api::transaction::TransactionHash;
+use starknet_api::core::ClassHash;
+use starknet_api::hash::StarkFelt;
 
-use crate::state::ExtendedStateReader;
+use crate::state::BlockifierState;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_starknet::contract_class::ContractClass;
 use serde_json::Value;
 use starknet::core::types::FlattenedSierraClass;
 
-impl CheatnetState {
+impl BlockifierState<'_> {
     pub fn declare(
         &mut self,
         contract_name: &Felt252,
         contracts: &HashMap<String, ContractArtifacts>,
     ) -> Result<ClassHash, CheatcodeError> {
-        let blockifier_state: &mut CachedState<ExtendedStateReader> = &mut self.blockifier_state;
+        let blockifier_state: &mut dyn State = self.blockifier_state as &mut dyn State;
 
         let contract_name_as_short_str = as_cairo_short_string(contract_name)
             .context("Converting contract name to short string failed")
@@ -50,36 +39,43 @@ impl CheatnetState {
         let class_hash =
             get_class_hash(contract_artifact.sierra.as_str()).expect("Failed to get class hash");
 
-        let nonce = blockifier_state
-            .get_nonce_at(ContractAddress(patricia_key!(
-                TEST_ACCOUNT_CONTRACT_ADDRESS
-            )))
-            .expect("Failed to get nonce");
+        // let nonce = blockifier_state
+        //     .get_nonce_at(ContractAddress(patricia_key!(
+        //         TEST_ACCOUNT_CONTRACT_ADDRESS
+        //     )))
+        //     .expect("Failed to get nonce");
 
-        let declare_tx = build_declare_transaction(
-            nonce,
-            class_hash,
-            ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS)),
-        );
-        let tx = DeclareTransaction::new(
-            starknet_api::transaction::DeclareTransaction::V2(declare_tx),
-            // TODO(#358)
-            TransactionHash::default(),
-            contract_class,
-        )
-        .unwrap_or_else(|err| panic!("Unable to build transaction {err:?}"));
+        // let declare_tx = build_declare_transaction(
+        //     nonce,
+        //     class_hash,
+        //     ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS)),
+        // );
+        // let tx = DeclareTransaction::new(
+        //     starknet_api::transaction::DeclareTransaction::V2(declare_tx),
+        //     // TODO(#358)
+        //     TransactionHash::default(),
+        //     contract_class.clone(),
+        // )
+        // .unwrap_or_else(|err| panic!("Unable to build transaction {err:?}"));
+        // TODO make it correct with compiled class hash
+        blockifier_state
+            .set_contract_class(&class_hash, contract_class)
+            .map_err(EnhancedHintError::from)?;
 
-        let account_tx = AccountTransaction::Declare(tx);
-        let block_context = build_block_context();
-        match account_tx.execute(blockifier_state, &block_context, true, true) {
-            Ok(_) => (),
-            Err(e) => {
-                return Err(EnhancedHintError::Anyhow(anyhow!(format!(
-                    "Failed to execute declare transaction:\n    {e}"
-                ))))
-                .map_err(From::from)
-            }
-        };
+        // match blockifier_state.get_compiled_contract_class(&class_hash) {
+        //     Err(StateError::UndeclaredClassHash(_)) => {
+        //         // Class is undeclared; declare it.
+
+        //         Ok(class_hash)
+        //         // blockifier_state.set_compiled_class_hash(class_hash, *compiled_class_hash)?;
+        //     }
+        //     Err(error) => Err(error).map_err(TransactionExecutionError::from),
+        //     Ok(_) => {
+        //         // Class is already declared, cannot redeclare
+        //         // (i.e., make sure the leaf is uninitialized).
+        //         Err(TransactionExecutionError::DeclareTransactionError { class_hash })
+        //     }
+        // }
 
         Ok(class_hash)
     }
