@@ -1,9 +1,7 @@
 use assert_fs::fixture::PathChild;
 use indoc::indoc;
 
-use crate::e2e::common::runner::{
-    runner, setup_package, setup_package_with_file_patterns, BASE_FILE_PATTERNS,
-};
+use crate::e2e::common::runner::{runner, setup_package_with_file_patterns, BASE_FILE_PATTERNS};
 
 #[test]
 #[allow(clippy::too_many_lines)]
