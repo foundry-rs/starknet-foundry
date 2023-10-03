@@ -6,6 +6,8 @@ members = [
 [workspace.scripts]
 test = "snforge"
 
+[workspace.tool.snforge]
+
 [workspace.dependencies]
 starknet = "2.2.0"
 snforge_std = { path = "../../../../../snforge_std" }
