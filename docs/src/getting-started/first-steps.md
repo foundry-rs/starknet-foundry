@@ -68,3 +68,11 @@ Make sure that the version in `tag` matches `snforge`. You can check the current
 $ snforge --version
 forge 0.7.1
 ```
+
+It is also possible to add this dependency
+using [`scarb add`](https://docs.swmansion.com/scarb/docs/guides/dependencies.html#adding-a-dependency-via-scarb-add)
+command.
+
+```shell
+$ scarb add snforge_std --git https://github.com/foundry-rs/starknet-foundry.git --tag v0.7.1
+```
