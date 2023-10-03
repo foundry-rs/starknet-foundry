@@ -1,7 +1,9 @@
 use cairo_felt::Felt252;
 use camino::Utf8PathBuf;
+use cheatnet::cheatcodes::deploy::deploy;
 use cheatnet::rpc::call_contract;
-use cheatnet::{cheatcodes::ContractArtifacts, rpc::CallContractOutput, CheatnetState};
+use cheatnet::state::{BlockifierState, CheatnetState};
+use cheatnet::{cheatcodes::ContractArtifacts, rpc::CallContractOutput};
 use conversions::StarknetConversions;
 use starknet::core::utils::get_selector_from_name;
 use starknet_api::core::ContractAddress;
@@ -36,27 +38,35 @@ pub fn get_contracts() -> HashMap<String, ContractArtifacts> {
 }
 
 pub fn deploy_contract(
-    state: &mut CheatnetState,
+    blockifier_state: &mut BlockifierState,
+    cheatnet_state: &mut CheatnetState,
     contract_name: &str,
     calldata: &[Felt252],
 ) -> ContractAddress {
     let contract = contract_name.to_owned().to_felt252();
     let contracts = get_contracts();
 
-    let class_hash = state.declare(&contract, &contracts).unwrap();
-    state
-        .deploy(&class_hash, calldata)
+    let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
+    deploy(blockifier_state, cheatnet_state, &class_hash, calldata)
         .unwrap()
         .contract_address
 }
 
 pub fn call_contract_getter_by_name(
-    state: &mut CheatnetState,
+    blockifier_state: &mut BlockifierState,
+    cheatnet_state: &mut CheatnetState,
     contract_address: &ContractAddress,
     fn_name: &str,
 ) -> CallContractOutput {
     let selector = felt_selector_from_name(fn_name);
-    let result = call_contract(contract_address, &selector, vec![].as_slice(), state).unwrap();
+    let result = call_contract(
+        blockifier_state,
+        cheatnet_state,
+        contract_address,
+        &selector,
+        vec![].as_slice(),
+    )
+    .unwrap();
 
     result
 }

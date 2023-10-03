@@ -34,14 +34,10 @@ impl CheatnetState {
             chain_id,
             nonce,
         };
-        self.cheatcode_state
-            .spoofed_contracts
-            .insert(contract_address, tx_info);
+        self.spoofed_contracts.insert(contract_address, tx_info);
     }
 
     pub fn stop_spoof(&mut self, contract_address: ContractAddress) {
-        self.cheatcode_state
-            .spoofed_contracts
-            .remove(&contract_address);
+        self.spoofed_contracts.remove(&contract_address);
     }
 }

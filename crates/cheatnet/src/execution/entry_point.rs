@@ -1,5 +1,5 @@
 use super::cairo1_execution::execute_entry_point_call_cairo1;
-use crate::state::CheatcodeState;
+use crate::state::CheatnetState;
 use blockifier::execution::call_info::{CallExecution, Retdata};
 use blockifier::execution::deprecated_execution::execute_entry_point_call;
 use blockifier::{
@@ -29,13 +29,13 @@ use std::collections::HashSet;
 pub fn execute_call_entry_point(
     entry_point: &mut CallEntryPoint, // Instead of 'self'
     state: &mut dyn State,
-    cheatcode_state: &CheatcodeState, // Added parameter
+    cheatnet_state: &mut CheatnetState, // Added parameter
     resources: &mut ExecutionResources,
     context: &mut EntryPointExecutionContext,
 ) -> EntryPointExecutionResult<CallInfo> {
     // region: Modified blockifier code
     // We skip recursion depth validation here.
-    if let Some(ret_data) = get_ret_data_by_call_entry_point(entry_point, cheatcode_state) {
+    if let Some(ret_data) = get_ret_data_by_call_entry_point(entry_point, cheatnet_state) {
         return Ok(mocked_call_info(entry_point.clone(), ret_data.clone()));
     }
     // endregion
@@ -79,7 +79,7 @@ pub fn execute_call_entry_point(
             entry_point.clone(),
             &contract_class,
             state,
-            cheatcode_state,
+            cheatnet_state,
             resources,
             context,
         ),
@@ -120,7 +120,7 @@ pub fn execute_constructor_entry_point(
     ctor_context: ConstructorContext,
     calldata: Calldata,
     remaining_gas: u64,
-    cheatcode_state: &CheatcodeState,
+    cheatnet_state: &mut CheatnetState,
 ) -> EntryPointExecutionResult<CallInfo> {
     // Ensure the class is declared (by reading it).
     let contract_class = state.get_compiled_contract_class(&ctor_context.class_hash)?;
@@ -144,7 +144,7 @@ pub fn execute_constructor_entry_point(
     execute_call_entry_point(
         &mut constructor_call,
         state,
-        cheatcode_state,
+        cheatnet_state,
         resources,
         context,
     )
@@ -153,10 +153,10 @@ pub fn execute_constructor_entry_point(
 
 fn get_ret_data_by_call_entry_point<'a>(
     call: &CallEntryPoint,
-    cheatcode_state: &'a CheatcodeState,
+    cheatnet_state: &'a CheatnetState,
 ) -> Option<&'a Vec<StarkFelt>> {
     if let Some(contract_address) = call.code_address {
-        if let Some(contract_functions) = cheatcode_state.mocked_functions.get(&contract_address) {
+        if let Some(contract_functions) = cheatnet_state.mocked_functions.get(&contract_address) {
             let entrypoint_selector = call.entry_point_selector;
 
             let ret_data = contract_functions.get(&entrypoint_selector);
