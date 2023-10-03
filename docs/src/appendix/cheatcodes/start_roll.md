@@ -11,7 +11,6 @@ The change can be canceled with [`stop_roll`](./stop_roll.md).
 For contract implementation:
 
 ```rust
-// ...
 #[starknet::interface]
 trait IConstructorRollChecker<TContractState> {
     fn get_stored_block_number(ref self: TContractState) -> u64;
@@ -38,12 +37,9 @@ mod ConstructorRollChecker {
         }
     }
 }
-// ...
 ```
 
-We can use `start_roll` in a test to change the block number for a given contract. In the example below, we use `start_roll` to mock the constructor by changing the block number to `234`. This is done by precalculating the address of the contract in the `deploy_contract()` function and then set the block number for the precalculated contract.
-
-We can use `start_roll` in a test to modify the block number for a specific contract. In the example below, we utilize `start_roll` to mock the constructor by setting the block number to 234. This is achieved by precalculating the contract's address in the `deploy_contract` function and setting the block number for the precomputed contract."
+We can use `start_roll` in a test to modify the block number for a given contract. In the example below, we utilize `start_roll` to mock the constructor by setting the block number to `234`. This is achieved by precalculating the contract's address in the `deploy_contract` function and setting the block number for the precomputed contract.
 
 ```rust
 use array::ArrayTrait;
@@ -57,7 +53,7 @@ fn deploy_contract(name: felt252) -> ContractAddress {
     let contract = declare(name);
     // precalculate the contract address
     let contract_address = contract.precalculate_address(@ArrayTrait::new());
-    // setting the block number with precalculated address
+    // setting the block number with the precalculated address
     start_roll(contract_address, 234);
     // deploying contract
     contract.deploy(@ArrayTrait::new()).unwrap()
