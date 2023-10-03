@@ -48,13 +48,13 @@ use starknet::ContractAddress;
 use snforge_std::{declare, ContractClassTrait};
 use snforge_std::start_warp;
 
-fn deploy_contract(name: felt252) -> ContractAddress {
+fn deploy_contract(name: felt252, blk_timestamp: u64) -> ContractAddress {
     // declaring contract
     let contract = declare(name);
     // precalculating the contract address
     let contract_address = contract.precalculate_address(@ArrayTrait::new());
-    // setting the block timestamp with the precalculated address
-    start_warp(contract_address, 1000);
+    // set the block timestamp for the precalculated address
+    start_warp(contract_address, blk_timestamp);
     // deploying contract
     contract.deploy(@ArrayTrait::new()).unwrap()
 }
@@ -62,7 +62,7 @@ fn deploy_contract(name: felt252) -> ContractAddress {
 #[test]
 fn test_warp() {
     // deploy contract
-    let contract_address = deploy_contract('ConstructorWarpChecker');
+    let contract_address = deploy_contract('ConstructorWarpChecker', 1000);
     // set dispatcher
     let dispatcher = IConstructorWarpCheckerDispatcher { contract_address };
     // retrieving the block timestamp
