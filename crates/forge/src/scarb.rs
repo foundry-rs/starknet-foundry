@@ -8,6 +8,7 @@ use starknet::core::types::{BlockId, BlockTag};
 use std::collections::HashMap;
 use std::fs;
 use test_collector::LinkedLibrary;
+use url::Url;
 
 #[allow(dead_code)]
 #[derive(Deserialize, Debug, PartialEq, Clone)]
@@ -40,9 +41,8 @@ pub struct StarknetContractArtifacts {
     pub casm: String,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Default)]
+#[derive(Debug, PartialEq, Default)]
 pub struct ForgeConfig {
-    #[serde(default)]
     /// Should runner exit after first failed test
     pub exit_first: bool,
     /// How many runs should fuzzer execute
@@ -50,14 +50,13 @@ pub struct ForgeConfig {
     /// Seed to be used by fuzzer
     pub fuzzer_seed: Option<u64>,
 
-    #[serde(default)]
     pub fork: Vec<ForkTarget>,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct ForkTarget {
     pub name: String,
-    pub url: String,
+    pub url: Url,
     pub block_id: BlockId,
 }
 
@@ -83,8 +82,10 @@ pub struct RawForkTarget {
     pub block_id: HashMap<String, String>,
 }
 
-impl From<RawForgeConfig> for ForgeConfig {
-    fn from(value: RawForgeConfig) -> ForgeConfig {
+impl TryFrom<RawForgeConfig> for ForgeConfig {
+    type Error = anyhow::Error;
+
+    fn try_from(value: RawForgeConfig) -> std::result::Result<Self, Self::Error> {
         let mut fork_targets = vec![];
 
         for raw_fork_target in value.fork {
@@ -109,17 +110,22 @@ impl From<RawForgeConfig> for ForgeConfig {
 
             fork_targets.push(ForkTarget {
                 name: raw_fork_target.name,
-                url: raw_fork_target.url,
+                url: Url::parse(&raw_fork_target.url).map_err(|parse_error| {
+                    anyhow!(
+                        "Could not parse the \"{}\" URL from Scarb.toml: {parse_error}",
+                        raw_fork_target.url
+                    )
+                })?,
                 block_id,
             });
         }
 
-        ForgeConfig {
+        Ok(ForgeConfig {
             exit_first: value.exit_first,
             fuzzer_runs: value.fuzzer_runs,
             fuzzer_seed: value.fuzzer_seed,
             fork: fork_targets,
-        }
+        })
     }
 }
 
@@ -213,7 +219,7 @@ pub fn config_from_scarb_for_package(
     };
 
     validate_raw_fork_config(&raw_config)?;
-    Ok(raw_config.into())
+    raw_config.try_into()
 }
 
 fn compilation_unit_for_package<'a>(
@@ -712,17 +718,17 @@ mod tests {
                 fork: vec![
                     ForkTarget {
                         name: "FIRST_FORK_NAME".to_string(),
-                        url: "http://some.rpc.url".to_string(),
+                        url: "http://some.rpc.url".parse().unwrap(),
                         block_id: BlockId::Number(1),
                     },
                     ForkTarget {
                         name: "SECOND_FORK_NAME".to_string(),
-                        url: "http://some.rpc.url".to_string(),
+                        url: "http://some.rpc.url".parse().unwrap(),
                         block_id: BlockId::Hash("1".to_string().to_field_element()),
                     },
                     ForkTarget {
                         name: "THIRD_FORK_NAME".to_string(),
-                        url: "http://some.rpc.url".to_string(),
+                        url: "http://some.rpc.url".parse().unwrap(),
                         block_id: BlockId::Tag(Latest),
                     }
                 ],
@@ -902,5 +908,37 @@ mod tests {
         assert!(err
             .to_string()
             .contains("block_id.tag has only two variants: Latest or Pending"));
+    }
+
+    #[test]
+    fn get_forge_config_for_package_fails_on_unparsable_url() {
+        let temp = setup_package("simple_package");
+        let content = indoc!(
+            r#"
+            [package]
+            name = "simple_package"
+            version = "0.1.0"
+
+            [[tool.snforge.fork]]
+            name = "SAME_NAME"
+            url = "unparsable_url"
+            block_id.tag = "Latest"
+            "#
+        );
+        temp.child("Scarb.toml").write_str(content).unwrap();
+
+        let scarb_metadata = MetadataCommand::new()
+            .inherit_stderr()
+            .current_dir(temp.path())
+            .exec()
+            .unwrap();
+
+        let err =
+            config_from_scarb_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
+                .unwrap_err();
+        println!("{err}");
+        assert!(err
+            .to_string()
+            .contains("Could not parse the \"unparsable_url\" URL from Scarb.toml:"));
     }
 }

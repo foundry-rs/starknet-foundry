@@ -1,5 +1,5 @@
 [package]
-name = "forks"
+name = "forking"
 version = "0.1.0"
 
 [dependencies]

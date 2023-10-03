@@ -99,11 +99,12 @@ fn block_id_to_string(block_id: BlockId) -> String {
 
 impl ForkCache {
     #[must_use]
-    pub(crate) fn load_or_new(url: &str, block_id: BlockId, cache_dir: Option<&str>) -> Self {
+    pub(crate) fn load_or_new(url: &Url, block_id: BlockId, cache_dir: Option<&str>) -> Self {
         let (fork_cache_content, cache_file) = if let BlockId::Tag(_) = block_id {
             (ForkCacheContent::new(), None)
         } else {
-            let cache_file_path = cache_file_path_from_fork_config(url, block_id, cache_dir);
+            let cache_file_path =
+                cache_file_path_from_fork_config(url.as_str(), block_id, cache_dir);
             let mut file = OpenOptions::new()
                 .write(true)
                 .read(true)

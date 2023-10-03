@@ -37,6 +37,7 @@ use starknet::core::types::{BlockId, BlockTag};
 use std::fs;
 use std::path::PathBuf;
 use std::sync::Arc;
+use url::Url;
 
 mod plugin;
 
@@ -63,7 +64,27 @@ pub enum ExpectedTestResult {
 #[derive(Debug, Clone, PartialEq)]
 pub enum ForkConfig {
     Id(String),
+    Params(Url, BlockId),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+enum RawForkConfig {
+    Id(String),
     Params(String, BlockId),
+}
+
+fn fork_config_from_raw_fork_config(
+    maybe_raw_fork_config: Option<RawForkConfig>,
+) -> Result<Option<ForkConfig>> {
+    let result = match maybe_raw_fork_config {
+        Some(RawForkConfig::Params(raw_url, block_id)) => {
+            let url = Url::parse(&raw_url)?;
+            Some(ForkConfig::Params(url, block_id))
+        }
+        Some(RawForkConfig::Id(name)) => Some(ForkConfig::Id(name)),
+        None => None,
+    };
+    Ok(result)
 }
 
 /// The configuration for running a single test.
@@ -200,14 +221,25 @@ pub fn try_extract_test_config(
         if attr.args.is_empty() {
             None
         } else {
-            extract_fork_config(db, attr).on_none(|| {
+            let maybe_raw_fork_config = extract_fork_config(db, attr).on_none(|| {
                 diagnostics.push(PluginDiagnostic {
                     stable_ptr: attr.args_stable_ptr.untyped(),
                     message: "Expected fork config must be of the form `url: <double quote \
                                   string>, block_id: <snforge_std::BlockId>`."
                         .into(),
                 });
-            })
+            });
+            let fork_config_result = fork_config_from_raw_fork_config(maybe_raw_fork_config);
+            match fork_config_result {
+                Ok(fork_config) => fork_config,
+                Err(error) => {
+                    diagnostics.push(PluginDiagnostic {
+                        stable_ptr: attr.args_stable_ptr.untyped(),
+                        message: format!("Failed to parse the URL: {error}"),
+                    });
+                    None
+                }
+            }
         }
     } else {
         None
@@ -273,7 +305,7 @@ fn extract_panic_values(db: &dyn SyntaxGroup, attr: &Attribute) -> Option<Vec<Fe
 }
 
 /// Tries to extract the fork configuration.
-fn extract_fork_config(db: &dyn SyntaxGroup, attr: &Attribute) -> Option<ForkConfig> {
+fn extract_fork_config(db: &dyn SyntaxGroup, attr: &Attribute) -> Option<RawForkConfig> {
     if attr.args.is_empty() {
         return None;
     }
@@ -286,16 +318,16 @@ fn extract_fork_config(db: &dyn SyntaxGroup, attr: &Attribute) -> Option<ForkCon
     }
 }
 
-fn extract_fork_config_from_id(id: &ast::Expr, db: &dyn SyntaxGroup) -> Option<ForkConfig> {
+fn extract_fork_config_from_id(id: &ast::Expr, db: &dyn SyntaxGroup) -> Option<RawForkConfig> {
     let ast::Expr::String(url_str) = id else {
         return None;
     };
     let url = url_str.string_value(db)?;
 
-    Some(ForkConfig::Id(url))
+    Some(RawForkConfig::Id(url))
 }
 
-fn extract_fork_config_from_args(db: &dyn SyntaxGroup, attr: &Attribute) -> Option<ForkConfig> {
+fn extract_fork_config_from_args(db: &dyn SyntaxGroup, attr: &Attribute) -> Option<RawForkConfig> {
     let [AttributeArg {
         variant:
             AttributeArgVariant::Named {
@@ -323,7 +355,7 @@ fn extract_fork_config_from_args(db: &dyn SyntaxGroup, attr: &Attribute) -> Opti
     let ast::Expr::String(url_str) = url else {
         return None;
     };
-    let url = url_str.string_value(db)?;
+    let raw_url = url_str.string_value(db)?;
 
     if block_id_arg_name != "block_id" {
         return None;
@@ -380,7 +412,7 @@ fn extract_fork_config_from_args(db: &dyn SyntaxGroup, attr: &Attribute) -> Opti
         return None;
     }
 
-    Some(ForkConfig::Params(url, block_id[0].unwrap()))
+    Some(RawForkConfig::Params(raw_url, block_id[0].unwrap()))
 }
 
 /// Represents a dependency of a Cairo project

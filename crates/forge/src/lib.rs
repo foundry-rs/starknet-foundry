@@ -7,7 +7,6 @@ use assert_fs::fixture::{FileTouch, PathChild, PathCopy};
 use assert_fs::TempDir;
 use camino::Utf8PathBuf;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
-use serde::Deserialize;
 use test_case_summary::TestCaseSummary;
 
 use cairo_lang_runner::SierraCasmRunner;
@@ -52,7 +51,7 @@ static BUILTINS: Lazy<Vec<&str>> = Lazy::new(|| {
 });
 
 /// Configuration of the test runner
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct RunnerConfig {
     test_name_filter: Option<String>,
     exact_match: bool,

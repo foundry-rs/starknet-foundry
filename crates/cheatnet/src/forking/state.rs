@@ -35,11 +35,9 @@ pub struct ForkStateReader {
 
 impl ForkStateReader {
     #[must_use]
-    pub fn new(url: &str, block_id: BlockId, cache_dir: Option<&str>) -> Self {
+    pub fn new(url: &Url, block_id: BlockId, cache_dir: Option<&str>) -> Self {
         ForkStateReader {
-            client: JsonRpcClient::new(HttpTransport::new(
-                Url::parse(url).unwrap_or_else(|_| panic!("Could not parse the {url} URL.")),
-            )),
+            client: JsonRpcClient::new(HttpTransport::new(url.clone())),
             block_id,
             runtime: Runtime::new().expect("Could not instantiate Runtime"),
             cache: ForkCache::load_or_new(url, block_id, cache_dir),

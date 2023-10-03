@@ -28,6 +28,11 @@ fn print_error_if_attributes_incorrect() {
             #[fork(url: "https://test.com")]
                   ^***********************^
             
+            error: Plugin diagnostic: Failed to parse the URL: relative URL without a base
+             --> test_fork.cairo:8:7
+            #[fork(url: "unparsable_url", block_id: BlockId::Number(1))]
+                  ^***************************************************^
+            
             error: Plugin diagnostic: Expected panic must be of the form `expected = <tuple of felts>`.
              --> test_should_panic.cairo:2:15
             #[should_panic(url: "https://test.com")]

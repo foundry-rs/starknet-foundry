@@ -114,7 +114,7 @@ fn try_deploying_undeclared_class() {
 #[test]
 fn test_forking_at_block_number() {
     let predeployed_contracts = Utf8PathBuf::from("predeployed-contracts");
-    let node_url = "http://188.34.188.184:9545/rpc/v0.4";
+    let node_url = "http://188.34.188.184:9545/rpc/v0.4".parse().unwrap();
     let cache_dir = TempDir::new().unwrap();
 
     {
@@ -123,7 +123,7 @@ fn test_forking_at_block_number() {
             ExtendedStateReader {
                 dict_state_reader: build_testing_state(&predeployed_contracts),
                 fork_state_reader: Some(ForkStateReader::new(
-                    node_url,
+                    &node_url,
                     BlockId::Number(309_780),
                     Some(cache_dir.path().to_str().unwrap()),
                 )),
@@ -136,7 +136,7 @@ fn test_forking_at_block_number() {
             ExtendedStateReader {
                 dict_state_reader: build_testing_state(&predeployed_contracts),
                 fork_state_reader: Some(ForkStateReader::new(
-                    node_url,
+                    &node_url,
                     BlockId::Number(309_781),
                     Some(cache_dir.path().to_str().unwrap()),
                 )),

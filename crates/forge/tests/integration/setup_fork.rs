@@ -107,7 +107,7 @@ fn fork_aliased_decorator() {
                 exit_first: false,
                 fork: vec![ForkTarget {
                     name: "FORK_NAME_FROM_SCARB_TOML".to_string(),
-                    url: CHEATNET_RPC_URL.to_string(),
+                    url: CHEATNET_RPC_URL.parse().unwrap(),
                     block_id: BlockId::Tag(Latest),
                 }],
                 fuzzer_runs: Some(1234),

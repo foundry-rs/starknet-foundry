@@ -83,13 +83,11 @@ pub(crate) fn print_test_result(
     Ok(())
 }
 
-fn get_block_message(fork_params: Option<&(String, BlockId)>) -> Result<String> {
+fn get_block_message(fork_params: Option<&(Url, BlockId)>) -> Result<String> {
     let result = if let Some((url, block_id)) = fork_params {
         match block_id {
             BlockId::Tag(_) => {
-                let client = JsonRpcClient::new(HttpTransport::new(
-                    Url::parse(url).unwrap_or_else(|_| panic!("Could not parse the {url} URL.")),
-                ));
+                let client = JsonRpcClient::new(HttpTransport::new(url.clone()));
                 let runtime = Runtime::new().expect("Could not instantiate Runtime");
                 match runtime.block_on(client.get_block_with_txs(block_id))? {
                     Block(BlockWithTxs {

@@ -33,6 +33,7 @@ use starknet_api::hash::StarkHash;
 use starknet_api::patricia_key;
 use starknet_api::transaction::Calldata;
 use test_collector::{ForkConfig, TestCase};
+use url::Url;
 
 use crate::cheatcodes_hint_processor::CheatcodesSyscallHandler;
 use crate::scarb::{ForkTarget, StarknetContractArtifacts};
@@ -188,7 +189,7 @@ pub(crate) fn run_from_test_case(
 
 fn get_fork_state_reader(
     workspace_root: &Utf8PathBuf,
-    fork_params: Option<&(String, BlockId)>,
+    fork_params: Option<&(Url, BlockId)>,
 ) -> Option<ForkStateReader> {
     fork_params.map(|(url, block_id)| {
         ForkStateReader::new(
@@ -202,7 +203,7 @@ fn get_fork_state_reader(
 pub(crate) fn extract_fork_params(
     fork_targets: &[ForkTarget],
     fork_config: &Option<ForkConfig>,
-) -> Result<Option<(String, BlockId)>> {
+) -> Result<Option<(Url, BlockId)>> {
     let result = match fork_config {
         Some(ForkConfig::Id(name)) => {
             let fork_target = fork_targets

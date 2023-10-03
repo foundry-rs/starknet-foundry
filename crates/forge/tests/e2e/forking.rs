@@ -4,8 +4,8 @@ use indoc::indoc;
 use crate::e2e::common::runner::{runner, setup_package};
 
 #[test]
-fn forks() {
-    let temp = setup_package("forks");
+fn forking_and_cache() {
+    let temp = setup_package("forking");
     let snapbox = runner();
 
     snapbox
@@ -17,15 +17,15 @@ fn forks() {
         [..]Finished[..]
 
 
-        Collected 4 test(s) from forks package
+        Collected 4 test(s) from forking package
         Running 0 test(s) from src/
         Running 4 test(s) from tests/
-        [PASS] tests::test_forks::latest
+        [PASS] tests::test_forking::latest
         Block number: [..], block hash: [..]
-        [PASS] tests::test_forks::pending
+        [PASS] tests::test_forking::pending
         Block parent hash: [..]
-        [PASS] tests::test_forks::number
-        [PASS] tests::test_forks::hash
+        [PASS] tests::test_forking::number
+        [PASS] tests::test_forking::hash
         Tests: 4 passed, 0 failed, 0 skipped
         "#});
 
