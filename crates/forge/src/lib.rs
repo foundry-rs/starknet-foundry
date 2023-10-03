@@ -7,6 +7,7 @@ use assert_fs::fixture::{FileTouch, PathChild, PathCopy};
 use assert_fs::TempDir;
 use camino::Utf8PathBuf;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
+use running::blocking_run_from_test;
 use serde::Deserialize;
 use std::sync::Arc;
 use test_case_summary::TestCaseSummary;
@@ -371,10 +372,10 @@ async fn run_p_test(
     cancellation_token: Arc<CancellationToken>,
 ) -> Result<(TestCaseSummary, Option<u32>)> {
     if args.is_empty() {
-        match run_from_test_case(
+        match blocking_run_from_test(
             package_root,
             runner,
-            &case,
+            case.clone(),
             runner_config,
             runner_params,
             vec![],
@@ -538,10 +539,10 @@ async fn run_with_fuzzing(
                     _ = cancellation_fuzzing_token.cancelled() => {
                         Ok(TestCaseSummary::Failed { name: "fuzzing".to_string(), run_result: None, msg: None, arguments: vec![] })
                     },
-                   result = run_from_test_case(
+                   result = blocking_run_from_test(
                         package_root,
                         runner,
-                        &case,
+                        case,
                         runner_config,
                         runner_params,
                         args.clone(),

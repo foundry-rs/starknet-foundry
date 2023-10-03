@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::thread;
 
 use anyhow::Result;
 use blockifier::execution::entry_point::{
@@ -70,10 +71,33 @@ fn build_hints_dict<'b>(
     (hints_dict, string_to_hint)
 }
 
-pub(crate) async fn run_from_test_case(
+pub(crate) async fn blocking_run_from_test(
     package_root: Arc<Utf8PathBuf>,
     runner: Arc<SierraCasmRunner>,
-    case: &TestCase,
+    case: Arc<TestCase>,
+    runner_config: Arc<RunnerConfig>,
+    runner_params: Arc<RunnerParams>,
+    args: Vec<Felt252>,
+) -> Result<TestCaseSummary> {
+    let result = tokio::task::spawn_blocking(|| {
+        run_from_test_case(
+            package_root,
+            runner,
+            case,
+            runner_config,
+            runner_params,
+            args,
+        )
+    })
+    .await?;
+
+    result
+}
+
+pub(crate) fn run_from_test_case(
+    package_root: Arc<Utf8PathBuf>,
+    runner: Arc<SierraCasmRunner>,
+    case: Arc<TestCase>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     args: Vec<Felt252>,
@@ -168,7 +192,7 @@ pub(crate) async fn run_from_test_case(
         instructions,
         builtins,
     ) {
-        Ok(result) => Ok(TestCaseSummary::from_run_result(result, case, args)),
+        Ok(result) => Ok(TestCaseSummary::from_run_result(result, &case, args)),
 
         // CairoRunError comes from VirtualMachineError which may come from HintException that originates in the cheatcode processor
         Err(RunnerError::CairoRunError(error)) => Ok(TestCaseSummary::Failed {

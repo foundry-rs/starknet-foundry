@@ -97,10 +97,11 @@ impl StateReader for ForkStateReader {
             return Ok(cache_hit);
         }
 
-        match self.runtime.block_on(
+        match self.runtime.block_on(async {
             self.client
-                .get_class_hash_at(self.block_id, contract_address.to_field_element()),
-        ) {
+                .get_class_hash_at(self.block_id, contract_address.to_field_element())
+                .await
+        }) {
             Ok(class_hash) => {
                 let class_hash = class_hash.to_class_hash();
                 self.cache
