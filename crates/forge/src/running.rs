@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::thread;
 
 use anyhow::Result;
 use blockifier::execution::entry_point::{
@@ -78,27 +77,25 @@ pub(crate) async fn blocking_run_from_test(
     runner_params: Arc<RunnerParams>,
     args: Vec<Felt252>,
 ) -> Result<TestCaseSummary> {
-    let result = tokio::task::spawn_blocking(|| {
+    tokio::task::spawn_blocking(move || {
         run_from_test_case(
-            package_root,
-            runner,
-            case,
-            runner_config,
-            runner_params,
+            &package_root,
+            &runner,
+            &case,
+            &runner_config,
+            &runner_params,
             args,
         )
     })
-    .await?;
-
-    result
+    .await?
 }
 
 pub(crate) fn run_from_test_case(
-    package_root: Arc<Utf8PathBuf>,
-    runner: Arc<SierraCasmRunner>,
-    case: Arc<TestCase>,
-    runner_config: Arc<RunnerConfig>,
-    runner_params: Arc<RunnerParams>,
+    package_root: &Arc<Utf8PathBuf>,
+    runner: &Arc<SierraCasmRunner>,
+    case: &Arc<TestCase>,
+    runner_config: &Arc<RunnerConfig>,
+    runner_params: &Arc<RunnerParams>,
     args: Vec<Felt252>,
 ) -> Result<TestCaseSummary> {
     let fork_targets = runner_config.fork_targets.as_ref();
@@ -149,7 +146,7 @@ pub(crate) fn run_from_test_case(
 
     let state_reader = ExtendedStateReader {
         dict_state_reader: build_testing_state(predeployed_contracts),
-        fork_state_reader: get_fork_state_reader(&package_root, fork_targets, &case.fork_config),
+        fork_state_reader: get_fork_state_reader(package_root, fork_targets, &case.fork_config),
     };
     let mut blockifier_state = CachedState::new(state_reader, GlobalContractCache::default());
     let mut execution_resources = ExecutionResources::default();
@@ -188,7 +185,7 @@ pub(crate) fn run_from_test_case(
         instructions,
         builtins,
     ) {
-        Ok(result) => Ok(TestCaseSummary::from_run_result(result, &case, args)),
+        Ok(result) => Ok(TestCaseSummary::from_run_result(result, case, args)),
 
         // CairoRunError comes from VirtualMachineError which may come from HintException that originates in the cheatcode processor
         Err(RunnerError::CairoRunError(error)) => Ok(TestCaseSummary::Failed {

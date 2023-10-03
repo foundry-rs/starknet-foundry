@@ -25,7 +25,7 @@ use smol_str::SmolStr;
 use walkdir::WalkDir;
 
 use crate::fuzzer::RandomFuzzer;
-use crate::running::run_from_test_case;
+
 use crate::scarb::{ForgeConfig, ForkTarget, StarknetContractArtifacts};
 pub use crate::test_crate_summary::TestCrateSummary;
 
@@ -291,7 +291,7 @@ fn try_close_tmp_dir(maybe_tmp_dir: Option<TempDir>) -> Result<()> {
 /// * `predeployed_contracts` - Absolute path to predeployed contracts used by starknet state e.g. account contracts
 ///
 
-#[allow(clippy::implicit_hasher)]
+#[allow(clippy::implicit_hasher, clippy::too_many_arguments)]
 pub async fn run(
     package_root: Arc<Utf8PathBuf>,
     package_path: &Utf8PathBuf,
@@ -515,7 +515,7 @@ async fn run_with_fuzzing(
 
     let mut tasks = vec![];
 
-    (1..runner_config.fuzzer_runs + 1).for_each(|_| {
+    (1..=runner_config.fuzzer_runs).for_each(|_| {
         let args = fuzzer.next_args();
         tasks.push(task::spawn({
             let case = case.clone();
