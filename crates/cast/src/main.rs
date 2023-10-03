@@ -287,6 +287,8 @@ async fn main() -> Result<()> {
                 let mut result = starknet_commands::account::delete::delete(
                     &config.account,
                     &config.accounts_file,
+                    &cli.path_to_scarb_toml,
+                    delete.delete_profile,
                     &network_name,
                 );
 

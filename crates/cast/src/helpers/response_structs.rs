@@ -38,7 +38,7 @@ pub struct AccountAddResponse {
 
 #[derive(Serialize)]
 pub struct AccountDeleteResponse {
-    pub address: FieldElement,
+    pub result: String,
 }
 
 #[derive(Serialize)]
