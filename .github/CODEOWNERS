@@ -7,3 +7,7 @@
 
 # Cheatable starknet
 /crates/cheatnet            @foundry-rs/starknet-foundry-cheatable-net
+/crates/forge/src/running.rs @foundry-rs/starknet-foundry-cheatable-net
+/crates/forge/src/cheatcodes_hint_processor.rs @foundry-rs/starknet-foundry-cheatable-net
+/crates/forge/tests/integration @foundry-rs/starknet-foundry-cheatable-net
+
