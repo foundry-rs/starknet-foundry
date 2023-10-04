@@ -432,22 +432,31 @@ async fn run_tests_from_crate(
         let function = runner.find_function(case_name).unwrap();
         let args = function_args(function, &BUILTINS);
 
+        let package_root = package_root.clone();
+        let case = Arc::new(case.clone());
+        let c = case.clone();
+        let cancellation_token = cancellation_token.clone();
+        let runner_params = runner_params.clone();
+        let runner_config = runner_config.clone();
+        let args: Vec<ConcreteTypeId> = args.into_iter().cloned().collect();
+        let runner = runner.clone();
+
         let task = task::spawn({
-            let package_root = package_root.clone();
-            let case = Arc::new(case.clone());
-            let c = case.clone();
-            let runner = runner.clone();
-            let args: Vec<ConcreteTypeId> = args.into_iter().cloned().collect();
-            let cancellation_token = cancellation_token.clone();
-            let runner_params = runner_params.clone();
-            let runner_config = runner_config.clone();
             async move {
                 tokio::select! {
                     _ = cancellation_token.cancelled() => {
                         // The token was cancelled
                        Ok((TestCaseSummary::skipped(&c), None))
                     },
-                    result = chose_strategy_and_run_test(package_root.clone() ,case, runner,runner_params, runner_config, args, cancellation_token.clone()) => {
+                    result = chose_strategy_and_run_test(
+                        package_root.clone(),
+                        case,
+                        runner,
+                        runner_params,
+                        runner_config,
+                        args,
+                        cancellation_token.clone()
+                    ) => {
                         result
                     },
                 }
