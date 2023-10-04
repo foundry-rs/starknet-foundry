@@ -393,6 +393,50 @@ fn test_cant_call_test_contract() {
 }
 
 #[test]
+fn test_storage_access_default_values() {
+    let test = test_case!(indoc!(
+        r#"
+        #[starknet::contract]
+        mod Contract {
+            #[derive(starknet::Store, Drop)]
+            struct CustomStruct {
+                a: felt252,
+                b: felt252,
+            }
+            #[storage]
+            struct Storage {
+                balance: felt252,
+                legacy_map: LegacyMap<felt252, felt252>,
+                custom_struct: CustomStruct,
+            }
+        }
+
+        use tests::test_case::Contract::balanceContractMemberStateTrait;
+        use tests::test_case::Contract::legacy_mapContractMemberStateTrait;
+        use tests::test_case::Contract::custom_structContractMemberStateTrait;
+
+        #[test]
+        fn testing_storage_defaults() {
+            let mut state = Contract::contract_state_for_testing();
+            let default_felt252 = state.balance.read();
+            assert(default_felt252 == 0, 'Incorrect storage value');
+
+            let default_map_value = state.legacy_map.read(22);
+            assert(default_map_value == 0, 'Incorrect map value');
+
+            let default_custom_struct = state.custom_struct.read();
+            assert(default_custom_struct.a == 0, 'Invalid cs.a value');
+            assert(default_custom_struct.b == 0, 'Invalid cs.b value');
+        }
+    "#
+    ),);
+
+    let result = run_test_case(&test);
+
+    assert_passed!(result);
+}
+
+#[test]
 fn test_simple_cheatcodes() {
     let test = test_case!(indoc!(
         r#"
