@@ -4,7 +4,8 @@ Run forge in the current directory
 
 ## `[TEST_FILTER]`
 
-Passing a test filter will only run tests with an [absolute module tree path](https://book.cairo-lang.org/ch06-03-paths-for-referring-to-an-item-in-the-module-tree.html?highlight=path#paths-for-referring-to-an-item-in-the-module-tree)
+Passing a test filter will only run tests with
+an [absolute module tree path](https://book.cairo-lang.org/ch06-03-paths-for-referring-to-an-item-in-the-module-tree.html?highlight=path#paths-for-referring-to-an-item-in-the-module-tree)
 containing this filter.
 
 ## `-e`, `--exact`
@@ -14,7 +15,7 @@ Test filter must be a whole qualified test name e.g. `package_name::my_test` ins
 
 ## `--init <NAME>`
 
- Create a new directory and forge project named `<NAME>`.
+Create a new directory and forge project named `<NAME>`.
 
 ## `-x`, `--exit-first`
 
@@ -28,13 +29,17 @@ Packages to run this command on, can be a concrete package name (`foobar`) or a 
 
 Run tests for all packages in the workspace.
 
-## `-r`, `--fuzzer-runs` `<FUZZER_RUNS>`  
+## `-r`, `--fuzzer-runs` `<FUZZER_RUNS>`
 
 Number of fuzzer runs.
 
-##  `-s`, `--fuzzer-seed` `<FUZZER_SEED>`  
+## `-s`, `--fuzzer-seed` `<FUZZER_SEED>`
 
 Seed for the fuzzer.
+
+## `-c`, `--clean-cache`
+
+Clean forge cache directory.
 
 ## `-h`, `--help`
 
