@@ -39,7 +39,7 @@ Seed for the fuzzer.
 
 ## `-c`, `--clean-cache`
 
-Clean forge cache directory
+Clean forge cache directory.
 
 ## `-h`, `--help`
 
