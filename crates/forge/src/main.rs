@@ -26,6 +26,7 @@ static CACHE_DIR: &str = ".snfoundry_cache";
 
 #[derive(Parser, Debug)]
 #[command(version)]
+#[allow(clippy::struct_excessive_bools)]
 struct Args {
     /// Name used to filter tests
     test_filter: Option<String>,
@@ -54,10 +55,10 @@ struct Args {
     #[arg(short, long)]
     clean_cache: bool,
 
-    /// Run only tests marked with `#[ignored]` attribute
+    /// Run only tests marked with `#[ignore]` attribute
     #[arg(long)]
     ignored: bool,
-    /// Run all tests regardless of `#[ignored]` attribute
+    /// Run all tests regardless of `#[ignore]` attribute
     #[arg(long)]
     include_ignored: bool,
 }

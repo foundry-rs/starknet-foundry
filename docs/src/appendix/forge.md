@@ -41,6 +41,14 @@ Seed for the fuzzer.
 
 Clean forge cache directory.
 
+## `--ignored`
+
+Run only tests marked with `#[ignore]` attribute.
+
+## `--include-ignored`
+
+Run all tests regardless of `#[ignore]` attribute.
+
 ## `-h`, `--help`
 
 Print help.
