@@ -145,7 +145,7 @@ impl HintProcessorLogic for TestExecutionSyscallHandler<'_> {
                 &mut self.cheatable_syscall_handler,
             );
         }
-        self.cheatable_syscall_handler.syscall_handler.execute_hint(
+        self.cheatable_syscall_handler.execute_hint(
             vm,
             exec_scopes,
             hint_data,
