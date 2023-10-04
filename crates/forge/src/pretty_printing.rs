@@ -46,14 +46,11 @@ pub(crate) fn print_test_result(test_result: &TestCaseSummary, fuzzer_runs: Opti
     let result_header = match test_result {
         TestCaseSummary::Passed { .. } => format!("[{}]", style("PASS").green()),
         TestCaseSummary::Failed { .. } => format!("[{}]", style("FAIL").red()),
-        TestCaseSummary::Skipped { .. } => format!("[{}]", style("SKIP").yellow()),
+        TestCaseSummary::Ignored { .. } => format!("[{}]", style("IGNORE").yellow()),
+        TestCaseSummary::Skipped { .. } => format!("[{}]", style("SKIP").color256(11)),
     };
 
-    let result_name = match test_result {
-        TestCaseSummary::Skipped { name }
-        | TestCaseSummary::Failed { name, .. }
-        | TestCaseSummary::Passed { name, .. } => name,
-    };
+    let result_name = test_result.name();
 
     let result_message = match test_result {
         TestCaseSummary::Passed { msg: Some(msg), .. } => format!("\n\nSuccess data:{msg}"),
@@ -80,14 +77,8 @@ pub fn print_failures(all_failed_tests: &[TestCaseSummary]) {
     if all_failed_tests.is_empty() {
         return;
     }
-    let failed_tests_names: Vec<&String> = all_failed_tests
-        .iter()
-        .map(|test_case_summary| match test_case_summary {
-            TestCaseSummary::Passed { name, .. }
-            | TestCaseSummary::Failed { name, .. }
-            | TestCaseSummary::Skipped { name, .. } => name,
-        })
-        .collect();
+    let failed_tests_names: Vec<&String> =
+        all_failed_tests.iter().map(TestCaseSummary::name).collect();
 
     println!("\nFailures:");
     for name in failed_tests_names {

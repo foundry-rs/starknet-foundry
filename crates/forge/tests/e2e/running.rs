@@ -20,12 +20,14 @@ fn simple_package() {
         [..]Finished[..]
 
 
-        Collected 11 test(s) from simple_package package
-        Running 1 test(s) from src/
+        Collected 13 test(s) from simple_package package
+        Running 2 test(s) from src/
         [PASS] simple_package::test_fib
-        Running 10 test(s) from tests/
+        [IGNORE] simple_package::ignored_test
+        Running 11 test(s) from tests/
         [PASS] tests::contract::call_and_invoke
         [PASS] tests::ext_function_test::test_my_test
+        [IGNORE] tests::ext_function_test::ignored_test
         [PASS] tests::ext_function_test::test_simple
         [PASS] tests::test_simple::test_simple
         [PASS] tests::test_simple::test_simple2
@@ -90,12 +92,14 @@ fn simple_package_with_git_dependency() {
         [..]Finished[..]
 
 
-        Collected 11 test(s) from simple_package package
-        Running 1 test(s) from src/
+        Collected 13 test(s) from simple_package package
+        Running 2 test(s) from src/
         [PASS] simple_package::test_fib
-        Running 10 test(s) from tests/
+        [IGNORE] simple_package::ignored_test
+        Running 11 test(s) from tests/
         [PASS] tests::contract::call_and_invoke
         [PASS] tests::ext_function_test::test_my_test
+        [IGNORE] tests::ext_function_test::ignored_test
         [PASS] tests::ext_function_test::test_simple
         [PASS] tests::test_simple::test_simple
         [PASS] tests::test_simple::test_simple2
@@ -180,10 +184,11 @@ fn with_filter_matching_module() {
         [..]Finished[..]
         
         
-        Collected 2 test(s) from simple_package package
+        Collected 3 test(s) from simple_package package
         Running 0 test(s) from src/
-        Running 2 test(s) from tests/
+        Running 3 test(s) from tests/
         [PASS] tests::ext_function_test::test_my_test
+        [IGNORE] tests::ext_function_test::ignored_test
         [PASS] tests::ext_function_test::test_simple
         Tests: 2 passed, 0 failed, 0 skipped
         "#});
@@ -361,12 +366,14 @@ fn with_exit_first() {
         [..]Finished[..]
 
 
-        Collected 11 test(s) from simple_package package
-        Running 1 test(s) from src/
+        Collected 13 test(s) from simple_package package
+        Running 2 test(s) from src/
         [PASS] simple_package::test_fib
-        Running 10 test(s) from tests/
+        [IGNORE] simple_package::ignored_test
+        Running 11 test(s) from tests/
         [PASS] tests::contract::call_and_invoke
         [PASS] tests::ext_function_test::test_my_test
+        [IGNORE] tests::ext_function_test::ignored_test
         [PASS] tests::ext_function_test::test_simple
         [PASS] tests::test_simple::test_simple
         [PASS] tests::test_simple::test_simple2
@@ -400,12 +407,14 @@ fn with_exit_first_flag() {
         [..]Finished[..]
 
 
-        Collected 11 test(s) from simple_package package
-        Running 1 test(s) from src/
+        Collected 13 test(s) from simple_package package
+        Running 2 test(s) from src/
         [PASS] simple_package::test_fib
-        Running 10 test(s) from tests/
+        [IGNORE] simple_package::ignored_test
+        Running 11 test(s) from tests/
         [PASS] tests::contract::call_and_invoke
         [PASS] tests::ext_function_test::test_my_test
+        [IGNORE] tests::ext_function_test::ignored_test
         [PASS] tests::ext_function_test::test_simple
         [PASS] tests::test_simple::test_simple
         [PASS] tests::test_simple::test_simple2
@@ -461,12 +470,14 @@ fn exit_first_flag_takes_precedence() {
         [..]Finished[..]
 
 
-        Collected 11 test(s) from simple_package package
-        Running 1 test(s) from src/
+        Collected 13 test(s) from simple_package package
+        Running 2 test(s) from src/
         [PASS] simple_package::test_fib
-        Running 10 test(s) from tests/
+        [IGNORE] simple_package::ignored_test
+        Running 11 test(s) from tests/
         [PASS] tests::contract::call_and_invoke
         [PASS] tests::ext_function_test::test_my_test
+        [IGNORE] tests::ext_function_test::ignored_test
         [PASS] tests::ext_function_test::test_simple
         [PASS] tests::test_simple::test_simple
         [PASS] tests::test_simple::test_simple2

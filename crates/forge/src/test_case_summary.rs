@@ -29,6 +29,11 @@ pub enum TestCaseSummary {
         /// Arguments used in the test case run
         arguments: Vec<Felt252>,
     },
+    /// Test case ignored with `#[ignore]` attribute
+    Ignored {
+        /// Name of the test case
+        name: String,
+    },
     /// Test case skipped (did not run)
     Skipped {
         /// Name of the test case
@@ -41,7 +46,16 @@ impl TestCaseSummary {
         match self {
             TestCaseSummary::Failed { arguments, .. }
             | TestCaseSummary::Passed { arguments, .. } => arguments.clone(),
-            TestCaseSummary::Skipped { .. } => vec![],
+            TestCaseSummary::Skipped { .. } | TestCaseSummary::Ignored { .. } => vec![],
+        }
+    }
+
+    pub(crate) fn name(&self) -> &String {
+        match self {
+            TestCaseSummary::Passed { name, .. }
+            | TestCaseSummary::Failed { name, .. }
+            | TestCaseSummary::Skipped { name, .. }
+            | TestCaseSummary::Ignored { name, .. } => name,
         }
     }
 }

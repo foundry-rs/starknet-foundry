@@ -79,6 +79,12 @@ pub(crate) fn run_from_test_case(
     args: Vec<Felt252>,
     environment_variables: &HashMap<String, String>,
 ) -> Result<TestCaseSummary> {
+    if case.ignored {
+        return Ok(TestCaseSummary::Ignored {
+            name: case.name.clone(),
+        });
+    }
+
     let available_gas = if let Some(available_gas) = &case.available_gas {
         Some(*available_gas)
     } else {
