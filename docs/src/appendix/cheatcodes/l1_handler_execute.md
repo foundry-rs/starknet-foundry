@@ -1,17 +1,24 @@
 # `l1_handler_execute`
 
-> `fn execute(self: L1Handler)`
+> `fn execute(self: L1Handler) -> Result<(), RevertedTransaction>`
 
 Executes a `#[l1_handler]` function to mock a
 [message](https://docs.starknet.io/documentation/architecture_and_concepts/L1-L2_Communication/messaging-mechanism/)
 arriving from Ethereum.
+
+> 📝 **Note**
+> 
+> Execution of the `#[l1_handler]` function may panic like any other function.
+> If you'd like to assert the panic data, use `RevertedTransaction` returned by the function.
+> It works like a regular `SafeDispatcher` would with a function call.
+> For more info check out [handling panic errors](../../testing/contracts.html#handling-errors)
+
 
 ```rust
 struct L1Handler {
     contract_address: ContractAddress,
     function_name: felt252,
     from_address: felt252,
-    fee: u128,
     payload: Span::<felt252>,
 }
 ```
@@ -21,7 +28,6 @@ where:
 - `contract_address` - The target contract address
 - `function_name` - Name of the `#[l1_handler]` function
 - `from_address` - Ethereum address of the contract that sends the message
-- `fee` - The fees paid on L1
 - `payload` - The message payload that may contain any Cairo data structure that can be serialized with
 [Serde](https://book.cairo-lang.org/appendix-03-derivable-traits.html?highlight=serde#serializing-with-serde)
 
@@ -70,7 +76,7 @@ fn test_l1_handler_execute() {
     l1_handler.from_address = 0x123;
     l1_handler.payload = payload.span();
 
-    l1_handler.execute();
+    l1_handler.execute().unwrap();
     //...
 }
 ```
