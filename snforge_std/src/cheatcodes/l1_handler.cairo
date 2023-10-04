@@ -27,7 +27,6 @@ impl L1HandlerImpl of L1HandlerTrait {
             self.contract_address.into(),
             self.function_name,
             self.from_address,
-            self.fee.into(),
             self.payload.len().into(),
         ];
 
