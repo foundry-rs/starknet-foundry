@@ -53,6 +53,13 @@ struct Args {
     /// Clean forge cache directory
     #[arg(short, long)]
     clean_cache: bool,
+
+    /// Run only tests marked with `#[ignored]` attribute
+    #[arg(long)]
+    ignored: bool,
+    /// Run all tests regardless of `#[ignored]` attribute
+    #[arg(long)]
+    include_ignored: bool,
 }
 
 fn validate_fuzzer_runs_value(val: &str) -> Result<u32> {
