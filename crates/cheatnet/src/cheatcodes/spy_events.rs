@@ -1,5 +1,5 @@
-use blockifier::execution::call_info::OrderedEvent;
 use crate::CheatnetState;
+use blockifier::execution::call_info::OrderedEvent;
 use cairo_felt::Felt252;
 use cairo_vm::hint_processor::hint_processor_utils::felt_to_usize;
 use conversions::StarknetConversions;
@@ -15,7 +15,10 @@ pub struct Event {
 }
 
 impl Event {
-    pub fn from_ordered_event(ordered_event: &OrderedEvent, contract_address: ContractAddress) -> Self {
+    pub fn from_ordered_event(
+        ordered_event: &OrderedEvent,
+        contract_address: ContractAddress,
+    ) -> Self {
         Self {
             from: contract_address,
             keys: ordered_event

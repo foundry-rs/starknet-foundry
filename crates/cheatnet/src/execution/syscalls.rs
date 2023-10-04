@@ -1,3 +1,4 @@
+use crate::cheatcodes::spy_events::Event;
 use crate::execution::{
     contract_print::{contract_print, PrintingResult},
     entry_point::execute_constructor_entry_point,
@@ -62,7 +63,6 @@ use starknet_api::{
     transaction::Calldata,
 };
 use std::{any::Any, collections::HashMap};
-use crate::cheatcodes::spy_events::Event;
 
 use super::calls::{execute_inner_call, execute_library_call};
 use super::execution_info::get_cheated_exec_info_ptr;
@@ -301,7 +301,7 @@ impl CheatableSyscallHandler<'_> {
         } else if SyscallSelector::EmitEvent == selector {
             let result = self.syscall_handler.execute_next_syscall(vm, hint);
             let event = Event::from_ordered_event(
-                &self.syscall_handler.events.last().unwrap(),
+                self.syscall_handler.events.last().unwrap(),
                 self.syscall_handler
                     .call
                     .code_address
