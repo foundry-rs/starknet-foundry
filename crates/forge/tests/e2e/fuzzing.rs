@@ -160,7 +160,6 @@ fn fuzzing_incorrect_function_args() {
         Collected 2 test(s) from fuzzing package
         Running 0 test(s) from src/
         Running 2 test(s) from tests/
-        [PASS] tests::incorrect_args::correct_args (fuzzer runs = 256)
         [ERROR] Tried to use incorrect type for fuzzing. Type = tests::incorrect_args::MyStruct is not supported
         "#});
 }

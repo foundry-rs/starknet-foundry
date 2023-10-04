@@ -381,7 +381,7 @@ pub async fn run(
 
     Ok(summaries)
 }
-async fn chose_strategy_and_run_test(
+async fn choose_strategy_and_run_test(
     package_root: Arc<Utf8PathBuf>,
     case: Arc<TestCase>,
     runner: Arc<SierraCasmRunner>,
@@ -468,7 +468,7 @@ async fn run_tests_from_crate(
                         // The token was cancelled
                        Ok(TestCaseSummary::skipped(&c))
                     },
-                    result = chose_strategy_and_run_test(
+                    result = choose_strategy_and_run_test(
                         package_root.clone(),
                         case,
                         runner,
@@ -488,9 +488,13 @@ async fn run_tests_from_crate(
 
     let mut results = vec![];
 
-    for thread in tasks {
-        let result = thread.await.unwrap()?;
-
+    for task in tasks {
+        let await_task = task.await?;
+        if let Err(e) = await_task {
+            cancellation_token.cancel();
+            return Err(e);
+        }
+        let result = await_task?;
         if result.runs().is_some() {
             was_fuzzed = true;
         }
