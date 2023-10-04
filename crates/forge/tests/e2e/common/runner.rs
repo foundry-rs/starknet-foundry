@@ -12,7 +12,7 @@ pub(crate) fn runner() -> SnapboxCommand {
     snapbox
 }
 
-pub(crate) static BASE_FILE_PATTERNS: &[&str] = &["**/*.cairo", "**/*.toml", "**/*.txt"];
+pub(crate) static BASE_FILE_PATTERNS: &[&str] = &["**/*.cairo", "**/*.toml"];
 
 pub(crate) fn setup_package_with_file_patterns(
     package_name: &str,
