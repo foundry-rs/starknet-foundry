@@ -16,6 +16,8 @@ pub fn run_test_case(test: &TestCase) -> Vec<TestCrateSummary> {
             None,
             false,
             false,
+            false,
+            false,
             Some(256),
             Some(12345),
             &Default::default(),
@@ -26,6 +28,7 @@ pub fn run_test_case(test: &TestCase) -> Vec<TestCrateSummary> {
             Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
             test.env().clone(),
             test.linked_libraries(),
+            Default::default(),
         ),
     )
     .unwrap()

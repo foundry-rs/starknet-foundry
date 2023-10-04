@@ -56,11 +56,13 @@ static BUILTINS: Lazy<Vec<&str>> = Lazy::new(|| {
 
 /// Configuration of the test runner
 #[derive(Deserialize, Debug, PartialEq)]
+#[allow(clippy::struct_excessive_bools)]
 pub struct RunnerConfig {
     test_name_filter: Option<String>,
     exact_match: bool,
     exit_first: bool,
-    fork_targets: Vec<ForkTarget>,
+    only_ignored: bool,
+    include_ignored: bool,
     fuzzer_runs: u32,
     fuzzer_seed: u64,
 }
@@ -74,10 +76,13 @@ impl RunnerConfig {
     /// * `exact_match` - Should test names match the `test_name_filter` exactly
     /// * `exit_first` - Should runner exit after first failed test
     #[must_use]
+    #[allow(clippy::fn_params_excessive_bools, clippy::too_many_arguments)]
     pub fn new(
         test_name_filter: Option<String>,
         exact_match: bool,
         exit_first: bool,
+        only_ignored: bool,
+        include_ignored: bool,
         fuzzer_runs: Option<u32>,
         fuzzer_seed: Option<u64>,
         forge_config_from_scarb: &ForgeConfig,
@@ -86,7 +91,8 @@ impl RunnerConfig {
             test_name_filter,
             exact_match,
             exit_first: forge_config_from_scarb.exit_first || exit_first,
-            fork_targets: forge_config_from_scarb.fork.clone(),
+            only_ignored,
+            include_ignored,
             fuzzer_runs: fuzzer_runs
                 .or(forge_config_from_scarb.fuzzer_runs)
                 .unwrap_or(FUZZER_RUNS_DEFAULT),
@@ -114,6 +120,7 @@ pub struct RunnerParams {
     predeployed_contracts: Utf8PathBuf,
     environment_variables: HashMap<String, String>,
     linked_libraries: Vec<LinkedLibrary>,
+    fork_targets: Vec<ForkTarget>,
 }
 
 impl RunnerParams {
@@ -124,6 +131,7 @@ impl RunnerParams {
         predeployed_contracts: Utf8PathBuf,
         environment_variables: HashMap<String, String>,
         linked_libraries: Vec<LinkedLibrary>,
+        forge_config: ForgeConfig,
     ) -> Self {
         Self {
             corelib_path,
@@ -131,6 +139,7 @@ impl RunnerParams {
             predeployed_contracts,
             environment_variables,
             linked_libraries,
+            fork_targets: forge_config.fork,
         }
     }
 }
@@ -257,11 +266,9 @@ fn run_tests_from_crate(
                 package_root,
                 &runner,
                 case,
-                runner_config.fork_targets.as_ref(),
-                &runner_params.contracts,
-                &runner_params.predeployed_contracts,
                 vec![],
-                &runner_params.environment_variables,
+                runner_params,
+                runner_config,
             )?;
             pretty_printing::print_test_result(&result, None);
 
@@ -347,11 +354,9 @@ fn run_with_fuzzing(
             package_root,
             runner,
             case,
-            runner_config.fork_targets.as_ref(),
-            &runner_params.contracts,
-            &runner_params.predeployed_contracts,
             args.clone(),
-            &runner_params.environment_variables,
+            runner_params,
+            runner_config,
         )?;
         results.push(result.clone());
 
@@ -389,8 +394,26 @@ mod tests {
 
     #[test]
     fn fuzzer_default_seed() {
-        let config = RunnerConfig::new(None, false, false, None, None, &Default::default());
-        let config2 = RunnerConfig::new(None, false, false, None, None, &Default::default());
+        let config = RunnerConfig::new(
+            None,
+            false,
+            false,
+            false,
+            false,
+            None,
+            None,
+            &Default::default(),
+        );
+        let config2 = RunnerConfig::new(
+            None,
+            false,
+            false,
+            false,
+            false,
+            None,
+            None,
+            &Default::default(),
+        );
 
         assert_ne!(config.fuzzer_seed, 0);
         assert_ne!(config2.fuzzer_seed, 0);
@@ -399,14 +422,24 @@ mod tests {
 
     #[test]
     fn runner_config_default_arguments() {
-        let config = RunnerConfig::new(None, false, false, None, None, &Default::default());
+        let config = RunnerConfig::new(
+            None,
+            false,
+            false,
+            false,
+            false,
+            None,
+            None,
+            &Default::default(),
+        );
         assert_eq!(
             config,
             RunnerConfig {
                 test_name_filter: None,
                 exact_match: false,
                 exit_first: false,
-                fork_targets: vec![],
+                only_ignored: false,
+                include_ignored: false,
                 fuzzer_runs: FUZZER_RUNS_DEFAULT,
                 fuzzer_seed: config.fuzzer_seed,
             }
@@ -421,14 +454,24 @@ mod tests {
             fuzzer_runs: Some(1234),
             fuzzer_seed: Some(500),
         };
-        let config = RunnerConfig::new(None, false, false, None, None, &config_from_scarb);
+        let config = RunnerConfig::new(
+            None,
+            false,
+            false,
+            false,
+            false,
+            None,
+            None,
+            &config_from_scarb,
+        );
         assert_eq!(
             config,
             RunnerConfig {
                 test_name_filter: None,
                 exact_match: false,
                 exit_first: true,
-                fork_targets: vec![],
+                only_ignored: false,
+                include_ignored: false,
                 fuzzer_runs: 1234,
                 fuzzer_seed: 500,
             }

@@ -15,6 +15,7 @@ use cheatnet::constants::{build_block_context, build_testing_state, build_transa
 use cheatnet::execution::syscalls::CheatableSyscallHandler;
 use itertools::chain;
 
+use crate::{RunnerConfig, RunnerParams};
 use cairo_lang_casm::hints::Hint;
 use cairo_lang_casm::instructions::Instruction;
 use cairo_lang_runner::casm_run::hint_to_hint_params;
@@ -35,7 +36,7 @@ use starknet_api::patricia_key;
 use starknet_api::transaction::Calldata;
 use test_collector::{ForkConfig, TestCase};
 
-use crate::scarb::{ForkTarget, StarknetContractArtifacts};
+use crate::scarb::ForkTarget;
 use crate::test_case_summary::TestCaseSummary;
 use crate::test_execution_syscall_handler::TestExecutionSyscallHandler;
 
@@ -68,18 +69,23 @@ fn build_hints_dict<'b>(
     (hints_dict, string_to_hint)
 }
 
-#[allow(clippy::too_many_arguments)]
 pub(crate) fn run_from_test_case(
     package_root: &Utf8PathBuf,
     runner: &SierraCasmRunner,
     case: &TestCase,
-    fork_targets: &[ForkTarget],
-    contracts: &HashMap<String, StarknetContractArtifacts>,
-    predeployed_contracts: &Utf8PathBuf,
     args: Vec<Felt252>,
-    environment_variables: &HashMap<String, String>,
+    runner_params: &RunnerParams,
+    runner_config: &RunnerConfig,
 ) -> Result<TestCaseSummary> {
-    if case.ignored {
+    let should_be_run = if runner_config.include_ignored {
+        true
+    } else if runner_config.only_ignored {
+        case.ignored
+    } else {
+        !case.ignored
+    };
+
+    if !should_be_run {
         return Ok(TestCaseSummary::Ignored {
             name: case.name.clone(),
         });
@@ -128,8 +134,12 @@ pub(crate) fn run_from_test_case(
     };
 
     let state_reader = ExtendedStateReader {
-        dict_state_reader: build_testing_state(predeployed_contracts),
-        fork_state_reader: get_fork_state_reader(package_root, fork_targets, &case.fork_config),
+        dict_state_reader: build_testing_state(&runner_params.predeployed_contracts),
+        fork_state_reader: get_fork_state_reader(
+            package_root,
+            &runner_params.fork_targets,
+            &case.fork_config,
+        ),
     };
     let mut blockifier_state = CachedState::new(state_reader, GlobalContractCache::default());
     let mut execution_resources = ExecutionResources::default();
@@ -155,10 +165,10 @@ pub(crate) fn run_from_test_case(
 
     let mut cheatcodes_hint_processor = TestExecutionSyscallHandler {
         cheatable_syscall_handler,
-        contracts,
+        contracts: &runner_params.contracts,
         hints: &string_to_hint,
         run_resources: RunResources::default(),
-        environment_variables,
+        environment_variables: &runner_params.environment_variables,
     };
 
     match runner.run_function(

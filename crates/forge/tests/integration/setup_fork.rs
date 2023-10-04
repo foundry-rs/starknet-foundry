@@ -90,6 +90,16 @@ fn fork_aliased_decorator() {
         "#
     ).as_str());
 
+    let forge_config = ForgeConfig {
+        exit_first: false,
+        fork: vec![ForkTarget {
+            name: "FORK_NAME_FROM_SCARB_TOML".to_string(),
+            url: CHEATNET_RPC_URL.to_string(),
+            block_id: HashMap::from([("tag".to_string(), "Latest".to_string())]),
+        }],
+        fuzzer_runs: Some(1234),
+        fuzzer_seed: Some(500),
+    };
     let result = run(
         &Utf8PathBuf::from_path_buf(PathBuf::from(tempdir().unwrap().path())).unwrap(),
         &test.path().unwrap(),
@@ -99,18 +109,11 @@ fn fork_aliased_decorator() {
             None,
             false,
             false,
+            false,
+            false,
             Some(1234),
             Some(500),
-            &ForgeConfig {
-                exit_first: false,
-                fork: vec![ForkTarget {
-                    name: "FORK_NAME_FROM_SCARB_TOML".to_string(),
-                    url: CHEATNET_RPC_URL.to_string(),
-                    block_id: HashMap::from([("tag".to_string(), "Latest".to_string())]),
-                }],
-                fuzzer_runs: Some(1234),
-                fuzzer_seed: Some(500),
-            },
+            &forge_config,
         ),
         &RunnerParams::new(
             corelib_path(),
@@ -118,6 +121,7 @@ fn fork_aliased_decorator() {
             Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
             Default::default(),
             test.linked_libraries(),
+            forge_config,
         ),
     )
     .unwrap();

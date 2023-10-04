@@ -56,10 +56,10 @@ struct Args {
     clean_cache: bool,
 
     /// Run only tests marked with `#[ignore]` attribute
-    #[arg(long)]
-    ignored: bool,
+    #[arg(long = "ignored")]
+    only_ignored: bool,
     /// Run all tests regardless of `#[ignore]` attribute
-    #[arg(long)]
+    #[arg(long, conflicts_with = "only_ignored")]
     include_ignored: bool,
 }
 
@@ -153,6 +153,8 @@ fn main_execution() -> Result<bool> {
             args.test_filter.clone(),
             args.exact,
             args.exit_first,
+            args.only_ignored,
+            args.include_ignored,
             args.fuzzer_runs,
             args.fuzzer_seed,
             &forge_config,
@@ -170,6 +172,7 @@ fn main_execution() -> Result<bool> {
             predeployed_contracts.clone(),
             env::vars().collect(),
             dependencies,
+            forge_config,
         );
 
         let tests_file_summaries = run(

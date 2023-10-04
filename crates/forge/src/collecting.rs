@@ -199,14 +199,24 @@ mod tests {
             fuzzer_runs: Some(1234),
             fuzzer_seed: Some(1000),
         };
-        let config = RunnerConfig::new(None, false, true, Some(100), Some(32), &config_from_scarb);
+        let config = RunnerConfig::new(
+            None,
+            false,
+            true,
+            false,
+            true,
+            Some(100),
+            Some(32),
+            &config_from_scarb,
+        );
         assert_eq!(
             config,
             RunnerConfig {
                 test_name_filter: None,
                 exact_match: false,
                 exit_first: true,
-                fork_targets: vec![],
+                only_ignored: false,
+                include_ignored: true,
                 fuzzer_runs: 100,
                 fuzzer_seed: 32,
             }
