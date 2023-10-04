@@ -13,10 +13,9 @@ impl BlockifierState<'_> {
         from_address: &Felt252,
         payload: &[Felt252],
     ) -> CallContractOutput {
-        let selector = Felt252::try_from(starknet_keccak(&function_name.to_bytes_be()))
-            .expect("Computing selector from short string failed");
+        let selector = starknet_keccak(&function_name.to_bytes_be());
 
-        let mut calldata = vec![from_address.to_owned()];
+        let mut calldata = vec![from_address.clone()];
         calldata.extend_from_slice(payload);
 
         call_l1_handler(

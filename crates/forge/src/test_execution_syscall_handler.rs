@@ -484,7 +484,6 @@ impl TestExecutionSyscallHandler<'_> {
                     contract_address,
                     &function_name,
                     &from_address,
-                    &fee,
                     &payload,
                 ) {
                     CallContractOutput::Success { .. } => {

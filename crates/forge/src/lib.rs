@@ -174,7 +174,7 @@ fn collect_tests_from_package(
             .map_err(|_| anyhow!("Failed to convert tests temporary directory to Utf8PathBuf"))?;
 
         all_test_roots.push(TestCrate {
-            crate_root: tests_tmp_dir_path.clone(),
+            crate_root: tests_tmp_dir_path,
             crate_name: "tests".to_string(),
             crate_type: TestCrateType::Tests,
         });
