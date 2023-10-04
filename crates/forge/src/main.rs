@@ -65,8 +65,8 @@ fn validate_fuzzer_runs_value(val: &str) -> Result<u32> {
     Ok(parsed_val)
 }
 
-fn clean_cache(package_root: &Utf8PathBuf) -> Result<()> {
-    let cache_dir = package_root.join(CACHE_DIR);
+fn clean_cache(workspace_root: &Utf8PathBuf) -> Result<()> {
+    let cache_dir = workspace_root.join(CACHE_DIR);
     if cache_dir.exists() {
         fs::remove_dir_all(cache_dir)?;
     }
