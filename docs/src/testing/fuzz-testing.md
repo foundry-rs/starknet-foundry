@@ -54,7 +54,17 @@ Trying to use arguments of different type in test definition will result in an e
 
 ## Fuzzer Configuration
 
-It is possible to configure the number of runs of the random fuzzer as well as its seed too with command line arguments:
+It is possible to configure the number of runs of the random fuzzer as well as its seed for a specific test case:
+
+```rust
+#[test]
+#[fuzzer(runs: 22, seed: 38)]
+fn test_sum(x: felt252, y: felt252) {
+    assert(sum(x, y) == x + y, 'sum incorrect');
+}
+```
+
+It can also be configured globally, via command line arguments:
 
 ```shell
 $ snforge --fuzzer-runs 1234 --fuzzer-seed 1111
