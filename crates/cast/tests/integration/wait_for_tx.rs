@@ -12,7 +12,12 @@ use starknet::core::types::FieldElement;
 async fn test_happy_path() {
     let provider = create_test_provider();
     let hash = from_env("CAST_MAP_DECLARE_HASH").unwrap();
-    let res = wait_for_tx(&provider, parse_number(&hash).unwrap(), DEFAULT_RETRIES).await;
+    let res = wait_for_tx(
+        &provider,
+        parse_number(&hash).unwrap(),
+        DEFAULT_RETRIES,
+    )
+    .await;
 
     assert!(res.is_ok());
     assert!(matches!(res.unwrap(), "Transaction accepted"));
@@ -61,7 +66,13 @@ async fn test_wait_for_nonexistent_tx() {
 async fn test_happy_path_handle_wait_for_tx() {
     let provider = create_test_provider();
     let hash = from_env("CAST_MAP_DECLARE_HASH").unwrap();
-    let res = handle_wait_for_tx(&provider, parse_number(&hash).unwrap(), 1, true).await;
+    let res = handle_wait_for_tx(
+        &provider,
+        parse_number(&hash).unwrap(),
+        1,
+        true,
+    )
+    .await;
 
     assert!(matches!(res, Ok(1)));
 }
