@@ -59,10 +59,14 @@ pub async fn test_happy_case() {
 #[tokio::test]
 pub async fn test_happy_case_add_profile() {
     let current_dir = Utf8PathBuf::from(duplicate_directory_with_salt(
-        CONTRACTS_DIR.to_string() + "/v1/map",
+        CONTRACTS_DIR.to_string() + "/map",
         "put",
-        "3",
+        "30",
     ));
+    //     let tmp_dir = TempDir::new()?;
+    //     tmp_dir
+    //         .copy_from(&tests_folder_path, &["**/*.cairo"])
+    //         .context("Unable to copy files to temporary directory")?;
     let accounts_file = "./accounts.json";
 
     let args = vec![

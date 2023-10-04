@@ -144,7 +144,7 @@ mod tests {
         let config = parse_scarb_config(
             &Some(String::from("myprofile")),
             &Some(Utf8PathBuf::from(
-                "tests/data/contracts/v1/balance/Scarb.toml",
+                "tests/data/contracts/constructor_with_params/Scarb.toml",
             )),
         )
         .unwrap();
@@ -157,7 +157,7 @@ mod tests {
     fn test_parse_scarb_config_happy_case_without_profile() {
         let config = parse_scarb_config(
             &None,
-            &Some(Utf8PathBuf::from("tests/data/contracts/v1/map/Scarb.toml")),
+            &Some(Utf8PathBuf::from("tests/data/contracts/map/Scarb.toml")),
         )
         .unwrap();
         assert_eq!(config.account, String::from("user2"));
@@ -196,7 +196,7 @@ mod tests {
         let config = parse_scarb_config(
             &Some(String::from("mariusz")),
             &Some(Utf8PathBuf::from(
-                "tests/data/contracts/v1/balance/Scarb.toml",
+                "tests/data/contracts/map/Scarb.toml",
             )),
         )
         .unwrap_err();
@@ -217,7 +217,7 @@ mod tests {
         assert!(config.account.is_empty());
     }
 
-    #[sealed_test(files = ["tests/data/contracts/v1/balance/Scarb.toml"])]
+    #[sealed_test(files = ["tests/data/contracts/no_sierra/Scarb.toml"])]
     fn test_parse_scarb_config_no_profile_no_path() {
         let config = parse_scarb_config(&None, &None).unwrap();
 
@@ -225,7 +225,7 @@ mod tests {
         assert!(config.account.is_empty());
     }
 
-    #[sealed_test(files = ["tests/data/contracts/v1/balance/Scarb.toml"])]
+    #[sealed_test(files = ["tests/data/contracts/constructor_with_params/Scarb.toml"])]
     fn test_parse_scarb_config_no_path() {
         let config = parse_scarb_config(&Some(String::from("myprofile")), &None).unwrap();
 
@@ -235,7 +235,7 @@ mod tests {
 
     #[test]
     fn test_get_scarb_metadata() {
-        let metadata = get_scarb_metadata(&"tests/data/contracts/v1/balance/Scarb.toml".into());
+        let metadata = get_scarb_metadata(&"tests/data/contracts/map/Scarb.toml".into());
         assert!(metadata.is_ok());
     }
 

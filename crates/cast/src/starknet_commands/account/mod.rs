@@ -166,7 +166,7 @@ mod tests {
 
     use crate::starknet_commands::account::add_created_profile_to_configuration;
 
-    #[sealed_test(files = ["tests/data/contracts/v1/balance/Scarb.toml"])]
+    #[sealed_test(files = ["tests/data/contracts/constructor_with_params/Scarb.toml"])]
     fn test_add_created_profile_to_configuration_happy_case() {
         let config = CastConfig {
             rpc_url: String::from("http://some-url"),
@@ -185,7 +185,7 @@ mod tests {
         assert!(contents.contains("accounts-file = \"accounts\""));
     }
 
-    #[sealed_test(files = ["tests/data/contracts/v1/balance/Scarb.toml"])]
+    #[sealed_test(files = ["tests/data/contracts/constructor_with_params/Scarb.toml"])]
     fn test_add_created_profile_to_configuration_profile_already_exists() {
         let config = CastConfig {
             rpc_url: String::from("http://some-url"),
