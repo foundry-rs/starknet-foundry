@@ -193,7 +193,6 @@ fn test_get_block_hash_syscall() {
 }
 
 #[test]
-#[ignore]
 fn test_library_calls() {
     let test = test_case!(
         indoc!(
