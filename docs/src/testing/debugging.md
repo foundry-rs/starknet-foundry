@@ -6,7 +6,7 @@
 > using appropriate release tag.
 >```toml
 > [dependencies]
-> snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.5.0" }
+> snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.7.1" }
 > ```
 
 Starknet Foundry standard library adds a utility method for printing inside tests and contracts to facilitate simple debugging.

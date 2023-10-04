@@ -269,6 +269,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::too_many_lines)]
     fn filtering_tests() {
         let mocked_tests = TestsFromCrate {
             sierra_program: program_for_testing(),
@@ -278,18 +279,21 @@ mod tests {
                     available_gas: None,
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
+                    fuzzer_config: None,
                 },
                 TestCase {
                     name: "crate2::run_other_thing".to_string(),
                     available_gas: None,
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
+                    fuzzer_config: None,
                 },
                 TestCase {
                     name: "outer::crate2::execute_next_thing".to_string(),
                     available_gas: None,
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
+                    fuzzer_config: None,
                 },
             ],
             test_crate_type: TestCrateType::Lib,
@@ -302,7 +306,8 @@ mod tests {
                 name: "crate1::do_thing".to_string(),
                 available_gas: None,
                 expected_result: ExpectedTestResult::Success,
-                fork_config: None
+                fork_config: None,
+                fuzzer_config: None
             },]
         );
 
@@ -313,7 +318,8 @@ mod tests {
                 name: "crate2::run_other_thing".to_string(),
                 available_gas: None,
                 expected_result: ExpectedTestResult::Success,
-                fork_config: None
+                fork_config: None,
+                fuzzer_config: None
             },]
         );
 
@@ -325,19 +331,22 @@ mod tests {
                     name: "crate1::do_thing".to_string(),
                     available_gas: None,
                     expected_result: ExpectedTestResult::Success,
-                    fork_config: None
+                    fork_config: None,
+                    fuzzer_config: None,
                 },
                 TestCase {
                     name: "crate2::run_other_thing".to_string(),
                     available_gas: None,
                     expected_result: ExpectedTestResult::Success,
-                    fork_config: None
+                    fork_config: None,
+                    fuzzer_config: None,
                 },
                 TestCase {
                     name: "outer::crate2::execute_next_thing".to_string(),
                     available_gas: None,
                     expected_result: ExpectedTestResult::Success,
-                    fork_config: None
+                    fork_config: None,
+                    fuzzer_config: None,
                 },
             ]
         );
@@ -353,19 +362,22 @@ mod tests {
                     name: "crate1::do_thing".to_string(),
                     available_gas: None,
                     expected_result: ExpectedTestResult::Success,
-                    fork_config: None
+                    fork_config: None,
+                    fuzzer_config: None,
                 },
                 TestCase {
                     name: "crate2::run_other_thing".to_string(),
                     available_gas: None,
                     expected_result: ExpectedTestResult::Success,
-                    fork_config: None
+                    fork_config: None,
+                    fuzzer_config: None,
                 },
                 TestCase {
                     name: "outer::crate2::execute_next_thing".to_string(),
                     available_gas: None,
                     expected_result: ExpectedTestResult::Success,
-                    fork_config: None
+                    fork_config: None,
+                    fuzzer_config: None,
                 },
             ]
         );
@@ -381,18 +393,21 @@ mod tests {
                     available_gas: None,
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
+                    fuzzer_config: None,
                 },
                 TestCase {
                     name: "crate2::run_other_thing".to_string(),
                     available_gas: None,
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
+                    fuzzer_config: None,
                 },
                 TestCase {
                     name: "outer::crate2::run_other_thing".to_string(),
                     available_gas: None,
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
+                    fuzzer_config: None,
                 },
             ],
             test_crate_type: TestCrateType::Tests,
@@ -406,13 +421,15 @@ mod tests {
                     name: "crate2::run_other_thing".to_string(),
                     available_gas: None,
                     expected_result: ExpectedTestResult::Success,
-                    fork_config: None
+                    fork_config: None,
+                    fuzzer_config: None,
                 },
                 TestCase {
                     name: "outer::crate2::run_other_thing".to_string(),
                     available_gas: None,
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
+                    fuzzer_config: None,
                 },
             ]
         );
@@ -428,24 +445,28 @@ mod tests {
                     available_gas: None,
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
+                    fuzzer_config: None,
                 },
                 TestCase {
                     name: "crate2::run_other_thing".to_string(),
                     available_gas: None,
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
+                    fuzzer_config: None,
                 },
                 TestCase {
                     name: "outer::crate3::run_other_thing".to_string(),
                     available_gas: None,
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
+                    fuzzer_config: None,
                 },
                 TestCase {
                     name: "do_thing".to_string(),
                     available_gas: None,
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
+                    fuzzer_config: None,
                 },
             ],
             test_crate_type: TestCrateType::Tests,
@@ -464,7 +485,8 @@ mod tests {
                 name: "do_thing".to_string(),
                 available_gas: None,
                 expected_result: ExpectedTestResult::Success,
-                fork_config: None
+                fork_config: None,
+                fuzzer_config: None,
             },]
         );
 
@@ -475,7 +497,8 @@ mod tests {
                 name: "crate1::do_thing".to_string(),
                 available_gas: None,
                 expected_result: ExpectedTestResult::Success,
-                fork_config: None
+                fork_config: None,
+                fuzzer_config: None,
             },]
         );
 
@@ -489,7 +512,8 @@ mod tests {
                 name: "outer::crate3::run_other_thing".to_string(),
                 available_gas: None,
                 expected_result: ExpectedTestResult::Success,
-                fork_config: None
+                fork_config: None,
+                fuzzer_config: None,
             },]
         );
     }
@@ -504,18 +528,21 @@ mod tests {
                     available_gas: None,
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
+                    fuzzer_config: None,
                 },
                 TestCase {
                     name: "crate2::run_other_thing".to_string(),
                     available_gas: None,
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
+                    fuzzer_config: None,
                 },
                 TestCase {
                     name: "thing".to_string(),
                     available_gas: None,
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
+                    fuzzer_config: None,
                 },
             ],
             test_crate_type: TestCrateType::Tests,
@@ -529,19 +556,22 @@ mod tests {
                     name: "crate1::do_thing".to_string(),
                     available_gas: None,
                     expected_result: ExpectedTestResult::Success,
-                    fork_config: None
+                    fork_config: None,
+                    fuzzer_config: None,
                 },
                 TestCase {
                     name: "crate2::run_other_thing".to_string(),
                     available_gas: None,
                     expected_result: ExpectedTestResult::Success,
-                    fork_config: None
+                    fork_config: None,
+                    fuzzer_config: None,
                 },
                 TestCase {
                     name: "thing".to_string(),
                     available_gas: None,
                     expected_result: ExpectedTestResult::Success,
-                    fork_config: None
+                    fork_config: None,
+                    fuzzer_config: None,
                 },
             ]
         );

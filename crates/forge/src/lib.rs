@@ -27,17 +27,17 @@ pub use crate::test_crate_summary::TestCrateSummary;
 use crate::collecting::{
     collect_test_crates, compile_tests_from_test_crates, filter_tests_from_crates, TestsFromCrate,
 };
-use test_collector::{LinkedLibrary, TestCase};
+use test_collector::{FuzzerConfig, LinkedLibrary, TestCase};
 
 pub mod pretty_printing;
 pub mod scarb;
 pub mod test_case_summary;
 
-mod cheatcodes_hint_processor;
 mod collecting;
 mod fuzzer;
 mod running;
 mod test_crate_summary;
+mod test_execution_syscall_handler;
 
 const FUZZER_RUNS_DEFAULT: u32 = 256;
 
@@ -329,12 +329,18 @@ fn run_with_fuzzing(
         })
         .collect::<Result<Vec<_>>>()?;
 
-    let mut fuzzer =
-        RandomFuzzer::create(runner_config.fuzzer_seed, runner_config.fuzzer_runs, &args)?;
+    let (fuzzer_runs, fuzzer_seed) = match case.fuzzer_config {
+        Some(FuzzerConfig {
+            fuzzer_runs,
+            fuzzer_seed,
+        }) => (fuzzer_runs, fuzzer_seed),
+        _ => (runner_config.fuzzer_runs, runner_config.fuzzer_seed),
+    };
+    let mut fuzzer = RandomFuzzer::create(fuzzer_seed, fuzzer_runs, &args)?;
 
     let mut results = vec![];
 
-    for _ in 1..=runner_config.fuzzer_runs {
+    for _ in 1..=fuzzer_runs {
         let args = fuzzer.next_args();
 
         let result = run_from_test_case(
@@ -376,24 +382,6 @@ fn function_args<'a>(function: &'a Function, builtins: &[&str]) -> Vec<&'a Concr
         .filter(|pt| !builtins.contains(&pt.debug_name))
         .collect()
 }
-
-// fn filter_tests_by_name(
-//     test_name_filter: &str,
-//     exact_match: bool,
-//     test_cases: Vec<TestCase>,
-// ) -> Vec<TestCase> {
-//     let mut result = vec![];
-//     for test in test_cases {
-//         if exact_match {
-//             if test.name == test_name_filter {
-//                 result.push(test);
-//             }
-//         } else if test.name.contains(test_name_filter) {
-//             result.push(test);
-//         }
-//     }
-//     result
-// }
 
 #[cfg(test)]
 mod tests {

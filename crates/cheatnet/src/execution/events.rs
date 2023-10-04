@@ -1,12 +1,12 @@
 use crate::cheatcodes::spy_events::Event;
-use crate::state::CheatcodeState;
+use crate::state::CheatnetState;
 use blockifier::execution::call_info::{CallInfo, OrderedEvent};
 use conversions::StarknetConversions;
 use starknet_api::core::ContractAddress;
 
 pub fn collect_emitted_events_from_spied_contracts(
     call_info: &CallInfo,
-    cheatcode_state: &mut CheatcodeState,
+    cheatnet_state: &mut CheatnetState,
 ) -> Vec<Event> {
     let mut all_events: Vec<(ContractAddress, &OrderedEvent)> = vec![];
     let mut stack: Vec<(Option<ContractAddress>, &CallInfo)> = vec![(None, call_info)];
@@ -17,7 +17,7 @@ pub fn collect_emitted_events_from_spied_contracts(
             .code_address
             .unwrap_or_else(|| parent_address.unwrap());
 
-        for spy_on in &mut cheatcode_state.spies {
+        for spy_on in &mut cheatnet_state.spies {
             if spy_on.does_spy(code_address) {
                 let mut emitted_events: Vec<(ContractAddress, &OrderedEvent)> = current_call
                     .execution

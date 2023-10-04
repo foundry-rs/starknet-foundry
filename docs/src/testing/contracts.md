@@ -7,7 +7,7 @@
 > using appropriate release tag.
 >```toml
 > [dependencies]
-> snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.5.0" }
+> snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.7.1" }
 > ```
 
 Using unit testing as much as possible is a good practice, as it makes your test suites run faster. However, when

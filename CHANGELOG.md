@@ -11,7 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
+- `#[fuzzer(...)]` attribute allowing to specify a fuzzer configuration for a single test case
 - Support for `u8`, `u16`, `u32`, `u64`, `u128`, `u256` types to fuzzer
+- `--clean-cache` flag
 
 #### Changed
 
