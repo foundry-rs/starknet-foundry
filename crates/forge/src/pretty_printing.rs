@@ -60,7 +60,7 @@ pub(crate) fn print_test_result(test_result: &TestCaseSummary, fuzzer_runs: Opti
         _ => String::new(),
     };
 
-    let fuzzer_runs = match fuzzer_runs {
+    let fuzzer_report = match fuzzer_runs {
         None => String::new(),
         Some(runs) => {
             if matches!(test_result, TestCaseSummary::Failed { .. }) {
@@ -72,7 +72,7 @@ pub(crate) fn print_test_result(test_result: &TestCaseSummary, fuzzer_runs: Opti
         }
     };
 
-    println!("{result_header} {result_name}{fuzzer_runs}{result_message}");
+    println!("{result_header} {result_name}{fuzzer_report}{result_message}");
 }
 
 pub fn print_failures(all_failed_tests: &[TestCaseSummary]) {
