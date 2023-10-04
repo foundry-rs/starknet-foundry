@@ -527,15 +527,16 @@ async fn run_with_fuzzing(
 
     for _ in 1..=fuzzer_runs {
         let args = fuzzer.next_args();
-        tasks.push(task::spawn({
-            let case = case.clone();
-            let package_root =  package_root.clone();
-            let runner = runner.clone();
-            let args = args.clone();
-            let cancellation_token = cancellation_token.clone();
-            let cancellation_fuzzing_token = Arc::new(token.clone());
-            let runner_params = runner_params.clone();
-            let runner_config = runner_config.clone();
+        let case = case.clone();
+        let package_root = package_root.clone();
+        let runner = runner.clone();
+        let args = args.clone();
+        let cancellation_token = cancellation_token.clone();
+        let cancellation_fuzzing_token = Arc::new(token.clone());
+        let runner_params = runner_params.clone();
+        let runner_config = runner_config.clone();
+
+        tasks.push(task::spawn(
             async move {
                 tokio::select! {
                     _ = cancellation_token.cancelled() => {
@@ -557,7 +558,7 @@ async fn run_with_fuzzing(
                     },
                 }
             }
-        }));
+        ));
     }
 
     let mut results = vec![];
@@ -643,14 +644,14 @@ mod tests {
         let config = RunnerConfig::new(None, false, false, None, None, &Default::default());
         assert_eq!(
             config,
-            Arc::new(RunnerConfig {
+            RunnerConfig {
                 test_name_filter: None,
                 exact_match: false,
                 exit_first: false,
                 fork_targets: vec![],
                 fuzzer_runs: FUZZER_RUNS_DEFAULT,
                 fuzzer_seed: config.fuzzer_seed,
-            })
+            }
         );
     }
 
@@ -665,14 +666,14 @@ mod tests {
         let config = RunnerConfig::new(None, false, false, None, None, &config_from_scarb);
         assert_eq!(
             config,
-            Arc::new(RunnerConfig {
+            RunnerConfig {
                 test_name_filter: None,
                 exact_match: false,
                 exit_first: true,
                 fork_targets: vec![],
                 fuzzer_runs: 1234,
                 fuzzer_seed: 500,
-            })
+            }
         );
     }
 
@@ -687,14 +688,14 @@ mod tests {
         let config = RunnerConfig::new(None, false, true, Some(100), Some(32), &config_from_scarb);
         assert_eq!(
             config,
-            Arc::new(RunnerConfig {
+            RunnerConfig {
                 test_name_filter: None,
                 exact_match: false,
                 exit_first: true,
                 fork_targets: vec![],
                 fuzzer_runs: 100,
                 fuzzer_seed: 32,
-            })
+            }
         );
     }
 
