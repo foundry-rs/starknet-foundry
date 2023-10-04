@@ -2,17 +2,19 @@ use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Parser;
 use include_dir::{include_dir, Dir};
-use scarb_metadata::MetadataCommand;
-
+use scarb_metadata::{MetadataCommand, PackageMetadata};
+use scarb_ui::args::PackagesFilter;
 use std::path::PathBuf;
+use std::{env, fs};
 use tempfile::{tempdir, TempDir};
 
-use forge::{pretty_printing, RunnerConfig};
-use forge::{run, TestFileSummary};
+use forge::{pretty_printing, RunnerConfig, RunnerParams};
+use forge::{run, TestCrateSummary};
 
 use forge::scarb::{
-    corelib_for_package, dependencies_for_package, get_contracts_map, name_for_package,
-    paths_for_package, target_name_for_package, try_get_starknet_artifacts_path,
+    config_from_scarb_for_package, corelib_for_package, dependencies_for_package,
+    get_contracts_map, name_for_package, paths_for_package, target_dir_for_package,
+    target_name_for_package, try_get_starknet_artifacts_path,
 };
 use forge::test_case_summary::TestCaseSummary;
 use std::process::{Command, Stdio};
@@ -20,6 +22,7 @@ use std::process::{Command, Stdio};
 mod init;
 
 static PREDEPLOYED_CONTRACTS: Dir = include_dir!("crates/cheatnet/predeployed-contracts");
+static CACHE_DIR: &str = ".snfoundry_cache";
 
 #[derive(Parser, Debug)]
 #[command(version)]
@@ -35,6 +38,39 @@ struct Args {
     /// Stop test execution after the first failed test
     #[arg(short = 'x', long)]
     exit_first: bool,
+
+    #[command(flatten)]
+    packages_filter: PackagesFilter,
+
+    /// Number of fuzzer runs
+    #[arg(short = 'r', long, value_parser = validate_fuzzer_runs_value)]
+    fuzzer_runs: Option<u32>,
+
+    /// Seed for the fuzzer
+    #[arg(short = 's', long)]
+    fuzzer_seed: Option<u64>,
+
+    /// Clean forge cache directory
+    #[arg(short, long)]
+    clean_cache: bool,
+}
+
+fn validate_fuzzer_runs_value(val: &str) -> Result<u32> {
+    let parsed_val: u32 = val
+        .parse()
+        .map_err(|_| anyhow!("Failed to parse {val} as u32"))?;
+    if parsed_val < 3 {
+        bail!("Number of fuzzer runs must be greater than or equal to 3")
+    }
+    Ok(parsed_val)
+}
+
+fn clean_cache(workspace_root: &Utf8PathBuf) -> Result<()> {
+    let cache_dir = workspace_root.join(CACHE_DIR);
+    if cache_dir.exists() {
+        fs::remove_dir_all(cache_dir)?;
+    }
+    Ok(())
 }
 
 fn load_predeployed_contracts() -> Result<TempDir> {
@@ -45,7 +81,7 @@ fn load_predeployed_contracts() -> Result<TempDir> {
     Ok(tmp_dir)
 }
 
-fn extract_failed_tests(tests_summaries: Vec<TestFileSummary>) -> Vec<TestCaseSummary> {
+fn extract_failed_tests(tests_summaries: Vec<TestCrateSummary>) -> Vec<TestCaseSummary> {
     tests_summaries
         .into_iter()
         .flat_map(|test_file_summary| test_file_summary.test_case_summaries)
@@ -70,50 +106,71 @@ fn main_execution() -> Result<bool> {
 
     let scarb_metadata = MetadataCommand::new().inherit_stderr().exec()?;
 
-    let build_output = Command::new("scarb")
-        .current_dir(std::env::current_dir().context("Failed to get current directory")?)
-        .arg("build")
-        .stderr(Stdio::inherit())
-        .stdout(Stdio::inherit())
-        .output()
-        .context("Failed to build contracts with Scarb")?;
-    if !build_output.status.success() {
-        bail!("Scarb build did not succeed")
+    let packages: Vec<PackageMetadata> = args
+        .packages_filter
+        .match_many(&scarb_metadata)
+        .context("Failed to find any packages matching the specified filter")?;
+
+    let package_root = &scarb_metadata.workspace.root;
+
+    if args.clean_cache {
+        clean_cache(package_root).context("Failed to clean snforge cache")?;
     }
 
     let mut all_failed_tests = vec![];
-    for package in &scarb_metadata.workspace.members {
-        let forge_config = forge::scarb::config_from_scarb_for_package(&scarb_metadata, package)?;
-        let (package_path, lib_path) = paths_for_package(&scarb_metadata, package)?;
+    for package in &packages {
+        let forge_config = config_from_scarb_for_package(&scarb_metadata, &package.id)?;
+        let (package_path, package_source_dir_path) =
+            paths_for_package(&scarb_metadata, &package.id)?;
+        env::set_current_dir(package_path.clone())?;
 
-        std::env::set_current_dir(package_path.clone())?;
+        // TODO(#671)
+        let target_dir = target_dir_for_package(&scarb_metadata.workspace.root)?;
 
-        let package_name = name_for_package(&scarb_metadata, package)?;
-        let dependencies = dependencies_for_package(&scarb_metadata, package)?;
-        let target_name = target_name_for_package(&scarb_metadata, package)?;
-        let corelib_path = corelib_for_package(&scarb_metadata, package)?;
+        let build_output = Command::new("scarb")
+            .arg("build")
+            .stderr(Stdio::inherit())
+            .stdout(Stdio::inherit())
+            .output()
+            .context("Failed to build contracts with Scarb")?;
+        if !build_output.status.success() {
+            bail!("Scarb build did not succeed")
+        }
+
+        let package_name = name_for_package(&scarb_metadata, &package.id)?;
+        let dependencies = dependencies_for_package(&scarb_metadata, &package.id)?;
+        let target_name = target_name_for_package(&scarb_metadata, &package.id)?;
+        let corelib_path = corelib_for_package(&scarb_metadata, &package.id)?;
         let runner_config = RunnerConfig::new(
             args.test_filter.clone(),
             args.exact,
             args.exit_first,
+            args.fuzzer_runs,
+            args.fuzzer_seed,
             &forge_config,
         );
 
-        let contracts_path = try_get_starknet_artifacts_path(&package_path, &target_name)?;
+        let contracts_path = try_get_starknet_artifacts_path(&target_dir, &target_name)?;
         let contracts = contracts_path
             .map(|path| get_contracts_map(&path))
             .transpose()?
             .unwrap_or_default();
 
+        let runner_params = RunnerParams::new(
+            corelib_path,
+            contracts,
+            predeployed_contracts.clone(),
+            env::vars().collect(),
+        );
+
         let tests_file_summaries = run(
+            package_root,
             &package_path,
             &package_name,
-            &lib_path,
-            &Some(dependencies.clone()),
+            &package_source_dir_path,
+            &dependencies,
             &runner_config,
-            &corelib_path,
-            &contracts,
-            &predeployed_contracts,
+            &runner_params,
         )?;
 
         let mut failed_tests = extract_failed_tests(tests_file_summaries);

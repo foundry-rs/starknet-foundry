@@ -7,7 +7,7 @@
 > using appropriate release tag.
 >```toml
 > [dependencies]
-> snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.5.0" }
+> snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.7.1" }
 > ```
 
 Using unit testing as much as possible is a good practice, as it makes your test suites run faster. However, when
@@ -80,8 +80,8 @@ fn call_and_invoke() {
 
 ```shell
 $ snforge
-Collected 1 test(s) and 1 test file(s)
-Running 1 test(s) from using_dispatchers
+Collected 1 test(s) from using_dispatchers package
+Running 1 test(s) from src/
 [PASS] using_dispatchers::call_and_invoke
 Tests: 1 passed, 0 failed, 0 skipped
 ```
@@ -138,8 +138,8 @@ fn failing() {
 
 ```shell
 $ snforge
-Collected 1 test(s) and 1 test file(s)
-Running 1 test(s) from package_name package
+Collected 1 test(s) from package_name package
+Running 1 test(s) from src/
 [FAIL] package_name::failing
 
 Failure data:
@@ -147,6 +147,9 @@ Failure data:
     original value: [75047462256968], converted to a string: [DAYTAH]
 
 Tests: 0 passed, 1 failed, 0 skipped
+
+Failures:
+    package_name::failing
 ```
 
 ### `SafeDispatcher`
@@ -175,8 +178,8 @@ Now the test passes as expected.
 
 ```shell
 $ snforge
-Collected 1 test(s) and 1 test file(s)
-Running 1 test(s) from package_name package
+Collected 1 test(s) from package_name package
+Running 1 test(s) from src/
 [PASS] package_name::handling_errors
 Tests: 1 passed, 0 failed, 0 skipped
 ```

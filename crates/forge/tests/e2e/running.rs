@@ -18,36 +18,35 @@ fn simple_package() {
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
-        Collected 11 test(s) and 5 test file(s)
-        Running 1 test(s) from simple_package package
+
+
+        Collected 11 test(s) from simple_package package
+        Running 1 test(s) from src/
         [PASS] simple_package::test_fib
-        Running 1 test(s) from tests/contract.cairo
-        [PASS] contract::call_and_invoke
-        Running 2 test(s) from tests/ext_function_test.cairo
-        [PASS] ext_function_test::test_my_test
-        [PASS] ext_function_test::test_simple
-        Running 6 test(s) from tests/test_simple.cairo
-        [PASS] test_simple::test_simple
-        [PASS] test_simple::test_simple2
-        [PASS] test_simple::test_two
-        [PASS] test_simple::test_two_and_two
-        [FAIL] test_simple::test_failing
-
+        Running 10 test(s) from tests/
+        [PASS] tests::contract::call_and_invoke
+        [PASS] tests::ext_function_test::test_my_test
+        [PASS] tests::ext_function_test::test_simple
+        [PASS] tests::test_simple::test_simple
+        [PASS] tests::test_simple::test_simple2
+        [PASS] tests::test_simple::test_two
+        [PASS] tests::test_simple::test_two_and_two
+        [FAIL] tests::test_simple::test_failing
+        
         Failure data:
             original value: [8111420071579136082810415440747], converted to a string: [failing check]
-
-        [FAIL] test_simple::test_another_failing
-
+        
+        [FAIL] tests::test_simple::test_another_failing
+        
         Failure data:
             original value: [8111420071579136082810415440747], converted to a string: [failing check]
-
-        Running 1 test(s) from tests/without_prefix.cairo
-        [PASS] without_prefix::five
+        
+        [PASS] tests::without_prefix::five
         Tests: 9 passed, 2 failed, 0 skipped
         
         Failures:
-            test_simple::test_failing
-            test_simple::test_another_failing
+            tests::test_simple::test_failing
+            tests::test_simple::test_another_failing
         "#});
 }
 
@@ -89,36 +88,35 @@ fn simple_package_with_git_dependency() {
         [..]Updating git repository[..]
         [..]Compiling[..]
         [..]Finished[..]
-        Collected 11 test(s) and 5 test file(s)
-        Running 1 test(s) from simple_package package
+
+
+        Collected 11 test(s) from simple_package package
+        Running 1 test(s) from src/
         [PASS] simple_package::test_fib
-        Running 1 test(s) from tests/contract.cairo
-        [PASS] contract::call_and_invoke
-        Running 2 test(s) from tests/ext_function_test.cairo
-        [PASS] ext_function_test::test_my_test
-        [PASS] ext_function_test::test_simple
-        Running 6 test(s) from tests/test_simple.cairo
-        [PASS] test_simple::test_simple
-        [PASS] test_simple::test_simple2
-        [PASS] test_simple::test_two
-        [PASS] test_simple::test_two_and_two
-        [FAIL] test_simple::test_failing
-
+        Running 10 test(s) from tests/
+        [PASS] tests::contract::call_and_invoke
+        [PASS] tests::ext_function_test::test_my_test
+        [PASS] tests::ext_function_test::test_simple
+        [PASS] tests::test_simple::test_simple
+        [PASS] tests::test_simple::test_simple2
+        [PASS] tests::test_simple::test_two
+        [PASS] tests::test_simple::test_two_and_two
+        [FAIL] tests::test_simple::test_failing
+        
         Failure data:
             original value: [8111420071579136082810415440747], converted to a string: [failing check]
-
-        [FAIL] test_simple::test_another_failing
-
+        
+        [FAIL] tests::test_simple::test_another_failing
+        
         Failure data:
             original value: [8111420071579136082810415440747], converted to a string: [failing check]
-
-        Running 1 test(s) from tests/without_prefix.cairo
-        [PASS] without_prefix::five
+        
+        [PASS] tests::without_prefix::five
         Tests: 9 passed, 2 failed, 0 skipped
         
         Failures:
-            test_simple::test_failing
-            test_simple::test_another_failing
+            tests::test_simple::test_failing
+            tests::test_simple::test_another_failing
         "#}).stderr_matches("");
 }
 
@@ -156,14 +154,13 @@ fn with_filter() {
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
-        Collected 2 test(s) and 5 test file(s)
-        Running 0 test(s) from simple_package package
-        Running 0 test(s) from tests/contract.cairo
-        Running 0 test(s) from tests/ext_function_test.cairo
-        Running 2 test(s) from tests/test_simple.cairo
-        [PASS] test_simple::test_two
-        [PASS] test_simple::test_two_and_two
-        Running 0 test(s) from tests/without_prefix.cairo
+
+
+        Collected 2 test(s) from simple_package package
+        Running 0 test(s) from src/
+        Running 2 test(s) from tests/
+        [PASS] tests::test_simple::test_two
+        [PASS] tests::test_simple::test_two_and_two
         Tests: 2 passed, 0 failed, 0 skipped
         "#});
 }
@@ -181,14 +178,13 @@ fn with_filter_matching_module() {
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
-        Collected 2 test(s) and 5 test file(s)
-        Running 0 test(s) from simple_package package
-        Running 0 test(s) from tests/contract.cairo
-        Running 2 test(s) from tests/ext_function_test.cairo
-        [PASS] ext_function_test::test_my_test
-        [PASS] ext_function_test::test_simple
-        Running 0 test(s) from tests/test_simple.cairo
-        Running 0 test(s) from tests/without_prefix.cairo
+        
+        
+        Collected 2 test(s) from simple_package package
+        Running 0 test(s) from src/
+        Running 2 test(s) from tests/
+        [PASS] tests::ext_function_test::test_my_test
+        [PASS] tests::ext_function_test::test_simple
         Tests: 2 passed, 0 failed, 0 skipped
         "#});
 }
@@ -200,20 +196,19 @@ fn with_exact_filter() {
 
     snapbox
         .current_dir(&temp)
-        .arg("test_simple::test_two")
+        .arg("tests::test_simple::test_two")
         .arg("--exact")
         .assert()
         .success()
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
-        Collected 1 test(s) and 5 test file(s)
-        Running 0 test(s) from simple_package package
-        Running 0 test(s) from tests/contract.cairo
-        Running 0 test(s) from tests/ext_function_test.cairo
-        Running 1 test(s) from tests/test_simple.cairo
-        [PASS] test_simple::test_two
-        Running 0 test(s) from tests/without_prefix.cairo
+
+
+        Collected 1 test(s) from simple_package package
+        Running 0 test(s) from src/
+        Running 1 test(s) from tests/
+        [PASS] tests::test_simple::test_two
         Tests: 1 passed, 0 failed, 0 skipped
         "#});
 }
@@ -231,12 +226,11 @@ fn with_non_matching_filter() {
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
-        Collected 0 test(s) and 5 test file(s)
-        Running 0 test(s) from simple_package package
-        Running 0 test(s) from tests/contract.cairo
-        Running 0 test(s) from tests/ext_function_test.cairo
-        Running 0 test(s) from tests/test_simple.cairo
-        Running 0 test(s) from tests/without_prefix.cairo
+
+
+        Collected 0 test(s) from simple_package package
+        Running 0 test(s) from src/
+        Running 0 test(s) from tests/
         Tests: 0 passed, 0 failed, 0 skipped
         "#});
 }
@@ -253,9 +247,11 @@ fn with_print() {
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
-        Collected 1 test(s) and 2 test file(s)
-        Running 0 test(s) from print_test package
-        Running 1 test(s) from tests/test_print.cairo
+
+
+        Collected 1 test(s) from print_test package
+        Running 0 test(s) from src/
+        Running 1 test(s) from tests/
         original value: [123], converted to a string: [{]
         original value: [3618502788666131213697322783095070105623107215331596699973092056135872020480]
         original value: [6381921], converted to a string: [aaa]
@@ -276,7 +272,7 @@ fn with_print() {
         original value: [124], converted to a string: [|]
         original value: [149]
         original value: [439721161573], converted to a string: [false]
-        [PASS] test_print::test_print
+        [PASS] tests::test_print::test_print
         Tests: 1 passed, 0 failed, 0 skipped
         "#});
 }
@@ -293,12 +289,14 @@ fn with_panic_data_decoding() {
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
-        Collected 4 test(s) and 2 test file(s)
-        Running 0 test(s) from panic_decoding package
-        Running 4 test(s) from tests/test_panic_decoding.cairo
-        [PASS] test_panic_decoding::test_simple
-        [FAIL] test_panic_decoding::test_panic_decoding
 
+
+        Collected 4 test(s) from panic_decoding package
+        Running 0 test(s) from src/
+        Running 4 test(s) from tests/
+        [PASS] tests::test_panic_decoding::test_simple
+        [FAIL] tests::test_panic_decoding::test_panic_decoding
+        
         Failure data:
             original value: [123], converted to a string: [{]
             original value: [6381921], converted to a string: [aaa]
@@ -306,18 +304,18 @@ fn with_panic_data_decoding() {
             original value: [152]
             original value: [124], converted to a string: [|]
             original value: [149]
-
-        [FAIL] test_panic_decoding::test_panic_decoding2
-
+        
+        [FAIL] tests::test_panic_decoding::test_panic_decoding2
+        
         Failure data:
             original value: [128]
-
-        [PASS] test_panic_decoding::test_simple2
+        
+        [PASS] tests::test_panic_decoding::test_simple2
         Tests: 2 passed, 2 failed, 0 skipped
         
         Failures:
-            test_panic_decoding::test_panic_decoding
-            test_panic_decoding::test_panic_decoding2
+            tests::test_panic_decoding::test_panic_decoding
+            tests::test_panic_decoding::test_panic_decoding2
         "#});
 }
 
@@ -361,30 +359,30 @@ fn with_exit_first() {
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
-        Collected 11 test(s) and 5 test file(s)
-        Running 1 test(s) from simple_package package
-        [PASS] simple_package::test_fib
-        Running 1 test(s) from tests/contract.cairo
-        [PASS] contract::call_and_invoke
-        Running 2 test(s) from tests/ext_function_test.cairo
-        [PASS] ext_function_test::test_my_test
-        [PASS] ext_function_test::test_simple
-        Running 6 test(s) from tests/test_simple.cairo
-        [PASS] test_simple::test_simple
-        [PASS] test_simple::test_simple2
-        [PASS] test_simple::test_two
-        [PASS] test_simple::test_two_and_two
-        [FAIL] test_simple::test_failing
 
+
+        Collected 11 test(s) from simple_package package
+        Running 1 test(s) from src/
+        [PASS] simple_package::test_fib
+        Running 10 test(s) from tests/
+        [PASS] tests::contract::call_and_invoke
+        [PASS] tests::ext_function_test::test_my_test
+        [PASS] tests::ext_function_test::test_simple
+        [PASS] tests::test_simple::test_simple
+        [PASS] tests::test_simple::test_simple2
+        [PASS] tests::test_simple::test_two
+        [PASS] tests::test_simple::test_two_and_two
+        [FAIL] tests::test_simple::test_failing
+        
         Failure data:
             original value: [8111420071579136082810415440747], converted to a string: [failing check]
-
-        [SKIP] test_simple::test_another_failing
-        [SKIP] without_prefix::five
+        
+        [SKIP] tests::test_simple::test_another_failing
+        [SKIP] tests::without_prefix::five
         Tests: 8 passed, 1 failed, 2 skipped
         
         Failures:
-            test_simple::test_failing
+            tests::test_simple::test_failing
         "#});
 }
 
@@ -400,30 +398,30 @@ fn with_exit_first_flag() {
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
-        Collected 11 test(s) and 5 test file(s)
-        Running 1 test(s) from simple_package package
-        [PASS] simple_package::test_fib
-        Running 1 test(s) from tests/contract.cairo
-        [PASS] contract::call_and_invoke
-        Running 2 test(s) from tests/ext_function_test.cairo
-        [PASS] ext_function_test::test_my_test
-        [PASS] ext_function_test::test_simple
-        Running 6 test(s) from tests/test_simple.cairo
-        [PASS] test_simple::test_simple
-        [PASS] test_simple::test_simple2
-        [PASS] test_simple::test_two
-        [PASS] test_simple::test_two_and_two
-        [FAIL] test_simple::test_failing
 
+
+        Collected 11 test(s) from simple_package package
+        Running 1 test(s) from src/
+        [PASS] simple_package::test_fib
+        Running 10 test(s) from tests/
+        [PASS] tests::contract::call_and_invoke
+        [PASS] tests::ext_function_test::test_my_test
+        [PASS] tests::ext_function_test::test_simple
+        [PASS] tests::test_simple::test_simple
+        [PASS] tests::test_simple::test_simple2
+        [PASS] tests::test_simple::test_two
+        [PASS] tests::test_simple::test_two_and_two
+        [FAIL] tests::test_simple::test_failing
+        
         Failure data:
             original value: [8111420071579136082810415440747], converted to a string: [failing check]
-
-        [SKIP] test_simple::test_another_failing
-        [SKIP] without_prefix::five
+        
+        [SKIP] tests::test_simple::test_another_failing
+        [SKIP] tests::without_prefix::five
         Tests: 8 passed, 1 failed, 2 skipped
         
         Failures:
-            test_simple::test_failing
+            tests::test_simple::test_failing
         "#});
 }
 
@@ -461,30 +459,30 @@ fn exit_first_flag_takes_precedence() {
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
-        Collected 11 test(s) and 5 test file(s)
-        Running 1 test(s) from simple_package package
-        [PASS] simple_package::test_fib
-        Running 1 test(s) from tests/contract.cairo
-        [PASS] contract::call_and_invoke
-        Running 2 test(s) from tests/ext_function_test.cairo
-        [PASS] ext_function_test::test_my_test
-        [PASS] ext_function_test::test_simple
-        Running 6 test(s) from tests/test_simple.cairo
-        [PASS] test_simple::test_simple
-        [PASS] test_simple::test_simple2
-        [PASS] test_simple::test_two
-        [PASS] test_simple::test_two_and_two
-        [FAIL] test_simple::test_failing
 
+
+        Collected 11 test(s) from simple_package package
+        Running 1 test(s) from src/
+        [PASS] simple_package::test_fib
+        Running 10 test(s) from tests/
+        [PASS] tests::contract::call_and_invoke
+        [PASS] tests::ext_function_test::test_my_test
+        [PASS] tests::ext_function_test::test_simple
+        [PASS] tests::test_simple::test_simple
+        [PASS] tests::test_simple::test_simple2
+        [PASS] tests::test_simple::test_two
+        [PASS] tests::test_simple::test_two_and_two
+        [FAIL] tests::test_simple::test_failing
+        
         Failure data:
             original value: [8111420071579136082810415440747], converted to a string: [failing check]
-
-        [SKIP] test_simple::test_another_failing
-        [SKIP] without_prefix::five
+        
+        [SKIP] tests::test_simple::test_another_failing
+        [SKIP] tests::without_prefix::five
         Tests: 8 passed, 1 failed, 2 skipped
         
         Failures:
-            test_simple::test_failing
+            tests::test_simple::test_failing
         "#});
 }
 
@@ -556,44 +554,20 @@ fn init_new_project_test() {
         [..]Updating git repository[..]
         [..]Compiling test_name v0.1.0[..]
         [..]Finished[..]
-        Collected 2 test(s) and 2 test file(s)
-        Running 0 test(s) from test_name package
-        Running 2 test(s) from tests/test_contract.cairo
-        [PASS] test_contract::test_increase_balance
-        [PASS] test_contract::test_cannot_increase_balance_with_zero_value
+
+
+        Collected 2 test(s) from test_name package
+        Running 0 test(s) from src/
+        Running 2 test(s) from tests/
+        [PASS] tests::test_contract::test_increase_balance
+        [PASS] tests::test_contract::test_cannot_increase_balance_with_zero_value
         Tests: 2 passed, 0 failed, 0 skipped
     "#});
 }
 
 #[test]
-fn using_corelib_names() {
-    let temp = setup_package("using_corelib_names");
-    let snapbox = runner();
-
-    snapbox
-        .current_dir(&temp)
-        .assert()
-        .success()
-        .stdout_matches(indoc! {r#"
-        [..]Compiling[..]
-        [..]Finished[..]
-        Collected 4 test(s) and 5 test file(s)
-        Running 0 test(s) from using_corelib_names package
-        Running 1 test(s) from tests/bits.cairo
-        [PASS] bits::test_names
-        Running 1 test(s) from tests/math.cairo
-        [PASS] math::test_names
-        Running 1 test(s) from tests/test.cairo
-        [PASS] test::test_names
-        Running 1 test(s) from tests/types.cairo
-        [PASS] types::test_names
-        Tests: 4 passed, 0 failed, 0 skipped
-        "#});
-}
-
-#[test]
 fn should_panic() {
-    let temp = assert_fs::TempDir::new().unwrap();
+    let temp = TempDir::new().unwrap();
     temp.copy_from("tests/data/should_panic_test", &["**/*.cairo", "**/*.toml"])
         .unwrap();
 
@@ -606,35 +580,37 @@ fn should_panic() {
         .stdout_matches(indoc! { r#"
         [..]Compiling[..]
         [..]Finished[..]
-        Collected 6 test(s) and 2 test file(s)
-        Running 0 test(s) from should_panic_test package
-        Running 6 test(s) from tests/should_panic_test.cairo
-        [PASS] should_panic_test::should_panic_no_data
 
+
+        Collected 6 test(s) from should_panic_test package
+        Running 0 test(s) from src/
+        Running 6 test(s) from tests/
+        [PASS] tests::should_panic_test::should_panic_no_data
+        
         Success data:
             original value: [0], converted to a string: []
-
-        [PASS] should_panic_test::should_panic_check_data
-        [PASS] should_panic_test::should_panic_multiple_messages
-        [FAIL] should_panic_test::should_panic_with_non_matching_data
-
+        
+        [PASS] tests::should_panic_test::should_panic_check_data
+        [PASS] tests::should_panic_test::should_panic_multiple_messages
+        [FAIL] tests::should_panic_test::should_panic_with_non_matching_data
+        
         Failure data:
             Incorrect panic data
             Actual:    [8111420071579136082810415440747] (failing check)
             Expected:  [0] ()
-
-        [FAIL] should_panic_test::didnt_expect_panic
-
+        
+        [FAIL] tests::should_panic_test::didnt_expect_panic
+        
         Failure data:
             original value: [156092886226808350968498952598218238307], converted to a string: [unexpected panic]
-
-        [FAIL] should_panic_test::expected_panic_but_didnt
+        
+        [FAIL] tests::should_panic_test::expected_panic_but_didnt
         Tests: 3 passed, 3 failed, 0 skipped
         
         Failures:
-            should_panic_test::should_panic_with_non_matching_data
-            should_panic_test::didnt_expect_panic
-            should_panic_test::expected_panic_but_didnt
+            tests::should_panic_test::should_panic_with_non_matching_data
+            tests::should_panic_test::didnt_expect_panic
+            tests::should_panic_test::expected_panic_but_didnt
         "#});
 }
 
@@ -657,12 +633,14 @@ fn printing_in_contracts() {
             allowed-libfuncs-list.name = "experimental"
         
         [..]Finished[..]
-        Collected 2 test(s) and 2 test file(s)
-        Running 0 test(s) from contract_printing package
-        Running 2 test(s) from tests/test_contract.cairo
+
+
+        Collected 2 test(s) from contract_printing package
+        Running 0 test(s) from src/
+        Running 2 test(s) from tests/
         original value: [22405534230753963835153736737], converted to a string: [Hello world!]
-        [PASS] test_contract::test_increase_balance
-        [PASS] test_contract::test_cannot_increase_balance_with_zero_value
+        [PASS] tests::test_contract::test_increase_balance
+        [PASS] tests::test_contract::test_cannot_increase_balance_with_zero_value
         Tests: 2 passed, 0 failed, 0 skipped
         "#});
 }

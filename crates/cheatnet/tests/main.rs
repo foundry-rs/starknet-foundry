@@ -1,5 +1,3 @@
-use dotenv::dotenv;
-
 mod cheatcodes;
 pub(crate) mod common;
 mod starknet;
@@ -10,12 +8,15 @@ mod starknet;
 fn init() {
     use camino::Utf8PathBuf;
     let contracts_path = Utf8PathBuf::from("tests").join("contracts");
-    dotenv().ok();
 
     let output = std::process::Command::new("scarb")
         .current_dir(contracts_path)
         .arg("build")
         .output()
         .unwrap();
-    assert!(output.status.success());
+    if !output.status.success() {
+        let stderr = String::from_utf8(output.stderr).expect("Decoding scarb stderr failed");
+        let stdout = String::from_utf8(output.stdout).expect("Decoding scarb stdout failed");
+        panic!("scarb build failed,\nstderr: \n{stderr}\nstdout: \n{stdout}",);
+    }
 }

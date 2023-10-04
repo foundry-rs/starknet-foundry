@@ -5,12 +5,66 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-# [Unreleased]
-# [0.6.0] - 2023-09-13
+## [Unreleased]
 
 ### Forge
 
 #### Added
+
+- `#[fuzzer(...)]` attribute allowing to specify a fuzzer configuration for a single test case
+- Support for `u8`, `u16`, `u32`, `u64`, `u128`, `u256` types to fuzzer
+- `--clean-cache` flag
+
+#### Changed
+
+- Spying events interface is updated to enable the use of events defined inside contracts in assertions
+
+## [0.7.1] - 2023-09-27
+
+### Forge
+
+#### Added
+
+- `var` library function for reading environmental variables
+
+### Fixed
+- Using any concrete `block_id` when using forking mode, would lead to crashes 
+
+## [0.7.0] - 2023-09-27
+
+### Forge
+
+#### Added
+
+- Support for scarb workspaces
+- Initial version of fuzz testing with randomly generated values
+- `#[fork(...)]` attribute allowing testing against a network fork
+
+#### Changed
+
+- Tests are collected only from a package tree (`src/lib.cairo` as an entrypoint) and `tests` folder:
+  - If there is a `lib.cairo` file in `tests` folder, then it is treated as an entrypoint to the `tests` package from which tests are collected
+  - Otherwise, all test files matching `tests/*.cairo` regex are treated as modules and added to a single virtual `lib.cairo`, which is treated as described above
+
+### Cast
+
+#### Added
+
+- `account add` command for importing accounts to the accounts file
+- `account create` command for creating openzeppelin accounts with starkli-style keystore
+- `account deploy` command for deploying openzeppelin accounts with starkli-style keystore
+
+### Changed
+
+- `--add-profile` no longer accepts `-a` for short
+- allow the `id` property in multicalls to be referenced in the inputs of `deploy` and `invoke` calls
+
+## [0.6.0] - 2023-09-13
+
+### Forge
+
+#### Added
+
 - `deploy_at` cheatcode
 - printing failures summary at the end of an execution
 - filtering tests now uses an absolute module tree path — it is possible to filter tests by module names, etc.

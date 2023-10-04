@@ -1,20 +1,31 @@
-use crate::common::{get_contracts, state::create_cheatnet_state};
+use crate::common::{
+    get_contracts,
+    state::{create_cached_state, create_cheatnet_state},
+};
 use cairo_felt::Felt252;
+use cheatnet::cheatcodes::deploy::deploy;
 use conversions::StarknetConversions;
 
 #[test]
 fn precalculate_address_simple() {
-    let mut state = create_cheatnet_state();
+    let mut cached_state = create_cached_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contracts = get_contracts();
     let contract_name = "HelloStarknet".to_owned().to_felt252();
-    let class_hash = state.declare(&contract_name, &contracts).unwrap();
+    let class_hash = blockifier_state
+        .declare(&contract_name, &contracts)
+        .unwrap();
 
-    let precalculated1 = state.precalculate_address(&class_hash, &[]);
-    let actual1 = state.deploy(&class_hash, &[]).unwrap().contract_address;
+    let precalculated1 = cheatnet_state.precalculate_address(&class_hash, &[]);
+    let actual1 = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[])
+        .unwrap()
+        .contract_address;
 
-    let precalculated2 = state.precalculate_address(&class_hash, &[]);
-    let actual2 = state.deploy(&class_hash, &[]).unwrap().contract_address;
+    let precalculated2 = cheatnet_state.precalculate_address(&class_hash, &[]);
+    let actual2 = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[])
+        .unwrap()
+        .contract_address;
 
     assert_eq!(precalculated1, actual1);
     assert_eq!(precalculated2, actual2);
@@ -23,29 +34,40 @@ fn precalculate_address_simple() {
 
 #[test]
 fn precalculate_address_calldata() {
-    let mut state = create_cheatnet_state();
+    let mut cached_state = create_cached_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contracts = get_contracts();
     let contract_name = "ConstructorSimple".to_owned().to_felt252();
-    let class_hash = state.declare(&contract_name, &contracts).unwrap();
+    let class_hash = blockifier_state
+        .declare(&contract_name, &contracts)
+        .unwrap();
 
     let calldata1 = vec![Felt252::from(123)];
     let calldata2 = vec![Felt252::from(420)];
 
-    let precalculated1 = state.precalculate_address(&class_hash, &calldata1);
-    let precalculated2 = state.precalculate_address(&class_hash, &calldata2);
+    let precalculated1 = cheatnet_state.precalculate_address(&class_hash, &calldata1);
+    let precalculated2 = cheatnet_state.precalculate_address(&class_hash, &calldata2);
 
-    let actual1 = state
-        .deploy(&class_hash, &calldata1)
-        .unwrap()
-        .contract_address;
+    let actual1 = deploy(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &class_hash,
+        &calldata1,
+    )
+    .unwrap()
+    .contract_address;
 
-    let precalculated2_post_deploy = state.precalculate_address(&class_hash, &calldata2);
+    let precalculated2_post_deploy = cheatnet_state.precalculate_address(&class_hash, &calldata2);
 
-    let actual2 = state
-        .deploy(&class_hash, &calldata2)
-        .unwrap()
-        .contract_address;
+    let actual2 = deploy(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &class_hash,
+        &calldata2,
+    )
+    .unwrap()
+    .contract_address;
 
     assert_eq!(precalculated1, actual1);
     assert_ne!(precalculated1, precalculated2);

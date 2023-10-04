@@ -34,4 +34,10 @@ call_type = "invoke"
 contract_address = "map_contract"
 function = "put"
 inputs = ["0x123", "234"]
+
+[[call]]
+call_type = "deploy"
+class_hash = "0x2bb3d35dba2984b3d0cd0901b4e7de5411daff6bff5e072060bcfadbbd257b1"
+inputs = ["0x123", "map_contract"]
+unique = false
 ```

@@ -1,37 +1,64 @@
 use std::collections::HashMap;
 use std::fmt::Debug;
 
-use anyhow::{Context, Result};
-use camino::{Utf8Path, Utf8PathBuf};
+use anyhow::{anyhow, Context, Result};
+use ark_std::iterable::Iterable;
+use assert_fs::fixture::{FileTouch, PathChild, PathCopy};
+use assert_fs::TempDir;
+use camino::Utf8PathBuf;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use serde::Deserialize;
 use test_case_summary::TestCaseSummary;
-use walkdir::WalkDir;
 
 use cairo_lang_runner::SierraCasmRunner;
-use cairo_lang_sierra::program::Program;
+use cairo_lang_sierra::ids::ConcreteTypeId;
+use cairo_lang_sierra::program::{Function, Program};
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
+use once_cell::sync::Lazy;
+use rand::{thread_rng, RngCore};
+use smol_str::SmolStr;
+use walkdir::WalkDir;
 
+use crate::fuzzer::RandomFuzzer;
 use crate::running::run_from_test_case;
-use crate::scarb::{ForgeConfig, StarknetContractArtifacts};
-pub use crate::test_file_summary::TestFileSummary;
-use test_collector::{collect_tests, LinkedLibrary, TestCase};
+use crate::scarb::{ForgeConfig, ForkTarget, StarknetContractArtifacts};
+pub use crate::test_crate_summary::TestCrateSummary;
+use test_collector::{collect_tests, FuzzerConfig, LinkedLibrary, TestCase};
 
 pub mod pretty_printing;
 pub mod scarb;
 pub mod test_case_summary;
 
-mod cheatcodes_hint_processor;
+mod fuzzer;
 mod running;
-mod test_file_summary;
+mod test_crate_summary;
+mod test_execution_syscall_handler;
+
+const FUZZER_RUNS_DEFAULT: u32 = 256;
+
+static BUILTINS: Lazy<Vec<&str>> = Lazy::new(|| {
+    vec![
+        "Pedersen",
+        "RangeCheck",
+        "Bitwise",
+        "EcOp",
+        "Poseidon",
+        "SegmentArena",
+        "GasBuiltin",
+        "System",
+    ]
+});
 
 /// Configuration of the test runner
-#[derive(Deserialize, Debug, PartialEq, Default)]
+#[derive(Deserialize, Debug, PartialEq)]
 pub struct RunnerConfig {
     test_name_filter: Option<String>,
     exact_match: bool,
     exit_first: bool,
+    fork_targets: Vec<ForkTarget>,
+    fuzzer_runs: u32,
+    fuzzer_seed: u64,
 }
 
 impl RunnerConfig {
@@ -47,12 +74,21 @@ impl RunnerConfig {
         test_name_filter: Option<String>,
         exact_match: bool,
         exit_first: bool,
+        fuzzer_runs: Option<u32>,
+        fuzzer_seed: Option<u64>,
         forge_config_from_scarb: &ForgeConfig,
     ) -> Self {
         Self {
             test_name_filter,
             exact_match,
             exit_first: forge_config_from_scarb.exit_first || exit_first,
+            fork_targets: forge_config_from_scarb.fork.clone(),
+            fuzzer_runs: fuzzer_runs
+                .or(forge_config_from_scarb.fuzzer_runs)
+                .unwrap_or(FUZZER_RUNS_DEFAULT),
+            fuzzer_seed: fuzzer_seed
+                .or(forge_config_from_scarb.fuzzer_seed)
+                .unwrap_or_else(|| thread_rng().next_u64()),
         }
     }
 }
@@ -68,106 +104,173 @@ pub enum RunnerStatus {
     DidNotRun,
 }
 
-struct TestsFromFile {
+struct TestsFromCrate {
     sierra_program: Program,
     test_cases: Vec<TestCase>,
-    relative_path: Utf8PathBuf,
+    test_crate_type: TestCrateType,
 }
 
-fn collect_tests_from_directory(
+#[derive(Debug, PartialEq, Clone, Copy)]
+pub enum TestCrateType {
+    /// Tests collected from the package
+    Lib,
+    /// Tests collected from the tests folder
+    Tests,
+}
+
+struct TestCrate {
+    crate_root: Utf8PathBuf,
+    crate_name: String,
+    crate_type: TestCrateType,
+}
+
+pub struct RunnerParams {
+    corelib_path: Utf8PathBuf,
+    contracts: HashMap<String, StarknetContractArtifacts>,
+    predeployed_contracts: Utf8PathBuf,
+    environment_variables: HashMap<String, String>,
+}
+
+impl RunnerParams {
+    #[must_use]
+    pub fn new(
+        corelib_path: Utf8PathBuf,
+        contracts: HashMap<String, StarknetContractArtifacts>,
+        predeployed_contracts: Utf8PathBuf,
+        environment_variables: HashMap<String, String>,
+    ) -> Self {
+        Self {
+            corelib_path,
+            contracts,
+            predeployed_contracts,
+            environment_variables,
+        }
+    }
+}
+
+fn collect_tests_from_package(
     package_path: &Utf8PathBuf,
     package_name: &str,
-    lib_path: &Utf8PathBuf,
-    linked_libraries: &Option<Vec<LinkedLibrary>>,
+    package_source_dir_path: &Utf8PathBuf,
+    linked_libraries: &[LinkedLibrary],
     corelib_path: &Utf8PathBuf,
     runner_config: &RunnerConfig,
-) -> Result<Vec<TestsFromFile>> {
-    let test_files = find_cairo_root_files_in_directory(package_path, lib_path)?;
-    test_files
+) -> Result<Vec<TestsFromCrate>> {
+    let tests_dir_path = package_path.join("tests");
+    let maybe_tests_tmp_dir = if tests_dir_path.try_exists()? {
+        Some(pack_tests_into_one_file(package_path)?)
+    } else {
+        None
+    };
+
+    let mut all_test_roots = vec![TestCrate {
+        crate_root: package_source_dir_path.clone(),
+        crate_name: package_name.to_string(),
+        crate_type: TestCrateType::Lib,
+    }];
+
+    if let Some(tests_tmp_dir) = &maybe_tests_tmp_dir {
+        let tests_tmp_dir_path = Utf8PathBuf::from_path_buf(tests_tmp_dir.to_path_buf())
+            .map_err(|_| anyhow!("Failed to convert tests temporary directory to Utf8PathBuf"))?;
+
+        all_test_roots.push(TestCrate {
+            crate_root: tests_tmp_dir_path.clone(),
+            crate_name: "tests".to_string(),
+            crate_type: TestCrateType::Tests,
+        });
+    }
+
+    let tests_from_files = all_test_roots
         .par_iter()
-        .map(|tf| {
-            collect_tests_from_tree(
-                tf,
-                package_path,
-                package_name,
-                linked_libraries,
-                corelib_path,
-                runner_config,
-            )
+        .map(|test_crate| {
+            collect_tests_from_tree(test_crate, linked_libraries, corelib_path, runner_config)
         })
-        .collect()
+        .collect();
+
+    try_close_tmp_dir(maybe_tests_tmp_dir)?;
+
+    tests_from_files
 }
 
-fn find_cairo_root_files_in_directory(
-    package_path: &Utf8PathBuf,
-    lib_path: &Utf8PathBuf,
-) -> Result<Vec<Utf8PathBuf>> {
-    let mut test_files: Vec<Utf8PathBuf> = vec![lib_path.clone()];
-    let src_path = lib_path.parent().with_context(|| {
-        format!("Failed to get parent directory of a package at path = {lib_path}")
-    })?;
+fn pack_tests_into_one_file(package_path: &Utf8PathBuf) -> Result<TempDir> {
+    let tests_folder_path = package_path.join("tests");
 
-    for entry in WalkDir::new(package_path)
+    let tmp_dir = TempDir::new()?;
+    tmp_dir
+        .copy_from(&tests_folder_path, &["**/*.cairo"])
+        .context("Unable to copy files to temporary directory")?;
+
+    let tests_lib_path = tmp_dir.child("lib.cairo");
+    if tests_lib_path.try_exists()? {
+        return Ok(tmp_dir);
+    }
+    tests_lib_path.touch()?;
+
+    let mut content = String::new();
+    for entry in WalkDir::new(&tests_folder_path)
+        .max_depth(1)
         .sort_by_file_name()
-        .into_iter()
-        .filter_entry(|e| !e.path().starts_with(src_path))
     {
-        let entry =
-            entry.with_context(|| format!("Failed to read directory at path = {package_path}"))?;
+        let entry = entry
+            .with_context(|| format!("Failed to read directory at path = {tests_folder_path}"))?;
         let path = entry.path();
 
         if path.is_file() && path.extension().unwrap_or_default() == "cairo" {
-            test_files.push(
-                Utf8Path::from_path(path)
-                    .with_context(|| format!("Failed to convert path = {path:?} to utf-8"))?
-                    .to_path_buf(),
-            );
+            let mod_name = path
+                .strip_prefix(&tests_folder_path)
+                .expect("Each test file path should start with package path")
+                .to_str()
+                .context("Unable to convert test file path to string")?
+                .strip_suffix(".cairo")
+                .expect("Each test file path should have .cairo extension");
+
+            content.push_str(&format!("mod {mod_name};\n"));
         }
     }
-    Ok(test_files)
+
+    std::fs::write(tests_lib_path, content).context("Failed to write to tests lib file")?;
+    Ok(tmp_dir)
 }
 
 fn collect_tests_from_tree(
-    test_root: &Utf8PathBuf,
-    package_path: &Utf8PathBuf,
-    package_name: &str,
-    linked_libraries: &Option<Vec<LinkedLibrary>>,
+    test_crate: &TestCrate,
+    linked_libraries: &[LinkedLibrary],
     corelib_path: &Utf8PathBuf,
     runner_config: &RunnerConfig,
-) -> Result<TestsFromFile> {
-    let builtins = vec![
-        "Pedersen",
-        "RangeCheck",
-        "Bitwise",
-        "EcOp",
-        "Poseidon",
-        "SegmentArena",
-        "GasBuiltin",
-        "System",
-    ];
-
-    let (sierra_program, tests_configs) = collect_tests(
-        test_root.as_str(),
+) -> Result<TestsFromCrate> {
+    let (sierra_program, test_cases) = collect_tests(
+        test_crate.crate_root.as_str(),
         None,
-        package_name,
-        linked_libraries.clone(),
-        Some(builtins.clone()),
+        &test_crate.crate_name,
+        linked_libraries,
+        Some(BUILTINS.clone()),
         corelib_path.into(),
     )?;
 
     let test_cases = if let Some(test_name_filter) = &runner_config.test_name_filter {
-        filter_tests_by_name(test_name_filter, runner_config.exact_match, tests_configs)
+        filter_tests_by_name(test_name_filter, runner_config.exact_match, test_cases)
     } else {
-        tests_configs
+        test_cases
     };
 
-    let relative_path = test_root.strip_prefix(package_path)?.to_path_buf();
-
-    Ok(TestsFromFile {
+    Ok(TestsFromCrate {
         sierra_program,
         test_cases,
-        relative_path,
+        test_crate_type: test_crate.crate_type,
     })
+}
+
+fn try_close_tmp_dir(maybe_tmp_dir: Option<TempDir>) -> Result<()> {
+    if let Some(tmp_dir) = maybe_tmp_dir {
+        let path = tmp_dir.path().to_path_buf();
+        tmp_dir.close().with_context(|| {
+            anyhow!(
+            "Failed to close temporary directory = {} with test files. The files might have not been released from filesystem",
+            path.display()
+        )
+        })?;
+    };
+    Ok(())
 }
 
 /// Run the tests in the package at the given path
@@ -182,42 +285,41 @@ fn collect_tests_from_tree(
 /// * `contracts` - Map with names of contract used in tests and corresponding sierra and casm artifacts
 /// * `predeployed_contracts` - Absolute path to predeployed contracts used by starknet state e.g. account contracts
 ///
-#[allow(clippy::implicit_hasher, clippy::too_many_arguments)]
+#[allow(clippy::implicit_hasher)]
 pub fn run(
+    package_root: &Utf8PathBuf,
     package_path: &Utf8PathBuf,
     package_name: &str,
-    lib_path: &Utf8PathBuf,
-    linked_libraries: &Option<Vec<LinkedLibrary>>,
+    package_source_dir_path: &Utf8PathBuf,
+    linked_libraries: &[LinkedLibrary],
     runner_config: &RunnerConfig,
-    corelib_path: &Utf8PathBuf,
-    contracts: &HashMap<String, StarknetContractArtifacts>,
-    predeployed_contracts: &Utf8PathBuf,
-) -> Result<Vec<TestFileSummary>> {
-    let tests = collect_tests_from_directory(
+    runner_params: &RunnerParams,
+) -> Result<Vec<TestCrateSummary>> {
+    let tests = collect_tests_from_package(
         package_path,
         package_name,
-        lib_path,
+        package_source_dir_path,
         linked_libraries,
-        corelib_path,
+        &runner_params.corelib_path,
         runner_config,
     )?;
 
     pretty_printing::print_collected_tests_count(
         tests.iter().map(|tests| tests.test_cases.len()).sum(),
-        tests.len(),
+        package_name,
     );
 
     let mut tests_iterator = tests.into_iter();
 
+    let mut fuzzing_happened = false;
     let mut summaries = vec![];
-    for tests_from_file in tests_iterator.by_ref() {
-        let summary = run_tests_from_file(
-            tests_from_file,
-            package_name,
-            runner_config,
-            contracts,
-            predeployed_contracts,
-        )?;
+
+    for tests_from_crate in tests_iterator.by_ref() {
+        let (summary, was_fuzzed) =
+            run_tests_from_crate(package_root, tests_from_crate, runner_config, runner_params)?;
+
+        fuzzing_happened |= was_fuzzed;
+
         summaries.push(summary.clone());
         if summary.runner_exit_status == RunnerStatus::TestFailed {
             break;
@@ -232,28 +334,31 @@ pub fn run(
             .collect();
 
         for test_case_summary in &skipped {
-            pretty_printing::print_test_result(test_case_summary);
+            pretty_printing::print_test_result(test_case_summary, None);
         }
 
-        let file_summary = TestFileSummary {
+        let file_summary = TestCrateSummary {
             test_case_summaries: skipped,
             runner_exit_status: RunnerStatus::DidNotRun,
-            relative_path: tests_from_file.relative_path,
+            test_crate_type: tests_from_file.test_crate_type,
         };
         summaries.push(file_summary);
     }
 
     pretty_printing::print_test_summary(&summaries);
+    if fuzzing_happened {
+        pretty_printing::print_test_seed(runner_config.fuzzer_seed);
+    }
+
     Ok(summaries)
 }
 
-fn run_tests_from_file(
-    tests: TestsFromFile,
-    package_name: &str,
+fn run_tests_from_crate(
+    package_root: &Utf8PathBuf,
+    tests: TestsFromCrate,
     runner_config: &RunnerConfig,
-    contracts: &HashMap<String, StarknetContractArtifacts>,
-    predeployed_contracts: &Utf8PathBuf,
-) -> Result<TestFileSummary> {
+    runner_params: &RunnerParams,
+) -> Result<(TestCrateSummary, bool)> {
     let runner = SierraCasmRunner::new(
         tests.sierra_program,
         Some(MetadataComputationConfig::default()),
@@ -261,38 +366,145 @@ fn run_tests_from_file(
     )
     .context("Failed setting up runner.")?;
 
-    pretty_printing::print_running_tests(
-        &tests.relative_path,
-        package_name,
-        tests.test_cases.len(),
-    );
+    pretty_printing::print_running_tests(tests.test_crate_type, tests.test_cases.len());
 
+    let mut was_fuzzed = false;
     let mut results = vec![];
+
     for (i, case) in tests.test_cases.iter().enumerate() {
-        let result = run_from_test_case(&runner, case, contracts, predeployed_contracts)?;
+        let case_name = case.name.as_str();
+        let function = runner.find_function(case_name)?;
+        let args = function_args(function, &BUILTINS);
+
+        let result = if args.is_empty() {
+            let result = run_from_test_case(
+                package_root,
+                &runner,
+                case,
+                runner_config.fork_targets.as_ref(),
+                &runner_params.contracts,
+                &runner_params.predeployed_contracts,
+                vec![],
+                &runner_params.environment_variables,
+            )?;
+            pretty_printing::print_test_result(&result, None);
+
+            result
+        } else {
+            was_fuzzed = true;
+            let (result, runs) = run_with_fuzzing(
+                package_root,
+                runner_config,
+                runner_params,
+                &runner,
+                case,
+                &args,
+            )?;
+            pretty_printing::print_test_result(&result, Some(runs));
+
+            result
+        };
+
         results.push(result.clone());
 
-        pretty_printing::print_test_result(&result);
         if runner_config.exit_first {
             if let TestCaseSummary::Failed { .. } = result {
                 for case in &tests.test_cases[i + 1..] {
                     let skipped_result = TestCaseSummary::skipped(case);
-                    pretty_printing::print_test_result(&skipped_result);
+                    pretty_printing::print_test_result(&skipped_result, None);
                     results.push(skipped_result);
                 }
-                return Ok(TestFileSummary {
-                    test_case_summaries: results,
-                    runner_exit_status: RunnerStatus::TestFailed,
-                    relative_path: tests.relative_path,
-                });
+                return Ok((
+                    TestCrateSummary {
+                        test_case_summaries: results,
+                        runner_exit_status: RunnerStatus::TestFailed,
+                        test_crate_type: tests.test_crate_type,
+                    },
+                    was_fuzzed,
+                ));
             }
         }
     }
-    Ok(TestFileSummary {
-        test_case_summaries: results,
-        runner_exit_status: RunnerStatus::Default,
-        relative_path: tests.relative_path,
-    })
+    Ok((
+        TestCrateSummary {
+            test_case_summaries: results,
+            runner_exit_status: RunnerStatus::Default,
+            test_crate_type: tests.test_crate_type,
+        },
+        was_fuzzed,
+    ))
+}
+
+fn run_with_fuzzing(
+    package_root: &Utf8PathBuf,
+    runner_config: &RunnerConfig,
+    runner_params: &RunnerParams,
+    runner: &SierraCasmRunner,
+    case: &TestCase,
+    args: &Vec<&ConcreteTypeId>,
+) -> Result<(TestCaseSummary, u32)> {
+    let args = args
+        .iter()
+        .map(|arg| {
+            arg.debug_name
+                .as_ref()
+                .ok_or_else(|| anyhow!("Type {arg:?} does not have a debug name"))
+                .map(smol_str::SmolStr::as_str)
+        })
+        .collect::<Result<Vec<_>>>()?;
+
+    let (fuzzer_runs, fuzzer_seed) = match case.fuzzer_config {
+        Some(FuzzerConfig {
+            fuzzer_runs,
+            fuzzer_seed,
+        }) => (fuzzer_runs, fuzzer_seed),
+        _ => (runner_config.fuzzer_runs, runner_config.fuzzer_seed),
+    };
+    let mut fuzzer = RandomFuzzer::create(fuzzer_seed, fuzzer_runs, &args)?;
+
+    let mut results = vec![];
+
+    for _ in 1..=fuzzer_runs {
+        let args = fuzzer.next_args();
+
+        let result = run_from_test_case(
+            package_root,
+            runner,
+            case,
+            runner_config.fork_targets.as_ref(),
+            &runner_params.contracts,
+            &runner_params.predeployed_contracts,
+            args.clone(),
+            &runner_params.environment_variables,
+        )?;
+        results.push(result.clone());
+
+        if let TestCaseSummary::Failed { .. } = result {
+            // Fuzz failed
+            break;
+        }
+    }
+
+    let result = results
+        .last()
+        .expect("Test should always run at least once")
+        .clone();
+    let runs = u32::try_from(results.len())?;
+    Ok((result, runs))
+}
+
+fn function_args<'a>(function: &'a Function, builtins: &[&str]) -> Vec<&'a ConcreteTypeId> {
+    let builtins: Vec<_> = builtins
+        .iter()
+        .map(|builtin| Some(SmolStr::new(builtin)))
+        .collect();
+
+    function
+        .signature
+        .param_types
+        .iter()
+        .filter(|pt| !builtins.contains(&pt.debug_name))
+        .collect()
 }
 
 fn filter_tests_by_name(
@@ -316,50 +528,121 @@ fn filter_tests_by_name(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use assert_fs::fixture::PathCopy;
     use test_collector::ExpectedTestResult;
 
     #[test]
+    fn fuzzer_default_seed() {
+        let config = RunnerConfig::new(None, false, false, None, None, &Default::default());
+        let config2 = RunnerConfig::new(None, false, false, None, None, &Default::default());
+
+        assert_ne!(config.fuzzer_seed, 0);
+        assert_ne!(config2.fuzzer_seed, 0);
+        assert_ne!(config.fuzzer_seed, config2.fuzzer_seed);
+    }
+
+    #[test]
+    fn runner_config_default_arguments() {
+        let config = RunnerConfig::new(None, false, false, None, None, &Default::default());
+        assert_eq!(
+            config,
+            RunnerConfig {
+                test_name_filter: None,
+                exact_match: false,
+                exit_first: false,
+                fork_targets: vec![],
+                fuzzer_runs: FUZZER_RUNS_DEFAULT,
+                fuzzer_seed: config.fuzzer_seed,
+            }
+        );
+    }
+
+    #[test]
+    fn runner_config_just_scarb_arguments() {
+        let config_from_scarb = ForgeConfig {
+            exit_first: true,
+            fork: vec![],
+            fuzzer_runs: Some(1234),
+            fuzzer_seed: Some(500),
+        };
+        let config = RunnerConfig::new(None, false, false, None, None, &config_from_scarb);
+        assert_eq!(
+            config,
+            RunnerConfig {
+                test_name_filter: None,
+                exact_match: false,
+                exit_first: true,
+                fork_targets: vec![],
+                fuzzer_runs: 1234,
+                fuzzer_seed: 500,
+            }
+        );
+    }
+
+    #[test]
+    fn runner_config_argument_precedence() {
+        let config_from_scarb = ForgeConfig {
+            exit_first: false,
+            fork: vec![],
+            fuzzer_runs: Some(1234),
+            fuzzer_seed: Some(1000),
+        };
+        let config = RunnerConfig::new(None, false, true, Some(100), Some(32), &config_from_scarb);
+        assert_eq!(
+            config,
+            RunnerConfig {
+                test_name_filter: None,
+                exact_match: false,
+                exit_first: true,
+                fork_targets: vec![],
+                fuzzer_runs: 100,
+                fuzzer_seed: 32,
+            }
+        );
+    }
+
+    #[test]
     fn collecting_tests() {
-        let temp = assert_fs::TempDir::new().unwrap();
+        let temp = TempDir::new().unwrap();
         temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
             .unwrap();
-        let tests_path = Utf8PathBuf::from_path_buf(temp.to_path_buf()).unwrap();
-        let lib_path = tests_path.join("src/lib.cairo");
+        let package_path = Utf8PathBuf::from_path_buf(temp.to_path_buf()).unwrap();
 
-        let tests = find_cairo_root_files_in_directory(&tests_path, &lib_path).unwrap();
+        let tests = pack_tests_into_one_file(&package_path).unwrap();
+        let virtual_lib_path = tests.join("lib.cairo");
+        let virtual_lib_u8_content = std::fs::read(&virtual_lib_path).unwrap();
+        let virtual_lib_content = std::str::from_utf8(&virtual_lib_u8_content).unwrap();
 
-        assert!(!tests.is_empty());
+        assert!(virtual_lib_path.try_exists().unwrap());
+        assert!(virtual_lib_content.contains("mod contract;"));
+        assert!(virtual_lib_content.contains("mod ext_function_test;"));
+        assert!(virtual_lib_content.contains("mod test_simple;"));
+        assert!(virtual_lib_content.contains("mod without_prefix;"));
     }
 
     #[test]
-    fn collecting_tests_err_on_invalid_dir() {
-        let tests_path = Utf8PathBuf::from("aaee");
-        let lib_path = Utf8PathBuf::from("asdfgdfg");
-
-        let result = find_cairo_root_files_in_directory(&tests_path, &lib_path);
-        let err = result.unwrap_err();
-
-        assert!(err.to_string().contains("Failed to read directory at path"));
-    }
-
-    #[test]
+    #[allow(clippy::too_many_lines)]
     fn filtering_tests() {
         let mocked_tests: Vec<TestCase> = vec![
             TestCase {
                 name: "crate1::do_thing".to_string(),
                 available_gas: None,
                 expected_result: ExpectedTestResult::Success,
+                fork_config: None,
+                fuzzer_config: None,
             },
             TestCase {
                 name: "crate2::run_other_thing".to_string(),
                 available_gas: None,
                 expected_result: ExpectedTestResult::Success,
+                fork_config: None,
+                fuzzer_config: None,
             },
             TestCase {
                 name: "outer::crate2::execute_next_thing".to_string(),
                 available_gas: None,
                 expected_result: ExpectedTestResult::Success,
+                fork_config: None,
+                fuzzer_config: None,
             },
         ];
 
@@ -370,6 +653,8 @@ mod tests {
                 name: "crate1::do_thing".to_string(),
                 available_gas: None,
                 expected_result: ExpectedTestResult::Success,
+                fork_config: None,
+                fuzzer_config: None,
             },]
         );
 
@@ -380,6 +665,8 @@ mod tests {
                 name: "crate2::run_other_thing".to_string(),
                 available_gas: None,
                 expected_result: ExpectedTestResult::Success,
+                fork_config: None,
+                fuzzer_config: None,
             },]
         );
 
@@ -391,16 +678,22 @@ mod tests {
                     name: "crate1::do_thing".to_string(),
                     available_gas: None,
                     expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                    fuzzer_config: None,
                 },
                 TestCase {
                     name: "crate2::run_other_thing".to_string(),
                     available_gas: None,
                     expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                    fuzzer_config: None,
                 },
                 TestCase {
                     name: "outer::crate2::execute_next_thing".to_string(),
                     available_gas: None,
                     expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                    fuzzer_config: None,
                 },
             ]
         );
@@ -416,16 +709,22 @@ mod tests {
                     name: "crate1::do_thing".to_string(),
                     available_gas: None,
                     expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                    fuzzer_config: None,
                 },
                 TestCase {
                     name: "crate2::run_other_thing".to_string(),
                     available_gas: None,
                     expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                    fuzzer_config: None,
                 },
                 TestCase {
                     name: "outer::crate2::execute_next_thing".to_string(),
                     available_gas: None,
                     expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                    fuzzer_config: None,
                 },
             ]
         );
@@ -438,16 +737,22 @@ mod tests {
                 name: "crate1::do_thing".to_string(),
                 available_gas: None,
                 expected_result: ExpectedTestResult::Success,
+                fork_config: None,
+                fuzzer_config: None,
             },
             TestCase {
                 name: "crate2::run_other_thing".to_string(),
                 available_gas: None,
                 expected_result: ExpectedTestResult::Success,
+                fork_config: None,
+                fuzzer_config: None,
             },
             TestCase {
                 name: "outer::crate2::run_other_thing".to_string(),
                 available_gas: None,
                 expected_result: ExpectedTestResult::Success,
+                fork_config: None,
+                fuzzer_config: None,
             },
         ];
 
@@ -459,11 +764,15 @@ mod tests {
                     name: "crate2::run_other_thing".to_string(),
                     available_gas: None,
                     expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                    fuzzer_config: None,
                 },
                 TestCase {
                     name: "outer::crate2::run_other_thing".to_string(),
                     available_gas: None,
                     expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                    fuzzer_config: None,
                 },
             ]
         );
@@ -476,21 +785,29 @@ mod tests {
                 name: "crate1::do_thing".to_string(),
                 available_gas: None,
                 expected_result: ExpectedTestResult::Success,
+                fork_config: None,
+                fuzzer_config: None,
             },
             TestCase {
                 name: "crate2::run_other_thing".to_string(),
                 available_gas: None,
                 expected_result: ExpectedTestResult::Success,
+                fork_config: None,
+                fuzzer_config: None,
             },
             TestCase {
                 name: "outer::crate3::run_other_thing".to_string(),
                 available_gas: None,
                 expected_result: ExpectedTestResult::Success,
+                fork_config: None,
+                fuzzer_config: None,
             },
             TestCase {
                 name: "do_thing".to_string(),
                 available_gas: None,
                 expected_result: ExpectedTestResult::Success,
+                fork_config: None,
+                fuzzer_config: None,
             },
         ];
 
@@ -507,6 +824,8 @@ mod tests {
                 name: "do_thing".to_string(),
                 available_gas: None,
                 expected_result: ExpectedTestResult::Success,
+                fork_config: None,
+                fuzzer_config: None,
             },]
         );
 
@@ -517,6 +836,8 @@ mod tests {
                 name: "crate1::do_thing".to_string(),
                 available_gas: None,
                 expected_result: ExpectedTestResult::Success,
+                fork_config: None,
+                fuzzer_config: None,
             },]
         );
 
@@ -530,6 +851,8 @@ mod tests {
                 name: "outer::crate3::run_other_thing".to_string(),
                 available_gas: None,
                 expected_result: ExpectedTestResult::Success,
+                fork_config: None,
+                fuzzer_config: None,
             },]
         );
     }
@@ -541,16 +864,22 @@ mod tests {
                 name: "crate1::do_thing".to_string(),
                 available_gas: None,
                 expected_result: ExpectedTestResult::Success,
+                fork_config: None,
+                fuzzer_config: None,
             },
             TestCase {
                 name: "crate2::run_other_thing".to_string(),
                 available_gas: None,
                 expected_result: ExpectedTestResult::Success,
+                fork_config: None,
+                fuzzer_config: None,
             },
             TestCase {
                 name: "thing".to_string(),
                 available_gas: None,
                 expected_result: ExpectedTestResult::Success,
+                fork_config: None,
+                fuzzer_config: None,
             },
         ];
 
@@ -562,16 +891,22 @@ mod tests {
                     name: "crate1::do_thing".to_string(),
                     available_gas: None,
                     expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                    fuzzer_config: None,
                 },
                 TestCase {
                     name: "crate2::run_other_thing".to_string(),
                     available_gas: None,
                     expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                    fuzzer_config: None,
                 },
                 TestCase {
                     name: "thing".to_string(),
                     available_gas: None,
                     expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                    fuzzer_config: None,
                 },
             ]
         );

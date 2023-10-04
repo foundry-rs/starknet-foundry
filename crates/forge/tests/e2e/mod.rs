@@ -1,4 +1,10 @@
-mod collection;
 pub(crate) mod common;
-mod file_operations;
+
+mod collection;
+mod diagnostics_and_plugins;
+mod env;
+mod forking;
+mod fuzzing;
+mod io_operations;
 mod running;
+mod workspaces;

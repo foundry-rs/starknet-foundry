@@ -3,10 +3,12 @@
 1. Bump Starknet Foundry version in the top-level `Cargo.toml` file
 2. Regenerate locks using `cargo update -p forge cast`
 3. Update `CHANGELOG.md`
-3. Merge introduced changes
-4. Create a new tag in repository with format `vMAJOR.MINOR.PATCH`. This will trigger the release workflow
-5. Wait for release workflows to pass. A new draft release will be created on GitHub.
-6. Update the release contents using template below and publish it
+    1. Convert the `[Unreleased]` section to `[vMAJOR.MINOR.PATCH] - year-month-date`.
+    2. Create a new `[Unreleased]` section
+4. Merge introduced changes
+5. Create a new tag in repository with format `vMAJOR.MINOR.PATCH`. This will trigger the release workflow
+6. Wait for release workflows to pass. A new draft release will be created on GitHub.
+7. Update the release contents using template below and publish it
 
 ## Release Template
 
