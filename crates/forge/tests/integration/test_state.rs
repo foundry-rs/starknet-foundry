@@ -504,7 +504,6 @@ fn test_simple_cheatcodes() {
 }
 
 #[test]
-#[ignore] //TODO (#612)
 fn test_spy_events_simple() {
     let test = test_case!(indoc!(
         r#"

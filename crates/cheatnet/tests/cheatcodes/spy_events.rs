@@ -146,20 +146,20 @@ fn check_events_order() {
     assert_eq!(
         events[1],
         Event {
-            from: spy_events_order_checker_address,
-            keys: vec![starknet_keccak("ThirdEvent".as_ref()).into()],
-            data: vec![Felt252::from(345)]
-        },
-        "Wrong second event"
-    );
-    assert_eq!(
-        events[2],
-        Event {
             from: spy_events_checker_address,
             keys: vec![starknet_keccak("FirstEvent".as_ref()).into()],
             data: vec![Felt252::from(234)]
         },
         "Wrong third event"
+    );
+    assert_eq!(
+        events[2],
+        Event {
+            from: spy_events_order_checker_address,
+            keys: vec![starknet_keccak("ThirdEvent".as_ref()).into()],
+            data: vec![Felt252::from(345)]
+        },
+        "Wrong second event"
     );
 }
 

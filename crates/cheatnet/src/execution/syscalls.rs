@@ -62,6 +62,7 @@ use starknet_api::{
     transaction::Calldata,
 };
 use std::{any::Any, collections::HashMap};
+use crate::cheatcodes::spy_events::Event;
 
 use super::calls::{execute_inner_call, execute_library_call};
 use super::execution_info::get_cheated_exec_info_ptr;
@@ -297,6 +298,17 @@ impl CheatableSyscallHandler<'_> {
             // Increment, since the selector was peeked into before
             self.syscall_handler.syscall_ptr += 1;
             return self.execute_syscall(vm, deploy_syscall, constants::DEPLOY_GAS_COST);
+        } else if SyscallSelector::EmitEvent == selector {
+            let result = self.syscall_handler.execute_next_syscall(vm, hint);
+            let event = Event::from_ordered_event(
+                &self.syscall_handler.events.last().unwrap(),
+                self.syscall_handler
+                    .call
+                    .code_address
+                    .unwrap_or(self.syscall_handler.call.storage_address),
+            );
+            self.cheatnet_state.detected_events.push(event);
+            return result;
         }
 
         self.syscall_handler.execute_next_syscall(vm, hint)
