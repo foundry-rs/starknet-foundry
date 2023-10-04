@@ -192,9 +192,13 @@ pub fn build_testing_state(predeployed_contracts: &Utf8PathBuf) -> DictStateRead
     let block_context = build_block_context();
     let test_account_class_hash = ClassHash(stark_felt!(TEST_ACCOUNT_CONTRACT_CLASS_HASH));
     let test_erc20_class_hash = ClassHash(stark_felt!(TEST_ERC20_CONTRACT_CLASS_HASH));
+    let test_contract_class_hash = ClassHash(stark_felt!(TEST_CONTRACT_CLASS_HASH));
 
     let class_hash_to_class = HashMap::from([
-        (test_account_class_hash, ContractClass::V1(account_class)),
+        (test_account_class_hash, ContractClass::V1(account_class.clone())),
+        // This is dummy put here only to satisfy blockifier 
+        // this class is not used and the test contract cannot be called
+        (test_contract_class_hash, ContractClass::V1(account_class)),
         (test_erc20_class_hash, ContractClass::V0(erc20_class)),
     ]);
 
@@ -202,9 +206,11 @@ pub fn build_testing_state(predeployed_contracts: &Utf8PathBuf) -> DictStateRead
     // address.
     let test_account_address = ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS));
     let test_erc20_address = block_context.fee_token_address;
+    let test_address = ContractAddress(patricia_key!(TEST_ADDRESS));
     let address_to_class_hash = HashMap::from([
         (test_account_address, test_account_class_hash),
         (test_erc20_address, test_erc20_class_hash),
+        (test_address, test_contract_class_hash),
     ]);
     let address_to_nonce = HashMap::from([(test_account_address, Nonce(StarkFelt::from(0_u8)))]);
     let minter_var_address = get_storage_var_address("permitted_minter", &[])

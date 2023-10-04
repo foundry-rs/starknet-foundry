@@ -11,7 +11,7 @@ use blockifier::state::cached_state::{CachedState, GlobalContractCache};
 use cairo_felt::Felt252;
 use cairo_vm::serde::deserialize_program::HintParams;
 use cairo_vm::types::relocatable::Relocatable;
-use cheatnet::constants::{build_block_context, build_testing_state, build_transaction_context, TEST_CONTRACT_ADDRESS, TEST_ADDRESS};
+use cheatnet::constants::{build_block_context, build_testing_state, build_transaction_context, TEST_ADDRESS};
 use cheatnet::execution::syscalls::CheatableSyscallHandler;
 use itertools::chain;
 
