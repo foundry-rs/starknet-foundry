@@ -241,6 +241,89 @@ fn with_non_matching_filter() {
 }
 
 #[test]
+fn with_ignored_flag() {
+    let temp = setup_package("simple_package");
+    let snapbox = runner();
+
+    snapbox
+        .current_dir(&temp)
+        .arg("--ignored")
+        .assert()
+        .code(1)
+        .stdout_matches(indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 2 test(s) from simple_package package
+        Running 1 test(s) from src/
+        [PASS] simple_package::ignored_test
+        Running 1 test(s) from tests/
+        [FAIL] tests::ext_function_test::ignored_test
+        
+        Failure data:
+            original value: [133508164996995645235097191], converted to a string: [not passing]
+        
+        Tests: 1 passed, 1 failed, 0 skipped
+        
+        Failures:
+            tests::ext_function_test::ignored_test
+        "#});
+}
+
+#[test]
+fn with_include_ignored_flag() {
+    let temp = setup_package("simple_package");
+    let snapbox = runner();
+
+    snapbox
+        .current_dir(&temp)
+        .arg("--include-ignored")
+        .assert()
+        .code(1)
+        .stdout_matches(indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 13 test(s) from simple_package package
+        Running 2 test(s) from src/
+        [PASS] simple_package::test_fib
+        [PASS] simple_package::ignored_test
+        Running 11 test(s) from tests/
+        [PASS] tests::contract::call_and_invoke
+        [PASS] tests::ext_function_test::test_my_test
+        [FAIL] tests::ext_function_test::ignored_test
+        
+        Failure data:
+            original value: [133508164996995645235097191], converted to a string: [not passing]
+        
+        [PASS] tests::ext_function_test::test_simple
+        [PASS] tests::test_simple::test_simple
+        [PASS] tests::test_simple::test_simple2
+        [PASS] tests::test_simple::test_two
+        [PASS] tests::test_simple::test_two_and_two
+        [FAIL] tests::test_simple::test_failing
+        
+        Failure data:
+            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+        
+        [FAIL] tests::test_simple::test_another_failing
+        
+        Failure data:
+            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+        
+        [PASS] tests::without_prefix::five
+        Tests: 10 passed, 3 failed, 0 skipped
+        
+        Failures:
+            tests::ext_function_test::ignored_test
+            tests::test_simple::test_failing
+            tests::test_simple::test_another_failing
+        "#});
+}
+
+#[test]
 fn with_print() {
     let temp = setup_package("print_test");
     let snapbox = runner();

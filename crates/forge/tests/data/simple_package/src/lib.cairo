@@ -16,5 +16,5 @@ fn test_fib() {
 #[test]
 #[ignore]
 fn ignored_test() {
-    assert(1 == 2, 'not passing');
+    assert(1 == 1, 'passing');
 }

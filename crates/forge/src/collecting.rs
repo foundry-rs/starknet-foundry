@@ -8,6 +8,7 @@ use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use test_collector::{collect_tests, LinkedLibrary, TestCase};
 use walkdir::WalkDir;
 
+#[cfg_attr(test, derive(Clone))]
 pub struct TestsFromCrate {
     pub sierra_program: Program,
     pub test_cases: Vec<TestCase>,
@@ -15,9 +16,9 @@ pub struct TestsFromCrate {
 }
 
 impl TestsFromCrate {
-    pub fn filter_by_name(&self, filter: &str, exact_match: bool) -> Self {
+    pub fn filter_by_name(self, filter: &str, exact_match: bool) -> Self {
         let mut result = vec![];
-        for test in &self.test_cases {
+        for test in self.test_cases {
             if exact_match {
                 if test.name == filter {
                     result.push(test);
@@ -27,8 +28,21 @@ impl TestsFromCrate {
             }
         }
         Self {
-            sierra_program: self.sierra_program.clone(),
-            test_cases: result.into_iter().cloned().collect(),
+            sierra_program: self.sierra_program,
+            test_cases: result,
+            test_crate_type: self.test_crate_type,
+        }
+    }
+
+    pub fn extract_ignored(self) -> Self {
+        let result = self
+            .test_cases
+            .into_iter()
+            .filter(|case| case.ignored)
+            .collect();
+        Self {
+            sierra_program: self.sierra_program,
+            test_cases: result,
             test_crate_type: self.test_crate_type,
         }
     }
@@ -123,13 +137,23 @@ pub fn filter_tests_from_crates(
     tests_from_crates: Vec<TestsFromCrate>,
     runner_config: &RunnerConfig,
 ) -> Vec<TestsFromCrate> {
-    if let Some(test_name_filter) = &runner_config.test_name_filter {
+    let filtered_by_name = if let Some(test_name_filter) = &runner_config.test_name_filter {
         tests_from_crates
             .into_iter()
             .map(|tc| tc.filter_by_name(test_name_filter, runner_config.exact_match))
             .collect()
     } else {
         tests_from_crates
+    };
+
+    // TODO: add tests for filter_tests_from_crate
+    if runner_config.only_ignored {
+        filtered_by_name
+            .into_iter()
+            .map(TestsFromCrate::extract_ignored)
+            .collect()
+    } else {
+        filtered_by_name
     }
 }
 
@@ -312,7 +336,7 @@ mod tests {
             test_crate_type: TestCrateType::Lib,
         };
 
-        let filtered = mocked_tests.filter_by_name("do", false);
+        let filtered = mocked_tests.clone().filter_by_name("do", false);
         assert_eq!(
             filtered.test_cases,
             vec![TestCase {
@@ -325,7 +349,7 @@ mod tests {
             },]
         );
 
-        let filtered = mocked_tests.filter_by_name("run", false);
+        let filtered = mocked_tests.clone().filter_by_name("run", false);
         assert_eq!(
             filtered.test_cases,
             vec![TestCase {
@@ -338,7 +362,7 @@ mod tests {
             },]
         );
 
-        let filtered = mocked_tests.filter_by_name("thing", false);
+        let filtered = mocked_tests.clone().filter_by_name("thing", false);
         assert_eq!(
             filtered.test_cases,
             vec![
@@ -369,7 +393,7 @@ mod tests {
             ]
         );
 
-        let filtered = mocked_tests.filter_by_name("nonexistent", false);
+        let filtered = mocked_tests.clone().filter_by_name("nonexistent", false);
         assert_eq!(filtered.test_cases, vec![]);
 
         let filtered = mocked_tests.filter_by_name("", false);
@@ -502,13 +526,13 @@ mod tests {
             test_crate_type: TestCrateType::Tests,
         };
 
-        let filtered = mocked_tests.filter_by_name("", true);
+        let filtered = mocked_tests.clone().filter_by_name("", true);
         assert_eq!(filtered.test_cases, vec![]);
 
-        let filtered = mocked_tests.filter_by_name("thing", true);
+        let filtered = mocked_tests.clone().filter_by_name("thing", true);
         assert_eq!(filtered.test_cases, vec![]);
 
-        let filtered = mocked_tests.filter_by_name("do_thing", true);
+        let filtered = mocked_tests.clone().filter_by_name("do_thing", true);
         assert_eq!(
             filtered.test_cases,
             vec![TestCase {
@@ -521,7 +545,9 @@ mod tests {
             },]
         );
 
-        let filtered = mocked_tests.filter_by_name("crate1::do_thing", true);
+        let filtered = mocked_tests
+            .clone()
+            .filter_by_name("crate1::do_thing", true);
         assert_eq!(
             filtered.test_cases,
             vec![TestCase {
@@ -534,7 +560,9 @@ mod tests {
             },]
         );
 
-        let filtered = mocked_tests.filter_by_name("crate3::run_other_thing", true);
+        let filtered = mocked_tests
+            .clone()
+            .filter_by_name("crate3::run_other_thing", true);
         assert_eq!(filtered.test_cases, vec![]);
 
         let filtered = mocked_tests.filter_by_name("outer::crate3::run_other_thing", true);

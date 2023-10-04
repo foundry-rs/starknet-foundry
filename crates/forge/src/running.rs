@@ -77,13 +77,9 @@ pub(crate) fn run_from_test_case(
     runner_params: &RunnerParams,
     runner_config: &RunnerConfig,
 ) -> Result<TestCaseSummary> {
-    let should_be_run = if runner_config.include_ignored {
-        true
-    } else if runner_config.only_ignored {
-        case.ignored
-    } else {
-        !case.ignored
-    };
+    // if only_ignored == true then tests without `#[ignore]` are filtered earlier
+    let should_be_run =
+        runner_config.include_ignored || runner_config.only_ignored || !case.ignored;
 
     if !should_be_run {
         return Ok(TestCaseSummary::Ignored {
