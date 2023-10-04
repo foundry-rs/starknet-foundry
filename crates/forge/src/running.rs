@@ -11,7 +11,7 @@ use blockifier::state::cached_state::{CachedState, GlobalContractCache};
 use cairo_felt::Felt252;
 use cairo_vm::serde::deserialize_program::HintParams;
 use cairo_vm::types::relocatable::Relocatable;
-use cheatnet::constants::{build_block_context, build_testing_state, build_transaction_context};
+use cheatnet::constants::{build_block_context, build_testing_state, build_transaction_context, TEST_CONTRACT_ADDRESS, TEST_ADDRESS};
 use cheatnet::execution::syscalls::CheatableSyscallHandler;
 use itertools::chain;
 
@@ -39,8 +39,6 @@ use crate::scarb::{ForkTarget, StarknetContractArtifacts};
 use crate::test_case_summary::TestCaseSummary;
 use crate::test_execution_syscall_handler::TestExecutionSyscallHandler;
 
-// snforge_std/src/cheatcodes.cairo::TEST
-const TEST_ADDRESS: &str = "0x01724987234973219347210837402";
 
 /// Builds `hints_dict` required in `cairo_vm::types::program::Program` from instructions.
 fn build_hints_dict<'b>(
