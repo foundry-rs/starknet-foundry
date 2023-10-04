@@ -59,7 +59,7 @@ toml_edit = "0.9.1"
 flatten-serde-json = "0.1.0"
 smol_str = "0.2.0"
 tokio.workspace = true
-tokio-util = "0.7.9"
+tokio-util.workspace = true
 num-integer = "0.1.45"
 
 [lib]

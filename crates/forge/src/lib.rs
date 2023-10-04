@@ -81,8 +81,8 @@ impl RunnerConfig {
         fuzzer_runs: Option<u32>,
         fuzzer_seed: Option<u64>,
         forge_config_from_scarb: &ForgeConfig,
-    ) -> Arc<Self> {
-        Arc::new(Self {
+    ) -> Self {
+        Self {
             test_name_filter,
             exact_match,
             exit_first: forge_config_from_scarb.exit_first || exit_first,
@@ -93,7 +93,7 @@ impl RunnerConfig {
             fuzzer_seed: fuzzer_seed
                 .or(forge_config_from_scarb.fuzzer_seed)
                 .unwrap_or_else(|| thread_rng().next_u64()),
-        })
+        }
     }
 }
 
@@ -142,13 +142,13 @@ impl RunnerParams {
         contracts: HashMap<String, StarknetContractArtifacts>,
         predeployed_contracts: Utf8PathBuf,
         environment_variables: HashMap<String, String>,
-    ) -> Arc<Self> {
-        Arc::new(Self {
+    ) -> Self {
+        Self {
             corelib_path,
             contracts,
             predeployed_contracts,
             environment_variables,
-        })
+        }
     }
 }
 
@@ -321,9 +321,8 @@ pub async fn run(
     let mut summaries = vec![];
 
     for tests_from_crate in tests_iterator.by_ref() {
-        let package_root = package_root.clone();
         let (summary, was_fuzzed) = run_tests_from_crate(
-            package_root,
+            package_root.clone(),
             tests_from_crate,
             runner_config.clone(),
             runner_params.clone(),
@@ -361,7 +360,7 @@ pub async fn run(
 
     Ok(summaries)
 }
-async fn run_p_test(
+async fn chose_strategy_and_run_test(
     package_root: Arc<Utf8PathBuf>,
     case: Arc<TestCase>,
     runner: Arc<SierraCasmRunner>,
@@ -392,9 +391,6 @@ async fn run_p_test(
             }
             Err(e) => Err(e),
         }
-
-        // pretty_printing::print_test_result(&result, None);
-        // result
     } else {
         run_with_fuzzing(
             package_root,
@@ -408,7 +404,7 @@ async fn run_p_test(
         .await
     }
 }
-//TODO rename
+
 async fn run_tests_from_crate(
     package_root: Arc<Utf8PathBuf>,
     tests: TestsFromCrate,
@@ -451,7 +447,7 @@ async fn run_tests_from_crate(
                         // The token was cancelled
                        Ok((TestCaseSummary::skipped(&c), None))
                     },
-                    result = run_p_test(package_root.clone() ,case, runner,runner_params, runner_config, args, cancellation_token.clone()) => {
+                    result = chose_strategy_and_run_test(package_root.clone() ,case, runner,runner_params, runner_config, args, cancellation_token.clone()) => {
                         result
                     },
                 }

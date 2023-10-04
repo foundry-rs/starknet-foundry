@@ -128,14 +128,14 @@ async fn main_execution() -> Result<bool> {
         let dependencies = dependencies_for_package(&scarb_metadata, &package.id)?;
         let target_name = target_name_for_package(&scarb_metadata, &package.id)?;
         let corelib_path = corelib_for_package(&scarb_metadata, &package.id)?;
-        let runner_config = RunnerConfig::new(
+        let runner_config = Arc::new(RunnerConfig::new(
             args.test_filter.clone(),
             args.exact,
             args.exit_first,
             args.fuzzer_runs,
             args.fuzzer_seed,
             &forge_config,
-        );
+        ));
 
         let contracts_path = try_get_starknet_artifacts_path(&target_dir, &target_name)?;
         let contracts = contracts_path
@@ -143,12 +143,12 @@ async fn main_execution() -> Result<bool> {
             .transpose()?
             .unwrap_or_default();
 
-        let runner_params = RunnerParams::new(
+        let runner_params = Arc::new(RunnerParams::new(
             corelib_path,
             contracts,
             predeployed_contracts.clone(),
             env::vars().collect(),
-        );
+        ));
 
         let tests_file_summaries = run(
             package_root.clone(),

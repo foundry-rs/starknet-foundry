@@ -21,20 +21,20 @@ pub async fn run_test_case(test: &TestCase) -> Vec<TestCrateSummary> {
         &String::from("src"),
         &test.path().unwrap().join("src"),
         &test.linked_libraries(),
-        RunnerConfig::new(
+        Arc::new(RunnerConfig::new(
             None,
             false,
             false,
             Some(256),
             Some(12345),
             &Default::default(),
-        ),
-        RunnerParams::new(
+        )),
+        Arc::new(RunnerParams::new(
             corelib_path(),
             test.contracts(&corelib_path()).unwrap(),
             Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
             test.env().clone(),
-        ),
+        )),
         cancellation_token,
     )
     .await
