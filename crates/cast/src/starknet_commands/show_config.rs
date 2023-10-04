@@ -11,8 +11,8 @@ pub struct ShowConfig {}
 #[allow(clippy::ptr_arg)]
 pub async fn show_config(
     cast_config: CastConfig,
-    profile: String,
-    scarb_path: Utf8PathBuf,
+    profile: Option<String>,
+    scarb_path: Option<Utf8PathBuf>,
     network: String,
 ) -> Result<ShowConfigResponse> {
     Ok(ShowConfigResponse {
