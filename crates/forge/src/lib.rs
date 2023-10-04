@@ -319,17 +319,38 @@ pub async fn run(
 
     let mut fuzzing_happened = false;
     let mut summaries = vec![];
-
+    let mut threads = vec![];
     for tests_from_crate in tests_iterator.by_ref() {
-        let (summary, was_fuzzed) = run_tests_from_crate(
-            package_root.clone(),
-            tests_from_crate,
-            runner_config.clone(),
-            runner_params.clone(),
-            cancellation_token.clone(),
-        )
-        .await?;
-
+        let package_root = package_root.clone();
+        let tests_from_crate = Arc::new(tests_from_crate);
+        let runner_config = runner_config.clone();
+        let runner_params = runner_params.clone();
+        let cancellation_token = cancellation_token.clone();
+        let test_crate_type = tests_from_crate.test_crate_type;
+        let tests_len = tests_from_crate.test_cases.len();
+        threads.push((
+            test_crate_type,
+            tests_len,
+            task::spawn({
+                async move {
+                    run_tests_from_crate(
+                        package_root,
+                        tests_from_crate,
+                        runner_config,
+                        runner_params,
+                        cancellation_token,
+                    )
+                    .await
+                }
+            }),
+        ));
+    }
+    for (test_crate_type, tests_len, thread) in threads {
+        pretty_printing::print_running_tests(test_crate_type.clone(), tests_len.clone());
+        let (summary, was_fuzzed) = thread.await??;
+        for s in &summary.test_case_summaries {
+            pretty_printing::print_test_result(s);
+        }
         fuzzing_happened |= was_fuzzed;
         summaries.push(summary.clone());
     }
@@ -342,7 +363,7 @@ pub async fn run(
             .collect();
 
         for test_case_summary in &skipped {
-            pretty_printing::print_test_result(test_case_summary, None);
+            pretty_printing::print_test_result(test_case_summary);
         }
 
         let file_summary = TestCrateSummary {
@@ -368,7 +389,7 @@ async fn chose_strategy_and_run_test(
     runner_config: Arc<RunnerConfig>,
     args: Vec<ConcreteTypeId>,
     cancellation_token: Arc<CancellationToken>,
-) -> Result<(TestCaseSummary, Option<u32>)> {
+) -> Result<TestCaseSummary> {
     let exit_first = runner_config.exit_first;
     if args.is_empty() {
         match blocking_run_from_test(
@@ -387,7 +408,7 @@ async fn chose_strategy_and_run_test(
                         cancellation_token.cancel();
                     }
                 }
-                Ok((result, None))
+                Ok(result)
             }
             Err(e) => Err(e),
         }
@@ -407,25 +428,24 @@ async fn chose_strategy_and_run_test(
 
 async fn run_tests_from_crate(
     package_root: Arc<Utf8PathBuf>,
-    tests: TestsFromCrate,
+    tests: Arc<TestsFromCrate>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     cancellation_token: Arc<CancellationToken>,
 ) -> Result<(TestCrateSummary, bool)> {
+    let sierra_program = &tests.sierra_program;
     let runner = Arc::new(
         SierraCasmRunner::new(
-            tests.sierra_program,
+            sierra_program.clone(),
             Some(MetadataComputationConfig::default()),
             OrderedHashMap::default(),
         )
         .context("Failed setting up runner.")?,
     );
 
-    pretty_printing::print_running_tests(tests.test_crate_type, tests.test_cases.len());
-
     let mut was_fuzzed = false;
     let mut tasks = vec![];
-    let test_cases = Arc::new(tests.test_cases);
+    let test_cases = &tests.test_cases;
     test_cases.iter().for_each(|case| {
         let case_name = case.name.as_str();
 
@@ -446,7 +466,7 @@ async fn run_tests_from_crate(
                 tokio::select! {
                     _ = cancellation_token.cancelled() => {
                         // The token was cancelled
-                       Ok((TestCaseSummary::skipped(&c), None))
+                       Ok(TestCaseSummary::skipped(&c))
                     },
                     result = chose_strategy_and_run_test(
                         package_root.clone(),
@@ -469,22 +489,19 @@ async fn run_tests_from_crate(
     let mut results = vec![];
 
     for thread in tasks {
-        let (result, runs) = thread.await.unwrap()?;
-        if runs.is_some() {
+        let result = thread.await.unwrap()?;
+
+        if result.runs().is_some() {
             was_fuzzed = true;
         }
 
-        pretty_printing::print_test_result(&result, runs);
-        results.push((result, runs));
+        // pretty_printing::print_test_result(&result, runs);
+        results.push(result);
     }
 
     Ok((
         TestCrateSummary {
-            test_case_summaries: results
-                .iter()
-                .map(|(result, _runs)| result.clone())
-                .collect(),
-
+            test_case_summaries: results,
             runner_exit_status: RunnerStatus::Default,
             test_crate_type: tests.test_crate_type,
         },
@@ -500,7 +517,7 @@ async fn run_with_fuzzing(
     case: Arc<TestCase>,
     args: &Vec<ConcreteTypeId>,
     cancellation_token: Arc<CancellationToken>,
-) -> Result<(TestCaseSummary, Option<u32>)> {
+) -> Result<TestCaseSummary> {
     let token = CancellationToken::new();
     let token = Arc::new(token.clone());
 
@@ -541,10 +558,10 @@ async fn run_with_fuzzing(
                 tokio::select! {
                     _ = cancellation_token.cancelled() => {
                         // The token was cancelled
-                        Ok(TestCaseSummary::Failed { name: "fuzzing".to_string(), run_result: None, msg: None, arguments: vec![] })
+                        Ok(TestCaseSummary::Failed { name: "fuzzing".to_string(), run_result: None, msg: None, arguments: vec![], runs: Some(0) })
                     },
                     _ = cancellation_fuzzing_token.cancelled() => {
-                        Ok(TestCaseSummary::Failed { name: "fuzzing".to_string(), run_result: None, msg: None, arguments: vec![] })
+                        Ok(TestCaseSummary::Failed { name: "fuzzing".to_string(), run_result: None, msg: None, arguments: vec![], runs: Some(0) })
                     },
                    result = blocking_run_from_test(
                         package_root,
@@ -584,12 +601,41 @@ async fn run_with_fuzzing(
         }
     }
 
-    let result = results
+    let result: TestCaseSummary = results
         .last()
         .expect("Test should always run at least once")
         .clone();
     let runs = u32::try_from(results.len())?;
-    Ok((result, Some(runs)))
+    let result = match result {
+        TestCaseSummary::Passed {
+            name,
+            run_result,
+            msg,
+            arguments,
+            ..
+        } => TestCaseSummary::Passed {
+            name,
+            run_result,
+            msg,
+            arguments,
+            runs: Some(runs),
+        },
+        TestCaseSummary::Failed {
+            name,
+            run_result,
+            msg,
+            arguments,
+            ..
+        } => TestCaseSummary::Failed {
+            name,
+            run_result,
+            msg,
+            arguments,
+            runs: Some(runs),
+        },
+        TestCaseSummary::Skipped { .. } => result,
+    };
+    Ok(result)
 }
 
 fn function_args<'a>(function: &'a Function, builtins: &[&str]) -> Vec<&'a ConcreteTypeId> {

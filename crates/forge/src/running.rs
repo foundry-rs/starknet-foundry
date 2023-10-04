@@ -196,6 +196,7 @@ pub(crate) fn run_from_test_case(
                 error.to_string().replace(" Custom Hint Error: ", "\n    ")
             )),
             arguments: args,
+            runs: None,
         }),
 
         Err(err) => Err(err.into()),

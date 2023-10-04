@@ -17,6 +17,7 @@ pub enum TestCaseSummary {
         msg: Option<String>,
         /// Arguments used in the test case run
         arguments: Vec<Felt252>,
+        runs: Option<u32>,
     },
     /// Test case failed
     Failed {
@@ -28,6 +29,7 @@ pub enum TestCaseSummary {
         msg: Option<String>,
         /// Arguments used in the test case run
         arguments: Vec<Felt252>,
+        runs: Option<u32>,
     },
     /// Test case skipped (did not run)
     Skipped {
@@ -42,6 +44,14 @@ impl TestCaseSummary {
             TestCaseSummary::Failed { arguments, .. }
             | TestCaseSummary::Passed { arguments, .. } => arguments.clone(),
             TestCaseSummary::Skipped { .. } => vec![],
+        }
+    }
+    pub(crate) fn runs(&self) -> Option<u32> {
+        match self {
+            TestCaseSummary::Failed { runs, .. } | TestCaseSummary::Passed { runs, .. } => {
+                runs.clone()
+            }
+            TestCaseSummary::Skipped { .. } => None,
         }
     }
 }
@@ -62,12 +72,14 @@ impl TestCaseSummary {
                     msg,
                     run_result,
                     arguments,
+                    runs: None,
                 },
                 ExpectedTestResult::Panics(_) => TestCaseSummary::Failed {
                     name,
                     msg,
                     run_result: Some(run_result),
                     arguments,
+                    runs: None,
                 },
             },
             RunResultValue::Panic(value) => match &test_case.expected_result {
@@ -76,6 +88,7 @@ impl TestCaseSummary {
                     msg,
                     run_result: Some(run_result),
                     arguments,
+                    runs: None,
                 },
                 ExpectedTestResult::Panics(panic_expectation) => match panic_expectation {
                     ExpectedPanicValue::Exact(expected) if &value != expected => {
@@ -84,6 +97,7 @@ impl TestCaseSummary {
                             msg,
                             run_result: Some(run_result),
                             arguments,
+                            runs: None,
                         }
                     }
                     _ => TestCaseSummary::Passed {
@@ -91,6 +105,7 @@ impl TestCaseSummary {
                         msg,
                         run_result,
                         arguments,
+                        runs: None,
                     },
                 },
             },
