@@ -595,7 +595,10 @@ fn validate_tests(
         }
         if let Some(return_type_name) = maybe_return_type_name {
             if !return_type_name.starts_with("core::panics::PanicResult::") {
-                anyhow::bail!("Test function {} must be panicable but it's not", test.name);
+                anyhow::bail!(
+                    "The test function {} always succeeds and cannot be used as a test. Make sure to include panickable statements such as `assert` in your test",
+                    test.name
+                );
             }
             if return_type_name != "core::panics::PanicResult::<((),)>" {
                 anyhow::bail!(
@@ -607,8 +610,8 @@ fn validate_tests(
             }
         } else {
             anyhow::bail!(
-                "Couldn't read result type for test function {} possible cause: Test function {} \
-                 must be panicable but it's not",
+                "Couldn't read result type for test function {} possible cause: The test function {} \
+                 always succeeds and cannot be used as a test. Make sure to include panickable statements such as `assert` in your test",
                 test.name,
                 test.name
             );
