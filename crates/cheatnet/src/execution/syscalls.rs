@@ -119,7 +119,10 @@ pub struct CheatableSyscallHandler<'a> {
 }
 
 impl<'a> CheatableSyscallHandler<'a> {
-    pub fn from(syscall_handler: SyscallHintProcessor<'a>, cheatnet_state: &'a mut CheatnetState) -> Self {
+    pub fn from(
+        syscall_handler: SyscallHintProcessor<'a>,
+        cheatnet_state: &'a mut CheatnetState,
+    ) -> Self {
         CheatableSyscallHandler {
             syscall_handler,
             cheatnet_state,

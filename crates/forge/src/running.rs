@@ -37,7 +37,7 @@ use test_collector::{ForkConfig, TestCase};
 
 use crate::scarb::{ForkTarget, StarknetContractArtifacts};
 use crate::test_case_summary::TestCaseSummary;
-use crate::test_execution_syscall_handler::{TestExecutionSyscallHandler, TestExecutionState};
+use crate::test_execution_syscall_handler::{TestExecutionState, TestExecutionSyscallHandler};
 
 // snforge_std/src/cheatcodes.cairo::TEST
 const TEST_ADDRESS: &str = "0x01724987234973219347210837402";
@@ -78,7 +78,7 @@ fn build_context() -> EntryPointExecutionContext {
     )
 }
 
-fn build_syscall_handler<'a> (
+fn build_syscall_handler<'a>(
     blockifier_state: &'a mut dyn State,
     string_to_hint: &'a HashMap<String, Hint>,
     execution_resources: &'a mut ExecutionResources,
@@ -97,7 +97,6 @@ fn build_syscall_handler<'a> (
         call_type: CallType::Call,
         initial_gas: u64::MAX,
     };
-
 
     let syscall_handler = SyscallHintProcessor::new(
         blockifier_state,
@@ -144,7 +143,6 @@ pub(crate) fn run_test_case(
     );
     let (hints_dict, string_to_hint) = build_hints_dict(instructions.clone());
 
-
     let state_reader = ExtendedStateReader {
         dict_state_reader: build_testing_state(predeployed_contracts),
         fork_state_reader: get_fork_state_reader(package_root, fork_targets, &case.fork_config),
@@ -152,20 +150,26 @@ pub(crate) fn run_test_case(
     let mut context = build_context();
     let mut execution_resources = ExecutionResources::default();
     let mut blockifier_state = CachedState::new(state_reader, GlobalContractCache::default());
-    let syscall_handler = build_syscall_handler(&mut blockifier_state, &string_to_hint, &mut execution_resources, &mut context)?;
-
+    let syscall_handler = build_syscall_handler(
+        &mut blockifier_state,
+        &string_to_hint,
+        &mut execution_resources,
+        &mut context,
+    )?;
 
     let mut cheatnet_state = CheatnetState::default();
-    let cheatable_syscall_handler = CheatableSyscallHandler::from(syscall_handler, &mut cheatnet_state);
-
+    let cheatable_syscall_handler =
+        CheatableSyscallHandler::from(syscall_handler, &mut cheatnet_state);
 
     let mut test_execution_state = TestExecutionState {
         environment_variables,
-        contracts
+        contracts,
     };
     let mut test_execution_syscall_handler = TestExecutionSyscallHandler::from(
-        cheatable_syscall_handler, &mut test_execution_state, &string_to_hint);
-    
+        cheatable_syscall_handler,
+        &mut test_execution_state,
+        &string_to_hint,
+    );
 
     match runner.run_function(
         runner.find_function(case.name.as_str())?,

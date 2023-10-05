@@ -79,13 +79,14 @@ impl<'a> TestExecutionSyscallHandler<'a> {
     pub fn from(
         cheatable_syscall_handler: CheatableSyscallHandler<'a>,
         test_execution_state: &'a mut TestExecutionState<'a>,
-        hints: &'a HashMap<String, Hint>) -> Self {
+        hints: &'a HashMap<String, Hint>,
+    ) -> Self {
         TestExecutionSyscallHandler {
             cheatable_syscall_handler,
             test_execution_state,
             hints,
             run_resources: RunResources::default(),
-        } 
+        }
     }
 }
 
