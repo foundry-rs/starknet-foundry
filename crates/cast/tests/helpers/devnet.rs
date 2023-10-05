@@ -1,4 +1,4 @@
-use crate::helpers::constants::{SCARB_VERSION, DEVNET_ENV_FILE, SEED, URL};
+use crate::helpers::constants::{DEVNET_ENV_FILE, SCARB_VERSION, SEED, URL};
 use crate::helpers::fixtures::{declare_contract, declare_deploy_contract, remove_devnet_env};
 use ctor::{ctor, dtor};
 use std::net::TcpStream;

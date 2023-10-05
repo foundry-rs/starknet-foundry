@@ -10,7 +10,6 @@ use test_case::test_case;
 
 #[tokio::test]
 async fn test_happy_case() {
-
     let contract_path =
         duplicate_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "1");
 
