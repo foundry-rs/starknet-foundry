@@ -38,7 +38,7 @@ use test_collector::{ForkConfig, TestCase};
 use crate::scarb::{ForkTarget, StarknetContractArtifacts};
 use crate::test_case_summary::TestCaseSummary;
 use crate::test_execution_syscall_handler::TestExecutionSyscallHandler;
-use crate::{RunnerConfig, RunnerParams};
+use crate::RunnerConfig;
 
 // snforge_std/src/cheatcodes.cairo::TEST
 const TEST_ADDRESS: &str = "0x01724987234973219347210837402";

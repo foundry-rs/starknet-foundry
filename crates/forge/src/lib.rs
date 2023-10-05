@@ -150,15 +150,6 @@ struct TestCrate {
     crate_type: TestCrateType,
 }
 
-pub struct RunnerParams {}
-
-impl RunnerParams {
-    #[must_use]
-    pub fn new() -> Self {
-        Self {}
-    }
-}
-
 fn collect_tests_from_package(
     package_path: &Utf8PathBuf,
     package_name: &str,
@@ -335,61 +326,18 @@ pub async fn run(
     for (test_crate_type, tests_len, thread) in threads {
         pretty_printing::print_running_tests(test_crate_type, tests_len);
         let (summary, was_fuzzed) = thread.await??;
-        for s in &summary.test_case_summaries {
-            pretty_printing::print_test_result(s);
+        for test_case_summary in &summary.test_case_summaries {
+            pretty_printing::print_test_result(test_case_summary);
         }
         fuzzing_happened |= was_fuzzed;
         summaries.push(summary.clone());
     }
 
-    for tests_from_file in tests_iterator {
-        let skipped: Vec<TestCaseSummary> = tests_from_file
-            .test_cases
-            .iter()
-            .map(TestCaseSummary::skipped)
-            .collect();
-
-        for test_case_summary in &skipped {
-            pretty_printing::print_test_result(test_case_summary);
-        }
-
-        let file_summary = TestCrateSummary {
-            test_case_summaries: skipped,
-            runner_exit_status: RunnerStatus::DidNotRun,
-            test_crate_type: tests_from_file.test_crate_type,
-        };
-        summaries.push(file_summary);
-    }
-
-    pretty_printing::print_test_summary(&summaries);
     if fuzzing_happened {
         pretty_printing::print_test_seed(runner_config.fuzzer_seed);
     }
 
     Ok(summaries)
-}
-async fn choose_strategy_and_run_test(
-    case: Arc<TestCase>,
-    runner: Arc<SierraCasmRunner>,
-    runner_config: Arc<RunnerConfig>,
-    args: Vec<ConcreteTypeId>,
-) -> Result<TestCaseSummary> {
-    let exit_first = runner_config.exit_first;
-    if args.is_empty() {
-        match blocking_run_from_test(runner, case.clone(), runner_config.clone(), vec![]).await {
-            Ok(result) => {
-                if exit_first {
-                    if let TestCaseSummary::Failed { .. } = &result {
-                        runner_config.cancellation_token.cancel();
-                    }
-                }
-                Ok(result)
-            }
-            Err(e) => Err(e),
-        }
-    } else {
-        run_with_fuzzing(runner_config, runner, case, &args).await
-    }
 }
 
 async fn run_tests_from_crate(
@@ -431,7 +379,7 @@ async fn run_tests_from_crate(
                         // The token was cancelled
                        Ok(TestCaseSummary::skipped(&c))
                     },
-                    result = choose_strategy_and_run_test(
+                    result = choose_test_strategy_and_run(
                         case,
                         runner,
                         runner_config.clone(),
@@ -455,6 +403,7 @@ async fn run_tests_from_crate(
             return Err(e);
         }
         let result = await_task?;
+
         if result.runs().is_some() {
             was_fuzzed = true;
         }
@@ -471,6 +420,30 @@ async fn run_tests_from_crate(
         },
         was_fuzzed,
     ))
+}
+
+async fn choose_test_strategy_and_run(
+    case: Arc<TestCase>,
+    runner: Arc<SierraCasmRunner>,
+    runner_config: Arc<RunnerConfig>,
+    args: Vec<ConcreteTypeId>,
+) -> Result<TestCaseSummary> {
+    let exit_first = runner_config.exit_first;
+    if args.is_empty() {
+        match blocking_run_from_test(runner, case.clone(), runner_config.clone(), vec![]).await {
+            Ok(result) => {
+                if exit_first {
+                    if let TestCaseSummary::Failed { .. } = &result {
+                        runner_config.cancellation_token.cancel();
+                    }
+                }
+                Ok(result)
+            }
+            Err(e) => Err(e),
+        }
+    } else {
+        run_with_fuzzing(runner_config, runner, case, &args).await
+    }
 }
 
 async fn run_with_fuzzing(
@@ -511,33 +484,46 @@ async fn run_with_fuzzing(
         let cancellation_fuzzing_token = Arc::new(token.clone());
         let runner_config = runner_config.clone();
 
-        tasks.push(task::spawn(
-            async move {
-                tokio::select! {
-                    _ = runner_config.cancellation_token.cancelled() => {
-                        // The token was cancelled
-                        Ok(TestCaseSummary::Failed { name: "fuzzing".to_string(), run_result: None, msg: None, arguments: vec![], runs: Some(0) })
-                    },
-                    _ = cancellation_fuzzing_token.cancelled() => {
-                        Ok(TestCaseSummary::Failed { name: "fuzzing".to_string(), run_result: None, msg: None, arguments: vec![], runs: Some(0) })
-                    },
-                   result = blocking_run_from_test(
-                        runner,
-                        case,
-                        runner_config.clone(),
-                        args.clone(),
-                    ) => {
-                        result
-                    },
-                }
+        tasks.push(task::spawn(async move {
+            tokio::select! {
+                _ = runner_config.error_cancellation_token.cancelled() => {
+                    //Stop all tests because test return Error
+                    Ok(TestCaseSummary::None {  })
+                },
+                _ = runner_config.cancellation_token.cancelled() => {
+                    //Stop executing all tests because flag --exit-first'
+                    //has been set and one test FAIL
+                    Ok(TestCaseSummary::None {  })
+                },
+                _ = cancellation_fuzzing_token.cancelled() => {
+                    //Single test of fuzzing test fail,
+                    // stop all testes related to fuzzing test
+                    Ok(TestCaseSummary::None {  })
+                },
+               result = blocking_run_from_test(
+                    runner,
+                    case,
+                    runner_config.clone(),
+                    args.clone(),
+                ) => {
+                    result
+                },
             }
-        ));
+        }));
     }
 
     let mut results = vec![];
+
     for task in tasks {
         let result = match task.await? {
-            Ok(result) => result,
+            Ok(result) => {
+                if runner_config.exit_first {
+                    if let TestCaseSummary::Failed { .. } = &result {
+                        runner_config.cancellation_token.cancel();
+                    }
+                }
+                result
+            }
             Err(e) => {
                 token.cancel();
                 runner_config.error_cancellation_token.cancel();
@@ -548,10 +534,8 @@ async fn run_with_fuzzing(
         if let TestCaseSummary::Failed { .. } = &result {
             if results.is_empty() {
                 token.cancel();
-                if runner_config.exit_first {
-                    runner_config.cancellation_token.cancel();
-                };
                 results.push(result);
+                break;
             }
         } else {
             results.push(result);
