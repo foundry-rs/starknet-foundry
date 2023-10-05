@@ -55,14 +55,20 @@ static BUILTINS: Lazy<Vec<&str>> = Lazy::new(|| {
 });
 
 /// Configuration of the test runner
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Debug)]
 pub struct RunnerConfig {
+    package_root: Utf8PathBuf,
     test_name_filter: Option<String>,
     exact_match: bool,
     exit_first: bool,
     fork_targets: Vec<ForkTarget>,
     fuzzer_runs: u32,
     fuzzer_seed: u64,
+    corelib_path: Utf8PathBuf,
+    contracts: HashMap<String, StarknetContractArtifacts>,
+    predeployed_contracts: Utf8PathBuf,
+    environment_variables: HashMap<String, String>,
+    cancellation_token: CancellationToken,
 }
 
 impl RunnerConfig {
@@ -75,14 +81,21 @@ impl RunnerConfig {
     /// * `exit_first` - Should runner exit after first failed test
     #[must_use]
     pub fn new(
+        package_root: Utf8PathBuf,
         test_name_filter: Option<String>,
         exact_match: bool,
         exit_first: bool,
         fuzzer_runs: Option<u32>,
         fuzzer_seed: Option<u64>,
         forge_config_from_scarb: &ForgeConfig,
+        corelib_path: Utf8PathBuf,
+        contracts: HashMap<String, StarknetContractArtifacts>,
+        predeployed_contracts: Utf8PathBuf,
+        environment_variables: HashMap<String, String>,
+        cancellation_token: CancellationToken,
     ) -> Self {
         Self {
+            package_root,
             test_name_filter,
             exact_match,
             exit_first: forge_config_from_scarb.exit_first || exit_first,
@@ -93,6 +106,11 @@ impl RunnerConfig {
             fuzzer_seed: fuzzer_seed
                 .or(forge_config_from_scarb.fuzzer_seed)
                 .unwrap_or_else(|| thread_rng().next_u64()),
+            corelib_path,
+            contracts,
+            predeployed_contracts,
+            environment_variables,
+            cancellation_token,
         }
     }
 }
@@ -128,27 +146,12 @@ struct TestCrate {
     crate_type: TestCrateType,
 }
 
-pub struct RunnerParams {
-    corelib_path: Utf8PathBuf,
-    contracts: HashMap<String, StarknetContractArtifacts>,
-    predeployed_contracts: Utf8PathBuf,
-    environment_variables: HashMap<String, String>,
-}
+pub struct RunnerParams {}
 
 impl RunnerParams {
     #[must_use]
-    pub fn new(
-        corelib_path: Utf8PathBuf,
-        contracts: HashMap<String, StarknetContractArtifacts>,
-        predeployed_contracts: Utf8PathBuf,
-        environment_variables: HashMap<String, String>,
-    ) -> Self {
-        Self {
-            corelib_path,
-            contracts,
-            predeployed_contracts,
-            environment_variables,
-        }
+    pub fn new() -> Self {
+        Self {}
     }
 }
 
@@ -157,7 +160,6 @@ fn collect_tests_from_package(
     package_name: &str,
     package_source_dir_path: &Utf8PathBuf,
     linked_libraries: &[LinkedLibrary],
-    corelib_path: &Utf8PathBuf,
     runner_config: &RunnerConfig,
 ) -> Result<Vec<TestsFromCrate>> {
     let tests_dir_path = package_path.join("tests");
@@ -186,9 +188,7 @@ fn collect_tests_from_package(
 
     let tests_from_files = all_test_roots
         .par_iter()
-        .map(|test_crate| {
-            collect_tests_from_tree(test_crate, linked_libraries, corelib_path, runner_config)
-        })
+        .map(|test_crate| collect_tests_from_tree(test_crate, linked_libraries, runner_config))
         .collect();
 
     try_close_tmp_dir(maybe_tests_tmp_dir)?;
@@ -239,7 +239,6 @@ fn pack_tests_into_one_file(package_path: &Utf8PathBuf) -> Result<TempDir> {
 fn collect_tests_from_tree(
     test_crate: &TestCrate,
     linked_libraries: &[LinkedLibrary],
-    corelib_path: &Utf8PathBuf,
     runner_config: &RunnerConfig,
 ) -> Result<TestsFromCrate> {
     let (sierra_program, test_cases) = collect_tests(
@@ -248,7 +247,7 @@ fn collect_tests_from_tree(
         &test_crate.crate_name,
         linked_libraries,
         Some(BUILTINS.clone()),
-        corelib_path.into(),
+        runner_config.corelib_path.clone().into(),
     )?;
 
     let test_cases = if let Some(test_name_filter) = &runner_config.test_name_filter {
@@ -292,21 +291,17 @@ fn try_close_tmp_dir(maybe_tmp_dir: Option<TempDir>) -> Result<()> {
 
 #[allow(clippy::implicit_hasher, clippy::too_many_arguments)]
 pub async fn run(
-    package_root: Arc<Utf8PathBuf>,
     package_path: &Utf8PathBuf,
     package_name: &str,
     package_source_dir_path: &Utf8PathBuf,
     linked_libraries: &[LinkedLibrary],
     runner_config: Arc<RunnerConfig>,
-    runner_params: Arc<RunnerParams>,
-    cancellation_token: Arc<CancellationToken>,
 ) -> Result<Vec<TestCrateSummary>> {
     let tests = collect_tests_from_package(
         package_path,
         package_name,
         package_source_dir_path,
         linked_libraries,
-        &runner_params.corelib_path.clone(),
         &runner_config,
     )?;
 
@@ -321,32 +316,20 @@ pub async fn run(
     let mut summaries = vec![];
     let mut threads = vec![];
     for tests_from_crate in tests_iterator.by_ref() {
-        let package_root = package_root.clone();
         let tests_from_crate = Arc::new(tests_from_crate);
         let runner_config = runner_config.clone();
-        let runner_params = runner_params.clone();
-        let cancellation_token = cancellation_token.clone();
         let test_crate_type = tests_from_crate.test_crate_type;
         let tests_len = tests_from_crate.test_cases.len();
         threads.push((
             test_crate_type,
             tests_len,
             task::spawn({
-                async move {
-                    run_tests_from_crate(
-                        package_root,
-                        tests_from_crate,
-                        runner_config,
-                        runner_params,
-                        cancellation_token,
-                    )
-                    .await
-                }
+                async move { run_tests_from_crate(tests_from_crate, runner_config).await }
             }),
         ));
     }
     for (test_crate_type, tests_len, thread) in threads {
-        pretty_printing::print_running_tests(test_crate_type.clone(), tests_len.clone());
+        pretty_printing::print_running_tests(test_crate_type, tests_len);
         let (summary, was_fuzzed) = thread.await??;
         for s in &summary.test_case_summaries {
             pretty_printing::print_test_result(s);
@@ -382,30 +365,18 @@ pub async fn run(
     Ok(summaries)
 }
 async fn choose_strategy_and_run_test(
-    package_root: Arc<Utf8PathBuf>,
     case: Arc<TestCase>,
     runner: Arc<SierraCasmRunner>,
-    runner_params: Arc<RunnerParams>,
     runner_config: Arc<RunnerConfig>,
     args: Vec<ConcreteTypeId>,
-    cancellation_token: Arc<CancellationToken>,
 ) -> Result<TestCaseSummary> {
     let exit_first = runner_config.exit_first;
     if args.is_empty() {
-        match blocking_run_from_test(
-            package_root,
-            runner,
-            case.clone(),
-            runner_config,
-            runner_params,
-            vec![],
-        )
-        .await
-        {
+        match blocking_run_from_test(runner, case.clone(), runner_config.clone(), vec![]).await {
             Ok(result) => {
                 if exit_first {
                     if let TestCaseSummary::Failed { .. } = &result {
-                        cancellation_token.cancel();
+                        runner_config.cancellation_token.cancel();
                     }
                 }
                 Ok(result)
@@ -413,25 +384,13 @@ async fn choose_strategy_and_run_test(
             Err(e) => Err(e),
         }
     } else {
-        run_with_fuzzing(
-            package_root,
-            runner_config,
-            runner_params,
-            runner,
-            case,
-            &args,
-            cancellation_token,
-        )
-        .await
+        run_with_fuzzing(runner_config, runner, case, &args).await
     }
 }
 
 async fn run_tests_from_crate(
-    package_root: Arc<Utf8PathBuf>,
     tests: Arc<TestsFromCrate>,
     runner_config: Arc<RunnerConfig>,
-    runner_params: Arc<RunnerParams>,
-    cancellation_token: Arc<CancellationToken>,
 ) -> Result<(TestCrateSummary, bool)> {
     let sierra_program = &tests.sierra_program;
     let runner = Arc::new(
@@ -446,17 +405,14 @@ async fn run_tests_from_crate(
     let mut was_fuzzed = false;
     let mut tasks = vec![];
     let test_cases = &tests.test_cases;
-    test_cases.iter().for_each(|case| {
+    for case in test_cases.iter() {
         let case_name = case.name.as_str();
 
         let function = runner.find_function(case_name).unwrap();
         let args = function_args(function, &BUILTINS);
 
-        let package_root = package_root.clone();
         let case = Arc::new(case.clone());
         let c = case.clone();
-        let cancellation_token = cancellation_token.clone();
-        let runner_params = runner_params.clone();
         let runner_config = runner_config.clone();
         let args: Vec<ConcreteTypeId> = args.into_iter().cloned().collect();
         let runner = runner.clone();
@@ -464,18 +420,15 @@ async fn run_tests_from_crate(
         let task = task::spawn({
             async move {
                 tokio::select! {
-                    _ = cancellation_token.cancelled() => {
+                    _ = runner_config.cancellation_token.cancelled() => {
                         // The token was cancelled
                        Ok(TestCaseSummary::skipped(&c))
                     },
                     result = choose_strategy_and_run_test(
-                        package_root.clone(),
                         case,
                         runner,
-                        runner_params,
-                        runner_config,
+                        runner_config.clone(),
                         args,
-                        cancellation_token.clone()
                     ) => {
                         result
                     },
@@ -484,14 +437,14 @@ async fn run_tests_from_crate(
         });
 
         tasks.push(task);
-    });
+    }
 
     let mut results = vec![];
 
     for task in tasks {
         let await_task = task.await?;
         if let Err(e) = await_task {
-            cancellation_token.cancel();
+            runner_config.cancellation_token.cancel();
             return Err(e);
         }
         let result = await_task?;
@@ -514,13 +467,10 @@ async fn run_tests_from_crate(
 }
 
 async fn run_with_fuzzing(
-    package_root: Arc<Utf8PathBuf>,
     runner_config: Arc<RunnerConfig>,
-    runner_params: Arc<RunnerParams>,
     runner: Arc<SierraCasmRunner>,
     case: Arc<TestCase>,
     args: &Vec<ConcreteTypeId>,
-    cancellation_token: Arc<CancellationToken>,
 ) -> Result<TestCaseSummary> {
     let token = CancellationToken::new();
     let token = Arc::new(token.clone());
@@ -549,18 +499,15 @@ async fn run_with_fuzzing(
     for _ in 1..=fuzzer_runs {
         let args = fuzzer.next_args();
         let case = case.clone();
-        let package_root = package_root.clone();
         let runner = runner.clone();
         let args = args.clone();
-        let cancellation_token = cancellation_token.clone();
         let cancellation_fuzzing_token = Arc::new(token.clone());
-        let runner_params = runner_params.clone();
         let runner_config = runner_config.clone();
 
         tasks.push(task::spawn(
             async move {
                 tokio::select! {
-                    _ = cancellation_token.cancelled() => {
+                    _ = runner_config.cancellation_token.cancelled() => {
                         // The token was cancelled
                         Ok(TestCaseSummary::Failed { name: "fuzzing".to_string(), run_result: None, msg: None, arguments: vec![], runs: Some(0) })
                     },
@@ -568,11 +515,9 @@ async fn run_with_fuzzing(
                         Ok(TestCaseSummary::Failed { name: "fuzzing".to_string(), run_result: None, msg: None, arguments: vec![], runs: Some(0) })
                     },
                    result = blocking_run_from_test(
-                        package_root,
                         runner,
                         case,
-                        runner_config,
-                        runner_params,
+                        runner_config.clone(),
                         args.clone(),
                     ) => {
                         result
@@ -596,7 +541,7 @@ async fn run_with_fuzzing(
             if results.is_empty() {
                 token.cancel();
                 if runner_config.exit_first {
-                    cancellation_token.cancel();
+                    runner_config.cancellation_token.cancel();
                 };
                 results.push(result);
             }

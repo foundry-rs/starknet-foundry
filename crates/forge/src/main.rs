@@ -113,7 +113,7 @@ async fn main_execution() -> Result<bool> {
         .match_many(&scarb_metadata)
         .context("Failed to find any packages matching the specified filter")?;
 
-    let package_root = Arc::new(scarb_metadata.workspace.root.clone());
+    let package_root = &scarb_metadata.workspace.root;
 
     if args.clean_cache {
         clean_cache(&package_root).context("Failed to clean snforge cache")?;
@@ -123,14 +123,14 @@ async fn main_execution() -> Result<bool> {
 
     for package in &packages {
         let token = CancellationToken::new();
-        let cancellation_token = Arc::new(token.clone());
+        let cancellation_token = token.clone();
         let forge_config = config_from_scarb_for_package(&scarb_metadata, &package.id)?;
         let (package_path, package_source_dir_path) =
             paths_for_package(&scarb_metadata, &package.id)?;
         env::set_current_dir(package_path.clone())?;
 
         // TODO(#671)
-        let target_dir = target_dir_for_package(&scarb_metadata.workspace.root)?;
+        let target_dir = target_dir_for_package(package_root)?;
 
         let build_output = Command::new("scarb")
             .arg("build")
@@ -146,14 +146,6 @@ async fn main_execution() -> Result<bool> {
         let dependencies = dependencies_for_package(&scarb_metadata, &package.id)?;
         let target_name = target_name_for_package(&scarb_metadata, &package.id)?;
         let corelib_path = corelib_for_package(&scarb_metadata, &package.id)?;
-        let runner_config = Arc::new(RunnerConfig::new(
-            args.test_filter.clone(),
-            args.exact,
-            args.exit_first,
-            args.fuzzer_runs,
-            args.fuzzer_seed,
-            &forge_config,
-        ));
 
         let contracts_path = try_get_starknet_artifacts_path(&target_dir, &target_name)?;
         let contracts = contracts_path
@@ -161,22 +153,27 @@ async fn main_execution() -> Result<bool> {
             .transpose()?
             .unwrap_or_default();
 
-        let runner_params = Arc::new(RunnerParams::new(
+        let runner_config = Arc::new(RunnerConfig::new(
+            package_root.clone(),
+            args.test_filter.clone(),
+            args.exact,
+            args.exit_first,
+            args.fuzzer_runs,
+            args.fuzzer_seed,
+            &forge_config,
             corelib_path,
             contracts,
             predeployed_contracts.clone(),
             env::vars().collect(),
+            cancellation_token.clone(),
         ));
 
         let tests_file_summaries = run(
-            package_root.clone(),
             &package_path,
             &package_name,
             &package_source_dir_path,
             &dependencies,
             runner_config,
-            runner_params,
-            cancellation_token.clone(),
         )
         .await?;
 

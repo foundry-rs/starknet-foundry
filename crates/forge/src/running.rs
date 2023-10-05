@@ -70,38 +70,26 @@ fn build_hints_dict<'b>(
 }
 
 pub(crate) async fn blocking_run_from_test(
-    package_root: Arc<Utf8PathBuf>,
     runner: Arc<SierraCasmRunner>,
     case: Arc<TestCase>,
     runner_config: Arc<RunnerConfig>,
-    runner_params: Arc<RunnerParams>,
     args: Vec<Felt252>,
 ) -> Result<TestCaseSummary> {
-    tokio::task::spawn_blocking(move || {
-        run_from_test_case(
-            &package_root,
-            &runner,
-            &case,
-            &runner_config,
-            &runner_params,
-            args,
-        )
-    })
-    .await?
+    tokio::task::spawn_blocking(move || run_from_test_case(&runner, &case, &runner_config, args))
+        .await?
 }
 
 pub(crate) fn run_from_test_case(
-    package_root: &Arc<Utf8PathBuf>,
     runner: &Arc<SierraCasmRunner>,
     case: &Arc<TestCase>,
     runner_config: &Arc<RunnerConfig>,
-    runner_params: &Arc<RunnerParams>,
     args: Vec<Felt252>,
 ) -> Result<TestCaseSummary> {
+    let package_root = &runner_config.package_root;
     let fork_targets = runner_config.fork_targets.as_ref();
-    let contracts: &HashMap<String, StarknetContractArtifacts> = &runner_params.contracts.clone();
-    let predeployed_contracts = &runner_params.predeployed_contracts;
-    let environment_variables = &runner_params.environment_variables;
+    let contracts: &HashMap<String, StarknetContractArtifacts> = &runner_config.contracts.clone();
+    let predeployed_contracts = &runner_config.predeployed_contracts;
+    let environment_variables = &runner_config.environment_variables;
     let available_gas = if let Some(available_gas) = &case.available_gas {
         Some(*available_gas)
     } else {

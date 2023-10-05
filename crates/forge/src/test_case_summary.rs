@@ -49,7 +49,7 @@ impl TestCaseSummary {
     pub(crate) fn runs(&self) -> Option<u32> {
         match self {
             TestCaseSummary::Failed { runs, .. } | TestCaseSummary::Passed { runs, .. } => {
-                runs.clone()
+                *runs
             }
             TestCaseSummary::Skipped { .. } => None,
         }
