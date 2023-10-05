@@ -5,9 +5,7 @@ use std::path::PathBuf;
 use crate::scarb::StarknetContractArtifacts;
 use anyhow::{anyhow, Context, Result};
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
-use blockifier::execution::execution_utils::{
-    felt_to_stark_felt, stark_felt_to_felt,
-};
+use blockifier::execution::execution_utils::{felt_to_stark_felt, stark_felt_to_felt};
 use cairo_felt::Felt252;
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
 use cairo_vm::hint_processor::hint_processor_definition::HintReference;
@@ -137,12 +135,8 @@ impl HintProcessorLogic for TestExecutionSyscallHandler<'_> {
                 &mut self.cheatable_syscall_handler,
             );
         }
-        self.cheatable_syscall_handler.execute_hint(
-            vm,
-            exec_scopes,
-            hint_data,
-            constants,
-        )
+        self.cheatable_syscall_handler
+            .execute_hint(vm, exec_scopes, hint_data, constants)
     }
 
     /// Trait function to store hint in the hint processor by string.
@@ -647,7 +641,6 @@ fn execute_syscall(
         _ => cheatable_syscall_handler.execute_hint(vm, exec_scopes, hint_data, constants),
     }
 }
-
 
 fn execute_call_contract(
     mut buffer: MemBuffer,

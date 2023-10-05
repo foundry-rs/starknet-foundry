@@ -537,9 +537,8 @@ fn test_spy_events_simple() {
 
 #[test]
 fn test_inconsistent_syscall_pointers() {
-    let test = test_case!(
-        indoc!(
-            r#"
+    let test = test_case!(indoc!(
+        r#"
         use starknet::ContractAddress;
         use starknet::info::get_block_number;
         use snforge_std::start_mock_call;
@@ -558,8 +557,8 @@ fn test_inconsistent_syscall_pointers() {
             let block_number = get_block_number();
         }
     "#
-        ),);
-        let result = run_test_case(&test);
+    ),);
+    let result = run_test_case(&test);
 
-        assert_passed!(result);
-    }
+    assert_passed!(result);
+}
