@@ -550,6 +550,7 @@ fn test_inconsistent_syscall_pointers() {
 
         #[test]
         fn test_deploy_error_handling() {
+            // verifies if SyscallHandler.syscal_ptr is incremented correctly when calling a contract
             let address = 'address'.try_into().unwrap();
             start_mock_call(address, 'get_value', 55);
             let contract = IContractDispatcher { contract_address: address };
