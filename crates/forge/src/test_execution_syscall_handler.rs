@@ -468,13 +468,12 @@ impl TestExecutionSyscallHandler<'_> {
                 let contract_address = inputs[0].to_contract_address();
                 let function_name = inputs[1].clone();
                 let from_address = inputs[2].clone();
-                let fee = inputs[3].clone();
-                let payload_length: usize = inputs[4]
+                let payload_length: usize = inputs[3]
                     .clone()
                     .to_usize()
                     .expect("Payload length is expected to fit into usize type");
 
-                let payload = Vec::from(&inputs[5..inputs.len()]);
+                let payload = Vec::from(&inputs[4..inputs.len()]);
 
                 let mut blockifier_state =
                     BlockifierState::from(self.cheatable_syscall_handler.syscall_handler.state);
