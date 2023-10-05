@@ -1,5 +1,5 @@
 use crate::starknet_commands::account::Account;
-use crate::starknet_commands::show_config::{show_config, ShowConfig};
+use crate::starknet_commands::show_config::ShowConfig;
 use crate::starknet_commands::{
     account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
 };
@@ -9,7 +9,7 @@ use camino::Utf8PathBuf;
 use cast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
 use cast::helpers::scarb_utils::{parse_scarb_config, CastConfig};
 use cast::{
-    chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_provider,
+    get_account, get_block_id, get_chain_id, get_provider,
     print_command_result,
 };
 use clap::{Parser, Subcommand};
@@ -281,10 +281,13 @@ async fn main() -> Result<()> {
             }
         },
         Commands::ShowConfig(_) => {
-            let chain_id = get_chain_id(&provider).await?;
-            let chain_id_str = chain_id_to_network_name(chain_id);
-            let mut result =
-                show_config(config, cli.profile, cli.path_to_scarb_toml, chain_id_str).await;
+            let mut result = starknet_commands::show_config::show_config(
+                &provider,
+                config,
+                cli.profile,
+                cli.path_to_scarb_toml,
+            )
+            .await;
             print_command_result("show-config", &mut result, cli.int_format, cli.json)?;
             Ok(())
         }

@@ -45,7 +45,7 @@ pub struct MulticallNewResponse {
 #[derive(Serialize)]
 pub struct ShowConfigResponse {
     pub profile: Option<String>,
-    pub network: String,
+    pub chain_id: String,
     pub rpc_url: Option<String>,
     pub account: Option<String>,
     pub scarb_path: Option<Utf8PathBuf>,
