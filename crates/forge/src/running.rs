@@ -108,10 +108,10 @@ fn build_syscall_handler<'a>(
             offset: 0,
         },
         entry_point,
-        &string_to_hint,
+        string_to_hint,
         ReadOnlySegments::default(),
     );
-    return Ok(syscall_handler);
+    Ok(syscall_handler)
 }
 
 #[allow(clippy::too_many_arguments)]
