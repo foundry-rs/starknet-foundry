@@ -161,7 +161,6 @@ impl HintProcessorLogic for CheatableSyscallHandler<'_> {
             PrintingResult::Passed => (),
             PrintingResult::Err(err) => return Err(err),
         }
-
         self.syscall_handler
             .execute_hint(vm, exec_scopes, hint_data, constants)
     }
@@ -278,24 +277,64 @@ impl CheatableSyscallHandler<'_> {
             response_wrapper.write(vm, &mut self.syscall_handler.syscall_ptr)?;
             return Ok(());
         } else if SyscallSelector::CallContract == selector {
+            let StarknetHint::SystemCall { system: syscall } = hint else {
+                return Err(HintError::CustomHint(
+                    "Test functions are unsupported on starknet.".into(),
+                ));
+            };
+            let initial_syscall_ptr = get_ptr_from_res_operand_unchecked(vm, syscall);
+            self.verify_syscall_ptr(initial_syscall_ptr)?;
+
             // Increment, since the selector was peeked into before
             self.syscall_handler.syscall_ptr += 1;
+
+            if selector != SyscallSelector::Keccak {
+                self.syscall_handler
+                    .increment_syscall_count_by(&selector, 1);
+            }
             return self.execute_syscall(
                 vm,
                 call_contract_syscall,
                 constants::CALL_CONTRACT_GAS_COST,
             );
         } else if SyscallSelector::LibraryCall == selector {
+            let StarknetHint::SystemCall { system: syscall } = hint else {
+                return Err(HintError::CustomHint(
+                    "Test functions are unsupported on starknet.".into(),
+                ));
+            };
+            let initial_syscall_ptr = get_ptr_from_res_operand_unchecked(vm, syscall);
+            self.verify_syscall_ptr(initial_syscall_ptr)?;
+
             // Increment, since the selector was peeked into before
             self.syscall_handler.syscall_ptr += 1;
+
+            if selector != SyscallSelector::Keccak {
+                self.syscall_handler
+                    .increment_syscall_count_by(&selector, 1);
+            }
+
             return self.execute_syscall(
                 vm,
                 library_call_syscall,
                 constants::CALL_CONTRACT_GAS_COST,
             );
         } else if SyscallSelector::Deploy == selector {
+            let StarknetHint::SystemCall { system: syscall } = hint else {
+                return Err(HintError::CustomHint(
+                    "Test functions are unsupported on starknet.".into(),
+                ));
+            };
+            let initial_syscall_ptr = get_ptr_from_res_operand_unchecked(vm, syscall);
+            self.verify_syscall_ptr(initial_syscall_ptr)?;
+
             // Increment, since the selector was peeked into before
             self.syscall_handler.syscall_ptr += 1;
+
+            if selector != SyscallSelector::Keccak {
+                self.syscall_handler
+                    .increment_syscall_count_by(&selector, 1);
+            }
             return self.execute_syscall(vm, deploy_syscall, constants::DEPLOY_GAS_COST);
         }
 
