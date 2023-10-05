@@ -540,7 +540,6 @@ fn test_inconsistent_syscall_pointers() {
     let test = test_case!(
         indoc!(
             r#"
-        
         use starknet::ContractAddress;
         use starknet::info::get_block_number;
         use snforge_std::start_mock_call;

@@ -638,11 +638,12 @@ fn execute_syscall(
 
     match selector {
         DeprecatedSyscallSelector::CallContract => {
-            execute_call_contract(
+            let ptr_delta = execute_call_contract(
                 MemBuffer::new(vm, system_ptr),
                 cheatable_syscall_handler.cheatnet_state,
                 &mut blockifier_state,
             )?;
+            cheatable_syscall_handler.syscall_handler.syscall_ptr += ptr_delta;
             Ok(())
         }
         DeprecatedSyscallSelector::Deploy => Err(HintError::CustomHint(Box::from(
@@ -688,7 +689,9 @@ fn execute_call_contract(
     mut buffer: MemBuffer,
     cheatnet_state: &mut CheatnetState,
     blockifier_state: &mut BlockifierState,
-) -> Result<(), HintError> {
+) -> Result<usize, HintError> {
+    let initial_syscall_ptr = buffer.ptr;
+
     let _selector = buffer.next_felt252().unwrap();
     let gas_counter = buffer.next_usize().unwrap();
 
@@ -718,7 +721,8 @@ fn execute_call_contract(
     buffer.write(Felt252::from(exit_code)).unwrap();
 
     buffer.write_arr(result.iter()).unwrap();
-    Ok(())
+    let ptr_delta = (buffer.ptr - initial_syscall_ptr).unwrap();
+    Ok(ptr_delta)
 }
 
 fn print(inputs: Vec<Felt252>) {
