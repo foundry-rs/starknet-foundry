@@ -622,10 +622,10 @@ fn execute_syscall(
         &vm.get_integer(system_ptr).unwrap(),
     ))?;
 
-
     match selector {
         DeprecatedSyscallSelector::CallContract => {
-            let (system_ptr, call_args) = get_call_contract_args(cheatable_syscall_handler, system_ptr, vm)?;
+            let (system_ptr, call_args) =
+                get_call_contract_args(cheatable_syscall_handler, system_ptr, vm);
 
             let mut blockifier_state =
                 BlockifierState::from(cheatable_syscall_handler.syscall_handler.state);
@@ -634,7 +634,13 @@ fn execute_syscall(
                 cheatable_syscall_handler.cheatnet_state,
                 &call_args,
             );
-            write_call_contract_response(cheatable_syscall_handler, system_ptr, vm, call_args, call_result)?;
+            write_call_contract_response(
+                cheatable_syscall_handler,
+                system_ptr,
+                vm,
+                &call_args,
+                call_result,
+            )?;
             Ok(())
         }
         DeprecatedSyscallSelector::Deploy => Err(HintError::CustomHint(Box::from(
@@ -652,14 +658,17 @@ struct CallContractArgs {
     gas_counter: usize,
     contract_address: ContractAddress,
     entry_point_selector: Felt252,
-    calldata: Vec<Felt252> 
+    calldata: Vec<Felt252>,
 }
 
-fn get_call_contract_args(cheatable_syscall_handler: &mut CheatableSyscallHandler, system_ptr: Relocatable,
-    vm: &mut VirtualMachine) -> Result<(Relocatable, CallContractArgs), HintError> {
+fn get_call_contract_args(
+    cheatable_syscall_handler: &mut CheatableSyscallHandler,
+    system_ptr: Relocatable,
+    vm: &mut VirtualMachine,
+) -> (Relocatable, CallContractArgs) {
     let mut buffer = MemBuffer::new(vm, system_ptr);
 
-    let _selector = buffer.next_felt252().unwrap().into_owned();
+    let selector = buffer.next_felt252().unwrap().into_owned();
     let gas_counter = buffer.next_usize().unwrap();
 
     let contract_address = buffer.next_felt252().unwrap().into_owned();
@@ -670,37 +679,40 @@ fn get_call_contract_args(cheatable_syscall_handler: &mut CheatableSyscallHandle
     let calldata = buffer.next_arr().unwrap();
     cheatable_syscall_handler.syscall_handler.syscall_ptr += (buffer.ptr - system_ptr).unwrap();
 
-    Ok(
-        (system_ptr,
+    (
+        buffer.ptr,
         CallContractArgs {
-            _selector,
+            _selector: selector,
             gas_counter,
             contract_address,
             entry_point_selector,
-            calldata
-        })
+            calldata,
+        },
     )
 }
 
-fn write_call_contract_response(cheatable_syscall_handler: &mut CheatableSyscallHandler, system_ptr: Relocatable,
-    vm: &mut VirtualMachine, call_args: CallContractArgs, call_result: CallContractOutput) -> Result<(), HintError> {
-        let mut buffer = MemBuffer::new(vm, system_ptr);
+fn write_call_contract_response(
+    cheatable_syscall_handler: &mut CheatableSyscallHandler,
+    system_ptr: Relocatable,
+    vm: &mut VirtualMachine,
+    call_args: &CallContractArgs,
+    call_result: CallContractOutput,
+) -> Result<(), HintError> {
+    let mut buffer = MemBuffer::new(vm, system_ptr);
 
-        let (result, exit_code) = match call_result {
-            CallContractOutput::Success { ret_data, .. } => (ret_data, 0),
-            CallContractOutput::Panic { panic_data, .. } => (panic_data, 1),
-            CallContractOutput::Error { msg, .. } => return Err(HintError::CustomHint(Box::from(msg))),
-        };
+    let (result, exit_code) = match call_result {
+        CallContractOutput::Success { ret_data, .. } => (ret_data, 0),
+        CallContractOutput::Panic { panic_data, .. } => (panic_data, 1),
+        CallContractOutput::Error { msg, .. } => return Err(HintError::CustomHint(Box::from(msg))),
+    };
 
-        buffer.write(call_args.gas_counter).unwrap();
-        buffer.write(Felt252::from(exit_code)).unwrap();
-    
-        buffer.write_arr(result.iter()).unwrap();
-        cheatable_syscall_handler.syscall_handler.syscall_ptr += (buffer.ptr - system_ptr).unwrap();
-        Ok(())
+    buffer.write(call_args.gas_counter).unwrap();
+    buffer.write(Felt252::from(exit_code)).unwrap();
+
+    buffer.write_arr(result.iter()).unwrap();
+    cheatable_syscall_handler.syscall_handler.syscall_ptr += (buffer.ptr - system_ptr).unwrap();
+    Ok(())
 }
-
-
 
 fn execute_call_contract(
     blockifier_state: &mut BlockifierState,
