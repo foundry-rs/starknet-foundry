@@ -42,16 +42,22 @@ pub(crate) fn print_test_seed(seed: u64) {
 }
 
 pub(crate) fn print_test_result(test_result: &TestCaseSummary) {
+    if let TestCaseSummary::None {} = test_result {
+        return;
+    }
+
     let result_header = match test_result {
         TestCaseSummary::Passed { .. } => format!("[{}]", style("PASS").green()),
         TestCaseSummary::Failed { .. } => format!("[{}]", style("FAIL").red()),
         TestCaseSummary::Skipped { .. } => format!("[{}]", style("SKIP").yellow()),
+        TestCaseSummary::None {} => return,
     };
 
     let result_name = match test_result {
         TestCaseSummary::Skipped { name }
         | TestCaseSummary::Failed { name, .. }
         | TestCaseSummary::Passed { name, .. } => name,
+        TestCaseSummary::None {} => return,
     };
 
     let result_message = match test_result {
@@ -79,12 +85,14 @@ pub fn print_failures(all_failed_tests: &[TestCaseSummary]) {
     if all_failed_tests.is_empty() {
         return;
     }
+    let empty_string = "".to_string();
     let failed_tests_names: Vec<&String> = all_failed_tests
         .iter()
         .map(|test_case_summary| match test_case_summary {
             TestCaseSummary::Passed { name, .. }
             | TestCaseSummary::Failed { name, .. }
             | TestCaseSummary::Skipped { name, .. } => name,
+            TestCaseSummary::None {} => &empty_string,
         })
         .collect();
 

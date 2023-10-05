@@ -36,6 +36,7 @@ pub enum TestCaseSummary {
         /// Name of the test case
         name: String,
     },
+    None {},
 }
 
 impl TestCaseSummary {
@@ -44,14 +45,47 @@ impl TestCaseSummary {
             TestCaseSummary::Failed { arguments, .. }
             | TestCaseSummary::Passed { arguments, .. } => arguments.clone(),
             TestCaseSummary::Skipped { .. } => vec![],
+            TestCaseSummary::None {} => vec![],
         }
     }
     pub(crate) fn runs(&self) -> Option<u32> {
         match self {
-            TestCaseSummary::Failed { runs, .. } | TestCaseSummary::Passed { runs, .. } => {
-                *runs
-            }
+            TestCaseSummary::Failed { runs, .. } | TestCaseSummary::Passed { runs, .. } => *runs,
             TestCaseSummary::Skipped { .. } => None,
+            TestCaseSummary::None {} => None,
+        }
+    }
+
+    pub(crate) fn update_runs(self, runs: u32) -> Self {
+        match self {
+            TestCaseSummary::Passed {
+                name,
+                run_result,
+                msg,
+                arguments,
+                ..
+            } => TestCaseSummary::Passed {
+                name,
+                run_result,
+                msg,
+                arguments,
+                runs: Some(runs),
+            },
+            TestCaseSummary::Failed {
+                name,
+                run_result,
+                msg,
+                arguments,
+                ..
+            } => TestCaseSummary::Failed {
+                name,
+                run_result,
+                msg,
+                arguments,
+                runs: Some(runs),
+            },
+            TestCaseSummary::Skipped { .. } => self,
+            TestCaseSummary::None {} => self,
         }
     }
 }

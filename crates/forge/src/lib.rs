@@ -19,6 +19,7 @@ use cairo_lang_sierra::ids::ConcreteTypeId;
 use cairo_lang_sierra::program::{Function, Program};
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
+use futures::future::join_all;
 use once_cell::sync::Lazy;
 use rand::{thread_rng, RngCore};
 use smol_str::SmolStr;
@@ -69,6 +70,7 @@ pub struct RunnerConfig {
     predeployed_contracts: Utf8PathBuf,
     environment_variables: HashMap<String, String>,
     cancellation_token: CancellationToken,
+    error_cancellation_token: CancellationToken,
 }
 
 impl RunnerConfig {
@@ -92,8 +94,9 @@ impl RunnerConfig {
         contracts: HashMap<String, StarknetContractArtifacts>,
         predeployed_contracts: Utf8PathBuf,
         environment_variables: HashMap<String, String>,
-        cancellation_token: CancellationToken,
     ) -> Self {
+        let cancellation_token = CancellationToken::new();
+        let error_cancellation_token = CancellationToken::new();
         Self {
             package_root,
             test_name_filter,
@@ -111,6 +114,7 @@ impl RunnerConfig {
             predeployed_contracts,
             environment_variables,
             cancellation_token,
+            error_cancellation_token,
         }
     }
 }
@@ -420,6 +424,9 @@ async fn run_tests_from_crate(
         let task = task::spawn({
             async move {
                 tokio::select! {
+                    _ = runner_config.error_cancellation_token.cancelled() => {
+                        Ok(TestCaseSummary::None {  })
+                    },
                     _ = runner_config.cancellation_token.cancelled() => {
                         // The token was cancelled
                        Ok(TestCaseSummary::skipped(&c))
@@ -444,7 +451,7 @@ async fn run_tests_from_crate(
     for task in tasks {
         let await_task = task.await?;
         if let Err(e) = await_task {
-            runner_config.cancellation_token.cancel();
+            runner_config.error_cancellation_token.cancel();
             return Err(e);
         }
         let result = await_task?;
@@ -533,6 +540,7 @@ async fn run_with_fuzzing(
             Ok(result) => result,
             Err(e) => {
                 token.cancel();
+                runner_config.error_cancellation_token.cancel();
                 return Err(e);
             }
         };
@@ -555,35 +563,7 @@ async fn run_with_fuzzing(
         .expect("Test should always run at least once")
         .clone();
     let runs = u32::try_from(results.len())?;
-    let result = match result {
-        TestCaseSummary::Passed {
-            name,
-            run_result,
-            msg,
-            arguments,
-            ..
-        } => TestCaseSummary::Passed {
-            name,
-            run_result,
-            msg,
-            arguments,
-            runs: Some(runs),
-        },
-        TestCaseSummary::Failed {
-            name,
-            run_result,
-            msg,
-            arguments,
-            ..
-        } => TestCaseSummary::Failed {
-            name,
-            run_result,
-            msg,
-            arguments,
-            runs: Some(runs),
-        },
-        TestCaseSummary::Skipped { .. } => result,
-    };
+    let result = result.update_runs(runs);
     Ok(result)
 }
 
