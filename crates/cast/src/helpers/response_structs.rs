@@ -46,9 +46,9 @@ pub struct MulticallNewResponse {
 pub struct ShowConfigResponse {
     pub profile: Option<String>,
     pub network: String,
-    pub rpc_url: String,
-    pub account: String,
+    pub rpc_url: Option<String>,
+    pub account: Option<String>,
     pub scarb_path: Option<Utf8PathBuf>,
-    pub account_file_path: Utf8PathBuf,
-    pub keystore: Utf8PathBuf,
+    pub account_file_path: Option<Utf8PathBuf>,
+    pub keystore: Option<Utf8PathBuf>,
 }

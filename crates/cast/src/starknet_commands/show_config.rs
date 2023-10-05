@@ -15,13 +15,19 @@ pub async fn show_config(
     scarb_path: Option<Utf8PathBuf>,
     network: String,
 ) -> Result<ShowConfigResponse> {
+    let rpc_url = Some(cast_config.rpc_url).filter(|p| !p.is_empty());
+    let account = Some(cast_config.account).filter(|p| !p.is_empty());
+    let account_file_path =
+        Some(cast_config.accounts_file).filter(|p| p != &Utf8PathBuf::default());
+    let keystore = Some(cast_config.keystore).filter(|p| p != &Utf8PathBuf::default());
+
     Ok(ShowConfigResponse {
         profile,
         scarb_path,
         network,
-        rpc_url: cast_config.rpc_url,
-        account: cast_config.account,
-        account_file_path: cast_config.accounts_file,
-        keystore: cast_config.keystore,
+        rpc_url,
+        account,
+        account_file_path,
+        keystore,
     })
 }
