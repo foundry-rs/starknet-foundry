@@ -6,7 +6,7 @@ use crate::common::{
 };
 use cairo_felt::Felt252;
 use cheatnet::cheatcodes::deploy::deploy;
-use cheatnet::rpc::{call_contract, CallContractOutput, ResourceReport};
+use cheatnet::rpc::{call_contract, ResourceReport};
 use conversions::StarknetConversions;
 
 #[test]
@@ -32,19 +32,14 @@ fn call_resources_simple() {
     )
     .unwrap();
 
-    assert!(match output {
-        CallContractOutput::Success {
-            resource_report, ..
-        } => {
-            resource_report
-                == ResourceReport {
-                    gas: 1.26,
-                    steps: 126,
-                    bultins: HashMap::from([("range_check_builtin".to_owned(), 2)]),
-                }
+    assert_eq!(
+        output.resource_report,
+        ResourceReport {
+            gas: 1.26,
+            steps: 126,
+            bultins: HashMap::from([("range_check_builtin".to_owned(), 2)]),
         }
-        _ => false,
-    });
+    );
 }
 
 #[test]

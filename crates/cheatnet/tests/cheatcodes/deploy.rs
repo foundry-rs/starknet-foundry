@@ -5,7 +5,7 @@ use cairo_felt::Felt252;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cheatnet::cheatcodes::deploy::{deploy, deploy_at};
 use cheatnet::cheatcodes::{CheatcodeError, EnhancedHintError};
-use cheatnet::rpc::{call_contract, CallContractOutput};
+use cheatnet::rpc::{call_contract, CallContractFailure, CallContractResult};
 use conversions::StarknetConversions;
 use starknet_api::core::ContractAddress;
 
@@ -138,11 +138,14 @@ fn deploy_contract_on_predefined_address_after_its_usage() {
     )
     .unwrap();
 
-    assert!(match output {
-        CallContractOutput::Error { msg, .. } =>
-            msg.contains("Requested contract address") && msg.contains("is not deployed"),
-        _ => false,
-    });
+    assert!(
+        matches!(
+            output.result,
+            CallContractResult::Failure(CallContractFailure::Error { msg, .. })
+            if msg.contains("Requested contract address") && msg.contains("is not deployed")
+        ),
+        "Wrong error message"
+    );
 
     let contract = "SpyEventsChecker".to_owned().to_felt252();
     let contracts = get_contracts();

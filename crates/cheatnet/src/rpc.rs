@@ -12,6 +12,8 @@ use crate::{
     },
     CheatnetState,
 };
+use blockifier::execution::call_info::CallInfo;
+use blockifier::execution::entry_point::EntryPointExecutionResult;
 use blockifier::execution::{
     entry_point::{CallEntryPoint, CallType, EntryPointExecutionContext, ExecutionResources},
     errors::{EntryPointExecutionError, PreExecutionError},
@@ -42,20 +44,103 @@ impl ResourceReport {
     }
 }
 
+/// Represents contract output, along with the data and the resources consumed during execution
 #[derive(Debug)]
-pub enum CallContractOutput {
-    Success {
-        ret_data: Vec<Felt252>,
-        resource_report: ResourceReport,
-    },
-    Panic {
-        panic_data: Vec<Felt252>,
-        resource_report: ResourceReport,
-    },
-    Error {
-        msg: String,
-        resource_report: ResourceReport,
-    },
+pub struct CallContractOutput {
+    pub result: CallContractResult,
+    pub resource_report: ResourceReport,
+}
+
+/// Enum representing possible contract execution result, along with the data
+#[derive(Debug)]
+pub enum CallContractResult {
+    Success { ret_data: Vec<Felt252> },
+    Failure(CallContractFailure),
+}
+
+/// Enum representing possible call failure and its' type.
+/// `Panic` - Recoverable, meant to be caught by the user.
+/// `Error` - Unrecoverable, equivalent of panic! in rust.
+#[derive(Debug)]
+pub enum CallContractFailure {
+    Panic { panic_data: Vec<Felt252> },
+    Error { msg: String },
+}
+
+impl CallContractFailure {
+    /// Maps blockifier-type error, to one that can be put into memory as panic-data (or re-raised)
+    #[must_use]
+    pub fn from_execution_error(
+        err: &EntryPointExecutionError,
+        contract_address: &ContractAddress,
+    ) -> Self {
+        match err {
+            EntryPointExecutionError::ExecutionFailed { error_data } => {
+                let err_data = error_data
+                    .iter()
+                    .map(|data| Felt252::from_bytes_be(data.bytes()))
+                    .collect();
+
+                CallContractFailure::Panic {
+                    panic_data: err_data,
+                }
+            }
+            EntryPointExecutionError::VirtualMachineExecutionErrorWithTrace { trace, .. } => {
+                if let Some(panic_data) = try_extract_panic_data(trace) {
+                    CallContractFailure::Panic { panic_data }
+                } else {
+                    CallContractFailure::Error { msg: trace.clone() }
+                }
+            }
+            EntryPointExecutionError::PreExecutionError(PreExecutionError::EntryPointNotFound(
+                selector,
+            )) => {
+                let selector_hash = selector.0;
+                let contract_addr = contract_address.0.key();
+                let msg = format!(
+                    "Entry point selector {selector_hash} not found in contract {contract_addr}"
+                );
+                CallContractFailure::Error { msg }
+            }
+            EntryPointExecutionError::PreExecutionError(
+                PreExecutionError::UninitializedStorageAddress(contract_address),
+            ) => {
+                let address = contract_address.0.key().to_string();
+                let msg = format!("Contract not deployed at address: {address}");
+                CallContractFailure::Error { msg }
+            }
+            EntryPointExecutionError::StateError(StateError::StateReadError(msg)) => {
+                CallContractFailure::Error { msg: msg.clone() }
+            }
+            result => panic!("Unparseable result: {result:?}"),
+        }
+    }
+}
+
+impl CallContractResult {
+    fn from_execution_result(
+        result: &EntryPointExecutionResult<CallInfo>,
+        contract_address: &ContractAddress,
+    ) -> Self {
+        match result {
+            Ok(call_info) => {
+                let raw_return_data = &call_info.execution.retdata.0;
+
+                let return_data = raw_return_data
+                    .iter()
+                    .map(|data| Felt252::from_bytes_be(data.bytes()))
+                    .collect();
+
+                CallContractResult::Success {
+                    ret_data: return_data,
+                }
+            }
+            Err(err) => CallContractResult::Failure(CallContractFailure::from_execution_error(
+                err,
+                contract_address,
+            )),
+        }
+    }
 }
 
 // This does contract call without the transaction layer. This way `call_contract` can return data and modify state.
@@ -107,82 +192,19 @@ pub fn call_contract(
         &mut context,
     );
 
+    if let Ok(ref call_info) = exec_result {
+        if !cheatnet_state.spies.is_empty() {
+            let mut events = collect_emitted_events_from_spied_contracts(call_info, cheatnet_state);
+            cheatnet_state.detected_events.append(&mut events);
+        }
+    };
+
     let gas = gas_from_execution_resources(&block_context, &resources);
     let resource_report = ResourceReport::new(gas, &resources);
+    let result = CallContractResult::from_execution_result(&exec_result, contract_address);
 
-    match exec_result {
-        Ok(call_info) => {
-            if !cheatnet_state.spies.is_empty() {
-                let mut events =
-                    collect_emitted_events_from_spied_contracts(&call_info, cheatnet_state);
-                cheatnet_state.detected_events.append(&mut events);
-            }
-
-            let raw_return_data = &call_info.execution.retdata.0;
-
-            let return_data = raw_return_data
-                .iter()
-                .map(|data| Felt252::from_bytes_be(data.bytes()))
-                .collect();
-
-            Ok(CallContractOutput::Success {
-                ret_data: return_data,
-                resource_report,
-            })
-        }
-        Err(EntryPointExecutionError::ExecutionFailed { error_data }) => {
-            let err_data = error_data
-                .iter()
-                .map(|data| Felt252::from_bytes_be(data.bytes()))
-                .collect();
-
-            Ok(CallContractOutput::Panic {
-                panic_data: err_data,
-                resource_report,
-            })
-        }
-        Err(EntryPointExecutionError::VirtualMachineExecutionErrorWithTrace { trace, .. }) => {
-            if let Some(panic_data) = try_extract_panic_data(&trace) {
-                Ok(CallContractOutput::Panic {
-                    panic_data,
-                    resource_report,
-                })
-            } else {
-                Ok(CallContractOutput::Error {
-                    msg: trace,
-                    resource_report,
-                })
-            }
-        }
-        Err(EntryPointExecutionError::PreExecutionError(
-            PreExecutionError::EntryPointNotFound(selector),
-        )) => {
-            let selector_hash = selector.0;
-            let contract_addr = contract_address.0.key();
-            let msg = format!(
-                "Entry point selector {selector_hash} not found in contract {contract_addr}"
-            );
-            Ok(CallContractOutput::Error {
-                msg,
-                resource_report,
-            })
-        }
-        Err(EntryPointExecutionError::PreExecutionError(
-            PreExecutionError::UninitializedStorageAddress(contract_address),
-        )) => {
-            let address = contract_address.0.key().to_string();
-            let msg = format!("Contract not deployed at address: {address}");
-            Ok(CallContractOutput::Error {
-                msg,
-                resource_report,
-            })
-        }
-        Err(EntryPointExecutionError::StateError(StateError::StateReadError(msg))) => {
-            Ok(CallContractOutput::Error {
-                msg,
-                resource_report,
-            })
-        }
-        result => panic!("Unparseable result: {result:?}"),
-    }
+    Ok(CallContractOutput {
+        result,
+        resource_report,
+    })
 }

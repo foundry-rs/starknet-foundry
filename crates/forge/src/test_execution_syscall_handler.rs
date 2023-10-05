@@ -21,10 +21,10 @@ use cairo_vm::types::exec_scope::ExecutionScopes;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::vm_core::VirtualMachine;
-use cheatnet::cheatcodes::deploy::{deploy, deploy_at, DeployPayload};
+use cheatnet::cheatcodes::deploy::{deploy, deploy_at, DeployCallPayload};
 use cheatnet::cheatcodes::{CheatcodeError, ContractArtifacts, EnhancedHintError};
 use cheatnet::execution::syscalls::CheatableSyscallHandler;
-use cheatnet::rpc::{call_contract, CallContractOutput};
+use cheatnet::rpc::{call_contract, CallContractFailure, CallContractResult};
 use cheatnet::state::{BlockifierState, CheatnetState};
 use conversions::StarknetConversions;
 use num_traits::{One, ToPrimitive};
@@ -375,6 +375,13 @@ impl TestExecutionSyscallHandler<'_> {
                 let calldata = Vec::from(&inputs[2..(2 + calldata_length)]);
                 let mut blockifier_state =
                     BlockifierState::from(self.cheatable_syscall_handler.syscall_handler.state);
+                let deploy_res = deploy(
+                    &mut blockifier_state,
+                    self.cheatable_syscall_handler.cheatnet_state,
+                    &class_hash,
+                    &calldata,
+                );
+
                 handle_deploy_result(
                     deploy(
                         &mut blockifier_state,
@@ -572,12 +579,12 @@ impl TestExecutionSyscallHandler<'_> {
 }
 
 fn handle_deploy_result(
-    deploy_result: Result<DeployPayload, CheatcodeError>,
+    deploy_result: Result<DeployCallPayload, CheatcodeError>,
     buffer: &mut MemBuffer,
 ) -> Result<(), EnhancedHintError> {
     match deploy_result {
-        Ok(payload) => {
-            let felt_contract_address: Felt252 = payload.contract_address.to_felt252();
+        Ok(call_payload) => {
+            let felt_contract_address: Felt252 = call_payload.contract_address.to_felt252();
 
             buffer
                 .write(Felt252::from(0))
@@ -699,7 +706,7 @@ fn execute_call_contract(
 
     let calldata = buffer.next_arr().unwrap();
 
-    let call_result = call_contract(
+    let call_output = call_contract(
         blockifier_state,
         cheatnet_state,
         &contract_address,
@@ -708,10 +715,14 @@ fn execute_call_contract(
     )
     .unwrap_or_else(|err| panic!("Transaction execution error: {err}"));
 
-    let (result, exit_code) = match call_result {
-        CallContractOutput::Success { ret_data, .. } => (ret_data, 0),
-        CallContractOutput::Panic { panic_data, .. } => (panic_data, 1),
-        CallContractOutput::Error { msg, .. } => return Err(HintError::CustomHint(Box::from(msg))),
+    let (result, exit_code) = match call_output.result {
+        CallContractResult::Success { ret_data, .. } => (ret_data, 0),
+        CallContractResult::Failure(failure_type) => match failure_type {
+            CallContractFailure::Panic { panic_data, .. } => (panic_data, 1),
+            CallContractFailure::Error { msg, .. } => {
+                return Err(HintError::CustomHint(Box::from(msg)))
+            }
+        },
     };
 
     buffer.write(gas_counter).unwrap();
