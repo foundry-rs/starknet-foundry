@@ -395,7 +395,6 @@ async fn run_tests_from_crate(
             was_fuzzed = true;
         }
 
-        // pretty_printing::print_test_result(&result, runs);
         results.push(result);
     }
 
@@ -621,7 +620,7 @@ fn filter_tests_by_name(
 mod tests {
     use super::*;
     use test_collector::ExpectedTestResult;
-
+    //TODO: fix this tests after refactor
     // #[test]
     // fn fuzzer_default_seed() {
     //     let config = RunnerConfig::new(None, false, false, None, None, &Default::default());
