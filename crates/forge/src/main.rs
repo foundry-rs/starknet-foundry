@@ -9,7 +9,7 @@ use std::sync::Arc;
 use std::{env, fs};
 use tempfile::{tempdir, TempDir};
 
-use forge::{pretty_printing, RunnerConfig, RunnerParams};
+use forge::{pretty_printing, RunnerConfig};
 use forge::{run, TestCrateSummary};
 
 use forge::scarb::{
@@ -88,7 +88,7 @@ fn extract_failed_tests(tests_summaries: Vec<TestCrateSummary>) -> Vec<TestCaseS
         .flat_map(|test_file_summary| test_file_summary.test_case_summaries)
         .filter(|test_case_summary| matches!(test_case_summary, TestCaseSummary::Failed { .. }))
         .collect()
-}
+} 
 
 #[tokio::main]
 async fn main_execution() -> Result<bool> {

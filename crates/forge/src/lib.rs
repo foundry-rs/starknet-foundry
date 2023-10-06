@@ -6,12 +6,14 @@ use ark_std::iterable::Iterable;
 use assert_fs::fixture::{FileTouch, PathChild, PathCopy};
 use assert_fs::TempDir;
 use camino::Utf8PathBuf;
+use futures::future::join_all;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use running::blocking_run_from_test;
-use serde::Deserialize;
+use tokio::sync::mpsc::channel;
+
 use std::sync::Arc;
 use test_case_summary::TestCaseSummary;
-use tokio::task;
+use tokio::task::{self, JoinHandle};
 use tokio_util::sync::CancellationToken;
 
 use cairo_lang_runner::SierraCasmRunner;
@@ -19,7 +21,7 @@ use cairo_lang_sierra::ids::ConcreteTypeId;
 use cairo_lang_sierra::program::{Function, Program};
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
-use futures::future::join_all;
+
 use once_cell::sync::Lazy;
 use rand::{thread_rng, RngCore};
 use smol_str::SmolStr;
@@ -82,6 +84,7 @@ impl RunnerConfig {
     /// * `exact_match` - Should test names match the `test_name_filter` exactly
     /// * `exit_first` - Should runner exit after first failed test
     #[must_use]
+    #[warn(clippy::too_many_arguments)]
     pub fn new(
         package_root: Utf8PathBuf,
         test_name_filter: Option<String>,
@@ -305,17 +308,16 @@ pub async fn run(
         package_name,
     );
 
-    let mut tests_iterator = tests.into_iter();
-
     let mut fuzzing_happened = false;
     let mut summaries = vec![];
-    let mut threads = vec![];
-    for tests_from_crate in tests_iterator.by_ref() {
+    let mut tasks = vec![];
+
+    for tests_from_crate in tests.into_iter() {
         let tests_from_crate = Arc::new(tests_from_crate);
         let runner_config = runner_config.clone();
         let test_crate_type = tests_from_crate.test_crate_type;
         let tests_len = tests_from_crate.test_cases.len();
-        threads.push((
+        tasks.push((
             test_crate_type,
             tests_len,
             task::spawn({
@@ -323,9 +325,10 @@ pub async fn run(
             }),
         ));
     }
-    for (test_crate_type, tests_len, thread) in threads {
+    for (test_crate_type, tests_len, task) in tasks {
         pretty_printing::print_running_tests(test_crate_type, tests_len);
-        let (summary, was_fuzzed) = thread.await??;
+
+        let (summary, was_fuzzed) = task.await??;
         for test_case_summary in &summary.test_case_summaries {
             pretty_printing::print_test_result(test_case_summary);
         }
@@ -369,27 +372,7 @@ async fn run_tests_from_crate(
         let args: Vec<ConcreteTypeId> = args.into_iter().cloned().collect();
         let runner = runner.clone();
 
-        let task = task::spawn({
-            async move {
-                tokio::select! {
-                    _ = runner_config.error_cancellation_token.cancelled() => {
-                        Ok(TestCaseSummary::None {  })
-                    },
-                    _ = runner_config.cancellation_token.cancelled() => {
-                        // The token was cancelled
-                       Ok(TestCaseSummary::skipped(&c))
-                    },
-                    result = choose_test_strategy_and_run(
-                        case,
-                        runner,
-                        runner_config.clone(),
-                        args,
-                    ) => {
-                        result
-                    },
-                }
-            }
-        });
+        let task = choose_test_strategy_and_run(case.clone(), runner, runner_config.clone(), args);
 
         tasks.push(task);
     }
@@ -397,12 +380,9 @@ async fn run_tests_from_crate(
     let mut results = vec![];
 
     for task in tasks {
-        let await_task = task.await?;
-        if let Err(e) = await_task {
-            runner_config.error_cancellation_token.cancel();
-            return Err(e);
-        }
-        let result = await_task?;
+        let await_task = task.await??;
+
+        let result = await_task;
 
         if result.runs().is_some() {
             was_fuzzed = true;
@@ -422,27 +402,48 @@ async fn run_tests_from_crate(
     ))
 }
 
-async fn choose_test_strategy_and_run(
+fn choose_test_strategy_and_run(
     case: Arc<TestCase>,
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
     args: Vec<ConcreteTypeId>,
-) -> Result<TestCaseSummary> {
+) -> JoinHandle<Result<TestCaseSummary>> {
     let exit_first = runner_config.exit_first;
+
     if args.is_empty() {
-        match blocking_run_from_test(runner, case.clone(), runner_config.clone(), vec![]).await {
-            Ok(result) => {
-                if exit_first {
-                    if let TestCaseSummary::Failed { .. } = &result {
-                        runner_config.cancellation_token.cancel();
+        tokio::task::spawn(async move {
+            tokio::select! {
+                _ = runner_config.cancellation_token.cancelled() => {
+                    //Stop executing all tests because flag --exit-first'
+                    //has been set and one test FAIL
+                    Ok(TestCaseSummary::skipped(&case))
+                },
+                _ = runner_config.error_cancellation_token.cancelled() => {
+                    //Stop executing all tests
+                    Ok(TestCaseSummary::None {  })
+                },
+                result = blocking_run_from_test(runner, case.clone(), runner_config.clone(), vec![], None) => {
+                    match result {
+                        Ok(result) => {
+                            if exit_first {
+                                if let TestCaseSummary::Failed { .. } = &result {
+                                    runner_config.cancellation_token.cancel();
+                                }
+                            }
+                            Ok(result)
+                        }
+                        Err(e) => {
+                            runner_config.error_cancellation_token.cancel();
+                            Err(e)
+                        }
                     }
                 }
-                Ok(result)
             }
-            Err(e) => Err(e),
-        }
+        })
     } else {
-        run_with_fuzzing(runner_config, runner, case, &args).await
+        tokio::task::spawn(async move {
+            run_with_fuzzing(runner_config.clone(), runner, case, &args).await
+        })
     }
 }
 
@@ -453,7 +454,6 @@ async fn run_with_fuzzing(
     args: &Vec<ConcreteTypeId>,
 ) -> Result<TestCaseSummary> {
     let token = CancellationToken::new();
-    let token = Arc::new(token.clone());
 
     let args = args
         .iter()
@@ -476,37 +476,58 @@ async fn run_with_fuzzing(
 
     let mut tasks = vec![];
 
+    let (send, mut recv) = channel(1);
+
     for _ in 1..=fuzzer_runs {
         let args = fuzzer.next_args();
         let case = case.clone();
+        let c = case.clone();
         let runner = runner.clone();
         let args = args.clone();
-        let cancellation_fuzzing_token = Arc::new(token.clone());
+        let cancellation_fuzzing_token = token.clone();
         let runner_config = runner_config.clone();
+        let send = send.clone();
 
         tasks.push(task::spawn(async move {
             tokio::select! {
                 _ = runner_config.error_cancellation_token.cancelled() => {
-                    //Stop all tests because test return Error
+                    //Stop executing all tests because flag --exit-first'
+                    //has been set and one test FAIL
                     Ok(TestCaseSummary::None {  })
                 },
                 _ = runner_config.cancellation_token.cancelled() => {
                     //Stop executing all tests because flag --exit-first'
                     //has been set and one test FAIL
-                    Ok(TestCaseSummary::None {  })
+                    Ok(TestCaseSummary::skipped(&c))
                 },
                 _ = cancellation_fuzzing_token.cancelled() => {
-                    //Single test of fuzzing test fail,
-                    // stop all testes related to fuzzing test
-                    Ok(TestCaseSummary::None {  })
+                    //Stop executing all tests because flag --exit-first'
+                    //has been set and one test FAIL
+                    Ok(TestCaseSummary::skipped(&c))
                 },
                result = blocking_run_from_test(
                     runner,
                     case,
                     runner_config.clone(),
                     args.clone(),
+                    Some(send),
                 ) => {
-                    result
+                    match result {
+                        Ok(result) => {
+                            if let TestCaseSummary::Failed { .. } = &result {
+                                if runner_config.exit_first {
+                                    runner_config.cancellation_token.cancel();
+                                } else {
+                                    cancellation_fuzzing_token.cancel();
+                                }
+                            }
+                            Ok(result)
+                        }
+                        Err(e) => {
+                            runner_config.error_cancellation_token.cancel();
+                            Err(e)
+                        }
+                    }
                 },
             }
         }));
@@ -514,33 +535,21 @@ async fn run_with_fuzzing(
 
     let mut results = vec![];
 
+    drop(send);
+
     for task in tasks {
-        let result = match task.await? {
-            Ok(result) => {
-                if runner_config.exit_first {
-                    if let TestCaseSummary::Failed { .. } = &result {
-                        runner_config.cancellation_token.cancel();
-                    }
-                }
-                result
-            }
-            Err(e) => {
-                token.cancel();
-                runner_config.error_cancellation_token.cancel();
-                return Err(e);
-            }
-        };
+        let result = task.await??;
+        results.push(result.clone());
 
         if let TestCaseSummary::Failed { .. } = &result {
-            if results.is_empty() {
-                token.cancel();
-                results.push(result);
-                break;
-            }
-        } else {
-            results.push(result);
-        }
+            break;
+        };
+        if let TestCaseSummary::None {} = &result {
+            break;
+        };
     }
+
+    let _ = recv.recv().await;
 
     let result: TestCaseSummary = results
         .last()

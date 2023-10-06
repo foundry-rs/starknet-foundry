@@ -34,6 +34,7 @@ use starknet_api::hash::StarkHash;
 use starknet_api::patricia_key;
 use starknet_api::transaction::Calldata;
 use test_collector::{ForkConfig, TestCase};
+use tokio::sync::mpsc::Sender;
 
 use crate::scarb::{ForkTarget, StarknetContractArtifacts};
 use crate::test_case_summary::TestCaseSummary;
@@ -74,6 +75,7 @@ pub(crate) async fn blocking_run_from_test(
     case: Arc<TestCase>,
     runner_config: Arc<RunnerConfig>,
     args: Vec<Felt252>,
+    _sender: Option<Sender<()>>,
 ) -> Result<TestCaseSummary> {
     tokio::task::spawn_blocking(move || run_from_test_case(&runner, &case, &runner_config, args))
         .await?
