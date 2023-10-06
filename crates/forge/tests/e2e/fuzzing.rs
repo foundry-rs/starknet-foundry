@@ -105,10 +105,10 @@ fn fuzzing_set_seed() {
         [PASS] fuzzing::tests::fuzzed_argument (fuzzer runs = 256)
         [PASS] fuzzing::tests::fuzzed_both_arguments (fuzzer runs = 256)
         [PASS] fuzzing::tests::passing
-        [FAIL] fuzzing::tests::failing_fuzz (fuzzer runs = 1, arguments = [341193006617052062735469547906266761132387087565883400330245273769314796067, 527032148587025968655727080236627006840087681556560587927394687076297616261])
+        [FAIL] fuzzing::tests::failing_fuzz (fuzzer runs = 1, arguments = [..])
 
         Failure data:
-            original value: [593979512822486835600413552099926114], converted to a string: [result == a + b]
+            original value: [..], converted to a string: [result == a + b]
 
         [PASS] fuzzing::tests::custom_fuzzer_config (fuzzer runs = 10)
         [PASS] fuzzing::tests::uint8_arg (fuzzer runs = 256)
