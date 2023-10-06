@@ -302,20 +302,22 @@ impl CheatableSyscallHandler<'_> {
             // No incrementation, since execute_next_syscall reads selector and increments syscall_ptr
             let result = self.syscall_handler.execute_next_syscall(vm, hint);
 
-            let contract_address = self
-                .syscall_handler
-                .call
-                .code_address
-                .unwrap_or(self.syscall_handler.call.storage_address);
+            if result.is_ok() {
+                let contract_address = self
+                    .syscall_handler
+                    .call
+                    .code_address
+                    .unwrap_or(self.syscall_handler.call.storage_address);
 
-            for spy_on in &mut self.cheatnet_state.spies {
-                if spy_on.does_spy(contract_address) {
-                    let event = Event::from_ordered_event(
-                        self.syscall_handler.events.last().unwrap(),
-                        contract_address,
-                    );
-                    self.cheatnet_state.detected_events.push(event);
-                    break;
+                for spy_on in &mut self.cheatnet_state.spies {
+                    if spy_on.does_spy(contract_address) {
+                        let event = Event::from_ordered_event(
+                            self.syscall_handler.events.last().unwrap(),
+                            contract_address,
+                        );
+                        self.cheatnet_state.detected_events.push(event);
+                        break;
+                    }
                 }
             }
 
