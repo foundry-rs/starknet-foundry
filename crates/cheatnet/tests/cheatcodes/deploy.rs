@@ -69,11 +69,11 @@ fn deploy_two_at_the_same_address() {
         ContractAddress::from(1_u8),
     );
 
-    assert!(match result {
-        Err(CheatcodeError::Unrecoverable(EnhancedHintError::Hint(HintError::CustomHint(err)))) =>
-            err.as_ref() == "Address is already taken",
-        _ => false,
-    });
+    assert!(matches!(
+        result,
+        Err(CheatcodeError::Unrecoverable(EnhancedHintError::Hint(HintError::CustomHint(err))))
+        if err.as_ref() == "Address is already taken"
+    ));
 }
 
 #[test]
@@ -283,11 +283,11 @@ fn deploy_invalid_class_hash() {
         &[Felt252::from(123_321), Felt252::from(523_325)],
     );
 
-    assert!(match output {
-        Err(CheatcodeError::Unrecoverable(EnhancedHintError::Hint(HintError::CustomHint(msg)))) =>
-            msg.as_ref().contains(class_hash.to_string().as_str()),
-        _ => false,
-    });
+    assert!(matches!(
+        output,
+        Err(CheatcodeError::Unrecoverable(EnhancedHintError::Hint(HintError::CustomHint(msg))))
+        if msg.as_ref().contains(class_hash.to_string().as_str()),
+    ));
 }
 
 #[test]

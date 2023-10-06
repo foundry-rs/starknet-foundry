@@ -56,12 +56,12 @@ fn deploy_resources_simple() {
 
     let payload = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[]).unwrap();
 
-    assert!(
-        payload.resource_report
-            == ResourceReport {
-                gas: 5.34,
-                steps: 534,
-                bultins: HashMap::from([("range_check_builtin".to_owned(), 15)]),
-            }
+    assert_eq!(
+        payload.resource_report,
+        ResourceReport {
+            gas: 5.34,
+            steps: 534,
+            bultins: HashMap::from([("range_check_builtin".to_owned(), 15)]),
+        }
     );
 }

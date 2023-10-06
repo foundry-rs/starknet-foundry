@@ -20,6 +20,7 @@ use blockifier::execution::{
 };
 use blockifier::state::errors::StateError;
 use cairo_felt::Felt252;
+use cairo_lang_runner::short_string::as_cairo_short_string;
 use starknet_api::{
     core::{ContractAddress, EntryPointSelector},
     deprecated_contract_class::EntryPointType,
@@ -76,10 +77,25 @@ impl CallContractFailure {
     ) -> Self {
         match err {
             EntryPointExecutionError::ExecutionFailed { error_data } => {
-                let err_data = error_data
+                let err_data: Vec<Felt252> = error_data
                     .iter()
                     .map(|data| Felt252::from_bytes_be(data.bytes()))
                     .collect();
+
+                let err_data_str = err_data
+                    .iter()
+                    .map(|x| as_cairo_short_string(x).unwrap())
+                    .collect::<Vec<String>>()
+                    .join("\n");
+
+                for invalid_calldata_msg in [
+                    "Failed to deserialize param #",
+                    "Input too long for arguments",
+                ] {
+                    if err_data_str.contains(invalid_calldata_msg) {
+                        return CallContractFailure::Error { msg: err_data_str };
+                    }
+                }
 
                 CallContractFailure::Panic {
                     panic_data: err_data,
@@ -112,7 +128,9 @@ impl CallContractFailure {
             EntryPointExecutionError::StateError(StateError::StateReadError(msg)) => {
                 CallContractFailure::Error { msg: msg.clone() }
             }
-            result => panic!("Unparseable result: {result:?}"),
+            result => CallContractFailure::Error {
+                msg: result.to_string(),
+            },
         }
     }
 }

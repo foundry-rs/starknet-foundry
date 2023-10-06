@@ -11,8 +11,10 @@ use std::sync::Arc;
 
 use blockifier::state::state_api::State;
 use cairo_felt::Felt252;
+use cairo_vm::vm::errors::hint_errors::HintError::CustomHint;
 use conversions::StarknetConversions;
 
+use crate::cheatcodes::EnhancedHintError;
 use crate::execution::syscalls::execute_deployment;
 use starknet_api::core::{ClassHash, ContractAddress};
 use starknet_api::transaction::Calldata;
@@ -21,6 +23,7 @@ use super::CheatcodeError;
 use crate::rpc::{CallContractFailure, ResourceReport};
 
 #[allow(clippy::module_name_repetitions)]
+#[derive(Debug)]
 pub struct DeployCallPayload {
     pub resource_report: ResourceReport,
     pub contract_address: ContractAddress,
@@ -37,6 +40,14 @@ pub fn deploy_at(
 ) -> Result<DeployCallPayload, CheatcodeError> {
     cheatnet_state.increment_deploy_salt_base();
     let blockifier_state_raw: &mut dyn State = blockifier_state.blockifier_state;
+
+    if let Ok(class_hash) = blockifier_state_raw.get_class_hash_at(contract_address) {
+        if class_hash != ClassHash::default() {
+            return Err(CheatcodeError::Unrecoverable(EnhancedHintError::from(
+                CustomHint(Box::from("Address is already taken")),
+            )));
+        }
+    }
 
     let entry_point_execution_ctx = &mut EntryPointExecutionContext::new(
         build_block_context(),
@@ -78,42 +89,6 @@ pub fn deploy_at(
             CallContractFailure::from_execution_error(&err, &contract_address);
         CheatcodeError::from(call_contract_failure)
     })
-
-    // TODO: assess if we even need this
-    // match call_result {
-    //     CallContractOutput::Success {
-    //         resource_report, ..
-    //     } => match result {
-    //         Ok(contract_address) => Ok(DeployPayload {
-    //             contract_address,
-    //             resource_report,
-    //         }),
-    //         Err(cheatcode_error) => Err(cheatcode_error),
-    //     },
-    //     CallContractOutput::Panic { panic_data, .. } => {
-    //         let panic_data_str = panic_data
-    //             .iter()
-    //             .map(|x| as_cairo_short_string(x).unwrap())
-    //             .collect::<Vec<String>>()
-    //             .join("\n");
-    //
-    //         for invalid_calldata_msg in [
-    //             "Failed to deserialize param #",
-    //             "Input too long for arguments",
-    //         ] {
-    //             if panic_data_str.contains(invalid_calldata_msg) {
-    //                 return Err(CheatcodeError::Unrecoverable(EnhancedHintError::from(
-    //                     CustomHint(Box::from(panic_data_str)),
-    //                 )));
-    //             }
-    //         }
-    //
-    //         Err(CheatcodeError::Recoverable(panic_data))
-    //     }
-    //     CallContractOutput::Error { msg, .. } => Err(CheatcodeError::Unrecoverable(
-    //         EnhancedHintError::from(CustomHint(Box::from(msg))),
-    //     )),
-    // }
 }
 
 #[allow(clippy::module_name_repetitions)]
