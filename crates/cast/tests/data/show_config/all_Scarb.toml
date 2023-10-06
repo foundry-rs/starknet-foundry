@@ -12,7 +12,7 @@ casm = true
 sierra = false
 
 [tool.sncast]
-url = "http://127.0.0.1:5050/rpc"
+url = "http://127.0.0.1:5055/rpc"
 account = "user"
 accounts-file = "../account-file"
 keystore = "../keystore"
@@ -21,4 +21,3 @@ keystore = "../keystore"
 url = "http://127.0.0.1:5055/rpc"
 account = "user1"
 accounts-file = "../account-file"
-keystore = "../keystore"
