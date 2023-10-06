@@ -115,7 +115,7 @@ fn main_execution() -> Result<bool> {
     let package_root = &scarb_metadata.workspace.root;
 
     if args.clean_cache {
-        clean_cache(&package_root).context("Failed to clean snforge cache")?;
+        clean_cache(package_root).context("Failed to clean snforge cache")?;
     }
 
     let rt = Runtime::new()?;

@@ -44,15 +44,13 @@ impl TestCaseSummary {
         match self {
             TestCaseSummary::Failed { arguments, .. }
             | TestCaseSummary::Passed { arguments, .. } => arguments.clone(),
-            TestCaseSummary::Skipped { .. } => vec![],
-            TestCaseSummary::None {} => vec![],
+            TestCaseSummary::Skipped { .. } | TestCaseSummary::None {} => vec![],
         }
     }
     pub(crate) fn runs(&self) -> Option<u32> {
         match self {
             TestCaseSummary::Failed { runs, .. } | TestCaseSummary::Passed { runs, .. } => *runs,
-            TestCaseSummary::Skipped { .. } => None,
-            TestCaseSummary::None {} => None,
+            TestCaseSummary::Skipped { .. } | TestCaseSummary::None {} => None,
         }
     }
 
@@ -84,8 +82,7 @@ impl TestCaseSummary {
                 arguments,
                 runs: Some(runs),
             },
-            TestCaseSummary::Skipped { .. } => self,
-            TestCaseSummary::None {} => self,
+            TestCaseSummary::Skipped { .. } | TestCaseSummary::None {} => self,
         }
     }
 }

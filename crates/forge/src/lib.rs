@@ -6,7 +6,7 @@ use ark_std::iterable::Iterable;
 use assert_fs::fixture::{FileTouch, PathChild, PathCopy};
 use assert_fs::TempDir;
 use camino::Utf8PathBuf;
-use futures::future::join_all;
+
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use running::blocking_run_from_test;
 use tokio::sync::mpsc::channel;
@@ -84,7 +84,7 @@ impl RunnerConfig {
     /// * `exact_match` - Should test names match the `test_name_filter` exactly
     /// * `exit_first` - Should runner exit after first failed test
     #[must_use]
-    #[warn(clippy::too_many_arguments)]
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         package_root: Utf8PathBuf,
         test_name_filter: Option<String>,
@@ -312,7 +312,7 @@ pub async fn run(
     let mut summaries = vec![];
     let mut tasks = vec![];
 
-    for tests_from_crate in tests.into_iter() {
+    for tests_from_crate in tests {
         let tests_from_crate = Arc::new(tests_from_crate);
         let runner_config = runner_config.clone();
         let test_crate_type = tests_from_crate.test_crate_type;
@@ -563,9 +563,11 @@ async fn run_with_fuzzing(
     let runs = u32::try_from(
         results
             .iter()
-            .filter(|item| match item {
-                TestCaseSummary::Passed { .. } | TestCaseSummary::Failed { .. } => true,
-                _ => false,
+            .filter(|item| {
+                matches!(
+                    item,
+                    TestCaseSummary::Passed { .. } | TestCaseSummary::Failed { .. }
+                )
             })
             .count(),
     )?;
