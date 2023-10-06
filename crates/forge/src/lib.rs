@@ -362,6 +362,7 @@ async fn run_tests_from_crate(
     let mut was_fuzzed = false;
     let mut tasks = vec![];
     let test_cases = &tests.test_cases;
+
     for case in test_cases.iter() {
         let case_name = case.name.as_str();
 
@@ -369,7 +370,6 @@ async fn run_tests_from_crate(
         let args = function_args(function, &BUILTINS);
 
         let case = Arc::new(case.clone());
-        let c = case.clone();
         let runner_config = runner_config.clone();
         let args: Vec<ConcreteTypeId> = args.into_iter().cloned().collect();
         let runner = runner.clone();
@@ -410,43 +410,50 @@ fn choose_test_strategy_and_run(
     runner_config: Arc<RunnerConfig>,
     args: Vec<ConcreteTypeId>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
-    let exit_first = runner_config.exit_first;
-
     if args.is_empty() {
-        tokio::task::spawn(async move {
-            tokio::select! {
-                _ = runner_config.cancellation_token.cancelled() => {
-                    //Stop executing all tests because flag --exit-first'
-                    //has been set and one test FAIL
-                    Ok(TestCaseSummary::skipped(&case))
-                },
-                _ = runner_config.error_cancellation_token.cancelled() => {
-                    //Stop executing all tests
-                    Ok(TestCaseSummary::None {  })
-                },
-                result = blocking_run_from_test(runner, case.clone(), runner_config.clone(), vec![], None) => {
-                    match result {
-                        Ok(result) => {
-                            if exit_first {
-                                if let TestCaseSummary::Failed { .. } = &result {
-                                    runner_config.cancellation_token.cancel();
-                                }
-                            }
-                            Ok(result)
-                        }
-                        Err(e) => {
-                            runner_config.error_cancellation_token.cancel();
-                            Err(e)
-                        }
-                    }
-                }
-            }
-        })
+        run_single_test(case, runner, runner_config)
     } else {
         tokio::task::spawn(async move {
             run_with_fuzzing(runner_config.clone(), runner, case, &args).await
         })
     }
+}
+
+fn run_single_test(
+    case: Arc<TestCase>,
+    runner: Arc<SierraCasmRunner>,
+    runner_config: Arc<RunnerConfig>,
+) -> JoinHandle<Result<TestCaseSummary>> {
+    let exit_first = runner_config.exit_first;
+    tokio::task::spawn(async move {
+        tokio::select! {
+            _ = runner_config.cancellation_token.cancelled() => {
+                //Stop executing all tests because flag --exit-first'
+                //has been set and one test FAIL
+                Ok(TestCaseSummary::skipped(&case))
+            },
+            _ = runner_config.error_cancellation_token.cancelled() => {
+                //Stop executing all tests
+                Ok(TestCaseSummary::None {  })
+            },
+            result = blocking_run_from_test(runner, case.clone(), runner_config.clone(), vec![], None) => {
+                match result {
+                    Ok(result) => {
+                        if exit_first {
+                            if let TestCaseSummary::Failed { .. } = &result {
+                                runner_config.cancellation_token.cancel();
+                            }
+                        }
+                        Ok(result)
+                    }
+                    Err(e) => {
+                        runner_config.error_cancellation_token.cancel();
+                        Err(e)
+                    }
+                }
+            }
+        }
+    })
 }
 
 async fn run_with_fuzzing(
@@ -483,7 +490,7 @@ async fn run_with_fuzzing(
     for _ in 1..=fuzzer_runs {
         let args = fuzzer.next_args();
         let case = case.clone();
-        let c = case.clone();
+        let case_copy = case.clone();
         let runner = runner.clone();
         let args = args.clone();
         let cancellation_fuzzing_token = token.clone();
@@ -500,12 +507,12 @@ async fn run_with_fuzzing(
                 _ = runner_config.cancellation_token.cancelled() => {
                     //Stop executing all tests because flag --exit-first'
                     //has been set and one test FAIL
-                    Ok(TestCaseSummary::skipped(&c))
+                    Ok(TestCaseSummary::skipped(&case_copy))
                 },
                 _ = cancellation_fuzzing_token.cancelled() => {
                     //Stop executing all tests because flag --exit-first'
                     //has been set and one test FAIL
-                    Ok(TestCaseSummary::skipped(&c))
+                    Ok(TestCaseSummary::skipped(&case_copy))
                 },
                result = blocking_run_from_test(
                     runner,
@@ -543,21 +550,30 @@ async fn run_with_fuzzing(
         let result = task.await??;
         results.push(result.clone());
 
-        if let TestCaseSummary::Failed { .. } = &result {
-            break;
-        };
-        if let TestCaseSummary::None {} = &result {
-            break;
-        };
+        match &result {
+            TestCaseSummary::Failed { .. } | TestCaseSummary::None {} => {
+                break;
+            }
+            _ => (),
+        }
     }
 
     let _ = recv.recv().await;
+
+    let runs = u32::try_from(
+        results
+            .iter()
+            .filter(|item| match item {
+                TestCaseSummary::Passed { .. } | TestCaseSummary::Failed { .. } => true,
+                _ => false,
+            })
+            .count(),
+    )?;
 
     let result: TestCaseSummary = results
         .last()
         .expect("Test should always run at least once")
         .clone();
-    let runs = u32::try_from(results.len())?;
     let result = result.update_runs(runs);
     Ok(result)
 }
