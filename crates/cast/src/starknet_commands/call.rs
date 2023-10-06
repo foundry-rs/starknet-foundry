@@ -47,11 +47,14 @@ pub async fn call(
 
     match res {
         Ok(res) => {
-            let response: String = res.iter().map(|item| format!("{item:#x}, ")).collect();
+            let response: String = res
+                .iter()
+                .map(|item| format!("{item:#x}"))
+                .collect::<Vec<String>>()
+                .join(", ");
+
             Ok(CallResponse {
-                response: "[".to_string()
-                    + response.trim_end_matches(|c| c == ' ' || c == ',')
-                    + "]",
+                response: format!("[{response}]"),
             })
         }
         Err(error) => handle_rpc_error(error),
