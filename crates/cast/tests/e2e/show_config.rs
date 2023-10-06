@@ -28,7 +28,7 @@ async fn test_show_config_from_scarb_toml() {
 async fn test_show_config_from_cli() {
     let args = vec![
         "--account",
-        "user2",
+        "/path/to/account.json",
         "--url",
         "http://127.0.0.1:5055/rpc",
         "--keystore",
@@ -40,7 +40,7 @@ async fn test_show_config_from_cli() {
 
     snapbox.assert().success().stdout_eq(indoc! {r#"
         command: show-config
-        account: user2
+        account: /path/to/account.json
         chain_id: alpha-goerli
         keystore: ../keystore
         rpc_url: http://127.0.0.1:5055/rpc
@@ -107,7 +107,7 @@ async fn test_show_config_when_keystore() {
 
     snapbox.assert().success().stdout_eq(indoc! {r#"
         command: show-config
-        account: user
+        account: /path/to/account.json
         chain_id: alpha-goerli
         keystore: ../keystore
         rpc_url: http://127.0.0.1:5055/rpc

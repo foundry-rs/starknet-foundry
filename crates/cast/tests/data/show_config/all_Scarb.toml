@@ -13,8 +13,7 @@ sierra = false
 
 [tool.sncast]
 url = "http://127.0.0.1:5055/rpc"
-account = "user"
-accounts-file = "../account-file"
+account = "/path/to/account.json"
 keystore = "../keystore"
 
 [tool.sncast.profile1]

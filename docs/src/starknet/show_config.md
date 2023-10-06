@@ -21,7 +21,6 @@ $ sncast \
 
 command: show-config
 account: user1
-account_file_path: ../account-file
 chain_id: alpha-goerli
 keystore: ../keystore
 rpc_url: http://127.0.0.1:5050/rpc

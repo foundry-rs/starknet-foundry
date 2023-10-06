@@ -19,6 +19,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Spying events interface is updated to enable the use of events defined inside contracts in assertions
 
+### Cast
+
+#### Added
+
+- `show-config` subcommand to display currently used configuration
+
+### Changed
+
+
 ## [0.7.1] - 2023-09-27
 
 ### Forge
@@ -50,7 +59,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- `show-config` subcommand to display currently used configuration
 - `account add` command for importing accounts to the accounts file
 - `account create` command for creating openzeppelin accounts with starkli-style keystore
 - `account deploy` command for deploying openzeppelin accounts with starkli-style keystore
