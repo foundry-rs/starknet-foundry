@@ -450,6 +450,8 @@ fn test_simple_cheatcodes() {
             start_prank, stop_prank,
             start_roll, stop_roll,
             start_warp, stop_warp,
+            start_spoof, stop_spoof,
+            TxInfoMockTrait,
             test_address
         };
 
@@ -494,6 +496,28 @@ fn test_simple_cheatcodes() {
             stop_warp(test_address);
             let new_block_timestamp = starknet::get_block_info().unbox().block_timestamp;
             assert(new_block_timestamp == old_block_timestamp, 'Timestamp did not change back')
+        }
+
+        #[test]
+        fn test_spoof_test_state() {
+            let test_address: ContractAddress = test_address();
+            let old_tx_info = starknet::get_tx_info().unbox();
+
+            let mut tx_info_mock = TxInfoMockTrait::default();
+            tx_info_mock.transaction_hash = Option::Some(421);
+
+            start_spoof(test_address, tx_info_mock);
+            let new_tx_info = starknet::get_tx_info().unbox();
+            assert(new_tx_info.nonce == old_tx_info.nonce, 'Wrong nonce');
+            assert(new_tx_info.transaction_hash == 421, 'Wrong transaction_hash');
+
+            stop_spoof(test_address);
+            let new_tx_info = starknet::get_tx_info().unbox();
+            assert(new_tx_info.nonce == old_tx_info.nonce, 'Wrong nonce');
+            assert(
+                new_tx_info.transaction_hash == old_tx_info.transaction_hash,
+                'Wrong transaction_hash'
+            )
         }
     "#
     ));
