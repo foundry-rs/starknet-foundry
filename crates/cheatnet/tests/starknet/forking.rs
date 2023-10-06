@@ -1,15 +1,18 @@
-use crate::common::state::{create_cheatnet_fork_state, create_cheatnet_fork_state_at};
+use crate::common::state::{
+    create_cheatnet_state, create_fork_cached_state, create_fork_cached_state_at,
+};
 use crate::common::{deploy_contract, felt_selector_from_name};
 use crate::{assert_error, assert_success};
+use blockifier::state::cached_state::{CachedState, GlobalContractCache};
 use cairo_felt::Felt252;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use camino::Utf8PathBuf;
+use cheatnet::cheatcodes::deploy::deploy;
 use cheatnet::cheatcodes::{CheatcodeError, EnhancedHintError};
 use cheatnet::constants::build_testing_state;
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::rpc::call_contract;
-use cheatnet::state::ExtendedStateReader;
-use cheatnet::CheatnetState;
+use cheatnet::state::{BlockifierState, CheatnetState, ExtendedStateReader};
 use conversions::StarknetConversions;
 use std::path::PathBuf;
 
@@ -25,7 +28,8 @@ use tempfile::TempDir;
 
 #[test]
 fn fork_simple() {
-    let mut state = create_cheatnet_fork_state();
+    let mut cached_fork_state = create_fork_cached_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_fork_state);
 
     let contract_address = Felt252::from(
         BigUint::from_str(
@@ -36,31 +40,54 @@ fn fork_simple() {
     .to_contract_address();
 
     let selector = felt_selector_from_name("get_balance");
-    let output = call_contract(&contract_address, &selector, &[], &mut state).unwrap();
+    let output = call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &contract_address,
+        &selector,
+        &[],
+    )
+    .unwrap();
     assert_success!(output, vec![Felt252::from(2)]);
 
     let selector = felt_selector_from_name("increase_balance");
     call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
         &contract_address,
         &selector,
         &[Felt252::from(100)],
-        &mut state,
     )
     .unwrap();
 
     let selector = felt_selector_from_name("get_balance");
-    let output = call_contract(&contract_address, &selector, &[], &mut state).unwrap();
+    let output = call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &contract_address,
+        &selector,
+        &[],
+    )
+    .unwrap();
     assert_success!(output, vec![Felt252::from(102)]);
 }
 
 #[test]
 fn try_calling_nonexistent_contract() {
-    let mut state = create_cheatnet_fork_state();
+    let mut cached_fork_state = create_fork_cached_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_fork_state);
 
     let contract_address = ContractAddress::from(1_u8);
     let selector = felt_selector_from_name("get_balance");
 
-    let output = call_contract(&contract_address, &selector, &[], &mut state).unwrap();
+    let output = call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &contract_address,
+        &selector,
+        &[],
+    )
+    .unwrap();
     assert_error!(
         output,
         "Contract not deployed at address: 0x0000000000000000000000000000000000000000000000000000000000000001"
@@ -69,15 +96,19 @@ fn try_calling_nonexistent_contract() {
 
 #[test]
 fn try_deploying_undeclared_class() {
-    let mut state = create_cheatnet_fork_state();
+    let mut cached_fork_state = create_fork_cached_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_fork_state);
 
     let class_hash = "1".to_owned().to_class_hash();
 
-    assert!(match state.deploy(&class_hash, &[]) {
-        Err(CheatcodeError::Unrecoverable(EnhancedHintError::Hint(HintError::CustomHint(msg)))) =>
-            msg.as_ref().contains(class_hash.to_string().as_str()),
-        _ => false,
-    });
+    assert!(
+        match deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[]) {
+            Err(CheatcodeError::Unrecoverable(EnhancedHintError::Hint(HintError::CustomHint(
+                msg,
+            )))) => msg.as_ref().contains(class_hash.to_string().as_str()),
+            _ => false,
+        }
+    );
 }
 
 #[test]
@@ -87,23 +118,32 @@ fn test_forking_at_block_number() {
     let cache_dir = TempDir::new().unwrap();
 
     {
-        let mut state_before_deploy = CheatnetState::new(ExtendedStateReader {
-            dict_state_reader: build_testing_state(&predeployed_contracts),
-            fork_state_reader: Some(ForkStateReader::new(
-                node_url,
-                BlockId::Number(309_780),
-                Some(cache_dir.path().to_str().unwrap()),
-            )),
-        });
+        let mut cheatnet_state = CheatnetState::default();
+        let mut cached_state_before_delopy = CachedState::new(
+            ExtendedStateReader {
+                dict_state_reader: build_testing_state(&predeployed_contracts),
+                fork_state_reader: Some(ForkStateReader::new(
+                    node_url,
+                    BlockId::Number(309_780),
+                    Some(cache_dir.path().to_str().unwrap()),
+                )),
+            },
+            GlobalContractCache::default(),
+        );
+        let mut state_before_deploy = BlockifierState::from(&mut cached_state_before_delopy);
 
-        let mut state_after_deploy = CheatnetState::new(ExtendedStateReader {
-            dict_state_reader: build_testing_state(&predeployed_contracts),
-            fork_state_reader: Some(ForkStateReader::new(
-                node_url,
-                BlockId::Number(309_781),
-                Some(cache_dir.path().to_str().unwrap()),
-            )),
-        });
+        let cached_state_afer_deploy = &mut CachedState::new(
+            ExtendedStateReader {
+                dict_state_reader: build_testing_state(&predeployed_contracts),
+                fork_state_reader: Some(ForkStateReader::new(
+                    node_url,
+                    BlockId::Number(309_781),
+                    Some(cache_dir.path().to_str().unwrap()),
+                )),
+            },
+            GlobalContractCache::default(),
+        );
+        let mut state_after_deploy = BlockifierState::from(cached_state_afer_deploy);
 
         let contract_address = Felt252::from(
             BigUint::from_str(
@@ -114,16 +154,28 @@ fn test_forking_at_block_number() {
         .to_contract_address();
 
         let selector = felt_selector_from_name("get_balance");
-        let output =
-            call_contract(&contract_address, &selector, &[], &mut state_before_deploy).unwrap();
+        let output = call_contract(
+            &mut state_before_deploy,
+            &mut cheatnet_state,
+            &contract_address,
+            &selector,
+            &[],
+        )
+        .unwrap();
         assert_error!(
             output,
             "Contract not deployed at address: 0x071c8d74edc89330f314f3b1109059d68ebfa68874aa91e9c425a6378ffde00e"
         );
 
         let selector = felt_selector_from_name("get_balance");
-        let output =
-            call_contract(&contract_address, &selector, &[], &mut state_after_deploy).unwrap();
+        let output = call_contract(
+            &mut state_after_deploy,
+            &mut cheatnet_state,
+            &contract_address,
+            &selector,
+            &[],
+        )
+        .unwrap();
         assert_success!(output, vec![Felt252::from(0)]);
     }
     purge_cache(cache_dir.path().to_str().unwrap());
@@ -131,7 +183,8 @@ fn test_forking_at_block_number() {
 
 #[test]
 fn call_forked_contract_from_other_contract() {
-    let mut state = create_cheatnet_fork_state();
+    let mut cached_fork_state = create_fork_cached_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_fork_state);
 
     let forked_contract_address = Felt252::from(
         BigUint::from_str(
@@ -140,14 +193,20 @@ fn call_forked_contract_from_other_contract() {
         .unwrap(),
     );
 
-    let contract_address = deploy_contract(&mut state, "ForkingChecker", &[Felt252::from(1)]);
+    let contract_address = deploy_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        "ForkingChecker",
+        &[Felt252::from(1)],
+    );
 
     let selector = felt_selector_from_name("get_balance_call_contract");
     let output = call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
         &contract_address,
         &selector,
         &[forked_contract_address],
-        &mut state,
     )
     .unwrap();
     assert_success!(output, vec![Felt252::from(2)]);
@@ -155,7 +214,8 @@ fn call_forked_contract_from_other_contract() {
 
 #[test]
 fn library_call_on_forked_class_hash() {
-    let mut state = create_cheatnet_fork_state();
+    let mut cached_fork_state = create_fork_cached_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_fork_state);
 
     let forked_class_hash = Felt252::from(
         BigUint::from_str(
@@ -164,31 +224,39 @@ fn library_call_on_forked_class_hash() {
         .unwrap(),
     );
 
-    let contract_address = deploy_contract(&mut state, "ForkingChecker", &[Felt252::from(1)]);
+    let contract_address = deploy_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        "ForkingChecker",
+        &[Felt252::from(1)],
+    );
 
     let selector = felt_selector_from_name("get_balance_library_call");
     let output = call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
         &contract_address,
         &selector,
         &[forked_class_hash.clone()],
-        &mut state,
     )
     .unwrap();
     assert_success!(output, vec![Felt252::from(0)]);
 
     call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
         &contract_address,
         &felt_selector_from_name("set_balance"),
         &[Felt252::from(100)],
-        &mut state,
     )
     .unwrap();
 
     let output = call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
         &contract_address,
         &selector,
         &[forked_class_hash],
-        &mut state,
     )
     .unwrap();
     assert_success!(output, vec![Felt252::from(100)]);
@@ -196,7 +264,8 @@ fn library_call_on_forked_class_hash() {
 
 #[test]
 fn call_forked_contract_from_constructor() {
-    let mut state = create_cheatnet_fork_state();
+    let mut cached_fork_state = create_fork_cached_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_fork_state);
 
     let forked_class_hash = Felt252::from(
         BigUint::from_str(
@@ -213,17 +282,19 @@ fn call_forked_contract_from_constructor() {
     );
 
     let contract_address = deploy_contract(
-        &mut state,
+        &mut blockifier_state,
+        &mut cheatnet_state,
         "ForkingChecker",
         &[Felt252::from(0), forked_contract_address],
     );
 
     let selector = felt_selector_from_name("get_balance_library_call");
     let output = call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
         &contract_address,
         &selector,
         &[forked_class_hash],
-        &mut state,
     )
     .unwrap();
     assert_success!(output, vec![Felt252::from(2)]);
@@ -233,10 +304,11 @@ fn call_forked_contract_from_constructor() {
 fn using_specified_block_nb_is_cached() {
     let cache_dir = TempDir::new().unwrap();
     let run_test = || {
-        let mut state = create_cheatnet_fork_state_at(
+        let mut cached_state = create_fork_cached_state_at(
             BlockId::Number(312_646),
             cache_dir.path().to_str().unwrap(),
         );
+        let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
         let contract_address = Felt252::from(
             BigUint::from_str(
                 "3216637956526895219277698311134811322769343974163380838558193911733621219342",
@@ -246,7 +318,14 @@ fn using_specified_block_nb_is_cached() {
         .to_contract_address();
 
         let selector = felt_selector_from_name("get_balance");
-        let output = call_contract(&contract_address, &selector, &[], &mut state).unwrap();
+        let output = call_contract(
+            &mut blockifier_state,
+            &mut cheatnet_state,
+            &contract_address,
+            &selector,
+            &[],
+        )
+        .unwrap();
         assert_success!(output, vec![Felt252::from(2)]);
     };
 
@@ -295,10 +374,10 @@ fn using_block_tag_is_not_cached() {
     fn test_tag(tag: BlockTag) {
         let cache_dir = TempDir::new().unwrap();
         {
-            let mut state = create_cheatnet_fork_state_at(
-                BlockId::Tag(tag),
-                cache_dir.path().to_str().unwrap(),
-            );
+            let mut cached_state =
+                create_fork_cached_state_at(BlockId::Tag(tag), cache_dir.path().to_str().unwrap());
+            let (mut blockifier_state, mut cheatnet_state) =
+                create_cheatnet_state(&mut cached_state);
             let contract_address = Felt252::from(
                 BigUint::from_str(
                     "3216637956526895219277698311134811322769343974163380838558193911733621219342",
@@ -308,7 +387,14 @@ fn using_block_tag_is_not_cached() {
             .to_contract_address();
 
             let selector = felt_selector_from_name("get_balance");
-            let output = call_contract(&contract_address, &selector, &[], &mut state).unwrap();
+            let output = call_contract(
+                &mut blockifier_state,
+                &mut cheatnet_state,
+                &contract_address,
+                &selector,
+                &[],
+            )
+            .unwrap();
             assert_success!(output, vec![Felt252::from(2)]);
         }
 
@@ -335,12 +421,20 @@ fn using_block_tag_is_not_cached() {
 #[test]
 fn test_cache_merging() {
     fn run_test(cache_dir: &str, contract_address: &str, balance: u64) {
-        let mut state = create_cheatnet_fork_state_at(BlockId::Number(312_767), cache_dir);
+        let mut cached_state = create_fork_cached_state_at(BlockId::Number(312_767), cache_dir);
+        let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
         let contract_address =
             Felt252::from(BigUint::from_str(contract_address).unwrap()).to_contract_address();
 
         let selector = felt_selector_from_name("get_balance");
-        let output = call_contract(&contract_address, &selector, &[], &mut state).unwrap();
+        let output = call_contract(
+            &mut blockifier_state,
+            &mut cheatnet_state,
+            &contract_address,
+            &selector,
+            &[],
+        )
+        .unwrap();
         assert_success!(output, vec![Felt252::from(balance)]);
     }
 
