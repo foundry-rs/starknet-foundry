@@ -72,7 +72,7 @@ fn l1_handler_executor() {
                 l1_handler.from_address = 0x123;
                 l1_handler.payload = array![].span();
                 match l1_handler.execute() {
-                    Result::Ok(_) => {},
+                    Result::Ok(_) => panic_with_felt252('should have panicked'),
                     Result::Err(RevertedTransaction { panic_data }) => {
                         assert(*panic_data.at(0) == 'custom', 'Wrong 1st panic datum');
                         assert(*panic_data.at(1) == 'panic', 'Wrong 2nd panic datum');
