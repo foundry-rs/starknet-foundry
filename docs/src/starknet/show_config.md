@@ -5,9 +5,8 @@
 Sometimes, before executing any other cast command, one may want to make sure that the right
 configuration settings are being used (eg proper network or account is used).
 
-For those cases you can call `show-config` with all the same configuration related arguments, you can also just
-replace subcommand and anything after it with `show-config` and it should show all the configuration that will be
-used.
+To see just that, a `show-config` subcommand  can be used. You can just
+replace any subcommand (and its parameters) with `show-config` and it will show currently used configuration.
 
 Anything configuration that you cannot see there means its not set properly or is not being detected.
 
