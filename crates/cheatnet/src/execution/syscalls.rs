@@ -300,9 +300,15 @@ impl CheatableSyscallHandler<'_> {
             return self.execute_syscall(vm, deploy_syscall, constants::DEPLOY_GAS_COST);
         } else if SyscallSelector::EmitEvent == selector {
             // No incrementation, since execute_next_syscall reads selector and increments syscall_ptr
+            let events_len_before = self.syscall_handler.events.len();
             let result = self.syscall_handler.execute_next_syscall(vm, hint);
 
             if result.is_ok() {
+                assert_eq!(
+                    events_len_before + 1,
+                    self.syscall_handler.events.len(),
+                    "EmitEvent syscall is expected to emit exactly one event"
+                );
                 let contract_address = self
                     .syscall_handler
                     .call
