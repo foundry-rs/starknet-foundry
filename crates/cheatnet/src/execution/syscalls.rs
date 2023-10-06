@@ -301,14 +301,24 @@ impl CheatableSyscallHandler<'_> {
         } else if SyscallSelector::EmitEvent == selector {
             // No incrementation, since execute_next_syscall reads selector and increments syscall_ptr
             let result = self.syscall_handler.execute_next_syscall(vm, hint);
-            let event = Event::from_ordered_event(
-                self.syscall_handler.events.last().unwrap(),
-                self.syscall_handler
-                    .call
-                    .code_address
-                    .unwrap_or(self.syscall_handler.call.storage_address),
-            );
-            self.cheatnet_state.detected_events.push(event);
+
+            let contract_address = self
+                .syscall_handler
+                .call
+                .code_address
+                .unwrap_or(self.syscall_handler.call.storage_address);
+
+            for spy_on in &mut self.cheatnet_state.spies {
+                if spy_on.does_spy(contract_address) {
+                    let event = Event::from_ordered_event(
+                        self.syscall_handler.events.last().unwrap(),
+                        contract_address,
+                    );
+                    self.cheatnet_state.detected_events.push(event);
+                    break;
+                }
+            }
+
             return result;
         }
 

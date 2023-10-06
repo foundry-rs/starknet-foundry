@@ -164,6 +164,58 @@ fn check_events_order() {
 }
 
 #[test]
+fn check_events_captured_only_for_spied_contracts() {
+    let mut cached_state = create_cached_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
+
+    let spy_events_checker_address = deploy_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        "SpyEventsChecker",
+        &[],
+    );
+    let selector = felt_selector_from_name("emit_one_event");
+
+    call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &spy_events_checker_address,
+        &selector,
+        &[Felt252::from(123)],
+    )
+    .unwrap();
+
+    let id = cheatnet_state.spy_events(SpyTarget::One(spy_events_checker_address));
+    call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &spy_events_checker_address,
+        &selector,
+        &[Felt252::from(123)],
+    )
+    .unwrap();
+
+    let (length, serialized_events) = cheatnet_state.fetch_events(&Felt252::from(id));
+    let events = felt_vec_to_event_vec(&serialized_events);
+
+    assert_eq!(length, 1, "There should be one event");
+    assert_eq!(
+        events.len(),
+        length,
+        "Length after serialization should be the same"
+    );
+    assert_eq!(
+        events[0],
+        Event {
+            from: spy_events_checker_address,
+            keys: vec![starknet_keccak("FirstEvent".as_ref()).into()],
+            data: vec![Felt252::from(123)]
+        },
+        "Wrong event"
+    );
+}
+
+#[test]
 fn duplicate_spies_on_one_address() {
     let mut cached_state = create_cached_state();
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
