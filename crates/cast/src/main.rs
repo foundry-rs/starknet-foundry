@@ -8,10 +8,7 @@ use anyhow::{anyhow, Result};
 use camino::Utf8PathBuf;
 use cast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
 use cast::helpers::scarb_utils::{parse_scarb_config, CastConfig};
-use cast::{
-    get_account, get_block_id, get_chain_id, get_provider,
-    print_command_result,
-};
+use cast::{get_account, get_block_id, get_chain_id, get_provider, print_command_result};
 use clap::{Parser, Subcommand};
 
 mod starknet_commands;

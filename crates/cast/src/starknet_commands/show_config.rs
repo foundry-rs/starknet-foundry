@@ -18,7 +18,7 @@ pub async fn show_config(
     profile: Option<String>,
     scarb_path: Option<Utf8PathBuf>,
 ) -> Result<ShowConfigResponse> {
-    let chain_id_field = get_chain_id(&provider).await?;
+    let chain_id_field = get_chain_id(provider).await?;
     let chain_id = chain_id_to_network_name(chain_id_field);
     let rpc_url = Some(cast_config.rpc_url).filter(|p| !p.is_empty());
     let account = Some(cast_config.account).filter(|p| !p.is_empty());
@@ -32,10 +32,10 @@ pub async fn show_config(
 
     Ok(ShowConfigResponse {
         profile,
-        scarb_path,
         chain_id,
         rpc_url,
         account,
+        scarb_path,
         account_file_path,
         keystore,
     })

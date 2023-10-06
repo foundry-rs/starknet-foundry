@@ -360,11 +360,7 @@ pub fn print_command_result<T: Serialize>(
                     .iter()
                     .filter_map(|(k, v)| {
                         // skip values that are not convertable to string
-                        if let Some(value) = v.as_str() {
-                            Some((k.as_str(), value.to_string()))
-                        } else {
-                            None
-                        }
+                        v.as_str().map(|value| (k.as_str(), value.to_string()))
                     })
                     .collect::<Vec<(&str, String)>>(),
             );
