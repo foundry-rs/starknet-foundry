@@ -299,6 +299,7 @@ impl CheatableSyscallHandler<'_> {
             self.syscall_handler.syscall_ptr += 1;
             return self.execute_syscall(vm, deploy_syscall, constants::DEPLOY_GAS_COST);
         } else if SyscallSelector::EmitEvent == selector {
+            // No incrementation, since execute_next_syscall reads selector and increments syscall_ptr
             let result = self.syscall_handler.execute_next_syscall(vm, hint);
             let event = Event::from_ordered_event(
                 self.syscall_handler.events.last().unwrap(),
