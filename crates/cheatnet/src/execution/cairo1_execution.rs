@@ -1,4 +1,4 @@
-use crate::execution::syscalls::cairo1_cheatable_syscall_handler::CheatableSyscallHandler;
+use crate::execution::syscalls::cairo1_cheatable_syscall_handler::Cairo1CheatableSyscallHandler;
 use crate::state::CheatnetState;
 use blockifier::execution::call_info::CallInfo;
 use blockifier::{
@@ -56,7 +56,7 @@ pub fn execute_entry_point_call_cairo1(
     let previous_vm_resources = syscall_handler.resources.vm_resources.clone();
 
     // region: Modified blockifier code
-    let mut cheatable_syscall_handler = CheatableSyscallHandler {
+    let mut cheatable_syscall_handler = Cairo1CheatableSyscallHandler {
         syscall_handler,
         cheatnet_state,
     };

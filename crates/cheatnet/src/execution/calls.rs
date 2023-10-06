@@ -1,4 +1,4 @@
-use crate::execution::syscalls::cairo1_cheatable_syscall_handler::CheatableSyscallHandler;
+use crate::execution::syscalls::cairo1_cheatable_syscall_handler::Cairo1CheatableSyscallHandler;
 use blockifier::{
     execution::{
         entry_point::{CallEntryPoint, CallType},
@@ -23,7 +23,7 @@ use super::{entry_point::execute_call_entry_point};
 pub fn execute_inner_call(
     call: &mut CallEntryPoint,
     vm: &mut VirtualMachine,
-    syscall_handler: &mut CheatableSyscallHandler<'_>, // Changed parameter type
+    syscall_handler: &mut Cairo1CheatableSyscallHandler<'_>, // Changed parameter type
     remaining_gas: &mut u64,
 ) -> SyscallResult<ReadOnlySegment> {
     // region: Modified blockifier code
@@ -57,7 +57,7 @@ pub fn execute_inner_call(
 
 // blockifier/src/execution/syscalls/hint_processor.rs:577 (execute_library_call)
 pub fn execute_library_call(
-    syscall_handler: &mut CheatableSyscallHandler<'_>, // Modified parameter type
+    syscall_handler: &mut Cairo1CheatableSyscallHandler<'_>, // Modified parameter type
     vm: &mut VirtualMachine,
     class_hash: ClassHash,
     call_to_external: bool,

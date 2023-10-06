@@ -46,7 +46,7 @@ use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cheatnet::cheatcodes::spy_events::SpyTarget;
 use starknet_api::block::BlockHash;
 use starknet_api::hash::StarkFelt;
-use cheatnet::execution::syscalls::cairo1_cheatable_syscall_handler::CheatableSyscallHandler;
+use cheatnet::execution::syscalls::cairo1_cheatable_syscall_handler::Cairo1CheatableSyscallHandler;
 
 mod file_operations;
 
@@ -63,7 +63,7 @@ impl From<&StarknetContractArtifacts> for ContractArtifacts {
 // This hint processor provides an implementation logic for functions from snforge_std library.
 // If cannot execute a hint it falls back to the CheatableSyscallHandler
 pub struct TestExecutionSyscallHandler<'a> {
-    pub cheatable_syscall_handler: CheatableSyscallHandler<'a>,
+    pub cheatable_syscall_handler: Cairo1CheatableSyscallHandler<'a>,
     pub contracts: &'a HashMap<String, StarknetContractArtifacts>,
     pub hints: &'a HashMap<String, Hint>,
     // pub cheatnet_state: CheatnetState,
@@ -624,7 +624,7 @@ fn execute_syscall(
     exec_scopes: &mut ExecutionScopes,
     hint_data: &Box<dyn Any>,
     constants: &HashMap<String, Felt252>,
-    cheatable_syscall_handler: &mut CheatableSyscallHandler,
+    cheatable_syscall_handler: &mut Cairo1CheatableSyscallHandler,
 ) -> Result<(), HintError> {
     let (cell, offset) = extract_buffer(system);
     let system_ptr = get_ptr(vm, cell, &offset)?;

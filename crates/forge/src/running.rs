@@ -32,7 +32,7 @@ use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::hash::StarkHash;
 use starknet_api::patricia_key;
 use starknet_api::transaction::Calldata;
-use cheatnet::execution::syscalls::cairo1_cheatable_syscall_handler::CheatableSyscallHandler;
+use cheatnet::execution::syscalls::cairo1_cheatable_syscall_handler::Cairo1CheatableSyscallHandler;
 use test_collector::{ForkConfig, TestCase};
 
 use crate::scarb::{ForkTarget, StarknetContractArtifacts};
@@ -142,7 +142,7 @@ pub(crate) fn run_from_test_case(
         ReadOnlySegments::default(),
     );
 
-    let cheatable_syscall_handler = CheatableSyscallHandler {
+    let cheatable_syscall_handler = Cairo1CheatableSyscallHandler {
         syscall_handler,
         cheatnet_state: &mut CheatnetState::default(),
     };
