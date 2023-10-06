@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `#[fuzzer(...)]` attribute allowing to specify a fuzzer configuration for a single test case
 - Support for `u8`, `u16`, `u32`, `u64`, `u128`, `u256` types to fuzzer
 - `--clean-cache` flag
+- cheatcodes (`prank`, `roll`, `warp`, `spoof`, `spy_events`) now work in a test state
 
 #### Changed
 
