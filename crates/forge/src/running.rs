@@ -15,7 +15,7 @@ use cheatnet::constants::{build_block_context, build_testing_state, build_transa
 use cheatnet::execution::syscalls::CheatableSyscallHandler;
 use itertools::chain;
 
-use crate::{RunnerConfig, RunnerParams};
+use crate::RunnerParams;
 use cairo_lang_casm::hints::Hint;
 use cairo_lang_casm::instructions::Instruction;
 use cairo_lang_runner::casm_run::hint_to_hint_params;
@@ -75,18 +75,7 @@ pub(crate) fn run_from_test_case(
     case: &TestCase,
     args: Vec<Felt252>,
     runner_params: &RunnerParams,
-    runner_config: &RunnerConfig,
 ) -> Result<TestCaseSummary> {
-    // if only_ignored == true then tests without `#[ignore]` are filtered earlier
-    let should_be_run =
-        runner_config.include_ignored || runner_config.only_ignored || !case.ignored;
-
-    if !should_be_run {
-        return Ok(TestCaseSummary::Ignored {
-            name: case.name.clone(),
-        });
-    }
-
     let available_gas = if let Some(available_gas) = &case.available_gas {
         Some(*available_gas)
     } else {

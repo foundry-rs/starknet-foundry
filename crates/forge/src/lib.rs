@@ -5,7 +5,6 @@ use anyhow::{anyhow, Context, Result};
 use ark_std::iterable::Iterable;
 use assert_fs::TempDir;
 use camino::Utf8PathBuf;
-use serde::Deserialize;
 use test_case_summary::TestCaseSummary;
 
 use cairo_lang_runner::SierraCasmRunner;
@@ -54,15 +53,41 @@ static BUILTINS: Lazy<Vec<&str>> = Lazy::new(|| {
     ]
 });
 
+#[derive(Debug, PartialEq)]
+enum TestsToRun {
+    All,
+    Ignored,
+    NonIgnored,
+}
+
+impl TestsToRun {
+    fn from_flags(only_ignored: bool, include_ignored: bool) -> Self {
+        if include_ignored {
+            Self::All
+        } else if only_ignored {
+            Self::Ignored
+        } else {
+            Self::NonIgnored
+        }
+    }
+}
+
+fn should_be_run(tests_to_run: &TestsToRun, case_ignored: bool) -> bool {
+    match tests_to_run {
+        TestsToRun::All => true,
+        TestsToRun::Ignored => case_ignored,
+        TestsToRun::NonIgnored => !case_ignored,
+    }
+}
+
 /// Configuration of the test runner
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Debug, PartialEq)]
 #[allow(clippy::struct_excessive_bools)]
 pub struct RunnerConfig {
     test_name_filter: Option<String>,
     exact_match: bool,
     exit_first: bool,
-    only_ignored: bool,
-    include_ignored: bool,
+    tests_to_run: TestsToRun,
     fuzzer_runs: u32,
     fuzzer_seed: u64,
 }
@@ -91,8 +116,7 @@ impl RunnerConfig {
             test_name_filter,
             exact_match,
             exit_first: forge_config_from_scarb.exit_first || exit_first,
-            only_ignored,
-            include_ignored,
+            tests_to_run: TestsToRun::from_flags(only_ignored, include_ignored),
             fuzzer_runs: fuzzer_runs
                 .or(forge_config_from_scarb.fuzzer_runs)
                 .unwrap_or(FUZZER_RUNS_DEFAULT),
@@ -131,7 +155,7 @@ impl RunnerParams {
         predeployed_contracts: Utf8PathBuf,
         environment_variables: HashMap<String, String>,
         linked_libraries: Vec<LinkedLibrary>,
-        forge_config: ForgeConfig,
+        fork_targets: Vec<ForkTarget>,
     ) -> Self {
         Self {
             corelib_path,
@@ -139,7 +163,7 @@ impl RunnerParams {
             predeployed_contracts,
             environment_variables,
             linked_libraries,
-            fork_targets: forge_config.fork,
+            fork_targets,
         }
     }
 }
@@ -261,15 +285,15 @@ fn run_tests_from_crate(
         let function = runner.find_function(case_name)?;
         let args = function_args(function, &BUILTINS);
 
+        if should_be_run(&runner_config.tests_to_run, case.ignored) {
+            results.push(TestCaseSummary::Ignored {
+                name: case.name.clone(),
+            });
+            continue;
+        }
+
         let result = if args.is_empty() {
-            let result = run_from_test_case(
-                package_root,
-                &runner,
-                case,
-                vec![],
-                runner_params,
-                runner_config,
-            )?;
+            let result = run_from_test_case(package_root, &runner, case, vec![], runner_params)?;
             pretty_printing::print_test_result(&result, None);
 
             result
@@ -350,14 +374,7 @@ fn run_with_fuzzing(
     for _ in 1..=fuzzer_runs {
         let args = fuzzer.next_args();
 
-        let result = run_from_test_case(
-            package_root,
-            runner,
-            case,
-            args.clone(),
-            runner_params,
-            runner_config,
-        )?;
+        let result = run_from_test_case(package_root, runner, case, args.clone(), runner_params)?;
         results.push(result.clone());
 
         if let TestCaseSummary::Failed { .. } = result {
@@ -438,10 +455,9 @@ mod tests {
                 test_name_filter: None,
                 exact_match: false,
                 exit_first: false,
-                only_ignored: false,
-                include_ignored: false,
                 fuzzer_runs: FUZZER_RUNS_DEFAULT,
                 fuzzer_seed: config.fuzzer_seed,
+                tests_to_run: TestsToRun::NonIgnored,
             }
         );
     }
@@ -470,8 +486,7 @@ mod tests {
                 test_name_filter: None,
                 exact_match: false,
                 exit_first: true,
-                only_ignored: false,
-                include_ignored: false,
+                tests_to_run: TestsToRun::NonIgnored,
                 fuzzer_runs: 1234,
                 fuzzer_seed: 500,
             }

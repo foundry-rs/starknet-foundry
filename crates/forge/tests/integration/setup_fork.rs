@@ -121,7 +121,7 @@ fn fork_aliased_decorator() {
             Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
             Default::default(),
             test.linked_libraries(),
-            forge_config,
+            forge_config.fork,
         ),
     )
     .unwrap();

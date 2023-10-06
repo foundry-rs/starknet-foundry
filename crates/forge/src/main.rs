@@ -172,7 +172,7 @@ fn main_execution() -> Result<bool> {
             predeployed_contracts.clone(),
             env::vars().collect(),
             dependencies,
-            forge_config,
+            forge_config.fork,
         );
 
         let tests_file_summaries = run(

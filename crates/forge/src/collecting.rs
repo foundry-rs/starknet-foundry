@@ -1,4 +1,4 @@
-use crate::{RunnerConfig, RunnerParams, BUILTINS};
+use crate::{RunnerConfig, RunnerParams, TestsToRun, BUILTINS};
 use anyhow::{anyhow, Context, Result};
 use assert_fs::fixture::{FileTouch, PathChild, PathCopy};
 use assert_fs::TempDir;
@@ -16,7 +16,7 @@ pub struct TestsFromCrate {
 }
 
 impl TestsFromCrate {
-    pub fn filter_by_name(self, filter: &str, exact_match: bool) -> Self {
+    fn filter_by_name(self, filter: &str, exact_match: bool) -> Self {
         let mut result = vec![];
         for test in self.test_cases {
             if exact_match {
@@ -34,7 +34,7 @@ impl TestsFromCrate {
         }
     }
 
-    pub fn extract_ignored(self) -> Self {
+    fn extract_ignored(self) -> Self {
         let result = self
             .test_cases
             .into_iter()
@@ -146,8 +146,7 @@ pub fn filter_tests_from_crates(
         tests_from_crates
     };
 
-    // TODO: add tests for filter_tests_from_crate
-    if runner_config.only_ignored {
+    if let TestsToRun::Ignored = runner_config.tests_to_run {
         filtered_by_name
             .into_iter()
             .map(TestsFromCrate::extract_ignored)
@@ -239,8 +238,7 @@ mod tests {
                 test_name_filter: None,
                 exact_match: false,
                 exit_first: true,
-                only_ignored: false,
-                include_ignored: true,
+                tests_to_run: TestsToRun::All,
                 fuzzer_runs: 100,
                 fuzzer_seed: 32,
             }
