@@ -375,12 +375,6 @@ impl TestExecutionSyscallHandler<'_> {
                 let calldata = Vec::from(&inputs[2..(2 + calldata_length)]);
                 let mut blockifier_state =
                     BlockifierState::from(self.cheatable_syscall_handler.syscall_handler.state);
-                let deploy_res = deploy(
-                    &mut blockifier_state,
-                    self.cheatable_syscall_handler.cheatnet_state,
-                    &class_hash,
-                    &calldata,
-                );
 
                 handle_deploy_result(
                     deploy(

@@ -38,7 +38,6 @@ pub fn deploy_at(
     calldata: &[Felt252],
     contract_address: ContractAddress,
 ) -> Result<DeployCallPayload, CheatcodeError> {
-    cheatnet_state.increment_deploy_salt_base();
     let blockifier_state_raw: &mut dyn State = blockifier_state.blockifier_state;
 
     if let Ok(class_hash) = blockifier_state_raw.get_class_hash_at(contract_address) {
@@ -67,7 +66,7 @@ pub fn deploy_at(
         calldata.to_vec().iter().map(felt_to_stark_felt).collect(),
     ));
 
-    execute_deployment(
+    let result = execute_deployment(
         blockifier_state_raw,
         &mut ExecutionResources::default(),
         entry_point_execution_ctx,
@@ -88,7 +87,9 @@ pub fn deploy_at(
         let call_contract_failure =
             CallContractFailure::from_execution_error(&err, &contract_address);
         CheatcodeError::from(call_contract_failure)
-    })
+    });
+    cheatnet_state.increment_deploy_salt_base();
+    result
 }
 
 #[allow(clippy::module_name_repetitions)]
