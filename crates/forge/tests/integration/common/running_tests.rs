@@ -4,39 +4,35 @@ use crate::integration::common::corelib::{corelib_path, predeployed_contracts};
 use crate::integration::common::runner::TestCase;
 use camino::Utf8PathBuf;
 
-use tokio_util::sync::CancellationToken;
-
-use forge::{run, RunnerConfig, RunnerParams, TestCrateSummary};
+use forge::{run, RunnerConfig, TestCrateSummary};
 use std::default::Default;
 use std::path::PathBuf;
 use tempfile::tempdir;
+use tokio::runtime::Runtime;
 
-#[tokio::main]
-pub async fn run_test_case(test: &TestCase) -> Vec<TestCrateSummary> {
-    let token = CancellationToken::new();
-    let cancellation_token = Arc::new(token.clone());
-    run(
-        Arc::new(Utf8PathBuf::from_path_buf(PathBuf::from(tempdir().unwrap().path())).unwrap()),
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src"),
-        &test.linked_libraries(),
-        Arc::new(RunnerConfig::new(
-            None,
-            false,
-            false,
-            Some(256),
-            Some(12345),
-            &Default::default(),
-        )),
-        Arc::new(RunnerParams::new(
-            corelib_path(),
-            test.contracts(&corelib_path()).unwrap(),
-            Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-            test.env().clone(),
-        )),
-        cancellation_token,
-    )
-    .await
-    .unwrap()
+pub fn run_test_case(test: &TestCase) -> Vec<TestCrateSummary> {
+    let rt = Runtime::new().expect("Could not instantiate Runtime");
+    rt.block_on(async {
+        run(
+            &test.path().unwrap(),
+            &String::from("src"),
+            &test.path().unwrap().join("src"),
+            &test.linked_libraries(),
+            Arc::new(RunnerConfig::new(
+                Utf8PathBuf::from_path_buf(PathBuf::from(tempdir().unwrap().path())).unwrap(),
+                None,
+                false,
+                false,
+                Some(256),
+                Some(12345),
+                &Default::default(),
+                corelib_path(),
+                test.contracts(&corelib_path()).unwrap(),
+                Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
+                test.env().clone(),
+            )),
+        )
+        .await
+    })
+    .expect("Runner fail")
 }

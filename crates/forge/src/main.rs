@@ -8,6 +8,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::{env, fs};
 use tempfile::{tempdir, TempDir};
+use tokio::runtime::Runtime;
 
 use forge::{pretty_printing, RunnerConfig};
 use forge::{run, TestCrateSummary};
@@ -19,7 +20,6 @@ use forge::scarb::{
 };
 use forge::test_case_summary::TestCaseSummary;
 use std::process::{Command, Stdio};
-use tokio_util::sync::CancellationToken;
 mod init;
 
 static PREDEPLOYED_CONTRACTS: Dir = include_dir!("crates/cheatnet/predeployed-contracts");
@@ -88,10 +88,9 @@ fn extract_failed_tests(tests_summaries: Vec<TestCrateSummary>) -> Vec<TestCaseS
         .flat_map(|test_file_summary| test_file_summary.test_case_summaries)
         .filter(|test_case_summary| matches!(test_case_summary, TestCaseSummary::Failed { .. }))
         .collect()
-} 
+}
 
-#[tokio::main]
-async fn main_execution() -> Result<bool> {
+fn main_execution() -> Result<bool> {
     let args = Args::parse();
     if let Some(project_name) = args.init {
         init::run(project_name.as_str())?;
@@ -119,64 +118,67 @@ async fn main_execution() -> Result<bool> {
         clean_cache(&package_root).context("Failed to clean snforge cache")?;
     }
 
-    let mut all_failed_tests = vec![];
+    let rt = Runtime::new()?;
+    let all_failed_tests = rt.block_on(async {
+        let mut all_failed_tests = vec![];
+        for package in &packages {
+            let forge_config = config_from_scarb_for_package(&scarb_metadata, &package.id)?;
+            let (package_path, package_source_dir_path) =
+                paths_for_package(&scarb_metadata, &package.id)?;
+            env::set_current_dir(package_path.clone())?;
 
-    for package in &packages {
-        let forge_config = config_from_scarb_for_package(&scarb_metadata, &package.id)?;
-        let (package_path, package_source_dir_path) =
-            paths_for_package(&scarb_metadata, &package.id)?;
-        env::set_current_dir(package_path.clone())?;
+            // TODO(#671)
+            let target_dir = target_dir_for_package(package_root)?;
 
-        // TODO(#671)
-        let target_dir = target_dir_for_package(package_root)?;
+            let build_output = Command::new("scarb")
+                .arg("build")
+                .stderr(Stdio::inherit())
+                .stdout(Stdio::inherit())
+                .output()
+                .context("Failed to build contracts with Scarb")?;
+            if !build_output.status.success() {
+                bail!("Scarb build did not succeed")
+            }
 
-        let build_output = Command::new("scarb")
-            .arg("build")
-            .stderr(Stdio::inherit())
-            .stdout(Stdio::inherit())
-            .output()
-            .context("Failed to build contracts with Scarb")?;
-        if !build_output.status.success() {
-            bail!("Scarb build did not succeed")
+            let package_name = Arc::new(name_for_package(&scarb_metadata, &package.id)?);
+            let dependencies = dependencies_for_package(&scarb_metadata, &package.id)?;
+            let target_name = target_name_for_package(&scarb_metadata, &package.id)?;
+            let corelib_path = corelib_for_package(&scarb_metadata, &package.id)?;
+
+            let contracts_path = try_get_starknet_artifacts_path(&target_dir, &target_name)?;
+            let contracts = contracts_path
+                .map(|path| get_contracts_map(&path))
+                .transpose()?
+                .unwrap_or_default();
+
+            let runner_config = Arc::new(RunnerConfig::new(
+                package_root.clone(),
+                args.test_filter.clone(),
+                args.exact,
+                args.exit_first,
+                args.fuzzer_runs,
+                args.fuzzer_seed,
+                &forge_config,
+                corelib_path,
+                contracts,
+                predeployed_contracts.clone(),
+                env::vars().collect(),
+            ));
+
+            let tests_file_summaries = run(
+                &package_path,
+                &package_name,
+                &package_source_dir_path,
+                &dependencies,
+                runner_config,
+            )
+            .await?;
+
+            let mut failed_tests = extract_failed_tests(tests_file_summaries);
+            all_failed_tests.append(&mut failed_tests);
         }
-
-        let package_name = Arc::new(name_for_package(&scarb_metadata, &package.id)?);
-        let dependencies = dependencies_for_package(&scarb_metadata, &package.id)?;
-        let target_name = target_name_for_package(&scarb_metadata, &package.id)?;
-        let corelib_path = corelib_for_package(&scarb_metadata, &package.id)?;
-
-        let contracts_path = try_get_starknet_artifacts_path(&target_dir, &target_name)?;
-        let contracts = contracts_path
-            .map(|path| get_contracts_map(&path))
-            .transpose()?
-            .unwrap_or_default();
-
-        let runner_config = Arc::new(RunnerConfig::new(
-            package_root.clone(),
-            args.test_filter.clone(),
-            args.exact,
-            args.exit_first,
-            args.fuzzer_runs,
-            args.fuzzer_seed,
-            &forge_config,
-            corelib_path,
-            contracts,
-            predeployed_contracts.clone(),
-            env::vars().collect(),
-        ));
-
-        let tests_file_summaries = run(
-            &package_path,
-            &package_name,
-            &package_source_dir_path,
-            &dependencies,
-            runner_config,
-        )
-        .await?;
-
-        let mut failed_tests = extract_failed_tests(tests_file_summaries);
-        all_failed_tests.append(&mut failed_tests);
-    }
+        Ok(all_failed_tests)
+    })?;
 
     // Explicitly close the temporary directories so we can handle the errors
     predeployed_contracts_dir.close().with_context(|| {
