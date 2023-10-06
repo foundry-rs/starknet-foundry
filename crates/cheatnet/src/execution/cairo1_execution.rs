@@ -1,4 +1,4 @@
-use super::syscalls::CheatableSyscallHandler;
+use crate::execution::syscalls::cairo1_cheatable_syscall_handler::CheatableSyscallHandler;
 use crate::state::CheatnetState;
 use blockifier::execution::call_info::CallInfo;
 use blockifier::{

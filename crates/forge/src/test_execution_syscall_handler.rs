@@ -23,7 +23,6 @@ use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use cheatnet::cheatcodes::deploy::{deploy, deploy_at, DeployPayload};
 use cheatnet::cheatcodes::{CheatcodeError, ContractArtifacts, EnhancedHintError};
-use cheatnet::execution::syscalls::CheatableSyscallHandler;
 use cheatnet::rpc::{call_contract, CallContractOutput};
 use cheatnet::state::{BlockifierState, CheatnetState};
 use conversions::StarknetConversions;
@@ -47,6 +46,7 @@ use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cheatnet::cheatcodes::spy_events::SpyTarget;
 use starknet_api::block::BlockHash;
 use starknet_api::hash::StarkFelt;
+use cheatnet::execution::syscalls::cairo1_cheatable_syscall_handler::CheatableSyscallHandler;
 
 mod file_operations;
 

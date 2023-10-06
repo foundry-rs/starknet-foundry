@@ -12,7 +12,6 @@ use cairo_felt::Felt252;
 use cairo_vm::serde::deserialize_program::HintParams;
 use cairo_vm::types::relocatable::Relocatable;
 use cheatnet::constants::{build_block_context, build_testing_state, build_transaction_context};
-use cheatnet::execution::syscalls::CheatableSyscallHandler;
 use itertools::chain;
 
 use cairo_lang_casm::hints::Hint;
@@ -33,6 +32,7 @@ use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::hash::StarkHash;
 use starknet_api::patricia_key;
 use starknet_api::transaction::Calldata;
+use cheatnet::execution::syscalls::cairo1_cheatable_syscall_handler::CheatableSyscallHandler;
 use test_collector::{ForkConfig, TestCase};
 
 use crate::scarb::{ForkTarget, StarknetContractArtifacts};
