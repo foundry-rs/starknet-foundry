@@ -2,8 +2,8 @@
 
 ## Overview
 
-Many times before executing any other cast command you want to make sure that you are passing the right
-configuration settings and not mixing up commands that needs to be sent to development environment to mainnet :)
+Sometimes, before executing any other cast command, one may want to make sure that the right
+configuration settings are being used (eg proper network or account is used).
 
 For those cases you can call `show-config` with all the same configuration related arguments, you can also just
 replace subcommand and anything after it with `show-config` and it should show all the configuration that will be
