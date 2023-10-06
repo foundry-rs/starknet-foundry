@@ -97,7 +97,7 @@ fn setup_declare_and_interact() -> TestCase {
 }
 
 fn declare_and_interact(test: &TestCase) {
-    let result = run_test_case(&test);
+    let result = run_test_case(test);
 
     assert_passed!(result);
 }
