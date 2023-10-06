@@ -285,18 +285,16 @@ fn run_tests_from_crate(
         let function = runner.find_function(case_name)?;
         let args = function_args(function, &BUILTINS);
 
-        if should_be_run(&runner_config.tests_to_run, case.ignored) {
-            results.push(TestCaseSummary::Ignored {
+        let (result, runs) = if !should_be_run(&runner_config.tests_to_run, case.ignored) {
+            let result = TestCaseSummary::Ignored {
                 name: case.name.clone(),
-            });
-            continue;
-        }
+            };
 
-        let result = if args.is_empty() {
+            (result, None)
+        } else if args.is_empty() {
             let result = run_from_test_case(package_root, &runner, case, vec![], runner_params)?;
-            pretty_printing::print_test_result(&result, None);
 
-            result
+            (result, None)
         } else {
             was_fuzzed = true;
             let (result, runs) = run_with_fuzzing(
@@ -307,11 +305,11 @@ fn run_tests_from_crate(
                 case,
                 &args,
             )?;
-            pretty_printing::print_test_result(&result, Some(runs));
 
-            result
+            (result, Some(runs))
         };
 
+        pretty_printing::print_test_result(&result, runs);
         results.push(result.clone());
 
         if runner_config.exit_first {
