@@ -8,7 +8,6 @@ configuration settings are being used (eg proper network or account is used).
 To see just that, a `show-config` subcommand  can be used. You can just
 replace any subcommand (and its parameters) with `show-config` and it will show currently used configuration.
 
-Anything configuration that you cannot see there means its not set properly or is not being detected.
 
 ## Examples
 
