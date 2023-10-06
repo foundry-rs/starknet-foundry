@@ -56,8 +56,7 @@ Options are:
 
 Optional.
 Specifies the Blockchain Explorer's Verification API URL ().  
-Default: the default API URL for selected verifier (eg. https://goerli.voyager.online/) (???)
-
+Default: the default API URL for selected verifier (eg. https://goerli.voyager.online/) (testnet)
 Options are: 
  - `https://voyager.online/` - for verification at mainnet
  - `https://goerli.voyager.online/` -  for verification on testnet
