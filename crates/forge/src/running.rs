@@ -21,6 +21,7 @@ use cairo_lang_runner::SierraCasmRunner;
 use cairo_lang_runner::{Arg, RunnerError};
 use cairo_vm::vm::runners::cairo_runner::RunResources;
 use camino::Utf8PathBuf;
+use cheatnet::execution::syscalls::cairo1_cheatable_syscall_handler::Cairo1CheatableSyscallHandler;
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::state::{CheatnetState, ExtendedStateReader};
 use conversions::StarknetConversions;
@@ -32,7 +33,6 @@ use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::hash::StarkHash;
 use starknet_api::patricia_key;
 use starknet_api::transaction::Calldata;
-use cheatnet::execution::syscalls::cairo1_cheatable_syscall_handler::Cairo1CheatableSyscallHandler;
 use test_collector::{ForkConfig, TestCase};
 
 use crate::scarb::{ForkTarget, StarknetContractArtifacts};

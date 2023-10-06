@@ -2,6 +2,7 @@ use crate::execution::calls::{execute_inner_call, execute_library_call};
 use crate::execution::contract_print::{contract_print, PrintingResult};
 use crate::execution::entry_point::execute_constructor_entry_point;
 use crate::execution::execution_info::get_cheated_exec_info_ptr;
+use crate::execution::syscalls::lib::stark_felt_from_ptr_immutable;
 use crate::state::CheatnetState;
 use blockifier::abi::constants;
 use blockifier::execution::call_info::CallInfo;
@@ -11,7 +12,7 @@ use blockifier::execution::entry_point::{
     CallEntryPoint, CallType, ConstructorContext, EntryPointExecutionContext,
     EntryPointExecutionResult, ExecutionResources,
 };
-use blockifier::execution::execution_utils::{felt_to_stark_felt, ReadOnlySegment};
+use blockifier::execution::execution_utils::ReadOnlySegment;
 use blockifier::execution::syscalls::hint_processor::{
     create_retdata_segment, write_segment, SyscallExecutionError, SyscallHintProcessor,
     OUT_OF_GAS_ERROR,
@@ -131,21 +132,6 @@ fn get_ptr_from_res_operand_unchecked(vm: &mut VirtualMachine, res: &ResOperand)
     };
     let cell_reloc = (base + i32::from(cell.offset)).unwrap();
     (vm.get_relocatable(cell_reloc).unwrap() + &base_offset).unwrap()
-}
-
-fn stark_felt_from_ptr_immutable(
-    vm: &VirtualMachine,
-    ptr: &Relocatable,
-) -> Result<StarkFelt, VirtualMachineError> {
-    Ok(felt_to_stark_felt(&felt_from_ptr_immutable(vm, ptr)?))
-}
-
-fn felt_from_ptr_immutable(
-    vm: &VirtualMachine,
-    ptr: &Relocatable,
-) -> Result<Felt252, VirtualMachineError> {
-    let felt = vm.get_integer(*ptr)?.into_owned();
-    Ok(felt)
 }
 
 impl Cairo1CheatableSyscallHandler<'_> {

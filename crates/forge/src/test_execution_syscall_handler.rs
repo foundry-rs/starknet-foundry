@@ -44,9 +44,9 @@ use cairo_lang_utils::bigint::BigIntAsHex;
 use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cheatnet::cheatcodes::spy_events::SpyTarget;
+use cheatnet::execution::syscalls::cairo1_cheatable_syscall_handler::Cairo1CheatableSyscallHandler;
 use starknet_api::block::BlockHash;
 use starknet_api::hash::StarkFelt;
-use cheatnet::execution::syscalls::cairo1_cheatable_syscall_handler::Cairo1CheatableSyscallHandler;
 
 mod file_operations;
 

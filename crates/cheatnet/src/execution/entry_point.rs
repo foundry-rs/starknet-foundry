@@ -1,7 +1,7 @@
 use super::cairo1_execution::execute_entry_point_call_cairo1;
+use crate::execution::cairo0_execution::execute_entry_point_call_cairo0;
 use crate::state::CheatnetState;
 use blockifier::execution::call_info::{CallExecution, Retdata};
-use blockifier::execution::deprecated_execution::execute_entry_point_call;
 use blockifier::{
     execution::{
         call_info::CallInfo,
@@ -68,10 +68,11 @@ pub fn execute_call_entry_point(
 
     // Region: Modified blockifier code
     let result = match contract_class {
-        ContractClass::V0(deprecated_class) => execute_entry_point_call(
+        ContractClass::V0(deprecated_class) => execute_entry_point_call_cairo0(
             entry_point.clone(),
             deprecated_class,
             state,
+            cheatnet_state,
             resources,
             context,
         ),
