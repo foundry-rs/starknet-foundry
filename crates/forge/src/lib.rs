@@ -431,12 +431,12 @@ fn run_single_test(
     let exit_first = runner_config.exit_first;
     tokio::task::spawn(async move {
         tokio::select! {
-            _ = runner_config.cancellation_token.cancelled() => {
+            () = runner_config.cancellation_token.cancelled() => {
                 //Stop executing all tests because flag --exit-first'
                 //has been set and one test FAIL
                 Ok(TestCaseSummary::skipped(&case))
             },
-            _ = runner_config.error_cancellation_token.cancelled() => {
+            () = runner_config.error_cancellation_token.cancelled() => {
                 //Stop executing all tests
                 Ok(TestCaseSummary::None {  })
             },
@@ -503,17 +503,17 @@ async fn run_with_fuzzing(
 
         tasks.push(task::spawn(async move {
             tokio::select! {
-                _ = runner_config.error_cancellation_token.cancelled() => {
+                () = runner_config.error_cancellation_token.cancelled() => {
                     //Stop executing all tests because flag --exit-first'
                     //has been set and one test FAIL
                     Ok(TestCaseSummary::None {  })
                 },
-                _ = runner_config.cancellation_token.cancelled() => {
+                () = runner_config.cancellation_token.cancelled() => {
                     //Stop executing all tests because flag --exit-first'
                     //has been set and one test FAIL
                     Ok(TestCaseSummary::skipped(&case_copy))
                 },
-                _ = cancellation_fuzzing_token.cancelled() => {
+                () = cancellation_fuzzing_token.cancelled() => {
                     //Stop executing all tests because flag --exit-first'
                     //has been set and one test FAIL
                     Ok(TestCaseSummary::skipped(&case_copy))
