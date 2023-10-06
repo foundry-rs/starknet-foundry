@@ -6,10 +6,7 @@ use crate::panic_data::try_extract_panic_data;
 use crate::state::BlockifierState;
 use crate::{
     constants::{build_block_context, build_transaction_context},
-    execution::{
-        entry_point::execute_call_entry_point, events::collect_emitted_events_from_spied_contracts,
-        gas::gas_from_execution_resources,
-    },
+    execution::{entry_point::execute_call_entry_point, gas::gas_from_execution_resources},
     CheatnetState,
 };
 use blockifier::execution::call_info::CallInfo;
@@ -209,13 +206,6 @@ pub fn call_contract(
         &mut resources,
         &mut context,
     );
-
-    if let Ok(ref call_info) = exec_result {
-        if !cheatnet_state.spies.is_empty() {
-            let mut events = collect_emitted_events_from_spied_contracts(call_info, cheatnet_state);
-            cheatnet_state.detected_events.append(&mut events);
-        }
-    };
 
     let gas = gas_from_execution_resources(&block_context, &resources);
     let resource_report = ResourceReport::new(gas, &resources);

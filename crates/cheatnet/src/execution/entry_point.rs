@@ -1,4 +1,5 @@
 use super::cairo1_execution::execute_entry_point_call_cairo1;
+use crate::execution::events::collect_emitted_events_from_spied_contracts;
 use crate::state::CheatnetState;
 use blockifier::execution::call_info::{CallExecution, Retdata};
 use blockifier::execution::deprecated_execution::execute_entry_point_call;
@@ -84,6 +85,13 @@ pub fn execute_call_entry_point(
             context,
         ),
     };
+
+    if let Ok(ref call_info) = result {
+        if !cheatnet_state.spies.is_empty() {
+            let mut events = collect_emitted_events_from_spied_contracts(call_info, cheatnet_state);
+            cheatnet_state.detected_events.append(&mut events);
+        }
+    }
 
     result.map_err(|error| {
         // endregion
