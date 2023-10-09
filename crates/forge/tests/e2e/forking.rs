@@ -23,6 +23,7 @@ fn without_cache() {
         Collected 1 test(s) from forking package
         Running 1 test(s) from src/
         [PASS] forking::test_fork_simple
+        Running 0 test(s) from tests/
         Tests: 1 passed, 0 failed, 0 skipped
         "#});
 }
@@ -56,6 +57,7 @@ fn with_cache() {
         Failure data:
             original value: [1480335954842313548834020101284630397133856818], converted to a string: [Balance should be 2]
         
+        Running 0 test(s) from tests/
         Tests: 0 passed, 1 failed, 0 skipped
 
         Failures:
@@ -84,6 +86,7 @@ fn with_clean_cache() {
         Collected 1 test(s) from forking package
         Running 1 test(s) from src/
         [PASS] forking::test_fork_simple
+        Running 0 test(s) from tests/
         Tests: 1 passed, 0 failed, 0 skipped
         "#});
 }
@@ -96,6 +99,7 @@ fn forking_and_cache() {
 
     snapbox
         .current_dir(&temp)
+        .arg("tests::")
         .assert()
         .code(0)
         .stdout_matches(indoc! {r#"
