@@ -77,7 +77,7 @@ fn with_clean_cache() {
         .current_dir(&temp)
         .args(["--clean-cache", "--exact", "forking::test_fork_simple"])
         .assert()
-        .code(0)
+        .success()
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
@@ -101,7 +101,7 @@ fn forking_and_cache() {
         .current_dir(&temp)
         .arg("tests::")
         .assert()
-        .code(0)
+        .success()
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
