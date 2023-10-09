@@ -96,7 +96,6 @@ fn fork_aliased_decorator() {
         &test.path().unwrap(),
         &String::from("src"),
         &test.path().unwrap().join("src"),
-        &test.linked_libraries(),
         &RunnerConfig::new(
             None,
             false,
@@ -119,6 +118,7 @@ fn fork_aliased_decorator() {
             test.contracts(&corelib_path()).unwrap(),
             Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
             Default::default(),
+            test.linked_libraries(),
         ),
     )
     .unwrap();

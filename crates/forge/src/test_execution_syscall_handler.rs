@@ -9,7 +9,6 @@ use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::execution_utils::{
     felt_to_stark_felt, stark_felt_from_ptr, stark_felt_to_felt,
 };
-use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::execution::syscalls::{
     GetBlockHashRequest, GetBlockHashResponse, SyscallRequest, SyscallRequestWrapper,
     SyscallResponse, SyscallResponseWrapper,
@@ -140,11 +139,10 @@ impl HintProcessorLogic for TestExecutionSyscallHandler<'_> {
             return execute_syscall(
                 system,
                 vm,
-                self.cheatable_syscall_handler.cheatnet_state,
                 exec_scopes,
                 hint_data,
                 constants,
-                &mut self.cheatable_syscall_handler.syscall_handler,
+                &mut self.cheatable_syscall_handler,
             );
         }
         self.cheatable_syscall_handler.syscall_handler.execute_hint(
@@ -623,11 +621,10 @@ struct ScarbStarknetContractArtifact {
 fn execute_syscall(
     system: &ResOperand,
     vm: &mut VirtualMachine,
-    cheatnet_state: &mut CheatnetState,
     exec_scopes: &mut ExecutionScopes,
     hint_data: &Box<dyn Any>,
     constants: &HashMap<String, Felt252>,
-    blockifier_syscall_handler: &mut SyscallHintProcessor,
+    cheatable_syscall_handler: &mut CheatableSyscallHandler,
 ) -> Result<(), HintError> {
     let (cell, offset) = extract_buffer(system);
     let system_ptr = get_ptr(vm, cell, &offset)?;
@@ -636,13 +633,14 @@ fn execute_syscall(
     let selector = DeprecatedSyscallSelector::try_from(felt_to_stark_felt(
         &vm.get_integer(system_ptr).unwrap(),
     ))?;
-    let mut blockifier_state = BlockifierState::from(blockifier_syscall_handler.state);
+    let mut blockifier_state =
+        BlockifierState::from(cheatable_syscall_handler.syscall_handler.state);
 
     match selector {
         DeprecatedSyscallSelector::CallContract => {
             execute_call_contract(
                 MemBuffer::new(vm, system_ptr),
-                cheatnet_state,
+                cheatable_syscall_handler.cheatnet_state,
                 &mut blockifier_state,
             )?;
             Ok(())
@@ -654,10 +652,14 @@ fn execute_syscall(
             "Replace class can't be used in tests".to_string(),
         ))),
         DeprecatedSyscallSelector::GetBlockHash => {
-            execute_get_block_hash(vm, &mut system_ptr.clone(), cheatnet_state)?;
+            execute_get_block_hash(
+                vm,
+                &mut system_ptr.clone(),
+                cheatable_syscall_handler.cheatnet_state,
+            )?;
             Ok(())
         }
-        _ => blockifier_syscall_handler.execute_hint(vm, exec_scopes, hint_data, constants),
+        _ => cheatable_syscall_handler.execute_hint(vm, exec_scopes, hint_data, constants),
     }
 }
 
