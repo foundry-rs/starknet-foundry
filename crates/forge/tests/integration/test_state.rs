@@ -450,6 +450,8 @@ fn test_simple_cheatcodes() {
             start_prank, stop_prank,
             start_roll, stop_roll,
             start_warp, stop_warp,
+            start_spoof, stop_spoof,
+            TxInfoMockTrait,
             test_address
         };
 
@@ -495,6 +497,28 @@ fn test_simple_cheatcodes() {
             let new_block_timestamp = starknet::get_block_info().unbox().block_timestamp;
             assert(new_block_timestamp == old_block_timestamp, 'Timestamp did not change back')
         }
+
+        #[test]
+        fn test_spoof_test_state() {
+            let test_address: ContractAddress = test_address();
+            let old_tx_info = starknet::get_tx_info().unbox();
+
+            let mut tx_info_mock = TxInfoMockTrait::default();
+            tx_info_mock.transaction_hash = Option::Some(421);
+
+            start_spoof(test_address, tx_info_mock);
+            let new_tx_info = starknet::get_tx_info().unbox();
+            assert(new_tx_info.nonce == old_tx_info.nonce, 'Wrong nonce');
+            assert(new_tx_info.transaction_hash == 421, 'Wrong transaction_hash');
+
+            stop_spoof(test_address);
+            let new_tx_info = starknet::get_tx_info().unbox();
+            assert(new_tx_info.nonce == old_tx_info.nonce, 'Wrong nonce');
+            assert(
+                new_tx_info.transaction_hash == old_tx_info.transaction_hash,
+                'Wrong transaction_hash'
+            )
+        }
     "#
     ));
 
@@ -504,7 +528,6 @@ fn test_simple_cheatcodes() {
 }
 
 #[test]
-#[ignore] //TODO (#612)
 fn test_spy_events_simple() {
     let test = test_case!(indoc!(
         r#"
@@ -513,19 +536,24 @@ fn test_spy_events_simple() {
             use starknet::SyscallResultTrait;
             use starknet::ContractAddress;
             use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpy, EventFetcher,
-                event_name_hash, EventAssertions, SpyOn, test_address };
+                event_name_hash, EventAssertions, Event, SpyOn, test_address };
+
             #[test]
             fn test_expect_events_simple() {
                 let contract_address = test_address();
                 let mut spy = spy_events(SpyOn::One(contract_address));
                 assert(spy._id == 0, 'Id should be 0');
-                let mut keys = array![];
-                let mut data = array![];
-                keys.append(1234);
-                data.append(2345);
-                starknet::emit_event_syscall(keys.span(), data.span()).unwrap_syscall();
-                spy.fetch_events();
-                assert(spy.events.len() == 1, 'There should be 1 event');
+
+                starknet::emit_event_syscall(array![1234].span(), array![2345].span()).unwrap_syscall();
+
+                spy.assert_emitted(@array![
+                    (
+                        contract_address,
+                        Event { keys: array![1234], data: array![2345] }
+                    )
+                ]);
+
+                assert(spy.events.len() == 0, 'There should be no events left');
             }
         "#
     ),);

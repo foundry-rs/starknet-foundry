@@ -5,7 +5,6 @@ use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use starknet_api::core::ContractAddress;
 use starknet_api::hash::StarkFelt;
-use std::collections::HashMap;
 
 impl CheatnetState {
     pub fn start_mock_call(
@@ -18,10 +17,7 @@ impl CheatnetState {
 
         let function_name = selector_from_name(&as_cairo_short_string(function_name).unwrap());
 
-        let contract_mocked_functions = self
-            .mocked_functions
-            .entry(contract_address)
-            .or_insert_with(HashMap::new);
+        let contract_mocked_functions = self.mocked_functions.entry(contract_address).or_default();
 
         contract_mocked_functions.insert(function_name, ret_data);
     }
