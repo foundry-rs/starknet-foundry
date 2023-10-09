@@ -25,6 +25,22 @@ use starknet_api::core::ContractAddress;
 use std::any::Any;
 use std::collections::HashMap;
 
+#[derive(Debug)]
+// crates/blockifier/src/execution/syscalls/mod.rs:127 (SingleSegmentResponse)
+// It is created here because fields in the original structure are private
+// so we cannot create it in call_contract_syscall
+pub struct SingleSegmentResponse {
+    pub(crate) segment: ReadOnlySegment,
+}
+// crates/blockifier/src/execution/syscalls/mod.rs:131 (SyscallResponse for SingleSegmentResponse)
+impl SyscallResponse for SingleSegmentResponse {
+    fn write(self, vm: &mut VirtualMachine, ptr: &mut Relocatable) -> WriteResponseResult {
+        write_maybe_relocatable(vm, ptr, self.segment.length)?;
+        write_maybe_relocatable(vm, ptr, self.segment.start_ptr)?;
+        Ok(())
+    }
+}
+
 pub struct Cairo0CheatableSyscallHandler<'a> {
     pub syscall_handler: DeprecatedSyscallHintProcessor<'a>,
     pub cheatnet_state: &'a mut CheatnetState,
@@ -181,20 +197,4 @@ pub fn get_caller_address(
             .get(&contract_address)
             .unwrap(),
     })
-}
-
-#[derive(Debug)]
-// crates/blockifier/src/execution/syscalls/mod.rs:127 (SingleSegmentResponse)
-// It is created here because fields in the original structure are private
-// so we cannot create it in call_contract_syscall
-pub struct SingleSegmentResponse {
-    pub(crate) segment: ReadOnlySegment,
-}
-// crates/blockifier/src/execution/syscalls/mod.rs:131 (SyscallResponse for SingleSegmentResponse)
-impl SyscallResponse for SingleSegmentResponse {
-    fn write(self, vm: &mut VirtualMachine, ptr: &mut Relocatable) -> WriteResponseResult {
-        write_maybe_relocatable(vm, ptr, self.segment.length)?;
-        write_maybe_relocatable(vm, ptr, self.segment.start_ptr)?;
-        Ok(())
-    }
 }

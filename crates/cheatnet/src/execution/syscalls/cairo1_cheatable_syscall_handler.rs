@@ -43,6 +43,50 @@ use starknet_api::transaction::Calldata;
 use std::any::Any;
 use std::collections::HashMap;
 
+pub type SyscallSelector = DeprecatedSyscallSelector;
+
+#[derive(Debug)]
+// crates/blockifier/src/execution/syscalls/mod.rs:127 (SingleSegmentResponse)
+// It is created here because fields in the original structure are private
+// so we cannot create it in call_contract_syscall
+pub struct SingleSegmentResponse {
+    pub(crate) segment: ReadOnlySegment,
+}
+// crates/blockifier/src/execution/syscalls/mod.rs:131 (SyscallResponse for SingleSegmentResponse)
+impl SyscallResponse for SingleSegmentResponse {
+    fn write(self, vm: &mut VirtualMachine, ptr: &mut Relocatable) -> WriteResponseResult {
+        write_segment(vm, ptr, self.segment)
+    }
+}
+
+// blockifier/src/execution/syscalls/mod.rs:157 (call_contract)
+pub fn call_contract_syscall(
+    request: CallContractRequest,
+    vm: &mut VirtualMachine,
+    syscall_handler: &mut Cairo1CheatableSyscallHandler<'_>, // Modified parameter type
+    remaining_gas: &mut u64,
+) -> SyscallResult<SingleSegmentResponse> {
+    let storage_address = request.contract_address;
+    let mut entry_point = CallEntryPoint {
+        class_hash: None,
+        code_address: Some(storage_address),
+        entry_point_type: EntryPointType::External,
+        entry_point_selector: request.function_selector,
+        calldata: request.calldata,
+        storage_address,
+        caller_address: syscall_handler.syscall_handler.storage_address(),
+        call_type: CallType::Call,
+        initial_gas: *remaining_gas,
+    };
+    let retdata_segment = execute_inner_call(&mut entry_point, vm, syscall_handler, remaining_gas)?;
+
+    // region: Modified blockifier code
+    Ok(SingleSegmentResponse {
+        segment: retdata_segment,
+    })
+    // endregion
+}
+
 // This hint processor modifies the standard syscalls implementation to react upon changes
 // introduced by cheatcodes that e.g. returns mocked data
 // If it cannot execute a cheatcode it falls back to SyscallHintProcessor, which provides standard implementation of
@@ -397,48 +441,4 @@ pub fn library_call_syscall(
     Ok(SingleSegmentResponse {
         segment: retdata_segment,
     })
-}
-
-pub type SyscallSelector = DeprecatedSyscallSelector;
-
-#[derive(Debug)]
-// crates/blockifier/src/execution/syscalls/mod.rs:127 (SingleSegmentResponse)
-// It is created here because fields in the original structure are private
-// so we cannot create it in call_contract_syscall
-pub struct SingleSegmentResponse {
-    pub(crate) segment: ReadOnlySegment,
-}
-// crates/blockifier/src/execution/syscalls/mod.rs:131 (SyscallResponse for SingleSegmentResponse)
-impl SyscallResponse for SingleSegmentResponse {
-    fn write(self, vm: &mut VirtualMachine, ptr: &mut Relocatable) -> WriteResponseResult {
-        write_segment(vm, ptr, self.segment)
-    }
-}
-
-// blockifier/src/execution/syscalls/mod.rs:157 (call_contract)
-pub fn call_contract_syscall(
-    request: CallContractRequest,
-    vm: &mut VirtualMachine,
-    syscall_handler: &mut Cairo1CheatableSyscallHandler<'_>, // Modified parameter type
-    remaining_gas: &mut u64,
-) -> SyscallResult<SingleSegmentResponse> {
-    let storage_address = request.contract_address;
-    let mut entry_point = CallEntryPoint {
-        class_hash: None,
-        code_address: Some(storage_address),
-        entry_point_type: EntryPointType::External,
-        entry_point_selector: request.function_selector,
-        calldata: request.calldata,
-        storage_address,
-        caller_address: syscall_handler.syscall_handler.storage_address(),
-        call_type: CallType::Call,
-        initial_gas: *remaining_gas,
-    };
-    let retdata_segment = execute_inner_call(&mut entry_point, vm, syscall_handler, remaining_gas)?;
-
-    // region: Modified blockifier code
-    Ok(SingleSegmentResponse {
-        segment: retdata_segment,
-    })
-    // endregion
 }
