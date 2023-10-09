@@ -76,7 +76,7 @@ pub struct TestExecutionSyscallHandler<'a> {
 }
 
 impl<'a> TestExecutionSyscallHandler<'a> {
-    pub fn from(
+    pub fn new(
         cheatable_syscall_handler: CheatableSyscallHandler<'a>,
         test_execution_state: &'a mut TestExecutionState<'a>,
         hints: &'a HashMap<String, Hint>,

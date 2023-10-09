@@ -159,13 +159,13 @@ pub(crate) fn run_test_case(
 
     let mut cheatnet_state = CheatnetState::default();
     let cheatable_syscall_handler =
-        CheatableSyscallHandler::from(syscall_handler, &mut cheatnet_state);
+        CheatableSyscallHandler::new(syscall_handler, &mut cheatnet_state);
 
     let mut test_execution_state = TestExecutionState {
         environment_variables,
         contracts,
     };
-    let mut test_execution_syscall_handler = TestExecutionSyscallHandler::from(
+    let mut test_execution_syscall_handler = TestExecutionSyscallHandler::new(
         cheatable_syscall_handler,
         &mut test_execution_state,
         &string_to_hint,
