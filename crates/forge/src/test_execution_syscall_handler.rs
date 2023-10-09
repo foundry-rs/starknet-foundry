@@ -679,7 +679,7 @@ fn execute_syscall(
 
 struct CallContractArgs {
     _selector: Felt252,
-    gas_counter: usize,
+    gas_counter: u64,
     contract_address: ContractAddress,
     entry_point_selector: Felt252,
     calldata: Vec<Felt252>,
@@ -693,7 +693,7 @@ fn get_call_contract_args(
     let mut buffer = MemBuffer::new(vm, system_ptr);
 
     let selector = buffer.next_felt252().unwrap().into_owned();
-    let gas_counter = buffer.next_usize().unwrap();
+    let gas_counter = buffer.next_felt252().unwrap().to_u64().unwrap();
 
     let contract_address = buffer.next_felt252().unwrap().into_owned();
     let contract_address = contract_address.to_contract_address();
@@ -730,7 +730,7 @@ fn write_call_contract_response(
         CallContractOutput::Error { msg, .. } => return Err(HintError::CustomHint(Box::from(msg))),
     };
 
-    buffer.write(call_args.gas_counter).unwrap();
+    buffer.write(Felt252::from(call_args.gas_counter)).unwrap();
     buffer.write(Felt252::from(exit_code)).unwrap();
 
     buffer.write_arr(result.iter()).unwrap();
