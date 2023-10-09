@@ -1,3 +1,8 @@
+use crate::cheatcodes::spy_events::Event;
+use crate::execution::{
+    contract_print::{contract_print, PrintingResult},
+    entry_point::execute_constructor_entry_point,
+};
 use crate::execution::calls::cairo1_calls::{execute_inner_call, execute_library_call};
 use crate::execution::contract_print::{contract_print, PrintingResult};
 use crate::execution::entry_point::execute_constructor_entry_point;
@@ -94,6 +99,18 @@ pub fn call_contract_syscall(
 pub struct Cairo1CheatableSyscallHandler<'a> {
     pub syscall_handler: SyscallHintProcessor<'a>,
     pub cheatnet_state: &'a mut CheatnetState,
+}
+
+impl<'a> Cairo1CheatableSyscallHandler<'a> {
+    pub fn new(
+        syscall_handler: SyscallHintProcessor<'a>,
+        cheatnet_state: &'a mut CheatnetState,
+    ) -> Self {
+        Cairo1CheatableSyscallHandler {
+            syscall_handler,
+            cheatnet_state,
+        }
+    }
 }
 
 // crates/blockifier/src/execution/syscalls/hint_processor.rs:472 (ResourceTracker for SyscallHintProcessor)
@@ -260,6 +277,36 @@ impl Cairo1CheatableSyscallHandler<'_> {
             // Increment, since the selector was peeked into before
             self.syscall_handler.syscall_ptr += 1;
             return self.execute_syscall(vm, deploy_syscall, constants::DEPLOY_GAS_COST);
+        } else if SyscallSelector::EmitEvent == selector {
+            // No incrementation, since execute_next_syscall reads selector and increments syscall_ptr
+            let events_len_before = self.syscall_handler.events.len();
+            let result = self.syscall_handler.execute_next_syscall(vm, hint);
+
+            if result.is_ok() {
+                assert_eq!(
+                    events_len_before + 1,
+                    self.syscall_handler.events.len(),
+                    "EmitEvent syscall is expected to emit exactly one event"
+                );
+                let contract_address = self
+                    .syscall_handler
+                    .call
+                    .code_address
+                    .unwrap_or(self.syscall_handler.call.storage_address);
+
+                for spy_on in &mut self.cheatnet_state.spies {
+                    if spy_on.does_spy(contract_address) {
+                        let event = Event::from_ordered_event(
+                            self.syscall_handler.events.last().unwrap(),
+                            contract_address,
+                        );
+                        self.cheatnet_state.detected_events.push(event);
+                        break;
+                    }
+                }
+            }
+
+            return result;
         }
 
         self.syscall_handler.execute_next_syscall(vm, hint)
