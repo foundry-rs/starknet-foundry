@@ -57,6 +57,7 @@ pub fn execute_entry_point_call_cairo0(
         entry_point_pc,
         &args,
     )?;
+    // endregion
 
     Ok(finalize_execution(
         vm,
@@ -77,17 +78,21 @@ pub fn cheatable_run_entry_point(
     entry_point_pc: usize,
     args: &Args,
 ) -> Result<(), VirtualMachineExecutionError> {
+    // region: Modified blockifier code
+    // Opposite to blockifier
     let verify_secure = false;
+    // endregion
     let program_segment_size = None; // Infer size from program.
     let args: Vec<&CairoArg> = args.iter().collect();
-    let result = runner.run_from_entrypoint(
+
+    runner.run_from_entrypoint(
         entry_point_pc,
         &args,
         verify_secure,
         program_segment_size,
         vm,
         hint_processor,
-    );
+    )?;
 
-    Ok(result?)
+    Ok(())
 }

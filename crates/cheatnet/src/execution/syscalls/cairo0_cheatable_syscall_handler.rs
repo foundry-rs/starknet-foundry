@@ -1,6 +1,4 @@
-use crate::execution::syscalls::lib::stark_felt_from_ptr_immutable;
 use crate::state::CheatnetState;
-use blockifier::abi::constants;
 use blockifier::execution::common_hints::HintExecutionResult;
 use blockifier::execution::deprecated_syscalls::hint_processor::{
     DeprecatedSyscallExecutionError, DeprecatedSyscallHintProcessor,
@@ -9,43 +7,23 @@ use blockifier::execution::deprecated_syscalls::{
     CallContractRequest, DeprecatedSyscallResult, DeprecatedSyscallSelector, EmptyRequest,
     GetContractAddressResponse, SyscallRequest, SyscallResponse, WriteResponseResult,
 };
-use blockifier::execution::entry_point::{CallEntryPoint, CallType};
-use blockifier::execution::execution_utils::{
-    stark_felt_to_felt, write_maybe_relocatable, ReadOnlySegment,
-};
+use blockifier::execution::execution_utils::{write_maybe_relocatable, ReadOnlySegment};
 use blockifier::execution::hint_code;
 
-use crate::execution::entry_point::execute_call_entry_point;
+use crate::execution::calls::cairo0_calls::execute_library_call;
+use crate::execution::syscalls::stark_felt_from_ptr_immutable;
 use cairo_felt::Felt252;
 use cairo_vm::hint_processor::builtin_hint_processor::builtin_hint_processor_definition::HintProcessorData;
 use cairo_vm::hint_processor::hint_processor_definition::{HintProcessorLogic, HintReference};
 use cairo_vm::serde::deserialize_program::ApTracking;
 use cairo_vm::types::exec_scope::ExecutionScopes;
-use cairo_vm::types::relocatable::{MaybeRelocatable, Relocatable};
+use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cairo_vm::vm::vm_core::VirtualMachine;
-use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector};
-use starknet_api::deprecated_contract_class::EntryPointType;
-use starknet_api::transaction::Calldata;
+use starknet_api::core::ContractAddress;
 use std::any::Any;
 use std::collections::HashMap;
-
-#[derive(Debug)]
-// crates/blockifier/src/execution/syscalls/mod.rs:127 (SingleSegmentResponse)
-// It is created here because fields in the original structure are private
-// so we cannot create it in call_contract_syscall
-pub struct SingleSegmentResponse {
-    pub(crate) segment: ReadOnlySegment,
-}
-// crates/blockifier/src/execution/syscalls/mod.rs:131 (SyscallResponse for SingleSegmentResponse)
-impl SyscallResponse for SingleSegmentResponse {
-    fn write(self, vm: &mut VirtualMachine, ptr: &mut Relocatable) -> WriteResponseResult {
-        write_maybe_relocatable(vm, ptr, self.segment.length)?;
-        write_maybe_relocatable(vm, ptr, self.segment.start_ptr)?;
-        Ok(())
-    }
-}
 
 pub struct Cairo0CheatableSyscallHandler<'a> {
     pub syscall_handler: DeprecatedSyscallHintProcessor<'a>,
@@ -94,17 +72,6 @@ impl HintProcessorLogic for Cairo0CheatableSyscallHandler<'_> {
 }
 
 impl<'a> Cairo0CheatableSyscallHandler<'a> {
-    pub fn verify_syscall_ptr(&self, actual_ptr: Relocatable) -> DeprecatedSyscallResult<()> {
-        if actual_ptr != self.syscall_handler.syscall_ptr {
-            return Err(DeprecatedSyscallExecutionError::BadSyscallPointer {
-                expected_ptr: self.syscall_handler.syscall_ptr,
-                actual_ptr,
-            });
-        }
-
-        Ok(())
-    }
-
     /// Infers and executes the next syscall.
     /// Must comply with the API of a hint function, as defined by the `HintProcessor`.
     pub fn execute_next_syscall_cheated(
@@ -162,6 +129,17 @@ impl<'a> Cairo0CheatableSyscallHandler<'a> {
 
         Ok(())
     }
+
+    pub fn verify_syscall_ptr(&self, actual_ptr: Relocatable) -> DeprecatedSyscallResult<()> {
+        if actual_ptr != self.syscall_handler.syscall_ptr {
+            return Err(DeprecatedSyscallExecutionError::BadSyscallPointer {
+                expected_ptr: self.syscall_handler.syscall_ptr,
+                actual_ptr,
+            });
+        }
+
+        Ok(())
+    }
 }
 
 pub fn delegate_call(
@@ -205,64 +183,18 @@ pub fn get_caller_address(
     })
 }
 
-pub fn execute_inner_call(
-    call: &mut CallEntryPoint,
-    vm: &mut VirtualMachine,
-    syscall_handler: &mut Cairo0CheatableSyscallHandler<'_>,
-) -> DeprecatedSyscallResult<ReadOnlySegment> {
-    // region: Modified blockifier code
-    let call_info = execute_call_entry_point(
-        call,
-        syscall_handler.syscall_handler.state,
-        syscall_handler.cheatnet_state,
-        syscall_handler.syscall_handler.resources,
-        syscall_handler.syscall_handler.context,
-    )?;
-    // endregion
-
-    let retdata = &call_info.execution.retdata.0;
-    let retdata: Vec<MaybeRelocatable> = retdata
-        .iter()
-        .map(|&x| MaybeRelocatable::from(stark_felt_to_felt(x)))
-        .collect();
-    let retdata_segment_start_ptr = syscall_handler
-        .syscall_handler
-        .read_only_segments
-        .allocate(vm, &retdata)?;
-
-    syscall_handler.syscall_handler.inner_calls.push(call_info);
-    Ok(ReadOnlySegment {
-        start_ptr: retdata_segment_start_ptr,
-        length: retdata.len(),
-    })
+#[derive(Debug)]
+// crates/blockifier/src/execution/syscalls/mod.rs:127 (SingleSegmentResponse)
+// It is created here because fields in the original structure are private
+// so we cannot create it in call_contract_syscall
+pub struct SingleSegmentResponse {
+    pub(crate) segment: ReadOnlySegment,
 }
-
-pub fn execute_library_call(
-    syscall_handler: &mut Cairo0CheatableSyscallHandler<'_>,
-    vm: &mut VirtualMachine,
-    class_hash: ClassHash,
-    code_address: Option<ContractAddress>,
-    call_to_external: bool,
-    entry_point_selector: EntryPointSelector,
-    calldata: Calldata,
-) -> DeprecatedSyscallResult<ReadOnlySegment> {
-    let entry_point_type = if call_to_external {
-        EntryPointType::External
-    } else {
-        EntryPointType::L1Handler
-    };
-    let mut entry_point = CallEntryPoint {
-        class_hash: Some(class_hash),
-        code_address,
-        entry_point_type,
-        entry_point_selector,
-        calldata,
-        // The call context remains the same in a library call.
-        storage_address: syscall_handler.syscall_handler.storage_address,
-        caller_address: syscall_handler.syscall_handler.caller_address,
-        call_type: CallType::Delegate,
-        initial_gas: constants::INITIAL_GAS_COST,
-    };
-
-    execute_inner_call(&mut entry_point, vm, syscall_handler)
+// crates/blockifier/src/execution/syscalls/mod.rs:131 (SyscallResponse for SingleSegmentResponse)
+impl SyscallResponse for SingleSegmentResponse {
+    fn write(self, vm: &mut VirtualMachine, ptr: &mut Relocatable) -> WriteResponseResult {
+        write_maybe_relocatable(vm, ptr, self.segment.length)?;
+        write_maybe_relocatable(vm, ptr, self.segment.start_ptr)?;
+        Ok(())
+    }
 }

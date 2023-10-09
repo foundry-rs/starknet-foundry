@@ -1,3 +1,4 @@
+use crate::execution::entry_point::execute_call_entry_point;
 use crate::execution::syscalls::cairo1_cheatable_syscall_handler::Cairo1CheatableSyscallHandler;
 use blockifier::{
     execution::{
@@ -16,8 +17,6 @@ use starknet_api::{
     deprecated_contract_class::EntryPointType,
     transaction::Calldata,
 };
-
-use super::entry_point::execute_call_entry_point;
 
 // blockifier/src/execution/syscalls/hint_processor.rs:541 (execute_inner_call)
 pub fn execute_inner_call(
