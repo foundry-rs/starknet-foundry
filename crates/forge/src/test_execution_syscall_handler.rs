@@ -498,22 +498,25 @@ impl TestExecutionSyscallHandler<'_> {
                 let mut blockifier_state =
                     BlockifierState::from(self.cheatable_syscall_handler.syscall_handler.state);
 
-                match blockifier_state.l1_handler_execute(
-                    self.cheatable_syscall_handler.cheatnet_state,
-                    contract_address,
-                    &function_name,
-                    &from_address,
-                    &payload,
-                ) {
-                    CallContractOutput::Success { .. } => {
+                match blockifier_state
+                    .l1_handler_execute(
+                        self.cheatable_syscall_handler.cheatnet_state,
+                        contract_address,
+                        &function_name,
+                        &from_address,
+                        &payload,
+                    )
+                    .result
+                {
+                    CallContractResult::Success { .. } => {
                         buffer.write(0);
                         Ok(())
                     }
-                    CallContractOutput::Panic { panic_data, .. } => {
+                    CallContractResult::Failure(CallContractFailure::Panic { panic_data }) => {
                         write_cheatcode_panic(&mut buffer, &panic_data);
                         Ok(())
                     }
-                    CallContractOutput::Error { msg, .. } => {
+                    CallContractResult::Failure(CallContractFailure::Error { msg }) => {
                         Err(EnhancedHintError::from(CustomHint(Box::from(msg))))
                     }
                 }
