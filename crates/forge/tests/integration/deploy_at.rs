@@ -126,7 +126,7 @@ fn deploy_at_error_handling() {
                     assert(*panic_data.at(1) == 'DEJTA', 'wrong 2nd panic datum');
                 },
             }
-        }xk
+        }
     "#
         ),
         Contract::from_code_path(
