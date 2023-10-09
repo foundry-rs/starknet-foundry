@@ -5,8 +5,6 @@ use anyhow::{anyhow, Context, Result};
 use ark_std::iterable::Iterable;
 use assert_fs::TempDir;
 use camino::Utf8PathBuf;
-use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
-use serde::Deserialize;
 use test_case_summary::TestCaseSummary;
 
 use cairo_lang_runner::SierraCasmRunner;
