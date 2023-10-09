@@ -62,6 +62,7 @@ enum TestsToRun {
 
 impl TestsToRun {
     fn from_flags(only_ignored: bool, include_ignored: bool) -> Self {
+        assert!(!(only_ignored && include_ignored));
         if include_ignored {
             Self::All
         } else if only_ignored {
