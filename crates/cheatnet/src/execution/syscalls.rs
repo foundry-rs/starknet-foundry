@@ -227,6 +227,15 @@ fn felt_from_ptr_immutable(
     Ok(felt)
 }
 
+fn get_syscall_operand(hint: &StarknetHint) -> Result<&ResOperand, HintError> {
+    let StarknetHint::SystemCall { system: syscall } = hint else {
+        return Err(HintError::CustomHint(
+            "Test functions are unsupported on starknet.".into(),
+        ));
+    };
+    Ok(syscall)
+}
+
 impl CheatableSyscallHandler<'_> {
     fn execute_next_syscall_cheated(
         &mut self,
@@ -241,14 +250,11 @@ impl CheatableSyscallHandler<'_> {
         )?)?;
         let contract_address = self.syscall_handler.storage_address();
 
+
         if SyscallSelector::GetExecutionInfo == selector
             && self.cheatnet_state.address_is_cheated(&contract_address)
         {
-            let StarknetHint::SystemCall { system: syscall } = hint else {
-                return Err(HintError::CustomHint(
-                    "Test functions are unsupported on starknet.".into(),
-                ));
-            };
+            let syscall = get_syscall_operand(hint)?;
             let initial_syscall_ptr = get_ptr_from_res_operand_unchecked(vm, syscall);
             self.verify_syscall_ptr(initial_syscall_ptr)?;
 
@@ -290,11 +296,7 @@ impl CheatableSyscallHandler<'_> {
             response_wrapper.write(vm, &mut self.syscall_handler.syscall_ptr)?;
             return Ok(());
         } else if SyscallSelector::CallContract == selector {
-            let StarknetHint::SystemCall { system: syscall } = hint else {
-                return Err(HintError::CustomHint(
-                    "Test functions are unsupported on starknet.".into(),
-                ));
-            };
+            let syscall = get_syscall_operand(hint)?;
             let initial_syscall_ptr = get_ptr_from_res_operand_unchecked(vm, syscall);
             self.verify_syscall_ptr(initial_syscall_ptr)?;
 
@@ -311,11 +313,7 @@ impl CheatableSyscallHandler<'_> {
                 constants::CALL_CONTRACT_GAS_COST,
             );
         } else if SyscallSelector::LibraryCall == selector {
-            let StarknetHint::SystemCall { system: syscall } = hint else {
-                return Err(HintError::CustomHint(
-                    "Test functions are unsupported on starknet.".into(),
-                ));
-            };
+            let syscall = get_syscall_operand(hint)?;
             let initial_syscall_ptr = get_ptr_from_res_operand_unchecked(vm, syscall);
             self.verify_syscall_ptr(initial_syscall_ptr)?;
 
@@ -333,11 +331,7 @@ impl CheatableSyscallHandler<'_> {
                 constants::CALL_CONTRACT_GAS_COST,
             );
         } else if SyscallSelector::Deploy == selector {
-            let StarknetHint::SystemCall { system: syscall } = hint else {
-                return Err(HintError::CustomHint(
-                    "Test functions are unsupported on starknet.".into(),
-                ));
-            };
+            let syscall = get_syscall_operand(hint)?;
             let initial_syscall_ptr = get_ptr_from_res_operand_unchecked(vm, syscall);
             self.verify_syscall_ptr(initial_syscall_ptr)?;
 
