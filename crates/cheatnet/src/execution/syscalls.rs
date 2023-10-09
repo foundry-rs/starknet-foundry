@@ -236,7 +236,6 @@ fn get_syscall_operand(hint: &StarknetHint) -> Result<&ResOperand, HintError> {
     Ok(syscall)
 }
 
-
 impl CheatableSyscallHandler<'_> {
     fn execute_next_syscall_cheated(
         &mut self,
@@ -246,10 +245,8 @@ impl CheatableSyscallHandler<'_> {
         // We peak into the selector without incrementing the pointer as it is done later
         let syscall = get_syscall_operand(hint)?;
         let initial_syscall_ptr = get_ptr_from_res_operand_unchecked(vm, syscall);
-        let selector = SyscallSelector::try_from(stark_felt_from_ptr_immutable(
-            vm,
-            &initial_syscall_ptr,
-        )?)?;
+        let selector =
+            SyscallSelector::try_from(stark_felt_from_ptr_immutable(vm, &initial_syscall_ptr)?)?;
         self.verify_syscall_ptr(initial_syscall_ptr)?;
         let contract_address = self.syscall_handler.storage_address();
 
