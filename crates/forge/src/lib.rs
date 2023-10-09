@@ -5,6 +5,7 @@ use anyhow::{anyhow, Context, Result};
 use ark_std::iterable::Iterable;
 use assert_fs::fixture::{FileTouch, PathChild, PathCopy};
 use assert_fs::TempDir;
+use cairo_felt::Felt252;
 use camino::Utf8PathBuf;
 
 use futures::StreamExt;
@@ -415,9 +416,7 @@ fn choose_test_strategy_and_run(
     if args.is_empty() {
         run_single_test(case, runner, runner_config)
     } else {
-        tokio::task::spawn(async move {
-            run_with_fuzzing(runner_config.clone(), runner, case, &args).await
-        })
+        run_with_fuzzing(runner_config.clone(), runner, case, args)
     }
 }
 
@@ -459,131 +458,151 @@ fn run_single_test(
     })
 }
 
-async fn run_with_fuzzing(
+fn run_with_fuzzing(
     runner_config: Arc<RunnerConfig>,
     runner: Arc<SierraCasmRunner>,
     case: Arc<TestCase>,
-    args: &Vec<ConcreteTypeId>,
-) -> Result<TestCaseSummary> {
-    let token = CancellationToken::new();
+    args: Vec<ConcreteTypeId>,
+) -> JoinHandle<Result<TestCaseSummary>> {
+    tokio::task::spawn(async move {
+        let token = CancellationToken::new();
 
-    let args = args
-        .iter()
-        .map(|arg| {
-            arg.debug_name
-                .as_ref()
-                .ok_or_else(|| anyhow!("Type {arg:?} does not have a debug name"))
-                .map(smol_str::SmolStr::as_str)
-        })
-        .collect::<Result<Vec<_>>>()?;
-
-    let (fuzzer_runs, fuzzer_seed) = match case.fuzzer_config {
-        Some(FuzzerConfig {
-            fuzzer_runs,
-            fuzzer_seed,
-        }) => (fuzzer_runs, fuzzer_seed),
-        _ => (runner_config.fuzzer_runs, runner_config.fuzzer_seed),
-    };
-    let mut fuzzer = RandomFuzzer::create(fuzzer_seed, fuzzer_runs, &args)?;
-
-    let mut tasks = FuturesUnordered::new();
-    // Pattern in order to waiting for things to finish shutting down
-    // https://tokio.rs/tokio/topics/shutdown
-    let (send, mut recv) = channel(1);
-
-    for _ in 1..=fuzzer_runs {
-        let args = fuzzer.next_args();
-        let case = case.clone();
-        let case_copy = case.clone();
-        let runner = runner.clone();
-        let args = args.clone();
-        let cancellation_fuzzing_token = token.clone();
-        let runner_config = runner_config.clone();
-        let send = send.clone();
-
-        tasks.push(task::spawn(async move {
-            tokio::select! {
-                () = runner_config.error_cancellation_token.cancelled() => {
-                    // Stop executing all tests because
-                    // one of a test returns Err
-                    Ok(TestCaseSummary::None {  })
-                },
-                () = runner_config.exit_first_cancellation_token.cancelled() => {
-                    // Stop executing all tests because flag --exit-first'
-                    // has been set and one test FAIL
-                    Ok(TestCaseSummary::skipped(&case_copy))
-                },
-                () = cancellation_fuzzing_token.cancelled() => {
-                    // Stop executing all single fuzzing tests
-                    // because one of fuzzing test has been FAIL
-                    Ok(TestCaseSummary::skipped(&case_copy))
-                },
-               result = blocking_run_from_test(
-                    runner,
-                    case,
-                    runner_config.clone(),
-                    args.clone(),
-                    Some(send),
-                ) => {
-                    match result {
-                        Ok(result) => {
-                            if let TestCaseSummary::Failed { .. } = &result {
-                                if runner_config.exit_first {
-                                    runner_config.exit_first_cancellation_token.cancel();
-                                } else {
-                                    cancellation_fuzzing_token.cancel();
-                                }
-                            }
-                            Ok(result)
-                        }
-                        Err(e) => {
-                            runner_config.error_cancellation_token.cancel();
-                            Err(e)
-                        }
-                    }
-                },
-            }
-        }));
-    }
-
-    let mut results = vec![];
-
-    // Graceful Shutdown Pattern
-    drop(send);
-
-    while let Some(task) = tasks.next().await {
-        let result = task??;
-        results.push(result.clone());
-
-        match &result {
-            TestCaseSummary::Failed { .. } | TestCaseSummary::None {} => {
-                break;
-            }
-            _ => (),
-        }
-    }
-
-    let _ = recv.recv().await;
-
-    let result: TestCaseSummary = results
-        .last()
-        .expect("Test should always run at least once")
-        .clone();
-
-    let runs = u32::try_from(
-        results
+        let args = args
             .iter()
-            .filter(|item| {
-                matches!(
-                    item,
-                    TestCaseSummary::Passed { .. } | TestCaseSummary::Failed { .. }
-                )
+            .map(|arg| {
+                arg.debug_name
+                    .as_ref()
+                    .ok_or_else(|| anyhow!("Type {arg:?} does not have a debug name"))
+                    .map(smol_str::SmolStr::as_str)
             })
-            .count(),
-    )?;
+            .collect::<Result<Vec<_>>>()?;
 
-    let result = result.update_runs(runs);
-    Ok(result)
+        let (fuzzer_runs, fuzzer_seed) = match case.fuzzer_config {
+            Some(FuzzerConfig {
+                fuzzer_runs,
+                fuzzer_seed,
+            }) => (fuzzer_runs, fuzzer_seed),
+            _ => (runner_config.fuzzer_runs, runner_config.fuzzer_seed),
+        };
+        let mut fuzzer = RandomFuzzer::create(fuzzer_seed, fuzzer_runs, &args)?;
+
+        let mut tasks = FuturesUnordered::new();
+        // Pattern in order to waiting for things to finish shutting down
+        // https://tokio.rs/tokio/topics/shutdown
+        let (send, mut recv) = channel(1);
+
+        for _ in 1..=fuzzer_runs {
+            let args = fuzzer.next_args();
+            let case = case.clone();
+            let runner = runner.clone();
+            let args = args.clone();
+            let cancellation_fuzzing_token = token.clone();
+            let runner_config = runner_config.clone();
+            let send = send.clone();
+
+            tasks.push(run_fuzzing_subtest(
+                runner,
+                runner_config,
+                case,
+                args,
+                cancellation_fuzzing_token,
+                send,
+            ));
+        }
+
+        let mut results = vec![];
+
+        // Graceful Shutdown Pattern
+        drop(send);
+
+        while let Some(task) = tasks.next().await {
+            let result = task??;
+            results.push(result.clone());
+
+            match &result {
+                TestCaseSummary::Failed { .. } | TestCaseSummary::None {} => {
+                    break;
+                }
+                _ => (),
+            }
+        }
+
+        let _ = recv.recv().await;
+
+        let result: TestCaseSummary = results
+            .last()
+            .expect("Test should always run at least once")
+            .clone();
+
+        let runs = u32::try_from(
+            results
+                .iter()
+                .filter(|item| {
+                    matches!(
+                        item,
+                        TestCaseSummary::Passed { .. } | TestCaseSummary::Failed { .. }
+                    )
+                })
+                .count(),
+        )?;
+
+        let result = result.update_runs(runs);
+        Ok(result)
+    })
+}
+
+fn run_fuzzing_subtest(
+    runner: Arc<SierraCasmRunner>,
+    runner_config: Arc<RunnerConfig>,
+    case: Arc<TestCase>,
+    args: Vec<Felt252>,
+    cancellation_fuzzing_token: CancellationToken,
+    send: tokio::sync::mpsc::Sender<()>,
+) -> JoinHandle<Result<TestCaseSummary>> {
+    let c = case.clone();
+    task::spawn(async move {
+        tokio::select! {
+            () = runner_config.error_cancellation_token.cancelled() => {
+                // Stop executing all tests because
+                // one of a test returns Err
+                Ok(TestCaseSummary::None {  })
+            },
+            () = runner_config.exit_first_cancellation_token.cancelled() => {
+                // Stop executing all tests because flag --exit-first'
+                // has been set and one test FAIL
+                Ok(TestCaseSummary::skipped(&c))
+            },
+            () = cancellation_fuzzing_token.cancelled() => {
+                // Stop executing all single fuzzing tests
+                // because one of fuzzing test has been FAIL
+                Ok(TestCaseSummary::skipped(&c))
+            },
+           result = blocking_run_from_test(
+                runner,
+                case,
+                runner_config.clone(),
+                args.clone(),
+                Some(send),
+            ) => {
+                match result {
+                    Ok(result) => {
+                        if let TestCaseSummary::Failed { .. } = &result {
+                            if runner_config.exit_first {
+                                runner_config.exit_first_cancellation_token.cancel();
+                            } else {
+                                cancellation_fuzzing_token.cancel();
+                            }
+                        }
+                        Ok(result)
+                    }
+                    Err(e) => {
+                        runner_config.error_cancellation_token.cancel();
+                        Err(e)
+                    }
+                }
+            },
+        }
+    })
 }
 
 fn function_args<'a>(function: &'a Function, builtins: &[&str]) -> Vec<&'a ConcreteTypeId> {
