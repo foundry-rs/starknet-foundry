@@ -62,7 +62,7 @@ static BUILTINS: Lazy<Vec<&str>> = Lazy::new(|| {
 /// Configuration of the test runner
 #[derive(Debug)]
 pub struct RunnerConfig {
-    package_root: Utf8PathBuf,
+    workspace_root: Utf8PathBuf,
     test_name_filter: Option<String>,
     exact_match: bool,
     exit_first: bool,
@@ -73,7 +73,7 @@ pub struct RunnerConfig {
     contracts: HashMap<String, StarknetContractArtifacts>,
     predeployed_contracts: Utf8PathBuf,
     environment_variables: HashMap<String, String>,
-    cancellation_token: CancellationToken,
+    exit_first_cancellation_token: CancellationToken,
     error_cancellation_token: CancellationToken,
 }
 
@@ -88,7 +88,7 @@ impl RunnerConfig {
     #[must_use]
     #[allow(clippy::too_many_arguments)]
     pub fn new(
-        package_root: Utf8PathBuf,
+        workspace_root: Utf8PathBuf,
         test_name_filter: Option<String>,
         exact_match: bool,
         exit_first: bool,
@@ -100,10 +100,10 @@ impl RunnerConfig {
         predeployed_contracts: Utf8PathBuf,
         environment_variables: HashMap<String, String>,
     ) -> Self {
-        let cancellation_token = CancellationToken::new();
+        let exit_first_cancellation_token = CancellationToken::new();
         let error_cancellation_token = CancellationToken::new();
         Self {
-            package_root,
+            workspace_root,
             test_name_filter,
             exact_match,
             exit_first: forge_config_from_scarb.exit_first || exit_first,
@@ -118,7 +118,7 @@ impl RunnerConfig {
             contracts,
             predeployed_contracts,
             environment_variables,
-            cancellation_token,
+            exit_first_cancellation_token,
             error_cancellation_token,
         }
     }
@@ -289,7 +289,7 @@ fn try_close_tmp_dir(maybe_tmp_dir: Option<TempDir>) -> Result<()> {
 /// * `predeployed_contracts` - Absolute path to predeployed contracts used by starknet state e.g. account contracts
 ///
 
-#[allow(clippy::implicit_hasher, clippy::too_many_arguments)]
+#[allow(clippy::implicit_hasher)]
 pub async fn run(
     package_path: &Utf8PathBuf,
     package_name: &str,
@@ -368,7 +368,7 @@ async fn run_tests_from_crate(
     for case in test_cases.iter() {
         let case_name = case.name.as_str();
 
-        let function = runner.find_function(case_name).unwrap();
+        let function = runner.find_function(case_name)?;
         let args = function_args(function, &BUILTINS);
 
         let case = Arc::new(case.clone());
@@ -431,13 +431,14 @@ fn run_single_test(
     let exit_first = runner_config.exit_first;
     tokio::task::spawn(async move {
         tokio::select! {
-            () = runner_config.cancellation_token.cancelled() => {
+            () = runner_config.exit_first_cancellation_token.cancelled() => {
                 //Stop executing all tests because flag --exit-first'
                 //has been set and one test FAIL
                 Ok(TestCaseSummary::skipped(&case))
             },
             () = runner_config.error_cancellation_token.cancelled() => {
-                //Stop executing all tests
+                //Stop executing all tests because
+                //one of a test returns Err
                 Ok(TestCaseSummary::None {  })
             },
             result = blocking_run_from_test(runner, case.clone(), runner_config.clone(), vec![], None) => {
@@ -445,7 +446,7 @@ fn run_single_test(
                     Ok(result) => {
                         if exit_first {
                             if let TestCaseSummary::Failed { .. } = &result {
-                                runner_config.cancellation_token.cancel();
+                                runner_config.exit_first_cancellation_token.cancel();
                             }
                         }
                         Ok(result)
@@ -504,18 +505,18 @@ async fn run_with_fuzzing(
         tasks.push(task::spawn(async move {
             tokio::select! {
                 () = runner_config.error_cancellation_token.cancelled() => {
-                    //Stop executing all tests because flag --exit-first'
-                    //has been set and one test FAIL
+                    //Stop executing all tests because
+                    //one of a test returns Err
                     Ok(TestCaseSummary::None {  })
                 },
-                () = runner_config.cancellation_token.cancelled() => {
+                () = runner_config.exit_first_cancellation_token.cancelled() => {
                     //Stop executing all tests because flag --exit-first'
                     //has been set and one test FAIL
                     Ok(TestCaseSummary::skipped(&case_copy))
                 },
                 () = cancellation_fuzzing_token.cancelled() => {
-                    //Stop executing all tests because flag --exit-first'
-                    //has been set and one test FAIL
+                    //Stop executing all single fuzzing tests
+                    //because one of fuzzing test has been FAIL
                     Ok(TestCaseSummary::skipped(&case_copy))
                 },
                result = blocking_run_from_test(
@@ -529,7 +530,7 @@ async fn run_with_fuzzing(
                         Ok(result) => {
                             if let TestCaseSummary::Failed { .. } = &result {
                                 if runner_config.exit_first {
-                                    runner_config.cancellation_token.cancel();
+                                    runner_config.exit_first_cancellation_token.cancel();
                                 } else {
                                     cancellation_fuzzing_token.cancel();
                                 }
@@ -620,33 +621,69 @@ fn filter_tests_by_name(
 mod tests {
     use super::*;
     use test_collector::ExpectedTestResult;
-    //TODO: fix this tests after refactor
-    // #[test]
-    // fn fuzzer_default_seed() {
-    //     let config = RunnerConfig::new(None, false, false, None, None, &Default::default());
-    //     let config2 = RunnerConfig::new(None, false, false, None, None, &Default::default());
+    #[test]
+    fn fuzzer_default_seed() {
+        let config = RunnerConfig::new(
+            Utf8PathBuf::new(),
+            None,
+            false,
+            false,
+            None,
+            None,
+            &Default::default(),
+            Utf8PathBuf::new(),
+            Default::default(),
+            Utf8PathBuf::new(),
+            Default::default(),
+        );
+        let config2 = RunnerConfig::new(
+            Utf8PathBuf::new(),
+            None,
+            false,
+            false,
+            None,
+            None,
+            &Default::default(),
+            Utf8PathBuf::new(),
+            Default::default(),
+            Utf8PathBuf::new(),
+            Default::default(),
+        );
 
-    //     assert_ne!(config.fuzzer_seed, 0);
-    //     assert_ne!(config2.fuzzer_seed, 0);
-    //     assert_ne!(config.fuzzer_seed, config2.fuzzer_seed);
-    // }
+        assert_ne!(config.fuzzer_seed, 0);
+        assert_ne!(config2.fuzzer_seed, 0);
+        assert_ne!(config.fuzzer_seed, config2.fuzzer_seed);
+    }
 
-    // #[test]
-    // fn runner_config_default_arguments() {
-    //     let config = RunnerConfig::new("test", None, false, false, None, None, &Default::default());
-    //     assert_eq!(
-    //         config,
-    //         RunnerConfig {
-    //             "test",
-    //             test_name_filter: None,
-    //             exact_match: false,
-    //             exit_first: false,
-    //             fork_targets: vec![],
-    //             fuzzer_runs: FUZZER_RUNS_DEFAULT,
-    //             fuzzer_seed: config.fuzzer_seed,
-    //         }
-    //     );
-    // }
+    #[test]
+    fn runner_config_default_arguments() {
+        let config = RunnerConfig::new(
+            Utf8PathBuf::new(),
+            None,
+            false,
+            false,
+            None,
+            None,
+            &Default::default(),
+            Default::default(),
+            Default::default(),
+            Default::default(),
+            Default::default(),
+        );
+        assert_eq!(
+            config,
+            RunnerConfig {
+                "test",
+                test_name_filter: None,
+                exact_match: false,
+                exit_first: false,
+                fork_targets: vec![],
+                fuzzer_runs: FUZZER_RUNS_DEFAULT,
+                fuzzer_seed: config.fuzzer_seed,
+
+            }
+        );
+    }
 
     // #[test]
     // fn runner_config_just_scarb_arguments() {

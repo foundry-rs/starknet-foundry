@@ -50,14 +50,14 @@ pub(crate) fn print_test_result(test_result: &TestCaseSummary) {
         TestCaseSummary::Passed { .. } => format!("[{}]", style("PASS").green()),
         TestCaseSummary::Failed { .. } => format!("[{}]", style("FAIL").red()),
         TestCaseSummary::Skipped { .. } => format!("[{}]", style("SKIP").yellow()),
-        TestCaseSummary::None {} => return,
+        TestCaseSummary::None {} => unreachable!(),
     };
 
     let result_name = match test_result {
         TestCaseSummary::Skipped { name }
         | TestCaseSummary::Failed { name, .. }
         | TestCaseSummary::Passed { name, .. } => name,
-        TestCaseSummary::None {} => return,
+        TestCaseSummary::None {} => unreachable!(),
     };
 
     let result_message = match test_result {

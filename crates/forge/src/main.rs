@@ -112,10 +112,10 @@ fn main_execution() -> Result<bool> {
         .match_many(&scarb_metadata)
         .context("Failed to find any packages matching the specified filter")?;
 
-    let package_root = &scarb_metadata.workspace.root;
+    let workspace_root = &scarb_metadata.workspace.root;
 
     if args.clean_cache {
-        clean_cache(package_root).context("Failed to clean snforge cache")?;
+        clean_cache(workspace_root).context("Failed to clean snforge cache")?;
     }
 
     let rt = Runtime::new()?;
@@ -128,7 +128,7 @@ fn main_execution() -> Result<bool> {
             env::set_current_dir(package_path.clone())?;
 
             // TODO(#671)
-            let target_dir = target_dir_for_package(package_root)?;
+            let target_dir = target_dir_for_package(workspace_root)?;
 
             let build_output = Command::new("scarb")
                 .arg("build")
@@ -152,7 +152,7 @@ fn main_execution() -> Result<bool> {
                 .unwrap_or_default();
 
             let runner_config = Arc::new(RunnerConfig::new(
-                package_root.clone(),
+                workspace_root.clone(),
                 args.test_filter.clone(),
                 args.exact,
                 args.exit_first,

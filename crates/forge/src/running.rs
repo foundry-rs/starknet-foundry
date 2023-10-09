@@ -87,7 +87,7 @@ pub(crate) fn run_from_test_case(
     runner_config: &Arc<RunnerConfig>,
     args: Vec<Felt252>,
 ) -> Result<TestCaseSummary> {
-    let package_root = &runner_config.package_root;
+    let workspace_root = &runner_config.workspace_root;
     let fork_targets = runner_config.fork_targets.as_ref();
     let contracts: &HashMap<String, StarknetContractArtifacts> = &runner_config.contracts.clone();
     let predeployed_contracts = &runner_config.predeployed_contracts;
@@ -136,7 +136,7 @@ pub(crate) fn run_from_test_case(
 
     let state_reader = ExtendedStateReader {
         dict_state_reader: build_testing_state(predeployed_contracts),
-        fork_state_reader: get_fork_state_reader(package_root, fork_targets, &case.fork_config),
+        fork_state_reader: get_fork_state_reader(workspace_root, fork_targets, &case.fork_config),
     };
     let mut blockifier_state = CachedState::new(state_reader, GlobalContractCache::default());
     let mut execution_resources = ExecutionResources::default();
@@ -194,7 +194,7 @@ pub(crate) fn run_from_test_case(
 }
 
 fn get_fork_state_reader(
-    package_root: &Utf8PathBuf,
+    workspace_root: &Utf8PathBuf,
     fork_targets: &[ForkTarget],
     fork_config: &Option<ForkConfig>,
 ) -> Option<ForkStateReader> {
@@ -202,17 +202,17 @@ fn get_fork_state_reader(
         Some(ForkConfig::Params(url, block_id)) => Some(ForkStateReader::new(
             url,
             *block_id,
-            Some(package_root.join(".snfoundry_cache").as_ref()),
+            Some(workspace_root.join(".snfoundry_cache").as_ref()),
         )),
         Some(ForkConfig::Id(name)) => {
-            find_params_and_build_fork_state_reader(package_root, fork_targets, name)
+            find_params_and_build_fork_state_reader(workspace_root, fork_targets, name)
         }
         _ => None,
     }
 }
 
 fn find_params_and_build_fork_state_reader(
-    package_root: &Utf8PathBuf,
+    workspace_root: &Utf8PathBuf,
     fork_targets: &[ForkTarget],
     fork_alias: &str,
 ) -> Option<ForkStateReader> {
@@ -239,6 +239,6 @@ fn find_params_and_build_fork_state_reader(
     Some(ForkStateReader::new(
         &fork?.url,
         block_id,
-        Some(package_root.join(".snfoundry_cache").as_ref()),
+        Some(workspace_root.join(".snfoundry_cache").as_ref()),
     ))
 }
