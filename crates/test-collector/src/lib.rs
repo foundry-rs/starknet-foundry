@@ -476,7 +476,7 @@ pub fn collect_tests(
     let mut crate_roots: OrderedHashMap<SmolStr, PathBuf> = linked_libraries
         .iter()
         .cloned()
-        .map(|source_root| (source_root.name.into(), source_root.path.clone()))
+        .map(|source_root| (source_root.name.into(), source_root.path))
         .collect();
     crate_roots.insert(crate_name.into(), PathBuf::from(crate_root));
 
