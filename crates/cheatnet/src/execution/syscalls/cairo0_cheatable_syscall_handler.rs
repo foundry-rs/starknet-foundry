@@ -5,8 +5,8 @@ use blockifier::execution::deprecated_syscalls::hint_processor::{
 };
 use blockifier::execution::deprecated_syscalls::{
     CallContractRequest, DeprecatedSyscallResult, DeprecatedSyscallSelector, EmptyRequest,
-    GetBlockNumberResponse, GetBlockTimestampResponse, GetContractAddressResponse, SyscallRequest,
-    SyscallResponse, WriteResponseResult,
+    GetBlockNumberResponse, GetBlockTimestampResponse, GetContractAddressResponse,
+    LibraryCallRequest, SyscallRequest, SyscallResponse, WriteResponseResult,
 };
 use blockifier::execution::execution_utils::{write_maybe_relocatable, ReadOnlySegment};
 use blockifier::execution::hint_code;
@@ -108,7 +108,7 @@ impl<'a> Cairo0CheatableSyscallHandler<'a> {
         let contract_address = self.syscall_handler.storage_address;
 
         if DeprecatedSyscallSelector::GetCallerAddress == selector
-            && self.cheatnet_state.address_is_cheated(&contract_address)
+            && self.cheatnet_state.address_is_pranked(&contract_address)
         {
             self.syscall_handler.syscall_ptr += 1;
 
@@ -118,7 +118,9 @@ impl<'a> Cairo0CheatableSyscallHandler<'a> {
             response.write(vm, &mut self.syscall_handler.syscall_ptr)?;
 
             return Ok(());
-        } else if DeprecatedSyscallSelector::GetBlockNumber == selector {
+        } else if DeprecatedSyscallSelector::GetBlockNumber == selector
+            && self.cheatnet_state.address_is_rolled(&contract_address)
+        {
             self.syscall_handler.syscall_ptr += 1;
 
             let response = get_block_number(&EmptyRequest {}, vm, self, contract_address).unwrap();
@@ -126,7 +128,9 @@ impl<'a> Cairo0CheatableSyscallHandler<'a> {
             response.write(vm, &mut self.syscall_handler.syscall_ptr)?;
 
             return Ok(());
-        } else if DeprecatedSyscallSelector::GetBlockTimestamp == selector {
+        } else if DeprecatedSyscallSelector::GetBlockTimestamp == selector
+            && self.cheatnet_state.address_is_warped(&contract_address)
+        {
             self.syscall_handler.syscall_ptr += 1;
 
             let response =
@@ -138,7 +142,10 @@ impl<'a> Cairo0CheatableSyscallHandler<'a> {
         } else if DeprecatedSyscallSelector::DelegateCall == selector {
             self.syscall_handler.syscall_ptr += 1;
             return self.execute_syscall(vm, delegate_call);
-        };
+        } else if DeprecatedSyscallSelector::LibraryCall == selector {
+            self.syscall_handler.syscall_ptr += 1;
+            return self.execute_syscall(vm, library_call);
+        }
 
         self.syscall_handler
             .execute_next_syscall(vm, ids_data, ap_tracking)
@@ -194,6 +201,27 @@ pub fn delegate_call(
         vm,
         class_hash,
         Some(storage_address),
+        call_to_external,
+        request.function_selector,
+        request.calldata,
+    )?;
+
+    Ok(SingleSegmentResponse {
+        segment: retdata_segment,
+    })
+}
+
+pub fn library_call(
+    request: LibraryCallRequest,
+    vm: &mut VirtualMachine,
+    syscall_handler: &mut Cairo0CheatableSyscallHandler<'_>,
+) -> DeprecatedSyscallResult<SingleSegmentResponse> {
+    let call_to_external = true;
+    let retdata_segment = execute_library_call(
+        syscall_handler,
+        vm,
+        request.class_hash,
+        None,
         call_to_external,
         request.function_selector,
         request.calldata,
