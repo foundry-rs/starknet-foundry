@@ -42,6 +42,7 @@ use crate::test_execution_syscall_handler::file_operations::string_into_felt;
 use cairo_lang_starknet::contract::starknet_keccak;
 use cairo_lang_utils::bigint::BigIntAsHex;
 use cairo_vm::types::relocatable::Relocatable;
+use cairo_vm::vm::errors::hint_errors::HintError::CustomHint;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cheatnet::cheatcodes::spy_events::SpyTarget;
 use cheatnet::execution::syscalls::cairo1_cheatable_syscall_handler::Cairo1CheatableSyscallHandler;
@@ -467,30 +468,34 @@ impl TestExecutionSyscallHandler<'_> {
                 let contract_address = inputs[0].to_contract_address();
                 let function_name = inputs[1].clone();
                 let from_address = inputs[2].clone();
-                let fee = inputs[3].clone();
-                let payload_length: usize = inputs[4]
+                let payload_length: usize = inputs[3]
                     .clone()
                     .to_usize()
                     .expect("Payload length is expected to fit into usize type");
 
-                let payload = Vec::from(&inputs[5..inputs.len()]);
+                let payload = Vec::from(&inputs[4..inputs.len()]);
 
                 let mut blockifier_state =
                     BlockifierState::from(self.cheatable_syscall_handler.syscall_handler.state);
 
                 match blockifier_state.l1_handler_execute(
+                    self.cheatable_syscall_handler.cheatnet_state,
                     contract_address,
                     &function_name,
                     &from_address,
-                    &fee,
                     &payload,
                 ) {
-                    Ok(()) => Ok(()),
-                    Err(CheatcodeError::Recoverable(panic_data)) => {
+                    CallContractOutput::Success { .. } => {
+                        buffer.write(0);
+                        Ok(())
+                    }
+                    CallContractOutput::Panic { panic_data, .. } => {
                         write_cheatcode_panic(&mut buffer, &panic_data);
                         Ok(())
                     }
-                    Err(CheatcodeError::Unrecoverable(err)) => Err(err),
+                    CallContractOutput::Error { msg, .. } => {
+                        Err(EnhancedHintError::from(CustomHint(Box::from(msg))))
+                    }
                 }
             }
             "read_txt" => {
