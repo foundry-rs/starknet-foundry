@@ -21,7 +21,7 @@ use smol_str::SmolStr;
 use walkdir::WalkDir;
 
 use crate::fuzzer::RandomFuzzer;
-use crate::running::run_from_test_case;
+use crate::running::run_test_case;
 use crate::scarb::{ForgeConfig, ForkTarget, StarknetContractArtifacts};
 pub use crate::test_crate_summary::TestCrateSummary;
 use test_collector::{collect_tests, FuzzerConfig, LinkedLibrary, TestCase};
@@ -174,7 +174,7 @@ fn collect_tests_from_package(
             .map_err(|_| anyhow!("Failed to convert tests temporary directory to Utf8PathBuf"))?;
 
         all_test_roots.push(TestCrate {
-            crate_root: tests_tmp_dir_path.clone(),
+            crate_root: tests_tmp_dir_path,
             crate_name: "tests".to_string(),
             crate_type: TestCrateType::Tests,
         });
@@ -377,7 +377,7 @@ fn run_tests_from_crate(
         let args = function_args(function, &BUILTINS);
 
         let result = if args.is_empty() {
-            let result = run_from_test_case(
+            let result = run_test_case(
                 package_root,
                 &runner,
                 case,
@@ -467,7 +467,7 @@ fn run_with_fuzzing(
     for _ in 1..=fuzzer_runs {
         let args = fuzzer.next_args();
 
-        let result = run_from_test_case(
+        let result = run_test_case(
             package_root,
             runner,
             case,
