@@ -26,12 +26,6 @@ The `verify` command will perform following actions:
 
 #### Parameters
 
-#### `--path-to-scarb-toml, -s <PATH>`
-
-Optional.
-Path to `Scarb.toml` file.
-If supplied, cast will not look for `Scarb.toml`` file in current (or parent) directory, but will use this path instead.
-
 #### `--contract-name`
 
 Required.
@@ -48,18 +42,19 @@ Optional.
 Specifies the Blockchan Explorer to verify with.  
 Default: `voyager`
 
-Options are: 
+Options as of writing of this document: 
  - voyager
  - starkscan
 
-#### `--verifier-url <URL>`
+#### `--network <NETWORK_NAME>`
 
 Optional.
-Specifies the Blockchain Explorer's Verification API URL ().  
-Default: the default API URL for selected verifier (eg. https://goerli.voyager.online/) (testnet)
-Options are: 
- - `https://voyager.online/` - for verification at mainnet
- - `https://goerli.voyager.online/` -  for verification on testnet
+Specifies the network on which Blockchain Explorers will do the verification
+Default: the default network on which verfication would be done is `goerli` testnet
+
+Options are:
+ - mainnet - for verification at mainnet
+ - goerli -  for verification on testnet
 
 ### Voyager API plugin
 
