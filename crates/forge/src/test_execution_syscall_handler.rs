@@ -61,15 +61,34 @@ impl From<&StarknetContractArtifacts> for ContractArtifacts {
     }
 }
 
+pub struct TestExecutionState<'a> {
+    pub environment_variables: &'a HashMap<String, String>,
+    pub contracts: &'a HashMap<String, StarknetContractArtifacts>,
+}
+
 // This hint processor provides an implementation logic for functions from snforge_std library.
 // If cannot execute a hint it falls back to the CheatableSyscallHandler
 pub struct TestExecutionSyscallHandler<'a> {
     pub cheatable_syscall_handler: CheatableSyscallHandler<'a>,
-    pub contracts: &'a HashMap<String, StarknetContractArtifacts>,
+    pub test_execution_state: &'a mut TestExecutionState<'a>,
+    // we need to keep a copy of hints as SyscallHintProcessor keeps it as private
     pub hints: &'a HashMap<String, Hint>,
-    // pub cheatnet_state: CheatnetState,
     pub run_resources: RunResources,
-    pub environment_variables: &'a HashMap<String, String>,
+}
+
+impl<'a> TestExecutionSyscallHandler<'a> {
+    pub fn new(
+        cheatable_syscall_handler: CheatableSyscallHandler<'a>,
+        test_execution_state: &'a mut TestExecutionState<'a>,
+        hints: &'a HashMap<String, Hint>,
+    ) -> Self {
+        TestExecutionSyscallHandler {
+            cheatable_syscall_handler,
+            test_execution_state,
+            hints,
+            run_resources: RunResources::default(),
+        }
+    }
 }
 
 // crates/blockifier/src/execution/syscalls/hint_processor.rs:472 (ResourceTracker for SyscallHintProcessor)
@@ -132,8 +151,8 @@ impl HintProcessorLogic for TestExecutionSyscallHandler<'_> {
                 input_end,
                 output_start,
                 output_end,
-                self.contracts,
-                self.environment_variables,
+                self.test_execution_state.contracts,
+                self.test_execution_state.environment_variables,
             );
         }
         if let Some(Hint::Starknet(StarknetHint::SystemCall { system })) = maybe_extended_hint {

@@ -31,7 +31,7 @@ use smol_str::SmolStr;
 use walkdir::WalkDir;
 
 use crate::fuzzer::RandomFuzzer;
-
+use crate::running::run_test_case;
 use crate::scarb::{ForgeConfig, ForkTarget, StarknetContractArtifacts};
 pub use crate::test_crate_summary::TestCrateSummary;
 use test_collector::{collect_tests, FuzzerConfig, LinkedLibrary, TestCase};
@@ -436,7 +436,7 @@ fn run_single_test(
             () = runner_config.error_cancellation_token.cancelled() => {
                 // Stop executing all tests because
                 // one of a test returns Err
-                Ok(TestCaseSummary::None {  })
+                Ok(TestCaseSummary::Interrupted {  })
             },
             result = blocking_run_from_test(runner, case.clone(), runner_config.clone(), vec![], None) => {
                 match result {
@@ -514,7 +514,7 @@ fn run_with_fuzzing(
             results.push(result.clone());
 
             match &result {
-                TestCaseSummary::Failed { .. } | TestCaseSummary::None {} => {
+                TestCaseSummary::Failed { .. } | TestCaseSummary::Interrupted {} => {
                     break;
                 }
                 _ => (),
@@ -559,7 +559,7 @@ fn run_fuzzing_subtest(
             () = runner_config.error_cancellation_token.cancelled() => {
                 // Stop executing all tests because
                 // one of a test returns Err
-                Ok(TestCaseSummary::None {  })
+                Ok(TestCaseSummary::Interrupted {  })
             },
             () = runner_config.exit_first_cancellation_token.cancelled() => {
                 // Stop executing all tests because flag --exit-first'
@@ -569,7 +569,8 @@ fn run_fuzzing_subtest(
             () = cancellation_fuzzing_token.cancelled() => {
                 // Stop executing all single fuzzing tests
                 // because one of fuzzing test has been FAIL
-                Ok(TestCaseSummary::skipped(&c))
+                Ok(TestCaseSummary::SkippedFuzzing {})
+
             },
            result = blocking_run_from_test(
                 runner,
