@@ -1,13 +1,11 @@
 use crate::cheatcodes::spy_events::Event;
+use crate::execution::calls::cairo1_calls::{execute_inner_call, execute_library_call};
+use crate::execution::execution_info::get_cheated_exec_info_ptr;
+use crate::execution::syscalls::stark_felt_from_ptr_immutable;
 use crate::execution::{
     contract_print::{contract_print, PrintingResult},
     entry_point::execute_constructor_entry_point,
 };
-use crate::execution::calls::cairo1_calls::{execute_inner_call, execute_library_call};
-use crate::execution::contract_print::{contract_print, PrintingResult};
-use crate::execution::entry_point::execute_constructor_entry_point;
-use crate::execution::execution_info::get_cheated_exec_info_ptr;
-use crate::execution::syscalls::stark_felt_from_ptr_immutable;
 use crate::state::CheatnetState;
 use blockifier::abi::constants;
 use blockifier::execution::call_info::CallInfo;
