@@ -7,7 +7,6 @@ use forge::{run, RunnerConfig, RunnerParams};
 use indoc::formatdoc;
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::string::ToString;
 use tempfile::tempdir;
 
 static CHEATNET_RPC_URL: &str = "http://188.34.188.184:9545/rpc/v0.4";
