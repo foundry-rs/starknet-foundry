@@ -46,7 +46,7 @@ pub const SECURITY_TEST_CLASS_HASH: &str = "0x114";
 pub const TEST_ERC20_CONTRACT_CLASS_HASH: &str = "0x1010";
 
 pub const TEST_CONTRACT_CLASS_HASH: &str = "0x117";
-// snforge_std/src/cheatcodes.cairo::TEST
+// snforge_std/src/cheatcodes.cairo::test_address
 pub const TEST_ADDRESS: &str = "0x01724987234973219347210837402";
 
 
