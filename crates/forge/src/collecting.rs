@@ -8,7 +8,7 @@ use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use test_collector::{collect_tests, LinkedLibrary, TestCase};
 use walkdir::WalkDir;
 
-#[cfg_attr(test, derive(Clone))]
+#[derive(Clone)]
 pub struct TestsFromCrate {
     pub sierra_program: Program,
     pub test_cases: Vec<TestCase>,

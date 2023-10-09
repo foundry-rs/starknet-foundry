@@ -72,11 +72,11 @@ impl TestsToRun {
     }
 }
 
-fn should_be_run(tests_to_run: &TestsToRun, case_ignored: bool) -> bool {
+fn should_be_run(tests_to_run: &TestsToRun, test_case: &TestCase) -> bool {
     match tests_to_run {
         TestsToRun::All => true,
-        TestsToRun::Ignored => case_ignored,
-        TestsToRun::NonIgnored => !case_ignored,
+        TestsToRun::Ignored => test_case.ignored,
+        TestsToRun::NonIgnored => !test_case.ignored,
     }
 }
 
@@ -285,7 +285,7 @@ fn run_tests_from_crate(
         let function = runner.find_function(case_name)?;
         let args = function_args(function, &BUILTINS);
 
-        let (result, runs) = if !should_be_run(&runner_config.tests_to_run, case.ignored) {
+        let (result, runs) = if !should_be_run(&runner_config.tests_to_run, case) {
             let result = TestCaseSummary::Ignored {
                 name: case.name.clone(),
             };
