@@ -164,12 +164,7 @@ pub(crate) fn run_from_test_case(
         instructions,
         builtins,
     ) {
-        Ok(result) => Ok(TestCaseSummary::from_run_result(
-            result,
-            case,
-            args,
-            fork_params,
-        )),
+        Ok(result) => Ok(TestCaseSummary::from_run_result(result, case, args)),
 
         // CairoRunError comes from VirtualMachineError which may come from HintException that originates in the cheatcode processor
         Err(RunnerError::CairoRunError(error)) => Ok(TestCaseSummary::Failed {
@@ -180,7 +175,6 @@ pub(crate) fn run_from_test_case(
                 error.to_string().replace(" Custom Hint Error: ", "\n    ")
             )),
             arguments: args,
-            fork_params,
         }),
 
         Err(err) => Err(err.into()),

@@ -113,7 +113,7 @@ impl TryFrom<RawForgeConfig> for ForgeConfig {
                 name: raw_fork_target.name,
                 url: Url::parse(&raw_fork_target.url).map_err(|parse_error| {
                     anyhow!(
-                        "Could not parse the url = {} URL from Scarb.toml: {parse_error}",
+                        "Could not parse the url = {} from Scarb.toml: {parse_error}",
                         raw_fork_target.url
                     )
                 })?,
@@ -940,6 +940,6 @@ mod tests {
         println!("{err}");
         assert!(err
             .to_string()
-            .contains("Could not parse the \"unparsable_url\" URL from Scarb.toml:"));
+            .contains("Could not parse the url = unparsable_url from Scarb.toml:"));
     }
 }
