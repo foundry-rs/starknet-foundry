@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use std::{collections::HashMap, fs, path::PathBuf};
 
-use blockifier::execution::contract_class::ContractClassV1;
+use blockifier::execution::contract_class::{ContractClassV1, ContractClassV1Inner};
 use blockifier::{
     abi::{abi_utils::get_storage_var_address, constants},
     block_context::BlockContext,
@@ -12,11 +12,13 @@ use blockifier::{
     transaction::objects::AccountTransactionContext,
 };
 use cairo_felt::Felt252;
+use cairo_vm::types::program::Program;
 use cairo_vm::vm::runners::builtin_runner::{
     BITWISE_BUILTIN_NAME, EC_OP_BUILTIN_NAME, HASH_BUILTIN_NAME, KECCAK_BUILTIN_NAME,
     OUTPUT_BUILTIN_NAME, POSEIDON_BUILTIN_NAME, RANGE_CHECK_BUILTIN_NAME, SIGNATURE_BUILTIN_NAME,
 };
 use camino::Utf8PathBuf;
+use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::{
     block::{BlockNumber, BlockTimestamp},
     core::{ChainId, ClassHash, ContractAddress, Nonce, PatriciaKey},
@@ -178,6 +180,20 @@ fn erc20_account_balance_key() -> StorageKey {
     .unwrap()
 }
 
+fn contract_class_no_entrypoints() -> ContractClass {
+    let inner = ContractClassV1Inner {
+        program: Program::default(),
+        entry_points_by_type: HashMap::from([
+            (EntryPointType::External, vec![]),
+            (EntryPointType::Constructor, vec![]),
+            (EntryPointType::L1Handler, vec![]),
+        ]),
+
+        hints: HashMap::new(),
+    };
+    ContractClass::V1(ContractClassV1(Arc::new(inner)))
+}
+
 // Creates a state with predeployed account and erc20 used to send transactions during tests.
 // Deployed contracts are cairo 0 contracts
 // Account does not include validations
@@ -200,7 +216,7 @@ pub fn build_testing_state(predeployed_contracts: &Utf8PathBuf) -> DictStateRead
         ),
         // This is dummy put here only to satisfy blockifier
         // this class is not used and the test contract cannot be called
-        (test_contract_class_hash, ContractClass::V1(account_class)),
+        (test_contract_class_hash, contract_class_no_entrypoints()),
         (test_erc20_class_hash, ContractClass::V0(erc20_class)),
     ]);
 
