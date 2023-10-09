@@ -5,7 +5,8 @@ use blockifier::execution::deprecated_syscalls::hint_processor::{
 };
 use blockifier::execution::deprecated_syscalls::{
     CallContractRequest, DeprecatedSyscallResult, DeprecatedSyscallSelector, EmptyRequest,
-    GetContractAddressResponse, SyscallRequest, SyscallResponse, WriteResponseResult,
+    GetBlockNumberResponse, GetBlockTimestampResponse, GetContractAddressResponse, SyscallRequest,
+    SyscallResponse, WriteResponseResult,
 };
 use blockifier::execution::execution_utils::{write_maybe_relocatable, ReadOnlySegment};
 use blockifier::execution::hint_code;
@@ -21,6 +22,8 @@ use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cairo_vm::vm::vm_core::VirtualMachine;
+use num_traits::ToPrimitive;
+use starknet_api::block::{BlockNumber, BlockTimestamp};
 use starknet_api::core::ContractAddress;
 use std::any::Any;
 use std::collections::HashMap;
@@ -115,6 +118,23 @@ impl<'a> Cairo0CheatableSyscallHandler<'a> {
             response.write(vm, &mut self.syscall_handler.syscall_ptr)?;
 
             return Ok(());
+        } else if DeprecatedSyscallSelector::GetBlockNumber == selector {
+            self.syscall_handler.syscall_ptr += 1;
+
+            let response = get_block_number(&EmptyRequest {}, vm, self, contract_address).unwrap();
+
+            response.write(vm, &mut self.syscall_handler.syscall_ptr)?;
+
+            return Ok(());
+        } else if DeprecatedSyscallSelector::GetBlockTimestamp == selector {
+            self.syscall_handler.syscall_ptr += 1;
+
+            let response =
+                get_block_timestamp(&EmptyRequest {}, vm, self, contract_address).unwrap();
+
+            response.write(vm, &mut self.syscall_handler.syscall_ptr)?;
+
+            return Ok(());
         } else if DeprecatedSyscallSelector::DelegateCall == selector {
             self.syscall_handler.syscall_ptr += 1;
             return self.execute_syscall(vm, delegate_call);
@@ -196,5 +216,43 @@ pub fn get_caller_address(
             .pranked_contracts
             .get(&contract_address)
             .unwrap(),
+    })
+}
+
+pub fn get_block_number(
+    _request: &EmptyRequest,
+    _vm: &mut VirtualMachine,
+    syscall_handler: &mut Cairo0CheatableSyscallHandler<'_>,
+    contract_address: ContractAddress,
+) -> DeprecatedSyscallResult<GetBlockNumberResponse> {
+    Ok(GetBlockNumberResponse {
+        block_number: BlockNumber(
+            syscall_handler
+                .cheatnet_state
+                .rolled_contracts
+                .get(&contract_address)
+                .unwrap()
+                .to_u64()
+                .unwrap(),
+        ),
+    })
+}
+
+pub fn get_block_timestamp(
+    _request: &EmptyRequest,
+    _vm: &mut VirtualMachine,
+    syscall_handler: &mut Cairo0CheatableSyscallHandler<'_>,
+    contract_address: ContractAddress,
+) -> DeprecatedSyscallResult<GetBlockTimestampResponse> {
+    Ok(GetBlockTimestampResponse {
+        block_timestamp: BlockTimestamp(
+            syscall_handler
+                .cheatnet_state
+                .warped_contracts
+                .get(&contract_address)
+                .unwrap()
+                .to_u64()
+                .unwrap(),
+        ),
     })
 }
