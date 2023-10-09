@@ -119,6 +119,18 @@ pub struct CheatableSyscallHandler<'a> {
     pub cheatnet_state: &'a mut CheatnetState,
 }
 
+impl<'a> CheatableSyscallHandler<'a> {
+    pub fn new(
+        syscall_handler: SyscallHintProcessor<'a>,
+        cheatnet_state: &'a mut CheatnetState,
+    ) -> Self {
+        CheatableSyscallHandler {
+            syscall_handler,
+            cheatnet_state,
+        }
+    }
+}
+
 // crates/blockifier/src/execution/syscalls/hint_processor.rs:472 (ResourceTracker for SyscallHintProcessor)
 impl ResourceTracker for CheatableSyscallHandler<'_> {
     fn consumed(&self) -> bool {

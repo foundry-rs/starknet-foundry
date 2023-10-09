@@ -57,13 +57,48 @@ pub enum CallContractOutput {
 
 // This does contract call without the transaction layer. This way `call_contract` can return data and modify state.
 // `call` and `invoke` on the transactional layer use such method under the hood.
-#[allow(clippy::too_many_lines)]
 pub fn call_contract(
     blockifier_state: &mut BlockifierState,
     cheatnet_state: &mut CheatnetState,
     contract_address: &ContractAddress,
     entry_point_selector: &Felt252,
     calldata: &[Felt252],
+) -> Result<CallContractOutput> {
+    call_entry_point(
+        blockifier_state,
+        cheatnet_state,
+        contract_address,
+        entry_point_selector,
+        calldata,
+        EntryPointType::External,
+    )
+}
+
+pub fn call_l1_handler(
+    blockifier_state: &mut BlockifierState,
+    cheatnet_state: &mut CheatnetState,
+    contract_address: &ContractAddress,
+    entry_point_selector: &Felt252,
+    calldata: &[Felt252],
+) -> Result<CallContractOutput> {
+    call_entry_point(
+        blockifier_state,
+        cheatnet_state,
+        contract_address,
+        entry_point_selector,
+        calldata,
+        EntryPointType::L1Handler,
+    )
+}
+
+#[allow(clippy::too_many_lines)]
+pub fn call_entry_point(
+    blockifier_state: &mut BlockifierState,
+    cheatnet_state: &mut CheatnetState,
+    contract_address: &ContractAddress,
+    entry_point_selector: &Felt252,
+    calldata: &[Felt252],
+    entry_point_type: EntryPointType,
 ) -> Result<CallContractOutput> {
     let entry_point_selector =
         EntryPointSelector(StarkHash::new(entry_point_selector.to_be_bytes())?);
@@ -77,7 +112,7 @@ pub fn call_contract(
     let mut entry_point = CallEntryPoint {
         class_hash: None,
         code_address: Some(*contract_address),
-        entry_point_type: EntryPointType::External,
+        entry_point_type,
         entry_point_selector,
         calldata,
         storage_address: *contract_address,
