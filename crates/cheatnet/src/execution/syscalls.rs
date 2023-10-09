@@ -236,6 +236,8 @@ fn get_syscall_operand(hint: &StarknetHint) -> Result<&ResOperand, HintError> {
     Ok(syscall)
 }
 
+fn execute
+
 impl CheatableSyscallHandler<'_> {
     fn execute_next_syscall_cheated(
         &mut self,
@@ -261,10 +263,8 @@ impl CheatableSyscallHandler<'_> {
             // Increment, since the selector was peeked into before
             self.syscall_handler.syscall_ptr += 1;
 
-            if selector != SyscallSelector::Keccak {
-                self.syscall_handler
-                    .increment_syscall_count_by(&selector, 1);
-            }
+            self.syscall_handler
+                .increment_syscall_count_by(&selector, 1);
 
             let SyscallRequestWrapper {
                 gas_counter,
@@ -302,11 +302,9 @@ impl CheatableSyscallHandler<'_> {
 
             // Increment, since the selector was peeked into before
             self.syscall_handler.syscall_ptr += 1;
+            self.syscall_handler
+                .increment_syscall_count_by(&selector, 1);
 
-            if selector != SyscallSelector::Keccak {
-                self.syscall_handler
-                    .increment_syscall_count_by(&selector, 1);
-            }
             return self.execute_syscall(
                 vm,
                 call_contract_syscall,
@@ -320,10 +318,8 @@ impl CheatableSyscallHandler<'_> {
             // Increment, since the selector was peeked into before
             self.syscall_handler.syscall_ptr += 1;
 
-            if selector != SyscallSelector::Keccak {
-                self.syscall_handler
-                    .increment_syscall_count_by(&selector, 1);
-            }
+            self.syscall_handler
+                .increment_syscall_count_by(&selector, 1);
 
             return self.execute_syscall(
                 vm,
@@ -338,10 +334,9 @@ impl CheatableSyscallHandler<'_> {
             // Increment, since the selector was peeked into before
             self.syscall_handler.syscall_ptr += 1;
 
-            if selector != SyscallSelector::Keccak {
-                self.syscall_handler
-                    .increment_syscall_count_by(&selector, 1);
-            }
+            self.syscall_handler
+                .increment_syscall_count_by(&selector, 1);
+
             return self.execute_syscall(vm, deploy_syscall, constants::DEPLOY_GAS_COST);
         } else if SyscallSelector::EmitEvent == selector {
             // No incrementation, since execute_next_syscall reads selector and increments syscall_ptr
