@@ -27,6 +27,7 @@ pub struct Contract {
 }
 
 impl Contract {
+    #[must_use]
     pub fn new(name: &str, code: &str) -> Self {
         Self {
             name: name.to_string(),
@@ -109,6 +110,7 @@ impl<'a> TestCase {
         self.enviroment_variables.insert(key.into(), value.into());
     }
 
+    #[must_use]
     pub fn env(&self) -> &HashMap<String, String> {
         &self.enviroment_variables
     }
@@ -118,6 +120,7 @@ impl<'a> TestCase {
             .map_err(|_| anyhow!("Failed to convert TestCase path to Utf8PathBuf"))
     }
 
+    #[must_use]
     pub fn linked_libraries(&self) -> Vec<LinkedLibrary> {
         let snforge_std_path = PathBuf::from_str("../../snforge_std")
             .unwrap()
@@ -151,6 +154,7 @@ impl<'a> TestCase {
             .collect()
     }
 
+    #[must_use]
     pub fn find_test_result(results: &[TestCrateSummary]) -> &TestCrateSummary {
         results
             .iter()

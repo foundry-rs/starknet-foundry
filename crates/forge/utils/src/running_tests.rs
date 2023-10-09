@@ -10,6 +10,7 @@ use std::path::PathBuf;
 use tempfile::tempdir;
 use tokio::runtime::Runtime;
 
+#[must_use]
 pub fn run_test_case(test: &TestCase) -> Vec<TestCrateSummary> {
     let rt = Runtime::new().expect("Could not instantiate Runtime");
 

@@ -15,6 +15,7 @@ pub(crate) struct CompiledTestCrate {
 }
 
 impl CompiledTestCrate {
+    #[must_use]
     pub fn filter_by_name(self, filter: &str) -> Self {
         let test_cases = self
             .test_cases
@@ -24,6 +25,7 @@ impl CompiledTestCrate {
         Self { test_cases, ..self }
     }
 
+    #[must_use]
     pub fn filter_by_exact_name(self, filter: &str) -> Self {
         let test_cases = self
             .test_cases
@@ -78,7 +80,8 @@ impl TestCompilationTarget {
     }
 }
 
-pub(crate) fn collect_test_compilation_targets(
+#[must_use]
+pub fn collect_test_compilation_targets(
     package_path: &Utf8Path,
     package_name: &str,
     package_source_dir_path: &Utf8Path,
