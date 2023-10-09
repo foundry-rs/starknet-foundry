@@ -197,7 +197,7 @@ impl ForkCache {
         self.fork_cache_content
             .storage_at
             .entry(contract_address_str.clone())
-            .or_insert_with(HashMap::new);
+            .or_default();
 
         self.fork_cache_content
             .storage_at
