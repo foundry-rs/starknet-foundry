@@ -387,9 +387,7 @@ async fn run_tests_from_crate(
     let mut results = vec![];
 
     while let Some(task) = tasks.next().await {
-        let await_task = task??;
-
-        let result = await_task;
+        let result = task??;
 
         if result.runs().is_some() {
             was_fuzzed = true;
@@ -432,13 +430,13 @@ fn run_single_test(
     tokio::task::spawn(async move {
         tokio::select! {
             () = runner_config.exit_first_cancellation_token.cancelled() => {
-                //Stop executing all tests because flag --exit-first'
-                //has been set and one test FAIL
+                // Stop executing all tests because flag --exit-first'
+                // has been set and one test FAIL
                 Ok(TestCaseSummary::skipped(&case))
             },
             () = runner_config.error_cancellation_token.cancelled() => {
-                //Stop executing all tests because
-                //one of a test returns Err
+                // Stop executing all tests because
+                // one of a test returns Err
                 Ok(TestCaseSummary::None {  })
             },
             result = blocking_run_from_test(runner, case.clone(), runner_config.clone(), vec![], None) => {
@@ -489,7 +487,8 @@ async fn run_with_fuzzing(
     let mut fuzzer = RandomFuzzer::create(fuzzer_seed, fuzzer_runs, &args)?;
 
     let mut tasks = FuturesUnordered::new();
-
+    // Pattern in order to waiting for things to finish shutting down
+    // https://tokio.rs/tokio/topics/shutdown
     let (send, mut recv) = channel(1);
 
     for _ in 1..=fuzzer_runs {
@@ -505,18 +504,18 @@ async fn run_with_fuzzing(
         tasks.push(task::spawn(async move {
             tokio::select! {
                 () = runner_config.error_cancellation_token.cancelled() => {
-                    //Stop executing all tests because
-                    //one of a test returns Err
+                    // Stop executing all tests because
+                    // one of a test returns Err
                     Ok(TestCaseSummary::None {  })
                 },
                 () = runner_config.exit_first_cancellation_token.cancelled() => {
-                    //Stop executing all tests because flag --exit-first'
-                    //has been set and one test FAIL
+                    // Stop executing all tests because flag --exit-first'
+                    // has been set and one test FAIL
                     Ok(TestCaseSummary::skipped(&case_copy))
                 },
                 () = cancellation_fuzzing_token.cancelled() => {
-                    //Stop executing all single fuzzing tests
-                    //because one of fuzzing test has been FAIL
+                    // Stop executing all single fuzzing tests
+                    // because one of fuzzing test has been FAIL
                     Ok(TestCaseSummary::skipped(&case_copy))
                 },
                result = blocking_run_from_test(
@@ -549,6 +548,7 @@ async fn run_with_fuzzing(
 
     let mut results = vec![];
 
+    // Graceful Shutdown Pattern
     drop(send);
 
     while let Some(task) = tasks.next().await {
@@ -565,6 +565,11 @@ async fn run_with_fuzzing(
 
     let _ = recv.recv().await;
 
+    let result: TestCaseSummary = results
+        .last()
+        .expect("Test should always run at least once")
+        .clone();
+
     let runs = u32::try_from(
         results
             .iter()
@@ -577,10 +582,6 @@ async fn run_with_fuzzing(
             .count(),
     )?;
 
-    let result: TestCaseSummary = results
-        .last()
-        .expect("Test should always run at least once")
-        .clone();
     let result = result.update_runs(runs);
     Ok(result)
 }
