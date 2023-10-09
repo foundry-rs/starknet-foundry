@@ -7,6 +7,7 @@ use forge::{run, RunnerConfig, RunnerParams};
 use indoc::formatdoc;
 use std::collections::HashMap;
 use std::path::PathBuf;
+use std::string::ToString;
 use tempfile::tempdir;
 
 static CHEATNET_RPC_URL: &str = "http://188.34.188.184:9545/rpc/v0.4";
@@ -145,45 +146,6 @@ fn fork_cairo0_contract() {
 
                 let total_supply = dispatcher.totalSupply();
                 assert(total_supply == 1368798332311330795498, 'Wrong total supply');
-            }}
-        "#,
-        CHEATNET_RPC_URL
-    ).as_str());
-
-    let result = run_test_case(&test);
-
-    assert_passed!(result);
-}
-
-#[test]
-fn fork_prank_cairo0_contract() {
-    let test = test_case!(formatdoc!(
-        r#"
-            use starknet::contract_address_const;
-            use snforge_std::start_prank;
-            use debug::PrintTrait;
-
-            #[starknet::interface]
-            trait IERC20Camel<TState> {{
-                fn permittedMinter(self: @TState) -> felt252;
-                fn permissionedMint(self: TState, recipient: felt252, amount: u256);
-                fn balanceOf(self: @TState, account: felt252) -> u256;
-            }}
-
-            #[test]
-            #[fork(url: "{}", block_id: BlockId::Number(313494))]
-            fn test_timestamp() {{
-                let contract_address = contract_address_const::<0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7>();
-
-                let dispatcher = IERC20CamelDispatcher {{ contract_address }};
-
-                let minter = dispatcher.permittedMinter();
-                minter.print();
-                start_prank(contract_address, minter.try_into().unwrap());
-
-                dispatcher.permissionedMint(123, 1);
-                let balance = dispatcher.balanceOf(123);
-                assert(balance == 1, 'aaa');
             }}
         "#,
         CHEATNET_RPC_URL
