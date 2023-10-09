@@ -315,3 +315,37 @@ fn deploy_invokes_constructor() {
 
     assert_success!(output, vec![Felt252::from(123)]);
 }
+
+#[test]
+fn deploy_at_invokes_constructor() {
+    let mut cached_state = create_cached_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
+
+    let contract = "ConstructorSimple".to_string().to_felt252();
+    let contracts = get_contracts();
+
+    let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
+
+    let contract_address = deploy_at(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &class_hash,
+        &[Felt252::from(123)],
+        Felt252::from(420).to_contract_address(),
+    )
+    .unwrap()
+    .contract_address;
+
+    let selector = felt_selector_from_name("get_number");
+
+    let output = call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &contract_address,
+        &selector,
+        &[],
+    )
+    .unwrap();
+
+    assert_success!(output, vec![Felt252::from(123)]);
+}
