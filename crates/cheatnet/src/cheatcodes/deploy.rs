@@ -13,6 +13,7 @@ use blockifier::state::state_api::State;
 use cairo_felt::Felt252;
 use cairo_vm::vm::errors::hint_errors::HintError::CustomHint;
 use conversions::StarknetConversions;
+use num_traits::ToPrimitive;
 
 use crate::cheatcodes::EnhancedHintError;
 use crate::execution::syscalls::execute_deployment;
@@ -30,7 +31,6 @@ pub struct DeployCallPayload {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[allow(clippy::cast_precision_loss)]
 pub fn deploy_at(
     blockifier_state: &mut BlockifierState,
     cheatnet_state: &mut CheatnetState,
@@ -66,9 +66,11 @@ pub fn deploy_at(
         calldata.to_vec().iter().map(felt_to_stark_felt).collect(),
     ));
 
+    let resources = &mut ExecutionResources::default();
+
     let result = execute_deployment(
         blockifier_state_raw,
-        &mut ExecutionResources::default(),
+        resources,
         entry_point_execution_ctx,
         ctor_context,
         calldata,
@@ -76,11 +78,17 @@ pub fn deploy_at(
         cheatnet_state,
     )
     .map(|call_info| DeployCallPayload {
-        resource_report: ResourceReport {
-            gas: call_info.execution.gas_consumed as f64,
-            steps: call_info.vm_resources.n_steps,
-            bultins: call_info.vm_resources.builtin_instance_counter,
-        },
+        resource_report: ResourceReport::new(
+            call_info
+                .execution
+                .gas_consumed
+                .to_f64()
+                .expect("Conversion to f64 failed")
+                + constants::DEPLOY_GAS_COST
+                    .to_f64()
+                    .expect("Conversion to f64 failed"),
+            resources,
+        ),
         contract_address,
     })
     .map_err(|err| {

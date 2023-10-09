@@ -33,7 +33,7 @@ pub struct ResourceReport {
 }
 
 impl ResourceReport {
-    fn new(gas: f64, resources: &ExecutionResources) -> Self {
+    pub(crate) fn new(gas: f64, resources: &ExecutionResources) -> Self {
         Self {
             gas,
             steps: resources.vm_resources.n_steps,

@@ -1,3 +1,4 @@
+use blockifier::abi::constants;
 use std::collections::HashMap;
 
 use crate::common::{
@@ -8,7 +9,9 @@ use cairo_felt::Felt252;
 use cheatnet::cheatcodes::deploy::deploy;
 use cheatnet::rpc::{call_contract, ResourceReport};
 use conversions::StarknetConversions;
+use num_traits::ToPrimitive;
 
+// TODO (834): Verify values in this test
 #[test]
 fn call_resources_simple() {
     let mut cached_state = create_cached_state();
@@ -59,9 +62,39 @@ fn deploy_resources_simple() {
     assert_eq!(
         payload.resource_report,
         ResourceReport {
-            gas: 5.34,
-            steps: 534,
-            bultins: HashMap::from([("range_check_builtin".to_owned(), 15)]),
+            gas: constants::DEPLOY_GAS_COST.to_f64().unwrap(),
+            steps: 0, // No constructor
+            bultins: HashMap::new(),
+        }
+    );
+}
+
+#[test]
+fn deploy_resources_with_constructor() {
+    let mut cached_state = create_cached_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
+
+    let contracts = get_contracts();
+
+    let contract_name = "ConstructorSimple".to_owned().to_felt252();
+    let class_hash = blockifier_state
+        .declare(&contract_name, &contracts)
+        .unwrap();
+
+    let payload = deploy(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &class_hash,
+        &[Felt252::from(1)],
+    )
+    .unwrap();
+
+    assert_eq!(
+        payload.resource_report,
+        ResourceReport {
+            gas: 13840.0 + constants::DEPLOY_GAS_COST.to_f64().unwrap(),
+            steps: 88, // Constructor steps
+            bultins: HashMap::from([("range_check_builtin".to_owned(), 2)]),
         }
     );
 }
