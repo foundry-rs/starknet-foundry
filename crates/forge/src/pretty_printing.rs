@@ -85,14 +85,14 @@ pub fn print_failures(all_failed_tests: &[TestCaseSummary]) {
     if all_failed_tests.is_empty() {
         return;
     }
-    let empty_string = String::new();
+
     let failed_tests_names: Vec<&String> = all_failed_tests
         .iter()
         .map(|test_case_summary| match test_case_summary {
             TestCaseSummary::Passed { name, .. }
             | TestCaseSummary::Failed { name, .. }
             | TestCaseSummary::Skipped { name, .. } => name,
-            TestCaseSummary::None {} => &empty_string,
+            TestCaseSummary::None {} => unreachable!(),
         })
         .collect();
 
