@@ -42,7 +42,7 @@ pub(crate) fn print_test_seed(seed: u64) {
 }
 
 pub(crate) fn print_test_result(test_result: &TestCaseSummary) {
-    if let TestCaseSummary::None {} = test_result {
+    if let TestCaseSummary::Interrupted {} | TestCaseSummary::SkippedFuzzing {} = test_result {
         return;
     }
 
@@ -50,14 +50,14 @@ pub(crate) fn print_test_result(test_result: &TestCaseSummary) {
         TestCaseSummary::Passed { .. } => format!("[{}]", style("PASS").green()),
         TestCaseSummary::Failed { .. } => format!("[{}]", style("FAIL").red()),
         TestCaseSummary::Skipped { .. } => format!("[{}]", style("SKIP").yellow()),
-        TestCaseSummary::None {} => unreachable!(),
+        TestCaseSummary::Interrupted {} | TestCaseSummary::SkippedFuzzing {} => unreachable!(),
     };
 
     let result_name = match test_result {
         TestCaseSummary::Skipped { name }
         | TestCaseSummary::Failed { name, .. }
         | TestCaseSummary::Passed { name, .. } => name,
-        TestCaseSummary::None {} => unreachable!(),
+        TestCaseSummary::Interrupted {} | TestCaseSummary::SkippedFuzzing {} => unreachable!(),
     };
 
     let result_message = match test_result {
@@ -89,10 +89,11 @@ pub fn print_failures(all_failed_tests: &[TestCaseSummary]) {
     let failed_tests_names: Vec<&String> = all_failed_tests
         .iter()
         .map(|test_case_summary| match test_case_summary {
-            TestCaseSummary::Passed { name, .. }
-            | TestCaseSummary::Failed { name, .. }
-            | TestCaseSummary::Skipped { name, .. } => name,
-            TestCaseSummary::None {} => unreachable!(),
+            TestCaseSummary::Failed { name, .. } => name,
+            TestCaseSummary::Passed { .. }
+            | TestCaseSummary::Skipped { .. }
+            | TestCaseSummary::Interrupted {}
+            | TestCaseSummary::SkippedFuzzing {} => unreachable!(),
         })
         .collect();
 

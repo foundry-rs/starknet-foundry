@@ -36,13 +36,13 @@ use starknet_api::transaction::Calldata;
 use test_collector::{ForkConfig, TestCase};
 use tokio::sync::mpsc::Sender;
 
-use crate::scarb::{ForkTarget, StarknetContractArtifacts};
+use crate::scarb::ForkTarget;
 use crate::test_case_summary::TestCaseSummary;
 
 use crate::test_execution_syscall_handler::TestExecutionSyscallHandler;
 use crate::RunnerConfig;
 
-use crate::test_execution_syscall_handler::{TestExecutionState, TestExecutionSyscallHandler};
+use crate::test_execution_syscall_handler::TestExecutionState;
 
 // snforge_std/src/cheatcodes.cairo::TEST
 const TEST_ADDRESS: &str = "0x01724987234973219347210837402";
@@ -80,7 +80,7 @@ pub(crate) async fn blocking_run_from_test(
     args: Vec<Felt252>,
     _sender: Option<Sender<()>>,
 ) -> Result<TestCaseSummary> {
-    tokio::task::spawn_blocking(move || run_test_case(&runner, &case, &runner_config, args)).await?
+    tokio::task::spawn_blocking(move || run_test_case(&runner, &case, runner_config, args)).await?
 }
 
 fn build_context() -> EntryPointExecutionContext {

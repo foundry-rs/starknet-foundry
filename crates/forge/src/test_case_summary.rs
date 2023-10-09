@@ -36,7 +36,8 @@ pub enum TestCaseSummary {
         /// Name of the test case
         name: String,
     },
-    None {},
+    SkippedFuzzing {},
+    Interrupted {},
 }
 
 impl TestCaseSummary {
@@ -44,13 +45,17 @@ impl TestCaseSummary {
         match self {
             TestCaseSummary::Failed { arguments, .. }
             | TestCaseSummary::Passed { arguments, .. } => arguments.clone(),
-            TestCaseSummary::Skipped { .. } | TestCaseSummary::None {} => vec![],
+            TestCaseSummary::Skipped { .. }
+            | TestCaseSummary::Interrupted {}
+            | TestCaseSummary::SkippedFuzzing {} => vec![],
         }
     }
     pub(crate) fn runs(&self) -> Option<u32> {
         match self {
             TestCaseSummary::Failed { runs, .. } | TestCaseSummary::Passed { runs, .. } => *runs,
-            TestCaseSummary::Skipped { .. } | TestCaseSummary::None {} => None,
+            TestCaseSummary::Skipped { .. }
+            | TestCaseSummary::Interrupted {}
+            | TestCaseSummary::SkippedFuzzing {} => None,
         }
     }
 
@@ -82,7 +87,9 @@ impl TestCaseSummary {
                 arguments,
                 runs: Some(runs),
             },
-            TestCaseSummary::Skipped { .. } | TestCaseSummary::None {} => self,
+            TestCaseSummary::Skipped { .. }
+            | TestCaseSummary::Interrupted {}
+            | TestCaseSummary::SkippedFuzzing {} => self,
         }
     }
 }
