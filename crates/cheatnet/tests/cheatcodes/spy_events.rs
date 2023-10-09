@@ -150,7 +150,7 @@ fn check_events_order() {
             keys: vec![starknet_keccak("FirstEvent".as_ref()).into()],
             data: vec![Felt252::from(234)]
         },
-        "Wrong third event"
+        "Wrong second event"
     );
     assert_eq!(
         events[2],
@@ -159,7 +159,7 @@ fn check_events_order() {
             keys: vec![starknet_keccak("ThirdEvent".as_ref()).into()],
             data: vec![Felt252::from(345)]
         },
-        "Wrong second event"
+        "Wrong third event"
     );
 }
 
