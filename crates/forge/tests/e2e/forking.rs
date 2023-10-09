@@ -111,9 +111,7 @@ fn forking_and_cache() {
         Running 0 test(s) from src/
         Running 4 test(s) from tests/
         [PASS] tests::test_forking::latest
-        Block number: [..], block hash: [..]
         [PASS] tests::test_forking::pending
-        Block parent hash: [..]
         [PASS] tests::test_forking::number
         [PASS] tests::test_forking::hash
         Tests: 4 passed, 0 failed, 0 skipped
