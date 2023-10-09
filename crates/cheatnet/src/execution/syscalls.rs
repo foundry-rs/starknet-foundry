@@ -236,7 +236,6 @@ fn get_syscall_operand(hint: &StarknetHint) -> Result<&ResOperand, HintError> {
     Ok(syscall)
 }
 
-fn execute
 
 impl CheatableSyscallHandler<'_> {
     fn execute_next_syscall_cheated(
@@ -245,24 +244,20 @@ impl CheatableSyscallHandler<'_> {
         hint: &StarknetHint,
     ) -> HintExecutionResult {
         // We peak into the selector without incrementing the pointer as it is done later
-        let syscall_selector_pointer = self.syscall_handler.syscall_ptr;
+        let syscall = get_syscall_operand(hint)?;
+        let initial_syscall_ptr = get_ptr_from_res_operand_unchecked(vm, syscall);
         let selector = SyscallSelector::try_from(stark_felt_from_ptr_immutable(
             vm,
-            &syscall_selector_pointer,
+            &initial_syscall_ptr,
         )?)?;
+        self.verify_syscall_ptr(initial_syscall_ptr)?;
         let contract_address = self.syscall_handler.storage_address();
-
 
         if SyscallSelector::GetExecutionInfo == selector
             && self.cheatnet_state.address_is_cheated(&contract_address)
         {
-            let syscall = get_syscall_operand(hint)?;
-            let initial_syscall_ptr = get_ptr_from_res_operand_unchecked(vm, syscall);
-            self.verify_syscall_ptr(initial_syscall_ptr)?;
-
             // Increment, since the selector was peeked into before
             self.syscall_handler.syscall_ptr += 1;
-
             self.syscall_handler
                 .increment_syscall_count_by(&selector, 1);
 
@@ -296,10 +291,6 @@ impl CheatableSyscallHandler<'_> {
             response_wrapper.write(vm, &mut self.syscall_handler.syscall_ptr)?;
             return Ok(());
         } else if SyscallSelector::CallContract == selector {
-            let syscall = get_syscall_operand(hint)?;
-            let initial_syscall_ptr = get_ptr_from_res_operand_unchecked(vm, syscall);
-            self.verify_syscall_ptr(initial_syscall_ptr)?;
-
             // Increment, since the selector was peeked into before
             self.syscall_handler.syscall_ptr += 1;
             self.syscall_handler
@@ -311,13 +302,8 @@ impl CheatableSyscallHandler<'_> {
                 constants::CALL_CONTRACT_GAS_COST,
             );
         } else if SyscallSelector::LibraryCall == selector {
-            let syscall = get_syscall_operand(hint)?;
-            let initial_syscall_ptr = get_ptr_from_res_operand_unchecked(vm, syscall);
-            self.verify_syscall_ptr(initial_syscall_ptr)?;
-
             // Increment, since the selector was peeked into before
             self.syscall_handler.syscall_ptr += 1;
-
             self.syscall_handler
                 .increment_syscall_count_by(&selector, 1);
 
@@ -327,13 +313,8 @@ impl CheatableSyscallHandler<'_> {
                 constants::CALL_CONTRACT_GAS_COST,
             );
         } else if SyscallSelector::Deploy == selector {
-            let syscall = get_syscall_operand(hint)?;
-            let initial_syscall_ptr = get_ptr_from_res_operand_unchecked(vm, syscall);
-            self.verify_syscall_ptr(initial_syscall_ptr)?;
-
             // Increment, since the selector was peeked into before
             self.syscall_handler.syscall_ptr += 1;
-
             self.syscall_handler
                 .increment_syscall_count_by(&selector, 1);
 
