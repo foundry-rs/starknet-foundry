@@ -79,7 +79,7 @@ pub fn deploy_at(
         } => {
             let result = blockifier_state_raw
                 .set_class_hash_at(contract_address, *class_hash)
-                .map(|_| contract_address)
+                .map(|()| contract_address)
                 .map_err(|msg| {
                     CheatcodeError::Unrecoverable(EnhancedHintError::from(CustomHint(Box::from(
                         msg.to_string(),

@@ -9,7 +9,6 @@ use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::execution_utils::{
     felt_to_stark_felt, stark_felt_from_ptr, stark_felt_to_felt,
 };
-use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::execution::syscalls::{
     GetBlockHashRequest, GetBlockHashResponse, SyscallRequest, SyscallRequestWrapper,
     SyscallResponse, SyscallResponseWrapper,
@@ -44,6 +43,7 @@ use crate::test_execution_syscall_handler::file_operations::string_into_felt;
 use cairo_lang_starknet::contract::starknet_keccak;
 use cairo_lang_utils::bigint::BigIntAsHex;
 use cairo_vm::types::relocatable::Relocatable;
+use cairo_vm::vm::errors::hint_errors::HintError::CustomHint;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cheatnet::cheatcodes::spy_events::SpyTarget;
 use starknet_api::block::BlockHash;
@@ -61,15 +61,34 @@ impl From<&StarknetContractArtifacts> for ContractArtifacts {
     }
 }
 
+pub struct TestExecutionState<'a> {
+    pub environment_variables: &'a HashMap<String, String>,
+    pub contracts: &'a HashMap<String, StarknetContractArtifacts>,
+}
+
 // This hint processor provides an implementation logic for functions from snforge_std library.
 // If cannot execute a hint it falls back to the CheatableSyscallHandler
 pub struct TestExecutionSyscallHandler<'a> {
     pub cheatable_syscall_handler: CheatableSyscallHandler<'a>,
-    pub contracts: &'a HashMap<String, StarknetContractArtifacts>,
+    pub test_execution_state: &'a mut TestExecutionState<'a>,
+    // we need to keep a copy of hints as SyscallHintProcessor keeps it as private
     pub hints: &'a HashMap<String, Hint>,
-    // pub cheatnet_state: CheatnetState,
     pub run_resources: RunResources,
-    pub environment_variables: &'a HashMap<String, String>,
+}
+
+impl<'a> TestExecutionSyscallHandler<'a> {
+    pub fn new(
+        cheatable_syscall_handler: CheatableSyscallHandler<'a>,
+        test_execution_state: &'a mut TestExecutionState<'a>,
+        hints: &'a HashMap<String, Hint>,
+    ) -> Self {
+        TestExecutionSyscallHandler {
+            cheatable_syscall_handler,
+            test_execution_state,
+            hints,
+            run_resources: RunResources::default(),
+        }
+    }
 }
 
 // crates/blockifier/src/execution/syscalls/hint_processor.rs:472 (ResourceTracker for SyscallHintProcessor)
@@ -132,19 +151,18 @@ impl HintProcessorLogic for TestExecutionSyscallHandler<'_> {
                 input_end,
                 output_start,
                 output_end,
-                self.contracts,
-                self.environment_variables,
+                self.test_execution_state.contracts,
+                self.test_execution_state.environment_variables,
             );
         }
         if let Some(Hint::Starknet(StarknetHint::SystemCall { system })) = maybe_extended_hint {
             return execute_syscall(
                 system,
                 vm,
-                self.cheatable_syscall_handler.cheatnet_state,
                 exec_scopes,
                 hint_data,
                 constants,
-                &mut self.cheatable_syscall_handler.syscall_handler,
+                &mut self.cheatable_syscall_handler,
             );
         }
         self.cheatable_syscall_handler.syscall_handler.execute_hint(
@@ -469,30 +487,34 @@ impl TestExecutionSyscallHandler<'_> {
                 let contract_address = inputs[0].to_contract_address();
                 let function_name = inputs[1].clone();
                 let from_address = inputs[2].clone();
-                let fee = inputs[3].clone();
-                let payload_length: usize = inputs[4]
+                let payload_length: usize = inputs[3]
                     .clone()
                     .to_usize()
                     .expect("Payload length is expected to fit into usize type");
 
-                let payload = Vec::from(&inputs[5..inputs.len()]);
+                let payload = Vec::from(&inputs[4..inputs.len()]);
 
                 let mut blockifier_state =
                     BlockifierState::from(self.cheatable_syscall_handler.syscall_handler.state);
 
                 match blockifier_state.l1_handler_execute(
+                    self.cheatable_syscall_handler.cheatnet_state,
                     contract_address,
                     &function_name,
                     &from_address,
-                    &fee,
                     &payload,
                 ) {
-                    Ok(()) => Ok(()),
-                    Err(CheatcodeError::Recoverable(panic_data)) => {
+                    CallContractOutput::Success { .. } => {
+                        buffer.write(0);
+                        Ok(())
+                    }
+                    CallContractOutput::Panic { panic_data, .. } => {
                         write_cheatcode_panic(&mut buffer, &panic_data);
                         Ok(())
                     }
-                    Err(CheatcodeError::Unrecoverable(err)) => Err(err),
+                    CallContractOutput::Error { msg, .. } => {
+                        Err(EnhancedHintError::from(CustomHint(Box::from(msg))))
+                    }
                 }
             }
             "read_txt" => {
@@ -623,11 +645,10 @@ struct ScarbStarknetContractArtifact {
 fn execute_syscall(
     system: &ResOperand,
     vm: &mut VirtualMachine,
-    cheatnet_state: &mut CheatnetState,
     exec_scopes: &mut ExecutionScopes,
     hint_data: &Box<dyn Any>,
     constants: &HashMap<String, Felt252>,
-    blockifier_syscall_handler: &mut SyscallHintProcessor,
+    cheatable_syscall_handler: &mut CheatableSyscallHandler,
 ) -> Result<(), HintError> {
     let (cell, offset) = extract_buffer(system);
     let system_ptr = get_ptr(vm, cell, &offset)?;
@@ -636,13 +657,14 @@ fn execute_syscall(
     let selector = DeprecatedSyscallSelector::try_from(felt_to_stark_felt(
         &vm.get_integer(system_ptr).unwrap(),
     ))?;
-    let mut blockifier_state = BlockifierState::from(blockifier_syscall_handler.state);
+    let mut blockifier_state =
+        BlockifierState::from(cheatable_syscall_handler.syscall_handler.state);
 
     match selector {
         DeprecatedSyscallSelector::CallContract => {
             execute_call_contract(
                 MemBuffer::new(vm, system_ptr),
-                cheatnet_state,
+                cheatable_syscall_handler.cheatnet_state,
                 &mut blockifier_state,
             )?;
             Ok(())
@@ -654,10 +676,14 @@ fn execute_syscall(
             "Replace class can't be used in tests".to_string(),
         ))),
         DeprecatedSyscallSelector::GetBlockHash => {
-            execute_get_block_hash(vm, &mut system_ptr.clone(), cheatnet_state)?;
+            execute_get_block_hash(
+                vm,
+                &mut system_ptr.clone(),
+                cheatable_syscall_handler.cheatnet_state,
+            )?;
             Ok(())
         }
-        _ => blockifier_syscall_handler.execute_hint(vm, exec_scopes, hint_data, constants),
+        _ => cheatable_syscall_handler.execute_hint(vm, exec_scopes, hint_data, constants),
     }
 }
 
