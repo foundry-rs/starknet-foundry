@@ -41,6 +41,7 @@ pub struct StarknetContractArtifacts {
     pub casm: String,
 }
 
+/// Represents forge config deserialized from Scarb.toml
 #[derive(Debug, PartialEq, Default)]
 pub struct ForgeConfig {
     /// Should runner exit after first failed test
@@ -60,9 +61,9 @@ pub struct ForkTarget {
     pub block_id: BlockId,
 }
 
-/// Represents forge config deserialized from Scarb.toml
+/// Represents forge config deserialized from Scarb.toml using basic types like String etc.
 #[derive(Deserialize, Debug, PartialEq, Default)]
-pub struct RawForgeConfig {
+struct RawForgeConfig {
     #[serde(default)]
     /// Should runner exit after first failed test
     pub exit_first: bool,
@@ -112,7 +113,7 @@ impl TryFrom<RawForgeConfig> for ForgeConfig {
                 name: raw_fork_target.name,
                 url: Url::parse(&raw_fork_target.url).map_err(|parse_error| {
                     anyhow!(
-                        "Could not parse the \"{}\" URL from Scarb.toml: {parse_error}",
+                        "Could not parse the url = {} URL from Scarb.toml: {parse_error}",
                         raw_fork_target.url
                     )
                 })?,

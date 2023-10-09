@@ -11,6 +11,7 @@ use tempfile::{tempdir, TempDir};
 use forge::{pretty_printing, RunnerConfig, RunnerParams};
 use forge::{run, TestCrateSummary};
 
+use forge::running::CACHE_DIR_NAME;
 use forge::scarb::{
     config_from_scarb_for_package, corelib_for_package, dependencies_for_package,
     get_contracts_map, name_for_package, paths_for_package, target_dir_for_package,
@@ -22,7 +23,6 @@ use std::process::{Command, Stdio};
 mod init;
 
 static PREDEPLOYED_CONTRACTS: Dir = include_dir!("crates/cheatnet/predeployed-contracts");
-static CACHE_DIR: &str = ".snfoundry_cache";
 
 #[derive(Parser, Debug)]
 #[command(version)]
@@ -66,7 +66,7 @@ fn validate_fuzzer_runs_value(val: &str) -> Result<u32> {
 }
 
 fn clean_cache(workspace_root: &Utf8PathBuf) -> Result<()> {
-    let cache_dir = workspace_root.join(CACHE_DIR);
+    let cache_dir = workspace_root.join(CACHE_DIR_NAME);
     if cache_dir.exists() {
         fs::remove_dir_all(cache_dir)?;
     }
