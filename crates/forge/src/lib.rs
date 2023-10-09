@@ -493,20 +493,14 @@ fn run_with_fuzzing(
 
         for _ in 1..=fuzzer_runs {
             let args = fuzzer.next_args();
-            let case = case.clone();
-            let runner = runner.clone();
-            let args = args.clone();
-            let cancellation_fuzzing_token = token.clone();
-            let runner_config = runner_config.clone();
-            let send = send.clone();
 
             tasks.push(run_fuzzing_subtest(
-                runner,
-                runner_config,
-                case,
+                runner.clone(),
+                runner_config.clone(),
+                case.clone(),
                 args,
-                cancellation_fuzzing_token,
-                send,
+                token.clone(),
+                send.clone(),
             ));
         }
 
