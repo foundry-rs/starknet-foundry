@@ -406,7 +406,7 @@ pub type SyscallSelector = DeprecatedSyscallSelector;
 // It is created here because fields in the original structure are private
 // so we cannot create it in call_contract_syscall
 pub struct SingleSegmentResponse {
-    segment: ReadOnlySegment,
+    pub(crate) segment: ReadOnlySegment,
 }
 // crates/blockifier/src/execution/syscalls/mod.rs:131 (SyscallResponse for SingleSegmentResponse)
 impl SyscallResponse for SingleSegmentResponse {

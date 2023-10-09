@@ -167,6 +167,7 @@ fn fork_prank_cairo0_contract() {
             trait IERC20Camel<TState> {{
                 fn permittedMinter(self: @TState) -> felt252;
                 fn permissionedMint(self: TState, recipient: felt252, amount: u256);
+                fn balanceOf(self: @TState, account: felt252) -> u256;
             }}
 
             #[test]
@@ -181,7 +182,8 @@ fn fork_prank_cairo0_contract() {
                 start_prank(contract_address, minter.try_into().unwrap());
 
                 dispatcher.permissionedMint(123, 1);
-                assert(1 == 1, 'aaa');
+                let balance = dispatcher.balanceOf(123);
+                assert(balance == 1, 'aaa');
             }}
         "#,
         CHEATNET_RPC_URL
