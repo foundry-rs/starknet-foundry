@@ -39,11 +39,11 @@ use crate::collecting::{
 };
 use test_collector::{FuzzerConfig, LinkedLibrary, TestCase};
 
+pub mod collecting;
 pub mod pretty_printing;
 pub mod scarb;
 pub mod test_case_summary;
 
-mod collecting;
 mod fuzzer;
 mod running;
 mod test_crate_summary;
