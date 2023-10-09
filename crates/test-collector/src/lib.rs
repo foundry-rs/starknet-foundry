@@ -3,18 +3,15 @@ use anyhow::{anyhow, Context, Result};
 use cairo_felt::Felt252;
 use cairo_lang_compiler::db::RootDatabase;
 use cairo_lang_compiler::diagnostics::DiagnosticsReporter;
-use cairo_lang_compiler::project::{
-    get_main_crate_ids_from_project, update_crate_roots_from_project_config, ProjectError,
-};
 use cairo_lang_debug::DebugWithDb;
 use cairo_lang_defs::ids::{FreeFunctionId, FunctionWithBodyId, ModuleItemId};
 use cairo_lang_defs::plugin::PluginDiagnostic;
 use cairo_lang_diagnostics::ToOption;
 use cairo_lang_filesystem::cfg::{Cfg, CfgSet};
-use cairo_lang_filesystem::db::init_dev_corelib;
-use cairo_lang_filesystem::ids::CrateId;
+use cairo_lang_filesystem::db::FilesGroup;
+use cairo_lang_filesystem::ids::{CrateId, CrateLongId, Directory};
 use cairo_lang_lowering::ids::ConcreteFunctionWithBodyId;
-use cairo_lang_project::{DeserializationError, ProjectConfig, ProjectConfigContent};
+use cairo_lang_project::{ProjectConfig, ProjectConfigContent};
 use cairo_lang_semantic::db::SemanticGroup;
 use cairo_lang_semantic::items::functions::GenericFunctionId;
 use cairo_lang_semantic::{ConcreteFunction, FunctionLongId};
@@ -33,52 +30,18 @@ use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use cairo_lang_utils::OptionHelper;
 use conversions::StarknetConversions;
 use itertools::Itertools;
+use num_bigint::BigInt;
 use num_traits::ToPrimitive;
 use plugin::TestPlugin;
-use project::setup_single_file_project;
 use smol_str::SmolStr;
 use starknet::core::types::{BlockId, BlockTag};
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::Arc;
 
 mod plugin;
-#[allow(clippy::module_name_repetitions)]
-mod project;
+
 pub mod sierra_casm_generator;
-
-pub fn build_project_config(
-    source_root: &Path,
-    crate_name: &str,
-) -> Result<ProjectConfig, DeserializationError> {
-    let base_path: PathBuf = source_root
-        .to_str()
-        .ok_or(DeserializationError::PathError)?
-        .into();
-    let crate_roots = OrderedHashMap::from([(SmolStr::from(crate_name), base_path.clone())]);
-    Ok(ProjectConfig {
-        base_path,
-        content: ProjectConfigContent { crate_roots },
-        corelib: None,
-    })
-}
-
-pub fn setup_project_without_cairo_project_toml(
-    db: &mut dyn SemanticGroup,
-    path: &Path,
-    crate_name: &str,
-) -> Result<Vec<CrateId>, ProjectError> {
-    assert!(path.is_dir(), "Project path must be a directory");
-
-    match build_project_config(path, crate_name) {
-        Ok(config) => {
-            let main_crate_ids = get_main_crate_ids_from_project(db, &config);
-            update_crate_roots_from_project_config(db, config);
-            Ok(main_crate_ids)
-        }
-        _ => Err(ProjectError::LoadProjectError),
-    }
-}
 
 /// Expectation for a panic case.
 #[derive(Debug, Clone, PartialEq)]
@@ -104,6 +67,12 @@ pub enum ForkConfig {
     Params(String, BlockId),
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct FuzzerConfig {
+    pub fuzzer_runs: u32,
+    pub fuzzer_seed: u64,
+}
+
 /// The configuration for running a single test.
 #[derive(Debug)]
 pub struct SingleTestConfig {
@@ -115,6 +84,8 @@ pub struct SingleTestConfig {
     pub ignored: bool,
     /// The configuration of forked network.
     pub fork_config: Option<ForkConfig>,
+    /// Custom fuzzing configuration
+    pub fuzzer_config: Option<FuzzerConfig>,
 }
 
 /// Finds the tests in the requested crates.
@@ -159,6 +130,7 @@ pub fn try_extract_test_config(
         .find(|attr| attr.id.as_str() == "available_gas");
     let should_panic_attr = attrs.iter().find(|attr| attr.id.as_str() == "should_panic");
     let fork_attr = attrs.iter().find(|attr| attr.id.as_str() == "fork");
+    let fuzzer_attr = attrs.iter().find(|attr| attr.id.as_str() == "fuzzer");
     let mut diagnostics = vec![];
     if let Some(attr) = test_attr {
         if !attr.args.is_empty() {
@@ -173,6 +145,7 @@ pub fn try_extract_test_config(
             available_gas_attr,
             should_panic_attr,
             fork_attr,
+            fuzzer_attr,
         ]
         .into_iter()
         .flatten()
@@ -250,6 +223,17 @@ pub fn try_extract_test_config(
     } else {
         None
     };
+    let fuzzer_config = if let Some(attr) = fuzzer_attr {
+        extract_fuzzer_config(db, attr).on_none(|| {
+            diagnostics.push(PluginDiagnostic {
+                stable_ptr: attr.args_stable_ptr.untyped(),
+                message: "Expected fuzzer config must be of the form `runs: <u32>, seed: <u64>`"
+                    .into(),
+            });
+        })
+    } else {
+        None
+    };
 
     if !diagnostics.is_empty() {
         return Err(diagnostics);
@@ -270,6 +254,7 @@ pub fn try_extract_test_config(
             },
             ignored,
             fork_config,
+            fuzzer_config,
         })
     })
 }
@@ -322,6 +307,49 @@ fn extract_fork_config(db: &dyn SyntaxGroup, attr: &Attribute) -> Option<ForkCon
         }
         _ => extract_fork_config_from_args(db, attr),
     }
+}
+
+fn extract_fuzzer_config(db: &dyn SyntaxGroup, attr: &Attribute) -> Option<FuzzerConfig> {
+    let [AttributeArg {
+        variant:
+            AttributeArgVariant::Named {
+                name: fuzzer_runs_name,
+                value: fuzzer_runs,
+                ..
+            },
+        ..
+    }, AttributeArg {
+        variant:
+            AttributeArgVariant::Named {
+                name: fuzzer_seed_name,
+                value: fuzzer_seed,
+                ..
+            },
+        ..
+    }] = &attr.args[..]
+    else {
+        return None;
+    };
+
+    if fuzzer_runs_name != "runs" || fuzzer_seed_name != "seed" {
+        return None;
+    };
+
+    let fuzzer_runs = extract_numeric_value(db, fuzzer_runs)?.to_u32()?;
+    let fuzzer_seed = extract_numeric_value(db, fuzzer_seed)?.to_u64()?;
+
+    Some(FuzzerConfig {
+        fuzzer_runs,
+        fuzzer_seed,
+    })
+}
+
+fn extract_numeric_value(db: &dyn SyntaxGroup, expr: &ast::Expr) -> Option<BigInt> {
+    let ast::Expr::Literal(literal) = expr else {
+        return None;
+    };
+
+    literal.numeric_value(db)
 }
 
 fn extract_fork_config_from_id(id: &ast::Expr, db: &dyn SyntaxGroup) -> Option<ForkConfig> {
@@ -434,17 +462,30 @@ pub struct TestCase {
     pub available_gas: Option<usize>,
     pub expected_result: ExpectedTestResult,
     pub fork_config: Option<ForkConfig>,
+    pub fuzzer_config: Option<FuzzerConfig>,
 }
 
-// returns tuple[sierra if no output_path, list[test_name, test_config]]
 pub fn collect_tests(
-    input_path: &str,
+    crate_root: &str,
     output_path: Option<&str>,
     crate_name: &str,
-    linked_libraries: &Vec<LinkedLibrary>,
+    linked_libraries: &[LinkedLibrary],
     builtins: Option<Vec<&str>>,
     corelib_path: PathBuf,
 ) -> Result<(Program, Vec<TestCase>)> {
+    let mut crate_roots: OrderedHashMap<SmolStr, PathBuf> = linked_libraries
+        .iter()
+        .cloned()
+        .map(|source_root| (source_root.name.into(), source_root.path))
+        .collect();
+    crate_roots.insert(crate_name.into(), PathBuf::from(crate_root));
+
+    let project_config = ProjectConfig {
+        base_path: crate_root.into(),
+        corelib: Some(Directory::Real(corelib_path)),
+        content: ProjectConfigContent { crate_roots },
+    };
+
     // code taken from crates/cairo-lang-test-runner/src/lib.rs
     let db = &mut {
         let mut b = RootDatabase::builder();
@@ -452,23 +493,13 @@ pub fn collect_tests(
         b.with_macro_plugin(Arc::new(TestPlugin::default()));
         b.with_macro_plugin(Arc::new(StarkNetPlugin::default()))
             .with_inline_macro_plugin(SelectorMacro::NAME, Arc::new(SelectorMacro));
+        b.with_project_config(project_config);
         b.build()?
     };
 
-    init_dev_corelib(db, corelib_path);
+    let main_crate_id = db.intern_crate(CrateLongId::Real(SmolStr::from(crate_name)));
 
-    let main_crate_id = setup_single_file_project(db, Path::new(&input_path), crate_name)
-        .with_context(|| format!("Failed to setup project for path({input_path})"))?;
-
-    for linked_library in linked_libraries {
-        setup_project_without_cairo_project_toml(db, &linked_library.path, &linked_library.name)
-            .with_context(|| format!("Failed to add linked library ({})", linked_library.name))?;
-    }
-
-    if DiagnosticsReporter::stderr()
-        .with_extra_crates(&[main_crate_id])
-        .check(db)
-    {
+    if DiagnosticsReporter::stderr().check(db) {
         return Err(anyhow!(
             "Failed to add linked library, for a detailed information, please go through the logs \
              above"
@@ -513,6 +544,7 @@ pub fn collect_tests(
             available_gas: config.available_gas,
             expected_result: config.expected_result,
             fork_config: config.fork_config,
+            fuzzer_config: config.fuzzer_config,
         })
         .collect();
 
@@ -563,7 +595,10 @@ fn validate_tests(
         }
         if let Some(return_type_name) = maybe_return_type_name {
             if !return_type_name.starts_with("core::panics::PanicResult::") {
-                anyhow::bail!("Test function {} must be panicable but it's not", test.name);
+                anyhow::bail!(
+                    "The test function {} always succeeds and cannot be used as a test. Make sure to include panickable statements such as `assert` in your test",
+                    test.name
+                );
             }
             if return_type_name != "core::panics::PanicResult::<((),)>" {
                 anyhow::bail!(
@@ -575,8 +610,8 @@ fn validate_tests(
             }
         } else {
             anyhow::bail!(
-                "Couldn't read result type for test function {} possible cause: Test function {} \
-                 must be panicable but it's not",
+                "Couldn't read result type for test function {} possible cause: The test function {} \
+                 always succeeds and cannot be used as a test. Make sure to include panickable statements such as `assert` in your test",
                 test.name,
                 test.name
             );

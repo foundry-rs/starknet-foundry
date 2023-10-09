@@ -1,11 +1,12 @@
 use crate::constants::TEST_ACCOUNT_CONTRACT_ADDRESS;
+use crate::state::BlockifierState;
 use crate::{cheatcodes::EnhancedHintError, CheatnetState};
 use anyhow::Result;
 use blockifier::abi::abi_utils::selector_from_name;
 use blockifier::execution::execution_utils::{felt_to_stark_felt, stark_felt_to_felt};
 use blockifier::transaction::constants::EXECUTE_ENTRY_POINT_NAME;
 
-use blockifier::state::state_api::{State, StateReader};
+use blockifier::state::state_api::State;
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_vm::vm::errors::hint_errors::HintError::CustomHint;
@@ -27,103 +28,114 @@ pub struct DeployPayload {
     pub resource_report: ResourceReport,
 }
 
-impl CheatnetState {
-    pub fn deploy_at(
-        &mut self,
-        class_hash: &ClassHash,
-        calldata: &[Felt252],
-        contract_address: ContractAddress,
-    ) -> Result<DeployPayload, CheatcodeError> {
-        let salt = self.get_salt();
-        self.increment_deploy_salt_base();
+#[allow(clippy::module_name_repetitions)]
+pub fn deploy_at(
+    blockifier_state: &mut BlockifierState,
+    cheatnet_state: &mut CheatnetState,
+    class_hash: &ClassHash,
+    calldata: &[Felt252],
+    contract_address: ContractAddress,
+) -> Result<DeployPayload, CheatcodeError> {
+    let salt = cheatnet_state.get_salt();
+    cheatnet_state.increment_deploy_salt_base();
 
-        // Deploy a contract using syscall deploy.
-        let account_address = ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS));
-        let entry_point_selector = selector_from_name("deploy_contract");
+    // Deploy a contract using syscall deploy.
+    let account_address = ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS));
+    let entry_point_selector = selector_from_name("deploy_contract");
 
-        if let Ok(class_hash) = self.blockifier_state.get_class_hash_at(contract_address) {
-            if class_hash != ClassHash::default() {
-                return Err(CheatcodeError::Unrecoverable(EnhancedHintError::from(
-                    CustomHint(Box::from("Address is already taken")),
-                )));
-            }
-        }
-
-        let execute_calldata = create_execute_calldata(
-            calldata,
-            class_hash,
-            &account_address,
-            &entry_point_selector,
-            &salt,
-        );
-
-        let call_result = call_contract(
-            &account_address,
-            &get_selector_from_name(EXECUTE_ENTRY_POINT_NAME)
-                .unwrap()
-                .to_felt252(),
-            execute_calldata.as_slice(),
-            self,
-        )
-        .unwrap_or_else(|err| panic!("Deploy txn failed: {err}"));
-
-        match call_result {
-            CallContractOutput::Success {
-                resource_report, ..
-            } => {
-                let result = self
-                    .blockifier_state
-                    .set_class_hash_at(contract_address, *class_hash)
-                    .map(|_| contract_address)
-                    .map_err(|msg| {
-                        CheatcodeError::Unrecoverable(EnhancedHintError::from(CustomHint(
-                            Box::from(msg.to_string()),
-                        )))
-                    });
-
-                match result {
-                    Ok(contract_address) => Ok(DeployPayload {
-                        contract_address,
-                        resource_report,
-                    }),
-                    Err(cheatcode_error) => Err(cheatcode_error),
-                }
-            }
-            CallContractOutput::Panic { panic_data, .. } => {
-                let panic_data_str = panic_data
-                    .iter()
-                    .map(|x| as_cairo_short_string(x).unwrap())
-                    .collect::<Vec<String>>()
-                    .join("\n");
-
-                for invalid_calldata_msg in [
-                    "Failed to deserialize param #",
-                    "Input too long for arguments",
-                ] {
-                    if panic_data_str.contains(invalid_calldata_msg) {
-                        return Err(CheatcodeError::Unrecoverable(EnhancedHintError::from(
-                            CustomHint(Box::from(panic_data_str)),
-                        )));
-                    }
-                }
-
-                Err(CheatcodeError::Recoverable(panic_data))
-            }
-            CallContractOutput::Error { msg, .. } => Err(CheatcodeError::Unrecoverable(
-                EnhancedHintError::from(CustomHint(Box::from(msg))),
-            )),
+    let blockifier_state_raw: &mut dyn State = blockifier_state.blockifier_state as &mut dyn State;
+    if let Ok(class_hash) = blockifier_state_raw.get_class_hash_at(contract_address) {
+        if class_hash != ClassHash::default() {
+            return Err(CheatcodeError::Unrecoverable(EnhancedHintError::from(
+                CustomHint(Box::from("Address is already taken")),
+            )));
         }
     }
 
-    pub fn deploy(
-        &mut self,
-        class_hash: &ClassHash,
-        calldata: &[Felt252],
-    ) -> Result<DeployPayload, CheatcodeError> {
-        let contract_address = self.precalculate_address(class_hash, calldata);
+    let execute_calldata = create_execute_calldata(
+        calldata,
+        class_hash,
+        &account_address,
+        &entry_point_selector,
+        &salt,
+    );
 
-        self.deploy_at(class_hash, calldata, contract_address)
+    let call_result = call_contract(
+        blockifier_state,
+        cheatnet_state,
+        &account_address,
+        &get_selector_from_name(EXECUTE_ENTRY_POINT_NAME)
+            .unwrap()
+            .to_felt252(),
+        execute_calldata.as_slice(),
+    )
+    .unwrap_or_else(|err| panic!("Deploy txn failed: {err}"));
+
+    let blockifier_state_raw = &mut blockifier_state.blockifier_state;
+
+    match call_result {
+        CallContractOutput::Success {
+            resource_report, ..
+        } => {
+            let result = blockifier_state_raw
+                .set_class_hash_at(contract_address, *class_hash)
+                .map(|()| contract_address)
+                .map_err(|msg| {
+                    CheatcodeError::Unrecoverable(EnhancedHintError::from(CustomHint(Box::from(
+                        msg.to_string(),
+                    ))))
+                });
+
+            match result {
+                Ok(contract_address) => Ok(DeployPayload {
+                    contract_address,
+                    resource_report,
+                }),
+                Err(cheatcode_error) => Err(cheatcode_error),
+            }
+        }
+        CallContractOutput::Panic { panic_data, .. } => {
+            let panic_data_str = panic_data
+                .iter()
+                .map(|x| as_cairo_short_string(x).unwrap())
+                .collect::<Vec<String>>()
+                .join("\n");
+
+            for invalid_calldata_msg in [
+                "Failed to deserialize param #",
+                "Input too long for arguments",
+            ] {
+                if panic_data_str.contains(invalid_calldata_msg) {
+                    return Err(CheatcodeError::Unrecoverable(EnhancedHintError::from(
+                        CustomHint(Box::from(panic_data_str)),
+                    )));
+                }
+            }
+
+            Err(CheatcodeError::Recoverable(panic_data))
+        }
+        CallContractOutput::Error { msg, .. } => Err(CheatcodeError::Unrecoverable(
+            EnhancedHintError::from(CustomHint(Box::from(msg))),
+        )),
     }
+}
+
+#[allow(clippy::module_name_repetitions)]
+pub fn deploy(
+    blockifier_state: &mut BlockifierState,
+    cheatnet_state: &mut CheatnetState,
+    class_hash: &ClassHash,
+    calldata: &[Felt252],
+) -> Result<DeployPayload, CheatcodeError> {
+    let contract_address = cheatnet_state.precalculate_address(class_hash, calldata);
+
+    deploy_at(
+        blockifier_state,
+        cheatnet_state,
+        class_hash,
+        calldata,
+        contract_address,
+    )
 }
 
 fn create_execute_calldata(

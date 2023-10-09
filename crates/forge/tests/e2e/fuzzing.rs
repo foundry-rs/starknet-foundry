@@ -15,8 +15,8 @@ fn fuzzing() {
         [..]Finished[..]
         
         
-        Collected 11 test(s) from fuzzing package
-        Running 11 test(s) from src/
+        Collected 12 test(s) from fuzzing package
+        Running 12 test(s) from src/
         [PASS] fuzzing::tests::adding
         [PASS] fuzzing::tests::fuzzed_argument (fuzzer runs = 256)
         [PASS] fuzzing::tests::fuzzed_both_arguments (fuzzer runs = 256)
@@ -26,6 +26,7 @@ fn fuzzing() {
         Failure data:
             original value: [593979512822486835600413552099926114], converted to a string: [result == a + b]
 
+        [PASS] fuzzing::tests::custom_fuzzer_config (fuzzer runs = 10)
         [PASS] fuzzing::tests::uint8_arg (fuzzer runs = 256)
         [PASS] fuzzing::tests::uint16_arg (fuzzer runs = 256)
         [PASS] fuzzing::tests::uint32_arg (fuzzer runs = 256)
@@ -33,7 +34,7 @@ fn fuzzing() {
         [PASS] fuzzing::tests::uint128_arg (fuzzer runs = 256)
         [PASS] fuzzing::tests::uint256_arg (fuzzer runs = 256)
         Running 0 test(s) from tests/
-        Tests: 10 passed, 1 failed, 0 skipped
+        Tests: 11 passed, 1 failed, 0 skipped
         Fuzzer seed: [..]
 
         Failures:
@@ -56,8 +57,8 @@ fn fuzzing_set_runs() {
         [..]Finished[..]
         
         
-        Collected 11 test(s) from fuzzing package
-        Running 11 test(s) from src/
+        Collected 12 test(s) from fuzzing package
+        Running 12 test(s) from src/
         [PASS] fuzzing::tests::adding
         [PASS] fuzzing::tests::fuzzed_argument (fuzzer runs = 10)
         [PASS] fuzzing::tests::fuzzed_both_arguments (fuzzer runs = 10)
@@ -67,6 +68,7 @@ fn fuzzing_set_runs() {
         Failure data:
             original value: [593979512822486835600413552099926114], converted to a string: [result == a + b]
 
+        [PASS] fuzzing::tests::custom_fuzzer_config (fuzzer runs = 10)
         [PASS] fuzzing::tests::uint8_arg (fuzzer runs = 10)
         [PASS] fuzzing::tests::uint16_arg (fuzzer runs = 10)
         [PASS] fuzzing::tests::uint32_arg (fuzzer runs = 10)
@@ -74,7 +76,7 @@ fn fuzzing_set_runs() {
         [PASS] fuzzing::tests::uint128_arg (fuzzer runs = 10)
         [PASS] fuzzing::tests::uint256_arg (fuzzer runs = 10)
         Running 0 test(s) from tests/
-        Tests: 10 passed, 1 failed, 0 skipped
+        Tests: 11 passed, 1 failed, 0 skipped
         Fuzzer seed: [..]
 
         Failures:
@@ -97,8 +99,8 @@ fn fuzzing_set_seed() {
         [..]Finished[..]
         
         
-        Collected 11 test(s) from fuzzing package
-        Running 11 test(s) from src/
+        Collected 12 test(s) from fuzzing package
+        Running 12 test(s) from src/
         [PASS] fuzzing::tests::adding
         [PASS] fuzzing::tests::fuzzed_argument (fuzzer runs = 256)
         [PASS] fuzzing::tests::fuzzed_both_arguments (fuzzer runs = 256)
@@ -108,6 +110,7 @@ fn fuzzing_set_seed() {
         Failure data:
             original value: [593979512822486835600413552099926114], converted to a string: [result == a + b]
 
+        [PASS] fuzzing::tests::custom_fuzzer_config (fuzzer runs = 10)
         [PASS] fuzzing::tests::uint8_arg (fuzzer runs = 256)
         [PASS] fuzzing::tests::uint16_arg (fuzzer runs = 256)
         [PASS] fuzzing::tests::uint32_arg (fuzzer runs = 256)
@@ -115,7 +118,7 @@ fn fuzzing_set_seed() {
         [PASS] fuzzing::tests::uint128_arg (fuzzer runs = 256)
         [PASS] fuzzing::tests::uint256_arg (fuzzer runs = 256)
         Running 0 test(s) from tests/
-        Tests: 10 passed, 1 failed, 0 skipped
+        Tests: 11 passed, 1 failed, 0 skipped
         Fuzzer seed: 1234
 
         Failures:
@@ -132,6 +135,7 @@ fn fuzzing_incorrect_runs() {
         .current_dir(&temp)
         .args(["--fuzzer-runs", "0"])
         .assert()
+        .code(2)
         .stderr_matches(indoc! {r#"
         error: invalid value '0' for '--fuzzer-runs <FUZZER_RUNS>': Number of fuzzer runs must be greater than or equal to 3
 
@@ -151,8 +155,8 @@ fn fuzzing_incorrect_function_args() {
         .stdout_matches(indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
-
-
+        
+        
         Collected 2 test(s) from fuzzing package
         Running 0 test(s) from src/
         Running 2 test(s) from tests/

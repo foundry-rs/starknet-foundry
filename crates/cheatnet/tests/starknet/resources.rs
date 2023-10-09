@@ -1,25 +1,34 @@
 use std::collections::HashMap;
 
 use crate::common::{
-    deploy_contract, felt_selector_from_name, get_contracts, state::create_cheatnet_state,
+    deploy_contract, felt_selector_from_name, get_contracts,
+    state::{create_cached_state, create_cheatnet_state},
 };
 use cairo_felt::Felt252;
+use cheatnet::cheatcodes::deploy::deploy;
 use cheatnet::rpc::{call_contract, CallContractOutput, ResourceReport};
 use conversions::StarknetConversions;
 
 #[test]
 fn call_resources_simple() {
-    let mut state = create_cheatnet_state();
+    let mut cached_state = create_cached_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
-    let contract_address = deploy_contract(&mut state, "HelloStarknet", &[]);
+    let contract_address = deploy_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        "HelloStarknet",
+        &[],
+    );
 
     let selector = felt_selector_from_name("increase_balance");
 
     let output = call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
         &contract_address,
         &selector,
         &[Felt252::from(123)],
-        &mut state,
     )
     .unwrap();
 
@@ -40,14 +49,17 @@ fn call_resources_simple() {
 
 #[test]
 fn deploy_resources_simple() {
-    let mut state = create_cheatnet_state();
+    let mut cached_state = create_cached_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contracts = get_contracts();
 
     let contract_name = "HelloStarknet".to_owned().to_felt252();
-    let class_hash = state.declare(&contract_name, &contracts).unwrap();
+    let class_hash = blockifier_state
+        .declare(&contract_name, &contracts)
+        .unwrap();
 
-    let payload = state.deploy(&class_hash, &[]).unwrap();
+    let payload = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[]).unwrap();
 
     assert!(
         payload.resource_report

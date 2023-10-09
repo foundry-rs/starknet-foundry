@@ -9,7 +9,6 @@ fn l1_handler_executor() {
     let test = test_case!(
         indoc!(
             r#"
-
             #[derive(Copy, Serde, Drop)]
             struct L1Data {
                 balance: felt252,
@@ -25,7 +24,7 @@ fn l1_handler_executor() {
             use serde::Serde;
             use array::{ArrayTrait, SpanTrait};
             use core::result::ResultTrait;
-            use snforge_std::{declare, ContractClassTrait, L1Handler, L1HandlerTrait};
+            use snforge_std::{declare, ContractClassTrait, L1Handler, L1HandlerTrait, RevertedTransaction};
 
             #[test]
             fn test_l1_handler_execute() {
@@ -50,11 +49,35 @@ fn l1_handler_executor() {
                 l1_handler.from_address = 0x123;
                 l1_handler.payload = payload.span();
 
-                l1_handler.execute();
-
+                l1_handler.execute().unwrap();
+                    
                 let dispatcher = IBalanceTokenDispatcher { contract_address };
-                assert(dispatcher.get_balance() == 42, 'Invalid balance');
+                assert(dispatcher.get_balance() == 42, dispatcher.get_balance());
                 assert(dispatcher.get_token_id() == 8888_u256, 'Invalid token id');
+            }
+             
+            #[test]
+            fn test_l1_handler_execute_panicking() {
+                let calldata = array![0x123];
+
+                let contract = declare('l1_handler_executor');
+                let contract_address = contract.deploy(@calldata).unwrap();
+
+
+                let mut l1_handler = L1HandlerTrait::new(
+                    contract_address,
+                    function_name: 'panicking_l1_handler'
+                );
+
+                l1_handler.from_address = 0x123;
+                l1_handler.payload = array![].span();
+                match l1_handler.execute() {
+                    Result::Ok(_) => panic_with_felt252('should have panicked'),
+                    Result::Err(RevertedTransaction { panic_data }) => {
+                        assert(*panic_data.at(0) == 'custom', 'Wrong 1st panic datum');
+                        assert(*panic_data.at(1) == 'panic', 'Wrong 2nd panic datum');
+                    },
+                }
             }
         "#
         ),

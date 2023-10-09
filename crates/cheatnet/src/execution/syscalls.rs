@@ -1,8 +1,9 @@
+use crate::cheatcodes::spy_events::Event;
 use crate::execution::{
     contract_print::{contract_print, PrintingResult},
     entry_point::execute_constructor_entry_point,
 };
-use crate::state::CheatcodeState;
+use crate::state::CheatnetState;
 use anyhow::Result;
 use blockifier::execution::syscalls::{
     DeployRequest, DeployResponse, LibraryCallRequest, SyscallRequest, SyscallRequestWrapper,
@@ -115,7 +116,19 @@ pub fn call_contract_syscall(
 // hints from blockifier
 pub struct CheatableSyscallHandler<'a> {
     pub syscall_handler: SyscallHintProcessor<'a>,
-    pub cheatcode_state: &'a CheatcodeState,
+    pub cheatnet_state: &'a mut CheatnetState,
+}
+
+impl<'a> CheatableSyscallHandler<'a> {
+    pub fn new(
+        syscall_handler: SyscallHintProcessor<'a>,
+        cheatnet_state: &'a mut CheatnetState,
+    ) -> Self {
+        CheatableSyscallHandler {
+            syscall_handler,
+            cheatnet_state,
+        }
+    }
 }
 
 // crates/blockifier/src/execution/syscalls/hint_processor.rs:472 (ResourceTracker for SyscallHintProcessor)
@@ -230,7 +243,7 @@ impl CheatableSyscallHandler<'_> {
         let contract_address = self.syscall_handler.storage_address();
 
         if SyscallSelector::GetExecutionInfo == selector
-            && self.cheatcode_state.address_is_cheated(&contract_address)
+            && self.cheatnet_state.address_is_cheated(&contract_address)
         {
             let StarknetHint::SystemCall { system: syscall } = hint else {
                 return Err(HintError::CustomHint(
@@ -261,7 +274,7 @@ impl CheatableSyscallHandler<'_> {
                 .get_or_allocate_execution_info_segment(vm)?;
 
             let ptr_cheated_exec_info = get_cheated_exec_info_ptr(
-                self.cheatcode_state,
+                self.cheatnet_state,
                 vm,
                 execution_info_ptr,
                 &contract_address,
@@ -297,6 +310,36 @@ impl CheatableSyscallHandler<'_> {
             // Increment, since the selector was peeked into before
             self.syscall_handler.syscall_ptr += 1;
             return self.execute_syscall(vm, deploy_syscall, constants::DEPLOY_GAS_COST);
+        } else if SyscallSelector::EmitEvent == selector {
+            // No incrementation, since execute_next_syscall reads selector and increments syscall_ptr
+            let events_len_before = self.syscall_handler.events.len();
+            let result = self.syscall_handler.execute_next_syscall(vm, hint);
+
+            if result.is_ok() {
+                assert_eq!(
+                    events_len_before + 1,
+                    self.syscall_handler.events.len(),
+                    "EmitEvent syscall is expected to emit exactly one event"
+                );
+                let contract_address = self
+                    .syscall_handler
+                    .call
+                    .code_address
+                    .unwrap_or(self.syscall_handler.call.storage_address);
+
+                for spy_on in &mut self.cheatnet_state.spies {
+                    if spy_on.does_spy(contract_address) {
+                        let event = Event::from_ordered_event(
+                            self.syscall_handler.events.last().unwrap(),
+                            contract_address,
+                        );
+                        self.cheatnet_state.detected_events.push(event);
+                        break;
+                    }
+                }
+            }
+
+            return result;
         }
 
         self.syscall_handler.execute_next_syscall(vm, hint)
@@ -406,7 +449,7 @@ fn deploy_syscall(
         ctor_context,
         request.constructor_calldata,
         *remaining_gas,
-        syscall_handler.cheatcode_state,
+        syscall_handler.cheatnet_state,
     )?;
 
     let constructor_retdata = create_retdata_segment(
@@ -432,7 +475,7 @@ pub fn execute_deployment(
     ctor_context: ConstructorContext,
     constructor_calldata: Calldata,
     remaining_gas: u64,
-    cheatcode_state: &CheatcodeState,
+    cheatnet_state: &mut CheatnetState,
 ) -> EntryPointExecutionResult<CallInfo> {
     // Address allocation in the state is done before calling the constructor, so that it is
     // visible from it.
@@ -451,7 +494,7 @@ pub fn execute_deployment(
         ctor_context,
         constructor_calldata,
         remaining_gas,
-        cheatcode_state,
+        cheatnet_state,
     )?;
 
     Ok(call_info)

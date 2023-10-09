@@ -29,7 +29,7 @@ pub fn execute_inner_call(
     let call_info = execute_call_entry_point(
         call,
         syscall_handler.syscall_handler.state,
-        syscall_handler.cheatcode_state,
+        syscall_handler.cheatnet_state,
         syscall_handler.syscall_handler.resources,
         syscall_handler.syscall_handler.context,
     )?;

@@ -11,8 +11,8 @@ pub fn run_test_case(test: &TestCase) -> Vec<TestCrateSummary> {
         &Utf8PathBuf::from_path_buf(PathBuf::from(tempdir().unwrap().path())).unwrap(),
         &test.path().unwrap(),
         &String::from("src"),
-        &test.path().unwrap().join("src/lib.cairo"),
-        test.linked_libraries(),
+        &test.path().unwrap().join("src"),
+        &test.linked_libraries(),
         &RunnerConfig::new(
             None,
             false,

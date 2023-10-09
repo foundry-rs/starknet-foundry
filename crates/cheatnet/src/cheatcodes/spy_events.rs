@@ -1,4 +1,5 @@
 use crate::CheatnetState;
+use blockifier::execution::call_info::OrderedEvent;
 use cairo_felt::Felt252;
 use cairo_vm::hint_processor::hint_processor_utils::felt_to_usize;
 use conversions::StarknetConversions;
@@ -11,6 +12,30 @@ pub struct Event {
     pub from: ContractAddress,
     pub keys: Vec<Felt252>,
     pub data: Vec<Felt252>,
+}
+
+impl Event {
+    pub fn from_ordered_event(
+        ordered_event: &OrderedEvent,
+        contract_address: ContractAddress,
+    ) -> Self {
+        Self {
+            from: contract_address,
+            keys: ordered_event
+                .event
+                .keys
+                .iter()
+                .map(|key| key.0.to_felt252())
+                .collect(),
+            data: ordered_event
+                .event
+                .data
+                .0
+                .iter()
+                .map(StarknetConversions::to_felt252)
+                .collect(),
+        }
+    }
 }
 
 /// Specifies which contract are spied on.
@@ -32,17 +57,16 @@ impl SpyTarget {
 
 impl CheatnetState {
     pub fn spy_events(&mut self, spy_on: SpyTarget) -> usize {
-        self.cheatcode_state.spies.push(spy_on);
-        self.cheatcode_state.spies.len() - 1
+        self.spies.push(spy_on);
+        self.spies.len() - 1
     }
 
     pub fn fetch_events(&mut self, id: &Felt252) -> (usize, Vec<Felt252>) {
-        let spy_on = &mut self.cheatcode_state.spies[felt_to_usize(id).unwrap()];
+        let spy_on = &mut self.spies[felt_to_usize(id).unwrap()];
         let mut spied_events_len = 0;
         let mut unconsumed_emitted_events: Vec<Event> = vec![];
 
         let serialized_events: Vec<Vec<Felt252>> = self
-            .cheatcode_state
             .detected_events
             .iter()
             .map(|event| {
@@ -62,7 +86,7 @@ impl CheatnetState {
             })
             .collect();
 
-        self.cheatcode_state.detected_events = unconsumed_emitted_events;
+        self.detected_events = unconsumed_emitted_events;
         (spied_events_len, serialized_events.concat())
     }
 }
