@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use std::{collections::HashMap, fs, path::PathBuf};
 
-use blockifier::execution::contract_class::ContractClassV1;
+use blockifier::execution::contract_class::{ContractClassV1, ContractClassV1Inner};
 use blockifier::{
     abi::{abi_utils::get_storage_var_address, constants},
     block_context::BlockContext,
@@ -12,11 +12,13 @@ use blockifier::{
     transaction::objects::AccountTransactionContext,
 };
 use cairo_felt::Felt252;
+use cairo_vm::types::program::Program;
 use cairo_vm::vm::runners::builtin_runner::{
     BITWISE_BUILTIN_NAME, EC_OP_BUILTIN_NAME, HASH_BUILTIN_NAME, KECCAK_BUILTIN_NAME,
     OUTPUT_BUILTIN_NAME, POSEIDON_BUILTIN_NAME, RANGE_CHECK_BUILTIN_NAME, SIGNATURE_BUILTIN_NAME,
 };
 use camino::Utf8PathBuf;
+use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::{
     block::{BlockNumber, BlockTimestamp},
     core::{ChainId, ClassHash, ContractAddress, Nonce, PatriciaKey},
@@ -44,6 +46,10 @@ pub const TEST_EMPTY_CONTRACT_CLASS_HASH: &str = "0x112";
 pub const TEST_FAULTY_ACCOUNT_CONTRACT_CLASS_HASH: &str = "0x113";
 pub const SECURITY_TEST_CLASS_HASH: &str = "0x114";
 pub const TEST_ERC20_CONTRACT_CLASS_HASH: &str = "0x1010";
+
+pub const TEST_CONTRACT_CLASS_HASH: &str = "0x117";
+// snforge_std/src/cheatcodes.cairo::test_address
+pub const TEST_ADDRESS: &str = "0x01724987234973219347210837402";
 
 pub const STEP_RESOURCE_COST: f64 = 0.01_f64;
 // snforge_std/src/cheatcodes.cairo::TEST
@@ -176,6 +182,20 @@ fn erc20_account_balance_key() -> StorageKey {
     .unwrap()
 }
 
+fn contract_class_no_entrypoints() -> ContractClass {
+    let inner = ContractClassV1Inner {
+        program: Program::default(),
+        entry_points_by_type: HashMap::from([
+            (EntryPointType::External, vec![]),
+            (EntryPointType::Constructor, vec![]),
+            (EntryPointType::L1Handler, vec![]),
+        ]),
+
+        hints: HashMap::new(),
+    };
+    ContractClass::V1(ContractClassV1(Arc::new(inner)))
+}
+
 // Creates a state with predeployed account and erc20 used to send transactions during tests.
 // Deployed contracts are cairo 0 contracts
 // Account does not include validations
@@ -189,9 +209,16 @@ pub fn build_testing_state(predeployed_contracts: &Utf8PathBuf) -> DictStateRead
     let block_context = build_block_context();
     let test_account_class_hash = ClassHash(stark_felt!(TEST_ACCOUNT_CONTRACT_CLASS_HASH));
     let test_erc20_class_hash = ClassHash(stark_felt!(TEST_ERC20_CONTRACT_CLASS_HASH));
+    let test_contract_class_hash = ClassHash(stark_felt!(TEST_CONTRACT_CLASS_HASH));
 
     let class_hash_to_class = HashMap::from([
-        (test_account_class_hash, ContractClass::V1(account_class)),
+        (
+            test_account_class_hash,
+            ContractClass::V1(account_class.clone()),
+        ),
+        // This is dummy put here only to satisfy blockifier
+        // this class is not used and the test contract cannot be called
+        (test_contract_class_hash, contract_class_no_entrypoints()),
         (test_erc20_class_hash, ContractClass::V0(erc20_class)),
     ]);
 
@@ -199,9 +226,11 @@ pub fn build_testing_state(predeployed_contracts: &Utf8PathBuf) -> DictStateRead
     // address.
     let test_account_address = ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS));
     let test_erc20_address = block_context.fee_token_address;
+    let test_address = ContractAddress(patricia_key!(TEST_ADDRESS));
     let address_to_class_hash = HashMap::from([
         (test_account_address, test_account_class_hash),
         (test_erc20_address, test_erc20_class_hash),
+        (test_address, test_contract_class_hash),
     ]);
     let address_to_nonce = HashMap::from([(test_account_address, Nonce(StarkFelt::from(0_u8)))]);
     let minter_var_address = get_storage_var_address("permitted_minter", &[])
