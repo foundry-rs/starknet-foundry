@@ -393,7 +393,7 @@ pub async fn run(
 async fn run_tests_from_crate(
     tests: Arc<TestsFromCrate>,
     runner_config: Arc<RunnerConfig>,
-    runne_params: Arc<RunnerParams>,
+    runner_params: Arc<RunnerParams>,
     cancellation_tokens: Arc<CancellationTokens>,
 ) -> Result<(TestCrateSummary, bool)> {
     let runner = Arc::new(
@@ -424,7 +424,7 @@ async fn run_tests_from_crate(
             case.clone(),
             runner,
             runner_config.clone(),
-            runne_params.clone(),
+            runner_params.clone(),
             cancellation_tokens.clone(),
         ));
     }
@@ -456,7 +456,7 @@ fn choose_test_strategy_and_run(
     case: Arc<TestCase>,
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
-    runne_params: Arc<RunnerParams>,
+    runner_params: Arc<RunnerParams>,
     cancellation_tokens: Arc<CancellationTokens>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     if args.is_empty() {
@@ -464,7 +464,7 @@ fn choose_test_strategy_and_run(
             case,
             runner,
             runner_config,
-            runne_params,
+            runner_params,
             cancellation_tokens,
         )
     } else {
@@ -473,7 +473,7 @@ fn choose_test_strategy_and_run(
             case,
             runner,
             runner_config.clone(),
-            runne_params,
+            runner_params,
             cancellation_tokens,
         )
     }
@@ -483,7 +483,7 @@ fn run_single_test(
     case: Arc<TestCase>,
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
-    runne_params: Arc<RunnerParams>,
+    runner_params: Arc<RunnerParams>,
     cancellation_tokens: Arc<CancellationTokens>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     let exit_first = runner_config.exit_first;
@@ -499,7 +499,7 @@ fn run_single_test(
                 // one of a test returns Err
                 Ok(TestCaseSummary::Interrupted {  })
             },
-            result = blocking_run_from_test(vec![], case.clone(),runner,  runner_config.clone(), runne_params.clone() , None) => {
+            result = blocking_run_from_test(vec![], case.clone(),runner,  runner_config.clone(), runner_params.clone() , None) => {
                 match result {
                     Ok(result) => {
                         if exit_first {
@@ -524,7 +524,7 @@ fn run_with_fuzzing(
     case: Arc<TestCase>,
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
-    runne_params: Arc<RunnerParams>,
+    runner_params: Arc<RunnerParams>,
     cancellation_tokens: Arc<CancellationTokens>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     tokio::task::spawn(async move {
@@ -562,7 +562,7 @@ fn run_with_fuzzing(
                 case.clone(),
                 runner.clone(),
                 runner_config.clone(),
-                runne_params.clone(),
+                runner_params.clone(),
                 cancellation_tokens.clone(),
                 token.clone(),
                 send.clone(),
@@ -616,7 +616,7 @@ fn run_fuzzing_subtest(
     case: Arc<TestCase>,
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
-    runne_params: Arc<RunnerParams>,
+    runner_params: Arc<RunnerParams>,
     cancellation_tokens: Arc<CancellationTokens>,
     cancellation_fuzzing_token: CancellationToken,
     send: tokio::sync::mpsc::Sender<()>,
@@ -645,7 +645,7 @@ fn run_fuzzing_subtest(
                 case,
                 runner,
                 runner_config.clone(),
-                runne_params.clone(),
+                runner_params.clone(),
                 Some(send),
             ) => {
                 match result {
