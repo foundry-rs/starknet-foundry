@@ -4,7 +4,7 @@ use crate::{assert_passed, test_case};
 use crate::integration::common::corelib::{corelib_path, predeployed_contracts};
 use camino::Utf8PathBuf;
 use forge::scarb::{ForgeConfig, ForkTarget};
-use forge::{run, RunnerConfig};
+use forge::{run, CancellationTokens, RunnerConfig, RunnerParams};
 use indoc::formatdoc;
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -118,11 +118,14 @@ fn fork_aliased_decorator() {
                             block_id: HashMap::from([("tag".to_string(), "Latest".to_string())]),
                         }],
                     },
+                )),
+                Arc::new(RunnerParams::new(
                     corelib_path(),
                     test.contracts(&corelib_path()).unwrap(),
                     Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
                     Default::default(),
                 )),
+                Arc::new(CancellationTokens::new()),
             )
             .await
         })
