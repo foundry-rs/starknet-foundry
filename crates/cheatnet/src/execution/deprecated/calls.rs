@@ -1,5 +1,5 @@
+use crate::execution::deprecated::syscalls::CheatableSyscallHandler;
 use crate::execution::entry_point::execute_call_entry_point;
-use crate::execution::syscalls::cairo0_cheatable_syscall_handler::Cairo0CheatableSyscallHandler;
 use blockifier::abi::constants;
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallResult;
 use blockifier::execution::entry_point::{CallEntryPoint, CallType};
@@ -14,7 +14,7 @@ use starknet_api::transaction::Calldata;
 pub fn execute_inner_call(
     call: &mut CallEntryPoint,
     vm: &mut VirtualMachine,
-    syscall_handler: &mut Cairo0CheatableSyscallHandler<'_>,
+    syscall_handler: &mut CheatableSyscallHandler<'_>,
 ) -> DeprecatedSyscallResult<ReadOnlySegment> {
     // region: Modified blockifier code
     let call_info = execute_call_entry_point(
@@ -44,7 +44,7 @@ pub fn execute_inner_call(
 }
 
 pub fn execute_library_call(
-    syscall_handler: &mut Cairo0CheatableSyscallHandler<'_>,
+    syscall_handler: &mut CheatableSyscallHandler<'_>,
     vm: &mut VirtualMachine,
     class_hash: ClassHash,
     code_address: Option<ContractAddress>,

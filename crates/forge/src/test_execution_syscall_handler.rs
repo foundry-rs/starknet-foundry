@@ -39,7 +39,7 @@ use cairo_lang_utils::bigint::BigIntAsHex;
 use cairo_vm::vm::errors::hint_errors::HintError::CustomHint;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cheatnet::cheatcodes::spy_events::SpyTarget;
-use cheatnet::execution::syscalls::cairo1_cheatable_syscall_handler::Cairo1CheatableSyscallHandler;
+use cheatnet::execution::syscalls::CheatableSyscallHandler;
 
 mod file_operations;
 
@@ -61,7 +61,7 @@ pub struct TestExecutionState<'a> {
 // This hint processor provides an implementation logic for functions from snforge_std library.
 // If cannot execute a hint it falls back to the CheatableSyscallHandler
 pub struct TestExecutionSyscallHandler<'a> {
-    pub cheatable_syscall_handler: Cairo1CheatableSyscallHandler<'a>,
+    pub cheatable_syscall_handler: CheatableSyscallHandler<'a>,
     pub test_execution_state: &'a mut TestExecutionState<'a>,
     // we need to keep a copy of hints as SyscallHintProcessor keeps it as private
     pub hints: &'a HashMap<String, Hint>,
@@ -70,7 +70,7 @@ pub struct TestExecutionSyscallHandler<'a> {
 
 impl<'a> TestExecutionSyscallHandler<'a> {
     pub fn new(
-        cheatable_syscall_handler: Cairo1CheatableSyscallHandler<'a>,
+        cheatable_syscall_handler: CheatableSyscallHandler<'a>,
         test_execution_state: &'a mut TestExecutionState<'a>,
         hints: &'a HashMap<String, Hint>,
     ) -> Self {
@@ -636,7 +636,7 @@ fn execute_syscall(
     exec_scopes: &mut ExecutionScopes,
     hint_data: &Box<dyn Any>,
     constants: &HashMap<String, Felt252>,
-    cheatable_syscall_handler: &mut Cairo1CheatableSyscallHandler,
+    cheatable_syscall_handler: &mut CheatableSyscallHandler,
 ) -> Result<(), HintError> {
     let (cell, offset) = extract_buffer(system);
     let system_ptr = get_ptr(vm, cell, &offset)?;
@@ -686,7 +686,7 @@ struct CallContractArgs {
 }
 
 fn get_call_contract_args(
-    cheatable_syscall_handler: &mut Cairo1CheatableSyscallHandler,
+    cheatable_syscall_handler: &mut CheatableSyscallHandler,
     system_ptr: Relocatable,
     vm: &mut VirtualMachine,
 ) -> (Relocatable, CallContractArgs) {
@@ -716,7 +716,7 @@ fn get_call_contract_args(
 }
 
 fn write_call_contract_response(
-    cheatable_syscall_handler: &mut Cairo1CheatableSyscallHandler,
+    cheatable_syscall_handler: &mut CheatableSyscallHandler,
     system_ptr: Relocatable,
     vm: &mut VirtualMachine,
     call_args: &CallContractArgs,

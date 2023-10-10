@@ -1,7 +1,6 @@
 use crate::cheatcodes::spy_events::Event;
-use crate::execution::calls::cairo1_calls::{execute_inner_call, execute_library_call};
+use crate::execution::calls::{execute_inner_call, execute_library_call};
 use crate::execution::execution_info::get_cheated_exec_info_ptr;
-use crate::execution::syscalls::stark_felt_from_ptr_immutable;
 use crate::execution::{
     contract_print::{contract_print, PrintingResult},
     entry_point::execute_constructor_entry_point,
@@ -15,7 +14,7 @@ use blockifier::execution::entry_point::{
     CallEntryPoint, CallType, ConstructorContext, EntryPointExecutionContext,
     EntryPointExecutionResult, ExecutionResources,
 };
-use blockifier::execution::execution_utils::ReadOnlySegment;
+use blockifier::execution::execution_utils::{felt_to_stark_felt, ReadOnlySegment};
 use blockifier::execution::syscalls::hint_processor::{
     create_retdata_segment, write_segment, SyscallExecutionError, SyscallHintProcessor,
     OUT_OF_GAS_ERROR,
@@ -66,7 +65,7 @@ impl SyscallResponse for SingleSegmentResponse {
 pub fn call_contract_syscall(
     request: CallContractRequest,
     vm: &mut VirtualMachine,
-    syscall_handler: &mut Cairo1CheatableSyscallHandler<'_>, // Modified parameter type
+    syscall_handler: &mut CheatableSyscallHandler<'_>, // Modified parameter type
     remaining_gas: &mut u64,
 ) -> SyscallResult<SingleSegmentResponse> {
     let storage_address = request.contract_address;
@@ -94,17 +93,17 @@ pub fn call_contract_syscall(
 // introduced by cheatcodes that e.g. returns mocked data
 // If it cannot execute a cheatcode it falls back to SyscallHintProcessor, which provides standard implementation of
 // hints from blockifier
-pub struct Cairo1CheatableSyscallHandler<'a> {
+pub struct CheatableSyscallHandler<'a> {
     pub syscall_handler: SyscallHintProcessor<'a>,
     pub cheatnet_state: &'a mut CheatnetState,
 }
 
-impl<'a> Cairo1CheatableSyscallHandler<'a> {
+impl<'a> CheatableSyscallHandler<'a> {
     pub fn new(
         syscall_handler: SyscallHintProcessor<'a>,
         cheatnet_state: &'a mut CheatnetState,
     ) -> Self {
-        Cairo1CheatableSyscallHandler {
+        CheatableSyscallHandler {
             syscall_handler,
             cheatnet_state,
         }
@@ -112,7 +111,7 @@ impl<'a> Cairo1CheatableSyscallHandler<'a> {
 }
 
 // crates/blockifier/src/execution/syscalls/hint_processor.rs:472 (ResourceTracker for SyscallHintProcessor)
-impl ResourceTracker for Cairo1CheatableSyscallHandler<'_> {
+impl ResourceTracker for CheatableSyscallHandler<'_> {
     fn consumed(&self) -> bool {
         self.syscall_handler.context.vm_run_resources.consumed()
     }
@@ -133,7 +132,7 @@ impl ResourceTracker for Cairo1CheatableSyscallHandler<'_> {
     }
 }
 
-impl HintProcessorLogic for Cairo1CheatableSyscallHandler<'_> {
+impl HintProcessorLogic for CheatableSyscallHandler<'_> {
     fn execute_hint(
         &mut self,
         vm: &mut VirtualMachine,
@@ -192,6 +191,21 @@ fn get_ptr_from_res_operand_unchecked(vm: &mut VirtualMachine, res: &ResOperand)
     (vm.get_relocatable(cell_reloc).unwrap() + &base_offset).unwrap()
 }
 
+pub fn stark_felt_from_ptr_immutable(
+    vm: &VirtualMachine,
+    ptr: &Relocatable,
+) -> Result<StarkFelt, VirtualMachineError> {
+    Ok(felt_to_stark_felt(&felt_from_ptr_immutable(vm, ptr)?))
+}
+
+pub fn felt_from_ptr_immutable(
+    vm: &VirtualMachine,
+    ptr: &Relocatable,
+) -> Result<Felt252, VirtualMachineError> {
+    let felt = vm.get_integer(*ptr)?.into_owned();
+    Ok(felt)
+}
+
 fn get_syscall_operand(hint: &StarknetHint) -> Result<&ResOperand, HintError> {
     let StarknetHint::SystemCall { system: syscall } = hint else {
         return Err(HintError::CustomHint(
@@ -201,7 +215,7 @@ fn get_syscall_operand(hint: &StarknetHint) -> Result<&ResOperand, HintError> {
     Ok(syscall)
 }
 
-impl Cairo1CheatableSyscallHandler<'_> {
+impl CheatableSyscallHandler<'_> {
     fn execute_next_syscall_cheated(
         &mut self,
         vm: &mut VirtualMachine,
@@ -329,7 +343,7 @@ impl Cairo1CheatableSyscallHandler<'_> {
         ExecuteCallback: FnOnce(
             Request,
             &mut VirtualMachine,
-            &mut Cairo1CheatableSyscallHandler<'_>,
+            &mut CheatableSyscallHandler<'_>,
             &mut u64, // Remaining gas.
         ) -> SyscallResult<Response>,
     {
@@ -390,7 +404,7 @@ impl Cairo1CheatableSyscallHandler<'_> {
 fn deploy_syscall(
     request: DeployRequest,
     vm: &mut VirtualMachine,
-    syscall_handler: &mut Cairo1CheatableSyscallHandler<'_>, // Modified parameter type
+    syscall_handler: &mut CheatableSyscallHandler<'_>, // Modified parameter type
     remaining_gas: &mut u64,
 ) -> SyscallResult<DeployResponse> {
     let deployer_address = syscall_handler.syscall_handler.storage_address();
@@ -475,7 +489,7 @@ pub fn execute_deployment(
 pub fn library_call_syscall(
     request: LibraryCallRequest,
     vm: &mut VirtualMachine,
-    syscall_handler: &mut Cairo1CheatableSyscallHandler<'_>, // Modified parameter type
+    syscall_handler: &mut CheatableSyscallHandler<'_>, // Modified parameter type
     remaining_gas: &mut u64,
 ) -> SyscallResult<SingleSegmentResponse> {
     let call_to_external = true;

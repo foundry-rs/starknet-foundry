@@ -11,7 +11,7 @@ use blockifier::execution::deprecated_syscalls::{
 use blockifier::execution::execution_utils::{write_maybe_relocatable, ReadOnlySegment};
 use blockifier::execution::hint_code;
 
-use crate::execution::calls::cairo0_calls::execute_library_call;
+use crate::execution::deprecated::calls::execute_library_call;
 use crate::execution::syscalls::stark_felt_from_ptr_immutable;
 use cairo_felt::Felt252;
 use cairo_vm::hint_processor::builtin_hint_processor::builtin_hint_processor_definition::HintProcessorData;
@@ -44,12 +44,12 @@ impl SyscallResponse for SingleSegmentResponse {
     }
 }
 
-pub struct Cairo0CheatableSyscallHandler<'a> {
+pub struct CheatableSyscallHandler<'a> {
     pub syscall_handler: DeprecatedSyscallHintProcessor<'a>,
     pub cheatnet_state: &'a mut CheatnetState,
 }
 
-impl ResourceTracker for Cairo0CheatableSyscallHandler<'_> {
+impl ResourceTracker for CheatableSyscallHandler<'_> {
     fn consumed(&self) -> bool {
         self.syscall_handler.context.vm_run_resources.consumed()
     }
@@ -70,7 +70,7 @@ impl ResourceTracker for Cairo0CheatableSyscallHandler<'_> {
     }
 }
 
-impl HintProcessorLogic for Cairo0CheatableSyscallHandler<'_> {
+impl HintProcessorLogic for CheatableSyscallHandler<'_> {
     fn execute_hint(
         &mut self,
         vm: &mut VirtualMachine,
@@ -90,7 +90,7 @@ impl HintProcessorLogic for Cairo0CheatableSyscallHandler<'_> {
     }
 }
 
-impl<'a> Cairo0CheatableSyscallHandler<'a> {
+impl<'a> CheatableSyscallHandler<'a> {
     /// Infers and executes the next syscall.
     /// Must comply with the API of a hint function, as defined by the `HintProcessor`.
     pub fn execute_next_syscall_cheated(
@@ -162,7 +162,7 @@ impl<'a> Cairo0CheatableSyscallHandler<'a> {
         ExecuteCallback: FnOnce(
             Request,
             &mut VirtualMachine,
-            &mut Cairo0CheatableSyscallHandler<'_>,
+            &mut CheatableSyscallHandler<'_>,
         ) -> DeprecatedSyscallResult<Response>,
     {
         let request = Request::read(vm, &mut self.syscall_handler.syscall_ptr)?;
@@ -188,7 +188,7 @@ impl<'a> Cairo0CheatableSyscallHandler<'a> {
 pub fn delegate_call(
     request: CallContractRequest,
     vm: &mut VirtualMachine,
-    syscall_handler: &mut Cairo0CheatableSyscallHandler<'_>,
+    syscall_handler: &mut CheatableSyscallHandler<'_>,
 ) -> DeprecatedSyscallResult<SingleSegmentResponse> {
     let call_to_external = true;
     let storage_address = request.contract_address;
@@ -214,7 +214,7 @@ pub fn delegate_call(
 pub fn library_call(
     request: LibraryCallRequest,
     vm: &mut VirtualMachine,
-    syscall_handler: &mut Cairo0CheatableSyscallHandler<'_>,
+    syscall_handler: &mut CheatableSyscallHandler<'_>,
 ) -> DeprecatedSyscallResult<SingleSegmentResponse> {
     let call_to_external = true;
     let retdata_segment = execute_library_call(
@@ -235,7 +235,7 @@ pub fn library_call(
 pub fn get_caller_address(
     _request: &EmptyRequest,
     _vm: &mut VirtualMachine,
-    syscall_handler: &mut Cairo0CheatableSyscallHandler<'_>,
+    syscall_handler: &mut CheatableSyscallHandler<'_>,
     contract_address: ContractAddress,
 ) -> DeprecatedSyscallResult<GetContractAddressResponse> {
     Ok(GetContractAddressResponse {
@@ -250,7 +250,7 @@ pub fn get_caller_address(
 pub fn get_block_number(
     _request: &EmptyRequest,
     _vm: &mut VirtualMachine,
-    syscall_handler: &mut Cairo0CheatableSyscallHandler<'_>,
+    syscall_handler: &mut CheatableSyscallHandler<'_>,
     contract_address: ContractAddress,
 ) -> DeprecatedSyscallResult<GetBlockNumberResponse> {
     Ok(GetBlockNumberResponse {
@@ -269,7 +269,7 @@ pub fn get_block_number(
 pub fn get_block_timestamp(
     _request: &EmptyRequest,
     _vm: &mut VirtualMachine,
-    syscall_handler: &mut Cairo0CheatableSyscallHandler<'_>,
+    syscall_handler: &mut CheatableSyscallHandler<'_>,
     contract_address: ContractAddress,
 ) -> DeprecatedSyscallResult<GetBlockTimestampResponse> {
     Ok(GetBlockTimestampResponse {

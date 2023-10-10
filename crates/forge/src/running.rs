@@ -23,7 +23,7 @@ use cairo_lang_runner::casm_run::hint_to_hint_params;
 use cairo_lang_runner::SierraCasmRunner;
 use cairo_lang_runner::{Arg, RunnerError};
 use camino::Utf8PathBuf;
-use cheatnet::execution::syscalls::cairo1_cheatable_syscall_handler::Cairo1CheatableSyscallHandler;
+use cheatnet::execution::syscalls::CheatableSyscallHandler;
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::state::{CheatnetState, ExtendedStateReader};
 use conversions::StarknetConversions;
@@ -158,7 +158,7 @@ pub(crate) fn run_test_case(
 
     let mut cheatnet_state = CheatnetState::default();
     let cheatable_syscall_handler =
-        Cairo1CheatableSyscallHandler::new(syscall_handler, &mut cheatnet_state);
+        CheatableSyscallHandler::new(syscall_handler, &mut cheatnet_state);
 
     let mut test_execution_state = TestExecutionState {
         environment_variables,
