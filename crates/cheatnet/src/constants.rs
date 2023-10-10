@@ -48,12 +48,9 @@ pub const SECURITY_TEST_CLASS_HASH: &str = "0x114";
 pub const TEST_ERC20_CONTRACT_CLASS_HASH: &str = "0x1010";
 
 pub const TEST_CONTRACT_CLASS_HASH: &str = "0x117";
-// snforge_std/src/cheatcodes.cairo::test_address
-pub const TEST_ADDRESS: &str = "0x01724987234973219347210837402";
-
 pub const STEP_RESOURCE_COST: f64 = 0.01_f64;
 // snforge_std/src/cheatcodes.cairo::TEST
-pub const TEST_MEMORY_ADDRESS: &str = "0x01724987234973219347210837402";
+pub const TEST_ADDRESS: &str = "0x01724987234973219347210837402";
 
 // HOW TO FIND:
 // 1. https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/fee-mechanism/#general_case

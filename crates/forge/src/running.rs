@@ -86,12 +86,12 @@ fn build_syscall_handler<'a>(
     let entry_point = CallEntryPoint {
         class_hash: None,
         code_address: Some(ContractAddress(patricia_key!(
-            cheatnet_constants::TEST_MEMORY_ADDRESS
+            cheatnet_constants::TEST_ADDRESS
         ))),
         entry_point_type: EntryPointType::External,
         entry_point_selector,
         calldata: Calldata(Arc::new(vec![])),
-        storage_address: ContractAddress(patricia_key!(cheatnet_constants::TEST_MEMORY_ADDRESS)),
+        storage_address: ContractAddress(patricia_key!(cheatnet_constants::TEST_ADDRESS)),
         caller_address: ContractAddress::default(),
         call_type: CallType::Call,
         initial_gas: u64::MAX,

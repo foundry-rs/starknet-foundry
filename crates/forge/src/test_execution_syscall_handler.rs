@@ -604,8 +604,8 @@ fn handle_deploy_result(
     buffer: &mut MemBuffer,
 ) -> Result<(), EnhancedHintError> {
     match deploy_result {
-        Ok(call_payload) => {
-            let felt_contract_address: Felt252 = call_payload.contract_address.to_felt252();
+        Ok(deploy_payload) => {
+            let felt_contract_address: Felt252 = deploy_payload.contract_address.to_felt252();
 
             buffer
                 .write(Felt252::from(0))
