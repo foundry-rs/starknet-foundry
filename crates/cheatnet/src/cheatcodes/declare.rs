@@ -49,6 +49,8 @@ impl BlockifierState<'_> {
                     .map_err(EnhancedHintError::from)?;
 
                 // NOTE: Compiled class hash is being set to 0 here
+                // because it is currently only used in verification
+                // and we haven't found a way to calculate it easily
                 blockifier_state
                     .set_compiled_class_hash(class_hash, Default::default())
                     .unwrap_or_else(|err| panic!("Failed to set compiled class hash: {err:?}"));
