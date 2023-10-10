@@ -4,7 +4,7 @@ use blockifier::execution::deprecated_syscalls::hint_processor::{
     DeprecatedSyscallExecutionError, DeprecatedSyscallHintProcessor,
 };
 use blockifier::execution::deprecated_syscalls::{
-    CallContractRequest, DeprecatedSyscallResult, DeprecatedSyscallSelector, EmptyRequest,
+    CallContractRequest, DeprecatedSyscallResult, DeprecatedSyscallSelector,
     GetBlockNumberResponse, GetBlockTimestampResponse, GetContractAddressResponse,
     LibraryCallRequest, SyscallRequest, SyscallResponse, WriteResponseResult,
 };
@@ -29,13 +29,13 @@ use std::any::Any;
 use std::collections::HashMap;
 
 #[derive(Debug)]
-// crates/blockifier/src/execution/syscalls/mod.rs:127 (SingleSegmentResponse)
+// crates/blockifier/src/execution/deprecated_syscalls/mod.rs:147 (SingleSegmentResponse)
 // It is created here because fields in the original structure are private
 // so we cannot create it in call_contract_syscall
 pub struct SingleSegmentResponse {
     pub(crate) segment: ReadOnlySegment,
 }
-// crates/blockifier/src/execution/syscalls/mod.rs:131 (SyscallResponse for SingleSegmentResponse)
+// crates/blockifier/src/execution/deprecated_syscalls/mod.rs:151 (SyscallResponse for SingleSegmentResponse)
 impl SyscallResponse for SingleSegmentResponse {
     fn write(self, vm: &mut VirtualMachine, ptr: &mut Relocatable) -> WriteResponseResult {
         write_maybe_relocatable(vm, ptr, self.segment.length)?;
@@ -49,6 +49,7 @@ pub struct CheatableSyscallHandler<'a> {
     pub cheatnet_state: &'a mut CheatnetState,
 }
 
+// crates/blockifier/src/execution/deprecated_syscalls/hint_processor.rs:326 (impl ResourceTracker for DeprecatedSyscallHintProcessor)
 impl ResourceTracker for CheatableSyscallHandler<'_> {
     fn consumed(&self) -> bool {
         self.syscall_handler.context.vm_run_resources.consumed()
@@ -91,8 +92,6 @@ impl HintProcessorLogic for CheatableSyscallHandler<'_> {
 }
 
 impl<'a> CheatableSyscallHandler<'a> {
-    /// Infers and executes the next syscall.
-    /// Must comply with the API of a hint function, as defined by the `HintProcessor`.
     pub fn execute_next_syscall_cheated(
         &mut self,
         vm: &mut VirtualMachine,
@@ -105,15 +104,17 @@ impl<'a> CheatableSyscallHandler<'a> {
             vm,
             &syscall_selector_pointer,
         )?)?;
+        self.verify_syscall_ptr(syscall_selector_pointer)?;
         let contract_address = self.syscall_handler.storage_address;
 
         if DeprecatedSyscallSelector::GetCallerAddress == selector
             && self.cheatnet_state.address_is_pranked(&contract_address)
         {
+            // Increment, since the selector was peeked into before
             self.syscall_handler.syscall_ptr += 1;
+            self.increment_syscall_count(selector);
 
-            let response =
-                get_caller_address(&EmptyRequest {}, vm, self, contract_address).unwrap();
+            let response = get_caller_address(self, contract_address).unwrap();
 
             response.write(vm, &mut self.syscall_handler.syscall_ptr)?;
 
@@ -122,8 +123,9 @@ impl<'a> CheatableSyscallHandler<'a> {
             && self.cheatnet_state.address_is_rolled(&contract_address)
         {
             self.syscall_handler.syscall_ptr += 1;
+            self.increment_syscall_count(selector);
 
-            let response = get_block_number(&EmptyRequest {}, vm, self, contract_address).unwrap();
+            let response = get_block_number(self, contract_address).unwrap();
 
             response.write(vm, &mut self.syscall_handler.syscall_ptr)?;
 
@@ -132,18 +134,22 @@ impl<'a> CheatableSyscallHandler<'a> {
             && self.cheatnet_state.address_is_warped(&contract_address)
         {
             self.syscall_handler.syscall_ptr += 1;
+            self.increment_syscall_count(selector);
 
-            let response =
-                get_block_timestamp(&EmptyRequest {}, vm, self, contract_address).unwrap();
+            let response = get_block_timestamp(self, contract_address).unwrap();
 
             response.write(vm, &mut self.syscall_handler.syscall_ptr)?;
 
             return Ok(());
         } else if DeprecatedSyscallSelector::DelegateCall == selector {
             self.syscall_handler.syscall_ptr += 1;
+            self.increment_syscall_count(selector);
+
             return self.execute_syscall(vm, delegate_call);
         } else if DeprecatedSyscallSelector::LibraryCall == selector {
             self.syscall_handler.syscall_ptr += 1;
+            self.increment_syscall_count(selector);
+
             return self.execute_syscall(vm, library_call);
         }
 
@@ -151,6 +157,7 @@ impl<'a> CheatableSyscallHandler<'a> {
             .execute_next_syscall(vm, ids_data, ap_tracking)
     }
 
+    // crates/blockifier/src/execution/deprecated_syscalls/hint_processor.rs:233
     fn execute_syscall<Request, Response, ExecuteCallback>(
         &mut self,
         vm: &mut VirtualMachine,
@@ -173,6 +180,7 @@ impl<'a> CheatableSyscallHandler<'a> {
         Ok(())
     }
 
+    // crates/blockifier/src/execution/deprecated_syscalls/hint_processor.rs:141
     pub fn verify_syscall_ptr(&self, actual_ptr: Relocatable) -> DeprecatedSyscallResult<()> {
         if actual_ptr != self.syscall_handler.syscall_ptr {
             return Err(DeprecatedSyscallExecutionError::BadSyscallPointer {
@@ -183,8 +191,20 @@ impl<'a> CheatableSyscallHandler<'a> {
 
         Ok(())
     }
+
+    // crates/blockifier/src/execution/deprecated_syscalls/hint_processor.rs:264
+    fn increment_syscall_count(&mut self, selector: DeprecatedSyscallSelector) {
+        let syscall_count = self
+            .syscall_handler
+            .resources
+            .syscall_counter
+            .entry(selector)
+            .or_default();
+        *syscall_count += 1;
+    }
 }
 
+// blockifier/src/execution/deprecated_syscalls/mod.rs:209 (delegate_call)
 pub fn delegate_call(
     request: CallContractRequest,
     vm: &mut VirtualMachine,
@@ -211,6 +231,7 @@ pub fn delegate_call(
     })
 }
 
+// blockifier/src/execution/deprecated_syscalls/mod.rs:537 (library_call)
 pub fn library_call(
     request: LibraryCallRequest,
     vm: &mut VirtualMachine,
@@ -232,9 +253,8 @@ pub fn library_call(
     })
 }
 
+// blockifier/src/execution/deprecated_syscalls/mod.rs:426 (get_caller_address)
 pub fn get_caller_address(
-    _request: &EmptyRequest,
-    _vm: &mut VirtualMachine,
     syscall_handler: &mut CheatableSyscallHandler<'_>,
     contract_address: ContractAddress,
 ) -> DeprecatedSyscallResult<GetContractAddressResponse> {
@@ -247,9 +267,8 @@ pub fn get_caller_address(
     })
 }
 
+// blockifier/src/execution/deprecated_syscalls/mod.rs:387 (get_block_number)
 pub fn get_block_number(
-    _request: &EmptyRequest,
-    _vm: &mut VirtualMachine,
     syscall_handler: &mut CheatableSyscallHandler<'_>,
     contract_address: ContractAddress,
 ) -> DeprecatedSyscallResult<GetBlockNumberResponse> {
@@ -266,9 +285,8 @@ pub fn get_block_number(
     })
 }
 
+// blockifier/src/execution/deprecated_syscalls/mod.rs:411 (get_block_timestamp)
 pub fn get_block_timestamp(
-    _request: &EmptyRequest,
-    _vm: &mut VirtualMachine,
     syscall_handler: &mut CheatableSyscallHandler<'_>,
     contract_address: ContractAddress,
 ) -> DeprecatedSyscallResult<GetBlockTimestampResponse> {

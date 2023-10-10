@@ -11,6 +11,7 @@ use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector};
 use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::transaction::Calldata;
 
+// blockifier/src/execution/deprecated_syscalls/hint_processor.rs:393 (execute_inner_call)
 pub fn execute_inner_call(
     call: &mut CallEntryPoint,
     vm: &mut VirtualMachine,
@@ -43,6 +44,7 @@ pub fn execute_inner_call(
     })
 }
 
+// blockifier/src/execution/deprecated_syscalls/hint_processor.rs:409 (execute_library_call)
 pub fn execute_library_call(
     syscall_handler: &mut CheatableSyscallHandler<'_>,
     vm: &mut VirtualMachine,
