@@ -22,6 +22,7 @@ use cairo_lang_runner::casm_run::hint_to_hint_params;
 use cairo_lang_runner::SierraCasmRunner;
 use cairo_lang_runner::{Arg, RunnerError};
 use camino::Utf8PathBuf;
+use cheatnet::constants as cheatnet_constants;
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::state::{CheatnetState, ExtendedStateReader};
 use conversions::StarknetConversions;
@@ -38,9 +39,6 @@ use test_collector::{ForkConfig, TestCase};
 use crate::scarb::{ForkTarget, StarknetContractArtifacts};
 use crate::test_case_summary::TestCaseSummary;
 use crate::test_execution_syscall_handler::{TestExecutionState, TestExecutionSyscallHandler};
-
-// snforge_std/src/cheatcodes.cairo::TEST
-const TEST_ADDRESS: &str = "0x01724987234973219347210837402";
 
 /// Builds `hints_dict` required in `cairo_vm::types::program::Program` from instructions.
 fn build_hints_dict<'b>(
@@ -88,11 +86,13 @@ fn build_syscall_handler<'a>(
     let entry_point_selector = EntryPointSelector(StarkHash::new(test_selector.to_bytes_be())?);
     let entry_point = CallEntryPoint {
         class_hash: None,
-        code_address: Some(ContractAddress(patricia_key!(TEST_ADDRESS))),
+        code_address: Some(ContractAddress(patricia_key!(
+            cheatnet_constants::TEST_ADDRESS
+        ))),
         entry_point_type: EntryPointType::External,
         entry_point_selector,
         calldata: Calldata(Arc::new(vec![])),
-        storage_address: ContractAddress(patricia_key!(TEST_ADDRESS)),
+        storage_address: ContractAddress(patricia_key!(cheatnet_constants::TEST_ADDRESS)),
         caller_address: ContractAddress::default(),
         call_type: CallType::Call,
         initial_gas: u64::MAX,
