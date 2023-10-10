@@ -396,10 +396,9 @@ async fn run_tests_from_crate(
     runne_params: Arc<RunnerParams>,
     cancellation_tokens: Arc<CancellationTokens>,
 ) -> Result<(TestCrateSummary, bool)> {
-    let sierra_program = &tests.sierra_program;
     let runner = Arc::new(
         SierraCasmRunner::new(
-            sierra_program.clone(),
+            tests.sierra_program.clone(),
             Some(MetadataComputationConfig::default()),
             OrderedHashMap::default(),
         )
