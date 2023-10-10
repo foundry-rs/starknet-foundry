@@ -18,7 +18,7 @@ use cairo_vm::vm::vm_core::VirtualMachine;
 use cheatnet::cheatcodes::deploy::{deploy, deploy_at, DeployCallPayload};
 use cheatnet::cheatcodes::{CheatcodeError, ContractArtifacts, EnhancedHintError};
 use cheatnet::execution::syscalls::CheatableSyscallHandler;
-use cheatnet::rpc::{call_contract, CallContractFailure, CallContractResult};
+use cheatnet::rpc::{call_contract, CallContractFailure, CallContractOutput, CallContractResult};
 use cheatnet::state::{BlockifierState, CheatnetState};
 use conversions::StarknetConversions;
 use num_traits::{One, ToPrimitive};
@@ -671,10 +671,10 @@ fn execute_syscall(
             )?;
             Ok(())
         }
-        DeprecatedSyscallSelector::Deploy => Err(HintError::CustomHint(Box::from(
+        DeprecatedSyscallSelector::Deploy => Err(CustomHint(Box::from(
             "Use snforge_std::ContractClass::deploy instead of deploy_syscall".to_string(),
         ))),
-        DeprecatedSyscallSelector::ReplaceClass => Err(HintError::CustomHint(Box::from(
+        DeprecatedSyscallSelector::ReplaceClass => Err(CustomHint(Box::from(
             "Replace class can't be used in tests".to_string(),
         ))),
         _ => cheatable_syscall_handler.execute_hint(vm, exec_scopes, hint_data, constants),
@@ -724,7 +724,7 @@ fn write_call_contract_response(
     system_ptr: Relocatable,
     vm: &mut VirtualMachine,
     call_args: &CallContractArgs,
-    call_result: CallContractOutput,
+    call_output: CallContractOutput,
 ) -> Result<(), HintError> {
     let mut buffer = MemBuffer::new(vm, system_ptr);
 
@@ -732,9 +732,7 @@ fn write_call_contract_response(
         CallContractResult::Success { ret_data, .. } => (ret_data, 0),
         CallContractResult::Failure(failure_type) => match failure_type {
             CallContractFailure::Panic { panic_data, .. } => (panic_data, 1),
-            CallContractFailure::Error { msg, .. } => {
-                return Err(HintError::CustomHint(Box::from(msg)))
-            }
+            CallContractFailure::Error { msg, .. } => return Err(CustomHint(Box::from(msg))),
         },
     };
 
