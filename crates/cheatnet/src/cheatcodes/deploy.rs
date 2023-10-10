@@ -59,7 +59,7 @@ pub fn deploy_at(
         class_hash: *class_hash,
         code_address: Some(contract_address),
         storage_address: contract_address,
-        caller_address: crate_constants::TEST_ADDRESS
+        caller_address: crate_constants::TEST_MEMORY_ADDRESS
             .to_string()
             .to_contract_address(),
     };

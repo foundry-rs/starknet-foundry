@@ -18,7 +18,7 @@ impl CheatnetState {
         let salt = self.get_salt();
 
         let execute_calldata = create_execute_calldata(calldata);
-        let deployer_address = crate_constants::TEST_ADDRESS
+        let deployer_address = crate_constants::TEST_MEMORY_ADDRESS
             .to_string()
             .to_contract_address();
         calculate_contract_address(salt, *class_hash, &execute_calldata, deployer_address).unwrap()
