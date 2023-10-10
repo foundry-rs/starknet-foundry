@@ -32,7 +32,6 @@ use smol_str::SmolStr;
 use walkdir::WalkDir;
 
 use crate::fuzzer::RandomFuzzer;
-use crate::running::run_test_case;
 use crate::scarb::{ForgeConfig, ForkTarget, StarknetContractArtifacts};
 pub use crate::test_crate_summary::TestCrateSummary;
 use test_collector::{collect_tests, FuzzerConfig, LinkedLibrary, TestCase};
@@ -704,33 +703,27 @@ fn filter_tests_by_name(
 mod tests {
     use super::*;
     use test_collector::ExpectedTestResult;
+
     #[test]
     fn fuzzer_default_seed() {
+        let workspace_root: Utf8PathBuf = Default::default();
         let config = RunnerConfig::new(
-            Utf8PathBuf::new(),
+            workspace_root.clone(),
             None,
             false,
             false,
             None,
             None,
             &Default::default(),
-            Utf8PathBuf::new(),
-            Default::default(),
-            Utf8PathBuf::new(),
-            Default::default(),
         );
         let config2 = RunnerConfig::new(
-            Utf8PathBuf::new(),
+            workspace_root,
             None,
             false,
             false,
             None,
             None,
             &Default::default(),
-            Utf8PathBuf::new(),
-            Default::default(),
-            Utf8PathBuf::new(),
-            Default::default(),
         );
 
         assert_ne!(config.fuzzer_seed, 0);
@@ -738,79 +731,97 @@ mod tests {
         assert_ne!(config.fuzzer_seed, config2.fuzzer_seed);
     }
 
-    // #[test]
-    // fn runner_config_default_arguments() {
-    //     let config = RunnerConfig::new(
-    //         Utf8PathBuf::new(),
-    //         None,
-    //         false,
-    //         false,
-    //         None,
-    //         None,
-    //         &Default::default(),
-    //         Default::default(),
-    //         Default::default(),
-    //         Default::default(),
-    //         Default::default(),
-    //     );
-    //     assert_eq!(
-    //         config,
-    //         RunnerConfig {
-    //             "test",
-    //             test_name_filter: None,
-    //             exact_match: false,
-    //             exit_first: false,
-    //             fork_targets: vec![],
-    //             fuzzer_runs: FUZZER_RUNS_DEFAULT,
-    //             fuzzer_seed: config.fuzzer_seed,
+    #[test]
+    fn runner_config_default_arguments() {
+        let workspace_root: Utf8PathBuf = Default::default();
+        let config = RunnerConfig::new(
+            workspace_root.clone(),
+            None,
+            false,
+            false,
+            None,
+            None,
+            &Default::default(),
+        );
+        assert_eq!(
+            config,
+            RunnerConfig {
+                workspace_root,
+                test_name_filter: None,
+                exact_match: false,
+                exit_first: false,
+                fork_targets: vec![],
+                fuzzer_runs: FUZZER_RUNS_DEFAULT,
+                fuzzer_seed: config.fuzzer_seed,
+            }
+        );
+    }
 
-    //         }
-    //     );
-    // }
+    #[test]
+    fn runner_config_just_scarb_arguments() {
+        let config_from_scarb = ForgeConfig {
+            exit_first: true,
+            fork: vec![],
+            fuzzer_runs: Some(1234),
+            fuzzer_seed: Some(500),
+        };
+        let workspace_root: Utf8PathBuf = Default::default();
 
-    // #[test]
-    // fn runner_config_just_scarb_arguments() {
-    //     let config_from_scarb = ForgeConfig {
-    //         exit_first: true,
-    //         fork: vec![],
-    //         fuzzer_runs: Some(1234),
-    //         fuzzer_seed: Some(500),
-    //     };
-    //     let config = RunnerConfig::new(None, false, false, None, None, &config_from_scarb);
-    //     assert_eq!(
-    //         config,
-    //         RunnerConfig {
-    //             test_name_filter: None,
-    //             exact_match: false,
-    //             exit_first: true,
-    //             fork_targets: vec![],
-    //             fuzzer_runs: 1234,
-    //             fuzzer_seed: 500,
-    //         }
-    //     );
-    // }
+        let config = RunnerConfig::new(
+            workspace_root.clone(),
+            None,
+            false,
+            false,
+            None,
+            None,
+            &config_from_scarb,
+        );
+        assert_eq!(
+            config,
+            RunnerConfig {
+                workspace_root,
+                test_name_filter: None,
+                exact_match: false,
+                exit_first: true,
+                fork_targets: vec![],
+                fuzzer_runs: 1234,
+                fuzzer_seed: 500,
+            }
+        );
+    }
 
-    // #[test]
-    // fn runner_config_argument_precedence() {
-    //     let config_from_scarb = ForgeConfig {
-    //         exit_first: false,
-    //         fork: vec![],
-    //         fuzzer_runs: Some(1234),
-    //         fuzzer_seed: Some(1000),
-    //     };
-    //     let config = RunnerConfig::new(None, false, true, Some(100), Some(32), &config_from_scarb);
-    //     assert_eq!(
-    //         config,
-    //         RunnerConfig {
-    //             test_name_filter: None,
-    //             exact_match: false,
-    //             exit_first: true,
-    //             fork_targets: vec![],
-    //             fuzzer_runs: 100,
-    //             fuzzer_seed: 32,
-    //         }
-    //     );
-    // }
+    #[test]
+    fn runner_config_argument_precedence() {
+        let workspace_root: Utf8PathBuf = Default::default();
+
+        let config_from_scarb = ForgeConfig {
+            exit_first: false,
+            fork: vec![],
+            fuzzer_runs: Some(1234),
+            fuzzer_seed: Some(1000),
+        };
+        let config = RunnerConfig::new(
+            workspace_root.clone(),
+            None,
+            false,
+            true,
+            Some(100),
+            Some(32),
+            &config_from_scarb,
+        );
+        assert_eq!(
+            config,
+            RunnerConfig {
+                workspace_root,
+                test_name_filter: None,
+                exact_match: false,
+                exit_first: true,
+                fork_targets: vec![],
+                fuzzer_runs: 100,
+                fuzzer_seed: 32,
+            }
+        );
+    }
 
     #[test]
     fn collecting_tests() {
