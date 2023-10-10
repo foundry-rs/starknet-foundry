@@ -1,14 +1,12 @@
-use crate::constants::TEST_ACCOUNT_CONTRACT_ADDRESS;
-
 use crate::CheatnetState;
 use blockifier::execution::execution_utils::felt_to_stark_felt;
 use cairo_felt::Felt252;
-use starknet_api::core::PatriciaKey;
 use starknet_api::core::{calculate_contract_address, ClassHash, ContractAddress};
-use starknet_api::hash::{StarkFelt, StarkHash};
+use starknet_api::hash::StarkFelt;
 use starknet_api::transaction::Calldata;
 
-use starknet_api::patricia_key;
+use crate::constants as crate_constants;
+use conversions::StarknetConversions;
 
 impl CheatnetState {
     #[must_use]
@@ -17,11 +15,13 @@ impl CheatnetState {
         class_hash: &ClassHash,
         calldata: &[Felt252],
     ) -> ContractAddress {
-        let account_address = ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS));
         let salt = self.get_salt();
 
         let execute_calldata = create_execute_calldata(calldata);
-        calculate_contract_address(salt, *class_hash, &execute_calldata, account_address).unwrap()
+        let deployer_address = crate_constants::TEST_ADDRESS
+            .to_string()
+            .to_contract_address();
+        calculate_contract_address(salt, *class_hash, &execute_calldata, deployer_address).unwrap()
     }
 }
 
