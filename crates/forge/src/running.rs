@@ -12,9 +12,7 @@ use blockifier::state::state_api::State;
 use cairo_felt::Felt252;
 use cairo_vm::serde::deserialize_program::HintParams;
 use cairo_vm::types::relocatable::Relocatable;
-use cheatnet::constants::{
-    build_block_context, build_testing_state, build_transaction_context, TEST_ADDRESS,
-};
+use cheatnet::execution::syscalls::CheatableSyscallHandler;
 use itertools::chain;
 
 use cairo_lang_casm::hints::Hint;
@@ -23,6 +21,7 @@ use cairo_lang_runner::casm_run::hint_to_hint_params;
 use cairo_lang_runner::SierraCasmRunner;
 use cairo_lang_runner::{Arg, RunnerError};
 use camino::Utf8PathBuf;
+use cheatnet::constants as cheatnet_constants;
 use cheatnet::execution::syscalls::CheatableSyscallHandler;
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::state::{CheatnetState, ExtendedStateReader};
@@ -68,8 +67,8 @@ fn build_hints_dict<'b>(
 }
 
 fn build_context() -> EntryPointExecutionContext {
-    let block_context = build_block_context();
-    let account_context = build_transaction_context();
+    let block_context = cheatnet_constants::build_block_context();
+    let account_context = cheatnet_constants::build_transaction_context();
     EntryPointExecutionContext::new(
         block_context.clone(),
         account_context,
@@ -87,11 +86,13 @@ fn build_syscall_handler<'a>(
     let entry_point_selector = EntryPointSelector(StarkHash::new(test_selector.to_bytes_be())?);
     let entry_point = CallEntryPoint {
         class_hash: None,
-        code_address: Some(ContractAddress(patricia_key!(TEST_ADDRESS))),
+        code_address: Some(ContractAddress(patricia_key!(
+            cheatnet_constants::TEST_ADDRESS
+        ))),
         entry_point_type: EntryPointType::External,
         entry_point_selector,
         calldata: Calldata(Arc::new(vec![])),
-        storage_address: ContractAddress(patricia_key!(TEST_ADDRESS)),
+        storage_address: ContractAddress(patricia_key!(cheatnet_constants::TEST_ADDRESS)),
         caller_address: ContractAddress::default(),
         call_type: CallType::Call,
         initial_gas: u64::MAX,
@@ -143,7 +144,7 @@ pub(crate) fn run_test_case(
     let (hints_dict, string_to_hint) = build_hints_dict(instructions.clone());
 
     let state_reader = ExtendedStateReader {
-        dict_state_reader: build_testing_state(predeployed_contracts),
+        dict_state_reader: cheatnet_constants::build_testing_state(predeployed_contracts),
         fork_state_reader: get_fork_state_reader(package_root, fork_targets, &case.fork_config),
     };
     let mut context = build_context();
