@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - Spying events interface is updated to enable the use of events defined inside contracts in assertions
+- Fixed inconsistent pointers bug https://github.com/foundry-rs/starknet-foundry/issues/659
 
 ## [0.7.1] - 2023-09-27
 
