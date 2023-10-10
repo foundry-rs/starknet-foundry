@@ -59,7 +59,9 @@ pub fn deploy_at(
         class_hash: *class_hash,
         code_address: Some(contract_address),
         storage_address: contract_address,
-        caller_address: crate_constants::TEST_ADDRESS.to_contract_address(),
+        caller_address: crate_constants::TEST_ADDRESS
+            .to_string()
+            .to_contract_address(),
     };
 
     let calldata = Calldata(Arc::new(
