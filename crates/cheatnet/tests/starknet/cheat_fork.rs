@@ -1,7 +1,7 @@
 use crate::common::felt_selector_from_name;
 use crate::common::state::{create_cheatnet_state, create_fork_cached_state};
 use cairo_felt::Felt252;
-use cheatnet::rpc::{call_contract, CallContractOutput};
+use cheatnet::rpc::{call_contract, CallContractResult};
 use conversions::StarknetConversions;
 use num_bigint::BigUint;
 use starknet_api::core::ContractAddress;
@@ -29,7 +29,7 @@ fn prank_cairo0_contract(selector: &str) {
         &[],
     )
     .unwrap();
-    let CallContractOutput::Success { ret_data, .. } = output else {
+    let CallContractResult::Success { ret_data } = output.result else {
         panic!("Wrong call output")
     };
     let caller = &ret_data[0];
@@ -44,7 +44,7 @@ fn prank_cairo0_contract(selector: &str) {
         &[],
     )
     .unwrap();
-    let CallContractOutput::Success { ret_data, .. } = output else {
+    let CallContractResult::Success { ret_data } = output.result else {
         panic!("Wrong call output")
     };
     let pranked_caller = &ret_data[0];
@@ -59,7 +59,7 @@ fn prank_cairo0_contract(selector: &str) {
         &[],
     )
     .unwrap();
-    let CallContractOutput::Success { ret_data, .. } = output else {
+    let CallContractResult::Success { ret_data } = output.result else {
         panic!("Wrong call output")
     };
     let unpranked_caller = &ret_data[0];
@@ -86,7 +86,7 @@ fn roll_cairo0_contract(selector: &str) {
         &[],
     )
     .unwrap();
-    let CallContractOutput::Success { ret_data, .. } = output else {
+    let CallContractResult::Success { ret_data } = output.result else {
         panic!("Wrong call output")
     };
     let block_number = &ret_data[0];
@@ -101,7 +101,7 @@ fn roll_cairo0_contract(selector: &str) {
         &[],
     )
     .unwrap();
-    let CallContractOutput::Success { ret_data, .. } = output else {
+    let CallContractResult::Success { ret_data } = output.result else {
         panic!("Wrong call output")
     };
     let rolled_block_number = &ret_data[0];
@@ -116,7 +116,7 @@ fn roll_cairo0_contract(selector: &str) {
         &[],
     )
     .unwrap();
-    let CallContractOutput::Success { ret_data, .. } = output else {
+    let CallContractResult::Success { ret_data } = output.result else {
         panic!("Wrong call output")
     };
     let unrolled_block_number = &ret_data[0];
@@ -143,7 +143,7 @@ fn warp_cairo0_contract(selector: &str) {
         &[],
     )
     .unwrap();
-    let CallContractOutput::Success { ret_data, .. } = output else {
+    let CallContractResult::Success { ret_data } = output.result else {
         panic!("Wrong call output")
     };
     let block_timestamp = &ret_data[0];
@@ -158,7 +158,7 @@ fn warp_cairo0_contract(selector: &str) {
         &[],
     )
     .unwrap();
-    let CallContractOutput::Success { ret_data, .. } = output else {
+    let CallContractResult::Success { ret_data } = output.result else {
         panic!("Wrong call output")
     };
     let warped_block_timestamp = &ret_data[0];
@@ -173,7 +173,7 @@ fn warp_cairo0_contract(selector: &str) {
         &[],
     )
     .unwrap();
-    let CallContractOutput::Success { ret_data, .. } = output else {
+    let CallContractResult::Success { ret_data } = output.result else {
         panic!("Wrong call output")
     };
     let unwarped_block_timestamp = &ret_data[0];

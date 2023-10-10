@@ -17,7 +17,6 @@ use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use cheatnet::cheatcodes::deploy::{deploy, deploy_at, DeployCallPayload};
 use cheatnet::cheatcodes::{CheatcodeError, ContractArtifacts, EnhancedHintError};
-use cheatnet::execution::syscalls::CheatableSyscallHandler;
 use cheatnet::rpc::{call_contract, CallContractFailure, CallContractOutput, CallContractResult};
 use cheatnet::state::{BlockifierState, CheatnetState};
 use conversions::StarknetConversions;
