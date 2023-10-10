@@ -10,7 +10,7 @@ use std::{env, fs};
 use tempfile::{tempdir, TempDir};
 use tokio::runtime::Runtime;
 
-use forge::{pretty_printing, RunnerConfig};
+use forge::{pretty_printing, CancellationTokens, RunnerConfig, RunnerParams};
 use forge::{run, TestCrateSummary};
 
 use forge::scarb::{
@@ -159,11 +159,16 @@ fn main_execution() -> Result<bool> {
                 args.fuzzer_runs,
                 args.fuzzer_seed,
                 &forge_config,
+            ));
+
+            let runner_params = Arc::new(RunnerParams::new(
                 corelib_path,
                 contracts,
                 predeployed_contracts.clone(),
                 env::vars().collect(),
             ));
+
+            let cancellation_tokens = Arc::new(CancellationTokens::new());
 
             let tests_file_summaries = run(
                 &package_path,
@@ -171,6 +176,8 @@ fn main_execution() -> Result<bool> {
                 &package_source_dir_path,
                 &dependencies,
                 runner_config,
+                runner_params,
+                cancellation_tokens,
             )
             .await?;
 

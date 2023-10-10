@@ -40,7 +40,7 @@ use crate::scarb::ForkTarget;
 use crate::test_case_summary::TestCaseSummary;
 
 use crate::test_execution_syscall_handler::TestExecutionSyscallHandler;
-use crate::RunnerConfig;
+use crate::{RunnerConfig, RunnerParams};
 
 use crate::test_execution_syscall_handler::TestExecutionState;
 
@@ -74,13 +74,17 @@ fn build_hints_dict<'b>(
 }
 
 pub(crate) async fn blocking_run_from_test(
-    runner: Arc<SierraCasmRunner>,
-    case: Arc<TestCase>,
-    runner_config: Arc<RunnerConfig>,
     args: Vec<Felt252>,
+    case: Arc<TestCase>,
+    runner: Arc<SierraCasmRunner>,
+    runner_config: Arc<RunnerConfig>,
+    runner_params: Arc<RunnerParams>,
     _sender: Option<Sender<()>>,
 ) -> Result<TestCaseSummary> {
-    tokio::task::spawn_blocking(move || run_test_case(&runner, &case, runner_config, args)).await?
+    tokio::task::spawn_blocking(move || {
+        run_test_case(args, &case, &runner, runner_config, runner_params)
+    })
+    .await?
 }
 
 fn build_context() -> EntryPointExecutionContext {
@@ -131,10 +135,11 @@ fn build_syscall_handler<'a>(
 
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn run_test_case(
-    runner: &SierraCasmRunner,
-    case: &TestCase,
-    runner_config: Arc<RunnerConfig>,
     args: Vec<Felt252>,
+    case: &TestCase,
+    runner: &SierraCasmRunner,
+    runner_config: Arc<RunnerConfig>,
+    runner_params: Arc<RunnerParams>,
 ) -> Result<TestCaseSummary> {
     let available_gas = if let Some(available_gas) = &case.available_gas {
         Some(*available_gas)
@@ -155,7 +160,7 @@ pub(crate) fn run_test_case(
     let (hints_dict, string_to_hint) = build_hints_dict(instructions.clone());
 
     let state_reader = ExtendedStateReader {
-        dict_state_reader: build_testing_state(&runner_config.predeployed_contracts),
+        dict_state_reader: build_testing_state(&runner_params.predeployed_contracts),
         fork_state_reader: get_fork_state_reader(
             &runner_config.workspace_root,
             &runner_config.fork_targets,
@@ -177,8 +182,8 @@ pub(crate) fn run_test_case(
         CheatableSyscallHandler::new(syscall_handler, &mut cheatnet_state);
 
     let mut test_execution_state = TestExecutionState {
-        environment_variables: &runner_config.environment_variables,
-        contracts: &runner_config.contracts,
+        environment_variables: &runner_params.environment_variables,
+        contracts: &runner_params.contracts,
     };
     let mut test_execution_syscall_handler = TestExecutionSyscallHandler::new(
         cheatable_syscall_handler,

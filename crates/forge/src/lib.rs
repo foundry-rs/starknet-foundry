@@ -11,6 +11,7 @@ use camino::Utf8PathBuf;
 use futures::StreamExt;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use running::blocking_run_from_test;
+use serde::Deserialize;
 use tokio::sync::mpsc::channel;
 
 use std::sync::Arc;
@@ -61,7 +62,7 @@ static BUILTINS: Lazy<Vec<&str>> = Lazy::new(|| {
 });
 
 /// Configuration of the test runner
-#[derive(Debug)]
+#[derive(Deserialize, Debug, PartialEq)]
 pub struct RunnerConfig {
     workspace_root: Utf8PathBuf,
     test_name_filter: Option<String>,
@@ -70,12 +71,6 @@ pub struct RunnerConfig {
     fork_targets: Vec<ForkTarget>,
     fuzzer_runs: u32,
     fuzzer_seed: u64,
-    corelib_path: Utf8PathBuf,
-    contracts: HashMap<String, StarknetContractArtifacts>,
-    predeployed_contracts: Utf8PathBuf,
-    environment_variables: HashMap<String, String>,
-    exit_first_cancellation_token: CancellationToken,
-    error_cancellation_token: CancellationToken,
 }
 
 impl RunnerConfig {
@@ -96,13 +91,7 @@ impl RunnerConfig {
         fuzzer_runs: Option<u32>,
         fuzzer_seed: Option<u64>,
         forge_config_from_scarb: &ForgeConfig,
-        corelib_path: Utf8PathBuf,
-        contracts: HashMap<String, StarknetContractArtifacts>,
-        predeployed_contracts: Utf8PathBuf,
-        environment_variables: HashMap<String, String>,
     ) -> Self {
-        let exit_first_cancellation_token = CancellationToken::new();
-        let error_cancellation_token = CancellationToken::new();
         Self {
             workspace_root,
             test_name_filter,
@@ -115,16 +104,46 @@ impl RunnerConfig {
             fuzzer_seed: fuzzer_seed
                 .or(forge_config_from_scarb.fuzzer_seed)
                 .unwrap_or_else(|| thread_rng().next_u64()),
+        }
+    }
+}
+pub struct RunnerParams {
+    corelib_path: Utf8PathBuf,
+    contracts: HashMap<String, StarknetContractArtifacts>,
+    predeployed_contracts: Utf8PathBuf,
+    environment_variables: HashMap<String, String>,
+}
+
+impl RunnerParams {
+    #[must_use]
+    pub fn new(
+        corelib_path: Utf8PathBuf,
+        contracts: HashMap<String, StarknetContractArtifacts>,
+        predeployed_contracts: Utf8PathBuf,
+        environment_variables: HashMap<String, String>,
+    ) -> Self {
+        Self {
             corelib_path,
             contracts,
             predeployed_contracts,
             environment_variables,
-            exit_first_cancellation_token,
-            error_cancellation_token,
         }
     }
 }
 
+pub struct CancellationTokens {
+    exit_first: CancellationToken,
+    error: CancellationToken,
+}
+
+impl CancellationTokens {
+    #[must_use]
+    pub fn new() -> Self {
+        let exit_first = CancellationToken::new();
+        let error = CancellationToken::new();
+        Self { exit_first, error }
+    }
+}
 /// Exit status of the runner
 #[derive(Debug, PartialEq, Clone)]
 pub enum RunnerStatus {
@@ -161,6 +180,7 @@ fn collect_tests_from_package(
     package_name: &str,
     package_source_dir_path: &Utf8PathBuf,
     linked_libraries: &[LinkedLibrary],
+    corelib_path: &Utf8PathBuf,
     runner_config: &RunnerConfig,
 ) -> Result<Vec<TestsFromCrate>> {
     let tests_dir_path = package_path.join("tests");
@@ -189,7 +209,14 @@ fn collect_tests_from_package(
 
     let tests_from_files = all_test_roots
         .par_iter()
-        .map(|test_crate| collect_tests_from_tree(test_crate, linked_libraries, runner_config))
+        .map(|test_crate| {
+            collect_tests_from_tree(
+                test_crate,
+                linked_libraries,
+                corelib_path.into(),
+                runner_config,
+            )
+        })
         .collect();
 
     try_close_tmp_dir(maybe_tests_tmp_dir)?;
@@ -240,6 +267,7 @@ fn pack_tests_into_one_file(package_path: &Utf8PathBuf) -> Result<TempDir> {
 fn collect_tests_from_tree(
     test_crate: &TestCrate,
     linked_libraries: &[LinkedLibrary],
+    corelib_path: &Utf8PathBuf,
     runner_config: &RunnerConfig,
 ) -> Result<TestsFromCrate> {
     let (sierra_program, test_cases) = collect_tests(
@@ -248,7 +276,7 @@ fn collect_tests_from_tree(
         &test_crate.crate_name,
         linked_libraries,
         Some(BUILTINS.clone()),
-        runner_config.corelib_path.clone().into(),
+        corelib_path.into(),
     )?;
 
     let test_cases = if let Some(test_name_filter) = &runner_config.test_name_filter {
@@ -297,12 +325,15 @@ pub async fn run(
     package_source_dir_path: &Utf8PathBuf,
     linked_libraries: &[LinkedLibrary],
     runner_config: Arc<RunnerConfig>,
+    runner_params: Arc<RunnerParams>,
+    cancellation_tokens: Arc<CancellationTokens>,
 ) -> Result<Vec<TestCrateSummary>> {
     let tests = collect_tests_from_package(
         package_path,
         package_name,
         package_source_dir_path,
         linked_libraries,
+        &runner_params.corelib_path,
         &runner_config,
     )?;
 
@@ -320,11 +351,21 @@ pub async fn run(
         let runner_config = runner_config.clone();
         let test_crate_type = tests_from_crate.test_crate_type;
         let tests_len = tests_from_crate.test_cases.len();
+        let runner_params = runner_params.clone();
+        let cancellation_tokens = cancellation_tokens.clone();
         tasks.push((
             test_crate_type,
             tests_len,
             task::spawn({
-                async move { run_tests_from_crate(tests_from_crate, runner_config).await }
+                async move {
+                    run_tests_from_crate(
+                        tests_from_crate,
+                        runner_config,
+                        runner_params.clone(),
+                        cancellation_tokens,
+                    )
+                    .await
+                }
             }),
         ));
     }
@@ -351,6 +392,8 @@ pub async fn run(
 async fn run_tests_from_crate(
     tests: Arc<TestsFromCrate>,
     runner_config: Arc<RunnerConfig>,
+    runne_params: Arc<RunnerParams>,
+    cancellation_tokens: Arc<CancellationTokens>,
 ) -> Result<(TestCrateSummary, bool)> {
     let sierra_program = &tests.sierra_program;
     let runner = Arc::new(
@@ -373,15 +416,16 @@ async fn run_tests_from_crate(
         let args = function_args(function, &BUILTINS);
 
         let case = Arc::new(case.clone());
-        let runner_config = runner_config.clone();
         let args: Vec<ConcreteTypeId> = args.into_iter().cloned().collect();
         let runner = runner.clone();
 
         tasks.push_back(choose_test_strategy_and_run(
+            args,
             case.clone(),
             runner,
             runner_config.clone(),
-            args,
+            runne_params.clone(),
+            cancellation_tokens.clone(),
         ));
     }
 
@@ -408,15 +452,30 @@ async fn run_tests_from_crate(
 }
 
 fn choose_test_strategy_and_run(
+    args: Vec<ConcreteTypeId>,
     case: Arc<TestCase>,
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
-    args: Vec<ConcreteTypeId>,
+    runne_params: Arc<RunnerParams>,
+    cancellation_tokens: Arc<CancellationTokens>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     if args.is_empty() {
-        run_single_test(case, runner, runner_config)
+        run_single_test(
+            case,
+            runner,
+            runner_config,
+            runne_params,
+            cancellation_tokens,
+        )
     } else {
-        run_with_fuzzing(runner_config.clone(), runner, case, args)
+        run_with_fuzzing(
+            args,
+            case,
+            runner,
+            runner_config.clone(),
+            runne_params,
+            cancellation_tokens,
+        )
     }
 }
 
@@ -424,32 +483,34 @@ fn run_single_test(
     case: Arc<TestCase>,
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
+    runne_params: Arc<RunnerParams>,
+    cancellation_tokens: Arc<CancellationTokens>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     let exit_first = runner_config.exit_first;
     tokio::task::spawn(async move {
         tokio::select! {
-            () = runner_config.exit_first_cancellation_token.cancelled() => {
+            () = cancellation_tokens.exit_first.cancelled() => {
                 // Stop executing all tests because flag --exit-first'
                 // has been set and one test FAIL
                 Ok(TestCaseSummary::skipped(&case))
             },
-            () = runner_config.error_cancellation_token.cancelled() => {
+            () = cancellation_tokens.error.cancelled() => {
                 // Stop executing all tests because
                 // one of a test returns Err
                 Ok(TestCaseSummary::Interrupted {  })
             },
-            result = blocking_run_from_test(runner, case.clone(), runner_config.clone(), vec![], None) => {
+            result = blocking_run_from_test(vec![], case.clone(),runner,  runner_config.clone(), runne_params.clone() , None) => {
                 match result {
                     Ok(result) => {
                         if exit_first {
                             if let TestCaseSummary::Failed { .. } = &result {
-                                runner_config.exit_first_cancellation_token.cancel();
+                                cancellation_tokens.exit_first.cancel();
                             }
                         }
                         Ok(result)
                     }
                     Err(e) => {
-                        runner_config.error_cancellation_token.cancel();
+                        cancellation_tokens.error.cancel();
                         Err(e)
                     }
                 }
@@ -459,10 +520,12 @@ fn run_single_test(
 }
 
 fn run_with_fuzzing(
-    runner_config: Arc<RunnerConfig>,
-    runner: Arc<SierraCasmRunner>,
-    case: Arc<TestCase>,
     args: Vec<ConcreteTypeId>,
+    case: Arc<TestCase>,
+    runner: Arc<SierraCasmRunner>,
+    runner_config: Arc<RunnerConfig>,
+    runne_params: Arc<RunnerParams>,
+    cancellation_tokens: Arc<CancellationTokens>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     tokio::task::spawn(async move {
         let token = CancellationToken::new();
@@ -495,10 +558,12 @@ fn run_with_fuzzing(
             let args = fuzzer.next_args();
 
             tasks.push(run_fuzzing_subtest(
+                args,
+                case.clone(),
                 runner.clone(),
                 runner_config.clone(),
-                case.clone(),
-                args,
+                runne_params.clone(),
+                cancellation_tokens.clone(),
                 token.clone(),
                 send.clone(),
             ));
@@ -546,22 +611,24 @@ fn run_with_fuzzing(
 }
 
 fn run_fuzzing_subtest(
+    args: Vec<Felt252>,
+    case: Arc<TestCase>,
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
-    case: Arc<TestCase>,
-    args: Vec<Felt252>,
+    runne_params: Arc<RunnerParams>,
+    cancellation_tokens: Arc<CancellationTokens>,
     cancellation_fuzzing_token: CancellationToken,
     send: tokio::sync::mpsc::Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     let c = case.clone();
     task::spawn(async move {
         tokio::select! {
-            () = runner_config.error_cancellation_token.cancelled() => {
+            () = cancellation_tokens.error.cancelled() => {
                 // Stop executing all tests because
                 // one of a test returns Err
                 Ok(TestCaseSummary::Interrupted {  })
             },
-            () = runner_config.exit_first_cancellation_token.cancelled() => {
+            () = cancellation_tokens.exit_first.cancelled() => {
                 // Stop executing all tests because flag --exit-first'
                 // has been set and one test FAIL
                 Ok(TestCaseSummary::skipped(&c))
@@ -573,17 +640,18 @@ fn run_fuzzing_subtest(
 
             },
            result = blocking_run_from_test(
-                runner,
-                case,
-                runner_config.clone(),
                 args.clone(),
+                case,
+                runner,
+                runner_config.clone(),
+                runne_params.clone(),
                 Some(send),
             ) => {
                 match result {
                     Ok(result) => {
                         if let TestCaseSummary::Failed { .. } = &result {
                             if runner_config.exit_first {
-                                runner_config.exit_first_cancellation_token.cancel();
+                                cancellation_tokens.exit_first.cancel();
                             } else {
                                 cancellation_fuzzing_token.cancel();
                             }
@@ -591,7 +659,7 @@ fn run_fuzzing_subtest(
                         Ok(result)
                     }
                     Err(e) => {
-                        runner_config.error_cancellation_token.cancel();
+                        cancellation_tokens.error.cancel();
                         Err(e)
                     }
                 }
