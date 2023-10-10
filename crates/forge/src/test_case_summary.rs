@@ -36,7 +36,9 @@ pub enum TestCaseSummary {
         /// Name of the test case
         name: String,
     },
+    /// Fuzzing test subtests skipped (did not run)
     SkippedFuzzing {},
+    /// Tests execution interrupted (by Err)
     Interrupted {},
 }
 
