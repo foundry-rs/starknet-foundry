@@ -12,7 +12,6 @@ use blockifier::state::state_api::State;
 use cairo_felt::Felt252;
 use cairo_vm::serde::deserialize_program::HintParams;
 use cairo_vm::types::relocatable::Relocatable;
-use cheatnet::constants::{build_block_context, build_testing_state, build_transaction_context};
 use cheatnet::execution::syscalls::CheatableSyscallHandler;
 use itertools::chain;
 
@@ -67,8 +66,8 @@ fn build_hints_dict<'b>(
 }
 
 fn build_context() -> EntryPointExecutionContext {
-    let block_context = build_block_context();
-    let account_context = build_transaction_context();
+    let block_context = cheatnet_constants::build_block_context();
+    let account_context = cheatnet_constants::build_transaction_context();
     EntryPointExecutionContext::new(
         block_context.clone(),
         account_context,
@@ -144,7 +143,7 @@ pub(crate) fn run_test_case(
     let (hints_dict, string_to_hint) = build_hints_dict(instructions.clone());
 
     let state_reader = ExtendedStateReader {
-        dict_state_reader: build_testing_state(predeployed_contracts),
+        dict_state_reader: cheatnet_constants::build_testing_state(predeployed_contracts),
         fork_state_reader: get_fork_state_reader(package_root, fork_targets, &case.fork_config),
     };
     let mut context = build_context();
