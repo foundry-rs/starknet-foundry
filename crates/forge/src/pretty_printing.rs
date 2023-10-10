@@ -42,10 +42,6 @@ pub(crate) fn print_test_seed(seed: u64) {
 }
 
 pub(crate) fn print_test_result(test_result: &TestCaseSummary) {
-    if let TestCaseSummary::Interrupted {} | TestCaseSummary::SkippedFuzzing {} = test_result {
-        return;
-    }
-
     let result_header = match test_result {
         TestCaseSummary::Passed { .. } => format!("[{}]", style("PASS").green()),
         TestCaseSummary::Failed { .. } => format!("[{}]", style("FAIL").red()),

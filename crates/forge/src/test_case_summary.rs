@@ -4,6 +4,11 @@ use cairo_lang_runner::{RunResult, RunResultValue};
 use std::option::Option;
 use test_collector::{ExpectedPanicValue, ExpectedTestResult, TestCase};
 
+#[derive(Debug, PartialEq, Clone)]
+pub struct FuzzingStatistics {
+    runs: u32,
+}
+
 /// Summary of running a single test case
 #[derive(Debug, PartialEq, Clone)]
 pub enum TestCaseSummary {
@@ -17,7 +22,8 @@ pub enum TestCaseSummary {
         msg: Option<String>,
         /// Arguments used in the test case run
         arguments: Vec<Felt252>,
-        runs: Option<u32>,
+        /// Statistic for fuzzing test
+        fuzzing_statistic: Option<FuzzingStatistics>,
     },
     /// Test case failed
     Failed {
@@ -29,7 +35,8 @@ pub enum TestCaseSummary {
         msg: Option<String>,
         /// Arguments used in the test case run
         arguments: Vec<Felt252>,
-        runs: Option<u32>,
+        /// Statistic for fuzzing test
+        fuzzing_statistic: Option<FuzzingStatistics>,
     },
     /// Test case skipped (did not run)
     Skipped {
@@ -54,14 +61,22 @@ impl TestCaseSummary {
     }
     pub(crate) fn runs(&self) -> Option<u32> {
         match self {
-            TestCaseSummary::Failed { runs, .. } | TestCaseSummary::Passed { runs, .. } => *runs,
+            TestCaseSummary::Failed {
+                fuzzing_statistic, ..
+            }
+            | TestCaseSummary::Passed {
+                fuzzing_statistic, ..
+            } => match fuzzing_statistic {
+                Some(FuzzingStatistics { runs, .. }) => Some(*runs),
+                None => None,
+            },
             TestCaseSummary::Skipped { .. }
             | TestCaseSummary::Interrupted {}
             | TestCaseSummary::SkippedFuzzing {} => None,
         }
     }
 
-    pub(crate) fn update_runs(self, runs: u32) -> Self {
+    pub(crate) fn with_runs(self, runs: u32) -> Self {
         match self {
             TestCaseSummary::Passed {
                 name,
@@ -74,7 +89,7 @@ impl TestCaseSummary {
                 run_result,
                 msg,
                 arguments,
-                runs: Some(runs),
+                fuzzing_statistic: Some(FuzzingStatistics { runs: runs }),
             },
             TestCaseSummary::Failed {
                 name,
@@ -87,7 +102,7 @@ impl TestCaseSummary {
                 run_result,
                 msg,
                 arguments,
-                runs: Some(runs),
+                fuzzing_statistic: Some(FuzzingStatistics { runs: runs }),
             },
             TestCaseSummary::Skipped { .. }
             | TestCaseSummary::Interrupted {}
@@ -112,14 +127,14 @@ impl TestCaseSummary {
                     msg,
                     run_result,
                     arguments,
-                    runs: None,
+                    fuzzing_statistic: None,
                 },
                 ExpectedTestResult::Panics(_) => TestCaseSummary::Failed {
                     name,
                     msg,
                     run_result: Some(run_result),
                     arguments,
-                    runs: None,
+                    fuzzing_statistic: None,
                 },
             },
             RunResultValue::Panic(value) => match &test_case.expected_result {
@@ -128,7 +143,7 @@ impl TestCaseSummary {
                     msg,
                     run_result: Some(run_result),
                     arguments,
-                    runs: None,
+                    fuzzing_statistic: None,
                 },
                 ExpectedTestResult::Panics(panic_expectation) => match panic_expectation {
                     ExpectedPanicValue::Exact(expected) if &value != expected => {
@@ -137,7 +152,7 @@ impl TestCaseSummary {
                             msg,
                             run_result: Some(run_result),
                             arguments,
-                            runs: None,
+                            fuzzing_statistic: None,
                         }
                     }
                     _ => TestCaseSummary::Passed {
@@ -145,7 +160,7 @@ impl TestCaseSummary {
                         msg,
                         run_result,
                         arguments,
-                        runs: None,
+                        fuzzing_statistic: None,
                     },
                 },
             },

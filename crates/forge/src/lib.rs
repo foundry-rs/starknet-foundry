@@ -605,7 +605,7 @@ fn run_with_fuzzing(
                 .count(),
         )?;
 
-        let result = result.update_runs(runs);
+        let result = result.with_runs(runs);
         Ok(result)
     })
 }

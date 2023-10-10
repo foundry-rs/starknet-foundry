@@ -208,7 +208,7 @@ pub(crate) fn run_test_case(
                 error.to_string().replace(" Custom Hint Error: ", "\n    ")
             )),
             arguments: args,
-            runs: None,
+            fuzzing_statistic: None,
         }),
 
         Err(err) => Err(err.into()),
