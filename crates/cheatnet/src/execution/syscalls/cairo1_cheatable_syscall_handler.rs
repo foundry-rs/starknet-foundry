@@ -154,7 +154,6 @@ impl HintProcessorLogic for Cairo1CheatableSyscallHandler<'_> {
             PrintingResult::Passed => (),
             PrintingResult::Err(err) => return Err(err),
         }
-
         self.syscall_handler
             .execute_hint(vm, exec_scopes, hint_data, constants)
     }
@@ -193,6 +192,15 @@ fn get_ptr_from_res_operand_unchecked(vm: &mut VirtualMachine, res: &ResOperand)
     (vm.get_relocatable(cell_reloc).unwrap() + &base_offset).unwrap()
 }
 
+fn get_syscall_operand(hint: &StarknetHint) -> Result<&ResOperand, HintError> {
+    let StarknetHint::SystemCall { system: syscall } = hint else {
+        return Err(HintError::CustomHint(
+            "Test functions are unsupported on starknet.".into(),
+        ));
+    };
+    Ok(syscall)
+}
+
 impl Cairo1CheatableSyscallHandler<'_> {
     fn execute_next_syscall_cheated(
         &mut self,
@@ -200,31 +208,20 @@ impl Cairo1CheatableSyscallHandler<'_> {
         hint: &StarknetHint,
     ) -> HintExecutionResult {
         // We peak into the selector without incrementing the pointer as it is done later
-        let syscall_selector_pointer = self.syscall_handler.syscall_ptr;
-        let selector = SyscallSelector::try_from(stark_felt_from_ptr_immutable(
-            vm,
-            &syscall_selector_pointer,
-        )?)?;
+        let syscall = get_syscall_operand(hint)?;
+        let initial_syscall_ptr = get_ptr_from_res_operand_unchecked(vm, syscall);
+        let selector =
+            SyscallSelector::try_from(stark_felt_from_ptr_immutable(vm, &initial_syscall_ptr)?)?;
+        self.verify_syscall_ptr(initial_syscall_ptr)?;
         let contract_address = self.syscall_handler.storage_address();
 
         if SyscallSelector::GetExecutionInfo == selector
             && self.cheatnet_state.address_is_cheated(&contract_address)
         {
-            let StarknetHint::SystemCall { system: syscall } = hint else {
-                return Err(HintError::CustomHint(
-                    "Test functions are unsupported on starknet.".into(),
-                ));
-            };
-            let initial_syscall_ptr = get_ptr_from_res_operand_unchecked(vm, syscall);
-            self.verify_syscall_ptr(initial_syscall_ptr)?;
-
             // Increment, since the selector was peeked into before
             self.syscall_handler.syscall_ptr += 1;
-
-            if selector != SyscallSelector::Keccak {
-                self.syscall_handler
-                    .increment_syscall_count_by(&selector, 1);
-            }
+            self.syscall_handler
+                .increment_syscall_count_by(&selector, 1);
 
             let SyscallRequestWrapper {
                 gas_counter,
@@ -258,6 +255,9 @@ impl Cairo1CheatableSyscallHandler<'_> {
         } else if SyscallSelector::CallContract == selector {
             // Increment, since the selector was peeked into before
             self.syscall_handler.syscall_ptr += 1;
+            self.syscall_handler
+                .increment_syscall_count_by(&selector, 1);
+
             return self.execute_syscall(
                 vm,
                 call_contract_syscall,
@@ -266,6 +266,9 @@ impl Cairo1CheatableSyscallHandler<'_> {
         } else if SyscallSelector::LibraryCall == selector {
             // Increment, since the selector was peeked into before
             self.syscall_handler.syscall_ptr += 1;
+            self.syscall_handler
+                .increment_syscall_count_by(&selector, 1);
+
             return self.execute_syscall(
                 vm,
                 library_call_syscall,
@@ -274,6 +277,9 @@ impl Cairo1CheatableSyscallHandler<'_> {
         } else if SyscallSelector::Deploy == selector {
             // Increment, since the selector was peeked into before
             self.syscall_handler.syscall_ptr += 1;
+            self.syscall_handler
+                .increment_syscall_count_by(&selector, 1);
+
             return self.execute_syscall(vm, deploy_syscall, constants::DEPLOY_GAS_COST);
         } else if SyscallSelector::EmitEvent == selector {
             // No incrementation, since execute_next_syscall reads selector and increments syscall_ptr

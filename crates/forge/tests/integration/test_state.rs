@@ -193,7 +193,6 @@ fn test_get_block_hash_syscall() {
 }
 
 #[test]
-#[ignore]
 fn test_library_calls() {
     let test = test_case!(
         indoc!(
@@ -389,7 +388,8 @@ fn test_cant_call_test_contract() {
     let result = run_test_case(&test);
 
     assert_failed!(result);
-    assert_case_output_contains!(result, "test_calling_test_fails", "not deployed");
+    assert_case_output_contains!(result, "test_calling_test_fails", "Entry point");
+    assert_case_output_contains!(result, "test_calling_test_fails", "not found in contract");
 }
 
 #[test]
@@ -558,6 +558,35 @@ fn test_spy_events_simple() {
         "#
     ),);
 
+    let result = run_test_case(&test);
+
+    assert_passed!(result);
+}
+
+#[test]
+fn test_inconsistent_syscall_pointers() {
+    let test = test_case!(indoc!(
+        r#"
+        use starknet::ContractAddress;
+        use starknet::info::get_block_number;
+        use snforge_std::start_mock_call;
+
+        #[starknet::interface]
+        trait IContract<TContractState> {
+            fn get_value(self: @TContractState, arg: ContractAddress) -> u128;
+        }
+
+        #[test]
+        fn test_deploy_error_handling() {
+            // verifies if SyscallHandler.syscal_ptr is incremented correctly when calling a contract
+            let address = 'address'.try_into().unwrap();
+            start_mock_call(address, 'get_value', 55);
+            let contract = IContractDispatcher { contract_address: address };
+            let value = contract.get_value(address);
+            let block_number = get_block_number();
+        }
+    "#
+    ),);
     let result = run_test_case(&test);
 
     assert_passed!(result);

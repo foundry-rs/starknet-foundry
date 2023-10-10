@@ -4,20 +4,14 @@ use std::path::PathBuf;
 
 use crate::scarb::StarknetContractArtifacts;
 use anyhow::{anyhow, Context, Result};
-use blockifier::abi::constants::GET_BLOCK_HASH_GAS_COST;
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
-use blockifier::execution::execution_utils::{
-    felt_to_stark_felt, stark_felt_from_ptr, stark_felt_to_felt,
-};
-use blockifier::execution::syscalls::{
-    GetBlockHashRequest, GetBlockHashResponse, SyscallRequest, SyscallRequestWrapper,
-    SyscallResponse, SyscallResponseWrapper,
-};
+use blockifier::execution::execution_utils::{felt_to_stark_felt, stark_felt_to_felt};
 use cairo_felt::Felt252;
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
 use cairo_vm::hint_processor::hint_processor_definition::HintReference;
 use cairo_vm::serde::deserialize_program::ApTracking;
 use cairo_vm::types::exec_scope::ExecutionScopes;
+use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::vm_core::VirtualMachine;
@@ -37,17 +31,15 @@ use cairo_lang_runner::{
     casm_run::{cell_ref_to_relocatable, extract_buffer, get_ptr},
     insert_value_to_cellref,
 };
+use starknet_api::core::ContractAddress;
 
 use crate::test_execution_syscall_handler::file_operations::string_into_felt;
 use cairo_lang_starknet::contract::starknet_keccak;
 use cairo_lang_utils::bigint::BigIntAsHex;
-use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::errors::hint_errors::HintError::CustomHint;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cheatnet::cheatcodes::spy_events::SpyTarget;
 use cheatnet::execution::syscalls::cairo1_cheatable_syscall_handler::Cairo1CheatableSyscallHandler;
-use starknet_api::block::BlockHash;
-use starknet_api::hash::StarkFelt;
 
 mod file_operations;
 
@@ -165,12 +157,8 @@ impl HintProcessorLogic for TestExecutionSyscallHandler<'_> {
                 &mut self.cheatable_syscall_handler,
             );
         }
-        self.cheatable_syscall_handler.syscall_handler.execute_hint(
-            vm,
-            exec_scopes,
-            hint_data,
-            constants,
-        )
+        self.cheatable_syscall_handler
+            .execute_hint(vm, exec_scopes, hint_data, constants)
     }
 
     /// Trait function to store hint in the hint processor by string.
@@ -657,15 +645,25 @@ fn execute_syscall(
     let selector = DeprecatedSyscallSelector::try_from(felt_to_stark_felt(
         &vm.get_integer(system_ptr).unwrap(),
     ))?;
-    let mut blockifier_state =
-        BlockifierState::from(cheatable_syscall_handler.syscall_handler.state);
 
     match selector {
         DeprecatedSyscallSelector::CallContract => {
-            execute_call_contract(
-                MemBuffer::new(vm, system_ptr),
-                cheatable_syscall_handler.cheatnet_state,
+            let (system_ptr, call_args) =
+                get_call_contract_args(cheatable_syscall_handler, system_ptr, vm);
+
+            let mut blockifier_state =
+                BlockifierState::from(cheatable_syscall_handler.syscall_handler.state);
+            let call_result = execute_call_contract(
                 &mut blockifier_state,
+                cheatable_syscall_handler.cheatnet_state,
+                &call_args,
+            );
+            write_call_contract_response(
+                cheatable_syscall_handler,
+                system_ptr,
+                vm,
+                &call_args,
+                call_result,
             )?;
             Ok(())
         }
@@ -675,46 +673,27 @@ fn execute_syscall(
         DeprecatedSyscallSelector::ReplaceClass => Err(HintError::CustomHint(Box::from(
             "Replace class can't be used in tests".to_string(),
         ))),
-        DeprecatedSyscallSelector::GetBlockHash => {
-            execute_get_block_hash(
-                vm,
-                &mut system_ptr.clone(),
-                cheatable_syscall_handler.cheatnet_state,
-            )?;
-            Ok(())
-        }
         _ => cheatable_syscall_handler.execute_hint(vm, exec_scopes, hint_data, constants),
     }
 }
 
-fn execute_get_block_hash(
-    vm: &mut VirtualMachine,
-    system_ptr: &mut Relocatable,
-    _cheatnet_state: &CheatnetState,
-) -> Result<(), HintError> {
-    let _selector = stark_felt_from_ptr(vm, system_ptr)?;
-    let SyscallRequestWrapper {
-        gas_counter,
-        request: _,
-    } = SyscallRequestWrapper::<GetBlockHashRequest>::read(vm, system_ptr)?;
-
-    let sc_response = SyscallResponseWrapper::Success {
-        gas_counter: gas_counter - GET_BLOCK_HASH_GAS_COST,
-        response: GetBlockHashResponse {
-            block_hash: BlockHash(StarkFelt::from(0_u32)),
-        },
-    };
-    sc_response.write(vm, system_ptr)?;
-    Ok(())
+struct CallContractArgs {
+    _selector: Felt252,
+    gas_counter: u64,
+    contract_address: ContractAddress,
+    entry_point_selector: Felt252,
+    calldata: Vec<Felt252>,
 }
 
-fn execute_call_contract(
-    mut buffer: MemBuffer,
-    cheatnet_state: &mut CheatnetState,
-    blockifier_state: &mut BlockifierState,
-) -> Result<(), HintError> {
-    let _selector = buffer.next_felt252().unwrap();
-    let gas_counter = buffer.next_usize().unwrap();
+fn get_call_contract_args(
+    cheatable_syscall_handler: &mut Cairo1CheatableSyscallHandler,
+    system_ptr: Relocatable,
+    vm: &mut VirtualMachine,
+) -> (Relocatable, CallContractArgs) {
+    let mut buffer = MemBuffer::new(vm, system_ptr);
+
+    let selector = buffer.next_felt252().unwrap().into_owned();
+    let gas_counter = buffer.next_felt252().unwrap().to_u64().unwrap();
 
     let contract_address = buffer.next_felt252().unwrap().into_owned();
     let contract_address = contract_address.to_contract_address();
@@ -722,15 +701,28 @@ fn execute_call_contract(
     let entry_point_selector = buffer.next_felt252().unwrap().into_owned();
 
     let calldata = buffer.next_arr().unwrap();
+    cheatable_syscall_handler.syscall_handler.syscall_ptr += (buffer.ptr - system_ptr).unwrap();
 
-    let call_result = call_contract(
-        blockifier_state,
-        cheatnet_state,
-        &contract_address,
-        &entry_point_selector,
-        &calldata,
+    (
+        buffer.ptr,
+        CallContractArgs {
+            _selector: selector,
+            gas_counter,
+            contract_address,
+            entry_point_selector,
+            calldata,
+        },
     )
-    .unwrap_or_else(|err| panic!("Transaction execution error: {err}"));
+}
+
+fn write_call_contract_response(
+    cheatable_syscall_handler: &mut Cairo1CheatableSyscallHandler,
+    system_ptr: Relocatable,
+    vm: &mut VirtualMachine,
+    call_args: &CallContractArgs,
+    call_result: CallContractOutput,
+) -> Result<(), HintError> {
+    let mut buffer = MemBuffer::new(vm, system_ptr);
 
     let (result, exit_code) = match call_result {
         CallContractOutput::Success { ret_data, .. } => (ret_data, 0),
@@ -738,11 +730,27 @@ fn execute_call_contract(
         CallContractOutput::Error { msg, .. } => return Err(HintError::CustomHint(Box::from(msg))),
     };
 
-    buffer.write(gas_counter).unwrap();
+    buffer.write(Felt252::from(call_args.gas_counter)).unwrap();
     buffer.write(Felt252::from(exit_code)).unwrap();
 
     buffer.write_arr(result.iter()).unwrap();
+    cheatable_syscall_handler.syscall_handler.syscall_ptr += (buffer.ptr - system_ptr).unwrap();
     Ok(())
+}
+
+fn execute_call_contract(
+    blockifier_state: &mut BlockifierState,
+    cheatnet_state: &mut CheatnetState,
+    call_args: &CallContractArgs,
+) -> CallContractOutput {
+    call_contract(
+        blockifier_state,
+        cheatnet_state,
+        &call_args.contract_address,
+        &call_args.entry_point_selector,
+        &call_args.calldata,
+    )
+    .unwrap_or_else(|err| panic!("Transaction execution error: {err}"))
 }
 
 fn print(inputs: Vec<Felt252>) {
