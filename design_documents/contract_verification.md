@@ -38,9 +38,8 @@ Address of the contract to be submitted for verification.
 
 #### `--verifier <VERIFIER NAME>`
 
-Optional.
+Required.
 Specifies the Blockchan Explorer to verify with.  
-Default: `voyager`
 
 Options as of writing of this document: 
  - voyager
@@ -64,7 +63,7 @@ To implement contract verification for a specific explorer, it is required to im
 
 - `ContractAddress` - `ContractAddress`
 - `ContractName` - `String`
-- `SourceCode` - collection of file records:
+- `SourceCode` - collection of file records (`.cairo` files  + `Scarb.toml`):
   - `FilePath` - `String`
   - `FileContent` - `String`
 
