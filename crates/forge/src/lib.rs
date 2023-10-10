@@ -351,18 +351,18 @@ pub async fn run(
         let tests_from_crate = Arc::new(tests_from_crate);
         let runner_config = runner_config.clone();
         let test_crate_type = tests_from_crate.test_crate_type;
-        let tests_len = tests_from_crate.test_cases.len();
+        let number_of_test_cases = tests_from_crate.test_cases.len();
         let runner_params = runner_params.clone();
         let cancellation_tokens = cancellation_tokens.clone();
         tasks.push((
             test_crate_type,
-            tests_len,
+            number_of_test_cases,
             task::spawn({
                 async move {
                     run_tests_from_crate(
                         tests_from_crate,
                         runner_config,
-                        runner_params.clone(),
+                        runner_params,
                         cancellation_tokens,
                     )
                     .await
@@ -472,7 +472,7 @@ fn choose_test_strategy_and_run(
             args,
             case,
             runner,
-            runner_config.clone(),
+            runner_config,
             runner_params,
             cancellation_tokens,
         )

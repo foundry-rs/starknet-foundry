@@ -95,40 +95,37 @@ fn fork_aliased_decorator() {
 
     let rt = Runtime::new().expect("Could not instantiate Runtime");
     let result = rt
-        .block_on(async {
-            run(
-                &test.path().unwrap(),
-                &String::from("src"),
-                &test.path().unwrap().join("src"),
-                &test.linked_libraries(),
-                Arc::new(RunnerConfig::new(
-                    Utf8PathBuf::from_path_buf(PathBuf::from(tempdir().unwrap().path())).unwrap(),
-                    None,
-                    false,
-                    false,
-                    Some(1234),
-                    Some(500),
-                    &ForgeConfig {
-                        exit_first: false,
-                        fuzzer_runs: Some(1234),
-                        fuzzer_seed: Some(500),
-                        fork: vec![ForkTarget {
-                            name: "FORK_NAME_FROM_SCARB_TOML".to_string(),
-                            url: CHEATNET_RPC_URL.to_string(),
-                            block_id: HashMap::from([("tag".to_string(), "Latest".to_string())]),
-                        }],
-                    },
-                )),
-                Arc::new(RunnerParams::new(
-                    corelib_path(),
-                    test.contracts(&corelib_path()).unwrap(),
-                    Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-                    Default::default(),
-                )),
-                Arc::new(CancellationTokens::new()),
-            )
-            .await
-        })
+        .block_on(run(
+            &test.path().unwrap(),
+            &String::from("src"),
+            &test.path().unwrap().join("src"),
+            &test.linked_libraries(),
+            Arc::new(RunnerConfig::new(
+                Utf8PathBuf::from_path_buf(PathBuf::from(tempdir().unwrap().path())).unwrap(),
+                None,
+                false,
+                false,
+                Some(1234),
+                Some(500),
+                &ForgeConfig {
+                    exit_first: false,
+                    fuzzer_runs: Some(1234),
+                    fuzzer_seed: Some(500),
+                    fork: vec![ForkTarget {
+                        name: "FORK_NAME_FROM_SCARB_TOML".to_string(),
+                        url: CHEATNET_RPC_URL.to_string(),
+                        block_id: HashMap::from([("tag".to_string(), "Latest".to_string())]),
+                    }],
+                },
+            )),
+            Arc::new(RunnerParams::new(
+                corelib_path(),
+                test.contracts(&corelib_path()).unwrap(),
+                Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
+                Default::default(),
+            )),
+            Arc::new(CancellationTokens::new()),
+        ))
         .expect("Runner fail");
 
     assert_passed!(result);
