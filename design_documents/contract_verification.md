@@ -10,7 +10,7 @@ This proposal includes an extension to `sncast` utility enabling a contract owne
 
 ## Proposed Solution
 
-We propose to design a dedicated `verify` command for the `sncast` tool, and add a mechanism whereby this command can be implemented for various Blockchain Explorers.
+We propose to design a dedicated `verify` command for the `sncast` tool, and add a mechanism whereby this command can be implemented for various Blockchain Explorers. We define a "generic" contract verification interface and propose to implement the interface by "adapters" specific to respective explorers. 
 
 ### `sncast` utility command - `verify`
 
@@ -56,9 +56,28 @@ Options are:
  - mainnet - for verification at mainnet
  - goerli -  for verification on testnet
 
-### Voyager API plugin
+### Contract Verification interface
 
-A sample request to the voyager API end point will look as follows: 
+To implement contract verification for a specific explorer, it is required to implement a generic interface (request/response), as described below. The data structures proposed can be eventually extended to cater for detailed requirements of subsequent explorer adapters.
+
+#### Request
+
+- `ContractAddress` - `ContractAddress`
+- `ContractName` - `String`
+- `SourceCode` - collection of file records:
+  - `FilePath` - `String`
+  - `FileContent` - `String`
+
+#### Response
+
+- `VerificationStatus` - `Enum` (`OK`, `Error`)
+- `Errors` - (Optional) collection of error records:
+  - `ErrorMessage` - `String`
+  - `ErrorDetail` - `String`
+
+### Voyager API adapter plugin
+
+A sample request in the Voyager API adapter implementation will look as follows: 
 ```rust
 
 const url = `${voyager.testnet.url}/contract/`
@@ -108,5 +127,5 @@ const resp = client
     .send()
     .await?;
 
-println!(resp.verify_status)
+println!(resp.verification_status)
 ```
