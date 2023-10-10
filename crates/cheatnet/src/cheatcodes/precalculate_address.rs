@@ -5,6 +5,7 @@ use starknet_api::core::{calculate_contract_address, ClassHash, ContractAddress}
 use starknet_api::hash::StarkFelt;
 use starknet_api::transaction::Calldata;
 
+use crate::constants as crate_constants;
 use conversions::StarknetConversions;
 
 impl CheatnetState {
@@ -17,8 +18,7 @@ impl CheatnetState {
         let salt = self.get_salt();
 
         let execute_calldata = create_execute_calldata(calldata);
-        let deployer_address =
-            Felt252::from(0x0000_1724_9872_3497_3219_3472_1083_7402_i128).to_contract_address();
+        let deployer_address = crate_constants::TEST_ADDRESS.to_contract_address();
         calculate_contract_address(salt, *class_hash, &execute_calldata, deployer_address).unwrap()
     }
 }

@@ -1,8 +1,9 @@
+use crate::constants as crate_constants;
 use crate::constants::{build_block_context, build_transaction_context};
 use crate::state::BlockifierState;
 use crate::CheatnetState;
 use anyhow::Result;
-use blockifier::abi::constants;
+use blockifier::abi::constants as blockifier_constants;
 use blockifier::execution::entry_point::{
     ConstructorContext, EntryPointExecutionContext, ExecutionResources,
 };
@@ -51,15 +52,14 @@ pub fn deploy_at(
     let entry_point_execution_ctx = &mut EntryPointExecutionContext::new(
         build_block_context(),
         build_transaction_context(),
-        constants::MAX_STEPS_PER_TX,
+        blockifier_constants::MAX_STEPS_PER_TX,
     );
 
     let ctor_context = ConstructorContext {
         class_hash: *class_hash,
         code_address: Some(contract_address),
         storage_address: contract_address,
-        caller_address: Felt252::from(0x0000_1724_9872_3497_3219_3472_1083_7402_i128)
-            .to_contract_address(), // TODO: Extract to consts
+        caller_address: crate_constants::TEST_ADDRESS.to_contract_address(),
     };
 
     let calldata = Calldata(Arc::new(
@@ -84,7 +84,7 @@ pub fn deploy_at(
                 .gas_consumed
                 .to_f64()
                 .expect("Conversion to f64 failed")
-                + constants::DEPLOY_GAS_COST
+                + blockifier_constants::DEPLOY_GAS_COST
                     .to_f64()
                     .expect("Conversion to f64 failed"),
             resources,
