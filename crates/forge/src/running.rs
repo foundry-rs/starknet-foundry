@@ -12,6 +12,7 @@ use blockifier::state::state_api::State;
 use cairo_felt::Felt252;
 use cairo_vm::serde::deserialize_program::HintParams;
 use cairo_vm::types::relocatable::Relocatable;
+use cheatnet::execution::syscalls::CheatableSyscallHandler;
 use itertools::chain;
 
 use cairo_lang_casm::hints::Hint;
@@ -21,7 +22,6 @@ use cairo_lang_runner::SierraCasmRunner;
 use cairo_lang_runner::{Arg, RunnerError};
 use camino::Utf8PathBuf;
 use cheatnet::constants as cheatnet_constants;
-use cheatnet::execution::syscalls::CheatableSyscallHandler;
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::state::{CheatnetState, ExtendedStateReader};
 use conversions::StarknetConversions;

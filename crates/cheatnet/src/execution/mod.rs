@@ -1,6 +1,5 @@
 #[allow(clippy::module_name_repetitions)]
 pub mod cairo1_execution;
-#[allow(clippy::module_name_repetitions)]
 pub mod calls;
 pub mod contract_print;
 pub mod deprecated;

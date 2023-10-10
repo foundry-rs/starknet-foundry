@@ -1,50 +1,71 @@
 use crate::cheatcodes::spy_events::Event;
-use crate::execution::calls::{execute_inner_call, execute_library_call};
-use crate::execution::execution_info::get_cheated_exec_info_ptr;
 use crate::execution::{
     contract_print::{contract_print, PrintingResult},
     entry_point::execute_constructor_entry_point,
 };
 use crate::state::CheatnetState;
-use blockifier::abi::constants;
-use blockifier::execution::call_info::CallInfo;
-use blockifier::execution::common_hints::HintExecutionResult;
-use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
-use blockifier::execution::entry_point::{
-    CallEntryPoint, CallType, ConstructorContext, EntryPointExecutionContext,
-    EntryPointExecutionResult, ExecutionResources,
-};
-use blockifier::execution::execution_utils::{felt_to_stark_felt, ReadOnlySegment};
-use blockifier::execution::syscalls::hint_processor::{
-    create_retdata_segment, write_segment, SyscallExecutionError, SyscallHintProcessor,
-    OUT_OF_GAS_ERROR,
-};
+use anyhow::Result;
 use blockifier::execution::syscalls::{
-    CallContractRequest, DeployRequest, DeployResponse, EmptyRequest, GetExecutionInfoResponse,
-    LibraryCallRequest, SyscallRequest, SyscallRequestWrapper, SyscallResponse,
-    SyscallResponseWrapper, SyscallResult, WriteResponseResult,
+    DeployRequest, DeployResponse, LibraryCallRequest, SyscallRequest, SyscallRequestWrapper,
+    SyscallResponse, SyscallResponseWrapper, SyscallResult,
 };
+use blockifier::execution::{call_info::CallInfo, entry_point::ConstructorContext};
 use blockifier::state::errors::StateError;
-use blockifier::state::state_api::State;
-use blockifier::transaction::transaction_utils::update_remaining_gas;
+use blockifier::{
+    abi::constants,
+    execution::{
+        execution_utils::ReadOnlySegment,
+        syscalls::{
+            hint_processor::{create_retdata_segment, write_segment, OUT_OF_GAS_ERROR},
+            CallContractRequest, WriteResponseResult,
+        },
+    },
+    transaction::transaction_utils::update_remaining_gas,
+};
+use blockifier::{
+    execution::{
+        common_hints::HintExecutionResult,
+        deprecated_syscalls::DeprecatedSyscallSelector,
+        entry_point::{
+            CallEntryPoint, CallType, EntryPointExecutionContext, EntryPointExecutionResult,
+            ExecutionResources,
+        },
+        execution_utils::felt_to_stark_felt,
+        syscalls::{
+            hint_processor::{SyscallExecutionError, SyscallHintProcessor},
+            EmptyRequest, GetExecutionInfoResponse,
+        },
+    },
+    state::state_api::State,
+};
 use cairo_felt::Felt252;
-use cairo_lang_casm::hints::{Hint, StarknetHint};
-use cairo_lang_casm::operand::{BinOpOperand, DerefOrImmediate, Operation, Register, ResOperand};
-use cairo_vm::hint_processor::hint_processor_definition::{HintProcessorLogic, HintReference};
-use cairo_vm::serde::deserialize_program::ApTracking;
-use cairo_vm::types::exec_scope::ExecutionScopes;
-use cairo_vm::types::relocatable::Relocatable;
-use cairo_vm::vm::errors::hint_errors::HintError;
-use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
-use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
-use cairo_vm::vm::vm_core::VirtualMachine;
-use starknet_api::core::{calculate_contract_address, ClassHash, ContractAddress};
-use starknet_api::deprecated_contract_class::EntryPointType;
-use starknet_api::hash::StarkFelt;
-use starknet_api::transaction::Calldata;
-use std::any::Any;
-use std::collections::HashMap;
+use cairo_lang_casm::{
+    hints::{Hint, StarknetHint},
+    operand::{BinOpOperand, DerefOrImmediate, Operation, Register, ResOperand},
+};
+use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
+use cairo_vm::vm::runners::cairo_runner::ResourceTracker;
+use cairo_vm::{
+    hint_processor::hint_processor_definition::HintReference,
+    serde::deserialize_program::ApTracking,
+    types::{exec_scope::ExecutionScopes, relocatable::Relocatable},
+    vm::{
+        errors::{hint_errors::HintError, vm_errors::VirtualMachineError},
+        runners::cairo_runner::RunResources,
+        vm_core::VirtualMachine,
+    },
+};
+use starknet_api::core::calculate_contract_address;
+use starknet_api::{
+    core::{ClassHash, ContractAddress},
+    deprecated_contract_class::EntryPointType,
+    hash::StarkFelt,
+    transaction::Calldata,
+};
+use std::{any::Any, collections::HashMap};
 
+use super::calls::{execute_inner_call, execute_library_call};
+use super::execution_info::get_cheated_exec_info_ptr;
 pub type SyscallSelector = DeprecatedSyscallSelector;
 
 #[derive(Debug)]
