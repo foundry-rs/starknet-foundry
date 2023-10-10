@@ -209,10 +209,7 @@ pub fn build_testing_state(predeployed_contracts: &Utf8PathBuf) -> DictStateRead
     let test_contract_class_hash = ClassHash(stark_felt!(TEST_CONTRACT_CLASS_HASH));
 
     let class_hash_to_class = HashMap::from([
-        (
-            test_account_class_hash,
-            ContractClass::V1(account_class.clone()),
-        ),
+        (test_account_class_hash, ContractClass::V1(account_class)),
         // This is dummy put here only to satisfy blockifier
         // this class is not used and the test contract cannot be called
         (test_contract_class_hash, contract_class_no_entrypoints()),
