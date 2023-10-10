@@ -193,7 +193,6 @@ fn test_get_block_hash_syscall() {
 }
 
 #[test]
-#[ignore]
 fn test_library_calls() {
     let test = test_case!(
         indoc!(
@@ -389,7 +388,8 @@ fn test_cant_call_test_contract() {
     let result = run_test_case(&test);
 
     assert_failed!(result);
-    assert_case_output_contains!(result, "test_calling_test_fails", "not deployed");
+    assert_case_output_contains!(result, "test_calling_test_fails", "Entry point");
+    assert_case_output_contains!(result, "test_calling_test_fails", "not found in contract");
 }
 
 #[test]
