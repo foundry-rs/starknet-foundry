@@ -1,4 +1,5 @@
 use crate::CheatnetState;
+use blockifier::execution::call_info::OrderedEvent;
 use cairo_felt::Felt252;
 use cairo_vm::hint_processor::hint_processor_utils::felt_to_usize;
 use conversions::StarknetConversions;
@@ -11,6 +12,30 @@ pub struct Event {
     pub from: ContractAddress,
     pub keys: Vec<Felt252>,
     pub data: Vec<Felt252>,
+}
+
+impl Event {
+    pub fn from_ordered_event(
+        ordered_event: &OrderedEvent,
+        contract_address: ContractAddress,
+    ) -> Self {
+        Self {
+            from: contract_address,
+            keys: ordered_event
+                .event
+                .keys
+                .iter()
+                .map(|key| key.0.to_felt252())
+                .collect(),
+            data: ordered_event
+                .event
+                .data
+                .0
+                .iter()
+                .map(StarknetConversions::to_felt252)
+                .collect(),
+        }
+    }
 }
 
 /// Specifies which contract are spied on.

@@ -6,10 +6,7 @@ use crate::panic_data::try_extract_panic_data;
 use crate::state::BlockifierState;
 use crate::{
     constants::{build_block_context, build_transaction_context},
-    execution::{
-        entry_point::execute_call_entry_point, events::collect_emitted_events_from_spied_contracts,
-        gas::gas_from_execution_resources,
-    },
+    execution::{entry_point::execute_call_entry_point, gas::gas_from_execution_resources},
     CheatnetState,
 };
 use blockifier::execution::{
@@ -60,13 +57,48 @@ pub enum CallContractOutput {
 
 // This does contract call without the transaction layer. This way `call_contract` can return data and modify state.
 // `call` and `invoke` on the transactional layer use such method under the hood.
-#[allow(clippy::too_many_lines)]
 pub fn call_contract(
     blockifier_state: &mut BlockifierState,
     cheatnet_state: &mut CheatnetState,
     contract_address: &ContractAddress,
     entry_point_selector: &Felt252,
     calldata: &[Felt252],
+) -> Result<CallContractOutput> {
+    call_entry_point(
+        blockifier_state,
+        cheatnet_state,
+        contract_address,
+        entry_point_selector,
+        calldata,
+        EntryPointType::External,
+    )
+}
+
+pub fn call_l1_handler(
+    blockifier_state: &mut BlockifierState,
+    cheatnet_state: &mut CheatnetState,
+    contract_address: &ContractAddress,
+    entry_point_selector: &Felt252,
+    calldata: &[Felt252],
+) -> Result<CallContractOutput> {
+    call_entry_point(
+        blockifier_state,
+        cheatnet_state,
+        contract_address,
+        entry_point_selector,
+        calldata,
+        EntryPointType::L1Handler,
+    )
+}
+
+#[allow(clippy::too_many_lines)]
+pub fn call_entry_point(
+    blockifier_state: &mut BlockifierState,
+    cheatnet_state: &mut CheatnetState,
+    contract_address: &ContractAddress,
+    entry_point_selector: &Felt252,
+    calldata: &[Felt252],
+    entry_point_type: EntryPointType,
 ) -> Result<CallContractOutput> {
     let entry_point_selector =
         EntryPointSelector(StarkHash::new(entry_point_selector.to_be_bytes())?);
@@ -80,7 +112,7 @@ pub fn call_contract(
     let mut entry_point = CallEntryPoint {
         class_hash: None,
         code_address: Some(*contract_address),
-        entry_point_type: EntryPointType::External,
+        entry_point_type,
         entry_point_selector,
         calldata,
         storage_address: *contract_address,
@@ -112,12 +144,6 @@ pub fn call_contract(
 
     match exec_result {
         Ok(call_info) => {
-            if !cheatnet_state.spies.is_empty() {
-                let mut events =
-                    collect_emitted_events_from_spied_contracts(&call_info, cheatnet_state);
-                cheatnet_state.detected_events.append(&mut events);
-            }
-
             let raw_return_data = &call_info.execution.retdata.0;
 
             let return_data = raw_return_data
