@@ -143,6 +143,13 @@ impl CancellationTokens {
         Self { exit_first, error }
     }
 }
+
+impl Default for CancellationTokens {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// Exit status of the runner
 #[derive(Debug, PartialEq, Clone)]
 pub enum RunnerStatus {
@@ -209,12 +216,7 @@ fn collect_tests_from_package(
     let tests_from_files = all_test_roots
         .par_iter()
         .map(|test_crate| {
-            collect_tests_from_tree(
-                test_crate,
-                linked_libraries,
-                corelib_path.into(),
-                runner_config,
-            )
+            collect_tests_from_tree(test_crate, linked_libraries, corelib_path, runner_config)
         })
         .collect();
 
@@ -609,6 +611,7 @@ fn run_with_fuzzing(
     })
 }
 
+#[allow(clippy::too_many_arguments)]
 fn run_fuzzing_subtest(
     args: Vec<Felt252>,
     case: Arc<TestCase>,
