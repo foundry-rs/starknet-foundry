@@ -588,11 +588,6 @@ fn run_with_fuzzing(
 
         let _ = recv.recv().await;
 
-        let result: TestCaseSummary = results
-            .last()
-            .expect("Test should always run at least once")
-            .clone();
-
         let runs = u32::try_from(
             results
                 .iter()
@@ -604,6 +599,28 @@ fn run_with_fuzzing(
                 })
                 .count(),
         )?;
+
+        if let Some(result) = results.iter().find(|item| {
+            matches!(
+                item,
+                TestCaseSummary::Interrupted {} | TestCaseSummary::Skipped { .. }
+            )
+        }) {
+            return Ok(result.clone());
+        }
+
+        if let Some(result) = results
+            .iter()
+            .find(|item| matches!(item, TestCaseSummary::Failed { .. }))
+        {
+            let result = result.clone().with_runs(runs);
+            return Ok(result);
+        }
+
+        let result: TestCaseSummary = results
+            .last()
+            .expect("Test should always run at least once")
+            .clone();
 
         let result = result.with_runs(runs);
         Ok(result)

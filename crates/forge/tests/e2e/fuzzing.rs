@@ -167,7 +167,7 @@ fn fuzzing_incorrect_function_args() {
 #[test]
 fn fuzzing_exit_first() {
     let temp = setup_package("fuzzing");
-    let snapbox = runner().arg("exit_first_only_fuzzing").arg("-x");
+    let snapbox = runner().arg("exit_first_fuzz").arg("-x");
 
     snapbox
         .current_dir(&temp)
@@ -181,17 +181,17 @@ fn fuzzing_exit_first() {
         Collected 2 test(s) from fuzzing package
         Running 0 test(s) from src/
         Running 2 test(s) from tests/
-        [FAIL] tests::exit_first_only_fuzzing::exit_first_fails_test (fuzzer runs = 1, arguments = [..])
+        [FAIL] tests::exit_first_fuzz::exit_first_fails_test (fuzzer runs = 1, arguments = [..])
 
         Failure data:
             original value: [..], converted to a string: [2 + b == 2 + b]
 
-        [SKIP] tests::exit_first_only_fuzzing::exit_first_hard_test
+        [SKIP] tests::exit_first_fuzz::exit_first_hard_test
         Tests: 0 passed, 1 failed, 1 skipped
         Fuzzer seed: [..]
 
         Failures:
-            tests::exit_first_only_fuzzing::exit_first_fails_test
+            tests::exit_first_fuzz::exit_first_fails_test
         "#});
 }
 #[test]
