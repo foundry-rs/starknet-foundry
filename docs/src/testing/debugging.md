@@ -65,6 +65,24 @@ Tests: 1 passed, 0 failed, 0 skipped
 Forge tries to convert values to strings when possible. In case conversion is not possible,
 just `original value` is printed.
 
+If the parsed value contains ASCII control characters (e.g. 27: `ESC`), it will not be converted to a string.
+
+```rust
+#[test]
+fn test_print() {
+    // ...
+    
+    27.print();
+```
+
+```shell
+$ snforge
+Collected 1 test(s) from package_name package
+Running 0 test(s) from src/
+Running 1 test(s) from tests/
+original value: [27]
+```
+
 ## In contracts
 > ⚠️ **Warning**
 > 
