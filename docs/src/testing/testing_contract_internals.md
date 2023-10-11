@@ -61,8 +61,6 @@ Example usages:
 #### 1. Mocking the context info
 Example for `roll`, same can be implemented for `prank`/`spoof`/`warp` etc.
 
-(only one example here for brevity)
-
 ```rust
 use result::ResultTrait;
 use box::BoxTrait;
