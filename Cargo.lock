@@ -1172,6 +1172,7 @@ dependencies = [
  "starknet",
  "starknet_api",
  "tempfile",
+ "test-case",
  "thiserror",
  "tokio",
  "url",
