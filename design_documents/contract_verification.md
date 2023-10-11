@@ -47,9 +47,8 @@ Options as of writing of this document:
 
 #### `--network <NETWORK_NAME>`
 
-Optional.
+Required.
 Specifies the network on which Blockchain Explorers will do the verification
-Default: the default network on which verfication would be done is `goerli` testnet
 
 Options are:
  - mainnet - for verification at mainnet
