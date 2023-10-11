@@ -118,7 +118,7 @@ fn main_execution() -> Result<bool> {
     if args.clean_cache {
         clean_cache(&workspace_root).context("Failed to clean snforge cache")?;
     }
-    let cores_approx = available_parallelism().unwrap().get();
+    let cores_approx = available_parallelism()?.get();
     let rt = Builder::new_multi_thread().max_blocking_threads(cores_approx).enable_all().build()?;
     let all_failed_tests = rt.block_on({
         rt.spawn(async move {
