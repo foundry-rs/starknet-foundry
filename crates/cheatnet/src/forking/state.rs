@@ -41,17 +41,17 @@ impl ForkStateReader {
     pub fn new(url: &str, block_id: BlockId, cache_dir: Option<&str>) -> Self {
         let client = JsonRpcClient::new(HttpTransport::new(Url::parse(url).unwrap()));
         let runtime = Runtime::new().expect("Could not instantiate Runtime");
-        let (block_id, dont_save) = match block_id {
-            BlockId::Tag(Latest) => (get_latest_block_number(&client, &runtime), true),
-            BlockId::Tag(Pending) => (BlockId::Tag(Pending), true),
-            _ => (block_id, false),
+        let (block_id, should_be_saved) = match block_id {
+            BlockId::Tag(Latest) => (get_latest_block_number(&client, &runtime), false),
+            BlockId::Tag(Pending) => (BlockId::Tag(Pending), false),
+            _ => (block_id, true),
         };
 
         ForkStateReader {
             client,
             block_id,
             runtime,
-            cache: ForkCache::load_or_new(url, block_id, cache_dir, dont_save),
+            cache: ForkCache::load_or_new(url, block_id, cache_dir, should_be_saved),
         }
     }
 }

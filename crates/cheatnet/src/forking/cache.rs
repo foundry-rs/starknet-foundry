@@ -75,12 +75,12 @@ impl ToString for ForkCacheContent {
 pub struct ForkCache {
     fork_cache_content: ForkCacheContent,
     cache_file: Option<String>,
-    dont_save: bool,
+    save: bool,
 }
 
 impl Drop for ForkCache {
     fn drop(&mut self) {
-        if !self.dont_save {
+        if self.save {
             self.save();
         }
     }
@@ -103,11 +103,9 @@ impl ForkCache {
         url: &str,
         block_id: BlockId,
         cache_dir: Option<&str>,
-        dont_save: bool,
+        save: bool,
     ) -> Self {
-        let (fork_cache_content, cache_file) = if dont_save {
-            (ForkCacheContent::new(), None)
-        } else {
+        let (fork_cache_content, cache_file) = if save {
             let cache_file_path = cache_file_path_from_fork_config(url, block_id, cache_dir);
             let mut file = OpenOptions::new()
                 .write(true)
@@ -128,12 +126,14 @@ impl ForkCache {
             };
 
             (fork_cache_content, Some(cache_file_path.to_string()))
+        } else {
+            (ForkCacheContent::new(), None)
         };
 
         ForkCache {
             fork_cache_content,
             cache_file,
-            dont_save,
+            save,
         }
     }
 
