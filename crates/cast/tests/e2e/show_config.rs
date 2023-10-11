@@ -16,7 +16,7 @@ async fn test_show_config_from_scarb_toml() {
     snapbox.assert().success().stdout_eq(indoc! {r#"
         command: show-config
         account: user1
-        account_file_path: ../account-file
+        accounts_file_path: ../account-file
         chain_id: alpha-goerli
         profile: profile1
         rpc_url: http://127.0.0.1:5055/rpc
@@ -64,7 +64,7 @@ async fn test_show_config_from_cli_and_scarb() {
     snapbox.assert().success().stdout_eq(indoc! {r#"
         command: show-config
         account: user2
-        account_file_path: ../account-file
+        accounts_file_path: ../account-file
         chain_id: alpha-goerli
         profile: profile1
         rpc_url: http://127.0.0.1:5055/rpc
@@ -87,7 +87,7 @@ async fn test_show_config_when_no_keystore() {
     snapbox.assert().success().stdout_eq(indoc! {r#"
         command: show-config
         account: user1
-        account_file_path: ../account-file
+        accounts_file_path: ../account-file
         chain_id: alpha-goerli
         profile: profile1
         rpc_url: http://127.0.0.1:5055/rpc

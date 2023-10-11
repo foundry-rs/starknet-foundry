@@ -22,12 +22,12 @@ pub async fn show_config(
     let chain_id = chain_id_to_network_name(chain_id_field);
     let rpc_url = Some(cast_config.rpc_url).filter(|p| !p.is_empty());
     let account = Some(cast_config.account).filter(|p| !p.is_empty());
-    let mut account_file_path =
+    let mut accounts_file_path =
         Some(cast_config.accounts_file).filter(|p| p != &Utf8PathBuf::default());
     let keystore = Some(cast_config.keystore).filter(|p| p != &Utf8PathBuf::default());
 
     if keystore.is_some() {
-        account_file_path = None;
+        accounts_file_path = None;
     }
 
     Ok(ShowConfigResponse {
@@ -36,7 +36,7 @@ pub async fn show_config(
         rpc_url,
         account,
         scarb_path,
-        account_file_path,
+        accounts_file_path,
         keystore,
     })
 }

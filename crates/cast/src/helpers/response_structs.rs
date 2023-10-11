@@ -49,6 +49,6 @@ pub struct ShowConfigResponse {
     pub rpc_url: Option<String>,
     pub account: Option<String>,
     pub scarb_path: Option<Utf8PathBuf>,
-    pub account_file_path: Option<Utf8PathBuf>,
+    pub accounts_file_path: Option<Utf8PathBuf>,
     pub keystore: Option<Utf8PathBuf>,
 }
