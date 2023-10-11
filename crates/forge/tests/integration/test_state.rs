@@ -564,6 +564,69 @@ fn test_spy_events_simple() {
 }
 
 #[test]
+fn test_spy_struct_events() {
+    let test = test_case!(indoc!(
+        r#"
+            use array::ArrayTrait;
+            use snforge_std::{ 
+                declare, ContractClassTrait, spy_events, 
+                EventSpy, EventFetcher, 
+                EventAssertions, Event, SpyOn, test_address 
+            };
+                
+           #[starknet::contract]
+            mod Emitter {
+                use result::ResultTrait;
+                use starknet::ClassHash;
+                
+                #[event]
+                #[derive(Drop, starknet::Event)]
+                enum Event {
+                    ThingEmitted: ThingEmitted
+                }
+                
+                #[derive(Drop, starknet::Event)]
+                struct ThingEmitted {
+                    thing: felt252
+                }
+    
+                #[storage]
+                struct Storage {}
+
+                #[external(v0)]
+                fn emit_event(
+                    ref self: ContractState,
+                ) {
+                    self.emit(Event::ThingEmitted(ThingEmitted { thing: 420 }));
+                }
+            }
+
+            #[test]
+            fn test_expect_event_struct() {
+                let contract_address = test_address();
+                let mut spy = spy_events(SpyOn::One(contract_address));
+                
+                let mut testing_state = Emitter::contract_state_for_testing();
+                Emitter::emit_event(ref testing_state);
+                
+                spy.assert_emitted(
+                    @array![
+                        (
+                            contract_address,
+                            Emitter::Event::ThingEmitted(Emitter::ThingEmitted { thing: 420 })
+                        )
+                    ]
+                )
+            }
+        "#
+    ));
+
+    let result = run_test_case(&test);
+
+    assert_passed!(result);
+}
+
+#[test]
 fn test_inconsistent_syscall_pointers() {
     let test = test_case!(indoc!(
         r#"
