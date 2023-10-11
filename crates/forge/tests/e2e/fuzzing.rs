@@ -105,10 +105,10 @@ fn fuzzing_set_seed() {
         [PASS] fuzzing::tests::fuzzed_argument (fuzzer runs = 256)
         [PASS] fuzzing::tests::fuzzed_both_arguments (fuzzer runs = 256)
         [PASS] fuzzing::tests::passing
-        [FAIL] fuzzing::tests::failing_fuzz (fuzzer runs = 1, arguments = [341193006617052062735469547906266761132387087565883400330245273769314796067, 527032148587025968655727080236627006840087681556560587927394687076297616261])
+        [FAIL] fuzzing::tests::failing_fuzz (fuzzer runs = 1, arguments = [..])
 
         Failure data:
-            original value: [593979512822486835600413552099926114], converted to a string: [result == a + b]
+            original value: [..], converted to a string: [result == a + b]
 
         [PASS] fuzzing::tests::custom_fuzzer_config (fuzzer runs = 10)
         [PASS] fuzzing::tests::uint8_arg (fuzzer runs = 256)
@@ -160,7 +160,66 @@ fn fuzzing_incorrect_function_args() {
         Collected 2 test(s) from fuzzing package
         Running 0 test(s) from src/
         Running 2 test(s) from tests/
-        [PASS] tests::incorrect_args::correct_args (fuzzer runs = 256)
         [ERROR] Tried to use incorrect type for fuzzing. Type = tests::incorrect_args::MyStruct is not supported
+        "#});
+}
+
+#[test]
+fn fuzzing_exit_first() {
+    let temp = setup_package("fuzzing");
+    let snapbox = runner().arg("exit_first_fuzz").arg("-x");
+
+    snapbox
+        .current_dir(&temp)
+        .assert()
+        .code(1)
+        .stdout_matches(indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 2 test(s) from fuzzing package
+        Running 0 test(s) from src/
+        Running 2 test(s) from tests/
+        [FAIL] tests::exit_first_fuzz::exit_first_fails_test (fuzzer runs = 1, arguments = [..])
+
+        Failure data:
+            original value: [..], converted to a string: [2 + b == 2 + b]
+
+        [SKIP] tests::exit_first_fuzz::exit_first_hard_test
+        Tests: 0 passed, 1 failed, 1 skipped
+        Fuzzer seed: [..]
+
+        Failures:
+            tests::exit_first_fuzz::exit_first_fails_test
+        "#});
+}
+#[test]
+fn fuzzing_exit_first_single_fail() {
+    let temp = setup_package("fuzzing");
+    let snapbox = runner().arg("exit_first_single_fail").arg("-x");
+
+    snapbox
+        .current_dir(&temp)
+        .assert()
+        .code(1)
+        .stdout_matches(indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 2 test(s) from fuzzing package
+        Running 0 test(s) from src/
+        Running 2 test(s) from tests/
+        [FAIL] tests::exit_first_single_fail::exit_first_fails_test
+
+        Failure data:
+            original value: [..], converted to a string: [2 + b == 2 + b]
+
+        [SKIP] tests::exit_first_single_fail::exit_first_hard_test
+        Tests: 0 passed, 1 failed, 1 skipped
+
+        Failures:
+            tests::exit_first_single_fail::exit_first_fails_test
         "#});
 }

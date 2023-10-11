@@ -9,7 +9,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.7.1"
+version = "0.8.0"
 edition = "2021"
 repository = "https://github.com/foundry-rs/starknet-foundry"
 license = "MIT"
@@ -60,6 +60,8 @@ thiserror = "1.0.49"
 ctor = "0.2.4"
 url = "2.4.0"
 tokio = { version = "1.28.2", features = ["full"] }
+tokio-util = "0.7.9"
+futures = "0.3.28"
 num-bigint = { version = "0.4.4", features = ["rand"] }
 walkdir = "2.4.0"
 dotenv = "0.15.0"
@@ -67,3 +69,4 @@ rand = "0.8.5"
 project-root = "0.2.2"
 which = "4.4.0"
 conversions = { path = "./crates/conversions" }
+test-case = "3.1.0"

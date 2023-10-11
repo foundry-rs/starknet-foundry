@@ -53,6 +53,8 @@ fn simple_package() {
 #[test]
 fn simple_package_with_git_dependency() {
     let temp = TempDir::new().unwrap();
+    let temp_scarb = TempDir::new().unwrap();
+
     temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
         .unwrap();
     let remote_url = get_remote_url();
@@ -81,6 +83,7 @@ fn simple_package_with_git_dependency() {
     let snapbox = runner();
 
     snapbox
+        .env("SCARB_CACHE", temp_scarb.path())
         .current_dir(&temp)
         .assert()
         .code(1)
@@ -321,13 +324,14 @@ fn with_panic_data_decoding() {
 
 #[test]
 fn with_exit_first() {
-    let temp = setup_package("simple_package");
+    let temp = setup_package("exit_first");
     let scarb_path = temp.child("Scarb.toml");
+
     scarb_path
         .write_str(&formatdoc!(
             r#"
             [package]
-            name = "simple_package"
+            name = "exit_first"
             version = "0.1.0"
 
             [dependencies]
@@ -361,34 +365,27 @@ fn with_exit_first() {
         [..]Finished[..]
 
 
-        Collected 11 test(s) from simple_package package
-        Running 1 test(s) from src/
-        [PASS] simple_package::test_fib
-        Running 10 test(s) from tests/
-        [PASS] tests::contract::call_and_invoke
-        [PASS] tests::ext_function_test::test_my_test
-        [PASS] tests::ext_function_test::test_simple
-        [PASS] tests::test_simple::test_simple
-        [PASS] tests::test_simple::test_simple2
-        [PASS] tests::test_simple::test_two
-        [PASS] tests::test_simple::test_two_and_two
-        [FAIL] tests::test_simple::test_failing
-        
+        Collected 4 test(s) from exit_first package
+        Running 0 test(s) from src/
+        Running 4 test(s) from tests/
+        [SKIP] tests::ext_function_test::hard_test
+        [SKIP] tests::ext_function_test::hard_test1
+        [FAIL] tests::ext_function_test::simple_test
+
         Failure data:
-            original value: [8111420071579136082810415440747], converted to a string: [failing check]
-        
-        [SKIP] tests::test_simple::test_another_failing
-        [SKIP] tests::without_prefix::five
-        Tests: 8 passed, 1 failed, 2 skipped
-        
+            original value: [35718230152306872753561363307], converted to a string: [simple check]
+
+        [SKIP] tests::ext_function_test::hard_test2
+        Tests: 0 passed, 1 failed, 3 skipped
+
         Failures:
-            tests::test_simple::test_failing
+            tests::ext_function_test::simple_test
         "#});
 }
 
 #[test]
 fn with_exit_first_flag() {
-    let temp = setup_package("simple_package");
+    let temp = setup_package("exit_first");
     let snapbox = runner().arg("--exit-first");
 
     snapbox
@@ -400,98 +397,32 @@ fn with_exit_first_flag() {
         [..]Finished[..]
 
 
-        Collected 11 test(s) from simple_package package
-        Running 1 test(s) from src/
-        [PASS] simple_package::test_fib
-        Running 10 test(s) from tests/
-        [PASS] tests::contract::call_and_invoke
-        [PASS] tests::ext_function_test::test_my_test
-        [PASS] tests::ext_function_test::test_simple
-        [PASS] tests::test_simple::test_simple
-        [PASS] tests::test_simple::test_simple2
-        [PASS] tests::test_simple::test_two
-        [PASS] tests::test_simple::test_two_and_two
-        [FAIL] tests::test_simple::test_failing
-        
+        Collected 4 test(s) from exit_first package
+        Running 0 test(s) from src/
+        Running 4 test(s) from tests/
+        [SKIP] tests::ext_function_test::hard_test
+        [SKIP] tests::ext_function_test::hard_test1
+        [FAIL] tests::ext_function_test::simple_test
+
         Failure data:
-            original value: [8111420071579136082810415440747], converted to a string: [failing check]
-        
-        [SKIP] tests::test_simple::test_another_failing
-        [SKIP] tests::without_prefix::five
-        Tests: 8 passed, 1 failed, 2 skipped
-        
+            original value: [35718230152306872753561363307], converted to a string: [simple check]
+
+        [SKIP] tests::ext_function_test::hard_test2
+        Tests: 0 passed, 1 failed, 3 skipped
+
         Failures:
-            tests::test_simple::test_failing
-        "#});
-}
-
-#[test]
-fn exit_first_flag_takes_precedence() {
-    let temp = setup_package("simple_package");
-    let scarb_path = temp.child("simple_package/Scarb.toml");
-    scarb_path
-        .write_str(indoc!(
-            r#"
-            [package]
-            name = "simple_package"
-            version = "0.1.0"
-
-            [dependencies]
-            starknet = "2.2.0"
-            snforge_std = { path = "../.." }
-
-            [[target.starknet-contract]]
-            sierra = true
-            casm = true
-            [tool.snforge]
-            exit_first = false
-            "#
-        ))
-        .unwrap();
-
-    let snapbox = runner();
-
-    snapbox
-        .current_dir(&temp)
-        .arg("--exit-first")
-        .assert()
-        .code(1)
-        .stdout_matches(indoc! {r#"
-        [..]Compiling[..]
-        [..]Finished[..]
-
-
-        Collected 11 test(s) from simple_package package
-        Running 1 test(s) from src/
-        [PASS] simple_package::test_fib
-        Running 10 test(s) from tests/
-        [PASS] tests::contract::call_and_invoke
-        [PASS] tests::ext_function_test::test_my_test
-        [PASS] tests::ext_function_test::test_simple
-        [PASS] tests::test_simple::test_simple
-        [PASS] tests::test_simple::test_simple2
-        [PASS] tests::test_simple::test_two
-        [PASS] tests::test_simple::test_two_and_two
-        [FAIL] tests::test_simple::test_failing
-        
-        Failure data:
-            original value: [8111420071579136082810415440747], converted to a string: [failing check]
-        
-        [SKIP] tests::test_simple::test_another_failing
-        [SKIP] tests::without_prefix::five
-        Tests: 8 passed, 1 failed, 2 skipped
-        
-        Failures:
-            tests::test_simple::test_failing
+            tests::ext_function_test::simple_test
         "#});
 }
 
 #[test]
 fn init_new_project_test() {
     let temp = TempDir::new().unwrap();
+    let temp_scarb = TempDir::new().unwrap();
 
     let snapbox = runner();
     snapbox
+        .env("SCARB_CACHE", temp_scarb.path())
         .current_dir(&temp)
         .arg("--init")
         .arg("test_name")

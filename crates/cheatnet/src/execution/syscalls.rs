@@ -73,7 +73,7 @@ pub type SyscallSelector = DeprecatedSyscallSelector;
 // It is created here because fields in the original structure are private
 // so we cannot create it in call_contract_syscall
 pub struct SingleSegmentResponse {
-    segment: ReadOnlySegment,
+    pub(crate) segment: ReadOnlySegment,
 }
 // crates/blockifier/src/execution/syscalls/mod.rs:131 (SyscallResponse for SingleSegmentResponse)
 impl SyscallResponse for SingleSegmentResponse {
@@ -212,14 +212,14 @@ fn get_ptr_from_res_operand_unchecked(vm: &mut VirtualMachine, res: &ResOperand)
     (vm.get_relocatable(cell_reloc).unwrap() + &base_offset).unwrap()
 }
 
-fn stark_felt_from_ptr_immutable(
+pub fn stark_felt_from_ptr_immutable(
     vm: &VirtualMachine,
     ptr: &Relocatable,
 ) -> Result<StarkFelt, VirtualMachineError> {
     Ok(felt_to_stark_felt(&felt_from_ptr_immutable(vm, ptr)?))
 }
 
-fn felt_from_ptr_immutable(
+pub fn felt_from_ptr_immutable(
     vm: &VirtualMachine,
     ptr: &Relocatable,
 ) -> Result<Felt252, VirtualMachineError> {
