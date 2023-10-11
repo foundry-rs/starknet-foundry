@@ -21,6 +21,7 @@ use glob::glob;
 use num_bigint::BigUint;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use serde_json::Value;
+use starknet::core::types::BlockTag::Latest;
 use starknet::core::types::{BlockId, BlockTag};
 use starknet_api::core::ContractAddress;
 use std::str::FromStr;
@@ -509,4 +510,22 @@ fn test_cache_merging() {
     .for_each(|param_tpl| run_test(param_tpl.0, param_tpl.1, param_tpl.2));
 
     assert_cache();
+}
+
+#[test]
+fn test_fetching_block_number_for_latest_block() {
+    let node_url = "http://188.34.188.184:9545/rpc/v0.4";
+    let fork_reader = ForkStateReader::new(node_url, BlockId::Tag(Latest), None);
+
+    match fork_reader.block_id {
+        BlockId::Number(_) => {}
+        _ => panic!("BlockId::Tag(Latest) should be converted to BlockId::Number"),
+    }
+}
+
+#[test]
+#[should_panic(expected = "Could not get the latest block number")]
+fn test_fetching_block_number_for_wrong_url() {
+    let node_url = "http://188.34.188.184:9545/rpc/xd";
+    let _ = ForkStateReader::new(node_url, BlockId::Tag(Latest), None);
 }
