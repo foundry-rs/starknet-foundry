@@ -66,7 +66,9 @@ impl TestCaseSummary {
             }
             | TestCaseSummary::Passed {
                 fuzzing_statistic, ..
-            } => fuzzing_statistic.as_ref().map(|FuzzingStatistics { runs, .. }| *runs),
+            } => fuzzing_statistic
+                .as_ref()
+                .map(|FuzzingStatistics { runs, .. }| *runs),
             TestCaseSummary::Skipped { .. }
             | TestCaseSummary::Interrupted {}
             | TestCaseSummary::SkippedFuzzing {} => None,
