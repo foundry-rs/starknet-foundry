@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Forge
 
 #### Fixed
-
+- reduced ram usage
 
 ## [0.8.0] - 2023-10-11
 
