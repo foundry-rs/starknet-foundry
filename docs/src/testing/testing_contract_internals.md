@@ -90,7 +90,65 @@ fn test_roll_test_state() {
 You can use both `starknet::emit_event_syscall`, and the spies will capture the events,
 emitted in a `#[test]` function, if you pass the `test_address()` as a spy parameter (or spy on all events).
 
-[//]: # (TODO #851: Provide better examples)
+
+Given the emitting contract implementation:
+```rust
+#[starknet::contract]
+mod Emitter {
+    use result::ResultTrait;
+    use starknet::ClassHash;
+    
+    #[event]
+    #[derive(Drop, starknet::Event)]
+    enum Event {
+        ThingEmitted: ThingEmitted
+    }
+    
+    #[derive(Drop, starknet::Event)]
+    struct ThingEmitted {
+        thing: felt252
+    }
+
+    #[storage]
+    struct Storage {}
+
+    #[external(v0)]
+    fn emit_event(
+        ref self: ContractState,
+    ) {
+        self.emit(Event::ThingEmitted(ThingEmitted { thing: 420 }));
+    }
+}
+```
+You can implement this test:
+
+```rust
+use array::ArrayTrait;
+use snforge_std::{ 
+    declare, ContractClassTrait, spy_events, 
+    EventSpy, EventFetcher, 
+    EventAssertions, Event, SpyOn, test_address 
+};
+#[test]
+fn test_expect_event() {
+    let contract_address = test_address();
+    let mut spy = spy_events(SpyOn::One(contract_address));
+    
+    let mut testing_state = Emitter::contract_state_for_testing();
+    Emitter::emit_event(ref testing_state);
+    
+    spy.assert_emitted(
+        @array![
+            (
+                contract_address,
+                Emitter::Event::ThingEmitted(Emitter::ThingEmitted { thing: 420 })
+            )
+        ]
+    )
+}
+```
+
+You can also use the `starknet::emit_event_syscall` directly in the tests:
 ```rust
 use array::ArrayTrait;
 use result::ResultTrait;
@@ -118,17 +176,11 @@ fn test_expect_events_simple() {
 }
 ```
 
-> ⚠️ **Warning**
->  
-> `ContractState.emit` usages will not be captured by spies in this version of forge.
-> It is intended to be fixed in the future.
-
-
 ## Using Library Calls with the test state context
 
 Using the above utilities, you can avoid deploying a mock contract, to test a `library_call` with a `LibraryCallDispatcher`.
 
-### 1. Write the contract class
+For contract implementation:
 
 ```rust
  #[starknet::contract]
@@ -158,7 +210,7 @@ mod LibraryContract {
     }
 }
 ```
-### 2. Write the test
+We use the `SafeLibraryDispatcher` like this:
 ```rust
 use result::ResultTrait;
 use starknet::{ ClassHash, library_call_syscall, ContractAddress };
