@@ -74,12 +74,6 @@ just `original value` is printed.
 Here is an example contract:
 
 ```rust
-#[starknet::interface]
-trait IHelloStarknet<TContractState> {
-    fn increase_balance(ref self: TContractState, amount: felt252);
-    fn get_balance(self: @TContractState) -> felt252;
-}
-
 #[starknet::contract]
 mod HelloStarknet {
     // Note: PrintTrait has to be imported
@@ -88,21 +82,20 @@ mod HelloStarknet {
     #[storage]
     struct Storage {
         balance: felt252, 
+        // ...
     }
 
     #[external(v0)]
     impl HelloStarknetImpl of super::IHelloStarknet<ContractState> {
         fn increase_balance(ref self: ContractState, amount: felt252) {
-            assert(amount != 0, 'Amount cannot be 0');
             self.balance.write(self.balance.read() + amount);
+
             'The new balance is:'.print();
             self.balance.read().print();
         }
-
-        fn get_balance(self: @ContractState) -> felt252 {
-            self.balance.read()
-        }
     }
+    
+    // ...
 }
 ```
 With a test:
@@ -110,33 +103,16 @@ With a test:
 #[test]
 fn test_increase_balance() {
     let contract_address = deploy_contract('HelloStarknet');
+    let dispatcher = IHelloStarknetDispatcher { contract_address };
+    
+    safe_dispatcher.increase_balance(42);
 
-    let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
-
-    let balance_before = safe_dispatcher.get_balance().unwrap();
-    assert(balance_before == 0, 'Invalid balance');
-
-    safe_dispatcher.increase_balance(42).unwrap();
-
-    let balance_after = safe_dispatcher.get_balance().unwrap();
-    assert(balance_after == 42, 'Invalid balance');
+    // ...
 }
 ```
 We get the following output:
 ```
 $ snforge                                                                                              
-    Updating [...]
-   Compiling [...]
-warn: libfunc `cheatcode` is not allowed in the libfuncs list `Default libfunc list`
- --> contract: HelloStarknet
-help: try compiling with the `experimental` list
- --> Scarb.toml
-    [[target.starknet-contract]]
-    allowed-libfuncs-list.name = "experimental"
-
-    Finished release target(s) in 2 seconds
-
-
 Collected 2 test(s) from package_name package
 Running 0 test(s) from src/
 Running 1 test(s) from tests/
