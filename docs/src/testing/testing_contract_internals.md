@@ -1,4 +1,4 @@
-# Testing contracts' internals
+# Testing Contracts' Internals
 
 Sometimes, you want to test a function which uses starknet context (like block number, timestamp, storage access) 
 without deploying the actual contract. 
