@@ -4,6 +4,11 @@ use cairo_lang_runner::{RunResult, RunResultValue};
 use std::option::Option;
 use test_collector::{ExpectedPanicValue, ExpectedTestResult, TestCase};
 
+#[derive(Debug, PartialEq, Clone)]
+pub struct FuzzingStatistics {
+    runs: u32,
+}
+
 /// Summary of running a single test case
 #[derive(Debug, PartialEq, Clone)]
 pub enum TestCaseSummary {
@@ -17,6 +22,8 @@ pub enum TestCaseSummary {
         msg: Option<String>,
         /// Arguments used in the test case run
         arguments: Vec<Felt252>,
+        /// Statistic for fuzzing test
+        fuzzing_statistic: Option<FuzzingStatistics>,
     },
     /// Test case failed
     Failed {
@@ -28,12 +35,18 @@ pub enum TestCaseSummary {
         msg: Option<String>,
         /// Arguments used in the test case run
         arguments: Vec<Felt252>,
+        /// Statistic for fuzzing test
+        fuzzing_statistic: Option<FuzzingStatistics>,
     },
     /// Test case skipped (did not run)
     Skipped {
         /// Name of the test case
         name: String,
     },
+    /// Fuzzing subtests skipped (did not run), previous subtest failed
+    SkippedFuzzing {},
+    /// Test case execution interrupted by error (did not run or was cancelled)
+    Interrupted {},
 }
 
 impl TestCaseSummary {
@@ -41,7 +54,58 @@ impl TestCaseSummary {
         match self {
             TestCaseSummary::Failed { arguments, .. }
             | TestCaseSummary::Passed { arguments, .. } => arguments.clone(),
-            TestCaseSummary::Skipped { .. } => vec![],
+            TestCaseSummary::Skipped { .. }
+            | TestCaseSummary::Interrupted {}
+            | TestCaseSummary::SkippedFuzzing {} => vec![],
+        }
+    }
+    pub(crate) fn runs(&self) -> Option<u32> {
+        match self {
+            TestCaseSummary::Failed {
+                fuzzing_statistic, ..
+            }
+            | TestCaseSummary::Passed {
+                fuzzing_statistic, ..
+            } => fuzzing_statistic
+                .as_ref()
+                .map(|FuzzingStatistics { runs, .. }| *runs),
+            TestCaseSummary::Skipped { .. }
+            | TestCaseSummary::Interrupted {}
+            | TestCaseSummary::SkippedFuzzing {} => None,
+        }
+    }
+
+    pub(crate) fn with_runs(self, runs: u32) -> Self {
+        match self {
+            TestCaseSummary::Passed {
+                name,
+                run_result,
+                msg,
+                arguments,
+                ..
+            } => TestCaseSummary::Passed {
+                name,
+                run_result,
+                msg,
+                arguments,
+                fuzzing_statistic: Some(FuzzingStatistics { runs }),
+            },
+            TestCaseSummary::Failed {
+                name,
+                run_result,
+                msg,
+                arguments,
+                ..
+            } => TestCaseSummary::Failed {
+                name,
+                run_result,
+                msg,
+                arguments,
+                fuzzing_statistic: Some(FuzzingStatistics { runs }),
+            },
+            TestCaseSummary::Skipped { .. }
+            | TestCaseSummary::Interrupted {}
+            | TestCaseSummary::SkippedFuzzing {} => self,
         }
     }
 }
@@ -62,12 +126,14 @@ impl TestCaseSummary {
                     msg,
                     run_result,
                     arguments,
+                    fuzzing_statistic: None,
                 },
                 ExpectedTestResult::Panics(_) => TestCaseSummary::Failed {
                     name,
                     msg,
                     run_result: Some(run_result),
                     arguments,
+                    fuzzing_statistic: None,
                 },
             },
             RunResultValue::Panic(value) => match &test_case.expected_result {
@@ -76,6 +142,7 @@ impl TestCaseSummary {
                     msg,
                     run_result: Some(run_result),
                     arguments,
+                    fuzzing_statistic: None,
                 },
                 ExpectedTestResult::Panics(panic_expectation) => match panic_expectation {
                     ExpectedPanicValue::Exact(expected) if &value != expected => {
@@ -84,6 +151,7 @@ impl TestCaseSummary {
                             msg,
                             run_result: Some(run_result),
                             arguments,
+                            fuzzing_statistic: None,
                         }
                     }
                     _ => TestCaseSummary::Passed {
@@ -91,6 +159,7 @@ impl TestCaseSummary {
                         msg,
                         run_result,
                         arguments,
+                        fuzzing_statistic: None,
                     },
                 },
             },
