@@ -34,10 +34,15 @@ use starknet_api::hash::StarkHash;
 use starknet_api::patricia_key;
 use starknet_api::transaction::Calldata;
 use test_collector::{ForkConfig, TestCase};
+use tokio::sync::mpsc::Sender;
 
-use crate::scarb::{ForkTarget, StarknetContractArtifacts};
+use crate::scarb::ForkTarget;
 use crate::test_case_summary::TestCaseSummary;
-use crate::test_execution_syscall_handler::{TestExecutionState, TestExecutionSyscallHandler};
+
+use crate::test_execution_syscall_handler::TestExecutionSyscallHandler;
+use crate::{RunnerConfig, RunnerParams};
+
+use crate::test_execution_syscall_handler::TestExecutionState;
 
 /// Builds `hints_dict` required in `cairo_vm::types::program::Program` from instructions.
 fn build_hints_dict<'b>(
@@ -63,6 +68,27 @@ fn build_hints_dict<'b>(
         hint_offset += instruction.body.op_size();
     }
     (hints_dict, string_to_hint)
+}
+
+pub(crate) async fn blocking_run_from_test(
+    args: Vec<Felt252>,
+    case: Arc<TestCase>,
+    runner: Arc<SierraCasmRunner>,
+    runner_config: Arc<RunnerConfig>,
+    runner_params: Arc<RunnerParams>,
+    sender: Option<Sender<()>>,
+) -> Result<TestCaseSummary> {
+    tokio::task::spawn_blocking(move || {
+        run_test_case(
+            args,
+            &case,
+            &runner,
+            &runner_config,
+            &runner_params,
+            &sender,
+        )
+    })
+    .await?
 }
 
 fn build_context() -> EntryPointExecutionContext {
@@ -115,14 +141,12 @@ fn build_syscall_handler<'a>(
 
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn run_test_case(
-    package_root: &Utf8PathBuf,
-    runner: &SierraCasmRunner,
-    case: &TestCase,
-    fork_targets: &[ForkTarget],
-    contracts: &HashMap<String, StarknetContractArtifacts>,
-    predeployed_contracts: &Utf8PathBuf,
     args: Vec<Felt252>,
-    environment_variables: &HashMap<String, String>,
+    case: &TestCase,
+    runner: &SierraCasmRunner,
+    runner_config: &Arc<RunnerConfig>,
+    runner_params: &Arc<RunnerParams>,
+    _sender: &Option<Sender<()>>,
 ) -> Result<TestCaseSummary> {
     let available_gas = if let Some(available_gas) = &case.available_gas {
         Some(*available_gas)
@@ -143,8 +167,14 @@ pub(crate) fn run_test_case(
     let (hints_dict, string_to_hint) = build_hints_dict(instructions.clone());
 
     let state_reader = ExtendedStateReader {
-        dict_state_reader: cheatnet_constants::build_testing_state(predeployed_contracts),
-        fork_state_reader: get_fork_state_reader(package_root, fork_targets, &case.fork_config),
+        dict_state_reader: cheatnet_constants::build_testing_state(
+            &runner_params.predeployed_contracts,
+        ),
+        fork_state_reader: get_fork_state_reader(
+            &runner_config.workspace_root,
+            &runner_config.fork_targets,
+            &case.fork_config,
+        ),
     };
     let mut context = build_context();
     let mut execution_resources = ExecutionResources::default();
@@ -161,8 +191,8 @@ pub(crate) fn run_test_case(
         CheatableSyscallHandler::new(syscall_handler, &mut cheatnet_state);
 
     let mut test_execution_state = TestExecutionState {
-        environment_variables,
-        contracts,
+        environment_variables: &runner_params.environment_variables,
+        contracts: &runner_params.contracts,
     };
     let mut test_execution_syscall_handler = TestExecutionSyscallHandler::new(
         cheatable_syscall_handler,
@@ -188,6 +218,7 @@ pub(crate) fn run_test_case(
                 error.to_string().replace(" Custom Hint Error: ", "\n    ")
             )),
             arguments: args,
+            fuzzing_statistic: None,
         }),
 
         Err(err) => Err(err.into()),
@@ -195,7 +226,7 @@ pub(crate) fn run_test_case(
 }
 
 fn get_fork_state_reader(
-    package_root: &Utf8PathBuf,
+    workspace_root: &Utf8PathBuf,
     fork_targets: &[ForkTarget],
     fork_config: &Option<ForkConfig>,
 ) -> Option<ForkStateReader> {
@@ -203,17 +234,17 @@ fn get_fork_state_reader(
         Some(ForkConfig::Params(url, block_id)) => Some(ForkStateReader::new(
             url,
             *block_id,
-            Some(package_root.join(".snfoundry_cache").as_ref()),
+            Some(workspace_root.join(".snfoundry_cache").as_ref()),
         )),
         Some(ForkConfig::Id(name)) => {
-            find_params_and_build_fork_state_reader(package_root, fork_targets, name)
+            find_params_and_build_fork_state_reader(workspace_root, fork_targets, name)
         }
         _ => None,
     }
 }
 
 fn find_params_and_build_fork_state_reader(
-    package_root: &Utf8PathBuf,
+    workspace_root: &Utf8PathBuf,
     fork_targets: &[ForkTarget],
     fork_alias: &str,
 ) -> Option<ForkStateReader> {
@@ -240,6 +271,6 @@ fn find_params_and_build_fork_state_reader(
     Some(ForkStateReader::new(
         &fork?.url,
         block_id,
-        Some(package_root.join(".snfoundry_cache").as_ref()),
+        Some(workspace_root.join(".snfoundry_cache").as_ref()),
     ))
 }
