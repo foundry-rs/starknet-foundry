@@ -123,11 +123,14 @@ fn test_forking_at_block_number() {
         let mut cached_state_before_delopy = CachedState::new(
             ExtendedStateReader {
                 dict_state_reader: build_testing_state(&predeployed_contracts),
-                fork_state_reader: Some(ForkStateReader::new(
-                    node_url,
-                    BlockId::Number(309_780),
-                    Some(cache_dir.path().to_str().unwrap()),
-                )),
+                fork_state_reader: Some(
+                    ForkStateReader::new(
+                        node_url,
+                        BlockId::Number(309_780),
+                        Some(cache_dir.path().to_str().unwrap()),
+                    )
+                    .unwrap(),
+                ),
             },
             GlobalContractCache::default(),
         );
@@ -136,11 +139,14 @@ fn test_forking_at_block_number() {
         let cached_state_afer_deploy = &mut CachedState::new(
             ExtendedStateReader {
                 dict_state_reader: build_testing_state(&predeployed_contracts),
-                fork_state_reader: Some(ForkStateReader::new(
-                    node_url,
-                    BlockId::Number(309_781),
-                    Some(cache_dir.path().to_str().unwrap()),
-                )),
+                fork_state_reader: Some(
+                    ForkStateReader::new(
+                        node_url,
+                        BlockId::Number(309_781),
+                        Some(cache_dir.path().to_str().unwrap()),
+                    )
+                    .unwrap(),
+                ),
             },
             GlobalContractCache::default(),
         );
@@ -515,7 +521,7 @@ fn test_cache_merging() {
 #[test]
 fn test_fetching_block_number_for_latest_block() {
     let node_url = "http://188.34.188.184:9545/rpc/v0.4";
-    let fork_reader = ForkStateReader::new(node_url, BlockId::Tag(Latest), None);
+    let fork_reader = ForkStateReader::new(node_url, BlockId::Tag(Latest), None).unwrap();
 
     match fork_reader.block_id {
         BlockId::Number(_) => {}
@@ -527,5 +533,5 @@ fn test_fetching_block_number_for_latest_block() {
 #[should_panic(expected = "Could not get the latest block number")]
 fn test_fetching_block_number_for_wrong_url() {
     let node_url = "http://188.34.188.184:9545/rpc/xd";
-    let _ = ForkStateReader::new(node_url, BlockId::Tag(Latest), None);
+    ForkStateReader::new(node_url, BlockId::Tag(Latest), None).unwrap();
 }

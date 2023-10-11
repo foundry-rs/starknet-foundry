@@ -1,4 +1,5 @@
 use crate::forking::cache::ForkCache;
+use anyhow::{anyhow, Result};
 use blockifier::execution::contract_class::{
     ContractClass as ContractClassBlockifier, ContractClassV0, ContractClassV1,
 };
@@ -37,22 +38,21 @@ pub struct ForkStateReader {
 }
 
 impl ForkStateReader {
-    #[must_use]
-    pub fn new(url: &str, block_id: BlockId, cache_dir: Option<&str>) -> Self {
+    pub fn new(url: &str, block_id: BlockId, cache_dir: Option<&str>) -> Result<Self> {
         let client = JsonRpcClient::new(HttpTransport::new(Url::parse(url).unwrap()));
         let runtime = Runtime::new().expect("Could not instantiate Runtime");
         let (block_id, should_be_saved) = match block_id {
-            BlockId::Tag(Latest) => (get_latest_block_number(&client, &runtime), false),
+            BlockId::Tag(Latest) => (get_latest_block_number(&client, &runtime)?, false),
             BlockId::Tag(Pending) => (BlockId::Tag(Pending), false),
             _ => (block_id, true),
         };
 
-        ForkStateReader {
+        Ok(ForkStateReader {
             client,
             block_id,
             runtime,
             cache: ForkCache::load_or_new(url, block_id, cache_dir, should_be_saved),
-        }
+        })
     }
 }
 
@@ -212,9 +212,12 @@ impl StateReader for ForkStateReader {
     }
 }
 
-fn get_latest_block_number(client: &JsonRpcClient<HttpTransport>, runtime: &Runtime) -> BlockId {
+fn get_latest_block_number(
+    client: &JsonRpcClient<HttpTransport>,
+    runtime: &Runtime,
+) -> Result<BlockId> {
     return match runtime.block_on(client.get_block_with_tx_hashes(BlockId::Tag(Latest))) {
-        Ok(MaybePendingBlockWithTxHashes::Block(block)) => BlockId::Number(block.block_number),
-        _ => panic!("Could not get the latest block number"),
+        Ok(MaybePendingBlockWithTxHashes::Block(block)) => Ok(BlockId::Number(block.block_number)),
+        _ => Err(anyhow!("Could not get the latest block number".to_string())),
     };
 }
