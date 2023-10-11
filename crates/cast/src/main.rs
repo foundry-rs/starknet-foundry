@@ -77,6 +77,9 @@ enum Commands {
 
     /// Create and deploy an account
     Account(Account),
+
+    /// Verify a contract
+    Verify(Verify)
 }
 
 #[tokio::main]
