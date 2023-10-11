@@ -76,10 +76,10 @@ pub(crate) async fn blocking_run_from_test(
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
-    _sender: Option<Sender<()>>,
+    sender: Option<Sender<()>>,
 ) -> Result<TestCaseSummary> {
     tokio::task::spawn_blocking(move || {
-        run_test_case(args, &case, &runner, &runner_config, &runner_params)
+        run_test_case(args, &case, &runner, &runner_config, &runner_params, sender)
     })
     .await?
 }
@@ -139,6 +139,7 @@ pub(crate) fn run_test_case(
     runner: &SierraCasmRunner,
     runner_config: &Arc<RunnerConfig>,
     runner_params: &Arc<RunnerParams>,
+    _sender: Option<Sender<()>>,
 ) -> Result<TestCaseSummary> {
     let available_gas = if let Some(available_gas) = &case.available_gas {
         Some(*available_gas)

@@ -163,3 +163,34 @@ fn fuzzing_incorrect_function_args() {
         [ERROR] Tried to use incorrect type for fuzzing. Type = tests::incorrect_args::MyStruct is not supported
         "#});
 }
+
+#[test]
+fn fuzzing_exit_first() {
+    let temp = setup_package("fuzzing");
+    let snapbox = runner().arg("exit_first").arg("-x");
+
+    snapbox
+        .current_dir(&temp)
+        .assert()
+        .code(1)
+        .stdout_matches(indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 2 test(s) from fuzzing package
+        Running 0 test(s) from src/
+        Running 2 test(s) from tests/
+        [FAIL] tests::exit_first::exit_first_fails_test (fuzzer runs = 1, arguments = [..])
+
+        Failure data:
+            original value: [..], converted to a string: [2 + b == 2 + b]
+
+        [SKIP] tests::exit_first::exit_first_hard_test
+        Tests: 0 passed, 1 failed, 1 skipped
+        Fuzzer seed: [..]
+
+        Failures:
+            tests::exit_first::exit_first_fails_test
+        "#});
+}

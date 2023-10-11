@@ -112,80 +112,82 @@ fn main_execution() -> Result<bool> {
         .match_many(&scarb_metadata)
         .context("Failed to find any packages matching the specified filter")?;
 
-    let workspace_root = &scarb_metadata.workspace.root;
+    let workspace_root = scarb_metadata.workspace.root.clone();
 
     if args.clean_cache {
-        clean_cache(workspace_root).context("Failed to clean snforge cache")?;
+        clean_cache(&workspace_root).context("Failed to clean snforge cache")?;
     }
 
     let rt = Runtime::new()?;
-    let all_failed_tests = rt.block_on(async {
-        let mut all_failed_tests = vec![];
-        for package in &packages {
-            let forge_config = config_from_scarb_for_package(&scarb_metadata, &package.id)?;
-            let (package_path, package_source_dir_path) =
-                paths_for_package(&scarb_metadata, &package.id)?;
-            env::set_current_dir(package_path.clone())?;
+    let all_failed_tests = rt.block_on({
+        rt.spawn(async move {
+            let mut all_failed_tests = vec![];
+            for package in &packages {
+                let forge_config = config_from_scarb_for_package(&scarb_metadata, &package.id)?;
+                let (package_path, package_source_dir_path) =
+                    paths_for_package(&scarb_metadata, &package.id)?;
+                env::set_current_dir(package_path.clone())?;
 
-            // TODO(#671)
-            let target_dir = target_dir_for_package(workspace_root)?;
+                // TODO(#671)
+                let target_dir = target_dir_for_package(&workspace_root)?;
 
-            let build_output = Command::new("scarb")
-                .arg("build")
-                .stderr(Stdio::inherit())
-                .stdout(Stdio::inherit())
-                .output()
-                .context("Failed to build contracts with Scarb")?;
-            if !build_output.status.success() {
-                bail!("Scarb build did not succeed")
+                let build_output = Command::new("scarb")
+                    .arg("build")
+                    .stderr(Stdio::inherit())
+                    .stdout(Stdio::inherit())
+                    .output()
+                    .context("Failed to build contracts with Scarb")?;
+                if !build_output.status.success() {
+                    bail!("Scarb build did not succeed")
+                }
+
+                let package_name = Arc::new(name_for_package(&scarb_metadata, &package.id)?);
+                let dependencies = dependencies_for_package(&scarb_metadata, &package.id)?;
+                let target_name = target_name_for_package(&scarb_metadata, &package.id)?;
+                let corelib_path = corelib_for_package(&scarb_metadata, &package.id)?;
+
+                let contracts_path = try_get_starknet_artifacts_path(&target_dir, &target_name)?;
+                let contracts = contracts_path
+                    .map(|path| get_contracts_map(&path))
+                    .transpose()?
+                    .unwrap_or_default();
+
+                let runner_config = Arc::new(RunnerConfig::new(
+                    workspace_root.clone(),
+                    args.test_filter.clone(),
+                    args.exact,
+                    args.exit_first,
+                    args.fuzzer_runs,
+                    args.fuzzer_seed,
+                    &forge_config,
+                ));
+
+                let runner_params = Arc::new(RunnerParams::new(
+                    corelib_path,
+                    contracts,
+                    predeployed_contracts.clone(),
+                    env::vars().collect(),
+                ));
+
+                let cancellation_tokens = Arc::new(CancellationTokens::new());
+
+                let tests_file_summaries = run(
+                    &package_path,
+                    &package_name,
+                    &package_source_dir_path,
+                    &dependencies,
+                    runner_config,
+                    runner_params,
+                    cancellation_tokens,
+                )
+                .await?;
+
+                let mut failed_tests = extract_failed_tests(tests_file_summaries);
+                all_failed_tests.append(&mut failed_tests);
             }
-
-            let package_name = Arc::new(name_for_package(&scarb_metadata, &package.id)?);
-            let dependencies = dependencies_for_package(&scarb_metadata, &package.id)?;
-            let target_name = target_name_for_package(&scarb_metadata, &package.id)?;
-            let corelib_path = corelib_for_package(&scarb_metadata, &package.id)?;
-
-            let contracts_path = try_get_starknet_artifacts_path(&target_dir, &target_name)?;
-            let contracts = contracts_path
-                .map(|path| get_contracts_map(&path))
-                .transpose()?
-                .unwrap_or_default();
-
-            let runner_config = Arc::new(RunnerConfig::new(
-                workspace_root.clone(),
-                args.test_filter.clone(),
-                args.exact,
-                args.exit_first,
-                args.fuzzer_runs,
-                args.fuzzer_seed,
-                &forge_config,
-            ));
-
-            let runner_params = Arc::new(RunnerParams::new(
-                corelib_path,
-                contracts,
-                predeployed_contracts.clone(),
-                env::vars().collect(),
-            ));
-
-            let cancellation_tokens = Arc::new(CancellationTokens::new());
-
-            let tests_file_summaries = run(
-                &package_path,
-                &package_name,
-                &package_source_dir_path,
-                &dependencies,
-                runner_config,
-                runner_params,
-                cancellation_tokens,
-            )
-            .await?;
-
-            let mut failed_tests = extract_failed_tests(tests_file_summaries);
-            all_failed_tests.append(&mut failed_tests);
-        }
-        Ok(all_failed_tests)
-    })?;
+            Ok(all_failed_tests)
+        })
+    })??;
 
     // Explicitly close the temporary directories so we can handle the errors
     predeployed_contracts_dir.close().with_context(|| {
