@@ -13,7 +13,7 @@ Starknet Foundry standard library adds a utility method for printing inside test
 
 ## In tests
 
-Here's a test with example use of print method:
+Here's a test with example use of [`print`](../appendix/forge-library/print.md) method:
 
 ```rust
 // Make sure to import Starknet Foundry PrintTrait
