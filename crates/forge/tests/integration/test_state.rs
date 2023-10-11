@@ -564,6 +564,67 @@ fn test_spy_events_simple() {
 }
 
 #[test]
+#[ignore] // TODO (851): Make it work
+fn test_spy_struct_events() {
+    let test = test_case!(indoc!(
+        r#"
+            use array::ArrayTrait;
+            use result::ResultTrait;
+            use starknet::SyscallResultTrait;
+            use traits::Into;
+            use starknet::ContractAddress;
+            use snforge_std::{ declare, ContractClassTrait, spy_events, EventSpy, EventFetcher,
+                event_name_hash, EventAssertions, Event, SpyOn, test_address };
+                
+           #[starknet::contract]
+            mod Emitter {
+                use result::ResultTrait;
+                use starknet::ClassHash;
+                
+                #[event]
+                #[derive(Drop, starknet::Event)]
+                enum Event {
+                    ThingEmitted: ThingEmitted
+                }
+                
+                #[derive(Drop, starknet::Event)]
+                struct ThingEmitted {
+                    thing: felt252
+                }
+    
+                #[storage]
+                struct Storage {}
+
+                #[external(v0)]
+                fn emit_event(
+                    ref self: ContractState,
+                ) {
+                    self.emit(Event::ThingEmitted(ThingEmitted { thing: 420 }));
+                }
+            }
+            
+            use starknet::event::EventEmitter;
+
+            #[test]
+            fn test_expect_event_struct() {
+                let contract_address = test_address();
+                let mut spy = spy_events(SpyOn::All);
+                assert(spy._id == 0, 'Id should be 0');
+                
+                let mut testing_state = Emitter::contract_state_for_testing();
+                Emitter::emit_event(ref testing_state);
+
+                assert(spy.events.len() == 1, spy.events.len().into());
+            }
+        "#
+    ));
+
+    let result = run_test_case(&test);
+
+    assert_passed!(result);
+}
+
+#[test]
 fn test_inconsistent_syscall_pointers() {
     let test = test_case!(indoc!(
         r#"
