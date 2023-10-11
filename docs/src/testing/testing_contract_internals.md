@@ -4,13 +4,13 @@ Sometimes, you want to test a function which uses starknet context (like block n
 without deploying the actual contract. 
 
 Using this pattern you can test: 
-- functions which are not available through the interface (contract uses them) 
+- functions which are not available through the interface (but your contract uses them)
 - functions which are internal
 - functions performing specific operations on the contracts' storage or context data
 - library calls directly in the tests
 
 ## Utilities For Testing Internals
-To facilitate such use cases we have a handful of utilities which make test behave like a contract
+To facilitate such use cases we have a handful of utilities which make a test behave like a contract. 
 
 ### `contract_state_for_testing()` - State of Test Contract
 
@@ -46,15 +46,15 @@ fn test_internal() {
 ```
 
 This code contains some caveats:
-1. To access `read/write` methods of the state fields (in this case it's `balance`) you need to also import `<member_name>ContractMemberStateTrait`, where `<member_name>` is the name of the storage variable inside `Storage` struct. 
+1. To access `read/write` methods of the state fields (in this case it's `balance`) you need to also import `<member_name>ContractMemberStateTrait` from your contract, where `<member_name>` is the name of the storage variable inside `Storage` struct.
 2. To test internal functions, you need to pass the created state explicitly to the function, since `self` context is not available (we're using it as a static function).
-3. The memory space allocated with this function will always start in the same place, which means that 2 allocations of the "testing state" in the same test, will overwrite each other.
+3. The memory space allocated with this function will always start in the same place, which means that 2 allocations of the "testing state" in the same test will overwrite each other.
 
 ### `snforge_std::test_address()` - Address of Test Contract
 
 That function returns the contract address of the test.
 It is useful, when you want to:
-- Mock the context (prank, warp, roll, spoof)
+- Mock the context (`prank`, `warp`, `roll`, `spoof`)
 - Spy for events emitted in the test
 
 Example usages:
@@ -241,5 +241,5 @@ fn test_library_calls() {
 ```
 > ⚠️ **Warning**
 > 
-> This library call will write to the `test_address()` memory segment, so it can potentially **overwrite** the changes
-> you make to the memory through `contract_state_for_testing()` object and vice-versa.
+> This library call will write to the `test_address` memory segment, so it can potentially **overwrite** the changes
+> you make to the memory through `contract_state_for_testing` object and vice-versa.
