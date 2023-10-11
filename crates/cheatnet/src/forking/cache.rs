@@ -75,12 +75,12 @@ impl ToString for ForkCacheContent {
 pub struct ForkCache {
     fork_cache_content: ForkCacheContent,
     cache_file: Option<String>,
-    block_id: BlockId,
+    dont_save: bool,
 }
 
 impl Drop for ForkCache {
     fn drop(&mut self) {
-        if !matches!(self.block_id, BlockId::Tag(_)) {
+        if !self.dont_save {
             self.save();
         }
     }
@@ -99,8 +99,13 @@ fn block_id_to_string(block_id: BlockId) -> String {
 
 impl ForkCache {
     #[must_use]
-    pub(crate) fn load_or_new(url: &str, block_id: BlockId, cache_dir: Option<&str>) -> Self {
-        let (fork_cache_content, cache_file) = if let BlockId::Tag(_) = block_id {
+    pub(crate) fn load_or_new(
+        url: &str,
+        block_id: BlockId,
+        cache_dir: Option<&str>,
+        dont_save: bool,
+    ) -> Self {
+        let (fork_cache_content, cache_file) = if dont_save {
             (ForkCacheContent::new(), None)
         } else {
             let cache_file_path = cache_file_path_from_fork_config(url, block_id, cache_dir);
@@ -128,7 +133,7 @@ impl ForkCache {
         ForkCache {
             fork_cache_content,
             cache_file,
-            block_id,
+            dont_save,
         }
     }
 
