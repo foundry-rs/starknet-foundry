@@ -66,10 +66,7 @@ impl TestCaseSummary {
             }
             | TestCaseSummary::Passed {
                 fuzzing_statistic, ..
-            } => match fuzzing_statistic {
-                Some(FuzzingStatistics { runs, .. }) => Some(*runs),
-                None => None,
-            },
+            } => fuzzing_statistic.as_ref().map(|FuzzingStatistics { runs, .. }| *runs),
             TestCaseSummary::Skipped { .. }
             | TestCaseSummary::Interrupted {}
             | TestCaseSummary::SkippedFuzzing {} => None,
@@ -89,7 +86,7 @@ impl TestCaseSummary {
                 run_result,
                 msg,
                 arguments,
-                fuzzing_statistic: Some(FuzzingStatistics { runs: runs }),
+                fuzzing_statistic: Some(FuzzingStatistics { runs }),
             },
             TestCaseSummary::Failed {
                 name,
@@ -102,7 +99,7 @@ impl TestCaseSummary {
                 run_result,
                 msg,
                 arguments,
-                fuzzing_statistic: Some(FuzzingStatistics { runs: runs }),
+                fuzzing_statistic: Some(FuzzingStatistics { runs }),
             },
             TestCaseSummary::Skipped { .. }
             | TestCaseSummary::Interrupted {}
