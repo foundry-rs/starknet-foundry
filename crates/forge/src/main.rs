@@ -8,7 +8,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::{env, fs};
 use tempfile::{tempdir, TempDir};
-use tokio::runtime::Runtime;
+use tokio::runtime::Builder;
 
 use forge::{pretty_printing, CancellationTokens, RunnerConfig, RunnerParams};
 use forge::{run, TestCrateSummary};
@@ -118,7 +118,7 @@ fn main_execution() -> Result<bool> {
         clean_cache(&workspace_root).context("Failed to clean snforge cache")?;
     }
 
-    let rt = Runtime::new()?;
+    let rt = Builder::new_multi_thread().max_blocking_threads(8).enable_all().build()?;
     let all_failed_tests = rt.block_on({
         rt.spawn(async move {
             let mut all_failed_tests = vec![];
