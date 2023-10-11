@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `--clean-cache` flag
 - Changed interface of `L1Handler.execute` and `L1Handler` (dropped `fee` parameter, added result handling with `RevertedTransaction`)
 - cheatcodes (`prank`, `roll`, `warp`, `spoof`, `spy_events`) now work in a test state
+- cheatcodes (`prank`, `roll`, `warp`) now work on forked Cairo 0 contracts
 
 #### Changed
 
