@@ -86,7 +86,7 @@ fn test_roll_test_state() {
 }
 ```
 ### 2. Spying for events
-You can use both `starknet::emit_event_syscall` and `ContractState.emit` and the spies will capture the events,
+You can use both `starknet::emit_event_syscall`, and the spies will capture the events,
 emitted in a `#[test]` function, if you pass the `test_address()` as a spy parameter (or spy on all events).
 
 [//]: # (TODO #851: Provide better examples)
@@ -115,8 +115,13 @@ fn test_expect_events_simple() {
 
     assert(spy.events.len() == 0, 'There should be no events left');
 }
-
 ```
+
+> ⚠️ **Warning**
+>  
+> `ContractState.emit` usages will not be captured by spies in this version of forge.
+> It is intended to be fixed in the future.
+
 
 ## Testing library calls directly in the tests
 
