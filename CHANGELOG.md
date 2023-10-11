@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for `u8`, `u16`, `u32`, `u64`, `u128`, `u256` types to fuzzer
 - `--clean-cache` flag
 - Changed interface of `L1Handler.execute` and `L1Handler` (dropped `fee` parameter, added result handling with `RevertedTransaction`)
-- cheatcodes (`prank`, `roll`, `warp`, `spoof`, `spy_events`) now work in a test state
+- Contract now has associated state, more about it [here](https://foundry-rs.github.io/starknet-foundry/testing/testing_contract_internals.html)
 - cheatcodes (`prank`, `roll`, `warp`) now work on forked Cairo 0 contracts
 
 #### Changed
