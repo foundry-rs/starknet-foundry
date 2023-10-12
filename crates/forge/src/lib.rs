@@ -579,7 +579,9 @@ fn run_with_fuzzing(
             results.push(result.clone());
 
             match &result {
-                TestCaseSummary::Failed { .. } | TestCaseSummary::Interrupted {} => {
+                TestCaseSummary::Failed { .. }
+                | TestCaseSummary::Interrupted {}
+                | TestCaseSummary::Skipped { .. } => {
                     break;
                 }
                 _ => (),
@@ -600,6 +602,14 @@ fn run_with_fuzzing(
                 .count(),
         )?;
 
+        if let Some(result) = results
+            .iter()
+            .find(|item| matches!(item, TestCaseSummary::Failed { .. }))
+        {
+            let result = result.clone().with_runs(runs);
+            return Ok(result);
+        }
+
         if let Some(result) = results.iter().find(|item| {
             matches!(
                 item,
@@ -607,14 +617,6 @@ fn run_with_fuzzing(
             )
         }) {
             return Ok(result.clone());
-        }
-
-        if let Some(result) = results
-            .iter()
-            .find(|item| matches!(item, TestCaseSummary::Failed { .. }))
-        {
-            let result = result.clone().with_runs(runs);
-            return Ok(result);
         }
 
         let result: TestCaseSummary = results
