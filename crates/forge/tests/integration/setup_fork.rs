@@ -11,6 +11,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use tempfile::tempdir;
 use tokio::runtime::Runtime;
+use tokio::sync::mpsc::channel;
 
 static CHEATNET_RPC_URL: &str = "http://188.34.188.184:9545/rpc/v0.4";
 
@@ -94,6 +95,7 @@ fn fork_aliased_decorator() {
     ).as_str());
 
     let rt = Runtime::new().expect("Could not instantiate Runtime");
+    let (send, mut r) = channel(1);
     let result = rt
         .block_on(run(
             &test.path().unwrap(),
@@ -125,6 +127,7 @@ fn fork_aliased_decorator() {
                 Default::default(),
             )),
             Arc::new(CancellationTokens::new()),
+            send.clone(),
         ))
         .expect("Runner fail");
 
