@@ -323,7 +323,6 @@ fn with_panic_data_decoding() {
 }
 
 #[test]
-#[ignore = "Non deterministic"]
 fn with_exit_first() {
     let temp = setup_package("exit_first");
     let scarb_path = temp.child("Scarb.toml");
@@ -366,18 +365,16 @@ fn with_exit_first() {
         [..]Finished[..]
 
 
-        Collected 4 test(s) from exit_first package
+        Collected 2 test(s) from exit_first package
         Running 0 test(s) from src/
-        Running 4 test(s) from tests/
+        Running 2 test(s) from tests/
         [SKIP] tests::ext_function_test::hard_test
-        [SKIP] tests::ext_function_test::hard_test1
         [FAIL] tests::ext_function_test::simple_test
 
         Failure data:
             original value: [35718230152306872753561363307], converted to a string: [simple check]
 
-        [SKIP] tests::ext_function_test::hard_test2
-        Tests: 0 passed, 1 failed, 3 skipped
+        Tests: 0 passed, 1 failed, 1 skipped
 
         Failures:
             tests::ext_function_test::simple_test
@@ -385,7 +382,6 @@ fn with_exit_first() {
 }
 
 #[test]
-#[ignore = "Non deterministic"]
 fn with_exit_first_flag() {
     let temp = setup_package("exit_first");
     let snapbox = runner().arg("--exit-first");
@@ -399,18 +395,16 @@ fn with_exit_first_flag() {
         [..]Finished[..]
 
 
-        Collected 4 test(s) from exit_first package
+        Collected 2 test(s) from exit_first package
         Running 0 test(s) from src/
-        Running 4 test(s) from tests/
+        Running 2 test(s) from tests/
         [SKIP] tests::ext_function_test::hard_test
-        [SKIP] tests::ext_function_test::hard_test1
         [FAIL] tests::ext_function_test::simple_test
 
         Failure data:
             original value: [35718230152306872753561363307], converted to a string: [simple check]
 
-        [SKIP] tests::ext_function_test::hard_test2
-        Tests: 0 passed, 1 failed, 3 skipped
+        Tests: 0 passed, 1 failed, 1 skipped
 
         Failures:
             tests::ext_function_test::simple_test
