@@ -12,6 +12,7 @@ use futures::StreamExt;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use running::blocking_run_from_test;
 use serde::Deserialize;
+use tokio::sync::mpsc::Sender;
 
 use std::sync::Arc;
 use test_case_summary::TestCaseSummary;
@@ -327,6 +328,7 @@ pub async fn run(
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     cancellation_tokens: Arc<CancellationTokens>,
+    send: Sender<()>,
 ) -> Result<Vec<TestCrateSummary>> {
     let tests = collect_tests_from_package(
         package_path,
@@ -357,12 +359,14 @@ pub async fn run(
             test_crate_type,
             number_of_test_cases,
             task::spawn({
+                let send = send.clone();
                 async move {
                     run_tests_from_crate(
                         tests_from_crate,
                         runner_config,
                         runner_params,
                         cancellation_tokens,
+                        send,
                     )
                     .await
                 }
@@ -394,6 +398,7 @@ async fn run_tests_from_crate(
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     cancellation_tokens: Arc<CancellationTokens>,
+    send: Sender<()>,
 ) -> Result<(TestCrateSummary, bool)> {
     let runner = Arc::new(
         SierraCasmRunner::new(
@@ -425,6 +430,7 @@ async fn run_tests_from_crate(
             runner_config.clone(),
             runner_params.clone(),
             cancellation_tokens.clone(),
+            send.clone(),
         ));
     }
 
@@ -457,6 +463,7 @@ fn choose_test_strategy_and_run(
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     cancellation_tokens: Arc<CancellationTokens>,
+    send: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     if args.is_empty() {
         run_single_test(
@@ -465,6 +472,7 @@ fn choose_test_strategy_and_run(
             runner_config,
             runner_params,
             cancellation_tokens,
+            send.clone(),
         )
     } else {
         run_with_fuzzing(
@@ -474,6 +482,7 @@ fn choose_test_strategy_and_run(
             runner_config,
             runner_params,
             cancellation_tokens,
+            send.clone(),
         )
     }
 }
@@ -484,6 +493,7 @@ fn run_single_test(
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     cancellation_tokens: Arc<CancellationTokens>,
+    send: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     let exit_first = runner_config.exit_first;
     tokio::task::spawn(async move {
@@ -498,7 +508,7 @@ fn run_single_test(
                 // one of a test returns Err
                 Ok(TestCaseSummary::Interrupted {  })
             },
-            result = blocking_run_from_test(vec![], case.clone(),runner,  runner_config.clone(), runner_params.clone() ) => {
+            result = blocking_run_from_test(vec![], case.clone(),runner,  runner_config.clone(), runner_params.clone(), send.clone() ) => {
                 match result? {
                     Ok(result) => {
                         if exit_first {
@@ -525,6 +535,7 @@ fn run_with_fuzzing(
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     cancellation_tokens: Arc<CancellationTokens>,
+    send: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     tokio::task::spawn(async move {
         let token = CancellationToken::new();
@@ -562,6 +573,7 @@ fn run_with_fuzzing(
                 runner_params.clone(),
                 cancellation_tokens.clone(),
                 token.clone(),
+                send.clone(),
             ));
         }
 
@@ -627,6 +639,7 @@ fn run_fuzzing_subtest(
     runner_params: Arc<RunnerParams>,
     cancellation_tokens: Arc<CancellationTokens>,
     cancellation_fuzzing_token: CancellationToken,
+    send: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     let c = case.clone();
     task::spawn(async move {
@@ -653,6 +666,7 @@ fn run_fuzzing_subtest(
                 runner,
                 runner_config.clone(),
                 runner_params.clone(),
+                send.clone()
             ) => {
                 match result? {
                     Ok(result) => {

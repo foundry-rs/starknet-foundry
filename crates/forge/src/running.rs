@@ -34,6 +34,7 @@ use starknet_api::hash::StarkHash;
 use starknet_api::patricia_key;
 use starknet_api::transaction::Calldata;
 use test_collector::{ForkConfig, TestCase};
+use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
 
 use crate::scarb::ForkTarget;
@@ -76,9 +77,17 @@ pub(crate) fn blocking_run_from_test(
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
+    send: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     tokio::task::spawn_blocking(move || {
-        run_test_case(args, &case, &runner, &runner_config, &runner_params)
+        run_test_case(
+            args,
+            &case,
+            &runner,
+            &runner_config,
+            &runner_params,
+            send.clone(),
+        )
     })
 }
 
@@ -137,7 +146,12 @@ pub(crate) fn run_test_case(
     runner: &SierraCasmRunner,
     runner_config: &Arc<RunnerConfig>,
     runner_params: &Arc<RunnerParams>,
+    send: Sender<()>,
 ) -> Result<TestCaseSummary> {
+    if send.is_closed() {
+        return Err(anyhow::anyhow!("stop"));
+    }
+
     let available_gas = if let Some(available_gas) = &case.available_gas {
         Some(*available_gas)
     } else {

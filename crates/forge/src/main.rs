@@ -9,6 +9,7 @@ use std::sync::Arc;
 use std::{env, fs};
 use tempfile::{tempdir, TempDir};
 use tokio::runtime::Builder;
+use tokio::sync::mpsc::channel;
 
 use forge::{pretty_printing, CancellationTokens, RunnerConfig, RunnerParams};
 use forge::{run, TestCrateSummary};
@@ -123,8 +124,10 @@ fn main_execution() -> Result<bool> {
         .max_blocking_threads(cores_approx)
         .enable_all()
         .build()?;
+
     let all_failed_tests = rt.block_on({
-        rt.spawn(async move {
+        let (send, mut r) = channel(1);
+        let result = rt.spawn(async move {
             let mut all_failed_tests = vec![];
             for package in &packages {
                 let forge_config = config_from_scarb_for_package(&scarb_metadata, &package.id)?;
@@ -183,14 +186,17 @@ fn main_execution() -> Result<bool> {
                     runner_config,
                     runner_params,
                     cancellation_tokens,
+                    send.clone(),
                 )
                 .await?;
 
                 let mut failed_tests = extract_failed_tests(tests_file_summaries);
                 all_failed_tests.append(&mut failed_tests);
             }
+            r.close();
             Ok(all_failed_tests)
-        })
+        });
+        result
     })??;
     rt.shutdown_background();
 
