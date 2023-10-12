@@ -12,7 +12,6 @@ use futures::StreamExt;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use running::blocking_run_from_test;
 use serde::Deserialize;
-use tokio::sync::mpsc::channel;
 
 use std::sync::Arc;
 use test_case_summary::TestCaseSummary;
@@ -499,8 +498,8 @@ fn run_single_test(
                 // one of a test returns Err
                 Ok(TestCaseSummary::Interrupted {  })
             },
-            result = blocking_run_from_test(vec![], case.clone(),runner,  runner_config.clone(), runner_params.clone() , None) => {
-                match result {
+            result = blocking_run_from_test(vec![], case.clone(),runner,  runner_config.clone(), runner_params.clone() ) => {
+                match result? {
                     Ok(result) => {
                         if exit_first {
                             if let TestCaseSummary::Failed { .. } = &result {
@@ -529,7 +528,6 @@ fn run_with_fuzzing(
 ) -> JoinHandle<Result<TestCaseSummary>> {
     tokio::task::spawn(async move {
         let token = CancellationToken::new();
-
         let args = args
             .iter()
             .map(|arg| {
@@ -552,7 +550,6 @@ fn run_with_fuzzing(
         let mut tasks = FuturesUnordered::new();
         // Pattern in order to waiting for things to finish shutting down
         // https://tokio.rs/tokio/topics/shutdown
-        let (send, mut recv) = channel(1);
 
         for _ in 1..=fuzzer_runs {
             let args = fuzzer.next_args();
@@ -565,14 +562,10 @@ fn run_with_fuzzing(
                 runner_params.clone(),
                 cancellation_tokens.clone(),
                 token.clone(),
-                send.clone(),
             ));
         }
 
         let mut results = vec![];
-
-        // Graceful Shutdown Pattern
-        drop(send);
 
         while let Some(task) = tasks.next().await {
             let result = task??;
@@ -585,8 +578,6 @@ fn run_with_fuzzing(
                 _ => (),
             }
         }
-
-        let _ = recv.recv().await;
 
         let runs = u32::try_from(
             results
@@ -636,7 +627,6 @@ fn run_fuzzing_subtest(
     runner_params: Arc<RunnerParams>,
     cancellation_tokens: Arc<CancellationTokens>,
     cancellation_fuzzing_token: CancellationToken,
-    send: tokio::sync::mpsc::Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     let c = case.clone();
     task::spawn(async move {
@@ -663,9 +653,8 @@ fn run_fuzzing_subtest(
                 runner,
                 runner_config.clone(),
                 runner_params.clone(),
-                Some(send),
             ) => {
-                match result {
+                match result? {
                     Ok(result) => {
                         if let TestCaseSummary::Failed { .. } = &result {
                             if runner_config.exit_first {

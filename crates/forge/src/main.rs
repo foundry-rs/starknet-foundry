@@ -192,6 +192,7 @@ fn main_execution() -> Result<bool> {
             Ok(all_failed_tests)
         })
     })??;
+    rt.shutdown_background();
 
     // Explicitly close the temporary directories so we can handle the errors
     predeployed_contracts_dir.close().with_context(|| {
