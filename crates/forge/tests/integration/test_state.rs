@@ -654,3 +654,91 @@ fn test_inconsistent_syscall_pointers() {
 
     assert_passed!(result);
 }
+
+#[test]
+fn test_caller_address_in_called_contract() {
+    let test = test_case!(
+        indoc!(
+            r#"
+        use result::ResultTrait;
+        use array::ArrayTrait;
+        use option::OptionTrait;
+        use traits::TryInto;
+        use starknet::ContractAddress;
+        use starknet::Felt252TryIntoContractAddress;
+        use snforge_std::{ declare, ContractClassTrait, test_address };
+
+        #[starknet::interface]
+        trait IPrankChecker<TContractState> {
+            fn get_caller_address(ref self: TContractState) -> felt252;
+        }
+
+        #[starknet::interface]
+        trait IConstructorPrankChecker<TContractState> {
+            fn get_stored_caller_address(ref self: TContractState) -> ContractAddress;
+        }
+
+        #[test]
+        fn test_contract() {
+            let prank_checker = declare('PrankChecker');
+            let contract_address_prank_checker = prank_checker.deploy(@ArrayTrait::new()).unwrap();
+            let dispatcher_prank_checker = IPrankCheckerDispatcher { contract_address: contract_address_prank_checker };
+
+            assert(dispatcher_prank_checker.get_caller_address() == test_address().into(), 'Incorrect caller address');
+
+
+            let constructor_prank_checker = declare('ConstructorPrankChecker');
+            let contract_address_constructor_prank_checker = constructor_prank_checker.deploy(@ArrayTrait::new()).unwrap();
+            let dispatcher_constructor_prank_checker = IConstructorPrankCheckerDispatcher { contract_address: contract_address_constructor_prank_checker };
+
+            assert(dispatcher_constructor_prank_checker.get_stored_caller_address() == test_address(), 'Incorrect caller address');
+
+        }
+    "#
+        ),
+        Contract::from_code_path(
+            "PrankChecker".to_string(),
+            Path::new("tests/data/contracts/prank_checker.cairo"),
+        )
+        .unwrap(),
+        Contract::new(
+            "ConstructorPrankChecker",
+            indoc!(
+                r#"
+            use starknet::ContractAddress;
+
+            #[starknet::interface]
+            trait IConstructorPrankChecker<TContractState> {
+                fn get_stored_caller_address(ref self: TContractState) -> ContractAddress;
+            }
+
+            #[starknet::contract]
+            mod ConstructorPrankChecker {
+                use starknet::ContractAddress;
+
+                #[storage]
+                struct Storage {
+                    caller_address: ContractAddress,
+                }
+
+                #[constructor]
+                fn constructor(ref self: ContractState) {
+                    let address = starknet::get_caller_address();
+                    self.caller_address.write(address);
+                }
+
+                #[external(v0)]
+                impl IConstructorPrankChecker of super::IConstructorPrankChecker<ContractState> {
+                    fn get_stored_caller_address(ref self: ContractState) -> ContractAddress {
+                        self.caller_address.read()
+                    }
+                }
+            }
+        "#
+            )
+        )
+    );
+    let result = run_test_case(&test);
+
+    assert_passed!(result);
+}
