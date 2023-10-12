@@ -1096,7 +1096,7 @@ dependencies = [
 
 [[package]]
 name = "cast"
-version = "0.8.1"
+version = "0.8.2"
 dependencies = [
  "anyhow",
  "camino",
@@ -1800,7 +1800,7 @@ checksum = "00b0228411908ca8685dba7fc2cdd70ec9990a6e753e89b6ac91a84c40fbaf4b"
 
 [[package]]
 name = "forge"
-version = "0.8.1"
+version = "0.8.2"
 dependencies = [
  "anyhow",
  "ark-ff",
