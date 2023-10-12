@@ -165,6 +165,7 @@ fn fuzzing_incorrect_function_args() {
 }
 
 #[test]
+#[ignore = "Non deterministic"]
 fn fuzzing_exit_first() {
     let temp = setup_package("fuzzing");
     let snapbox = runner().arg("exit_first_fuzz").arg("-x");

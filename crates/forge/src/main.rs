@@ -8,7 +8,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::{env, fs};
 use tempfile::{tempdir, TempDir};
-use tokio::runtime::Runtime;
+use tokio::runtime::Builder;
 
 use forge::{pretty_printing, CancellationTokens, RunnerConfig, RunnerParams};
 use forge::{run, TestCrateSummary};
@@ -20,6 +20,7 @@ use forge::scarb::{
 };
 use forge::test_case_summary::TestCaseSummary;
 use std::process::{Command, Stdio};
+use std::thread::available_parallelism;
 mod init;
 
 static PREDEPLOYED_CONTRACTS: Dir = include_dir!("crates/cheatnet/predeployed-contracts");
@@ -117,8 +118,11 @@ fn main_execution() -> Result<bool> {
     if args.clean_cache {
         clean_cache(&workspace_root).context("Failed to clean snforge cache")?;
     }
-
-    let rt = Runtime::new()?;
+    let cores_approx = available_parallelism()?.get();
+    let rt = Builder::new_multi_thread()
+        .max_blocking_threads(cores_approx)
+        .enable_all()
+        .build()?;
     let all_failed_tests = rt.block_on({
         rt.spawn(async move {
             let mut all_failed_tests = vec![];
