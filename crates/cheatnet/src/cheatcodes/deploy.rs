@@ -1,4 +1,4 @@
-use crate::constants as crate_constants;
+use crate::constants::TEST_ADDRESS;
 use crate::constants::{build_block_context, build_transaction_context};
 use crate::state::BlockifierState;
 use crate::CheatnetState;
@@ -13,7 +13,9 @@ use std::sync::Arc;
 use blockifier::state::state_api::State;
 use cairo_felt::Felt252;
 use cairo_vm::vm::errors::hint_errors::HintError::CustomHint;
-use conversions::StarknetConversions;
+use starknet_api::core::PatriciaKey;
+use starknet_api::patricia_key;
+use starknet_api::hash::StarkHash;
 use num_traits::ToPrimitive;
 
 use crate::cheatcodes::EnhancedHintError;
@@ -59,9 +61,7 @@ pub fn deploy_at(
         class_hash: *class_hash,
         code_address: Some(contract_address),
         storage_address: contract_address,
-        caller_address: crate_constants::TEST_ADDRESS
-            .to_string()
-            .to_contract_address(),
+        caller_address: ContractAddress(patricia_key!(TEST_ADDRESS)),
     };
 
     let calldata = Calldata(Arc::new(
@@ -69,7 +69,6 @@ pub fn deploy_at(
     ));
 
     let resources = &mut ExecutionResources::default();
-
     let result = execute_deployment(
         blockifier_state_raw,
         resources,

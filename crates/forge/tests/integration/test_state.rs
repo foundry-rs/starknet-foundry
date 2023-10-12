@@ -688,9 +688,9 @@ fn test_caller_address_in_called_contract() {
 
             let constructor_prank_checker = declare('ConstructorPrankChecker');
             let contract_address_constructor_prank_checker = constructor_prank_checker.deploy(@ArrayTrait::new()).unwrap();
-            let dispatcher_constructor_prank_checker = IPrankCheckerDispatcher { contract_address: contract_address_constructor_prank_checker };
+            let dispatcher_constructor_prank_checker = IConstructorPrankCheckerDispatcher { contract_address: contract_address_constructor_prank_checker };
 
-            assert(dispatcher_constructor_prank_checker.get_caller_address() == test_address().into(), 'Incorrect caller address');
+            assert(dispatcher_constructor_prank_checker.get_stored_caller_address() == test_address(), 'Incorrect caller address');
 
         }
     "#
