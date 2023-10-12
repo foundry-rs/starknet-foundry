@@ -1,3 +1,4 @@
+use anyhow::Ok;
 use camino::Utf8PathBuf;
 use serde::Serialize;
 use starknet::core::types::FieldElement;
@@ -40,4 +41,16 @@ pub struct AccountAddResponse {
 pub struct MulticallNewResponse {
     pub path: Utf8PathBuf,
     pub content: String,
+}
+
+enum VerificationStatus {
+    OK,
+    Error,
+}
+
+
+#[derive(Serialize)]
+pub struct VerifyResponse {
+    pub verification_status: VerificationStatus,
+    pub errors: Option<String>
 }

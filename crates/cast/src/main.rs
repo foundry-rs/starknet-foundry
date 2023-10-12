@@ -275,6 +275,19 @@ async fn main() -> Result<()> {
                 print_command_result("account deploy", &mut result, cli.int_format, cli.json)?;
                 Ok(())
             }
+            account::Commands::Verify(verify) => {
+                let mut result = starknet_commands::account::verify::verify(
+                    &provider,
+                    verify.contract_address,
+                    verify.contract_name,
+                    verify.verifier,
+                    verify.network,
+                )
+                .await;
+
+                print_command_result("account verify", &mut result, cli.int_format, cli.json)?;
+                Ok(())
+            }
         },
     }
 }
