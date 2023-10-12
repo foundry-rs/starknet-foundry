@@ -2,6 +2,7 @@ use anyhow::Result;
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use crate::constants::TEST_ADDRESS;
 use crate::panic_data::try_extract_panic_data;
 use crate::state::BlockifierState;
 use crate::{
@@ -24,6 +25,8 @@ use starknet_api::{
     hash::{StarkFelt, StarkHash},
     transaction::Calldata,
 };
+use starknet_api::core::PatriciaKey;
+use starknet_api::patricia_key;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ResourceReport {
@@ -219,7 +222,8 @@ pub fn call_entry_point(
         entry_point_selector,
         calldata,
         storage_address: *contract_address,
-        caller_address: ContractAddress::default(),
+        // test_contract address
+        caller_address: ContractAddress(patricia_key!(TEST_ADDRESS)),
         call_type: CallType::Call,
         initial_gas: u64::MAX,
     };
