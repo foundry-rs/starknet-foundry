@@ -7,7 +7,9 @@ use anyhow::{anyhow, Result};
 use camino::Utf8PathBuf;
 use cast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
 use cast::helpers::scarb_utils::{parse_scarb_config, CastConfig};
-use cast::{get_account, get_block_id, get_chain_id, get_provider, print_command_result};
+use cast::{
+    get_account, get_block_id, get_chain_id, get_provider, print_command_result, ValueFormat,
+};
 use clap::{Parser, Subcommand};
 
 mod starknet_commands;
@@ -42,9 +44,13 @@ struct Cli {
     #[clap(short, long)]
     keystore: Option<Utf8PathBuf>,
 
-    /// If passed, values will be displayed as integers, otherwise as hexes
-    #[clap(short, long)]
+    /// If passed, values will be displayed as integers
+    #[clap(long, conflicts_with = "hex_format")]
     int_format: bool,
+
+    /// If passed, values will be displayed as integers
+    #[clap(long, conflicts_with = "int_format")]
+    hex_format: bool,
 
     /// If passed, output will be displayed in json format
     #[clap(short, long)]
@@ -84,6 +90,15 @@ enum Commands {
 async fn main() -> Result<()> {
     let cli = Cli::parse();
 
+    // Clap validates that both are not passed at same time
+    let value_format = if cli.hex_format {
+        ValueFormat::Hex
+    } else if cli.int_format {
+        ValueFormat::Int
+    } else {
+        ValueFormat::Default
+    };
+
     let mut config = parse_scarb_config(&cli.profile, &cli.path_to_scarb_toml)?;
     update_cast_config(&mut config, &cli);
 
@@ -107,7 +122,7 @@ async fn main() -> Result<()> {
             )
             .await;
 
-            print_command_result("declare", &mut result, cli.int_format, cli.json)?;
+            print_command_result("declare", &mut result, value_format, cli.json)?;
             Ok(())
         }
         Commands::Deploy(deploy) => {
@@ -129,7 +144,7 @@ async fn main() -> Result<()> {
             )
             .await;
 
-            print_command_result("deploy", &mut result, cli.int_format, cli.json)?;
+            print_command_result("deploy", &mut result, value_format, cli.json)?;
             Ok(())
         }
         Commands::Call(call) => {
@@ -144,7 +159,7 @@ async fn main() -> Result<()> {
             )
             .await;
 
-            print_command_result("call", &mut result, cli.int_format, cli.json)?;
+            print_command_result("call", &mut result, value_format, cli.json)?;
             Ok(())
         }
         Commands::Invoke(invoke) => {
@@ -165,7 +180,7 @@ async fn main() -> Result<()> {
             )
             .await;
 
-            print_command_result("invoke", &mut result, cli.int_format, cli.json)?;
+            print_command_result("invoke", &mut result, value_format, cli.json)?;
             Ok(())
         }
         Commands::Multicall(multicall) => {
@@ -174,12 +189,7 @@ async fn main() -> Result<()> {
                     if let Some(output_path) = &new.output_path {
                         let mut result =
                             starknet_commands::multicall::new::new(output_path, new.overwrite);
-                        print_command_result(
-                            "multicall new",
-                            &mut result,
-                            cli.int_format,
-                            cli.json,
-                        )?;
+                        print_command_result("multicall new", &mut result, value_format, cli.json)?;
                     } else {
                         println!("{DEFAULT_MULTICALL_CONTENTS}");
                     }
@@ -200,7 +210,7 @@ async fn main() -> Result<()> {
                     )
                     .await;
 
-                    print_command_result("multicall run", &mut result, cli.int_format, cli.json)?;
+                    print_command_result("multicall run", &mut result, value_format, cli.json)?;
                 }
             }
             Ok(())
@@ -218,7 +228,7 @@ async fn main() -> Result<()> {
                 )
                 .await;
 
-                print_command_result("account add", &mut result, cli.int_format, cli.json)?;
+                print_command_result("account add", &mut result, value_format, cli.json)?;
                 Ok(())
             }
             account::Commands::Create(create) => {
@@ -239,11 +249,11 @@ async fn main() -> Result<()> {
                     create.salt,
                     create.add_profile,
                     create.class_hash,
-                    create.hex_format,
+                    value_format,
                 )
                 .await;
 
-                print_command_result("account create", &mut result, cli.int_format, cli.json)?;
+                print_command_result("account create", &mut result, value_format, cli.json)?;
                 Ok(())
             }
             account::Commands::Deploy(deploy) => {
@@ -270,7 +280,7 @@ async fn main() -> Result<()> {
                 )
                 .await;
 
-                print_command_result("account deploy", &mut result, cli.int_format, cli.json)?;
+                print_command_result("account deploy", &mut result, value_format, cli.json)?;
                 Ok(())
             }
         },

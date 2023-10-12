@@ -6,7 +6,9 @@ use camino::Utf8PathBuf;
 use cast::helpers::constants::{CREATE_KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH};
 use cast::helpers::response_structs::AccountCreateResponse;
 use cast::helpers::scarb_utils::CastConfig;
-use cast::{extract_or_generate_salt, get_chain_id, get_keystore_password, parse_number};
+use cast::{
+    extract_or_generate_salt, get_chain_id, get_keystore_password, parse_number, ValueFormat,
+};
 use clap::Args;
 use serde_json::json;
 use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
@@ -34,10 +36,6 @@ pub struct Create {
     /// Custom open zeppelin contract class hash of declared contract
     #[clap(short, long)]
     pub class_hash: Option<String>,
-
-    /// Show `max_fee` in hex format
-    #[clap(long)]
-    pub hex_format: bool,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -52,7 +50,7 @@ pub async fn create(
     salt: Option<FieldElement>,
     add_profile: bool,
     class_hash: Option<String>,
-    hex_format: bool,
+    value_format: ValueFormat,
 ) -> Result<AccountCreateResponse> {
     let salt = extract_or_generate_salt(salt);
     let class_hash = {
@@ -99,7 +97,8 @@ pub async fn create(
     let mut output = vec![("address", format!("{address:#x}"))];
     if account_json["deployed"] == json!(false) {
         println!("Account successfully created. Prefund generated address with at least {max_fee} tokens. It is good to send more in the case of higher demand, max_fee * 2 = {}", max_fee * 2);
-        let max_fee_str = if hex_format {
+        // For default and Int it should be in int
+        let max_fee_str = if value_format == ValueFormat::Hex {
             format!("{max_fee:#x}")
         } else {
             format!("{max_fee:#}")

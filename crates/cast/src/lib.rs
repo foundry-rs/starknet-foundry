@@ -33,6 +33,7 @@ use starknet::{
     providers::{MaybeUnknownErrorCode, StarknetErrorWithMessage},
 };
 use std::collections::HashMap;
+use std::str::FromStr;
 use std::thread::sleep;
 use std::time::Duration;
 use std::{env, fs};
@@ -48,6 +49,16 @@ struct Account {
     salt: Option<String>,
     deployed: Option<bool>,
     class_hash: Option<String>,
+}
+
+#[derive(Debug, PartialEq, Eq, Copy, Clone)]
+pub enum ValueFormat {
+    // Addresses as hex, fees as int
+    Default,
+    // everything as int
+    Int,
+    // everything as int
+    Hex,
 }
 
 pub fn get_provider(url: &str) -> Result<JsonRpcClient<HttpTransport>> {
@@ -307,22 +318,40 @@ pub async fn handle_wait_for_tx<T>(
 
 pub fn print_formatted(
     mut output: Vec<(&str, String)>,
-    int_format: bool,
+    value_format: ValueFormat,
     json: bool,
     error: bool,
 ) -> Result<()> {
-    if !int_format {
-        output = output
-            .into_iter()
-            .map(|(key, value)| {
+    output = output
+        .into_iter()
+        .map(|(key, value)| match value_format {
+            ValueFormat::Default => {
                 if let Ok(int_value) = U256::from_dec_str(&value) {
                     (key, format!("{int_value:#x}"))
                 } else {
                     (key, value)
                 }
-            })
-            .collect();
-    }
+            }
+            ValueFormat::Int => {
+                if let Ok(int_value) = U256::from_dec_str(&value) {
+                    (key, format!("{int_value}"))
+                } else if let Ok(field) = FieldElement::from_str(value.as_str()) {
+                    (key, format!("{field}"))
+                } else {
+                    (key, value)
+                }
+            }
+            ValueFormat::Hex => {
+                if let Ok(int_value) = U256::from_dec_str(&value) {
+                    (key, format!("{int_value:#x}"))
+                } else if let Ok(field) = FieldElement::from_str(value.as_str()) {
+                    (key, format!("{field:#x}"))
+                } else {
+                    (key, value)
+                }
+            }
+        })
+        .collect();
 
     if json {
         let json_output: HashMap<&str, String> = output.into_iter().collect();
@@ -341,7 +370,7 @@ pub fn print_formatted(
 pub fn print_command_result<T: Serialize>(
     command: &str,
     result: &mut Result<T>,
-    int_format: bool,
+    value_format: ValueFormat,
     json: bool,
 ) -> Result<()> {
     let mut output = vec![("command", command.to_string())];
@@ -367,7 +396,7 @@ pub fn print_command_result<T: Serialize>(
             error = true;
         }
     };
-    print_formatted(output, int_format, json, error)
+    print_formatted(output, value_format, json, error)
 }
 
 fn write_to_output<T: std::fmt::Display>(value: T, error: bool) {
