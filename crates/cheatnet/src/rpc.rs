@@ -19,14 +19,14 @@ use blockifier::execution::{
 use blockifier::state::errors::StateError;
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
+use starknet_api::core::PatriciaKey;
+use starknet_api::patricia_key;
 use starknet_api::{
     core::{ContractAddress, EntryPointSelector},
     deprecated_contract_class::EntryPointType,
     hash::{StarkFelt, StarkHash},
     transaction::Calldata,
 };
-use starknet_api::core::PatriciaKey;
-use starknet_api::patricia_key;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ResourceReport {

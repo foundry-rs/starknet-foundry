@@ -657,8 +657,9 @@ fn test_inconsistent_syscall_pointers() {
 
 #[test]
 fn test_caller_address_in_called_contract() {
-    let test = test_case!(indoc!(
-        r#"
+    let test = test_case!(
+        indoc!(
+            r#"
         use result::ResultTrait;
         use array::ArrayTrait;
         use option::OptionTrait;
@@ -694,16 +695,16 @@ fn test_caller_address_in_called_contract() {
 
         }
     "#
-    ),
-    Contract::from_code_path(
-        "PrankChecker".to_string(),
-        Path::new("tests/data/contracts/prank_checker.cairo"),
-    )
-    .unwrap(),
-    Contract::new(
-        "ConstructorPrankChecker",
-        indoc!(
-            r#"
+        ),
+        Contract::from_code_path(
+            "PrankChecker".to_string(),
+            Path::new("tests/data/contracts/prank_checker.cairo"),
+        )
+        .unwrap(),
+        Contract::new(
+            "ConstructorPrankChecker",
+            indoc!(
+                r#"
             use starknet::ContractAddress;
 
             #[starknet::interface]
@@ -734,8 +735,8 @@ fn test_caller_address_in_called_contract() {
                 }
             }
         "#
+            )
         )
-    )
     );
     let result = run_test_case(&test);
 
