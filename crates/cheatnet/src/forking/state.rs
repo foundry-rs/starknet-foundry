@@ -216,8 +216,8 @@ fn get_latest_block_number(
     client: &JsonRpcClient<HttpTransport>,
     runtime: &Runtime,
 ) -> Result<BlockId> {
-    return match runtime.block_on(client.get_block_with_tx_hashes(BlockId::Tag(Latest))) {
+    match runtime.block_on(client.get_block_with_tx_hashes(BlockId::Tag(Latest))) {
         Ok(MaybePendingBlockWithTxHashes::Block(block)) => Ok(BlockId::Number(block.block_number)),
         _ => Err(anyhow!("Could not get the latest block number".to_string())),
-    };
+    }
 }
