@@ -80,6 +80,9 @@ pub(crate) fn blocking_run_from_test(
     send: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     tokio::task::spawn_blocking(move || {
+        // Due to the inability of spawn_blocking to be abruptly cancelled,
+        // a channel is used to receive information indicating
+        // that the execution of the task is no longer necessary.
         if send.is_closed() {
             return Err(anyhow::anyhow!("stop spawn_blocking"));
         }
