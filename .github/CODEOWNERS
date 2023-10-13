@@ -2,12 +2,12 @@
 /crates/cast/               @foundry-rs/starknet-foundry-cast
 
 # Forge
-/crates/forge               @foundry-rs/starknet-foundry-forge
-/crates/test-collector/     @foundry-rs/starknet-foundry-forge
+/crates/forge               @foundry-rs/starknet-foundry-forge-cli
+/crates/test-collector/     @foundry-rs/starknet-foundry-forge-cli 
 
-# Cheatable starknet
-/crates/cheatnet            @foundry-rs/starknet-foundry-cheatable-net
-/crates/forge/src/running.rs @foundry-rs/starknet-foundry-cheatable-net
-/crates/forge/src/cheatcodes_hint_processor.rs @foundry-rs/starknet-foundry-cheatable-net
-/crates/forge/tests/integration @foundry-rs/starknet-foundry-cheatable-net
+# snforge-core
+/crates/cheatnet            @foundry-rs/starknet-foundry-forge-core
+/crates/forge/src/running.rs @foundry-rs/starknet-foundry-forge-core
+/crates/forge/src/cheatcodes_hint_processor.rs @foundry-rs/starknet-foundry-forge-core
+/crates/forge/tests/integration @foundry-rs/starknet-foundry-forge-core
 

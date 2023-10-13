@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+#### Added
+
+- `show-config` subcommand to display currently used configuration
+
+## [0.8.2] - 2023-10-12
+
+### Forge
+
+#### Fixed
+- incorrect caller address bug
+
+## [0.8.1] - 2023-10-12
+### Forge
+
+#### Fixed
+- significantly reduced ram usage
+
+## [0.8.0] - 2023-10-11
+
 ### Forge
 
 #### Added
@@ -15,11 +36,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for `u8`, `u16`, `u32`, `u64`, `u128`, `u256` types to fuzzer
 - `--clean-cache` flag
 - Changed interface of `L1Handler.execute` and `L1Handler` (dropped `fee` parameter, added result handling with `RevertedTransaction`)
-- cheatcodes (`prank`, `roll`, `warp`, `spoof`, `spy_events`) now work in a test state
+- Contract now has associated state, more about it [here](https://foundry-rs.github.io/starknet-foundry/testing/testing_contract_internals.html)
+- cheatcodes (`prank`, `roll`, `warp`) now work on forked Cairo 0 contracts
 
 #### Changed
 
 - Spying events interface is updated to enable the use of events defined inside contracts in assertions
+- Test are executed in parallel
 - Fixed inconsistent pointers bug https://github.com/foundry-rs/starknet-foundry/issues/659
 - Fixed an issue where `deploy_at` would not trigger the constructors https://github.com/foundry-rs/starknet-foundry/issues/805
 

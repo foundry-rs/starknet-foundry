@@ -58,7 +58,11 @@ openssl = { version = "0.10", features = ["vendored"] }
 toml_edit = "0.9.1"
 flatten-serde-json = "0.1.0"
 smol_str = "0.2.0"
+tokio.workspace = true
+tokio-util.workspace = true
+futures.workspace = true
 num-integer = "0.1.45"
+url.workspace = true
 
 [lib]
 name = "forge"
