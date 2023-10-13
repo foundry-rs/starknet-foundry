@@ -258,15 +258,15 @@ fn with_print() {
         original value: [123], converted to a string: [{]
         original value: [3618502788666131213697322783095070105623107215331596699973092056135872020480]
         original value: [6381921], converted to a string: [aaa]
-        original value: [12], converted to a string: []
+        original value: [12]
         original value: [1234]
         original value: [123456]
         original value: [1233456789]
         original value: [123345678910]
-        original value: [0], converted to a string: []
+        original value: [0]
         original value: [10633823966279327296825105735305134080]
-        original value: [2], converted to a string: []
-        original value: [11], converted to a string: []
+        original value: [2]
+        original value: [11]
         original value: [1234]
         original value: [123456]
         original value: [123456789]
@@ -275,6 +275,12 @@ fn with_print() {
         original value: [124], converted to a string: [|]
         original value: [149]
         original value: [439721161573], converted to a string: [false]
+        original value: [27]
+        original value: [17]
+        original value: [37], converted to a string: [%]
+        original value: [127]
+        original value: [32], converted to a string: [ ]
+        original value: [166906514068638843492736773029576256], converted to a string: [ % abc 123 !?>@]
         [PASS] tests::test_print::test_print
         Tests: 1 passed, 0 failed, 0 skipped
         "#});
