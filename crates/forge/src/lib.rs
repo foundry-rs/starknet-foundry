@@ -12,7 +12,7 @@ use futures::StreamExt;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use running::blocking_run_from_test;
 use serde::Deserialize;
-use tokio::sync::mpsc::Sender;
+use tokio::sync::mpsc::{channel, Sender};
 
 use std::sync::Arc;
 use test_case_summary::TestCaseSummary;
@@ -319,7 +319,7 @@ fn try_close_tmp_dir(maybe_tmp_dir: Option<TempDir>) -> Result<()> {
 /// * `predeployed_contracts` - Absolute path to predeployed contracts used by starknet state e.g. account contracts
 ///
 
-#[allow(clippy::implicit_hasher)]
+#[allow(clippy::implicit_hasher, clippy::too_many_arguments)]
 pub async fn run(
     package_path: &Utf8PathBuf,
     package_name: &str,
@@ -328,7 +328,6 @@ pub async fn run(
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     cancellation_tokens: Arc<CancellationTokens>,
-    send: Sender<()>,
 ) -> Result<Vec<TestCrateSummary>> {
     let tests = collect_tests_from_package(
         package_path,
@@ -359,14 +358,12 @@ pub async fn run(
             test_crate_type,
             number_of_test_cases,
             task::spawn({
-                let send = send.clone();
                 async move {
                     run_tests_from_crate(
                         tests_from_crate,
                         runner_config,
                         runner_params,
                         cancellation_tokens,
-                        send,
                     )
                     .await
                 }
@@ -398,7 +395,6 @@ async fn run_tests_from_crate(
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     cancellation_tokens: Arc<CancellationTokens>,
-    send: Sender<()>,
 ) -> Result<(TestCrateSummary, bool)> {
     let runner = Arc::new(
         SierraCasmRunner::new(
@@ -412,6 +408,7 @@ async fn run_tests_from_crate(
     let mut was_fuzzed = false;
     let mut tasks = FuturesOrdered::new();
     let test_cases = &tests.test_cases;
+    let (send, mut rec) = channel(1);
 
     for case in test_cases.iter() {
         let case_name = case.name.as_str();
@@ -445,6 +442,8 @@ async fn run_tests_from_crate(
 
         results.push(result);
     }
+
+    rec.close();
 
     Ok((
         TestCrateSummary {
@@ -482,7 +481,6 @@ fn choose_test_strategy_and_run(
             runner_config,
             runner_params,
             cancellation_tokens,
-            send.clone(),
         )
     }
 }
@@ -535,10 +533,10 @@ fn run_with_fuzzing(
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     cancellation_tokens: Arc<CancellationTokens>,
-    send: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     tokio::task::spawn(async move {
         let token = CancellationToken::new();
+        let (send, mut rec) = channel(1);
         let args = args
             .iter()
             .map(|arg| {
@@ -590,6 +588,8 @@ fn run_with_fuzzing(
                 _ => (),
             }
         }
+
+        rec.close();
 
         let runs = u32::try_from(
             results

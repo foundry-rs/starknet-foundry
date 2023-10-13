@@ -95,7 +95,7 @@ fn fork_aliased_decorator() {
     ).as_str());
 
     let rt = Runtime::new().expect("Could not instantiate Runtime");
-    let (send, mut r) = channel(1);
+
     let result = rt
         .block_on(run(
             &test.path().unwrap(),
@@ -127,7 +127,6 @@ fn fork_aliased_decorator() {
                 Default::default(),
             )),
             Arc::new(CancellationTokens::new()),
-            send.clone(),
         ))
         .expect("Runner fail");
 

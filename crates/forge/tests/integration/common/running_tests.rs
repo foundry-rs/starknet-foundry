@@ -9,11 +9,9 @@ use std::default::Default;
 use std::path::PathBuf;
 use tempfile::tempdir;
 use tokio::runtime::Runtime;
-use tokio::sync::mpsc::channel;
 
 pub fn run_test_case(test: &TestCase) -> Vec<TestCrateSummary> {
     let rt = Runtime::new().expect("Could not instantiate Runtime");
-    let (send, mut r) = channel(1);
 
     rt.block_on(run(
         &test.path().unwrap(),
@@ -36,7 +34,6 @@ pub fn run_test_case(test: &TestCase) -> Vec<TestCrateSummary> {
             test.env().clone(),
         )),
         Arc::new(CancellationTokens::new()),
-        send.clone(),
     ))
     .expect("Runner fail")
 }
