@@ -345,38 +345,26 @@ pub async fn run(
 
     let mut fuzzing_happened = false;
     let mut summaries = vec![];
-    let mut tasks = vec![];
 
     for tests_from_crate in tests {
         let tests_from_crate = Arc::new(tests_from_crate);
         let runner_config = runner_config.clone();
-        let test_crate_type = tests_from_crate.test_crate_type;
-        let number_of_test_cases = tests_from_crate.test_cases.len();
         let runner_params = runner_params.clone();
         let cancellation_tokens = cancellation_tokens.clone();
-        tasks.push((
-            test_crate_type,
-            number_of_test_cases,
-            task::spawn({
-                async move {
-                    run_tests_from_crate(
-                        tests_from_crate,
-                        runner_config,
-                        runner_params,
-                        cancellation_tokens,
-                    )
-                    .await
-                }
-            }),
-        ));
-    }
-    for (test_crate_type, tests_len, task) in tasks {
-        pretty_printing::print_running_tests(test_crate_type, tests_len);
 
-        let (summary, was_fuzzed) = task.await??;
-        for test_case_summary in &summary.test_case_summaries {
-            pretty_printing::print_test_result(test_case_summary);
-        }
+        pretty_printing::print_running_tests(
+            tests_from_crate.test_crate_type,
+            tests_from_crate.test_cases.len(),
+        );
+
+        let (summary, was_fuzzed) = run_tests_from_crate(
+            tests_from_crate,
+            runner_config,
+            runner_params,
+            cancellation_tokens,
+        )
+        .await?;
+
         fuzzing_happened |= was_fuzzed;
         summaries.push(summary.clone());
     }
@@ -502,6 +490,8 @@ fn run_single_test(
             result = blocking_run_from_test(vec![], case.clone(),runner,  runner_config.clone(), runner_params.clone() , None) => {
                 match result {
                     Ok(result) => {
+                        pretty_printing::print_test_result(&result);
+
                         if exit_first {
                             if let TestCaseSummary::Failed { .. } = &result {
                                 cancellation_tokens.exit_first.cancel();
@@ -536,7 +526,7 @@ fn run_with_fuzzing(
                 arg.debug_name
                     .as_ref()
                     .ok_or_else(|| anyhow!("Type {arg:?} does not have a debug name"))
-                    .map(smol_str::SmolStr::as_str)
+                    .map(SmolStr::as_str)
             })
             .collect::<Result<Vec<_>>>()?;
 
@@ -623,6 +613,9 @@ fn run_with_fuzzing(
             .clone();
 
         let result = result.with_runs(runs);
+
+        pretty_printing::print_test_result(&result);
+
         Ok(result)
     })
 }
