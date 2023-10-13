@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+#### Added
+
+- `show-config` subcommand to display currently used configuration
+
 ## [0.8.2] - 2023-10-12
 
 ### Forge
@@ -39,15 +45,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Test are executed in parallel
 - Fixed inconsistent pointers bug https://github.com/foundry-rs/starknet-foundry/issues/659
 - Fixed an issue where `deploy_at` would not trigger the constructors https://github.com/foundry-rs/starknet-foundry/issues/805
-
-### Cast
-
-#### Added
-
-- `show-config` subcommand to display currently used configuration
-
-### Changed
-
 
 ## [0.7.1] - 2023-09-27
 
