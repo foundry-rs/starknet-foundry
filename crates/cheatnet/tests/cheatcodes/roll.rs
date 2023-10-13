@@ -1,4 +1,4 @@
-use crate::common::assertions::compare_outputs;
+use crate::common::assertions::assert_outputs;
 use crate::{
     assert_success,
     common::{
@@ -266,7 +266,7 @@ fn roll_proxy() {
     )
     .unwrap();
 
-    compare_outputs(before_roll_output, after_roll_cancellation_output);
+    assert_outputs(before_roll_output, after_roll_cancellation_output);
 }
 
 #[test]
@@ -321,5 +321,5 @@ fn roll_library_call() {
     )
     .unwrap();
 
-    compare_outputs(before_roll_output, after_roll_cancellation_output);
+    assert_outputs(before_roll_output, after_roll_cancellation_output);
 }

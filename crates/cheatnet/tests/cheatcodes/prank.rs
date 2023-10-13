@@ -1,4 +1,4 @@
-use crate::common::assertions::compare_outputs;
+use crate::common::assertions::assert_outputs;
 use crate::{
     assert_success,
     common::{
@@ -267,7 +267,7 @@ fn prank_proxy() {
     )
     .unwrap();
 
-    compare_outputs(before_prank_output, after_prank_cancellation_output);
+    assert_outputs(before_prank_output, after_prank_cancellation_output);
 }
 
 #[test]
@@ -322,5 +322,5 @@ fn prank_library_call() {
     )
     .unwrap();
 
-    compare_outputs(before_prank_output, after_prank_cancellation_output);
+    assert_outputs(before_prank_output, after_prank_cancellation_output);
 }

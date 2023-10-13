@@ -45,7 +45,7 @@ macro_rules! assert_error {
     };
 }
 
-pub fn compare_outputs(output1: CallContractOutput, output2: CallContractOutput) {
+pub fn assert_outputs(output1: CallContractOutput, output2: CallContractOutput) {
     let CallContractResult::Success {
         ret_data: before_ret_data,
     } = output1.result
