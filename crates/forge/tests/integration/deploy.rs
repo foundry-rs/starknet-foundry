@@ -2,6 +2,7 @@ use crate::integration::common::runner::Contract;
 use crate::integration::common::running_tests::run_test_case;
 use crate::{assert_passed, test_case};
 use indoc::indoc;
+use std::path::Path;
 
 #[test]
 fn error_handling() {
@@ -26,28 +27,11 @@ fn error_handling() {
         }
     "#
         ),
-        Contract::new(
-            "PanickingConstructor",
-            indoc!(
-                r#"
-                #[starknet::contract]
-                mod PanickingConstructor {
-                    use array::ArrayTrait;
-
-                    #[storage]
-                    struct Storage {}
-
-                    #[constructor]
-                    fn constructor(ref self: ContractState) {
-                        let mut panic_data = ArrayTrait::new();
-                        panic_data.append('PANIK');
-                        panic_data.append('DEJTA');
-                        panic(panic_data);
-                    }
-                }
-    "#
-            )
+        Contract::from_code_path(
+            "PanickingConstructor".to_string(),
+            Path::new("tests/data/contracts/panicking_constructor.cairo"),
         )
+        .unwrap()
     );
 
     let result = run_test_case(&test);

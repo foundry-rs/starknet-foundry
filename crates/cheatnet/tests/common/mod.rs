@@ -1,7 +1,7 @@
 use cairo_felt::Felt252;
 use camino::Utf8PathBuf;
 use cheatnet::cheatcodes::deploy::deploy;
-use cheatnet::rpc::call_contract;
+use cheatnet::rpc::{call_contract, CallContractFailure, CallContractResult};
 use cheatnet::state::{BlockifierState, CheatnetState};
 use cheatnet::{cheatcodes::ContractArtifacts, rpc::CallContractOutput};
 use conversions::StarknetConversions;
@@ -19,10 +19,12 @@ pub mod scarb;
 pub mod state;
 
 pub fn recover_data(output: CallContractOutput) -> Vec<Felt252> {
-    match output {
-        CallContractOutput::Success { ret_data, .. } => ret_data,
-        CallContractOutput::Panic { panic_data, .. } => panic_data,
-        CallContractOutput::Error { msg, .. } => panic!("Call failed with message: {msg}"),
+    match output.result {
+        CallContractResult::Success { ret_data, .. } => ret_data,
+        CallContractResult::Failure(failure_type) => match failure_type {
+            CallContractFailure::Panic { panic_data, .. } => panic_data,
+            CallContractFailure::Error { msg, .. } => panic!("Call failed with message: {msg}"),
+        },
     }
 }
 

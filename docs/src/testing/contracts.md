@@ -183,3 +183,9 @@ Running 1 test(s) from src/
 [PASS] package_name::handling_errors
 Tests: 1 passed, 0 failed, 0 skipped
 ```
+
+### Expecting Test Failure
+
+Sometimes the test code failing can be a desired behavior.
+Instead of manually handling it, you can simply mark your test as `#[should_panic(...)]`.
+[See here](./testing.md#expected-failures) for more details.

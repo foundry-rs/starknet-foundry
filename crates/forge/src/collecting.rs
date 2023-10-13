@@ -199,10 +199,19 @@ mod tests {
             fuzzer_runs: Some(1234),
             fuzzer_seed: Some(1000),
         };
-        let config = RunnerConfig::new(None, false, true, Some(100), Some(32), &config_from_scarb);
+        let config = RunnerConfig::new(
+            Default::default(),
+            None,
+            false,
+            true,
+            Some(100),
+            Some(32),
+            &config_from_scarb,
+        );
         assert_eq!(
             config,
             RunnerConfig {
+                workspace_root: Default::default(),
                 test_name_filter: None,
                 exact_match: false,
                 exit_first: true,
