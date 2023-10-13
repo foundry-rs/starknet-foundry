@@ -52,13 +52,7 @@ impl StateReader for ExtendedStateReader {
                 self.fork_state_reader
                     .as_mut()
                     .map_or(Ok(StarkFelt::default()), |reader| {
-                        match reader.get_storage_at(contract_address, key) {
-                            Ok(value) => Ok(value),
-                            Err(StateError::StateReadError(msg)) if msg.contains("node") => {
-                                Err(StateError::StateReadError(msg))
-                            }
-                            _ => Ok(Default::default()),
-                        }
+                        match_node_response(reader.get_storage_at(contract_address, key))
                     })
             })
     }
@@ -70,13 +64,7 @@ impl StateReader for ExtendedStateReader {
                 self.fork_state_reader
                     .as_mut()
                     .map_or(Ok(Nonce::default()), |reader| {
-                        match reader.get_nonce_at(contract_address) {
-                            Ok(nonce) => Ok(nonce),
-                            Err(StateError::StateReadError(msg)) if msg.contains("node") => {
-                                Err(StateError::StateReadError(msg))
-                            }
-                            _ => Ok(Default::default()),
-                        }
+                        match_node_response(reader.get_nonce_at(contract_address))
                     })
             })
     }
@@ -88,13 +76,7 @@ impl StateReader for ExtendedStateReader {
                 self.fork_state_reader
                     .as_mut()
                     .map_or(Ok(ClassHash::default()), |reader| {
-                        match reader.get_class_hash_at(contract_address) {
-                            Ok(class_hash) => Ok(class_hash),
-                            Err(StateError::StateReadError(msg)) if msg.contains("node") => {
-                                Err(StateError::StateReadError(msg))
-                            }
-                            _ => Ok(Default::default()),
-                        }
+                        match_node_response(reader.get_class_hash_at(contract_address))
                     })
             })
     }
@@ -232,5 +214,15 @@ impl CheatnetState {
             || self.address_is_pranked(contract_address)
             || self.address_is_warped(contract_address)
             || self.address_is_spoofed(contract_address)
+    }
+}
+
+fn match_node_response<T: Default>(result: StateResult<T>) -> StateResult<T> {
+    match result {
+        Ok(class_hash) => Ok(class_hash),
+        Err(StateError::StateReadError(msg)) if msg.contains("node") => {
+            Err(StateError::StateReadError(msg))
+        }
+        _ => Ok(Default::default()),
     }
 }
