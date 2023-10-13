@@ -406,7 +406,6 @@ async fn run_tests_from_crate(
         .context("Failed setting up runner.")?,
     );
 
-    let mut was_fuzzed = false;
     let mut tasks = FuturesOrdered::new();
     let test_cases = &tests.test_cases;
 
@@ -435,18 +434,15 @@ async fn run_tests_from_crate(
     while let Some(task) = tasks.next().await {
         let result = task??;
 
-        if result.runs().is_some() {
-            was_fuzzed = true;
-        }
-
         results.push(result);
     }
 
+    let contained_fuzzed_tests = results.iter().any(|summary| summary.runs().is_some());
     Ok(TestCrateSummary {
         test_case_summaries: results,
         runner_exit_status: RunnerStatus::Default,
         test_crate_type: tests.test_crate_type,
-        contained_fuzzed_tests: was_fuzzed,
+        contained_fuzzed_tests,
     })
 }
 
