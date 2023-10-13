@@ -53,6 +53,8 @@
     * [start_mock_call](appendix/cheatcodes/start_mock_call.md)
     * [stop_mock_call](appendix/cheatcodes/stop_mock_call.md)
     * [spy_events](appendix/cheatcodes/spy_events.md)
+    * [start_spoof](appendix/cheatcodes/start_spoof.md)
+    * [stop_spoof](appendix/cheatcodes/stop_spoof.md)
 
 * [Forge Library Functions References](appendix/forge-library.md)
     * [declare](appendix/forge-library/declare.md)
