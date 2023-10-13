@@ -24,7 +24,7 @@ use cairo_lang_sierra::ids::ConcreteTypeId;
 use cairo_lang_sierra::program::{Function, Program};
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
-use futures::stream::{FuturesOrdered, FuturesUnordered};
+use futures::stream::FuturesUnordered;
 
 use once_cell::sync::Lazy;
 use rand::{thread_rng, RngCore};
@@ -394,7 +394,7 @@ async fn run_tests_from_crate(
     );
 
     let mut was_fuzzed = false;
-    let mut tasks = FuturesOrdered::new();
+    let mut tasks = FuturesUnordered::new();
     let test_cases = &tests.test_cases;
 
     for case in test_cases.iter() {
@@ -407,7 +407,7 @@ async fn run_tests_from_crate(
         let args: Vec<ConcreteTypeId> = args.into_iter().cloned().collect();
         let runner = runner.clone();
 
-        tasks.push_back(choose_test_strategy_and_run(
+        tasks.push(choose_test_strategy_and_run(
             args,
             case.clone(),
             runner,
