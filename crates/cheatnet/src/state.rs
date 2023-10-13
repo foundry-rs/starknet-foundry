@@ -52,9 +52,13 @@ impl StateReader for ExtendedStateReader {
                 self.fork_state_reader
                     .as_mut()
                     .map_or(Ok(StarkFelt::default()), |reader| {
-                        reader
-                            .get_storage_at(contract_address, key)
-                            .or(Ok(StarkFelt::default()))
+                        match reader.get_storage_at(contract_address, key) {
+                            Ok(value) => Ok(value),
+                            Err(StateError::StateReadError(msg)) if msg.contains("node") => {
+                                Err(StateError::StateReadError(msg))
+                            }
+                            _ => Ok(Default::default()),
+                        }
                     })
             })
     }
@@ -66,9 +70,13 @@ impl StateReader for ExtendedStateReader {
                 self.fork_state_reader
                     .as_mut()
                     .map_or(Ok(Nonce::default()), |reader| {
-                        reader
-                            .get_nonce_at(contract_address)
-                            .or(Ok(Nonce::default()))
+                        match reader.get_nonce_at(contract_address) {
+                            Ok(nonce) => Ok(nonce),
+                            Err(StateError::StateReadError(msg)) if msg.contains("node") => {
+                                Err(StateError::StateReadError(msg))
+                            }
+                            _ => Ok(Default::default()),
+                        }
                     })
             })
     }
@@ -80,9 +88,13 @@ impl StateReader for ExtendedStateReader {
                 self.fork_state_reader
                     .as_mut()
                     .map_or(Ok(ClassHash::default()), |reader| {
-                        reader
-                            .get_class_hash_at(contract_address)
-                            .or(Ok(ClassHash::default()))
+                        match reader.get_class_hash_at(contract_address) {
+                            Ok(class_hash) => Ok(class_hash),
+                            Err(StateError::StateReadError(msg)) if msg.contains("node") => {
+                                Err(StateError::StateReadError(msg))
+                            }
+                            _ => Ok(Default::default()),
+                        }
                     })
             })
     }

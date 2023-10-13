@@ -12,8 +12,8 @@ use conversions::StarknetConversions;
 use flate2::read::GzDecoder;
 use num_bigint::BigUint;
 use starknet::core::types::{BlockId, ContractClass as ContractClassStarknet};
-use starknet::providers::jsonrpc::HttpTransport;
-use starknet::providers::{JsonRpcClient, Provider};
+use starknet::providers::jsonrpc::{HttpTransport, JsonRpcClientError};
+use starknet::providers::{JsonRpcClient, Provider, ProviderError};
 use starknet_api::core::{ClassHash, CompiledClassHash, ContractAddress, Nonce};
 use starknet_api::deprecated_contract_class::{
     ContractClass as DeprecatedContractClass, ContractClassAbiEntry, EntryPoint, EntryPointType,
@@ -66,6 +66,12 @@ impl StateReader for ForkStateReader {
                     .cache_get_storage_at(contract_address, key, value_sf);
                 Ok(value_sf)
             }
+            Err(ProviderError::Other(JsonRpcClientError::TransportError(_))) => {
+                Err(StateReadError(
+                    "Unable to reach the node. Check your internet connection and node url"
+                        .to_string(),
+                ))
+            }
             Err(_) => Err(StateReadError(format!(
                 "Unable to get storage at address: {contract_address:?} and key: {key:?} form fork"
             ))),
@@ -85,6 +91,12 @@ impl StateReader for ForkStateReader {
                 let nonce = nonce.to_nonce();
                 self.cache.cache_get_nonce_at(contract_address, nonce);
                 Ok(nonce)
+            }
+            Err(ProviderError::Other(JsonRpcClientError::TransportError(_))) => {
+                Err(StateReadError(
+                    "Unable to reach the node. Check your internet connection and node url"
+                        .to_string(),
+                ))
             }
             Err(_) => Err(StateReadError(format!(
                 "Unable to get nonce at {contract_address:?} from fork"
@@ -107,6 +119,12 @@ impl StateReader for ForkStateReader {
                     .cache_get_class_hash_at(contract_address, class_hash);
                 Ok(class_hash)
             }
+            Err(ProviderError::Other(JsonRpcClientError::TransportError(_))) => {
+                Err(StateReadError(
+                    "Unable to reach the node. Check your internet connection and node url"
+                        .to_string(),
+                ))
+            }
             Err(_) => Err(StateReadError(format!(
                 "Unable to get class hash at {contract_address:?} from fork"
             ))),
@@ -119,24 +137,29 @@ impl StateReader for ForkStateReader {
     ) -> StateResult<ContractClassBlockifier> {
         let contract_class =
             if let Some(cache_hit) = self.cache.get_compiled_contract_class(class_hash) {
-                cache_hit
+                Ok(cache_hit)
             } else {
-                let contract_class_result = self.runtime.block_on(
+                match self.runtime.block_on(
                     self.client
                         .get_class(self.block_id, class_hash.to_field_element()),
-                );
+                ) {
+                    Ok(contract_class) => {
+                        self.cache
+                            .cache_get_compiled_contract_class(class_hash, &contract_class);
 
-                if contract_class_result.is_err() {
-                    return Err(UndeclaredClassHash(*class_hash));
+                        Ok(contract_class)
+                    }
+                    Err(ProviderError::Other(JsonRpcClientError::TransportError(_))) => {
+                        Err(StateReadError(
+                            "Unable to reach the node. Check your internet connection and node url"
+                                .to_string(),
+                        ))
+                    }
+                    Err(_) => Err(UndeclaredClassHash(*class_hash)),
                 }
-
-                let contract_class = contract_class_result.unwrap();
-                self.cache
-                    .cache_get_compiled_contract_class(class_hash, &contract_class);
-                contract_class
             };
 
-        match contract_class {
+        match contract_class? {
             ContractClassStarknet::Sierra(flattened_class) => {
                 let converted_sierra_program: Vec<BigUintAsHex> = flattened_class
                     .sierra_program
