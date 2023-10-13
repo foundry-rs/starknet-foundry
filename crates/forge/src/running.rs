@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use blockifier::execution::entry_point::{
     CallEntryPoint, CallType, EntryPointExecutionContext, ExecutionResources,
 };
@@ -25,8 +25,11 @@ use cheatnet::constants as cheatnet_constants;
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::state::{CheatnetState, ExtendedStateReader};
 use conversions::StarknetConversions;
-use starknet::core::types::{BlockId, BlockTag};
+use starknet::core::types::BlockTag::Latest;
+use starknet::core::types::{BlockId, BlockTag, MaybePendingBlockWithTxHashes};
 use starknet::core::utils::get_selector_from_name;
+use starknet::providers::jsonrpc::HttpTransport;
+use starknet::providers::{JsonRpcClient, Provider};
 use starknet_api::core::PatriciaKey;
 use starknet_api::core::{ContractAddress, EntryPointSelector};
 use starknet_api::deprecated_contract_class::EntryPointType;
@@ -34,7 +37,9 @@ use starknet_api::hash::StarkHash;
 use starknet_api::patricia_key;
 use starknet_api::transaction::Calldata;
 use test_collector::{ForkConfig, TestCase};
+use tokio::runtime::Runtime;
 use tokio::sync::mpsc::Sender;
+use url::Url;
 
 use crate::scarb::ForkTarget;
 use crate::test_case_summary::TestCaseSummary;
@@ -174,7 +179,7 @@ pub(crate) fn run_test_case(
             &runner_config.workspace_root,
             &runner_config.fork_targets,
             &case.fork_config,
-        ),
+        )?,
     };
     let mut context = build_context();
     let mut execution_resources = ExecutionResources::default();
@@ -229,17 +234,32 @@ fn get_fork_state_reader(
     workspace_root: &Utf8PathBuf,
     fork_targets: &[ForkTarget],
     fork_config: &Option<ForkConfig>,
-) -> Option<ForkStateReader> {
+) -> Result<Option<ForkStateReader>> {
     match &fork_config {
-        Some(ForkConfig::Params(url, block_id)) => Some(ForkStateReader::new(
-            url,
-            *block_id,
-            Some(workspace_root.join(".snfoundry_cache").as_ref()),
-        )),
+        Some(ForkConfig::Params(url, mut block_id)) => {
+            if let BlockId::Tag(Latest) = block_id {
+                block_id = get_latest_block_number(url)?;
+            }
+            Ok(Some(ForkStateReader::new(
+                url,
+                block_id,
+                Some(workspace_root.join(".snfoundry_cache").as_ref()),
+            )))
+        }
         Some(ForkConfig::Id(name)) => {
             find_params_and_build_fork_state_reader(workspace_root, fork_targets, name)
         }
-        _ => None,
+        _ => Ok(None),
+    }
+}
+
+fn get_latest_block_number(url: &str) -> Result<BlockId> {
+    let client = JsonRpcClient::new(HttpTransport::new(Url::parse(url).unwrap()));
+    let runtime = Runtime::new().expect("Could not instantiate Runtime");
+
+    match runtime.block_on(client.get_block_with_tx_hashes(BlockId::Tag(Latest))) {
+        Ok(MaybePendingBlockWithTxHashes::Block(block)) => Ok(BlockId::Number(block.block_number)),
+        _ => Err(anyhow!("Could not get the latest block number".to_string())),
     }
 }
 
@@ -247,30 +267,35 @@ fn find_params_and_build_fork_state_reader(
     workspace_root: &Utf8PathBuf,
     fork_targets: &[ForkTarget],
     fork_alias: &str,
-) -> Option<ForkStateReader> {
-    let fork = fork_targets.iter().find(|fork| fork.name == fork_alias);
-
-    let block_id = fork?
-        .block_id
-        .iter()
-        .map(|(id_type, value)| match id_type.as_str() {
-            "number" => Some(BlockId::Number(value.parse().unwrap())),
-            "hash" => Some(BlockId::Hash(value.to_field_element())),
-            "tag" => match value.as_str() {
-                "Latest" => Some(BlockId::Tag(BlockTag::Latest)),
-                "Pending" => Some(BlockId::Tag(BlockTag::Pending)),
+) -> Result<Option<ForkStateReader>> {
+    if let Some(fork) = fork_targets.iter().find(|fork| fork.name == fork_alias) {
+        let block_id = fork
+            .block_id
+            .iter()
+            .map(|(id_type, value)| match id_type.as_str() {
+                "number" => Some(BlockId::Number(value.parse().unwrap())),
+                "hash" => Some(BlockId::Hash(value.to_field_element())),
+                "tag" => match value.as_str() {
+                    "Latest" => Some(BlockId::Tag(BlockTag::Latest)),
+                    "Pending" => Some(BlockId::Tag(BlockTag::Pending)),
+                    _ => unreachable!(),
+                },
                 _ => unreachable!(),
-            },
-            _ => unreachable!(),
-        })
-        .collect::<Vec<_>>();
-    let [Some(block_id)] = block_id[..] else {
-        return None;
-    };
+            })
+            .collect::<Vec<_>>();
+        let [Some(mut block_id)] = block_id[..] else {
+            return Ok(None);
+        };
 
-    Some(ForkStateReader::new(
-        &fork?.url,
-        block_id,
-        Some(workspace_root.join(".snfoundry_cache").as_ref()),
-    ))
+        if let BlockId::Tag(Latest) = block_id {
+            block_id = get_latest_block_number(&fork.url)?;
+        }
+        return Ok(Some(ForkStateReader::new(
+            &fork.url,
+            block_id,
+            Some(workspace_root.join(".snfoundry_cache").as_ref()),
+        )));
+    }
+
+    Ok(None)
 }
