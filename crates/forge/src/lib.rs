@@ -557,8 +557,6 @@ fn run_with_fuzzing(
         let mut fuzzer = RandomFuzzer::create(fuzzer_seed, fuzzer_runs, &args)?;
 
         let mut tasks = FuturesUnordered::new();
-        // Pattern in order to waiting for things to finish shutting down
-        // https://tokio.rs/tokio/topics/shutdown
 
         for _ in 1..=fuzzer_runs {
             let args = fuzzer.next_args();

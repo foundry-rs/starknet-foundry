@@ -80,7 +80,10 @@ pub(crate) fn blocking_run_from_test(
     send: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     tokio::task::spawn_blocking(move || {
-        run_test_case(args, &case, &runner, &runner_config, &runner_params, &send)
+        if send.is_closed() {
+            return Err(anyhow::anyhow!("stop spawn_blocking"));
+        }
+        run_test_case(args, &case, &runner, &runner_config, &runner_params)
     })
 }
 
@@ -139,12 +142,7 @@ pub(crate) fn run_test_case(
     runner: &SierraCasmRunner,
     runner_config: &Arc<RunnerConfig>,
     runner_params: &Arc<RunnerParams>,
-    send: &Sender<()>,
 ) -> Result<TestCaseSummary> {
-    if send.is_closed() {
-        return Err(anyhow::anyhow!("stop"));
-    }
-
     let available_gas = if let Some(available_gas) = &case.available_gas {
         Some(*available_gas)
     } else {
