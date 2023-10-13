@@ -1,8 +1,8 @@
+use indoc::indoc;
+use std::path::Path;
 use utils::runner::Contract;
 use utils::running_tests::run_test_case;
 use utils::{assert_passed, test_case};
-use indoc::indoc;
-use std::path::Path;
 
 #[test]
 fn error_handling() {

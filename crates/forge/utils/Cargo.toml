@@ -25,3 +25,4 @@ serde.workspace = true
 tempfile.workspace = true
 forge = { path = "../../forge" }
 test-collector = { path = "../../test-collector" }
+tokio.workspace = true

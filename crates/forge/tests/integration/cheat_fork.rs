@@ -1,6 +1,6 @@
-use crate::integration::common::running_tests::run_test_case;
-use crate::{assert_passed, test_case};
 use indoc::formatdoc;
+use utils::running_tests::run_test_case;
+use utils::{assert_passed, test_case};
 
 static CHEATNET_RPC_URL: &str = "http://188.34.188.184:9545/rpc/v0.4";
 
