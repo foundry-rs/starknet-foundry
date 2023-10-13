@@ -600,27 +600,25 @@ fn run_with_fuzzing(
                 .count(),
         )?;
 
-        if let Some(result) = results.iter().find(|item| {
+        let result = if let Some(interrupted_or_skipped) = results.iter().find(|item| {
             matches!(
                 item,
                 TestCaseSummary::Interrupted {} | TestCaseSummary::Skipped { .. }
             )
         }) {
-            return Ok(result.clone());
-        }
-
-        if let Some(result) = results
+            interrupted_or_skipped.clone()
+        } else if let Some(failed) = results
             .iter()
             .find(|item| matches!(item, TestCaseSummary::Failed { .. }))
         {
-            let result = result.clone().with_runs(runs);
-            return Ok(result);
-        }
-
-        let result: TestCaseSummary = results
-            .last()
-            .expect("Test should always run at least once")
-            .clone();
+            failed.clone().with_runs(runs)
+        } else {
+            results
+                .last()
+                .expect("Test should always run at least once")
+                .clone()
+                .with_runs(runs)
+        };
 
         let result = result.with_runs(runs);
         Ok(result)
