@@ -67,10 +67,7 @@ impl StateReader for ForkStateReader {
                 Ok(value_sf)
             }
             Err(ProviderError::Other(JsonRpcClientError::TransportError(_))) => {
-                Err(StateReadError(
-                    "Unable to reach the node. Check your internet connection and node url"
-                        .to_string(),
-                ))
+                node_connection_error()
             }
             Err(_) => Err(StateReadError(format!(
                 "Unable to get storage at address: {contract_address:?} and key: {key:?} form fork"
@@ -93,10 +90,7 @@ impl StateReader for ForkStateReader {
                 Ok(nonce)
             }
             Err(ProviderError::Other(JsonRpcClientError::TransportError(_))) => {
-                Err(StateReadError(
-                    "Unable to reach the node. Check your internet connection and node url"
-                        .to_string(),
-                ))
+                node_connection_error()
             }
             Err(_) => Err(StateReadError(format!(
                 "Unable to get nonce at {contract_address:?} from fork"
@@ -120,10 +114,7 @@ impl StateReader for ForkStateReader {
                 Ok(class_hash)
             }
             Err(ProviderError::Other(JsonRpcClientError::TransportError(_))) => {
-                Err(StateReadError(
-                    "Unable to reach the node. Check your internet connection and node url"
-                        .to_string(),
-                ))
+                node_connection_error()
             }
             Err(_) => Err(StateReadError(format!(
                 "Unable to get class hash at {contract_address:?} from fork"
@@ -150,10 +141,7 @@ impl StateReader for ForkStateReader {
                         Ok(contract_class)
                     }
                     Err(ProviderError::Other(JsonRpcClientError::TransportError(_))) => {
-                        Err(StateReadError(
-                            "Unable to reach the node. Check your internet connection and node url"
-                                .to_string(),
-                        ))
+                        node_connection_error()
                     }
                     Err(_) => Err(UndeclaredClassHash(*class_hash)),
                 }
@@ -222,4 +210,10 @@ impl StateReader for ForkStateReader {
             "Unable to get compiled class hash from the fork".to_string(),
         ))
     }
+}
+
+fn node_connection_error<T>() -> StateResult<T> {
+    Err(StateReadError(
+        "Unable to reach the node. Check your internet connection and node url".to_string(),
+    ))
 }
