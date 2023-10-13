@@ -319,7 +319,7 @@ fn try_close_tmp_dir(maybe_tmp_dir: Option<TempDir>) -> Result<()> {
 /// * `predeployed_contracts` - Absolute path to predeployed contracts used by starknet state e.g. account contracts
 ///
 
-#[allow(clippy::implicit_hasher, clippy::too_many_arguments)]
+#[allow(clippy::implicit_hasher)]
 pub async fn run(
     package_path: &Utf8PathBuf,
     package_name: &str,
