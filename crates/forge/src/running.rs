@@ -80,14 +80,7 @@ pub(crate) fn blocking_run_from_test(
     send: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     tokio::task::spawn_blocking(move || {
-        run_test_case(
-            args,
-            &case,
-            &runner,
-            &runner_config,
-            &runner_params,
-            send.clone(),
-        )
+        run_test_case(args, &case, &runner, &runner_config, &runner_params, &send)
     })
 }
 
@@ -146,7 +139,7 @@ pub(crate) fn run_test_case(
     runner: &SierraCasmRunner,
     runner_config: &Arc<RunnerConfig>,
     runner_params: &Arc<RunnerParams>,
-    send: Sender<()>,
+    send: &Sender<()>,
 ) -> Result<TestCaseSummary> {
     if send.is_closed() {
         return Err(anyhow::anyhow!("stop"));

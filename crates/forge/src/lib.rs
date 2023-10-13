@@ -427,7 +427,7 @@ async fn run_tests_from_crate(
             runner_config.clone(),
             runner_params.clone(),
             cancellation_tokens.clone(),
-            send.clone(),
+            &send,
         ));
     }
 
@@ -462,7 +462,7 @@ fn choose_test_strategy_and_run(
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     cancellation_tokens: Arc<CancellationTokens>,
-    send: Sender<()>,
+    send: &Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     if args.is_empty() {
         run_single_test(

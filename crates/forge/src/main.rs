@@ -125,7 +125,7 @@ fn main_execution() -> Result<bool> {
         .build()?;
 
     let all_failed_tests = rt.block_on({
-        let result = rt.spawn(async move {
+        rt.spawn(async move {
             let mut all_failed_tests = vec![];
             for package in &packages {
                 let forge_config = config_from_scarb_for_package(&scarb_metadata, &package.id)?;
@@ -191,8 +191,7 @@ fn main_execution() -> Result<bool> {
                 all_failed_tests.append(&mut failed_tests);
             }
             Ok(all_failed_tests)
-        });
-        result
+        })
     })??;
     rt.shutdown_background();
 
