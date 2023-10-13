@@ -422,6 +422,8 @@ async fn run_tests_from_crate(
     while let Some(task) = tasks.next().await {
         let result = task??;
 
+        pretty_printing::print_test_result(&result);
+
         if result.runs().is_some() {
             was_fuzzed = true;
         }
@@ -490,8 +492,6 @@ fn run_single_test(
             result = blocking_run_from_test(vec![], case.clone(),runner,  runner_config.clone(), runner_params.clone() , None) => {
                 match result {
                     Ok(result) => {
-                        pretty_printing::print_test_result(&result);
-
                         if exit_first {
                             if let TestCaseSummary::Failed { .. } = &result {
                                 cancellation_tokens.exit_first.cancel();
@@ -613,8 +613,6 @@ fn run_with_fuzzing(
             .clone();
 
         let result = result.with_runs(runs);
-
-        pretty_printing::print_test_result(&result);
 
         Ok(result)
     })
