@@ -633,4 +633,70 @@ mod tests {
             }
         );
     }
+
+    #[test]
+    fn runner_config_just_scarb_arguments() {
+        let config_from_scarb = ForgeConfig {
+            exit_first: true,
+            fork: vec![],
+            fuzzer_runs: Some(1234),
+            fuzzer_seed: Some(500),
+        };
+        let workspace_root: Utf8PathBuf = Default::default();
+
+        let config = RunnerConfig::new(
+            workspace_root.clone(),
+            None,
+            false,
+            false,
+            None,
+            None,
+            &config_from_scarb,
+        );
+        assert_eq!(
+            config,
+            RunnerConfig {
+                workspace_root,
+                test_name_filter: None,
+                exact_match: false,
+                exit_first: true,
+                fork_targets: vec![],
+                fuzzer_runs: 1234,
+                fuzzer_seed: 500,
+            }
+        );
+    }
+
+    #[test]
+    fn runner_config_argument_precedence() {
+        let workspace_root: Utf8PathBuf = Default::default();
+
+        let config_from_scarb = ForgeConfig {
+            exit_first: false,
+            fork: vec![],
+            fuzzer_runs: Some(1234),
+            fuzzer_seed: Some(1000),
+        };
+        let config = RunnerConfig::new(
+            workspace_root.clone(),
+            None,
+            false,
+            true,
+            Some(100),
+            Some(32),
+            &config_from_scarb,
+        );
+        assert_eq!(
+            config,
+            RunnerConfig {
+                workspace_root,
+                test_name_filter: None,
+                exact_match: false,
+                exit_first: true,
+                fork_targets: vec![],
+                fuzzer_runs: 100,
+                fuzzer_seed: 32,
+            }
+        );
+    }
 }
