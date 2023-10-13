@@ -35,6 +35,7 @@ use starknet_api::patricia_key;
 use starknet_api::transaction::Calldata;
 use test_collector::{ForkConfig, TestCase};
 use tokio::sync::mpsc::Sender;
+use tokio::task::JoinHandle;
 
 use crate::scarb::ForkTarget;
 use crate::test_case_summary::TestCaseSummary;
@@ -70,25 +71,17 @@ fn build_hints_dict<'b>(
     (hints_dict, string_to_hint)
 }
 
-pub(crate) async fn blocking_run_from_test(
+pub(crate) fn blocking_run_from_test(
     args: Vec<Felt252>,
     case: Arc<TestCase>,
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
-    sender: Option<Sender<()>>,
-) -> Result<TestCaseSummary> {
+    send: Sender<()>,
+) -> JoinHandle<Result<TestCaseSummary>> {
     tokio::task::spawn_blocking(move || {
-        run_test_case(
-            args,
-            &case,
-            &runner,
-            &runner_config,
-            &runner_params,
-            &sender,
-        )
+        run_test_case(args, &case, &runner, &runner_config, &runner_params, &send)
     })
-    .await?
 }
 
 fn build_context() -> EntryPointExecutionContext {
@@ -146,8 +139,12 @@ pub(crate) fn run_test_case(
     runner: &SierraCasmRunner,
     runner_config: &Arc<RunnerConfig>,
     runner_params: &Arc<RunnerParams>,
-    _sender: &Option<Sender<()>>,
+    send: &Sender<()>,
 ) -> Result<TestCaseSummary> {
+    if send.is_closed() {
+        return Err(anyhow::anyhow!("stop"));
+    }
+
     let available_gas = if let Some(available_gas) = &case.available_gas {
         Some(*available_gas)
     } else {

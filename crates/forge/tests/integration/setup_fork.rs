@@ -94,6 +94,7 @@ fn fork_aliased_decorator() {
     ).as_str());
 
     let rt = Runtime::new().expect("Could not instantiate Runtime");
+
     let result = rt
         .block_on(run(
             &test.path().unwrap(),

@@ -123,6 +123,7 @@ fn main_execution() -> Result<bool> {
         .max_blocking_threads(cores_approx)
         .enable_all()
         .build()?;
+
     let all_failed_tests = rt.block_on({
         rt.spawn(async move {
             let mut all_failed_tests = vec![];
@@ -192,6 +193,7 @@ fn main_execution() -> Result<bool> {
             Ok(all_failed_tests)
         })
     })??;
+    rt.shutdown_background();
 
     // Explicitly close the temporary directories so we can handle the errors
     predeployed_contracts_dir.close().with_context(|| {

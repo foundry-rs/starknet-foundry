@@ -12,7 +12,7 @@ use futures::StreamExt;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use running::blocking_run_from_test;
 use serde::Deserialize;
-use tokio::sync::mpsc::channel;
+use tokio::sync::mpsc::{channel, Sender};
 
 use std::sync::Arc;
 use test_case_summary::TestCaseSummary;
@@ -408,6 +408,7 @@ async fn run_tests_from_crate(
     let mut was_fuzzed = false;
     let mut tasks = FuturesOrdered::new();
     let test_cases = &tests.test_cases;
+    let (send, mut rec) = channel(1);
 
     for case in test_cases.iter() {
         let case_name = case.name.as_str();
@@ -426,6 +427,7 @@ async fn run_tests_from_crate(
             runner_config.clone(),
             runner_params.clone(),
             cancellation_tokens.clone(),
+            &send,
         ));
     }
 
@@ -440,6 +442,8 @@ async fn run_tests_from_crate(
 
         results.push(result);
     }
+
+    rec.close();
 
     Ok((
         TestCrateSummary {
@@ -458,6 +462,7 @@ fn choose_test_strategy_and_run(
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     cancellation_tokens: Arc<CancellationTokens>,
+    send: &Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     if args.is_empty() {
         run_single_test(
@@ -466,6 +471,7 @@ fn choose_test_strategy_and_run(
             runner_config,
             runner_params,
             cancellation_tokens,
+            send.clone(),
         )
     } else {
         run_with_fuzzing(
@@ -485,6 +491,7 @@ fn run_single_test(
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     cancellation_tokens: Arc<CancellationTokens>,
+    send: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     let exit_first = runner_config.exit_first;
     tokio::task::spawn(async move {
@@ -499,8 +506,8 @@ fn run_single_test(
                 // one of a test returns Err
                 Ok(TestCaseSummary::Interrupted {  })
             },
-            result = blocking_run_from_test(vec![], case.clone(),runner,  runner_config.clone(), runner_params.clone() , None) => {
-                match result {
+            result = blocking_run_from_test(vec![], case.clone(),runner,  runner_config.clone(), runner_params.clone(), send.clone() ) => {
+                match result? {
                     Ok(result) => {
                         if exit_first {
                             if let TestCaseSummary::Failed { .. } = &result {
@@ -529,7 +536,7 @@ fn run_with_fuzzing(
 ) -> JoinHandle<Result<TestCaseSummary>> {
     tokio::task::spawn(async move {
         let token = CancellationToken::new();
-
+        let (send, mut rec) = channel(1);
         let args = args
             .iter()
             .map(|arg| {
@@ -552,7 +559,6 @@ fn run_with_fuzzing(
         let mut tasks = FuturesUnordered::new();
         // Pattern in order to waiting for things to finish shutting down
         // https://tokio.rs/tokio/topics/shutdown
-        let (send, mut recv) = channel(1);
 
         for _ in 1..=fuzzer_runs {
             let args = fuzzer.next_args();
@@ -571,9 +577,6 @@ fn run_with_fuzzing(
 
         let mut results = vec![];
 
-        // Graceful Shutdown Pattern
-        drop(send);
-
         while let Some(task) = tasks.next().await {
             let result = task??;
             results.push(result.clone());
@@ -588,7 +591,7 @@ fn run_with_fuzzing(
             }
         }
 
-        let _ = recv.recv().await;
+        rec.close();
 
         let runs = u32::try_from(
             results
@@ -638,7 +641,7 @@ fn run_fuzzing_subtest(
     runner_params: Arc<RunnerParams>,
     cancellation_tokens: Arc<CancellationTokens>,
     cancellation_fuzzing_token: CancellationToken,
-    send: tokio::sync::mpsc::Sender<()>,
+    send: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     let c = case.clone();
     task::spawn(async move {
@@ -665,9 +668,9 @@ fn run_fuzzing_subtest(
                 runner,
                 runner_config.clone(),
                 runner_params.clone(),
-                Some(send),
+                send.clone()
             ) => {
-                match result {
+                match result? {
                     Ok(result) => {
                         if let TestCaseSummary::Failed { .. } = &result {
                             if runner_config.exit_first {
