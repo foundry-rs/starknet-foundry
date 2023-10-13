@@ -21,7 +21,6 @@ use glob::glob;
 use num_bigint::BigUint;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use serde_json::Value;
-use starknet::core::types::BlockTag::Latest;
 use starknet::core::types::{BlockId, BlockTag};
 use starknet_api::core::ContractAddress;
 use std::str::FromStr;
@@ -123,14 +122,11 @@ fn test_forking_at_block_number() {
         let mut cached_state_before_delopy = CachedState::new(
             ExtendedStateReader {
                 dict_state_reader: build_testing_state(&predeployed_contracts),
-                fork_state_reader: Some(
-                    ForkStateReader::new(
-                        node_url,
-                        BlockId::Number(309_780),
-                        Some(cache_dir.path().to_str().unwrap()),
-                    )
-                    .unwrap(),
-                ),
+                fork_state_reader: Some(ForkStateReader::new(
+                    node_url,
+                    BlockId::Number(309_780),
+                    Some(cache_dir.path().to_str().unwrap()),
+                )),
             },
             GlobalContractCache::default(),
         );
@@ -139,14 +135,11 @@ fn test_forking_at_block_number() {
         let cached_state_afer_deploy = &mut CachedState::new(
             ExtendedStateReader {
                 dict_state_reader: build_testing_state(&predeployed_contracts),
-                fork_state_reader: Some(
-                    ForkStateReader::new(
-                        node_url,
-                        BlockId::Number(309_781),
-                        Some(cache_dir.path().to_str().unwrap()),
-                    )
-                    .unwrap(),
-                ),
+                fork_state_reader: Some(ForkStateReader::new(
+                    node_url,
+                    BlockId::Number(309_781),
+                    Some(cache_dir.path().to_str().unwrap()),
+                )),
             },
             GlobalContractCache::default(),
         );
@@ -516,22 +509,4 @@ fn test_cache_merging() {
     .for_each(|param_tpl| run_test(param_tpl.0, param_tpl.1, param_tpl.2));
 
     assert_cache();
-}
-
-#[test]
-fn test_fetching_block_number_for_latest_block() {
-    let node_url = "http://188.34.188.184:9545/rpc/v0.4";
-    let fork_reader = ForkStateReader::new(node_url, BlockId::Tag(Latest), None).unwrap();
-
-    match fork_reader.block_id {
-        BlockId::Number(_) => {}
-        _ => panic!("BlockId::Tag(Latest) should be converted to BlockId::Number"),
-    }
-}
-
-#[test]
-#[should_panic(expected = "Could not get the latest block number")]
-fn test_fetching_block_number_for_wrong_url() {
-    let node_url = "http://188.34.188.184:9545/rpc/xd";
-    ForkStateReader::new(node_url, BlockId::Tag(Latest), None).unwrap();
 }

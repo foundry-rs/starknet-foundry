@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use blockifier::execution::entry_point::{
     CallEntryPoint, CallType, EntryPointExecutionContext, ExecutionResources,
 };
@@ -25,8 +25,11 @@ use cheatnet::constants as cheatnet_constants;
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::state::{CheatnetState, ExtendedStateReader};
 use conversions::StarknetConversions;
-use starknet::core::types::{BlockId, BlockTag};
+use starknet::core::types::BlockTag::Latest;
+use starknet::core::types::{BlockId, BlockTag, MaybePendingBlockWithTxHashes};
 use starknet::core::utils::get_selector_from_name;
+use starknet::providers::jsonrpc::HttpTransport;
+use starknet::providers::{JsonRpcClient, Provider};
 use starknet_api::core::PatriciaKey;
 use starknet_api::core::{ContractAddress, EntryPointSelector};
 use starknet_api::deprecated_contract_class::EntryPointType;
@@ -34,7 +37,9 @@ use starknet_api::hash::StarkHash;
 use starknet_api::patricia_key;
 use starknet_api::transaction::Calldata;
 use test_collector::{ForkConfig, TestCase};
+use tokio::runtime::Runtime;
 use tokio::sync::mpsc::Sender;
+use url::Url;
 
 use crate::scarb::ForkTarget;
 use crate::test_case_summary::TestCaseSummary;
@@ -231,15 +236,35 @@ fn get_fork_state_reader(
     fork_config: &Option<ForkConfig>,
 ) -> Result<Option<ForkStateReader>> {
     match &fork_config {
-        Some(ForkConfig::Params(url, block_id)) => Ok(Some(ForkStateReader::new(
-            url,
-            *block_id,
-            Some(workspace_root.join(".snfoundry_cache").as_ref()),
-        )?)),
+        Some(ForkConfig::Params(url, block_id)) => {
+            let block_id = get_block_id(url, *block_id)?;
+            Ok(Some(ForkStateReader::new(
+                url,
+                block_id,
+                Some(workspace_root.join(".snfoundry_cache").as_ref()),
+            )))
+        }
         Some(ForkConfig::Id(name)) => {
             find_params_and_build_fork_state_reader(workspace_root, fork_targets, name)
         }
         _ => Ok(None),
+    }
+}
+
+fn get_block_id(url: &str, block_id: BlockId) -> Result<BlockId> {
+    match block_id {
+        BlockId::Tag(Latest) => {
+            let client = JsonRpcClient::new(HttpTransport::new(Url::parse(url).unwrap()));
+            let runtime = Runtime::new().expect("Could not instantiate Runtime");
+
+            match runtime.block_on(client.get_block_with_tx_hashes(BlockId::Tag(Latest))) {
+                Ok(MaybePendingBlockWithTxHashes::Block(block)) => {
+                    Ok(BlockId::Number(block.block_number))
+                }
+                _ => Err(anyhow!("Could not get the latest block number".to_string())),
+            }
+        }
+        _ => Ok(block_id),
     }
 }
 
@@ -267,11 +292,12 @@ fn find_params_and_build_fork_state_reader(
             return Ok(None);
         };
 
+        let block_id = get_block_id(&fork.url, block_id)?;
         return Ok(Some(ForkStateReader::new(
             &fork.url,
             block_id,
             Some(workspace_root.join(".snfoundry_cache").as_ref()),
-        )?));
+        )));
     }
 
     Ok(None)

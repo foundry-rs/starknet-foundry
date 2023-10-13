@@ -1,5 +1,4 @@
 use crate::forking::cache::ForkCache;
-use anyhow::{anyhow, Result};
 use blockifier::execution::contract_class::{
     ContractClass as ContractClassBlockifier, ContractClassV0, ContractClassV1,
 };
@@ -12,10 +11,7 @@ use cairo_lang_utils::bigint::BigUintAsHex;
 use conversions::StarknetConversions;
 use flate2::read::GzDecoder;
 use num_bigint::BigUint;
-use starknet::core::types::BlockTag::{Latest, Pending};
-use starknet::core::types::{
-    BlockId, ContractClass as ContractClassStarknet, MaybePendingBlockWithTxHashes,
-};
+use starknet::core::types::{BlockId, ContractClass as ContractClassStarknet};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider};
 use starknet_api::core::{ClassHash, CompiledClassHash, ContractAddress, Nonce};
@@ -38,21 +34,14 @@ pub struct ForkStateReader {
 }
 
 impl ForkStateReader {
-    pub fn new(url: &str, block_id: BlockId, cache_dir: Option<&str>) -> Result<Self> {
-        let client = JsonRpcClient::new(HttpTransport::new(Url::parse(url).unwrap()));
-        let runtime = Runtime::new().expect("Could not instantiate Runtime");
-        let (block_id, should_be_saved) = match block_id {
-            BlockId::Tag(Latest) => (get_latest_block_number(&client, &runtime)?, false),
-            BlockId::Tag(Pending) => (BlockId::Tag(Pending), false),
-            _ => (block_id, true),
-        };
-
-        Ok(ForkStateReader {
-            client,
+    #[must_use]
+    pub fn new(url: &str, block_id: BlockId, cache_dir: Option<&str>) -> Self {
+        ForkStateReader {
+            client: JsonRpcClient::new(HttpTransport::new(Url::parse(url).unwrap())),
             block_id,
-            runtime,
-            cache: ForkCache::load_or_new(url, block_id, cache_dir, should_be_saved),
-        })
+            runtime: Runtime::new().expect("Could not instantiate Runtime"),
+            cache: ForkCache::load_or_new(url, block_id, cache_dir),
+        }
     }
 }
 
@@ -209,15 +198,5 @@ impl StateReader for ForkStateReader {
         Err(StateReadError(
             "Unable to get compiled class hash from the fork".to_string(),
         ))
-    }
-}
-
-fn get_latest_block_number(
-    client: &JsonRpcClient<HttpTransport>,
-    runtime: &Runtime,
-) -> Result<BlockId> {
-    match runtime.block_on(client.get_block_with_tx_hashes(BlockId::Tag(Latest))) {
-        Ok(MaybePendingBlockWithTxHashes::Block(block)) => Ok(BlockId::Number(block.block_number)),
-        _ => Err(anyhow!("Could not get the latest block number".to_string())),
     }
 }

@@ -26,9 +26,7 @@ pub fn create_fork_cached_state() -> CachedState<ExtendedStateReader> {
     CachedState::new(
         ExtendedStateReader {
             dict_state_reader: build_testing_state(&predeployed_contracts),
-            fork_state_reader: Some(
-                ForkStateReader::new(node_url, BlockId::Tag(Latest), None).unwrap(),
-            ),
+            fork_state_reader: Some(ForkStateReader::new(node_url, BlockId::Tag(Latest), None)),
         },
         GlobalContractCache::default(),
     )
@@ -43,9 +41,7 @@ pub fn create_fork_cached_state_at(
     CachedState::new(
         ExtendedStateReader {
             dict_state_reader: build_testing_state(&predeployed_contracts),
-            fork_state_reader: Some(
-                ForkStateReader::new(node_url, block_id, Some(cache_dir)).unwrap(),
-            ),
+            fork_state_reader: Some(ForkStateReader::new(node_url, block_id, Some(cache_dir))),
         },
         GlobalContractCache::default(),
     )
