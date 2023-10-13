@@ -205,3 +205,47 @@ pub(crate) fn get_current_branch() -> String {
         String::from_utf8(output.stdout).unwrap().trim().to_string()
     }
 }
+
+#[macro_export]
+macro_rules! assert_stdout_contains {
+    ( $output:expr, $lines:expr ) => {{
+        use regex::Regex;
+
+        let output = $output.get_output();
+        let stdout = String::from_utf8(output.stdout.clone()).unwrap();
+
+        for line in $lines.lines() {
+            let escaped = regex::escape(line);
+            let replaced = escaped.replace("\\[\\.\\.\\]", ".*");
+            let re = Regex::new(replaced.as_str()).unwrap();
+
+            assert!(
+                re.find(stdout.as_str()).is_some(),
+                "Stdout missing line = {}",
+                line
+            );
+        }
+    }};
+}
+
+#[macro_export]
+macro_rules! assert_stderr_contains {
+    ( $output:expr, $lines:expr ) => {{
+        use regex::Regex;
+
+        let output = $output.get_output();
+        let stderr = String::from_utf8(output.stderr.clone()).unwrap();
+
+        for line in $lines.lines() {
+            let escaped = regex::escape(line);
+            let replaced = escaped.replace("\\[\\.\\.\\]", ".*");
+            let re = Regex::new(replaced.as_str()).unwrap();
+
+            assert!(
+                re.find(stderr.as_str()).is_some(),
+                "Stderr missing line = {}",
+                line
+            );
+        }
+    }};
+}
