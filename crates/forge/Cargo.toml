@@ -62,6 +62,7 @@ tokio.workspace = true
 tokio-util.workspace = true
 futures.workspace = true
 num-integer = "0.1.45"
+url.workspace = true
 
 [lib]
 name = "forge"
