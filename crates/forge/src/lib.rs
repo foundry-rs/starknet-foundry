@@ -343,7 +343,6 @@ pub async fn run(
         package_name,
     );
 
-    let mut fuzzing_happened = false;
     let mut summaries = vec![];
     let mut tasks = vec![];
 
@@ -373,17 +372,19 @@ pub async fn run(
     for (test_crate_type, tests_len, task) in tasks {
         pretty_printing::print_running_tests(test_crate_type, tests_len);
 
-        let (summary, was_fuzzed) = task.await??;
+        let summary = task.await??;
         for test_case_summary in &summary.test_case_summaries {
             pretty_printing::print_test_result(test_case_summary);
         }
-        fuzzing_happened |= was_fuzzed;
         summaries.push(summary.clone());
     }
 
     pretty_printing::print_test_summary(&summaries);
 
-    if fuzzing_happened {
+    if summaries
+        .iter()
+        .any(|summary| summary.contained_fuzzed_tests)
+    {
         pretty_printing::print_test_seed(runner_config.fuzzer_seed);
     }
 
@@ -395,7 +396,7 @@ async fn run_tests_from_crate(
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     cancellation_tokens: Arc<CancellationTokens>,
-) -> Result<(TestCrateSummary, bool)> {
+) -> Result<TestCrateSummary> {
     let runner = Arc::new(
         SierraCasmRunner::new(
             tests.sierra_program.clone(),
@@ -405,7 +406,6 @@ async fn run_tests_from_crate(
         .context("Failed setting up runner.")?,
     );
 
-    let mut was_fuzzed = false;
     let mut tasks = FuturesOrdered::new();
     let test_cases = &tests.test_cases;
 
@@ -434,21 +434,16 @@ async fn run_tests_from_crate(
     while let Some(task) = tasks.next().await {
         let result = task??;
 
-        if result.runs().is_some() {
-            was_fuzzed = true;
-        }
-
         results.push(result);
     }
 
-    Ok((
-        TestCrateSummary {
-            test_case_summaries: results,
-            runner_exit_status: RunnerStatus::Default,
-            test_crate_type: tests.test_crate_type,
-        },
-        was_fuzzed,
-    ))
+    let contained_fuzzed_tests = results.iter().any(|summary| summary.runs().is_some());
+    Ok(TestCrateSummary {
+        test_case_summaries: results,
+        runner_exit_status: RunnerStatus::Default,
+        test_crate_type: tests.test_crate_type,
+        contained_fuzzed_tests,
+    })
 }
 
 fn choose_test_strategy_and_run(
