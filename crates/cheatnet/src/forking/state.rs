@@ -28,7 +28,7 @@ use url::Url;
 #[derive(Debug)]
 pub struct ForkStateReader {
     client: JsonRpcClient<HttpTransport>,
-    pub block_id: BlockId,
+    block_id: BlockId,
     runtime: Runtime,
     cache: ForkCache,
 }
