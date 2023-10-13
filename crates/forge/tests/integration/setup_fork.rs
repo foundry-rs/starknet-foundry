@@ -11,7 +11,6 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use tempfile::tempdir;
 use tokio::runtime::Runtime;
-use tokio::sync::mpsc::channel;
 
 static CHEATNET_RPC_URL: &str = "http://188.34.188.184:9545/rpc/v0.4";
 
