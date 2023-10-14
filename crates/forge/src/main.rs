@@ -28,6 +28,7 @@ static CACHE_DIR: &str = ".snfoundry_cache";
 
 #[derive(Parser, Debug)]
 #[command(version)]
+#[allow(clippy::struct_excessive_bools)]
 struct Args {
     /// Name used to filter tests
     test_filter: Option<String>,
@@ -59,6 +60,13 @@ struct Args {
     /// Number of cores used for test execution
     #[arg(long, value_parser = validate_cores_number)]
     cores: Option<usize>,
+
+    /// Run only tests marked with `#[ignore]` attribute
+    #[arg(long = "ignored")]
+    only_ignored: bool,
+    /// Run all tests regardless of `#[ignore]` attribute
+    #[arg(long, conflicts_with = "only_ignored")]
+    include_ignored: bool,
 }
 
 fn validate_cores_number(val: &str) -> Result<usize> {
@@ -112,6 +120,7 @@ fn extract_failed_tests(tests_summaries: Vec<TestCrateSummary>) -> Vec<TestCaseS
         .collect()
 }
 
+#[allow(clippy::too_many_lines)]
 fn main_execution() -> Result<bool> {
     let args = Args::parse();
     if let Some(project_name) = args.init {
@@ -192,6 +201,8 @@ fn main_execution() -> Result<bool> {
                     args.test_filter.clone(),
                     args.exact,
                     args.exit_first,
+                    args.only_ignored,
+                    args.include_ignored,
                     args.fuzzer_runs,
                     args.fuzzer_seed,
                     &forge_config,

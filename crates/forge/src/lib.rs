@@ -9,7 +9,6 @@ use camino::{Utf8Path, Utf8PathBuf};
 
 use futures::StreamExt;
 use running::blocking_run_from_test;
-use serde::Deserialize;
 use tokio::sync::mpsc::{channel, Sender};
 
 use std::sync::Arc;
@@ -64,13 +63,42 @@ static BUILTINS: Lazy<Vec<&str>> = Lazy::new(|| {
     ]
 });
 
+#[derive(Debug, PartialEq)]
+enum TestsToRun {
+    All,
+    Ignored,
+    NotIgnored,
+}
+
+impl TestsToRun {
+    fn from_flags(only_ignored: bool, include_ignored: bool) -> Self {
+        assert!(!(only_ignored && include_ignored));
+        if include_ignored {
+            Self::All
+        } else if only_ignored {
+            Self::Ignored
+        } else {
+            Self::NotIgnored
+        }
+    }
+}
+
+fn should_be_run(test_case: &TestCase, tests_to_run: &TestsToRun) -> bool {
+    match tests_to_run {
+        TestsToRun::All => true,
+        TestsToRun::Ignored => test_case.ignored,
+        TestsToRun::NotIgnored => !test_case.ignored,
+    }
+}
+
 /// Configuration of the test runner
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct RunnerConfig {
     workspace_root: Utf8PathBuf,
     test_name_filter: Option<String>,
     exact_match: bool,
     exit_first: bool,
+    tests_to_run: TestsToRun,
     fork_targets: Vec<ForkTarget>,
     fuzzer_runs: u32,
     fuzzer_seed: u64,
@@ -85,12 +113,14 @@ impl RunnerConfig {
     /// * `exact_match` - Should test names match the `test_name_filter` exactly
     /// * `exit_first` - Should runner exit after first failed test
     #[must_use]
-    #[allow(clippy::too_many_arguments)]
+    #[allow(clippy::too_many_arguments, clippy::fn_params_excessive_bools)]
     pub fn new(
         workspace_root: Utf8PathBuf,
         test_name_filter: Option<String>,
         exact_match: bool,
         exit_first: bool,
+        only_ignored: bool,
+        include_ignored: bool,
         fuzzer_runs: Option<u32>,
         fuzzer_seed: Option<u64>,
         forge_config_from_scarb: &ForgeConfig,
@@ -100,6 +130,7 @@ impl RunnerConfig {
             test_name_filter,
             exact_match,
             exit_first: forge_config_from_scarb.exit_first || exit_first,
+            tests_to_run: TestsToRun::from_flags(only_ignored, include_ignored),
             fork_targets: forge_config_from_scarb.fork.clone(),
             fuzzer_runs: fuzzer_runs
                 .or(forge_config_from_scarb.fuzzer_runs)
@@ -293,9 +324,16 @@ async fn run_tests_from_crate(
     let (send_shut_down, mut rec_shut_down) = channel(1);
 
     for case in test_cases.iter() {
-        let case_name = case.name.as_str();
+        let case_name = case.name.clone();
 
-        let function = runner.find_function(case_name)?;
+        if !should_be_run(case, &runner_config.tests_to_run) {
+            tasks.push(tokio::task::spawn(async {
+                Ok(TestCaseSummary::Ignored { name: case_name })
+            }));
+            continue;
+        };
+
+        let function = runner.find_function(&case_name)?;
         let args = function_args(function, &BUILTINS);
 
         let case = Arc::new(case.clone());
@@ -590,6 +628,8 @@ mod tests {
             None,
             false,
             false,
+            false,
+            false,
             None,
             None,
             &Default::default(),
@@ -597,6 +637,8 @@ mod tests {
         let config2 = RunnerConfig::new(
             workspace_root,
             None,
+            false,
+            false,
             false,
             false,
             None,
@@ -617,6 +659,8 @@ mod tests {
             None,
             false,
             false,
+            false,
+            false,
             None,
             None,
             &Default::default(),
@@ -628,6 +672,7 @@ mod tests {
                 test_name_filter: None,
                 exact_match: false,
                 exit_first: false,
+                tests_to_run: TestsToRun::NotIgnored,
                 fork_targets: vec![],
                 fuzzer_runs: FUZZER_RUNS_DEFAULT,
                 fuzzer_seed: config.fuzzer_seed,
@@ -650,6 +695,8 @@ mod tests {
             None,
             false,
             false,
+            false,
+            false,
             None,
             None,
             &config_from_scarb,
@@ -661,6 +708,7 @@ mod tests {
                 test_name_filter: None,
                 exact_match: false,
                 exit_first: true,
+                tests_to_run: TestsToRun::NotIgnored,
                 fork_targets: vec![],
                 fuzzer_runs: 1234,
                 fuzzer_seed: 500,
@@ -683,6 +731,8 @@ mod tests {
             None,
             false,
             true,
+            true,
+            false,
             Some(100),
             Some(32),
             &config_from_scarb,
@@ -694,6 +744,7 @@ mod tests {
                 test_name_filter: None,
                 exact_match: false,
                 exit_first: true,
+                tests_to_run: TestsToRun::Ignored,
                 fork_targets: vec![],
                 fuzzer_runs: 100,
                 fuzzer_seed: 32,

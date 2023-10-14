@@ -45,6 +45,14 @@ Clean forge cache directory.
 
 Number of cores to use for test execution.
 
+## `--ignored`
+
+Run only tests marked with `#[ignore]` attribute.
+
+## `--include-ignored`
+
+Run all tests regardless of `#[ignore]` attribute.
+
 ## `-h`, `--help`
 
 Print help.

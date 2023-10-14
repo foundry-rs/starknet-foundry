@@ -1,4 +1,4 @@
-use crate::{CrateLocation, RunnerConfig, RunnerParams, BUILTINS};
+use crate::{CrateLocation, RunnerConfig, RunnerParams, TestsToRun, BUILTINS};
 use anyhow::{anyhow, Context, Result};
 use assert_fs::fixture::{FileTouch, PathChild, PathCopy};
 use assert_fs::TempDir;
@@ -31,6 +31,18 @@ impl CompiledTestCrate {
             .filter(|tc| tc.name == filter)
             .collect();
         Self { test_cases, ..self }
+    }
+
+    fn extract_ignored(self) -> Self {
+        let result = self
+            .test_cases
+            .into_iter()
+            .filter(|case| case.ignored)
+            .collect();
+        Self {
+            test_cases: result,
+            ..self
+        }
     }
 }
 
@@ -117,7 +129,7 @@ pub(crate) fn filter_tests_from_crates(
     compiled_test_crates: Vec<CompiledTestCrate>,
     runner_config: &RunnerConfig,
 ) -> Vec<CompiledTestCrate> {
-    if let Some(test_name_filter) = &runner_config.test_name_filter {
+    let filtered_by_name = if let Some(test_name_filter) = &runner_config.test_name_filter {
         compiled_test_crates
             .into_iter()
             .map(|tc| {
@@ -130,6 +142,15 @@ pub(crate) fn filter_tests_from_crates(
             .collect()
     } else {
         compiled_test_crates
+    };
+
+    if let TestsToRun::Ignored = runner_config.tests_to_run {
+        filtered_by_name
+            .into_iter()
+            .map(CompiledTestCrate::extract_ignored)
+            .collect()
+    } else {
+        filtered_by_name
     }
 }
 
@@ -357,6 +378,7 @@ mod tests {
                 TestCase {
                     name: "crate1::do_thing".to_string(),
                     available_gas: None,
+                    ignored: false,
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
@@ -364,6 +386,7 @@ mod tests {
                 TestCase {
                     name: "crate2::run_other_thing".to_string(),
                     available_gas: None,
+                    ignored: true,
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
@@ -371,6 +394,7 @@ mod tests {
                 TestCase {
                     name: "outer::crate2::execute_next_thing".to_string(),
                     available_gas: None,
+                    ignored: true,
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
@@ -378,6 +402,7 @@ mod tests {
                 TestCase {
                     name: "thing".to_string(),
                     available_gas: None,
+                    ignored: false,
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
@@ -392,6 +417,7 @@ mod tests {
             vec![TestCase {
                 name: "crate1::do_thing".to_string(),
                 available_gas: None,
+                ignored: false,
                 expected_result: ExpectedTestResult::Success,
                 fork_config: None,
                 fuzzer_config: None
@@ -404,6 +430,7 @@ mod tests {
             vec![TestCase {
                 name: "crate2::run_other_thing".to_string(),
                 available_gas: None,
+                ignored: true,
                 expected_result: ExpectedTestResult::Success,
                 fork_config: None,
                 fuzzer_config: None
@@ -418,6 +445,7 @@ mod tests {
                     name: "crate1::do_thing".to_string(),
                     available_gas: None,
                     expected_result: ExpectedTestResult::Success,
+                    ignored: false,
                     fork_config: None,
                     fuzzer_config: None,
                 },
@@ -425,6 +453,7 @@ mod tests {
                     name: "crate2::run_other_thing".to_string(),
                     available_gas: None,
                     expected_result: ExpectedTestResult::Success,
+                    ignored: true,
                     fork_config: None,
                     fuzzer_config: None,
                 },
@@ -432,12 +461,14 @@ mod tests {
                     name: "outer::crate2::execute_next_thing".to_string(),
                     available_gas: None,
                     expected_result: ExpectedTestResult::Success,
+                    ignored: true,
                     fork_config: None,
                     fuzzer_config: None,
                 },
                 TestCase {
                     name: "thing".to_string(),
                     available_gas: None,
+                    ignored: false,
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
@@ -455,6 +486,7 @@ mod tests {
                 TestCase {
                     name: "crate1::do_thing".to_string(),
                     available_gas: None,
+                    ignored: false,
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
@@ -462,6 +494,7 @@ mod tests {
                 TestCase {
                     name: "crate2::run_other_thing".to_string(),
                     available_gas: None,
+                    ignored: true,
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
@@ -469,6 +502,7 @@ mod tests {
                 TestCase {
                     name: "outer::crate2::execute_next_thing".to_string(),
                     available_gas: None,
+                    ignored: true,
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
@@ -476,6 +510,7 @@ mod tests {
                 TestCase {
                     name: "thing".to_string(),
                     available_gas: None,
+                    ignored: false,
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
@@ -510,6 +545,7 @@ mod tests {
                 TestCase {
                     name: "crate1::do_thing".to_string(),
                     available_gas: None,
+                    ignored: false,
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
@@ -517,6 +553,7 @@ mod tests {
                 TestCase {
                     name: "crate2::run_other_thing".to_string(),
                     available_gas: None,
+                    ignored: true,
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
@@ -524,6 +561,7 @@ mod tests {
                 TestCase {
                     name: "outer::crate2::run_other_thing".to_string(),
                     available_gas: None,
+                    ignored: true,
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
@@ -531,6 +569,7 @@ mod tests {
                 TestCase {
                     name: "thing".to_string(),
                     available_gas: None,
+                    ignored: false,
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
@@ -546,6 +585,7 @@ mod tests {
                 TestCase {
                     name: "crate2::run_other_thing".to_string(),
                     available_gas: None,
+                    ignored: true,
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
@@ -553,6 +593,7 @@ mod tests {
                 TestCase {
                     name: "outer::crate2::run_other_thing".to_string(),
                     available_gas: None,
+                    ignored: true,
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
@@ -569,6 +610,7 @@ mod tests {
                 TestCase {
                     name: "crate1::do_thing".to_string(),
                     available_gas: None,
+                    ignored: false,
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
@@ -576,6 +618,7 @@ mod tests {
                 TestCase {
                     name: "crate2::run_other_thing".to_string(),
                     available_gas: None,
+                    ignored: true,
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
@@ -583,6 +626,7 @@ mod tests {
                 TestCase {
                     name: "outer::crate3::run_other_thing".to_string(),
                     available_gas: None,
+                    ignored: true,
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
@@ -590,6 +634,7 @@ mod tests {
                 TestCase {
                     name: "do_thing".to_string(),
                     available_gas: None,
+                    ignored: false,
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
                     fuzzer_config: None,
@@ -610,6 +655,7 @@ mod tests {
             vec![TestCase {
                 name: "do_thing".to_string(),
                 available_gas: None,
+                ignored: false,
                 expected_result: ExpectedTestResult::Success,
                 fork_config: None,
                 fuzzer_config: None,
@@ -624,6 +670,7 @@ mod tests {
             vec![TestCase {
                 name: "crate1::do_thing".to_string(),
                 available_gas: None,
+                ignored: false,
                 expected_result: ExpectedTestResult::Success,
                 fork_config: None,
                 fuzzer_config: None,
@@ -643,6 +690,7 @@ mod tests {
             vec![TestCase {
                 name: "outer::crate3::run_other_thing".to_string(),
                 available_gas: None,
+                ignored: true,
                 expected_result: ExpectedTestResult::Success,
                 fork_config: None,
                 fuzzer_config: None,

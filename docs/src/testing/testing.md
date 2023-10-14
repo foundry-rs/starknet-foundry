@@ -91,3 +91,27 @@ Running 1 test(s) from src/
 [PASS] src::should_panic_check_data
 Tests: 1 passed, 0 failed, 0 skipped
 ```
+
+## Ignoring Some Tests Unless Specifically Requested
+
+Sometimes you may have tests that you want to exclude during most runs of `snforge test`.
+You can achieve it using `#[ignore]` - tests marked with this attribute will not be run by default.
+
+```rust
+#[test]
+#[ignore]
+fn ignored_test() {
+    // test code
+}
+```
+
+```shell
+$ snforge
+Collected 1 test(s) from package_name package
+Running 1 test(s) from src/
+[IGNORE] src::ignored_test
+Tests: 1 passed, 0 failed, 0 skipped
+```
+
+You can run only the ignored tests using `snforge --ignored`. 
+To run all tests regardless of the `#[ignore]` attribute use `snforge --include-ignored`.
