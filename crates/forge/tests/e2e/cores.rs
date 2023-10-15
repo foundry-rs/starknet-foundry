@@ -55,7 +55,7 @@ fn with_more_than_one_core() {
     snapbox
         .current_dir(&temp)
         .arg("--cores")
-        .arg("3")
+        .arg("2")
         .assert()
         .code(1)
         .stdout_matches(indoc! {r#"

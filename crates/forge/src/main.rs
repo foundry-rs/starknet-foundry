@@ -142,8 +142,8 @@ fn main_execution() -> Result<bool> {
 
     let cores = if let Some(cores) = args.cores {
         cores
-    } else if let Ok(cores) = available_parallelism() {
-        cores.get()
+    } else if let Ok(available_cores) = available_parallelism() {
+        available_cores.get()
     } else {
         eprintln!("Failed to get the number of available cores, defaulting to 1");
         1
