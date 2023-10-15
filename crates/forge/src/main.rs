@@ -57,7 +57,7 @@ struct Args {
     clean_cache: bool,
 
     /// Cores used for parallel tests execution
-    #[arg(short = 't', long, value_parser = validate_cores_number)]
+    #[arg(long, value_parser = validate_cores_number)]
     cores: Option<usize>,
 }
 
@@ -139,17 +139,16 @@ fn main_execution() -> Result<bool> {
     if args.clean_cache {
         clean_cache(&workspace_root).context("Failed to clean snforge cache")?;
     }
+
     let cores = if let Some(cores) = args.cores {
         cores
+    } else if let Ok(cores) = available_parallelism() {
+        cores.get()
     } else {
-        match available_parallelism() {
-            Ok(cores) => cores.get(),
-            Err(_) => {
-                eprintln!("Failed to get the number of available cores, defaulting to 1");
-                1
-            }
-        }
+        eprintln!("Failed to get the number of available cores, defaulting to 1");
+        1
     };
+
     let rt = Builder::new_multi_thread()
         .max_blocking_threads(cores)
         .enable_all()
