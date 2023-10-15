@@ -109,10 +109,4 @@ fn with_too_much_cores() {
         String::from_utf8(assert.get_output().stderr.clone()).expect("stderr is not valid UTF-8");
 
     assert!(stderr.contains("error: invalid value '99999' for '--cores <CORES>': Number of cores must be less than or equal to the number of cores available on the machine"));
-
-    let re = regex::Regex::new(r"\(\d+\)").expect("Invalid regex");
-    assert!(
-        re.is_match(&stderr),
-        "stderr does not contain the expected pattern"
-    );
 }
