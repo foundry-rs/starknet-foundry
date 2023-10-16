@@ -140,7 +140,7 @@ pub fn filter_tests_from_crates(
     }
 }
 
-pub fn pack_tests_into_one_file(
+fn pack_tests_into_one_file(
     tmp_dir: &TempDir,
     tests_folder_path: &Utf8PathBuf,
 ) -> Result<TestCrateCompilationTarget> {
