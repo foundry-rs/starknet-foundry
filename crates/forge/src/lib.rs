@@ -409,6 +409,9 @@ async fn run_tests_from_crate(
     let mut tasks = FuturesOrdered::new();
     let test_cases = &tests.test_cases;
     let (send, mut rec) = channel(1);
+    // Waiting for things to finish shutting down
+    // https://tokio.rs/tokio/topics/shutdown
+    let (send_shut_down, mut rec_shut_down) = channel(1);
 
     for case in test_cases.iter() {
         let case_name = case.name.as_str();
@@ -428,6 +431,7 @@ async fn run_tests_from_crate(
             runner_params.clone(),
             cancellation_tokens.clone(),
             &send,
+            &send_shut_down,
         ));
     }
 
@@ -435,7 +439,6 @@ async fn run_tests_from_crate(
 
     while let Some(task) = tasks.next().await {
         let result = task??;
-
         if result.runs().is_some() {
             was_fuzzed = true;
         }
@@ -444,6 +447,10 @@ async fn run_tests_from_crate(
     }
 
     rec.close();
+
+    // Waiting for things to finish shutting down
+    drop(send_shut_down);
+    let _ = rec_shut_down.recv().await;
 
     Ok((
         TestCrateSummary {
@@ -463,6 +470,7 @@ fn choose_test_strategy_and_run(
     runner_params: Arc<RunnerParams>,
     cancellation_tokens: Arc<CancellationTokens>,
     send: &Sender<()>,
+    send_shut_down: &Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     if args.is_empty() {
         run_single_test(
@@ -472,6 +480,7 @@ fn choose_test_strategy_and_run(
             runner_params,
             cancellation_tokens,
             send.clone(),
+            send_shut_down.clone(),
         )
     } else {
         run_with_fuzzing(
@@ -481,6 +490,7 @@ fn choose_test_strategy_and_run(
             runner_config,
             runner_params,
             cancellation_tokens,
+            send_shut_down.clone(),
         )
     }
 }
@@ -492,6 +502,7 @@ fn run_single_test(
     runner_params: Arc<RunnerParams>,
     cancellation_tokens: Arc<CancellationTokens>,
     send: Sender<()>,
+    send_shut_down: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     let exit_first = runner_config.exit_first;
     tokio::task::spawn(async move {
@@ -506,7 +517,7 @@ fn run_single_test(
                 // one of a test returns Err
                 Ok(TestCaseSummary::Interrupted {  })
             },
-            result = blocking_run_from_test(vec![], case.clone(),runner,  runner_config.clone(), runner_params.clone(), send.clone() ) => {
+            result = blocking_run_from_test(vec![], case.clone(),runner,  runner_config.clone(), runner_params.clone(), send.clone(), send_shut_down.clone() ) => {
                 match result? {
                     Ok(result) => {
                         if exit_first {
@@ -533,6 +544,7 @@ fn run_with_fuzzing(
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     cancellation_tokens: Arc<CancellationTokens>,
+    send_shut_down: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     tokio::task::spawn(async move {
         let token = CancellationToken::new();
@@ -570,6 +582,7 @@ fn run_with_fuzzing(
                 cancellation_tokens.clone(),
                 token.clone(),
                 send.clone(),
+                send_shut_down.clone(),
             ));
         }
 
@@ -638,6 +651,7 @@ fn run_fuzzing_subtest(
     cancellation_tokens: Arc<CancellationTokens>,
     cancellation_fuzzing_token: CancellationToken,
     send: Sender<()>,
+    send_shut_down: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     let c = case.clone();
     task::spawn(async move {
@@ -664,7 +678,8 @@ fn run_fuzzing_subtest(
                 runner,
                 runner_config.clone(),
                 runner_params.clone(),
-                send.clone()
+                send.clone(),
+                send_shut_down.clone()
             ) => {
                 match result? {
                     Ok(result) => {
