@@ -77,7 +77,7 @@ address: 0x7a949e83b243068d0cbedd8d5b8b32fafea66c54de23c40e68b126b5c845b61
 ```
 ### `account delete`
 
-Delete an account from `accounts-file` and optionally his associated Scarb profile.
+Delete an account from `accounts-file` and its associated Scarb profile.
 
 ```shell
 $ sncast \
@@ -88,12 +88,14 @@ $ sncast \
   
 Do you want to remove account a4 from network alpha-goerli? (Y/n)
 Y
+Account removed from Scarb
 command: account delete
 result: Account successfully removed
 ```
-    Note that you can pass --delete-profile argument to remove the associated profile in Scarb.toml.
+> 💡 **Info**
+> Note that you can pass --delete-profile false argument to persist the associated profile in Scarb.toml.
 
-    For a detailed CLI description, see [account delete command reference](../appendix/cast/account/delete.md).
+For a detailed CLI description, see [account delete command reference](../appendix/cast/account/delete.md).
 
 ### Custom account contract
 

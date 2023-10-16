@@ -3,24 +3,22 @@ use camino::Utf8PathBuf;
 use cast::helpers::response_structs::AccountDeleteResponse;
 use cast::helpers::scarb_utils::get_scarb_manifest;
 use clap::Args;
+use promptly::prompt;
 use serde_json::Map;
-use serde_json::Value;
-use std::fs::{File, OpenOptions};
-use std::io;
+use std::fs::File;
 use std::io::Read;
 use std::io::Write;
-use std::str::Split;
 
 #[derive(Args, Debug)]
-#[command(about = "Delete an account information from the accounts file")]
+#[command(about = "Delete account information from the accounts file")]
 pub struct Delete {
-    /// Name of the account to be deployed
+    /// Name of the account to be deleted
     #[clap(short, long)]
     pub name: Option<String>,
 
-    /// If passed, a profile with corresponding data will be removed in Scarb.toml
+    /// If passed with false, Scarb profile won't be removed
     #[clap(long)]
-    pub delete_profile: bool,
+    pub delete_profile: Option<String>,
 
     /// Network where the account exists
     #[clap(long)]
@@ -32,12 +30,19 @@ pub fn delete(
     name: &str,
     path: &Utf8PathBuf,
     path_to_scarb_toml: &Option<Utf8PathBuf>,
-    delete_profile: bool,
+    delete_profile: Option<String>,
     network_name: &str,
 ) -> Result<AccountDeleteResponse> {
     let contents = std::fs::read_to_string(path.clone()).context("Couldn't read accounts file")?;
     let items: serde_json::Value = serde_json::from_str(&contents)
         .map_err(|_| anyhow!("Failed to parse accounts file at {path}"))?;
+
+    // validate delete_profile in "true" or "false" or empty
+    if let Some(ref delete_profile) = delete_profile {
+        if delete_profile != "true" && delete_profile != "false" {
+            bail!("delete_profile must be true or false");
+        }
+    }
 
     if items[&network_name].is_null() {
         bail!("No accounts defined for network {}", network_name);
@@ -46,72 +51,70 @@ pub fn delete(
         bail!("Account with name {name} does not exist")
     }
 
-    let mut items: Map<String, Value> =
+    let mut items: Map<String, serde_json::Value> =
         serde_json::from_str(&contents).expect("failed to read file { path }");
 
     // Let's ask confirmation
-    println!("Do you want to remove account {name} from network {network_name}? (Y/n)");
+    let prompt_text =
+        format!("Do you want to remove account {name} from network {network_name}? (Y/n)");
+    let input: String = prompt(prompt_text)?;
 
-    let mut input = String::new();
-    io::stdin()
-        .read_line(&mut input)
-        .expect("Failed to read input");
+    if !input.starts_with('Y') {
+        bail!("Delete aborted");
+    }
 
-    let mut result = "Account successfully removed".to_string();
-    if input.starts_with('Y') {
-        // get to the nested object "nested"
-        let nested = items
-            .get_mut(network_name)
-            .expect("can't find network")
-            .as_object_mut()
-            .expect("invalid network format");
+    // get to the nested object "nested"
+    let nested = items
+        .get_mut(network_name)
+        .expect("can't find network")
+        .as_object_mut()
+        .expect("invalid network format");
 
-        // now remove the child from there
-        nested.remove(name);
+    // now remove the child from there
+    nested.remove(name);
 
-        std::fs::write(path.clone(), serde_json::to_string_pretty(&items).unwrap())?;
-        // Remove profile from Scarb.toml
-        if delete_profile {
-            let profile_name = format!("[tool.sncast.{name}]");
-            let manifest_path = match path_to_scarb_toml.clone() {
-                Some(path) => path,
-                None => {
-                    get_scarb_manifest().context("Failed to obtain manifest path from scarb")?
+    std::fs::write(path.clone(), serde_json::to_string_pretty(&items).unwrap())?;
+
+    let mut remove_scarb_message = "Account not removed from Scarb".to_string();
+    // delete profile if delete_profile is true or not passed
+    if delete_profile.map_or(true, |s| s == "true") {
+        let manifest_path = match path_to_scarb_toml.clone() {
+            Some(path) => path,
+            None => get_scarb_manifest().context("Failed to obtain manifest path from scarb")?,
+        };
+        let mut toml_content = String::new();
+        let mut file = File::open(manifest_path.clone()).expect("Failed to open file");
+        file.read_to_string(&mut toml_content)
+            .expect("Failed to read file");
+
+        // Parse the TOML content
+        let mut parsed_toml: toml::Value =
+            toml::de::from_str(&toml_content).expect("Failed to parse TOML");
+
+        // Remove the nested section from the Value object.
+        if let Some(table) = parsed_toml
+            .get_mut("tool")
+            .and_then(toml::Value::as_table_mut)
+        {
+            if let Some(nested_table) = table.get_mut("sncast").and_then(toml::Value::as_table_mut)
+            {
+                if nested_table.remove(name).is_some() {
+                    remove_scarb_message = "Account removed from Scarb".to_string();
                 }
-            };
-            println!("Removing profile {profile_name} from {manifest_path}.");
-
-            // Open Scarb file.
-            let mut file = File::open(manifest_path.clone())?;
-            let mut contents = String::new();
-            file.read_to_string(&mut contents)?;
-            let eol = "\n";
-            let mut lines: Split<&str> = contents.split(eol);
-
-            // Find and remove profile.
-            let mut filtered_lines: Vec<&str> = lines.clone().collect();
-            let index = lines.position(|line| line == profile_name).unwrap();
-            filtered_lines.remove(index); // Remove profile name
-            filtered_lines.remove(index); // Remove account
-            filtered_lines.remove(index); // Remove accounts-file
-            filtered_lines.remove(index); // Remove url
-            if index < filtered_lines.len() && filtered_lines[index].is_empty() {
-                //Remove empty line
-                filtered_lines.remove(index);
             }
-            // Update Scarb file.
-            let new_contents = filtered_lines.join("\n");
-            let mut file = OpenOptions::new()
-                .write(true)
-                .truncate(true)
-                .open(manifest_path)?;
-            file.write_all(new_contents.as_bytes())?;
-            file.flush()?;
         }
-    } else {
-        result = "Delete cancelled".to_string();
+
+        // Serialize the modified TOML data back to a string
+        let modified_toml = toml::to_string(&parsed_toml).expect("Failed to serialize TOML");
+
+        // Write the modified content back to the file
+        let mut file = File::create(manifest_path).expect("Failed to create file");
+        file.write_all(modified_toml.as_bytes())
+            .expect("Failed to write to file");
     };
 
+    println!("{remove_scarb_message}");
+    let result = "Account successfully removed".to_string();
     Ok(AccountDeleteResponse {
         result: result.to_string(),
     })
