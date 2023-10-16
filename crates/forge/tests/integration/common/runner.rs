@@ -12,7 +12,7 @@ use cairo_lang_starknet::inline_macros::selector::SelectorMacro;
 use cairo_lang_starknet::plugin::StarkNetPlugin;
 use camino::Utf8PathBuf;
 use forge::scarb::StarknetContractArtifacts;
-use forge::{TestCrateSummary, TestCrateType};
+use forge::{TestCrateSummary, CrateLocation};
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -154,7 +154,7 @@ impl<'a> TestCase {
     pub fn find_test_result(results: &[TestCrateSummary]) -> &TestCrateSummary {
         results
             .iter()
-            .find(|r| r.test_crate_type == TestCrateType::Tests)
+            .find(|r| r.test_crate_type == CrateLocation::Tests)
             .unwrap()
     }
 }

@@ -9,13 +9,13 @@ use test_collector::{collect_tests, LinkedLibrary, TestCase};
 use walkdir::WalkDir;
 
 #[derive(Debug, Clone)]
-pub struct TestsFromCrate {
+pub struct CompiledTests {
     pub sierra_program: Program,
     pub test_cases: Vec<TestCase>,
-    pub test_crate_type: TestCrateType,
+    pub tests_location: CrateLocation,
 }
 
-impl TestsFromCrate {
+impl CompiledTests {
     pub fn filter_by_name(self, filter: &str) -> Self {
         let test_cases = self
             .test_cases
@@ -36,10 +36,10 @@ impl TestsFromCrate {
 }
 
 #[derive(Debug, PartialEq, Clone, Copy)]
-pub enum TestCrateType {
-    /// Tests collected from the package
+pub enum CrateLocation {
+    /// Main crate in a package
     Lib,
-    /// Tests collected from the tests folder
+    /// Crate in the `tests/` directory
     Tests,
 }
 
@@ -47,7 +47,7 @@ pub enum TestCrateType {
 pub struct TestCompilationTarget {
     pub crate_root: Utf8PathBuf,
     pub crate_name: String,
-    pub crate_type: TestCrateType,
+    pub crate_location: CrateLocation,
 }
 
 impl TestCompilationTarget {
@@ -55,7 +55,7 @@ impl TestCompilationTarget {
         &self,
         linked_libraries: &[LinkedLibrary],
         corelib_path: &Utf8PathBuf,
-    ) -> Result<TestsFromCrate> {
+    ) -> Result<CompiledTests> {
         let (sierra_program, test_cases) = collect_tests(
             self.crate_root.as_str(),
             None,
@@ -65,10 +65,10 @@ impl TestCompilationTarget {
             corelib_path.into(),
         )?;
 
-        Ok(TestsFromCrate {
+        Ok(CompiledTests {
             sierra_program,
             test_cases,
-            test_crate_type: self.crate_type,
+            tests_location: self.crate_location,
         })
     }
 }
@@ -87,7 +87,7 @@ pub fn collect_test_compilation_targets(
             Some(TestCompilationTarget {
                 crate_root: tests_dir_path,
                 crate_name: "tests".to_string(),
-                crate_type: TestCrateType::Tests,
+                crate_location: CrateLocation::Tests,
             })
         } else {
             Some(pack_tests_into_single_crate(temp_dir, &tests_dir_path)?)
@@ -99,7 +99,7 @@ pub fn collect_test_compilation_targets(
     let mut compilation_targets = vec![TestCompilationTarget {
         crate_root: package_source_dir_path.clone(),
         crate_name: package_name.to_string(),
-        crate_type: TestCrateType::Lib,
+        crate_location: CrateLocation::Lib,
     }];
     if let Some(test_dir_crate) = test_dir_crate {
         compilation_targets.push(test_dir_crate);
@@ -111,7 +111,7 @@ pub fn collect_test_compilation_targets(
 pub fn compile_tests(
     targets: &Vec<TestCompilationTarget>,
     runner_params: &RunnerParams,
-) -> Result<Vec<TestsFromCrate>> {
+) -> Result<Vec<CompiledTests>> {
     targets
         .par_iter()
         .map(|target| {
@@ -121,9 +121,9 @@ pub fn compile_tests(
 }
 
 pub fn filter_tests_from_crates(
-    tests_from_crates: Vec<TestsFromCrate>,
+    tests_from_crates: Vec<CompiledTests>,
     runner_config: &RunnerConfig,
-) -> Vec<TestsFromCrate> {
+) -> Vec<CompiledTests> {
     if let Some(test_name_filter) = &runner_config.test_name_filter {
         tests_from_crates
             .into_iter()
@@ -186,7 +186,7 @@ fn pack_tests_into_single_crate(
     Ok(TestCompilationTarget {
         crate_root: tests_tmp_dir_path,
         crate_name: "tests".to_string(),
-        crate_type: TestCrateType::Tests,
+        crate_location: CrateLocation::Tests,
     })
 }
 
@@ -215,11 +215,11 @@ mod tests {
         assert!(compilation_targets.contains(&TestCompilationTarget {
             crate_root: package_path,
             crate_name: "simple_package".to_string(),
-            crate_type: TestCrateType::Lib,
+            crate_location: CrateLocation::Lib,
         }));
         assert!(compilation_targets
             .iter()
-            .any(|tc| tc.crate_name == "tests" && tc.crate_type == TestCrateType::Tests));
+            .any(|tc| tc.crate_name == "tests" && tc.crate_location == CrateLocation::Tests));
     }
 
     #[test]
@@ -255,7 +255,7 @@ mod tests {
     #[test]
     #[allow(clippy::too_many_lines)]
     fn filtering_tests() {
-        let mocked_tests = TestsFromCrate {
+        let mocked_tests = CompiledTests {
             sierra_program: program_for_testing(),
             test_cases: vec![
                 TestCase {
@@ -280,7 +280,7 @@ mod tests {
                     fuzzer_config: None,
                 },
             ],
-            test_crate_type: TestCrateType::Lib,
+            tests_location: CrateLocation::Lib,
         };
 
         let filtered = mocked_tests.clone().filter_by_name("do");
@@ -369,7 +369,7 @@ mod tests {
 
     #[test]
     fn filtering_tests_uses_whole_path() {
-        let mocked_tests = TestsFromCrate {
+        let mocked_tests = CompiledTests {
             sierra_program: program_for_testing(),
             test_cases: vec![
                 TestCase {
@@ -394,7 +394,7 @@ mod tests {
                     fuzzer_config: None,
                 },
             ],
-            test_crate_type: TestCrateType::Tests,
+            tests_location: CrateLocation::Tests,
         };
 
         let filtered = mocked_tests.filter_by_name("crate2::");
@@ -421,7 +421,7 @@ mod tests {
 
     #[test]
     fn filtering_with_exact_match() {
-        let mocked_tests = TestsFromCrate {
+        let mocked_tests = CompiledTests {
             sierra_program: program_for_testing(),
             test_cases: vec![
                 TestCase {
@@ -453,7 +453,7 @@ mod tests {
                     fuzzer_config: None,
                 },
             ],
-            test_crate_type: TestCrateType::Tests,
+            tests_location: CrateLocation::Tests,
         };
 
         let filtered = mocked_tests.clone().filter_by_exact_name("");
@@ -510,7 +510,7 @@ mod tests {
 
     #[test]
     fn filtering_tests_works_without_crate_in_test_name() {
-        let mocked_tests = TestsFromCrate {
+        let mocked_tests = CompiledTests {
             sierra_program: program_for_testing(),
             test_cases: vec![
                 TestCase {
@@ -535,7 +535,7 @@ mod tests {
                     fuzzer_config: None,
                 },
             ],
-            test_crate_type: TestCrateType::Tests,
+            tests_location: CrateLocation::Tests,
         };
 
         let result = mocked_tests.filter_by_name("thing");

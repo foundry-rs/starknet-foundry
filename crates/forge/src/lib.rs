@@ -31,11 +31,11 @@ use smol_str::SmolStr;
 use crate::fuzzer::RandomFuzzer;
 use crate::scarb::{ForgeConfig, ForkTarget, StarknetContractArtifacts};
 
-pub use crate::collecting::TestCrateType;
+pub use crate::collecting::CrateLocation;
 pub use crate::test_crate_summary::TestCrateSummary;
 
 use crate::collecting::{
-    collect_test_compilation_targets, compile_tests, filter_tests_from_crates, TestsFromCrate,
+    collect_test_compilation_targets, compile_tests, filter_tests_from_crates, CompiledTests,
 };
 use test_collector::{FuzzerConfig, LinkedLibrary, TestCase};
 
@@ -204,13 +204,13 @@ pub async fn run(
 ) -> Result<Vec<TestCrateSummary>> {
     let temp_dir = TempDir::new()?;
 
-    let test_crates = collect_test_compilation_targets(
+    let compilation_targets = collect_test_compilation_targets(
         package_path,
         package_name,
         package_source_dir_path,
         &temp_dir,
     )?;
-    let tests = compile_tests(&test_crates, &runner_params)?;
+    let tests = compile_tests(&compilation_targets, &runner_params)?;
     let tests = filter_tests_from_crates(tests, &runner_config);
 
     try_close_tmp_dir(temp_dir)?;
@@ -224,20 +224,20 @@ pub async fn run(
     let mut summaries = vec![];
     let mut tasks = vec![];
 
-    for tests_from_crate in tests {
-        let tests_from_crate = Arc::new(tests_from_crate);
+    for compiled_tests in tests {
+        let compiled_tests = Arc::new(compiled_tests);
         let runner_config = runner_config.clone();
-        let test_crate_type = tests_from_crate.test_crate_type;
-        let number_of_test_cases = tests_from_crate.test_cases.len();
+        let tests_location = compiled_tests.tests_location;
+        let number_of_test_cases = compiled_tests.test_cases.len();
         let runner_params = runner_params.clone();
         let cancellation_tokens = cancellation_tokens.clone();
         tasks.push((
-            test_crate_type,
+            tests_location,
             number_of_test_cases,
             task::spawn({
                 async move {
                     run_tests_from_crate(
-                        tests_from_crate,
+                        compiled_tests,
                         runner_config,
                         runner_params,
                         cancellation_tokens,
@@ -247,8 +247,8 @@ pub async fn run(
             }),
         ));
     }
-    for (test_crate_type, tests_len, task) in tasks {
-        pretty_printing::print_running_tests(test_crate_type, tests_len);
+    for (tests_location, tests_len, task) in tasks {
+        pretty_printing::print_running_tests(tests_location, tests_len);
 
         let (summary, was_fuzzed) = task.await??;
         for test_case_summary in &summary.test_case_summaries {
@@ -268,7 +268,7 @@ pub async fn run(
 }
 
 async fn run_tests_from_crate(
-    tests: Arc<TestsFromCrate>,
+    tests: Arc<CompiledTests>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     cancellation_tokens: Arc<CancellationTokens>,
@@ -322,7 +322,7 @@ async fn run_tests_from_crate(
         TestCrateSummary {
             test_case_summaries: results,
             runner_exit_status: RunnerStatus::Default,
-            test_crate_type: tests.test_crate_type,
+            test_crate_type: tests.tests_location,
         },
         was_fuzzed,
     ))
