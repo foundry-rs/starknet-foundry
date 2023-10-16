@@ -44,13 +44,13 @@ pub enum TestCrateType {
 }
 
 #[derive(Debug, PartialEq)]
-pub struct TestCrateCompilationTarget {
+pub struct TestCompilationTarget {
     pub crate_root: Utf8PathBuf,
     pub crate_name: String,
     pub crate_type: TestCrateType,
 }
 
-impl TestCrateCompilationTarget {
+impl TestCompilationTarget {
     pub fn compile_tests(
         &self,
         linked_libraries: &[LinkedLibrary],
@@ -73,18 +73,18 @@ impl TestCrateCompilationTarget {
     }
 }
 
-pub fn collect_test_crates(
+pub fn collect_test_compilation_targets(
     package_path: &Utf8PathBuf,
     package_name: &str,
     package_source_dir_path: &Utf8PathBuf,
     temp_dir: &TempDir,
-) -> Result<Vec<TestCrateCompilationTarget>> {
+) -> Result<Vec<TestCompilationTarget>> {
     let tests_dir_path = package_path.join("tests");
 
     let test_dir_crate = if tests_dir_path.exists() {
         let lib_path = tests_dir_path.join("lib.cairo");
         if lib_path.exists() {
-            Some(TestCrateCompilationTarget {
+            Some(TestCompilationTarget {
                 crate_root: tests_dir_path,
                 crate_name: "tests".to_string(),
                 crate_type: TestCrateType::Tests,
@@ -96,26 +96,26 @@ pub fn collect_test_crates(
         None
     };
 
-    let mut test_crates = vec![TestCrateCompilationTarget {
+    let mut compilation_targets = vec![TestCompilationTarget {
         crate_root: package_source_dir_path.clone(),
         crate_name: package_name.to_string(),
         crate_type: TestCrateType::Lib,
     }];
     if let Some(test_dir_crate) = test_dir_crate {
-        test_crates.push(test_dir_crate);
+        compilation_targets.push(test_dir_crate);
     }
 
-    Ok(test_crates)
+    Ok(compilation_targets)
 }
 
-pub fn compile_tests_from_test_crates(
-    test_crates: &Vec<TestCrateCompilationTarget>,
+pub fn compile_tests(
+    targets: &Vec<TestCompilationTarget>,
     runner_params: &RunnerParams,
 ) -> Result<Vec<TestsFromCrate>> {
-    test_crates
+    targets
         .par_iter()
-        .map(|test_crate| {
-            test_crate.compile_tests(&runner_params.linked_libraries, &runner_params.corelib_path)
+        .map(|target| {
+            target.compile_tests(&runner_params.linked_libraries, &runner_params.corelib_path)
         })
         .collect()
 }
@@ -143,7 +143,7 @@ pub fn filter_tests_from_crates(
 fn pack_tests_into_single_crate(
     tmp_dir: &TempDir,
     tests_folder_path: &Utf8PathBuf,
-) -> Result<TestCrateCompilationTarget> {
+) -> Result<TestCompilationTarget> {
     tmp_dir
         .copy_from(tests_folder_path, &["**/*.cairo"])
         .context("Unable to copy files to temporary directory")?;
@@ -183,7 +183,7 @@ fn pack_tests_into_single_crate(
     let tests_tmp_dir_path = Utf8PathBuf::from_path_buf(tmp_dir.to_path_buf())
         .map_err(|_| anyhow!("Failed to convert tests temporary directory to Utf8PathBuf"))?;
 
-    Ok(TestCrateCompilationTarget {
+    Ok(TestCompilationTarget {
         crate_root: tests_tmp_dir_path,
         crate_name: "tests".to_string(),
         crate_type: TestCrateType::Tests,
@@ -199,13 +199,13 @@ mod tests {
     use test_collector::ExpectedTestResult;
 
     #[test]
-    fn collecting_test_crates() {
+    fn collecting_test_compilation_targets() {
         let temp = TempDir::new().unwrap();
         temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
             .unwrap();
         let package_path = Utf8PathBuf::from_path_buf(temp.to_path_buf()).unwrap();
 
-        let test_crates = collect_test_crates(
+        let compilation_targets = collect_test_compilation_targets(
             &package_path,
             "simple_package",
             &package_path,
@@ -213,12 +213,12 @@ mod tests {
         )
         .unwrap();
 
-        assert!(test_crates.contains(&TestCrateCompilationTarget {
+        assert!(compilation_targets.contains(&TestCompilationTarget {
             crate_root: package_path,
             crate_name: "simple_package".to_string(),
             crate_type: TestCrateType::Lib,
         }));
-        assert!(test_crates
+        assert!(compilation_targets
             .iter()
             .any(|tc| tc.crate_name == "tests" && tc.crate_type == TestCrateType::Tests));
     }

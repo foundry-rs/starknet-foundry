@@ -35,7 +35,7 @@ pub use crate::collecting::TestCrateType;
 pub use crate::test_crate_summary::TestCrateSummary;
 
 use crate::collecting::{
-    collect_test_crates, compile_tests_from_test_crates, filter_tests_from_crates, TestsFromCrate,
+    collect_test_compilation_targets, compile_tests, filter_tests_from_crates, TestsFromCrate,
 };
 use test_collector::{FuzzerConfig, LinkedLibrary, TestCase};
 
@@ -204,13 +204,13 @@ pub async fn run(
 ) -> Result<Vec<TestCrateSummary>> {
     let temp_dir = TempDir::new()?;
 
-    let test_crates = collect_test_crates(
+    let test_crates = collect_test_compilation_targets(
         package_path,
         package_name,
         package_source_dir_path,
         &temp_dir,
     )?;
-    let tests = compile_tests_from_test_crates(&test_crates, &runner_params)?;
+    let tests = compile_tests(&test_crates, &runner_params)?;
     let tests = filter_tests_from_crates(tests, &runner_config);
 
     try_close_tmp_dir(temp_dir)?;
