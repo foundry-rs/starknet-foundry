@@ -8,6 +8,7 @@ use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use test_collector::{collect_tests, LinkedLibrary, TestCase};
 use walkdir::WalkDir;
 
+#[derive(Debug, Clone)]
 pub struct TestsFromCrate {
     pub sierra_program: Program,
     pub test_cases: Vec<TestCase>,
@@ -15,9 +16,9 @@ pub struct TestsFromCrate {
 }
 
 impl TestsFromCrate {
-    pub fn filter_by_name(&self, filter: &str, exact_match: bool) -> Self {
+    pub fn filter_by_name(self, filter: &str, exact_match: bool) -> Self {
         let mut result = vec![];
-        for test in &self.test_cases {
+        for test in self.test_cases {
             if exact_match {
                 if test.name == filter {
                     result.push(test);
@@ -27,9 +28,8 @@ impl TestsFromCrate {
             }
         }
         Self {
-            sierra_program: self.sierra_program.clone(),
-            test_cases: result.into_iter().cloned().collect(),
-            test_crate_type: self.test_crate_type,
+            test_cases: result,
+            ..self
         }
     }
 }
@@ -308,7 +308,7 @@ mod tests {
             test_crate_type: TestCrateType::Lib,
         };
 
-        let filtered = mocked_tests.filter_by_name("do", false);
+        let filtered = mocked_tests.clone().filter_by_name("do", false);
         assert_eq!(
             filtered.test_cases,
             vec![TestCase {
@@ -320,7 +320,7 @@ mod tests {
             },]
         );
 
-        let filtered = mocked_tests.filter_by_name("run", false);
+        let filtered = mocked_tests.clone().filter_by_name("run", false);
         assert_eq!(
             filtered.test_cases,
             vec![TestCase {
@@ -332,7 +332,7 @@ mod tests {
             },]
         );
 
-        let filtered = mocked_tests.filter_by_name("thing", false);
+        let filtered = mocked_tests.clone().filter_by_name("thing", false);
         assert_eq!(
             filtered.test_cases,
             vec![
@@ -360,10 +360,10 @@ mod tests {
             ]
         );
 
-        let filtered = mocked_tests.filter_by_name("nonexistent", false);
+        let filtered = mocked_tests.clone().filter_by_name("nonexistent", false);
         assert_eq!(filtered.test_cases, vec![]);
 
-        let filtered = mocked_tests.filter_by_name("", false);
+        let filtered = mocked_tests.clone().filter_by_name("", false);
         assert_eq!(
             filtered.test_cases,
             vec![
@@ -481,13 +481,13 @@ mod tests {
             test_crate_type: TestCrateType::Tests,
         };
 
-        let filtered = mocked_tests.filter_by_name("", true);
+        let filtered = mocked_tests.clone().filter_by_name("", true);
         assert_eq!(filtered.test_cases, vec![]);
 
-        let filtered = mocked_tests.filter_by_name("thing", true);
+        let filtered = mocked_tests.clone().filter_by_name("thing", true);
         assert_eq!(filtered.test_cases, vec![]);
 
-        let filtered = mocked_tests.filter_by_name("do_thing", true);
+        let filtered = mocked_tests.clone().filter_by_name("do_thing", true);
         assert_eq!(
             filtered.test_cases,
             vec![TestCase {
@@ -499,7 +499,9 @@ mod tests {
             },]
         );
 
-        let filtered = mocked_tests.filter_by_name("crate1::do_thing", true);
+        let filtered = mocked_tests
+            .clone()
+            .filter_by_name("crate1::do_thing", true);
         assert_eq!(
             filtered.test_cases,
             vec![TestCase {
@@ -511,10 +513,14 @@ mod tests {
             },]
         );
 
-        let filtered = mocked_tests.filter_by_name("crate3::run_other_thing", true);
+        let filtered = mocked_tests
+            .clone()
+            .filter_by_name("crate3::run_other_thing", true);
         assert_eq!(filtered.test_cases, vec![]);
 
-        let filtered = mocked_tests.filter_by_name("outer::crate3::run_other_thing", true);
+        let filtered = mocked_tests
+            .clone()
+            .filter_by_name("outer::crate3::run_other_thing", true);
         assert_eq!(
             filtered.test_cases,
             vec![TestCase {
