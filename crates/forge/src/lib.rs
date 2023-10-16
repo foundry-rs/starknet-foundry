@@ -376,16 +376,6 @@ pub async fn run(
         for test_case_summary in &summary.test_case_summaries {
             pretty_printing::print_test_result(test_case_summary);
         }
-        summaries.push(summary.clone());
-    }
-
-    pretty_printing::print_test_summary(&summaries);
-
-    if summaries
-        .iter()
-        .any(|summary| summary.contained_fuzzed_tests)
-    {
-        pretty_printing::print_test_seed(runner_config.fuzzer_seed);
     }
 
     Ok(summaries)
