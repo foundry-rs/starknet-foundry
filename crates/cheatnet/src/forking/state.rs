@@ -67,9 +67,9 @@ impl BlockInfoReader for ForkStateReader {
                 "Block with id {:?} is pending",
                 self.block_id
             ))),
-            Err(_) => Err(StateReadError(format!(
-                "Unable to get block with tx hashes form fork"
-            ))),
+            Err(_) => Err(StateReadError(
+                "Unable to get block with tx hashes form fork".to_string(),
+            )),
         }
     }
 }
