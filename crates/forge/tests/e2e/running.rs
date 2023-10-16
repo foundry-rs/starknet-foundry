@@ -16,6 +16,10 @@ fn simple_package() {
     assert_stdout_contains!(
         output,
         indoc! {r#"
+    [..]Compiling[..]
+    [..]Finished[..]
+
+
     Collected 11 test(s) from simple_package package
     Running 1 test(s) from src/
     [PASS] simple_package::test_fib
@@ -87,6 +91,11 @@ fn simple_package_with_git_dependency() {
     assert_stdout_contains!(
         output,
         indoc! {r#"
+        [..]Updating git repository[..]
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
         Collected 11 test(s) from simple_package package
         Running 1 test(s) from src/
         [PASS] simple_package::test_fib
@@ -149,6 +158,10 @@ fn with_filter() {
     assert_stdout_contains!(
         output,
         indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
         Collected 2 test(s) from simple_package package
         Running 0 test(s) from src/
         Running 2 test(s) from tests/
@@ -202,6 +215,10 @@ fn with_exact_filter() {
     assert_stdout_contains!(
         output,
         indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
         Collected 1 test(s) from simple_package package
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
@@ -221,6 +238,10 @@ fn with_non_matching_filter() {
     assert_stdout_contains!(
         output,
         indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
         Collected 0 test(s) from simple_package package
         Running 0 test(s) from src/
         Running 0 test(s) from tests/
