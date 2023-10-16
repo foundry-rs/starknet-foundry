@@ -5,11 +5,9 @@ use indoc::formatdoc;
 use regex::Regex;
 use snapbox::cmd::{cargo_bin, Command as SnapboxCommand};
 use std::env;
-use std::fmt::format;
 use std::process::Command;
 use std::str::FromStr;
 use ark_std::iterable::Iterable;
-use itertools::Itertools;
 
 pub(crate) fn runner() -> SnapboxCommand {
     let snapbox = SnapboxCommand::new(cargo_bin!("snforge"));
@@ -241,7 +239,6 @@ pub(crate) fn is_present(line: &str, actual: &mut Vec<String>, asserted: &Vec<St
 #[macro_export]
 macro_rules! assert_stdout_contains {
     ( $output:expr, $lines:expr ) => {{
-        use regex::Regex;
         use $crate::e2e::common::runner::is_present;
 
         let output = $output.get_output();
@@ -250,35 +247,28 @@ macro_rules! assert_stdout_contains {
         let asserted_lines: Vec<String> = $lines.lines().map(|line| line.into()).collect();
         let mut actual_lines: Vec<String> = stdout.lines().map(|line| line.into()).collect();
 
+
+        let mut matches = true;
         let mut out = String::new();
+
         for line in &asserted_lines {
             if is_present(&line, &mut actual_lines, &asserted_lines) {
                 out.push_str("| ");
             } else {
+                matches = false;
                 out.push_str("- ");
             }
             out.push_str(line);
             out.push_str("\n");
         }
         for remaining_line in actual_lines {
+            matches = false;
             out.push_str("+ ");
             out.push_str(&remaining_line);
             out.push_str("\n");
         }
 
-        println!("{out}");
-
-        for line in $lines.lines() {
-            let escaped = regex::escape(line);
-            let replaced = escaped.replace("\\[\\.\\.\\]", ".*");
-            let re = Regex::new(replaced.as_str()).unwrap();
-
-            assert!(
-                re.find(stdout.as_str()).is_some(),
-                "Stdout missing line = {}",
-                line
-            );
-        }
+        assert!(matches, "Stdout does not match:\n\n{}", out);
     }};
 }
 
