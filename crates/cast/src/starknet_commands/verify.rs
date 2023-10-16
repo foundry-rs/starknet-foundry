@@ -1,6 +1,8 @@
+use anyhow::{anyhow, Result};
 use clap::Args;
 use starknet::core::types::FieldElement;
 use cast::helpers::response_structs::VerifyResponse;
+use cast::helpers::response_structs::VerificationStatus;
 
 #[derive(Args)]
 #[command(about = "Verify a contract through a block exporer")]
@@ -14,7 +16,7 @@ pub struct Verify {
     pub contract_name: String, 
 
     /// Block explorer to use for the verification
-    #[clap(short = 'v', long = 'verifier')]
+    #[clap(short = 'v', long = "verifier")]
     pub verifier: String,
 
     /// The network on which block explorer will do the verification
@@ -30,5 +32,19 @@ pub async fn verify(
 ) -> Result<VerifyResponse> {
     let verification_status = VerificationStatus::OK;
     let errors = None;
-    Ok(VerifyResponse { verification_status, errors })
+    println!("Contract address: {}", contract_address);
+    println!("Contract name: {}", contract_name);
+    println!("Verifier: {}", verifier);
+    println!("Network: {}", network);
+    match verification_status {
+        VerificationStatus::OK => {
+            Ok(VerifyResponse {
+                verification_status,
+                errors
+            })
+        },
+        VerificationStatus::Error => {
+            Err(anyhow!("Unknown RPC error"))
+        }
+    }
 }

@@ -1,4 +1,3 @@
-use anyhow::Ok;
 use camino::Utf8PathBuf;
 use serde::Serialize;
 use starknet::core::types::FieldElement;
@@ -43,9 +42,21 @@ pub struct MulticallNewResponse {
     pub content: String,
 }
 
-enum VerificationStatus {
+pub enum VerificationStatus {
     OK,
     Error,
+}
+
+impl Serialize for VerificationStatus {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer
+    {
+        match self {
+            VerificationStatus::OK => serializer.serialize_bool(true),
+            VerificationStatus::Error => serializer.serialize_bool(false)
+        }
+    }
 }
 
 

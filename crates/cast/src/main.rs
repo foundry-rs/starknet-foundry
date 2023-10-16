@@ -1,6 +1,6 @@
 use crate::starknet_commands::account::Account;
 use crate::starknet_commands::{
-    account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
+    account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,verify::Verify
 };
 use anyhow::{anyhow, Result};
 
@@ -275,20 +275,19 @@ async fn main() -> Result<()> {
                 print_command_result("account deploy", &mut result, cli.int_format, cli.json)?;
                 Ok(())
             }
-            account::Commands::Verify(verify) => {
-                let mut result = starknet_commands::account::verify::verify(
-                    &provider,
-                    verify.contract_address,
-                    verify.contract_name,
-                    verify.verifier,
-                    verify.network,
-                )
-                .await;
-
-                print_command_result("account verify", &mut result, cli.int_format, cli.json)?;
-                Ok(())
-            }
         },
+        Commands::Verify(verify) => {
+            let mut result = starknet_commands::verify::verify(
+                verify.contract_address,
+                verify.contract_name,
+                verify.verifier,
+                verify.network,
+            )
+            .await;
+
+            print_command_result("account verify", &mut result, cli.int_format, cli.json)?;
+            Ok(())
+        }
     }
 }
 
