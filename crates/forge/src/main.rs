@@ -56,7 +56,7 @@ struct Args {
     #[arg(short, long)]
     clean_cache: bool,
 
-    /// Cores used for parallel tests execution
+    /// Number of cores used for test execution
     #[arg(long, value_parser = validate_cores_number)]
     cores: Option<usize>,
 }
