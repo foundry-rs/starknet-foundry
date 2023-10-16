@@ -35,10 +35,7 @@ use cairo_lang_casm::hints::{Hint, StarknetHint};
 use cairo_lang_casm::operand::{CellRef, ResOperand};
 use cairo_lang_runner::casm_run::{extract_relocatable, vm_get_range, MemBuffer};
 use cairo_lang_runner::short_string::as_cairo_short_string;
-use cairo_lang_runner::{
-    casm_run::{cell_ref_to_relocatable, extract_buffer, get_ptr},
-    insert_value_to_cellref,
-};
+use cairo_lang_runner::{casm_run::cell_ref_to_relocatable, insert_value_to_cellref};
 use starknet_api::core::ContractAddress;
 
 use crate::test_execution_syscall_handler::file_operations::string_into_felt;
@@ -154,9 +151,8 @@ impl HintProcessorLogic for TestExecutionSyscallHandler<'_> {
                 self.test_execution_state.environment_variables,
             );
         }
-        if let Some(Hint::Starknet(StarknetHint::SystemCall { system })) = maybe_extended_hint {
+        if let Some(Hint::Starknet(StarknetHint::SystemCall { .. })) = maybe_extended_hint {
             return execute_syscall(
-                system,
                 vm,
                 exec_scopes,
                 hint_data,
@@ -642,24 +638,21 @@ struct ScarbStarknetContractArtifact {
 }
 
 fn execute_syscall(
-    system: &ResOperand,
     vm: &mut VirtualMachine,
     exec_scopes: &mut ExecutionScopes,
     hint_data: &Box<dyn Any>,
     constants: &HashMap<String, Felt252>,
     cheatable_syscall_handler: &mut CheatableSyscallHandler,
 ) -> Result<(), HintError> {
-    let (cell, offset) = extract_buffer(system);
-    let mut system_ptr = get_ptr(vm, cell, &offset)?;
-
     // We peek into memory to check the selector
     let selector = DeprecatedSyscallSelector::try_from(felt_to_stark_felt(
-        &vm.get_integer(system_ptr).unwrap(),
+        &vm.get_integer(cheatable_syscall_handler.syscall_handler.syscall_ptr)
+            .unwrap(),
     ))?;
 
     match selector {
         DeprecatedSyscallSelector::CallContract => {
-            let call_args = get_call_contract_args(cheatable_syscall_handler, &mut system_ptr, vm);
+            let call_args = get_call_contract_args(cheatable_syscall_handler, vm)?;
 
             let mut blockifier_state =
                 BlockifierState::from(cheatable_syscall_handler.syscall_handler.state);
@@ -714,14 +707,12 @@ impl SyscallRequest for CallContractArgs {
 
 fn get_call_contract_args(
     cheatable_syscall_handler: &mut CheatableSyscallHandler,
-    system_ptr: &mut Relocatable,
     vm: &mut VirtualMachine,
-) -> CallContractArgs {
-    let ptr_before = *system_ptr;
-    let call_contract_args = CallContractArgs::read(vm, system_ptr);
-    cheatable_syscall_handler.syscall_handler.syscall_ptr += (*system_ptr - ptr_before).unwrap();
-
-    call_contract_args.unwrap()
+) -> SyscallResult<CallContractArgs> {
+    CallContractArgs::read(
+        vm,
+        &mut cheatable_syscall_handler.syscall_handler.syscall_ptr,
+    )
 }
 
 fn write_call_contract_response(
