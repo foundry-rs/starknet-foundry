@@ -47,4 +47,5 @@ pub async fn verify(
             Err(anyhow!("Unknown RPC error"))
         }
     }
+    // Main core logic of verification starts from here
 }

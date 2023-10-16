@@ -1,3 +1,4 @@
+use crate::common::assertions::assert_outputs;
 use crate::{
     assert_success,
     common::{
@@ -225,29 +226,15 @@ fn prank_proxy() {
         &[],
     );
 
-    cheatnet_state.start_prank(contract_address, ContractAddress::from(123_u128));
-
-    let selector = felt_selector_from_name("get_caller_address");
-
-    let output = call_contract(
-        &mut blockifier_state,
-        &mut cheatnet_state,
-        &contract_address,
-        &selector,
-        &[],
-    )
-    .unwrap();
-
-    assert_success!(output, vec![Felt252::from(123)]);
-
     let proxy_address = deploy_contract(
         &mut blockifier_state,
         &mut cheatnet_state,
         "PrankCheckerProxy",
         &[],
     );
+
     let proxy_selector = felt_selector_from_name("get_prank_checkers_caller_address");
-    let output = call_contract(
+    let before_prank_output = call_contract(
         &mut blockifier_state,
         &mut cheatnet_state,
         &proxy_address,
@@ -256,7 +243,31 @@ fn prank_proxy() {
     )
     .unwrap();
 
-    assert_success!(output, vec![Felt252::from(123)]);
+    cheatnet_state.start_prank(contract_address, ContractAddress::from(123_u128));
+
+    let after_prank_output = call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &proxy_address,
+        &proxy_selector,
+        &[contract_address.to_felt252()],
+    )
+    .unwrap();
+
+    assert_success!(after_prank_output, vec![Felt252::from(123)]);
+
+    cheatnet_state.stop_prank(contract_address);
+
+    let after_prank_cancellation_output = call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &proxy_address,
+        &proxy_selector,
+        &[contract_address.to_felt252()],
+    )
+    .unwrap();
+
+    assert_outputs(before_prank_output, after_prank_cancellation_output);
 }
 
 #[test]
@@ -277,10 +288,8 @@ fn prank_library_call() {
         &[],
     );
 
-    cheatnet_state.start_prank(lib_call_address, ContractAddress::from(123_u128));
-
     let lib_call_selector = felt_selector_from_name("get_caller_address_with_lib_call");
-    let output = call_contract(
+    let before_prank_output = call_contract(
         &mut blockifier_state,
         &mut cheatnet_state,
         &lib_call_address,
@@ -289,5 +298,29 @@ fn prank_library_call() {
     )
     .unwrap();
 
-    assert_success!(output, vec![Felt252::from(123)]);
+    cheatnet_state.start_prank(lib_call_address, ContractAddress::from(123_u128));
+
+    let after_prank_output = call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &lib_call_address,
+        &lib_call_selector,
+        &[class_hash.to_felt252()],
+    )
+    .unwrap();
+
+    assert_success!(after_prank_output, vec![Felt252::from(123)]);
+
+    cheatnet_state.stop_prank(lib_call_address);
+
+    let after_prank_cancellation_output = call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &lib_call_address,
+        &lib_call_selector,
+        &[class_hash.to_felt252()],
+    )
+    .unwrap();
+
+    assert_outputs(before_prank_output, after_prank_cancellation_output);
 }

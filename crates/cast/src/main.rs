@@ -1,4 +1,5 @@
 use crate::starknet_commands::account::Account;
+use crate::starknet_commands::show_config::ShowConfig;
 use crate::starknet_commands::{
     account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,verify::Verify
 };
@@ -79,7 +80,10 @@ enum Commands {
     Account(Account),
 
     /// Verify a contract
-    Verify(Verify)
+    Verify(Verify),
+    
+    /// Show current configuration being used
+    ShowConfig(ShowConfig),
 }
 
 #[tokio::main]
@@ -287,7 +291,18 @@ async fn main() -> Result<()> {
 
             print_command_result("account verify", &mut result, cli.int_format, cli.json)?;
             Ok(())
-        }
+        },
+        Commands::ShowConfig(_) => {
+            let mut result = starknet_commands::show_config::show_config(
+                &provider,
+                config,
+                cli.profile,
+                cli.path_to_scarb_toml,
+            )
+            .await;
+            print_command_result("show-config", &mut result, cli.int_format, cli.json)?;
+            Ok(())
+         }
     }
 }
 

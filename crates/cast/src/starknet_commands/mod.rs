@@ -5,3 +5,4 @@ pub mod deploy;
 pub mod invoke;
 pub mod multicall;
 pub mod verify;
+pub mod show_config;
