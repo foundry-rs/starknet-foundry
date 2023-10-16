@@ -707,16 +707,6 @@ impl SyscallRequest for CallContractArgs {
     }
 }
 
-fn get_call_contract_args(
-    cheatable_syscall_handler: &mut CheatableSyscallHandler,
-    vm: &mut VirtualMachine,
-) -> SyscallResult<CallContractArgs> {
-    CallContractArgs::read(
-        vm,
-        &mut cheatable_syscall_handler.syscall_handler.syscall_ptr,
-    )
-}
-
 fn write_call_contract_response(
     cheatable_syscall_handler: &mut CheatableSyscallHandler,
     vm: &mut VirtualMachine,
