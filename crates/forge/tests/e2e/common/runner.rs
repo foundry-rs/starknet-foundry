@@ -1,3 +1,4 @@
+use ark_std::iterable::Iterable;
 use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
 use assert_fs::TempDir;
 use camino::Utf8PathBuf;
@@ -7,7 +8,6 @@ use snapbox::cmd::{cargo_bin, Command as SnapboxCommand};
 use std::env;
 use std::process::Command;
 use std::str::FromStr;
-use ark_std::iterable::Iterable;
 
 pub(crate) fn runner() -> SnapboxCommand {
     let snapbox = SnapboxCommand::new(cargo_bin!("snforge"));
@@ -208,7 +208,10 @@ pub(crate) fn get_current_branch() -> String {
     }
 }
 
-pub(crate) fn intersection_with_wildcard(asserted: &Vec<String>, actual: &Vec<String>) -> Vec<(String, usize)> {
+pub(crate) fn intersection_with_wildcard(
+    asserted: &Vec<String>,
+    actual: &Vec<String>,
+) -> Vec<(String, usize)> {
     let mut result = vec![];
 
     for element in asserted {
@@ -236,60 +239,53 @@ pub(crate) fn is_present(line: &str, actual: &mut Vec<String>, asserted: &Vec<St
     false
 }
 
+pub(crate) fn assert_output_contains(output: &str, lines: &str) {
+    let asserted_lines: Vec<String> = lines.lines().map(std::convert::Into::into).collect();
+    let mut actual_lines: Vec<String> = output.lines().map(std::convert::Into::into).collect();
+
+    let mut matches = true;
+    let mut out = String::new();
+
+    for line in &asserted_lines {
+        if is_present(line, &mut actual_lines, &asserted_lines) {
+            out.push_str("| ");
+        } else {
+            matches = false;
+            out.push_str("- ");
+        }
+        out.push_str(line);
+        out.push('\n');
+    }
+    for remaining_line in actual_lines {
+        matches = false;
+        out.push_str("+ ");
+        out.push_str(&remaining_line);
+        out.push('\n');
+    }
+
+    assert!(matches, "Stdout does not match:\n\n{out}");
+}
+
 #[macro_export]
 macro_rules! assert_stdout_contains {
     ( $output:expr, $lines:expr ) => {{
-        use $crate::e2e::common::runner::is_present;
+        use $crate::e2e::common::runner::assert_output_contains;
 
         let output = $output.get_output();
         let stdout = String::from_utf8(output.stdout.clone()).unwrap();
 
-        let asserted_lines: Vec<String> = $lines.lines().map(|line| line.into()).collect();
-        let mut actual_lines: Vec<String> = stdout.lines().map(|line| line.into()).collect();
-
-
-        let mut matches = true;
-        let mut out = String::new();
-
-        for line in &asserted_lines {
-            if is_present(&line, &mut actual_lines, &asserted_lines) {
-                out.push_str("| ");
-            } else {
-                matches = false;
-                out.push_str("- ");
-            }
-            out.push_str(line);
-            out.push_str("\n");
-        }
-        for remaining_line in actual_lines {
-            matches = false;
-            out.push_str("+ ");
-            out.push_str(&remaining_line);
-            out.push_str("\n");
-        }
-
-        assert!(matches, "Stdout does not match:\n\n{}", out);
+        assert_output_contains(&stdout, $lines);
     }};
 }
 
 #[macro_export]
 macro_rules! assert_stderr_contains {
     ( $output:expr, $lines:expr ) => {{
-        use regex::Regex;
+        use $crate::e2e::common::runner::assert_output_contains;
 
         let output = $output.get_output();
         let stderr = String::from_utf8(output.stderr.clone()).unwrap();
 
-        for line in $lines.lines() {
-            let escaped = regex::escape(line);
-            let replaced = escaped.replace("\\[\\.\\.\\]", ".*");
-            let re = Regex::new(replaced.as_str()).unwrap();
-
-            assert!(
-                re.find(stderr.as_str()).is_some(),
-                "Stderr missing line = {}",
-                line
-            );
-        }
+        assert_output_contains(&stderr, $lines);
     }};
 }
