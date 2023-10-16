@@ -376,7 +376,9 @@ pub async fn run(
         for test_case_summary in &summary.test_case_summaries {
             pretty_printing::print_test_result(test_case_summary);
         }
+        println!("test");
     }
+    println!("test32");
 
     Ok(summaries)
 }
