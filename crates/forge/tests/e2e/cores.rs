@@ -106,6 +106,8 @@ fn with_too_much_cores() {
         .code(2)
         .stderr_matches(indoc! {r#"
             error: invalid value '99999' for '--cores <CORES>': Number of cores must be less than or equal to the number of cores available on the machine ([..])
+
+            For more information, try '--help'.
         "#});
 }
 
@@ -122,5 +124,7 @@ fn with_zero_core() {
         .code(2)
         .stderr_matches(indoc! {r#"
             error: invalid value '0' for '--cores <CORES>': Number of cores must be greater than 0
+
+            For more information, try '--help'.
         "#});
 }
