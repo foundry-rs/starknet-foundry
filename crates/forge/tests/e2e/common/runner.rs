@@ -210,22 +210,6 @@ pub(crate) fn get_current_branch() -> String {
     }
 }
 
-pub(crate) fn difference_with_wildcard(a: &Vec<String>, b: &Vec<String>) -> Vec<String> {
-    let mut result = vec![];
-
-    for element in a {
-        let escaped = regex::escape(element);
-        let replaced = escaped.replace("\\[\\.\\.\\]", ".*");
-        let re = Regex::new(replaced.as_str()).unwrap();
-
-        if !b.iter().any(|other| re.is_match(other)) {
-            result.push(element.clone());
-        }
-    }
-
-    result
-}
-
 pub(crate) fn intersection_with_wildcard(asserted: &Vec<String>, actual: &Vec<String>) -> Vec<(String, usize)> {
     let mut result = vec![];
 
