@@ -81,7 +81,7 @@ enum Commands {
 
     /// Verify a contract
     Verify(Verify),
-    
+
     /// Show current configuration being used
     ShowConfig(ShowConfig),
 }
@@ -286,10 +286,11 @@ async fn main() -> Result<()> {
                 verify.contract_name,
                 verify.verifier,
                 verify.network,
+                &cli.path_to_scarb_toml
             )
             .await;
 
-            print_command_result("account verify", &mut result, cli.int_format, cli.json)?;
+            print_command_result("verify", &mut result, cli.int_format, cli.json)?;
             Ok(())
         },
         Commands::ShowConfig(_) => {

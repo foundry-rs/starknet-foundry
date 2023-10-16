@@ -1123,6 +1123,7 @@ dependencies = [
  "tokio",
  "toml",
  "url",
+ "walkdir",
  "which",
 ]
 
