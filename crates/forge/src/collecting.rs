@@ -61,7 +61,7 @@ impl TestCrateCompilationTarget {
             None,
             &self.crate_name,
             linked_libraries,
-            Some(BUILTINS.clone()),
+            &BUILTINS,
             corelib_path.into(),
         )?;
 
