@@ -33,7 +33,9 @@ use serde::Deserialize;
 
 use cairo_lang_casm::hints::{Hint, StarknetHint};
 use cairo_lang_casm::operand::{CellRef, ResOperand};
-use cairo_lang_runner::casm_run::{extract_relocatable, vm_get_range, MemBuffer};
+use cairo_lang_runner::casm_run::{
+    extract_buffer, extract_relocatable, get_ptr, vm_get_range, MemBuffer,
+};
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{casm_run::cell_ref_to_relocatable, insert_value_to_cellref};
 use starknet_api::core::ContractAddress;
@@ -150,8 +152,9 @@ impl HintProcessorLogic for TestExecutionSyscallHandler<'_> {
                 self.test_execution_state.environment_variables,
             );
         }
-        if let Some(Hint::Starknet(StarknetHint::SystemCall { .. })) = maybe_extended_hint {
+        if let Some(Hint::Starknet(StarknetHint::SystemCall { system })) = maybe_extended_hint {
             return execute_syscall(
+                system,
                 vm,
                 exec_scopes,
                 hint_data,
@@ -637,12 +640,20 @@ struct ScarbStarknetContractArtifact {
 }
 
 fn execute_syscall(
+    system: &ResOperand,
     vm: &mut VirtualMachine,
     exec_scopes: &mut ExecutionScopes,
     hint_data: &Box<dyn Any>,
     constants: &HashMap<String, Felt252>,
     cheatable_syscall_handler: &mut CheatableSyscallHandler,
 ) -> Result<(), HintError> {
+    let (cell, offset) = extract_buffer(system);
+    let system_ptr = get_ptr(vm, cell, &offset)?;
+
+    cheatable_syscall_handler
+        .syscall_handler
+        .verify_syscall_ptr(system_ptr)?;
+
     // We peek into memory to check the selector
     let selector = DeprecatedSyscallSelector::try_from(felt_to_stark_felt(
         &vm.get_integer(cheatable_syscall_handler.syscall_handler.syscall_ptr)
