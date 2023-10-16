@@ -1,7 +1,8 @@
 use crate::starknet_commands::account::Account;
 use crate::starknet_commands::show_config::ShowConfig;
 use crate::starknet_commands::{
-    account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,verify::Verify
+    account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
+    verify::Verify,
 };
 use anyhow::{anyhow, Result};
 
@@ -286,13 +287,13 @@ async fn main() -> Result<()> {
                 verify.contract_name,
                 verify.verifier,
                 verify.network,
-                &cli.path_to_scarb_toml
+                &cli.path_to_scarb_toml,
             )
             .await;
 
             print_command_result("verify", &mut result, cli.int_format, cli.json)?;
             Ok(())
-        },
+        }
         Commands::ShowConfig(_) => {
             let mut result = starknet_commands::show_config::show_config(
                 &provider,
@@ -303,7 +304,7 @@ async fn main() -> Result<()> {
             .await;
             print_command_result("show-config", &mut result, cli.int_format, cli.json)?;
             Ok(())
-         }
+        }
     }
 }
 

@@ -5,8 +5,8 @@ use cast::helpers::response_structs::VerificationStatus;
 use cast::helpers::response_structs::VerifyResponse;
 use cast::helpers::scarb_utils::get_scarb_manifest;
 use clap::Args;
-use starknet::core::types::FieldElement;
 use serde::Serialize;
+use starknet::core::types::FieldElement;
 use walkdir::WalkDir;
 
 #[derive(Args)]
@@ -45,7 +45,7 @@ pub async fn verify(
 ) -> Result<VerifyResponse> {
     let verification_status = VerificationStatus::OK;
     let errors = None;
-    
+
     let res = match verification_status {
         VerificationStatus::OK => Ok(VerifyResponse {
             verification_status,
@@ -79,13 +79,11 @@ pub async fn verify(
     let explorer_url: &str = match verifier.as_str() {
         "voyager" => match network.as_str() {
             "mainnet" => "https://voyager.online/",
-            "goerli" => "https://goerli.voyager.online/",
-            _ => "https://voyager.online/",
+            _ => "https://goerli.voyager.online/",
         },
         "starkscan" => match network.as_str() {
             "mainnet" => "https://starkscan.co/",
-            "goerli" => "https://testnet.starkscan.co/",
-            _ => "https://starkscan.co/",
+            _ => "https://testnet.starkscan.co/",
         },
 
         _ => {
@@ -96,10 +94,7 @@ pub async fn verify(
         }
     };
 
-    let verify_api_url: String = format!(
-        "{}/{}",
-        explorer_url, "contract-verify"
-    );
+    let verify_api_url: String = format!("{}/{}", explorer_url, "contract-verify");
 
     // Build JSON Payload for the verification request
     // get the parent dir of the manifest path
@@ -109,7 +104,6 @@ pub async fn verify(
 
     // read all file names along with their contents in a JSON format in the workspace dir recursively
     // key is the file name and value is the file content
-    
 
     let mut file_data = serde_json::Map::new();
 
@@ -119,7 +113,7 @@ pub async fn verify(
         let path = entry.path();
         if path.is_file() {
             let file_name = path.file_name().unwrap().to_string_lossy().to_string();
-            let file_content = std::fs::read_to_string(&path)?;
+            let file_content = std::fs::read_to_string(path)?;
 
             file_data.insert(file_name, serde_json::Value::String(file_content));
         }
@@ -138,7 +132,6 @@ pub async fn verify(
     // Serialize the payload to a JSON string for the POST request
     let json_payload = serde_json::to_string(&payload)?;
 
-
     // Send the POST request to the explorer
     let client = reqwest::Client::new();
     let api_res = client
@@ -152,7 +145,7 @@ pub async fn verify(
     // Parse the response from the explorer
     let api_res: serde_json::Value = serde_json::from_str(&api_res)?;
 
-    println!("{:?}", api_res);
+    println!("{api_res:?}");
 
     // Check if the verification was successful
     // let verification_status = match api_res["status"].as_str() {
