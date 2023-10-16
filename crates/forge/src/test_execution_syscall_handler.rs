@@ -651,7 +651,10 @@ fn execute_syscall(
 
     match selector {
         DeprecatedSyscallSelector::CallContract => {
-            let call_args = get_call_contract_args(cheatable_syscall_handler, vm)?;
+            let call_args = CallContractArgs::read(
+                vm,
+                &mut cheatable_syscall_handler.syscall_handler.syscall_ptr,
+            )?;
 
             let mut blockifier_state =
                 BlockifierState::from(cheatable_syscall_handler.syscall_handler.state);
