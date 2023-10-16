@@ -1,11 +1,18 @@
 use std::any::Any;
 use std::collections::HashMap;
+use std::convert::Into;
 use std::path::PathBuf;
 
 use crate::scarb::StarknetContractArtifacts;
 use anyhow::{anyhow, Context, Result};
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
-use blockifier::execution::execution_utils::{felt_to_stark_felt, stark_felt_to_felt};
+use blockifier::execution::execution_utils::{
+    felt_to_stark_felt, stark_felt_from_ptr, stark_felt_to_felt, ReadOnlySegment,
+};
+use blockifier::execution::syscalls::hint_processor::{read_felt_array, SyscallExecutionError};
+use blockifier::execution::syscalls::{
+    SyscallRequest, SyscallResponse, SyscallResponseWrapper, SyscallResult,
+};
 use cairo_felt::Felt252;
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
 use cairo_vm::hint_processor::hint_processor_definition::HintReference;
@@ -17,7 +24,7 @@ use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use cheatnet::cheatcodes::deploy::{deploy, deploy_at, DeployCallPayload};
 use cheatnet::cheatcodes::{CheatcodeError, ContractArtifacts, EnhancedHintError};
-use cheatnet::execution::syscalls::CheatableSyscallHandler;
+use cheatnet::execution::syscalls::{CheatableSyscallHandler, SingleSegmentResponse};
 use cheatnet::rpc::{call_contract, CallContractFailure, CallContractOutput, CallContractResult};
 use cheatnet::state::{BlockifierState, CheatnetState};
 use conversions::StarknetConversions;
@@ -643,7 +650,7 @@ fn execute_syscall(
     cheatable_syscall_handler: &mut CheatableSyscallHandler,
 ) -> Result<(), HintError> {
     let (cell, offset) = extract_buffer(system);
-    let system_ptr = get_ptr(vm, cell, &offset)?;
+    let mut system_ptr = get_ptr(vm, cell, &offset)?;
 
     // We peek into memory to check the selector
     let selector = DeprecatedSyscallSelector::try_from(felt_to_stark_felt(
@@ -652,8 +659,7 @@ fn execute_syscall(
 
     match selector {
         DeprecatedSyscallSelector::CallContract => {
-            let (system_ptr, call_args) =
-                get_call_contract_args(cheatable_syscall_handler, system_ptr, vm);
+            let call_args = get_call_contract_args(cheatable_syscall_handler, &mut system_ptr, vm);
 
             let mut blockifier_state =
                 BlockifierState::from(cheatable_syscall_handler.syscall_handler.state);
@@ -662,13 +668,7 @@ fn execute_syscall(
                 cheatable_syscall_handler.cheatnet_state,
                 &call_args,
             );
-            write_call_contract_response(
-                cheatable_syscall_handler,
-                system_ptr,
-                vm,
-                &call_args,
-                call_result,
-            )?;
+            write_call_contract_response(cheatable_syscall_handler, vm, &call_args, call_result)?;
             Ok(())
         }
         DeprecatedSyscallSelector::Deploy => Err(CustomHint(Box::from(
@@ -689,58 +689,81 @@ struct CallContractArgs {
     calldata: Vec<Felt252>,
 }
 
-fn get_call_contract_args(
-    cheatable_syscall_handler: &mut CheatableSyscallHandler,
-    system_ptr: Relocatable,
-    vm: &mut VirtualMachine,
-) -> (Relocatable, CallContractArgs) {
-    let mut buffer = MemBuffer::new(vm, system_ptr);
+impl SyscallRequest for CallContractArgs {
+    fn read(vm: &VirtualMachine, ptr: &mut Relocatable) -> SyscallResult<CallContractArgs> {
+        let selector = stark_felt_from_ptr(vm, ptr)?.to_felt252();
+        let gas_counter = stark_felt_from_ptr(vm, ptr)?.to_felt252().to_u64().unwrap();
 
-    let selector = buffer.next_felt252().unwrap().into_owned();
-    let gas_counter = buffer.next_felt252().unwrap().to_u64().unwrap();
+        let contract_address = stark_felt_from_ptr(vm, ptr)?.to_contract_address();
+        let entry_point_selector = stark_felt_from_ptr(vm, ptr)?.to_felt252();
 
-    let contract_address = buffer.next_felt252().unwrap().into_owned();
-    let contract_address = contract_address.to_contract_address();
+        let calldata = read_felt_array::<SyscallExecutionError>(vm, ptr)?
+            .iter()
+            .map(StarknetConversions::to_felt252)
+            .collect();
 
-    let entry_point_selector = buffer.next_felt252().unwrap().into_owned();
-
-    let calldata = buffer.next_arr().unwrap();
-    cheatable_syscall_handler.syscall_handler.syscall_ptr += (buffer.ptr - system_ptr).unwrap();
-
-    (
-        buffer.ptr,
-        CallContractArgs {
+        Ok(CallContractArgs {
             _selector: selector,
             gas_counter,
             contract_address,
             entry_point_selector,
             calldata,
-        },
-    )
+        })
+    }
+}
+
+fn get_call_contract_args(
+    cheatable_syscall_handler: &mut CheatableSyscallHandler,
+    system_ptr: &mut Relocatable,
+    vm: &mut VirtualMachine,
+) -> CallContractArgs {
+    let ptr_before = *system_ptr;
+    let call_contract_args = CallContractArgs::read(vm, system_ptr);
+    cheatable_syscall_handler.syscall_handler.syscall_ptr += (*system_ptr - ptr_before).unwrap();
+
+    call_contract_args.unwrap()
 }
 
 fn write_call_contract_response(
     cheatable_syscall_handler: &mut CheatableSyscallHandler,
-    system_ptr: Relocatable,
     vm: &mut VirtualMachine,
     call_args: &CallContractArgs,
     call_output: CallContractOutput,
 ) -> Result<(), HintError> {
-    let mut buffer = MemBuffer::new(vm, system_ptr);
+    let response_wrapper: SyscallResponseWrapper<SingleSegmentResponse> = match call_output.result {
+        CallContractResult::Success { ret_data, .. } => {
+            let memory_segment_start_ptr = cheatable_syscall_handler
+                .syscall_handler
+                .read_only_segments
+                .allocate(vm, &ret_data.iter().map(Into::into).collect())?;
 
-    let (result, exit_code) = match call_output.result {
-        CallContractResult::Success { ret_data, .. } => (ret_data, 0),
+            SyscallResponseWrapper::Success {
+                gas_counter: call_args.gas_counter,
+                response: SingleSegmentResponse {
+                    segment: ReadOnlySegment {
+                        start_ptr: memory_segment_start_ptr,
+                        length: ret_data.len(),
+                    },
+                },
+            }
+        }
         CallContractResult::Failure(failure_type) => match failure_type {
-            CallContractFailure::Panic { panic_data, .. } => (panic_data, 1),
+            CallContractFailure::Panic { panic_data, .. } => SyscallResponseWrapper::Failure {
+                gas_counter: call_args.gas_counter,
+                error_data: panic_data
+                    .iter()
+                    .map(StarknetConversions::to_stark_felt)
+                    .collect(),
+            },
             CallContractFailure::Error { msg, .. } => return Err(CustomHint(Box::from(msg))),
         },
     };
 
-    buffer.write(Felt252::from(call_args.gas_counter)).unwrap();
-    buffer.write(Felt252::from(exit_code)).unwrap();
+    response_wrapper.write(
+        vm,
+        &mut cheatable_syscall_handler.syscall_handler.syscall_ptr,
+    )?;
 
-    buffer.write_arr(result.iter()).unwrap();
-    cheatable_syscall_handler.syscall_handler.syscall_ptr += (buffer.ptr - system_ptr).unwrap();
     Ok(())
 }
 
