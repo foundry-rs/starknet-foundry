@@ -98,15 +98,29 @@ fn with_too_much_cores() {
     let temp = setup_package("simple_package");
     let snapbox = runner();
 
-    let assert = snapbox
+    snapbox
         .current_dir(&temp)
         .arg("--cores")
         .arg("99999")
         .assert()
-        .code(2);
+        .code(2)
+        .stderr_matches(indoc! {r#"
+            error: invalid value '99999' for '--cores <CORES>': Number of cores must be less than or equal to the number of cores available on the machine ([..])
+        "#});
+}
 
-    let stderr =
-        String::from_utf8(assert.get_output().stderr.clone()).expect("stderr is not valid UTF-8");
+#[test]
+fn with_zero_core() {
+    let temp = setup_package("simple_package");
+    let snapbox = runner();
 
-    assert!(stderr.contains("error: invalid value '99999' for '--cores <CORES>': Number of cores must be less than or equal to the number of cores available on the machine"));
+    snapbox
+        .current_dir(&temp)
+        .arg("--cores")
+        .arg("0")
+        .assert()
+        .code(2)
+        .stderr_matches(indoc! {r#"
+            error: invalid value '0' for '--cores <CORES>': Number of cores must be greater than 0
+        "#});
 }
