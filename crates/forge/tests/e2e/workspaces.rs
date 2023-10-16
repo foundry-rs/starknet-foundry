@@ -27,11 +27,16 @@ fn root_workspace_without_arguments() {
         Failure data:
             original value: [8111420071579136082810415440747], converted to a string: [failing check]
         
-        [SKIP] tests::test_failing::test_another_failing
-        Tests: 1 passed, 1 failed, 1 skipped
+        [FAIL] tests::test_failing::test_another_failing
+
+        Failure data:
+            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+        
+        Tests: 1 passed, 2 failed, 0 skipped
         
         Failures:
             tests::test_failing::test_failing
+            tests::test_failing::test_another_failing
         "#});
 }
 
@@ -77,11 +82,11 @@ fn root_workspace_specific_package2() {
         [..]Finished[..]
 
 
-        Collected 7 test(s) from fibonacci package
+        Collected 6 test(s) from fibonacci package
         Running 2 test(s) from src/
         [PASS] fibonacci::tests::it_works
         [PASS] fibonacci::tests::contract_test
-        Running 5 test(s) from tests/
+        Running 4 test(s) from tests/
         [PASS] tests::lib_test
         [PASS] tests::abc::abc_test
         [PASS] tests::abc::efg::efg_test
@@ -90,8 +95,7 @@ fn root_workspace_specific_package2() {
         Failure data:
             original value: [0], converted to a string: []
         
-        [SKIP] tests::abc::efg::skipped_test
-        Tests: 5 passed, 1 failed, 1 skipped
+        Tests: 5 passed, 1 failed, 0 skipped
         
         Failures:
             tests::abc::efg::failing_test
@@ -144,11 +148,16 @@ fn root_workspace_specify_root_package() {
         Failure data:
             original value: [8111420071579136082810415440747], converted to a string: [failing check]
         
-        [SKIP] tests::test_failing::test_another_failing
-        Tests: 1 passed, 1 failed, 1 skipped
+        [FAIL] tests::test_failing::test_another_failing
+
+        Failure data:
+            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+        
+        Tests: 1 passed, 2 failed, 0 skipped
         
         Failures:
             tests::test_failing::test_failing
+            tests::test_failing::test_another_failing
         "#});
 }
 
@@ -210,11 +219,11 @@ fn root_workspace_for_entire_workspace() {
         [..]Finished[..]
         
         
-        Collected 7 test(s) from fibonacci package
+        Collected 6 test(s) from fibonacci package
         Running 2 test(s) from src/
         [PASS] fibonacci::tests::it_works
         [PASS] fibonacci::tests::contract_test
-        Running 5 test(s) from tests/
+        Running 4 test(s) from tests/
         [PASS] tests::lib_test
         [PASS] tests::abc::abc_test
         [PASS] tests::abc::efg::efg_test
@@ -223,8 +232,7 @@ fn root_workspace_for_entire_workspace() {
         Failure data:
             original value: [0], converted to a string: []
         
-        [SKIP] tests::abc::efg::skipped_test
-        Tests: 5 passed, 1 failed, 1 skipped
+        Tests: 5 passed, 1 failed, 0 skipped
         [..]Compiling[..]
         [..]Finished[..]
         
@@ -238,12 +246,17 @@ fn root_workspace_for_entire_workspace() {
         Failure data:
             original value: [8111420071579136082810415440747], converted to a string: [failing check]
         
-        [SKIP] tests::test_failing::test_another_failing
-        Tests: 1 passed, 1 failed, 1 skipped
+        [FAIL] tests::test_failing::test_another_failing
+
+        Failure data:
+            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+        
+        Tests: 1 passed, 2 failed, 0 skipped
         
         Failures:
             tests::abc::efg::failing_test
             tests::test_failing::test_failing
+            tests::test_failing::test_another_failing
         "#});
 }
 
@@ -277,11 +290,11 @@ fn root_workspace_for_entire_workspace_inside_package() {
         [..]Finished[..]
         
         
-        Collected 7 test(s) from fibonacci package
+        Collected 6 test(s) from fibonacci package
         Running 2 test(s) from src/
         [PASS] fibonacci::tests::it_works
         [PASS] fibonacci::tests::contract_test
-        Running 5 test(s) from tests/
+        Running 4 test(s) from tests/
         [PASS] tests::lib_test
         [PASS] tests::abc::abc_test
         [PASS] tests::abc::efg::efg_test
@@ -290,8 +303,7 @@ fn root_workspace_for_entire_workspace_inside_package() {
         Failure data:
             original value: [0], converted to a string: []
         
-        [SKIP] tests::abc::efg::skipped_test
-        Tests: 5 passed, 1 failed, 1 skipped
+        Tests: 5 passed, 1 failed, 0 skipped
         [..]Compiling[..]
         [..]Finished[..]
         
@@ -305,12 +317,17 @@ fn root_workspace_for_entire_workspace_inside_package() {
         Failure data:
             original value: [8111420071579136082810415440747], converted to a string: [failing check]
         
-        [SKIP] tests::test_failing::test_another_failing
-        Tests: 1 passed, 1 failed, 1 skipped
+        [FAIL] tests::test_failing::test_another_failing
+
+        Failure data:
+            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+        
+        Tests: 1 passed, 2 failed, 0 skipped
         
         Failures:
             tests::abc::efg::failing_test
             tests::test_failing::test_failing
+            tests::test_failing::test_another_failing
         "#});
 }
 
@@ -352,11 +369,11 @@ fn virtual_workspace_without_arguments() {
         [..]Finished[..]
         
         
-        Collected 7 test(s) from fibonacci2 package
+        Collected 6 test(s) from fibonacci2 package
         Running 2 test(s) from src/
         [PASS] fibonacci2::tests::it_works
         [PASS] fibonacci2::tests::contract_test
-        Running 5 test(s) from tests/
+        Running 4 test(s) from tests/
         [PASS] tests::lib_test
         [PASS] tests::abc::abc_test
         [PASS] tests::abc::efg::efg_test
@@ -365,8 +382,7 @@ fn virtual_workspace_without_arguments() {
         Failure data:
             original value: [0], converted to a string: []
         
-        [SKIP] tests::abc::efg::skipped_test
-        Tests: 5 passed, 1 failed, 1 skipped
+        Tests: 5 passed, 1 failed, 0 skipped
         [..]Compiling[..]
         [..]Compiling[..]
         [..]Finished[..]
@@ -428,11 +444,11 @@ fn virtual_workspace_specific_package2() {
         [..]Finished[..]
         
         
-        Collected 7 test(s) from fibonacci2 package
+        Collected 6 test(s) from fibonacci2 package
         Running 2 test(s) from src/
         [PASS] fibonacci2::tests::it_works
         [PASS] fibonacci2::tests::contract_test
-        Running 5 test(s) from tests/
+        Running 4 test(s) from tests/
         [PASS] tests::lib_test
         [PASS] tests::abc::abc_test
         [PASS] tests::abc::efg::efg_test
@@ -441,8 +457,7 @@ fn virtual_workspace_specific_package2() {
         Failure data:
             original value: [0], converted to a string: []
         
-        [SKIP] tests::abc::efg::skipped_test
-        Tests: 5 passed, 1 failed, 1 skipped
+        Tests: 5 passed, 1 failed, 0 skipped
         
         Failures:
             tests::abc::efg::failing_test
@@ -515,11 +530,11 @@ fn virtual_workspace_for_entire_workspace() {
         [..]Finished[..]
         
         
-        Collected 7 test(s) from fibonacci2 package
+        Collected 6 test(s) from fibonacci2 package
         Running 2 test(s) from src/
         [PASS] fibonacci2::tests::it_works
         [PASS] fibonacci2::tests::contract_test
-        Running 5 test(s) from tests/
+        Running 4 test(s) from tests/
         [PASS] tests::lib_test
         [PASS] tests::abc::abc_test
         [PASS] tests::abc::efg::efg_test
@@ -528,8 +543,7 @@ fn virtual_workspace_for_entire_workspace() {
         Failure data:
             original value: [0], converted to a string: []
         
-        [SKIP] tests::abc::efg::skipped_test
-        Tests: 5 passed, 1 failed, 1 skipped
+        Tests: 5 passed, 1 failed, 0 skipped
         [..]Compiling[..]
         [..]Compiling[..]
         [..]Finished[..]
@@ -565,11 +579,11 @@ fn virtual_workspace_for_entire_workspace_inside_package() {
         [..]Finished[..]
         
         
-        Collected 7 test(s) from fibonacci2 package
+        Collected 6 test(s) from fibonacci2 package
         Running 2 test(s) from src/
         [PASS] fibonacci2::tests::it_works
         [PASS] fibonacci2::tests::contract_test
-        Running 5 test(s) from tests/
+        Running 4 test(s) from tests/
         [PASS] tests::lib_test
         [PASS] tests::abc::abc_test
         [PASS] tests::abc::efg::efg_test
@@ -578,8 +592,7 @@ fn virtual_workspace_for_entire_workspace_inside_package() {
         Failure data:
             original value: [0], converted to a string: []
         
-        [SKIP] tests::abc::efg::skipped_test
-        Tests: 5 passed, 1 failed, 1 skipped
+        Tests: 5 passed, 1 failed, 0 skipped
         [..]Compiling[..]
         [..]Compiling[..]
         [..]Finished[..]

@@ -5,7 +5,7 @@ use cairo_felt::Felt252;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cheatnet::cheatcodes::deploy::{deploy, deploy_at};
 use cheatnet::cheatcodes::{CheatcodeError, EnhancedHintError};
-use cheatnet::rpc::{call_contract, CallContractOutput};
+use cheatnet::rpc::{call_contract, CallContractFailure, CallContractResult};
 use conversions::StarknetConversions;
 use starknet_api::core::ContractAddress;
 
@@ -69,11 +69,11 @@ fn deploy_two_at_the_same_address() {
         ContractAddress::from(1_u8),
     );
 
-    assert!(match result {
-        Err(CheatcodeError::Unrecoverable(EnhancedHintError::Hint(HintError::CustomHint(err)))) =>
-            err.as_ref() == "Address is already taken",
-        _ => false,
-    });
+    assert!(matches!(
+        result,
+        Err(CheatcodeError::Unrecoverable(EnhancedHintError::Hint(HintError::CustomHint(err))))
+        if err.as_ref() == "Address is already taken"
+    ));
 }
 
 #[test]
@@ -138,11 +138,14 @@ fn deploy_contract_on_predefined_address_after_its_usage() {
     )
     .unwrap();
 
-    assert!(match output {
-        CallContractOutput::Error { msg, .. } =>
-            msg.contains("Requested contract address") && msg.contains("is not deployed"),
-        _ => false,
-    });
+    assert!(
+        matches!(
+            output.result,
+            CallContractResult::Failure(CallContractFailure::Error { msg, .. })
+            if msg.contains("Requested contract address") && msg.contains("is not deployed")
+        ),
+        "Wrong error message"
+    );
 
     let contract = "SpyEventsChecker".to_owned().to_felt252();
     let contracts = get_contracts();
@@ -280,11 +283,11 @@ fn deploy_invalid_class_hash() {
         &[Felt252::from(123_321), Felt252::from(523_325)],
     );
 
-    assert!(match output {
-        Err(CheatcodeError::Unrecoverable(EnhancedHintError::Hint(HintError::CustomHint(msg)))) =>
-            msg.as_ref().contains(class_hash.to_string().as_str()),
-        _ => false,
-    });
+    assert!(matches!(
+        output,
+        Err(CheatcodeError::Unrecoverable(EnhancedHintError::Hint(HintError::CustomHint(msg))))
+        if msg.as_ref().contains(class_hash.to_string().as_str()),
+    ));
 }
 
 #[test]
@@ -298,6 +301,40 @@ fn deploy_invokes_constructor() {
         "ConstructorSimple",
         &[Felt252::from(123)],
     );
+
+    let selector = felt_selector_from_name("get_number");
+
+    let output = call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &contract_address,
+        &selector,
+        &[],
+    )
+    .unwrap();
+
+    assert_success!(output, vec![Felt252::from(123)]);
+}
+
+#[test]
+fn deploy_at_invokes_constructor() {
+    let mut cached_state = create_cached_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
+
+    let contract = "ConstructorSimple".to_string().to_felt252();
+    let contracts = get_contracts();
+
+    let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
+
+    let contract_address = deploy_at(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &class_hash,
+        &[Felt252::from(123)],
+        Felt252::from(420).to_contract_address(),
+    )
+    .unwrap()
+    .contract_address;
 
     let selector = felt_selector_from_name("get_number");
 

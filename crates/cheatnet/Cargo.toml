@@ -39,6 +39,7 @@ indoc.workspace = true
 dotenv.workspace = true
 rayon.workspace = true
 glob = "0.3.1"
+test-case.workspace = true
 
 
 [lib]
