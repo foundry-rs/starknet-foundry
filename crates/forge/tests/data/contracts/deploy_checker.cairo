@@ -12,7 +12,7 @@ mod DeployChecker {
     fn constructor(ref self: ContractState, balance: felt252) -> (ContractAddress, felt252) {
         self.balance.write(balance);
         self.caller.write(starknet::get_caller_address());
-        (self.caller.read(), balance + 5)
+        (self.caller.read(), balance)
     }
 
     #[external(v0)]

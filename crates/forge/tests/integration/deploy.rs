@@ -60,7 +60,7 @@ fn deploy_syscall() {
             let calldata = array![10];
         
             let (contract_address, span) = deploy_syscall(contract.class_hash, salt, calldata.span(), false).unwrap();
-            assert(*span[0] == test_address().into() && *span[1] == 15, 'constructor return missmatch');
+            assert(*span[0] == test_address().into() && *span[1] == 10, 'constructor return missmatch');
             
             let dispatcher = IDeployCheckerDispatcher { contract_address };
             assert(dispatcher.get_balance() == 10, 'balance missmatch');
