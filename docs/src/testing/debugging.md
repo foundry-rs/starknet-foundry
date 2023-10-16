@@ -13,7 +13,7 @@ Starknet Foundry standard library adds a utility method for printing inside test
 
 ## In tests
 
-Here's a test with example use of print method:
+Here's a test with example use of [`print`](../appendix/forge-library/print.md) method:
 
 ```rust
 // Make sure to import Starknet Foundry PrintTrait
@@ -53,9 +53,9 @@ original value: [2019423207056158060135], converted to a string: [my string]
 original value: [6373661751074312243962081276474], converted to a string: [Print number:]
 original value: [123], converted to a string: [{]
 original value: [97254360215367257408299385], converted to a string: [Print array:]
-original value: [1], converted to a string: []
-original value: [2], converted to a string: []
-original value: [3], converted to a string: []
+original value: [1]
+original value: [2]
+original value: [3]
 original value: [379899844591278365831020], converted to a string: [Print bool:]
 original value: [439721161573], converted to a string: [false]
 [PASS] tests::test_print::test_print
@@ -64,6 +64,24 @@ Tests: 1 passed, 0 failed, 0 skipped
 
 Forge tries to convert values to strings when possible. In case conversion is not possible,
 just `original value` is printed.
+
+If the parsed value contains ASCII control characters (e.g. 27: `ESC`), it will not be converted to a string.
+
+```rust
+#[test]
+fn test_print() {
+    // ...
+    
+    27.print();
+```
+
+```shell
+$ snforge
+Collected 1 test(s) from package_name package
+Running 0 test(s) from src/
+Running 1 test(s) from tests/
+original value: [27]
+```
 
 ## In contracts
 > ⚠️ **Warning**
@@ -74,12 +92,6 @@ just `original value` is printed.
 Here is an example contract:
 
 ```rust
-#[starknet::interface]
-trait IHelloStarknet<TContractState> {
-    fn increase_balance(ref self: TContractState, amount: felt252);
-    fn get_balance(self: @TContractState) -> felt252;
-}
-
 #[starknet::contract]
 mod HelloStarknet {
     // Note: PrintTrait has to be imported
@@ -88,21 +100,20 @@ mod HelloStarknet {
     #[storage]
     struct Storage {
         balance: felt252, 
+        // ...
     }
 
     #[external(v0)]
     impl HelloStarknetImpl of super::IHelloStarknet<ContractState> {
         fn increase_balance(ref self: ContractState, amount: felt252) {
-            assert(amount != 0, 'Amount cannot be 0');
             self.balance.write(self.balance.read() + amount);
+
             'The new balance is:'.print();
             self.balance.read().print();
         }
-
-        fn get_balance(self: @ContractState) -> felt252 {
-            self.balance.read()
-        }
     }
+    
+    // ...
 }
 ```
 With a test:
@@ -110,33 +121,16 @@ With a test:
 #[test]
 fn test_increase_balance() {
     let contract_address = deploy_contract('HelloStarknet');
+    let dispatcher = IHelloStarknetDispatcher { contract_address };
+    
+    safe_dispatcher.increase_balance(42);
 
-    let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
-
-    let balance_before = safe_dispatcher.get_balance().unwrap();
-    assert(balance_before == 0, 'Invalid balance');
-
-    safe_dispatcher.increase_balance(42).unwrap();
-
-    let balance_after = safe_dispatcher.get_balance().unwrap();
-    assert(balance_after == 42, 'Invalid balance');
+    // ...
 }
 ```
 We get the following output:
 ```
 $ snforge                                                                                              
-    Updating [...]
-   Compiling [...]
-warn: libfunc `cheatcode` is not allowed in the libfuncs list `Default libfunc list`
- --> contract: HelloStarknet
-help: try compiling with the `experimental` list
- --> Scarb.toml
-    [[target.starknet-contract]]
-    allowed-libfuncs-list.name = "experimental"
-
-    Finished release target(s) in 2 seconds
-
-
 Collected 2 test(s) from package_name package
 Running 0 test(s) from src/
 Running 1 test(s) from tests/

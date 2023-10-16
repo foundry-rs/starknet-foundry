@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Changed
+
+- `snforge_std::PrintTrait` will not convert values representing ASCII control characters to strings
+
+### Cast
+
+#### Added
+
+- `show-config` subcommand to display currently used configuration
+
 ## [0.8.2] - 2023-10-12
 
 ### Forge
