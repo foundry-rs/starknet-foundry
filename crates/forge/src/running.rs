@@ -7,7 +7,7 @@ use blockifier::execution::entry_point::{
 };
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
-use blockifier::state::cached_state::{CachedState, GlobalContractCache};
+use blockifier::state::cached_state::CachedState;
 use blockifier::state::state_api::State;
 use cairo_felt::Felt252;
 use cairo_vm::serde::deserialize_program::HintParams;
@@ -24,7 +24,7 @@ use camino::Utf8Path;
 use cheatnet::constants as cheatnet_constants;
 use cheatnet::execution::contract_execution_syscall_handler::ContractExecutionSyscallHandler;
 use cheatnet::forking::state::ForkStateReader;
-use cheatnet::state::{CheatnetState, ExtendedStateReader};
+use cheatnet::state::{BlockInfoReader, CheatnetBlockInfo, CheatnetState, ExtendedStateReader};
 use conversions::StarknetConversions;
 use starknet::core::types::BlockTag::Latest;
 use starknet::core::types::{BlockId, BlockTag, MaybePendingBlockWithTxHashes};
@@ -104,8 +104,8 @@ pub(crate) fn blocking_run_from_test(
     })
 }
 
-fn build_context() -> EntryPointExecutionContext {
-    let block_context = cheatnet_constants::build_block_context();
+fn build_context(block_info: CheatnetBlockInfo) -> EntryPointExecutionContext {
+    let block_context = cheatnet_constants::build_block_context(block_info);
     let account_context = cheatnet_constants::build_transaction_context();
     EntryPointExecutionContext::new(
         block_context.clone(),
@@ -189,9 +189,10 @@ pub(crate) fn run_test_case(
             &case.fork_config,
         )?,
     };
-    let mut context = build_context();
+    let block_info = state_reader.get_block_info().unwrap();
+    let mut context = build_context(block_info);
     let mut execution_resources = ExecutionResources::default();
-    let mut blockifier_state = CachedState::new(state_reader, GlobalContractCache::default());
+    let mut blockifier_state = CachedState::from(state_reader);
     let syscall_handler = build_syscall_handler(
         &mut blockifier_state,
         &string_to_hint,
@@ -199,7 +200,10 @@ pub(crate) fn run_test_case(
         &mut context,
     )?;
 
-    let mut cheatnet_state = CheatnetState::default();
+    let mut cheatnet_state = CheatnetState {
+        block_info,
+        ..Default::default()
+    };
     let mut cheatable_syscall_handler =
         CheatableSyscallHandler::wrap(syscall_handler, &mut cheatnet_state);
     let contract_execution_syscall_handler =

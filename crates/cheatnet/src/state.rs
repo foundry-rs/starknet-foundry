@@ -1,5 +1,6 @@
 use crate::cheatcodes;
 use crate::cheatcodes::spy_events::{Event, SpyTarget};
+use crate::constants::TEST_SEQUENCER_ADDRESS;
 use crate::forking::state::ForkStateReader;
 use blockifier::state::state_api::State;
 use blockifier::{
@@ -12,11 +13,15 @@ use blockifier::{
 };
 use cairo_felt::Felt252;
 use cheatcodes::spoof::TxInfoMock;
+use starknet_api::block::{BlockNumber, BlockTimestamp};
 use starknet_api::core::EntryPointSelector;
+use starknet_api::core::PatriciaKey;
+use starknet_api::hash::StarkHash;
 use starknet_api::transaction::ContractAddressSalt;
 use starknet_api::{
     core::{ClassHash, CompiledClassHash, ContractAddress, Nonce},
     hash::StarkFelt,
+    patricia_key,
     state::StorageKey,
 };
 use std::collections::HashMap;
@@ -27,9 +32,40 @@ pub struct ExtendedStateReader {
     pub fork_state_reader: Option<ForkStateReader>,
 }
 
+pub trait BlockInfoReader {
+    fn get_block_info(&self) -> StateResult<CheatnetBlockInfo>;
+}
+
+impl BlockInfoReader for ExtendedStateReader {
+    fn get_block_info(&self) -> StateResult<CheatnetBlockInfo> {
+        if self.fork_state_reader.is_some() {
+            return self.fork_state_reader.as_ref().unwrap().get_block_info();
+        }
+
+        Ok(CheatnetBlockInfo::default())
+    }
+}
+
 #[allow(clippy::module_name_repetitions)]
 pub struct BlockifierState<'a> {
     pub blockifier_state: &'a mut dyn State,
+}
+
+#[derive(Copy, Clone)]
+pub struct CheatnetBlockInfo {
+    pub block_number: BlockNumber,
+    pub timestamp: BlockTimestamp,
+    pub sequencer_address: ContractAddress,
+}
+
+impl Default for CheatnetBlockInfo {
+    fn default() -> Self {
+        Self {
+            block_number: BlockNumber(2000),
+            timestamp: BlockTimestamp::default(),
+            sequencer_address: ContractAddress(patricia_key!(TEST_SEQUENCER_ADDRESS)),
+        }
+    }
 }
 
 impl<'a> BlockifierState<'a> {
@@ -176,6 +212,7 @@ pub struct CheatnetState {
     pub spies: Vec<SpyTarget>,
     pub detected_events: Vec<Event>,
     pub deploy_salt_base: u32,
+    pub block_info: CheatnetBlockInfo,
 }
 
 impl CheatnetState {

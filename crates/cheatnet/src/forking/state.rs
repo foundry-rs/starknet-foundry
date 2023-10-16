@@ -1,4 +1,5 @@
 use crate::forking::cache::ForkCache;
+use crate::state::{BlockInfoReader, CheatnetBlockInfo};
 use blockifier::execution::contract_class::{
     ContractClass as ContractClassBlockifier, ContractClassV0, ContractClassV1,
 };
@@ -11,14 +12,20 @@ use cairo_lang_utils::bigint::BigUintAsHex;
 use conversions::StarknetConversions;
 use flate2::read::GzDecoder;
 use num_bigint::BigUint;
-use starknet::core::types::{BlockId, ContractClass as ContractClassStarknet};
+use starknet::core::types::{
+    BlockId, ContractClass as ContractClassStarknet, MaybePendingBlockWithTxHashes,
+};
 use starknet::providers::jsonrpc::{HttpTransport, JsonRpcClientError};
 use starknet::providers::{JsonRpcClient, Provider, ProviderError};
+use starknet_api::block::{BlockNumber, BlockTimestamp};
+use starknet_api::core::PatriciaKey;
 use starknet_api::core::{ClassHash, CompiledClassHash, ContractAddress, Nonce};
 use starknet_api::deprecated_contract_class::{
     ContractClass as DeprecatedContractClass, ContractClassAbiEntry, EntryPoint, EntryPointType,
 };
 use starknet_api::hash::StarkFelt;
+use starknet_api::hash::StarkHash;
+use starknet_api::patricia_key;
 use starknet_api::state::StorageKey;
 use std::collections::HashMap;
 use std::io::Read;
@@ -41,6 +48,28 @@ impl ForkStateReader {
             block_id,
             runtime: Runtime::new().expect("Could not instantiate Runtime"),
             cache: ForkCache::load_or_new(url, block_id, cache_dir),
+        }
+    }
+}
+
+impl BlockInfoReader for ForkStateReader {
+    fn get_block_info(&self) -> StateResult<CheatnetBlockInfo> {
+        match self
+            .runtime
+            .block_on(self.client.get_block_with_tx_hashes(self.block_id))
+        {
+            Ok(MaybePendingBlockWithTxHashes::Block(block)) => Ok(CheatnetBlockInfo {
+                block_number: BlockNumber(block.block_number),
+                timestamp: BlockTimestamp(block.timestamp),
+                sequencer_address: ContractAddress(patricia_key!(block.sequencer_address)),
+            }),
+            Ok(MaybePendingBlockWithTxHashes::PendingBlock(_)) => Err(StateReadError(format!(
+                "Block with id {:?} is pending",
+                self.block_id
+            ))),
+            Err(_) => Err(StateReadError(format!(
+                "Unable to get block with tx hashes form fork"
+            ))),
         }
     }
 }
