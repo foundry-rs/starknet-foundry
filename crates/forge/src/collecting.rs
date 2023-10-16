@@ -17,29 +17,21 @@ pub struct TestsFromCrate {
 
 impl TestsFromCrate {
     pub fn filter_by_name(self, filter: &str) -> Self {
-        let mut result = vec![];
-        for test in self.test_cases {
-            if test.name.contains(filter) {
-                result.push(test);
-            }
-        }
-        Self {
-            test_cases: result,
-            ..self
-        }
+        let test_cases = self
+            .test_cases
+            .into_iter()
+            .filter(|tc| tc.name.contains(filter))
+            .collect();
+        Self { test_cases, ..self }
     }
 
     pub fn filter_by_exact_name(self, filter: &str) -> Self {
-        let mut result = vec![];
-        for test in self.test_cases {
-            if test.name == filter {
-                result.push(test);
-            }
-        }
-        Self {
-            test_cases: result,
-            ..self
-        }
+        let test_cases = self
+            .test_cases
+            .into_iter()
+            .filter(|tc| tc.name == filter)
+            .collect();
+        Self { test_cases, ..self }
     }
 }
 
