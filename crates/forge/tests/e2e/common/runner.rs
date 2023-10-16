@@ -2,10 +2,14 @@ use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
 use assert_fs::TempDir;
 use camino::Utf8PathBuf;
 use indoc::formatdoc;
+use regex::Regex;
 use snapbox::cmd::{cargo_bin, Command as SnapboxCommand};
 use std::env;
+use std::fmt::format;
 use std::process::Command;
 use std::str::FromStr;
+use ark_std::iterable::Iterable;
+use itertools::Itertools;
 
 pub(crate) fn runner() -> SnapboxCommand {
     let snapbox = SnapboxCommand::new(cargo_bin!("snforge"));
@@ -206,13 +210,79 @@ pub(crate) fn get_current_branch() -> String {
     }
 }
 
+pub(crate) fn difference_with_wildcard(a: &Vec<String>, b: &Vec<String>) -> Vec<String> {
+    let mut result = vec![];
+
+    for element in a {
+        let escaped = regex::escape(element);
+        let replaced = escaped.replace("\\[\\.\\.\\]", ".*");
+        let re = Regex::new(replaced.as_str()).unwrap();
+
+        if !b.iter().any(|other| re.is_match(other)) {
+            result.push(element.clone());
+        }
+    }
+
+    result
+}
+
+pub(crate) fn intersection_with_wildcard(asserted: &Vec<String>, actual: &Vec<String>) -> Vec<(String, usize)> {
+    let mut result = vec![];
+
+    for element in asserted {
+        let escaped = regex::escape(element);
+        let replaced = escaped.replace("\\[\\.\\.\\]", ".*");
+        let wrapped = format!("^{replaced}$");
+        let re = Regex::new(wrapped.as_str()).unwrap();
+
+        let index = actual.iter().position(|other| re.is_match(other));
+        if let Some(index) = index {
+            result.push((element.clone(), index));
+        }
+    }
+
+    result
+}
+
+pub(crate) fn is_present(line: &str, actual: &mut Vec<String>, asserted: &Vec<String>) -> bool {
+    let present = intersection_with_wildcard(asserted, actual);
+    let result = present.iter().find(|(l, _)| l.as_str() == line);
+    if let Some((_, position)) = result {
+        actual.remove(*position);
+        return true;
+    }
+    false
+}
+
 #[macro_export]
 macro_rules! assert_stdout_contains {
     ( $output:expr, $lines:expr ) => {{
         use regex::Regex;
+        use $crate::e2e::common::runner::is_present;
 
         let output = $output.get_output();
         let stdout = String::from_utf8(output.stdout.clone()).unwrap();
+
+        let asserted_lines: Vec<String> = $lines.lines().map(|line| line.into()).collect();
+        let mut actual_lines: Vec<String> = stdout.lines().map(|line| line.into()).collect();
+
+        let mut out = String::new();
+        for line in &asserted_lines {
+            if is_present(&line, &mut actual_lines, &asserted_lines) {
+                out.push_str("| ");
+            } else {
+                out.push_str("- ");
+            }
+            out.push_str(line);
+            out.push_str("\n");
+        }
+        for remaining_line in actual_lines {
+            out.push_str("+ ");
+            out.push_str(&remaining_line);
+            out.push_str("\n");
+        }
+
+        println!("{out}");
 
         for line in $lines.lines() {
             let escaped = regex::escape(line);
