@@ -376,7 +376,7 @@ pub async fn run(
         for test_case_summary in &summary.test_case_summaries {
             pretty_printing::print_test_result(test_case_summary);
         }
-        summaries.push(summary.clone());
+        summaries.push(summary);
     }
 
     pretty_printing::print_test_summary(&summaries);
@@ -457,6 +457,7 @@ async fn run_tests_from_crate(
     })
 }
 
+#[allow(clippy::too_many_arguments)]
 fn choose_test_strategy_and_run(
     args: Vec<ConcreteTypeId>,
     case: Arc<TestCase>,
