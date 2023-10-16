@@ -90,7 +90,7 @@ pub fn collect_test_crates(
                 crate_type: TestCrateType::Tests,
             })
         } else {
-            Some(pack_tests_into_one_file(temp_dir, &tests_dir_path)?)
+            Some(pack_tests_into_single_crate(temp_dir, &tests_dir_path)?)
         }
     } else {
         None
@@ -140,7 +140,7 @@ pub fn filter_tests_from_crates(
     }
 }
 
-fn pack_tests_into_one_file(
+fn pack_tests_into_single_crate(
     tmp_dir: &TempDir,
     tests_folder_path: &Utf8PathBuf,
 ) -> Result<TestCrateCompilationTarget> {
@@ -263,7 +263,7 @@ mod tests {
         let tests_path = package_path.join("tests");
 
         let temp_dir = TempDir::new().unwrap();
-        let tests = pack_tests_into_one_file(&temp_dir, &tests_path).unwrap();
+        let tests = pack_tests_into_single_crate(&temp_dir, &tests_path).unwrap();
         let virtual_lib_path = tests.crate_root.join("lib.cairo");
         let virtual_lib_u8_content = std::fs::read(&virtual_lib_path).unwrap();
         let virtual_lib_content = std::str::from_utf8(&virtual_lib_u8_content).unwrap();
