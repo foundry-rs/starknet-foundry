@@ -71,7 +71,7 @@ fn validate_cores_number(val: &str) -> Result<usize> {
     let cores_approx = available_parallelism()?.get();
     if parsed_val > cores_approx {
         bail!(
-            "Number of cores must be less than or equal to the number of cores available on the machine ({})",
+            "Number of cores must be less than or equal to the number of cores available on the machine = {}",
             cores_approx
         );
     }
