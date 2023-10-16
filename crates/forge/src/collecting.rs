@@ -193,7 +193,6 @@ fn pack_tests_into_single_crate(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::scarb::ForgeConfig;
     use assert_fs::fixture::PathCopy;
     use assert_fs::TempDir;
     use test_collector::ExpectedTestResult;
