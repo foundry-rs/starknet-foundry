@@ -344,7 +344,7 @@ pub async fn run(
     );
 
     let mut fuzzing_happened = false;
-    let mut summaries = vec![];
+    let summaries = vec![];
     let mut tasks = vec![];
 
     for tests_from_crate in tests {
@@ -378,10 +378,7 @@ pub async fn run(
             pretty_printing::print_test_result(test_case_summary);
         }
         fuzzing_happened |= was_fuzzed;
-        summaries.push(summary.clone());
     }
-
-    pretty_printing::print_test_summary(&summaries);
 
     if fuzzing_happened {
         pretty_printing::print_test_seed(runner_config.fuzzer_seed);
