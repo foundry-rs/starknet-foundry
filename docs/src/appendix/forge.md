@@ -43,7 +43,7 @@ Clean forge cache directory.
 
 ## `--cores`, `<NUM_CORES>`
 
-Number of cores to use for parallel execution.
+Number of cores to use for test execution.
 
 ## `-h`, `--help`
 
