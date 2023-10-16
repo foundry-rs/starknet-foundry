@@ -41,7 +41,6 @@ use starknet_api::core::ContractAddress;
 use crate::test_execution_syscall_handler::file_operations::string_into_felt;
 use cairo_lang_starknet::contract::starknet_keccak;
 use cairo_lang_utils::bigint::BigIntAsHex;
-use cairo_vm::vm::errors::hint_errors::HintError::CustomHint;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cheatnet::cheatcodes::spy_events::SpyTarget;
 
@@ -507,9 +506,9 @@ impl TestExecutionSyscallHandler<'_> {
                         write_cheatcode_panic(&mut buffer, &panic_data);
                         Ok(())
                     }
-                    CallContractResult::Failure(CallContractFailure::Error { msg }) => {
-                        Err(EnhancedHintError::from(CustomHint(Box::from(msg))))
-                    }
+                    CallContractResult::Failure(CallContractFailure::Error { msg }) => Err(
+                        EnhancedHintError::from(HintError::CustomHint(Box::from(msg))),
+                    ),
                 }
             }
             "read_txt" => {
@@ -664,10 +663,10 @@ fn execute_syscall(
             write_call_contract_response(cheatable_syscall_handler, vm, &call_args, call_result)?;
             Ok(())
         }
-        DeprecatedSyscallSelector::Deploy => Err(CustomHint(Box::from(
+        DeprecatedSyscallSelector::Deploy => Err(HintError::CustomHint(Box::from(
             "Use snforge_std::ContractClass::deploy instead of deploy_syscall".to_string(),
         ))),
-        DeprecatedSyscallSelector::ReplaceClass => Err(CustomHint(Box::from(
+        DeprecatedSyscallSelector::ReplaceClass => Err(HintError::CustomHint(Box::from(
             "Replace class can't be used in tests".to_string(),
         ))),
         _ => cheatable_syscall_handler.execute_hint(vm, exec_scopes, hint_data, constants),
@@ -746,7 +745,9 @@ fn write_call_contract_response(
                     .map(StarknetConversions::to_stark_felt)
                     .collect(),
             },
-            CallContractFailure::Error { msg, .. } => return Err(CustomHint(Box::from(msg))),
+            CallContractFailure::Error { msg, .. } => {
+                return Err(HintError::CustomHint(Box::from(msg)))
+            }
         },
     };
 
