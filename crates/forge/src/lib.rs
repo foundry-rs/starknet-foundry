@@ -343,7 +343,6 @@ pub async fn run(
         package_name,
     );
 
-    let mut fuzzing_happened = false;
     let mut summaries = vec![];
 
     for tests_from_crate in tests {
@@ -357,7 +356,7 @@ pub async fn run(
             tests_from_crate.test_cases.len(),
         );
 
-        let (summary, was_fuzzed) = run_tests_from_crate(
+        let summary = run_tests_from_crate(
             tests_from_crate,
             runner_config,
             runner_params,
@@ -365,13 +364,15 @@ pub async fn run(
         )
         .await?;
 
-        fuzzing_happened |= was_fuzzed;
         summaries.push(summary.clone());
     }
 
     pretty_printing::print_test_summary(&summaries);
 
-    if fuzzing_happened {
+    if summaries
+        .iter()
+        .any(|summary| summary.contained_fuzzed_tests)
+    {
         pretty_printing::print_test_seed(runner_config.fuzzer_seed);
     }
 
@@ -383,7 +384,7 @@ async fn run_tests_from_crate(
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     cancellation_tokens: Arc<CancellationTokens>,
-) -> Result<(TestCrateSummary, bool)> {
+) -> Result<TestCrateSummary> {
     let runner = Arc::new(
         SierraCasmRunner::new(
             tests.sierra_program.clone(),
@@ -393,7 +394,6 @@ async fn run_tests_from_crate(
         .context("Failed setting up runner.")?,
     );
 
-    let mut was_fuzzed = false;
     let mut tasks = FuturesUnordered::new();
     let test_cases = &tests.test_cases;
 
@@ -424,21 +424,16 @@ async fn run_tests_from_crate(
 
         pretty_printing::print_test_result(&result);
 
-        if result.runs().is_some() {
-            was_fuzzed = true;
-        }
-
         results.push(result);
     }
 
-    Ok((
-        TestCrateSummary {
-            test_case_summaries: results,
-            runner_exit_status: RunnerStatus::Default,
-            test_crate_type: tests.test_crate_type,
-        },
-        was_fuzzed,
-    ))
+    let contained_fuzzed_tests = results.iter().any(|summary| summary.runs().is_some());
+    Ok(TestCrateSummary {
+        test_case_summaries: results,
+        runner_exit_status: RunnerStatus::Default,
+        test_crate_type: tests.test_crate_type,
+        contained_fuzzed_tests,
+    })
 }
 
 fn choose_test_strategy_and_run(
@@ -590,27 +585,25 @@ fn run_with_fuzzing(
                 .count(),
         )?;
 
-        if let Some(result) = results.iter().find(|item| {
+        let result = if let Some(interrupted_or_skipped) = results.iter().find(|item| {
             matches!(
                 item,
                 TestCaseSummary::Interrupted {} | TestCaseSummary::Skipped { .. }
             )
         }) {
-            return Ok(result.clone());
-        }
-
-        if let Some(result) = results
+            interrupted_or_skipped.clone()
+        } else if let Some(failed) = results
             .iter()
             .find(|item| matches!(item, TestCaseSummary::Failed { .. }))
         {
-            let result = result.clone().with_runs(runs);
-            return Ok(result);
-        }
-
-        let result: TestCaseSummary = results
-            .last()
-            .expect("Test should always run at least once")
-            .clone();
+            failed.clone().with_runs(runs)
+        } else {
+            results
+                .last()
+                .expect("Test should always run at least once")
+                .clone()
+                .with_runs(runs)
+        };
 
         let result = result.with_runs(runs);
 
