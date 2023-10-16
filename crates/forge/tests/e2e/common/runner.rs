@@ -208,32 +208,19 @@ pub(crate) fn get_current_branch() -> String {
     }
 }
 
-pub(crate) fn intersection_with_wildcard(
-    asserted: &Vec<String>,
-    actual: &Vec<String>,
-) -> Vec<(String, usize)> {
-    let mut result = vec![];
+pub(crate) fn find_with_wildcard(line: &str, actual: &Vec<String>) -> Option<usize> {
+    let escaped = regex::escape(line);
+    let replaced = escaped.replace("\\[\\.\\.\\]", ".*");
+    let wrapped = format!("^{replaced}$");
+    let re = Regex::new(wrapped.as_str()).unwrap();
 
-    for element in asserted {
-        let escaped = regex::escape(element);
-        let replaced = escaped.replace("\\[\\.\\.\\]", ".*");
-        let wrapped = format!("^{replaced}$");
-        let re = Regex::new(wrapped.as_str()).unwrap();
-
-        let index = actual.iter().position(|other| re.is_match(other));
-        if let Some(index) = index {
-            result.push((element.clone(), index));
-        }
-    }
-
-    result
+    actual.iter().position(|other| re.is_match(other))
 }
 
-pub(crate) fn is_present(line: &str, actual: &mut Vec<String>, asserted: &Vec<String>) -> bool {
-    let present = intersection_with_wildcard(asserted, actual);
-    let result = present.iter().find(|(l, _)| l.as_str() == line);
-    if let Some((_, position)) = result {
-        actual.remove(*position);
+pub(crate) fn is_present(line: &str, actual: &mut Vec<String>) -> bool {
+    let position = find_with_wildcard(line, actual);
+    if let Some(position) = position {
+        actual.remove(position);
         return true;
     }
     false
@@ -247,7 +234,7 @@ pub(crate) fn assert_output_contains(output: &str, lines: &str) {
     let mut out = String::new();
 
     for line in &asserted_lines {
-        if is_present(line, &mut actual_lines, &asserted_lines) {
+        if is_present(line, &mut actual_lines) {
             out.push_str("| ");
         } else {
             matches = false;
