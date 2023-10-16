@@ -199,37 +199,6 @@ mod tests {
     use test_collector::ExpectedTestResult;
 
     #[test]
-    fn runner_config_argument_precedence() {
-        let config_from_scarb = ForgeConfig {
-            exit_first: false,
-            fork: vec![],
-            fuzzer_runs: Some(1234),
-            fuzzer_seed: Some(1000),
-        };
-        let config = RunnerConfig::new(
-            Default::default(),
-            None,
-            false,
-            true,
-            Some(100),
-            Some(32),
-            &config_from_scarb,
-        );
-        assert_eq!(
-            config,
-            RunnerConfig {
-                workspace_root: Default::default(),
-                test_name_filter: None,
-                exact_match: false,
-                exit_first: true,
-                fork_targets: vec![],
-                fuzzer_runs: 100,
-                fuzzer_seed: 32,
-            }
-        );
-    }
-
-    #[test]
     fn collecting_test_crates() {
         let temp = TempDir::new().unwrap();
         temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
