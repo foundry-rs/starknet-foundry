@@ -44,13 +44,13 @@ pub enum TestCrateType {
 }
 
 #[derive(Debug, PartialEq)]
-pub struct TestCrate {
+pub struct TestCrateCompilationTarget {
     pub crate_root: Utf8PathBuf,
     pub crate_name: String,
     pub crate_type: TestCrateType,
 }
 
-impl TestCrate {
+impl TestCrateCompilationTarget {
     pub fn compile_tests(
         &self,
         linked_libraries: &[LinkedLibrary],
@@ -78,13 +78,13 @@ pub fn collect_test_crates(
     package_name: &str,
     package_source_dir_path: &Utf8PathBuf,
     temp_dir: &TempDir,
-) -> Result<Vec<TestCrate>> {
+) -> Result<Vec<TestCrateCompilationTarget>> {
     let tests_dir_path = package_path.join("tests");
 
     let test_dir_crate = if tests_dir_path.exists() {
         let lib_path = tests_dir_path.join("lib.cairo");
         if lib_path.exists() {
-            Some(TestCrate {
+            Some(TestCrateCompilationTarget {
                 crate_root: tests_dir_path,
                 crate_name: "tests".to_string(),
                 crate_type: TestCrateType::Tests,
@@ -96,7 +96,7 @@ pub fn collect_test_crates(
         None
     };
 
-    let mut test_crates = vec![TestCrate {
+    let mut test_crates = vec![TestCrateCompilationTarget {
         crate_root: package_source_dir_path.clone(),
         crate_name: package_name.to_string(),
         crate_type: TestCrateType::Lib,
@@ -109,7 +109,7 @@ pub fn collect_test_crates(
 }
 
 pub fn compile_tests_from_test_crates(
-    test_crates: &Vec<TestCrate>,
+    test_crates: &Vec<TestCrateCompilationTarget>,
     runner_params: &RunnerParams,
 ) -> Result<Vec<TestsFromCrate>> {
     test_crates
@@ -143,7 +143,7 @@ pub fn filter_tests_from_crates(
 pub fn pack_tests_into_one_file(
     tmp_dir: &TempDir,
     tests_folder_path: &Utf8PathBuf,
-) -> Result<TestCrate> {
+) -> Result<TestCrateCompilationTarget> {
     tmp_dir
         .copy_from(tests_folder_path, &["**/*.cairo"])
         .context("Unable to copy files to temporary directory")?;
@@ -183,7 +183,7 @@ pub fn pack_tests_into_one_file(
     let tests_tmp_dir_path = Utf8PathBuf::from_path_buf(tmp_dir.to_path_buf())
         .map_err(|_| anyhow!("Failed to convert tests temporary directory to Utf8PathBuf"))?;
 
-    Ok(TestCrate {
+    Ok(TestCrateCompilationTarget {
         crate_root: tests_tmp_dir_path,
         crate_name: "tests".to_string(),
         crate_type: TestCrateType::Tests,
@@ -244,7 +244,7 @@ mod tests {
         )
         .unwrap();
 
-        assert!(test_crates.contains(&TestCrate {
+        assert!(test_crates.contains(&TestCrateCompilationTarget {
             crate_root: package_path,
             crate_name: "simple_package".to_string(),
             crate_type: TestCrateType::Lib,
