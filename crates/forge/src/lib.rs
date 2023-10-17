@@ -24,7 +24,7 @@ use cairo_lang_sierra::ids::ConcreteTypeId;
 use cairo_lang_sierra::program::{Function, Program};
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
-use futures::stream::{FuturesOrdered, FuturesUnordered};
+use futures::stream::FuturesUnordered;
 
 use once_cell::sync::Lazy;
 use rand::{thread_rng, RngCore};
@@ -345,38 +345,26 @@ pub async fn run(
 
     let mut fuzzing_happened = false;
     let mut summaries = vec![];
-    let mut tasks = vec![];
 
     for tests_from_crate in tests {
         let tests_from_crate = Arc::new(tests_from_crate);
         let runner_config = runner_config.clone();
-        let test_crate_type = tests_from_crate.test_crate_type;
-        let number_of_test_cases = tests_from_crate.test_cases.len();
         let runner_params = runner_params.clone();
         let cancellation_tokens = cancellation_tokens.clone();
-        tasks.push((
-            test_crate_type,
-            number_of_test_cases,
-            task::spawn({
-                async move {
-                    run_tests_from_crate(
-                        tests_from_crate,
-                        runner_config,
-                        runner_params,
-                        cancellation_tokens,
-                    )
-                    .await
-                }
-            }),
-        ));
-    }
-    for (test_crate_type, tests_len, task) in tasks {
-        pretty_printing::print_running_tests(test_crate_type, tests_len);
 
-        let (summary, was_fuzzed) = task.await??;
-        for test_case_summary in &summary.test_case_summaries {
-            pretty_printing::print_test_result(test_case_summary);
-        }
+        pretty_printing::print_running_tests(
+            tests_from_crate.test_crate_type,
+            tests_from_crate.test_cases.len(),
+        );
+
+        let (summary, was_fuzzed) = run_tests_from_crate(
+            tests_from_crate,
+            runner_config,
+            runner_params,
+            cancellation_tokens,
+        )
+        .await?;
+
         fuzzing_happened |= was_fuzzed;
         summaries.push(summary.clone());
     }
@@ -406,7 +394,7 @@ async fn run_tests_from_crate(
     );
 
     let mut was_fuzzed = false;
-    let mut tasks = FuturesOrdered::new();
+    let mut tasks = FuturesUnordered::new();
     let test_cases = &tests.test_cases;
 
     for case in test_cases.iter() {
@@ -419,7 +407,7 @@ async fn run_tests_from_crate(
         let args: Vec<ConcreteTypeId> = args.into_iter().cloned().collect();
         let runner = runner.clone();
 
-        tasks.push_back(choose_test_strategy_and_run(
+        tasks.push(choose_test_strategy_and_run(
             args,
             case.clone(),
             runner,
@@ -433,6 +421,8 @@ async fn run_tests_from_crate(
 
     while let Some(task) = tasks.next().await {
         let result = task??;
+
+        pretty_printing::print_test_result(&result);
 
         if result.runs().is_some() {
             was_fuzzed = true;
@@ -536,7 +526,7 @@ fn run_with_fuzzing(
                 arg.debug_name
                     .as_ref()
                     .ok_or_else(|| anyhow!("Type {arg:?} does not have a debug name"))
-                    .map(smol_str::SmolStr::as_str)
+                    .map(SmolStr::as_str)
             })
             .collect::<Result<Vec<_>>>()?;
 
@@ -623,6 +613,7 @@ fn run_with_fuzzing(
             .clone();
 
         let result = result.with_runs(runs);
+
         Ok(result)
     })
 }

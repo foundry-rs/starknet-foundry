@@ -1,3 +1,4 @@
+use crate::assert_stdout_contains;
 use crate::e2e::common::runner::{
     runner, setup_package, setup_package_with_file_patterns, BASE_FILE_PATTERNS,
 };
@@ -8,12 +9,14 @@ fn without_cache() {
     let temp = setup_package("forking");
     let snapbox = runner();
 
-    snapbox
+    let output = snapbox
         .current_dir(&temp)
         .args(["--exact", "forking::test_fork_simple"])
         .assert()
-        .code(0)
-        .stdout_matches(indoc! {r#"
+        .code(0);
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -22,7 +25,8 @@ fn without_cache() {
         Running 1 test(s) from src/
         [PASS] forking::test_fork_simple
         Tests: 1 passed, 0 failed, 0 skipped
-        "#});
+        "#}
+    );
 }
 
 #[test]
@@ -37,11 +41,10 @@ fn with_cache() {
     );
     let snapbox = runner();
 
-    snapbox
-        .current_dir(&temp)
-        .assert()
-        .code(1)
-        .stdout_matches(indoc! {r#"
+    let output = snapbox.current_dir(&temp).assert().code(1);
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -57,7 +60,8 @@ fn with_cache() {
 
         Failures:
             forking::test_fork_simple
-        "#});
+        "#}
+    );
 }
 
 #[test]
@@ -68,12 +72,14 @@ fn with_clean_cache() {
     );
     let snapbox = runner();
 
-    snapbox
+    let output = snapbox
         .current_dir(&temp)
         .arg("--clean-cache")
         .assert()
-        .code(0)
-        .stdout_matches(indoc! {r#"
+        .code(0);
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -82,5 +88,6 @@ fn with_clean_cache() {
         Running 1 test(s) from src/
         [PASS] forking::test_fork_simple
         Tests: 1 passed, 0 failed, 0 skipped
-        "#});
+        "#}
+    );
 }
