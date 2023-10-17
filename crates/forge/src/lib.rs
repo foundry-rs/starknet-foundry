@@ -36,6 +36,7 @@ pub use crate::test_crate_summary::TestCrateSummary;
 use crate::collecting::{
     collect_test_compilation_targets, compile_tests, filter_tests_from_crates, CompiledTestCrate,
 };
+use crate::tests_to_run::{should_be_run, TestsToRun};
 use test_collector::{FuzzerConfig, LinkedLibrary, TestCase};
 
 pub mod pretty_printing;
@@ -47,6 +48,7 @@ mod fuzzer;
 mod running;
 mod test_crate_summary;
 mod test_execution_syscall_handler;
+mod tests_to_run;
 
 const FUZZER_RUNS_DEFAULT: u32 = 256;
 
@@ -62,34 +64,6 @@ static BUILTINS: Lazy<Vec<&str>> = Lazy::new(|| {
         "System",
     ]
 });
-
-#[derive(Debug, PartialEq)]
-enum TestsToRun {
-    All,
-    Ignored,
-    NotIgnored,
-}
-
-impl TestsToRun {
-    fn from_flags(only_ignored: bool, include_ignored: bool) -> Self {
-        assert!(!(only_ignored && include_ignored));
-        if include_ignored {
-            Self::All
-        } else if only_ignored {
-            Self::Ignored
-        } else {
-            Self::NotIgnored
-        }
-    }
-}
-
-fn should_be_run(test_case: &TestCase, tests_to_run: &TestsToRun) -> bool {
-    match tests_to_run {
-        TestsToRun::All => true,
-        TestsToRun::Ignored => test_case.ignored,
-        TestsToRun::NotIgnored => !test_case.ignored,
-    }
-}
 
 /// Configuration of the test runner
 #[derive(Debug, PartialEq)]
@@ -749,6 +723,22 @@ mod tests {
                 fuzzer_runs: 100,
                 fuzzer_seed: 32,
             }
+        );
+    }
+
+    #[test]
+    #[should_panic]
+    fn only_ignored_and_include_ignored_both_true() {
+        let _ = RunnerConfig::new(
+            Default::default(),
+            None,
+            false,
+            false,
+            true,
+            true,
+            None,
+            None,
+            &Default::default(),
         );
     }
 }

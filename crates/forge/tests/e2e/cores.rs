@@ -20,12 +20,14 @@ fn with_one_core() {
         [..]Finished[..]
 
 
-        Collected 11 test(s) from simple_package package
-        Running 1 test(s) from src/
+        Collected 13 test(s) from simple_package package
+        Running 2 test(s) from src/
         [PASS] simple_package::test_fib
-        Running 10 test(s) from tests/
+        [IGNORE] simple_package::ignored_test
+        Running 11 test(s) from tests/
         [PASS] tests::contract::call_and_invoke
         [PASS] tests::ext_function_test::test_my_test
+        [IGNORE] tests::ext_function_test::ignored_test
         [PASS] tests::ext_function_test::test_simple
         [PASS] tests::test_simple::test_simple
         [PASS] tests::test_simple::test_simple2
@@ -69,12 +71,14 @@ fn with_more_than_one_core() {
         [..]Finished[..]
 
 
-        Collected 11 test(s) from simple_package package
-        Running 1 test(s) from src/
+        Collected 13 test(s) from simple_package package
+        Running 2 test(s) from src/
         [PASS] simple_package::test_fib
-        Running 10 test(s) from tests/
+        [IGNORE] simple_package::ignored_test
+        Running 11 test(s) from tests/
         [PASS] tests::contract::call_and_invoke
         [PASS] tests::ext_function_test::test_my_test
+        [IGNORE] tests::ext_function_test::ignored_test
         [PASS] tests::ext_function_test::test_simple
         [PASS] tests::test_simple::test_simple
         [PASS] tests::test_simple::test_simple2

@@ -33,7 +33,7 @@ impl CompiledTestCrate {
         Self { test_cases, ..self }
     }
 
-    fn extract_ignored(self) -> Self {
+    fn extract_ignored_cases(self) -> Self {
         let result = self
             .test_cases
             .into_iter()
@@ -147,7 +147,7 @@ pub(crate) fn filter_tests_from_crates(
     if let TestsToRun::Ignored = runner_config.tests_to_run {
         filtered_by_name
             .into_iter()
-            .map(CompiledTestCrate::extract_ignored)
+            .map(CompiledTestCrate::extract_ignored_cases)
             .collect()
     } else {
         filtered_by_name

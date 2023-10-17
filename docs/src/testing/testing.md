@@ -113,5 +113,5 @@ Running 1 test(s) from src/
 Tests: 1 passed, 0 failed, 0 skipped
 ```
 
-You can run only the ignored tests using `snforge --ignored`. 
+To run only tests marked with the  `#[ignore]` attribute use `snforge --ignored`. 
 To run all tests regardless of the `#[ignore]` attribute use `snforge --include-ignored`.
