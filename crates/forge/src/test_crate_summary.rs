@@ -11,6 +11,8 @@ pub struct TestCrateSummary {
     pub runner_exit_status: RunnerStatus,
     /// Type of the test crate
     pub test_crate_type: CrateLocation,
+    /// If test crate contained fuzzed tests
+    pub contained_fuzzed_tests: bool,
 }
 
 impl TestCrateSummary {
