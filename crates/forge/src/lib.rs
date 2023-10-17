@@ -587,9 +587,7 @@ fn run_with_fuzzing(
             results.push(result.clone());
 
             match &result {
-                TestCaseSummary::Failed { .. }
-                | TestCaseSummary::InterruptedByError {}
-                | TestCaseSummary::Skipped { .. } => {
+                TestCaseSummary::Failed { .. } | TestCaseSummary::InterruptedByError {} => {
                     break;
                 }
                 _ => (),
