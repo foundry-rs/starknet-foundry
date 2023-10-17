@@ -68,7 +68,7 @@ impl BlockInfoReader for ForkStateReader {
                 self.block_id
             ))),
             Err(_) => Err(StateReadError(
-                "Unable to get block with tx hashes form fork".to_string(),
+                "Unable to get block with tx hashes from fork".to_string(),
             )),
         }
     }
@@ -99,7 +99,7 @@ impl StateReader for ForkStateReader {
                 node_connection_error()
             }
             Err(_) => Err(StateReadError(format!(
-                "Unable to get storage at address: {contract_address:?} and key: {key:?} form fork"
+                "Unable to get storage at address: {contract_address:?} and key: {key:?} from fork"
             ))),
         }
     }
