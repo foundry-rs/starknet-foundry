@@ -389,6 +389,24 @@ mod tests {
     }
 
     #[test]
+    fn filtering_with_no_tests() {
+        let mocked_tests = CompiledTests {
+            sierra_program: program_for_testing(),
+            test_cases: vec![],
+            tests_location: CrateLocation::Lib,
+        };
+        let filtered = mocked_tests.clone().filter_by_name("");
+        assert_eq!(filtered.test_cases, vec![]);
+        let filtered = mocked_tests.clone().filter_by_name("thing");
+        assert_eq!(filtered.test_cases, vec![]);
+
+        let filtered = mocked_tests.clone().filter_by_exact_name("");
+        assert_eq!(filtered.test_cases, vec![]);
+        let filtered = mocked_tests.clone().filter_by_exact_name("thing");
+        assert_eq!(filtered.test_cases, vec![]);
+    }
+
+    #[test]
     fn filtering_tests_uses_whole_path() {
         let mocked_tests = CompiledTests {
             sierra_program: program_for_testing(),
