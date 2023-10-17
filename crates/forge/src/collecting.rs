@@ -73,39 +73,54 @@ impl TestCompilationTarget {
     }
 }
 
+pub fn optimize_compilation_targets(
+    compilation_targets: Vec<TestCompilationTarget>,
+    temp_dir: &TempDir,
+) -> Result<Vec<TestCompilationTarget>> {
+    let result = compilation_targets
+        .into_iter()
+        .map(
+            |compilation_target| match compilation_target.crate_location {
+                CrateLocation::Lib => Ok(compilation_target),
+                CrateLocation::Tests => {
+                    let lib_path = compilation_target.crate_root.join("lib.cairo");
+                    if lib_path.exists() {
+                        Ok(compilation_target)
+                    } else {
+                        Ok(pack_tests_into_single_crate(
+                            temp_dir,
+                            &compilation_target.crate_root,
+                        )?)
+                    }
+                }
+            },
+        )
+        .collect::<Result<_>>()?;
+
+    Ok(result)
+}
+
 pub fn collect_test_compilation_targets(
     package_path: &Utf8Path,
     package_name: &str,
     package_source_dir_path: &Utf8Path,
-    temp_dir: &TempDir,
-) -> Result<Vec<TestCompilationTarget>> {
-    let tests_dir_path = package_path.join("tests");
-
-    let test_dir_crate = if tests_dir_path.exists() {
-        let lib_path = tests_dir_path.join("lib.cairo");
-        if lib_path.exists() {
-            Some(TestCompilationTarget {
-                crate_root: tests_dir_path,
-                crate_name: "tests".to_string(),
-                crate_location: CrateLocation::Tests,
-            })
-        } else {
-            Some(pack_tests_into_single_crate(temp_dir, &tests_dir_path)?)
-        }
-    } else {
-        None
-    };
-
+) -> Vec<TestCompilationTarget> {
     let mut compilation_targets = vec![TestCompilationTarget {
         crate_root: package_source_dir_path.to_path_buf(),
         crate_name: package_name.to_string(),
         crate_location: CrateLocation::Lib,
     }];
-    if let Some(test_dir_crate) = test_dir_crate {
-        compilation_targets.push(test_dir_crate);
+
+    let tests_dir_path = package_path.join("tests");
+    if tests_dir_path.exists() {
+        compilation_targets.push(TestCompilationTarget {
+            crate_root: tests_dir_path,
+            crate_name: "tests".to_string(),
+            crate_location: CrateLocation::Tests,
+        });
     }
 
-    Ok(compilation_targets)
+    compilation_targets
 }
 
 pub fn compile_tests(
@@ -211,35 +226,68 @@ mod tests {
             .unwrap();
         let package_path = Utf8PathBuf::from_path_buf(temp.to_path_buf()).unwrap();
 
-        let compilation_targets = collect_test_compilation_targets(
-            &package_path,
-            "simple_package",
-            &package_path,
-            &TempDir::new().unwrap(),
-        )
-        .unwrap();
+        let compilation_targets =
+            collect_test_compilation_targets(&package_path, "simple_package", &package_path);
 
-        assert!(compilation_targets.contains(&TestCompilationTarget {
-            crate_root: package_path,
-            crate_name: "simple_package".to_string(),
-            crate_location: CrateLocation::Lib,
-        }));
-        assert!(compilation_targets
-            .iter()
-            .any(|tc| tc.crate_name == "tests" && tc.crate_location == CrateLocation::Tests));
+        assert_eq!(
+            compilation_targets,
+            vec![
+                TestCompilationTarget {
+                    crate_root: package_path.clone(),
+                    crate_name: "simple_package".to_string(),
+                    crate_location: CrateLocation::Lib,
+                },
+                TestCompilationTarget {
+                    crate_root: package_path.join("tests"),
+                    crate_name: "tests".to_string(),
+                    crate_location: CrateLocation::Tests,
+                }
+            ]
+        );
     }
 
     #[test]
-    fn packing_tests() {
+    fn optimizing_compilation_targets() {
         let temp = TempDir::new().unwrap();
         temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
             .unwrap();
         let package_path = Utf8PathBuf::from_path_buf(temp.to_path_buf()).unwrap();
-        let tests_path = package_path.join("tests");
 
-        let temp_dir = TempDir::new().unwrap();
-        let tests = pack_tests_into_single_crate(&temp_dir, &tests_path).unwrap();
-        let virtual_lib_path = tests.crate_root.join("lib.cairo");
+        let compilation_targets = vec![
+            TestCompilationTarget {
+                crate_root: package_path.clone(),
+                crate_name: "simple_package".to_string(),
+                crate_location: CrateLocation::Lib,
+            },
+            TestCompilationTarget {
+                crate_root: package_path.join("tests"),
+                crate_name: "tests".to_string(),
+                crate_location: CrateLocation::Tests,
+            },
+        ];
+
+        let temp_for_tests = TempDir::new().unwrap();
+        let tests_path = Utf8PathBuf::from_path_buf(temp_for_tests.to_path_buf()).unwrap();
+        let optimized_compilation_targets =
+            optimize_compilation_targets(compilation_targets, &temp_for_tests).unwrap();
+
+        assert_eq!(
+            optimized_compilation_targets,
+            vec![
+                TestCompilationTarget {
+                    crate_root: package_path.clone(),
+                    crate_name: "simple_package".to_string(),
+                    crate_location: CrateLocation::Lib,
+                },
+                TestCompilationTarget {
+                    crate_root: tests_path.clone(),
+                    crate_name: "tests".to_string(),
+                    crate_location: CrateLocation::Tests,
+                },
+            ]
+        );
+
+        let virtual_lib_path = tests_path.join("lib.cairo");
         let virtual_lib_u8_content = std::fs::read(&virtual_lib_path).unwrap();
         let virtual_lib_content = std::str::from_utf8(&virtual_lib_u8_content).unwrap();
 
