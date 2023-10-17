@@ -1,4 +1,5 @@
 use crate::e2e::common::runner::{runner, setup_package};
+use crate::{assert_stderr_contains, assert_stdout_contains};
 use indoc::indoc;
 
 #[test]
@@ -6,11 +7,10 @@ fn fuzzing() {
     let temp = setup_package("fuzzing");
     let snapbox = runner().arg("fuzzing");
 
-    snapbox
-        .current_dir(&temp)
-        .assert()
-        .code(1)
-        .stdout_matches(indoc! {r#"
+    let output = snapbox.current_dir(&temp).assert().code(1);
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
         
@@ -39,7 +39,8 @@ fn fuzzing() {
 
         Failures:
             fuzzing::tests::failing_fuzz
-        "#});
+        "#}
+    );
 }
 
 #[test]
@@ -47,12 +48,14 @@ fn fuzzing_set_runs() {
     let temp = setup_package("fuzzing");
     let snapbox = runner().arg("fuzzing");
 
-    snapbox
+    let output = snapbox
         .current_dir(&temp)
         .args(["--fuzzer-runs", "10"])
         .assert()
-        .code(1)
-        .stdout_matches(indoc! {r#"
+        .code(1);
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
         
@@ -81,7 +84,8 @@ fn fuzzing_set_runs() {
 
         Failures:
             fuzzing::tests::failing_fuzz
-        "#});
+        "#}
+    );
 }
 
 #[test]
@@ -89,12 +93,14 @@ fn fuzzing_set_seed() {
     let temp = setup_package("fuzzing");
     let snapbox = runner().arg("fuzzing");
 
-    snapbox
+    let output = snapbox
         .current_dir(&temp)
         .args(["--fuzzer-seed", "1234"])
         .assert()
-        .code(1)
-        .stdout_matches(indoc! {r#"
+        .code(1);
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
         
@@ -123,7 +129,8 @@ fn fuzzing_set_seed() {
 
         Failures:
             fuzzing::tests::failing_fuzz
-        "#});
+        "#}
+    );
 }
 
 #[test]
@@ -131,16 +138,19 @@ fn fuzzing_incorrect_runs() {
     let temp = setup_package("fuzzing");
     let snapbox = runner();
 
-    snapbox
+    let output = snapbox
         .current_dir(&temp)
         .args(["--fuzzer-runs", "0"])
         .assert()
-        .code(2)
-        .stderr_matches(indoc! {r#"
+        .code(2);
+    assert_stderr_contains!(
+        output,
+        indoc! {r#"
         error: invalid value '0' for '--fuzzer-runs <FUZZER_RUNS>': Number of fuzzer runs must be greater than or equal to 3
 
         For more information, try '--help'.
-        "#});
+        "#}
+    );
 }
 
 #[test]
@@ -148,11 +158,10 @@ fn fuzzing_incorrect_function_args() {
     let temp = setup_package("fuzzing");
     let snapbox = runner().arg("incorrect_args");
 
-    snapbox
-        .current_dir(&temp)
-        .assert()
-        .code(2)
-        .stdout_matches(indoc! {r#"
+    let output = snapbox.current_dir(&temp).assert().code(2);
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
         
@@ -161,7 +170,8 @@ fn fuzzing_incorrect_function_args() {
         Running 0 test(s) from src/
         Running 2 test(s) from tests/
         [ERROR] Tried to use incorrect type for fuzzing. Type = tests::incorrect_args::MyStruct is not supported
-        "#});
+        "#}
+    );
 }
 
 #[test]
@@ -170,11 +180,10 @@ fn fuzzing_exit_first() {
     let temp = setup_package("fuzzing");
     let snapbox = runner().arg("exit_first_fuzz").arg("-x");
 
-    snapbox
-        .current_dir(&temp)
-        .assert()
-        .code(1)
-        .stdout_matches(indoc! {r#"
+    let output = snapbox.current_dir(&temp).assert().code(1);
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -193,18 +202,18 @@ fn fuzzing_exit_first() {
 
         Failures:
             tests::exit_first_fuzz::exit_first_fails_test
-        "#});
+        "#}
+    );
 }
 #[test]
 fn fuzzing_exit_first_single_fail() {
     let temp = setup_package("fuzzing");
     let snapbox = runner().arg("exit_first_single_fail").arg("-x");
 
-    snapbox
-        .current_dir(&temp)
-        .assert()
-        .code(1)
-        .stdout_matches(indoc! {r#"
+    let output = snapbox.current_dir(&temp).assert().code(1);
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -222,5 +231,6 @@ fn fuzzing_exit_first_single_fail() {
 
         Failures:
             tests::exit_first_single_fail::exit_first_fails_test
-        "#});
+        "#}
+    );
 }

@@ -3,7 +3,7 @@ use std::{collections::HashMap, fs, path::PathBuf};
 
 use blockifier::execution::contract_class::{ContractClassV1, ContractClassV1Inner};
 use blockifier::{
-    abi::{abi_utils::get_storage_var_address, constants},
+    abi::constants,
     block_context::BlockContext,
     execution::{
         contract_class::{ContractClass, ContractClassV0},
@@ -24,7 +24,6 @@ use starknet_api::{
     core::{ChainId, ClassHash, ContractAddress, Nonce, PatriciaKey},
     hash::{StarkFelt, StarkHash},
     patricia_key, stark_felt,
-    state::StorageKey,
     transaction::{
         Calldata, DeclareTransactionV2, Fee, InvokeTransactionV1, TransactionHash,
         TransactionSignature, TransactionVersion,
@@ -35,7 +34,6 @@ use crate::state::DictStateReader;
 
 pub const TEST_SEQUENCER_ADDRESS: &str = "0x1000";
 pub const TEST_ERC20_CONTRACT_ADDRESS: &str = "0x1001";
-pub const TEST_ACCOUNT_CONTRACT_ADDRESS: &str = "0x101";
 pub const MAX_FEE: u128 = 1_000_000 * 100_000_000_000; // 1000000 * min_gas_price.
 pub const INITIAL_BALANCE: u128 = 10 * MAX_FEE;
 
@@ -163,22 +161,6 @@ fn load_v0_contract_class(
     ContractClassV0::try_from_json_string(&raw_contract_class).unwrap()
 }
 
-fn load_v1_contract_class(
-    predeployed_contracts: &Utf8PathBuf,
-    contract_path: &str,
-) -> ContractClassV1 {
-    let raw_contract_class = read_predeployed_contract_file(predeployed_contracts, contract_path);
-    ContractClassV1::try_from_json_string(&raw_contract_class).unwrap()
-}
-
-fn erc20_account_balance_key() -> StorageKey {
-    get_storage_var_address(
-        "ERC20_balances",
-        &[stark_felt!(TEST_ACCOUNT_CONTRACT_ADDRESS)],
-    )
-    .unwrap()
-}
-
 fn contract_class_no_entrypoints() -> ContractClass {
     let inner = ContractClassV1Inner {
         program: Program::default(),
@@ -198,52 +180,29 @@ fn contract_class_no_entrypoints() -> ContractClass {
 // Account does not include validations
 #[must_use]
 pub fn build_testing_state(predeployed_contracts: &Utf8PathBuf) -> DictStateReader {
-    let account_class = load_v1_contract_class(predeployed_contracts, "account_cairo1.casm.json");
     let erc20_class = load_v0_contract_class(
         predeployed_contracts,
         "erc20_contract_without_some_syscalls_compiled.json",
     );
     let block_context = build_block_context();
-    let test_account_class_hash = ClassHash(stark_felt!(TEST_ACCOUNT_CONTRACT_CLASS_HASH));
     let test_erc20_class_hash = ClassHash(stark_felt!(TEST_ERC20_CONTRACT_CLASS_HASH));
     let test_contract_class_hash = ClassHash(stark_felt!(TEST_CONTRACT_CLASS_HASH));
 
     let class_hash_to_class = HashMap::from([
-        (test_account_class_hash, ContractClass::V1(account_class)),
         // This is dummy put here only to satisfy blockifier
         // this class is not used and the test contract cannot be called
         (test_contract_class_hash, contract_class_no_entrypoints()),
         (test_erc20_class_hash, ContractClass::V0(erc20_class)),
     ]);
 
-    // A random address that is unlikely to equal the result of the calculation of a contract
-    // address.
-    let test_account_address = ContractAddress(patricia_key!(TEST_ACCOUNT_CONTRACT_ADDRESS));
     let test_erc20_address = block_context.fee_token_address;
     let test_address = ContractAddress(patricia_key!(TEST_ADDRESS));
     let address_to_class_hash = HashMap::from([
-        (test_account_address, test_account_class_hash),
         (test_erc20_address, test_erc20_class_hash),
         (test_address, test_contract_class_hash),
     ]);
-    let address_to_nonce = HashMap::from([(test_account_address, Nonce(StarkFelt::from(0_u8)))]);
-    let minter_var_address = get_storage_var_address("permitted_minter", &[])
-        .expect("Failed to get permitted_minter storage address.");
-    let storage_view = HashMap::from([
-        (
-            (test_erc20_address, erc20_account_balance_key()),
-            stark_felt!(INITIAL_BALANCE),
-        ),
-        // Give the account mint permission.
-        (
-            (test_erc20_address, minter_var_address),
-            *test_account_address.0.key(),
-        ),
-    ]);
 
     DictStateReader {
-        storage_view,
-        address_to_nonce,
         address_to_class_hash,
         class_hash_to_class,
         ..Default::default()

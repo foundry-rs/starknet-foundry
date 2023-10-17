@@ -5,7 +5,7 @@ members = [
     "crates/test-collector",
     "crates/cast",
     "crates/cheatnet",
-    "crates/conversions"
+    "crates/conversions",
 ]
 
 [workspace.package]
@@ -20,7 +20,6 @@ blockifier = { git = "https://github.com/starkware-libs/blockifier.git", rev = "
 starknet_api = "0.4.1"
 cairo-lang-casm = "2.2.0"
 cairo-lang-runner = "2.2.0"
-cairo-lang-test-runner = "2.2.0"
 cairo-lang-sierra-to-casm = "2.2.0"
 cairo-lang-sierra = "2.2.0"
 cairo-lang-utils = "2.2.0"

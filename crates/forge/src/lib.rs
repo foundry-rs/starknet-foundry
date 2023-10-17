@@ -24,7 +24,7 @@ use cairo_lang_sierra::ids::ConcreteTypeId;
 use cairo_lang_sierra::program::{Function, Program};
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
-use futures::stream::{FuturesOrdered, FuturesUnordered};
+use futures::stream::FuturesUnordered;
 
 use once_cell::sync::Lazy;
 use rand::{thread_rng, RngCore};
@@ -328,7 +328,7 @@ pub async fn run(
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     cancellation_tokens: Arc<CancellationTokens>,
-) -> Result<Vec<TestCrateSummary>> {
+) -> Result<Vec<()>> {
     let tests = collect_tests_from_package(
         package_path,
         package_name,
@@ -344,43 +344,32 @@ pub async fn run(
     );
 
     let mut summaries = vec![];
-    let mut tasks = vec![];
 
     for tests_from_crate in tests {
         let tests_from_crate = Arc::new(tests_from_crate);
         let runner_config = runner_config.clone();
-        let test_crate_type = tests_from_crate.test_crate_type;
-        let number_of_test_cases = tests_from_crate.test_cases.len();
         let runner_params = runner_params.clone();
         let cancellation_tokens = cancellation_tokens.clone();
-        tasks.push((
-            test_crate_type,
-            number_of_test_cases,
-            task::spawn({
-                async move {
-                    run_tests_from_crate(
-                        tests_from_crate,
-                        runner_config,
-                        runner_params,
-                        cancellation_tokens,
-                    )
-                    .await
-                }
-            }),
-        ));
-    }
-    for (test_crate_type, tests_len, task) in tasks {
-        pretty_printing::print_running_tests(test_crate_type, tests_len);
 
-        let summary = task.await??;
-        for test_case_summary in &summary.test_case_summaries {
-            pretty_printing::print_test_result(test_case_summary);
-        }
-        println!("test");
+        pretty_printing::print_running_tests(
+            tests_from_crate.test_crate_type,
+            tests_from_crate.test_cases.len(),
+        );
+
+        let summary = run_tests_from_crate(
+            tests_from_crate,
+            runner_config,
+            runner_params,
+            cancellation_tokens,
+        )
+        .await?;
+
+        summaries.push(summary);
     }
+
     println!("test32");
 
-    Ok(summaries)
+    Ok(vec![])
 }
 
 async fn run_tests_from_crate(
@@ -388,7 +377,7 @@ async fn run_tests_from_crate(
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     cancellation_tokens: Arc<CancellationTokens>,
-) -> Result<TestCrateSummary> {
+) -> Result<()> {
     let runner = Arc::new(
         SierraCasmRunner::new(
             tests.sierra_program.clone(),
@@ -398,11 +387,18 @@ async fn run_tests_from_crate(
         .context("Failed setting up runner.")?,
     );
 
-    let mut tasks = FuturesOrdered::new();
+    let mut tasks = FuturesUnordered::new();
     let test_cases = &tests.test_cases;
+
+    // Initiate two channels to manage the `--exit-first` flag.
+    // Owing to `cheatnet` fork's utilization of its own Tokio runtime for RPC requests,
+    // test execution must occur within a `tokio::spawn_blocking`.
+    // As `spawn_blocking` can't be prematurely cancelled (refer: https://dtantsur.github.io/rust-openstack/tokio/task/fn.spawn_blocking.html),
+    // a channel is used to signal the task that test processing is no longer necessary.
     let (send, mut rec) = channel(1);
-    // Waiting for things to finish shutting down
-    // https://tokio.rs/tokio/topics/shutdown
+
+    // The second channel serves as a hold point to ensure all tasks complete
+    // their shutdown procedures before moving forward (more info: https://tokio.rs/tokio/topics/shutdown)
     let (send_shut_down, mut rec_shut_down) = channel(1);
 
     for case in test_cases.iter() {
@@ -415,7 +411,7 @@ async fn run_tests_from_crate(
         let args: Vec<ConcreteTypeId> = args.into_iter().cloned().collect();
         let runner = runner.clone();
 
-        tasks.push_back(choose_test_strategy_and_run(
+        tasks.push(choose_test_strategy_and_run(
             args,
             case.clone(),
             runner,
@@ -427,11 +423,10 @@ async fn run_tests_from_crate(
         ));
     }
 
-    let mut results = vec![];
-
     while let Some(task) = tasks.next().await {
         let result = task??;
-        results.push(result);
+
+        pretty_printing::print_test_result(&result);
     }
 
     rec.close();
@@ -440,15 +435,10 @@ async fn run_tests_from_crate(
     drop(send_shut_down);
     let _ = rec_shut_down.recv().await;
 
-    let contained_fuzzed_tests = results.iter().any(|summary| summary.runs().is_some());
-    Ok(TestCrateSummary {
-        test_case_summaries: results,
-        runner_exit_status: RunnerStatus::Default,
-        test_crate_type: tests.test_crate_type,
-        contained_fuzzed_tests,
-    })
+    Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 fn choose_test_strategy_and_run(
     args: Vec<ConcreteTypeId>,
     case: Arc<TestCase>,
@@ -542,7 +532,7 @@ fn run_with_fuzzing(
                 arg.debug_name
                     .as_ref()
                     .ok_or_else(|| anyhow!("Type {arg:?} does not have a debug name"))
-                    .map(smol_str::SmolStr::as_str)
+                    .map(SmolStr::as_str)
             })
             .collect::<Result<Vec<_>>>()?;
 
@@ -622,6 +612,7 @@ fn run_with_fuzzing(
         };
 
         let result = result.with_runs(runs);
+
         Ok(result)
     })
 }
