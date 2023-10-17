@@ -153,6 +153,7 @@ fn main_execution() -> Result<bool> {
         .max_blocking_threads(cores)
         .enable_all()
         .build()?;
+
     let all_failed_tests = rt.block_on({
         rt.spawn(async move {
             let mut all_failed_tests = vec![];
