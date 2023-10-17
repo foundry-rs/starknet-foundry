@@ -1,4 +1,5 @@
 use crate::e2e::common::runner::{runner, setup_package};
+use crate::{assert_stderr_contains, assert_stdout_contains};
 use indoc::indoc;
 
 #[test]
@@ -6,13 +7,15 @@ fn with_one_core() {
     let temp = setup_package("simple_package");
     let snapbox = runner();
 
-    snapbox
+    let output = snapbox
         .current_dir(&temp)
         .arg("--cores")
         .arg("1")
         .assert()
-        .code(1)
-        .stdout_matches(indoc! {r#"
+        .code(1);
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -44,7 +47,8 @@ fn with_one_core() {
         Failures:
             tests::test_simple::test_failing
             tests::test_simple::test_another_failing
-        "#});
+        "#}
+    );
 }
 
 #[test]
@@ -52,13 +56,15 @@ fn with_more_than_one_core() {
     let temp = setup_package("simple_package");
     let snapbox = runner();
 
-    snapbox
+    let output = snapbox
         .current_dir(&temp)
         .arg("--cores")
         .arg("2")
         .assert()
-        .code(1)
-        .stdout_matches(indoc! {r#"
+        .code(1);
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -90,7 +96,8 @@ fn with_more_than_one_core() {
         Failures:
             tests::test_simple::test_failing
             tests::test_simple::test_another_failing
-        "#});
+        "#}
+    );
 }
 
 #[test]
@@ -98,17 +105,20 @@ fn with_too_much_cores() {
     let temp = setup_package("simple_package");
     let snapbox = runner();
 
-    snapbox
+    let output = snapbox
         .current_dir(&temp)
         .arg("--cores")
         .arg("99999")
         .assert()
-        .code(2)
-        .stderr_matches(indoc! {r#"
+        .code(2);
+    assert_stderr_contains!(
+        output,
+        indoc! {r#"
             error: invalid value '99999' for '--cores <CORES>': Number of cores must be less than or equal to the number of cores available on the machine = [..]
 
             For more information, try '--help'.
-        "#});
+        "#}
+    );
 }
 
 #[test]
@@ -116,15 +126,18 @@ fn with_zero_core() {
     let temp = setup_package("simple_package");
     let snapbox = runner();
 
-    snapbox
+    let output = snapbox
         .current_dir(&temp)
         .arg("--cores")
         .arg("0")
         .assert()
-        .code(2)
-        .stderr_matches(indoc! {r#"
+        .code(2);
+    assert_stderr_contains!(
+        output,
+        indoc! {r#"
             error: invalid value '0' for '--cores <CORES>': Number of cores must be greater than 0
 
             For more information, try '--help'.
-        "#});
+        "#}
+    );
 }

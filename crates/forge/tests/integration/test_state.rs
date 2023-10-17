@@ -279,12 +279,6 @@ fn test_disabled_syscalls() {
             let value : ClassHash = 'xd'.try_into().unwrap();
             replace_class_syscall(value);
         }
-
-        #[test]
-        fn test_deploy() {
-            let class_hash = declare('HelloStarknet').class_hash;
-            deploy_syscall(class_hash, 98435723905, ArrayTrait::new().span(), false);
-        }
     "#
         ),
         Contract::from_code_path(
@@ -301,11 +295,6 @@ fn test_disabled_syscalls() {
         result,
         "test_replace_class",
         "Replace class can't be used in tests"
-    );
-    assert_case_output_contains!(
-        result,
-        "test_deploy",
-        "Use snforge_std::ContractClass::deploy instead of deploy_syscall"
     );
 }
 

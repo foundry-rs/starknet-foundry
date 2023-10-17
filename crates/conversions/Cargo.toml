@@ -8,13 +8,9 @@ testing = []
 
 [dependencies]
 anyhow.workspace = true
-assert_fs.workspace = true
 blockifier.workspace = true
-camino.workspace = true
-include_dir.workspace = true
 starknet_api.workspace = true
 cairo-felt.workspace = true
-tempfile.workspace = true
 cairo-lang-casm.workspace = true
 cairo-lang-runner.workspace = true
 cairo-lang-utils.workspace = true

@@ -428,7 +428,9 @@ fn deploy_syscall(
     syscall_handler: &mut CheatableSyscallHandler<'_>, // Modified parameter type
     remaining_gas: &mut u64,
 ) -> SyscallResult<DeployResponse> {
+    // region: Modified blockifier code
     let deployer_address = syscall_handler.syscall_handler.storage_address();
+    // endregion
     let deployer_address_for_calculation = if request.deploy_from_zero {
         ContractAddress::default()
     } else {

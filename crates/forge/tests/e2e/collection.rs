@@ -1,3 +1,4 @@
+use crate::assert_stdout_contains;
 use assert_fs::fixture::PathCopy;
 use indoc::indoc;
 
@@ -14,11 +15,11 @@ fn collection_with_lib() {
 
     let snapbox = runner();
 
-    snapbox
-        .current_dir(&temp)
-        .assert()
-        .success()
-        .stdout_matches(indoc! {r#"
+    let output = snapbox.current_dir(&temp).assert().success();
+
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -44,7 +45,8 @@ fn collection_with_lib() {
         [PASS] tests::fab::test_fab
         [PASS] tests::fab::fab_mod::test_fab
         Tests: 17 passed, 0 failed, 0 skipped
-        "#});
+        "#}
+    );
 }
 
 #[test]
@@ -58,11 +60,10 @@ fn collection_without_lib() {
 
     let snapbox = runner();
 
-    snapbox
-        .current_dir(&temp)
-        .assert()
-        .success()
-        .stdout_matches(indoc! {r#"
+    let output = snapbox.current_dir(&temp).assert().success();
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -88,5 +89,6 @@ fn collection_without_lib() {
         [PASS] tests::fibfabfob::test_fob
         [PASS] tests::fibfabfob::test_fab
         Tests: 17 passed, 0 failed, 0 skipped
-        "#});
+        "#}
+    );
 }
