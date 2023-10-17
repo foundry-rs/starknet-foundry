@@ -1,3 +1,4 @@
+use crate::assert_stdout_contains;
 use assert_fs::fixture::PathChild;
 use indoc::indoc;
 
@@ -133,23 +134,14 @@ fn file_reading() {
 
     // run from different directories to make sure cwd is always set to package directory
     let snapbox = runner();
-    snapbox
-        .current_dir(&temp)
-        .assert()
-        .code(1)
-        .stdout_matches(expected);
+    let output = snapbox.current_dir(&temp).assert().code(1);
+    assert_stdout_contains!(output, expected);
 
     let snapbox = runner();
-    snapbox
-        .current_dir(temp.child("src"))
-        .assert()
-        .code(1)
-        .stdout_matches(expected);
+    let output = snapbox.current_dir(temp.child("src")).assert().code(1);
+    assert_stdout_contains!(output, expected);
 
     let snapbox = runner();
-    snapbox
-        .current_dir(temp.child("data"))
-        .assert()
-        .code(1)
-        .stdout_matches(expected);
+    let output = snapbox.current_dir(temp.child("data")).assert().code(1);
+    assert_stdout_contains!(output, expected);
 }

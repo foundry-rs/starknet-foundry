@@ -1,16 +1,16 @@
 # Testing Contracts' Internals
 
-Sometimes, you want to test a function which uses starknet context (like block number, timestamp, storage access) 
+Sometimes, you want to test a function which uses Starknet context (like block number, timestamp, storage access) 
 without deploying the actual contract. 
 
-Using this pattern you can test: 
+Since every test is treated like a contract, using the aforementioned pattern you can test: 
 - functions which are not available through the interface (but your contract uses them)
 - functions which are internal
 - functions performing specific operations on the contracts' storage or context data
 - library calls directly in the tests
 
 ## Utilities For Testing Internals
-To facilitate such use cases we have a handful of utilities which make a test behave like a contract. 
+To facilitate such use cases, we have a handful of utilities which make a test behave like a contract. 
 
 ### `contract_state_for_testing()` - State of Test Contract
 
@@ -33,7 +33,7 @@ mod Contract {
     }
 }
 
-use tests::test_case::Contract::balanceContractMemberStateTrait;   // <--- Ad. 1
+use Contract::balanceContractMemberStateTrait;   // <--- Ad. 1
 
 #[test]
 fn test_internal() {
@@ -48,7 +48,7 @@ fn test_internal() {
 This code contains some caveats:
 1. To access `read/write` methods of the state fields (in this case it's `balance`) you need to also import `<member_name>ContractMemberStateTrait` from your contract, where `<member_name>` is the name of the storage variable inside `Storage` struct.
 2. To test internal functions, you need to pass the created state explicitly to the function, since `self` context is not available (we're using it as a static function).
-3. The memory space allocated with this function will always start in the same place, which means that 2 allocations of the "testing state" in the same test will overwrite each other.
+3. This function will always return the struct keeping track of the state of the test. It means that within one test every result of `contract_state_for_testing` actually points to the same state.
 
 ### `snforge_std::test_address()` - Address of Test Contract
 
