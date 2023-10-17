@@ -2,7 +2,7 @@ use crate::test_case_summary::TestCaseSummary;
 use crate::{RunnerStatus, TestCrateType};
 
 /// Summary of the test run in the file
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq)]
 pub struct TestCrateSummary {
     /// Summaries of each test case in the file
     pub test_case_summaries: Vec<TestCaseSummary>,
