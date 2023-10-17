@@ -8,6 +8,8 @@ use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use test_collector::{collect_tests, LinkedLibrary, TestCase};
 use walkdir::WalkDir;
 
+// TODO docstrings in file
+
 #[derive(Debug, Clone)]
 pub struct CompiledTestCrate {
     pub sierra_program: Program,
@@ -73,6 +75,7 @@ impl TestCompilationTarget {
     }
 }
 
+// TODO consider different name + add docstring
 pub fn optimize_compilation_targets(
     compilation_targets: Vec<TestCompilationTarget>,
     temp_dir: &TempDir,
