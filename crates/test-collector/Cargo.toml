@@ -7,8 +7,6 @@ edition.workspace = true
 testing = []
 
 [dependencies]
-rayon.workspace = true
-
 cairo-lang-casm.workspace = true
 cairo-lang-compiler.workspace = true
 cairo-lang-debug.workspace = true
@@ -16,7 +14,6 @@ cairo-lang-defs.workspace = true
 cairo-lang-diagnostics.workspace = true
 cairo-lang-filesystem.workspace = true
 cairo-lang-lowering.workspace = true
-cairo-lang-test-runner.workspace = true
 cairo-lang-plugins.workspace = true
 cairo-lang-project.workspace = true
 cairo-lang-sierra-ap-change.workspace = true

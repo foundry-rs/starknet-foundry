@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Test output are printed in real time again
 
+#### Added
+
+- `--cores` flag to specify the number of cores to use for parallel execution
+
 ### Cast
 
 #### Added
