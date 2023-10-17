@@ -10,7 +10,9 @@ use cast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS
 use cast::helpers::scarb_utils::{parse_scarb_config, CastConfig};
 use cast::{get_account, get_block_id, get_chain_id, get_provider, print_command_result};
 use clap::{Parser, Subcommand};
+use script::Script;
 
+mod script;
 mod starknet_commands;
 
 #[derive(Parser)]
@@ -81,6 +83,9 @@ enum Commands {
 
     /// Show current configuration being used
     ShowConfig(ShowConfig),
+
+    // Run a deployment script
+    Script(Script),
 }
 
 #[tokio::main]
@@ -287,6 +292,13 @@ async fn main() -> Result<()> {
             .await;
             print_command_result("show-config", &mut result, cli.int_format, cli.json)?;
             Ok(())
+        }
+        Commands::Script(script) => {
+            let res = script::run(script.script_path);
+            match res {
+                Ok(_) => Ok(()),
+                Err(err) => panic!("{}", err),
+            }
         }
     }
 }
