@@ -508,7 +508,7 @@ fn run_single_test(
             () = cancellation_tokens.error.cancelled() => {
                 // Stop executing all tests because
                 // one of a test returns Err
-                Ok(TestCaseSummary::Interrupted {  })
+                Ok(TestCaseSummary::InterruptedByError {  })
             },
 
             result = blocking_run_from_test(vec![], case.clone(),runner,  runner_config.clone(), runner_params.clone(), send.clone(), send_shut_down.clone() ) => {
@@ -588,7 +588,7 @@ fn run_with_fuzzing(
 
             match &result {
                 TestCaseSummary::Failed { .. }
-                | TestCaseSummary::Interrupted {}
+                | TestCaseSummary::InterruptedByError {}
                 | TestCaseSummary::Skipped { .. } => {
                     break;
                 }
@@ -618,7 +618,7 @@ fn run_with_fuzzing(
         } else if let Some(interrupted_or_skipped) = results.iter().find(|item| {
             matches!(
                 item,
-                TestCaseSummary::Interrupted {} | TestCaseSummary::Skipped { .. }
+                TestCaseSummary::InterruptedByError {} | TestCaseSummary::Skipped { .. }
             )
         }) {
             interrupted_or_skipped.clone()
@@ -654,7 +654,7 @@ fn run_fuzzing_subtest(
             () = cancellation_tokens.error.cancelled() => {
                 // Stop executing all tests because
                 // one of a test returns Err
-                Ok(TestCaseSummary::Interrupted {  })
+                Ok(TestCaseSummary::InterruptedByError {  })
             },
             () = cancellation_tokens.exit_first.cancelled() => {
                 // Stop executing all tests because flag --exit-first'

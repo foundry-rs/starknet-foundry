@@ -46,14 +46,14 @@ pub(crate) fn print_test_result(test_result: &TestCaseSummary) {
         TestCaseSummary::Passed { .. } => format!("[{}]", style("PASS").green()),
         TestCaseSummary::Failed { .. } => format!("[{}]", style("FAIL").red()),
         TestCaseSummary::Skipped { .. } => format!("[{}]", style("SKIP").yellow()),
-        TestCaseSummary::Interrupted {} | TestCaseSummary::SkippedFuzzing {} => unreachable!(),
+        TestCaseSummary::InterruptedByError {} | TestCaseSummary::SkippedFuzzing {} => unreachable!(),
     };
 
     let result_name = match test_result {
         TestCaseSummary::Skipped { name }
         | TestCaseSummary::Failed { name, .. }
         | TestCaseSummary::Passed { name, .. } => name,
-        TestCaseSummary::Interrupted {} | TestCaseSummary::SkippedFuzzing {} => unreachable!(),
+        TestCaseSummary::InterruptedByError {} | TestCaseSummary::SkippedFuzzing {} => unreachable!(),
     };
 
     let result_message = match test_result {
@@ -88,7 +88,7 @@ pub fn print_failures(all_failed_tests: &[TestCaseSummary]) {
             TestCaseSummary::Failed { name, .. } => name,
             TestCaseSummary::Passed { .. }
             | TestCaseSummary::Skipped { .. }
-            | TestCaseSummary::Interrupted {}
+            | TestCaseSummary::InterruptedByError {}
             | TestCaseSummary::SkippedFuzzing {} => unreachable!(),
         })
         .collect();

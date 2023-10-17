@@ -42,7 +42,7 @@ pub enum TestCaseSummary {
     /// Fuzzing subtests skipped (did not run), previous subtest failed
     SkippedFuzzing {},
     /// Test case execution interrupted by error (did not run or was cancelled)
-    Interrupted {},
+    InterruptedByError {},
 }
 
 impl TestCaseSummary {
@@ -51,7 +51,7 @@ impl TestCaseSummary {
             TestCaseSummary::Failed { arguments, .. }
             | TestCaseSummary::Passed { arguments, .. } => arguments.clone(),
             TestCaseSummary::Skipped { .. }
-            | TestCaseSummary::Interrupted {}
+            | TestCaseSummary::InterruptedByError {}
             | TestCaseSummary::SkippedFuzzing {} => vec![],
         }
     }
@@ -66,7 +66,7 @@ impl TestCaseSummary {
                 .as_ref()
                 .map(|FuzzingStatistics { runs, .. }| *runs),
             TestCaseSummary::Skipped { .. }
-            | TestCaseSummary::Interrupted {}
+            | TestCaseSummary::InterruptedByError {}
             | TestCaseSummary::SkippedFuzzing {} => None,
         }
     }
@@ -97,7 +97,7 @@ impl TestCaseSummary {
                 fuzzing_statistic: Some(FuzzingStatistics { runs }),
             },
             TestCaseSummary::Skipped { .. }
-            | TestCaseSummary::Interrupted {}
+            | TestCaseSummary::InterruptedByError {}
             | TestCaseSummary::SkippedFuzzing {} => self,
         }
     }
