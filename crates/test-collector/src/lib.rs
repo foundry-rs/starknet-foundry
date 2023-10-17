@@ -550,7 +550,7 @@ pub fn collect_tests(
 
     let sierra_program = replace_sierra_ids_in_program(db, &sierra_program);
 
-    validate_tests(sierra_program.clone(), &collected_tests, &builtins)?;
+    validate_tests(sierra_program.clone(), &collected_tests, builtins)?;
 
     if let Some(path) = output_path {
         fs::write(path, sierra_program.to_string()).context("Failed to write output")?;
