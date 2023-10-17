@@ -5,7 +5,7 @@ use anyhow::{anyhow, Context, Result};
 use ark_std::iterable::Iterable;
 use assert_fs::TempDir;
 use cairo_felt::Felt252;
-use camino::Utf8PathBuf;
+use camino::{Utf8Path, Utf8PathBuf};
 
 use futures::StreamExt;
 use running::blocking_run_from_test;
@@ -195,9 +195,9 @@ fn try_close_tmp_dir(temp_dir: TempDir) -> Result<()> {
 
 #[allow(clippy::implicit_hasher)]
 pub async fn run(
-    package_path: &Utf8PathBuf,
+    package_path: &Utf8Path,
     package_name: &str,
-    package_source_dir_path: &Utf8PathBuf,
+    package_source_dir_path: &Utf8Path,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     cancellation_tokens: Arc<CancellationTokens>,

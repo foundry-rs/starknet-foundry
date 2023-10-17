@@ -54,7 +54,7 @@ impl TestCompilationTarget {
     pub fn compile_tests(
         &self,
         linked_libraries: &[LinkedLibrary],
-        corelib_path: &Utf8PathBuf,
+        corelib_path: &Utf8Path,
     ) -> Result<CompiledTests> {
         let (sierra_program, test_cases) = collect_tests(
             self.crate_root.as_str(),
@@ -74,9 +74,9 @@ impl TestCompilationTarget {
 }
 
 pub fn collect_test_compilation_targets(
-    package_path: &Utf8PathBuf,
+    package_path: &Utf8Path,
     package_name: &str,
-    package_source_dir_path: &Utf8PathBuf,
+    package_source_dir_path: &Utf8Path,
     temp_dir: &TempDir,
 ) -> Result<Vec<TestCompilationTarget>> {
     let tests_dir_path = package_path.join("tests");
@@ -97,7 +97,7 @@ pub fn collect_test_compilation_targets(
     };
 
     let mut compilation_targets = vec![TestCompilationTarget {
-        crate_root: package_source_dir_path.clone(),
+        crate_root: package_source_dir_path.to_path_buf(),
         crate_name: package_name.to_string(),
         crate_location: CrateLocation::Lib,
     }];
@@ -142,7 +142,7 @@ pub fn filter_tests_from_crates(
 
 fn pack_tests_into_single_crate(
     tmp_dir: &TempDir,
-    tests_folder_path: &Utf8PathBuf,
+    tests_folder_path: &Utf8Path,
 ) -> Result<TestCompilationTarget> {
     tmp_dir
         .copy_from(tests_folder_path, &["**/*.cairo"])

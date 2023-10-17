@@ -1,5 +1,5 @@
 use anyhow::{anyhow, bail, Context, Result};
-use camino::Utf8PathBuf;
+use camino::{Utf8Path, Utf8PathBuf};
 use clap::Parser;
 use include_dir::{include_dir, Dir};
 use scarb_metadata::{MetadataCommand, PackageMetadata};
@@ -67,7 +67,7 @@ fn validate_fuzzer_runs_value(val: &str) -> Result<u32> {
     Ok(parsed_val)
 }
 
-fn clean_cache(workspace_root: &Utf8PathBuf) -> Result<()> {
+fn clean_cache(workspace_root: &Utf8Path) -> Result<()> {
     let cache_dir = workspace_root.join(CACHE_DIR);
     if cache_dir.exists() {
         fs::remove_dir_all(cache_dir)?;
