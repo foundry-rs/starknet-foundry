@@ -3,7 +3,7 @@ use anyhow::{anyhow, Context, Result};
 use assert_fs::fixture::{FileTouch, PathChild, PathCopy};
 use assert_fs::TempDir;
 use cairo_lang_sierra::program::Program;
-use camino::Utf8PathBuf;
+use camino::{Utf8Path, Utf8PathBuf};
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use test_collector::{collect_tests, LinkedLibrary, TestCase};
 use walkdir::WalkDir;
@@ -163,16 +163,11 @@ fn pack_tests_into_single_crate(
     {
         let entry = entry
             .with_context(|| format!("Failed to read directory at path = {tests_folder_path}"))?;
-        let path = entry.path();
+        let path = Utf8Path::from_path(entry.path())
+            .ok_or_else(|| anyhow!("Failed to convert path = {:?} to Utf8Path", entry.path()))?;
 
         if path.is_file() && path.extension().unwrap_or_default() == "cairo" {
-            let mod_name = path
-                .strip_prefix(tests_folder_path)
-                .expect("Each test file path should start with package path")
-                .to_str()
-                .context("Unable to convert test file path to string")?
-                .strip_suffix(".cairo")
-                .expect("Each test file path should have .cairo extension");
+            let mod_name = module_name_from_path(tests_folder_path, path);
 
             content.push_str(&format!("mod {mod_name};\n"));
         }
@@ -188,6 +183,18 @@ fn pack_tests_into_single_crate(
         crate_name: "tests".to_string(),
         crate_location: CrateLocation::Tests,
     })
+}
+
+fn module_name_from_path<'a>(tests_folder_path: &Utf8Path, path: &'a Utf8Path) -> &'a str {
+    path.strip_prefix(tests_folder_path)
+        .unwrap_or_else(|_| {
+            panic!(
+                "Path to test = {path} does not start with test_folder_path = {tests_folder_path}"
+            )
+        })
+        .as_str()
+        .strip_suffix(".cairo")
+        .unwrap_or_else(|| panic!("Path to test = {path} should have .cairo extension"))
 }
 
 #[cfg(test)]
@@ -552,5 +559,32 @@ mod tests {
                 fuzzer_config: None,
             },]
         );
+    }
+
+    #[test]
+    fn module_name() {
+        let path = Utf8PathBuf::from("a/b/c");
+        let file_path = path.join("e.cairo");
+
+        let module_name = module_name_from_path(&path, &file_path);
+        assert_eq!(module_name, "e");
+    }
+
+    #[test]
+    #[should_panic(expected = "does not start with test_folder_path")]
+    fn module_name_non_related_paths() {
+        let path = Utf8PathBuf::from("a/b/c");
+        let file_path = Utf8PathBuf::from("e.cairo");
+
+        module_name_from_path(&path, &file_path);
+    }
+
+    #[test]
+    #[should_panic(expected = "should have .cairo extension")]
+    fn module_name_wrong_extension() {
+        let path = Utf8PathBuf::from("a/b/c");
+        let file_path = path.join("e.txt");
+
+        module_name_from_path(&path, &file_path);
     }
 }
