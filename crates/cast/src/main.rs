@@ -13,7 +13,9 @@ use cast::{
     print_command_result, ValueFormat,
 };
 use clap::{Parser, Subcommand};
+use script::Script;
 
+mod script;
 mod starknet_commands;
 
 #[derive(Parser)]
@@ -90,6 +92,9 @@ enum Commands {
 
     /// Show current configuration being used
     ShowConfig(ShowConfig),
+
+    // Run a deployment script
+    Script(Script),
 }
 
 #[tokio::main]
@@ -320,6 +325,13 @@ async fn main() -> Result<()> {
             .await;
             print_command_result("show-config", &mut result, value_format, cli.json)?;
             Ok(())
+        }
+        Commands::Script(script) => {
+            let res = script::run(script.script_path);
+            match res {
+                Ok(_) => Ok(()),
+                Err(err) => panic!("{}", err),
+            }
         }
     }
 }
