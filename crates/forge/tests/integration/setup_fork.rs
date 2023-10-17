@@ -167,21 +167,16 @@ fn fork_cairo0_contract() {
 }
 
 #[test]
-fn get_block_timestamp_in_forked_block() {
+fn get_block_info_in_forked_block() {
     let test = test_case!(formatdoc!(
         r#"
-            use result::ResultTrait;
-            use array::ArrayTrait;
-            use option::OptionTrait;
-            use traits::TryInto;
-            use starknet::ContractAddress;
-            use starknet::Felt252TryIntoContractAddress;
             use starknet::contract_address_const;
             use snforge_std::{{ BlockTag, BlockId, declare, ContractClassTrait }};
 
             #[starknet::interface]
             trait IERC20Camel<TContractState> {{
                 fn return_block_timestamp(ref self: TContractState) -> felt252;
+                fn return_block_number(ref self: TContractState) -> felt252;
             }}
 
             #[starknet::interface]
@@ -189,33 +184,48 @@ fn get_block_timestamp_in_forked_block() {
                 fn get_block_timestamp(ref self: TContractState) -> u64;
             }}
 
+            #[starknet::interface]
+            trait IRollChecker<TContractState> {{
+                fn get_block_number(ref self: TContractState) -> u64;
+            }}
+
             #[test]
-            #[fork(url: "{}", block_id: BlockId::Number(315057))]
-            fn test_fork_get_block_timestamp_contract_on_testnet() {{
+            #[fork(url: "{}", block_id: BlockId::Number(315778))]
+            fn test_fork_get_block_info_contract_on_testnet() {{
                 let dispatcher = IERC20CamelDispatcher {{
                     contract_address: contract_address_const::<1825832089891106126806210124294467331434544162488231781791271899226056323189>()
                 }};
 
                 let timestamp = dispatcher.return_block_timestamp();
-                assert(timestamp != 0, timestamp);
+                assert(timestamp == 1697551429, timestamp);
+                let block_number = dispatcher.return_block_number();
+                assert(block_number == 315778, block_number);
             }}
 
             #[test]
-            #[fork(url: "{}", block_id: BlockId::Number(315057))]
-            fn test_fork_get_block_timestamp_test_state() {{
-                let timestamp = starknet::get_block_timestamp();
-                assert(timestamp != 0, timestamp.into());
+            #[fork(url: "{}", block_id: BlockId::Number(315778))]
+            fn test_fork_get_block_info_test_state() {{
+                let block_info = starknet::get_block_info().unbox();
+                assert(block_info.block_timestamp == 1697551429, block_info.block_timestamp.into());
+                assert(block_info.block_number == 315778, block_info.block_number.into());
             }}
 
             #[test]
-            #[fork(url: "{}", block_id: BlockId::Number(315057))]
-            fn test_fork_get_block_timestamp_contract_deployed() {{
+            #[fork(url: "{}", block_id: BlockId::Number(315778))]
+            fn test_fork_get_block_info_contract_deployed() {{
                 let contract = declare('WarpChecker');
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IWarpCheckerDispatcher {{ contract_address }};
 
                 let block_timestamp = dispatcher.get_block_timestamp();
-                assert(block_timestamp != 0, block_timestamp.into());
+                assert(block_timestamp == 1697551429, block_timestamp.into());
+
+                let contract = declare('RollChecker');
+                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+                let dispatcher = IRollCheckerDispatcher {{ contract_address }};
+
+                let block_number = dispatcher.get_block_number();
+                assert(block_number == 315778, block_number.into());
             }}
         "#,
         CHEATNET_RPC_URL, CHEATNET_RPC_URL, CHEATNET_RPC_URL
@@ -223,7 +233,12 @@ fn get_block_timestamp_in_forked_block() {
     Contract::from_code_path(
         "WarpChecker".to_string(),
         Path::new("tests/data/contracts/warp_checker.cairo"),
-    ).unwrap());
+    ).unwrap(),
+    Contract::from_code_path(
+        "RollChecker".to_string(),
+        Path::new("tests/data/contracts/roll_checker.cairo"),
+    )
+    .unwrap());
 
     let result = run_test_case(&test);
 
