@@ -12,6 +12,7 @@ use tokio::runtime::Runtime;
 
 pub fn run_test_case(test: &TestCase) -> Vec<TestCrateSummary> {
     let rt = Runtime::new().expect("Could not instantiate Runtime");
+
     rt.block_on(run(
         &test.path().unwrap(),
         &String::from("src"),

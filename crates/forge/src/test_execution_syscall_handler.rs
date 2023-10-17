@@ -671,9 +671,6 @@ fn execute_syscall(
             )?;
             Ok(())
         }
-        DeprecatedSyscallSelector::Deploy => Err(CustomHint(Box::from(
-            "Use snforge_std::ContractClass::deploy instead of deploy_syscall".to_string(),
-        ))),
         DeprecatedSyscallSelector::ReplaceClass => Err(CustomHint(Box::from(
             "Replace class can't be used in tests".to_string(),
         ))),
