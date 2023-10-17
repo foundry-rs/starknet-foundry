@@ -16,12 +16,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 
 - `snforge_std::PrintTrait` will not convert values representing ASCII control characters to strings
-- Test from different crates are no longer run in parallel
-- Test outputs are printed in non-deterministic order
-
-#### Fixed
-
-- Test output are printed in real time again
 
 #### Added
 
@@ -32,6 +26,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - `show-config` subcommand to display currently used configuration
+
+## [0.8.3] - 2023-10-17
+
+### Forge 
+
+#### Changed
+
+- Test from different crates are no longer run in parallel
+- Test outputs are printed in non-deterministic order
+
+#### Fixed
+
+- Test output are printed in real time again
+- Bug when application would not wait for tasks to terminate after execution was cancelled
 
 ## [0.8.2] - 2023-10-12
 
