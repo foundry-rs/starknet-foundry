@@ -10,7 +10,7 @@ use starknet::core::types::FieldElement;
 use walkdir::WalkDir;
 
 #[derive(Args)]
-#[command(about = "Verify a contract through a block exporer")]
+#[command(about = "Verify a contract through a block explorer")]
 pub struct Verify {
     /// Address of a contract to be verified
     #[clap(short = 'a', long)]
@@ -21,11 +21,11 @@ pub struct Verify {
     pub contract_name: String,
 
     /// Block explorer to use for the verification
-    #[clap(short = 'v', long = "verifier")]
+    #[clap(short = 'v', long = "verifier", value_parser = ["voyager", "starkscan"])]
     pub verifier: String,
 
     /// The network on which block explorer will do the verification
-    #[clap(short = 'n', long = "network")]
+    #[clap(short = 'n', long = "network", value_parser = ["mainnet", "goerli"])]
     pub network: String,
 }
 
@@ -59,26 +59,6 @@ pub async fn verify(
         Some(path) => path,
         None => get_scarb_manifest().context("Failed to obtain manifest path from scarb")?,
     };
-
-    // Verifier must be one of the `voyager` or `starkscan`
-    if verifier != "voyager" && verifier != "starkscan" {
-        return Ok(VerifyResponse {
-            verification_status: VerificationStatus::Error,
-            errors: Some(format!(
-                "verifier must be one of [voyager, starkscan], provided: {verifier}"
-            )),
-        });
-    }
-
-    // Network must be one of the `mainnet` or `goerli`
-    if network != "mainnet" && network != "goerli" {
-        return Ok(VerifyResponse {
-            verification_status: VerificationStatus::Error,
-            errors: Some(format!(
-                "network must be one of [mainnet, goerli], provided: {network}"
-            )),
-        });
-    }
 
     let explorer_url: &str = match verifier.as_str() {
         "voyager" => match network.as_str() {
