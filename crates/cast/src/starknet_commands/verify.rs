@@ -65,8 +65,7 @@ pub async fn verify(
         return Ok(VerifyResponse {
             verification_status: VerificationStatus::Error,
             errors: Some(format!(
-                "verifier must be one of [voyager, starkscan], provided: {}",
-                verifier
+                "verifier must be one of [voyager, starkscan], provided: {verifier}"
             )),
         });
     }
@@ -76,8 +75,7 @@ pub async fn verify(
         return Ok(VerifyResponse {
             verification_status: VerificationStatus::Error,
             errors: Some(format!(
-                "network must be one of [mainnet, goerli], provided: {}",
-                network
+                "network must be one of [mainnet, goerli], provided: {network}"
             )),
         });
     }
