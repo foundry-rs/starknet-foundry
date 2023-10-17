@@ -677,7 +677,7 @@ fn execute_syscall(
             write_call_contract_response(cheatable_syscall_handler, vm, &call_args, call_result)?;
             Ok(())
         }
-        DeprecatedSyscallSelector::ReplaceClass => Err(CustomHint(Box::from(
+        DeprecatedSyscallSelector::ReplaceClass => Err(HintError::CustomHint(Box::from(
             "Replace class can't be used in tests".to_string(),
         ))),
         _ => cheatable_syscall_handler.execute_hint(vm, exec_scopes, hint_data, constants),
