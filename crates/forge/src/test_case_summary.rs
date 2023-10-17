@@ -16,8 +16,6 @@ pub enum TestCaseSummary {
     Passed {
         /// Name of the test case
         name: String,
-        /// Values returned by the test case run
-        run_result: RunResult,
         /// Message to be printed after the test case run
         msg: Option<String>,
         /// Arguments used in the test case run
@@ -29,8 +27,6 @@ pub enum TestCaseSummary {
     Failed {
         /// Name of the test case
         name: String,
-        /// Values returned by the test case run
-        run_result: Option<RunResult>,
         /// Message returned by the test case run
         msg: Option<String>,
         /// Arguments used in the test case run
@@ -79,26 +75,23 @@ impl TestCaseSummary {
         match self {
             TestCaseSummary::Passed {
                 name,
-                run_result,
                 msg,
                 arguments,
                 ..
             } => TestCaseSummary::Passed {
                 name,
-                run_result,
                 msg,
                 arguments,
                 fuzzing_statistic: Some(FuzzingStatistics { runs }),
             },
             TestCaseSummary::Failed {
                 name,
-                run_result,
+
                 msg,
                 arguments,
                 ..
             } => TestCaseSummary::Failed {
                 name,
-                run_result,
                 msg,
                 arguments,
                 fuzzing_statistic: Some(FuzzingStatistics { runs }),
@@ -119,19 +112,17 @@ impl TestCaseSummary {
     ) -> Self {
         let name = test_case.name.to_string();
         let msg = extract_result_data(&run_result, &test_case.expected_result);
-        match run_result.clone().value {
+        match run_result.value {
             RunResultValue::Success(_) => match &test_case.expected_result {
                 ExpectedTestResult::Success => TestCaseSummary::Passed {
                     name,
                     msg,
-                    run_result,
                     arguments,
                     fuzzing_statistic: None,
                 },
                 ExpectedTestResult::Panics(_) => TestCaseSummary::Failed {
                     name,
                     msg,
-                    run_result: Some(run_result),
                     arguments,
                     fuzzing_statistic: None,
                 },
@@ -140,7 +131,6 @@ impl TestCaseSummary {
                 ExpectedTestResult::Success => TestCaseSummary::Failed {
                     name,
                     msg,
-                    run_result: Some(run_result),
                     arguments,
                     fuzzing_statistic: None,
                 },
@@ -149,7 +139,6 @@ impl TestCaseSummary {
                         TestCaseSummary::Failed {
                             name,
                             msg,
-                            run_result: Some(run_result),
                             arguments,
                             fuzzing_statistic: None,
                         }
@@ -157,7 +146,6 @@ impl TestCaseSummary {
                     _ => TestCaseSummary::Passed {
                         name,
                         msg,
-                        run_result,
                         arguments,
                         fuzzing_statistic: None,
                     },

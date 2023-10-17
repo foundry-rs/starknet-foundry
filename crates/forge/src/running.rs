@@ -39,6 +39,7 @@ use starknet_api::transaction::Calldata;
 use test_collector::{ForkConfig, TestCase};
 use tokio::runtime::Runtime;
 use tokio::sync::mpsc::Sender;
+use tokio::task::JoinHandle;
 use url::Url;
 
 use crate::scarb::ForkTarget;
@@ -75,25 +76,31 @@ fn build_hints_dict<'b>(
     (hints_dict, string_to_hint)
 }
 
-pub(crate) async fn blocking_run_from_test(
+pub(crate) fn blocking_run_from_test(
     args: Vec<Felt252>,
     case: Arc<TestCase>,
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
-    sender: Option<Sender<()>>,
-) -> Result<TestCaseSummary> {
+    send: Sender<()>,
+    send_shut_down: Sender<()>,
+) -> JoinHandle<Result<TestCaseSummary>> {
     tokio::task::spawn_blocking(move || {
+        // Due to the inability of spawn_blocking to be abruptly cancelled,
+        // a channel is used to receive information indicating
+        // that the execution of the task is no longer necessary.
+        if send.is_closed() {
+            return Err(anyhow::anyhow!("stop spawn_blocking"));
+        }
         run_test_case(
             args,
             &case,
             &runner,
             &runner_config,
             &runner_params,
-            &sender,
+            &send_shut_down,
         )
     })
-    .await?
 }
 
 fn build_context() -> EntryPointExecutionContext {
@@ -151,7 +158,7 @@ pub(crate) fn run_test_case(
     runner: &SierraCasmRunner,
     runner_config: &Arc<RunnerConfig>,
     runner_params: &Arc<RunnerParams>,
-    _sender: &Option<Sender<()>>,
+    _send_shut_down: &Sender<()>,
 ) -> Result<TestCaseSummary> {
     let available_gas = if let Some(available_gas) = &case.available_gas {
         Some(*available_gas)
@@ -217,7 +224,6 @@ pub(crate) fn run_test_case(
         // CairoRunError comes from VirtualMachineError which may come from HintException that originates in the cheatcode processor
         Err(RunnerError::CairoRunError(error)) => Ok(TestCaseSummary::Failed {
             name: case.name.clone(),
-            run_result: None,
             msg: Some(format!(
                 "\n    {}\n",
                 error.to_string().replace(" Custom Hint Error: ", "\n    ")

@@ -55,6 +55,27 @@ struct Args {
     /// Clean forge cache directory
     #[arg(short, long)]
     clean_cache: bool,
+
+    /// Number of cores used for test execution
+    #[arg(long, value_parser = validate_cores_number)]
+    cores: Option<usize>,
+}
+
+fn validate_cores_number(val: &str) -> Result<usize> {
+    let parsed_val: usize = val
+        .parse()
+        .map_err(|_| anyhow::anyhow!("Failed to parse '{}' as usize", val))?;
+    if parsed_val == 0 {
+        bail!("Number of cores must be greater than 0");
+    }
+    let cores_approx = available_parallelism()?.get();
+    if parsed_val > cores_approx {
+        bail!(
+            "Number of cores must be less than or equal to the number of cores available on the machine = {}",
+            cores_approx
+        );
+    }
+    Ok(parsed_val)
 }
 
 fn validate_fuzzer_runs_value(val: &str) -> Result<u32> {
@@ -118,11 +139,21 @@ fn main_execution() -> Result<bool> {
     if args.clean_cache {
         clean_cache(&workspace_root).context("Failed to clean snforge cache")?;
     }
-    let cores_approx = available_parallelism()?.get();
+
+    let cores = if let Some(cores) = args.cores {
+        cores
+    } else if let Ok(available_cores) = available_parallelism() {
+        available_cores.get()
+    } else {
+        eprintln!("Failed to get the number of available cores, defaulting to 1");
+        1
+    };
+
     let rt = Builder::new_multi_thread()
-        .max_blocking_threads(cores_approx)
+        .max_blocking_threads(cores)
         .enable_all()
         .build()?;
+
     let all_failed_tests = rt.block_on({
         rt.spawn(async move {
             let mut all_failed_tests = vec![];
