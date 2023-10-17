@@ -610,18 +610,18 @@ fn run_with_fuzzing(
                 .count(),
         )?;
 
-        let result = if let Some(interrupted_or_skipped) = results.iter().find(|item| {
+        let result = if let Some(failed) = results
+            .iter()
+            .find(|item| matches!(item, TestCaseSummary::Failed { .. }))
+        {
+            failed.clone().with_runs(runs)
+        } else if let Some(interrupted_or_skipped) = results.iter().find(|item| {
             matches!(
                 item,
                 TestCaseSummary::Interrupted {} | TestCaseSummary::Skipped { .. }
             )
         }) {
             interrupted_or_skipped.clone()
-        } else if let Some(failed) = results
-            .iter()
-            .find(|item| matches!(item, TestCaseSummary::Failed { .. }))
-        {
-            failed.clone().with_runs(runs)
         } else {
             results
                 .last()
