@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Added
+
+- support for `deploy_syscall` directly in the test code (alternative to `deploy`)
+
 #### Changed
 
 - `snforge_std::PrintTrait` will not convert values representing ASCII control characters to strings
