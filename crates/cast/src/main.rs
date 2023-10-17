@@ -11,6 +11,9 @@ use cast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS
 use cast::helpers::scarb_utils::{parse_scarb_config, CastConfig};
 use cast::{get_account, get_block_id, get_chain_id, get_provider, print_command_result};
 use clap::{Parser, Subcommand};
+use starknet::providers::jsonrpc::HttpTransport;
+use starknet::providers::JsonRpcClient;
+use url::Url;
 
 mod starknet_commands;
 
@@ -95,7 +98,15 @@ async fn main() -> Result<()> {
     let mut config = parse_scarb_config(&cli.profile, &cli.path_to_scarb_toml)?;
     update_cast_config(&mut config, &cli);
 
-    let provider = get_provider(&config.rpc_url)?;
+    let provider;
+
+    // if cli.command is not verify make provider to null
+    if let Commands::Verify(_) = cli.command {
+        // Create provider with a dummy URL
+        provider = JsonRpcClient::new(HttpTransport::new(Url::parse("https://example.com")?));
+    } else {
+        provider = get_provider(&config.rpc_url)?;
+    }
 
     match cli.command {
         Commands::Declare(declare) => {

@@ -29,7 +29,7 @@ pub struct Verify {
     pub network: String,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 struct VerificationPayload {
     contract_name: String,
     contract_address: String,
@@ -61,18 +61,24 @@ pub async fn verify(
     };
 
     // Verifier must be one of the `voyager` or `starkscan`
-    if verifier != "voyager" || verifier != "starknet" {
+    if verifier != "voyager" && verifier != "starkscan" {
         return Ok(VerifyResponse {
             verification_status: VerificationStatus::Error,
-            errors: Some("verifier must be one of [voyager, starkscan]".to_string()),
+            errors: Some(format!(
+                "verifier must be one of [voyager, starkscan], provided: {}",
+                verifier
+            )),
         });
     }
 
     // Network must be one of the `mainnet` or `goerli`
-    if network != "mainnet" || network != "goerli" {
+    if network != "mainnet" && network != "goerli" {
         return Ok(VerifyResponse {
             verification_status: VerificationStatus::Error,
-            errors: Some("network must be one of [mainnet, goerli]".to_string()),
+            errors: Some(format!(
+                "network must be one of [mainnet, goerli], provided: {}",
+                network
+            )),
         });
     }
 
@@ -94,7 +100,7 @@ pub async fn verify(
         }
     };
 
-    let verify_api_url: String = format!("{}/{}", explorer_url, "contract-verify");
+    let verify_api_url: String = format!("{}{}", explorer_url, "contract-verify");
 
     // Build JSON Payload for the verification request
     // get the parent dir of the manifest path
@@ -111,10 +117,9 @@ pub async fn verify(
     for entry in WalkDir::new(workspace_dir).follow_links(true) {
         let entry = entry?;
         let path = entry.path();
-        if path.is_file() {
+        if path.is_file() && (path.ends_with(".cairo") || path.ends_with(".toml")) {
             let file_name = path.file_name().unwrap().to_string_lossy().to_string();
             let file_content = std::fs::read_to_string(path)?;
-
             file_data.insert(file_name, serde_json::Value::String(file_content));
         }
     }
@@ -143,15 +148,8 @@ pub async fn verify(
         .await?;
 
     // Parse the response from the explorer
-    let api_res: serde_json::Value = serde_json::from_str(&api_res)?;
-
+    // let api_res: serde_json::Value = serde_json::from_str(&api_res)?;
     println!("{api_res:?}");
-
-    // Check if the verification was successful
-    // let verification_status = match api_res["status"].as_str() {
-    //     Some("success") => VerificationStatus::OK,
-    //     _ => VerificationStatus::Error,
-    // };
 
     res
 }
