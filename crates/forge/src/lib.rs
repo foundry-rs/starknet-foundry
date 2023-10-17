@@ -396,9 +396,16 @@ async fn run_tests_from_crate(
 
     let mut tasks = FuturesUnordered::new();
     let test_cases = &tests.test_cases;
+
+    // Initiate two channels to manage the `--exit-first` flag.
+    // Owing to `cheatnet` fork's utilization of its own Tokio runtime for RPC requests,
+    // test execution must occur within a `tokio::spawn_blocking`.
+    // As `spawn_blocking` can't be prematurely cancelled (refer: https://dtantsur.github.io/rust-openstack/tokio/task/fn.spawn_blocking.html),
+    // a channel is used to signal the task that test processing is no longer necessary.
     let (send, mut rec) = channel(1);
-    // Waiting for things to finish shutting down
-    // https://tokio.rs/tokio/topics/shutdown
+
+    // The second channel serves as a hold point to ensure all tasks complete
+    // their shutdown procedures before moving forward (more info: https://tokio.rs/tokio/topics/shutdown)
     let (send_shut_down, mut rec_shut_down) = channel(1);
 
     for case in test_cases.iter() {
