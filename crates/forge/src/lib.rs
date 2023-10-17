@@ -24,7 +24,7 @@ use cairo_lang_sierra::ids::ConcreteTypeId;
 use cairo_lang_sierra::program::{Function, Program};
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
-use futures::stream::{FuturesOrdered, FuturesUnordered};
+use futures::stream::FuturesUnordered;
 
 use once_cell::sync::Lazy;
 use rand::{thread_rng, RngCore};
@@ -343,47 +343,36 @@ pub async fn run(
         package_name,
     );
 
-    let mut fuzzing_happened = false;
     let mut summaries = vec![];
-    let mut tasks = vec![];
 
     for tests_from_crate in tests {
         let tests_from_crate = Arc::new(tests_from_crate);
         let runner_config = runner_config.clone();
-        let test_crate_type = tests_from_crate.test_crate_type;
-        let number_of_test_cases = tests_from_crate.test_cases.len();
         let runner_params = runner_params.clone();
         let cancellation_tokens = cancellation_tokens.clone();
-        tasks.push((
-            test_crate_type,
-            number_of_test_cases,
-            task::spawn({
-                async move {
-                    run_tests_from_crate(
-                        tests_from_crate,
-                        runner_config,
-                        runner_params,
-                        cancellation_tokens,
-                    )
-                    .await
-                }
-            }),
-        ));
-    }
-    for (test_crate_type, tests_len, task) in tasks {
-        pretty_printing::print_running_tests(test_crate_type, tests_len);
 
-        let (summary, was_fuzzed) = task.await??;
-        for test_case_summary in &summary.test_case_summaries {
-            pretty_printing::print_test_result(test_case_summary);
-        }
-        fuzzing_happened |= was_fuzzed;
-        summaries.push(summary.clone());
+        pretty_printing::print_running_tests(
+            tests_from_crate.test_crate_type,
+            tests_from_crate.test_cases.len(),
+        );
+
+        let summary = run_tests_from_crate(
+            tests_from_crate,
+            runner_config,
+            runner_params,
+            cancellation_tokens,
+        )
+        .await?;
+
+        summaries.push(summary);
     }
 
     pretty_printing::print_test_summary(&summaries);
 
-    if fuzzing_happened {
+    if summaries
+        .iter()
+        .any(|summary| summary.contained_fuzzed_tests)
+    {
         pretty_printing::print_test_seed(runner_config.fuzzer_seed);
     }
 
@@ -395,7 +384,7 @@ async fn run_tests_from_crate(
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     cancellation_tokens: Arc<CancellationTokens>,
-) -> Result<(TestCrateSummary, bool)> {
+) -> Result<TestCrateSummary> {
     let runner = Arc::new(
         SierraCasmRunner::new(
             tests.sierra_program.clone(),
@@ -405,10 +394,18 @@ async fn run_tests_from_crate(
         .context("Failed setting up runner.")?,
     );
 
-    let mut was_fuzzed = false;
-    let mut tasks = FuturesOrdered::new();
+    let mut tasks = FuturesUnordered::new();
     let test_cases = &tests.test_cases;
+    // Initiate two channels to manage the `--exit-first` flag.
+    // Owing to `cheatnet` fork's utilization of its own Tokio runtime for RPC requests,
+    // test execution must occur within a `tokio::spawn_blocking`.
+    // As `spawn_blocking` can't be prematurely cancelled (refer: https://dtantsur.github.io/rust-openstack/tokio/task/fn.spawn_blocking.html),
+    // a channel is used to signal the task that test processing is no longer necessary.
     let (send, mut rec) = channel(1);
+
+    // The second channel serves as a hold point to ensure all tasks complete
+    // their shutdown procedures before moving forward (more info: https://tokio.rs/tokio/topics/shutdown)
+    let (send_shut_down, mut rec_shut_down) = channel(1);
 
     for case in test_cases.iter() {
         let case_name = case.name.as_str();
@@ -420,7 +417,7 @@ async fn run_tests_from_crate(
         let args: Vec<ConcreteTypeId> = args.into_iter().cloned().collect();
         let runner = runner.clone();
 
-        tasks.push_back(choose_test_strategy_and_run(
+        tasks.push(choose_test_strategy_and_run(
             args,
             case.clone(),
             runner,
@@ -428,6 +425,7 @@ async fn run_tests_from_crate(
             runner_params.clone(),
             cancellation_tokens.clone(),
             &send,
+            &send_shut_down,
         ));
     }
 
@@ -436,25 +434,27 @@ async fn run_tests_from_crate(
     while let Some(task) = tasks.next().await {
         let result = task??;
 
-        if result.runs().is_some() {
-            was_fuzzed = true;
-        }
+        pretty_printing::print_test_result(&result);
 
         results.push(result);
     }
 
     rec.close();
 
-    Ok((
-        TestCrateSummary {
-            test_case_summaries: results,
-            runner_exit_status: RunnerStatus::Default,
-            test_crate_type: tests.test_crate_type,
-        },
-        was_fuzzed,
-    ))
+    // Waiting for things to finish shutting down
+    drop(send_shut_down);
+    let _ = rec_shut_down.recv().await;
+
+    let contained_fuzzed_tests = results.iter().any(|summary| summary.runs().is_some());
+    Ok(TestCrateSummary {
+        test_case_summaries: results,
+        runner_exit_status: RunnerStatus::Default,
+        test_crate_type: tests.test_crate_type,
+        contained_fuzzed_tests,
+    })
 }
 
+#[allow(clippy::too_many_arguments)]
 fn choose_test_strategy_and_run(
     args: Vec<ConcreteTypeId>,
     case: Arc<TestCase>,
@@ -463,6 +463,7 @@ fn choose_test_strategy_and_run(
     runner_params: Arc<RunnerParams>,
     cancellation_tokens: Arc<CancellationTokens>,
     send: &Sender<()>,
+    send_shut_down: &Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     if args.is_empty() {
         run_single_test(
@@ -472,6 +473,7 @@ fn choose_test_strategy_and_run(
             runner_params,
             cancellation_tokens,
             send.clone(),
+            send_shut_down.clone(),
         )
     } else {
         run_with_fuzzing(
@@ -481,6 +483,7 @@ fn choose_test_strategy_and_run(
             runner_config,
             runner_params,
             cancellation_tokens,
+            send_shut_down.clone(),
         )
     }
 }
@@ -492,6 +495,7 @@ fn run_single_test(
     runner_params: Arc<RunnerParams>,
     cancellation_tokens: Arc<CancellationTokens>,
     send: Sender<()>,
+    send_shut_down: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     let exit_first = runner_config.exit_first;
     tokio::task::spawn(async move {
@@ -506,7 +510,8 @@ fn run_single_test(
                 // one of a test returns Err
                 Ok(TestCaseSummary::Interrupted {  })
             },
-            result = blocking_run_from_test(vec![], case.clone(),runner,  runner_config.clone(), runner_params.clone(), send.clone() ) => {
+
+            result = blocking_run_from_test(vec![], case.clone(),runner,  runner_config.clone(), runner_params.clone(), send.clone(), send_shut_down.clone() ) => {
                 match result? {
                     Ok(result) => {
                         if exit_first {
@@ -533,6 +538,7 @@ fn run_with_fuzzing(
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     cancellation_tokens: Arc<CancellationTokens>,
+    send_shut_down: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     tokio::task::spawn(async move {
         let token = CancellationToken::new();
@@ -543,7 +549,7 @@ fn run_with_fuzzing(
                 arg.debug_name
                     .as_ref()
                     .ok_or_else(|| anyhow!("Type {arg:?} does not have a debug name"))
-                    .map(smol_str::SmolStr::as_str)
+                    .map(SmolStr::as_str)
             })
             .collect::<Result<Vec<_>>>()?;
 
@@ -557,8 +563,6 @@ fn run_with_fuzzing(
         let mut fuzzer = RandomFuzzer::create(fuzzer_seed, fuzzer_runs, &args)?;
 
         let mut tasks = FuturesUnordered::new();
-        // Pattern in order to waiting for things to finish shutting down
-        // https://tokio.rs/tokio/topics/shutdown
 
         for _ in 1..=fuzzer_runs {
             let args = fuzzer.next_args();
@@ -572,6 +576,7 @@ fn run_with_fuzzing(
                 cancellation_tokens.clone(),
                 token.clone(),
                 send.clone(),
+                send_shut_down.clone(),
             ));
         }
 
@@ -605,29 +610,28 @@ fn run_with_fuzzing(
                 .count(),
         )?;
 
-        if let Some(result) = results
-            .iter()
-            .find(|item| matches!(item, TestCaseSummary::Failed { .. }))
-        {
-            let result = result.clone().with_runs(runs);
-            return Ok(result);
-        }
-
-        if let Some(result) = results.iter().find(|item| {
+        let result = if let Some(interrupted_or_skipped) = results.iter().find(|item| {
             matches!(
                 item,
                 TestCaseSummary::Interrupted {} | TestCaseSummary::Skipped { .. }
             )
         }) {
-            return Ok(result.clone());
-        }
-
-        let result: TestCaseSummary = results
-            .last()
-            .expect("Test should always run at least once")
-            .clone();
+            interrupted_or_skipped.clone()
+        } else if let Some(failed) = results
+            .iter()
+            .find(|item| matches!(item, TestCaseSummary::Failed { .. }))
+        {
+            failed.clone().with_runs(runs)
+        } else {
+            results
+                .last()
+                .expect("Test should always run at least once")
+                .clone()
+                .with_runs(runs)
+        };
 
         let result = result.with_runs(runs);
+
         Ok(result)
     })
 }
@@ -642,6 +646,7 @@ fn run_fuzzing_subtest(
     cancellation_tokens: Arc<CancellationTokens>,
     cancellation_fuzzing_token: CancellationToken,
     send: Sender<()>,
+    send_shut_down: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     let c = case.clone();
     task::spawn(async move {
@@ -668,7 +673,8 @@ fn run_fuzzing_subtest(
                 runner,
                 runner_config.clone(),
                 runner_params.clone(),
-                send.clone()
+                send.clone(),
+                send_shut_down.clone()
             ) => {
                 match result? {
                     Ok(result) => {

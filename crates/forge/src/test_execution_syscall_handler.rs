@@ -671,9 +671,6 @@ fn execute_syscall(
             )?;
             Ok(())
         }
-        DeprecatedSyscallSelector::Deploy => Err(CustomHint(Box::from(
-            "Use snforge_std::ContractClass::deploy instead of deploy_syscall".to_string(),
-        ))),
         DeprecatedSyscallSelector::ReplaceClass => Err(CustomHint(Box::from(
             "Replace class can't be used in tests".to_string(),
         ))),
@@ -759,9 +756,18 @@ fn execute_call_contract(
     .unwrap_or_else(|err| panic!("Transaction execution error: {err}"))
 }
 
+fn as_printable_short_string(value: &Felt252) -> Option<String> {
+    let bytes: Vec<u8> = value.to_bytes_be();
+    if bytes.iter().any(u8::is_ascii_control) {
+        return None;
+    }
+
+    as_cairo_short_string(value)
+}
+
 fn print(inputs: Vec<Felt252>) {
     for value in inputs {
-        if let Some(short_string) = as_cairo_short_string(&value) {
+        if let Some(short_string) = as_printable_short_string(&value) {
             println!("original value: [{value}], converted to a string: [{short_string}]",);
         } else {
             println!("original value: [{value}]");

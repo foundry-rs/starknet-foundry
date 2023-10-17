@@ -58,5 +58,23 @@ fn test_print() {
     let bool: bool = 1 == 5;
     bool.print();
 
+    let esc = 27;
+    esc.print();
+
+    let dc1 = 17;
+    dc1.print();
+
+    let percent = 37;
+    percent.print();
+
+    let del = 127;
+    del.print();
+
+    let space = 32;
+    space.print();
+
+    let complex = ' % abc 123 !?>@';
+    complex.print();
+
     assert(1 == 1, 'simple check');
 }
