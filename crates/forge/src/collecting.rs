@@ -279,6 +279,13 @@ mod tests {
                     fork_config: None,
                     fuzzer_config: None,
                 },
+                TestCase {
+                    name: "thing".to_string(),
+                    available_gas: None,
+                    expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                    fuzzer_config: None,
+                },
             ],
             tests_location: CrateLocation::Lib,
         };
@@ -332,6 +339,13 @@ mod tests {
                     fork_config: None,
                     fuzzer_config: None,
                 },
+                TestCase {
+                    name: "thing".to_string(),
+                    available_gas: None,
+                    expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                    fuzzer_config: None,
+                },
             ]
         );
 
@@ -363,6 +377,13 @@ mod tests {
                     fork_config: None,
                     fuzzer_config: None,
                 },
+                TestCase {
+                    name: "thing".to_string(),
+                    available_gas: None,
+                    expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                    fuzzer_config: None,
+                },
             ]
         );
     }
@@ -388,6 +409,13 @@ mod tests {
                 },
                 TestCase {
                     name: "outer::crate2::run_other_thing".to_string(),
+                    available_gas: None,
+                    expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                    fuzzer_config: None,
+                },
+                TestCase {
+                    name: "thing".to_string(),
                     available_gas: None,
                     expected_result: ExpectedTestResult::Success,
                     fork_config: None,
@@ -505,65 +533,6 @@ mod tests {
                 fork_config: None,
                 fuzzer_config: None,
             },]
-        );
-    }
-
-    #[test]
-    fn filtering_tests_works_without_crate_in_test_name() {
-        let mocked_tests = CompiledTests {
-            sierra_program: program_for_testing(),
-            test_cases: vec![
-                TestCase {
-                    name: "crate1::do_thing".to_string(),
-                    available_gas: None,
-                    expected_result: ExpectedTestResult::Success,
-                    fork_config: None,
-                    fuzzer_config: None,
-                },
-                TestCase {
-                    name: "crate2::run_other_thing".to_string(),
-                    available_gas: None,
-                    expected_result: ExpectedTestResult::Success,
-                    fork_config: None,
-                    fuzzer_config: None,
-                },
-                TestCase {
-                    name: "thing".to_string(),
-                    available_gas: None,
-                    expected_result: ExpectedTestResult::Success,
-                    fork_config: None,
-                    fuzzer_config: None,
-                },
-            ],
-            tests_location: CrateLocation::Tests,
-        };
-
-        let result = mocked_tests.filter_by_name("thing");
-        assert_eq!(
-            result.test_cases,
-            vec![
-                TestCase {
-                    name: "crate1::do_thing".to_string(),
-                    available_gas: None,
-                    expected_result: ExpectedTestResult::Success,
-                    fork_config: None,
-                    fuzzer_config: None,
-                },
-                TestCase {
-                    name: "crate2::run_other_thing".to_string(),
-                    available_gas: None,
-                    expected_result: ExpectedTestResult::Success,
-                    fork_config: None,
-                    fuzzer_config: None,
-                },
-                TestCase {
-                    name: "thing".to_string(),
-                    available_gas: None,
-                    expected_result: ExpectedTestResult::Success,
-                    fork_config: None,
-                    fuzzer_config: None,
-                },
-            ]
         );
     }
 }
