@@ -35,7 +35,7 @@ pub use crate::collecting::CrateLocation;
 pub use crate::test_crate_summary::TestCrateSummary;
 
 use crate::collecting::{
-    collect_test_compilation_targets, compile_tests, filter_tests_from_crates, CompiledTests,
+    collect_test_compilation_targets, compile_tests, filter_tests_from_crates, CompiledTestCrate,
 };
 use test_collector::{FuzzerConfig, LinkedLibrary, TestCase};
 
@@ -222,19 +222,19 @@ pub async fn run(
 
     let mut summaries = vec![];
 
-    for compiled_tests in tests {
-        let compiled_tests = Arc::new(compiled_tests);
+    for compiled_test_crate in tests {
+        let compiled_test_crate = Arc::new(compiled_test_crate);
         let runner_config = runner_config.clone();
         let runner_params = runner_params.clone();
         let cancellation_tokens = cancellation_tokens.clone();
 
         pretty_printing::print_running_tests(
-            compiled_tests.tests_location,
-            compiled_tests.test_cases.len(),
+            compiled_test_crate.tests_location,
+            compiled_test_crate.test_cases.len(),
         );
 
         let summary = run_tests_from_crate(
-            compiled_tests,
+            compiled_test_crate,
             runner_config,
             runner_params,
             cancellation_tokens,
@@ -257,7 +257,7 @@ pub async fn run(
 }
 
 async fn run_tests_from_crate(
-    tests: Arc<CompiledTests>,
+    tests: Arc<CompiledTestCrate>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     cancellation_tokens: Arc<CancellationTokens>,

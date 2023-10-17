@@ -9,13 +9,13 @@ use test_collector::{collect_tests, LinkedLibrary, TestCase};
 use walkdir::WalkDir;
 
 #[derive(Debug, Clone)]
-pub struct CompiledTests {
+pub struct CompiledTestCrate {
     pub sierra_program: Program,
     pub test_cases: Vec<TestCase>,
     pub tests_location: CrateLocation,
 }
 
-impl CompiledTests {
+impl CompiledTestCrate {
     pub fn filter_by_name(self, filter: &str) -> Self {
         let test_cases = self
             .test_cases
@@ -55,7 +55,7 @@ impl TestCompilationTarget {
         &self,
         linked_libraries: &[LinkedLibrary],
         corelib_path: &Utf8Path,
-    ) -> Result<CompiledTests> {
+    ) -> Result<CompiledTestCrate> {
         let (sierra_program, test_cases) = collect_tests(
             self.crate_root.as_str(),
             None,
@@ -65,7 +65,7 @@ impl TestCompilationTarget {
             corelib_path.into(),
         )?;
 
-        Ok(CompiledTests {
+        Ok(CompiledTestCrate {
             sierra_program,
             test_cases,
             tests_location: self.crate_location,
@@ -111,7 +111,7 @@ pub fn collect_test_compilation_targets(
 pub fn compile_tests(
     targets: &Vec<TestCompilationTarget>,
     runner_params: &RunnerParams,
-) -> Result<Vec<CompiledTests>> {
+) -> Result<Vec<CompiledTestCrate>> {
     targets
         .par_iter()
         .map(|target| {
@@ -121,11 +121,11 @@ pub fn compile_tests(
 }
 
 pub fn filter_tests_from_crates(
-    tests_from_crates: Vec<CompiledTests>,
+    compiled_test_crates: Vec<CompiledTestCrate>,
     runner_config: &RunnerConfig,
-) -> Vec<CompiledTests> {
+) -> Vec<CompiledTestCrate> {
     if let Some(test_name_filter) = &runner_config.test_name_filter {
-        tests_from_crates
+        compiled_test_crates
             .into_iter()
             .map(|tc| {
                 if runner_config.exact_match {
@@ -136,7 +136,7 @@ pub fn filter_tests_from_crates(
             })
             .collect()
     } else {
-        tests_from_crates
+        compiled_test_crates
     }
 }
 
@@ -262,7 +262,7 @@ mod tests {
     #[test]
     #[allow(clippy::too_many_lines)]
     fn filtering_tests() {
-        let mocked_tests = CompiledTests {
+        let mocked_tests = CompiledTestCrate {
             sierra_program: program_for_testing(),
             test_cases: vec![
                 TestCase {
@@ -397,7 +397,7 @@ mod tests {
 
     #[test]
     fn filtering_with_no_tests() {
-        let mocked_tests = CompiledTests {
+        let mocked_tests = CompiledTestCrate {
             sierra_program: program_for_testing(),
             test_cases: vec![],
             tests_location: CrateLocation::Lib,
@@ -415,7 +415,7 @@ mod tests {
 
     #[test]
     fn filtering_tests_uses_whole_path() {
-        let mocked_tests = CompiledTests {
+        let mocked_tests = CompiledTestCrate {
             sierra_program: program_for_testing(),
             test_cases: vec![
                 TestCase {
@@ -474,7 +474,7 @@ mod tests {
 
     #[test]
     fn filtering_with_exact_match() {
-        let mocked_tests = CompiledTests {
+        let mocked_tests = CompiledTestCrate {
             sierra_program: program_for_testing(),
             test_cases: vec![
                 TestCase {
