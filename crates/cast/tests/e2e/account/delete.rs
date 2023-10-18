@@ -173,8 +173,10 @@ pub async fn invalid_remove_profile_flag() {
     let snapbox = Command::new(cargo_bin!("sncast")).args(args).stdin("Y");
 
     snapbox.assert().stderr_matches(indoc! {r#"
-    command: account delete
-    error: delete_profile must be true or false
+    error: invalid value 'no' for '--delete-profile <DELETE_PROFILE>'
+      [possible values: true, false]
+
+    For more information, try '--help'.
     "#});
 
     let _ = tokio::fs::remove_file("temp_accounts4.json").await;

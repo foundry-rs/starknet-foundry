@@ -17,8 +17,8 @@ pub struct Delete {
     pub name: Option<String>,
 
     /// If passed with false, Scarb profile won't be removed
-    #[clap(long)]
-    pub delete_profile: Option<String>,
+    #[clap(long, num_args = 1, default_value = "true")]
+    pub delete_profile: Option<bool>,
 
     /// Network where the account exists; defaults to network of rpc node
     #[clap(long)]
@@ -30,19 +30,12 @@ pub fn delete(
     name: &str,
     path: &Utf8PathBuf,
     path_to_scarb_toml: &Option<Utf8PathBuf>,
-    delete_profile: Option<String>,
+    delete_profile: Option<bool>,
     network_name: &str,
 ) -> Result<AccountDeleteResponse> {
     let contents = std::fs::read_to_string(path.clone()).context("Couldn't read accounts file")?;
     let items: serde_json::Value = serde_json::from_str(&contents)
         .map_err(|_| anyhow!("Failed to parse accounts file at {path}"))?;
-
-    // validate delete_profile in "true" or "false" or empty
-    if let Some(ref delete_profile) = delete_profile {
-        if delete_profile != "true" && delete_profile != "false" {
-            bail!("delete_profile must be true or false");
-        }
-    }
 
     if items[&network_name].is_null() {
         bail!("No accounts defined for network {}", network_name);
@@ -75,9 +68,9 @@ pub fn delete(
 
     std::fs::write(path.clone(), serde_json::to_string_pretty(&items).unwrap())?;
 
-    let mut remove_scarb_message = "Account not removed from Scarb.toml".to_string();
+    let mut scarb_result = "Account not removed from Scarb.toml".to_string();
     // delete profile if delete_profile is true or not passed
-    if delete_profile.map_or(true, |s| s == "true") {
+    if delete_profile == Some(true) {
         let manifest_path = match path_to_scarb_toml.clone() {
             Some(path) => path,
             None => get_scarb_manifest().context("Failed to obtain manifest path from scarb")?,
@@ -99,7 +92,7 @@ pub fn delete(
             if let Some(nested_table) = table.get_mut("sncast").and_then(toml::Value::as_table_mut)
             {
                 if nested_table.remove(name).is_some() {
-                    remove_scarb_message = "Account removed from Scarb.toml".to_string();
+                    scarb_result = "Account removed from Scarb.toml".to_string();
                 }
             }
         }
@@ -113,9 +106,9 @@ pub fn delete(
             .expect("Failed to write to file");
     };
 
-    println!("{remove_scarb_message}");
     let result = "Account successfully removed".to_string();
     Ok(AccountDeleteResponse {
-        result: result.to_string(),
+        result: result,
+        scarb_result: scarb_result,
     })
 }
