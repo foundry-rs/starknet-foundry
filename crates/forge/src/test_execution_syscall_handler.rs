@@ -39,6 +39,7 @@ use cairo_lang_starknet::contract::starknet_keccak;
 use cairo_lang_utils::bigint::BigIntAsHex;
 use cairo_vm::vm::errors::hint_errors::HintError::CustomHint;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
+use cheatnet::cheatcodes::ecdsa_utils::{ecdsa_sign_message, generate_ecdsa_keys};
 use cheatnet::cheatcodes::spy_events::SpyTarget;
 
 mod file_operations;
@@ -574,6 +575,37 @@ impl TestExecutionSyscallHandler<'_> {
                 buffer
                     .write(Felt252::from(hash))
                     .expect("Failed to insert event name hash");
+                Ok(())
+            }
+            "generate_ecdsa_keys" => {
+                let (private_key, public_key) = generate_ecdsa_keys();
+
+                buffer
+                    .write(private_key)
+                    .expect("Failed to insert private key");
+                buffer
+                    .write(public_key)
+                    .expect("Failed to insert public key");
+                Ok(())
+            }
+            "ecdsa_sign_message" => {
+                let private_key = inputs[0].clone();
+                let message_hash = inputs[1].clone();
+
+                match ecdsa_sign_message(&private_key, &message_hash) {
+                    Ok((r, s)) => {
+                        buffer.write(0).expect("Failed to insert exit code");
+                        buffer.write(r).expect("Failed to insert signature r");
+                        buffer.write(s).expect("Failed to insert signature s");
+                    }
+                    Err(msg) => {
+                        buffer.write(1).expect("Failed to insert exit code");
+                        buffer
+                            .write(msg.to_felt252())
+                            .expect("Failed to insert error message");
+                    }
+                }
+
                 Ok(())
             }
             _ => Err(anyhow!("Unknown cheatcode selector: {selector}")).map_err(Into::into),
