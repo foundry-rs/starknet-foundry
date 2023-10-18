@@ -224,7 +224,6 @@ pub(crate) fn run_test_case(
         // CairoRunError comes from VirtualMachineError which may come from HintException that originates in the cheatcode processor
         Err(RunnerError::CairoRunError(error)) => Ok(TestCaseSummary::Failed {
             name: case.name.clone(),
-            run_result: None,
             msg: Some(format!(
                 "\n    {}\n",
                 error.to_string().replace(" Custom Hint Error: ", "\n    ")
