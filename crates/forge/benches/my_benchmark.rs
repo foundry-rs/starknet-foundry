@@ -2,17 +2,17 @@ use assert_fs::fixture::PathCopy;
 use assert_fs::TempDir;
 use camino::Utf8PathBuf;
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
-use forge::collecting::{collect_test_crates, TestCrate};
-use forge::TestCrateType;
+use forge::collecting::{collect_test_compilation_targets, TestCompilationTarget};
+use forge::CrateLocation;
 use indoc::indoc;
 use std::path::PathBuf;
 use std::str::FromStr;
 use std::time::Duration;
 use test_collector::LinkedLibrary;
-use utils::corelib::corelib_path;
-use utils::runner::{Contract, TestCase};
-use utils::running_tests::run_test_case;
-use utils::{assert_passed, test_case};
+use test_utils::corelib::corelib_path;
+use test_utils::runner::{Contract, TestCase};
+use test_utils::running_tests::run_test_case;
+use test_utils::{assert_passed, test_case};
 
 fn setup_collect_tests() -> TempDir {
     let temp = TempDir::new().unwrap();
@@ -23,13 +23,17 @@ fn setup_collect_tests() -> TempDir {
 }
 
 fn collect_tests(package: &TempDir) {
-    let temp_dir = TempDir::new().unwrap();
     let path = Utf8PathBuf::from_path_buf(package.to_path_buf()).unwrap();
 
-    collect_test_crates(&path, "simple_package", &path, &temp_dir).unwrap();
+    let _ = collect_test_compilation_targets(&path, "simple_package", &path);
 }
 
-fn setup_compile_tests() -> (TestCrate, Vec<LinkedLibrary>, Utf8PathBuf, TempDir) {
+fn setup_compile_tests() -> (
+    TestCompilationTarget,
+    Vec<LinkedLibrary>,
+    Utf8PathBuf,
+    TempDir,
+) {
     let package = setup_collect_tests();
     let path = Utf8PathBuf::from_path_buf(package.to_path_buf())
         .unwrap()
@@ -50,17 +54,19 @@ fn setup_compile_tests() -> (TestCrate, Vec<LinkedLibrary>, Utf8PathBuf, TempDir
         },
     ];
 
-    let test_crate = TestCrate {
+    let lib_content = std::fs::read_to_string(path.join("lib.cairo")).unwrap();
+    let test_crate = TestCompilationTarget {
         crate_root: path,
         crate_name: "simple_package".to_string(),
-        crate_type: TestCrateType::Lib,
+        crate_location: CrateLocation::Lib,
+        lib_content,
     };
 
     (test_crate, linked_libraries, corelib_path(), package)
 }
 
 fn compile_tests(
-    test_crate: &TestCrate,
+    test_crate: &TestCompilationTarget,
     linked_libraries: &[LinkedLibrary],
     corelib_path: &Utf8PathBuf,
 ) {
