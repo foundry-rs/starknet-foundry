@@ -581,12 +581,13 @@ fn run_with_fuzzing(
         }
 
         let mut results = vec![];
+        let mut result = TestCaseSummary::SkippedFuzzing {};
 
         while let Some(task) = tasks.next().await {
-            let result = task??;
+            result = task??;
             results.push(result.clone());
 
-            match &result {
+            match result {
                 TestCaseSummary::Failed { .. } | TestCaseSummary::InterruptedByError {} => {
                     break;
                 }
@@ -607,26 +608,6 @@ fn run_with_fuzzing(
                 })
                 .count(),
         )?;
-
-        let result = if let Some(failed) = results
-            .iter()
-            .find(|item| matches!(item, TestCaseSummary::Failed { .. }))
-        {
-            failed.clone().with_runs(runs)
-        } else if let Some(interrupted_or_skipped) = results.iter().find(|item| {
-            matches!(
-                item,
-                TestCaseSummary::InterruptedByError {} | TestCaseSummary::Skipped { .. }
-            )
-        }) {
-            interrupted_or_skipped.clone()
-        } else {
-            results
-                .last()
-                .expect("Test should always run at least once")
-                .clone()
-                .with_runs(runs)
-        };
 
         let result = result.with_runs(runs);
 
