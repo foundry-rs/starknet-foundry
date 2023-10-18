@@ -75,6 +75,7 @@ command: account create
 max_fee: 0x64a7168300
 address: 0x7a949e83b243068d0cbedd8d5b8b32fafea66c54de23c40e68b126b5c845b61
 ```
+
 ### `account delete`
 
 Delete an account from `accounts-file` and its associated Scarb profile.
