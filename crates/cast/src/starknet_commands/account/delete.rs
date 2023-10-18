@@ -99,7 +99,7 @@ pub fn delete(
             if let Some(nested_table) = table.get_mut("sncast").and_then(toml::Value::as_table_mut)
             {
                 if nested_table.remove(name).is_some() {
-                    remove_scarb_message = "Account removed from Scarb".to_string();
+                    remove_scarb_message = "Account removed from Scarb.toml".to_string();
                 }
             }
         }
