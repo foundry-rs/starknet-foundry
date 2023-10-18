@@ -20,7 +20,7 @@ pub struct Delete {
     #[clap(long)]
     pub delete_profile: Option<String>,
 
-    /// Network where the account exists
+    /// Network where the account exists; defaults to network of rpc node
     #[clap(long)]
     pub network: Option<String>,
 }
