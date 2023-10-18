@@ -1,3 +1,4 @@
+use crate::common::assertions::assert_outputs;
 use crate::{
     assert_success,
     common::{
@@ -224,21 +225,6 @@ fn warp_proxy() {
         &[],
     );
 
-    cheatnet_state.start_warp(contract_address, Felt252::from(123_u128));
-
-    let selector = felt_selector_from_name("get_block_timestamp");
-
-    let output = call_contract(
-        &mut blockifier_state,
-        &mut cheatnet_state,
-        &contract_address,
-        &selector,
-        &[],
-    )
-    .unwrap();
-
-    assert_success!(output, vec![Felt252::from(123)]);
-
     let proxy_address = deploy_contract(
         &mut blockifier_state,
         &mut cheatnet_state,
@@ -246,6 +232,16 @@ fn warp_proxy() {
         &[],
     );
     let proxy_selector = felt_selector_from_name("get_warp_checkers_block_timestamp");
+    let before_warp_output = call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &proxy_address,
+        &proxy_selector,
+        &[contract_address.to_felt252()],
+    )
+    .unwrap();
+
+    cheatnet_state.start_warp(contract_address, Felt252::from(123_u128));
     let output = call_contract(
         &mut blockifier_state,
         &mut cheatnet_state,
@@ -256,6 +252,18 @@ fn warp_proxy() {
     .unwrap();
 
     assert_success!(output, vec![Felt252::from(123)]);
+
+    cheatnet_state.stop_warp(contract_address);
+    let after_warp_cancellation_output = call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &proxy_address,
+        &proxy_selector,
+        &[contract_address.to_felt252()],
+    )
+    .unwrap();
+
+    assert_outputs(before_warp_output, after_warp_cancellation_output);
 }
 
 #[test]
@@ -275,10 +283,19 @@ fn warp_library_call() {
         "WarpCheckerLibCall",
         &[],
     );
+    let lib_call_selector = felt_selector_from_name("get_block_timestamp_with_lib_call");
+
+    let before_warp_output = call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &lib_call_address,
+        &lib_call_selector,
+        &[class_hash.to_felt252()],
+    )
+    .unwrap();
 
     cheatnet_state.start_warp(lib_call_address, Felt252::from(123_u128));
 
-    let lib_call_selector = felt_selector_from_name("get_block_timestamp_with_lib_call");
     let output = call_contract(
         &mut blockifier_state,
         &mut cheatnet_state,
@@ -289,4 +306,15 @@ fn warp_library_call() {
     .unwrap();
 
     assert_success!(output, vec![Felt252::from(123)]);
+
+    cheatnet_state.stop_warp(lib_call_address);
+    let after_warp_cancellation_output = call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &lib_call_address,
+        &lib_call_selector,
+        &[class_hash.to_felt252()],
+    )
+    .unwrap();
+    assert_outputs(before_warp_output, after_warp_cancellation_output);
 }
