@@ -581,16 +581,13 @@ fn run_with_fuzzing(
         }
 
         let mut results = vec![];
-        let mut result = TestCaseSummary::Failed {
-            name: case.name.to_string(),
-            msg: None,
-            arguments: vec![],
-            fuzzing_statistic: None,
-        };
+        let mut final_result = None;
 
         while let Some(task) = tasks.next().await {
-            result = task??;
+            let result = task??;
+
             results.push(result.clone());
+            final_result = Some(result.clone());
 
             match result {
                 TestCaseSummary::Failed { .. } | TestCaseSummary::InterruptedByError {} => {
@@ -614,9 +611,10 @@ fn run_with_fuzzing(
                 .count(),
         )?;
 
-        let result = result.with_runs(runs);
-
-        Ok(result)
+        match final_result {
+            Some(result) => Ok(result.with_runs(runs)),
+            None => panic!("Test should always run at least once"),
+        }
     })
 }
 
