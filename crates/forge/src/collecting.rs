@@ -65,34 +65,20 @@ impl TestCompilationTarget {
             tests_location: self.crate_location,
         })
     }
-}
 
-// TODO consider different name + add docstring
-pub(crate) fn optimize_compilation_targets(
-    compilation_targets: Vec<TestCompilationTarget>,
-    temp_dir: &TempDir,
-) -> Result<Vec<TestCompilationTarget>> {
-    let result = compilation_targets
-        .into_iter()
-        .map(
-            |compilation_target| match compilation_target.crate_location {
-                CrateLocation::Lib => Ok(compilation_target),
-                CrateLocation::Tests => {
-                    let lib_path = compilation_target.crate_root.join("lib.cairo");
-                    if lib_path.exists() {
-                        Ok(compilation_target)
-                    } else {
-                        Ok(pack_tests_into_single_crate(
-                            temp_dir,
-                            &compilation_target.crate_root,
-                        )?)
-                    }
+    pub(crate) fn ensure_lib_file_exists(self, temp_dir: &TempDir) -> Result<Self> {
+        match self.crate_location {
+            CrateLocation::Lib => Ok(self),
+            CrateLocation::Tests => {
+                let lib_path = self.crate_root.join("lib.cairo");
+                if lib_path.exists() {
+                    Ok(self)
+                } else {
+                    pack_tests_into_single_crate(&self.crate_name, temp_dir, &self.crate_root)
                 }
-            },
-        )
-        .collect::<Result<_>>()?;
-
-    Ok(result)
+            }
+        }
+    }
 }
 
 pub(crate) fn collect_test_compilation_targets(
@@ -151,9 +137,11 @@ pub(crate) fn filter_tests_from_crates(
 }
 
 fn pack_tests_into_single_crate(
+    name: &str,
     tmp_dir: &TempDir,
     tests_folder_path: &Utf8Path,
 ) -> Result<TestCompilationTarget> {
+    let tmp_dir = tmp_dir.child(name);
     tmp_dir
         .copy_from(tests_folder_path, &["**/*.cairo"])
         .context("Unable to copy files to temporary directory")?;
@@ -243,7 +231,7 @@ mod tests {
     }
 
     #[test]
-    fn optimizing_compilation_targets() {
+    fn ensure_lib_in_compilation_targets() {
         let temp = TempDir::new().unwrap();
         temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
             .unwrap();
@@ -263,9 +251,12 @@ mod tests {
         ];
 
         let temp_for_tests = TempDir::new().unwrap();
-        let tests_path = Utf8PathBuf::from_path_buf(temp_for_tests.to_path_buf()).unwrap();
-        let optimized_compilation_targets =
-            optimize_compilation_targets(compilation_targets, &temp_for_tests).unwrap();
+        let temp_for_tests_path = Utf8PathBuf::from_path_buf(temp_for_tests.to_path_buf()).unwrap();
+        let optimized_compilation_targets: Vec<TestCompilationTarget> = compilation_targets
+            .into_iter()
+            .map(|ct| ct.ensure_lib_file_exists(&temp_for_tests))
+            .collect::<Result<_>>()
+            .unwrap();
 
         assert_eq!(
             optimized_compilation_targets,
@@ -276,14 +267,14 @@ mod tests {
                     crate_location: CrateLocation::Lib,
                 },
                 TestCompilationTarget {
-                    crate_root: tests_path.clone(),
+                    crate_root: temp_for_tests_path.clone().join("tests"),
                     crate_name: "tests".to_string(),
                     crate_location: CrateLocation::Tests,
                 },
             ]
         );
 
-        let virtual_lib_path = tests_path.join("lib.cairo");
+        let virtual_lib_path = temp_for_tests_path.join("tests/lib.cairo");
         let virtual_lib_u8_content = std::fs::read(&virtual_lib_path).unwrap();
         let virtual_lib_content = std::str::from_utf8(&virtual_lib_u8_content).unwrap();
 
@@ -292,6 +283,63 @@ mod tests {
         assert!(virtual_lib_content.contains("mod ext_function_test;"));
         assert!(virtual_lib_content.contains("mod test_simple;"));
         assert!(virtual_lib_content.contains("mod without_prefix;"));
+    }
+
+    #[test]
+    fn ensure_lib_in_compilation_targets_with_multiple_tests_dirs() {
+        let temp = TempDir::new().unwrap();
+        temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
+            .unwrap();
+        let package_path = Utf8PathBuf::from_path_buf(temp.to_path_buf()).unwrap();
+
+        let compilation_targets = vec![
+            TestCompilationTarget {
+                crate_root: package_path.join("tests"),
+                crate_name: "tests".to_string(),
+                crate_location: CrateLocation::Tests,
+            },
+            TestCompilationTarget {
+                crate_root: package_path.join("tests"),
+                crate_name: "other_tests".to_string(),
+                crate_location: CrateLocation::Tests,
+            },
+        ];
+
+        let temp_for_tests = TempDir::new().unwrap();
+        let temp_for_tests_path = Utf8PathBuf::from_path_buf(temp_for_tests.to_path_buf()).unwrap();
+        let optimized_compilation_targets: Vec<TestCompilationTarget> = compilation_targets
+            .into_iter()
+            .map(|ct| ct.ensure_lib_file_exists(&temp_for_tests))
+            .collect::<Result<_>>()
+            .unwrap();
+
+        assert_eq!(
+            optimized_compilation_targets,
+            vec![
+                TestCompilationTarget {
+                    crate_root: temp_for_tests_path.clone().join("tests"),
+                    crate_name: "tests".to_string(),
+                    crate_location: CrateLocation::Tests,
+                },
+                TestCompilationTarget {
+                    crate_root: temp_for_tests_path.clone().join("other_tests"),
+                    crate_name: "tests".to_string(),
+                    crate_location: CrateLocation::Tests,
+                },
+            ]
+        );
+
+        for name in ["tests", "other_tests"] {
+            let virtual_lib_path = temp_for_tests_path.join(name).join("lib.cairo");
+            let virtual_lib_u8_content = std::fs::read(&virtual_lib_path).unwrap();
+            let virtual_lib_content = std::str::from_utf8(&virtual_lib_u8_content).unwrap();
+
+            assert!(virtual_lib_path.try_exists().unwrap());
+            assert!(virtual_lib_content.contains("mod contract;"));
+            assert!(virtual_lib_content.contains("mod ext_function_test;"));
+            assert!(virtual_lib_content.contains("mod test_simple;"));
+            assert!(virtual_lib_content.contains("mod without_prefix;"));
+        }
     }
 
     fn program_for_testing() -> Program {

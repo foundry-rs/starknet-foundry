@@ -35,8 +35,7 @@ use crate::scarb::{ForgeConfig, ForkTarget, StarknetContractArtifacts};
 pub use crate::test_crate_summary::TestCrateSummary;
 
 use crate::collecting::{
-    collect_test_compilation_targets, compile_tests, filter_tests_from_crates,
-    optimize_compilation_targets, CompiledTestCrate,
+    collect_test_compilation_targets, compile_tests, filter_tests_from_crates, CompiledTestCrate,
 };
 use test_collector::{FuzzerConfig, LinkedLibrary, TestCase};
 
@@ -215,7 +214,10 @@ pub async fn run(
 
     let compilation_targets =
         collect_test_compilation_targets(package_path, package_name, package_source_dir_path);
-    let compilation_targets = optimize_compilation_targets(compilation_targets, &temp_dir)?;
+    let compilation_targets = compilation_targets
+        .into_iter()
+        .map(|ct| ct.ensure_lib_file_exists(&temp_dir))
+        .collect::<Result<_>>()?;
     let tests = compile_tests(&compilation_targets, &runner_params)?;
     let tests = filter_tests_from_crates(tests, &runner_config);
 
