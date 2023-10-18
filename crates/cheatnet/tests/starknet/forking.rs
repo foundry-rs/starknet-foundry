@@ -12,7 +12,7 @@ use cheatnet::cheatcodes::{CheatcodeError, EnhancedHintError};
 use cheatnet::constants::build_testing_state;
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::rpc::call_contract;
-use cheatnet::state::{BlockifierState, BlockInfoReader, CheatnetState, ExtendedStateReader};
+use cheatnet::state::{BlockInfoReader, BlockifierState, CheatnetState, ExtendedStateReader};
 use conversions::StarknetConversions;
 use std::path::PathBuf;
 
@@ -363,17 +363,21 @@ fn using_specified_block_nb_is_cached() {
         };
 
         assert_eq!(
-            cache["block_info"].as_object().unwrap()["block_number"].as_u64().unwrap(),
-            312646
+            cache["block_info"].as_object().unwrap()["block_number"]
+                .as_u64()
+                .unwrap(),
+            312_646
         );
         assert_eq!(
-            cache["block_info"].as_object().unwrap()["timestamp"].as_u64().unwrap(),
-            1695291683
+            cache["block_info"].as_object().unwrap()["timestamp"]
+                .as_u64()
+                .unwrap(),
+            1_695_291_683
         );
         assert_eq!(
             cache["block_info"].as_object().unwrap()["sequencer_address"],
             "0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8"
-        )
+        );
     };
     // 1st run - check whether cache is written
     run_test();
@@ -511,17 +515,21 @@ fn test_cache_merging() {
         }
 
         assert_eq!(
-            cache["block_info"].as_object().unwrap()["block_number"].as_u64().unwrap(),
-            312767
+            cache["block_info"].as_object().unwrap()["block_number"]
+                .as_u64()
+                .unwrap(),
+            312_767
         );
         assert_eq!(
-            cache["block_info"].as_object().unwrap()["timestamp"].as_u64().unwrap(),
-            1695378726
+            cache["block_info"].as_object().unwrap()["timestamp"]
+                .as_u64()
+                .unwrap(),
+            1_695_378_726
         );
         assert_eq!(
             cache["block_info"].as_object().unwrap()["sequencer_address"],
             "0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8"
-        )
+        );
     };
     let cache_dir_str = cache_dir.path().to_str().unwrap();
 
@@ -580,22 +588,23 @@ fn test_cached_block_info_merging() {
         );
         if is_block_info_cached {
             assert_eq!(
-                cache["block_info"].as_object().unwrap()["block_number"].as_u64().unwrap(),
-                312767
+                cache["block_info"].as_object().unwrap()["block_number"]
+                    .as_u64()
+                    .unwrap(),
+                312_767
             );
             assert_eq!(
-                cache["block_info"].as_object().unwrap()["timestamp"].as_u64().unwrap(),
-                1695378726
+                cache["block_info"].as_object().unwrap()["timestamp"]
+                    .as_u64()
+                    .unwrap(),
+                1_695_378_726
             );
             assert_eq!(
                 cache["block_info"].as_object().unwrap()["sequencer_address"],
                 "0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8"
-            )
-        } else {
-            assert_eq!(
-                cache["block_info"].as_object(),
-                None
             );
+        } else {
+            assert_eq!(cache["block_info"].as_object(), None);
         }
     };
     let cache_dir_str = cache_dir.path().to_str().unwrap();
