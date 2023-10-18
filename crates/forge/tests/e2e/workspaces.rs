@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 
+use crate::assert_stdout_contains;
 use indoc::indoc;
 
 use crate::e2e::common::runner::{runner, setup_hello_workspace, setup_virtual_workspace};
@@ -9,11 +10,10 @@ fn root_workspace_without_arguments() {
     let temp = setup_hello_workspace();
 
     let snapbox = runner();
-    snapbox
-        .current_dir(&temp)
-        .assert()
-        .code(1)
-        .stdout_matches(indoc! {r#"
+    let output = snapbox.current_dir(&temp).assert().code(1);
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -37,7 +37,8 @@ fn root_workspace_without_arguments() {
         Failures:
             tests::test_failing::test_failing
             tests::test_failing::test_another_failing
-        "#});
+        "#}
+    );
 }
 
 #[test]
@@ -45,11 +46,10 @@ fn root_workspace_specific_package() {
     let temp = setup_hello_workspace();
     let snapbox = runner().arg("--package").arg("addition");
 
-    snapbox
-        .current_dir(&temp)
-        .assert()
-        .success()
-        .stdout_matches(indoc! {r#"
+    let output = snapbox.current_dir(&temp).assert().success();
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
         [..]Compiling[..]
         [..]Compiling[..]
         [..]Finished[..]
@@ -64,7 +64,8 @@ fn root_workspace_specific_package() {
         [PASS] tests::nested::test_nested::test_two
         [PASS] tests::nested::test_nested::test_two_and_two
         Tests: 5 passed, 0 failed, 0 skipped
-        "#});
+        "#}
+    );
 }
 
 #[test]
@@ -72,11 +73,10 @@ fn root_workspace_specific_package2() {
     let temp = setup_hello_workspace();
     let snapbox = runner().arg("--package").arg("fibonacci");
 
-    snapbox
-        .current_dir(&temp)
-        .assert()
-        .code(1)
-        .stdout_matches(indoc! {r#"
+    let output = snapbox.current_dir(&temp).assert().code(1);
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
         [..]Compiling[..]
         [..]Compiling[..]
         [..]Finished[..]
@@ -99,7 +99,8 @@ fn root_workspace_specific_package2() {
         
         Failures:
             tests::abc::efg::failing_test
-        "#});
+        "#}
+    );
 }
 
 #[test]
@@ -107,11 +108,10 @@ fn root_workspace_specific_package_and_name() {
     let temp = setup_hello_workspace();
     let snapbox = runner().arg("simple").arg("--package").arg("addition");
 
-    snapbox
-        .current_dir(&temp)
-        .assert()
-        .success()
-        .stdout_matches(indoc! {r#"
+    let output = snapbox.current_dir(&temp).assert().success();
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
         [..]Compiling[..]
         [..]Compiling[..]
         [..]Finished[..]
@@ -122,7 +122,8 @@ fn root_workspace_specific_package_and_name() {
         Running 1 test(s) from tests/
         [PASS] tests::nested::simple_case
         Tests: 1 passed, 0 failed, 0 skipped
-        "#});
+        "#}
+    );
 }
 
 #[test]
@@ -130,11 +131,10 @@ fn root_workspace_specify_root_package() {
     let temp = setup_hello_workspace();
     let snapbox = runner().arg("--package").arg("hello_workspaces");
 
-    snapbox
-        .current_dir(&temp)
-        .assert()
-        .code(1)
-        .stdout_matches(indoc! {r#"
+    let output = snapbox.current_dir(&temp).assert().code(1);
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -158,7 +158,8 @@ fn root_workspace_specify_root_package() {
         Failures:
             tests::test_failing::test_failing
             tests::test_failing::test_another_failing
-        "#});
+        "#}
+    );
 }
 
 #[test]
@@ -168,11 +169,10 @@ fn root_workspace_inside_nested_package() {
 
     let snapbox = runner();
 
-    snapbox
-        .current_dir(package_dir)
-        .assert()
-        .success()
-        .stdout_matches(indoc! {r#"
+    let output = snapbox.current_dir(package_dir).assert().success();
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
         [..]Compiling[..]
         [..]Compiling[..]
         [..]Finished[..]
@@ -187,7 +187,8 @@ fn root_workspace_inside_nested_package() {
         [PASS] tests::nested::test_nested::test_two
         [PASS] tests::nested::test_nested::test_two_and_two
         Tests: 5 passed, 0 failed, 0 skipped
-        "#});
+        "#}
+    );
 }
 
 #[test]
@@ -195,11 +196,10 @@ fn root_workspace_for_entire_workspace() {
     let temp = setup_hello_workspace();
     let snapbox = runner().arg("--workspace");
 
-    snapbox
-        .current_dir(&temp)
-        .assert()
-        .code(1)
-        .stdout_matches(indoc! {r#"
+    let output = snapbox.current_dir(&temp).assert().code(1);
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
          [..]Compiling[..]
         [..]Compiling[..]
         [..]Finished[..]
@@ -257,7 +257,8 @@ fn root_workspace_for_entire_workspace() {
             tests::abc::efg::failing_test
             tests::test_failing::test_failing
             tests::test_failing::test_another_failing
-        "#});
+        "#}
+    );
 }
 
 #[test]
@@ -266,11 +267,10 @@ fn root_workspace_for_entire_workspace_inside_package() {
     let package_dir = temp.join(PathBuf::from("crates/fibonacci"));
 
     let snapbox = runner().arg("--workspace");
-    snapbox
-        .current_dir(package_dir)
-        .assert()
-        .code(1)
-        .stdout_matches(indoc! {r#"
+    let output = snapbox.current_dir(package_dir).assert().code(1);
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
         [..]Compiling[..]
         [..]Compiling[..]
         [..]Finished[..]
@@ -328,7 +328,8 @@ fn root_workspace_for_entire_workspace_inside_package() {
             tests::abc::efg::failing_test
             tests::test_failing::test_failing
             tests::test_failing::test_another_failing
-        "#});
+        "#}
+    );
 }
 
 #[test]
@@ -360,11 +361,10 @@ fn virtual_workspace_without_arguments() {
     let temp = setup_virtual_workspace();
     let snapbox = runner();
 
-    snapbox
-        .current_dir(&temp)
-        .assert()
-        .code(1)
-        .stdout_matches(indoc! {r#"
+    let output = snapbox.current_dir(&temp).assert().code(1);
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
         
@@ -400,7 +400,8 @@ fn virtual_workspace_without_arguments() {
         
         Failures:
             tests::abc::efg::failing_test
-        "#});
+        "#}
+    );
 }
 
 #[test]
@@ -408,11 +409,10 @@ fn virtual_workspace_specify_package() {
     let temp = setup_virtual_workspace();
     let snapbox = runner().arg("--package").arg("subtraction");
 
-    snapbox
-        .current_dir(&temp)
-        .assert()
-        .success()
-        .stdout_matches(indoc! {r#"
+    let output = snapbox.current_dir(&temp).assert().success();
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
         [..]Compiling[..]
         [..]Compiling[..]
         [..]Finished[..]
@@ -427,7 +427,8 @@ fn virtual_workspace_specify_package() {
         [PASS] tests::nested::test_nested::test_two
         [PASS] tests::nested::test_nested::test_two_and_two
         Tests: 5 passed, 0 failed, 0 skipped
-        "#});
+        "#}
+    );
 }
 
 #[test]
@@ -435,11 +436,10 @@ fn virtual_workspace_specific_package2() {
     let temp = setup_virtual_workspace();
     let snapbox = runner().arg("--package").arg("fibonacci2");
 
-    snapbox
-        .current_dir(&temp)
-        .assert()
-        .code(1)
-        .stdout_matches(indoc! {r#"
+    let output = snapbox.current_dir(&temp).assert().code(1);
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
         
@@ -461,7 +461,8 @@ fn virtual_workspace_specific_package2() {
         
         Failures:
             tests::abc::efg::failing_test
-        "#});
+        "#}
+    );
 }
 
 #[test]
@@ -469,11 +470,10 @@ fn virtual_workspace_specific_package_and_name() {
     let temp = setup_virtual_workspace();
     let snapbox = runner().arg("simple").arg("--package").arg("subtraction");
 
-    snapbox
-        .current_dir(&temp)
-        .assert()
-        .success()
-        .stdout_matches(indoc! {r#"
+    let output = snapbox.current_dir(&temp).assert().success();
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
         [..]Compiling[..]
         [..]Compiling[..]
         [..]Finished[..]
@@ -484,7 +484,8 @@ fn virtual_workspace_specific_package_and_name() {
         Running 1 test(s) from tests/
         [PASS] tests::nested::simple_case
         Tests: 1 passed, 0 failed, 0 skipped
-        "#});
+        "#}
+    );
 }
 
 #[test]
@@ -494,11 +495,10 @@ fn virtual_workspace_inside_nested_package() {
 
     let snapbox = runner();
 
-    snapbox
-        .current_dir(package_dir)
-        .assert()
-        .success()
-        .stdout_matches(indoc! {r#"
+    let output = snapbox.current_dir(package_dir).assert().success();
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
         [..]Compiling[..]
         [..]Compiling[..]
         [..]Finished[..]
@@ -513,7 +513,8 @@ fn virtual_workspace_inside_nested_package() {
         [PASS] tests::nested::test_nested::test_two
         [PASS] tests::nested::test_nested::test_two_and_two
         Tests: 5 passed, 0 failed, 0 skipped
-        "#});
+        "#}
+    );
 }
 
 #[test]
@@ -521,11 +522,10 @@ fn virtual_workspace_for_entire_workspace() {
     let temp = setup_virtual_workspace();
     let snapbox = runner().arg("--workspace");
 
-    snapbox
-        .current_dir(&temp)
-        .assert()
-        .code(1)
-        .stdout_matches(indoc! {r#"
+    let output = snapbox.current_dir(&temp).assert().code(1);
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
         
@@ -561,7 +561,8 @@ fn virtual_workspace_for_entire_workspace() {
         
         Failures:
             tests::abc::efg::failing_test
-        "#});
+        "#}
+    );
 }
 
 #[test]
@@ -570,11 +571,10 @@ fn virtual_workspace_for_entire_workspace_inside_package() {
     let package_dir = temp.join(PathBuf::from("dummy_name/fibonacci2"));
 
     let snapbox = runner().arg("--workspace");
-    snapbox
-        .current_dir(package_dir)
-        .assert()
-        .code(1)
-        .stdout_matches(indoc! {r#"
+    let output = snapbox.current_dir(package_dir).assert().code(1);
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
         
@@ -610,7 +610,8 @@ fn virtual_workspace_for_entire_workspace_inside_package() {
         
         Failures:
             tests::abc::efg::failing_test
-        "#});
+        "#}
+    );
 }
 
 #[test]

@@ -1,7 +1,9 @@
+use ark_std::iterable::Iterable;
 use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
 use assert_fs::TempDir;
 use camino::Utf8PathBuf;
 use indoc::formatdoc;
+use regex::Regex;
 use snapbox::cmd::{cargo_bin, Command as SnapboxCommand};
 use std::env;
 use std::process::Command;
@@ -204,4 +206,73 @@ pub(crate) fn get_current_branch() -> String {
 
         String::from_utf8(output.stdout).unwrap().trim().to_string()
     }
+}
+
+pub(crate) fn find_with_wildcard(line: &str, actual: &Vec<String>) -> Option<usize> {
+    let escaped = regex::escape(line);
+    let replaced = escaped.replace("\\[\\.\\.\\]", ".*");
+    let wrapped = format!("^{replaced}$");
+    let re = Regex::new(wrapped.as_str()).unwrap();
+
+    actual.iter().position(|other| re.is_match(other))
+}
+
+pub(crate) fn is_present(line: &str, actual: &mut Vec<String>) -> bool {
+    let position = find_with_wildcard(line, actual);
+    if let Some(position) = position {
+        actual.remove(position);
+        return true;
+    }
+    false
+}
+
+pub(crate) fn assert_output_contains(output: &str, lines: &str) {
+    let asserted_lines: Vec<String> = lines.lines().map(std::convert::Into::into).collect();
+    let mut actual_lines: Vec<String> = output.lines().map(std::convert::Into::into).collect();
+
+    let mut matches = true;
+    let mut out = String::new();
+
+    for line in &asserted_lines {
+        if is_present(line, &mut actual_lines) {
+            out.push_str("| ");
+        } else {
+            matches = false;
+            out.push_str("- ");
+        }
+        out.push_str(line);
+        out.push('\n');
+    }
+    for remaining_line in actual_lines {
+        matches = false;
+        out.push_str("+ ");
+        out.push_str(&remaining_line);
+        out.push('\n');
+    }
+
+    assert!(matches, "Stdout does not match:\n\n{out}");
+}
+
+#[macro_export]
+macro_rules! assert_stdout_contains {
+    ( $output:expr, $lines:expr ) => {{
+        use $crate::e2e::common::runner::assert_output_contains;
+
+        let output = $output.get_output();
+        let stdout = String::from_utf8(output.stdout.clone()).unwrap();
+
+        assert_output_contains(&stdout, $lines);
+    }};
+}
+
+#[macro_export]
+macro_rules! assert_stderr_contains {
+    ( $output:expr, $lines:expr ) => {{
+        use $crate::e2e::common::runner::assert_output_contains;
+
+        let output = $output.get_output();
+        let stderr = String::from_utf8(output.stderr.clone()).unwrap();
+
+        assert_output_contains(&stderr, $lines);
+    }};
 }
