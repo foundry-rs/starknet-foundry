@@ -56,7 +56,7 @@ impl VerificationInterface for VoyagerVerificationInterface {
             VerificationStatus::Error => Err(anyhow!("Unknown RPC error")),
         };
 
-        // Read all files name along with their contents in a JSON format 
+        // Read all files name along with their contents in a JSON format
         // in the workspace dir recursively
         // key is the file name and value is the file content
 
