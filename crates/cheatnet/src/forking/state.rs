@@ -73,10 +73,9 @@ impl BlockInfoReader for ForkStateReader {
 
                 Ok(block_info)
             }
-            Ok(MaybePendingBlockWithTxHashes::PendingBlock(_)) => Err(StateReadError(format!(
-                "Block with id {:?} is pending",
-                self.block_id
-            ))),
+            Ok(MaybePendingBlockWithTxHashes::PendingBlock(_)) => Err(StateReadError(
+                "Unable to get block info of the pending block".to_string(),
+            )),
             Err(_) => Err(StateReadError(
                 "Unable to get block with tx hashes from fork".to_string(),
             )),

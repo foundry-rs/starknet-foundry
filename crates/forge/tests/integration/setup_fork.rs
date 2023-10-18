@@ -225,8 +225,18 @@ fn get_block_info_in_forked_block() {
                 let sequencer_addr = dispatcher.read_sequencer_address();
                 assert(sequencer_addr == expected_sequencer_addr, sequencer_addr.into());
             }}
+
+            #[test]
+            #[fork(url: "{}", block_id: BlockId::Tag(BlockTag::Latest))]
+            fn test_fork_get_block_info_latest_block() {{
+                let block_info = starknet::get_block_info().unbox();
+                assert(block_info.block_timestamp > 1697630072, block_info.block_timestamp.into());
+                assert(block_info.block_number > 315887, block_info.block_number.into());
+                let sequencer_addr = contract_address_const::<0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8>();
+                assert(block_info.sequencer_address > sequencer_addr, block_info.sequencer_address.into());
+            }}
         "#,
-        CHEATNET_RPC_URL, CHEATNET_RPC_URL, CHEATNET_RPC_URL
+        CHEATNET_RPC_URL, CHEATNET_RPC_URL, CHEATNET_RPC_URL, CHEATNET_RPC_URL
     ).as_str(),
     Contract::from_code_path(
         "BlockInfoChecker".to_string(),
