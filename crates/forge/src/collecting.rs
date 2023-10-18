@@ -7,9 +7,6 @@ use camino::{Utf8Path, Utf8PathBuf};
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use test_collector::{collect_tests, LinkedLibrary, TestCase};
 use walkdir::WalkDir;
-
-// TODO docstrings in file
-
 #[derive(Debug, Clone)]
 pub(crate) struct CompiledTestCrate {
     pub sierra_program: Program,
