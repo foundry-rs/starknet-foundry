@@ -13,6 +13,7 @@ use blockifier::{
 };
 use cairo_felt::Felt252;
 use cheatcodes::spoof::TxInfoMock;
+use serde::{Deserialize, Serialize};
 use starknet_api::block::{BlockNumber, BlockTimestamp};
 use starknet_api::core::EntryPointSelector;
 use starknet_api::core::PatriciaKey;
@@ -33,13 +34,13 @@ pub struct ExtendedStateReader {
 }
 
 pub trait BlockInfoReader {
-    fn get_block_info(&self) -> StateResult<CheatnetBlockInfo>;
+    fn get_block_info(&mut self) -> StateResult<CheatnetBlockInfo>;
 }
 
 impl BlockInfoReader for ExtendedStateReader {
-    fn get_block_info(&self) -> StateResult<CheatnetBlockInfo> {
-        if self.fork_state_reader.is_some() {
-            return self.fork_state_reader.as_ref().unwrap().get_block_info();
+    fn get_block_info(&mut self) -> StateResult<CheatnetBlockInfo> {
+        if let Some(ref mut fork_state_reader) = self.fork_state_reader {
+            return fork_state_reader.get_block_info();
         }
 
         Ok(CheatnetBlockInfo::default())
@@ -51,7 +52,7 @@ pub struct BlockifierState<'a> {
     pub blockifier_state: &'a mut dyn State,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Serialize, Deserialize, Debug)]
 pub struct CheatnetBlockInfo {
     pub block_number: BlockNumber,
     pub timestamp: BlockTimestamp,

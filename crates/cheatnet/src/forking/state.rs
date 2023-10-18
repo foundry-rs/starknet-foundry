@@ -53,16 +53,26 @@ impl ForkStateReader {
 }
 
 impl BlockInfoReader for ForkStateReader {
-    fn get_block_info(&self) -> StateResult<CheatnetBlockInfo> {
+    fn get_block_info(&mut self) -> StateResult<CheatnetBlockInfo> {
+        if let Some(cache_hit) = self.cache.get_block_info() {
+            return Ok(cache_hit);
+        }
+
         match self
             .runtime
             .block_on(self.client.get_block_with_tx_hashes(self.block_id))
         {
-            Ok(MaybePendingBlockWithTxHashes::Block(block)) => Ok(CheatnetBlockInfo {
-                block_number: BlockNumber(block.block_number),
-                timestamp: BlockTimestamp(block.timestamp),
-                sequencer_address: ContractAddress(patricia_key!(block.sequencer_address)),
-            }),
+            Ok(MaybePendingBlockWithTxHashes::Block(block)) => {
+                let block_info = CheatnetBlockInfo {
+                    block_number: BlockNumber(block.block_number),
+                    timestamp: BlockTimestamp(block.timestamp),
+                    sequencer_address: ContractAddress(patricia_key!(block.sequencer_address)),
+                };
+
+                self.cache.cache_get_block_info(block_info);
+
+                Ok(block_info)
+            }
             Ok(MaybePendingBlockWithTxHashes::PendingBlock(_)) => Err(StateReadError(format!(
                 "Block with id {:?} is pending",
                 self.block_id

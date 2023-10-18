@@ -12,7 +12,7 @@ use cheatnet::cheatcodes::{CheatcodeError, EnhancedHintError};
 use cheatnet::constants::build_testing_state;
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::rpc::call_contract;
-use cheatnet::state::{BlockifierState, CheatnetState, ExtendedStateReader};
+use cheatnet::state::{BlockifierState, BlockInfoReader, CheatnetState, ExtendedStateReader};
 use conversions::StarknetConversions;
 use std::path::PathBuf;
 
@@ -309,6 +309,8 @@ fn using_specified_block_nb_is_cached() {
             BlockId::Number(312_646),
             cache_dir.path().to_str().unwrap(),
         );
+        let _ = cached_state.state.get_block_info().unwrap();
+
         let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
         let contract_address = Felt252::from(
             BigUint::from_str(
@@ -358,7 +360,20 @@ fn using_specified_block_nb_is_cached() {
         {
             Value::String(_) => {}
             _ => panic!("The compiled_contract_class entry is not as string"),
-        }
+        };
+
+        assert_eq!(
+            cache["block_info"].as_object().unwrap()["block_number"].as_u64().unwrap(),
+            312646
+        );
+        assert_eq!(
+            cache["block_info"].as_object().unwrap()["timestamp"].as_u64().unwrap(),
+            1695291683
+        );
+        assert_eq!(
+            cache["block_info"].as_object().unwrap()["sequencer_address"],
+            "0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8"
+        )
     };
     // 1st run - check whether cache is written
     run_test();
@@ -423,6 +438,8 @@ fn using_block_tag_is_not_cached() {
 fn test_cache_merging() {
     fn run_test(cache_dir: &str, contract_address: &str, balance: u64) {
         let mut cached_state = create_fork_cached_state_at(BlockId::Number(312_767), cache_dir);
+        let _ = cached_state.state.get_block_info().unwrap();
+
         let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
         let contract_address =
             Felt252::from(BigUint::from_str(contract_address).unwrap()).to_contract_address();
@@ -492,6 +509,19 @@ fn test_cache_merging() {
             Value::String(_) => {}
             _ => panic!("The compiled_contract_class entry is not as string"),
         }
+
+        assert_eq!(
+            cache["block_info"].as_object().unwrap()["block_number"].as_u64().unwrap(),
+            312767
+        );
+        assert_eq!(
+            cache["block_info"].as_object().unwrap()["timestamp"].as_u64().unwrap(),
+            1695378726
+        );
+        assert_eq!(
+            cache["block_info"].as_object().unwrap()["sequencer_address"],
+            "0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8"
+        )
     };
     let cache_dir_str = cache_dir.path().to_str().unwrap();
 
@@ -510,6 +540,72 @@ fn test_cache_merging() {
     .for_each(|param_tpl| run_test(param_tpl.0, param_tpl.1, param_tpl.2));
 
     assert_cache();
+}
+
+#[test]
+fn test_cached_block_info_merging() {
+    fn run_test(cache_dir: &str, contract_address: &str, balance: u64, call_get_block_info: bool) {
+        let mut cached_state = create_fork_cached_state_at(BlockId::Number(312_767), cache_dir);
+        if call_get_block_info {
+            let _ = cached_state.state.get_block_info().unwrap();
+        }
+        let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
+        let contract_address =
+            Felt252::from(BigUint::from_str(contract_address).unwrap()).to_contract_address();
+
+        let selector = felt_selector_from_name("get_balance");
+        let output = call_contract(
+            &mut blockifier_state,
+            &mut cheatnet_state,
+            &contract_address,
+            &selector,
+            &[],
+        )
+        .unwrap();
+        assert_success!(output, vec![Felt252::from(balance)]);
+    }
+
+    let cache_dir = TempDir::new().unwrap();
+    let contract_1_address =
+        "3216637956526895219277698311134811322769343974163380838558193911733621219342";
+
+    let assert_cached_block_info = |is_block_info_cached: bool| {
+        // Assertions
+        let cache = read_cache(
+            cache_dir
+                .path()
+                .join(PathBuf::from_str("*312767.json").unwrap())
+                .to_str()
+                .unwrap(),
+        );
+        if is_block_info_cached {
+            assert_eq!(
+                cache["block_info"].as_object().unwrap()["block_number"].as_u64().unwrap(),
+                312767
+            );
+            assert_eq!(
+                cache["block_info"].as_object().unwrap()["timestamp"].as_u64().unwrap(),
+                1695378726
+            );
+            assert_eq!(
+                cache["block_info"].as_object().unwrap()["sequencer_address"],
+                "0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8"
+            )
+        } else {
+            assert_eq!(
+                cache["block_info"].as_object(),
+                None
+            );
+        }
+    };
+    let cache_dir_str = cache_dir.path().to_str().unwrap();
+
+    run_test(cache_dir_str, contract_1_address, 2, false);
+    assert_cached_block_info(false);
+    run_test(cache_dir_str, contract_1_address, 2, true);
+    assert_cached_block_info(true);
+    run_test(cache_dir_str, contract_1_address, 2, false);
+    assert_cached_block_info(true);
 }
 
 #[test]

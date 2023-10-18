@@ -179,7 +179,7 @@ pub(crate) fn run_test_case(
     );
     let (hints_dict, string_to_hint) = build_hints_dict(instructions.clone());
 
-    let state_reader = ExtendedStateReader {
+    let mut state_reader = ExtendedStateReader {
         dict_state_reader: cheatnet_constants::build_testing_state(
             &runner_params.predeployed_contracts,
         ),
