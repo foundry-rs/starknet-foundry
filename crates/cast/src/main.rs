@@ -100,7 +100,7 @@ async fn main() -> Result<()> {
 
     let provider;
 
-    // if cli.command is not verify make provider to null
+    // if cli.command is not verify make a dummy provider
     if let Commands::Verify(_) = cli.command {
         // Create provider with a dummy URL
         provider = JsonRpcClient::new(HttpTransport::new(Url::parse("https://example.com")?));

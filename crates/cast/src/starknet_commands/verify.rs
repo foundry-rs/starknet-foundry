@@ -56,7 +56,8 @@ impl VerificationInterface for VoyagerVerificationInterface {
             VerificationStatus::Error => Err(anyhow!("Unknown RPC error")),
         };
 
-        // read all file names along with their contents in a JSON format in the workspace dir recursively
+        // Read all files name along with their contents in a JSON format 
+        // in the workspace dir recursively
         // key is the file name and value is the file content
 
         let mut file_data = serde_json::Map::new();
@@ -126,7 +127,7 @@ impl VerificationInterface for StarkscanVerificationInterface {
         _contract_name: String,
     ) -> Result<VerifyResponse> {
         // This function left unimplemented for now
-        // It will be implemented once the starkscan explorer API is ready
+        // It will be implemented once the starkscan explorer APIs are ready
 
         println!(
             "Verifying {workspace_dir:?} workspace",
