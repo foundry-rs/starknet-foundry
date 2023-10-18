@@ -13,7 +13,6 @@ indoc.workspace = true
 scarb-metadata = { git = "https://github.com/software-mansion/scarb.git", rev = "58cc88e" }
 cairo-lang-runner.workspace = true
 cairo-lang-casm.workspace = true
-cairo-lang-test-runner.workspace = true
 cairo-lang-sierra-to-casm.workspace = true
 cairo-lang-sierra.workspace = true
 cairo-lang-utils.workspace = true
