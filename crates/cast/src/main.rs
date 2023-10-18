@@ -284,7 +284,7 @@ async fn main() -> Result<()> {
                     .name
                     .ok_or_else(|| anyhow!("required argument --name not provided"))?;
                 let network_name = match delete.network {
-                    Some(_) => delete.network.unwrap_or_default(),
+                    Some(network) => network,
                     None => chain_id_to_network_name(get_chain_id(&provider).await?),
                 };
 
