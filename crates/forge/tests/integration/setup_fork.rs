@@ -170,75 +170,68 @@ fn fork_cairo0_contract() {
 fn get_block_info_in_forked_block() {
     let test = test_case!(formatdoc!(
         r#"
+            use starknet::ContractAddress;
+            use starknet::ContractAddressIntoFelt252;
             use starknet::contract_address_const;
             use snforge_std::{{ BlockTag, BlockId, declare, ContractClassTrait }};
 
             #[starknet::interface]
-            trait IERC20Camel<TContractState> {{
-                fn return_block_timestamp(ref self: TContractState) -> felt252;
-                fn return_block_number(ref self: TContractState) -> felt252;
-            }}
-
-            #[starknet::interface]
-            trait IWarpChecker<TContractState> {{
-                fn get_block_timestamp(ref self: TContractState) -> u64;
-            }}
-
-            #[starknet::interface]
-            trait IRollChecker<TContractState> {{
-                fn get_block_number(ref self: TContractState) -> u64;
+            trait IBlockInfoChecker<TContractState> {{
+                fn read_block_number(self: @TContractState) -> u64;
+                fn read_block_timestamp(self: @TContractState) -> u64;
+                fn read_sequencer_address(self: @TContractState) -> ContractAddress;
             }}
 
             #[test]
-            #[fork(url: "{}", block_id: BlockId::Number(315778))]
+            #[fork(url: "{}", block_id: BlockId::Number(315887))]
             fn test_fork_get_block_info_contract_on_testnet() {{
-                let dispatcher = IERC20CamelDispatcher {{
-                    contract_address: contract_address_const::<1825832089891106126806210124294467331434544162488231781791271899226056323189>()
+                let dispatcher = IBlockInfoCheckerDispatcher {{
+                    contract_address: contract_address_const::<0x4bc9a2c302d2c704dbabe8fe396d9fe7b9ca65a46a3cf5d2edc6c57bddcf316>()
                 }};
 
-                let timestamp = dispatcher.return_block_timestamp();
-                assert(timestamp == 1697551429, timestamp);
-                let block_number = dispatcher.return_block_number();
-                assert(block_number == 315778, block_number);
+                let timestamp = dispatcher.read_block_timestamp();
+                assert(timestamp == 1697630072, timestamp.into());
+                let block_number = dispatcher.read_block_number();
+                assert(block_number == 315887, block_number.into());
+
+                let expected_sequencer_addr = contract_address_const::<0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8>();
+                let sequencer_addr = dispatcher.read_sequencer_address();
+                assert(sequencer_addr == expected_sequencer_addr, sequencer_addr.into());
             }}
 
             #[test]
-            #[fork(url: "{}", block_id: BlockId::Number(315778))]
+            #[fork(url: "{}", block_id: BlockId::Number(315887))]
             fn test_fork_get_block_info_test_state() {{
                 let block_info = starknet::get_block_info().unbox();
-                assert(block_info.block_timestamp == 1697551429, block_info.block_timestamp.into());
-                assert(block_info.block_number == 315778, block_info.block_number.into());
+                assert(block_info.block_timestamp == 1697630072, block_info.block_timestamp.into());
+                assert(block_info.block_number == 315887, block_info.block_number.into());
+                let expected_sequencer_addr = contract_address_const::<0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8>();
+                assert(block_info.sequencer_address == expected_sequencer_addr, block_info.sequencer_address.into());
             }}
 
             #[test]
-            #[fork(url: "{}", block_id: BlockId::Number(315778))]
+            #[fork(url: "{}", block_id: BlockId::Number(315887))]
             fn test_fork_get_block_info_contract_deployed() {{
-                let contract = declare('WarpChecker');
+                let contract = declare('BlockInfoChecker');
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
-                let dispatcher = IWarpCheckerDispatcher {{ contract_address }};
+                let dispatcher = IBlockInfoCheckerDispatcher {{ contract_address }};
 
-                let block_timestamp = dispatcher.get_block_timestamp();
-                assert(block_timestamp == 1697551429, block_timestamp.into());
+                let timestamp = dispatcher.read_block_timestamp();
+                assert(timestamp == 1697630072, timestamp.into());
+                let block_number = dispatcher.read_block_number();
+                assert(block_number == 315887, block_number.into());
 
-                let contract = declare('RollChecker');
-                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
-                let dispatcher = IRollCheckerDispatcher {{ contract_address }};
-
-                let block_number = dispatcher.get_block_number();
-                assert(block_number == 315778, block_number.into());
+                let expected_sequencer_addr = contract_address_const::<0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8>();
+                let sequencer_addr = dispatcher.read_sequencer_address();
+                assert(sequencer_addr == expected_sequencer_addr, sequencer_addr.into());
             }}
         "#,
         CHEATNET_RPC_URL, CHEATNET_RPC_URL, CHEATNET_RPC_URL
     ).as_str(),
     Contract::from_code_path(
-        "WarpChecker".to_string(),
-        Path::new("tests/data/contracts/warp_checker.cairo"),
-    ).unwrap(),
-    Contract::from_code_path(
-        "RollChecker".to_string(),
-        Path::new("tests/data/contracts/roll_checker.cairo"),
-    )
-    .unwrap());
+        "BlockInfoChecker".to_string(),
+        Path::new("tests/data/contracts/block_info_checker.cairo"),
+    ).unwrap());
 
     let result = run_test_case(&test);
 
