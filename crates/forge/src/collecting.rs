@@ -11,7 +11,7 @@ use walkdir::WalkDir;
 // TODO docstrings in file
 
 #[derive(Debug, Clone)]
-pub struct CompiledTestCrate {
+pub(crate) struct CompiledTestCrate {
     pub sierra_program: Program,
     pub test_cases: Vec<TestCase>,
     pub tests_location: CrateLocation,
@@ -38,14 +38,14 @@ impl CompiledTestCrate {
 }
 
 #[derive(Debug, PartialEq)]
-pub struct TestCompilationTarget {
-    pub crate_root: Utf8PathBuf,
-    pub crate_name: String,
-    pub crate_location: CrateLocation,
+pub(crate) struct TestCompilationTarget {
+    pub(crate) crate_root: Utf8PathBuf,
+    pub(crate) crate_name: String,
+    pub(crate) crate_location: CrateLocation,
 }
 
 impl TestCompilationTarget {
-    pub fn compile_tests(
+    pub(crate) fn compile_tests(
         &self,
         linked_libraries: &[LinkedLibrary],
         corelib_path: &Utf8Path,
@@ -68,7 +68,7 @@ impl TestCompilationTarget {
 }
 
 // TODO consider different name + add docstring
-pub fn optimize_compilation_targets(
+pub(crate) fn optimize_compilation_targets(
     compilation_targets: Vec<TestCompilationTarget>,
     temp_dir: &TempDir,
 ) -> Result<Vec<TestCompilationTarget>> {
@@ -95,7 +95,7 @@ pub fn optimize_compilation_targets(
     Ok(result)
 }
 
-pub fn collect_test_compilation_targets(
+pub(crate) fn collect_test_compilation_targets(
     package_path: &Utf8Path,
     package_name: &str,
     package_source_dir_path: &Utf8Path,
@@ -118,7 +118,7 @@ pub fn collect_test_compilation_targets(
     compilation_targets
 }
 
-pub fn compile_tests(
+pub(crate) fn compile_tests(
     targets: &Vec<TestCompilationTarget>,
     runner_params: &RunnerParams,
 ) -> Result<Vec<CompiledTestCrate>> {
@@ -130,7 +130,7 @@ pub fn compile_tests(
         .collect()
 }
 
-pub fn filter_tests_from_crates(
+pub(crate) fn filter_tests_from_crates(
     compiled_test_crates: Vec<CompiledTestCrate>,
     runner_config: &RunnerConfig,
 ) -> Vec<CompiledTestCrate> {
