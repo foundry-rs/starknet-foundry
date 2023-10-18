@@ -396,7 +396,6 @@ async fn run_tests_from_crate(
 
     let mut tasks = FuturesUnordered::new();
     let test_cases = &tests.test_cases;
-
     // Initiate two channels to manage the `--exit-first` flag.
     // Owing to `cheatnet` fork's utilization of its own Tokio runtime for RPC requests,
     // test execution must occur within a `tokio::spawn_blocking`.
@@ -509,8 +508,9 @@ fn run_single_test(
             () = cancellation_tokens.error.cancelled() => {
                 // Stop executing all tests because
                 // one of a test returns Err
-                Ok(TestCaseSummary::Interrupted {  })
+                Ok(TestCaseSummary::InterruptedByError {  })
             },
+
             result = blocking_run_from_test(vec![], case.clone(),runner,  runner_config.clone(), runner_params.clone(), send.clone(), send_shut_down.clone() ) => {
                 match result? {
                     Ok(result) => {
@@ -581,13 +581,16 @@ fn run_with_fuzzing(
         }
 
         let mut results = vec![];
+        let mut final_result = None;
 
         while let Some(task) = tasks.next().await {
             let result = task??;
-            results.push(result.clone());
 
-            match &result {
-                TestCaseSummary::Failed { .. } | TestCaseSummary::Interrupted {} => {
+            results.push(result.clone());
+            final_result = Some(result.clone());
+
+            match result {
+                TestCaseSummary::Failed { .. } | TestCaseSummary::InterruptedByError {} => {
                     break;
                 }
                 _ => (),
@@ -608,29 +611,10 @@ fn run_with_fuzzing(
                 .count(),
         )?;
 
-        let result = if let Some(interrupted_or_skipped) = results.iter().find(|item| {
-            matches!(
-                item,
-                TestCaseSummary::Interrupted {} | TestCaseSummary::Skipped { .. }
-            )
-        }) {
-            interrupted_or_skipped.clone()
-        } else if let Some(failed) = results
-            .iter()
-            .find(|item| matches!(item, TestCaseSummary::Failed { .. }))
-        {
-            failed.clone().with_runs(runs)
-        } else {
-            results
-                .last()
-                .expect("Test should always run at least once")
-                .clone()
-                .with_runs(runs)
-        };
-
-        let result = result.with_runs(runs);
-
-        Ok(result)
+        match final_result {
+            Some(result) => Ok(result.with_runs(runs)),
+            None => panic!("Test should always run at least once"),
+        }
     })
 }
 
@@ -652,7 +636,7 @@ fn run_fuzzing_subtest(
             () = cancellation_tokens.error.cancelled() => {
                 // Stop executing all tests because
                 // one of a test returns Err
-                Ok(TestCaseSummary::Interrupted {  })
+                Ok(TestCaseSummary::InterruptedByError {  })
             },
             () = cancellation_tokens.exit_first.cancelled() => {
                 // Stop executing all tests because flag --exit-first'
