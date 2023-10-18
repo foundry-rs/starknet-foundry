@@ -31,7 +31,7 @@ use smol_str::SmolStr;
 use crate::fuzzer::RandomFuzzer;
 use crate::scarb::{ForgeConfig, ForkTarget, StarknetContractArtifacts};
 
-pub use crate::collecting::CrateLocation;
+// pub use crate::collecting::CrateLocation;
 pub use crate::test_crate_summary::TestCrateSummary;
 
 use crate::collecting::{
@@ -168,6 +168,14 @@ impl RunnerParams {
             linked_libraries,
         }
     }
+}
+
+#[derive(Debug, PartialEq, Clone, Copy)]
+pub enum CrateLocation {
+    /// Main crate in a package
+    Lib,
+    /// Crate in the `tests/` directory
+    Tests,
 }
 
 fn try_close_tmp_dir(temp_dir: TempDir) -> Result<()> {

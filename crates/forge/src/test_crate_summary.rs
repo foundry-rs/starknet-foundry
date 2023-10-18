@@ -1,6 +1,5 @@
-use crate::collecting::CrateLocation;
 use crate::test_case_summary::TestCaseSummary;
-use crate::RunnerStatus;
+use crate::{CrateLocation, RunnerStatus};
 
 /// Summary of the test run in the file
 #[derive(Debug, PartialEq)]

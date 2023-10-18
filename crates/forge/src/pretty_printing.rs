@@ -1,6 +1,5 @@
-use crate::collecting::CrateLocation;
 use crate::test_case_summary::TestCaseSummary;
-use crate::TestCrateSummary;
+use crate::{CrateLocation, TestCrateSummary};
 use anyhow::Error;
 use console::style;
 

@@ -1,4 +1,4 @@
-use crate::{RunnerConfig, RunnerParams, BUILTINS};
+use crate::{CrateLocation, RunnerConfig, RunnerParams, BUILTINS};
 use anyhow::{anyhow, Context, Result};
 use assert_fs::fixture::{FileTouch, PathChild, PathCopy};
 use assert_fs::TempDir;
@@ -35,14 +35,6 @@ impl CompiledTestCrate {
             .collect();
         Self { test_cases, ..self }
     }
-}
-
-#[derive(Debug, PartialEq, Clone, Copy)]
-pub enum CrateLocation {
-    /// Main crate in a package
-    Lib,
-    /// Crate in the `tests/` directory
-    Tests,
 }
 
 #[derive(Debug, PartialEq)]
@@ -218,6 +210,7 @@ fn module_name_from_path<'a>(tests_folder_path: &Utf8Path, path: &'a Utf8Path) -
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::CrateLocation;
     use assert_fs::fixture::PathCopy;
     use assert_fs::TempDir;
     use test_collector::ExpectedTestResult;
