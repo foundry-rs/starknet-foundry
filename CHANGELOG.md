@@ -17,10 +17,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `snforge_std::PrintTrait` will not convert values representing ASCII control characters to strings
 
-#### Added
-
-- `--cores` flag to specify the number of cores to use for parallel execution
-
 ### Cast
 
 #### Added
