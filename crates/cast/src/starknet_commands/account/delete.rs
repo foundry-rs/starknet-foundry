@@ -75,7 +75,7 @@ pub fn delete(
 
     std::fs::write(path.clone(), serde_json::to_string_pretty(&items).unwrap())?;
 
-    let mut remove_scarb_message = "Account not removed from Scarb".to_string();
+    let mut remove_scarb_message = "Account not removed from Scarb.toml".to_string();
     // delete profile if delete_profile is true or not passed
     if delete_profile.map_or(true, |s| s == "true") {
         let manifest_path = match path_to_scarb_toml.clone() {
