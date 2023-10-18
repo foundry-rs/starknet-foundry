@@ -581,7 +581,12 @@ fn run_with_fuzzing(
         }
 
         let mut results = vec![];
-        let mut result = TestCaseSummary::SkippedFuzzing {};
+        let mut result = TestCaseSummary::Failed {
+            name: case.name.to_string(),
+            msg: None,
+            arguments: vec![],
+            fuzzing_statistic: None,
+        };
 
         while let Some(task) = tasks.next().await {
             result = task??;
