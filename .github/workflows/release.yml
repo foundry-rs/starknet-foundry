@@ -11,6 +11,8 @@ permissions:
 jobs:
   verify-version:
     runs-on: ubuntu-latest
+    outputs:
+      versionIsValid: ${{ steps.validVersion.outputs.versionIsValid }}
     steps:
       - uses: actions/checkout@v4
 
@@ -38,9 +40,8 @@ jobs:
       - name: Compare versions
         id: validVersion
         run: |
-          VALID_VERSION=$(node ./scripts/compareVersions.js ${{ steps.lookupVersionRelease.outputs.release }} ${{ steps.lookupVersion.outputs.result }})
-          echo "VALID_VERSION=$VALID_VERSION"
-          echo "VALID_VERSION=$VALID_VERSION" >> $GITHUB_OUTPUT
+          IS_VALID=$(node ./scripts/compareVersions.js ${{ steps.lookupVersionRelease.outputs.release }} ${{ steps.lookupVersion.outputs.result }})
+          echo "versionIsValid=IS_VALID" >> $GITHUB_OUTPUT
 
   #      - name: Version check
   #        if: steps.lookupVersion.outputs.result != github.ref_name
@@ -49,7 +50,7 @@ jobs:
   build-binaries:
     name: Build ${{ matrix.target }}
     needs: verify-version
-    if: ${{ needs.verify-version.outputs.VALID_VERSION == 'true' }}
+    if: ${{ needs.verify-version.outputs.versionIsValid == 'true' }}
     runs-on: ${{ matrix.os }}
     continue-on-error: true
 
