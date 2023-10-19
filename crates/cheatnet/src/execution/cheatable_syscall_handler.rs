@@ -1,4 +1,4 @@
-use crate::execution::contract_syscall_handler::ContractSyscallHandler;
+use crate::execution::contract_execution_syscall_handler::ContractExecutionSyscallHandler;
 use crate::execution::{cheated_syscalls, syscall_hooks};
 use crate::state::CheatnetState;
 use anyhow::Result;
@@ -93,7 +93,7 @@ impl HintProcessorLogic for CheatableSyscallHandler<'_> {
             }
         }
 
-        ContractSyscallHandler::wrap(&mut self.syscall_handler).execute_hint(
+        ContractExecutionSyscallHandler::wrap(self).execute_hint(
             vm,
             exec_scopes,
             hint_data,

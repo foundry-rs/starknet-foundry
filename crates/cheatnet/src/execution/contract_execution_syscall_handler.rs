@@ -1,3 +1,4 @@
+use crate::execution::cheatable_syscall_handler::CheatableSyscallHandler;
 use cairo_felt::Felt252;
 use cairo_lang_casm::{
     hints::{Hint, StarknetHint},
@@ -24,16 +25,21 @@ fn extract_input(
         .map_err(|_| HintError::CustomHint("Failed to read input data".into()))
 }
 
-pub(crate) struct ContractSyscallHandler<'a> {
-    syscall_handler: &'a mut dyn HintProcessorLogic,
+pub(crate) struct ContractExecutionSyscallHandler<'handler, 'reference> {
+    cheatable_syscall_handler: &'reference mut CheatableSyscallHandler<'handler>,
 }
-impl ContractSyscallHandler<'_> {
-    pub(crate) fn wrap(syscall_handler: &mut dyn HintProcessorLogic) -> ContractSyscallHandler<'_> {
-        ContractSyscallHandler { syscall_handler }
+
+impl<'handler, 'reference> ContractExecutionSyscallHandler<'handler, 'reference> {
+    pub(crate) fn wrap(
+        cheatable_syscall_handler: &'reference mut CheatableSyscallHandler<'handler>,
+    ) -> ContractExecutionSyscallHandler<'handler, 'reference> {
+        ContractExecutionSyscallHandler {
+            cheatable_syscall_handler,
+        }
     }
 }
 
-impl HintProcessorLogic for ContractSyscallHandler<'_> {
+impl HintProcessorLogic for ContractExecutionSyscallHandler<'_, '_> {
     fn execute_hint(
         &mut self,
         vm: &mut VirtualMachine,
@@ -75,7 +81,7 @@ impl HintProcessorLogic for ContractSyscallHandler<'_> {
                 )),
             }
         } else {
-            self.syscall_handler
+            self.cheatable_syscall_handler
                 .execute_hint(vm, exec_scopes, hint_data, constants)
         };
     }
