@@ -40,8 +40,16 @@ jobs:
       - name: Compare versions
         id: validVersion
         run: |
-          IS_VALID=$(node ./scripts/compareVersions.js ${{ steps.lookupVersionRelease.outputs.release }} ${{ steps.lookupVersion.outputs.result }})
+          RELEASE_VERSION=${{ steps.lookupVersionRelease.outputs.release }}
+          COMMIT_VERSION=${{ steps.lookupVersion.outputs.result }})
+          echo "Project version from newest release = $RELEASE_VERSION"
+          echo "Project version from this commit = $COMMIT_VERSION"
+          IS_VALID=$(node ./scripts/compareVersions.js $RELEASE_VERSION $COMMIT_VERSION
           echo "versionIsValid=$IS_VALID" >> "$GITHUB_OUTPUT"
+
+      - name: Output job skipped
+        if: ${{ steps.validVersion.outputs.versionIsValid == 'false' }}
+        run: echo "Version from commit is not greater from newest release, skipping build"
 
   #      - name: Version check
   #        if: steps.lookupVersion.outputs.result != github.ref_name
