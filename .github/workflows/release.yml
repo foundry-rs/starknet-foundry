@@ -39,7 +39,7 @@ jobs:
         id: validVersion
         run: |
           RELEASE_VERSION=${{ steps.lookupVersionRelease.outputs.release }}
-          COMMIT_VERSION=${{ steps.lookupVersion.outputs.result }})
+          COMMIT_VERSION=${{ steps.lookupVersion.outputs.result }}
           echo "Project version from newest release = $RELEASE_VERSION"
           echo "Project version from this commit = $COMMIT_VERSION"
           IS_VALID=$(node ./scripts/compareVersions.js $RELEASE_VERSION $COMMIT_VERSION
