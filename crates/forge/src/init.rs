@@ -4,7 +4,7 @@ use include_dir::{include_dir, Dir};
 
 use regex::Regex;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::process::{Command, Stdio};
 use std::str::from_utf8;
 use toml_edit::{ArrayOfTables, Document, Item, Table};
@@ -41,7 +41,7 @@ fn replace_project_name(contents: &[u8], project_name: &str) -> Vec<u8> {
     contents.into_bytes()
 }
 
-fn add_target_to_toml(path: &PathBuf) -> Result<()> {
+fn add_target_to_toml(path: &Path) -> Result<()> {
     let config_file = fs::read_to_string(path)?;
 
     let mut doc = config_file.parse::<Document>().expect("invalid document");
