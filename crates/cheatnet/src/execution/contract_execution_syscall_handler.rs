@@ -25,12 +25,12 @@ fn extract_input(
         .map_err(|_| HintError::CustomHint("Failed to read input data".into()))
 }
 
-pub(crate) struct ContractExecutionSyscallHandler<'handler, 'reference> {
-    cheatable_syscall_handler: &'reference mut CheatableSyscallHandler<'handler>,
+pub struct ContractExecutionSyscallHandler<'handler, 'reference> {
+    pub cheatable_syscall_handler: &'reference mut CheatableSyscallHandler<'handler>,
 }
 
 impl<'handler, 'reference> ContractExecutionSyscallHandler<'handler, 'reference> {
-    pub(crate) fn wrap(
+    pub fn wrap(
         cheatable_syscall_handler: &'reference mut CheatableSyscallHandler<'handler>,
     ) -> ContractExecutionSyscallHandler<'handler, 'reference> {
         ContractExecutionSyscallHandler {

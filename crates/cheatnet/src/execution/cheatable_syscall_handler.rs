@@ -1,4 +1,3 @@
-use crate::execution::contract_execution_syscall_handler::ContractExecutionSyscallHandler;
 use crate::execution::{cheated_syscalls, syscall_hooks};
 use crate::state::CheatnetState;
 use anyhow::Result;
@@ -93,12 +92,8 @@ impl HintProcessorLogic for CheatableSyscallHandler<'_> {
             }
         }
 
-        ContractExecutionSyscallHandler::wrap(self).execute_hint(
-            vm,
-            exec_scopes,
-            hint_data,
-            constants,
-        )
+        self.syscall_handler
+            .execute_hint(vm, exec_scopes, hint_data, constants)
     }
 
     /// Trait function to store hint in the hint processor by string.
