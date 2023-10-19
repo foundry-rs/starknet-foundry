@@ -33,7 +33,6 @@ cheatnet = { path = "../cheatnet" }
 conversions = { path = "../conversions" }
 cairo-lang-runner.workspace = true
 cairo-lang-casm.workspace = true
-cairo-lang-test-runner.workspace = true
 cairo-lang-sierra-to-casm.workspace = true
 cairo-lang-sierra.workspace = true
 cairo-lang-utils.workspace = true

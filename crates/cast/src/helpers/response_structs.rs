@@ -19,9 +19,9 @@ pub struct DeclareResponse {
     pub transaction_hash: FieldElement,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Clone, Debug)]
 pub struct CallResponse {
-    pub response: String,
+    pub data: Vec<FieldElement>,
 }
 
 #[derive(Serialize)]
