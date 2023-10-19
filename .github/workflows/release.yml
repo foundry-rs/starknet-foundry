@@ -2,6 +2,9 @@ name: Release
 
 on:
   push:
+    branches:
+      - 'master'
+  create:
     tags:
       - v[0-9]+.*
 
@@ -10,9 +13,20 @@ permissions:
 
 jobs:
   verify-version:
+    name: Verify that version that triggered this workflow is greater than most recent  release
     runs-on: ubuntu-latest
+    outputs:
+      versionIsValid: ${{ steps.validVersion.outputs.versionIsValid }}
+      version: ${{ steps.validVersion.outputs.version }}
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v3
+        with:
+          cache: 'npm'
+          cache-dependency-path: scripts/package-lock.json
+      - run: npm ci
+        working-directory: scripts
 
       - name: Get version from Cargo.toml
         id: lookupVersion
@@ -20,13 +34,51 @@ jobs:
         with:
           cmd: yq -oy '"v" + .workspace.package.version' 'Cargo.toml'
 
-      - name: Version check
-        if: steps.lookupVersion.outputs.result != github.ref_name
-        run: echo "Project version in Cargo.toml does not match the tag" && exit 1
+      - name: Get version from the latest releases
+        id: lookupVersionRelease
+        uses: pozetroninc/github-action-get-latest-release@master
+        with:
+          owner: foundry-rs
+          repo: starknet-foundry
+          excludes: prerelease, draft
+
+      - name: Compare versions
+        id: validVersion
+        run: |
+          RELEASE_VERSION=${{ steps.lookupVersionRelease.outputs.release }}
+          COMMIT_VERSION=${{ steps.lookupVersion.outputs.result }}
+          echo "Project version from newest release = $RELEASE_VERSION"
+          echo "Project version from this commit = $COMMIT_VERSION"
+          IS_VALID=$(node ./scripts/compareVersions.js $RELEASE_VERSION $COMMIT_VERSION)
+          echo "versionIsValid=$IS_VALID" >> "$GITHUB_OUTPUT"
+          echo "version=$COMMIT_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Output job skipped
+        if: ${{ steps.validVersion.outputs.versionIsValid == 'false' }}
+        run: echo "Version from commit is not greater from newest release, skipping build"
+
+  create-tag:
+    name: If workflow was triggered by a push to master, create a new tag with release version
+    runs-on: ubuntu-latest
+    needs: verify-version
+    if: ${{ needs.verify-version.outputs.versionIsValid == 'true' }}
+
+    steps:
+      - name: Create tag action was triggered by a push
+        if: ${{ github.event_name == 'push' }}
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: 'refs/tags/${{ needs.verify-version.outputs.version }}',
+              sha: context.sha
+            })
 
   build-binaries:
     name: Build ${{ matrix.target }}
-    needs: verify-version
+    needs: create-tag
     runs-on: ${{ matrix.os }}
     continue-on-error: true
 
@@ -94,7 +146,7 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          PKG_FULL_NAME="starknet-foundry-${{ github.ref_name }}-${{ matrix.target }}" 
+          PKG_FULL_NAME="starknet-foundry-${{ github.ref_name }}-${{ matrix.target }}"
           echo "PKG_FULL_NAME=$PKG_FULL_NAME" >> $GITHUB_ENV
 
           chmod +x ./scripts/package.sh
@@ -109,7 +161,7 @@ jobs:
   create-release:
     name: Draft release
     runs-on: ubuntu-latest
-    needs: build-binaries
+    needs: [build-binaries, verify-version]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -130,8 +182,10 @@ jobs:
         uses: taiki-e/create-gh-release-action@9762dfdfe60a96b3fef6c4a0aaafd9840f1195b7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          changelog: CHANGELOG.md
+          allow-missing-changelog: false
           title: $version
-          draft: true
+          ref: refs/tags/${{ needs.verify-version.outputs.version }}
 
       - name: Upload artifacts to the release
         working-directory: artifacts
