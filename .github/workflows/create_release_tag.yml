@@ -9,8 +9,6 @@ permissions:
 jobs:
   verify-version:
     runs-on: ubuntu-latest
-    outputs:
-      versionIsValid: ${{ steps.validVersion.outputs.versionIsValid }}
     steps:
       - uses: actions/checkout@v4
 
