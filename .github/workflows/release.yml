@@ -30,7 +30,7 @@ jobs:
           excludes: prerelease, draft
 
       - name: Compare versions
-        run: node ./scripts/compareVersions.js {{ steps.lookupVersion.outputs.result }} {{ steps.lookupVersionRelease.outputs.result }}
+        run: node ./scripts/compareVersions.js {{ steps.lookupVersion.outputs.result }} {{ steps.lookupVersionRelease.outputs.release }}
 
 #      - name: Version check
 #        if: steps.lookupVersion.outputs.result != github.ref_name
