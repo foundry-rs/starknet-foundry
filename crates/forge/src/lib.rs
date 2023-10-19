@@ -50,6 +50,7 @@ mod test_crate_summary;
 mod test_execution_syscall_handler;
 
 const FUZZER_RUNS_DEFAULT: u32 = 256;
+pub const CACHE_DIR: &str = ".snfoundry_cache";
 
 static BUILTINS: Lazy<Vec<&str>> = Lazy::new(|| {
     vec![
