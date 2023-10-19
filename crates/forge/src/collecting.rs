@@ -156,7 +156,7 @@ fn module_name_from_path<'a>(tests_folder_path: &Utf8Path, path: &'a Utf8Path) -
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tests_to_run::TestsFilter;
+    use crate::test_filter::TestsFilter;
     use crate::CrateLocation;
     use assert_fs::fixture::PathCopy;
     use assert_fs::TempDir;

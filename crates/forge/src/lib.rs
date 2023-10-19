@@ -35,7 +35,7 @@ use crate::scarb::{ForgeConfig, ForkTarget, StarknetContractArtifacts};
 pub use crate::test_crate_summary::TestCrateSummary;
 
 use crate::collecting::{collect_test_compilation_targets, compile_tests, CompiledTestCrate};
-use crate::tests_to_run::TestsFilter;
+use crate::test_filter::TestsFilter;
 use test_collector::{FuzzerConfig, LinkedLibrary, TestCase};
 
 pub mod pretty_printing;
@@ -47,7 +47,7 @@ mod fuzzer;
 mod running;
 mod test_crate_summary;
 mod test_execution_syscall_handler;
-mod tests_to_run;
+mod test_filter;
 
 const FUZZER_RUNS_DEFAULT: u32 = 256;
 
@@ -596,7 +596,7 @@ fn function_args<'a>(function: &'a Function, builtins: &[&str]) -> Vec<&'a Concr
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tests_to_run::{IgnoredFilter, NameFilter};
+    use crate::test_filter::{IgnoredFilter, NameFilter};
 
     #[test]
     fn fuzzer_default_seed() {
