@@ -20,7 +20,7 @@ use cairo_lang_casm::instructions::Instruction;
 use cairo_lang_runner::casm_run::hint_to_hint_params;
 use cairo_lang_runner::SierraCasmRunner;
 use cairo_lang_runner::{Arg, RunnerError};
-use camino::Utf8PathBuf;
+use camino::Utf8Path;
 use cheatnet::constants as cheatnet_constants;
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::state::{CheatnetState, ExtendedStateReader};
@@ -237,7 +237,7 @@ pub(crate) fn run_test_case(
 }
 
 fn get_fork_state_reader(
-    workspace_root: &Utf8PathBuf,
+    workspace_root: &Utf8Path,
     fork_targets: &[ForkTarget],
     fork_config: &Option<ForkConfig>,
 ) -> Result<Option<ForkStateReader>> {
@@ -270,7 +270,7 @@ fn get_latest_block_number(url: &str) -> Result<BlockId> {
 }
 
 fn find_params_and_build_fork_state_reader(
-    workspace_root: &Utf8PathBuf,
+    workspace_root: &Utf8Path,
     fork_targets: &[ForkTarget],
     fork_alias: &str,
 ) -> Result<Option<ForkStateReader>> {
