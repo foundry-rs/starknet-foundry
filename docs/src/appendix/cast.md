@@ -2,6 +2,7 @@
 
 * [common flags](./cast/common.md)
 * [account](./cast/account/account.md)
+    * [add](./cast/account/add.md)
     * [create](./cast/account/create.md)
     * [deploy](./cast/account/deploy.md)
 * [declare](./cast/declare.md)
@@ -11,3 +12,4 @@
 * [multicall](./cast/multicall/multicall.md)
     * [new](./cast/multicall/new.md)
     * [run](./cast/multicall/run.md)
+* [show-config](./cast/show_config.md)
