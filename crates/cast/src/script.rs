@@ -36,7 +36,6 @@ use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cairo_vm::vm::vm_core::VirtualMachine;
 use camino::Utf8PathBuf;
-use cast::get_provider;
 use cheatnet::cheatcodes::EnhancedHintError;
 use cheatnet::constants::{build_block_context, build_transaction_context};
 use cheatnet::state::DictStateReader;
@@ -199,24 +198,21 @@ impl CairoHintProcessor<'_> {
             }
             "call" => {
                 let contract_address = inputs[0].to_field_element();
-                let function_name = as_cairo_short_string(&inputs[1]).unwrap();
-                let calldata_length = inputs[2].to_usize().unwrap();
+                let function_name = as_cairo_short_string(&inputs[1])
+                    .expect("Failed to convert function name to short string");
+                let calldata_length = inputs[2]
+                    .to_usize()
+                    .expect("Failed to convert calldata length to usize");
                 let calldata = Vec::from(&inputs[3..(3 + calldata_length)]);
                 let calldata_felts: Vec<FieldElement> =
                     calldata.iter().map(|x| x.to_field_element()).collect();
-
-                // TODO: remove hardcoded
-                let provider: starknet::providers::JsonRpcClient<
-                    starknet::providers::jsonrpc::HttpTransport,
-                > = get_provider("https://starknet-testnet.public.blastapi.io")?;
-                let block_id = BlockId::Tag(Pending);
 
                 let call_response = self.runtime.block_on(call::call(
                     contract_address,
                     &function_name,
                     calldata_felts,
-                    &provider,
-                    &block_id,
+                    self.provider,
+                    &BlockId::Tag(Pending),
                 ))?;
 
                 buffer
@@ -229,7 +225,6 @@ impl CairoHintProcessor<'_> {
 
                 Ok(())
             }
-            // _ => Err(anyhow!("Unknown cheatcode selector: {selector}")).map_err(Into::into),
             _ => Err(anyhow!("Unknown cheatcode selector: {selector}")),
         }?;
 
