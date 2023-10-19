@@ -8,8 +8,11 @@ use cairo_lang_runner::{
     casm_run::{extract_relocatable, vm_get_range},
     short_string::as_cairo_short_string,
 };
-use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
+use cairo_vm::hint_processor::hint_processor_definition::{HintProcessorLogic, HintReference};
+use cairo_vm::serde::deserialize_program::ApTracking;
 use cairo_vm::types::exec_scope::ExecutionScopes;
+use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
+use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cairo_vm::vm::{errors::hint_errors::HintError, vm_core::VirtualMachine};
 use std::any::Any;
 use std::collections::HashMap;
@@ -84,5 +87,53 @@ impl HintProcessorLogic for ContractExecutionSyscallHandler<'_, '_> {
             self.cheatable_syscall_handler
                 .execute_hint(vm, exec_scopes, hint_data, constants)
         };
+    }
+    fn compile_hint(
+        &self,
+        hint_code: &str,
+        ap_tracking_data: &ApTracking,
+        reference_ids: &HashMap<String, usize>,
+        references: &[HintReference],
+    ) -> Result<Box<dyn Any>, VirtualMachineError> {
+        self.cheatable_syscall_handler.compile_hint(
+            hint_code,
+            ap_tracking_data,
+            reference_ids,
+            references,
+        )
+    }
+}
+
+impl ResourceTracker for ContractExecutionSyscallHandler<'_, '_> {
+    fn consumed(&self) -> bool {
+        self.cheatable_syscall_handler
+            .syscall_handler
+            .context
+            .vm_run_resources
+            .consumed()
+    }
+
+    fn consume_step(&mut self) {
+        self.cheatable_syscall_handler
+            .syscall_handler
+            .context
+            .vm_run_resources
+            .consume_step();
+    }
+
+    fn get_n_steps(&self) -> Option<usize> {
+        self.cheatable_syscall_handler
+            .syscall_handler
+            .context
+            .vm_run_resources
+            .get_n_steps()
+    }
+
+    fn run_resources(&self) -> &RunResources {
+        self.cheatable_syscall_handler
+            .syscall_handler
+            .context
+            .vm_run_resources
+            .run_resources()
     }
 }
