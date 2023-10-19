@@ -89,3 +89,366 @@ impl TestsFilter {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::collecting::CompiledTestCrate;
+    use crate::test_filter::TestsFilter;
+    use crate::CrateLocation;
+    use cairo_lang_sierra::program::Program;
+    use test_collector::{ExpectedTestResult, TestCase};
+
+    fn program_for_testing() -> Program {
+        Program {
+            type_declarations: vec![],
+            libfunc_declarations: vec![],
+            statements: vec![],
+            funcs: vec![],
+        }
+    }
+
+    #[test]
+    #[allow(clippy::too_many_lines)]
+    fn filtering_tests() {
+        let mocked_tests = CompiledTestCrate {
+            sierra_program: program_for_testing(),
+            test_cases: vec![
+                TestCase {
+                    name: "crate1::do_thing".to_string(),
+                    available_gas: None,
+                    ignored: false,
+                    expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                    fuzzer_config: None,
+                },
+                TestCase {
+                    name: "crate2::run_other_thing".to_string(),
+                    available_gas: None,
+                    ignored: true,
+                    expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                    fuzzer_config: None,
+                },
+                TestCase {
+                    name: "outer::crate2::execute_next_thing".to_string(),
+                    available_gas: None,
+                    ignored: true,
+                    expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                    fuzzer_config: None,
+                },
+                TestCase {
+                    name: "thing".to_string(),
+                    available_gas: None,
+                    ignored: false,
+                    expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                    fuzzer_config: None,
+                },
+            ],
+            tests_location: CrateLocation::Lib,
+        };
+
+        let tests_filter = TestsFilter::new(Some("do".to_string()), false, false, false);
+        let filtered = tests_filter.filter_tests(mocked_tests.clone());
+        assert_eq!(
+            filtered.test_cases,
+            vec![TestCase {
+                name: "crate1::do_thing".to_string(),
+                available_gas: None,
+                ignored: false,
+                expected_result: ExpectedTestResult::Success,
+                fork_config: None,
+                fuzzer_config: None
+            },]
+        );
+
+        let tests_filter = TestsFilter::new(Some("run".to_string()), false, false, false);
+        let filtered = tests_filter.filter_tests(mocked_tests.clone());
+        assert_eq!(
+            filtered.test_cases,
+            vec![TestCase {
+                name: "crate2::run_other_thing".to_string(),
+                available_gas: None,
+                ignored: true,
+                expected_result: ExpectedTestResult::Success,
+                fork_config: None,
+                fuzzer_config: None
+            },]
+        );
+
+        let tests_filter = TestsFilter::new(Some("thing".to_string()), false, false, false);
+        let filtered = tests_filter.filter_tests(mocked_tests.clone());
+        assert_eq!(
+            filtered.test_cases,
+            vec![
+                TestCase {
+                    name: "crate1::do_thing".to_string(),
+                    available_gas: None,
+                    expected_result: ExpectedTestResult::Success,
+                    ignored: false,
+                    fork_config: None,
+                    fuzzer_config: None,
+                },
+                TestCase {
+                    name: "crate2::run_other_thing".to_string(),
+                    available_gas: None,
+                    expected_result: ExpectedTestResult::Success,
+                    ignored: true,
+                    fork_config: None,
+                    fuzzer_config: None,
+                },
+                TestCase {
+                    name: "outer::crate2::execute_next_thing".to_string(),
+                    available_gas: None,
+                    expected_result: ExpectedTestResult::Success,
+                    ignored: true,
+                    fork_config: None,
+                    fuzzer_config: None,
+                },
+                TestCase {
+                    name: "thing".to_string(),
+                    available_gas: None,
+                    ignored: false,
+                    expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                    fuzzer_config: None,
+                },
+            ]
+        );
+
+        let tests_filter = TestsFilter::new(Some("nonexistent".to_string()), false, false, false);
+        let filtered = tests_filter.filter_tests(mocked_tests.clone());
+        assert_eq!(filtered.test_cases, vec![]);
+
+        let tests_filter = TestsFilter::new(Some(String::new()), false, false, false);
+        let filtered = tests_filter.filter_tests(mocked_tests.clone());
+        assert_eq!(
+            filtered.test_cases,
+            vec![
+                TestCase {
+                    name: "crate1::do_thing".to_string(),
+                    available_gas: None,
+                    ignored: false,
+                    expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                    fuzzer_config: None,
+                },
+                TestCase {
+                    name: "crate2::run_other_thing".to_string(),
+                    available_gas: None,
+                    ignored: true,
+                    expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                    fuzzer_config: None,
+                },
+                TestCase {
+                    name: "outer::crate2::execute_next_thing".to_string(),
+                    available_gas: None,
+                    ignored: true,
+                    expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                    fuzzer_config: None,
+                },
+                TestCase {
+                    name: "thing".to_string(),
+                    available_gas: None,
+                    ignored: false,
+                    expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                    fuzzer_config: None,
+                },
+            ]
+        );
+    }
+
+    #[test]
+    fn filtering_with_no_tests() {
+        let mocked_tests = CompiledTestCrate {
+            sierra_program: program_for_testing(),
+            test_cases: vec![],
+            tests_location: CrateLocation::Lib,
+        };
+
+        let tests_filter = TestsFilter::new(Some(String::new()), false, false, false);
+        let filtered = tests_filter.filter_tests(mocked_tests.clone());
+        assert_eq!(filtered.test_cases, vec![]);
+
+        let tests_filter = TestsFilter::new(Some("thing".to_string()), false, false, false);
+        let filtered = tests_filter.filter_tests(mocked_tests.clone());
+        assert_eq!(filtered.test_cases, vec![]);
+    }
+
+    #[test]
+    fn filtering_tests_uses_whole_path() {
+        let mocked_tests = CompiledTestCrate {
+            sierra_program: program_for_testing(),
+            test_cases: vec![
+                TestCase {
+                    name: "crate1::do_thing".to_string(),
+                    available_gas: None,
+                    ignored: false,
+                    expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                    fuzzer_config: None,
+                },
+                TestCase {
+                    name: "crate2::run_other_thing".to_string(),
+                    available_gas: None,
+                    ignored: true,
+                    expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                    fuzzer_config: None,
+                },
+                TestCase {
+                    name: "outer::crate2::run_other_thing".to_string(),
+                    available_gas: None,
+                    ignored: true,
+                    expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                    fuzzer_config: None,
+                },
+                TestCase {
+                    name: "thing".to_string(),
+                    available_gas: None,
+                    ignored: false,
+                    expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                    fuzzer_config: None,
+                },
+            ],
+            tests_location: CrateLocation::Tests,
+        };
+
+        let tests_filter = TestsFilter::new(Some("crate2".to_string()), false, false, false);
+        let filtered = tests_filter.filter_tests(mocked_tests.clone());
+        assert_eq!(
+            filtered.test_cases,
+            vec![
+                TestCase {
+                    name: "crate2::run_other_thing".to_string(),
+                    available_gas: None,
+                    ignored: true,
+                    expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                    fuzzer_config: None,
+                },
+                TestCase {
+                    name: "outer::crate2::run_other_thing".to_string(),
+                    available_gas: None,
+                    ignored: true,
+                    expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                    fuzzer_config: None,
+                },
+            ]
+        );
+    }
+
+    #[test]
+    fn filtering_with_exact_match() {
+        let mocked_tests = CompiledTestCrate {
+            sierra_program: program_for_testing(),
+            test_cases: vec![
+                TestCase {
+                    name: "crate1::do_thing".to_string(),
+                    available_gas: None,
+                    ignored: false,
+                    expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                    fuzzer_config: None,
+                },
+                TestCase {
+                    name: "crate2::run_other_thing".to_string(),
+                    available_gas: None,
+                    ignored: true,
+                    expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                    fuzzer_config: None,
+                },
+                TestCase {
+                    name: "outer::crate3::run_other_thing".to_string(),
+                    available_gas: None,
+                    ignored: true,
+                    expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                    fuzzer_config: None,
+                },
+                TestCase {
+                    name: "do_thing".to_string(),
+                    available_gas: None,
+                    ignored: false,
+                    expected_result: ExpectedTestResult::Success,
+                    fork_config: None,
+                    fuzzer_config: None,
+                },
+            ],
+            tests_location: CrateLocation::Tests,
+        };
+
+        let tests_filter = TestsFilter::new(Some(String::new()), true, false, false);
+        let filtered = tests_filter.filter_tests(mocked_tests.clone());
+        assert_eq!(filtered.test_cases, vec![]);
+
+        let tests_filter = TestsFilter::new(Some("thing".to_string()), true, false, false);
+        let filtered = tests_filter.filter_tests(mocked_tests.clone());
+        assert_eq!(filtered.test_cases, vec![]);
+
+        let tests_filter = TestsFilter::new(Some("do_thing".to_string()), true, false, false);
+        let filtered = tests_filter.filter_tests(mocked_tests.clone());
+        assert_eq!(
+            filtered.test_cases,
+            vec![TestCase {
+                name: "do_thing".to_string(),
+                available_gas: None,
+                ignored: false,
+                expected_result: ExpectedTestResult::Success,
+                fork_config: None,
+                fuzzer_config: None,
+            },]
+        );
+
+        let tests_filter =
+            TestsFilter::new(Some("crate1::do_thing".to_string()), true, false, false);
+        let filtered = tests_filter.filter_tests(mocked_tests.clone());
+        assert_eq!(
+            filtered.test_cases,
+            vec![TestCase {
+                name: "crate1::do_thing".to_string(),
+                available_gas: None,
+                ignored: false,
+                expected_result: ExpectedTestResult::Success,
+                fork_config: None,
+                fuzzer_config: None,
+            },]
+        );
+
+        let tests_filter = TestsFilter::new(
+            Some("crate3::run_other_thing".to_string()),
+            true,
+            false,
+            false,
+        );
+        let filtered = tests_filter.filter_tests(mocked_tests.clone());
+        assert_eq!(filtered.test_cases, vec![]);
+
+        let tests_filter = TestsFilter::new(
+            Some("outer::crate3::run_other_thing".to_string()),
+            true,
+            false,
+            false,
+        );
+        let filtered = tests_filter.filter_tests(mocked_tests.clone());
+        assert_eq!(
+            filtered.test_cases,
+            vec![TestCase {
+                name: "outer::crate3::run_other_thing".to_string(),
+                available_gas: None,
+                ignored: true,
+                expected_result: ExpectedTestResult::Success,
+                fork_config: None,
+                fuzzer_config: None,
+            },]
+        );
+    }
+}
