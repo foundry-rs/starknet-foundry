@@ -1,5 +1,5 @@
 use crate::test_case_summary::TestCaseSummary;
-use crate::{TestCrateSummary, TestCrateType};
+use crate::{CrateLocation, TestCrateSummary};
 use anyhow::Error;
 use console::style;
 
@@ -13,10 +13,10 @@ pub(crate) fn print_collected_tests_count(tests_num: usize, package_name: &str) 
     println!("{}", style(plain_text).bold());
 }
 
-pub(crate) fn print_running_tests(test_crate_file: TestCrateType, tests_num: usize) {
+pub(crate) fn print_running_tests(test_crate_file: CrateLocation, tests_num: usize) {
     let dir_name = match test_crate_file {
-        TestCrateType::Lib => "src",
-        TestCrateType::Tests => "tests",
+        CrateLocation::Lib => "src",
+        CrateLocation::Tests => "tests",
     };
     let plain_text = format!("Running {tests_num} test(s) from {dir_name}/");
 
