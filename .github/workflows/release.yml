@@ -35,9 +35,6 @@ jobs:
           repo: starknet-foundry
           excludes: prerelease, draft
 
-      - run: echo ${{ steps.lookupVersion.outputs.result }}
-      - run: echo ${{ steps.lookupVersionRelease.outputs.release }}
-
       - name: Compare versions
         id: validVersion
         run: |
