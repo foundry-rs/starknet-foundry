@@ -39,25 +39,6 @@ use super::calls::{execute_inner_call, execute_library_call};
 use super::execution_info::get_cheated_exec_info_ptr;
 pub type SyscallSelector = DeprecatedSyscallSelector;
 
-pub fn emit_event_hook(syscall_handler: &mut CheatableSyscallHandler<'_>) {
-    let contract_address = syscall_handler
-        .syscall_handler
-        .call
-        .code_address
-        .unwrap_or(syscall_handler.syscall_handler.call.storage_address);
-
-    for spy_on in &mut syscall_handler.cheatnet_state.spies {
-        if spy_on.does_spy(contract_address) {
-            let event = Event::from_ordered_event(
-                syscall_handler.syscall_handler.events.last().unwrap(),
-                contract_address,
-            );
-            syscall_handler.cheatnet_state.detected_events.push(event);
-            break;
-        }
-    }
-}
-
 #[allow(clippy::needless_pass_by_value)]
 pub fn get_execution_info_syscall(
     _request: EmptyRequest,

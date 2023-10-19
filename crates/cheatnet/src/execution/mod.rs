@@ -9,3 +9,4 @@ pub mod entry_point;
 #[allow(clippy::module_name_repetitions)]
 pub mod execution_info;
 pub mod gas;
+pub mod syscall_hooks;

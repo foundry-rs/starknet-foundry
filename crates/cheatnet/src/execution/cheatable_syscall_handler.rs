@@ -154,7 +154,7 @@ pub fn felt_from_ptr_immutable(
 fn get_syscall_operand(hint: &StarknetHint) -> Result<&ResOperand, HintError> {
     let StarknetHint::SystemCall { system: syscall } = hint else {
         return Err(HintError::CustomHint(
-            "Test functions are unsupported on starknet.".into(),
+            "snforge_std functions are not allowed in contracts".into(),
         ));
     };
     Ok(syscall)
