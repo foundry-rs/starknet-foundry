@@ -95,7 +95,7 @@ Tests: 1 passed, 0 failed, 0 skipped
 ## Ignoring Some Tests Unless Specifically Requested
 
 Sometimes you may have tests that you want to exclude during most runs of `snforge test`.
-You can achieve it using `#[ignore]` - tests marked with this attribute will not be run by default.
+You can achieve it using `#[ignore]` - tests marked with this attribute will be skipped by default.
 
 ```rust
 #[test]
