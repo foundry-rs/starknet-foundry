@@ -50,7 +50,7 @@ jobs:
 
   build-binaries:
     name: Build ${{ matrix.target }}
-    if: steps.validVersion.outputs.VALID_VERSION == "true"
+    if: verify-version.outputs.VALID_VERSION == "true"
     needs: verify-version
     runs-on: ${{ matrix.os }}
     continue-on-error: true
