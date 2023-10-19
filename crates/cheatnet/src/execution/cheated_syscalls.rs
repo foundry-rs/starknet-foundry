@@ -1,4 +1,3 @@
-use crate::cheatcodes::spy_events::Event;
 use crate::execution::cheatable_syscall_handler::CheatableSyscallHandler;
 use crate::execution::entry_point::execute_constructor_entry_point;
 use crate::state::CheatnetState;

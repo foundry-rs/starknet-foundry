@@ -1,5 +1,5 @@
-use crate::execution::cheated_syscalls;
 use crate::execution::contract_print::{contract_print, PrintingResult};
+use crate::execution::{cheated_syscalls, syscall_hooks};
 use crate::state::CheatnetState;
 use anyhow::Result;
 use blockifier::execution::syscalls::{
@@ -213,7 +213,7 @@ impl CheatableSyscallHandler<'_> {
                     self.syscall_handler.events.len(),
                     "EmitEvent syscall is expected to emit exactly one event"
                 );
-                cheated_syscalls::emit_event_hook(self);
+                syscall_hooks::emit_event_hook(self);
                 hint_exec_result
             }
             _ => self.syscall_handler.execute_next_syscall(vm, hint),
