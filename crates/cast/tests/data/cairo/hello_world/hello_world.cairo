@@ -13,10 +13,6 @@ use starknet::{
     contract_address_const
 };
 
-fn print_felt252(felt_: felt252) {
-    cheatcode::<'print_felt252'>(array![felt_].span());
-}
-
 #[derive(Drop, Clone)]
 struct CallResult {
     data: Array::<felt252>,
@@ -60,7 +56,6 @@ fn call(
 }
 fn main() {
     'Hello, World!'.print();
-    print_felt252('Hello, cheatcode!');
 
     let eth = 0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7;
     let addr = 0x0089496091c660345BaA480dF76c1A900e57cf34759A899eFd1EADb362b20DB5;

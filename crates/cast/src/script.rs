@@ -188,14 +188,6 @@ impl CairoHintProcessor<'_> {
         let result_start = buffer.ptr;
 
         match selector {
-            "print_felt252" => {
-                let felt_: Felt252 = inputs[0].clone();
-                match as_cairo_short_string(&felt_) {
-                    Some(short_string) => println!("{short_string}"),
-                    None => println!("{felt_}"),
-                }
-                Ok(())
-            }
             "call" => {
                 let contract_address = inputs[0].to_field_element();
                 let function_name = as_cairo_short_string(&inputs[1])
