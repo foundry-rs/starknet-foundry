@@ -358,10 +358,7 @@ pub fn print_command_result<T: Serialize>(
                     .as_object()
                     .expect("Invalid JSON value")
                     .iter()
-                    .filter_map(|(k, v)| {
-                        // skip values that are not convertable to string
-                        v.as_str().map(|value| (k.as_str(), value.to_string()))
-                    })
+                    .map(|(k, v)| (k.as_str(), v.to_string()))
                     .collect::<Vec<(&str, String)>>(),
             );
         }

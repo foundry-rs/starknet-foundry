@@ -1,7 +1,6 @@
 use std::any::Any;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::mpsc;
 
 use anyhow::{anyhow, Context, Result};
 use blockifier::execution::entry_point::{
@@ -38,7 +37,6 @@ use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cairo_vm::vm::vm_core::VirtualMachine;
 use camino::Utf8PathBuf;
 use cast::get_provider;
-use cast::helpers::response_structs::CallResponse;
 use cheatnet::cheatcodes::EnhancedHintError;
 use cheatnet::constants::{build_block_context, build_transaction_context};
 use cheatnet::state::DictStateReader;
@@ -48,7 +46,9 @@ use conversions::StarknetConversions;
 use itertools::chain;
 use num_traits::ToPrimitive;
 use starknet::core::types::{BlockId, BlockTag::Pending, FieldElement};
-use tokio::task::JoinHandle;
+use starknet::providers::jsonrpc::HttpTransport;
+use starknet::providers::JsonRpcClient;
+use tokio::runtime::Runtime;
 
 use crate::starknet_commands::call;
 
@@ -62,6 +62,8 @@ pub struct Script {
 pub struct CairoHintProcessor<'a> {
     pub blockifier_syscall_handler: SyscallHintProcessor<'a>,
     pub hints: &'a HashMap<String, Hint>,
+    pub provider: &'a JsonRpcClient<HttpTransport>,
+    pub runtime: Runtime,
 }
 
 // crates/blockifier/src/execution/syscalls/hint_processor.rs:472 (ResourceTracker for SyscallHintProcessor)
@@ -209,24 +211,13 @@ impl CairoHintProcessor<'_> {
                 > = get_provider("https://starknet-testnet.public.blastapi.io")?;
                 let block_id = BlockId::Tag(Pending);
 
-                // TODO: come up with a way of doing it properly
-                let (tx, rx) = mpsc::channel::<CallResponse>();
-
-                let handle: JoinHandle<()> = tokio::task::spawn(async move {
-                    let call_response = call::call(
-                        contract_address,
-                        &function_name,
-                        calldata_felts,
-                        &provider,
-                        &block_id,
-                    )
-                    .await
-                    .unwrap();
-
-                    tx.send(call_response).expect("Send failed");
-                });
-
-                let call_response = rx.recv().expect("Receive failed");
+                let call_response = self.runtime.block_on(call::call(
+                    contract_address,
+                    &function_name,
+                    calldata_felts,
+                    &provider,
+                    &block_id,
+                ))?;
 
                 buffer
                     .write(call_response.data.len())
@@ -250,7 +241,11 @@ impl CairoHintProcessor<'_> {
     }
 }
 
-pub fn run(script_path: Utf8PathBuf) -> Result<()> {
+pub fn run(
+    script_path: Utf8PathBuf,
+    provider: &JsonRpcClient<HttpTransport>,
+    runtime: Runtime,
+) -> Result<()> {
     check_compiler_path(true, Path::new(&script_path))?;
 
     // let db = &mut RootDatabase::builder().detect_corelib().build()?;
@@ -318,6 +313,8 @@ pub fn run(script_path: Utf8PathBuf) -> Result<()> {
     let mut cairo_hint_processor = CairoHintProcessor {
         blockifier_syscall_handler: syscall_handler,
         hints: &string_to_hint,
+        provider,
+        runtime,
     };
 
     match runner.run_function(
