@@ -69,7 +69,7 @@ pub struct TestExecutionSyscallHandler<'a> {
 }
 
 impl<'a> TestExecutionSyscallHandler<'a> {
-    pub fn new(
+    pub fn wrap(
         cheatable_syscall_handler: CheatableSyscallHandler<'a>,
         test_execution_state: &'a mut TestExecutionState<'a>,
         hints: &'a HashMap<String, Hint>,
@@ -190,7 +190,7 @@ impl TestExecutionSyscallHandler<'_> {
         // Parse the selector.
         let selector = &selector.value.to_bytes_be().1;
         let selector = std::str::from_utf8(selector).map_err(|_| {
-            HintError::CustomHint(Box::from(
+            CustomHint(Box::from(
                 "Failed to parse the  cheatcode selector".to_string(),
             ))
         })?;
@@ -198,9 +198,8 @@ impl TestExecutionSyscallHandler<'_> {
         // Extract the inputs.
         let input_start = extract_relocatable(vm, input_start)?;
         let input_end = extract_relocatable(vm, input_end)?;
-        let inputs = vm_get_range(vm, input_start, input_end).map_err(|_| {
-            HintError::CustomHint(Box::from("Failed to read input data".to_string()))
-        })?;
+        let inputs = vm_get_range(vm, input_start, input_end)
+            .map_err(|_| CustomHint(Box::from("Failed to read input data".to_string())))?;
 
         self.match_cheatcode_by_selector(
             vm,

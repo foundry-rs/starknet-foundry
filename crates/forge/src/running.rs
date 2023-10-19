@@ -200,13 +200,13 @@ pub(crate) fn run_test_case(
 
     let mut cheatnet_state = CheatnetState::default();
     let cheatable_syscall_handler =
-        CheatableSyscallHandler::new(syscall_handler, &mut cheatnet_state);
+        CheatableSyscallHandler::wrap(syscall_handler, &mut cheatnet_state);
 
     let mut test_execution_state = TestExecutionState {
         environment_variables: &runner_params.environment_variables,
         contracts: &runner_params.contracts,
     };
-    let mut test_execution_syscall_handler = TestExecutionSyscallHandler::new(
+    let mut test_execution_syscall_handler = TestExecutionSyscallHandler::wrap(
         cheatable_syscall_handler,
         &mut test_execution_state,
         &string_to_hint,
