@@ -22,6 +22,7 @@ use cairo_lang_sierra::program::Function;
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use futures::stream::FuturesUnordered;
+use itertools::Itertools;
 
 use once_cell::sync::Lazy;
 use rand::{thread_rng, RngCore};
@@ -33,10 +34,8 @@ use crate::scarb::{ForgeConfig, ForkTarget, StarknetContractArtifacts};
 // pub use crate::collecting::CrateLocation;
 pub use crate::test_crate_summary::TestCrateSummary;
 
-use crate::collecting::{
-    collect_test_compilation_targets, compile_tests, filter_tests_from_crates, CompiledTestCrate,
-};
-use crate::tests_to_run::{should_be_run, TestsToRun};
+use crate::collecting::{collect_test_compilation_targets, compile_tests, CompiledTestCrate};
+use crate::tests_to_run::TestsFilter;
 use test_collector::{FuzzerConfig, LinkedLibrary, TestCase};
 
 pub mod pretty_printing;
@@ -69,10 +68,8 @@ static BUILTINS: Lazy<Vec<&str>> = Lazy::new(|| {
 #[derive(Debug, PartialEq)]
 pub struct RunnerConfig {
     workspace_root: Utf8PathBuf,
-    test_name_filter: Option<String>,
-    exact_match: bool,
     exit_first: bool,
-    tests_to_run: TestsToRun,
+    tests_filter: TestsFilter,
     fork_targets: Vec<ForkTarget>,
     fuzzer_runs: u32,
     fuzzer_seed: u64,
@@ -101,10 +98,7 @@ impl RunnerConfig {
     ) -> Self {
         Self {
             workspace_root,
-            test_name_filter,
-            exact_match,
             exit_first: forge_config_from_scarb.exit_first || exit_first,
-            tests_to_run: TestsToRun::from_flags(only_ignored, include_ignored),
             fork_targets: forge_config_from_scarb.fork.clone(),
             fuzzer_runs: fuzzer_runs
                 .or(forge_config_from_scarb.fuzzer_runs)
@@ -112,6 +106,12 @@ impl RunnerConfig {
             fuzzer_seed: fuzzer_seed
                 .or(forge_config_from_scarb.fuzzer_seed)
                 .unwrap_or_else(|| thread_rng().next_u64()),
+            tests_filter: TestsFilter::new(
+                test_name_filter,
+                exact_match,
+                only_ignored,
+                include_ignored,
+            ),
         }
     }
 }
@@ -224,7 +224,10 @@ pub async fn run(
         .map(|ct| ct.ensure_lib_file_exists(&temp_dir))
         .collect::<Result<_>>()?;
     let tests = compile_tests(&compilation_targets, &runner_params)?;
-    let tests = filter_tests_from_crates(tests, &runner_config);
+    let tests = tests
+        .into_iter()
+        .map(|tc| runner_config.tests_filter.filter_tests(tc))
+        .collect_vec();
 
     try_close_tmp_dir(temp_dir)?;
 
@@ -300,7 +303,7 @@ async fn run_tests_from_crate(
     for case in test_cases.iter() {
         let case_name = case.name.clone();
 
-        if !should_be_run(case, &runner_config.tests_to_run) {
+        if !runner_config.tests_filter.should_be_run(case) {
             tasks.push(tokio::task::spawn(async {
                 Ok(TestCaseSummary::Ignored { name: case_name })
             }));
@@ -593,6 +596,7 @@ fn function_args<'a>(function: &'a Function, builtins: &[&str]) -> Vec<&'a Concr
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::tests_to_run::{IgnoredFilter, NameFilter};
 
     #[test]
     fn fuzzer_default_seed() {
@@ -643,10 +647,11 @@ mod tests {
             config,
             RunnerConfig {
                 workspace_root,
-                test_name_filter: None,
-                exact_match: false,
                 exit_first: false,
-                tests_to_run: TestsToRun::NotIgnored,
+                tests_filter: TestsFilter {
+                    name_filter: NameFilter::All,
+                    ignored_filter: IgnoredFilter::NotIgnored
+                },
                 fork_targets: vec![],
                 fuzzer_runs: FUZZER_RUNS_DEFAULT,
                 fuzzer_seed: config.fuzzer_seed,
@@ -666,10 +671,10 @@ mod tests {
 
         let config = RunnerConfig::new(
             workspace_root.clone(),
-            None,
+            Some("test".to_string()),
             false,
             false,
-            false,
+            true,
             false,
             None,
             None,
@@ -679,11 +684,12 @@ mod tests {
             config,
             RunnerConfig {
                 workspace_root,
-                test_name_filter: None,
-                exact_match: false,
                 exit_first: true,
-                tests_to_run: TestsToRun::NotIgnored,
                 fork_targets: vec![],
+                tests_filter: TestsFilter {
+                    name_filter: NameFilter::Match("test".to_string()),
+                    ignored_filter: IgnoredFilter::Ignored
+                },
                 fuzzer_runs: 1234,
                 fuzzer_seed: 500,
             }
@@ -702,11 +708,11 @@ mod tests {
         };
         let config = RunnerConfig::new(
             workspace_root.clone(),
-            None,
-            false,
+            Some("abc".to_string()),
             true,
             true,
             false,
+            true,
             Some(100),
             Some(32),
             &config_from_scarb,
@@ -715,10 +721,11 @@ mod tests {
             config,
             RunnerConfig {
                 workspace_root,
-                test_name_filter: None,
-                exact_match: false,
                 exit_first: true,
-                tests_to_run: TestsToRun::Ignored,
+                tests_filter: TestsFilter {
+                    name_filter: NameFilter::ExactMatch("abc".to_string()),
+                    ignored_filter: IgnoredFilter::All
+                },
                 fork_targets: vec![],
                 fuzzer_runs: 100,
                 fuzzer_seed: 32,
@@ -733,6 +740,22 @@ mod tests {
             Default::default(),
             None,
             false,
+            false,
+            true,
+            true,
+            None,
+            None,
+            &Default::default(),
+        );
+    }
+
+    #[test]
+    #[should_panic]
+    fn exact_match_true_without_test_filter_name() {
+        let _ = RunnerConfig::new(
+            Default::default(),
+            None,
+            true,
             false,
             true,
             true,
