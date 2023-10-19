@@ -39,7 +39,8 @@ jobs:
         id: validVersion
         run: |
           VALID_VERSION=$(node ./scripts/compareVersions.js ${{ steps.lookupVersionRelease.outputs.release }} ${{ steps.lookupVersion.outputs.result }})
-          echo "VALID_VERSION=$VALID_VERSION" >> "$GITHUB_OUTPUT"
+          echo "VALID_VERSION=$VALID_VERSION"
+          echo "VALID_VERSION=$VALID_VERSION" >> $GITHUB_OUTPUT
 
   #      - name: Version check
   #        if: steps.lookupVersion.outputs.result != github.ref_name
@@ -48,7 +49,7 @@ jobs:
   build-binaries:
     name: Build ${{ matrix.target }}
     needs: verify-version
-#    if: ${{ needs.verify-version.outputs.VALID_VERSION == 'true' }}
+    if: ${{ needs.verify-version.outputs.VALID_VERSION == 'true' }}
     runs-on: ${{ matrix.os }}
     continue-on-error: true
 
@@ -86,9 +87,6 @@ jobs:
             os: windows-latest
 
     steps:
-      - run: ${{ needs.verify-version.outputs.VALID_VERSION }}
-      - run: ${{ needs.verify-version.outputs.VALID_VERSION == 'true' }}
-
       - uses: actions/checkout@v4
         with:
           submodules: true
