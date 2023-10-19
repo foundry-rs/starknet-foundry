@@ -14,6 +14,9 @@ use cast::{
 };
 use clap::{Parser, Subcommand};
 use script::Script;
+use starknet::providers::jsonrpc::HttpTransport;
+use starknet::providers::JsonRpcClient;
+use tokio::runtime::Runtime;
 
 mod script;
 mod starknet_commands;
@@ -97,9 +100,8 @@ enum Commands {
     Script(Script),
 }
 
-#[tokio::main]
 #[allow(clippy::too_many_lines)]
-async fn main() -> Result<()> {
+fn main() -> Result<()> {
     let cli = Cli::parse();
 
     // Clap validates that both are not passed at same time
@@ -115,7 +117,24 @@ async fn main() -> Result<()> {
     update_cast_config(&mut config, &cli);
 
     let provider = get_provider(&config.rpc_url)?;
+    let runtime = Runtime::new().expect("Could not instantiate Runtime");
 
+    if let Commands::Script(script) = cli.command {
+        let res = script::run(script.script_path, &provider, runtime);
+        match res {
+            Ok(_) => Ok(()),
+            Err(err) => panic!("{}", err),
+        }
+    } else {
+        runtime.block_on(run_async_command(cli, &mut config, provider))
+    }
+}
+
+async fn run_async_command(
+    cli: Cli,
+    config: &mut CastConfig,
+    provider: JsonRpcClient<HttpTransport>,
+) -> Result<()> {
     match cli.command {
         Commands::Declare(declare) => {
             let account = get_account(
@@ -280,8 +299,8 @@ async fn main() -> Result<()> {
                 }
                 let mut result = starknet_commands::account::deploy::deploy(
                     &provider,
-                    config.accounts_file,
-                    config.account,
+                    &config.accounts_file,
+                    &config.account,
                     chain_id,
                     deploy.max_fee,
                     cli.wait,
@@ -318,7 +337,7 @@ async fn main() -> Result<()> {
         Commands::ShowConfig(_) => {
             let mut result = starknet_commands::show_config::show_config(
                 &provider,
-                config,
+                config.clone(),
                 cli.profile,
                 cli.path_to_scarb_toml,
             )
@@ -326,13 +345,7 @@ async fn main() -> Result<()> {
             print_command_result("show-config", &mut result, value_format, cli.json)?;
             Ok(())
         }
-        Commands::Script(script) => {
-            let res = script::run(script.script_path);
-            match res {
-                Ok(_) => Ok(()),
-                Err(err) => panic!("{}", err),
-            }
-        }
+        _ => Ok(()),
     }
 }
 
