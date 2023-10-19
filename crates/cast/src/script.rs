@@ -1,6 +1,7 @@
 use std::any::Any;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use std::sync::mpsc;
 
 use anyhow::{anyhow, Context, Result};
 use blockifier::execution::entry_point::{
@@ -24,6 +25,7 @@ use cairo_lang_runner::{build_hints_dict, insert_value_to_cellref, SierraCasmRun
 use cairo_lang_diagnostics::ToOption;
 use cairo_lang_sierra_generator::db::SierraGenGroup;
 use cairo_lang_sierra_generator::replace_ids::{DebugReplacer, SierraIdReplacer};
+use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::bigint::BigIntAsHex;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use cairo_vm::hint_processor::hint_processor_definition::{HintProcessorLogic, HintReference};
@@ -35,12 +37,20 @@ use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cairo_vm::vm::vm_core::VirtualMachine;
 use camino::Utf8PathBuf;
+use cast::get_provider;
+use cast::helpers::response_structs::CallResponse;
 use cheatnet::cheatcodes::EnhancedHintError;
 use cheatnet::constants::{build_block_context, build_transaction_context};
 use cheatnet::state::DictStateReader;
 use clap::command;
 use clap::Args;
+use conversions::StarknetConversions;
 use itertools::chain;
+use num_traits::ToPrimitive;
+use starknet::core::types::{BlockId, BlockTag::Pending, FieldElement};
+use tokio::task::JoinHandle;
+
+use crate::starknet_commands::call;
 
 #[derive(Args)]
 #[command(about = "")]
@@ -185,6 +195,49 @@ impl CairoHintProcessor<'_> {
                 }
                 Ok(())
             }
+            "call" => {
+                let contract_address = inputs[0].to_field_element();
+                let function_name = as_cairo_short_string(&inputs[1]).unwrap();
+                let calldata_length = inputs[2].to_usize().unwrap();
+                let calldata = Vec::from(&inputs[3..(3 + calldata_length)]);
+                let calldata_felts: Vec<FieldElement> =
+                    calldata.iter().map(|x| x.to_field_element()).collect();
+
+                // TODO: remove hardcoded
+                let provider: starknet::providers::JsonRpcClient<
+                    starknet::providers::jsonrpc::HttpTransport,
+                > = get_provider("https://starknet-testnet.public.blastapi.io")?;
+                let block_id = BlockId::Tag(Pending);
+
+                // TODO: come up with a way of doing it properly
+                let (tx, rx) = mpsc::channel::<CallResponse>();
+
+                let handle: JoinHandle<()> = tokio::task::spawn(async move {
+                    let call_response = call::call(
+                        contract_address,
+                        &function_name,
+                        calldata_felts,
+                        &provider,
+                        &block_id,
+                    )
+                    .await
+                    .unwrap();
+
+                    tx.send(call_response).expect("Send failed");
+                });
+
+                let call_response = rx.recv().expect("Receive failed");
+
+                buffer
+                    .write(call_response.data.len())
+                    .expect("Failed to insert data length");
+
+                buffer
+                    .write_data(call_response.data.iter().map(|x| x.to_felt252()))
+                    .expect("Failed to insert data");
+
+                Ok(())
+            }
             // _ => Err(anyhow!("Unknown cheatcode selector: {selector}")).map_err(Into::into),
             _ => Err(anyhow!("Unknown cheatcode selector: {selector}")),
         }?;
@@ -218,7 +271,7 @@ pub fn run(script_path: Utf8PathBuf) -> Result<()> {
 
     let runner = SierraCasmRunner::new(
         replacer.apply(&sierra_program),
-        None,
+        Some(MetadataComputationConfig::default()),
         OrderedHashMap::default(),
     )
     .with_context(|| "Failed setting up runner.")?;

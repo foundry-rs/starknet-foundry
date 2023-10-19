@@ -1037,78 +1037,31 @@ name = "cast"
 version = "0.10.2"
 dependencies = [
  "anyhow",
- "ark-ff",
- "ark-secp256k1",
- "ark-secp256r1",
- "ark-std",
- "assert_fs",
- "blockifier",
- "cairo-felt",
- "cairo-lang-casm",
- "cairo-lang-compiler",
- "cairo-lang-debug",
- "cairo-lang-defs",
- "cairo-lang-diagnostics",
- "cairo-lang-filesystem",
- "cairo-lang-lowering",
- "cairo-lang-plugins",
- "cairo-lang-project",
- "cairo-lang-runner",
- "cairo-lang-semantic",
- "cairo-lang-sierra",
- "cairo-lang-sierra-ap-change",
- "cairo-lang-sierra-gas",
- "cairo-lang-sierra-generator",
- "cairo-lang-sierra-to-casm",
- "cairo-lang-starknet",
- "cairo-lang-syntax",
- "cairo-lang-utils",
- "cairo-vm",
  "camino",
- "cheatnet",
  "clap",
- "conversions",
  "ctor",
  "dotenv",
- "flatten-serde-json",
  "fs_extra",
- "include_dir",
  "indoc",
- "itertools 0.11.0",
- "num-bigint",
- "num-traits 0.2.17",
- "once_cell",
- "openssl",
- "parity-scale-codec",
- "parity-scale-codec-derive",
  "primitive-types",
  "project-root",
  "promptly",
  "rand",
- "rayon",
- "regex",
  "reqwest",
  "rpassword",
  "scarb-artifacts",
- "scarb-metadata 1.8.0",
- "scarb-ui 0.7.0",
- "schemars",
+ "scarb-metadata",
  "sealed_test",
  "serde",
  "serde_json",
  "shellexpand",
  "snapbox",
  "starknet",
- "starknet_api",
  "tempfile",
  "test-case",
- "test-collector",
- "thiserror",
  "tokio",
  "toml 0.8.6",
- "toml_edit 0.9.1",
  "url",
- "walkdir",
  "which",
 ]
 
@@ -1151,7 +1104,7 @@ dependencies = [
  "rayon",
  "regex",
  "scarb-artifacts",
- "scarb-metadata 1.8.0",
+ "scarb-metadata",
  "serde",
  "serde_json",
  "starknet",
@@ -1252,16 +1205,6 @@ dependencies = [
  "is-terminal",
  "lazy_static",
  "windows-sys 0.48.0",
-]
-
-[[package]]
-name = "combine"
-version = "4.6.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "35ed6e9d84f0b51a7f52daf1c7d71dd136fd7a3f41a8462b8cdb8c78d920fad4"
-dependencies = [
- "bytes",
- "memchr",
 ]
 
 [[package]]
@@ -1870,8 +1813,8 @@ dependencies = [
  "rayon",
  "regex",
  "scarb-artifacts",
- "scarb-metadata 1.8.0",
- "scarb-ui 0.1.1",
+ "scarb-metadata",
+ "scarb-ui",
  "schemars",
  "serde",
  "serde_json",
@@ -2521,15 +2464,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8f6d5ed8676d904364de097082f4e7d240b571b67989ced0240f08b7f966f940"
 dependencies = [
  "cpufeatures",
-]
-
-[[package]]
-name = "kstring"
-version = "1.0.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8b310ccceade8121d7d77fee406160e457c2f4e7c7982d589da3499bc7ea4526"
-dependencies = [
- "serde",
 ]
 
 [[package]]
@@ -3691,22 +3625,10 @@ dependencies = [
  "assert_fs",
  "camino",
  "indoc",
- "scarb-metadata 1.8.0",
+ "scarb-metadata",
  "serde",
  "serde_json",
  "test-collector",
-]
-
-[[package]]
-name = "scarb-metadata"
-version = "1.7.0"
-source = "git+https://github.com/software-mansion/scarb.git?rev=58cc88e#58cc88efb4f8b9923735931e47d72912457ec321"
-dependencies = [
- "camino",
- "semver",
- "serde",
- "serde_json",
- "thiserror",
 ]
 
 [[package]]
@@ -3733,23 +3655,7 @@ dependencies = [
  "clap",
  "console",
  "indicatif",
- "scarb-metadata 1.8.0",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "scarb-ui"
-version = "0.7.0"
-source = "git+https://github.com/software-mansion/scarb.git?rev=58cc88e#58cc88efb4f8b9923735931e47d72912457ec321"
-dependencies = [
- "anyhow",
- "camino",
- "clap",
- "console",
- "indicatif",
- "indoc",
- "scarb-metadata 1.7.0",
+ "scarb-metadata",
  "serde",
  "serde_json",
 ]
@@ -4551,7 +4457,7 @@ dependencies = [
  "forge",
  "indoc",
  "scarb-artifacts",
- "scarb-metadata 1.8.0",
+ "scarb-metadata",
  "serde",
  "serde_json",
  "tempfile",
@@ -4757,18 +4663,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3550f4e9685620ac18a50ed434eb3aec30db8ba93b0287467bca5826ea25baf1"
 dependencies = [
  "serde",
-]
-
-[[package]]
-name = "toml_edit"
-version = "0.9.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6b26d63d75583ce572323a963b850d2121cf47a03b1f6c5fc96d641d3b0412b3"
-dependencies = [
- "combine",
- "indexmap 1.9.3",
- "itertools 0.10.5",
- "kstring",
 ]
 
 [[package]]
