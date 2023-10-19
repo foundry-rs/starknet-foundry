@@ -2,7 +2,7 @@ use camino::Utf8PathBuf;
 use serde::Serialize;
 use starknet::core::types::FieldElement;
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, Debug)]
 pub struct InvokeResponse {
     pub transaction_hash: FieldElement,
 }
