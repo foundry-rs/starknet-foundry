@@ -39,6 +39,7 @@ jobs:
         id: validVersion
         run: |
           VALID_VERSION=$(node ./scripts/compareVersions.js ${{ steps.lookupVersionRelease.outputs.release }} ${{ steps.lookupVersion.outputs.result }})
+          echo "VALID_VERSION=$VALID_VERSION"
           echo "VALID_VERSION=$VALID_VERSION" >> $GITHUB_OUTPUT
 
   #      - name: Version check
