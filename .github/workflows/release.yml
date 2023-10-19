@@ -2,8 +2,6 @@ name: Release
 
 on:
   push:
-#    tags:
-#      - v[0-9]+.*
 
 permissions:
   contents: write
@@ -50,10 +48,6 @@ jobs:
       - name: Output job skipped
         if: ${{ steps.validVersion.outputs.versionIsValid == 'false' }}
         run: echo "Version from commit is not greater from newest release, skipping build"
-
-  #      - name: Version check
-  #        if: steps.lookupVersion.outputs.result != github.ref_name
-  #        run: echo "Project version in Cargo.toml does not match the tag" && exit 1
 
   build-binaries:
     name: Build ${{ matrix.target }}
