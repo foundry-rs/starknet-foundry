@@ -37,7 +37,7 @@ pub use crate::test_crate_summary::TestCrateSummary;
 
 use crate::collecting::{collect_test_compilation_targets, compile_tests, CompiledTestCrate};
 use crate::test_filter::TestsFilter;
-use test_collector::{ForkConfig, FuzzerConfig, LinkedLibrary, RawForkConfig, TestCase};
+use test_collector::{FuzzerConfig, LinkedLibrary, RawForkConfig, TestCase, ValidatedForkConfig};
 
 pub mod pretty_printing;
 pub mod scarb;
@@ -196,37 +196,34 @@ fn try_close_tmp_dir(temp_dir: TempDir) -> Result<()> {
 }
 
 fn find_or_parse_raw_fork_config(
-    fork_config: ForkConfig,
+    raw_fork_config: RawForkConfig,
     runner_config: &RunnerConfig,
-) -> Result<ForkConfig> {
-    if let ForkConfig::Raw(raw_fork_config) = fork_config {
-        match raw_fork_config {
-            RawForkConfig::Params(url_str, block_id) => {
-                Ok(ForkConfig::Parsed(url_str.parse()?, block_id))
-            }
-            RawForkConfig::Id(name) => {
-                let fork_target_from_runner_config = runner_config
-                    .fork_targets
-                    .iter()
-                    .find(|fork| fork.name == name)
-                    .ok_or_else(|| {
-                        anyhow!("Fork configuration named = {name} not found in the Scarb.toml")
-                    })?; // TODO essa test it
-                Ok(ForkConfig::Parsed(
-                    fork_target_from_runner_config.url.clone(),
-                    fork_target_from_runner_config.block_id,
-                ))
-            }
+) -> Result<ValidatedForkConfig> {
+    match raw_fork_config {
+        RawForkConfig::Params(url_str, block_id) => Ok(ValidatedForkConfig {
+            url: url_str.parse()?,
+            block_id,
+        }),
+        RawForkConfig::Id(name) => {
+            let fork_target_from_runner_config = runner_config
+                .fork_targets
+                .iter()
+                .find(|fork| fork.name == name)
+                .ok_or_else(|| {
+                    anyhow!("Fork configuration named = {name} not found in the Scarb.toml")
+                })?; // TODO essa test it
+            Ok(ValidatedForkConfig {
+                url: fork_target_from_runner_config.url.clone(),
+                block_id: fork_target_from_runner_config.block_id,
+            })
         }
-    } else {
-        unreachable!()
     }
 }
 
-fn map_raw_to_parsed_fork_configs_in_tests(
-    compiled_test_crate: CompiledTestCrate,
+fn map_fork_configs_from_raw_to_validated_in_tests(
+    compiled_test_crate: CompiledTestCrate<RawForkConfig>,
     runner_config: &RunnerConfig,
-) -> Result<CompiledTestCrate> {
+) -> Result<CompiledTestCrate<ValidatedForkConfig>> {
     let mut test_cases = vec![];
 
     for case in compiled_test_crate.test_cases {
@@ -235,15 +232,21 @@ fn map_raw_to_parsed_fork_configs_in_tests(
         } else {
             None
         };
+
         test_cases.push(TestCase {
+            name: case.name,
+            available_gas: case.available_gas,
+            ignored: case.ignored,
+            expected_result: case.expected_result,
             fork_config,
-            ..case
+            fuzzer_config: case.fuzzer_config,
         });
     }
 
     Ok(CompiledTestCrate {
+        sierra_program: compiled_test_crate.sierra_program,
         test_cases,
-        ..compiled_test_crate
+        tests_location: compiled_test_crate.tests_location,
     })
 }
 
@@ -284,7 +287,7 @@ pub async fn run(
         .collect_vec();
     let test_crates = test_crates
         .into_iter()
-        .map(|ctc| map_raw_to_parsed_fork_configs_in_tests(ctc, &runner_config))
+        .map(|ctc| map_fork_configs_from_raw_to_validated_in_tests(ctc, &runner_config))
         .collect::<Result<Vec<_>>>()?;
 
     try_close_tmp_dir(temp_dir)?;
@@ -331,7 +334,7 @@ pub async fn run(
 }
 
 async fn run_tests_from_crate(
-    tests: Arc<CompiledTestCrate>,
+    tests: Arc<CompiledTestCrate<ValidatedForkConfig>>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     cancellation_tokens: Arc<CancellationTokens>,
@@ -430,7 +433,7 @@ async fn run_tests_from_crate(
 #[allow(clippy::too_many_arguments)]
 fn choose_test_strategy_and_run(
     args: Vec<ConcreteTypeId>,
-    case: Arc<TestCase>,
+    case: Arc<TestCase<ValidatedForkConfig>>,
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
@@ -462,7 +465,7 @@ fn choose_test_strategy_and_run(
 }
 
 fn run_single_test(
-    case: Arc<TestCase>,
+    case: Arc<TestCase<ValidatedForkConfig>>,
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
@@ -506,7 +509,7 @@ fn run_single_test(
 
 fn run_with_fuzzing(
     args: Vec<ConcreteTypeId>,
-    case: Arc<TestCase>,
+    case: Arc<TestCase<ValidatedForkConfig>>,
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
@@ -598,7 +601,7 @@ fn run_with_fuzzing(
 #[allow(clippy::too_many_arguments)]
 fn run_fuzzing_subtest(
     args: Vec<Felt252>,
-    case: Arc<TestCase>,
+    case: Arc<TestCase<ValidatedForkConfig>>,
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,

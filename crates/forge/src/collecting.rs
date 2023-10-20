@@ -5,13 +5,13 @@ use assert_fs::TempDir;
 use cairo_lang_sierra::program::Program;
 use camino::{Utf8Path, Utf8PathBuf};
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
-use test_collector::{collect_tests, LinkedLibrary, TestCase};
+use test_collector::{collect_tests, ForkConfig, LinkedLibrary, RawForkConfig, TestCase};
 use walkdir::WalkDir;
 
 #[derive(Debug, Clone)]
-pub(crate) struct CompiledTestCrate {
+pub(crate) struct CompiledTestCrate<T: ForkConfig> {
     pub sierra_program: Program,
-    pub test_cases: Vec<TestCase>,
+    pub test_cases: Vec<TestCase<T>>,
     pub tests_location: CrateLocation,
 }
 
@@ -27,7 +27,7 @@ impl TestCompilationTarget {
         &self,
         linked_libraries: &[LinkedLibrary],
         corelib_path: &Utf8Path,
-    ) -> Result<CompiledTestCrate> {
+    ) -> Result<CompiledTestCrate<RawForkConfig>> {
         let (sierra_program, test_cases) = collect_tests(
             self.crate_root.as_str(),
             None,
@@ -85,7 +85,7 @@ pub(crate) fn collect_test_compilation_targets(
 pub(crate) fn compile_tests(
     targets: &Vec<TestCompilationTarget>,
     runner_params: &RunnerParams,
-) -> Result<Vec<CompiledTestCrate>> {
+) -> Result<Vec<CompiledTestCrate<RawForkConfig>>> {
     targets
         .par_iter()
         .map(|target| {

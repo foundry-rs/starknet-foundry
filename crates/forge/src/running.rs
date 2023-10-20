@@ -37,7 +37,7 @@ use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::hash::StarkHash;
 use starknet_api::patricia_key;
 use starknet_api::transaction::Calldata;
-use test_collector::{ForkConfig, TestCase};
+use test_collector::{TestCase, ValidatedForkConfig};
 use thiserror::Error;
 use tokio::runtime::Runtime;
 use tokio::sync::mpsc::Sender;
@@ -79,7 +79,7 @@ fn build_hints_dict<'b>(
 
 pub(crate) fn blocking_run_from_test(
     args: Vec<Felt252>,
-    case: Arc<TestCase>,
+    case: Arc<TestCase<ValidatedForkConfig>>,
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
@@ -167,7 +167,7 @@ pub(crate) enum TestCaseRunError {
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn run_test_case(
     args: Vec<Felt252>,
-    case: &TestCase,
+    case: &TestCase<ValidatedForkConfig>,
     runner: &SierraCasmRunner,
     runner_config: &Arc<RunnerConfig>,
     runner_params: &Arc<RunnerParams>,
@@ -239,7 +239,7 @@ pub(crate) fn run_test_case(
 
 fn extract_test_case_summary(
     run_result: Result<RunResult, TestCaseRunError>,
-    case: &TestCase,
+    case: &TestCase<ValidatedForkConfig>,
     args: Vec<Felt252>,
 ) -> Result<TestCaseSummary> {
     match run_result {
@@ -273,10 +273,10 @@ fn extract_test_case_summary(
 
 fn get_fork_state_reader(
     workspace_root: &Utf8Path,
-    fork_config: &Option<ForkConfig>,
+    fork_config: &Option<ValidatedForkConfig>,
 ) -> Result<Option<ForkStateReader>> {
     match fork_config {
-        Some(ForkConfig::Parsed(url, mut block_id)) => {
+        Some(ValidatedForkConfig { url, mut block_id }) => {
             if let BlockId::Tag(Latest) = block_id {
                 block_id = get_latest_block_number(url)?;
             }
@@ -286,7 +286,6 @@ fn get_fork_state_reader(
                 Some(workspace_root.join(CACHE_DIR).as_ref()),
             )))
         }
-        Some(ForkConfig::Raw(..)) => unreachable!(),
         None => Ok(None),
     }
 }
