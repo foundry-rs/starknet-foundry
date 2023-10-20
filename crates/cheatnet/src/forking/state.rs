@@ -73,9 +73,30 @@ impl BlockInfoReader for ForkStateReader {
 
                 Ok(block_info)
             }
-            Ok(MaybePendingBlockWithTxHashes::PendingBlock(_)) => Err(StateReadError(
-                "Unable to get block info of the pending block".to_string(),
-            )),
+            Ok(MaybePendingBlockWithTxHashes::PendingBlock(pending_block)) => {
+                let parent_block_id = BlockId::Hash(pending_block.parent_hash);
+
+                match self
+                    .runtime
+                    .block_on(self.client.get_block_with_tx_hashes(parent_block_id))
+                {
+                    Ok(MaybePendingBlockWithTxHashes::Block(parent_block)) => {
+                        Ok(CheatnetBlockInfo {
+                            block_number: BlockNumber(parent_block.block_number + 1),
+                            timestamp: BlockTimestamp(pending_block.timestamp),
+                            sequencer_address: ContractAddress(patricia_key!(
+                                pending_block.sequencer_address
+                            )),
+                        })
+                    }
+                    Ok(MaybePendingBlockWithTxHashes::PendingBlock(_)) => Err(StateReadError(
+                        "Parent block of the pending block cannot be pending".to_string(),
+                    )),
+                    Err(_) => Err(StateReadError(
+                        "Unable to get parent block with tx hashes from fork".to_string(),
+                    )),
+                }
+            }
             Err(_) => Err(StateReadError(
                 "Unable to get block with tx hashes from fork".to_string(),
             )),

@@ -183,7 +183,7 @@ fn get_block_info_in_forked_block() {
             }}
 
             #[test]
-            #[fork(url: "{}", block_id: BlockId::Number(315887))]
+            #[fork(url: "{CHEATNET_RPC_URL}", block_id: BlockId::Number(315887))]
             fn test_fork_get_block_info_contract_on_testnet() {{
                 let dispatcher = IBlockInfoCheckerDispatcher {{
                     contract_address: contract_address_const::<0x4bc9a2c302d2c704dbabe8fe396d9fe7b9ca65a46a3cf5d2edc6c57bddcf316>()
@@ -200,7 +200,7 @@ fn get_block_info_in_forked_block() {
             }}
 
             #[test]
-            #[fork(url: "{}", block_id: BlockId::Number(315887))]
+            #[fork(url: "{CHEATNET_RPC_URL}", block_id: BlockId::Number(315887))]
             fn test_fork_get_block_info_test_state() {{
                 let block_info = starknet::get_block_info().unbox();
                 assert(block_info.block_timestamp == 1697630072, block_info.block_timestamp.into());
@@ -210,7 +210,7 @@ fn get_block_info_in_forked_block() {
             }}
 
             #[test]
-            #[fork(url: "{}", block_id: BlockId::Number(315887))]
+            #[fork(url: "{CHEATNET_RPC_URL}", block_id: BlockId::Number(315887))]
             fn test_fork_get_block_info_contract_deployed() {{
                 let contract = declare('BlockInfoChecker');
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
@@ -227,14 +227,21 @@ fn get_block_info_in_forked_block() {
             }}
 
             #[test]
-            #[fork(url: "{}", block_id: BlockId::Tag(BlockTag::Latest))]
+            #[fork(url: "{CHEATNET_RPC_URL}", block_id: BlockId::Tag(BlockTag::Latest))]
             fn test_fork_get_block_info_latest_block() {{
                 let block_info = starknet::get_block_info().unbox();
                 assert(block_info.block_timestamp > 1697630072, block_info.block_timestamp.into());
                 assert(block_info.block_number > 315887, block_info.block_number.into());
             }}
-        "#,
-        CHEATNET_RPC_URL, CHEATNET_RPC_URL, CHEATNET_RPC_URL, CHEATNET_RPC_URL
+
+            #[test]
+            #[fork(url: "{CHEATNET_RPC_URL}", block_id: BlockId::Tag(BlockTag::Pending))]
+            fn test_fork_get_block_info_pending_block() {{
+                let block_info = starknet::get_block_info().unbox();
+                assert(block_info.block_timestamp > 1697630072, block_info.block_timestamp.into());
+                assert(block_info.block_number > 315887, block_info.block_number.into());
+            }}
+        "#
     ).as_str(),
     Contract::from_code_path(
         "BlockInfoChecker".to_string(),
