@@ -1,5 +1,5 @@
 use anyhow::{anyhow, bail, Context, Result};
-use camino::Utf8PathBuf;
+use camino::{Utf8Path, Utf8PathBuf};
 use clap::Parser;
 use include_dir::{include_dir, Dir};
 use scarb_metadata::{MetadataCommand, PackageMetadata};
@@ -55,27 +55,6 @@ struct Args {
     /// Clean forge cache directory
     #[arg(short, long)]
     clean_cache: bool,
-
-    /// Number of cores used for test execution
-    #[arg(long, value_parser = validate_cores_number)]
-    cores: Option<usize>,
-}
-
-fn validate_cores_number(val: &str) -> Result<usize> {
-    let parsed_val: usize = val
-        .parse()
-        .map_err(|_| anyhow::anyhow!("Failed to parse '{}' as usize", val))?;
-    if parsed_val == 0 {
-        bail!("Number of cores must be greater than 0");
-    }
-    let cores_approx = available_parallelism()?.get();
-    if parsed_val > cores_approx {
-        bail!(
-            "Number of cores must be less than or equal to the number of cores available on the machine = {}",
-            cores_approx
-        );
-    }
-    Ok(parsed_val)
 }
 
 fn validate_fuzzer_runs_value(val: &str) -> Result<u32> {
@@ -88,7 +67,7 @@ fn validate_fuzzer_runs_value(val: &str) -> Result<u32> {
     Ok(parsed_val)
 }
 
-fn clean_cache(workspace_root: &Utf8PathBuf) -> Result<()> {
+fn clean_cache(workspace_root: &Utf8Path) -> Result<()> {
     let cache_dir = workspace_root.join(CACHE_DIR);
     if cache_dir.exists() {
         fs::remove_dir_all(cache_dir)?;
@@ -140,9 +119,7 @@ fn main_execution() -> Result<bool> {
         clean_cache(&workspace_root).context("Failed to clean snforge cache")?;
     }
 
-    let cores = if let Some(cores) = args.cores {
-        cores
-    } else if let Ok(available_cores) = available_parallelism() {
+    let cores = if let Ok(available_cores) = available_parallelism() {
         available_cores.get()
     } else {
         eprintln!("Failed to get the number of available cores, defaulting to 1");
@@ -202,6 +179,7 @@ fn main_execution() -> Result<bool> {
                     contracts,
                     predeployed_contracts.clone(),
                     env::vars().collect(),
+                    dependencies,
                 ));
 
                 let cancellation_tokens = Arc::new(CancellationTokens::new());
@@ -210,7 +188,6 @@ fn main_execution() -> Result<bool> {
                     &package_path,
                     &package_name,
                     &package_source_dir_path,
-                    &dependencies,
                     runner_config,
                     runner_params,
                     cancellation_tokens,

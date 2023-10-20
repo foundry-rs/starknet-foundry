@@ -24,7 +24,7 @@ use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use cheatnet::cheatcodes::deploy::{deploy, deploy_at, DeployCallPayload};
 use cheatnet::cheatcodes::{CheatcodeError, ContractArtifacts, EnhancedHintError};
-use cheatnet::execution::syscalls::{CheatableSyscallHandler, SingleSegmentResponse};
+use cheatnet::execution::cheatable_syscall_handler::CheatableSyscallHandler;
 use cheatnet::rpc::{call_contract, CallContractFailure, CallContractOutput, CallContractResult};
 use cheatnet::state::{BlockifierState, CheatnetState};
 use conversions::StarknetConversions;
@@ -717,6 +717,7 @@ impl SyscallRequest for CallContractArgs {
 
 fn write_call_contract_response(
     cheatable_syscall_handler: &mut CheatableSyscallHandler,
+    system_ptr: Relocatable,
     vm: &mut VirtualMachine,
     call_args: &CallContractArgs,
     call_output: CallContractOutput,
