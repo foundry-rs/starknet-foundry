@@ -106,7 +106,7 @@ impl RunnerConfig {
             fuzzer_seed: fuzzer_seed
                 .or(forge_config_from_scarb.fuzzer_seed)
                 .unwrap_or_else(|| thread_rng().next_u64()),
-            tests_filter: TestsFilter::new(
+            tests_filter: TestsFilter::from_flags(
                 test_name_filter,
                 exact_match,
                 only_ignored,
@@ -303,7 +303,10 @@ async fn run_tests_from_crate(
     for case in test_cases.iter() {
         let case_name = case.name.clone();
 
-        if !runner_config.tests_filter.should_be_run(case) {
+        if !runner_config
+            .tests_filter
+            .should_be_run_based_on_ignored(case)
+        {
             tasks.push(tokio::task::spawn(async {
                 Ok(TestCaseSummary::Ignored { name: case_name })
             }));
