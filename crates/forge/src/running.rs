@@ -26,9 +26,8 @@ use cheatnet::constants as cheatnet_constants;
 use cheatnet::execution::contract_execution_syscall_handler::ContractExecutionSyscallHandler;
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::state::{BlockInfoReader, CheatnetBlockInfo, CheatnetState, ExtendedStateReader};
-use conversions::StarknetConversions;
 use starknet::core::types::BlockTag::Latest;
-use starknet::core::types::{BlockId, BlockTag, MaybePendingBlockWithTxHashes};
+use starknet::core::types::{BlockId, MaybePendingBlockWithTxHashes};
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider};
@@ -45,7 +44,6 @@ use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
 use url::Url;
 
-use crate::scarb::ForkTarget;
 use crate::test_case_summary::TestCaseSummary;
 
 use crate::test_execution_syscall_handler::TestExecutionSyscallHandler;
@@ -197,11 +195,7 @@ pub(crate) fn run_test_case(
         dict_state_reader: cheatnet_constants::build_testing_state(
             &runner_params.predeployed_contracts,
         ),
-        fork_state_reader: get_fork_state_reader(
-            &runner_config.workspace_root,
-            &runner_config.fork_targets,
-            &case.fork_config,
-        )?,
+        fork_state_reader: get_fork_state_reader(&runner_config.workspace_root, &case.fork_config)?,
     };
     let block_info = state_reader.get_block_info()?;
 
@@ -279,70 +273,30 @@ fn extract_test_case_summary(
 
 fn get_fork_state_reader(
     workspace_root: &Utf8Path,
-    fork_targets: &[ForkTarget],
     fork_config: &Option<ForkConfig>,
 ) -> Result<Option<ForkStateReader>> {
-    match &fork_config {
-        Some(ForkConfig::Params(url, mut block_id)) => {
+    match fork_config {
+        Some(ForkConfig::Parsed(url, mut block_id)) => {
             if let BlockId::Tag(Latest) = block_id {
                 block_id = get_latest_block_number(url)?;
             }
             Ok(Some(ForkStateReader::new(
-                url,
+                url.clone(),
                 block_id,
                 Some(workspace_root.join(CACHE_DIR).as_ref()),
             )))
         }
-        Some(ForkConfig::Id(name)) => {
-            find_params_and_build_fork_state_reader(workspace_root, fork_targets, name)
-        }
-        _ => Ok(None),
+        Some(ForkConfig::Raw(..)) => unreachable!(),
+        None => Ok(None),
     }
 }
 
-fn get_latest_block_number(url: &str) -> Result<BlockId> {
-    let client = JsonRpcClient::new(HttpTransport::new(Url::parse(url).unwrap()));
+fn get_latest_block_number(url: &Url) -> Result<BlockId> {
+    let client = JsonRpcClient::new(HttpTransport::new(url.clone()));
     let runtime = Runtime::new().expect("Could not instantiate Runtime");
 
     match runtime.block_on(client.get_block_with_tx_hashes(BlockId::Tag(Latest))) {
         Ok(MaybePendingBlockWithTxHashes::Block(block)) => Ok(BlockId::Number(block.block_number)),
         _ => Err(anyhow!("Could not get the latest block number".to_string())),
     }
-}
-
-fn find_params_and_build_fork_state_reader(
-    workspace_root: &Utf8Path,
-    fork_targets: &[ForkTarget],
-    fork_alias: &str,
-) -> Result<Option<ForkStateReader>> {
-    if let Some(fork) = fork_targets.iter().find(|fork| fork.name == fork_alias) {
-        let block_id = fork
-            .block_id
-            .iter()
-            .map(|(id_type, value)| match id_type.as_str() {
-                "number" => Some(BlockId::Number(value.parse().unwrap())),
-                "hash" => Some(BlockId::Hash(value.to_field_element())),
-                "tag" => match value.as_str() {
-                    "Latest" => Some(BlockId::Tag(BlockTag::Latest)),
-                    "Pending" => Some(BlockId::Tag(BlockTag::Pending)),
-                    _ => unreachable!(),
-                },
-                _ => unreachable!(),
-            })
-            .collect::<Vec<_>>();
-        let [Some(mut block_id)] = block_id[..] else {
-            return Ok(None);
-        };
-
-        if let BlockId::Tag(Latest) = block_id {
-            block_id = get_latest_block_number(&fork.url)?;
-        }
-        return Ok(Some(ForkStateReader::new(
-            &fork.url,
-            block_id,
-            Some(workspace_root.join(CACHE_DIR).as_ref()),
-        )));
-    }
-
-    Ok(None)
 }

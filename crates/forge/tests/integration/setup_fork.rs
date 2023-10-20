@@ -4,10 +4,11 @@ use crate::{assert_case_output_contains, assert_failed, assert_passed, test_case
 use crate::integration::common::corelib::{corelib_path, predeployed_contracts};
 use crate::integration::common::runner::Contract;
 use camino::Utf8PathBuf;
-use forge::scarb::{ForgeConfig, ForkTarget};
+use forge::scarb::config::{ForgeConfig, ForkTarget};
 use forge::{run, CancellationTokens, RunnerConfig, RunnerParams};
 use indoc::formatdoc;
-use std::collections::HashMap;
+use starknet::core::types::BlockId;
+use starknet::core::types::BlockTag::Latest;
 use std::path::Path;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -117,8 +118,8 @@ fn fork_aliased_decorator() {
                     fuzzer_seed: Some(500),
                     fork: vec![ForkTarget {
                         name: "FORK_NAME_FROM_SCARB_TOML".to_string(),
-                        url: CHEATNET_RPC_URL.to_string(),
-                        block_id: HashMap::from([("tag".to_string(), "Latest".to_string())]),
+                        url: CHEATNET_RPC_URL.parse().unwrap(),
+                        block_id: BlockId::Tag(Latest),
                     }],
                 },
             )),

@@ -1,0 +1,127 @@
+use anyhow::{anyhow, Result};
+use conversions::StarknetConversions;
+use itertools::Itertools;
+use serde::Deserialize;
+use starknet::core::types::{BlockId, BlockTag};
+use std::collections::HashMap;
+use url::Url;
+
+#[derive(Debug, PartialEq, Default)]
+#[allow(clippy::module_name_repetitions)]
+pub struct ForgeConfig {
+    /// Should runner exit after first failed test
+    pub exit_first: bool,
+    /// How many runs should fuzzer execute
+    pub fuzzer_runs: Option<u32>,
+    /// Seed to be used by fuzzer
+    pub fuzzer_seed: Option<u64>,
+
+    pub fork: Vec<ForkTarget>,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct ForkTarget {
+    pub name: String,
+    pub url: Url,
+    pub block_id: BlockId,
+}
+
+/// Represents forge config deserialized from Scarb.toml using basic types like String etc.
+#[derive(Deserialize, Debug, PartialEq, Default)]
+pub(crate) struct RawForgeConfig {
+    #[serde(default)]
+    /// Should runner exit after first failed test
+    pub exit_first: bool,
+    /// How many runs should fuzzer execute
+    pub fuzzer_runs: Option<u32>,
+    /// Seed to be used by fuzzer
+    pub fuzzer_seed: Option<u64>,
+
+    #[serde(default)]
+    pub fork: Vec<RawForkTarget>,
+}
+
+#[derive(Deserialize, Debug, PartialEq, Default, Clone)]
+pub(crate) struct RawForkTarget {
+    pub name: String,
+    pub url: String,
+    pub block_id: HashMap<String, String>,
+}
+
+pub(super) fn validate_raw_fork_config(raw_config: &RawForgeConfig) -> Result<()> {
+    let forks = &raw_config.fork;
+    let names: Vec<String> = forks.iter().map(|fork| fork.name.clone()).collect();
+    let removed_duplicated_names: Vec<String> = names.clone().into_iter().unique().collect();
+
+    if names.len() != removed_duplicated_names.len() {
+        return Err(anyhow!("Some fork names are duplicated"));
+    }
+
+    for fork in forks {
+        let block_id_items: Vec<(&String, &String)> = fork.block_id.iter().collect();
+        let [(block_id_key, block_id_value)] = block_id_items[..] else {
+            return Err(anyhow!("block_id should be set once per fork"));
+        };
+
+        if !["number", "hash", "tag"].contains(&&**block_id_key) {
+            return Err(anyhow!(
+                "block_id has only three variants: number, hash and tag"
+            ));
+        }
+
+        if block_id_key == "tag" && !["Latest", "Pending"].contains(&&**block_id_value) {
+            return Err(anyhow!(
+                "block_id.tag has only two variants: Latest or Pending"
+            ));
+        }
+    }
+
+    Ok(())
+}
+
+impl TryFrom<RawForgeConfig> for ForgeConfig {
+    type Error = anyhow::Error;
+
+    fn try_from(value: RawForgeConfig) -> Result<Self, Self::Error> {
+        let mut fork_targets = vec![];
+
+        for raw_fork_target in value.fork {
+            let block_id: Vec<BlockId> = raw_fork_target
+                .block_id
+                .iter()
+                .map(|(id_type, value)| match id_type.as_str() {
+                    "number" => BlockId::Number(value.parse().unwrap()),
+                    "hash" => BlockId::Hash(value.to_field_element()),
+                    "tag" => match value.as_str() {
+                        "Latest" => BlockId::Tag(BlockTag::Latest),
+                        "Pending" => BlockId::Tag(BlockTag::Pending),
+                        _ => unreachable!(),
+                    },
+                    _ => unreachable!(),
+                })
+                .collect();
+
+            let [block_id] = block_id[..] else {
+                unreachable!()
+            };
+
+            fork_targets.push(ForkTarget {
+                name: raw_fork_target.name,
+                url: Url::parse(&raw_fork_target.url).map_err(|parse_error| {
+                    anyhow!(
+                        "Could not parse the url = {} from Scarb.toml: {parse_error}",
+                        raw_fork_target.url
+                    )
+                })?,
+                block_id,
+            });
+        }
+
+        Ok(ForgeConfig {
+            exit_first: value.exit_first,
+            fuzzer_runs: value.fuzzer_runs,
+            fuzzer_seed: value.fuzzer_seed,
+            fork: fork_targets,
+        })
+    }
+}

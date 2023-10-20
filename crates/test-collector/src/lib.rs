@@ -38,6 +38,7 @@ use starknet::core::types::{BlockId, BlockTag};
 use std::fs;
 use std::path::PathBuf;
 use std::sync::Arc;
+use url::Url;
 
 mod plugin;
 
@@ -63,6 +64,12 @@ pub enum ExpectedTestResult {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ForkConfig {
+    Raw(RawForkConfig),
+    Parsed(Url, BlockId),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum RawForkConfig {
     Id(String),
     Params(String, BlockId),
 }
@@ -358,7 +365,7 @@ fn extract_fork_config_from_id(id: &ast::Expr, db: &dyn SyntaxGroup) -> Option<F
     };
     let url = url_str.string_value(db)?;
 
-    Some(ForkConfig::Id(url))
+    Some(ForkConfig::Raw(RawForkConfig::Id(url)))
 }
 
 fn extract_fork_config_from_args(db: &dyn SyntaxGroup, attr: &Attribute) -> Option<ForkConfig> {
@@ -446,7 +453,10 @@ fn extract_fork_config_from_args(db: &dyn SyntaxGroup, attr: &Attribute) -> Opti
         return None;
     }
 
-    Some(ForkConfig::Params(url, block_id[0].unwrap()))
+    Some(ForkConfig::Raw(RawForkConfig::Params(
+        url,
+        block_id[0].unwrap(),
+    )))
 }
 
 /// Represents a dependency of a Cairo project

@@ -29,14 +29,15 @@ use rand::{thread_rng, RngCore};
 use smol_str::SmolStr;
 
 use crate::fuzzer::RandomFuzzer;
-use crate::scarb::{ForgeConfig, ForkTarget, StarknetContractArtifacts};
+use crate::scarb::config::{ForgeConfig, ForkTarget};
+use crate::scarb::StarknetContractArtifacts;
 
 // pub use crate::collecting::CrateLocation;
 pub use crate::test_crate_summary::TestCrateSummary;
 
 use crate::collecting::{collect_test_compilation_targets, compile_tests, CompiledTestCrate};
 use crate::test_filter::TestsFilter;
-use test_collector::{FuzzerConfig, LinkedLibrary, TestCase};
+use test_collector::{ForkConfig, FuzzerConfig, LinkedLibrary, RawForkConfig, TestCase};
 
 pub mod pretty_printing;
 pub mod scarb;
@@ -194,6 +195,58 @@ fn try_close_tmp_dir(temp_dir: TempDir) -> Result<()> {
     Ok(())
 }
 
+fn find_or_parse_raw_fork_config(
+    fork_config: ForkConfig,
+    runner_config: &RunnerConfig,
+) -> Result<ForkConfig> {
+    if let ForkConfig::Raw(raw_fork_config) = fork_config {
+        match raw_fork_config {
+            RawForkConfig::Params(url_str, block_id) => {
+                Ok(ForkConfig::Parsed(url_str.parse()?, block_id))
+            }
+            RawForkConfig::Id(name) => {
+                let fork_target_from_runner_config = runner_config
+                    .fork_targets
+                    .iter()
+                    .find(|fork| fork.name == name)
+                    .ok_or_else(|| {
+                        anyhow!("Fork configuration named = {name} not found in the Scarb.toml")
+                    })?; // TODO essa test it
+                Ok(ForkConfig::Parsed(
+                    fork_target_from_runner_config.url.clone(),
+                    fork_target_from_runner_config.block_id,
+                ))
+            }
+        }
+    } else {
+        unreachable!()
+    }
+}
+
+fn map_raw_to_parsed_fork_configs_in_tests(
+    compiled_test_crate: CompiledTestCrate,
+    runner_config: &RunnerConfig,
+) -> Result<CompiledTestCrate> {
+    let mut test_cases = vec![];
+
+    for case in compiled_test_crate.test_cases {
+        let fork_config = if let Some(fc) = case.fork_config {
+            Some(find_or_parse_raw_fork_config(fc, runner_config)?)
+        } else {
+            None
+        };
+        test_cases.push(TestCase {
+            fork_config,
+            ..case
+        });
+    }
+
+    Ok(CompiledTestCrate {
+        test_cases,
+        ..compiled_test_crate
+    })
+}
+
 /// Run the tests in the package at the given path
 ///
 /// # Arguments
@@ -224,22 +277,26 @@ pub async fn run(
         .into_iter()
         .map(|ct| ct.ensure_lib_file_exists(&temp_dir))
         .collect::<Result<_>>()?;
-    let tests = compile_tests(&compilation_targets, &runner_params)?;
-    let tests = tests
+    let test_crates = compile_tests(&compilation_targets, &runner_params)?;
+    let test_crates = test_crates
         .into_iter()
         .map(|tc| runner_config.tests_filter.filter_tests(tc))
         .collect_vec();
+    let test_crates = test_crates
+        .into_iter()
+        .map(|ctc| map_raw_to_parsed_fork_configs_in_tests(ctc, &runner_config))
+        .collect::<Result<Vec<_>>>()?;
 
     try_close_tmp_dir(temp_dir)?;
 
     pretty_printing::print_collected_tests_count(
-        tests.iter().map(|tests| tests.test_cases.len()).sum(),
+        test_crates.iter().map(|tests| tests.test_cases.len()).sum(),
         package_name,
     );
 
     let mut summaries = vec![];
 
-    for compiled_test_crate in tests {
+    for compiled_test_crate in test_crates {
         let compiled_test_crate = Arc::new(compiled_test_crate);
         let runner_config = runner_config.clone();
         let runner_params = runner_params.clone();
