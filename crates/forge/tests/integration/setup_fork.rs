@@ -1,5 +1,5 @@
 use crate::integration::common::running_tests::run_test_case;
-use crate::{assert_passed, test_case};
+use crate::{assert_case_output_contains, assert_failed, assert_passed, test_case};
 
 use crate::integration::common::corelib::{corelib_path, predeployed_contracts};
 use crate::integration::common::runner::Contract;
@@ -243,4 +243,26 @@ fn get_block_info_in_forked_block() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
+}
+
+#[test]
+fn test_fork_get_block_info_fails() {
+    let test = test_case!(formatdoc!(
+        r#"
+            #[test]
+            #[fork(url: "{CHEATNET_RPC_URL}", block_id: BlockId::Number(999999999999))]
+            fn test_fork_get_block_info_fails() {{
+                let block_info = starknet::get_block_info().unbox();
+            }}
+        "#
+    ).as_str());
+
+    let result = run_test_case(&test);
+
+    assert_failed!(result);
+    assert_case_output_contains!(
+        result,
+        "test_fork_get_block_info_fails",
+        "Unable to get block with tx hashes from fork"
+    );
 }

@@ -189,7 +189,19 @@ pub(crate) fn run_test_case(
             &case.fork_config,
         )?,
     };
-    let block_info = state_reader.get_block_info().unwrap();
+    let block_info = match state_reader.get_block_info() {
+        Ok(block_info) => block_info,
+        Err(error) => return Ok(TestCaseSummary::Failed {
+            name: case.name.clone(),
+            msg: Some(format!(
+                "\n    {}\n",
+                error.to_string().replace(" : ", "\n    ")
+            )),
+            arguments: args,
+            fuzzing_statistic: None,
+        }),
+    };
+
     let mut context = build_context(block_info);
     let mut execution_resources = ExecutionResources::default();
     let mut blockifier_state = CachedState::from(state_reader);

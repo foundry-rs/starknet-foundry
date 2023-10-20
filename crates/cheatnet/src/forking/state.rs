@@ -93,12 +93,12 @@ impl BlockInfoReader for ForkStateReader {
                         "Parent block of the pending block cannot be pending".to_string(),
                     )),
                     Err(err) => Err(StateReadError(format!(
-                        "Unable to get parent block with tx hashes from fork, err:{err:?}"
+                        "Unable to get parent block with tx hashes from fork, err: {err:?}"
                     ))),
                 }
             }
             Err(err) => Err(StateReadError(format!(
-                "Unable to get block with tx hashes from fork, err:{err:?}"
+                "Unable to get block with tx hashes from fork, err: {err:?}"
             ))),
         }
     }
