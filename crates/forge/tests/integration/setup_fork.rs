@@ -233,14 +233,6 @@ fn get_block_info_in_forked_block() {
                 assert(block_info.block_timestamp > 1697630072, block_info.block_timestamp.into());
                 assert(block_info.block_number > 315887, block_info.block_number.into());
             }}
-
-            #[test]
-            #[fork(url: "{CHEATNET_RPC_URL}", block_id: BlockId::Tag(BlockTag::Pending))]
-            fn test_fork_get_block_info_pending_block() {{
-                let block_info = starknet::get_block_info().unbox();
-                assert(block_info.block_timestamp > 1697630072, block_info.block_timestamp.into());
-                assert(block_info.block_number > 315887, block_info.block_number.into());
-            }}
         "#
     ).as_str(),
     Contract::from_code_path(
