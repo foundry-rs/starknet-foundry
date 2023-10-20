@@ -13,6 +13,7 @@ permissions:
 
 jobs:
   verify-version:
+    name: Verify that version that triggered this workflow is greater than most recent  release
     runs-on: ubuntu-latest
     outputs:
       versionIsValid: ${{ steps.validVersion.outputs.versionIsValid }}
@@ -57,6 +58,7 @@ jobs:
         run: echo "Version from commit is not greater from newest release, skipping build"
 
   create-tag:
+    name: If workflow was triggered by a push to master, create a new tag with release version
     runs-on: ubuntu-latest
     needs: verify-version
     if: ${{ needs.verify-version.outputs.versionIsValid == 'true' }}
