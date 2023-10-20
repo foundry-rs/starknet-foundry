@@ -108,7 +108,7 @@ pub fn delete(
 
     let result = "Account successfully removed".to_string();
     Ok(AccountDeleteResponse {
-        result: result,
-        scarb_result: scarb_result,
+        result,
+        scarb_result,
     })
 }
