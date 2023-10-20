@@ -21,6 +21,7 @@ use glob::glob;
 use num_bigint::BigUint;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use serde_json::Value;
+use starknet::core::types::BlockTag::Latest;
 use starknet::core::types::{BlockId, BlockTag};
 use starknet_api::core::ContractAddress;
 use std::str::FromStr;
@@ -509,4 +510,46 @@ fn test_cache_merging() {
     .for_each(|param_tpl| run_test(param_tpl.0, param_tpl.1, param_tpl.2));
 
     assert_cache();
+}
+
+#[test]
+fn test_calling_nonexistent_url() {
+    let predeployed_contracts = Utf8PathBuf::from("predeployed-contracts");
+    let nonexistent_url = "http://188.34.188.184:9546";
+    let mut cached_fork_state = CachedState::new(
+        ExtendedStateReader {
+            dict_state_reader: build_testing_state(&predeployed_contracts),
+            fork_state_reader: Some(ForkStateReader::new(
+                nonexistent_url,
+                BlockId::Tag(Latest),
+                None,
+            )),
+        },
+        GlobalContractCache::default(),
+    );
+
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_fork_state);
+
+    let contract_address = Felt252::from(
+        BigUint::from_str(
+            "3216637956526895219277698311134811322769343974163380838558193911733621219342",
+        )
+        .unwrap(),
+    )
+    .to_contract_address();
+
+    let selector = felt_selector_from_name("get_balance");
+    let output = call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &contract_address,
+        &selector,
+        &[],
+    )
+    .unwrap();
+
+    assert_error!(
+        output,
+        "Unable to reach the node. Check your internet connection and node url"
+    );
 }

@@ -19,7 +19,7 @@ use starknet_api::hash::StarkHash;
 use starknet_api::patricia_key;
 
 use crate::cheatcodes::EnhancedHintError;
-use crate::execution::syscalls::execute_deployment;
+use crate::execution::cheated_syscalls;
 use starknet_api::core::{ClassHash, ContractAddress};
 use starknet_api::transaction::Calldata;
 
@@ -69,7 +69,7 @@ pub fn deploy_at(
     ));
 
     let resources = &mut ExecutionResources::default();
-    let result = execute_deployment(
+    let result = cheated_syscalls::execute_deployment(
         blockifier_state_raw,
         resources,
         entry_point_execution_ctx,

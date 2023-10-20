@@ -63,8 +63,7 @@ pub enum ValueFormat {
 impl ValueFormat {
     pub fn format_u64(&self, input: u64) -> String {
         match self {
-            ValueFormat::Default => format!("{input}"),
-            ValueFormat::Int => format!("{input}"),
+            ValueFormat::Default | ValueFormat::Int => format!("{input}"),
             ValueFormat::Hex => format!("{input:#x}"),
         }
     }
@@ -72,13 +71,12 @@ impl ValueFormat {
     pub fn format_str(&self, input: &str) -> String {
         if let Ok(field) = FieldElement::from_str(input) {
             return match self {
-                ValueFormat::Default => format!("{field:#x}"),
                 ValueFormat::Int => format!("{field:#}"),
-                ValueFormat::Hex => format!("{field:#x}"),
+                ValueFormat::Hex | ValueFormat::Default => format!("{field:#x}"),
             };
         }
 
-        return format!("{input}");
+        format!("{input}")
     }
 }
 
@@ -372,19 +370,17 @@ pub fn print_command_result<T: Serialize>(
                     .as_object()
                     .expect("Invalid JSON value")
                     .iter()
-                    .map(|(k, v)| {
+                    .filter_map(|(k, v)| {
                         let value = match v {
                             Value::Number(n) => {
                                 let n = n.as_u64().expect("found unexpected value");
                                 value_format.format_u64(n)
                             }
                             Value::String(s) => value_format.format_str(&s),
-                            _ => {
-                                panic!("Found unexpected value as value");
-                            }
+                            _ => return None,
                         };
 
-                        dbg!((k.as_str(), value))
+                        Some((k.as_str(), value))
                     })
                     .collect::<Vec<(&str, String)>>(),
             );

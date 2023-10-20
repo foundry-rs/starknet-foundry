@@ -94,12 +94,12 @@ fn fork_aliased_decorator() {
     ).as_str());
 
     let rt = Runtime::new().expect("Could not instantiate Runtime");
+
     let result = rt
         .block_on(run(
             &test.path().unwrap(),
             &String::from("src"),
             &test.path().unwrap().join("src"),
-            &test.linked_libraries(),
             Arc::new(RunnerConfig::new(
                 Utf8PathBuf::from_path_buf(PathBuf::from(tempdir().unwrap().path())).unwrap(),
                 None,
@@ -123,6 +123,7 @@ fn fork_aliased_decorator() {
                 test.contracts(&corelib_path()).unwrap(),
                 Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
                 Default::default(),
+                test.linked_libraries(),
             )),
             Arc::new(CancellationTokens::new()),
         ))

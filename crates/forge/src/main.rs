@@ -1,5 +1,5 @@
 use anyhow::{anyhow, bail, Context, Result};
-use camino::Utf8PathBuf;
+use camino::{Utf8Path, Utf8PathBuf};
 use clap::Parser;
 use include_dir::{include_dir, Dir};
 use scarb_metadata::{MetadataCommand, PackageMetadata};
@@ -10,7 +10,7 @@ use std::{env, fs};
 use tempfile::{tempdir, TempDir};
 use tokio::runtime::Builder;
 
-use forge::{pretty_printing, CancellationTokens, RunnerConfig, RunnerParams};
+use forge::{pretty_printing, CancellationTokens, RunnerConfig, RunnerParams, CACHE_DIR};
 use forge::{run, TestCrateSummary};
 
 use forge::scarb::{
@@ -24,7 +24,6 @@ use std::thread::available_parallelism;
 mod init;
 
 static PREDEPLOYED_CONTRACTS: Dir = include_dir!("crates/cheatnet/predeployed-contracts");
-static CACHE_DIR: &str = ".snfoundry_cache";
 
 #[derive(Parser, Debug)]
 #[command(version)]
@@ -67,7 +66,7 @@ fn validate_fuzzer_runs_value(val: &str) -> Result<u32> {
     Ok(parsed_val)
 }
 
-fn clean_cache(workspace_root: &Utf8PathBuf) -> Result<()> {
+fn clean_cache(workspace_root: &Utf8Path) -> Result<()> {
     let cache_dir = workspace_root.join(CACHE_DIR);
     if cache_dir.exists() {
         fs::remove_dir_all(cache_dir)?;
@@ -118,11 +117,19 @@ fn main_execution() -> Result<bool> {
     if args.clean_cache {
         clean_cache(&workspace_root).context("Failed to clean snforge cache")?;
     }
-    let cores_approx = available_parallelism()?.get();
+
+    let cores = if let Ok(available_cores) = available_parallelism() {
+        available_cores.get()
+    } else {
+        eprintln!("Failed to get the number of available cores, defaulting to 1");
+        1
+    };
+
     let rt = Builder::new_multi_thread()
-        .max_blocking_threads(cores_approx)
+        .max_blocking_threads(cores)
         .enable_all()
         .build()?;
+
     let all_failed_tests = rt.block_on({
         rt.spawn(async move {
             let mut all_failed_tests = vec![];
@@ -171,6 +178,7 @@ fn main_execution() -> Result<bool> {
                     contracts,
                     predeployed_contracts.clone(),
                     env::vars().collect(),
+                    dependencies,
                 ));
 
                 let cancellation_tokens = Arc::new(CancellationTokens::new());
@@ -179,7 +187,6 @@ fn main_execution() -> Result<bool> {
                     &package_path,
                     &package_name,
                     &package_source_dir_path,
-                    &dependencies,
                     runner_config,
                     runner_params,
                     cancellation_tokens,

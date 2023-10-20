@@ -59,6 +59,7 @@ use snforge_std::{ declare, ContractClassTrait };
 fn call_and_invoke() {
     // First declare and deploy a contract
     let contract = declare('HelloStarknet');
+    // Alternatively we could use `deploy_syscall` here
     let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
     
     // Create a Dispatcher object that will allow interacting with the deployed contract

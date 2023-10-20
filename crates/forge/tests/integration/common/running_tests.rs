@@ -12,11 +12,11 @@ use tokio::runtime::Runtime;
 
 pub fn run_test_case(test: &TestCase) -> Vec<TestCrateSummary> {
     let rt = Runtime::new().expect("Could not instantiate Runtime");
+
     rt.block_on(run(
         &test.path().unwrap(),
         &String::from("src"),
         &test.path().unwrap().join("src"),
-        &test.linked_libraries(),
         Arc::new(RunnerConfig::new(
             Utf8PathBuf::from_path_buf(PathBuf::from(tempdir().unwrap().path())).unwrap(),
             None,
@@ -31,6 +31,7 @@ pub fn run_test_case(test: &TestCase) -> Vec<TestCrateSummary> {
             test.contracts(&corelib_path()).unwrap(),
             Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
             test.env().clone(),
+            test.linked_libraries(),
         )),
         Arc::new(CancellationTokens::new()),
     ))
