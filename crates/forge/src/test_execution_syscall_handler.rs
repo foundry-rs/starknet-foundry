@@ -45,6 +45,7 @@ use cairo_lang_starknet::contract::starknet_keccak;
 use cairo_lang_utils::bigint::BigIntAsHex;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cheatnet::cheatcodes::spy_events::SpyTarget;
+use cheatnet::execution::cheated_syscalls::SingleSegmentResponse;
 
 mod file_operations;
 
@@ -717,7 +718,6 @@ impl SyscallRequest for CallContractArgs {
 
 fn write_call_contract_response(
     cheatable_syscall_handler: &mut CheatableSyscallHandler,
-    system_ptr: Relocatable,
     vm: &mut VirtualMachine,
     call_args: &CallContractArgs,
     call_output: CallContractOutput,
