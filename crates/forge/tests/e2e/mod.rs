@@ -7,4 +7,5 @@ mod forking;
 mod fuzzing;
 mod io_operations;
 mod running;
+mod signing;
 mod workspaces;

@@ -1,0 +1,12 @@
+[package]
+name = "signing"
+version = "0.1.0"
+
+[[target.starknet-contract]]
+build-external-contracts = ["openzeppelin::account::account::Account"]
+sierra = true
+casm = true
+
+[dependencies]
+snforge_std = { path = "../../../../../snforge_std" }
+openzeppelin = { git = "https://github.com/openzeppelin/cairo-contracts", rev = "6454ca1" }
