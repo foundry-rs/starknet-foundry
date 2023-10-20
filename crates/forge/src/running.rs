@@ -191,15 +191,17 @@ pub(crate) fn run_test_case(
     };
     let block_info = match state_reader.get_block_info() {
         Ok(block_info) => block_info,
-        Err(error) => return Ok(TestCaseSummary::Failed {
-            name: case.name.clone(),
-            msg: Some(format!(
-                "\n    {}\n",
-                error.to_string().replace(" : ", "\n    ")
-            )),
-            arguments: args,
-            fuzzing_statistic: None,
-        }),
+        Err(error) => {
+            return Ok(TestCaseSummary::Failed {
+                name: case.name.clone(),
+                msg: Some(format!(
+                    "\n    {}\n",
+                    error.to_string().replace(" : ", "\n    ")
+                )),
+                arguments: args,
+                fuzzing_statistic: None,
+            })
+        }
     };
 
     let mut context = build_context(block_info);

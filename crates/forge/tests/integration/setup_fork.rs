@@ -255,7 +255,8 @@ fn test_fork_get_block_info_fails() {
                 let block_info = starknet::get_block_info().unbox();
             }}
         "#
-    ).as_str());
+    )
+    .as_str());
 
     let result = run_test_case(&test);
 
