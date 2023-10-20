@@ -3,7 +3,7 @@ use crate::{assert_passed, test_case};
 use indoc::indoc;
 
 #[test]
-fn generate_keys_sing_verify() {
+fn simple_signing_flow() {
     let test = test_case!(indoc!(
         r#"
             use snforge_std::{ StarkCurveKeyPair, StarkCurveKeyPairTrait };
@@ -13,7 +13,7 @@ fn generate_keys_sing_verify() {
                 let mut key_pair = StarkCurveKeyPairTrait::generate();
                 let message_hash = 123456;
 
-                let signature = key_pair.sign(message_hash);
+                let signature = key_pair.sign(message_hash).unwrap();
                 assert(key_pair.verify(message_hash, signature), 'Wrong signature');
             }
         "#

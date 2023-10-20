@@ -11,7 +11,7 @@ use thiserror::Error;
 
 pub mod declare;
 pub mod deploy;
-pub mod ecdsa_utils;
+pub mod signing;
 pub mod get_class_hash;
 pub mod l1_handler_execute;
 pub mod mock_call;
