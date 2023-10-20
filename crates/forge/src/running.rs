@@ -46,7 +46,7 @@ use crate::scarb::ForkTarget;
 use crate::test_case_summary::TestCaseSummary;
 
 use crate::test_execution_syscall_handler::TestExecutionSyscallHandler;
-use crate::{RunnerConfig, RunnerParams};
+use crate::{RunnerConfig, RunnerParams, CACHE_DIR};
 
 use crate::test_execution_syscall_handler::TestExecutionState;
 
@@ -249,7 +249,7 @@ fn get_fork_state_reader(
             Ok(Some(ForkStateReader::new(
                 url,
                 block_id,
-                Some(workspace_root.join(".snfoundry_cache").as_ref()),
+                Some(workspace_root.join(CACHE_DIR).as_ref()),
             )))
         }
         Some(ForkConfig::Id(name)) => {
@@ -299,7 +299,7 @@ fn find_params_and_build_fork_state_reader(
         return Ok(Some(ForkStateReader::new(
             &fork.url,
             block_id,
-            Some(workspace_root.join(".snfoundry_cache").as_ref()),
+            Some(workspace_root.join(CACHE_DIR).as_ref()),
         )));
     }
 
