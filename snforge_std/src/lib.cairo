@@ -36,9 +36,6 @@ use cheatcodes::stop_warp;
 use cheatcodes::start_mock_call;
 use cheatcodes::stop_mock_call;
 
-use cheatcodes::signing::StarkCurveKeyPair;
-use cheatcodes::signing::StarkCurveKeyPairTrait;
-
 mod forge_print;
 
 use forge_print::PrintTrait;
@@ -46,3 +43,5 @@ use forge_print::PrintTrait;
 mod fs;
 
 mod env;
+
+mod signing;
