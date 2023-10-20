@@ -92,14 +92,14 @@ impl BlockInfoReader for ForkStateReader {
                     Ok(MaybePendingBlockWithTxHashes::PendingBlock(_)) => Err(StateReadError(
                         "Parent block of the pending block cannot be pending".to_string(),
                     )),
-                    Err(_) => Err(StateReadError(
-                        "Unable to get parent block with tx hashes from fork".to_string(),
-                    )),
+                    Err(err) => Err(StateReadError(format!(
+                        "Unable to get parent block with tx hashes from fork, err:{err:?}"
+                    ))),
                 }
             }
-            Err(_) => Err(StateReadError(
-                "Unable to get block with tx hashes from fork".to_string(),
-            )),
+            Err(err) => Err(StateReadError(format!(
+                "Unable to get block with tx hashes from fork, err:{err:?}"
+            ))),
         }
     }
 }
