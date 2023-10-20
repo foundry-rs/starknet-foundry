@@ -9,6 +9,7 @@ struct StarkCurveKeyPair {
 
 trait StarkCurveKeyPairTrait {
     fn generate() -> StarkCurveKeyPair;
+    fn from_private_key(private_key: felt252) -> StarkCurveKeyPair;
     fn sign(
         ref self: StarkCurveKeyPair, message_hash: felt252
     ) -> Result<(felt252, felt252), felt252>;
@@ -22,6 +23,12 @@ impl StarkCurveKeyPairImpl of StarkCurveKeyPairTrait {
         let output = cheatcode::<'generate_ecdsa_keys'>(array![].span());
 
         StarkCurveKeyPair { private_key: *output[0], public_key: *output[1] }
+    }
+
+    fn from_private_key(private_key: felt252) -> StarkCurveKeyPair {
+        let output = cheatcode::<'get_public_key'>(array![private_key].span());
+
+        StarkCurveKeyPair { private_key, public_key: *output[0] }
     }
 
     fn sign(

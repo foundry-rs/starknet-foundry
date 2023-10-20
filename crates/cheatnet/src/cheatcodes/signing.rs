@@ -12,6 +12,13 @@ pub fn generate_ecdsa_keys() -> (Felt252, Felt252) {
     )
 }
 
+#[must_use]
+pub fn get_public_key(private_key: &Felt252) -> Felt252 {
+    let key_pair = SigningKey::from_secret_scalar(private_key.to_field_element());
+
+    key_pair.verifying_key().scalar().to_felt252()
+}
+
 pub fn ecdsa_sign_message(
     private_key: &Felt252,
     message_hash: &Felt252,

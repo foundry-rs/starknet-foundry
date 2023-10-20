@@ -39,7 +39,7 @@ use cairo_lang_starknet::contract::starknet_keccak;
 use cairo_lang_utils::bigint::BigIntAsHex;
 use cairo_vm::vm::errors::hint_errors::HintError::CustomHint;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
-use cheatnet::cheatcodes::signing::{ecdsa_sign_message, generate_ecdsa_keys};
+use cheatnet::cheatcodes::signing::{ecdsa_sign_message, generate_ecdsa_keys, get_public_key};
 use cheatnet::cheatcodes::spy_events::SpyTarget;
 
 mod file_operations;
@@ -586,6 +586,16 @@ impl TestExecutionSyscallHandler<'_> {
                 buffer
                     .write(public_key)
                     .expect("Failed to insert public key");
+                Ok(())
+            }
+            "get_public_key" => {
+                let private_key = inputs[0].clone();
+                let public_key = get_public_key(&private_key);
+
+                buffer
+                    .write(public_key)
+                    .expect("Failed to insert public key");
+
                 Ok(())
             }
             "ecdsa_sign_message" => {
