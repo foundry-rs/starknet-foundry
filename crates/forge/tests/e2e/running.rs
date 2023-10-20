@@ -343,6 +343,77 @@ fn with_include_ignored_flag() {
 }
 
 #[test]
+fn with_ignored_flag_and_filter() {
+    let temp = setup_package("simple_package");
+    let snapbox = runner();
+
+    let output = snapbox
+        .current_dir(&temp)
+        .arg("--ignored")
+        .arg("ext_function_test::ignored_test")
+        .assert()
+        .code(1);
+
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+        
+        
+        Collected 1 test(s) from simple_package package
+        Running 0 test(s) from src/
+        Running 1 test(s) from tests/
+        [FAIL] tests::ext_function_test::ignored_test
+ 
+        Failure data:
+            original value: [133508164996995645235097191], converted to a string: [not passing]
+        
+        Tests: 0 passed, 1 failed, 0 skipped
+        
+        Failures:
+            tests::ext_function_test::ignored_test
+        "#}
+    );
+}
+
+#[test]
+fn with_include_ignored_flag_and_filter() {
+    let temp = setup_package("simple_package");
+    let snapbox = runner();
+
+    let output = snapbox
+        .current_dir(&temp)
+        .arg("--include-ignored")
+        .arg("ignored_test")
+        .assert()
+        .code(1);
+
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+        
+        
+        Collected 2 test(s) from simple_package package
+        Running 1 test(s) from src/
+        [PASS] simple_package::ignored_test
+        Running 1 test(s) from tests/
+        [FAIL] tests::ext_function_test::ignored_test
+        
+        Failure data:
+            original value: [133508164996995645235097191], converted to a string: [not passing]
+
+        Tests: 1 passed, 1 failed, 0 skipped
+        
+        Failures:
+            tests::ext_function_test::ignored_test
+        "#}
+    );
+}
+
+#[test]
 fn with_print() {
     let temp = setup_package("print_test");
     let snapbox = runner();
