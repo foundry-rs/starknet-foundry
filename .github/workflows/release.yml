@@ -1,6 +1,9 @@
 name: Release
 
 on:
+  push:
+    branches:
+      - 'master'
   create:
     tags:
       - v[0-9]+.*
@@ -13,6 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       versionIsValid: ${{ steps.validVersion.outputs.versionIsValid }}
+      version: ${{ steps.validVersion.outputs.version }}
     steps:
       - uses: actions/checkout@v4
 
@@ -46,15 +50,34 @@ jobs:
           echo "Project version from this commit = $COMMIT_VERSION"
           IS_VALID=$(node ./scripts/compareVersions.js $RELEASE_VERSION $COMMIT_VERSION)
           echo "versionIsValid=$IS_VALID" >> "$GITHUB_OUTPUT"
+          echo "version=$COMMIT_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Output job skipped
         if: ${{ steps.validVersion.outputs.versionIsValid == 'false' }}
         run: echo "Version from commit is not greater from newest release, skipping build"
 
-  build-binaries:
-    name: Build ${{ matrix.target }}
+  create-tag:
+    runs-on: ubuntu-latest
     needs: verify-version
     if: ${{ needs.verify-version.outputs.versionIsValid == 'true' }}
+
+    steps:
+      - name: Create tag action was triggered by a push
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: 'refs/tags/${{ needs.verify-version.outputs.version }}',
+              sha: context.sha
+            })
+
+  build-binaries:
+    name: Build ${{ matrix.target }}
+    needs: create-tag
+    #    if: ${{ needs.verify-version.outputs.versionIsValid == 'true' }}
     runs-on: ${{ matrix.os }}
     continue-on-error: true
 
