@@ -56,7 +56,7 @@ pub enum ValueFormat {
     Default,
     // everything as int
     Int,
-    // everything as int
+    // everything as hex
     Hex,
 }
 

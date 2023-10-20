@@ -22,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - `show-config` subcommand to display currently used configuration
+- `--hex-format` flag has been added
+
+#### Removed
+- `-i` for `--int-format` is removed
 
 ## [0.8.3] - 2023-10-17
 
