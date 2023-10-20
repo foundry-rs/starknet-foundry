@@ -1,7 +1,6 @@
 use anyhow::{anyhow, bail, Context, Error, Result};
 use camino::Utf8PathBuf;
 use helpers::constants::{DEFAULT_RETRIES, KEYSTORE_PASSWORD_ENV_VAR, UDC_ADDRESS};
-use primitive_types::U256;
 use rand::rngs::OsRng;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
@@ -59,6 +58,28 @@ pub enum ValueFormat {
     Int,
     // everything as int
     Hex,
+}
+
+impl ValueFormat {
+    pub fn format_u64(&self, input: u64) -> String {
+        match self {
+            ValueFormat::Default => format!("{input}"),
+            ValueFormat::Int => format!("{input}"),
+            ValueFormat::Hex => format!("{input:#x}"),
+        }
+    }
+
+    pub fn format_str(&self, input: &str) -> String {
+        if let Ok(field) = FieldElement::from_str(input) {
+            return match self {
+                ValueFormat::Default => format!("{field:#x}"),
+                ValueFormat::Int => format!("{field:#}"),
+                ValueFormat::Hex => format!("{field:#x}"),
+            };
+        }
+
+        return format!("{input}");
+    }
 }
 
 pub fn get_provider(url: &str) -> Result<JsonRpcClient<HttpTransport>> {
@@ -316,43 +337,7 @@ pub async fn handle_wait_for_tx<T>(
     Ok(return_value)
 }
 
-pub fn print_formatted(
-    mut output: Vec<(&str, String)>,
-    value_format: ValueFormat,
-    json: bool,
-    error: bool,
-) -> Result<()> {
-    output = output
-        .into_iter()
-        .map(|(key, value)| match value_format {
-            ValueFormat::Default => {
-                if let Ok(int_value) = U256::from_dec_str(&value) {
-                    (key, format!("{int_value:#x}"))
-                } else {
-                    (key, value)
-                }
-            }
-            ValueFormat::Int => {
-                if let Ok(int_value) = U256::from_dec_str(&value) {
-                    (key, format!("{int_value}"))
-                } else if let Ok(field) = FieldElement::from_str(value.as_str()) {
-                    (key, format!("{field}"))
-                } else {
-                    (key, value)
-                }
-            }
-            ValueFormat::Hex => {
-                if let Ok(int_value) = U256::from_dec_str(&value) {
-                    (key, format!("{int_value:#x}"))
-                } else if let Ok(field) = FieldElement::from_str(value.as_str()) {
-                    (key, format!("{field:#x}"))
-                } else {
-                    (key, value)
-                }
-            }
-        })
-        .collect();
-
+pub fn print_formatted(output: Vec<(&str, String)>, json: bool, error: bool) -> Result<()> {
     if json {
         let json_output: HashMap<&str, String> = output.into_iter().collect();
         let json_value: Value = serde_json::to_value(json_output)?;
@@ -387,7 +372,20 @@ pub fn print_command_result<T: Serialize>(
                     .as_object()
                     .expect("Invalid JSON value")
                     .iter()
-                    .map(|(k, v)| (k.as_str(), v.as_str().expect("Invalid value").to_string()))
+                    .map(|(k, v)| {
+                        let value = match v {
+                            Value::Number(n) => {
+                                let n = n.as_u64().expect("found unexpected value");
+                                value_format.format_u64(n)
+                            }
+                            Value::String(s) => value_format.format_str(&s),
+                            _ => {
+                                panic!("Found unexpected value as value");
+                            }
+                        };
+
+                        dbg!((k.as_str(), value))
+                    })
                     .collect::<Vec<(&str, String)>>(),
             );
         }
@@ -396,7 +394,7 @@ pub fn print_command_result<T: Serialize>(
             error = true;
         }
     };
-    print_formatted(output, value_format, json, error)
+    print_formatted(output, json, error)
 }
 
 fn write_to_output<T: std::fmt::Display>(value: T, error: bool) {

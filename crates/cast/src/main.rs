@@ -48,7 +48,7 @@ struct Cli {
     #[clap(long, conflicts_with = "hex_format")]
     int_format: bool,
 
-    /// If passed, values will be displayed as integers
+    /// If passed, values will be displayed as hex
     #[clap(long, conflicts_with = "int_format")]
     hex_format: bool,
 

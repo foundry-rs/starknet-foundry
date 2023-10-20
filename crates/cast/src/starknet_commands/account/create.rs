@@ -98,11 +98,7 @@ pub async fn create(
     if account_json["deployed"] == json!(false) {
         println!("Account successfully created. Prefund generated address with at least {max_fee} tokens. It is good to send more in the case of higher demand, max_fee * 2 = {}", max_fee * 2);
         // For default and Int it should be in int
-        let max_fee_str = if value_format == ValueFormat::Hex {
-            format!("{max_fee:#x}")
-        } else {
-            format!("{max_fee:#}")
-        };
+        let max_fee_str = value_format.format_u64(max_fee);
         output.push(("max_fee", max_fee_str));
     }
 
@@ -115,7 +111,7 @@ pub async fn create(
 
     Ok(AccountCreateResponse {
         address,
-        max_fee: FieldElement::from(max_fee),
+        max_fee,
         add_profile: if add_profile {
             "Profile successfully added to Scarb.toml".to_string()
         } else {
