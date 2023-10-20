@@ -2,6 +2,7 @@ use crate::assert_stdout_contains;
 use crate::e2e::common::runner::{
     runner, setup_package, setup_package_with_file_patterns, BASE_FILE_PATTERNS,
 };
+use forge::CACHE_DIR;
 use indoc::indoc;
 
 #[test]
@@ -30,14 +31,14 @@ fn without_cache() {
 }
 
 #[test]
-/// The cache file at `forking/.snfoundry_cache/` was modified to have different value stored
+/// The cache file at `forking/$CACHE_DIR` was modified to have different value stored
 /// that this from the real network. We use it to verify that values from cache are actually used.
 ///
 /// The test that passed when using data from network, should fail for fabricated data.
 fn with_cache() {
     let temp = setup_package_with_file_patterns(
         "forking",
-        &[BASE_FILE_PATTERNS, &[".snfoundry_cache/*.json"]].concat(),
+        &[BASE_FILE_PATTERNS, &[&format!("{CACHE_DIR}/*.json")]].concat(),
     );
     let snapbox = runner();
 
@@ -68,7 +69,7 @@ fn with_cache() {
 fn with_clean_cache() {
     let temp = setup_package_with_file_patterns(
         "forking",
-        &[BASE_FILE_PATTERNS, &[".snfoundry_cache/*.json"]].concat(),
+        &[BASE_FILE_PATTERNS, &[&format!("{CACHE_DIR}/*.json")]].concat(),
     );
     let snapbox = runner();
 

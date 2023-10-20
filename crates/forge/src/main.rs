@@ -10,7 +10,7 @@ use std::{env, fs};
 use tempfile::{tempdir, TempDir};
 use tokio::runtime::Builder;
 
-use forge::{pretty_printing, CancellationTokens, RunnerConfig, RunnerParams};
+use forge::{pretty_printing, CancellationTokens, RunnerConfig, RunnerParams, CACHE_DIR};
 use forge::{run, TestCrateSummary};
 
 use forge::scarb::{
@@ -24,7 +24,6 @@ use std::thread::available_parallelism;
 mod init;
 
 static PREDEPLOYED_CONTRACTS: Dir = include_dir!("crates/cheatnet/predeployed-contracts");
-static CACHE_DIR: &str = ".snfoundry_cache";
 
 #[derive(Parser, Debug)]
 #[command(version)]
