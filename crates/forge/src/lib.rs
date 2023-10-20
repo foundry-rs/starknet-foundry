@@ -211,7 +211,7 @@ fn find_or_parse_raw_fork_config(
                 .find(|fork| fork.name == name)
                 .ok_or_else(|| {
                     anyhow!("Fork configuration named = {name} not found in the Scarb.toml")
-                })?; // TODO essa test it
+                })?;
             Ok(ValidatedForkConfig {
                 url: fork_target_from_runner_config.url.clone(),
                 block_id: fork_target_from_runner_config.block_id,
@@ -675,6 +675,11 @@ fn function_args<'a>(function: &'a Function, builtins: &[&str]) -> Vec<&'a Concr
 mod tests {
     use super::*;
     use crate::test_filter::{IgnoredFilter, NameFilter};
+    use cairo_lang_sierra::program::Program;
+    use starknet::core::types::BlockId;
+    use starknet::core::types::BlockTag::Latest;
+    use test_collector::ExpectedTestResult;
+    use url::Url;
 
     #[test]
     fn fuzzer_default_seed() {
@@ -841,5 +846,85 @@ mod tests {
             None,
             &Default::default(),
         );
+    }
+
+    #[test]
+    fn map_fork_configs_unparsable_url() {
+        let mocked_tests = CompiledTestCrate {
+            sierra_program: Program {
+                type_declarations: vec![],
+                libfunc_declarations: vec![],
+                statements: vec![],
+                funcs: vec![],
+            },
+            test_cases: vec![TestCase {
+                name: "crate1::do_thing".to_string(),
+                available_gas: None,
+                ignored: false,
+                expected_result: ExpectedTestResult::Success,
+                fork_config: Some(RawForkConfig::Params(
+                    "unparsable_url".to_string(),
+                    BlockId::Tag(Latest),
+                )),
+                fuzzer_config: None,
+            }],
+            tests_location: CrateLocation::Lib,
+        };
+        let config = RunnerConfig::new(
+            Default::default(),
+            None,
+            false,
+            false,
+            false,
+            false,
+            None,
+            None,
+            &Default::default(),
+        );
+
+        assert!(map_fork_configs_from_raw_to_validated_in_tests(mocked_tests, &config).is_err());
+    }
+
+    #[test]
+    fn map_fork_configs_non_existent_id() {
+        let mocked_tests = CompiledTestCrate {
+            sierra_program: Program {
+                type_declarations: vec![],
+                libfunc_declarations: vec![],
+                statements: vec![],
+                funcs: vec![],
+            },
+            test_cases: vec![TestCase {
+                name: "crate1::do_thing".to_string(),
+                available_gas: None,
+                ignored: false,
+                expected_result: ExpectedTestResult::Success,
+                fork_config: Some(RawForkConfig::Id("non_existent".to_string())),
+                fuzzer_config: None,
+            }],
+            tests_location: CrateLocation::Lib,
+        };
+        let config = RunnerConfig::new(
+            Default::default(),
+            None,
+            false,
+            false,
+            false,
+            false,
+            None,
+            None,
+            &ForgeConfig {
+                exit_first: false,
+                fuzzer_runs: None,
+                fuzzer_seed: None,
+                fork: vec![ForkTarget {
+                    name: "definitely_not_non_existing".to_string(),
+                    url: Url::parse("https://not_taken.com").unwrap(),
+                    block_id: BlockId::Number(120),
+                }],
+            },
+        );
+
+        assert!(map_fork_configs_from_raw_to_validated_in_tests(mocked_tests, &config).is_err());
     }
 }

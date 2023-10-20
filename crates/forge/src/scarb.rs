@@ -789,4 +789,33 @@ mod tests {
             format!("{err:?}").contains("block_id.tag has only two variants: Latest or Pending")
         );
     }
+
+    #[test]
+    fn get_forge_config_for_package_fails_on_unparsable_url() {
+        let temp = setup_package("simple_package");
+        let content = indoc!(
+            r#"
+        [package]
+        name = "simple_package"
+        version = "0.1.0"
+        [[tool.snforge.fork]]
+        name = "NAME"
+        url = "unparsable_url"
+        block_id.tag = "Latest"
+        "#
+        );
+        temp.child("Scarb.toml").write_str(content).unwrap();
+
+        let scarb_metadata = MetadataCommand::new()
+            .inherit_stderr()
+            .current_dir(temp.path())
+            .exec()
+            .unwrap();
+
+        let err =
+            config_from_scarb_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
+                .unwrap_err();
+        assert!(format!("{err:?}")
+            .contains("Could not parse the url = unparsable_url from Scarb.toml:"));
+    }
 }
