@@ -54,17 +54,13 @@ impl ForkCacheContent {
                     .insert(other_contract_address.clone(), other_storage.clone());
             }
         }
-        // nonce_at
+
         self.nonce_at.extend(other.nonce_at.clone());
-        // class_hash_at
         self.class_hash_at.extend(other.class_hash_at.clone());
-        // compiled_contract_class
         self.compiled_contract_class
             .extend(other.compiled_contract_class.clone());
-        // compiled_class_hash
         self.compiled_class_hash
             .extend(other.compiled_class_hash.clone());
-        // block_info
         if other.block_info.is_some() {
             self.block_info = other.block_info;
         }
