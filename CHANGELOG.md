@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - support for `deploy_syscall` directly in the test code (alternative to `deploy`)
+- `snforge_std::signing` module for performing ecdsa signatures
 
 #### Changed
 
