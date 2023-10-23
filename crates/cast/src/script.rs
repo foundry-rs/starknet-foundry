@@ -405,10 +405,7 @@ pub fn run(
 ) -> Result<()> {
     check_compiler_path(true, Path::new(&script_path))?;
 
-    // let db = &mut RootDatabase::builder().detect_corelib().build()?;
-    let db = &mut RootDatabase::builder().build()?;
-    let corelib_path = PathBuf::from("/Users/kamiljankowski/Documents/GitHub/cairo/corelib/src/");
-    init_dev_corelib(db, corelib_path);
+    let db = &mut RootDatabase::builder().detect_corelib().build()?;
 
     let main_crate_ids = setup_project(db, Path::new(&script_path))?;
     if DiagnosticsReporter::stderr().check(db) {
