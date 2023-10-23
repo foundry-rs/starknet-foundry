@@ -44,10 +44,10 @@ pub enum TestCaseSummary {
         /// Name of the test case
         name: String,
     },
-    /// Fuzzing subtests skipped (did not run), previous subtest failed or
-    /// test case execution interrupted by error (did not run or was cancelled),
-    /// To summing up this enum is return when we want to ignore test result.
-    /// pretty_printer will be panic if get this kind of result.
+    /// Enum variant representing:
+    ///  - fuzzing subtest that was skipped/interrupted during fuzzing due to other subtest failing
+    ///  - single test or fuzzing subtest that was interrupted by error
+    /// This enum is returned when we want to ignore the test result
     Interrupted {},
 }
 
