@@ -90,7 +90,9 @@ pub(crate) fn blocking_run_from_test(
         // a channel is used to receive information indicating
         // that the execution of the task is no longer necessary.
         if send.is_closed() {
-            return Err(anyhow::anyhow!("stop spawn_blocking"));
+            return Ok(TestCaseSummary::Skipped {
+                name: case.name.clone(),
+            });
         }
         run_test_case(
             args,
