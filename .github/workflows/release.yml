@@ -186,7 +186,7 @@ jobs:
           changelog: CHANGELOG.md
           allow-missing-changelog: false
           title: $version
-          ref: refs/tags/{{ needs.verify-version.outputs.version }}
+          ref: refs/tags/${{ needs.verify-version.outputs.version }}
 
 #      - name: Upload artifacts to the release
 #        working-directory: artifacts
