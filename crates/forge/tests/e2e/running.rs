@@ -20,12 +20,14 @@ fn simple_package() {
     [..]Finished[..]
 
 
-    Collected 11 test(s) from simple_package package
-    Running 1 test(s) from src/
+    Collected 13 test(s) from simple_package package
+    Running 2 test(s) from src/
     [PASS] simple_package::test_fib
-    Running 10 test(s) from tests/
+    [IGNORE] simple_package::ignored_test
+    Running 11 test(s) from tests/
     [PASS] tests::contract::call_and_invoke
     [PASS] tests::ext_function_test::test_my_test
+    [IGNORE] tests::ext_function_test::ignored_test
     [PASS] tests::ext_function_test::test_simple
     [PASS] tests::test_simple::test_simple
     [PASS] tests::test_simple::test_simple2
@@ -96,12 +98,14 @@ fn simple_package_with_git_dependency() {
         [..]Finished[..]
 
 
-        Collected 11 test(s) from simple_package package
-        Running 1 test(s) from src/
+        Collected 13 test(s) from simple_package package
+        Running 2 test(s) from src/
         [PASS] simple_package::test_fib
-        Running 10 test(s) from tests/
+        [IGNORE] simple_package::ignored_test
+        Running 11 test(s) from tests/
         [PASS] tests::contract::call_and_invoke
         [PASS] tests::ext_function_test::test_my_test
+        [IGNORE] tests::ext_function_test::ignored_test
         [PASS] tests::ext_function_test::test_simple
         [PASS] tests::test_simple::test_simple
         [PASS] tests::test_simple::test_simple2
@@ -190,10 +194,11 @@ fn with_filter_matching_module() {
         [..]Finished[..]
         
         
-        Collected 2 test(s) from simple_package package
+        Collected 3 test(s) from simple_package package
         Running 0 test(s) from src/
-        Running 2 test(s) from tests/
+        Running 3 test(s) from tests/
         [PASS] tests::ext_function_test::test_my_test
+        [IGNORE] tests::ext_function_test::ignored_test
         [PASS] tests::ext_function_test::test_simple
         Tests: 2 passed, 0 failed, 0 skipped
         "#}
@@ -246,6 +251,164 @@ fn with_non_matching_filter() {
         Running 0 test(s) from src/
         Running 0 test(s) from tests/
         Tests: 0 passed, 0 failed, 0 skipped
+        "#}
+    );
+}
+
+#[test]
+fn with_ignored_flag() {
+    let temp = setup_package("simple_package");
+    let snapbox = runner();
+
+    let output = snapbox.current_dir(&temp).arg("--ignored").assert().code(1);
+
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+        
+        
+        Collected 2 test(s) from simple_package package
+        Running 1 test(s) from src/
+        [PASS] simple_package::ignored_test
+        Running 1 test(s) from tests/
+        [FAIL] tests::ext_function_test::ignored_test
+        
+        Failure data:
+            original value: [133508164996995645235097191], converted to a string: [not passing]
+        
+        Tests: 1 passed, 1 failed, 0 skipped
+        
+        Failures:
+            tests::ext_function_test::ignored_test
+        "#}
+    );
+}
+
+#[test]
+fn with_include_ignored_flag() {
+    let temp = setup_package("simple_package");
+    let snapbox = runner();
+
+    let output = snapbox
+        .current_dir(&temp)
+        .arg("--include-ignored")
+        .assert()
+        .code(1);
+
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+        
+        
+        Collected 13 test(s) from simple_package package
+        Running 2 test(s) from src/
+        [PASS] simple_package::test_fib
+        [PASS] simple_package::ignored_test
+        Running 11 test(s) from tests/
+        [PASS] tests::contract::call_and_invoke
+        [PASS] tests::ext_function_test::test_my_test
+        [FAIL] tests::ext_function_test::ignored_test
+        
+        Failure data:
+            original value: [133508164996995645235097191], converted to a string: [not passing]
+        
+        [PASS] tests::ext_function_test::test_simple
+        [PASS] tests::test_simple::test_simple
+        [PASS] tests::test_simple::test_simple2
+        [PASS] tests::test_simple::test_two
+        [PASS] tests::test_simple::test_two_and_two
+        [FAIL] tests::test_simple::test_failing
+        
+        Failure data:
+            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+        
+        [FAIL] tests::test_simple::test_another_failing
+        
+        Failure data:
+            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+        
+        [PASS] tests::without_prefix::five
+        Tests: 10 passed, 3 failed, 0 skipped
+        
+        Failures:
+            tests::ext_function_test::ignored_test
+            tests::test_simple::test_failing
+            tests::test_simple::test_another_failing
+        "#}
+    );
+}
+
+#[test]
+fn with_ignored_flag_and_filter() {
+    let temp = setup_package("simple_package");
+    let snapbox = runner();
+
+    let output = snapbox
+        .current_dir(&temp)
+        .arg("--ignored")
+        .arg("ext_function_test::ignored_test")
+        .assert()
+        .code(1);
+
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+        
+        
+        Collected 1 test(s) from simple_package package
+        Running 0 test(s) from src/
+        Running 1 test(s) from tests/
+        [FAIL] tests::ext_function_test::ignored_test
+ 
+        Failure data:
+            original value: [133508164996995645235097191], converted to a string: [not passing]
+        
+        Tests: 0 passed, 1 failed, 0 skipped
+        
+        Failures:
+            tests::ext_function_test::ignored_test
+        "#}
+    );
+}
+
+#[test]
+fn with_include_ignored_flag_and_filter() {
+    let temp = setup_package("simple_package");
+    let snapbox = runner();
+
+    let output = snapbox
+        .current_dir(&temp)
+        .arg("--include-ignored")
+        .arg("ignored_test")
+        .assert()
+        .code(1);
+
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+        
+        
+        Collected 2 test(s) from simple_package package
+        Running 1 test(s) from src/
+        [PASS] simple_package::ignored_test
+        Running 1 test(s) from tests/
+        [FAIL] tests::ext_function_test::ignored_test
+        
+        Failure data:
+            original value: [133508164996995645235097191], converted to a string: [not passing]
+
+        Tests: 1 passed, 1 failed, 0 skipped
+        
+        Failures:
+            tests::ext_function_test::ignored_test
         "#}
     );
 }
@@ -343,7 +506,6 @@ fn with_panic_data_decoding() {
 }
 
 #[test]
-#[ignore = "Non deterministic"]
 fn with_exit_first() {
     let temp = setup_package("exit_first");
     let scarb_path = temp.child("Scarb.toml");
@@ -385,18 +547,16 @@ fn with_exit_first() {
         [..]Finished[..]
 
 
-        Collected 4 test(s) from exit_first package
+        Collected 2 test(s) from exit_first package
         Running 0 test(s) from src/
-        Running 4 test(s) from tests/
+        Running 2 test(s) from tests/
         [SKIP] tests::ext_function_test::hard_test
-        [SKIP] tests::ext_function_test::hard_test1
         [FAIL] tests::ext_function_test::simple_test
 
         Failure data:
             original value: [35718230152306872753561363307], converted to a string: [simple check]
 
-        [SKIP] tests::ext_function_test::hard_test2
-        Tests: 0 passed, 1 failed, 3 skipped
+        Tests: 0 passed, 1 failed, 1 skipped
 
         Failures:
             tests::ext_function_test::simple_test
@@ -405,7 +565,6 @@ fn with_exit_first() {
 }
 
 #[test]
-#[ignore = "Non deterministic"]
 fn with_exit_first_flag() {
     let temp = setup_package("exit_first");
     let snapbox = runner().arg("--exit-first");
@@ -418,18 +577,16 @@ fn with_exit_first_flag() {
         [..]Finished[..]
 
 
-        Collected 4 test(s) from exit_first package
+        Collected 2 test(s) from exit_first package
         Running 0 test(s) from src/
-        Running 4 test(s) from tests/
+        Running 2 test(s) from tests/
         [SKIP] tests::ext_function_test::hard_test
-        [SKIP] tests::ext_function_test::hard_test1
         [FAIL] tests::ext_function_test::simple_test
 
         Failure data:
             original value: [35718230152306872753561363307], converted to a string: [simple check]
 
-        [SKIP] tests::ext_function_test::hard_test2
-        Tests: 0 passed, 1 failed, 3 skipped
+        Tests: 0 passed, 1 failed, 1 skipped
 
         Failures:
             tests::ext_function_test::simple_test

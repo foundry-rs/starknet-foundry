@@ -11,15 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
+- `#[ignore]` attribute together with `--ignored` and `include-ignored` flags - read more [here](https://foundry-rs.github.io/starknet-foundry/testing/testing.html#ignoring-some-tests-unless-specifically-requested)
 - support for `deploy_syscall` directly in the test code (alternative to `deploy`)
 
 #### Changed
 
 - `snforge_std::PrintTrait` will not convert values representing ASCII control characters to strings
-
-#### Added
-
-- `--cores` flag to specify the number of cores to use for parallel execution
 
 ### Cast
 
@@ -73,6 +70,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Test are executed in parallel
 - Fixed inconsistent pointers bug https://github.com/foundry-rs/starknet-foundry/issues/659
 - Fixed an issue where `deploy_at` would not trigger the constructors https://github.com/foundry-rs/starknet-foundry/issues/805
+
+### Cast
+
+#### Changed
+
+- dropped official support for cairo 1 compiled contracts. While they still should be working without any problems, 
+from now on the only officially supported cairo compiler version is 2
 
 ## [0.7.1] - 2023-09-27
 

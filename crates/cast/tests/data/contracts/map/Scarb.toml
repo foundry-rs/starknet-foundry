@@ -1,5 +1,5 @@
 [package]
-name = "build_fails_v2"
+name = "map"
 version = "0.1.0"
 
 [dependencies]

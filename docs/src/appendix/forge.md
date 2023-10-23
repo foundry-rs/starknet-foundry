@@ -41,9 +41,13 @@ Seed for the fuzzer.
 
 Clean forge cache directory.
 
-## `--cores`, `<NUM_CORES>`
+## `--ignored`
 
-Number of cores to use for test execution.
+Run only tests marked with `#[ignore]` attribute.
+
+## `--include-ignored`
+
+Run all tests regardless of `#[ignore]` attribute.
 
 ## `-h`, `--help`
 

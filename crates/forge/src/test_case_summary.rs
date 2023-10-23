@@ -34,7 +34,12 @@ pub enum TestCaseSummary {
         /// Statistic for fuzzing test
         fuzzing_statistic: Option<FuzzingStatistics>,
     },
-    /// Test case skipped (did not run)
+    /// Test case ignored due to `#[ignored]` attribute or `--ignored` flag
+    Ignored {
+        /// Name of the test case
+        name: String,
+    },
+    /// Test case skipped due to exit first
     Skipped {
         /// Name of the test case
         name: String,
@@ -42,7 +47,7 @@ pub enum TestCaseSummary {
     /// Fuzzing subtests skipped (did not run), previous subtest failed
     SkippedFuzzing {},
     /// Test case execution interrupted by error (did not run or was cancelled)
-    Interrupted {},
+    InterruptedByError {},
 }
 
 impl TestCaseSummary {
@@ -50,9 +55,10 @@ impl TestCaseSummary {
         match self {
             TestCaseSummary::Failed { arguments, .. }
             | TestCaseSummary::Passed { arguments, .. } => arguments.clone(),
-            TestCaseSummary::Skipped { .. }
-            | TestCaseSummary::Interrupted {}
-            | TestCaseSummary::SkippedFuzzing {} => vec![],
+            TestCaseSummary::Ignored { .. } | TestCaseSummary::Skipped { .. } => vec![],
+            TestCaseSummary::InterruptedByError {} | TestCaseSummary::SkippedFuzzing {} => {
+                unreachable!()
+            }
         }
     }
     pub(crate) fn runs(&self) -> Option<u32> {
@@ -65,9 +71,10 @@ impl TestCaseSummary {
             } => fuzzing_statistic
                 .as_ref()
                 .map(|FuzzingStatistics { runs, .. }| *runs),
-            TestCaseSummary::Skipped { .. }
-            | TestCaseSummary::Interrupted {}
-            | TestCaseSummary::SkippedFuzzing {} => None,
+            TestCaseSummary::Ignored { .. } | TestCaseSummary::Skipped { .. } => None,
+            TestCaseSummary::InterruptedByError {} | TestCaseSummary::SkippedFuzzing {} => {
+                unreachable!()
+            }
         }
     }
 
@@ -96,8 +103,9 @@ impl TestCaseSummary {
                 arguments,
                 fuzzing_statistic: Some(FuzzingStatistics { runs }),
             },
-            TestCaseSummary::Skipped { .. }
-            | TestCaseSummary::Interrupted {}
+            TestCaseSummary::Ignored { .. }
+            | TestCaseSummary::Skipped { .. }
+            | TestCaseSummary::InterruptedByError {}
             | TestCaseSummary::SkippedFuzzing {} => self,
         }
     }

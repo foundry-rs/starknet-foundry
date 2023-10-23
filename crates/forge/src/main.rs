@@ -1,5 +1,5 @@
 use anyhow::{anyhow, bail, Context, Result};
-use camino::Utf8PathBuf;
+use camino::{Utf8Path, Utf8PathBuf};
 use clap::Parser;
 use include_dir::{include_dir, Dir};
 use scarb_metadata::{MetadataCommand, PackageMetadata};
@@ -10,7 +10,7 @@ use std::{env, fs};
 use tempfile::{tempdir, TempDir};
 use tokio::runtime::Builder;
 
-use forge::{pretty_printing, CancellationTokens, RunnerConfig, RunnerParams};
+use forge::{pretty_printing, CancellationTokens, RunnerConfig, RunnerParams, CACHE_DIR};
 use forge::{run, TestCrateSummary};
 
 use forge::scarb::{
@@ -24,10 +24,10 @@ use std::thread::available_parallelism;
 mod init;
 
 static PREDEPLOYED_CONTRACTS: Dir = include_dir!("crates/cheatnet/predeployed-contracts");
-static CACHE_DIR: &str = ".snfoundry_cache";
 
 #[derive(Parser, Debug)]
 #[command(version)]
+#[allow(clippy::struct_excessive_bools)]
 struct Args {
     /// Name used to filter tests
     test_filter: Option<String>,
@@ -56,26 +56,12 @@ struct Args {
     #[arg(short, long)]
     clean_cache: bool,
 
-    /// Number of cores used for test execution
-    #[arg(long, value_parser = validate_cores_number)]
-    cores: Option<usize>,
-}
-
-fn validate_cores_number(val: &str) -> Result<usize> {
-    let parsed_val: usize = val
-        .parse()
-        .map_err(|_| anyhow::anyhow!("Failed to parse '{}' as usize", val))?;
-    if parsed_val == 0 {
-        bail!("Number of cores must be greater than 0");
-    }
-    let cores_approx = available_parallelism()?.get();
-    if parsed_val > cores_approx {
-        bail!(
-            "Number of cores must be less than or equal to the number of cores available on the machine = {}",
-            cores_approx
-        );
-    }
-    Ok(parsed_val)
+    /// Run only tests marked with `#[ignore]` attribute
+    #[arg(long = "ignored")]
+    only_ignored: bool,
+    /// Run all tests regardless of `#[ignore]` attribute
+    #[arg(long, conflicts_with = "only_ignored")]
+    include_ignored: bool,
 }
 
 fn validate_fuzzer_runs_value(val: &str) -> Result<u32> {
@@ -88,7 +74,7 @@ fn validate_fuzzer_runs_value(val: &str) -> Result<u32> {
     Ok(parsed_val)
 }
 
-fn clean_cache(workspace_root: &Utf8PathBuf) -> Result<()> {
+fn clean_cache(workspace_root: &Utf8Path) -> Result<()> {
     let cache_dir = workspace_root.join(CACHE_DIR);
     if cache_dir.exists() {
         fs::remove_dir_all(cache_dir)?;
@@ -112,6 +98,7 @@ fn extract_failed_tests(tests_summaries: Vec<TestCrateSummary>) -> Vec<TestCaseS
         .collect()
 }
 
+#[allow(clippy::too_many_lines)]
 fn main_execution() -> Result<bool> {
     let args = Args::parse();
     if let Some(project_name) = args.init {
@@ -140,9 +127,7 @@ fn main_execution() -> Result<bool> {
         clean_cache(&workspace_root).context("Failed to clean snforge cache")?;
     }
 
-    let cores = if let Some(cores) = args.cores {
-        cores
-    } else if let Ok(available_cores) = available_parallelism() {
+    let cores = if let Ok(available_cores) = available_parallelism() {
         available_cores.get()
     } else {
         eprintln!("Failed to get the number of available cores, defaulting to 1");
@@ -192,6 +177,8 @@ fn main_execution() -> Result<bool> {
                     args.test_filter.clone(),
                     args.exact,
                     args.exit_first,
+                    args.only_ignored,
+                    args.include_ignored,
                     args.fuzzer_runs,
                     args.fuzzer_seed,
                     &forge_config,
@@ -202,6 +189,7 @@ fn main_execution() -> Result<bool> {
                     contracts,
                     predeployed_contracts.clone(),
                     env::vars().collect(),
+                    dependencies,
                 ));
 
                 let cancellation_tokens = Arc::new(CancellationTokens::new());
@@ -210,7 +198,6 @@ fn main_execution() -> Result<bool> {
                     &package_path,
                     &package_name,
                     &package_source_dir_path,
-                    &dependencies,
                     runner_config,
                     runner_params,
                     cancellation_tokens,

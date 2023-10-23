@@ -11,8 +11,8 @@ use blockifier::execution::deprecated_syscalls::{
 use blockifier::execution::execution_utils::{write_maybe_relocatable, ReadOnlySegment};
 use blockifier::execution::hint_code;
 
+use crate::execution::cheatable_syscall_handler::stark_felt_from_ptr_immutable;
 use crate::execution::deprecated::calls::execute_library_call;
-use crate::execution::syscalls::stark_felt_from_ptr_immutable;
 use cairo_felt::Felt252;
 use cairo_vm::hint_processor::builtin_hint_processor::builtin_hint_processor_definition::HintProcessorData;
 use cairo_vm::hint_processor::hint_processor_definition::{HintProcessorLogic, HintReference};
