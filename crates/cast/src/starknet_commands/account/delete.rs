@@ -49,7 +49,7 @@ pub fn delete(
 
     // Let's ask confirmation
     let prompt_text =
-        format!("Do you want to remove account {name} from network {network_name}? (Y/n)");
+        format!("Do you want to remove the account {name} deployed to network {network_name} from local file {path}? (Y/n)");
     let input: String = prompt(prompt_text)?;
 
     if !input.starts_with('Y') {
