@@ -9,7 +9,8 @@ use camino::Utf8PathBuf;
 use cast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
 use cast::helpers::scarb_utils::{parse_scarb_config, CastConfig};
 use cast::{
-    get_account, get_block_id, get_chain_id, get_provider, print_command_result, ValueFormat,
+    chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_provider,
+    print_command_result, ValueFormat,
 };
 use clap::{Parser, Subcommand};
 
@@ -285,6 +286,26 @@ async fn main() -> Result<()> {
                 .await;
 
                 print_command_result("account deploy", &mut result, value_format, cli.json)?;
+                Ok(())
+            }
+            account::Commands::Delete(delete) => {
+                config.account = delete
+                    .name
+                    .ok_or_else(|| anyhow!("required argument --name not provided"))?;
+                let network_name = match delete.network {
+                    Some(network) => network,
+                    None => chain_id_to_network_name(get_chain_id(&provider).await?),
+                };
+
+                let mut result = starknet_commands::account::delete::delete(
+                    &config.account,
+                    &config.accounts_file,
+                    &cli.path_to_scarb_toml,
+                    delete.delete_profile,
+                    &network_name,
+                );
+
+                print_command_result("account delete", &mut result, value_format, cli.json)?;
                 Ok(())
             }
         },

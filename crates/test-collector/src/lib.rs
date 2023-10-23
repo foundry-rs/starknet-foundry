@@ -460,6 +460,7 @@ pub struct LinkedLibrary {
 pub struct TestCase {
     pub name: String,
     pub available_gas: Option<usize>,
+    pub ignored: bool,
     pub expected_result: ExpectedTestResult,
     pub fork_config: Option<ForkConfig>,
     pub fuzzer_config: Option<FuzzerConfig>,
@@ -542,6 +543,7 @@ pub fn collect_tests(
         .map(|(test_name, config)| TestCase {
             name: test_name,
             available_gas: config.available_gas,
+            ignored: config.ignored,
             expected_result: config.expected_result,
             fork_config: config.fork_config,
             fuzzer_config: config.fuzzer_config,

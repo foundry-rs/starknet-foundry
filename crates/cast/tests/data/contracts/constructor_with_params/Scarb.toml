@@ -1,9 +1,9 @@
 [package]
-name = "build_fails_v1"
+name = "constructor_with_params"
 version = "0.1.0"
 
 [dependencies]
-starknet = ">=1.1.1"
+starknet = ">=2.0.2"
 
 [[target.starknet-contract]]
 casm = true
@@ -11,6 +11,6 @@ casm = true
 [lib]
 sierra = false
 
-[tool.sncast]
+[tool.sncast.myprofile]
 url = "http://127.0.0.1:5055/rpc"
-account = "user2"
+account = "user1"
