@@ -1,3 +1,4 @@
+use crate::common::cache::{purge_cache, read_cache};
 use crate::common::state::{
     create_cheatnet_state, create_fork_cached_state, create_fork_cached_state_at,
 };
@@ -14,16 +15,15 @@ use cheatnet::forking::state::ForkStateReader;
 use cheatnet::rpc::call_contract;
 use cheatnet::state::{BlockInfoReader, BlockifierState, CheatnetState, ExtendedStateReader};
 use conversions::StarknetConversions;
-use std::path::PathBuf;
-
-use crate::common::cache::{purge_cache, read_cache};
 use glob::glob;
 use num_bigint::BigUint;
+use num_traits::Num;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use serde_json::Value;
 use starknet::core::types::BlockTag::Latest;
 use starknet::core::types::{BlockId, BlockTag};
 use starknet_api::core::ContractAddress;
+use std::path::PathBuf;
 use std::str::FromStr;
 use tempfile::TempDir;
 
@@ -299,6 +299,139 @@ fn call_forked_contract_from_constructor() {
     )
     .unwrap();
     assert_success!(output, vec![Felt252::from(2)]);
+}
+
+#[test]
+fn call_forked_contract_get_block_info_via_proxy() {
+    let cache_dir = TempDir::new().unwrap();
+    let mut cached_fork_state =
+        create_fork_cached_state_at(BlockId::Number(315_887), cache_dir.path().to_str().unwrap());
+    let block_info = cached_fork_state.state.get_block_info().unwrap();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_fork_state);
+    cheatnet_state.block_info = block_info;
+
+    let forked_contract_address = Felt252::from(
+        BigUint::from_str(
+            "2142482702760034245482243841749569811658592971915399561448302710970247869206",
+        )
+        .unwrap(),
+    );
+
+    let contract_address = deploy_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        "BlockInfoCheckerProxy",
+        &[],
+    );
+
+    let selector = felt_selector_from_name("read_block_number");
+    let output = call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &contract_address,
+        &selector,
+        &[forked_contract_address.clone()],
+    )
+    .unwrap();
+    assert_success!(output, vec![Felt252::from(315_887)]);
+
+    let selector = felt_selector_from_name("read_block_timestamp");
+    let output = call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &contract_address,
+        &selector,
+        &[forked_contract_address.clone()],
+    )
+    .unwrap();
+    assert_success!(output, vec![Felt252::from(1_697_630_072)]);
+
+    let selector = felt_selector_from_name("read_sequencer_address");
+    let output = call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &contract_address,
+        &selector,
+        &[forked_contract_address],
+    )
+    .unwrap();
+    assert_success!(
+        output,
+        vec![Felt252::from(
+            BigUint::from_str_radix(
+                &"0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8"[2..],
+                16
+            )
+            .unwrap()
+        )]
+    );
+}
+
+#[test]
+fn call_forked_contract_get_block_info_via_libcall() {
+    let cache_dir = TempDir::new().unwrap();
+    let mut cached_fork_state =
+        create_fork_cached_state_at(BlockId::Number(315_887), cache_dir.path().to_str().unwrap());
+    let block_info = cached_fork_state.state.get_block_info().unwrap();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_fork_state);
+    cheatnet_state.block_info = block_info;
+
+    let forked_class_hash = Felt252::from(
+        BigUint::from_str_radix(
+            &"0x00623d04363a9502cd0706dfc717574dd3c596f162c3867456002f25c706cd14"[2..],
+            16,
+        )
+        .unwrap(),
+    );
+
+    let contract_address = deploy_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        "BlockInfoCheckerLibCall",
+        &[],
+    );
+
+    let selector = felt_selector_from_name("read_block_number_with_lib_call");
+    let output = call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &contract_address,
+        &selector,
+        &[forked_class_hash.clone()],
+    )
+    .unwrap();
+    assert_success!(output, vec![Felt252::from(315_887)]);
+
+    let selector = felt_selector_from_name("read_block_timestamp_with_lib_call");
+    let output = call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &contract_address,
+        &selector,
+        &[forked_class_hash.clone()],
+    )
+    .unwrap();
+    assert_success!(output, vec![Felt252::from(1_697_630_072)]);
+
+    let selector = felt_selector_from_name("read_sequencer_address_with_lib_call");
+    let output = call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &contract_address,
+        &selector,
+        &[forked_class_hash],
+    )
+    .unwrap();
+    assert_success!(
+        output,
+        vec![Felt252::from(
+            BigUint::from_str_radix(
+                &"0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8"[2..],
+                16
+            )
+            .unwrap()
+        )]
+    );
 }
 
 #[test]
