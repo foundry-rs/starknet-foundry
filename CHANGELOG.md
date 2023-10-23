@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 
 - `show-config` subcommand to display currently used configuration
+- `account delete` command for removing accounts from the accounts file
 
 ## [0.8.3] - 2023-10-17
 
