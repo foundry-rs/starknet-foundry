@@ -84,7 +84,7 @@ async fn test_happy_case_from_cli_with_scarb() {
     snapbox.assert().success().stdout_eq(indoc! {r#"
         {
           "command": "call",
-          "response": "[0x0]"
+          "data": "[0]"
         }
 "#});
 }
@@ -118,7 +118,7 @@ async fn test_happy_case_mixed() {
     snapbox.assert().success().stdout_eq(indoc! {r#"
         {
           "command": "call",
-          "response": "[0x0]"
+          "data": "[0]"
         }
 "#});
 }

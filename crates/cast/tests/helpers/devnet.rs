@@ -36,6 +36,7 @@ fn start_devnet() {
         + "/cairo/bin/starknet-sierra-compile";
     Command::new("starknet-devnet")
         .args([
+            "--hide-server-logs",
             "--port",
             &port,
             "--seed",

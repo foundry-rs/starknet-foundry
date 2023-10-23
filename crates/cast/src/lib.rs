@@ -358,7 +358,32 @@ pub fn print_command_result<T: Serialize>(
                     .as_object()
                     .expect("Invalid JSON value")
                     .iter()
-                    .map(|(k, v)| (k.as_str(), v.to_string()))
+                    .filter_map(|(k, v)| {
+                        if v.is_string() {
+                            Some((k.as_str(), v.as_str().unwrap().to_string()))
+                        } else if v.is_array() {
+                            let new_array: Vec<Value> = v
+                                .as_array()
+                                .expect("Invalid JSON array")
+                                .iter()
+                                .filter_map(|element| {
+                                    if element.is_string() {
+                                        let num = element.as_str().unwrap().parse::<i32>().ok()?;
+                                        Some(serde_json::Value::Number(serde_json::Number::from(
+                                            num,
+                                        )))
+                                    } else {
+                                        Some(element.clone())
+                                    }
+                                })
+                                .collect();
+                            Some((k.as_str(), serde_json::Value::Array(new_array).to_string()))
+                        } else if !v.is_null() {
+                            Some((k.as_str(), v.to_string()))
+                        } else {
+                            None
+                        }
+                    })
                     .collect::<Vec<(&str, String)>>(),
             );
         }
