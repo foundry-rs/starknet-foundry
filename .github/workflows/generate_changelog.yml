@@ -3,6 +3,9 @@ name: Generate changelog in PR
 on:
   pull_request:
 
+permissions:
+  contents: write
+
 jobs:
   verify-version:
     name: Verify that version that triggered this workflow is greater than most recent  release
