@@ -67,7 +67,7 @@ jobs:
       - run: |
           RELEASE_VERSION=${{ needs.verify-version.outputs.version }}
           RELEASE_VERSION="${RELEASE_VERSION:1}"
-          sed -i "s/\[Unreleased\]/\[${RELEASE_VERSION}\] - $(date '+%Y-%m-%d')/" CHANGELOG.md
+          sed -i "s/\[Unreleased\]/\[${RELEASE_VERSION}\] - $(TZ=Europe/Krakow date '+%Y-%m-%d')/" CHANGELOG.md
 
       - name: Commit CHANGELOG.md
         run: |
