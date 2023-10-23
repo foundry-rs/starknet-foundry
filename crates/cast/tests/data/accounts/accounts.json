@@ -56,6 +56,12 @@
             "private_key": "0x5c0883893a3c32b57769f168383c53ee",
             "public_key": "0x3a00dc633e18cadbcacf7b36b348e7c97827081318f6a08d85ddb546c38d2bf",
             "address": "0x98459bc7e9740d1b55e5d04c3942badca974f327f7e1bb9d10737c87ea0aec"
+        },
+        "devnet0": {
+            "address": "0x7e00d496e324876bbc8531f2d9a82bf154d1a04a50218ee74cdd372f75a551a",
+            "deployed": true,
+            "private_key": "0xe3e70682c2094cac629f6fbed82c07cd",
+            "public_key": "0x7e52885445756b313ea16849145363ccb73fb4ab0440dbac333cf9d13de82b9"
         }
     },
     "alpha-goerli2": {

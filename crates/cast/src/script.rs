@@ -1,6 +1,6 @@
 use std::any::Any;
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use anyhow::{anyhow, Context, Result};
 use blockifier::execution::entry_point::{
@@ -15,7 +15,6 @@ use cairo_lang_casm::operand::{CellRef, ResOperand};
 use cairo_lang_compiler::db::RootDatabase;
 use cairo_lang_compiler::diagnostics::DiagnosticsReporter;
 use cairo_lang_compiler::project::{check_compiler_path, setup_project};
-use cairo_lang_filesystem::db::init_dev_corelib;
 use cairo_lang_runner::casm_run::cell_ref_to_relocatable;
 use cairo_lang_runner::casm_run::{extract_relocatable, vm_get_range, MemBuffer};
 use cairo_lang_runner::short_string::as_cairo_short_string;
@@ -36,8 +35,8 @@ use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cairo_vm::vm::vm_core::VirtualMachine;
 use camino::Utf8PathBuf;
+use cast::get_account;
 use cast::helpers::scarb_utils::CastConfig;
-use cast::{get_account, get_chain_id};
 use cheatnet::cheatcodes::EnhancedHintError;
 use cheatnet::constants::{build_block_context, build_transaction_context};
 use cheatnet::state::DictStateReader;
@@ -51,7 +50,7 @@ use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use tokio::runtime::Runtime;
 
-use crate::starknet_commands::{account, call, declare, deploy, invoke};
+use crate::starknet_commands::{call, declare, deploy, invoke};
 
 #[derive(Args)]
 #[command(about = "")]
@@ -345,43 +344,6 @@ impl CairoHintProcessor<'_> {
                 buffer
                     .write(deploy_response.transaction_hash.to_felt252())
                     .expect("Failed to insert transaction hash");
-
-                Ok(())
-            }
-            "deploy_account" => {
-                // let name = as_cairo_short_string(&inputs[0])
-                //     .expect("Failed to convert contract name to short string");
-                // let max_fee = inputs[1].to_field_element();
-                // let class_hash = if inputs[2] == 0.into() {
-                //     Some(inputs[3].to_field_element())
-                // } else {
-                //     None
-                // };
-
-                // let chain_id = self.runtime.block_on(get_chain_id(self.provider))?;
-
-                // let account = self.runtime.block_on(get_account(
-                //     &self.config.account,
-                //     &self.config.accounts_file,
-                //     self.provider,
-                //     &self.config.keystore,
-                // ))?;
-
-                // let invoke_response = self.runtime.block_on(account::deploy::deploy(
-                //     self.provider,
-                //     &self.config.accounts_file,
-                //     &name,
-                //     chain_id,
-                //     max_fee,
-                //     true,
-                //     class_hash,
-                //     None,
-                //     None,
-                // ))?;
-
-                // buffer
-                //     .write(invoke_response.transaction_hash.to_felt252())
-                //     .expect("Failed to insert transaction hash");
 
                 Ok(())
             }
