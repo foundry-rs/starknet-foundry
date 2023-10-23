@@ -1,6 +1,6 @@
 use core::result::ResultTrait;
 use snforge_std::{declare, ContractClass, ContractClassTrait, start_spoof, TxInfoMockTrait};
-use snforge_std::signing::{StarkCurveKeyPair, StarkCurveKeyPairTrait};
+use snforge_std::signature::{StarkCurveKeyPair, StarkCurveKeyPairTrait};
 
 use starknet::account::Call;
 

@@ -6,7 +6,7 @@ use indoc::indoc;
 fn simple_signing_flow() {
     let test = test_case!(indoc!(
         r#"
-            use snforge_std::signing::{ StarkCurveKeyPair, StarkCurveKeyPairTrait };
+            use snforge_std::signature::{ StarkCurveKeyPair, StarkCurveKeyPairTrait };
 
             #[test]
             fn test() {
@@ -28,7 +28,7 @@ fn simple_signing_flow() {
 fn try_to_sign_max_felt() {
     let test = test_case!(indoc!(
         r#"
-            use snforge_std::signing::{ StarkCurveKeyPair, StarkCurveKeyPairTrait };
+            use snforge_std::signature::{ StarkCurveKeyPair, StarkCurveKeyPairTrait };
 
             #[test]
             fn test() {
