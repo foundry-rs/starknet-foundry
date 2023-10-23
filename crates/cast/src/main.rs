@@ -2,6 +2,7 @@ use crate::starknet_commands::account::Account;
 use crate::starknet_commands::show_config::ShowConfig;
 use crate::starknet_commands::{
     account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
+    verify::Verify,
 };
 use anyhow::{anyhow, Result};
 
@@ -10,6 +11,9 @@ use cast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS
 use cast::helpers::scarb_utils::{parse_scarb_config, CastConfig};
 use cast::{get_account, get_block_id, get_chain_id, get_provider, print_command_result};
 use clap::{Parser, Subcommand};
+use starknet::providers::jsonrpc::HttpTransport;
+use starknet::providers::JsonRpcClient;
+use url::Url;
 
 mod starknet_commands;
 
@@ -79,6 +83,9 @@ enum Commands {
     /// Create and deploy an account
     Account(Account),
 
+    /// Verify a contract
+    Verify(Verify),
+
     /// Show current configuration being used
     ShowConfig(ShowConfig),
 }
@@ -91,7 +98,15 @@ async fn main() -> Result<()> {
     let mut config = parse_scarb_config(&cli.profile, &cli.path_to_scarb_toml)?;
     update_cast_config(&mut config, &cli);
 
-    let provider = get_provider(&config.rpc_url)?;
+    let provider;
+
+    // if cli.command is not verify make a dummy provider
+    if let Commands::Verify(_) = cli.command {
+        // Create provider with a dummy URL
+        provider = JsonRpcClient::new(HttpTransport::new(Url::parse("https://example.com")?));
+    } else {
+        provider = get_provider(&config.rpc_url)?;
+    }
 
     match cli.command {
         Commands::Declare(declare) => {
@@ -277,6 +292,19 @@ async fn main() -> Result<()> {
                 Ok(())
             }
         },
+        Commands::Verify(verify) => {
+            let mut result = starknet_commands::verify::verify(
+                verify.contract_address,
+                verify.contract_name,
+                verify.verifier,
+                verify.network,
+                &cli.path_to_scarb_toml,
+            )
+            .await;
+
+            print_command_result("verify", &mut result, cli.int_format, cli.json)?;
+            Ok(())
+        }
         Commands::ShowConfig(_) => {
             let mut result = starknet_commands::show_config::show_config(
                 &provider,

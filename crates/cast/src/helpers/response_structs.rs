@@ -42,6 +42,29 @@ pub struct MulticallNewResponse {
     pub content: String,
 }
 
+pub enum VerificationStatus {
+    OK,
+    Error,
+}
+
+impl Serialize for VerificationStatus {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match self {
+            VerificationStatus::OK => serializer.serialize_bool(true),
+            VerificationStatus::Error => serializer.serialize_bool(false),
+        }
+    }
+}
+
+#[derive(Serialize)]
+pub struct VerifyResponse {
+    pub verification_status: VerificationStatus,
+    pub errors: Option<String>,
+}
+
 #[derive(Serialize)]
 pub struct ShowConfigResponse {
     pub profile: Option<String>,
