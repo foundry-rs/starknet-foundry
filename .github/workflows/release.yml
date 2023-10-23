@@ -183,8 +183,9 @@ jobs:
         uses: taiki-e/create-gh-release-action@9762dfdfe60a96b3fef6c4a0aaafd9840f1195b7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          changelog: CHANGELOG.md
+          allow-missing-changelog: false
           title: $version
-          draft: true
 
       - name: Upload artifacts to the release
         working-directory: artifacts
