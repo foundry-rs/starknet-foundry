@@ -61,7 +61,7 @@ jobs:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
 
-      - run: sed -i "s/\[Unreleased\]/\${{  }} - $(date '+%Y-%m-%d')/"
+      - run: sed -i "s/\[Unreleased\]/\${{ needs.verify-version.outputs.version }} - $(date '+%Y-%m-%d')/"
 
       - name: Commit CHANGELOG.md
         run: |
