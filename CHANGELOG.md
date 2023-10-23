@@ -25,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `--hex-format` flag has been added
 
 #### Removed
-- `-i` for `--int-format` is removed
+- `-i` short for `--int-format` is removed, now have to use the full form `--int-format`
 
 ## [0.8.3] - 2023-10-17
 
