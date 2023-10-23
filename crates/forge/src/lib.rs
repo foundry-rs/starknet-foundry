@@ -354,9 +354,7 @@ async fn run_tests_from_crate(
     drop(send_shut_down);
     let _ = rec_shut_down.recv().await;
 
-    if interrupted {
-        panic!("Tests were interrupted")
-    }
+    assert!(!interrupted, "Tests were interrupted");
 
     let contained_fuzzed_tests = results.iter().any(|summary| summary.runs().is_some());
     Ok(TestCrateSummary {
