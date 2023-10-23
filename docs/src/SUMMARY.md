@@ -40,7 +40,10 @@
 
 # Appendix
 
-* [Forge Command](appendix/forge.md)
+* [Forge Commands](appendix/forge.md)
+    * [test](appendix/forge/test.md)
+    * [init](appendix/forge/init.md)
+    * [clean-cache](appendix/forge/clean-cache.md)
 * [Cheatcodes Reference](appendix/cheatcodes.md)
     * [start_prank](appendix/cheatcodes/start_prank.md)
     * [stop_prank](appendix/cheatcodes/stop_prank.md)

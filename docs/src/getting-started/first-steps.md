@@ -3,10 +3,10 @@
 In this section we provide an overview of Starknet Foundry `snforge` command line tool.
 We demonstrate how to create a new project, compile, and test it.
 
-To start a new project with Starknet Foundry, run `--init` command:
+To start a new project with Starknet Foundry, run `snforge init`
 
 ```shell
-snforge --init project_name
+$ snforge init project_name
 ```
 
 Let's check out the project structure
@@ -36,10 +36,10 @@ casm = true
 # ...
 ```
 
-And run tests with `snforge`
+And run tests with `snforge test`
 
 ```shell
-$ snforge
+$ snforge test
 Collected 2 test(s) from test_name package
 Running 0 test(s) from src/
 Running 2 test(s) from tests/

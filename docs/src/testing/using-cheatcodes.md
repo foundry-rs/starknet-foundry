@@ -77,7 +77,7 @@ fn call_and_invoke() {
 However, when running this test, we will get a failure with a message
 
 ```shell
-$ snforge
+$ snforge test
 Collected 1 test(s) from package_name package
 Running 1 test(s) from src/
 [FAIL] package_name::call_and_invoke
@@ -127,7 +127,7 @@ fn call_and_invoke() {
 The test will now pass without an error
 
 ```shell
-$ snforge
+$ snforge test
 Collected 1 test(s) from package_name package
 Running 1 test(s) from src/
 [PASS] package_name::call_and_invoke
@@ -160,7 +160,7 @@ fn call_and_invoke() {
 ```
 
 ```shell
-$ snforge
+$ snforge test
 Collected 1 test(s) from package_name package
 Running 1 test(s) from src/
 [FAIL] package_name::call_and_invoke

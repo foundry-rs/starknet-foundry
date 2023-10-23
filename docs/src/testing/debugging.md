@@ -44,7 +44,7 @@ fn test_print() {
 Running tests will include prints in the output:
 
 ```shell
-$ snforge
+$ snforge test
 Collected 1 test(s) from package_name package
 Running 0 test(s) from src/
 Running 1 test(s) from tests/
@@ -76,7 +76,7 @@ fn test_print() {
 ```
 
 ```shell
-$ snforge
+$ snforge test
 Collected 1 test(s) from package_name package
 Running 0 test(s) from src/
 Running 1 test(s) from tests/
@@ -129,8 +129,8 @@ fn test_increase_balance() {
 }
 ```
 We get the following output:
-```
-$ snforge                                                                                              
+```shell
+$ snforge test                                                                                    
 Collected 2 test(s) from package_name package
 Running 0 test(s) from src/
 Running 1 test(s) from tests/

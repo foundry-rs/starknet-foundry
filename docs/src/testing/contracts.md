@@ -80,7 +80,7 @@ fn call_and_invoke() {
 ```
 
 ```shell
-$ snforge
+$ snforge test
 Collected 1 test(s) from using_dispatchers package
 Running 1 test(s) from src/
 [PASS] using_dispatchers::call_and_invoke
@@ -138,7 +138,7 @@ fn failing() {
 ```
 
 ```shell
-$ snforge
+$ snforge test
 Collected 1 test(s) from package_name package
 Running 1 test(s) from src/
 [FAIL] package_name::failing
@@ -178,7 +178,7 @@ fn handling_errors() {
 Now the test passes as expected.
 
 ```shell
-$ snforge
+$ snforge test
 Collected 1 test(s) from package_name package
 Running 1 test(s) from src/
 [PASS] package_name::handling_errors

@@ -2,7 +2,9 @@ use crate::assert_stdout_contains;
 use assert_fs::fixture::PathChild;
 use indoc::indoc;
 
-use crate::e2e::common::runner::{runner, setup_package_with_file_patterns, BASE_FILE_PATTERNS};
+use crate::e2e::common::runner::{
+    setup_package_with_file_patterns, test_runner, BASE_FILE_PATTERNS,
+};
 
 #[test]
 #[allow(clippy::too_many_lines)]
@@ -133,15 +135,15 @@ fn file_reading() {
     "#};
 
     // run from different directories to make sure cwd is always set to package directory
-    let snapbox = runner();
+    let snapbox = test_runner();
     let output = snapbox.current_dir(&temp).assert().code(1);
     assert_stdout_contains!(output, expected);
 
-    let snapbox = runner();
+    let snapbox = test_runner();
     let output = snapbox.current_dir(temp.child("src")).assert().code(1);
     assert_stdout_contains!(output, expected);
 
-    let snapbox = runner();
+    let snapbox = test_runner();
     let output = snapbox.current_dir(temp.child("data")).assert().code(1);
     assert_stdout_contains!(output, expected);
 }
