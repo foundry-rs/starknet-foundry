@@ -334,13 +334,18 @@ async fn run_tests_from_crate(
     }
 
     let mut results = vec![];
+    let mut interrupted = false;
 
     while let Some(task) = tasks.next().await {
         let result = task??;
+        match result {
+            TestCaseSummary::Interrupted {} => interrupted = true,
+            result => {
+                pretty_printing::print_test_result(&result);
 
-        pretty_printing::print_test_result(&result);
-
-        results.push(result);
+                results.push(result);
+            }
+        }
     }
 
     rec.close();
@@ -348,6 +353,10 @@ async fn run_tests_from_crate(
     // Waiting for things to finish shutting down
     drop(send_shut_down);
     let _ = rec_shut_down.recv().await;
+
+    if interrupted {
+        panic!("Tests were interrupted")
+    }
 
     let contained_fuzzed_tests = results.iter().any(|summary| summary.runs().is_some());
     Ok(TestCrateSummary {
