@@ -64,7 +64,10 @@ jobs:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
 
-      - run: sed -i "s/\[Unreleased\]/\[${{ needs.verify-version.outputs.version }}\] - $(date '+%Y-%m-%d')/" CHANGELOG.md
+      - run: |
+          RELEASE_VERSION=${{ needs.verify-version.outputs.version }}
+          RELEASE_VERSION="${RELEASE_VERSION:1}"
+          sed -i "s/\[Unreleased\]/\[${RELEASE_VERSION}\] - $(date '+%Y-%m-%d')/" CHANGELOG.md
 
       - name: Commit CHANGELOG.md
         run: |
