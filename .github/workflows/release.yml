@@ -65,7 +65,7 @@ jobs:
 
     steps:
       - name: Create tag action was triggered by a push
-        if: ${{ github.event_name == 'pull_request' }}
+        if: ${{ github.event_name == 'push' }}
         uses: actions/github-script@v6
         with:
           script: |
