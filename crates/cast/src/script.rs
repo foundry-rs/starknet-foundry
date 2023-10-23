@@ -36,9 +36,8 @@ use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cairo_vm::vm::vm_core::VirtualMachine;
 use camino::Utf8PathBuf;
-use cast::get_account;
-use cast::helpers::response_structs::InvokeResponse;
 use cast::helpers::scarb_utils::CastConfig;
+use cast::{get_account, get_chain_id};
 use cheatnet::cheatcodes::EnhancedHintError;
 use cheatnet::constants::{build_block_context, build_transaction_context};
 use cheatnet::state::DictStateReader;
@@ -52,7 +51,7 @@ use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use tokio::runtime::Runtime;
 
-use crate::starknet_commands::{call, invoke};
+use crate::starknet_commands::{account, call, declare, deploy, invoke};
 
 #[derive(Args)]
 #[command(about = "")]
@@ -66,6 +65,7 @@ pub struct CairoHintProcessor<'a> {
     pub hints: &'a HashMap<String, Hint>,
     pub provider: &'a JsonRpcClient<HttpTransport>,
     pub config: &'a CastConfig,
+    pub path_to_scarb_toml: &'a Option<Utf8PathBuf>,
     pub runtime: Runtime,
 }
 
@@ -252,12 +252,136 @@ impl CairoHintProcessor<'_> {
                     calldata,
                     max_fee,
                     &account,
-                    false,
+                    true,
                 ))?;
 
                 buffer
                     .write(invoke_response.transaction_hash.to_felt252())
                     .expect("Failed to insert transaction hash");
+
+                Ok(())
+            }
+            "declare" => {
+                let contract_name = as_cairo_short_string(&inputs[0])
+                    .expect("Failed to convert contract name to short string");
+                let max_fee = if inputs[1] == 0.into() {
+                    Some(inputs[2].to_field_element())
+                } else {
+                    None
+                };
+
+                let account = self.runtime.block_on(get_account(
+                    &self.config.account,
+                    &self.config.accounts_file,
+                    self.provider,
+                    &self.config.keystore,
+                ))?;
+
+                let declare_response = self.runtime.block_on(declare::declare(
+                    &contract_name,
+                    max_fee,
+                    &account,
+                    self.path_to_scarb_toml,
+                    true,
+                ))?;
+
+                buffer
+                    .write(declare_response.class_hash.to_felt252())
+                    .expect("Failed to insert class hash");
+
+                buffer
+                    .write(declare_response.transaction_hash.to_felt252())
+                    .expect("Failed to insert transaction hash");
+
+                Ok(())
+            }
+            "deploy" => {
+                let class_hash = inputs[0].to_field_element();
+                let calldata_length = inputs[1]
+                    .to_usize()
+                    .expect("Failed to convert calldata length to usize");
+                let constructor_calldata: Vec<FieldElement> = {
+                    let calldata = Vec::from(&inputs[2..(2 + calldata_length)]);
+                    calldata.iter().map(|x| x.to_field_element()).collect()
+                };
+                let mut offset = 2 + calldata_length;
+                let salt = if inputs[offset] == 0.into() {
+                    offset += 1;
+                    Some(inputs[offset - 1].to_field_element())
+                } else {
+                    None
+                };
+                let unique = {
+                    offset += 1;
+                    inputs[offset - 1] == 1.into()
+                };
+                let max_fee = if inputs[offset] == 0.into() {
+                    Some(inputs[offset + 1].to_field_element())
+                } else {
+                    None
+                };
+
+                let account = self.runtime.block_on(get_account(
+                    &self.config.account,
+                    &self.config.accounts_file,
+                    self.provider,
+                    &self.config.keystore,
+                ))?;
+
+                let deploy_response = self.runtime.block_on(deploy::deploy(
+                    class_hash,
+                    constructor_calldata,
+                    salt,
+                    unique,
+                    max_fee,
+                    &account,
+                    true,
+                ))?;
+
+                buffer
+                    .write(deploy_response.contract_address.to_felt252())
+                    .expect("Failed to insert contract address");
+
+                buffer
+                    .write(deploy_response.transaction_hash.to_felt252())
+                    .expect("Failed to insert transaction hash");
+
+                Ok(())
+            }
+            "deploy_account" => {
+                // let name = as_cairo_short_string(&inputs[0])
+                //     .expect("Failed to convert contract name to short string");
+                // let max_fee = inputs[1].to_field_element();
+                // let class_hash = if inputs[2] == 0.into() {
+                //     Some(inputs[3].to_field_element())
+                // } else {
+                //     None
+                // };
+
+                // let chain_id = self.runtime.block_on(get_chain_id(self.provider))?;
+
+                // let account = self.runtime.block_on(get_account(
+                //     &self.config.account,
+                //     &self.config.accounts_file,
+                //     self.provider,
+                //     &self.config.keystore,
+                // ))?;
+
+                // let invoke_response = self.runtime.block_on(account::deploy::deploy(
+                //     self.provider,
+                //     &self.config.accounts_file,
+                //     &name,
+                //     chain_id,
+                //     max_fee,
+                //     true,
+                //     class_hash,
+                //     None,
+                //     None,
+                // ))?;
+
+                // buffer
+                //     .write(invoke_response.transaction_hash.to_felt252())
+                //     .expect("Failed to insert transaction hash");
 
                 Ok(())
             }
@@ -276,6 +400,7 @@ pub fn run(
     script_path: Utf8PathBuf,
     provider: &JsonRpcClient<HttpTransport>,
     config: &CastConfig,
+    path_to_scarb_toml: &Option<Utf8PathBuf>,
     runtime: Runtime,
 ) -> Result<()> {
     check_compiler_path(true, Path::new(&script_path))?;
@@ -347,6 +472,7 @@ pub fn run(
         hints: &string_to_hint,
         provider,
         config,
+        path_to_scarb_toml,
         runtime,
     };
 

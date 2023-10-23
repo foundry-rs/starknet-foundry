@@ -102,7 +102,13 @@ fn main() -> Result<()> {
     let runtime = Runtime::new().expect("Could not instantiate Runtime");
 
     if let Commands::Script(script) = cli.command {
-        let res = script::run(script.script_path, &provider, &config, runtime);
+        let res = script::run(
+            script.script_path,
+            &provider,
+            &config,
+            &cli.path_to_scarb_toml,
+            runtime,
+        );
         match res {
             Ok(_) => Ok(()),
             Err(err) => panic!("{}", err),
