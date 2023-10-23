@@ -85,6 +85,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DEVNET_VERSION: 0.5.5
+      SCARB_VERSION: 0.5.2
     steps:
       - uses: actions/checkout@v4
         with:
@@ -105,7 +106,9 @@ jobs:
         run: |
             sudo apt install -y libgmp3-dev
             pip install starknet-devnet==${{ env.DEVNET_VERSION }}
-      - uses: asdf-vm/actions/setup@v2
+      - uses: software-mansion/setup-scarb@v1.3.1
+        with:
+          scarb-version: ${{ env.SCARB_VERSION }}
       - name: Prepare for tests
         run: |
           ./scripts/prepare_for_tests.sh

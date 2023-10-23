@@ -1,13 +1,13 @@
 [[call]]
 call_type = "deploy"
-class_hash = "0x076e94149fc55e7ad9c5fe3b9af570970ae2cf51205f8452f39753e9497fe849"
+class_hash = "0x6eb3fda9eaa7d99bb7c9e72c8d874988a5b9269f3f866773889bc5ab4ec9079"
 inputs = []
 id = "map_contract"
 unique = false
 
 [[call]]
 call_type = "invoke"
-contract_address = "0x6a9b1c31fa25ca8f3cecb58142f3ec4d1f7611ed9520b4d3ae598d02d625e41"
+contract_address = "0x7bc9260c649835c66d756841432ce1473e3796d6bacf2b6dc2b7c3238555584"
 function = "put"
 inputs = ["0x123", "234"]
 

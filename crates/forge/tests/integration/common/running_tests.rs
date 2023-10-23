@@ -22,6 +22,8 @@ pub fn run_test_case(test: &TestCase) -> Vec<TestCrateSummary> {
             None,
             false,
             false,
+            false,
+            false,
             Some(256),
             Some(12345),
             &Default::default(),

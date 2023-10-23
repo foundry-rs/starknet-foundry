@@ -105,6 +105,8 @@ fn fork_aliased_decorator() {
                 None,
                 false,
                 false,
+                false,
+                false,
                 Some(1234),
                 Some(500),
                 &ForgeConfig {

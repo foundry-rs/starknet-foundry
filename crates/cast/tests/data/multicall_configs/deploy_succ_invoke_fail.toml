@@ -1,6 +1,6 @@
 [[call]]
 call_type = "deploy"
-class_hash = "0x076e94149fc55e7ad9c5fe3b9af570970ae2cf51205f8452f39753e9497fe849"
+class_hash = "0x6eb3fda9eaa7d99bb7c9e72c8d874988a5b9269f3f866773889bc5ab4ec9079"
 inputs = []
 id = "Map"
 unique = false

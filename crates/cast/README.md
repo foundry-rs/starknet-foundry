@@ -2,7 +2,7 @@
 
 Starknet Foundry `sncast` is a command line tool for performing Starknet RPC calls. With it, you can easily interact with Starknet contracts!
 
-Note, that at the moment, `sncast` only supports contracts written in Cairo 1 and Cairo 2.
+Note, that `sncast` only officially supports contracts written in Cairo 2.
 
 ## Table of contents
 

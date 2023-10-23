@@ -27,6 +27,7 @@ static PREDEPLOYED_CONTRACTS: Dir = include_dir!("crates/cheatnet/predeployed-co
 
 #[derive(Parser, Debug)]
 #[command(version)]
+#[allow(clippy::struct_excessive_bools)]
 struct Args {
     /// Name used to filter tests
     test_filter: Option<String>,
@@ -54,6 +55,13 @@ struct Args {
     /// Clean forge cache directory
     #[arg(short, long)]
     clean_cache: bool,
+
+    /// Run only tests marked with `#[ignore]` attribute
+    #[arg(long = "ignored")]
+    only_ignored: bool,
+    /// Run all tests regardless of `#[ignore]` attribute
+    #[arg(long, conflicts_with = "only_ignored")]
+    include_ignored: bool,
 }
 
 fn validate_fuzzer_runs_value(val: &str) -> Result<u32> {
@@ -90,6 +98,7 @@ fn extract_failed_tests(tests_summaries: Vec<TestCrateSummary>) -> Vec<TestCaseS
         .collect()
 }
 
+#[allow(clippy::too_many_lines)]
 fn main_execution() -> Result<bool> {
     let args = Args::parse();
     if let Some(project_name) = args.init {
@@ -168,6 +177,8 @@ fn main_execution() -> Result<bool> {
                     args.test_filter.clone(),
                     args.exact,
                     args.exit_first,
+                    args.only_ignored,
+                    args.include_ignored,
                     args.fuzzer_runs,
                     args.fuzzer_seed,
                     &forge_config,
