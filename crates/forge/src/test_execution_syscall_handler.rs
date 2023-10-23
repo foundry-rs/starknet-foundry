@@ -39,8 +39,8 @@ use cairo_lang_starknet::contract::starknet_keccak;
 use cairo_lang_utils::bigint::BigIntAsHex;
 use cairo_vm::vm::errors::hint_errors::HintError::CustomHint;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
-use cheatnet::cheatcodes::signature::{ecdsa_sign_message, generate_ecdsa_keys, get_public_key};
 use cheatnet::cheatcodes::spy_events::SpyTarget;
+use starknet::signers::SigningKey;
 
 mod file_operations;
 
@@ -578,22 +578,22 @@ impl TestExecutionSyscallHandler<'_> {
                 Ok(())
             }
             "generate_ecdsa_keys" => {
-                let (private_key, public_key) = generate_ecdsa_keys();
+                let key_pair = SigningKey::from_random();
 
                 buffer
-                    .write(private_key)
+                    .write(key_pair.secret_scalar().to_felt252())
                     .expect("Failed to insert private key");
                 buffer
-                    .write(public_key)
+                    .write(key_pair.verifying_key().scalar().to_felt252())
                     .expect("Failed to insert public key");
                 Ok(())
             }
             "get_public_key" => {
                 let private_key = inputs[0].clone();
-                let public_key = get_public_key(&private_key);
+                let key_pair = SigningKey::from_secret_scalar(private_key.to_field_element());
 
                 buffer
-                    .write(public_key)
+                    .write(key_pair.verifying_key().scalar().to_felt252())
                     .expect("Failed to insert public key");
 
                 Ok(())
@@ -602,18 +602,21 @@ impl TestExecutionSyscallHandler<'_> {
                 let private_key = inputs[0].clone();
                 let message_hash = inputs[1].clone();
 
-                match ecdsa_sign_message(&private_key, &message_hash) {
-                    Ok((r, s)) => {
-                        buffer.write(0).expect("Failed to insert exit code");
-                        buffer.write(r).expect("Failed to insert signature r");
-                        buffer.write(s).expect("Failed to insert signature s");
-                    }
-                    Err(msg) => {
-                        buffer.write(1).expect("Failed to insert exit code");
-                        buffer
-                            .write(msg.to_felt252())
-                            .expect("Failed to insert error message");
-                    }
+                let key_pair = SigningKey::from_secret_scalar(private_key.to_field_element());
+
+                if let Ok(signature) = key_pair.sign(&message_hash.to_field_element()) {
+                    buffer.write(0).expect("Failed to insert exit code");
+                    buffer
+                        .write(signature.r.to_felt252())
+                        .expect("Failed to insert signature r");
+                    buffer
+                        .write(signature.s.to_felt252())
+                        .expect("Failed to insert signature s");
+                } else {
+                    buffer.write(1).expect("Failed to insert exit code");
+                    buffer
+                        .write("message_hash out of range".to_string().to_felt252())
+                        .expect("Failed to insert error message");
                 }
 
                 Ok(())
