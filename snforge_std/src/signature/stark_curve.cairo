@@ -1,5 +1,7 @@
 use starknet::testing::cheatcode;
 use ecdsa::check_ecdsa_signature;
+use super::interface::Signer;
+use super::interface::Verifier;
 
 #[derive(Copy, Drop)]
 struct StarkCurveKeyPair {
@@ -7,17 +9,7 @@ struct StarkCurveKeyPair {
     public_key: felt252
 }
 
-trait StarkCurveKeyPairTrait {
-    fn generate() -> StarkCurveKeyPair;
-    fn from_private_key(private_key: felt252) -> StarkCurveKeyPair;
-    fn sign(
-        ref self: StarkCurveKeyPair, message_hash: felt252
-    ) -> Result<(felt252, felt252), felt252>;
-    fn verify(
-        ref self: StarkCurveKeyPair, message_hash: felt252, signature: (felt252, felt252)
-    ) -> bool;
-}
-
+#[generate_trait]
 impl StarkCurveKeyPairImpl of StarkCurveKeyPairTrait {
     fn generate() -> StarkCurveKeyPair {
         let output = cheatcode::<'generate_ecdsa_keys'>(array![].span());
@@ -30,7 +22,9 @@ impl StarkCurveKeyPairImpl of StarkCurveKeyPairTrait {
 
         StarkCurveKeyPair { private_key, public_key: *output[0] }
     }
+}
 
+impl StarkCurveKeyPairSigner of Signer<StarkCurveKeyPair> {
     fn sign(
         ref self: StarkCurveKeyPair, message_hash: felt252
     ) -> Result<(felt252, felt252), felt252> {
@@ -46,7 +40,9 @@ impl StarkCurveKeyPairImpl of StarkCurveKeyPairTrait {
             panic_with_felt252('Should not be reached')
         }
     }
+}
 
+impl StarkCurveKeyPairVerifier of Verifier<StarkCurveKeyPair> {
     fn verify(
         ref self: StarkCurveKeyPair, message_hash: felt252, signature: (felt252, felt252)
     ) -> bool {
