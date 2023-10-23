@@ -1,7 +1,6 @@
-# `signing` Module
+# `signature` Module
 
-Module containing struct and trait for creating `ecdsa` signatures
+Module containing struct and interface for creating `ecdsa` signatures
 
-* [`StarkCurveKeyPair`](signing/stark_curve_key_pair.md) - keeps `ecdsa` keys
-* [`StarkCurveKeyPairTrait`](signing/stark_curve_key_pair_trait.md) - defines methods for generating,
-signing, and verifying with `ecdsa` keys
+* [`Interface`](signing/interface.md) - keeps `Signer` and `Verifier` interfaces
+* [`StarkCurveKeyPair`](signing/stark_curve_key_pair_trait.md) - implementation of stark curve signer
