@@ -70,7 +70,7 @@ jobs:
           
           if ! grep -q $RELEASE_VERSION CHANGELOG.md; then
             sed -i "s/## \[Unreleased\]/## \[Unreleased\]\n\n## \[${RELEASE_VERSION}\] - $(TZ=Europe/Krakow date '+%Y-%m-%d')/" CHANGELOG.md
-          if          
+          fi          
 
       - name: Commit CHANGELOG.md
         run: |
