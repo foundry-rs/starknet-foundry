@@ -44,10 +44,10 @@ pub enum TestCaseSummary {
         /// Name of the test case
         name: String,
     },
-    /// Fuzzing subtests skipped (did not run), previous subtest failed
-    SkippedFuzzing {},
-    /// Test case execution interrupted by error (did not run or was cancelled)
-    InterruptedByError {},
+    /// Fuzzing subtests skipped (did not run), previous subtest failed or
+    /// Test case execution interrupted by error (did not run or was cancelled).
+    /// To summing up this enum is return when we want to ignore test result
+    Interrupted {},
 }
 
 impl TestCaseSummary {
@@ -56,7 +56,7 @@ impl TestCaseSummary {
             TestCaseSummary::Failed { arguments, .. }
             | TestCaseSummary::Passed { arguments, .. } => arguments.clone(),
             TestCaseSummary::Ignored { .. } | TestCaseSummary::Skipped { .. } => vec![],
-            TestCaseSummary::InterruptedByError {} | TestCaseSummary::SkippedFuzzing {} => {
+            TestCaseSummary::Interrupted {} => {
                 unreachable!()
             }
         }
@@ -72,7 +72,7 @@ impl TestCaseSummary {
                 .as_ref()
                 .map(|FuzzingStatistics { runs, .. }| *runs),
             TestCaseSummary::Ignored { .. } | TestCaseSummary::Skipped { .. } => None,
-            TestCaseSummary::InterruptedByError {} | TestCaseSummary::SkippedFuzzing {} => {
+            TestCaseSummary::Interrupted {} => {
                 unreachable!()
             }
         }
@@ -105,8 +105,7 @@ impl TestCaseSummary {
             },
             TestCaseSummary::Ignored { .. }
             | TestCaseSummary::Skipped { .. }
-            | TestCaseSummary::InterruptedByError {}
-            | TestCaseSummary::SkippedFuzzing {} => self,
+            | TestCaseSummary::Interrupted {} => self,
         }
     }
 }
