@@ -140,24 +140,24 @@ jobs:
         run: |
           echo "CARGO=cross" >> $GITHUB_ENV
 
-      - name: Build
-        run: ${{ env.CARGO }} build --release --locked --target ${{ matrix.target }}
-
-      - name: Package
-        shell: bash
-        run: |
-          set -euxo pipefail
-          PKG_FULL_NAME="starknet-foundry-${{ github.ref_name }}-${{ matrix.target }}" 
-          echo "PKG_FULL_NAME=$PKG_FULL_NAME" >> $GITHUB_ENV
-
-          chmod +x ./scripts/package.sh
-          ./scripts/package.sh "${{ matrix.target }}" "$PKG_FULL_NAME"
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: build-${{ matrix.target }}
-          path: ${{ env.PKG_FULL_NAME }}.*
+#      - name: Build
+#        run: ${{ env.CARGO }} build --release --locked --target ${{ matrix.target }}
+#
+#      - name: Package
+#        shell: bash
+#        run: |
+#          set -euxo pipefail
+#          PKG_FULL_NAME="starknet-foundry-${{ github.ref_name }}-${{ matrix.target }}"
+#          echo "PKG_FULL_NAME=$PKG_FULL_NAME" >> $GITHUB_ENV
+#
+#          chmod +x ./scripts/package.sh
+#          ./scripts/package.sh "${{ matrix.target }}" "$PKG_FULL_NAME"
+#
+#      - name: Upload artifact
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: build-${{ matrix.target }}
+#          path: ${{ env.PKG_FULL_NAME }}.*
 
   create-release:
     name: Draft release
@@ -168,15 +168,15 @@ jobs:
         with:
           submodules: true
 
-      - name: Download artifacts
-        uses: actions/download-artifact@v3
-        with:
-          path: artifacts-dl
-
-      - name: Unpack artifacts to staging directory
-        run: |
-          mkdir -p artifacts
-          mv artifacts-dl/build-*/starknet-foundry-* artifacts/
+#      - name: Download artifacts
+#        uses: actions/download-artifact@v3
+#        with:
+#          path: artifacts-dl
+#
+#      - name: Unpack artifacts to staging directory
+#        run: |
+#          mkdir -p artifacts
+#          mv artifacts-dl/build-*/starknet-foundry-* artifacts/
 
       - name: Draft GitHub release
         id: draft-release
@@ -187,9 +187,9 @@ jobs:
           allow-missing-changelog: false
           title: $version
 
-      - name: Upload artifacts to the release
-        working-directory: artifacts
-        run: gh release upload "$TAG" *
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ steps.draft-release.outputs.computed-prefix }}${{ steps.draft-release.outputs.version }}
+#      - name: Upload artifacts to the release
+#        working-directory: artifacts
+#        run: gh release upload "$TAG" *
+#        env:
+#          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#          TAG: ${{ steps.draft-release.outputs.computed-prefix }}${{ steps.draft-release.outputs.version }}
