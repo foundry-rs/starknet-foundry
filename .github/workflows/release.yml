@@ -38,7 +38,7 @@ jobs:
         id: lookupVersionRelease
         uses: pozetroninc/github-action-get-latest-release@master
         with:
-          owner: cptartur
+          owner: foundry-rs
           repo: starknet-foundry
           excludes: prerelease, draft
 
