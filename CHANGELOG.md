@@ -71,6 +71,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed inconsistent pointers bug https://github.com/foundry-rs/starknet-foundry/issues/659
 - Fixed an issue where `deploy_at` would not trigger the constructors https://github.com/foundry-rs/starknet-foundry/issues/805
 
+### Cast
+
+#### Changed
+
+- dropped official support for cairo 1 compiled contracts. While they still should be working without any problems, 
+from now on the only officially supported cairo compiler version is 2
+
 ## [0.7.1] - 2023-09-27
 
 ### Forge
