@@ -63,10 +63,6 @@ pub async fn test_happy_case_add_profile() {
         "put",
         "30",
     ));
-    //     let tmp_dir = TempDir::new()?;
-    //     tmp_dir
-    //         .copy_from(&tests_folder_path, &["**/*.cairo"])
-    //         .context("Unable to copy files to temporary directory")?;
     let accounts_file = "./accounts.json";
 
     let args = vec![

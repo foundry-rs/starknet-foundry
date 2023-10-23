@@ -75,8 +75,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Changed
 
-- dropped official support for cairo 1 contracts. while they still should be working without any problems, from now on 
-the only officially supported cairo version is 2
+- dropped official support for cairo 1 compiled contracts. While they still should be working without any problems, 
+from now on the only officially supported cairo compiler version is 2
 
 ## [0.7.1] - 2023-09-27
 
