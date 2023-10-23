@@ -1,5 +1,5 @@
 use crate::test_case_summary::TestCaseSummary;
-use crate::{TestCrateSummary, TestCrateType};
+use crate::{CrateLocation, TestCrateSummary};
 use anyhow::Error;
 use console::style;
 
@@ -13,10 +13,10 @@ pub(crate) fn print_collected_tests_count(tests_num: usize, package_name: &str) 
     println!("{}", style(plain_text).bold());
 }
 
-pub(crate) fn print_running_tests(test_crate_file: TestCrateType, tests_num: usize) {
+pub(crate) fn print_running_tests(test_crate_file: CrateLocation, tests_num: usize) {
     let dir_name = match test_crate_file {
-        TestCrateType::Lib => "src",
-        TestCrateType::Tests => "tests",
+        CrateLocation::Lib => "src",
+        CrateLocation::Tests => "tests",
     };
     let plain_text = format!("Running {tests_num} test(s) from {dir_name}/");
 
@@ -45,7 +45,8 @@ pub(crate) fn print_test_result(test_result: &TestCaseSummary) {
     let result_header = match test_result {
         TestCaseSummary::Passed { .. } => format!("[{}]", style("PASS").green()),
         TestCaseSummary::Failed { .. } => format!("[{}]", style("FAIL").red()),
-        TestCaseSummary::Skipped { .. } => format!("[{}]", style("SKIP").yellow()),
+        TestCaseSummary::Ignored { .. } => format!("[{}]", style("IGNORE").yellow()),
+        TestCaseSummary::Skipped { .. } => format!("[{}]", style("SKIP").color256(11)),
         TestCaseSummary::InterruptedByError {} | TestCaseSummary::SkippedFuzzing {} => {
             unreachable!()
         }
@@ -53,6 +54,7 @@ pub(crate) fn print_test_result(test_result: &TestCaseSummary) {
 
     let result_name = match test_result {
         TestCaseSummary::Skipped { name }
+        | TestCaseSummary::Ignored { name }
         | TestCaseSummary::Failed { name, .. }
         | TestCaseSummary::Passed { name, .. } => name,
         TestCaseSummary::InterruptedByError {} | TestCaseSummary::SkippedFuzzing {} => {
@@ -91,6 +93,7 @@ pub fn print_failures(all_failed_tests: &[TestCaseSummary]) {
         .map(|test_case_summary| match test_case_summary {
             TestCaseSummary::Failed { name, .. } => name,
             TestCaseSummary::Passed { .. }
+            | TestCaseSummary::Ignored { .. }
             | TestCaseSummary::Skipped { .. }
             | TestCaseSummary::InterruptedByError {}
             | TestCaseSummary::SkippedFuzzing {} => unreachable!(),
