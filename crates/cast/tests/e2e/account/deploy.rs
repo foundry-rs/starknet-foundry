@@ -225,7 +225,7 @@ pub async fn test_valid_class_hash() {
 
 pub async fn create_account(salt: &str, add_profile: bool) -> (Utf8PathBuf, &str) {
     let created_dir = Utf8PathBuf::from(duplicate_directory_with_salt(
-        CONTRACTS_DIR.to_string() + "/v1/balance",
+        CONTRACTS_DIR.to_string() + "/constructor_with_params",
         "put",
         salt,
     ));
