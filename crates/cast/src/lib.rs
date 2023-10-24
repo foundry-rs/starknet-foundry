@@ -1,7 +1,6 @@
 use anyhow::{anyhow, bail, Context, Error, Result};
 use camino::Utf8PathBuf;
 use helpers::constants::{DEFAULT_RETRIES, KEYSTORE_PASSWORD_ENV_VAR, UDC_ADDRESS};
-use primitive_types::U256;
 use rand::rngs::OsRng;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
@@ -33,6 +32,7 @@ use starknet::{
     providers::{MaybeUnknownErrorCode, StarknetErrorWithMessage},
 };
 use std::collections::HashMap;
+use std::str::FromStr;
 use std::thread::sleep;
 use std::time::Duration;
 use std::{env, fs};
@@ -48,6 +48,38 @@ struct Account {
     salt: Option<String>,
     deployed: Option<bool>,
     class_hash: Option<String>,
+}
+
+#[derive(Debug, PartialEq, Eq, Copy, Clone)]
+pub enum ValueFormat {
+    // Addresses as hex, fees as int
+    Default,
+    // everything as int
+    Int,
+    // everything as hex
+    Hex,
+}
+
+impl ValueFormat {
+    #[must_use]
+    pub fn format_u64(&self, input: u64) -> String {
+        match self {
+            ValueFormat::Default | ValueFormat::Int => format!("{input}"),
+            ValueFormat::Hex => format!("{input:#x}"),
+        }
+    }
+
+    #[must_use]
+    pub fn format_str(&self, input: &str) -> String {
+        if let Ok(field) = FieldElement::from_str(input) {
+            return match self {
+                ValueFormat::Int => format!("{field:#}"),
+                ValueFormat::Hex | ValueFormat::Default => format!("{field:#x}"),
+            };
+        }
+
+        input.to_string()
+    }
 }
 
 pub fn get_provider(url: &str) -> Result<JsonRpcClient<HttpTransport>> {
@@ -305,25 +337,7 @@ pub async fn handle_wait_for_tx<T>(
     Ok(return_value)
 }
 
-pub fn print_formatted(
-    mut output: Vec<(&str, String)>,
-    int_format: bool,
-    json: bool,
-    error: bool,
-) -> Result<()> {
-    if !int_format {
-        output = output
-            .into_iter()
-            .map(|(key, value)| {
-                if let Ok(int_value) = U256::from_dec_str(&value) {
-                    (key, format!("{int_value:#x}"))
-                } else {
-                    (key, value)
-                }
-            })
-            .collect();
-    }
-
+pub fn print_formatted(output: Vec<(&str, String)>, json: bool, error: bool) -> Result<()> {
     if json {
         let json_output: HashMap<&str, String> = output.into_iter().collect();
         let json_value: Value = serde_json::to_value(json_output)?;
@@ -341,7 +355,7 @@ pub fn print_formatted(
 pub fn print_command_result<T: Serialize>(
     command: &str,
     result: &mut Result<T>,
-    int_format: bool,
+    value_format: ValueFormat,
     json: bool,
 ) -> Result<()> {
     let mut output = vec![("command", command.to_string())];
@@ -359,8 +373,16 @@ pub fn print_command_result<T: Serialize>(
                     .expect("Invalid JSON value")
                     .iter()
                     .filter_map(|(k, v)| {
-                        // skip values that are not convertable to string
-                        v.as_str().map(|value| (k.as_str(), value.to_string()))
+                        let value = match v {
+                            Value::Number(n) => {
+                                let n = n.as_u64().expect("found unexpected value");
+                                value_format.format_u64(n)
+                            }
+                            Value::String(s) => value_format.format_str(s),
+                            _ => return None,
+                        };
+
+                        Some((k.as_str(), value))
                     })
                     .collect::<Vec<(&str, String)>>(),
             );
@@ -370,7 +392,7 @@ pub fn print_command_result<T: Serialize>(
             error = true;
         }
     };
-    print_formatted(output, int_format, json, error)
+    print_formatted(output, json, error)
 }
 
 fn write_to_output<T: std::fmt::Display>(value: T, error: bool) {

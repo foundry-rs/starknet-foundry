@@ -28,6 +28,10 @@ Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/forge.ht
 
 - `show-config` subcommand to display currently used configuration
 - `account delete` command for removing accounts from the accounts file
+- `--hex-format` flag has been added
+
+#### Removed
+- `-i` short for `--int-format` is removed, now have to use the full form `--int-format`
 
 ## [0.8.3] - 2023-10-17
 
