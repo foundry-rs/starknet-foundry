@@ -74,6 +74,7 @@
     * [account](appendix/cast/account/account.md)
         * [create](appendix/cast/account/create.md)
         * [deploy](appendix/cast/account/deploy.md)
+        * [delete](appendix/cast/account/delete.md)
     * [declare](appendix/cast/declare.md)
     * [deploy](appendix/cast/deploy.md)
     * [invoke](appendix/cast/invoke.md)

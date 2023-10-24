@@ -6,6 +6,8 @@ entire account management flow with the `sncast account create` and `sncast acco
 Difference between those two commands is that the first one creates account information (private key, address and more)
 and the second one deploys it to the network. After deployment, account can be used to interact with Starknet.
 
+To remove an account from the accounts file, you can use  `sncast account delete`. Please note this only removes the account information stored locally - this will not remove the account from Starknet.
+
 > 💡 **Info**
 > Currently, only OpenZeppelin account creation is supported.
 
@@ -73,6 +75,28 @@ command: account create
 max_fee: 0x64a7168300
 address: 0x7a949e83b243068d0cbedd8d5b8b32fafea66c54de23c40e68b126b5c845b61
 ```
+
+### `account delete`
+
+Delete an account from `accounts-file` and its associated Scarb profile.
+
+```shell
+$ sncast \
+    --accounts-file my-account-file.json \
+    account delete \
+    --name some-name \
+    --network alpha-goerli
+  
+Do you want to remove account a4 from network alpha-goerli? (Y/n)
+Y
+Account removed from Scarb
+command: account delete
+result: Account successfully removed
+```
+> 💡 **Info**
+> Note that you can pass `--delete-profile false` argument to persist the associated profile in Scarb.toml.
+
+For a detailed CLI description, see [account delete command reference](../appendix/cast/account/delete.md).
 
 ### Custom account contract
 

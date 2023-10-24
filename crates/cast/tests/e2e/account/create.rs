@@ -91,9 +91,9 @@ pub async fn test_happy_case_generate_salt() {
 #[tokio::test]
 pub async fn test_happy_case_add_profile() {
     let current_dir = Utf8PathBuf::from(duplicate_directory_with_salt(
-        CONTRACTS_DIR.to_string() + "/v1/balance",
+        CONTRACTS_DIR.to_string() + "/map",
         "put",
-        "1",
+        "10",
     ));
     let accounts_file = "./accounts.json";
 
@@ -180,9 +180,9 @@ pub async fn test_happy_case_accounts_file_already_exists() {
 #[tokio::test]
 pub async fn test_profile_already_exists() {
     let current_dir = Utf8PathBuf::from(duplicate_directory_with_salt(
-        CONTRACTS_DIR.to_string() + "/v1/balance",
+        CONTRACTS_DIR.to_string() + "/constructor_with_params",
         "put",
-        "2",
+        "20",
     ));
     let accounts_file = "./accounts.json";
 
@@ -281,9 +281,9 @@ pub async fn test_happy_case_keystore() {
 #[tokio::test]
 pub async fn test_happy_case_keystore_add_profile() {
     let current_dir = Utf8PathBuf::from(duplicate_directory_with_salt(
-        CONTRACTS_DIR.to_string() + "/v1/map",
+        CONTRACTS_DIR.to_string() + "/map",
         "put",
-        "5",
+        "50",
     ));
     let keystore_path = "my_key.json";
     let account_path = "my_account.json";

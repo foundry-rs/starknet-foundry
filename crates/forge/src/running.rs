@@ -12,7 +12,7 @@ use blockifier::state::state_api::State;
 use cairo_felt::Felt252;
 use cairo_vm::serde::deserialize_program::HintParams;
 use cairo_vm::types::relocatable::Relocatable;
-use cheatnet::execution::syscalls::CheatableSyscallHandler;
+use cheatnet::execution::cheatable_syscall_handler::CheatableSyscallHandler;
 use itertools::chain;
 
 use cairo_lang_casm::hints::Hint;
@@ -20,8 +20,9 @@ use cairo_lang_casm::instructions::Instruction;
 use cairo_lang_runner::casm_run::hint_to_hint_params;
 use cairo_lang_runner::SierraCasmRunner;
 use cairo_lang_runner::{Arg, RunnerError};
-use camino::Utf8PathBuf;
+use camino::Utf8Path;
 use cheatnet::constants as cheatnet_constants;
+use cheatnet::execution::contract_execution_syscall_handler::ContractExecutionSyscallHandler;
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::state::{CheatnetState, ExtendedStateReader};
 use conversions::StarknetConversions;
@@ -46,7 +47,7 @@ use crate::scarb::ForkTarget;
 use crate::test_case_summary::TestCaseSummary;
 
 use crate::test_execution_syscall_handler::TestExecutionSyscallHandler;
-use crate::{RunnerConfig, RunnerParams};
+use crate::{RunnerConfig, RunnerParams, CACHE_DIR};
 
 use crate::test_execution_syscall_handler::TestExecutionState;
 
@@ -90,7 +91,7 @@ pub(crate) fn blocking_run_from_test(
         // a channel is used to receive information indicating
         // that the execution of the task is no longer necessary.
         if send.is_closed() {
-            return Err(anyhow::anyhow!("stop spawn_blocking"));
+            return Ok(TestCaseSummary::Interrupted {});
         }
         run_test_case(
             args,
@@ -199,15 +200,17 @@ pub(crate) fn run_test_case(
     )?;
 
     let mut cheatnet_state = CheatnetState::default();
-    let cheatable_syscall_handler =
-        CheatableSyscallHandler::new(syscall_handler, &mut cheatnet_state);
+    let mut cheatable_syscall_handler =
+        CheatableSyscallHandler::wrap(syscall_handler, &mut cheatnet_state);
+    let contract_execution_syscall_handler =
+        ContractExecutionSyscallHandler::wrap(&mut cheatable_syscall_handler);
 
     let mut test_execution_state = TestExecutionState {
         environment_variables: &runner_params.environment_variables,
         contracts: &runner_params.contracts,
     };
-    let mut test_execution_syscall_handler = TestExecutionSyscallHandler::new(
-        cheatable_syscall_handler,
+    let mut test_execution_syscall_handler = TestExecutionSyscallHandler::wrap(
+        contract_execution_syscall_handler,
         &mut test_execution_state,
         &string_to_hint,
     );
@@ -237,7 +240,7 @@ pub(crate) fn run_test_case(
 }
 
 fn get_fork_state_reader(
-    workspace_root: &Utf8PathBuf,
+    workspace_root: &Utf8Path,
     fork_targets: &[ForkTarget],
     fork_config: &Option<ForkConfig>,
 ) -> Result<Option<ForkStateReader>> {
@@ -249,7 +252,7 @@ fn get_fork_state_reader(
             Ok(Some(ForkStateReader::new(
                 url,
                 block_id,
-                Some(workspace_root.join(".snfoundry_cache").as_ref()),
+                Some(workspace_root.join(CACHE_DIR).as_ref()),
             )))
         }
         Some(ForkConfig::Id(name)) => {
@@ -270,7 +273,7 @@ fn get_latest_block_number(url: &str) -> Result<BlockId> {
 }
 
 fn find_params_and_build_fork_state_reader(
-    workspace_root: &Utf8PathBuf,
+    workspace_root: &Utf8Path,
     fork_targets: &[ForkTarget],
     fork_alias: &str,
 ) -> Result<Option<ForkStateReader>> {
@@ -299,7 +302,7 @@ fn find_params_and_build_fork_state_reader(
         return Ok(Some(ForkStateReader::new(
             &fork.url,
             block_id,
-            Some(workspace_root.join(".snfoundry_cache").as_ref()),
+            Some(workspace_root.join(CACHE_DIR).as_ref()),
         )));
     }
 
