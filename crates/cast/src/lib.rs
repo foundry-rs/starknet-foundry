@@ -61,6 +61,7 @@ pub enum ValueFormat {
 }
 
 impl ValueFormat {
+    #[must_use]
     pub fn format_u64(&self, input: u64) -> String {
         match self {
             ValueFormat::Default | ValueFormat::Int => format!("{input}"),
@@ -68,6 +69,7 @@ impl ValueFormat {
         }
     }
 
+    #[must_use]
     pub fn format_str(&self, input: &str) -> String {
         if let Ok(field) = FieldElement::from_str(input) {
             return match self {
@@ -76,7 +78,7 @@ impl ValueFormat {
             };
         }
 
-        format!("{input}")
+        input.to_string()
     }
 }
 
@@ -376,7 +378,7 @@ pub fn print_command_result<T: Serialize>(
                                 let n = n.as_u64().expect("found unexpected value");
                                 value_format.format_u64(n)
                             }
-                            Value::String(s) => value_format.format_str(&s),
+                            Value::String(s) => value_format.format_str(s),
                             _ => return None,
                         };
 

@@ -19,6 +19,7 @@ mod starknet_commands;
 #[derive(Parser)]
 #[command(version)]
 #[command(about = "Cast - a Starknet Foundry CLI", long_about = None)]
+#[allow(clippy::struct_excessive_bools)]
 struct Cli {
     /// Profile name in Scarb.toml config file
     #[clap(short, long)]
