@@ -44,7 +44,9 @@ pub enum TestCaseSummary {
         /// Name of the test case
         name: String,
     },
-    /// Enum variant representing:
+    /// Test case execution interrupted:
+    ///
+    /// Possible causes:
     ///  - fuzzing subtest that was skipped/interrupted during fuzzing due to other subtest failing
     ///  - single test or fuzzing subtest that was interrupted by error
     /// This enum is returned when we want to ignore the test result
