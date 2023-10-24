@@ -1,4 +1,3 @@
-use crate::execution::contract_print::{contract_print, PrintingResult};
 use crate::execution::{cheated_syscalls, syscall_hooks};
 use crate::state::CheatnetState;
 use anyhow::Result;
@@ -44,7 +43,7 @@ pub struct CheatableSyscallHandler<'a> {
 }
 
 impl<'a> CheatableSyscallHandler<'a> {
-    pub fn new(
+    pub fn wrap(
         syscall_handler: SyscallHintProcessor<'a>,
         cheatnet_state: &'a mut CheatnetState,
     ) -> Self {
@@ -93,11 +92,6 @@ impl HintProcessorLogic for CheatableSyscallHandler<'_> {
             }
         }
 
-        match contract_print(vm, maybe_extended_hint) {
-            PrintingResult::Printed => return Ok(()),
-            PrintingResult::Passed => (),
-            PrintingResult::Err(err) => return Err(err),
-        }
         self.syscall_handler
             .execute_hint(vm, exec_scopes, hint_data, constants)
     }

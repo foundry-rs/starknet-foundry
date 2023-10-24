@@ -1,4 +1,5 @@
 use super::cheatable_syscall_handler::CheatableSyscallHandler;
+use crate::execution::contract_execution_syscall_handler::ContractExecutionSyscallHandler;
 use crate::state::CheatnetState;
 use blockifier::execution::call_info::CallInfo;
 use blockifier::{
@@ -60,12 +61,14 @@ pub fn execute_entry_point_call_cairo1(
         syscall_handler,
         cheatnet_state,
     };
+    let mut contract_execution_syscall_handler =
+        ContractExecutionSyscallHandler::wrap(&mut cheatable_syscall_handler);
 
     // Execute.
     cheatable_run_entry_point(
         &mut vm,
         &mut runner,
-        &mut cheatable_syscall_handler,
+        &mut contract_execution_syscall_handler,
         &entry_point,
         &args,
         program_extra_data_length,
