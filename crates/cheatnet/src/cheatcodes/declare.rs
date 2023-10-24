@@ -14,9 +14,7 @@ use starknet_api::hash::StarkFelt;
 
 use crate::state::BlockifierState;
 use cairo_lang_runner::short_string::as_cairo_short_string;
-use cairo_lang_starknet::contract_class::ContractClass;
-use serde_json::Value;
-use starknet::core::types::FlattenedSierraClass;
+use starknet::core::types::contract::SierraClass;
 
 impl BlockifierState<'_> {
     pub fn declare(
@@ -71,14 +69,8 @@ impl BlockifierState<'_> {
 }
 
 fn get_class_hash(sierra_contract: &str) -> Result<ClassHash> {
-    let sierra_class: ContractClass = serde_json::from_str(sierra_contract)?;
-    let abi_flattened = sierra_class.abi.unwrap().json();
-    let mut sierra_contract_map: HashMap<String, Value> = serde_json::from_str(sierra_contract)?;
-    sierra_contract_map.insert("abi".to_string(), Value::String(abi_flattened));
-    let sierra_contract = serde_json::to_string_pretty(&sierra_contract_map)?;
-
-    let sierra_class: FlattenedSierraClass = serde_json::from_str(&sierra_contract)?;
-    let class_hash = sierra_class.class_hash();
+    let sierra_class: SierraClass = serde_json::from_str(sierra_contract)?;
+    let class_hash = sierra_class.class_hash()?;
     let class_hash = StarkFelt::new(class_hash.to_bytes_be())?;
     Ok(ClassHash(class_hash))
 }

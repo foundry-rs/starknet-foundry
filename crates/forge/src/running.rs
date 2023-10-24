@@ -47,7 +47,7 @@ use crate::scarb::ForkTarget;
 use crate::test_case_summary::TestCaseSummary;
 
 use crate::test_execution_syscall_handler::TestExecutionSyscallHandler;
-use crate::{RunnerConfig, RunnerParams};
+use crate::{RunnerConfig, RunnerParams, CACHE_DIR};
 
 use crate::test_execution_syscall_handler::TestExecutionState;
 
@@ -91,7 +91,7 @@ pub(crate) fn blocking_run_from_test(
         // a channel is used to receive information indicating
         // that the execution of the task is no longer necessary.
         if send.is_closed() {
-            return Err(anyhow::anyhow!("stop spawn_blocking"));
+            return Ok(TestCaseSummary::Interrupted {});
         }
         run_test_case(
             args,
@@ -252,7 +252,7 @@ fn get_fork_state_reader(
             Ok(Some(ForkStateReader::new(
                 url,
                 block_id,
-                Some(workspace_root.join(".snfoundry_cache").as_ref()),
+                Some(workspace_root.join(CACHE_DIR).as_ref()),
             )))
         }
         Some(ForkConfig::Id(name)) => {
@@ -302,7 +302,7 @@ fn find_params_and_build_fork_state_reader(
         return Ok(Some(ForkStateReader::new(
             &fork.url,
             block_id,
-            Some(workspace_root.join(".snfoundry_cache").as_ref()),
+            Some(workspace_root.join(CACHE_DIR).as_ref()),
         )));
     }
 

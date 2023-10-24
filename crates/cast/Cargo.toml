@@ -21,6 +21,7 @@ primitive-types = "0.12.1"
 shellexpand = "3.1.0"
 toml = "0.7.6"
 rpassword = "7.2.0"
+promptly = "0.3.1"
 
 [dev-dependencies]
 ctor.workspace = true
