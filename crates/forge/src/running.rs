@@ -263,6 +263,7 @@ fn extract_test_case_summary(
                 fuzzing_statistic: None,
             })
         }
+        // ForkStateReader.get_block_info() may return error
         Err(TestCaseRunError::StateError(error)) => Ok(TestCaseSummary::Failed {
             name: case.name.clone(),
             msg: Some(format!(
