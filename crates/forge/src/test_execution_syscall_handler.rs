@@ -48,6 +48,7 @@ use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cheatnet::cheatcodes::spy_events::SpyTarget;
 use cheatnet::execution::cheated_syscalls::SingleSegmentResponse;
 use cheatnet::execution::contract_execution_syscall_handler::ContractExecutionSyscallHandler;
+use starknet::signers::SigningKey;
 
 mod file_operations;
 
@@ -628,6 +629,50 @@ impl TestExecutionSyscallHandler<'_, '_> {
                 buffer
                     .write(Felt252::from(hash))
                     .expect("Failed to insert event name hash");
+                Ok(())
+            }
+            "generate_ecdsa_keys" => {
+                let key_pair = SigningKey::from_random();
+
+                buffer
+                    .write(key_pair.secret_scalar().to_felt252())
+                    .expect("Failed to insert private key");
+                buffer
+                    .write(key_pair.verifying_key().scalar().to_felt252())
+                    .expect("Failed to insert public key");
+                Ok(())
+            }
+            "get_public_key" => {
+                let private_key = inputs[0].clone();
+                let key_pair = SigningKey::from_secret_scalar(private_key.to_field_element());
+
+                buffer
+                    .write(key_pair.verifying_key().scalar().to_felt252())
+                    .expect("Failed to insert public key");
+
+                Ok(())
+            }
+            "ecdsa_sign_message" => {
+                let private_key = inputs[0].clone();
+                let message_hash = inputs[1].clone();
+
+                let key_pair = SigningKey::from_secret_scalar(private_key.to_field_element());
+
+                if let Ok(signature) = key_pair.sign(&message_hash.to_field_element()) {
+                    buffer.write(0).expect("Failed to insert exit code");
+                    buffer
+                        .write(signature.r.to_felt252())
+                        .expect("Failed to insert signature r");
+                    buffer
+                        .write(signature.s.to_felt252())
+                        .expect("Failed to insert signature s");
+                } else {
+                    buffer.write(1).expect("Failed to insert exit code");
+                    buffer
+                        .write("message_hash out of range".to_string().to_felt252())
+                        .expect("Failed to insert error message");
+                }
+
                 Ok(())
             }
             _ => Err(anyhow!("Unknown cheatcode selector: {selector}")).map_err(Into::into),

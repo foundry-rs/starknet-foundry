@@ -15,6 +15,7 @@ mod pure_cairo;
 mod roll;
 mod setup_fork;
 mod should_panic;
+mod signing;
 mod spoof;
 mod spy_events;
 mod syscalls;
