@@ -62,7 +62,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: verify-version
     if: ${{ needs.verify-version.outputs.versionIsValid == 'true' }}
-
     steps:
       - name: Create tag action was triggered by a push
         if: ${{ github.event_name == 'push' }}
