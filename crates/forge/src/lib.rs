@@ -335,10 +335,21 @@ async fn run_tests_from_crate(
 
     let mut results = vec![];
     let mut interrupted = false;
+    let cancel_and_wait_for_pending_tasks = || async {
+        rec.close();
+
+        // Waiting for things to finish shutting down
+        drop(send_shut_down);
+        let _ = rec_shut_down.recv().await;
+    };
 
     while let Some(task) = tasks.next().await {
-        let result = task??;
-        match result {
+        let result = task?;
+        if let Err(err) = result {
+            cancel_and_wait_for_pending_tasks().await;
+            return Err(err);
+        }
+        match result? {
             // Because tests are executed parallel is possible to receive
             // Ok(TestCaseSummary::Interrupted) before Err
             TestCaseSummary::Interrupted {} => interrupted = true,
@@ -350,11 +361,7 @@ async fn run_tests_from_crate(
         }
     }
 
-    rec.close();
-
-    // Waiting for things to finish shutting down
-    drop(send_shut_down);
-    let _ = rec_shut_down.recv().await;
+    cancel_and_wait_for_pending_tasks().await;
 
     // This Panic should never occur.
     // If TestCaseSummary::Interrupted is returned by a test,
