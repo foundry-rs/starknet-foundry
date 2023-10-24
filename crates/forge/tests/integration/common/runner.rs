@@ -10,9 +10,9 @@ use cairo_lang_starknet::casm_contract_class::CasmContractClass;
 use cairo_lang_starknet::contract_class::compile_contract_in_prepared_db;
 use cairo_lang_starknet::inline_macros::selector::SelectorMacro;
 use cairo_lang_starknet::plugin::StarkNetPlugin;
-use camino::Utf8PathBuf;
+use camino::{Utf8Path, Utf8PathBuf};
 use forge::scarb::StarknetContractArtifacts;
-use forge::{TestCrateSummary, TestCrateType};
+use forge::{CrateLocation, TestCrateSummary};
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -39,7 +39,7 @@ impl Contract {
         Ok(Self { name, code })
     }
 
-    fn generate_sierra_and_casm(self, corelib_path: &Utf8PathBuf) -> Result<(String, String)> {
+    fn generate_sierra_and_casm(self, corelib_path: &Utf8Path) -> Result<(String, String)> {
         let path = TempDir::new()?;
         let contract_path = path.child("contract.cairo");
         contract_path.touch()?;
@@ -137,7 +137,7 @@ impl<'a> TestCase {
 
     pub fn contracts(
         &self,
-        corelib_path: &Utf8PathBuf,
+        corelib_path: &Utf8Path,
     ) -> Result<HashMap<String, StarknetContractArtifacts>> {
         self.contracts
             .clone()
@@ -154,7 +154,7 @@ impl<'a> TestCase {
     pub fn find_test_result(results: &[TestCrateSummary]) -> &TestCrateSummary {
         results
             .iter()
-            .find(|r| r.test_crate_type == TestCrateType::Tests)
+            .find(|r| r.test_crate_type == CrateLocation::Tests)
             .unwrap()
     }
 }
