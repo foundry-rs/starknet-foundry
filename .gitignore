@@ -5,3 +5,5 @@ pyproject.toml
 target
 .vscode/
 .env
+Scarb.lock
+!snforge_std/Scarb.lock

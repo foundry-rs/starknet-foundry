@@ -10,12 +10,7 @@ fn library_call_syscall() {
     let test = test_case!(
         indoc!(
             r#"
-        use array::ArrayTrait;
-        use result::ResultTrait;
-        use option::OptionTrait;
-        use traits::TryInto;
         use starknet::ContractAddress;
-        use starknet::Felt252TryIntoContractAddress;
         use starknet::ClassHash;
         use snforge_std::{ declare, ContractClassTrait };
 
@@ -75,7 +70,7 @@ fn library_call_syscall() {
 
                     #[starknet::interface]
                     trait IExecutor<TContractState> {
-                        fn add_two(ref self: ContractState, number: felt252) -> felt252;
+                        fn add_two(ref self: TContractState, number: felt252) -> felt252;
                     }
 
                     #[storage]
