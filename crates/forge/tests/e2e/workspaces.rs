@@ -3,13 +3,13 @@ use std::path::PathBuf;
 use crate::assert_stdout_contains;
 use indoc::indoc;
 
-use crate::e2e::common::runner::{runner, setup_hello_workspace, setup_virtual_workspace};
+use crate::e2e::common::runner::{setup_hello_workspace, setup_virtual_workspace, test_runner};
 
 #[test]
 fn root_workspace_without_arguments() {
     let temp = setup_hello_workspace();
 
-    let snapbox = runner();
+    let snapbox = test_runner();
     let output = snapbox.current_dir(&temp).assert().code(1);
     assert_stdout_contains!(
         output,
@@ -44,7 +44,7 @@ fn root_workspace_without_arguments() {
 #[test]
 fn root_workspace_specific_package() {
     let temp = setup_hello_workspace();
-    let snapbox = runner().arg("--package").arg("addition");
+    let snapbox = test_runner().arg("--package").arg("addition");
 
     let output = snapbox.current_dir(&temp).assert().success();
     assert_stdout_contains!(
@@ -71,7 +71,7 @@ fn root_workspace_specific_package() {
 #[test]
 fn root_workspace_specific_package2() {
     let temp = setup_hello_workspace();
-    let snapbox = runner().arg("--package").arg("fibonacci");
+    let snapbox = test_runner().arg("--package").arg("fibonacci");
 
     let output = snapbox.current_dir(&temp).assert().code(1);
     assert_stdout_contains!(
@@ -106,7 +106,7 @@ fn root_workspace_specific_package2() {
 #[test]
 fn root_workspace_specific_package_and_name() {
     let temp = setup_hello_workspace();
-    let snapbox = runner().arg("simple").arg("--package").arg("addition");
+    let snapbox = test_runner().arg("simple").arg("--package").arg("addition");
 
     let output = snapbox.current_dir(&temp).assert().success();
     assert_stdout_contains!(
@@ -129,7 +129,7 @@ fn root_workspace_specific_package_and_name() {
 #[test]
 fn root_workspace_specify_root_package() {
     let temp = setup_hello_workspace();
-    let snapbox = runner().arg("--package").arg("hello_workspaces");
+    let snapbox = test_runner().arg("--package").arg("hello_workspaces");
 
     let output = snapbox.current_dir(&temp).assert().code(1);
     assert_stdout_contains!(
@@ -167,7 +167,7 @@ fn root_workspace_inside_nested_package() {
     let temp = setup_hello_workspace();
     let package_dir = temp.join(PathBuf::from("crates/addition"));
 
-    let snapbox = runner();
+    let snapbox = test_runner();
 
     let output = snapbox.current_dir(package_dir).assert().success();
     assert_stdout_contains!(
@@ -194,7 +194,7 @@ fn root_workspace_inside_nested_package() {
 #[test]
 fn root_workspace_for_entire_workspace() {
     let temp = setup_hello_workspace();
-    let snapbox = runner().arg("--workspace");
+    let snapbox = test_runner().arg("--workspace");
 
     let output = snapbox.current_dir(&temp).assert().code(1);
     assert_stdout_contains!(
@@ -266,7 +266,7 @@ fn root_workspace_for_entire_workspace_inside_package() {
     let temp = setup_hello_workspace();
     let package_dir = temp.join(PathBuf::from("crates/fibonacci"));
 
-    let snapbox = runner().arg("--workspace");
+    let snapbox = test_runner().arg("--workspace");
     let output = snapbox.current_dir(package_dir).assert().code(1);
     assert_stdout_contains!(
         output,
@@ -335,7 +335,10 @@ fn root_workspace_for_entire_workspace_inside_package() {
 #[test]
 fn root_workspace_for_entire_workspace_and_specific_package() {
     let temp = setup_hello_workspace();
-    let snapbox = runner().arg("--workspace").arg("--package").arg("addition");
+    let snapbox = test_runner()
+        .arg("--workspace")
+        .arg("--package")
+        .arg("addition");
 
     let result = snapbox.current_dir(&temp).assert().code(2);
 
@@ -347,7 +350,7 @@ fn root_workspace_for_entire_workspace_and_specific_package() {
 #[test]
 fn root_workspace_missing_package() {
     let temp = setup_hello_workspace();
-    let snapbox = runner().arg("--package").arg("missing_package");
+    let snapbox = test_runner().arg("--package").arg("missing_package");
 
     let result = snapbox.current_dir(&temp).assert().code(2);
 
@@ -359,7 +362,7 @@ fn root_workspace_missing_package() {
 #[test]
 fn virtual_workspace_without_arguments() {
     let temp = setup_virtual_workspace();
-    let snapbox = runner();
+    let snapbox = test_runner();
 
     let output = snapbox.current_dir(&temp).assert().code(1);
     assert_stdout_contains!(
@@ -407,7 +410,7 @@ fn virtual_workspace_without_arguments() {
 #[test]
 fn virtual_workspace_specify_package() {
     let temp = setup_virtual_workspace();
-    let snapbox = runner().arg("--package").arg("subtraction");
+    let snapbox = test_runner().arg("--package").arg("subtraction");
 
     let output = snapbox.current_dir(&temp).assert().success();
     assert_stdout_contains!(
@@ -434,7 +437,7 @@ fn virtual_workspace_specify_package() {
 #[test]
 fn virtual_workspace_specific_package2() {
     let temp = setup_virtual_workspace();
-    let snapbox = runner().arg("--package").arg("fibonacci2");
+    let snapbox = test_runner().arg("--package").arg("fibonacci2");
 
     let output = snapbox.current_dir(&temp).assert().code(1);
     assert_stdout_contains!(
@@ -468,7 +471,10 @@ fn virtual_workspace_specific_package2() {
 #[test]
 fn virtual_workspace_specific_package_and_name() {
     let temp = setup_virtual_workspace();
-    let snapbox = runner().arg("simple").arg("--package").arg("subtraction");
+    let snapbox = test_runner()
+        .arg("simple")
+        .arg("--package")
+        .arg("subtraction");
 
     let output = snapbox.current_dir(&temp).assert().success();
     assert_stdout_contains!(
@@ -493,7 +499,7 @@ fn virtual_workspace_inside_nested_package() {
     let temp = setup_virtual_workspace();
     let package_dir = temp.join(PathBuf::from("dummy_name/subtraction"));
 
-    let snapbox = runner();
+    let snapbox = test_runner();
 
     let output = snapbox.current_dir(package_dir).assert().success();
     assert_stdout_contains!(
@@ -520,7 +526,7 @@ fn virtual_workspace_inside_nested_package() {
 #[test]
 fn virtual_workspace_for_entire_workspace() {
     let temp = setup_virtual_workspace();
-    let snapbox = runner().arg("--workspace");
+    let snapbox = test_runner().arg("--workspace");
 
     let output = snapbox.current_dir(&temp).assert().code(1);
     assert_stdout_contains!(
@@ -570,7 +576,7 @@ fn virtual_workspace_for_entire_workspace_inside_package() {
     let temp = setup_virtual_workspace();
     let package_dir = temp.join(PathBuf::from("dummy_name/fibonacci2"));
 
-    let snapbox = runner().arg("--workspace");
+    let snapbox = test_runner().arg("--workspace");
     let output = snapbox.current_dir(package_dir).assert().code(1);
     assert_stdout_contains!(
         output,
@@ -617,7 +623,7 @@ fn virtual_workspace_for_entire_workspace_inside_package() {
 #[test]
 fn virtual_workspace_for_entire_workspace_and_specific_package() {
     let temp = setup_virtual_workspace();
-    let snapbox = runner()
+    let snapbox = test_runner()
         .arg("--workspace")
         .arg("--package")
         .arg("subtraction");
@@ -632,7 +638,7 @@ fn virtual_workspace_for_entire_workspace_and_specific_package() {
 #[test]
 fn virtual_workspace_missing_package() {
     let temp = setup_virtual_workspace();
-    let snapbox = runner().arg("--package").arg("missing_package");
+    let snapbox = test_runner().arg("--package").arg("missing_package");
 
     let result = snapbox.current_dir(&temp).assert().code(2);
 

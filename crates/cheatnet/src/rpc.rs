@@ -230,7 +230,7 @@ pub fn call_entry_point(
 
     let mut resources = ExecutionResources::default();
     let account_context = build_transaction_context();
-    let block_context = build_block_context();
+    let block_context = build_block_context(cheatnet_state.block_info);
 
     let mut context = EntryPointExecutionContext::new(
         block_context.clone(),

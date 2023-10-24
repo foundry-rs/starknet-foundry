@@ -47,7 +47,7 @@ pub(crate) fn print_test_result(test_result: &TestCaseSummary) {
         TestCaseSummary::Failed { .. } => format!("[{}]", style("FAIL").red()),
         TestCaseSummary::Ignored { .. } => format!("[{}]", style("IGNORE").yellow()),
         TestCaseSummary::Skipped { .. } => format!("[{}]", style("SKIP").color256(11)),
-        TestCaseSummary::InterruptedByError {} | TestCaseSummary::SkippedFuzzing {} => {
+        TestCaseSummary::Interrupted {} => {
             unreachable!()
         }
     };
@@ -57,7 +57,7 @@ pub(crate) fn print_test_result(test_result: &TestCaseSummary) {
         | TestCaseSummary::Ignored { name }
         | TestCaseSummary::Failed { name, .. }
         | TestCaseSummary::Passed { name, .. } => name,
-        TestCaseSummary::InterruptedByError {} | TestCaseSummary::SkippedFuzzing {} => {
+        TestCaseSummary::Interrupted {} => {
             unreachable!()
         }
     };
@@ -95,8 +95,7 @@ pub fn print_failures(all_failed_tests: &[TestCaseSummary]) {
             TestCaseSummary::Passed { .. }
             | TestCaseSummary::Ignored { .. }
             | TestCaseSummary::Skipped { .. }
-            | TestCaseSummary::InterruptedByError {}
-            | TestCaseSummary::SkippedFuzzing {} => unreachable!(),
+            | TestCaseSummary::Interrupted {} => unreachable!(),
         })
         .collect();
 

@@ -27,10 +27,10 @@ fn test_sum(x: felt252, y: felt252) {
 }
 ```
 
-Then run `snforge` like usual.
+Then run `snforge test` like usual.
 
 ```shell
-$ snforge
+$ snforge test
 Collected 1 test(s) from package_name package
 Running 1 test(s) from src/
 [PASS] package_name::test_sum (fuzzer runs = 256)
@@ -67,7 +67,7 @@ fn test_sum(x: felt252, y: felt252) {
 It can also be configured globally, via command line arguments:
 
 ```shell
-$ snforge --fuzzer-runs 1234 --fuzzer-seed 1111
+$ snforge test --fuzzer-runs 1234 --fuzzer-seed 1111
 ```
 
 Or in `Scarb.toml` file:

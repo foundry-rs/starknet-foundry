@@ -1,11 +1,11 @@
-use crate::e2e::common::runner::{runner, setup_package};
+use crate::e2e::common::runner::{setup_package, test_runner};
 use crate::{assert_stderr_contains, assert_stdout_contains};
 use indoc::indoc;
 
 #[test]
 fn fuzzing() {
     let temp = setup_package("fuzzing");
-    let snapbox = runner().arg("fuzzing");
+    let snapbox = test_runner().arg("fuzzing");
 
     let output = snapbox.current_dir(&temp).assert().code(1);
     assert_stdout_contains!(
@@ -46,7 +46,7 @@ fn fuzzing() {
 #[test]
 fn fuzzing_set_runs() {
     let temp = setup_package("fuzzing");
-    let snapbox = runner().arg("fuzzing");
+    let snapbox = test_runner().arg("fuzzing");
 
     let output = snapbox
         .current_dir(&temp)
@@ -91,7 +91,7 @@ fn fuzzing_set_runs() {
 #[test]
 fn fuzzing_set_seed() {
     let temp = setup_package("fuzzing");
-    let snapbox = runner().arg("fuzzing");
+    let snapbox = test_runner().arg("fuzzing");
 
     let output = snapbox
         .current_dir(&temp)
@@ -136,7 +136,7 @@ fn fuzzing_set_seed() {
 #[test]
 fn fuzzing_incorrect_runs() {
     let temp = setup_package("fuzzing");
-    let snapbox = runner();
+    let snapbox = test_runner();
 
     let output = snapbox
         .current_dir(&temp)
@@ -156,7 +156,7 @@ fn fuzzing_incorrect_runs() {
 #[test]
 fn fuzzing_incorrect_function_args() {
     let temp = setup_package("fuzzing");
-    let snapbox = runner().arg("incorrect_args");
+    let snapbox = test_runner().arg("incorrect_args");
 
     let output = snapbox.current_dir(&temp).assert().code(2);
     assert_stdout_contains!(
@@ -177,7 +177,7 @@ fn fuzzing_incorrect_function_args() {
 #[test]
 fn fuzzing_exit_first() {
     let temp = setup_package("fuzzing");
-    let snapbox = runner().arg("exit_first_fuzz").arg("-x");
+    let snapbox = test_runner().arg("exit_first_fuzz").arg("-x");
 
     let output = snapbox.current_dir(&temp).assert().code(1);
     assert_stdout_contains!(
@@ -207,7 +207,7 @@ fn fuzzing_exit_first() {
 #[test]
 fn fuzzing_exit_first_single_fail() {
     let temp = setup_package("fuzzing");
-    let snapbox = runner().arg("exit_first_single_fail").arg("-x");
+    let snapbox = test_runner().arg("exit_first_single_fail").arg("-x");
 
     let output = snapbox.current_dir(&temp).assert().code(1);
     assert_stdout_contains!(

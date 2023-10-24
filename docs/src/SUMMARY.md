@@ -40,7 +40,10 @@
 
 # Appendix
 
-* [Forge Command](appendix/forge.md)
+* [Forge Commands](appendix/forge.md)
+    * [test](appendix/forge/test.md)
+    * [init](appendix/forge/init.md)
+    * [clean-cache](appendix/forge/clean-cache.md)
 * [Cheatcodes Reference](appendix/cheatcodes.md)
     * [start_prank](appendix/cheatcodes/start_prank.md)
     * [stop_prank](appendix/cheatcodes/stop_prank.md)
@@ -69,6 +72,9 @@
         * [parse_json](appendix/forge-library/fs/parse_json.md)
     * [env](appendix/forge-library/env.md)
         * [var](appendix/forge-library/env/var.md)
+    * [signature](appendix/forge-library/signature)
+        * [interface](appendix/forge-library/signature/interface.md)
+        * [StarkCurveKeyPair](appendix/forge-library/signature/stark_curve_key_pair.md)
 * [Cast Commands](appendix/cast.md)
     * [common flags](appendix/cast/common.md)
     * [account](appendix/cast/account/account.md)

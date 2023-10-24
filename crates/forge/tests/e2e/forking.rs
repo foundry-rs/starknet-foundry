@@ -1,6 +1,6 @@
 use crate::assert_stdout_contains;
 use crate::e2e::common::runner::{
-    runner, setup_package, setup_package_with_file_patterns, BASE_FILE_PATTERNS,
+    runner, setup_package, setup_package_with_file_patterns, test_runner, BASE_FILE_PATTERNS,
 };
 use forge::CACHE_DIR;
 use indoc::indoc;
@@ -8,7 +8,7 @@ use indoc::indoc;
 #[test]
 fn without_cache() {
     let temp = setup_package("forking");
-    let snapbox = runner();
+    let snapbox = test_runner();
 
     let output = snapbox
         .current_dir(&temp)
@@ -40,7 +40,7 @@ fn with_cache() {
         "forking",
         &[BASE_FILE_PATTERNS, &[&format!("{CACHE_DIR}/*.json")]].concat(),
     );
-    let snapbox = runner();
+    let snapbox = test_runner();
 
     let output = snapbox.current_dir(&temp).assert().code(1);
     assert_stdout_contains!(
@@ -71,13 +71,14 @@ fn with_clean_cache() {
         "forking",
         &[BASE_FILE_PATTERNS, &[&format!("{CACHE_DIR}/*.json")]].concat(),
     );
-    let snapbox = runner();
 
-    let output = snapbox
+    runner()
+        .arg("clean-cache")
         .current_dir(&temp)
-        .arg("--clean-cache")
         .assert()
         .code(0);
+
+    let output = test_runner().current_dir(&temp).assert().code(0);
     assert_stdout_contains!(
         output,
         indoc! {r#"
