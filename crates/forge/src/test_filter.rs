@@ -1,5 +1,4 @@
-use crate::collecting::{CompiledTestCrate, CompiledTestCrateRaw};
-use test_collector::{TestCase, ValidatedForkConfig};
+use crate::collecting::{CompiledTestCrate, CompiledTestCrateRaw, TestCaseRunnable};
 
 #[derive(Debug, PartialEq)]
 // Specifies what tests should be included
@@ -81,10 +80,7 @@ impl TestsFilter {
         }
     }
 
-    pub(crate) fn should_be_run_based_on_ignored(
-        &self,
-        test_case: &TestCase<ValidatedForkConfig>,
-    ) -> bool {
+    pub(crate) fn should_be_run_based_on_ignored(&self, test_case: &TestCaseRunnable) -> bool {
         match self.ignored_filter {
             IgnoredFilter::All => true,
             IgnoredFilter::Ignored => test_case.ignored,

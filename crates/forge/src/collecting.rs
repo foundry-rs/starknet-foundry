@@ -5,13 +5,15 @@ use assert_fs::TempDir;
 use cairo_lang_sierra::program::Program;
 use camino::{Utf8Path, Utf8PathBuf};
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
-use test_collector::{
-    collect_tests, ForkConfig, LinkedLibrary, RawForkConfig, TestCase, ValidatedForkConfig,
-};
+use starknet::core::types::BlockId;
+use test_collector::{collect_tests, ForkConfig, LinkedLibrary, RawForkConfig, TestCase};
+use url::Url;
 use walkdir::WalkDir;
 
 pub(crate) type CompiledTestCrateRaw = CompiledTestCrate<RawForkConfig>;
 pub(crate) type CompiledTestCrateRunnable = CompiledTestCrate<ValidatedForkConfig>;
+
+pub(crate) type TestCaseRunnable = TestCase<ValidatedForkConfig>;
 
 #[derive(Debug, Clone)]
 pub(crate) struct CompiledTestCrate<T: ForkConfig> {
@@ -19,6 +21,14 @@ pub(crate) struct CompiledTestCrate<T: ForkConfig> {
     pub test_cases: Vec<TestCase<T>>,
     pub tests_location: CrateLocation,
 }
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ValidatedForkConfig {
+    pub url: Url,
+    pub block_id: BlockId,
+}
+
+impl ForkConfig for ValidatedForkConfig {}
 
 #[derive(Debug, PartialEq)]
 pub(crate) struct TestCompilationTarget {

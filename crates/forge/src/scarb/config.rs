@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, bail, Result};
 use conversions::StarknetConversions;
 use itertools::Itertools;
 use serde::Deserialize;
@@ -54,25 +54,21 @@ pub(super) fn validate_raw_fork_config(raw_config: &RawForgeConfig) -> Result<()
     let removed_duplicated_names: Vec<String> = names.clone().into_iter().unique().collect();
 
     if names.len() != removed_duplicated_names.len() {
-        return Err(anyhow!("Some fork names are duplicated"));
+        bail!("Some fork names are duplicated");
     }
 
     for fork in forks {
         let block_id_items: Vec<(&String, &String)> = fork.block_id.iter().collect();
         let [(block_id_key, block_id_value)] = block_id_items[..] else {
-            return Err(anyhow!("block_id should be set once per fork"));
+            bail!("block_id should be set once per fork");
         };
 
         if !["number", "hash", "tag"].contains(&&**block_id_key) {
-            return Err(anyhow!(
-                "block_id has only three variants: number, hash and tag"
-            ));
+            bail!("block_id = {block_id_key} is not valid. Possible values = are \"number\", \"hash\" and \"tag\"");
         }
 
         if block_id_key == "tag" && !["Latest", "Pending"].contains(&&**block_id_value) {
-            return Err(anyhow!(
-                "block_id.tag has only two variants: Latest or Pending"
-            ));
+            bail!("block_id.tag has only two variants: Latest or Pending");
         }
     }
 

@@ -37,10 +37,10 @@ pub use crate::test_crate_summary::TestCrateSummary;
 
 use crate::collecting::{
     collect_test_compilation_targets, compile_tests, CompiledTestCrate, CompiledTestCrateRaw,
-    CompiledTestCrateRunnable,
+    CompiledTestCrateRunnable, TestCaseRunnable, ValidatedForkConfig,
 };
 use crate::test_filter::TestsFilter;
-use test_collector::{FuzzerConfig, LinkedLibrary, RawForkConfig, TestCase, ValidatedForkConfig};
+use test_collector::{FuzzerConfig, LinkedLibrary, RawForkConfig, TestCase};
 
 pub mod pretty_printing;
 pub mod scarb;
@@ -436,7 +436,7 @@ async fn run_tests_from_crate(
 #[allow(clippy::too_many_arguments)]
 fn choose_test_strategy_and_run(
     args: Vec<ConcreteTypeId>,
-    case: Arc<TestCase<ValidatedForkConfig>>,
+    case: Arc<TestCaseRunnable>,
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
@@ -468,7 +468,7 @@ fn choose_test_strategy_and_run(
 }
 
 fn run_single_test(
-    case: Arc<TestCase<ValidatedForkConfig>>,
+    case: Arc<TestCaseRunnable>,
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
@@ -512,7 +512,7 @@ fn run_single_test(
 
 fn run_with_fuzzing(
     args: Vec<ConcreteTypeId>,
-    case: Arc<TestCase<ValidatedForkConfig>>,
+    case: Arc<TestCaseRunnable>,
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
@@ -604,7 +604,7 @@ fn run_with_fuzzing(
 #[allow(clippy::too_many_arguments)]
 fn run_fuzzing_subtest(
     args: Vec<Felt252>,
-    case: Arc<TestCase<ValidatedForkConfig>>,
+    case: Arc<TestCaseRunnable>,
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,

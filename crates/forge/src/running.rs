@@ -37,7 +37,7 @@ use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::hash::StarkHash;
 use starknet_api::patricia_key;
 use starknet_api::transaction::Calldata;
-use test_collector::{TestCase, ValidatedForkConfig};
+use test_collector::TestCase;
 use thiserror::Error;
 use tokio::runtime::Runtime;
 use tokio::sync::mpsc::Sender;
@@ -46,6 +46,7 @@ use url::Url;
 
 use crate::test_case_summary::TestCaseSummary;
 
+use crate::collecting::{TestCaseRunnable, ValidatedForkConfig};
 use crate::test_execution_syscall_handler::TestExecutionSyscallHandler;
 use crate::{RunnerConfig, RunnerParams, CACHE_DIR};
 
@@ -79,7 +80,7 @@ fn build_hints_dict<'b>(
 
 pub(crate) fn blocking_run_from_test(
     args: Vec<Felt252>,
-    case: Arc<TestCase<ValidatedForkConfig>>,
+    case: Arc<TestCaseRunnable>,
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
@@ -167,7 +168,7 @@ pub(crate) enum TestCaseRunError {
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn run_test_case(
     args: Vec<Felt252>,
-    case: &TestCase<ValidatedForkConfig>,
+    case: &TestCaseRunnable,
     runner: &SierraCasmRunner,
     runner_config: &Arc<RunnerConfig>,
     runner_params: &Arc<RunnerParams>,

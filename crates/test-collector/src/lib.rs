@@ -38,7 +38,6 @@ use starknet::core::types::{BlockId, BlockTag};
 use std::fs;
 use std::path::PathBuf;
 use std::sync::Arc;
-use url::Url;
 
 mod plugin;
 
@@ -64,14 +63,8 @@ pub enum ExpectedTestResult {
 
 pub trait ForkConfig {}
 
-impl ForkConfig for ValidatedForkConfig {}
 impl ForkConfig for RawForkConfig {}
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct ValidatedForkConfig {
-    pub url: Url,
-    pub block_id: BlockId,
-}
 #[derive(Debug, Clone, PartialEq)]
 pub enum RawForkConfig {
     Id(String),
@@ -467,6 +460,8 @@ pub struct LinkedLibrary {
     pub path: PathBuf,
 }
 
+pub type TestCaseRaw = TestCase<RawForkConfig>;
+
 #[derive(Debug, PartialEq, Clone)]
 pub struct TestCase<T: ForkConfig> {
     pub name: String,
@@ -484,7 +479,7 @@ pub fn collect_tests(
     linked_libraries: &[LinkedLibrary],
     builtins: &[&str],
     corelib_path: PathBuf,
-) -> Result<(Program, Vec<TestCase<RawForkConfig>>)> {
+) -> Result<(Program, Vec<TestCaseRaw>)> {
     let mut crate_roots: OrderedHashMap<SmolStr, PathBuf> = linked_libraries
         .iter()
         .cloned()
@@ -532,7 +527,7 @@ pub fn collect_tests(
         .context("Compilation failed without any diagnostics")
         .context("Failed to get sierra program")?;
 
-    let collected_tests: Vec<TestCase<RawForkConfig>> = all_tests
+    let collected_tests: Vec<TestCaseRaw> = all_tests
         .into_iter()
         .map(|(func_id, test)| {
             (
@@ -573,7 +568,7 @@ pub fn collect_tests(
 
 fn validate_tests(
     sierra_program: Program,
-    collected_tests: &Vec<TestCase<RawForkConfig>>,
+    collected_tests: &Vec<TestCaseRaw>,
     ignored_params: &[&str],
 ) -> Result<(), anyhow::Error> {
     let casm_generator = match SierraCasmGenerator::new(sierra_program) {

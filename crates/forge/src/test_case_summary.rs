@@ -1,8 +1,9 @@
+use crate::collecting::TestCaseRunnable;
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{RunResult, RunResultValue};
 use std::option::Option;
-use test_collector::{ExpectedPanicValue, ExpectedTestResult, TestCase, ValidatedForkConfig};
+use test_collector::{ExpectedPanicValue, ExpectedTestResult};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct FuzzingStatistics {
@@ -117,7 +118,7 @@ impl TestCaseSummary {
     #[must_use]
     pub(crate) fn from_run_result(
         run_result: RunResult,
-        test_case: &TestCase<ValidatedForkConfig>,
+        test_case: &TestCaseRunnable,
         arguments: Vec<Felt252>,
     ) -> Self {
         let name = test_case.name.to_string();
@@ -165,7 +166,7 @@ impl TestCaseSummary {
     }
 
     #[must_use]
-    pub(crate) fn skipped(test_case: &TestCase<ValidatedForkConfig>) -> Self {
+    pub(crate) fn skipped(test_case: &TestCaseRunnable) -> Self {
         Self::Skipped {
             name: test_case.name.to_string(),
         }
