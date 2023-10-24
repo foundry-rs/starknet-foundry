@@ -755,7 +755,7 @@ mod tests {
             config_from_scarb_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
                 .unwrap_err();
         assert!(
-            format!("{err:?}").contains("block_id has only three variants: number, hash and tag")
+            format!("{err:?}").contains("block_id = wrong_variant is not valid. Possible values = are \"number\", \"hash\" and \"tag\"")
         );
     }
 
