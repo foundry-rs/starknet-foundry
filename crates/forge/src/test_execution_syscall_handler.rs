@@ -14,13 +14,9 @@ use blockifier::execution::syscalls::{
     SyscallRequest, SyscallResponse, SyscallResponseWrapper, SyscallResult,
 };
 use cairo_felt::Felt252;
-use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
-use cairo_vm::hint_processor::hint_processor_definition::HintReference;
-use cairo_vm::serde::deserialize_program::ApTracking;
 use cairo_vm::types::exec_scope::ExecutionScopes;
 use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::errors::hint_errors::HintError;
-use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use cheatnet::cheatcodes::deploy::{deploy, deploy_at, DeployCallPayload};
 use cheatnet::cheatcodes::{CheatcodeError, ContractArtifacts, EnhancedHintError};
@@ -44,10 +40,13 @@ use crate::test_execution_syscall_handler::file_operations::string_into_felt;
 use cairo_lang_starknet::contract::starknet_keccak;
 use cairo_lang_utils::bigint::BigIntAsHex;
 use cairo_vm::vm::errors::hint_errors::HintError::CustomHint;
-use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
+use cairo_vm::vm::runners::cairo_runner::RunResources;
 use cheatnet::cheatcodes::spy_events::SpyTarget;
 use cheatnet::execution::cheated_syscalls::SingleSegmentResponse;
 use cheatnet::execution::contract_execution_syscall_handler::ContractExecutionSyscallHandler;
+use cheatnet::execution::syscall_handler::{
+    Passable, StackableHintProcessorLogic, StackableResourceTracker,
+};
 
 mod file_operations;
 
@@ -78,7 +77,7 @@ pub struct TestExecutionSyscallHandler<'a, 'b> {
 
 impl<'a, 'b> TestExecutionSyscallHandler<'a, 'b> {
     pub fn wrap(
-        contract_execution_syscall_handler: ContractExecutionSyscallHandler<'a, 'b>,
+        contract_execution_syscall_handler: ContractExecutionSyscallHandler,
         test_execution_state: &'a mut TestExecutionState<'a>,
         hints: &'a HashMap<String, Hint>,
     ) -> Self {
@@ -91,53 +90,14 @@ impl<'a, 'b> TestExecutionSyscallHandler<'a, 'b> {
     }
 }
 
-// crates/blockifier/src/execution/syscalls/hint_processor.rs:472 (ResourceTracker for SyscallHintProcessor)
-impl ResourceTracker for TestExecutionSyscallHandler<'_, '_> {
-    fn consumed(&self) -> bool {
-        self.contract_execution_syscall_handler
-            .cheatable_syscall_handler
-            .syscall_handler
-            .context
-            .vm_run_resources
-            .consumed()
-    }
-
-    fn consume_step(&mut self) {
-        self.contract_execution_syscall_handler
-            .cheatable_syscall_handler
-            .syscall_handler
-            .context
-            .vm_run_resources
-            .consume_step();
-    }
-
-    fn get_n_steps(&self) -> Option<usize> {
-        self.contract_execution_syscall_handler
-            .cheatable_syscall_handler
-            .syscall_handler
-            .context
-            .vm_run_resources
-            .get_n_steps()
-    }
-
-    fn run_resources(&self) -> &RunResources {
-        self.contract_execution_syscall_handler
-            .cheatable_syscall_handler
-            .syscall_handler
-            .context
-            .vm_run_resources
-            .run_resources()
-    }
-}
-
-impl HintProcessorLogic for TestExecutionSyscallHandler<'_, '_> {
+impl StackableHintProcessorLogic for TestExecutionSyscallHandler<'_, '_> {
     fn execute_hint(
         &mut self,
         vm: &mut VirtualMachine,
         exec_scopes: &mut ExecutionScopes,
         hint_data: &Box<dyn Any>,
         constants: &HashMap<String, Felt252>,
-    ) -> Result<(), HintError> {
+    ) -> Passable<Result<(), HintError>> {
         let maybe_extended_hint = hint_data.downcast_ref::<Hint>();
         if let Some(Hint::Starknet(StarknetHint::Cheatcode {
             selector,
@@ -147,7 +107,7 @@ impl HintProcessorLogic for TestExecutionSyscallHandler<'_, '_> {
             output_end,
         })) = maybe_extended_hint
         {
-            return self.execute_cheatcode_hint(
+            return Passable::Done(self.execute_cheatcode_hint(
                 vm,
                 exec_scopes,
                 selector,
@@ -157,7 +117,7 @@ impl HintProcessorLogic for TestExecutionSyscallHandler<'_, '_> {
                 output_end,
                 self.test_execution_state.contracts,
                 self.test_execution_state.environment_variables,
-            );
+            ));
         }
         if let Some(Hint::Starknet(StarknetHint::SystemCall { system })) = maybe_extended_hint {
             return execute_syscall(
@@ -170,22 +130,10 @@ impl HintProcessorLogic for TestExecutionSyscallHandler<'_, '_> {
                     .cheatable_syscall_handler,
             );
         }
-        self.contract_execution_syscall_handler
-            .cheatable_syscall_handler
-            .execute_hint(vm, exec_scopes, hint_data, constants)
-    }
-
-    /// Trait function to store hint in the hint processor by string.
-    fn compile_hint(
-        &self,
-        hint_code: &str,
-        _ap_tracking_data: &ApTracking,
-        _reference_ids: &HashMap<String, usize>,
-        _references: &[HintReference],
-    ) -> Result<Box<dyn Any>, VirtualMachineError> {
-        Ok(Box::new(self.hints[hint_code].clone()))
+        Passable::Pass
     }
 }
+impl StackableResourceTracker for TestExecutionSyscallHandler<'_, '_> {}
 
 impl TestExecutionSyscallHandler<'_, '_> {
     #[allow(clippy::trivially_copy_pass_by_ref, clippy::too_many_arguments)]
@@ -691,11 +639,11 @@ struct ScarbStarknetContractArtifact {
 fn execute_syscall(
     system: &ResOperand,
     vm: &mut VirtualMachine,
-    exec_scopes: &mut ExecutionScopes,
-    hint_data: &Box<dyn Any>,
-    constants: &HashMap<String, Felt252>,
+    _exec_scopes: &mut ExecutionScopes,
+    _hint_data: &Box<dyn Any>,
+    _constants: &HashMap<String, Felt252>,
     cheatable_syscall_handler: &mut CheatableSyscallHandler,
-) -> Result<(), HintError> {
+) -> Passable<Result<(), HintError>> {
     let (cell, offset) = extract_buffer(system);
     let system_ptr = get_ptr(vm, cell, &offset)?;
 
@@ -724,12 +672,12 @@ fn execute_syscall(
                 &call_args,
             );
             write_call_contract_response(cheatable_syscall_handler, vm, &call_args, call_result)?;
-            Ok(())
+            Passable::Done(Ok(()))
         }
-        DeprecatedSyscallSelector::ReplaceClass => Err(HintError::CustomHint(Box::from(
-            "Replace class can't be used in tests".to_string(),
+        DeprecatedSyscallSelector::ReplaceClass => Passable::Done(Err(HintError::CustomHint(
+            Box::from("Replace class can't be used in tests".to_string()),
         ))),
-        _ => cheatable_syscall_handler.execute_hint(vm, exec_scopes, hint_data, constants),
+        _ => Passable::Pass,
     }
 }
 

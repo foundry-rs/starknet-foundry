@@ -23,6 +23,7 @@ use cairo_lang_runner::{Arg, RunnerError};
 use camino::Utf8Path;
 use cheatnet::constants as cheatnet_constants;
 use cheatnet::execution::contract_execution_syscall_handler::ContractExecutionSyscallHandler;
+use cheatnet::execution::syscall_handler_stack::SyscallHandlerStack;
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::state::{CheatnetState, ExtendedStateReader};
 use conversions::StarknetConversions;
@@ -192,7 +193,7 @@ pub(crate) fn run_test_case(
     let mut context = build_context();
     let mut execution_resources = ExecutionResources::default();
     let mut blockifier_state = CachedState::new(state_reader, GlobalContractCache::default());
-    let syscall_handler = build_syscall_handler(
+    let mut syscall_handler = build_syscall_handler(
         &mut blockifier_state,
         &string_to_hint,
         &mut execution_resources,
@@ -202,7 +203,7 @@ pub(crate) fn run_test_case(
     let mut cheatnet_state = CheatnetState::default();
     let mut cheatable_syscall_handler =
         CheatableSyscallHandler::wrap(syscall_handler, &mut cheatnet_state);
-    let contract_execution_syscall_handler =
+    let mut contract_execution_syscall_handler =
         ContractExecutionSyscallHandler::wrap(&mut cheatable_syscall_handler);
 
     let mut test_execution_state = TestExecutionState {
@@ -215,9 +216,16 @@ pub(crate) fn run_test_case(
         &string_to_hint,
     );
 
+    let mut stack = SyscallHandlerStack::from_handlers(vec![
+        &mut test_execution_syscall_handler,
+        &mut contract_execution_syscall_handler,
+        &mut cheatable_syscall_handler,
+        &mut syscall_handler,
+    ]);
+
     match runner.run_function(
         runner.find_function(case.name.as_str())?,
-        &mut test_execution_syscall_handler,
+        &mut stack,
         hints_dict,
         instructions,
         builtins,

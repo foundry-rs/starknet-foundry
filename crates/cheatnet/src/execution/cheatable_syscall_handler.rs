@@ -1,3 +1,6 @@
+use crate::execution::syscall_handler::{
+    Passable, StackableHintProcessorLogic, StackableResourceTracker, StackableSyscallHandler,
+};
 use crate::execution::{cheated_syscalls, syscall_hooks};
 use crate::state::CheatnetState;
 use anyhow::Result;
@@ -16,15 +19,10 @@ use cairo_lang_casm::{
     hints::{Hint, StarknetHint},
     operand::{BinOpOperand, DerefOrImmediate, Operation, Register, ResOperand},
 };
-use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
-use cairo_vm::vm::runners::cairo_runner::ResourceTracker;
 use cairo_vm::{
-    hint_processor::hint_processor_definition::HintReference,
-    serde::deserialize_program::ApTracking,
     types::{exec_scope::ExecutionScopes, relocatable::Relocatable},
     vm::{
         errors::{hint_errors::HintError, vm_errors::VirtualMachineError},
-        runners::cairo_runner::RunResources,
         vm_core::VirtualMachine,
     },
 };
@@ -38,13 +36,13 @@ pub type SyscallSelector = DeprecatedSyscallSelector;
 // If it cannot execute a cheatcode it falls back to SyscallHintProcessor, which provides standard implementation of
 // hints from blockifier
 pub struct CheatableSyscallHandler<'a> {
-    pub syscall_handler: SyscallHintProcessor<'a>,
+    pub syscall_handler: &'a mut SyscallHintProcessor<'a>,
     pub cheatnet_state: &'a mut CheatnetState,
 }
 
 impl<'a> CheatableSyscallHandler<'a> {
     pub fn wrap(
-        syscall_handler: SyscallHintProcessor<'a>,
+        syscall_handler: &'a mut SyscallHintProcessor<'a>,
         cheatnet_state: &'a mut CheatnetState,
     ) -> Self {
         CheatableSyscallHandler {
@@ -54,36 +52,14 @@ impl<'a> CheatableSyscallHandler<'a> {
     }
 }
 
-// crates/blockifier/src/execution/syscalls/hint_processor.rs:472 (ResourceTracker for SyscallHintProcessor)
-impl ResourceTracker for CheatableSyscallHandler<'_> {
-    fn consumed(&self) -> bool {
-        self.syscall_handler.context.vm_run_resources.consumed()
-    }
-
-    fn consume_step(&mut self) {
-        self.syscall_handler.context.vm_run_resources.consume_step();
-    }
-
-    fn get_n_steps(&self) -> Option<usize> {
-        self.syscall_handler.context.vm_run_resources.get_n_steps()
-    }
-
-    fn run_resources(&self) -> &RunResources {
-        self.syscall_handler
-            .context
-            .vm_run_resources
-            .run_resources()
-    }
-}
-
-impl HintProcessorLogic for CheatableSyscallHandler<'_> {
+impl StackableHintProcessorLogic for CheatableSyscallHandler<'_> {
     fn execute_hint(
         &mut self,
         vm: &mut VirtualMachine,
-        exec_scopes: &mut ExecutionScopes,
+        _exec_scopes: &mut ExecutionScopes,
         hint_data: &Box<dyn Any>,
-        constants: &HashMap<String, Felt252>,
-    ) -> HintExecutionResult {
+        _constants: &HashMap<String, Felt252>,
+    ) -> Passable<Result<(), HintError>> {
         let maybe_extended_hint = hint_data.downcast_ref::<Hint>();
 
         if let Some(Hint::Starknet(StarknetHint::SystemCall { .. })) = maybe_extended_hint {
@@ -91,23 +67,11 @@ impl HintProcessorLogic for CheatableSyscallHandler<'_> {
                 return self.execute_next_syscall_cheated(vm, hint);
             }
         }
-
-        self.syscall_handler
-            .execute_hint(vm, exec_scopes, hint_data, constants)
-    }
-
-    /// Trait function to store hint in the hint processor by string.
-    fn compile_hint(
-        &self,
-        hint_code: &str,
-        ap_tracking_data: &ApTracking,
-        reference_ids: &HashMap<String, usize>,
-        references: &[HintReference],
-    ) -> Result<Box<dyn Any>, VirtualMachineError> {
-        self.syscall_handler
-            .compile_hint(hint_code, ap_tracking_data, reference_ids, references)
+        Passable::Pass
     }
 }
+impl StackableResourceTracker for CheatableSyscallHandler<'_> {}
+impl StackableSyscallHandler for CheatableSyscallHandler<'_> {}
 
 // crates/blockifier/src/execution/syscalls/hint_processor.rs:454
 /// Retrieves a [Relocatable] from the VM given a [`ResOperand`].
@@ -170,35 +134,39 @@ impl CheatableSyscallHandler<'_> {
         &mut self,
         vm: &mut VirtualMachine,
         hint: &StarknetHint,
-    ) -> HintExecutionResult {
+    ) -> Passable<HintExecutionResult> {
         // We peek into the selector without incrementing the pointer as it is done later
-        let syscall = get_syscall_operand(hint)?;
+        let syscall = get_syscall_operand(hint).unwrap();
         let initial_syscall_ptr = get_ptr_from_res_operand_unchecked(vm, syscall);
-        let selector =
-            SyscallSelector::try_from(stark_felt_from_ptr_immutable(vm, &initial_syscall_ptr)?)?;
-        self.verify_syscall_ptr(initial_syscall_ptr)?;
+        let selector = SyscallSelector::try_from(
+            stark_felt_from_ptr_immutable(vm, &initial_syscall_ptr).unwrap(),
+        )
+        .unwrap();
+        if let Err(err) = self.verify_syscall_ptr(initial_syscall_ptr) {
+            return Passable::Done(Err(err.into()));
+        }
 
         match selector {
-            SyscallSelector::GetExecutionInfo => self.execute_syscall(
+            SyscallSelector::GetExecutionInfo => Passable::Done(self.execute_syscall(
                 vm,
                 cheated_syscalls::get_execution_info_syscall,
                 SyscallSelector::GetExecutionInfo,
-            ),
-            SyscallSelector::CallContract => self.execute_syscall(
+            )),
+            SyscallSelector::CallContract => Passable::Done(self.execute_syscall(
                 vm,
                 cheated_syscalls::call_contract_syscall,
                 SyscallSelector::CallContract,
-            ),
-            SyscallSelector::LibraryCall => self.execute_syscall(
+            )),
+            SyscallSelector::LibraryCall => Passable::Done(self.execute_syscall(
                 vm,
                 cheated_syscalls::library_call_syscall,
                 SyscallSelector::LibraryCall,
-            ),
-            SyscallSelector::Deploy => self.execute_syscall(
+            )),
+            SyscallSelector::Deploy => Passable::Done(self.execute_syscall(
                 vm,
                 cheated_syscalls::deploy_syscall,
                 SyscallSelector::Deploy,
-            ),
+            )),
             SyscallSelector::EmitEvent => {
                 let events_len_before = self.syscall_handler.events.len();
                 let hint_exec_result = self.syscall_handler.execute_next_syscall(vm, hint);
@@ -208,9 +176,9 @@ impl CheatableSyscallHandler<'_> {
                     "EmitEvent syscall is expected to emit exactly one event"
                 );
                 syscall_hooks::emit_event_hook(self);
-                hint_exec_result
+                Passable::Done(hint_exec_result)
             }
-            _ => self.syscall_handler.execute_next_syscall(vm, hint),
+            _ => Passable::Pass,
         }
     }
 
