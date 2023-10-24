@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `snforge_std::PrintTrait` will not convert values representing ASCII control characters to strings
 - separated `snforge` to subcommands: `snforge test`, `snforge init` and `snforge clean-cache`. 
 Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/forge.html).
+- `starknet::get_block_info` now returns correct block info in a forked block
 
 ### Cast
 
