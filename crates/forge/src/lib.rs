@@ -35,7 +35,10 @@ use crate::scarb::StarknetContractArtifacts;
 // pub use crate::collecting::CrateLocation;
 pub use crate::test_crate_summary::TestCrateSummary;
 
-use crate::collecting::{collect_test_compilation_targets, compile_tests, CompiledTestCrate};
+use crate::collecting::{
+    collect_test_compilation_targets, compile_tests, CompiledTestCrate, CompiledTestCrateRaw,
+    CompiledTestCrateRunnable,
+};
 use crate::test_filter::TestsFilter;
 use test_collector::{FuzzerConfig, LinkedLibrary, RawForkConfig, TestCase, ValidatedForkConfig};
 
@@ -221,9 +224,9 @@ fn find_or_parse_raw_fork_config(
 }
 
 fn map_fork_configs_from_raw_to_validated_in_tests(
-    compiled_test_crate: CompiledTestCrate<RawForkConfig>,
+    compiled_test_crate: CompiledTestCrateRaw,
     runner_config: &RunnerConfig,
-) -> Result<CompiledTestCrate<ValidatedForkConfig>> {
+) -> Result<CompiledTestCrateRunnable> {
     let mut test_cases = vec![];
 
     for case in compiled_test_crate.test_cases {
@@ -334,7 +337,7 @@ pub async fn run(
 }
 
 async fn run_tests_from_crate(
-    tests: Arc<CompiledTestCrate<ValidatedForkConfig>>,
+    tests: Arc<CompiledTestCrateRunnable>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     cancellation_tokens: Arc<CancellationTokens>,

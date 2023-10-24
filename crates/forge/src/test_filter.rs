@@ -1,5 +1,5 @@
-use crate::collecting::CompiledTestCrate;
-use test_collector::{RawForkConfig, TestCase, ValidatedForkConfig};
+use crate::collecting::{CompiledTestCrate, CompiledTestCrateRaw};
+use test_collector::{TestCase, ValidatedForkConfig};
 
 #[derive(Debug, PartialEq)]
 // Specifies what tests should be included
@@ -55,10 +55,7 @@ impl TestsFilter {
         }
     }
 
-    pub(crate) fn filter_tests(
-        &self,
-        test_crate: CompiledTestCrate<RawForkConfig>,
-    ) -> CompiledTestCrate<RawForkConfig> {
+    pub(crate) fn filter_tests(&self, test_crate: CompiledTestCrateRaw) -> CompiledTestCrateRaw {
         let mut cases = test_crate.test_cases;
 
         cases = match &self.name_filter {
