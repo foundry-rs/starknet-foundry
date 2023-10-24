@@ -55,7 +55,7 @@ impl ForkStateReader {
 
 fn get_pending_block_parent(
     state_reader: &ForkStateReader,
-    pending_block: PendingBlockWithTxHashes,
+    pending_block: &PendingBlockWithTxHashes,
 ) -> StateResult<CheatnetBlockInfo> {
     let parent_block_id = BlockId::Hash(pending_block.parent_hash);
 
@@ -100,7 +100,7 @@ impl BlockInfoReader for ForkStateReader {
                 Ok(block_info)
             }
             Ok(MaybePendingBlockWithTxHashes::PendingBlock(pending_block)) => {
-                get_pending_block_parent(self, pending_block)
+                get_pending_block_parent(self, &pending_block)
             }
             Err(err) => Err(StateReadError(format!(
                 "Unable to get block with tx hashes from fork, err: {err:?}"
