@@ -95,7 +95,6 @@ fn simple_package_with_git_dependency() {
     assert_stdout_contains!(
         output,
         indoc! {r#"
-        [..]Updating git repository[..]
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -663,7 +662,6 @@ fn init_new_project_test() {
     assert_stdout_contains!(
         output,
         indoc! {r#"
-        [..]Updating git repository[..]
         [..]Compiling test_name v0.1.0[..]
         [..]Finished[..]
 
