@@ -29,11 +29,11 @@ static PREDEPLOYED_CONTRACTS: Dir = include_dir!("crates/cheatnet/predeployed-co
 #[command(version)]
 struct Cli {
     #[command(subcommand)]
-    subcommand: Subcommands,
+    subcommand: ForgeSubcommand,
 }
 
 #[derive(Subcommand, Debug)]
-enum Subcommands {
+enum ForgeSubcommand {
     /// Run tests for a project in the current directory
     Test {
         #[command(flatten)]
@@ -234,15 +234,15 @@ fn main_execution() -> Result<bool> {
         .context("Cannot find `scarb` binary in PATH. Make sure you have Scarb installed https://github.com/software-mansion/scarb")?;
 
     match cli.subcommand {
-        Subcommands::Init { name } => {
+        ForgeSubcommand::Init { name } => {
             init::run(name.as_str())?;
             Ok(true)
         }
-        Subcommands::CleanCache {} => {
+        ForgeSubcommand::CleanCache {} => {
             clean_cache()?;
             Ok(true)
         }
-        Subcommands::Test { args } => test_workspace(args),
+        ForgeSubcommand::Test { args } => test_workspace(args),
     }
 }
 
