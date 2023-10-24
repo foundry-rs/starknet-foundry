@@ -33,23 +33,7 @@ fn simple_signing_flow() {
 }
 ```
 
-When signing and the `message_hash` is too big
-(`> 0x800000000000000000000000000000000000000000000000000000000000000`)
-the `Result::Err('message_hash out of range')` error will be returned.
-
-```rust
-use snforge_std::signature::{ StarkCurveKeyPair, StarkCurveKeyPairTrait, Signer };
-
-#[test]
-fn message_hash_too_big() {
-    let mut key_pair = StarkCurveKeyPairTrait::generate();
-    let max_felt = 3618502788666131213697322783095070105623107215331596699973092056135872020480;
-
-    match key_pair.sign(max_felt) {
-        Result::Ok(_) => panic_with_felt252('shouldve panicked'),
-        Result::Err(msg) => {
-            assert(msg == 'message_hash out of range', msg);
-        }
-    }
-}
-```
+> ⚠️ **Warning**
+> When signing and the `message_hash` is too big
+> (`> 0x800000000000000000000000000000000000000000000000000000000000000`)
+> the `Result::Err('message_hash out of range')` error will be returned.
