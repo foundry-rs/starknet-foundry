@@ -11,8 +11,11 @@ use std::{env, fs};
 use toml_edit::{value, Document};
 
 pub(crate) fn runner() -> SnapboxCommand {
-    let snapbox = SnapboxCommand::new(cargo_bin!("snforge"));
-    snapbox
+    SnapboxCommand::new(cargo_bin!("snforge"))
+}
+
+pub(crate) fn test_runner() -> SnapboxCommand {
+    runner().arg("test")
 }
 
 pub(crate) static BASE_FILE_PATTERNS: &[&str] = &["**/*.cairo", "**/*.toml"];

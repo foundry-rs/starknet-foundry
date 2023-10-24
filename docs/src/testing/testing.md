@@ -25,7 +25,7 @@ You can find a detailed explanation of how Forge collects tests [here](test-coll
 Now run forge using a command:
 
 ```shell
-$ snforge
+$ snforge test
 Collected 1 test(s) from package_name package
 Running 1 test(s) from src/
 [PASS] package_name::test_sum
@@ -53,7 +53,7 @@ fn failing() {
 ```
 
 ```shell
-$ snforge
+$ snforge test
 Collected 1 test(s) from package_name package
 Running 1 test(s) from src/
 [FAIL] package_name::failing
@@ -85,7 +85,7 @@ fn should_panic_check_data() {
 ```
 
 ```shell
-$ snforge
+$ snforge test
 Collected 1 test(s) from package_name package
 Running 1 test(s) from src/
 [PASS] src::should_panic_check_data
@@ -113,5 +113,5 @@ Running 1 test(s) from src/
 Tests: 1 passed, 0 failed, 0 skipped
 ```
 
-To run only tests marked with the  `#[ignore]` attribute use `snforge --ignored`. 
-To run all tests regardless of the `#[ignore]` attribute use `snforge --include-ignored`.
+To run only tests marked with the  `#[ignore]` attribute use `snforge test --ignored`. 
+To run all tests regardless of the `#[ignore]` attribute use `snforge test --include-ignored`.

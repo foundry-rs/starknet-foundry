@@ -2,7 +2,7 @@ use crate::assert_stdout_contains;
 use assert_fs::fixture::PathCopy;
 use indoc::indoc;
 
-use crate::e2e::common::runner::runner;
+use crate::e2e::common::runner::test_runner;
 
 #[test]
 fn collection_with_lib() {
@@ -13,7 +13,7 @@ fn collection_with_lib() {
     )
     .unwrap();
 
-    let snapbox = runner();
+    let snapbox = test_runner();
 
     let output = snapbox.current_dir(&temp).assert().success();
 
@@ -58,7 +58,7 @@ fn collection_without_lib() {
     )
     .unwrap();
 
-    let snapbox = runner();
+    let snapbox = test_runner();
 
     let output = snapbox.current_dir(&temp).assert().success();
     assert_stdout_contains!(
