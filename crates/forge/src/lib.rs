@@ -358,7 +358,7 @@ async fn run_tests_from_crate(
 
     // This Panic should never occur.
     // If TestCaseSummary::Interrupted is returned by a test,
-    // this implies that there's another return with an Err result.
+    // this implies that there should be another test than returned an Err.
     assert!(!interrupted, "Tests were interrupted");
 
     let contained_fuzzed_tests = results.iter().any(|summary| summary.runs().is_some());
