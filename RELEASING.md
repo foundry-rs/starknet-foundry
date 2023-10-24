@@ -1,7 +1,7 @@
 # Instruction For Creating New Starknet Forge Releases
 
-1. Run `./scripts/release.sh MAJOR.MINOR.PATCH`
-2. Merge introduced changes to master branch
+1. Run `./scripts/release.sh MAJOR.MINOR.PATCH`.
+2. Merge introduced changes to master branch.
 3. Wait for release workflows to pass. A new release will be created on GitHub.
 
 ## Manually Creating a Release
