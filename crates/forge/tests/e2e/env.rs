@@ -1,11 +1,11 @@
 use crate::assert_stdout_contains;
-use crate::e2e::common::runner::{runner, setup_package};
+use crate::e2e::common::runner::{setup_package, test_runner};
 use indoc::indoc;
 
 #[test]
 fn env_var_reading() {
     let temp = setup_package("env");
-    let snapbox = runner();
+    let snapbox = test_runner();
 
     let output = snapbox
         .current_dir(&temp)

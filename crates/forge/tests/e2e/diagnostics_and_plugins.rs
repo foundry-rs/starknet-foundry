@@ -1,12 +1,12 @@
 use crate::assert_stderr_contains;
 use indoc::indoc;
 
-use crate::e2e::common::runner::{runner, setup_package};
+use crate::e2e::common::runner::{setup_package, test_runner};
 
 #[test]
 fn print_error_if_attributes_incorrect() {
     let temp = setup_package("diagnostics_and_plugins");
-    let snapbox = runner();
+    let snapbox = test_runner();
 
     let output = snapbox.current_dir(&temp).assert().code(2);
     assert_stderr_contains!(
