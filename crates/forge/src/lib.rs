@@ -339,6 +339,8 @@ async fn run_tests_from_crate(
     while let Some(task) = tasks.next().await {
         let result = task??;
         match result {
+            // Because tests are executed parallel is possible to receive
+            // Ok(TestCaseSummary::Interrupted) before Err
             TestCaseSummary::Interrupted {} => interrupted = true,
             result => {
                 pretty_printing::print_test_result(&result);
@@ -354,6 +356,9 @@ async fn run_tests_from_crate(
     drop(send_shut_down);
     let _ = rec_shut_down.recv().await;
 
+    // This Panic should never occur.
+    // If TestCaseSummary::Interrupted is returned by a test,
+    // this implies that there's another return with an Err result.
     assert!(!interrupted, "Tests were interrupted");
 
     let contained_fuzzed_tests = results.iter().any(|summary| summary.runs().is_some());
@@ -452,7 +457,7 @@ fn run_with_fuzzing(
     send_shut_down: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     tokio::task::spawn(async move {
-        let token = CancellationToken::new();
+        let cancellation_fuzzing_token = CancellationToken::new();
         let (send, mut rec) = channel(1);
         let args = args
             .iter()
@@ -485,7 +490,7 @@ fn run_with_fuzzing(
                 runner_config.clone(),
                 runner_params.clone(),
                 cancellation_tokens.clone(),
-                token.clone(),
+                cancellation_fuzzing_token.clone(),
                 send.clone(),
                 send_shut_down.clone(),
             ));
@@ -501,7 +506,11 @@ fn run_with_fuzzing(
             final_result = Some(result.clone());
 
             match result {
-                TestCaseSummary::Failed { .. } | TestCaseSummary::Interrupted {} => {
+                TestCaseSummary::Failed { .. } => {
+                    cancellation_fuzzing_token.cancel();
+                    break;
+                }
+                TestCaseSummary::Interrupted {} => {
                     break;
                 }
                 _ => (),
@@ -574,8 +583,6 @@ fn run_fuzzing_subtest(
                         if let TestCaseSummary::Failed { .. } = &result {
                             if runner_config.exit_first {
                                 cancellation_tokens.exit_first.cancel();
-                            } else {
-                                cancellation_fuzzing_token.cancel();
                             }
                         }
                         Ok(result)
