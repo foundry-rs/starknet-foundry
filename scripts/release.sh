@@ -9,4 +9,3 @@ sed -i.bak "/\[workspace.package\]/,/version =/ s/version = \".*/version = \"${V
 rm Cargo.toml.bak 2> /dev/null
 
 cargo update forge cast
-
