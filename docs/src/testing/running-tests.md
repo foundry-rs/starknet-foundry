@@ -6,9 +6,9 @@ To run tests with Forge, simply run the `snforge test` command from the package 
 $ snforge test
 Collected 3 test(s) from package_name package
 Running 3 test(s) from src/
-[PASS] package_name::executing
-[PASS] package_name::calling
-[PASS] package_name::calling_another
+[PASS] package_name::tests::executing
+[PASS] package_name::tests::calling
+[PASS] package_name::tests::calling_another
 Tests: 3 passed, 0 failed, 0 skipped
 ```
 
@@ -22,8 +22,8 @@ By default, any test with an [absolute module tree path](https://book.cairo-lang
 $ snforge test calling
 Collected 2 test(s) from package_name package
 Running 2 test(s) from src/
-[PASS] package_name::calling
-[PASS] package_name::calling_another
+[PASS] package_name::tests::calling
+[PASS] package_name::tests::calling_another
 Tests: 2 passed, 0 failed, 0 skipped
 ```
 
@@ -36,7 +36,7 @@ Note, you have to use a fully qualified test name, including a module name.
 $ snforge test package_name::calling --exact
 Collected 1 test(s) from package_name package
 Running 1 test(s) from src/
-[PASS] package_name::calling
+[PASS] package_name::tests::calling
 Tests: 1 passed, 0 failed, 0 skipped
 ```
 
@@ -48,10 +48,10 @@ To stop the test execution after first failed test, you can pass an `--exit-firs
 $ snforge test --exit-first
 Collected 6 test(s) from package_name package
 Running 6 test(s) from src/
-[PASS] package_name::executing
-[PASS] package_name::calling
-[PASS] package_name::calling_another
-[FAIL] package_name::failing
+[PASS] package_name::tests::executing
+[PASS] package_name::tests::calling
+[PASS] package_name::tests::calling_another
+[FAIL] package_name::tests::failing
 
 Failure data:
     original value: [8111420071579136082810415440747], converted to a string: [failing check]
@@ -102,7 +102,7 @@ only the tests in `./src` and `./tests` folders will be executed.
 $ snforge test
 Collected 1 test(s) from hello_workspaces package
 Running 1 test(s) from src/
-[PASS] hello_workspaces::test_simple
+[PASS] hello_workspaces::tests::test_simple
 Tests: 1 passed, 0 failed, 0 skipped
 ```
 

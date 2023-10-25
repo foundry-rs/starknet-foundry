@@ -71,8 +71,9 @@ If the parsed value contains ASCII control characters (e.g. 27: `ESC`), it will 
 #[test]
 fn test_print() {
     // ...
-    
+
     27.print();
+}
 ```
 
 ```shell
