@@ -8,4 +8,5 @@ rm CHANGELOG.md.bak 2> /dev/null
 sed -i.bak "/\[workspace.package\]/,/version =/ s/version = \".*/version = \"${VERSION}\"/" Cargo.toml
 rm Cargo.toml.bak 2> /dev/null
 
-cargo update forge cast
+cargo update forge
+cargo update cast
