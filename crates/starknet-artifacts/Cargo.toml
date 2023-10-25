@@ -1,0 +1,17 @@
+[package]
+name = "starknet-artifacts"
+version = "1.0.0"
+edition.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+assert_fs.workspace = true
+camino.workspace = true
+indoc.workspace = true
+test-collector = { path = "../test-collector" }
+serde_json.workspace = true
+serde.workspace = true
+scarb-metadata = { git = "https://github.com/software-mansion/scarb.git", rev = "58cc88e" }
+
+[lib]
+name = "starknet_artifacts"

@@ -1083,6 +1083,7 @@ dependencies = [
  "shellexpand",
  "snapbox",
  "starknet",
+ "starknet-artifacts",
  "tempfile",
  "test-case",
  "tokio",
@@ -1132,6 +1133,7 @@ dependencies = [
  "serde",
  "serde_json",
  "starknet",
+ "starknet-artifacts",
  "starknet_api",
  "tempfile",
  "test-case",
@@ -1843,6 +1845,7 @@ dependencies = [
  "smol_str",
  "snapbox",
  "starknet",
+ "starknet-artifacts",
  "starknet_api",
  "tempfile",
  "test-collector",
@@ -4037,6 +4040,20 @@ dependencies = [
  "starknet-providers",
  "starknet-signers",
  "thiserror",
+]
+
+[[package]]
+name = "starknet-artifacts"
+version = "1.0.0"
+dependencies = [
+ "anyhow",
+ "assert_fs",
+ "camino",
+ "indoc",
+ "scarb-metadata 1.7.0",
+ "serde",
+ "serde_json",
+ "test-collector",
 ]
 
 [[package]]

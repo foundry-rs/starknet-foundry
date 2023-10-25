@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::cheatcodes::{CheatcodeError, ContractArtifacts, EnhancedHintError};
+use crate::cheatcodes::{CheatcodeError, EnhancedHintError};
 use anyhow::{anyhow, Context, Result};
 use blockifier::execution::contract_class::{
     ContractClass as BlockifierContractClass, ContractClassV1,
@@ -16,11 +16,13 @@ use crate::state::BlockifierState;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use starknet::core::types::contract::SierraClass;
 
+use starknet_artifacts::StarknetContractArtifacts;
+
 impl BlockifierState<'_> {
     pub fn declare(
         &mut self,
         contract_name: &Felt252,
-        contracts: &HashMap<String, ContractArtifacts>,
+        contracts: &HashMap<String, StarknetContractArtifacts>,
     ) -> Result<ClassHash, CheatcodeError> {
         let blockifier_state: &mut dyn State = self.blockifier_state as &mut dyn State;
 

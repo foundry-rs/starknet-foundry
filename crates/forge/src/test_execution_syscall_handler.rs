@@ -3,7 +3,6 @@ use std::collections::HashMap;
 use std::convert::Into;
 use std::path::PathBuf;
 
-use crate::scarb::StarknetContractArtifacts;
 use anyhow::{anyhow, Context, Result};
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::execution_utils::{
@@ -23,13 +22,14 @@ use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use cheatnet::cheatcodes::deploy::{deploy, deploy_at, DeployCallPayload};
-use cheatnet::cheatcodes::{CheatcodeError, ContractArtifacts, EnhancedHintError};
+use cheatnet::cheatcodes::{CheatcodeError, EnhancedHintError};
 use cheatnet::execution::cheatable_syscall_handler::CheatableSyscallHandler;
 use cheatnet::rpc::{call_contract, CallContractFailure, CallContractOutput, CallContractResult};
 use cheatnet::state::{BlockifierState, CheatnetState};
 use conversions::StarknetConversions;
 use num_traits::{One, ToPrimitive};
 use serde::Deserialize;
+use starknet_artifacts::StarknetContractArtifacts;
 
 use cairo_lang_casm::hints::{Hint, StarknetHint};
 use cairo_lang_casm::operand::{CellRef, ResOperand};
@@ -51,16 +51,6 @@ use cheatnet::execution::contract_execution_syscall_handler::ContractExecutionSy
 use starknet::signers::SigningKey;
 
 mod file_operations;
-
-// TODO(#41) Remove after we have a separate scarb package
-impl From<&StarknetContractArtifacts> for ContractArtifacts {
-    fn from(artifacts: &StarknetContractArtifacts) -> Self {
-        ContractArtifacts {
-            sierra: artifacts.sierra.clone(),
-            casm: artifacts.casm.clone(),
-        }
-    }
-}
 
 pub struct TestExecutionState<'a> {
     pub environment_variables: &'a HashMap<String, String>,
@@ -382,14 +372,7 @@ impl TestExecutionSyscallHandler<'_, '_> {
                         .state,
                 );
 
-                match blockifier_state.declare(
-                    &contract_name,
-                    // TODO(#41) Remove after we have a separate scarb package
-                    &contracts
-                        .iter()
-                        .map(|(k, v)| (k.clone(), ContractArtifacts::from(v)))
-                        .collect(),
-                ) {
+                match blockifier_state.declare(&contract_name, contracts) {
                     Ok(class_hash) => {
                         let felt_class_hash = stark_felt_to_felt(class_hash.0);
 

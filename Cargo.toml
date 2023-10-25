@@ -6,6 +6,7 @@ members = [
     "crates/cast",
     "crates/cheatnet",
     "crates/conversions",
+    "crates/starknet-artifacts",
 ]
 
 [workspace.package]

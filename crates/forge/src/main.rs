@@ -1,9 +1,15 @@
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
+use forge::scarb::config_from_scarb_for_package;
 use include_dir::{include_dir, Dir};
 use scarb_metadata::{MetadataCommand, PackageMetadata};
 use scarb_ui::args::PackagesFilter;
+use starknet_artifacts::{
+    corelib_for_package, dependencies_for_package, get_contracts_map, name_for_package,
+    paths_for_package, target_dir_for_package, target_name_for_package,
+    try_get_starknet_artifacts_path,
+};
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::{env, fs};
@@ -13,11 +19,6 @@ use tokio::runtime::Builder;
 use forge::{pretty_printing, CancellationTokens, RunnerConfig, RunnerParams, CACHE_DIR};
 use forge::{run, TestCrateSummary};
 
-use forge::scarb::{
-    config_from_scarb_for_package, corelib_for_package, dependencies_for_package,
-    get_contracts_map, name_for_package, paths_for_package, target_dir_for_package,
-    target_name_for_package, try_get_starknet_artifacts_path,
-};
 use forge::test_case_summary::TestCaseSummary;
 use std::process::{Command, Stdio};
 use std::thread::available_parallelism;

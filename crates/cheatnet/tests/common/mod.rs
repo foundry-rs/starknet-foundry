@@ -1,21 +1,21 @@
 use cairo_felt::Felt252;
 use camino::Utf8PathBuf;
 use cheatnet::cheatcodes::deploy::deploy;
+use cheatnet::rpc::CallContractOutput;
 use cheatnet::rpc::{call_contract, CallContractFailure, CallContractResult};
 use cheatnet::state::{BlockifierState, CheatnetState};
-use cheatnet::{cheatcodes::ContractArtifacts, rpc::CallContractOutput};
 use conversions::StarknetConversions;
 use starknet::core::utils::get_selector_from_name;
 use starknet_api::core::ContractAddress;
+use starknet_artifacts::{
+    get_contracts_map, try_get_starknet_artifacts_path, StarknetContractArtifacts,
+};
 use std::{collections::HashMap, str::FromStr};
-
-use crate::common::scarb::{get_contracts_map, try_get_starknet_artifacts_path};
 
 static TARGET_NAME: &str = "cheatnet_testing_contracts";
 
 pub mod assertions;
 pub mod cache;
-pub mod scarb;
 pub mod state;
 
 pub fn recover_data(output: CallContractOutput) -> Vec<Felt252> {
@@ -28,15 +28,16 @@ pub fn recover_data(output: CallContractOutput) -> Vec<Felt252> {
     }
 }
 
-pub fn get_contracts() -> HashMap<String, ContractArtifacts> {
+pub fn get_contracts() -> HashMap<String, StarknetContractArtifacts> {
     let contracts_path = Utf8PathBuf::from_str("tests/contracts")
         .unwrap()
         .canonicalize_utf8()
-        .unwrap();
+        .unwrap()
+        .join("target");
     let artifacts_path = try_get_starknet_artifacts_path(&contracts_path, TARGET_NAME)
         .unwrap()
         .unwrap();
-    get_contracts_map(&artifacts_path)
+    get_contracts_map(&artifacts_path).unwrap()
 }
 
 pub fn deploy_contract(

@@ -18,6 +18,7 @@ rayon.workspace = true
 test-collector = { path = "../test-collector" }
 cheatnet = { path = "../cheatnet" }
 conversions = { path = "../conversions" }
+starknet-artifacts = { path = "../starknet-artifacts" }
 cairo-lang-runner.workspace = true
 cairo-lang-casm.workspace = true
 cairo-lang-sierra-to-casm.workspace = true
