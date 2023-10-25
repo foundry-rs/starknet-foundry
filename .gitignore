@@ -5,3 +5,4 @@ pyproject.toml
 target
 .vscode/
 .env
+*/node_modules
