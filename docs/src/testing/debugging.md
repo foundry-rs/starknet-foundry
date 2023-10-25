@@ -58,7 +58,7 @@ original value: [2]
 original value: [3]
 original value: [379899844591278365831020], converted to a string: [Print bool:]
 original value: [439721161573], converted to a string: [false]
-[PASS] tests::test_print::test_print
+[PASS] tests::test_print
 Tests: 1 passed, 0 failed, 0 skipped
 ```
 
@@ -82,6 +82,8 @@ Collected 1 test(s) from package_name package
 Running 0 test(s) from src/
 Running 1 test(s) from tests/
 original value: [27]
+[PASS] tests::test_print
+Tests: 1 passed, 0 failed, 0 skipped
 ```
 
 ## In contracts

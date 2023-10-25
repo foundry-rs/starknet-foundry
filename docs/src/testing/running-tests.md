@@ -33,7 +33,7 @@ To run a specific test, you can pass a filter string along with an `--exact` fla
 Note, you have to use a fully qualified test name, including a module name.
 
 ```shell
-$ snforge test package_name::calling --exact
+$ snforge test package_name::tests::calling --exact
 Collected 1 test(s) from package_name package
 Running 1 test(s) from src/
 [PASS] package_name::tests::calling
@@ -56,12 +56,12 @@ Running 6 test(s) from src/
 Failure data:
     original value: [8111420071579136082810415440747], converted to a string: [failing check]
     
-[SKIP] package_name::other_test
-[SKIP] package_name::yet_another_test
+[SKIP] package_name::tests::other_test
+[SKIP] package_name::tests::yet_another_test
 Tests: 3 passed, 1 failed, 2 skipped
 
 Failures:
-    package_name::failing
+    package_name::tests::failing
 ```
 
 ## Scarb workspaces support
@@ -139,7 +139,7 @@ Tests: 1 passed, 0 failed, 0 skipped
 
 Collected 1 test(s) from hello_workspaces package
 Running 1 test(s) from src/
-[PASS] hello_workspaces::test_simple
+[PASS] hello_workspaces::tests::test_simple
 Tests: 1 passed, 0 failed, 0 skipped
 ```
 

@@ -69,7 +69,7 @@ Failure data:
 Tests: 0 passed, 1 failed, 0 skipped
 
 Failures:
-    package_name::failing
+    package_name::tests::failing
 ```
 
 ## Expected failures
