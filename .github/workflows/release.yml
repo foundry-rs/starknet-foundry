@@ -139,7 +139,7 @@ jobs:
           path: ${{ env.PKG_FULL_NAME }}.*
 
   create-release:
-    name: Draft release
+    name: Create release
     runs-on: ubuntu-latest
     needs: [build-binaries, verify-version]
     steps:
@@ -157,8 +157,8 @@ jobs:
           mkdir -p artifacts
           mv artifacts-dl/build-*/starknet-foundry-* artifacts/
 
-      - name: Draft GitHub release
-        id: draft-release
+      - name: Create GitHub release
+        id: create-release
         uses: taiki-e/create-gh-release-action@9762dfdfe60a96b3fef6c4a0aaafd9840f1195b7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -172,4 +172,4 @@ jobs:
         run: gh release upload "$TAG" *
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ steps.draft-release.outputs.computed-prefix }}${{ steps.draft-release.outputs.version }}
+          TAG: ${{ steps.create-release.outputs.computed-prefix }}${{ steps.create-release.outputs.version }}
