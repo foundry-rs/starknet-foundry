@@ -56,24 +56,6 @@ jobs:
         if: ${{ steps.validVersion.outputs.versionIsValid == 'false' }}
         run: echo "Version from commit is not greater from newest release, skipping build"
 
-  create-tag:
-    name: If workflow was triggered by a push to master, create a new tag with release version
-    runs-on: ubuntu-latest
-    needs: verify-version
-    if: ${{ needs.verify-version.outputs.versionIsValid == 'true' }}
-    steps:
-      - name: Create tag action was triggered by a push
-        if: ${{ github.event_name == 'push' }}
-        uses: actions/github-script@v6
-        with:
-          script: |
-            github.rest.git.createRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: 'refs/tags/${{ needs.verify-version.outputs.version }}',
-              sha: context.sha
-            })
-
   build-binaries:
     name: Build ${{ matrix.target }}
     needs: create-tag
