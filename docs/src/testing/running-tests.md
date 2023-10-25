@@ -6,24 +6,24 @@ To run tests with Forge, simply run the `snforge test` command from the package 
 $ snforge test
 Collected 3 test(s) from package_name package
 Running 3 test(s) from src/
-[PASS] package_name::executing
-[PASS] package_name::calling
-[PASS] package_name::calling_another
+[PASS] package_name::tests::executing
+[PASS] package_name::tests::calling
+[PASS] package_name::tests::calling_another
 Tests: 3 passed, 0 failed, 0 skipped
 ```
 
 ## Filtering Tests
 
 You can pass a filter string after the `snforge test` command to filter tests.
-By default, any test with an [absolute module tree path](https://book.cairo-lang.org/ch06-03-paths-for-referring-to-an-item-in-the-module-tree.html?highlight=path#paths-for-referring-to-an-item-in-the-module-tree)
+By default, any test with an [absolute module tree path](https://book.cairo-lang.org/ch07-03-paths-for-referring-to-an-item-in-the-module-tree.html#paths-for-referring-to-an-item-in-the-module-tree)
  matching the filter will be run.
 
 ```shell
 $ snforge test calling
 Collected 2 test(s) from package_name package
 Running 2 test(s) from src/
-[PASS] package_name::calling
-[PASS] package_name::calling_another
+[PASS] package_name::tests::calling
+[PASS] package_name::tests::calling_another
 Tests: 2 passed, 0 failed, 0 skipped
 ```
 
@@ -33,10 +33,10 @@ To run a specific test, you can pass a filter string along with an `--exact` fla
 Note, you have to use a fully qualified test name, including a module name.
 
 ```shell
-$ snforge test package_name::calling --exact
+$ snforge test package_name::tests::calling --exact
 Collected 1 test(s) from package_name package
 Running 1 test(s) from src/
-[PASS] package_name::calling
+[PASS] package_name::tests::calling
 Tests: 1 passed, 0 failed, 0 skipped
 ```
 
@@ -48,20 +48,20 @@ To stop the test execution after first failed test, you can pass an `--exit-firs
 $ snforge test --exit-first
 Collected 6 test(s) from package_name package
 Running 6 test(s) from src/
-[PASS] package_name::executing
-[PASS] package_name::calling
-[PASS] package_name::calling_another
-[FAIL] package_name::failing
+[PASS] package_name::tests::executing
+[PASS] package_name::tests::calling
+[PASS] package_name::tests::calling_another
+[FAIL] package_name::tests::failing
 
 Failure data:
     original value: [8111420071579136082810415440747], converted to a string: [failing check]
     
-[SKIP] package_name::other_test
-[SKIP] package_name::yet_another_test
+[SKIP] package_name::tests::other_test
+[SKIP] package_name::tests::yet_another_test
 Tests: 3 passed, 1 failed, 2 skipped
 
 Failures:
-    package_name::failing
+    package_name::tests::failing
 ```
 
 ## Scarb workspaces support
@@ -102,7 +102,7 @@ only the tests in `./src` and `./tests` folders will be executed.
 $ snforge test
 Collected 1 test(s) from hello_workspaces package
 Running 1 test(s) from src/
-[PASS] hello_workspaces::test_simple
+[PASS] hello_workspaces::tests::test_simple
 Tests: 1 passed, 0 failed, 0 skipped
 ```
 
@@ -139,7 +139,7 @@ Tests: 1 passed, 0 failed, 0 skipped
 
 Collected 1 test(s) from hello_workspaces package
 Running 1 test(s) from src/
-[PASS] hello_workspaces::test_simple
+[PASS] hello_workspaces::tests::test_simple
 Tests: 1 passed, 0 failed, 0 skipped
 ```
 

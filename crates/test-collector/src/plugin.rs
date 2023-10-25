@@ -24,4 +24,15 @@ impl MacroPlugin for TestPlugin {
             remove_original_item: false,
         }
     }
+
+    fn declared_attributes(&self) -> Vec<String> {
+        vec![
+            "test".to_string(),
+            "ignore".to_string(),
+            "available_gas".to_string(),
+            "should_panic".to_string(),
+            "fork".to_string(),
+            "fuzzer".to_string(),
+        ]
+    }
 }
