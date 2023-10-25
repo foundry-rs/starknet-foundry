@@ -24,32 +24,11 @@ For example, you can set up different forks like this:
 
 ```toml
 [[tool.snforge.fork]]
-name = "ethereum_mainnet"
+name = "Starknet"
 url = "http://your.rpc.url"
 block_id.tag = "Latest"
-
-[[tool.snforge.fork]]
-name = "custom_fork"
-url = "http://your.second.rpc.url"
-block_id.tag = "Pending"
 ```
 
-Once you've done that, you can simply refer to these forks by name when you run your tests:
-
-```toml
-#[test]
-#[fork("ethereum_mainnet")]
-fn test_using_ethereum_mainnet() {
-    // ...
-}
-
-#[test]
-#[fork("custom_fork")]
-fn test_using_custom_fork() {
-    // ...
-}
-```
-This way, you can easily configure and reference different forks for your tests using meaningful names.
 To learn more, check out the page about [Fork Testing](../testing/fork-testing.md).
 
 ## Cast
