@@ -318,3 +318,131 @@ fn warp_library_call() {
     .unwrap();
     assert_outputs(before_warp_output, after_warp_cancellation_output);
 }
+
+#[test]
+fn warp_global_simple() {
+    let mut cached_state = create_cached_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
+
+    let contract_address = deploy_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        "WarpChecker",
+        &[],
+    );
+
+    cheatnet_state.start_warp_global(Felt252::from(123_u128));
+
+    let selector = felt_selector_from_name("get_block_timestamp");
+
+    let output = call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &contract_address,
+        &selector,
+        &[],
+    )
+    .unwrap();
+
+    assert_success!(output, vec![Felt252::from(123)]);
+}
+
+#[test]
+fn warp_global_priority_over_warp() {
+    let mut cached_state = create_cached_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
+
+    let contract_address = deploy_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        "WarpChecker",
+        &[],
+    );
+
+    cheatnet_state.start_warp_global(Felt252::from(123_u128));
+    cheatnet_state.start_warp(contract_address, Felt252::from(321_u128));
+
+    let selector = felt_selector_from_name("get_block_timestamp");
+
+    let output = call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &contract_address,
+        &selector,
+        &[],
+    )
+    .unwrap();
+
+    assert_success!(output, vec![Felt252::from(123)]);
+
+    cheatnet_state.stop_warp_global();
+
+    let selector = felt_selector_from_name("get_block_timestamp");
+
+    let output = call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &contract_address,
+        &selector,
+        &[],
+    )
+    .unwrap();
+
+    assert_success!(output, vec![Felt252::from(321)]);
+
+}
+
+#[test]
+fn warp_global_stop() {
+    let mut cached_state = create_cached_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
+
+    let contract_address = deploy_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        "WarpChecker",
+        &[],
+    );
+
+    let selector = felt_selector_from_name("get_block_timestamp");
+
+    let output = call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &contract_address,
+        &selector,
+        &[],
+    )
+    .unwrap();
+
+    let old_block_timestamp = recover_data(output);
+
+    cheatnet_state.start_warp_global(Felt252::from(123_u128));
+
+    let output = call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &contract_address,
+        &selector,
+        &[],
+    )
+    .unwrap();
+
+    let new_block_timestamp = recover_data(output);
+    assert_eq!(new_block_timestamp, vec![Felt252::from(123)]);
+    assert_ne!(old_block_timestamp, new_block_timestamp);
+
+    cheatnet_state.stop_warp_global();
+
+    let output = call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &contract_address,
+        &selector,
+        &[],
+    )
+    .unwrap();
+    let changed_back_block_timestamp = recover_data(output);
+
+    assert_eq!(old_block_timestamp, changed_back_block_timestamp);
+}

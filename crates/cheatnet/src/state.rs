@@ -208,6 +208,7 @@ pub struct CheatnetState {
     pub rolled_contracts: HashMap<ContractAddress, Felt252>,
     pub pranked_contracts: HashMap<ContractAddress, ContractAddress>,
     pub warped_contracts: HashMap<ContractAddress, Felt252>,
+    pub global_warp: Option<Felt252>,
     pub mocked_functions: HashMap<ContractAddress, HashMap<EntryPointSelector, Vec<StarkFelt>>>,
     pub spoofed_contracts: HashMap<ContractAddress, TxInfoMock>,
     pub spies: Vec<SpyTarget>,
@@ -233,7 +234,7 @@ impl CheatnetState {
 
     #[must_use]
     pub fn address_is_warped(&self, contract_address: &ContractAddress) -> bool {
-        self.warped_contracts.contains_key(contract_address)
+        self.global_warp.is_some() || self.warped_contracts.contains_key(contract_address)
     }
 
     #[must_use]

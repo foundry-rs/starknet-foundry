@@ -54,6 +54,15 @@ fn stop_warp(contract_address: ContractAddress) {
     cheatcode::<'stop_warp'>(array![contract_address_felt].span());
 }
 
+fn start_warp_global(block_timestamp: u64) {
+    let block_timestamp_felt: felt252 = block_timestamp.into();
+    cheatcode::<'start_warp_global'>(array![block_timestamp_felt].span());
+}
+
+fn stop_warp_global() {
+    cheatcode::<'stop_warp_global'>(array![].span());
+}
+
 fn start_mock_call<T, impl TSerde: serde::Serde<T>, impl TDestruct: Destruct<T>>(
     contract_address: ContractAddress, function_name: felt252, ret_data: T
 ) {
