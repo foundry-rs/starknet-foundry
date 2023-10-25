@@ -6,6 +6,12 @@ use std::collections::HashMap;
 use std::fs;
 use test_collector::LinkedLibrary;
 
+#[derive(Deserialize, Debug, PartialEq, Clone)]
+struct StarknetArtifacts {
+    version: u32,
+    contracts: Vec<StarknetContract>,
+}
+
 #[allow(dead_code)]
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 struct StarknetContract {
@@ -20,12 +26,6 @@ struct StarknetContract {
 struct StarknetContractArtifactPaths {
     sierra: Utf8PathBuf,
     casm: Utf8PathBuf,
-}
-
-#[derive(Deserialize, Debug, PartialEq, Clone)]
-struct StarknetArtifacts {
-    version: u32,
-    contracts: Vec<StarknetContract>,
 }
 
 /// Contains compiled Starknet artifacts

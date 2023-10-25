@@ -87,7 +87,7 @@ async fn wrong_contract_name_passed() {
 
     snapbox.assert().success().stderr_matches(indoc! {r#"
         command: declare
-        error: Cannot find sierra artifact nonexistent in starknet_artifacts.json[..]
+        error: Failed to find artifacts in starknet_artifacts.json file[..]
     "#});
 }
 
@@ -170,6 +170,6 @@ fn scarb_no_artifacts(contract_path: &str, accounts_file_path: &str) {
 
     snapbox.assert().success().stderr_matches(indoc! {r#"
         command: declare
-        [..]is set to 'true' under your [[target.starknet-contract]] field in Scarb.toml[..]
+        [..]Make sure you have enabled sierra and casm code generation in Scarb.toml[..]
     "#});
 }
