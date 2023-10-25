@@ -141,7 +141,7 @@ jobs:
   create-release:
     name: Create release
     runs-on: ubuntu-latest
-    needs: [build-binaries, verify-version]
+    needs: [ build-binaries, verify-version ]
     steps:
       - uses: actions/checkout@v4
         with:
