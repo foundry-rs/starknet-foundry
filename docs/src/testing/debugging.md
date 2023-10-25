@@ -134,7 +134,7 @@ fn test_increase_balance() {
 We get the following output:
 ```shell
 $ snforge test                                                                                    
-Collected 2 test(s) from package_name package
+Collected 1 test(s) from package_name package
 Running 0 test(s) from src/
 Running 1 test(s) from tests/
 original value: [1882356686041040905424961122938381530884043578], converted to a string: [The new balance is:]
