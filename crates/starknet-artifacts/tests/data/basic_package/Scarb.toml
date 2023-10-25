@@ -1,5 +1,5 @@
 [package]
-name = "simple_package"
+name = "basic_package"
 version = "0.1.0"
 
 [dependencies]

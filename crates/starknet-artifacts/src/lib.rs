@@ -259,7 +259,7 @@ mod tests {
 
     #[test]
     fn get_starknet_artifacts_path() {
-        let temp = setup_package("simple_package");
+        let temp = setup_package("basic_package");
 
         let build_output = Command::new("scarb")
             .current_dir(&temp)
@@ -270,19 +270,19 @@ mod tests {
 
         let result = try_get_starknet_artifacts_path(
             &Utf8PathBuf::from_path_buf(temp.to_path_buf().join("target")).unwrap(),
-            "simple_package",
+            "basic_package",
         );
         let path = result.unwrap().unwrap();
         assert_eq!(
             path,
             temp.path()
-                .join("target/dev/simple_package.starknet_artifacts.json")
+                .join("target/dev/basic_package.starknet_artifacts.json")
         );
     }
 
     #[test]
     fn get_starknet_artifacts_path_for_project_with_different_package_and_target_name() {
-        let temp = setup_package("simple_package");
+        let temp = setup_package("basic_package");
 
         let snforge_std_path = Utf8PathBuf::from_str("../../snforge_std")
             .unwrap()
@@ -296,7 +296,7 @@ mod tests {
             .write_str(&formatdoc!(
                 r#"
                 [package]
-                name = "simple_package"
+                name = "basic_package"
                 version = "0.1.0"
 
                 [dependencies]
@@ -332,14 +332,14 @@ mod tests {
 
     #[test]
     fn get_starknet_artifacts_path_for_project_without_starknet_target() {
-        let temp = setup_package("panic_decoding");
+        let temp = setup_package("empty_lib");
 
         let manifest_path = temp.child("Scarb.toml");
         manifest_path
             .write_str(indoc!(
                 r#"
             [package]
-            name = "panic_decoding"
+            name = "empty_lib"
             version = "0.1.0"
             "#,
             ))
@@ -354,7 +354,7 @@ mod tests {
 
         let result = try_get_starknet_artifacts_path(
             &Utf8PathBuf::from_path_buf(temp.to_path_buf().join("target")).unwrap(),
-            "panic_decoding",
+            "empty_lib",
         );
         let path = result.unwrap();
         assert!(path.is_none());
@@ -362,11 +362,11 @@ mod tests {
 
     #[test]
     fn get_starknet_artifacts_path_for_project_without_scarb_build() {
-        let temp = setup_package("simple_package");
+        let temp = setup_package("basic_package");
 
         let result = try_get_starknet_artifacts_path(
             &Utf8PathBuf::from_path_buf(temp.to_path_buf().join("target")).unwrap(),
-            "simple_package",
+            "basic_package",
         );
         let path = result.unwrap();
         assert!(path.is_none());
@@ -374,7 +374,7 @@ mod tests {
 
     #[test]
     fn parsing_starknet_artifacts() {
-        let temp = setup_package("simple_package");
+        let temp = setup_package("basic_package");
 
         let build_output = Command::new("scarb")
             .current_dir(&temp)
@@ -385,7 +385,7 @@ mod tests {
 
         let artifacts_path = temp
             .path()
-            .join("target/dev/simple_package.starknet_artifacts.json");
+            .join("target/dev/basic_package.starknet_artifacts.json");
         let artifacts_path = Utf8PathBuf::from_path_buf(artifacts_path).unwrap();
 
         let artifacts = artifacts_for_package(&artifacts_path).unwrap();
@@ -409,7 +409,7 @@ mod tests {
 
     #[test]
     fn get_contracts() {
-        let temp = setup_package("simple_package");
+        let temp = setup_package("basic_package");
 
         let build_output = Command::new("scarb")
             .current_dir(&temp)
@@ -420,7 +420,7 @@ mod tests {
 
         let artifacts_path = temp
             .path()
-            .join("target/dev/simple_package.starknet_artifacts.json");
+            .join("target/dev/basic_package.starknet_artifacts.json");
         let artifacts_path = Utf8PathBuf::from_path_buf(artifacts_path).unwrap();
 
         let contracts = get_contracts_map(&artifacts_path).unwrap();
@@ -429,18 +429,18 @@ mod tests {
         assert!(contracts.contains_key("HelloStarknet"));
 
         let sierra_contents_erc20 =
-            fs::read_to_string(temp.join("target/dev/simple_package_ERC20.sierra.json")).unwrap();
+            fs::read_to_string(temp.join("target/dev/basic_package_ERC20.sierra.json")).unwrap();
         let casm_contents_erc20 =
-            fs::read_to_string(temp.join("target/dev/simple_package_ERC20.casm.json")).unwrap();
+            fs::read_to_string(temp.join("target/dev/basic_package_ERC20.casm.json")).unwrap();
         let contract = contracts.get("ERC20").unwrap();
         assert_eq!(&sierra_contents_erc20, &contract.sierra);
         assert_eq!(&casm_contents_erc20, &contract.casm);
 
         let sierra_contents_erc20 =
-            fs::read_to_string(temp.join("target/dev/simple_package_HelloStarknet.sierra.json"))
+            fs::read_to_string(temp.join("target/dev/basic_package_HelloStarknet.sierra.json"))
                 .unwrap();
         let casm_contents_erc20 =
-            fs::read_to_string(temp.join("target/dev/simple_package_HelloStarknet.casm.json"))
+            fs::read_to_string(temp.join("target/dev/basic_package_HelloStarknet.casm.json"))
                 .unwrap();
         let contract = contracts.get("HelloStarknet").unwrap();
         assert_eq!(&sierra_contents_erc20, &contract.sierra);
@@ -449,7 +449,7 @@ mod tests {
 
     #[test]
     fn get_dependencies_for_package() {
-        let temp = setup_package("simple_package");
+        let temp = setup_package("basic_package");
         let scarb_metadata = MetadataCommand::new()
             .inherit_stderr()
             .current_dir(temp.path())
@@ -466,7 +466,7 @@ mod tests {
 
     #[test]
     fn get_paths_for_package() {
-        let temp = setup_package("simple_package");
+        let temp = setup_package("basic_package");
         let scarb_metadata = MetadataCommand::new()
             .inherit_stderr()
             .current_dir(temp.path())
@@ -484,7 +484,7 @@ mod tests {
 
     #[test]
     fn get_name_for_package() {
-        let temp = setup_package("simple_package");
+        let temp = setup_package("basic_package");
         let scarb_metadata = MetadataCommand::new()
             .inherit_stderr()
             .current_dir(temp.path())
@@ -494,12 +494,12 @@ mod tests {
         let package_name =
             name_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0]).unwrap();
 
-        assert_eq!(package_name, "simple_package".to_string());
+        assert_eq!(package_name, "basic_package".to_string());
     }
 
     #[test]
     fn get_corelib_path_for_package() {
-        let temp = setup_package("simple_package");
+        let temp = setup_package("basic_package");
         let scarb_metadata = MetadataCommand::new()
             .inherit_stderr()
             .current_dir(temp.path())
@@ -518,7 +518,7 @@ mod tests {
 
     #[test]
     fn get_target_name_for_package() {
-        let temp = setup_package("simple_package");
+        let temp = setup_package("basic_package");
         let scarb_metadata = MetadataCommand::new()
             .inherit_stderr()
             .current_dir(temp.path())
@@ -528,12 +528,12 @@ mod tests {
         let target_name =
             target_name_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0]).unwrap();
 
-        assert_eq!(target_name, "simple_package");
+        assert_eq!(target_name, "basic_package");
     }
 
     #[test]
     fn get_dependencies_for_package_err_on_invalid_package() {
-        let temp = setup_package("simple_package");
+        let temp = setup_package("basic_package");
         let scarb_metadata = MetadataCommand::new()
             .inherit_stderr()
             .current_dir(temp.path())
