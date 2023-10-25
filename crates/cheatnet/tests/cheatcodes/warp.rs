@@ -389,7 +389,6 @@ fn warp_global_priority_over_warp() {
     .unwrap();
 
     assert_success!(output, vec![Felt252::from(321)]);
-
 }
 
 #[test]
