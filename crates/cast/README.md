@@ -4,7 +4,7 @@ Starknet Foundry `sncast` is a command line tool for performing Starknet RPC cal
 
 Note, that `sncast` only officially supports contracts written in Cairo 2.
 
-## Table of contents
+## Table Of Contents
 
 <!-- TOC -->
   * [Installation](#installation)
@@ -25,11 +25,11 @@ You can download latest version of `sncast` [here](https://github.com/foundry-rs
 
 For more details on Starknet Foundry `sncast`, please visit [our docs](https://foundry-rs.github.io/starknet-foundry/starknet/index.html) 
 
-## Example usages
+## Example Usages
 
 All subcommand usages are shown for two scenarios - when all necessary arguments are supplied using CLI, and when `url`, `accounts-file` and `account` arguments are taken from `Scarb.toml`. To learn more about configuring profiles with parameters in `Scarb.toml` file, please refer to the [documentation](https://foundry-rs.github.io/starknet-foundry/projects/configuration.html#defining-profiles-in-scarbtoml).
 
-### Declare a contract
+### Declare a Contract
 
 ```shell
 $ sncast --account myuser \
@@ -54,7 +54,7 @@ class_hash: 0x8448a68b5ea1affc45e3fd4b8b480ea36a51dc34e337a16d2567d32d0c6f8a
 transaction_hash: 0x7ad0d6e449e33b6581a4bb8df866c0fce3919a5ee05a30840ba521dafee217f
 ```
 
-### Deploy a contract
+### Deploy a Contract
 
 ```shell
 $ sncast --account myuser \
@@ -78,7 +78,7 @@ transaction_hash: 0x64a62a000240e034d1862c2bbfa154aac6a8195b4b2e570f38bf4fd47a5a
 ```
 
 
-### Invoke a contract
+### Invoke a Contract
 
 ```shell
 $ sncast --url http://127.0.0.1:5050 \
@@ -105,7 +105,7 @@ command: Invoke
 transaction_hash: 0x7ad0d6e449e33b6581a4bb8df866c0fce3919a5ee05a30840ba521dafee217f
 ```
 
-### Call a contract
+### Call a Contract
 
 ```shell
 $ sncast --url http://127.0.0.1:5050 \
