@@ -10,7 +10,7 @@ Cancels the [`start_warp`](./start_warp.md) for the contract at the given addres
 use snforge_std::stop_warp;
 
 #[test]
-fn test_wrap() {
+fn test_warp() {
     // ...
     
     stop_warp(contract_address);
