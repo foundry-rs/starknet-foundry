@@ -41,6 +41,12 @@ Run only tests marked with `#[ignore]` attribute.
 
 Run all tests regardless of `#[ignore]` attribute.
 
+## `--color` `<WHEN>`
+
+Control when colored output is used. Valid values:
+- `always` (default): always display colors.
+- `never`: never display colors.
+
 ## `-h`, `--help`
 
 Print help.

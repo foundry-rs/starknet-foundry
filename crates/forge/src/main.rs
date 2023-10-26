@@ -1,6 +1,6 @@
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
 use forge::scarb::config_from_scarb_for_package;
 use include_dir::{include_dir, Dir};
 use scarb_artifacts::{
@@ -50,6 +50,12 @@ enum ForgeSubcommand {
     CleanCache {},
 }
 
+#[derive(ValueEnum, Debug, Clone)]
+enum ColorOption {
+    Always,
+    Never,
+}
+
 #[derive(Parser, Debug)]
 #[allow(clippy::struct_excessive_bools)]
 struct TestArgs {
@@ -79,6 +85,9 @@ struct TestArgs {
     /// Run all tests regardless of `#[ignore]` attribute
     #[arg(long, conflicts_with = "only_ignored")]
     include_ignored: bool,
+
+    #[arg(value_enum, long, help = "Control when colored output is used", default_value_t = ColorOption::Always, value_name="WHEN")]
+    color: ColorOption,
 }
 
 fn validate_fuzzer_runs_value(val: &str) -> Result<u32> {
@@ -118,6 +127,9 @@ fn extract_failed_tests(tests_summaries: Vec<TestCrateSummary>) -> Vec<TestCaseS
 }
 
 fn test_workspace(args: TestArgs) -> Result<bool> {
+    if let ColorOption::Never = args.color {
+        env::set_var("CLICOLOR", "0");
+    }
     let scarb_metadata = MetadataCommand::new().inherit_stderr().exec()?;
     let workspace_root = scarb_metadata.workspace.root.clone();
 
