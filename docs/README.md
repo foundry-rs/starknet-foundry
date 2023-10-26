@@ -14,7 +14,7 @@ cargo install mdbook
 mdbook build
 ```
 
-## Open preview and reload on every change
+## Open Preview and Reload on Every Change
 
 ```shell
 mdbook serve
