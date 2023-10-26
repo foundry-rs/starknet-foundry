@@ -4,7 +4,7 @@ use crate::corelib::{corelib_path, predeployed_contracts};
 use crate::runner::TestCase;
 use camino::Utf8PathBuf;
 
-use forge::{run, CancellationTokens, RunnerConfig, RunnerParams, TestCrateSummary};
+use forge::{run, RunnerConfig, RunnerParams, TestCrateSummary};
 use std::default::Default;
 use std::path::PathBuf;
 use tempfile::tempdir;
@@ -36,7 +36,6 @@ pub fn run_test_case(test: &TestCase) -> Vec<TestCrateSummary> {
             test.env().clone(),
             test.linked_libraries(),
         )),
-        Arc::new(CancellationTokens::new()),
     ))
     .expect("Runner fail")
 }

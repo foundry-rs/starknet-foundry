@@ -16,7 +16,7 @@ use std::{env, fs};
 use tempfile::{tempdir, TempDir};
 use tokio::runtime::Builder;
 
-use forge::{pretty_printing, CancellationTokens, RunnerConfig, RunnerParams, CACHE_DIR};
+use forge::{pretty_printing, RunnerConfig, RunnerParams, CACHE_DIR};
 use forge::{run, TestCrateSummary};
 
 use forge::test_case_summary::TestCaseSummary;
@@ -196,15 +196,12 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                     dependencies,
                 ));
 
-                let cancellation_tokens = Arc::new(CancellationTokens::new());
-
                 let tests_file_summaries = run(
                     &package_path,
                     &package_name,
                     &package_source_dir_path,
                     runner_config,
                     runner_params,
-                    cancellation_tokens,
                 )
                 .await?;
 

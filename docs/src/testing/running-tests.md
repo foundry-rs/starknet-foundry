@@ -55,9 +55,7 @@ Running 6 test(s) from src/
 
 Failure data:
     original value: [8111420071579136082810415440747], converted to a string: [failing check]
-    
-[SKIP] package_name::tests::other_test
-[SKIP] package_name::tests::yet_another_test
+
 Tests: 3 passed, 1 failed, 2 skipped
 
 Failures:

@@ -10,7 +10,7 @@ use tempfile::tempdir;
 use tokio::runtime::Runtime;
 
 use forge::scarb::config::{ForgeConfig, ForkTarget};
-use forge::{run, CancellationTokens, RunnerConfig, RunnerParams};
+use forge::{run, RunnerConfig, RunnerParams};
 use test_collector::RawForkParams;
 use test_utils::corelib::{corelib_path, predeployed_contracts};
 use test_utils::runner::Contract;
@@ -134,7 +134,6 @@ fn fork_aliased_decorator() {
                 Default::default(),
                 test.linked_libraries(),
             )),
-            Arc::new(CancellationTokens::new()),
         ))
         .expect("Runner fail");
 

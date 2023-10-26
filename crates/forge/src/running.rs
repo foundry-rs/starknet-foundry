@@ -79,7 +79,6 @@ fn build_hints_dict<'b>(
 }
 
 pub(crate) fn blocking_run_from_test(
-    args: Vec<Felt252>,
     case: Arc<TestCaseRunnable>,
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
@@ -92,6 +91,39 @@ pub(crate) fn blocking_run_from_test(
         // a channel is used to receive information indicating
         // that the execution of the task is no longer necessary.
         if send.is_closed() {
+            return Ok(TestCaseSummary::Skipped {});
+        }
+        let run_result = run_test_case(
+            vec![],
+            &case,
+            &runner,
+            &runner_config,
+            &runner_params,
+            &send_shut_down,
+        );
+
+        extract_test_case_summary(run_result, &case, vec![])
+    })
+}
+pub(crate) fn blocking_run_from_fuzzing_test(
+    args: Vec<Felt252>,
+    case: Arc<TestCaseRunnable>,
+    runner: Arc<SierraCasmRunner>,
+    runner_config: Arc<RunnerConfig>,
+    runner_params: Arc<RunnerParams>,
+    send: Sender<()>,
+    fuzzing_send: Sender<()>,
+    send_shut_down: Sender<()>,
+) -> JoinHandle<Result<TestCaseSummary>> {
+    tokio::task::spawn_blocking(move || {
+        // Due to the inability of spawn_blocking to be abruptly cancelled,
+        // a channel is used to receive information indicating
+        // that the execution of the task is no longer necessary.
+        if send.is_closed() {
+            return Ok(TestCaseSummary::Skipped {});
+        }
+
+        if fuzzing_send.is_closed() {
             return Ok(TestCaseSummary::Skipped {});
         }
         let run_result = run_test_case(
