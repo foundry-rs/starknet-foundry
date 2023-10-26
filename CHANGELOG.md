@@ -9,9 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
-#### Changed
+#### Fixed
 
-- fixed diagnostic paths referring to `tests` folder
+- diagnostic paths referring to `tests` folder
 
 ## [0.9.0] - 2023-10-25
 

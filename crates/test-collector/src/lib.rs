@@ -499,18 +499,8 @@ pub fn collect_tests(
         b.build()?
     };
 
-    // region: Modified code from setup_single_project_file from cairo-lang-compiler/src/project.rs
-    let main_crate_id = db.intern_crate(CrateLongId::Real(SmolStr::from(crate_name)));
-    db.set_crate_root(
-        main_crate_id,
-        Some(Directory::Real(crate_root.to_path_buf())),
-    );
-
-    let module_id = ModuleId::CrateRoot(main_crate_id);
-    let file_id = db.module_main_file(module_id).unwrap();
-    db.as_files_group_mut()
-        .override_file_content(file_id, Some(Arc::new(lib_content.to_string())));
-    // endregion
+    let main_crate_id =
+        insert_lib_entrypoint_content_into_db(db, crate_name, crate_root, lib_content);
 
     if DiagnosticsReporter::stderr().check(db) {
         return Err(anyhow!(
@@ -570,6 +560,27 @@ pub fn collect_tests(
         fs::write(path, sierra_program.to_string()).context("Failed to write output")?;
     }
     Ok((sierra_program, collected_tests))
+}
+
+// inspired with cairo-lang-compiler/src/project.rs:49 (part of setup_single_project_file)
+fn insert_lib_entrypoint_content_into_db(
+    db: &mut RootDatabase,
+    crate_name: &str,
+    crate_root: &Path,
+    lib_content: &str,
+) -> CrateId {
+    let main_crate_id = db.intern_crate(CrateLongId::Real(SmolStr::from(crate_name)));
+    db.set_crate_root(
+        main_crate_id,
+        Some(Directory::Real(crate_root.to_path_buf())),
+    );
+
+    let module_id = ModuleId::CrateRoot(main_crate_id);
+    let file_id = db.module_main_file(module_id).unwrap();
+    db.as_files_group_mut()
+        .override_file_content(file_id, Some(Arc::new(lib_content.to_string())));
+
+    main_crate_id
 }
 
 fn validate_tests(
