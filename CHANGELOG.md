@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Breaking
+
+- forking `Pending` block has become disallowed
+
 ## [0.9.0] - 2023-10-25
 
 ### Forge
