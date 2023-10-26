@@ -26,13 +26,8 @@ enum BlockId {
 
 enum BlockTag {
     Latest,
-    Pending,
 }
 ```
-
-> 📝 **Note**
->
-> Forking `Pending` blocks is not available, as the block context would change too often.
 
 ```rust
 use snforge_std::BlockId;
