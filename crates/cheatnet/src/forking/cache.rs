@@ -226,7 +226,7 @@ impl ForkCache {
 
     pub(crate) fn get_class_hash_at(&self, contract_address: ContractAddress) -> Option<ClassHash> {
         self.fork_cache_content
-            .nonce_at
+            .class_hash_at
             .get(&contract_address.to_felt252().to_string())
             .map(StarknetConversions::to_class_hash)
     }
