@@ -23,17 +23,16 @@ fn get_cheated_block_info_ptr(
     };
 
     // Global warp overrides contract warp
-    let warped_timestamp = if let Some(warped) = &cheatnet_state.global_warp {
-        Some(warped.clone())
-    } else if let Some(warped) = cheatnet_state.warped_contracts.get(contract_address) {
-        Some(warped.clone())
-    } else {
-        None
-    };
+    let warped_timestamp = cheatnet_state.global_warp.as_ref().cloned().or_else(|| {
+        cheatnet_state
+            .warped_contracts
+            .get(contract_address)
+            .cloned()
+    });
 
     if let Some(warped_timestamp) = warped_timestamp {
         new_block_info[1] = MaybeRelocatable::Int(warped_timestamp);
-    };
+    }
 
     vm.load_data(ptr_cheated_block_info, &new_block_info)
         .unwrap();
