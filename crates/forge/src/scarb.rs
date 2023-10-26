@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Context, Result};
-use camino::Utf8PathBuf;
+use camino::{Utf8Path, Utf8PathBuf};
 use itertools::Itertools;
 use scarb_metadata::{CompilationUnitMetadata, Metadata, MetadataCommand, PackageId};
 use serde::Deserialize;
@@ -65,7 +65,7 @@ pub struct ForkTarget {
 /// # Arguments
 ///
 /// * `path` - A path to `starknet_artifacts.json` file.
-fn artifacts_for_package(path: &Utf8PathBuf) -> Result<StarknetArtifacts> {
+fn artifacts_for_package(path: &Utf8Path) -> Result<StarknetArtifacts> {
     let starknet_artifacts =
         fs::read_to_string(path).with_context(|| format!("Failed to read {path:?} contents"))?;
     let starknet_artifacts: StarknetArtifacts =
@@ -84,7 +84,7 @@ fn artifacts_for_package(path: &Utf8PathBuf) -> Result<StarknetArtifacts> {
 /// * `path` - A path to the Scarb package
 /// * `target_name` - A name of the target that is being built by Scarb
 pub fn try_get_starknet_artifacts_path(
-    target_dir: &Utf8PathBuf,
+    target_dir: &Utf8Path,
     target_name: &str,
 ) -> Result<Option<Utf8PathBuf>> {
     let path = target_dir.join("dev");
@@ -111,7 +111,7 @@ pub fn try_get_starknet_artifacts_path(
 /// # Arguments
 ///
 /// * path - A path to the Scarb package
-pub fn get_contracts_map(path: &Utf8PathBuf) -> Result<HashMap<String, StarknetContractArtifacts>> {
+pub fn get_contracts_map(path: &Utf8Path) -> Result<HashMap<String, StarknetContractArtifacts>> {
     let base_path = path
         .parent()
         .ok_or_else(|| anyhow!("Failed to get parent for path = {}", path))?;
@@ -199,7 +199,7 @@ pub fn paths_for_package(
     Ok((package_path, Utf8PathBuf::from(package_source_dir_path)))
 }
 
-pub fn target_dir_for_package(workspace_root: &Utf8PathBuf) -> Result<Utf8PathBuf> {
+pub fn target_dir_for_package(workspace_root: &Utf8Path) -> Result<Utf8PathBuf> {
     let scarb_metadata = MetadataCommand::new().inherit_stderr().exec()?;
 
     let target_dir = scarb_metadata
@@ -307,7 +307,7 @@ mod tests {
                 casm = true
 
                 [dependencies]
-                starknet = "2.2.0"
+                starknet = "2.3.0"
                 snforge_std = {{ path = "{}" }}
 
                 [[tool.snforge.fork]]
@@ -376,7 +376,7 @@ mod tests {
                 version = "0.1.0"
 
                 [dependencies]
-                starknet = "2.2.0"
+                starknet = "2.3.0"
                 snforge_std = {{ path = "{}" }}
 
                 [[target.starknet-contract]]
@@ -505,19 +505,24 @@ mod tests {
         assert!(contracts.contains_key("HelloStarknet"));
 
         let sierra_contents_erc20 =
-            fs::read_to_string(temp.join("target/dev/simple_package_ERC20.sierra.json")).unwrap();
-        let casm_contents_erc20 =
-            fs::read_to_string(temp.join("target/dev/simple_package_ERC20.casm.json")).unwrap();
+            fs::read_to_string(temp.join("target/dev/simple_package_ERC20.contract_class.json"))
+                .unwrap();
+        let casm_contents_erc20 = fs::read_to_string(
+            temp.join("target/dev/simple_package_ERC20.compiled_contract_class.json"),
+        )
+        .unwrap();
         let contract = contracts.get("ERC20").unwrap();
         assert_eq!(&sierra_contents_erc20, &contract.sierra);
         assert_eq!(&casm_contents_erc20, &contract.casm);
 
-        let sierra_contents_erc20 =
-            fs::read_to_string(temp.join("target/dev/simple_package_HelloStarknet.sierra.json"))
-                .unwrap();
-        let casm_contents_erc20 =
-            fs::read_to_string(temp.join("target/dev/simple_package_HelloStarknet.casm.json"))
-                .unwrap();
+        let sierra_contents_erc20 = fs::read_to_string(
+            temp.join("target/dev/simple_package_HelloStarknet.contract_class.json"),
+        )
+        .unwrap();
+        let casm_contents_erc20 = fs::read_to_string(
+            temp.join("target/dev/simple_package_HelloStarknet.compiled_contract_class.json"),
+        )
+        .unwrap();
         let contract = contracts.get("HelloStarknet").unwrap();
         assert_eq!(&sierra_contents_erc20, &contract.sierra);
         assert_eq!(&casm_contents_erc20, &contract.casm);

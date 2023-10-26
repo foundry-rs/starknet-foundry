@@ -460,6 +460,7 @@ pub struct LinkedLibrary {
 pub struct TestCase {
     pub name: String,
     pub available_gas: Option<usize>,
+    pub ignored: bool,
     pub expected_result: ExpectedTestResult,
     pub fork_config: Option<ForkConfig>,
     pub fuzzer_config: Option<FuzzerConfig>,
@@ -470,13 +471,13 @@ pub fn collect_tests(
     output_path: Option<&str>,
     crate_name: &str,
     linked_libraries: &[LinkedLibrary],
-    builtins: Option<Vec<&str>>,
+    builtins: &[&str],
     corelib_path: PathBuf,
 ) -> Result<(Program, Vec<TestCase>)> {
     let mut crate_roots: OrderedHashMap<SmolStr, PathBuf> = linked_libraries
         .iter()
         .cloned()
-        .map(|source_root| (source_root.name.into(), source_root.path.clone()))
+        .map(|source_root| (source_root.name.into(), source_root.path))
         .collect();
     crate_roots.insert(crate_name.into(), PathBuf::from(crate_root));
 
@@ -542,6 +543,7 @@ pub fn collect_tests(
         .map(|(test_name, config)| TestCase {
             name: test_name,
             available_gas: config.available_gas,
+            ignored: config.ignored,
             expected_result: config.expected_result,
             fork_config: config.fork_config,
             fuzzer_config: config.fuzzer_config,
@@ -550,11 +552,7 @@ pub fn collect_tests(
 
     let sierra_program = replace_sierra_ids_in_program(db, &sierra_program);
 
-    let builtins = builtins.map_or_else(Vec::new, |builtins| {
-        builtins.iter().map(|s| (*s).to_string()).collect()
-    });
-
-    validate_tests(sierra_program.clone(), &collected_tests, &builtins)?;
+    validate_tests(sierra_program.clone(), &collected_tests, builtins)?;
 
     if let Some(path) = output_path {
         fs::write(path, sierra_program.to_string()).context("Failed to write output")?;
@@ -565,7 +563,7 @@ pub fn collect_tests(
 fn validate_tests(
     sierra_program: Program,
     collected_tests: &Vec<TestCase>,
-    ignored_params: &[String],
+    ignored_params: &[&str],
 ) -> Result<(), anyhow::Error> {
     let casm_generator = match SierraCasmGenerator::new(sierra_program) {
         Ok(casm_generator) => casm_generator,
@@ -576,7 +574,7 @@ fn validate_tests(
         let mut filtered_params: Vec<String> = Vec::new();
         for param in &func.params {
             let param_str = &param.ty.debug_name.as_ref().unwrap().to_string();
-            if !ignored_params.contains(param_str) {
+            if !ignored_params.contains(&param_str.as_str()) {
                 filtered_params.push(param_str.to_string());
             }
         }

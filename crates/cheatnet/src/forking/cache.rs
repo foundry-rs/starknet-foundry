@@ -1,3 +1,4 @@
+use crate::state::CheatnetBlockInfo;
 use camino::Utf8PathBuf;
 use conversions::StarknetConversions;
 use fs2::FileExt;
@@ -21,6 +22,7 @@ struct ForkCacheContent {
     class_hash_at: HashMap<String, String>,
     compiled_contract_class: HashMap<String, String>,
     compiled_class_hash: HashMap<String, String>,
+    block_info: Option<CheatnetBlockInfo>,
 }
 
 impl ForkCacheContent {
@@ -32,6 +34,7 @@ impl ForkCacheContent {
             class_hash_at: HashMap::new(),
             compiled_contract_class: HashMap::new(),
             compiled_class_hash: HashMap::new(),
+            block_info: None,
         }
     }
     fn from_str(serialized: &str) -> Self {
@@ -51,16 +54,16 @@ impl ForkCacheContent {
                     .insert(other_contract_address.clone(), other_storage.clone());
             }
         }
-        // nonce_at
+
         self.nonce_at.extend(other.nonce_at.clone());
-        // class_hash_at
         self.class_hash_at.extend(other.class_hash_at.clone());
-        // compiled_contract_class
         self.compiled_contract_class
             .extend(other.compiled_contract_class.clone());
-        // compiled_class_hash
         self.compiled_class_hash
             .extend(other.compiled_class_hash.clone());
+        if other.block_info.is_some() {
+            self.block_info = other.block_info;
+        }
     }
 }
 
@@ -196,7 +199,7 @@ impl ForkCache {
         self.fork_cache_content
             .storage_at
             .entry(contract_address_str.clone())
-            .or_insert_with(HashMap::new);
+            .or_default();
 
         self.fork_cache_content
             .storage_at
@@ -265,6 +268,14 @@ impl ForkCache {
         self.fork_cache_content
             .compiled_contract_class
             .insert(class_hash_str, contract_class_str);
+    }
+
+    pub(crate) fn get_block_info(&self) -> Option<CheatnetBlockInfo> {
+        self.fork_cache_content.block_info
+    }
+
+    pub(crate) fn cache_get_block_info(&mut self, block_info: CheatnetBlockInfo) {
+        self.fork_cache_content.block_info = Some(block_info);
     }
 }
 

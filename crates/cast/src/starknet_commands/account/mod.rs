@@ -1,5 +1,6 @@
 use crate::starknet_commands::account::add::Add;
 use crate::starknet_commands::account::create::Create;
+use crate::starknet_commands::account::delete::Delete;
 use crate::starknet_commands::account::deploy::Deploy;
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
@@ -17,6 +18,7 @@ use toml::Value;
 
 pub mod add;
 pub mod create;
+pub mod delete;
 pub mod deploy;
 
 #[derive(Args)]
@@ -31,6 +33,7 @@ pub enum Commands {
     Add(Add),
     Create(Create),
     Deploy(Deploy),
+    Delete(Delete),
 }
 
 pub fn prepare_account_json(
@@ -166,7 +169,7 @@ mod tests {
 
     use crate::starknet_commands::account::add_created_profile_to_configuration;
 
-    #[sealed_test(files = ["tests/data/contracts/v1/balance/Scarb.toml"])]
+    #[sealed_test(files = ["tests/data/contracts/constructor_with_params/Scarb.toml"])]
     fn test_add_created_profile_to_configuration_happy_case() {
         let config = CastConfig {
             rpc_url: String::from("http://some-url"),
@@ -185,7 +188,7 @@ mod tests {
         assert!(contents.contains("accounts-file = \"accounts\""));
     }
 
-    #[sealed_test(files = ["tests/data/contracts/v1/balance/Scarb.toml"])]
+    #[sealed_test(files = ["tests/data/contracts/constructor_with_params/Scarb.toml"])]
     fn test_add_created_profile_to_configuration_profile_already_exists() {
         let config = CastConfig {
             rpc_url: String::from("http://some-url"),

@@ -2,57 +2,64 @@ use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
 use camino::Utf8PathBuf;
 use indoc::{formatdoc, indoc};
 
-use crate::e2e::common::runner::{get_current_branch, get_remote_url, runner, setup_package};
+use crate::assert_stdout_contains;
+use crate::e2e::common::runner::{
+    get_current_branch, get_remote_url, runner, setup_package, test_runner,
+};
 use assert_fs::TempDir;
 use std::{path::Path, str::FromStr};
 
 #[test]
 fn simple_package() {
     let temp = setup_package("simple_package");
-    let snapbox = runner();
+    let snapbox = test_runner();
+    let output = snapbox.current_dir(&temp).assert().code(1);
 
-    snapbox
-        .current_dir(&temp)
-        .assert()
-        .code(1)
-        .stdout_matches(indoc! {r#"
-        [..]Compiling[..]
-        [..]Finished[..]
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
+    [..]Compiling[..]
+    [..]Finished[..]
 
 
-        Collected 11 test(s) from simple_package package
-        Running 1 test(s) from src/
-        [PASS] simple_package::test_fib
-        Running 10 test(s) from tests/
-        [PASS] tests::contract::call_and_invoke
-        [PASS] tests::ext_function_test::test_my_test
-        [PASS] tests::ext_function_test::test_simple
-        [PASS] tests::test_simple::test_simple
-        [PASS] tests::test_simple::test_simple2
-        [PASS] tests::test_simple::test_two
-        [PASS] tests::test_simple::test_two_and_two
-        [FAIL] tests::test_simple::test_failing
-        
-        Failure data:
-            original value: [8111420071579136082810415440747], converted to a string: [failing check]
-        
-        [FAIL] tests::test_simple::test_another_failing
-        
-        Failure data:
-            original value: [8111420071579136082810415440747], converted to a string: [failing check]
-        
-        [PASS] tests::without_prefix::five
-        Tests: 9 passed, 2 failed, 0 skipped
-        
-        Failures:
-            tests::test_simple::test_failing
-            tests::test_simple::test_another_failing
-        "#});
+    Collected 13 test(s) from simple_package package
+    Running 2 test(s) from src/
+    [PASS] simple_package::tests::test_fib
+    [IGNORE] simple_package::tests::ignored_test
+    Running 11 test(s) from tests/
+    [PASS] tests::contract::call_and_invoke
+    [PASS] tests::ext_function_test::test_my_test
+    [IGNORE] tests::ext_function_test::ignored_test
+    [PASS] tests::ext_function_test::test_simple
+    [PASS] tests::test_simple::test_simple
+    [PASS] tests::test_simple::test_simple2
+    [PASS] tests::test_simple::test_two
+    [PASS] tests::test_simple::test_two_and_two
+    [FAIL] tests::test_simple::test_failing
+    
+    Failure data:
+        original value: [8111420071579136082810415440747], converted to a string: [failing check]
+    
+    [FAIL] tests::test_simple::test_another_failing
+    
+    Failure data:
+        original value: [8111420071579136082810415440747], converted to a string: [failing check]
+    
+    [PASS] tests::without_prefix::five
+    Tests: 9 passed, 2 failed, 0 skipped
+    
+    Failures:
+        tests::test_simple::test_failing
+        tests::test_simple::test_another_failing
+    "#}
+    );
 }
 
 #[test]
 fn simple_package_with_git_dependency() {
     let temp = TempDir::new().unwrap();
+    let temp_scarb = TempDir::new().unwrap();
+
     temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
         .unwrap();
     let remote_url = get_remote_url();
@@ -70,7 +77,7 @@ fn simple_package_with_git_dependency() {
             casm = true
 
             [dependencies]
-            starknet = "2.2.0"
+            starknet = "2.3.0"
             snforge_std = {{ git = "https://github.com/{}", branch = "{}" }}
             "#,
             remote_url,
@@ -78,24 +85,28 @@ fn simple_package_with_git_dependency() {
         ))
         .unwrap();
 
-    let snapbox = runner();
-
-    snapbox
+    let snapbox = test_runner();
+    let output = snapbox
+        .env("SCARB_CACHE", temp_scarb.path())
         .current_dir(&temp)
         .assert()
-        .code(1)
-        .stdout_matches(indoc! {r#"
-        [..]Updating git repository[..]
+        .code(1);
+
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
 
 
-        Collected 11 test(s) from simple_package package
-        Running 1 test(s) from src/
-        [PASS] simple_package::test_fib
-        Running 10 test(s) from tests/
+        Collected 13 test(s) from simple_package package
+        Running 2 test(s) from src/
+        [PASS] simple_package::tests::test_fib
+        [IGNORE] simple_package::tests::ignored_test
+        Running 11 test(s) from tests/
         [PASS] tests::contract::call_and_invoke
         [PASS] tests::ext_function_test::test_my_test
+        [IGNORE] tests::ext_function_test::ignored_test
         [PASS] tests::ext_function_test::test_simple
         [PASS] tests::test_simple::test_simple
         [PASS] tests::test_simple::test_simple2
@@ -117,7 +128,8 @@ fn simple_package_with_git_dependency() {
         Failures:
             tests::test_simple::test_failing
             tests::test_simple::test_another_failing
-        "#}).stderr_matches("");
+        "#}
+    );
 }
 
 #[test]
@@ -133,7 +145,7 @@ fn with_failing_scarb_build() {
         ))
         .unwrap();
 
-    let snapbox = runner();
+    let snapbox = test_runner();
 
     let result = snapbox.current_dir(&temp).assert().code(2);
 
@@ -144,14 +156,13 @@ fn with_failing_scarb_build() {
 #[test]
 fn with_filter() {
     let temp = setup_package("simple_package");
-    let snapbox = runner();
+    let snapbox = test_runner();
 
-    snapbox
-        .current_dir(&temp)
-        .arg("two")
-        .assert()
-        .success()
-        .stdout_matches(indoc! {r#"
+    let output = snapbox.current_dir(&temp).arg("two").assert().success();
+
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -162,45 +173,54 @@ fn with_filter() {
         [PASS] tests::test_simple::test_two
         [PASS] tests::test_simple::test_two_and_two
         Tests: 2 passed, 0 failed, 0 skipped
-        "#});
+        "#}
+    );
 }
 
 #[test]
 fn with_filter_matching_module() {
     let temp = setup_package("simple_package");
-    let snapbox = runner();
+    let snapbox = test_runner();
 
-    snapbox
+    let output = snapbox
         .current_dir(&temp)
         .arg("ext_function_test::")
         .assert()
-        .success()
-        .stdout_matches(indoc! {r#"
+        .success();
+
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
         
         
-        Collected 2 test(s) from simple_package package
+        Collected 3 test(s) from simple_package package
         Running 0 test(s) from src/
-        Running 2 test(s) from tests/
+        Running 3 test(s) from tests/
         [PASS] tests::ext_function_test::test_my_test
+        [IGNORE] tests::ext_function_test::ignored_test
         [PASS] tests::ext_function_test::test_simple
         Tests: 2 passed, 0 failed, 0 skipped
-        "#});
+        "#}
+    );
 }
 
 #[test]
 fn with_exact_filter() {
     let temp = setup_package("simple_package");
-    let snapbox = runner();
+    let snapbox = test_runner();
 
-    snapbox
+    let output = snapbox
         .current_dir(&temp)
         .arg("tests::test_simple::test_two")
         .arg("--exact")
         .assert()
-        .success()
-        .stdout_matches(indoc! {r#"
+        .success();
+
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -210,20 +230,20 @@ fn with_exact_filter() {
         Running 1 test(s) from tests/
         [PASS] tests::test_simple::test_two
         Tests: 1 passed, 0 failed, 0 skipped
-        "#});
+        "#}
+    );
 }
 
 #[test]
 fn with_non_matching_filter() {
     let temp = setup_package("simple_package");
-    let snapbox = runner();
+    let snapbox = test_runner();
 
-    snapbox
-        .current_dir(&temp)
-        .arg("qwerty")
-        .assert()
-        .success()
-        .stdout_matches(indoc! {r#"
+    let output = snapbox.current_dir(&temp).arg("qwerty").assert().success();
+
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -232,19 +252,178 @@ fn with_non_matching_filter() {
         Running 0 test(s) from src/
         Running 0 test(s) from tests/
         Tests: 0 passed, 0 failed, 0 skipped
-        "#});
+        "#}
+    );
+}
+
+#[test]
+fn with_ignored_flag() {
+    let temp = setup_package("simple_package");
+    let snapbox = test_runner();
+
+    let output = snapbox.current_dir(&temp).arg("--ignored").assert().code(1);
+
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+        
+        
+        Collected 2 test(s) from simple_package package
+        Running 1 test(s) from src/
+        [PASS] simple_package::tests::ignored_test
+        Running 1 test(s) from tests/
+        [FAIL] tests::ext_function_test::ignored_test
+        
+        Failure data:
+            original value: [133508164996995645235097191], converted to a string: [not passing]
+        
+        Tests: 1 passed, 1 failed, 0 skipped
+        
+        Failures:
+            tests::ext_function_test::ignored_test
+        "#}
+    );
+}
+
+#[test]
+fn with_include_ignored_flag() {
+    let temp = setup_package("simple_package");
+    let snapbox = test_runner();
+
+    let output = snapbox
+        .current_dir(&temp)
+        .arg("--include-ignored")
+        .assert()
+        .code(1);
+
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+        
+        
+        Collected 13 test(s) from simple_package package
+        Running 2 test(s) from src/
+        [PASS] simple_package::tests::test_fib
+        [PASS] simple_package::tests::ignored_test
+        Running 11 test(s) from tests/
+        [PASS] tests::contract::call_and_invoke
+        [PASS] tests::ext_function_test::test_my_test
+        [FAIL] tests::ext_function_test::ignored_test
+        
+        Failure data:
+            original value: [133508164996995645235097191], converted to a string: [not passing]
+        
+        [PASS] tests::ext_function_test::test_simple
+        [PASS] tests::test_simple::test_simple
+        [PASS] tests::test_simple::test_simple2
+        [PASS] tests::test_simple::test_two
+        [PASS] tests::test_simple::test_two_and_two
+        [FAIL] tests::test_simple::test_failing
+        
+        Failure data:
+            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+        
+        [FAIL] tests::test_simple::test_another_failing
+        
+        Failure data:
+            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+        
+        [PASS] tests::without_prefix::five
+        Tests: 10 passed, 3 failed, 0 skipped
+        
+        Failures:
+            tests::ext_function_test::ignored_test
+            tests::test_simple::test_failing
+            tests::test_simple::test_another_failing
+        "#}
+    );
+}
+
+#[test]
+fn with_ignored_flag_and_filter() {
+    let temp = setup_package("simple_package");
+    let snapbox = test_runner();
+
+    let output = snapbox
+        .current_dir(&temp)
+        .arg("--ignored")
+        .arg("ext_function_test::ignored_test")
+        .assert()
+        .code(1);
+
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+        
+        
+        Collected 1 test(s) from simple_package package
+        Running 0 test(s) from src/
+        Running 1 test(s) from tests/
+        [FAIL] tests::ext_function_test::ignored_test
+ 
+        Failure data:
+            original value: [133508164996995645235097191], converted to a string: [not passing]
+        
+        Tests: 0 passed, 1 failed, 0 skipped
+        
+        Failures:
+            tests::ext_function_test::ignored_test
+        "#}
+    );
+}
+
+#[test]
+fn with_include_ignored_flag_and_filter() {
+    let temp = setup_package("simple_package");
+    let snapbox = test_runner();
+
+    let output = snapbox
+        .current_dir(&temp)
+        .arg("--include-ignored")
+        .arg("ignored_test")
+        .assert()
+        .code(1);
+
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+        
+        
+        Collected 2 test(s) from simple_package package
+        Running 1 test(s) from src/
+        [PASS] simple_package::tests::ignored_test
+        Running 1 test(s) from tests/
+        [FAIL] tests::ext_function_test::ignored_test
+        
+        Failure data:
+            original value: [133508164996995645235097191], converted to a string: [not passing]
+
+        Tests: 1 passed, 1 failed, 0 skipped
+        
+        Failures:
+            tests::ext_function_test::ignored_test
+        "#}
+    );
 }
 
 #[test]
 fn with_print() {
     let temp = setup_package("print_test");
-    let snapbox = runner();
+    let snapbox = test_runner();
 
-    snapbox
-        .current_dir(&temp)
-        .assert()
-        .success()
-        .stdout_matches(indoc! {r#"
+    let output = snapbox.current_dir(&temp).assert().success();
+
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -255,15 +434,15 @@ fn with_print() {
         original value: [123], converted to a string: [{]
         original value: [3618502788666131213697322783095070105623107215331596699973092056135872020480]
         original value: [6381921], converted to a string: [aaa]
-        original value: [12], converted to a string: []
+        original value: [12]
         original value: [1234]
         original value: [123456]
         original value: [1233456789]
         original value: [123345678910]
-        original value: [0], converted to a string: []
+        original value: [0]
         original value: [10633823966279327296825105735305134080]
-        original value: [2], converted to a string: []
-        original value: [11], converted to a string: []
+        original value: [2]
+        original value: [11]
         original value: [1234]
         original value: [123456]
         original value: [123456789]
@@ -272,21 +451,28 @@ fn with_print() {
         original value: [124], converted to a string: [|]
         original value: [149]
         original value: [439721161573], converted to a string: [false]
+        original value: [27]
+        original value: [17]
+        original value: [37], converted to a string: [%]
+        original value: [127]
+        original value: [32], converted to a string: [ ]
+        original value: [166906514068638843492736773029576256], converted to a string: [ % abc 123 !?>@]
         [PASS] tests::test_print::test_print
         Tests: 1 passed, 0 failed, 0 skipped
-        "#});
+        "#}
+    );
 }
 
 #[test]
 fn with_panic_data_decoding() {
     let temp = setup_package("panic_decoding");
-    let snapbox = runner();
+    let snapbox = test_runner();
 
-    snapbox
-        .current_dir(&temp)
-        .assert()
-        .code(1)
-        .stdout_matches(indoc! {r#"
+    let output = snapbox.current_dir(&temp).assert().code(1);
+
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -316,22 +502,24 @@ fn with_panic_data_decoding() {
         Failures:
             tests::test_panic_decoding::test_panic_decoding
             tests::test_panic_decoding::test_panic_decoding2
-        "#});
+        "#}
+    );
 }
 
 #[test]
 fn with_exit_first() {
-    let temp = setup_package("simple_package");
+    let temp = setup_package("exit_first");
     let scarb_path = temp.child("Scarb.toml");
+
     scarb_path
         .write_str(&formatdoc!(
             r#"
             [package]
-            name = "simple_package"
+            name = "exit_first"
             version = "0.1.0"
 
             [dependencies]
-            starknet = "2.2.0"
+            starknet = "2.3.0"
             snforge_std = {{ path = "{}" }}
 
             [[target.starknet-contract]]
@@ -350,151 +538,73 @@ fn with_exit_first() {
         ))
         .unwrap();
 
-    let snapbox = runner();
+    let snapbox = test_runner();
 
-    snapbox
-        .current_dir(&temp)
-        .assert()
-        .code(1)
-        .stdout_matches(indoc! {r#"
+    let output = snapbox.current_dir(&temp).assert().code(1);
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
 
 
-        Collected 11 test(s) from simple_package package
-        Running 1 test(s) from src/
-        [PASS] simple_package::test_fib
-        Running 10 test(s) from tests/
-        [PASS] tests::contract::call_and_invoke
-        [PASS] tests::ext_function_test::test_my_test
-        [PASS] tests::ext_function_test::test_simple
-        [PASS] tests::test_simple::test_simple
-        [PASS] tests::test_simple::test_simple2
-        [PASS] tests::test_simple::test_two
-        [PASS] tests::test_simple::test_two_and_two
-        [FAIL] tests::test_simple::test_failing
-        
+        Collected 2 test(s) from exit_first package
+        Running 0 test(s) from src/
+        Running 2 test(s) from tests/
+        [SKIP] tests::ext_function_test::hard_test
+        [FAIL] tests::ext_function_test::simple_test
+
         Failure data:
-            original value: [8111420071579136082810415440747], converted to a string: [failing check]
-        
-        [SKIP] tests::test_simple::test_another_failing
-        [SKIP] tests::without_prefix::five
-        Tests: 8 passed, 1 failed, 2 skipped
-        
+            original value: [35718230152306872753561363307], converted to a string: [simple check]
+
+        Tests: 0 passed, 1 failed, 1 skipped
+
         Failures:
-            tests::test_simple::test_failing
-        "#});
+            tests::ext_function_test::simple_test
+        "#}
+    );
 }
 
 #[test]
 fn with_exit_first_flag() {
-    let temp = setup_package("simple_package");
-    let snapbox = runner().arg("--exit-first");
+    let temp = setup_package("exit_first");
+    let snapbox = test_runner().arg("--exit-first");
 
-    snapbox
-        .current_dir(&temp)
-        .assert()
-        .code(1)
-        .stdout_matches(indoc! {r#"
+    let output = snapbox.current_dir(&temp).assert().code(1);
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
 
 
-        Collected 11 test(s) from simple_package package
-        Running 1 test(s) from src/
-        [PASS] simple_package::test_fib
-        Running 10 test(s) from tests/
-        [PASS] tests::contract::call_and_invoke
-        [PASS] tests::ext_function_test::test_my_test
-        [PASS] tests::ext_function_test::test_simple
-        [PASS] tests::test_simple::test_simple
-        [PASS] tests::test_simple::test_simple2
-        [PASS] tests::test_simple::test_two
-        [PASS] tests::test_simple::test_two_and_two
-        [FAIL] tests::test_simple::test_failing
-        
+        Collected 2 test(s) from exit_first package
+        Running 0 test(s) from src/
+        Running 2 test(s) from tests/
+        [SKIP] tests::ext_function_test::hard_test
+        [FAIL] tests::ext_function_test::simple_test
+
         Failure data:
-            original value: [8111420071579136082810415440747], converted to a string: [failing check]
-        
-        [SKIP] tests::test_simple::test_another_failing
-        [SKIP] tests::without_prefix::five
-        Tests: 8 passed, 1 failed, 2 skipped
-        
+            original value: [35718230152306872753561363307], converted to a string: [simple check]
+
+        Tests: 0 passed, 1 failed, 1 skipped
+
         Failures:
-            tests::test_simple::test_failing
-        "#});
-}
-
-#[test]
-fn exit_first_flag_takes_precedence() {
-    let temp = setup_package("simple_package");
-    let scarb_path = temp.child("simple_package/Scarb.toml");
-    scarb_path
-        .write_str(indoc!(
-            r#"
-            [package]
-            name = "simple_package"
-            version = "0.1.0"
-
-            [dependencies]
-            starknet = "2.2.0"
-            snforge_std = { path = "../.." }
-
-            [[target.starknet-contract]]
-            sierra = true
-            casm = true
-            [tool.snforge]
-            exit_first = false
-            "#
-        ))
-        .unwrap();
-
-    let snapbox = runner();
-
-    snapbox
-        .current_dir(&temp)
-        .arg("--exit-first")
-        .assert()
-        .code(1)
-        .stdout_matches(indoc! {r#"
-        [..]Compiling[..]
-        [..]Finished[..]
-
-
-        Collected 11 test(s) from simple_package package
-        Running 1 test(s) from src/
-        [PASS] simple_package::test_fib
-        Running 10 test(s) from tests/
-        [PASS] tests::contract::call_and_invoke
-        [PASS] tests::ext_function_test::test_my_test
-        [PASS] tests::ext_function_test::test_simple
-        [PASS] tests::test_simple::test_simple
-        [PASS] tests::test_simple::test_simple2
-        [PASS] tests::test_simple::test_two
-        [PASS] tests::test_simple::test_two_and_two
-        [FAIL] tests::test_simple::test_failing
-        
-        Failure data:
-            original value: [8111420071579136082810415440747], converted to a string: [failing check]
-        
-        [SKIP] tests::test_simple::test_another_failing
-        [SKIP] tests::without_prefix::five
-        Tests: 8 passed, 1 failed, 2 skipped
-        
-        Failures:
-            tests::test_simple::test_failing
-        "#});
+            tests::ext_function_test::simple_test
+        "#}
+    );
 }
 
 #[test]
 fn init_new_project_test() {
     let temp = TempDir::new().unwrap();
+    let temp_scarb = TempDir::new().unwrap();
 
     let snapbox = runner();
     snapbox
+        .env("SCARB_CACHE", temp_scarb.path())
         .current_dir(&temp)
-        .arg("--init")
-        .arg("test_name")
+        .args(["init", "test_name"])
         .assert()
         .success();
     let manifest_path = temp.child("test_name/Scarb.toml");
@@ -511,11 +621,10 @@ fn init_new_project_test() {
 
             [dependencies]
             snforge_std = {{ git = "https://github.com/foundry-rs/starknet-foundry", tag = "v{}" }}
-            starknet = "2.2.0"
+            starknet = "2.3.0"
 
             [[target.starknet-contract]]
             casm = true
-            # foo = {{ path = "vendor/foo" }}
         "#,
         version
     );
@@ -536,7 +645,7 @@ fn init_new_project_test() {
         casm = true
 
         [dependencies]
-        starknet = "2.2.0"
+        starknet = "2.3.0"
         snforge_std = {{ git = "https://github.com/{}", branch = "{}" }}
         "#,
             remote_url,
@@ -544,14 +653,15 @@ fn init_new_project_test() {
         ))
         .unwrap();
 
-    let snapbox = runner();
+    let snapbox = test_runner();
     // Check if template works with current version of snforge_std
-    snapbox
+    let output = snapbox
         .current_dir(temp.child(Path::new("test_name")))
         .assert()
-        .success()
-        .stdout_matches(indoc! {r#"
-        [..]Updating git repository[..]
+        .success();
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
         [..]Compiling test_name v0.1.0[..]
         [..]Finished[..]
 
@@ -562,7 +672,8 @@ fn init_new_project_test() {
         [PASS] tests::test_contract::test_increase_balance
         [PASS] tests::test_contract::test_cannot_increase_balance_with_zero_value
         Tests: 2 passed, 0 failed, 0 skipped
-    "#});
+    "#}
+    );
 }
 
 #[test]
@@ -571,13 +682,12 @@ fn should_panic() {
     temp.copy_from("tests/data/should_panic_test", &["**/*.cairo", "**/*.toml"])
         .unwrap();
 
-    let snapbox = runner();
+    let snapbox = test_runner();
 
-    snapbox
-        .current_dir(&temp)
-        .assert()
-        .code(1)
-        .stdout_matches(indoc! { r#"
+    let output = snapbox.current_dir(&temp).assert().code(1);
+    assert_stdout_contains!(
+        output,
+        indoc! { r#"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -586,44 +696,44 @@ fn should_panic() {
         Running 0 test(s) from src/
         Running 6 test(s) from tests/
         [PASS] tests::should_panic_test::should_panic_no_data
-        
+
         Success data:
             original value: [0], converted to a string: []
-        
+
         [PASS] tests::should_panic_test::should_panic_check_data
         [PASS] tests::should_panic_test::should_panic_multiple_messages
         [FAIL] tests::should_panic_test::should_panic_with_non_matching_data
-        
+
         Failure data:
             Incorrect panic data
             Actual:    [8111420071579136082810415440747] (failing check)
             Expected:  [0] ()
-        
+
         [FAIL] tests::should_panic_test::didnt_expect_panic
-        
+
         Failure data:
             original value: [156092886226808350968498952598218238307], converted to a string: [unexpected panic]
-        
+
         [FAIL] tests::should_panic_test::expected_panic_but_didnt
         Tests: 3 passed, 3 failed, 0 skipped
-        
+
         Failures:
             tests::should_panic_test::should_panic_with_non_matching_data
             tests::should_panic_test::didnt_expect_panic
             tests::should_panic_test::expected_panic_but_didnt
-        "#});
+        "#}
+    );
 }
 
 #[test]
 fn printing_in_contracts() {
     let temp = setup_package("contract_printing");
-    let snapbox = runner();
+    let snapbox = test_runner();
 
-    snapbox
-        .current_dir(&temp)
-        .assert()
-        .success()
-        .stdout_matches(indoc! {r#"
+    let output = snapbox.current_dir(&temp).assert().success();
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
         [..]Compiling[..]
         warn: libfunc `cheatcode` is not allowed in the libfuncs list `Default libfunc list`
          --> contract: HelloStarknet
@@ -631,7 +741,7 @@ fn printing_in_contracts() {
          --> Scarb.toml
             [[target.starknet-contract]]
             allowed-libfuncs-list.name = "experimental"
-        
+
         [..]Finished[..]
 
 
@@ -642,5 +752,6 @@ fn printing_in_contracts() {
         [PASS] tests::test_contract::test_increase_balance
         [PASS] tests::test_contract::test_cannot_increase_balance_with_zero_value
         Tests: 2 passed, 0 failed, 0 skipped
-        "#});
+        "#}
+    );
 }

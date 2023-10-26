@@ -55,9 +55,12 @@ pub async fn declare_contract(account: &str, path: &str, shortname: &str) -> Fie
         casm_class_hash,
     );
 
-    let hash = declaration.send().await.unwrap().class_hash;
-    write_devnet_env(format!("{shortname}_CLASS_HASH").as_str(), &hash);
-    hash
+    let tx = declaration.send().await.unwrap();
+    let class_hash = tx.class_hash;
+    let tx_hash = tx.transaction_hash;
+    write_devnet_env(format!("{shortname}_CLASS_HASH").as_str(), &class_hash);
+    write_devnet_env(format!("{shortname}_DECLARE_HASH").as_str(), &tx_hash);
+    class_hash
 }
 
 pub async fn declare_deploy_contract(account: &str, path: &str, shortname: &str) {

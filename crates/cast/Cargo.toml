@@ -8,7 +8,6 @@ edition.workspace = true
 anyhow.workspace = true
 camino.workspace = true
 clap.workspace = true
-console.workspace = true
 serde_json.workspace = true
 serde.workspace = true
 starknet.workspace = true
@@ -22,6 +21,7 @@ primitive-types = "0.12.1"
 shellexpand = "3.1.0"
 toml = "0.7.6"
 rpassword = "7.2.0"
+promptly = "0.3.1"
 
 [dev-dependencies]
 ctor.workspace = true
@@ -29,7 +29,7 @@ snapbox = "0.4.13"
 indoc.workspace = true
 reqwest = "0.11.18"
 tempfile = "3.8.0"
-test-case = "3.1.0"
+test-case.workspace = true
 fs_extra = "1.3.0"
 sealed_test = "1.0.0"
 dotenv = "0.15.0"
