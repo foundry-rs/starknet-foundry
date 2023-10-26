@@ -159,11 +159,11 @@ jobs:
       - uses: dtolnay/rust-toolchain@439cf607258077187679211f12aa6f19af4a0af7
         with:
           toolchain: stable
+      - uses: Swatinem/rust-cache@v2
       - uses: actions/checkout@v4
       - name: Install mdBook
         run: |
           cargo install --version ${MDBOOK_VERSION} mdbook
-      - uses: Swatinem/rust-cache@v2
       - name: Build with mdBook
         run: mdbook build
         working-directory: ./docs
