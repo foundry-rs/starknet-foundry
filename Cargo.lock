@@ -1045,6 +1045,7 @@ dependencies = [
  "rand",
  "reqwest",
  "rpassword",
+ "scarb-artifacts",
  "scarb-metadata 1.4.2",
  "sealed_test",
  "serde",
@@ -1052,7 +1053,6 @@ dependencies = [
  "shellexpand",
  "snapbox",
  "starknet",
- "starknet-artifacts",
  "tempfile",
  "test-case",
  "tokio",
@@ -1099,10 +1099,10 @@ dependencies = [
  "num-traits 0.2.16",
  "rayon",
  "regex",
+ "scarb-artifacts",
  "serde",
  "serde_json",
  "starknet",
- "starknet-artifacts",
  "starknet_api",
  "tempfile",
  "test-case",
@@ -1826,6 +1826,7 @@ dependencies = [
  "rand",
  "rayon",
  "regex",
+ "scarb-artifacts",
  "scarb-metadata 1.7.0",
  "scarb-ui",
  "schemars",
@@ -1834,7 +1835,6 @@ dependencies = [
  "smol_str",
  "snapbox",
  "starknet",
- "starknet-artifacts",
  "starknet_api",
  "tempfile",
  "test-collector",
@@ -3620,6 +3620,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "scarb-artifacts"
+version = "1.0.0"
+dependencies = [
+ "anyhow",
+ "assert_fs",
+ "camino",
+ "indoc",
+ "scarb-metadata 1.7.0",
+ "serde",
+ "serde_json",
+ "test-collector",
+]
+
+[[package]]
 name = "scarb-metadata"
 version = "1.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4029,20 +4043,6 @@ dependencies = [
  "starknet-providers",
  "starknet-signers",
  "thiserror",
-]
-
-[[package]]
-name = "starknet-artifacts"
-version = "1.0.0"
-dependencies = [
- "anyhow",
- "assert_fs",
- "camino",
- "indoc",
- "scarb-metadata 1.7.0",
- "serde",
- "serde_json",
- "test-collector",
 ]
 
 [[package]]

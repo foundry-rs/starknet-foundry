@@ -28,7 +28,7 @@ use once_cell::sync::Lazy;
 use rand::{thread_rng, RngCore};
 use smol_str::SmolStr;
 
-use starknet_artifacts::StarknetContractArtifacts;
+use scarb_artifacts::StarknetContractArtifacts;
 
 use crate::fuzzer::RandomFuzzer;
 use crate::scarb::{ForgeConfig, ForkTarget};

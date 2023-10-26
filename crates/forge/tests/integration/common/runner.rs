@@ -12,7 +12,7 @@ use cairo_lang_starknet::inline_macros::selector::SelectorMacro;
 use cairo_lang_starknet::plugin::StarkNetPlugin;
 use camino::{Utf8Path, Utf8PathBuf};
 use forge::{CrateLocation, TestCrateSummary};
-use starknet_artifacts::StarknetContractArtifacts;
+use scarb_artifacts::StarknetContractArtifacts;
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};

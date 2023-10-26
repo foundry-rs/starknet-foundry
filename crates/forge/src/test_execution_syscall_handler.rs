@@ -28,8 +28,8 @@ use cheatnet::rpc::{call_contract, CallContractFailure, CallContractOutput, Call
 use cheatnet::state::{BlockifierState, CheatnetState};
 use conversions::StarknetConversions;
 use num_traits::{One, ToPrimitive};
+use scarb_artifacts::StarknetContractArtifacts;
 use serde::Deserialize;
-use starknet_artifacts::StarknetContractArtifacts;
 
 use cairo_lang_casm::hints::{Hint, StarknetHint};
 use cairo_lang_casm::operand::{CellRef, ResOperand};

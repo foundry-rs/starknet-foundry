@@ -22,7 +22,7 @@ shellexpand = "3.1.0"
 toml = "0.7.6"
 rpassword = "7.2.0"
 promptly = "0.3.1"
-starknet-artifacts = { path = "../starknet-artifacts" }
+scarb-artifacts = { path = "../scarb-artifacts" }
 
 [dev-dependencies]
 ctor.workspace = true

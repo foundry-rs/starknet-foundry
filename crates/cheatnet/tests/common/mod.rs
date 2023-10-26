@@ -5,11 +5,11 @@ use cheatnet::rpc::CallContractOutput;
 use cheatnet::rpc::{call_contract, CallContractFailure, CallContractResult};
 use cheatnet::state::{BlockifierState, CheatnetState};
 use conversions::StarknetConversions;
-use starknet::core::utils::get_selector_from_name;
-use starknet_api::core::ContractAddress;
-use starknet_artifacts::{
+use scarb_artifacts::{
     get_contracts_map, try_get_starknet_artifacts_path, StarknetContractArtifacts,
 };
+use starknet::core::utils::get_selector_from_name;
+use starknet_api::core::ContractAddress;
 use std::{collections::HashMap, str::FromStr};
 
 static TARGET_NAME: &str = "cheatnet_testing_contracts";

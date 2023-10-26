@@ -16,7 +16,7 @@ use crate::state::BlockifierState;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use starknet::core::types::contract::SierraClass;
 
-use starknet_artifacts::StarknetContractArtifacts;
+use scarb_artifacts::StarknetContractArtifacts;
 
 impl BlockifierState<'_> {
     pub fn declare(

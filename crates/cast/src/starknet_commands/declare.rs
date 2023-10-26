@@ -3,6 +3,7 @@ use camino::{Utf8Path, Utf8PathBuf};
 use cast::helpers::{response_structs::DeclareResponse, scarb_utils::get_scarb_manifest};
 use cast::{handle_rpc_error, handle_wait_for_tx};
 use clap::Args;
+use scarb_artifacts::get_contracts_map;
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::ConnectedAccount;
 use starknet::core::types::FieldElement;
@@ -12,7 +13,6 @@ use starknet::{
     providers::jsonrpc::{HttpTransport, JsonRpcClient},
     signers::LocalWallet,
 };
-use starknet_artifacts::get_contracts_map;
 use std::process::{Command, Stdio};
 use std::sync::Arc;
 

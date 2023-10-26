@@ -2,8 +2,8 @@ use assert_fs::fixture::{FileTouch, FileWriteStr, PathChild, PathCopy};
 use assert_fs::TempDir;
 use camino::Utf8PathBuf;
 use indoc::indoc;
+use scarb_artifacts::corelib_for_package;
 use scarb_metadata::MetadataCommand;
-use starknet_artifacts::corelib_for_package;
 
 #[allow(clippy::module_name_repetitions)]
 pub fn corelib_path() -> Utf8PathBuf {
