@@ -73,7 +73,7 @@
     * [env](appendix/forge-library/env.md)
         * [var](appendix/forge-library/env/var.md)
     * [signature](appendix/forge-library/signature.md)
-        * [interface](appendix/forge-library/signature/interface.md)
+        * [Interface](appendix/forge-library/signature/interface.md)
         * [StarkCurveKeyPair](appendix/forge-library/signature/stark_curve_key_pair.md)
 * [Cast Commands](appendix/cast.md)
     * [common flags](appendix/cast/common.md)

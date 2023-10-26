@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2023-10-25
+
 ### Forge
 
 #### Added
@@ -17,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Changed
 
+- updated Cairo version to 2.3.0 - compatible Scarb version is 2.3.0:
+  - tests in `src` folder now have to be in a module annotated with `#[cfg(test)]`
 - `snforge_std::PrintTrait` will not convert values representing ASCII control characters to strings
 - separated `snforge` to subcommands: `snforge test`, `snforge init` and `snforge clean-cache`. 
 Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/forge.html).

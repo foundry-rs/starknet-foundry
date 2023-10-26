@@ -21,40 +21,40 @@ fn file_reading() {
 
         Collected 23 test(s) from file_reading package
         Running 9 test(s) from src/
-        [PASS] file_reading::valid_content_and_same_content_no_matter_whitespaces
-        [PASS] file_reading::serialization
-        [PASS] file_reading::valid_content_different_folder
-        [FAIL] file_reading::non_existent
+        [PASS] file_reading::tests::valid_content_and_same_content_no_matter_whitespaces
+        [PASS] file_reading::tests::serialization
+        [PASS] file_reading::tests::valid_content_different_folder
+        [FAIL] file_reading::tests::non_existent
         
         Failure data:
             Got an exception while executing a hint:
             No such file or directory (os error 2)
         
-        [FAIL] file_reading::invalid_quotes
+        [FAIL] file_reading::tests::invalid_quotes
         
         Failure data:
             Got an exception while executing a hint:
             Failed to parse data/invalid_quotes.txt file
         
-        [FAIL] file_reading::negative_number
+        [FAIL] file_reading::tests::negative_number
         
         Failure data:
             Got an exception while executing a hint:
             Failed to parse data/negative_number.txt file
         
-        [FAIL] file_reading::non_ascii
+        [FAIL] file_reading::tests::non_ascii
         
         Failure data:
             Got an exception while executing a hint:
             Failed to parse data/non_ascii.txt file
         
-        [FAIL] file_reading::not_number_without_quotes
+        [FAIL] file_reading::tests::not_number_without_quotes
         
         Failure data:
             Got an exception while executing a hint:
             Failed to parse data/nan_without_quotes.txt file
         
-        [FAIL] file_reading::too_large_number
+        [FAIL] file_reading::tests::too_large_number
         
         Failure data:
             Got an exception while executing a hint:
@@ -118,12 +118,12 @@ fn file_reading() {
         Tests: 9 passed, 14 failed, 0 skipped
         
         Failures:
-            file_reading::non_existent
-            file_reading::invalid_quotes
-            file_reading::negative_number
-            file_reading::non_ascii
-            file_reading::not_number_without_quotes
-            file_reading::too_large_number
+            file_reading::tests::non_existent
+            file_reading::tests::invalid_quotes
+            file_reading::tests::negative_number
+            file_reading::tests::non_ascii
+            file_reading::tests::not_number_without_quotes
+            file_reading::tests::too_large_number
             tests::test::invalid_json
             tests::test::non_existent
             tests::test::json_non_existent
