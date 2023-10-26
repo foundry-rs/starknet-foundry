@@ -151,6 +151,7 @@ jobs:
       - run: cargo lint
 
   build-docs:
+    name: Test Docs Building
     runs-on: ubuntu-latest
     env:
       MDBOOK_VERSION: 0.4.31
