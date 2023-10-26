@@ -87,7 +87,7 @@ pub fn try_get_starknet_artifacts_path(
 ///
 /// # Arguments
 ///
-/// * path - A path to the Scarb package
+/// * `path`` - A path to the Scarb package
 pub fn get_contracts_map(path: &Utf8Path) -> Result<HashMap<String, StarknetContractArtifacts>> {
     let base_path = path
         .parent()
@@ -196,8 +196,10 @@ pub fn dependencies_for_package(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use assert_fs::fixture::{FileTouch, FileWriteStr, PathChild, PathCopy};
+    use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
+    use assert_fs::prelude::FileTouch;
     use assert_fs::TempDir;
+    use camino::Utf8PathBuf;
     use indoc::{formatdoc, indoc};
     use scarb_metadata::MetadataCommand;
     use std::process::Command;
@@ -231,7 +233,7 @@ mod tests {
                 casm = true
 
                 [dependencies]
-                starknet = "2.2.0"
+                starknet = "2.3.0"
                 snforge_std = {{ path = "{}" }}
 
                 [[tool.snforge.fork]]
@@ -300,7 +302,7 @@ mod tests {
                 version = "0.1.0"
 
                 [dependencies]
-                starknet = "2.2.0"
+                starknet = "2.3.0"
                 snforge_std = {{ path = "{}" }}
 
                 [[target.starknet-contract]]
@@ -429,19 +431,24 @@ mod tests {
         assert!(contracts.contains_key("HelloStarknet"));
 
         let sierra_contents_erc20 =
-            fs::read_to_string(temp.join("target/dev/basic_package_ERC20.sierra.json")).unwrap();
-        let casm_contents_erc20 =
-            fs::read_to_string(temp.join("target/dev/basic_package_ERC20.casm.json")).unwrap();
+            fs::read_to_string(temp.join("target/dev/basic_package_ERC20.contract_class.json"))
+                .unwrap();
+        let casm_contents_erc20 = fs::read_to_string(
+            temp.join("target/dev/basic_package_ERC20.compiled_contract_class.json"),
+        )
+        .unwrap();
         let contract = contracts.get("ERC20").unwrap();
         assert_eq!(&sierra_contents_erc20, &contract.sierra);
         assert_eq!(&casm_contents_erc20, &contract.casm);
 
-        let sierra_contents_erc20 =
-            fs::read_to_string(temp.join("target/dev/basic_package_HelloStarknet.sierra.json"))
-                .unwrap();
-        let casm_contents_erc20 =
-            fs::read_to_string(temp.join("target/dev/basic_package_HelloStarknet.casm.json"))
-                .unwrap();
+        let sierra_contents_erc20 = fs::read_to_string(
+            temp.join("target/dev/basic_package_HelloStarknet.contract_class.json"),
+        )
+        .unwrap();
+        let casm_contents_erc20 = fs::read_to_string(
+            temp.join("target/dev/basic_package_HelloStarknet.compiled_contract_class.json"),
+        )
+        .unwrap();
         let contract = contracts.get("HelloStarknet").unwrap();
         assert_eq!(&sierra_contents_erc20, &contract.sierra);
         assert_eq!(&casm_contents_erc20, &contract.casm);
