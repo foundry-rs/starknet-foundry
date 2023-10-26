@@ -163,6 +163,7 @@ jobs:
       - name: Install mdBook
         run: |
           cargo install --version ${MDBOOK_VERSION} mdbook
+      - uses: Swatinem/rust-cache@v2
       - name: Build with mdBook
         run: mdbook build
         working-directory: ./docs
