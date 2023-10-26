@@ -12,13 +12,17 @@ fn sum(a: felt252, b: felt252) -> felt252 {
     return a + b;
 }
 
-#[test]
-fn test_sum() {
-    assert(sum(2, 3) == 5, 'sum incorrect');
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_sum() {
+        assert(sum(2, 3) == 5, 'sum incorrect');
+    }
 }
 ```
 
 It is a common practice to keep your unit tests in the same file as the tested code. 
+Keep in mind that all tests in `src` folder have to be in a module annotated with `#[cfg(test)]`.
 When it comes to integration tests, you can keep them in separate files in the `tests` directory.
 You can find a detailed explanation of how Forge collects tests [here](test-collection.md).
 
@@ -28,7 +32,7 @@ Now run forge using a command:
 $ snforge test
 Collected 1 test(s) from package_name package
 Running 1 test(s) from src/
-[PASS] package_name::test_sum
+[PASS] package_name::tests::test_sum
 Tests: 1 passed, 0 failed, 0 skipped
 ```
 
@@ -37,18 +41,19 @@ Tests: 1 passed, 0 failed, 0 skipped
 If your code panics, the test is considered failed. Here's an example of a failing test.
 
 ```rust
-use array::ArrayTrait;
-
 fn panicking_function() {
-    let mut data = ArrayTrait::new();
+    let mut data = array![];
     data.append('aaa');
     panic(data)
 }
 
-#[test]
-fn failing() {
-    panicking_function();
-    assert(2 == 2, '2 == 2');
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn failing() {
+        panicking_function();
+        assert(2 == 2, '2 == 2');
+    }
 }
 ```
 
@@ -56,7 +61,7 @@ fn failing() {
 $ snforge test
 Collected 1 test(s) from package_name package
 Running 1 test(s) from src/
-[FAIL] package_name::failing
+[FAIL] package_name::tests::failing
 
 Failure data:
     [6381921], converted to a string: [aaa]
@@ -64,7 +69,7 @@ Failure data:
 Tests: 0 passed, 1 failed, 0 skipped
 
 Failures:
-    package_name::failing
+    package_name::tests::failing
 ```
 
 ## Expected failures
@@ -87,8 +92,9 @@ fn should_panic_check_data() {
 ```shell
 $ snforge test
 Collected 1 test(s) from package_name package
-Running 1 test(s) from src/
-[PASS] src::should_panic_check_data
+Running 0 test(s) from src/
+Running 1 test(s) from tests/
+[PASS] tests::should_panic_check_data
 Tests: 1 passed, 0 failed, 0 skipped
 ```
 
@@ -106,10 +112,11 @@ fn ignored_test() {
 ```
 
 ```shell
-$ snforge
+$ snforge test
 Collected 1 test(s) from package_name package
-Running 1 test(s) from src/
-[IGNORE] src::ignored_test
+Running 0 test(s) from src/
+Running 1 test(s) from tests/
+[IGNORE] tests::ignored_test
 Tests: 1 passed, 0 failed, 0 skipped
 ```
 
