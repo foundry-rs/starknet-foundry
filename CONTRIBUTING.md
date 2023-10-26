@@ -8,7 +8,7 @@ Need some guidance?
 Reach out to other developers on [Telegram](https://t.me/+d8ULaPxeRqlhMDNk) or open
 a [GitHub discussion](https://github.com/foundry-rs/starknet-foundry/discussions)!
 
-### Environment setup
+## Environment Setup
 
 See [development guide](https://foundry-rs.github.io/starknet-foundry/development/environment-setup.html) in Starknet
 Foundry book for environment setup.
@@ -59,7 +59,7 @@ $ cargo test cheatcodes   # runs all cheatcodes tests
 $ cargo test starknet     # runs all starknet tests
 ```
 
-## Contributing
+### Contributing
 
 Before you open a pull request, it is always a good idea to search
 the [issues](https://github.com/foundry-rs/starknet-foundry/issues) and verify if the feature you would like
