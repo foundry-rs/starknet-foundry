@@ -117,7 +117,7 @@ mod tests {
                 casm = true
 
                 [dependencies]
-                starknet = "2.2.0"
+                starknet = "2.3.0"
                 snforge_std = {{ path = "{}" }}
 
                 [[tool.snforge.fork]]
@@ -141,6 +141,303 @@ mod tests {
             .unwrap();
 
         temp
+    }
+
+    #[test]
+    fn get_starknet_artifacts_path() {
+        let temp = setup_package("simple_package");
+
+        let build_output = Command::new("scarb")
+            .current_dir(&temp)
+            .arg("build")
+            .output()
+            .unwrap();
+        assert!(build_output.status.success());
+
+        let result = try_get_starknet_artifacts_path(
+            &Utf8PathBuf::from_path_buf(temp.to_path_buf().join("target")).unwrap(),
+            "simple_package",
+        );
+        let path = result.unwrap().unwrap();
+        assert_eq!(
+            path,
+            temp.path()
+                .join("target/dev/simple_package.starknet_artifacts.json")
+        );
+    }
+
+    #[test]
+    fn get_starknet_artifacts_path_for_project_with_different_package_and_target_name() {
+        let temp = setup_package("simple_package");
+
+        let snforge_std_path = Utf8PathBuf::from_str("../../snforge_std")
+            .unwrap()
+            .canonicalize_utf8()
+            .unwrap()
+            .to_string()
+            .replace('\\', "/");
+
+        let scarb_path = temp.child("Scarb.toml");
+        scarb_path
+            .write_str(&formatdoc!(
+                r#"
+                [package]
+                name = "simple_package"
+                version = "0.1.0"
+
+                [dependencies]
+                starknet = "2.3.0"
+                snforge_std = {{ path = "{}" }}
+
+                [[target.starknet-contract]]
+                name = "essa"
+                sierra = true
+                casm = true
+                "#,
+                snforge_std_path
+            ))
+            .unwrap();
+
+        let build_output = Command::new("scarb")
+            .current_dir(&temp)
+            .arg("build")
+            .output()
+            .unwrap();
+        assert!(build_output.status.success());
+
+        let result = try_get_starknet_artifacts_path(
+            &Utf8PathBuf::from_path_buf(temp.to_path_buf().join("target")).unwrap(),
+            "essa",
+        );
+        let path = result.unwrap().unwrap();
+        assert_eq!(
+            path,
+            temp.path().join("target/dev/essa.starknet_artifacts.json")
+        );
+    }
+
+    #[test]
+    fn get_starknet_artifacts_path_for_project_without_starknet_target() {
+        let temp = setup_package("panic_decoding");
+
+        let manifest_path = temp.child("Scarb.toml");
+        manifest_path
+            .write_str(indoc!(
+                r#"
+            [package]
+            name = "panic_decoding"
+            version = "0.1.0"
+            "#,
+            ))
+            .unwrap();
+
+        let build_output = Command::new("scarb")
+            .current_dir(&temp)
+            .arg("build")
+            .output()
+            .unwrap();
+        assert!(build_output.status.success());
+
+        let result = try_get_starknet_artifacts_path(
+            &Utf8PathBuf::from_path_buf(temp.to_path_buf().join("target")).unwrap(),
+            "panic_decoding",
+        );
+        let path = result.unwrap();
+        assert!(path.is_none());
+    }
+
+    #[test]
+    fn get_starknet_artifacts_path_for_project_without_scarb_build() {
+        let temp = setup_package("simple_package");
+
+        let result = try_get_starknet_artifacts_path(
+            &Utf8PathBuf::from_path_buf(temp.to_path_buf().join("target")).unwrap(),
+            "simple_package",
+        );
+        let path = result.unwrap();
+        assert!(path.is_none());
+    }
+
+    #[test]
+    fn parsing_starknet_artifacts() {
+        let temp = setup_package("simple_package");
+
+        let build_output = Command::new("scarb")
+            .current_dir(&temp)
+            .arg("build")
+            .output()
+            .unwrap();
+        assert!(build_output.status.success());
+
+        let artifacts_path = temp
+            .path()
+            .join("target/dev/simple_package.starknet_artifacts.json");
+        let artifacts_path = Utf8PathBuf::from_path_buf(artifacts_path).unwrap();
+
+        let artifacts = artifacts_for_package(&artifacts_path).unwrap();
+
+        assert!(!artifacts.contracts.is_empty());
+    }
+
+    #[test]
+    fn parsing_starknet_artifacts_on_invalid_file() {
+        let temp = TempDir::new().unwrap();
+        let path = temp.child("wrong.json");
+        path.touch().unwrap();
+        path.write_str("\"aa\": {}").unwrap();
+        let artifacts_path = Utf8PathBuf::from_path_buf(path.to_path_buf()).unwrap();
+
+        let result = artifacts_for_package(&artifacts_path);
+        let err = result.unwrap_err();
+
+        assert!(err.to_string().contains(&format!("Failed to parse {artifacts_path:?} contents. Make sure you have enabled sierra and casm code generation in Scarb.toml")));
+    }
+
+    #[test]
+    fn get_contracts() {
+        let temp = setup_package("simple_package");
+
+        let build_output = Command::new("scarb")
+            .current_dir(&temp)
+            .arg("build")
+            .output()
+            .unwrap();
+        assert!(build_output.status.success());
+
+        let artifacts_path = temp
+            .path()
+            .join("target/dev/simple_package.starknet_artifacts.json");
+        let artifacts_path = Utf8PathBuf::from_path_buf(artifacts_path).unwrap();
+
+        let contracts = get_contracts_map(&artifacts_path).unwrap();
+
+        assert!(contracts.contains_key("ERC20"));
+        assert!(contracts.contains_key("HelloStarknet"));
+
+        let sierra_contents_erc20 =
+            fs::read_to_string(temp.join("target/dev/simple_package_ERC20.contract_class.json"))
+                .unwrap();
+        let casm_contents_erc20 = fs::read_to_string(
+            temp.join("target/dev/simple_package_ERC20.compiled_contract_class.json"),
+        )
+        .unwrap();
+        let contract = contracts.get("ERC20").unwrap();
+        assert_eq!(&sierra_contents_erc20, &contract.sierra);
+        assert_eq!(&casm_contents_erc20, &contract.casm);
+
+        let sierra_contents_erc20 = fs::read_to_string(
+            temp.join("target/dev/simple_package_HelloStarknet.contract_class.json"),
+        )
+        .unwrap();
+        let casm_contents_erc20 = fs::read_to_string(
+            temp.join("target/dev/simple_package_HelloStarknet.compiled_contract_class.json"),
+        )
+        .unwrap();
+        let contract = contracts.get("HelloStarknet").unwrap();
+        assert_eq!(&sierra_contents_erc20, &contract.sierra);
+        assert_eq!(&casm_contents_erc20, &contract.casm);
+    }
+
+    #[test]
+    fn get_dependencies_for_package() {
+        let temp = setup_package("simple_package");
+        let scarb_metadata = MetadataCommand::new()
+            .inherit_stderr()
+            .current_dir(temp.path())
+            .exec()
+            .unwrap();
+
+        let dependencies =
+            dependencies_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
+                .unwrap();
+
+        assert!(!dependencies.is_empty());
+        assert!(dependencies.iter().all(|dep| dep.path.exists()));
+    }
+
+    #[test]
+    fn get_paths_for_package() {
+        let temp = setup_package("simple_package");
+        let scarb_metadata = MetadataCommand::new()
+            .inherit_stderr()
+            .current_dir(temp.path())
+            .exec()
+            .unwrap();
+
+        let (package_path, package_source_dir_path) =
+            paths_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0]).unwrap();
+
+        assert!(package_path.is_dir());
+        assert!(package_source_dir_path.is_dir());
+        assert_eq!(package_source_dir_path, package_path.join("src"));
+        assert!(package_source_dir_path.starts_with(package_path));
+    }
+
+    #[test]
+    fn get_name_for_package() {
+        let temp = setup_package("simple_package");
+        let scarb_metadata = MetadataCommand::new()
+            .inherit_stderr()
+            .current_dir(temp.path())
+            .exec()
+            .unwrap();
+
+        let package_name =
+            name_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0]).unwrap();
+
+        assert_eq!(package_name, "simple_package".to_string());
+    }
+
+    #[test]
+    fn get_corelib_path_for_package() {
+        let temp = setup_package("simple_package");
+        let scarb_metadata = MetadataCommand::new()
+            .inherit_stderr()
+            .current_dir(temp.path())
+            .exec()
+            .unwrap();
+
+        let corelib_path =
+            corelib_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0]).unwrap();
+
+        assert!(corelib_path.is_dir());
+        assert!(corelib_path.exists());
+
+        let lib_path = corelib_path.join("lib.cairo");
+        assert!(lib_path.exists());
+    }
+
+    #[test]
+    fn get_target_name_for_package() {
+        let temp = setup_package("simple_package");
+        let scarb_metadata = MetadataCommand::new()
+            .inherit_stderr()
+            .current_dir(temp.path())
+            .exec()
+            .unwrap();
+
+        let target_name =
+            target_name_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0]).unwrap();
+
+        assert_eq!(target_name, "simple_package");
+    }
+
+    #[test]
+    fn get_dependencies_for_package_err_on_invalid_package() {
+        let temp = setup_package("simple_package");
+        let scarb_metadata = MetadataCommand::new()
+            .inherit_stderr()
+            .current_dir(temp.path())
+            .exec()
+            .unwrap();
+
+        let result =
+            dependencies_for_package(&scarb_metadata, &PackageId::from(String::from("12345679")));
+        let err = result.unwrap_err();
+
+        assert!(err
+            .to_string()
+            .contains("Failed to find metadata for package"));
     }
 
     #[test]

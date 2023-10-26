@@ -7,7 +7,8 @@ test case.
 
 Starknet Forge will collect tests only from these places:
 
-- any files reachable from the package root (declared as `mod` in `lib.cairo` or its children)
+- any files reachable from the package root (declared as `mod` in `lib.cairo` or its children) - 
+these have to be in a module annotated with `#[cfg(test)]`
 - files inside the [`tests`](#the-tests-directory) directory
 
 ## The *tests* Directory
