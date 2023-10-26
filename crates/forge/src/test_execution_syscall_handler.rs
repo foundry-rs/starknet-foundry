@@ -748,8 +748,12 @@ fn execute_syscall(
                 cheatable_syscall_handler.cheatnet_state,
                 &call_args,
             );
-            write_call_contract_response(cheatable_syscall_handler, vm, &call_args, call_result)
-                .expect("Writing call response to memory failed");
+            if let Err(err) =
+                write_call_contract_response(cheatable_syscall_handler, vm, &call_args, call_result)
+            {
+                return Some(Err(err));
+            }
+
             Some(Ok(()))
         }
         DeprecatedSyscallSelector::ReplaceClass => Some(Err(CustomHint(Box::from(
