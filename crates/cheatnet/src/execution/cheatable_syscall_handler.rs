@@ -1,3 +1,7 @@
+use crate::execution::syscall_interceptor::{
+    ChainableHintProcessor, ExecuteHintRequest, HintCompilationInterceptor,
+    HintExecutionInterceptor, HintProcessorLogicInterceptor, ResourceTrackerInterceptor,
+};
 use crate::execution::{cheated_syscalls, syscall_hooks};
 use crate::state::CheatnetState;
 use anyhow::Result;
@@ -16,20 +20,14 @@ use cairo_lang_casm::{
     hints::{Hint, StarknetHint},
     operand::{BinOpOperand, DerefOrImmediate, Operation, Register, ResOperand},
 };
-use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
-use cairo_vm::vm::runners::cairo_runner::ResourceTracker;
 use cairo_vm::{
-    hint_processor::hint_processor_definition::HintReference,
-    serde::deserialize_program::ApTracking,
-    types::{exec_scope::ExecutionScopes, relocatable::Relocatable},
+    types::relocatable::Relocatable,
     vm::{
         errors::{hint_errors::HintError, vm_errors::VirtualMachineError},
-        runners::cairo_runner::RunResources,
         vm_core::VirtualMachine,
     },
 };
 use starknet_api::hash::StarkFelt;
-use std::{any::Any, collections::HashMap};
 
 pub type SyscallSelector = DeprecatedSyscallSelector;
 
@@ -37,77 +35,56 @@ pub type SyscallSelector = DeprecatedSyscallSelector;
 // introduced by cheatcodes that e.g. returns mocked data
 // If it cannot execute a cheatcode it falls back to SyscallHintProcessor, which provides standard implementation of
 // hints from blockifier
-pub struct CheatableSyscallHandler<'a> {
-    pub syscall_handler: SyscallHintProcessor<'a>,
+pub struct CheatableSyscallHandler<'a, 'b>
+where
+    'b: 'a,
+{
+    pub child: &'a mut SyscallHintProcessor<'b>,
     pub cheatnet_state: &'a mut CheatnetState,
 }
 
-impl<'a> CheatableSyscallHandler<'a> {
+impl<'a, 'b> CheatableSyscallHandler<'a, 'b> {
     pub fn wrap(
-        syscall_handler: SyscallHintProcessor<'a>,
+        syscall_handler: &'a mut SyscallHintProcessor<'b>,
         cheatnet_state: &'a mut CheatnetState,
     ) -> Self {
         CheatableSyscallHandler {
-            syscall_handler,
+            child: syscall_handler,
             cheatnet_state,
         }
     }
 }
 
-// crates/blockifier/src/execution/syscalls/hint_processor.rs:472 (ResourceTracker for SyscallHintProcessor)
-impl ResourceTracker for CheatableSyscallHandler<'_> {
-    fn consumed(&self) -> bool {
-        self.syscall_handler.context.vm_run_resources.consumed()
+impl ChainableHintProcessor for CheatableSyscallHandler<'_, '_> {
+    fn get_child(&self) -> Option<&dyn HintProcessorLogicInterceptor> {
+        Some(self.child)
     }
 
-    fn consume_step(&mut self) {
-        self.syscall_handler.context.vm_run_resources.consume_step();
-    }
-
-    fn get_n_steps(&self) -> Option<usize> {
-        self.syscall_handler.context.vm_run_resources.get_n_steps()
-    }
-
-    fn run_resources(&self) -> &RunResources {
-        self.syscall_handler
-            .context
-            .vm_run_resources
-            .run_resources()
+    fn get_child_mut(&mut self) -> Option<&mut dyn HintProcessorLogicInterceptor> {
+        Some(self.child)
     }
 }
 
-impl HintProcessorLogic for CheatableSyscallHandler<'_> {
-    fn execute_hint(
+impl HintExecutionInterceptor for CheatableSyscallHandler<'_, '_> {
+    fn intercept_execute_hint(
         &mut self,
-        vm: &mut VirtualMachine,
-        exec_scopes: &mut ExecutionScopes,
-        hint_data: &Box<dyn Any>,
-        constants: &HashMap<String, Felt252>,
-    ) -> HintExecutionResult {
-        let maybe_extended_hint = hint_data.downcast_ref::<Hint>();
-
+        execute_hint_request: &mut ExecuteHintRequest,
+    ) -> Option<std::result::Result<(), HintError>> {
+        let maybe_extended_hint = execute_hint_request.hint_data.downcast_ref::<Hint>();
         if let Some(Hint::Starknet(StarknetHint::SystemCall { .. })) = maybe_extended_hint {
             if let Some(Hint::Starknet(hint)) = maybe_extended_hint {
-                return self.execute_next_syscall_cheated(vm, hint);
+                return self.execute_next_syscall_cheated(execute_hint_request.vm, hint);
             }
         }
-
-        self.syscall_handler
-            .execute_hint(vm, exec_scopes, hint_data, constants)
-    }
-
-    /// Trait function to store hint in the hint processor by string.
-    fn compile_hint(
-        &self,
-        hint_code: &str,
-        ap_tracking_data: &ApTracking,
-        reference_ids: &HashMap<String, usize>,
-        references: &[HintReference],
-    ) -> Result<Box<dyn Any>, VirtualMachineError> {
-        self.syscall_handler
-            .compile_hint(hint_code, ap_tracking_data, reference_ids, references)
+        None
     }
 }
+
+impl HintCompilationInterceptor for CheatableSyscallHandler<'_, '_> {}
+
+impl ResourceTrackerInterceptor for CheatableSyscallHandler<'_, '_> {}
+
+impl HintProcessorLogicInterceptor for CheatableSyscallHandler<'_, '_> {}
 
 // crates/blockifier/src/execution/syscalls/hint_processor.rs:454
 /// Retrieves a [Relocatable] from the VM given a [`ResOperand`].
@@ -165,53 +142,66 @@ fn get_syscall_cost(syscall_selector: SyscallSelector) -> u64 {
     }
 }
 
-impl CheatableSyscallHandler<'_> {
+impl CheatableSyscallHandler<'_, '_> {
     fn execute_next_syscall_cheated(
         &mut self,
         vm: &mut VirtualMachine,
         hint: &StarknetHint,
-    ) -> HintExecutionResult {
+    ) -> Option<HintExecutionResult> {
+        let selector = match self.get_syscall_selector(vm, hint) {
+            Ok(selector) => selector,
+            Err(err) => return Some(Err(err)),
+        };
+
+        match selector {
+            SyscallSelector::GetExecutionInfo => Some(self.execute_syscall(
+                vm,
+                cheated_syscalls::get_execution_info_syscall,
+                SyscallSelector::GetExecutionInfo,
+            )),
+            SyscallSelector::CallContract => Some(self.execute_syscall(
+                vm,
+                cheated_syscalls::call_contract_syscall,
+                SyscallSelector::CallContract,
+            )),
+            SyscallSelector::LibraryCall => Some(self.execute_syscall(
+                vm,
+                cheated_syscalls::library_call_syscall,
+                SyscallSelector::LibraryCall,
+            )),
+            SyscallSelector::Deploy => Some(self.execute_syscall(
+                vm,
+                cheated_syscalls::deploy_syscall,
+                SyscallSelector::Deploy,
+            )),
+            SyscallSelector::EmitEvent => {
+                let events_len_before = self.child.events.len();
+                let hint_exec_result = self.child.execute_next_syscall(vm, hint);
+                assert_eq!(
+                    events_len_before + 1,
+                    self.child.events.len(),
+                    "EmitEvent syscall is expected to emit exactly one event"
+                );
+                syscall_hooks::emit_event_hook(self);
+                Some(hint_exec_result)
+            }
+            _ => None,
+        }
+    }
+
+    fn get_syscall_selector(
+        &self,
+        vm: &mut VirtualMachine,
+        hint: &StarknetHint,
+    ) -> Result<SyscallSelector, HintError> {
         // We peek into the selector without incrementing the pointer as it is done later
         let syscall = get_syscall_operand(hint)?;
         let initial_syscall_ptr = get_ptr_from_res_operand_unchecked(vm, syscall);
         let selector =
             SyscallSelector::try_from(stark_felt_from_ptr_immutable(vm, &initial_syscall_ptr)?)?;
-        self.verify_syscall_ptr(initial_syscall_ptr)?;
 
-        match selector {
-            SyscallSelector::GetExecutionInfo => self.execute_syscall(
-                vm,
-                cheated_syscalls::get_execution_info_syscall,
-                SyscallSelector::GetExecutionInfo,
-            ),
-            SyscallSelector::CallContract => self.execute_syscall(
-                vm,
-                cheated_syscalls::call_contract_syscall,
-                SyscallSelector::CallContract,
-            ),
-            SyscallSelector::LibraryCall => self.execute_syscall(
-                vm,
-                cheated_syscalls::library_call_syscall,
-                SyscallSelector::LibraryCall,
-            ),
-            SyscallSelector::Deploy => self.execute_syscall(
-                vm,
-                cheated_syscalls::deploy_syscall,
-                SyscallSelector::Deploy,
-            ),
-            SyscallSelector::EmitEvent => {
-                let events_len_before = self.syscall_handler.events.len();
-                let hint_exec_result = self.syscall_handler.execute_next_syscall(vm, hint);
-                assert_eq!(
-                    events_len_before + 1,
-                    self.syscall_handler.events.len(),
-                    "EmitEvent syscall is expected to emit exactly one event"
-                );
-                syscall_hooks::emit_event_hook(self);
-                hint_exec_result
-            }
-            _ => self.syscall_handler.execute_next_syscall(vm, hint),
-        }
+        self.verify_syscall_ptr(initial_syscall_ptr)?;
+        Ok(selector)
     }
 
     // crates/blockifier/src/execution/syscalls/hint_processor.rs:280 (SyscallHintProcessor::execute_syscall)
@@ -227,20 +217,19 @@ impl CheatableSyscallHandler<'_> {
         ExecuteCallback: FnOnce(
             Request,
             &mut VirtualMachine,
-            &mut CheatableSyscallHandler<'_>,
+            &mut CheatableSyscallHandler<'_, '_>,
             &mut u64, // Remaining gas.
         ) -> SyscallResult<Response>,
     {
         // Increment, since the selector was peeked into before
-        self.syscall_handler.syscall_ptr += 1;
-        self.syscall_handler
-            .increment_syscall_count_by(&selector, 1);
+        self.child.syscall_ptr += 1;
+        self.child.increment_syscall_count_by(&selector, 1);
         let base_gas_cost = get_syscall_cost(selector);
 
         let SyscallRequestWrapper {
             gas_counter,
             request,
-        } = SyscallRequestWrapper::<Request>::read(vm, &mut self.syscall_handler.syscall_ptr)?;
+        } = SyscallRequestWrapper::<Request>::read(vm, &mut self.child.syscall_ptr)?;
 
         if gas_counter < base_gas_cost {
             //  Out of gas failure.
@@ -250,7 +239,7 @@ impl CheatableSyscallHandler<'_> {
                 gas_counter,
                 error_data: vec![out_of_gas_error],
             };
-            response.write(vm, &mut self.syscall_handler.syscall_ptr)?;
+            response.write(vm, &mut self.child.syscall_ptr)?;
 
             return Ok(());
         }
@@ -272,16 +261,16 @@ impl CheatableSyscallHandler<'_> {
             Err(error) => return Err(error.into()),
         };
 
-        response.write(vm, &mut self.syscall_handler.syscall_ptr)?;
+        response.write(vm, &mut self.child.syscall_ptr)?;
 
         Ok(())
     }
 
     // crates/blockifier/src/execution/syscalls/hint_processor.rs:176 (verify_syscall_ptr)
     fn verify_syscall_ptr(&self, actual_ptr: Relocatable) -> SyscallResult<()> {
-        if actual_ptr != self.syscall_handler.syscall_ptr {
+        if actual_ptr != self.child.syscall_ptr {
             return Err(SyscallExecutionError::BadSyscallPointer {
-                expected_ptr: self.syscall_handler.syscall_ptr,
+                expected_ptr: self.child.syscall_ptr,
                 actual_ptr,
             });
         }

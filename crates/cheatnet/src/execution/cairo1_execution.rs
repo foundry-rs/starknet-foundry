@@ -43,7 +43,8 @@ pub fn execute_entry_point_call_cairo1(
         entry_point,
         program_extra_data_length,
     } = initialize_execution_context(call, contract_class, state, resources, context)?;
-
+    // Snapshot the VM resources, in order to calculate the usage of this run at the end.
+    let previous_vm_resources = syscall_handler.resources.vm_resources.clone();
     let args = prepare_call_arguments(
         &syscall_handler.call,
         &mut vm,
@@ -52,15 +53,9 @@ pub fn execute_entry_point_call_cairo1(
         &entry_point,
     )?;
     let n_total_args = args.len();
-
-    // Snapshot the VM resources, in order to calculate the usage of this run at the end.
-    let previous_vm_resources = syscall_handler.resources.vm_resources.clone();
-
     // region: Modified blockifier code
-    let mut cheatable_syscall_handler = CheatableSyscallHandler {
-        syscall_handler,
-        cheatnet_state,
-    };
+    let mut cheatable_syscall_handler =
+        CheatableSyscallHandler::wrap(&mut syscall_handler, cheatnet_state);
     let mut contract_execution_syscall_handler =
         ContractExecutionSyscallHandler::wrap(&mut cheatable_syscall_handler);
 
@@ -78,7 +73,7 @@ pub fn execute_entry_point_call_cairo1(
     let call_info = finalize_execution(
         vm,
         runner,
-        cheatable_syscall_handler.syscall_handler,
+        syscall_handler,
         previous_vm_resources,
         n_total_args,
         program_extra_data_length,

@@ -1,4 +1,8 @@
 use crate::execution::cheatable_syscall_handler::CheatableSyscallHandler;
+use crate::execution::syscall_interceptor::{
+    ChainableHintProcessor, ExecuteHintRequest, HintCompilationInterceptor,
+    HintExecutionInterceptor, HintProcessorLogicInterceptor, ResourceTrackerInterceptor,
+};
 use cairo_felt::Felt252;
 use cairo_lang_casm::{
     hints::{Hint, StarknetHint},
@@ -28,29 +32,36 @@ fn extract_input(
         .map_err(|_| HintError::CustomHint("Failed to read input data".into()))
 }
 
-pub struct ContractExecutionSyscallHandler<'handler, 'reference> {
-    pub cheatable_syscall_handler: &'reference mut CheatableSyscallHandler<'handler>,
+pub struct ContractExecutionSyscallHandler<'a, 'b, 'c>
+where
+    'c: 'b,
+    'b: 'a,
+{
+    pub child: &'a mut CheatableSyscallHandler<'b, 'c>,
 }
 
-impl<'handler, 'reference> ContractExecutionSyscallHandler<'handler, 'reference> {
-    pub fn wrap(
-        cheatable_syscall_handler: &'reference mut CheatableSyscallHandler<'handler>,
-    ) -> ContractExecutionSyscallHandler<'handler, 'reference> {
-        ContractExecutionSyscallHandler {
-            cheatable_syscall_handler,
-        }
+impl<'a, 'b, 'c> ContractExecutionSyscallHandler<'a, 'b, 'c> {
+    pub fn wrap(child: &'b mut CheatableSyscallHandler<'b, 'c>) -> Self {
+        Self { child }
     }
 }
 
-impl HintProcessorLogic for ContractExecutionSyscallHandler<'_, '_> {
-    fn execute_hint(
+impl ChainableHintProcessor for ContractExecutionSyscallHandler<'_, '_, '_> {
+    fn get_child(&self) -> Option<&dyn HintProcessorLogicInterceptor> {
+        Some(self.child)
+    }
+
+    fn get_child_mut(&mut self) -> Option<&mut dyn HintProcessorLogicInterceptor> {
+        Some(self.child)
+    }
+}
+impl HintProcessorLogicInterceptor for ContractExecutionSyscallHandler<'_, '_, '_> {}
+impl HintExecutionInterceptor for ContractExecutionSyscallHandler<'_, '_, '_> {
+    fn intercept_execute_hint(
         &mut self,
-        vm: &mut VirtualMachine,
-        exec_scopes: &mut ExecutionScopes,
-        hint_data: &Box<dyn Any>,
-        constants: &HashMap<String, Felt252>,
-    ) -> Result<(), HintError> {
-        let maybe_extended_hint = hint_data.downcast_ref::<Hint>();
+        execute_hint_request: &mut ExecuteHintRequest,
+    ) -> Option<Result<(), HintError>> {
+        let maybe_extended_hint = execute_hint_request.hint_data.downcast_ref::<Hint>();
 
         return if let Some(Hint::Starknet(StarknetHint::Cheatcode {
             selector,
@@ -61,12 +72,12 @@ impl HintProcessorLogic for ContractExecutionSyscallHandler<'_, '_> {
         {
             let selector = &selector.value.to_bytes_be().1;
             let selector = std::str::from_utf8(selector).unwrap();
-            let inputs = match extract_input(vm, input_start, input_end) {
+            let inputs = match extract_input(execute_hint_request.vm, input_start, input_end) {
                 Ok(inputs) => inputs,
-                Err(err) => return Err(err),
+                Err(err) => return Some(Err(err)),
             };
 
-            match selector {
+            Some(match selector {
                 "print" => {
                     for value in inputs {
                         if let Some(short_string) = as_cairo_short_string(&value) {
@@ -82,12 +93,26 @@ impl HintProcessorLogic for ContractExecutionSyscallHandler<'_, '_> {
                 _ => Err(HintError::CustomHint(
                     "Only `print` cheatcode is available in contracts.".into(),
                 )),
-            }
+            })
         } else {
-            self.cheatable_syscall_handler
-                .execute_hint(vm, exec_scopes, hint_data, constants)
+            None
         };
     }
+}
+
+impl HintCompilationInterceptor for ContractExecutionSyscallHandler<'_, '_, '_> {}
+
+impl HintProcessorLogic for ContractExecutionSyscallHandler<'_, '_, '_> {
+    fn execute_hint(
+        &mut self,
+        vm: &mut VirtualMachine,
+        exec_scopes: &mut ExecutionScopes,
+        hint_data: &Box<dyn Any>,
+        constants: &HashMap<String, Felt252>,
+    ) -> Result<(), HintError> {
+        HintExecutionInterceptor::execute_hint_chain(self, vm, exec_scopes, hint_data, constants)
+    }
+
     fn compile_hint(
         &self,
         hint_code: &str,
@@ -95,7 +120,8 @@ impl HintProcessorLogic for ContractExecutionSyscallHandler<'_, '_> {
         reference_ids: &HashMap<String, usize>,
         references: &[HintReference],
     ) -> Result<Box<dyn Any>, VirtualMachineError> {
-        self.cheatable_syscall_handler.compile_hint(
+        HintCompilationInterceptor::compile_hint_chain(
+            self,
             hint_code,
             ap_tracking_data,
             reference_ids,
@@ -103,37 +129,22 @@ impl HintProcessorLogic for ContractExecutionSyscallHandler<'_, '_> {
         )
     }
 }
+impl ResourceTrackerInterceptor for ContractExecutionSyscallHandler<'_, '_, '_> {}
 
-impl ResourceTracker for ContractExecutionSyscallHandler<'_, '_> {
+impl ResourceTracker for ContractExecutionSyscallHandler<'_, '_, '_> {
     fn consumed(&self) -> bool {
-        self.cheatable_syscall_handler
-            .syscall_handler
-            .context
-            .vm_run_resources
-            .consumed()
+        ResourceTrackerInterceptor::consumed_chain(self)
     }
 
     fn consume_step(&mut self) {
-        self.cheatable_syscall_handler
-            .syscall_handler
-            .context
-            .vm_run_resources
-            .consume_step();
+        ResourceTrackerInterceptor::consume_step_chain(self);
     }
 
     fn get_n_steps(&self) -> Option<usize> {
-        self.cheatable_syscall_handler
-            .syscall_handler
-            .context
-            .vm_run_resources
-            .get_n_steps()
+        ResourceTrackerInterceptor::get_n_steps_chain(self)
     }
 
     fn run_resources(&self) -> &RunResources {
-        self.cheatable_syscall_handler
-            .syscall_handler
-            .context
-            .vm_run_resources
-            .run_resources()
+        ResourceTrackerInterceptor::run_resources_chain(self)
     }
 }

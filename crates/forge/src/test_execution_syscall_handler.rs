@@ -14,13 +14,9 @@ use blockifier::execution::syscalls::{
     SyscallRequest, SyscallResponse, SyscallResponseWrapper, SyscallResult,
 };
 use cairo_felt::Felt252;
-use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
-use cairo_vm::hint_processor::hint_processor_definition::HintReference;
-use cairo_vm::serde::deserialize_program::ApTracking;
 use cairo_vm::types::exec_scope::ExecutionScopes;
 use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::errors::hint_errors::HintError;
-use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use cheatnet::cheatcodes::deploy::{deploy, deploy_at, DeployCallPayload};
 use cheatnet::cheatcodes::{CheatcodeError, ContractArtifacts, EnhancedHintError};
@@ -43,11 +39,18 @@ use starknet_api::core::ContractAddress;
 use crate::test_execution_syscall_handler::file_operations::string_into_felt;
 use cairo_lang_starknet::contract::starknet_keccak;
 use cairo_lang_utils::bigint::BigIntAsHex;
+use cairo_vm::hint_processor::hint_processor_definition::{HintProcessorLogic, HintReference};
+use cairo_vm::serde::deserialize_program::ApTracking;
 use cairo_vm::vm::errors::hint_errors::HintError::CustomHint;
+use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cheatnet::cheatcodes::spy_events::SpyTarget;
 use cheatnet::execution::cheated_syscalls::SingleSegmentResponse;
 use cheatnet::execution::contract_execution_syscall_handler::ContractExecutionSyscallHandler;
+use cheatnet::execution::syscall_interceptor::{
+    ChainableHintProcessor, ExecuteHintRequest, HintCompilationInterceptor,
+    HintExecutionInterceptor, HintProcessorLogicInterceptor, ResourceTrackerInterceptor,
+};
 use starknet::signers::SigningKey;
 
 mod file_operations;
@@ -69,21 +72,26 @@ pub struct TestExecutionState<'a> {
 
 // This hint processor provides an implementation logic for functions from snforge_std library.
 // If cannot execute a hint it falls back to the CheatableSyscallHandler
-pub struct TestExecutionSyscallHandler<'a, 'b> {
-    pub contract_execution_syscall_handler: ContractExecutionSyscallHandler<'a, 'b>,
-    pub test_execution_state: &'a mut TestExecutionState<'a>,
+pub struct TestExecutionSyscallHandler<'a, 'b, 'c, 'd>
+where
+    'a: 'b,
+    'b: 'c,
+    'c: 'd,
+{
+    pub contract_execution_syscall_handler: &'a mut ContractExecutionSyscallHandler<'b, 'c, 'd>,
+    pub test_execution_state: &'a mut TestExecutionState<'b>,
     // we need to keep a copy of hints as SyscallHintProcessor keeps it as private
     pub hints: &'a HashMap<String, Hint>,
     pub run_resources: RunResources,
 }
 
-impl<'a, 'b> TestExecutionSyscallHandler<'a, 'b> {
+impl<'a, 'b, 'c, 'd> TestExecutionSyscallHandler<'a, 'b, 'c, 'd> {
     pub fn wrap(
-        contract_execution_syscall_handler: ContractExecutionSyscallHandler<'a, 'b>,
-        test_execution_state: &'a mut TestExecutionState<'a>,
+        contract_execution_syscall_handler: &'a mut ContractExecutionSyscallHandler<'b, 'c, 'd>,
+        test_execution_state: &'a mut TestExecutionState<'b>,
         hints: &'a HashMap<String, Hint>,
     ) -> Self {
-        TestExecutionSyscallHandler {
+        Self {
             contract_execution_syscall_handler,
             test_execution_state,
             hints,
@@ -91,47 +99,7 @@ impl<'a, 'b> TestExecutionSyscallHandler<'a, 'b> {
         }
     }
 }
-
-// crates/blockifier/src/execution/syscalls/hint_processor.rs:472 (ResourceTracker for SyscallHintProcessor)
-impl ResourceTracker for TestExecutionSyscallHandler<'_, '_> {
-    fn consumed(&self) -> bool {
-        self.contract_execution_syscall_handler
-            .cheatable_syscall_handler
-            .syscall_handler
-            .context
-            .vm_run_resources
-            .consumed()
-    }
-
-    fn consume_step(&mut self) {
-        self.contract_execution_syscall_handler
-            .cheatable_syscall_handler
-            .syscall_handler
-            .context
-            .vm_run_resources
-            .consume_step();
-    }
-
-    fn get_n_steps(&self) -> Option<usize> {
-        self.contract_execution_syscall_handler
-            .cheatable_syscall_handler
-            .syscall_handler
-            .context
-            .vm_run_resources
-            .get_n_steps()
-    }
-
-    fn run_resources(&self) -> &RunResources {
-        self.contract_execution_syscall_handler
-            .cheatable_syscall_handler
-            .syscall_handler
-            .context
-            .vm_run_resources
-            .run_resources()
-    }
-}
-
-impl HintProcessorLogic for TestExecutionSyscallHandler<'_, '_> {
+impl HintProcessorLogic for TestExecutionSyscallHandler<'_, '_, '_, '_> {
     fn execute_hint(
         &mut self,
         vm: &mut VirtualMachine,
@@ -139,7 +107,49 @@ impl HintProcessorLogic for TestExecutionSyscallHandler<'_, '_> {
         hint_data: &Box<dyn Any>,
         constants: &HashMap<String, Felt252>,
     ) -> Result<(), HintError> {
-        let maybe_extended_hint = hint_data.downcast_ref::<Hint>();
+        HintExecutionInterceptor::execute_hint_chain(self, vm, exec_scopes, hint_data, constants)
+    }
+
+    fn compile_hint(
+        &self,
+        hint_code: &str,
+        ap_tracking_data: &ApTracking,
+        reference_ids: &HashMap<String, usize>,
+        references: &[HintReference],
+    ) -> std::result::Result<Box<dyn Any>, VirtualMachineError> {
+        HintCompilationInterceptor::compile_hint_chain(
+            self,
+            hint_code,
+            ap_tracking_data,
+            reference_ids,
+            references,
+        )
+    }
+}
+impl ResourceTracker for TestExecutionSyscallHandler<'_, '_, '_, '_> {
+    fn consumed(&self) -> bool {
+        ResourceTrackerInterceptor::consumed_chain(self)
+    }
+
+    fn consume_step(&mut self) {
+        ResourceTrackerInterceptor::consume_step_chain(self);
+    }
+
+    fn get_n_steps(&self) -> Option<usize> {
+        ResourceTrackerInterceptor::get_n_steps_chain(self)
+    }
+
+    fn run_resources(&self) -> &RunResources {
+        ResourceTrackerInterceptor::run_resources_chain(self)
+    }
+}
+
+impl HintExecutionInterceptor for TestExecutionSyscallHandler<'_, '_, '_, '_> {
+    fn intercept_execute_hint(
+        &mut self,
+        execute_hint_request: &mut ExecuteHintRequest,
+    ) -> Option<std::result::Result<(), HintError>> {
+        let maybe_extended_hint = execute_hint_request.hint_data.downcast_ref::<Hint>();
         if let Some(Hint::Starknet(StarknetHint::Cheatcode {
             selector,
             input_start,
@@ -148,9 +158,9 @@ impl HintProcessorLogic for TestExecutionSyscallHandler<'_, '_> {
             output_end,
         })) = maybe_extended_hint
         {
-            return self.execute_cheatcode_hint(
-                vm,
-                exec_scopes,
+            return Some(self.execute_cheatcode_hint(
+                execute_hint_request.vm,
+                execute_hint_request.exec_scopes,
                 selector,
                 input_start,
                 input_end,
@@ -158,37 +168,39 @@ impl HintProcessorLogic for TestExecutionSyscallHandler<'_, '_> {
                 output_end,
                 self.test_execution_state.contracts,
                 self.test_execution_state.environment_variables,
-            );
+            ));
         }
         if let Some(Hint::Starknet(StarknetHint::SystemCall { system })) = maybe_extended_hint {
             return execute_syscall(
                 system,
-                vm,
-                exec_scopes,
-                hint_data,
-                constants,
-                self.contract_execution_syscall_handler
-                    .cheatable_syscall_handler,
+                execute_hint_request.vm,
+                execute_hint_request.exec_scopes,
+                execute_hint_request.hint_data,
+                execute_hint_request.constants,
+                self.contract_execution_syscall_handler.child,
             );
         }
-        self.contract_execution_syscall_handler
-            .cheatable_syscall_handler
-            .execute_hint(vm, exec_scopes, hint_data, constants)
-    }
-
-    /// Trait function to store hint in the hint processor by string.
-    fn compile_hint(
-        &self,
-        hint_code: &str,
-        _ap_tracking_data: &ApTracking,
-        _reference_ids: &HashMap<String, usize>,
-        _references: &[HintReference],
-    ) -> Result<Box<dyn Any>, VirtualMachineError> {
-        Ok(Box::new(self.hints[hint_code].clone()))
+        None
     }
 }
 
-impl TestExecutionSyscallHandler<'_, '_> {
+impl ChainableHintProcessor for TestExecutionSyscallHandler<'_, '_, '_, '_> {
+    fn get_child(&self) -> Option<&dyn HintProcessorLogicInterceptor> {
+        Some(self.contract_execution_syscall_handler)
+    }
+
+    fn get_child_mut(&mut self) -> Option<&mut dyn HintProcessorLogicInterceptor> {
+        Some(self.contract_execution_syscall_handler)
+    }
+}
+
+impl HintCompilationInterceptor for TestExecutionSyscallHandler<'_, '_, '_, '_> {}
+
+impl ResourceTrackerInterceptor for TestExecutionSyscallHandler<'_, '_, '_, '_> {}
+
+impl HintProcessorLogicInterceptor for TestExecutionSyscallHandler<'_, '_, '_, '_> {}
+
+impl TestExecutionSyscallHandler<'_, '_, '_, '_> {
     #[allow(clippy::trivially_copy_pass_by_ref, clippy::too_many_arguments)]
     pub fn execute_cheatcode_hint(
         &mut self,
@@ -252,7 +264,7 @@ impl TestExecutionSyscallHandler<'_, '_> {
                 let contract_address = inputs[0].to_contract_address();
                 let value = inputs[1].clone();
                 self.contract_execution_syscall_handler
-                    .cheatable_syscall_handler
+                    .child
                     .cheatnet_state
                     .start_roll(contract_address, value);
                 Ok(())
@@ -260,7 +272,7 @@ impl TestExecutionSyscallHandler<'_, '_> {
             "stop_roll" => {
                 let contract_address = inputs[0].to_contract_address();
                 self.contract_execution_syscall_handler
-                    .cheatable_syscall_handler
+                    .child
                     .cheatnet_state
                     .stop_roll(contract_address);
                 Ok(())
@@ -269,7 +281,7 @@ impl TestExecutionSyscallHandler<'_, '_> {
                 let contract_address = inputs[0].to_contract_address();
                 let value = inputs[1].clone();
                 self.contract_execution_syscall_handler
-                    .cheatable_syscall_handler
+                    .child
                     .cheatnet_state
                     .start_warp(contract_address, value);
                 Ok(())
@@ -277,7 +289,7 @@ impl TestExecutionSyscallHandler<'_, '_> {
             "stop_warp" => {
                 let contract_address = inputs[0].to_contract_address();
                 self.contract_execution_syscall_handler
-                    .cheatable_syscall_handler
+                    .child
                     .cheatnet_state
                     .stop_warp(contract_address);
                 Ok(())
@@ -287,7 +299,7 @@ impl TestExecutionSyscallHandler<'_, '_> {
                 let caller_address = inputs[1].to_contract_address();
 
                 self.contract_execution_syscall_handler
-                    .cheatable_syscall_handler
+                    .child
                     .cheatnet_state
                     .start_prank(contract_address, caller_address);
                 Ok(())
@@ -296,7 +308,7 @@ impl TestExecutionSyscallHandler<'_, '_> {
                 let contract_address = inputs[0].to_contract_address();
 
                 self.contract_execution_syscall_handler
-                    .cheatable_syscall_handler
+                    .child
                     .cheatnet_state
                     .stop_prank(contract_address);
                 Ok(())
@@ -317,7 +329,7 @@ impl TestExecutionSyscallHandler<'_, '_> {
                     .collect::<Vec<_>>();
 
                 self.contract_execution_syscall_handler
-                    .cheatable_syscall_handler
+                    .child
                     .cheatnet_state
                     .start_mock_call(contract_address, &function_name, &ret_data);
                 Ok(())
@@ -327,7 +339,7 @@ impl TestExecutionSyscallHandler<'_, '_> {
                 let function_name = inputs[1].clone();
 
                 self.contract_execution_syscall_handler
-                    .cheatable_syscall_handler
+                    .child
                     .cheatnet_state
                     .stop_mock_call(contract_address, &function_name);
                 Ok(())
@@ -350,7 +362,7 @@ impl TestExecutionSyscallHandler<'_, '_> {
                     .then(|| Vec::from(&inputs[15..(15 + signature_len)]));
 
                 self.contract_execution_syscall_handler
-                    .cheatable_syscall_handler
+                    .child
                     .cheatnet_state
                     .start_spoof(
                         contract_address,
@@ -368,7 +380,7 @@ impl TestExecutionSyscallHandler<'_, '_> {
                 let contract_address = inputs[0].to_contract_address();
 
                 self.contract_execution_syscall_handler
-                    .cheatable_syscall_handler
+                    .child
                     .cheatnet_state
                     .stop_spoof(contract_address);
                 Ok(())
@@ -376,10 +388,7 @@ impl TestExecutionSyscallHandler<'_, '_> {
             "declare" => {
                 let contract_name = inputs[0].clone();
                 let mut blockifier_state = BlockifierState::from(
-                    self.contract_execution_syscall_handler
-                        .cheatable_syscall_handler
-                        .syscall_handler
-                        .state,
+                    self.contract_execution_syscall_handler.child.child.state,
                 );
 
                 match blockifier_state.declare(
@@ -412,18 +421,13 @@ impl TestExecutionSyscallHandler<'_, '_> {
                 let calldata_length = inputs[1].to_usize().unwrap();
                 let calldata = Vec::from(&inputs[2..(2 + calldata_length)]);
                 let mut blockifier_state = BlockifierState::from(
-                    self.contract_execution_syscall_handler
-                        .cheatable_syscall_handler
-                        .syscall_handler
-                        .state,
+                    self.contract_execution_syscall_handler.child.child.state,
                 );
 
                 handle_deploy_result(
                     deploy(
                         &mut blockifier_state,
-                        self.contract_execution_syscall_handler
-                            .cheatable_syscall_handler
-                            .cheatnet_state,
+                        self.contract_execution_syscall_handler.child.cheatnet_state,
                         &class_hash,
                         &calldata,
                     ),
@@ -437,18 +441,13 @@ impl TestExecutionSyscallHandler<'_, '_> {
                 let contract_address = inputs[2 + calldata_length].to_contract_address();
 
                 let mut blockifier_state = BlockifierState::from(
-                    self.contract_execution_syscall_handler
-                        .cheatable_syscall_handler
-                        .syscall_handler
-                        .state,
+                    self.contract_execution_syscall_handler.child.child.state,
                 );
 
                 handle_deploy_result(
                     deploy_at(
                         &mut blockifier_state,
-                        self.contract_execution_syscall_handler
-                            .cheatable_syscall_handler
-                            .cheatnet_state,
+                        self.contract_execution_syscall_handler.child.cheatnet_state,
                         &class_hash,
                         &calldata,
                         contract_address,
@@ -467,7 +466,7 @@ impl TestExecutionSyscallHandler<'_, '_> {
 
                 let contract_address = self
                     .contract_execution_syscall_handler
-                    .cheatable_syscall_handler
+                    .child
                     .cheatnet_state
                     .precalculate_address(&class_hash, &calldata);
 
@@ -500,10 +499,7 @@ impl TestExecutionSyscallHandler<'_, '_> {
                 let contract_address = inputs[0].to_contract_address();
 
                 let mut blockifier_state = BlockifierState::from(
-                    self.contract_execution_syscall_handler
-                        .cheatable_syscall_handler
-                        .syscall_handler
-                        .state,
+                    self.contract_execution_syscall_handler.child.child.state,
                 );
 
                 match blockifier_state.get_class_hash(contract_address) {
@@ -531,17 +527,12 @@ impl TestExecutionSyscallHandler<'_, '_> {
                 let payload = Vec::from(&inputs[4..inputs.len()]);
 
                 let mut blockifier_state = BlockifierState::from(
-                    self.contract_execution_syscall_handler
-                        .cheatable_syscall_handler
-                        .syscall_handler
-                        .state,
+                    self.contract_execution_syscall_handler.child.child.state,
                 );
 
                 match blockifier_state
                     .l1_handler_execute(
-                        self.contract_execution_syscall_handler
-                            .cheatable_syscall_handler
-                            .cheatnet_state,
+                        self.contract_execution_syscall_handler.child.cheatnet_state,
                         contract_address,
                         &function_name,
                         &from_address,
@@ -596,7 +587,7 @@ impl TestExecutionSyscallHandler<'_, '_> {
 
                 let id = self
                     .contract_execution_syscall_handler
-                    .cheatable_syscall_handler
+                    .child
                     .cheatnet_state
                     .spy_events(spy_on);
                 buffer
@@ -608,7 +599,7 @@ impl TestExecutionSyscallHandler<'_, '_> {
                 let id = &inputs[0];
                 let (emitted_events_len, serialized_events) = self
                     .contract_execution_syscall_handler
-                    .cheatable_syscall_handler
+                    .child
                     .cheatnet_state
                     .fetch_events(id);
 
@@ -736,46 +727,55 @@ struct ScarbStarknetContractArtifact {
 fn execute_syscall(
     system: &ResOperand,
     vm: &mut VirtualMachine,
-    exec_scopes: &mut ExecutionScopes,
-    hint_data: &Box<dyn Any>,
-    constants: &HashMap<String, Felt252>,
+    _exec_scopes: &mut ExecutionScopes,
+    _hint_data: &Box<dyn Any>,
+    _constants: &HashMap<String, Felt252>,
     cheatable_syscall_handler: &mut CheatableSyscallHandler,
-) -> Result<(), HintError> {
-    let (cell, offset) = extract_buffer(system);
-    let system_ptr = get_ptr(vm, cell, &offset)?;
-
-    cheatable_syscall_handler
-        .syscall_handler
-        .verify_syscall_ptr(system_ptr)?;
-
-    // We peek into memory to check the selector
-    let selector = DeprecatedSyscallSelector::try_from(felt_to_stark_felt(
-        &vm.get_integer(cheatable_syscall_handler.syscall_handler.syscall_ptr)
-            .unwrap(),
-    ))?;
-
+) -> Option<Result<(), HintError>> {
+    let selector = match extract_selector(system, vm, cheatable_syscall_handler) {
+        Ok(x) => x,
+        Err(x) => return Some(Err(x)),
+    };
     match selector {
         DeprecatedSyscallSelector::CallContract => {
-            let call_args = CallContractArgs::read(
-                vm,
-                &mut cheatable_syscall_handler.syscall_handler.syscall_ptr,
-            )?;
+            let call_args =
+                CallContractArgs::read(vm, &mut cheatable_syscall_handler.child.syscall_ptr)
+                    .expect("Could not read call args");
 
-            let mut blockifier_state =
-                BlockifierState::from(cheatable_syscall_handler.syscall_handler.state);
+            let mut blockifier_state = BlockifierState::from(cheatable_syscall_handler.child.state);
             let call_result = execute_call_contract(
                 &mut blockifier_state,
                 cheatable_syscall_handler.cheatnet_state,
                 &call_args,
             );
-            write_call_contract_response(cheatable_syscall_handler, vm, &call_args, call_result)?;
-            Ok(())
+            write_call_contract_response(cheatable_syscall_handler, vm, &call_args, call_result)
+                .expect("Writing call response to memory failed");
+            Some(Ok(()))
         }
-        DeprecatedSyscallSelector::ReplaceClass => Err(HintError::CustomHint(Box::from(
+        DeprecatedSyscallSelector::ReplaceClass => Some(Err(CustomHint(Box::from(
             "Replace class can't be used in tests".to_string(),
-        ))),
-        _ => cheatable_syscall_handler.execute_hint(vm, exec_scopes, hint_data, constants),
+        )))),
+        _ => None,
     }
+}
+
+fn extract_selector(
+    system: &ResOperand,
+    vm: &mut VirtualMachine,
+    cheatable_syscall_handler: &mut CheatableSyscallHandler,
+) -> Result<DeprecatedSyscallSelector, HintError> {
+    let (cell, offset) = extract_buffer(system);
+    let system_ptr = get_ptr(vm, cell, &offset)?;
+
+    cheatable_syscall_handler
+        .child
+        .verify_syscall_ptr(system_ptr)?;
+
+    // We peek into memory to check the selector
+    Ok(DeprecatedSyscallSelector::try_from(felt_to_stark_felt(
+        &vm.get_integer(cheatable_syscall_handler.child.syscall_ptr)
+            .unwrap(),
+    ))?)
 }
 
 struct CallContractArgs {
@@ -818,7 +818,7 @@ fn write_call_contract_response(
     let response_wrapper: SyscallResponseWrapper<SingleSegmentResponse> = match call_output.result {
         CallContractResult::Success { ret_data, .. } => {
             let memory_segment_start_ptr = cheatable_syscall_handler
-                .syscall_handler
+                .child
                 .read_only_segments
                 .allocate(vm, &ret_data.iter().map(Into::into).collect())?;
 
@@ -846,10 +846,7 @@ fn write_call_contract_response(
         },
     };
 
-    response_wrapper.write(
-        vm,
-        &mut cheatable_syscall_handler.syscall_handler.syscall_ptr,
-    )?;
+    response_wrapper.write(vm, &mut cheatable_syscall_handler.child.syscall_ptr)?;
 
     Ok(())
 }

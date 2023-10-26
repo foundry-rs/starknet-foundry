@@ -208,7 +208,7 @@ pub(crate) fn run_test_case(
     let mut context = build_context(block_info);
     let mut execution_resources = ExecutionResources::default();
     let mut blockifier_state = CachedState::from(state_reader);
-    let syscall_handler = build_syscall_handler(
+    let mut syscall_handler = build_syscall_handler(
         &mut blockifier_state,
         &string_to_hint,
         &mut execution_resources,
@@ -220,8 +220,8 @@ pub(crate) fn run_test_case(
         ..Default::default()
     };
     let mut cheatable_syscall_handler =
-        CheatableSyscallHandler::wrap(syscall_handler, &mut cheatnet_state);
-    let contract_execution_syscall_handler =
+        CheatableSyscallHandler::wrap(&mut syscall_handler, &mut cheatnet_state);
+    let mut contract_execution_syscall_handler =
         ContractExecutionSyscallHandler::wrap(&mut cheatable_syscall_handler);
 
     let mut test_execution_state = TestExecutionState {
@@ -229,7 +229,7 @@ pub(crate) fn run_test_case(
         contracts: &runner_params.contracts,
     };
     let mut test_execution_syscall_handler = TestExecutionSyscallHandler::wrap(
-        contract_execution_syscall_handler,
+        &mut contract_execution_syscall_handler,
         &mut test_execution_state,
         &string_to_hint,
     );
