@@ -105,7 +105,7 @@ fn warp_cairo0_contract() {
     let test = test_case!(formatdoc!(
         r#"
             use starknet::{{class_hash::Felt252TryIntoClassHash, SyscallResultTrait}};
-            use snforge_std::{{start_warp, stop_warp, test_address, StartWarp, StopWarp}};
+            use snforge_std::{{start_warp, stop_warp, test_address, CheatTarget}};
 
             const CAIRO0_CLASS_HASH: felt252 = 3390338629460413397996224645413818793848470654644268493965292562067946505747;
             const LIB_CALL_SELECTOR: felt252 = 1104673410415683966349700971986586038248888383055081852378797598061780438342;
@@ -120,7 +120,7 @@ fn warp_cairo0_contract() {
                 ).unwrap_syscall()[0];
 
                 start_warp(
-                    StartWarp::One((test_address(), 123))
+                    CheatTarget::One(test_address()), 123
                 );
 
                 let warped_block_timestamp = starknet::library_call_syscall(
@@ -129,7 +129,7 @@ fn warp_cairo0_contract() {
                     array![].span(),
                 ).unwrap_syscall()[0];
 
-                stop_warp(StopWarp::One(test_address()));
+                stop_warp(CheatTarget::One(test_address()));
 
                 let unwarped_block_timestamp = starknet::library_call_syscall(
                     CAIRO0_CLASS_HASH.try_into().unwrap(),

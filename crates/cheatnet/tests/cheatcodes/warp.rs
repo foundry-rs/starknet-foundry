@@ -8,7 +8,7 @@ use crate::{
 };
 use cairo_felt::Felt252;
 use cheatnet::cheatcodes::deploy::deploy;
-use cheatnet::cheatcodes::warp::{StartWarpTarget, StopWarpTarget};
+use cheatnet::state::CheatTarget;
 use cheatnet::rpc::call_contract;
 use conversions::StarknetConversions;
 
@@ -24,10 +24,7 @@ fn warp_simple() {
         &[],
     );
 
-    cheatnet_state.start_warp(StartWarpTarget::One((
-        contract_address,
-        Felt252::from(123_u128),
-    )));
+    cheatnet_state.start_warp(CheatTarget::One(contract_address),Felt252::from(123_u128));
 
     let selector = felt_selector_from_name("get_block_timestamp");
 
@@ -55,7 +52,7 @@ fn warp_with_other_syscall() {
         &[],
     );
 
-    cheatnet_state.start_warp(StartWarpTarget::One((contract_address, Felt252::from(123))));
+    cheatnet_state.start_warp(CheatTarget::One(contract_address), Felt252::from(123));
     let selector = felt_selector_from_name("get_block_timestamp_and_emit_event");
 
     let output = call_contract(
@@ -83,10 +80,10 @@ fn warp_in_constructor() {
         .unwrap();
     let precalculated_address = cheatnet_state.precalculate_address(&class_hash, &[]);
 
-    cheatnet_state.start_warp(StartWarpTarget::One((
-        precalculated_address,
+    cheatnet_state.start_warp(
+        CheatTarget::One(precalculated_address),
         Felt252::from(123),
-    )));
+    );
 
     let contract_address = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[])
         .unwrap()
@@ -133,10 +130,10 @@ fn warp_stop() {
 
     let old_block_timestamp = recover_data(output);
 
-    cheatnet_state.start_warp(StartWarpTarget::One((
-        contract_address,
+    cheatnet_state.start_warp(CheatTarget::One(
+        contract_address),
         Felt252::from(123_u128),
-    )));
+    );
 
     let output = call_contract(
         &mut blockifier_state,
@@ -151,7 +148,7 @@ fn warp_stop() {
     assert_eq!(new_block_timestamp, vec![Felt252::from(123)]);
     assert_ne!(old_block_timestamp, new_block_timestamp);
 
-    cheatnet_state.stop_warp(StopWarpTarget::One(contract_address));
+    cheatnet_state.stop_warp(CheatTarget::One(contract_address));
 
     let output = call_contract(
         &mut blockifier_state,
@@ -191,14 +188,14 @@ fn warp_double() {
 
     let old_block_timestamp = recover_data(output);
 
-    cheatnet_state.start_warp(StartWarpTarget::One((
-        contract_address,
+    cheatnet_state.start_warp(CheatTarget::One(
+        contract_address),
         Felt252::from(123_u128),
-    )));
-    cheatnet_state.start_warp(StartWarpTarget::One((
-        contract_address,
+    );
+    cheatnet_state.start_warp(CheatTarget::One(
+        contract_address),
         Felt252::from(123_u128),
-    )));
+    );
 
     let output = call_contract(
         &mut blockifier_state,
@@ -213,7 +210,7 @@ fn warp_double() {
     assert_eq!(new_block_timestamp, vec![Felt252::from(123)]);
     assert_ne!(old_block_timestamp, new_block_timestamp);
 
-    cheatnet_state.stop_warp(StopWarpTarget::One(contract_address));
+    cheatnet_state.stop_warp(CheatTarget::One(contract_address));
 
     let output = call_contract(
         &mut blockifier_state,
@@ -256,10 +253,10 @@ fn warp_proxy() {
     )
     .unwrap();
 
-    cheatnet_state.start_warp(StartWarpTarget::One((
-        contract_address,
+    cheatnet_state.start_warp(CheatTarget::One(
+        contract_address),
         Felt252::from(123_u128),
-    )));
+    );
 
     let output = call_contract(
         &mut blockifier_state,
@@ -272,7 +269,7 @@ fn warp_proxy() {
 
     assert_success!(output, vec![Felt252::from(123)]);
 
-    cheatnet_state.stop_warp(StopWarpTarget::One(contract_address));
+    cheatnet_state.stop_warp(CheatTarget::One(contract_address));
     let after_warp_cancellation_output = call_contract(
         &mut blockifier_state,
         &mut cheatnet_state,
@@ -313,10 +310,10 @@ fn warp_library_call() {
     )
     .unwrap();
 
-    cheatnet_state.start_warp(StartWarpTarget::One((
-        lib_call_address,
+    cheatnet_state.start_warp(CheatTarget::One(
+        lib_call_address),
         Felt252::from(123_u128),
-    )));
+    );
 
     let output = call_contract(
         &mut blockifier_state,
@@ -329,7 +326,7 @@ fn warp_library_call() {
 
     assert_success!(output, vec![Felt252::from(123)]);
 
-    cheatnet_state.stop_warp(StopWarpTarget::One(lib_call_address));
+    cheatnet_state.stop_warp(CheatTarget::One(lib_call_address));
     let after_warp_cancellation_output = call_contract(
         &mut blockifier_state,
         &mut cheatnet_state,
@@ -353,7 +350,7 @@ fn warp_all_simple() {
         &[],
     );
 
-    cheatnet_state.start_warp(StartWarpTarget::All(Felt252::from(123)));
+    cheatnet_state.start_warp(CheatTarget::All, Felt252::from(123));
 
     let selector = felt_selector_from_name("get_block_timestamp");
 
@@ -381,11 +378,11 @@ fn warp_all_then_one() {
         &[],
     );
 
-    cheatnet_state.start_warp(StartWarpTarget::All(Felt252::from(321_u128)));
-    cheatnet_state.start_warp(StartWarpTarget::One((
-        contract_address,
+    cheatnet_state.start_warp(CheatTarget::All, Felt252::from(321_u128));
+    cheatnet_state.start_warp(CheatTarget::One(
+        contract_address),
         Felt252::from(123_u128),
-    )));
+    );
 
     let selector = felt_selector_from_name("get_block_timestamp");
 
@@ -413,11 +410,11 @@ fn warp_one_then_all() {
         &[],
     );
 
-    cheatnet_state.start_warp(StartWarpTarget::One((
-        contract_address,
+    cheatnet_state.start_warp(CheatTarget::One(
+        contract_address),
         Felt252::from(123_u128),
-    )));
-    cheatnet_state.start_warp(StartWarpTarget::All(Felt252::from(321_u128)));
+    );
+    cheatnet_state.start_warp(CheatTarget::All, Felt252::from(321_u128));
 
     let selector = felt_selector_from_name("get_block_timestamp");
 
@@ -458,7 +455,7 @@ fn warp_global_stop() {
 
     let old_block_timestamp = recover_data(output);
 
-    cheatnet_state.start_warp(StartWarpTarget::All(Felt252::from(123_u128)));
+    cheatnet_state.start_warp(CheatTarget::All, Felt252::from(123_u128));
 
     let output = call_contract(
         &mut blockifier_state,
@@ -473,7 +470,7 @@ fn warp_global_stop() {
     assert_eq!(new_block_timestamp, vec![Felt252::from(123)]);
     assert_ne!(old_block_timestamp, new_block_timestamp);
 
-    cheatnet_state.stop_warp(StopWarpTarget::All);
+    cheatnet_state.stop_warp(CheatTarget::All);
 
     let output = call_contract(
         &mut blockifier_state,

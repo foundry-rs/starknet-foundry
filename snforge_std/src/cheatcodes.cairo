@@ -18,14 +18,7 @@ mod tx_info;
 mod fork;
 
 #[derive(Drop, Serde)]
-enum StartWarp {
-    All: u64,
-    One: (ContractAddress, u64),
-    Multiple: Array<(ContractAddress, u64)>
-}
-
-#[derive(Drop, Serde)]
-enum StopWarp {
+enum CheatTarget {
     All: (),
     One: ContractAddress,
     Multiple: Array<ContractAddress>
@@ -57,15 +50,16 @@ fn stop_prank(contract_address: ContractAddress) {
     cheatcode::<'stop_prank'>(array![contract_address_felt].span());
 }
 
-fn start_warp(warp_info: StartWarp) {
+fn start_warp(target: CheatTarget, block_number: u64) {
     let mut inputs = array![];
-    warp_info.serialize(ref inputs);
+    target.serialize(ref inputs);
+    inputs.append(block_number.into());
     cheatcode::<'start_warp'>(inputs.span());
 }
 
-fn stop_warp(warp_info: StopWarp) {
+fn stop_warp(target: CheatTarget) {
     let mut inputs = array![];
-    warp_info.serialize(ref inputs);
+    target.serialize(ref inputs);
     cheatcode::<'stop_warp'>(inputs.span());
 }
 
