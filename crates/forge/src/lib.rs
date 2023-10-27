@@ -835,7 +835,7 @@ mod tests {
     }
 
     #[test]
-    fn map_fork_configs_unparsable_url() {
+    fn to_runnable_unparsable_url() {
         let mocked_tests = CompiledTestCrate {
             sierra_program: Program {
                 type_declarations: vec![],
@@ -872,7 +872,7 @@ mod tests {
     }
 
     #[test]
-    fn map_fork_configs_non_existent_id() {
+    fn to_runnable_non_existent_id() {
         let mocked_tests = CompiledTestCrate {
             sierra_program: Program {
                 type_declarations: vec![],
@@ -904,7 +904,7 @@ mod tests {
                 fuzzer_runs: None,
                 fuzzer_seed: None,
                 fork: vec![ForkTarget {
-                    name: "definitely_not_non_existing".to_string(),
+                    name: "definitely_non_existing".to_string(),
                     params: RawForkParams {
                         url: "https://not_taken.com".to_string(),
                         block_id: BlockId::Number(120),
