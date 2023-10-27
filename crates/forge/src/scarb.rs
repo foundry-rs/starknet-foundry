@@ -233,6 +233,7 @@ mod tests {
     use starknet::core::types::BlockTag::Latest;
     use std::process::Command;
     use std::str::FromStr;
+    use test_collector::RawForkParams;
 
     fn setup_package(package_name: &str) -> TempDir {
         let temp = TempDir::new().unwrap();
@@ -600,18 +601,24 @@ mod tests {
                 fork: vec![
                     ForkTarget {
                         name: "FIRST_FORK_NAME".to_string(),
-                        url: "http://some.rpc.url".parse().unwrap(),
-                        block_id: BlockId::Number(1),
+                        params: RawForkParams {
+                            url: "http://some.rpc.url".to_string(),
+                            block_id: BlockId::Number(1)
+                        },
                     },
                     ForkTarget {
                         name: "SECOND_FORK_NAME".to_string(),
-                        url: "http://some.rpc.url".parse().unwrap(),
-                        block_id: BlockId::Hash("1".to_string().to_field_element()),
+                        params: RawForkParams {
+                            url: "http://some.rpc.url".to_string(),
+                            block_id: BlockId::Hash("1".to_string().to_field_element())
+                        },
                     },
                     ForkTarget {
                         name: "THIRD_FORK_NAME".to_string(),
-                        url: "http://some.rpc.url".parse().unwrap(),
-                        block_id: BlockId::Tag(Latest),
+                        params: RawForkParams {
+                            url: "http://some.rpc.url".to_string(),
+                            block_id: BlockId::Tag(Latest)
+                        },
                     }
                 ],
                 fuzzer_runs: None,

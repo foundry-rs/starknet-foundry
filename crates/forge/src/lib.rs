@@ -40,7 +40,7 @@ use crate::collecting::{
     CompiledTestCrateRunnable, TestCaseRunnable, ValidatedForkConfig,
 };
 use crate::test_filter::TestsFilter;
-use test_collector::{FuzzerConfig, LinkedLibrary, RawForkConfig, TestCase};
+use test_collector::{FuzzerConfig, LinkedLibrary, RawForkConfig, RawForkParams, TestCase};
 
 pub mod pretty_printing;
 pub mod scarb;
@@ -198,15 +198,19 @@ fn try_close_tmp_dir(temp_dir: TempDir) -> Result<()> {
     Ok(())
 }
 
-fn find_or_parse_raw_fork_config(
+fn parse_fork_params(raw_fork_params: &RawForkParams) -> Result<ValidatedForkConfig> {
+    Ok(ValidatedForkConfig {
+        url: raw_fork_params.url.parse()?,
+        block_id: raw_fork_params.block_id,
+    })
+}
+
+fn replace_id_with_params(
     raw_fork_config: RawForkConfig,
     runner_config: &RunnerConfig,
-) -> Result<ValidatedForkConfig> {
+) -> Result<RawForkParams> {
     match raw_fork_config {
-        RawForkConfig::Params(url_str, block_id) => Ok(ValidatedForkConfig {
-            url: url_str.parse()?,
-            block_id,
-        }),
+        RawForkConfig::Params(raw_fork_params) => Ok(raw_fork_params),
         RawForkConfig::Id(name) => {
             let fork_target_from_runner_config = runner_config
                 .fork_targets
@@ -215,15 +219,13 @@ fn find_or_parse_raw_fork_config(
                 .ok_or_else(|| {
                     anyhow!("Fork configuration named = {name} not found in the Scarb.toml")
                 })?;
-            Ok(ValidatedForkConfig {
-                url: fork_target_from_runner_config.url.clone(),
-                block_id: fork_target_from_runner_config.block_id,
-            })
+
+            Ok(fork_target_from_runner_config.params.clone())
         }
     }
 }
 
-fn map_fork_configs_from_raw_to_validated_in_tests(
+fn to_runnable(
     compiled_test_crate: CompiledTestCrateRaw,
     runner_config: &RunnerConfig,
 ) -> Result<CompiledTestCrateRunnable> {
@@ -231,7 +233,9 @@ fn map_fork_configs_from_raw_to_validated_in_tests(
 
     for case in compiled_test_crate.test_cases {
         let fork_config = if let Some(fc) = case.fork_config {
-            Some(find_or_parse_raw_fork_config(fc, runner_config)?)
+            let raw_fork_params = replace_id_with_params(fc, runner_config)?;
+            let validated_fork_config = parse_fork_params(&raw_fork_params)?;
+            Some(validated_fork_config)
         } else {
             None
         };
@@ -290,7 +294,7 @@ pub async fn run(
         .collect_vec();
     let test_crates = test_crates
         .into_iter()
-        .map(|ctc| map_fork_configs_from_raw_to_validated_in_tests(ctc, &runner_config))
+        .map(|ctc| to_runnable(ctc, &runner_config))
         .collect::<Result<Vec<_>>>()?;
 
     try_close_tmp_dir(temp_dir)?;
@@ -682,7 +686,6 @@ mod tests {
     use starknet::core::types::BlockId;
     use starknet::core::types::BlockTag::Latest;
     use test_collector::ExpectedTestResult;
-    use url::Url;
 
     #[test]
     fn fuzzer_default_seed() {
@@ -865,10 +868,10 @@ mod tests {
                 available_gas: None,
                 ignored: false,
                 expected_result: ExpectedTestResult::Success,
-                fork_config: Some(RawForkConfig::Params(
-                    "unparsable_url".to_string(),
-                    BlockId::Tag(Latest),
-                )),
+                fork_config: Some(RawForkConfig::Params(RawForkParams {
+                    url: "unparsable_url".to_string(),
+                    block_id: BlockId::Tag(Latest),
+                })),
                 fuzzer_config: None,
             }],
             tests_location: CrateLocation::Lib,
@@ -885,7 +888,7 @@ mod tests {
             &Default::default(),
         );
 
-        assert!(map_fork_configs_from_raw_to_validated_in_tests(mocked_tests, &config).is_err());
+        assert!(to_runnable(mocked_tests, &config).is_err());
     }
 
     #[test]
@@ -922,12 +925,14 @@ mod tests {
                 fuzzer_seed: None,
                 fork: vec![ForkTarget {
                     name: "definitely_not_non_existing".to_string(),
-                    url: Url::parse("https://not_taken.com").unwrap(),
-                    block_id: BlockId::Number(120),
+                    params: RawForkParams {
+                        url: "https://not_taken.com".to_string(),
+                        block_id: BlockId::Number(120),
+                    },
                 }],
             },
         );
 
-        assert!(map_fork_configs_from_raw_to_validated_in_tests(mocked_tests, &config).is_err());
+        assert!(to_runnable(mocked_tests, &config).is_err());
     }
 }

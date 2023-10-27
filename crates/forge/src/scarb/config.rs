@@ -1,10 +1,10 @@
-use anyhow::{anyhow, bail, Result};
+use anyhow::{bail, Result};
 use conversions::StarknetConversions;
 use itertools::Itertools;
 use serde::Deserialize;
 use starknet::core::types::{BlockId, BlockTag};
 use std::collections::HashMap;
-use url::Url;
+use test_collector::RawForkParams;
 
 #[derive(Debug, PartialEq, Default)]
 #[allow(clippy::module_name_repetitions)]
@@ -22,8 +22,7 @@ pub struct ForgeConfig {
 #[derive(Debug, PartialEq, Clone)]
 pub struct ForkTarget {
     pub name: String,
-    pub url: Url,
-    pub block_id: BlockId,
+    pub params: RawForkParams,
 }
 
 /// Represents forge config deserialized from Scarb.toml using basic types like String etc.
@@ -103,13 +102,10 @@ impl TryFrom<RawForgeConfig> for ForgeConfig {
 
             fork_targets.push(ForkTarget {
                 name: raw_fork_target.name,
-                url: Url::parse(&raw_fork_target.url).map_err(|parse_error| {
-                    anyhow!(
-                        "Could not parse the url = {} from Scarb.toml: {parse_error}",
-                        raw_fork_target.url
-                    )
-                })?,
-                block_id,
+                params: RawForkParams {
+                    url: raw_fork_target.url,
+                    block_id,
+                },
             });
         }
 

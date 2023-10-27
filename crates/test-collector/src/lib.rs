@@ -68,7 +68,13 @@ impl ForkConfig for RawForkConfig {}
 #[derive(Debug, Clone, PartialEq)]
 pub enum RawForkConfig {
     Id(String),
-    Params(String, BlockId),
+    Params(RawForkParams),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct RawForkParams {
+    pub url: String,
+    pub block_id: BlockId,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -450,7 +456,10 @@ fn extract_fork_config_from_args(db: &dyn SyntaxGroup, attr: &Attribute) -> Opti
         return None;
     }
 
-    Some(RawForkConfig::Params(url, block_id[0].unwrap()))
+    Some(RawForkConfig::Params(RawForkParams {
+        url,
+        block_id: block_id[0].unwrap(),
+    }))
 }
 
 /// Represents a dependency of a Cairo project

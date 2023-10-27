@@ -13,6 +13,7 @@ use std::path::Path;
 use std::path::PathBuf;
 use std::sync::Arc;
 use tempfile::tempdir;
+use test_collector::RawForkParams;
 use tokio::runtime::Runtime;
 
 static CHEATNET_RPC_URL: &str = "http://188.34.188.184:9545/rpc/v0.4";
@@ -118,8 +119,10 @@ fn fork_aliased_decorator() {
                     fuzzer_seed: Some(500),
                     fork: vec![ForkTarget {
                         name: "FORK_NAME_FROM_SCARB_TOML".to_string(),
-                        url: CHEATNET_RPC_URL.parse().unwrap(),
-                        block_id: BlockId::Tag(Latest),
+                        params: RawForkParams {
+                            url: CHEATNET_RPC_URL.to_string(),
+                            block_id: BlockId::Tag(Latest),
+                        },
                     }],
                 },
             )),
