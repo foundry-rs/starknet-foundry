@@ -1,6 +1,7 @@
 use crate::common::felt_selector_from_name;
 use crate::common::state::{create_cheatnet_state, create_fork_cached_state};
 use cairo_felt::Felt252;
+use cheatnet::cheatcodes::warp::{StartWarpTarget, StopWarpTarget};
 use cheatnet::rpc::{call_contract, CallContractResult};
 use conversions::StarknetConversions;
 use num_bigint::BigUint;
@@ -148,8 +149,7 @@ fn warp_cairo0_contract(selector: &str) {
     };
     let block_timestamp = &ret_data[0];
 
-    cheatnet_state.start_warp(contract_address, Felt252::from(123));
-
+    cheatnet_state.start_warp(StartWarpTarget::One((contract_address, Felt252::from(123))));
     let output = call_contract(
         &mut blockifier_state,
         &mut cheatnet_state,
@@ -163,7 +163,7 @@ fn warp_cairo0_contract(selector: &str) {
     };
     let warped_block_timestamp = &ret_data[0];
 
-    cheatnet_state.stop_warp(contract_address);
+    cheatnet_state.stop_warp(StopWarpTarget::One(contract_address));
 
     let output = call_contract(
         &mut blockifier_state,

@@ -17,6 +17,20 @@ mod contract_class;
 mod tx_info;
 mod fork;
 
+#[derive(Drop, Serde)]
+enum StartWarp {
+    All: u64,
+    One: (ContractAddress, u64),
+    Multiple: Array<(ContractAddress, u64)>
+}
+
+#[derive(Drop, Serde)]
+enum StopWarp {
+    All: (),
+    One: ContractAddress,
+    Multiple: Array<ContractAddress>
+}
+
 fn test_address() -> ContractAddress {
     contract_address_const::<469394814521890341860918960550914>()
 }
@@ -43,24 +57,16 @@ fn stop_prank(contract_address: ContractAddress) {
     cheatcode::<'stop_prank'>(array![contract_address_felt].span());
 }
 
-fn start_warp(contract_address: ContractAddress, block_timestamp: u64) {
-    let contract_address_felt: felt252 = contract_address.into();
-    let block_timestamp_felt: felt252 = block_timestamp.into();
-    cheatcode::<'start_warp'>(array![contract_address_felt, block_timestamp_felt].span());
+fn start_warp(warp_info: StartWarp) {
+    let mut inputs = array![];
+    warp_info.serialize(ref inputs);
+    cheatcode::<'start_warp'>(inputs.span());
 }
 
-fn stop_warp(contract_address: ContractAddress) {
-    let contract_address_felt: felt252 = contract_address.into();
-    cheatcode::<'stop_warp'>(array![contract_address_felt].span());
-}
-
-fn start_warp_global(block_timestamp: u64) {
-    let block_timestamp_felt: felt252 = block_timestamp.into();
-    cheatcode::<'start_warp_global'>(array![block_timestamp_felt].span());
-}
-
-fn stop_warp_global() {
-    cheatcode::<'stop_warp_global'>(array![].span());
+fn stop_warp(warp_info: StopWarp) {
+    let mut inputs = array![];
+    warp_info.serialize(ref inputs);
+    cheatcode::<'stop_warp'>(inputs.span());
 }
 
 fn start_mock_call<T, impl TSerde: serde::Serde<T>, impl TDestruct: Destruct<T>>(

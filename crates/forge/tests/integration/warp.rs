@@ -16,7 +16,7 @@ fn warp() {
             use traits::Into;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use snforge_std::{ declare, ContractClassTrait, start_warp, stop_warp, start_roll };
+            use snforge_std::{ declare, ContractClassTrait, start_warp, stop_warp, StartWarp, StopWarp, start_roll };
 
             #[starknet::interface]
             trait IWarpChecker<TContractState> {
@@ -37,12 +37,12 @@ fn warp() {
 
                 let old_block_timestamp = warp_checker.get_block_timestamp();
 
-                start_warp(warp_checker.contract_address, 123);
+                start_warp(StartWarp::One((warp_checker.contract_address, 123)));
 
                 let new_block_timestamp = warp_checker.get_block_timestamp();
                 assert(new_block_timestamp == 123, 'Wrong block timestamp');
 
-                stop_warp(warp_checker.contract_address);
+                stop_warp(StopWarp::One(warp_checker.contract_address));
 
                 let new_block_timestamp = warp_checker.get_block_timestamp();
                 assert(new_block_timestamp == old_block_timestamp, 'Timestamp did not change back')

@@ -23,7 +23,10 @@ use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use cheatnet::cheatcodes::deploy::{deploy, deploy_at, DeployCallPayload};
-use cheatnet::cheatcodes::{CheatcodeError, ContractArtifacts, EnhancedHintError};
+use cheatnet::cheatcodes::{
+    warp::{StartWarpTarget, StopWarpTarget},
+    CheatcodeError, ContractArtifacts, EnhancedHintError,
+};
 use cheatnet::execution::cheatable_syscall_handler::CheatableSyscallHandler;
 use cheatnet::rpc::{call_contract, CallContractFailure, CallContractOutput, CallContractResult};
 use cheatnet::state::{BlockifierState, CheatnetState};
@@ -266,20 +269,56 @@ impl TestExecutionSyscallHandler<'_, '_> {
                 Ok(())
             }
             "start_warp" => {
-                let contract_address = inputs[0].to_contract_address();
-                let value = inputs[1].clone();
-                self.contract_execution_syscall_handler
-                    .cheatable_syscall_handler
-                    .cheatnet_state
-                    .start_warp(contract_address, value);
+                // First felt encodes the variant
+                if inputs[0] == Felt252::from(0) {
+                    self.contract_execution_syscall_handler
+                        .cheatable_syscall_handler
+                        .cheatnet_state
+                        .start_warp(StartWarpTarget::All(inputs[1].clone()));
+                } else if inputs[0] == Felt252::from(1) {
+                    let warp_target =
+                        StartWarpTarget::One((inputs[1].to_contract_address(), inputs[2].clone()));
+                    self.contract_execution_syscall_handler
+                        .cheatable_syscall_handler
+                        .cheatnet_state
+                        .start_warp(warp_target);
+                } else if inputs[0] == Felt252::from(2) {
+                    let warp_tuples: Vec<_> = inputs[2..]
+                        .chunks_exact(2)
+                        .map(|chunk| (chunk[0].to_contract_address(), chunk[1].clone()))
+                        .collect();
+                    self.contract_execution_syscall_handler
+                        .cheatable_syscall_handler
+                        .cheatnet_state
+                        .start_warp(StartWarpTarget::Multiple(warp_tuples));
+                }
+
                 Ok(())
             }
             "stop_warp" => {
-                let contract_address = inputs[0].to_contract_address();
-                self.contract_execution_syscall_handler
-                    .cheatable_syscall_handler
-                    .cheatnet_state
-                    .stop_warp(contract_address);
+                // First felt encodes the variant
+                if inputs[0] == Felt252::from(0) {
+                    self.contract_execution_syscall_handler
+                        .cheatable_syscall_handler
+                        .cheatnet_state
+                        .stop_warp(StopWarpTarget::All);
+                } else if inputs[0] == Felt252::from(1) {
+                    let warp_target = StopWarpTarget::One(inputs[1].to_contract_address());
+                    self.contract_execution_syscall_handler
+                        .cheatable_syscall_handler
+                        .cheatnet_state
+                        .stop_warp(warp_target);
+                } else if inputs[0] == Felt252::from(2) {
+                    let warp_targets: Vec<_> = inputs[2..]
+                        .iter()
+                        .map(Felt252::to_contract_address)
+                        .collect();
+                    self.contract_execution_syscall_handler
+                        .cheatable_syscall_handler
+                        .cheatnet_state
+                        .stop_warp(StopWarpTarget::Multiple(warp_targets));
+                }
+
                 Ok(())
             }
             "start_prank" => {

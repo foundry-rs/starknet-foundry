@@ -22,13 +22,12 @@ fn get_cheated_block_info_ptr(
         new_block_info[0] = MaybeRelocatable::Int(rolled_number.clone());
     };
 
-    // Global warp overrides contract warp
-    let warped_timestamp = cheatnet_state.global_warp.as_ref().cloned().or_else(|| {
-        cheatnet_state
-            .warped_contracts
-            .get(contract_address)
-            .cloned()
-    });
+    // Warp on an individual contract overrides global warp
+    let warped_timestamp = cheatnet_state
+        .warped_contracts
+        .get(contract_address)
+        .cloned()
+        .or_else(|| cheatnet_state.global_warp.clone());
 
     if let Some(warped_timestamp) = warped_timestamp {
         new_block_info[1] = MaybeRelocatable::Int(warped_timestamp);
@@ -113,7 +112,6 @@ pub fn get_cheated_exec_info_ptr(
 
     // Initialize as old exec_info
     let mut new_exec_info = vm.get_continuous_range(execution_info_ptr, 5).unwrap();
-
     if cheatnet_state.address_is_rolled(contract_address)
         || cheatnet_state.address_is_warped(contract_address)
     {
