@@ -10,7 +10,7 @@ use test_case::test_case;
 
 #[tokio::test]
 pub async fn test_happy_case() {
-    let accounts_file = "./tmp/accounts.json";
+    let accounts_file = "./tmp-c1/accounts.json";
     let args = vec![
         "--url",
         URL,
@@ -52,7 +52,7 @@ pub async fn test_happy_case() {
 
 #[tokio::test]
 pub async fn test_happy_case_generate_salt() {
-    let accounts_file = "./tmp1/accounts.json";
+    let accounts_file = "./tmp-c2/accounts.json";
     let args = vec![
         "--url",
         URL,
@@ -131,7 +131,7 @@ pub async fn test_happy_case_add_profile() {
 
 #[tokio::test]
 pub async fn test_happy_case_accounts_file_already_exists() {
-    let current_dir = Utf8PathBuf::from("./tmp2");
+    let current_dir = Utf8PathBuf::from("./tmp-c3");
     let accounts_file = "./accounts.json";
     fs::create_dir_all(&current_dir).expect("Unable to create directory");
 

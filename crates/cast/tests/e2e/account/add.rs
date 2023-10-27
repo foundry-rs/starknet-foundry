@@ -9,7 +9,7 @@ use std::fs;
 
 #[tokio::test]
 pub async fn test_happy_case() {
-    let accounts_file = "./tmp/accounts.json";
+    let accounts_file = "./tmp-a1/accounts.json";
     _ = fs::remove_file(accounts_file);
 
     let args = vec![
@@ -63,10 +63,6 @@ pub async fn test_happy_case_add_profile() {
         "put",
         "30",
     ));
-    //     let tmp_dir = TempDir::new()?;
-    //     tmp_dir
-    //         .copy_from(&tests_folder_path, &["**/*.cairo"])
-    //         .context("Unable to copy files to temporary directory")?;
     let accounts_file = "./accounts.json";
 
     let args = vec![
@@ -133,7 +129,7 @@ pub async fn test_happy_case_add_profile() {
 
 #[tokio::test]
 pub async fn test_detect_deployed() {
-    let accounts_file = "./tmp/accounts.json";
+    let accounts_file = "./tmp-a2/accounts.json";
     _ = fs::remove_file(accounts_file);
 
     let args = vec![

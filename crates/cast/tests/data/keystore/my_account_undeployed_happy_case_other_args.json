@@ -6,8 +6,8 @@
         "public_key": "0xe2d3d7080bfc665e0060a06e8e95c3db3ff78a1fec4cc81ddc87e49a12e0a"
     },
     "deployment": {
-        "status": "deployed",
+        "status": "undeployed",
         "class_hash": "0x4d07e40e93398ed3c76981e72dd1fd22557a78ce36c0515f679e27f0bb5bc5f",
-        "address": "0xcce3217e4aea0ab738b55446b1b378750edfca617db549fda1ede28435206c"
+        "salt": "0x14df438ac6825165c7a0af29decd5892528b763a333f93a5f6b12980dbddd9a"
     }
 }
