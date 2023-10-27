@@ -7,9 +7,9 @@ use starknet_api::hash::StarkFelt;
 use starknet_api::stark_felt;
 
 static HELLO_STARKNET_CLASS_HASH: &str =
-    "0x298f80e468953d1e65314b6bc63347c7a3fe454a89c2b15387dd52ee281d103";
+    "0x05ecd2c5f5ca68a4dc1b945582c69434adfc8bedbd188f0146a35875a4791936";
 static CONSTRUCTOR_SIMPLE_CLASS_HASH: &str =
-    "0x02dbeae7583f3dd4af0bc2da4d58611433165fec7e31245bfa2f1378fbff6a4c";
+    "0x05f5abdb98a7ec93a20ac4b2ed284979613bc71f2dec3df10e589ebe40c562b4";
 
 #[test]
 fn declare_simple() {

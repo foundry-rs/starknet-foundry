@@ -5,7 +5,7 @@ Run tests for a project in the current directory.
 ## `[TEST_FILTER]`
 
 Passing a test filter will only run tests with
-an [absolute module tree path](https://book.cairo-lang.org/ch06-03-paths-for-referring-to-an-item-in-the-module-tree.html?highlight=path#paths-for-referring-to-an-item-in-the-module-tree)
+an [absolute module tree path](https://book.cairo-lang.org/ch07-03-paths-for-referring-to-an-item-in-the-module-tree.html#paths-for-referring-to-an-item-in-the-module-tree)
 containing this filter.
 
 ## `-e`, `--exact`
