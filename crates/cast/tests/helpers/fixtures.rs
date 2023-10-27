@@ -34,13 +34,15 @@ pub async fn declare_contract(account: &str, path: &str, shortname: &str) -> Fie
     .expect("Could not get the account");
 
     let contract_definition: SierraClass = {
-        let file_contents = std::fs::read(CONTRACTS_DIR.to_string() + path + ".contract_class.json")
-            .expect("Could not read contract's sierra file");
+        let file_contents =
+            std::fs::read(CONTRACTS_DIR.to_string() + path + ".contract_class.json")
+                .expect("Could not read contract's sierra file");
         serde_json::from_slice(&file_contents).expect("Could not cast sierra file to SierraClass")
     };
     let casm_contract_definition: CompiledClass = {
-        let file_contents = std::fs::read(CONTRACTS_DIR.to_string() + path + ".compiled_contract_class.json")
-            .expect("Could not read contract's casm file");
+        let file_contents =
+            std::fs::read(CONTRACTS_DIR.to_string() + path + ".compiled_contract_class.json")
+                .expect("Could not read contract's casm file");
         serde_json::from_slice(&file_contents).expect("Could not cast casm file to CompiledClass")
     };
 
