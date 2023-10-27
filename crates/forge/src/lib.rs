@@ -488,6 +488,7 @@ fn run_with_fuzzing(
                 })
                 .count(),
         )?;
+
         if let Some(TestCaseSummary::Passed { .. }) = final_result {
             if runs != fuzzer_runs {
                 final_result = results

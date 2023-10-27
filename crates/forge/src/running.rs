@@ -105,6 +105,8 @@ pub(crate) fn blocking_run_from_test(
         extract_test_case_summary(run_result, &case, vec![])
     })
 }
+
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn blocking_run_from_fuzzing_test(
     args: Vec<Felt252>,
     case: Arc<TestCaseRunnable>,
