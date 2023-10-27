@@ -195,9 +195,7 @@ mod tests {
     fn test_parse_scarb_config_no_profile_found() {
         let config = parse_scarb_config(
             &Some(String::from("mariusz")),
-            &Some(Utf8PathBuf::from(
-                "tests/data/contracts/map/Scarb.toml",
-            )),
+            &Some(Utf8PathBuf::from("tests/data/contracts/map/Scarb.toml")),
         )
         .unwrap_err();
         assert_eq!(

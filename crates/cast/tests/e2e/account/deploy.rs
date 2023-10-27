@@ -283,11 +283,7 @@ pub async fn test_happy_case_keystore() {
 
     let address = get_address_from_keystore(keystore_path, account_path, KEYSTORE_PASSWORD_ENV_VAR);
 
-    mint_token(
-        &convert_to_hex(&address.to_string()),
-        9_999_999_999_999_999_999,
-    )
-    .await;
+    mint_token(&convert_to_hex(&address.to_string()), 9_999_999_999_999_999_999).await;
 
     let args = vec![
         "--url",
@@ -461,11 +457,7 @@ pub async fn test_deploy_keystore_other_args() {
 
     let address = get_address_from_keystore(keystore_path, account_path, KEYSTORE_PASSWORD_ENV_VAR);
 
-    mint_token(
-        &convert_to_hex(&address.to_string()),
-        9_999_999_999_999_999_999,
-    )
-    .await;
+    mint_token(&convert_to_hex(&address.to_string()), 9_999_999_999_999_999_999).await;
 
     let args = vec![
         "--url",
