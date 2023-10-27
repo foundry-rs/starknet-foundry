@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - 'master'
-  create:
     tags:
       - v[0-9]+.*
 
@@ -57,27 +56,10 @@ jobs:
         if: ${{ steps.validVersion.outputs.versionIsValid == 'false' }}
         run: echo "Version from commit is not greater from newest release, skipping build"
 
-  create-tag:
-    name: If workflow was triggered by a push to master, create a new tag with release version
-    runs-on: ubuntu-latest
-    needs: verify-version
-    if: ${{ needs.verify-version.outputs.versionIsValid == 'true' }}
-    steps:
-      - name: Create tag action was triggered by a push
-        if: ${{ github.event_name == 'push' }}
-        uses: actions/github-script@v6
-        with:
-          script: |
-            github.rest.git.createRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: 'refs/tags/${{ needs.verify-version.outputs.version }}',
-              sha: context.sha
-            })
-
   build-binaries:
     name: Build ${{ matrix.target }}
-    needs: create-tag
+    needs: verify-version
+    if: ${{ needs.verify-version.outputs.versionIsValid == 'true' }}
     runs-on: ${{ matrix.os }}
     continue-on-error: true
 
@@ -145,7 +127,7 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          PKG_FULL_NAME="starknet-foundry-${{ github.ref_name }}-${{ matrix.target }}"
+          PKG_FULL_NAME="starknet-foundry-${{ needs.verify-version.outputs.version }}-${{ matrix.target }}"
           echo "PKG_FULL_NAME=$PKG_FULL_NAME" >> $GITHUB_ENV
 
           chmod +x ./scripts/package.sh
@@ -158,9 +140,9 @@ jobs:
           path: ${{ env.PKG_FULL_NAME }}.*
 
   create-release:
-    name: Draft release
+    name: Create release
     runs-on: ubuntu-latest
-    needs: [build-binaries, verify-version]
+    needs: [ build-binaries, verify-version ]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -176,8 +158,8 @@ jobs:
           mkdir -p artifacts
           mv artifacts-dl/build-*/starknet-foundry-* artifacts/
 
-      - name: Draft GitHub release
-        id: draft-release
+      - name: Create GitHub release
+        id: create-release
         uses: taiki-e/create-gh-release-action@9762dfdfe60a96b3fef6c4a0aaafd9840f1195b7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -191,4 +173,4 @@ jobs:
         run: gh release upload "$TAG" *
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ steps.draft-release.outputs.computed-prefix }}${{ steps.draft-release.outputs.version }}
+          TAG: ${{ steps.create-release.outputs.computed-prefix }}${{ steps.create-release.outputs.version }}
