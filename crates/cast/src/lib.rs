@@ -23,8 +23,7 @@ use starknet::{
     core::types::{
         BlockId,
         BlockTag::{Latest, Pending},
-        ExecutionResult, FieldElement,
-        StarknetError,
+        ExecutionResult, FieldElement, StarknetError,
     },
     providers::{MaybeUnknownErrorCode, StarknetErrorWithMessage},
 };
@@ -261,9 +260,7 @@ pub async fn wait_for_tx(
                 code: MaybeUnknownErrorCode::Known(StarknetError::TransactionHashNotFound),
                 message: _,
             })) => {
-                println!(
-                    "Waiting for transaction to be received ({i} retries left)"
-                );
+                println!("Waiting for transaction to be received ({i} retries left)");
             }
             Err(err) => return Err(err.into()),
         };
