@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - diagnostic paths referring to `tests` folder
 
+### Cast
+
+#### Changed
+- bump starknet-rs dependency
+- replaced starknet-devnet with starknet-devnet-rs for tests
+
 ## [0.9.0] - 2023-10-25
 
 ### Forge
@@ -96,13 +102,6 @@ Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/forge.ht
 
 - dropped official support for cairo 1 compiled contracts. While they still should be working without any problems, 
 from now on the only officially supported cairo compiler version is 2
-
-### Cast
-
-#### Changed
-
-- dropped official support for cairo 1 contracts. while they still should be working without any problems, from now on 
-the only officially supported cairo version is 2
 
 ## [0.7.1] - 2023-09-27
 
