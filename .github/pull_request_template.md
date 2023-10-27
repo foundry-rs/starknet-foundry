@@ -9,10 +9,6 @@ Closes #
 -
 -
 
-## Breaking changes
-
-<!-- List of all breaking changes, if applicable -->
-
 ## Checklist
 
 <!-- Make sure all of these are complete -->
