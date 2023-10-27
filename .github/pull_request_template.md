@@ -7,7 +7,6 @@ Closes #
 <!-- A brief description of the changes -->
 
 -
--
 
 ## Checklist
 
