@@ -1,8 +1,8 @@
 use crate::common::felt_selector_from_name;
 use crate::common::state::{create_cheatnet_state, create_fork_cached_state};
 use cairo_felt::Felt252;
-use cheatnet::state::CheatTarget;
 use cheatnet::rpc::{call_contract, CallContractResult};
+use cheatnet::state::CheatTarget;
 use conversions::StarknetConversions;
 use num_bigint::BigUint;
 use starknet_api::core::ContractAddress;

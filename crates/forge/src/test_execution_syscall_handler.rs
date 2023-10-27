@@ -23,12 +23,10 @@ use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use cheatnet::cheatcodes::deploy::{deploy, deploy_at, DeployCallPayload};
-use cheatnet::cheatcodes::{
-    CheatcodeError, ContractArtifacts, EnhancedHintError,
-};
+use cheatnet::cheatcodes::{CheatcodeError, ContractArtifacts, EnhancedHintError};
 use cheatnet::execution::cheatable_syscall_handler::CheatableSyscallHandler;
 use cheatnet::rpc::{call_contract, CallContractFailure, CallContractOutput, CallContractResult};
-use cheatnet::state::{BlockifierState, CheatnetState,  CheatTarget};
+use cheatnet::state::{BlockifierState, CheatTarget, CheatnetState};
 use conversions::StarknetConversions;
 use num_traits::{One, ToPrimitive};
 use serde::Deserialize;
@@ -288,9 +286,9 @@ impl TestExecutionSyscallHandler<'_, '_> {
                 };
 
                 self.contract_execution_syscall_handler
-                        .cheatable_syscall_handler
-                        .cheatnet_state
-                        .start_warp(target, warp_timestamp);
+                    .cheatable_syscall_handler
+                    .cheatnet_state
+                    .start_warp(target, warp_timestamp);
 
                 Ok(())
             }

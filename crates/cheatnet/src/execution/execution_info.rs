@@ -23,11 +23,7 @@ fn get_cheated_block_info_ptr(
     };
 
     // Warp on an individual contract overrides global warp
-    let warped_timestamp = cheatnet_state
-        .warped_contracts
-        .get(contract_address)
-        .cloned()
-        .or_else(|| cheatnet_state.global_warp.clone());
+    let warped_timestamp = cheatnet_state.get_address_block_timestamp(contract_address);
 
     if let Some(warped_timestamp) = warped_timestamp {
         new_block_info[1] = MaybeRelocatable::Int(warped_timestamp);

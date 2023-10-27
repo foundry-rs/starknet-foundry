@@ -27,11 +27,11 @@ use starknet_api::{
 };
 use std::collections::HashMap;
 
-// Specifies which contracts to target 
+// Specifies which contracts to target
 // with a cheatcode function
 pub enum CheatTarget {
-    All, 
-    One(ContractAddress), 
+    All,
+    One(ContractAddress),
     Multiple(Vec<ContractAddress>),
 }
 
@@ -210,12 +210,17 @@ impl StateReader for DictStateReader {
     }
 }
 
+pub enum WarpedContract {
+    Warped(Felt252),
+    Unwarped,
+}
+
 #[allow(clippy::module_name_repetitions)]
 #[derive(Default)]
 pub struct CheatnetState {
     pub rolled_contracts: HashMap<ContractAddress, Felt252>,
     pub pranked_contracts: HashMap<ContractAddress, ContractAddress>,
-    pub warped_contracts: HashMap<ContractAddress, Felt252>,
+    pub warped_contracts: HashMap<ContractAddress, WarpedContract>,
     pub global_warp: Option<Felt252>,
     pub mocked_functions: HashMap<ContractAddress, HashMap<EntryPointSelector, Vec<StarkFelt>>>,
     pub spoofed_contracts: HashMap<ContractAddress, TxInfoMock>,
@@ -242,7 +247,34 @@ impl CheatnetState {
 
     #[must_use]
     pub fn address_is_warped(&self, contract_address: &ContractAddress) -> bool {
-        self.global_warp.is_some() || self.warped_contracts.contains_key(contract_address)
+        self.global_warp.is_some()
+            || match self.warped_contracts.get(contract_address) {
+                Some(warped_contract) => match warped_contract {
+                    WarpedContract::Warped(_) => true,
+                    WarpedContract::Unwarped => false,
+                },
+                None => false,
+            }
+    }
+
+    #[must_use]
+    pub fn get_address_block_timestamp(&self, address: &ContractAddress) -> Option<Felt252> {
+        /* The Logic
+         * - If there is a global warp and no contract warp, use the global warp
+         * - If there is a global warp and a contract warp (either Warped or Unwarped), use the contract warp
+         * - If there is no global warp and a contract warp, use the contract warp (either Warped or Unwarped)
+         * - If there is no global warp and no contract warp, return None (no warp)
+         *
+         * This logic ensures that `start_warp` and `stop_warp` will always behave as expected,
+         */
+
+        match (&self.global_warp, self.warped_contracts.get(address)) {
+            (_, Some(warped_contract)) => match warped_contract {
+                WarpedContract::Warped(contract_timestamp) => Some(contract_timestamp.clone()),
+                WarpedContract::Unwarped => None,
+            },
+            (any_global, None) => any_global.clone(),
+        }
     }
 
     #[must_use]
