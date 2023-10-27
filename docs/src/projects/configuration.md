@@ -16,21 +16,6 @@ exit_first = true
 
 Forge automatically looks for `Scarb.toml` in the directory you are running the tests in or in any of its parents.
 
-### Configuring Fork in `Scarb.toml`
-
-Forge makes things easier by letting you set up fork configurations inside the Scarb.toml file. Instead of repeatedly typing out the same details on the command line, you can define them in the file. 
-
-For example, you can set up different forks like this:
-
-```toml
-[[tool.snforge.fork]]
-name = "Starknet"
-url = "http://your.rpc.url"
-block_id.tag = "Latest"
-```
-
-To learn more, check out the page about [Fork Testing](../testing/fork-testing.md).
-
 ## Cast
 
 ### Defining Profiles in `Scarb.toml`
