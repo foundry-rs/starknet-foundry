@@ -20,7 +20,7 @@ fn root_workspace_without_arguments() {
 
         Collected 3 test(s) from hello_workspaces package
         Running 1 test(s) from src/
-        [PASS] hello_workspaces::test_simple
+        [PASS] hello_workspaces::tests::test_simple
         Running 2 test(s) from tests/
         [FAIL] tests::test_failing::test_failing
         
@@ -141,7 +141,7 @@ fn root_workspace_specify_root_package() {
 
         Collected 3 test(s) from hello_workspaces package
         Running 1 test(s) from src/
-        [PASS] hello_workspaces::test_simple
+        [PASS] hello_workspaces::tests::test_simple
         Running 2 test(s) from tests/
         [FAIL] tests::test_failing::test_failing
         
@@ -200,7 +200,7 @@ fn root_workspace_for_entire_workspace() {
     assert_stdout_contains!(
         output,
         indoc! {r#"
-         [..]Compiling[..]
+        [..]Compiling[..]
         [..]Compiling[..]
         [..]Finished[..]
         
@@ -239,7 +239,7 @@ fn root_workspace_for_entire_workspace() {
         
         Collected 3 test(s) from hello_workspaces package
         Running 1 test(s) from src/
-        [PASS] hello_workspaces::test_simple
+        [PASS] hello_workspaces::tests::test_simple
         Running 2 test(s) from tests/
         [FAIL] tests::test_failing::test_failing
         
@@ -310,7 +310,7 @@ fn root_workspace_for_entire_workspace_inside_package() {
         
         Collected 3 test(s) from hello_workspaces package
         Running 1 test(s) from src/
-        [PASS] hello_workspaces::test_simple
+        [PASS] hello_workspaces::tests::test_simple
         Running 2 test(s) from tests/
         [FAIL] tests::test_failing::test_failing
         

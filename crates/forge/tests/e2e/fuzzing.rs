@@ -111,7 +111,7 @@ fn fuzzing_set_seed() {
         [PASS] fuzzing::tests::fuzzed_argument (fuzzer runs = 256)
         [PASS] fuzzing::tests::fuzzed_both_arguments (fuzzer runs = 256)
         [PASS] fuzzing::tests::passing
-        [FAIL] fuzzing::tests::failing_fuzz (fuzzer runs = 1, arguments = [..])
+        [FAIL] fuzzing::tests::failing_fuzz (fuzzer runs = 1, arguments = [[..], [..]])
 
         Failure data:
             original value: [..], converted to a string: [result == a + b]

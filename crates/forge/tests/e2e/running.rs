@@ -24,8 +24,8 @@ fn simple_package() {
 
     Collected 13 test(s) from simple_package package
     Running 2 test(s) from src/
-    [PASS] simple_package::test_fib
-    [IGNORE] simple_package::ignored_test
+    [PASS] simple_package::tests::test_fib
+    [IGNORE] simple_package::tests::ignored_test
     Running 11 test(s) from tests/
     [PASS] tests::contract::call_and_invoke
     [PASS] tests::ext_function_test::test_my_test
@@ -77,7 +77,7 @@ fn simple_package_with_git_dependency() {
             casm = true
 
             [dependencies]
-            starknet = "2.2.0"
+            starknet = "2.3.0"
             snforge_std = {{ git = "https://github.com/{}", branch = "{}" }}
             "#,
             remote_url,
@@ -95,15 +95,14 @@ fn simple_package_with_git_dependency() {
     assert_stdout_contains!(
         output,
         indoc! {r#"
-        [..]Updating git repository[..]
         [..]Compiling[..]
         [..]Finished[..]
 
 
         Collected 13 test(s) from simple_package package
         Running 2 test(s) from src/
-        [PASS] simple_package::test_fib
-        [IGNORE] simple_package::ignored_test
+        [PASS] simple_package::tests::test_fib
+        [IGNORE] simple_package::tests::ignored_test
         Running 11 test(s) from tests/
         [PASS] tests::contract::call_and_invoke
         [PASS] tests::ext_function_test::test_my_test
@@ -273,7 +272,7 @@ fn with_ignored_flag() {
         
         Collected 2 test(s) from simple_package package
         Running 1 test(s) from src/
-        [PASS] simple_package::ignored_test
+        [PASS] simple_package::tests::ignored_test
         Running 1 test(s) from tests/
         [FAIL] tests::ext_function_test::ignored_test
         
@@ -308,8 +307,8 @@ fn with_include_ignored_flag() {
         
         Collected 13 test(s) from simple_package package
         Running 2 test(s) from src/
-        [PASS] simple_package::test_fib
-        [PASS] simple_package::ignored_test
+        [PASS] simple_package::tests::test_fib
+        [PASS] simple_package::tests::ignored_test
         Running 11 test(s) from tests/
         [PASS] tests::contract::call_and_invoke
         [PASS] tests::ext_function_test::test_my_test
@@ -400,7 +399,7 @@ fn with_include_ignored_flag_and_filter() {
         
         Collected 2 test(s) from simple_package package
         Running 1 test(s) from src/
-        [PASS] simple_package::ignored_test
+        [PASS] simple_package::tests::ignored_test
         Running 1 test(s) from tests/
         [FAIL] tests::ext_function_test::ignored_test
         
@@ -520,7 +519,7 @@ fn with_exit_first() {
             version = "0.1.0"
 
             [dependencies]
-            starknet = "2.2.0"
+            starknet = "2.3.0"
             snforge_std = {{ path = "{}" }}
 
             [[target.starknet-contract]]
@@ -622,11 +621,10 @@ fn init_new_project_test() {
 
             [dependencies]
             snforge_std = {{ git = "https://github.com/foundry-rs/starknet-foundry", tag = "v{}" }}
-            starknet = "2.2.0"
+            starknet = "2.3.0"
 
             [[target.starknet-contract]]
             casm = true
-            # foo = {{ path = "vendor/foo" }}
         "#,
         version
     );
@@ -647,7 +645,7 @@ fn init_new_project_test() {
         casm = true
 
         [dependencies]
-        starknet = "2.2.0"
+        starknet = "2.3.0"
         snforge_std = {{ git = "https://github.com/{}", branch = "{}" }}
         "#,
             remote_url,
@@ -664,7 +662,6 @@ fn init_new_project_test() {
     assert_stdout_contains!(
         output,
         indoc! {r#"
-        [..]Updating git repository[..]
         [..]Compiling test_name v0.1.0[..]
         [..]Finished[..]
 

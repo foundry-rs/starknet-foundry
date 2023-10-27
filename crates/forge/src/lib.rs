@@ -3,7 +3,6 @@ use std::fmt::Debug;
 
 use anyhow::{anyhow, Context, Result};
 use ark_std::iterable::Iterable;
-use assert_fs::TempDir;
 use cairo_felt::Felt252;
 use camino::{Utf8Path, Utf8PathBuf};
 
@@ -187,17 +186,6 @@ pub enum CrateLocation {
     Tests,
 }
 
-fn try_close_tmp_dir(temp_dir: TempDir) -> Result<()> {
-    let path = temp_dir.path().to_path_buf();
-    temp_dir.close().with_context(|| {
-            anyhow!(
-            "Failed to close temporary directory = {} with test files. The files might have not been released from filesystem",
-            path.display()
-        )
-        })?;
-    Ok(())
-}
-
 fn parse_fork_params(raw_fork_params: &RawForkParams) -> Result<ValidatedForkConfig> {
     Ok(ValidatedForkConfig {
         url: raw_fork_params.url.parse()?,
@@ -279,14 +267,8 @@ pub async fn run(
     runner_params: Arc<RunnerParams>,
     cancellation_tokens: Arc<CancellationTokens>,
 ) -> Result<Vec<TestCrateSummary>> {
-    let temp_dir = TempDir::new()?;
-
     let compilation_targets =
-        collect_test_compilation_targets(package_path, package_name, package_source_dir_path);
-    let compilation_targets = compilation_targets
-        .into_iter()
-        .map(|ct| ct.ensure_lib_file_exists(&temp_dir))
-        .collect::<Result<_>>()?;
+        collect_test_compilation_targets(package_path, package_name, package_source_dir_path)?;
     let test_crates = compile_tests(&compilation_targets, &runner_params)?;
     let test_crates = test_crates
         .into_iter()
@@ -296,8 +278,6 @@ pub async fn run(
         .into_iter()
         .map(|ctc| to_runnable(ctc, &runner_config))
         .collect::<Result<Vec<_>>>()?;
-
-    try_close_tmp_dir(temp_dir)?;
 
     pretty_printing::print_collected_tests_count(
         test_crates.iter().map(|tests| tests.test_cases.len()).sum(),
