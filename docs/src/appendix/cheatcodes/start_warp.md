@@ -1,12 +1,20 @@
 # `start_warp`
 
-> `fn start_warp(contract_address: ContractAddress, block_timestamp: u64)`
+> `fn start_warp(target: CheatTarget, block_timestamp: u64)`
 
-Changes the block timestamp for a contract at the given address.
+Changes the block timestamp for a contract at the given address(es).
 The change can be canceled with [`stop_warp`](./stop_warp.md).
 
-- `contract_address` - target contract address
+- `target` - target contract address(es).
 - `block_timestamp` - block timestamp to be set
+
+```rust
+enum CheatTarget {
+    All: (),
+    One: ContractAddress,
+    Multiple: Span<ContractAddress>
+}
+```
 
 For contract implementation:
 
@@ -31,19 +39,51 @@ impl IContractImpl of IContract<ContractState> {
 // ...
 ```
 
-We can use `start_warp` in a test to change the block timestamp for a given contract:
+We can use `start_warp` in a test to change the block timestamp for contracts:
 
 ```rust
-use snforge_std::start_warp;
+use snforge_std::{start_warp, CheatTarget};
 
 #[test]
-fn test_warp() {
+fn test_warp_one() {
     // ...
 
-    start_warp(contract_address, 1000);
+    start_warp(CheatTarget::One(contract_address), 1000);
 
     dispatcher.set_block_timestamp();
     let new_timestamp = dispatcher.get_block_timestamp();
     assert(new_timestamp == 1000, 'Wrong timestamp');
 }
+
+#[test]
+fn test_warp_multi() {
+    // ...
+
+    start_warp(CheatTarget::Multiple(array![address1, address 2, address 3].span()), 1000);
+
+    dispatcher1.set_block_timestamp();
+    dispatcher2.set_block_timestamp();
+    dispatcher3.set_block_timestamp();
+
+    assert(dispatcher1.get_block_timestamp() == 1000, 'Wrong timestamp');
+    assert(dispatcher2.get_block_timestamp() == 1000, 'Wrong timestamp');
+    assert(dispatcher3.get_block_timestamp() == 1000, 'Wrong timestamp');
+}
+
+#[test]
+fn test_warp_all() {
+    // ...
+
+    start_warp(CheatTarget::All, 1000);
+
+    dispatcher1.set_block_timestamp();
+    dispatcher2.set_block_timestamp();
+    dispatcher3.set_block_timestamp();
+
+    assert(dispatcher1.get_block_timestamp() == 1000, 'Wrong timestamp');
+    assert(dispatcher2.get_block_timestamp() == 1000, 'Wrong timestamp');
+    assert(dispatcher3.get_block_timestamp() == 1000, 'Wrong timestamp');
+}
 ```
+
+

@@ -4,10 +4,8 @@
 - [`stop_prank`](cheatcodes/stop_prank.md) - cancels the `start_prank` for the contract
 - [`start_roll`](cheatcodes/start_roll.md) - changes the block number for a contract
 - [`stop_roll`](cheatcodes/stop_roll.md) - cancels the `start_roll` for the contract
-- [`start_warp`](cheatcodes/start_warp.md) - changes the block timestamp for a contract
-- [`stop_warp`](cheatcodes/stop_warp.md) - cancels the `start_warp` for the contract
-- [`start_warp_global`](cheatcodes/start_warp_global.md) - changes the block timestamp for all contracts
-- [`stop_warp_global`](cheatcodes/stop_warp_global.md) - cancels `start_warp_global`
+- [`start_warp`](cheatcodes/start_warp.md) - changes the block timestamp for contracts
+- [`stop_warp`](cheatcodes/stop_warp.md) - cancels the `start_warp` for contracts
 - [`get_class_hash`](cheatcodes/get_class_hash.md) - retrieves a class hash of a contract
 - [`start_mock_call`](cheatcodes/start_mock_call.md) - mocks contract call to a `function_name` of a contract
 - [`stop_mock_call`](cheatcodes/stop_mock_call.md) - cancels the `start_mock_call` for the function `function_name` of a contract
