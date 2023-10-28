@@ -3,7 +3,6 @@ use std::fmt::Debug;
 
 use anyhow::{anyhow, Context, Result};
 use ark_std::iterable::Iterable;
-use assert_fs::TempDir;
 use cairo_felt::Felt252;
 use camino::{Utf8Path, Utf8PathBuf};
 
@@ -183,17 +182,6 @@ pub enum CrateLocation {
     Tests,
 }
 
-fn try_close_tmp_dir(temp_dir: TempDir) -> Result<()> {
-    let path = temp_dir.path().to_path_buf();
-    temp_dir.close().with_context(|| {
-            anyhow!(
-            "Failed to close temporary directory = {} with test files. The files might have not been released from filesystem",
-            path.display()
-        )
-        })?;
-    Ok(())
-}
-
 /// Run the tests in the package at the given path
 ///
 /// # Arguments
@@ -216,21 +204,13 @@ pub async fn run(
     runner_params: Arc<RunnerParams>,
     cancellation_tokens: Arc<CancellationTokens>,
 ) -> Result<Vec<TestCrateSummary>> {
-    let temp_dir = TempDir::new()?;
-
     let compilation_targets =
-        collect_test_compilation_targets(package_path, package_name, package_source_dir_path);
-    let compilation_targets = compilation_targets
-        .into_iter()
-        .map(|ct| ct.ensure_lib_file_exists(&temp_dir))
-        .collect::<Result<_>>()?;
+        collect_test_compilation_targets(package_path, package_name, package_source_dir_path)?;
     let tests = compile_tests(&compilation_targets, &runner_params)?;
     let tests = tests
         .into_iter()
         .map(|tc| runner_config.tests_filter.filter_tests(tc))
         .collect_vec();
-
-    try_close_tmp_dir(temp_dir)?;
 
     pretty_printing::print_collected_tests_count(
         tests.iter().map(|tests| tests.test_cases.len()).sum(),
@@ -334,13 +314,20 @@ async fn run_tests_from_crate(
     }
 
     let mut results = vec![];
+    let mut interrupted = false;
 
     while let Some(task) = tasks.next().await {
         let result = task??;
+        match result {
+            // Because tests are executed parallel is possible to receive
+            // Ok(TestCaseSummary::Interrupted) before Err
+            TestCaseSummary::Interrupted {} => interrupted = true,
+            result => {
+                pretty_printing::print_test_result(&result);
 
-        pretty_printing::print_test_result(&result);
-
-        results.push(result);
+                results.push(result);
+            }
+        }
     }
 
     rec.close();
@@ -348,6 +335,11 @@ async fn run_tests_from_crate(
     // Waiting for things to finish shutting down
     drop(send_shut_down);
     let _ = rec_shut_down.recv().await;
+
+    // This Panic should never occur.
+    // If TestCaseSummary::Interrupted is returned by a test,
+    // this implies that there should be another test than returned an Err.
+    assert!(!interrupted, "Tests were interrupted");
 
     let contained_fuzzed_tests = results.iter().any(|summary| summary.runs().is_some());
     Ok(TestCrateSummary {
@@ -412,7 +404,7 @@ fn run_single_test(
             () = cancellation_tokens.error.cancelled() => {
                 // Stop executing all tests because
                 // one of a test returns Err
-                Ok(TestCaseSummary::InterruptedByError {  })
+                Ok(TestCaseSummary::Interrupted{  })
             },
 
             result = blocking_run_from_test(vec![], case.clone(),runner,  runner_config.clone(), runner_params.clone(), send.clone(), send_shut_down.clone() ) => {
@@ -445,7 +437,7 @@ fn run_with_fuzzing(
     send_shut_down: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     tokio::task::spawn(async move {
-        let token = CancellationToken::new();
+        let cancellation_fuzzing_token = CancellationToken::new();
         let (send, mut rec) = channel(1);
         let args = args
             .iter()
@@ -478,7 +470,7 @@ fn run_with_fuzzing(
                 runner_config.clone(),
                 runner_params.clone(),
                 cancellation_tokens.clone(),
-                token.clone(),
+                cancellation_fuzzing_token.clone(),
                 send.clone(),
                 send_shut_down.clone(),
             ));
@@ -494,7 +486,11 @@ fn run_with_fuzzing(
             final_result = Some(result.clone());
 
             match result {
-                TestCaseSummary::Failed { .. } | TestCaseSummary::InterruptedByError {} => {
+                TestCaseSummary::Failed { .. } => {
+                    cancellation_fuzzing_token.cancel();
+                    break;
+                }
+                TestCaseSummary::Interrupted {} => {
                     break;
                 }
                 _ => (),
@@ -540,7 +536,7 @@ fn run_fuzzing_subtest(
             () = cancellation_tokens.error.cancelled() => {
                 // Stop executing all tests because
                 // one of a test returns Err
-                Ok(TestCaseSummary::InterruptedByError {  })
+                Ok(TestCaseSummary::Interrupted{  })
             },
             () = cancellation_tokens.exit_first.cancelled() => {
                 // Stop executing all tests because flag --exit-first'
@@ -550,7 +546,7 @@ fn run_fuzzing_subtest(
             () = cancellation_fuzzing_token.cancelled() => {
                 // Stop executing all single fuzzing tests
                 // because one of fuzzing test has been FAIL
-                Ok(TestCaseSummary::SkippedFuzzing {})
+                Ok(TestCaseSummary::Interrupted {  })
 
             },
            result = blocking_run_from_test(
@@ -567,8 +563,6 @@ fn run_fuzzing_subtest(
                         if let TestCaseSummary::Failed { .. } = &result {
                             if runner_config.exit_first {
                                 cancellation_tokens.exit_first.cancel();
-                            } else {
-                                cancellation_fuzzing_token.cancel();
                             }
                         }
                         Ok(result)

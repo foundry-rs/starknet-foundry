@@ -6,19 +6,20 @@ on:
   push:
     branches:
       - master
+  workflow_dispatch:
 
 jobs:
   test-forge-unit-and-integration:
     name: Test Forge / Unit and Integration Tests
     env:
-      SCARB_VERSION: 0.7.0
+      SCARB_VERSION: 2.3.0
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: true
       - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@a95ba195448af2da9b00fb742d14ffaaf3c21f43
       - uses: software-mansion/setup-scarb@v1.3.1
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
@@ -28,7 +29,7 @@ jobs:
   test-forge-e2e:
     name: Test Forge / E2E Tests
     env:
-      SCARB_VERSION: 0.7.0
+      SCARB_VERSION: 2.3.0
     runs-on: ubuntu-latest
     steps:
       - name: Extract branch name
@@ -57,7 +58,7 @@ jobs:
         with:
           submodules: true
       - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@a95ba195448af2da9b00fb742d14ffaaf3c21f43
       - uses: software-mansion/setup-scarb@v1.3.1
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
@@ -66,14 +67,14 @@ jobs:
   test-cheatnet:
     name: Test Cheatnet
     env:
-      SCARB_VERSION: 0.7.0
+      SCARB_VERSION: 2.3.0
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: true
       - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@a95ba195448af2da9b00fb742d14ffaaf3c21f43
       - uses: software-mansion/setup-scarb@v1.3.1
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
@@ -93,7 +94,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@439cf607258077187679211f12aa6f19af4a0af7
         with:
           toolchain: stable
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@a95ba195448af2da9b00fb742d14ffaaf3c21f43
       - uses: actions/setup-python@v4
         with:
           python-version: '3.9'
@@ -124,7 +125,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@439cf607258077187679211f12aa6f19af4a0af7
         with:
           toolchain: stable
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@a95ba195448af2da9b00fb742d14ffaaf3c21f43
       - name: Check forge formatting
         run: cargo fmt --check -p forge
       - name: Check cast formatting
@@ -146,5 +147,23 @@ jobs:
       - uses: dtolnay/rust-toolchain@439cf607258077187679211f12aa6f19af4a0af7
         with:
           toolchain: stable
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@a95ba195448af2da9b00fb742d14ffaaf3c21f43
       - run: cargo lint
+
+  build-docs:
+    name: Test Building Docs
+    runs-on: ubuntu-latest
+    env:
+      MDBOOK_VERSION: 0.4.31
+    steps:
+      - uses: dtolnay/rust-toolchain@439cf607258077187679211f12aa6f19af4a0af7
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@a95ba195448af2da9b00fb742d14ffaaf3c21f43
+      - uses: actions/checkout@v4
+      - name: Install mdBook
+        run: |
+          cargo install --version ${MDBOOK_VERSION} mdbook
+      - name: Build with mdBook
+        run: mdbook build
+        working-directory: ./docs

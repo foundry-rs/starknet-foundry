@@ -6,7 +6,9 @@ use camino::Utf8PathBuf;
 use cast::helpers::constants::{CREATE_KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH};
 use cast::helpers::response_structs::AccountCreateResponse;
 use cast::helpers::scarb_utils::CastConfig;
-use cast::{extract_or_generate_salt, get_chain_id, get_keystore_password, parse_number};
+use cast::{
+    extract_or_generate_salt, get_chain_id, get_keystore_password, parse_number, ValueFormat,
+};
 use clap::Args;
 use serde_json::json;
 use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
@@ -48,6 +50,7 @@ pub async fn create(
     salt: Option<FieldElement>,
     add_profile: bool,
     class_hash: Option<String>,
+    value_format: ValueFormat,
 ) -> Result<AccountCreateResponse> {
     let salt = extract_or_generate_salt(salt);
     let class_hash = {
@@ -94,7 +97,9 @@ pub async fn create(
     let mut output = vec![("address", format!("{address:#x}"))];
     if account_json["deployed"] == json!(false) {
         println!("Account successfully created. Prefund generated address with at least {max_fee} tokens. It is good to send more in the case of higher demand, max_fee * 2 = {}", max_fee * 2);
-        output.push(("max_fee", format!("{max_fee:#x}")));
+        // For default and Int it should be in int
+        let max_fee_str = value_format.format_u64(max_fee);
+        output.push(("max_fee", max_fee_str));
     }
 
     if add_profile {
@@ -106,7 +111,7 @@ pub async fn create(
 
     Ok(AccountCreateResponse {
         address,
-        max_fee: FieldElement::from(max_fee),
+        max_fee,
         add_profile: if add_profile {
             "Profile successfully added to Scarb.toml".to_string()
         } else {

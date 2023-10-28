@@ -17,9 +17,7 @@ trait L1HandlerTrait {
 
 impl L1HandlerImpl of L1HandlerTrait {
     fn new(contract_address: ContractAddress, function_name: felt252) -> L1Handler {
-        L1Handler {
-            contract_address, function_name, from_address: 0, payload: array![].span(),
-        }
+        L1Handler { contract_address, function_name, from_address: 0, payload: array![].span(), }
     }
 
     fn execute(self: L1Handler) -> Result::<(), RevertedTransaction> {

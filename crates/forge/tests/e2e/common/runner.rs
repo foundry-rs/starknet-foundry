@@ -5,13 +5,17 @@ use camino::Utf8PathBuf;
 use indoc::formatdoc;
 use regex::Regex;
 use snapbox::cmd::{cargo_bin, Command as SnapboxCommand};
-use std::env;
 use std::process::Command;
 use std::str::FromStr;
+use std::{env, fs};
+use toml_edit::{value, Document};
 
 pub(crate) fn runner() -> SnapboxCommand {
-    let snapbox = SnapboxCommand::new(cargo_bin!("snforge"));
-    snapbox
+    SnapboxCommand::new(cargo_bin!("snforge"))
+}
+
+pub(crate) fn test_runner() -> SnapboxCommand {
+    runner().arg("test")
 }
 
 pub(crate) static BASE_FILE_PATTERNS: &[&str] = &["**/*.cairo", "**/*.toml"];
@@ -32,25 +36,17 @@ pub(crate) fn setup_package_with_file_patterns(
         .replace('\\', "/");
 
     let manifest_path = temp.child("Scarb.toml");
-    manifest_path
-        .write_str(&formatdoc!(
-            r#"
-                [package]
-                name = "{}"
-                version = "0.1.0"
 
-                [[target.starknet-contract]]
-                sierra = true
-                casm = true
-
-                [dependencies]
-                starknet = "2.2.0"
-                snforge_std = {{ path = "{}" }}
-                "#,
-            package_name,
-            snforge_std_path
-        ))
+    let mut scarb_toml = fs::read_to_string(&manifest_path)
+        .unwrap()
+        .parse::<Document>()
         .unwrap();
+    scarb_toml["dependencies"]["snforge_std"]["path"] = value(snforge_std_path);
+    scarb_toml["dependencies"]["starknet"] = value("2.3.0");
+    scarb_toml["target.starknet-contract"]["sierra"] = value(true);
+    scarb_toml["target.starknet-contract"]["casm"] = value(true);
+
+    manifest_path.write_str(&scarb_toml.to_string()).unwrap();
 
     temp
 }
@@ -87,7 +83,7 @@ pub(crate) fn setup_hello_workspace() -> TempDir {
 
                 
                 [workspace.dependencies]
-                starknet = "2.2.0"
+                starknet = "2.3.0"
                 snforge_std = {{ path = "{}" }}
                 
                 [workspace.package]
@@ -146,7 +142,7 @@ pub(crate) fn setup_virtual_workspace() -> TempDir {
                 [workspace.tool.snforge]
                 
                 [workspace.dependencies]
-                starknet = "2.2.0"
+                starknet = "2.3.0"
                 snforge_std = {{ path = "{}" }}
                 
                 [workspace.package]

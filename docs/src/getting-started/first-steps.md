@@ -3,10 +3,10 @@
 In this section we provide an overview of Starknet Foundry `snforge` command line tool.
 We demonstrate how to create a new project, compile, and test it.
 
-To start a new project with Starknet Foundry, run `--init` command:
+To start a new project with Starknet Foundry, run `snforge init`
 
 ```shell
-snforge --init project_name
+$ snforge init project_name
 ```
 
 Let's check out the project structure
@@ -27,19 +27,10 @@ $ tree . -L 1
 * `tests/` contains tests.
 * `Scarb.toml` contains configuration of the project as well as of `snforge`, `sncast` etc.
 
-Ensures that `casm` codegen is enabled in the `Scarb.toml` file.
-
-```toml
-# ...
-[[target.starknet-contract]]
-casm = true
-# ...
-```
-
-And run tests with `snforge`
+And run tests with `snforge test`
 
 ```shell
-$ snforge
+$ snforge test
 Collected 2 test(s) from test_name package
 Running 0 test(s) from src/
 Running 2 test(s) from tests/
@@ -74,5 +65,16 @@ using [`scarb add`](https://docs.swmansion.com/scarb/docs/guides/dependencies.ht
 command.
 
 ```shell
-$ scarb add snforge_std --git https://github.com/foundry-rs/starknet-foundry.git --tag v0.7.1
+$ scarb add snforge_std \
+ --git https://github.com/foundry-rs/starknet-foundry.git \
+ --tag v0.7.1
+```
+
+Additionally, ensure that `casm` codegen is enabled in the `Scarb.toml` file.
+
+```toml
+# ...
+[[target.starknet-contract]]
+casm = true
+# ...
 ```
