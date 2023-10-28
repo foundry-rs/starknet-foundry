@@ -248,13 +248,10 @@ impl CheatnetState {
     #[must_use]
     pub fn address_is_warped(&self, contract_address: &ContractAddress) -> bool {
         self.global_warp.is_some()
-            || match self.warped_contracts.get(contract_address) {
-                Some(warped_contract) => match warped_contract {
-                    WarpedContract::Warped(_) => true,
-                    WarpedContract::Unwarped => false,
-                },
-                None => false,
-            }
+            || matches!(
+                self.warped_contracts.get(contract_address),
+                Some(WarpedContract::Warped(_))
+            )
     }
 
     #[must_use]

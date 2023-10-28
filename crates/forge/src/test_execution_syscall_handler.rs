@@ -267,22 +267,22 @@ impl TestExecutionSyscallHandler<'_, '_> {
             }
             "start_warp" => {
                 // The last element in `inputs` should be the timestamp in all cases
-                println!("Running1");
                 let warp_timestamp = inputs.last().unwrap().clone();
-                println!("Running2");
-                // First felt encodes the variant
-                let target = if inputs[0] == Felt252::from(0) {
-                    CheatTarget::All
-                } else if inputs[0] == Felt252::from(1) {
-                    CheatTarget::One(inputs[1].to_contract_address())
-                } else if inputs[0] == Felt252::from(2) {
-                    let contract_addresses: Vec<_> = inputs[2..inputs.len() - 1]
-                        .iter()
-                        .map(|f| (*f).to_contract_address())
-                        .collect();
-                    CheatTarget::Multiple(contract_addresses)
-                } else {
-                    panic!("Invalid CheatTarget variant");
+
+                // First element encodes the variant of CheatTarget
+                let target = match &inputs[0] {
+                    x if *x == Felt252::from(0) => CheatTarget::All,
+                    x if *x == Felt252::from(1) => {
+                        CheatTarget::One(inputs[1].to_contract_address())
+                    }
+                    x if *x == Felt252::from(2) => {
+                        let contract_addresses: Vec<_> = inputs[2..inputs.len() - 1]
+                            .iter()
+                            .map(Felt252::to_contract_address)
+                            .collect();
+                        CheatTarget::Multiple(contract_addresses)
+                    }
+                    _ => panic!("Invalid CheatTarget variant"),
                 };
 
                 self.contract_execution_syscall_handler
@@ -293,28 +293,26 @@ impl TestExecutionSyscallHandler<'_, '_> {
                 Ok(())
             }
             "stop_warp" => {
-                // First felt encodes the variant
-                if inputs[0] == Felt252::from(0) {
-                    self.contract_execution_syscall_handler
-                        .cheatable_syscall_handler
-                        .cheatnet_state
-                        .stop_warp(CheatTarget::All);
-                } else if inputs[0] == Felt252::from(1) {
-                    let warp_target = CheatTarget::One(inputs[1].to_contract_address());
-                    self.contract_execution_syscall_handler
-                        .cheatable_syscall_handler
-                        .cheatnet_state
-                        .stop_warp(warp_target);
-                } else if inputs[0] == Felt252::from(2) {
-                    let warp_targets: Vec<_> = inputs[2..]
-                        .iter()
-                        .map(Felt252::to_contract_address)
-                        .collect();
-                    self.contract_execution_syscall_handler
-                        .cheatable_syscall_handler
-                        .cheatnet_state
-                        .stop_warp(CheatTarget::Multiple(warp_targets));
-                }
+                // First element encodes the variant of CheatTarget
+                let target = match &inputs[0] {
+                    x if *x == Felt252::from(0) => CheatTarget::All,
+                    x if *x == Felt252::from(1) => {
+                        CheatTarget::One(inputs[1].to_contract_address())
+                    }
+                    x if *x == Felt252::from(2) => {
+                        let contract_addresses: Vec<_> = inputs[2..]
+                            .iter()
+                            .map(Felt252::to_contract_address)
+                            .collect();
+                        CheatTarget::Multiple(contract_addresses)
+                    }
+                    _ => panic!("Invalid CheatTarget variant"),
+                };
+
+                self.contract_execution_syscall_handler
+                    .cheatable_syscall_handler
+                    .cheatnet_state
+                    .stop_warp(target);
 
                 Ok(())
             }

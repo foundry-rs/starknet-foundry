@@ -633,8 +633,6 @@ fn init_new_project_test() {
 
     let remote_url = get_remote_url();
     let branch = get_current_branch();
-    println!("remote_url: {remote_url:?}");
-    println!("branch: {branch:?}");
     manifest_path
         .write_str(&formatdoc!(
             r#"
