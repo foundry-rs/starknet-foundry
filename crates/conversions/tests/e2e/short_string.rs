@@ -44,13 +44,19 @@ mod tests_short_string {
     fn test_short_string_conversions_limit() {
         // 32 characters.
         let short_string = "1234567890123456789012345678912".to_string();
-        
+
         assert_eq!(short_string, short_string.to_class_hash().to_short_string());
         assert_eq!(short_string, short_string.to_felt252().to_short_string());
-        assert_eq!(short_string, short_string.to_field_element().to_short_string());
+        assert_eq!(
+            short_string,
+            short_string.to_field_element().to_short_string()
+        );
         assert_eq!(short_string, short_string.to_nonce().to_short_string());
         assert_eq!(short_string, short_string.to_stark_felt().to_short_string());
         assert_eq!(short_string, short_string.to_stark_hash().to_short_string());
-        assert_eq!(short_string, short_string.to_contract_address().to_short_string());
+        assert_eq!(
+            short_string,
+            short_string.to_contract_address().to_short_string()
+        );
     }
 }
