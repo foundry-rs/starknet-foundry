@@ -1,6 +1,6 @@
 use anyhow::{anyhow, bail, Context, Result};
-use camino::{Utf8Path, Utf8PathBuf};
-use clap::Parser;
+use camino::Utf8PathBuf;
+use clap::{Parser, Subcommand};
 use include_dir::{include_dir, Dir};
 use scarb_metadata::{MetadataCommand, PackageMetadata};
 use scarb_ui::args::PackagesFilter;
@@ -27,17 +27,37 @@ static PREDEPLOYED_CONTRACTS: Dir = include_dir!("crates/cheatnet/predeployed-co
 
 #[derive(Parser, Debug)]
 #[command(version)]
+struct Cli {
+    #[command(subcommand)]
+    subcommand: ForgeSubcommand,
+}
+
+#[derive(Subcommand, Debug)]
+enum ForgeSubcommand {
+    /// Run tests for a project in the current directory
+    Test {
+        #[command(flatten)]
+        args: TestArgs,
+    },
+    /// Create a new directory with a Forge project
+    Init {
+        /// Name of a new project
+        name: String,
+    },
+    /// Clean Forge cache directory
+    CleanCache {},
+}
+
+#[derive(Parser, Debug)]
 #[allow(clippy::struct_excessive_bools)]
-struct Args {
+struct TestArgs {
     /// Name used to filter tests
     test_filter: Option<String>,
     /// Use exact matches for `test_filter`
     #[arg(short, long)]
     exact: bool,
-    /// Create a new directory and forge project named <NAME>
-    #[arg(long, value_name = "NAME")]
-    init: Option<String>,
-    /// Stop test execution after the first failed test
+
+    /// Stop executing tests after the first failed test
     #[arg(short = 'x', long)]
     exit_first: bool,
 
@@ -47,14 +67,9 @@ struct Args {
     /// Number of fuzzer runs
     #[arg(short = 'r', long, value_parser = validate_fuzzer_runs_value)]
     fuzzer_runs: Option<u32>,
-
     /// Seed for the fuzzer
     #[arg(short = 's', long)]
     fuzzer_seed: Option<u64>,
-
-    /// Clean forge cache directory
-    #[arg(short, long)]
-    clean_cache: bool,
 
     /// Run only tests marked with `#[ignore]` attribute
     #[arg(long = "ignored")]
@@ -74,7 +89,9 @@ fn validate_fuzzer_runs_value(val: &str) -> Result<u32> {
     Ok(parsed_val)
 }
 
-fn clean_cache(workspace_root: &Utf8Path) -> Result<()> {
+fn clean_cache() -> Result<()> {
+    let scarb_metadata = MetadataCommand::new().inherit_stderr().exec()?;
+    let workspace_root = scarb_metadata.workspace.root.clone();
     let cache_dir = workspace_root.join(CACHE_DIR);
     if cache_dir.exists() {
         fs::remove_dir_all(cache_dir)?;
@@ -98,34 +115,19 @@ fn extract_failed_tests(tests_summaries: Vec<TestCrateSummary>) -> Vec<TestCaseS
         .collect()
 }
 
-#[allow(clippy::too_many_lines)]
-fn main_execution() -> Result<bool> {
-    let args = Args::parse();
-    if let Some(project_name) = args.init {
-        init::run(project_name.as_str())?;
-        return Ok(true);
-    }
+fn test_workspace(args: TestArgs) -> Result<bool> {
+    let scarb_metadata = MetadataCommand::new().inherit_stderr().exec()?;
+    let workspace_root = scarb_metadata.workspace.root.clone();
 
     let predeployed_contracts_dir = load_predeployed_contracts()?;
     let predeployed_contracts_path: PathBuf = predeployed_contracts_dir.path().into();
     let predeployed_contracts = Utf8PathBuf::try_from(predeployed_contracts_path.clone())
         .context("Failed to convert path to predeployed contracts to Utf8PathBuf")?;
 
-    which::which("scarb")
-        .context("Cannot find `scarb` binary in PATH. Make sure you have Scarb installed https://github.com/software-mansion/scarb")?;
-
-    let scarb_metadata = MetadataCommand::new().inherit_stderr().exec()?;
-
     let packages: Vec<PackageMetadata> = args
         .packages_filter
         .match_many(&scarb_metadata)
         .context("Failed to find any packages matching the specified filter")?;
-
-    let workspace_root = scarb_metadata.workspace.root.clone();
-
-    if args.clean_cache {
-        clean_cache(&workspace_root).context("Failed to clean snforge cache")?;
-    }
 
     let cores = if let Ok(available_cores) = available_parallelism() {
         available_cores.get()
@@ -222,6 +224,26 @@ fn main_execution() -> Result<bool> {
     pretty_printing::print_failures(&all_failed_tests);
 
     Ok(all_failed_tests.is_empty())
+}
+
+#[allow(clippy::too_many_lines)]
+fn main_execution() -> Result<bool> {
+    let cli = Cli::parse();
+
+    which::which("scarb")
+        .context("Cannot find `scarb` binary in PATH. Make sure you have Scarb installed https://github.com/software-mansion/scarb")?;
+
+    match cli.subcommand {
+        ForgeSubcommand::Init { name } => {
+            init::run(name.as_str())?;
+            Ok(true)
+        }
+        ForgeSubcommand::CleanCache {} => {
+            clean_cache()?;
+            Ok(true)
+        }
+        ForgeSubcommand::Test { args } => test_workspace(args),
+    }
 }
 
 fn main() {

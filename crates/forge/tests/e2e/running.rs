@@ -3,14 +3,16 @@ use camino::Utf8PathBuf;
 use indoc::{formatdoc, indoc};
 
 use crate::assert_stdout_contains;
-use crate::e2e::common::runner::{get_current_branch, get_remote_url, runner, setup_package};
+use crate::e2e::common::runner::{
+    get_current_branch, get_remote_url, runner, setup_package, test_runner,
+};
 use assert_fs::TempDir;
 use std::{path::Path, str::FromStr};
 
 #[test]
 fn simple_package() {
     let temp = setup_package("simple_package");
-    let snapbox = runner();
+    let snapbox = test_runner();
     let output = snapbox.current_dir(&temp).assert().code(1);
 
     assert_stdout_contains!(
@@ -22,8 +24,8 @@ fn simple_package() {
 
     Collected 13 test(s) from simple_package package
     Running 2 test(s) from src/
-    [PASS] simple_package::test_fib
-    [IGNORE] simple_package::ignored_test
+    [PASS] simple_package::tests::test_fib
+    [IGNORE] simple_package::tests::ignored_test
     Running 11 test(s) from tests/
     [PASS] tests::contract::call_and_invoke
     [PASS] tests::ext_function_test::test_my_test
@@ -75,7 +77,7 @@ fn simple_package_with_git_dependency() {
             casm = true
 
             [dependencies]
-            starknet = "2.2.0"
+            starknet = "2.3.0"
             snforge_std = {{ git = "https://github.com/{}", branch = "{}" }}
             "#,
             remote_url,
@@ -83,7 +85,7 @@ fn simple_package_with_git_dependency() {
         ))
         .unwrap();
 
-    let snapbox = runner();
+    let snapbox = test_runner();
     let output = snapbox
         .env("SCARB_CACHE", temp_scarb.path())
         .current_dir(&temp)
@@ -93,15 +95,14 @@ fn simple_package_with_git_dependency() {
     assert_stdout_contains!(
         output,
         indoc! {r#"
-        [..]Updating git repository[..]
         [..]Compiling[..]
         [..]Finished[..]
 
 
         Collected 13 test(s) from simple_package package
         Running 2 test(s) from src/
-        [PASS] simple_package::test_fib
-        [IGNORE] simple_package::ignored_test
+        [PASS] simple_package::tests::test_fib
+        [IGNORE] simple_package::tests::ignored_test
         Running 11 test(s) from tests/
         [PASS] tests::contract::call_and_invoke
         [PASS] tests::ext_function_test::test_my_test
@@ -144,7 +145,7 @@ fn with_failing_scarb_build() {
         ))
         .unwrap();
 
-    let snapbox = runner();
+    let snapbox = test_runner();
 
     let result = snapbox.current_dir(&temp).assert().code(2);
 
@@ -155,7 +156,7 @@ fn with_failing_scarb_build() {
 #[test]
 fn with_filter() {
     let temp = setup_package("simple_package");
-    let snapbox = runner();
+    let snapbox = test_runner();
 
     let output = snapbox.current_dir(&temp).arg("two").assert().success();
 
@@ -179,7 +180,7 @@ fn with_filter() {
 #[test]
 fn with_filter_matching_module() {
     let temp = setup_package("simple_package");
-    let snapbox = runner();
+    let snapbox = test_runner();
 
     let output = snapbox
         .current_dir(&temp)
@@ -208,7 +209,7 @@ fn with_filter_matching_module() {
 #[test]
 fn with_exact_filter() {
     let temp = setup_package("simple_package");
-    let snapbox = runner();
+    let snapbox = test_runner();
 
     let output = snapbox
         .current_dir(&temp)
@@ -236,7 +237,7 @@ fn with_exact_filter() {
 #[test]
 fn with_non_matching_filter() {
     let temp = setup_package("simple_package");
-    let snapbox = runner();
+    let snapbox = test_runner();
 
     let output = snapbox.current_dir(&temp).arg("qwerty").assert().success();
 
@@ -258,7 +259,7 @@ fn with_non_matching_filter() {
 #[test]
 fn with_ignored_flag() {
     let temp = setup_package("simple_package");
-    let snapbox = runner();
+    let snapbox = test_runner();
 
     let output = snapbox.current_dir(&temp).arg("--ignored").assert().code(1);
 
@@ -271,7 +272,7 @@ fn with_ignored_flag() {
         
         Collected 2 test(s) from simple_package package
         Running 1 test(s) from src/
-        [PASS] simple_package::ignored_test
+        [PASS] simple_package::tests::ignored_test
         Running 1 test(s) from tests/
         [FAIL] tests::ext_function_test::ignored_test
         
@@ -289,7 +290,7 @@ fn with_ignored_flag() {
 #[test]
 fn with_include_ignored_flag() {
     let temp = setup_package("simple_package");
-    let snapbox = runner();
+    let snapbox = test_runner();
 
     let output = snapbox
         .current_dir(&temp)
@@ -306,8 +307,8 @@ fn with_include_ignored_flag() {
         
         Collected 13 test(s) from simple_package package
         Running 2 test(s) from src/
-        [PASS] simple_package::test_fib
-        [PASS] simple_package::ignored_test
+        [PASS] simple_package::tests::test_fib
+        [PASS] simple_package::tests::ignored_test
         Running 11 test(s) from tests/
         [PASS] tests::contract::call_and_invoke
         [PASS] tests::ext_function_test::test_my_test
@@ -345,7 +346,7 @@ fn with_include_ignored_flag() {
 #[test]
 fn with_ignored_flag_and_filter() {
     let temp = setup_package("simple_package");
-    let snapbox = runner();
+    let snapbox = test_runner();
 
     let output = snapbox
         .current_dir(&temp)
@@ -380,7 +381,7 @@ fn with_ignored_flag_and_filter() {
 #[test]
 fn with_include_ignored_flag_and_filter() {
     let temp = setup_package("simple_package");
-    let snapbox = runner();
+    let snapbox = test_runner();
 
     let output = snapbox
         .current_dir(&temp)
@@ -398,7 +399,7 @@ fn with_include_ignored_flag_and_filter() {
         
         Collected 2 test(s) from simple_package package
         Running 1 test(s) from src/
-        [PASS] simple_package::ignored_test
+        [PASS] simple_package::tests::ignored_test
         Running 1 test(s) from tests/
         [FAIL] tests::ext_function_test::ignored_test
         
@@ -416,7 +417,7 @@ fn with_include_ignored_flag_and_filter() {
 #[test]
 fn with_print() {
     let temp = setup_package("print_test");
-    let snapbox = runner();
+    let snapbox = test_runner();
 
     let output = snapbox.current_dir(&temp).assert().success();
 
@@ -465,7 +466,7 @@ fn with_print() {
 #[test]
 fn with_panic_data_decoding() {
     let temp = setup_package("panic_decoding");
-    let snapbox = runner();
+    let snapbox = test_runner();
 
     let output = snapbox.current_dir(&temp).assert().code(1);
 
@@ -518,7 +519,7 @@ fn with_exit_first() {
             version = "0.1.0"
 
             [dependencies]
-            starknet = "2.2.0"
+            starknet = "2.3.0"
             snforge_std = {{ path = "{}" }}
 
             [[target.starknet-contract]]
@@ -537,7 +538,7 @@ fn with_exit_first() {
         ))
         .unwrap();
 
-    let snapbox = runner();
+    let snapbox = test_runner();
 
     let output = snapbox.current_dir(&temp).assert().code(1);
     assert_stdout_contains!(
@@ -567,7 +568,7 @@ fn with_exit_first() {
 #[test]
 fn with_exit_first_flag() {
     let temp = setup_package("exit_first");
-    let snapbox = runner().arg("--exit-first");
+    let snapbox = test_runner().arg("--exit-first");
 
     let output = snapbox.current_dir(&temp).assert().code(1);
     assert_stdout_contains!(
@@ -603,8 +604,7 @@ fn init_new_project_test() {
     snapbox
         .env("SCARB_CACHE", temp_scarb.path())
         .current_dir(&temp)
-        .arg("--init")
-        .arg("test_name")
+        .args(["init", "test_name"])
         .assert()
         .success();
     let manifest_path = temp.child("test_name/Scarb.toml");
@@ -621,11 +621,10 @@ fn init_new_project_test() {
 
             [dependencies]
             snforge_std = {{ git = "https://github.com/foundry-rs/starknet-foundry", tag = "v{}" }}
-            starknet = "2.2.0"
+            starknet = "2.3.0"
 
             [[target.starknet-contract]]
             casm = true
-            # foo = {{ path = "vendor/foo" }}
         "#,
         version
     );
@@ -646,7 +645,7 @@ fn init_new_project_test() {
         casm = true
 
         [dependencies]
-        starknet = "2.2.0"
+        starknet = "2.3.0"
         snforge_std = {{ git = "https://github.com/{}", branch = "{}" }}
         "#,
             remote_url,
@@ -654,7 +653,7 @@ fn init_new_project_test() {
         ))
         .unwrap();
 
-    let snapbox = runner();
+    let snapbox = test_runner();
     // Check if template works with current version of snforge_std
     let output = snapbox
         .current_dir(temp.child(Path::new("test_name")))
@@ -663,7 +662,6 @@ fn init_new_project_test() {
     assert_stdout_contains!(
         output,
         indoc! {r#"
-        [..]Updating git repository[..]
         [..]Compiling test_name v0.1.0[..]
         [..]Finished[..]
 
@@ -684,7 +682,7 @@ fn should_panic() {
     temp.copy_from("tests/data/should_panic_test", &["**/*.cairo", "**/*.toml"])
         .unwrap();
 
-    let snapbox = runner();
+    let snapbox = test_runner();
 
     let output = snapbox.current_dir(&temp).assert().code(1);
     assert_stdout_contains!(
@@ -730,7 +728,7 @@ fn should_panic() {
 #[test]
 fn printing_in_contracts() {
     let temp = setup_package("contract_printing");
-    let snapbox = runner();
+    let snapbox = test_runner();
 
     let output = snapbox.current_dir(&temp).assert().success();
     assert_stdout_contains!(
