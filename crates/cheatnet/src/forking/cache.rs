@@ -1,7 +1,9 @@
 use crate::state::CheatnetBlockInfo;
+use cairo_felt::Felt252;
 use camino::Utf8PathBuf;
 use conversions::StarknetConversions;
 use fs2::FileExt;
+use num_bigint::BigUint;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use starknet::core::types::{BlockId, BlockTag, ContractClass, FieldElement};
@@ -226,9 +228,15 @@ impl ForkCache {
 
     pub(crate) fn get_class_hash_at(&self, contract_address: ContractAddress) -> Option<ClassHash> {
         self.fork_cache_content
-            .nonce_at
+            .class_hash_at
             .get(&contract_address.to_felt252().to_string())
-            .map(StarknetConversions::to_class_hash)
+            .map(|dec_string| {
+                Felt252::from(
+                    BigUint::parse_bytes(dec_string.as_bytes(), 10)
+                        .expect("Parsing class_hash_at entry failed"),
+                )
+                .to_class_hash()
+            }) // Entry encoded as a decimal string
     }
 
     pub(crate) fn cache_get_class_hash_at(
