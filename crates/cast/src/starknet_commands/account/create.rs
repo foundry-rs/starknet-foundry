@@ -6,9 +6,7 @@ use camino::Utf8PathBuf;
 use cast::helpers::constants::{CREATE_KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH};
 use cast::helpers::response_structs::AccountCreateResponse;
 use cast::helpers::scarb_utils::CastConfig;
-use cast::{
-    extract_or_generate_salt, get_chain_id, get_keystore_password, parse_number,
-};
+use cast::{extract_or_generate_salt, get_chain_id, get_keystore_password, parse_number};
 use clap::Args;
 use serde_json::json;
 use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
@@ -102,7 +100,7 @@ pub async fn create(
             "--add-profile flag was not set. No profile added to Scarb.toml".to_string()
         },
         message: if account_json["deployed"] == json!(false) {
-            format!("Account successfully created. Prefund generated address with at least <max_fee> tokens. It is good to send more in the case of higher demand.")
+            "Account successfully created. Prefund generated address with at least <max_fee> tokens. It is good to send more in the case of higher demand.".to_string()
         } else {
             "Account already deployed".to_string()
         },
