@@ -59,7 +59,6 @@ async fn test_happy_case_from_cli_with_scarb() {
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
-        "--json",
         "--path-to-scarb-toml",
         "tests/data/files/correct_Scarb.toml",
         "--profile",
@@ -82,10 +81,8 @@ async fn test_happy_case_from_cli_with_scarb() {
     let snapbox = runner(&args);
 
     snapbox.assert().success().stdout_eq(indoc! {r#"
-        {
-          "command": "call",
-          "response": "[0x0]"
-        }
+        command: call
+        response: [0x0]
 "#});
 }
 
@@ -95,7 +92,6 @@ async fn test_happy_case_mixed() {
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
-        "--json",
         "--path-to-scarb-toml",
         "tests/data/files/correct_Scarb.toml",
         "--profile",
@@ -116,10 +112,8 @@ async fn test_happy_case_mixed() {
     let snapbox = runner(&args);
 
     snapbox.assert().success().stdout_eq(indoc! {r#"
-        {
-          "command": "call",
-          "response": "[0x0]"
-        }
+        command: call
+        response: [0x0]
 "#});
 }
 
