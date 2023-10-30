@@ -96,14 +96,7 @@ jobs:
         run: |
           devnetrev=$(grep "DEVNET_REV=" ./scripts/install_devnet.sh | awk -F '=' '{print $2}')
           echo "devnet_rev=${devnetrev//\"}" >> $GITHUB_OUTPUT
-#      - name: Cache starknet-devnet-rs
-#        id: cache-devnet
-#        uses: actions/cache@v3
-#        with:
-#          path: ./crates/cast/tests/utils/devnet
-#          key: starknet-devnet-rs-${{ steps.devnet-rev.outputs.devnet_rev }}
       - name: Install starknet-devnet-rs
-#        if: steps.cache-devnet.outputs.cache-hit != 'true'
         run: ./scripts/install_devnet.sh
       - uses: software-mansion/setup-scarb@v1.3.1
         with:
