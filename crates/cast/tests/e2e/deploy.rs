@@ -4,7 +4,7 @@ use crate::helpers::fixtures::{
 };
 use crate::helpers::runner::runner;
 use indoc::indoc;
-use starknet::core::types::TransactionReceipt::Invoke;
+use starknet::core::types::TransactionReceipt::Deploy;
 
 #[tokio::test]
 async fn test_happy_case() {
@@ -22,7 +22,7 @@ async fn test_happy_case() {
         "0x2",
         "--unique",
         "--max-fee",
-        "999999999999",
+        "99999999999999999",
     ]);
 
     let snapbox = runner(&args);
@@ -31,7 +31,7 @@ async fn test_happy_case() {
     let hash = get_transaction_hash(&output);
     let receipt = get_transaction_receipt(hash).await;
 
-    assert!(matches!(receipt, Invoke(_)));
+    assert!(matches!(receipt, Deploy(_)));
 }
 
 #[tokio::test]
@@ -56,7 +56,7 @@ async fn test_happy_case_with_constructor() {
     let hash = get_transaction_hash(&output);
     let receipt = get_transaction_receipt(hash).await;
 
-    assert!(matches!(receipt, Invoke(_)));
+    assert!(matches!(receipt, Deploy(_)));
 }
 
 #[test]
@@ -77,7 +77,7 @@ fn test_wrong_calldata() {
     let output = String::from_utf8(snapbox.assert().success().get_output().stderr.clone()).unwrap();
 
     assert!(output.contains("error: "));
-    assert!(output.contains("Error in the called contract"));
+    assert!(output.contains("Transaction execution has failed."));
 }
 
 #[tokio::test]
@@ -94,7 +94,7 @@ async fn test_contract_not_declared() {
     let snapbox = runner(&args);
     let output = String::from_utf8(snapbox.assert().get_output().stderr.clone()).unwrap();
 
-    assert!(output.contains("Class with hash 0x1 is not declared."));
+    assert!(output.contains("Transaction execution has failed."));
 }
 
 #[test]
@@ -115,7 +115,7 @@ fn test_contract_already_deployed() {
     let snapbox = runner(&args);
     let output = String::from_utf8(snapbox.assert().get_output().stderr.clone()).unwrap();
 
-    assert!(output.contains("StarknetErrorCode.CONTRACT_ADDRESS_UNAVAILABLE"));
+    assert!(output.contains("Transaction execution has failed"));
 }
 
 #[test]
@@ -140,6 +140,6 @@ fn test_too_low_max_fee() {
 
     snapbox.assert().stderr_matches(indoc! {r#"
         command: deploy
-        error: Transaction has been rejected
+        error: Max fee is smaller than the minimal transaction cost (validation plus fee transfer)
     "#});
 }

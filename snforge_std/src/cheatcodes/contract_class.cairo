@@ -19,7 +19,7 @@ impl RevertedTransactionImpl of RevertedTransactionTrait {
     }
 }
 
-#[derive(Drop, Clone)]
+#[derive(Drop, Clone, Copy)]
 struct ContractClass {
     class_hash: ClassHash,
 }

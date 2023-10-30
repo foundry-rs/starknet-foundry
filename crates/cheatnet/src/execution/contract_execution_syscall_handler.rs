@@ -68,15 +68,7 @@ impl HintProcessorLogic for ContractExecutionSyscallHandler<'_, '_> {
 
             match selector {
                 "print" => {
-                    for value in inputs {
-                        if let Some(short_string) = as_cairo_short_string(&value) {
-                            println!(
-                                "original value: [{value}], converted to a string: [{short_string}]",
-                            );
-                        } else {
-                            println!("original value: [{value}]");
-                        }
-                    }
+                    print(inputs);
                     Ok(())
                 }
                 _ => Err(HintError::CustomHint(
@@ -135,5 +127,24 @@ impl ResourceTracker for ContractExecutionSyscallHandler<'_, '_> {
             .context
             .vm_run_resources
             .run_resources()
+    }
+}
+
+fn as_printable_short_string(value: &Felt252) -> Option<String> {
+    let bytes: Vec<u8> = value.to_bytes_be();
+    if bytes.iter().any(u8::is_ascii_control) {
+        return None;
+    }
+
+    as_cairo_short_string(value)
+}
+
+pub fn print(inputs: Vec<Felt252>) {
+    for value in inputs {
+        if let Some(short_string) = as_printable_short_string(&value) {
+            println!("original value: [{value}], converted to a string: [{short_string}]",);
+        } else {
+            println!("original value: [{value}]");
+        }
     }
 }

@@ -47,7 +47,9 @@ use cairo_vm::vm::errors::hint_errors::HintError::CustomHint;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cheatnet::cheatcodes::spy_events::SpyTarget;
 use cheatnet::execution::cheated_syscalls::SingleSegmentResponse;
-use cheatnet::execution::contract_execution_syscall_handler::ContractExecutionSyscallHandler;
+use cheatnet::execution::contract_execution_syscall_handler::{
+    print, ContractExecutionSyscallHandler,
+};
 use starknet::signers::SigningKey;
 
 mod file_operations;
@@ -901,25 +903,6 @@ fn execute_call_contract(
         &call_args.calldata,
     )
     .unwrap_or_else(|err| panic!("Transaction execution error: {err}"))
-}
-
-fn as_printable_short_string(value: &Felt252) -> Option<String> {
-    let bytes: Vec<u8> = value.to_bytes_be();
-    if bytes.iter().any(u8::is_ascii_control) {
-        return None;
-    }
-
-    as_cairo_short_string(value)
-}
-
-fn print(inputs: Vec<Felt252>) {
-    for value in inputs {
-        if let Some(short_string) = as_printable_short_string(&value) {
-            println!("original value: [{value}], converted to a string: [{short_string}]",);
-        } else {
-            println!("original value: [{value}]");
-        }
-    }
 }
 
 fn write_cheatcode_panic(buffer: &mut MemBuffer, panic_data: &[Felt252]) {

@@ -68,3 +68,6 @@ name = "forge"
 [[bin]]
 name = "snforge"
 path = "src/main.rs"
+
+[dev-dependencies]
+test_utils = { path = "test_utils" }
