@@ -55,22 +55,27 @@ fn setup_compile_tests() -> (
     ];
 
     let lib_content = std::fs::read_to_string(path.join("lib.cairo")).unwrap();
-    let test_crate = TestCompilationTarget {
+    let compilation_target = TestCompilationTarget {
         crate_root: path,
         crate_name: "simple_package".to_string(),
         crate_location: CrateLocation::Lib,
         lib_content,
     };
 
-    (test_crate, linked_libraries, corelib_path(), package)
+    (
+        compilation_target,
+        linked_libraries,
+        corelib_path(),
+        package,
+    )
 }
 
 fn compile_tests(
-    test_crate: &TestCompilationTarget,
+    compilation_target: &TestCompilationTarget,
     linked_libraries: &[LinkedLibrary],
     corelib_path: &Utf8PathBuf,
 ) {
-    test_crate
+    compilation_target
         .compile_tests(linked_libraries, corelib_path)
         .unwrap();
 }
