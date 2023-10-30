@@ -1045,6 +1045,7 @@ dependencies = [
  "rand",
  "reqwest",
  "rpassword",
+ "scarb-artifacts",
  "scarb-metadata 1.4.2",
  "sealed_test",
  "serde",
@@ -1098,6 +1099,7 @@ dependencies = [
  "num-traits 0.2.16",
  "rayon",
  "regex",
+ "scarb-artifacts",
  "serde",
  "serde_json",
  "starknet",
@@ -1824,6 +1826,7 @@ dependencies = [
  "rand",
  "rayon",
  "regex",
+ "scarb-artifacts",
  "scarb-metadata 1.7.0",
  "scarb-ui",
  "schemars",
@@ -3632,6 +3635,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "scarb-artifacts"
+version = "1.0.0"
+dependencies = [
+ "anyhow",
+ "assert_fs",
+ "camino",
+ "indoc",
+ "scarb-metadata 1.7.0",
+ "serde",
+ "serde_json",
+ "test-collector",
+]
+
+[[package]]
 name = "scarb-metadata"
 version = "1.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4436,6 +4453,7 @@ dependencies = [
  "camino",
  "forge",
  "indoc",
+ "scarb-artifacts",
  "scarb-metadata 1.7.0",
  "serde",
  "serde_json",
