@@ -27,15 +27,6 @@ $ tree . -L 1
 * `tests/` contains tests.
 * `Scarb.toml` contains configuration of the project as well as of `snforge`, `sncast` etc.
 
-Ensures that `casm` codegen is enabled in the `Scarb.toml` file.
-
-```toml
-# ...
-[[target.starknet-contract]]
-casm = true
-# ...
-```
-
 And run tests with `snforge test`
 
 ```shell
@@ -74,5 +65,16 @@ using [`scarb add`](https://docs.swmansion.com/scarb/docs/guides/dependencies.ht
 command.
 
 ```shell
-$ scarb add snforge_std --git https://github.com/foundry-rs/starknet-foundry.git --tag v0.7.1
+$ scarb add snforge_std \
+ --git https://github.com/foundry-rs/starknet-foundry.git \
+ --tag v0.7.1
+```
+
+Additionally, ensure that `casm` codegen is enabled in the `Scarb.toml` file.
+
+```toml
+# ...
+[[target.starknet-contract]]
+casm = true
+# ...
 ```

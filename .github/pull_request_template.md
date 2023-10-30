@@ -7,11 +7,6 @@ Closes #
 <!-- A brief description of the changes -->
 
 -
--
-
-## Breaking changes
-
-<!-- List of all breaking changes, if applicable -->
 
 ## Checklist
 

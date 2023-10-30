@@ -13,6 +13,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - forking `Pending` block has become disallowed
 
+## [0.9.1] - 2023-10-30
+
+### Forge
+
+#### Fixed
+
+- diagnostic paths referring to `tests` folder
+- caching `get_class_hash_at` in forking test mode (credits to @jainkunal for catching the bug)
+
 ## [0.9.0] - 2023-10-25
 
 ### Forge
@@ -21,7 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `#[ignore]` attribute together with `--ignored` and `include-ignored` flags - read more [here](https://foundry-rs.github.io/starknet-foundry/testing/testing.html#ignoring-some-tests-unless-specifically-requested)
 - support for `deploy_syscall` directly in the test code (alternative to `deploy`)
-- `snforge_std::signing` module for performing ecdsa signatures
+- `snforge_std::signature` module for performing ecdsa signatures
 
 #### Changed
 

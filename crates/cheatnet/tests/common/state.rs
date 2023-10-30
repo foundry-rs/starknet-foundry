@@ -22,7 +22,7 @@ pub fn create_cached_state() -> CachedState<ExtendedStateReader> {
 #[allow(clippy::module_name_repetitions)]
 pub fn create_fork_cached_state() -> CachedState<ExtendedStateReader> {
     let predeployed_contracts = Utf8PathBuf::from("predeployed-contracts");
-    let node_url = "http://188.34.188.184:9545/rpc/v0.4";
+    let node_url = "http://188.34.188.184:9545/rpc/v0.4".parse().unwrap();
     CachedState::new(
         ExtendedStateReader {
             dict_state_reader: build_testing_state(&predeployed_contracts),
@@ -37,7 +37,7 @@ pub fn create_fork_cached_state_at(
     cache_dir: &str,
 ) -> CachedState<ExtendedStateReader> {
     let predeployed_contracts = Utf8PathBuf::from("predeployed-contracts");
-    let node_url = "http://188.34.188.184:9545/rpc/v0.4";
+    let node_url = "http://188.34.188.184:9545/rpc/v0.4".parse().unwrap();
     CachedState::new(
         ExtendedStateReader {
             dict_state_reader: build_testing_state(&predeployed_contracts),

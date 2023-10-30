@@ -3,7 +3,6 @@ use std::fmt::Debug;
 
 use anyhow::{anyhow, Context, Result};
 use ark_std::iterable::Iterable;
-use assert_fs::TempDir;
 use cairo_felt::Felt252;
 use camino::{Utf8Path, Utf8PathBuf};
 
@@ -29,14 +28,18 @@ use rand::{thread_rng, RngCore};
 use smol_str::SmolStr;
 
 use crate::fuzzer::RandomFuzzer;
-use crate::scarb::{ForgeConfig, ForkTarget, StarknetContractArtifacts};
+use crate::scarb::config::{ForgeConfig, ForkTarget};
+use crate::scarb::StarknetContractArtifacts;
 
 // pub use crate::collecting::CrateLocation;
 pub use crate::test_crate_summary::TestCrateSummary;
 
-use crate::collecting::{collect_test_compilation_targets, compile_tests, CompiledTestCrate};
+use crate::collecting::{
+    collect_test_compilation_targets, compile_tests, CompiledTestCrate, CompiledTestCrateRaw,
+    CompiledTestCrateRunnable, TestCaseRunnable, ValidatedForkConfig,
+};
 use crate::test_filter::TestsFilter;
-use test_collector::{FuzzerConfig, LinkedLibrary, TestCase};
+use test_collector::{FuzzerConfig, LinkedLibrary, RawForkConfig, RawForkParams, TestCase};
 
 pub mod pretty_printing;
 pub mod scarb;
@@ -183,15 +186,63 @@ pub enum CrateLocation {
     Tests,
 }
 
-fn try_close_tmp_dir(temp_dir: TempDir) -> Result<()> {
-    let path = temp_dir.path().to_path_buf();
-    temp_dir.close().with_context(|| {
-            anyhow!(
-            "Failed to close temporary directory = {} with test files. The files might have not been released from filesystem",
-            path.display()
-        )
-        })?;
-    Ok(())
+fn parse_fork_params(raw_fork_params: &RawForkParams) -> Result<ValidatedForkConfig> {
+    Ok(ValidatedForkConfig {
+        url: raw_fork_params.url.parse()?,
+        block_id: raw_fork_params.block_id,
+    })
+}
+
+fn replace_id_with_params(
+    raw_fork_config: RawForkConfig,
+    runner_config: &RunnerConfig,
+) -> Result<RawForkParams> {
+    match raw_fork_config {
+        RawForkConfig::Params(raw_fork_params) => Ok(raw_fork_params),
+        RawForkConfig::Id(name) => {
+            let fork_target_from_runner_config = runner_config
+                .fork_targets
+                .iter()
+                .find(|fork| fork.name == name)
+                .ok_or_else(|| {
+                    anyhow!("Fork configuration named = {name} not found in the Scarb.toml")
+                })?;
+
+            Ok(fork_target_from_runner_config.params.clone())
+        }
+    }
+}
+
+fn to_runnable(
+    compiled_test_crate: CompiledTestCrateRaw,
+    runner_config: &RunnerConfig,
+) -> Result<CompiledTestCrateRunnable> {
+    let mut test_cases = vec![];
+
+    for case in compiled_test_crate.test_cases {
+        let fork_config = if let Some(fc) = case.fork_config {
+            let raw_fork_params = replace_id_with_params(fc, runner_config)?;
+            let validated_fork_config = parse_fork_params(&raw_fork_params)?;
+            Some(validated_fork_config)
+        } else {
+            None
+        };
+
+        test_cases.push(TestCase {
+            name: case.name,
+            available_gas: case.available_gas,
+            ignored: case.ignored,
+            expected_result: case.expected_result,
+            fork_config,
+            fuzzer_config: case.fuzzer_config,
+        });
+    }
+
+    Ok(CompiledTestCrate {
+        sierra_program: compiled_test_crate.sierra_program,
+        test_cases,
+        tests_location: compiled_test_crate.tests_location,
+    })
 }
 
 /// Run the tests in the package at the given path
@@ -216,30 +267,26 @@ pub async fn run(
     runner_params: Arc<RunnerParams>,
     cancellation_tokens: Arc<CancellationTokens>,
 ) -> Result<Vec<TestCrateSummary>> {
-    let temp_dir = TempDir::new()?;
-
     let compilation_targets =
-        collect_test_compilation_targets(package_path, package_name, package_source_dir_path);
-    let compilation_targets = compilation_targets
-        .into_iter()
-        .map(|ct| ct.ensure_lib_file_exists(&temp_dir))
-        .collect::<Result<_>>()?;
-    let tests = compile_tests(&compilation_targets, &runner_params)?;
-    let tests = tests
+        collect_test_compilation_targets(package_path, package_name, package_source_dir_path)?;
+    let test_crates = compile_tests(&compilation_targets, &runner_params)?;
+    let test_crates = test_crates
         .into_iter()
         .map(|tc| runner_config.tests_filter.filter_tests(tc))
         .collect_vec();
-
-    try_close_tmp_dir(temp_dir)?;
+    let test_crates = test_crates
+        .into_iter()
+        .map(|ctc| to_runnable(ctc, &runner_config))
+        .collect::<Result<Vec<_>>>()?;
 
     pretty_printing::print_collected_tests_count(
-        tests.iter().map(|tests| tests.test_cases.len()).sum(),
+        test_crates.iter().map(|tests| tests.test_cases.len()).sum(),
         package_name,
     );
 
     let mut summaries = vec![];
 
-    for compiled_test_crate in tests {
+    for compiled_test_crate in test_crates {
         let compiled_test_crate = Arc::new(compiled_test_crate);
         let runner_config = runner_config.clone();
         let runner_params = runner_params.clone();
@@ -274,7 +321,7 @@ pub async fn run(
 }
 
 async fn run_tests_from_crate(
-    tests: Arc<CompiledTestCrate>,
+    tests: Arc<CompiledTestCrateRunnable>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     cancellation_tokens: Arc<CancellationTokens>,
@@ -373,7 +420,7 @@ async fn run_tests_from_crate(
 #[allow(clippy::too_many_arguments)]
 fn choose_test_strategy_and_run(
     args: Vec<ConcreteTypeId>,
-    case: Arc<TestCase>,
+    case: Arc<TestCaseRunnable>,
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
@@ -405,7 +452,7 @@ fn choose_test_strategy_and_run(
 }
 
 fn run_single_test(
-    case: Arc<TestCase>,
+    case: Arc<TestCaseRunnable>,
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
@@ -449,7 +496,7 @@ fn run_single_test(
 
 fn run_with_fuzzing(
     args: Vec<ConcreteTypeId>,
-    case: Arc<TestCase>,
+    case: Arc<TestCaseRunnable>,
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
@@ -541,7 +588,7 @@ fn run_with_fuzzing(
 #[allow(clippy::too_many_arguments)]
 fn run_fuzzing_subtest(
     args: Vec<Felt252>,
-    case: Arc<TestCase>,
+    case: Arc<TestCaseRunnable>,
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
@@ -615,6 +662,10 @@ fn function_args<'a>(function: &'a Function, builtins: &[&str]) -> Vec<&'a Concr
 mod tests {
     use super::*;
     use crate::test_filter::{IgnoredFilter, NameFilter};
+    use cairo_lang_sierra::program::Program;
+    use starknet::core::types::BlockId;
+    use starknet::core::types::BlockTag::Latest;
+    use test_collector::ExpectedTestResult;
 
     #[test]
     fn fuzzer_default_seed() {
@@ -781,5 +832,87 @@ mod tests {
             None,
             &Default::default(),
         );
+    }
+
+    #[test]
+    fn to_runnable_unparsable_url() {
+        let mocked_tests = CompiledTestCrate {
+            sierra_program: Program {
+                type_declarations: vec![],
+                libfunc_declarations: vec![],
+                statements: vec![],
+                funcs: vec![],
+            },
+            test_cases: vec![TestCase {
+                name: "crate1::do_thing".to_string(),
+                available_gas: None,
+                ignored: false,
+                expected_result: ExpectedTestResult::Success,
+                fork_config: Some(RawForkConfig::Params(RawForkParams {
+                    url: "unparsable_url".to_string(),
+                    block_id: BlockId::Tag(Latest),
+                })),
+                fuzzer_config: None,
+            }],
+            tests_location: CrateLocation::Lib,
+        };
+        let config = RunnerConfig::new(
+            Default::default(),
+            None,
+            false,
+            false,
+            false,
+            false,
+            None,
+            None,
+            &Default::default(),
+        );
+
+        assert!(to_runnable(mocked_tests, &config).is_err());
+    }
+
+    #[test]
+    fn to_runnable_non_existent_id() {
+        let mocked_tests = CompiledTestCrate {
+            sierra_program: Program {
+                type_declarations: vec![],
+                libfunc_declarations: vec![],
+                statements: vec![],
+                funcs: vec![],
+            },
+            test_cases: vec![TestCase {
+                name: "crate1::do_thing".to_string(),
+                available_gas: None,
+                ignored: false,
+                expected_result: ExpectedTestResult::Success,
+                fork_config: Some(RawForkConfig::Id("non_existent".to_string())),
+                fuzzer_config: None,
+            }],
+            tests_location: CrateLocation::Lib,
+        };
+        let config = RunnerConfig::new(
+            Default::default(),
+            None,
+            false,
+            false,
+            false,
+            false,
+            None,
+            None,
+            &ForgeConfig {
+                exit_first: false,
+                fuzzer_runs: None,
+                fuzzer_seed: None,
+                fork: vec![ForkTarget {
+                    name: "definitely_non_existing".to_string(),
+                    params: RawForkParams {
+                        url: "https://not_taken.com".to_string(),
+                        block_id: BlockId::Number(120),
+                    },
+                }],
+            },
+        );
+
+        assert!(to_runnable(mocked_tests, &config).is_err());
     }
 }

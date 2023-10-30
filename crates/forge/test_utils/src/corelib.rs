@@ -6,6 +6,7 @@ use indoc::indoc;
 use scarb_metadata::MetadataCommand;
 
 #[allow(clippy::module_name_repetitions)]
+#[must_use]
 pub fn corelib_path() -> Utf8PathBuf {
     // create an empty scarb project to extract corelib location from metadata
     let dir = TempDir::new().unwrap();
@@ -34,6 +35,7 @@ pub fn corelib_path() -> Utf8PathBuf {
     corelib_for_package(&scarb_metadata, package).unwrap()
 }
 
+#[must_use]
 pub fn predeployed_contracts() -> TempDir {
     let predeployed_contracts = TempDir::new().unwrap();
     predeployed_contracts
