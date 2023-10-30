@@ -363,17 +363,15 @@ async fn run_tests_from_crate(
         let result = task??;
 
         pretty_printing::print_test_result(&result);
-        results.push(result.clone());
 
-        match result {
-            TestCaseSummary::Failed { .. } => {
-                if runner_config.exit_first {
-                    interrupted = true;
-                    rec.close();
-                }
+        if let TestCaseSummary::Failed { .. } = result {
+            if runner_config.exit_first {
+                interrupted = true;
+                rec.close();
             }
-            _ => (),
         }
+
+        results.push(result);
     }
 
     // Waiting for things to finish shutting down
