@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Fixed
 
 - diagnostic paths referring to `tests` folder
-- caching `get_class_hash_at` in forking test mode
+- caching `get_class_hash_at` in forking test mode (credits to @jainkunal for catching the bug)
 
 ## [0.9.0] - 2023-10-25
 
