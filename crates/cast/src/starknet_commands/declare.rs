@@ -1,9 +1,9 @@
 use anyhow::{anyhow, Context, Result};
-use camino::Utf8PathBuf;
+use camino::{Utf8Path, Utf8PathBuf};
 use cast::helpers::{response_structs::DeclareResponse, scarb_utils::get_scarb_manifest};
 use cast::{handle_rpc_error, handle_wait_for_tx};
 use clap::Args;
-use serde::Deserialize;
+use scarb_artifacts::get_contracts_map;
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::ConnectedAccount;
 use starknet::core::types::FieldElement;
@@ -15,29 +15,6 @@ use starknet::{
 };
 use std::process::{Command, Stdio};
 use std::sync::Arc;
-
-#[allow(dead_code)]
-#[derive(Deserialize)]
-struct ScarbStarknetArtifacts {
-    version: u32,
-    contracts: Vec<ScarbStarknetContract>,
-}
-
-#[allow(dead_code)]
-#[derive(Deserialize)]
-struct ScarbStarknetContract {
-    id: String,
-    package_name: String,
-    contract_name: String,
-    artifacts: ScarbStarknetContractArtifact,
-}
-
-#[allow(dead_code)]
-#[derive(Deserialize)]
-struct ScarbStarknetContractArtifact {
-    sierra: Option<Utf8PathBuf>,
-    casm: Option<Utf8PathBuf>,
-}
 
 #[derive(Args)]
 #[command(about = "Declare a contract to starknet", long_about = None)]
@@ -91,7 +68,7 @@ pub async fn declare(
         .inherit_stderr()
         .exec()
         .context("Failed to obtain scarb metadata")?;
-    // TODO #41 improve handling starknet artifacts
+
     let compiled_directory = metadata
         .target_dir
         .map(|path| path.join("release"))
@@ -110,51 +87,19 @@ pub async fn declare(
         })
         .ok_or(anyhow!("Failed to find starknet_artifacts.json file"))?;
 
-    let starknet_artifacts = std::fs::read_to_string(&starknet_artifacts)
-        .with_context(|| format!("Failed to read {starknet_artifacts:?} contents"))?;
+    let artifacts_path = Utf8Path::from_path(&starknet_artifacts).ok_or(anyhow!(
+        "Failed to convert starknet_artifacts.json Path to Utf8Path"
+    ))?;
 
-    let starknet_artifacts: ScarbStarknetArtifacts =
-        serde_json::from_str(starknet_artifacts.as_str())
-            .context("Failed to parse starknet_artifacts.json contents")?;
+    let contracts = get_contracts_map(artifacts_path)?;
+    let contract_artifacts = contracts
+        .get(&contract_name)
+        .ok_or(anyhow!("Failed to find artifacts in starknet_artifacts.json file. Make sure you have enabled sierra and casm code generation in Scarb.toml"))?;
 
-    let sierra_path = starknet_artifacts
-        .contracts
-        .iter()
-        .find_map(|contract| {
-            if contract.contract_name == contract_name {
-                return contract.artifacts.sierra.clone();
-            }
-            None
-        })
-        .ok_or(anyhow!("Cannot find sierra artifact {contract_name} in starknet_artifacts.json - please make sure sierra is set to 'true' under your [[target.starknet-contract]] field in Scarb.toml"))?;
-
-    let casm_path = starknet_artifacts
-        .contracts
-        .iter()
-        .find_map(|contract| {
-            if contract.contract_name == contract_name {
-                return contract.artifacts.casm.clone();
-            }
-            None
-        })
-        .ok_or(anyhow!("Cannot find casm artifact {contract_name} in starknet_artifacts.json - please make sure casm is set to 'true' under your [[target.starknet-contract]] field in Scarb.toml"))?;
-
-    let sierra_contract_path = &compiled_directory.join(sierra_path);
-    let casm_contract_path = &compiled_directory.join(casm_path);
-
-    let contract_definition: SierraClass = {
-        let file_contents = std::fs::read(sierra_contract_path.clone())
-            .with_context(|| format!("Failed to read contract file: {sierra_contract_path}"))?;
-        serde_json::from_slice(&file_contents).with_context(|| {
-            format!("Failed to parse contract definition: {sierra_contract_path}")
-        })?
-    };
-    let casm_contract_definition: CompiledClass = {
-        let file_contents = std::fs::read(casm_contract_path.clone())
-            .with_context(|| format!("Failed to read contract file: {casm_contract_path}"))?;
-        serde_json::from_slice(&file_contents)
-            .with_context(|| format!("Failed to parse contract definition: {casm_contract_path}"))?
-    };
+    let contract_definition: SierraClass = serde_json::from_str(&contract_artifacts.sierra)
+        .with_context(|| "Failed to parse sierra artifact")?;
+    let casm_contract_definition: CompiledClass = serde_json::from_str(&contract_artifacts.casm)
+        .with_context(|| "Failed to parse casm artifact")?;
 
     let casm_class_hash = casm_contract_definition.class_hash()?;
 
