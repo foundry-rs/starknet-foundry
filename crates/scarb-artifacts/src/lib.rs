@@ -84,11 +84,6 @@ pub fn try_get_starknet_artifacts_path(
 }
 
 /// Get the map with `StarknetContractArtifacts` for the given package
-///
-/// # Arguments
-///
-/// * `target_dir` - A path to target directory
-/// * `target_name` - A name of the target that is being built by Scarb
 pub fn get_contracts_map(
     metadata: &Metadata,
     package: &PackageId,
