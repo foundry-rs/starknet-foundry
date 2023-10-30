@@ -278,7 +278,12 @@ pub async fn run(
         let summary =
             run_tests_from_crate(compiled_test_crate, runner_config, runner_params).await?;
 
+        let interrupted = summary.interrupted;
+
         summaries.push(summary);
+        if interrupted {
+            break;
+        }
     }
 
     pretty_printing::print_test_summary(&summaries);
@@ -352,6 +357,7 @@ async fn run_tests_from_crate(
     }
 
     let mut results = vec![];
+    let mut interrupted = false;
 
     while let Some(task) = tasks.next().await {
         let result = task??;
@@ -362,6 +368,7 @@ async fn run_tests_from_crate(
         match result {
             TestCaseSummary::Failed { .. } => {
                 if runner_config.exit_first {
+                    interrupted = true;
                     rec.close();
                 }
             }
@@ -379,6 +386,7 @@ async fn run_tests_from_crate(
         runner_exit_status: RunnerStatus::Default,
         test_crate_type: tests.tests_location,
         contained_fuzzed_tests,
+        interrupted,
     })
 }
 

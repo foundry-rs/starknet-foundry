@@ -121,13 +121,10 @@ pub(crate) fn blocking_run_from_fuzzing_test(
         // Due to the inability of spawn_blocking to be abruptly cancelled,
         // a channel is used to receive information indicating
         // that the execution of the task is no longer necessary.
-        if send.is_closed() {
+        if send.is_closed() | fuzzing_send.is_closed() {
             return Ok(TestCaseSummary::Skipped {});
         }
 
-        if fuzzing_send.is_closed() {
-            return Ok(TestCaseSummary::Skipped {});
-        }
         let run_result = run_test_case(
             args.clone(),
             &case,
