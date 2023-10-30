@@ -4,27 +4,25 @@ use crate::helpers::fixtures::{
 };
 use crate::helpers::runner::runner;
 use indoc::indoc;
-use starknet::core::types::TransactionReceipt::Invoke;
-use test_case::test_case;
+use starknet::core::types::TransactionReceipt::Deploy;
 
-#[test_case(from_env("CAST_MAP_V1_CLASS_HASH").unwrap().as_str(), "user1" ; "when cairo1 contract")]
-#[test_case(from_env("CAST_MAP_V2_CLASS_HASH").unwrap().as_str(), "user2" ; "when cairo2 contract")]
 #[tokio::test]
-async fn test_happy_case(class_hash: &str, account: &str) {
+async fn test_happy_case() {
+    let class_hash = from_env("CAST_MAP_CLASS_HASH").unwrap();
     let mut args = default_cli_args();
     args.append(&mut vec![
         "--account",
-        account,
+        "user2",
         "--int-format",
         "--json",
         "deploy",
         "--class-hash",
-        class_hash,
+        &class_hash,
         "--salt",
         "0x2",
         "--unique",
         "--max-fee",
-        "999999999999",
+        "99999999999999999",
     ]);
 
     let snapbox = runner(&args);
@@ -33,22 +31,21 @@ async fn test_happy_case(class_hash: &str, account: &str) {
     let hash = get_transaction_hash(&output);
     let receipt = get_transaction_receipt(hash).await;
 
-    assert!(matches!(receipt, Invoke(_)));
+    assert!(matches!(receipt, Deploy(_)));
 }
 
-#[test_case(from_env("CAST_WITH_CONSTRUCTOR_V1_CLASS_HASH").unwrap().as_str(), "user3" ; "when cairo1 contract")]
-#[test_case(from_env("CAST_WITH_CONSTRUCTOR_V2_CLASS_HASH").unwrap().as_str(), "user4" ; "when cairo2 contract")]
 #[tokio::test]
-async fn test_happy_case_with_constructor(class_hash: &str, account: &str) {
+async fn test_happy_case_with_constructor() {
+    let class_hash = from_env("CAST_WITH_CONSTRUCTOR_CLASS_HASH").unwrap();
     let mut args = default_cli_args();
     args.append(&mut vec![
         "--account",
-        account,
+        "user4",
         "--int-format",
         "--json",
         "deploy",
         "--class-hash",
-        class_hash,
+        &class_hash,
         "--constructor-calldata",
         "0x1 0x1 0x0",
     ]);
@@ -59,19 +56,19 @@ async fn test_happy_case_with_constructor(class_hash: &str, account: &str) {
     let hash = get_transaction_hash(&output);
     let receipt = get_transaction_receipt(hash).await;
 
-    assert!(matches!(receipt, Invoke(_)));
+    assert!(matches!(receipt, Deploy(_)));
 }
 
-#[test_case(from_env("CAST_WITH_CONSTRUCTOR_V1_CLASS_HASH").unwrap().as_str(), "user3" ; "when cairo1 contract")]
-#[test_case(from_env("CAST_WITH_CONSTRUCTOR_V2_CLASS_HASH").unwrap().as_str(), "user4" ; "when cairo2 contract")]
-fn test_wrong_calldata(class_hash: &str, account: &str) {
+#[test]
+fn test_wrong_calldata() {
+    let class_hash = from_env("CAST_WITH_CONSTRUCTOR_CLASS_HASH").unwrap();
     let mut args = default_cli_args();
     args.append(&mut vec![
         "--account",
-        account,
+        "user4",
         "deploy",
         "--class-hash",
-        class_hash,
+        &class_hash,
         "--constructor-calldata",
         "0x1 0x1",
     ]);
@@ -80,7 +77,7 @@ fn test_wrong_calldata(class_hash: &str, account: &str) {
     let output = String::from_utf8(snapbox.assert().success().get_output().stderr.clone()).unwrap();
 
     assert!(output.contains("error: "));
-    assert!(output.contains("Error in the called contract"));
+    assert!(output.contains("Transaction execution has failed."));
 }
 
 #[tokio::test]
@@ -97,19 +94,19 @@ async fn test_contract_not_declared() {
     let snapbox = runner(&args);
     let output = String::from_utf8(snapbox.assert().get_output().stderr.clone()).unwrap();
 
-    assert!(output.contains("Class with hash 0x1 is not declared."));
+    assert!(output.contains("Transaction execution has failed."));
 }
 
-#[test_case(from_env("CAST_MAP_V1_CLASS_HASH").unwrap().as_str(), "user1" ; "when cairo1 contract")]
-#[test_case(from_env("CAST_MAP_V2_CLASS_HASH").unwrap().as_str(), "user2" ; "when cairo2 contract")]
-fn test_contract_already_deployed(class_hash: &str, account: &str) {
+#[test]
+fn test_contract_already_deployed() {
+    let class_hash = from_env("CAST_MAP_CLASS_HASH").unwrap();
     let mut args = default_cli_args();
     args.append(&mut vec![
         "--account",
-        account,
+        "user1",
         "deploy",
         "--class-hash",
-        class_hash,
+        &class_hash,
         "--salt",
         "0x1",
         "--unique",
@@ -118,20 +115,20 @@ fn test_contract_already_deployed(class_hash: &str, account: &str) {
     let snapbox = runner(&args);
     let output = String::from_utf8(snapbox.assert().get_output().stderr.clone()).unwrap();
 
-    assert!(output.contains("StarknetErrorCode.CONTRACT_ADDRESS_UNAVAILABLE"));
+    assert!(output.contains("Transaction execution has failed"));
 }
 
-#[test_case(from_env("CAST_MAP_V1_CLASS_HASH").unwrap().as_str(), "user1" ; "when cairo1 contract")]
-#[test_case(from_env("CAST_MAP_V2_CLASS_HASH").unwrap().as_str(), "user2" ; "when cairo2 contract")]
-fn test_too_low_max_fee(class_hash: &str, account: &str) {
+#[test]
+fn test_too_low_max_fee() {
+    let class_hash = from_env("CAST_MAP_CLASS_HASH").unwrap();
     let mut args = default_cli_args();
     args.append(&mut vec![
         "--account",
-        account,
+        "user2",
         "--wait",
         "deploy",
         "--class-hash",
-        class_hash,
+        &class_hash,
         "--salt",
         "0x2",
         "--unique",
@@ -143,6 +140,6 @@ fn test_too_low_max_fee(class_hash: &str, account: &str) {
 
     snapbox.assert().stderr_matches(indoc! {r#"
         command: deploy
-        error: Transaction has been rejected
+        error: Max fee is smaller than the minimal transaction cost (validation plus fee transfer)
     "#});
 }

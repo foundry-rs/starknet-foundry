@@ -80,10 +80,11 @@ fn call_and_invoke() {
 ```
 
 ```shell
-$ snforge
+$ snforge test
 Collected 1 test(s) from using_dispatchers package
-Running 1 test(s) from src/
-[PASS] using_dispatchers::call_and_invoke
+Running 0 test(s) from src/
+Running 1 test(s) from tests/
+[PASS] tests::call_and_invoke
 Tests: 1 passed, 0 failed, 0 skipped
 ```
 
@@ -138,10 +139,11 @@ fn failing() {
 ```
 
 ```shell
-$ snforge
+$ snforge test
 Collected 1 test(s) from package_name package
-Running 1 test(s) from src/
-[FAIL] package_name::failing
+Running 0 test(s) from src/
+Running 1 test(s) from tests/
+[FAIL] tests::failing
 
 Failure data:
     original value: [344693033283], converted to a string: [PANIC]
@@ -150,7 +152,7 @@ Failure data:
 Tests: 0 passed, 1 failed, 0 skipped
 
 Failures:
-    package_name::failing
+    tests::failing
 ```
 
 ### `SafeDispatcher`
@@ -178,10 +180,11 @@ fn handling_errors() {
 Now the test passes as expected.
 
 ```shell
-$ snforge
+$ snforge test
 Collected 1 test(s) from package_name package
-Running 1 test(s) from src/
-[PASS] package_name::handling_errors
+Running 0 test(s) from src/
+Running 1 test(s) from tests/
+[PASS] tests::handling_errors
 Tests: 1 passed, 0 failed, 0 skipped
 ```
 

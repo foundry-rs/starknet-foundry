@@ -1,5 +1,4 @@
 mod cheat_fork;
-pub(crate) mod common;
 mod declare;
 mod deploy;
 mod deploy_at;
@@ -15,6 +14,7 @@ mod pure_cairo;
 mod roll;
 mod setup_fork;
 mod should_panic;
+mod signing;
 mod spoof;
 mod spy_events;
 mod syscalls;

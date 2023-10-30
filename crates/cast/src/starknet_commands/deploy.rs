@@ -49,7 +49,7 @@ pub async fn deploy(
     let salt = extract_or_generate_salt(salt);
 
     let factory = ContractFactory::new(class_hash, account);
-    let deployment = factory.deploy(&constructor_calldata, salt, unique);
+    let deployment = factory.deploy(constructor_calldata.clone(), salt, unique);
 
     let execution = if let Some(max_fee) = max_fee {
         deployment.max_fee(max_fee)

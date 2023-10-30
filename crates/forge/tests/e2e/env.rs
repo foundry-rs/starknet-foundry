@@ -1,11 +1,11 @@
 use crate::assert_stdout_contains;
-use crate::e2e::common::runner::{runner, setup_package};
+use crate::e2e::common::runner::{setup_package, test_runner};
 use indoc::indoc;
 
 #[test]
 fn env_var_reading() {
     let temp = setup_package("env");
-    let snapbox = runner();
+    let snapbox = test_runner();
 
     let output = snapbox
         .current_dir(&temp)
@@ -22,7 +22,7 @@ fn env_var_reading() {
 
         Collected 1 test(s) from env package
         Running 1 test(s) from src/
-        [PASS] env::reading_env_vars
+        [PASS] env::tests::reading_env_vars
         Tests: 1 passed, 0 failed, 0 skipped
         "#}
     );

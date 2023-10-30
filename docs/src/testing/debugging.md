@@ -44,7 +44,7 @@ fn test_print() {
 Running tests will include prints in the output:
 
 ```shell
-$ snforge
+$ snforge test
 Collected 1 test(s) from package_name package
 Running 0 test(s) from src/
 Running 1 test(s) from tests/
@@ -58,7 +58,7 @@ original value: [2]
 original value: [3]
 original value: [379899844591278365831020], converted to a string: [Print bool:]
 original value: [439721161573], converted to a string: [false]
-[PASS] tests::test_print::test_print
+[PASS] tests::test_print
 Tests: 1 passed, 0 failed, 0 skipped
 ```
 
@@ -71,16 +71,19 @@ If the parsed value contains ASCII control characters (e.g. 27: `ESC`), it will 
 #[test]
 fn test_print() {
     // ...
-    
+
     27.print();
+}
 ```
 
 ```shell
-$ snforge
+$ snforge test
 Collected 1 test(s) from package_name package
 Running 0 test(s) from src/
 Running 1 test(s) from tests/
 original value: [27]
+[PASS] tests::test_print
+Tests: 1 passed, 0 failed, 0 skipped
 ```
 
 ## In contracts
@@ -129,9 +132,9 @@ fn test_increase_balance() {
 }
 ```
 We get the following output:
-```
-$ snforge                                                                                              
-Collected 2 test(s) from package_name package
+```shell
+$ snforge test                                                                                    
+Collected 1 test(s) from package_name package
 Running 0 test(s) from src/
 Running 1 test(s) from tests/
 original value: [1882356686041040905424961122938381530884043578], converted to a string: [The new balance is:]
