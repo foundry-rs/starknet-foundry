@@ -177,7 +177,7 @@ fn criterion_benchmark(c: &mut Criterion) {
     let collect_tests_input = setup_collect_tests();
     let compile_tests_input = setup_compile_tests();
 
-    let mut group = c.benchmark_group("forge-benchmark-group");
+    let mut group = c.benchmark_group("benchmark-normal-flow");
     group.sampling_mode(SamplingMode::Flat); // https://bheisler.github.io/criterion.rs/book/user_guide/advanced_configuration.html#sampling-mode
     group.sample_size(50);
     group.measurement_time(Duration::from_secs(120));
