@@ -13,12 +13,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - diagnostic paths referring to `tests` folder
 
-### Cast
-
-#### Changed
-- bump starknet-rs dependency
-- replaced starknet-devnet with starknet-devnet-rs for tests
-
 ## [0.9.0] - 2023-10-25
 
 ### Forge
