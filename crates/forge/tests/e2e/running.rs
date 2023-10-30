@@ -507,7 +507,6 @@ fn with_panic_data_decoding() {
 }
 
 #[test]
-#[ignore = "change way of handling exit first"]
 fn with_exit_first() {
     let temp = setup_package("exit_first");
     let scarb_path = temp.child("Scarb.toml");
@@ -565,7 +564,6 @@ fn with_exit_first() {
     );
 }
 
-#[ignore = "change way of handling exit first"]
 #[test]
 fn with_exit_first_flag() {
     let temp = setup_package("exit_first");

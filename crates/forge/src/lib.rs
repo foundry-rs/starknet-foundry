@@ -484,7 +484,6 @@ fn run_with_fuzzing(
             }
         }
 
-        rec.close();
         let runs = u32::try_from(
             results
                 .iter()

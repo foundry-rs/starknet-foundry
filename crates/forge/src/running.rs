@@ -102,6 +102,10 @@ pub(crate) fn blocking_run_from_test(
             &send_shut_down,
         );
 
+        if send.is_closed() {
+            return Ok(TestCaseSummary::Skipped {});
+        }
+
         extract_test_case_summary(run_result, &case, vec![])
     })
 }
@@ -133,6 +137,10 @@ pub(crate) fn blocking_run_from_fuzzing_test(
             &runner_params,
             &send_shut_down,
         );
+
+        if send.is_closed() {
+            return Ok(TestCaseSummary::Skipped {});
+        }
 
         extract_test_case_summary(run_result, &case, args)
     })
