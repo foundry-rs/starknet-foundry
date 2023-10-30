@@ -35,6 +35,7 @@ serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
 num-bigint.workspace = true
+url.workspace = true
 smol_str = { version = "0.2.0", features = ["serde"] }
 num-integer = "0.1"
 conversions.workspace = true

@@ -3,15 +3,30 @@ use anyhow::{anyhow, Context, Result};
 use cairo_lang_sierra::program::Program;
 use camino::{Utf8Path, Utf8PathBuf};
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
-use test_collector::{collect_tests, LinkedLibrary, TestCase};
+use starknet::core::types::BlockId;
+use test_collector::{collect_tests, ForkConfig, LinkedLibrary, RawForkConfig, TestCase};
+use url::Url;
 use walkdir::WalkDir;
 
+pub(crate) type CompiledTestCrateRaw = CompiledTestCrate<RawForkConfig>;
+pub(crate) type CompiledTestCrateRunnable = CompiledTestCrate<ValidatedForkConfig>;
+
+pub(crate) type TestCaseRunnable = TestCase<ValidatedForkConfig>;
+
 #[derive(Debug, Clone)]
-pub(crate) struct CompiledTestCrate {
+pub(crate) struct CompiledTestCrate<T: ForkConfig> {
     pub sierra_program: Program,
-    pub test_cases: Vec<TestCase>,
+    pub test_cases: Vec<TestCase<T>>,
     pub tests_location: CrateLocation,
 }
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ValidatedForkConfig {
+    pub url: Url,
+    pub block_id: BlockId,
+}
+
+impl ForkConfig for ValidatedForkConfig {}
 
 #[derive(Debug, PartialEq)]
 pub(crate) struct TestCompilationTarget {
@@ -26,7 +41,7 @@ impl TestCompilationTarget {
         &self,
         linked_libraries: &[LinkedLibrary],
         corelib_path: &Utf8Path,
-    ) -> Result<CompiledTestCrate> {
+    ) -> Result<CompiledTestCrateRaw> {
         let (sierra_program, test_cases) = collect_tests(
             &self.crate_name,
             self.crate_root.as_std_path(),
@@ -73,7 +88,7 @@ pub(crate) fn collect_test_compilation_targets(
 pub(crate) fn compile_tests(
     targets: &Vec<TestCompilationTarget>,
     runner_params: &RunnerParams,
-) -> Result<Vec<CompiledTestCrate>> {
+) -> Result<Vec<CompiledTestCrateRaw>> {
     targets
         .par_iter()
         .map(|target| {

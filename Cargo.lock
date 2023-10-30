@@ -4415,6 +4415,7 @@ dependencies = [
  "smol_str",
  "starknet",
  "thiserror",
+ "url",
 ]
 
 [[package]]

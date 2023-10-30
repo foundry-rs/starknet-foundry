@@ -1,5 +1,4 @@
-use crate::collecting::CompiledTestCrate;
-use test_collector::TestCase;
+use crate::collecting::{CompiledTestCrate, CompiledTestCrateRaw, TestCaseRunnable};
 
 #[derive(Debug, PartialEq)]
 // Specifies what tests should be included
@@ -55,7 +54,7 @@ impl TestsFilter {
         }
     }
 
-    pub(crate) fn filter_tests(&self, test_crate: CompiledTestCrate) -> CompiledTestCrate {
+    pub(crate) fn filter_tests(&self, test_crate: CompiledTestCrateRaw) -> CompiledTestCrateRaw {
         let mut cases = test_crate.test_cases;
 
         cases = match &self.name_filter {
@@ -81,7 +80,7 @@ impl TestsFilter {
         }
     }
 
-    pub(crate) fn should_be_run_based_on_ignored(&self, test_case: &TestCase) -> bool {
+    pub(crate) fn should_be_run_based_on_ignored(&self, test_case: &TestCaseRunnable) -> bool {
         match self.ignored_filter {
             IgnoredFilter::All => true,
             IgnoredFilter::Ignored => test_case.ignored,
