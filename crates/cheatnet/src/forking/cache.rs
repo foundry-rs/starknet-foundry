@@ -1,7 +1,9 @@
 use crate::state::CheatnetBlockInfo;
+use cairo_felt::Felt252;
 use camino::Utf8PathBuf;
 use conversions::StarknetConversions;
 use fs2::FileExt;
+use num_bigint::BigUint;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use starknet::core::types::{BlockId, BlockTag, ContractClass, FieldElement};
@@ -102,7 +104,7 @@ fn block_id_to_string(block_id: BlockId) -> String {
 
 impl ForkCache {
     #[must_use]
-    pub(crate) fn load_or_new(url: &str, block_id: BlockId, cache_dir: Option<&str>) -> Self {
+    pub(crate) fn load_or_new(url: &Url, block_id: BlockId, cache_dir: Option<&str>) -> Self {
         let (fork_cache_content, cache_file) = if let BlockId::Tag(_) = block_id {
             (ForkCacheContent::new(), None)
         } else {
@@ -226,9 +228,15 @@ impl ForkCache {
 
     pub(crate) fn get_class_hash_at(&self, contract_address: ContractAddress) -> Option<ClassHash> {
         self.fork_cache_content
-            .nonce_at
+            .class_hash_at
             .get(&contract_address.to_felt252().to_string())
-            .map(StarknetConversions::to_class_hash)
+            .map(|dec_string| {
+                Felt252::from(
+                    BigUint::parse_bytes(dec_string.as_bytes(), 10)
+                        .expect("Parsing class_hash_at entry failed"),
+                )
+                .to_class_hash()
+            }) // Entry encoded as a decimal string
     }
 
     pub(crate) fn cache_get_class_hash_at(
@@ -280,19 +288,17 @@ impl ForkCache {
 }
 
 fn cache_file_path_from_fork_config(
-    url: &str,
+    url: &Url,
     block_id: BlockId,
     cache_dir: Option<&str>,
 ) -> Utf8PathBuf {
     let cache_dir = cache_dir.unwrap_or_else(|| {
         panic!("cache_dir has to be provided if working at a concrete block_number/block_hash")
     });
-    let url = Url::parse(url).expect("Failed to parse URL");
-    let url_str = url.as_str();
     let re = Regex::new(r"[^a-zA-Z0-9]").unwrap();
 
     // Use the replace_all method to replace non-alphanumeric characters with underscores
-    let sanitized_path = re.replace_all(url_str, "_").to_string();
+    let sanitized_path = re.replace_all(url.as_str(), "_").to_string();
 
     let cache_file_path = Utf8PathBuf::from(cache_dir)
         .join(sanitized_path + "_" + block_id_to_string(block_id).as_str() + ".json");

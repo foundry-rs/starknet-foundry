@@ -1,6 +1,6 @@
 use crate::helpers::constants::ACCOUNT;
 use crate::helpers::fixtures::{
-    convert_to_hex, default_cli_args, from_env, get_transaction_hash, get_transaction_receipt,
+    default_cli_args, from_env, get_transaction_hash, get_transaction_receipt,
 };
 use crate::helpers::runner::runner;
 use indoc::indoc;
@@ -23,7 +23,7 @@ async fn test_happy_case() {
         "--calldata",
         "0x1 0x2",
         "--max-fee",
-        "999999999999",
+        "99999999999999999",
     ]);
 
     let snapbox = runner(&args);
@@ -49,11 +49,9 @@ async fn test_contract_does_not_exist() {
     ]);
 
     let snapbox = runner(&args);
+    let output = String::from_utf8(snapbox.assert().success().get_output().stderr.clone()).unwrap();
 
-    snapbox.assert().stderr_matches(indoc! {r#"
-        command: invoke
-        error: Contract not found
-    "#});
+    assert!(output.contains("Transaction execution has failed."));
 }
 
 #[test]
@@ -71,11 +69,9 @@ fn test_wrong_function_name() {
     ]);
 
     let snapbox = runner(&args);
+    let output = String::from_utf8(snapbox.assert().success().get_output().stderr.clone()).unwrap();
 
-    snapbox.assert().stderr_matches(indoc! {r#"
-        command: invoke
-        error: Contract error
-    "#});
+    assert!(output.contains("Transaction execution has failed."));
 }
 
 #[test]
@@ -84,7 +80,7 @@ fn test_wrong_calldata() {
     let mut args = default_cli_args();
     args.append(&mut vec![
         "--account",
-        "user2",
+        "user5",
         "invoke",
         "--contract-address",
         &contract_address,
@@ -101,8 +97,7 @@ fn test_wrong_calldata() {
     let stderr_str =
         std::str::from_utf8(&out.stderr).expect("failed to convert command output to string");
 
-    assert!(stderr_str.contains("Error in the called contract"));
-    assert!(stderr_str.contains(&convert_to_hex(&contract_address)));
+    assert!(stderr_str.contains("Transaction execution has failed."));
 }
 
 #[test]
@@ -128,6 +123,6 @@ fn test_too_low_max_fee() {
 
     snapbox.assert().stderr_matches(indoc! {r#"
         command: invoke
-        error: Transaction has been rejected
+        error: Max fee is smaller than the minimal transaction cost (validation plus fee transfer)
     "#});
 }

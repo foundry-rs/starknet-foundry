@@ -28,6 +28,7 @@ static PREDEPLOYED_CONTRACTS: Dir = include_dir!("crates/cheatnet/predeployed-co
 
 #[derive(Parser, Debug)]
 #[command(version)]
+#[clap(name = "snforge")]
 struct Cli {
     #[command(subcommand)]
     subcommand: ForgeSubcommand,

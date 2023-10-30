@@ -26,7 +26,7 @@ async fn test_happy_case() {
         "--contract-name",
         "Map",
         "--max-fee",
-        "999999999999",
+        "99999999999999999",
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
@@ -62,8 +62,7 @@ async fn contract_already_declared() {
 
     snapbox.assert().success().stderr_matches(indoc! {r#"
         command: declare
-        [..] is already declared.
-        ...
+        error: Class with hash [..] is already declared.
     "#});
 }
 
@@ -143,7 +142,7 @@ fn test_too_low_max_fee() {
 
     snapbox.assert().success().stderr_matches(indoc! {r#"
         command: declare
-        error: Transaction has been rejected
+        error: Max fee is smaller than the minimal transaction cost (validation plus fee transfer)
     "#});
 
     fs::remove_dir_all(contract_path).unwrap();

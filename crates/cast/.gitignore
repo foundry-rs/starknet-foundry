@@ -4,3 +4,6 @@ tests/utils/scarb*
 /tests/data/contracts/**/*.tool-versions
 /tests/utils/compiler/
 .env*
+tests/data/contracts/constructor_with_params[0-9]/
+tests/data/contracts/map[0-9]/
+tests/utils/devnet

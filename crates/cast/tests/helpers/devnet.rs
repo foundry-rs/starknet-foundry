@@ -1,4 +1,4 @@
-use crate::helpers::constants::{DEVNET_ENV_FILE, SCARB_VERSION, SEED, URL};
+use crate::helpers::constants::{DEVNET_ENV_FILE, SEED, URL};
 use crate::helpers::fixtures::{declare_contract, declare_deploy_contract, remove_devnet_env};
 use ctor::{ctor, dtor};
 use std::net::TcpStream;
@@ -31,19 +31,8 @@ fn start_devnet() {
         }
     }
 
-    let compiler_path = "tests/utils/compiler/scarb-".to_string()
-        + SCARB_VERSION
-        + "/cairo/bin/starknet-sierra-compile";
-    Command::new("starknet-devnet")
-        .args([
-            "--hide-server-logs",
-            "--port",
-            &port,
-            "--seed",
-            &SEED.to_string(),
-            "--sierra-compiler-path",
-            &compiler_path,
-        ])
+    Command::new("tests/utils/devnet/bin/starknet-devnet")
+        .args(["--port", &port, "--seed", &SEED.to_string()])
         .stdout(Stdio::null())
         .spawn()
         .expect("Failed to start devnet!");
