@@ -87,7 +87,7 @@ pub fn try_get_starknet_artifacts_path(
 ///
 /// # Arguments
 ///
-/// * `path`` - A path to the Scarb package
+/// * `path` - A path to the Scarb package
 pub fn get_contracts_map(path: &Utf8Path) -> Result<HashMap<String, StarknetContractArtifacts>> {
     let base_path = path
         .parent()

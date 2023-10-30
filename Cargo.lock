@@ -4453,6 +4453,7 @@ dependencies = [
  "camino",
  "forge",
  "indoc",
+ "scarb-artifacts",
  "scarb-metadata 1.7.0",
  "serde",
  "serde_json",
