@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - diagnostic paths referring to `tests` folder
 
+### Cast
+
+#### Fixed
+
+- account comnmands now always return valid json when --json flag is passed
+
 ## [0.9.0] - 2023-10-25
 
 ### Forge
