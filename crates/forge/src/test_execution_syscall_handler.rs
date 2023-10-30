@@ -272,12 +272,10 @@ impl TestExecutionSyscallHandler<'_, '_> {
                 let warp_timestamp = inputs.last().unwrap().clone();
 
                 // First element encodes the variant of CheatTarget
-                let target = match &inputs[0] {
-                    x if *x == Felt252::from(0) => CheatTarget::All,
-                    x if *x == Felt252::from(1) => {
-                        CheatTarget::One(inputs[1].to_contract_address())
-                    }
-                    x if *x == Felt252::from(2) => {
+                let target = match &inputs[0].to_u8() {
+                    Some(0) => CheatTarget::All,
+                    Some(1) => CheatTarget::One(inputs[1].to_contract_address()),
+                    Some(2) => {
                         let contract_addresses: Vec<_> = inputs[2..inputs.len() - 1]
                             .iter()
                             .map(Felt252::to_contract_address)
@@ -296,12 +294,10 @@ impl TestExecutionSyscallHandler<'_, '_> {
             }
             "stop_warp" => {
                 // First element encodes the variant of CheatTarget
-                let target = match &inputs[0] {
-                    x if *x == Felt252::from(0) => CheatTarget::All,
-                    x if *x == Felt252::from(1) => {
-                        CheatTarget::One(inputs[1].to_contract_address())
-                    }
-                    x if *x == Felt252::from(2) => {
+                let target = match &inputs[0].to_u8() {
+                    Some(0) => CheatTarget::All,
+                    Some(1) => CheatTarget::One(inputs[1].to_contract_address()),
+                    Some(2) => {
                         let contract_addresses: Vec<_> = inputs[2..]
                             .iter()
                             .map(Felt252::to_contract_address)
