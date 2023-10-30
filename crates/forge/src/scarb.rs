@@ -1,30 +1,9 @@
-use anyhow::{anyhow, Result};
-use itertools::Itertools;
 use scarb_metadata::{Metadata, PackageId};
-use serde::Deserialize;
-use std::collections::HashMap;
 
-/// Represents forge config deserialized from Scarb.toml
-#[derive(Deserialize, Debug, PartialEq, Default)]
-pub struct ForgeConfig {
-    #[serde(default)]
-    /// Should runner exit after first failed test
-    pub exit_first: bool,
-    /// How many runs should fuzzer execute
-    pub fuzzer_runs: Option<u32>,
-    /// Seed to be used by fuzzer
-    pub fuzzer_seed: Option<u64>,
+use crate::scarb::config::{validate_raw_fork_config, ForgeConfig};
+use anyhow::{anyhow, Context, Result};
 
-    #[serde(default)]
-    pub fork: Vec<ForkTarget>,
-}
-
-#[derive(Deserialize, Debug, PartialEq, Default, Clone)]
-pub struct ForkTarget {
-    pub name: String,
-    pub url: String,
-    pub block_id: HashMap<String, String>,
-}
+pub mod config;
 
 /// Get Forge config from the `Scarb.toml` file
 ///
@@ -36,58 +15,34 @@ pub fn config_from_scarb_for_package(
     metadata: &Metadata,
     package: &PackageId,
 ) -> Result<ForgeConfig> {
-    let raw_metadata = metadata
+    let maybe_raw_metadata = metadata
         .get_package(package)
         .ok_or_else(|| anyhow!("Failed to find metadata for package = {package}"))?
         .tool_metadata("snforge");
-    let config = raw_metadata.map_or_else(
-        || Ok(Default::default()),
-        |raw_metadata| Ok(serde_json::from_value(raw_metadata.clone())?),
-    );
-    validate_fork_config(config)
-}
+    let raw_config = if let Some(raw_metadata) = maybe_raw_metadata {
+        serde_json::from_value(raw_metadata.clone())?
+    } else {
+        Default::default()
+    };
 
-fn validate_fork_config(config: Result<ForgeConfig>) -> Result<ForgeConfig> {
-    if let Ok(ForgeConfig { fork: forks, .. }) = &config {
-        let names: Vec<String> = forks.iter().map(|fork| fork.name.clone()).collect();
-        let removed_duplicated_names: Vec<String> = names.clone().into_iter().unique().collect();
-
-        if names.len() != removed_duplicated_names.len() {
-            return Err(anyhow!("Some fork names are duplicated"));
-        }
-
-        for fork in forks {
-            let block_id_items: Vec<(&String, &String)> = fork.block_id.iter().collect();
-            let [(block_id_key, block_id_value)] = block_id_items[..] else {
-                return Err(anyhow!("block_id should be set once per fork"));
-            };
-
-            if !["number", "hash", "tag"].contains(&&**block_id_key) {
-                return Err(anyhow!(
-                    "block_id has only three variants: number, hash and tag"
-                ));
-            }
-
-            if block_id_key == "tag" && !["Latest", "Pending"].contains(&&**block_id_value) {
-                return Err(anyhow!(
-                    "block_id.tag has only two variants: Latest or Pending"
-                ));
-            }
-        }
-    }
-
-    config
+    validate_raw_fork_config(&raw_config).context("Invalid config in Scarb.toml: ")?;
+    raw_config.try_into()
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::scarb::config::ForkTarget;
     use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
     use assert_fs::TempDir;
     use camino::Utf8PathBuf;
+    use conversions::StarknetConversions;
     use indoc::{formatdoc, indoc};
     use scarb_metadata::MetadataCommand;
+    use starknet::core::types::BlockId;
+    use starknet::core::types::BlockTag::Latest;
     use std::str::FromStr;
+    use test_collector::RawForkParams;
 
     fn setup_package(package_name: &str) -> TempDir {
         let temp = TempDir::new().unwrap();
@@ -163,18 +118,24 @@ mod tests {
                 fork: vec![
                     ForkTarget {
                         name: "FIRST_FORK_NAME".to_string(),
-                        url: "http://some.rpc.url".to_string(),
-                        block_id: HashMap::from([("number".to_string(), "1".to_string())]),
+                        params: RawForkParams {
+                            url: "http://some.rpc.url".to_string(),
+                            block_id: BlockId::Number(1)
+                        },
                     },
                     ForkTarget {
                         name: "SECOND_FORK_NAME".to_string(),
-                        url: "http://some.rpc.url".to_string(),
-                        block_id: HashMap::from([("hash".to_string(), "1".to_string())]),
+                        params: RawForkParams {
+                            url: "http://some.rpc.url".to_string(),
+                            block_id: BlockId::Hash("1".to_string().to_field_element())
+                        },
                     },
                     ForkTarget {
                         name: "THIRD_FORK_NAME".to_string(),
-                        url: "http://some.rpc.url".to_string(),
-                        block_id: HashMap::from([("tag".to_string(), "Latest".to_string())]),
+                        params: RawForkParams {
+                            url: "http://some.rpc.url".to_string(),
+                            block_id: BlockId::Tag(Latest)
+                        },
                     }
                 ],
                 fuzzer_runs: None,
@@ -259,7 +220,7 @@ mod tests {
             config_from_scarb_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
                 .unwrap_err();
 
-        assert!(err.to_string().contains("Some fork names are duplicated"));
+        assert!(format!("{err:?}").contains("Some fork names are duplicated"));
     }
 
     #[test]
@@ -288,9 +249,7 @@ mod tests {
         let err =
             config_from_scarb_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
                 .unwrap_err();
-        assert!(err
-            .to_string()
-            .contains("block_id should be set once per fork"));
+        assert!(format!("{err:?}").contains("block_id should be set once per fork"));
     }
 
     #[test]
@@ -319,9 +278,9 @@ mod tests {
         let err =
             config_from_scarb_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
                 .unwrap_err();
-        assert!(err
-            .to_string()
-            .contains("block_id has only three variants: number, hash and tag"));
+        assert!(
+            format!("{err:?}").contains("block_id = wrong_variant is not valid. Possible values = are \"number\", \"hash\" and \"tag\"")
+        );
     }
 
     #[test]
@@ -350,8 +309,8 @@ mod tests {
         let err =
             config_from_scarb_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
                 .unwrap_err();
-        assert!(err
-            .to_string()
-            .contains("block_id.tag has only two variants: Latest or Pending"));
+        assert!(
+            format!("{err:?}").contains("block_id.tag has only two variants: Latest or Pending")
+        );
     }
 }

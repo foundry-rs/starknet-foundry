@@ -6,7 +6,7 @@
         "public_key": "0xe2d3d7080bfc665e0060a06e8e95c3db3ff78a1fec4cc81ddc87e49a12e0a"
     },
     "deployment": {
-        "class_hash": "0x646a72e2aab2fca75d713fbe4a58f2d12cbd64105621b89dc9ce7045b5bf02b",
+        "class_hash": "0x4d07e40e93398ed3c76981e72dd1fd22557a78ce36c0515f679e27f0bb5bc5f",
         "salt": "0x14df438ac6825165c7a0af29decd5892528b763a333f93a5f6b12980dbddd9f"
     }
 }

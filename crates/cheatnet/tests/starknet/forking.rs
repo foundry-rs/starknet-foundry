@@ -26,6 +26,7 @@ use starknet_api::core::ContractAddress;
 use std::path::PathBuf;
 use std::str::FromStr;
 use tempfile::TempDir;
+use url::Url;
 
 #[test]
 fn fork_simple() {
@@ -115,7 +116,7 @@ fn try_deploying_undeclared_class() {
 #[test]
 fn test_forking_at_block_number() {
     let predeployed_contracts = Utf8PathBuf::from("predeployed-contracts");
-    let node_url = "http://188.34.188.184:9545/rpc/v0.4";
+    let node_url: Url = "http://188.34.188.184:9545/rpc/v0.4".parse().unwrap();
     let cache_dir = TempDir::new().unwrap();
 
     {
@@ -124,7 +125,7 @@ fn test_forking_at_block_number() {
             ExtendedStateReader {
                 dict_state_reader: build_testing_state(&predeployed_contracts),
                 fork_state_reader: Some(ForkStateReader::new(
-                    node_url,
+                    node_url.clone(),
                     BlockId::Number(309_780),
                     Some(cache_dir.path().to_str().unwrap()),
                 )),
@@ -753,7 +754,7 @@ fn test_cached_block_info_merging() {
 #[test]
 fn test_calling_nonexistent_url() {
     let predeployed_contracts = Utf8PathBuf::from("predeployed-contracts");
-    let nonexistent_url = "http://188.34.188.184:9546";
+    let nonexistent_url = "http://188.34.188.184:9546".parse().unwrap();
     let mut cached_fork_state = CachedState::new(
         ExtendedStateReader {
             dict_state_reader: build_testing_state(&predeployed_contracts),
