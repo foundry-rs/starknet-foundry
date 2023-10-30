@@ -7,7 +7,7 @@ use cast::helpers::constants::{CREATE_KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH};
 use cast::helpers::response_structs::AccountCreateResponse;
 use cast::helpers::scarb_utils::CastConfig;
 use cast::{
-    extract_or_generate_salt, get_chain_id, get_keystore_password, parse_number, ValueFormat,
+    extract_or_generate_salt, get_chain_id, get_keystore_password, parse_number,
 };
 use clap::Args;
 use serde_json::json;
@@ -50,7 +50,6 @@ pub async fn create(
     salt: Option<FieldElement>,
     add_profile: bool,
     class_hash: Option<String>,
-    value_format: ValueFormat,
 ) -> Result<AccountCreateResponse> {
     let salt = extract_or_generate_salt(salt);
     let class_hash = {
@@ -94,21 +93,6 @@ pub async fn create(
         add_created_profile_to_configuration(&path_to_scarb_toml, &config)?;
     }
 
-    let mut output = vec![("address", format!("{address:#x}"))];
-    if account_json["deployed"] == json!(false) {
-        println!("Account successfully created. Prefund generated address with at least {max_fee} tokens. It is good to send more in the case of higher demand, max_fee * 2 = {}", max_fee * 2);
-        // For default and Int it should be in int
-        let max_fee_str = value_format.format_u64(max_fee);
-        output.push(("max_fee", max_fee_str));
-    }
-
-    if add_profile {
-        output.push((
-            "add-profile",
-            "Profile successfully added to Scarb.toml".to_string(),
-        ));
-    }
-
     Ok(AccountCreateResponse {
         address,
         max_fee,
@@ -116,6 +100,11 @@ pub async fn create(
             "Profile successfully added to Scarb.toml".to_string()
         } else {
             "--add-profile flag was not set. No profile added to Scarb.toml".to_string()
+        },
+        message: if account_json["deployed"] == json!(false) {
+            format!("Account successfully created. Prefund generated address with at least <max_fee> tokens. It is good to send more in the case of higher demand.")
+        } else {
+            "Account already deployed".to_string()
         },
     })
 }

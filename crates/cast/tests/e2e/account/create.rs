@@ -261,12 +261,11 @@ pub async fn test_happy_case_keystore() {
     let snapbox = runner(&args);
 
     snapbox.assert().stdout_matches(indoc! {r#"
-        CREATE_KEYSTORE_PASSWORD environment variable found and will be used for keystore password
-        Account successfully created[..]
         command: account create
         add_profile: --add-profile flag was not set. No profile added to Scarb.toml
         address: 0x[..]
         max_fee: [..]
+        message: Account successfully created[..]
     "#});
 
     let contents = fs::read_to_string(account_path).expect("Unable to read created file");
@@ -415,12 +414,11 @@ pub async fn test_happy_case_keystore_int_format() {
     let snapbox = runner(&args);
 
     snapbox.assert().stdout_matches(indoc! {r#"
-        CREATE_KEYSTORE_PASSWORD environment variable found and will be used for keystore password
-        Account successfully created[..]
         command: account create
         add_profile: --add-profile flag was not set. No profile added to Scarb.toml
         address: [..]
         max_fee: [..]
+        message: Account successfully created[..]
     "#});
 
     let contents = fs::read_to_string(account_path).expect("Unable to read created file");
@@ -457,12 +455,11 @@ pub async fn test_happy_case_keystore_hex_format() {
     let snapbox = runner(&args);
 
     snapbox.assert().stdout_matches(indoc! {r#"
-        CREATE_KEYSTORE_PASSWORD environment variable found and will be used for keystore password
-        Account successfully created[..]
         command: account create
         add_profile: --add-profile flag was not set. No profile added to Scarb.toml
         address: 0x[..]
         max_fee: 0x[..]
+        message: Account successfully created[..]
     "#});
 
     let contents = fs::read_to_string(account_path).expect("Unable to read created file");

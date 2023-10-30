@@ -75,7 +75,6 @@ pub async fn add(
         .await
         .is_ok()
     {
-        println!("Contract detected as deployed on chain");
         true
     } else {
         false

@@ -105,7 +105,6 @@ fn get_account_info(name: &str, chain_id: FieldElement, path: &Utf8PathBuf) -> R
 pub fn get_keystore_password(env_var: &str) -> std::io::Result<String> {
     match env::var(env_var) {
         Ok(password) => {
-            println!("{env_var} environment variable found and will be used for keystore password");
             Ok(password)
         }
         _ => rpassword::prompt_password("Enter password: "),
