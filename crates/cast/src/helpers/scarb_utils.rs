@@ -1,11 +1,12 @@
 use anyhow::{anyhow, bail, Context, Result};
-use camino::Utf8PathBuf;
+use camino::{Utf8Path, Utf8PathBuf};
 use scarb_metadata;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::env;
+use std::collections::HashMap;
 use std::process::{Command, Stdio};
 use std::str::FromStr;
+use std::{env, fs};
 
 #[derive(Deserialize, Serialize, Clone, Debug, Default)]
 pub struct CastConfig {
@@ -129,6 +130,62 @@ pub fn get_package_tool_sncast(metadata: &scarb_metadata::Metadata) -> Result<&V
         .ok_or_else(|| anyhow!("No field [tool.sncast] found in package"))?;
 
     Ok(tool_sncast)
+}
+
+#[derive(Deserialize, Debug, PartialEq, Clone)]
+struct StarknetArtifacts {
+    version: u32,
+    contracts: Vec<StarknetContract>,
+}
+
+#[allow(dead_code)]
+#[derive(Deserialize, Debug, PartialEq, Clone)]
+struct StarknetContract {
+    id: String,
+    package_name: String,
+    contract_name: String,
+    artifacts: StarknetContractArtifactPaths,
+}
+
+#[allow(dead_code)]
+#[derive(Deserialize, Debug, PartialEq, Clone)]
+struct StarknetContractArtifactPaths {
+    sierra: Utf8PathBuf,
+    casm: Utf8PathBuf,
+}
+
+/// Contains compiled Starknet artifacts
+#[derive(Debug, PartialEq, Clone)]
+pub struct StarknetContractArtifacts {
+    /// Compiled sierra code
+    pub sierra: String,
+    /// Compiled casm code
+    pub casm: String,
+}
+
+// TODO (#?): remove the implementation and use get_contracts_map from scarb-artifacts crate,
+//            once scarb-metadata is updated from "=1.4.2"
+pub fn get_contracts_map(path: &Utf8Path) -> Result<HashMap<String, StarknetContractArtifacts>> {
+    let base_path = path
+        .parent()
+        .ok_or_else(|| anyhow!("Failed to get parent for path = {}", path))?;
+
+    let starknet_artifacts =
+        fs::read_to_string(path).with_context(|| format!("Failed to read {path:?} contents"))?;
+    let artifacts: StarknetArtifacts =
+        serde_json::from_str(starknet_artifacts.as_str())
+            .with_context(|| format!("Failed to parse {path:?} contents. Make sure you have enabled sierra and casm code generation in Scarb.toml"))?;
+
+    let mut map = HashMap::new();
+    for contract in artifacts.contracts {
+        let name = contract.contract_name;
+        let sierra_path = base_path.join(contract.artifacts.sierra);
+        let casm_path = base_path.join(contract.artifacts.casm);
+        let sierra = fs::read_to_string(sierra_path)?;
+        let casm = fs::read_to_string(casm_path)?;
+        map.insert(name, StarknetContractArtifacts { sierra, casm });
+    }
+    Ok(map)
 }
 
 #[cfg(test)]

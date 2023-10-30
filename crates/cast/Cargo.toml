@@ -16,7 +16,7 @@ url.workspace = true
 rand.workspace = true
 project-root.workspace = true
 which.workspace = true
-scarb-metadata = { git = "https://github.com/software-mansion/scarb.git", rev = "58cc88e" }
+scarb-metadata = "=1.4.2"
 primitive-types = "0.12.1"
 shellexpand = "3.1.0"
 toml = "0.7.6"
