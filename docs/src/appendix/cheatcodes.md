@@ -1,5 +1,6 @@
 # Cheatcodes Reference
 
+-[`CheatTarget`](cheatcodes/cheat_target.md) - enum for selecting contracts to target with cheatcodes
 - [`start_prank`](cheatcodes/start_prank.md) - changes the caller address for a contract
 - [`stop_prank`](cheatcodes/stop_prank.md) - cancels the `start_prank` for the contract
 - [`start_roll`](cheatcodes/start_roll.md) - changes the block number for a contract

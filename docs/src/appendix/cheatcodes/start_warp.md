@@ -2,19 +2,11 @@
 
 > `fn start_warp(target: CheatTarget, block_timestamp: u64)`
 
-Changes the block timestamp for a contract at the given address(es).
+Changes the block timestamp for the given target.
 The change can be canceled with [`stop_warp`](./stop_warp.md).
 
-- `target` - target contract address(es).
+- `target` - target contract address(es). See [`CheatTarget`](./cheat_target.md).
 - `block_timestamp` - block timestamp to be set
-
-```rust
-enum CheatTarget {
-    All: (),
-    One: ContractAddress,
-    Multiple: Span<ContractAddress>
-}
-```
 
 For contract implementation:
 

@@ -256,21 +256,14 @@ impl CheatnetState {
 
     #[must_use]
     pub fn get_address_block_timestamp(&self, address: &ContractAddress) -> Option<Felt252> {
-        /* The Logic
-         * - If there is a global warp and no contract warp, use the global warp
-         * - If there is a global warp and a contract warp (either Warped or Unwarped), use the contract warp
-         * - If there is no global warp and a contract warp, use the contract warp (either Warped or Unwarped)
-         * - If there is no global warp and no contract warp, return None (no warp)
-         *
-         * This logic ensures that `start_warp` and `stop_warp` will always behave as expected,
-         */
-
-        match (&self.global_warp, self.warped_contracts.get(address)) {
-            (_, Some(warped_contract)) => match warped_contract {
+        // An individual warp for a contract overrides any global warp
+        if let Some(warped_contract) = self.warped_contracts.get(address) {
+            match warped_contract {
                 WarpedContract::Warped(contract_timestamp) => Some(contract_timestamp.clone()),
                 WarpedContract::Unwarped => None,
-            },
-            (any_global, None) => any_global.clone(),
+            }
+        } else {
+            self.global_warp.clone()
         }
     }
 
