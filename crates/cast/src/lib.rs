@@ -265,9 +265,7 @@ pub async fn wait_for_tx(
             Err(err) => return Err(err.into()),
         };
 
-        if i > 1 {
-            sleep(Duration::from_secs(5));
-        }
+        sleep(Duration::from_secs(5));
     }
 
     Err(anyhow!(
