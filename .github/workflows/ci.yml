@@ -106,9 +106,6 @@ jobs:
       - uses: software-mansion/setup-scarb@v1.3.1
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
-      - name: Prepare for tests
-        run: |
-          ./scripts/prepare_for_tests.sh
       - name: Run tests
         run: cargo test --release -p cast
 
