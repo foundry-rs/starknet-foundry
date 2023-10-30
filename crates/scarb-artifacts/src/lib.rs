@@ -87,7 +87,7 @@ pub fn try_get_starknet_artifacts_path(
 ///
 /// # Arguments
 ///
-/// * `path` - A path to {target_name}.starknet_artifacts.json file
+/// * `path` - A path to `{target_name}.starknet_artifacts.json` file
 pub fn get_contracts_map(path: &Utf8Path) -> Result<HashMap<String, StarknetContractArtifacts>> {
     let base_path = path
         .parent()
