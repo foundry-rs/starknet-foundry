@@ -1,4 +1,4 @@
-use crate::state::{CheatTarget, WarpedContract};
+use crate::state::{CheatInfo, CheatTarget};
 use crate::CheatnetState;
 use cairo_felt::Felt252;
 
@@ -13,12 +13,12 @@ impl CheatnetState {
             }
             CheatTarget::One(contract_address) => {
                 self.warped_contracts
-                    .insert(contract_address, WarpedContract::Warped(timestamp));
+                    .insert(contract_address, CheatInfo::Cheated(timestamp));
             }
             CheatTarget::Multiple(contracts) => {
                 for contract_address in contracts {
                     self.warped_contracts
-                        .insert(contract_address, WarpedContract::Warped(timestamp.clone()));
+                        .insert(contract_address, CheatInfo::Cheated(timestamp.clone()));
                 }
             }
         }
@@ -32,12 +32,12 @@ impl CheatnetState {
             }
             CheatTarget::One(contract_address) => {
                 self.warped_contracts
-                    .insert(contract_address, WarpedContract::Unwarped);
+                    .insert(contract_address, CheatInfo::Uncheated);
             }
             CheatTarget::Multiple(contracts) => {
                 for contract_address in contracts {
                     self.warped_contracts
-                        .insert(contract_address, WarpedContract::Unwarped);
+                        .insert(contract_address, CheatInfo::Uncheated);
                 }
             }
         }

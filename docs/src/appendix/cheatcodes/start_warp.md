@@ -5,7 +5,7 @@
 Changes the block timestamp for the given target.
 The change can be canceled with [`stop_warp`](./stop_warp.md).
 
-- `target` - target contract address(es). See [`CheatTarget`](./cheat_target.md).
+- `target` - instance of [`CheatTarget`](./cheat_target.md) specifying which contracts to warp.
 - `block_timestamp` - block timestamp to be set
 
 For contract implementation:

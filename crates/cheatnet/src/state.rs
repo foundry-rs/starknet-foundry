@@ -210,9 +210,9 @@ impl StateReader for DictStateReader {
     }
 }
 
-pub enum WarpedContract {
-    Warped(Felt252),
-    Unwarped,
+pub enum CheatInfo<T> {
+    Cheated(T),
+    Uncheated,
 }
 
 #[allow(clippy::module_name_repetitions)]
@@ -220,7 +220,7 @@ pub enum WarpedContract {
 pub struct CheatnetState {
     pub rolled_contracts: HashMap<ContractAddress, Felt252>,
     pub pranked_contracts: HashMap<ContractAddress, ContractAddress>,
-    pub warped_contracts: HashMap<ContractAddress, WarpedContract>,
+    pub warped_contracts: HashMap<ContractAddress, CheatInfo<Felt252>>,
     pub global_warp: Option<Felt252>,
     pub mocked_functions: HashMap<ContractAddress, HashMap<EntryPointSelector, Vec<StarkFelt>>>,
     pub spoofed_contracts: HashMap<ContractAddress, TxInfoMock>,
@@ -250,7 +250,7 @@ impl CheatnetState {
         self.global_warp.is_some()
             || matches!(
                 self.warped_contracts.get(contract_address),
-                Some(WarpedContract::Warped(_))
+                Some(CheatInfo::Cheated(_))
             )
     }
 
@@ -259,8 +259,8 @@ impl CheatnetState {
         // An individual warp for a contract overrides any global warp
         if let Some(warped_contract) = self.warped_contracts.get(address) {
             match warped_contract {
-                WarpedContract::Warped(contract_timestamp) => Some(contract_timestamp.clone()),
-                WarpedContract::Unwarped => None,
+                CheatInfo::Cheated(contract_timestamp) => Some(contract_timestamp.clone()),
+                CheatInfo::Uncheated => None,
             }
         } else {
             self.global_warp.clone()

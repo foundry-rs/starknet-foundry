@@ -407,7 +407,7 @@ fn warp_one_then_all() {
 }
 
 #[test]
-fn warp_global_stop() {
+fn warp_all_stop() {
     let mut cached_state = create_cached_state();
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
@@ -459,4 +459,107 @@ fn warp_global_stop() {
     let changed_back_block_timestamp = recover_data(output);
 
     assert_eq!(old_block_timestamp, changed_back_block_timestamp);
+}
+
+#[test]
+fn warp_multiple() {
+    println!("blah blah blah");
+    let mut cached_state = create_cached_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
+
+    let contract = "WarpChecker".to_owned().to_felt252();
+    let contracts = get_contracts();
+    let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
+
+    let contract_address1 = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[])
+        .unwrap()
+        .contract_address;
+
+    let contract_address2 = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[])
+        .unwrap()
+        .contract_address;
+
+    let selector = felt_selector_from_name("get_block_timestamp");
+
+    let output = call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &contract_address1,
+        &selector,
+        &[],
+    )
+    .unwrap();
+
+    let old_block_timestamp1 = recover_data(output);
+
+    let output = call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &contract_address2,
+        &selector,
+        &[],
+    )
+    .unwrap();
+
+    let old_block_timestamp2 = recover_data(output);
+
+    cheatnet_state.start_warp(
+        CheatTarget::Multiple(vec![contract_address1, contract_address2]),
+        Felt252::from(123_u128),
+    );
+
+    let output = call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &contract_address1,
+        &selector,
+        &[],
+    )
+    .unwrap();
+
+    let new_block_timestamp1 = recover_data(output);
+
+    let output = call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &contract_address2,
+        &selector,
+        &[],
+    )
+    .unwrap();
+
+    let new_block_timestamp2 = recover_data(output);
+
+    assert_eq!(new_block_timestamp1, vec![Felt252::from(123)]);
+    assert_eq!(new_block_timestamp2, vec![Felt252::from(123)]);
+
+    cheatnet_state.stop_warp(CheatTarget::Multiple(vec![
+        contract_address1,
+        contract_address2,
+    ]));
+
+    let output = call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &contract_address1,
+        &selector,
+        &[],
+    )
+    .unwrap();
+
+    let changed_back_block_timestamp1 = recover_data(output);
+
+    let output = call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &contract_address2,
+        &selector,
+        &[],
+    )
+    .unwrap();
+
+    let changed_back_block_timestamp2 = recover_data(output);
+
+    assert_eq!(old_block_timestamp1, changed_back_block_timestamp1);
+    assert_eq!(old_block_timestamp2, changed_back_block_timestamp2);
 }
