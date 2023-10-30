@@ -8,11 +8,12 @@ on:
       - master
   workflow_dispatch:
 
+env:
+  SCARB_VERSION: 2.3.0
+
 jobs:
   test-forge-unit-and-integration:
     name: Test Forge / Unit and Integration Tests
-    env:
-      SCARB_VERSION: 2.3.0
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -28,8 +29,6 @@ jobs:
 
   test-forge-e2e:
     name: Test Forge / E2E Tests
-    env:
-      SCARB_VERSION: 2.3.0
     runs-on: ubuntu-latest
     steps:
       - name: Extract branch name
@@ -66,8 +65,6 @@ jobs:
 
   test-cheatnet:
     name: Test Cheatnet
-    env:
-      SCARB_VERSION: 2.3.0
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -84,8 +81,6 @@ jobs:
   test-cast:
     name: Test Cast
     runs-on: ubuntu-latest
-    env:
-      SCARB_VERSION: 0.5.2
     steps:
       - uses: actions/checkout@v4
         with:
