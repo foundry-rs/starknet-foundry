@@ -169,7 +169,7 @@ pub fn paths_for_package(
     Ok((package_path, Utf8PathBuf::from(package_source_dir_path)))
 }
 
-pub fn target_dir_for_package(metadata: &Metadata) -> Utf8PathBuf {
+fn target_dir_for_package(metadata: &Metadata) -> Utf8PathBuf {
     metadata
         .target_dir
         .clone()
