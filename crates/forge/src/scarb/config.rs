@@ -63,7 +63,7 @@ pub(super) fn validate_raw_fork_config(raw_config: &RawForgeConfig) -> Result<()
         };
 
         if !["number", "hash", "tag"].contains(&&**block_id_key) {
-            bail!("invalid block variant {block_id_key}. Possible values are \"number\", \"hash\" and \"tag\"");
+            bail!("block_id = {block_id_key} is not valid. Possible values = are \"number\", \"hash\" and \"tag\"");
         }
 
         if block_id_key == "tag" && block_id_value != "Latest" {
