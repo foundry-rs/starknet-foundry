@@ -1046,7 +1046,7 @@ dependencies = [
  "reqwest",
  "rpassword",
  "scarb-artifacts",
- "scarb-metadata 1.4.2",
+ "scarb-metadata",
  "sealed_test",
  "serde",
  "serde_json",
@@ -1100,6 +1100,7 @@ dependencies = [
  "rayon",
  "regex",
  "scarb-artifacts",
+ "scarb-metadata",
  "serde",
  "serde_json",
  "starknet",
@@ -1827,7 +1828,7 @@ dependencies = [
  "rayon",
  "regex",
  "scarb-artifacts",
- "scarb-metadata 1.7.0",
+ "scarb-metadata",
  "scarb-ui",
  "schemars",
  "serde",
@@ -3627,23 +3628,10 @@ dependencies = [
  "assert_fs",
  "camino",
  "indoc",
- "scarb-metadata 1.7.0",
+ "scarb-metadata",
  "serde",
  "serde_json",
  "test-collector",
-]
-
-[[package]]
-name = "scarb-metadata"
-version = "1.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "26ba10c59bd4ebde82de954e3a3d6d503eb17bd634106ef144af1356b28b8f0f"
-dependencies = [
- "camino",
- "semver",
- "serde",
- "serde_json",
- "thiserror",
 ]
 
 [[package]]
@@ -3669,7 +3657,7 @@ dependencies = [
  "console",
  "indicatif",
  "indoc",
- "scarb-metadata 1.7.0",
+ "scarb-metadata",
  "serde",
  "serde_json",
 ]
@@ -3783,9 +3771,9 @@ dependencies = [
 
 [[package]]
 name = "semver"
-version = "1.0.18"
+version = "1.0.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b0293b4b29daaf487284529cc2f5675b8e57c61f70167ba415a463651fd6a918"
+checksum = "836fa6a3e1e547f9a2c4040802ec865b5d85f4014efe00555d7090a3dcaa1090"
 dependencies = [
  "serde",
 ]
@@ -3823,9 +3811,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.105"
+version = "1.0.107"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "693151e1ac27563d6dbcec9dee9fbd5da8539b20fa14ad3752b2e6d363ace360"
+checksum = "6b420ce6e3d8bd882e9b243c6eed35dbc9a6110c9769e74b584e0d68d1f20c65"
 dependencies = [
  "itoa",
  "ryu",

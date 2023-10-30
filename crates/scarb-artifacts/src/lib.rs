@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
-use scarb_metadata::{CompilationUnitMetadata, Metadata, MetadataCommand, PackageId};
+use scarb_metadata::{CompilationUnitMetadata, Metadata, PackageId};
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs;
@@ -58,7 +58,7 @@ fn artifacts_for_package(path: &Utf8Path) -> Result<StarknetArtifacts> {
 ///
 /// # Arguments
 ///
-/// * `path` - A path to the Scarb package
+/// * `target_dir` - A path to target directory
 /// * `target_name` - A name of the target that is being built by Scarb
 pub fn try_get_starknet_artifacts_path(
     target_dir: &Utf8Path,
@@ -87,22 +87,36 @@ pub fn try_get_starknet_artifacts_path(
 ///
 /// # Arguments
 ///
-/// * `path`` - A path to the Scarb package
-pub fn get_contracts_map(path: &Utf8Path) -> Result<HashMap<String, StarknetContractArtifacts>> {
-    let base_path = path
-        .parent()
-        .ok_or_else(|| anyhow!("Failed to get parent for path = {}", path))?;
-    let artifacts = artifacts_for_package(path)?;
-    let mut map = HashMap::new();
-    for contract in artifacts.contracts {
-        let name = contract.contract_name;
-        let sierra_path = base_path.join(contract.artifacts.sierra);
-        let casm_path = base_path.join(contract.artifacts.casm);
-        let sierra = fs::read_to_string(sierra_path)?;
-        let casm = fs::read_to_string(casm_path)?;
-        map.insert(name, StarknetContractArtifacts { sierra, casm });
+/// * `target_dir` - A path to target directory
+/// * `target_name` - A name of the target that is being built by Scarb
+pub fn get_contracts_map(
+    metadata: &Metadata,
+    package: &PackageId,
+) -> Result<HashMap<String, StarknetContractArtifacts>> {
+    let target_dir = target_dir_for_package(metadata);
+    let target_name = target_name_for_package(metadata, package)?;
+
+    let maybe_contracts_path = try_get_starknet_artifacts_path(&target_dir, &target_name)?;
+
+    match maybe_contracts_path {
+        Some(contracts_path) => {
+            let base_path = contracts_path
+                .parent()
+                .ok_or_else(|| anyhow!("Failed to get parent for path = {}", &contracts_path))?;
+            let artifacts = artifacts_for_package(&contracts_path)?;
+            let mut map = HashMap::new();
+            for contract in artifacts.contracts {
+                let name = contract.contract_name;
+                let sierra_path = base_path.join(contract.artifacts.sierra);
+                let casm_path = base_path.join(contract.artifacts.casm);
+                let sierra = fs::read_to_string(sierra_path)?;
+                let casm = fs::read_to_string(casm_path)?;
+                map.insert(name, StarknetContractArtifacts { sierra, casm });
+            }
+            Ok(map)
+        }
+        None => Ok(HashMap::default()),
     }
-    Ok(map)
 }
 
 fn compilation_unit_for_package<'a>(
@@ -155,14 +169,11 @@ pub fn paths_for_package(
     Ok((package_path, Utf8PathBuf::from(package_source_dir_path)))
 }
 
-pub fn target_dir_for_package(workspace_root: &Utf8Path) -> Result<Utf8PathBuf> {
-    let scarb_metadata = MetadataCommand::new().inherit_stderr().exec()?;
-
-    let target_dir = scarb_metadata
+pub fn target_dir_for_package(metadata: &Metadata) -> Utf8PathBuf {
+    metadata
         .target_dir
-        .unwrap_or_else(|| workspace_root.join("target"));
-
-    Ok(target_dir)
+        .clone()
+        .unwrap_or_else(|| metadata.workspace.root.join("target"))
 }
 
 /// Get a name of the given package
@@ -420,12 +431,14 @@ mod tests {
             .unwrap();
         assert!(build_output.status.success());
 
-        let artifacts_path = temp
-            .path()
-            .join("target/dev/basic_package.starknet_artifacts.json");
-        let artifacts_path = Utf8PathBuf::from_path_buf(artifacts_path).unwrap();
+        let metadata = scarb_metadata::MetadataCommand::new()
+            .inherit_stderr()
+            .manifest_path(temp.join("Scarb.toml"))
+            .exec()
+            .unwrap();
 
-        let contracts = get_contracts_map(&artifacts_path).unwrap();
+        let package = metadata.packages.get(0).unwrap();
+        let contracts = get_contracts_map(&metadata, &package.id).unwrap();
 
         assert!(contracts.contains_key("ERC20"));
         assert!(contracts.contains_key("HelloStarknet"));

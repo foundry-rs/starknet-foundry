@@ -31,6 +31,7 @@ conversions.workspace = true
 fs2 = "0.4.3"
 flate2 = "1.0.27"
 scarb-artifacts = { path = "../scarb-artifacts" }
+scarb-metadata = { git = "https://github.com/software-mansion/scarb.git", rev = "58cc88e" }
 
 [dev-dependencies]
 ctor.workspace = true

@@ -5,8 +5,7 @@ use forge::scarb::config_from_scarb_for_package;
 use include_dir::{include_dir, Dir};
 use scarb_artifacts::{
     corelib_for_package, dependencies_for_package, get_contracts_map, name_for_package,
-    paths_for_package, target_dir_for_package, target_name_for_package,
-    try_get_starknet_artifacts_path,
+    paths_for_package,
 };
 use scarb_metadata::{MetadataCommand, PackageMetadata};
 use scarb_ui::args::PackagesFilter;
@@ -152,8 +151,6 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                 env::set_current_dir(package_path.clone())?;
 
                 // TODO(#671)
-                let target_dir = target_dir_for_package(&workspace_root)?;
-
                 let build_output = Command::new("scarb")
                     .arg("build")
                     .stderr(Stdio::inherit())
@@ -166,14 +163,9 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
 
                 let package_name = Arc::new(name_for_package(&scarb_metadata, &package.id)?);
                 let dependencies = dependencies_for_package(&scarb_metadata, &package.id)?;
-                let target_name = target_name_for_package(&scarb_metadata, &package.id)?;
                 let corelib_path = corelib_for_package(&scarb_metadata, &package.id)?;
 
-                let contracts_path = try_get_starknet_artifacts_path(&target_dir, &target_name)?;
-                let contracts = contracts_path
-                    .map(|path| get_contracts_map(&path))
-                    .transpose()?
-                    .unwrap_or_default();
+                let contracts = get_contracts_map(&scarb_metadata, &package.id).unwrap_or_default();
 
                 let runner_config = Arc::new(RunnerConfig::new(
                     workspace_root.clone(),
