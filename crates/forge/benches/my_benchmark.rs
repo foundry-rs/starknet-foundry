@@ -182,17 +182,20 @@ fn criterion_benchmark(c: &mut Criterion) {
     group.sample_size(50);
     group.measurement_time(Duration::from_secs(120));
     group.bench_with_input(
-        BenchmarkId::new("declare_and_interact", format!("{test:?}")),
+        BenchmarkId::new(
+            "declare_and_interact",
+            format!("{declare_and_interact_input:?}"),
+        ),
         &declare_and_interact_input,
         |b, test_case| b.iter(|| declare_and_interact(test_case)),
     );
     group.bench_with_input(
-        BenchmarkId::new("collect_tests", format!("{test:?}")),
+        BenchmarkId::new("collect_tests", format!("{collect_tests_input:?}")),
         &collect_tests_input,
         |b, package| b.iter(|| collect_tests(package)),
     );
     group.bench_with_input(
-        BenchmarkId::new("compile_tests", format!("{test:?}")),
+        BenchmarkId::new("compile_tests", format!("{compile_tests_input:?}")),
         &compile_tests_input,
         |b, (compilation_target, linked_libraries, corelib_path, _)| {
             b.iter(|| compile_tests(compilation_target, linked_libraries, corelib_path));
