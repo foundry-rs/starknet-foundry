@@ -91,11 +91,6 @@ jobs:
       - uses: Swatinem/rust-cache@a95ba195448af2da9b00fb742d14ffaaf3c21f43
         with:
           cache-directories: crates/cast/tests/utils/devnet
-      - name: Set starknet-devnet-rs rev
-        id: devnet-rev
-        run: |
-          devnetrev=$(grep "DEVNET_REV=" ./scripts/install_devnet.sh | awk -F '=' '{print $2}')
-          echo "devnet_rev=${devnetrev//\"}" >> $GITHUB_OUTPUT
       - name: Install starknet-devnet-rs
         run: ./scripts/install_devnet.sh
       - uses: software-mansion/setup-scarb@v1.3.1
