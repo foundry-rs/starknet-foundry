@@ -42,7 +42,7 @@ mod tests_short_string {
 
     #[test]
     fn test_short_string_conversions_limit() {
-        // 32 characters.
+        // 31 characters.
         let short_string = "123456789012345678901234567891".to_string();
 
         assert_eq!(short_string, short_string.to_class_hash().to_short_string());
