@@ -1,7 +1,7 @@
 use assert_fs::fixture::PathCopy;
 use assert_fs::TempDir;
 use camino::Utf8PathBuf;
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, SamplingMode};
 use forge::collecting::{collect_test_compilation_targets, TestCompilationTarget};
 use forge::CrateLocation;
 use indoc::indoc;
@@ -178,8 +178,9 @@ fn criterion_benchmark(c: &mut Criterion) {
     let compile_tests_input = setup_compile_tests();
 
     let mut group = c.benchmark_group("forge-benchmark-group");
-    group.sample_size(10);
-    group.measurement_time(Duration::from_secs(30));
+    group.sampling_mode(SamplingMode::Flat); // https://bheisler.github.io/criterion.rs/book/user_guide/advanced_configuration.html#sampling-mode
+    group.sample_size(50);
+    group.measurement_time(Duration::from_secs(120));
     group.bench_with_input(
         BenchmarkId::new("declare_and_interact", format!("{test:?}")),
         &test,
