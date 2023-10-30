@@ -58,7 +58,7 @@ fn artifacts_for_package(path: &Utf8Path) -> Result<StarknetArtifacts> {
 ///
 /// # Arguments
 ///
-/// * `path` - A path to the Scarb package
+/// * `target_dir` - A path to the target directory of the package
 /// * `target_name` - A name of the target that is being built by Scarb
 pub fn try_get_starknet_artifacts_path(
     target_dir: &Utf8Path,
@@ -87,7 +87,7 @@ pub fn try_get_starknet_artifacts_path(
 ///
 /// # Arguments
 ///
-/// * `path` - A path to the Scarb package
+/// * `path` - A path to {target_name}.starknet_artifacts.json file
 pub fn get_contracts_map(path: &Utf8Path) -> Result<HashMap<String, StarknetContractArtifacts>> {
     let base_path = path
         .parent()

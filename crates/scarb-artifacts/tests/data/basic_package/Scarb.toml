@@ -9,6 +9,3 @@ snforge_std = { path = "../../../../../snforge_std" }
 [[target.starknet-contract]]
 sierra = true
 casm = true
-
-[tool.snforge]
-exit_first = false

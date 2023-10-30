@@ -1,25 +1,15 @@
-mod hello_starknet;
-mod erc20;
-
-fn fib(a: felt252, b: felt252, n: felt252) -> felt252 {
-    match n {
-        0 => a,
-        _ => fib(b, a + b, n - 1),
+#[starknet::contract]
+mod HelloStarknet {
+    #[storage]
+    struct Storage {
+        balance: felt252,
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::fib;
-    
-    #[test]
-    fn test_fib() {
-        assert(fib(0, 1, 10) == 55, fib(0, 1, 10));
-    }
-
-    #[test]
-    #[ignore]
-    fn ignored_test() {
-        assert(1 == 1, 'passing');
+#[starknet::contract]
+mod ERC20 {
+    #[storage]
+    struct Storage {
+        balance: felt252,
     }
 }
