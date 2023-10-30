@@ -173,7 +173,7 @@ fn declare_and_interact(test: &TestCase) {
 }
 
 fn criterion_benchmark(c: &mut Criterion) {
-    let test = setup_declare_and_interact();
+    let declare_and_interact_input = setup_declare_and_interact();
     let collect_tests_input = setup_collect_tests();
     let compile_tests_input = setup_compile_tests();
 
@@ -183,7 +183,7 @@ fn criterion_benchmark(c: &mut Criterion) {
     group.measurement_time(Duration::from_secs(120));
     group.bench_with_input(
         BenchmarkId::new("declare_and_interact", format!("{test:?}")),
-        &test,
+        &declare_and_interact_input,
         |b, test_case| b.iter(|| declare_and_interact(test_case)),
     );
     group.bench_with_input(
