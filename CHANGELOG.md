@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - diagnostic paths referring to `tests` folder
 - caching `get_class_hash_at` in forking test mode (credits to @jainkunal for catching the bug)
 
+#### Changed
+- `start_warp` and `stop_warp` now take `CheatTarget` as the first argument instead of `ContractAddress`. Read more [here](./docs/src/appendix/cheatcodes/start_warp.md). 
+
 ## [0.9.0] - 2023-10-25
 
 ### Forge
