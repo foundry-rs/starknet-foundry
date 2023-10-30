@@ -55,11 +55,10 @@ async fn test_happy_case_from_cli_no_scarb() {
 
 #[tokio::test]
 async fn test_happy_case_from_cli_with_scarb() {
-    let address = from_env("CAST_MAP_V1_ADDRESS").unwrap();
+    let address = from_env("CAST_MAP_ADDRESS").unwrap();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
-        "--json",
         "--path-to-scarb-toml",
         "tests/data/files/correct_Scarb.toml",
         "--profile",
@@ -82,20 +81,17 @@ async fn test_happy_case_from_cli_with_scarb() {
     let snapbox = runner(&args);
 
     snapbox.assert().success().stdout_eq(indoc! {r#"
-        {
-          "command": "call",
-          "response": "[0x0]"
-        }
+        command: call
+        response: [0x0]
 "#});
 }
 
 #[tokio::test]
 async fn test_happy_case_mixed() {
-    let address = from_env("CAST_MAP_V1_ADDRESS").unwrap();
+    let address = from_env("CAST_MAP_ADDRESS").unwrap();
     let args = vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
-        "--json",
         "--path-to-scarb-toml",
         "tests/data/files/correct_Scarb.toml",
         "--profile",
@@ -116,10 +112,8 @@ async fn test_happy_case_mixed() {
     let snapbox = runner(&args);
 
     snapbox.assert().success().stdout_eq(indoc! {r#"
-        {
-          "command": "call",
-          "response": "[0x0]"
-        }
+        command: call
+        response: [0x0]
 "#});
 }
 
@@ -223,15 +217,15 @@ async fn test_keystore_inexistent_account() {
 #[tokio::test]
 async fn test_keystore_undeployed_account() {
     let contract_path =
-        duplicate_directory_with_salt(CONTRACTS_DIR.to_string() + "/v1/map", "put", "8");
+        duplicate_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "8");
 
     let args = vec![
         "--url",
         URL,
         "--keystore",
-        "../../../keystore/my_key.json",
+        "../../keystore/my_key.json",
         "--account",
-        "../../../keystore/my_account_undeployed.json",
+        "../../keystore/my_account_undeployed.json",
         "declare",
         "--contract-name",
         "Map",
@@ -252,15 +246,15 @@ async fn test_keystore_undeployed_account() {
 #[tokio::test]
 async fn test_keystore_declare() {
     let contract_path =
-        duplicate_directory_with_salt(CONTRACTS_DIR.to_string() + "/v1/map", "put", "999");
+        duplicate_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "999");
 
     let args = vec![
         "--url",
         URL,
         "--keystore",
-        "../../../keystore/my_key.json",
+        "../../keystore/my_key.json",
         "--account",
-        "../../../keystore/my_account.json",
+        "../../keystore/my_account.json",
         "declare",
         "--contract-name",
         "Map",

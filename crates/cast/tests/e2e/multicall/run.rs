@@ -1,7 +1,6 @@
 use crate::helpers::constants::MULTICALL_CONFIGS_DIR;
 use crate::helpers::fixtures::default_cli_args;
 use crate::helpers::runner::runner;
-use indoc::indoc;
 use std::path::Path;
 
 #[tokio::test]
@@ -31,7 +30,7 @@ async fn test_happy_case() {
 #[tokio::test]
 async fn test_calldata_ids() {
     let mut args = default_cli_args();
-    args.append(&mut vec!["--account", "user2"]);
+    args.append(&mut vec!["--account", "user5"]);
 
     let path = project_root::get_project_root().expect("failed to get project root path");
     let path = Path::new(&path)
@@ -89,7 +88,7 @@ async fn test_deploy_fail() {
     let stderr_str =
         std::str::from_utf8(&out.stderr).expect("failed to convert command output to string");
 
-    assert!(stderr_str.contains("Class with hash 0x1 is not declared"));
+    assert!(stderr_str.contains("Transaction execution has failed."));
 }
 
 #[tokio::test]
@@ -113,7 +112,7 @@ async fn test_invoke_fail() {
         std::str::from_utf8(&out.stderr).expect("failed to convert command output to string");
 
     assert!(out.stdout.is_empty());
-    assert!(stderr_str.contains("Contract not found"));
+    assert!(stderr_str.contains("Transaction execution has failed."));
 }
 
 #[tokio::test]
@@ -130,8 +129,7 @@ async fn test_deploy_success_invoke_fails() {
     args.append(&mut vec!["multicall", "run", "--path", path_str]);
 
     let snapbox = runner(&args);
-    snapbox.assert().success().stderr_matches(indoc! {r#"
-        command: multicall run
-        error: Contract not found
-    "#});
+    let output = String::from_utf8(snapbox.assert().success().get_output().stderr.clone()).unwrap();
+
+    assert!(output.contains("Transaction execution has failed."));
 }

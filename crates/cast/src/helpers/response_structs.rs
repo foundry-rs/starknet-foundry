@@ -27,13 +27,19 @@ pub struct CallResponse {
 #[derive(Serialize)]
 pub struct AccountCreateResponse {
     pub address: FieldElement,
-    pub max_fee: FieldElement,
+    pub max_fee: u64,
     pub add_profile: String,
 }
 
 #[derive(Serialize)]
 pub struct AccountAddResponse {
     pub add_profile: String,
+}
+
+#[derive(Serialize)]
+pub struct AccountDeleteResponse {
+    pub result: String,
+    pub scarb_result: String,
 }
 
 #[derive(Serialize)]

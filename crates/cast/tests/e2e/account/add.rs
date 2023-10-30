@@ -9,7 +9,7 @@ use std::fs;
 
 #[tokio::test]
 pub async fn test_happy_case() {
-    let accounts_file = "./tmp/accounts.json";
+    let accounts_file = "./tmp-a1/accounts.json";
     _ = fs::remove_file(accounts_file);
 
     let args = vec![
@@ -59,9 +59,9 @@ pub async fn test_happy_case() {
 #[tokio::test]
 pub async fn test_happy_case_add_profile() {
     let current_dir = Utf8PathBuf::from(duplicate_directory_with_salt(
-        CONTRACTS_DIR.to_string() + "/v1/map",
+        CONTRACTS_DIR.to_string() + "/map",
         "put",
-        "3",
+        "30",
     ));
     let accounts_file = "./accounts.json";
 
@@ -129,7 +129,7 @@ pub async fn test_happy_case_add_profile() {
 
 #[tokio::test]
 pub async fn test_detect_deployed() {
-    let accounts_file = "./tmp/accounts.json";
+    let accounts_file = "./tmp-a2/accounts.json";
     _ = fs::remove_file(accounts_file);
 
     let args = vec![

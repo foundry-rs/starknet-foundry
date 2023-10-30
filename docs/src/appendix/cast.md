@@ -5,6 +5,7 @@
     * [add](./cast/account/add.md)
     * [create](./cast/account/create.md)
     * [deploy](./cast/account/deploy.md)
+    * [delete](./cast/account/delete.md)
 * [declare](./cast/declare.md)
 * [deploy](./cast/deploy.md)
 * [invoke](./cast/invoke.md)

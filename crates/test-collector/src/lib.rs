@@ -4,11 +4,12 @@ use cairo_felt::Felt252;
 use cairo_lang_compiler::db::RootDatabase;
 use cairo_lang_compiler::diagnostics::DiagnosticsReporter;
 use cairo_lang_debug::DebugWithDb;
-use cairo_lang_defs::ids::{FreeFunctionId, FunctionWithBodyId, ModuleItemId};
+use cairo_lang_defs::db::DefsGroup;
+use cairo_lang_defs::ids::{FreeFunctionId, FunctionWithBodyId, ModuleId, ModuleItemId};
 use cairo_lang_defs::plugin::PluginDiagnostic;
 use cairo_lang_diagnostics::ToOption;
 use cairo_lang_filesystem::cfg::{Cfg, CfgSet};
-use cairo_lang_filesystem::db::FilesGroup;
+use cairo_lang_filesystem::db::{AsFilesGroupMut, FilesGroup, FilesGroupEx};
 use cairo_lang_filesystem::ids::{CrateId, CrateLongId, Directory};
 use cairo_lang_lowering::ids::ConcreteFunctionWithBodyId;
 use cairo_lang_project::{ProjectConfig, ProjectConfigContent};
@@ -36,7 +37,7 @@ use plugin::TestPlugin;
 use smol_str::SmolStr;
 use starknet::core::types::{BlockId, BlockTag};
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 mod plugin;
@@ -61,10 +62,20 @@ pub enum ExpectedTestResult {
     Panics(ExpectedPanicValue),
 }
 
+pub trait ForkConfig {}
+
+impl ForkConfig for RawForkConfig {}
+
 #[derive(Debug, Clone, PartialEq)]
-pub enum ForkConfig {
+pub enum RawForkConfig {
     Id(String),
-    Params(String, BlockId),
+    Params(RawForkParams),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct RawForkParams {
+    pub url: String,
+    pub block_id: BlockId,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -83,7 +94,7 @@ pub struct SingleTestConfig {
     /// Should the test be ignored.
     pub ignored: bool,
     /// The configuration of forked network.
-    pub fork_config: Option<ForkConfig>,
+    pub fork_config: Option<RawForkConfig>,
     /// Custom fuzzing configuration
     pub fuzzer_config: Option<FuzzerConfig>,
 }
@@ -296,7 +307,7 @@ fn extract_panic_values(db: &dyn SyntaxGroup, attr: &Attribute) -> Option<Vec<Fe
 }
 
 /// Tries to extract the fork configuration.
-fn extract_fork_config(db: &dyn SyntaxGroup, attr: &Attribute) -> Option<ForkConfig> {
+fn extract_fork_config(db: &dyn SyntaxGroup, attr: &Attribute) -> Option<RawForkConfig> {
     if attr.args.is_empty() {
         return None;
     }
@@ -352,16 +363,16 @@ fn extract_numeric_value(db: &dyn SyntaxGroup, expr: &ast::Expr) -> Option<BigIn
     literal.numeric_value(db)
 }
 
-fn extract_fork_config_from_id(id: &ast::Expr, db: &dyn SyntaxGroup) -> Option<ForkConfig> {
-    let ast::Expr::String(url_str) = id else {
+fn extract_fork_config_from_id(id: &ast::Expr, db: &dyn SyntaxGroup) -> Option<RawForkConfig> {
+    let ast::Expr::String(id_str) = id else {
         return None;
     };
-    let url = url_str.string_value(db)?;
+    let id = id_str.string_value(db)?;
 
-    Some(ForkConfig::Id(url))
+    Some(RawForkConfig::Id(id))
 }
 
-fn extract_fork_config_from_args(db: &dyn SyntaxGroup, attr: &Attribute) -> Option<ForkConfig> {
+fn extract_fork_config_from_args(db: &dyn SyntaxGroup, attr: &Attribute) -> Option<RawForkConfig> {
     let [AttributeArg {
         variant:
             AttributeArgVariant::Named {
@@ -446,7 +457,10 @@ fn extract_fork_config_from_args(db: &dyn SyntaxGroup, attr: &Attribute) -> Opti
         return None;
     }
 
-    Some(ForkConfig::Params(url, block_id[0].unwrap()))
+    Some(RawForkConfig::Params(RawForkParams {
+        url,
+        block_id: block_id[0].unwrap(),
+    }))
 }
 
 /// Represents a dependency of a Cairo project
@@ -456,29 +470,32 @@ pub struct LinkedLibrary {
     pub path: PathBuf,
 }
 
+pub type TestCaseRaw = TestCase<RawForkConfig>;
+
 #[derive(Debug, PartialEq, Clone)]
-pub struct TestCase {
+pub struct TestCase<T: ForkConfig> {
     pub name: String,
     pub available_gas: Option<usize>,
+    pub ignored: bool,
     pub expected_result: ExpectedTestResult,
-    pub fork_config: Option<ForkConfig>,
+    pub fork_config: Option<T>,
     pub fuzzer_config: Option<FuzzerConfig>,
 }
 
 pub fn collect_tests(
-    crate_root: &str,
-    output_path: Option<&str>,
     crate_name: &str,
+    crate_root: &Path,
+    lib_content: &str,
     linked_libraries: &[LinkedLibrary],
     builtins: &[&str],
     corelib_path: PathBuf,
-) -> Result<(Program, Vec<TestCase>)> {
-    let mut crate_roots: OrderedHashMap<SmolStr, PathBuf> = linked_libraries
+    output_path: Option<&str>,
+) -> Result<(Program, Vec<TestCaseRaw>)> {
+    let crate_roots: OrderedHashMap<SmolStr, PathBuf> = linked_libraries
         .iter()
         .cloned()
         .map(|source_root| (source_root.name.into(), source_root.path))
         .collect();
-    crate_roots.insert(crate_name.into(), PathBuf::from(crate_root));
 
     let project_config = ProjectConfig {
         base_path: crate_root.into(),
@@ -497,7 +514,8 @@ pub fn collect_tests(
         b.build()?
     };
 
-    let main_crate_id = db.intern_crate(CrateLongId::Real(SmolStr::from(crate_name)));
+    let main_crate_id =
+        insert_lib_entrypoint_content_into_db(db, crate_name, crate_root, lib_content);
 
     if DiagnosticsReporter::stderr().check(db) {
         return Err(anyhow!(
@@ -520,7 +538,7 @@ pub fn collect_tests(
         .context("Compilation failed without any diagnostics")
         .context("Failed to get sierra program")?;
 
-    let collected_tests: Vec<TestCase> = all_tests
+    let collected_tests: Vec<TestCaseRaw> = all_tests
         .into_iter()
         .map(|(func_id, test)| {
             (
@@ -542,6 +560,7 @@ pub fn collect_tests(
         .map(|(test_name, config)| TestCase {
             name: test_name,
             available_gas: config.available_gas,
+            ignored: config.ignored,
             expected_result: config.expected_result,
             fork_config: config.fork_config,
             fuzzer_config: config.fuzzer_config,
@@ -558,9 +577,30 @@ pub fn collect_tests(
     Ok((sierra_program, collected_tests))
 }
 
+// inspired with cairo-lang-compiler/src/project.rs:49 (part of setup_single_project_file)
+fn insert_lib_entrypoint_content_into_db(
+    db: &mut RootDatabase,
+    crate_name: &str,
+    crate_root: &Path,
+    lib_content: &str,
+) -> CrateId {
+    let main_crate_id = db.intern_crate(CrateLongId::Real(SmolStr::from(crate_name)));
+    db.set_crate_root(
+        main_crate_id,
+        Some(Directory::Real(crate_root.to_path_buf())),
+    );
+
+    let module_id = ModuleId::CrateRoot(main_crate_id);
+    let file_id = db.module_main_file(module_id).unwrap();
+    db.as_files_group_mut()
+        .override_file_content(file_id, Some(Arc::new(lib_content.to_string())));
+
+    main_crate_id
+}
+
 fn validate_tests(
     sierra_program: Program,
-    collected_tests: &Vec<TestCase>,
+    collected_tests: &Vec<TestCaseRaw>,
     ignored_params: &[&str],
 ) -> Result<(), anyhow::Error> {
     let casm_generator = match SierraCasmGenerator::new(sierra_program) {

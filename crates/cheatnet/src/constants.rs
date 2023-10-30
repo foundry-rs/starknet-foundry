@@ -1,6 +1,7 @@
 use std::sync::Arc;
 use std::{collections::HashMap, fs, path::PathBuf};
 
+use crate::state::{CheatnetBlockInfo, DictStateReader};
 use blockifier::execution::contract_class::{ContractClassV1, ContractClassV1Inner};
 use blockifier::{
     abi::constants,
@@ -20,7 +21,6 @@ use cairo_vm::vm::runners::builtin_runner::{
 use camino::Utf8PathBuf;
 use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::{
-    block::{BlockNumber, BlockTimestamp},
     core::{ChainId, ClassHash, ContractAddress, Nonce, PatriciaKey},
     hash::{StarkFelt, StarkHash},
     patricia_key, stark_felt,
@@ -29,8 +29,6 @@ use starknet_api::{
         TransactionSignature, TransactionVersion,
     },
 };
-
-use crate::state::DictStateReader;
 
 pub const TEST_SEQUENCER_ADDRESS: &str = "0x1000";
 pub const TEST_ERC20_CONTRACT_ADDRESS: &str = "0x1001";
@@ -54,7 +52,7 @@ pub const TEST_ADDRESS: &str = "0x01724987234973219347210837402";
 // 1. https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/fee-mechanism/#general_case
 // 2. src/starkware/cairo/lang/instances.py::starknet_with_keccak_instance
 #[must_use]
-pub fn build_block_context() -> BlockContext {
+pub fn build_block_context(block_info: CheatnetBlockInfo) -> BlockContext {
     // blockifier::test_utils::create_for_account_testing
     let vm_resource_fee_cost = Arc::new(HashMap::from([
         (constants::N_STEPS_RESOURCE.to_string(), STEP_RESOURCE_COST),
@@ -94,9 +92,9 @@ pub fn build_block_context() -> BlockContext {
 
     BlockContext {
         chain_id: ChainId("SN_GOERLI".to_string()),
-        block_number: BlockNumber(2000),
-        block_timestamp: BlockTimestamp::default(),
-        sequencer_address: ContractAddress(patricia_key!(TEST_SEQUENCER_ADDRESS)),
+        block_number: block_info.block_number,
+        block_timestamp: block_info.timestamp,
+        sequencer_address: block_info.sequencer_address,
         fee_token_address: ContractAddress(patricia_key!(TEST_ERC20_CONTRACT_ADDRESS)),
         deprecated_fee_token_address: ContractAddress(patricia_key!(TEST_ERC20_CONTRACT_ADDRESS)),
         vm_resource_fee_cost,
@@ -184,7 +182,8 @@ pub fn build_testing_state(predeployed_contracts: &Utf8PathBuf) -> DictStateRead
         predeployed_contracts,
         "erc20_contract_without_some_syscalls_compiled.json",
     );
-    let block_context = build_block_context();
+
+    let block_context = build_block_context(CheatnetBlockInfo::default());
     let test_erc20_class_hash = ClassHash(stark_felt!(TEST_ERC20_CONTRACT_CLASS_HASH));
     let test_contract_class_hash = ClassHash(stark_felt!(TEST_CONTRACT_CLASS_HASH));
 

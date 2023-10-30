@@ -7,21 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.1] - 2023-10-30
+
+### Forge
+
+#### Fixed
+
+- diagnostic paths referring to `tests` folder
+- caching `get_class_hash_at` in forking test mode (credits to @jainkunal for catching the bug)
+
+## [0.9.0] - 2023-10-25
+
 ### Forge
 
 #### Added
 
+- `#[ignore]` attribute together with `--ignored` and `include-ignored` flags - read more [here](https://foundry-rs.github.io/starknet-foundry/testing/testing.html#ignoring-some-tests-unless-specifically-requested)
 - support for `deploy_syscall` directly in the test code (alternative to `deploy`)
+- `snforge_std::signature` module for performing ecdsa signatures
 
 #### Changed
 
+- updated Cairo version to 2.3.0 - compatible Scarb version is 2.3.0:
+  - tests in `src` folder now have to be in a module annotated with `#[cfg(test)]`
 - `snforge_std::PrintTrait` will not convert values representing ASCII control characters to strings
+- separated `snforge` to subcommands: `snforge test`, `snforge init` and `snforge clean-cache`. 
+Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/forge.html).
+- `starknet::get_block_info` now returns correct block info in a forked block
 
 ### Cast
 
 #### Added
 
 - `show-config` subcommand to display currently used configuration
+- `account delete` command for removing accounts from the accounts file
+- `--hex-format` flag has been added
+
+#### Removed
+- `-i` short for `--int-format` is removed, now have to use the full form `--int-format`
 
 ## [0.8.3] - 2023-10-17
 
@@ -69,6 +92,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Test are executed in parallel
 - Fixed inconsistent pointers bug https://github.com/foundry-rs/starknet-foundry/issues/659
 - Fixed an issue where `deploy_at` would not trigger the constructors https://github.com/foundry-rs/starknet-foundry/issues/805
+
+### Cast
+
+#### Changed
+
+- dropped official support for cairo 1 compiled contracts. While they still should be working without any problems, 
+from now on the only officially supported cairo compiler version is 2
 
 ## [0.7.1] - 2023-09-27
 

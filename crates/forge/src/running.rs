@@ -7,7 +7,8 @@ use blockifier::execution::entry_point::{
 };
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
-use blockifier::state::cached_state::{CachedState, GlobalContractCache};
+use blockifier::state::cached_state::CachedState;
+use blockifier::state::errors::StateError;
 use blockifier::state::state_api::State;
 use cairo_felt::Felt252;
 use cairo_vm::serde::deserialize_program::HintParams;
@@ -18,15 +19,15 @@ use itertools::chain;
 use cairo_lang_casm::hints::Hint;
 use cairo_lang_casm::instructions::Instruction;
 use cairo_lang_runner::casm_run::hint_to_hint_params;
-use cairo_lang_runner::SierraCasmRunner;
 use cairo_lang_runner::{Arg, RunnerError};
+use cairo_lang_runner::{RunResult, SierraCasmRunner};
 use camino::Utf8Path;
 use cheatnet::constants as cheatnet_constants;
+use cheatnet::execution::contract_execution_syscall_handler::ContractExecutionSyscallHandler;
 use cheatnet::forking::state::ForkStateReader;
-use cheatnet::state::{CheatnetState, ExtendedStateReader};
-use conversions::StarknetConversions;
+use cheatnet::state::{BlockInfoReader, CheatnetBlockInfo, CheatnetState, ExtendedStateReader};
 use starknet::core::types::BlockTag::Latest;
-use starknet::core::types::{BlockId, BlockTag, MaybePendingBlockWithTxHashes};
+use starknet::core::types::{BlockId, MaybePendingBlockWithTxHashes};
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider};
@@ -36,17 +37,18 @@ use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::hash::StarkHash;
 use starknet_api::patricia_key;
 use starknet_api::transaction::Calldata;
-use test_collector::{ForkConfig, TestCase};
+use test_collector::TestCase;
+use thiserror::Error;
 use tokio::runtime::Runtime;
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
 use url::Url;
 
-use crate::scarb::ForkTarget;
 use crate::test_case_summary::TestCaseSummary;
 
+use crate::collecting::{TestCaseRunnable, ValidatedForkConfig};
 use crate::test_execution_syscall_handler::TestExecutionSyscallHandler;
-use crate::{RunnerConfig, RunnerParams};
+use crate::{RunnerConfig, RunnerParams, CACHE_DIR};
 
 use crate::test_execution_syscall_handler::TestExecutionState;
 
@@ -78,7 +80,7 @@ fn build_hints_dict<'b>(
 
 pub(crate) fn blocking_run_from_test(
     args: Vec<Felt252>,
-    case: Arc<TestCase>,
+    case: Arc<TestCaseRunnable>,
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
@@ -90,21 +92,23 @@ pub(crate) fn blocking_run_from_test(
         // a channel is used to receive information indicating
         // that the execution of the task is no longer necessary.
         if send.is_closed() {
-            return Err(anyhow::anyhow!("stop spawn_blocking"));
+            return Ok(TestCaseSummary::Interrupted {});
         }
-        run_test_case(
-            args,
+        let run_result = run_test_case(
+            args.clone(),
             &case,
             &runner,
             &runner_config,
             &runner_params,
             &send_shut_down,
-        )
+        );
+
+        extract_test_case_summary(run_result, &case, args)
     })
 }
 
-fn build_context() -> EntryPointExecutionContext {
-    let block_context = cheatnet_constants::build_block_context();
+fn build_context(block_info: CheatnetBlockInfo) -> EntryPointExecutionContext {
+    let block_context = cheatnet_constants::build_block_context(block_info);
     let account_context = cheatnet_constants::build_transaction_context();
     EntryPointExecutionContext::new(
         block_context.clone(),
@@ -151,15 +155,25 @@ fn build_syscall_handler<'a>(
     Ok(syscall_handler)
 }
 
+#[derive(Debug, Error)]
+pub(crate) enum TestCaseRunError {
+    #[error("{0}")]
+    RunnerError(#[from] RunnerError),
+    #[error("{0}")]
+    StateError(#[from] StateError),
+    #[error("{0}")]
+    Error(#[from] anyhow::Error),
+}
+
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn run_test_case(
     args: Vec<Felt252>,
-    case: &TestCase,
+    case: &TestCaseRunnable,
     runner: &SierraCasmRunner,
     runner_config: &Arc<RunnerConfig>,
     runner_params: &Arc<RunnerParams>,
     _send_shut_down: &Sender<()>,
-) -> Result<TestCaseSummary> {
+) -> Result<RunResult, TestCaseRunError> {
     let available_gas = if let Some(available_gas) = &case.available_gas {
         Some(*available_gas)
     } else {
@@ -167,7 +181,7 @@ pub(crate) fn run_test_case(
     };
     let func = runner.find_function(case.name.as_str())?;
     let initial_gas = runner.get_initial_available_gas(func, available_gas)?;
-    let runner_args: Vec<Arg> = args.clone().into_iter().map(Arg::Value).collect();
+    let runner_args: Vec<Arg> = args.into_iter().map(Arg::Value).collect();
 
     let (entry_code, builtins) = runner.create_entry_code(func, &runner_args, initial_gas)?;
     let footer = runner.create_code_footer();
@@ -178,19 +192,17 @@ pub(crate) fn run_test_case(
     );
     let (hints_dict, string_to_hint) = build_hints_dict(instructions.clone());
 
-    let state_reader = ExtendedStateReader {
+    let mut state_reader = ExtendedStateReader {
         dict_state_reader: cheatnet_constants::build_testing_state(
             &runner_params.predeployed_contracts,
         ),
-        fork_state_reader: get_fork_state_reader(
-            &runner_config.workspace_root,
-            &runner_config.fork_targets,
-            &case.fork_config,
-        )?,
+        fork_state_reader: get_fork_state_reader(&runner_config.workspace_root, &case.fork_config)?,
     };
-    let mut context = build_context();
+    let block_info = state_reader.get_block_info()?;
+
+    let mut context = build_context(block_info);
     let mut execution_resources = ExecutionResources::default();
-    let mut blockifier_state = CachedState::new(state_reader, GlobalContractCache::default());
+    let mut blockifier_state = CachedState::from(state_reader);
     let syscall_handler = build_syscall_handler(
         &mut blockifier_state,
         &string_to_hint,
@@ -198,110 +210,93 @@ pub(crate) fn run_test_case(
         &mut context,
     )?;
 
-    let mut cheatnet_state = CheatnetState::default();
-    let cheatable_syscall_handler =
-        CheatableSyscallHandler::new(syscall_handler, &mut cheatnet_state);
+    let mut cheatnet_state = CheatnetState {
+        block_info,
+        ..Default::default()
+    };
+    let mut cheatable_syscall_handler =
+        CheatableSyscallHandler::wrap(syscall_handler, &mut cheatnet_state);
+    let contract_execution_syscall_handler =
+        ContractExecutionSyscallHandler::wrap(&mut cheatable_syscall_handler);
 
     let mut test_execution_state = TestExecutionState {
         environment_variables: &runner_params.environment_variables,
         contracts: &runner_params.contracts,
     };
-    let mut test_execution_syscall_handler = TestExecutionSyscallHandler::new(
-        cheatable_syscall_handler,
+    let mut test_execution_syscall_handler = TestExecutionSyscallHandler::wrap(
+        contract_execution_syscall_handler,
         &mut test_execution_state,
         &string_to_hint,
     );
 
-    match runner.run_function(
+    Ok(runner.run_function(
         runner.find_function(case.name.as_str())?,
         &mut test_execution_syscall_handler,
         hints_dict,
         instructions,
         builtins,
-    ) {
+    )?)
+}
+
+fn extract_test_case_summary(
+    run_result: Result<RunResult, TestCaseRunError>,
+    case: &TestCase<ValidatedForkConfig>,
+    args: Vec<Felt252>,
+) -> Result<TestCaseSummary> {
+    match run_result {
         Ok(result) => Ok(TestCaseSummary::from_run_result(result, case, args)),
 
         // CairoRunError comes from VirtualMachineError which may come from HintException that originates in the cheatcode processor
-        Err(RunnerError::CairoRunError(error)) => Ok(TestCaseSummary::Failed {
+        Err(TestCaseRunError::RunnerError(RunnerError::CairoRunError(error))) => {
+            Ok(TestCaseSummary::Failed {
+                name: case.name.clone(),
+                msg: Some(format!(
+                    "\n    {}\n",
+                    error.to_string().replace(" Custom Hint Error: ", "\n    ")
+                )),
+                arguments: args,
+                fuzzing_statistic: None,
+            })
+        }
+        // ForkStateReader.get_block_info() may return error
+        Err(TestCaseRunError::StateError(error)) => Ok(TestCaseSummary::Failed {
             name: case.name.clone(),
             msg: Some(format!(
                 "\n    {}\n",
-                error.to_string().replace(" Custom Hint Error: ", "\n    ")
+                error.to_string().replace(" : ", "\n    ")
             )),
             arguments: args,
             fuzzing_statistic: None,
         }),
-
         Err(err) => Err(err.into()),
     }
 }
 
 fn get_fork_state_reader(
     workspace_root: &Utf8Path,
-    fork_targets: &[ForkTarget],
-    fork_config: &Option<ForkConfig>,
+    fork_config: &Option<ValidatedForkConfig>,
 ) -> Result<Option<ForkStateReader>> {
-    match &fork_config {
-        Some(ForkConfig::Params(url, mut block_id)) => {
+    match fork_config {
+        Some(ValidatedForkConfig { url, mut block_id }) => {
             if let BlockId::Tag(Latest) = block_id {
                 block_id = get_latest_block_number(url)?;
             }
             Ok(Some(ForkStateReader::new(
-                url,
+                url.clone(),
                 block_id,
-                Some(workspace_root.join(".snfoundry_cache").as_ref()),
+                Some(workspace_root.join(CACHE_DIR).as_ref()),
             )))
         }
-        Some(ForkConfig::Id(name)) => {
-            find_params_and_build_fork_state_reader(workspace_root, fork_targets, name)
-        }
-        _ => Ok(None),
+        None => Ok(None),
     }
 }
 
-fn get_latest_block_number(url: &str) -> Result<BlockId> {
-    let client = JsonRpcClient::new(HttpTransport::new(Url::parse(url).unwrap()));
+fn get_latest_block_number(url: &Url) -> Result<BlockId> {
+    let client = JsonRpcClient::new(HttpTransport::new(url.clone()));
     let runtime = Runtime::new().expect("Could not instantiate Runtime");
 
     match runtime.block_on(client.get_block_with_tx_hashes(BlockId::Tag(Latest))) {
         Ok(MaybePendingBlockWithTxHashes::Block(block)) => Ok(BlockId::Number(block.block_number)),
         _ => Err(anyhow!("Could not get the latest block number".to_string())),
     }
-}
-
-fn find_params_and_build_fork_state_reader(
-    workspace_root: &Utf8Path,
-    fork_targets: &[ForkTarget],
-    fork_alias: &str,
-) -> Result<Option<ForkStateReader>> {
-    if let Some(fork) = fork_targets.iter().find(|fork| fork.name == fork_alias) {
-        let block_id = fork
-            .block_id
-            .iter()
-            .map(|(id_type, value)| match id_type.as_str() {
-                "number" => Some(BlockId::Number(value.parse().unwrap())),
-                "hash" => Some(BlockId::Hash(value.to_field_element())),
-                "tag" => match value.as_str() {
-                    "Latest" => Some(BlockId::Tag(BlockTag::Latest)),
-                    "Pending" => Some(BlockId::Tag(BlockTag::Pending)),
-                    _ => unreachable!(),
-                },
-                _ => unreachable!(),
-            })
-            .collect::<Vec<_>>();
-        let [Some(mut block_id)] = block_id[..] else {
-            return Ok(None);
-        };
-
-        if let BlockId::Tag(Latest) = block_id {
-            block_id = get_latest_block_number(&fork.url)?;
-        }
-        return Ok(Some(ForkStateReader::new(
-            &fork.url,
-            block_id,
-            Some(workspace_root.join(".snfoundry_cache").as_ref()),
-        )));
-    }
-
-    Ok(None)
 }
