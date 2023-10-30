@@ -52,6 +52,7 @@ enum ForgeSubcommand {
 
 #[derive(ValueEnum, Debug, Clone)]
 enum ColorOption {
+    Auto,
     Always,
     Never,
 }
@@ -86,7 +87,8 @@ struct TestArgs {
     #[arg(long, conflicts_with = "only_ignored")]
     include_ignored: bool,
 
-    #[arg(value_enum, long, help = "Control when colored output is used", default_value_t = ColorOption::Always, value_name="WHEN")]
+    /// Control when colored output is used
+    #[arg(value_enum, long, default_value_t = ColorOption::Auto, value_name="WHEN")]
     color: ColorOption,
 }
 
@@ -127,9 +129,12 @@ fn extract_failed_tests(tests_summaries: Vec<TestCrateSummary>) -> Vec<TestCaseS
 }
 
 fn test_workspace(args: TestArgs) -> Result<bool> {
-    if let ColorOption::Never = args.color {
-        env::set_var("CLICOLOR", "0");
+    match args.color {
+        ColorOption::Always => env::set_var("CLICOLOR_FORCE", "1"),
+        ColorOption::Never => env::set_var("CLICOLOR", "0"),
+        ColorOption::Auto => (),
     }
+
     let scarb_metadata = MetadataCommand::new().inherit_stderr().exec()?;
     let workspace_root = scarb_metadata.workspace.root.clone();
 

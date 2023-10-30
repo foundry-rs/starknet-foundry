@@ -44,7 +44,8 @@ Run all tests regardless of `#[ignore]` attribute.
 ## `--color` `<WHEN>`
 
 Control when colored output is used. Valid values:
-- `always` (default): always display colors.
+- `auto` (default): automatically detect if color support is available on the terminal. 
+- `always`: always display colors.
 - `never`: never display colors.
 
 ## `-h`, `--help`
