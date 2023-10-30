@@ -102,7 +102,7 @@ jobs:
           key: starknet-devnet-rs-${{ steps.devnet-rev.outputs.devnet_rev }}
       - name: Install starknet-devnet-rs
         if: steps.cache-devnet.outputs.cache-hit != 'true'
-        run: ./scripts/prepare_for_tests.sh
+        run: ./scripts/install_devnet.sh
       - uses: software-mansion/setup-scarb@v1.3.1
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
