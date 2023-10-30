@@ -92,7 +92,7 @@ jobs:
       - name: Set starknet-devnet-rs rev
         id: devnet-rev
         run: |
-          devnetrev=$(grep "DEVNET_REV=" ./scripts/prepare_for_tests.sh | awk -F '=' '{print $2}')
+          devnetrev=$(grep "DEVNET_REV=" ./scripts/install_devnet.sh | awk -F '=' '{print $2}')
           echo "devnet_rev=${devnetrev//\"}" >> $GITHUB_OUTPUT
       - name: Cache starknet-devnet-rs
         id: cache-devnet
