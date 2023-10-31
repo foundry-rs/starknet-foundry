@@ -44,10 +44,12 @@ async fn test_happy_case_with_constructor() {
         "--int-format",
         "--json",
         "deploy",
+        "--constructor-calldata",
+        "0x1",
+        "0x1",
+        "0x0",
         "--class-hash",
         &class_hash,
-        "--constructor-calldata",
-        "0x1 0x1 0x0",
     ]);
 
     let snapbox = runner(&args);
