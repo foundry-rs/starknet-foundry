@@ -150,7 +150,6 @@ pub async fn test_detect_deployed() {
     let snapbox = runner(&args);
 
     snapbox.assert().stdout_matches(indoc! {r#"
-        Contract detected as deployed on chain
         command: account add
         add_profile: --add-profile flag was not set. No profile added to Scarb.toml
     "#});

@@ -29,6 +29,7 @@ pub struct AccountCreateResponse {
     pub address: FieldElement,
     pub max_fee: u64,
     pub add_profile: String,
+    pub message: String,
 }
 
 #[derive(Serialize)]
