@@ -79,7 +79,7 @@ fn compile_tests(
         .unwrap();
 }
 
-fn setup_declare_and_interact() -> TestCase {
+fn setup_declare_deploy_and_interact() -> TestCase {
     test_case!(
         indoc!(
             r#"
@@ -170,14 +170,14 @@ fn setup_declare_and_interact() -> TestCase {
     )
 }
 
-fn declare_and_interact(test: &TestCase) {
+fn declare_deploy_and_interact(test: &TestCase) {
     let result = run_test_case(test);
 
     assert_passed!(result);
 }
 
 fn criterion_benchmark(c: &mut Criterion) {
-    let declare_and_interact_input = setup_declare_and_interact();
+    let declare_and_interact_input = setup_declare_deploy_and_interact();
     let collect_tests_input = setup_collect_tests();
     let compile_tests_input = setup_compile_tests();
 
@@ -191,11 +191,11 @@ fn criterion_benchmark(c: &mut Criterion) {
     group.measurement_time(Duration::from_secs(120));
     group.bench_with_input(
         BenchmarkId::new(
-            "declare_and_interact",
+            "declare_deploy_and_interact",
             format!("{declare_and_interact_input:?}"),
         ),
         &declare_and_interact_input,
-        |b, test_case| b.iter(|| declare_and_interact(test_case)),
+        |b, test_case| b.iter(|| declare_deploy_and_interact(test_case)),
     );
     group.bench_with_input(
         BenchmarkId::new("collect_tests", format!("{collect_tests_input:?}")),
