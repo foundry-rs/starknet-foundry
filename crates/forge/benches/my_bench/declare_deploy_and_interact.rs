@@ -1,85 +1,10 @@
-use assert_fs::fixture::PathCopy;
-use assert_fs::TempDir;
-use camino::Utf8PathBuf;
-use criterion::{BenchmarkId, Criterion, SamplingMode};
-use forge::{collect_test_compilation_targets, CrateLocation, TestCompilationTarget};
 use indoc::indoc;
-use std::path::PathBuf;
-use std::str::FromStr;
-use std::time::Duration;
-use test_collector::LinkedLibrary;
-use test_utils::corelib::corelib_path;
-use test_utils::runner::{Contract, TestCase};
+use test_utils::runner::Contract;
+use test_utils::runner::TestCase;
 use test_utils::running_tests::run_test_case;
 use test_utils::{assert_passed, test_case};
 
-fn setup_collect_tests() -> TempDir {
-    let temp = TempDir::new().unwrap();
-    temp.copy_from("tests/data/simple_package", &["**/*.cairo", "**/*.toml"])
-        .unwrap();
-
-    temp
-}
-
-fn collect_tests(package: &TempDir) {
-    let path = Utf8PathBuf::from_path_buf(package.to_path_buf()).unwrap();
-
-    let _ = collect_test_compilation_targets(&path, "simple_package", &path);
-}
-
-fn setup_compile_tests() -> (
-    TestCompilationTarget,
-    Vec<LinkedLibrary>,
-    Utf8PathBuf,
-    TempDir,
-) {
-    let package = setup_collect_tests();
-    let path = Utf8PathBuf::from_path_buf(package.to_path_buf())
-        .unwrap()
-        .join("src");
-
-    let snforge_std_path = PathBuf::from_str("../../snforge_std")
-        .unwrap()
-        .canonicalize()
-        .unwrap();
-    let linked_libraries = vec![
-        LinkedLibrary {
-            name: "simple_package".to_string(),
-            path: PathBuf::from(path.clone()),
-        },
-        LinkedLibrary {
-            name: "snforge_std".to_string(),
-            path: snforge_std_path.join("src"),
-        },
-    ];
-
-    let lib_content = std::fs::read_to_string(path.join("lib.cairo")).unwrap();
-    let compilation_target = TestCompilationTarget {
-        crate_root: path,
-        crate_name: "simple_package".to_string(),
-        crate_location: CrateLocation::Lib,
-        lib_content,
-    };
-
-    (
-        compilation_target,
-        linked_libraries,
-        corelib_path(),
-        package,
-    )
-}
-
-fn compile_tests(
-    compilation_target: &TestCompilationTarget,
-    linked_libraries: &[LinkedLibrary],
-    corelib_path: &Utf8PathBuf,
-) {
-    compilation_target
-        .compile_tests(linked_libraries, corelib_path)
-        .unwrap();
-}
-
-fn setup_declare_deploy_and_interact() -> TestCase {
+pub fn setup() -> TestCase {
     test_case!(
         indoc!(
             r#"
@@ -136,13 +61,13 @@ fn setup_declare_deploy_and_interact() -> TestCase {
                     struct Storage {
                         balance: felt252,
                     }
-        
+
                     // Increases the balance by the given amount.
                     #[external(v0)]
                     fn increase_balance(ref self: ContractState, amount: felt252) {
                         self.balance.write(self.balance.read() + amount);
                     }
-        
+
                     // Decreases the balance by the given amount.
                     #[external(v0)]
                     fn decrease_balance(ref self: ContractState, amount: felt252) {
@@ -170,44 +95,8 @@ fn setup_declare_deploy_and_interact() -> TestCase {
     )
 }
 
-fn declare_deploy_and_interact(test: &TestCase) {
+pub fn declare_deploy_and_interact(test: &TestCase) {
     let result = run_test_case(test);
 
     assert_passed!(result);
-}
-
-pub fn criterion_benchmark(c: &mut Criterion) {
-    let declare_and_interact_input = setup_declare_deploy_and_interact();
-    let collect_tests_input = setup_collect_tests();
-    let compile_tests_input = setup_compile_tests();
-
-    let mut group = c.benchmark_group("benchmark-normal-flow");
-
-    // Needed because our benchmark is long-running
-    // https://bheisler.github.io/criterion.rs/book/user_guide/advanced_configuration.html#sampling-mode
-    group.sampling_mode(SamplingMode::Flat);
-
-    group.sample_size(50);
-    group.measurement_time(Duration::from_secs(120));
-    group.bench_with_input(
-        BenchmarkId::new(
-            "declare_deploy_and_interact",
-            format!("{declare_and_interact_input:?}"),
-        ),
-        &declare_and_interact_input,
-        |b, test_case| b.iter(|| declare_deploy_and_interact(test_case)),
-    );
-    group.bench_with_input(
-        BenchmarkId::new("collect_tests", format!("{collect_tests_input:?}")),
-        &collect_tests_input,
-        |b, package| b.iter(|| collect_tests(package)),
-    );
-    group.bench_with_input(
-        BenchmarkId::new("compile_tests", format!("{compile_tests_input:?}")),
-        &compile_tests_input,
-        |b, (compilation_target, linked_libraries, corelib_path, _)| {
-            b.iter(|| compile_tests(compilation_target, linked_libraries, corelib_path));
-        },
-    );
-    group.finish();
 }
