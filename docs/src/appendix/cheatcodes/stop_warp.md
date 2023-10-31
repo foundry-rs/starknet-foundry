@@ -4,7 +4,7 @@
 
 Cancels the [`start_warp`](./start_warp.md) for the given target.
 
-- `target` - target contract address(es)
+- `target` - instance of [`CheatTarget`](./cheat_target.md) specifying which contracts to stop warping.
 
 ```rust
 use snforge_std::stop_warp;

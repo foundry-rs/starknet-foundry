@@ -47,5 +47,3 @@ fn test_warp_one() {
     assert(new_timestamp == 1000, 'Wrong timestamp');
 }
 ```
-
-
