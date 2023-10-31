@@ -1,17 +1,19 @@
 use crate::helpers::constants::{ACCOUNT_FILE_PATH, CONTRACTS_DIR, DEVNET_ENV_FILE, URL};
 use camino::Utf8PathBuf;
-use cast::helpers::constants::UDC_ADDRESS;
+use cast::get_keystore_password;
 use cast::{get_account, get_provider, parse_number};
 use primitive_types::U256;
-use serde_json::{json, Value};
+use serde_json::{json, Map, Value};
 use starknet::accounts::{Account, Call};
 use starknet::contract::ContractFactory;
 use starknet::core::types::contract::{CompiledClass, SierraClass};
 use starknet::core::types::FieldElement;
 use starknet::core::types::TransactionReceipt;
+use starknet::core::utils::get_contract_address;
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
+use starknet::signers::SigningKey;
 use std::collections::HashMap;
 use std::env;
 use std::fs;
@@ -32,13 +34,15 @@ pub async fn declare_contract(account: &str, path: &str, shortname: &str) -> Fie
     .expect("Could not get the account");
 
     let contract_definition: SierraClass = {
-        let file_contents = std::fs::read(CONTRACTS_DIR.to_string() + path + ".sierra.json")
-            .expect("Could not read contract's sierra file");
+        let file_contents =
+            std::fs::read(CONTRACTS_DIR.to_string() + path + ".contract_class.json")
+                .expect("Could not read contract's sierra file");
         serde_json::from_slice(&file_contents).expect("Could not cast sierra file to SierraClass")
     };
     let casm_contract_definition: CompiledClass = {
-        let file_contents = std::fs::read(CONTRACTS_DIR.to_string() + path + ".casm.json")
-            .expect("Could not read contract's casm file");
+        let file_contents =
+            std::fs::read(CONTRACTS_DIR.to_string() + path + ".compiled_contract_class.json")
+                .expect("Could not read contract's casm file");
         serde_json::from_slice(&file_contents).expect("Could not cast casm file to CompiledClass")
     };
 
@@ -81,21 +85,15 @@ pub async fn declare_deploy_contract(account: &str, path: &str, shortname: &str)
 
     let transaction_hash = deployment.send().await.unwrap().transaction_hash;
     let receipt = get_transaction_receipt(transaction_hash).await;
-    let mut address = None;
     match receipt {
-        TransactionReceipt::Invoke(invoke_receipt) => {
-            for event in invoke_receipt.events {
-                if event.from_address == FieldElement::from_hex_be(UDC_ADDRESS).unwrap() {
-                    address = event.data.first().copied();
-                    break;
-                }
-            }
+        TransactionReceipt::Deploy(deploy_receipt) => {
+            let address = deploy_receipt.contract_address;
+            write_devnet_env(format!("{shortname}_ADDRESS").as_str(), &address);
         }
         _ => {
             panic!("Unexpected TransactionReceipt variant");
         }
     };
-    write_devnet_env(format!("{shortname}_ADDRESS").as_str(), &address.unwrap());
 }
 
 pub async fn invoke_map_contract(key: &str, value: &str, account: &str, contract_address: &str) {
@@ -122,13 +120,14 @@ pub async fn invoke_map_contract(key: &str, value: &str, account: &str, contract
     execution.send().await.unwrap();
 }
 
-pub async fn mint_token(recipient: &str, amount: f32) {
+// devnet-rs accepts an amount as u128
+// but serde_json cannot serialize numbers this big
+pub async fn mint_token(recipient: &str, amount: u64) {
     let client = reqwest::Client::new();
     let json = json!(
         {
             "address": recipient,
-            "amount": amount,
-            "lite": true
+            "amount": amount
         }
     );
     client
@@ -256,4 +255,41 @@ pub fn from_env(name: &str) -> Result<String, String> {
         Ok(value) => Ok(value),
         Err(_) => Err(format!("Variable {name} not available in env!")),
     }
+}
+
+pub fn get_address_from_keystore(
+    keystore_path: &str,
+    account_path: &str,
+    password: &str,
+) -> FieldElement {
+    let contents = std::fs::read_to_string(account_path).unwrap();
+    let items: Map<String, serde_json::Value> = serde_json::from_str(&contents).unwrap();
+    let deployment = items.get("deployment").unwrap();
+
+    let private_key = SigningKey::from_keystore(
+        keystore_path,
+        get_keystore_password(password).unwrap().as_str(),
+    )
+    .unwrap();
+    let salt = FieldElement::from_hex_be(
+        deployment
+            .get("salt")
+            .and_then(serde_json::Value::as_str)
+            .unwrap(),
+    )
+    .unwrap();
+    let oz_class_hash = FieldElement::from_hex_be(
+        deployment
+            .get("class_hash")
+            .and_then(serde_json::Value::as_str)
+            .unwrap(),
+    )
+    .unwrap();
+
+    get_contract_address(
+        salt,
+        oz_class_hash,
+        &[private_key.verifying_key().scalar()],
+        FieldElement::ZERO,
+    )
 }

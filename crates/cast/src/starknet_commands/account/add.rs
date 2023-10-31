@@ -68,18 +68,11 @@ pub async fn add(
         );
     }
 
-    let deployed = if add.deployed {
-        true
-    } else if provider
-        .get_class_hash_at(BlockId::Tag(Pending), add.address)
-        .await
-        .is_ok()
-    {
-        println!("Contract detected as deployed on chain");
-        true
-    } else {
-        false
-    };
+    let deployed = add.deployed
+        || provider
+            .get_class_hash_at(BlockId::Tag(Pending), add.address)
+            .await
+            .is_ok();
 
     let account_json =
         prepare_account_json(private_key, add.address, deployed, add.class_hash, add.salt);
