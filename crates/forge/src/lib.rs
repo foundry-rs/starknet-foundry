@@ -281,7 +281,11 @@ pub async fn run(
         let interrupted = summary.interrupted;
 
         summaries.push(summary);
+
         if interrupted {
+            // Handle scenario for --exit-first flag.
+            // Because snforge runs test crates one by one synchronously.
+            // In case of test FAIL with --exit-first flag stops processing the next crates
             break;
         }
     }
