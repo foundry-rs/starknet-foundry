@@ -1,8 +1,8 @@
-use crate::integration::common::runner::Contract;
-use crate::integration::common::running_tests::run_test_case;
-use crate::{assert_passed, test_case};
 use indoc::indoc;
 use std::path::Path;
+use test_utils::runner::Contract;
+use test_utils::running_tests::run_test_case;
+use test_utils::{assert_passed, test_case};
 
 #[test]
 fn simple_declare() {

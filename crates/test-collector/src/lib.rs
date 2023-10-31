@@ -62,10 +62,20 @@ pub enum ExpectedTestResult {
     Panics(ExpectedPanicValue),
 }
 
+pub trait ForkConfig {}
+
+impl ForkConfig for RawForkConfig {}
+
 #[derive(Debug, Clone, PartialEq)]
-pub enum ForkConfig {
+pub enum RawForkConfig {
     Id(String),
-    Params(String, BlockId),
+    Params(RawForkParams),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct RawForkParams {
+    pub url: String,
+    pub block_id: BlockId,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -84,7 +94,7 @@ pub struct SingleTestConfig {
     /// Should the test be ignored.
     pub ignored: bool,
     /// The configuration of forked network.
-    pub fork_config: Option<ForkConfig>,
+    pub fork_config: Option<RawForkConfig>,
     /// Custom fuzzing configuration
     pub fuzzer_config: Option<FuzzerConfig>,
 }
@@ -297,7 +307,7 @@ fn extract_panic_values(db: &dyn SyntaxGroup, attr: &Attribute) -> Option<Vec<Fe
 }
 
 /// Tries to extract the fork configuration.
-fn extract_fork_config(db: &dyn SyntaxGroup, attr: &Attribute) -> Option<ForkConfig> {
+fn extract_fork_config(db: &dyn SyntaxGroup, attr: &Attribute) -> Option<RawForkConfig> {
     if attr.args.is_empty() {
         return None;
     }
@@ -353,16 +363,16 @@ fn extract_numeric_value(db: &dyn SyntaxGroup, expr: &ast::Expr) -> Option<BigIn
     literal.numeric_value(db)
 }
 
-fn extract_fork_config_from_id(id: &ast::Expr, db: &dyn SyntaxGroup) -> Option<ForkConfig> {
-    let ast::Expr::String(url_str) = id else {
+fn extract_fork_config_from_id(id: &ast::Expr, db: &dyn SyntaxGroup) -> Option<RawForkConfig> {
+    let ast::Expr::String(id_str) = id else {
         return None;
     };
-    let url = url_str.string_value(db)?;
+    let id = id_str.string_value(db)?;
 
-    Some(ForkConfig::Id(url))
+    Some(RawForkConfig::Id(id))
 }
 
-fn extract_fork_config_from_args(db: &dyn SyntaxGroup, attr: &Attribute) -> Option<ForkConfig> {
+fn extract_fork_config_from_args(db: &dyn SyntaxGroup, attr: &Attribute) -> Option<RawForkConfig> {
     let [AttributeArg {
         variant:
             AttributeArgVariant::Named {
@@ -447,7 +457,10 @@ fn extract_fork_config_from_args(db: &dyn SyntaxGroup, attr: &Attribute) -> Opti
         return None;
     }
 
-    Some(ForkConfig::Params(url, block_id[0].unwrap()))
+    Some(RawForkConfig::Params(RawForkParams {
+        url,
+        block_id: block_id[0].unwrap(),
+    }))
 }
 
 /// Represents a dependency of a Cairo project
@@ -457,13 +470,15 @@ pub struct LinkedLibrary {
     pub path: PathBuf,
 }
 
+pub type TestCaseRaw = TestCase<RawForkConfig>;
+
 #[derive(Debug, PartialEq, Clone)]
-pub struct TestCase {
+pub struct TestCase<T: ForkConfig> {
     pub name: String,
     pub available_gas: Option<usize>,
     pub ignored: bool,
     pub expected_result: ExpectedTestResult,
-    pub fork_config: Option<ForkConfig>,
+    pub fork_config: Option<T>,
     pub fuzzer_config: Option<FuzzerConfig>,
 }
 
@@ -475,7 +490,7 @@ pub fn collect_tests(
     builtins: &[&str],
     corelib_path: PathBuf,
     output_path: Option<&str>,
-) -> Result<(Program, Vec<TestCase>)> {
+) -> Result<(Program, Vec<TestCaseRaw>)> {
     let crate_roots: OrderedHashMap<SmolStr, PathBuf> = linked_libraries
         .iter()
         .cloned()
@@ -523,7 +538,7 @@ pub fn collect_tests(
         .context("Compilation failed without any diagnostics")
         .context("Failed to get sierra program")?;
 
-    let collected_tests: Vec<TestCase> = all_tests
+    let collected_tests: Vec<TestCaseRaw> = all_tests
         .into_iter()
         .map(|(func_id, test)| {
             (
@@ -585,7 +600,7 @@ fn insert_lib_entrypoint_content_into_db(
 
 fn validate_tests(
     sierra_program: Program,
-    collected_tests: &Vec<TestCase>,
+    collected_tests: &Vec<TestCaseRaw>,
     ignored_params: &[&str],
 ) -> Result<(), anyhow::Error> {
     let casm_generator = match SierraCasmGenerator::new(sierra_program) {

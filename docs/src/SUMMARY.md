@@ -75,6 +75,7 @@
 * [Cast Commands](appendix/cast.md)
     * [common flags](appendix/cast/common.md)
     * [account](appendix/cast/account/account.md)
+        * [add](appendix/cast/account/add.md)
         * [create](appendix/cast/account/create.md)
         * [deploy](appendix/cast/account/deploy.md)
         * [delete](appendix/cast/account/delete.md)
@@ -85,3 +86,4 @@
     * [multicall](appendix/cast/multicall/multicall.md)
         * [new](appendix/cast/multicall/new.md)
         * [run](appendix/cast/multicall/run.md)
+    * [show-config](appendix/cast/show_config.md)

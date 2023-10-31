@@ -33,15 +33,13 @@ async fn test_rejected_transaction() {
 
     let factory = ContractFactory::new(parse_number(&class_hash).unwrap(), account);
     let deployment = factory
-        .deploy(&Vec::new(), FieldElement::ONE, false)
+        .deploy(Vec::new(), FieldElement::ONE, false)
         .max_fee(FieldElement::ONE);
-    let resp = deployment.send().await.unwrap();
+    let resp = deployment.send().await.unwrap_err();
 
-    let result = wait_for_tx(&provider, resp.transaction_hash, DEFAULT_RETRIES).await;
-
-    assert!(
-        matches!(result, Err(message) if message.to_string() == "Transaction has been rejected")
-    );
+    assert!(resp
+        .to_string()
+        .contains("Max fee is smaller than the minimal transaction cost"));
 }
 
 #[tokio::test]

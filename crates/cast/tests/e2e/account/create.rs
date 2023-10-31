@@ -10,7 +10,7 @@ use test_case::test_case;
 
 #[tokio::test]
 pub async fn test_happy_case() {
-    let accounts_file = "./tmp/accounts.json";
+    let accounts_file = "./tmp-c1/accounts.json";
     let args = vec![
         "--url",
         URL,
@@ -52,7 +52,7 @@ pub async fn test_happy_case() {
 
 #[tokio::test]
 pub async fn test_happy_case_generate_salt() {
-    let accounts_file = "./tmp1/accounts.json";
+    let accounts_file = "./tmp-c2/accounts.json";
     let args = vec![
         "--url",
         URL,
@@ -131,7 +131,7 @@ pub async fn test_happy_case_add_profile() {
 
 #[tokio::test]
 pub async fn test_happy_case_accounts_file_already_exists() {
-    let current_dir = Utf8PathBuf::from("./tmp2");
+    let current_dir = Utf8PathBuf::from("./tmp-c3");
     let accounts_file = "./accounts.json";
     fs::create_dir_all(&current_dir).expect("Unable to create directory");
 
@@ -261,12 +261,11 @@ pub async fn test_happy_case_keystore() {
     let snapbox = runner(&args);
 
     snapbox.assert().stdout_matches(indoc! {r#"
-        CREATE_KEYSTORE_PASSWORD environment variable found and will be used for keystore password
-        Account successfully created[..]
         command: account create
         add_profile: --add-profile flag was not set. No profile added to Scarb.toml
         address: 0x[..]
         max_fee: [..]
+        message: Account successfully created[..]
     "#});
 
     let contents = fs::read_to_string(account_path).expect("Unable to read created file");
@@ -393,7 +392,7 @@ pub fn test_keystore_already_exists(keystore_path: &str, account_path: &str, err
 #[tokio::test]
 pub async fn test_happy_case_keystore_int_format() {
     let keystore_path = "my_key.json";
-    let account_path = "my_account.json";
+    let account_path = "my_account_int.json";
     _ = fs::remove_file(keystore_path);
     _ = fs::remove_file(account_path);
     env::set_var(CREATE_KEYSTORE_PASSWORD_ENV_VAR, "123");
@@ -415,12 +414,11 @@ pub async fn test_happy_case_keystore_int_format() {
     let snapbox = runner(&args);
 
     snapbox.assert().stdout_matches(indoc! {r#"
-        CREATE_KEYSTORE_PASSWORD environment variable found and will be used for keystore password
-        Account successfully created[..]
         command: account create
         add_profile: --add-profile flag was not set. No profile added to Scarb.toml
         address: [..]
         max_fee: [..]
+        message: Account successfully created[..]
     "#});
 
     let contents = fs::read_to_string(account_path).expect("Unable to read created file");
@@ -435,7 +433,7 @@ pub async fn test_happy_case_keystore_int_format() {
 #[tokio::test]
 pub async fn test_happy_case_keystore_hex_format() {
     let keystore_path = "my_key.json";
-    let account_path = "my_account.json";
+    let account_path = "my_account_hex.json";
     _ = fs::remove_file(keystore_path);
     _ = fs::remove_file(account_path);
     env::set_var(CREATE_KEYSTORE_PASSWORD_ENV_VAR, "123");
@@ -457,12 +455,11 @@ pub async fn test_happy_case_keystore_hex_format() {
     let snapbox = runner(&args);
 
     snapbox.assert().stdout_matches(indoc! {r#"
-        CREATE_KEYSTORE_PASSWORD environment variable found and will be used for keystore password
-        Account successfully created[..]
         command: account create
         add_profile: --add-profile flag was not set. No profile added to Scarb.toml
         address: 0x[..]
         max_fee: 0x[..]
+        message: Account successfully created[..]
     "#});
 
     let contents = fs::read_to_string(account_path).expect("Unable to read created file");

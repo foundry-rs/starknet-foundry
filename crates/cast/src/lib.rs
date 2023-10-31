@@ -12,7 +12,7 @@ use starknet::providers::jsonrpc::JsonRpcClientError::RpcError;
 use starknet::providers::jsonrpc::RpcError::{Code, Unknown};
 use starknet::providers::ProviderError::Other;
 use starknet::{
-    accounts::SingleOwnerAccount,
+    accounts::{ExecutionEncoding, SingleOwnerAccount},
     providers::{
         jsonrpc::{HttpTransport, JsonRpcClient},
         Provider, ProviderError,
@@ -23,11 +23,7 @@ use starknet::{
     core::types::{
         BlockId,
         BlockTag::{Latest, Pending},
-        FieldElement, MaybePendingTransactionReceipt,
-        MaybePendingTransactionReceipt::Receipt,
-        StarknetError,
-        TransactionReceipt::{Declare, Deploy, DeployAccount, Invoke, L1Handler},
-        TransactionStatus,
+        ExecutionResult, FieldElement, StarknetError,
     },
     providers::{MaybeUnknownErrorCode, StarknetErrorWithMessage},
 };
@@ -108,10 +104,7 @@ fn get_account_info(name: &str, chain_id: FieldElement, path: &Utf8PathBuf) -> R
 
 pub fn get_keystore_password(env_var: &str) -> std::io::Result<String> {
     match env::var(env_var) {
-        Ok(password) => {
-            println!("{env_var} environment variable found and will be used for keystore password");
-            Ok(password)
-        }
+        Ok(password) => Ok(password),
         _ => rpassword::prompt_password("Enter password: "),
     }
 }
@@ -187,7 +180,13 @@ fn get_account_from_keystore<'a>(
             .ok_or_else(|| anyhow::anyhow!("Failed to get address from account JSON file - make sure the account is deployed"))?
     )?;
 
-    Ok(SingleOwnerAccount::new(provider, signer, address, chain_id))
+    Ok(SingleOwnerAccount::new(
+        provider,
+        signer,
+        address,
+        chain_id,
+        ExecutionEncoding::Legacy,
+    ))
 }
 
 fn get_account_from_accounts_file<'a>(
@@ -212,7 +211,13 @@ fn get_account_from_accounts_file<'a>(
             &account_info.address
         )
     })?;
-    let account = SingleOwnerAccount::new(provider, signer, address, chain_id);
+    let account = SingleOwnerAccount::new(
+        provider,
+        signer,
+        address,
+        chain_id,
+        ExecutionEncoding::Legacy,
+    );
 
     Ok(account)
 }
@@ -238,19 +243,21 @@ pub async fn wait_for_tx(
     retries: u8,
 ) -> Result<&str> {
     println!("Transaction hash: {tx_hash:#x}");
-
-    let mut maybe_receipt: Option<MaybePendingTransactionReceipt> = None;
     for i in (1..retries).rev() {
         match provider.get_transaction_receipt(tx_hash).await {
-            Ok(receipt) => {
-                maybe_receipt = Some(receipt);
-                break;
-            }
+            Ok(receipt) => match receipt.execution_result() {
+                ExecutionResult::Succeeded => {
+                    return Ok("Transaction accepted");
+                }
+                ExecutionResult::Reverted { reason } => {
+                    return Err(anyhow!("Transaction has been reverted: {}", reason));
+                }
+            },
             Err(ProviderError::StarknetError(StarknetErrorWithMessage {
                 code: MaybeUnknownErrorCode::Known(StarknetError::TransactionHashNotFound),
                 message: _,
             })) => {
-                println!("Waiting for transaction to be received. Retries left: {i}");
+                println!("Waiting for transaction to be received ({i} retries left)");
             }
             Err(err) => return Err(err.into()),
         };
@@ -258,36 +265,9 @@ pub async fn wait_for_tx(
         sleep(Duration::from_secs(5));
     }
 
-    if maybe_receipt.is_none() {
-        bail!("Could not get transaction with hash: {tx_hash:#x}. Transaction rejected or not received.")
-    }
-
-    loop {
-        let status = if let Ok(Receipt(receipt)) = provider.get_transaction_receipt(tx_hash).await {
-            match receipt {
-                Invoke(receipt) => receipt.status,
-                Declare(receipt) => receipt.status,
-                Deploy(receipt) => receipt.status,
-                DeployAccount(receipt) => receipt.status,
-                L1Handler(receipt) => receipt.status,
-            }
-        } else {
-            println!("Received transaction. Status: Pending");
-            sleep(Duration::from_secs(5));
-
-            continue;
-        };
-
-        match status {
-            TransactionStatus::AcceptedOnL2 | TransactionStatus::AcceptedOnL1 => {
-                return Ok("Transaction accepted")
-            }
-            TransactionStatus::Rejected => {
-                return Err(anyhow!("Transaction has been rejected"));
-            }
-            TransactionStatus::Pending => {}
-        }
-    }
+    Err(anyhow!(
+        "Could not get transaction with hash: {tx_hash:#x}. Transaction rejected or not received."
+    ))
 }
 
 #[must_use]
@@ -302,7 +282,11 @@ pub fn get_rpc_error_message(error: StarknetError) -> &'static str {
         StarknetError::InvalidTransactionIndex => "There is no transaction with such an index",
         StarknetError::ClassHashNotFound => "Provided class hash does not exist",
         StarknetError::ContractError => "An error occurred in the called contract",
-        StarknetError::InvalidContractClass => "Contract class is invalid",
+        StarknetError::InvalidTransactionNonce => "Invalid transaction nonce",
+        StarknetError::InsufficientMaxFee => "Max fee is smaller then the minimal transaction cost",
+        StarknetError::InsufficientAccountBalance => {
+            "Account balance is too small to cover transaction fee"
+        }
         StarknetError::ClassAlreadyDeclared => {
             "Contract with the same class hash is already declared"
         }
