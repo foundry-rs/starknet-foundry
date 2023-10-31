@@ -19,6 +19,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Changed
 - `start_warp` and `stop_warp` now take `CheatTarget` as the first argument instead of `ContractAddress`. Read more [here](./docs/src/appendix/cheatcodes/start_warp.md). 
 
+### Cast
+
+#### Fixed
+
+- account commands now always return valid json when `--json` flag is passed
+
 ## [0.9.0] - 2023-10-25
 
 ### Forge

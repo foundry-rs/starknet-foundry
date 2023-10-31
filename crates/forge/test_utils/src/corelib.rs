@@ -1,8 +1,8 @@
 use assert_fs::fixture::{FileTouch, FileWriteStr, PathChild, PathCopy};
 use assert_fs::TempDir;
 use camino::Utf8PathBuf;
-use forge::scarb::corelib_for_package;
 use indoc::indoc;
+use scarb_artifacts::corelib_for_package;
 use scarb_metadata::MetadataCommand;
 
 #[allow(clippy::module_name_repetitions)]
