@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use std::convert::Into;
 use std::path::PathBuf;
 
+use crate::deserialize_cheat_target;
 use crate::scarb::StarknetContractArtifacts;
 use anyhow::{anyhow, Context, Result};
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
@@ -26,7 +27,7 @@ use cheatnet::cheatcodes::deploy::{deploy, deploy_at, DeployCallPayload};
 use cheatnet::cheatcodes::{CheatcodeError, ContractArtifacts, EnhancedHintError};
 use cheatnet::execution::cheatable_syscall_handler::CheatableSyscallHandler;
 use cheatnet::rpc::{call_contract, CallContractFailure, CallContractOutput, CallContractResult};
-use cheatnet::state::{BlockifierState, CheatTarget, CheatnetState};
+use cheatnet::state::{BlockifierState, CheatnetState};
 use conversions::StarknetConversions;
 use num_traits::{One, ToPrimitive};
 use serde::Deserialize;
@@ -271,19 +272,7 @@ impl TestExecutionSyscallHandler<'_, '_> {
                 // The last element in `inputs` should be the timestamp in all cases
                 let warp_timestamp = inputs.last().unwrap().clone();
 
-                // First element encodes the variant of CheatTarget
-                let target = match &inputs[0].to_u8() {
-                    Some(0) => CheatTarget::All,
-                    Some(1) => CheatTarget::One(inputs[1].to_contract_address()),
-                    Some(2) => {
-                        let contract_addresses: Vec<_> = inputs[2..inputs.len() - 1]
-                            .iter()
-                            .map(Felt252::to_contract_address)
-                            .collect();
-                        CheatTarget::Multiple(contract_addresses)
-                    }
-                    _ => panic!("Invalid CheatTarget variant"),
-                };
+                let target = deserialize_cheat_target(&inputs[..inputs.len() - 1]);
 
                 self.contract_execution_syscall_handler
                     .cheatable_syscall_handler
@@ -293,19 +282,7 @@ impl TestExecutionSyscallHandler<'_, '_> {
                 Ok(())
             }
             "stop_warp" => {
-                // First element encodes the variant of CheatTarget
-                let target = match &inputs[0].to_u8() {
-                    Some(0) => CheatTarget::All,
-                    Some(1) => CheatTarget::One(inputs[1].to_contract_address()),
-                    Some(2) => {
-                        let contract_addresses: Vec<_> = inputs[2..]
-                            .iter()
-                            .map(Felt252::to_contract_address)
-                            .collect();
-                        CheatTarget::Multiple(contract_addresses)
-                    }
-                    _ => panic!("Invalid CheatTarget variant"),
-                };
+                let target = deserialize_cheat_target(&inputs);
 
                 self.contract_execution_syscall_handler
                     .cheatable_syscall_handler

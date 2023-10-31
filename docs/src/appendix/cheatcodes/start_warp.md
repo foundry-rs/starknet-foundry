@@ -46,36 +46,6 @@ fn test_warp_one() {
     let new_timestamp = dispatcher.get_block_timestamp();
     assert(new_timestamp == 1000, 'Wrong timestamp');
 }
-
-#[test]
-fn test_warp_multi() {
-    // ...
-
-    start_warp(CheatTarget::Multiple(array![address1, address 2, address 3].span()), 1000);
-
-    dispatcher1.set_block_timestamp();
-    dispatcher2.set_block_timestamp();
-    dispatcher3.set_block_timestamp();
-
-    assert(dispatcher1.get_block_timestamp() == 1000, 'Wrong timestamp');
-    assert(dispatcher2.get_block_timestamp() == 1000, 'Wrong timestamp');
-    assert(dispatcher3.get_block_timestamp() == 1000, 'Wrong timestamp');
-}
-
-#[test]
-fn test_warp_all() {
-    // ...
-
-    start_warp(CheatTarget::All, 1000);
-
-    dispatcher1.set_block_timestamp();
-    dispatcher2.set_block_timestamp();
-    dispatcher3.set_block_timestamp();
-
-    assert(dispatcher1.get_block_timestamp() == 1000, 'Wrong timestamp');
-    assert(dispatcher2.get_block_timestamp() == 1000, 'Wrong timestamp');
-    assert(dispatcher3.get_block_timestamp() == 1000, 'Wrong timestamp');
-}
 ```
 
 

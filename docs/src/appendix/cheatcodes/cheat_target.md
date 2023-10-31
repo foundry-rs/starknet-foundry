@@ -14,7 +14,7 @@ enum CheatTarget {
 - `Multiple` applies the cheatcode to the given contract addresses. 
 
 
-An example with the [`start_warp`](./start_warp.md) cheatcode. 
+An example with the [`start_warp`](./start_warp.md) cheatcode:
 ```rust 
 #[test]
 fn some_test() {

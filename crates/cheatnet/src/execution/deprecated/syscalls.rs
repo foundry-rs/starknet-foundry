@@ -294,7 +294,7 @@ pub fn get_block_timestamp(
         block_timestamp: BlockTimestamp(
             syscall_handler
                 .cheatnet_state
-                .get_address_block_timestamp(&contract_address)
+                .get_cheated_block_timestamp(&contract_address)
                 .unwrap()
                 .to_u64()
                 .unwrap(),

@@ -210,7 +210,7 @@ impl StateReader for DictStateReader {
     }
 }
 
-pub enum CheatInfo<T> {
+pub enum CheatStatus<T> {
     Cheated(T),
     Uncheated,
 }
@@ -220,7 +220,7 @@ pub enum CheatInfo<T> {
 pub struct CheatnetState {
     pub rolled_contracts: HashMap<ContractAddress, Felt252>,
     pub pranked_contracts: HashMap<ContractAddress, ContractAddress>,
-    pub warped_contracts: HashMap<ContractAddress, CheatInfo<Felt252>>,
+    pub warped_contracts: HashMap<ContractAddress, CheatStatus<Felt252>>,
     pub global_warp: Option<Felt252>,
     pub mocked_functions: HashMap<ContractAddress, HashMap<EntryPointSelector, Vec<StarkFelt>>>,
     pub spoofed_contracts: HashMap<ContractAddress, TxInfoMock>,
@@ -250,17 +250,17 @@ impl CheatnetState {
         self.global_warp.is_some()
             || matches!(
                 self.warped_contracts.get(contract_address),
-                Some(CheatInfo::Cheated(_))
+                Some(CheatStatus::Cheated(_))
             )
     }
 
     #[must_use]
-    pub fn get_address_block_timestamp(&self, address: &ContractAddress) -> Option<Felt252> {
+    pub fn get_cheated_block_timestamp(&self, address: &ContractAddress) -> Option<Felt252> {
         // An individual warp for a contract overrides any global warp
         if let Some(warped_contract) = self.warped_contracts.get(address) {
             match warped_contract {
-                CheatInfo::Cheated(contract_timestamp) => Some(contract_timestamp.clone()),
-                CheatInfo::Uncheated => None,
+                CheatStatus::Cheated(contract_timestamp) => Some(contract_timestamp.clone()),
+                CheatStatus::Uncheated => None,
             }
         } else {
             self.global_warp.clone()
