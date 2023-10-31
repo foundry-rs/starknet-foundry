@@ -234,6 +234,16 @@ pub(crate) fn run_test_case(
         &string_to_hint,
     );
 
+    let block_number_of_latest = if let Some(ValidatedForkConfig {
+        url: _,
+        block_id: BlockId::Tag(Latest),
+    }) = &case.fork_config
+    {
+        Some(block_info.block_number)
+    } else {
+        None
+    };
+
     match runner.run_function(
         runner.find_function(case.name.as_str())?,
         &mut test_execution_syscall_handler,
@@ -241,7 +251,12 @@ pub(crate) fn run_test_case(
         instructions,
         builtins,
     ) {
-        Ok(result) => Ok(TestCaseSummary::from_run_result(result, case, args)),
+        Ok(result) => Ok(TestCaseSummary::from_run_result(
+            result,
+            case,
+            args,
+            block_number_of_latest,
+        )),
         // CairoRunError comes from VirtualMachineError which may come from HintException that originates in the TestSyscallExecutionHandler
         Err(RunnerError::CairoRunError(error)) => Ok(TestCaseSummary::Failed {
             name: case.name.clone(),
@@ -251,6 +266,7 @@ pub(crate) fn run_test_case(
             )),
             arguments: args,
             fuzzing_statistic: None,
+            block_number_of_latest,
         }),
         Err(err) => Err(err.into()),
     }
@@ -269,6 +285,7 @@ fn extract_test_case_summary(
             msg: Some(error.to_string()),
             arguments: args,
             fuzzing_statistic: None,
+            block_number_of_latest: None,
         }),
         // ForkStateReader.get_block_info() may return error
         Err(TestCaseRunError::StateError(error)) => Ok(TestCaseSummary::Failed {
@@ -279,6 +296,7 @@ fn extract_test_case_summary(
             )),
             arguments: args,
             fuzzing_statistic: None,
+            block_number_of_latest: None,
         }),
         Err(error) => Err(error.into()),
     }

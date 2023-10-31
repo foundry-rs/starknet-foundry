@@ -80,7 +80,14 @@ pub(crate) fn print_test_result(test_result: &TestCaseSummary) {
         }
     };
 
-    println!("{result_header} {result_name}{fuzzer_report}{result_message}");
+    let block_number_message = match test_result.block_number_of_latest() {
+        None => String::new(),
+        Some(block_number_of_latest) => {
+            format!("\nNumber of the block used for fork testing = {block_number_of_latest}")
+        }
+    };
+
+    println!("{result_header} {result_name}{fuzzer_report}{block_number_message}{result_message}");
 }
 
 pub fn print_failures(all_failed_tests: &[TestCaseSummary]) {

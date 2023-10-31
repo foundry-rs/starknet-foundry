@@ -4,6 +4,7 @@ mod tests {
 
     #[test]
     fn reading_env_vars() {
+        let x: u8 = 1 / 0;
         let felt252_value = var('FELT_ENV_VAR');
         let short_string_value = var('STRING_ENV_VAR');
 
