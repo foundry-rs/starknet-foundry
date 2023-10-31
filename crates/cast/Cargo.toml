@@ -16,7 +16,7 @@ url.workspace = true
 rand.workspace = true
 project-root.workspace = true
 which.workspace = true
-scarb-metadata = "=1.4.2"
+scarb-metadata.workspace = true
 primitive-types = "0.12.1"
 shellexpand = "3.1.0"
 toml = "0.8.6"

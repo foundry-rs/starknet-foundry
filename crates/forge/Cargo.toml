@@ -42,11 +42,11 @@ clap.workspace = true
 console.workspace = true
 rand.workspace = true
 which.workspace = true
+scarb-metadata.workspace = true
+scarb-ui = "0.1.0"
 schemars = { version = "0.8.12", features = ["preserve_order"] }
 parity-scale-codec = "3.5.0"
 parity-scale-codec-derive = "3.1.4"
-scarb-ui = { git = "https://github.com/software-mansion/scarb.git", rev = "58cc88e" }
-scarb-metadata = { git = "https://github.com/software-mansion/scarb.git", rev = "58cc88e" }
 snapbox = "0.4.13"
 cairo-vm = "0.8.1"
 ark-ff = "0.4.0-alpha.7"
