@@ -31,21 +31,21 @@ use crate::fuzzer::RandomFuzzer;
 use crate::scarb::config::{ForgeConfig, ForkTarget};
 use crate::scarb::StarknetContractArtifacts;
 
-// pub use crate::collecting::CrateLocation;
+pub use crate::collecting::{collect_test_compilation_targets, TestCompilationTarget};
 pub use crate::test_crate_summary::TestCrateSummary;
 
 use crate::collecting::{
-    collect_test_compilation_targets, compile_tests, CompiledTestCrate, CompiledTestCrateRaw,
-    CompiledTestCrateRunnable, TestCaseRunnable, ValidatedForkConfig,
+    compile_tests, CompiledTestCrate, CompiledTestCrateRaw, CompiledTestCrateRunnable,
+    TestCaseRunnable, ValidatedForkConfig,
 };
 use crate::test_filter::TestsFilter;
 use test_collector::{FuzzerConfig, LinkedLibrary, RawForkConfig, RawForkParams, TestCase};
 
-pub mod collecting;
 pub mod pretty_printing;
 pub mod scarb;
 pub mod test_case_summary;
 
+mod collecting;
 mod fuzzer;
 mod running;
 mod test_crate_summary;
