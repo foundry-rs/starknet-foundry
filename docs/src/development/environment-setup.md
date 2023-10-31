@@ -24,7 +24,7 @@ It is not possible to run tests without these installed.
 
 ## Running Tests
 
-> ⚠️ Make sure you run `./scripts/prepare_for_tests.sh`
+> ⚠️ Make sure you run `./scripts/install_devnet.sh`
 > and then set [Scarb](https://docs.swmansion.com/scarb/) version 
 > [compatible](https://github.com/foundry-rs/starknet-foundry/releases) with both `snforge` and `sncast`
 > after setting up the development environment, otherwise the tests will fail.
