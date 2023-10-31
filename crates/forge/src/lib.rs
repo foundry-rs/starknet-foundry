@@ -20,11 +20,8 @@ use cairo_lang_sierra::ids::ConcreteTypeId;
 use cairo_lang_sierra::program::Function;
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
-use cheatnet::state::CheatTarget;
-use conversions::StarknetConversions;
 use futures::stream::FuturesUnordered;
 use itertools::Itertools;
-use num_traits::ToPrimitive;
 
 use once_cell::sync::Lazy;
 use rand::{thread_rng, RngCore};
@@ -660,22 +657,6 @@ fn function_args<'a>(function: &'a Function, builtins: &[&str]) -> Vec<&'a Concr
         .iter()
         .filter(|pt| !builtins.contains(&pt.debug_name))
         .collect()
-}
-
-fn deserialize_cheat_target(inputs: &[Felt252]) -> CheatTarget {
-    // First element encodes the variant of CheatTarget
-    match inputs[0].to_u8() {
-        Some(0) => CheatTarget::All,
-        Some(1) => CheatTarget::One(inputs[1].to_contract_address()),
-        Some(2) => {
-            let contract_addresses: Vec<_> = inputs[2..]
-                .iter()
-                .map(Felt252::to_contract_address)
-                .collect();
-            CheatTarget::Multiple(contract_addresses)
-        }
-        _ => panic!("Invalid CheatTarget variant"),
-    }
 }
 
 #[cfg(test)]

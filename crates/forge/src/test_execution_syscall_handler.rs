@@ -3,7 +3,6 @@ use std::collections::HashMap;
 use std::convert::Into;
 use std::path::PathBuf;
 
-use crate::deserialize_cheat_target;
 use anyhow::{anyhow, Context, Result};
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::execution_utils::{
@@ -26,7 +25,7 @@ use cheatnet::cheatcodes::deploy::{deploy, deploy_at, DeployCallPayload};
 use cheatnet::cheatcodes::{CheatcodeError, EnhancedHintError};
 use cheatnet::execution::cheatable_syscall_handler::CheatableSyscallHandler;
 use cheatnet::rpc::{call_contract, CallContractFailure, CallContractOutput, CallContractResult};
-use cheatnet::state::{BlockifierState, CheatnetState};
+use cheatnet::state::{BlockifierState, CheatTarget, CheatnetState};
 use conversions::StarknetConversions;
 use num_traits::{One, ToPrimitive};
 use scarb_artifacts::StarknetContractArtifacts;
@@ -699,6 +698,22 @@ fn handle_deploy_result(
             Ok(())
         }
         Err(CheatcodeError::Unrecoverable(err)) => Err(err),
+    }
+}
+
+fn deserialize_cheat_target(inputs: &[Felt252]) -> CheatTarget {
+    // First element encodes the variant of CheatTarget
+    match inputs[0].to_u8() {
+        Some(0) => CheatTarget::All,
+        Some(1) => CheatTarget::One(inputs[1].to_contract_address()),
+        Some(2) => {
+            let contract_addresses: Vec<_> = inputs[2..]
+                .iter()
+                .map(Felt252::to_contract_address)
+                .collect();
+            CheatTarget::Multiple(contract_addresses)
+        }
+        _ => panic!("Invalid CheatTarget variant"),
     }
 }
 
