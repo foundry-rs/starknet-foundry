@@ -7,10 +7,6 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use starknet::core::utils::UdcUniqueness::{NotUnique, Unique};
 use starknet::core::utils::{UdcUniqueSettings, UdcUniqueness};
-use starknet::providers::jsonrpc::JsonRpcClientError;
-use starknet::providers::jsonrpc::JsonRpcClientError::RpcError;
-use starknet::providers::jsonrpc::RpcError::{Code, Unknown};
-use starknet::providers::ProviderError::Other;
 use starknet::{
     accounts::{ExecutionEncoding, SingleOwnerAccount},
     providers::{
@@ -270,37 +266,10 @@ pub async fn wait_for_tx(
     ))
 }
 
-#[must_use]
-pub fn get_rpc_error_message(error: StarknetError) -> &'static str {
+pub fn handle_rpc_error<G>(error: ProviderError) -> std::result::Result<G, Error> {
     match error {
-        StarknetError::FailedToReceiveTransaction => "Node failed to receive transaction",
-        StarknetError::ContractNotFound => "There is no contract at the specified address",
-        StarknetError::BlockNotFound => "Block was not found",
-        StarknetError::TransactionHashNotFound => {
-            "Transaction with provided hash was not found (does not exist)"
-        }
-        StarknetError::InvalidTransactionIndex => "There is no transaction with such an index",
-        StarknetError::ClassHashNotFound => "Provided class hash does not exist",
-        StarknetError::ContractError => "An error occurred in the called contract",
-        StarknetError::InvalidTransactionNonce => "Invalid transaction nonce",
-        StarknetError::InsufficientMaxFee => "Max fee is smaller then the minimal transaction cost",
-        StarknetError::InsufficientAccountBalance => {
-            "Account balance is too small to cover transaction fee"
-        }
-        StarknetError::ClassAlreadyDeclared => {
-            "Contract with the same class hash is already declared"
-        }
-        _ => "Unknown RPC error",
-    }
-}
-
-pub fn handle_rpc_error<T, G>(
-    error: ProviderError<JsonRpcClientError<T>>,
-) -> std::result::Result<G, Error> {
-    match error {
-        Other(RpcError(Code(error))) => Err(anyhow!(get_rpc_error_message(error))),
-        Other(RpcError(Unknown(error))) => Err(anyhow!(error.message)),
         ProviderError::StarknetError(error) => Err(anyhow!(error.message)),
+        ProviderError::Other(error) => Err(anyhow!(error)),
         _ => Err(anyhow!("Unknown RPC error")),
     }
 }
