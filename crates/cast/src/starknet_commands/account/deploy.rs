@@ -152,7 +152,6 @@ async fn deploy_from_keystore(
         .await
         .is_ok()
     {
-        println!("Account already deployed, adjusting the account file");
         InvokeResponse {
             transaction_hash: FieldElement::ZERO,
         }
