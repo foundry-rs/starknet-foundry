@@ -8,6 +8,11 @@ which is `~/.starknet_accounts/starknet_open_zeppelin_accounts.json` by default.
 
 * [`url`](../common.md#--url--u-rpc_url)
 
+## `--name, -n <NAME>`
+Required.
+
+Name of the account to be added.
+
 ## `--address, -a <ADDRESS>`
 Required.
 
