@@ -78,7 +78,7 @@ fn build_hints_dict<'b>(
     (hints_dict, string_to_hint)
 }
 
-pub(crate) fn blocking_run_from_test(
+pub(crate) fn run_test(
     case: Arc<TestCaseRunnable>,
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
@@ -111,7 +111,7 @@ pub(crate) fn blocking_run_from_test(
 }
 
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn blocking_run_from_fuzzing_test(
+pub(crate) fn run_fuzz_test(
     args: Vec<Felt252>,
     case: Arc<TestCaseRunnable>,
     runner: Arc<SierraCasmRunner>,

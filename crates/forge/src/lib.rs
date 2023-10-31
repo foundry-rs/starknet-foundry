@@ -7,7 +7,7 @@ use ark_std::iterable::Iterable;
 use camino::{Utf8Path, Utf8PathBuf};
 
 use futures::StreamExt;
-use running::{blocking_run_from_fuzzing_test, blocking_run_from_test};
+use running::{run_fuzz_test, run_test};
 use tokio::sync::mpsc::{channel, Sender};
 
 use std::sync::Arc;
@@ -403,7 +403,7 @@ fn choose_test_strategy_and_run(
     send_shut_down: &Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     if args.is_empty() {
-        blocking_run_from_test(
+        run_test(
             case,
             runner,
             runner_config,
@@ -459,7 +459,7 @@ fn run_with_fuzzing(
         for _ in 1..=fuzzer_runs {
             let args = fuzzer.next_args();
 
-            tasks.push(blocking_run_from_fuzzing_test(
+            tasks.push(run_fuzz_test(
                 args,
                 case.clone(),
                 runner.clone(),
