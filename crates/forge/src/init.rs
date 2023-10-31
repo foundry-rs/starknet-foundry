@@ -70,7 +70,7 @@ pub fn run(project_name: &str) -> Result<()> {
         .stderr(Stdio::inherit())
         .stdout(Stdio::inherit())
         .output()
-        .context("Failed to initial new project")?;
+        .context("Failed to initialize a new project")?;
 
     let version = env!("CARGO_PKG_VERSION");
 
