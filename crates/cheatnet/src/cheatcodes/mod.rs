@@ -77,9 +77,3 @@ impl From<CallContractFailure> for CheatcodeError {
         }
     }
 }
-
-#[derive(Debug, PartialEq, Clone)]
-pub struct ContractArtifacts {
-    pub sierra: String,
-    pub casm: String,
-}
