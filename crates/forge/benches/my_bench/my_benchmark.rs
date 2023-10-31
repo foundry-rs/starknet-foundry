@@ -1,7 +1,7 @@
 use assert_fs::fixture::PathCopy;
 use assert_fs::TempDir;
 use camino::Utf8PathBuf;
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, SamplingMode};
+use criterion::{BenchmarkId, Criterion, SamplingMode};
 use forge::{collect_test_compilation_targets, CrateLocation, TestCompilationTarget};
 use indoc::indoc;
 use std::path::PathBuf;
@@ -176,7 +176,7 @@ fn declare_deploy_and_interact(test: &TestCase) {
     assert_passed!(result);
 }
 
-fn criterion_benchmark(c: &mut Criterion) {
+pub fn criterion_benchmark(c: &mut Criterion) {
     let declare_and_interact_input = setup_declare_deploy_and_interact();
     let collect_tests_input = setup_collect_tests();
     let compile_tests_input = setup_compile_tests();
@@ -211,6 +211,3 @@ fn criterion_benchmark(c: &mut Criterion) {
     );
     group.finish();
 }
-
-criterion_group!(benches, criterion_benchmark);
-criterion_main!(benches);

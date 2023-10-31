@@ -74,5 +74,6 @@ criterion = { version = "0.5.1", features = ["html_reports"] }
 test_utils = { path = "test_utils" }
 
 [[bench]]
-name = "my_benchmark"
+name = "my_bench"
+path = "benches/main.rs"
 harness = false
