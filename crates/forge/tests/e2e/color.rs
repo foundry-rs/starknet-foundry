@@ -9,7 +9,7 @@ fn runner_color(value: &str) -> SnapboxCommand {
         .arg(value)
 }
 
-fn has_escape(output: &OutputAssert) -> bool {
+fn is_colored(output: &OutputAssert) -> bool {
     String::from_utf8(output.get_output().stdout.clone())
         .unwrap()
         .contains("\x1b[")
@@ -20,7 +20,7 @@ fn color_always() {
     let temp = setup_package("simple_package");
     let snapbox = runner_color("always");
     let output = snapbox.current_dir(&temp).assert().code(1);
-    assert!(has_escape(&output), "Stdout doesn't contains escape code");
+    assert!(is_colored(&output), "output expected to be colored but it is not");
 }
 
 #[test]
@@ -28,5 +28,5 @@ fn color_never() {
     let temp = setup_package("simple_package");
     let snapbox = runner_color("never");
     let output = snapbox.current_dir(&temp).assert().code(1);
-    assert!(!has_escape(&output), "Stdout contains escape code");
+    assert!(!is_colored(&output), "output not expected to be colored but it is");
 }
