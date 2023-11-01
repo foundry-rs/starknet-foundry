@@ -46,7 +46,7 @@ scarb-metadata.workspace = true
 scarb-ui = "0.1.0"
 schemars = { version = "0.8.12", features = ["preserve_order"] }
 parity-scale-codec = "3.5.0"
-parity-scale-codec-derive = "3.1.4"
+parity-scale-codec-derive = "3.6.5"
 snapbox = "0.4.13"
 cairo-vm = "0.8.1"
 ark-ff = "0.4.0-alpha.7"
