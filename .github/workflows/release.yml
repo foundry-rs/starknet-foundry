@@ -160,7 +160,7 @@ jobs:
 
       - name: Create GitHub release
         id: create-release
-        uses: taiki-e/create-gh-release-action@9762dfdfe60a96b3fef6c4a0aaafd9840f1195b7
+        uses: taiki-e/create-gh-release-action@8df4de6534ceacdaed10a08f73418ca751f31793
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           changelog: CHANGELOG.md
