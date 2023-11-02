@@ -106,7 +106,7 @@ jobs:
           toolchain: stable
           target: ${{ matrix.target }}
 
-      - uses: Swatinem/rust-cache@dd05243424bd5c0e585e4b55eb2d7615cdd32f1f
+      - uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8
         with:
           workspaces: starknet-foundry
 
