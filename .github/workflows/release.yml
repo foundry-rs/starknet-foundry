@@ -98,8 +98,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: true
 
       - uses: dtolnay/rust-toolchain@439cf607258077187679211f12aa6f19af4a0af7
         with:
@@ -145,8 +143,6 @@ jobs:
     needs: [ build-binaries, verify-version ]
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: true
 
       - name: Download artifacts
         uses: actions/download-artifact@v3
