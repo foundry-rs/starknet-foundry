@@ -94,7 +94,7 @@ pub fn string_into_felt(string: &str) -> Result<Felt252> {
 
 #[cfg(test)]
 mod tests {
-    use forge_runner::test_execution_syscall_handler::file_operations::string_into_felt;
+    use crate::test_execution_syscall_handler::file_operations::string_into_felt;
     use cairo_felt::Felt252;
     use num_bigint::BigUint;
     use num_traits::One;

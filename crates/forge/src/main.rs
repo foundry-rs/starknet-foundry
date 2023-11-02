@@ -2,10 +2,11 @@ use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
 use forge::scarb::config_from_scarb_for_package;
-use forge::{pretty_printing, run, CancellationTokens, RunnerParams, CACHE_DIR};
+use forge::test_filter::TestsFilter;
+use forge::{pretty_printing, run};
 use forge_runner::test_case_summary::TestCaseSummary;
 use forge_runner::test_crate_summary::TestCrateSummary;
-use forge_runner::{RunnerConfig, RunnerParams};
+use forge_runner::{CancellationTokens, RunnerConfig, RunnerParams, CACHE_DIR};
 use include_dir::{include_dir, Dir};
 use rand::{thread_rng, RngCore};
 use scarb_artifacts::{
@@ -201,6 +202,12 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                     &package_path,
                     &package_name,
                     &package_source_dir_path,
+                    &TestsFilter::from_flags(
+                        args.test_filter.clone(),
+                        args.exact,
+                        args.only_ignored,
+                        args.include_ignored,
+                    ),
                     runner_config,
                     runner_params,
                     cancellation_tokens,

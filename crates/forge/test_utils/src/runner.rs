@@ -11,7 +11,8 @@ use cairo_lang_starknet::contract_class::compile_contract_in_prepared_db;
 use cairo_lang_starknet::inline_macros::selector::SelectorMacro;
 use cairo_lang_starknet::plugin::StarkNetPlugin;
 use camino::{Utf8Path, Utf8PathBuf};
-use forge::{CrateLocation, TestCrateSummary};
+use forge::CrateLocation;
+use forge_runner::test_crate_summary::TestCrateSummary;
 use scarb_artifacts::StarknetContractArtifacts;
 use std::collections::HashMap;
 use std::fs;
@@ -156,10 +157,7 @@ impl<'a> TestCase {
 
     #[must_use]
     pub fn find_test_result(results: &[TestCrateSummary]) -> &TestCrateSummary {
-        results
-            .iter()
-            .find(|r| r.test_crate_type == CrateLocation::Tests)
-            .unwrap()
+        results.first().unwrap()
     }
 }
 

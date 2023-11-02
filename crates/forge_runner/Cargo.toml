@@ -34,6 +34,7 @@ itertools.workspace = true
 camino.workspace = true
 thiserror.workspace = true
 serde_json.workspace = true
+console.workspace = true
 serde.workspace = true
 flatten-serde-json = "0.1.0"
 cheatnet = { path = "../cheatnet" }

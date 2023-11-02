@@ -1,17 +1,20 @@
+use indoc::formatdoc;
+use std::path::Path;
 use std::path::PathBuf;
 use std::sync::Arc;
 
 use camino::Utf8PathBuf;
+use forge::run;
+use forge::test_filter::TestsFilter;
 use starknet::core::types::BlockId;
 use starknet::core::types::BlockTag::Latest;
 use tempfile::tempdir;
 use tokio::runtime::Runtime;
 
-use forge::scarb::config::{ForgeConfig, ForkTarget};
-use forge::{run, RunnerConfig, RunnerParams};
-use forge_runner::CancellationTokens;
+use forge_runner::{CancellationTokens, ForkTarget, RunnerConfig, RunnerParams};
 use test_collector::RawForkParams;
 use test_utils::corelib::{corelib_path, predeployed_contracts};
+use test_utils::runner::Contract;
 use test_utils::running_tests::run_test_case;
 use test_utils::{assert_case_output_contains, assert_failed, assert_passed, test_case};
 
@@ -103,27 +106,19 @@ fn fork_aliased_decorator() {
             &test.path().unwrap(),
             &String::from("src"),
             &test.path().unwrap().join("src"),
+            &TestsFilter::from_flags(None, false, false, false),
             Arc::new(RunnerConfig::new(
                 Utf8PathBuf::from_path_buf(PathBuf::from(tempdir().unwrap().path())).unwrap(),
-                None,
                 false,
-                false,
-                false,
-                false,
-                Some(1234),
-                Some(500),
-                &ForgeConfig {
-                    exit_first: false,
-                    fuzzer_runs: Some(1234),
-                    fuzzer_seed: Some(500),
-                    fork: vec![ForkTarget {
-                        name: "FORK_NAME_FROM_SCARB_TOML".to_string(),
-                        params: RawForkParams {
-                            url: CHEATNET_RPC_URL.to_string(),
-                            block_id: BlockId::Tag(Latest),
-                        },
-                    }],
-                },
+                vec![ForkTarget {
+                    name: "FORK_NAME_FROM_SCARB_TOML".to_string(),
+                    params: RawForkParams {
+                        url: CHEATNET_RPC_URL.to_string(),
+                        block_id: BlockId::Tag(Latest),
+                    },
+                }],
+                1234,
+                500,
             )),
             Arc::new(RunnerParams::new(
                 corelib_path(),

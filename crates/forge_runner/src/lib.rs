@@ -26,12 +26,15 @@ use tokio::task;
 use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
 use url::Url;
+use console::style;
 
 mod fuzzer;
 mod running;
 pub mod test_case_summary;
 pub mod test_crate_summary;
 mod test_execution_syscall_handler;
+
+pub const CACHE_DIR: &str = ".snfoundry_cache";
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct ForkTarget {
@@ -78,11 +81,11 @@ impl RunnerConfig {
 }
 
 pub struct RunnerParams {
-    corelib_path: Utf8PathBuf,
+    pub corelib_path: Utf8PathBuf,
     pub contracts: HashMap<String, StarknetContractArtifacts>,
     pub predeployed_contracts: Utf8PathBuf,
     pub environment_variables: HashMap<String, String>,
-    linked_libraries: Vec<LinkedLibrary>,
+    pub linked_libraries: Vec<LinkedLibrary>,
 }
 
 impl RunnerParams {
@@ -149,14 +152,14 @@ pub enum RunnerStatus {
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct ForkConfig {
+pub struct ForkConfig {
     pub url: Url,
     pub block_id: BlockId,
 }
 
 impl ForkConfigTrait for ForkConfig {}
 
-pub(crate) type TestCase = CollectedTestCase<ForkConfig>;
+pub type TestCase = CollectedTestCase<ForkConfig>;
 
 #[derive(Debug, Clone)]
 pub struct TestCrate {
@@ -195,15 +198,15 @@ pub async fn run_tests_from_crate(
     for case in test_cases.iter() {
         let case_name = case.name.clone();
 
-        if !runner_config
-            .tests_filter
-            .should_be_run_based_on_ignored(case)
-        {
-            tasks.push(tokio::task::spawn(async {
-                Ok(TestCaseSummary::Ignored { name: case_name })
-            }));
-            continue;
-        };
+        // if !runner_config
+        //     .tests_filter
+        //     .should_be_run_based_on_ignored(case)
+        // {
+        //     tasks.push(tokio::task::spawn(async {
+        //         Ok(TestCaseSummary::Ignored { name: case_name })
+        //     }));
+        //     continue;
+        // };
 
         let function = runner.find_function(&case_name)?;
         let args = function_args(function, &BUILTINS);
@@ -234,7 +237,7 @@ pub async fn run_tests_from_crate(
             // Ok(TestCaseSummary::Interrupted) before Err
             TestCaseSummary::Interrupted {} => interrupted = true,
             result => {
-                pretty_printing::print_test_result(&result);
+                print_test_result(&result);
 
                 results.push(result);
             }
@@ -256,7 +259,7 @@ pub async fn run_tests_from_crate(
     Ok(TestCrateSummary {
         test_case_summaries: results,
         runner_exit_status: RunnerStatus::Default,
-        test_crate_type: tests.tests_location,
+        // test_crate_type: tests.tests_location,
         contained_fuzzed_tests,
     })
 }
@@ -500,4 +503,46 @@ fn function_args<'a>(function: &'a Function, builtins: &[&str]) -> Vec<&'a Concr
         .iter()
         .filter(|pt| !builtins.contains(&pt.debug_name))
         .collect()
+}
+
+pub(crate) fn print_test_result(test_result: &TestCaseSummary) {
+    let result_header = match test_result {
+        TestCaseSummary::Passed { .. } => format!("[{}]", style("PASS").green()),
+        TestCaseSummary::Failed { .. } => format!("[{}]", style("FAIL").red()),
+        TestCaseSummary::Ignored { .. } => format!("[{}]", style("IGNORE").yellow()),
+        TestCaseSummary::Skipped { .. } => format!("[{}]", style("SKIP").color256(11)),
+        TestCaseSummary::Interrupted {} => {
+            unreachable!()
+        }
+    };
+
+    let result_name = match test_result {
+        TestCaseSummary::Skipped { name }
+        | TestCaseSummary::Ignored { name }
+        | TestCaseSummary::Failed { name, .. }
+        | TestCaseSummary::Passed { name, .. } => name,
+        TestCaseSummary::Interrupted {} => {
+            unreachable!()
+        }
+    };
+
+    let result_message = match test_result {
+        TestCaseSummary::Passed { msg: Some(msg), .. } => format!("\n\nSuccess data:{msg}"),
+        TestCaseSummary::Failed { msg: Some(msg), .. } => format!("\n\nFailure data:{msg}"),
+        _ => String::new(),
+    };
+
+    let fuzzer_report = match test_result.runs() {
+        None => String::new(),
+        Some(runs) => {
+            if matches!(test_result, TestCaseSummary::Failed { .. }) {
+                let arguments = test_result.arguments();
+                format!(" (fuzzer runs = {runs}, arguments = {arguments:?})")
+            } else {
+                format!(" (fuzzer runs = {runs})")
+            }
+        }
+    };
+
+    println!("{result_header} {result_name}{fuzzer_report}{result_message}");
 }

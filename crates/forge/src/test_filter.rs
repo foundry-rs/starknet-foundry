@@ -2,11 +2,11 @@ use crate::collecting::{CompiledTestCrate, CompiledTestCrateRaw, TestCaseRunnabl
 
 #[derive(Debug, PartialEq)]
 // Specifies what tests should be included
-pub(crate) struct TestsFilter {
+pub struct TestsFilter {
     // based on name
-    pub name_filter: NameFilter,
+    name_filter: NameFilter,
     // based on `#[ignore]` attribute
-    pub ignored_filter: IgnoredFilter,
+    ignored_filter: IgnoredFilter,
 }
 
 #[derive(Debug, PartialEq)]
@@ -24,7 +24,7 @@ pub(crate) enum IgnoredFilter {
 }
 
 impl TestsFilter {
-    pub(crate) fn from_flags(
+    pub fn from_flags(
         test_name_filter: Option<String>,
         exact_match: bool,
         only_ignored: bool,
