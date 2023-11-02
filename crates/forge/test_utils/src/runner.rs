@@ -157,7 +157,10 @@ impl<'a> TestCase {
 
     #[must_use]
     pub fn find_test_result(results: &[TestCrateSummary]) -> &TestCrateSummary {
-        results.first().unwrap()
+        results
+            .iter()
+            .find(|tc| !tc.test_case_summaries.is_empty())
+            .unwrap()
     }
 }
 
