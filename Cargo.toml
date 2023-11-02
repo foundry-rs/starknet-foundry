@@ -56,7 +56,7 @@ serde = { version = "1.0.163", features = ["derive"] }
 serde_json = "1.0.104"
 starknet = "0.6.0"
 tempfile = "3.8.0"
-thiserror = "1.0.49"
+thiserror = "1.0.50"
 ctor = "0.2.4"
 url = "2.4.0"
 tokio = { version = "1.28.2", features = ["full"] }
