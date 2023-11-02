@@ -5,7 +5,9 @@ use forge::scarb::config_from_scarb_for_package;
 use forge::{pretty_printing, run, CancellationTokens, RunnerParams, CACHE_DIR};
 use forge_runner::test_case_summary::TestCaseSummary;
 use forge_runner::test_crate_summary::TestCrateSummary;
+use forge_runner::{RunnerConfig, RunnerParams};
 use include_dir::{include_dir, Dir};
+use rand::{thread_rng, RngCore};
 use scarb_artifacts::{
     corelib_for_package, dependencies_for_package, get_contracts_map, name_for_package,
     paths_for_package, target_dir_for_package, target_name_for_package,
@@ -177,14 +179,12 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
 
                 let runner_config = Arc::new(RunnerConfig::new(
                     workspace_root.clone(),
-                    args.test_filter.clone(),
-                    args.exact,
                     args.exit_first,
-                    args.only_ignored,
-                    args.include_ignored,
-                    args.fuzzer_runs,
-                    args.fuzzer_seed,
-                    &forge_config,
+                    forge_config.fork.clone(),
+                    args.fuzzer_runs.or(forge_config.fuzzer_runs).unwrap_or(256),
+                    args.fuzzer_seed
+                        .or(forge_config.fuzzer_seed)
+                        .unwrap_or_else(|| thread_rng().next_u64()),
                 ));
 
                 let runner_params = Arc::new(RunnerParams::new(

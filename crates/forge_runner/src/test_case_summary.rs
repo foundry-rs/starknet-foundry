@@ -1,3 +1,4 @@
+use crate::TestCase;
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{RunResult, RunResultValue};
@@ -117,7 +118,7 @@ impl TestCaseSummary {
     #[must_use]
     pub fn from_run_result(
         run_result: RunResult,
-        test_case: &TestCaseRunnable,
+        test_case: &TestCase,
         arguments: Vec<Felt252>,
     ) -> Self {
         let name = test_case.name.to_string();
@@ -165,7 +166,7 @@ impl TestCaseSummary {
     }
 
     #[must_use]
-    pub fn skipped(test_case: &TestCaseRunnable) -> Self {
+    pub fn skipped(test_case: &TestCase) -> Self {
         Self::Skipped {
             name: test_case.name.to_string(),
         }

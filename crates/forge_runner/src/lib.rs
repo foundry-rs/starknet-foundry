@@ -9,15 +9,18 @@ use cairo_lang_sierra::ids::ConcreteTypeId;
 use cairo_lang_sierra::program::{Function, Program};
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
+use camino::Utf8PathBuf;
 use futures::stream::FuturesUnordered;
 use futures::StreamExt;
 use once_cell::sync::Lazy;
+use scarb_artifacts::StarknetContractArtifacts;
 use smol_str::SmolStr;
 use starknet::core::types::BlockId;
+use std::collections::HashMap;
 use std::sync::Arc;
-use test_collector::ForkConfig as ForkConfigTrait;
 use test_collector::FuzzerConfig;
 use test_collector::TestCase as CollectedTestCase;
+use test_collector::{ForkConfig as ForkConfigTrait, LinkedLibrary, RawForkParams};
 use tokio::sync::mpsc::{channel, Sender};
 use tokio::task;
 use tokio::task::JoinHandle;
@@ -29,6 +32,97 @@ mod running;
 pub mod test_case_summary;
 pub mod test_crate_summary;
 mod test_execution_syscall_handler;
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct ForkTarget {
+    pub name: String,
+    pub params: RawForkParams,
+}
+
+/// Configuration of the test runner
+#[derive(Debug, PartialEq)]
+pub struct RunnerConfig {
+    pub workspace_root: Utf8PathBuf,
+    pub exit_first: bool,
+    // pub tests_filter: TestsFilter,
+    pub fork_targets: Vec<ForkTarget>,
+    pub fuzzer_runs: u32,
+    pub fuzzer_seed: u64,
+}
+
+impl RunnerConfig {
+    /// Creates a new `RunnerConfig` from given arguments
+    ///
+    /// # Arguments
+    ///
+    /// * `test_name_filter` - Used to filter test cases by names
+    /// * `exact_match` - Should test names match the `test_name_filter` exactly
+    /// * `exit_first` - Should runner exit after first failed test
+    #[must_use]
+    #[allow(clippy::too_many_arguments, clippy::fn_params_excessive_bools)]
+    pub fn new(
+        workspace_root: Utf8PathBuf,
+        exit_first: bool,
+        fork_targets: Vec<ForkTarget>,
+        fuzzer_runs: u32,
+        fuzzer_seed: u64,
+    ) -> Self {
+        Self {
+            workspace_root,
+            exit_first,
+            fork_targets,
+            fuzzer_runs,
+            fuzzer_seed,
+        }
+    }
+}
+
+pub struct RunnerParams {
+    corelib_path: Utf8PathBuf,
+    pub contracts: HashMap<String, StarknetContractArtifacts>,
+    pub predeployed_contracts: Utf8PathBuf,
+    pub environment_variables: HashMap<String, String>,
+    linked_libraries: Vec<LinkedLibrary>,
+}
+
+impl RunnerParams {
+    #[must_use]
+    pub fn new(
+        corelib_path: Utf8PathBuf,
+        contracts: HashMap<String, StarknetContractArtifacts>,
+        predeployed_contracts: Utf8PathBuf,
+        environment_variables: HashMap<String, String>,
+        linked_libraries: Vec<LinkedLibrary>,
+    ) -> Self {
+        Self {
+            corelib_path,
+            contracts,
+            predeployed_contracts,
+            environment_variables,
+            linked_libraries,
+        }
+    }
+}
+
+pub struct CancellationTokens {
+    exit_first: CancellationToken,
+    error: CancellationToken,
+}
+
+impl CancellationTokens {
+    #[must_use]
+    pub fn new() -> Self {
+        let exit_first = CancellationToken::new();
+        let error = CancellationToken::new();
+        Self { exit_first, error }
+    }
+}
+
+impl Default for CancellationTokens {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 pub static BUILTINS: Lazy<Vec<&str>> = Lazy::new(|| {
     vec![

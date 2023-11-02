@@ -1,14 +1,13 @@
 use anyhow::{anyhow, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use itertools::Itertools;
-use rand::{thread_rng, RngCore};
-use std::collections::HashMap;
+use rand::RngCore;
 use std::fmt::Debug;
 use std::sync::Arc;
 
-use scarb_artifacts::StarknetContractArtifacts;
-use test_collector::{LinkedLibrary, RawForkConfig, RawForkParams, TestCase};
-use tokio_util::sync::CancellationToken;
+use forge_runner::test_crate_summary::TestCrateSummary;
+use forge_runner::{CancellationTokens, RunnerConfig, RunnerParams};
+use test_collector::{RawForkConfig, RawForkParams, TestCase};
 
 use crate::collecting::{
     collect_test_compilation_targets, compile_tests, CompiledTestCrate, CompiledTestCrateRaw,
@@ -25,105 +24,6 @@ mod test_filter;
 
 const FUZZER_RUNS_DEFAULT: u32 = 256;
 pub const CACHE_DIR: &str = ".snfoundry_cache";
-
-/// Configuration of the test runner
-#[derive(Debug, PartialEq)]
-pub struct RunnerConfig {
-    pub workspace_root: Utf8PathBuf,
-    pub exit_first: bool,
-    pub tests_filter: TestsFilter,
-    fork_targets: Vec<ForkTarget>,
-    pub fuzzer_runs: u32,
-    pub fuzzer_seed: u64,
-}
-
-pub struct CancellationTokens {
-    exit_first: CancellationToken,
-    error: CancellationToken,
-}
-
-impl CancellationTokens {
-    #[must_use]
-    pub fn new() -> Self {
-        let exit_first = CancellationToken::new();
-        let error = CancellationToken::new();
-        Self { exit_first, error }
-    }
-}
-
-impl Default for CancellationTokens {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl RunnerConfig {
-    /// Creates a new `RunnerConfig` from given arguments
-    ///
-    /// # Arguments
-    ///
-    /// * `test_name_filter` - Used to filter test cases by names
-    /// * `exact_match` - Should test names match the `test_name_filter` exactly
-    /// * `exit_first` - Should runner exit after first failed test
-    #[must_use]
-    #[allow(clippy::too_many_arguments, clippy::fn_params_excessive_bools)]
-    pub fn new(
-        workspace_root: Utf8PathBuf,
-        test_name_filter: Option<String>,
-        exact_match: bool,
-        exit_first: bool,
-        only_ignored: bool,
-        include_ignored: bool,
-        fuzzer_runs: Option<u32>,
-        fuzzer_seed: Option<u64>,
-        forge_config_from_scarb: &ForgeConfig,
-    ) -> Self {
-        Self {
-            workspace_root,
-            exit_first: forge_config_from_scarb.exit_first || exit_first,
-            fork_targets: forge_config_from_scarb.fork.clone(),
-            fuzzer_runs: fuzzer_runs
-                .or(forge_config_from_scarb.fuzzer_runs)
-                .unwrap_or(FUZZER_RUNS_DEFAULT),
-            fuzzer_seed: fuzzer_seed
-                .or(forge_config_from_scarb.fuzzer_seed)
-                .unwrap_or_else(|| thread_rng().next_u64()),
-            tests_filter: TestsFilter::from_flags(
-                test_name_filter,
-                exact_match,
-                only_ignored,
-                include_ignored,
-            ),
-        }
-    }
-}
-
-pub struct RunnerParams {
-    corelib_path: Utf8PathBuf,
-    pub contracts: HashMap<String, StarknetContractArtifacts>,
-    pub predeployed_contracts: Utf8PathBuf,
-    pub environment_variables: HashMap<String, String>,
-    linked_libraries: Vec<LinkedLibrary>,
-}
-
-impl RunnerParams {
-    #[must_use]
-    pub fn new(
-        corelib_path: Utf8PathBuf,
-        contracts: HashMap<String, StarknetContractArtifacts>,
-        predeployed_contracts: Utf8PathBuf,
-        environment_variables: HashMap<String, String>,
-        linked_libraries: Vec<LinkedLibrary>,
-    ) -> Self {
-        Self {
-            corelib_path,
-            contracts,
-            predeployed_contracts,
-            environment_variables,
-            linked_libraries,
-        }
-    }
-}
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum CrateLocation {

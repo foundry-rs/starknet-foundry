@@ -18,7 +18,7 @@ use itertools::chain;
 
 use crate::test_case_summary::TestCaseSummary;
 use crate::test_execution_syscall_handler::{TestExecutionState, TestExecutionSyscallHandler};
-use crate::{ForkConfig, TestCase};
+use crate::{ForkConfig, RunnerConfig, TestCase};
 use cairo_lang_casm::hints::Hint;
 use cairo_lang_casm::instructions::Instruction;
 use cairo_lang_runner::casm_run::hint_to_hint_params;
