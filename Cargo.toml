@@ -43,7 +43,7 @@ cairo-felt = "0.8.2"
 anyhow = "1.0.75"
 assert_fs = "1.0.13"
 camino = { version = "1.1.4", features = ["serde1"] }
-clap = { version = "4.3.23", features = ["derive"] }
+clap = { version = "4.4.7", features = ["derive"] }
 console = "0.15.7"
 include_dir = "0.7.3"
 indoc = "2"
