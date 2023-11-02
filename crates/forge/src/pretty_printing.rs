@@ -1,7 +1,8 @@
-use crate::test_case_summary::TestCaseSummary;
-use crate::{CrateLocation, TestCrateSummary};
+use crate::CrateLocation;
 use anyhow::Error;
 use console::style;
+use forge_runner::test_case_summary::TestCaseSummary;
+use forge_runner::test_crate_summary::TestCrateSummary;
 
 pub fn print_error_message(error: &Error) {
     let error_tag = style("ERROR").red();

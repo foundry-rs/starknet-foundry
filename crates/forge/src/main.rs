@@ -2,6 +2,9 @@ use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
 use forge::scarb::config_from_scarb_for_package;
+use forge::{pretty_printing, run, CancellationTokens, RunnerParams, CACHE_DIR};
+use forge_runner::test_case_summary::TestCaseSummary;
+use forge_runner::test_crate_summary::TestCrateSummary;
 use include_dir::{include_dir, Dir};
 use scarb_artifacts::{
     corelib_for_package, dependencies_for_package, get_contracts_map, name_for_package,
@@ -11,17 +14,13 @@ use scarb_artifacts::{
 use scarb_metadata::{MetadataCommand, PackageMetadata};
 use scarb_ui::args::PackagesFilter;
 use std::path::PathBuf;
+use std::process::{Command, Stdio};
 use std::sync::Arc;
+use std::thread::available_parallelism;
 use std::{env, fs};
 use tempfile::{tempdir, TempDir};
 use tokio::runtime::Builder;
 
-use forge::{pretty_printing, CancellationTokens, RunnerConfig, RunnerParams, CACHE_DIR};
-use forge::{run, TestCrateSummary};
-
-use forge::test_case_summary::TestCaseSummary;
-use std::process::{Command, Stdio};
-use std::thread::available_parallelism;
 mod init;
 
 static PREDEPLOYED_CONTRACTS: Dir = include_dir!("crates/cheatnet/predeployed-contracts");

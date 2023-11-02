@@ -1,5 +1,5 @@
 use crate::test_case_summary::TestCaseSummary;
-use crate::{CrateLocation, RunnerStatus};
+use crate::RunnerStatus;
 
 /// Summary of the test run in the file
 #[derive(Debug, PartialEq)]
@@ -15,21 +15,21 @@ pub struct TestCrateSummary {
 }
 
 impl TestCrateSummary {
-    pub(crate) fn count_passed(&self) -> usize {
+    pub fn count_passed(&self) -> usize {
         self.test_case_summaries
             .iter()
             .filter(|tu| matches!(tu, TestCaseSummary::Passed { .. }))
             .count()
     }
 
-    pub(crate) fn count_failed(&self) -> usize {
+    pub fn count_failed(&self) -> usize {
         self.test_case_summaries
             .iter()
             .filter(|tu| matches!(tu, TestCaseSummary::Failed { .. }))
             .count()
     }
 
-    pub(crate) fn count_skipped(&self) -> usize {
+    pub fn count_skipped(&self) -> usize {
         self.test_case_summaries
             .iter()
             .filter(|tu| matches!(tu, TestCaseSummary::Skipped { .. }))

@@ -180,7 +180,7 @@ macro_rules! test_case {
 #[macro_export]
 macro_rules! assert_passed {
     ($result:expr) => {{
-        use forge::test_case_summary::TestCaseSummary;
+        use forge_runner::test_case_summary::TestCaseSummary;
         use $crate::runner::TestCase;
 
         let result = TestCase::find_test_result(&$result);
@@ -201,7 +201,7 @@ macro_rules! assert_passed {
 #[macro_export]
 macro_rules! assert_failed {
     ($result:expr) => {{
-        use forge::test_case_summary::TestCaseSummary;
+        use forge_runner::test_case_summary::TestCaseSummary;
 
         use $crate::runner::TestCase;
 
@@ -223,7 +223,7 @@ macro_rules! assert_failed {
 #[macro_export]
 macro_rules! assert_case_output_contains {
     ($result:expr, $test_case_name:expr, $asserted_msg:expr) => {{
-        use forge::test_case_summary::TestCaseSummary;
+        use forge_runner::test_case_summary::TestCaseSummary;
 
         use $crate::runner::TestCase;
 

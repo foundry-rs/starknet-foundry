@@ -1,4 +1,3 @@
-use crate::collecting::TestCaseRunnable;
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{RunResult, RunResultValue};
@@ -55,7 +54,7 @@ pub enum TestCaseSummary {
 }
 
 impl TestCaseSummary {
-    pub(crate) fn arguments(&self) -> Vec<Felt252> {
+    pub fn arguments(&self) -> Vec<Felt252> {
         match self {
             TestCaseSummary::Failed { arguments, .. }
             | TestCaseSummary::Passed { arguments, .. } => arguments.clone(),
@@ -65,7 +64,7 @@ impl TestCaseSummary {
             }
         }
     }
-    pub(crate) fn runs(&self) -> Option<u32> {
+    pub fn runs(&self) -> Option<u32> {
         match self {
             TestCaseSummary::Failed {
                 fuzzing_statistic, ..
@@ -82,7 +81,7 @@ impl TestCaseSummary {
         }
     }
 
-    pub(crate) fn with_runs(self, runs: u32) -> Self {
+    pub fn with_runs(self, runs: u32) -> Self {
         match self {
             TestCaseSummary::Passed {
                 name,
@@ -116,7 +115,7 @@ impl TestCaseSummary {
 
 impl TestCaseSummary {
     #[must_use]
-    pub(crate) fn from_run_result(
+    pub fn from_run_result(
         run_result: RunResult,
         test_case: &TestCaseRunnable,
         arguments: Vec<Felt252>,
@@ -166,7 +165,7 @@ impl TestCaseSummary {
     }
 
     #[must_use]
-    pub(crate) fn skipped(test_case: &TestCaseRunnable) -> Self {
+    pub fn skipped(test_case: &TestCaseRunnable) -> Self {
         Self::Skipped {
             name: test_case.name.to_string(),
         }
@@ -196,7 +195,7 @@ fn build_readable_text(data: &Vec<Felt252>) -> Option<String> {
 /// Returns a string with the data that was produced by the test case.
 /// If the test was expected to fail with specific data e.g. `#[should_panic(expected: ('data',))]`
 /// and failed to do so, it returns a string comparing the panic data and the expected data.
-pub(crate) fn extract_result_data(
+pub fn extract_result_data(
     run_result: &RunResult,
     expectation: &ExpectedTestResult,
 ) -> Option<String> {

@@ -4,11 +4,12 @@ use crate::corelib::{corelib_path, predeployed_contracts};
 use crate::runner::TestCase;
 use camino::Utf8PathBuf;
 
-use forge::{run, CancellationTokens, RunnerConfig, RunnerParams, TestCrateSummary};
+use forge::{run, RunnerConfig, RunnerParams, TestCrateSummary};
 use std::default::Default;
 use std::path::PathBuf;
 use tempfile::tempdir;
 use tokio::runtime::Runtime;
+use forge_runner::CancellationTokens;
 
 #[must_use]
 pub fn run_test_case(test: &TestCase) -> Vec<TestCrateSummary> {

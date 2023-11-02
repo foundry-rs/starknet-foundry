@@ -543,7 +543,7 @@ impl TestExecutionSyscallHandler<'_, '_> {
                         Ok(())
                     }
                     CallContractResult::Failure(CallContractFailure::Error { msg }) => Err(
-                        EnhancedHintError::from(HintError::CustomHint(Box::from(msg))),
+                        EnhancedHintError::from(CustomHint(Box::from(msg))),
                     ),
                 }
             }
@@ -756,7 +756,7 @@ fn execute_syscall(
             write_call_contract_response(cheatable_syscall_handler, vm, &call_args, call_result)?;
             Ok(())
         }
-        DeprecatedSyscallSelector::ReplaceClass => Err(HintError::CustomHint(Box::from(
+        DeprecatedSyscallSelector::ReplaceClass => Err(CustomHint(Box::from(
             "Replace class can't be used in tests".to_string(),
         ))),
         _ => cheatable_syscall_handler.execute_hint(vm, exec_scopes, hint_data, constants),
@@ -826,7 +826,7 @@ fn write_call_contract_response(
                     .collect(),
             },
             CallContractFailure::Error { msg, .. } => {
-                return Err(HintError::CustomHint(Box::from(msg)))
+                return Err(CustomHint(Box::from(msg)))
             }
         },
     };

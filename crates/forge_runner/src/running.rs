@@ -16,6 +16,8 @@ use cairo_vm::types::relocatable::Relocatable;
 use cheatnet::execution::cheatable_syscall_handler::CheatableSyscallHandler;
 use itertools::chain;
 
+use crate::test_case_summary::TestCaseSummary;
+use crate::test_execution_syscall_handler::{TestExecutionState, TestExecutionSyscallHandler};
 use cairo_lang_casm::hints::Hint;
 use cairo_lang_casm::instructions::Instruction;
 use cairo_lang_runner::casm_run::hint_to_hint_params;
@@ -44,14 +46,6 @@ use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
 use url::Url;
 
-use crate::test_case_summary::TestCaseSummary;
-
-use crate::collecting::{TestCaseRunnable, ValidatedForkConfig};
-use crate::test_execution_syscall_handler::TestExecutionSyscallHandler;
-use crate::{RunnerConfig, RunnerParams, CACHE_DIR};
-
-use crate::test_execution_syscall_handler::TestExecutionState;
-
 /// Builds `hints_dict` required in `cairo_vm::types::program::Program` from instructions.
 fn build_hints_dict<'b>(
     instructions: impl Iterator<Item = &'b Instruction>,
@@ -78,7 +72,7 @@ fn build_hints_dict<'b>(
     (hints_dict, string_to_hint)
 }
 
-pub(crate) fn blocking_run_from_test(
+pub fn blocking_run_from_test(
     args: Vec<Felt252>,
     case: Arc<TestCaseRunnable>,
     runner: Arc<SierraCasmRunner>,
@@ -156,7 +150,7 @@ fn build_syscall_handler<'a>(
 }
 
 #[derive(Debug, Error)]
-pub(crate) enum TestCaseRunError {
+pub enum TestCaseRunError {
     #[error("{0}")]
     RunnerError(#[from] RunnerError),
     #[error("{0}")]
@@ -166,7 +160,7 @@ pub(crate) enum TestCaseRunError {
 }
 
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn run_test_case(
+pub fn run_test_case(
     args: Vec<Felt252>,
     case: &TestCaseRunnable,
     runner: &SierraCasmRunner,

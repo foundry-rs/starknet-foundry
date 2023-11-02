@@ -1,19 +1,17 @@
-use std::path::Path;
 use std::path::PathBuf;
 use std::sync::Arc;
 
 use camino::Utf8PathBuf;
-use indoc::formatdoc;
 use starknet::core::types::BlockId;
 use starknet::core::types::BlockTag::Latest;
 use tempfile::tempdir;
 use tokio::runtime::Runtime;
 
 use forge::scarb::config::{ForgeConfig, ForkTarget};
-use forge::{run, CancellationTokens, RunnerConfig, RunnerParams};
+use forge::{run, RunnerConfig, RunnerParams};
+use forge_runner::CancellationTokens;
 use test_collector::RawForkParams;
 use test_utils::corelib::{corelib_path, predeployed_contracts};
-use test_utils::runner::Contract;
 use test_utils::running_tests::run_test_case;
 use test_utils::{assert_case_output_contains, assert_failed, assert_passed, test_case};
 

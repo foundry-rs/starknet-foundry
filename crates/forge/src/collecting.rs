@@ -1,7 +1,8 @@
-use crate::{CrateLocation, RunnerParams, BUILTINS};
+use crate::{CrateLocation, RunnerParams};
 use anyhow::{anyhow, Context, Result};
 use cairo_lang_sierra::program::Program;
 use camino::{Utf8Path, Utf8PathBuf};
+use forge_runner::BUILTINS;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use starknet::core::types::BlockId;
 use test_collector::{collect_tests, ForkConfig, LinkedLibrary, RawForkConfig, TestCase};
