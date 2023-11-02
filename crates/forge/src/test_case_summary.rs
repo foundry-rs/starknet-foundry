@@ -1,8 +1,14 @@
+use crate::collecting::TestCaseRunnable;
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{RunResult, RunResultValue};
 use std::option::Option;
-use test_collector::{ExpectedPanicValue, ExpectedTestResult, TestCase};
+use test_collector::{ExpectedPanicValue, ExpectedTestResult};
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct FuzzingStatistics {
+    runs: u32,
+}
 
 /// Summary of running a single test case
 #[derive(Debug, PartialEq, Clone)]
@@ -11,29 +17,41 @@ pub enum TestCaseSummary {
     Passed {
         /// Name of the test case
         name: String,
-        /// Values returned by the test case run
-        run_result: RunResult,
         /// Message to be printed after the test case run
         msg: Option<String>,
         /// Arguments used in the test case run
         arguments: Vec<Felt252>,
+        /// Statistic for fuzzing test
+        fuzzing_statistic: Option<FuzzingStatistics>,
     },
     /// Test case failed
     Failed {
         /// Name of the test case
         name: String,
-        /// Values returned by the test case run
-        run_result: Option<RunResult>,
         /// Message returned by the test case run
         msg: Option<String>,
         /// Arguments used in the test case run
         arguments: Vec<Felt252>,
+        /// Statistic for fuzzing test
+        fuzzing_statistic: Option<FuzzingStatistics>,
     },
-    /// Test case skipped (did not run)
+    /// Test case ignored due to `#[ignored]` attribute or `--ignored` flag
+    Ignored {
+        /// Name of the test case
+        name: String,
+    },
+    /// Test case skipped due to exit first
     Skipped {
         /// Name of the test case
         name: String,
     },
+    /// Test case execution interrupted:
+    ///
+    /// Possible causes:
+    ///  - fuzzing subtest that was skipped/interrupted during fuzzing due to other subtest failing
+    ///  - single test or fuzzing subtest that was interrupted by error
+    /// This enum is returned when we want to ignore the test result
+    Interrupted {},
 }
 
 impl TestCaseSummary {
@@ -41,7 +59,57 @@ impl TestCaseSummary {
         match self {
             TestCaseSummary::Failed { arguments, .. }
             | TestCaseSummary::Passed { arguments, .. } => arguments.clone(),
-            TestCaseSummary::Skipped { .. } => vec![],
+            TestCaseSummary::Ignored { .. } | TestCaseSummary::Skipped { .. } => vec![],
+            TestCaseSummary::Interrupted {} => {
+                unreachable!()
+            }
+        }
+    }
+    pub(crate) fn runs(&self) -> Option<u32> {
+        match self {
+            TestCaseSummary::Failed {
+                fuzzing_statistic, ..
+            }
+            | TestCaseSummary::Passed {
+                fuzzing_statistic, ..
+            } => fuzzing_statistic
+                .as_ref()
+                .map(|FuzzingStatistics { runs, .. }| *runs),
+            TestCaseSummary::Ignored { .. } | TestCaseSummary::Skipped { .. } => None,
+            TestCaseSummary::Interrupted {} => {
+                unreachable!()
+            }
+        }
+    }
+
+    pub(crate) fn with_runs(self, runs: u32) -> Self {
+        match self {
+            TestCaseSummary::Passed {
+                name,
+                msg,
+                arguments,
+                ..
+            } => TestCaseSummary::Passed {
+                name,
+                msg,
+                arguments,
+                fuzzing_statistic: Some(FuzzingStatistics { runs }),
+            },
+            TestCaseSummary::Failed {
+                name,
+
+                msg,
+                arguments,
+                ..
+            } => TestCaseSummary::Failed {
+                name,
+                msg,
+                arguments,
+                fuzzing_statistic: Some(FuzzingStatistics { runs }),
+            },
+            TestCaseSummary::Ignored { .. }
+            | TestCaseSummary::Skipped { .. }
+            | TestCaseSummary::Interrupted {} => self,
         }
     }
 }
@@ -50,47 +118,47 @@ impl TestCaseSummary {
     #[must_use]
     pub(crate) fn from_run_result(
         run_result: RunResult,
-        test_case: &TestCase,
+        test_case: &TestCaseRunnable,
         arguments: Vec<Felt252>,
     ) -> Self {
         let name = test_case.name.to_string();
         let msg = extract_result_data(&run_result, &test_case.expected_result);
-        match run_result.clone().value {
+        match run_result.value {
             RunResultValue::Success(_) => match &test_case.expected_result {
                 ExpectedTestResult::Success => TestCaseSummary::Passed {
                     name,
                     msg,
-                    run_result,
                     arguments,
+                    fuzzing_statistic: None,
                 },
                 ExpectedTestResult::Panics(_) => TestCaseSummary::Failed {
                     name,
                     msg,
-                    run_result: Some(run_result),
                     arguments,
+                    fuzzing_statistic: None,
                 },
             },
             RunResultValue::Panic(value) => match &test_case.expected_result {
                 ExpectedTestResult::Success => TestCaseSummary::Failed {
                     name,
                     msg,
-                    run_result: Some(run_result),
                     arguments,
+                    fuzzing_statistic: None,
                 },
                 ExpectedTestResult::Panics(panic_expectation) => match panic_expectation {
                     ExpectedPanicValue::Exact(expected) if &value != expected => {
                         TestCaseSummary::Failed {
                             name,
                             msg,
-                            run_result: Some(run_result),
                             arguments,
+                            fuzzing_statistic: None,
                         }
                     }
                     _ => TestCaseSummary::Passed {
                         name,
                         msg,
-                        run_result,
                         arguments,
+                        fuzzing_statistic: None,
                     },
                 },
             },
@@ -98,7 +166,7 @@ impl TestCaseSummary {
     }
 
     #[must_use]
-    pub(crate) fn skipped(test_case: &TestCase) -> Self {
+    pub(crate) fn skipped(test_case: &TestCaseRunnable) -> Self {
         Self::Skipped {
             name: test_case.name.to_string(),
         }

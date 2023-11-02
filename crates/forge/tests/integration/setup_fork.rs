@@ -1,13 +1,21 @@
-use crate::integration::common::corelib::{corelib_path, predeployed_contracts};
-use crate::integration::common::running_tests::run_test_case;
-use crate::{assert_passed, test_case};
-use camino::Utf8PathBuf;
-use forge::scarb::{ForgeConfig, ForkTarget};
-use forge::{run, RunnerConfig, RunnerParams};
-use indoc::formatdoc;
-use std::collections::HashMap;
+use std::path::Path;
 use std::path::PathBuf;
+use std::sync::Arc;
+
+use camino::Utf8PathBuf;
+use indoc::formatdoc;
+use starknet::core::types::BlockId;
+use starknet::core::types::BlockTag::Latest;
 use tempfile::tempdir;
+use tokio::runtime::Runtime;
+
+use forge::scarb::config::{ForgeConfig, ForkTarget};
+use forge::{run, CancellationTokens, RunnerConfig, RunnerParams};
+use test_collector::RawForkParams;
+use test_utils::corelib::{corelib_path, predeployed_contracts};
+use test_utils::runner::Contract;
+use test_utils::running_tests::run_test_case;
+use test_utils::{assert_case_output_contains, assert_failed, assert_passed, test_case};
 
 static CHEATNET_RPC_URL: &str = "http://188.34.188.184:9545/rpc/v0.4";
 
@@ -90,37 +98,45 @@ fn fork_aliased_decorator() {
         "#
     ).as_str());
 
-    let result = run(
-        &Utf8PathBuf::from_path_buf(PathBuf::from(tempdir().unwrap().path())).unwrap(),
-        &test.path().unwrap(),
-        &String::from("src"),
-        &test.path().unwrap().join("src"),
-        &test.linked_libraries(),
-        &RunnerConfig::new(
-            None,
-            false,
-            false,
-            Some(1234),
-            Some(500),
-            &ForgeConfig {
-                exit_first: false,
-                fork: vec![ForkTarget {
-                    name: "FORK_NAME_FROM_SCARB_TOML".to_string(),
-                    url: CHEATNET_RPC_URL.to_string(),
-                    block_id: HashMap::from([("tag".to_string(), "Latest".to_string())]),
-                }],
-                fuzzer_runs: Some(1234),
-                fuzzer_seed: Some(500),
-            },
-        ),
-        &RunnerParams::new(
-            corelib_path(),
-            test.contracts(&corelib_path()).unwrap(),
-            Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
-            Default::default(),
-        ),
-    )
-    .unwrap();
+    let rt = Runtime::new().expect("Could not instantiate Runtime");
+
+    let result = rt
+        .block_on(run(
+            &test.path().unwrap(),
+            &String::from("src"),
+            &test.path().unwrap().join("src"),
+            Arc::new(RunnerConfig::new(
+                Utf8PathBuf::from_path_buf(PathBuf::from(tempdir().unwrap().path())).unwrap(),
+                None,
+                false,
+                false,
+                false,
+                false,
+                Some(1234),
+                Some(500),
+                &ForgeConfig {
+                    exit_first: false,
+                    fuzzer_runs: Some(1234),
+                    fuzzer_seed: Some(500),
+                    fork: vec![ForkTarget {
+                        name: "FORK_NAME_FROM_SCARB_TOML".to_string(),
+                        params: RawForkParams {
+                            url: CHEATNET_RPC_URL.to_string(),
+                            block_id: BlockId::Tag(Latest),
+                        },
+                    }],
+                },
+            )),
+            Arc::new(RunnerParams::new(
+                corelib_path(),
+                test.contracts(&corelib_path()).unwrap(),
+                Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
+                Default::default(),
+                test.linked_libraries(),
+            )),
+            Arc::new(CancellationTokens::new()),
+        ))
+        .expect("Runner fail");
 
     assert_passed!(result);
 }
@@ -153,4 +169,106 @@ fn fork_cairo0_contract() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
+}
+
+#[test]
+fn get_block_info_in_forked_block() {
+    let test = test_case!(formatdoc!(
+        r#"
+            use starknet::ContractAddress;
+            use starknet::ContractAddressIntoFelt252;
+            use starknet::contract_address_const;
+            use snforge_std::{{ BlockTag, BlockId, declare, ContractClassTrait }};
+
+            #[starknet::interface]
+            trait IBlockInfoChecker<TContractState> {{
+                fn read_block_number(self: @TContractState) -> u64;
+                fn read_block_timestamp(self: @TContractState) -> u64;
+                fn read_sequencer_address(self: @TContractState) -> ContractAddress;
+            }}
+
+            #[test]
+            #[fork(url: "{CHEATNET_RPC_URL}", block_id: BlockId::Number(315887))]
+            fn test_fork_get_block_info_contract_on_testnet() {{
+                let dispatcher = IBlockInfoCheckerDispatcher {{
+                    contract_address: contract_address_const::<0x4bc9a2c302d2c704dbabe8fe396d9fe7b9ca65a46a3cf5d2edc6c57bddcf316>()
+                }};
+
+                let timestamp = dispatcher.read_block_timestamp();
+                assert(timestamp == 1697630072, timestamp.into());
+                let block_number = dispatcher.read_block_number();
+                assert(block_number == 315887, block_number.into());
+
+                let expected_sequencer_addr = contract_address_const::<0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8>();
+                let sequencer_addr = dispatcher.read_sequencer_address();
+                assert(sequencer_addr == expected_sequencer_addr, sequencer_addr.into());
+            }}
+
+            #[test]
+            #[fork(url: "{CHEATNET_RPC_URL}", block_id: BlockId::Number(315887))]
+            fn test_fork_get_block_info_test_state() {{
+                let block_info = starknet::get_block_info().unbox();
+                assert(block_info.block_timestamp == 1697630072, block_info.block_timestamp.into());
+                assert(block_info.block_number == 315887, block_info.block_number.into());
+                let expected_sequencer_addr = contract_address_const::<0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8>();
+                assert(block_info.sequencer_address == expected_sequencer_addr, block_info.sequencer_address.into());
+            }}
+
+            #[test]
+            #[fork(url: "{CHEATNET_RPC_URL}", block_id: BlockId::Number(315887))]
+            fn test_fork_get_block_info_contract_deployed() {{
+                let contract = declare('BlockInfoChecker');
+                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+                let dispatcher = IBlockInfoCheckerDispatcher {{ contract_address }};
+
+                let timestamp = dispatcher.read_block_timestamp();
+                assert(timestamp == 1697630072, timestamp.into());
+                let block_number = dispatcher.read_block_number();
+                assert(block_number == 315887, block_number.into());
+
+                let expected_sequencer_addr = contract_address_const::<0x1176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8>();
+                let sequencer_addr = dispatcher.read_sequencer_address();
+                assert(sequencer_addr == expected_sequencer_addr, sequencer_addr.into());
+            }}
+
+            #[test]
+            #[fork(url: "{CHEATNET_RPC_URL}", block_id: BlockId::Tag(BlockTag::Latest))]
+            fn test_fork_get_block_info_latest_block() {{
+                let block_info = starknet::get_block_info().unbox();
+                assert(block_info.block_timestamp > 1697630072, block_info.block_timestamp.into());
+                assert(block_info.block_number > 315887, block_info.block_number.into());
+            }}
+        "#
+    ).as_str(),
+    Contract::from_code_path(
+        "BlockInfoChecker".to_string(),
+        Path::new("tests/data/contracts/block_info_checker.cairo"),
+    ).unwrap());
+
+    let result = run_test_case(&test);
+
+    assert_passed!(result);
+}
+
+#[test]
+fn test_fork_get_block_info_fails() {
+    let test = test_case!(formatdoc!(
+        r#"
+            #[test]
+            #[fork(url: "{CHEATNET_RPC_URL}", block_id: BlockId::Number(999999999999))]
+            fn test_fork_get_block_info_fails() {{
+                let block_info = starknet::get_block_info().unbox();
+            }}
+        "#
+    )
+    .as_str());
+
+    let result = run_test_case(&test);
+
+    assert_failed!(result);
+    assert_case_output_contains!(
+        result,
+        "test_fork_get_block_info_fails",
+        "Unable to get block with tx hashes from fork"
+    );
 }

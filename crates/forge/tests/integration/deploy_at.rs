@@ -1,8 +1,8 @@
-use crate::integration::common::runner::Contract;
-use crate::integration::common::running_tests::run_test_case;
-use crate::{assert_case_output_contains, assert_failed, assert_passed, test_case};
 use indoc::indoc;
 use std::path::Path;
+use test_utils::runner::Contract;
+use test_utils::running_tests::run_test_case;
+use test_utils::{assert_case_output_contains, assert_failed, assert_passed, test_case};
 
 #[test]
 fn deploy_at_correct_address() {
@@ -103,4 +103,40 @@ fn deploy_two_at_the_same_address() {
         "test_deploy_two_at_the_same_address",
         "Address is already taken"
     );
+}
+
+#[test]
+fn deploy_at_error_handling() {
+    let test = test_case!(
+        indoc!(
+            r#"
+        use array::ArrayTrait;
+        use snforge_std::{ declare, ContractClassTrait, RevertedTransaction };
+        use starknet::ContractAddress;
+
+        #[test]
+        fn test_deploy_at_error_handling() {
+            let contract_address = 123;
+        
+            let contract = declare('PanickingConstructor');
+            match contract.deploy_at(@array![], contract_address.try_into().unwrap()) {
+                Result::Ok(_) => panic_with_felt252('shouldve panicked'),
+                Result::Err(RevertedTransaction { panic_data }) => {
+                    assert(*panic_data.at(0) == 'PANIK', 'wrong 1st panic datum');
+                    assert(*panic_data.at(1) == 'DEJTA', 'wrong 2nd panic datum');
+                },
+            }
+        }
+    "#
+        ),
+        Contract::from_code_path(
+            "PanickingConstructor".to_string(),
+            Path::new("tests/data/contracts/panicking_constructor.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test);
+
+    assert_passed!(result);
 }

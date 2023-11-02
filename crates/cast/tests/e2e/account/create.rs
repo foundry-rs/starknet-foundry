@@ -10,7 +10,7 @@ use test_case::test_case;
 
 #[tokio::test]
 pub async fn test_happy_case() {
-    let accounts_file = "./tmp/accounts.json";
+    let accounts_file = "./tmp-c1/accounts.json";
     let args = vec![
         "--url",
         URL,
@@ -52,7 +52,7 @@ pub async fn test_happy_case() {
 
 #[tokio::test]
 pub async fn test_happy_case_generate_salt() {
-    let accounts_file = "./tmp1/accounts.json";
+    let accounts_file = "./tmp-c2/accounts.json";
     let args = vec![
         "--url",
         URL,
@@ -91,9 +91,9 @@ pub async fn test_happy_case_generate_salt() {
 #[tokio::test]
 pub async fn test_happy_case_add_profile() {
     let current_dir = Utf8PathBuf::from(duplicate_directory_with_salt(
-        CONTRACTS_DIR.to_string() + "/v1/balance",
+        CONTRACTS_DIR.to_string() + "/map",
         "put",
-        "1",
+        "10",
     ));
     let accounts_file = "./accounts.json";
 
@@ -131,7 +131,7 @@ pub async fn test_happy_case_add_profile() {
 
 #[tokio::test]
 pub async fn test_happy_case_accounts_file_already_exists() {
-    let current_dir = Utf8PathBuf::from("./tmp2");
+    let current_dir = Utf8PathBuf::from("./tmp-c3");
     let accounts_file = "./accounts.json";
     fs::create_dir_all(&current_dir).expect("Unable to create directory");
 
@@ -180,9 +180,9 @@ pub async fn test_happy_case_accounts_file_already_exists() {
 #[tokio::test]
 pub async fn test_profile_already_exists() {
     let current_dir = Utf8PathBuf::from(duplicate_directory_with_salt(
-        CONTRACTS_DIR.to_string() + "/v1/balance",
+        CONTRACTS_DIR.to_string() + "/constructor_with_params",
         "put",
-        "2",
+        "20",
     ));
     let accounts_file = "./accounts.json";
 
@@ -261,12 +261,11 @@ pub async fn test_happy_case_keystore() {
     let snapbox = runner(&args);
 
     snapbox.assert().stdout_matches(indoc! {r#"
-        CREATE_KEYSTORE_PASSWORD environment variable found and will be used for keystore password
-        Account successfully created[..]
         command: account create
         add_profile: --add-profile flag was not set. No profile added to Scarb.toml
         address: 0x[..]
-        max_fee: 0x[..]
+        max_fee: [..]
+        message: Account successfully created[..]
     "#});
 
     let contents = fs::read_to_string(account_path).expect("Unable to read created file");
@@ -281,9 +280,9 @@ pub async fn test_happy_case_keystore() {
 #[tokio::test]
 pub async fn test_happy_case_keystore_add_profile() {
     let current_dir = Utf8PathBuf::from(duplicate_directory_with_salt(
-        CONTRACTS_DIR.to_string() + "/v1/map",
+        CONTRACTS_DIR.to_string() + "/map",
         "put",
-        "5",
+        "50",
     ));
     let keystore_path = "my_key.json";
     let account_path = "my_account.json";
@@ -388,4 +387,86 @@ pub fn test_keystore_already_exists(keystore_path: &str, account_path: &str, err
         std::str::from_utf8(&out.stderr).expect("failed to convert command output to string");
 
     assert!(stderr_str.contains(error));
+}
+
+#[tokio::test]
+pub async fn test_happy_case_keystore_int_format() {
+    let keystore_path = "my_key.json";
+    let account_path = "my_account_int.json";
+    _ = fs::remove_file(keystore_path);
+    _ = fs::remove_file(account_path);
+    env::set_var(CREATE_KEYSTORE_PASSWORD_ENV_VAR, "123");
+
+    let args = vec![
+        "--url",
+        URL,
+        "--keystore",
+        keystore_path,
+        "--account",
+        account_path,
+        "--int-format",
+        "account",
+        "create",
+        "--class-hash",
+        DEVNET_OZ_CLASS_HASH,
+    ];
+
+    let snapbox = runner(&args);
+
+    snapbox.assert().stdout_matches(indoc! {r#"
+        command: account create
+        add_profile: --add-profile flag was not set. No profile added to Scarb.toml
+        address: [..]
+        max_fee: [..]
+        message: Account successfully created[..]
+    "#});
+
+    let contents = fs::read_to_string(account_path).expect("Unable to read created file");
+    assert!(contents.contains("\"deployment\": {"));
+    assert!(contents.contains("\"variant\": {"));
+    assert!(contents.contains("\"version\": 1"));
+
+    _ = fs::remove_file(keystore_path);
+    _ = fs::remove_file(account_path);
+}
+
+#[tokio::test]
+pub async fn test_happy_case_keystore_hex_format() {
+    let keystore_path = "my_key.json";
+    let account_path = "my_account_hex.json";
+    _ = fs::remove_file(keystore_path);
+    _ = fs::remove_file(account_path);
+    env::set_var(CREATE_KEYSTORE_PASSWORD_ENV_VAR, "123");
+
+    let args = vec![
+        "--url",
+        URL,
+        "--keystore",
+        keystore_path,
+        "--account",
+        account_path,
+        "--hex-format",
+        "account",
+        "create",
+        "--class-hash",
+        DEVNET_OZ_CLASS_HASH,
+    ];
+
+    let snapbox = runner(&args);
+
+    snapbox.assert().stdout_matches(indoc! {r#"
+        command: account create
+        add_profile: --add-profile flag was not set. No profile added to Scarb.toml
+        address: 0x[..]
+        max_fee: 0x[..]
+        message: Account successfully created[..]
+    "#});
+
+    let contents = fs::read_to_string(account_path).expect("Unable to read created file");
+    assert!(contents.contains("\"deployment\": {"));
+    assert!(contents.contains("\"variant\": {"));
+    assert!(contents.contains("\"version\": 1"));
+
+    _ = fs::remove_file(keystore_path);
+    _ = fs::remove_file(account_path);
 }

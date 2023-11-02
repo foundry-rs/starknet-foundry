@@ -8,10 +8,8 @@ testing = []
 
 [dependencies]
 anyhow.workspace = true
-assert_fs.workspace = true
 blockifier.workspace = true
 camino.workspace = true
-include_dir.workspace = true
 starknet_api.workspace = true
 cairo-felt.workspace = true
 tempfile.workspace = true
@@ -32,13 +30,14 @@ num-bigint.workspace = true
 conversions.workspace = true
 fs2 = "0.4.3"
 flate2 = "1.0.27"
+scarb-artifacts = { path = "../scarb-artifacts" }
 
 [dev-dependencies]
 ctor.workspace = true
 indoc.workspace = true
-dotenv.workspace = true
 rayon.workspace = true
 glob = "0.3.1"
+test-case.workspace = true
 
 
 [lib]

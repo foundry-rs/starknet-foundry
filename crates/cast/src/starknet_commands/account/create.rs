@@ -91,26 +91,18 @@ pub async fn create(
         add_created_profile_to_configuration(&path_to_scarb_toml, &config)?;
     }
 
-    let mut output = vec![("address", format!("{address:#x}"))];
-    if account_json["deployed"] == json!(false) {
-        println!("Account successfully created. Prefund generated address with at least {max_fee} tokens. It is good to send more in the case of higher demand, max_fee * 2 = {}", max_fee * 2);
-        output.push(("max_fee", format!("{max_fee:#x}")));
-    }
-
-    if add_profile {
-        output.push((
-            "add-profile",
-            "Profile successfully added to Scarb.toml".to_string(),
-        ));
-    }
-
     Ok(AccountCreateResponse {
         address,
-        max_fee: FieldElement::from(max_fee),
+        max_fee,
         add_profile: if add_profile {
             "Profile successfully added to Scarb.toml".to_string()
         } else {
             "--add-profile flag was not set. No profile added to Scarb.toml".to_string()
+        },
+        message: if account_json["deployed"] == json!(false) {
+            "Account successfully created. Prefund generated address with at least <max_fee> tokens. It is good to send more in the case of higher demand.".to_string()
+        } else {
+            "Account already deployed".to_string()
         },
     })
 }

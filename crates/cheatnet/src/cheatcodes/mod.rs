@@ -1,5 +1,6 @@
 use std::io;
 
+use crate::rpc::CallContractFailure;
 use blockifier::state::errors::StateError;
 use cairo_felt::Felt252;
 use cairo_vm::vm::errors::hint_errors::HintError;
@@ -53,6 +54,7 @@ impl From<EnhancedHintError> for HintError {
     }
 }
 
+/// A structure used for returning cheatcode errors in tests
 #[derive(Debug)]
 pub enum CheatcodeError {
     Recoverable(Vec<Felt252>),        // Return error result in cairo
@@ -65,8 +67,13 @@ impl From<EnhancedHintError> for CheatcodeError {
     }
 }
 
-#[derive(Debug, PartialEq, Clone)]
-pub struct ContractArtifacts {
-    pub sierra: String,
-    pub casm: String,
+impl From<CallContractFailure> for CheatcodeError {
+    fn from(value: CallContractFailure) -> Self {
+        match value {
+            CallContractFailure::Panic { panic_data } => CheatcodeError::Recoverable(panic_data),
+            CallContractFailure::Error { msg } => {
+                CheatcodeError::Unrecoverable(HintError::CustomHint(Box::from(msg)).into())
+            }
+        }
+    }
 }

@@ -1,5 +1,5 @@
 use crate::test_case_summary::TestCaseSummary;
-use crate::{TestCrateSummary, TestCrateType};
+use crate::{CrateLocation, TestCrateSummary};
 use anyhow::Error;
 use console::style;
 
@@ -13,10 +13,10 @@ pub(crate) fn print_collected_tests_count(tests_num: usize, package_name: &str) 
     println!("{}", style(plain_text).bold());
 }
 
-pub(crate) fn print_running_tests(test_crate_file: TestCrateType, tests_num: usize) {
+pub(crate) fn print_running_tests(test_crate_file: CrateLocation, tests_num: usize) {
     let dir_name = match test_crate_file {
-        TestCrateType::Lib => "src",
-        TestCrateType::Tests => "tests",
+        CrateLocation::Lib => "src",
+        CrateLocation::Tests => "tests",
     };
     let plain_text = format!("Running {tests_num} test(s) from {dir_name}/");
 
@@ -41,17 +41,25 @@ pub(crate) fn print_test_seed(seed: u64) {
     println!("{}: {seed}", style("Fuzzer seed").bold());
 }
 
-pub(crate) fn print_test_result(test_result: &TestCaseSummary, fuzzer_runs: Option<u32>) {
+pub(crate) fn print_test_result(test_result: &TestCaseSummary) {
     let result_header = match test_result {
         TestCaseSummary::Passed { .. } => format!("[{}]", style("PASS").green()),
         TestCaseSummary::Failed { .. } => format!("[{}]", style("FAIL").red()),
-        TestCaseSummary::Skipped { .. } => format!("[{}]", style("SKIP").yellow()),
+        TestCaseSummary::Ignored { .. } => format!("[{}]", style("IGNORE").yellow()),
+        TestCaseSummary::Skipped { .. } => format!("[{}]", style("SKIP").color256(11)),
+        TestCaseSummary::Interrupted {} => {
+            unreachable!()
+        }
     };
 
     let result_name = match test_result {
         TestCaseSummary::Skipped { name }
+        | TestCaseSummary::Ignored { name }
         | TestCaseSummary::Failed { name, .. }
         | TestCaseSummary::Passed { name, .. } => name,
+        TestCaseSummary::Interrupted {} => {
+            unreachable!()
+        }
     };
 
     let result_message = match test_result {
@@ -60,7 +68,7 @@ pub(crate) fn print_test_result(test_result: &TestCaseSummary, fuzzer_runs: Opti
         _ => String::new(),
     };
 
-    let fuzzer_report = match fuzzer_runs {
+    let fuzzer_report = match test_result.runs() {
         None => String::new(),
         Some(runs) => {
             if matches!(test_result, TestCaseSummary::Failed { .. }) {
@@ -79,12 +87,15 @@ pub fn print_failures(all_failed_tests: &[TestCaseSummary]) {
     if all_failed_tests.is_empty() {
         return;
     }
+
     let failed_tests_names: Vec<&String> = all_failed_tests
         .iter()
         .map(|test_case_summary| match test_case_summary {
-            TestCaseSummary::Passed { name, .. }
-            | TestCaseSummary::Failed { name, .. }
-            | TestCaseSummary::Skipped { name, .. } => name,
+            TestCaseSummary::Failed { name, .. } => name,
+            TestCaseSummary::Passed { .. }
+            | TestCaseSummary::Ignored { .. }
+            | TestCaseSummary::Skipped { .. }
+            | TestCaseSummary::Interrupted {} => unreachable!(),
         })
         .collect();
 

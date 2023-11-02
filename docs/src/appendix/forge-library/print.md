@@ -5,12 +5,17 @@
 Trait used for displaying test data with the `snforge` command line output.
 
 The trait is implemented for types:
+
 - `felt252`
 - `Array<felt252>`
 - `ContractAddress`
 - `u8`, `u16`, `u32`, `u64`, `u128`, `u256`
 - `i8`, `i16`, `i32`, `i64`, `i128`
 - `bool`
+
+Forge will attempt to convert these values to strings and display them.
+In case the value contains parts that evaluate to ascii control characters (e.g. 27: `ESC`), the value will not be
+printed.
 
 ```rust
 use array::ArrayTrait;

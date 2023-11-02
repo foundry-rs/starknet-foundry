@@ -1,46 +1,56 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use blockifier::execution::entry_point::{
     CallEntryPoint, CallType, EntryPointExecutionContext, ExecutionResources,
 };
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
-use blockifier::state::cached_state::{CachedState, GlobalContractCache};
+use blockifier::state::cached_state::CachedState;
+use blockifier::state::errors::StateError;
+use blockifier::state::state_api::State;
 use cairo_felt::Felt252;
 use cairo_vm::serde::deserialize_program::HintParams;
 use cairo_vm::types::relocatable::Relocatable;
-use cheatnet::constants::{build_block_context, build_testing_state, build_transaction_context};
-use cheatnet::execution::syscalls::CheatableSyscallHandler;
+use cheatnet::execution::cheatable_syscall_handler::CheatableSyscallHandler;
 use itertools::chain;
 
 use cairo_lang_casm::hints::Hint;
 use cairo_lang_casm::instructions::Instruction;
 use cairo_lang_runner::casm_run::hint_to_hint_params;
-use cairo_lang_runner::SierraCasmRunner;
 use cairo_lang_runner::{Arg, RunnerError};
-use cairo_vm::vm::runners::cairo_runner::RunResources;
-use camino::Utf8PathBuf;
+use cairo_lang_runner::{RunResult, SierraCasmRunner};
+use camino::Utf8Path;
+use cheatnet::constants as cheatnet_constants;
+use cheatnet::execution::contract_execution_syscall_handler::ContractExecutionSyscallHandler;
 use cheatnet::forking::state::ForkStateReader;
-use cheatnet::state::{CheatnetState, ExtendedStateReader};
-use conversions::StarknetConversions;
-use starknet::core::types::{BlockId, BlockTag};
+use cheatnet::state::{BlockInfoReader, CheatnetBlockInfo, CheatnetState, ExtendedStateReader};
+use starknet::core::types::BlockTag::Latest;
+use starknet::core::types::{BlockId, MaybePendingBlockWithTxHashes};
 use starknet::core::utils::get_selector_from_name;
+use starknet::providers::jsonrpc::HttpTransport;
+use starknet::providers::{JsonRpcClient, Provider};
 use starknet_api::core::PatriciaKey;
 use starknet_api::core::{ContractAddress, EntryPointSelector};
 use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::hash::StarkHash;
 use starknet_api::patricia_key;
 use starknet_api::transaction::Calldata;
-use test_collector::{ForkConfig, TestCase};
+use test_collector::TestCase;
+use thiserror::Error;
+use tokio::runtime::Runtime;
+use tokio::sync::mpsc::Sender;
+use tokio::task::JoinHandle;
+use url::Url;
 
-use crate::scarb::{ForkTarget, StarknetContractArtifacts};
 use crate::test_case_summary::TestCaseSummary;
-use crate::test_execution_syscall_handler::TestExecutionSyscallHandler;
 
-// snforge_std/src/cheatcodes.cairo::TEST
-const TEST_ADDRESS: &str = "0x01724987234973219347210837402";
+use crate::collecting::{TestCaseRunnable, ValidatedForkConfig};
+use crate::test_execution_syscall_handler::TestExecutionSyscallHandler;
+use crate::{RunnerConfig, RunnerParams, CACHE_DIR};
+
+use crate::test_execution_syscall_handler::TestExecutionState;
 
 /// Builds `hints_dict` required in `cairo_vm::types::program::Program` from instructions.
 fn build_hints_dict<'b>(
@@ -68,27 +78,110 @@ fn build_hints_dict<'b>(
     (hints_dict, string_to_hint)
 }
 
-#[allow(clippy::too_many_arguments)]
-pub(crate) fn run_from_test_case(
-    package_root: &Utf8PathBuf,
-    runner: &SierraCasmRunner,
-    case: &TestCase,
-    fork_targets: &[ForkTarget],
-    contracts: &HashMap<String, StarknetContractArtifacts>,
-    predeployed_contracts: &Utf8PathBuf,
+pub(crate) fn blocking_run_from_test(
     args: Vec<Felt252>,
-    environment_variables: &HashMap<String, String>,
-) -> Result<TestCaseSummary> {
+    case: Arc<TestCaseRunnable>,
+    runner: Arc<SierraCasmRunner>,
+    runner_config: Arc<RunnerConfig>,
+    runner_params: Arc<RunnerParams>,
+    send: Sender<()>,
+    send_shut_down: Sender<()>,
+) -> JoinHandle<Result<TestCaseSummary>> {
+    tokio::task::spawn_blocking(move || {
+        // Due to the inability of spawn_blocking to be abruptly cancelled,
+        // a channel is used to receive information indicating
+        // that the execution of the task is no longer necessary.
+        if send.is_closed() {
+            return Ok(TestCaseSummary::Interrupted {});
+        }
+        let run_result = run_test_case(
+            args.clone(),
+            &case,
+            &runner,
+            &runner_config,
+            &runner_params,
+            &send_shut_down,
+        );
+
+        extract_test_case_summary(run_result, &case, args)
+    })
+}
+
+fn build_context(block_info: CheatnetBlockInfo) -> EntryPointExecutionContext {
+    let block_context = cheatnet_constants::build_block_context(block_info);
+    let account_context = cheatnet_constants::build_transaction_context();
+    EntryPointExecutionContext::new(
+        block_context.clone(),
+        account_context,
+        block_context.invoke_tx_max_n_steps.try_into().unwrap(),
+    )
+}
+
+fn build_syscall_handler<'a>(
+    blockifier_state: &'a mut dyn State,
+    string_to_hint: &'a HashMap<String, Hint>,
+    execution_resources: &'a mut ExecutionResources,
+    context: &'a mut EntryPointExecutionContext,
+) -> Result<SyscallHintProcessor<'a>> {
+    let test_selector = get_selector_from_name("TEST_CONTRACT_SELECTOR").unwrap();
+    let entry_point_selector = EntryPointSelector(StarkHash::new(test_selector.to_bytes_be())?);
+    let entry_point = CallEntryPoint {
+        class_hash: None,
+        code_address: Some(ContractAddress(patricia_key!(
+            cheatnet_constants::TEST_ADDRESS
+        ))),
+        entry_point_type: EntryPointType::External,
+        entry_point_selector,
+        calldata: Calldata(Arc::new(vec![])),
+        storage_address: ContractAddress(patricia_key!(cheatnet_constants::TEST_ADDRESS)),
+        caller_address: ContractAddress::default(),
+        call_type: CallType::Call,
+        initial_gas: u64::MAX,
+    };
+
+    let syscall_handler = SyscallHintProcessor::new(
+        blockifier_state,
+        execution_resources,
+        context,
+        // This segment is created by SierraCasmRunner
+        Relocatable {
+            segment_index: 10,
+            offset: 0,
+        },
+        entry_point,
+        string_to_hint,
+        ReadOnlySegments::default(),
+    );
+    Ok(syscall_handler)
+}
+
+#[derive(Debug, Error)]
+pub(crate) enum TestCaseRunError {
+    #[error("{0}")]
+    RunnerError(#[from] RunnerError),
+    #[error("{0}")]
+    StateError(#[from] StateError),
+    #[error("{0}")]
+    Error(#[from] anyhow::Error),
+}
+
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn run_test_case(
+    args: Vec<Felt252>,
+    case: &TestCaseRunnable,
+    runner: &SierraCasmRunner,
+    runner_config: &Arc<RunnerConfig>,
+    runner_params: &Arc<RunnerParams>,
+    _send_shut_down: &Sender<()>,
+) -> Result<RunResult, TestCaseRunError> {
     let available_gas = if let Some(available_gas) = &case.available_gas {
         Some(*available_gas)
     } else {
         Some(usize::MAX)
     };
-
     let func = runner.find_function(case.name.as_str())?;
     let initial_gas = runner.get_initial_available_gas(func, available_gas)?;
-
-    let runner_args: Vec<Arg> = args.clone().into_iter().map(Arg::Value).collect();
+    let runner_args: Vec<Arg> = args.into_iter().map(Arg::Value).collect();
 
     let (entry_code, builtins) = runner.create_entry_code(func, &runner_args, initial_gas)?;
     let footer = runner.create_code_footer();
@@ -99,132 +192,111 @@ pub(crate) fn run_from_test_case(
     );
     let (hints_dict, string_to_hint) = build_hints_dict(instructions.clone());
 
-    // Losely inspired by crates/cheatnet/src/execution/cairo1_execution::execute_entry_point_call_cairo1
-    let block_context = build_block_context();
-    let account_context = build_transaction_context();
-    let mut context = EntryPointExecutionContext::new(
-        block_context.clone(),
-        account_context,
-        block_context.invoke_tx_max_n_steps.try_into().unwrap(),
-    );
-    let test_selector = get_selector_from_name("TEST_CONTRACT_SELECTOR").unwrap();
-    let entry_point_selector = EntryPointSelector(StarkHash::new(test_selector.to_bytes_be())?);
-    let entry_point = CallEntryPoint {
-        class_hash: None,
-        code_address: Some(ContractAddress(patricia_key!(TEST_ADDRESS))),
-        entry_point_type: EntryPointType::External,
-        entry_point_selector,
-        calldata: Calldata(Arc::new(vec![])),
-        storage_address: ContractAddress(patricia_key!(TEST_ADDRESS)),
-        caller_address: ContractAddress::default(),
-        call_type: CallType::Call,
-        initial_gas: u64::MAX,
+    let mut state_reader = ExtendedStateReader {
+        dict_state_reader: cheatnet_constants::build_testing_state(
+            &runner_params.predeployed_contracts,
+        ),
+        fork_state_reader: get_fork_state_reader(&runner_config.workspace_root, &case.fork_config)?,
     };
+    let block_info = state_reader.get_block_info()?;
 
-    let state_reader = ExtendedStateReader {
-        dict_state_reader: build_testing_state(predeployed_contracts),
-        fork_state_reader: get_fork_state_reader(package_root, fork_targets, &case.fork_config),
-    };
-    let mut blockifier_state = CachedState::new(state_reader, GlobalContractCache::default());
+    let mut context = build_context(block_info);
     let mut execution_resources = ExecutionResources::default();
-
-    let syscall_handler = SyscallHintProcessor::new(
+    let mut blockifier_state = CachedState::from(state_reader);
+    let syscall_handler = build_syscall_handler(
         &mut blockifier_state,
+        &string_to_hint,
         &mut execution_resources,
         &mut context,
-        // This segment is created by SierraCasmRunner
-        Relocatable {
-            segment_index: 10,
-            offset: 0,
-        },
-        entry_point,
+    )?;
+
+    let mut cheatnet_state = CheatnetState {
+        block_info,
+        ..Default::default()
+    };
+    let mut cheatable_syscall_handler =
+        CheatableSyscallHandler::wrap(syscall_handler, &mut cheatnet_state);
+    let contract_execution_syscall_handler =
+        ContractExecutionSyscallHandler::wrap(&mut cheatable_syscall_handler);
+
+    let mut test_execution_state = TestExecutionState {
+        environment_variables: &runner_params.environment_variables,
+        contracts: &runner_params.contracts,
+    };
+    let mut test_execution_syscall_handler = TestExecutionSyscallHandler::wrap(
+        contract_execution_syscall_handler,
+        &mut test_execution_state,
         &string_to_hint,
-        ReadOnlySegments::default(),
     );
 
-    let cheatable_syscall_handler = CheatableSyscallHandler {
-        syscall_handler,
-        cheatnet_state: &mut CheatnetState::default(),
-    };
-
-    let mut cheatcodes_hint_processor = TestExecutionSyscallHandler {
-        cheatable_syscall_handler,
-        contracts,
-        hints: &string_to_hint,
-        run_resources: RunResources::default(),
-        environment_variables,
-    };
-
-    match runner.run_function(
+    Ok(runner.run_function(
         runner.find_function(case.name.as_str())?,
-        &mut cheatcodes_hint_processor,
+        &mut test_execution_syscall_handler,
         hints_dict,
         instructions,
         builtins,
-    ) {
+    )?)
+}
+
+fn extract_test_case_summary(
+    run_result: Result<RunResult, TestCaseRunError>,
+    case: &TestCase<ValidatedForkConfig>,
+    args: Vec<Felt252>,
+) -> Result<TestCaseSummary> {
+    match run_result {
         Ok(result) => Ok(TestCaseSummary::from_run_result(result, case, args)),
 
         // CairoRunError comes from VirtualMachineError which may come from HintException that originates in the cheatcode processor
-        Err(RunnerError::CairoRunError(error)) => Ok(TestCaseSummary::Failed {
+        Err(TestCaseRunError::RunnerError(RunnerError::CairoRunError(error))) => {
+            Ok(TestCaseSummary::Failed {
+                name: case.name.clone(),
+                msg: Some(format!(
+                    "\n    {}\n",
+                    error.to_string().replace(" Custom Hint Error: ", "\n    ")
+                )),
+                arguments: args,
+                fuzzing_statistic: None,
+            })
+        }
+        // ForkStateReader.get_block_info() may return error
+        Err(TestCaseRunError::StateError(error)) => Ok(TestCaseSummary::Failed {
             name: case.name.clone(),
-            run_result: None,
             msg: Some(format!(
                 "\n    {}\n",
-                error.to_string().replace(" Custom Hint Error: ", "\n    ")
+                error.to_string().replace(" : ", "\n    ")
             )),
             arguments: args,
+            fuzzing_statistic: None,
         }),
-
         Err(err) => Err(err.into()),
     }
 }
 
 fn get_fork_state_reader(
-    package_root: &Utf8PathBuf,
-    fork_targets: &[ForkTarget],
-    fork_config: &Option<ForkConfig>,
-) -> Option<ForkStateReader> {
-    match &fork_config {
-        Some(ForkConfig::Params(url, block_id)) => Some(ForkStateReader::new(
-            url,
-            *block_id,
-            Some(package_root.join(".snfoundry_cache").as_ref()),
-        )),
-        Some(ForkConfig::Id(name)) => {
-            find_params_and_build_fork_state_reader(package_root, fork_targets, name)
+    workspace_root: &Utf8Path,
+    fork_config: &Option<ValidatedForkConfig>,
+) -> Result<Option<ForkStateReader>> {
+    match fork_config {
+        Some(ValidatedForkConfig { url, mut block_id }) => {
+            if let BlockId::Tag(Latest) = block_id {
+                block_id = get_latest_block_number(url)?;
+            }
+            Ok(Some(ForkStateReader::new(
+                url.clone(),
+                block_id,
+                Some(workspace_root.join(CACHE_DIR).as_ref()),
+            )))
         }
-        _ => None,
+        None => Ok(None),
     }
 }
 
-fn find_params_and_build_fork_state_reader(
-    package_root: &Utf8PathBuf,
-    fork_targets: &[ForkTarget],
-    fork_alias: &str,
-) -> Option<ForkStateReader> {
-    let fork = fork_targets.iter().find(|fork| fork.name == fork_alias);
+fn get_latest_block_number(url: &Url) -> Result<BlockId> {
+    let client = JsonRpcClient::new(HttpTransport::new(url.clone()));
+    let runtime = Runtime::new().expect("Could not instantiate Runtime");
 
-    let block_id = fork?
-        .block_id
-        .iter()
-        .map(|(id_type, value)| match id_type.as_str() {
-            "number" => Some(BlockId::Number(value.parse().unwrap())),
-            "hash" => Some(BlockId::Hash(value.to_field_element())),
-            "tag" => match value.as_str() {
-                "Latest" => Some(BlockId::Tag(BlockTag::Latest)),
-                "Pending" => Some(BlockId::Tag(BlockTag::Pending)),
-                _ => unreachable!(),
-            },
-            _ => unreachable!(),
-        })
-        .collect::<Vec<_>>();
-    let [Some(block_id)] = block_id[..] else {
-        return None;
-    };
-
-    Some(ForkStateReader::new(
-        &fork?.url,
-        block_id,
-        Some(package_root.join(".snfoundry_cache").as_ref()),
-    ))
+    match runtime.block_on(client.get_block_with_tx_hashes(BlockId::Tag(Latest))) {
+        Ok(MaybePendingBlockWithTxHashes::Block(block)) => Ok(BlockId::Number(block.block_number)),
+        _ => Err(anyhow!("Could not get the latest block number".to_string())),
+    }
 }

@@ -1,8 +1,8 @@
-use crate::integration::common::runner::Contract;
-use crate::integration::common::running_tests::run_test_case;
-use crate::{assert_case_output_contains, assert_failed, assert_passed, test_case};
 use indoc::indoc;
 use std::path::Path;
+use test_utils::runner::Contract;
+use test_utils::running_tests::run_test_case;
+use test_utils::{assert_case_output_contains, assert_failed, assert_passed, test_case};
 
 #[test]
 #[allow(clippy::too_many_lines)]
@@ -10,12 +10,7 @@ fn library_call_syscall() {
     let test = test_case!(
         indoc!(
             r#"
-        use array::ArrayTrait;
-        use result::ResultTrait;
-        use option::OptionTrait;
-        use traits::TryInto;
         use starknet::ContractAddress;
-        use starknet::Felt252TryIntoContractAddress;
         use starknet::ClassHash;
         use snforge_std::{ declare, ContractClassTrait };
 
@@ -75,7 +70,7 @@ fn library_call_syscall() {
 
                     #[starknet::interface]
                     trait IExecutor<TContractState> {
-                        fn add_two(ref self: ContractState, number: felt252) -> felt252;
+                        fn add_two(ref self: TContractState, number: felt252) -> felt252;
                     }
 
                     #[storage]

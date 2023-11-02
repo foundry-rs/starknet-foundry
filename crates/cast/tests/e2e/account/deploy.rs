@@ -1,6 +1,8 @@
 use crate::helpers::constants::{CONTRACTS_DIR, DEVNET_OZ_CLASS_HASH, URL};
+use crate::helpers::fixtures::convert_to_hex;
 use crate::helpers::fixtures::{
-    duplicate_directory_with_salt, get_transaction_hash, get_transaction_receipt, mint_token,
+    duplicate_directory_with_salt, get_address_from_keystore, get_transaction_hash,
+    get_transaction_receipt, mint_token,
 };
 use camino::Utf8PathBuf;
 use cast::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
@@ -26,7 +28,7 @@ pub async fn test_happy_case() {
         "--name",
         "my_account",
         "--max-fee",
-        "10000000000000000",
+        "99999999999999999",
         "--class-hash",
         DEVNET_OZ_CLASS_HASH,
     ];
@@ -59,7 +61,6 @@ pub async fn test_happy_case() {
 pub async fn test_happy_case_add_profile() {
     let (created_dir, accounts_file) = create_account("4", true).await;
 
-    // test
     let args = vec![
         "--profile",
         "my_account",
@@ -71,7 +72,7 @@ pub async fn test_happy_case_add_profile() {
         "--name",
         "my_account",
         "--max-fee",
-        "10000000000000000",
+        "99999999999999999",
         "--class-hash",
         DEVNET_OZ_CLASS_HASH,
     ];
@@ -157,7 +158,7 @@ async fn test_too_low_max_fee() {
 
     snapbox.assert().success().stderr_matches(indoc! {r#"
         command: account deploy
-        error: Transaction has been rejected
+        error: Max fee is smaller than the minimal transaction cost (validation plus fee transfer)
     "#});
 
     fs::remove_dir_all(created_dir).unwrap();
@@ -225,7 +226,7 @@ pub async fn test_valid_class_hash() {
 
 pub async fn create_account(salt: &str, add_profile: bool) -> (Utf8PathBuf, &str) {
     let created_dir = Utf8PathBuf::from(duplicate_directory_with_salt(
-        CONTRACTS_DIR.to_string() + "/v1/balance",
+        CONTRACTS_DIR.to_string() + "/constructor_with_params",
         "put",
         salt,
     ));
@@ -261,7 +262,7 @@ pub async fn create_account(salt: &str, add_profile: bool) -> (Utf8PathBuf, &str
         items["alpha-goerli"]["my_account"]["address"]
             .as_str()
             .unwrap(),
-        1e17,
+        9_999_999_999_999_999_999,
     )
     .await;
 
@@ -271,14 +272,22 @@ pub async fn create_account(salt: &str, add_profile: bool) -> (Utf8PathBuf, &str
 #[tokio::test]
 pub async fn test_happy_case_keystore() {
     let keystore_path = "tests/data/keystore/my_key.json";
-    let account_path = "tests/data/keystore/my_account_copy.json";
+    let account_path = "tests/data/keystore/my_account_undeployed_happy_case_copy.json";
 
     fs::copy(
-        "tests/data/keystore/my_account_undeployed.json",
+        "tests/data/keystore/my_account_undeployed_happy_case.json",
         account_path,
     )
     .unwrap();
     env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+
+    let address = get_address_from_keystore(keystore_path, account_path, KEYSTORE_PASSWORD_ENV_VAR);
+
+    mint_token(
+        &convert_to_hex(&address.to_string()),
+        9_999_999_999_999_999_999,
+    )
+    .await;
 
     let args = vec![
         "--url",
@@ -290,7 +299,7 @@ pub async fn test_happy_case_keystore() {
         "account",
         "deploy",
         "--max-fee",
-        "10000000000000000",
+        "99999999999999999",
         "--class-hash",
         DEVNET_OZ_CLASS_HASH,
     ];
@@ -440,19 +449,27 @@ pub async fn test_deploy_keystore_no_status() {
 #[tokio::test]
 pub async fn test_deploy_keystore_other_args() {
     let keystore_path = "tests/data/keystore/my_key.json";
-    let account_path = "tests/data/keystore/my_account_copy.json";
+    let account_path = "tests/data/keystore/my_account_undeployed_happy_case_other_args_copy.json";
+
+    env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
 
     fs::copy(
-        "tests/data/keystore/my_account_undeployed.json",
+        "tests/data/keystore/my_account_undeployed_happy_case_other_args.json",
         account_path,
     )
     .unwrap();
-    env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
+
+    let address = get_address_from_keystore(keystore_path, account_path, KEYSTORE_PASSWORD_ENV_VAR);
+
+    mint_token(
+        &convert_to_hex(&address.to_string()),
+        9_999_999_999_999_999_999,
+    )
+    .await;
 
     let args = vec![
         "--url",
         URL,
-        "--json",
         "--accounts-file",
         "accounts.json",
         "--keystore",
@@ -464,18 +481,15 @@ pub async fn test_deploy_keystore_other_args() {
         "--name",
         "some-name",
         "--max-fee",
-        "10000000000000000",
+        "99999999999999999",
         "--class-hash",
         DEVNET_OZ_CLASS_HASH,
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast")).args(args);
     snapbox.assert().stdout_matches(indoc! {r#"
-        KEYSTORE_PASSWORD environment variable found and will be used for keystore password
-        {
-          "command": "account deploy",
-          "transaction_hash": "0x[..]"
-        }
+        command: account deploy
+        transaction_hash: 0x[..]
     "#});
 
     _ = fs::remove_file(account_path);

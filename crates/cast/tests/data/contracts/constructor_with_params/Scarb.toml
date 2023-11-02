@@ -1,0 +1,17 @@
+[package]
+name = "constructor_with_params"
+version = "0.1.0"
+
+[dependencies]
+starknet = ">=2.0.2"
+
+[[target.starknet-contract]]
+sierra = true
+casm = true
+
+[lib]
+sierra = false
+
+[tool.sncast.myprofile]
+url = "http://127.0.0.1:5055/rpc"
+account = "user1"

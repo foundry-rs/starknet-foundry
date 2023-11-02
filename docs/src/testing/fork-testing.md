@@ -7,12 +7,6 @@ network and perform actions on top of it.
 >
 > Actions are performed on to of the `forked` state which means real network is not affected.
 
-
-> ⚠️ **Warning**
->
-> Calls to the nodes are not cached between test cases at the moment, so you can expect fork
-> tests to be slower than regular ones. Optimisations are well on their way though!
-
 There are two ways of configuring a fork:
 - by specifying `url` and `block_id` parameters in the `#[fork(...)]` attribute
 - or by passing a fork name defined in your `Scarb.toml` to the `#[fork(...)]` attribute

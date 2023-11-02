@@ -1,0 +1,11 @@
+[package]
+name = "exit_first"
+version = "0.1.0"
+
+[dependencies]
+starknet = "2.3.0"
+snforge_std = { path = "../../../../../snforge_std" }
+
+[[target.starknet-contract]]
+sierra = true
+casm = true

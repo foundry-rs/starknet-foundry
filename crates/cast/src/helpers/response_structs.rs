@@ -27,8 +27,9 @@ pub struct CallResponse {
 #[derive(Serialize)]
 pub struct AccountCreateResponse {
     pub address: FieldElement,
-    pub max_fee: FieldElement,
+    pub max_fee: u64,
     pub add_profile: String,
+    pub message: String,
 }
 
 #[derive(Serialize)]
@@ -37,7 +38,24 @@ pub struct AccountAddResponse {
 }
 
 #[derive(Serialize)]
+pub struct AccountDeleteResponse {
+    pub result: String,
+    pub scarb_result: String,
+}
+
+#[derive(Serialize)]
 pub struct MulticallNewResponse {
     pub path: Utf8PathBuf,
     pub content: String,
+}
+
+#[derive(Serialize)]
+pub struct ShowConfigResponse {
+    pub profile: Option<String>,
+    pub chain_id: String,
+    pub rpc_url: Option<String>,
+    pub account: Option<String>,
+    pub scarb_path: Option<Utf8PathBuf>,
+    pub accounts_file_path: Option<Utf8PathBuf>,
+    pub keystore: Option<Utf8PathBuf>,
 }

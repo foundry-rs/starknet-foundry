@@ -1,4 +1,4 @@
-use crate::helpers::constants::{COMPILER_VERSION, DEVNET_ENV_FILE, SEED, URL};
+use crate::helpers::constants::{DEVNET_ENV_FILE, SEED, URL};
 use crate::helpers::fixtures::{declare_contract, declare_deploy_contract, remove_devnet_env};
 use ctor::{ctor, dtor};
 use std::net::TcpStream;
@@ -31,18 +31,8 @@ fn start_devnet() {
         }
     }
 
-    let compiler_path = "tests/utils/compiler/".to_string()
-        + COMPILER_VERSION
-        + "/cairo/bin/starknet-sierra-compile";
-    Command::new("starknet-devnet")
-        .args([
-            "--port",
-            &port,
-            "--seed",
-            &SEED.to_string(),
-            "--sierra-compiler-path",
-            &compiler_path,
-        ])
+    Command::new("tests/utils/devnet/bin/starknet-devnet")
+        .args(["--port", &port, "--seed", &SEED.to_string()])
         .stdout(Stdio::null())
         .spawn()
         .expect("Failed to start devnet!");
@@ -68,23 +58,13 @@ fn start_devnet() {
     let rt = Runtime::new().expect("Could not instantiate Runtime");
     rt.block_on(declare_deploy_contract(
         "user1",
-        "/v1/map/target/dev/map_v1_Map",
-        "CAST_MAP_V1",
-    ));
-    rt.block_on(declare_deploy_contract(
-        "user2",
-        "/v2/map/target/dev/map_v2_Map",
-        "CAST_MAP_V2",
-    ));
-    rt.block_on(declare_contract(
-        "user3",
-        "/v1/constructor_with_params/target/dev/constructor_with_params_v1_ConstructorWithParams",
-        "CAST_WITH_CONSTRUCTOR_V1",
+        "/map/target/dev/map_Map",
+        "CAST_MAP",
     ));
     rt.block_on(declare_contract(
         "user4",
-        "/v2/constructor_with_params/target/dev/constructor_with_params_v2_ConstructorWithParams",
-        "CAST_WITH_CONSTRUCTOR_V2",
+        "/constructor_with_params/target/dev/constructor_with_params_ConstructorWithParams",
+        "CAST_WITH_CONSTRUCTOR",
     ));
     dotenv::from_filename(DEVNET_ENV_FILE).unwrap();
 }

@@ -1,7 +1,6 @@
 use anyhow::{anyhow, bail, Context, Error, Result};
 use camino::Utf8PathBuf;
 use helpers::constants::{DEFAULT_RETRIES, KEYSTORE_PASSWORD_ENV_VAR, UDC_ADDRESS};
-use primitive_types::U256;
 use rand::rngs::OsRng;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
@@ -13,7 +12,7 @@ use starknet::providers::jsonrpc::JsonRpcClientError::RpcError;
 use starknet::providers::jsonrpc::RpcError::{Code, Unknown};
 use starknet::providers::ProviderError::Other;
 use starknet::{
-    accounts::SingleOwnerAccount,
+    accounts::{ExecutionEncoding, SingleOwnerAccount},
     providers::{
         jsonrpc::{HttpTransport, JsonRpcClient},
         Provider, ProviderError,
@@ -24,15 +23,12 @@ use starknet::{
     core::types::{
         BlockId,
         BlockTag::{Latest, Pending},
-        FieldElement, MaybePendingTransactionReceipt,
-        MaybePendingTransactionReceipt::Receipt,
-        StarknetError,
-        TransactionReceipt::{Declare, Deploy, DeployAccount, Invoke, L1Handler},
-        TransactionStatus,
+        ExecutionResult, FieldElement, StarknetError,
     },
     providers::{MaybeUnknownErrorCode, StarknetErrorWithMessage},
 };
 use std::collections::HashMap;
+use std::str::FromStr;
 use std::thread::sleep;
 use std::time::Duration;
 use std::{env, fs};
@@ -48,6 +44,38 @@ struct Account {
     salt: Option<String>,
     deployed: Option<bool>,
     class_hash: Option<String>,
+}
+
+#[derive(Debug, PartialEq, Eq, Copy, Clone)]
+pub enum ValueFormat {
+    // Addresses as hex, fees as int
+    Default,
+    // everything as int
+    Int,
+    // everything as hex
+    Hex,
+}
+
+impl ValueFormat {
+    #[must_use]
+    pub fn format_u64(&self, input: u64) -> String {
+        match self {
+            ValueFormat::Default | ValueFormat::Int => format!("{input}"),
+            ValueFormat::Hex => format!("{input:#x}"),
+        }
+    }
+
+    #[must_use]
+    pub fn format_str(&self, input: &str) -> String {
+        if let Ok(field) = FieldElement::from_str(input) {
+            return match self {
+                ValueFormat::Int => format!("{field:#}"),
+                ValueFormat::Hex | ValueFormat::Default => format!("{field:#x}"),
+            };
+        }
+
+        input.to_string()
+    }
 }
 
 pub fn get_provider(url: &str) -> Result<JsonRpcClient<HttpTransport>> {
@@ -76,10 +104,7 @@ fn get_account_info(name: &str, chain_id: FieldElement, path: &Utf8PathBuf) -> R
 
 pub fn get_keystore_password(env_var: &str) -> std::io::Result<String> {
     match env::var(env_var) {
-        Ok(password) => {
-            println!("{env_var} environment variable found and will be used for keystore password");
-            Ok(password)
-        }
+        Ok(password) => Ok(password),
         _ => rpassword::prompt_password("Enter password: "),
     }
 }
@@ -155,7 +180,13 @@ fn get_account_from_keystore<'a>(
             .ok_or_else(|| anyhow::anyhow!("Failed to get address from account JSON file - make sure the account is deployed"))?
     )?;
 
-    Ok(SingleOwnerAccount::new(provider, signer, address, chain_id))
+    Ok(SingleOwnerAccount::new(
+        provider,
+        signer,
+        address,
+        chain_id,
+        ExecutionEncoding::Legacy,
+    ))
 }
 
 fn get_account_from_accounts_file<'a>(
@@ -180,7 +211,13 @@ fn get_account_from_accounts_file<'a>(
             &account_info.address
         )
     })?;
-    let account = SingleOwnerAccount::new(provider, signer, address, chain_id);
+    let account = SingleOwnerAccount::new(
+        provider,
+        signer,
+        address,
+        chain_id,
+        ExecutionEncoding::Legacy,
+    );
 
     Ok(account)
 }
@@ -206,19 +243,21 @@ pub async fn wait_for_tx(
     retries: u8,
 ) -> Result<&str> {
     println!("Transaction hash: {tx_hash:#x}");
-
-    let mut maybe_receipt: Option<MaybePendingTransactionReceipt> = None;
     for i in (1..retries).rev() {
         match provider.get_transaction_receipt(tx_hash).await {
-            Ok(receipt) => {
-                maybe_receipt = Some(receipt);
-                break;
-            }
+            Ok(receipt) => match receipt.execution_result() {
+                ExecutionResult::Succeeded => {
+                    return Ok("Transaction accepted");
+                }
+                ExecutionResult::Reverted { reason } => {
+                    return Err(anyhow!("Transaction has been reverted: {}", reason));
+                }
+            },
             Err(ProviderError::StarknetError(StarknetErrorWithMessage {
                 code: MaybeUnknownErrorCode::Known(StarknetError::TransactionHashNotFound),
                 message: _,
             })) => {
-                println!("Waiting for transaction to be received. Retries left: {i}");
+                println!("Waiting for transaction to be received ({i} retries left)");
             }
             Err(err) => return Err(err.into()),
         };
@@ -226,36 +265,9 @@ pub async fn wait_for_tx(
         sleep(Duration::from_secs(5));
     }
 
-    if maybe_receipt.is_none() {
-        bail!("Could not get transaction with hash: {tx_hash:#x}. Transaction rejected or not received.")
-    }
-
-    loop {
-        let status = if let Ok(Receipt(receipt)) = provider.get_transaction_receipt(tx_hash).await {
-            match receipt {
-                Invoke(receipt) => receipt.status,
-                Declare(receipt) => receipt.status,
-                Deploy(receipt) => receipt.status,
-                DeployAccount(receipt) => receipt.status,
-                L1Handler(receipt) => receipt.status,
-            }
-        } else {
-            println!("Received transaction. Status: Pending");
-            sleep(Duration::from_secs(5));
-
-            continue;
-        };
-
-        match status {
-            TransactionStatus::AcceptedOnL2 | TransactionStatus::AcceptedOnL1 => {
-                return Ok("Transaction accepted")
-            }
-            TransactionStatus::Rejected => {
-                return Err(anyhow!("Transaction has been rejected"));
-            }
-            TransactionStatus::Pending => {}
-        }
-    }
+    Err(anyhow!(
+        "Could not get transaction with hash: {tx_hash:#x}. Transaction rejected or not received."
+    ))
 }
 
 #[must_use]
@@ -270,7 +282,11 @@ pub fn get_rpc_error_message(error: StarknetError) -> &'static str {
         StarknetError::InvalidTransactionIndex => "There is no transaction with such an index",
         StarknetError::ClassHashNotFound => "Provided class hash does not exist",
         StarknetError::ContractError => "An error occurred in the called contract",
-        StarknetError::InvalidContractClass => "Contract class is invalid",
+        StarknetError::InvalidTransactionNonce => "Invalid transaction nonce",
+        StarknetError::InsufficientMaxFee => "Max fee is smaller then the minimal transaction cost",
+        StarknetError::InsufficientAccountBalance => {
+            "Account balance is too small to cover transaction fee"
+        }
         StarknetError::ClassAlreadyDeclared => {
             "Contract with the same class hash is already declared"
         }
@@ -305,25 +321,7 @@ pub async fn handle_wait_for_tx<T>(
     Ok(return_value)
 }
 
-pub fn print_formatted(
-    mut output: Vec<(&str, String)>,
-    int_format: bool,
-    json: bool,
-    error: bool,
-) -> Result<()> {
-    if !int_format {
-        output = output
-            .into_iter()
-            .map(|(key, value)| {
-                if let Ok(int_value) = U256::from_dec_str(&value) {
-                    (key, format!("{int_value:#x}"))
-                } else {
-                    (key, value)
-                }
-            })
-            .collect();
-    }
-
+pub fn print_formatted(output: Vec<(&str, String)>, json: bool, error: bool) -> Result<()> {
     if json {
         let json_output: HashMap<&str, String> = output.into_iter().collect();
         let json_value: Value = serde_json::to_value(json_output)?;
@@ -341,7 +339,7 @@ pub fn print_formatted(
 pub fn print_command_result<T: Serialize>(
     command: &str,
     result: &mut Result<T>,
-    int_format: bool,
+    value_format: ValueFormat,
     json: bool,
 ) -> Result<()> {
     let mut output = vec![("command", command.to_string())];
@@ -358,7 +356,18 @@ pub fn print_command_result<T: Serialize>(
                     .as_object()
                     .expect("Invalid JSON value")
                     .iter()
-                    .map(|(k, v)| (k.as_str(), v.as_str().expect("Invalid value").to_string()))
+                    .filter_map(|(k, v)| {
+                        let value = match v {
+                            Value::Number(n) => {
+                                let n = n.as_u64().expect("found unexpected value");
+                                value_format.format_u64(n)
+                            }
+                            Value::String(s) => value_format.format_str(s),
+                            _ => return None,
+                        };
+
+                        Some((k.as_str(), value))
+                    })
                     .collect::<Vec<(&str, String)>>(),
             );
         }
@@ -367,7 +376,7 @@ pub fn print_command_result<T: Serialize>(
             error = true;
         }
     };
-    print_formatted(output, int_format, json, error)
+    print_formatted(output, json, error)
 }
 
 fn write_to_output<T: std::fmt::Display>(value: T, error: bool) {

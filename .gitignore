@@ -1,7 +1,10 @@
 .idea
 pyproject.toml
 .DS_Store
-.tool-versions
+*/.tool-versions
 target
 .vscode/
 .env
+Scarb.lock
+!snforge_std/Scarb.lock
+*/node_modules

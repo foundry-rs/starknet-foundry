@@ -1,8 +1,8 @@
-use crate::integration::common::runner::Contract;
-use crate::integration::common::running_tests::run_test_case;
-use crate::{assert_case_output_contains, assert_failed, assert_passed, test_case};
 use indoc::indoc;
 use std::path::Path;
+use test_utils::runner::Contract;
+use test_utils::running_tests::run_test_case;
+use test_utils::{assert_case_output_contains, assert_failed, assert_passed, test_case};
 
 #[test]
 fn spy_events_simple() {
@@ -428,7 +428,7 @@ fn event_emitted_wrong_data_asserted() {
     assert_case_output_contains!(
         result,
         "test_assert_wrong_data",
-        "2840291908834152590840431343062040185517446857039536029244055137616771589522"
+        "1071059591818692687693501857417723820819626707667477619231912076312778489185"
     );
 }
 

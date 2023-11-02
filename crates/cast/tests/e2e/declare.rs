@@ -8,27 +8,25 @@ use starknet::core::types::TransactionReceipt::Declare;
 use std::fs;
 use test_case::test_case;
 
-#[test_case("/v1/map", "1", "user7" ; "when cairo1 contract")]
-#[test_case("/v2/map", "1", "user8" ; "when cairo2 contract")]
 #[tokio::test]
-async fn test_happy_case(contract_path: &str, salt: &str, account: &str) {
+async fn test_happy_case() {
     let contract_path =
-        duplicate_directory_with_salt(CONTRACTS_DIR.to_string() + contract_path, "put", salt);
+        duplicate_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "1");
 
     let args = vec![
         "--url",
         URL,
         "--accounts-file",
-        "../../../accounts/accounts.json",
+        "../../accounts/accounts.json",
         "--account",
-        account,
+        "user8",
         "--int-format",
         "--json",
         "declare",
         "--contract-name",
         "Map",
         "--max-fee",
-        "999999999999",
+        "99999999999999999",
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
@@ -50,7 +48,7 @@ async fn contract_already_declared() {
         "--url",
         URL,
         "--accounts-file",
-        "../../../accounts/accounts.json",
+        "../../accounts/accounts.json",
         "--account",
         "user1",
         "declare",
@@ -59,13 +57,12 @@ async fn contract_already_declared() {
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(CONTRACTS_DIR.to_string() + "/v1/map")
+        .current_dir(CONTRACTS_DIR.to_string() + "/map")
         .args(args);
 
     snapbox.assert().success().stderr_matches(indoc! {r#"
         command: declare
-        [..] is already declared.
-        ...
+        error: Class with hash [..] is already declared.
     "#});
 }
 
@@ -75,7 +72,7 @@ async fn wrong_contract_name_passed() {
         "--url",
         URL,
         "--accounts-file",
-        "../../../accounts/accounts.json",
+        "../../accounts/accounts.json",
         "--account",
         "user1",
         "declare",
@@ -84,19 +81,17 @@ async fn wrong_contract_name_passed() {
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(CONTRACTS_DIR.to_string() + "/v1/map")
+        .current_dir(CONTRACTS_DIR.to_string() + "/map")
         .args(args);
 
     snapbox.assert().success().stderr_matches(indoc! {r#"
         command: declare
-        error: Cannot find sierra artifact nonexistent in starknet_artifacts.json[..]
+        error: Failed to find artifacts in starknet_artifacts.json file[..]
     "#});
 }
 
-#[test_case("/v1/build_fails", "../../../accounts/accounts.json" ; "when wrong cairo1 contract")]
-#[test_case("/v2/build_fails", "../../../accounts/accounts.json" ; "when wrong cairo2 contract")]
-#[test_case("/v1", "../../accounts/accounts.json" ; "when cairo 1 and Scarb.toml does not exist")]
-#[test_case("/v2", "../../accounts/accounts.json" ; "when cairo 2 and Scarb.toml does not exist")]
+#[test_case("/build_fails", "../../accounts/accounts.json" ; "when wrong cairo contract")]
+#[test_case("/", "../accounts/accounts.json" ; "when Scarb.toml does not exist")]
 fn scarb_build_fails(contract_path: &str, accounts_file_path: &str) {
     let args = vec![
         "--url",
@@ -121,19 +116,18 @@ fn scarb_build_fails(contract_path: &str, accounts_file_path: &str) {
     "#});
 }
 
-#[test_case("/v1/map", "2", "user1" ; "when cairo1 contract")]
-#[test_case("/v2/map", "2", "user2" ; "when cairo2 contract")]
-fn test_too_low_max_fee(contract_path: &str, salt: &str, account: &str) {
+#[test]
+fn test_too_low_max_fee() {
     let contract_path =
-        duplicate_directory_with_salt(CONTRACTS_DIR.to_string() + contract_path, "put", salt);
+        duplicate_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "2");
 
     let args = vec![
         "--url",
         URL,
         "--accounts-file",
-        "../../../accounts/accounts.json",
+        "../../accounts/accounts.json",
         "--account",
-        account,
+        "user2",
         "--wait",
         "declare",
         "--contract-name",
@@ -148,14 +142,14 @@ fn test_too_low_max_fee(contract_path: &str, salt: &str, account: &str) {
 
     snapbox.assert().success().stderr_matches(indoc! {r#"
         command: declare
-        error: Transaction has been rejected
+        error: Max fee is smaller than the minimal transaction cost (validation plus fee transfer)
     "#});
 
     fs::remove_dir_all(contract_path).unwrap();
 }
 
-#[test_case("/v2/no_sierra", "../../../accounts/accounts.json" ; "when there is no sierra artifact")]
-#[test_case("/v2/no_casm", "../../../accounts/accounts.json" ; "when there is no casm artifact")]
+#[test_case("/no_sierra", "../../accounts/accounts.json" ; "when there is no sierra artifact")]
+#[test_case("/no_casm", "../../accounts/accounts.json" ; "when there is no casm artifact")]
 fn scarb_no_artifacts(contract_path: &str, accounts_file_path: &str) {
     let args = vec![
         "--url",
@@ -175,6 +169,6 @@ fn scarb_no_artifacts(contract_path: &str, accounts_file_path: &str) {
 
     snapbox.assert().success().stderr_matches(indoc! {r#"
         command: declare
-        [..]is set to 'true' under your [[target.starknet-contract]] field in Scarb.toml[..]
+        [..]Make sure you have enabled sierra and casm code generation in Scarb.toml[..]
     "#});
 }

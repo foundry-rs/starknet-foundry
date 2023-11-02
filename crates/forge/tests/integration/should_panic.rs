@@ -1,6 +1,6 @@
-use crate::integration::common::running_tests::run_test_case;
-use crate::{assert_passed, test_case};
 use indoc::indoc;
+use test_utils::running_tests::run_test_case;
+use test_utils::{assert_passed, test_case};
 
 #[test]
 fn should_panic() {
