@@ -74,6 +74,6 @@ criterion = { version = "0.5.1", features = ["html_reports"] }
 test_utils = { path = "test_utils" }
 
 [[bench]]
-name = "my_bench"
+name = "forge_bench"
 path = "benches/main.rs"
 harness = false

@@ -1,4 +1,4 @@
-use crate::my_bench::collect_tests;
+use crate::forge_bench::collect_tests;
 use assert_fs::TempDir;
 use camino::Utf8PathBuf;
 use forge::{CrateLocation, TestCompilationTarget};

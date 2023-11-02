@@ -1,4 +1,4 @@
-use crate::my_bench::{collect_tests, compile_tests, declare_deploy_and_interact};
+use crate::forge_bench::{collect_tests, compile_tests, declare_deploy_and_interact};
 use criterion::{BenchmarkId, Criterion, SamplingMode};
 use std::time::Duration;
 
