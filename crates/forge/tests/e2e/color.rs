@@ -20,7 +20,10 @@ fn color_always() {
     let temp = setup_package("simple_package");
     let snapbox = runner_color("always");
     let output = snapbox.current_dir(&temp).assert().code(1);
-    assert!(is_colored(&output), "output expected to be colored but it is not");
+    assert!(
+        is_colored(&output),
+        "output expected to be colored but it is not"
+    );
 }
 
 #[test]
@@ -28,5 +31,8 @@ fn color_never() {
     let temp = setup_package("simple_package");
     let snapbox = runner_color("never");
     let output = snapbox.current_dir(&temp).assert().code(1);
-    assert!(!is_colored(&output), "output not expected to be colored but it is");
+    assert!(
+        !is_colored(&output),
+        "output not expected to be colored but it is"
+    );
 }
