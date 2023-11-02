@@ -16,12 +16,12 @@ pub struct ExecuteHintRequest<'a> {
     pub constants: &'a HashMap<String, Felt252>,
 }
 
-pub trait ChainableHintProcessor {
+pub trait HintProcessorExtension {
     fn get_child(&self) -> Option<&dyn HintProcessorLogicInterceptor>;
     fn get_child_mut(&mut self) -> Option<&mut dyn HintProcessorLogicInterceptor>;
 }
 
-pub trait HintExecutionInterceptor: ChainableHintProcessor {
+pub trait HintExecutionInterceptor: HintProcessorExtension {
     fn intercept_execute_hint(
         &mut self,
         execute_hint_request: &mut ExecuteHintRequest,
@@ -67,7 +67,7 @@ pub struct CompileHintRequest<'a> {
     pub references: &'a [HintReference],
 }
 
-pub trait HintCompilationInterceptor: ChainableHintProcessor {
+pub trait HintCompilationInterceptor: HintProcessorExtension {
     fn intercept_compile_hint(
         &self,
         _compile_hint_request: &CompileHintRequest,
@@ -107,7 +107,7 @@ pub trait HintCompilationInterceptor: ChainableHintProcessor {
     }
 }
 
-pub trait ResourceTrackerInterceptor: ChainableHintProcessor {
+pub trait ResourceTrackerInterceptor: HintProcessorExtension {
     fn intercept_consumed(&self) -> Option<bool> {
         None
     }

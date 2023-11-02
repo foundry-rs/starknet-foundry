@@ -1,7 +1,7 @@
 use crate::execution::cheatable_syscall_handler::CheatableSyscallHandler;
 use crate::execution::syscall_interceptor::{
-    ChainableHintProcessor, ExecuteHintRequest, HintCompilationInterceptor,
-    HintExecutionInterceptor, HintProcessorLogicInterceptor, ResourceTrackerInterceptor,
+    ExecuteHintRequest, HintCompilationInterceptor, HintExecutionInterceptor,
+    HintProcessorExtension, HintProcessorLogicInterceptor, ResourceTrackerInterceptor,
 };
 use cairo_felt::Felt252;
 use cairo_lang_casm::{
@@ -46,7 +46,7 @@ impl<'a, 'b, 'c> ContractExecutionSyscallHandler<'a, 'b, 'c> {
     }
 }
 
-impl ChainableHintProcessor for ContractExecutionSyscallHandler<'_, '_, '_> {
+impl HintProcessorExtension for ContractExecutionSyscallHandler<'_, '_, '_> {
     fn get_child(&self) -> Option<&dyn HintProcessorLogicInterceptor> {
         Some(self.child)
     }
@@ -102,7 +102,7 @@ impl HintProcessorLogic for ContractExecutionSyscallHandler<'_, '_, '_> {
         hint_data: &Box<dyn Any>,
         constants: &HashMap<String, Felt252>,
     ) -> Result<(), HintError> {
-        HintExecutionInterceptor::execute_hint_chain(self, vm, exec_scopes, hint_data, constants)
+        self.execute_hint_chain(vm, exec_scopes, hint_data, constants)
     }
 
     fn compile_hint(
@@ -112,32 +112,26 @@ impl HintProcessorLogic for ContractExecutionSyscallHandler<'_, '_, '_> {
         reference_ids: &HashMap<String, usize>,
         references: &[HintReference],
     ) -> Result<Box<dyn Any>, VirtualMachineError> {
-        HintCompilationInterceptor::compile_hint_chain(
-            self,
-            hint_code,
-            ap_tracking_data,
-            reference_ids,
-            references,
-        )
+        self.compile_hint_chain(hint_code, ap_tracking_data, reference_ids, references)
     }
 }
 impl ResourceTrackerInterceptor for ContractExecutionSyscallHandler<'_, '_, '_> {}
 
 impl ResourceTracker for ContractExecutionSyscallHandler<'_, '_, '_> {
     fn consumed(&self) -> bool {
-        ResourceTrackerInterceptor::consumed_chain(self)
+        self.consumed_chain()
     }
 
     fn consume_step(&mut self) {
-        ResourceTrackerInterceptor::consume_step_chain(self);
+        self.consume_step_chain();
     }
 
     fn get_n_steps(&self) -> Option<usize> {
-        ResourceTrackerInterceptor::get_n_steps_chain(self)
+        self.get_n_steps_chain()
     }
 
     fn run_resources(&self) -> &RunResources {
-        ResourceTrackerInterceptor::run_resources_chain(self)
+        self.run_resources_chain()
     }
 }
 

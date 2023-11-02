@@ -50,8 +50,8 @@ use cheatnet::execution::contract_execution_syscall_handler::{
     print, ContractExecutionSyscallHandler,
 };
 use cheatnet::execution::syscall_interceptor::{
-    ChainableHintProcessor, ExecuteHintRequest, HintCompilationInterceptor,
-    HintExecutionInterceptor, HintProcessorLogicInterceptor, ResourceTrackerInterceptor,
+    ExecuteHintRequest, HintCompilationInterceptor, HintExecutionInterceptor,
+    HintProcessorExtension, HintProcessorLogicInterceptor, ResourceTrackerInterceptor,
 };
 use starknet::signers::SigningKey;
 
@@ -80,7 +80,7 @@ where
     'b: 'c,
     'c: 'd,
 {
-    pub contract_execution_syscall_handler: &'a mut ContractExecutionSyscallHandler<'b, 'c, 'd>,
+    pub child: &'a mut ContractExecutionSyscallHandler<'b, 'c, 'd>,
     pub test_execution_state: &'a mut TestExecutionState<'b>,
     // we need to keep a copy of hints as SyscallHintProcessor keeps it as private
     pub hints: &'a HashMap<String, Hint>,
@@ -94,7 +94,7 @@ impl<'a, 'b, 'c, 'd> TestExecutionSyscallHandler<'a, 'b, 'c, 'd> {
         hints: &'a HashMap<String, Hint>,
     ) -> Self {
         Self {
-            contract_execution_syscall_handler,
+            child: contract_execution_syscall_handler,
             test_execution_state,
             hints,
             run_resources: RunResources::default(),
@@ -109,7 +109,7 @@ impl HintProcessorLogic for TestExecutionSyscallHandler<'_, '_, '_, '_> {
         hint_data: &Box<dyn Any>,
         constants: &HashMap<String, Felt252>,
     ) -> Result<(), HintError> {
-        HintExecutionInterceptor::execute_hint_chain(self, vm, exec_scopes, hint_data, constants)
+        self.execute_hint_chain(vm, exec_scopes, hint_data, constants)
     }
 
     fn compile_hint(
@@ -119,30 +119,24 @@ impl HintProcessorLogic for TestExecutionSyscallHandler<'_, '_, '_, '_> {
         reference_ids: &HashMap<String, usize>,
         references: &[HintReference],
     ) -> std::result::Result<Box<dyn Any>, VirtualMachineError> {
-        HintCompilationInterceptor::compile_hint_chain(
-            self,
-            hint_code,
-            ap_tracking_data,
-            reference_ids,
-            references,
-        )
+        self.compile_hint_chain(hint_code, ap_tracking_data, reference_ids, references)
     }
 }
 impl ResourceTracker for TestExecutionSyscallHandler<'_, '_, '_, '_> {
     fn consumed(&self) -> bool {
-        ResourceTrackerInterceptor::consumed_chain(self)
+        self.consumed_chain()
     }
 
     fn consume_step(&mut self) {
-        ResourceTrackerInterceptor::consume_step_chain(self);
+        self.consume_step_chain();
     }
 
     fn get_n_steps(&self) -> Option<usize> {
-        ResourceTrackerInterceptor::get_n_steps_chain(self)
+        self.get_n_steps_chain()
     }
 
     fn run_resources(&self) -> &RunResources {
-        ResourceTrackerInterceptor::run_resources_chain(self)
+        self.run_resources_chain()
     }
 }
 
@@ -179,20 +173,20 @@ impl HintExecutionInterceptor for TestExecutionSyscallHandler<'_, '_, '_, '_> {
                 execute_hint_request.exec_scopes,
                 execute_hint_request.hint_data,
                 execute_hint_request.constants,
-                self.contract_execution_syscall_handler.child,
+                self.child.child,
             );
         }
         None
     }
 }
 
-impl ChainableHintProcessor for TestExecutionSyscallHandler<'_, '_, '_, '_> {
+impl HintProcessorExtension for TestExecutionSyscallHandler<'_, '_, '_, '_> {
     fn get_child(&self) -> Option<&dyn HintProcessorLogicInterceptor> {
-        Some(self.contract_execution_syscall_handler)
+        Some(self.child)
     }
 
     fn get_child_mut(&mut self) -> Option<&mut dyn HintProcessorLogicInterceptor> {
-        Some(self.contract_execution_syscall_handler)
+        Some(self.child)
     }
 }
 
@@ -265,7 +259,7 @@ impl TestExecutionSyscallHandler<'_, '_, '_, '_> {
             "start_roll" => {
                 let contract_address = inputs[0].to_contract_address();
                 let value = inputs[1].clone();
-                self.contract_execution_syscall_handler
+                self.child
                     .child
                     .cheatnet_state
                     .start_roll(contract_address, value);
@@ -273,16 +267,13 @@ impl TestExecutionSyscallHandler<'_, '_, '_, '_> {
             }
             "stop_roll" => {
                 let contract_address = inputs[0].to_contract_address();
-                self.contract_execution_syscall_handler
-                    .child
-                    .cheatnet_state
-                    .stop_roll(contract_address);
+                self.child.child.cheatnet_state.stop_roll(contract_address);
                 Ok(())
             }
             "start_warp" => {
                 let contract_address = inputs[0].to_contract_address();
                 let value = inputs[1].clone();
-                self.contract_execution_syscall_handler
+                self.child
                     .child
                     .cheatnet_state
                     .start_warp(contract_address, value);
@@ -290,17 +281,14 @@ impl TestExecutionSyscallHandler<'_, '_, '_, '_> {
             }
             "stop_warp" => {
                 let contract_address = inputs[0].to_contract_address();
-                self.contract_execution_syscall_handler
-                    .child
-                    .cheatnet_state
-                    .stop_warp(contract_address);
+                self.child.child.cheatnet_state.stop_warp(contract_address);
                 Ok(())
             }
             "start_prank" => {
                 let contract_address = inputs[0].to_contract_address();
                 let caller_address = inputs[1].to_contract_address();
 
-                self.contract_execution_syscall_handler
+                self.child
                     .child
                     .cheatnet_state
                     .start_prank(contract_address, caller_address);
@@ -309,10 +297,7 @@ impl TestExecutionSyscallHandler<'_, '_, '_, '_> {
             "stop_prank" => {
                 let contract_address = inputs[0].to_contract_address();
 
-                self.contract_execution_syscall_handler
-                    .child
-                    .cheatnet_state
-                    .stop_prank(contract_address);
+                self.child.child.cheatnet_state.stop_prank(contract_address);
                 Ok(())
             }
             "start_mock_call" => {
@@ -330,17 +315,18 @@ impl TestExecutionSyscallHandler<'_, '_, '_, '_> {
                     .cloned()
                     .collect::<Vec<_>>();
 
-                self.contract_execution_syscall_handler
-                    .child
-                    .cheatnet_state
-                    .start_mock_call(contract_address, &function_name, &ret_data);
+                self.child.child.cheatnet_state.start_mock_call(
+                    contract_address,
+                    &function_name,
+                    &ret_data,
+                );
                 Ok(())
             }
             "stop_mock_call" => {
                 let contract_address = inputs[0].to_contract_address();
                 let function_name = inputs[1].clone();
 
-                self.contract_execution_syscall_handler
+                self.child
                     .child
                     .cheatnet_state
                     .stop_mock_call(contract_address, &function_name);
@@ -363,35 +349,27 @@ impl TestExecutionSyscallHandler<'_, '_, '_, '_> {
                     .is_one()
                     .then(|| Vec::from(&inputs[15..(15 + signature_len)]));
 
-                self.contract_execution_syscall_handler
-                    .child
-                    .cheatnet_state
-                    .start_spoof(
-                        contract_address,
-                        version,
-                        account_contract_address,
-                        max_fee,
-                        signature,
-                        transaction_hash,
-                        chain_id,
-                        nonce,
-                    );
+                self.child.child.cheatnet_state.start_spoof(
+                    contract_address,
+                    version,
+                    account_contract_address,
+                    max_fee,
+                    signature,
+                    transaction_hash,
+                    chain_id,
+                    nonce,
+                );
                 Ok(())
             }
             "stop_spoof" => {
                 let contract_address = inputs[0].to_contract_address();
 
-                self.contract_execution_syscall_handler
-                    .child
-                    .cheatnet_state
-                    .stop_spoof(contract_address);
+                self.child.child.cheatnet_state.stop_spoof(contract_address);
                 Ok(())
             }
             "declare" => {
                 let contract_name = inputs[0].clone();
-                let mut blockifier_state = BlockifierState::from(
-                    self.contract_execution_syscall_handler.child.child.state,
-                );
+                let mut blockifier_state = BlockifierState::from(self.child.child.child.state);
 
                 match blockifier_state.declare(
                     &contract_name,
@@ -422,14 +400,12 @@ impl TestExecutionSyscallHandler<'_, '_, '_, '_> {
                 let class_hash = inputs[0].to_class_hash();
                 let calldata_length = inputs[1].to_usize().unwrap();
                 let calldata = Vec::from(&inputs[2..(2 + calldata_length)]);
-                let mut blockifier_state = BlockifierState::from(
-                    self.contract_execution_syscall_handler.child.child.state,
-                );
+                let mut blockifier_state = BlockifierState::from(self.child.child.child.state);
 
                 handle_deploy_result(
                     deploy(
                         &mut blockifier_state,
-                        self.contract_execution_syscall_handler.child.cheatnet_state,
+                        self.child.child.cheatnet_state,
                         &class_hash,
                         &calldata,
                     ),
@@ -442,14 +418,12 @@ impl TestExecutionSyscallHandler<'_, '_, '_, '_> {
                 let calldata = Vec::from(&inputs[2..(2 + calldata_length)]);
                 let contract_address = inputs[2 + calldata_length].to_contract_address();
 
-                let mut blockifier_state = BlockifierState::from(
-                    self.contract_execution_syscall_handler.child.child.state,
-                );
+                let mut blockifier_state = BlockifierState::from(self.child.child.child.state);
 
                 handle_deploy_result(
                     deploy_at(
                         &mut blockifier_state,
-                        self.contract_execution_syscall_handler.child.cheatnet_state,
+                        self.child.child.cheatnet_state,
                         &class_hash,
                         &calldata,
                         contract_address,
@@ -467,7 +441,7 @@ impl TestExecutionSyscallHandler<'_, '_, '_, '_> {
                 let calldata = Vec::from(&inputs[2..(2 + calldata_length)]);
 
                 let contract_address = self
-                    .contract_execution_syscall_handler
+                    .child
                     .child
                     .cheatnet_state
                     .precalculate_address(&class_hash, &calldata);
@@ -500,9 +474,7 @@ impl TestExecutionSyscallHandler<'_, '_, '_, '_> {
             "get_class_hash" => {
                 let contract_address = inputs[0].to_contract_address();
 
-                let mut blockifier_state = BlockifierState::from(
-                    self.contract_execution_syscall_handler.child.child.state,
-                );
+                let mut blockifier_state = BlockifierState::from(self.child.child.child.state);
 
                 match blockifier_state.get_class_hash(contract_address) {
                     Ok(class_hash) => {
@@ -528,13 +500,11 @@ impl TestExecutionSyscallHandler<'_, '_, '_, '_> {
 
                 let payload = Vec::from(&inputs[4..inputs.len()]);
 
-                let mut blockifier_state = BlockifierState::from(
-                    self.contract_execution_syscall_handler.child.child.state,
-                );
+                let mut blockifier_state = BlockifierState::from(self.child.child.child.state);
 
                 match blockifier_state
                     .l1_handler_execute(
-                        self.contract_execution_syscall_handler.child.cheatnet_state,
+                        self.child.child.cheatnet_state,
                         contract_address,
                         &function_name,
                         &from_address,
@@ -587,11 +557,7 @@ impl TestExecutionSyscallHandler<'_, '_, '_, '_> {
                     }
                 };
 
-                let id = self
-                    .contract_execution_syscall_handler
-                    .child
-                    .cheatnet_state
-                    .spy_events(spy_on);
+                let id = self.child.child.cheatnet_state.spy_events(spy_on);
                 buffer
                     .write(Felt252::from(id))
                     .expect("Failed to insert spy id");
@@ -599,11 +565,8 @@ impl TestExecutionSyscallHandler<'_, '_, '_, '_> {
             }
             "fetch_events" => {
                 let id = &inputs[0];
-                let (emitted_events_len, serialized_events) = self
-                    .contract_execution_syscall_handler
-                    .child
-                    .cheatnet_state
-                    .fetch_events(id);
+                let (emitted_events_len, serialized_events) =
+                    self.child.child.cheatnet_state.fetch_events(id);
 
                 buffer
                     .write(Felt252::from(emitted_events_len))

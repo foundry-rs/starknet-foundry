@@ -1,6 +1,6 @@
 use crate::execution::syscall_interceptor::{
-    ChainableHintProcessor, ExecuteHintRequest, HintCompilationInterceptor,
-    HintExecutionInterceptor, HintProcessorLogicInterceptor, ResourceTrackerInterceptor,
+    ExecuteHintRequest, HintCompilationInterceptor, HintExecutionInterceptor,
+    HintProcessorExtension, HintProcessorLogicInterceptor, ResourceTrackerInterceptor,
 };
 use crate::execution::{cheated_syscalls, syscall_hooks};
 use crate::state::CheatnetState;
@@ -55,7 +55,7 @@ impl<'a, 'b> CheatableSyscallHandler<'a, 'b> {
     }
 }
 
-impl ChainableHintProcessor for CheatableSyscallHandler<'_, '_> {
+impl HintProcessorExtension for CheatableSyscallHandler<'_, '_> {
     fn get_child(&self) -> Option<&dyn HintProcessorLogicInterceptor> {
         Some(self.child)
     }

@@ -1,6 +1,6 @@
 use crate::execution::syscall_interceptor::{
-    ChainableHintProcessor, CompileHintRequest, ExecuteHintRequest, HintCompilationInterceptor,
-    HintExecutionInterceptor, HintProcessorLogicInterceptor, ResourceTrackerInterceptor,
+    CompileHintRequest, ExecuteHintRequest, HintCompilationInterceptor, HintExecutionInterceptor,
+    HintProcessorExtension, HintProcessorLogicInterceptor, ResourceTrackerInterceptor,
 };
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
@@ -9,7 +9,7 @@ use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use std::any::Any;
 
-impl ChainableHintProcessor for SyscallHintProcessor<'_> {
+impl HintProcessorExtension for SyscallHintProcessor<'_> {
     fn get_child(&self) -> Option<&dyn HintProcessorLogicInterceptor> {
         None
     }
