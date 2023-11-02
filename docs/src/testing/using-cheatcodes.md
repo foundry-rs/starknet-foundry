@@ -23,8 +23,8 @@ In this tutorial, we will be using the following Starknet contract:
 trait IHelloStarknet<TContractState> {
     fn increase_balance(ref self: TContractState, amount: felt252);
     fn get_balance(self: @TContractState) -> felt252;
-    fn get_block_number(self: @TContractState) -> u64;
-    fn get_block_timestamp(self: @TContractState) -> u64;
+    fn get_block_number_at_construction(self: @TContractState) -> u64;
+    fn get_block_timestamp_at_construction(self: @TContractState) -> u64;
 }
 
 #[starknet::contract]
@@ -60,11 +60,11 @@ mod HelloStarknet {
             self.balance.read()
         }
         // Gets the block number
-        fn get_block_number(self: @ContractState) -> u64 {
+        fn get_block_number_at_construction(self: @ContractState) -> u64 {
             self.blk_nb.read()
         }
         // Gets the block timestamp
-        fn get_block_timestamp(self: @ContractState) -> u64 {
+        fn get_block_timestamp_at_construction(self: @ContractState) -> u64 {
             self.blk_timestamp.read()
         }
     }
@@ -197,7 +197,7 @@ Failures:
     package_name::call_and_invoke
 ```
 
-### Mocking the constructor with `prank`
+### Pranking the constructor
 
 Most of the cheatcodes like `prank`, `mock_call`, `warp`, `roll` do work in the constructor of the contracts.
 
@@ -210,10 +210,12 @@ use snforge_std::{ declare, ContractClassTrait, start_prank };
 
 #[test]
 fn mock_constructor_with_prank() {
-    // declaring contract
     let contract = declare('HelloStarknet');
+    let constructor_arguments = @ArrayTrait::new();
+
     // Precalculate the address to obtain the contract address before the constructor call (deploy) itself
-    let contract_address = contract.precalculate_address(@ArrayTrait::new());
+    let contract_address = contract.precalculate_address(constructor_arguments);
+
     // Change the caller address to 123 before the call to contract.deploy
     start_prank(contract_address, 123.try_into().unwrap());
 
@@ -224,27 +226,20 @@ fn mock_constructor_with_prank() {
 
 ### Mocking the constructor with `roll`
 
-Similarly, as we've seen with the `prank` cheatcode, you can also use the `roll` cheatcode to mock the constructor and pre-set the block number to a specific value, which will be stored in the `blk_number` variable. To do this, you'll need to use the `start_roll` cheatcode, which requires two input parameters: `contract_address` to specify the target contract and `block_number` to set the desired value.
-
-The `contract_address` can be derived by precalculating the address with `precalculate_address` function of theof `ContractClassTrait` on declared contract, as demonstrated in the `prank` example.
-
-It's important to note that the `start_roll` cheatcode needs to be used before deploying the contract to successfully mock the constructor.
-
 ```rust
 #[test]
 fn mock_constructor_with_roll() {
-    // declaring contract
     let contract = declare('HelloStarknet');
-    // precalculating the contract address
-    let contract_address = contract.precalculate_address(@ArrayTrait::new());
+    let constructor_arguments = @ArrayTrait::new();
+    let contract_address = contract.precalculate_address(constructor_arguments);
+
     // set the block number to 234 for the precalculated address
     start_roll(contract_address, 234);
-    // deploying contract
+
     let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
-    // set dispatcher
     let dispatcher = IHelloStarknetDispatcher { contract_address };
-    // retrieving the block number
-    let block_number = dispatcher.get_block_number();
+    let block_number = dispatcher.get_block_number_at_construction();
+
     // asserting if block number is 234 set by start_roll()
     assert(block_number == 234, 'Wrong block number');
 }
@@ -252,26 +247,21 @@ fn mock_constructor_with_roll() {
 
 ### Mocking the constructor with `warp`
 
-As we have seen previously, to mock the constructor with the `warp` cheatcode, you need to use the `start_warp` cheatcode, which requires two input parameters: `contract_address` for specifying the target contract and `block_timestamp` for setting the desired value.
-
-It's important to note that the `start_warp` cheatcode needs to be used before deploying the contract to successfully mock the constructor.
-
 ```rust
 #[test]
 fn mock_constructor_with_warp() {
-    // declaring contract
     let contract = declare('HelloStarknet');
-    // precalculating the contract address
-    let contract_address = contract.precalculate_address(@ArrayTrait::new());
+    let constructor_arguments = @ArrayTrait::new();
+    let contract_address = contract.precalculate_address(constructor_arguments);
+
     // set the block timestamp to 1000 for the precalculated address
     start_warp(contract_address, 1000);
-    // deploying contract
+
     let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
-    // set dispatcher
     let dispatcher = IHelloStarknetDispatcher { contract_address };
-    // retrieving the block timestamp
-    let block_timestamp = dispatcher.get_block_timestamp();
-    // asserting if block timestamp is 1000 set by start_warp
+    let block_timestamp = dispatcher.get_block_timestamp_at_construction();
+
+    // asserting if block timestamp is 1000 set by start_warp()
     assert(block_timestamp == 1000, 'Wrong block timestamp');
 }
 ```
