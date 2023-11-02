@@ -16,12 +16,13 @@ url.workspace = true
 rand.workspace = true
 project-root.workspace = true
 which.workspace = true
-scarb-metadata = "=1.4.2"
+scarb-metadata.workspace = true
 primitive-types = "0.12.1"
 shellexpand = "3.1.0"
-toml = "0.7.6"
+toml = "0.8.6"
 rpassword = "7.2.0"
 promptly = "0.3.1"
+scarb-artifacts = { path = "../scarb-artifacts" }
 
 [dev-dependencies]
 ctor.workspace = true

@@ -7,7 +7,6 @@ fn test_happy_case() {
     let contract_address = from_env("CAST_MAP_ADDRESS").unwrap();
     let mut args = default_cli_args();
     args.append(&mut vec![
-        "--json",
         "call",
         "--contract-address",
         &contract_address,
@@ -22,10 +21,8 @@ fn test_happy_case() {
     let snapbox = runner(&args);
 
     snapbox.assert().success().stdout_eq(indoc! {r#"
-        {
-          "command": "call",
-          "response": "[0x0]"
-        }
+        command: call
+        response: [0x0]
     "#});
 }
 
@@ -88,7 +85,7 @@ fn test_wrong_function_name() {
 
     snapbox.assert().stderr_matches(indoc! {r#"
         command: call
-        error: Contract error
+        error: Entry point [..] not found in contract.
     "#});
 }
 
@@ -110,7 +107,7 @@ fn test_wrong_calldata() {
 
     snapbox.assert().stderr_matches(indoc! {r#"
         command: call
-        error: Execution was reverted; failure reason: [0x496e70757420746f6f206c6f6e6720666f7220617267756d656e7473].
+        error: Execution failed. Failure reason: "Input too long for arguments".
     "#});
 }
 

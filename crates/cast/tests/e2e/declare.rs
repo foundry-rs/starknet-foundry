@@ -26,7 +26,7 @@ async fn test_happy_case() {
         "--contract-name",
         "Map",
         "--max-fee",
-        "999999999999",
+        "99999999999999999",
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
@@ -62,8 +62,7 @@ async fn contract_already_declared() {
 
     snapbox.assert().success().stderr_matches(indoc! {r#"
         command: declare
-        [..] is already declared.
-        ...
+        error: Class with hash [..] is already declared.
     "#});
 }
 
@@ -87,7 +86,7 @@ async fn wrong_contract_name_passed() {
 
     snapbox.assert().success().stderr_matches(indoc! {r#"
         command: declare
-        error: Cannot find sierra artifact nonexistent in starknet_artifacts.json[..]
+        error: Failed to find artifacts in starknet_artifacts.json file[..]
     "#});
 }
 
@@ -143,7 +142,7 @@ fn test_too_low_max_fee() {
 
     snapbox.assert().success().stderr_matches(indoc! {r#"
         command: declare
-        error: Transaction has been rejected
+        error: Max fee is smaller than the minimal transaction cost (validation plus fee transfer)
     "#});
 
     fs::remove_dir_all(contract_path).unwrap();
@@ -170,6 +169,6 @@ fn scarb_no_artifacts(contract_path: &str, accounts_file_path: &str) {
 
     snapbox.assert().success().stderr_matches(indoc! {r#"
         command: declare
-        [..]is set to 'true' under your [[target.starknet-contract]] field in Scarb.toml[..]
+        [..]Make sure you have enabled sierra and casm code generation in Scarb.toml[..]
     "#});
 }

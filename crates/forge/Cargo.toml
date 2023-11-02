@@ -18,6 +18,7 @@ rayon.workspace = true
 test-collector = { path = "../test-collector" }
 cheatnet = { path = "../cheatnet" }
 conversions = { path = "../conversions" }
+scarb-artifacts = { path = "../scarb-artifacts" }
 cairo-lang-runner.workspace = true
 cairo-lang-casm.workspace = true
 cairo-lang-sierra-to-casm.workspace = true
@@ -41,11 +42,11 @@ clap.workspace = true
 console.workspace = true
 rand.workspace = true
 which.workspace = true
+scarb-metadata.workspace = true
+scarb-ui = "0.1.0"
 schemars = { version = "0.8.12", features = ["preserve_order"] }
 parity-scale-codec = "3.5.0"
-parity-scale-codec-derive = "3.1.4"
-scarb-ui = { git = "https://github.com/software-mansion/scarb.git", rev = "58cc88e" }
-scarb-metadata = { git = "https://github.com/software-mansion/scarb.git", rev = "58cc88e" }
+parity-scale-codec-derive = "3.6.5"
 snapbox = "0.4.13"
 cairo-vm = "0.8.1"
 ark-ff = "0.4.0-alpha.7"
@@ -53,7 +54,7 @@ ark-std = "0.4.0"
 ark-secp256k1 = "0.4.0"
 ark-secp256r1 = "0.4.0"
 openssl = { version = "0.10", features = ["vendored"] }
-toml_edit = "0.9.1"
+toml_edit = "0.20.7"
 flatten-serde-json = "0.1.0"
 smol_str = "0.2.0"
 tokio.workspace = true
@@ -68,3 +69,6 @@ name = "forge"
 [[bin]]
 name = "snforge"
 path = "src/main.rs"
+
+[dev-dependencies]
+test_utils = { path = "test_utils" }
