@@ -9,7 +9,9 @@ use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::execution_utils::{
     felt_to_stark_felt, stark_felt_from_ptr, stark_felt_to_felt, ReadOnlySegment,
 };
-use blockifier::execution::syscalls::hint_processor::{read_felt_array, SyscallExecutionError};
+use blockifier::execution::syscalls::hint_processor::{
+    read_felt_array, SyscallExecutionError, SyscallHintProcessor,
+};
 use blockifier::execution::syscalls::{
     SyscallRequest, SyscallResponse, SyscallResponseWrapper, SyscallResult,
 };
@@ -48,10 +50,6 @@ use cheatnet::cheatcodes::spy_events::SpyTarget;
 use cheatnet::execution::cheated_syscalls::SingleSegmentResponse;
 use cheatnet::execution::contract_execution_syscall_handler::{
     print, ContractExecutionSyscallHandler,
-};
-use cheatnet::execution::syscall_interceptor::{
-    ExecuteHintRequest, HintCompilationInterceptor, HintExecutionInterceptor,
-    HintProcessorExtension, HintProcessorLogicInterceptor, ResourceTrackerInterceptor,
 };
 use starknet::signers::SigningKey;
 
@@ -109,7 +107,56 @@ impl HintProcessorLogic for TestExecutionSyscallHandler<'_, '_, '_, '_> {
         hint_data: &Box<dyn Any>,
         constants: &HashMap<String, Felt252>,
     ) -> Result<(), HintError> {
-        self.execute_hint_chain(vm, exec_scopes, hint_data, constants)
+        let maybe_extended_hint = hint_data.downcast_ref::<Hint>();
+        if let Some(Hint::Starknet(StarknetHint::Cheatcode {
+            selector,
+            input_start,
+            input_end,
+            output_start,
+            output_end,
+        })) = maybe_extended_hint
+        {
+            return self.execute_cheatcode_hint(
+                vm,
+                exec_scopes,
+                selector,
+                input_start,
+                input_end,
+                output_start,
+                output_end,
+                self.test_execution_state.contracts,
+                self.test_execution_state.environment_variables,
+            );
+        }
+        if let Some(Hint::Starknet(StarknetHint::SystemCall { system })) = maybe_extended_hint {
+            let selector = extract_selector(system, vm, self.child.child.child)?;
+
+            match selector {
+                DeprecatedSyscallSelector::CallContract => {
+                    let call_args =
+                        CallContractArgs::read(vm, &mut self.child.child.child.syscall_ptr)
+                            .expect("Could not read call args");
+
+                    let mut blockifier_state = BlockifierState::from(self.child.child.child.state);
+                    let call_result = execute_call_contract(
+                        &mut blockifier_state,
+                        self.child.child.cheatnet_state,
+                        &call_args,
+                    );
+                    write_call_contract_response(self.child.child, vm, &call_args, call_result)?;
+
+                    return Ok(());
+                }
+                DeprecatedSyscallSelector::ReplaceClass => {
+                    return Err(CustomHint(Box::from(
+                        "Replace class can't be used in tests".to_string(),
+                    )))
+                }
+                _ => {}
+            }
+        }
+        self.child
+            .execute_hint(vm, exec_scopes, hint_data, constants)
     }
 
     fn compile_hint(
@@ -119,82 +166,27 @@ impl HintProcessorLogic for TestExecutionSyscallHandler<'_, '_, '_, '_> {
         reference_ids: &HashMap<String, usize>,
         references: &[HintReference],
     ) -> std::result::Result<Box<dyn Any>, VirtualMachineError> {
-        self.compile_hint_chain(hint_code, ap_tracking_data, reference_ids, references)
+        self.child
+            .compile_hint(hint_code, ap_tracking_data, reference_ids, references)
     }
 }
 impl ResourceTracker for TestExecutionSyscallHandler<'_, '_, '_, '_> {
     fn consumed(&self) -> bool {
-        self.consumed_chain()
+        self.child.consumed()
     }
 
     fn consume_step(&mut self) {
-        self.consume_step_chain();
+        self.child.consume_step();
     }
 
     fn get_n_steps(&self) -> Option<usize> {
-        self.get_n_steps_chain()
+        self.child.get_n_steps()
     }
 
     fn run_resources(&self) -> &RunResources {
-        self.run_resources_chain()
+        self.child.run_resources()
     }
 }
-
-impl HintExecutionInterceptor for TestExecutionSyscallHandler<'_, '_, '_, '_> {
-    fn intercept_execute_hint(
-        &mut self,
-        execute_hint_request: &mut ExecuteHintRequest,
-    ) -> Option<std::result::Result<(), HintError>> {
-        let maybe_extended_hint = execute_hint_request.hint_data.downcast_ref::<Hint>();
-        if let Some(Hint::Starknet(StarknetHint::Cheatcode {
-            selector,
-            input_start,
-            input_end,
-            output_start,
-            output_end,
-        })) = maybe_extended_hint
-        {
-            return Some(self.execute_cheatcode_hint(
-                execute_hint_request.vm,
-                execute_hint_request.exec_scopes,
-                selector,
-                input_start,
-                input_end,
-                output_start,
-                output_end,
-                self.test_execution_state.contracts,
-                self.test_execution_state.environment_variables,
-            ));
-        }
-        if let Some(Hint::Starknet(StarknetHint::SystemCall { system })) = maybe_extended_hint {
-            return execute_syscall(
-                system,
-                execute_hint_request.vm,
-                execute_hint_request.exec_scopes,
-                execute_hint_request.hint_data,
-                execute_hint_request.constants,
-                self.child.child,
-            );
-        }
-        None
-    }
-}
-
-impl HintProcessorExtension for TestExecutionSyscallHandler<'_, '_, '_, '_> {
-    fn get_child(&self) -> Option<&dyn HintProcessorLogicInterceptor> {
-        Some(self.child)
-    }
-
-    fn get_child_mut(&mut self) -> Option<&mut dyn HintProcessorLogicInterceptor> {
-        Some(self.child)
-    }
-}
-
-impl HintCompilationInterceptor for TestExecutionSyscallHandler<'_, '_, '_, '_> {}
-
-impl ResourceTrackerInterceptor for TestExecutionSyscallHandler<'_, '_, '_, '_> {}
-
-impl HintProcessorLogicInterceptor for TestExecutionSyscallHandler<'_, '_, '_, '_> {}
 
 impl TestExecutionSyscallHandler<'_, '_, '_, '_> {
     #[allow(clippy::trivially_copy_pass_by_ref, clippy::too_many_arguments)]
@@ -689,61 +681,19 @@ struct ScarbStarknetContractArtifact {
     casm: Option<PathBuf>,
 }
 
-fn execute_syscall(
-    system: &ResOperand,
-    vm: &mut VirtualMachine,
-    _exec_scopes: &mut ExecutionScopes,
-    _hint_data: &Box<dyn Any>,
-    _constants: &HashMap<String, Felt252>,
-    cheatable_syscall_handler: &mut CheatableSyscallHandler,
-) -> Option<Result<(), HintError>> {
-    let selector = match extract_selector(system, vm, cheatable_syscall_handler) {
-        Ok(x) => x,
-        Err(x) => return Some(Err(x)),
-    };
-    match selector {
-        DeprecatedSyscallSelector::CallContract => {
-            let call_args =
-                CallContractArgs::read(vm, &mut cheatable_syscall_handler.child.syscall_ptr)
-                    .expect("Could not read call args");
-
-            let mut blockifier_state = BlockifierState::from(cheatable_syscall_handler.child.state);
-            let call_result = execute_call_contract(
-                &mut blockifier_state,
-                cheatable_syscall_handler.cheatnet_state,
-                &call_args,
-            );
-            if let Err(err) =
-                write_call_contract_response(cheatable_syscall_handler, vm, &call_args, call_result)
-            {
-                return Some(Err(err));
-            }
-
-            Some(Ok(()))
-        }
-        DeprecatedSyscallSelector::ReplaceClass => Some(Err(CustomHint(Box::from(
-            "Replace class can't be used in tests".to_string(),
-        )))),
-        _ => None,
-    }
-}
-
 fn extract_selector(
     system: &ResOperand,
     vm: &mut VirtualMachine,
-    cheatable_syscall_handler: &mut CheatableSyscallHandler,
+    syscall_handler: &mut SyscallHintProcessor,
 ) -> Result<DeprecatedSyscallSelector, HintError> {
     let (cell, offset) = extract_buffer(system);
     let system_ptr = get_ptr(vm, cell, &offset)?;
 
-    cheatable_syscall_handler
-        .child
-        .verify_syscall_ptr(system_ptr)?;
+    syscall_handler.verify_syscall_ptr(system_ptr)?;
 
     // We peek into memory to check the selector
     Ok(DeprecatedSyscallSelector::try_from(felt_to_stark_felt(
-        &vm.get_integer(cheatable_syscall_handler.child.syscall_ptr)
-            .unwrap(),
+        &vm.get_integer(syscall_handler.syscall_ptr).unwrap(),
     ))?)
 }
 
