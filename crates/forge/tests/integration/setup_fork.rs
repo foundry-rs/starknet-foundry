@@ -1,17 +1,17 @@
+use indoc::formatdoc;
 use std::path::Path;
 use std::path::PathBuf;
 use std::sync::Arc;
 
 use camino::Utf8PathBuf;
-use indoc::formatdoc;
+use forge::run;
+use forge::test_filter::TestsFilter;
 use starknet::core::types::BlockId;
 use starknet::core::types::BlockTag::Latest;
 use tempfile::tempdir;
 use tokio::runtime::Runtime;
 
-use forge::scarb::config::ForkTarget;
-use forge::test_filter::TestsFilter;
-use forge::{run, CancellationTokens, RunnerConfig, RunnerParams};
+use forge_runner::{CancellationTokens, ForkTarget, RunnerConfig, RunnerParams};
 use test_collector::RawForkParams;
 use test_utils::corelib::{corelib_path, predeployed_contracts};
 use test_utils::runner::Contract;

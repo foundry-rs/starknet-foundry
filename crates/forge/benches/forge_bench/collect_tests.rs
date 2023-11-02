@@ -1,7 +1,7 @@
 use assert_fs::fixture::PathCopy;
 use assert_fs::TempDir;
 use camino::Utf8PathBuf;
-use forge::collect_test_compilation_targets;
+use forge::collecting::collect_test_compilation_targets;
 
 pub fn setup() -> TempDir {
     let temp = TempDir::new().unwrap();

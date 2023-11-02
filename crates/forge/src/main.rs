@@ -1,8 +1,15 @@
 use anyhow::{anyhow, bail, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use clap::{Parser, Subcommand, ValueEnum};
+use forge::scarb::config::ForgeConfig;
 use forge::scarb::config_from_scarb_for_package;
+use forge::test_filter::TestsFilter;
+use forge::{pretty_printing, run};
+use forge_runner::test_case_summary::TestCaseSummary;
+use forge_runner::test_crate_summary::TestCrateSummary;
+use forge_runner::{CancellationTokens, RunnerConfig, RunnerParams, CACHE_DIR};
 use include_dir::{include_dir, Dir};
+use rand::{thread_rng, RngCore};
 use scarb_artifacts::{
     corelib_for_package, dependencies_for_package, get_contracts_map, name_for_package,
     paths_for_package,
@@ -10,26 +17,18 @@ use scarb_artifacts::{
 use scarb_metadata::{Metadata, MetadataCommand, PackageMetadata};
 use scarb_ui::args::PackagesFilter;
 use std::path::PathBuf;
+use std::process::{Command, Stdio};
 use std::sync::Arc;
+use std::thread::available_parallelism;
 use std::{env, fs};
 use tempfile::{tempdir, TempDir};
 use tokio::runtime::Builder;
 
-use forge::{
-    pretty_printing, CancellationTokens, RunnerConfig, RunnerParams, CACHE_DIR, FUZZER_RUNS_DEFAULT,
-};
-use forge::{run, TestCrateSummary};
-
-use forge::scarb::config::ForgeConfig;
-use forge::test_case_summary::TestCaseSummary;
-use forge::test_filter::TestsFilter;
-use rand::{thread_rng, RngCore};
-use std::process::{Command, Stdio};
-use std::thread::available_parallelism;
-
 mod init;
 
 static PREDEPLOYED_CONTRACTS: Dir = include_dir!("crates/cheatnet/predeployed-contracts");
+
+const FUZZER_RUNS_DEFAULT: u32 = 256;
 
 #[derive(Parser, Debug)]
 #[command(version)]

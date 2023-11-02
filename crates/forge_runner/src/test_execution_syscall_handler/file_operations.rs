@@ -6,7 +6,7 @@ use flatten_serde_json::flatten;
 use num_bigint::BigUint;
 use serde_json::{Map, Value};
 
-pub(super) fn read_txt(file_path: &Felt252) -> Result<Vec<Felt252>, EnhancedHintError> {
+pub fn read_txt(file_path: &Felt252) -> Result<Vec<Felt252>, EnhancedHintError> {
     let file_path_str = as_cairo_short_string(file_path)
         .with_context(|| format!("Failed to convert {file_path} to str"))?;
     let content = std::fs::read_to_string(file_path_str.clone())?;
@@ -22,7 +22,7 @@ pub(super) fn read_txt(file_path: &Felt252) -> Result<Vec<Felt252>, EnhancedHint
         .collect()
 }
 
-pub(super) fn read_json(file_path: &Felt252) -> Result<Vec<Felt252>, EnhancedHintError> {
+pub fn read_json(file_path: &Felt252) -> Result<Vec<Felt252>, EnhancedHintError> {
     let file_path_str = as_cairo_short_string(file_path)
         .with_context(|| format!("Failed to convert {file_path} to str"))?;
     let content = std::fs::read_to_string(&file_path_str)?;
@@ -66,7 +66,7 @@ fn value_into_vec(value: &Value) -> Vec<String> {
     }
 }
 
-pub(super) fn string_into_felt(string: &str) -> Result<Felt252> {
+pub fn string_into_felt(string: &str) -> Result<Felt252> {
     if let Ok(number) = string.parse::<BigUint>() {
         // By default it is replaced with 0 in this case
         if number < Felt252::prime() {

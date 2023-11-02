@@ -542,9 +542,9 @@ impl TestExecutionSyscallHandler<'_, '_> {
                         write_cheatcode_panic(&mut buffer, &panic_data);
                         Ok(())
                     }
-                    CallContractResult::Failure(CallContractFailure::Error { msg }) => Err(
-                        EnhancedHintError::from(HintError::CustomHint(Box::from(msg))),
-                    ),
+                    CallContractResult::Failure(CallContractFailure::Error { msg }) => {
+                        Err(EnhancedHintError::from(CustomHint(Box::from(msg))))
+                    }
                 }
             }
             "read_txt" => {
@@ -756,7 +756,7 @@ fn execute_syscall(
             write_call_contract_response(cheatable_syscall_handler, vm, &call_args, call_result)?;
             Ok(())
         }
-        DeprecatedSyscallSelector::ReplaceClass => Err(HintError::CustomHint(Box::from(
+        DeprecatedSyscallSelector::ReplaceClass => Err(CustomHint(Box::from(
             "Replace class can't be used in tests".to_string(),
         ))),
         _ => cheatable_syscall_handler.execute_hint(vm, exec_scopes, hint_data, constants),
@@ -825,9 +825,7 @@ fn write_call_contract_response(
                     .map(StarknetConversions::to_stark_felt)
                     .collect(),
             },
-            CallContractFailure::Error { msg, .. } => {
-                return Err(HintError::CustomHint(Box::from(msg)))
-            }
+            CallContractFailure::Error { msg, .. } => return Err(CustomHint(Box::from(msg))),
         },
     };
 
