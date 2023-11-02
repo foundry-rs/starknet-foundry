@@ -21,7 +21,7 @@ jobs:
           submodules: true
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8
-      - uses: software-mansion/setup-scarb@v1.3.1
+      - uses: software-mansion/setup-scarb@v1.3.2
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
       - run: cargo test --release --lib -p forge
@@ -58,7 +58,7 @@ jobs:
           submodules: true
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8
-      - uses: software-mansion/setup-scarb@v1.3.1
+      - uses: software-mansion/setup-scarb@v1.3.2
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
       - run: cargo test --release e2e -p forge
@@ -72,7 +72,7 @@ jobs:
           submodules: true
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8
-      - uses: software-mansion/setup-scarb@v1.3.1
+      - uses: software-mansion/setup-scarb@v1.3.2
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
       - name: Run Cheatnet tests
@@ -93,7 +93,7 @@ jobs:
           cache-directories: crates/cast/tests/utils/devnet
       - name: Install starknet-devnet-rs
         run: ./scripts/install_devnet.sh
-      - uses: software-mansion/setup-scarb@v1.3.1
+      - uses: software-mansion/setup-scarb@v1.3.2
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
       - name: Run tests
