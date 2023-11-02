@@ -1,23 +1,28 @@
 use crate::fuzzer::RandomFuzzer;
+use crate::running::blocking_run_from_test;
 use crate::test_case_summary::TestCaseSummary;
 use crate::test_crate_summary::TestCrateSummary;
 use anyhow::{anyhow, Context, Result};
 use cairo_felt::Felt252;
 use cairo_lang_runner::SierraCasmRunner;
 use cairo_lang_sierra::ids::ConcreteTypeId;
-use cairo_lang_sierra::program::Function;
+use cairo_lang_sierra::program::{Function, Program};
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use futures::stream::FuturesUnordered;
 use futures::StreamExt;
 use once_cell::sync::Lazy;
 use smol_str::SmolStr;
+use starknet::core::types::BlockId;
 use std::sync::Arc;
+use test_collector::ForkConfig as ForkConfigTrait;
 use test_collector::FuzzerConfig;
+use test_collector::TestCase as CollectedTestCase;
 use tokio::sync::mpsc::{channel, Sender};
 use tokio::task;
 use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
+use url::Url;
 
 mod fuzzer;
 mod running;
@@ -49,8 +54,24 @@ pub enum RunnerStatus {
     DidNotRun,
 }
 
+#[derive(Debug, Clone)]
+pub(crate) struct ForkConfig {
+    pub url: Url,
+    pub block_id: BlockId,
+}
+
+impl ForkConfigTrait for ForkConfig {}
+
+pub(crate) type TestCase = CollectedTestCase<ForkConfig>;
+
+#[derive(Debug, Clone)]
+pub struct TestCrate {
+    pub sierra_program: Program,
+    pub test_cases: Vec<TestCase>,
+}
+
 pub async fn run_tests_from_crate(
-    tests: Arc<CompiledTestCrateRunnable>,
+    tests: Arc<TestCrate>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     cancellation_tokens: Arc<CancellationTokens>,
@@ -149,7 +170,7 @@ pub async fn run_tests_from_crate(
 #[allow(clippy::too_many_arguments)]
 fn choose_test_strategy_and_run(
     args: Vec<ConcreteTypeId>,
-    case: Arc<TestCaseRunnable>,
+    case: Arc<TestCase>,
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
@@ -181,7 +202,7 @@ fn choose_test_strategy_and_run(
 }
 
 fn run_single_test(
-    case: Arc<TestCaseRunnable>,
+    case: Arc<TestCase>,
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
@@ -225,7 +246,7 @@ fn run_single_test(
 
 fn run_with_fuzzing(
     args: Vec<ConcreteTypeId>,
-    case: Arc<TestCaseRunnable>,
+    case: Arc<TestCase>,
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
@@ -317,7 +338,7 @@ fn run_with_fuzzing(
 #[allow(clippy::too_many_arguments)]
 fn run_fuzzing_subtest(
     args: Vec<Felt252>,
-    case: Arc<TestCaseRunnable>,
+    case: Arc<TestCase>,
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,

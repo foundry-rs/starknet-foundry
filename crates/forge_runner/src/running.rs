@@ -18,6 +18,7 @@ use itertools::chain;
 
 use crate::test_case_summary::TestCaseSummary;
 use crate::test_execution_syscall_handler::{TestExecutionState, TestExecutionSyscallHandler};
+use crate::{ForkConfig, TestCase};
 use cairo_lang_casm::hints::Hint;
 use cairo_lang_casm::instructions::Instruction;
 use cairo_lang_runner::casm_run::hint_to_hint_params;
@@ -39,7 +40,6 @@ use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::hash::StarkHash;
 use starknet_api::patricia_key;
 use starknet_api::transaction::Calldata;
-use test_collector::TestCase;
 use thiserror::Error;
 use tokio::runtime::Runtime;
 use tokio::sync::mpsc::Sender;
@@ -74,7 +74,7 @@ fn build_hints_dict<'b>(
 
 pub fn blocking_run_from_test(
     args: Vec<Felt252>,
-    case: Arc<TestCaseRunnable>,
+    case: Arc<TestCase>,
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
@@ -162,7 +162,7 @@ pub enum TestCaseRunError {
 #[allow(clippy::too_many_arguments)]
 pub fn run_test_case(
     args: Vec<Felt252>,
-    case: &TestCaseRunnable,
+    case: &TestCase,
     runner: &SierraCasmRunner,
     runner_config: &Arc<RunnerConfig>,
     runner_params: &Arc<RunnerParams>,
@@ -234,7 +234,7 @@ pub fn run_test_case(
 
 fn extract_test_case_summary(
     run_result: Result<RunResult, TestCaseRunError>,
-    case: &TestCase<ValidatedForkConfig>,
+    case: &TestCase,
     args: Vec<Felt252>,
 ) -> Result<TestCaseSummary> {
     match run_result {
@@ -268,10 +268,10 @@ fn extract_test_case_summary(
 
 fn get_fork_state_reader(
     workspace_root: &Utf8Path,
-    fork_config: &Option<ValidatedForkConfig>,
+    fork_config: &Option<ForkConfig>,
 ) -> Result<Option<ForkStateReader>> {
     match fork_config {
-        Some(ValidatedForkConfig { url, mut block_id }) => {
+        Some(ForkConfig { url, mut block_id }) => {
             if let BlockId::Tag(Latest) = block_id {
                 block_id = get_latest_block_number(url)?;
             }
