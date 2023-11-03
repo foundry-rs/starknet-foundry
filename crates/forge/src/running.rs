@@ -19,11 +19,12 @@ use itertools::chain;
 use cairo_lang_casm::hints::Hint;
 use cairo_lang_casm::instructions::Instruction;
 use cairo_lang_runner::casm_run::hint_to_hint_params;
-use cairo_lang_runner::{Arg, RunnerError};
-use cairo_lang_runner::{RunResult, SierraCasmRunner};
+use cairo_lang_runner::{Arg, RunResultValue, RunnerError};
+use cairo_vm::vm::vm_core::VirtualMachine;
 use camino::Utf8Path;
 use cheatnet::constants as cheatnet_constants;
 use cheatnet::execution::contract_execution_syscall_handler::ContractExecutionSyscallHandler;
+use cheatnet::execution::gas::gas_from_execution_resources;
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::state::{BlockInfoReader, CheatnetBlockInfo, CheatnetState, ExtendedStateReader};
 use starknet::core::types::BlockTag::Latest;
@@ -47,6 +48,7 @@ use url::Url;
 use crate::test_case_summary::TestCaseSummary;
 
 use crate::collecting::{TestCaseRunnable, ValidatedForkConfig};
+use crate::sierra_casm_runner::SierraCasmRunner;
 use crate::test_execution_syscall_handler::TestExecutionSyscallHandler;
 use crate::{RunnerConfig, RunnerParams, CACHE_DIR};
 
@@ -165,6 +167,12 @@ pub(crate) enum TestCaseRunError {
     Error(#[from] anyhow::Error),
 }
 
+#[derive(Debug, PartialEq, Clone)]
+pub struct TestRunResult {
+    pub gas: f64,
+    pub value: RunResultValue,
+}
+
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn run_test_case(
     args: Vec<Felt252>,
@@ -173,7 +181,7 @@ pub(crate) fn run_test_case(
     runner_config: &Arc<RunnerConfig>,
     runner_params: &Arc<RunnerParams>,
     _send_shut_down: &Sender<()>,
-) -> Result<RunResult, TestCaseRunError> {
+) -> Result<TestRunResult, TestCaseRunError> {
     let available_gas = if let Some(available_gas) = &case.available_gas {
         Some(*available_gas)
     } else {
@@ -184,7 +192,7 @@ pub(crate) fn run_test_case(
     let runner_args: Vec<Arg> = args.into_iter().map(Arg::Value).collect();
 
     let (entry_code, builtins) = runner.create_entry_code(func, &runner_args, initial_gas)?;
-    let footer = runner.create_code_footer();
+    let footer = SierraCasmRunner::create_code_footer();
     let instructions = chain!(
         entry_code.iter(),
         runner.get_casm_program().instructions.iter(),
@@ -229,17 +237,38 @@ pub(crate) fn run_test_case(
         &string_to_hint,
     );
 
-    Ok(runner.run_function(
-        runner.find_function(case.name.as_str())?,
+    let mut vm = VirtualMachine::new(true);
+    let res = runner.run_function_with_vm(
+        func,
+        &mut vm,
         &mut test_execution_syscall_handler,
         hints_dict,
         instructions,
         builtins,
-    )?)
+    )?;
+
+    let gas = gas_from_execution_resources(
+        &test_execution_syscall_handler
+            .contract_execution_syscall_handler
+            .cheatable_syscall_handler
+            .syscall_handler
+            .context
+            .block_context,
+        test_execution_syscall_handler
+            .contract_execution_syscall_handler
+            .cheatable_syscall_handler
+            .syscall_handler
+            .resources,
+    );
+
+    Ok(TestRunResult {
+        gas,
+        value: res.value,
+    })
 }
 
 fn extract_test_case_summary(
-    run_result: Result<RunResult, TestCaseRunError>,
+    run_result: Result<TestRunResult, TestCaseRunError>,
     case: &TestCase<ValidatedForkConfig>,
     args: Vec<Felt252>,
 ) -> Result<TestCaseSummary> {

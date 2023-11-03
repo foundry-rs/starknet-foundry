@@ -15,7 +15,6 @@ use test_case_summary::TestCaseSummary;
 use tokio::task::{self, JoinHandle};
 use tokio_util::sync::CancellationToken;
 
-use cairo_lang_runner::SierraCasmRunner;
 use cairo_lang_sierra::ids::ConcreteTypeId;
 use cairo_lang_sierra::program::Function;
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
@@ -39,6 +38,7 @@ use crate::collecting::{
     collect_test_compilation_targets, compile_tests, CompiledTestCrate, CompiledTestCrateRaw,
     CompiledTestCrateRunnable, TestCaseRunnable, ValidatedForkConfig,
 };
+use crate::sierra_casm_runner::SierraCasmRunner;
 use crate::test_filter::TestsFilter;
 use test_collector::{FuzzerConfig, LinkedLibrary, RawForkConfig, RawForkParams, TestCase};
 
@@ -49,6 +49,7 @@ pub mod test_case_summary;
 mod collecting;
 mod fuzzer;
 mod running;
+mod sierra_casm_runner;
 mod test_crate_summary;
 mod test_execution_syscall_handler;
 mod test_filter;

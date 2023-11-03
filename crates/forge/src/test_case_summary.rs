@@ -1,7 +1,8 @@
 use crate::collecting::TestCaseRunnable;
+use crate::running::TestRunResult;
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
-use cairo_lang_runner::{RunResult, RunResultValue};
+use cairo_lang_runner::RunResultValue;
 use std::option::Option;
 use test_collector::{ExpectedPanicValue, ExpectedTestResult};
 
@@ -23,6 +24,7 @@ pub enum TestCaseSummary {
         arguments: Vec<Felt252>,
         /// Statistic for fuzzing test
         fuzzing_statistic: Option<FuzzingStatistics>,
+        gas: f64,
     },
     /// Test case failed
     Failed {
@@ -88,11 +90,13 @@ impl TestCaseSummary {
                 name,
                 msg,
                 arguments,
+                gas,
                 ..
             } => TestCaseSummary::Passed {
                 name,
                 msg,
                 arguments,
+                gas,
                 fuzzing_statistic: Some(FuzzingStatistics { runs }),
             },
             TestCaseSummary::Failed {
@@ -117,7 +121,7 @@ impl TestCaseSummary {
 impl TestCaseSummary {
     #[must_use]
     pub(crate) fn from_run_result(
-        run_result: RunResult,
+        run_result: TestRunResult,
         test_case: &TestCaseRunnable,
         arguments: Vec<Felt252>,
     ) -> Self {
@@ -130,6 +134,7 @@ impl TestCaseSummary {
                     msg,
                     arguments,
                     fuzzing_statistic: None,
+                    gas: run_result.gas,
                 },
                 ExpectedTestResult::Panics(_) => TestCaseSummary::Failed {
                     name,
@@ -159,6 +164,7 @@ impl TestCaseSummary {
                         msg,
                         arguments,
                         fuzzing_statistic: None,
+                        gas: 0f64,
                     },
                 },
             },
@@ -197,7 +203,7 @@ fn build_readable_text(data: &Vec<Felt252>) -> Option<String> {
 /// If the test was expected to fail with specific data e.g. `#[should_panic(expected: ('data',))]`
 /// and failed to do so, it returns a string comparing the panic data and the expected data.
 pub(crate) fn extract_result_data(
-    run_result: &RunResult,
+    run_result: &TestRunResult,
     expectation: &ExpectedTestResult,
 ) -> Option<String> {
     match &run_result.value {
