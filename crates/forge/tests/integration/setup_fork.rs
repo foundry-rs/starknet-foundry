@@ -1,7 +1,6 @@
 use indoc::formatdoc;
 use std::path::Path;
 use std::path::PathBuf;
-use std::sync::Arc;
 
 use camino::Utf8PathBuf;
 use forge::run;

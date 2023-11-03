@@ -199,10 +199,10 @@ pub async fn run_tests_from_crate(
     // their shutdown procedures before moving forward (more info: https://tokio.rs/tokio/topics/shutdown)
     let (send_shut_down, mut rec_shut_down) = channel(1);
 
-    for case in test_cases.iter() {
+    for case in test_cases {
         let case_name = case.name.clone();
 
-        if !tests_filter.should_be_run(&case) {
+        if !tests_filter.should_be_run(case) {
             tasks.push(tokio::task::spawn(async {
                 Ok(TestCaseSummary::Ignored { name: case_name })
             }));

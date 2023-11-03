@@ -42,47 +42,47 @@ pub(crate) fn print_test_seed(seed: u64) {
     println!("{}: {seed}", style("Fuzzer seed").bold());
 }
 
-pub(crate) fn print_test_result(test_result: &TestCaseSummary) {
-    let result_header = match test_result {
-        TestCaseSummary::Passed { .. } => format!("[{}]", style("PASS").green()),
-        TestCaseSummary::Failed { .. } => format!("[{}]", style("FAIL").red()),
-        TestCaseSummary::Ignored { .. } => format!("[{}]", style("IGNORE").yellow()),
-        TestCaseSummary::Skipped { .. } => format!("[{}]", style("SKIP").color256(11)),
-        TestCaseSummary::Interrupted {} => {
-            unreachable!()
-        }
-    };
-
-    let result_name = match test_result {
-        TestCaseSummary::Skipped { name }
-        | TestCaseSummary::Ignored { name }
-        | TestCaseSummary::Failed { name, .. }
-        | TestCaseSummary::Passed { name, .. } => name,
-        TestCaseSummary::Interrupted {} => {
-            unreachable!()
-        }
-    };
-
-    let result_message = match test_result {
-        TestCaseSummary::Passed { msg: Some(msg), .. } => format!("\n\nSuccess data:{msg}"),
-        TestCaseSummary::Failed { msg: Some(msg), .. } => format!("\n\nFailure data:{msg}"),
-        _ => String::new(),
-    };
-
-    let fuzzer_report = match test_result.runs() {
-        None => String::new(),
-        Some(runs) => {
-            if matches!(test_result, TestCaseSummary::Failed { .. }) {
-                let arguments = test_result.arguments();
-                format!(" (fuzzer runs = {runs}, arguments = {arguments:?})")
-            } else {
-                format!(" (fuzzer runs = {runs})")
-            }
-        }
-    };
-
-    println!("{result_header} {result_name}{fuzzer_report}{result_message}");
-}
+// pub(crate) fn print_test_result(test_result: &TestCaseSummary) {
+//     let result_header = match test_result {
+//         TestCaseSummary::Passed { .. } => format!("[{}]", style("PASS").green()),
+//         TestCaseSummary::Failed { .. } => format!("[{}]", style("FAIL").red()),
+//         TestCaseSummary::Ignored { .. } => format!("[{}]", style("IGNORE").yellow()),
+//         TestCaseSummary::Skipped { .. } => format!("[{}]", style("SKIP").color256(11)),
+//         TestCaseSummary::Interrupted {} => {
+//             unreachable!()
+//         }
+//     };
+//
+//     let result_name = match test_result {
+//         TestCaseSummary::Skipped { name }
+//         | TestCaseSummary::Ignored { name }
+//         | TestCaseSummary::Failed { name, .. }
+//         | TestCaseSummary::Passed { name, .. } => name,
+//         TestCaseSummary::Interrupted {} => {
+//             unreachable!()
+//         }
+//     };
+//
+//     let result_message = match test_result {
+//         TestCaseSummary::Passed { msg: Some(msg), .. } => format!("\n\nSuccess data:{msg}"),
+//         TestCaseSummary::Failed { msg: Some(msg), .. } => format!("\n\nFailure data:{msg}"),
+//         _ => String::new(),
+//     };
+//
+//     let fuzzer_report = match test_result.runs() {
+//         None => String::new(),
+//         Some(runs) => {
+//             if matches!(test_result, TestCaseSummary::Failed { .. }) {
+//                 let arguments = test_result.arguments();
+//                 format!(" (fuzzer runs = {runs}, arguments = {arguments:?})")
+//             } else {
+//                 format!(" (fuzzer runs = {runs})")
+//             }
+//         }
+//     };
+//
+//     println!("{result_header} {result_name}{fuzzer_report}{result_message}");
+// }
 
 pub fn print_failures(all_failed_tests: &[TestCaseSummary]) {
     if all_failed_tests.is_empty() {

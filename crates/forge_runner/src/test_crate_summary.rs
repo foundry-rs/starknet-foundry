@@ -15,6 +15,7 @@ pub struct TestCrateSummary {
 }
 
 impl TestCrateSummary {
+    #[must_use]
     pub fn count_passed(&self) -> usize {
         self.test_case_summaries
             .iter()
@@ -22,6 +23,7 @@ impl TestCrateSummary {
             .count()
     }
 
+    #[must_use]
     pub fn count_failed(&self) -> usize {
         self.test_case_summaries
             .iter()
@@ -29,6 +31,7 @@ impl TestCrateSummary {
             .count()
     }
 
+    #[must_use]
     pub fn count_skipped(&self) -> usize {
         self.test_case_summaries
             .iter()

@@ -1,4 +1,4 @@
-use crate::collecting::{CompiledTestCrate, CompiledTestCrateRaw, TestCaseRunnable};
+use crate::collecting::{CompiledTestCrate, CompiledTestCrateRaw};
 use forge_runner::{TestCase, TestsFilter as TestsFilterTrait};
 
 #[derive(Debug, PartialEq)]
@@ -25,6 +25,7 @@ pub(crate) enum IgnoredFilter {
 }
 
 impl TestsFilter {
+    #[must_use]
     pub fn from_flags(
         test_name_filter: Option<String>,
         exact_match: bool,
@@ -112,13 +113,13 @@ mod tests {
     #[test]
     #[should_panic]
     fn from_flags_only_ignored_and_include_ignored_both_true() {
-        TestsFilter::from_flags(None, false, true, true);
+        let _ = TestsFilter::from_flags(None, false, true, true);
     }
 
     #[test]
     #[should_panic]
     fn from_flags_exact_match_true_without_test_filter_name() {
-        TestsFilter::from_flags(None, true, false, false);
+        let _ = TestsFilter::from_flags(None, true, false, false);
     }
 
     #[test]

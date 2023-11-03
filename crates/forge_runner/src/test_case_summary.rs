@@ -55,6 +55,7 @@ pub enum TestCaseSummary {
 }
 
 impl TestCaseSummary {
+    #[must_use]
     pub fn arguments(&self) -> Vec<Felt252> {
         match self {
             TestCaseSummary::Failed { arguments, .. }
@@ -65,6 +66,7 @@ impl TestCaseSummary {
             }
         }
     }
+    #[must_use]
     pub fn runs(&self) -> Option<u32> {
         match self {
             TestCaseSummary::Failed {
@@ -82,6 +84,7 @@ impl TestCaseSummary {
         }
     }
 
+    #[must_use]
     pub fn with_runs(self, runs: u32) -> Self {
         match self {
             TestCaseSummary::Passed {
