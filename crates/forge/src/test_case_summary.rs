@@ -2,6 +2,7 @@ use crate::collecting::TestCaseRunnable;
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{RunResult, RunResultValue};
+use starknet_api::block::BlockNumber;
 use std::option::Option;
 use test_collector::{ExpectedPanicValue, ExpectedTestResult};
 
@@ -23,6 +24,8 @@ pub enum TestCaseSummary {
         arguments: Vec<Felt252>,
         /// Statistic for fuzzing test
         fuzzing_statistic: Option<FuzzingStatistics>,
+        /// Number of block used if BlockId::Tag(Latest) was specified
+        block_number_of_latest: Option<BlockNumber>,
     },
     /// Test case failed
     Failed {
@@ -34,6 +37,8 @@ pub enum TestCaseSummary {
         arguments: Vec<Felt252>,
         /// Statistic for fuzzing test
         fuzzing_statistic: Option<FuzzingStatistics>,
+        /// Number of block used if BlockId::Tag(Latest) was specified
+        block_number_of_latest: Option<BlockNumber>,
     },
     /// Test case ignored due to `#[ignored]` attribute or `--ignored` flag
     Ignored {
@@ -82,30 +87,51 @@ impl TestCaseSummary {
         }
     }
 
+    pub(crate) fn block_number_of_latest(&self) -> &Option<BlockNumber> {
+        match self {
+            TestCaseSummary::Failed {
+                block_number_of_latest,
+                ..
+            }
+            | TestCaseSummary::Passed {
+                block_number_of_latest,
+                ..
+            } => block_number_of_latest,
+            TestCaseSummary::Ignored { .. } | TestCaseSummary::Skipped { .. } => &None,
+            TestCaseSummary::Interrupted {} => {
+                unreachable!()
+            }
+        }
+    }
+
     pub(crate) fn with_runs(self, runs: u32) -> Self {
         match self {
             TestCaseSummary::Passed {
                 name,
                 msg,
                 arguments,
+                block_number_of_latest,
                 ..
             } => TestCaseSummary::Passed {
                 name,
                 msg,
                 arguments,
                 fuzzing_statistic: Some(FuzzingStatistics { runs }),
+                block_number_of_latest,
             },
             TestCaseSummary::Failed {
                 name,
 
                 msg,
                 arguments,
+                block_number_of_latest,
                 ..
             } => TestCaseSummary::Failed {
                 name,
                 msg,
                 arguments,
                 fuzzing_statistic: Some(FuzzingStatistics { runs }),
+                block_number_of_latest,
             },
             TestCaseSummary::Ignored { .. }
             | TestCaseSummary::Skipped { .. }
@@ -120,6 +146,7 @@ impl TestCaseSummary {
         run_result: RunResult,
         test_case: &TestCaseRunnable,
         arguments: Vec<Felt252>,
+        block_number_of_latest: Option<BlockNumber>,
     ) -> Self {
         let name = test_case.name.to_string();
         let msg = extract_result_data(&run_result, &test_case.expected_result);
@@ -130,12 +157,14 @@ impl TestCaseSummary {
                     msg,
                     arguments,
                     fuzzing_statistic: None,
+                    block_number_of_latest,
                 },
                 ExpectedTestResult::Panics(_) => TestCaseSummary::Failed {
                     name,
                     msg,
                     arguments,
                     fuzzing_statistic: None,
+                    block_number_of_latest,
                 },
             },
             RunResultValue::Panic(value) => match &test_case.expected_result {
@@ -144,6 +173,7 @@ impl TestCaseSummary {
                     msg,
                     arguments,
                     fuzzing_statistic: None,
+                    block_number_of_latest,
                 },
                 ExpectedTestResult::Panics(panic_expectation) => match panic_expectation {
                     ExpectedPanicValue::Exact(expected) if &value != expected => {
@@ -152,6 +182,7 @@ impl TestCaseSummary {
                             msg,
                             arguments,
                             fuzzing_statistic: None,
+                            block_number_of_latest,
                         }
                     }
                     _ => TestCaseSummary::Passed {
@@ -159,6 +190,7 @@ impl TestCaseSummary {
                         msg,
                         arguments,
                         fuzzing_statistic: None,
+                        block_number_of_latest,
                     },
                 },
             },

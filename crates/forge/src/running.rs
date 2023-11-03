@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use anyhow::{anyhow, Result};
+use anyhow::{bail, Result};
 use blockifier::execution::entry_point::{
     CallEntryPoint, CallType, EntryPointExecutionContext, ExecutionResources,
 };
@@ -29,8 +29,9 @@ use cheatnet::state::{BlockInfoReader, CheatnetBlockInfo, CheatnetState, Extende
 use starknet::core::types::BlockTag::Latest;
 use starknet::core::types::{BlockId, MaybePendingBlockWithTxHashes};
 use starknet::core::utils::get_selector_from_name;
-use starknet::providers::jsonrpc::HttpTransport;
-use starknet::providers::{JsonRpcClient, Provider};
+use starknet::providers::jsonrpc::{HttpTransport, HttpTransportError, JsonRpcClientError};
+use starknet::providers::{JsonRpcClient, Provider, ProviderError};
+use starknet_api::block::BlockNumber;
 use starknet_api::core::PatriciaKey;
 use starknet_api::core::{ContractAddress, EntryPointSelector};
 use starknet_api::deprecated_contract_class::EntryPointType;
@@ -122,9 +123,10 @@ fn build_syscall_handler<'a>(
     string_to_hint: &'a HashMap<String, Hint>,
     execution_resources: &'a mut ExecutionResources,
     context: &'a mut EntryPointExecutionContext,
-) -> Result<SyscallHintProcessor<'a>> {
+) -> SyscallHintProcessor<'a> {
     let test_selector = get_selector_from_name("TEST_CONTRACT_SELECTOR").unwrap();
-    let entry_point_selector = EntryPointSelector(StarkHash::new(test_selector.to_bytes_be())?);
+    let entry_point_selector =
+        EntryPointSelector(StarkHash::new(test_selector.to_bytes_be()).unwrap());
     let entry_point = CallEntryPoint {
         class_hash: None,
         code_address: Some(ContractAddress(patricia_key!(
@@ -139,7 +141,7 @@ fn build_syscall_handler<'a>(
         initial_gas: u64::MAX,
     };
 
-    let syscall_handler = SyscallHintProcessor::new(
+    SyscallHintProcessor::new(
         blockifier_state,
         execution_resources,
         context,
@@ -151,18 +153,20 @@ fn build_syscall_handler<'a>(
         entry_point,
         string_to_hint,
         ReadOnlySegments::default(),
-    );
-    Ok(syscall_handler)
+    )
 }
 
 #[derive(Debug, Error)]
 pub(crate) enum TestCaseRunError {
     #[error("{0}")]
-    RunnerError(#[from] RunnerError),
-    #[error("{0}")]
     StateError(#[from] StateError),
     #[error("{0}")]
-    Error(#[from] anyhow::Error),
+    ProviderError(#[from] ProviderError<JsonRpcClientError<HttpTransportError>>),
+}
+
+pub(crate) struct RunResultWithInfo {
+    pub(crate) run_result: Result<RunResult, RunnerError>,
+    pub(crate) block_number_of_latest: Option<BlockNumber>,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -173,17 +177,21 @@ pub(crate) fn run_test_case(
     runner_config: &Arc<RunnerConfig>,
     runner_params: &Arc<RunnerParams>,
     _send_shut_down: &Sender<()>,
-) -> Result<RunResult, TestCaseRunError> {
+) -> Result<RunResultWithInfo, TestCaseRunError> {
     let available_gas = if let Some(available_gas) = &case.available_gas {
         Some(*available_gas)
     } else {
         Some(usize::MAX)
     };
-    let func = runner.find_function(case.name.as_str())?;
-    let initial_gas = runner.get_initial_available_gas(func, available_gas)?;
+    let func = runner.find_function(case.name.as_str()).unwrap();
+    let initial_gas = runner
+        .get_initial_available_gas(func, available_gas)
+        .unwrap();
     let runner_args: Vec<Arg> = args.into_iter().map(Arg::Value).collect();
 
-    let (entry_code, builtins) = runner.create_entry_code(func, &runner_args, initial_gas)?;
+    let (entry_code, builtins) = runner
+        .create_entry_code(func, &runner_args, initial_gas)
+        .unwrap();
     let footer = runner.create_code_footer();
     let instructions = chain!(
         entry_code.iter(),
@@ -208,7 +216,7 @@ pub(crate) fn run_test_case(
         &string_to_hint,
         &mut execution_resources,
         &mut context,
-    )?;
+    );
 
     let mut cheatnet_state = CheatnetState {
         block_info,
@@ -229,35 +237,66 @@ pub(crate) fn run_test_case(
         &string_to_hint,
     );
 
-    Ok(runner.run_function(
-        runner.find_function(case.name.as_str())?,
+    let block_number_of_latest = if let Some(ValidatedForkConfig {
+        url: _,
+        block_id: BlockId::Tag(Latest),
+    }) = &case.fork_config
+    {
+        Some(block_info.block_number)
+    } else {
+        None
+    };
+
+    let run_result = runner.run_function(
+        func,
         &mut test_execution_syscall_handler,
         hints_dict,
         instructions,
         builtins,
-    )?)
+    );
+
+    Ok(RunResultWithInfo {
+        run_result,
+        block_number_of_latest,
+    })
 }
 
 fn extract_test_case_summary(
-    run_result: Result<RunResult, TestCaseRunError>,
+    run_result: Result<RunResultWithInfo, TestCaseRunError>,
     case: &TestCase<ValidatedForkConfig>,
     args: Vec<Felt252>,
 ) -> Result<TestCaseSummary> {
     match run_result {
-        Ok(result) => Ok(TestCaseSummary::from_run_result(result, case, args)),
-
-        // CairoRunError comes from VirtualMachineError which may come from HintException that originates in the cheatcode processor
-        Err(TestCaseRunError::RunnerError(RunnerError::CairoRunError(error))) => {
-            Ok(TestCaseSummary::Failed {
-                name: case.name.clone(),
-                msg: Some(format!(
-                    "\n    {}\n",
-                    error.to_string().replace(" Custom Hint Error: ", "\n    ")
+        Ok(result_with_info) => {
+            match result_with_info.run_result {
+                Ok(run_result) => Ok(TestCaseSummary::from_run_result(
+                    run_result,
+                    case,
+                    args,
+                    result_with_info.block_number_of_latest,
                 )),
-                arguments: args,
-                fuzzing_statistic: None,
-            })
+                // CairoRunError comes from VirtualMachineError which may come from HintException that originates in the cheatcode processor
+                Err(RunnerError::CairoRunError(error)) => Ok(TestCaseSummary::Failed {
+                    name: case.name.clone(),
+                    msg: Some(format!(
+                        "\n    {}\n",
+                        error.to_string().replace(" Custom Hint Error: ", "\n    ")
+                    )),
+                    arguments: args,
+                    fuzzing_statistic: None,
+                    block_number_of_latest: result_with_info.block_number_of_latest,
+                }),
+                Err(err) => bail!(err),
+            }
         }
+        // `get_fork_state_reader` may return an error
+        Err(TestCaseRunError::ProviderError(error)) => Ok(TestCaseSummary::Failed {
+            name: case.name.clone(),
+            msg: Some(error.to_string()),
+            arguments: args,
+            fuzzing_statistic: None,
+            block_number_of_latest: None,
+        }),
         // ForkStateReader.get_block_info() may return error
         Err(TestCaseRunError::StateError(error)) => Ok(TestCaseSummary::Failed {
             name: case.name.clone(),
@@ -267,15 +306,15 @@ fn extract_test_case_summary(
             )),
             arguments: args,
             fuzzing_statistic: None,
+            block_number_of_latest: None,
         }),
-        Err(err) => Err(err.into()),
     }
 }
 
 fn get_fork_state_reader(
     workspace_root: &Utf8Path,
     fork_config: &Option<ValidatedForkConfig>,
-) -> Result<Option<ForkStateReader>> {
+) -> Result<Option<ForkStateReader>, ProviderError<JsonRpcClientError<HttpTransportError>>> {
     match fork_config {
         Some(ValidatedForkConfig { url, mut block_id }) => {
             if let BlockId::Tag(Latest) = block_id {
@@ -291,12 +330,15 @@ fn get_fork_state_reader(
     }
 }
 
-fn get_latest_block_number(url: &Url) -> Result<BlockId> {
+fn get_latest_block_number(
+    url: &Url,
+) -> Result<BlockId, ProviderError<JsonRpcClientError<HttpTransportError>>> {
     let client = JsonRpcClient::new(HttpTransport::new(url.clone()));
     let runtime = Runtime::new().expect("Could not instantiate Runtime");
 
     match runtime.block_on(client.get_block_with_tx_hashes(BlockId::Tag(Latest))) {
         Ok(MaybePendingBlockWithTxHashes::Block(block)) => Ok(BlockId::Number(block.block_number)),
-        _ => Err(anyhow!("Could not get the latest block number".to_string())),
+        Ok(MaybePendingBlockWithTxHashes::PendingBlock(_)) => unreachable!(),
+        Err(provider_error) => Err(provider_error),
     }
 }
