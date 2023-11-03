@@ -47,7 +47,6 @@ pub struct ForkTarget {
 pub struct RunnerConfig {
     pub workspace_root: Utf8PathBuf,
     pub exit_first: bool,
-    // pub tests_filter: TestsFilter,
     pub fork_targets: Vec<ForkTarget>,
     pub fuzzer_runs: u32,
     pub fuzzer_seed: u64,
@@ -167,11 +166,16 @@ pub struct TestCrate {
     pub test_cases: Vec<TestCase>,
 }
 
+pub trait TestsFilter {
+    fn should_be_run(&self, test_case: &TestCase) -> bool;
+}
+
 pub async fn run_tests_from_crate(
     tests: Arc<TestCrate>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     cancellation_tokens: Arc<CancellationTokens>,
+    tests_filter: &impl TestsFilter,
 ) -> Result<TestCrateSummary> {
     let runner = Arc::new(
         SierraCasmRunner::new(
@@ -198,15 +202,12 @@ pub async fn run_tests_from_crate(
     for case in test_cases.iter() {
         let case_name = case.name.clone();
 
-        // if !runner_config
-        //     .tests_filter
-        //     .should_be_run_based_on_ignored(case)
-        // {
-        //     tasks.push(tokio::task::spawn(async {
-        //         Ok(TestCaseSummary::Ignored { name: case_name })
-        //     }));
-        //     continue;
-        // };
+        if !tests_filter.should_be_run(&case) {
+            tasks.push(tokio::task::spawn(async {
+                Ok(TestCaseSummary::Ignored { name: case_name })
+            }));
+            continue;
+        };
 
         let function = runner.find_function(&case_name)?;
         let args = function_args(function, &BUILTINS);

@@ -1,7 +1,6 @@
 use anyhow::{anyhow, Result};
 use camino::Utf8Path;
 use itertools::Itertools;
-use rand::RngCore;
 use std::fmt::Debug;
 use std::sync::Arc;
 
@@ -10,9 +9,7 @@ use forge_runner::TestCase as RunnerTestCase;
 use forge_runner::{CancellationTokens, ForkConfig, RunnerConfig, RunnerParams, TestCrate};
 use test_collector::{RawForkConfig, RawForkParams};
 
-use crate::collecting::{
-    collect_test_compilation_targets, compile_tests, CompiledTestCrateRaw, ValidatedForkConfig,
-};
+use crate::collecting::{collect_test_compilation_targets, compile_tests, CompiledTestCrateRaw};
 use crate::test_filter::TestsFilter;
 
 pub mod collecting;
@@ -28,8 +25,8 @@ pub enum CrateLocation {
     Tests,
 }
 
-fn parse_fork_params(raw_fork_params: &RawForkParams) -> Result<ValidatedForkConfig> {
-    Ok(ValidatedForkConfig {
+fn parse_fork_params(raw_fork_params: &RawForkParams) -> Result<ForkConfig> {
+    Ok(ForkConfig {
         url: raw_fork_params.url.parse()?,
         block_id: raw_fork_params.block_id,
     })
@@ -64,11 +61,7 @@ fn to_runner_test_crate(
     for case in compiled_test_crate.test_cases {
         let fork_config = if let Some(fc) = case.fork_config {
             let raw_fork_params = replace_id_with_params(fc, runner_config)?;
-            let validated_fork_config = parse_fork_params(&raw_fork_params)?;
-            let fork_config = ForkConfig {
-                url: validated_fork_config.url,
-                block_id: validated_fork_config.block_id,
-            };
+            let fork_config = parse_fork_params(&raw_fork_params)?;
             Some(fork_config)
         } else {
             None
@@ -142,10 +135,11 @@ pub async fn run(
         let compiled_test_crate = Arc::new(compiled_test_crate);
 
         let summary = forge_runner::run_tests_from_crate(
-            compiled_test_crate,
+            compiled_test_crate.clone(),
             runner_config.clone(),
             runner_params.clone(),
             cancellation_tokens.clone(),
+            tests_filter,
         )
         .await?;
 
