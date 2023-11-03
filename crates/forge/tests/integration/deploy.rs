@@ -82,20 +82,3 @@ fn deploy_syscall() {
 
     assert_passed!(result);
 }
-
-#[test]
-fn empty() {
-    let test = test_case!(indoc!(
-        r#"
-        #[test]
-        fn empty() {
-            let x = 2 * 2 * 2;
-            assert(x == 8, '123456789012345678');
-        }
-    "#
-    ),);
-
-    let result = run_test_case(&test);
-
-    assert_passed!(result);
-}

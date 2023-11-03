@@ -41,6 +41,8 @@ use cairo_vm::vm::runners::cairo_runner::CairoRunner;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use num_traits::ToPrimitive;
 
+// almost entirely copied from cairo_lang_runner
+// fields are `pub` now
 pub struct SierraCasmRunner {
     /// The sierra program.
     pub sierra_program: cairo_lang_sierra::program::Program,
@@ -102,6 +104,7 @@ impl SierraCasmRunner {
     where
         Instructions: Iterator<Item = &'a Instruction> + Clone,
     {
+        // changed from casm_run::fun_function to our implementation
         let (cells, ap) = run_function(
             vm,
             instructions,
@@ -450,6 +453,7 @@ fn create_metadata(
     }
 }
 
+// casm_run::run_function
 pub fn run_function<'a, 'b: 'a, Instructions>(
     vm: &mut VirtualMachine,
     instructions: Instructions,
@@ -499,6 +503,7 @@ where
         .map_err(CairoRunError::from)?;
     runner.relocate(vm, true).map_err(CairoRunError::from)?;
 
+    // changed region
     finalize(
         vm,
         &runner,
@@ -509,6 +514,7 @@ where
         0,
         2,
     );
+    // end region
 
     Ok((
         runner.relocated_memory,
@@ -516,6 +522,7 @@ where
     ))
 }
 
+// similar to `finalize_execution` from blockifier
 fn finalize(
     vm: &mut VirtualMachine,
     runner: &CairoRunner,
