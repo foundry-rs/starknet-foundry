@@ -259,7 +259,11 @@ pub(crate) fn run_test_case(
             .cheatable_syscall_handler
             .syscall_handler
             .resources,
-    ) + test_execution_syscall_handler.contract_execution_syscall_handler.cheatable_syscall_handler.cheatnet_state.gas_used;
+    ) + test_execution_syscall_handler
+        .contract_execution_syscall_handler
+        .cheatable_syscall_handler
+        .cheatnet_state
+        .gas_used;
 
     Ok(TestRunResult {
         gas,

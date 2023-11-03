@@ -81,8 +81,10 @@ pub(crate) fn print_test_result(test_result: &TestCaseSummary) {
     };
 
     let gas_report = match test_result {
-        TestCaseSummary::Passed { gas, .. } => { format!("\nGas used: {gas}\n") }
-        _ => String::new()
+        TestCaseSummary::Passed { gas, .. } => {
+            format!("\nGas used: {gas}\n")
+        }
+        _ => String::new(),
     };
 
     println!("{result_header} {result_name}{fuzzer_report}{result_message}{gas_report}");
