@@ -463,7 +463,6 @@ fn warp_all_stop() {
 
 #[test]
 fn warp_multiple() {
-    println!("blah blah blah");
     let mut cached_state = create_cached_state();
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
