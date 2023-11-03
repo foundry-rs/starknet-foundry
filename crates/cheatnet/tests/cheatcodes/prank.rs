@@ -504,3 +504,67 @@ fn prank_multiple() {
     assert_eq!(old_address1, changed_back_address1);
     assert_eq!(old_address2, changed_back_address2);
 }
+
+#[test]
+fn prank_all_then_one() {
+    let mut cached_state = create_cached_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
+
+    let contract_address = deploy_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        "PrankChecker",
+        &[],
+    );
+
+    let selector = felt_selector_from_name("get_caller_address");
+
+    cheatnet_state.start_prank(CheatTarget::All, ContractAddress::from(321_u128));
+    cheatnet_state.start_prank(
+        CheatTarget::One(contract_address),
+        ContractAddress::from(123_u128),
+    );
+
+    let output = call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &contract_address,
+        &selector,
+        &[],
+    )
+    .unwrap();
+
+    assert_eq!(recover_data(output), vec![Felt252::from(123)]);
+}
+
+#[test]
+fn prank_one_then_all() {
+    let mut cached_state = create_cached_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
+
+    let contract_address = deploy_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        "PrankChecker",
+        &[],
+    );
+
+    let selector = felt_selector_from_name("get_caller_address");
+
+    cheatnet_state.start_prank(
+        CheatTarget::One(contract_address),
+        ContractAddress::from(123_u128),
+    );
+    cheatnet_state.start_prank(CheatTarget::All, ContractAddress::from(321_u128));
+
+    let output = call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &contract_address,
+        &selector,
+        &[],
+    )
+    .unwrap();
+
+    assert_eq!(recover_data(output), vec![Felt252::from(321)]);
+}
