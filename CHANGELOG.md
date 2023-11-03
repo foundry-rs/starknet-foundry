@@ -27,7 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Fixed
 
 - account commands now always return valid json when `--json` flag is passed
-- allow passing multiple calldata argument items without quotes 
+- allow passing multiple calldata argument items without quotes
+- display correct error message when account file is invalid
 
 ## [0.9.0] - 2023-10-25
 
