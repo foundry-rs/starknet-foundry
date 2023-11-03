@@ -20,8 +20,6 @@ pub mod pretty_printing;
 pub mod scarb;
 pub mod test_filter;
 
-const FUZZER_RUNS_DEFAULT: u32 = 256;
-
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum CrateLocation {
     /// Main crate in a package
@@ -170,261 +168,76 @@ pub async fn run(
     Ok(summaries)
 }
 
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-//     use crate::test_filter::{IgnoredFilter, NameFilter};
-//     use cairo_lang_sierra::program::Program;
-//     use starknet::core::types::BlockId;
-//     use starknet::core::types::BlockTag::Latest;
-//     use test_collector::ExpectedTestResult;
-//
-//     #[test]
-//     fn fuzzer_default_seed() {
-//         let workspace_root: Utf8PathBuf = Default::default();
-//         let config = RunnerConfig::new(
-//             workspace_root.clone(),
-//             None,
-//             false,
-//             false,
-//             false,
-//             false,
-//             None,
-//             None,
-//             &Default::default(),
-//         );
-//         let config2 = RunnerConfig::new(
-//             workspace_root,
-//             None,
-//             false,
-//             false,
-//             false,
-//             false,
-//             None,
-//             None,
-//             &Default::default(),
-//         );
-//
-//         assert_ne!(config.fuzzer_seed, 0);
-//         assert_ne!(config2.fuzzer_seed, 0);
-//         assert_ne!(config.fuzzer_seed, config2.fuzzer_seed);
-//     }
-//
-//     #[test]
-//     fn runner_config_default_arguments() {
-//         let workspace_root: Utf8PathBuf = Default::default();
-//         let config = RunnerConfig::new(
-//             workspace_root.clone(),
-//             None,
-//             false,
-//             false,
-//             false,
-//             false,
-//             None,
-//             None,
-//             &Default::default(),
-//         );
-//         assert_eq!(
-//             config,
-//             RunnerConfig {
-//                 workspace_root,
-//                 exit_first: false,
-//                 tests_filter: TestsFilter {
-//                     name_filter: NameFilter::All,
-//                     ignored_filter: IgnoredFilter::NotIgnored
-//                 },
-//                 fork_targets: vec![],
-//                 fuzzer_runs: FUZZER_RUNS_DEFAULT,
-//                 fuzzer_seed: config.fuzzer_seed,
-//             }
-//         );
-//     }
-//
-//     #[test]
-//     fn runner_config_just_scarb_arguments() {
-//         let config_from_scarb = ForgeConfig {
-//             exit_first: true,
-//             fork: vec![],
-//             fuzzer_runs: Some(1234),
-//             fuzzer_seed: Some(500),
-//         };
-//         let workspace_root: Utf8PathBuf = Default::default();
-//
-//         let config = RunnerConfig::new(
-//             workspace_root.clone(),
-//             Some("test".to_string()),
-//             false,
-//             false,
-//             true,
-//             false,
-//             None,
-//             None,
-//             &config_from_scarb,
-//         );
-//         assert_eq!(
-//             config,
-//             RunnerConfig {
-//                 workspace_root,
-//                 exit_first: true,
-//                 fork_targets: vec![],
-//                 tests_filter: TestsFilter {
-//                     name_filter: NameFilter::Match("test".to_string()),
-//                     ignored_filter: IgnoredFilter::Ignored
-//                 },
-//                 fuzzer_runs: 1234,
-//                 fuzzer_seed: 500,
-//             }
-//         );
-//     }
-//
-//     #[test]
-//     fn runner_config_argument_precedence() {
-//         let workspace_root: Utf8PathBuf = Default::default();
-//
-//         let config_from_scarb = ForgeConfig {
-//             exit_first: false,
-//             fork: vec![],
-//             fuzzer_runs: Some(1234),
-//             fuzzer_seed: Some(1000),
-//         };
-//         let config = RunnerConfig::new(
-//             workspace_root.clone(),
-//             Some("abc".to_string()),
-//             true,
-//             true,
-//             false,
-//             true,
-//             Some(100),
-//             Some(32),
-//             &config_from_scarb,
-//         );
-//         assert_eq!(
-//             config,
-//             RunnerConfig {
-//                 workspace_root,
-//                 exit_first: true,
-//                 tests_filter: TestsFilter {
-//                     name_filter: NameFilter::ExactMatch("abc".to_string()),
-//                     ignored_filter: IgnoredFilter::All
-//                 },
-//                 fork_targets: vec![],
-//                 fuzzer_runs: 100,
-//                 fuzzer_seed: 32,
-//             }
-//         );
-//     }
-//
-//     #[test]
-//     #[should_panic]
-//     fn only_ignored_and_include_ignored_both_true() {
-//         let _ = RunnerConfig::new(
-//             Default::default(),
-//             None,
-//             false,
-//             false,
-//             true,
-//             true,
-//             None,
-//             None,
-//             &Default::default(),
-//         );
-//     }
-//
-//     #[test]
-//     #[should_panic]
-//     fn exact_match_true_without_test_filter_name() {
-//         let _ = RunnerConfig::new(
-//             Default::default(),
-//             None,
-//             true,
-//             false,
-//             true,
-//             true,
-//             None,
-//             None,
-//             &Default::default(),
-//         );
-//     }
-//
-//     #[test]
-//     fn to_runnable_unparsable_url() {
-//         let mocked_tests = CompiledTestCrate {
-//             sierra_program: Program {
-//                 type_declarations: vec![],
-//                 libfunc_declarations: vec![],
-//                 statements: vec![],
-//                 funcs: vec![],
-//             },
-//             test_cases: vec![TestCase {
-//                 name: "crate1::do_thing".to_string(),
-//                 available_gas: None,
-//                 ignored: false,
-//                 expected_result: ExpectedTestResult::Success,
-//                 fork_config: Some(RawForkConfig::Params(RawForkParams {
-//                     url: "unparsable_url".to_string(),
-//                     block_id: BlockId::Tag(Latest),
-//                 })),
-//                 fuzzer_config: None,
-//             }],
-//             tests_location: CrateLocation::Lib,
-//         };
-//         let config = RunnerConfig::new(
-//             Default::default(),
-//             None,
-//             false,
-//             false,
-//             false,
-//             false,
-//             None,
-//             None,
-//             &Default::default(),
-//         );
-//
-//         assert!(to_runnable(mocked_tests, &config).is_err());
-//     }
-//
-//     #[test]
-//     fn to_runnable_non_existent_id() {
-//         let mocked_tests = CompiledTestCrate {
-//             sierra_program: Program {
-//                 type_declarations: vec![],
-//                 libfunc_declarations: vec![],
-//                 statements: vec![],
-//                 funcs: vec![],
-//             },
-//             test_cases: vec![TestCase {
-//                 name: "crate1::do_thing".to_string(),
-//                 available_gas: None,
-//                 ignored: false,
-//                 expected_result: ExpectedTestResult::Success,
-//                 fork_config: Some(RawForkConfig::Id("non_existent".to_string())),
-//                 fuzzer_config: None,
-//             }],
-//             tests_location: CrateLocation::Lib,
-//         };
-//         let config = RunnerConfig::new(
-//             Default::default(),
-//             None,
-//             false,
-//             false,
-//             false,
-//             false,
-//             None,
-//             None,
-//             &ForgeConfig {
-//                 exit_first: false,
-//                 fuzzer_runs: None,
-//                 fuzzer_seed: None,
-//                 fork: vec![ForkTarget {
-//                     name: "definitely_non_existing".to_string(),
-//                     params: RawForkParams {
-//                         url: "https://not_taken.com".to_string(),
-//                         block_id: BlockId::Number(120),
-//                     },
-//                 }],
-//             },
-//         );
-//
-//         assert!(to_runnable(mocked_tests, &config).is_err());
-//     }
-// }
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use cairo_lang_sierra::program::Program;
+    use forge_runner::ForkTarget;
+    use starknet::core::types::BlockId;
+    use starknet::core::types::BlockTag::Latest;
+    use test_collector::{ExpectedTestResult, TestCase};
+
+    #[test]
+    fn to_runnable_unparsable_url() {
+        let mocked_tests = CompiledTestCrateRaw {
+            sierra_program: Program {
+                type_declarations: vec![],
+                libfunc_declarations: vec![],
+                statements: vec![],
+                funcs: vec![],
+            },
+            test_cases: vec![TestCase::<RawForkConfig> {
+                name: "crate1::do_thing".to_string(),
+                available_gas: None,
+                ignored: false,
+                expected_result: ExpectedTestResult::Success,
+                fork_config: Some(RawForkConfig::Params(RawForkParams {
+                    url: "unparsable_url".to_string(),
+                    block_id: BlockId::Tag(Latest),
+                })),
+                fuzzer_config: None,
+            }],
+            tests_location: CrateLocation::Lib,
+        };
+        let config = RunnerConfig::new(Default::default(), false, vec![], 256, 12345);
+
+        assert!(to_runnable(mocked_tests, &config).is_err());
+    }
+
+    #[test]
+    fn to_runnable_non_existent_id() {
+        let mocked_tests = CompiledTestCrateRaw {
+            sierra_program: Program {
+                type_declarations: vec![],
+                libfunc_declarations: vec![],
+                statements: vec![],
+                funcs: vec![],
+            },
+            test_cases: vec![TestCase::<RawForkConfig> {
+                name: "crate1::do_thing".to_string(),
+                available_gas: None,
+                ignored: false,
+                expected_result: ExpectedTestResult::Success,
+                fork_config: Some(RawForkConfig::Id("non_existent".to_string())),
+                fuzzer_config: None,
+            }],
+            tests_location: CrateLocation::Lib,
+        };
+
+        let config = RunnerConfig::new(
+            Default::default(),
+            false,
+            vec![ForkTarget {
+                name: "definitely_non_existing".to_string(),
+                params: RawForkParams {
+                    url: "https://not_taken.com".to_string(),
+                    block_id: BlockId::Number(120),
+                },
+            }],
+            256,
+            12345,
+        );
+
+        assert!(to_runnable(mocked_tests, &config).is_err());
+    }
+}

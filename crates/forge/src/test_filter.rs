@@ -107,6 +107,18 @@ mod tests {
     }
 
     #[test]
+    #[should_panic]
+    fn from_flags_only_ignored_and_include_ignored_both_true() {
+        TestsFilter::from_flags(None, false, true, true);
+    }
+
+    #[test]
+    #[should_panic]
+    fn from_flags_exact_match_true_without_test_filter_name() {
+        TestsFilter::from_flags(None, true, false, false);
+    }
+
+    #[test]
     #[allow(clippy::too_many_lines)]
     fn filtering_tests() {
         let mocked_tests = CompiledTestCrate {

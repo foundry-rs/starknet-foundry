@@ -1,6 +1,7 @@
 use anyhow::{anyhow, bail, Context, Result};
-use camino::Utf8PathBuf;
+use camino::{Utf8Path, Utf8PathBuf};
 use clap::{Parser, Subcommand};
+use forge::scarb::config::ForgeConfig;
 use forge::scarb::config_from_scarb_for_package;
 use forge::test_filter::TestsFilter;
 use forge::{pretty_printing, run};
@@ -27,6 +28,8 @@ use tokio::runtime::Builder;
 mod init;
 
 static PREDEPLOYED_CONTRACTS: Dir = include_dir!("crates/cheatnet/predeployed-contracts");
+
+const FUZZER_RUNS_DEFAULT: u32 = 256;
 
 #[derive(Parser, Debug)]
 #[command(version)]
@@ -178,14 +181,12 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                     .transpose()?
                     .unwrap_or_default();
 
-                let runner_config = Arc::new(RunnerConfig::new(
-                    workspace_root.clone(),
+                let runner_config = Arc::new(combine_configs(
+                    &workspace_root,
                     args.exit_first,
-                    forge_config.fork.clone(),
-                    args.fuzzer_runs.or(forge_config.fuzzer_runs).unwrap_or(256),
-                    args.fuzzer_seed
-                        .or(forge_config.fuzzer_seed)
-                        .unwrap_or_else(|| thread_rng().next_u64()),
+                    args.fuzzer_runs,
+                    args.fuzzer_seed,
+                    &forge_config,
                 ));
 
                 let runner_params = Arc::new(RunnerParams::new(
@@ -234,6 +235,26 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
     Ok(all_failed_tests.is_empty())
 }
 
+fn combine_configs(
+    workspace_root: &Utf8Path,
+    exit_first: bool,
+    fuzzer_runs: Option<u32>,
+    fuzzer_seed: Option<u64>,
+    forge_config: &ForgeConfig,
+) -> RunnerConfig {
+    RunnerConfig::new(
+        workspace_root.to_path_buf(),
+        exit_first || forge_config.exit_first,
+        forge_config.fork.clone(),
+        fuzzer_runs
+            .or(forge_config.fuzzer_runs)
+            .unwrap_or(FUZZER_RUNS_DEFAULT),
+        fuzzer_seed
+            .or(forge_config.fuzzer_seed)
+            .unwrap_or_else(|| thread_rng().next_u64()),
+    )
+}
+
 #[allow(clippy::too_many_lines)]
 fn main_execution() -> Result<bool> {
     let cli = Cli::parse();
@@ -263,4 +284,88 @@ fn main() {
             std::process::exit(2);
         }
     };
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn fuzzer_default_seed() {
+        let workspace_root: Utf8PathBuf = Default::default();
+        let config = combine_configs(&workspace_root, false, None, None, &Default::default());
+        let config2 = combine_configs(&workspace_root, false, None, None, &Default::default());
+
+        assert_ne!(config.fuzzer_seed, 0);
+        assert_ne!(config2.fuzzer_seed, 0);
+        assert_ne!(config.fuzzer_seed, config2.fuzzer_seed);
+    }
+
+    #[test]
+    fn runner_config_default_arguments() {
+        let workspace_root: Utf8PathBuf = Default::default();
+        let config = combine_configs(&workspace_root, false, None, None, &Default::default());
+        assert_eq!(
+            config,
+            RunnerConfig {
+                workspace_root,
+                exit_first: false,
+                fork_targets: vec![],
+                fuzzer_runs: FUZZER_RUNS_DEFAULT,
+                fuzzer_seed: config.fuzzer_seed,
+            }
+        );
+    }
+
+    #[test]
+    fn runner_config_just_scarb_arguments() {
+        let config_from_scarb = ForgeConfig {
+            exit_first: true,
+            fork: vec![],
+            fuzzer_runs: Some(1234),
+            fuzzer_seed: Some(500),
+        };
+        let workspace_root: Utf8PathBuf = Default::default();
+
+        let config = combine_configs(&workspace_root, false, None, None, &config_from_scarb);
+        assert_eq!(
+            config,
+            RunnerConfig {
+                workspace_root,
+                exit_first: true,
+                fork_targets: vec![],
+                fuzzer_runs: 1234,
+                fuzzer_seed: 500,
+            }
+        );
+    }
+
+    #[test]
+    fn runner_config_argument_precedence() {
+        let workspace_root: Utf8PathBuf = Default::default();
+
+        let config_from_scarb = ForgeConfig {
+            exit_first: false,
+            fork: vec![],
+            fuzzer_runs: Some(1234),
+            fuzzer_seed: Some(1000),
+        };
+        let config = combine_configs(
+            &workspace_root,
+            true,
+            Some(100),
+            Some(32),
+            &config_from_scarb,
+        );
+        assert_eq!(
+            config,
+            RunnerConfig {
+                workspace_root,
+                exit_first: true,
+                fork_targets: vec![],
+                fuzzer_runs: 100,
+                fuzzer_seed: 32,
+            }
+        );
+    }
 }
