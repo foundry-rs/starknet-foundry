@@ -107,7 +107,7 @@ fn fork_aliased_decorator() {
             &String::from("src"),
             &test.path().unwrap().join("src"),
             &TestsFilter::from_flags(None, false, false, false),
-            Arc::new(RunnerConfig::new(
+            RunnerConfig::new(
                 Utf8PathBuf::from_path_buf(PathBuf::from(tempdir().unwrap().path())).unwrap(),
                 false,
                 vec![ForkTarget {
@@ -119,15 +119,15 @@ fn fork_aliased_decorator() {
                 }],
                 1234,
                 500,
-            )),
-            Arc::new(RunnerParams::new(
+            ),
+            RunnerParams::new(
                 corelib_path(),
                 test.contracts(&corelib_path()).unwrap(),
                 Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
                 Default::default(),
                 test.linked_libraries(),
-            )),
-            Arc::new(CancellationTokens::new()),
+            ),
+            CancellationTokens::new(),
         ))
         .expect("Runner fail");
 

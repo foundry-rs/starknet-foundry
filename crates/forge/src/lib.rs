@@ -55,7 +55,7 @@ fn replace_id_with_params(
     }
 }
 
-fn to_runnable(
+fn to_runner_test_crate(
     compiled_test_crate: CompiledTestCrateRaw,
     runner_config: &RunnerConfig,
 ) -> Result<TestCrate> {
@@ -103,16 +103,15 @@ fn to_runnable(
 /// * `contracts` - Map with names of contract used in tests and corresponding sierra and casm artifacts
 /// * `predeployed_contracts` - Absolute path to predeployed contracts used by starknet state e.g. account contracts
 ///
-
 #[allow(clippy::implicit_hasher)]
 pub async fn run(
     package_path: &Utf8Path,
     package_name: &str,
     package_source_dir_path: &Utf8Path,
     tests_filter: &TestsFilter,
-    runner_config: Arc<RunnerConfig>,
-    runner_params: Arc<RunnerParams>,
-    cancellation_tokens: Arc<CancellationTokens>,
+    runner_config: RunnerConfig,
+    runner_params: RunnerParams,
+    cancellation_tokens: CancellationTokens,
 ) -> Result<Vec<TestCrateSummary>> {
     let compilation_targets =
         collect_test_compilation_targets(package_path, package_name, package_source_dir_path)?;
@@ -121,10 +120,6 @@ pub async fn run(
         .into_iter()
         .map(|tc| tests_filter.filter_tests(tc))
         .collect_vec();
-    // let test_crates = test_crates
-    //     .into_iter()
-    //     .map(|ctc| to_runnable(ctc, &runner_config))
-    //     .collect::<Result<Vec<_>>>()?;
 
     pretty_printing::print_collected_tests_count(
         test_crates.iter().map(|tests| tests.test_cases.len()).sum(),
@@ -133,23 +128,24 @@ pub async fn run(
 
     let mut summaries = vec![];
 
+    let runner_config = Arc::new(runner_config);
+    let runner_params = Arc::new(runner_params);
+    let cancellation_tokens = Arc::new(cancellation_tokens);
+
     for compiled_test_crate in test_crates {
         pretty_printing::print_running_tests(
             compiled_test_crate.tests_location,
             compiled_test_crate.test_cases.len(),
         );
 
-        let compiled_test_crate = to_runnable(compiled_test_crate, &runner_config)?;
+        let compiled_test_crate = to_runner_test_crate(compiled_test_crate, &runner_config)?;
         let compiled_test_crate = Arc::new(compiled_test_crate);
-        let runner_config = runner_config.clone();
-        let runner_params = runner_params.clone();
-        let cancellation_tokens = cancellation_tokens.clone();
 
         let summary = forge_runner::run_tests_from_crate(
             compiled_test_crate,
-            runner_config,
-            runner_params,
-            cancellation_tokens,
+            runner_config.clone(),
+            runner_params.clone(),
+            cancellation_tokens.clone(),
         )
         .await?;
 
@@ -201,7 +197,7 @@ mod tests {
         };
         let config = RunnerConfig::new(Default::default(), false, vec![], 256, 12345);
 
-        assert!(to_runnable(mocked_tests, &config).is_err());
+        assert!(to_runner_test_crate(mocked_tests, &config).is_err());
     }
 
     #[test]
@@ -238,6 +234,6 @@ mod tests {
             12345,
         );
 
-        assert!(to_runnable(mocked_tests, &config).is_err());
+        assert!(to_runner_test_crate(mocked_tests, &config).is_err());
     }
 }

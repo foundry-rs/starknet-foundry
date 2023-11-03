@@ -181,23 +181,23 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                     .transpose()?
                     .unwrap_or_default();
 
-                let runner_config = Arc::new(combine_configs(
+                let runner_config = combine_configs(
                     &workspace_root,
                     args.exit_first,
                     args.fuzzer_runs,
                     args.fuzzer_seed,
                     &forge_config,
-                ));
+                );
 
-                let runner_params = Arc::new(RunnerParams::new(
+                let runner_params = RunnerParams::new(
                     corelib_path,
                     contracts,
                     predeployed_contracts.clone(),
                     env::vars().collect(),
                     dependencies,
-                ));
+                );
 
-                let cancellation_tokens = Arc::new(CancellationTokens::new());
+                let cancellation_tokens = CancellationTokens::new();
 
                 let tests_file_summaries = run(
                     &package_path,

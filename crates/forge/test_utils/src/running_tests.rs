@@ -22,21 +22,21 @@ pub fn run_test_case(test: &TestCase) -> Vec<TestCrateSummary> {
         &String::from("src"),
         &test.path().unwrap().join("src"),
         &TestsFilter::from_flags(None, false, false, false),
-        Arc::new(RunnerConfig::new(
+        RunnerConfig::new(
             Utf8PathBuf::from_path_buf(PathBuf::from(tempdir().unwrap().path())).unwrap(),
             false,
             vec![],
             256,
             12345,
-        )),
-        Arc::new(RunnerParams::new(
+        ),
+        RunnerParams::new(
             corelib_path(),
             test.contracts(&corelib_path()).unwrap(),
             Utf8PathBuf::from_path_buf(predeployed_contracts().to_path_buf()).unwrap(),
             test.env().clone(),
             test.linked_libraries(),
-        )),
-        Arc::new(CancellationTokens::new()),
+        ),
+        CancellationTokens::new(),
     ))
     .expect("Runner fail")
 }
