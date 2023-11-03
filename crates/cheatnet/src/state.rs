@@ -219,7 +219,8 @@ pub enum CheatStatus<T> {
 #[derive(Default)]
 pub struct CheatnetState {
     pub rolled_contracts: HashMap<ContractAddress, Felt252>,
-    pub pranked_contracts: HashMap<ContractAddress, ContractAddress>,
+    pub pranked_contracts: HashMap<ContractAddress, CheatStatus<ContractAddress>>,
+    pub global_prank: Option<ContractAddress>,
     pub warped_contracts: HashMap<ContractAddress, CheatStatus<Felt252>>,
     pub global_warp: Option<Felt252>,
     pub mocked_functions: HashMap<ContractAddress, HashMap<EntryPointSelector, Vec<StarkFelt>>>,
@@ -242,7 +243,8 @@ impl CheatnetState {
 
     #[must_use]
     pub fn address_is_pranked(&self, contract_address: &ContractAddress) -> bool {
-        self.pranked_contracts.contains_key(contract_address)
+        self.global_prank.is_some()
+            || matches! {self.pranked_contracts.get(contract_address), Some(CheatStatus::Cheated(_))}
     }
 
     #[must_use]
@@ -264,6 +266,19 @@ impl CheatnetState {
             }
         } else {
             self.global_warp.clone()
+        }
+    }
+
+    #[must_use]
+    pub fn get_cheated_caller_address(&self, address: &ContractAddress) -> Option<ContractAddress> {
+        // An individual prank for a contract overrides any global prank
+        if let Some(pranked_contract) = self.pranked_contracts.get(address) {
+            match pranked_contract {
+                CheatStatus::Cheated(caller_address) => Some(*caller_address),
+                CheatStatus::Uncheated => None,
+            }
+        } else {
+            self.global_prank
         }
     }
 

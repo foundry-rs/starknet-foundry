@@ -281,22 +281,24 @@ impl TestExecutionSyscallHandler<'_, '_> {
                 Ok(())
             }
             "start_prank" => {
-                let contract_address = inputs[0].to_contract_address();
-                let caller_address = inputs[1].to_contract_address();
+                // The last element in `inputs` should be the contract address in all cases
+                let caller_address = inputs.last().unwrap().to_contract_address();
+
+                let target = deserialize_cheat_target(&inputs[..inputs.len() - 1]);
 
                 self.contract_execution_syscall_handler
                     .cheatable_syscall_handler
                     .cheatnet_state
-                    .start_prank(contract_address, caller_address);
+                    .start_prank(target, caller_address);
                 Ok(())
             }
             "stop_prank" => {
-                let contract_address = inputs[0].to_contract_address();
+                let target = deserialize_cheat_target(&inputs);
 
                 self.contract_execution_syscall_handler
                     .cheatable_syscall_handler
                     .cheatnet_state
-                    .stop_prank(contract_address);
+                    .stop_prank(target);
                 Ok(())
             }
             "start_mock_call" => {

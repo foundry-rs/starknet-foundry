@@ -138,8 +138,7 @@ pub fn get_cheated_exec_info_ptr(
     if cheatnet_state.address_is_pranked(contract_address) {
         new_exec_info[2] = MaybeRelocatable::Int(stark_felt_to_felt(
             *cheatnet_state
-                .pranked_contracts
-                .get(contract_address)
+                .get_cheated_caller_address(contract_address)
                 .expect("No caller address value found for the pranked contract address")
                 .0
                 .key(),

@@ -9,6 +9,7 @@ use crate::{
 use cairo_felt::Felt252;
 use cheatnet::cheatcodes::deploy::deploy;
 use cheatnet::rpc::call_contract;
+use cheatnet::state::CheatTarget;
 use conversions::StarknetConversions;
 use starknet_api::core::ContractAddress;
 
@@ -24,7 +25,10 @@ fn prank_simple() {
         &[],
     );
 
-    cheatnet_state.start_prank(contract_address, ContractAddress::from(123_u128));
+    cheatnet_state.start_prank(
+        CheatTarget::One(contract_address),
+        ContractAddress::from(123_u128),
+    );
 
     let selector = felt_selector_from_name("get_caller_address");
 
@@ -52,7 +56,10 @@ fn prank_with_other_syscall() {
         &[],
     );
 
-    cheatnet_state.start_prank(contract_address, ContractAddress::from(123_u128));
+    cheatnet_state.start_prank(
+        CheatTarget::One(contract_address),
+        ContractAddress::from(123_u128),
+    );
 
     let selector = felt_selector_from_name("get_caller_address_and_emit_event");
 
@@ -81,7 +88,10 @@ fn prank_in_constructor() {
         .unwrap();
     let precalculated_address = cheatnet_state.precalculate_address(&class_hash, &[]);
 
-    cheatnet_state.start_prank(precalculated_address, ContractAddress::from(123_u128));
+    cheatnet_state.start_prank(
+        CheatTarget::One(precalculated_address),
+        ContractAddress::from(123_u128),
+    );
 
     let contract_address = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[])
         .unwrap()
@@ -128,7 +138,10 @@ fn prank_stop() {
 
     let old_address = recover_data(output);
 
-    cheatnet_state.start_prank(contract_address, ContractAddress::from(123_u128));
+    cheatnet_state.start_prank(
+        CheatTarget::One(contract_address),
+        ContractAddress::from(123_u128),
+    );
 
     let output = call_contract(
         &mut blockifier_state,
@@ -143,7 +156,7 @@ fn prank_stop() {
     assert_eq!(new_address, vec![Felt252::from(123)]);
     assert_ne!(old_address, new_address);
 
-    cheatnet_state.stop_prank(contract_address);
+    cheatnet_state.stop_prank(CheatTarget::One(contract_address));
 
     let output = call_contract(
         &mut blockifier_state,
@@ -183,8 +196,14 @@ fn prank_double() {
 
     let old_address = recover_data(output);
 
-    cheatnet_state.start_prank(contract_address, ContractAddress::from(123_u128));
-    cheatnet_state.start_prank(contract_address, ContractAddress::from(123_u128));
+    cheatnet_state.start_prank(
+        CheatTarget::One(contract_address),
+        ContractAddress::from(123_u128),
+    );
+    cheatnet_state.start_prank(
+        CheatTarget::One(contract_address),
+        ContractAddress::from(123_u128),
+    );
 
     let output = call_contract(
         &mut blockifier_state,
@@ -199,7 +218,7 @@ fn prank_double() {
     assert_eq!(new_address, vec![Felt252::from(123)]);
     assert_ne!(old_address, new_address);
 
-    cheatnet_state.stop_prank(contract_address);
+    cheatnet_state.stop_prank(CheatTarget::One(contract_address));
 
     let output = call_contract(
         &mut blockifier_state,
@@ -243,7 +262,10 @@ fn prank_proxy() {
     )
     .unwrap();
 
-    cheatnet_state.start_prank(contract_address, ContractAddress::from(123_u128));
+    cheatnet_state.start_prank(
+        CheatTarget::One(contract_address),
+        ContractAddress::from(123_u128),
+    );
 
     let after_prank_output = call_contract(
         &mut blockifier_state,
@@ -256,7 +278,7 @@ fn prank_proxy() {
 
     assert_success!(after_prank_output, vec![Felt252::from(123)]);
 
-    cheatnet_state.stop_prank(contract_address);
+    cheatnet_state.stop_prank(CheatTarget::One(contract_address));
 
     let after_prank_cancellation_output = call_contract(
         &mut blockifier_state,
@@ -298,7 +320,10 @@ fn prank_library_call() {
     )
     .unwrap();
 
-    cheatnet_state.start_prank(lib_call_address, ContractAddress::from(123_u128));
+    cheatnet_state.start_prank(
+        CheatTarget::One(lib_call_address),
+        ContractAddress::from(123_u128),
+    );
 
     let after_prank_output = call_contract(
         &mut blockifier_state,
@@ -311,7 +336,7 @@ fn prank_library_call() {
 
     assert_success!(after_prank_output, vec![Felt252::from(123)]);
 
-    cheatnet_state.stop_prank(lib_call_address);
+    cheatnet_state.stop_prank(CheatTarget::One(lib_call_address));
 
     let after_prank_cancellation_output = call_contract(
         &mut blockifier_state,

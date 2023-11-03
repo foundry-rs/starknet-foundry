@@ -15,7 +15,7 @@ fn prank() {
             use traits::TryInto;
             use starknet::ContractAddress;
             use starknet::Felt252TryIntoContractAddress;
-            use snforge_std::{ declare, ContractClassTrait, start_prank, stop_prank };
+            use snforge_std::{ declare, ContractClassTrait, start_prank, stop_prank, CheatTarget,};
 
             #[starknet::interface]
             trait IPrankChecker<TContractState> {
@@ -33,12 +33,12 @@ fn prank() {
 
                 let old_caller_address = dispatcher.get_caller_address();
 
-                start_prank(contract_address, target_caller_address);
+                start_prank(CheatTarget::One(contract_address), target_caller_address);
 
                 let new_caller_address = dispatcher.get_caller_address();
                 assert(new_caller_address == 123, 'Wrong caller address');
 
-                stop_prank(contract_address);
+                stop_prank(CheatTarget::One(contract_address));
 
                 let new_caller_address = dispatcher.get_caller_address();
                 assert(old_caller_address == new_caller_address, 'Address did not change back');

@@ -15,8 +15,8 @@ impl CheatnetState {
                 self.warped_contracts
                     .insert(contract_address, CheatStatus::Cheated(timestamp));
             }
-            CheatTarget::Multiple(contracts) => {
-                for contract_address in contracts {
+            CheatTarget::Multiple(contract_addresses) => {
+                for contract_address in contract_addresses {
                     self.warped_contracts
                         .insert(contract_address, CheatStatus::Cheated(timestamp.clone()));
                 }
@@ -34,8 +34,8 @@ impl CheatnetState {
                 self.warped_contracts
                     .insert(contract_address, CheatStatus::Uncheated);
             }
-            CheatTarget::Multiple(contracts) => {
-                for contract_address in contracts {
+            CheatTarget::Multiple(contract_addresses) => {
+                for contract_address in contract_addresses {
                     self.warped_contracts
                         .insert(contract_address, CheatStatus::Uncheated);
                 }
