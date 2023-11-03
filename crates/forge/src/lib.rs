@@ -5,11 +5,12 @@ use std::fmt::Debug;
 use std::sync::Arc;
 
 use forge_runner::test_crate_summary::TestCrateSummary;
-use forge_runner::TestCase as RunnerTestCase;
 use forge_runner::{CancellationTokens, ForkConfig, RunnerConfig, RunnerParams, TestCrate};
+use forge_runner::{TestCase as RunnerTestCase, TestResultPrinter};
 use test_collector::{RawForkConfig, RawForkParams};
 
 use crate::collecting::{collect_test_compilation_targets, compile_tests, CompiledTestCrateRaw};
+use crate::pretty_printing::TestPrinter;
 use crate::test_filter::TestsFilter;
 
 pub mod collecting;
@@ -96,7 +97,7 @@ fn to_runner_test_crate(
 /// * `contracts` - Map with names of contract used in tests and corresponding sierra and casm artifacts
 /// * `predeployed_contracts` - Absolute path to predeployed contracts used by starknet state e.g. account contracts
 ///
-#[allow(clippy::implicit_hasher)]
+#[allow(clippy::implicit_hasher, clippy::too_many_arguments)]
 pub async fn run(
     package_path: &Utf8Path,
     package_name: &str,
@@ -105,6 +106,7 @@ pub async fn run(
     runner_config: RunnerConfig,
     runner_params: RunnerParams,
     cancellation_tokens: CancellationTokens,
+    pretty_printer: &(impl TestPrinter + TestResultPrinter),
 ) -> Result<Vec<TestCrateSummary>> {
     let compilation_targets =
         collect_test_compilation_targets(package_path, package_name, package_source_dir_path)?;
@@ -114,7 +116,7 @@ pub async fn run(
         .map(|tc| tests_filter.filter_tests(tc))
         .collect_vec();
 
-    pretty_printing::print_collected_tests_count(
+    pretty_printer.print_collected_tests_count(
         test_crates.iter().map(|tests| tests.test_cases.len()).sum(),
         package_name,
     );
@@ -126,7 +128,7 @@ pub async fn run(
     let cancellation_tokens = Arc::new(cancellation_tokens);
 
     for compiled_test_crate in test_crates {
-        pretty_printing::print_running_tests(
+        pretty_printer.print_running_tests(
             compiled_test_crate.tests_location,
             compiled_test_crate.test_cases.len(),
         );
@@ -140,19 +142,20 @@ pub async fn run(
             runner_params.clone(),
             cancellation_tokens.clone(),
             tests_filter,
+            pretty_printer,
         )
         .await?;
 
         summaries.push(summary);
     }
 
-    pretty_printing::print_test_summary(&summaries);
+    pretty_printer.print_test_summary(&summaries);
 
     if summaries
         .iter()
         .any(|summary| summary.contained_fuzzed_tests)
     {
-        pretty_printing::print_test_seed(runner_config.fuzzer_seed);
+        pretty_printer.print_test_seed(runner_config.fuzzer_seed);
     }
 
     Ok(summaries)

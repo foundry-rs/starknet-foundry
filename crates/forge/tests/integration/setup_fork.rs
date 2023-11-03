@@ -3,6 +3,7 @@ use std::path::Path;
 use std::path::PathBuf;
 
 use camino::Utf8PathBuf;
+use forge::pretty_printing::NullPrinter;
 use forge::run;
 use forge::test_filter::TestsFilter;
 use starknet::core::types::BlockId;
@@ -127,6 +128,7 @@ fn fork_aliased_decorator() {
                 test.linked_libraries(),
             ),
             CancellationTokens::new(),
+            &NullPrinter::new(),
         ))
         .expect("Runner fail");
 

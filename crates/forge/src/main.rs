@@ -1,10 +1,11 @@
 use anyhow::{anyhow, bail, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use clap::{Parser, Subcommand};
+use forge::pretty_printing::{PrettyPrinter, TestPrinter};
+use forge::run;
 use forge::scarb::config::ForgeConfig;
 use forge::scarb::config_from_scarb_for_package;
 use forge::test_filter::TestsFilter;
-use forge::{pretty_printing, run};
 use forge_runner::test_case_summary::TestCaseSummary;
 use forge_runner::test_crate_summary::TestCrateSummary;
 use forge_runner::{CancellationTokens, RunnerConfig, RunnerParams, CACHE_DIR};
@@ -122,7 +123,7 @@ fn extract_failed_tests(tests_summaries: Vec<TestCrateSummary>) -> Vec<TestCaseS
         .collect()
 }
 
-fn test_workspace(args: TestArgs) -> Result<bool> {
+fn test_workspace(args: TestArgs, pretty_printer: &'static PrettyPrinter) -> Result<bool> {
     let scarb_metadata = MetadataCommand::new().inherit_stderr().exec()?;
     let workspace_root = scarb_metadata.workspace.root.clone();
 
@@ -212,6 +213,7 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                     runner_config,
                     runner_params,
                     cancellation_tokens,
+                    pretty_printer,
                 )
                 .await?;
 
@@ -230,7 +232,7 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
         )
     })?;
 
-    pretty_printing::print_failures(&all_failed_tests);
+    pretty_printer.print_failures(&all_failed_tests);
 
     Ok(all_failed_tests.is_empty())
 }
@@ -256,7 +258,7 @@ fn combine_configs(
 }
 
 #[allow(clippy::too_many_lines)]
-fn main_execution() -> Result<bool> {
+fn main_execution(pretty_printer: &'static PrettyPrinter) -> Result<bool> {
     let cli = Cli::parse();
 
     which::which("scarb")
@@ -271,16 +273,19 @@ fn main_execution() -> Result<bool> {
             clean_cache()?;
             Ok(true)
         }
-        ForgeSubcommand::Test { args } => test_workspace(args),
+        ForgeSubcommand::Test { args } => test_workspace(args, pretty_printer),
     }
 }
 
 fn main() {
-    match main_execution() {
+    // This is leaking memory
+    let pretty_printer = Box::leak(Box::new(PrettyPrinter::new()));
+
+    match main_execution(pretty_printer) {
         Ok(true) => std::process::exit(0),
         Ok(false) => std::process::exit(1),
         Err(error) => {
-            pretty_printing::print_error_message(&error);
+            pretty_printer.print_error_message(&error);
             std::process::exit(2);
         }
     };

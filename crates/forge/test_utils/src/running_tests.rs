@@ -1,6 +1,7 @@
 use crate::corelib::{corelib_path, predeployed_contracts};
 use crate::runner::TestCase;
 use camino::Utf8PathBuf;
+use forge::pretty_printing::NullPrinter;
 use forge::run;
 use forge::test_filter::TestsFilter;
 use forge_runner::test_crate_summary::TestCrateSummary;
@@ -33,6 +34,7 @@ pub fn run_test_case(test: &TestCase) -> Vec<TestCrateSummary> {
             test.linked_libraries(),
         ),
         CancellationTokens::new(),
+        &NullPrinter::new(),
     ))
     .expect("Runner fail")
 }

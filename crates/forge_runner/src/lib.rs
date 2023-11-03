@@ -10,7 +10,6 @@ use cairo_lang_sierra::program::{Function, Program};
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use camino::Utf8PathBuf;
-use console::style;
 use futures::stream::FuturesUnordered;
 use futures::StreamExt;
 use once_cell::sync::Lazy;
@@ -170,12 +169,17 @@ pub trait TestsFilter {
     fn should_be_run(&self, test_case: &TestCase) -> bool;
 }
 
+pub trait TestResultPrinter {
+    fn print_test_result(&self, test_result: &TestCaseSummary);
+}
+
 pub async fn run_tests_from_crate(
     tests: Arc<TestCrate>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     cancellation_tokens: Arc<CancellationTokens>,
     tests_filter: &impl TestsFilter,
+    result_printer: &impl TestResultPrinter,
 ) -> Result<TestCrateSummary> {
     let runner = Arc::new(
         SierraCasmRunner::new(
@@ -238,7 +242,7 @@ pub async fn run_tests_from_crate(
             // Ok(TestCaseSummary::Interrupted) before Err
             TestCaseSummary::Interrupted {} => interrupted = true,
             result => {
-                print_test_result(&result);
+                result_printer.print_test_result(&result);
 
                 results.push(result);
             }
@@ -504,46 +508,4 @@ fn function_args<'a>(function: &'a Function, builtins: &[&str]) -> Vec<&'a Concr
         .iter()
         .filter(|pt| !builtins.contains(&pt.debug_name))
         .collect()
-}
-
-pub(crate) fn print_test_result(test_result: &TestCaseSummary) {
-    let result_header = match test_result {
-        TestCaseSummary::Passed { .. } => format!("[{}]", style("PASS").green()),
-        TestCaseSummary::Failed { .. } => format!("[{}]", style("FAIL").red()),
-        TestCaseSummary::Ignored { .. } => format!("[{}]", style("IGNORE").yellow()),
-        TestCaseSummary::Skipped { .. } => format!("[{}]", style("SKIP").color256(11)),
-        TestCaseSummary::Interrupted {} => {
-            unreachable!()
-        }
-    };
-
-    let result_name = match test_result {
-        TestCaseSummary::Skipped { name }
-        | TestCaseSummary::Ignored { name }
-        | TestCaseSummary::Failed { name, .. }
-        | TestCaseSummary::Passed { name, .. } => name,
-        TestCaseSummary::Interrupted {} => {
-            unreachable!()
-        }
-    };
-
-    let result_message = match test_result {
-        TestCaseSummary::Passed { msg: Some(msg), .. } => format!("\n\nSuccess data:{msg}"),
-        TestCaseSummary::Failed { msg: Some(msg), .. } => format!("\n\nFailure data:{msg}"),
-        _ => String::new(),
-    };
-
-    let fuzzer_report = match test_result.runs() {
-        None => String::new(),
-        Some(runs) => {
-            if matches!(test_result, TestCaseSummary::Failed { .. }) {
-                let arguments = test_result.arguments();
-                format!(" (fuzzer runs = {runs}, arguments = {arguments:?})")
-            } else {
-                format!(" (fuzzer runs = {runs})")
-            }
-        }
-    };
-
-    println!("{result_header} {result_name}{fuzzer_report}{result_message}");
 }
