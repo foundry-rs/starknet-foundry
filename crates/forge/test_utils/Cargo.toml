@@ -10,7 +10,7 @@ anyhow.workspace = true
 assert_fs.workspace = true
 camino.workspace = true
 indoc.workspace = true
-scarb-metadata = { git = "https://github.com/software-mansion/scarb.git", rev = "58cc88e" }
+scarb-metadata.workspace = true
 cairo-lang-runner.workspace = true
 cairo-lang-casm.workspace = true
 cairo-lang-sierra-to-casm.workspace = true
