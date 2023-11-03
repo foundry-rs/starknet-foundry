@@ -807,6 +807,8 @@ fn write_call_contract_response(
                 .read_only_segments
                 .allocate(vm, &ret_data.iter().map(Into::into).collect())?;
 
+            cheatable_syscall_handler.cheatnet_state.gas_used += call_output.resource_report.gas;
+
             SyscallResponseWrapper::Success {
                 gas_counter: call_args.gas_counter,
                 response: SingleSegmentResponse {
