@@ -10,6 +10,7 @@ use cairo_lang_sierra::program::{Function, Program};
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use camino::Utf8PathBuf;
+use console::style;
 use futures::stream::FuturesUnordered;
 use futures::StreamExt;
 use once_cell::sync::Lazy;
@@ -26,7 +27,6 @@ use tokio::task;
 use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
 use url::Url;
-use console::style;
 
 mod fuzzer;
 mod running;

@@ -542,9 +542,9 @@ impl TestExecutionSyscallHandler<'_, '_> {
                         write_cheatcode_panic(&mut buffer, &panic_data);
                         Ok(())
                     }
-                    CallContractResult::Failure(CallContractFailure::Error { msg }) => Err(
-                        EnhancedHintError::from(CustomHint(Box::from(msg))),
-                    ),
+                    CallContractResult::Failure(CallContractFailure::Error { msg }) => {
+                        Err(EnhancedHintError::from(CustomHint(Box::from(msg))))
+                    }
                 }
             }
             "read_txt" => {
@@ -825,9 +825,7 @@ fn write_call_contract_response(
                     .map(StarknetConversions::to_stark_felt)
                     .collect(),
             },
-            CallContractFailure::Error { msg, .. } => {
-                return Err(CustomHint(Box::from(msg)))
-            }
+            CallContractFailure::Error { msg, .. } => return Err(CustomHint(Box::from(msg))),
         },
     };
 
