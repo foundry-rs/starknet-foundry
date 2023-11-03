@@ -258,28 +258,12 @@ impl CheatnetState {
 
     #[must_use]
     pub fn get_cheated_block_timestamp(&self, address: &ContractAddress) -> Option<Felt252> {
-        // An individual warp for a contract overrides any global warp
-        if let Some(warped_contract) = self.warped_contracts.get(address) {
-            match warped_contract {
-                CheatStatus::Cheated(contract_timestamp) => Some(contract_timestamp.clone()),
-                CheatStatus::Uncheated => None,
-            }
-        } else {
-            self.global_warp.clone()
-        }
+        get_cheat_for_contract(&self.global_warp, &self.warped_contracts, address)
     }
 
     #[must_use]
     pub fn get_cheated_caller_address(&self, address: &ContractAddress) -> Option<ContractAddress> {
-        // An individual prank for a contract overrides any global prank
-        if let Some(pranked_contract) = self.pranked_contracts.get(address) {
-            match pranked_contract {
-                CheatStatus::Cheated(caller_address) => Some(*caller_address),
-                CheatStatus::Uncheated => None,
-            }
-        } else {
-            self.global_prank
-        }
+        get_cheat_for_contract(&self.global_prank, &self.pranked_contracts, address)
     }
 
     #[must_use]
@@ -308,5 +292,20 @@ fn match_node_response<T: Default>(result: StateResult<T>) -> StateResult<T> {
             Err(StateError::StateReadError(msg))
         }
         _ => Ok(Default::default()),
+    }
+}
+
+fn get_cheat_for_contract<T: Clone>(
+    global_cheat: &Option<T>,
+    contract_cheats: &HashMap<ContractAddress, CheatStatus<T>>,
+    contract: &ContractAddress,
+) -> Option<T> {
+    if let Some(cheated_contract) = contract_cheats.get(contract) {
+        match cheated_contract {
+            CheatStatus::Cheated(contract_cheat) => Some(contract_cheat.clone()),
+            CheatStatus::Uncheated => None,
+        }
+    } else {
+        global_cheat.clone()
     }
 }
