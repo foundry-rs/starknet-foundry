@@ -8,7 +8,6 @@ use blockifier::execution::entry_point::{
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::cached_state::CachedState;
-use blockifier::state::errors::StateError;
 use blockifier::state::state_api::State;
 use cairo_felt::Felt252;
 use cairo_vm::serde::deserialize_program::HintParams;
@@ -39,7 +38,6 @@ use starknet_api::hash::StarkHash;
 use starknet_api::patricia_key;
 use starknet_api::transaction::Calldata;
 use test_collector::TestCase;
-use thiserror::Error;
 use tokio::runtime::Runtime;
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
@@ -156,14 +154,6 @@ fn build_syscall_handler<'a>(
     )
 }
 
-#[derive(Debug, Error)]
-pub(crate) enum TestCaseRunError {
-    #[error("{0}")]
-    StateError(#[from] StateError),
-    #[error("{0}")]
-    ProviderError(#[from] ProviderError<JsonRpcClientError<HttpTransportError>>),
-}
-
 pub(crate) struct RunResultWithInfo {
     pub(crate) run_result: Result<RunResult, RunnerError>,
     pub(crate) block_number_of_latest: Option<BlockNumber>,
@@ -177,7 +167,7 @@ pub(crate) fn run_test_case(
     runner_config: &Arc<RunnerConfig>,
     runner_params: &Arc<RunnerParams>,
     _send_shut_down: &Sender<()>,
-) -> Result<RunResultWithInfo, TestCaseRunError> {
+) -> Result<RunResultWithInfo> {
     let available_gas = if let Some(available_gas) = &case.available_gas {
         Some(*available_gas)
     } else {
@@ -262,7 +252,7 @@ pub(crate) fn run_test_case(
 }
 
 fn extract_test_case_summary(
-    run_result: Result<RunResultWithInfo, TestCaseRunError>,
+    run_result: Result<RunResultWithInfo>,
     case: &TestCase<ValidatedForkConfig>,
     args: Vec<Felt252>,
 ) -> Result<TestCaseSummary> {
@@ -275,7 +265,7 @@ fn extract_test_case_summary(
                     args,
                     result_with_info.block_number_of_latest,
                 )),
-                // CairoRunError comes from VirtualMachineError which may come from HintException that originates in the cheatcode processor
+                // CairoRunError comes from VirtualMachineError which may come from HintException that originates in TestExecutionSyscallHandler
                 Err(RunnerError::CairoRunError(error)) => Ok(TestCaseSummary::Failed {
                     name: case.name.clone(),
                     msg: Some(format!(
@@ -289,21 +279,10 @@ fn extract_test_case_summary(
                 Err(err) => bail!(err),
             }
         }
-        // `get_fork_state_reader` may return an error
-        Err(TestCaseRunError::ProviderError(error)) => Ok(TestCaseSummary::Failed {
+        // `ForkStateReader.get_block_info` and `get_fork_state_reader` may return an error
+        Err(error) => Ok(TestCaseSummary::Failed {
             name: case.name.clone(),
             msg: Some(error.to_string()),
-            arguments: args,
-            fuzzing_statistic: None,
-            block_number_of_latest: None,
-        }),
-        // ForkStateReader.get_block_info() may return error
-        Err(TestCaseRunError::StateError(error)) => Ok(TestCaseSummary::Failed {
-            name: case.name.clone(),
-            msg: Some(format!(
-                "\n    {}\n",
-                error.to_string().replace(" : ", "\n    ")
-            )),
             arguments: args,
             fuzzing_statistic: None,
             block_number_of_latest: None,
