@@ -294,3 +294,6 @@ snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry", tag = "v
 #### Added
 
 - Initial release
+
+#### Changed
+- changed every inconsistent headings in folders from title case to sentence case format
