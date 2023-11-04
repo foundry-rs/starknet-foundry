@@ -97,7 +97,7 @@ main() {
 
   ensure mkdir -p "$_tempdir"
 
-  create_install_dir "$_resolved_version"
+  create_install_dir "${_resolved_version:1}"
   local _installdir=$RETVAL
   assert_nz "$_installdir" "installdir"
 
