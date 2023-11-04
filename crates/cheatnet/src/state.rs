@@ -26,6 +26,7 @@ use starknet_api::{
     state::StorageKey,
 };
 use std::collections::HashMap;
+use std::hash::BuildHasher;
 
 // Specifies which contracts to target
 // with a cheatcode function
@@ -308,4 +309,52 @@ fn get_cheat_for_contract<T: Clone>(
     } else {
         global_cheat.clone()
     }
+}
+
+pub fn start_cheat<T: Clone, S: BuildHasher>(
+    global_cheat: &mut Option<T>,
+    contract_cheats: &mut HashMap<ContractAddress, CheatStatus<T>, S>,
+    target: CheatTarget,
+    cheat_variable: T,
+) {
+    match target {
+        CheatTarget::All => {
+            *global_cheat = Some(cheat_variable);
+            // Clear individual cheats so that `All`
+            // contracts are affected by this cheat
+            contract_cheats.clear();
+        }
+        CheatTarget::One(contract_address) => {
+            (*contract_cheats).insert(contract_address, CheatStatus::Cheated(cheat_variable));
+        }
+        CheatTarget::Multiple(contract_addresses) => {
+            for contract_address in contract_addresses {
+                (*contract_cheats).insert(
+                    contract_address,
+                    CheatStatus::Cheated(cheat_variable.clone()),
+                );
+            }
+        }
+    }
+}
+
+pub fn stop_cheat<T, S: BuildHasher>(
+    global_cheat: &mut Option<T>,
+    contract_cheats: &mut HashMap<ContractAddress, CheatStatus<T>, S>,
+    target: CheatTarget,
+) {
+    match target {
+        CheatTarget::All => {
+            *global_cheat = None;
+            contract_cheats.clear();
+        }
+        CheatTarget::One(contract_address) => {
+            (*contract_cheats).insert(contract_address, CheatStatus::Uncheated);
+        }
+        CheatTarget::Multiple(contract_addresses) => {
+            for contract_address in contract_addresses {
+                (*contract_cheats).insert(contract_address, CheatStatus::Uncheated);
+            }
+        }
+    };
 }
