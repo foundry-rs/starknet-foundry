@@ -17,12 +17,11 @@ if ! command -v curl &> /dev/null; then
     exit 1
 fi
 
-# Create the .foundry bin directory and foundryup binary if it doesn't exist.
+# Create the ${HOME}/.local/bin bin directory and snfoundryup binary if it doesn't exist.
 mkdir -p ${LOCAL_BIN}
 curl -# -L ${SNFOUNDRYUP_URL} -o ${SNFOUNDRYUP_PATH}
 chmod +x ${SNFOUNDRYUP_PATH}
 
-# Create the man directory for future man files if it doesn't exist.
 
 # Store the correct profile file (i.e. .profile for bash or .zshenv for ZSH).
 case $SHELL in
@@ -47,12 +46,12 @@ case $SHELL in
     exit 1
 esac
 
-# Only add foundryup if it isn't already in PATH.
+# Only add snfoundryup if it isn't already in PATH.
 if [[ ":$PATH:" != *":${LOCAL_BIN}:"* ]]; then
-    # Add the foundryup directory to the path and ensure the old PATH variables remain.
+    # Add the snfoundryup directory to the path and ensure the old PATH variables remain.
     echo >> $PROFILE && echo "export PATH=\"\$PATH:$LOCAL_BIN\"" >> $PROFILE
 fi
 
 
-echo && echo "Detected your preferred shell is ${PREF_SHELL} and added snfoundryup to PATH. Run 'source ${PROFILE}' or start a new terminal session to use foundryup."
+echo && echo "Detected your preferred shell is ${PREF_SHELL} and added snfoundryup to PATH. Run 'source ${PROFILE}' or start a new terminal session to use snfoundryup."
 echo "Then, simply run 'snfoundryup' to install Starknet-Foundry."
