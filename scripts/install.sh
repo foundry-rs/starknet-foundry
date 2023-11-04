@@ -4,11 +4,9 @@ set -e
 echo Installing snfoundryup...
 
 
-REPO="https://github.com/foundry-rs/starknet-foundry"
 XDG_DATA_HOME="${XDG_DATA_HOME:-"${HOME}/.local/share"}"
 INSTALL_ROOT="${XDG_DATA_HOME}/starknet-foundry-install"
 LOCAL_BIN="${HOME}/.local/bin"
-LOCAL_BIN_ESCAPED="\$HOME/.local/bin"
 
 SNFOUNDRYUP_URL="https://raw.githubusercontent.com/partychad/starknet-foundry/fork-master/scripts/snfoundryup"
 SNFOUNDRYUP_PATH="${LOCAL_BIN}/snfoundryup"
