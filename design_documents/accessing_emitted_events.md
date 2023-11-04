@@ -20,7 +20,7 @@ Some contract functions can emit events. It is important to test if they were em
 
 Propose a solution that will allow checking if events were emitted.
 
-## Considered Solutions
+## Considered solutions
 
 1. `expect_events` cheatcode 
 2. `spy_events` cheatcode

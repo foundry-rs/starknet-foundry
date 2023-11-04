@@ -1,4 +1,4 @@
-# Printing Current Configuration
+# Printing current configuration
 
 ## Overview
 

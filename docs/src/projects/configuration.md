@@ -1,8 +1,8 @@
-# Project Configuration
+# Project configuration
 
 ## Forge
 
-### Configuring Forge Settings in `Scarb.toml`
+### Configuring Forge settings in `Scarb.toml`
 
 It is possible to configure forge for all test runs through `Scarb.toml`.
 Instead of passing arguments in the command line, set them directly in the file.
@@ -18,7 +18,7 @@ Forge automatically looks for `Scarb.toml` in the directory you are running the 
 
 ## Cast
 
-### Defining Profiles in `Scarb.toml`
+### Defining profiles in `Scarb.toml`
 
 To be able to work with the network, you need to supply cast with a few parameters —
 namely the rpc node url and an account name that should be used to interact with it.
@@ -58,11 +58,11 @@ command: call
 response: [0x0]
 ```
 
-### Multiple Profiles
+### Multiple profiles
 
 You can have multiple profiles defined in the `Scarb.toml`.
 
-### Default Profile
+### Default profile
 
 If you don't need multiple profiles, you can define the parameters without specifying one:
 

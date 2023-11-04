@@ -13,7 +13,7 @@ Current test design in Starknet Forge has some issues:
 
 Propose a solution of test design that solves most of the aforementioned issues.
 
-## Proposed Solution
+## Proposed solution
 
 Tests should be contracts (just like in the early days of Protostar).
 Basically, the code in test should behave as if it was a function called in an invoke transaction.

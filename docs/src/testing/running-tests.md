@@ -1,4 +1,4 @@
-# Running Tests
+# Running tests
 
 To run tests with Forge, simply run the `snforge test` command from the package directory.
 
@@ -12,7 +12,7 @@ Running 3 test(s) from src/
 Tests: 3 passed, 0 failed, 0 skipped
 ```
 
-## Filtering Tests
+## Filtering tests
 
 You can pass a filter string after the `snforge test` command to filter tests.
 By default, any test with an [absolute module tree path](https://book.cairo-lang.org/ch07-03-paths-for-referring-to-an-item-in-the-module-tree.html#paths-for-referring-to-an-item-in-the-module-tree)
@@ -27,7 +27,7 @@ Running 2 test(s) from src/
 Tests: 2 passed, 0 failed, 0 skipped
 ```
 
-## Running a Specific Test
+## Running a specific test
 
 To run a specific test, you can pass a filter string along with an `--exact` flag.
 Note, you have to use a fully qualified test name, including a module name.
@@ -40,7 +40,7 @@ Running 1 test(s) from src/
 Tests: 1 passed, 0 failed, 0 skipped
 ```
 
-## Stopping Test Execution After First Failed Test
+## Stopping test execution after first failed test
 
 To stop the test execution after first failed test, you can pass an `--exit-first` flag along with `snforge test` command.
 

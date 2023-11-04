@@ -1,4 +1,4 @@
-# Forge CLI Reference
+# Forge CLI reference
 
 * [`snforge test`](./forge/test.md)
 * [`snforge init`](./forge/init.md)

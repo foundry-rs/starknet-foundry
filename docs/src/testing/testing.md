@@ -1,4 +1,4 @@
-# Writing Tests
+# Writing tests
 
 Forge lets you test standalone functions from your smart contracts. This technique is referred to as unit testing. You
 should write as many unit tests as possible as these are faster than integration tests.
@@ -98,7 +98,7 @@ Running 1 test(s) from tests/
 Tests: 1 passed, 0 failed, 0 skipped
 ```
 
-## Ignoring Some Tests Unless Specifically Requested
+## Ignoring some tests unless specifically requested
 
 Sometimes you may have tests that you want to exclude during most runs of `snforge test`.
 You can achieve it using `#[ignore]` - tests marked with this attribute will be skipped by default.

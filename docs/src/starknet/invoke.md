@@ -1,4 +1,4 @@
-# Invoking Contracts
+# Invoking contracts
 
 ## Overview
 

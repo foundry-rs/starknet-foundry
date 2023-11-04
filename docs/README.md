@@ -1,4 +1,4 @@
-# Starknet Foundry Book
+# Starknet Foundry book
 
 ## Installation
 

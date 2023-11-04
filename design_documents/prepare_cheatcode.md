@@ -33,7 +33,7 @@ the address in advance with the current cheatcodes.
 
 Propose a solution that will allow knowing the address of a contract before the deployment.
 
-## Considered Solutions
+## Considered solutions
 
 ### Require Calling the `prepare` Cheatcode Before Every Deployment
 
@@ -55,7 +55,7 @@ Users would have to perform an often unnecessary extra step with every deploymen
 Introducing the `precalculate_address` cheatcode that would return the contract address of the contract that would be
 deployed with `deploy` cheatcode.
 
-#### Salt "Counter"
+#### Salt "counter"
 
 Introduce an internal "counter" and use its value to salt the otherwise deterministic contract address.
 Every time the `deploy` is called, increment this counter, so subsequent calls of `deploy` with the same `class_hash`
@@ -73,7 +73,7 @@ That will use the same method of calculating the contract address as `deploy` us
 This way the user will have an ability to know the address of the contract that will be deployed, and the current
 deployment flow will remain unchanged.
 
-#### Known Problems With This Solution
+#### Known problems with this solution
 
 For the address returned by `precalculate_address` to match the address from `deploy`, the user will have to
 call `precalculate_address` immediately before the deployment or at least before any other calls to `deploy` as the
@@ -81,7 +81,7 @@ internal counter will then be incremented.
 
 This could be remedied by having separate counters for all `class_hashe`es, but it will still remain a limiting factor.
 
-#### Example Usage
+#### Example usage
 
 ```cairo
 mod HelloStarknet {
@@ -132,7 +132,7 @@ fn call_and_invoke() {
 }
 ```
 
-## Proposed Solution
+## Proposed solution
 
 Change the current deployment flow, so it can better facilitate precalculating of contract addresses.
 
@@ -162,16 +162,16 @@ And remove the `deploy` cheatcode entirely.
 
 Both `precalculate_address` and `deploy` should use the same way of calculating the contract address.
 
-### Salt "Counter"
+### Salt "counter"
 
 Introduce the same salt counter as [discussed here](#salt-counter).
 This will allow deterministic address calculation and deploying of multiple instances of the same contract.
 
-### Known Problems With This Solution
+### Known problems with this solution
 
 Same problems as [indicated here](#known-problems-with-this-solution) apply to Proposed Solution 2 as well.
 
-### Example Usage
+### Example usage
 
 ```cairo
 mod HelloStarknet {

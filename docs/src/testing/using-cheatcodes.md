@@ -13,7 +13,7 @@ When testing smart contracts, often there are parts of code that are dependent o
 Instead of trying to replicate these conditions in tests, you can emulate them
 using [cheatcodes](../appendix/cheatcodes.md).
 
-## The Test Contract
+## The test contract
 
 In this tutorial will be using this Starknet contract:
 
@@ -55,7 +55,7 @@ mod HelloStarknet {
 Note that this is the same contract as on the [Testing Smart Contracts](./testing.md) page with
 the `assert_is_allowed_user` function added.
 
-## Writing Tests
+## Writing tests
 
 We can try to create a test that will increase and verify the balance.
 
@@ -94,14 +94,14 @@ Failures:
 
 Our user validation is not letting us call the contract, because the default caller address is not `123`.
 
-## Using Cheatcodes in Tests
+## Using Cheatcodes in tests
 
 By using cheatcodes, we can change various properties of transaction info, block info, etc.
 For example, we can use the [`start_prank`](../appendix/cheatcodes/start_prank.md) cheatcode to change the caller
 address,
 so it passes our validation.
 
-### Pranking the Address
+### Pranking the address
 
 ```rust
 use snforge_std::{ declare, ContractClassTrait, start_prank };
@@ -136,7 +136,7 @@ Running 1 test(s) from tests/
 Tests: 1 passed, 0 failed, 0 skipped
 ```
 
-### Canceling the Prank
+### Canceling the prank
 
 Most cheatcodes come with corresponding `start_` and `stop_` functions that can be used to start and stop the state
 change.

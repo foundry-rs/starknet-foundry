@@ -24,7 +24,7 @@ enum SpyOn {
 
 > ⚠️ **Warning**
 >
-> Spying on the same contract with multiple spies can result in unexpected behavior — avoid it if possible.
+> Spying on the same contract with multiple spies can result in unexpected Behavior — Avoid it if Possible.
 
 `EventSpy` implements `EventFetcher` and `EventAssertions` traits.
 

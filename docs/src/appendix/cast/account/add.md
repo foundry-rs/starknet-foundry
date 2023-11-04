@@ -4,7 +4,7 @@ Import an account to accounts file.
 Account information will be saved to the file specified by `--accounts-file` argument,
 which is `~/.starknet_accounts/starknet_open_zeppelin_accounts.json` by default.
 
-## Required common arguments - passed by CLI or specified in Scarb.toml
+## Required Common Arguments - passed by CLI or specified in Scarb.toml
 
 * [`url`](../common.md#--url--u-rpc_url)
 

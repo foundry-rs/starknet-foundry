@@ -1,4 +1,4 @@
-# Creating And Deploying Accounts
+# Creating and deploying accounts
 
 Account is required to perform interactions with Starknet (only calls can be done without it). Starknet Foundry cast supports
 entire account management flow with the `sncast account create` and `sncast account deploy` commands.

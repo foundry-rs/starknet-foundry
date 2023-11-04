@@ -1,4 +1,4 @@
-# Cheatcodes Reference
+# Cheatcodes reference
 
 - [`start_prank`](cheatcodes/start_prank.md) - changes the caller address for a contract
 - [`stop_prank`](cheatcodes/stop_prank.md) - cancels the `start_prank` for the contract

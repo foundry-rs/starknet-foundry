@@ -42,13 +42,13 @@ We should allow for all flags passed to sncast to be propagated to the script. C
 and usable from script if someone wishes so, but we should not require it. That means, we might have to review our subcommands
 and if some of them requires it directly (`account create` is one), we should try to get rid of this dependency. 
 
-### interacting with contract
+### Interacting with contract
 We will use contracts dispatchers to be able to call/invoke its functions directly 
 (e.g. if contract named `mycontract` has a function `myfunction`, we should be able to just do `mycontractDispatcher.myfunction();`).
 We should also support our subcommands (`invoke`, `call`) to call/invoke so dispatchers are able to use them, and for calling/invoking 
 contracts without dispatchers.
 
-### running the script
+### Running the script
 The script would essentially run an entrypoint function - `main`. Inside our script subcommand, we will have to compile 
 the cairo script file using a custom builder/extension, and then run it using some form of a custom runner - all similarly
 to how it is done in snforge.
@@ -79,7 +79,7 @@ that sets up the devnet to be used for dry running for users.
 The behaviour would be changed with `--broadcast` flag, that would actually execute needed transactions. We should also
 include a warning message about potential incurring cost.
 
-### error handling
+### Error handling
 If the transaction fails, we should put all the relevant info about it to the state file, output log information and stop
 script execution.
 If the script fails (for any reason that is not connected to transactions - eg rpc node down), we should output relevant
@@ -91,7 +91,7 @@ In case of failed transaction, we should allow to:
 we should allow users to just re-run the script - all the previous (succeeded) transactions should not be replayed, the
 erroneous transaction should be retried and its output should be put into [state file](#example-state-file).
 
-### idempotency
+### Idempotency
 At the later stages we will want to have the script to be able to track the on chain state using a state file, which would 
 in turn allow the script to be called multiple times without any modifications, to ensure desired state. To achieve that
 we must ensure idempotency of calls to the network.
@@ -220,7 +220,7 @@ Picking those would ensure us that:
 
 
 
-### example script
+### Example script
 An example deployment script could look like this:
 
 ```cairo
@@ -259,7 +259,7 @@ fn main() {
 }
 ```
 
-### example state file
+### Example state file
 The state file by default should be written to the current working directory, with a name `<script file name>.state.json`.
 Its schema could look like this:
 

@@ -48,7 +48,7 @@ Running 2 test(s) from tests/
 Tests: 2 passed, 0 failed, 0 skipped
 ```
 
-## Using `snforge` With Existing Scarb Projects
+## Using `snforge` with existing Scarb projects
 
 To use `snforge` with existing Scarb projects, make sure you have declared the `snforge_std` package as your project
 dependency.

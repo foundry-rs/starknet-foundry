@@ -1,4 +1,4 @@
-# Testing Contracts' Internals
+# Testing contracts' internals
 
 Sometimes, you want to test a function which uses Starknet context (like block number, timestamp, storage access) 
 without deploying the actual contract. 
@@ -9,7 +9,7 @@ Since every test is treated like a contract, using the aforementioned pattern yo
 - functions performing specific operations on the contracts' storage or context data
 - library calls directly in the tests
 
-## Utilities For Testing Internals
+## Utilities For testing internals
 To facilitate such use cases, we have a handful of utilities which make a test behave like a contract. 
 
 ### `contract_state_for_testing()` - State of Test Contract
@@ -50,7 +50,7 @@ This code contains some caveats:
 2. To test internal functions, you need to pass the created state explicitly to the function, since `self` context is not available (we're using it as a static function).
 3. This function will always return the struct keeping track of the state of the test. It means that within one test every result of `contract_state_for_testing` actually points to the same state.
 
-### `snforge_std::test_address()` - Address of Test Contract
+### `snforge_std::test_address()` - Address of test contract
 
 That function returns the contract address of the test.
 It is useful, when you want to:
@@ -174,7 +174,7 @@ fn test_expect_events_simple() {
 }
 ```
 
-## Using Library Calls with the test state context
+## Using library calls with the test state context
 
 Using the above utilities, you can avoid deploying a mock contract, to test a `library_call` with a `LibraryCallDispatcher`.
 

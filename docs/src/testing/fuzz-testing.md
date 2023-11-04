@@ -1,4 +1,4 @@
-# Fuzz Testing
+# Fuzz testing
 
 In many cases, a test needs to verify function behavior for multiple possible values.
 While it is possible to come up with these cases on your own, it is often impractical, especially when you want to test
@@ -10,7 +10,7 @@ against a large number of possible arguments.
 > other fuzzer runs.
 > In the future, more advanced fuzzing execution modes will be added.
 
-## Random Fuzzing
+## Random fuzzing
 
 To convert a test to a random fuzz test, simply add arguments to the test function.
 These arguments can then be used in the test body.
@@ -39,7 +39,7 @@ Tests: 1 passed, 0 failed, 0 skipped
 Fuzzer seed: [..]
 ```
 
-## Types Supported by the Fuzzer
+## Types supported by the Fuzzer
 
 Fuzzer currently supports generating values of these types
 
@@ -53,7 +53,7 @@ Fuzzer currently supports generating values of these types
 
 Trying to use arguments of different type in test definition will result in an error.
 
-## Fuzzer Configuration
+## Fuzzer configuration
 
 It is possible to configure the number of runs of the random fuzzer as well as its seed for a specific test case:
 

@@ -1,4 +1,4 @@
-# Deploying New Contracts
+# Deploying new contracts
 
 ## Overview
 

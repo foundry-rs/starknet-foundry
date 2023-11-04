@@ -24,7 +24,7 @@ let file_data = read_array_from_file('file.txt').unwrap();
 assert(*array[0] == *file_data[0] && *array[1] == *file_data[1], 'arrays are not equal');
 ```
 
-## Proposed Solution
+## Proposed solution
 
 Create traits that are responsible for reading data from a file and loading it into Cairo memory
 as an array of felts, returning a Result if something goes wrong (file does not exist, short string is too long, etc.).

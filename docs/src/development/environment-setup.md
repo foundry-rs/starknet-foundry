@@ -1,4 +1,4 @@
-# Environment Setup
+# Environment setup
 
 Install the latest stable [Rust](https://www.rust-lang.org/tools/install) version.
 If you already have Rust installed make sure to upgrade it by running
@@ -13,7 +13,7 @@ To verify that project was cloned and set up correctly, you can run
 $ cargo check
 ```
 
-## External Dependencies
+## External dependencies
 
 To run Starknet Foundry tests, you must install these tools on your computer:
 
@@ -22,7 +22,7 @@ To run Starknet Foundry tests, you must install these tools on your computer:
 
 It is not possible to run tests without these installed.
 
-## Running Tests
+## Running tests
 
 > ⚠️ Make sure you run `./scripts/prepare_for_tests.sh`
 > and then set [Scarb](https://docs.swmansion.com/scarb/) version 
@@ -35,7 +35,7 @@ Tests can be run with:
 $ cargo test
 ```
 
-## Formatting and Lints
+## Formatting and lints
 
 Starknet Foundry uses [rustfmt](https://github.com/rust-lang/rustfmt) for formatting. You can run the formatter with
 

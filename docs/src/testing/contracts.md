@@ -1,4 +1,4 @@
-# Testing Smart Contracts
+# Testing smart contracts
 
 > ℹ️ **Info**
 > To use the library functions designed for testing smart contracts,
@@ -13,7 +13,7 @@
 Using unit testing as much as possible is a good practice, as it makes your test suites run faster. However, when
 writing smart contracts, you often want to test their interactions with the blockchain state and with other contracts.
 
-## The Test Contract
+## The test contract
 
 In this tutorial we will be using this Starknet contract
 
@@ -48,7 +48,7 @@ mod HelloStarknet {
 
 Note that the name after `mod` will be used as the contract name for testing purposes.
 
-## Writing Tests
+## Writing tests
 
 Let's write a test that will deploy the `HelloStarknet` contract and call some functions.
 
@@ -88,7 +88,7 @@ Running 1 test(s) from tests/
 Tests: 1 passed, 0 failed, 0 skipped
 ```
 
-## Handling Errors
+## Handling errors
 
 Sometimes we want to test contracts functions that can panic, like testing that function that verifies caller address
 panics on invalid address. For that purpose Starknet also provides a `SafeDispatcher`, that returns a `Result` instead of
@@ -188,7 +188,7 @@ Running 1 test(s) from tests/
 Tests: 1 passed, 0 failed, 0 skipped
 ```
 
-### Expecting Test Failure
+### Expecting test failure
 
 Sometimes the test code failing can be a desired behavior.
 Instead of manually handling it, you can simply mark your test as `#[should_panic(...)]`.
