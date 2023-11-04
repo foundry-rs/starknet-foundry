@@ -445,6 +445,7 @@ download() {
 }
 
 create_symlinks() {
+  local _installdir=$1
   for binary in "${BINARIES[@]}"; do
     local _binary="${_installdir}/bin/${binary}"
     local _symlink="${LOCAL_BIN}/${binary}"
