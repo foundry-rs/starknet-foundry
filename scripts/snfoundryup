@@ -47,19 +47,21 @@ main() {
 
   # Transform long options to short ones.
   for arg in "$@"; do
-    shift
-    case "$arg" in
-      '--help')           set -- "$@" '-h'   ;;
-      '--no-modify-path') set -- "$@" '-p'   ;;
-      '--version')        set -- "$@" '-v'   ;;
-      *)                  set -- "$@" "$arg" ;;
-    esac
+  shift
+  case "$arg" in
+    '--help')           set -- "$@" '-h'   ;;
+    '--no-modify-path') set -- "$@" '-p'   ;;
+    '--version')        set -- "$@" '-v'   ;;
+    '--commit')         set -- "$@" '-c'   ;;
+    *)                  set -- "$@" "$arg" ;;
+  esac
   done
 
   local _requested_ref="latest"
   local _requested_version="latest"
   local _do_modify_path=1
-  while getopts ":hpv:" opt; do
+  local _commit_hash=""
+  while getopts ":hpv:c:" opt; do
     case $opt in
     p)
       _do_modify_path=0
@@ -71,6 +73,10 @@ main() {
     v)
       _requested_ref="tag/v${OPTARG}"
       _requested_version="$OPTARG"
+      ;;
+    c)  # Add this case for the new -c option
+      _commit_hash="$OPTARG"
+       clone_and_build "$_commit_hash"
       ;;
     \?)
       err "invalid option -$OPTARG"
@@ -486,6 +492,36 @@ add_local_bin_to_path() {
   echo \
     "Detected your preferred shell is ${_pref_shell} and added '${LOCAL_BIN_ESCAPED}' to PATH." \
     "Run 'source ${_profile}' or start a new terminal session to use Starknet Foundry."
+}
+
+clone_and_build() {
+  local _commit_hash=$1
+  local _tempdir
+
+  if ! _tempdir="$(ensure mktemp -d)"; then
+    exit 1
+  fi
+
+  say "Cloning repository at commit $_commit_hash..."
+  ensure git clone "$REPO" $_tempdir
+  ensure cd "$_tempdir/starknet-foundry"
+  ensure git fetch --all
+  ensure git checkout "$_commit_hash"
+
+  say "Building binaries with cargo..."
+  ensure cargo build --release
+
+  local _build_output_dir="$PWD/target/release"
+
+  create_install_dir "${_commit_hash}/bin"
+  local _installdir=${RETVAL%????} # Assign with the last four characters removed.
+  assert_nz "$_installdir" "installdir"
+
+  ensure cp "$_build_output_dir/snforge" "$_installdir/bin/snforge"
+  ensure cp "$_build_output_dir/sncast" "$_installdir/bin/sncast"
+
+  create_symlinks "$_installdir"
+
 }
 
 main "$@" || exit 1
