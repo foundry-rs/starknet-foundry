@@ -11,6 +11,11 @@ LOCAL_BIN="${HOME}/.local/bin"
 SNFOUNDRYUP_URL="https://raw.githubusercontent.com/partychad/starknet-foundry/fork-master/scripts/snfoundryup"
 SNFOUNDRYUP_PATH="${LOCAL_BIN}/snfoundryup"
 
+# Check for curl
+if ! command -v curl &> /dev/null; then
+    echo "curl could not be found, please install it first."
+    exit 1
+fi
 
 # Create the .foundry bin directory and foundryup binary if it doesn't exist.
 mkdir -p ${LOCAL_BIN}
