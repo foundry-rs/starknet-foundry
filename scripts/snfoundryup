@@ -405,7 +405,7 @@ resolve_version() {
   local _response
 
   say "retrieving $_requested_version version from ${REPO}..."
-  _response=$(ensure curl -Ls -H 'Accept: application/json' "${REPO}/releases/${_requested_ref}")
+  _response=$(ensure curl -# -Ls -H 'Accept: application/json' "${REPO}/releases/${_requested_ref}")
   if [ "{\"error\":\"Not Found\"}" = "$_response" ]; then
     err "version $_requested_version not found"
   fi
@@ -440,7 +440,7 @@ download() {
 
   say "downloading ${_tarball}..."
 
-  ensure curl -fLS -o "$_dl" "$_url"
+  ensure curl -# -fLS -o "$_dl" "$_url"
   ensure tar -xz -C "$_installdir" --strip-components=1 -f "$_dl"
 }
 
