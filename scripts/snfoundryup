@@ -74,9 +74,11 @@ main() {
       _requested_ref="tag/v${OPTARG}"
       _requested_version="$OPTARG"
       ;;
-    c)  # Add this case for the new -c option
+    c)
+      need_cmd cargo
       _commit_hash="$OPTARG"
        clone_and_build "$_commit_hash"
+       exit 0
       ;;
     \?)
       err "invalid option -$OPTARG"
@@ -504,7 +506,7 @@ clone_and_build() {
 
   say "Cloning repository at commit $_commit_hash..."
   ensure git clone "$REPO" $_tempdir
-  ensure cd "$_tempdir/starknet-foundry"
+  ensure cd "$_tempdir"
   ensure git fetch --all
   ensure git checkout "$_commit_hash"
 
