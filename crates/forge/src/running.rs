@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use anyhow::{bail, Result};
+use anyhow::{anyhow, bail, Result};
 use blockifier::execution::entry_point::{
     CallEntryPoint, CallType, EntryPointExecutionContext, ExecutionResources,
 };
@@ -28,8 +28,8 @@ use cheatnet::state::{BlockInfoReader, CheatnetBlockInfo, CheatnetState, Extende
 use starknet::core::types::BlockTag::Latest;
 use starknet::core::types::{BlockId, MaybePendingBlockWithTxHashes};
 use starknet::core::utils::get_selector_from_name;
-use starknet::providers::jsonrpc::{HttpTransport, HttpTransportError, JsonRpcClientError};
-use starknet::providers::{JsonRpcClient, Provider, ProviderError};
+use starknet::providers::jsonrpc::HttpTransport;
+use starknet::providers::{JsonRpcClient, Provider};
 use starknet_api::block::BlockNumber;
 use starknet_api::core::PatriciaKey;
 use starknet_api::core::{ContractAddress, EntryPointSelector};
@@ -293,7 +293,7 @@ fn extract_test_case_summary(
 fn get_fork_state_reader(
     workspace_root: &Utf8Path,
     fork_config: &Option<ValidatedForkConfig>,
-) -> Result<Option<ForkStateReader>, ProviderError<JsonRpcClientError<HttpTransportError>>> {
+) -> Result<Option<ForkStateReader>> {
     match fork_config {
         Some(ValidatedForkConfig { url, mut block_id }) => {
             if let BlockId::Tag(Latest) = block_id {
@@ -309,15 +309,12 @@ fn get_fork_state_reader(
     }
 }
 
-fn get_latest_block_number(
-    url: &Url,
-) -> Result<BlockId, ProviderError<JsonRpcClientError<HttpTransportError>>> {
+fn get_latest_block_number(url: &Url) -> Result<BlockId> {
     let client = JsonRpcClient::new(HttpTransport::new(url.clone()));
     let runtime = Runtime::new().expect("Could not instantiate Runtime");
 
     match runtime.block_on(client.get_block_with_tx_hashes(BlockId::Tag(Latest))) {
         Ok(MaybePendingBlockWithTxHashes::Block(block)) => Ok(BlockId::Number(block.block_number)),
-        Ok(MaybePendingBlockWithTxHashes::PendingBlock(_)) => unreachable!(),
-        Err(provider_error) => Err(provider_error),
+        _ => Err(anyhow!("Could not get the latest block number".to_string())),
     }
 }
