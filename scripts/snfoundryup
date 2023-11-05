@@ -77,6 +77,7 @@ main() {
       ;;
     c)
       need_cmd cargo
+      banner
       _commit_hash="$OPTARG"
        clone_and_build "$_commit_hash"
        exit 0
@@ -89,7 +90,7 @@ main() {
       ;;
     esac
   done
-
+  banner
   resolve_version "$_requested_version" "$_requested_ref" || return 1
   local _resolved_version=$RETVAL
   assert_nz "$_resolved_version" "resolved_version"
@@ -525,6 +526,34 @@ clone_and_build() {
 
   create_symlinks "$_installdir"
 
+}
+
+banner() {
+  cat <<"EOF"
+
+
+.---------------------------------------------------------------------------------.
+|                                                                                 |
+|    ____  _             _               _                                        |
+|   / ___|| |_ __ _ _ __| | ___ __   ___| |_      Simplified and streamlined      |
+|   \___ \| __/ _` | '__| |/ / '_ \ / _ \ __|     toolkit for StarkNet            |
+|    ___) | || (_| | |  |   <| | | |  __/ |_      development.                    |
+|   |____/ \__\__,_|_|  |_|\_\_| |_|\___|\__|                                     |
+|   |  ___|__  _   _ _ __   __| |_ __ _   _       Providing a suite of tools      |
+|   | |_ / _ \| | | | '_ \ / _` | '__| | | |      o build on StarkNet with ease.  |
+|   |  _| (_) | |_| | | | | (_| | |  | |_| |                                      |
+|   |_|  \___/ \__,_|_| |_|\__,_|_|   \__, |                                      |
+|                                     |___/                                       |
+.---------------------------------------------------------------------------------.
+|                                                                                 | 
+|   Repo       : https://github.com/foundry-rs/starknet-foundry/                  | 
+|   Book       : https://foundry-rs.github.io/starknet-foundry/                   | 
+|   Support    : https://t.me/starknet_foundry_support/                           |  
+|                                                                                 | 
+'---------------------------------------------------------------------------------'
+
+
+EOF
 }
 
 main "$@" || exit 1
