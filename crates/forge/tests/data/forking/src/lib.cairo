@@ -25,4 +25,10 @@ mod tests {
         let balance = dispatcher.get_balance();
         assert(balance == 102, 'Balance should be 102');
     }
+
+    #[test]
+    #[fork(url: "http://188.34.188.184:9545/rpc/v0.4", block_id: BlockId::Tag(Latest))]
+    fn print_block_number_when_latest() {
+        assert(1 == 1, '');
+    }
 }

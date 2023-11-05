@@ -42,7 +42,12 @@ fn with_cache() {
     );
     let snapbox = test_runner();
 
-    let output = snapbox.current_dir(&temp).assert().code(1);
+    let output = snapbox
+        .current_dir(&temp)
+        .args(["--exact", "forking::tests::test_fork_simple"])
+        .assert()
+        .code(1);
+
     assert_stdout_contains!(
         output,
         indoc! {r#"
@@ -78,7 +83,12 @@ fn with_clean_cache() {
         .assert()
         .code(0);
 
-    let output = test_runner().current_dir(&temp).assert().code(0);
+    let output = test_runner()
+        .current_dir(&temp)
+        .args(["--exact", "forking::tests::test_fork_simple"])
+        .assert()
+        .code(0);
+
     assert_stdout_contains!(
         output,
         indoc! {r#"
@@ -89,6 +99,36 @@ fn with_clean_cache() {
         Collected 1 test(s) from forking package
         Running 1 test(s) from src/
         [PASS] forking::tests::test_fork_simple
+        Tests: 1 passed, 0 failed, 0 skipped
+        "#}
+    );
+}
+
+#[test]
+fn printing_latest_block_number() {
+    let temp = setup_package_with_file_patterns(
+        "forking",
+        &[BASE_FILE_PATTERNS, &[&format!("{CACHE_DIR}/*.json")]].concat(),
+    );
+    let snapbox = test_runner();
+
+    let output = snapbox
+        .current_dir(&temp)
+        .args(["--exact", "forking::tests::print_block_number_when_latest"])
+        .assert()
+        .code(0);
+
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 1 test(s) from forking package
+        Running 1 test(s) from src/
+        [PASS] forking::tests::print_block_number_when_latest
+        Number of the block used for fork testing = [..]
         Tests: 1 passed, 0 failed, 0 skipped
         "#}
     );
