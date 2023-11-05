@@ -18,7 +18,7 @@ XDG_DATA_HOME="${XDG_DATA_HOME:-"${HOME}/.local/share"}"
 INSTALL_ROOT="${XDG_DATA_HOME}/starknet-foundry-install"
 LOCAL_BIN="${HOME}/.local/bin"
 LOCAL_BIN_ESCAPED="\$HOME/.local/bin"
-BINARIES=("snforge" "sncast")
+BINARIES="snforge sncast" # Array synthax for shells. List can be expanded for new binaries
 usage() {
   cat <<EOF
 The installer for Starknet Foundry
@@ -105,7 +105,7 @@ main() {
 
   ensure mkdir -p "$_tempdir"
 
-  create_install_dir "${_resolved_version:1}"
+  create_install_dir "$(echo "$_resolved_version" | sed 's/^.//')" # truncating first character
   local _installdir=$RETVAL
   assert_nz "$_installdir" "installdir"
 
@@ -454,7 +454,7 @@ download() {
 
 create_symlinks() {
   local _installdir=$1
-  for binary in "${BINARIES[@]}"; do
+  for binary in $BINARIES; do
     local _binary="${_installdir}/bin/${binary}"
     local _symlink="${LOCAL_BIN}/${binary}"
 
