@@ -21,6 +21,7 @@ use std::fs::OpenOptions;
 use std::io::Write;
 use std::sync::Arc;
 use url::Url;
+use tempfile::TempDir;
 
 pub async fn declare_contract(account: &str, path: &str, shortname: &str) -> FieldElement {
     let provider = get_provider(URL).expect("Could not get the provider");
@@ -197,15 +198,12 @@ pub fn create_test_provider() -> JsonRpcClient<HttpTransport> {
 }
 
 #[must_use]
-pub fn duplicate_directory_with_salt(src_path: String, to_be_salted: &str, salt: &str) -> String {
-    let dest_path = src_path.clone() + salt;
+pub fn duplicate_directory_with_salt(src_path: String, to_be_salted: &str, salt: &str) -> TempDir {
 
     let src_dir = Utf8PathBuf::from(src_path);
-    let dest_dir = Utf8PathBuf::from(&dest_path);
-
-    _ = fs::remove_dir_all(&dest_dir);
-    fs::create_dir_all(&dest_dir).expect("Unable to create directory");
-
+    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
+    let dest_dir = Utf8PathBuf::from_path_buf(temp_dir.path().to_path_buf()).expect("Failed to create Utf8PathBuf from PathBuf");
+    
     fs_extra::dir::copy(
         src_dir.join("src"),
         &dest_dir,
@@ -225,7 +223,7 @@ pub fn duplicate_directory_with_salt(src_path: String, to_be_salted: &str, salt:
     fs::write(dest_dir.join("src/lib.cairo"), updated_code)
         .expect("Unable to change contract code");
 
-    dest_path
+    temp_dir
 }
 
 pub fn remove_devnet_env() {
