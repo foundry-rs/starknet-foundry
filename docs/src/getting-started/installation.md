@@ -10,7 +10,7 @@ and added to your `PATH` environment variable.
 You can find what version of Scarb is compatible with your version of Starknet Foundry
 in [release notes](https://github.com/foundry-rs/starknet-foundry/releases).
 
-### Install via Snfoundryup
+### Install via `snfoundryup`
 
 Snfoundryup is the Starknet Foundry toolchain installer. You can find more about it [here](https://github.com/foundry-rs/starknet-foundry/tree/master/scripts).
 
