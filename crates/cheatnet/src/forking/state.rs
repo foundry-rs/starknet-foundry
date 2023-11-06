@@ -14,7 +14,6 @@ use flate2::read::GzDecoder;
 use num_bigint::BigUint;
 use starknet::core::types::{
     BlockId, ContractClass as ContractClassStarknet, MaybePendingBlockWithTxHashes,
-    PendingBlockWithTxHashes,
 };
 use starknet::providers::jsonrpc::{HttpTransport, JsonRpcClientError};
 use starknet::providers::{JsonRpcClient, Provider, ProviderError};
@@ -53,31 +52,6 @@ impl ForkStateReader {
     }
 }
 
-fn get_pending_block_parent(
-    state_reader: &ForkStateReader,
-    pending_block: &PendingBlockWithTxHashes,
-) -> StateResult<CheatnetBlockInfo> {
-    let parent_block_id = BlockId::Hash(pending_block.parent_hash);
-
-    match state_reader.runtime.block_on(
-        state_reader
-            .client
-            .get_block_with_tx_hashes(parent_block_id),
-    ) {
-        Ok(MaybePendingBlockWithTxHashes::Block(parent_block)) => Ok(CheatnetBlockInfo {
-            block_number: BlockNumber(parent_block.block_number + 1),
-            timestamp: BlockTimestamp(pending_block.timestamp),
-            sequencer_address: ContractAddress(patricia_key!(pending_block.sequencer_address)),
-        }),
-        Ok(MaybePendingBlockWithTxHashes::PendingBlock(_)) => Err(StateReadError(
-            "Parent block of the pending block cannot be pending".to_string(),
-        )),
-        Err(err) => Err(StateReadError(format!(
-            "Unable to get parent block with tx hashes from fork, err: {err:?}"
-        ))),
-    }
-}
-
 impl BlockInfoReader for ForkStateReader {
     fn get_block_info(&mut self) -> StateResult<CheatnetBlockInfo> {
         if let Some(cache_hit) = self.cache.get_block_info() {
@@ -99,8 +73,8 @@ impl BlockInfoReader for ForkStateReader {
 
                 Ok(block_info)
             }
-            Ok(MaybePendingBlockWithTxHashes::PendingBlock(pending_block)) => {
-                get_pending_block_parent(self, &pending_block)
+            Ok(MaybePendingBlockWithTxHashes::PendingBlock(_)) => {
+                unreachable!("Pending block is not be allowed at the configuration level")
             }
             Err(err) => Err(StateReadError(format!(
                 "Unable to get block with tx hashes from fork, err: {err:?}"

@@ -5,7 +5,7 @@ network and perform actions on top of it.
 
 > 📝 **Note**
 >
-> Actions are performed on to of the `forked` state which means real network is not affected.
+> Actions are performed on top of the `forked` state which means real network is not affected.
 
 There are two ways of configuring a fork:
 - by specifying `url` and `block_id` parameters in the `#[fork(...)]` attribute
@@ -26,7 +26,6 @@ enum BlockId {
 
 enum BlockTag {
     Latest,
-    Pending,
 }
 ```
 
@@ -57,16 +56,11 @@ block_id.tag = "Latest"
 [[tool.snforge.fork]]
 name = "SOME_SECOND_NAME"
 url = "http://your.second.rpc.url"
-block_id.tag = "Pending"
+block_id.number = "123"
 
 [[tool.snforge.fork]]
 name = "SOME_THIRD_NAME"
 url = "http://your.third.rpc.url"
-block_id.number = "123"
-
-[[tool.snforge.fork]]
-name = "SOME_FOURTH_NAME"
-url = "http://your.fourth.rpc.url"
 block_id.hash = "0x123"
 ```
 

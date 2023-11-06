@@ -33,7 +33,6 @@ If you are unable to install Starknet Foundry using the instructions above, you 
 the [source code](https://github.com/foundry-rs/starknet-foundry) as follows:
 
 1. [Set up a development environment.](../development/environment-setup.md)
-2. Run `git submodule update --init --recursive && cd starknet-foundry && cargo build --release`.
-   This will create a `target` directory.
+2. Run `cd starknet-foundry && cargo build --release`. This will create a `target` directory.
 3. Move the `target` directory to the desired location (e.g. `~/.starknet-foundry`).
 4. Add `DESIRED_LOCATION/target/release/` to your `PATH`.

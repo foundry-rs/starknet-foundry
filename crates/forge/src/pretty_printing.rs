@@ -42,22 +42,24 @@ pub(crate) fn print_test_seed(seed: u64) {
 }
 
 pub(crate) fn print_test_result(test_result: &TestCaseSummary) {
+    if let TestCaseSummary::Skipped { .. } = test_result {
+        return;
+    }
+
     let result_header = match test_result {
         TestCaseSummary::Passed { .. } => format!("[{}]", style("PASS").green()),
         TestCaseSummary::Failed { .. } => format!("[{}]", style("FAIL").red()),
         TestCaseSummary::Ignored { .. } => format!("[{}]", style("IGNORE").yellow()),
-        TestCaseSummary::Skipped { .. } => format!("[{}]", style("SKIP").color256(11)),
-        TestCaseSummary::Interrupted {} => {
+        TestCaseSummary::Skipped { .. } => {
             unreachable!()
         }
     };
 
     let result_name = match test_result {
-        TestCaseSummary::Skipped { name }
-        | TestCaseSummary::Ignored { name }
+        TestCaseSummary::Ignored { name }
         | TestCaseSummary::Failed { name, .. }
         | TestCaseSummary::Passed { name, .. } => name,
-        TestCaseSummary::Interrupted {} => {
+        TestCaseSummary::Skipped {} => {
             unreachable!()
         }
     };
@@ -101,8 +103,7 @@ pub fn print_failures(all_failed_tests: &[TestCaseSummary]) {
             TestCaseSummary::Failed { name, .. } => name,
             TestCaseSummary::Passed { .. }
             | TestCaseSummary::Ignored { .. }
-            | TestCaseSummary::Skipped { .. }
-            | TestCaseSummary::Interrupted {} => unreachable!(),
+            | TestCaseSummary::Skipped {} => unreachable!(),
         })
         .collect();
 

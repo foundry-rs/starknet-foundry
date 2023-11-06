@@ -551,7 +551,6 @@ fn with_exit_first() {
         Collected 2 test(s) from exit_first package
         Running 0 test(s) from src/
         Running 2 test(s) from tests/
-        [SKIP] tests::ext_function_test::hard_test
         [FAIL] tests::ext_function_test::simple_test
 
         Failure data:
@@ -581,7 +580,6 @@ fn with_exit_first_flag() {
         Collected 2 test(s) from exit_first package
         Running 0 test(s) from src/
         Running 2 test(s) from tests/
-        [SKIP] tests::ext_function_test::hard_test
         [FAIL] tests::ext_function_test::simple_test
 
         Failure data:

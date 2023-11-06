@@ -488,7 +488,6 @@ pub async fn test_deploy_keystore_other_args() {
 
     let snapbox = Command::new(cargo_bin!("sncast")).args(args);
     snapbox.assert().stdout_matches(indoc! {r#"
-        KEYSTORE_PASSWORD environment variable found and will be used for keystore password
         command: account deploy
         transaction_hash: 0x[..]
     "#});

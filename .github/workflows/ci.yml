@@ -17,11 +17,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: true
       - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@a95ba195448af2da9b00fb742d14ffaaf3c21f43
-      - uses: software-mansion/setup-scarb@v1.3.1
+      - uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8
+      - uses: software-mansion/setup-scarb@v1.3.2
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
       - run: cargo test --release --lib -p forge
@@ -54,11 +52,9 @@ jobs:
         run: echo 'The branch name is' $BRANCH_NAME
 
       - uses: actions/checkout@v4
-        with:
-          submodules: true
       - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@a95ba195448af2da9b00fb742d14ffaaf3c21f43
-      - uses: software-mansion/setup-scarb@v1.3.1
+      - uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8
+      - uses: software-mansion/setup-scarb@v1.3.2
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
       - run: cargo test --release e2e -p forge
@@ -68,11 +64,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: true
       - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@a95ba195448af2da9b00fb742d14ffaaf3c21f43
-      - uses: software-mansion/setup-scarb@v1.3.1
+      - uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8
+      - uses: software-mansion/setup-scarb@v1.3.2
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
       - name: Run Cheatnet tests
@@ -83,32 +77,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: true
       - uses: dtolnay/rust-toolchain@439cf607258077187679211f12aa6f19af4a0af7
         with:
           toolchain: stable
-      - uses: Swatinem/rust-cache@a95ba195448af2da9b00fb742d14ffaaf3c21f43
-      - name: Set starknet-devnet-rs rev
-        id: devnet-rev
-        run: |
-          devnetrev=$(grep "DEVNET_REV=" ./scripts/prepare_for_tests.sh | awk -F '=' '{print $2}')
-          echo "devnet_rev=${devnetrev//\"}" >> $GITHUB_OUTPUT
-      - name: Cache starknet-devnet-rs
-        id: cache-devnet
-        uses: actions/cache@v3
+      - uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8
         with:
-          path: ./crates/cast/tests/utils/devnet
-          key: starknet-devnet-rs-${{ steps.devnet-rev.outputs.devnet_rev }}
+          cache-directories: crates/cast/tests/utils/devnet
       - name: Install starknet-devnet-rs
-        if: steps.cache-devnet.outputs.cache-hit != 'true'
-        run: ./scripts/prepare_for_tests.sh
-      - uses: software-mansion/setup-scarb@v1.3.1
+        run: ./scripts/install_devnet.sh
+      - uses: software-mansion/setup-scarb@v1.3.2
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
-      - name: Prepare for tests
-        run: |
-          ./scripts/prepare_for_tests.sh
       - name: Run tests
         run: cargo test --release -p cast
 
@@ -116,12 +95,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: true
       - uses: dtolnay/rust-toolchain@439cf607258077187679211f12aa6f19af4a0af7
         with:
           toolchain: stable
-      - uses: Swatinem/rust-cache@a95ba195448af2da9b00fb742d14ffaaf3c21f43
+      - uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8
       - name: Check forge formatting
         run: cargo fmt --check -p forge
       - name: Check cast formatting
@@ -138,12 +115,10 @@ jobs:
       RUSTFLAGS: "-Dwarnings"
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: true
       - uses: dtolnay/rust-toolchain@439cf607258077187679211f12aa6f19af4a0af7
         with:
           toolchain: stable
-      - uses: Swatinem/rust-cache@a95ba195448af2da9b00fb742d14ffaaf3c21f43
+      - uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8
       - run: cargo lint
 
   build-docs:
@@ -155,7 +130,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@439cf607258077187679211f12aa6f19af4a0af7
         with:
           toolchain: stable
-      - uses: Swatinem/rust-cache@a95ba195448af2da9b00fb742d14ffaaf3c21f43
+      - uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8
       - uses: actions/checkout@v4
       - name: Install mdBook
         run: |

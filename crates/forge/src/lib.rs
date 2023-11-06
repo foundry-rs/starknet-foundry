@@ -27,16 +27,17 @@ use once_cell::sync::Lazy;
 use rand::{thread_rng, RngCore};
 use smol_str::SmolStr;
 
+use scarb_artifacts::StarknetContractArtifacts;
+
 use crate::fuzzer::RandomFuzzer;
 use crate::scarb::config::{ForgeConfig, ForkTarget};
-use crate::scarb::StarknetContractArtifacts;
 
-// pub use crate::collecting::CrateLocation;
+pub use crate::collecting::{collect_test_compilation_targets, TestCompilationTarget};
 pub use crate::test_crate_summary::TestCrateSummary;
 
 use crate::collecting::{
-    collect_test_compilation_targets, compile_tests, CompiledTestCrate, CompiledTestCrateRaw,
-    CompiledTestCrateRunnable, TestCaseRunnable, ValidatedForkConfig,
+    compile_tests, CompiledTestCrate, CompiledTestCrateRaw, CompiledTestCrateRunnable,
+    TestCaseRunnable, ValidatedForkConfig,
 };
 use crate::test_filter::TestsFilter;
 use test_collector::{FuzzerConfig, LinkedLibrary, RawForkConfig, RawForkParams, TestCase};
@@ -381,20 +382,12 @@ async fn run_tests_from_crate(
     }
 
     let mut results = vec![];
-    let mut interrupted = false;
 
     while let Some(task) = tasks.next().await {
         let result = task??;
-        match result {
-            // Because tests are executed parallel is possible to receive
-            // Ok(TestCaseSummary::Interrupted) before Err
-            TestCaseSummary::Interrupted {} => interrupted = true,
-            result => {
-                pretty_printing::print_test_result(&result);
 
-                results.push(result);
-            }
-        }
+        pretty_printing::print_test_result(&result);
+        results.push(result);
     }
 
     rec.close();
@@ -402,11 +395,6 @@ async fn run_tests_from_crate(
     // Waiting for things to finish shutting down
     drop(send_shut_down);
     let _ = rec_shut_down.recv().await;
-
-    // This Panic should never occur.
-    // If TestCaseSummary::Interrupted is returned by a test,
-    // this implies that there should be another test than returned an Err.
-    assert!(!interrupted, "Tests were interrupted");
 
     let contained_fuzzed_tests = results.iter().any(|summary| summary.runs().is_some());
     Ok(TestCrateSummary {
@@ -466,12 +454,12 @@ fn run_single_test(
             () = cancellation_tokens.exit_first.cancelled() => {
                 // Stop executing all tests because flag --exit-first'
                 // has been set and one test FAIL
-                Ok(TestCaseSummary::skipped(&case))
+                Ok(TestCaseSummary::Skipped {})
             },
             () = cancellation_tokens.error.cancelled() => {
                 // Stop executing all tests because
                 // one of a test returns Err
-                Ok(TestCaseSummary::Interrupted{  })
+                Ok(TestCaseSummary::Skipped {})
             },
 
             result = blocking_run_from_test(vec![], case.clone(),runner,  runner_config.clone(), runner_params.clone(), send.clone(), send_shut_down.clone() ) => {
@@ -552,15 +540,9 @@ fn run_with_fuzzing(
             results.push(result.clone());
             final_result = Some(result.clone());
 
-            match result {
-                TestCaseSummary::Failed { .. } => {
-                    cancellation_fuzzing_token.cancel();
-                    break;
-                }
-                TestCaseSummary::Interrupted {} => {
-                    break;
-                }
-                _ => (),
+            if let TestCaseSummary::Failed { .. } = result {
+                cancellation_fuzzing_token.cancel();
+                break;
             }
         }
 
@@ -597,23 +579,22 @@ fn run_fuzzing_subtest(
     send: Sender<()>,
     send_shut_down: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
-    let c = case.clone();
     task::spawn(async move {
         tokio::select! {
             () = cancellation_tokens.error.cancelled() => {
                 // Stop executing all tests because
                 // one of a test returns Err
-                Ok(TestCaseSummary::Interrupted{  })
+                Ok(TestCaseSummary::Skipped {  })
             },
             () = cancellation_tokens.exit_first.cancelled() => {
                 // Stop executing all tests because flag --exit-first'
                 // has been set and one test FAIL
-                Ok(TestCaseSummary::skipped(&c))
+                Ok(TestCaseSummary::Skipped {  })
             },
             () = cancellation_fuzzing_token.cancelled() => {
                 // Stop executing all single fuzzing tests
                 // because one of fuzzing test has been FAIL
-                Ok(TestCaseSummary::Interrupted {  })
+                Ok(TestCaseSummary::Skipped {  })
 
             },
            result = blocking_run_from_test(
