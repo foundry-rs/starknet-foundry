@@ -100,7 +100,6 @@ pub fn build_block_context(block_info: CheatnetBlockInfo) -> BlockContext {
         invoke_tx_max_n_steps: 1_000_000,
         validate_max_n_steps: 1_000_000,
         max_recursion_depth: 50,
-        // TODO: Do 2 separate ones
         fee_token_addresses: FeeTokenAddresses {
             strk_fee_token_address: ContractAddress(patricia_key!(TEST_ERC20_CONTRACT_ADDRESS)),
             eth_fee_token_address: ContractAddress(patricia_key!(TEST_ERC20_CONTRACT_ADDRESS)),
