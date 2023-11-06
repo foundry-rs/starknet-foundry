@@ -40,7 +40,12 @@ pub enum TestCaseSummary {
         /// Name of the test case
         name: String,
     },
-    /// Test case skipped due to exit first
+    /// Test case skipped due to exit first or execution interrupted
+    /// Possible causes:
+    ///  - fuzzing subtest that was skipped/interrupted during fuzzing due to other subtest failing
+    ///  - single test or fuzzing subtest that was interrupted by error
+    /// This enum is returned when we want to ignore the test result.
+    /// It is also used to compute how many tests were skipped in the case of the exit-first flag.
     Skipped {},
 }
 
