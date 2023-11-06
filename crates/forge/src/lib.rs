@@ -24,13 +24,12 @@ use futures::stream::FuturesUnordered;
 use itertools::Itertools;
 
 use once_cell::sync::Lazy;
-use rand::{thread_rng, RngCore};
 use smol_str::SmolStr;
 
 use scarb_artifacts::StarknetContractArtifacts;
 
 use crate::fuzzer::RandomFuzzer;
-use crate::scarb::config::{ForgeConfig, ForkTarget};
+use crate::scarb::config::ForkTarget;
 
 pub use crate::collecting::{collect_test_compilation_targets, TestCompilationTarget};
 pub use crate::test_crate_summary::TestCrateSummary;
@@ -53,7 +52,7 @@ mod running;
 mod test_crate_summary;
 mod test_execution_syscall_handler;
 
-const FUZZER_RUNS_DEFAULT: u32 = 256;
+pub const FUZZER_RUNS_DEFAULT: u32 = 256;
 pub const CACHE_DIR: &str = ".snfoundry_cache";
 
 static BUILTINS: Lazy<Vec<&str>> = Lazy::new(|| {
@@ -72,11 +71,11 @@ static BUILTINS: Lazy<Vec<&str>> = Lazy::new(|| {
 /// Configuration of the test runner
 #[derive(Debug, PartialEq)]
 pub struct RunnerConfig {
-    workspace_root: Utf8PathBuf,
-    exit_first: bool,
-    fork_targets: Vec<ForkTarget>,
-    fuzzer_runs: u32,
-    fuzzer_seed: u64,
+    pub workspace_root: Utf8PathBuf,
+    pub exit_first: bool,
+    pub fork_targets: Vec<ForkTarget>,
+    pub fuzzer_runs: u32,
+    pub fuzzer_seed: u64,
 }
 
 impl RunnerConfig {
@@ -92,20 +91,16 @@ impl RunnerConfig {
     pub fn new(
         workspace_root: Utf8PathBuf,
         exit_first: bool,
-        fuzzer_runs: Option<u32>,
-        fuzzer_seed: Option<u64>,
-        forge_config_from_scarb: &ForgeConfig,
+        fork_targets: Vec<ForkTarget>,
+        fuzzer_runs: u32,
+        fuzzer_seed: u64,
     ) -> Self {
         Self {
             workspace_root,
-            exit_first: forge_config_from_scarb.exit_first || exit_first,
-            fork_targets: forge_config_from_scarb.fork.clone(),
-            fuzzer_runs: fuzzer_runs
-                .or(forge_config_from_scarb.fuzzer_runs)
-                .unwrap_or(FUZZER_RUNS_DEFAULT),
-            fuzzer_seed: fuzzer_seed
-                .or(forge_config_from_scarb.fuzzer_seed)
-                .unwrap_or_else(|| thread_rng().next_u64()),
+            exit_first,
+            fork_targets,
+            fuzzer_runs,
+            fuzzer_seed,
         }
     }
 }
@@ -641,103 +636,6 @@ mod tests {
     use test_collector::ExpectedTestResult;
 
     #[test]
-    fn fuzzer_default_seed() {
-        let workspace_root: Utf8PathBuf = Default::default();
-        let config = RunnerConfig::new(
-            workspace_root.clone(),
-            false,
-            None,
-            None,
-            &Default::default(),
-        );
-        let config2 = RunnerConfig::new(workspace_root, false, None, None, &Default::default());
-
-        assert_ne!(config.fuzzer_seed, 0);
-        assert_ne!(config2.fuzzer_seed, 0);
-        assert_ne!(config.fuzzer_seed, config2.fuzzer_seed);
-    }
-
-    #[test]
-    fn runner_config_default_arguments() {
-        let workspace_root: Utf8PathBuf = Default::default();
-        let config = RunnerConfig::new(
-            workspace_root.clone(),
-            false,
-            None,
-            None,
-            &Default::default(),
-        );
-        assert_eq!(
-            config,
-            RunnerConfig {
-                workspace_root,
-                exit_first: false,
-                fork_targets: vec![],
-                fuzzer_runs: FUZZER_RUNS_DEFAULT,
-                fuzzer_seed: config.fuzzer_seed,
-            }
-        );
-    }
-
-    #[test]
-    fn runner_config_just_scarb_arguments() {
-        let config_from_scarb = ForgeConfig {
-            exit_first: true,
-            fork: vec![],
-            fuzzer_runs: Some(1234),
-            fuzzer_seed: Some(500),
-        };
-        let workspace_root: Utf8PathBuf = Default::default();
-
-        let config = RunnerConfig::new(
-            workspace_root.clone(),
-            false,
-            None,
-            None,
-            &config_from_scarb,
-        );
-        assert_eq!(
-            config,
-            RunnerConfig {
-                workspace_root,
-                exit_first: true,
-                fork_targets: vec![],
-                fuzzer_runs: 1234,
-                fuzzer_seed: 500,
-            }
-        );
-    }
-
-    #[test]
-    fn runner_config_argument_precedence() {
-        let workspace_root: Utf8PathBuf = Default::default();
-
-        let config_from_scarb = ForgeConfig {
-            exit_first: false,
-            fork: vec![],
-            fuzzer_runs: Some(1234),
-            fuzzer_seed: Some(1000),
-        };
-        let config = RunnerConfig::new(
-            workspace_root.clone(),
-            true,
-            Some(100),
-            Some(32),
-            &config_from_scarb,
-        );
-        assert_eq!(
-            config,
-            RunnerConfig {
-                workspace_root,
-                exit_first: true,
-                fork_targets: vec![],
-                fuzzer_runs: 100,
-                fuzzer_seed: 32,
-            }
-        );
-    }
-
-    #[test]
     fn to_runnable_unparsable_url() {
         let mocked_tests = CompiledTestCrate {
             sierra_program: Program {
@@ -759,7 +657,7 @@ mod tests {
             }],
             tests_location: CrateLocation::Lib,
         };
-        let config = RunnerConfig::new(Default::default(), false, None, None, &Default::default());
+        let config = RunnerConfig::new(Default::default(), false, vec![], 256, 12345);
 
         assert!(to_runnable(mocked_tests, &config).is_err());
     }
@@ -786,20 +684,15 @@ mod tests {
         let config = RunnerConfig::new(
             Default::default(),
             false,
-            None,
-            None,
-            &ForgeConfig {
-                exit_first: false,
-                fuzzer_runs: None,
-                fuzzer_seed: None,
-                fork: vec![ForkTarget {
-                    name: "definitely_non_existing".to_string(),
-                    params: RawForkParams {
-                        url: "https://not_taken.com".to_string(),
-                        block_id: BlockId::Number(120),
-                    },
-                }],
-            },
+            vec![ForkTarget {
+                name: "definitely_non_existing".to_string(),
+                params: RawForkParams {
+                    url: "https://not_taken.com".to_string(),
+                    block_id: BlockId::Number(120),
+                },
+            }],
+            256,
+            12345,
         );
 
         assert!(to_runnable(mocked_tests, &config).is_err());
