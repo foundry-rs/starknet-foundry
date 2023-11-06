@@ -258,10 +258,10 @@ impl TestExecutionSyscallHandler<'_, '_> {
                 Ok(())
             }
             "start_warp" => {
+                let target = deserialize_cheat_target(&inputs[..inputs.len() - 1]);
+
                 // The last element in `inputs` should be the timestamp in all cases
                 let warp_timestamp = inputs.last().unwrap().clone();
-
-                let target = deserialize_cheat_target(&inputs[..inputs.len() - 1]);
 
                 self.contract_execution_syscall_handler
                     .cheatable_syscall_handler
@@ -281,10 +281,10 @@ impl TestExecutionSyscallHandler<'_, '_> {
                 Ok(())
             }
             "start_prank" => {
+                let target = deserialize_cheat_target(&inputs[..inputs.len() - 1]);
+
                 // The last element in `inputs` should be the contract address in all cases
                 let caller_address = inputs.last().unwrap().to_contract_address();
-
-                let target = deserialize_cheat_target(&inputs[..inputs.len() - 1]);
 
                 self.contract_execution_syscall_handler
                     .cheatable_syscall_handler
@@ -715,7 +715,7 @@ fn deserialize_cheat_target(inputs: &[Felt252]) -> CheatTarget {
                 .collect();
             CheatTarget::Multiple(contract_addresses)
         }
-        _ => panic!("Invalid CheatTarget variant"),
+        _ => unreachable!("Invalid CheatTarget variant"),
     }
 }
 

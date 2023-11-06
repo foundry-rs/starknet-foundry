@@ -315,24 +315,22 @@ pub fn start_cheat<T: Clone, S: BuildHasher>(
     global_cheat: &mut Option<T>,
     contract_cheats: &mut HashMap<ContractAddress, CheatStatus<T>, S>,
     target: CheatTarget,
-    cheat_variable: T,
+    cheat_value: T,
 ) {
     match target {
         CheatTarget::All => {
-            *global_cheat = Some(cheat_variable);
+            *global_cheat = Some(cheat_value);
             // Clear individual cheats so that `All`
             // contracts are affected by this cheat
             contract_cheats.clear();
         }
         CheatTarget::One(contract_address) => {
-            (*contract_cheats).insert(contract_address, CheatStatus::Cheated(cheat_variable));
+            (*contract_cheats).insert(contract_address, CheatStatus::Cheated(cheat_value));
         }
         CheatTarget::Multiple(contract_addresses) => {
             for contract_address in contract_addresses {
-                (*contract_cheats).insert(
-                    contract_address,
-                    CheatStatus::Cheated(cheat_variable.clone()),
-                );
+                (*contract_cheats)
+                    .insert(contract_address, CheatStatus::Cheated(cheat_value.clone()));
             }
         }
     }
