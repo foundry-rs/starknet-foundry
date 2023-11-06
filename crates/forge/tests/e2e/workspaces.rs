@@ -202,6 +202,9 @@ fn root_workspace_for_entire_workspace() {
         indoc! {r#"
         [..]Compiling[..]
         [..]Compiling[..]
+        [..]Compiling[..]
+        [..]Compiling[..]
+        [..]Compiling[..]
         [..]Finished[..]
         
         
@@ -214,9 +217,6 @@ fn root_workspace_for_entire_workspace() {
         [PASS] tests::nested::test_nested::test_two
         [PASS] tests::nested::test_nested::test_two_and_two
         Tests: 5 passed, 0 failed, 0 skipped
-        [..]Compiling[..]
-        [..]Compiling[..]
-        [..]Finished[..]
         
         
         Collected 6 test(s) from fibonacci package
@@ -233,8 +233,6 @@ fn root_workspace_for_entire_workspace() {
             original value: [0], converted to a string: []
         
         Tests: 5 passed, 1 failed, 0 skipped
-        [..]Compiling[..]
-        [..]Finished[..]
         
         
         Collected 3 test(s) from hello_workspaces package
@@ -273,6 +271,9 @@ fn root_workspace_for_entire_workspace_inside_package() {
         indoc! {r#"
         [..]Compiling[..]
         [..]Compiling[..]
+        [..]Compiling[..]
+        [..]Compiling[..]
+        [..]Compiling[..]
         [..]Finished[..]
         
         
@@ -285,9 +286,6 @@ fn root_workspace_for_entire_workspace_inside_package() {
         [PASS] tests::nested::test_nested::test_two
         [PASS] tests::nested::test_nested::test_two_and_two
         Tests: 5 passed, 0 failed, 0 skipped
-        [..]Compiling[..]
-        [..]Compiling[..]
-        [..]Finished[..]
         
         
         Collected 6 test(s) from fibonacci package
@@ -304,8 +302,6 @@ fn root_workspace_for_entire_workspace_inside_package() {
             original value: [0], converted to a string: []
         
         Tests: 5 passed, 1 failed, 0 skipped
-        [..]Compiling[..]
-        [..]Finished[..]
         
         
         Collected 3 test(s) from hello_workspaces package
@@ -369,6 +365,8 @@ fn virtual_workspace_without_arguments() {
         output,
         indoc! {r#"
         [..]Compiling[..]
+        [..]Compiling[..]
+        [..]Compiling[..]
         [..]Finished[..]
         
         
@@ -386,9 +384,6 @@ fn virtual_workspace_without_arguments() {
             original value: [0], converted to a string: []
         
         Tests: 5 passed, 1 failed, 0 skipped
-        [..]Compiling[..]
-        [..]Compiling[..]
-        [..]Finished[..]
 
 
         Collected 5 test(s) from subtraction package
@@ -533,6 +528,8 @@ fn virtual_workspace_for_entire_workspace() {
         output,
         indoc! {r#"
         [..]Compiling[..]
+        [..]Compiling[..]
+        [..]Compiling[..]
         [..]Finished[..]
         
         
@@ -550,9 +547,6 @@ fn virtual_workspace_for_entire_workspace() {
             original value: [0], converted to a string: []
         
         Tests: 5 passed, 1 failed, 0 skipped
-        [..]Compiling[..]
-        [..]Compiling[..]
-        [..]Finished[..]
 
 
         Collected 5 test(s) from subtraction package
@@ -582,6 +576,8 @@ fn virtual_workspace_for_entire_workspace_inside_package() {
         output,
         indoc! {r#"
         [..]Compiling[..]
+        [..]Compiling[..]
+        [..]Compiling[..]
         [..]Finished[..]
         
         
@@ -599,9 +595,6 @@ fn virtual_workspace_for_entire_workspace_inside_package() {
             original value: [0], converted to a string: []
         
         Tests: 5 passed, 1 failed, 0 skipped
-        [..]Compiling[..]
-        [..]Compiling[..]
-        [..]Finished[..]
 
 
         Collected 5 test(s) from subtraction package

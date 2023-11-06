@@ -7,7 +7,7 @@ use scarb_artifacts::{
     corelib_for_package, dependencies_for_package, get_contracts_map, name_for_package,
     paths_for_package,
 };
-use scarb_metadata::{MetadataCommand, PackageMetadata};
+use scarb_metadata::{Metadata, MetadataCommand, PackageMetadata};
 use scarb_ui::args::PackagesFilter;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -136,18 +136,30 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
         ColorOption::Auto => (),
     }
 
-    let scarb_metadata = MetadataCommand::new().inherit_stderr().exec()?;
-    let workspace_root = scarb_metadata.workspace.root.clone();
-
     let predeployed_contracts_dir = load_predeployed_contracts()?;
     let predeployed_contracts_path: PathBuf = predeployed_contracts_dir.path().into();
     let predeployed_contracts = Utf8PathBuf::try_from(predeployed_contracts_path.clone())
         .context("Failed to convert path to predeployed contracts to Utf8PathBuf")?;
 
+    let scarb_metadata = MetadataCommand::new().inherit_stderr().exec()?;
+    let workspace_root = scarb_metadata.workspace.root.clone();
+
     let packages: Vec<PackageMetadata> = args
         .packages_filter
         .match_many(&scarb_metadata)
         .context("Failed to find any packages matching the specified filter")?;
+
+    let filter = PackagesFilter::generate_for::<Metadata>(packages.iter());
+    let build_output = Command::new("scarb")
+        .arg("build")
+        .env("SCARB_PACKAGES_FILTER", filter.to_env())
+        .stderr(Stdio::inherit())
+        .stdout(Stdio::inherit())
+        .output()
+        .context("Failed to build contracts with Scarb")?;
+    if !build_output.status.success() {
+        bail!("Scarb build did not succeed")
+    }
 
     let cores = if let Ok(available_cores) = available_parallelism() {
         available_cores.get()
@@ -169,17 +181,6 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                 let (package_path, package_source_dir_path) =
                     paths_for_package(&scarb_metadata, &package.id)?;
                 env::set_current_dir(package_path.clone())?;
-
-                // TODO(#671)
-                let build_output = Command::new("scarb")
-                    .arg("build")
-                    .stderr(Stdio::inherit())
-                    .stdout(Stdio::inherit())
-                    .output()
-                    .context("Failed to build contracts with Scarb")?;
-                if !build_output.status.success() {
-                    bail!("Scarb build did not succeed")
-                }
 
                 let package_name = Arc::new(name_for_package(&scarb_metadata, &package.id)?);
                 let dependencies = dependencies_for_package(&scarb_metadata, &package.id)?;
@@ -224,7 +225,7 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                 let mut failed_tests = extract_failed_tests(tests_file_summaries);
                 all_failed_tests.append(&mut failed_tests);
             }
-            Ok(all_failed_tests)
+            Ok::<_, anyhow::Error>(all_failed_tests)
         })
     })??;
 
