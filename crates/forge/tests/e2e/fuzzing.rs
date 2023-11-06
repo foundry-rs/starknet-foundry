@@ -200,7 +200,6 @@ fn fuzzing_exit_first() {
 
         Failures:
             tests::exit_first_fuzz::exit_first_fails_test
-
         "#}
     );
 }
@@ -230,8 +229,6 @@ fn fuzzing_exit_first_single_fail() {
 
         Failures:
             tests::exit_first_single_fail::exit_first_fails_test
-
-        Tests: 0 passed, 1 failed, 1 skipped
         "#}
     );
 }
