@@ -14,7 +14,7 @@ in [release notes](https://github.com/foundry-rs/starknet-foundry/releases).
 
 Snfoundryup is the Starknet Foundry toolchain installer.
 
-First install `snfoundryup` by running:
+You can install it by running:
 
 ```shell
 curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/scripts/install.sh | bash
