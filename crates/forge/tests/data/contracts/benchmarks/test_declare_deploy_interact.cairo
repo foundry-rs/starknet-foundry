@@ -1,9 +1,9 @@
- use result::ResultTrait;
+use result::ResultTrait;
 use traits::Into;
 use starknet::ClassHashIntoFelt252;
 use starknet::ContractAddress;
 use starknet::Felt252TryIntoContractAddress;
-use snforge_std::{ declare, ContractClassTrait, start_prank, start_roll, start_warp };
+use snforge_std::{ declare, CheatTarget, ContractClassTrait, start_prank, start_roll, start_warp };
 
 #[starknet::interface]
 trait IHelloStarknet<TContractState> {
@@ -27,7 +27,7 @@ fn declare_and_interact() {
     let balance = dispatcher.get_balance();
 
     start_prank(contract_address, 1234.try_into().unwrap());
-    start_roll(contract_address, 234);
+    start_roll(CheatTarget::One(contract_address), 234);
     start_warp(contract_address, 123);
 
     let (x, y, z) = dispatcher.interact_with_state();
