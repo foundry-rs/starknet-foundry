@@ -445,7 +445,6 @@ fn extract_fork_config_from_args(db: &dyn SyntaxGroup, attr: &Attribute) -> Opti
                     .to_string();
                 match tag.as_str() {
                     "Latest" => Some(BlockId::Tag(BlockTag::Latest)),
-                    "Pending" => Some(BlockId::Tag(BlockTag::Pending)),
                     _ => None,
                 }
             }

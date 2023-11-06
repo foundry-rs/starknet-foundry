@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Context, Result};
-use camino::{Utf8Path, Utf8PathBuf};
+use camino::Utf8PathBuf;
 use cast::helpers::{response_structs::DeclareResponse, scarb_utils::get_scarb_manifest};
 use cast::{handle_rpc_error, handle_wait_for_tx};
 use clap::Args;
@@ -45,7 +45,6 @@ pub async fn declare(
     let command_result = Command::new("scarb")
         .arg("--manifest-path")
         .arg(&manifest_path)
-        .arg("--release")
         .arg("build")
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
@@ -69,29 +68,16 @@ pub async fn declare(
         .exec()
         .context("Failed to obtain scarb metadata")?;
 
-    let compiled_directory = metadata
-        .target_dir
-        .map(|path| path.join("release"))
-        .ok_or(anyhow!("Failed to obtain path to compiled contracts"))?;
+    let package = metadata
+        .packages
+        .iter()
+        .find(|package| package.manifest_path == manifest_path)
+        .ok_or(anyhow!(
+            "Failed to find package for contract {}",
+            contract_name
+        ))?;
+    let contracts = get_contracts_map(&metadata, &package.id)?;
 
-    let mut paths = compiled_directory
-        .read_dir()
-        .context("Failed to read ./target/release, scarb build probably failed")?;
-
-    let starknet_artifacts = paths
-        .find_map(|path| {
-            path.ok().and_then(|entry| {
-                let name = entry.file_name().into_string().ok()?;
-                name.contains("starknet_artifacts").then_some(entry.path())
-            })
-        })
-        .ok_or(anyhow!("Failed to find starknet_artifacts.json file"))?;
-
-    let artifacts_path = Utf8Path::from_path(&starknet_artifacts).ok_or(anyhow!(
-        "Failed to convert starknet_artifacts.json Path to Utf8Path"
-    ))?;
-
-    let contracts = get_contracts_map(artifacts_path)?;
     let contract_artifacts = contracts
         .get(&contract_name)
         .ok_or(anyhow!("Failed to find artifacts in starknet_artifacts.json file. Make sure you have enabled sierra and casm code generation in Scarb.toml"))?;

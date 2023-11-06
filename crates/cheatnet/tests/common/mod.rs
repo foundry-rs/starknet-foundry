@@ -5,14 +5,10 @@ use cheatnet::rpc::CallContractOutput;
 use cheatnet::rpc::{call_contract, CallContractFailure, CallContractResult};
 use cheatnet::state::{BlockifierState, CheatnetState};
 use conversions::StarknetConversions;
-use scarb_artifacts::{
-    get_contracts_map, try_get_starknet_artifacts_path, StarknetContractArtifacts,
-};
+use scarb_artifacts::{get_contracts_map, StarknetContractArtifacts};
 use starknet::core::utils::get_selector_from_name;
 use starknet_api::core::ContractAddress;
-use std::{collections::HashMap, str::FromStr};
-
-static TARGET_NAME: &str = "cheatnet_testing_contracts";
+use std::collections::HashMap;
 
 pub mod assertions;
 pub mod cache;
@@ -29,15 +25,14 @@ pub fn recover_data(output: CallContractOutput) -> Vec<Felt252> {
 }
 
 pub fn get_contracts() -> HashMap<String, StarknetContractArtifacts> {
-    let contracts_path = Utf8PathBuf::from_str("tests/contracts")
-        .unwrap()
-        .canonicalize_utf8()
-        .unwrap()
-        .join("target");
-    let artifacts_path = try_get_starknet_artifacts_path(&contracts_path, TARGET_NAME)
-        .unwrap()
+    let scarb_metadata = scarb_metadata::MetadataCommand::new()
+        .inherit_stderr()
+        .manifest_path(Utf8PathBuf::from("tests/contracts/Scarb.toml"))
+        .exec()
         .unwrap();
-    get_contracts_map(&artifacts_path).unwrap()
+
+    let package = scarb_metadata.packages.get(0).unwrap();
+    get_contracts_map(&scarb_metadata, &package.id).unwrap()
 }
 
 pub fn deploy_contract(
