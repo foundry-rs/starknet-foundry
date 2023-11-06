@@ -82,9 +82,6 @@ impl TestCaseSummary {
                 ..
             } => latest_block_number,
             TestCaseSummary::Ignored { .. } | TestCaseSummary::Skipped { .. } => &None,
-            TestCaseSummary::Interrupted {} => {
-                unreachable!()
-            }
         }
     }
 
