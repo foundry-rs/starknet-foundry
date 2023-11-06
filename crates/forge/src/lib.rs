@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::fmt::Debug;
 
-use anyhow::{anyhow, Context, Ok, Result};
+use anyhow::{anyhow, Context, Result};
 use ark_std::iterable::Iterable;
 
 use camino::{Utf8Path, Utf8PathBuf};
