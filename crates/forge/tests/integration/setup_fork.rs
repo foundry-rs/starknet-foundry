@@ -10,6 +10,7 @@ use tempfile::tempdir;
 use tokio::runtime::Runtime;
 
 use forge::scarb::config::{ForgeConfig, ForkTarget};
+use forge::test_filter::TestsFilter;
 use forge::{run, CancellationTokens, RunnerConfig, RunnerParams};
 use test_collector::RawForkParams;
 use test_utils::corelib::{corelib_path, predeployed_contracts};
@@ -105,12 +106,9 @@ fn fork_aliased_decorator() {
             &test.path().unwrap(),
             &String::from("src"),
             &test.path().unwrap().join("src"),
+            &TestsFilter::from_flags(None, false, false, false),
             Arc::new(RunnerConfig::new(
                 Utf8PathBuf::from_path_buf(PathBuf::from(tempdir().unwrap().path())).unwrap(),
-                None,
-                false,
-                false,
-                false,
                 false,
                 Some(1234),
                 Some(500),

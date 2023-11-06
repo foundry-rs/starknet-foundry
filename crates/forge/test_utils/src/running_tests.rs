@@ -4,6 +4,7 @@ use crate::corelib::{corelib_path, predeployed_contracts};
 use crate::runner::TestCase;
 use camino::Utf8PathBuf;
 
+use forge::test_filter::TestsFilter;
 use forge::{run, CancellationTokens, RunnerConfig, RunnerParams, TestCrateSummary};
 use std::default::Default;
 use std::path::PathBuf;
@@ -18,12 +19,9 @@ pub fn run_test_case(test: &TestCase) -> Vec<TestCrateSummary> {
         &test.path().unwrap(),
         &String::from("src"),
         &test.path().unwrap().join("src"),
+        &TestsFilter::from_flags(None, false, false, false),
         Arc::new(RunnerConfig::new(
             Utf8PathBuf::from_path_buf(PathBuf::from(tempdir().unwrap().path())).unwrap(),
-            None,
-            false,
-            false,
-            false,
             false,
             Some(256),
             Some(12345),

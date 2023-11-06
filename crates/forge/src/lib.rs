@@ -45,13 +45,13 @@ use test_collector::{FuzzerConfig, LinkedLibrary, RawForkConfig, RawForkParams, 
 pub mod pretty_printing;
 pub mod scarb;
 pub mod test_case_summary;
+pub mod test_filter;
 
 mod collecting;
 mod fuzzer;
 mod running;
 mod test_crate_summary;
 mod test_execution_syscall_handler;
-mod test_filter;
 
 const FUZZER_RUNS_DEFAULT: u32 = 256;
 pub const CACHE_DIR: &str = ".snfoundry_cache";
@@ -74,7 +74,6 @@ static BUILTINS: Lazy<Vec<&str>> = Lazy::new(|| {
 pub struct RunnerConfig {
     workspace_root: Utf8PathBuf,
     exit_first: bool,
-    tests_filter: TestsFilter,
     fork_targets: Vec<ForkTarget>,
     fuzzer_runs: u32,
     fuzzer_seed: u64,
@@ -92,11 +91,7 @@ impl RunnerConfig {
     #[allow(clippy::too_many_arguments, clippy::fn_params_excessive_bools)]
     pub fn new(
         workspace_root: Utf8PathBuf,
-        test_name_filter: Option<String>,
-        exact_match: bool,
         exit_first: bool,
-        only_ignored: bool,
-        include_ignored: bool,
         fuzzer_runs: Option<u32>,
         fuzzer_seed: Option<u64>,
         forge_config_from_scarb: &ForgeConfig,
@@ -111,12 +106,6 @@ impl RunnerConfig {
             fuzzer_seed: fuzzer_seed
                 .or(forge_config_from_scarb.fuzzer_seed)
                 .unwrap_or_else(|| thread_rng().next_u64()),
-            tests_filter: TestsFilter::from_flags(
-                test_name_filter,
-                exact_match,
-                only_ignored,
-                include_ignored,
-            ),
         }
     }
 }
@@ -264,6 +253,7 @@ pub async fn run(
     package_path: &Utf8Path,
     package_name: &str,
     package_source_dir_path: &Utf8Path,
+    tests_filter: &TestsFilter,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     cancellation_tokens: Arc<CancellationTokens>,
@@ -273,7 +263,7 @@ pub async fn run(
     let test_crates = compile_tests(&compilation_targets, &runner_params)?;
     let test_crates = test_crates
         .into_iter()
-        .map(|tc| runner_config.tests_filter.filter_tests(tc))
+        .map(|tc| tests_filter.filter_tests(tc))
         .collect_vec();
     let test_crates = test_crates
         .into_iter()
@@ -303,6 +293,7 @@ pub async fn run(
             runner_config,
             runner_params,
             cancellation_tokens,
+            tests_filter,
         )
         .await?;
 
@@ -321,11 +312,16 @@ pub async fn run(
     Ok(summaries)
 }
 
+pub trait TestCaseFilter {
+    fn should_be_run(&self, test_case: &TestCase<ValidatedForkConfig>) -> bool;
+}
+
 async fn run_tests_from_crate(
     tests: Arc<CompiledTestCrateRunnable>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     cancellation_tokens: Arc<CancellationTokens>,
+    tests_filter: &impl TestCaseFilter,
 ) -> Result<TestCrateSummary> {
     let runner = Arc::new(
         SierraCasmRunner::new(
@@ -352,10 +348,7 @@ async fn run_tests_from_crate(
     for case in test_cases.iter() {
         let case_name = case.name.clone();
 
-        if !runner_config
-            .tests_filter
-            .should_be_run_based_on_ignored(case)
-        {
+        if !tests_filter.should_be_run(case) {
             tasks.push(tokio::task::spawn(async {
                 Ok(TestCaseSummary::Ignored { name: case_name })
             }));
@@ -642,7 +635,6 @@ fn function_args<'a>(function: &'a Function, builtins: &[&str]) -> Vec<&'a Concr
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_filter::{IgnoredFilter, NameFilter};
     use cairo_lang_sierra::program::Program;
     use starknet::core::types::BlockId;
     use starknet::core::types::BlockTag::Latest;
@@ -653,26 +645,12 @@ mod tests {
         let workspace_root: Utf8PathBuf = Default::default();
         let config = RunnerConfig::new(
             workspace_root.clone(),
-            None,
-            false,
-            false,
-            false,
             false,
             None,
             None,
             &Default::default(),
         );
-        let config2 = RunnerConfig::new(
-            workspace_root,
-            None,
-            false,
-            false,
-            false,
-            false,
-            None,
-            None,
-            &Default::default(),
-        );
+        let config2 = RunnerConfig::new(workspace_root, false, None, None, &Default::default());
 
         assert_ne!(config.fuzzer_seed, 0);
         assert_ne!(config2.fuzzer_seed, 0);
@@ -684,10 +662,6 @@ mod tests {
         let workspace_root: Utf8PathBuf = Default::default();
         let config = RunnerConfig::new(
             workspace_root.clone(),
-            None,
-            false,
-            false,
-            false,
             false,
             None,
             None,
@@ -698,10 +672,6 @@ mod tests {
             RunnerConfig {
                 workspace_root,
                 exit_first: false,
-                tests_filter: TestsFilter {
-                    name_filter: NameFilter::All,
-                    ignored_filter: IgnoredFilter::NotIgnored
-                },
                 fork_targets: vec![],
                 fuzzer_runs: FUZZER_RUNS_DEFAULT,
                 fuzzer_seed: config.fuzzer_seed,
@@ -721,10 +691,6 @@ mod tests {
 
         let config = RunnerConfig::new(
             workspace_root.clone(),
-            Some("test".to_string()),
-            false,
-            false,
-            true,
             false,
             None,
             None,
@@ -736,10 +702,6 @@ mod tests {
                 workspace_root,
                 exit_first: true,
                 fork_targets: vec![],
-                tests_filter: TestsFilter {
-                    name_filter: NameFilter::Match("test".to_string()),
-                    ignored_filter: IgnoredFilter::Ignored
-                },
                 fuzzer_runs: 1234,
                 fuzzer_seed: 500,
             }
@@ -758,10 +720,6 @@ mod tests {
         };
         let config = RunnerConfig::new(
             workspace_root.clone(),
-            Some("abc".to_string()),
-            true,
-            true,
-            false,
             true,
             Some(100),
             Some(32),
@@ -772,46 +730,10 @@ mod tests {
             RunnerConfig {
                 workspace_root,
                 exit_first: true,
-                tests_filter: TestsFilter {
-                    name_filter: NameFilter::ExactMatch("abc".to_string()),
-                    ignored_filter: IgnoredFilter::All
-                },
                 fork_targets: vec![],
                 fuzzer_runs: 100,
                 fuzzer_seed: 32,
             }
-        );
-    }
-
-    #[test]
-    #[should_panic]
-    fn only_ignored_and_include_ignored_both_true() {
-        let _ = RunnerConfig::new(
-            Default::default(),
-            None,
-            false,
-            false,
-            true,
-            true,
-            None,
-            None,
-            &Default::default(),
-        );
-    }
-
-    #[test]
-    #[should_panic]
-    fn exact_match_true_without_test_filter_name() {
-        let _ = RunnerConfig::new(
-            Default::default(),
-            None,
-            true,
-            false,
-            true,
-            true,
-            None,
-            None,
-            &Default::default(),
         );
     }
 
@@ -837,17 +759,7 @@ mod tests {
             }],
             tests_location: CrateLocation::Lib,
         };
-        let config = RunnerConfig::new(
-            Default::default(),
-            None,
-            false,
-            false,
-            false,
-            false,
-            None,
-            None,
-            &Default::default(),
-        );
+        let config = RunnerConfig::new(Default::default(), false, None, None, &Default::default());
 
         assert!(to_runnable(mocked_tests, &config).is_err());
     }
@@ -873,10 +785,6 @@ mod tests {
         };
         let config = RunnerConfig::new(
             Default::default(),
-            None,
-            false,
-            false,
-            false,
             false,
             None,
             None,
