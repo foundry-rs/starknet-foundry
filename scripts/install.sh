@@ -12,10 +12,11 @@ SNFOUNDRYUP_URL="https://raw.githubusercontent.com/foundry-rs/starknet-foundry/m
 SNFOUNDRYUP_PATH="${LOCAL_BIN}/snfoundryup"
 
 # Check for curl
-if ! command -v curl &> /dev/null; then
+if ! command -v curl > /dev/null 2>&1; then
     echo "curl could not be found, please install it first."
     exit 1
 fi
+
 
 # Create the ${HOME}/.local/bin bin directory and snfoundryup binary if it doesn't exist.
 mkdir -p ${LOCAL_BIN}
@@ -47,9 +48,9 @@ case $SHELL in
 esac
 
 # Only add snfoundryup if it isn't already in PATH.
-if [[ ":$PATH:" != *":${LOCAL_BIN}:"* ]]; then
+if [ ":$PATH:" != *":${LOCAL_BIN}:"* ]; then
     # Add the snfoundryup directory to the path and ensure the old PATH variables remain.
-    echo >> $PROFILE && echo "export PATH=\"\$PATH:$LOCAL_BIN\"" >> $PROFILE
+    echo >> "$PROFILE" && echo "export PATH=\"\$PATH:$LOCAL_BIN\"" >> "$PROFILE"
 fi
 
 

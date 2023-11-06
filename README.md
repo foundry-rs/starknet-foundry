@@ -32,7 +32,7 @@ Starknet Foundry, like its [Ethereum counterpart](https://github.com/foundry-rs/
 To install Starknet Foundry, first install `snfoundryup` by running:
 
 ```shell
-curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/scripts/install.sh | bash
+curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/scripts/install.sh | sh
 ```
 Follow the instructions and then run
 
