@@ -2,7 +2,7 @@ use crate::execution::deprecated::syscalls::CheatableSyscallHandler;
 use crate::state::CheatnetState;
 use blockifier::execution::call_info::CallInfo;
 use blockifier::execution::contract_class::ContractClassV0;
-use blockifier::execution::deprecated_execution::{
+use blockifier::execution::deprecated_entry_point_execution::{
     finalize_execution, initialize_execution_context, prepare_call_arguments, VmExecutionContext,
 };
 use blockifier::execution::entry_point::{
