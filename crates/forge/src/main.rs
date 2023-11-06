@@ -19,8 +19,10 @@ use forge::{pretty_printing, CancellationTokens, RunnerConfig, RunnerParams, CAC
 use forge::{run, TestCrateSummary};
 
 use forge::test_case_summary::TestCaseSummary;
+use forge::test_filter::TestsFilter;
 use std::process::{Command, Stdio};
 use std::thread::available_parallelism;
+
 mod init;
 
 static PREDEPLOYED_CONTRACTS: Dir = include_dir!("crates/cheatnet/predeployed-contracts");
@@ -187,11 +189,7 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
 
                 let runner_config = Arc::new(RunnerConfig::new(
                     workspace_root.clone(),
-                    args.test_filter.clone(),
-                    args.exact,
                     args.exit_first,
-                    args.only_ignored,
-                    args.include_ignored,
                     args.fuzzer_runs,
                     args.fuzzer_seed,
                     &forge_config,
@@ -211,6 +209,12 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                     &package_path,
                     &package_name,
                     &package_source_dir_path,
+                    &TestsFilter::from_flags(
+                        args.test_filter.clone(),
+                        args.exact,
+                        args.only_ignored,
+                        args.include_ignored,
+                    ),
                     runner_config,
                     runner_params,
                     cancellation_tokens,
