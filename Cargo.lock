@@ -1076,6 +1076,7 @@ dependencies = [
  "rayon",
  "regex",
  "scarb-artifacts",
+ "scarb-metadata",
  "serde",
  "serde_json",
  "starknet",
