@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+#### Removed
+
+- forking of the `Pending` block
+
 #### Added
 
 - `--color` option to control when colored output is used
