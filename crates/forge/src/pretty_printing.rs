@@ -80,10 +80,10 @@ pub(crate) fn print_test_result(test_result: &TestCaseSummary) {
         }
     };
 
-    let block_number_message = match test_result.block_number_of_latest() {
+    let block_number_message = match test_result.latest_block_number() {
         None => String::new(),
-        Some(block_number_of_latest) => {
-            format!("\nNumber of the block used for fork testing = {block_number_of_latest}")
+        Some(latest_block_number) => {
+            format!("\nNumber of the block used for fork testing = {latest_block_number}")
         }
     };
 

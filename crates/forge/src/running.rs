@@ -156,7 +156,7 @@ fn build_syscall_handler<'a>(
 
 pub(crate) struct RunResultWithInfo {
     pub(crate) run_result: Result<RunResult, RunnerError>,
-    pub(crate) block_number_of_latest: Option<BlockNumber>,
+    pub(crate) latest_block_number: Option<BlockNumber>,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -227,7 +227,7 @@ pub(crate) fn run_test_case(
         &string_to_hint,
     );
 
-    let block_number_of_latest = if let Some(ValidatedForkConfig {
+    let latest_block_number = if let Some(ValidatedForkConfig {
         url: _,
         block_id: BlockId::Tag(Latest),
     }) = &case.fork_config
@@ -247,7 +247,7 @@ pub(crate) fn run_test_case(
 
     Ok(RunResultWithInfo {
         run_result,
-        block_number_of_latest,
+        latest_block_number,
     })
 }
 
@@ -263,7 +263,7 @@ fn extract_test_case_summary(
                     run_result,
                     case,
                     args,
-                    result_with_info.block_number_of_latest,
+                    result_with_info.latest_block_number,
                 )),
                 // CairoRunError comes from VirtualMachineError which may come from HintException that originates in TestExecutionSyscallHandler
                 Err(RunnerError::CairoRunError(error)) => Ok(TestCaseSummary::Failed {
@@ -274,7 +274,7 @@ fn extract_test_case_summary(
                     )),
                     arguments: args,
                     fuzzing_statistic: None,
-                    block_number_of_latest: result_with_info.block_number_of_latest,
+                    latest_block_number: result_with_info.latest_block_number,
                 }),
                 Err(err) => bail!(err),
             }
@@ -285,7 +285,7 @@ fn extract_test_case_summary(
             msg: Some(error.to_string()),
             arguments: args,
             fuzzing_statistic: None,
-            block_number_of_latest: None,
+            latest_block_number: None,
         }),
     }
 }
