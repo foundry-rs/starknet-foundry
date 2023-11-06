@@ -58,11 +58,12 @@ pub async fn test_happy_case() {
 
 #[tokio::test]
 pub async fn test_happy_case_add_profile() {
-    let current_dir = Utf8PathBuf::from(duplicate_directory_with_salt(
+    let current_dir = Utf8PathBuf::from_path_buf(duplicate_directory_with_salt(
         CONTRACTS_DIR.to_string() + "/map",
         "put",
         "30",
-    ));
+    ).path().to_path_buf()).expect("Failed to create Utf8PathBuf from PathBuf");
+
     let accounts_file = "./accounts.json";
 
     let args = vec![

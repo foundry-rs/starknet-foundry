@@ -30,7 +30,7 @@ async fn test_happy_case() {
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(&contract_path)
+        .current_dir(&contract_path.path())
         .args(args);
     let output = snapbox.assert().success().get_output().stdout.clone();
 
@@ -137,7 +137,7 @@ fn test_too_low_max_fee() {
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(&contract_path)
+        .current_dir(&contract_path.path())
         .args(args);
 
     snapbox.assert().success().stderr_matches(indoc! {r#"

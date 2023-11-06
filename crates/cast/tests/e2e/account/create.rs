@@ -90,11 +90,11 @@ pub async fn test_happy_case_generate_salt() {
 
 #[tokio::test]
 pub async fn test_happy_case_add_profile() {
-    let current_dir = Utf8PathBuf::from(duplicate_directory_with_salt(
+    let current_dir = Utf8PathBuf::from_path_buf(duplicate_directory_with_salt(
         CONTRACTS_DIR.to_string() + "/map",
         "put",
         "10",
-    ));
+    ).path().to_path_buf()).expect("Failed to create Utf8PathBuf from PathBuf");
     let accounts_file = "./accounts.json";
 
     let args = vec![
@@ -179,11 +179,11 @@ pub async fn test_happy_case_accounts_file_already_exists() {
 
 #[tokio::test]
 pub async fn test_profile_already_exists() {
-    let current_dir = Utf8PathBuf::from(duplicate_directory_with_salt(
-        CONTRACTS_DIR.to_string() + "/constructor_with_params",
+    let current_dir = Utf8PathBuf::from_path_buf(duplicate_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
         "put",
         "20",
-    ));
+    ).path().to_path_buf()).expect("Failed to create Utf8PathBuf from PathBuf");
     let accounts_file = "./accounts.json";
 
     let args = vec![
@@ -279,11 +279,11 @@ pub async fn test_happy_case_keystore() {
 
 #[tokio::test]
 pub async fn test_happy_case_keystore_add_profile() {
-    let current_dir = Utf8PathBuf::from(duplicate_directory_with_salt(
+    let current_dir = Utf8PathBuf::from_path_buf(duplicate_directory_with_salt(
         CONTRACTS_DIR.to_string() + "/map",
         "put",
         "50",
-    ));
+    ).path().to_path_buf()).expect("Failed to create Utf8PathBuf from PathBuf");
     let keystore_path = "my_key.json";
     let account_path = "my_account.json";
     let accounts_file = "accounts.json";

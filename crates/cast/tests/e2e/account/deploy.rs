@@ -225,11 +225,11 @@ pub async fn test_valid_class_hash() {
 }
 
 pub async fn create_account(salt: &str, add_profile: bool) -> (Utf8PathBuf, &str) {
-    let created_dir = Utf8PathBuf::from(duplicate_directory_with_salt(
-        CONTRACTS_DIR.to_string() + "/constructor_with_params",
+    let created_dir = Utf8PathBuf::from_path_buf(duplicate_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/map",
         "put",
         salt,
-    ));
+    ).path().to_path_buf()).expect("Failed to create Utf8PathBuf from PathBuf");
     let accounts_file = "./accounts.json";
 
     let mut args = vec![
