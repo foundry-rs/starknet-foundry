@@ -190,7 +190,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn get_forge_config_for_package_fails_on_same_fork_name() {
         let temp = setup_package("simple_package");
         let content = indoc!(
