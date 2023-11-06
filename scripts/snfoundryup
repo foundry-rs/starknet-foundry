@@ -507,7 +507,7 @@ clone_and_build() {
   fi
 
   say "Cloning repository at commit $_commit_hash..."
-  ensure git clone "$REPO" $_tempdir
+  ensure git clone "$REPO" "$_tempdir"
   ensure cd "$_tempdir"
   ensure git fetch --all
   ensure git checkout "$_commit_hash"
@@ -518,7 +518,7 @@ clone_and_build() {
   local _build_output_dir="$PWD/target/release"
 
   create_install_dir "${_commit_hash}/bin"
-  local _installdir=${RETVAL%????} # Assign with the last four characters removed.
+  local _installdir=${RETVAL%????} # create_symlinks expects a PATH with /bin stripped, rather than modifiyng the function, we just strip it here.
   assert_nz "$_installdir" "installdir"
 
   ensure cp "$_build_output_dir/snforge" "$_installdir/bin/snforge"
