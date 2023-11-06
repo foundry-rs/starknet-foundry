@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use anyhow::{anyhow, bail, Result};
+use blockifier::execution::common_hints::ExecutionMode;
 use blockifier::execution::entry_point::{
     CallEntryPoint, CallType, EntryPointExecutionContext, ExecutionResources,
 };
@@ -109,11 +110,7 @@ pub(crate) fn blocking_run_from_test(
 fn build_context(block_info: CheatnetBlockInfo) -> EntryPointExecutionContext {
     let block_context = cheatnet_constants::build_block_context(block_info);
     let account_context = cheatnet_constants::build_transaction_context();
-    EntryPointExecutionContext::new(
-        block_context.clone(),
-        account_context,
-        block_context.invoke_tx_max_n_steps.try_into().unwrap(),
-    )
+    EntryPointExecutionContext::new(&block_context, &account_context, ExecutionMode::Execute)
 }
 
 fn build_syscall_handler<'a>(
