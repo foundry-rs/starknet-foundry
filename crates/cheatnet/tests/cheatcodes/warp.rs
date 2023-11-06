@@ -325,12 +325,17 @@ fn warp_all_simple() {
     let mut cached_state = create_cached_state();
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
-    let contract_address = deploy_contract(
-        &mut blockifier_state,
-        &mut cheatnet_state,
-        "WarpChecker",
-        &[],
-    );
+    let contract = "WarpChecker".to_owned().to_felt252();
+    let contracts = get_contracts();
+    let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
+
+    let contract_address1 = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[])
+        .unwrap()
+        .contract_address;
+
+    let contract_address2 = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[])
+        .unwrap()
+        .contract_address;
 
     cheatnet_state.start_warp(CheatTarget::All, Felt252::from(123));
 
@@ -339,7 +344,18 @@ fn warp_all_simple() {
     let output = call_contract(
         &mut blockifier_state,
         &mut cheatnet_state,
-        &contract_address,
+        &contract_address1,
+        &selector,
+        &[],
+    )
+    .unwrap();
+
+    assert_success!(output, vec![Felt252::from(123)]);
+
+    let output = call_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &contract_address2,
         &selector,
         &[],
     )

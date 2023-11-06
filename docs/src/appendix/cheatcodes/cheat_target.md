@@ -4,7 +4,7 @@
 enum CheatTarget {
     All: (),
     One: ContractAddress,
-    Multiple: Span<ContractAddress>
+    Multiple: Array<ContractAddress>
 }
 ```
 
@@ -25,7 +25,7 @@ fn some_test() {
     // block timestamp:
     //   - for address 10: 456
     //   - for every other address: 123
-    stop_warp(CheatTarget::Multiple(array![20, 30].span()));
+    stop_warp(CheatTarget::Multiple(array![20, 30]));
     // block timestamp:
     //   - for address 10: 456
     //   - for addresses 20 and 30: not cheated 

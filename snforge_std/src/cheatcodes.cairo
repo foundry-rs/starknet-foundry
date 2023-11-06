@@ -21,7 +21,7 @@ mod fork;
 enum CheatTarget {
     All: (),
     One: ContractAddress,
-    Multiple: Span<ContractAddress>
+    Multiple: Array<ContractAddress>
 }
 
 fn test_address() -> ContractAddress {

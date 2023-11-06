@@ -82,7 +82,7 @@ fn prank() {
                 let old_caller_address1 = dispatcher1.get_caller_address();
                 let old_caller_address2 = dispatcher2.get_caller_address();
 
-                start_prank(CheatTarget::Multiple(array![contract_address1, contract_address2].span()), target_caller_address);
+                start_prank(CheatTarget::Multiple(array![contract_address1, contract_address2]), target_caller_address);
 
                 let new_caller_address1 = dispatcher1.get_caller_address();
                 let new_caller_address2 = dispatcher2.get_caller_address();
@@ -90,7 +90,7 @@ fn prank() {
                 assert(new_caller_address1 == 123, 'Wrong caller address #1');
                 assert(new_caller_address2 == 123, 'Wrong caller address #2');
 
-                stop_prank(CheatTarget::Multiple(array![contract_address1, contract_address2].span()));
+                stop_prank(CheatTarget::Multiple(array![contract_address1, contract_address2]));
 
                 let new_caller_address1 = dispatcher1.get_caller_address();
                 let new_caller_address2 = dispatcher2.get_caller_address();
