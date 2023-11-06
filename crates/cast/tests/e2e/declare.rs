@@ -1,6 +1,6 @@
 use crate::helpers::constants::{CONTRACTS_DIR, URL};
 use crate::helpers::fixtures::{
-    duplicate_directory_with_salt, get_transaction_hash, get_transaction_receipt,
+    duplicate_directory_with_salt, get_transaction_hash, get_transaction_receipt, get_accounts_path
 };
 use indoc::indoc;
 use snapbox::cmd::{cargo_bin, Command};
@@ -12,12 +12,12 @@ use test_case::test_case;
 async fn test_happy_case() {
     let contract_path =
         duplicate_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "1");
-
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
     let args = vec![
         "--url",
         URL,
         "--accounts-file",
-        "../../accounts/accounts.json",
+        accounts_json_path.as_str(),
         "--account",
         "user8",
         "--int-format",
