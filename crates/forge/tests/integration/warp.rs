@@ -58,7 +58,7 @@ fn warp_basic() {
                 let old_block_timestamp1 = warp_checker1.get_block_timestamp();
                 let old_block_timestamp2 = warp_checker2.get_block_timestamp();
 
-                start_warp(CheatTarget::Multiple(array![warp_checker1.contract_address, warp_checker2.contract_address].span()), 123);
+                start_warp(CheatTarget::Multiple(array![warp_checker1.contract_address, warp_checker2.contract_address]), 123);
 
                 let new_block_timestamp1 = warp_checker1.get_block_timestamp();
                 let new_block_timestamp2 = warp_checker2.get_block_timestamp();
@@ -66,7 +66,7 @@ fn warp_basic() {
                 assert(new_block_timestamp1 == 123, 'Wrong block timestamp #1');
                 assert(new_block_timestamp2 == 123, 'Wrong block timestamp #2');
 
-                stop_warp(CheatTarget::Multiple(array![warp_checker1.contract_address, warp_checker2.contract_address].span()));
+                stop_warp(CheatTarget::Multiple(array![warp_checker1.contract_address, warp_checker2.contract_address]));
 
                 let new_block_timestamp1 = warp_checker1.get_block_timestamp();
                 let new_block_timestamp2 = warp_checker2.get_block_timestamp();
@@ -168,7 +168,7 @@ fn warp_complex() {
                 assert(new_block_timestamp1 == 456, 'Wrong block timestamp #3');
                 assert(new_block_timestamp2 == 123, 'Wrong block timestamp #4');
 
-                start_warp(CheatTarget::Multiple(array![warp_checker1.contract_address, warp_checker2.contract_address].span()), 789);
+                start_warp(CheatTarget::Multiple(array![warp_checker1.contract_address, warp_checker2.contract_address]), 789);
 
                 let new_block_timestamp1 = warp_checker1.get_block_timestamp();
                 let new_block_timestamp2 = warp_checker2.get_block_timestamp();

@@ -256,7 +256,7 @@ impl CheatnetState {
 
     #[must_use]
     pub fn get_cheated_block_timestamp(&self, address: &ContractAddress) -> Option<Felt252> {
-        // An individual warp for a contract overrides any global warp
+        // Warps from the warped_contracts mapping take priority over self.global_warp
         if let Some(warped_contract) = self.warped_contracts.get(address) {
             match warped_contract {
                 CheatStatus::Cheated(contract_timestamp) => Some(contract_timestamp.clone()),

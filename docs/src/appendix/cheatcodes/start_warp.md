@@ -5,7 +5,7 @@
 Changes the block timestamp for the given target.
 The change can be canceled with [`stop_warp`](./stop_warp.md).
 
-- `target` - instance of [`CheatTarget`](./cheat_target.md) specifying which contracts to warp.
+- `target` - instance of [`CheatTarget`](./cheat_target.md) specifying which contracts to warp
 - `block_timestamp` - block timestamp to be set
 
 For contract implementation:
@@ -37,7 +37,7 @@ We can use `start_warp` in a test to change the block timestamp for contracts:
 use snforge_std::{start_warp, CheatTarget};
 
 #[test]
-fn test_warp_one() {
+fn test_warp() {
     // ...
 
     start_warp(CheatTarget::One(contract_address), 1000);
