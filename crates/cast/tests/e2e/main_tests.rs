@@ -1,5 +1,5 @@
 use crate::helpers::constants::{ACCOUNT, ACCOUNT_FILE_PATH, CONTRACTS_DIR, URL};
-use crate::helpers::fixtures::{duplicate_directory_with_salt, from_env};
+use crate::helpers::fixtures::{duplicate_directory_with_salt, from_env, get_keystores_path};
 use crate::helpers::runner::runner;
 use cast::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
 use indoc::indoc;
@@ -247,14 +247,15 @@ async fn test_keystore_undeployed_account() {
 async fn test_keystore_declare() {
     let contract_path =
         duplicate_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "999");
-
+        let my_key_path = get_keystores_path("tests/data/keystore/my_key.json");
+        let my_account_path = get_keystores_path("tests/data/keystore/my_account.json");
     let args = vec![
         "--url",
         URL,
         "--keystore",
-        "../../keystore/my_key.json",
+        my_key_path.as_str(),
         "--account",
-        "../../keystore/my_account.json",
+        my_account_path.as_str(),
         "declare",
         "--contract-name",
         "Map",
