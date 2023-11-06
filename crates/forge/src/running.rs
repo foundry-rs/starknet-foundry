@@ -151,9 +151,13 @@ fn build_syscall_handler<'a>(
     )
 }
 
+pub(crate) struct FuzzingInfo {
+    pub(crate) latest_block_number: Option<BlockNumber>,
+}
+
 pub(crate) struct RunResultWithInfo {
     pub(crate) run_result: Result<RunResult, RunnerError>,
-    pub(crate) latest_block_number: Option<BlockNumber>,
+    pub(crate) fuzzing_info: FuzzingInfo,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -244,7 +248,9 @@ pub(crate) fn run_test_case(
 
     Ok(RunResultWithInfo {
         run_result,
-        latest_block_number,
+        fuzzing_info: FuzzingInfo {
+            latest_block_number,
+        },
     })
 }
 
@@ -256,11 +262,11 @@ fn extract_test_case_summary(
     match run_result {
         Ok(result_with_info) => {
             match result_with_info.run_result {
-                Ok(run_result) => Ok(TestCaseSummary::from_run_result(
+                Ok(run_result) => Ok(TestCaseSummary::from_run_result_and_info(
                     run_result,
                     case,
                     args,
-                    result_with_info.latest_block_number,
+                    &result_with_info.fuzzing_info,
                 )),
                 // CairoRunError comes from VirtualMachineError which may come from HintException that originates in TestExecutionSyscallHandler
                 Err(RunnerError::CairoRunError(error)) => Ok(TestCaseSummary::Failed {
@@ -271,7 +277,7 @@ fn extract_test_case_summary(
                     )),
                     arguments: args,
                     fuzzing_statistic: None,
-                    latest_block_number: result_with_info.latest_block_number,
+                    latest_block_number: result_with_info.fuzzing_info.latest_block_number,
                 }),
                 Err(err) => bail!(err),
             }

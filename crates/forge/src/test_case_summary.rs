@@ -1,4 +1,5 @@
 use crate::collecting::TestCaseRunnable;
+use crate::running::FuzzingInfo;
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{RunResult, RunResultValue};
@@ -121,14 +122,15 @@ impl TestCaseSummary {
 
 impl TestCaseSummary {
     #[must_use]
-    pub(crate) fn from_run_result(
+    pub(crate) fn from_run_result_and_info(
         run_result: RunResult,
         test_case: &TestCaseRunnable,
         arguments: Vec<Felt252>,
-        latest_block_number: Option<BlockNumber>,
+        fuzzing_info: &FuzzingInfo,
     ) -> Self {
         let name = test_case.name.to_string();
         let msg = extract_result_data(&run_result, &test_case.expected_result);
+        let latest_block_number = fuzzing_info.latest_block_number;
         match run_result.value {
             RunResultValue::Success(_) => match &test_case.expected_result {
                 ExpectedTestResult::Success => TestCaseSummary::Passed {
