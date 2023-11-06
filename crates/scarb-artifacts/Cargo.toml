@@ -11,7 +11,7 @@ indoc.workspace = true
 test-collector = { path = "../test-collector" }
 serde_json.workspace = true
 serde.workspace = true
-scarb-metadata = { git = "https://github.com/software-mansion/scarb.git", rev = "58cc88e" }
+scarb-metadata.workspace = true
 
 [lib]
 name = "scarb_artifacts"
