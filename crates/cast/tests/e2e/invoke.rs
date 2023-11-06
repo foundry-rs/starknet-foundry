@@ -114,7 +114,8 @@ fn test_too_low_max_fee() {
         "--function",
         "put",
         "--calldata",
-        "0x1 0x2",
+        "0x1",
+        "0x2",
         "--max-fee",
         "1",
     ]);
