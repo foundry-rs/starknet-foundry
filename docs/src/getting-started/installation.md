@@ -12,7 +12,7 @@ in [release notes](https://github.com/foundry-rs/starknet-foundry/releases).
 
 ### Install via `snfoundryup`
 
-Snfoundryup is the Starknet Foundry toolchain installer. You can find more about it [here](https://github.com/foundry-rs/starknet-foundry/tree/master/scripts).
+Snfoundryup is the Starknet Foundry toolchain installer.
 
 First install `snfoundryup` by running:
 
