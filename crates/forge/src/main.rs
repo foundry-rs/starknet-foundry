@@ -1,12 +1,11 @@
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
 use forge::scarb::config_from_scarb_for_package;
 use include_dir::{include_dir, Dir};
 use scarb_artifacts::{
     corelib_for_package, dependencies_for_package, get_contracts_map, name_for_package,
-    paths_for_package, target_dir_for_package, target_name_for_package,
-    try_get_starknet_artifacts_path,
+    paths_for_package,
 };
 use scarb_metadata::{MetadataCommand, PackageMetadata};
 use scarb_ui::args::PackagesFilter;
@@ -50,6 +49,13 @@ enum ForgeSubcommand {
     CleanCache {},
 }
 
+#[derive(ValueEnum, Debug, Clone)]
+enum ColorOption {
+    Auto,
+    Always,
+    Never,
+}
+
 #[derive(Parser, Debug)]
 #[allow(clippy::struct_excessive_bools)]
 struct TestArgs {
@@ -79,6 +85,10 @@ struct TestArgs {
     /// Run all tests regardless of `#[ignore]` attribute
     #[arg(long, conflicts_with = "only_ignored")]
     include_ignored: bool,
+
+    /// Control when colored output is used
+    #[arg(value_enum, long, default_value_t = ColorOption::Auto, value_name="WHEN")]
+    color: ColorOption,
 }
 
 fn validate_fuzzer_runs_value(val: &str) -> Result<u32> {
@@ -118,6 +128,12 @@ fn extract_failed_tests(tests_summaries: Vec<TestCrateSummary>) -> Vec<TestCaseS
 }
 
 fn test_workspace(args: TestArgs) -> Result<bool> {
+    match args.color {
+        ColorOption::Always => env::set_var("CLICOLOR_FORCE", "1"),
+        ColorOption::Never => env::set_var("CLICOLOR", "0"),
+        ColorOption::Auto => (),
+    }
+
     let scarb_metadata = MetadataCommand::new().inherit_stderr().exec()?;
     let workspace_root = scarb_metadata.workspace.root.clone();
 
@@ -153,8 +169,6 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                 env::set_current_dir(package_path.clone())?;
 
                 // TODO(#671)
-                let target_dir = target_dir_for_package(&workspace_root)?;
-
                 let build_output = Command::new("scarb")
                     .arg("build")
                     .stderr(Stdio::inherit())
@@ -167,14 +181,9 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
 
                 let package_name = Arc::new(name_for_package(&scarb_metadata, &package.id)?);
                 let dependencies = dependencies_for_package(&scarb_metadata, &package.id)?;
-                let target_name = target_name_for_package(&scarb_metadata, &package.id)?;
                 let corelib_path = corelib_for_package(&scarb_metadata, &package.id)?;
 
-                let contracts_path = try_get_starknet_artifacts_path(&target_dir, &target_name)?;
-                let contracts = contracts_path
-                    .map(|path| get_contracts_map(&path))
-                    .transpose()?
-                    .unwrap_or_default();
+                let contracts = get_contracts_map(&scarb_metadata, &package.id).unwrap_or_default();
 
                 let runner_config = Arc::new(RunnerConfig::new(
                     workspace_root.clone(),

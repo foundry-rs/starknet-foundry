@@ -31,12 +31,12 @@ use scarb_artifacts::StarknetContractArtifacts;
 use crate::fuzzer::RandomFuzzer;
 use crate::scarb::config::{ForgeConfig, ForkTarget};
 
-// pub use crate::collecting::CrateLocation;
+pub use crate::collecting::{collect_test_compilation_targets, TestCompilationTarget};
 pub use crate::test_crate_summary::TestCrateSummary;
 
 use crate::collecting::{
-    collect_test_compilation_targets, compile_tests, CompiledTestCrate, CompiledTestCrateRaw,
-    CompiledTestCrateRunnable, TestCaseRunnable, ValidatedForkConfig,
+    compile_tests, CompiledTestCrate, CompiledTestCrateRaw, CompiledTestCrateRunnable,
+    TestCaseRunnable, ValidatedForkConfig,
 };
 use crate::test_filter::TestsFilter;
 use test_collector::{FuzzerConfig, LinkedLibrary, RawForkConfig, RawForkParams, TestCase};
@@ -361,7 +361,6 @@ async fn run_tests_from_crate(
     }
 
     let mut results = vec![];
-    let mut interrupted = false;
 
     while let Some(task) = tasks.next().await {
         let result = task??;

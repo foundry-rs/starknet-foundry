@@ -225,10 +225,10 @@ fn fuzzing_exit_first_single_fail() {
         Failure data:
             original value: [..], converted to a string: [2 + b == 2 + b]
 
-        Tests: 0 passed, 1 failed, 1 skipped
-
         Failures:
             tests::exit_first_single_fail::exit_first_fails_test
+
+        Tests: 0 passed, 1 failed, 1 skipped
         "#}
     );
 }
