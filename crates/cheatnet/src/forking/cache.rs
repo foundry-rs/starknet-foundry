@@ -97,7 +97,7 @@ fn block_id_to_string(block_id: BlockId) -> String {
         BlockId::Number(x) => x.to_string(),
         BlockId::Tag(x) => match x {
             BlockTag::Latest => "latest".to_string(),
-            BlockTag::Pending => "pending".to_string(),
+            BlockTag::Pending => unreachable!(),
         },
     }
 }
