@@ -91,6 +91,7 @@ jobs:
       - name: Run tests
         run: cargo test --release -p cast
 
+# test
   rustfmt:
     runs-on: ubuntu-latest
     steps:
