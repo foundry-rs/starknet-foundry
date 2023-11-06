@@ -435,6 +435,7 @@ fn test_simple_cheatcodes() {
         use array::SpanTrait;
         use starknet::ContractAddressIntoFelt252;
         use snforge_std::{
+            CheatTarget,
             start_prank, stop_prank,
             start_roll, stop_roll,
             start_warp, stop_warp,
@@ -463,11 +464,11 @@ fn test_simple_cheatcodes() {
             let test_address: ContractAddress = test_address();
             let old_block_number = starknet::get_block_info().unbox().block_number;
 
-            start_roll(test_address, 234);
+            start_roll(CheatTarget::One(test_address), 234);
             let new_block_number = starknet::get_block_info().unbox().block_number;
             assert(new_block_number == 234, 'Wrong block number');
 
-            stop_roll(test_address);
+            stop_roll(CheatTarget::One(test_address));
             let new_block_number = starknet::get_block_info().unbox().block_number;
             assert(new_block_number == old_block_number, 'Block num did not change back');
         }

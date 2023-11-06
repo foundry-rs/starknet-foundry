@@ -27,6 +27,14 @@ use starknet_api::{
 };
 use std::collections::HashMap;
 
+// Specifies which contracts to target
+// with a cheatcode function
+pub enum CheatTarget {
+    All,
+    One(ContractAddress),
+    Multiple(Vec<ContractAddress>),
+}
+
 #[derive(Debug)]
 pub struct ExtendedStateReader {
     pub dict_state_reader: DictStateReader,
@@ -202,10 +210,16 @@ impl StateReader for DictStateReader {
     }
 }
 
+pub enum CheatStatus<T> {
+    Cheated(T),
+    Uncheated,
+}
+
 #[allow(clippy::module_name_repetitions)]
 #[derive(Default)]
 pub struct CheatnetState {
-    pub rolled_contracts: HashMap<ContractAddress, Felt252>,
+    pub rolled_contracts: HashMap<ContractAddress, CheatStatus<Felt252>>,
+    pub global_roll: Option<Felt252>,
     pub pranked_contracts: HashMap<ContractAddress, ContractAddress>,
     pub warped_contracts: HashMap<ContractAddress, Felt252>,
     pub mocked_functions: HashMap<ContractAddress, HashMap<EntryPointSelector, Vec<StarkFelt>>>,
@@ -238,7 +252,23 @@ impl CheatnetState {
 
     #[must_use]
     pub fn address_is_rolled(&self, contract_address: &ContractAddress) -> bool {
-        self.rolled_contracts.contains_key(contract_address)
+        self.global_roll.is_some()
+            || matches!(
+                self.rolled_contracts.get(contract_address),
+                Some(CheatStatus::Cheated(_))
+            )
+    }
+
+    #[must_use]
+    pub fn get_cheated_block_number(&self, address: &ContractAddress) -> Option<Felt252> {
+        if let Some(rolled_contract) = self.rolled_contracts.get(address) {
+            match rolled_contract {
+                CheatStatus::Cheated(contract_block_number) => Some(contract_block_number.clone()),
+                CheatStatus::Uncheated => None,
+            }
+        } else {
+            self.global_roll.clone()
+        }
     }
 
     #[must_use]

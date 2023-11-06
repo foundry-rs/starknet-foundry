@@ -57,7 +57,7 @@ fn roll_cairo0_contract() {
     let test = test_case!(formatdoc!(
         r#"
             use starknet::{{class_hash::Felt252TryIntoClassHash, SyscallResultTrait}};
-            use snforge_std::{{start_roll, stop_roll, test_address}};
+            use snforge_std::{{start_roll, stop_roll, test_address, CheatTarget}};
 
             const CAIRO0_CLASS_HASH: felt252 = 3390338629460413397996224645413818793848470654644268493965292562067946505747;
             const LIB_CALL_SELECTOR: felt252 = 1043360521069001059812816533306435120284814797591254795559962622467917544215;
@@ -71,7 +71,7 @@ fn roll_cairo0_contract() {
                     array![].span(),
                 ).unwrap_syscall()[0];
 
-                start_roll(test_address(), 123);
+                start_roll(CheatTarget::One(test_address()), 123);
 
                 let rolled_block_number = starknet::library_call_syscall(
                     CAIRO0_CLASS_HASH.try_into().unwrap(),
@@ -79,7 +79,7 @@ fn roll_cairo0_contract() {
                     array![].span(),
                 ).unwrap_syscall()[0];
 
-                stop_roll(test_address());
+                stop_roll(CheatTarget::One(test_address()));
 
                 let unrolled_block_number = starknet::library_call_syscall(
                     CAIRO0_CLASS_HASH.try_into().unwrap(),

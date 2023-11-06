@@ -17,19 +17,28 @@ mod contract_class;
 mod tx_info;
 mod fork;
 
+#[derive(Drop, Serde)]
+enum CheatTarget {
+    All: (),
+    One: ContractAddress,
+    Multiple: Span<ContractAddress>
+}
+
 fn test_address() -> ContractAddress {
     contract_address_const::<469394814521890341860918960550914>()
 }
 
-fn start_roll(contract_address: ContractAddress, block_number: u64) {
-    let contract_address_felt: felt252 = contract_address.into();
-    let block_number_felt: felt252 = block_number.into();
-    cheatcode::<'start_roll'>(array![contract_address_felt, block_number_felt].span());
+fn start_roll(target: CheatTarget, block_number: u64) {
+    let mut inputs = array![];
+    target.serialize(ref inputs);
+    inputs.append(block_number.into());
+    cheatcode::<'start_roll'>(inputs.span());
 }
 
-fn stop_roll(contract_address: ContractAddress) {
-    let contract_address_felt: felt252 = contract_address.into();
-    cheatcode::<'stop_roll'>(array![contract_address_felt].span());
+fn stop_roll(target: CheatTarget) {
+    let mut inputs = array![];
+    target.serialize(ref inputs);
+    cheatcode::<'stop_roll'>(inputs.span());
 }
 
 fn start_prank(contract_address: ContractAddress, caller_address: ContractAddress) {

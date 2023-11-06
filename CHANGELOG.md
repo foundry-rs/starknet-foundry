@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `--color` option to control when colored output is used
 
+#### Changed
+
+- `start_roll` and `stop_roll` now take `CheatTarget` as the first argument instead of `ContractAddress`
+
 ## [0.9.1] - 2023-10-30
 
 ### Forge
