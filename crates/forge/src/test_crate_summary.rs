@@ -12,8 +12,6 @@ pub struct TestCrateSummary {
     pub test_crate_type: CrateLocation,
     /// If test crate contained fuzzed tests
     pub contained_fuzzed_tests: bool,
-    /// If test crate was interrupted
-    pub interrupted: bool,
 }
 
 impl TestCrateSummary {

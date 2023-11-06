@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::fmt::Debug;
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, Context, Ok, Result};
 use ark_std::iterable::Iterable;
 
 use camino::{Utf8Path, Utf8PathBuf};
@@ -278,15 +278,17 @@ pub async fn run(
         let summary =
             run_tests_from_crate(compiled_test_crate, runner_config, runner_params).await?;
 
-        let interrupted = summary.interrupted;
-
-        summaries.push(summary);
-
-        if interrupted {
-            // Handle scenario for --exit-first flag.
-            // Because snforge runs test crates one by one synchronously.
-            // In case of test FAIL with --exit-first flag stops processing the next crates
-            break;
+        match summary {
+            TestCrateRunResult::Ok(summary) => {
+                summaries.push(summary);
+            }
+            TestCrateRunResult::Interrupted(summary) => {
+                summaries.push(summary);
+                // Handle scenario for --exit-first flag.
+                // Because snforge runs test crates one by one synchronously.
+                // In case of test FAIL with --exit-first flag stops processing the next crates
+                break;
+            }
         }
     }
 
@@ -301,12 +303,16 @@ pub async fn run(
 
     Ok(summaries)
 }
+enum TestCrateRunResult {
+    Ok(TestCrateSummary),
+    Interrupted(TestCrateSummary),
+}
 
 async fn run_tests_from_crate(
     tests: Arc<CompiledTestCrateRunnable>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
-) -> Result<TestCrateSummary> {
+) -> Result<TestCrateRunResult> {
     let runner = Arc::new(
         SierraCasmRunner::new(
             tests.sierra_program.clone(),
@@ -383,13 +389,18 @@ async fn run_tests_from_crate(
     let _ = rec_shut_down.recv().await;
 
     let contained_fuzzed_tests = results.iter().any(|summary| summary.runs().is_some());
-    Ok(TestCrateSummary {
+    let summary = TestCrateSummary {
         test_case_summaries: results,
         runner_exit_status: RunnerStatus::Default,
         test_crate_type: tests.tests_location,
         contained_fuzzed_tests,
-        interrupted,
-    })
+    };
+
+    if interrupted {
+        Ok(TestCrateRunResult::Interrupted(summary))
+    } else {
+        Ok(TestCrateRunResult::Ok(summary))
+    }
 }
 
 #[allow(clippy::too_many_arguments)]
