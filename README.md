@@ -29,16 +29,21 @@ Starknet Foundry, like its [Ethereum counterpart](https://github.com/foundry-rs/
 
 ## Installation
 
-To install Starknet Foundry, run:
+To install Starknet Foundry, first install `snfoundryup` by running:
 
 ```shell
-curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/scripts/install.sh | sh
+curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/scripts/install.sh | bash
+```
+Follow the instructions and then run
+
+```shell
+snfoundryup
 ```
 
 You can also specify a version you wish to install:
 
 ```shell
-curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/scripts/install.sh | sh -s -- -v 0.3.0
+snfoundryup -v 0.9.0
 ```
 
 To verify that the Starknet Foundry is installed correctly, run `snforge --version` and `sncast --version`.
