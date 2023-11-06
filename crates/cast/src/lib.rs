@@ -91,8 +91,11 @@ pub async fn get_chain_id(provider: &JsonRpcClient<HttpTransport>) -> Result<Fie
 
 fn get_account_info(name: &str, chain_id: FieldElement, path: &Utf8PathBuf) -> Result<Account> {
     raise_if_empty(name, "Account name")?;
+    let file_content =
+        fs::read_to_string(path).with_context(|| format!("Cannot read a file {path}"))?;
     let accounts: HashMap<String, HashMap<String, Account>> =
-        serde_json::from_str(&fs::read_to_string(path)?)?;
+        serde_json::from_str(&file_content)
+            .with_context(|| format!("Cannot parse file {path} to JSON"))?;
     let network_name = chain_id_to_network_name(chain_id);
     let account = accounts
         .get(&network_name)
@@ -170,8 +173,10 @@ fn get_account_from_keystore<'a>(
         get_keystore_password(KEYSTORE_PASSWORD_ENV_VAR)?.as_str(),
     )?);
 
-    let account_info: serde_json::Value =
-        serde_json::from_str(&fs::read_to_string(path_to_account)?)?;
+    let file_content = fs::read_to_string(path_to_account.clone())
+        .with_context(|| format!("Cannot read a file {}", &path_to_account))?;
+    let account_info: serde_json::Value = serde_json::from_str(&file_content)
+        .with_context(|| format!("Cannot parse file {} to JSON", &path_to_account))?;
     let address = FieldElement::from_hex_be(
         account_info
             .get("deployment")
