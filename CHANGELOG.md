@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Added
+
+- `--color` option to control when colored output is used
+
 ## [0.9.1] - 2023-10-30
 
 ### Forge
@@ -21,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Fixed
 
 - account commands now always return valid json when `--json` flag is passed
+- allow passing multiple calldata argument items without quotes 
 
 ## [0.9.0] - 2023-10-25
 
