@@ -74,7 +74,7 @@ impl BlockInfoReader for ForkStateReader {
                 Ok(block_info)
             }
             Ok(MaybePendingBlockWithTxHashes::PendingBlock(_)) => {
-                unreachable!("Pending block should not be allowed at configuration level")
+                unreachable!("Pending block is not be allowed at the configuration level")
             }
             Err(err) => Err(StateReadError(format!(
                 "Unable to get block with tx hashes from fork, err: {err:?}"
