@@ -361,6 +361,7 @@ async fn run_tests_from_crate(
     }
 
     let mut results = vec![];
+    let mut interrupted = false;
 
     while let Some(task) = tasks.next().await {
         let result = task??;
