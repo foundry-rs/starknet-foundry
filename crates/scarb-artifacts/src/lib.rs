@@ -107,19 +107,19 @@ pub fn get_contracts_map(
     let maybe_contracts_path = try_get_starknet_artifacts_path(&target_dir, &target_name)?;
 
     let map = match maybe_contracts_path {
-        Some(contracts_path) => load_contract_artifacts(contracts_path)?,
+        Some(contracts_path) => load_contract_artifacts(&contracts_path)?,
         None => HashMap::default(),
     };
     Ok(map)
 }
 
 fn load_contract_artifacts(
-    contracts_path: Utf8PathBuf,
+    contracts_path: &Utf8PathBuf,
 ) -> Result<HashMap<String, StarknetContractArtifacts>> {
     let base_path = contracts_path
         .parent()
         .ok_or_else(|| anyhow!("Failed to get parent for path = {}", &contracts_path))?;
-    let artifacts = artifacts_for_package(&contracts_path)?;
+    let artifacts = artifacts_for_package(contracts_path)?;
     let mut map = HashMap::new();
 
     for ref contract in artifacts.contracts {
