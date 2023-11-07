@@ -191,6 +191,17 @@ impl ForkConfig {
     }
 }
 
+impl TryFrom<RawForkParams> for ForkConfig {
+    type Error = anyhow::Error;
+
+    fn try_from(value: RawForkParams) -> std::result::Result<Self, Self::Error> {
+        Ok(ForkConfig {
+            url: value.url.parse()?,
+            block_id: value.block_id,
+        })
+    }
+}
+
 impl ForkConfigTrait for ForkConfig {}
 
 pub type TestCase = CollectedTestCase<ForkConfig>;

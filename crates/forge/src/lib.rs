@@ -25,13 +25,6 @@ pub enum CrateLocation {
     Tests,
 }
 
-fn parse_fork_params(raw_fork_params: &RawForkParams) -> Result<ForkConfig> {
-    Ok(ForkConfig::new(
-        raw_fork_params.url.parse()?,
-        raw_fork_params.block_id,
-    ))
-}
-
 fn replace_id_with_params(
     raw_fork_config: RawForkConfig,
     runner_config: &RunnerConfig,
@@ -61,7 +54,7 @@ fn to_runnable(
     for case in compiled_test_crate.test_cases {
         let fork_config = if let Some(fc) = case.fork_config {
             let raw_fork_params = replace_id_with_params(fc, runner_config)?;
-            let fork_config = parse_fork_params(&raw_fork_params)?;
+            let fork_config = ForkConfig::try_from(raw_fork_params)?;
             Some(fork_config)
         } else {
             None
