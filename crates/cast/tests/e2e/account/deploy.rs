@@ -225,13 +225,12 @@ pub async fn test_valid_class_hash() {
 }
 
 pub async fn create_account(salt: &str, add_profile: bool) -> (Utf8PathBuf, &str) {
-    let created_dir = Utf8PathBuf::from_path_buf(duplicate_directory_with_salt(
-        CONTRACTS_DIR.to_string() + "/map",
+    let created_dir =duplicate_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/constructor_with_params",
         "put",
         salt,
-    ).path().to_path_buf()).expect("Failed to create Utf8PathBuf from PathBuf");
+    );
     let accounts_file = "./accounts.json";
-
     let mut args = vec![
         "--url",
         URL,
@@ -249,12 +248,12 @@ pub async fn create_account(salt: &str, add_profile: bool) -> (Utf8PathBuf, &str
     }
 
     Command::new(cargo_bin!("sncast"))
-        .current_dir(&created_dir)
+        .current_dir(&created_dir.path())
         .args(&args)
         .assert()
         .success();
 
-    let contents = fs::read_to_string(created_dir.join(accounts_file)).unwrap();
+    let contents = fs::read_to_string(created_dir.path().join(accounts_file)).unwrap();
     let items: Value =
         serde_json::from_str(&contents).expect("Failed to parse accounts file at {path}");
 
@@ -265,8 +264,8 @@ pub async fn create_account(salt: &str, add_profile: bool) -> (Utf8PathBuf, &str
         9_999_999_999_999_999_999,
     )
     .await;
-
-    (created_dir, accounts_file)
+    let created_dir_utf8 = Utf8PathBuf::from_path_buf(created_dir.into_path()).expect("Path contains invalid UTF-8");
+    (created_dir_utf8, accounts_file)
 }
 
 #[tokio::test]
