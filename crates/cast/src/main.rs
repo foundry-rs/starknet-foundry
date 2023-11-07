@@ -7,12 +7,14 @@ use anyhow::{anyhow, Result};
 
 use camino::Utf8PathBuf;
 use cast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
-use cast::helpers::scarb_utils::{parse_scarb_config, CastConfig};
+use cast::helpers::scarb_utils::{get_scarb_metadata, parse_scarb_config, CastConfig};
 use cast::{
     chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_provider,
     print_command_result, ValueFormat,
 };
 use clap::{Parser, Subcommand};
+
+use scarb_ui::args::PackagesFilter;
 
 mod starknet_commands;
 
@@ -26,9 +28,12 @@ struct Cli {
     #[clap(short, long)]
     profile: Option<String>,
 
-    /// Path to Scarb.toml that is to be used; overrides default behaviour of searching for scarb.toml in current or parent directories
+    /// Path to Scarb.toml that is to be used; overrides default behaviour of searching for Scarb.toml in current or parent directories
     #[clap(short = 's', long)]
     path_to_scarb_toml: Option<Utf8PathBuf>,
+
+    #[command(flatten)]
+    packages_filter: PackagesFilter,
 
     /// RPC provider url address; overrides url from Scarb.toml
     #[clap(short = 'u', long = "url")]
@@ -106,7 +111,9 @@ async fn main() -> Result<()> {
         ValueFormat::Default
     };
 
-    let mut config = parse_scarb_config(&cli.profile, &cli.path_to_scarb_toml)?;
+    let metadata = get_scarb_metadata(cli.path_to_scarb_toml.as_ref())?;
+
+    let mut config = parse_scarb_config(&cli.profile, &metadata)?;
     update_cast_config(&mut config, &cli);
 
     let provider = get_provider(&config.rpc_url)?;
