@@ -21,5 +21,5 @@ fn segment_arena_simple() {
         &[],
     );
 
-    assert!(matches!(output, Result::Ok(_)))
+    assert!(matches!(output, Result::Ok(_)));
 }
