@@ -15,7 +15,8 @@ use blockifier::{
 use cairo_vm::types::program::Program;
 use cairo_vm::vm::runners::builtin_runner::{
     BITWISE_BUILTIN_NAME, EC_OP_BUILTIN_NAME, HASH_BUILTIN_NAME, KECCAK_BUILTIN_NAME,
-    OUTPUT_BUILTIN_NAME, POSEIDON_BUILTIN_NAME, RANGE_CHECK_BUILTIN_NAME, SIGNATURE_BUILTIN_NAME,
+    OUTPUT_BUILTIN_NAME, POSEIDON_BUILTIN_NAME, RANGE_CHECK_BUILTIN_NAME,
+    SEGMENT_ARENA_BUILTIN_NAME, SIGNATURE_BUILTIN_NAME,
 };
 use camino::Utf8PathBuf;
 use starknet_api::data_availability::DataAvailabilityMode;
@@ -83,12 +84,10 @@ pub fn build_block_context(block_info: CheatnetBlockInfo) -> BlockContext {
             KECCAK_BUILTIN_NAME.to_string(),
             2048_f64 * STEP_RESOURCE_COST, // 2**11
         ),
-        // The gas estimation should panic in case it encounters a builtin that doesn't have a cost
-        // This builtin seems to be unused for cost estimation
-        // (
-        //     SEGMENT_ARENA_BUILTIN_NAME.to_string(),
-        //     0_f64 * STEP_RESOURCE_COST,
-        // ), // BUILTIN COST NOT FOUND
+        (
+            SEGMENT_ARENA_BUILTIN_NAME.to_string(),
+            0_f64 * STEP_RESOURCE_COST,
+        ),
     ]));
 
     BlockContext {

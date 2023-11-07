@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - when specifying `BlockId::Tag(Latest)` block number of the used block will be printed
 - printing number of ignored and filtered out tests
 
+#### Fixed
+
+- Segment Arena Builtin crashing with `CairoResourcesNotContainedInFeeCosts` when Felt252Dict was used
+
 ### Cast
 
 #### Fixed
