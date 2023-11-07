@@ -225,7 +225,7 @@ pub async fn test_valid_class_hash() {
 }
 
 pub async fn create_account(salt: &str, add_profile: bool) -> (Utf8PathBuf, &str) {
-    let created_dir =duplicate_directory_with_salt(
+    let created_dir = duplicate_directory_with_salt(
         CONTRACTS_DIR.to_string() + "/constructor_with_params",
         "put",
         salt,
@@ -264,7 +264,8 @@ pub async fn create_account(salt: &str, add_profile: bool) -> (Utf8PathBuf, &str
         9_999_999_999_999_999_999,
     )
     .await;
-    let created_dir_utf8 = Utf8PathBuf::from_path_buf(created_dir.into_path()).expect("Path contains invalid UTF-8");
+    let created_dir_utf8 =
+        Utf8PathBuf::from_path_buf(created_dir.into_path()).expect("Path contains invalid UTF-8");
     (created_dir_utf8, accounts_file)
 }
 

@@ -20,8 +20,8 @@ use std::fs;
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::sync::Arc;
-use url::Url;
 use tempfile::TempDir;
+use url::Url;
 
 pub async fn declare_contract(account: &str, path: &str, shortname: &str) -> FieldElement {
     let provider = get_provider(URL).expect("Could not get the provider");
@@ -199,11 +199,11 @@ pub fn create_test_provider() -> JsonRpcClient<HttpTransport> {
 
 #[must_use]
 pub fn duplicate_directory_with_salt(src_path: String, to_be_salted: &str, salt: &str) -> TempDir {
-
     let src_dir = Utf8PathBuf::from(src_path);
     let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
-    let dest_dir = Utf8PathBuf::from_path_buf(temp_dir.path().to_path_buf()).expect("Failed to create Utf8PathBuf from PathBuf");
-    
+    let dest_dir = Utf8PathBuf::from_path_buf(temp_dir.path().to_path_buf())
+        .expect("Failed to create Utf8PathBuf from PathBuf");
+
     fs_extra::dir::copy(
         src_dir.join("src"),
         &dest_dir,
@@ -292,17 +292,22 @@ pub fn get_address_from_keystore(
     )
 }
 
-
 pub fn get_accounts_path(relative_path_from_cargo_toml: &str) -> String {
     use std::path::PathBuf;
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
     let binding = PathBuf::from(manifest_dir).join(relative_path_from_cargo_toml);
-    binding.to_str().expect("Failed to convert path to string").to_string()
+    binding
+        .to_str()
+        .expect("Failed to convert path to string")
+        .to_string()
 }
 
 pub fn get_keystores_path(relative_path_from_cargo_toml: &str) -> String {
     use std::path::PathBuf;
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
     let binding = PathBuf::from(manifest_dir).join(relative_path_from_cargo_toml);
-    binding.to_str().expect("Failed to convert path to string").to_string()
+    binding
+        .to_str()
+        .expect("Failed to convert path to string")
+        .to_string()
 }

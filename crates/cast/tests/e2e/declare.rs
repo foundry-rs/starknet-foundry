@@ -1,6 +1,6 @@
 use crate::helpers::constants::{CONTRACTS_DIR, URL};
 use crate::helpers::fixtures::{
-    duplicate_directory_with_salt, get_transaction_hash, get_transaction_receipt, get_accounts_path
+    duplicate_directory_with_salt, get_accounts_path, get_transaction_hash, get_transaction_receipt,
 };
 use indoc::indoc;
 use snapbox::cmd::{cargo_bin, Command};
@@ -120,7 +120,7 @@ fn scarb_build_fails(contract_path: &str, accounts_file_path: &str) {
 fn test_too_low_max_fee() {
     let contract_path =
         duplicate_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "2");
-        let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
     let args = vec![
         "--url",
