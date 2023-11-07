@@ -7,6 +7,7 @@ use std::string::ToString;
 use std::time::{Duration, Instant};
 use tokio::runtime::Runtime;
 use url::Url;
+use std::io::{self, Write};
 
 #[cfg(test)]
 #[ctor]
@@ -31,11 +32,35 @@ fn start_devnet() {
         }
     }
 
+    dbg!("here1");
+
     Command::new("tests/utils/devnet/bin/starknet-devnet")
         .args(["--port", &port, "--seed", &SEED.to_string()])
         .stdout(Stdio::null())
         .spawn()
         .expect("Failed to start devnet!");
+
+    let ps_command = Command::new("ps")
+        .arg("aux")
+        .stdout(std::process::Stdio::piped())
+        .spawn();
+
+    if let Ok(mut ps_child) = ps_command {
+        let grep_command = Command::new("grep")
+            .arg("devnet")
+            .stdin(ps_child.stdout.take().unwrap())
+            .output();
+
+        if let Ok(grep_output) = grep_command {
+            io::stdout().write_all(&grep_output.stdout).unwrap();
+        } else {
+            eprintln!("Error running 'grep' command");
+        }
+    } else {
+        eprintln!("Error running 'ps' command");
+    }
+
+    dbg!("here2");
 
     let now = Instant::now();
     let timeout = Duration::from_secs(30);
@@ -49,12 +74,15 @@ fn start_devnet() {
         }
     }
 
+    dbg!("here3");
+
     Command::new("tests/utils/build_contracts.sh")
         .spawn()
         .expect("Failed to compile contracts")
         .wait()
         .expect("Timed out compiling contracts");
 
+    dbg!("here4");
     let rt = Runtime::new().expect("Could not instantiate Runtime");
     rt.block_on(declare_deploy_contract(
         "user1",
