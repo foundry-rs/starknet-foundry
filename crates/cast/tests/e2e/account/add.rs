@@ -58,11 +58,11 @@ pub async fn test_happy_case() {
 
 #[tokio::test]
 pub async fn test_happy_case_add_profile() {
-    let current_dir = Utf8PathBuf::from_path_buf(duplicate_directory_with_salt(
+    let current_dir = duplicate_directory_with_salt(
         CONTRACTS_DIR.to_string() + "/map",
         "put",
         "30",
-    ).path().to_path_buf()).expect("Failed to create Utf8PathBuf from PathBuf");
+    );
 
     let accounts_file = "./accounts.json";
 
@@ -89,15 +89,15 @@ pub async fn test_happy_case_add_profile() {
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(&current_dir)
+        .current_dir(&current_dir.path())
         .args(args);
 
     snapbox.assert().stdout_matches(indoc! {r#"
         command: account add
         add_profile: Profile successfully added to Scarb.toml
     "#});
-
-    let mut file = current_dir.clone();
+    let current_dir_utf8 = Utf8PathBuf::from_path_buf(current_dir.into_path()).expect("Path contains invalid UTF-8"); // current_dir is consumed but the tmp folder is not deleted, it will persist until a reboot
+    let mut file = current_dir_utf8.clone();
     file.push(Utf8PathBuf::from(accounts_file));
 
     let contents = fs::read_to_string(file).expect("Unable to read created file");
@@ -121,11 +121,10 @@ pub async fn test_happy_case_add_profile() {
     );
 
     let contents =
-        fs::read_to_string(current_dir.join("Scarb.toml")).expect("Unable to read Scarb.toml");
+        fs::read_to_string(current_dir_utf8.join("Scarb.toml")).expect("Unable to read Scarb.toml");
     assert!(contents.contains("[tool.sncast.my_account_add]"));
     assert!(contents.contains("account = \"my_account_add\""));
 
-    fs::remove_dir_all(current_dir).unwrap();
 }
 
 #[tokio::test]
