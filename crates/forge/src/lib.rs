@@ -234,10 +234,15 @@ pub async fn run(
     let compilation_targets =
         collect_test_compilation_targets(package_path, package_name, package_source_dir_path)?;
     let test_crates = compile_tests(&compilation_targets, &runner_params)?;
+    let all_tests: usize = test_crates.iter().map(|tc| tc.test_cases.len()).sum();
+
     let test_crates = test_crates
         .into_iter()
         .map(|tc| tests_filter.filter_tests(tc))
         .collect_vec();
+    let not_filtered: usize = test_crates.iter().map(|tc| tc.test_cases.len()).sum();
+    let filtered = all_tests - not_filtered;
+
     let test_crates = test_crates
         .into_iter()
         .map(|ctc| to_runnable(ctc, &runner_config))
@@ -282,7 +287,7 @@ pub async fn run(
         }
     }
 
-    pretty_printing::print_test_summary(&summaries);
+    pretty_printing::print_test_summary(&summaries, filtered);
 
     if summaries
         .iter()

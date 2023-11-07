@@ -46,7 +46,7 @@ fn simple_package() {
         original value: [8111420071579136082810415440747], converted to a string: [failing check]
     
     [PASS] tests::without_prefix::five
-    Tests: 9 passed, 2 failed, 0 skipped
+    Tests: 9 passed, 2 failed, 0 skipped, 2 ignored, 0 filtered out
     
     Failures:
         tests::test_simple::test_failing
@@ -123,7 +123,7 @@ fn simple_package_with_git_dependency() {
             original value: [8111420071579136082810415440747], converted to a string: [failing check]
         
         [PASS] tests::without_prefix::five
-        Tests: 9 passed, 2 failed, 0 skipped
+        Tests: 9 passed, 2 failed, 0 skipped, 2 ignored, 0 filtered out
         
         Failures:
             tests::test_simple::test_failing
@@ -172,7 +172,7 @@ fn with_filter() {
         Running 2 test(s) from tests/
         [PASS] tests::test_simple::test_two
         [PASS] tests::test_simple::test_two_and_two
-        Tests: 2 passed, 0 failed, 0 skipped
+        Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 11 filtered out
         "#}
     );
 }
@@ -201,7 +201,7 @@ fn with_filter_matching_module() {
         [PASS] tests::ext_function_test::test_my_test
         [IGNORE] tests::ext_function_test::ignored_test
         [PASS] tests::ext_function_test::test_simple
-        Tests: 2 passed, 0 failed, 0 skipped
+        Tests: 2 passed, 0 failed, 0 skipped, 1 ignored, 10 filtered out
         "#}
     );
 }
@@ -229,7 +229,7 @@ fn with_exact_filter() {
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
         [PASS] tests::test_simple::test_two
-        Tests: 1 passed, 0 failed, 0 skipped
+        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 12 filtered out
         "#}
     );
 }
@@ -251,7 +251,7 @@ fn with_non_matching_filter() {
         Collected 0 test(s) from simple_package package
         Running 0 test(s) from src/
         Running 0 test(s) from tests/
-        Tests: 0 passed, 0 failed, 0 skipped
+        Tests: 0 passed, 0 failed, 0 skipped, 0 ignored, 13 filtered out
         "#}
     );
 }
@@ -279,7 +279,7 @@ fn with_ignored_flag() {
         Failure data:
             original value: [133508164996995645235097191], converted to a string: [not passing]
         
-        Tests: 1 passed, 1 failed, 0 skipped
+        Tests: 1 passed, 1 failed, 0 skipped, 0 ignored, 11 filtered out
         
         Failures:
             tests::ext_function_test::ignored_test
@@ -333,7 +333,7 @@ fn with_include_ignored_flag() {
             original value: [8111420071579136082810415440747], converted to a string: [failing check]
         
         [PASS] tests::without_prefix::five
-        Tests: 10 passed, 3 failed, 0 skipped
+        Tests: 10 passed, 3 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
             tests::ext_function_test::ignored_test
@@ -370,7 +370,7 @@ fn with_ignored_flag_and_filter() {
         Failure data:
             original value: [133508164996995645235097191], converted to a string: [not passing]
         
-        Tests: 0 passed, 1 failed, 0 skipped
+        Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 12 filtered out
         
         Failures:
             tests::ext_function_test::ignored_test
@@ -406,7 +406,7 @@ fn with_include_ignored_flag_and_filter() {
         Failure data:
             original value: [133508164996995645235097191], converted to a string: [not passing]
 
-        Tests: 1 passed, 1 failed, 0 skipped
+        Tests: 1 passed, 1 failed, 0 skipped, 0 ignored, 11 filtered out
         
         Failures:
             tests::ext_function_test::ignored_test
@@ -458,7 +458,7 @@ fn with_print() {
         original value: [32], converted to a string: [ ]
         original value: [166906514068638843492736773029576256], converted to a string: [ % abc 123 !?>@]
         [PASS] tests::test_print::test_print
-        Tests: 1 passed, 0 failed, 0 skipped
+        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         "#}
     );
 }
@@ -497,7 +497,7 @@ fn with_panic_data_decoding() {
             original value: [128]
         
         [PASS] tests::test_panic_decoding::test_simple2
-        Tests: 2 passed, 2 failed, 0 skipped
+        Tests: 2 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
             tests::test_panic_decoding::test_panic_decoding
@@ -556,7 +556,7 @@ fn with_exit_first() {
         Failure data:
             original value: [35718230152306872753561363307], converted to a string: [simple check]
 
-        Tests: 0 passed, 1 failed, 1 skipped
+        Tests: 0 passed, 1 failed, 1 skipped, 0 ignored, 0 filtered out
 
         Failures:
             tests::ext_function_test::simple_test
@@ -585,7 +585,7 @@ fn with_exit_first_flag() {
         Failure data:
             original value: [35718230152306872753561363307], converted to a string: [simple check]
 
-        Tests: 0 passed, 1 failed, 1 skipped
+        Tests: 0 passed, 1 failed, 1 skipped, 0 ignored, 0 filtered out
 
         Failures:
             tests::ext_function_test::simple_test
@@ -669,7 +669,7 @@ fn init_new_project_test() {
         Running 2 test(s) from tests/
         [PASS] tests::test_contract::test_increase_balance
         [PASS] tests::test_contract::test_cannot_increase_balance_with_zero_value
-        Tests: 2 passed, 0 failed, 0 skipped
+        Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
     "#}
     );
 }
@@ -713,7 +713,7 @@ fn should_panic() {
             original value: [156092886226808350968498952598218238307], converted to a string: [unexpected panic]
 
         [FAIL] tests::should_panic_test::expected_panic_but_didnt
-        Tests: 3 passed, 3 failed, 0 skipped
+        Tests: 3 passed, 3 failed, 0 skipped, 0 ignored, 0 filtered out
 
         Failures:
             tests::should_panic_test::should_panic_with_non_matching_data
@@ -749,7 +749,7 @@ fn printing_in_contracts() {
         original value: [22405534230753963835153736737], converted to a string: [Hello world!]
         [PASS] tests::test_contract::test_increase_balance
         [PASS] tests::test_contract::test_cannot_increase_balance_with_zero_value
-        Tests: 2 passed, 0 failed, 0 skipped
+        Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         "#}
     );
 }
