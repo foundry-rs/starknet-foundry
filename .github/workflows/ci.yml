@@ -94,6 +94,8 @@ jobs:
       - name: Install starknet-devnet-rs
         if: steps.cache-devnet.outputs.cache-hit != 'true'
         run: ./scripts/install_devnet.sh
+      - name: debug
+        run: ls -la . && ls -la ./crates/cast/tests/utils/devnet/bin
       - uses: software-mansion/setup-scarb@v1.3.2
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
