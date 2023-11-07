@@ -526,6 +526,7 @@ clone_and_build() {
 
   create_symlinks "$_installdir"
 
+  ensure cd - > /dev/null  # Go back to the previous directory and suppress output
 }
 
 banner() {
