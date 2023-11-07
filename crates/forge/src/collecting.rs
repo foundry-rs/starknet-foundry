@@ -80,7 +80,10 @@ pub(crate) fn compile_tests(
     targets
         .par_iter()
         .map(|target| {
-            target.compile_tests(&runner_params.linked_libraries, &runner_params.corelib_path)
+            target.compile_tests(
+                runner_params.linked_libraries(),
+                runner_params.corelib_path(),
+            )
         })
         .collect()
 }

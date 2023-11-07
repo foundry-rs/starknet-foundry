@@ -201,14 +201,11 @@ fn build_readable_text(data: &Vec<Felt252>) -> Option<String> {
     }
 }
 
-#[must_use]
 /// Returns a string with the data that was produced by the test case.
 /// If the test was expected to fail with specific data e.g. `#[should_panic(expected: ('data',))]`
 /// and failed to do so, it returns a string comparing the panic data and the expected data.
-pub fn extract_result_data(
-    run_result: &RunResult,
-    expectation: &ExpectedTestResult,
-) -> Option<String> {
+#[must_use]
+fn extract_result_data(run_result: &RunResult, expectation: &ExpectedTestResult) -> Option<String> {
     match &run_result.value {
         RunResultValue::Success(data) => build_readable_text(data),
         RunResultValue::Panic(panic_data) => {

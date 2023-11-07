@@ -26,10 +26,10 @@ pub enum CrateLocation {
 }
 
 fn parse_fork_params(raw_fork_params: &RawForkParams) -> Result<ForkConfig> {
-    Ok(ForkConfig {
-        url: raw_fork_params.url.parse()?,
-        block_id: raw_fork_params.block_id,
-    })
+    Ok(ForkConfig::new(
+        raw_fork_params.url.parse()?,
+        raw_fork_params.block_id,
+    ))
 }
 
 fn replace_id_with_params(
@@ -42,12 +42,12 @@ fn replace_id_with_params(
             let fork_target_from_runner_config = runner_config
                 .fork_targets
                 .iter()
-                .find(|fork| fork.name == name)
+                .find(|fork| fork.name() == name)
                 .ok_or_else(|| {
                     anyhow!("Fork configuration named = {name} not found in the Scarb.toml")
                 })?;
 
-            Ok(fork_target_from_runner_config.params.clone())
+            Ok(fork_target_from_runner_config.params().clone())
         }
     }
 }
@@ -77,10 +77,10 @@ fn to_runnable(
         });
     }
 
-    Ok(TestCrate {
-        sierra_program: compiled_test_crate.sierra_program,
+    Ok(TestCrate::new(
+        compiled_test_crate.sierra_program,
         test_cases,
-    })
+    ))
 }
 
 /// Run the tests in the package at the given path
@@ -215,13 +215,13 @@ mod tests {
         let config = RunnerConfig::new(
             Default::default(),
             false,
-            vec![ForkTarget {
-                name: "definitely_non_existing".to_string(),
-                params: RawForkParams {
+            vec![ForkTarget::new(
+                "definitely_non_existing".to_string(),
+                RawForkParams {
                     url: "https://not_taken.com".to_string(),
                     block_id: BlockId::Number(120),
                 },
-            }],
+            )],
             256,
             12345,
         );

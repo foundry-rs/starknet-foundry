@@ -110,13 +110,13 @@ fn fork_aliased_decorator() {
             Arc::new(RunnerConfig::new(
                 Utf8PathBuf::from_path_buf(PathBuf::from(tempdir().unwrap().path())).unwrap(),
                 false,
-                vec![ForkTarget {
-                    name: "FORK_NAME_FROM_SCARB_TOML".to_string(),
-                    params: RawForkParams {
+                vec![ForkTarget::new(
+                    "FORK_NAME_FROM_SCARB_TOML".to_string(),
+                    RawForkParams {
                         url: CHEATNET_RPC_URL.to_string(),
                         block_id: BlockId::Tag(Latest),
                     },
-                }],
+                )],
                 256,
                 12345,
             )),

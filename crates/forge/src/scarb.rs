@@ -116,27 +116,27 @@ mod tests {
             ForgeConfig {
                 exit_first: false,
                 fork: vec![
-                    ForkTarget {
-                        name: "FIRST_FORK_NAME".to_string(),
-                        params: RawForkParams {
+                    ForkTarget::new(
+                        "FIRST_FORK_NAME".to_string(),
+                        RawForkParams {
                             url: "http://some.rpc.url".to_string(),
                             block_id: BlockId::Number(1)
                         },
-                    },
-                    ForkTarget {
-                        name: "SECOND_FORK_NAME".to_string(),
-                        params: RawForkParams {
+                    ),
+                    ForkTarget::new(
+                        "SECOND_FORK_NAME".to_string(),
+                        RawForkParams {
                             url: "http://some.rpc.url".to_string(),
                             block_id: BlockId::Hash("1".to_string().to_field_element())
                         },
-                    },
-                    ForkTarget {
-                        name: "THIRD_FORK_NAME".to_string(),
-                        params: RawForkParams {
+                    ),
+                    ForkTarget::new(
+                        "THIRD_FORK_NAME".to_string(),
+                        RawForkParams {
                             url: "http://some.rpc.url".to_string(),
                             block_id: BlockId::Tag(Latest)
                         },
-                    }
+                    )
                 ],
                 fuzzer_runs: None,
                 fuzzer_seed: None,

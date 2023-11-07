@@ -36,10 +36,40 @@ mod test_execution_syscall_handler;
 
 pub const CACHE_DIR: &str = ".snfoundry_cache";
 
+pub static BUILTINS: Lazy<Vec<&str>> = Lazy::new(|| {
+    vec![
+        "Pedersen",
+        "RangeCheck",
+        "Bitwise",
+        "EcOp",
+        "Poseidon",
+        "SegmentArena",
+        "GasBuiltin",
+        "System",
+    ]
+});
+
 #[derive(Debug, PartialEq, Clone)]
 pub struct ForkTarget {
-    pub name: String,
-    pub params: RawForkParams,
+    name: String,
+    params: RawForkParams,
+}
+
+impl ForkTarget {
+    #[must_use]
+    pub fn new(name: String, params: RawForkParams) -> Self {
+        Self { name, params }
+    }
+
+    #[must_use]
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    #[must_use]
+    pub fn params(&self) -> &RawForkParams {
+        &self.params
+    }
 }
 
 /// Configuration of the test runner
@@ -80,11 +110,22 @@ impl RunnerConfig {
 }
 
 pub struct RunnerParams {
-    pub corelib_path: Utf8PathBuf,
-    pub contracts: HashMap<String, StarknetContractArtifacts>,
-    pub predeployed_contracts: Utf8PathBuf,
-    pub environment_variables: HashMap<String, String>,
-    pub linked_libraries: Vec<LinkedLibrary>,
+    corelib_path: Utf8PathBuf,
+    contracts: HashMap<String, StarknetContractArtifacts>,
+    predeployed_contracts: Utf8PathBuf,
+    environment_variables: HashMap<String, String>,
+    linked_libraries: Vec<LinkedLibrary>,
+}
+
+impl RunnerParams {
+    #[must_use]
+    pub fn linked_libraries(&self) -> &Vec<LinkedLibrary> {
+        &self.linked_libraries
+    }
+    #[must_use]
+    pub fn corelib_path(&self) -> &Utf8PathBuf {
+        &self.corelib_path
+    }
 }
 
 impl RunnerParams {
@@ -126,19 +167,6 @@ impl Default for CancellationTokens {
     }
 }
 
-pub static BUILTINS: Lazy<Vec<&str>> = Lazy::new(|| {
-    vec![
-        "Pedersen",
-        "RangeCheck",
-        "Bitwise",
-        "EcOp",
-        "Poseidon",
-        "SegmentArena",
-        "GasBuiltin",
-        "System",
-    ]
-});
-
 /// Exit status of the runner
 #[derive(Debug, PartialEq, Clone)]
 pub enum RunnerStatus {
@@ -152,8 +180,15 @@ pub enum RunnerStatus {
 
 #[derive(Debug, Clone)]
 pub struct ForkConfig {
-    pub url: Url,
-    pub block_id: BlockId,
+    url: Url,
+    block_id: BlockId,
+}
+
+impl ForkConfig {
+    #[must_use]
+    pub fn new(url: Url, block_id: BlockId) -> Self {
+        Self { url, block_id }
+    }
 }
 
 impl ForkConfigTrait for ForkConfig {}
@@ -162,8 +197,18 @@ pub type TestCase = CollectedTestCase<ForkConfig>;
 
 #[derive(Debug, Clone)]
 pub struct TestCrate {
-    pub sierra_program: Program,
-    pub test_cases: Vec<TestCase>,
+    sierra_program: Program,
+    test_cases: Vec<TestCase>,
+}
+
+impl TestCrate {
+    #[must_use]
+    pub fn new(sierra_program: Program, test_cases: Vec<TestCase>) -> Self {
+        Self {
+            sierra_program,
+            test_cases,
+        }
+    }
 }
 
 pub trait TestCaseFilter {

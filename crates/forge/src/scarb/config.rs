@@ -94,13 +94,13 @@ impl TryFrom<RawForgeConfig> for ForgeConfig {
                 unreachable!()
             };
 
-            fork_targets.push(ForkTarget {
-                name: raw_fork_target.name,
-                params: RawForkParams {
+            fork_targets.push(ForkTarget::new(
+                raw_fork_target.name,
+                RawForkParams {
                     url: raw_fork_target.url,
                     block_id,
                 },
-            });
+            ));
         }
 
         Ok(ForgeConfig {
