@@ -19,7 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - when specifying `BlockId::Tag(Latest)` block number of the used block will be printed
 
 #### Fixed
-- Segment Arena Builtin would crash with `CairoResourcesNotContainedInFeeCosts` when Felt252Dict was used, it's now fixed
+
+- Segment Arena Builtin crashing with `CairoResourcesNotContainedInFeeCosts` when Felt252Dict was used
 
 ### Cast
 
