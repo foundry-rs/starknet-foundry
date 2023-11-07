@@ -19,7 +19,7 @@ test-collector = { path = "../test-collector" }
 cheatnet = { path = "../cheatnet" }
 conversions = { path = "../conversions" }
 scarb-artifacts = { path = "../scarb-artifacts" }
-forge_runner = { path = "../forge_runner" }
+forge_runner = { path = "../forge-runner" }
 cairo-lang-runner.workspace = true
 cairo-lang-casm.workspace = true
 cairo-lang-sierra-to-casm.workspace = true

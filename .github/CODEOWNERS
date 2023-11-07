@@ -1,9 +1,9 @@
 # Cast
 /crates/cast/               @foundry-rs/starknet-foundry-cast
 
-# Forge
+# snforge-cli
 /crates/forge               @foundry-rs/starknet-foundry-forge-cli
-/crates/test-collector/     @foundry-rs/starknet-foundry-forge-cli 
+/crates/test-collector/     @foundry-rs/starknet-foundry-forge-cli
 
 # snforge-core
 /crates/cheatnet            @foundry-rs/starknet-foundry-forge-core
