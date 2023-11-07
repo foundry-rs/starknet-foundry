@@ -5,8 +5,10 @@ use std::fmt::Debug;
 use std::sync::Arc;
 
 use forge_runner::test_crate_summary::TestCrateSummary;
-use forge_runner::TestCase as RunnerTestCase;
-use forge_runner::{CancellationTokens, ForkConfig, RunnerConfig, RunnerParams, TestCrate};
+use forge_runner::{
+    CancellationTokens, RunnerConfig, RunnerParams, TestCaseRunnable, TestCrate,
+    ValidatedForkConfig,
+};
 use test_collector::{RawForkConfig, RawForkParams};
 
 use crate::collecting::{collect_test_compilation_targets, compile_tests, CompiledTestCrateRaw};
@@ -54,13 +56,13 @@ fn to_runnable(
     for case in compiled_test_crate.test_cases {
         let fork_config = if let Some(fc) = case.fork_config {
             let raw_fork_params = replace_id_with_params(fc, runner_config)?;
-            let fork_config = ForkConfig::try_from(raw_fork_params)?;
+            let fork_config = ValidatedForkConfig::try_from(raw_fork_params)?;
             Some(fork_config)
         } else {
             None
         };
 
-        test_cases.push(RunnerTestCase {
+        test_cases.push(TestCaseRunnable {
             name: case.name,
             available_gas: case.available_gas,
             ignored: case.ignored,

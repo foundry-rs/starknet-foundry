@@ -1,5 +1,5 @@
 use crate::running::ForkInfo;
-use crate::TestCase;
+use crate::TestCaseRunnable;
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{RunResult, RunResultValue};
@@ -127,7 +127,7 @@ impl TestCaseSummary {
     #[must_use]
     pub(crate) fn from_run_result_and_info(
         run_result: RunResult,
-        test_case: &TestCase,
+        test_case: &TestCaseRunnable,
         arguments: Vec<Felt252>,
         fork_info: &ForkInfo,
     ) -> Self {

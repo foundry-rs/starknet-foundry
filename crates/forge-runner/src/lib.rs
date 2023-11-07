@@ -20,8 +20,8 @@ use starknet::core::types::BlockId;
 use std::collections::HashMap;
 use std::sync::Arc;
 use test_collector::FuzzerConfig;
-use test_collector::TestCase as CollectedTestCase;
-use test_collector::{ForkConfig as ForkConfigTrait, LinkedLibrary, RawForkParams};
+use test_collector::TestCase;
+use test_collector::{ForkConfig, LinkedLibrary, RawForkParams};
 use tokio::sync::mpsc::{channel, Sender};
 use tokio::task;
 use tokio::task::JoinHandle;
@@ -179,42 +179,42 @@ pub enum RunnerStatus {
 }
 
 #[derive(Debug, Clone)]
-pub struct ForkConfig {
+pub struct ValidatedForkConfig {
     url: Url,
     block_id: BlockId,
 }
 
-impl ForkConfig {
+impl ValidatedForkConfig {
     #[must_use]
     pub fn new(url: Url, block_id: BlockId) -> Self {
         Self { url, block_id }
     }
 }
 
-impl TryFrom<RawForkParams> for ForkConfig {
+impl TryFrom<RawForkParams> for ValidatedForkConfig {
     type Error = anyhow::Error;
 
     fn try_from(value: RawForkParams) -> std::result::Result<Self, Self::Error> {
-        Ok(ForkConfig {
+        Ok(ValidatedForkConfig {
             url: value.url.parse()?,
             block_id: value.block_id,
         })
     }
 }
 
-impl ForkConfigTrait for ForkConfig {}
+impl ForkConfig for ValidatedForkConfig {}
 
-pub type TestCase = CollectedTestCase<ForkConfig>;
+pub type TestCaseRunnable = TestCase<ValidatedForkConfig>;
 
 #[derive(Debug, Clone)]
 pub struct TestCrate {
     sierra_program: Program,
-    test_cases: Vec<TestCase>,
+    test_cases: Vec<TestCaseRunnable>,
 }
 
 impl TestCrate {
     #[must_use]
-    pub fn new(sierra_program: Program, test_cases: Vec<TestCase>) -> Self {
+    pub fn new(sierra_program: Program, test_cases: Vec<TestCaseRunnable>) -> Self {
         Self {
             sierra_program,
             test_cases,
@@ -223,7 +223,7 @@ impl TestCrate {
 }
 
 pub trait TestCaseFilter {
-    fn should_be_run(&self, test_case: &TestCase) -> bool;
+    fn should_be_run(&self, test_case: &TestCaseRunnable) -> bool;
 }
 
 pub async fn run_tests_from_crate(
@@ -311,7 +311,7 @@ pub async fn run_tests_from_crate(
 #[allow(clippy::too_many_arguments)]
 fn choose_test_strategy_and_run(
     args: Vec<ConcreteTypeId>,
-    case: Arc<TestCase>,
+    case: Arc<TestCaseRunnable>,
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
@@ -343,7 +343,7 @@ fn choose_test_strategy_and_run(
 }
 
 fn run_single_test(
-    case: Arc<TestCase>,
+    case: Arc<TestCaseRunnable>,
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
@@ -387,7 +387,7 @@ fn run_single_test(
 
 fn run_with_fuzzing(
     args: Vec<ConcreteTypeId>,
-    case: Arc<TestCase>,
+    case: Arc<TestCaseRunnable>,
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
@@ -473,7 +473,7 @@ fn run_with_fuzzing(
 #[allow(clippy::too_many_arguments)]
 fn run_fuzzing_subtest(
     args: Vec<Felt252>,
-    case: Arc<TestCase>,
+    case: Arc<TestCaseRunnable>,
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,

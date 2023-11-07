@@ -1,5 +1,5 @@
 use crate::collecting::{CompiledTestCrate, CompiledTestCrateRaw};
-use forge_runner::{TestCase, TestCaseFilter};
+use forge_runner::{TestCaseFilter, TestCaseRunnable};
 
 #[derive(Debug, PartialEq)]
 // Specifies what tests should be included
@@ -84,7 +84,7 @@ impl TestsFilter {
 }
 
 impl TestCaseFilter for TestsFilter {
-    fn should_be_run(&self, test_case: &TestCase) -> bool {
+    fn should_be_run(&self, test_case: &TestCaseRunnable) -> bool {
         match self.ignored_filter {
             IgnoredFilter::All => true,
             IgnoredFilter::Ignored => test_case.ignored,

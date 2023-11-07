@@ -18,7 +18,7 @@ use itertools::chain;
 
 use crate::test_case_summary::TestCaseSummary;
 use crate::test_execution_syscall_handler::{TestExecutionState, TestExecutionSyscallHandler};
-use crate::{ForkConfig, RunnerConfig, RunnerParams, TestCase, CACHE_DIR};
+use crate::{RunnerConfig, RunnerParams, TestCaseRunnable, ValidatedForkConfig, CACHE_DIR};
 use cairo_lang_casm::hints::Hint;
 use cairo_lang_casm::instructions::Instruction;
 use cairo_lang_runner::casm_run::hint_to_hint_params;
@@ -74,7 +74,7 @@ fn build_hints_dict<'b>(
 
 pub fn blocking_run_from_test(
     args: Vec<Felt252>,
-    case: Arc<TestCase>,
+    case: Arc<TestCaseRunnable>,
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
@@ -157,7 +157,7 @@ pub struct RunResultWithInfo {
 #[allow(clippy::too_many_arguments)]
 pub fn run_test_case(
     args: Vec<Felt252>,
-    case: &TestCase,
+    case: &TestCaseRunnable,
     runner: &SierraCasmRunner,
     runner_config: &Arc<RunnerConfig>,
     runner_params: &Arc<RunnerParams>,
@@ -222,7 +222,7 @@ pub fn run_test_case(
         &string_to_hint,
     );
 
-    let latest_block_number = if let Some(ForkConfig {
+    let latest_block_number = if let Some(ValidatedForkConfig {
         url: _,
         block_id: BlockId::Tag(Latest),
     }) = &case.fork_config
@@ -250,7 +250,7 @@ pub fn run_test_case(
 
 fn extract_test_case_summary(
     run_result: Result<RunResultWithInfo>,
-    case: &TestCase,
+    case: &TestCaseRunnable,
     args: Vec<Felt252>,
 ) -> Result<TestCaseSummary> {
     match run_result {
@@ -289,10 +289,10 @@ fn extract_test_case_summary(
 
 fn get_fork_state_reader(
     workspace_root: &Utf8Path,
-    fork_config: &Option<ForkConfig>,
+    fork_config: &Option<ValidatedForkConfig>,
 ) -> Result<Option<ForkStateReader>> {
     match fork_config {
-        Some(ForkConfig { url, mut block_id }) => {
+        Some(ValidatedForkConfig { url, mut block_id }) => {
             if let BlockId::Tag(Latest) = block_id {
                 block_id = get_latest_block_number(url)?;
             }
