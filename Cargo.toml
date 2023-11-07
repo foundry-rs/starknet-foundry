@@ -71,3 +71,4 @@ which = "4.4.0"
 conversions = { path = "./crates/conversions" }
 test-case = "3.1.0"
 scarb-metadata = "1.8.0"
+scarb-ui = "0.1.0"
