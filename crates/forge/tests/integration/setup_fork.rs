@@ -9,7 +9,7 @@ use starknet::core::types::BlockTag::Latest;
 use tempfile::tempdir;
 use tokio::runtime::Runtime;
 
-use forge::scarb::config::{ForgeConfig, ForkTarget};
+use forge::scarb::config::ForkTarget;
 use forge::test_filter::TestsFilter;
 use forge::{run, CancellationTokens, RunnerConfig, RunnerParams};
 use test_collector::RawForkParams;
@@ -110,20 +110,15 @@ fn fork_aliased_decorator() {
             Arc::new(RunnerConfig::new(
                 Utf8PathBuf::from_path_buf(PathBuf::from(tempdir().unwrap().path())).unwrap(),
                 false,
-                Some(1234),
-                Some(500),
-                &ForgeConfig {
-                    exit_first: false,
-                    fuzzer_runs: Some(1234),
-                    fuzzer_seed: Some(500),
-                    fork: vec![ForkTarget {
-                        name: "FORK_NAME_FROM_SCARB_TOML".to_string(),
-                        params: RawForkParams {
-                            url: CHEATNET_RPC_URL.to_string(),
-                            block_id: BlockId::Tag(Latest),
-                        },
-                    }],
-                },
+                vec![ForkTarget {
+                    name: "FORK_NAME_FROM_SCARB_TOML".to_string(),
+                    params: RawForkParams {
+                        url: CHEATNET_RPC_URL.to_string(),
+                        block_id: BlockId::Tag(Latest),
+                    },
+                }],
+                256,
+                12345,
             )),
             Arc::new(RunnerParams::new(
                 corelib_path(),
