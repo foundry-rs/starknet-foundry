@@ -218,14 +218,16 @@ async fn test_keystore_inexistent_account() {
 async fn test_keystore_undeployed_account() {
     let contract_path =
         duplicate_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "8");
+        let my_key_path = get_keystores_path("tests/data/keystore/my_key.json");
+        let my_account_undeployed_path = get_keystores_path("tests/data/keystore/my_account_undeployed.json");
 
     let args = vec![
         "--url",
         URL,
         "--keystore",
-        "../../keystore/my_key.json",
+        my_key_path.as_str(),
         "--account",
-        "../../keystore/my_account_undeployed.json",
+        my_account_undeployed_path.as_str(),
         "declare",
         "--contract-name",
         "Map",
