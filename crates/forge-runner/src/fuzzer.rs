@@ -1,8 +1,7 @@
+use crate::fuzzer::arguments::CairoType;
 use anyhow::Result;
 use rand::rngs::StdRng;
 use rand::Rng;
-
-use crate::fuzzer::arguments::CairoType;
 
 mod arguments;
 mod random;
