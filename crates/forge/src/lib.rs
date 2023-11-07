@@ -437,6 +437,10 @@ fn run_with_fuzzing(
     send_shut_down: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     tokio::task::spawn(async move {
+        if send.is_closed() {
+            return Ok(TestCaseSummary::Skipped {});
+        }
+
         let (fuzzing_send, mut fuzzing_rec) = channel(1);
         let args = args
             .iter()
