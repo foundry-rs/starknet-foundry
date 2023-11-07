@@ -391,7 +391,7 @@ pub fn test_keystore_already_exists(keystore_path: &str, account_path: &str, err
 
 #[tokio::test]
 pub async fn test_happy_case_keystore_int_format() {
-    let keystore_path = "my_key.json";
+    let keystore_path = "my_key_int.json";
     let account_path = "my_account_int.json";
     _ = fs::remove_file(keystore_path);
     _ = fs::remove_file(account_path);
@@ -432,7 +432,7 @@ pub async fn test_happy_case_keystore_int_format() {
 
 #[tokio::test]
 pub async fn test_happy_case_keystore_hex_format() {
-    let keystore_path = "my_key.json";
+    let keystore_path = "my_key_hex.json";
     let account_path = "my_account_hex.json";
     _ = fs::remove_file(keystore_path);
     _ = fs::remove_file(account_path);

@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `--color` option to control when colored output is used
 - when specifying `BlockId::Tag(Latest)` block number of the used block will be printed
+- printing number of ignored and filtered out tests
 
 #### Fixed
 
