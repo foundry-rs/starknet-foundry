@@ -18,6 +18,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `--color` option to control when colored output is used
 - when specifying `BlockId::Tag(Latest)` block number of the used block will be printed
 
+### Cast
+
+#### Fixed
+- display correct error message when account file is invalid
+- allow passing multiple calldata argument items without quotes
+- account commands now always return valid json when `--json` flag is passed
+
 ## [0.9.1] - 2023-10-30
 
 ### Forge
@@ -26,14 +33,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - diagnostic paths referring to `tests` folder
 - caching `get_class_hash_at` in forking test mode (credits to @jainkunal for catching the bug)
-
-### Cast
-
-#### Fixed
-
-- account commands now always return valid json when `--json` flag is passed
-- allow passing multiple calldata argument items without quotes
-- display correct error message when account file is invalid
 
 ## [0.9.0] - 2023-10-25
 
