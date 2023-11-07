@@ -194,15 +194,16 @@ fn fuzzing_exit_first() {
 
         Failure data:
             original value: [..], converted to a string: [2 + b == 2 + b]
-        Tests: 0 passed, 1 failed, 1 skipped, 0 ignored, 16 filtered out
-        Fuzzer seed: [..]
 
+        Tests: 0 passed, 1 failed, 1 skipped, 0 ignored, 16 filtered out
+
+        Fuzzer seed: [..]
         Failures:
             tests::exit_first_fuzz::exit_first_fails_test
-
         "#}
     );
 }
+
 #[test]
 fn fuzzing_exit_first_single_fail() {
     let temp = setup_package("fuzzing");
