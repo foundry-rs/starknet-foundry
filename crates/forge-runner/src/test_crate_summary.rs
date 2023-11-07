@@ -8,8 +8,6 @@ pub struct TestCrateSummary {
     pub test_case_summaries: Vec<TestCaseSummary>,
     /// Status of the runner after executing tests in the file
     pub runner_exit_status: RunnerStatus,
-    // /// Type of the test crate
-    // pub test_crate_type: CrateLocation,
     /// If test crate contained fuzzed tests
     pub contained_fuzzed_tests: bool,
 }
