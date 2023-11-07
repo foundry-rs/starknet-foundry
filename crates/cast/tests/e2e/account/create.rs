@@ -90,11 +90,11 @@ pub async fn test_happy_case_generate_salt() {
 
 #[tokio::test]
 pub async fn test_happy_case_add_profile() {
-    let current_dir = Utf8PathBuf::from_path_buf(duplicate_directory_with_salt(
+    let current_dir = duplicate_directory_with_salt(
         CONTRACTS_DIR.to_string() + "/map",
         "put",
         "10",
-    ).path().to_path_buf()).expect("Failed to create Utf8PathBuf from PathBuf");
+    );
     let accounts_file = "./accounts.json";
 
     let args = vec![
@@ -122,11 +122,10 @@ pub async fn test_happy_case_add_profile() {
     assert!(stdout_str.contains("add_profile: Profile successfully added to Scarb.toml"));
 
     let contents =
-        fs::read_to_string(current_dir.join("Scarb.toml")).expect("Unable to read Scarb.toml");
+        fs::read_to_string(current_dir.path().join("Scarb.toml")).expect("Unable to read Scarb.toml");
     assert!(contents.contains("[tool.sncast.my_account]"));
     assert!(contents.contains("account = \"my_account\""));
 
-    fs::remove_dir_all(current_dir).unwrap();
 }
 
 #[tokio::test]
@@ -179,11 +178,11 @@ pub async fn test_happy_case_accounts_file_already_exists() {
 
 #[tokio::test]
 pub async fn test_profile_already_exists() {
-    let current_dir = Utf8PathBuf::from_path_buf(duplicate_directory_with_salt(
-        CONTRACTS_DIR.to_string() + "/map",
+    let current_dir = duplicate_directory_with_salt(
+        CONTRACTS_DIR.to_string() + "/constructor_with_params",
         "put",
         "20",
-    ).path().to_path_buf()).expect("Failed to create Utf8PathBuf from PathBuf");
+    );
     let accounts_file = "./accounts.json";
 
     let args = vec![
@@ -201,7 +200,7 @@ pub async fn test_profile_already_exists() {
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(&current_dir)
+        .current_dir(&current_dir.path())
         .args(args);
     let bdg = snapbox.assert();
     let out = bdg.get_output();
@@ -212,7 +211,6 @@ pub async fn test_profile_already_exists() {
         "error: Failed to add myprofile profile to the Scarb.toml. Profile already exists"
     ));
 
-    fs::remove_dir_all(current_dir).unwrap();
 }
 
 #[tokio::test]
@@ -279,11 +277,11 @@ pub async fn test_happy_case_keystore() {
 
 #[tokio::test]
 pub async fn test_happy_case_keystore_add_profile() {
-    let current_dir = Utf8PathBuf::from_path_buf(duplicate_directory_with_salt(
+    let current_dir =duplicate_directory_with_salt(
         CONTRACTS_DIR.to_string() + "/map",
         "put",
         "50",
-    ).path().to_path_buf()).expect("Failed to create Utf8PathBuf from PathBuf");
+    );
     let keystore_path = "my_key.json";
     let account_path = "my_account.json";
     let accounts_file = "accounts.json";
@@ -316,18 +314,18 @@ pub async fn test_happy_case_keystore_add_profile() {
     assert!(stdout_str.contains("add_profile: Profile successfully added to Scarb.toml"));
 
     let contents =
-        fs::read_to_string(current_dir.join("Scarb.toml")).expect("Unable to read Scarb.toml");
+        fs::read_to_string(current_dir.path().join("Scarb.toml")).expect("Unable to read Scarb.toml");
     assert!(contents.contains("[tool.sncast.my_account]"));
     assert!(contents.contains("account = \"my_account.json\""));
 
     let contents =
-        fs::read_to_string(current_dir.join(account_path)).expect("Unable to read created file");
+        fs::read_to_string(current_dir.path().join(account_path)).expect("Unable to read created file");
     assert!(contents.contains("\"deployment\": {"));
     assert!(contents.contains("\"variant\": {"));
     assert!(contents.contains("\"version\": 1"));
 
     let contents =
-        fs::read_to_string(current_dir.join("Scarb.toml")).expect("Unable to read Scarb.toml");
+        fs::read_to_string(current_dir.path().join("Scarb.toml")).expect("Unable to read Scarb.toml");
     assert!(contents.contains(r#"[tool.sncast.my_account]"#));
     assert!(contents.contains(r#"account = "my_account.json""#));
     assert!(!contents.contains(r#"accounts-file = "accounts.json""#));
