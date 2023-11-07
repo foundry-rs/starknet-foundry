@@ -487,7 +487,7 @@ where
         None,
     )
     .map_err(CairoRunError::from)?;
-    let mut runner = CairoRunner::new(&program, "all_cairo", false)
+    let mut runner = CairoRunner::new(&program, "starknet", false)
         .map_err(CairoRunError::from)
         .map_err(Box::new)?;
 

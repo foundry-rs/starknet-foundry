@@ -101,7 +101,6 @@ impl TestCaseSummary {
             },
             TestCaseSummary::Failed {
                 name,
-
                 msg,
                 arguments,
                 ..
@@ -164,7 +163,7 @@ impl TestCaseSummary {
                         msg,
                         arguments,
                         fuzzing_statistic: None,
-                        gas: 0f64,
+                        gas: run_result.gas,
                     },
                 },
             },

@@ -88,8 +88,8 @@ pub(crate) fn print_test_result(test_result: &TestCaseSummary) {
     };
 
     // uncomment this to see used gas
-    // println!("{result_header} {result_name}{fuzzer_report}{result_message}{gas_report}");
-    println!("{result_header} {result_name}{fuzzer_report}{result_message}");
+    println!("{result_header} {result_name}{fuzzer_report}{result_message}{_gas_report}");
+    // println!("{result_header} {result_name}{fuzzer_report}{result_message}");
 }
 
 pub fn print_failures(all_failed_tests: &[TestCaseSummary]) {
