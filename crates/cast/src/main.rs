@@ -100,32 +100,9 @@ enum Commands {
     Script(Script),
 }
 
-#[allow(clippy::too_many_lines)]
 fn main() -> Result<()> {
     let cli = Cli::parse();
 
-    let mut config = parse_scarb_config(&cli.profile, &cli.path_to_scarb_toml)?;
-    update_cast_config(&mut config, &cli);
-
-    let provider = get_provider(&config.rpc_url)?;
-    let runtime = Runtime::new().expect("Could not instantiate Runtime");
-
-    if let Commands::Script(script) = cli.command {
-        let res = script::run(script.script_path, &provider, runtime);
-        match res {
-            Ok(_) => Ok(()),
-            Err(err) => panic!("{}", err),
-        }
-    } else {
-        runtime.block_on(run_async_command(cli, &mut config, provider))
-    }
-}
-
-async fn run_async_command(
-    cli: Cli,
-    config: &mut CastConfig,
-    provider: JsonRpcClient<HttpTransport>,
-) -> Result<()> {
     // Clap validates that both are not passed at same time
     let value_format = if cli.hex_format {
         ValueFormat::Hex
@@ -135,6 +112,34 @@ async fn run_async_command(
         ValueFormat::Default
     };
 
+    let mut config = parse_scarb_config(&cli.profile, &cli.path_to_scarb_toml)?;
+    update_cast_config(&mut config, &cli);
+
+    let provider = get_provider(&config.rpc_url)?;
+    let runtime = Runtime::new().expect("Could not instantiate Runtime");
+
+    if let Commands::Script(script) = cli.command {
+        let mut result = script::run(
+            &script.script_path,
+            &provider,
+            runtime,
+            &cli.path_to_scarb_toml,
+        );
+
+        print_command_result("declare", &mut result, value_format, cli.json)?;
+        Ok(())
+    } else {
+        runtime.block_on(run_async_command(cli, &mut config, provider, value_format))
+    }
+}
+
+#[allow(clippy::too_many_lines)]
+async fn run_async_command(
+    cli: Cli,
+    config: &mut CastConfig,
+    provider: JsonRpcClient<HttpTransport>,
+    value_format: ValueFormat,
+) -> Result<()> {
     match cli.command {
         Commands::Declare(declare) => {
             let account = get_account(
@@ -345,7 +350,7 @@ async fn run_async_command(
             print_command_result("show-config", &mut result, value_format, cli.json)?;
             Ok(())
         }
-        _ => Ok(()),
+        Commands::Script(_) => Err(anyhow!("All cases should already be handled")),
     }
 }
 

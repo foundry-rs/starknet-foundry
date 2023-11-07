@@ -1,6 +1,7 @@
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
 use scarb_metadata;
+use scarb_metadata::Metadata;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::env;
@@ -76,11 +77,30 @@ pub fn get_scarb_metadata(manifest_path: &Utf8PathBuf) -> Result<scarb_metadata:
     scarb_metadata::MetadataCommand::new()
         .inherit_stderr()
         .manifest_path(manifest_path)
-        .no_deps()
+        // .no_deps()
         .exec()
         .context(
             format!("Failed to read Scarb.toml manifest file, not found in current nor parent directories, {}", env::current_dir().unwrap().into_os_string().into_string().unwrap()),
         )
+}
+
+pub fn parse_scarb_metadata(path: &Option<Utf8PathBuf>) -> Result<Metadata> {
+    if let Some(path) = path {
+        if !path.exists() {
+            bail!("{path} file does not exist!");
+        }
+    }
+
+    let manifest_path = match path.clone() {
+        Some(path) => path,
+        None => get_scarb_manifest().context("Failed to obtain manifest path from scarb")?,
+    };
+
+    if !manifest_path.exists() {
+        bail!("Scarb Manifest doesn't exist")
+    }
+
+    get_scarb_metadata(&manifest_path)
 }
 
 pub fn parse_scarb_config(

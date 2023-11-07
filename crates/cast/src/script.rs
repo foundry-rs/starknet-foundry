@@ -2,13 +2,14 @@ use std::any::Any;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
+use crate::starknet_commands::call;
 use anyhow::{anyhow, Context, Result};
+use blockifier::execution::common_hints::ExecutionMode;
 use blockifier::execution::entry_point::{
     CallEntryPoint, EntryPointExecutionContext, ExecutionResources,
 };
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
-use blockifier::execution::common_hints::ExecutionMode;
 use blockifier::state::cached_state::{CachedState, GlobalContractCache};
 use cairo_felt::Felt252;
 use cairo_lang_casm::hints::{Hint, StarknetHint};
@@ -16,13 +17,12 @@ use cairo_lang_casm::operand::{CellRef, ResOperand};
 use cairo_lang_compiler::db::RootDatabase;
 use cairo_lang_compiler::diagnostics::DiagnosticsReporter;
 use cairo_lang_compiler::project::{check_compiler_path, setup_project};
+use cairo_lang_diagnostics::ToOption;
 use cairo_lang_filesystem::db::init_dev_corelib;
 use cairo_lang_runner::casm_run::cell_ref_to_relocatable;
 use cairo_lang_runner::casm_run::{extract_relocatable, vm_get_range, MemBuffer};
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{build_hints_dict, insert_value_to_cellref, SierraCasmRunner};
-
-use cairo_lang_diagnostics::ToOption;
 use cairo_lang_sierra_generator::db::SierraGenGroup;
 use cairo_lang_sierra_generator::replace_ids::{DebugReplacer, SierraIdReplacer};
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
@@ -37,20 +37,20 @@ use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cairo_vm::vm::vm_core::VirtualMachine;
 use camino::Utf8PathBuf;
+use cast::helpers::scarb_utils::parse_scarb_metadata;
 use cheatnet::cheatcodes::EnhancedHintError;
 use cheatnet::constants::{build_block_context, build_transaction_context};
-use cheatnet::state::{DictStateReader, CheatnetBlockInfo};
+use cheatnet::state::{CheatnetBlockInfo, DictStateReader};
 use clap::command;
 use clap::Args;
 use conversions::StarknetConversions;
 use itertools::chain;
 use num_traits::ToPrimitive;
+use scarb_artifacts::corelib_for_package;
 use starknet::core::types::{BlockId, BlockTag::Pending, FieldElement};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use tokio::runtime::Runtime;
-
-use crate::starknet_commands::call;
 
 #[derive(Args)]
 #[command(about = "")]
@@ -167,7 +167,7 @@ impl CairoHintProcessor<'_> {
             HintError::CustomHint(Box::from("Failed to read input data".to_string()))
         })?;
 
-        self.match_cheatcode_by_selector(vm, selector, inputs, output_start, output_end)
+        self.match_cheatcode_by_selector(vm, selector, &inputs, output_start, output_end)
             .map_err(Into::into)
     }
 
@@ -181,7 +181,7 @@ impl CairoHintProcessor<'_> {
         &mut self,
         vm: &mut VirtualMachine,
         selector: &str,
-        inputs: Vec<Felt252>,
+        inputs: &[Felt252],
         output_start: &CellRef,
         output_end: &CellRef,
     ) -> Result<(), EnhancedHintError> {
@@ -197,8 +197,10 @@ impl CairoHintProcessor<'_> {
                     .to_usize()
                     .expect("Failed to convert calldata length to usize");
                 let calldata = Vec::from(&inputs[3..(3 + calldata_length)]);
-                let calldata_felts: Vec<FieldElement> =
-                    calldata.iter().map(|x| x.to_field_element()).collect();
+                let calldata_felts: Vec<FieldElement> = calldata
+                    .iter()
+                    .map(StarknetConversions::to_field_element)
+                    .collect();
 
                 let call_response = self.runtime.block_on(call::call(
                     contract_address,
@@ -213,7 +215,12 @@ impl CairoHintProcessor<'_> {
                     .expect("Failed to insert data length");
 
                 buffer
-                    .write_data(call_response.data.iter().map(|x| x.to_felt252()))
+                    .write_data(
+                        call_response
+                            .data
+                            .iter()
+                            .map(StarknetConversions::to_felt252),
+                    )
                     .expect("Failed to insert data");
 
                 Ok(())
@@ -230,16 +237,19 @@ impl CairoHintProcessor<'_> {
 }
 
 pub fn run(
-    script_path: Utf8PathBuf,
+    script_path: &Utf8PathBuf,
     provider: &JsonRpcClient<HttpTransport>,
     runtime: Runtime,
+    path_to_scarb_toml: &Option<Utf8PathBuf>,
 ) -> Result<()> {
     check_compiler_path(true, Path::new(&script_path))?;
 
-    // let db = &mut RootDatabase::builder().detect_corelib().build()?;
+    let metadata = parse_scarb_metadata(path_to_scarb_toml)?;
+
+    let corelib = corelib_for_package(&metadata, &metadata.workspace.members[0])?;
     let db = &mut RootDatabase::builder().build()?;
-    let corelib_path = PathBuf::from("/Users/kamiljankowski/Documents/GitHub/cairo/corelib/src/");
-    init_dev_corelib(db, corelib_path);
+
+    init_dev_corelib(db, PathBuf::from(corelib));
 
     let main_crate_ids = setup_project(db, Path::new(&script_path))?;
     if DiagnosticsReporter::stderr().check(db) {

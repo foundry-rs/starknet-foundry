@@ -41,7 +41,7 @@ fn call(
     // TODO: handle Result
     // let exit_code = *buf[0];
     let result_data_len = (*buf[0]).try_into().unwrap();
-    result_data_len.print();
+
     let mut result_data = array![];
     let mut i = 1;
     loop {
@@ -55,12 +55,11 @@ fn call(
     CallResult { data: result_data }
 }
 fn main() {
-    'Hello, World!'.print();
-
     let eth = 0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7;
     let addr = 0x0089496091c660345BaA480dF76c1A900e57cf34759A899eFd1EADb362b20DB5;
     let call_result = call(eth.try_into().unwrap(), 'allowance', array![addr, addr]);
     call_result.data.print();
 
-    'Bye, World!'.print();
+    let call_result = call(eth.try_into().unwrap(), 'symbol', array![]);
+    call_result.data.print();
 }
