@@ -102,6 +102,9 @@ pub(crate) fn run_test(
             &send_shut_down,
         );
 
+        // TODO: code below is added to fix snforge tests
+        // remove it after improve exit-first tests
+        // issue #1043
         if send.is_closed() {
             return Ok(TestCaseSummary::Skipped {});
         }
@@ -138,6 +141,9 @@ pub(crate) fn run_fuzz_test(
             &send_shut_down,
         );
 
+        // TODO: code below is added to fix snforge tests
+        // remove it after improve exit-first tests
+        // issue #1043
         if send.is_closed() {
             return Ok(TestCaseSummary::Skipped {});
         }
