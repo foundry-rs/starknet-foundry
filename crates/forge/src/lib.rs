@@ -445,7 +445,7 @@ fn run_with_fuzzing(
     send_shut_down: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     tokio::task::spawn(async move {
-        let (fuzzing_send, mut rec) = channel(1);
+        let (fuzzing_send, mut fuzzing_rec) = channel(1);
         let args = args
             .iter()
             .map(|arg| {
@@ -483,19 +483,21 @@ fn run_with_fuzzing(
         }
 
         let mut results = vec![];
-        let mut final_result = None;
 
         while let Some(task) = tasks.next().await {
             let result = task??;
 
             results.push(result.clone());
-            final_result = Some(result.clone());
 
             if let TestCaseSummary::Failed { .. } = result {
-                rec.close();
+                fuzzing_rec.close();
                 break;
             }
         }
+
+        let final_result = results
+            .last()
+            .expect("Test should always run at least once");
 
         let runs = u32::try_from(
             results
@@ -509,19 +511,16 @@ fn run_with_fuzzing(
                 .count(),
         )?;
 
-        if let Some(TestCaseSummary::Passed { .. }) = final_result {
+        if let TestCaseSummary::Passed { .. } = final_result {
+            // Because we execute tests parallel, it's possible to
+            // get Passed after Skipped. To treat fuzzing a test as Passed
+            // we have to ensure that all fuzzing subtests Passed
             if runs != fuzzer_runs {
-                final_result = results
-                    .iter()
-                    .cloned()
-                    .find(|item| matches!(item, TestCaseSummary::Skipped {}));
+                return Ok(TestCaseSummary::Skipped {});
             };
         };
 
-        match final_result {
-            Some(result) => Ok(result.with_runs(runs)),
-            None => panic!("Test should always run at least once"),
-        }
+        Ok(final_result.clone().with_runs(runs))
     })
 }
 
