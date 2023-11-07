@@ -8,6 +8,7 @@ use blockifier::execution::entry_point::{
 };
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
+use blockifier::execution::common_hints::ExecutionMode;
 use blockifier::state::cached_state::{CachedState, GlobalContractCache};
 use cairo_felt::Felt252;
 use cairo_lang_casm::hints::{Hint, StarknetHint};
@@ -38,7 +39,7 @@ use cairo_vm::vm::vm_core::VirtualMachine;
 use camino::Utf8PathBuf;
 use cheatnet::cheatcodes::EnhancedHintError;
 use cheatnet::constants::{build_block_context, build_transaction_context};
-use cheatnet::state::DictStateReader;
+use cheatnet::state::{DictStateReader, CheatnetBlockInfo};
 use clap::command;
 use clap::Args;
 use conversions::StarknetConversions;
@@ -271,12 +272,12 @@ pub fn run(
     let (hints_dict, string_to_hint) = build_hints_dict(instructions.clone());
 
     // hint processor
-    let block_context = build_block_context();
+    let block_context = build_block_context(CheatnetBlockInfo::default());
     let account_context = build_transaction_context();
     let mut context = EntryPointExecutionContext::new(
-        block_context.clone(),
-        account_context,
-        block_context.invoke_tx_max_n_steps.try_into().unwrap(),
+        &block_context.clone(),
+        &account_context,
+        ExecutionMode::Execute,
     );
 
     let mut blockifier_state =

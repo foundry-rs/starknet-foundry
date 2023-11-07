@@ -104,15 +104,6 @@ enum Commands {
 fn main() -> Result<()> {
     let cli = Cli::parse();
 
-    // Clap validates that both are not passed at same time
-    let value_format = if cli.hex_format {
-        ValueFormat::Hex
-    } else if cli.int_format {
-        ValueFormat::Int
-    } else {
-        ValueFormat::Default
-    };
-
     let mut config = parse_scarb_config(&cli.profile, &cli.path_to_scarb_toml)?;
     update_cast_config(&mut config, &cli);
 
@@ -135,6 +126,15 @@ async fn run_async_command(
     config: &mut CastConfig,
     provider: JsonRpcClient<HttpTransport>,
 ) -> Result<()> {
+    // Clap validates that both are not passed at same time
+    let value_format = if cli.hex_format {
+        ValueFormat::Hex
+    } else if cli.int_format {
+        ValueFormat::Int
+    } else {
+        ValueFormat::Default
+    };
+
     match cli.command {
         Commands::Declare(declare) => {
             let account = get_account(
