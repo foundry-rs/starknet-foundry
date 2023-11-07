@@ -3,6 +3,7 @@
 
 # snforge-cli
 /crates/forge               @foundry-rs/starknet-foundry-forge-cli
+/crates/forge-runner        @foundry-rs/starknet-foundry-forge-cli
 /crates/test-collector/     @foundry-rs/starknet-foundry-forge-cli
 
 # snforge-core
