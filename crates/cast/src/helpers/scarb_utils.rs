@@ -70,18 +70,29 @@ pub fn get_scarb_manifest() -> Result<Utf8PathBuf> {
     Ok(path)
 }
 
-pub fn get_scarb_metadata(manifest_path: &Utf8PathBuf) -> Result<scarb_metadata::Metadata> {
+pub fn get_scarb_metadata(
+    manifest_path: &Utf8PathBuf,
+    with_deps: bool,
+) -> Result<scarb_metadata::Metadata> {
     which::which("scarb")
         .context("Cannot find `scarb` binary in PATH. Make sure you have Scarb installed https://github.com/software-mansion/scarb")?;
 
-    scarb_metadata::MetadataCommand::new()
-        .inherit_stderr()
-        .manifest_path(manifest_path)
-        // .no_deps()
-        .exec()
-        .context(
-            format!("Failed to read Scarb.toml manifest file, not found in current nor parent directories, {}", env::current_dir().unwrap().into_os_string().into_string().unwrap()),
-        )
+    let mut binding = scarb_metadata::MetadataCommand::new();
+    let mut command = binding.inherit_stderr()
+        .manifest_path(manifest_path);
+
+    if !with_deps {
+        command = command.no_deps();
+    }
+
+    command.exec().context(format!(
+        "Failed to read Scarb.toml manifest file, not found in current nor parent directories, {}",
+        env::current_dir()
+            .unwrap()
+            .into_os_string()
+            .into_string()
+            .unwrap()
+    ))
 }
 
 pub fn parse_scarb_metadata(path: &Option<Utf8PathBuf>) -> Result<Metadata> {
@@ -122,7 +133,7 @@ pub fn parse_scarb_config(
         return Ok(CastConfig::default());
     }
 
-    let metadata = get_scarb_metadata(&manifest_path)?;
+    let metadata = get_scarb_metadata(&manifest_path, false)?;
 
     match get_package_tool_sncast(&metadata) {
         Ok(package_tool_sncast) => {
@@ -253,13 +264,13 @@ mod tests {
 
     #[test]
     fn test_get_scarb_metadata() {
-        let metadata = get_scarb_metadata(&"tests/data/contracts/map/Scarb.toml".into());
+        let metadata = get_scarb_metadata(&"tests/data/contracts/map/Scarb.toml".into(), false);
         assert!(metadata.is_ok());
     }
 
     #[test]
     fn test_get_scarb_metadata_not_found() {
-        let metadata_err = get_scarb_metadata(&"Scarb.toml".into()).unwrap_err();
+        let metadata_err = get_scarb_metadata(&"Scarb.toml".into(), false).unwrap_err();
         assert!(metadata_err
             .to_string()
             .contains("Failed to read Scarb.toml manifest file"));
