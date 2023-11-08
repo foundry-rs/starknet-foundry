@@ -558,8 +558,13 @@ pub fn collect_tests(
         .collect_vec()
         .into_iter()
         .map(|(test_name, config)| {
-            if let Some(_) = config.available_gas {
-                gas_error = Some(Err(anyhow!("{} - Gas calculation used for available_gas is incorrect, because it doesn't include the cost of contract execution.", test_name)))
+            if config.available_gas.is_some() {
+                gas_error = Some(Err(
+                    anyhow!
+                        ("{} - Gas calculation used for available_gas is incorrect, because it doesn't include the cost of contract execution.",
+                         test_name
+                    )
+                ));
 
             };
             TestCase {
