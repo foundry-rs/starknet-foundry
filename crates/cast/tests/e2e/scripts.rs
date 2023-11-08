@@ -1,5 +1,5 @@
-use indoc::indoc;
 use crate::helpers::constants::{SCRIPTS_DIR, URL};
+use indoc::indoc;
 use snapbox::cmd::{cargo_bin, Command};
 #[tokio::test]
 async fn test_happy_case() {

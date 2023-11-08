@@ -327,11 +327,11 @@ pub fn run(
     ) {
         Ok(result) => match result.value {
             RunResultValue::Success(data) => Ok(ScriptResponse {
-                status: format!("success"),
+                status: "success".to_string(),
                 msg: build_readable_text(&data),
             }),
             RunResultValue::Panic(panic_data) => Ok(ScriptResponse {
-                status: format!("script panicked"),
+                status: "script panicked".to_string(),
                 msg: build_readable_text(&panic_data),
             }),
         },
