@@ -181,3 +181,60 @@ fn warp_cairo0_contract(selector: &str) {
     assert_eq!(warped_block_timestamp, &Felt252::from(123));
     assert_eq!(unwarped_block_timestamp, block_timestamp);
 }
+
+// #[test_case("return_sequencer_address"; "when common call")]
+// #[test_case("return_proxied_sequencer_address"; "when library call")]
+// fn elect_cairo0_contract(selector: &str) {
+//     let mut cached_fork_state = create_fork_cached_state();
+//     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_fork_state);
+
+//     let contract_address =
+//         Felt252::from(BigUint::from_str(CAIRO0_TESTER_ADDRESS).unwrap()).to_contract_address();
+
+//     let selector = felt_selector_from_name(selector);
+//     let output = call_contract(
+//         &mut blockifier_state,
+//         &mut cheatnet_state,
+//         &contract_address,
+//         &selector,
+//         &[],
+//     )
+//     .unwrap();
+//     let CallContractResult::Success { ret_data } = output.result else {
+//         panic!("Wrong call output")
+//     };
+//     let sequencer_address = &ret_data[0];
+
+//     cheatnet_state.start_elect(contract_address, ContractAddress::from(123));
+
+//     let output = call_contract(
+//         &mut blockifier_state,
+//         &mut cheatnet_state,
+//         &contract_address,
+//         &selector,
+//         &[],
+//     )
+//     .unwrap();
+//     let CallContractResult::Success { ret_data } = output.result else {
+//         panic!("Wrong call output")
+//     };
+//     let elected_sequencer_address = &ret_data[0];
+
+//     cheatnet_state.stop_elect(contract_address);
+
+//     let output = call_contract(
+//         &mut blockifier_state,
+//         &mut cheatnet_state,
+//         &contract_address,
+//         &selector,
+//         &[],
+//     )
+//     .unwrap();
+//     let CallContractResult::Success { ret_data } = output.result else {
+//         panic!("Wrong call output")
+//     };
+//     let unwarped_sequencer_address = &ret_data[0];
+
+//     assert_eq!(warped_sequencer_address, &Felt252::from(123));
+//     assert_eq!(unwarped_sequencer_address, sequencer_address);
+// }

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Added
+
+- `elect` cheatcode for mocking the sequencer address
+
 ## [0.10.0] - 2023-11-08
 
 ### Forge

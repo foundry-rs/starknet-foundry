@@ -74,9 +74,9 @@ fn test_simple_syscalls() {
             fn get_block_timestamp(ref self: TContractState) -> u64;
         }
 
-     #[starknet::interface]
-        trait ISequencerAddressChecker<TContractState> {
-            fn get_sequencer_address(self: @TContractState) -> ContractAddress;
+        #[starknet::interface]
+        trait IElectChecker<TContractState> {
+            fn get_sequencer_address(ref self: TContractState) -> ContractAddress;
         }
 
         #[test]
@@ -97,13 +97,13 @@ fn test_simple_syscalls() {
             let contract_address_warp = contract_warp.deploy(@ArrayTrait::new()).unwrap();
             let dispatcher_warp = IWarpCheckerDispatcher { contract_address: contract_address_warp };
             
-            let contract_sequencer_add = declare('SequencerAddressChecker');
-            let contract_sequencer_add_address = contract_sequencer_add.deploy(@ArrayTrait::new()).unwrap();
-            let dispatcher_sequencer_add = ISequencerAddressCheckerDispatcher { contract_address: contract_sequencer_add_address };
+            let contract_elect = declare('ElectChecker');
+            let contract_address_elect = contract_elect.deploy(@ArrayTrait::new()).unwrap();
+            let dispatcher_elect = IElectCheckerDispatcher { contract_address: contract_address_elect };
 
             assert(dispatcher_roll.get_block_number() == block_info.block_number, 'Invalid block number');
             assert(dispatcher_warp.get_block_timestamp() == block_info.block_timestamp, 'Invalid block timestamp');
-            assert(dispatcher_sequencer_add.get_sequencer_address() == block_info.sequencer_address, 'Invalid block timestamp');
+            assert(dispatcher_elect.get_sequencer_address() == block_info.sequencer_address, 'Invalid sequencer address');
 
             let contract = declare('SpoofChecker');
             let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
@@ -136,8 +136,8 @@ fn test_simple_syscalls() {
         )
         .unwrap(),
         Contract::from_code_path(
-            "SequencerAddressChecker".to_string(),
-            Path::new("tests/data/contracts/sequencer_address_checker.cairo")
+            "ElectChecker".to_string(),
+            Path::new("tests/data/contracts/elect_checker.cairo")
         )
         .unwrap()
     );
@@ -435,6 +435,7 @@ fn test_simple_cheatcodes() {
         use array::SpanTrait;
         use starknet::ContractAddressIntoFelt252;
         use snforge_std::{
+            start_elect, stop_elect,
             start_prank, stop_prank,
             start_roll, stop_roll,
             start_warp, stop_warp,
@@ -484,6 +485,20 @@ fn test_simple_cheatcodes() {
             stop_warp(test_address);
             let new_block_timestamp = starknet::get_block_info().unbox().block_timestamp;
             assert(new_block_timestamp == old_block_timestamp, 'Timestamp did not change back')
+        }
+
+        #[test]
+        fn test_elect_test_state() {
+            let test_address: ContractAddress = test_address();
+            let old_sequencer_address = starknet::get_block_info().unbox().sequencer_address;
+
+            start_elect(test_address, 123.try_into().unwrap());
+            let new_sequencer_address = starknet::get_block_info().unbox().sequencer_address;
+            assert(new_sequencer_address == 123.try_into().unwrap(), 'Wrong sequencer address');
+
+            stop_elect(test_address);
+            let new_sequencer_address = starknet::get_block_info().unbox().sequencer_address;
+            assert(new_sequencer_address == old_sequencer_address, 'Sequencer address did not change back')
         }
 
         #[test]

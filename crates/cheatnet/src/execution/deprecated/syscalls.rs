@@ -141,6 +141,17 @@ impl<'a> CheatableSyscallHandler<'a> {
             response.write(vm, &mut self.syscall_handler.syscall_ptr)?;
 
             return Ok(());
+        } else if DeprecatedSyscallSelector::GetSequencerAddress == selector
+            && self.cheatnet_state.address_is_elected(&contract_address)
+        {
+            self.syscall_handler.syscall_ptr += 1;
+            self.increment_syscall_count(selector);
+
+            let response = get_sequencer_address(self, contract_address).unwrap();
+
+            response.write(vm, &mut self.syscall_handler.syscall_ptr)?;
+
+            return Ok(());
         } else if DeprecatedSyscallSelector::DelegateCall == selector {
             self.syscall_handler.syscall_ptr += 1;
             self.increment_syscall_count(selector);
@@ -300,5 +311,25 @@ pub fn get_block_timestamp(
                 .to_u64()
                 .unwrap(),
         ),
+    })
+}
+
+// blockifier/src/execution/deprecated_syscalls/mod.rs:470 (get_sequencer_address)
+type GetSequencerAddressResponse = GetContractAddressResponse;
+
+pub fn get_sequencer_address(
+    cheatable_syscall_handler: &mut CheatableSyscallHandler<'_>,
+    contract_address: ContractAddress,
+) -> DeprecatedSyscallResult<GetSequencerAddressResponse> {
+    cheatable_syscall_handler
+        .syscall_handler
+        .verify_not_in_validate_mode("get_sequencer_address")?;
+
+    Ok(GetSequencerAddressResponse {
+        address: *cheatable_syscall_handler
+            .cheatnet_state
+            .elected_contracts
+            .get(&contract_address)
+            .unwrap(),
     })
 }
