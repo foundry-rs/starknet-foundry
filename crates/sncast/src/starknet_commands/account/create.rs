@@ -3,12 +3,12 @@ use crate::starknet_commands::account::{
 };
 use anyhow::{anyhow, bail, Result};
 use camino::Utf8PathBuf;
+use clap::Args;
+use serde_json::json;
 use sncast::helpers::constants::{CREATE_KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH};
 use sncast::helpers::response_structs::AccountCreateResponse;
 use sncast::helpers::scarb_utils::CastConfig;
 use sncast::{extract_or_generate_salt, get_chain_id, get_keystore_password, parse_number};
-use clap::Args;
-use serde_json::json;
 use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
 use starknet::core::types::{FeeEstimate, FieldElement};
 use starknet::core::utils::get_contract_address;

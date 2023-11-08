@@ -5,10 +5,10 @@ use crate::helpers::fixtures::{
     get_transaction_receipt, mint_token,
 };
 use camino::Utf8PathBuf;
-use sncast::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
 use indoc::indoc;
 use serde_json::Value;
 use snapbox::cmd::{cargo_bin, Command};
+use sncast::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
 use starknet::core::types::TransactionReceipt::DeployAccount;
 use std::{env, fs};
 use test_case::test_case;

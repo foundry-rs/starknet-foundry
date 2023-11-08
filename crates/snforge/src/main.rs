@@ -1,7 +1,6 @@
 use anyhow::{anyhow, bail, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use clap::{Parser, Subcommand, ValueEnum};
-use snforge::scarb::config_from_scarb_for_package;
 use include_dir::{include_dir, Dir};
 use scarb_artifacts::{
     corelib_for_package, dependencies_for_package, get_contracts_map, name_for_package,
@@ -9,6 +8,7 @@ use scarb_artifacts::{
 };
 use scarb_metadata::{Metadata, MetadataCommand, PackageMetadata};
 use scarb_ui::args::PackagesFilter;
+use snforge::scarb::config_from_scarb_for_package;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::{env, fs};
@@ -19,10 +19,10 @@ use snforge::{pretty_printing, RunnerConfig, RunnerParams, CACHE_DIR, FUZZER_RUN
 
 use snforge::{run, TestCrateSummary};
 
+use rand::{thread_rng, RngCore};
 use snforge::scarb::config::ForgeConfig;
 use snforge::test_case_summary::TestCaseSummary;
 use snforge::test_filter::TestsFilter;
-use rand::{thread_rng, RngCore};
 use std::process::{Command, Stdio};
 use std::thread::available_parallelism;
 

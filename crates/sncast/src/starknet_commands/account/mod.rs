@@ -4,14 +4,14 @@ use crate::starknet_commands::account::delete::Delete;
 use crate::starknet_commands::account::deploy::Deploy;
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
+use clap::{Args, Subcommand};
+use serde_json::json;
 use sncast::{
     chain_id_to_network_name, decode_chain_id,
     helpers::scarb_utils::{
         get_package_tool_sncast, get_scarb_manifest, get_scarb_metadata, CastConfig,
     },
 };
-use clap::{Args, Subcommand};
-use serde_json::json;
 use starknet::{core::types::FieldElement, signers::SigningKey};
 use std::{fs::OpenOptions, io::Write};
 use toml::Value;
@@ -161,10 +161,10 @@ pub fn add_created_profile_to_configuration(
 #[cfg(test)]
 mod tests {
     use camino::Utf8PathBuf;
-    use sncast::helpers::constants::DEFAULT_ACCOUNTS_FILE;
-    use sncast::helpers::scarb_utils::CastConfig;
     use sealed_test::prelude::rusty_fork_test;
     use sealed_test::prelude::sealed_test;
+    use sncast::helpers::constants::DEFAULT_ACCOUNTS_FILE;
+    use sncast::helpers::scarb_utils::CastConfig;
     use std::fs;
 
     use crate::starknet_commands::account::add_created_profile_to_configuration;

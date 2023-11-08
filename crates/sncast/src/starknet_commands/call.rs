@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
+use clap::Args;
 use sncast::handle_rpc_error;
 use sncast::helpers::response_structs::CallResponse;
-use clap::Args;
 use starknet::core::types::{BlockId, FieldElement, FunctionCall};
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;

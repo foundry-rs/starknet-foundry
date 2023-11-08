@@ -2,8 +2,8 @@ use crate::assert_stdout_contains;
 use crate::e2e::common::runner::{
     runner, setup_package, setup_package_with_file_patterns, test_runner, BASE_FILE_PATTERNS,
 };
-use snforge::CACHE_DIR;
 use indoc::indoc;
+use snforge::CACHE_DIR;
 
 #[test]
 fn without_cache() {

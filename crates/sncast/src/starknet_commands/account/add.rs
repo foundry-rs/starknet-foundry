@@ -3,10 +3,10 @@ use crate::starknet_commands::account::{
 };
 use anyhow::{ensure, Result};
 use camino::Utf8PathBuf;
+use clap::Args;
 use sncast::get_chain_id;
 use sncast::helpers::response_structs::AccountAddResponse;
 use sncast::helpers::scarb_utils::CastConfig;
-use clap::Args;
 use starknet::core::types::BlockTag::Pending;
 use starknet::core::types::{BlockId, FieldElement};
 use starknet::providers::{

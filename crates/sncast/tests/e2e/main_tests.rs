@@ -1,9 +1,9 @@
 use crate::helpers::constants::{ACCOUNT, ACCOUNT_FILE_PATH, CONTRACTS_DIR, URL};
 use crate::helpers::fixtures::{duplicate_directory_with_salt, from_env};
 use crate::helpers::runner::runner;
-use sncast::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
 use indoc::indoc;
 use snapbox::cmd::{cargo_bin, Command};
+use sncast::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
 use std::env;
 use std::fs;
 

@@ -1,10 +1,10 @@
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8PathBuf;
-use sncast::helpers::response_structs::AccountDeleteResponse;
-use sncast::helpers::scarb_utils::get_scarb_manifest;
 use clap::Args;
 use promptly::prompt;
 use serde_json::Map;
+use sncast::helpers::response_structs::AccountDeleteResponse;
+use sncast::helpers::scarb_utils::get_scarb_manifest;
 use std::fs::File;
 use std::io::Read;
 use std::io::Write;

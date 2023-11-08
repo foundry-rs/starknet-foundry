@@ -1,9 +1,9 @@
 use crate::helpers::constants::{ACCOUNT_FILE_PATH, CONTRACTS_DIR, DEVNET_ENV_FILE, URL};
 use camino::Utf8PathBuf;
-use sncast::get_keystore_password;
-use sncast::{get_account, get_provider, parse_number};
 use primitive_types::U256;
 use serde_json::{json, Map, Value};
+use sncast::get_keystore_password;
+use sncast::{get_account, get_provider, parse_number};
 use starknet::accounts::{Account, Call};
 use starknet::contract::ContractFactory;
 use starknet::core::types::contract::{CompiledClass, SierraClass};

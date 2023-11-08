@@ -1,9 +1,9 @@
 use anyhow::{anyhow, Context, Result};
 use camino::Utf8PathBuf;
-use sncast::helpers::{response_structs::DeclareResponse, scarb_utils::get_scarb_manifest};
-use sncast::{handle_rpc_error, handle_wait_for_tx};
 use clap::Args;
 use scarb_artifacts::get_contracts_map;
+use sncast::helpers::{response_structs::DeclareResponse, scarb_utils::get_scarb_manifest};
+use sncast::{handle_rpc_error, handle_wait_for_tx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::ConnectedAccount;
 use starknet::core::types::FieldElement;

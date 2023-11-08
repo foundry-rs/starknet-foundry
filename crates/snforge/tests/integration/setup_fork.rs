@@ -3,10 +3,10 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use camino::Utf8PathBuf;
+use indoc::formatdoc;
 use snforge::scarb::config::ForkTarget;
 use snforge::test_filter::TestsFilter;
 use snforge::{run, RunnerConfig, RunnerParams};
-use indoc::formatdoc;
 use starknet::core::types::BlockId;
 use starknet::core::types::BlockTag::Latest;
 use tempfile::tempdir;
