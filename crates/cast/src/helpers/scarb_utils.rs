@@ -78,8 +78,7 @@ pub fn get_scarb_metadata(
         .context("Cannot find `scarb` binary in PATH. Make sure you have Scarb installed https://github.com/software-mansion/scarb")?;
 
     let mut binding = scarb_metadata::MetadataCommand::new();
-    let mut command = binding.inherit_stderr()
-        .manifest_path(manifest_path);
+    let mut command = binding.inherit_stderr().manifest_path(manifest_path);
 
     if !with_deps {
         command = command.no_deps();
@@ -111,7 +110,7 @@ pub fn parse_scarb_metadata(path: &Option<Utf8PathBuf>) -> Result<Metadata> {
         bail!("Scarb Manifest doesn't exist")
     }
 
-    get_scarb_metadata(&manifest_path)
+    get_scarb_metadata(&manifest_path, true)
 }
 
 pub fn parse_scarb_config(
