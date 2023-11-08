@@ -170,3 +170,12 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ steps.create-release.outputs.computed-prefix }}${{ steps.create-release.outputs.version }}
+
+  deploy-docs:
+    name: Deploy documentation
+    needs: create-release
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/docs.yml
