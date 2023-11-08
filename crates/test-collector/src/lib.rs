@@ -536,6 +536,7 @@ pub fn collect_tests(
         .to_option()
         .context("Compilation failed without any diagnostics")
         .context("Failed to get sierra program")?;
+    let mut gas_error = None;
 
     let collected_tests: Vec<TestCaseRaw> = all_tests
         .into_iter()
@@ -556,15 +557,25 @@ pub fn collect_tests(
         })
         .collect_vec()
         .into_iter()
-        .map(|(test_name, config)| TestCase {
-            name: test_name,
-            available_gas: config.available_gas,
-            ignored: config.ignored,
-            expected_result: config.expected_result,
-            fork_config: config.fork_config,
-            fuzzer_config: config.fuzzer_config,
+        .map(|(test_name, config)| {
+            if let Some(_) = config.available_gas {
+                gas_error = Some(Err(anyhow!("{} - Gas calculation used for available_gas is incorrect, because it doesn't include the cost of contract execution.", test_name)))
+
+            };
+            TestCase {
+                name: test_name,
+                available_gas: config.available_gas,
+                ignored: config.ignored,
+                expected_result: config.expected_result,
+                fork_config: config.fork_config,
+                fuzzer_config: config.fuzzer_config,
+            }
         })
         .collect();
+
+    if let Some(err) = gas_error {
+        return err;
+    }
 
     let sierra_program = replace_sierra_ids_in_program(db, &sierra_program);
 
