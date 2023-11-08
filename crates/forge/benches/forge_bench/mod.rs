@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 pub mod benchmark;
 mod collect_tests;
 mod compile_tests;
