@@ -3,9 +3,9 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use camino::Utf8PathBuf;
-use forge::scarb::config::ForkTarget;
-use forge::test_filter::TestsFilter;
-use forge::{run, RunnerConfig, RunnerParams};
+use snforge::scarb::config::ForkTarget;
+use snforge::test_filter::TestsFilter;
+use snforge::{run, RunnerConfig, RunnerParams};
 use indoc::formatdoc;
 use starknet::core::types::BlockId;
 use starknet::core::types::BlockTag::Latest;

@@ -5,7 +5,7 @@ BENCHMARKS_FILE = "benchmarks.csv"
 THEME = "default"
 TOOLS = [
     ("protostar", "Protostar"),
-    ("forge", "Starknet Forge"),
+    ("snforge", "Starknet Forge"),
     ("cairo_test", "Cairo-Test"),
 ]
 

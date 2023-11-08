@@ -25,7 +25,7 @@ pub struct ForkTarget {
     pub params: RawForkParams,
 }
 
-/// Represents forge config deserialized from Scarb.toml using basic types like String etc.
+/// Represents snforge config deserialized from Scarb.toml using basic types like String etc.
 #[derive(Deserialize, Debug, PartialEq, Default)]
 pub(crate) struct RawForgeConfig {
     #[serde(default)]

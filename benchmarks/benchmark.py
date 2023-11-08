@@ -10,7 +10,7 @@ import subprocess
 TOOLCHAINS = [
     # name, command, cairo version
     ("protostar", ["protostar", "test"], 1),
-    ("forge", ["snforge"], 2),
+    ("snforge", ["snforge"], 2),
     ("cairo_test", ["scarb", "cairo-test"], 2),
 ]
 

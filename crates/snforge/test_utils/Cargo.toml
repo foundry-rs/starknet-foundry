@@ -23,6 +23,6 @@ serde_json.workspace = true
 serde.workspace = true
 tempfile.workspace = true
 tokio.workspace = true
-forge = { path = "../../forge" }
+snforge = { path = ".." }
 test-collector = { path = "../../test-collector" }
 scarb-artifacts = { path = "../../scarb-artifacts" }

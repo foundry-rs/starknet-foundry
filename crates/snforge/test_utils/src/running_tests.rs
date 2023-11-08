@@ -4,8 +4,8 @@ use crate::corelib::{corelib_path, predeployed_contracts};
 use crate::runner::TestCase;
 use camino::Utf8PathBuf;
 
-use forge::test_filter::TestsFilter;
-use forge::{run, RunnerConfig, RunnerParams, TestCrateSummary};
+use snforge::test_filter::TestsFilter;
+use snforge::{run, RunnerConfig, RunnerParams, TestCrateSummary};
 
 use std::path::PathBuf;
 use tempfile::tempdir;

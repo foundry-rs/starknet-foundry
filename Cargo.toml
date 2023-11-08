@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
-    "crates/forge",
+    "crates/snforge",
     "crates/test-collector",
     "crates/sncast",
     "crates/cheatnet",

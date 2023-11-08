@@ -1,7 +1,7 @@
 use anyhow::{anyhow, bail, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use clap::{Parser, Subcommand, ValueEnum};
-use forge::scarb::config_from_scarb_for_package;
+use snforge::scarb::config_from_scarb_for_package;
 use include_dir::{include_dir, Dir};
 use scarb_artifacts::{
     corelib_for_package, dependencies_for_package, get_contracts_map, name_for_package,
@@ -15,13 +15,13 @@ use std::{env, fs};
 use tempfile::{tempdir, TempDir};
 use tokio::runtime::Builder;
 
-use forge::{pretty_printing, RunnerConfig, RunnerParams, CACHE_DIR, FUZZER_RUNS_DEFAULT};
+use snforge::{pretty_printing, RunnerConfig, RunnerParams, CACHE_DIR, FUZZER_RUNS_DEFAULT};
 
-use forge::{run, TestCrateSummary};
+use snforge::{run, TestCrateSummary};
 
-use forge::scarb::config::ForgeConfig;
-use forge::test_case_summary::TestCaseSummary;
-use forge::test_filter::TestsFilter;
+use snforge::scarb::config::ForgeConfig;
+use snforge::test_case_summary::TestCaseSummary;
+use snforge::test_filter::TestsFilter;
 use rand::{thread_rng, RngCore};
 use std::process::{Command, Stdio};
 use std::thread::available_parallelism;
