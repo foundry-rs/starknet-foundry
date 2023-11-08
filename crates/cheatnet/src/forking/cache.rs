@@ -182,9 +182,11 @@ impl ForkCache {
             .get(&storage_key_str)?;
 
         Some(
-            FieldElement::from_hex_be(cache_hit)
-                .unwrap_or_else(|_| panic!("Could not parse {cache_hit}"))
-                .to_stark_felt(),
+            Felt252::from(
+                BigUint::parse_bytes(cache_hit.as_bytes(), 10)
+                    .expect("Parsing class_hash_at entry failed"),
+            )
+            .to_stark_felt(),
         )
     }
 
