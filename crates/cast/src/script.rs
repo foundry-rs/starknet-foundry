@@ -22,7 +22,9 @@ use cairo_lang_filesystem::db::init_dev_corelib;
 use cairo_lang_runner::casm_run::cell_ref_to_relocatable;
 use cairo_lang_runner::casm_run::{extract_relocatable, vm_get_range, MemBuffer};
 use cairo_lang_runner::short_string::as_cairo_short_string;
-use cairo_lang_runner::{build_hints_dict, insert_value_to_cellref, SierraCasmRunner};
+use cairo_lang_runner::{
+    build_hints_dict, insert_value_to_cellref, RunResultValue, SierraCasmRunner,
+};
 use cairo_lang_sierra_generator::db::SierraGenGroup;
 use cairo_lang_sierra_generator::replace_ids::{DebugReplacer, SierraIdReplacer};
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
@@ -37,6 +39,7 @@ use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cairo_vm::vm::vm_core::VirtualMachine;
 use camino::Utf8PathBuf;
+use cast::helpers::response_structs::ScriptResponse;
 use cast::helpers::scarb_utils::parse_scarb_metadata;
 use cheatnet::cheatcodes::EnhancedHintError;
 use cheatnet::constants::{build_block_context, build_transaction_context};
@@ -241,7 +244,7 @@ pub fn run(
     provider: &JsonRpcClient<HttpTransport>,
     runtime: Runtime,
     path_to_scarb_toml: &Option<Utf8PathBuf>,
-) -> Result<()> {
+) -> Result<ScriptResponse> {
     check_compiler_path(true, Path::new(&script_path))?;
 
     let metadata = parse_scarb_metadata(path_to_scarb_toml)?;
@@ -322,7 +325,36 @@ pub fn run(
         instructions,
         builtins,
     ) {
-        Ok(_result) => Ok(()),
+        Ok(result) => match result.value {
+            RunResultValue::Success(data) => Ok(ScriptResponse {
+                status: format!("success"),
+                msg: build_readable_text(&data),
+            }),
+            RunResultValue::Panic(panic_data) => Ok(ScriptResponse {
+                status: format!("script panicked"),
+                msg: build_readable_text(&panic_data),
+            }),
+        },
         Err(err) => Err(err.into()),
+    }
+}
+
+// taken from starknet-foundry/crates/forge/src/test_case_summary.rs
+/// Helper function to build `readable_text` from a run data.
+fn build_readable_text(data: &Vec<Felt252>) -> Option<String> {
+    let mut readable_text = String::new();
+
+    for felt in data {
+        readable_text.push_str(&format!("\n    original value: [{felt}]"));
+        if let Some(short_string) = as_cairo_short_string(felt) {
+            readable_text.push_str(&format!(", converted to a string: [{short_string}]"));
+        }
+    }
+
+    if readable_text.is_empty() {
+        None
+    } else {
+        readable_text.push('\n');
+        Some(readable_text)
     }
 }

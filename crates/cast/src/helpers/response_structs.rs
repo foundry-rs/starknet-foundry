@@ -59,3 +59,9 @@ pub struct ShowConfigResponse {
     pub accounts_file_path: Option<Utf8PathBuf>,
     pub keystore: Option<Utf8PathBuf>,
 }
+
+#[derive(Serialize)]
+pub struct ScriptResponse {
+    pub status: String,
+    pub msg: Option<String>,
+}

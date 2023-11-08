@@ -126,7 +126,7 @@ fn main() -> Result<()> {
             &cli.path_to_scarb_toml,
         );
 
-        print_command_result("declare", &mut result, value_format, cli.json)?;
+        print_command_result("script", &mut result, value_format, cli.json)?;
         Ok(())
     } else {
         runtime.block_on(run_async_command(cli, &mut config, provider, value_format))
