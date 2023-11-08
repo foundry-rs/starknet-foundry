@@ -753,3 +753,19 @@ fn printing_in_contracts() {
         "#}
     );
 }
+
+#[test]
+fn available_gas_error() {
+    let temp = setup_package("available_gas");
+    let snapbox = test_runner();
+
+    let output = snapbox.current_dir(&temp).assert().failure();
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+        [ERROR] tests::available_gas::available_gas - Gas calculation used for available_gas is incorrect, because it doesn't include the cost of contract execution.
+        "#}
+    );
+}
