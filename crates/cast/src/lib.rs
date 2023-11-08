@@ -350,6 +350,26 @@ pub fn print_formatted(output: Vec<(&str, String)>, json: bool, error: bool) -> 
     Ok(())
 }
 
+fn json_value_to_string(value: &Value, value_format: ValueFormat) -> Option<String> {
+    let res = match value {
+        Value::Number(n) => {
+            let n = n.as_u64().expect("found unexpected value");
+            value_format.format_u64(n)
+        }
+        Value::String(s) => value_format.format_str(s),
+        Value::Array(arr) => {
+            let arr_as_string = arr
+                .iter()
+                .filter_map(|item| json_value_to_string(item, value_format))
+                .collect::<Vec<String>>()
+                .join(", ");
+            format!("[{arr_as_string}]")
+        }
+        _ => return None,
+    };
+    Some(res)
+}
+
 pub fn print_command_result<T: Serialize>(
     command: &str,
     result: &mut Result<T>,
@@ -371,16 +391,7 @@ pub fn print_command_result<T: Serialize>(
                     .expect("Invalid JSON value")
                     .iter()
                     .filter_map(|(k, v)| {
-                        let value = match v {
-                            Value::Number(n) => {
-                                let n = n.as_u64().expect("found unexpected value");
-                                value_format.format_u64(n)
-                            }
-                            Value::String(s) => value_format.format_str(s),
-                            _ => return None,
-                        };
-
-                        Some((k.as_str(), value))
+                        json_value_to_string(v, value_format).map(|v| (k.as_str(), v))
                     })
                     .collect::<Vec<(&str, String)>>(),
             );
