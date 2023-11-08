@@ -82,14 +82,14 @@ jobs:
           toolchain: stable
       - uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8
         with:
-          cache-directories: crates/cast/tests/utils/devnet
+          cache-directories: crates/sncast/tests/utils/devnet
       - name: Install starknet-devnet-rs
         run: ./scripts/install_devnet.sh
       - uses: software-mansion/setup-scarb@v1.3.2
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
       - name: Run tests
-        run: cargo test --release -p cast
+        run: cargo test --release -p sncast
 
   rustfmt:
     runs-on: ubuntu-latest
@@ -101,8 +101,8 @@ jobs:
       - uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8
       - name: Check forge formatting
         run: cargo fmt --check -p forge
-      - name: Check cast formatting
-        run: cargo fmt --check -p cast
+      - name: Check sncast formatting
+        run: cargo fmt --check -p sncast
       - name: Check test-collector formatting
         run: cargo fmt --check -p test-collector
       - name: Check cheatnet formatting

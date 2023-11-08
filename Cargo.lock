@@ -1020,39 +1020,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "37b2a672a2cb129a2e41c10b1224bb368f9f37a2b16b612598138befd7b37eb5"
 
 [[package]]
-name = "cast"
-version = "0.9.1"
-dependencies = [
- "anyhow",
- "camino",
- "clap",
- "ctor",
- "dotenv",
- "fs_extra",
- "indoc",
- "primitive-types",
- "project-root",
- "promptly",
- "rand",
- "reqwest",
- "rpassword",
- "scarb-artifacts",
- "scarb-metadata",
- "sealed_test",
- "serde",
- "serde_json",
- "shellexpand",
- "snapbox",
- "starknet",
- "tempfile",
- "test-case",
- "tokio",
- "toml 0.8.6",
- "url",
- "which",
-]
-
-[[package]]
 name = "cc"
 version = "1.0.83"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1339,7 +1306,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f2b12d017a929603d80db1831cd3a24082f8137ce19c69e6447f54f5fc8d692f"
 dependencies = [
  "anes",
- "cast 0.3.0",
+ "cast",
  "ciborium",
  "clap",
  "criterion-plot",
@@ -1364,7 +1331,7 @@ version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6b50826342786a51a89e2da3a28f1c32b06e387201bc2d19791f622c673706b1"
 dependencies = [
- "cast 0.3.0",
+ "cast",
  "itertools 0.10.5",
 ]
 
@@ -4058,6 +4025,39 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ed1559baff8a696add3322b9be3e940d433e7bb4e38d79017205fd37ff28b28e"
 dependencies = [
  "anstream",
+]
+
+[[package]]
+name = "sncast"
+version = "0.9.1"
+dependencies = [
+ "anyhow",
+ "camino",
+ "clap",
+ "ctor",
+ "dotenv",
+ "fs_extra",
+ "indoc",
+ "primitive-types",
+ "project-root",
+ "promptly",
+ "rand",
+ "reqwest",
+ "rpassword",
+ "scarb-artifacts",
+ "scarb-metadata",
+ "sealed_test",
+ "serde",
+ "serde_json",
+ "shellexpand",
+ "snapbox",
+ "starknet",
+ "tempfile",
+ "test-case",
+ "tokio",
+ "toml 0.8.6",
+ "url",
+ "which",
 ]
 
 [[package]]
