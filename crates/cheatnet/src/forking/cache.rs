@@ -6,7 +6,7 @@ use fs2::FileExt;
 use num_bigint::BigUint;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use starknet::core::types::{BlockId, BlockTag, ContractClass, FieldElement};
+use starknet::core::types::{BlockId, BlockTag, ContractClass};
 use starknet_api::core::{ClassHash, ContractAddress, Nonce};
 use starknet_api::hash::StarkFelt;
 use starknet_api::state::StorageKey;
