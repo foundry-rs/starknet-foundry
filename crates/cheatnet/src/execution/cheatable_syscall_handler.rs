@@ -139,6 +139,17 @@ pub fn felt_from_ptr_immutable(
     Ok(felt)
 }
 
+pub fn get_syscall_selector(
+    syscall: &ResOperand,
+    vm: &mut VirtualMachine,
+    syscall_handler: &SyscallHintProcessor<'_>,
+) -> Result<StarkFelt, HintError> {
+    let initial_syscall_ptr = get_ptr_from_res_operand_unchecked(vm, syscall);
+    syscall_handler.verify_syscall_ptr(initial_syscall_ptr)?;
+    let selector = stark_felt_from_ptr_immutable(vm, &initial_syscall_ptr)?;
+    Ok(selector)
+}
+
 fn get_syscall_operand(hint: &StarknetHint) -> Result<&ResOperand, HintError> {
     let StarknetHint::SystemCall { system: syscall } = hint else {
         return Err(HintError::CustomHint(
@@ -165,12 +176,10 @@ impl CheatableSyscallHandler<'_> {
         vm: &mut VirtualMachine,
         hint: &StarknetHint,
     ) -> HintExecutionResult {
-        // We peek into the selector without incrementing the pointer as it is done later
         let syscall = get_syscall_operand(hint)?;
-        let initial_syscall_ptr = get_ptr_from_res_operand_unchecked(vm, syscall);
+        // We peek into the selector without incrementing the pointer as it is done later
         let selector =
-            SyscallSelector::try_from(stark_felt_from_ptr_immutable(vm, &initial_syscall_ptr)?)?;
-        self.verify_syscall_ptr(initial_syscall_ptr)?;
+            SyscallSelector::try_from(get_syscall_selector(syscall, vm, &self.syscall_handler)?)?;
 
         match selector {
             SyscallSelector::GetExecutionInfo => self.execute_syscall(
@@ -266,18 +275,6 @@ impl CheatableSyscallHandler<'_> {
         };
 
         response.write(vm, &mut self.child.syscall_ptr)?;
-
-        Ok(())
-    }
-
-    // crates/blockifier/src/execution/syscalls/hint_processor.rs:176 (verify_syscall_ptr)
-    fn verify_syscall_ptr(&self, actual_ptr: Relocatable) -> SyscallResult<()> {
-        if actual_ptr != self.child.syscall_ptr {
-            return Err(SyscallExecutionError::BadSyscallPointer {
-                expected_ptr: self.child.syscall_ptr,
-                actual_ptr,
-            });
-        }
 
         Ok(())
     }

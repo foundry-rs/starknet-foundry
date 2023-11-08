@@ -6,7 +6,7 @@ use std::path::PathBuf;
 use anyhow::{anyhow, Context, Result};
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::execution_utils::{
-    felt_to_stark_felt, stark_felt_from_ptr, stark_felt_to_felt, ReadOnlySegment,
+    stark_felt_from_ptr, stark_felt_to_felt, ReadOnlySegment,
 };
 use blockifier::execution::syscalls::hint_processor::{read_felt_array, SyscallExecutionError};
 use blockifier::execution::syscalls::{
@@ -23,7 +23,9 @@ use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use cheatnet::cheatcodes::deploy::{deploy, deploy_at, DeployCallPayload};
 use cheatnet::cheatcodes::{CheatcodeError, EnhancedHintError};
-use cheatnet::execution::cheatable_syscall_handler::CheatableSyscallHandler;
+use cheatnet::execution::cheatable_syscall_handler::{
+    get_syscall_selector, CheatableSyscallHandler,
+};
 use cheatnet::rpc::{call_contract, CallContractFailure, CallContractOutput, CallContractResult};
 use cheatnet::state::{BlockifierState, CheatTarget, CheatnetState};
 use conversions::StarknetConversions;
@@ -33,9 +35,7 @@ use serde::Deserialize;
 
 use cairo_lang_casm::hints::{Hint, StarknetHint};
 use cairo_lang_casm::operand::{CellRef, ResOperand};
-use cairo_lang_runner::casm_run::{
-    extract_buffer, extract_relocatable, get_ptr, vm_get_range, MemBuffer,
-};
+use cairo_lang_runner::casm_run::MemBuffer;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{casm_run::cell_ref_to_relocatable, insert_value_to_cellref};
 use starknet_api::core::ContractAddress;
@@ -43,12 +43,11 @@ use starknet_api::core::ContractAddress;
 use crate::test_execution_syscall_handler::file_operations::string_into_felt;
 use cairo_lang_starknet::contract::starknet_keccak;
 use cairo_lang_utils::bigint::BigIntAsHex;
-use cairo_vm::vm::errors::hint_errors::HintError::CustomHint;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cheatnet::cheatcodes::spy_events::SpyTarget;
 use cheatnet::execution::cheated_syscalls::SingleSegmentResponse;
 use cheatnet::execution::contract_execution_syscall_handler::{
-    print, ContractExecutionSyscallHandler,
+    extract_input, parse_selector, print, ContractExecutionSyscallHandler,
 };
 use starknet::signers::SigningKey;
 
@@ -188,19 +187,9 @@ impl TestExecutionSyscallHandler<'_> {
         contracts: &HashMap<String, StarknetContractArtifacts>,
         environment_variables: &HashMap<String, String>,
     ) -> Result<(), HintError> {
-        // Parse the selector.
-        let selector = &selector.value.to_bytes_be().1;
-        let selector = std::str::from_utf8(selector).map_err(|_| {
-            CustomHint(Box::from(
-                "Failed to parse the  cheatcode selector".to_string(),
-            ))
-        })?;
-
-        // Extract the inputs.
-        let input_start = extract_relocatable(vm, input_start)?;
-        let input_end = extract_relocatable(vm, input_end)?;
-        let inputs = vm_get_range(vm, input_start, input_end)
-            .map_err(|_| CustomHint(Box::from("Failed to read input data".to_string())))?;
+        let parsed_selector = parse_selector(selector)?;
+        let selector = parsed_selector.as_str();
+        let inputs = extract_input(vm, input_start, input_end)?;
 
         self.match_cheatcode_by_selector(
             vm,
@@ -691,18 +680,11 @@ fn execute_syscall(
     constants: &HashMap<String, Felt252>,
     cheatable_syscall_handler: &mut CheatableSyscallHandler,
 ) -> Result<(), HintError> {
-    let (cell, offset) = extract_buffer(system);
-    let system_ptr = get_ptr(vm, cell, &offset)?;
-
-    cheatable_syscall_handler
-        .child
-        .verify_syscall_ptr(system_ptr)?;
-
-    // We peek into memory to check the selector
-    let selector = DeprecatedSyscallSelector::try_from(felt_to_stark_felt(
-        &vm.get_integer(cheatable_syscall_handler.child.syscall_ptr)
-            .unwrap(),
-    ))?;
+    let selector = DeprecatedSyscallSelector::try_from(get_syscall_selector(
+        system,
+        vm,
+        &cheatable_syscall_handler.child,
+    )?)?;
 
     match selector {
         DeprecatedSyscallSelector::CallContract => {
