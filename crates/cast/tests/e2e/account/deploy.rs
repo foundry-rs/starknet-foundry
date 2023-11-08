@@ -11,8 +11,8 @@ use serde_json::Value;
 use snapbox::cmd::{cargo_bin, Command};
 use starknet::core::types::TransactionReceipt::DeployAccount;
 use std::{env, fs};
-use test_case::test_case;
 use tempfile::TempDir;
+use test_case::test_case;
 
 #[tokio::test]
 pub async fn test_happy_case() {
@@ -129,7 +129,6 @@ fn test_account_deploy_error(accounts_content: &str, error: &str) {
     let stderr_str =
         std::str::from_utf8(&out.stderr).expect("failed to convert command output to string");
     assert!(stderr_str.contains(error));
-
 }
 
 #[tokio::test]

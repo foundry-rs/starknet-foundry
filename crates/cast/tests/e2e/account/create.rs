@@ -6,8 +6,8 @@ use cast::helpers::constants::CREATE_KEYSTORE_PASSWORD_ENV_VAR;
 use indoc::indoc;
 use snapbox::cmd::{cargo_bin, Command};
 use std::{env, fs};
-use test_case::test_case;
 use tempfile::TempDir;
+use test_case::test_case;
 
 #[tokio::test]
 pub async fn test_happy_case() {
@@ -127,7 +127,6 @@ pub async fn test_happy_case_add_profile() {
 
 #[tokio::test]
 pub async fn test_happy_case_accounts_file_already_exists() {
-
     let accounts_file = "./accounts.json";
     let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
 
@@ -165,11 +164,10 @@ pub async fn test_happy_case_accounts_file_already_exists() {
     assert!(stdout_str.contains("max_fee: "));
     assert!(stdout_str.contains("address: "));
 
-    let contents =
-        fs::read_to_string(temp_dir.path().join(accounts_file)).expect("Unable to read created file");
+    let contents = fs::read_to_string(temp_dir.path().join(accounts_file))
+        .expect("Unable to read created file");
     assert!(contents.contains("my_account"));
     assert!(contents.contains("deployed"));
-
 }
 
 #[tokio::test]
