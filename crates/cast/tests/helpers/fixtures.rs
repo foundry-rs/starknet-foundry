@@ -20,6 +20,7 @@ use std::fs;
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::sync::Arc;
+use tempfile::TempDir;
 use url::Url;
 
 pub async fn declare_contract(account: &str, path: &str, shortname: &str) -> FieldElement {
@@ -197,14 +198,11 @@ pub fn create_test_provider() -> JsonRpcClient<HttpTransport> {
 }
 
 #[must_use]
-pub fn duplicate_directory_with_salt(src_path: String, to_be_salted: &str, salt: &str) -> String {
-    let dest_path = src_path.clone() + salt;
-
+pub fn duplicate_directory_with_salt(src_path: String, to_be_salted: &str, salt: &str) -> TempDir {
     let src_dir = Utf8PathBuf::from(src_path);
-    let dest_dir = Utf8PathBuf::from(&dest_path);
-
-    _ = fs::remove_dir_all(&dest_dir);
-    fs::create_dir_all(&dest_dir).expect("Unable to create directory");
+    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
+    let dest_dir = Utf8PathBuf::from_path_buf(temp_dir.path().to_path_buf())
+        .expect("Failed to create Utf8PathBuf from PathBuf");
 
     fs_extra::dir::copy(
         src_dir.join("src"),
@@ -225,7 +223,7 @@ pub fn duplicate_directory_with_salt(src_path: String, to_be_salted: &str, salt:
     fs::write(dest_dir.join("src/lib.cairo"), updated_code)
         .expect("Unable to change contract code");
 
-    dest_path
+    temp_dir
 }
 
 pub fn remove_devnet_env() {
@@ -292,4 +290,24 @@ pub fn get_address_from_keystore(
         &[private_key.verifying_key().scalar()],
         FieldElement::ZERO,
     )
+}
+#[must_use]
+pub fn get_accounts_path(relative_path_from_cargo_toml: &str) -> String {
+    use std::path::PathBuf;
+    let manifest_dir = env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
+    let binding = PathBuf::from(manifest_dir).join(relative_path_from_cargo_toml);
+    binding
+        .to_str()
+        .expect("Failed to convert path to string")
+        .to_string()
+}
+#[must_use]
+pub fn get_keystores_path(relative_path_from_cargo_toml: &str) -> String {
+    use std::path::PathBuf;
+    let manifest_dir = env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
+    let binding = PathBuf::from(manifest_dir).join(relative_path_from_cargo_toml);
+    binding
+        .to_str()
+        .expect("Failed to convert path to string")
+        .to_string()
 }
