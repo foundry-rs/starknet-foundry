@@ -45,7 +45,7 @@ pub fn execute_entry_point_call_cairo0(
 
     // region: Modified blockifier code
     let mut cheatable_syscall_handler = CheatableSyscallHandler {
-        syscall_handler,
+        child: syscall_handler,
         cheatnet_state,
     };
 
@@ -62,7 +62,7 @@ pub fn execute_entry_point_call_cairo0(
     Ok(finalize_execution(
         vm,
         runner,
-        cheatable_syscall_handler.syscall_handler,
+        cheatable_syscall_handler.child,
         call,
         previous_vm_resources,
         implicit_args,

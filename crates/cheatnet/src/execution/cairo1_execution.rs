@@ -56,12 +56,10 @@ pub fn execute_entry_point_call_cairo1(
     let previous_vm_resources = syscall_handler.resources.vm_resources.clone();
 
     // region: Modified blockifier code
-    let mut cheatable_syscall_handler = CheatableSyscallHandler {
-        syscall_handler,
-        cheatnet_state,
-    };
+    let mut cheatable_syscall_handler =
+        CheatableSyscallHandler::wrap(syscall_handler, cheatnet_state);
     let mut contract_execution_syscall_handler =
-        ContractExecutionSyscallHandler::wrap(&mut cheatable_syscall_handler);
+        ContractExecutionSyscallHandler::wrap(cheatable_syscall_handler);
 
     // Execute.
     cheatable_run_entry_point(
@@ -77,7 +75,7 @@ pub fn execute_entry_point_call_cairo1(
     let call_info = finalize_execution(
         vm,
         runner,
-        cheatable_syscall_handler.syscall_handler,
+        contract_execution_syscall_handler.child.child,
         previous_vm_resources,
         n_total_args,
         program_extra_data_length,
