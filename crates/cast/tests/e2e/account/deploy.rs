@@ -121,7 +121,7 @@ fn test_account_deploy_error(accounts_content: &str, error: &str) {
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(&temp_dir.path())
+        .current_dir(temp_dir.path())
         .args(args);
     let bdg = snapbox.assert();
     let out = bdg.get_output();
@@ -247,7 +247,7 @@ pub async fn create_account(salt: &str, add_profile: bool) -> (Utf8PathBuf, &str
     }
 
     Command::new(cargo_bin!("sncast"))
-        .current_dir(&created_dir.path())
+        .current_dir(created_dir.path())
         .args(&args)
         .assert()
         .success();

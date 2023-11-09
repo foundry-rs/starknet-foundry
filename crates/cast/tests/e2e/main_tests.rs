@@ -236,7 +236,7 @@ async fn test_keystore_undeployed_account() {
 
     env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
     let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(&contract_path.path())
+        .current_dir(contract_path.path())
         .args(args);
 
     snapbox.assert().stderr_matches(indoc! {r#"
@@ -266,7 +266,7 @@ async fn test_keystore_declare() {
 
     env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
     let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(&contract_path.path())
+        .current_dir(contract_path.path())
         .args(args);
 
     snapbox.assert().success().get_output().stderr.is_empty();

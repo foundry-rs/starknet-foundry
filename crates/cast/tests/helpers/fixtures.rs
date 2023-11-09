@@ -291,7 +291,7 @@ pub fn get_address_from_keystore(
         FieldElement::ZERO,
     )
 }
-
+#[must_use]
 pub fn get_accounts_path(relative_path_from_cargo_toml: &str) -> String {
     use std::path::PathBuf;
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
@@ -301,7 +301,7 @@ pub fn get_accounts_path(relative_path_from_cargo_toml: &str) -> String {
         .expect("Failed to convert path to string")
         .to_string()
 }
-
+#[must_use]
 pub fn get_keystores_path(relative_path_from_cargo_toml: &str) -> String {
     use std::path::PathBuf;
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");

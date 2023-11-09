@@ -86,7 +86,7 @@ pub async fn test_happy_case_add_profile() {
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(&current_dir.path())
+        .current_dir(current_dir.path())
         .args(args);
 
     snapbox.assert().stdout_matches(indoc! {r#"

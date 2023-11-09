@@ -153,7 +153,7 @@ pub async fn test_happy_case_accounts_file_already_exists() {
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(&temp_dir.path())
+        .current_dir(temp_dir.path())
         .args(args);
     let bdg = snapbox.assert();
     let out = bdg.get_output();
@@ -194,7 +194,7 @@ pub async fn test_profile_already_exists() {
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(&current_dir.path())
+        .current_dir(current_dir.path())
         .args(args);
     let bdg = snapbox.assert();
     let out = bdg.get_output();
