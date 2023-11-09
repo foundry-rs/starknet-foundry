@@ -40,7 +40,7 @@ fn print_error_if_attributes_incorrect() {
             #[fuzzer()]
                     ^^
 
-            error: Plugin diagnostic: Expected panic must be of the form `expected = <tuple of felts>`.
+            error: Plugin diagnostic: Expected panic must be of the form `expected: <tuple of felt252s>`.
              --> {mock_tests_dir_path_str}/tests/test_should_panic.cairo:2:15
             #[should_panic(url: "https://test.com")]
                           ^***********************^
