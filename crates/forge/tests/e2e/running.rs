@@ -419,9 +419,17 @@ fn with_failed_flag() {
     let temp = setup_package("simple_package");
     let snapbox = test_runner();
 
-    snapbox.current_dir(&temp).arg("--failed").assert().code(1);
+    snapbox
+        .current_dir(&temp)
+        .arg("--only_failed")
+        .assert()
+        .code(1);
     let snapbox = test_runner();
-    let output = snapbox.current_dir(&temp).arg("--failed").assert().code(1);
+    let output = snapbox
+        .current_dir(&temp)
+        .arg("--only_failed")
+        .assert()
+        .code(1);
 
     assert_stdout_contains!(
         output,

@@ -97,8 +97,8 @@ struct TestArgs {
     color: ColorOption,
 
     /// Run only failures
-    #[arg(long = "failed")]
-    failed: bool,
+    #[arg(long = "only_failed")]
+    only_failed: bool,
 }
 
 fn validate_fuzzer_runs_value(val: &str) -> Result<u32> {
@@ -155,6 +155,25 @@ fn combine_configs(
             .or(forge_config.fuzzer_seed)
             .unwrap_or_else(|| thread_rng().next_u64()),
     )
+}
+
+fn write_failed_tests(all_failed_tests: &Vec<TestCaseSummary>) -> Result<()> {
+    let test_fails = std::env::current_dir()?.join(".prev_tests_failed");
+
+    let mut file = fs::OpenOptions::new()
+        .write(true)
+        .create(true)
+        .open(test_fails)?;
+
+    all_failed_tests.iter().for_each(|line| {
+        if let TestCaseSummary::Failed { name, .. } = line {
+            let mut a = name.clone();
+            a.push_str("\n");
+            file.write_all(a.as_bytes()).expect("Can not write to file");
+        }
+    });
+
+    Ok(())
 }
 
 fn test_workspace(args: TestArgs) -> Result<bool> {
@@ -241,7 +260,7 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                         args.exact,
                         args.only_ignored,
                         args.include_ignored,
-                        args.failed,
+                        args.only_failed,
                     ),
                     runner_config,
                     runner_params,
@@ -251,21 +270,7 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                 let mut failed_tests = extract_failed_tests(tests_file_summaries);
                 all_failed_tests.append(&mut failed_tests);
             }
-            let test_fails = std::env::current_dir()?.join(".test_fails");
-
-            let mut file = fs::OpenOptions::new()
-                // .create(true) // To create a new file
-                .write(true)
-                .create(true)
-                // either use the ? operator or unwrap since it returns a Result
-                .open(test_fails)?;
-            all_failed_tests.iter().for_each(|line| {
-                if let TestCaseSummary::Failed { name, .. } = line {
-                    let mut a = name.clone();
-                    a.push_str("\n");
-                    file.write_all(a.as_bytes()).unwrap();
-                }
-            });
+            write_failed_tests(&all_failed_tests)?;
 
             Ok::<_, anyhow::Error>(all_failed_tests)
         })

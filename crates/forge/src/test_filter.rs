@@ -20,7 +20,7 @@ pub(crate) enum NameFilter {
     All,
     Match(String),
     ExactMatch(String),
-    FailedOnly,
+    OnlyFailed,
 }
 
 #[derive(Debug, PartialEq)]
@@ -37,7 +37,7 @@ impl TestsFilter {
         exact_match: bool,
         only_ignored: bool,
         include_ignored: bool,
-        failed: bool,
+        only_failed: bool,
     ) -> Self {
         assert!(!(only_ignored && include_ignored));
 
@@ -49,8 +49,8 @@ impl TestsFilter {
             IgnoredFilter::NotIgnored
         };
 
-        let name_filter = if failed {
-            NameFilter::FailedOnly
+        let name_filter = if only_failed {
+            NameFilter::OnlyFailed
         } else if exact_match {
             NameFilter::ExactMatch(test_name_filter.unwrap())
         } else if let Some(name) = test_name_filter {
@@ -65,7 +65,7 @@ impl TestsFilter {
         }
     }
     pub(crate) fn read_test_fails_file() -> Result<Vec<String>> {
-        let test_fails = std::env::current_dir()?.join(".test_fails");
+        let test_fails = std::env::current_dir()?.join(".prev_tests_failed");
         let file = File::open(test_fails)?;
         let buf = BufReader::new(file);
         Ok(buf
@@ -85,7 +85,7 @@ impl TestsFilter {
             NameFilter::ExactMatch(name) => {
                 cases.into_iter().filter(|tc| tc.name == *name).collect()
             }
-            NameFilter::FailedOnly => match Self::read_test_fails_file() {
+            NameFilter::OnlyFailed => match Self::read_test_fails_file() {
                 Ok(result) => cases
                     .into_iter()
                     .filter(|tc| result.iter().any(|name| name == &tc.name))
