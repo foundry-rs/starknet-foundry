@@ -32,6 +32,7 @@ pub(crate) enum IgnoredFilter {
 
 impl TestsFilter {
     #[must_use]
+    #[allow(clippy::fn_params_excessive_bools)]
     pub fn from_flags(
         test_name_filter: Option<String>,
         exact_match: bool,
@@ -137,13 +138,13 @@ mod tests {
     #[test]
     #[should_panic]
     fn from_flags_only_ignored_and_include_ignored_both_true() {
-        let _ = TestsFilter::from_flags(None, false, true, true);
+        let _ = TestsFilter::from_flags(None, false, true, true, false);
     }
 
     #[test]
     #[should_panic]
     fn from_flags_exact_match_true_without_test_filter_name() {
-        let _ = TestsFilter::from_flags(None, true, false, false);
+        let _ = TestsFilter::from_flags(None, true, false, false, false);
     }
 
     #[test]
@@ -188,7 +189,8 @@ mod tests {
             tests_location: CrateLocation::Lib,
         };
 
-        let tests_filter = TestsFilter::from_flags(Some("do".to_string()), false, false, false);
+        let tests_filter =
+            TestsFilter::from_flags(Some("do".to_string()), false, false, false, false);
         let filtered = tests_filter.filter_tests(mocked_tests.clone());
         assert_eq!(
             filtered.test_cases,
@@ -203,7 +205,7 @@ mod tests {
         );
 
         let tests_filter =
-            TestsFilter::from_flags(Some("te2::run".to_string()), false, false, false);
+            TestsFilter::from_flags(Some("te2::run".to_string()), false, false, false, false);
         let filtered = tests_filter.filter_tests(mocked_tests.clone());
         assert_eq!(
             filtered.test_cases,
@@ -217,7 +219,8 @@ mod tests {
             },]
         );
 
-        let tests_filter = TestsFilter::from_flags(Some("thing".to_string()), false, false, false);
+        let tests_filter =
+            TestsFilter::from_flags(Some("thing".to_string()), false, false, false, false);
         let filtered = tests_filter.filter_tests(mocked_tests.clone());
         assert_eq!(
             filtered.test_cases,
@@ -258,11 +261,11 @@ mod tests {
         );
 
         let tests_filter =
-            TestsFilter::from_flags(Some("nonexistent".to_string()), false, false, false);
+            TestsFilter::from_flags(Some("nonexistent".to_string()), false, false, false, false);
         let filtered = tests_filter.filter_tests(mocked_tests.clone());
         assert_eq!(filtered.test_cases, vec![]);
 
-        let tests_filter = TestsFilter::from_flags(Some(String::new()), false, false, false);
+        let tests_filter = TestsFilter::from_flags(Some(String::new()), false, false, false, false);
         let filtered = tests_filter.filter_tests(mocked_tests.clone());
         assert_eq!(
             filtered.test_cases,
@@ -311,16 +314,18 @@ mod tests {
             tests_location: CrateLocation::Lib,
         };
 
-        let tests_filter = TestsFilter::from_flags(Some(String::new()), false, false, false);
+        let tests_filter = TestsFilter::from_flags(Some(String::new()), false, false, false, false);
         let filtered = tests_filter.filter_tests(mocked_tests.clone());
         assert_eq!(filtered.test_cases, vec![]);
 
-        let tests_filter = TestsFilter::from_flags(Some("thing".to_string()), false, false, false);
+        let tests_filter =
+            TestsFilter::from_flags(Some("thing".to_string()), false, false, false, false);
         let filtered = tests_filter.filter_tests(mocked_tests.clone());
         assert_eq!(filtered.test_cases, vec![]);
     }
 
     #[test]
+    #[allow(clippy::too_many_lines)]
     fn filtering_with_exact_match() {
         let mocked_tests = CompiledTestCrate {
             sierra_program: program_for_testing(),
@@ -361,16 +366,17 @@ mod tests {
             tests_location: CrateLocation::Tests,
         };
 
-        let tests_filter = TestsFilter::from_flags(Some(String::new()), true, false, false);
-        let filtered = tests_filter.filter_tests(mocked_tests.clone());
-        assert_eq!(filtered.test_cases, vec![]);
-
-        let tests_filter = TestsFilter::from_flags(Some("thing".to_string()), true, false, false);
+        let tests_filter = TestsFilter::from_flags(Some(String::new()), true, false, false, false);
         let filtered = tests_filter.filter_tests(mocked_tests.clone());
         assert_eq!(filtered.test_cases, vec![]);
 
         let tests_filter =
-            TestsFilter::from_flags(Some("do_thing".to_string()), true, false, false);
+            TestsFilter::from_flags(Some("thing".to_string()), true, false, false, false);
+        let filtered = tests_filter.filter_tests(mocked_tests.clone());
+        assert_eq!(filtered.test_cases, vec![]);
+
+        let tests_filter =
+            TestsFilter::from_flags(Some("do_thing".to_string()), true, false, false, false);
         let filtered = tests_filter.filter_tests(mocked_tests.clone());
         assert_eq!(
             filtered.test_cases,
@@ -384,8 +390,13 @@ mod tests {
             },]
         );
 
-        let tests_filter =
-            TestsFilter::from_flags(Some("crate1::do_thing".to_string()), true, false, false);
+        let tests_filter = TestsFilter::from_flags(
+            Some("crate1::do_thing".to_string()),
+            true,
+            false,
+            false,
+            false,
+        );
         let filtered = tests_filter.filter_tests(mocked_tests.clone());
         assert_eq!(
             filtered.test_cases,
@@ -404,6 +415,7 @@ mod tests {
             true,
             false,
             false,
+            false,
         );
         let filtered = tests_filter.filter_tests(mocked_tests.clone());
         assert_eq!(filtered.test_cases, vec![]);
@@ -411,6 +423,7 @@ mod tests {
         let tests_filter = TestsFilter::from_flags(
             Some("outer::crate3::run_other_thing".to_string()),
             true,
+            false,
             false,
             false,
         );
@@ -469,7 +482,7 @@ mod tests {
             tests_location: CrateLocation::Tests,
         };
 
-        let tests_filter = TestsFilter::from_flags(None, false, true, false);
+        let tests_filter = TestsFilter::from_flags(None, false, true, false, false);
         let filtered = tests_filter.filter_tests(mocked_tests);
         assert_eq!(
             filtered.test_cases,
@@ -535,7 +548,7 @@ mod tests {
             tests_location: CrateLocation::Tests,
         };
 
-        let tests_filter = TestsFilter::from_flags(None, false, false, true);
+        let tests_filter = TestsFilter::from_flags(None, false, false, true, false);
         let filtered = tests_filter.filter_tests(mocked_tests);
         assert_eq!(
             filtered.test_cases,

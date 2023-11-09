@@ -157,7 +157,7 @@ fn combine_configs(
     )
 }
 
-fn write_failed_tests(all_failed_tests: &Vec<TestCaseSummary>) -> Result<()> {
+fn write_failed_tests(all_failed_tests: &[TestCaseSummary]) -> Result<()> {
     let test_fails = std::env::current_dir()?.join(".prev_tests_failed");
 
     let mut file = fs::OpenOptions::new()
@@ -165,13 +165,14 @@ fn write_failed_tests(all_failed_tests: &Vec<TestCaseSummary>) -> Result<()> {
         .create(true)
         .open(test_fails)?;
 
-    all_failed_tests.iter().for_each(|line| {
+    for line in all_failed_tests {
         if let TestCaseSummary::Failed { name, .. } = line {
-            let mut a = name.clone();
-            a.push_str("\n");
-            file.write_all(a.as_bytes()).expect("Can not write to file");
+            let mut name = name.clone();
+            name.push('\n');
+            file.write_all(name.as_bytes())
+                .expect("Can not write to file");
         }
-    });
+    }
 
     Ok(())
 }
