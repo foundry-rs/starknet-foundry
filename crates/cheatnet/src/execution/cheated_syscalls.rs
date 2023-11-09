@@ -52,7 +52,7 @@ pub fn get_execution_info_syscall(
     let contract_address = syscall_handler.child.storage_address();
 
     let ptr_cheated_exec_info = get_cheated_exec_info_ptr(
-        &syscall_handler.cheatnet_state,
+        syscall_handler.cheatnet_state,
         vm,
         execution_info_ptr,
         &contract_address,
@@ -99,7 +99,7 @@ pub fn deploy_syscall(
         ctor_context,
         request.constructor_calldata,
         *remaining_gas,
-        &mut syscall_handler.cheatnet_state,
+        syscall_handler.cheatnet_state,
     )?;
 
     let constructor_retdata = create_retdata_segment(

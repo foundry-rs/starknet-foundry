@@ -33,6 +33,7 @@ pub struct ContractExecutionSyscallHandler<'a> {
 }
 
 impl<'a> ContractExecutionSyscallHandler<'a> {
+    #[must_use]
     pub fn wrap(child: CheatableSyscallHandler<'a>) -> ContractExecutionSyscallHandler<'a> {
         ContractExecutionSyscallHandler { child }
     }
