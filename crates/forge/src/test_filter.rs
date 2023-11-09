@@ -1,5 +1,9 @@
+use std::fs::File;
+use std::io::{BufRead, BufReader};
+
 use crate::collecting::{CompiledTestCrate, CompiledTestCrateRaw, ValidatedForkConfig};
 use crate::TestCaseFilter;
+use anyhow::Result;
 use test_collector::TestCase;
 
 #[derive(Debug, PartialEq)]
@@ -16,6 +20,7 @@ pub(crate) enum NameFilter {
     All,
     Match(String),
     ExactMatch(String),
+    FailedOnly,
 }
 
 #[derive(Debug, PartialEq)]
@@ -32,6 +37,7 @@ impl TestsFilter {
         exact_match: bool,
         only_ignored: bool,
         include_ignored: bool,
+        failed: bool,
     ) -> Self {
         assert!(!(only_ignored && include_ignored));
 
@@ -43,7 +49,9 @@ impl TestsFilter {
             IgnoredFilter::NotIgnored
         };
 
-        let name_filter = if exact_match {
+        let name_filter = if failed {
+            NameFilter::FailedOnly
+        } else if exact_match {
             NameFilter::ExactMatch(test_name_filter.unwrap())
         } else if let Some(name) = test_name_filter {
             NameFilter::Match(name)
@@ -56,7 +64,15 @@ impl TestsFilter {
             ignored_filter,
         }
     }
-
+    pub(crate) fn read_test_fails_file() -> Result<Vec<String>> {
+        let test_fails = std::env::current_dir()?.join(".test_fails");
+        let file = File::open(test_fails)?;
+        let buf = BufReader::new(file);
+        Ok(buf
+            .lines()
+            .map(|l| l.expect("Could not parse line"))
+            .collect())
+    }
     pub(crate) fn filter_tests(&self, test_crate: CompiledTestCrateRaw) -> CompiledTestCrateRaw {
         let mut cases = test_crate.test_cases;
 
@@ -69,6 +85,13 @@ impl TestsFilter {
             NameFilter::ExactMatch(name) => {
                 cases.into_iter().filter(|tc| tc.name == *name).collect()
             }
+            NameFilter::FailedOnly => match Self::read_test_fails_file() {
+                Ok(result) => cases
+                    .into_iter()
+                    .filter(|tc| result.iter().any(|name| name == &tc.name))
+                    .collect(),
+                Err(_) => cases,
+            },
         };
 
         cases = match self.ignored_filter {
