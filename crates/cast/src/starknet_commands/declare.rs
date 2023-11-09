@@ -64,6 +64,7 @@ pub async fn declare(
     }
 
     let metadata = scarb_metadata::MetadataCommand::new()
+        .manifest_path(&manifest_path)
         .inherit_stderr()
         .exec()
         .context("Failed to obtain scarb metadata")?;
