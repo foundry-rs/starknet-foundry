@@ -45,29 +45,26 @@ impl SyscallResponse for SingleSegmentResponse {
 }
 
 pub struct CheatableSyscallHandler<'a> {
-    pub syscall_handler: DeprecatedSyscallHintProcessor<'a>,
+    pub child: DeprecatedSyscallHintProcessor<'a>,
     pub cheatnet_state: &'a mut CheatnetState,
 }
 
 // crates/blockifier/src/execution/deprecated_syscalls/hint_processor.rs:326 (impl ResourceTracker for DeprecatedSyscallHintProcessor)
 impl ResourceTracker for CheatableSyscallHandler<'_> {
     fn consumed(&self) -> bool {
-        self.syscall_handler.context.vm_run_resources.consumed()
+        self.child.context.vm_run_resources.consumed()
     }
 
     fn consume_step(&mut self) {
-        self.syscall_handler.context.vm_run_resources.consume_step();
+        self.child.context.vm_run_resources.consume_step();
     }
 
     fn get_n_steps(&self) -> Option<usize> {
-        self.syscall_handler.context.vm_run_resources.get_n_steps()
+        self.child.context.vm_run_resources.get_n_steps()
     }
 
     fn run_resources(&self) -> &RunResources {
-        self.syscall_handler
-            .context
-            .vm_run_resources
-            .run_resources()
+        self.child.context.vm_run_resources.run_resources()
     }
 }
 
@@ -86,7 +83,7 @@ impl HintProcessorLogic for CheatableSyscallHandler<'_> {
             return self.execute_next_syscall_cheated(vm, &hint.ids_data, &hint.ap_tracking);
         }
 
-        self.syscall_handler
+        self.child
             .execute_hint(vm, exec_scopes, hint_data, constants)
     }
 }
@@ -99,62 +96,61 @@ impl<'a> CheatableSyscallHandler<'a> {
         ap_tracking: &ApTracking,
     ) -> HintExecutionResult {
         // We peak into the selector without incrementing the pointer as it is done later
-        let syscall_selector_pointer = self.syscall_handler.syscall_ptr;
+        let syscall_selector_pointer = self.child.syscall_ptr;
         let selector = DeprecatedSyscallSelector::try_from(stark_felt_from_ptr_immutable(
             vm,
             &syscall_selector_pointer,
         )?)?;
         self.verify_syscall_ptr(syscall_selector_pointer)?;
-        let contract_address = self.syscall_handler.storage_address;
+        let contract_address = self.child.storage_address;
 
         if DeprecatedSyscallSelector::GetCallerAddress == selector
             && self.cheatnet_state.address_is_pranked(&contract_address)
         {
             // Increment, since the selector was peeked into before
-            self.syscall_handler.syscall_ptr += 1;
+            self.child.syscall_ptr += 1;
             self.increment_syscall_count(selector);
 
             let response = get_caller_address(self, contract_address).unwrap();
 
-            response.write(vm, &mut self.syscall_handler.syscall_ptr)?;
+            response.write(vm, &mut self.child.syscall_ptr)?;
 
             return Ok(());
         } else if DeprecatedSyscallSelector::GetBlockNumber == selector
             && self.cheatnet_state.address_is_rolled(&contract_address)
         {
-            self.syscall_handler.syscall_ptr += 1;
+            self.child.syscall_ptr += 1;
             self.increment_syscall_count(selector);
 
             let response = get_block_number(self, contract_address).unwrap();
 
-            response.write(vm, &mut self.syscall_handler.syscall_ptr)?;
+            response.write(vm, &mut self.child.syscall_ptr)?;
 
             return Ok(());
         } else if DeprecatedSyscallSelector::GetBlockTimestamp == selector
             && self.cheatnet_state.address_is_warped(&contract_address)
         {
-            self.syscall_handler.syscall_ptr += 1;
+            self.child.syscall_ptr += 1;
             self.increment_syscall_count(selector);
 
             let response = get_block_timestamp(self, contract_address).unwrap();
 
-            response.write(vm, &mut self.syscall_handler.syscall_ptr)?;
+            response.write(vm, &mut self.child.syscall_ptr)?;
 
             return Ok(());
         } else if DeprecatedSyscallSelector::DelegateCall == selector {
-            self.syscall_handler.syscall_ptr += 1;
+            self.child.syscall_ptr += 1;
             self.increment_syscall_count(selector);
 
             return self.execute_syscall(vm, delegate_call);
         } else if DeprecatedSyscallSelector::LibraryCall == selector {
-            self.syscall_handler.syscall_ptr += 1;
+            self.child.syscall_ptr += 1;
             self.increment_syscall_count(selector);
 
             return self.execute_syscall(vm, library_call);
         }
 
-        self.syscall_handler
-            .execute_next_syscall(vm, ids_data, ap_tracking)
+        self.child.execute_next_syscall(vm, ids_data, ap_tracking)
     }
 
     // crates/blockifier/src/execution/deprecated_syscalls/hint_processor.rs:233
@@ -172,19 +168,19 @@ impl<'a> CheatableSyscallHandler<'a> {
             &mut CheatableSyscallHandler<'_>,
         ) -> DeprecatedSyscallResult<Response>,
     {
-        let request = Request::read(vm, &mut self.syscall_handler.syscall_ptr)?;
+        let request = Request::read(vm, &mut self.child.syscall_ptr)?;
 
         let response = execute_callback(request, vm, self)?;
-        response.write(vm, &mut self.syscall_handler.syscall_ptr)?;
+        response.write(vm, &mut self.child.syscall_ptr)?;
 
         Ok(())
     }
 
     // crates/blockifier/src/execution/deprecated_syscalls/hint_processor.rs:141
     pub fn verify_syscall_ptr(&self, actual_ptr: Relocatable) -> DeprecatedSyscallResult<()> {
-        if actual_ptr != self.syscall_handler.syscall_ptr {
+        if actual_ptr != self.child.syscall_ptr {
             return Err(DeprecatedSyscallExecutionError::BadSyscallPointer {
-                expected_ptr: self.syscall_handler.syscall_ptr,
+                expected_ptr: self.child.syscall_ptr,
                 actual_ptr,
             });
         }
@@ -195,7 +191,7 @@ impl<'a> CheatableSyscallHandler<'a> {
     // crates/blockifier/src/execution/deprecated_syscalls/hint_processor.rs:264
     fn increment_syscall_count(&mut self, selector: DeprecatedSyscallSelector) {
         let syscall_count = self
-            .syscall_handler
+            .child
             .resources
             .syscall_counter
             .entry(selector)
@@ -213,7 +209,7 @@ pub fn delegate_call(
     let call_to_external = true;
     let storage_address = request.contract_address;
     let class_hash = syscall_handler
-        .syscall_handler
+        .child
         .state
         .get_class_hash_at(storage_address)?;
     let retdata_segment = execute_library_call(

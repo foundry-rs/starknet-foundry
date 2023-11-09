@@ -28,21 +28,18 @@ fn extract_input(
         .map_err(|_| HintError::CustomHint("Failed to read input data".into()))
 }
 
-pub struct ContractExecutionSyscallHandler<'handler, 'reference> {
-    pub cheatable_syscall_handler: &'reference mut CheatableSyscallHandler<'handler>,
+pub struct ContractExecutionSyscallHandler<'a> {
+    pub child: CheatableSyscallHandler<'a>,
 }
 
-impl<'handler, 'reference> ContractExecutionSyscallHandler<'handler, 'reference> {
-    pub fn wrap(
-        cheatable_syscall_handler: &'reference mut CheatableSyscallHandler<'handler>,
-    ) -> ContractExecutionSyscallHandler<'handler, 'reference> {
-        ContractExecutionSyscallHandler {
-            cheatable_syscall_handler,
-        }
+impl<'a> ContractExecutionSyscallHandler<'a> {
+    #[must_use]
+    pub fn wrap(child: CheatableSyscallHandler<'a>) -> ContractExecutionSyscallHandler<'a> {
+        ContractExecutionSyscallHandler { child }
     }
 }
 
-impl HintProcessorLogic for ContractExecutionSyscallHandler<'_, '_> {
+impl HintProcessorLogic for ContractExecutionSyscallHandler<'_> {
     fn execute_hint(
         &mut self,
         vm: &mut VirtualMachine,
@@ -76,7 +73,7 @@ impl HintProcessorLogic for ContractExecutionSyscallHandler<'_, '_> {
                 )),
             }
         } else {
-            self.cheatable_syscall_handler
+            self.child
                 .execute_hint(vm, exec_scopes, hint_data, constants)
         };
     }
@@ -87,46 +84,26 @@ impl HintProcessorLogic for ContractExecutionSyscallHandler<'_, '_> {
         reference_ids: &HashMap<String, usize>,
         references: &[HintReference],
     ) -> Result<Box<dyn Any>, VirtualMachineError> {
-        self.cheatable_syscall_handler.compile_hint(
-            hint_code,
-            ap_tracking_data,
-            reference_ids,
-            references,
-        )
+        self.child
+            .compile_hint(hint_code, ap_tracking_data, reference_ids, references)
     }
 }
 
-impl ResourceTracker for ContractExecutionSyscallHandler<'_, '_> {
+impl ResourceTracker for ContractExecutionSyscallHandler<'_> {
     fn consumed(&self) -> bool {
-        self.cheatable_syscall_handler
-            .syscall_handler
-            .context
-            .vm_run_resources
-            .consumed()
+        self.child.child.context.vm_run_resources.consumed()
     }
 
     fn consume_step(&mut self) {
-        self.cheatable_syscall_handler
-            .syscall_handler
-            .context
-            .vm_run_resources
-            .consume_step();
+        self.child.child.context.vm_run_resources.consume_step();
     }
 
     fn get_n_steps(&self) -> Option<usize> {
-        self.cheatable_syscall_handler
-            .syscall_handler
-            .context
-            .vm_run_resources
-            .get_n_steps()
+        self.child.child.context.vm_run_resources.get_n_steps()
     }
 
     fn run_resources(&self) -> &RunResources {
-        self.cheatable_syscall_handler
-            .syscall_handler
-            .context
-            .vm_run_resources
-            .run_resources()
+        self.child.child.context.vm_run_resources.run_resources()
     }
 }
 
