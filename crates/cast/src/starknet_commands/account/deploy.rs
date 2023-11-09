@@ -41,8 +41,8 @@ pub struct Deploy {
 #[allow(clippy::too_many_arguments)]
 pub async fn deploy(
     provider: &JsonRpcClient<HttpTransport>,
-    accounts_file: &Utf8PathBuf,
-    name: &str,
+    accounts_file: Utf8PathBuf,
+    name: String,
     chain_id: FieldElement,
     max_fee: FieldElement,
     wait: bool,
@@ -68,7 +68,7 @@ pub async fn deploy(
         if name == String::default() {
             bail!("No --name value passed")
         }
-        account_file_exists(accounts_file)?;
+        account_file_exists(&accounts_file)?;
         deploy_from_accounts_file(
             provider,
             accounts_file,
@@ -185,8 +185,8 @@ async fn deploy_from_keystore(
 
 async fn deploy_from_accounts_file(
     provider: &JsonRpcClient<HttpTransport>,
-    accounts_file: &Utf8PathBuf,
-    name: &str,
+    accounts_file: Utf8PathBuf,
+    name: String,
     chain_id: FieldElement,
     max_fee: FieldElement,
     wait: bool,

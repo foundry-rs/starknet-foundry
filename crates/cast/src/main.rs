@@ -96,7 +96,7 @@ enum Commands {
     /// Show current configuration being used
     ShowConfig(ShowConfig),
 
-    // Run a deployment script
+    /// Run a deployment script
     Script(Script),
 }
 
@@ -129,14 +129,14 @@ fn main() -> Result<()> {
         print_command_result("script", &mut result, value_format, cli.json)?;
         Ok(())
     } else {
-        runtime.block_on(run_async_command(cli, &mut config, provider, value_format))
+        runtime.block_on(run_async_command(cli, config, provider, value_format))
     }
 }
 
 #[allow(clippy::too_many_lines)]
 async fn run_async_command(
     cli: Cli,
-    config: &mut CastConfig,
+    mut config: CastConfig,
     provider: JsonRpcClient<HttpTransport>,
     value_format: ValueFormat,
 ) -> Result<()> {
@@ -304,8 +304,8 @@ async fn run_async_command(
                 }
                 let mut result = starknet_commands::account::deploy::deploy(
                     &provider,
-                    &config.accounts_file,
-                    &config.account,
+                    config.accounts_file,
+                    config.account,
                     chain_id,
                     deploy.max_fee,
                     cli.wait,
@@ -342,7 +342,7 @@ async fn run_async_command(
         Commands::ShowConfig(_) => {
             let mut result = starknet_commands::show_config::show_config(
                 &provider,
-                config.clone(),
+                config,
                 cli.profile,
                 cli.path_to_scarb_toml,
             )
