@@ -94,7 +94,7 @@ pub async fn test_happy_case_add_profile() {
         add_profile: Profile successfully added to Scarb.toml
     "#});
     let current_dir_utf8 =
-        Utf8PathBuf::from_path_buf(current_dir.into_path()).expect("Path contains invalid UTF-8"); // current_dir is consumed but the tmp folder is not deleted, it will persist until a reboot
+        Utf8PathBuf::from_path_buf(current_dir.into_path()).expect("Path contains invalid UTF-8");
     let mut file = current_dir_utf8.clone();
     file.push(Utf8PathBuf::from(accounts_file));
 
