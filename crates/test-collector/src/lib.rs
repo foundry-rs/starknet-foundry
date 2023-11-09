@@ -25,6 +25,7 @@ use cairo_lang_starknet::inline_macros::selector::SelectorMacro;
 use cairo_lang_starknet::plugin::StarkNetPlugin;
 use cairo_lang_syntax::attribute::structured::{Attribute, AttributeArg, AttributeArgVariant};
 use cairo_lang_syntax::node::ast;
+use cairo_lang_syntax::node::ast::{ArgClause, Expr};
 use cairo_lang_syntax::node::db::SyntaxGroup;
 use cairo_lang_syntax::node::helpers::GetIdentifier;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
@@ -417,49 +418,51 @@ fn extract_fork_config_from_args(db: &dyn SyntaxGroup, attr: &Attribute) -> Opti
         .identifier(db)
         .to_string();
 
-    let block_id = block_id
-        .arguments(db)
-        .args(db)
-        .elements(db)
-        .into_iter()
-        .map(|arg| match arg.arg_clause(db) {
-            ast::ArgClause::Unnamed(unnamed_arg_clause) => Some(unnamed_arg_clause.value(db)),
-            _ => None,
-        })
-        .map(|arg| match arg {
-            Some(ast::Expr::Literal(value)) => match block_id_type.as_str() {
-                "Number" => Some(BlockId::Number(
+    let args = block_id.arguments(db).args(db).elements(db);
+    let expr = match args.first()?.arg_clause(db) {
+        ArgClause::Unnamed(unnamed_arg_clause) => Some(unnamed_arg_clause.value(db)),
+        _ => None,
+    }?;
+    let block_id = try_get_block_id(db, &block_id_type, &expr)?;
+
+    Some(RawForkConfig::Params(RawForkParams { url, block_id }))
+}
+
+fn try_get_block_id(db: &dyn SyntaxGroup, block_id_type: &str, expr: &Expr) -> Option<BlockId> {
+    match block_id_type {
+        "Number" => {
+            if let Expr::Literal(value) = expr {
+                return Some(BlockId::Number(
                     u64::try_from(value.numeric_value(db).unwrap()).unwrap(),
-                )),
-                "Hash" => Some(BlockId::Hash(
+                ));
+            }
+            None
+        }
+        "Hash" => {
+            if let Expr::Literal(value) = expr {
+                return Some(BlockId::Hash(
                     Felt252::from(value.numeric_value(db).unwrap()).to_field_element(),
-                )),
-                _ => None,
-            },
-            Some(ast::Expr::Path(block_tag)) => {
+                ));
+            }
+            None
+        }
+        "Tag" => {
+            if let Expr::Path(block_tag) = expr {
                 let tag = block_tag
                     .elements(db)
                     .last()
                     .unwrap()
                     .identifier(db)
                     .to_string();
-                match tag.as_str() {
+                return match tag.as_str() {
                     "Latest" => Some(BlockId::Tag(BlockTag::Latest)),
                     _ => None,
-                }
+                };
             }
-            _ => None,
-        })
-        .collect::<Vec<_>>();
-
-    if block_id.len() != 1 || block_id[0].is_none() {
-        return None;
+            None
+        }
+        _ => None,
     }
-
-    Some(RawForkConfig::Params(RawForkParams {
-        url,
-        block_id: block_id[0].unwrap(),
-    }))
 }
 
 /// Represents a dependency of a Cairo project
