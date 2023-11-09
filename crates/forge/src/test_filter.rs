@@ -65,15 +65,7 @@ impl TestsFilter {
             ignored_filter,
         }
     }
-    pub(crate) fn read_test_fails_file() -> Result<Vec<String>> {
-        let test_fails = std::env::current_dir()?.join(".prev_tests_failed");
-        let file = File::open(test_fails)?;
-        let buf = BufReader::new(file);
-        Ok(buf
-            .lines()
-            .map(|l| l.expect("Could not parse line"))
-            .collect())
-    }
+
     pub(crate) fn filter_tests(&self, test_crate: CompiledTestCrateRaw) -> CompiledTestCrateRaw {
         let mut cases = test_crate.test_cases;
 
@@ -105,6 +97,16 @@ impl TestsFilter {
             test_cases: cases,
             ..test_crate
         }
+    }
+
+    fn read_test_fails_file() -> Result<Vec<String>> {
+        let test_fails = std::env::current_dir()?.join(".prev_tests_failed");
+        let file = File::open(test_fails)?;
+        let buf = BufReader::new(file);
+        Ok(buf
+            .lines()
+            .map(|l| l.expect("Could not parse line"))
+            .collect())
     }
 }
 
