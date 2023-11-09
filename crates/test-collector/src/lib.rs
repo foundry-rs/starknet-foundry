@@ -27,6 +27,7 @@ use cairo_lang_syntax::attribute::structured::{Attribute, AttributeArg, Attribut
 use cairo_lang_syntax::node::ast;
 use cairo_lang_syntax::node::db::SyntaxGroup;
 use cairo_lang_syntax::node::helpers::GetIdentifier;
+use cairo_lang_test_plugin::test_config::{PanicExpectation, TestExpectation};
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use cairo_lang_utils::OptionHelper;
 use conversions::StarknetConversions;
@@ -43,24 +44,6 @@ use std::sync::Arc;
 mod plugin;
 
 pub mod sierra_casm_generator;
-
-/// Expectation for a panic case.
-#[derive(Debug, Clone, PartialEq)]
-pub enum ExpectedPanicValue {
-    /// Accept any panic value.
-    Any,
-    /// Accept only this specific vector of panics.
-    Exact(Vec<Felt252>),
-}
-
-/// Expectation for a result of a test.
-#[derive(Debug, Clone, PartialEq)]
-pub enum ExpectedTestResult {
-    /// Running the test should not panic.
-    Success,
-    /// Running the test should result in a panic.
-    Panics(ExpectedPanicValue),
-}
 
 pub trait ForkConfig {}
 
@@ -90,7 +73,7 @@ pub struct SingleTestConfig {
     /// The amount of gas the test requested.
     pub available_gas: Option<usize>,
     /// The expected result of the run.
-    pub expected_result: ExpectedTestResult,
+    pub expected_result: TestExpectation,
     /// Should the test be ignored.
     pub ignored: bool,
     /// The configuration of forked network.
@@ -255,13 +238,13 @@ pub fn try_extract_test_config(
         Some(SingleTestConfig {
             available_gas,
             expected_result: if should_panic {
-                ExpectedTestResult::Panics(if let Some(values) = expected_panic_value {
-                    ExpectedPanicValue::Exact(values)
+                TestExpectation::Panics(if let Some(values) = expected_panic_value {
+                    PanicExpectation::Exact(values)
                 } else {
-                    ExpectedPanicValue::Any
+                    PanicExpectation::Any
                 })
             } else {
-                ExpectedTestResult::Success
+                TestExpectation::Success
             },
             ignored,
             fork_config,
@@ -476,7 +459,7 @@ pub struct TestCase<T: ForkConfig> {
     pub name: String,
     pub available_gas: Option<usize>,
     pub ignored: bool,
-    pub expected_result: ExpectedTestResult,
+    pub expected_result: TestExpectation,
     pub fork_config: Option<T>,
     pub fuzzer_config: Option<FuzzerConfig>,
 }

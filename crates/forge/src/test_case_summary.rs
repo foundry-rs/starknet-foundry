@@ -3,9 +3,9 @@ use crate::running::ForkInfo;
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{RunResult, RunResultValue};
+use cairo_lang_test_plugin::test_config::{PanicExpectation, TestExpectation};
 use starknet_api::block::BlockNumber;
 use std::option::Option;
-use test_collector::{ExpectedPanicValue, ExpectedTestResult};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct FuzzingStatistics {
@@ -133,14 +133,14 @@ impl TestCaseSummary {
         let latest_block_number = fork_info.latest_block_number;
         match run_result.value {
             RunResultValue::Success(_) => match &test_case.expected_result {
-                ExpectedTestResult::Success => TestCaseSummary::Passed {
+                TestExpectation::Success => TestCaseSummary::Passed {
                     name,
                     msg,
                     arguments,
                     fuzzing_statistic: None,
                     latest_block_number,
                 },
-                ExpectedTestResult::Panics(_) => TestCaseSummary::Failed {
+                TestExpectation::Panics(_) => TestCaseSummary::Failed {
                     name,
                     msg,
                     arguments,
@@ -149,15 +149,15 @@ impl TestCaseSummary {
                 },
             },
             RunResultValue::Panic(value) => match &test_case.expected_result {
-                ExpectedTestResult::Success => TestCaseSummary::Failed {
+                TestExpectation::Success => TestCaseSummary::Failed {
                     name,
                     msg,
                     arguments,
                     fuzzing_statistic: None,
                     latest_block_number,
                 },
-                ExpectedTestResult::Panics(panic_expectation) => match panic_expectation {
-                    ExpectedPanicValue::Exact(expected) if &value != expected => {
+                TestExpectation::Panics(panic_expectation) => match panic_expectation {
+                    PanicExpectation::Exact(expected) if &value != expected => {
                         TestCaseSummary::Failed {
                             name,
                             msg,
@@ -204,17 +204,17 @@ fn build_readable_text(data: &Vec<Felt252>) -> Option<String> {
 /// and failed to do so, it returns a string comparing the panic data and the expected data.
 pub(crate) fn extract_result_data(
     run_result: &RunResult,
-    expectation: &ExpectedTestResult,
+    expectation: &TestExpectation,
 ) -> Option<String> {
     match &run_result.value {
         RunResultValue::Success(data) => build_readable_text(data),
         RunResultValue::Panic(panic_data) => {
             let expected_data = match expectation {
-                ExpectedTestResult::Panics(panic_expectation) => match panic_expectation {
-                    ExpectedPanicValue::Exact(data) => Some(data),
-                    ExpectedPanicValue::Any => None,
+                TestExpectation::Panics(panic_expectation) => match panic_expectation {
+                    PanicExpectation::Exact(data) => Some(data),
+                    PanicExpectation::Any => None,
                 },
-                ExpectedTestResult::Success => None,
+                TestExpectation::Success => None,
             };
 
             let panic_string: String = panic_data
