@@ -10,22 +10,22 @@ use walkdir::WalkDir;
 pub(crate) type CompiledTestCrateRaw = CompiledTestCrate<RawForkConfig>;
 
 #[derive(Debug, Clone)]
-pub struct CompiledTestCrate<T: ForkConfig> {
+pub(crate) struct CompiledTestCrate<T: ForkConfig> {
     pub sierra_program: Program,
     pub test_cases: Vec<TestCase<T>>,
     pub tests_location: CrateLocation,
 }
 
 #[derive(Debug, PartialEq)]
-pub struct TestCompilationTarget {
-    pub crate_root: Utf8PathBuf,
-    pub crate_name: String,
-    pub crate_location: CrateLocation,
-    pub lib_content: String,
+pub(crate) struct TestCompilationTarget {
+    pub(crate) crate_root: Utf8PathBuf,
+    pub(crate) crate_name: String,
+    pub(crate) crate_location: CrateLocation,
+    pub(crate) lib_content: String,
 }
 
 impl TestCompilationTarget {
-    pub fn compile_tests(
+    pub(crate) fn compile_tests(
         &self,
         linked_libraries: &[LinkedLibrary],
         corelib_path: &Utf8Path,
@@ -48,7 +48,7 @@ impl TestCompilationTarget {
     }
 }
 
-pub fn collect_test_compilation_targets(
+pub(crate) fn collect_test_compilation_targets(
     package_path: &Utf8Path,
     package_name: &str,
     package_source_dir_path: &Utf8Path,

@@ -4,7 +4,7 @@ use camino::Utf8PathBuf;
 use forge::run;
 use forge::test_filter::TestsFilter;
 use forge_runner::test_crate_summary::TestCrateSummary;
-use forge_runner::{CancellationTokens, RunnerConfig, RunnerParams};
+use forge_runner::{RunnerConfig, RunnerParams};
 use std::path::PathBuf;
 use std::sync::Arc;
 use tempfile::tempdir;
@@ -33,7 +33,6 @@ pub fn run_test_case(test: &TestCase) -> Vec<TestCrateSummary> {
             test.env().clone(),
             test.linked_libraries(),
         )),
-        Arc::new(CancellationTokens::new()),
     ))
     .expect("Runner fail")
 }

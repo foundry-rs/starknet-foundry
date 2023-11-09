@@ -32,7 +32,7 @@ fn root_workspace_without_arguments() {
         Failure data:
             original value: [8111420071579136082810415440747], converted to a string: [failing check]
         
-        Tests: 1 passed, 2 failed, 0 skipped
+        Tests: 1 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
             tests::test_failing::test_failing
@@ -63,7 +63,7 @@ fn root_workspace_specific_package() {
         [PASS] tests::nested::contract_test
         [PASS] tests::nested::test_nested::test_two
         [PASS] tests::nested::test_nested::test_two_and_two
-        Tests: 5 passed, 0 failed, 0 skipped
+        Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         "#}
     );
 }
@@ -95,7 +95,7 @@ fn root_workspace_specific_package2() {
         Failure data:
             original value: [0], converted to a string: []
         
-        Tests: 5 passed, 1 failed, 0 skipped
+        Tests: 5 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
             tests::abc::efg::failing_test
@@ -121,7 +121,7 @@ fn root_workspace_specific_package_and_name() {
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
         [PASS] tests::nested::simple_case
-        Tests: 1 passed, 0 failed, 0 skipped
+        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 4 filtered out
         "#}
     );
 }
@@ -153,7 +153,7 @@ fn root_workspace_specify_root_package() {
         Failure data:
             original value: [8111420071579136082810415440747], converted to a string: [failing check]
         
-        Tests: 1 passed, 2 failed, 0 skipped
+        Tests: 1 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
             tests::test_failing::test_failing
@@ -186,7 +186,7 @@ fn root_workspace_inside_nested_package() {
         [PASS] tests::nested::contract_test
         [PASS] tests::nested::test_nested::test_two
         [PASS] tests::nested::test_nested::test_two_and_two
-        Tests: 5 passed, 0 failed, 0 skipped
+        Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         "#}
     );
 }
@@ -216,7 +216,7 @@ fn root_workspace_for_entire_workspace() {
         [PASS] tests::nested::contract_test
         [PASS] tests::nested::test_nested::test_two
         [PASS] tests::nested::test_nested::test_two_and_two
-        Tests: 5 passed, 0 failed, 0 skipped
+        Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         
         
         Collected 6 test(s) from fibonacci package
@@ -232,7 +232,7 @@ fn root_workspace_for_entire_workspace() {
         Failure data:
             original value: [0], converted to a string: []
         
-        Tests: 5 passed, 1 failed, 0 skipped
+        Tests: 5 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
         
         
         Collected 3 test(s) from hello_workspaces package
@@ -249,7 +249,7 @@ fn root_workspace_for_entire_workspace() {
         Failure data:
             original value: [8111420071579136082810415440747], converted to a string: [failing check]
         
-        Tests: 1 passed, 2 failed, 0 skipped
+        Tests: 1 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
             tests::abc::efg::failing_test
@@ -285,7 +285,7 @@ fn root_workspace_for_entire_workspace_inside_package() {
         [PASS] tests::nested::contract_test
         [PASS] tests::nested::test_nested::test_two
         [PASS] tests::nested::test_nested::test_two_and_two
-        Tests: 5 passed, 0 failed, 0 skipped
+        Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         
         
         Collected 6 test(s) from fibonacci package
@@ -301,7 +301,7 @@ fn root_workspace_for_entire_workspace_inside_package() {
         Failure data:
             original value: [0], converted to a string: []
         
-        Tests: 5 passed, 1 failed, 0 skipped
+        Tests: 5 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
         
         
         Collected 3 test(s) from hello_workspaces package
@@ -318,7 +318,7 @@ fn root_workspace_for_entire_workspace_inside_package() {
         Failure data:
             original value: [8111420071579136082810415440747], converted to a string: [failing check]
         
-        Tests: 1 passed, 2 failed, 0 skipped
+        Tests: 1 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
             tests::abc::efg::failing_test
@@ -383,7 +383,7 @@ fn virtual_workspace_without_arguments() {
         Failure data:
             original value: [0], converted to a string: []
         
-        Tests: 5 passed, 1 failed, 0 skipped
+        Tests: 5 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
 
 
         Collected 5 test(s) from subtraction package
@@ -394,7 +394,7 @@ fn virtual_workspace_without_arguments() {
         [PASS] tests::nested::contract_test
         [PASS] tests::nested::test_nested::test_two
         [PASS] tests::nested::test_nested::test_two_and_two
-        Tests: 5 passed, 0 failed, 0 skipped
+        Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
             tests::abc::efg::failing_test
@@ -424,7 +424,7 @@ fn virtual_workspace_specify_package() {
         [PASS] tests::nested::contract_test
         [PASS] tests::nested::test_nested::test_two
         [PASS] tests::nested::test_nested::test_two_and_two
-        Tests: 5 passed, 0 failed, 0 skipped
+        Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         "#}
     );
 }
@@ -455,7 +455,7 @@ fn virtual_workspace_specific_package2() {
         Failure data:
             original value: [0], converted to a string: []
         
-        Tests: 5 passed, 1 failed, 0 skipped
+        Tests: 5 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
             tests::abc::efg::failing_test
@@ -484,7 +484,7 @@ fn virtual_workspace_specific_package_and_name() {
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
         [PASS] tests::nested::simple_case
-        Tests: 1 passed, 0 failed, 0 skipped
+        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 4 filtered out
         "#}
     );
 }
@@ -513,7 +513,7 @@ fn virtual_workspace_inside_nested_package() {
         [PASS] tests::nested::contract_test
         [PASS] tests::nested::test_nested::test_two
         [PASS] tests::nested::test_nested::test_two_and_two
-        Tests: 5 passed, 0 failed, 0 skipped
+        Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         "#}
     );
 }
@@ -546,7 +546,7 @@ fn virtual_workspace_for_entire_workspace() {
         Failure data:
             original value: [0], converted to a string: []
         
-        Tests: 5 passed, 1 failed, 0 skipped
+        Tests: 5 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
 
 
         Collected 5 test(s) from subtraction package
@@ -557,7 +557,7 @@ fn virtual_workspace_for_entire_workspace() {
         [PASS] tests::nested::contract_test
         [PASS] tests::nested::test_nested::test_two
         [PASS] tests::nested::test_nested::test_two_and_two
-        Tests: 5 passed, 0 failed, 0 skipped
+        Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
             tests::abc::efg::failing_test
@@ -594,7 +594,7 @@ fn virtual_workspace_for_entire_workspace_inside_package() {
         Failure data:
             original value: [0], converted to a string: []
         
-        Tests: 5 passed, 1 failed, 0 skipped
+        Tests: 5 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
 
 
         Collected 5 test(s) from subtraction package
@@ -605,7 +605,7 @@ fn virtual_workspace_for_entire_workspace_inside_package() {
         [PASS] tests::nested::contract_test
         [PASS] tests::nested::test_nested::test_two
         [PASS] tests::nested::test_nested::test_two_and_two
-        Tests: 5 passed, 0 failed, 0 skipped
+        Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
             tests::abc::efg::failing_test

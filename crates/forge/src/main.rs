@@ -7,7 +7,7 @@ use forge::test_filter::TestsFilter;
 use forge::{pretty_printing, run};
 use forge_runner::test_case_summary::TestCaseSummary;
 use forge_runner::test_crate_summary::TestCrateSummary;
-use forge_runner::{CancellationTokens, RunnerConfig, RunnerParams, CACHE_DIR};
+use forge_runner::{RunnerConfig, RunnerParams, CACHE_DIR};
 use include_dir::{include_dir, Dir};
 use rand::{thread_rng, RngCore};
 use scarb_artifacts::{
@@ -227,8 +227,6 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                     dependencies,
                 ));
 
-                let cancellation_tokens = Arc::new(CancellationTokens::new());
-
                 let tests_file_summaries = run(
                     &package_path,
                     &package_name,
@@ -241,7 +239,6 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                     ),
                     runner_config,
                     runner_params,
-                    cancellation_tokens,
                 )
                 .await?;
 

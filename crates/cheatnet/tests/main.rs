@@ -1,3 +1,4 @@
+mod builtins;
 mod cheatcodes;
 pub(crate) mod common;
 mod starknet;

@@ -24,17 +24,20 @@ pub(crate) fn print_running_tests(test_crate_file: CrateLocation, tests_num: usi
     println!("{}", style(plain_text).bold());
 }
 
-pub(crate) fn print_test_summary(summaries: &[TestCrateSummary]) {
+pub(crate) fn print_test_summary(summaries: &[TestCrateSummary], filtered: usize) {
     let passed: usize = summaries.iter().map(TestCrateSummary::count_passed).sum();
-    let skipped: usize = summaries.iter().map(TestCrateSummary::count_skipped).sum();
     let failed: usize = summaries.iter().map(TestCrateSummary::count_failed).sum();
+    let skipped: usize = summaries.iter().map(TestCrateSummary::count_skipped).sum();
+    let ignored: usize = summaries.iter().map(TestCrateSummary::count_ignored).sum();
 
     println!(
-        "{}: {} passed, {} failed, {} skipped",
+        "{}: {} passed, {} failed, {} skipped, {} ignored, {} filtered out",
         style("Tests").bold(),
         passed,
         failed,
         skipped,
+        ignored,
+        filtered,
     );
 }
 

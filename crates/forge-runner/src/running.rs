@@ -72,8 +72,7 @@ fn build_hints_dict<'b>(
     (hints_dict, string_to_hint)
 }
 
-pub fn blocking_run_from_test(
-    args: Vec<Felt252>,
+pub fn run_test(
     case: Arc<TestCaseRunnable>,
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
@@ -89,6 +88,45 @@ pub fn blocking_run_from_test(
             return Ok(TestCaseSummary::Skipped {});
         }
         let run_result = run_test_case(
+            vec![],
+            &case,
+            &runner,
+            &runner_config,
+            &runner_params,
+            &send_shut_down,
+        );
+
+        // TODO: code below is added to fix snforge tests
+        // remove it after improve exit-first tests
+        // issue #1043
+        if send.is_closed() {
+            return Ok(TestCaseSummary::Skipped {});
+        }
+
+        extract_test_case_summary(run_result, &case, vec![])
+    })
+}
+
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn run_fuzz_test(
+    args: Vec<Felt252>,
+    case: Arc<TestCaseRunnable>,
+    runner: Arc<SierraCasmRunner>,
+    runner_config: Arc<RunnerConfig>,
+    runner_params: Arc<RunnerParams>,
+    send: Sender<()>,
+    fuzzing_send: Sender<()>,
+    send_shut_down: Sender<()>,
+) -> JoinHandle<Result<TestCaseSummary>> {
+    tokio::task::spawn_blocking(move || {
+        // Due to the inability of spawn_blocking to be abruptly cancelled,
+        // a channel is used to receive information indicating
+        // that the execution of the task is no longer necessary.
+        if send.is_closed() | fuzzing_send.is_closed() {
+            return Ok(TestCaseSummary::Skipped {});
+        }
+
+        let run_result = run_test_case(
             args.clone(),
             &case,
             &runner,
@@ -96,6 +134,13 @@ pub fn blocking_run_from_test(
             &runner_params,
             &send_shut_down,
         );
+
+        // TODO: code below is added to fix snforge tests
+        // remove it after improve exit-first tests
+        // issue #1043
+        if send.is_closed() {
+            return Ok(TestCaseSummary::Skipped {});
+        }
 
         extract_test_case_summary(run_result, &case, args)
     })

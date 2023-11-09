@@ -11,7 +11,7 @@ use starknet::core::types::BlockTag::Latest;
 use tempfile::tempdir;
 use tokio::runtime::Runtime;
 
-use forge_runner::{CancellationTokens, ForkTarget, RunnerConfig, RunnerParams};
+use forge_runner::{ForkTarget, RunnerConfig, RunnerParams};
 use test_collector::RawForkParams;
 use test_utils::corelib::{corelib_path, predeployed_contracts};
 use test_utils::runner::Contract;
@@ -127,7 +127,6 @@ fn fork_aliased_decorator() {
                 Default::default(),
                 test.linked_libraries(),
             )),
-            Arc::new(CancellationTokens::new()),
         ))
         .expect("Runner fail");
 

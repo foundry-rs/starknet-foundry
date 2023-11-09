@@ -6,7 +6,7 @@ use std::sync::Arc;
 
 use forge_runner::test_crate_summary::TestCrateSummary;
 use forge_runner::{
-    CancellationTokens, RunnerConfig, RunnerParams, TestCaseRunnable, TestCrate,
+    RunnerConfig, RunnerParams, TestCaseRunnable, TestCrate, TestCrateRunResult,
     ValidatedForkConfig,
 };
 use test_collector::{RawForkConfig, RawForkParams};
@@ -14,10 +14,11 @@ use test_collector::{RawForkConfig, RawForkParams};
 use crate::collecting::{collect_test_compilation_targets, compile_tests, CompiledTestCrateRaw};
 use crate::test_filter::TestsFilter;
 
-pub mod collecting;
 pub mod pretty_printing;
 pub mod scarb;
 pub mod test_filter;
+
+mod collecting;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum CrateLocation {
@@ -99,15 +100,18 @@ pub async fn run(
     tests_filter: &TestsFilter,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
-    cancellation_tokens: Arc<CancellationTokens>,
 ) -> Result<Vec<TestCrateSummary>> {
     let compilation_targets =
         collect_test_compilation_targets(package_path, package_name, package_source_dir_path)?;
     let test_crates = compile_tests(&compilation_targets, &runner_params)?;
+    let all_tests: usize = test_crates.iter().map(|tc| tc.test_cases.len()).sum();
+
     let test_crates = test_crates
         .into_iter()
         .map(|tc| tests_filter.filter_tests(tc))
         .collect_vec();
+    let not_filtered: usize = test_crates.iter().map(|tc| tc.test_cases.len()).sum();
+    let filtered = all_tests - not_filtered;
 
     pretty_printing::print_collected_tests_count(
         test_crates.iter().map(|tests| tests.test_cases.len()).sum(),
@@ -126,21 +130,30 @@ pub async fn run(
         let compiled_test_crate = Arc::new(compiled_test_crate);
         let runner_config = runner_config.clone();
         let runner_params = runner_params.clone();
-        let cancellation_tokens = cancellation_tokens.clone();
 
         let summary = forge_runner::run_tests_from_crate(
             compiled_test_crate.clone(),
             runner_config,
             runner_params,
-            cancellation_tokens,
             tests_filter,
         )
         .await?;
 
-        summaries.push(summary);
+        match summary {
+            TestCrateRunResult::Ok(summary) => {
+                summaries.push(summary);
+            }
+            TestCrateRunResult::Interrupted(summary) => {
+                summaries.push(summary);
+                // Handle scenario for --exit-first flag.
+                // Because snforge runs test crates one by one synchronously.
+                // In case of test FAIL with --exit-first flag stops processing the next crates
+                break;
+            }
+        }
     }
 
-    pretty_printing::print_test_summary(&summaries);
+    pretty_printing::print_test_summary(&summaries, filtered);
 
     if summaries
         .iter()

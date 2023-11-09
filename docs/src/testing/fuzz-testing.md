@@ -35,7 +35,7 @@ Collected 1 test(s) from package_name package
 Running 0 test(s) from src/
 Running 1 test(s) from tests/
 [PASS] tests::test_sum (fuzzer runs = 256)
-Tests: 1 passed, 0 failed, 0 skipped
+Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 Fuzzer seed: [..]
 ```
 
