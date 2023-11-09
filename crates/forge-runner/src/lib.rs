@@ -1,4 +1,5 @@
 use crate::fuzzer::RandomFuzzer;
+use crate::printing::print_test_result;
 use crate::running::{run_fuzz_test, run_test};
 use crate::test_case_summary::TestCaseSummary;
 use crate::test_crate_summary::TestCrateSummary;
@@ -9,7 +10,6 @@ use cairo_lang_sierra::program::{Function, Program};
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use camino::Utf8PathBuf;
-use console::style;
 use futures::stream::FuturesUnordered;
 use futures::StreamExt;
 use once_cell::sync::Lazy;
@@ -25,10 +25,12 @@ use tokio::sync::mpsc::{channel, Sender};
 use tokio::task::JoinHandle;
 use url::Url;
 
-mod fuzzer;
-mod running;
 pub mod test_case_summary;
 pub mod test_crate_summary;
+
+mod fuzzer;
+mod printing;
+mod running;
 mod test_execution_syscall_handler;
 
 pub const CACHE_DIR: &str = ".snfoundry_cache";
@@ -437,55 +439,4 @@ fn function_args<'a>(function: &'a Function, builtins: &[&str]) -> Vec<&'a Concr
         .iter()
         .filter(|pt| !builtins.contains(&pt.debug_name))
         .collect()
-}
-
-fn print_test_result(test_result: &TestCaseSummary) {
-    if let TestCaseSummary::Skipped { .. } = test_result {
-        return;
-    }
-
-    let result_header = match test_result {
-        TestCaseSummary::Passed { .. } => format!("[{}]", style("PASS").green()),
-        TestCaseSummary::Failed { .. } => format!("[{}]", style("FAIL").red()),
-        TestCaseSummary::Ignored { .. } => format!("[{}]", style("IGNORE").yellow()),
-        TestCaseSummary::Skipped { .. } => {
-            unreachable!()
-        }
-    };
-
-    let result_name = match test_result {
-        TestCaseSummary::Ignored { name }
-        | TestCaseSummary::Failed { name, .. }
-        | TestCaseSummary::Passed { name, .. } => name,
-        TestCaseSummary::Skipped {} => {
-            unreachable!()
-        }
-    };
-
-    let result_message = match test_result {
-        TestCaseSummary::Passed { msg: Some(msg), .. } => format!("\n\nSuccess data:{msg}"),
-        TestCaseSummary::Failed { msg: Some(msg), .. } => format!("\n\nFailure data:{msg}"),
-        _ => String::new(),
-    };
-
-    let fuzzer_report = match test_result.runs() {
-        None => String::new(),
-        Some(runs) => {
-            if matches!(test_result, TestCaseSummary::Failed { .. }) {
-                let arguments = test_result.arguments();
-                format!(" (fuzzer runs = {runs}, arguments = {arguments:?})")
-            } else {
-                format!(" (fuzzer runs = {runs})")
-            }
-        }
-    };
-
-    let block_number_message = match test_result.latest_block_number() {
-        None => String::new(),
-        Some(latest_block_number) => {
-            format!("\nNumber of the block used for fork testing = {latest_block_number}")
-        }
-    };
-
-    println!("{result_header} {result_name}{fuzzer_report}{block_number_message}{result_message}");
 }
