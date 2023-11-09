@@ -33,6 +33,7 @@ snfoundryup -v 0.9.0
 See `snfoundryup --help` for more options, like installing from a specific version or commit.
 
 To verify that the Starknet Foundry is installed correctly, run `snforge --version` and `sncast --version`.
+
 ## How to build Starknet Foundry from source code
 
 If you are unable to install Starknet Foundry using the instructions above, you can try building it from
