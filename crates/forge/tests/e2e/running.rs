@@ -765,7 +765,7 @@ fn available_gas_error() {
         indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
-        [ERROR] tests::available_gas::available_gas - Available gas attribute is not supported: Contract functions execution cost would not be included in the gas calculation.
+        [ERROR] tests::available_gas::available_gas - Attribute `available_gas` is not supported: Contract functions execution cost would not be included in the gas calculation.
         "#}
     );
 }
