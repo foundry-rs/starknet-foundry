@@ -415,15 +415,11 @@ fn with_include_ignored_flag_and_filter() {
 }
 
 #[test]
-fn with_failed_flag() {
+fn with_rerun_failed_flag() {
     let temp = setup_package("simple_package");
     let snapbox = test_runner();
 
-    snapbox
-        .current_dir(&temp)
-        .arg("--rerun_failed")
-        .assert()
-        .code(1);
+    snapbox.current_dir(&temp).assert().code(1);
     let snapbox = test_runner();
     let output = snapbox
         .current_dir(&temp)
