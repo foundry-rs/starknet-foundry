@@ -27,6 +27,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `available_gas` attribute, it didn't compute correctly gas usage. Contract functions execution cost would not be included.
 
+### Cast
+
+#### Added
+
+- added deployment scripts with `call` subcommand. The script can be launched with `sncast script path/to/script.cairo`
+
 ## [0.10.1] - 2023-11-09
 
 ### Cast
