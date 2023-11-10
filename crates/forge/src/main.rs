@@ -1,5 +1,5 @@
 use anyhow::{anyhow, bail, Context, Result};
-use camino::{Utf8Path, Utf8PathBuf};
+use camino::Utf8Path;
 use clap::{Parser, Subcommand, ValueEnum};
 use forge::scarb::config_from_scarb_for_package;
 use scarb_artifacts::{
@@ -269,6 +269,7 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use camino::Utf8PathBuf;
 
     #[test]
     fn fuzzer_default_seed() {
