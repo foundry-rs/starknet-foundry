@@ -15,7 +15,7 @@ use num_bigint::BigUint;
 use starknet::core::types::{
     BlockId, ContractClass as ContractClassStarknet, MaybePendingBlockWithTxHashes,
 };
-use starknet::providers::jsonrpc::{HttpTransport, HttpTransportError, JsonRpcClientError};
+use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider, ProviderError};
 use starknet_api::block::{BlockNumber, BlockTimestamp};
 use starknet_api::core::PatriciaKey;
