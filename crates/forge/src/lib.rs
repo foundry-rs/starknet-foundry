@@ -543,9 +543,9 @@ fn function_args<'a>(function: &'a Function, builtins: &[&str]) -> Vec<&'a Concr
 mod tests {
     use super::*;
     use cairo_lang_sierra::program::Program;
-    use cairo_lang_test_plugin::test_config::TestExpectation;
     use starknet::core::types::BlockId;
     use starknet::core::types::BlockTag::Latest;
+    use test_collector::ExpectedTestResult;
 
     #[test]
     fn to_runnable_unparsable_url() {
@@ -560,7 +560,7 @@ mod tests {
                 name: "crate1::do_thing".to_string(),
                 available_gas: None,
                 ignored: false,
-                expected_result: TestExpectation::Success,
+                expected_result: ExpectedTestResult::Success,
                 fork_config: Some(RawForkConfig::Params(RawForkParams {
                     url: "unparsable_url".to_string(),
                     block_id: BlockId::Tag(Latest),
@@ -587,7 +587,7 @@ mod tests {
                 name: "crate1::do_thing".to_string(),
                 available_gas: None,
                 ignored: false,
-                expected_result: TestExpectation::Success,
+                expected_result: ExpectedTestResult::Success,
                 fork_config: Some(RawForkConfig::Id("non_existent".to_string())),
                 fuzzer_config: None,
             }],

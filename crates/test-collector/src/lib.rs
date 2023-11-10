@@ -27,7 +27,7 @@ use cairo_lang_syntax::attribute::structured::{Attribute, AttributeArg, Attribut
 use cairo_lang_syntax::node::ast;
 use cairo_lang_syntax::node::db::SyntaxGroup;
 use cairo_lang_syntax::node::helpers::GetIdentifier;
-use cairo_lang_test_plugin::test_config::TestExpectation;
+use cairo_lang_test_plugin::test_config::{PanicExpectation, TestExpectation};
 use cairo_lang_test_plugin::{try_extract_test_config, TestConfig};
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use cairo_lang_utils::OptionHelper;
@@ -48,6 +48,44 @@ pub mod sierra_casm_generator;
 
 const FORK_ATTR: &str = "fork";
 const FUZZER_ATTR: &str = "fuzzer";
+
+/// Expectation for a panic case.
+#[derive(Debug, Clone, PartialEq)]
+pub enum ExpectedPanicValue {
+    /// Accept any panic value.
+    Any,
+    /// Accept only this specific vector of panics.
+    Exact(Vec<Felt252>),
+}
+
+impl From<PanicExpectation> for ExpectedPanicValue {
+    fn from(value: PanicExpectation) -> Self {
+        match value {
+            PanicExpectation::Any => ExpectedPanicValue::Any,
+            PanicExpectation::Exact(vec) => ExpectedPanicValue::Exact(vec),
+        }
+    }
+}
+
+/// Expectation for a result of a test.
+#[derive(Debug, Clone, PartialEq)]
+pub enum ExpectedTestResult {
+    /// Running the test should not panic.
+    Success,
+    /// Running the test should result in a panic.
+    Panics(ExpectedPanicValue),
+}
+
+impl From<TestExpectation> for ExpectedTestResult {
+    fn from(value: TestExpectation) -> Self {
+        match value {
+            TestExpectation::Success => ExpectedTestResult::Success,
+            TestExpectation::Panics(panic_expectation) => {
+                ExpectedTestResult::Panics(panic_expectation.into())
+            }
+        }
+    }
+}
 
 pub trait ForkConfig {}
 
@@ -77,7 +115,7 @@ pub struct SingleTestConfig {
     /// The amount of gas the test requested.
     pub available_gas: Option<usize>,
     /// The expected result of the run.
-    pub expectation: TestExpectation,
+    pub expected_result: ExpectedTestResult,
     /// Should the test be ignored.
     pub ignored: bool,
     /// The configuration of forked network.
@@ -175,7 +213,7 @@ pub fn forge_try_extract_test_config(
              ignored,
          }| SingleTestConfig {
             available_gas,
-            expectation,
+            expected_result: expectation.into(),
             ignored,
             fork_config,
             fuzzer_config,
@@ -354,7 +392,7 @@ pub struct TestCase<T: ForkConfig> {
     pub name: String,
     pub available_gas: Option<usize>,
     pub ignored: bool,
-    pub expected_result: TestExpectation,
+    pub expected_result: ExpectedTestResult,
     pub fork_config: Option<T>,
     pub fuzzer_config: Option<FuzzerConfig>,
 }
@@ -438,7 +476,7 @@ pub fn collect_tests(
             name: test_name,
             available_gas: config.available_gas,
             ignored: config.ignored,
-            expected_result: config.expectation,
+            expected_result: config.expected_result,
             fork_config: config.fork_config,
             fuzzer_config: config.fuzzer_config,
         })
