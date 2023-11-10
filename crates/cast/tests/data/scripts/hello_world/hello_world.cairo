@@ -38,8 +38,6 @@ fn call(
 
     let buf = cheatcode::<'call'>(inputs.span());
 
-    // TODO: handle Result
-    // let exit_code = *buf[0];
     let result_data_len = (*buf[0]).try_into().unwrap();
 
     let mut result_data = array![];
