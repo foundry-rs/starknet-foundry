@@ -99,9 +99,8 @@ mod tests {
     use crate::collecting::CompiledTestCrate;
     use crate::test_filter::TestsFilter;
     use crate::CrateLocation;
-    use crate::TestCase;
     use cairo_lang_sierra::program::Program;
-    use test_collector::ExpectedTestResult;
+    use test_collector::{ExpectedTestResult, TestCase};
 
     fn program_for_testing() -> Program {
         Program {
