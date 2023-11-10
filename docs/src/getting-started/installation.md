@@ -25,12 +25,7 @@ Follow the instructions and then run:
 snfoundryup
 ```
 
-You can also specify a version you wish to install:
-
-```shell
-snfoundryup -v 0.9.0
-```
-See `snfoundryup --help` for more options, like installing from a specific version or commit.
+See `snfoundryup --help` for more options.
 
 To verify that the Starknet Foundry is installed correctly, run `snforge --version` and `sncast --version`.
 

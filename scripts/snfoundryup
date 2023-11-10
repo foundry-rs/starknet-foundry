@@ -18,7 +18,7 @@ XDG_DATA_HOME="${XDG_DATA_HOME:-"${HOME}/.local/share"}"
 INSTALL_ROOT="${XDG_DATA_HOME}/starknet-foundry-install"
 LOCAL_BIN="${HOME}/.local/bin"
 LOCAL_BIN_ESCAPED="\$HOME/.local/bin"
-BINARIES="snforge sncast" # Array synthax for shells. List can be expanded for new binaries
+BINARIES="snforge sncast" # Array syntax for shells. List can be expanded for new binaries
 usage() {
   cat <<EOF
 The installer for Starknet Foundry
@@ -79,8 +79,8 @@ main() {
       need_cmd cargo
       banner
       _commit_hash="$OPTARG"
-       clone_and_build "$_commit_hash"
-       exit 0
+      clone_and_build "$_commit_hash"
+      exit 0
       ;;
     \?)
       err "invalid option -$OPTARG"

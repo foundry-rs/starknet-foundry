@@ -3,9 +3,6 @@ set -e
 
 echo Installing snfoundryup...
 
-
-XDG_DATA_HOME="${XDG_DATA_HOME:-"${HOME}/.local/share"}"
-INSTALL_ROOT="${XDG_DATA_HOME}/starknet-foundry-install"
 LOCAL_BIN="${HOME}/.local/bin"
 
 SNFOUNDRYUP_URL="https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/scripts/snfoundryup"
@@ -19,9 +16,9 @@ fi
 
 
 # Create the ${HOME}/.local/bin bin directory and snfoundryup binary if it doesn't exist.
-mkdir -p ${LOCAL_BIN}
-curl -# -L ${SNFOUNDRYUP_URL} -o ${SNFOUNDRYUP_PATH}
-chmod +x ${SNFOUNDRYUP_PATH}
+mkdir -p "${LOCAL_BIN}"
+curl -# -L "${SNFOUNDRYUP_URL}" -o "${SNFOUNDRYUP_PATH}"
+chmod +x "${SNFOUNDRYUP_PATH}"
 
 
 # Store the correct profile file (i.e. .profile for bash or .zshenv for ZSH).
@@ -54,5 +51,6 @@ if [ ":$PATH:" != *":${LOCAL_BIN}:"* ]; then
 fi
 
 
-echo && echo "Detected your preferred shell is ${PREF_SHELL} and added snfoundryup to PATH. Run 'source ${PROFILE}' or start a new terminal session to use snfoundryup."
-echo "Then, simply run 'snfoundryup' to install Starknet-Foundry."
+printf "\nDetected your preferred shell is %s and added snfoundryup to PATH. Run 'source %s' or start a new terminal session to use snfoundryup.\n" "$PREF_SHELL" "$PROFILE"
+printf "Then, simply run 'snfoundryup' to install Starknet-Foundry.\n"
+
