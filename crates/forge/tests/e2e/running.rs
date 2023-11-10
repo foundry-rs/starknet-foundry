@@ -753,3 +753,19 @@ fn printing_in_contracts() {
         "#}
     );
 }
+
+#[test]
+fn available_gas_error() {
+    let temp = setup_package("available_gas");
+    let snapbox = test_runner();
+
+    let output = snapbox.current_dir(&temp).assert().failure();
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+        [ERROR] tests::available_gas::available_gas - Attribute `available_gas` is not supported: Contract functions execution cost would not be included in the gas calculation.
+        "#}
+    );
+}
