@@ -306,7 +306,6 @@ pub fn handle_rpc_error<T>(error: ProviderError) -> std::result::Result<T, Error
                 .as_any()
                 .downcast_ref::<starknet::providers::jsonrpc::RpcError>()
             {
-                panic!("debug to check if this is tested at all");
                 match err {
                     Code(error) => Err(anyhow!(get_rpc_error_message(error))),
                     Unknown(error) => Err(anyhow!(error.message.clone())),
