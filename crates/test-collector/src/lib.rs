@@ -21,6 +21,9 @@ use cairo_lang_sierra::extensions::NamedType;
 use cairo_lang_sierra::program::{GenericArg, Program};
 use cairo_lang_sierra_generator::db::SierraGenGroup;
 use cairo_lang_sierra_generator::replace_ids::replace_sierra_ids_in_program;
+use cairo_lang_starknet::inline_macros::get_dep_component::{
+    GetDepComponentMacro, GetDepComponentMutMacro,
+};
 use cairo_lang_starknet::inline_macros::selector::SelectorMacro;
 use cairo_lang_starknet::plugin::StarkNetPlugin;
 use cairo_lang_syntax::attribute::structured::{Attribute, AttributeArg, AttributeArgVariant};
@@ -507,8 +510,13 @@ pub fn collect_tests(
         let mut b = RootDatabase::builder();
         b.with_cfg(CfgSet::from_iter([Cfg::name("test")]));
         b.with_macro_plugin(Arc::new(TestPlugin::default()));
-        b.with_macro_plugin(Arc::new(StarkNetPlugin::default()))
-            .with_inline_macro_plugin(SelectorMacro::NAME, Arc::new(SelectorMacro));
+        b.with_macro_plugin(Arc::new(StarkNetPlugin::default()));
+        b.with_inline_macro_plugin(SelectorMacro::NAME, Arc::new(SelectorMacro));
+        b.with_inline_macro_plugin(GetDepComponentMacro::NAME, Arc::new(GetDepComponentMacro));
+        b.with_inline_macro_plugin(
+            GetDepComponentMutMacro::NAME,
+            Arc::new(GetDepComponentMutMacro),
+        );
         b.with_project_config(project_config);
         b.build()?
     };
