@@ -419,7 +419,7 @@ impl SierraCasmRunner {
     }
 
     /// Creates a list of instructions that will be appended to the program's bytecode.
-    pub fn create_code_footer(&self) -> Vec<Instruction> {
+    pub fn create_code_footer() -> Vec<Instruction> {
         casm! {
             // Add a `ret` instruction used in libfuncs that retrieve the current value of the `fp`
             // and `pc` registers.

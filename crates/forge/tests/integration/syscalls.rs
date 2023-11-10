@@ -306,3 +306,76 @@ fn compare_keccak_from_contract_with_plain_keccak() {
 
     assert_passed!(result);
 }
+
+#[test]
+fn test_gas_usage() {
+    let test = test_case!(
+        indoc!(
+            r#"
+            use option::OptionTrait;
+            use traits::TryInto;
+            use starknet::ContractAddress;
+            use snforge_std::{ declare, ContractClassTrait };
+            use starknet::syscalls::keccak_syscall;
+            use starknet::SyscallResultTrait;
+
+            #[starknet::interface]
+            trait IHelloStarknet<TContractState> {
+                fn increase_balance(ref self: TContractState);
+                fn increase_balance_empty(ref self: TContractState);
+            }
+
+            #[test]
+            fn test_deploy_and_assert() {
+                let contract = declare('HelloEmpty');
+                let contract_address = contract.deploy(@array![]).unwrap();
+                let dispatcher = IHelloStarknetDispatcher { contract_address };
+
+                assert(1 == 1, 'xd');
+            }
+
+            #[test]
+            fn test_deploy_and_local_keccak() {
+                let contract = declare('HelloEmpty');
+                let contract_address = contract.deploy(@array![]).unwrap();
+                let dispatcher = IHelloStarknetDispatcher { contract_address };
+
+                keccak_syscall(array![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17].span()).unwrap_syscall();
+
+                assert(1 == 1, 'xd');
+            }
+
+            #[test]
+            fn test_deploy_and_call_empty_function() {
+                let contract = declare('HelloEmpty');
+                let contract_address = contract.deploy(@array![]).unwrap();
+                let dispatcher = IHelloStarknetDispatcher { contract_address };
+
+                dispatcher.increase_balance_empty();
+
+                assert(1 == 1, 'xd');
+            }
+
+            #[test]
+            fn test_deploy_and_contract_keccak() {
+                let contract = declare('HelloEmpty');
+                let contract_address = contract.deploy(@array![]).unwrap();
+                let dispatcher = IHelloStarknetDispatcher { contract_address };
+
+                dispatcher.increase_balance();
+
+                assert(1 == 1, 'xd');
+            }
+        "#
+        ),
+        Contract::from_code_path(
+            "HelloEmpty".to_string(),
+            Path::new("tests/data/contracts/empty.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test);
+
+    assert_passed!(result);
+}

@@ -236,7 +236,7 @@ pub(crate) fn run_test_case(
     let (entry_code, builtins) = runner
         .create_entry_code(func, &runner_args, initial_gas)
         .unwrap();
-    let footer = runner.create_code_footer();
+    let footer = SierraCasmRunner::create_code_footer();
     let instructions = chain!(
         entry_code.iter(),
         runner.get_casm_program().instructions.iter(),
