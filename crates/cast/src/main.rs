@@ -25,7 +25,7 @@ mod starknet_commands;
 #[allow(clippy::struct_excessive_bools)]
 struct Cli {
     /// Profile name in Scarb.toml config file
-    #[clap(short, long)]
+    #[clap(long)]
     profile: Option<String>,
 
     /// Path to Scarb.toml that is to be used; overrides default behaviour of searching for Scarb.toml in current or parent directories
@@ -66,7 +66,7 @@ struct Cli {
     json: bool,
 
     /// If passed, command will wait until transaction is accepted or rejected
-    #[clap(short, long)]
+    #[clap(long)]
     wait: bool,
 
     #[command(subcommand)]
