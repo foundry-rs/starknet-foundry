@@ -94,7 +94,7 @@ pub fn get_scarb_metadata(manifest_path: Option<&Utf8PathBuf>) -> Result<Metadat
 }
 
 pub fn parse_scarb_config(profile: &Option<String>, metadata: &Metadata) -> Result<CastConfig> {
-    match get_package_tool_sncast(&metadata) {
+    match get_package_tool_sncast(metadata) {
         Ok(package_tool_sncast) => {
             CastConfig::from_package_tool_sncast(package_tool_sncast, profile)
         }
