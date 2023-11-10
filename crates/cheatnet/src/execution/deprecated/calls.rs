@@ -20,10 +20,10 @@ pub fn execute_inner_call(
     // region: Modified blockifier code
     let call_info = execute_call_entry_point(
         call,
-        syscall_handler.syscall_handler.state,
+        syscall_handler.child.state,
         syscall_handler.cheatnet_state,
-        syscall_handler.syscall_handler.resources,
-        syscall_handler.syscall_handler.context,
+        syscall_handler.child.resources,
+        syscall_handler.child.context,
     )?;
     // endregion
 
@@ -33,11 +33,11 @@ pub fn execute_inner_call(
         .map(|&x| MaybeRelocatable::from(x.to_felt252()))
         .collect();
     let retdata_segment_start_ptr = syscall_handler
-        .syscall_handler
+        .child
         .read_only_segments
         .allocate(vm, &retdata)?;
 
-    syscall_handler.syscall_handler.inner_calls.push(call_info);
+    syscall_handler.child.inner_calls.push(call_info);
     Ok(ReadOnlySegment {
         start_ptr: retdata_segment_start_ptr,
         length: retdata.len(),
@@ -66,8 +66,8 @@ pub fn execute_library_call(
         entry_point_selector,
         calldata,
         // The call context remains the same in a library call.
-        storage_address: syscall_handler.syscall_handler.storage_address,
-        caller_address: syscall_handler.syscall_handler.caller_address,
+        storage_address: syscall_handler.child.storage_address,
+        caller_address: syscall_handler.child.caller_address,
         call_type: CallType::Delegate,
         initial_gas: constants::INITIAL_GAS_COST,
     };
