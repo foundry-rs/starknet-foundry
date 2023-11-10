@@ -433,7 +433,7 @@ fn try_get_block_id(db: &dyn SyntaxGroup, block_id_type: &str, expr: &Expr) -> O
         "Number" => {
             if let Expr::Literal(value) = expr {
                 return Some(BlockId::Number(
-                    u64::try_from(value.numeric_value(db).unwrap()).unwrap(),
+                    u64::try_from(value.numeric_value(db).unwrap()).ok()?,
                 ));
             }
             None
