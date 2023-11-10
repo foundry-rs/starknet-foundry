@@ -83,7 +83,7 @@ pub(crate) fn setup_hello_workspace() -> TempDir {
 
                 
                 [workspace.dependencies]
-                starknet = "2.3.0"
+                starknet = "2.3.1"
                 snforge_std = {{ path = "{}" }}
                 
                 [workspace.package]
@@ -142,7 +142,7 @@ pub(crate) fn setup_virtual_workspace() -> TempDir {
                 [workspace.tool.snforge]
                 
                 [workspace.dependencies]
-                starknet = "2.3.0"
+                starknet = "2.3.1"
                 snforge_std = {{ path = "{}" }}
                 
                 [workspace.package]

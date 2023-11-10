@@ -77,7 +77,7 @@ fn simple_package_with_git_dependency() {
             casm = true
 
             [dependencies]
-            starknet = "2.3.0"
+            starknet = "2.3.1"
             snforge_std = {{ git = "https://github.com/{}", branch = "{}" }}
             "#,
             remote_url,
@@ -519,7 +519,7 @@ fn with_exit_first() {
             version = "0.1.0"
 
             [dependencies]
-            starknet = "2.3.0"
+            starknet = "2.3.1"
             snforge_std = {{ path = "{}" }}
 
             [[target.starknet-contract]]
