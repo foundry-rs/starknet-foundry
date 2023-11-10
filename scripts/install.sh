@@ -45,10 +45,16 @@ case $SHELL in
 esac
 
 # Only add snfoundryup if it isn't already in PATH.
-if [ ":$PATH:" != *":${LOCAL_BIN}:"* ]; then
-    # Add the snfoundryup directory to the path and ensure the old PATH variables remain.
-    echo >> "$PROFILE" && echo "export PATH=\"\$PATH:$LOCAL_BIN\"" >> "$PROFILE"
-fi
+case ":$PATH:" in
+    *":${LOCAL_BIN}:"*)
+        # The path is already in PATH, do nothing
+        ;;
+    *)
+        # Add the snfoundryup directory to the path
+        echo >> "$PROFILE" && echo "export PATH=\"\$PATH:$LOCAL_BIN\"" >> "$PROFILE"
+        ;;
+esac
+
 
 
 printf "\nDetected your preferred shell is %s and added snfoundryup to PATH. Run 'source %s' or start a new terminal session to use snfoundryup.\n" "$PREF_SHELL" "$PROFILE"
