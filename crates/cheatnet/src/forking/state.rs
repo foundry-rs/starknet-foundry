@@ -15,7 +15,7 @@ use num_bigint::BigUint;
 use starknet::core::types::{
     BlockId, ContractClass as ContractClassStarknet, MaybePendingBlockWithTxHashes,
 };
-use starknet::providers::jsonrpc::HttpTransport;
+use starknet::providers::jsonrpc::{HttpTransport, HttpTransportError};
 use starknet::providers::{JsonRpcClient, Provider, ProviderError};
 use starknet_api::block::{BlockNumber, BlockTimestamp};
 use starknet_api::core::PatriciaKey;
@@ -89,13 +89,15 @@ impl BlockInfoReader for ForkStateReader {
 #[macro_export]
 macro_rules! other_provider_error {
     ( $boxed:expr ) => {{
-        use blockifier::state::errors::StateError::StateReadError;
-        let err = $boxed.deref().to_string();
-        if !err.is_empty() {
-            // TODO: Condition
-            return node_connection_error();
+        match $boxed.deref().as_any().downcast_ref::<HttpTransportError>() {
+            None => {
+                let serialized = $boxed.deref().to_string();
+                Err(StateReadError(format!(
+                    "JsonRpc provider error: {serialized}"
+                )))
+            }
+            Some(_) => node_connection_error(),
         }
-        Err(StateReadError(format!("JsonRpc provider error: {err}")))
     }};
 }
 
