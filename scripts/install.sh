@@ -41,7 +41,7 @@ case $SHELL in
     ;;
 *)
     echo "snfoundryup: could not detect shell, manually add ${LOCAL_BIN} to your PATH."
-    exit 1
+    exit 0
 esac
 
 # Only add snfoundryup if it isn't already in PATH.
@@ -55,8 +55,5 @@ case ":$PATH:" in
         ;;
 esac
 
-
-
 printf "\nDetected your preferred shell is %s and added snfoundryup to PATH. Run 'source %s' or start a new terminal session to use snfoundryup.\n" "$PREF_SHELL" "$PROFILE"
 printf "Then, simply run 'snfoundryup' to install Starknet-Foundry.\n"
-
