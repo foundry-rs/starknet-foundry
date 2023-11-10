@@ -498,7 +498,7 @@ fn test_simple_cheatcodes() {
 
             stop_elect(test_address);
             let new_sequencer_address = starknet::get_block_info().unbox().sequencer_address;
-            assert(new_sequencer_address == old_sequencer_address, 'Sequencer address did not change back')
+            assert(new_sequencer_address == old_sequencer_address, 'Sequencer addr did not revert')
         }
 
         #[test]
