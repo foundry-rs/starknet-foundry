@@ -643,7 +643,7 @@ fn init_new_project_test() {
         casm = true
 
         [dependencies]
-        starknet = "2.3.0"
+        starknet = "2.3.1"
         snforge_std = {{ git = "https://github.com/{}", branch = "{}" }}
         "#,
             remote_url,
