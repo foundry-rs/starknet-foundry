@@ -2,7 +2,7 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 
 use crate::collecting::{CompiledTestCrate, CompiledTestCrateRaw, ValidatedForkConfig};
-use crate::TestCaseFilter;
+use crate::{cache_dir, TestCaseFilter};
 use anyhow::Result;
 use test_collector::TestCase;
 
@@ -20,7 +20,7 @@ pub(crate) enum NameFilter {
     All,
     Match(String),
     ExactMatch(String),
-    OnlyFailed,
+    RerunFailed,
 }
 
 #[derive(Debug, PartialEq)]
@@ -38,7 +38,7 @@ impl TestsFilter {
         exact_match: bool,
         only_ignored: bool,
         include_ignored: bool,
-        only_failed: bool,
+        rerun_failed: bool,
     ) -> Self {
         assert!(!(only_ignored && include_ignored));
 
@@ -50,8 +50,8 @@ impl TestsFilter {
             IgnoredFilter::NotIgnored
         };
 
-        let name_filter = if only_failed {
-            NameFilter::OnlyFailed
+        let name_filter = if rerun_failed {
+            NameFilter::RerunFailed
         } else if exact_match {
             NameFilter::ExactMatch(test_name_filter.unwrap())
         } else if let Some(name) = test_name_filter {
@@ -78,7 +78,7 @@ impl TestsFilter {
             NameFilter::ExactMatch(name) => {
                 cases.into_iter().filter(|tc| tc.name == *name).collect()
             }
-            NameFilter::OnlyFailed => match Self::read_test_fails_file() {
+            NameFilter::RerunFailed => match Self::read_tests_failed_file() {
                 Ok(result) => cases
                     .into_iter()
                     .filter(|tc| result.iter().any(|name| name == &tc.name))
@@ -99,9 +99,9 @@ impl TestsFilter {
         }
     }
 
-    fn read_test_fails_file() -> Result<Vec<String>> {
-        let test_fails = std::env::current_dir()?.join(".prev_tests_failed");
-        let file = File::open(test_fails)?;
+    fn read_tests_failed_file() -> Result<Vec<String>> {
+        let tests_failed_path = cache_dir()?.join(".prev_tests_failed");
+        let file = File::open(tests_failed_path)?;
         let buf = BufReader::new(file);
         Ok(buf
             .lines()

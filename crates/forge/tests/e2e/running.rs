@@ -421,13 +421,13 @@ fn with_failed_flag() {
 
     snapbox
         .current_dir(&temp)
-        .arg("--only_failed")
+        .arg("--rerun_failed")
         .assert()
         .code(1);
     let snapbox = test_runner();
     let output = snapbox
         .current_dir(&temp)
-        .arg("--only_failed")
+        .arg("--rerun_failed")
         .assert()
         .code(1);
 

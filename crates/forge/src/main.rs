@@ -16,13 +16,12 @@ use std::{env, fs};
 use tempfile::{tempdir, TempDir};
 use tokio::runtime::Builder;
 
-use forge::{pretty_printing, RunnerConfig, RunnerParams, CACHE_DIR, FUZZER_RUNS_DEFAULT};
-
-use forge::{run, TestCrateSummary};
+use forge::{cache_dir, pretty_printing, RunnerConfig, RunnerParams, FUZZER_RUNS_DEFAULT};
 
 use forge::scarb::config::ForgeConfig;
 use forge::test_case_summary::TestCaseSummary;
 use forge::test_filter::TestsFilter;
+use forge::{run, TestCrateSummary};
 use rand::{thread_rng, RngCore};
 use std::process::{Command, Stdio};
 use std::thread::available_parallelism;
@@ -97,8 +96,8 @@ struct TestArgs {
     color: ColorOption,
 
     /// Run only failures
-    #[arg(long = "only_failed")]
-    only_failed: bool,
+    #[arg(long = "rerun_failed")]
+    rerun_failed: bool,
 }
 
 fn validate_fuzzer_runs_value(val: &str) -> Result<u32> {
@@ -112,9 +111,7 @@ fn validate_fuzzer_runs_value(val: &str) -> Result<u32> {
 }
 
 fn clean_cache() -> Result<()> {
-    let scarb_metadata = MetadataCommand::new().inherit_stderr().exec()?;
-    let workspace_root = scarb_metadata.workspace.root.clone();
-    let cache_dir = workspace_root.join(CACHE_DIR);
+    let cache_dir = cache_dir()?;
     if cache_dir.exists() {
         fs::remove_dir_all(cache_dir)?;
     }
@@ -158,12 +155,12 @@ fn combine_configs(
 }
 
 fn write_failed_tests(all_failed_tests: &[TestCaseSummary]) -> Result<()> {
-    let test_fails = std::env::current_dir()?.join(".prev_tests_failed");
+    let tests_failed_path = cache_dir()?.join(".prev_tests_failed");
 
     let mut file = fs::OpenOptions::new()
         .write(true)
         .create(true)
-        .open(test_fails)?;
+        .open(tests_failed_path)?;
 
     for line in all_failed_tests {
         if let TestCaseSummary::Failed { name, .. } = line {
@@ -259,7 +256,7 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                         args.exact,
                         args.only_ignored,
                         args.include_ignored,
-                        args.only_failed,
+                        args.rerun_failed,
                     ),
                     runner_config,
                     runner_params,

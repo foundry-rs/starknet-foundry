@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- `--only_failed` option to run only failed tests from previous run
+- `--rerun_failed` option to run only failed tests from previous run
 
 ## [0.10.1] - 2023-11-09
 

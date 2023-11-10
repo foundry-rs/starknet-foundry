@@ -8,6 +8,7 @@ use camino::{Utf8Path, Utf8PathBuf};
 
 use futures::StreamExt;
 use running::{run_fuzz_test, run_test};
+use scarb_metadata::MetadataCommand;
 use tokio::sync::mpsc::{channel, Sender};
 
 use std::sync::Arc;
@@ -148,6 +149,14 @@ pub enum CrateLocation {
     Lib,
     /// Crate in the `tests/` directory
     Tests,
+}
+
+pub fn cache_dir() -> Result<Utf8PathBuf> {
+    let scarb_metadata = MetadataCommand::new().inherit_stderr().exec()?;
+    let workspace_root = scarb_metadata.workspace.root.clone();
+    let cache_dir_path = workspace_root.join(CACHE_DIR);
+    std::fs::create_dir_all(&cache_dir_path)?;
+    Ok(cache_dir_path)
 }
 
 fn parse_fork_params(raw_fork_params: &RawForkParams) -> Result<ValidatedForkConfig> {
