@@ -85,9 +85,8 @@ fn deploy_syscall() {
 
 #[test]
 fn empty() {
-    let test = test_case!(
-        indoc!(
-            r#"
+    let test = test_case!(indoc!(
+        r#"
         #[test]
         fn empty() {
             let mut i = 0;
@@ -100,7 +99,7 @@ fn empty() {
             }
         }
     "#
-        ));
+    ));
 
     let result = run_test_case(&test);
 

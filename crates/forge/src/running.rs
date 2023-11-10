@@ -203,7 +203,7 @@ pub(crate) struct ForkInfo {
 }
 
 pub(crate) struct RunResultWithInfo {
-    pub(crate) run_result: Result<RunResult, RunnerError>,
+    pub(crate) run_result: Result<TestRunResult, RunnerError>,
     pub(crate) fork_info: ForkInfo,
 }
 
@@ -292,40 +292,36 @@ pub(crate) fn run_test_case(
     };
 
     let mut vm = VirtualMachine::new(true);
-    let res = runner.run_function_with_vm(
-        func,
-        &mut vm,
-        &mut test_execution_syscall_handler,
-        hints_dict,
-        instructions,
-        builtins,
-    );
+    let res = runner
+        .run_function_with_vm(
+            func,
+            &mut vm,
+            &mut test_execution_syscall_handler,
+            hints_dict,
+            instructions,
+            builtins,
+        )
+        .unwrap();
 
     let gas = gas_from_execution_resources(
         &test_execution_syscall_handler
-            .contract_execution_syscall_handler
-            .cheatable_syscall_handler
-            .syscall_handler
+            .child
+            .child
+            .child
             .context
             .block_context,
-        test_execution_syscall_handler
-            .contract_execution_syscall_handler
-            .cheatable_syscall_handler
-            .syscall_handler
-            .resources,
+        test_execution_syscall_handler.child.child.child.resources,
     ) + test_execution_syscall_handler
-        .contract_execution_syscall_handler
-        .cheatable_syscall_handler
+        .child
+        .child
         .cheatnet_state
         .gas_used;
 
-    Ok(TestRunResult {
-        gas,
-        value: res.value,
-    })
-
     Ok(RunResultWithInfo {
-        run_result,
+        run_result: Ok(TestRunResult {
+            gas,
+            value: res.value,
+        }),
         fork_info: ForkInfo {
             latest_block_number,
         },

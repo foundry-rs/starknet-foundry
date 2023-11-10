@@ -3,7 +3,7 @@ use crate::running::ForkInfo;
 use crate::running::TestRunResult;
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
-use cairo_lang_runner::{RunResult, RunResultValue};
+use cairo_lang_runner::RunResultValue;
 use starknet_api::block::BlockNumber;
 use std::option::Option;
 use test_collector::{ExpectedPanicValue, ExpectedTestResult};
@@ -126,7 +126,7 @@ impl TestCaseSummary {
 impl TestCaseSummary {
     #[must_use]
     pub(crate) fn from_run_result_and_info(
-        run_result: RunResult,
+        run_result: TestRunResult,
         test_case: &TestCaseRunnable,
         arguments: Vec<Felt252>,
         fork_info: &ForkInfo,

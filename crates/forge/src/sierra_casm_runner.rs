@@ -419,7 +419,7 @@ impl SierraCasmRunner {
     }
 
     /// Creates a list of instructions that will be appended to the program's bytecode.
-    pub fn create_code_footer() -> Vec<Instruction> {
+    pub fn create_code_footer(&self) -> Vec<Instruction> {
         casm! {
             // Add a `ret` instruction used in libfuncs that retrieve the current value of the `fp`
             // and `pc` registers.
@@ -504,16 +504,7 @@ where
     runner.relocate(vm, true).map_err(CairoRunError::from)?;
 
     // changed region
-    finalize(
-        vm,
-        &runner,
-        &mut hint_processor
-            .contract_execution_syscall_handler
-            .cheatable_syscall_handler
-            .syscall_handler,
-        0,
-        2,
-    );
+    finalize(vm, &runner, &mut hint_processor.child.child.child, 0, 2);
     // end region
 
     Ok((
