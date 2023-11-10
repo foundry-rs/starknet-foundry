@@ -1,5 +1,5 @@
 use crate::sierra_casm_generator::SierraCasmGenerator;
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use cairo_felt::Felt252;
 use cairo_lang_compiler::db::RootDatabase;
 use cairo_lang_compiler::diagnostics::DiagnosticsReporter;
@@ -556,15 +556,20 @@ pub fn collect_tests(
         })
         .collect_vec()
         .into_iter()
-        .map(|(test_name, config)| TestCase {
-            name: test_name,
-            available_gas: config.available_gas,
-            ignored: config.ignored,
-            expected_result: config.expected_result,
-            fork_config: config.fork_config,
-            fuzzer_config: config.fuzzer_config,
+        .map(|(test_name, config)| {
+            if config.available_gas.is_some() {
+                bail!("{} - Attribute `available_gas` is not supported: Contract functions execution cost would not be included in the gas calculation.", test_name)
+            };
+            Ok(TestCase {
+                name: test_name,
+                available_gas: config.available_gas,
+                ignored: config.ignored,
+                expected_result: config.expected_result,
+                fork_config: config.fork_config,
+                fuzzer_config: config.fuzzer_config,
+            })
         })
-        .collect();
+        .collect::<Result<Vec<_>>>()?;
 
     let sierra_program = replace_sierra_ids_in_program(db, &sierra_program);
 
