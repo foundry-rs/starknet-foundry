@@ -258,10 +258,10 @@ pub(crate) fn run_test_case(
         block_info,
         ..Default::default()
     };
-    let mut cheatable_syscall_handler =
+    let cheatable_syscall_handler =
         CheatableSyscallHandler::wrap(syscall_handler, &mut cheatnet_state);
     let contract_execution_syscall_handler =
-        ContractExecutionSyscallHandler::wrap(&mut cheatable_syscall_handler);
+        ContractExecutionSyscallHandler::wrap(cheatable_syscall_handler);
 
     let mut test_execution_state = TestExecutionState {
         environment_variables: &runner_params.environment_variables,
