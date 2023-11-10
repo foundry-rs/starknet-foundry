@@ -66,8 +66,8 @@ pub(super) fn validate_raw_fork_config(raw_config: &RawForgeConfig) -> Result<()
             bail!("block_id = {block_id_key} is not valid. Possible values = are \"number\", \"hash\" and \"tag\"");
         }
 
-        if block_id_key == "tag" && !["Latest", "Pending"].contains(&&**block_id_value) {
-            bail!("block_id.tag has only two variants: Latest or Pending");
+        if block_id_key == "tag" && block_id_value != "Latest" {
+            bail!("block_id.tag can only be equal to Latest");
         }
     }
 
@@ -89,7 +89,6 @@ impl TryFrom<RawForgeConfig> for ForgeConfig {
                     "hash" => BlockId::Hash(value.to_field_element()),
                     "tag" => match value.as_str() {
                         "Latest" => BlockId::Tag(BlockTag::Latest),
-                        "Pending" => BlockId::Tag(BlockTag::Pending),
                         _ => unreachable!(),
                     },
                     _ => unreachable!(),

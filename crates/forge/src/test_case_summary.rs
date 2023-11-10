@@ -1,8 +1,10 @@
 use crate::collecting::TestCaseRunnable;
+use crate::running::ForkInfo;
 use crate::running::TestRunResult;
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
-use cairo_lang_runner::RunResultValue;
+use cairo_lang_runner::{RunResult, RunResultValue};
+use starknet_api::block::BlockNumber;
 use std::option::Option;
 use test_collector::{ExpectedPanicValue, ExpectedTestResult};
 
@@ -24,6 +26,8 @@ pub enum TestCaseSummary {
         arguments: Vec<Felt252>,
         /// Statistic for fuzzing test
         fuzzing_statistic: Option<FuzzingStatistics>,
+        /// Number of block used if BlockId::Tag(Latest) was specified
+        latest_block_number: Option<BlockNumber>,
         gas: f64,
     },
     /// Test case failed
@@ -36,24 +40,16 @@ pub enum TestCaseSummary {
         arguments: Vec<Felt252>,
         /// Statistic for fuzzing test
         fuzzing_statistic: Option<FuzzingStatistics>,
+        /// Number of block used if BlockId::Tag(Latest) was specified
+        latest_block_number: Option<BlockNumber>,
     },
     /// Test case ignored due to `#[ignored]` attribute or `--ignored` flag
     Ignored {
         /// Name of the test case
         name: String,
     },
-    /// Test case skipped due to exit first
-    Skipped {
-        /// Name of the test case
-        name: String,
-    },
-    /// Test case execution interrupted:
-    ///
-    /// Possible causes:
-    ///  - fuzzing subtest that was skipped/interrupted during fuzzing due to other subtest failing
-    ///  - single test or fuzzing subtest that was interrupted by error
-    /// This enum is returned when we want to ignore the test result
-    Interrupted {},
+    /// Test case skipped due to exit first or execution interrupted, test result is ignored.
+    Skipped {},
 }
 
 impl TestCaseSummary {
@@ -62,9 +58,6 @@ impl TestCaseSummary {
             TestCaseSummary::Failed { arguments, .. }
             | TestCaseSummary::Passed { arguments, .. } => arguments.clone(),
             TestCaseSummary::Ignored { .. } | TestCaseSummary::Skipped { .. } => vec![],
-            TestCaseSummary::Interrupted {} => {
-                unreachable!()
-            }
         }
     }
     pub(crate) fn runs(&self) -> Option<u32> {
@@ -78,9 +71,20 @@ impl TestCaseSummary {
                 .as_ref()
                 .map(|FuzzingStatistics { runs, .. }| *runs),
             TestCaseSummary::Ignored { .. } | TestCaseSummary::Skipped { .. } => None,
-            TestCaseSummary::Interrupted {} => {
-                unreachable!()
+        }
+    }
+
+    pub(crate) fn latest_block_number(&self) -> &Option<BlockNumber> {
+        match self {
+            TestCaseSummary::Failed {
+                latest_block_number,
+                ..
             }
+            | TestCaseSummary::Passed {
+                latest_block_number,
+                ..
+            } => latest_block_number,
+            TestCaseSummary::Ignored { .. } | TestCaseSummary::Skipped { .. } => &None,
         }
     }
 
@@ -90,6 +94,7 @@ impl TestCaseSummary {
                 name,
                 msg,
                 arguments,
+                latest_block_number,
                 gas,
                 ..
             } => TestCaseSummary::Passed {
@@ -98,34 +103,37 @@ impl TestCaseSummary {
                 arguments,
                 gas,
                 fuzzing_statistic: Some(FuzzingStatistics { runs }),
+                latest_block_number,
             },
             TestCaseSummary::Failed {
                 name,
                 msg,
                 arguments,
+                latest_block_number,
                 ..
             } => TestCaseSummary::Failed {
                 name,
                 msg,
                 arguments,
                 fuzzing_statistic: Some(FuzzingStatistics { runs }),
+                latest_block_number,
             },
-            TestCaseSummary::Ignored { .. }
-            | TestCaseSummary::Skipped { .. }
-            | TestCaseSummary::Interrupted {} => self,
+            TestCaseSummary::Ignored { .. } | TestCaseSummary::Skipped {} => self,
         }
     }
 }
 
 impl TestCaseSummary {
     #[must_use]
-    pub(crate) fn from_run_result(
-        run_result: TestRunResult,
+    pub(crate) fn from_run_result_and_info(
+        run_result: RunResult,
         test_case: &TestCaseRunnable,
         arguments: Vec<Felt252>,
+        fork_info: &ForkInfo,
     ) -> Self {
         let name = test_case.name.to_string();
         let msg = extract_result_data(&run_result, &test_case.expected_result);
+        let latest_block_number = fork_info.latest_block_number;
         match run_result.value {
             RunResultValue::Success(_) => match &test_case.expected_result {
                 ExpectedTestResult::Success => TestCaseSummary::Passed {
@@ -133,6 +141,7 @@ impl TestCaseSummary {
                     msg,
                     arguments,
                     fuzzing_statistic: None,
+                    latest_block_number,
                     gas: run_result.gas,
                 },
                 ExpectedTestResult::Panics(_) => TestCaseSummary::Failed {
@@ -140,6 +149,7 @@ impl TestCaseSummary {
                     msg,
                     arguments,
                     fuzzing_statistic: None,
+                    latest_block_number,
                 },
             },
             RunResultValue::Panic(value) => match &test_case.expected_result {
@@ -148,6 +158,7 @@ impl TestCaseSummary {
                     msg,
                     arguments,
                     fuzzing_statistic: None,
+                    latest_block_number,
                 },
                 ExpectedTestResult::Panics(panic_expectation) => match panic_expectation {
                     ExpectedPanicValue::Exact(expected) if &value != expected => {
@@ -156,6 +167,7 @@ impl TestCaseSummary {
                             msg,
                             arguments,
                             fuzzing_statistic: None,
+                            latest_block_number,
                         }
                     }
                     _ => TestCaseSummary::Passed {
@@ -163,17 +175,11 @@ impl TestCaseSummary {
                         msg,
                         arguments,
                         fuzzing_statistic: None,
+                        latest_block_number,
                         gas: run_result.gas,
                     },
                 },
             },
-        }
-    }
-
-    #[must_use]
-    pub(crate) fn skipped(test_case: &TestCaseRunnable) -> Self {
-        Self::Skipped {
-            name: test_case.name.to_string(),
         }
     }
 }

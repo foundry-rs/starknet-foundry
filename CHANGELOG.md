@@ -7,11 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.1] - 2023-11-09
+
+### Cast
+
+#### Fixed
+- scarb metadata in declare subcommand now takes manifest path from cli if passed instead of looking for it
+
+## [0.10.0] - 2023-11-08
+
 ### Forge
+
+#### Removed
+
+- forking of the `Pending` block
 
 #### Added
 
 - `--color` option to control when colored output is used
+- when specifying `BlockId::Tag(Latest)` block number of the used block will be printed
+- printing number of ignored and filtered out tests
+
+#### Fixed
+
+- Segment Arena Builtin crashing with `CairoResourcesNotContainedInFeeCosts` when Felt252Dict was used
+
+### Cast
+
+#### Fixed
+
+- account commands now always return valid json when `--json` flag is passed
+- allow passing multiple calldata argument items without quotes
+- display correct error message when account file is invalid
 
 ## [0.9.1] - 2023-10-30
 
@@ -21,12 +48,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - diagnostic paths referring to `tests` folder
 - caching `get_class_hash_at` in forking test mode (credits to @jainkunal for catching the bug)
-
-### Cast
-
-#### Fixed
-
-- account commands now always return valid json when `--json` flag is passed
 
 ## [0.9.0] - 2023-10-25
 

@@ -3,17 +3,16 @@ use std::fmt::Debug;
 
 use anyhow::{anyhow, Context, Result};
 use ark_std::iterable::Iterable;
-use cairo_felt::Felt252;
+
 use camino::{Utf8Path, Utf8PathBuf};
 
 use futures::StreamExt;
-use running::blocking_run_from_test;
+use running::{run_fuzz_test, run_test};
 use tokio::sync::mpsc::{channel, Sender};
 
 use std::sync::Arc;
 use test_case_summary::TestCaseSummary;
-use tokio::task::{self, JoinHandle};
-use tokio_util::sync::CancellationToken;
+use tokio::task::JoinHandle;
 
 use cairo_lang_sierra::ids::ConcreteTypeId;
 use cairo_lang_sierra::program::Function;
@@ -23,13 +22,12 @@ use futures::stream::FuturesUnordered;
 use itertools::Itertools;
 
 use once_cell::sync::Lazy;
-use rand::{thread_rng, RngCore};
 use smol_str::SmolStr;
 
 use scarb_artifacts::StarknetContractArtifacts;
 
 use crate::fuzzer::RandomFuzzer;
-use crate::scarb::config::{ForgeConfig, ForkTarget};
+use crate::scarb::config::ForkTarget;
 
 // pub use crate::collecting::CrateLocation;
 pub use crate::test_crate_summary::TestCrateSummary;
@@ -45,6 +43,7 @@ use test_collector::{FuzzerConfig, LinkedLibrary, RawForkConfig, RawForkParams, 
 pub mod pretty_printing;
 pub mod scarb;
 pub mod test_case_summary;
+pub mod test_filter;
 
 mod collecting;
 mod fuzzer;
@@ -52,9 +51,8 @@ mod running;
 mod sierra_casm_runner;
 mod test_crate_summary;
 mod test_execution_syscall_handler;
-mod test_filter;
 
-const FUZZER_RUNS_DEFAULT: u32 = 256;
+pub const FUZZER_RUNS_DEFAULT: u32 = 256;
 pub const CACHE_DIR: &str = ".snfoundry_cache";
 
 static BUILTINS: Lazy<Vec<&str>> = Lazy::new(|| {
@@ -73,12 +71,11 @@ static BUILTINS: Lazy<Vec<&str>> = Lazy::new(|| {
 /// Configuration of the test runner
 #[derive(Debug, PartialEq)]
 pub struct RunnerConfig {
-    workspace_root: Utf8PathBuf,
-    exit_first: bool,
-    tests_filter: TestsFilter,
-    fork_targets: Vec<ForkTarget>,
-    fuzzer_runs: u32,
-    fuzzer_seed: u64,
+    pub workspace_root: Utf8PathBuf,
+    pub exit_first: bool,
+    pub fork_targets: Vec<ForkTarget>,
+    pub fuzzer_runs: u32,
+    pub fuzzer_seed: u64,
 }
 
 impl RunnerConfig {
@@ -93,52 +90,18 @@ impl RunnerConfig {
     #[allow(clippy::too_many_arguments, clippy::fn_params_excessive_bools)]
     pub fn new(
         workspace_root: Utf8PathBuf,
-        test_name_filter: Option<String>,
-        exact_match: bool,
         exit_first: bool,
-        only_ignored: bool,
-        include_ignored: bool,
-        fuzzer_runs: Option<u32>,
-        fuzzer_seed: Option<u64>,
-        forge_config_from_scarb: &ForgeConfig,
+        fork_targets: Vec<ForkTarget>,
+        fuzzer_runs: u32,
+        fuzzer_seed: u64,
     ) -> Self {
         Self {
             workspace_root,
-            exit_first: forge_config_from_scarb.exit_first || exit_first,
-            fork_targets: forge_config_from_scarb.fork.clone(),
-            fuzzer_runs: fuzzer_runs
-                .or(forge_config_from_scarb.fuzzer_runs)
-                .unwrap_or(FUZZER_RUNS_DEFAULT),
-            fuzzer_seed: fuzzer_seed
-                .or(forge_config_from_scarb.fuzzer_seed)
-                .unwrap_or_else(|| thread_rng().next_u64()),
-            tests_filter: TestsFilter::from_flags(
-                test_name_filter,
-                exact_match,
-                only_ignored,
-                include_ignored,
-            ),
+            exit_first,
+            fork_targets,
+            fuzzer_runs,
+            fuzzer_seed,
         }
-    }
-}
-
-pub struct CancellationTokens {
-    exit_first: CancellationToken,
-    error: CancellationToken,
-}
-
-impl CancellationTokens {
-    #[must_use]
-    pub fn new() -> Self {
-        let exit_first = CancellationToken::new();
-        let error = CancellationToken::new();
-        Self { exit_first, error }
-    }
-}
-
-impl Default for CancellationTokens {
-    fn default() -> Self {
-        Self::new()
     }
 }
 
@@ -265,17 +228,22 @@ pub async fn run(
     package_path: &Utf8Path,
     package_name: &str,
     package_source_dir_path: &Utf8Path,
+    tests_filter: &TestsFilter,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
-    cancellation_tokens: Arc<CancellationTokens>,
 ) -> Result<Vec<TestCrateSummary>> {
     let compilation_targets =
         collect_test_compilation_targets(package_path, package_name, package_source_dir_path)?;
     let test_crates = compile_tests(&compilation_targets, &runner_params)?;
+    let all_tests: usize = test_crates.iter().map(|tc| tc.test_cases.len()).sum();
+
     let test_crates = test_crates
         .into_iter()
-        .map(|tc| runner_config.tests_filter.filter_tests(tc))
+        .map(|tc| tests_filter.filter_tests(tc))
         .collect_vec();
+    let not_filtered: usize = test_crates.iter().map(|tc| tc.test_cases.len()).sum();
+    let filtered = all_tests - not_filtered;
+
     let test_crates = test_crates
         .into_iter()
         .map(|ctc| to_runnable(ctc, &runner_config))
@@ -292,7 +260,6 @@ pub async fn run(
         let compiled_test_crate = Arc::new(compiled_test_crate);
         let runner_config = runner_config.clone();
         let runner_params = runner_params.clone();
-        let cancellation_tokens = cancellation_tokens.clone();
 
         pretty_printing::print_running_tests(
             compiled_test_crate.tests_location,
@@ -303,14 +270,25 @@ pub async fn run(
             compiled_test_crate,
             runner_config,
             runner_params,
-            cancellation_tokens,
+            tests_filter,
         )
         .await?;
 
-        summaries.push(summary);
+        match summary {
+            TestCrateRunResult::Ok(summary) => {
+                summaries.push(summary);
+            }
+            TestCrateRunResult::Interrupted(summary) => {
+                summaries.push(summary);
+                // Handle scenario for --exit-first flag.
+                // Because snforge runs test crates one by one synchronously.
+                // In case of test FAIL with --exit-first flag stops processing the next crates
+                break;
+            }
+        }
     }
 
-    pretty_printing::print_test_summary(&summaries);
+    pretty_printing::print_test_summary(&summaries, filtered);
 
     if summaries
         .iter()
@@ -321,13 +299,21 @@ pub async fn run(
 
     Ok(summaries)
 }
+enum TestCrateRunResult {
+    Ok(TestCrateSummary),
+    Interrupted(TestCrateSummary),
+}
+
+pub trait TestCaseFilter {
+    fn should_be_run(&self, test_case: &TestCase<ValidatedForkConfig>) -> bool;
+}
 
 async fn run_tests_from_crate(
     tests: Arc<CompiledTestCrateRunnable>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
-    cancellation_tokens: Arc<CancellationTokens>,
-) -> Result<TestCrateSummary> {
+    tests_filter: &impl TestCaseFilter,
+) -> Result<TestCrateRunResult> {
     let runner = Arc::new(
         SierraCasmRunner::new(
             tests.sierra_program.clone(),
@@ -353,10 +339,7 @@ async fn run_tests_from_crate(
     for case in test_cases.iter() {
         let case_name = case.name.clone();
 
-        if !runner_config
-            .tests_filter
-            .should_be_run_based_on_ignored(case)
-        {
+        if !tests_filter.should_be_run(case) {
             tasks.push(tokio::task::spawn(async {
                 Ok(TestCaseSummary::Ignored { name: case_name })
             }));
@@ -376,7 +359,6 @@ async fn run_tests_from_crate(
             runner,
             runner_config.clone(),
             runner_params.clone(),
-            cancellation_tokens.clone(),
             &send,
             &send_shut_down,
         ));
@@ -387,36 +369,36 @@ async fn run_tests_from_crate(
 
     while let Some(task) = tasks.next().await {
         let result = task??;
-        match result {
-            // Because tests are executed parallel is possible to receive
-            // Ok(TestCaseSummary::Interrupted) before Err
-            TestCaseSummary::Interrupted {} => interrupted = true,
-            result => {
-                pretty_printing::print_test_result(&result);
 
-                results.push(result);
+        pretty_printing::print_test_result(&result);
+
+        if let TestCaseSummary::Failed { .. } = result {
+            if runner_config.exit_first {
+                interrupted = true;
+                rec.close();
             }
         }
-    }
 
-    rec.close();
+        results.push(result);
+    }
 
     // Waiting for things to finish shutting down
     drop(send_shut_down);
     let _ = rec_shut_down.recv().await;
 
-    // This Panic should never occur.
-    // If TestCaseSummary::Interrupted is returned by a test,
-    // this implies that there should be another test than returned an Err.
-    assert!(!interrupted, "Tests were interrupted");
-
     let contained_fuzzed_tests = results.iter().any(|summary| summary.runs().is_some());
-    Ok(TestCrateSummary {
+    let summary = TestCrateSummary {
         test_case_summaries: results,
         runner_exit_status: RunnerStatus::Default,
         test_crate_type: tests.tests_location,
         contained_fuzzed_tests,
-    })
+    };
+
+    if interrupted {
+        Ok(TestCrateRunResult::Interrupted(summary))
+    } else {
+        Ok(TestCrateRunResult::Ok(summary))
+    }
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -426,17 +408,15 @@ fn choose_test_strategy_and_run(
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
-    cancellation_tokens: Arc<CancellationTokens>,
     send: &Sender<()>,
     send_shut_down: &Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     if args.is_empty() {
-        run_single_test(
+        run_test(
             case,
             runner,
             runner_config,
             runner_params,
-            cancellation_tokens,
             send.clone(),
             send_shut_down.clone(),
         )
@@ -447,53 +427,10 @@ fn choose_test_strategy_and_run(
             runner,
             runner_config,
             runner_params,
-            cancellation_tokens,
+            send.clone(),
             send_shut_down.clone(),
         )
     }
-}
-
-fn run_single_test(
-    case: Arc<TestCaseRunnable>,
-    runner: Arc<SierraCasmRunner>,
-    runner_config: Arc<RunnerConfig>,
-    runner_params: Arc<RunnerParams>,
-    cancellation_tokens: Arc<CancellationTokens>,
-    send: Sender<()>,
-    send_shut_down: Sender<()>,
-) -> JoinHandle<Result<TestCaseSummary>> {
-    let exit_first = runner_config.exit_first;
-    tokio::task::spawn(async move {
-        tokio::select! {
-            () = cancellation_tokens.exit_first.cancelled() => {
-                // Stop executing all tests because flag --exit-first'
-                // has been set and one test FAIL
-                Ok(TestCaseSummary::skipped(&case))
-            },
-            () = cancellation_tokens.error.cancelled() => {
-                // Stop executing all tests because
-                // one of a test returns Err
-                Ok(TestCaseSummary::Interrupted{  })
-            },
-
-            result = blocking_run_from_test(vec![], case.clone(),runner,  runner_config.clone(), runner_params.clone(), send.clone(), send_shut_down.clone() ) => {
-                match result? {
-                    Ok(result) => {
-                        if exit_first {
-                            if let TestCaseSummary::Failed { .. } = &result {
-                                cancellation_tokens.exit_first.cancel();
-                            }
-                        }
-                        Ok(result)
-                    }
-                    Err(e) => {
-                        cancellation_tokens.error.cancel();
-                        Err(e)
-                    }
-                }
-            }
-        }
-    })
 }
 
 fn run_with_fuzzing(
@@ -502,12 +439,15 @@ fn run_with_fuzzing(
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
-    cancellation_tokens: Arc<CancellationTokens>,
+    send: Sender<()>,
     send_shut_down: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     tokio::task::spawn(async move {
-        let cancellation_fuzzing_token = CancellationToken::new();
-        let (send, mut rec) = channel(1);
+        if send.is_closed() {
+            return Ok(TestCaseSummary::Skipped {});
+        }
+
+        let (fuzzing_send, mut fuzzing_rec) = channel(1);
         let args = args
             .iter()
             .map(|arg| {
@@ -532,41 +472,34 @@ fn run_with_fuzzing(
         for _ in 1..=fuzzer_runs {
             let args = fuzzer.next_args();
 
-            tasks.push(run_fuzzing_subtest(
+            tasks.push(run_fuzz_test(
                 args,
                 case.clone(),
                 runner.clone(),
                 runner_config.clone(),
                 runner_params.clone(),
-                cancellation_tokens.clone(),
-                cancellation_fuzzing_token.clone(),
                 send.clone(),
+                fuzzing_send.clone(),
                 send_shut_down.clone(),
             ));
         }
 
         let mut results = vec![];
-        let mut final_result = None;
 
         while let Some(task) = tasks.next().await {
             let result = task??;
 
             results.push(result.clone());
-            final_result = Some(result.clone());
 
-            match result {
-                TestCaseSummary::Failed { .. } => {
-                    cancellation_fuzzing_token.cancel();
-                    break;
-                }
-                TestCaseSummary::Interrupted {} => {
-                    break;
-                }
-                _ => (),
+            if let TestCaseSummary::Failed { .. } = result {
+                fuzzing_rec.close();
+                break;
             }
         }
 
-        rec.close();
+        let final_result = results
+            .last()
+            .expect("Test should always run at least once");
 
         let runs = u32::try_from(
             results
@@ -580,69 +513,16 @@ fn run_with_fuzzing(
                 .count(),
         )?;
 
-        match final_result {
-            Some(result) => Ok(result.with_runs(runs)),
-            None => panic!("Test should always run at least once"),
-        }
-    })
-}
+        if let TestCaseSummary::Passed { .. } = final_result {
+            // Because we execute tests parallel, it's possible to
+            // get Passed after Skipped. To treat fuzzing a test as Passed
+            // we have to ensure that all fuzzing subtests Passed
+            if runs != fuzzer_runs {
+                return Ok(TestCaseSummary::Skipped {});
+            };
+        };
 
-#[allow(clippy::too_many_arguments)]
-fn run_fuzzing_subtest(
-    args: Vec<Felt252>,
-    case: Arc<TestCaseRunnable>,
-    runner: Arc<SierraCasmRunner>,
-    runner_config: Arc<RunnerConfig>,
-    runner_params: Arc<RunnerParams>,
-    cancellation_tokens: Arc<CancellationTokens>,
-    cancellation_fuzzing_token: CancellationToken,
-    send: Sender<()>,
-    send_shut_down: Sender<()>,
-) -> JoinHandle<Result<TestCaseSummary>> {
-    let c = case.clone();
-    task::spawn(async move {
-        tokio::select! {
-            () = cancellation_tokens.error.cancelled() => {
-                // Stop executing all tests because
-                // one of a test returns Err
-                Ok(TestCaseSummary::Interrupted{  })
-            },
-            () = cancellation_tokens.exit_first.cancelled() => {
-                // Stop executing all tests because flag --exit-first'
-                // has been set and one test FAIL
-                Ok(TestCaseSummary::skipped(&c))
-            },
-            () = cancellation_fuzzing_token.cancelled() => {
-                // Stop executing all single fuzzing tests
-                // because one of fuzzing test has been FAIL
-                Ok(TestCaseSummary::Interrupted {  })
-
-            },
-           result = blocking_run_from_test(
-                args.clone(),
-                case,
-                runner,
-                runner_config.clone(),
-                runner_params.clone(),
-                send.clone(),
-                send_shut_down.clone()
-            ) => {
-                match result? {
-                    Ok(result) => {
-                        if let TestCaseSummary::Failed { .. } = &result {
-                            if runner_config.exit_first {
-                                cancellation_tokens.exit_first.cancel();
-                            }
-                        }
-                        Ok(result)
-                    }
-                    Err(e) => {
-                        cancellation_tokens.error.cancel();
-                        Err(e)
-                    }
-                }
-            },
-        }
+        Ok(final_result.clone().with_runs(runs))
     })
 }
 
@@ -663,178 +543,10 @@ fn function_args<'a>(function: &'a Function, builtins: &[&str]) -> Vec<&'a Concr
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_filter::{IgnoredFilter, NameFilter};
     use cairo_lang_sierra::program::Program;
     use starknet::core::types::BlockId;
     use starknet::core::types::BlockTag::Latest;
     use test_collector::ExpectedTestResult;
-
-    #[test]
-    fn fuzzer_default_seed() {
-        let workspace_root: Utf8PathBuf = Default::default();
-        let config = RunnerConfig::new(
-            workspace_root.clone(),
-            None,
-            false,
-            false,
-            false,
-            false,
-            None,
-            None,
-            &Default::default(),
-        );
-        let config2 = RunnerConfig::new(
-            workspace_root,
-            None,
-            false,
-            false,
-            false,
-            false,
-            None,
-            None,
-            &Default::default(),
-        );
-
-        assert_ne!(config.fuzzer_seed, 0);
-        assert_ne!(config2.fuzzer_seed, 0);
-        assert_ne!(config.fuzzer_seed, config2.fuzzer_seed);
-    }
-
-    #[test]
-    fn runner_config_default_arguments() {
-        let workspace_root: Utf8PathBuf = Default::default();
-        let config = RunnerConfig::new(
-            workspace_root.clone(),
-            None,
-            false,
-            false,
-            false,
-            false,
-            None,
-            None,
-            &Default::default(),
-        );
-        assert_eq!(
-            config,
-            RunnerConfig {
-                workspace_root,
-                exit_first: false,
-                tests_filter: TestsFilter {
-                    name_filter: NameFilter::All,
-                    ignored_filter: IgnoredFilter::NotIgnored
-                },
-                fork_targets: vec![],
-                fuzzer_runs: FUZZER_RUNS_DEFAULT,
-                fuzzer_seed: config.fuzzer_seed,
-            }
-        );
-    }
-
-    #[test]
-    fn runner_config_just_scarb_arguments() {
-        let config_from_scarb = ForgeConfig {
-            exit_first: true,
-            fork: vec![],
-            fuzzer_runs: Some(1234),
-            fuzzer_seed: Some(500),
-        };
-        let workspace_root: Utf8PathBuf = Default::default();
-
-        let config = RunnerConfig::new(
-            workspace_root.clone(),
-            Some("test".to_string()),
-            false,
-            false,
-            true,
-            false,
-            None,
-            None,
-            &config_from_scarb,
-        );
-        assert_eq!(
-            config,
-            RunnerConfig {
-                workspace_root,
-                exit_first: true,
-                fork_targets: vec![],
-                tests_filter: TestsFilter {
-                    name_filter: NameFilter::Match("test".to_string()),
-                    ignored_filter: IgnoredFilter::Ignored
-                },
-                fuzzer_runs: 1234,
-                fuzzer_seed: 500,
-            }
-        );
-    }
-
-    #[test]
-    fn runner_config_argument_precedence() {
-        let workspace_root: Utf8PathBuf = Default::default();
-
-        let config_from_scarb = ForgeConfig {
-            exit_first: false,
-            fork: vec![],
-            fuzzer_runs: Some(1234),
-            fuzzer_seed: Some(1000),
-        };
-        let config = RunnerConfig::new(
-            workspace_root.clone(),
-            Some("abc".to_string()),
-            true,
-            true,
-            false,
-            true,
-            Some(100),
-            Some(32),
-            &config_from_scarb,
-        );
-        assert_eq!(
-            config,
-            RunnerConfig {
-                workspace_root,
-                exit_first: true,
-                tests_filter: TestsFilter {
-                    name_filter: NameFilter::ExactMatch("abc".to_string()),
-                    ignored_filter: IgnoredFilter::All
-                },
-                fork_targets: vec![],
-                fuzzer_runs: 100,
-                fuzzer_seed: 32,
-            }
-        );
-    }
-
-    #[test]
-    #[should_panic]
-    fn only_ignored_and_include_ignored_both_true() {
-        let _ = RunnerConfig::new(
-            Default::default(),
-            None,
-            false,
-            false,
-            true,
-            true,
-            None,
-            None,
-            &Default::default(),
-        );
-    }
-
-    #[test]
-    #[should_panic]
-    fn exact_match_true_without_test_filter_name() {
-        let _ = RunnerConfig::new(
-            Default::default(),
-            None,
-            true,
-            false,
-            true,
-            true,
-            None,
-            None,
-            &Default::default(),
-        );
-    }
 
     #[test]
     fn to_runnable_unparsable_url() {
@@ -858,17 +570,7 @@ mod tests {
             }],
             tests_location: CrateLocation::Lib,
         };
-        let config = RunnerConfig::new(
-            Default::default(),
-            None,
-            false,
-            false,
-            false,
-            false,
-            None,
-            None,
-            &Default::default(),
-        );
+        let config = RunnerConfig::new(Default::default(), false, vec![], 256, 12345);
 
         assert!(to_runnable(mocked_tests, &config).is_err());
     }
@@ -894,25 +596,16 @@ mod tests {
         };
         let config = RunnerConfig::new(
             Default::default(),
-            None,
             false,
-            false,
-            false,
-            false,
-            None,
-            None,
-            &ForgeConfig {
-                exit_first: false,
-                fuzzer_runs: None,
-                fuzzer_seed: None,
-                fork: vec![ForkTarget {
-                    name: "definitely_non_existing".to_string(),
-                    params: RawForkParams {
-                        url: "https://not_taken.com".to_string(),
-                        block_id: BlockId::Number(120),
-                    },
-                }],
-            },
+            vec![ForkTarget {
+                name: "definitely_non_existing".to_string(),
+                params: RawForkParams {
+                    url: "https://not_taken.com".to_string(),
+                    block_id: BlockId::Number(120),
+                },
+            }],
+            256,
+            12345,
         );
 
         assert!(to_runnable(mocked_tests, &config).is_err());

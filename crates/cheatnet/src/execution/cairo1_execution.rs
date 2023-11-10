@@ -2,12 +2,11 @@ use super::cheatable_syscall_handler::CheatableSyscallHandler;
 use crate::execution::contract_execution_syscall_handler::ContractExecutionSyscallHandler;
 use crate::state::CheatnetState;
 use blockifier::execution::call_info::CallInfo;
+use blockifier::execution::entry_point_execution::{
+    finalize_execution, initialize_execution_context, prepare_call_arguments, VmExecutionContext,
+};
 use blockifier::{
     execution::{
-        cairo1_execution::{
-            finalize_execution, initialize_execution_context, prepare_call_arguments,
-            VmExecutionContext,
-        },
         contract_class::{ContractClassV1, EntryPointV1},
         entry_point::{
             CallEntryPoint, EntryPointExecutionContext, EntryPointExecutionResult,
@@ -57,12 +56,9 @@ pub fn execute_entry_point_call_cairo1(
     let previous_vm_resources = syscall_handler.resources.vm_resources.clone();
 
     // region: Modified blockifier code
-    let mut cheatable_syscall_handler = CheatableSyscallHandler {
-        syscall_handler,
-        cheatnet_state,
-    };
+    let cheatable_syscall_handler = CheatableSyscallHandler::wrap(syscall_handler, cheatnet_state);
     let mut contract_execution_syscall_handler =
-        ContractExecutionSyscallHandler::wrap(&mut cheatable_syscall_handler);
+        ContractExecutionSyscallHandler::wrap(cheatable_syscall_handler);
 
     // Execute.
     cheatable_run_entry_point(
@@ -78,7 +74,7 @@ pub fn execute_entry_point_call_cairo1(
     let call_info = finalize_execution(
         vm,
         runner,
-        cheatable_syscall_handler.syscall_handler,
+        contract_execution_syscall_handler.child.child,
         previous_vm_resources,
         n_total_args,
         program_extra_data_length,

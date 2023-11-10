@@ -11,6 +11,7 @@ use crate::{
     CheatnetState,
 };
 use blockifier::execution::call_info::CallInfo;
+use blockifier::execution::common_hints::ExecutionMode;
 use blockifier::execution::entry_point::EntryPointExecutionResult;
 use blockifier::execution::{
     entry_point::{CallEntryPoint, CallType, EntryPointExecutionContext, ExecutionResources},
@@ -232,11 +233,8 @@ pub fn call_entry_point(
     let account_context = build_transaction_context();
     let block_context = build_block_context(cheatnet_state.block_info);
 
-    let mut context = EntryPointExecutionContext::new(
-        block_context.clone(),
-        account_context,
-        block_context.invoke_tx_max_n_steps.try_into().unwrap(),
-    );
+    let mut context =
+        EntryPointExecutionContext::new(&block_context, &account_context, ExecutionMode::Execute);
 
     let exec_result = execute_call_entry_point(
         &mut entry_point,

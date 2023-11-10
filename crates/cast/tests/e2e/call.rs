@@ -97,10 +97,11 @@ fn test_wrong_calldata() {
         "call",
         "--contract-address",
         &contract_address,
+        "--calldata",
+        "0x1",
+        "0x2",
         "--function",
         "get",
-        "--calldata",
-        "0x1 0x2",
     ]);
 
     let snapbox = runner(&args);

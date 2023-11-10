@@ -59,7 +59,7 @@ original value: [3]
 original value: [379899844591278365831020], converted to a string: [Print bool:]
 original value: [439721161573], converted to a string: [false]
 [PASS] tests::test_print
-Tests: 1 passed, 0 failed, 0 skipped
+Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
 
 Forge tries to convert values to strings when possible. In case conversion is not possible,
@@ -83,7 +83,7 @@ Running 0 test(s) from src/
 Running 1 test(s) from tests/
 original value: [27]
 [PASS] tests::test_print
-Tests: 1 passed, 0 failed, 0 skipped
+Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
 
 ## In contracts
@@ -140,7 +140,7 @@ Running 1 test(s) from tests/
 original value: [1882356686041040905424961122938381530884043578], converted to a string: [The new balance is:]
 original value: [42], converted to a string: [*]
 [PASS] tests::test_contract::test_increase_balance
-Tests: 1 passed, 0 failed, 0 skipped
+Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
 
 **Note**: 
