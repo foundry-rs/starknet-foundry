@@ -167,9 +167,7 @@ fn write_failed_tests(all_failed_tests: &[TestCaseSummary]) -> Result<()> {
 
     for line in all_failed_tests {
         if let TestCaseSummary::Failed { name, .. } = line {
-            let mut name = name.clone();
-            name.push('\n');
-            file.write_all(name.as_bytes())
+            file.write_all((name.clone() + "\n").as_bytes())
                 .expect("Can not write to file");
         }
     }
