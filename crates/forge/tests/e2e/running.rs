@@ -619,7 +619,7 @@ fn init_new_project_test() {
 
             [dependencies]
             snforge_std = {{ git = "https://github.com/foundry-rs/starknet-foundry", tag = "v{}" }}
-            starknet = "2.3.0"
+            starknet = "2.3.1"
 
             [[target.starknet-contract]]
             casm = true
