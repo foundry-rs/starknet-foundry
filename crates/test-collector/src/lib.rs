@@ -558,7 +558,7 @@ pub fn collect_tests(
         .into_iter()
         .map(|(test_name, config)| {
             if config.available_gas.is_some() {
-                bail!("{} - `gas_calculation` attribute is not support", test_name)
+                bail!("{} - Available gas attribute is not supported: Contract functions execution cost would not be included in the gas calculation.", test_name)
             };
             Ok(TestCase {
                 name: test_name,
