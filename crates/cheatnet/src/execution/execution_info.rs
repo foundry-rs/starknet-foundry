@@ -3,6 +3,7 @@ use cairo_vm::{
     types::relocatable::{MaybeRelocatable, Relocatable},
     vm::vm_core::VirtualMachine,
 };
+use conversions::StarknetConversions;
 use starknet_api::core::ContractAddress;
 
 use crate::{cheatcodes::spoof::TxInfoMock, state::CheatnetState};
@@ -24,6 +25,10 @@ fn get_cheated_block_info_ptr(
 
     if let Some(warped_timestamp) = cheatnet_state.warped_contracts.get(contract_address) {
         new_block_info[1] = MaybeRelocatable::Int(warped_timestamp.clone());
+    };
+
+    if let Some(elected_address) = cheatnet_state.elected_contracts.get(contract_address) {
+        new_block_info[2] = MaybeRelocatable::Int(elected_address.to_felt252());
     };
 
     vm.load_data(ptr_cheated_block_info, &new_block_info)
@@ -108,6 +113,7 @@ pub fn get_cheated_exec_info_ptr(
 
     if cheatnet_state.address_is_rolled(contract_address)
         || cheatnet_state.address_is_warped(contract_address)
+        || cheatnet_state.address_is_elected(contract_address)
     {
         let data = vm.get_range(execution_info_ptr, 1)[0].clone();
         if let MaybeRelocatable::RelocatableValue(block_info_ptr) = data.unwrap().into_owned() {

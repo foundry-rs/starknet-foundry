@@ -33,6 +33,8 @@ use cheatcodes::start_roll;
 use cheatcodes::stop_roll;
 use cheatcodes::start_warp;
 use cheatcodes::stop_warp;
+use cheatcodes::start_elect;
+use cheatcodes::stop_elect;
 use cheatcodes::start_mock_call;
 use cheatcodes::stop_mock_call;
 

@@ -208,6 +208,7 @@ pub struct CheatnetState {
     pub rolled_contracts: HashMap<ContractAddress, Felt252>,
     pub pranked_contracts: HashMap<ContractAddress, ContractAddress>,
     pub warped_contracts: HashMap<ContractAddress, Felt252>,
+    pub elected_contracts: HashMap<ContractAddress, ContractAddress>,
     pub mocked_functions: HashMap<ContractAddress, HashMap<EntryPointSelector, Vec<StarkFelt>>>,
     pub spoofed_contracts: HashMap<ContractAddress, TxInfoMock>,
     pub spies: Vec<SpyTarget>,
@@ -242,6 +243,11 @@ impl CheatnetState {
     }
 
     #[must_use]
+    pub fn address_is_elected(&self, contract_address: &ContractAddress) -> bool {
+        self.elected_contracts.contains_key(contract_address)
+    }
+
+    #[must_use]
     pub fn address_is_spoofed(&self, contract_address: &ContractAddress) -> bool {
         self.spoofed_contracts.contains_key(contract_address)
     }
@@ -251,6 +257,7 @@ impl CheatnetState {
         self.address_is_rolled(contract_address)
             || self.address_is_pranked(contract_address)
             || self.address_is_warped(contract_address)
+            || self.address_is_elected(contract_address)
             || self.address_is_spoofed(contract_address)
     }
 }

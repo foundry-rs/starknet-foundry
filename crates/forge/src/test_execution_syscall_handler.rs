@@ -262,6 +262,25 @@ impl TestExecutionSyscallHandler<'_> {
                 self.child.child.cheatnet_state.stop_warp(contract_address);
                 Ok(())
             }
+            "start_elect" => {
+                let contract_address = inputs[0].to_contract_address();
+                let sequencer_address = inputs[1].to_contract_address();
+
+                self.contract_execution_syscall_handler
+                    .cheatable_syscall_handler
+                    .cheatnet_state
+                    .start_elect(contract_address, sequencer_address);
+                Ok(())
+            }
+            "stop_elect" => {
+                let contract_address = inputs[0].to_contract_address();
+
+                self.contract_execution_syscall_handler
+                    .cheatable_syscall_handler
+                    .cheatnet_state
+                    .stop_elect(contract_address);
+                Ok(())
+            }
             "start_prank" => {
                 let contract_address = inputs[0].to_contract_address();
                 let caller_address = inputs[1].to_contract_address();
