@@ -1,9 +1,8 @@
 use crate::collecting::TestCaseRunnable;
 use crate::running::ForkInfo;
-use crate::running::TestRunResult;
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
-use cairo_lang_runner::RunResultValue;
+use cairo_lang_runner::{RunResult, RunResultValue};
 use starknet_api::block::BlockNumber;
 use std::option::Option;
 use test_collector::{ExpectedPanicValue, ExpectedTestResult};
@@ -126,10 +125,11 @@ impl TestCaseSummary {
 impl TestCaseSummary {
     #[must_use]
     pub(crate) fn from_run_result_and_info(
-        run_result: TestRunResult,
+        run_result: RunResult,
         test_case: &TestCaseRunnable,
         arguments: Vec<Felt252>,
         fork_info: &ForkInfo,
+        gas: f64,
     ) -> Self {
         let name = test_case.name.to_string();
         let msg = extract_result_data(&run_result, &test_case.expected_result);
@@ -142,7 +142,7 @@ impl TestCaseSummary {
                     arguments,
                     fuzzing_statistic: None,
                     latest_block_number,
-                    gas: run_result.gas,
+                    gas,
                 },
                 ExpectedTestResult::Panics(_) => TestCaseSummary::Failed {
                     name,
@@ -176,7 +176,7 @@ impl TestCaseSummary {
                         arguments,
                         fuzzing_statistic: None,
                         latest_block_number,
-                        gas: run_result.gas,
+                        gas,
                     },
                 },
             },
@@ -208,7 +208,7 @@ fn build_readable_text(data: &Vec<Felt252>) -> Option<String> {
 /// If the test was expected to fail with specific data e.g. `#[should_panic(expected: ('data',))]`
 /// and failed to do so, it returns a string comparing the panic data and the expected data.
 pub(crate) fn extract_result_data(
-    run_result: &TestRunResult,
+    run_result: &RunResult,
     expectation: &ExpectedTestResult,
 ) -> Option<String> {
     match &run_result.value {

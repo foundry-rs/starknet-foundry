@@ -19,7 +19,7 @@ use itertools::chain;
 use cairo_lang_casm::hints::Hint;
 use cairo_lang_casm::instructions::Instruction;
 use cairo_lang_runner::casm_run::hint_to_hint_params;
-use cairo_lang_runner::{Arg, RunResultValue, RunnerError};
+use cairo_lang_runner::{Arg, RunResult, RunnerError};
 use cairo_vm::vm::vm_core::VirtualMachine;
 use camino::Utf8Path;
 use cheatnet::constants as cheatnet_constants;
@@ -203,14 +203,9 @@ pub(crate) struct ForkInfo {
 }
 
 pub(crate) struct RunResultWithInfo {
-    pub(crate) run_result: Result<TestRunResult, RunnerError>,
+    pub(crate) run_result: Result<RunResult, RunnerError>,
     pub(crate) fork_info: ForkInfo,
-}
-
-#[derive(Debug, PartialEq, Clone)]
-pub struct TestRunResult {
-    pub gas: f64,
-    pub value: RunResultValue,
+    pub(crate) gas: f64,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -292,17 +287,14 @@ pub(crate) fn run_test_case(
     };
 
     let mut vm = VirtualMachine::new(true);
-    let res = runner
-        .run_function_with_vm(
-            func,
-            &mut vm,
-            &mut test_execution_syscall_handler,
-            hints_dict,
-            instructions,
-            builtins,
-        )
-        .unwrap();
-
+    let res = runner.run_function_with_vm(
+        func,
+        &mut vm,
+        &mut test_execution_syscall_handler,
+        hints_dict,
+        instructions,
+        builtins,
+    );
     let gas = gas_from_execution_resources(
         &test_execution_syscall_handler
             .child
@@ -318,13 +310,11 @@ pub(crate) fn run_test_case(
         .gas_used;
 
     Ok(RunResultWithInfo {
-        run_result: Ok(TestRunResult {
-            gas,
-            value: res.value,
-        }),
+        run_result: res,
         fork_info: ForkInfo {
             latest_block_number,
         },
+        gas,
     })
 }
 
@@ -341,6 +331,7 @@ fn extract_test_case_summary(
                     case,
                     args,
                     &result_with_info.fork_info,
+                    result_with_info.gas,
                 )),
                 // CairoRunError comes from VirtualMachineError which may come from HintException that originates in TestExecutionSyscallHandler
                 Err(RunnerError::CairoRunError(error)) => Ok(TestCaseSummary::Failed {
