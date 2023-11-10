@@ -1,5 +1,5 @@
 use crate::sierra_casm_generator::SierraCasmGenerator;
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use cairo_felt::Felt252;
 use cairo_lang_compiler::db::RootDatabase;
 use cairo_lang_compiler::diagnostics::DiagnosticsReporter;
@@ -536,7 +536,6 @@ pub fn collect_tests(
         .to_option()
         .context("Compilation failed without any diagnostics")
         .context("Failed to get sierra program")?;
-    let mut gas_error = None;
 
     let collected_tests: Vec<TestCaseRaw> = all_tests
         .into_iter()
@@ -559,28 +558,18 @@ pub fn collect_tests(
         .into_iter()
         .map(|(test_name, config)| {
             if config.available_gas.is_some() {
-                gas_error = Some(Err(
-                    anyhow!
-                        ("{} - Gas calculation used for available_gas is incorrect, because it doesn't include the cost of contract execution.",
-                         test_name
-                    )
-                ));
-
+                bail!("{} - `gas_calculation` attribute is not support", test_name)
             };
-            TestCase {
+            Ok(TestCase {
                 name: test_name,
                 available_gas: config.available_gas,
                 ignored: config.ignored,
                 expected_result: config.expected_result,
                 fork_config: config.fork_config,
                 fuzzer_config: config.fuzzer_config,
-            }
+            })
         })
-        .collect();
-
-    if let Some(err) = gas_error {
-        return err;
-    }
+        .collect::<Result<Vec<_>>>()?;
 
     let sierra_program = replace_sierra_ids_in_program(db, &sierra_program);
 

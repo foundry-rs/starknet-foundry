@@ -765,7 +765,7 @@ fn available_gas_error() {
         indoc! {r#"
         [..]Compiling[..]
         [..]Finished[..]
-        [ERROR] tests::available_gas::available_gas - Gas calculation used for available_gas is incorrect, because it doesn't include the cost of contract execution.
+        [ERROR] tests::available_gas::available_gas - `gas_calculation` attribute is not support
         "#}
     );
 }
