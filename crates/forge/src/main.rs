@@ -9,18 +9,17 @@ use scarb_artifacts::{
 };
 use scarb_metadata::{Metadata, MetadataCommand, PackageMetadata};
 use scarb_ui::args::PackagesFilter;
-use std::io::Write;
+use std::env;
 use std::path::PathBuf;
 use std::sync::Arc;
-use std::{env, fs};
 use tempfile::{tempdir, TempDir};
 use tokio::runtime::Builder;
 
-use forge::{cache_dir, pretty_printing, RunnerConfig, RunnerParams, FUZZER_RUNS_DEFAULT};
-
 use forge::scarb::config::ForgeConfig;
+use forge::shared_cache::shared_cache::{clean_cache, write_failed_tests};
 use forge::test_case_summary::TestCaseSummary;
 use forge::test_filter::TestsFilter;
+use forge::{pretty_printing, RunnerConfig, RunnerParams, FUZZER_RUNS_DEFAULT};
 use forge::{run, TestCrateSummary};
 use rand::{thread_rng, RngCore};
 use std::process::{Command, Stdio};
@@ -110,14 +109,6 @@ fn validate_fuzzer_runs_value(val: &str) -> Result<u32> {
     Ok(parsed_val)
 }
 
-fn clean_cache() -> Result<()> {
-    let cache_dir = cache_dir()?;
-    if cache_dir.exists() {
-        fs::remove_dir_all(cache_dir)?;
-    }
-    Ok(())
-}
-
 fn load_predeployed_contracts() -> Result<TempDir> {
     let tmp_dir = tempdir()?;
     PREDEPLOYED_CONTRACTS
@@ -152,24 +143,6 @@ fn combine_configs(
             .or(forge_config.fuzzer_seed)
             .unwrap_or_else(|| thread_rng().next_u64()),
     )
-}
-
-fn write_failed_tests(all_failed_tests: &[TestCaseSummary]) -> Result<()> {
-    let tests_failed_path = cache_dir()?.join(".prev_tests_failed");
-
-    let mut file = fs::OpenOptions::new()
-        .write(true)
-        .create(true)
-        .open(tests_failed_path)?;
-
-    for line in all_failed_tests {
-        if let TestCaseSummary::Failed { name, .. } = line {
-            file.write_all((name.clone() + "\n").as_bytes())
-                .expect("Can not write to file");
-        }
-    }
-
-    Ok(())
 }
 
 fn test_workspace(args: TestArgs) -> Result<bool> {

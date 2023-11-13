@@ -47,8 +47,9 @@ use url::Url;
 use crate::test_case_summary::TestCaseSummary;
 
 use crate::collecting::{TestCaseRunnable, ValidatedForkConfig};
+use crate::shared_cache::CACHE_DIR;
 use crate::test_execution_syscall_handler::TestExecutionSyscallHandler;
-use crate::{RunnerConfig, RunnerParams, CACHE_DIR};
+use crate::{RunnerConfig, RunnerParams};
 
 use crate::test_execution_syscall_handler::TestExecutionState;
 
