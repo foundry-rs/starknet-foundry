@@ -4,7 +4,6 @@ use crate::helpers::runner::runner;
 use camino::Utf8PathBuf;
 use indoc::indoc;
 use serde_json::json;
-use snapbox::cmd::{cargo_bin, Command};
 use std::fs;
 
 #[tokio::test]
@@ -28,7 +27,7 @@ pub async fn test_happy_case() {
         "--deployed",
     ];
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
 
     snapbox.assert().stdout_matches(indoc! {r#"
         command: account add
@@ -85,9 +84,7 @@ pub async fn test_happy_case_add_profile() {
         "--add-profile",
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(current_dir.path())
-        .args(args);
+    let snapbox = runner(&args, Some(current_dir.path()));
 
     snapbox.assert().stdout_matches(indoc! {r#"
         command: account add
@@ -144,7 +141,7 @@ pub async fn test_detect_deployed() {
         "0x5",
     ];
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
 
     snapbox.assert().stdout_matches(indoc! {r#"
         command: account add
@@ -190,7 +187,7 @@ pub async fn test_invalid_public_key() {
         "--deployed",
     ];
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
 
     snapbox.assert().stderr_matches(indoc! {r#"
         command: account add
@@ -210,7 +207,7 @@ pub async fn test_missing_arguments() {
         "--deployed",
     ];
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
     snapbox.assert().stderr_matches(indoc! {r#"
         error: the following required arguments were not provided:
           --address <ADDRESS>

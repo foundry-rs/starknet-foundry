@@ -18,7 +18,7 @@ pub async fn test_no_accounts_in_network() {
         "goerli0-network",
     ]);
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
 
     snapbox.assert().stderr_matches(indoc! {r#"
     command: account delete
@@ -31,7 +31,7 @@ pub async fn test_account_does_not_exist() {
     let mut args = default_cli_args();
     args.append(&mut vec!["account", "delete", "--name", "user99"]);
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
 
     snapbox.assert().stderr_matches(indoc! {r#"
     command: account delete

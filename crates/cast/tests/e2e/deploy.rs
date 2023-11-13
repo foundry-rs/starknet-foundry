@@ -25,7 +25,7 @@ async fn test_happy_case() {
         "99999999999999999",
     ]);
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
     let output = snapbox.assert().success().get_output().stdout.clone();
 
     let hash = get_transaction_hash(&output);
@@ -52,7 +52,7 @@ async fn test_happy_case_with_constructor() {
         &class_hash,
     ]);
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
     let output = snapbox.assert().success().get_output().stdout.clone();
 
     let hash = get_transaction_hash(&output);
@@ -75,7 +75,7 @@ fn test_wrong_calldata() {
         "0x1 0x1",
     ]);
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
     let output = String::from_utf8(snapbox.assert().success().get_output().stderr.clone()).unwrap();
 
     assert!(output.contains("error: "));
@@ -93,7 +93,7 @@ async fn test_contract_not_declared() {
         "0x1",
     ]);
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
     let output = String::from_utf8(snapbox.assert().get_output().stderr.clone()).unwrap();
 
     assert!(output.contains("Transaction execution has failed."));
@@ -114,7 +114,7 @@ fn test_contract_already_deployed() {
         "--unique",
     ]);
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
     let output = String::from_utf8(snapbox.assert().get_output().stderr.clone()).unwrap();
 
     assert!(output.contains("Transaction execution has failed"));
@@ -138,7 +138,7 @@ fn test_too_low_max_fee() {
         "1",
     ]);
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
 
     snapbox.assert().stderr_matches(indoc! {r#"
         command: deploy

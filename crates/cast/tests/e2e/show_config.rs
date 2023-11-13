@@ -11,7 +11,7 @@ async fn test_show_config_from_scarb_toml() {
         "show-config",
     ];
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
 
     snapbox.assert().success().stdout_eq(indoc! {r#"
         command: show-config
@@ -36,7 +36,7 @@ async fn test_show_config_from_cli() {
         "show-config",
     ];
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
 
     snapbox.assert().success().stdout_eq(indoc! {r#"
         command: show-config
@@ -59,7 +59,7 @@ async fn test_show_config_from_cli_and_scarb() {
         "show-config",
     ];
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
 
     snapbox.assert().success().stdout_eq(indoc! {r#"
         command: show-config
@@ -82,7 +82,7 @@ async fn test_show_config_when_no_keystore() {
         "show-config",
     ];
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
 
     snapbox.assert().success().stdout_eq(indoc! {r#"
         command: show-config
@@ -103,7 +103,7 @@ async fn test_show_config_when_keystore() {
         "show-config",
     ];
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
 
     snapbox.assert().success().stdout_eq(indoc! {r#"
         command: show-config

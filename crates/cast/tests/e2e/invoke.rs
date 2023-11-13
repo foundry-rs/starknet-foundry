@@ -26,7 +26,7 @@ async fn test_happy_case() {
         "99999999999999999",
     ]);
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
     let output = snapbox.assert().success().get_output().stdout.clone();
 
     let hash = get_transaction_hash(&output);
@@ -48,7 +48,7 @@ async fn test_contract_does_not_exist() {
         "put",
     ]);
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
     let output = String::from_utf8(snapbox.assert().success().get_output().stderr.clone()).unwrap();
 
     assert!(output.contains("Transaction execution has failed."));
@@ -68,7 +68,7 @@ fn test_wrong_function_name() {
         "nonexistent_put",
     ]);
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
     let output = String::from_utf8(snapbox.assert().success().get_output().stderr.clone()).unwrap();
 
     assert!(output.contains("Transaction execution has failed."));
@@ -90,7 +90,7 @@ fn test_wrong_calldata() {
         "0x1",
     ]);
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
     let bdg = snapbox.assert();
     let out = bdg.get_output();
 
@@ -120,7 +120,7 @@ fn test_too_low_max_fee() {
         "1",
     ]);
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
 
     snapbox.assert().stderr_matches(indoc! {r#"
         command: invoke

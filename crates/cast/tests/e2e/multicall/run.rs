@@ -16,7 +16,7 @@ async fn test_happy_case() {
 
     args.append(&mut vec!["multicall", "run", "--path", path_str]);
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
     let bdg = snapbox.assert();
     let out = bdg.get_output();
 
@@ -40,7 +40,7 @@ async fn test_calldata_ids() {
 
     args.append(&mut vec!["multicall", "run", "--path", path_str]);
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
     let bdg = snapbox.assert();
     let out = bdg.get_output();
 
@@ -58,7 +58,7 @@ async fn test_invalid_path() {
 
     args.append(&mut vec!["multicall", "run", "--path", "non-existent"]);
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
     let bdg = snapbox.assert();
     let out = bdg.get_output();
 
@@ -81,7 +81,7 @@ async fn test_deploy_fail() {
 
     args.append(&mut vec!["multicall", "run", "--path", path_str]);
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
     let bdg = snapbox.assert();
     let out = bdg.get_output();
 
@@ -104,7 +104,7 @@ async fn test_invoke_fail() {
 
     args.append(&mut vec!["multicall", "run", "--path", path_str]);
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
     let bdg = snapbox.assert();
     let out = bdg.get_output();
 
@@ -128,7 +128,7 @@ async fn test_deploy_success_invoke_fails() {
 
     args.append(&mut vec!["multicall", "run", "--path", path_str]);
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
     let output = String::from_utf8(snapbox.assert().success().get_output().stderr.clone()).unwrap();
 
     assert!(output.contains("Transaction execution has failed."));

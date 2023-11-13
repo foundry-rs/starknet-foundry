@@ -18,7 +18,7 @@ fn test_happy_case() {
         "latest",
     ]);
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
 
     snapbox.assert().success().stdout_eq(indoc! {r#"
         command: call
@@ -42,7 +42,7 @@ async fn test_call_after_storage_changed() {
         "0x2",
     ]);
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
 
     snapbox.assert().success().stdout_eq(indoc! {r#"
         command: call
@@ -61,7 +61,7 @@ async fn test_contract_does_not_exist() {
         "get",
     ]);
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
 
     snapbox.assert().stderr_matches(indoc! {r#"
         command: call
@@ -81,7 +81,7 @@ fn test_wrong_function_name() {
         "nonexistent_get",
     ]);
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
 
     snapbox.assert().stderr_matches(indoc! {r#"
         command: call
@@ -104,7 +104,7 @@ fn test_wrong_calldata() {
         "get",
     ]);
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
 
     snapbox.assert().stderr_matches(indoc! {r#"
         command: call
@@ -126,7 +126,7 @@ async fn test_invalid_selector() {
         "0x1 0x2",
     ]);
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
     snapbox.assert().stderr_matches(indoc! {r#"
       command: call
       error: Failed to convert entry point selector to FieldElement: the provided name contains non-ASCII characters

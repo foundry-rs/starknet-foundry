@@ -2,10 +2,11 @@ use crate::helpers::constants::{CONTRACTS_DIR, URL};
 use crate::helpers::fixtures::{
     duplicate_directory_with_salt, get_accounts_path, get_transaction_hash, get_transaction_receipt,
 };
+use crate::helpers::runner::runner;
 use indoc::indoc;
-use snapbox::cmd::{cargo_bin, Command};
 use starknet::core::types::TransactionReceipt::Declare;
 use std::fs;
+use std::path::Path;
 use test_case::test_case;
 
 #[tokio::test]
@@ -29,9 +30,7 @@ async fn test_happy_case() {
         "99999999999999999",
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(contract_path.path())
-        .args(args);
+    let snapbox = runner(&args, Some(contract_path.path()));
     let output = snapbox.assert().success().get_output().stdout.clone();
 
     let hash = get_transaction_hash(&output);
@@ -44,11 +43,14 @@ async fn test_happy_case() {
 
 #[tokio::test]
 async fn contract_already_declared() {
+    let contract_path = Path::new(CONTRACTS_DIR).join("map");
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+
     let args = vec![
         "--url",
         URL,
         "--accounts-file",
-        "../../accounts/accounts.json",
+        accounts_json_path.as_str(),
         "--account",
         "user1",
         "declare",
@@ -56,9 +58,7 @@ async fn contract_already_declared() {
         "Map",
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(CONTRACTS_DIR.to_string() + "/map")
-        .args(args);
+    let snapbox = runner(&args, Some(&contract_path));
 
     snapbox.assert().success().stderr_matches(indoc! {r#"
         command: declare
@@ -68,11 +68,14 @@ async fn contract_already_declared() {
 
 #[tokio::test]
 async fn wrong_contract_name_passed() {
+    let contract_path = Path::new(CONTRACTS_DIR).join("map");
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+
     let args = vec![
         "--url",
         URL,
         "--accounts-file",
-        "../../accounts/accounts.json",
+        accounts_json_path.as_str(),
         "--account",
         "user1",
         "declare",
@@ -80,9 +83,7 @@ async fn wrong_contract_name_passed() {
         "nonexistent",
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(CONTRACTS_DIR.to_string() + "/map")
-        .args(args);
+    let snapbox = runner(&args, Some(&contract_path));
 
     snapbox.assert().success().stderr_matches(indoc! {r#"
         command: declare
@@ -90,9 +91,11 @@ async fn wrong_contract_name_passed() {
     "#});
 }
 
-#[test_case("/build_fails", "../../accounts/accounts.json" ; "when wrong cairo contract")]
-#[test_case("/", "../accounts/accounts.json" ; "when Scarb.toml does not exist")]
-fn scarb_build_fails(contract_path: &str, accounts_file_path: &str) {
+#[test_case("build_fails", "../../accounts/accounts.json" ; "when wrong cairo contract")]
+#[test_case(".", "../accounts/accounts.json" ; "when Scarb.toml does not exist")]
+fn scarb_build_fails(relative_contract_path: &str, accounts_file_path: &str) {
+    let contract_path = Path::new(CONTRACTS_DIR).join(relative_contract_path);
+
     let args = vec![
         "--url",
         URL,
@@ -104,10 +107,7 @@ fn scarb_build_fails(contract_path: &str, accounts_file_path: &str) {
         "--contract-name",
         "BuildFails",
     ];
-
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(CONTRACTS_DIR.to_string() + contract_path)
-        .args(args);
+    let snapbox = runner(&args, Some(&contract_path));
 
     snapbox.assert().stderr_matches(indoc! {r#"
         command: declare
@@ -137,9 +137,7 @@ fn test_too_low_max_fee() {
         "1",
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(contract_path.path())
-        .args(args);
+    let snapbox = runner(&args, Some(&contract_path.path()));
 
     snapbox.assert().success().stderr_matches(indoc! {r#"
         command: declare
@@ -149,9 +147,10 @@ fn test_too_low_max_fee() {
     fs::remove_dir_all(contract_path).unwrap();
 }
 
-#[test_case("/no_sierra", "../../accounts/accounts.json" ; "when there is no sierra artifact")]
-#[test_case("/no_casm", "../../accounts/accounts.json" ; "when there is no casm artifact")]
-fn scarb_no_artifacts(contract_path: &str, accounts_file_path: &str) {
+#[test_case("no_sierra", "../../accounts/accounts.json" ; "when there is no sierra artifact")]
+#[test_case("no_casm", "../../accounts/accounts.json" ; "when there is no casm artifact")]
+fn scarb_no_artifacts(relative_contract_path: &str, accounts_file_path: &str) {
+    let contract_path = Path::new(CONTRACTS_DIR).join(relative_contract_path);
     let args = vec![
         "--url",
         URL,
@@ -164,9 +163,7 @@ fn scarb_no_artifacts(contract_path: &str, accounts_file_path: &str) {
         "minimal_contract",
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(CONTRACTS_DIR.to_string() + contract_path)
-        .args(args);
+    let snapbox = runner(&args, Some(&contract_path));
 
     snapbox.assert().success().stderr_matches(indoc! {r#"
         command: declare
