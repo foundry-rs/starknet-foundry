@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Forge
 
+- Bump cairo to 2.3.1
+
 #### Removed
 
 - `available_gas` attribute, it didn't compute correctly gas usage. Contract functions execution cost would not be included.
