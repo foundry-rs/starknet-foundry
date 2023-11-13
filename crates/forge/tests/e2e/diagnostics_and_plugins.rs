@@ -74,7 +74,7 @@ fn print_error_if_attributes_incorrect() {
              --> {mock_tests_dir_path_str}/tests/test_fuzzer.cairo:2:9
             #[fuzzer(test: 10)]
                     ^********^
-            
+
             error: Plugin diagnostic: Expected fuzzer config must be of the form `runs: <u32>, seed: <u64>`
              --> {mock_tests_dir_path_str}/tests/test_fuzzer.cairo:8:9
             #[fuzzer()]
