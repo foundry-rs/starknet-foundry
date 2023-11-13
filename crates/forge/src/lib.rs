@@ -168,6 +168,7 @@ pub async fn run(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::collecting::CompiledTestCrate;
     use cairo_lang_sierra::program::Program;
     use forge_runner::ForkTarget;
     use starknet::core::types::BlockId;
@@ -176,14 +177,14 @@ mod tests {
 
     #[test]
     fn to_runnable_unparsable_url() {
-        let mocked_tests = CompiledTestCrateRaw {
+        let mocked_tests = CompiledTestCrate {
             sierra_program: Program {
                 type_declarations: vec![],
                 libfunc_declarations: vec![],
                 statements: vec![],
                 funcs: vec![],
             },
-            test_cases: vec![TestCase::<RawForkConfig> {
+            test_cases: vec![TestCase {
                 name: "crate1::do_thing".to_string(),
                 available_gas: None,
                 ignored: false,
