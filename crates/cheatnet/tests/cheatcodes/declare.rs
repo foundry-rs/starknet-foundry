@@ -9,7 +9,7 @@ use scarb_artifacts::StarknetContractArtifacts;
 use starknet_api::core::ClassHash;
 use test_case::test_case;
 
-fn class_hash_from_str(
+fn get_contract_class_hash(
     contract_name: &str,
     contracts: &HashMap<String, StarknetContractArtifacts>,
 ) -> ClassHash {
@@ -26,7 +26,7 @@ fn declare_simple(contract_name: &str) {
     let contracts = get_contracts();
 
     let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
-    let expected_class_hash = class_hash_from_str(contract_name, &contracts);
+    let expected_class_hash = get_contract_class_hash(contract_name, &contracts);
 
     assert_eq!(class_hash, expected_class_hash);
 }
@@ -41,7 +41,7 @@ fn declare_multiple(contract_names: Vec<&str>) {
     for contract_name in contract_names {
         let contract = contract_name.to_owned().to_felt252();
         let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
-        let expected_class_hash = class_hash_from_str(contract_name, &contracts);
+        let expected_class_hash = get_contract_class_hash(contract_name, &contracts);
         assert_eq!(class_hash, expected_class_hash);
     }
 }
@@ -55,7 +55,7 @@ fn declare_same_contract(contract_name: &str, error_msg: &str) {
     let contracts = get_contracts();
 
     let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
-    let expected_class_hash = class_hash_from_str(contract_name, &contracts);
+    let expected_class_hash = get_contract_class_hash(contract_name, &contracts);
     assert_eq!(class_hash, expected_class_hash);
 
     let output = blockifier_state.declare(&contract, &contracts);
