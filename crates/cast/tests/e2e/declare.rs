@@ -1,6 +1,6 @@
 use crate::helpers::constants::{CONTRACTS_DIR, URL};
 use crate::helpers::fixtures::{
-    duplicate_directory_with_salt, get_transaction_hash, get_transaction_receipt,
+    duplicate_directory_with_salt, get_accounts_path, get_transaction_hash, get_transaction_receipt,
 };
 use indoc::indoc;
 use snapbox::cmd::{cargo_bin, Command};
@@ -12,12 +12,12 @@ use test_case::test_case;
 async fn test_happy_case() {
     let contract_path =
         duplicate_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "1");
-
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
     let args = vec![
         "--url",
         URL,
         "--accounts-file",
-        "../../accounts/accounts.json",
+        accounts_json_path.as_str(),
         "--account",
         "user8",
         "--int-format",
@@ -30,7 +30,7 @@ async fn test_happy_case() {
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(&contract_path)
+        .current_dir(contract_path.path())
         .args(args);
     let output = snapbox.assert().success().get_output().stdout.clone();
 
@@ -120,12 +120,13 @@ fn scarb_build_fails(contract_path: &str, accounts_file_path: &str) {
 fn test_too_low_max_fee() {
     let contract_path =
         duplicate_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "2");
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
     let args = vec![
         "--url",
         URL,
         "--accounts-file",
-        "../../accounts/accounts.json",
+        accounts_json_path.as_str(),
         "--account",
         "user2",
         "--wait",
@@ -137,7 +138,7 @@ fn test_too_low_max_fee() {
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(&contract_path)
+        .current_dir(contract_path.path())
         .args(args);
 
     snapbox.assert().success().stderr_matches(indoc! {r#"

@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Removed
+
+- `available_gas` attribute, it didn't compute correctly gas usage. Contract functions execution cost would not be included.
+
+## [0.10.1] - 2023-11-09
+
+### Cast
+
+#### Fixed
+- scarb metadata in declare subcommand now takes manifest path from cli if passed instead of looking for it
+
 ## [0.10.0] - 2023-11-08
 
 ### Forge

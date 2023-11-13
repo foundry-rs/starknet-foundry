@@ -20,7 +20,6 @@ mod tests {
     use super::subtract;
 
     #[test]
-    #[available_gas(100000)]
     fn it_works() {
         assert(subtract(3, 2) == 1, 'it works!');
     }
