@@ -23,17 +23,20 @@ pub(crate) fn print_running_tests(test_crate_file: CrateLocation, tests_num: usi
     println!("{}", style(plain_text).bold());
 }
 
-pub(crate) fn print_test_summary(summaries: &[TestCrateSummary]) {
+pub(crate) fn print_test_summary(summaries: &[TestCrateSummary], filtered: usize) {
     let passed: usize = summaries.iter().map(TestCrateSummary::count_passed).sum();
-    let skipped: usize = summaries.iter().map(TestCrateSummary::count_skipped).sum();
     let failed: usize = summaries.iter().map(TestCrateSummary::count_failed).sum();
+    let skipped: usize = summaries.iter().map(TestCrateSummary::count_skipped).sum();
+    let ignored: usize = summaries.iter().map(TestCrateSummary::count_ignored).sum();
 
     println!(
-        "{}: {} passed, {} failed, {} skipped",
+        "{}: {} passed, {} failed, {} skipped, {} ignored, {} filtered out",
         style("Tests").bold(),
         passed,
         failed,
         skipped,
+        ignored,
+        filtered,
     );
 }
 
@@ -82,7 +85,14 @@ pub(crate) fn print_test_result(test_result: &TestCaseSummary) {
         }
     };
 
-    println!("{result_header} {result_name}{fuzzer_report}{result_message}");
+    let block_number_message = match test_result.latest_block_number() {
+        None => String::new(),
+        Some(latest_block_number) => {
+            format!("\nNumber of the block used for fork testing = {latest_block_number}")
+        }
+    };
+
+    println!("{result_header} {result_name}{fuzzer_report}{block_number_message}{result_message}");
 }
 
 pub fn print_failures(all_failed_tests: &[TestCaseSummary]) {

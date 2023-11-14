@@ -149,8 +149,7 @@ fn warp_cairo0_contract(selector: &str) {
     };
     let block_timestamp = &ret_data[0];
 
-    cheatnet_state.start_warp(contract_address, Felt252::from(123));
-
+    cheatnet_state.start_warp(CheatTarget::One(contract_address), Felt252::from(123));
     let output = call_contract(
         &mut blockifier_state,
         &mut cheatnet_state,
@@ -164,7 +163,7 @@ fn warp_cairo0_contract(selector: &str) {
     };
     let warped_block_timestamp = &ret_data[0];
 
-    cheatnet_state.stop_warp(contract_address);
+    cheatnet_state.stop_warp(CheatTarget::One(contract_address));
 
     let output = call_contract(
         &mut blockifier_state,

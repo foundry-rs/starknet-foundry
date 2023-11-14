@@ -35,4 +35,11 @@ impl TestCrateSummary {
             .filter(|tu| matches!(tu, TestCaseSummary::Skipped { .. }))
             .count()
     }
+
+    pub(crate) fn count_ignored(&self) -> usize {
+        self.test_case_summaries
+            .iter()
+            .filter(|tu| matches!(tu, TestCaseSummary::Ignored { .. }))
+            .count()
+    }
 }

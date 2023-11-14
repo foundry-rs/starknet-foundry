@@ -34,7 +34,7 @@ fn fuzzing() {
         [PASS] fuzzing::tests::uint128_arg (fuzzer runs = 256)
         [PASS] fuzzing::tests::uint256_arg (fuzzer runs = 256)
         Running 0 test(s) from tests/
-        Tests: 11 passed, 1 failed, 0 skipped
+        Tests: 11 passed, 1 failed, 0 skipped, 0 ignored, 6 filtered out
         Fuzzer seed: [..]
 
         Failures:
@@ -79,7 +79,7 @@ fn fuzzing_set_runs() {
         [PASS] fuzzing::tests::uint128_arg (fuzzer runs = 10)
         [PASS] fuzzing::tests::uint256_arg (fuzzer runs = 10)
         Running 0 test(s) from tests/
-        Tests: 11 passed, 1 failed, 0 skipped
+        Tests: 11 passed, 1 failed, 0 skipped, 0 ignored, 6 filtered out
         Fuzzer seed: [..]
 
         Failures:
@@ -124,7 +124,7 @@ fn fuzzing_set_seed() {
         [PASS] fuzzing::tests::uint128_arg (fuzzer runs = 256)
         [PASS] fuzzing::tests::uint256_arg (fuzzer runs = 256)
         Running 0 test(s) from tests/
-        Tests: 11 passed, 1 failed, 0 skipped
+        Tests: 11 passed, 1 failed, 0 skipped, 0 ignored, 6 filtered out
         Fuzzer seed: 1234
 
         Failures:
@@ -194,15 +194,16 @@ fn fuzzing_exit_first() {
 
         Failure data:
             original value: [..], converted to a string: [2 + b == 2 + b]
-        Tests: 0 passed, 1 failed, 1 skipped
-        Fuzzer seed: [..]
 
+        Tests: 0 passed, 1 failed, 1 skipped, 0 ignored, 16 filtered out
+
+        Fuzzer seed: [..]
         Failures:
             tests::exit_first_fuzz::exit_first_fails_test
-
         "#}
     );
 }
+
 #[test]
 fn fuzzing_exit_first_single_fail() {
     let temp = setup_package("fuzzing");
@@ -227,7 +228,7 @@ fn fuzzing_exit_first_single_fail() {
         Failures:
             tests::exit_first_single_fail::exit_first_fails_test
 
-        Tests: 0 passed, 1 failed, 1 skipped
+        Tests: 0 passed, 1 failed, 1 skipped, 0 ignored, 16 filtered out
         "#}
     );
 }

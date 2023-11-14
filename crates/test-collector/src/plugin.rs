@@ -3,7 +3,7 @@ use cairo_lang_syntax::attribute::structured::AttributeListStructurize;
 use cairo_lang_syntax::node::ast;
 use cairo_lang_syntax::node::db::SyntaxGroup;
 
-use crate::try_extract_test_config;
+use crate::forge_try_extract_test_config;
 
 /// Plugin to create diagnostics for tests attributes.
 #[derive(Debug, Default)]
@@ -16,7 +16,8 @@ impl MacroPlugin for TestPlugin {
         PluginResult {
             code: None,
             diagnostics: if let ast::Item::FreeFunction(free_func_ast) = item_ast {
-                try_extract_test_config(db, &free_func_ast.attributes(db).structurize(db)).err()
+                forge_try_extract_test_config(db, &free_func_ast.attributes(db).structurize(db))
+                    .err()
             } else {
                 None
             }
