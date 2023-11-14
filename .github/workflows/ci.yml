@@ -98,13 +98,13 @@ jobs:
       - uses: software-mansion/setup-scarb@v1.3.2
       - name: Check forge formatting
         run: |
-        find . -type f -name "Scarb.toml" -print0 | while IFS= read -r -d '' file; do
-          dir="$(dirname "$file")"
-          cd "$dir"
-          echo "Running 'scarb fmt' in directory: $PWD"
-          scarb fmt --check
-          cd - > /dev/null
-      done
+          find . -type f -name "Scarb.toml" -print0 | while IFS= read -r -d '' file; do
+            dir="$(dirname "$file")"
+            cd "$dir"
+            echo "Running 'scarb fmt' in directory: $PWD"
+            scarb fmt --check
+            cd - > /dev/null
+          done
 
   rustfmt:
     runs-on: ubuntu-latest

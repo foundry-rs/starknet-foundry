@@ -36,6 +36,7 @@ mod tests {
     fn fuzzed_both_arguments(a: felt252, b: felt252) {
         let result = adder(a, b);
         assert(result == a + b, 'result == a + b');
+        
     }
 
     #[test]
