@@ -36,14 +36,6 @@ pub enum CheatTarget {
     Multiple(Vec<ContractAddress>),
 }
 
-// Specifies which contracts to target
-// with a cheatcode function
-pub enum CheatTarget {
-    All,
-    One(ContractAddress),
-    Multiple(Vec<ContractAddress>),
-}
-
 #[derive(Debug)]
 pub struct ExtendedStateReader {
     pub dict_state_reader: DictStateReader,
@@ -229,7 +221,8 @@ pub enum CheatStatus<T> {
 pub struct CheatnetState {
     pub rolled_contracts: HashMap<ContractAddress, CheatStatus<Felt252>>,
     pub global_roll: Option<Felt252>,
-    pub pranked_contracts: HashMap<ContractAddress, ContractAddress>,
+    pub pranked_contracts: HashMap<ContractAddress, CheatStatus<ContractAddress>>,
+    pub global_prank: Option<ContractAddress>,
     pub warped_contracts: HashMap<ContractAddress, CheatStatus<Felt252>>,
     pub global_warp: Option<Felt252>,
     pub mocked_functions: HashMap<ContractAddress, HashMap<EntryPointSelector, Vec<StarkFelt>>>,
@@ -252,7 +245,8 @@ impl CheatnetState {
 
     #[must_use]
     pub fn address_is_pranked(&self, contract_address: &ContractAddress) -> bool {
-        self.pranked_contracts.contains_key(contract_address)
+        self.global_prank.is_some()
+            || matches! {self.pranked_contracts.get(contract_address), Some(CheatStatus::Cheated(_))}
     }
 
     #[must_use]
@@ -266,15 +260,12 @@ impl CheatnetState {
 
     #[must_use]
     pub fn get_cheated_block_timestamp(&self, address: &ContractAddress) -> Option<Felt252> {
-        // Warps from the warped_contracts mapping take priority over self.global_warp
-        if let Some(warped_contract) = self.warped_contracts.get(address) {
-            match warped_contract {
-                CheatStatus::Cheated(contract_timestamp) => Some(contract_timestamp.clone()),
-                CheatStatus::Uncheated => None,
-            }
-        } else {
-            self.global_warp.clone()
-        }
+        get_cheat_for_contract(&self.global_warp, &self.warped_contracts, address)
+    }
+
+    #[must_use]
+    pub fn get_cheated_caller_address(&self, address: &ContractAddress) -> Option<ContractAddress> {
+        get_cheat_for_contract(&self.global_prank, &self.pranked_contracts, address)
     }
 
     #[must_use]
@@ -334,24 +325,22 @@ pub fn start_cheat<T: Clone, S: BuildHasher>(
     global_cheat: &mut Option<T>,
     contract_cheats: &mut HashMap<ContractAddress, CheatStatus<T>, S>,
     target: CheatTarget,
-    cheat_variable: T,
+    cheat_value: T,
 ) {
     match target {
         CheatTarget::All => {
-            *global_cheat = Some(cheat_variable);
+            *global_cheat = Some(cheat_value);
             // Clear individual cheats so that `All`
             // contracts are affected by this cheat
             contract_cheats.clear();
         }
         CheatTarget::One(contract_address) => {
-            (*contract_cheats).insert(contract_address, CheatStatus::Cheated(cheat_variable));
+            (*contract_cheats).insert(contract_address, CheatStatus::Cheated(cheat_value));
         }
         CheatTarget::Multiple(contract_addresses) => {
             for contract_address in contract_addresses {
-                (*contract_cheats).insert(
-                    contract_address,
-                    CheatStatus::Cheated(cheat_variable.clone()),
-                );
+                (*contract_cheats)
+                    .insert(contract_address, CheatStatus::Cheated(cheat_value.clone()));
             }
         }
     }

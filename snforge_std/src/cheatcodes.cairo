@@ -41,15 +41,17 @@ fn stop_roll(target: CheatTarget) {
     cheatcode::<'stop_roll'>(inputs.span());
 }
 
-fn start_prank(contract_address: ContractAddress, caller_address: ContractAddress) {
-    let contract_address_felt: felt252 = contract_address.into();
-    let caller_address_felt: felt252 = caller_address.into();
-    cheatcode::<'start_prank'>(array![contract_address_felt, caller_address_felt].span());
+fn start_prank(target: CheatTarget, caller_address: ContractAddress) {
+    let mut inputs = array![];
+    target.serialize(ref inputs);
+    inputs.append(caller_address.into());
+    cheatcode::<'start_prank'>(inputs.span());
 }
 
-fn stop_prank(contract_address: ContractAddress) {
-    let contract_address_felt: felt252 = contract_address.into();
-    cheatcode::<'stop_prank'>(array![contract_address_felt].span());
+fn stop_prank(target: CheatTarget) {
+    let mut inputs = array![];
+    target.serialize(ref inputs);
+    cheatcode::<'stop_prank'>(inputs.span());
 }
 
 fn start_warp(target: CheatTarget, block_number: u64) {
