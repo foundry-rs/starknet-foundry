@@ -17,6 +17,13 @@ mod contract_class;
 mod tx_info;
 mod fork;
 
+#[derive(Drop, Serde)]
+enum CheatTarget {
+    All: (),
+    One: ContractAddress,
+    Multiple: Array<ContractAddress>
+}
+
 fn test_address() -> ContractAddress {
     contract_address_const::<469394814521890341860918960550914>()
 }
@@ -43,15 +50,17 @@ fn stop_prank(contract_address: ContractAddress) {
     cheatcode::<'stop_prank'>(array![contract_address_felt].span());
 }
 
-fn start_warp(contract_address: ContractAddress, block_timestamp: u64) {
-    let contract_address_felt: felt252 = contract_address.into();
-    let block_timestamp_felt: felt252 = block_timestamp.into();
-    cheatcode::<'start_warp'>(array![contract_address_felt, block_timestamp_felt].span());
+fn start_warp(target: CheatTarget, block_number: u64) {
+    let mut inputs = array![];
+    target.serialize(ref inputs);
+    inputs.append(block_number.into());
+    cheatcode::<'start_warp'>(inputs.span());
 }
 
-fn stop_warp(contract_address: ContractAddress) {
-    let contract_address_felt: felt252 = contract_address.into();
-    cheatcode::<'stop_warp'>(array![contract_address_felt].span());
+fn stop_warp(target: CheatTarget) {
+    let mut inputs = array![];
+    target.serialize(ref inputs);
+    cheatcode::<'stop_warp'>(inputs.span());
 }
 
 fn start_elect(contract_address: ContractAddress, sequencer_address: ContractAddress) {

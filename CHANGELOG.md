@@ -7,11 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Forge
-
 #### Added
 
 - `elect` cheatcode for mocking the sequencer address
+
+## [0.10.2] - 2023-11-13
+
+### Forge
+
+#### Changed
+
+- Bump cairo to 2.3.1
 
 #### Removed
 
@@ -50,6 +56,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - account commands now always return valid json when `--json` flag is passed
 - allow passing multiple calldata argument items without quotes
 - display correct error message when account file is invalid
+
+#### Changed
+- `start_warp` and `stop_warp` now take `CheatTarget` as the first argument instead of `ContractAddress`. Read more [here](./docs/src/appendix/cheatcodes/start_warp.md). 
+
 
 ## [0.9.1] - 2023-10-30
 
