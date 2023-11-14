@@ -1,6 +1,6 @@
-use std::path::Path;
 use crate::helpers::runner::runner;
 use indoc::indoc;
+use std::path::Path;
 use test_case::test_case;
 
 #[test_case(Some(Path::new("tests/data/show_config")), None ; "Scarb.toml in current_dir")]
@@ -9,13 +9,9 @@ fn test_show_config_from_scarb_toml(current_dir: Option<&Path>, path_to_scarb_to
     let mut args = vec![];
     if let Some(scarb_path) = path_to_scarb_toml {
         args.append(&mut vec!["--path-to-scarb-toml", scarb_path]);
-    } 
-    args.append(&mut vec![
-        "--profile",
-        "profile1",
-        "show-config",
-    ]);
-    
+    }
+    args.append(&mut vec!["--profile", "profile1", "show-config"]);
+
     let snapbox = runner(&args, current_dir);
     let mut expected_output = String::from(indoc! {r#"
         command: show-config
@@ -56,19 +52,15 @@ async fn test_show_config_from_cli() {
 
 #[test_case(Some(Path::new("tests/data/show_config")), None ; "Scarb.toml in current_dir")]
 #[test_case(None, Some("tests/data/show_config/Scarb.toml") ; "Scarb.toml passed as argument")]
-fn test_show_config_from_cli_and_scarb(current_dir: Option<&Path>, path_to_scarb_toml: Option<&str>) {
-    let mut args = vec![
-        "--account",
-        "user2",
-    ];
+fn test_show_config_from_cli_and_scarb(
+    current_dir: Option<&Path>,
+    path_to_scarb_toml: Option<&str>,
+) {
+    let mut args = vec!["--account", "user2"];
     if let Some(scarb_path) = path_to_scarb_toml {
         args.append(&mut vec!["--path-to-scarb-toml", scarb_path]);
     }
-    args.append(&mut vec![
-        "--profile",
-        "profile1",
-        "show-config",
-    ]);
+    args.append(&mut vec!["--profile", "profile1", "show-config"]);
     let snapbox = runner(&args, current_dir);
 
     let mut expected_output = String::from(indoc! {r#"
@@ -92,12 +84,8 @@ fn test_show_config_when_no_keystore(current_dir: Option<&Path>, path_to_scarb_t
     if let Some(scarb_path) = path_to_scarb_toml {
         args.append(&mut vec!["--path-to-scarb-toml", scarb_path]);
     }
-    args.append(&mut vec![
-        "--profile",
-        "profile1",
-        "show-config",
-    ]);
-    
+    args.append(&mut vec!["--profile", "profile1", "show-config"]);
+
     let snapbox = runner(&args, current_dir);
     let mut expected_output = String::from(indoc! {r#"
         command: show-config
@@ -120,9 +108,7 @@ fn test_show_config_when_keystore(current_dir: Option<&Path>, path_to_scarb_toml
     if let Some(scarb_path) = path_to_scarb_toml {
         args.append(&mut vec!["--path-to-scarb-toml", scarb_path]);
     }
-    args.append(&mut vec![
-        "show-config",
-    ]);
+    args.append(&mut vec!["show-config"]);
 
     let snapbox = runner(&args, current_dir);
 
