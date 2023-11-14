@@ -111,9 +111,10 @@ async fn main() -> Result<()> {
         ValueFormat::Default
     };
 
-    let metadata = get_scarb_metadata(cli.path_to_scarb_toml.as_ref())?;
+    let metadata = get_scarb_metadata(cli.path_to_scarb_toml.as_ref());
+    let metadata = metadata.as_ref().ok();
 
-    let mut config = parse_scarb_config(&cli.profile, &metadata)?;
+    let mut config = parse_scarb_config(&cli.profile, metadata)?;
     update_cast_config(&mut config, &cli);
 
     let provider = get_provider(&config.rpc_url)?;
