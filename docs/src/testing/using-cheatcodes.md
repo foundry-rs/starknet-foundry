@@ -202,7 +202,7 @@ Failures:
 
 ### Pranking the constructor
 
-Most of the cheatcodes like `prank`, `mock_call`, `warp`, `roll` do work in the constructor of the contracts.
+Most of the cheatcodes like `prank`, `mock_call`, `warp`, `roll`, `elect` do work in the constructor of the contracts.
 
 Let's say, that you have a contract that saves the caller address (deployer) in the constructor, and you want it to be pre-set to a certain value.
 
@@ -266,5 +266,26 @@ fn mock_constructor_with_warp() {
 
     // asserting if block timestamp is 1000 set by start_warp()
     assert(block_timestamp == 1000, 'Wrong block timestamp');
+}
+```
+
+### Mocking the constructor with `elect`
+
+```rust
+#[test]
+fn mock_constructor_with_elect() {
+    let contract = declare('HelloStarknet');
+    let constructor_arguments = @ArrayTrait::new();
+    let contract_address = contract.precalculate_address(constructor_arguments);
+
+    // set the sequencer address to 123 for the precalculated address
+    start_elect(contract_address, 123.try_into().unwrap());
+
+    let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+    let dispatcher = IHelloStarknetDispatcher { contract_address };
+    let sequencer_address = dispatcher.get_seq_addr_at_construction();
+
+    // asserting if sequencer address is 123 set by start_elect()
+    assert(sequencer_address == 123.try_into().unwrap(), 'Wrong sequencer address');
 }
 ```

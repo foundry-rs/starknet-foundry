@@ -59,7 +59,7 @@ It is useful, when you want to:
 
 Example usages:
 #### 1. Mocking the context info
-Example for `roll`, same can be implemented for `prank`/`spoof`/`warp` etc.
+Example for `roll`, same can be implemented for `prank`/`spoof`/`warp`/`elect` etc.
 
 ```rust
 use result::ResultTrait;
