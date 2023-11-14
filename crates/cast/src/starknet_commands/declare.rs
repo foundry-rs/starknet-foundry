@@ -1,9 +1,8 @@
 use anyhow::{anyhow, Context, Result};
-use camino::Utf8PathBuf;
-use cast::helpers::{response_structs::DeclareResponse, scarb_utils::get_scarb_manifest};
+use cast::helpers::response_structs::DeclareResponse;
 use cast::{handle_rpc_error, handle_wait_for_tx};
 use clap::Args;
-use scarb_artifacts::get_contracts_map;
+use scarb_metadata::PackageMetadata;
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::ConnectedAccount;
 use starknet::core::types::FieldElement;
@@ -13,6 +12,7 @@ use starknet::{
     providers::jsonrpc::{HttpTransport, JsonRpcClient},
     signers::LocalWallet,
 };
+use std::collections::HashMap;
 use std::process::{Command, Stdio};
 use std::sync::Arc;
 
@@ -33,23 +33,23 @@ pub async fn declare(
     contract_name: &str,
     max_fee: Option<FieldElement>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
-    path_to_scarb_toml: &Option<Utf8PathBuf>,
+    contracts: &HashMap<String, scarb_artifacts::StarknetContractArtifacts>,
+    package: &PackageMetadata,
     wait: bool,
 ) -> Result<DeclareResponse> {
     let contract_name: String = contract_name.to_string();
-    let manifest_path = match path_to_scarb_toml.clone() {
-        Some(path) => path,
-        None => get_scarb_manifest().context("Failed to obtain manifest path from scarb")?,
-    };
 
     let command_result = Command::new("scarb")
         .arg("--manifest-path")
-        .arg(&manifest_path)
+        .arg(&package.manifest_path)
+        .arg("-p")
+        .arg(&package.name)
         .arg("build")
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .output()
         .context("Failed to start building contracts with Scarb")?;
+
     let result_code = command_result
         .status
         .code()
@@ -62,22 +62,6 @@ pub async fn declare(
             result_msg
         );
     }
-
-    let metadata = scarb_metadata::MetadataCommand::new()
-        .manifest_path(&manifest_path)
-        .inherit_stderr()
-        .exec()
-        .context("Failed to obtain scarb metadata")?;
-
-    let package = metadata
-        .packages
-        .iter()
-        .find(|package| package.manifest_path == manifest_path)
-        .ok_or(anyhow!(
-            "Failed to find package for contract {}",
-            contract_name
-        ))?;
-    let contracts = get_contracts_map(&metadata, &package.id)?;
 
     let contract_artifacts = contracts
         .get(&contract_name)

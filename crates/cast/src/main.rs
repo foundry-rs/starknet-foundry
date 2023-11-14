@@ -3,7 +3,7 @@ use crate::starknet_commands::show_config::ShowConfig;
 use crate::starknet_commands::{
     account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
 };
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, bail, Result};
 
 use camino::Utf8PathBuf;
 use cast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
@@ -14,7 +14,8 @@ use cast::{
 };
 use clap::{Parser, Subcommand};
 
-use scarb_ui::args::PackagesFilter;
+use scarb_artifacts::get_contracts_map;
+use scarb_ui::args::PackagesFilterLong;
 
 mod starknet_commands;
 
@@ -25,7 +26,7 @@ mod starknet_commands;
 #[allow(clippy::struct_excessive_bools)]
 struct Cli {
     /// Profile name in Scarb.toml config file
-    #[clap(long)]
+    #[clap(short = 'p', long)]
     profile: Option<String>,
 
     /// Path to Scarb.toml that is to be used; overrides default behaviour of searching for Scarb.toml in current or parent directories
@@ -33,7 +34,7 @@ struct Cli {
     path_to_scarb_toml: Option<Utf8PathBuf>,
 
     #[command(flatten)]
-    packages_filter: PackagesFilter,
+    packages_filter: PackagesFilterLong,
 
     /// RPC provider url address; overrides url from Scarb.toml
     #[clap(short = 'u', long = "url")]
@@ -66,7 +67,7 @@ struct Cli {
     json: bool,
 
     /// If passed, command will wait until transaction is accepted or rejected
-    #[clap(long)]
+    #[clap(short = 'w', long)]
     wait: bool,
 
     #[command(subcommand)]
@@ -121,6 +122,16 @@ async fn main() -> Result<()> {
 
     match cli.command {
         Commands::Declare(declare) => {
+            let Some(metadata) = metadata else {
+                bail!("Failed to fetch Scarb metadata") // TODO: Consider propagating error from line 115
+            };
+
+            let package = cli
+                .packages_filter
+                .into_packages_filter()
+                .match_one(metadata)?;
+            let contracts = get_contracts_map(metadata, &package.id)?;
+
             let account = get_account(
                 &config.account,
                 &config.accounts_file,
@@ -132,7 +143,8 @@ async fn main() -> Result<()> {
                 &declare.contract,
                 declare.max_fee,
                 &account,
-                &cli.path_to_scarb_toml,
+                &contracts,
+                &package,
                 cli.wait,
             )
             .await;
