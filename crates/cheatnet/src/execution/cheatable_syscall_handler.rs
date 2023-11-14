@@ -178,8 +178,7 @@ impl CheatableSyscallHandler<'_> {
     ) -> HintExecutionResult {
         let syscall = get_syscall_operand(hint)?;
         // We peek into the selector without incrementing the pointer as it is done later
-        let selector =
-            SyscallSelector::try_from(get_syscall_selector(syscall, vm, &self.syscall_handler)?)?;
+        let selector = SyscallSelector::try_from(get_syscall_selector(syscall, vm, &self.child)?)?;
 
         match selector {
             SyscallSelector::GetExecutionInfo => self.execute_syscall(
