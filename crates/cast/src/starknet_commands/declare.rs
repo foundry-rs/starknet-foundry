@@ -15,6 +15,7 @@ use starknet::{
 };
 use std::process::{Command, Stdio};
 use std::sync::Arc;
+use cast::helpers::scarb_utils::get_package_metadata;
 
 #[derive(Args)]
 #[command(about = "Declare a contract to starknet", long_about = None)]
@@ -69,11 +70,7 @@ pub async fn declare(
         .exec()
         .context("Failed to obtain scarb metadata")?;
 
-    let package = metadata
-        .packages
-        .iter()
-        .find(|package| package.manifest_path == manifest_path)
-        .ok_or(anyhow!(
+    let package = get_package_metadata(&metadata, &manifest_path).with_context(|| anyhow!(
             "Failed to find package for contract {}",
             contract_name
         ))?;

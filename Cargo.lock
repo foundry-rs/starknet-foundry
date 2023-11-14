@@ -1071,6 +1071,7 @@ dependencies = [
  "serde",
  "serde_json",
  "shellexpand",
+ "smol_str",
  "snapbox",
  "starknet",
  "tempfile",
