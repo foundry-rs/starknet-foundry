@@ -74,3 +74,27 @@ async fn test_run_script_from_different_directory() {
         status: success
     "#});
 }
+
+
+#[tokio::test]
+async fn test_verify_imports_within_same_package() {
+    let script_path = "src/verify_import.cairo";
+    let args = vec![
+        "--accounts-file",
+        "../../accounts/accounts.json",
+        "--account",
+        "user1",
+        "--url",
+        URL,
+        "script",
+        &script_path,
+    ];
+
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(SCRIPTS_DIR.to_owned() + "/hello_world")
+        .args(args);
+    snapbox.assert().success().stdout_eq(indoc! {r#"
+        command: script
+        status: success
+    "#});
+}
