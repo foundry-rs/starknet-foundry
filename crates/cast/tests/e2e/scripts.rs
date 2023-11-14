@@ -75,7 +75,6 @@ async fn test_run_script_from_different_directory() {
     "#});
 }
 
-
 #[tokio::test]
 async fn test_verify_imports_within_same_package() {
     let script_path = "src/verify_import.cairo";
