@@ -27,6 +27,14 @@ use starknet_api::{
 };
 use std::collections::HashMap;
 
+// Specifies which contracts to target
+// with a cheatcode function
+pub enum CheatTarget {
+    All,
+    One(ContractAddress),
+    Multiple(Vec<ContractAddress>),
+}
+
 #[derive(Debug)]
 pub struct ExtendedStateReader {
     pub dict_state_reader: DictStateReader,
@@ -202,12 +210,18 @@ impl StateReader for DictStateReader {
     }
 }
 
+pub enum CheatStatus<T> {
+    Cheated(T),
+    Uncheated,
+}
+
 #[allow(clippy::module_name_repetitions)]
 #[derive(Default)]
 pub struct CheatnetState {
     pub rolled_contracts: HashMap<ContractAddress, Felt252>,
     pub pranked_contracts: HashMap<ContractAddress, ContractAddress>,
-    pub warped_contracts: HashMap<ContractAddress, Felt252>,
+    pub warped_contracts: HashMap<ContractAddress, CheatStatus<Felt252>>,
+    pub global_warp: Option<Felt252>,
     pub elected_contracts: HashMap<ContractAddress, ContractAddress>,
     pub mocked_functions: HashMap<ContractAddress, HashMap<EntryPointSelector, Vec<StarkFelt>>>,
     pub spoofed_contracts: HashMap<ContractAddress, TxInfoMock>,
@@ -234,7 +248,24 @@ impl CheatnetState {
 
     #[must_use]
     pub fn address_is_warped(&self, contract_address: &ContractAddress) -> bool {
-        self.warped_contracts.contains_key(contract_address)
+        self.global_warp.is_some()
+            || matches!(
+                self.warped_contracts.get(contract_address),
+                Some(CheatStatus::Cheated(_))
+            )
+    }
+
+    #[must_use]
+    pub fn get_cheated_block_timestamp(&self, address: &ContractAddress) -> Option<Felt252> {
+        // Warps from the warped_contracts mapping take priority over self.global_warp
+        if let Some(warped_contract) = self.warped_contracts.get(address) {
+            match warped_contract {
+                CheatStatus::Cheated(contract_timestamp) => Some(contract_timestamp.clone()),
+                CheatStatus::Uncheated => None,
+            }
+        } else {
+            self.global_warp.clone()
+        }
     }
 
     #[must_use]

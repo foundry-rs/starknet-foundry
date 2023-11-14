@@ -237,9 +237,7 @@ pub(crate) fn run_test_case(
     let (hints_dict, string_to_hint) = build_hints_dict(instructions.clone());
 
     let mut state_reader = ExtendedStateReader {
-        dict_state_reader: cheatnet_constants::build_testing_state(
-            &runner_params.predeployed_contracts,
-        ),
+        dict_state_reader: cheatnet_constants::build_testing_state(),
         fork_state_reader: get_fork_state_reader(&runner_config.workspace_root, &case.fork_config)?,
     };
     let block_info = state_reader.get_block_info()?;
@@ -258,10 +256,10 @@ pub(crate) fn run_test_case(
         block_info,
         ..Default::default()
     };
-    let mut cheatable_syscall_handler =
+    let cheatable_syscall_handler =
         CheatableSyscallHandler::wrap(syscall_handler, &mut cheatnet_state);
     let contract_execution_syscall_handler =
-        ContractExecutionSyscallHandler::wrap(&mut cheatable_syscall_handler);
+        ContractExecutionSyscallHandler::wrap(cheatable_syscall_handler);
 
     let mut test_execution_state = TestExecutionState {
         environment_variables: &runner_params.environment_variables,

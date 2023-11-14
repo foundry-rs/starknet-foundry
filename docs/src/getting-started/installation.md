@@ -10,22 +10,41 @@ and added to your `PATH` environment variable.
 You can find what version of Scarb is compatible with your version of Starknet Foundry
 in [release notes](https://github.com/foundry-rs/starknet-foundry/releases).
 
-### Install via installation script
+### Install via `snfoundryup`
 
-1. Open a terminal and run the following command:
+Snfoundryup is the Starknet Foundry toolchain installer.
+
+You can install it by running:
 
 ```shell
 curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/scripts/install.sh | sh
 ```
 
-2. To verify that the Starknet Foundry is installed correctly, run `snforge --version` and `sncast --version`.
-   In some cases, you may need to close and reopen the terminal.
-
-You can also specify a version you wish to install:
+Follow the instructions and then run:
 
 ```shell
-curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/scripts/install.sh | sh -s -- -v 0.3.0
+snfoundryup
 ```
+
+See `snfoundryup --help` for more options.
+
+To verify that the Starknet Foundry is installed correctly, run `snforge --version` and `sncast --version`.
+
+### Installation via [asdf](https://asdf-vm.com/)
+
+First, add the Starknet Foundry plugin to asdf:
+
+```shell
+asdf plugin add starknet-foundry
+```
+
+Install the latest version:
+
+```shell
+asdf install starknet-foundry latest
+```
+
+See [asdf guide](https://asdf-vm.com/guide/getting-started.html) for more details.
 
 ## How to build Starknet Foundry from source code
 

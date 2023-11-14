@@ -1,15 +1,13 @@
 use std::collections::BTreeMap;
+use std::collections::HashMap;
 use std::sync::Arc;
-use std::{collections::HashMap, fs, path::PathBuf};
 
 use crate::state::{CheatnetBlockInfo, DictStateReader};
 use blockifier::block_context::{FeeTokenAddresses, GasPrices};
 use blockifier::execution::contract_class::{ContractClassV1, ContractClassV1Inner};
 use blockifier::transaction::objects::{CommonAccountFields, CurrentAccountTransactionContext};
 use blockifier::{
-    abi::constants,
-    block_context::BlockContext,
-    execution::contract_class::{ContractClass, ContractClassV0},
+    abi::constants, block_context::BlockContext, execution::contract_class::ContractClass,
     transaction::objects::AccountTransactionContext,
 };
 use cairo_vm::types::program::Program;
@@ -18,7 +16,6 @@ use cairo_vm::vm::runners::builtin_runner::{
     OUTPUT_BUILTIN_NAME, POSEIDON_BUILTIN_NAME, RANGE_CHECK_BUILTIN_NAME,
     SEGMENT_ARENA_BUILTIN_NAME, SIGNATURE_BUILTIN_NAME,
 };
-use camino::Utf8PathBuf;
 use starknet_api::data_availability::DataAvailabilityMode;
 use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::transaction::{Resource, ResourceBounds, ResourceBoundsMapping};
@@ -171,22 +168,6 @@ pub fn build_invoke_transaction(
     }
 }
 
-fn read_predeployed_contract_file(
-    predeployed_contracts: &Utf8PathBuf,
-    contract_path: &str,
-) -> String {
-    let full_contract_path: PathBuf = predeployed_contracts.join(contract_path).into();
-    fs::read_to_string(full_contract_path).expect("Failed to read predeployed contracts")
-}
-
-fn load_v0_contract_class(
-    predeployed_contracts: &Utf8PathBuf,
-    contract_path: &str,
-) -> ContractClassV0 {
-    let raw_contract_class = read_predeployed_contract_file(predeployed_contracts, contract_path);
-    ContractClassV0::try_from_json_string(&raw_contract_class).unwrap()
-}
-
 fn contract_class_no_entrypoints() -> ContractClass {
     let inner = ContractClassV1Inner {
         program: Program::default(),
@@ -205,12 +186,7 @@ fn contract_class_no_entrypoints() -> ContractClass {
 // Deployed contracts are cairo 0 contracts
 // Account does not include validations
 #[must_use]
-pub fn build_testing_state(predeployed_contracts: &Utf8PathBuf) -> DictStateReader {
-    let erc20_class = load_v0_contract_class(
-        predeployed_contracts,
-        "erc20_contract_without_some_syscalls_compiled.json",
-    );
-
+pub fn build_testing_state() -> DictStateReader {
     let test_erc20_class_hash = ClassHash(stark_felt!(TEST_ERC20_CONTRACT_CLASS_HASH));
     let test_contract_class_hash = ClassHash(stark_felt!(TEST_CONTRACT_CLASS_HASH));
 
@@ -218,7 +194,6 @@ pub fn build_testing_state(predeployed_contracts: &Utf8PathBuf) -> DictStateRead
         // This is dummy put here only to satisfy blockifier
         // this class is not used and the test contract cannot be called
         (test_contract_class_hash, contract_class_no_entrypoints()),
-        (test_erc20_class_hash, ContractClass::V0(erc20_class)),
     ]);
 
     let test_erc20_address = ContractAddress(patricia_key!(TEST_ERC20_CONTRACT_ADDRESS));
