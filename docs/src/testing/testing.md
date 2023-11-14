@@ -33,7 +33,7 @@ $ snforge test
 Collected 1 test(s) from package_name package
 Running 1 test(s) from src/
 [PASS] package_name::tests::test_sum
-Tests: 1 passed, 0 failed, 0 skipped
+Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
 
 ## Failing tests
@@ -66,7 +66,7 @@ Running 1 test(s) from src/
 Failure data:
     [6381921], converted to a string: [aaa]
 
-Tests: 0 passed, 1 failed, 0 skipped
+Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
 
 Failures:
     package_name::tests::failing
@@ -95,7 +95,7 @@ Collected 1 test(s) from package_name package
 Running 0 test(s) from src/
 Running 1 test(s) from tests/
 [PASS] tests::should_panic_check_data
-Tests: 1 passed, 0 failed, 0 skipped
+Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
 
 ## Ignoring Some Tests Unless Specifically Requested
@@ -117,7 +117,7 @@ Collected 1 test(s) from package_name package
 Running 0 test(s) from src/
 Running 1 test(s) from tests/
 [IGNORE] tests::ignored_test
-Tests: 1 passed, 0 failed, 0 skipped
+Tests: 0 passed, 0 failed, 0 skipped, 1 ignored, 0 filtered out
 ```
 
 To run only tests marked with the  `#[ignore]` attribute use `snforge test --ignored`. 

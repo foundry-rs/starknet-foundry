@@ -78,8 +78,7 @@ fn build_hints_dict<'b>(
     (hints_dict, string_to_hint)
 }
 
-pub(crate) fn blocking_run_from_test(
-    args: Vec<Felt252>,
+pub(crate) fn run_test(
     case: Arc<TestCaseRunnable>,
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
@@ -95,6 +94,45 @@ pub(crate) fn blocking_run_from_test(
             return Ok(TestCaseSummary::Skipped {});
         }
         let run_result = run_test_case(
+            vec![],
+            &case,
+            &runner,
+            &runner_config,
+            &runner_params,
+            &send_shut_down,
+        );
+
+        // TODO: code below is added to fix snforge tests
+        // remove it after improve exit-first tests
+        // issue #1043
+        if send.is_closed() {
+            return Ok(TestCaseSummary::Skipped {});
+        }
+
+        extract_test_case_summary(run_result, &case, vec![])
+    })
+}
+
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn run_fuzz_test(
+    args: Vec<Felt252>,
+    case: Arc<TestCaseRunnable>,
+    runner: Arc<SierraCasmRunner>,
+    runner_config: Arc<RunnerConfig>,
+    runner_params: Arc<RunnerParams>,
+    send: Sender<()>,
+    fuzzing_send: Sender<()>,
+    send_shut_down: Sender<()>,
+) -> JoinHandle<Result<TestCaseSummary>> {
+    tokio::task::spawn_blocking(move || {
+        // Due to the inability of spawn_blocking to be abruptly cancelled,
+        // a channel is used to receive information indicating
+        // that the execution of the task is no longer necessary.
+        if send.is_closed() | fuzzing_send.is_closed() {
+            return Ok(TestCaseSummary::Skipped {});
+        }
+
+        let run_result = run_test_case(
             args.clone(),
             &case,
             &runner,
@@ -102,6 +140,13 @@ pub(crate) fn blocking_run_from_test(
             &runner_params,
             &send_shut_down,
         );
+
+        // TODO: code below is added to fix snforge tests
+        // remove it after improve exit-first tests
+        // issue #1043
+        if send.is_closed() {
+            return Ok(TestCaseSummary::Skipped {});
+        }
 
         extract_test_case_summary(run_result, &case, args)
     })
@@ -192,9 +237,7 @@ pub(crate) fn run_test_case(
     let (hints_dict, string_to_hint) = build_hints_dict(instructions.clone());
 
     let mut state_reader = ExtendedStateReader {
-        dict_state_reader: cheatnet_constants::build_testing_state(
-            &runner_params.predeployed_contracts,
-        ),
+        dict_state_reader: cheatnet_constants::build_testing_state(),
         fork_state_reader: get_fork_state_reader(&runner_config.workspace_root, &case.fork_config)?,
     };
     let block_info = state_reader.get_block_info()?;
@@ -213,10 +256,10 @@ pub(crate) fn run_test_case(
         block_info,
         ..Default::default()
     };
-    let mut cheatable_syscall_handler =
+    let cheatable_syscall_handler =
         CheatableSyscallHandler::wrap(syscall_handler, &mut cheatnet_state);
     let contract_execution_syscall_handler =
-        ContractExecutionSyscallHandler::wrap(&mut cheatable_syscall_handler);
+        ContractExecutionSyscallHandler::wrap(cheatable_syscall_handler);
 
     let mut test_execution_state = TestExecutionState {
         environment_variables: &runner_params.environment_variables,

@@ -3,17 +3,16 @@ use std::fmt::Debug;
 
 use anyhow::{anyhow, Context, Result};
 use ark_std::iterable::Iterable;
-use cairo_felt::Felt252;
+
 use camino::{Utf8Path, Utf8PathBuf};
 
 use futures::StreamExt;
-use running::blocking_run_from_test;
+use running::{run_fuzz_test, run_test};
 use tokio::sync::mpsc::{channel, Sender};
 
 use std::sync::Arc;
 use test_case_summary::TestCaseSummary;
-use tokio::task::{self, JoinHandle};
-use tokio_util::sync::CancellationToken;
+use tokio::task::JoinHandle;
 
 use cairo_lang_runner::SierraCasmRunner;
 use cairo_lang_sierra::ids::ConcreteTypeId;
@@ -31,12 +30,12 @@ use scarb_artifacts::StarknetContractArtifacts;
 use crate::fuzzer::RandomFuzzer;
 use crate::scarb::config::ForkTarget;
 
-pub use crate::collecting::{collect_test_compilation_targets, TestCompilationTarget};
+// pub use crate::collecting::CrateLocation;
 pub use crate::test_crate_summary::TestCrateSummary;
 
 use crate::collecting::{
-    compile_tests, CompiledTestCrate, CompiledTestCrateRaw, CompiledTestCrateRunnable,
-    TestCaseRunnable, ValidatedForkConfig,
+    collect_test_compilation_targets, compile_tests, CompiledTestCrate, CompiledTestCrateRaw,
+    CompiledTestCrateRunnable, TestCaseRunnable, ValidatedForkConfig,
 };
 use crate::test_filter::TestsFilter;
 use test_collector::{FuzzerConfig, LinkedLibrary, RawForkConfig, RawForkParams, TestCase};
@@ -105,26 +104,6 @@ impl RunnerConfig {
     }
 }
 
-pub struct CancellationTokens {
-    exit_first: CancellationToken,
-    error: CancellationToken,
-}
-
-impl CancellationTokens {
-    #[must_use]
-    pub fn new() -> Self {
-        let exit_first = CancellationToken::new();
-        let error = CancellationToken::new();
-        Self { exit_first, error }
-    }
-}
-
-impl Default for CancellationTokens {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 /// Exit status of the runner
 #[derive(Debug, PartialEq, Clone)]
 pub enum RunnerStatus {
@@ -139,7 +118,6 @@ pub enum RunnerStatus {
 pub struct RunnerParams {
     corelib_path: Utf8PathBuf,
     contracts: HashMap<String, StarknetContractArtifacts>,
-    predeployed_contracts: Utf8PathBuf,
     environment_variables: HashMap<String, String>,
     linked_libraries: Vec<LinkedLibrary>,
 }
@@ -149,14 +127,12 @@ impl RunnerParams {
     pub fn new(
         corelib_path: Utf8PathBuf,
         contracts: HashMap<String, StarknetContractArtifacts>,
-        predeployed_contracts: Utf8PathBuf,
         environment_variables: HashMap<String, String>,
         linked_libraries: Vec<LinkedLibrary>,
     ) -> Self {
         Self {
             corelib_path,
             contracts,
-            predeployed_contracts,
             environment_variables,
             linked_libraries,
         }
@@ -251,15 +227,19 @@ pub async fn run(
     tests_filter: &TestsFilter,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
-    cancellation_tokens: Arc<CancellationTokens>,
 ) -> Result<Vec<TestCrateSummary>> {
     let compilation_targets =
         collect_test_compilation_targets(package_path, package_name, package_source_dir_path)?;
     let test_crates = compile_tests(&compilation_targets, &runner_params)?;
+    let all_tests: usize = test_crates.iter().map(|tc| tc.test_cases.len()).sum();
+
     let test_crates = test_crates
         .into_iter()
         .map(|tc| tests_filter.filter_tests(tc))
         .collect_vec();
+    let not_filtered: usize = test_crates.iter().map(|tc| tc.test_cases.len()).sum();
+    let filtered = all_tests - not_filtered;
+
     let test_crates = test_crates
         .into_iter()
         .map(|ctc| to_runnable(ctc, &runner_config))
@@ -276,7 +256,6 @@ pub async fn run(
         let compiled_test_crate = Arc::new(compiled_test_crate);
         let runner_config = runner_config.clone();
         let runner_params = runner_params.clone();
-        let cancellation_tokens = cancellation_tokens.clone();
 
         pretty_printing::print_running_tests(
             compiled_test_crate.tests_location,
@@ -287,15 +266,25 @@ pub async fn run(
             compiled_test_crate,
             runner_config,
             runner_params,
-            cancellation_tokens,
             tests_filter,
         )
         .await?;
 
-        summaries.push(summary);
+        match summary {
+            TestCrateRunResult::Ok(summary) => {
+                summaries.push(summary);
+            }
+            TestCrateRunResult::Interrupted(summary) => {
+                summaries.push(summary);
+                // Handle scenario for --exit-first flag.
+                // Because snforge runs test crates one by one synchronously.
+                // In case of test FAIL with --exit-first flag stops processing the next crates
+                break;
+            }
+        }
     }
 
-    pretty_printing::print_test_summary(&summaries);
+    pretty_printing::print_test_summary(&summaries, filtered);
 
     if summaries
         .iter()
@@ -306,6 +295,10 @@ pub async fn run(
 
     Ok(summaries)
 }
+enum TestCrateRunResult {
+    Ok(TestCrateSummary),
+    Interrupted(TestCrateSummary),
+}
 
 pub trait TestCaseFilter {
     fn should_be_run(&self, test_case: &TestCase<ValidatedForkConfig>) -> bool;
@@ -315,9 +308,8 @@ async fn run_tests_from_crate(
     tests: Arc<CompiledTestCrateRunnable>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
-    cancellation_tokens: Arc<CancellationTokens>,
     tests_filter: &impl TestCaseFilter,
-) -> Result<TestCrateSummary> {
+) -> Result<TestCrateRunResult> {
     let runner = Arc::new(
         SierraCasmRunner::new(
             tests.sierra_program.clone(),
@@ -363,34 +355,46 @@ async fn run_tests_from_crate(
             runner,
             runner_config.clone(),
             runner_params.clone(),
-            cancellation_tokens.clone(),
             &send,
             &send_shut_down,
         ));
     }
 
     let mut results = vec![];
+    let mut interrupted = false;
 
     while let Some(task) = tasks.next().await {
         let result = task??;
 
         pretty_printing::print_test_result(&result);
+
+        if let TestCaseSummary::Failed { .. } = result {
+            if runner_config.exit_first {
+                interrupted = true;
+                rec.close();
+            }
+        }
+
         results.push(result);
     }
-
-    rec.close();
 
     // Waiting for things to finish shutting down
     drop(send_shut_down);
     let _ = rec_shut_down.recv().await;
 
     let contained_fuzzed_tests = results.iter().any(|summary| summary.runs().is_some());
-    Ok(TestCrateSummary {
+    let summary = TestCrateSummary {
         test_case_summaries: results,
         runner_exit_status: RunnerStatus::Default,
         test_crate_type: tests.tests_location,
         contained_fuzzed_tests,
-    })
+    };
+
+    if interrupted {
+        Ok(TestCrateRunResult::Interrupted(summary))
+    } else {
+        Ok(TestCrateRunResult::Ok(summary))
+    }
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -400,17 +404,15 @@ fn choose_test_strategy_and_run(
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
-    cancellation_tokens: Arc<CancellationTokens>,
     send: &Sender<()>,
     send_shut_down: &Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     if args.is_empty() {
-        run_single_test(
+        run_test(
             case,
             runner,
             runner_config,
             runner_params,
-            cancellation_tokens,
             send.clone(),
             send_shut_down.clone(),
         )
@@ -421,53 +423,10 @@ fn choose_test_strategy_and_run(
             runner,
             runner_config,
             runner_params,
-            cancellation_tokens,
+            send.clone(),
             send_shut_down.clone(),
         )
     }
-}
-
-fn run_single_test(
-    case: Arc<TestCaseRunnable>,
-    runner: Arc<SierraCasmRunner>,
-    runner_config: Arc<RunnerConfig>,
-    runner_params: Arc<RunnerParams>,
-    cancellation_tokens: Arc<CancellationTokens>,
-    send: Sender<()>,
-    send_shut_down: Sender<()>,
-) -> JoinHandle<Result<TestCaseSummary>> {
-    let exit_first = runner_config.exit_first;
-    tokio::task::spawn(async move {
-        tokio::select! {
-            () = cancellation_tokens.exit_first.cancelled() => {
-                // Stop executing all tests because flag --exit-first'
-                // has been set and one test FAIL
-                Ok(TestCaseSummary::Skipped {})
-            },
-            () = cancellation_tokens.error.cancelled() => {
-                // Stop executing all tests because
-                // one of a test returns Err
-                Ok(TestCaseSummary::Skipped {})
-            },
-
-            result = blocking_run_from_test(vec![], case.clone(),runner,  runner_config.clone(), runner_params.clone(), send.clone(), send_shut_down.clone() ) => {
-                match result? {
-                    Ok(result) => {
-                        if exit_first {
-                            if let TestCaseSummary::Failed { .. } = &result {
-                                cancellation_tokens.exit_first.cancel();
-                            }
-                        }
-                        Ok(result)
-                    }
-                    Err(e) => {
-                        cancellation_tokens.error.cancel();
-                        Err(e)
-                    }
-                }
-            }
-        }
-    })
 }
 
 fn run_with_fuzzing(
@@ -476,12 +435,15 @@ fn run_with_fuzzing(
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
-    cancellation_tokens: Arc<CancellationTokens>,
+    send: Sender<()>,
     send_shut_down: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     tokio::task::spawn(async move {
-        let cancellation_fuzzing_token = CancellationToken::new();
-        let (send, mut rec) = channel(1);
+        if send.is_closed() {
+            return Ok(TestCaseSummary::Skipped {});
+        }
+
+        let (fuzzing_send, mut fuzzing_rec) = channel(1);
         let args = args
             .iter()
             .map(|arg| {
@@ -506,35 +468,34 @@ fn run_with_fuzzing(
         for _ in 1..=fuzzer_runs {
             let args = fuzzer.next_args();
 
-            tasks.push(run_fuzzing_subtest(
+            tasks.push(run_fuzz_test(
                 args,
                 case.clone(),
                 runner.clone(),
                 runner_config.clone(),
                 runner_params.clone(),
-                cancellation_tokens.clone(),
-                cancellation_fuzzing_token.clone(),
                 send.clone(),
+                fuzzing_send.clone(),
                 send_shut_down.clone(),
             ));
         }
 
         let mut results = vec![];
-        let mut final_result = None;
 
         while let Some(task) = tasks.next().await {
             let result = task??;
 
             results.push(result.clone());
-            final_result = Some(result.clone());
 
             if let TestCaseSummary::Failed { .. } = result {
-                cancellation_fuzzing_token.cancel();
+                fuzzing_rec.close();
                 break;
             }
         }
 
-        rec.close();
+        let final_result = results
+            .last()
+            .expect("Test should always run at least once");
 
         let runs = u32::try_from(
             results
@@ -548,68 +509,16 @@ fn run_with_fuzzing(
                 .count(),
         )?;
 
-        match final_result {
-            Some(result) => Ok(result.with_runs(runs)),
-            None => panic!("Test should always run at least once"),
-        }
-    })
-}
+        if let TestCaseSummary::Passed { .. } = final_result {
+            // Because we execute tests parallel, it's possible to
+            // get Passed after Skipped. To treat fuzzing a test as Passed
+            // we have to ensure that all fuzzing subtests Passed
+            if runs != fuzzer_runs {
+                return Ok(TestCaseSummary::Skipped {});
+            };
+        };
 
-#[allow(clippy::too_many_arguments)]
-fn run_fuzzing_subtest(
-    args: Vec<Felt252>,
-    case: Arc<TestCaseRunnable>,
-    runner: Arc<SierraCasmRunner>,
-    runner_config: Arc<RunnerConfig>,
-    runner_params: Arc<RunnerParams>,
-    cancellation_tokens: Arc<CancellationTokens>,
-    cancellation_fuzzing_token: CancellationToken,
-    send: Sender<()>,
-    send_shut_down: Sender<()>,
-) -> JoinHandle<Result<TestCaseSummary>> {
-    task::spawn(async move {
-        tokio::select! {
-            () = cancellation_tokens.error.cancelled() => {
-                // Stop executing all tests because
-                // one of a test returns Err
-                Ok(TestCaseSummary::Skipped {  })
-            },
-            () = cancellation_tokens.exit_first.cancelled() => {
-                // Stop executing all tests because flag --exit-first'
-                // has been set and one test FAIL
-                Ok(TestCaseSummary::Skipped {  })
-            },
-            () = cancellation_fuzzing_token.cancelled() => {
-                // Stop executing all single fuzzing tests
-                // because one of fuzzing test has been FAIL
-                Ok(TestCaseSummary::Skipped {  })
-
-            },
-           result = blocking_run_from_test(
-                args.clone(),
-                case,
-                runner,
-                runner_config.clone(),
-                runner_params.clone(),
-                send.clone(),
-                send_shut_down.clone()
-            ) => {
-                match result? {
-                    Ok(result) => {
-                        if let TestCaseSummary::Failed { .. } = &result {
-                            if runner_config.exit_first {
-                                cancellation_tokens.exit_first.cancel();
-                            }
-                        }
-                        Ok(result)
-                    }
-                    Err(e) => {
-                        cancellation_tokens.error.cancel();
-                        Err(e)
-                    }
-                }
-            },
-        }
+        Ok(final_result.clone().with_runs(runs))
     })
 }
 

@@ -7,7 +7,6 @@ use crate::{assert_error, assert_success};
 use blockifier::state::cached_state::{CachedState, GlobalContractCache};
 use cairo_felt::Felt252;
 use cairo_vm::vm::errors::hint_errors::HintError;
-use camino::Utf8PathBuf;
 use cheatnet::cheatcodes::deploy::deploy;
 use cheatnet::cheatcodes::{CheatcodeError, EnhancedHintError};
 use cheatnet::constants::build_testing_state;
@@ -115,7 +114,6 @@ fn try_deploying_undeclared_class() {
 
 #[test]
 fn test_forking_at_block_number() {
-    let predeployed_contracts = Utf8PathBuf::from("predeployed-contracts");
     let node_url: Url = "http://188.34.188.184:9545/rpc/v0.4".parse().unwrap();
     let cache_dir = TempDir::new().unwrap();
 
@@ -123,7 +121,7 @@ fn test_forking_at_block_number() {
         let mut cheatnet_state = CheatnetState::default();
         let mut cached_state_before_delopy = CachedState::new(
             ExtendedStateReader {
-                dict_state_reader: build_testing_state(&predeployed_contracts),
+                dict_state_reader: build_testing_state(),
                 fork_state_reader: Some(ForkStateReader::new(
                     node_url.clone(),
                     BlockId::Number(309_780),
@@ -136,7 +134,7 @@ fn test_forking_at_block_number() {
 
         let cached_state_afer_deploy = &mut CachedState::new(
             ExtendedStateReader {
-                dict_state_reader: build_testing_state(&predeployed_contracts),
+                dict_state_reader: build_testing_state(),
                 fork_state_reader: Some(ForkStateReader::new(
                     node_url,
                     BlockId::Number(309_781),
@@ -752,11 +750,10 @@ fn test_cached_block_info_merging() {
 
 #[test]
 fn test_calling_nonexistent_url() {
-    let predeployed_contracts = Utf8PathBuf::from("predeployed-contracts");
     let nonexistent_url = "http://188.34.188.184:9546".parse().unwrap();
     let mut cached_fork_state = CachedState::new(
         ExtendedStateReader {
-            dict_state_reader: build_testing_state(&predeployed_contracts),
+            dict_state_reader: build_testing_state(),
             fork_state_reader: Some(ForkStateReader::new(
                 nonexistent_url,
                 BlockId::Tag(Latest),

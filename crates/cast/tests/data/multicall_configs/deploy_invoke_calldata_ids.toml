@@ -1,19 +1,19 @@
 [[call]]
 call_type = "deploy"
-class_hash = "0x7e8ce6bded24c040643448bf99555b3f0124b568e505200a6d7030ab4f6152a"
+class_hash = "0x3a8b191831033ba48ee176d5dde7088e71c853002b02a1cfa5a760aa98be046"
 inputs = []
 id = "map_contract"
 unique = false
 
 [[call]]
 call_type = "invoke"
-contract_address = "0x1e002ddcb9470513424e7310645205d592002aeb00ea8bc3b871c2b3135bf9c"
+contract_address = "0x1e52f6ebc3e594d2a6dc2a0d7d193cb50144cfdfb7fdd9519135c29b67e427"
 function = "put"
 inputs = ["0x123", "map_contract"]
 
 [[call]]
 call_type = "deploy"
-class_hash = "0x271bae5209b61491c5a7ad0092581de47ae2aa40aca5f12fcfddf22ff9c0cc9"
+class_hash = "0x6e10d493d7c807e0fbaad4f0c31792f24d64747fa328830a68cb5d2313f9a55"
 inputs = ["map_contract", "0x1", "0x1"]
 id = "constructor-params"
 unique = false
