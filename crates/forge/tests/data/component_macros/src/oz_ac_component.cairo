@@ -55,14 +55,12 @@ mod SRC5Component {
 }
 
 
-
 #[starknet::component]
 mod AccessControlComponent {
     use starknet::ContractAddress;
     use starknet::get_caller_address;
     use super::SRC5Component;
     use super::SRC5Component::InternalTrait as SRC5InternalTrait;
-
 
 
     #[starknet::interface]

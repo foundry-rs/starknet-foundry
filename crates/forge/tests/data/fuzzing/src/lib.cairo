@@ -2,7 +2,7 @@ fn adder(a: felt252, b: felt252) -> felt252 {
     a + b
 }
 
-fn always_five(a: felt252, b: felt252) -> felt252{
+fn always_five(a: felt252, b: felt252) -> felt252 {
     5
 }
 
@@ -36,7 +36,6 @@ mod tests {
     fn fuzzed_both_arguments(a: felt252, b: felt252) {
         let result = adder(a, b);
         assert(result == a + b, 'result == a + b');
-        
     }
 
     #[test]

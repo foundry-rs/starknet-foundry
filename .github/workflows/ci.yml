@@ -96,7 +96,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: software-mansion/setup-scarb@v1.3.2
-      - name: Check forge formatting
+      - name: Check cairo files format
         run: |
           find . -type f -name "Scarb.toml" -print0 | while IFS= read -r -d '' file; do
             dir="$(dirname "$file")"
