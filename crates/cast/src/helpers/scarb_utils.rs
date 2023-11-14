@@ -139,10 +139,12 @@ mod tests {
     fn test_parse_scarb_config_happy_case_with_profile() {
         let config = parse_scarb_config(
             &Some(String::from("myprofile")),
-            Some(&get_scarb_metadata(Some(&Utf8PathBuf::from(
-                "tests/data/contracts/constructor_with_params/Scarb.toml",
-            )))
-            .unwrap()),
+            Some(
+                &get_scarb_metadata(Some(&Utf8PathBuf::from(
+                    "tests/data/contracts/constructor_with_params/Scarb.toml",
+                )))
+                .unwrap(),
+            ),
         )
         .unwrap();
 
@@ -154,10 +156,12 @@ mod tests {
     fn test_parse_scarb_config_happy_case_without_profile() {
         let config = parse_scarb_config(
             &None,
-            Some(&get_scarb_metadata(Some(&Utf8PathBuf::from(
-                "tests/data/contracts/map/Scarb.toml",
-            )))
-            .unwrap()),
+            Some(
+                &get_scarb_metadata(Some(&Utf8PathBuf::from(
+                    "tests/data/contracts/map/Scarb.toml",
+                )))
+                .unwrap(),
+            ),
         )
         .unwrap();
         assert_eq!(config.account, String::from("user2"));
@@ -168,10 +172,12 @@ mod tests {
     fn test_parse_scarb_config_not_in_file() {
         let config = parse_scarb_config(
             &None,
-            Some(&get_scarb_metadata(Some(&Utf8PathBuf::from(
-                "tests/data/files/noconfig_Scarb.toml",
-            )))
-            .unwrap()),
+            Some(
+                &get_scarb_metadata(Some(&Utf8PathBuf::from(
+                    "tests/data/files/noconfig_Scarb.toml",
+                )))
+                .unwrap(),
+            ),
         )
         .unwrap();
 
@@ -183,10 +189,12 @@ mod tests {
     fn test_parse_scarb_config_no_profile_found() {
         let config = parse_scarb_config(
             &Some(String::from("mariusz")),
-            Some(&get_scarb_metadata(Some(&Utf8PathBuf::from(
-                "tests/data/contracts/map/Scarb.toml",
-            )))
-            .unwrap()),
+            Some(
+                &get_scarb_metadata(Some(&Utf8PathBuf::from(
+                    "tests/data/contracts/map/Scarb.toml",
+                )))
+                .unwrap(),
+            ),
         )
         .unwrap_err();
         assert_eq!(
@@ -199,10 +207,12 @@ mod tests {
     fn test_parse_scarb_config_account_missing() {
         let config = parse_scarb_config(
             &None,
-            Some(&get_scarb_metadata(Some(&Utf8PathBuf::from(
-                "tests/data/files/somemissing_Scarb.toml",
-            )))
-            .unwrap()),
+            Some(
+                &get_scarb_metadata(Some(&Utf8PathBuf::from(
+                    "tests/data/files/somemissing_Scarb.toml",
+                )))
+                .unwrap(),
+            ),
         )
         .unwrap();
 
