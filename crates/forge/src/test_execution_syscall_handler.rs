@@ -249,10 +249,10 @@ impl TestExecutionSyscallHandler<'_> {
                 Ok(())
             }
             "start_warp" => {
-                let target = deserialize_cheat_target(&inputs[..inputs.len() - 1]);
-
                 // The last element in `inputs` should be the timestamp in all cases
                 let warp_timestamp = inputs.last().unwrap().clone();
+
+                let target = deserialize_cheat_target(&inputs[..inputs.len() - 1]);
 
                 self.child
                     .child

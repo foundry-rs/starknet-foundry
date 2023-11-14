@@ -36,6 +36,14 @@ pub enum CheatTarget {
     Multiple(Vec<ContractAddress>),
 }
 
+// Specifies which contracts to target
+// with a cheatcode function
+pub enum CheatTarget {
+    All,
+    One(ContractAddress),
+    Multiple(Vec<ContractAddress>),
+}
+
 #[derive(Debug)]
 pub struct ExtendedStateReader {
     pub dict_state_reader: DictStateReader,
