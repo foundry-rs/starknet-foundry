@@ -14,9 +14,8 @@ use flate2::read::GzDecoder;
 use num_bigint::BigUint;
 use starknet::core::types::{
     BlockId, ContractClass as ContractClassStarknet, MaybePendingBlockWithTxHashes,
-    PendingBlockWithTxHashes,
 };
-use starknet::providers::jsonrpc::{HttpTransport, JsonRpcClientError};
+use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider, ProviderError};
 use starknet_api::block::{BlockNumber, BlockTimestamp};
 use starknet_api::core::PatriciaKey;
@@ -30,6 +29,7 @@ use starknet_api::patricia_key;
 use starknet_api::state::StorageKey;
 use std::collections::HashMap;
 use std::io::Read;
+use std::ops::Deref;
 use tokio::runtime::Runtime;
 use url::Url;
 
@@ -53,31 +53,6 @@ impl ForkStateReader {
     }
 }
 
-fn get_pending_block_parent(
-    state_reader: &ForkStateReader,
-    pending_block: &PendingBlockWithTxHashes,
-) -> StateResult<CheatnetBlockInfo> {
-    let parent_block_id = BlockId::Hash(pending_block.parent_hash);
-
-    match state_reader.runtime.block_on(
-        state_reader
-            .client
-            .get_block_with_tx_hashes(parent_block_id),
-    ) {
-        Ok(MaybePendingBlockWithTxHashes::Block(parent_block)) => Ok(CheatnetBlockInfo {
-            block_number: BlockNumber(parent_block.block_number + 1),
-            timestamp: BlockTimestamp(pending_block.timestamp),
-            sequencer_address: ContractAddress(patricia_key!(pending_block.sequencer_address)),
-        }),
-        Ok(MaybePendingBlockWithTxHashes::PendingBlock(_)) => Err(StateReadError(
-            "Parent block of the pending block cannot be pending".to_string(),
-        )),
-        Err(err) => Err(StateReadError(format!(
-            "Unable to get parent block with tx hashes from fork, err: {err:?}"
-        ))),
-    }
-}
-
 impl BlockInfoReader for ForkStateReader {
     fn get_block_info(&mut self) -> StateResult<CheatnetBlockInfo> {
         if let Some(cache_hit) = self.cache.get_block_info() {
@@ -92,21 +67,40 @@ impl BlockInfoReader for ForkStateReader {
                 let block_info = CheatnetBlockInfo {
                     block_number: BlockNumber(block.block_number),
                     timestamp: BlockTimestamp(block.timestamp),
-                    sequencer_address: ContractAddress(patricia_key!(block.sequencer_address)),
+                    sequencer_address: ContractAddress(patricia_key!(block
+                        .sequencer_address
+                        .to_stark_felt())),
                 };
 
                 self.cache.cache_get_block_info(block_info);
 
                 Ok(block_info)
             }
-            Ok(MaybePendingBlockWithTxHashes::PendingBlock(pending_block)) => {
-                get_pending_block_parent(self, &pending_block)
+            Ok(MaybePendingBlockWithTxHashes::PendingBlock(_)) => {
+                unreachable!("Pending block is not be allowed at the configuration level")
             }
             Err(err) => Err(StateReadError(format!(
                 "Unable to get block with tx hashes from fork, err: {err:?}"
             ))),
         }
     }
+}
+
+#[macro_export]
+macro_rules! other_provider_error {
+    ( $boxed:expr ) => {{
+        let err_str = $boxed.deref().to_string();
+        if err_str.contains("error sending request for url") {
+            return node_connection_error();
+        }
+        Err(StateReadError(format!("JsonRpc provider error: {err_str}")))
+    }};
+}
+
+fn node_connection_error<T>() -> StateResult<T> {
+    Err(StateReadError(
+        "Unable to reach the node. Check your internet connection and node url".to_string(),
+    ))
 }
 
 impl StateReader for ForkStateReader {
@@ -130,9 +124,7 @@ impl StateReader for ForkStateReader {
                     .cache_get_storage_at(contract_address, key, value_sf);
                 Ok(value_sf)
             }
-            Err(ProviderError::Other(JsonRpcClientError::TransportError(_))) => {
-                node_connection_error()
-            }
+            Err(ProviderError::Other(boxed)) => other_provider_error!(boxed),
             Err(_) => Err(StateReadError(format!(
                 "Unable to get storage at address: {contract_address:?} and key: {key:?} from fork"
             ))),
@@ -153,9 +145,7 @@ impl StateReader for ForkStateReader {
                 self.cache.cache_get_nonce_at(contract_address, nonce);
                 Ok(nonce)
             }
-            Err(ProviderError::Other(JsonRpcClientError::TransportError(_))) => {
-                node_connection_error()
-            }
+            Err(ProviderError::Other(boxed)) => other_provider_error!(boxed),
             Err(_) => Err(StateReadError(format!(
                 "Unable to get nonce at {contract_address:?} from fork"
             ))),
@@ -177,9 +167,7 @@ impl StateReader for ForkStateReader {
                     .cache_get_class_hash_at(contract_address, class_hash);
                 Ok(class_hash)
             }
-            Err(ProviderError::Other(JsonRpcClientError::TransportError(_))) => {
-                node_connection_error()
-            }
+            Err(ProviderError::Other(boxed)) => other_provider_error!(boxed),
             Err(_) => Err(StateReadError(format!(
                 "Unable to get class hash at {contract_address:?} from fork"
             ))),
@@ -204,9 +192,7 @@ impl StateReader for ForkStateReader {
 
                         Ok(contract_class)
                     }
-                    Err(ProviderError::Other(JsonRpcClientError::TransportError(_))) => {
-                        node_connection_error()
-                    }
+                    Err(ProviderError::Other(boxed)) => other_provider_error!(boxed),
                     Err(_) => Err(UndeclaredClassHash(*class_hash)),
                 }
             };
@@ -274,10 +260,4 @@ impl StateReader for ForkStateReader {
             "Unable to get compiled class hash from the fork".to_string(),
         ))
     }
-}
-
-fn node_connection_error<T>() -> StateResult<T> {
-    Err(StateReadError(
-        "Unable to reach the node. Check your internet connection and node url".to_string(),
-    ))
 }

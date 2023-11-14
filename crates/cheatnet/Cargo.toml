@@ -28,6 +28,7 @@ url.workspace = true
 tokio.workspace = true
 num-bigint.workspace = true
 conversions.workspace = true
+scarb-metadata.workspace = true
 fs2 = "0.4.3"
 flate2 = "1.0.27"
 scarb-artifacts = { path = "../scarb-artifacts" }

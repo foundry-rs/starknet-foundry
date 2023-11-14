@@ -7,3 +7,4 @@ mod roll;
 mod spoof;
 mod starknet;
 mod warp;
+mod segment_arena_user;

@@ -23,17 +23,20 @@ pub(crate) fn print_running_tests(test_crate_file: CrateLocation, tests_num: usi
     println!("{}", style(plain_text).bold());
 }
 
-pub(crate) fn print_test_summary(summaries: &[TestCrateSummary]) {
+pub(crate) fn print_test_summary(summaries: &[TestCrateSummary], filtered: usize) {
     let passed: usize = summaries.iter().map(TestCrateSummary::count_passed).sum();
-    let skipped: usize = summaries.iter().map(TestCrateSummary::count_skipped).sum();
     let failed: usize = summaries.iter().map(TestCrateSummary::count_failed).sum();
+    let skipped: usize = summaries.iter().map(TestCrateSummary::count_skipped).sum();
+    let ignored: usize = summaries.iter().map(TestCrateSummary::count_ignored).sum();
 
     println!(
-        "{}: {} passed, {} failed, {} skipped",
+        "{}: {} passed, {} failed, {} skipped, {} ignored, {} filtered out",
         style("Tests").bold(),
         passed,
         failed,
         skipped,
+        ignored,
+        filtered,
     );
 }
 
@@ -42,22 +45,24 @@ pub(crate) fn print_test_seed(seed: u64) {
 }
 
 pub(crate) fn print_test_result(test_result: &TestCaseSummary) {
+    if let TestCaseSummary::Skipped { .. } = test_result {
+        return;
+    }
+
     let result_header = match test_result {
         TestCaseSummary::Passed { .. } => format!("[{}]", style("PASS").green()),
         TestCaseSummary::Failed { .. } => format!("[{}]", style("FAIL").red()),
         TestCaseSummary::Ignored { .. } => format!("[{}]", style("IGNORE").yellow()),
-        TestCaseSummary::Skipped { .. } => format!("[{}]", style("SKIP").color256(11)),
-        TestCaseSummary::Interrupted {} => {
+        TestCaseSummary::Skipped { .. } => {
             unreachable!()
         }
     };
 
     let result_name = match test_result {
-        TestCaseSummary::Skipped { name }
-        | TestCaseSummary::Ignored { name }
+        TestCaseSummary::Ignored { name }
         | TestCaseSummary::Failed { name, .. }
         | TestCaseSummary::Passed { name, .. } => name,
-        TestCaseSummary::Interrupted {} => {
+        TestCaseSummary::Skipped {} => {
             unreachable!()
         }
     };
@@ -80,7 +85,14 @@ pub(crate) fn print_test_result(test_result: &TestCaseSummary) {
         }
     };
 
-    println!("{result_header} {result_name}{fuzzer_report}{result_message}");
+    let block_number_message = match test_result.latest_block_number() {
+        None => String::new(),
+        Some(latest_block_number) => {
+            format!("\nNumber of the block used for fork testing = {latest_block_number}")
+        }
+    };
+
+    println!("{result_header} {result_name}{fuzzer_report}{block_number_message}{result_message}");
 }
 
 pub fn print_failures(all_failed_tests: &[TestCaseSummary]) {
@@ -94,8 +106,7 @@ pub fn print_failures(all_failed_tests: &[TestCaseSummary]) {
             TestCaseSummary::Failed { name, .. } => name,
             TestCaseSummary::Passed { .. }
             | TestCaseSummary::Ignored { .. }
-            | TestCaseSummary::Skipped { .. }
-            | TestCaseSummary::Interrupted {} => unreachable!(),
+            | TestCaseSummary::Skipped {} => unreachable!(),
         })
         .collect();
 

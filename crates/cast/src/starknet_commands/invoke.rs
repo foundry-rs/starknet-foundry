@@ -23,7 +23,7 @@ pub struct Invoke {
     pub function: String,
 
     /// Calldata for the invoked function
-    #[clap(short, long, value_delimiter = ' ')]
+    #[clap(short, long, value_delimiter = ' ', num_args = 1..)]
     pub calldata: Vec<FieldElement>,
 
     /// Max fee for the transaction. If not provided, max fee will be automatically estimated
