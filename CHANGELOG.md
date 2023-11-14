@@ -7,7 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.2] - 2023-11-13
+
 ### Forge
+
+#### Changed
+
+- Bump cairo to 2.3.1
 
 #### Removed
 

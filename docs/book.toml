@@ -4,6 +4,7 @@ language = "en"
 multilingual = false
 src = "src"
 title = "The Starknet Foundry Book"
+description = "Starknet Foundry is a toolchain for developing Starknet smart contracts. It helps with writing, deploying, and testing your smart contracts written in Cairo. It is inspired by Foundry."
 
 [output.html]
 git-repository-url = "https://github.com/foundry-rs/starknet-foundry/"
