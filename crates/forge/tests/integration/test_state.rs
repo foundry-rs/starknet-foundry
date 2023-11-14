@@ -435,6 +435,7 @@ fn test_simple_cheatcodes() {
         use array::SpanTrait;
         use starknet::ContractAddressIntoFelt252;
         use snforge_std::{
+            CheatTarget,
             start_prank, stop_prank,
             start_roll, stop_roll,
             start_warp, stop_warp,
@@ -477,11 +478,11 @@ fn test_simple_cheatcodes() {
             let test_address: ContractAddress = test_address();
             let old_block_timestamp = starknet::get_block_info().unbox().block_timestamp;
 
-            start_warp(test_address, 123);
+            start_warp(CheatTarget::One(test_address), 123);
             let new_block_timestamp = starknet::get_block_info().unbox().block_timestamp;
             assert(new_block_timestamp == 123, 'Wrong block timestamp');
 
-            stop_warp(test_address);
+            stop_warp(CheatTarget::One(test_address));
             let new_block_timestamp = starknet::get_block_info().unbox().block_timestamp;
             assert(new_block_timestamp == old_block_timestamp, 'Timestamp did not change back')
         }

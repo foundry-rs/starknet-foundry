@@ -26,6 +26,7 @@ use cheatcodes::events::EventAssertions;
 use cheatcodes::events::spy_events;
 use cheatcodes::events::event_name_hash;
 
+use cheatcodes::CheatTarget;
 use cheatcodes::test_address;
 use cheatcodes::start_prank;
 use cheatcodes::stop_prank;

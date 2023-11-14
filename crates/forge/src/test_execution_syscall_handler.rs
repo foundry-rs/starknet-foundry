@@ -25,7 +25,7 @@ use cheatnet::cheatcodes::deploy::{deploy, deploy_at, DeployCallPayload};
 use cheatnet::cheatcodes::{CheatcodeError, EnhancedHintError};
 use cheatnet::execution::cheatable_syscall_handler::CheatableSyscallHandler;
 use cheatnet::rpc::{call_contract, CallContractFailure, CallContractOutput, CallContractResult};
-use cheatnet::state::{BlockifierState, CheatnetState};
+use cheatnet::state::{BlockifierState, CheatTarget, CheatnetState};
 use conversions::StarknetConversions;
 use num_traits::{One, ToPrimitive};
 use scarb_artifacts::StarknetContractArtifacts;
@@ -249,17 +249,22 @@ impl TestExecutionSyscallHandler<'_> {
                 Ok(())
             }
             "start_warp" => {
-                let contract_address = inputs[0].to_contract_address();
-                let value = inputs[1].clone();
+                // The last element in `inputs` should be the timestamp in all cases
+                let warp_timestamp = inputs.last().unwrap().clone();
+
+                let target = deserialize_cheat_target(&inputs[..inputs.len() - 1]);
+
                 self.child
                     .child
                     .cheatnet_state
-                    .start_warp(contract_address, value);
+                    .start_warp(target, warp_timestamp);
+
                 Ok(())
             }
             "stop_warp" => {
-                let contract_address = inputs[0].to_contract_address();
-                self.child.child.cheatnet_state.stop_warp(contract_address);
+                let target = deserialize_cheat_target(&inputs);
+
+                self.child.child.cheatnet_state.stop_warp(target);
                 Ok(())
             }
             "start_prank" => {
@@ -634,6 +639,22 @@ fn handle_deploy_result(
             Ok(())
         }
         Err(CheatcodeError::Unrecoverable(err)) => Err(err),
+    }
+}
+
+fn deserialize_cheat_target(inputs: &[Felt252]) -> CheatTarget {
+    // First element encodes the variant of CheatTarget
+    match inputs[0].to_u8() {
+        Some(0) => CheatTarget::All,
+        Some(1) => CheatTarget::One(inputs[1].to_contract_address()),
+        Some(2) => {
+            let contract_addresses: Vec<_> = inputs[2..]
+                .iter()
+                .map(Felt252::to_contract_address)
+                .collect();
+            CheatTarget::Multiple(contract_addresses)
+        }
+        _ => panic!("Invalid CheatTarget variant"),
     }
 }
 
