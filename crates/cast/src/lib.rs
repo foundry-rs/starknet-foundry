@@ -7,8 +7,6 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use starknet::core::utils::UdcUniqueness::{NotUnique, Unique};
 use starknet::core::utils::{UdcUniqueSettings, UdcUniqueness};
-use starknet::providers::jsonrpc::JsonRpcClientError;
-use starknet::providers::jsonrpc::JsonRpcClientError::RpcError;
 use starknet::providers::jsonrpc::RpcError::{Code, Unknown};
 use starknet::providers::ProviderError::Other;
 use starknet::{
@@ -28,6 +26,7 @@ use starknet::{
     providers::{MaybeUnknownErrorCode, StarknetErrorWithMessage},
 };
 use std::collections::HashMap;
+use std::ops::Deref;
 use std::str::FromStr;
 use std::thread::sleep;
 use std::time::Duration;
@@ -276,7 +275,7 @@ pub async fn wait_for_tx(
 }
 
 #[must_use]
-pub fn get_rpc_error_message(error: StarknetError) -> &'static str {
+pub fn get_rpc_error_message(error: &StarknetError) -> &'static str {
     match error {
         StarknetError::FailedToReceiveTransaction => "Node failed to receive transaction",
         StarknetError::ContractNotFound => "There is no contract at the specified address",
@@ -299,12 +298,22 @@ pub fn get_rpc_error_message(error: StarknetError) -> &'static str {
     }
 }
 
-pub fn handle_rpc_error<T, G>(
-    error: ProviderError<JsonRpcClientError<T>>,
-) -> std::result::Result<G, Error> {
+pub fn handle_rpc_error<T>(error: ProviderError) -> std::result::Result<T, Error> {
     match error {
-        Other(RpcError(Code(error))) => Err(anyhow!(get_rpc_error_message(error))),
-        Other(RpcError(Unknown(error))) => Err(anyhow!(error.message)),
+        Other(x) => {
+            if let Some(err) = x
+                .deref()
+                .as_any()
+                .downcast_ref::<starknet::providers::jsonrpc::RpcError>()
+            {
+                match err {
+                    Code(error) => Err(anyhow!(get_rpc_error_message(error))),
+                    Unknown(error) => Err(anyhow!(error.message.clone())),
+                }
+            } else {
+                Err(anyhow!("Unknown RPC error"))
+            }
+        }
         ProviderError::StarknetError(error) => Err(anyhow!(error.message)),
         _ => Err(anyhow!("Unknown RPC error")),
     }

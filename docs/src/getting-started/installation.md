@@ -19,6 +19,7 @@ You can install it by running:
 ```shell
 curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/scripts/install.sh | sh
 ```
+
 Follow the instructions and then run:
 
 ```shell
@@ -28,6 +29,22 @@ snfoundryup
 See `snfoundryup --help` for more options.
 
 To verify that the Starknet Foundry is installed correctly, run `snforge --version` and `sncast --version`.
+
+### Installation via [asdf](https://asdf-vm.com/)
+
+First, add the Starknet Foundry plugin to asdf:
+
+```shell
+asdf plugin add starknet-foundry
+```
+
+Install the latest version:
+
+```shell
+asdf install starknet-foundry latest
+```
+
+See [asdf guide](https://asdf-vm.com/guide/getting-started.html) for more details.
 
 ## How to build Starknet Foundry from source code
 

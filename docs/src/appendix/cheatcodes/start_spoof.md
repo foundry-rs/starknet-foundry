@@ -1,6 +1,7 @@
 # `start_spoof`
 
 > `fn start_spoof(contract_address: ContractAddress, tx_info_mock: TxInfoMock)`
+
 Changes `TxInfo` returned by `get_tx_info()` for the targeted contract until the spoof is stopped
 with [stop_spoof](./stop_spoof.md).
 
