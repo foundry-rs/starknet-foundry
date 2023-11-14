@@ -137,7 +137,7 @@ fn test_too_low_max_fee() {
         "1",
     ];
 
-    let snapbox = runner(&args, Some(&contract_path.path()));
+    let snapbox = runner(&args, Some(contract_path.path()));
 
     snapbox.assert().success().stderr_matches(indoc! {r#"
         command: declare

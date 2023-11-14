@@ -108,7 +108,7 @@ pub async fn test_happy_case_add_profile() {
         DEVNET_OZ_CLASS_HASH,
     ];
 
-    let snapbox = runner(&args, Some(&current_dir.path()));
+    let snapbox = runner(&args, Some(current_dir.path()));
     let bdg = snapbox.assert();
     let out = bdg.get_output();
 
@@ -188,7 +188,7 @@ pub async fn test_profile_already_exists() {
         DEVNET_OZ_CLASS_HASH,
     ];
 
-    let snapbox = runner(&args, Some(&current_dir.path()));
+    let snapbox = runner(&args, Some(current_dir.path()));
     let bdg = snapbox.assert();
     let out = bdg.get_output();
 
@@ -286,7 +286,7 @@ pub async fn test_happy_case_keystore_add_profile() {
         "--add-profile",
     ];
 
-    let snapbox = runner(&args, Some(&current_dir.path()));
+    let snapbox = runner(&args, Some(current_dir.path()));
     let bdg = snapbox.assert().success();
     let out = bdg.get_output();
 
