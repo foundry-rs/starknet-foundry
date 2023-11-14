@@ -118,7 +118,6 @@ pub enum RunnerStatus {
 pub struct RunnerParams {
     corelib_path: Utf8PathBuf,
     contracts: HashMap<String, StarknetContractArtifacts>,
-    predeployed_contracts: Utf8PathBuf,
     environment_variables: HashMap<String, String>,
     linked_libraries: Vec<LinkedLibrary>,
 }
@@ -128,14 +127,12 @@ impl RunnerParams {
     pub fn new(
         corelib_path: Utf8PathBuf,
         contracts: HashMap<String, StarknetContractArtifacts>,
-        predeployed_contracts: Utf8PathBuf,
         environment_variables: HashMap<String, String>,
         linked_libraries: Vec<LinkedLibrary>,
     ) -> Self {
         Self {
             corelib_path,
             contracts,
-            predeployed_contracts,
             environment_variables,
             linked_libraries,
         }
