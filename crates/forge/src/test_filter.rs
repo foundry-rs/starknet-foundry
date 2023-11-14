@@ -1,12 +1,14 @@
-use crate::collecting::{CompiledTestCrate, CompiledTestCrateRaw, TestCaseRunnable};
+use crate::collecting::{CompiledTestCrate, CompiledTestCrateRaw, ValidatedForkConfig};
+use crate::TestCaseFilter;
+use test_collector::TestCase;
 
 #[derive(Debug, PartialEq)]
 // Specifies what tests should be included
-pub(crate) struct TestsFilter {
+pub struct TestsFilter {
     // based on name
-    pub name_filter: NameFilter,
+    name_filter: NameFilter,
     // based on `#[ignore]` attribute
-    pub ignored_filter: IgnoredFilter,
+    ignored_filter: IgnoredFilter,
 }
 
 #[derive(Debug, PartialEq)]
@@ -24,7 +26,8 @@ pub(crate) enum IgnoredFilter {
 }
 
 impl TestsFilter {
-    pub(crate) fn from_flags(
+    #[must_use]
+    pub fn from_flags(
         test_name_filter: Option<String>,
         exact_match: bool,
         only_ignored: bool,
@@ -79,8 +82,10 @@ impl TestsFilter {
             ..test_crate
         }
     }
+}
 
-    pub(crate) fn should_be_run_based_on_ignored(&self, test_case: &TestCaseRunnable) -> bool {
+impl TestCaseFilter for TestsFilter {
+    fn should_be_run(&self, test_case: &TestCase<ValidatedForkConfig>) -> bool {
         match self.ignored_filter {
             IgnoredFilter::All => true,
             IgnoredFilter::Ignored => test_case.ignored,
@@ -104,6 +109,18 @@ mod tests {
             statements: vec![],
             funcs: vec![],
         }
+    }
+
+    #[test]
+    #[should_panic]
+    fn from_flags_only_ignored_and_include_ignored_both_true() {
+        let _ = TestsFilter::from_flags(None, false, true, true);
+    }
+
+    #[test]
+    #[should_panic]
+    fn from_flags_exact_match_true_without_test_filter_name() {
+        let _ = TestsFilter::from_flags(None, true, false, false);
     }
 
     #[test]

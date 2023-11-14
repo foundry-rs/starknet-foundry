@@ -38,17 +38,14 @@ pub type SyscallSelector = DeprecatedSyscallSelector;
 // If it cannot execute a cheatcode it falls back to SyscallHintProcessor, which provides standard implementation of
 // hints from blockifier
 pub struct CheatableSyscallHandler<'a> {
-    pub syscall_handler: SyscallHintProcessor<'a>,
+    pub child: SyscallHintProcessor<'a>,
     pub cheatnet_state: &'a mut CheatnetState,
 }
 
 impl<'a> CheatableSyscallHandler<'a> {
-    pub fn wrap(
-        syscall_handler: SyscallHintProcessor<'a>,
-        cheatnet_state: &'a mut CheatnetState,
-    ) -> Self {
+    pub fn wrap(child: SyscallHintProcessor<'a>, cheatnet_state: &'a mut CheatnetState) -> Self {
         CheatableSyscallHandler {
-            syscall_handler,
+            child,
             cheatnet_state,
         }
     }
@@ -57,22 +54,19 @@ impl<'a> CheatableSyscallHandler<'a> {
 // crates/blockifier/src/execution/syscalls/hint_processor.rs:472 (ResourceTracker for SyscallHintProcessor)
 impl ResourceTracker for CheatableSyscallHandler<'_> {
     fn consumed(&self) -> bool {
-        self.syscall_handler.context.vm_run_resources.consumed()
+        self.child.context.vm_run_resources.consumed()
     }
 
     fn consume_step(&mut self) {
-        self.syscall_handler.context.vm_run_resources.consume_step();
+        self.child.context.vm_run_resources.consume_step();
     }
 
     fn get_n_steps(&self) -> Option<usize> {
-        self.syscall_handler.context.vm_run_resources.get_n_steps()
+        self.child.context.vm_run_resources.get_n_steps()
     }
 
     fn run_resources(&self) -> &RunResources {
-        self.syscall_handler
-            .context
-            .vm_run_resources
-            .run_resources()
+        self.child.context.vm_run_resources.run_resources()
     }
 }
 
@@ -92,7 +86,7 @@ impl HintProcessorLogic for CheatableSyscallHandler<'_> {
             }
         }
 
-        self.syscall_handler
+        self.child
             .execute_hint(vm, exec_scopes, hint_data, constants)
     }
 
@@ -104,7 +98,7 @@ impl HintProcessorLogic for CheatableSyscallHandler<'_> {
         reference_ids: &HashMap<String, usize>,
         references: &[HintReference],
     ) -> Result<Box<dyn Any>, VirtualMachineError> {
-        self.syscall_handler
+        self.child
             .compile_hint(hint_code, ap_tracking_data, reference_ids, references)
     }
 }
@@ -200,17 +194,17 @@ impl CheatableSyscallHandler<'_> {
                 SyscallSelector::Deploy,
             ),
             SyscallSelector::EmitEvent => {
-                let events_len_before = self.syscall_handler.events.len();
-                let hint_exec_result = self.syscall_handler.execute_next_syscall(vm, hint);
+                let events_len_before = self.child.events.len();
+                let hint_exec_result = self.child.execute_next_syscall(vm, hint);
                 assert_eq!(
                     events_len_before + 1,
-                    self.syscall_handler.events.len(),
+                    self.child.events.len(),
                     "EmitEvent syscall is expected to emit exactly one event"
                 );
                 syscall_hooks::emit_event_hook(self);
                 hint_exec_result
             }
-            _ => self.syscall_handler.execute_next_syscall(vm, hint),
+            _ => self.child.execute_next_syscall(vm, hint),
         }
     }
 
@@ -232,15 +226,14 @@ impl CheatableSyscallHandler<'_> {
         ) -> SyscallResult<Response>,
     {
         // Increment, since the selector was peeked into before
-        self.syscall_handler.syscall_ptr += 1;
-        self.syscall_handler
-            .increment_syscall_count_by(&selector, 1);
+        self.child.syscall_ptr += 1;
+        self.child.increment_syscall_count_by(&selector, 1);
         let base_gas_cost = get_syscall_cost(selector);
 
         let SyscallRequestWrapper {
             gas_counter,
             request,
-        } = SyscallRequestWrapper::<Request>::read(vm, &mut self.syscall_handler.syscall_ptr)?;
+        } = SyscallRequestWrapper::<Request>::read(vm, &mut self.child.syscall_ptr)?;
 
         if gas_counter < base_gas_cost {
             //  Out of gas failure.
@@ -250,7 +243,7 @@ impl CheatableSyscallHandler<'_> {
                 gas_counter,
                 error_data: vec![out_of_gas_error],
             };
-            response.write(vm, &mut self.syscall_handler.syscall_ptr)?;
+            response.write(vm, &mut self.child.syscall_ptr)?;
 
             return Ok(());
         }
@@ -272,16 +265,16 @@ impl CheatableSyscallHandler<'_> {
             Err(error) => return Err(error.into()),
         };
 
-        response.write(vm, &mut self.syscall_handler.syscall_ptr)?;
+        response.write(vm, &mut self.child.syscall_ptr)?;
 
         Ok(())
     }
 
     // crates/blockifier/src/execution/syscalls/hint_processor.rs:176 (verify_syscall_ptr)
     fn verify_syscall_ptr(&self, actual_ptr: Relocatable) -> SyscallResult<()> {
-        if actual_ptr != self.syscall_handler.syscall_ptr {
+        if actual_ptr != self.child.syscall_ptr {
             return Err(SyscallExecutionError::BadSyscallPointer {
-                expected_ptr: self.syscall_handler.syscall_ptr,
+                expected_ptr: self.child.syscall_ptr,
                 actual_ptr,
             });
         }

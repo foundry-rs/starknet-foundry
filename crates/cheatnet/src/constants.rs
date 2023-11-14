@@ -1,32 +1,34 @@
+use std::collections::BTreeMap;
 use std::sync::Arc;
 use std::{collections::HashMap, fs, path::PathBuf};
 
 use crate::state::{CheatnetBlockInfo, DictStateReader};
+use blockifier::block_context::{FeeTokenAddresses, GasPrices};
 use blockifier::execution::contract_class::{ContractClassV1, ContractClassV1Inner};
+use blockifier::transaction::objects::{CommonAccountFields, CurrentAccountTransactionContext};
 use blockifier::{
     abi::constants,
     block_context::BlockContext,
-    execution::{
-        contract_class::{ContractClass, ContractClassV0},
-        execution_utils::felt_to_stark_felt,
-    },
+    execution::contract_class::{ContractClass, ContractClassV0},
     transaction::objects::AccountTransactionContext,
 };
-use cairo_felt::Felt252;
 use cairo_vm::types::program::Program;
 use cairo_vm::vm::runners::builtin_runner::{
     BITWISE_BUILTIN_NAME, EC_OP_BUILTIN_NAME, HASH_BUILTIN_NAME, KECCAK_BUILTIN_NAME,
-    OUTPUT_BUILTIN_NAME, POSEIDON_BUILTIN_NAME, RANGE_CHECK_BUILTIN_NAME, SIGNATURE_BUILTIN_NAME,
+    OUTPUT_BUILTIN_NAME, POSEIDON_BUILTIN_NAME, RANGE_CHECK_BUILTIN_NAME,
+    SEGMENT_ARENA_BUILTIN_NAME, SIGNATURE_BUILTIN_NAME,
 };
 use camino::Utf8PathBuf;
+use starknet_api::data_availability::DataAvailabilityMode;
 use starknet_api::deprecated_contract_class::EntryPointType;
+use starknet_api::transaction::{Resource, ResourceBounds, ResourceBoundsMapping};
 use starknet_api::{
     core::{ChainId, ClassHash, ContractAddress, Nonce, PatriciaKey},
     hash::{StarkFelt, StarkHash},
     patricia_key, stark_felt,
     transaction::{
-        Calldata, DeclareTransactionV2, Fee, InvokeTransactionV1, TransactionHash,
-        TransactionSignature, TransactionVersion,
+        Calldata, DeclareTransactionV2, InvokeTransactionV1, TransactionHash, TransactionSignature,
+        TransactionVersion,
     },
 };
 
@@ -82,12 +84,10 @@ pub fn build_block_context(block_info: CheatnetBlockInfo) -> BlockContext {
             KECCAK_BUILTIN_NAME.to_string(),
             2048_f64 * STEP_RESOURCE_COST, // 2**11
         ),
-        // The gas estimation should panic in case it encounters a builtin that doesn't have a cost
-        // This builtin seems to be unused for cost estimation
-        // (
-        //     SEGMENT_ARENA_BUILTIN_NAME.to_string(),
-        //     0_f64 * STEP_RESOURCE_COST,
-        // ), // BUILTIN COST NOT FOUND
+        (
+            SEGMENT_ARENA_BUILTIN_NAME.to_string(),
+            0_f64 * STEP_RESOURCE_COST,
+        ),
     ]));
 
     BlockContext {
@@ -95,26 +95,54 @@ pub fn build_block_context(block_info: CheatnetBlockInfo) -> BlockContext {
         block_number: block_info.block_number,
         block_timestamp: block_info.timestamp,
         sequencer_address: block_info.sequencer_address,
-        fee_token_address: ContractAddress(patricia_key!(TEST_ERC20_CONTRACT_ADDRESS)),
-        deprecated_fee_token_address: ContractAddress(patricia_key!(TEST_ERC20_CONTRACT_ADDRESS)),
         vm_resource_fee_cost,
-        gas_price: 100 * u128::pow(10, 9),
         invoke_tx_max_n_steps: 1_000_000,
         validate_max_n_steps: 1_000_000,
         max_recursion_depth: 50,
+        fee_token_addresses: FeeTokenAddresses {
+            strk_fee_token_address: ContractAddress(patricia_key!(TEST_ERC20_CONTRACT_ADDRESS)),
+            eth_fee_token_address: ContractAddress(patricia_key!(TEST_ERC20_CONTRACT_ADDRESS)),
+        },
+        gas_prices: GasPrices {
+            eth_l1_gas_price: 100 * u128::pow(10, 9),
+            strk_l1_gas_price: 100 * u128::pow(10, 9),
+        },
     }
 }
 
 #[must_use]
 pub fn build_transaction_context() -> AccountTransactionContext {
-    AccountTransactionContext {
-        transaction_hash: TransactionHash::default(),
-        max_fee: Fee::default(),
-        version: TransactionVersion(StarkFelt::from(2_u8)),
-        signature: TransactionSignature::default(),
-        nonce: Nonce(felt_to_stark_felt(&Felt252::from(0))),
-        sender_address: ContractAddress::default(),
-    }
+    AccountTransactionContext::Current(CurrentAccountTransactionContext {
+        common_fields: CommonAccountFields {
+            transaction_hash: TransactionHash::default(),
+            version: TransactionVersion::THREE,
+            signature: TransactionSignature::default(),
+            nonce: Nonce(StarkFelt::from(0_u8)),
+            sender_address: ContractAddress::default(),
+            only_query: false,
+        },
+        resource_bounds: ResourceBoundsMapping(BTreeMap::from([
+            (
+                Resource::L1Gas,
+                ResourceBounds {
+                    max_amount: 0,
+                    max_price_per_unit: 1,
+                },
+            ),
+            (
+                Resource::L2Gas,
+                ResourceBounds {
+                    max_amount: 0,
+                    max_price_per_unit: 0,
+                },
+            ),
+        ])),
+        tip: Default::default(),
+        nonce_data_availability_mode: DataAvailabilityMode::L1,
+        fee_data_availability_mode: DataAvailabilityMode::L1,
+        paymaster_data: Default::default(),
+        account_deployment_data: Default::default(),
+    })
 }
 
 #[must_use]
@@ -183,7 +211,6 @@ pub fn build_testing_state(predeployed_contracts: &Utf8PathBuf) -> DictStateRead
         "erc20_contract_without_some_syscalls_compiled.json",
     );
 
-    let block_context = build_block_context(CheatnetBlockInfo::default());
     let test_erc20_class_hash = ClassHash(stark_felt!(TEST_ERC20_CONTRACT_CLASS_HASH));
     let test_contract_class_hash = ClassHash(stark_felt!(TEST_CONTRACT_CLASS_HASH));
 
@@ -194,7 +221,7 @@ pub fn build_testing_state(predeployed_contracts: &Utf8PathBuf) -> DictStateRead
         (test_erc20_class_hash, ContractClass::V0(erc20_class)),
     ]);
 
-    let test_erc20_address = block_context.fee_token_address;
+    let test_erc20_address = ContractAddress(patricia_key!(TEST_ERC20_CONTRACT_ADDRESS));
     let test_address = ContractAddress(patricia_key!(TEST_ADDRESS));
     let address_to_class_hash = HashMap::from([
         (test_erc20_address, test_erc20_class_hash),

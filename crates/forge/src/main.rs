@@ -1,14 +1,13 @@
 use anyhow::{anyhow, bail, Context, Result};
-use camino::Utf8PathBuf;
+use camino::{Utf8Path, Utf8PathBuf};
 use clap::{Parser, Subcommand, ValueEnum};
 use forge::scarb::config_from_scarb_for_package;
 use include_dir::{include_dir, Dir};
 use scarb_artifacts::{
     corelib_for_package, dependencies_for_package, get_contracts_map, name_for_package,
-    paths_for_package, target_dir_for_package, target_name_for_package,
-    try_get_starknet_artifacts_path,
+    paths_for_package,
 };
-use scarb_metadata::{MetadataCommand, PackageMetadata};
+use scarb_metadata::{Metadata, MetadataCommand, PackageMetadata};
 use scarb_ui::args::PackagesFilter;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -16,12 +15,17 @@ use std::{env, fs};
 use tempfile::{tempdir, TempDir};
 use tokio::runtime::Builder;
 
-use forge::{pretty_printing, CancellationTokens, RunnerConfig, RunnerParams, CACHE_DIR};
+use forge::{pretty_printing, RunnerConfig, RunnerParams, CACHE_DIR, FUZZER_RUNS_DEFAULT};
+
 use forge::{run, TestCrateSummary};
 
+use forge::scarb::config::ForgeConfig;
 use forge::test_case_summary::TestCaseSummary;
+use forge::test_filter::TestsFilter;
+use rand::{thread_rng, RngCore};
 use std::process::{Command, Stdio};
 use std::thread::available_parallelism;
+
 mod init;
 
 static PREDEPLOYED_CONTRACTS: Dir = include_dir!("crates/cheatnet/predeployed-contracts");
@@ -128,6 +132,26 @@ fn extract_failed_tests(tests_summaries: Vec<TestCrateSummary>) -> Vec<TestCaseS
         .collect()
 }
 
+fn combine_configs(
+    workspace_root: &Utf8Path,
+    exit_first: bool,
+    fuzzer_runs: Option<u32>,
+    fuzzer_seed: Option<u64>,
+    forge_config: &ForgeConfig,
+) -> RunnerConfig {
+    RunnerConfig::new(
+        workspace_root.to_path_buf(),
+        exit_first || forge_config.exit_first,
+        forge_config.fork.clone(),
+        fuzzer_runs
+            .or(forge_config.fuzzer_runs)
+            .unwrap_or(FUZZER_RUNS_DEFAULT),
+        fuzzer_seed
+            .or(forge_config.fuzzer_seed)
+            .unwrap_or_else(|| thread_rng().next_u64()),
+    )
+}
+
 fn test_workspace(args: TestArgs) -> Result<bool> {
     match args.color {
         ColorOption::Always => env::set_var("CLICOLOR_FORCE", "1"),
@@ -135,18 +159,30 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
         ColorOption::Auto => (),
     }
 
-    let scarb_metadata = MetadataCommand::new().inherit_stderr().exec()?;
-    let workspace_root = scarb_metadata.workspace.root.clone();
-
     let predeployed_contracts_dir = load_predeployed_contracts()?;
     let predeployed_contracts_path: PathBuf = predeployed_contracts_dir.path().into();
     let predeployed_contracts = Utf8PathBuf::try_from(predeployed_contracts_path.clone())
         .context("Failed to convert path to predeployed contracts to Utf8PathBuf")?;
 
+    let scarb_metadata = MetadataCommand::new().inherit_stderr().exec()?;
+    let workspace_root = scarb_metadata.workspace.root.clone();
+
     let packages: Vec<PackageMetadata> = args
         .packages_filter
         .match_many(&scarb_metadata)
         .context("Failed to find any packages matching the specified filter")?;
+
+    let filter = PackagesFilter::generate_for::<Metadata>(packages.iter());
+    let build_output = Command::new("scarb")
+        .arg("build")
+        .env("SCARB_PACKAGES_FILTER", filter.to_env())
+        .stderr(Stdio::inherit())
+        .stdout(Stdio::inherit())
+        .output()
+        .context("Failed to build contracts with Scarb")?;
+    if !build_output.status.success() {
+        bail!("Scarb build did not succeed")
+    }
 
     let cores = if let Ok(available_cores) = available_parallelism() {
         available_cores.get()
@@ -169,37 +205,15 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                     paths_for_package(&scarb_metadata, &package.id)?;
                 env::set_current_dir(package_path.clone())?;
 
-                // TODO(#671)
-                let target_dir = target_dir_for_package(&workspace_root)?;
-
-                let build_output = Command::new("scarb")
-                    .arg("build")
-                    .stderr(Stdio::inherit())
-                    .stdout(Stdio::inherit())
-                    .output()
-                    .context("Failed to build contracts with Scarb")?;
-                if !build_output.status.success() {
-                    bail!("Scarb build did not succeed")
-                }
-
                 let package_name = Arc::new(name_for_package(&scarb_metadata, &package.id)?);
                 let dependencies = dependencies_for_package(&scarb_metadata, &package.id)?;
-                let target_name = target_name_for_package(&scarb_metadata, &package.id)?;
                 let corelib_path = corelib_for_package(&scarb_metadata, &package.id)?;
 
-                let contracts_path = try_get_starknet_artifacts_path(&target_dir, &target_name)?;
-                let contracts = contracts_path
-                    .map(|path| get_contracts_map(&path))
-                    .transpose()?
-                    .unwrap_or_default();
+                let contracts = get_contracts_map(&scarb_metadata, &package.id).unwrap_or_default();
 
-                let runner_config = Arc::new(RunnerConfig::new(
-                    workspace_root.clone(),
-                    args.test_filter.clone(),
-                    args.exact,
+                let runner_config = Arc::new(combine_configs(
+                    &workspace_root,
                     args.exit_first,
-                    args.only_ignored,
-                    args.include_ignored,
                     args.fuzzer_runs,
                     args.fuzzer_seed,
                     &forge_config,
@@ -213,22 +227,25 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                     dependencies,
                 ));
 
-                let cancellation_tokens = Arc::new(CancellationTokens::new());
-
                 let tests_file_summaries = run(
                     &package_path,
                     &package_name,
                     &package_source_dir_path,
+                    &TestsFilter::from_flags(
+                        args.test_filter.clone(),
+                        args.exact,
+                        args.only_ignored,
+                        args.include_ignored,
+                    ),
                     runner_config,
                     runner_params,
-                    cancellation_tokens,
                 )
                 .await?;
 
                 let mut failed_tests = extract_failed_tests(tests_file_summaries);
                 all_failed_tests.append(&mut failed_tests);
             }
-            Ok(all_failed_tests)
+            Ok::<_, anyhow::Error>(all_failed_tests)
         })
     })??;
 
@@ -274,4 +291,88 @@ fn main() {
             std::process::exit(2);
         }
     };
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn fuzzer_default_seed() {
+        let workspace_root: Utf8PathBuf = Default::default();
+        let config = combine_configs(&workspace_root, false, None, None, &Default::default());
+        let config2 = combine_configs(&workspace_root, false, None, None, &Default::default());
+
+        assert_ne!(config.fuzzer_seed, 0);
+        assert_ne!(config2.fuzzer_seed, 0);
+        assert_ne!(config.fuzzer_seed, config2.fuzzer_seed);
+    }
+
+    #[test]
+    fn runner_config_default_arguments() {
+        let workspace_root: Utf8PathBuf = Default::default();
+        let config = combine_configs(&workspace_root, false, None, None, &Default::default());
+        assert_eq!(
+            config,
+            RunnerConfig {
+                workspace_root,
+                exit_first: false,
+                fork_targets: vec![],
+                fuzzer_runs: FUZZER_RUNS_DEFAULT,
+                fuzzer_seed: config.fuzzer_seed,
+            }
+        );
+    }
+
+    #[test]
+    fn runner_config_just_scarb_arguments() {
+        let config_from_scarb = ForgeConfig {
+            exit_first: true,
+            fork: vec![],
+            fuzzer_runs: Some(1234),
+            fuzzer_seed: Some(500),
+        };
+        let workspace_root: Utf8PathBuf = Default::default();
+
+        let config = combine_configs(&workspace_root, false, None, None, &config_from_scarb);
+        assert_eq!(
+            config,
+            RunnerConfig {
+                workspace_root,
+                exit_first: true,
+                fork_targets: vec![],
+                fuzzer_runs: 1234,
+                fuzzer_seed: 500,
+            }
+        );
+    }
+
+    #[test]
+    fn runner_config_argument_precedence() {
+        let workspace_root: Utf8PathBuf = Default::default();
+
+        let config_from_scarb = ForgeConfig {
+            exit_first: false,
+            fork: vec![],
+            fuzzer_runs: Some(1234),
+            fuzzer_seed: Some(1000),
+        };
+        let config = combine_configs(
+            &workspace_root,
+            true,
+            Some(100),
+            Some(32),
+            &config_from_scarb,
+        );
+        assert_eq!(
+            config,
+            RunnerConfig {
+                workspace_root,
+                exit_first: true,
+                fork_targets: vec![],
+                fuzzer_runs: 100,
+                fuzzer_seed: 32,
+            }
+        );
+    }
 }

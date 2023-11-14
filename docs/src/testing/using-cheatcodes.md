@@ -110,7 +110,7 @@ Running 1 test(s) from tests/
 Failure data:
     original value: [2619239621329578143946475627394146418642347364], converted to a string: [user is not allowed]
 
-Tests: 0 passed, 1 failed, 0 skipped
+Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
 
 Failures:
     tests::call_and_invoke
@@ -156,7 +156,7 @@ Collected 1 test(s) from package_name package
 Running 0 test(s) from src/
 Running 1 test(s) from tests/
 [PASS] tests::call_and_invoke
-Tests: 1 passed, 0 failed, 0 skipped
+Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
 
 ### Canceling the Prank
@@ -189,12 +189,12 @@ $ snforge test
 Collected 1 test(s) from package_name package
 Running 0 test(s) from src/
 Running 1 test(s) from tests/
-[FAIL] tests::call_and_invoke
+[FAIL] tests::call_and_invoke, 0 ignored, 0 filtered out
 
 Failure data:
     original value: [2619239621329578143946475627394146418642347364], converted to a string: [user is not allowed]
 
-Tests: 0 passed, 1 failed, 0 skipped
+Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
 
 Failures:
     tests::call_and_invoke

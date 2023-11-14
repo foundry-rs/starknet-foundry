@@ -72,7 +72,7 @@ mod tests {
                 casm = true
 
                 [dependencies]
-                starknet = "2.3.0"
+                starknet = "2.3.1"
                 snforge_std = {{ path = "{}" }}
 
                 [[tool.snforge.fork]]
@@ -295,7 +295,7 @@ mod tests {
             [[tool.snforge.fork]]
             name = "SAME_NAME"
             url = "http://some.rpc.url"
-            block_id.tag = "Wrong tag"
+            block_id.tag = "Pending"
             "#
         );
         temp.child("Scarb.toml").write_str(content).unwrap();
@@ -309,8 +309,6 @@ mod tests {
         let err =
             config_from_scarb_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
                 .unwrap_err();
-        assert!(
-            format!("{err:?}").contains("block_id.tag has only two variants: Latest or Pending")
-        );
+        assert!(format!("{err:?}").contains("block_id.tag can only be equal to Latest"));
     }
 }

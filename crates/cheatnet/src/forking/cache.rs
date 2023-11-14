@@ -6,7 +6,7 @@ use fs2::FileExt;
 use num_bigint::BigUint;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use starknet::core::types::{BlockId, BlockTag, ContractClass, FieldElement};
+use starknet::core::types::{BlockId, BlockTag, ContractClass};
 use starknet_api::core::{ClassHash, ContractAddress, Nonce};
 use starknet_api::hash::StarkFelt;
 use starknet_api::state::StorageKey;
@@ -97,7 +97,7 @@ fn block_id_to_string(block_id: BlockId) -> String {
         BlockId::Number(x) => x.to_string(),
         BlockId::Tag(x) => match x {
             BlockTag::Latest => "latest".to_string(),
-            BlockTag::Pending => "pending".to_string(),
+            BlockTag::Pending => unreachable!(),
         },
     }
 }
@@ -182,9 +182,11 @@ impl ForkCache {
             .get(&storage_key_str)?;
 
         Some(
-            FieldElement::from_hex_be(cache_hit)
-                .unwrap_or_else(|_| panic!("Could not parse {cache_hit}"))
-                .to_stark_felt(),
+            Felt252::from(
+                BigUint::parse_bytes(cache_hit.as_bytes(), 10)
+                    .expect("Parsing class_hash_at entry failed"),
+            )
+            .to_stark_felt(),
         )
     }
 

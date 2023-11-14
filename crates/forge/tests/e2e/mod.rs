@@ -2,6 +2,7 @@ pub(crate) mod common;
 
 mod collection;
 mod color;
+mod components;
 mod diagnostics_and_plugins;
 mod env;
 mod forking;

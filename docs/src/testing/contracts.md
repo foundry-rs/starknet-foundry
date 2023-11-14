@@ -85,7 +85,7 @@ Collected 1 test(s) from using_dispatchers package
 Running 0 test(s) from src/
 Running 1 test(s) from tests/
 [PASS] tests::call_and_invoke
-Tests: 1 passed, 0 failed, 0 skipped
+Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
 
 ## Handling Errors
@@ -149,7 +149,7 @@ Failure data:
     original value: [344693033283], converted to a string: [PANIC]
     original value: [75047462256968], converted to a string: [DAYTAH]
 
-Tests: 0 passed, 1 failed, 0 skipped
+Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
 
 Failures:
     tests::failing
@@ -185,7 +185,7 @@ Collected 1 test(s) from package_name package
 Running 0 test(s) from src/
 Running 1 test(s) from tests/
 [PASS] tests::handling_errors
-Tests: 1 passed, 0 failed, 0 skipped
+Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
 
 ### Expecting Test Failure

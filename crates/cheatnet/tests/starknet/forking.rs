@@ -569,7 +569,6 @@ fn using_block_tag_is_not_cached() {
         );
     }
     test_tag(BlockTag::Latest);
-    test_tag(BlockTag::Pending);
 }
 
 #[test]
