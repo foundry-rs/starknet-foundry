@@ -149,17 +149,6 @@ impl<'a> CheatableSyscallHandler<'a> {
             response.write(vm, &mut self.child.syscall_ptr)?;
 
             return Ok(());
-        } else if DeprecatedSyscallSelector::GetSequencerAddress == selector
-            && self.cheatnet_state.address_is_elected(&contract_address)
-        {
-            self.syscall_handler.syscall_ptr += 1;
-            self.increment_syscall_count(selector);
-
-            let response = get_sequencer_address(self, contract_address).unwrap();
-
-            response.write(vm, &mut self.syscall_handler.syscall_ptr)?;
-
-            return Ok(());
         } else if DeprecatedSyscallSelector::DelegateCall == selector {
             self.child.syscall_ptr += 1;
             self.increment_syscall_count(selector);

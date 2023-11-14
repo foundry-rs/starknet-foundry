@@ -74,17 +74,6 @@ fn stop_elect(contract_address: ContractAddress) {
     cheatcode::<'stop_elect'>(array![contract_address_felt].span());
 }
 
-fn start_elect(contract_address: ContractAddress, sequencer_address: ContractAddress) {
-    let contract_address_felt: felt252 = contract_address.into();
-    let sequencer_address_felt: felt252 = sequencer_address.into();
-    cheatcode::<'start_elect'>(array![contract_address_felt, sequencer_address_felt].span());
-}
-
-fn stop_elect(contract_address: ContractAddress) {
-    let contract_address_felt: felt252 = contract_address.into();
-    cheatcode::<'stop_elect'>(array![contract_address_felt].span());
-}
-
 fn start_mock_call<T, impl TSerde: serde::Serde<T>, impl TDestruct: Destruct<T>>(
     contract_address: ContractAddress, function_name: felt252, ret_data: T
 ) {

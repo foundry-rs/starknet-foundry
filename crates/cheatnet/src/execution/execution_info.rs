@@ -31,10 +31,6 @@ fn get_cheated_block_info_ptr(
         new_block_info[2] = MaybeRelocatable::Int(elected_address.to_felt252());
     };
 
-    if let Some(elected_address) = cheatnet_state.elected_contracts.get(contract_address) {
-        new_block_info[2] = MaybeRelocatable::Int(elected_address.to_felt252());
-    };
-
     vm.load_data(ptr_cheated_block_info, &new_block_info)
         .unwrap();
     ptr_cheated_block_info
