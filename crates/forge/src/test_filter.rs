@@ -4,7 +4,7 @@ use mockall_double::double;
 use test_collector::TestCase;
 
 #[double]
-use crate::shared_cache::shared_cache;
+use crate::shared_cache::helpers;
 
 #[derive(Debug, PartialEq)]
 // Specifies what tests should be included
@@ -77,7 +77,7 @@ impl TestsFilter {
             NameFilter::ExactMatch(name) => {
                 cases.into_iter().filter(|tc| tc.name == *name).collect()
             }
-            NameFilter::RerunFailed => match shared_cache::read_tests_failed_file() {
+            NameFilter::RerunFailed => match helpers::read_tests_failed_file() {
                 Ok(result) => cases
                     .into_iter()
                     .filter(|tc| result.iter().any(|name| name == &tc.name))
@@ -111,7 +111,7 @@ impl TestCaseFilter for TestsFilter {
 
 #[cfg(test)]
 mod tests {
-    use super::shared_cache;
+    use super::helpers;
     use crate::collecting::CompiledTestCrate;
     use crate::test_filter::TestsFilter;
     use crate::CrateLocation;
@@ -259,7 +259,7 @@ mod tests {
 
         let tests_filter = TestsFilter::from_flags(Some(String::new()), false, false, false, true);
 
-        let ctx = shared_cache::read_tests_failed_file_context();
+        let ctx = helpers::read_tests_failed_file_context();
         ctx.expect()
             .returning(|| Ok(vec!["crate1::do_thing".to_string()]));
 

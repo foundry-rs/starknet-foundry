@@ -1,9 +1,9 @@
 pub const CACHE_DIR: &str = ".snfoundry_cache";
-use mockall::predicate::*;
-use mockall::*;
+#[cfg(test)]
+use mockall::{automock, predicate::str};
 
-#[automock()]
-pub mod shared_cache {
+#[cfg_attr(test, automock)]
+pub mod helpers {
     use anyhow::Result;
     use camino::Utf8PathBuf;
     use scarb_metadata::MetadataCommand;
@@ -57,3 +57,5 @@ pub mod shared_cache {
         Ok(())
     }
 }
+
+pub use helpers::*;

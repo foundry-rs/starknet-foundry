@@ -125,7 +125,7 @@ pub fn run(project_name: &str) -> Result<()> {
         .context("Failed to add starknet")?;
 
     add_target_to_toml(&project_path.join("Scarb.toml"))?;
-    extend_gitignore(&project_path.join(".gitignore"))?;
+    extend_gitignore(&project_path.join(".snfoundry_cache/"))?;
     overwrite_files_from_scarb_template("src", &project_path, project_name)?;
     overwrite_files_from_scarb_template("tests", &project_path, project_name)?;
 

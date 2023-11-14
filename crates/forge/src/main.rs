@@ -16,7 +16,7 @@ use tempfile::{tempdir, TempDir};
 use tokio::runtime::Builder;
 
 use forge::scarb::config::ForgeConfig;
-use forge::shared_cache::shared_cache::{clean_cache, write_failed_tests};
+use forge::shared_cache::{clean_cache, write_failed_tests};
 use forge::test_case_summary::TestCaseSummary;
 use forge::test_filter::TestsFilter;
 use forge::{pretty_printing, RunnerConfig, RunnerParams, FUZZER_RUNS_DEFAULT};
