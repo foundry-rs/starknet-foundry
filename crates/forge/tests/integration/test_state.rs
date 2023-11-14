@@ -450,11 +450,11 @@ fn test_simple_cheatcodes() {
             let caller_addr_before = starknet::get_caller_address();
             let target_caller_address: ContractAddress = (123_felt252).try_into().unwrap();
 
-            start_prank(test_address, target_caller_address);
+            start_prank(CheatTarget::One(test_address), target_caller_address);
             let caller_addr_after = starknet::get_caller_address();
             assert(caller_addr_after==target_caller_address, caller_addr_after.into());
 
-            stop_prank(test_address);
+            stop_prank(CheatTarget::One(test_address));
             let caller_addr_after = starknet::get_caller_address();
             assert(caller_addr_after==caller_addr_before, caller_addr_before.into());
         }

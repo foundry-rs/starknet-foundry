@@ -5,7 +5,7 @@ use traits::TryInto;
 use starknet::ContractAddress;
 use starknet::Felt252TryIntoContractAddress;
 
-use snforge_std::{declare, ContractClass, ContractClassTrait, start_prank};
+use snforge_std::{declare, ContractClass, ContractClassTrait, start_prank, CheatTarget};
 
 use component_macros::example::{IMyContractDispatcherTrait, IMyContractDispatcher};
 
@@ -17,6 +17,6 @@ fn test_mint() {
     let minter: ContractAddress = 'minter'.try_into().unwrap();
 
     let dispatcher = IMyContractDispatcher { contract_address: address };
-    start_prank(address, minter);
+    start_prank(CheatTarget::One(address), minter);
     dispatcher.mint();
 }

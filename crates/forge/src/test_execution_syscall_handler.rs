@@ -268,19 +268,21 @@ impl TestExecutionSyscallHandler<'_> {
                 Ok(())
             }
             "start_prank" => {
-                let contract_address = inputs[0].to_contract_address();
-                let caller_address = inputs[1].to_contract_address();
+                let target = deserialize_cheat_target(&inputs[..inputs.len() - 1]);
+
+                // The last element in `inputs` should be the contract address in all cases
+                let caller_address = inputs.last().unwrap().to_contract_address();
 
                 self.child
                     .child
                     .cheatnet_state
-                    .start_prank(contract_address, caller_address);
+                    .start_prank(target, caller_address);
                 Ok(())
             }
             "stop_prank" => {
-                let contract_address = inputs[0].to_contract_address();
+                let target = deserialize_cheat_target(&inputs);
 
-                self.child.child.cheatnet_state.stop_prank(contract_address);
+                self.child.child.cheatnet_state.stop_prank(target);
                 Ok(())
             }
             "start_mock_call" => {
@@ -654,7 +656,7 @@ fn deserialize_cheat_target(inputs: &[Felt252]) -> CheatTarget {
                 .collect();
             CheatTarget::Multiple(contract_addresses)
         }
-        _ => panic!("Invalid CheatTarget variant"),
+        _ => unreachable!("Invalid CheatTarget variant"),
     }
 }
 
