@@ -62,8 +62,11 @@ fn add_target_to_toml(path: &Path) -> Result<()> {
 }
 
 fn extend_gitignore(path: &Path) -> Result<()> {
-    let mut file = OpenOptions::new().write(true).append(true).open(path)?;
-    writeln!(file, ".prev_tests_failed")?;
+    let mut file = OpenOptions::new()
+        .write(true)
+        .append(true)
+        .open(path.join(".gitignore"))?;
+    writeln!(file, ".snfoundry_cache/")?;
 
     Ok(())
 }
@@ -125,7 +128,7 @@ pub fn run(project_name: &str) -> Result<()> {
         .context("Failed to add starknet")?;
 
     add_target_to_toml(&project_path.join("Scarb.toml"))?;
-    extend_gitignore(&project_path.join(".snfoundry_cache/"))?;
+    extend_gitignore(&project_path)?;
     overwrite_files_from_scarb_template("src", &project_path, project_name)?;
     overwrite_files_from_scarb_template("tests", &project_path, project_name)?;
 
