@@ -51,7 +51,7 @@ fn roll_basic() {
                 let old_block_number1 = roll_checker1.get_block_number();
                 let old_block_number2 = roll_checker2.get_block_number();
 
-                start_roll(CheatTarget::Multiple(array![roll_checker1.contract_address, roll_checker2.contract_address].span()), 123);
+                start_roll(CheatTarget::Multiple(array![roll_checker1.contract_address, roll_checker2.contract_address]), 123);
 
                 let new_block_number1 = roll_checker1.get_block_number();
                 let new_block_number2 = roll_checker2.get_block_number();
@@ -59,7 +59,7 @@ fn roll_basic() {
                 assert(new_block_number1 == 123, 'Wrong block number #1');
                 assert(new_block_number2 == 123, 'Wrong block number #2');
 
-                stop_roll(CheatTarget::Multiple(array![roll_checker1.contract_address, roll_checker2.contract_address].span()));
+                stop_roll(CheatTarget::Multiple(array![roll_checker1.contract_address, roll_checker2.contract_address]));
 
                 let new_block_number1 = roll_checker1.get_block_number();
                 let new_block_number2 = roll_checker2.get_block_number();
@@ -158,7 +158,7 @@ fn roll_complex() {
                 assert(new_block_number1 == 456, 'Wrong block number #3');
                 assert(new_block_number2 == 123, 'Wrong block number #4');
 
-                start_roll(CheatTarget::Multiple(array![roll_checker1.contract_address, roll_checker2.contract_address].span()), 789);
+                start_roll(CheatTarget::Multiple(array![roll_checker1.contract_address, roll_checker2.contract_address]), 789);
 
                 let new_block_number1 = roll_checker1.get_block_number();
                 let new_block_number2 = roll_checker2.get_block_number();
