@@ -1,10 +1,8 @@
 use crate::collecting::{CompiledTestCrate, CompiledTestCrateRaw, ValidatedForkConfig};
 use crate::TestCaseFilter;
-use mockall_double::double;
 use test_collector::TestCase;
 
-#[double]
-use crate::shared_cache::helpers;
+use crate::shared_cache::read_tests_failed_file;
 
 #[derive(Debug, PartialEq)]
 // Specifies what tests should be included
@@ -77,7 +75,7 @@ impl TestsFilter {
             NameFilter::ExactMatch(name) => {
                 cases.into_iter().filter(|tc| tc.name == *name).collect()
             }
-            NameFilter::RerunFailed => match helpers::read_tests_failed_file() {
+            NameFilter::RerunFailed => match read_tests_failed_file() {
                 Ok(result) => cases
                     .into_iter()
                     .filter(|tc| result.iter().any(|name| name == &tc.name))
@@ -111,7 +109,6 @@ impl TestCaseFilter for TestsFilter {
 
 #[cfg(test)]
 mod tests {
-    use super::helpers;
     use crate::collecting::CompiledTestCrate;
     use crate::test_filter::TestsFilter;
     use crate::CrateLocation;
@@ -256,26 +253,6 @@ mod tests {
             TestsFilter::from_flags(Some("nonexistent".to_string()), false, false, false, false);
         let filtered = tests_filter.filter_tests(mocked_tests.clone());
         assert_eq!(filtered.test_cases, vec![]);
-
-        let tests_filter = TestsFilter::from_flags(Some(String::new()), false, false, false, true);
-
-        let ctx = helpers::read_tests_failed_file_context();
-        ctx.expect()
-            .returning(|| Ok(vec!["crate1::do_thing".to_string()]));
-
-        let filtered = tests_filter.filter_tests(mocked_tests.clone());
-
-        assert_eq!(
-            filtered.test_cases,
-            vec![TestCase {
-                name: "crate1::do_thing".to_string(),
-                available_gas: None,
-                ignored: false,
-                expected_result: ExpectedTestResult::Success,
-                fork_config: None,
-                fuzzer_config: None,
-            },]
-        );
 
         let tests_filter = TestsFilter::from_flags(Some(String::new()), false, false, false, false);
         let filtered = tests_filter.filter_tests(mocked_tests.clone());
