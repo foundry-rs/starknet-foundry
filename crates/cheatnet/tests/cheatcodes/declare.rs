@@ -7,7 +7,6 @@ use cheatnet::cheatcodes::{CheatcodeError, EnhancedHintError};
 use conversions::StarknetConversions;
 use scarb_artifacts::StarknetContractArtifacts;
 use starknet_api::core::ClassHash;
-use test_case::test_case;
 
 fn get_contract_class_hash(
     contract_name: &str,
@@ -17,8 +16,10 @@ fn get_contract_class_hash(
     get_class_hash(sierra.sierra.as_str()).unwrap()
 }
 
-#[test_case("HelloStarknet")]
-fn declare_simple(contract_name: &str) {
+#[test]
+fn declare_simple() {
+    let contract_name = "HelloStarknet";
+
     let mut cached_state = create_cached_state();
     let (mut blockifier_state, _) = create_cheatnet_state(&mut cached_state);
 
@@ -31,8 +32,10 @@ fn declare_simple(contract_name: &str) {
     assert_eq!(class_hash, expected_class_hash);
 }
 
-#[test_case(vec!["HelloStarknet", "ConstructorSimple"])]
-fn declare_multiple(contract_names: Vec<&str>) {
+#[test]
+fn declare_multiple() {
+    let contract_names = vec!["HelloStarknet", "ConstructorSimple"];
+
     let mut cached_state = create_cached_state();
     let (mut blockifier_state, _) = create_cheatnet_state(&mut cached_state);
 
@@ -46,8 +49,10 @@ fn declare_multiple(contract_names: Vec<&str>) {
     }
 }
 
-#[test_case("HelloStarknet", "is already declared")]
-fn declare_same_contract(contract_name: &str, error_msg: &str) {
+#[test]
+fn declare_same_contract() {
+    let contract_name = "HelloStarknet";
+
     let mut cached_state = create_cached_state();
     let (mut blockifier_state, _) = create_cheatnet_state(&mut cached_state);
 
@@ -62,14 +67,16 @@ fn declare_same_contract(contract_name: &str, error_msg: &str) {
 
     assert!(match output {
         Err(CheatcodeError::Unrecoverable(EnhancedHintError::Anyhow(msg))) => {
-            msg.to_string().contains(error_msg)
+            msg.to_string().contains("is already declared")
         }
         _ => false,
     });
 }
 
-#[test_case("GoodbyeStarknet")]
-fn declare_non_existant(contract_name: &str) {
+#[test]
+fn declare_non_existant() {
+    let contract_name = "GoodbyeStarknet";
+
     let mut cached_state = create_cached_state();
     let (mut blockifier_state, _) = create_cheatnet_state(&mut cached_state);
 
