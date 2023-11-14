@@ -1,24 +1,23 @@
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use assert_fs::fixture::{FileTouch, FileWriteStr, PathChild};
 use assert_fs::TempDir;
-use cairo_lang_compiler::db::RootDatabase;
-use cairo_lang_compiler::project::setup_project;
-use cairo_lang_compiler::CompilerConfig;
-use cairo_lang_filesystem::db::init_dev_corelib;
-use cairo_lang_starknet::allowed_libfuncs::{validate_compatible_sierra_version, ListSelector};
-use cairo_lang_starknet::casm_contract_class::CasmContractClass;
-use cairo_lang_starknet::contract_class::compile_contract_in_prepared_db;
-use cairo_lang_starknet::inline_macros::selector::SelectorMacro;
-use cairo_lang_starknet::plugin::StarkNetPlugin;
-use camino::{Utf8Path, Utf8PathBuf};
+use camino::Utf8PathBuf;
 use forge::{CrateLocation, TestCrateSummary};
-use scarb_artifacts::StarknetContractArtifacts;
+use indoc::formatdoc;
+use scarb_artifacts::{get_contracts_map, StarknetContractArtifacts};
+use scarb_metadata::MetadataCommand;
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::process::{Command, Stdio};
 use std::str::FromStr;
-use std::sync::Arc;
-use test_collector::LinkedLibrary;
+
+/// Represents a dependency of a Cairo project
+#[derive(Debug, Clone)]
+pub struct LinkedLibrary {
+    pub name: String,
+    pub path: PathBuf,
+}
 
 #[derive(Debug, Clone)]
 pub struct Contract {
@@ -40,43 +39,57 @@ impl Contract {
         Ok(Self { name, code })
     }
 
-    fn generate_sierra_and_casm(self, corelib_path: &Utf8Path) -> Result<(String, String)> {
-        let path = TempDir::new()?;
-        let contract_path = path.child("contract.cairo");
+    fn generate_sierra_and_casm(self) -> Result<(String, String)> {
+        let dir = TempDir::new()?;
+
+        let contract_path = dir.child("src/lib.cairo");
         contract_path.touch()?;
         contract_path.write_str(&self.code)?;
 
-        let allowed_libfuncs_list = Some(ListSelector::default());
+        let scarb_toml_path = dir.child("Scarb.toml");
+        scarb_toml_path
+            .write_str(&formatdoc!(
+                r#"
+                [package]
+                name = "contract"
+                version = "0.1.0"
+    
+                [[target.starknet-contract]]
+                sierra = true
+                casm = true
+    
+                [dependencies]
+                starknet = "2.3.1"
+                "#,
+            ))
+            .unwrap();
 
-        let db = &mut {
-            RootDatabase::builder()
-                .with_macro_plugin(Arc::new(StarkNetPlugin::default()))
-                .with_inline_macro_plugin(SelectorMacro::NAME, Arc::new(SelectorMacro))
-                .build()?
-        };
-        init_dev_corelib(db, corelib_path.into());
+        let build_output = Command::new("scarb")
+            .current_dir(&dir)
+            .arg("build")
+            .stderr(Stdio::inherit())
+            .output()
+            .context("Failed to build contracts with Scarb")?;
+        if !build_output.status.success() {
+            bail!("Scarb build did not succeed")
+        }
 
-        let main_crate_ids = setup_project(db, Path::new(&contract_path.path()))?;
+        let scarb_metadata = MetadataCommand::new()
+            .current_dir(dir.path())
+            .inherit_stderr()
+            .exec()?;
+        let package = scarb_metadata
+            .packages
+            .iter()
+            .find(|package| package.name == "contract")
+            .unwrap();
 
-        let contract =
-            compile_contract_in_prepared_db(db, None, main_crate_ids, CompilerConfig::default())?;
-
-        validate_compatible_sierra_version(
-            &contract,
-            if let Some(allowed_libfuncs_list) = allowed_libfuncs_list {
-                allowed_libfuncs_list
-            } else {
-                ListSelector::default()
-            },
-        )?;
-
-        let sierra =
-            serde_json::to_string_pretty(&contract).with_context(|| "Serialization failed.")?;
-
-        let casm = CasmContractClass::from_contract_class(contract, true)?;
-        let casm = serde_json::to_string_pretty(&casm)?;
-
-        Ok((sierra, casm))
+        Ok(get_contracts_map(&scarb_metadata, &package.id)
+            .unwrap()
+            .into_values()
+            .map(|x| (x.sierra, x.casm))
+            .next()
+            .unwrap())
     }
 }
 
@@ -98,6 +111,33 @@ impl<'a> TestCase {
         test_file.write_str(test_code)?;
 
         dir.child("src/lib.cairo").touch().unwrap();
+
+        let snforge_std_path = Utf8PathBuf::from_str("../../snforge_std")
+            .unwrap()
+            .canonicalize_utf8()
+            .unwrap()
+            .to_string()
+            .replace('\\', "/");
+
+        let scarb_toml_path = dir.child("Scarb.toml");
+        scarb_toml_path
+            .write_str(&formatdoc!(
+                r#"
+                [package]
+                name = "test_package"
+                version = "0.1.0"
+    
+                [[target.starknet-contract]]
+                sierra = true
+                casm = true
+    
+                [dependencies]
+                starknet = "2.3.1"
+                snforge_std = {{ path = "{}" }}
+                "#,
+                snforge_std_path
+            ))
+            .unwrap();
 
         Ok(Self {
             dir,
@@ -138,16 +178,13 @@ impl<'a> TestCase {
         ]
     }
 
-    pub fn contracts(
-        &self,
-        corelib_path: &Utf8Path,
-    ) -> Result<HashMap<String, StarknetContractArtifacts>> {
+    pub fn contracts(&self) -> Result<HashMap<String, StarknetContractArtifacts>> {
         self.contracts
             .clone()
             .into_iter()
             .map(|contract| {
                 let name = contract.name.clone();
-                let (sierra, casm) = contract.generate_sierra_and_casm(corelib_path)?;
+                let (sierra, casm) = contract.generate_sierra_and_casm()?;
 
                 Ok((name, StarknetContractArtifacts { sierra, casm }))
             })

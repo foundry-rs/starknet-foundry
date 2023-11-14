@@ -38,7 +38,6 @@ use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::hash::StarkHash;
 use starknet_api::patricia_key;
 use starknet_api::transaction::Calldata;
-use test_collector::TestCase;
 use tokio::runtime::Runtime;
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
@@ -46,7 +45,7 @@ use url::Url;
 
 use crate::test_case_summary::TestCaseSummary;
 
-use crate::collecting::{TestCaseRunnable, ValidatedForkConfig};
+use crate::collector_structs::{TestCase, TestCaseRunnable, ValidatedForkConfig};
 use crate::test_execution_syscall_handler::TestExecutionSyscallHandler;
 use crate::{RunnerConfig, RunnerParams, CACHE_DIR};
 

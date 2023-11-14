@@ -1,7 +1,9 @@
 use scarb_metadata::{Metadata, PackageId};
+use std::process::{Command, Stdio};
 
 use crate::scarb::config::{validate_raw_fork_config, ForgeConfig};
 use anyhow::{anyhow, Context, Result};
+use scarb_ui::args::PackagesFilter;
 
 pub mod config;
 
@@ -29,10 +31,43 @@ pub fn config_from_scarb_for_package(
     raw_config.try_into()
 }
 
+pub fn build_contracts_with_scarb(filter: PackagesFilter) -> Result<()> {
+    let build_output = Command::new("scarb")
+        .arg("build")
+        .env("SCARB_PACKAGES_FILTER", filter.to_env())
+        .stderr(Stdio::inherit())
+        .stdout(Stdio::inherit())
+        .output()
+        .context("Failed to build contracts with Scarb")?;
+
+    if build_output.status.success() {
+        Ok(())
+    } else {
+        Err(anyhow!("Scarb build did not succeed"))
+    }
+}
+
+pub fn build_test_artifacts_with_scarb(filter: PackagesFilter) -> Result<()> {
+    let build_output = Command::new("scarb")
+        .arg("snforge-test-collector")
+        .env("SCARB_PACKAGES_FILTER", filter.to_env())
+        .stderr(Stdio::inherit())
+        .stdout(Stdio::inherit())
+        .output()
+        .context("Failed to build test artifacts with Scarb")?;
+
+    if build_output.status.success() {
+        Ok(())
+    } else {
+        Err(anyhow!("scarb snforge-test-collector did not succeed"))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::scarb::config::ForkTarget;
+    use crate::RawForkParams;
     use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
     use assert_fs::TempDir;
     use camino::Utf8PathBuf;
@@ -42,7 +77,6 @@ mod tests {
     use starknet::core::types::BlockId;
     use starknet::core::types::BlockTag::Latest;
     use std::str::FromStr;
-    use test_collector::RawForkParams;
 
     fn setup_package(package_name: &str) -> TempDir {
         let temp = TempDir::new().unwrap();

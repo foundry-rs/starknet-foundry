@@ -2,10 +2,10 @@ use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
 use camino::Utf8PathBuf;
 use indoc::{formatdoc, indoc};
 
-use crate::assert_stdout_contains;
 use crate::e2e::common::runner::{
     get_current_branch, get_remote_url, runner, setup_package, test_runner,
 };
+use crate::{assert_stderr_contains, assert_stdout_contains};
 use assert_fs::TempDir;
 use std::{path::Path, str::FromStr};
 
@@ -614,6 +614,7 @@ fn init_new_project_test() {
             [package]
             name = "test_name"
             version = "0.1.0"
+            edition = "2023_10"
 
             # See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest.html
 
@@ -759,12 +760,10 @@ fn available_gas_error() {
     let snapbox = test_runner();
 
     let output = snapbox.current_dir(&temp).assert().failure();
-    assert_stdout_contains!(
+    assert_stderr_contains!(
         output,
         indoc! {r"
-        [..]Compiling[..]
-        [..]Finished[..]
-        [ERROR] tests::available_gas::available_gas - Attribute `available_gas` is not supported: Contract functions execution cost would not be included in the gas calculation.
+        Error: tests::available_gas::available_gas - Attribute `available_gas` is not supported: Contract functions execution cost would not be included in the gas calculation.
         "}
     );
 }

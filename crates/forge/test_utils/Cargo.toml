@@ -24,5 +24,4 @@ serde.workspace = true
 tempfile.workspace = true
 tokio.workspace = true
 forge = { path = "../../forge" }
-test-collector = { path = "../../test-collector" }
 scarb-artifacts = { path = "../../scarb-artifacts" }

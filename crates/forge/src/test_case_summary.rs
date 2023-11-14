@@ -1,11 +1,10 @@
-use crate::collecting::TestCaseRunnable;
+use crate::collector_structs::{ExpectedPanicValue, ExpectedTestResult, TestCaseRunnable};
 use crate::running::ForkInfo;
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{RunResult, RunResultValue};
 use starknet_api::block::BlockNumber;
 use std::option::Option;
-use test_collector::{ExpectedPanicValue, ExpectedTestResult};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct FuzzingStatistics {

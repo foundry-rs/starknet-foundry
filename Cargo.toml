@@ -2,7 +2,6 @@
 resolver = "2"
 members = [
     "crates/forge",
-    "crates/test-collector",
     "crates/cast",
     "crates/cheatnet",
     "crates/conversions",
@@ -27,17 +26,6 @@ cairo-lang-utils = "=2.3.1"
 cairo-lang-starknet = "=2.3.1"
 cairo-lang-compiler = "=2.3.1"
 cairo-lang-filesystem = "=2.3.1"
-cairo-lang-debug = "=2.3.1"
-cairo-lang-defs = "=2.3.1"
-cairo-lang-diagnostics = "=2.3.1"
-cairo-lang-lowering = "=2.3.1"
-cairo-lang-plugins = "=2.3.1"
-cairo-lang-project = "=2.3.1"
-cairo-lang-semantic = "=2.3.1"
-cairo-lang-sierra-ap-change = "=2.3.1"
-cairo-lang-sierra-gas = "=2.3.1"
-cairo-lang-sierra-generator = "=2.3.1"
-cairo-lang-syntax = "=2.3.1"
 cairo-lang-test-plugin = "=2.3.1"
 cairo-vm = "0.8.2"
 cairo-felt = "0.8.2"

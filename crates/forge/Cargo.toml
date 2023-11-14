@@ -15,7 +15,6 @@ indoc.workspace = true
 starknet_api.workspace = true
 tempfile.workspace = true
 rayon.workspace = true
-test-collector = { path = "../test-collector" }
 cheatnet = { path = "../cheatnet" }
 conversions = { path = "../conversions" }
 scarb-artifacts = { path = "../scarb-artifacts" }
@@ -25,8 +24,6 @@ cairo-lang-sierra-to-casm.workspace = true
 cairo-lang-sierra.workspace = true
 cairo-lang-utils.workspace = true
 cairo-lang-starknet.workspace = true
-cairo-lang-compiler.workspace = true
-cairo-lang-filesystem.workspace = true
 cairo-lang-test-plugin.workspace = true
 cairo-felt.workspace = true
 itertools.workspace = true

@@ -1,10 +1,10 @@
+use crate::collector_structs::RawForkParams;
 use anyhow::{bail, Result};
 use conversions::StarknetConversions;
 use itertools::Itertools;
 use serde::Deserialize;
 use starknet::core::types::{BlockId, BlockTag};
 use std::collections::HashMap;
-use test_collector::RawForkParams;
 
 #[derive(Debug, PartialEq, Default)]
 pub struct ForgeConfig {

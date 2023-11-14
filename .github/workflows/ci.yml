@@ -120,8 +120,6 @@ jobs:
         run: cargo fmt --check -p forge
       - name: Check cast formatting
         run: cargo fmt --check -p cast
-      - name: Check test-collector formatting
-        run: cargo fmt --check -p test-collector
       - name: Check cheatnet formatting
         run: cargo fmt --check -p cheatnet
 
