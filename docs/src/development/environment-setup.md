@@ -1,5 +1,11 @@
 # Environment Setup
 
+> 💡 **Info**
+> 
+> This setup is for further development of Starknet Foundry purposes.
+>
+> If you don't wish to contribute, you can omit these instructions.
+
 Install the latest stable [Rust](https://www.rust-lang.org/tools/install) version.
 If you already have Rust installed make sure to upgrade it by running
 
