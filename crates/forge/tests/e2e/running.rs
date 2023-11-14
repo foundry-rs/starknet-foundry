@@ -77,7 +77,7 @@ fn simple_package_with_git_dependency() {
             casm = true
 
             [dependencies]
-            starknet = "2.3.0"
+            starknet = "2.3.1"
             snforge_std = {{ git = "https://github.com/{}", branch = "{}" }}
             "#,
             remote_url,
@@ -519,7 +519,7 @@ fn with_exit_first() {
             version = "0.1.0"
 
             [dependencies]
-            starknet = "2.3.0"
+            starknet = "2.3.1"
             snforge_std = {{ path = "{}" }}
 
             [[target.starknet-contract]]
@@ -619,7 +619,7 @@ fn init_new_project_test() {
 
             [dependencies]
             snforge_std = {{ git = "https://github.com/foundry-rs/starknet-foundry", tag = "v{}" }}
-            starknet = "2.3.0"
+            starknet = "2.3.1"
 
             [[target.starknet-contract]]
             casm = true
@@ -631,7 +631,6 @@ fn init_new_project_test() {
 
     let remote_url = get_remote_url();
     let branch = get_current_branch();
-
     manifest_path
         .write_str(&formatdoc!(
             r#"
@@ -643,7 +642,7 @@ fn init_new_project_test() {
         casm = true
 
         [dependencies]
-        starknet = "2.3.0"
+        starknet = "2.3.1"
         snforge_std = {{ git = "https://github.com/{}", branch = "{}" }}
         "#,
             remote_url,
