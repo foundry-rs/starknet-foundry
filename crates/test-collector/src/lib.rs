@@ -326,6 +326,19 @@ fn extract_fork_config_from_args(db: &dyn SyntaxGroup, attr: &Attribute) -> Opti
         return None;
     };
 
+    let elements: Vec<String> = block_id
+        .path(db)
+        .elements(db)
+        .iter()
+        .map(|e| e.identifier(db).to_string())
+        .collect();
+    if !(elements.len() == 2
+        && elements[0] == "BlockId"
+        && ["Number", "Hash", "Tag"].contains(&elements[1].as_str()))
+    {
+        return None;
+    }
+
     let block_id_type = block_id
         .path(db)
         .elements(db)

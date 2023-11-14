@@ -85,6 +85,31 @@ fn print_error_if_attributes_incorrect() {
         #[should_panic(url: "https://test.com")]
                       ^***********************^
 
+
+        error: Plugin diagnostic: Expected fork config must be of the form `url: <double quote string>, block_id: <snforge_std::BlockId>`.
+         --> {mock_tests_dir_path_str}/tests/test_fork.cairo:56:7
+        #[fork(url: "http://188.34.188.184:9545/rpc/v0.4", block_id: Number(12345))]
+              ^*******************************************************************^
+
+        error: Plugin diagnostic: Expected fork config must be of the form `url: <double quote string>, block_id: <snforge_std::BlockId>`.
+         --> {mock_tests_dir_path_str}/tests/test_fork.cairo:62:7
+        #[fork(url: "http://188.34.188.184:9545/rpc/v0.4", block_id: Hash(0x12345))]
+              ^*******************************************************************^
+
+        error: Plugin diagnostic: Expected fork config must be of the form `url: <double quote string>, block_id: <snforge_std::BlockId>`.
+         --> {mock_tests_dir_path_str}/tests/test_fork.cairo:68:7
+        #[fork(url: "http://188.34.188.184:9545/rpc/v0.4", block_id: Tag(Latest))]
+              ^*****************************************************************^
+
+        error: Plugin diagnostic: Expected fork config must be of the form `url: <double quote string>, block_id: <snforge_std::BlockId>`.
+         --> {mock_tests_dir_path_str}/tests/test_fork.cairo:74:7
+        #[fork(url: "http://188.34.188.184:9545/rpc/v0.4", block_id: BlockWhat::Number(12345))]
+              ^******************************************************************************^
+
+        error: Plugin diagnostic: Expected fork config must be of the form `url: <double quote string>, block_id: <snforge_std::BlockId>`.
+         --> {mock_tests_dir_path_str}/tests/test_fork.cairo:80:7
+        #[fork(url: "http://188.34.188.184:9545/rpc/v0.4", block_id: Something::BlockId::Number(12345))]
+              ^***************************************************************************************^
     "#}
     );
 }
