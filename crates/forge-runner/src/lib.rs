@@ -73,6 +73,7 @@ impl ForkTarget {
 
 /// Configuration of the test runner
 #[derive(Debug, PartialEq)]
+#[non_exhaustive]
 pub struct RunnerConfig {
     pub workspace_root: Utf8PathBuf,
     pub exit_first: bool,
@@ -108,6 +109,8 @@ impl RunnerConfig {
     }
 }
 
+#[non_exhaustive]
+#[derive(Debug, Clone)]
 pub struct RunnerParams {
     corelib_path: Utf8PathBuf,
     contracts: HashMap<String, StarknetContractArtifacts>,
@@ -148,6 +151,7 @@ impl RunnerParams {
 
 /// Exit status of the runner
 #[derive(Debug, PartialEq, Clone)]
+#[non_exhaustive]
 pub enum RunnerStatus {
     /// Runner exited without problems
     Default,
@@ -158,6 +162,7 @@ pub enum RunnerStatus {
 }
 
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub struct ValidatedForkConfig {
     url: Url,
     block_id: BlockId,

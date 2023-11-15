@@ -314,13 +314,13 @@ mod tests {
         let config = combine_configs(&workspace_root, false, None, None, &Default::default());
         assert_eq!(
             config,
-            RunnerConfig {
+            RunnerConfig::new(
                 workspace_root,
-                exit_first: false,
-                fork_targets: vec![],
-                fuzzer_runs: FUZZER_RUNS_DEFAULT,
-                fuzzer_seed: config.fuzzer_seed,
-            }
+                false,
+                vec![],
+                FUZZER_RUNS_DEFAULT,
+                config.fuzzer_seed
+            )
         );
     }
 
@@ -337,13 +337,7 @@ mod tests {
         let config = combine_configs(&workspace_root, false, None, None, &config_from_scarb);
         assert_eq!(
             config,
-            RunnerConfig {
-                workspace_root,
-                exit_first: true,
-                fork_targets: vec![],
-                fuzzer_runs: 1234,
-                fuzzer_seed: 500,
-            }
+            RunnerConfig::new(workspace_root, true, vec![], 1234, 500)
         );
     }
 
@@ -366,13 +360,7 @@ mod tests {
         );
         assert_eq!(
             config,
-            RunnerConfig {
-                workspace_root,
-                exit_first: true,
-                fork_targets: vec![],
-                fuzzer_runs: 100,
-                fuzzer_seed: 32,
-            }
+            RunnerConfig::new(workspace_root, true, vec![], 100, 32)
         );
     }
 }
