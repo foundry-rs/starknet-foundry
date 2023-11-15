@@ -500,7 +500,7 @@ fn test_simple_cheatcodes() {
             assert(new_tx_info.nonce == old_tx_info.nonce, 'Wrong nonce');
             assert(new_tx_info.transaction_hash == 421, 'Wrong transaction_hash');
 
-            stop_spoof(test_address);
+            stop_spoof(CheatTarget::One(test_address));
             let new_tx_info = starknet::get_tx_info().unbox();
             assert(new_tx_info.nonce == old_tx_info.nonce, 'Wrong nonce');
             assert(

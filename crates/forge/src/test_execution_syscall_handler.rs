@@ -320,7 +320,7 @@ impl TestExecutionSyscallHandler<'_> {
                 Ok(())
             }
             "start_spoof" => {
-                let contract_address = inputs[0].to_contract_address();
+                let target = deserialize_cheat_target(&inputs);
 
                 let version = inputs[1].is_one().then(|| inputs[2].clone());
                 let account_contract_address = inputs[3].is_one().then(|| inputs[4].clone());
@@ -337,7 +337,7 @@ impl TestExecutionSyscallHandler<'_> {
                     .then(|| Vec::from(&inputs[15..(15 + signature_len)]));
 
                 self.child.child.cheatnet_state.start_spoof(
-                    contract_address,
+                    target,
                     version,
                     account_contract_address,
                     max_fee,
@@ -349,9 +349,9 @@ impl TestExecutionSyscallHandler<'_> {
                 Ok(())
             }
             "stop_spoof" => {
-                let contract_address = inputs[0].to_contract_address();
+                let target = deserialize_cheat_target(&inputs);
 
-                self.child.child.cheatnet_state.stop_spoof(contract_address);
+                self.child.child.cheatnet_state.stop_spoof(target);
                 Ok(())
             }
             "declare" => {

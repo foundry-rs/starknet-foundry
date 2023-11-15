@@ -8,6 +8,7 @@ use crate::{
 };
 use cairo_felt::Felt252;
 use cheatnet::cheatcodes::deploy::deploy;
+use cheatnet::state::CheatTarget;
 use cheatnet::{
     rpc::call_contract,
     state::{BlockifierState, CheatnetState},
@@ -189,7 +190,7 @@ fn spoof_simple() {
     let nonce = None;
 
     cheatnet_state.start_spoof(
-        contract_address,
+        CheatTarget::One(contract_address),
         version,
         account_contract_address,
         max_fee,
@@ -248,7 +249,7 @@ fn start_spoof_multiple_times() {
     let expected_nonce = Felt252::from(33);
 
     cheatnet_state.start_spoof(
-        contract_address,
+        CheatTarget::One(contract_address),
         Some(expected_version.clone()),
         Some(expected_account_address.clone()),
         Some(expected_max_fee.clone()),
@@ -272,7 +273,7 @@ fn start_spoof_multiple_times() {
     );
 
     cheatnet_state.start_spoof(
-        contract_address,
+        CheatTarget::One(contract_address),
         None,
         Some(expected_account_address.clone()),
         None,
@@ -296,7 +297,7 @@ fn start_spoof_multiple_times() {
     );
 
     cheatnet_state.start_spoof(
-        contract_address,
+        CheatTarget::One(contract_address),
         Some(expected_version.clone()),
         None,
         Some(expected_max_fee.clone()),
@@ -355,7 +356,7 @@ fn spoof_start_stop() {
     let nonce = None;
 
     cheatnet_state.start_spoof(
-        contract_address,
+        CheatTarget::One(contract_address),
         version,
         account_contract_address,
         max_fee,
@@ -378,7 +379,7 @@ fn spoof_start_stop() {
         &nonce_before,
     );
 
-    cheatnet_state.stop_spoof(contract_address);
+    cheatnet_state.stop_spoof(CheatTarget::One(contract_address));
 
     assert_all_mock_checker_getters(
         &mut blockifier_state,
@@ -420,7 +421,7 @@ fn spoof_stop_no_effect() {
         &contract_address,
     );
 
-    cheatnet_state.stop_spoof(contract_address);
+    cheatnet_state.stop_spoof(CheatTarget::One(contract_address));
 
     assert_all_mock_checker_getters(
         &mut blockifier_state,
@@ -457,7 +458,7 @@ fn spoof_with_other_syscall() {
     let nonce = None;
 
     cheatnet_state.start_spoof(
-        contract_address,
+        CheatTarget::One(contract_address),
         version,
         account_contract_address,
         max_fee,
@@ -503,7 +504,7 @@ fn spoof_in_constructor() {
     let nonce = None;
 
     cheatnet_state.start_spoof(
-        precalculated_address,
+        CheatTarget::One(precalculated_address),
         version,
         account_contract_address,
         max_fee,
@@ -554,7 +555,7 @@ fn spoof_proxy() {
     let nonce = None;
 
     cheatnet_state.start_spoof(
-        contract_address,
+        CheatTarget::One(contract_address),
         version,
         account_contract_address,
         max_fee,
@@ -623,7 +624,7 @@ fn spoof_library_call() {
     let nonce = None;
 
     cheatnet_state.start_spoof(
-        lib_call_address,
+        CheatTarget::One(lib_call_address),
         version,
         account_contract_address,
         max_fee,
@@ -644,4 +645,394 @@ fn spoof_library_call() {
     .unwrap();
 
     assert_success!(output, vec![Felt252::from(123)]);
+}
+
+#[test]
+fn spoof_all_simple() {
+    let mut cached_state = create_cached_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
+
+    let contract_address = deploy_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        "SpoofChecker",
+        &[],
+    );
+
+    let (
+        nonce_before,
+        account_address_before,
+        version_before,
+        chain_id_before,
+        max_fee_before,
+        signature_before,
+        _,
+    ) = call_mock_checker_getters(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &contract_address,
+    );
+
+    let version = None;
+    let account_contract_address = None;
+    let max_fee = None;
+    let signature = None;
+    let transaction_hash = Some(Felt252::from(123));
+    let chain_id = None;
+    let nonce = None;
+
+    cheatnet_state.start_spoof(
+        CheatTarget::All,
+        version,
+        account_contract_address,
+        max_fee,
+        signature,
+        transaction_hash,
+        chain_id,
+        nonce,
+    );
+
+    assert_all_mock_checker_getters(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &contract_address,
+        &version_before,
+        &account_address_before,
+        &max_fee_before,
+        &signature_before,
+        &[Felt252::from(123)],
+        &chain_id_before,
+        &nonce_before,
+    );
+}
+
+#[test]
+fn spoof_all_then_one() {
+    let mut cached_state = create_cached_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
+
+    let contract_address = deploy_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        "SpoofChecker",
+        &[],
+    );
+
+    let (
+        nonce_before,
+        account_address_before,
+        version_before,
+        chain_id_before,
+        max_fee_before,
+        signature_before,
+        _,
+    ) = call_mock_checker_getters(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &contract_address,
+    );
+
+    let version = None;
+    let account_contract_address = None;
+    let max_fee = None;
+    let signature = None;
+    let transaction_hash = Some(Felt252::from(123));
+    let chain_id = None;
+    let nonce = None;
+
+    cheatnet_state.start_spoof(
+        CheatTarget::All,
+        version,
+        account_contract_address,
+        max_fee,
+        signature,
+        transaction_hash,
+        chain_id,
+        nonce,
+    );
+
+    let version = None;
+    let account_contract_address = None;
+    let max_fee = None;
+    let signature = None;
+    let transaction_hash = Some(Felt252::from(321));
+    let chain_id = None;
+    let nonce = None;
+
+    cheatnet_state.start_spoof(
+        CheatTarget::One(contract_address),
+        version,
+        account_contract_address,
+        max_fee,
+        signature,
+        transaction_hash,
+        chain_id,
+        nonce,
+    );
+
+    assert_all_mock_checker_getters(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &contract_address,
+        &version_before,
+        &account_address_before,
+        &max_fee_before,
+        &signature_before,
+        &[Felt252::from(321)],
+        &chain_id_before,
+        &nonce_before,
+    );
+}
+
+#[test]
+fn spoof_one_then_all() {
+    let mut cached_state = create_cached_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
+
+    let contract_address = deploy_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        "SpoofChecker",
+        &[],
+    );
+
+    let (
+        nonce_before,
+        account_address_before,
+        version_before,
+        chain_id_before,
+        max_fee_before,
+        signature_before,
+        _,
+    ) = call_mock_checker_getters(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &contract_address,
+    );
+
+    let version = None;
+    let account_contract_address = None;
+    let max_fee = None;
+    let signature = None;
+    let transaction_hash = Some(Felt252::from(123));
+    let chain_id = None;
+    let nonce = None;
+
+    cheatnet_state.start_spoof(
+        CheatTarget::One(contract_address),
+        version,
+        account_contract_address,
+        max_fee,
+        signature,
+        transaction_hash,
+        chain_id,
+        nonce,
+    );
+
+    let version = None;
+    let account_contract_address = None;
+    let max_fee = None;
+    let signature = None;
+    let transaction_hash = Some(Felt252::from(321));
+    let chain_id = None;
+    let nonce = None;
+
+    cheatnet_state.start_spoof(
+        CheatTarget::All,
+        version,
+        account_contract_address,
+        max_fee,
+        signature,
+        transaction_hash,
+        chain_id,
+        nonce,
+    );
+
+    assert_all_mock_checker_getters(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &contract_address,
+        &version_before,
+        &account_address_before,
+        &max_fee_before,
+        &signature_before,
+        &[Felt252::from(321)],
+        &chain_id_before,
+        &nonce_before,
+    );
+}
+
+#[test]
+fn spoof_all_stop() {
+    let mut cached_state = create_cached_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
+
+    let contract_address = deploy_contract(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        "SpoofChecker",
+        &[],
+    );
+
+    let (
+        nonce_before,
+        account_address_before,
+        version_before,
+        chain_id_before,
+        max_fee_before,
+        signature_before,
+        txn_hash_before,
+    ) = call_mock_checker_getters(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &contract_address,
+    );
+
+    let version = None;
+    let account_contract_address = None;
+    let max_fee = None;
+    let signature = None;
+    let transaction_hash = Some(Felt252::from(123));
+    let chain_id = None;
+    let nonce = None;
+
+    cheatnet_state.start_spoof(
+        CheatTarget::All,
+        version,
+        account_contract_address,
+        max_fee,
+        signature,
+        transaction_hash,
+        chain_id,
+        nonce,
+    );
+
+    cheatnet_state.stop_spoof(CheatTarget::All);
+
+    assert_all_mock_checker_getters(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &contract_address,
+        &version_before,
+        &account_address_before,
+        &max_fee_before,
+        &signature_before,
+        &txn_hash_before,
+        &chain_id_before,
+        &nonce_before,
+    );
+}
+
+#[allow(clippy::too_many_lines)]
+#[test]
+fn spoof_multiple() {
+    let mut cached_state = create_cached_state();
+    let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
+
+    let contract = "SpoofChecker".to_owned().to_felt252();
+    let contracts = get_contracts();
+    let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
+
+    let contract_address_1 = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[])
+        .unwrap()
+        .contract_address;
+
+    let contract_address_2 = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[])
+        .unwrap()
+        .contract_address;
+    let (
+        nonce_before_1,
+        account_address_before_1,
+        version_before_1,
+        chain_id_before_1,
+        max_fee_before_1,
+        signature_before_1,
+        txn_hash_before_1,
+    ) = call_mock_checker_getters(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &contract_address_1,
+    );
+    let (
+        nonce_before_2,
+        account_address_before_2,
+        version_before_2,
+        chain_id_before_2,
+        max_fee_before_2,
+        signature_before_2,
+        txn_hash_before_2,
+    ) = call_mock_checker_getters(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &contract_address_2,
+    );
+
+    let version = None;
+    let account_contract_address = None;
+    let max_fee = None;
+    let signature = None;
+    let transaction_hash = Some(Felt252::from(123));
+    let chain_id = None;
+    let nonce = None;
+
+    cheatnet_state.start_spoof(
+        CheatTarget::Multiple(vec![contract_address_1, contract_address_2]),
+        version,
+        account_contract_address,
+        max_fee,
+        signature,
+        transaction_hash,
+        chain_id,
+        nonce,
+    );
+    assert_all_mock_checker_getters(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &contract_address_1,
+        &version_before_1,
+        &account_address_before_1,
+        &max_fee_before_1,
+        &signature_before_1,
+        &[Felt252::from(123)],
+        &chain_id_before_1,
+        &nonce_before_1,
+    );
+    assert_all_mock_checker_getters(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &contract_address_2,
+        &version_before_2,
+        &account_address_before_2,
+        &max_fee_before_2,
+        &signature_before_2,
+        &[Felt252::from(123)],
+        &chain_id_before_2,
+        &nonce_before_2,
+    );
+    cheatnet_state.stop_spoof(CheatTarget::All);
+
+    assert_all_mock_checker_getters(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &contract_address_1,
+        &version_before_1,
+        &account_address_before_1,
+        &max_fee_before_1,
+        &signature_before_1,
+        &txn_hash_before_1,
+        &chain_id_before_1,
+        &nonce_before_1,
+    );
+    assert_all_mock_checker_getters(
+        &mut blockifier_state,
+        &mut cheatnet_state,
+        &contract_address_2,
+        &version_before_2,
+        &account_address_before_2,
+        &max_fee_before_2,
+        &signature_before_2,
+        &txn_hash_before_2,
+        &chain_id_before_2,
+        &nonce_before_2,
+    );
 }
