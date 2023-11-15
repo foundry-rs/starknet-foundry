@@ -1,17 +1,18 @@
+use crate::state::{start_cheat, stop_cheat, CheatTarget};
 use crate::CheatnetState;
 use starknet_api::core::ContractAddress;
 
 impl CheatnetState {
-    pub fn start_prank(
-        &mut self,
-        contract_address: ContractAddress,
-        caller_address: ContractAddress,
-    ) {
-        self.pranked_contracts
-            .insert(contract_address, caller_address);
+    pub fn start_prank(&mut self, target: CheatTarget, caller_address: ContractAddress) {
+        start_cheat(
+            &mut self.global_prank,
+            &mut self.pranked_contracts,
+            target,
+            caller_address,
+        );
     }
 
-    pub fn stop_prank(&mut self, contract_address: ContractAddress) {
-        self.pranked_contracts.remove(&contract_address);
+    pub fn stop_prank(&mut self, target: CheatTarget) {
+        stop_cheat(&mut self.global_prank, &mut self.pranked_contracts, target);
     }
 }

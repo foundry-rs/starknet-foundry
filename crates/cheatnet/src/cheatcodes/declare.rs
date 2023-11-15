@@ -70,7 +70,7 @@ impl BlockifierState<'_> {
     }
 }
 
-fn get_class_hash(sierra_contract: &str) -> Result<ClassHash> {
+pub fn get_class_hash(sierra_contract: &str) -> Result<ClassHash> {
     let sierra_class: SierraClass = serde_json::from_str(sierra_contract)?;
     let class_hash = sierra_class.class_hash()?;
     let class_hash = StarkFelt::new(class_hash.to_bytes_be())?;

@@ -64,7 +64,7 @@ fn advanced_types() {
         use traits::TryInto;
         use starknet::ContractAddress;
         use starknet::Felt252TryIntoContractAddress;
-        use snforge_std::{ declare, ContractClassTrait, start_prank };
+        use snforge_std::{ declare, ContractClassTrait, start_prank, CheatTarget };
 
         #[starknet::interface]
         trait IERC20<TContractState> {
@@ -104,7 +104,7 @@ fn advanced_types() {
             let balance = dispatcher.balance_of(user_address);
             assert(balance == 1111_u256, 'balance == 1111');
 
-            start_prank(contract_address, user_address);
+            start_prank(CheatTarget::One(contract_address), user_address);
             dispatcher.transfer(other_user_address, 1000_u256);
         
             let balance = dispatcher.balance_of(user_address);
@@ -576,7 +576,7 @@ fn nonexistent_method_call() {
     assert_case_output_contains!(
         result,
         "test_nonexistent_method_call",
-        "Entry point selector 0x01fdb214e1495025fa4baf660d34f03c0d8b5037cf10311d2a3202a806aa9485 not found in contract 0x01779e0d4a362d853a9b30a6d6a912ad8a08854d2faff2b0a04e985653d0fb57"
+        "Entry point selector 0x01fdb214e1495025fa4baf660d34f03c0d8b5037cf10311d2a3202a806aa9485 not found in contract 0x00c0727f111a1f9fd7543cf36ae25feaa8184a9188daa4c9c148605445dcba9f"
     );
 }
 
