@@ -14,7 +14,6 @@ For contract implementation:
 // ...
 #[storage]
 struct Storage {
-    // ...
     stored_sequencer_address: ContractAddress
 }
 
@@ -28,7 +27,6 @@ impl IContractImpl of IContract<ContractState> {
         self.stored_sequencer_address.read()
     }
 }
-// ...
 ```
 
 We can use `start_elect` in a test to change the sequencer address for a given contract:
