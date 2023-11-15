@@ -495,7 +495,7 @@ fn test_simple_cheatcodes() {
             let mut tx_info_mock = TxInfoMockTrait::default();
             tx_info_mock.transaction_hash = Option::Some(421);
 
-            start_spoof(test_address, tx_info_mock);
+            start_spoof(CheatTarget::One(test_address), tx_info_mock);
             let new_tx_info = starknet::get_tx_info().unbox();
             assert(new_tx_info.nonce == old_tx_info.nonce, 'Wrong nonce');
             assert(new_tx_info.transaction_hash == 421, 'Wrong transaction_hash');
