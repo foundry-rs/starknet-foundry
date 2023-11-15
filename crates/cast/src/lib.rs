@@ -353,7 +353,9 @@ pub fn print_formatted(output: Vec<(&str, String)>, json: bool, error: bool) -> 
 fn json_value_to_string(value: &Value, value_format: ValueFormat) -> Option<String> {
     match value {
         Value::Number(n) => {
-            let n = n.as_u64().unwrap_or_else(|| panic!("failed to convert {n} to u64"));
+            let n = n
+                .as_u64()
+                .unwrap_or_else(|| panic!("failed to convert {n} to u64"));
             Some(value_format.format_u64(n))
         }
         Value::String(s) => Some(value_format.format_str(s)),
