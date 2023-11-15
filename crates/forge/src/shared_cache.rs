@@ -46,7 +46,7 @@ pub fn cache_failed_tests_names(all_failed_tests: &[TestCaseSummary]) -> Result<
 
     for line in all_failed_tests {
         if let TestCaseSummary::Failed { name, .. } = line {
-            file.write_all((name.clone() + "\n").as_bytes())
+            file.write((name.clone() + "\n").as_bytes())
                 .expect("Can not write to file");
         }
     }

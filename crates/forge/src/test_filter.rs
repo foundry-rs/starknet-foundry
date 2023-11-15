@@ -66,6 +66,7 @@ impl TestsFilter {
 
     pub(crate) fn filter_tests(&self, test_crate: CompiledTestCrateRaw) -> CompiledTestCrateRaw {
         let mut cases = test_crate.test_cases;
+
         cases = match &self.name_filter {
             NameFilter::All => cases,
             NameFilter::Match(filter) => cases
