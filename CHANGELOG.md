@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- `elect` cheatcode for mocking the sequencer address
+- `elect` cheatcode for mocking the sequencer address. Read more [here](./docs/src/appendix/cheatcodes/start_elect.md).
 
 ## [0.10.2] - 2023-11-13
 

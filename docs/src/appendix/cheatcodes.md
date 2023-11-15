@@ -7,6 +7,8 @@
 - [`stop_roll`](cheatcodes/stop_roll.md) - cancels the `start_roll` for the contract
 - [`start_warp`](cheatcodes/start_warp.md) - changes the block timestamp for contracts
 - [`stop_warp`](cheatcodes/stop_warp.md) - cancels the `start_warp` for contracts
+- [`start_elect`](cheatcodes/start_elect.md) - changes the sequencer address for a contract
+- [`stop_elect`](cheatcodes/stop_elect.md) - cancels the `start_elect` for the contract
 - [`get_class_hash`](cheatcodes/get_class_hash.md) - retrieves a class hash of a contract
 - [`start_mock_call`](cheatcodes/start_mock_call.md) - mocks contract call to a `function_name` of a contract
 - [`stop_mock_call`](cheatcodes/stop_mock_call.md) - cancels the `start_mock_call` for the function `function_name` of a contract
