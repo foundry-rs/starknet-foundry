@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Changed
+
+- `start_warp` and `stop_warp` now take `CheatTarget` as the first argument instead of `ContractAddress`. Read more [here](./docs/src/appendix/cheatcodes/start_warp.md). 
+- `start_prank` and `stop_prank` now take `CheatTarget` as the first argument instead of `ContractAddress`. Read more [here](./docs/src/appendix/cheatcodes/start_prank.md).
+- `start_roll` and `stop_roll` now take `CheatTarget` as the first argument instead of `ContractAddress`. Read more [here](./docs/src/appendix/cheatcodes/start_roll.md).
+
 ## [0.10.2] - 2023-11-13
 
 ### Forge

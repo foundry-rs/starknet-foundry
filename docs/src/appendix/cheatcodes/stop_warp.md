@@ -1,19 +1,19 @@
 # `stop_warp`
 
-> `fn stop_warp(contract_address: ContractAddress)`
+> `fn stop_warp(target: CheatTarget)`
 
-Cancels the [`start_warp`](./start_warp.md) for the contract at the given address.
+Cancels the [`start_warp`](./start_warp.md) for the given target.
 
-- `contract_address` - target contract address
+- `target` - instance of [`CheatTarget`](./cheat_target.md) specifying which contracts to stop warping.
 
 ```rust
 use snforge_std::stop_warp;
 
 #[test]
-fn test_wrap() {
+fn test_warp() {
     // ...
     
-    stop_warp(contract_address);
+    stop_warp(CheatTarget::One(contract_address));
     
     // ...
 }
