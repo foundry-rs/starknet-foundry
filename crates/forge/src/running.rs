@@ -237,9 +237,7 @@ pub(crate) fn run_test_case(
     let (hints_dict, string_to_hint) = build_hints_dict(instructions.clone());
 
     let mut state_reader = ExtendedStateReader {
-        dict_state_reader: cheatnet_constants::build_testing_state(
-            &runner_params.predeployed_contracts,
-        ),
+        dict_state_reader: cheatnet_constants::build_testing_state(),
         fork_state_reader: get_fork_state_reader(&runner_config.workspace_root, &case.fork_config)?,
     };
     let block_info = state_reader.get_block_info()?;

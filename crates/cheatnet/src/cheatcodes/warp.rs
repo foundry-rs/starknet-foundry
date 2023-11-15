@@ -1,13 +1,18 @@
+use crate::state::{start_cheat, stop_cheat, CheatTarget};
 use crate::CheatnetState;
 use cairo_felt::Felt252;
-use starknet_api::core::ContractAddress;
 
 impl CheatnetState {
-    pub fn start_warp(&mut self, contract_address: ContractAddress, timestamp: Felt252) {
-        self.warped_contracts.insert(contract_address, timestamp);
+    pub fn start_warp(&mut self, target: CheatTarget, timestamp: Felt252) {
+        start_cheat(
+            &mut self.global_warp,
+            &mut self.warped_contracts,
+            target,
+            timestamp,
+        );
     }
 
-    pub fn stop_warp(&mut self, contract_address: ContractAddress) {
-        self.warped_contracts.remove(&contract_address);
+    pub fn stop_warp(&mut self, target: CheatTarget) {
+        stop_cheat(&mut self.global_warp, &mut self.warped_contracts, target);
     }
 }

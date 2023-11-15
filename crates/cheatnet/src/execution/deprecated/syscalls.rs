@@ -255,10 +255,9 @@ pub fn get_caller_address(
     contract_address: ContractAddress,
 ) -> DeprecatedSyscallResult<GetContractAddressResponse> {
     Ok(GetContractAddressResponse {
-        address: *syscall_handler
+        address: syscall_handler
             .cheatnet_state
-            .pranked_contracts
-            .get(&contract_address)
+            .get_cheated_caller_address(&contract_address)
             .unwrap(),
     })
 }
@@ -290,8 +289,7 @@ pub fn get_block_timestamp(
         block_timestamp: BlockTimestamp(
             syscall_handler
                 .cheatnet_state
-                .warped_contracts
-                .get(&contract_address)
+                .get_cheated_block_timestamp(&contract_address)
                 .unwrap()
                 .to_u64()
                 .unwrap(),
