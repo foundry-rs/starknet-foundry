@@ -159,7 +159,7 @@ impl CairoHintProcessor<'_> {
         let selector = &selector.value.to_bytes_be().1;
         let selector = std::str::from_utf8(selector).map_err(|_| {
             HintError::CustomHint(Box::from(
-                "Failed to parse the  cheatcode selector".to_string(),
+                "Failed to parse the cheatcode selector".to_string(),
             ))
         })?;
 
