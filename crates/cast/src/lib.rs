@@ -351,23 +351,22 @@ pub fn print_formatted(output: Vec<(&str, String)>, json: bool, error: bool) -> 
 }
 
 fn json_value_to_string(value: &Value, value_format: ValueFormat) -> Option<String> {
-    let res = match value {
+    match value {
         Value::Number(n) => {
             let n = n.as_u64().expect("found unexpected value");
-            value_format.format_u64(n)
+            Some(value_format.format_u64(n))
         }
-        Value::String(s) => value_format.format_str(s),
+        Value::String(s) => Some(value_format.format_str(s)),
         Value::Array(arr) => {
             let arr_as_string = arr
                 .iter()
                 .filter_map(|item| json_value_to_string(item, value_format))
                 .collect::<Vec<String>>()
                 .join(", ");
-            format!("[{arr_as_string}]")
+            Some(format!("[{arr_as_string}]"))
         }
-        _ => return None,
-    };
-    Some(res)
+        _ => None,
+    }
 }
 
 pub fn print_command_result<T: Serialize>(
