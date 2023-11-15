@@ -235,17 +235,19 @@ impl TestExecutionSyscallHandler<'_> {
 
         match selector {
             "start_roll" => {
-                let contract_address = inputs[0].to_contract_address();
-                let value = inputs[1].clone();
+                let target = deserialize_cheat_target(&inputs[..inputs.len() - 1]);
+                let block_number = inputs.last().unwrap().clone();
+
                 self.child
                     .child
                     .cheatnet_state
-                    .start_roll(contract_address, value);
+                    .start_roll(target, block_number);
                 Ok(())
             }
             "stop_roll" => {
-                let contract_address = inputs[0].to_contract_address();
-                self.child.child.cheatnet_state.stop_roll(contract_address);
+                let target = deserialize_cheat_target(&inputs);
+
+                self.child.child.cheatnet_state.stop_roll(target);
                 Ok(())
             }
             "start_warp" => {

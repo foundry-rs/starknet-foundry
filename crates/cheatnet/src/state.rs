@@ -219,7 +219,8 @@ pub enum CheatStatus<T> {
 #[allow(clippy::module_name_repetitions)]
 #[derive(Default)]
 pub struct CheatnetState {
-    pub rolled_contracts: HashMap<ContractAddress, Felt252>,
+    pub rolled_contracts: HashMap<ContractAddress, CheatStatus<Felt252>>,
+    pub global_roll: Option<Felt252>,
     pub pranked_contracts: HashMap<ContractAddress, CheatStatus<ContractAddress>>,
     pub global_prank: Option<ContractAddress>,
     pub warped_contracts: HashMap<ContractAddress, CheatStatus<Felt252>>,
@@ -269,7 +270,16 @@ impl CheatnetState {
 
     #[must_use]
     pub fn address_is_rolled(&self, contract_address: &ContractAddress) -> bool {
-        self.rolled_contracts.contains_key(contract_address)
+        self.global_roll.is_some()
+            || matches!(
+                self.rolled_contracts.get(contract_address),
+                Some(CheatStatus::Cheated(_))
+            )
+    }
+
+    #[must_use]
+    pub fn get_cheated_block_number(&self, address: &ContractAddress) -> Option<Felt252> {
+        get_cheat_for_contract(&self.global_roll, &self.rolled_contracts, address)
     }
 
     #[must_use]
