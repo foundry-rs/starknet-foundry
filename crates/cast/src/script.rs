@@ -319,7 +319,7 @@ pub fn run(
     };
 
     match runner.run_function(
-        runner.find_function("::main")?,
+        func,
         &mut cairo_hint_processor,
         hints_dict,
         instructions,
