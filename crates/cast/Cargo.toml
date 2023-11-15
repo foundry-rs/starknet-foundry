@@ -38,9 +38,8 @@ cairo-lang-compiler.workspace = true
 cairo-lang-filesystem.workspace = true
 itertools.workspace = true
 num-traits.workspace = true
-cairo-felt = "0.8.1"
-snapbox = "0.4.11"
-cairo-vm = "0.8.1"
+cairo-felt.workspace = true
+cairo-vm.workspace = true
 
 cairo-lang-diagnostics.workspace = true
 cairo-lang-sierra-generator.workspace = true
