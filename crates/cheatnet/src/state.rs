@@ -245,17 +245,20 @@ impl CheatnetState {
 
     #[must_use]
     pub fn address_is_pranked(&self, contract_address: &ContractAddress) -> bool {
-        self.global_prank.is_some()
-            || matches! {self.pranked_contracts.get(contract_address), Some(CheatStatus::Cheated(_))}
+        match self.pranked_contracts.get(contract_address) {
+            Some(CheatStatus::Uncheated) => false,
+            Some(CheatStatus::Cheated(_)) => true,
+            None => self.global_prank.is_some(),
+        }
     }
 
     #[must_use]
     pub fn address_is_warped(&self, contract_address: &ContractAddress) -> bool {
-        self.global_warp.is_some()
-            || matches!(
-                self.warped_contracts.get(contract_address),
-                Some(CheatStatus::Cheated(_))
-            )
+        match self.warped_contracts.get(contract_address) {
+            Some(CheatStatus::Uncheated) => false,
+            Some(CheatStatus::Cheated(_)) => true,
+            None => self.global_warp.is_some(),
+        }
     }
 
     #[must_use]
@@ -270,11 +273,11 @@ impl CheatnetState {
 
     #[must_use]
     pub fn address_is_rolled(&self, contract_address: &ContractAddress) -> bool {
-        self.global_roll.is_some()
-            || matches!(
-                self.rolled_contracts.get(contract_address),
-                Some(CheatStatus::Cheated(_))
-            )
+        match self.rolled_contracts.get(contract_address) {
+            Some(CheatStatus::Uncheated) => false,
+            Some(CheatStatus::Cheated(_)) => true,
+            None => self.global_roll.is_some(),
+        }
     }
 
     #[must_use]
@@ -285,14 +288,6 @@ impl CheatnetState {
     #[must_use]
     pub fn address_is_spoofed(&self, contract_address: &ContractAddress) -> bool {
         self.spoofed_contracts.contains_key(contract_address)
-    }
-
-    #[must_use]
-    pub fn address_is_cheated(&self, contract_address: &ContractAddress) -> bool {
-        self.address_is_rolled(contract_address)
-            || self.address_is_pranked(contract_address)
-            || self.address_is_warped(contract_address)
-            || self.address_is_spoofed(contract_address)
     }
 }
 
