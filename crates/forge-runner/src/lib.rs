@@ -189,6 +189,7 @@ impl ForkConfig for ValidatedForkConfig {}
 pub type TestCaseRunnable = TestCase<ValidatedForkConfig>;
 
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub struct TestCrate {
     sierra_program: Program,
     test_cases: Vec<TestCaseRunnable>,
@@ -208,6 +209,7 @@ pub trait TestCaseFilter {
     fn should_be_run(&self, test_case: &TestCaseRunnable) -> bool;
 }
 
+#[non_exhaustive]
 pub enum TestCrateRunResult {
     Ok(TestCrateSummary),
     Interrupted(TestCrateSummary),

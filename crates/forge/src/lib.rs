@@ -150,6 +150,7 @@ pub async fn run(
                 // In case of test FAIL with --exit-first flag stops processing the next crates
                 break;
             }
+            _ => unreachable!("Unsupported TestCrateRunResult encountered"),
         }
     }
 
