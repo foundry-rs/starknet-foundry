@@ -51,15 +51,15 @@ impl TestsFilter {
         let mut name_filters = vec![];
 
         if exact_match {
-            name_filters.push(NameFilter::ExactMatch(test_name_filter.unwrap()))
+            name_filters.push(NameFilter::ExactMatch(test_name_filter.unwrap()));
         } else if let Some(name) = test_name_filter {
-            name_filters.push(NameFilter::Match(name))
+            name_filters.push(NameFilter::Match(name));
         } else {
-            name_filters.push(NameFilter::All)
+            name_filters.push(NameFilter::All);
         };
 
         if rerun_failed {
-            name_filters.push(NameFilter::RerunFailed)
+            name_filters.push(NameFilter::RerunFailed);
         }
 
         Self {
