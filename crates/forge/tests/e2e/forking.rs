@@ -12,7 +12,7 @@ fn without_cache() {
 
     let output = snapbox
         .current_dir(&temp)
-        .args(["--exact", "forking::tests::test_fork_simple"])
+        .args(["forking::tests::test_fork_simple"])
         .assert()
         .code(0);
     assert_stdout_contains!(
@@ -22,10 +22,13 @@ fn without_cache() {
         [..]Finished[..]
 
 
-        Collected 1 test(s) from forking package
-        Running 1 test(s) from src/
+        Collected 4 test(s) from forking package
+        Running 4 test(s) from src/
         [PASS] forking::tests::test_fork_simple
-        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 1 filtered out
+        [PASS] forking::tests::test_fork_simple_number_hex
+        [PASS] forking::tests::test_fork_simple_hash_hex
+        [PASS] forking::tests::test_fork_simple_hash_number
+        Tests: 4 passed, 0 failed, 0 skipped, 0 ignored, 1 filtered out
         "#}
     );
 }
@@ -62,7 +65,7 @@ fn with_cache() {
         Failure data:
             original value: [1480335954842313548834020101284630397133856818], converted to a string: [Balance should be 2]
         
-        Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 1 filtered out
+        Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 4 filtered out
 
         Failures:
             forking::tests::test_fork_simple
@@ -99,7 +102,7 @@ fn with_clean_cache() {
         Collected 1 test(s) from forking package
         Running 1 test(s) from src/
         [PASS] forking::tests::test_fork_simple
-        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 1 filtered out
+        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 4 filtered out
         "#}
     );
 }
@@ -129,7 +132,7 @@ fn printing_latest_block_number() {
         Running 1 test(s) from src/
         [PASS] forking::tests::print_block_number_when_latest
         Number of the block used for fork testing = [..]
-        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 1 filtered out
+        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 4 filtered out
         "#}
     );
 }
