@@ -22,7 +22,7 @@ fn test_show_config_from_scarb_toml(current_dir: Option<&Path>, path_to_scarb_to
         rpc_url: http://127.0.0.1:5055/rpc
     "#});
     if let Some(scarb_path) = path_to_scarb_toml {
-        expected_output.push_str(&format!("scarb_path: {}\n", scarb_path));
+        expected_output.push_str(&format!("scarb_path: {scarb_path}\n"));
     }
     snapbox.assert().success().stdout_eq(expected_output);
 }
@@ -72,7 +72,7 @@ fn test_show_config_from_cli_and_scarb(
         rpc_url: http://127.0.0.1:5055/rpc
     "#});
     if let Some(scarb_path) = path_to_scarb_toml {
-        expected_output.push_str(&format!("scarb_path: {}\n", scarb_path));
+        expected_output.push_str(&format!("scarb_path: {scarb_path}\n"));
     }
     snapbox.assert().success().stdout_eq(expected_output);
 }
@@ -96,7 +96,7 @@ fn test_show_config_when_no_keystore(current_dir: Option<&Path>, path_to_scarb_t
         rpc_url: http://127.0.0.1:5055/rpc
     "#});
     if let Some(scarb_path) = path_to_scarb_toml {
-        expected_output.push_str(&format!("scarb_path: {}\n", scarb_path));
+        expected_output.push_str(&format!("scarb_path: {scarb_path}\n"));
     }
     snapbox.assert().success().stdout_eq(expected_output);
 }
@@ -120,7 +120,7 @@ fn test_show_config_when_keystore(current_dir: Option<&Path>, path_to_scarb_toml
         rpc_url: http://127.0.0.1:5055/rpc
     "#});
     if let Some(scarb_path) = path_to_scarb_toml {
-        expected_output.push_str(&format!("scarb_path: {}\n", scarb_path));
+        expected_output.push_str(&format!("scarb_path: {scarb_path}\n"));
     }
     snapbox.assert().success().stdout_eq(expected_output);
 }
