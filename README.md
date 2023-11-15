@@ -78,10 +78,6 @@ Starknet Foundry is under active development! Expect a lot of new features to ap
 
 Forge achieves performance comparable to the Cairo Test Runner with improved user experience.
 
-![Starknet test framework speed comparison](./benchmarks/plot.png)
-
-To learn more about our benchmark methodology check [here](./benchmarks/).
-
 ## Getting Help
 
 You haven't found your answer to your question in
