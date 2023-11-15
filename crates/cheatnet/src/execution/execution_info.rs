@@ -18,13 +18,13 @@ fn get_cheated_block_info_ptr(
 
     let mut new_block_info = original_block_info.to_owned();
 
-    if let Some(rolled_number) = cheatnet_state.rolled_contracts.get(contract_address) {
-        new_block_info[0] = MaybeRelocatable::Int(rolled_number.clone());
+    if let Some(rolled_number) = cheatnet_state.get_cheated_block_number(contract_address) {
+        new_block_info[0] = MaybeRelocatable::Int(rolled_number);
     };
 
-    if let Some(warped_timestamp) = cheatnet_state.warped_contracts.get(contract_address) {
-        new_block_info[1] = MaybeRelocatable::Int(warped_timestamp.clone());
-    };
+    if let Some(warped_timestamp) = cheatnet_state.get_cheated_block_timestamp(contract_address) {
+        new_block_info[1] = MaybeRelocatable::Int(warped_timestamp);
+    }
 
     vm.load_data(ptr_cheated_block_info, &new_block_info)
         .unwrap();
@@ -105,7 +105,6 @@ pub fn get_cheated_exec_info_ptr(
 
     // Initialize as old exec_info
     let mut new_exec_info = vm.get_continuous_range(execution_info_ptr, 5).unwrap();
-
     if cheatnet_state.address_is_rolled(contract_address)
         || cheatnet_state.address_is_warped(contract_address)
     {
@@ -139,8 +138,7 @@ pub fn get_cheated_exec_info_ptr(
     if cheatnet_state.address_is_pranked(contract_address) {
         new_exec_info[2] = MaybeRelocatable::Int(stark_felt_to_felt(
             *cheatnet_state
-                .pranked_contracts
-                .get(contract_address)
+                .get_cheated_caller_address(contract_address)
                 .expect("No caller address value found for the pranked contract address")
                 .0
                 .key(),

@@ -1,5 +1,5 @@
 use anyhow::{anyhow, bail, Context, Result};
-use camino::{Utf8Path, Utf8PathBuf};
+use camino::Utf8Path;
 use clap::{Parser, Subcommand, ValueEnum};
 use forge::scarb::config::ForgeConfig;
 use forge::scarb::config_from_scarb_for_package;
@@ -8,7 +8,6 @@ use forge::{pretty_printing, run};
 use forge_runner::test_case_summary::TestCaseSummary;
 use forge_runner::test_crate_summary::TestCrateSummary;
 use forge_runner::{RunnerConfig, RunnerParams, CACHE_DIR};
-use include_dir::{include_dir, Dir};
 use rand::{thread_rng, RngCore};
 use scarb_artifacts::{
     corelib_for_package, dependencies_for_package, get_contracts_map, name_for_package,
@@ -16,17 +15,13 @@ use scarb_artifacts::{
 };
 use scarb_metadata::{Metadata, MetadataCommand, PackageMetadata};
 use scarb_ui::args::PackagesFilter;
-use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use std::sync::Arc;
 use std::thread::available_parallelism;
 use std::{env, fs};
-use tempfile::{tempdir, TempDir};
 use tokio::runtime::Builder;
 
 mod init;
-
-static PREDEPLOYED_CONTRACTS: Dir = include_dir!("crates/cheatnet/predeployed-contracts");
 
 const FUZZER_RUNS_DEFAULT: u32 = 256;
 
@@ -116,14 +111,6 @@ fn clean_cache() -> Result<()> {
     Ok(())
 }
 
-fn load_predeployed_contracts() -> Result<TempDir> {
-    let tmp_dir = tempdir()?;
-    PREDEPLOYED_CONTRACTS
-        .extract(&tmp_dir)
-        .context("Failed to copy corelib to temporary directory")?;
-    Ok(tmp_dir)
-}
-
 fn extract_failed_tests(tests_summaries: Vec<TestCrateSummary>) -> Vec<TestCaseSummary> {
     tests_summaries
         .into_iter()
@@ -158,11 +145,6 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
         ColorOption::Never => env::set_var("CLICOLOR", "0"),
         ColorOption::Auto => (),
     }
-
-    let predeployed_contracts_dir = load_predeployed_contracts()?;
-    let predeployed_contracts_path: PathBuf = predeployed_contracts_dir.path().into();
-    let predeployed_contracts = Utf8PathBuf::try_from(predeployed_contracts_path.clone())
-        .context("Failed to convert path to predeployed contracts to Utf8PathBuf")?;
 
     let scarb_metadata = MetadataCommand::new().inherit_stderr().exec()?;
     let workspace_root = scarb_metadata.workspace.root.clone();
@@ -222,7 +204,6 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                 let runner_params = Arc::new(RunnerParams::new(
                     corelib_path,
                     contracts,
-                    predeployed_contracts.clone(),
                     env::vars().collect(),
                     dependencies,
                 ));
@@ -248,14 +229,6 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
             Ok::<_, anyhow::Error>(all_failed_tests)
         })
     })??;
-
-    // Explicitly close the temporary directories so we can handle the errors
-    predeployed_contracts_dir.close().with_context(|| {
-        anyhow!(
-            "Failed to close temporary directory = {} with predeployed contracts. Predeployed contract files might have not been released from filesystem",
-            predeployed_contracts_path.display()
-        )
-    })?;
 
     pretty_printing::print_failures(&all_failed_tests);
 
@@ -296,6 +269,7 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use camino::Utf8PathBuf;
 
     #[test]
     fn fuzzer_default_seed() {

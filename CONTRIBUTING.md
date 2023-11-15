@@ -15,11 +15,6 @@ Foundry book for environment setup.
 
 ### Running Tests and Checks
 
-To run tests scripts, you have to install:
-
-- [asdf](https://asdf-vm.com/guide/getting-started.html)
-- [starknet-devnet](https://0xspaceshard.github.io/starknet-devnet/docs/intro)
-
 > ⚠️ Make sure you run `./scripts/install_devnet.sh`
 > and then set [Scarb](https://docs.swmansion.com/scarb/) version 
 > [compatible](https://github.com/foundry-rs/starknet-foundry/releases) with both `snforge` and `sncast`

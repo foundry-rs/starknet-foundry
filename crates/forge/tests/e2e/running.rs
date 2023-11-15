@@ -77,7 +77,7 @@ fn simple_package_with_git_dependency() {
             casm = true
 
             [dependencies]
-            starknet = "2.3.0"
+            starknet = "2.3.1"
             snforge_std = {{ git = "https://github.com/{}", branch = "{}" }}
             "#,
             remote_url,
@@ -519,7 +519,7 @@ fn with_exit_first() {
             version = "0.1.0"
 
             [dependencies]
-            starknet = "2.3.0"
+            starknet = "2.3.1"
             snforge_std = {{ path = "{}" }}
 
             [[target.starknet-contract]]
@@ -619,7 +619,7 @@ fn init_new_project_test() {
 
             [dependencies]
             snforge_std = {{ git = "https://github.com/foundry-rs/starknet-foundry", tag = "v{}" }}
-            starknet = "2.3.0"
+            starknet = "2.3.1"
 
             [[target.starknet-contract]]
             casm = true
@@ -631,7 +631,6 @@ fn init_new_project_test() {
 
     let remote_url = get_remote_url();
     let branch = get_current_branch();
-
     manifest_path
         .write_str(&formatdoc!(
             r#"
@@ -643,7 +642,7 @@ fn init_new_project_test() {
         casm = true
 
         [dependencies]
-        starknet = "2.3.0"
+        starknet = "2.3.1"
         snforge_std = {{ git = "https://github.com/{}", branch = "{}" }}
         "#,
             remote_url,
@@ -750,6 +749,22 @@ fn printing_in_contracts() {
         [PASS] tests::test_contract::test_increase_balance
         [PASS] tests::test_contract::test_cannot_increase_balance_with_zero_value
         Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
+        "#}
+    );
+}
+
+#[test]
+fn available_gas_error() {
+    let temp = setup_package("available_gas");
+    let snapbox = test_runner();
+
+    let output = snapbox.current_dir(&temp).assert().failure();
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+        [ERROR] tests::available_gas::available_gas - Attribute `available_gas` is not supported: Contract functions execution cost would not be included in the gas calculation.
         "#}
     );
 }
