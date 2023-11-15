@@ -466,7 +466,44 @@ fn with_rerun_failed_flag_without_cache() {
 }
 
 #[test]
-fn with_rerun_failed_flag_when_tests() {
+fn with_rerun_failed_flag_and_name_filter() {
+    let temp = setup_package("simple_package");
+    let snapbox = test_runner();
+
+    snapbox.current_dir(&temp).assert().code(1);
+    let snapbox = test_runner();
+    let output = snapbox
+        .current_dir(&temp)
+        .arg("--rerun-failed")
+        .arg("test_another_failing")
+        .assert()
+        .code(1);
+
+    assert_stdout_contains!(
+        output,
+        indoc! {r#"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+        Collected 1 test(s) from simple_package package
+        Running 0 test(s) from src/
+        Running 1 test(s) from tests/
+        [FAIL] tests::test_simple::test_another_failing
+
+        Failure data:
+            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+
+        Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 12 filtered out
+
+        Failures:
+            tests::test_simple::test_another_failing
+
+        "#}
+    );
+}
+
+#[test]
+fn with_rerun_failed_flag() {
     let temp = setup_package("simple_package");
     let snapbox = test_runner();
 
