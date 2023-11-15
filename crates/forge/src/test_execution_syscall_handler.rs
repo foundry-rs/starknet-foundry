@@ -23,9 +23,8 @@ use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use cheatnet::cheatcodes::deploy::{deploy, deploy_at, DeployCallPayload};
 use cheatnet::cheatcodes::{CheatcodeError, EnhancedHintError};
-use cheatnet::execution::cheatable_syscall_handler::{
-    get_syscall_selector, CheatableSyscallHandler,
-};
+use cheatnet::execution::cheatable_syscall_handler::CheatableSyscallHandler;
+use cheatnet::execution::syscalls::{extract_input, get_syscall_selector, parse_selector};
 use cheatnet::rpc::{call_contract, CallContractFailure, CallContractOutput, CallContractResult};
 use cheatnet::state::{BlockifierState, CheatTarget, CheatnetState};
 use conversions::StarknetConversions;
@@ -47,7 +46,7 @@ use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cheatnet::cheatcodes::spy_events::SpyTarget;
 use cheatnet::execution::cheated_syscalls::SingleSegmentResponse;
 use cheatnet::execution::contract_execution_syscall_handler::{
-    extract_input, parse_selector, print, ContractExecutionSyscallHandler,
+    print, ContractExecutionSyscallHandler,
 };
 use starknet::signers::SigningKey;
 

@@ -1,14 +1,7 @@
 use crate::execution::cheatable_syscall_handler::CheatableSyscallHandler;
 use cairo_felt::Felt252;
-use cairo_lang_casm::{
-    hints::{Hint, StarknetHint},
-    operand::ResOperand,
-};
-use cairo_lang_runner::{
-    casm_run::{extract_relocatable, vm_get_range},
-    short_string::as_cairo_short_string,
-};
-use cairo_lang_utils::bigint::BigIntAsHex;
+use cairo_lang_casm::hints::{Hint, StarknetHint};
+use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_vm::hint_processor::hint_processor_definition::{HintProcessorLogic, HintReference};
 use cairo_vm::serde::deserialize_program::ApTracking;
 use cairo_vm::types::exec_scope::ExecutionScopes;
@@ -18,22 +11,7 @@ use cairo_vm::vm::{errors::hint_errors::HintError, vm_core::VirtualMachine};
 use std::any::Any;
 use std::collections::HashMap;
 
-pub fn extract_input(
-    vm: &mut VirtualMachine,
-    input_start: &ResOperand,
-    input_end: &ResOperand,
-) -> Result<Vec<Felt252>, HintError> {
-    let input_start = extract_relocatable(vm, input_start)?;
-    let input_end = extract_relocatable(vm, input_end)?;
-    vm_get_range(vm, input_start, input_end)
-        .map_err(|_| HintError::CustomHint("Failed to read input data".into()))
-}
-
-pub fn parse_selector(selector: &BigIntAsHex) -> Result<String, HintError> {
-    let selector = selector.value.to_bytes_be().1;
-    String::from_utf8(selector)
-        .map_err(|_| HintError::CustomHint("Failed to parse selector".to_string().into()))
-}
+use super::syscalls::{extract_input, parse_selector};
 
 pub struct ContractExecutionSyscallHandler<'a> {
     pub child: CheatableSyscallHandler<'a>,

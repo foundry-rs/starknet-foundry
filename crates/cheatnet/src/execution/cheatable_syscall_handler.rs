@@ -7,21 +7,20 @@ use blockifier::execution::syscalls::{
 use blockifier::execution::{
     common_hints::HintExecutionResult,
     deprecated_syscalls::DeprecatedSyscallSelector,
-    execution_utils::felt_to_stark_felt,
     syscalls::hint_processor::{SyscallExecutionError, SyscallHintProcessor},
 };
 use blockifier::{abi::constants, execution::syscalls::hint_processor::OUT_OF_GAS_ERROR};
 use cairo_felt::Felt252;
 use cairo_lang_casm::{
     hints::{Hint, StarknetHint},
-    operand::{BinOpOperand, DerefOrImmediate, Operation, Register, ResOperand},
+    operand::ResOperand,
 };
 use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
 use cairo_vm::vm::runners::cairo_runner::ResourceTracker;
 use cairo_vm::{
     hint_processor::hint_processor_definition::HintReference,
     serde::deserialize_program::ApTracking,
-    types::{exec_scope::ExecutionScopes, relocatable::Relocatable},
+    types::exec_scope::ExecutionScopes,
     vm::{
         errors::{hint_errors::HintError, vm_errors::VirtualMachineError},
         runners::cairo_runner::RunResources,
@@ -30,6 +29,8 @@ use cairo_vm::{
 };
 use starknet_api::hash::StarkFelt;
 use std::{any::Any, collections::HashMap};
+
+use super::syscalls::get_syscall_selector;
 
 pub type SyscallSelector = DeprecatedSyscallSelector;
 
@@ -101,53 +102,6 @@ impl HintProcessorLogic for CheatableSyscallHandler<'_> {
         self.child
             .compile_hint(hint_code, ap_tracking_data, reference_ids, references)
     }
-}
-
-// crates/blockifier/src/execution/syscalls/hint_processor.rs:454
-/// Retrieves a [Relocatable] from the VM given a [`ResOperand`].
-/// A [`ResOperand`] represents a CASM result expression, and is deserialized with the hint.
-fn get_ptr_from_res_operand_unchecked(vm: &mut VirtualMachine, res: &ResOperand) -> Relocatable {
-    let (cell, base_offset) = match res {
-        ResOperand::Deref(cell) => (cell, Felt252::from(0)),
-        ResOperand::BinOp(BinOpOperand {
-            op: Operation::Add,
-            a,
-            b: DerefOrImmediate::Immediate(b),
-        }) => (a, Felt252::from(b.clone().value)),
-        _ => panic!("Illegal argument for a buffer."),
-    };
-    let base = match cell.register {
-        Register::AP => vm.get_ap(),
-        Register::FP => vm.get_fp(),
-    };
-    let cell_reloc = (base + i32::from(cell.offset)).unwrap();
-    (vm.get_relocatable(cell_reloc).unwrap() + &base_offset).unwrap()
-}
-
-pub fn stark_felt_from_ptr_immutable(
-    vm: &VirtualMachine,
-    ptr: &Relocatable,
-) -> Result<StarkFelt, VirtualMachineError> {
-    Ok(felt_to_stark_felt(&felt_from_ptr_immutable(vm, ptr)?))
-}
-
-pub fn felt_from_ptr_immutable(
-    vm: &VirtualMachine,
-    ptr: &Relocatable,
-) -> Result<Felt252, VirtualMachineError> {
-    let felt = vm.get_integer(*ptr)?.into_owned();
-    Ok(felt)
-}
-
-pub fn get_syscall_selector(
-    syscall: &ResOperand,
-    vm: &mut VirtualMachine,
-    syscall_handler: &SyscallHintProcessor<'_>,
-) -> Result<StarkFelt, HintError> {
-    let initial_syscall_ptr = get_ptr_from_res_operand_unchecked(vm, syscall);
-    syscall_handler.verify_syscall_ptr(initial_syscall_ptr)?;
-    let selector = stark_felt_from_ptr_immutable(vm, &initial_syscall_ptr)?;
-    Ok(selector)
 }
 
 fn get_syscall_operand(hint: &StarknetHint) -> Result<&ResOperand, HintError> {

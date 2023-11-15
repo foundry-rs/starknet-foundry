@@ -10,3 +10,4 @@ pub mod entry_point;
 pub mod execution_info;
 pub mod gas;
 pub mod syscall_hooks;
+pub mod syscalls;
