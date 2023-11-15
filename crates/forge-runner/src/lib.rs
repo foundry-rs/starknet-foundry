@@ -121,17 +121,6 @@ pub struct RunnerParams {
 
 impl RunnerParams {
     #[must_use]
-    pub fn linked_libraries(&self) -> &Vec<LinkedLibrary> {
-        &self.linked_libraries
-    }
-    #[must_use]
-    pub fn corelib_path(&self) -> &Utf8PathBuf {
-        &self.corelib_path
-    }
-}
-
-impl RunnerParams {
-    #[must_use]
     pub fn new(
         corelib_path: Utf8PathBuf,
         contracts: HashMap<String, StarknetContractArtifacts>,
@@ -146,6 +135,15 @@ impl RunnerParams {
             environment_variables,
             linked_libraries,
         }
+    }
+
+    #[must_use]
+    pub fn linked_libraries(&self) -> &Vec<LinkedLibrary> {
+        &self.linked_libraries
+    }
+    #[must_use]
+    pub fn corelib_path(&self) -> &Utf8PathBuf {
+        &self.corelib_path
     }
 }
 
