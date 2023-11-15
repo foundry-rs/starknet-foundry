@@ -2,7 +2,7 @@
 
 > 💡 **Info**
 > 
-> This setup is for further development of Starknet Foundry purposes.
+> This setup is for development of Starknet Foundry.
 >
 > If you don't wish to contribute, you can omit these instructions.
 
