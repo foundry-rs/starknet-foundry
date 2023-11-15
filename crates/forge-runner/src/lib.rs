@@ -83,13 +83,6 @@ pub struct RunnerConfig {
 }
 
 impl RunnerConfig {
-    /// Creates a new `RunnerConfig` from given arguments
-    ///
-    /// # Arguments
-    ///
-    /// * `test_name_filter` - Used to filter test cases by names
-    /// * `exact_match` - Should test names match the `test_name_filter` exactly
-    /// * `exit_first` - Should runner exit after first failed test
     #[must_use]
     #[allow(clippy::too_many_arguments, clippy::fn_params_excessive_bools)]
     pub fn new(
