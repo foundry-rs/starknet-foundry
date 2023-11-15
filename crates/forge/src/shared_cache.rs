@@ -5,7 +5,7 @@ use anyhow::{Ok, Result};
 use camino::Utf8PathBuf;
 use scarb_metadata::MetadataCommand;
 use std::fs::{self, File};
-use std::io::{BufRead, BufReader, Write};
+use std::io::{BufRead, BufReader, BufWriter, Write};
 
 use crate::test_case_summary::TestCaseSummary;
 
@@ -42,12 +42,11 @@ pub fn get_or_create_cache_dir() -> Result<Utf8PathBuf> {
 
 pub fn cache_failed_tests_names(all_failed_tests: &[TestCaseSummary]) -> Result<()> {
     let tests_failed_path = get_or_create_cache_dir()?.join(PREV_TESTS_FAILED);
-    let mut file = File::create(tests_failed_path)?;
-
+    let file = File::create(tests_failed_path)?;
+    let mut file = BufWriter::new(file);
     for line in all_failed_tests {
         if let TestCaseSummary::Failed { name, .. } = line {
-            file.write_all((name.clone() + "\n").as_bytes())
-                .expect("Can not write to file");
+            writeln!(file, "{name}")?;
         }
     }
 

@@ -7,8 +7,8 @@ use crate::shared_cache::get_cached_failed_tests_names;
 #[derive(Debug, PartialEq)]
 // Specifies what tests should be included
 pub struct TestsFilter {
-    // based on name
-    name_filter: NameFilter,
+    // based on names
+    name_filters: Vec<NameFilter>,
     // based on `#[ignore]` attribute
     ignored_filter: IgnoredFilter,
 }
@@ -48,45 +48,49 @@ impl TestsFilter {
             IgnoredFilter::NotIgnored
         };
 
-        let name_filter = if rerun_failed {
-            NameFilter::RerunFailed
-        } else if exact_match {
-            NameFilter::ExactMatch(test_name_filter.unwrap())
+        let mut name_filters = vec![];
+
+        if exact_match {
+            name_filters.push(NameFilter::ExactMatch(test_name_filter.unwrap()))
         } else if let Some(name) = test_name_filter {
-            NameFilter::Match(name)
+            name_filters.push(NameFilter::Match(name))
         } else {
-            NameFilter::All
+            name_filters.push(NameFilter::All)
         };
 
+        if rerun_failed {
+            name_filters.push(NameFilter::RerunFailed)
+        }
+
         Self {
-            name_filter,
+            name_filters,
             ignored_filter,
         }
     }
 
     pub(crate) fn filter_tests(&self, test_crate: CompiledTestCrateRaw) -> CompiledTestCrateRaw {
         let mut cases = test_crate.test_cases;
-
-        cases = match &self.name_filter {
-            NameFilter::All => cases,
-            NameFilter::Match(filter) => cases
-                .into_iter()
-                .filter(|tc| tc.name.contains(filter))
-                .collect(),
-            NameFilter::ExactMatch(name) => {
-                cases.into_iter().filter(|tc| tc.name == *name).collect()
-            }
-            NameFilter::RerunFailed => {
-                match get_cached_failed_tests_names().expect("Can't read cached failed tests") {
-                    Some(result) => cases
-                        .into_iter()
-                        .filter(|tc| result.iter().any(|name| name == &tc.name))
-                        .collect(),
-                    None => cases,
+        for name_filter in &self.name_filters {
+            cases = match name_filter {
+                NameFilter::All => cases,
+                NameFilter::Match(filter) => cases
+                    .into_iter()
+                    .filter(|tc| tc.name.contains(filter))
+                    .collect(),
+                NameFilter::ExactMatch(name) => {
+                    cases.into_iter().filter(|tc| tc.name == *name).collect()
                 }
-            }
-        };
-
+                NameFilter::RerunFailed => {
+                    match get_cached_failed_tests_names().expect("Can't read cached failed tests") {
+                        Some(result) => cases
+                            .into_iter()
+                            .filter(|tc| result.iter().any(|name| name == &tc.name))
+                            .collect(),
+                        None => cases,
+                    }
+                }
+            };
+        }
         cases = match self.ignored_filter {
             // if NotIgnored (default) we filter ignored tests later and display them as ignored
             IgnoredFilter::All | IgnoredFilter::NotIgnored => cases,
