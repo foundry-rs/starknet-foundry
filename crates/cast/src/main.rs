@@ -350,7 +350,7 @@ async fn run_async_command(
             print_command_result("show-config", &mut result, value_format, cli.json)?;
             Ok(())
         }
-        Commands::Script(_) => Err(anyhow!("All cases should already be handled")),
+        Commands::Script(_) => unreachable!(),
     }
 }
 
