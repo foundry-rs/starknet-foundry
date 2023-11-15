@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
-- `--rerun_failed` option to run only failed tests from previous run
+- `--rerun-failed` option to run tests that failed during the last run
 
 ## [0.10.2] - 2023-11-13
 

@@ -16,7 +16,7 @@ use tempfile::{tempdir, TempDir};
 use tokio::runtime::Builder;
 
 use forge::scarb::config::ForgeConfig;
-use forge::shared_cache::{clean_cache, write_failed_tests};
+use forge::shared_cache::{cache_failed_tests_names, clean_cache};
 use forge::test_case_summary::TestCaseSummary;
 use forge::test_filter::TestsFilter;
 use forge::{pretty_printing, RunnerConfig, RunnerParams, FUZZER_RUNS_DEFAULT};
@@ -94,8 +94,8 @@ struct TestArgs {
     #[arg(value_enum, long, default_value_t = ColorOption::Auto, value_name="WHEN")]
     color: ColorOption,
 
-    /// Run only failures
-    #[arg(long = "rerun_failed")]
+    /// Run tests that failed during the last run
+    #[arg(long)]
     rerun_failed: bool,
 }
 
@@ -239,7 +239,7 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                 let mut failed_tests = extract_failed_tests(tests_file_summaries);
                 all_failed_tests.append(&mut failed_tests);
             }
-            write_failed_tests(&all_failed_tests)?;
+            cache_failed_tests_names(&all_failed_tests)?;
 
             Ok::<_, anyhow::Error>(all_failed_tests)
         })

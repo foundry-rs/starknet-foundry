@@ -2,7 +2,7 @@ use crate::collecting::{CompiledTestCrate, CompiledTestCrateRaw, ValidatedForkCo
 use crate::TestCaseFilter;
 use test_collector::TestCase;
 
-use crate::shared_cache::read_tests_failed_file;
+use crate::shared_cache::get_cached_failed_tests_names;
 
 #[derive(Debug, PartialEq)]
 // Specifies what tests should be included
@@ -75,13 +75,15 @@ impl TestsFilter {
             NameFilter::ExactMatch(name) => {
                 cases.into_iter().filter(|tc| tc.name == *name).collect()
             }
-            NameFilter::RerunFailed => match read_tests_failed_file() {
-                Ok(result) => cases
-                    .into_iter()
-                    .filter(|tc| result.iter().any(|name| name == &tc.name))
-                    .collect(),
-                Err(_) => cases,
-            },
+            NameFilter::RerunFailed => {
+                match get_cached_failed_tests_names().expect("Can't read cached failed tests") {
+                    Some(result) => cases
+                        .into_iter()
+                        .filter(|tc| result.iter().any(|name| name == &tc.name))
+                        .collect(),
+                    None => cases,
+                }
+            }
         };
 
         cases = match self.ignored_filter {

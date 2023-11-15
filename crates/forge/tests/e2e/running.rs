@@ -423,7 +423,7 @@ fn with_rerun_failed_flag() {
     let snapbox = test_runner();
     let output = snapbox
         .current_dir(&temp)
-        .arg("--rerun_failed")
+        .arg("--rerun-failed")
         .assert()
         .code(1);
 
