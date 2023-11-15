@@ -147,7 +147,7 @@ fn start_spoof_all_attributes_mocked() {
                 assert(max_fee == 466_u128, 'Invalid max_fee');
 
                 let signature = dispatcher.get_signature();
-                assert(signature.len() == 2, 'Invalid signature len');
+                assert(signature.len() == 2, signature.len().into());
                 assert(*signature.at(0) == 477, 'Invalid signature el[0]');
                 assert(*signature.at(1) == 478, 'Invalid signature el[1]');
             }
@@ -345,12 +345,12 @@ fn start_spoof_multiple() {
                 let contract = declare('SpoofChecker');
                 
                 let contract_address_1 = contract.deploy(@ArrayTrait::new()).unwrap();
-                let dispatcher_1 = ISpoofCheckerDispatcher { contract_address };
+                let dispatcher_1 = ISpoofCheckerDispatcher { contract_address: contract_address_1 };
                 
                 let tx_hash_before_mock_1 = dispatcher_1.get_tx_hash();
                 
                 let contract_address_2 = contract.deploy(@ArrayTrait::new()).unwrap();
-                let dispatcher_2 = ISpoofCheckerDispatcher { contract_address };
+                let dispatcher_2 = ISpoofCheckerDispatcher { contract_address: contract_address_2 };
                 
                 let tx_hash_before_mock_2 = dispatcher_2.get_tx_hash();
 
@@ -358,7 +358,7 @@ fn start_spoof_multiple() {
                 tx_info_mock.transaction_hash = Option::Some(421);
                 
                 start_spoof(
-                    CheatTarget::Multiple(vec![contract_address_1, contract_address_2]),
+                    CheatTarget::Multiple(array![contract_address_1, contract_address_2]),
                     tx_info_mock
                 );
 
@@ -444,7 +444,7 @@ fn start_spoof_complex() {
             use starknet::ContractAddress;
             use starknet::ContractAddressIntoFelt252;
             use array::SpanTrait;
-            use snforge_std::{ declare, ContractClassTrait, start_spoof, TxInfoMock, TxInfoMockTrait };
+            use snforge_std::{ declare, ContractClassTrait, start_spoof, TxInfoMock, TxInfoMockTrait, CheatTarget };
 
             #[starknet::interface]
             trait ISpoofChecker<TContractState> {
@@ -460,32 +460,29 @@ fn start_spoof_complex() {
                 let dispatcher_1 = ISpoofCheckerDispatcher { contract_address: contract_address_1 };
                 let dispatcher_2 = ISpoofCheckerDispatcher { contract_address: contract_address_2 };
 
-                let tx_hash_before_mock_1 = dispatcher_1.get_tx_hash();
-                let tx_hash_before_mock_1 = dispatcher_1.get_tx_hash();
-
                 let mut tx_info_mock = TxInfoMockTrait::default();
                 tx_info_mock.transaction_hash = Option::Some(421);
                 start_spoof(CheatTarget::All, tx_info_mock);
 
                 let transaction_hash_1 = dispatcher_1.get_tx_hash();
-                assert(transaction_hash == 421, 'Invalid tx hash');
                 let transaction_hash_2 = dispatcher_2.get_tx_hash();
+                assert(transaction_hash_1 == 421, 'Invalid tx hash');
                 assert(transaction_hash_2 == 421, 'Invalid tx hash');
                 
                 tx_info_mock.transaction_hash = Option::Some(621);
                 start_spoof(CheatTarget::One(contract_address_2), tx_info_mock);
                 
                 let transaction_hash_1 = dispatcher_1.get_tx_hash();
-                assert(transaction_hash == 421, 'Invalid tx hash');
                 let transaction_hash_2 = dispatcher_2.get_tx_hash();
+                assert(transaction_hash_1 == 421, 'Invalid tx hash');
                 assert(transaction_hash_2 == 621, 'Invalid tx hash');
                 
                 tx_info_mock.transaction_hash = Option::Some(821);
                 start_spoof(CheatTarget::Multiple(array![contract_address_1, contract_address_2]), tx_info_mock);
                 
                 let transaction_hash_1 = dispatcher_1.get_tx_hash();
-                assert(transaction_hash == 821, 'Invalid tx hash');
                 let transaction_hash_2 = dispatcher_2.get_tx_hash();
+                assert(transaction_hash_1 == 821, 'Invalid tx hash');
                 assert(transaction_hash_2 == 821, 'Invalid tx hash');
             }
         "#
