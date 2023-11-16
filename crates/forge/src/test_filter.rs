@@ -33,7 +33,10 @@ impl TestsFilter {
         only_ignored: bool,
         include_ignored: bool,
     ) -> Self {
-        assert!(!(only_ignored && include_ignored));
+        assert!(
+            !(only_ignored && include_ignored),
+            "Arguments only_ignored and include_ignored cannot be both true"
+        );
 
         let ignored_filter = if include_ignored {
             IgnoredFilter::All
@@ -44,7 +47,10 @@ impl TestsFilter {
         };
 
         let name_filter = if exact_match {
-            NameFilter::ExactMatch(test_name_filter.unwrap())
+            NameFilter::ExactMatch(
+                test_name_filter
+                    .expect("Argument test_name_filter cannot be None with exact_match"),
+            )
         } else if let Some(name) = test_name_filter {
             NameFilter::Match(name)
         } else {
@@ -112,13 +118,13 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Arguments only_ignored and include_ignored cannot be both true")]
     fn from_flags_only_ignored_and_include_ignored_both_true() {
         let _ = TestsFilter::from_flags(None, false, true, true);
     }
 
     #[test]
-    #[should_panic]
+    #[should_panic(expected = "Argument test_name_filter cannot be None with exact_match")]
     fn from_flags_exact_match_true_without_test_filter_name() {
         let _ = TestsFilter::from_flags(None, true, false, false);
     }
