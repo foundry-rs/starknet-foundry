@@ -2,7 +2,7 @@
 
 > `fn stop_spoof(contract_address: ContractAddress)`
 
-Cancels the [`start_spoof`](./start_spoof.md) for the contract at the given address.
+Cancels the [`start_spoof`](./start_spoof.md) for the given target.
 
 - `target` - instance of [`CheatTarget`](./cheat_target.md) specifying which contracts to stop spoofing
 
