@@ -657,7 +657,7 @@ fn handle_deploy_result(
         Err(CheatcodeError::Unrecoverable(err)) => Err(err),
     }
 }
-//
+// Returns the tuple (target, n read elements)
 fn deserialize_cheat_target(inputs: &[Felt252]) -> (CheatTarget, usize) {
     // First element encodes the variant of CheatTarget
     match inputs[0].to_u8() {
