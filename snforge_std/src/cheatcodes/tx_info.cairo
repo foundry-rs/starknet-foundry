@@ -45,10 +45,8 @@ fn option_as_tuple<T, impl TDrop: Drop<T>>(option: Option<T>, default: T) -> (bo
 fn join_arrays(ref a: Array<felt252>, ref b: Span<felt252>) {
     loop {
         match b.pop_front() {
-              Option::Some(x) => {
-                  a.append(x.clone());
-              },
-              Option::None => {break ();}
+            Option::Some(x) => { a.append(x.clone()); },
+            Option::None => { break (); }
         };
     };
 }
