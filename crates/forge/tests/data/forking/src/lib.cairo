@@ -32,7 +32,9 @@ mod tests {
     #[fork(url: "http://188.34.188.184:9545/rpc/v0.4", block_id: BlockId::Number(0x4c82c))]
     fn test_fork_simple_number_hex() {
         let dispatcher = IHelloStarknetDispatcher {
-            contract_address: contract_address_const::<3216637956526895219277698311134811322769343974163380838558193911733621219342>()
+            contract_address: contract_address_const::<
+                3216637956526895219277698311134811322769343974163380838558193911733621219342
+            >()
         };
 
         let balance = dispatcher.get_balance();
@@ -45,10 +47,15 @@ mod tests {
     }
 
     #[test]
-    #[fork(url: "http://188.34.188.184:9545/rpc/v0.4", block_id: BlockId::Hash(0x05a49d0e9704b2d5df7aed50551d96d138ad2a3525c9e3d3511fb42bf54f6b84))]
+    #[fork(
+        url: "http://188.34.188.184:9545/rpc/v0.4",
+        block_id: BlockId::Hash(0x05a49d0e9704b2d5df7aed50551d96d138ad2a3525c9e3d3511fb42bf54f6b84)
+    )]
     fn test_fork_simple_hash_hex() {
         let dispatcher = IHelloStarknetDispatcher {
-            contract_address: contract_address_const::<3216637956526895219277698311134811322769343974163380838558193911733621219342>()
+            contract_address: contract_address_const::<
+                3216637956526895219277698311134811322769343974163380838558193911733621219342
+            >()
         };
 
         let balance = dispatcher.get_balance();
@@ -61,10 +68,17 @@ mod tests {
     }
 
     #[test]
-    #[fork(url: "http://188.34.188.184:9545/rpc/v0.4", block_id: BlockId::Hash(2552411129059775354525588266083178415167802891503196038260593864007232744324))]
+    #[fork(
+        url: "http://188.34.188.184:9545/rpc/v0.4",
+        block_id: BlockId::Hash(
+            2552411129059775354525588266083178415167802891503196038260593864007232744324
+        )
+    )]
     fn test_fork_simple_hash_number() {
         let dispatcher = IHelloStarknetDispatcher {
-            contract_address: contract_address_const::<3216637956526895219277698311134811322769343974163380838558193911733621219342>()
+            contract_address: contract_address_const::<
+                3216637956526895219277698311134811322769343974163380838558193911733621219342
+            >()
         };
 
         let balance = dispatcher.get_balance();
