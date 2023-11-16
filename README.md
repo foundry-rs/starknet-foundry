@@ -76,6 +76,8 @@ Starknet Foundry is under active development! Expect a lot of new features to ap
 
 ## Performance
 
+![Performance plot](.github/images/plot.png)
+
 Forge achieves performance comparable to the Cairo Test Runner with improved user experience.
 
 ## Getting Help
