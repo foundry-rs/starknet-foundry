@@ -23,7 +23,7 @@ mod SpyEventsCheckerProxy {
 
     #[storage]
     struct Storage {
-        proxied_address: ContractAddress, 
+        proxied_address: ContractAddress,
     }
 
     #[event]

@@ -45,10 +45,7 @@ mod MyContract {
     }
 
     #[constructor]
-    fn constructor(
-        ref self: ContractState,
-        minter: ContractAddress
-    ) {
+    fn constructor(ref self: ContractState, minter: ContractAddress) {
         // AccessControl-related initialization
         self.accesscontrol.initializer();
         self.accesscontrol._grant_role(MINTER_ROLE, minter);
