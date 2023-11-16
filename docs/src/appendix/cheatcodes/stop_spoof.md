@@ -1,6 +1,6 @@
 # `stop_spoof`
 
-> `fn stop_spoof(contract_address: ContractAddress)`
+> `fn stop_spoof(target: CheatTarget)`
 
 Cancels the [`start_spoof`](./start_spoof.md) for the given target.
 
