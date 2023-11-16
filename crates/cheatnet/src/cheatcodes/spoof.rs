@@ -1,7 +1,8 @@
+use crate::state::{start_cheat, stop_cheat, CheatTarget};
 use crate::CheatnetState;
 use cairo_felt::Felt252;
-use starknet_api::core::ContractAddress;
 
+#[derive(Clone)]
 pub struct TxInfoMock {
     pub version: Option<Felt252>,
     pub account_contract_address: Option<Felt252>,
@@ -16,7 +17,7 @@ impl CheatnetState {
     #[allow(clippy::too_many_arguments)]
     pub fn start_spoof(
         &mut self,
-        contract_address: ContractAddress,
+        target: CheatTarget,
         version: Option<Felt252>,
         account_contract_address: Option<Felt252>,
         max_fee: Option<Felt252>,
@@ -34,10 +35,15 @@ impl CheatnetState {
             chain_id,
             nonce,
         };
-        self.spoofed_contracts.insert(contract_address, tx_info);
+        start_cheat(
+            &mut self.global_spoof,
+            &mut self.spoofed_contracts,
+            target,
+            tx_info,
+        );
     }
 
-    pub fn stop_spoof(&mut self, contract_address: ContractAddress) {
-        self.spoofed_contracts.remove(&contract_address);
+    pub fn stop_spoof(&mut self, target: CheatTarget) {
+        stop_cheat(&mut self.global_spoof, &mut self.spoofed_contracts, target);
     }
 }
