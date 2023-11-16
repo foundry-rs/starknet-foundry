@@ -322,6 +322,7 @@ impl TestExecutionSyscallHandler<'_> {
             "start_spoof" => {
                 let (target, inputs_start) = deserialize_cheat_target(&inputs);
 
+                // We check for 1s - because of serialization from tx_info.cairo::option_as_tuple
                 let version = inputs[inputs_start]
                     .is_one()
                     .then(|| inputs[inputs_start + 1].clone());
