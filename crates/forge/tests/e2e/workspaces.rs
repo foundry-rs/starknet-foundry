@@ -13,7 +13,7 @@ fn root_workspace_without_arguments() {
     let output = snapbox.current_dir(&temp).assert().code(1);
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -37,7 +37,7 @@ fn root_workspace_without_arguments() {
         Failures:
             tests::test_failing::test_failing
             tests::test_failing::test_another_failing
-        "#}
+        "}
     );
 }
 
@@ -49,7 +49,7 @@ fn root_workspace_specific_package() {
     let output = snapbox.current_dir(&temp).assert().success();
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Compiling[..]
         [..]Finished[..]
@@ -64,7 +64,7 @@ fn root_workspace_specific_package() {
         [PASS] tests::nested::test_nested::test_two
         [PASS] tests::nested::test_nested::test_two_and_two
         Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
-        "#}
+        "}
     );
 }
 
@@ -76,7 +76,7 @@ fn root_workspace_specific_package2() {
     let output = snapbox.current_dir(&temp).assert().code(1);
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Compiling[..]
         [..]Finished[..]
@@ -99,7 +99,7 @@ fn root_workspace_specific_package2() {
         
         Failures:
             tests::abc::efg::failing_test
-        "#}
+        "}
     );
 }
 
@@ -111,7 +111,7 @@ fn root_workspace_specific_package_and_name() {
     let output = snapbox.current_dir(&temp).assert().success();
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Compiling[..]
         [..]Finished[..]
@@ -122,7 +122,7 @@ fn root_workspace_specific_package_and_name() {
         Running 1 test(s) from tests/
         [PASS] tests::nested::simple_case
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 4 filtered out
-        "#}
+        "}
     );
 }
 
@@ -134,7 +134,7 @@ fn root_workspace_specify_root_package() {
     let output = snapbox.current_dir(&temp).assert().code(1);
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -158,7 +158,7 @@ fn root_workspace_specify_root_package() {
         Failures:
             tests::test_failing::test_failing
             tests::test_failing::test_another_failing
-        "#}
+        "}
     );
 }
 
@@ -172,7 +172,7 @@ fn root_workspace_inside_nested_package() {
     let output = snapbox.current_dir(package_dir).assert().success();
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Compiling[..]
         [..]Finished[..]
@@ -187,7 +187,7 @@ fn root_workspace_inside_nested_package() {
         [PASS] tests::nested::test_nested::test_two
         [PASS] tests::nested::test_nested::test_two_and_two
         Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
-        "#}
+        "}
     );
 }
 
@@ -199,7 +199,7 @@ fn root_workspace_for_entire_workspace() {
     let output = snapbox.current_dir(&temp).assert().code(1);
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Compiling[..]
         [..]Compiling[..]
@@ -255,7 +255,7 @@ fn root_workspace_for_entire_workspace() {
             tests::abc::efg::failing_test
             tests::test_failing::test_failing
             tests::test_failing::test_another_failing
-        "#}
+        "}
     );
 }
 
@@ -268,7 +268,7 @@ fn root_workspace_for_entire_workspace_inside_package() {
     let output = snapbox.current_dir(package_dir).assert().code(1);
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Compiling[..]
         [..]Compiling[..]
@@ -324,7 +324,7 @@ fn root_workspace_for_entire_workspace_inside_package() {
             tests::abc::efg::failing_test
             tests::test_failing::test_failing
             tests::test_failing::test_another_failing
-        "#}
+        "}
     );
 }
 
@@ -363,7 +363,7 @@ fn virtual_workspace_without_arguments() {
     let output = snapbox.current_dir(&temp).assert().code(1);
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Compiling[..]
         [..]Compiling[..]
@@ -398,7 +398,7 @@ fn virtual_workspace_without_arguments() {
         
         Failures:
             tests::abc::efg::failing_test
-        "#}
+        "}
     );
 }
 
@@ -410,7 +410,7 @@ fn virtual_workspace_specify_package() {
     let output = snapbox.current_dir(&temp).assert().success();
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Compiling[..]
         [..]Finished[..]
@@ -425,7 +425,7 @@ fn virtual_workspace_specify_package() {
         [PASS] tests::nested::test_nested::test_two
         [PASS] tests::nested::test_nested::test_two_and_two
         Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
-        "#}
+        "}
     );
 }
 
@@ -437,7 +437,7 @@ fn virtual_workspace_specific_package2() {
     let output = snapbox.current_dir(&temp).assert().code(1);
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
         
@@ -459,7 +459,7 @@ fn virtual_workspace_specific_package2() {
         
         Failures:
             tests::abc::efg::failing_test
-        "#}
+        "}
     );
 }
 
@@ -474,7 +474,7 @@ fn virtual_workspace_specific_package_and_name() {
     let output = snapbox.current_dir(&temp).assert().success();
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Compiling[..]
         [..]Finished[..]
@@ -485,7 +485,7 @@ fn virtual_workspace_specific_package_and_name() {
         Running 1 test(s) from tests/
         [PASS] tests::nested::simple_case
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 4 filtered out
-        "#}
+        "}
     );
 }
 
@@ -499,7 +499,7 @@ fn virtual_workspace_inside_nested_package() {
     let output = snapbox.current_dir(package_dir).assert().success();
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Compiling[..]
         [..]Finished[..]
@@ -514,7 +514,7 @@ fn virtual_workspace_inside_nested_package() {
         [PASS] tests::nested::test_nested::test_two
         [PASS] tests::nested::test_nested::test_two_and_two
         Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
-        "#}
+        "}
     );
 }
 
@@ -526,7 +526,7 @@ fn virtual_workspace_for_entire_workspace() {
     let output = snapbox.current_dir(&temp).assert().code(1);
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Compiling[..]
         [..]Compiling[..]
@@ -561,7 +561,7 @@ fn virtual_workspace_for_entire_workspace() {
         
         Failures:
             tests::abc::efg::failing_test
-        "#}
+        "}
     );
 }
 
@@ -574,7 +574,7 @@ fn virtual_workspace_for_entire_workspace_inside_package() {
     let output = snapbox.current_dir(package_dir).assert().code(1);
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Compiling[..]
         [..]Compiling[..]
@@ -609,7 +609,7 @@ fn virtual_workspace_for_entire_workspace_inside_package() {
         
         Failures:
             tests::abc::efg::failing_test
-        "#}
+        "}
     );
 }
 
