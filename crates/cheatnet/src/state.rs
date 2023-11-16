@@ -264,11 +264,11 @@ impl CheatnetState {
 
     #[must_use]
     pub fn address_is_spoofed(&self, contract_address: &ContractAddress) -> bool {
-        self.global_spoof.is_some()
-            || matches!(
-                self.spoofed_contracts.get(contract_address),
-                Some(CheatStatus::Cheated(_))
-            )
+        match self.spoofed_contracts.get(contract_address) {
+            Some(CheatStatus::Uncheated) => false,
+            Some(CheatStatus::Cheated(_)) => true,
+            None => self.global_spoof.is_some(),
+        }
     }
 
     #[must_use]
