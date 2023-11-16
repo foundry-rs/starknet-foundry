@@ -27,11 +27,11 @@ pub fn get_cached_failed_tests_names(workspace_root: &Utf8PathBuf) -> Result<Opt
     Ok(Some(tests))
 }
 
-pub fn get_cache_dir(workspace_root: &Utf8PathBuf) -> Result<Utf8PathBuf> {
+fn get_cache_dir(workspace_root: &Utf8PathBuf) -> Result<Utf8PathBuf> {
     Ok(workspace_root.join(CACHE_DIR))
 }
 
-pub fn get_or_create_cache_dir(workspace_root: &Utf8PathBuf) -> Result<Utf8PathBuf> {
+fn get_or_create_cache_dir(workspace_root: &Utf8PathBuf) -> Result<Utf8PathBuf> {
     let cache_dir_path = get_cache_dir(workspace_root)?;
     std::fs::create_dir_all(&cache_dir_path)?;
     Ok(cache_dir_path)
