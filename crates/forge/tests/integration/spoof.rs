@@ -400,10 +400,16 @@ fn start_spoof_all() {
             #[starknet::interface]
             trait ISpoofChecker<TContractState> {
                 fn get_tx_hash(ref self: TContractState) -> felt252;
+                fn get_nonce(ref self: TContractState) -> felt252;
+                fn get_account_contract_address(ref self: TContractState) -> ContractAddress;
+                fn get_signature(ref self: TContractState) -> Span<felt252>;
+                fn get_version(ref self: TContractState) -> felt252;
+                fn get_max_fee(ref self: TContractState) -> u128;
+                fn get_chain_id(ref self: TContractState) -> felt252;
             }
 
             #[test]
-            fn start_spoof_all() {
+            fn start_spoof_all_one_param() {
                 let contract = declare('SpoofChecker');
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ISpoofCheckerDispatcher { contract_address };
@@ -416,6 +422,49 @@ fn start_spoof_all() {
 
                 let transaction_hash = dispatcher.get_tx_hash();
                 assert(transaction_hash == 421, 'Invalid tx hash');
+            }
+            
+              #[test]
+            fn start_spoof_all_multiple_params() {
+                let contract = declare('SpoofChecker');
+                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+                let dispatcher = ISpoofCheckerDispatcher { contract_address };
+
+                let tx_hash_before_mock = dispatcher.get_tx_hash();
+
+                let mut tx_info_mock = TxInfoMockTrait::default();
+                tx_info_mock.nonce = Option::Some(411);
+                tx_info_mock.account_contract_address = Option::Some(422.try_into().unwrap());
+                tx_info_mock.version = Option::Some(433);
+                tx_info_mock.transaction_hash = Option::Some(444);
+                tx_info_mock.chain_id = Option::Some(455);
+                tx_info_mock.max_fee = Option::Some(466_u128);
+                tx_info_mock.signature = Option::Some(array![477, 478].span());
+
+                start_spoof(CheatTarget::All, tx_info_mock);
+
+                let nonce = dispatcher.get_nonce();
+                assert(nonce == 411, 'Invalid nonce');
+
+                let account_contract_address: felt252 = dispatcher.get_account_contract_address().into();
+                assert(account_contract_address == 422, 'Invalid account address');
+
+                let version = dispatcher.get_version();
+                assert(version == 433, 'Invalid version');
+
+                let transaction_hash = dispatcher.get_tx_hash();
+                assert(transaction_hash == 444, 'Invalid tx hash');
+
+                let chain_id = dispatcher.get_chain_id();
+                assert(chain_id == 455, 'Invalid chain_id');
+
+                let max_fee = dispatcher.get_max_fee();
+                assert(max_fee == 466_u128, 'Invalid max_fee');
+
+                let signature = dispatcher.get_signature();
+                assert(signature.len() == 2, 'Invalid signature len');
+                assert(*signature.at(0) == 477, 'Invalid signature el[0]');
+                assert(*signature.at(1) == 478, 'Invalid signature el[1]');
             }
         "#
         ),
