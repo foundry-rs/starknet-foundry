@@ -76,11 +76,7 @@ Starknet Foundry is under active development! Expect a lot of new features to ap
 
 ## Performance
 
-Forge achieves performance comparable to the Cairo Test Runner with improved user experience. All that is possible on just a single thread and multithreading is well on its way!
-
-![Starknet test framework speed comparison](./benchmarks/plot.png)
-
-To learn more about our benchmark methodology check [here](./benchmarks/).
+Forge achieves performance comparable to the Cairo Test Runner with improved user experience.
 
 ## Getting Help
 
