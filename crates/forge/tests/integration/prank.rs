@@ -8,7 +8,7 @@ use test_utils::{assert_passed, test_case};
 fn prank() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
             use result::ResultTrait;
             use array::ArrayTrait;
             use option::OptionTrait;
@@ -98,7 +98,7 @@ fn prank() {
                 assert(old_caller_address1 == new_caller_address1, 'Address did not change back #1');
                 assert(old_caller_address2 == new_caller_address2, 'Address did not change back #2');
             }
-        "#
+        "
         ),
         Contract::from_code_path(
             "PrankChecker".to_string(),

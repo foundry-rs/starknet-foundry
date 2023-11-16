@@ -8,7 +8,7 @@ use test_utils::{assert_passed, test_case};
 fn start_and_stop_spoof_single_attribute() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
             use result::ResultTrait;
             use box::BoxTrait;
             use starknet::info::TxInfo;
@@ -70,7 +70,7 @@ fn start_and_stop_spoof_single_attribute() {
                 let transaction_hash = dispatcher.get_tx_hash();
                 assert(transaction_hash == tx_hash_before_mock, 'Invalid tx hash');
             }
-        "#
+        "
         ),
         Contract::from_code_path(
             "SpoofChecker".to_string(),
@@ -88,7 +88,7 @@ fn start_and_stop_spoof_single_attribute() {
 fn start_spoof_all_attributes_mocked() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
             use result::ResultTrait;
             use option::OptionTrait;
             use starknet::info::TxInfo;
@@ -151,7 +151,7 @@ fn start_spoof_all_attributes_mocked() {
                 assert(*signature.at(0) == 477, 'Invalid signature el[0]');
                 assert(*signature.at(1) == 478, 'Invalid signature el[1]');
             }
-        "#
+        "
         ),
         Contract::from_code_path(
             "SpoofChecker".to_string(),
@@ -169,7 +169,7 @@ fn start_spoof_all_attributes_mocked() {
 fn start_spoof_cancel_mock_by_setting_attribute_to_none() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
             use result::ResultTrait;
             use box::BoxTrait;
             use starknet::info::TxInfo;
@@ -231,7 +231,7 @@ fn start_spoof_cancel_mock_by_setting_attribute_to_none() {
                 let signature = dispatcher.get_signature();
                 assert(signature == signature_before_mock, 'Invalid signature');
             }
-        "#
+        "
         ),
         Contract::from_code_path(
             "SpoofChecker".to_string(),
@@ -249,7 +249,7 @@ fn start_spoof_cancel_mock_by_setting_attribute_to_none() {
 fn start_spoof_no_attributes_mocked() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
             use result::ResultTrait;
             use option::OptionTrait;
             use starknet::info::TxInfo;
@@ -306,7 +306,7 @@ fn start_spoof_no_attributes_mocked() {
                 let signature = dispatcher.get_signature();
                 assert(signature.len() == signature_before_mock.len(), 'Invalid signature');
             }
-        "#
+        "
         ),
         Contract::from_code_path(
             "SpoofChecker".to_string(),
@@ -324,7 +324,7 @@ fn start_spoof_no_attributes_mocked() {
 fn start_spoof_multiple() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
             use result::ResultTrait;
             use option::OptionTrait;
             use starknet::info::TxInfo;
@@ -368,7 +368,7 @@ fn start_spoof_multiple() {
                 let transaction_hash = dispatcher_2.get_tx_hash();
                 assert(transaction_hash == 421, 'Invalid tx hash');
             }
-        "#
+        "
         ),
         Contract::from_code_path(
             "SpoofChecker".to_string(),
@@ -386,7 +386,7 @@ fn start_spoof_multiple() {
 fn start_spoof_all() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
             use result::ResultTrait;
             use option::OptionTrait;
             use starknet::info::TxInfo;
@@ -466,7 +466,7 @@ fn start_spoof_all() {
                 assert(*signature.at(0) == 477, 'Invalid signature el[0]');
                 assert(*signature.at(1) == 478, 'Invalid signature el[1]');
             }
-        "#
+        "
         ),
         Contract::from_code_path(
             "SpoofChecker".to_string(),
@@ -484,7 +484,7 @@ fn start_spoof_all() {
 fn start_spoof_complex() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
             use result::ResultTrait;
             use option::OptionTrait;
             use starknet::info::TxInfo;
@@ -534,7 +534,7 @@ fn start_spoof_complex() {
                 assert(transaction_hash_1 == 821, 'Invalid tx hash');
                 assert(transaction_hash_2 == 821, 'Invalid tx hash');
             }
-        "#
+        "
         ),
         Contract::from_code_path(
             "SpoofChecker".to_string(),

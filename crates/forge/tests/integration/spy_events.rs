@@ -8,7 +8,7 @@ use test_utils::{assert_case_output_contains, assert_failed, assert_passed, test
 fn spy_events_simple() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
             use array::ArrayTrait;
             use result::ResultTrait;
             use starknet::ContractAddress;
@@ -60,7 +60,7 @@ fn spy_events_simple() {
                 ]);
                 assert(spy.events.len() == 0, 'There should be no events');
             }
-        "#
+        "
         ),
         Contract::from_code_path(
             "SpyEventsChecker".to_string(),
@@ -78,7 +78,7 @@ fn spy_events_simple() {
 fn assert_emitted_fails() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
             use array::ArrayTrait;
             use result::ResultTrait;
             use starknet::ContractAddress;
@@ -127,7 +127,7 @@ fn assert_emitted_fails() {
                     )
                 ]);
             }
-        "#
+        "
         ),
         Contract::from_code_path(
             "SpyEventsChecker".to_string(),
@@ -151,7 +151,7 @@ fn assert_emitted_fails() {
 fn expect_three_events_while_two_emitted() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
             use array::ArrayTrait;
             use result::ResultTrait;
             use traits::Into;
@@ -234,7 +234,7 @@ fn expect_three_events_while_two_emitted() {
                     )
                 ]);
             }
-        "#
+        "
         ),
         Contract::from_code_path(
             "SpyEventsChecker".to_string(),
@@ -262,7 +262,7 @@ fn expect_three_events_while_two_emitted() {
 fn expect_two_events_while_three_emitted() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
             use array::ArrayTrait;
             use result::ResultTrait;
             use traits::Into;
@@ -336,7 +336,7 @@ fn expect_two_events_while_three_emitted() {
                     )
                 ]);
             }
-        "#
+        "
         ),
         Contract::from_code_path(
             "SpyEventsChecker".to_string(),
@@ -354,7 +354,7 @@ fn expect_two_events_while_three_emitted() {
 fn event_emitted_wrong_data_asserted() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
             use array::ArrayTrait;
             use result::ResultTrait;
             use starknet::ContractAddress;
@@ -403,7 +403,7 @@ fn event_emitted_wrong_data_asserted() {
                     )
                 ]);
             }
-        "#
+        "
         ),
         Contract::from_code_path(
             "SpyEventsChecker".to_string(),
@@ -436,7 +436,7 @@ fn event_emitted_wrong_data_asserted() {
 fn emit_unnamed_event() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
             use array::ArrayTrait;
             use result::ResultTrait;
             use traits::Into;
@@ -467,7 +467,7 @@ fn emit_unnamed_event() {
                     )
                 ]);
             }
-        "#
+        "
         ),
         Contract::from_code_path(
             "SpyEventsChecker".to_string(),

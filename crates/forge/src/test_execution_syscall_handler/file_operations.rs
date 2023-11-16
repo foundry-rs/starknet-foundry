@@ -131,8 +131,8 @@ mod tests {
     }
     #[test]
     fn test_json_values_sorted_by_keys_invalid_data() {
-        let string = r#"
-        [1,2,'3232']"#
+        let string = r"
+        [1,2,'3232']"
             .to_owned();
         let result = json_values_sorted_by_keys(&string);
         assert!(result.is_err());
