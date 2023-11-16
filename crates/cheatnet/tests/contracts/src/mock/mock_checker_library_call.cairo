@@ -20,7 +20,9 @@ mod MockCheckerLibCall {
 
     #[external(v0)]
     impl IMockCheckerLibCall of super::IMockCheckerLibCall<ContractState> {
-        fn get_constant_thing_with_lib_call(ref self: ContractState, class_hash: ClassHash) -> felt252 {
+        fn get_constant_thing_with_lib_call(
+            ref self: ContractState, class_hash: ClassHash
+        ) -> felt252 {
             let mock_checker = IMockCheckerLibraryDispatcher { class_hash };
             mock_checker.get_constant_thing()
         }

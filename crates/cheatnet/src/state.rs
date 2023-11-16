@@ -226,7 +226,8 @@ pub struct CheatnetState {
     pub warped_contracts: HashMap<ContractAddress, CheatStatus<Felt252>>,
     pub global_warp: Option<Felt252>,
     pub mocked_functions: HashMap<ContractAddress, HashMap<EntryPointSelector, Vec<StarkFelt>>>,
-    pub spoofed_contracts: HashMap<ContractAddress, TxInfoMock>,
+    pub spoofed_contracts: HashMap<ContractAddress, CheatStatus<TxInfoMock>>,
+    pub global_spoof: Option<TxInfoMock>,
     pub spies: Vec<SpyTarget>,
     pub detected_events: Vec<Event>,
     pub deploy_salt_base: u32,
@@ -262,8 +263,22 @@ impl CheatnetState {
     }
 
     #[must_use]
+    pub fn address_is_spoofed(&self, contract_address: &ContractAddress) -> bool {
+        self.global_spoof.is_some()
+            || matches!(
+                self.spoofed_contracts.get(contract_address),
+                Some(CheatStatus::Cheated(_))
+            )
+    }
+
+    #[must_use]
     pub fn get_cheated_block_timestamp(&self, address: &ContractAddress) -> Option<Felt252> {
         get_cheat_for_contract(&self.global_warp, &self.warped_contracts, address)
+    }
+
+    #[must_use]
+    pub fn get_cheated_tx_info(&self, address: &ContractAddress) -> Option<TxInfoMock> {
+        get_cheat_for_contract(&self.global_spoof, &self.spoofed_contracts, address)
     }
 
     #[must_use]
@@ -283,11 +298,6 @@ impl CheatnetState {
     #[must_use]
     pub fn get_cheated_block_number(&self, address: &ContractAddress) -> Option<Felt252> {
         get_cheat_for_contract(&self.global_roll, &self.rolled_contracts, address)
-    }
-
-    #[must_use]
-    pub fn address_is_spoofed(&self, contract_address: &ContractAddress) -> bool {
-        self.spoofed_contracts.contains_key(contract_address)
     }
 }
 

@@ -43,9 +43,9 @@ fn get_cheated_tx_info_ptr(
     let mut new_tx_info = original_tx_info.to_owned();
 
     let tx_info_mock = cheatnet_state
-        .spoofed_contracts
-        .get(contract_address)
+        .get_cheated_tx_info(contract_address)
         .unwrap();
+
     let TxInfoMock {
         version,
         account_contract_address,
@@ -54,16 +54,16 @@ fn get_cheated_tx_info_ptr(
         transaction_hash,
         chain_id,
         nonce,
-    } = tx_info_mock.to_owned();
+    } = tx_info_mock;
 
     if let Some(version) = version {
-        new_tx_info[0] = MaybeRelocatable::Int(version.clone());
+        new_tx_info[0] = MaybeRelocatable::Int(version);
     };
     if let Some(account_contract_address) = account_contract_address {
-        new_tx_info[1] = MaybeRelocatable::Int(account_contract_address.clone());
+        new_tx_info[1] = MaybeRelocatable::Int(account_contract_address);
     };
     if let Some(max_fee) = max_fee {
-        new_tx_info[2] = MaybeRelocatable::Int(max_fee.clone());
+        new_tx_info[2] = MaybeRelocatable::Int(max_fee);
     };
 
     if let Some(signature) = signature {
@@ -79,13 +79,13 @@ fn get_cheated_tx_info_ptr(
     }
 
     if let Some(transaction_hash) = transaction_hash {
-        new_tx_info[5] = MaybeRelocatable::Int(transaction_hash.clone());
+        new_tx_info[5] = MaybeRelocatable::Int(transaction_hash);
     };
     if let Some(chain_id) = chain_id {
-        new_tx_info[6] = MaybeRelocatable::Int(chain_id.clone());
+        new_tx_info[6] = MaybeRelocatable::Int(chain_id);
     };
     if let Some(nonce) = nonce {
-        new_tx_info[7] = MaybeRelocatable::Int(nonce.clone());
+        new_tx_info[7] = MaybeRelocatable::Int(nonce);
     };
 
     vm.load_data(ptr_cheated_tx_info, &new_tx_info).unwrap();
