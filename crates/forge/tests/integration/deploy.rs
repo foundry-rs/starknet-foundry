@@ -8,7 +8,7 @@ use test_utils::{assert_passed, test_case};
 fn error_handling() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
         use result::ResultTrait;
         use snforge_std::{ declare, ContractClass, ContractClassTrait };
         use array::ArrayTrait;
@@ -25,7 +25,7 @@ fn error_handling() {
                 }
             }
         }
-    "#
+    "
         ),
         Contract::from_code_path(
             "PanickingConstructor".to_string(),
@@ -43,7 +43,7 @@ fn error_handling() {
 fn deploy_syscall() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
         use snforge_std::{declare, test_address};
         use starknet::{SyscallResult, deploy_syscall};
         
@@ -69,7 +69,7 @@ fn deploy_syscall() {
             let (contract_address_from_zero, span) = deploy_syscall(contract.class_hash, salt, calldata.span(), true).unwrap();
             assert(contract_address != contract_address_from_zero, 'deploy from zero no effect');
         }
-    "#
+    "
         ),
         Contract::from_code_path(
             "DeployChecker".to_string(),

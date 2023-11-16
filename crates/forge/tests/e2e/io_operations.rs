@@ -14,7 +14,7 @@ fn file_reading() {
         &[BASE_FILE_PATTERNS, &["**/*.txt", "**/*.json"]].concat(),
     );
 
-    let expected = indoc! {r#"
+    let expected = indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -118,7 +118,7 @@ fn file_reading() {
             tests::test::json_non_existent
             tests::test::negative_number
             tests::test::not_number_without_quotes
-    "#};
+    "};
 
     // run from different directories to make sure cwd is always set to package directory
     let snapbox = test_runner();

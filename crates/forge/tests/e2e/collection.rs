@@ -19,7 +19,7 @@ fn collection_with_lib() {
 
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -45,7 +45,7 @@ fn collection_with_lib() {
         [PASS] tests::fibfabfob::test_fib
         [PASS] tests::fibfabfob::test_fab
         Tests: 17 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
-        "#}
+        "}
     );
 }
 
@@ -63,7 +63,7 @@ fn collection_without_lib() {
     let output = snapbox.current_dir(&temp).assert().success();
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -89,6 +89,6 @@ fn collection_without_lib() {
         [PASS] tests::fibfabfob::test_fob
         [PASS] tests::fibfabfob::test_fib
         Tests: 17 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
-        "#}
+        "}
     );
 }
