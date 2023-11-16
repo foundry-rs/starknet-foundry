@@ -76,6 +76,6 @@ fn test_spoof() {
     dispatcher.store_tx_hash();
     
     let tx_hash = dispatcher.get_stored_tx_hash();
-    assert(tx_hash == tx_hash_before_mock, 'tx_hash should not be mocked anymore');
+    assert(tx_hash == tx_hash_before_mock, 'tx_hash was not reverted');
 }
 ```
