@@ -1,10 +1,10 @@
 # Cheatcodes Reference
 
--[`CheatTarget`](cheatcodes/cheat_target.md) - enum for selecting contracts to target with cheatcodes
+- [`CheatTarget`](cheatcodes/cheat_target.md) - enum for selecting contracts to target with cheatcodes
 - [`start_prank`](cheatcodes/start_prank.md) - changes the caller address for contracts
 - [`stop_prank`](cheatcodes/stop_prank.md) - cancels the `start_prank` for contracts
-- [`start_roll`](cheatcodes/start_roll.md) - changes the block number for a contract
-- [`stop_roll`](cheatcodes/stop_roll.md) - cancels the `start_roll` for the contract
+- [`start_roll`](cheatcodes/start_roll.md) - changes the block number for contracts
+- [`stop_roll`](cheatcodes/stop_roll.md) - cancels the `start_roll` for contracts
 - [`start_warp`](cheatcodes/start_warp.md) - changes the block timestamp for contracts
 - [`stop_warp`](cheatcodes/stop_warp.md) - cancels the `start_warp` for contracts
 - [`get_class_hash`](cheatcodes/get_class_hash.md) - retrieves a class hash of a contract

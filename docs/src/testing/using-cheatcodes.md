@@ -237,7 +237,7 @@ fn mock_constructor_with_roll() {
     let contract_address = contract.precalculate_address(constructor_arguments);
 
     // set the block number to 234 for the precalculated address
-    start_roll(contract_address, 234);
+    start_roll(CheatTarget::One(contract_address), 234);
 
     let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
     let dispatcher = IHelloStarknetDispatcher { contract_address };

@@ -271,8 +271,7 @@ pub fn get_block_number(
         block_number: BlockNumber(
             syscall_handler
                 .cheatnet_state
-                .rolled_contracts
-                .get(&contract_address)
+                .get_cheated_block_number(&contract_address)
                 .unwrap()
                 .to_u64()
                 .unwrap(),

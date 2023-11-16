@@ -11,5 +11,5 @@ enum BlockTag {
 enum BlockId {
     Tag: BlockTag,
     Hash: felt252,
-    Number: felt252,
+    Number: u64,
 }

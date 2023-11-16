@@ -66,6 +66,7 @@ use result::ResultTrait;
 use box::BoxTrait;
 use starknet::ContractAddress;
 use snforge_std::{
+    CheatTarget,
     start_roll, stop_roll,
     test_address
 };
@@ -75,11 +76,11 @@ fn test_roll_test_state() {
     let test_address: ContractAddress = test_address();
     let old_block_number = starknet::get_block_info().unbox().block_number;
 
-    start_roll(test_address, 234);
+    start_roll(CheatTarget::One(test_address), 234);
     let new_block_number = starknet::get_block_info().unbox().block_number;
     assert(new_block_number == 234, 'Wrong block number');
 
-    stop_roll(test_address);
+    stop_roll(CheatTarget::One(test_address));
     let new_block_number = starknet::get_block_info().unbox().block_number;
     assert(new_block_number == old_block_number, 'Block num did not change back');
 }
