@@ -8,7 +8,7 @@ use test_utils::{assert_case_output_contains, assert_failed, assert_passed, test
 fn simple_call_and_invoke() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
         use array::ArrayTrait;
         use result::ResultTrait;
         use option::OptionTrait;
@@ -39,7 +39,7 @@ fn simple_call_and_invoke() {
             let balance = dispatcher.get_balance();
             assert(balance == 100, 'balance == 100');
         }
-    "#
+    "
         ),
         Contract::from_code_path(
             "HelloStarknet".to_string(),
@@ -57,7 +57,7 @@ fn simple_call_and_invoke() {
 fn advanced_types() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
         use array::ArrayTrait;
         use result::ResultTrait;
         use option::OptionTrait;
@@ -112,7 +112,7 @@ fn advanced_types() {
             let balance = dispatcher.balance_of(other_user_address);
             assert(balance == 1000_u256, 'balance == 1000');
         }
-    "#
+    "
         ),
         Contract::from_code_path(
             "ERC20".to_string(),
@@ -130,7 +130,7 @@ fn advanced_types() {
 fn handling_errors() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
         use array::ArrayTrait;
         use result::ResultTrait;
         use option::OptionTrait;
@@ -179,7 +179,7 @@ fn handling_errors() {
                 }
             };
         }
-    "#
+    "
         ),
         Contract::from_code_path(
             "HelloStarknet".to_string(),
@@ -197,7 +197,7 @@ fn handling_errors() {
 fn serding() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
         use array::ArrayTrait;
         use result::ResultTrait;
         use option::OptionTrait;
@@ -251,7 +251,7 @@ fn serding() {
         
             assert(result == 1 + 2 + 3 + 4 + 5, 'Invalid sum');
         }
-    "#
+    "
         ),
         Contract::from_code_path(
             "Serding".to_string(),
@@ -270,7 +270,7 @@ fn serding() {
 fn proxy_storage() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
         use array::ArrayTrait;
         use result::ResultTrait;
         use option::OptionTrait;
@@ -329,12 +329,12 @@ fn proxy_storage() {
         
             assert(storage_after == cs, 'Invalid storage');
         }
-    "#
+    "
         ),
         Contract::new(
             "Caller",
             indoc!(
-                r#"
+                r"
             #[derive(Drop, Serde, starknet::Store)]
             struct NestedStruct {
                 d: felt252, 
@@ -370,13 +370,13 @@ fn proxy_storage() {
                     safe_dispatcher.store_and_add_5(custom_struct)
                 }
             }
-            "#
+            "
             )
         ),
         Contract::new(
             "Executor",
             indoc!(
-                r#"
+                r"
             #[derive(Drop, Serde, starknet::Store)]
             struct NestedStruct {
                 d: felt252, 
@@ -408,7 +408,7 @@ fn proxy_storage() {
                     self.thing.read()
                 }
             }
-            "#
+            "
             )
         )
     );
@@ -423,7 +423,7 @@ fn proxy_storage() {
 fn proxy_dispatcher_panic() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
         use array::ArrayTrait;
         use result::ResultTrait;
         use option::OptionTrait;
@@ -456,12 +456,12 @@ fn proxy_dispatcher_panic() {
                 Result::Err(x) => assert(*x.at(0) == 'panic_msg', 'wrong panic msg')
             }
         }
-    "#
+    "
         ),
         Contract::new(
             "Caller",
             indoc!(
-                r#"
+                r"
             #[starknet::contract]
             mod Caller {
                 use result::ResultTrait;
@@ -490,13 +490,13 @@ fn proxy_dispatcher_panic() {
                     dispatcher.invoke_with_panic()
                 }
             }
-            "#
+            "
             )
         ),
         Contract::new(
             "Executor",
             indoc!(
-                r#"
+                r"
             #[starknet::contract]
             mod Executor {
                 #[storage]
@@ -507,7 +507,7 @@ fn proxy_dispatcher_panic() {
                     panic_with_felt252('panic_msg');
                 }
             }
-            "#
+            "
             )
         )
     );
@@ -521,7 +521,7 @@ fn proxy_dispatcher_panic() {
 fn nonexistent_method_call() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
         use array::ArrayTrait;
         use result::ResultTrait;
         use option::OptionTrait;
@@ -553,19 +553,19 @@ fn nonexistent_method_call() {
                 Result::Err(x) => assert(*x.at(0) == 'panic_msg', 'wrong panic msg')
             }
         }
-    "#
+    "
         ),
         Contract::new(
             "Contract",
             indoc!(
-                r#"
+                r"
             #[starknet::contract]
             mod Contract {
                 #[storage]
                 struct Storage {
                 }
             }
-            "#
+            "
             )
         )
     );
@@ -584,7 +584,7 @@ fn nonexistent_method_call() {
 fn nonexistent_libcall_function() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
         use array::ArrayTrait;
         use result::ResultTrait;
         use option::OptionTrait;
@@ -613,12 +613,12 @@ fn nonexistent_libcall_function() {
             let dispatcher = IContractDispatcher { contract_address };
             dispatcher.invoke_nonexistent_libcall_from_contract(class.class_hash);
         }
-        "#
+        "
         ),
         Contract::new(
             "LibCaller",
             indoc!(
-                r#"
+                r"
                 #[starknet::contract]
                 mod Contract {
                     use starknet::ClassHash;
@@ -643,20 +643,20 @@ fn nonexistent_libcall_function() {
                         }
                     }
                 }
-                "#
+                "
             )
         ),
         Contract::new(
             "Contract",
             indoc!(
-                r#"
+                r"
             #[starknet::contract]
             mod Contract {
                 #[storage]
                 struct Storage {
                 }
             }
-            "#
+            "
             )
         )
     );
@@ -674,7 +674,7 @@ fn nonexistent_libcall_function() {
 #[test]
 fn undeclared_class_call() {
     let test = test_case!(indoc!(
-        r#"
+        r"
         use starknet::ContractAddress;
         use traits::TryInto;
         use option::OptionTrait;
@@ -689,7 +689,7 @@ fn undeclared_class_call() {
             let dispatcher = IContractDispatcher { contract_address: 5.try_into().unwrap() };
             dispatcher.invoke_nonexistent();
         }
-        "#
+        "
     ));
 
     let result = run_test_case(&test);
@@ -706,7 +706,7 @@ fn undeclared_class_call() {
 fn nonexistent_class_libcall() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
         use array::ArrayTrait;
         use result::ResultTrait;
         use option::OptionTrait;
@@ -730,12 +730,12 @@ fn nonexistent_class_libcall() {
             let dispatcher = IContractDispatcher { contract_address };
             dispatcher.invoke_nonexistent_libcall_from_contract();
         }
-        "#
+        "
         ),
         Contract::new(
             "LibCaller",
             indoc!(
-                r#"
+                r"
                 #[starknet::contract]
                 mod Contract {
                     use starknet::class_hash::class_hash_try_from_felt252;
@@ -760,20 +760,20 @@ fn nonexistent_class_libcall() {
                         lib_dispatcher.invoke_nonexistent();
                     }
                 }
-                "#
+                "
             )
         ),
         Contract::new(
             "Contract",
             indoc!(
-                r#"
+                r"
             #[starknet::contract]
             mod Contract {
                 #[storage]
                 struct Storage {
                 }
             }
-            "#
+            "
             )
         )
     );

@@ -8,7 +8,7 @@ use test_utils::{assert_passed, test_case};
 fn simple_declare() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
         use result::ResultTrait;
         use traits::Into;
         use starknet::ClassHashIntoFelt252;
@@ -20,12 +20,12 @@ fn simple_declare() {
             let contract = declare('HelloStarknet');
             assert(contract.class_hash.into() != 0, 'proper class hash');
         }
-        "#
+        "
         ),
         Contract::new(
             "HelloStarknet",
             indoc!(
-                r#"
+                r"
                 #[starknet::contract]
                 mod HelloStarknet {
                     #[storage]
@@ -45,7 +45,7 @@ fn simple_declare() {
                         self.balance.write(self.balance.read() - amount);
                     }
                 }
-                "#
+                "
             )
         )
     );
@@ -65,7 +65,7 @@ fn simple_declare_from_contract_code() {
 
     let test = test_case!(
         indoc!(
-            r#"
+            r"
         use result::ResultTrait;
         use traits::Into;
         use starknet::ClassHashIntoFelt252;
@@ -78,7 +78,7 @@ fn simple_declare_from_contract_code() {
             let class_hash = contract.class_hash.into();
             assert(class_hash != 0, 'proper class hash');
         }
-        "#
+        "
         ),
         contract
     );

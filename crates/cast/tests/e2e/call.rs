@@ -20,10 +20,10 @@ fn test_happy_case() {
 
     let snapbox = runner(&args);
 
-    snapbox.assert().success().stdout_eq(indoc! {r#"
+    snapbox.assert().success().stdout_eq(indoc! {r"
         command: call
         response: [0x0]
-    "#});
+    "});
 }
 
 #[tokio::test]
@@ -44,10 +44,10 @@ async fn test_call_after_storage_changed() {
 
     let snapbox = runner(&args);
 
-    snapbox.assert().success().stdout_eq(indoc! {r#"
+    snapbox.assert().success().stdout_eq(indoc! {r"
         command: call
         response: [0x3]
-    "#});
+    "});
 }
 
 #[tokio::test]
@@ -63,10 +63,10 @@ async fn test_contract_does_not_exist() {
 
     let snapbox = runner(&args);
 
-    snapbox.assert().stderr_matches(indoc! {r#"
+    snapbox.assert().stderr_matches(indoc! {r"
         command: call
         error: Contract not found
-    "#});
+    "});
 }
 
 #[test]
@@ -83,10 +83,10 @@ fn test_wrong_function_name() {
 
     let snapbox = runner(&args);
 
-    snapbox.assert().stderr_matches(indoc! {r#"
+    snapbox.assert().stderr_matches(indoc! {r"
         command: call
         error: Entry point [..] not found in contract.
-    "#});
+    "});
 }
 
 #[test]
@@ -127,8 +127,8 @@ async fn test_invalid_selector() {
     ]);
 
     let snapbox = runner(&args);
-    snapbox.assert().stderr_matches(indoc! {r#"
+    snapbox.assert().stderr_matches(indoc! {r"
       command: call
       error: Failed to convert entry point selector to FieldElement: the provided name contains non-ASCII characters
-  "#});
+  "});
 }

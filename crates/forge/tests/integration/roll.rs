@@ -8,7 +8,7 @@ use test_utils::{assert_passed, test_case};
 fn roll_basic() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
             use result::ResultTrait;
             use array::ArrayTrait;
             use option::OptionTrait;
@@ -113,7 +113,7 @@ fn roll_basic() {
                 let new_block_number = dispatcher.get_block_number();
                 assert(new_block_number == old_block_number, 'Block num did not change back');
             }
-        "#
+        "
         ),
         Contract::from_code_path(
             "RollChecker".to_string(),
@@ -131,7 +131,7 @@ fn roll_basic() {
 fn roll_complex() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
             use result::ResultTrait;
             use array::ArrayTrait;
             use option::OptionTrait;
@@ -193,7 +193,7 @@ fn roll_complex() {
                 assert(new_block_number1 == 789, 'Wrong block number #7');
                 assert(new_block_number2 == old_block_number2, 'Wrong block number #8');
             }
-        "#
+        "
         ),
         Contract::from_code_path(
             "RollChecker".to_string(),

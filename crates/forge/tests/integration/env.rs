@@ -7,7 +7,7 @@ use test_utils::{assert_case_output_contains, assert_failed, assert_passed, test
 #[test]
 fn read_short_string() {
     let mut test = test_case!(indoc!(
-        r#"
+        r"
         use snforge_std::env::var;
 
         #[test]
@@ -15,7 +15,7 @@ fn read_short_string() {
             let result = var('MY_ENV_VAR');
             assert(result == 'env_var_value', 'failed reading env var');
         }
-    "#
+    "
     ));
     test.set_env("MY_ENV_VAR", "'env_var_value'");
 
@@ -27,7 +27,7 @@ fn read_short_string() {
 #[test]
 fn read_felt252() {
     let mut test = test_case!(indoc!(
-        r#"
+        r"
         use snforge_std::env::var;
 
         #[test]
@@ -35,7 +35,7 @@ fn read_felt252() {
             let result = var('MY_ENV_VAR');
             assert(result == 1234567, 'failed reading env var');
         }
-    "#
+    "
     ));
     test.set_env("MY_ENV_VAR", "1234567");
 
@@ -47,14 +47,14 @@ fn read_felt252() {
 #[test]
 fn read_invalid_felt252() {
     let mut test = test_case!(indoc!(
-        r#"
+        r"
         use snforge_std::env::var;
 
         #[test]
         fn test_read_invalid_felt252() {
             let result = var('MY_ENV_VAR');
         }
-    "#
+    "
     ));
 
     let value = (Felt252::prime() + BigUint::from(1_u32)).to_string();
@@ -73,14 +73,14 @@ fn read_invalid_felt252() {
 #[test]
 fn read_invalid_short_string() {
     let mut test = test_case!(indoc!(
-        r#"
+        r"
         use snforge_std::env::var;
 
         #[test]
         fn test_read_invalid_short_string() {
             let result = var('MY_ENV_VAR');
         }
-    "#
+    "
     ));
 
     let value =
@@ -100,14 +100,14 @@ fn read_invalid_short_string() {
 #[test]
 fn read_non_existent() {
     let test = test_case!(indoc!(
-        r#"
+        r"
         use snforge_std::env::var;
 
         #[test]
         fn test_read_invalid_short_string() {
             let result = var('MY_ENV_VAR');
         }
-    "#
+    "
     ));
     let result = run_test_case(&test);
 
