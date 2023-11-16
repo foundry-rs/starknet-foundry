@@ -221,7 +221,7 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                 let mut failed_tests = extract_failed_tests(tests_file_summaries);
                 all_failed_tests.append(&mut failed_tests);
             }
-            cache_failed_tests_names(&all_failed_tests, workspace_root)?;
+            cache_failed_tests_names(&all_failed_tests, &workspace_root)?;
 
             Ok::<_, anyhow::Error>(all_failed_tests)
         })
