@@ -98,13 +98,15 @@ jobs:
       - uses: software-mansion/setup-scarb@v1.3.2
       - name: Check cairo files format
         run: |
-          find . -type f -name "Scarb.toml" -print0 | while IFS= read -r -d '' file; do
-            dir="$(dirname "$file")"
-            cd "$dir"
-            echo "Running 'scarb fmt' in directory: $PWD"
-            scarb fmt --check
-            cd - > /dev/null
-          done
+          output=$(find . -type f -name "Scarb.toml" -execdir sh -c '
+              echo "Running \"scarb fmt\" in directory: $PWD"
+              scarb fmt --check
+          ' \;)
+          echo "$output"
+          if grep -iq "Diff" <<< "$output"; then
+              exit 1
+          fi
+              exit 0
 
   rustfmt:
     runs-on: ubuntu-latest

@@ -24,6 +24,7 @@ mod tests {
     fn adding() {
         let result = adder(2, 3);
         assert(result == 5, '2 + 3 == 5');
+        
     }
 
     #[test]
