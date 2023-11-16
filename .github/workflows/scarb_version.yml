@@ -1,0 +1,22 @@
+name: Get Scarb version from top-level .tool-versions file for latest release
+
+on:
+  workflow_call:
+    outputs:
+      version:
+        description: "Version of Scarb from tol-level .tool-versions for latest release"
+        value: ${{ jobs.get-scarb-version.outputs.version }}
+
+jobs:
+  get-scarb-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.extractScarbVersion.outputs.scarbVersion }}
+    steps:
+      - name: Get scarb version
+        id: extractScarbVersion
+        run: |
+          snfoundry_version=$(curl -s https://api.github.com/repos/foundry-rs/starknet-foundry/releases/latest | grep tarball_url | awk -F '/' '{print $8}' | tr -d '",')
+          version=$(curl -s https://raw.githubusercontent.com/foundry-rs/starknet-foundry/$snfoundry_version/.tool-versions | awk '{print $2}')
+
+          echo "scarbVersion=$version" >> "$GITHUB_OUTPUT"
