@@ -23,6 +23,10 @@ pub struct Delete {
     /// Network where the account exists; defaults to network of rpc node
     #[clap(long)]
     pub network: Option<String>,
+
+    /// Allow CLI to be run in non-interactive mode
+    #[clap(long, num_args=1, default_value = "true")]
+    pub yes: Option<bool>,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -32,6 +36,7 @@ pub fn delete(
     path_to_scarb_toml: &Option<Utf8PathBuf>,
     delete_profile: Option<bool>,
     network_name: &str,
+    yes: Option<bool>,
 ) -> Result<AccountDeleteResponse> {
     let contents = std::fs::read_to_string(path.clone()).context("Couldn't read accounts file")?;
     let items: serde_json::Value = serde_json::from_str(&contents)
@@ -47,13 +52,15 @@ pub fn delete(
     let mut items: Map<String, serde_json::Value> =
         serde_json::from_str(&contents).expect("failed to read file { path }");
 
-    // Let's ask confirmation
-    let prompt_text =
-        format!("Do you want to remove the account {name} deployed to network {network_name} from local file {path}? (Y/n)");
-    let input: String = prompt(prompt_text)?;
+    if yes == Some(false) {
+        // Let's ask confirmation
+        let prompt_text =
+            format!("Do you want to remove the account {name} deployed to network {network_name} from local file {path}? (Y/n)");
+        let input: String = prompt(prompt_text)?;
 
-    if !input.starts_with('Y') {
-        bail!("Delete aborted");
+        if !input.starts_with('Y') {
+            bail!("Delete aborted");
+        }
     }
 
     // get to the nested object "nested"
