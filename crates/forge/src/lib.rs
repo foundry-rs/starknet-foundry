@@ -21,7 +21,6 @@ use cairo_lang_sierra::program::Function;
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use futures::stream::FuturesUnordered;
-use itertools::Itertools;
 
 use once_cell::sync::Lazy;
 use smol_str::SmolStr;
@@ -237,7 +236,7 @@ pub async fn run(
     let test_crates = test_crates
         .into_iter()
         .map(|tc| tests_filter.filter_tests(tc))
-        .collect_vec();
+        .collect::<Result<Vec<CompiledTestCrate<RawForkConfig>>>>()?;
     let not_filtered: usize = test_crates.iter().map(|tc| tc.test_cases.len()).sum();
     let filtered = all_tests - not_filtered;
 
