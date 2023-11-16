@@ -106,7 +106,7 @@ jobs:
           if grep -iq "Diff" <<< "$output"; then
               exit 1
           fi
-              exit 0
+          exit 0
 
   rustfmt:
     runs-on: ubuntu-latest
