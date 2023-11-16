@@ -147,7 +147,7 @@ fn start_spoof_all_attributes_mocked() {
                 assert(max_fee == 466_u128, 'Invalid max_fee');
 
                 let signature = dispatcher.get_signature();
-                assert(signature.len() == 2, signature.len().into());
+                assert(signature.len() == 2, 'Invalid signature len');
                 assert(*signature.at(0) == 477, 'Invalid signature el[0]');
                 assert(*signature.at(1) == 478, 'Invalid signature el[1]');
             }
