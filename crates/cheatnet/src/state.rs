@@ -2,6 +2,7 @@ use crate::cheatcodes;
 use crate::cheatcodes::spy_events::{Event, SpyTarget};
 use crate::constants::TEST_SEQUENCER_ADDRESS;
 use crate::forking::state::ForkStateReader;
+use blockifier::execution::contract_address;
 use blockifier::state::state_api::State;
 use blockifier::{
     execution::contract_class::ContractClass,
@@ -245,30 +246,28 @@ impl CheatnetState {
     }
 
     #[must_use]
-    pub fn address_is_pranked(&self, contract_address: &ContractAddress) -> bool {
-        match self.pranked_contracts.get(contract_address) {
-            Some(CheatStatus::Uncheated) => false,
-            Some(CheatStatus::Cheated(_)) => true,
-            None => self.global_prank.is_some(),
-        }
+    pub fn address_is_rolled(&self, contract_address: &ContractAddress) -> bool {
+        self.get_cheated_block_number(contract_address).is_some()
     }
 
     #[must_use]
     pub fn address_is_warped(&self, contract_address: &ContractAddress) -> bool {
-        match self.warped_contracts.get(contract_address) {
-            Some(CheatStatus::Uncheated) => false,
-            Some(CheatStatus::Cheated(_)) => true,
-            None => self.global_warp.is_some(),
-        }
+        self.get_cheated_block_timestamp(contract_address).is_some()
+    }
+
+    #[must_use]
+    pub fn address_is_pranked(&self, contract_address: &ContractAddress) -> bool {
+        self.get_cheated_caller_address(contract_address).is_some()
     }
 
     #[must_use]
     pub fn address_is_spoofed(&self, contract_address: &ContractAddress) -> bool {
-        match self.spoofed_contracts.get(contract_address) {
-            Some(CheatStatus::Uncheated) => false,
-            Some(CheatStatus::Cheated(_)) => true,
-            None => self.global_spoof.is_some(),
-        }
+        self.get_cheated_tx_info(contract_address).is_some()
+    }
+
+    #[must_use]
+    pub fn get_cheated_block_number(&self, address: &ContractAddress) -> Option<Felt252> {
+        get_cheat_for_contract(&self.global_roll, &self.rolled_contracts, address)
     }
 
     #[must_use]
@@ -284,20 +283,6 @@ impl CheatnetState {
     #[must_use]
     pub fn get_cheated_caller_address(&self, address: &ContractAddress) -> Option<ContractAddress> {
         get_cheat_for_contract(&self.global_prank, &self.pranked_contracts, address)
-    }
-
-    #[must_use]
-    pub fn address_is_rolled(&self, contract_address: &ContractAddress) -> bool {
-        match self.rolled_contracts.get(contract_address) {
-            Some(CheatStatus::Uncheated) => false,
-            Some(CheatStatus::Cheated(_)) => true,
-            None => self.global_roll.is_some(),
-        }
-    }
-
-    #[must_use]
-    pub fn get_cheated_block_number(&self, address: &ContractAddress) -> Option<Felt252> {
-        get_cheat_for_contract(&self.global_roll, &self.rolled_contracts, address)
     }
 }
 
