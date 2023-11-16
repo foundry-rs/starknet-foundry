@@ -1,5 +1,6 @@
 use crate::collecting::{CompiledTestCrate, CompiledTestCrateRaw, ValidatedForkConfig};
 use crate::TestCaseFilter;
+use camino::Utf8PathBuf;
 use test_collector::TestCase;
 
 use crate::shared_cache::get_cached_failed_tests_names;
@@ -13,6 +14,8 @@ pub struct TestsFilter {
     ignored_filter: IgnoredFilter,
     // based on rerun_failed flag
     last_failed_filter: bool,
+
+    workspace_root: Utf8PathBuf,
 }
 
 #[derive(Debug, PartialEq)]
@@ -38,6 +41,7 @@ impl TestsFilter {
         only_ignored: bool,
         include_ignored: bool,
         rerun_failed: bool,
+        workspace_root: Utf8PathBuf,
     ) -> Self {
         assert!(!(only_ignored && include_ignored));
 
@@ -61,6 +65,7 @@ impl TestsFilter {
             name_filter,
             ignored_filter,
             last_failed_filter: rerun_failed,
+            workspace_root,
         }
     }
 
@@ -79,7 +84,9 @@ impl TestsFilter {
         };
 
         if self.last_failed_filter {
-            cases = match get_cached_failed_tests_names().expect("Can't read cached failed tests") {
+            cases = match get_cached_failed_tests_names(self.workspace_root.clone())
+                .expect("Can't read cached failed tests")
+            {
                 Some(result) => cases
                     .into_iter()
                     .filter(|tc| result.iter().any(|name| name == &tc.name))

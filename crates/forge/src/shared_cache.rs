@@ -9,8 +9,8 @@ use std::io::{BufRead, BufReader, BufWriter, Write};
 
 use crate::test_case_summary::TestCaseSummary;
 
-pub fn get_cached_failed_tests_names() -> Result<Option<Vec<String>>> {
-    let tests_failed_path = get_cache_dir()?.join(PREV_TESTS_FAILED);
+pub fn get_cached_failed_tests_names(workspace_root: Utf8PathBuf) -> Result<Option<Vec<String>>> {
+    let tests_failed_path = get_cache_dir(workspace_root)?.join(PREV_TESTS_FAILED);
     if !tests_failed_path.exists() {
         return Ok(None);
     }
@@ -27,21 +27,21 @@ pub fn get_cached_failed_tests_names() -> Result<Option<Vec<String>>> {
     Ok(Some(tests))
 }
 
-pub fn get_cache_dir() -> Result<Utf8PathBuf> {
-    let scarb_metadata = MetadataCommand::new().inherit_stderr().exec();
-    let scarb_metadata = scarb_metadata?;
-    let workspace_root = scarb_metadata.workspace.root.clone();
+pub fn get_cache_dir(workspace_root: Utf8PathBuf) -> Result<Utf8PathBuf> {
     Ok(workspace_root.join(CACHE_DIR))
 }
 
-pub fn get_or_create_cache_dir() -> Result<Utf8PathBuf> {
-    let cache_dir_path = get_cache_dir()?;
+pub fn get_or_create_cache_dir(workspace_root: Utf8PathBuf) -> Result<Utf8PathBuf> {
+    let cache_dir_path = get_cache_dir(workspace_root)?;
     std::fs::create_dir_all(&cache_dir_path)?;
     Ok(cache_dir_path)
 }
 
-pub fn cache_failed_tests_names(all_failed_tests: &[TestCaseSummary]) -> Result<()> {
-    let tests_failed_path = get_or_create_cache_dir()?.join(PREV_TESTS_FAILED);
+pub fn cache_failed_tests_names(
+    all_failed_tests: &[TestCaseSummary],
+    workspace_root: Utf8PathBuf,
+) -> Result<()> {
+    let tests_failed_path = get_or_create_cache_dir(workspace_root)?.join(PREV_TESTS_FAILED);
     let file = File::create(tests_failed_path)?;
     let mut file = BufWriter::new(file);
     for line in all_failed_tests {
@@ -54,7 +54,9 @@ pub fn cache_failed_tests_names(all_failed_tests: &[TestCaseSummary]) -> Result<
 }
 
 pub fn clean_cache() -> Result<()> {
-    let cache_dir = get_cache_dir()?;
+    let scarb_metadata = MetadataCommand::new().inherit_stderr().exec()?;
+    let workspace_root = scarb_metadata.workspace.root.clone();
+    let cache_dir = get_cache_dir(workspace_root)?;
     if cache_dir.exists() {
         fs::remove_dir_all(cache_dir)?;
     }
