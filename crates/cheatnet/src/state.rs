@@ -2,7 +2,6 @@ use crate::cheatcodes;
 use crate::cheatcodes::spy_events::{Event, SpyTarget};
 use crate::constants::TEST_SEQUENCER_ADDRESS;
 use crate::forking::state::ForkStateReader;
-use blockifier::execution::contract_address;
 use blockifier::state::state_api::State;
 use blockifier::{
     execution::contract_class::ContractClass,
