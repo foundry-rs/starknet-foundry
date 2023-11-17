@@ -174,8 +174,10 @@ pub fn get_package_tool_sncast(metadata: &scarb_metadata::Metadata) -> Result<&V
 
 #[cfg(test)]
 mod tests {
-    use crate::helpers::scarb_utils::{get_scarb_metadata, verify_or_determine_scarb_manifest_path};
     use crate::helpers::scarb_utils::parse_scarb_config;
+    use crate::helpers::scarb_utils::{
+        get_scarb_metadata, verify_or_determine_scarb_manifest_path,
+    };
     use camino::Utf8PathBuf;
     use sealed_test::prelude::rusty_fork_test;
     use sealed_test::prelude::sealed_test;
