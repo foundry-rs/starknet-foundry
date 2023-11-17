@@ -208,10 +208,11 @@ mod tests {
     }
 
     #[test]
+    #[should_panic(expected = "whatever/Scarb.toml file does not exist!")]
     fn test_parse_scarb_config_not_found() {
-        let config =
-            parse_scarb_config(&None, &Some(Utf8PathBuf::from("whatever/Scarb.toml"))).unwrap_err();
-        assert!(config.to_string().contains("file does not exist!"));
+        let _ = verify_or_determine_scarb_manifest_path(&Some(Utf8PathBuf::from(
+            "whatever/Scarb.toml",
+        )));
     }
 
     #[test]
