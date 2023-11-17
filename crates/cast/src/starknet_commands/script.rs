@@ -209,13 +209,13 @@ impl CairoHintProcessor<'_> {
                 ))?;
 
                 buffer
-                    .write(call_response.data.len())
+                    .write(call_response.response.len())
                     .expect("Failed to insert data length");
 
                 buffer
                     .write_data(
                         call_response
-                            .data
+                            .response
                             .iter()
                             .map(StarknetConversions::to_felt252),
                     )

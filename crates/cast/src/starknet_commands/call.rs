@@ -46,7 +46,7 @@ pub async fn call(
     let res = provider.call(function_call, block_id).await;
 
     match res {
-        Ok(data) => Ok(CallResponse { data }),
+        Ok(response) => Ok(CallResponse { response }),
         Err(error) => handle_rpc_error(error),
     }
 }

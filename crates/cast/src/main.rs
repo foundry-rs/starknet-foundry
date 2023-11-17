@@ -2,6 +2,7 @@ use crate::starknet_commands::account::Account;
 use crate::starknet_commands::show_config::ShowConfig;
 use crate::starknet_commands::{
     account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
+    script::Script,
 };
 use anyhow::{anyhow, Result};
 
@@ -15,12 +16,10 @@ use cast::{
     print_command_result, ValueFormat,
 };
 use clap::{Parser, Subcommand};
-use script::Script;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use tokio::runtime::Runtime;
 
-mod script;
 mod starknet_commands;
 
 #[derive(Parser)]
@@ -124,7 +123,7 @@ fn main() -> Result<()> {
 
     if let Commands::Script(script) = cli.command {
         let scarb_manifest_path = scarb_manifest_path.expect("Scarb.toml not found");
-        let mut result = script::run(
+        let mut result = starknet_commands::script::run(
             &script.script_path,
             &provider,
             runtime,
