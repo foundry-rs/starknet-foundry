@@ -1,7 +1,6 @@
 use anyhow::{anyhow, Context, Result};
 use camino::Utf8PathBuf;
 use scarb_metadata;
-use scarb_metadata::{Metadata, PackageMetadata};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::env;
@@ -118,9 +117,9 @@ pub fn verify_or_determine_scarb_manifest_path(
 }
 
 pub fn get_package_metadata<'a>(
-    metadata: &'a Metadata,
+    metadata: &'a scarb_metadata::Metadata,
     manifest_path: &'a Utf8PathBuf,
-) -> Result<&'a PackageMetadata> {
+) -> Result<&'a scarb_metadata::PackageMetadata> {
     let manifest_path = canonicalize(manifest_path.clone())
         .unwrap_or_else(|err| panic!("Failed to canonicalize {manifest_path}, error: {err:?}"));
 
