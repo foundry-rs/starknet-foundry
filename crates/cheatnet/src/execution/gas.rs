@@ -6,7 +6,6 @@ use blockifier::{
 };
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources as VmExecutionResources;
 
-#[allow(clippy::module_name_repetitions)]
 #[must_use]
 pub fn gas_from_execution_resources(
     block_context: &BlockContext,
