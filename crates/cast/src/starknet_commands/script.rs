@@ -241,35 +241,7 @@ pub fn run(
     provider: &JsonRpcClient<HttpTransport>,
     runtime: Runtime,
 ) -> Result<ScriptResponse> {
-    let script_folder = script_path
-        .parent()
-        .ok_or(anyhow!("Failed to determine parent for {script_path}"))?;
-
-    let scarb_manifest_path = get_scarb_manifest_for(script_folder)
-        .context("Failed to obtain manifest path from scarb")
-        .unwrap();
-
-    ScarbCommand::new()
-        .arg("build")
-        .env("SCARB_MANIFEST_PATH", &scarb_manifest_path)
-        .run()?;
-
-    let metadata = get_scarb_metadata(&scarb_manifest_path, true)?;
-    let package_metadata = get_package_metadata(&metadata, &scarb_manifest_path)?;
-
-    let filename = format!("{}.sierra.json", package_metadata.name);
-    let path = metadata
-        .target_dir
-        .unwrap_or(metadata.workspace.root.join("target"))
-        .join(metadata.current_profile)
-        .join(filename.clone());
-
-    ensure!(
-        path.exists(),
-        formatdoc! {r#"
-            package has not been compiled, file does not exist: {path}
-        "#}
-    );
+    let path = compile_script(script_path)?;
 
     let sierra_program = serde_json::from_str::<VersionedProgram>(
         &fs::read_to_string(path.clone())
@@ -354,6 +326,40 @@ pub fn run(
         },
         Err(err) => Err(err.into()),
     }
+}
+
+fn compile_script(script_path: &Utf8PathBuf) -> Result<Utf8PathBuf> {
+    let script_folder = script_path
+        .parent()
+        .ok_or(anyhow!("Failed to determine parent for {script_path}"))?;
+
+    let scarb_manifest_path = get_scarb_manifest_for(script_folder)
+        .context("Failed to obtain manifest path from scarb")
+        .unwrap();
+
+    ScarbCommand::new()
+        .arg("build")
+        .env("SCARB_MANIFEST_PATH", &scarb_manifest_path)
+        .run()?;
+
+    let metadata = get_scarb_metadata(&scarb_manifest_path, true)?;
+    let package_metadata = get_package_metadata(&metadata, &scarb_manifest_path)?;
+
+    let filename = format!("{}.sierra.json", package_metadata.name);
+    let path = metadata
+        .target_dir
+        .unwrap_or(metadata.workspace.root.join("target"))
+        .join(metadata.current_profile)
+        .join(filename.clone());
+
+    ensure!(
+        path.exists(),
+        formatdoc! {r#"
+            package has not been compiled, file does not exist: {path}
+        "#}
+    );
+
+    Ok(path)
 }
 
 // taken from starknet-foundry/crates/forge/src/test_case_summary.rs
