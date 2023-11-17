@@ -6,7 +6,7 @@ pub mod nonce;
 pub mod short_string;
 pub mod stark_felt;
 
-trait FromConv<T> {
+pub trait FromConv<T> {
     fn from_(value: T) -> Self;
 }
 
@@ -22,4 +22,15 @@ where
     fn into_(self: T) -> U {
         U::from_(self)
     }
+}
+
+#[macro_export]
+macro_rules! from_thru_felt252 {
+    ($from:ty, $to:ty) => {
+        impl FromConv<$from> for $to {
+            fn from_(value: $from) -> Self {
+                Self::from_(Felt252::from_(value))
+            }
+        }
+    };
 }
