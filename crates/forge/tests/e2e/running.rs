@@ -427,7 +427,7 @@ fn with_rerun_failed_flag_without_cache() {
 
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
         
@@ -461,7 +461,7 @@ fn with_rerun_failed_flag_without_cache() {
         Failure data:
             original value: [8111420071579136082810415440747], converted to a string: [failing check]
 
-        "#}
+        "}
     );
 }
 
@@ -481,7 +481,7 @@ fn with_rerun_failed_flag_and_name_filter() {
 
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -498,7 +498,7 @@ fn with_rerun_failed_flag_and_name_filter() {
         Failures:
             tests::test_simple::test_another_failing
 
-        "#}
+        "}
     );
 }
 
@@ -517,7 +517,7 @@ fn with_rerun_failed_flag() {
 
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -540,7 +540,7 @@ fn with_rerun_failed_flag() {
             tests::test_simple::test_another_failing
             tests::test_simple::test_failing
 
-        "#}
+        "}
     );
 }
 
