@@ -1,10 +1,11 @@
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{anyhow, Context, Result};
 use camino::Utf8PathBuf;
 use scarb_metadata;
-use scarb_metadata::Metadata;
+use scarb_metadata::{Metadata, PackageMetadata};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::env;
+use std::fs::canonicalize;
 use std::process::{Command, Stdio};
 use std::str::FromStr;
 
@@ -94,51 +95,61 @@ pub fn get_scarb_metadata(
     ))
 }
 
-pub fn parse_scarb_metadata(path: &Option<Utf8PathBuf>) -> Result<Metadata> {
-    if let Some(path) = path {
-        if !path.exists() {
-            bail!("{path} file does not exist!");
-        }
+#[must_use]
+pub fn verify_or_determine_scarb_manifest_path(
+    path_to_scarb_toml: &Option<Utf8PathBuf>,
+) -> Option<Utf8PathBuf> {
+    if let Some(path) = path_to_scarb_toml {
+        assert!(path.exists(), "{path} file does not exist!");
     }
 
-    let manifest_path = match path.clone() {
+    let manifest_path = match path_to_scarb_toml.clone() {
         Some(path) => path,
-        None => get_scarb_manifest().context("Failed to obtain manifest path from scarb")?,
+        None => get_scarb_manifest()
+            .context("Failed to obtain manifest path from scarb")
+            .unwrap(),
     };
 
     if !manifest_path.exists() {
-        bail!("Scarb Manifest doesn't exist")
+        return None;
     }
 
-    get_scarb_metadata(&manifest_path, true)
+    Some(manifest_path)
+}
+
+pub fn get_package_metadata<'a>(
+    metadata: &'a Metadata,
+    manifest_path: &'a Utf8PathBuf,
+) -> Result<&'a PackageMetadata> {
+    let manifest_path = canonicalize(manifest_path.clone())
+        .unwrap_or_else(|err| panic!("Failed to canonicalize {manifest_path}, error: {err:?}"));
+
+    let package = metadata
+        .packages
+        .iter()
+        .find(|package| package.manifest_path == manifest_path)
+        .ok_or(anyhow!(
+            "Path {} not found in scarb metadata",
+            manifest_path.display()
+        ))?;
+    Ok(package)
 }
 
 pub fn parse_scarb_config(
     profile: &Option<String>,
-    path: &Option<Utf8PathBuf>,
+    manifest_path: &Option<Utf8PathBuf>,
 ) -> Result<CastConfig> {
-    if let Some(path) = path {
-        if !path.exists() {
-            bail!("{path} file does not exist!");
+    if let Some(manifest_path) = manifest_path {
+        let metadata = get_scarb_metadata(manifest_path, false)?;
+
+        match get_package_tool_sncast(&metadata) {
+            Ok(package_tool_sncast) => {
+                CastConfig::from_package_tool_sncast(package_tool_sncast, profile)
+            }
+            Err(_) => Ok(CastConfig::default()),
         }
-    }
-
-    let manifest_path = match path.clone() {
-        Some(path) => path,
-        None => get_scarb_manifest().context("Failed to obtain manifest path from scarb")?,
-    };
-
-    if !manifest_path.exists() {
-        return Ok(CastConfig::default());
-    }
-
-    let metadata = get_scarb_metadata(&manifest_path, false)?;
-
-    match get_package_tool_sncast(&metadata) {
-        Ok(package_tool_sncast) => {
-            CastConfig::from_package_tool_sncast(package_tool_sncast, profile)
-        }
-        Err(_) => Ok(CastConfig::default()),
+    } else {
+        Ok(CastConfig::default())
     }
 }
 

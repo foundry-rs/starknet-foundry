@@ -1,9 +1,9 @@
 use std::any::Any;
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::fs;
 
 use crate::starknet_commands::call;
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, ensure, Context, Result};
 use blockifier::execution::common_hints::ExecutionMode;
 use blockifier::execution::entry_point::{
     CallEntryPoint, EntryPointExecutionContext, ExecutionResources,
@@ -14,19 +14,13 @@ use blockifier::state::cached_state::{CachedState, GlobalContractCache};
 use cairo_felt::Felt252;
 use cairo_lang_casm::hints::{Hint, StarknetHint};
 use cairo_lang_casm::operand::{CellRef, ResOperand};
-use cairo_lang_compiler::db::RootDatabase;
-use cairo_lang_compiler::diagnostics::DiagnosticsReporter;
-use cairo_lang_compiler::project::{check_compiler_path, setup_project};
-use cairo_lang_diagnostics::ToOption;
-use cairo_lang_filesystem::db::init_dev_corelib;
 use cairo_lang_runner::casm_run::cell_ref_to_relocatable;
 use cairo_lang_runner::casm_run::{extract_relocatable, vm_get_range, MemBuffer};
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{
     build_hints_dict, insert_value_to_cellref, RunResultValue, SierraCasmRunner,
 };
-use cairo_lang_sierra_generator::db::SierraGenGroup;
-use cairo_lang_sierra_generator::replace_ids::{DebugReplacer, SierraIdReplacer};
+use cairo_lang_sierra::program::VersionedProgram;
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::bigint::BigIntAsHex;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
@@ -40,16 +34,17 @@ use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cairo_vm::vm::vm_core::VirtualMachine;
 use camino::Utf8PathBuf;
 use cast::helpers::response_structs::ScriptResponse;
-use cast::helpers::scarb_utils::parse_scarb_metadata;
+use cast::helpers::scarb_utils::{get_package_metadata, get_scarb_metadata};
 use cheatnet::cheatcodes::EnhancedHintError;
 use cheatnet::constants::{build_block_context, build_transaction_context};
 use cheatnet::state::{CheatnetBlockInfo, DictStateReader};
 use clap::command;
 use clap::Args;
 use conversions::StarknetConversions;
+use indoc::formatdoc;
 use itertools::chain;
 use num_traits::ToPrimitive;
-use scarb_artifacts::corelib_for_package;
+use scarb_metadata::ScarbCommand;
 use starknet::core::types::{BlockId, BlockTag::Pending, FieldElement};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
@@ -243,36 +238,46 @@ pub fn run(
     script_path: &Utf8PathBuf,
     provider: &JsonRpcClient<HttpTransport>,
     runtime: Runtime,
-    path_to_scarb_toml: &Option<Utf8PathBuf>,
+    scarb_manifest_path: &Utf8PathBuf,
 ) -> Result<ScriptResponse> {
-    check_compiler_path(true, Path::new(&script_path))?;
+    ScarbCommand::new().arg("build").run()?;
 
-    let metadata = parse_scarb_metadata(path_to_scarb_toml)?;
+    let metadata = get_scarb_metadata(scarb_manifest_path, true)?;
+    let package_metadata = get_package_metadata(&metadata, scarb_manifest_path)?;
 
-    let corelib = corelib_for_package(&metadata, &metadata.workspace.members[0])?;
-    let db = &mut RootDatabase::builder().build()?;
+    let filename = format!("{}.sierra.json", package_metadata.name);
+    let path = metadata
+        .target_dir
+        .unwrap_or(metadata.workspace.root.join("target"))
+        .join(metadata.current_profile)
+        .join(filename.clone());
 
-    init_dev_corelib(db, PathBuf::from(corelib));
+    ensure!(
+        path.exists(),
+        formatdoc! {r#"
+            package has not been compiled, file does not exist: {filename}
+        "#}
+    );
 
-    let main_crate_ids = setup_project(db, Path::new(&script_path))?;
-    if DiagnosticsReporter::stderr().check(db) {
-        anyhow::bail!("failed to compile: {}", script_path);
-    }
-
-    let sierra_program = db
-        .get_sierra_program(main_crate_ids.clone())
-        .to_option()
-        .with_context(|| "Compilation failed without any diagnostics.")?;
-    let replacer = DebugReplacer { db };
+    let sierra_program = serde_json::from_str::<VersionedProgram>(
+        &fs::read_to_string(path.clone())
+            .with_context(|| format!("failed to read Sierra file: {path}"))?,
+    )
+    .with_context(|| format!("failed to deserialize Sierra program: {path}"))?
+    .into_v1()
+    .with_context(|| format!("failed to load Sierra program: {path}"))?;
 
     let runner = SierraCasmRunner::new(
-        replacer.apply(&sierra_program),
+        sierra_program,
         Some(MetadataComputationConfig::default()),
         OrderedHashMap::default(),
     )
     .with_context(|| "Failed setting up runner.")?;
 
-    let func = runner.find_function("::main")?;
+    let script_name = script_path.file_stem().unwrap();
+    let name_suffix = script_name.to_string() + "::main";
+    let func = runner.find_function(name_suffix.as_str())?;
+
     let (entry_code, builtins) = runner.create_entry_code(func, &Vec::new(), usize::MAX)?;
     let footer = runner.create_code_footer();
     let instructions = chain!(
