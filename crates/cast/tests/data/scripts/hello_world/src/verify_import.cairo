@@ -1,6 +1,6 @@
-use hello_world::some_code::make_one;
+use hello_world::some_code::calc_fib;
 
 fn main() {
-    let res = make_one();
-    assert(res == 1, res);
+    let res = calc_fib();
+    assert(res == 5, res);
 }
