@@ -1,3 +1,3 @@
-fn make_one() -> felt252{
+fn make_one() -> felt252 {
     1
 }
