@@ -22,6 +22,7 @@ shellexpand = "3.1.0"
 toml = "0.8.6"
 rpassword = "7.2.0"
 promptly = "0.3.1"
+smol_str = "0.2.0"
 scarb-artifacts = { path = "../scarb-artifacts" }
 # Freeze reqwest dependency, because newer versions cause cast tests to fail on macs
 reqwest = "=0.11.18"
@@ -41,6 +42,7 @@ itertools.workspace = true
 num-traits.workspace = true
 cairo-felt.workspace = true
 cairo-vm.workspace = true
+cairo-lang-project.workspace = true
 
 cairo-lang-diagnostics.workspace = true
 cairo-lang-sierra-generator.workspace = true
