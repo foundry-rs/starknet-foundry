@@ -21,7 +21,7 @@ pub struct DeclareResponse {
 
 #[derive(Serialize, Clone, Debug)]
 pub struct CallResponse {
-    pub data: Vec<FieldElement>,
+    pub response: Vec<FieldElement>,
 }
 
 #[derive(Serialize)]

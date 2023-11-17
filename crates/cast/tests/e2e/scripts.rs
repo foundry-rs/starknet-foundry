@@ -43,10 +43,10 @@ async fn test_call_failing() {
     let snapbox = Command::new(cargo_bin!("sncast"))
         .current_dir(SCRIPTS_DIR.to_owned() + "/hello_world")
         .args(args);
-    snapbox.assert().success().stderr_matches(indoc! {r#"
+    snapbox.assert().success().stderr_matches(indoc! {r"
         command: script
         error: Got an exception while executing a hint: Hint Error: Entry point [..] not found in contract.
-    "#});
+    "});
 }
 
 #[tokio::test]
