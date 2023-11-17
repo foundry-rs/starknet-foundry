@@ -56,7 +56,6 @@ impl BlockInfoReader for ExtendedStateReader {
     }
 }
 
-#[allow(clippy::module_name_repetitions)]
 pub struct BlockifierState<'a> {
     pub blockifier_state: &'a mut dyn State,
 }
@@ -216,7 +215,6 @@ pub enum CheatStatus<T> {
     Uncheated,
 }
 
-#[allow(clippy::module_name_repetitions)]
 #[derive(Default)]
 pub struct CheatnetState {
     pub rolled_contracts: HashMap<ContractAddress, CheatStatus<Felt252>>,
@@ -226,7 +224,8 @@ pub struct CheatnetState {
     pub warped_contracts: HashMap<ContractAddress, CheatStatus<Felt252>>,
     pub global_warp: Option<Felt252>,
     pub mocked_functions: HashMap<ContractAddress, HashMap<EntryPointSelector, Vec<StarkFelt>>>,
-    pub spoofed_contracts: HashMap<ContractAddress, TxInfoMock>,
+    pub spoofed_contracts: HashMap<ContractAddress, CheatStatus<TxInfoMock>>,
+    pub global_spoof: Option<TxInfoMock>,
     pub spies: Vec<SpyTarget>,
     pub detected_events: Vec<Event>,
     pub deploy_salt_base: u32,
@@ -244,37 +243,23 @@ impl CheatnetState {
     }
 
     #[must_use]
-    pub fn address_is_pranked(&self, contract_address: &ContractAddress) -> bool {
-        self.global_prank.is_some()
-            || matches! {self.pranked_contracts.get(contract_address), Some(CheatStatus::Cheated(_))}
+    pub fn address_is_rolled(&self, contract_address: &ContractAddress) -> bool {
+        self.get_cheated_block_number(contract_address).is_some()
     }
 
     #[must_use]
     pub fn address_is_warped(&self, contract_address: &ContractAddress) -> bool {
-        self.global_warp.is_some()
-            || matches!(
-                self.warped_contracts.get(contract_address),
-                Some(CheatStatus::Cheated(_))
-            )
+        self.get_cheated_block_timestamp(contract_address).is_some()
     }
 
     #[must_use]
-    pub fn get_cheated_block_timestamp(&self, address: &ContractAddress) -> Option<Felt252> {
-        get_cheat_for_contract(&self.global_warp, &self.warped_contracts, address)
+    pub fn address_is_pranked(&self, contract_address: &ContractAddress) -> bool {
+        self.get_cheated_caller_address(contract_address).is_some()
     }
 
     #[must_use]
-    pub fn get_cheated_caller_address(&self, address: &ContractAddress) -> Option<ContractAddress> {
-        get_cheat_for_contract(&self.global_prank, &self.pranked_contracts, address)
-    }
-
-    #[must_use]
-    pub fn address_is_rolled(&self, contract_address: &ContractAddress) -> bool {
-        self.global_roll.is_some()
-            || matches!(
-                self.rolled_contracts.get(contract_address),
-                Some(CheatStatus::Cheated(_))
-            )
+    pub fn address_is_spoofed(&self, contract_address: &ContractAddress) -> bool {
+        self.get_cheated_tx_info(contract_address).is_some()
     }
 
     #[must_use]
@@ -283,16 +268,18 @@ impl CheatnetState {
     }
 
     #[must_use]
-    pub fn address_is_spoofed(&self, contract_address: &ContractAddress) -> bool {
-        self.spoofed_contracts.contains_key(contract_address)
+    pub fn get_cheated_block_timestamp(&self, address: &ContractAddress) -> Option<Felt252> {
+        get_cheat_for_contract(&self.global_warp, &self.warped_contracts, address)
     }
 
     #[must_use]
-    pub fn address_is_cheated(&self, contract_address: &ContractAddress) -> bool {
-        self.address_is_rolled(contract_address)
-            || self.address_is_pranked(contract_address)
-            || self.address_is_warped(contract_address)
-            || self.address_is_spoofed(contract_address)
+    pub fn get_cheated_tx_info(&self, address: &ContractAddress) -> Option<TxInfoMock> {
+        get_cheat_for_contract(&self.global_spoof, &self.spoofed_contracts, address)
+    }
+
+    #[must_use]
+    pub fn get_cheated_caller_address(&self, address: &ContractAddress) -> Option<ContractAddress> {
+        get_cheat_for_contract(&self.global_prank, &self.pranked_contracts, address)
     }
 }
 

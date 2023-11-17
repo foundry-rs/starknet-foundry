@@ -8,7 +8,7 @@ use test_utils::{assert_passed, test_case};
 fn precalculate_address() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
         use result::ResultTrait;
         use snforge_std::{ declare, ContractClass, ContractClassTrait };
         use array::ArrayTrait;
@@ -30,7 +30,7 @@ fn precalculate_address() {
             assert(contract_address_pre2 == contract_address2, 'must be eq');
             assert(contract_address != contract_address2, 'must be different');
         }
-    "#
+    "
         ),
         Contract::from_code_path(
             "HelloStarknet".to_string(),

@@ -78,11 +78,10 @@ fn valid_content_and_same_content_no_matter_whitespaces() {
     let file = FileTrait::new('data/valid.txt');
     let content = FileParser::<A>::parse_txt(@file).unwrap();
     let expected = A {
-        a: 1, nested_b: B {
-            nested_c: C { c: u256 { low: 'hello', high: 3 } }
-            }, nested_d: D {
-            d: 'world', e: 0
-        }, f: 3618502788666131213697322783095070105623107215331596699973092056135872020480,
+        a: 1,
+        nested_b: B { nested_c: C { c: u256 { low: 'hello', high: 3 } } },
+        nested_d: D { d: 'world', e: 0 },
+        f: 3618502788666131213697322783095070105623107215331596699973092056135872020480,
     };
     assert(content.f == expected.f, '')
 }

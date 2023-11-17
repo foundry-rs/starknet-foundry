@@ -15,7 +15,7 @@ fn env_var_reading() {
         .code(0);
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -24,6 +24,6 @@ fn env_var_reading() {
         Running 1 test(s) from src/
         [PASS] env::tests::reading_env_vars
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
-        "#}
+        "}
     );
 }

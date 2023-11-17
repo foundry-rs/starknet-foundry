@@ -17,7 +17,7 @@ fn without_cache() {
         .code(0);
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -29,7 +29,7 @@ fn without_cache() {
         [PASS] forking::tests::test_fork_simple_hash_hex
         [PASS] forking::tests::test_fork_simple_hash_number
         Tests: 4 passed, 0 failed, 0 skipped, 0 ignored, 1 filtered out
-        "#}
+        "}
     );
 }
 
@@ -53,7 +53,7 @@ fn with_cache() {
 
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -69,7 +69,7 @@ fn with_cache() {
 
         Failures:
             forking::tests::test_fork_simple
-        "#}
+        "}
     );
 }
 
@@ -94,7 +94,7 @@ fn with_clean_cache() {
 
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -103,7 +103,7 @@ fn with_clean_cache() {
         Running 1 test(s) from src/
         [PASS] forking::tests::test_fork_simple
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 4 filtered out
-        "#}
+        "}
     );
 }
 
@@ -123,7 +123,7 @@ fn printing_latest_block_number() {
 
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -133,6 +133,6 @@ fn printing_latest_block_number() {
         [PASS] forking::tests::print_block_number_when_latest
         Number of the block used for fork testing = [..]
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 4 filtered out
-        "#}
+        "}
     );
 }
