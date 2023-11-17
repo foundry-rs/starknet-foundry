@@ -34,7 +34,9 @@ use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cairo_vm::vm::vm_core::VirtualMachine;
 use camino::Utf8PathBuf;
 use cast::helpers::response_structs::ScriptResponse;
-use cast::helpers::scarb_utils::{get_package_metadata, get_scarb_metadata};
+use cast::helpers::scarb_utils::{
+    get_package_metadata, get_scarb_manifest_for, get_scarb_metadata,
+};
 use cheatnet::cheatcodes::EnhancedHintError;
 use cheatnet::constants::{build_block_context, build_transaction_context};
 use cheatnet::state::{CheatnetBlockInfo, DictStateReader};
@@ -238,15 +240,22 @@ pub fn run(
     script_path: &Utf8PathBuf,
     provider: &JsonRpcClient<HttpTransport>,
     runtime: Runtime,
-    scarb_manifest_path: &Utf8PathBuf,
 ) -> Result<ScriptResponse> {
+    let script_folder = script_path
+        .parent()
+        .ok_or(anyhow!("Failed to determine parent for {script_path}"))?;
+
+    let scarb_manifest_path = get_scarb_manifest_for(script_folder)
+        .context("Failed to obtain manifest path from scarb")
+        .unwrap();
+
     ScarbCommand::new()
         .arg("build")
-        .env("SCARB_MANIFEST_PATH", scarb_manifest_path)
+        .env("SCARB_MANIFEST_PATH", &scarb_manifest_path)
         .run()?;
 
-    let metadata = get_scarb_metadata(scarb_manifest_path, true)?;
-    let package_metadata = get_package_metadata(&metadata, scarb_manifest_path)?;
+    let metadata = get_scarb_metadata(&scarb_manifest_path, true)?;
+    let package_metadata = get_package_metadata(&metadata, &scarb_manifest_path)?;
 
     let filename = format!("{}.sierra.json", package_metadata.name);
     let path = metadata

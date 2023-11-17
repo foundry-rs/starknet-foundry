@@ -1,5 +1,5 @@
-use anyhow::{anyhow, Context, Result};
-use camino::Utf8PathBuf;
+use anyhow::{anyhow, bail, Context, Result};
+use camino::{Utf8Path, Utf8PathBuf};
 use scarb_metadata;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -52,10 +52,15 @@ where
 }
 
 pub fn get_scarb_manifest() -> Result<Utf8PathBuf> {
+    get_scarb_manifest_for(<&Utf8Path>::from("."))
+}
+
+pub fn get_scarb_manifest_for(dir: &Utf8Path) -> Result<Utf8PathBuf> {
     which::which("scarb")
         .context("Cannot find `scarb` binary in PATH. Make sure you have Scarb installed https://github.com/software-mansion/scarb")?;
 
     let output = Command::new("scarb")
+        .current_dir(dir)
         .arg("manifest-path")
         .stdout(Stdio::piped())
         .output()
@@ -136,19 +141,30 @@ pub fn get_package_metadata<'a>(
 
 pub fn parse_scarb_config(
     profile: &Option<String>,
-    manifest_path: &Option<Utf8PathBuf>,
+    path: &Option<Utf8PathBuf>,
 ) -> Result<CastConfig> {
-    if let Some(manifest_path) = manifest_path {
-        let metadata = get_scarb_metadata(manifest_path, false)?;
-
-        match get_package_tool_sncast(&metadata) {
-            Ok(package_tool_sncast) => {
-                CastConfig::from_package_tool_sncast(package_tool_sncast, profile)
-            }
-            Err(_) => Ok(CastConfig::default()),
+    if let Some(path) = path {
+        if !path.exists() {
+            bail!("{path} file does not exist!");
         }
-    } else {
-        Ok(CastConfig::default())
+    }
+
+    let manifest_path = match path.clone() {
+        Some(path) => path,
+        None => get_scarb_manifest().context("Failed to obtain manifest path from scarb")?,
+    };
+
+    if !manifest_path.exists() {
+        return Ok(CastConfig::default());
+    }
+
+    let metadata = get_scarb_metadata(&manifest_path, false)?;
+
+    match get_package_tool_sncast(&metadata) {
+        Ok(package_tool_sncast) => {
+            CastConfig::from_package_tool_sncast(package_tool_sncast, profile)
+        }
+        Err(_) => Ok(CastConfig::default()),
     }
 }
 
@@ -173,10 +189,8 @@ pub fn get_package_tool_sncast(metadata: &scarb_metadata::Metadata) -> Result<&V
 
 #[cfg(test)]
 mod tests {
+    use crate::helpers::scarb_utils::get_scarb_metadata;
     use crate::helpers::scarb_utils::parse_scarb_config;
-    use crate::helpers::scarb_utils::{
-        get_scarb_metadata, verify_or_determine_scarb_manifest_path,
-    };
     use camino::Utf8PathBuf;
     use sealed_test::prelude::rusty_fork_test;
     use sealed_test::prelude::sealed_test;
@@ -207,11 +221,10 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "whatever/Scarb.toml file does not exist!")]
     fn test_parse_scarb_config_not_found() {
-        let _ = verify_or_determine_scarb_manifest_path(&Some(Utf8PathBuf::from(
-            "whatever/Scarb.toml",
-        )));
+        let config =
+            parse_scarb_config(&None, &Some(Utf8PathBuf::from("whatever/Scarb.toml"))).unwrap_err();
+        assert!(config.to_string().contains("file does not exist!"));
     }
 
     #[test]
@@ -268,8 +281,7 @@ mod tests {
 
     #[sealed_test(files = ["tests/data/contracts/constructor_with_params/Scarb.toml"])]
     fn test_parse_scarb_config_no_path() {
-        let manifest_path = verify_or_determine_scarb_manifest_path(&None);
-        let config = parse_scarb_config(&Some(String::from("myprofile")), &manifest_path).unwrap();
+        let config = parse_scarb_config(&Some(String::from("myprofile")), &None).unwrap();
 
         assert_eq!(config.rpc_url, String::from("http://127.0.0.1:5055/rpc"));
         assert_eq!(config.account, String::from("user1"));

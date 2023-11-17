@@ -8,9 +8,7 @@ use anyhow::{anyhow, Result};
 
 use camino::Utf8PathBuf;
 use cast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
-use cast::helpers::scarb_utils::{
-    parse_scarb_config, verify_or_determine_scarb_manifest_path, CastConfig,
-};
+use cast::helpers::scarb_utils::{parse_scarb_config, CastConfig};
 use cast::{
     chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_provider,
     print_command_result, ValueFormat,
@@ -113,22 +111,14 @@ fn main() -> Result<()> {
         ValueFormat::Default
     };
 
-    let scarb_manifest_path = verify_or_determine_scarb_manifest_path(&cli.path_to_scarb_toml);
-
-    let mut config = parse_scarb_config(&cli.profile, &scarb_manifest_path)?;
+    let mut config = parse_scarb_config(&cli.profile, &cli.path_to_scarb_toml)?;
     update_cast_config(&mut config, &cli);
 
     let provider = get_provider(&config.rpc_url)?;
     let runtime = Runtime::new().expect("Could not instantiate Runtime");
 
     if let Commands::Script(script) = cli.command {
-        let scarb_manifest_path = scarb_manifest_path.expect("Scarb.toml not found");
-        let mut result = starknet_commands::script::run(
-            &script.script_path,
-            &provider,
-            runtime,
-            &scarb_manifest_path,
-        );
+        let mut result = starknet_commands::script::run(&script.script_path, &provider, runtime);
 
         print_command_result("script", &mut result, value_format, cli.json)?;
         Ok(())
