@@ -240,7 +240,10 @@ pub fn run(
     runtime: Runtime,
     scarb_manifest_path: &Utf8PathBuf,
 ) -> Result<ScriptResponse> {
-    ScarbCommand::new().arg("build").run()?;
+    ScarbCommand::new()
+        .arg("build")
+        .env("SCARB_MANIFEST_PATH", scarb_manifest_path)
+        .run()?;
 
     let metadata = get_scarb_metadata(scarb_manifest_path, true)?;
     let package_metadata = get_package_metadata(&metadata, scarb_manifest_path)?;
@@ -255,7 +258,7 @@ pub fn run(
     ensure!(
         path.exists(),
         formatdoc! {r#"
-            package has not been compiled, file does not exist: {filename}
+            package has not been compiled, file does not exist: {path}
         "#}
     );
 
