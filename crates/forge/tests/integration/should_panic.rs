@@ -5,7 +5,7 @@ use test_utils::{assert_passed, test_case};
 #[test]
 fn should_panic() {
     let test = test_case!(indoc!(
-        r#"
+        r"
             use array::ArrayTrait;
 
             #[test]
@@ -28,7 +28,7 @@ fn should_panic() {
                 arr.append('second message');
                 panic(arr);
             }
-        "#
+        "
     ));
 
     let result = run_test_case(&test);

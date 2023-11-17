@@ -5,7 +5,7 @@ use test_utils::{assert_passed, test_case};
 #[test]
 fn fuzzed_argument() {
     let test = test_case!(indoc!(
-        r#"        
+        r"
         fn adder(a: felt252, b: felt252) -> felt252 {
             a + b
         }
@@ -15,7 +15,7 @@ fn fuzzed_argument() {
             let result = adder(2, b);
             assert(result == 2 + b, '2 + b == 2 + b');
         }
-    "#
+    "
     ));
 
     let result = run_test_case(&test);
@@ -26,7 +26,7 @@ fn fuzzed_argument() {
 #[test]
 fn fuzzer_different_types() {
     let test = test_case!(indoc!(
-        r#"
+        r"
         #[test]
         fn uint256_arg(a: u256) {
             if a <= 5_u256 {
@@ -36,7 +36,7 @@ fn fuzzer_different_types() {
                 assert(x == a - 5_u256, 'x != a - 5');
             }
         }
-    "#
+    "
     ));
 
     let result = run_test_case(&test);
