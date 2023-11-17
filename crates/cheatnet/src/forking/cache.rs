@@ -75,7 +75,6 @@ impl ToString for ForkCacheContent {
     }
 }
 
-#[allow(clippy::module_name_repetitions)]
 #[derive(Debug)]
 pub struct ForkCache {
     fork_cache_content: ForkCacheContent,

@@ -56,7 +56,6 @@ impl BlockInfoReader for ExtendedStateReader {
     }
 }
 
-#[allow(clippy::module_name_repetitions)]
 pub struct BlockifierState<'a> {
     pub blockifier_state: &'a mut dyn State,
 }
@@ -216,7 +215,6 @@ pub enum CheatStatus<T> {
     Uncheated,
 }
 
-#[allow(clippy::module_name_repetitions)]
 #[derive(Default)]
 pub struct CheatnetState {
     pub rolled_contracts: HashMap<ContractAddress, CheatStatus<Felt252>>,
