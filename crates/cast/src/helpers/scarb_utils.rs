@@ -174,7 +174,7 @@ pub fn get_package_tool_sncast(metadata: &scarb_metadata::Metadata) -> Result<&V
 
 #[cfg(test)]
 mod tests {
-    use crate::helpers::scarb_utils::get_scarb_metadata;
+    use crate::helpers::scarb_utils::{get_scarb_metadata, verify_or_determine_scarb_manifest_path};
     use crate::helpers::scarb_utils::parse_scarb_config;
     use camino::Utf8PathBuf;
     use sealed_test::prelude::rusty_fork_test;
@@ -266,7 +266,8 @@ mod tests {
 
     #[sealed_test(files = ["tests/data/contracts/constructor_with_params/Scarb.toml"])]
     fn test_parse_scarb_config_no_path() {
-        let config = parse_scarb_config(&Some(String::from("myprofile")), &None).unwrap();
+        let manifest_path = verify_or_determine_scarb_manifest_path(&None);
+        let config = parse_scarb_config(&Some(String::from("myprofile")), &manifest_path).unwrap();
 
         assert_eq!(config.rpc_url, String::from("http://127.0.0.1:5055/rpc"));
         assert_eq!(config.account, String::from("user1"));
