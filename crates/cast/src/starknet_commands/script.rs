@@ -4,17 +4,10 @@ use std::fs;
 
 use crate::starknet_commands::call;
 use anyhow::{anyhow, ensure, Context, Result};
-use blockifier::execution::common_hints::ExecutionMode;
-use blockifier::execution::entry_point::{
-    CallEntryPoint, EntryPointExecutionContext, ExecutionResources,
-};
-use blockifier::execution::execution_utils::ReadOnlySegments;
-use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
-use blockifier::state::cached_state::{CachedState, GlobalContractCache};
 use cairo_felt::Felt252;
 use cairo_lang_casm::hints::{Hint, StarknetHint};
 use cairo_lang_casm::operand::{CellRef, ResOperand};
-use cairo_lang_runner::casm_run::cell_ref_to_relocatable;
+use cairo_lang_runner::casm_run::{cell_ref_to_relocatable, execute_core_hint_base};
 use cairo_lang_runner::casm_run::{extract_relocatable, vm_get_range, MemBuffer};
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{
@@ -27,7 +20,6 @@ use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use cairo_vm::hint_processor::hint_processor_definition::{HintProcessorLogic, HintReference};
 use cairo_vm::serde::deserialize_program::ApTracking;
 use cairo_vm::types::exec_scope::ExecutionScopes;
-use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
@@ -38,8 +30,6 @@ use cast::helpers::scarb_utils::{
     get_package_metadata, get_scarb_manifest_for, get_scarb_metadata,
 };
 use cheatnet::cheatcodes::EnhancedHintError;
-use cheatnet::constants::{build_block_context, build_transaction_context};
-use cheatnet::state::{CheatnetBlockInfo, DictStateReader};
 use clap::command;
 use clap::Args;
 use conversions::StarknetConversions;
@@ -60,40 +50,28 @@ pub struct Script {
 }
 
 pub struct CairoHintProcessor<'a> {
-    pub blockifier_syscall_handler: SyscallHintProcessor<'a>,
     pub hints: &'a HashMap<String, Hint>,
     pub provider: &'a JsonRpcClient<HttpTransport>,
     pub runtime: Runtime,
+    pub run_resources: RunResources,
 }
 
-// crates/blockifier/src/execution/syscalls/hint_processor.rs:472 (ResourceTracker for SyscallHintProcessor)
+// cairo/crates/cairo-lang-runner/src/casm_run/mod.rs:457 (ResourceTracker for CairoHintProcessor)
 impl ResourceTracker for CairoHintProcessor<'_> {
     fn consumed(&self) -> bool {
-        self.blockifier_syscall_handler
-            .context
-            .vm_run_resources
-            .consumed()
+        self.run_resources.consumed()
     }
 
     fn consume_step(&mut self) {
-        self.blockifier_syscall_handler
-            .context
-            .vm_run_resources
-            .consume_step();
+        self.run_resources.consume_step();
     }
 
     fn get_n_steps(&self) -> Option<usize> {
-        self.blockifier_syscall_handler
-            .context
-            .vm_run_resources
-            .get_n_steps()
+        self.run_resources.get_n_steps()
     }
 
     fn run_resources(&self) -> &RunResources {
-        self.blockifier_syscall_handler
-            .context
-            .vm_run_resources
-            .run_resources()
+        self.run_resources.run_resources()
     }
 }
 
@@ -103,7 +81,7 @@ impl HintProcessorLogic for CairoHintProcessor<'_> {
         vm: &mut VirtualMachine,
         exec_scopes: &mut ExecutionScopes,
         hint_data: &Box<dyn Any>,
-        constants: &HashMap<String, Felt252>,
+        _constants: &HashMap<String, Felt252>,
     ) -> Result<(), HintError> {
         let maybe_extended_hint = hint_data.downcast_ref::<Hint>();
         if let Some(Hint::Starknet(StarknetHint::Cheatcode {
@@ -124,8 +102,14 @@ impl HintProcessorLogic for CairoHintProcessor<'_> {
                 output_end,
             );
         }
-        self.blockifier_syscall_handler
-            .execute_hint(vm, exec_scopes, hint_data, constants)
+
+        let hint = maybe_extended_hint.ok_or(HintError::WrongHintData)?;
+        match hint {
+            Hint::Core(hint) => execute_core_hint_base(vm, exec_scopes, hint),
+            Hint::Starknet(_) => Err(HintError::CustomHint(Box::from(
+                "Starknet syscalls are not supported",
+            ))),
+        }
     }
 
     /// Trait function to store hint in the hint processor by string.
@@ -273,38 +257,11 @@ pub fn run(
     // import from cairo-lang-runner
     let (hints_dict, string_to_hint) = build_hints_dict(instructions.clone());
 
-    // hint processor
-    let block_context = build_block_context(CheatnetBlockInfo::default());
-    let account_context = build_transaction_context();
-    let mut context = EntryPointExecutionContext::new(
-        &block_context.clone(),
-        &account_context,
-        ExecutionMode::Execute,
-    );
-
-    let mut blockifier_state =
-        CachedState::new(DictStateReader::default(), GlobalContractCache::default());
-    let mut execution_resources = ExecutionResources::default();
-
-    let syscall_handler = SyscallHintProcessor::new(
-        &mut blockifier_state,
-        &mut execution_resources,
-        &mut context,
-        // This segment is created by SierraCasmRunner
-        Relocatable {
-            segment_index: 10,
-            offset: 0,
-        },
-        CallEntryPoint::default(),
-        &string_to_hint,
-        ReadOnlySegments::default(),
-    );
-
     let mut cairo_hint_processor = CairoHintProcessor {
-        blockifier_syscall_handler: syscall_handler,
         hints: &string_to_hint,
         provider,
         runtime,
+        run_resources: RunResources::default(),
     };
 
     match runner.run_function(

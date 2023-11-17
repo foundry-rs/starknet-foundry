@@ -99,3 +99,27 @@ async fn test_verify_imports_within_same_package() {
         status: success
     "});
 }
+
+#[tokio::test]
+async fn test_fail_when_using_starknet_syscall() {
+    let script_path = "src/using_starknet_syscall.cairo";
+    let args = vec![
+        "--accounts-file",
+        "../../accounts/accounts.json",
+        "--account",
+        "user1",
+        "--url",
+        URL,
+        "script",
+        &script_path,
+    ];
+
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(SCRIPTS_DIR.to_owned() + "/hello_world")
+        .args(args);
+    snapbox.assert().success().stderr_matches(indoc! {r"
+        ...
+        command: script
+        error: Got an exception while executing a hint: Hint Error: Starknet syscalls are not supported
+    "});
+}
