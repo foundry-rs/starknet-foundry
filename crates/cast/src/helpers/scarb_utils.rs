@@ -143,14 +143,13 @@ pub fn parse_scarb_config(
     profile: &Option<String>,
     path: &Option<Utf8PathBuf>,
 ) -> Result<CastConfig> {
-    if let Some(path) = path {
-        if !path.exists() {
-            bail!("{path} file does not exist!");
-        }
-    }
-
     let manifest_path = match path.clone() {
-        Some(path) => path,
+        Some(path) => {
+            if !(path.exists()) {
+                bail!("{path} file does not exist!");
+            }
+            path
+        }
         None => get_scarb_manifest().context("Failed to obtain manifest path from scarb")?,
     };
 
