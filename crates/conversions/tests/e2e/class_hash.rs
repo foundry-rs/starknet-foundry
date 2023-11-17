@@ -1,8 +1,11 @@
 #[cfg(test)]
 mod tests_class_hash {
-    use conversions::StarknetConversions;
-
     use crate::helpers::hex::str_hex_to_stark_felt;
+    use cairo_felt::Felt252;
+    use conversions::IntoConv;
+    use starknet::core::types::FieldElement;
+    use starknet_api::core::{ContractAddress, Nonce};
+    use starknet_api::hash::StarkHash;
     use starknet_api::{core::ClassHash, hash::StarkFelt};
 
     #[test]
@@ -10,13 +13,21 @@ mod tests_class_hash {
         let felt: StarkFelt = StarkFelt::new([1u8; 32]).unwrap();
         let class_hash = ClassHash(felt);
 
-        assert_eq!(class_hash, class_hash.to_contract_address().to_class_hash());
-        assert_eq!(class_hash, class_hash.to_felt252().to_class_hash());
-        assert_eq!(class_hash, class_hash.to_field_element().to_class_hash());
-        assert_eq!(class_hash, class_hash.to_nonce().to_class_hash());
-        assert_eq!(class_hash, class_hash.to_short_string().to_class_hash());
-        assert_eq!(class_hash, class_hash.to_stark_felt().to_class_hash());
-        assert_eq!(class_hash, class_hash.to_stark_hash().to_class_hash());
+        let contract_address: ContractAddress = class_hash.into_();
+        let felt252: Felt252 = class_hash.into_();
+        let field_element: FieldElement = class_hash.into_();
+        let nonce: Nonce = class_hash.into_();
+        let short_string: String = class_hash.into_();
+        let stark_felt: StarkFelt = class_hash.into_();
+        let stark_hash: StarkHash = class_hash.into_();
+
+        assert_eq!(class_hash, contract_address.into_());
+        assert_eq!(class_hash, felt252.into_());
+        assert_eq!(class_hash, field_element.into_());
+        assert_eq!(class_hash, nonce.into_());
+        assert_eq!(class_hash, short_string.into_());
+        assert_eq!(class_hash, stark_felt.into_());
+        assert_eq!(class_hash, stark_hash.into_());
     }
 
     #[test]

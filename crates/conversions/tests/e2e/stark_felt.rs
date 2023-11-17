@@ -1,12 +1,15 @@
 #[cfg(test)]
 mod tests_stark_felt {
     use crate::helpers::hex::str_hex_to_stark_felt;
-    use conversions::StarknetConversions;
+    use conversions::ConvertInto;
+    use starknet_api::core::ClassHash;
     use starknet_api::hash::StarkFelt;
 
     #[test]
     fn test_stark_felts_conversions_happy_case() {
         let stark_felt: StarkFelt = StarkFelt::new([1u8; 32]).unwrap();
+
+        let ch: ClassHash = stark_felt.convert_into();
 
         assert_eq!(stark_felt, stark_felt.to_class_hash().to_stark_felt());
         assert_eq!(stark_felt, stark_felt.to_contract_address().to_stark_felt());

@@ -1,43 +1,10 @@
-use super::StarknetConversions;
-use blockifier::execution::execution_utils::stark_felt_to_felt;
+use crate::FromConv;
 use cairo_felt::Felt252;
-use starknet::core::types::FieldElement;
-use starknet_api::core::Nonce;
-use starknet_api::{
-    core::{ClassHash, ContractAddress},
-    hash::{StarkFelt, StarkHash},
-};
+use starknet_api::core::{ContractAddress, PatriciaKey};
+use starknet_api::hash::StarkHash;
 
-impl StarknetConversions for ContractAddress {
-    fn to_felt252(&self) -> Felt252 {
-        stark_felt_to_felt(*self.0.key())
-    }
-
-    fn to_field_element(&self) -> FieldElement {
-        self.to_felt252().to_field_element()
-    }
-
-    fn to_stark_felt(&self) -> StarkFelt {
-        self.to_felt252().to_stark_felt()
-    }
-
-    fn to_stark_hash(&self) -> StarkHash {
-        self.to_felt252().to_stark_hash()
-    }
-
-    fn to_class_hash(&self) -> ClassHash {
-        self.to_felt252().to_class_hash()
-    }
-
-    fn to_contract_address(&self) -> ContractAddress {
-        *self
-    }
-
-    fn to_short_string(&self) -> String {
-        self.to_felt252().to_short_string()
-    }
-
-    fn to_nonce(&self) -> Nonce {
-        self.to_felt252().to_nonce()
+impl FromConv<Felt252> for ContractAddress {
+    fn from_(value: Felt252) -> ContractAddress {
+        ContractAddress(PatriciaKey::try_from(StarkHash::from_(value)).unwrap())
     }
 }
