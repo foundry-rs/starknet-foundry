@@ -16,7 +16,7 @@ pub struct TestsFilter {
     // based on rerun_failed flag
     last_failed_filter: bool,
 
-    workspace_root: Utf8PathBuf,
+    cache_dir_path: Utf8PathBuf,
 }
 
 #[derive(Debug, PartialEq)]
@@ -42,7 +42,7 @@ impl TestsFilter {
         only_ignored: bool,
         include_ignored: bool,
         rerun_failed: bool,
-        workspace_root: Utf8PathBuf,
+        cache_dir_path: Utf8PathBuf,
     ) -> Self {
         assert!(
             !(only_ignored && include_ignored),
@@ -72,7 +72,7 @@ impl TestsFilter {
             name_filter,
             ignored_filter,
             last_failed_filter: rerun_failed,
-            workspace_root,
+            cache_dir_path,
         }
     }
 
@@ -94,7 +94,7 @@ impl TestsFilter {
         };
 
         if self.last_failed_filter {
-            cases = match get_cached_failed_tests_names(&self.workspace_root)? {
+            cases = match get_cached_failed_tests_names(&self.cache_dir_path)? {
                 Some(result) => cases
                     .into_iter()
                     .filter(|tc| result.iter().any(|name| name == &tc.name))

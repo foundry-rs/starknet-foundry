@@ -9,8 +9,8 @@ use std::io::{BufRead, BufReader, BufWriter, Write};
 
 use crate::test_case_summary::TestCaseSummary;
 
-pub fn get_cached_failed_tests_names(workspace_root: &Utf8PathBuf) -> Result<Option<Vec<String>>> {
-    let tests_failed_path = get_cache_dir(workspace_root)?.join(PREV_TESTS_FAILED);
+pub fn get_cached_failed_tests_names(cache_dir_path: &Utf8PathBuf) -> Result<Option<Vec<String>>> {
+    let tests_failed_path = cache_dir_path.join(PREV_TESTS_FAILED);
     if !tests_failed_path.exists() {
         return Ok(None);
     }
@@ -27,21 +27,17 @@ pub fn get_cached_failed_tests_names(workspace_root: &Utf8PathBuf) -> Result<Opt
     Ok(Some(tests))
 }
 
-fn get_cache_dir(workspace_root: &Utf8PathBuf) -> Result<Utf8PathBuf> {
-    Ok(workspace_root.join(CACHE_DIR))
-}
-
-fn get_or_create_cache_dir(workspace_root: &Utf8PathBuf) -> Result<Utf8PathBuf> {
-    let cache_dir_path = get_cache_dir(workspace_root)?;
-    std::fs::create_dir_all(&cache_dir_path)?;
+fn get_or_create_cache_dir(cache_dir_path: &Utf8PathBuf) -> Result<&Utf8PathBuf> {
+    std::fs::create_dir_all(cache_dir_path)?;
     Ok(cache_dir_path)
 }
 
 pub fn cache_failed_tests_names(
     all_failed_tests: &[TestCaseSummary],
-    workspace_root: &Utf8PathBuf,
+    cache_dir_path: &Utf8PathBuf,
 ) -> Result<()> {
-    let tests_failed_path = get_or_create_cache_dir(workspace_root)?.join(PREV_TESTS_FAILED);
+    let tests_failed_path = get_or_create_cache_dir(cache_dir_path)?.join(PREV_TESTS_FAILED);
+    dbg!(&tests_failed_path);
     let file = File::create(tests_failed_path)?;
     let mut file = BufWriter::new(file);
     for line in all_failed_tests {
@@ -56,7 +52,7 @@ pub fn cache_failed_tests_names(
 pub fn clean_cache() -> Result<()> {
     let scarb_metadata = MetadataCommand::new().inherit_stderr().exec()?;
     let workspace_root = scarb_metadata.workspace.root.clone();
-    let cache_dir = get_cache_dir(&workspace_root)?;
+    let cache_dir = workspace_root.join(CACHE_DIR);
     if cache_dir.exists() {
         fs::remove_dir_all(cache_dir)?;
     }

@@ -236,7 +236,7 @@ pub async fn run(
     let test_crates = test_crates
         .into_iter()
         .map(|tc| tests_filter.filter_tests(tc))
-        .collect::<Result<Vec<CompiledTestCrate<RawForkConfig>>>>()?;
+        .collect::<Result<Vec<CompiledTestCrateRaw>>>()?;
     let not_filtered: usize = test_crates.iter().map(|tc| tc.test_cases.len()).sum();
     let filtered = all_tests - not_filtered;
 

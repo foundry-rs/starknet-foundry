@@ -13,7 +13,7 @@ use std::sync::Arc;
 use tokio::runtime::Builder;
 
 use forge::scarb::config::ForgeConfig;
-use forge::shared_cache::{cache_failed_tests_names, clean_cache};
+use forge::shared_cache::{cache_failed_tests_names, clean_cache, CACHE_DIR};
 use forge::test_case_summary::TestCaseSummary;
 use forge::test_filter::TestsFilter;
 use forge::{pretty_printing, RunnerConfig, RunnerParams, FUZZER_RUNS_DEFAULT};
@@ -211,7 +211,7 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                         args.only_ignored,
                         args.include_ignored,
                         args.rerun_failed,
-                        workspace_root.clone(),
+                        workspace_root.join(CACHE_DIR),
                     ),
                     runner_config,
                     runner_params,
@@ -221,7 +221,7 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                 let mut failed_tests = extract_failed_tests(tests_file_summaries);
                 all_failed_tests.append(&mut failed_tests);
             }
-            cache_failed_tests_names(&all_failed_tests, &workspace_root)?;
+            cache_failed_tests_names(&all_failed_tests, &workspace_root.join(CACHE_DIR))?;
 
             Ok::<_, anyhow::Error>(all_failed_tests)
         })
