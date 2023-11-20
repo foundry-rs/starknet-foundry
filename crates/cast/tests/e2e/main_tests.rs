@@ -5,22 +5,30 @@ use cast::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
 use indoc::indoc;
 use std::env;
 use std::fs;
+use std::path::Path;
+use test_case::test_case;
 
+
+#[test_case(Some(Path::new("tests/data/files")), None ; "Scarb.toml in current_dir")]
+#[test_case(None, Some("tests/data/files/Scarb.toml") ; "Scarb.toml passed as argument")]
 #[tokio::test]
-async fn test_happy_case_from_scarb() {
-    let args = vec![
+async fn test_happy_case_from_scarb(current_dir: Option<&Path>, path_to_scarb_toml: Option<&str>) {
+    let mut args = vec![];
+    if let Some(scarb_path) = path_to_scarb_toml {
+        args.append(&mut vec!["--path-to-scarb-toml", scarb_path]);
+    }
+
+    args.append(&mut vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
-        "--path-to-scarb-toml",
-        "tests/data/files/correct_Scarb.toml",
         "call",
         "--contract-address",
         "0x0",
         "--function",
         "doesnotmatter",
-    ];
+    ]);
 
-    let snapbox = runner(&args, None);
+    let snapbox = runner(&args, current_dir);
 
     snapbox.assert().success().stderr_matches(indoc! {r#"
         command: call
@@ -59,7 +67,7 @@ async fn test_happy_case_from_cli_with_scarb() {
         "--accounts-file",
         ACCOUNT_FILE_PATH,
         "--path-to-scarb-toml",
-        "tests/data/files/correct_Scarb.toml",
+        "tests/data/files/Scarb.toml",
         "--profile",
         "profile1",
         "--url",
@@ -92,7 +100,7 @@ async fn test_happy_case_mixed() {
         "--accounts-file",
         ACCOUNT_FILE_PATH,
         "--path-to-scarb-toml",
-        "tests/data/files/correct_Scarb.toml",
+        "tests/data/files/Scarb.toml",
         "--profile",
         "profile2",
         "--account",
