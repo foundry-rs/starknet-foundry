@@ -1,13 +1,12 @@
-use std::sync::Arc;
-
 use crate::corelib::corelib_path;
 use crate::runner::TestCase;
 use camino::Utf8PathBuf;
-
+use forge::run;
 use forge::test_filter::TestsFilter;
-use forge::{run, RunnerConfig, RunnerParams, TestCrateSummary};
-
+use forge_runner::test_crate_summary::TestCrateSummary;
+use forge_runner::{RunnerConfig, RunnerParams};
 use std::path::PathBuf;
+use std::sync::Arc;
 use tempfile::tempdir;
 use tokio::runtime::Runtime;
 

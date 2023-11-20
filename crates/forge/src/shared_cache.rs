@@ -3,11 +3,10 @@ pub const PREV_TESTS_FAILED: &str = ".prev_tests_failed";
 
 use anyhow::{Ok, Result};
 use camino::Utf8PathBuf;
+use forge_runner::test_case_summary::TestCaseSummary;
 use scarb_metadata::MetadataCommand;
 use std::fs::{self, File};
 use std::io::{BufRead, BufReader, BufWriter, Write};
-
-use crate::test_case_summary::TestCaseSummary;
 
 pub fn get_cached_failed_tests_names(cache_dir_path: &Utf8PathBuf) -> Result<Option<Vec<String>>> {
     let tests_failed_path = cache_dir_path.join(PREV_TESTS_FAILED);

@@ -1,10 +1,10 @@
-use crate::collecting::{CompiledTestCrate, CompiledTestCrateRaw, ValidatedForkConfig};
-use crate::TestCaseFilter;
+use crate::{
+    collecting::{CompiledTestCrate, CompiledTestCrateRaw},
+    shared_cache::get_cached_failed_tests_names,
+};
 use anyhow::Result;
 use camino::Utf8PathBuf;
-use test_collector::TestCase;
-
-use crate::shared_cache::get_cached_failed_tests_names;
+use forge_runner::{TestCaseFilter, TestCaseRunnable};
 
 #[derive(Debug, PartialEq)]
 // Specifies what tests should be included
@@ -117,7 +117,7 @@ impl TestsFilter {
 }
 
 impl TestCaseFilter for TestsFilter {
-    fn should_be_run(&self, test_case: &TestCase<ValidatedForkConfig>) -> bool {
+    fn should_be_run(&self, test_case: &TestCaseRunnable) -> bool {
         match self.ignored_filter {
             IgnoredFilter::All => true,
             IgnoredFilter::Ignored => test_case.ignored,
