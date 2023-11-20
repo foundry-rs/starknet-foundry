@@ -1,5 +1,4 @@
 use anyhow::Result;
-use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::constants::TEST_ADDRESS;
@@ -32,16 +31,14 @@ use starknet_api::{
 #[derive(Debug, Clone, PartialEq)]
 pub struct ResourceReport {
     pub gas: f64,
-    pub steps: usize,
-    pub bultins: HashMap<String, usize>,
+    pub resources: ExecutionResources,
 }
 
 impl ResourceReport {
     pub(crate) fn new(gas: f64, resources: &ExecutionResources) -> Self {
         Self {
             gas,
-            steps: resources.vm_resources.n_steps,
-            bultins: resources.vm_resources.builtin_instance_counter.clone(),
+            resources: resources.clone(),
         }
     }
 }

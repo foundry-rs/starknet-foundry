@@ -209,6 +209,7 @@ pub(crate) struct RunResultWithInfo {
 }
 
 #[allow(clippy::too_many_arguments)]
+#[allow(clippy::too_many_lines)]
 pub(crate) fn run_test_case(
     args: Vec<Felt252>,
     case: &TestCaseRunnable,
@@ -295,6 +296,33 @@ pub(crate) fn run_test_case(
         instructions,
         builtins,
     );
+
+    test_execution_syscall_handler
+        .child
+        .child
+        .child
+        .resources
+        .vm_resources += &test_execution_syscall_handler
+        .child
+        .child
+        .cheatnet_state
+        .vm_resources_used
+        .vm_resources;
+    test_execution_syscall_handler
+        .child
+        .child
+        .child
+        .resources
+        .syscall_counter
+        .extend(
+            &test_execution_syscall_handler
+                .child
+                .child
+                .cheatnet_state
+                .vm_resources_used
+                .syscall_counter,
+        );
+
     let gas = gas_from_execution_resources(
         &test_execution_syscall_handler
             .child
@@ -303,11 +331,7 @@ pub(crate) fn run_test_case(
             .context
             .block_context,
         test_execution_syscall_handler.child.child.child.resources,
-    ) + test_execution_syscall_handler
-        .child
-        .child
-        .cheatnet_state
-        .gas_used;
+    );
 
     Ok(RunResultWithInfo {
         run_result: res,

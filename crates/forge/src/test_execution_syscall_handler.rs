@@ -746,7 +746,15 @@ fn write_call_contract_response(
                 .read_only_segments
                 .allocate(vm, &ret_data.iter().map(Into::into).collect())?;
 
-            cheatable_syscall_handler.cheatnet_state.gas_used += call_output.resource_report.gas;
+            cheatable_syscall_handler
+                .cheatnet_state
+                .vm_resources_used
+                .vm_resources += &call_output.resource_report.resources.vm_resources;
+            cheatable_syscall_handler
+                .cheatnet_state
+                .vm_resources_used
+                .syscall_counter
+                .extend(call_output.resource_report.resources.syscall_counter);
 
             SyscallResponseWrapper::Success {
                 gas_counter: call_args.gas_counter,

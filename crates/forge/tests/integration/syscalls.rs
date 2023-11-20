@@ -366,6 +366,11 @@ fn test_gas_usage() {
 
                 assert(1 == 1, 'xd');
             }
+
+            #[test]
+            fn test_keccak_builtin() {
+                keccak::keccak_u256s_le_inputs(array![1].span());
+            }
         "#
         ),
         Contract::from_code_path(

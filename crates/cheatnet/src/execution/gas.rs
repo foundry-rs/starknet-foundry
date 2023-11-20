@@ -1,5 +1,8 @@
 use std::collections::HashMap;
 
+use blockifier::fee::os_resources::OS_RESOURCES;
+use blockifier::fee::os_usage::get_additional_os_resources;
+use blockifier::transaction::transaction_types::TransactionType;
 use blockifier::{
     abi::constants, block_context::BlockContext, execution::entry_point::ExecutionResources,
     fee::fee_utils::calculate_l1_gas_by_vm_usage, transaction::objects::ResourcesMapping,
@@ -12,7 +15,8 @@ pub fn gas_from_execution_resources(
     block_context: &BlockContext,
     resources: &ExecutionResources,
 ) -> f64 {
-    let resource_mapping = vm_execution_resources_to_resource_mapping(&resources.vm_resources);
+    let total_vm_usage = get_total_vm_usage(resources);
+    let resource_mapping = vm_execution_resources_to_resource_mapping(&total_vm_usage);
     calculate_l1_gas_by_vm_usage(block_context, &resource_mapping)
         .expect("Calculating gas failed, some resources were not included.")
 }
@@ -27,4 +31,18 @@ fn vm_execution_resources_to_resource_mapping(
     )]);
     map.extend(execution_resources.builtin_instance_counter.clone());
     ResourcesMapping(map)
+}
+
+fn get_total_vm_usage(resources: &ExecutionResources) -> VmExecutionResources {
+    let total_vm_usage = &resources.vm_resources
+        + &(&get_additional_os_resources(
+            &resources.syscall_counter,
+            TransactionType::InvokeFunction,
+        )
+        .unwrap()
+            - OS_RESOURCES
+                .execute_txs_inner()
+                .get(&TransactionType::InvokeFunction)
+                .expect("`OS_RESOURCES` must contain all transaction types."));
+    total_vm_usage.filter_unused_builtins()
 }

@@ -82,26 +82,3 @@ fn deploy_syscall() {
 
     assert_passed!(result);
 }
-
-#[test]
-fn empty() {
-    let test = test_case!(indoc!(
-        r#"
-        #[test]
-        fn empty() {
-            let mut i = 0;
-            loop {
-                if i == 1 {
-                    break;
-                }
-                assert(1 == 1, 'xd');
-                i = i + 1;
-            }
-        }
-    "#
-    ));
-
-    let result = run_test_case(&test);
-
-    assert_passed!(result);
-}

@@ -1,4 +1,7 @@
 use blockifier::abi::constants;
+use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector::StorageWrite;
+use blockifier::execution::entry_point::ExecutionResources;
+use cairo_vm::vm::runners::cairo_runner::ExecutionResources as VmExecutionResources;
 use std::collections::HashMap;
 
 use crate::common::{
@@ -38,9 +41,18 @@ fn call_resources_simple() {
     assert_eq!(
         output.resource_report,
         ResourceReport {
-            gas: 1.26,
-            steps: 126,
-            bultins: HashMap::from([("range_check_builtin".to_owned(), 2)]),
+            gas: 2.26,
+            resources: ExecutionResources {
+                vm_resources: VmExecutionResources {
+                    n_steps: 126,
+                    n_memory_holes: 0,
+                    builtin_instance_counter: HashMap::from([(
+                        "range_check_builtin".to_owned(),
+                        2
+                    )]),
+                },
+                syscall_counter: Default::default()
+            }
         }
     );
 }
@@ -63,8 +75,14 @@ fn deploy_resources_simple() {
         payload.resource_report,
         ResourceReport {
             gas: constants::DEPLOY_GAS_COST.to_f64().unwrap(),
-            steps: 0, // No constructor
-            bultins: HashMap::new(),
+            resources: ExecutionResources {
+                vm_resources: VmExecutionResources {
+                    n_steps: 0,
+                    n_memory_holes: 0,
+                    builtin_instance_counter: HashMap::new(),
+                },
+                syscall_counter: Default::default()
+            }
         }
     );
 }
@@ -93,8 +111,17 @@ fn deploy_resources_with_constructor() {
         payload.resource_report,
         ResourceReport {
             gas: 13840.0 + constants::DEPLOY_GAS_COST.to_f64().unwrap(),
-            steps: 88, // Constructor steps
-            bultins: HashMap::from([("range_check_builtin".to_owned(), 2)]),
+            resources: ExecutionResources {
+                vm_resources: VmExecutionResources {
+                    n_steps: 88,
+                    n_memory_holes: 0,
+                    builtin_instance_counter: HashMap::from([(
+                        "range_check_builtin".to_owned(),
+                        2
+                    )]),
+                },
+                syscall_counter: HashMap::from([(StorageWrite, 1)])
+            }
         }
     );
 }
