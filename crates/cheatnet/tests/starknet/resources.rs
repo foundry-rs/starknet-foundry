@@ -1,5 +1,7 @@
 use blockifier::abi::constants;
-use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector::{StorageRead, StorageWrite};
+use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector::{
+    StorageRead, StorageWrite,
+};
 use blockifier::execution::entry_point::ExecutionResources;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources as VmExecutionResources;
 use std::collections::HashMap;

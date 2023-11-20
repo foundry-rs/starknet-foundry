@@ -1,10 +1,10 @@
 use crate::fuzzer::RandomFuzzer;
 use crate::printing::print_test_result;
 use crate::running::{run_fuzz_test, run_test};
+use crate::sierra_casm_runner::SierraCasmRunner;
 use crate::test_case_summary::TestCaseSummary;
 use crate::test_crate_summary::TestCrateSummary;
 use anyhow::{anyhow, Context, Result};
-use cairo_lang_runner::SierraCasmRunner;
 use cairo_lang_sierra::ids::ConcreteTypeId;
 use cairo_lang_sierra::program::{Function, Program};
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
@@ -31,6 +31,7 @@ pub mod test_crate_summary;
 mod fuzzer;
 mod printing;
 mod running;
+mod sierra_casm_runner;
 mod test_execution_syscall_handler;
 
 pub const CACHE_DIR: &str = ".snfoundry_cache";

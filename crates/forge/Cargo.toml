@@ -23,9 +23,6 @@ forge_runner = { path = "../forge-runner" }
 cairo-lang-runner.workspace = true
 cairo-lang-casm.workspace = true
 cairo-lang-sierra-to-casm.workspace = true
-cairo-lang-sierra-type-size = "2.3.0"
-cairo-lang-sierra-gas = "2.3.0"
-cairo-lang-sierra-ap-change = "2.3.0"
 cairo-lang-sierra.workspace = true
 cairo-lang-utils.workspace = true
 cairo-lang-starknet.workspace = true
