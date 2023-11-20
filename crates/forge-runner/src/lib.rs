@@ -180,12 +180,12 @@ pub type TestCaseRunnable = TestCase<ValidatedForkConfig>;
 
 #[derive(Debug, Clone)]
 #[non_exhaustive]
-pub struct TestCrate {
+pub struct CompiledTestCrate {
     sierra_program: Program,
     test_cases: Vec<TestCaseRunnable>,
 }
 
-impl TestCrate {
+impl CompiledTestCrate {
     #[must_use]
     pub fn new(sierra_program: Program, test_cases: Vec<TestCaseRunnable>) -> Self {
         Self {
@@ -206,7 +206,7 @@ pub enum TestCrateRunResult {
 }
 
 pub async fn run_tests_from_crate(
-    tests: Arc<TestCrate>,
+    tests: Arc<CompiledTestCrate>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     tests_filter: &impl TestCaseFilter,

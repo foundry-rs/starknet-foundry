@@ -6,7 +6,7 @@ use std::sync::Arc;
 
 use forge_runner::test_crate_summary::TestCrateSummary;
 use forge_runner::{
-    RunnerConfig, RunnerParams, TestCaseRunnable, TestCrate, TestCrateRunResult,
+    CompiledTestCrate, RunnerConfig, RunnerParams, TestCaseRunnable, TestCrateRunResult,
     ValidatedForkConfig,
 };
 use test_collector::{RawForkConfig, RawForkParams};
@@ -51,7 +51,7 @@ fn replace_id_with_params(
 fn to_runnable(
     compiled_test_crate: CompiledTestCrateRaw,
     runner_config: &RunnerConfig,
-) -> Result<TestCrate> {
+) -> Result<CompiledTestCrate> {
     let mut test_cases = vec![];
 
     for case in compiled_test_crate.test_cases {
@@ -73,7 +73,7 @@ fn to_runnable(
         });
     }
 
-    Ok(TestCrate::new(
+    Ok(CompiledTestCrate::new(
         compiled_test_crate.sierra_program,
         test_cases,
     ))
