@@ -137,10 +137,52 @@ jobs:
           name: build-${{ matrix.target }}
           path: ${{ env.PKG_FULL_NAME }}.*
 
+  test-binary:
+    name: Test binary
+    runs-on: ubuntu-latest
+    needs: [ build-binaries, verify-version ]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: software-mansion/setup-scarb@v1.3.2
+
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts-dl
+
+      - name: Move artifacts to staging directory
+        run: |
+          mkdir -p artifacts
+          mv artifacts-dl/build-*/starknet-foundry-* artifacts/
+
+      - name: Get binary path
+        run: |
+          BINARY_PATH="artifacts/starknet-foundry-${{ needs.verify-version.outputs.version }}-x86_64-unknown-linux-gnu.tar.gz"
+          echo "BINARY_PATH=$BINARY_PATH" >> $GITHUB_ENV
+
+      - name: Unpack artifact
+        run: |
+          tar xzvf ${{ env.BINARY_PATH }}
+
+      - name: Smoke test
+        run: |
+          BINARY_PATH="${{ env.BINARY_PATH }}"
+          BINARY_PATH="${BINARY_PATH%.tar.gz}"
+          BINARY_PATH="${BINARY_PATH#artifacts/}"
+          
+          SNFORGE_PATH=$(realpath $BINARY_PATH/bin/snforge)
+          SNCAST_PATH=$(realpath $BINARY_PATH/bin/sncast)
+          
+          REPO_URL=${{ github.repositoryUrl }}
+          REVISION=${{ github.sha }}
+          
+          ./scripts/smoke_test.sh $SNFORGE_PATH $SNCAST_PATH $REPO_URL $REVISION
+
   create-release:
     name: Create release
     runs-on: ubuntu-latest
-    needs: [ build-binaries, verify-version ]
+    needs: [ test-binary, verify-version ]
     steps:
       - uses: actions/checkout@v4
 
