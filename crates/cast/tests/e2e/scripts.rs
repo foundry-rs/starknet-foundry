@@ -4,7 +4,7 @@ use snapbox::cmd::{cargo_bin, Command};
 
 #[tokio::test]
 async fn test_happy_case() {
-    let script_path = "src/hello_world.cairo";
+    let script_name = "hello_world";
     let args = vec![
         "--accounts-file",
         "../../accounts/accounts.json",
@@ -13,7 +13,7 @@ async fn test_happy_case() {
         "--url",
         URL,
         "script",
-        &script_path,
+        &script_name,
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
@@ -28,7 +28,7 @@ async fn test_happy_case() {
 
 #[tokio::test]
 async fn test_call_failing() {
-    let script_path = "src/call_fail.cairo";
+    let script_name = "call_fail";
     let args = vec![
         "--accounts-file",
         "../../accounts/accounts.json",
@@ -37,7 +37,7 @@ async fn test_call_failing() {
         "--url",
         URL,
         "script",
-        &script_path,
+        &script_name,
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
@@ -51,8 +51,8 @@ async fn test_call_failing() {
 
 #[tokio::test]
 async fn test_run_script_from_different_directory() {
-    let script_path = "hello_world/src/hello_world.cairo";
-    let path_to_scarb_toml = "hello_world/Scarb.toml";
+    let script_name = "hello_world";
+    let path_to_package = "hello_world/Scarb.toml";
     let args = vec![
         "--accounts-file",
         "../accounts/accounts.json",
@@ -60,10 +60,10 @@ async fn test_run_script_from_different_directory() {
         "user1",
         "--url",
         URL,
-        "--path-to-scarb-toml",
-        path_to_scarb_toml,
         "script",
-        &script_path,
+        "--path-to-package",
+        path_to_package,
+        &script_name,
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
@@ -78,7 +78,7 @@ async fn test_run_script_from_different_directory() {
 
 #[tokio::test]
 async fn test_verify_imports_within_same_package() {
-    let script_path = "src/verify_import.cairo";
+    let script_name = "verify_import";
     let args = vec![
         "--accounts-file",
         "../../accounts/accounts.json",
@@ -87,7 +87,7 @@ async fn test_verify_imports_within_same_package() {
         "--url",
         URL,
         "script",
-        &script_path,
+        &script_name,
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
@@ -102,7 +102,7 @@ async fn test_verify_imports_within_same_package() {
 
 #[tokio::test]
 async fn test_fail_when_using_starknet_syscall() {
-    let script_path = "src/using_starknet_syscall.cairo";
+    let script_name = "using_starknet_syscall";
     let args = vec![
         "--accounts-file",
         "../../accounts/accounts.json",
@@ -111,7 +111,7 @@ async fn test_fail_when_using_starknet_syscall() {
         "--url",
         URL,
         "script",
-        &script_path,
+        &script_name,
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))

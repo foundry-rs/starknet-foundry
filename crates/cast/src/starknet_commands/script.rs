@@ -27,13 +27,12 @@ use cairo_vm::vm::vm_core::VirtualMachine;
 use camino::Utf8PathBuf;
 use cast::helpers::response_structs::ScriptResponse;
 use cast::helpers::scarb_utils::{
-    get_package_metadata, get_scarb_manifest_for, get_scarb_metadata, ScarbOpts,
+    get_package_metadata, get_scarb_manifest, get_scarb_metadata, ScarbOpts,
 };
 use cheatnet::cheatcodes::EnhancedHintError;
 use clap::command;
 use clap::Args;
 use conversions::StarknetConversions;
-use indoc::formatdoc;
 use itertools::chain;
 use num_traits::ToPrimitive;
 use scarb_metadata::ScarbCommand;
@@ -45,8 +44,12 @@ use tokio::runtime::Runtime;
 #[derive(Args)]
 #[command(about = "")]
 pub struct Script {
-    /// Path to the script
-    pub script_path: Utf8PathBuf,
+    /// Path to the package with the script folder
+    #[clap(short, long)]
+    pub path_to_package: Option<Utf8PathBuf>,
+
+    /// Module name that contains the `main` function, which will be executed
+    pub script_module_name: String,
 }
 
 pub struct CairoHintProcessor<'a> {
@@ -221,11 +224,12 @@ impl CairoHintProcessor<'_> {
 }
 
 pub fn run(
-    script_path: &Utf8PathBuf,
+    module_name: &str,
+    path_to_package: &Option<Utf8PathBuf>,
     provider: &JsonRpcClient<HttpTransport>,
     runtime: Runtime,
 ) -> Result<ScriptResponse> {
-    let path = compile_script(script_path)?;
+    let path = compile_script(path_to_package.clone())?;
 
     let sierra_program = serde_json::from_str::<VersionedProgram>(
         &fs::read_to_string(path.clone())
@@ -242,8 +246,7 @@ pub fn run(
     )
     .with_context(|| "Failed setting up runner.")?;
 
-    let script_name = script_path.file_stem().unwrap();
-    let name_suffix = script_name.to_string() + "::main";
+    let name_suffix = module_name.to_string() + "::main";
     let func = runner.find_function(name_suffix.as_str())?;
 
     let (entry_code, builtins) = runner.create_entry_code(func, &Vec::new(), usize::MAX)?;
@@ -285,23 +288,38 @@ pub fn run(
     }
 }
 
-fn compile_script(script_path: &Utf8PathBuf) -> Result<Utf8PathBuf> {
-    let script_folder = script_path
-        .parent()
-        .ok_or(anyhow!("Failed to determine parent for {script_path}"))?;
+fn compile_script(path_to_package: Option<Utf8PathBuf>) -> Result<Utf8PathBuf> {
+    let manifest_path = match path_to_package {
+        Some(path) => path.clone(),
+        None => get_scarb_manifest()
+            .context("Failed to obtain manifest path from scarb")
+            .unwrap(),
+    };
 
-    let scarb_manifest_path = get_scarb_manifest_for(script_folder)
-        .context("Failed to obtain manifest path from scarb")
-        .unwrap();
+    let package_folder = manifest_path
+        .parent()
+        .unwrap_or_else(|| panic!("Failed to determine parent for {manifest_path}"));
+
+    let script_folder_path = package_folder.join("scripts");
+    ensure!(
+        script_folder_path.exists(),
+        "No scripts folder in {package_folder}"
+    );
+
+    let scripts_manifest_path = script_folder_path.join("Scarb.toml");
+    ensure!(
+        scripts_manifest_path.exists(),
+        "No Scarb.toml in {scripts_manifest_path}"
+    );
 
     ScarbCommand::new()
         .arg("build")
-        .env("SCARB_MANIFEST_PATH", &scarb_manifest_path)
+        .env("SCARB_MANIFEST_PATH", &scripts_manifest_path)
         .run()?;
 
     let opts = ScarbOpts { with_deps: true };
-    let metadata = get_scarb_metadata(&scarb_manifest_path, opts)?;
-    let package_metadata = get_package_metadata(&metadata, &scarb_manifest_path)?;
+    let metadata = get_scarb_metadata(&scripts_manifest_path, opts)?;
+    let package_metadata = get_package_metadata(&metadata, &scripts_manifest_path)?;
 
     let filename = format!("{}.sierra.json", package_metadata.name);
     let path = metadata
@@ -312,9 +330,7 @@ fn compile_script(script_path: &Utf8PathBuf) -> Result<Utf8PathBuf> {
 
     ensure!(
         path.exists(),
-        formatdoc! {r#"
-            package has not been compiled, file does not exist: {path}
-        "#}
+        "package has not been compiled, file does not exist: {path}"
     );
 
     Ok(path)

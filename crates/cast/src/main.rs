@@ -118,7 +118,12 @@ fn main() -> Result<()> {
     let runtime = Runtime::new().expect("Could not instantiate Runtime");
 
     if let Commands::Script(script) = cli.command {
-        let mut result = starknet_commands::script::run(&script.script_path, &provider, runtime);
+        let mut result = starknet_commands::script::run(
+            &script.script_module_name,
+            &script.path_to_package,
+            &provider,
+            runtime,
+        );
 
         print_command_result("script", &mut result, value_format, cli.json)?;
         Ok(())
