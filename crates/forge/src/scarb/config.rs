@@ -1,6 +1,5 @@
 use anyhow::{bail, Result};
 use conversions::StarknetConversions;
-use forge_runner::ForkTarget;
 use itertools::Itertools;
 use serde::Deserialize;
 use starknet::core::types::{BlockId, BlockTag};
@@ -17,6 +16,29 @@ pub struct ForgeConfig {
     pub fuzzer_seed: Option<u64>,
 
     pub fork: Vec<ForkTarget>,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct ForkTarget {
+    name: String,
+    params: RawForkParams,
+}
+
+impl ForkTarget {
+    #[must_use]
+    pub fn new(name: String, params: RawForkParams) -> Self {
+        Self { name, params }
+    }
+
+    #[must_use]
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    #[must_use]
+    pub fn params(&self) -> &RawForkParams {
+        &self.params
+    }
 }
 
 /// Represents forge config deserialized from Scarb.toml using basic types like String etc.
