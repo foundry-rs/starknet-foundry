@@ -6,5 +6,4 @@ mod invoke;
 mod main_tests;
 mod multicall;
 mod script;
-mod scripts;
 mod show_config;
