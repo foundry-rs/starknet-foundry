@@ -8,7 +8,6 @@ anyhow.workspace = true
 assert_fs.workspace = true
 camino.workspace = true
 indoc.workspace = true
-test-collector = { path = "../test-collector" }
 serde_json.workspace = true
 serde.workspace = true
 scarb-metadata.workspace = true

@@ -16,9 +16,10 @@ use cairo_vm::types::relocatable::Relocatable;
 use cheatnet::execution::cheatable_syscall_handler::CheatableSyscallHandler;
 use itertools::chain;
 
+use crate::compiled_runnable::ValidatedForkConfig;
 use crate::test_case_summary::TestCaseSummary;
 use crate::test_execution_syscall_handler::{TestExecutionState, TestExecutionSyscallHandler};
-use crate::{RunnerConfig, RunnerParams, TestCaseRunnable, ValidatedForkConfig, CACHE_DIR};
+use crate::{RunnerConfig, RunnerParams, TestCaseRunnable, CACHE_DIR};
 use cairo_lang_casm::hints::Hint;
 use cairo_lang_casm::instructions::Instruction;
 use cairo_lang_runner::casm_run::hint_to_hint_params;

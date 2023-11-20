@@ -1,3 +1,4 @@
+use crate::compiled_runnable::{CompiledTestCrateRunnable, FuzzerConfig, TestCaseRunnable};
 use crate::fuzzer::RandomFuzzer;
 use crate::printing::print_test_result;
 use crate::running::{run_fuzz_test, run_test};
@@ -6,7 +7,7 @@ use crate::test_crate_summary::TestCrateSummary;
 use anyhow::{anyhow, Context, Result};
 use cairo_lang_runner::SierraCasmRunner;
 use cairo_lang_sierra::ids::ConcreteTypeId;
-use cairo_lang_sierra::program::{Function, Program};
+use cairo_lang_sierra::program::Function;
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use camino::Utf8PathBuf;
@@ -15,15 +16,13 @@ use futures::StreamExt;
 use once_cell::sync::Lazy;
 use scarb_artifacts::StarknetContractArtifacts;
 use smol_str::SmolStr;
-use starknet::core::types::BlockId;
 use std::collections::HashMap;
 use std::sync::Arc;
-use test_collector::{ExpectedTestResult, FuzzerConfig};
-use test_collector::{LinkedLibrary, RawForkParams};
 use tokio::sync::mpsc::{channel, Sender};
 use tokio::task::JoinHandle;
-use url::Url;
 
+pub mod compiled_runnable;
+pub mod expected_result;
 pub mod test_case_summary;
 pub mod test_crate_summary;
 
@@ -78,35 +77,20 @@ impl RunnerConfig {
 #[non_exhaustive]
 #[derive(Debug, Clone)]
 pub struct RunnerParams {
-    corelib_path: Utf8PathBuf,
     contracts: HashMap<String, StarknetContractArtifacts>,
     environment_variables: HashMap<String, String>,
-    linked_libraries: Vec<LinkedLibrary>,
 }
 
 impl RunnerParams {
     #[must_use]
     pub fn new(
-        corelib_path: Utf8PathBuf,
         contracts: HashMap<String, StarknetContractArtifacts>,
         environment_variables: HashMap<String, String>,
-        linked_libraries: Vec<LinkedLibrary>,
     ) -> Self {
         Self {
-            corelib_path,
             contracts,
             environment_variables,
-            linked_libraries,
         }
-    }
-
-    #[must_use]
-    pub fn linked_libraries(&self) -> &Vec<LinkedLibrary> {
-        &self.linked_libraries
-    }
-    #[must_use]
-    pub fn corelib_path(&self) -> &Utf8PathBuf {
-        &self.corelib_path
     }
 }
 
@@ -120,58 +104,6 @@ pub enum RunnerStatus {
     TestFailed,
     /// Runner did not run, e.g. when test cases got skipped
     DidNotRun,
-}
-
-#[derive(Debug, Clone)]
-pub struct TestCaseRunnable {
-    pub name: String,
-    pub available_gas: Option<usize>,
-    pub ignored: bool,
-    pub expected_result: ExpectedTestResult,
-    pub fork_config: Option<ValidatedForkConfig>,
-    pub fuzzer_config: Option<FuzzerConfig>,
-}
-
-#[derive(Debug, Clone)]
-#[non_exhaustive]
-pub struct ValidatedForkConfig {
-    url: Url,
-    block_id: BlockId,
-}
-
-impl ValidatedForkConfig {
-    #[must_use]
-    pub fn new(url: Url, block_id: BlockId) -> Self {
-        Self { url, block_id }
-    }
-}
-
-impl TryFrom<RawForkParams> for ValidatedForkConfig {
-    type Error = anyhow::Error;
-
-    fn try_from(value: RawForkParams) -> std::result::Result<Self, Self::Error> {
-        Ok(ValidatedForkConfig {
-            url: value.url.parse()?,
-            block_id: value.block_id,
-        })
-    }
-}
-
-#[derive(Debug, Clone)]
-#[non_exhaustive]
-pub struct CompiledTestCrateRunnable {
-    sierra_program: Program,
-    test_cases: Vec<TestCaseRunnable>,
-}
-
-impl CompiledTestCrateRunnable {
-    #[must_use]
-    pub fn new(sierra_program: Program, test_cases: Vec<TestCaseRunnable>) -> Self {
-        Self {
-            sierra_program,
-            test_cases,
-        }
-    }
 }
 
 pub trait TestCaseFilter {
@@ -192,7 +124,7 @@ pub async fn run_tests_from_crate(
 ) -> Result<TestCrateRunResult> {
     let runner = Arc::new(
         SierraCasmRunner::new(
-            tests.sierra_program.clone(),
+            tests.sierra_program().clone(),
             Some(MetadataComputationConfig::default()),
             OrderedHashMap::default(),
         )
@@ -200,7 +132,7 @@ pub async fn run_tests_from_crate(
     );
 
     let mut tasks = FuturesUnordered::new();
-    let test_cases = &tests.test_cases;
+    let test_cases = tests.test_cases();
     // Initiate two channels to manage the `--exit-first` flag.
     // Owing to `cheatnet` fork's utilization of its own Tokio runtime for RPC requests,
     // test execution must occur within a `tokio::spawn_blocking`.

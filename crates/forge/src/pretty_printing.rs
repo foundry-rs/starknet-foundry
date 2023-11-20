@@ -1,4 +1,4 @@
-use crate::CrateLocation;
+use crate::compiled_raw::CrateLocation;
 use anyhow::Error;
 use console::style;
 use forge_runner::test_case_summary::TestCaseSummary;
