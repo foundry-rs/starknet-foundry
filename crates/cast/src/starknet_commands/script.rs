@@ -28,7 +28,7 @@ use cairo_vm::vm::vm_core::VirtualMachine;
 use camino::Utf8PathBuf;
 use cast::helpers::response_structs::ScriptResponse;
 use cast::helpers::scarb_utils::{
-    get_package_metadata, get_scarb_manifest, get_scarb_metadata, ScarbOpts, CastConfig,
+    get_package_metadata, get_scarb_manifest, get_scarb_metadata, CastConfig, ScarbOpts,
 };
 use cheatnet::cheatcodes::EnhancedHintError;
 use clap::command;
