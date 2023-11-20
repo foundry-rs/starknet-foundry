@@ -19,6 +19,7 @@ test-collector = { path = "../test-collector" }
 cheatnet = { path = "../cheatnet" }
 conversions = { path = "../conversions" }
 scarb-artifacts = { path = "../scarb-artifacts" }
+forge_runner = { path = "../forge-runner" }
 cairo-lang-runner.workspace = true
 cairo-lang-casm.workspace = true
 cairo-lang-sierra-to-casm.workspace = true
@@ -30,6 +31,7 @@ cairo-lang-utils.workspace = true
 cairo-lang-starknet.workspace = true
 cairo-lang-compiler.workspace = true
 cairo-lang-filesystem.workspace = true
+cairo-lang-test-plugin.workspace = true
 cairo-felt.workspace = true
 itertools.workspace = true
 regex.workspace = true

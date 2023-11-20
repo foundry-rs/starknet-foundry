@@ -11,7 +11,7 @@ use cairo_lang_starknet::contract_class::compile_contract_in_prepared_db;
 use cairo_lang_starknet::inline_macros::selector::SelectorMacro;
 use cairo_lang_starknet::plugin::StarkNetPlugin;
 use camino::{Utf8Path, Utf8PathBuf};
-use forge::{CrateLocation, TestCrateSummary};
+use forge_runner::test_crate_summary::TestCrateSummary;
 use scarb_artifacts::StarknetContractArtifacts;
 use std::collections::HashMap;
 use std::fs;
@@ -158,7 +158,7 @@ impl<'a> TestCase {
     pub fn find_test_result(results: &[TestCrateSummary]) -> &TestCrateSummary {
         results
             .iter()
-            .find(|r| r.test_crate_type == CrateLocation::Tests)
+            .find(|tc| !tc.test_case_summaries.is_empty())
             .unwrap()
     }
 }
@@ -180,7 +180,7 @@ macro_rules! test_case {
 #[macro_export]
 macro_rules! assert_passed {
     ($result:expr) => {{
-        use forge::test_case_summary::TestCaseSummary;
+        use forge_runner::test_case_summary::TestCaseSummary;
         use $crate::runner::TestCase;
 
         let result = TestCase::find_test_result(&$result);
@@ -201,7 +201,7 @@ macro_rules! assert_passed {
 #[macro_export]
 macro_rules! assert_failed {
     ($result:expr) => {{
-        use forge::test_case_summary::TestCaseSummary;
+        use forge_runner::test_case_summary::TestCaseSummary;
 
         use $crate::runner::TestCase;
 
@@ -223,7 +223,7 @@ macro_rules! assert_failed {
 #[macro_export]
 macro_rules! assert_case_output_contains {
     ($result:expr, $test_case_name:expr, $asserted_msg:expr) => {{
-        use forge::test_case_summary::TestCaseSummary;
+        use forge_runner::test_case_summary::TestCaseSummary;
 
         use $crate::runner::TestCase;
 

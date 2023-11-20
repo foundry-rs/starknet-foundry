@@ -27,7 +27,6 @@ mod tests {
     use snforge_std::declare;
 
     #[test]
-    #[available_gas(100000)]
     fn it_works() {
         assert(fib(0, 1, 16) == 987, 'it works!');
     }

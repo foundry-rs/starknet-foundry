@@ -44,11 +44,11 @@ mod MockChecker {
         }
 
         fn get_struct_thing(ref self: ContractState) -> StructThing {
-            StructThing {item_one: 12, item_two: 21}
+            StructThing { item_one: 12, item_two: 21 }
         }
 
         fn get_arr_thing(ref self: ContractState) -> Array<StructThing> {
-            array![StructThing {item_one: 12, item_two: 21}]
+            array![StructThing { item_one: 12, item_two: 21 }]
         }
     }
 }

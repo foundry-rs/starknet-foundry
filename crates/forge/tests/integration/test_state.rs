@@ -7,7 +7,7 @@ use test_utils::{assert_case_output_contains, assert_failed, assert_passed, test
 #[test]
 fn test_storage_access_from_tests() {
     let test = test_case!(indoc!(
-        r#"
+        r"
         #[starknet::contract]
         mod Contract {
             #[storage]
@@ -33,7 +33,7 @@ fn test_storage_access_from_tests() {
             let value = Contract::InternalImpl::internal_function(@state);
             assert(value == 10, 'Incorrect storage value');
         }
-    "#
+    "
     ),);
 
     let result = run_test_case(&test);
@@ -45,7 +45,7 @@ fn test_storage_access_from_tests() {
 fn test_simple_syscalls() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
         use starknet::info::{get_execution_info, TxInfo};
         use result::ResultTrait;
         use box::BoxTrait;
@@ -118,7 +118,7 @@ fn test_simple_syscalls() {
             assert(tx_info.chain_id == dispatcher.get_chain_id(), 'Incorrect chain_id');
             assert(tx_info.nonce == dispatcher.get_nonce(), 'Incorrect nonce');
         }
-    "#
+    "
         ),
         Contract::from_code_path(
             "SpoofChecker".to_string(),
@@ -151,7 +151,7 @@ fn test_simple_syscalls() {
 fn test_get_block_hash_syscall() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
         use starknet::info::{get_execution_info, TxInfo};
         use result::ResultTrait;
         use box::BoxTrait;
@@ -177,7 +177,7 @@ fn test_get_block_hash_syscall() {
             let stored_blk_hash = block_hash_checker_dispatcher.read_block_hash();
             assert(stored_blk_hash == 0, 'Wrong stored blk hash');
         }
-    "#
+    "
         ),
         Contract::from_code_path(
             "BlockHashChecker".to_string(),
@@ -195,7 +195,7 @@ fn test_get_block_hash_syscall() {
 fn test_library_calls() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
         use result::ResultTrait;
         use starknet::{ ClassHash, library_call_syscall, ContractAddress };
         use snforge_std::{ declare };
@@ -222,12 +222,12 @@ fn test_library_calls() {
             let value = lib_dispatcher.get_value().unwrap();
             assert(value == 10, 'Incorrect state');
         }
-    "#
+    "
         ),
         Contract::new(
             "LibraryContract",
             indoc!(
-                r#"
+                r"
                 #[starknet::contract]
                 mod LibraryContract {
                     use result::ResultTrait;
@@ -254,7 +254,7 @@ fn test_library_calls() {
                        self.value.write(number);
                     }
                 }
-                "#
+                "
             )
         )
     );
@@ -268,7 +268,7 @@ fn test_library_calls() {
 fn test_disabled_syscalls() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
         use result::ResultTrait;
         use starknet::{ClassHash, deploy_syscall, replace_class_syscall, get_block_hash_syscall};
         use snforge_std::declare;
@@ -278,7 +278,7 @@ fn test_disabled_syscalls() {
             let value : ClassHash = 'xd'.try_into().unwrap();
             replace_class_syscall(value);
         }
-    "#
+    "
         ),
         Contract::from_code_path(
             "HelloStarknet".to_string(),
@@ -300,7 +300,7 @@ fn test_disabled_syscalls() {
 #[test]
 fn test_get_block_hash() {
     let test = test_case!(indoc!(
-        r#"
+        r"
         use result::ResultTrait;
         use box::BoxTrait;
         use starknet::{get_block_hash_syscall, get_block_info};
@@ -311,7 +311,7 @@ fn test_get_block_hash() {
             let hash = get_block_hash_syscall(block_info.block_number - 10).unwrap();
             assert(hash == 0, 'Hash not zero');
         }
-    "#
+    "
     ));
 
     let result = run_test_case(&test);
@@ -323,7 +323,7 @@ fn test_get_block_hash() {
 fn test_cant_call_test_contract() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
         use result::ResultTrait;
         use starknet::{ClassHash, ContractAddress, deploy_syscall, replace_class_syscall, get_block_hash_syscall};
         use snforge_std::{ declare, ContractClassTrait, test_address };
@@ -340,12 +340,12 @@ fn test_cant_call_test_contract() {
             let dispatcher = ICallsBackDispatcher { contract_address: contract_address };
             dispatcher.call_back(test_address());
         }
-    "#
+    "
         ),
         Contract::new(
             "CallsBack",
             indoc!(
-                r#"
+                r"
                 #[starknet::contract]
                 mod CallsBack {
                     use result::ResultTrait;
@@ -368,7 +368,7 @@ fn test_cant_call_test_contract() {
                         dispatcher.test_calling_test_fails();
                     }
                 }
-                "#
+                "
             )
         )
     );
@@ -383,7 +383,7 @@ fn test_cant_call_test_contract() {
 #[test]
 fn test_storage_access_default_values() {
     let test = test_case!(indoc!(
-        r#"
+        r"
         #[starknet::contract]
         mod Contract {
             #[derive(starknet::Store, Drop)]
@@ -416,7 +416,7 @@ fn test_storage_access_default_values() {
             assert(default_custom_struct.a == 0, 'Invalid cs.a value');
             assert(default_custom_struct.b == 0, 'Invalid cs.b value');
         }
-    "#
+    "
     ),);
 
     let result = run_test_case(&test);
@@ -427,7 +427,7 @@ fn test_storage_access_default_values() {
 #[test]
 fn test_simple_cheatcodes() {
     let test = test_case!(indoc!(
-        r#"
+        r"
         use result::ResultTrait;
         use box::BoxTrait;
         use serde::Serde;
@@ -435,6 +435,7 @@ fn test_simple_cheatcodes() {
         use array::SpanTrait;
         use starknet::ContractAddressIntoFelt252;
         use snforge_std::{
+            CheatTarget,
             start_prank, stop_prank,
             start_roll, stop_roll,
             start_warp, stop_warp,
@@ -449,11 +450,11 @@ fn test_simple_cheatcodes() {
             let caller_addr_before = starknet::get_caller_address();
             let target_caller_address: ContractAddress = (123_felt252).try_into().unwrap();
 
-            start_prank(test_address, target_caller_address);
+            start_prank(CheatTarget::One(test_address), target_caller_address);
             let caller_addr_after = starknet::get_caller_address();
             assert(caller_addr_after==target_caller_address, caller_addr_after.into());
 
-            stop_prank(test_address);
+            stop_prank(CheatTarget::One(test_address));
             let caller_addr_after = starknet::get_caller_address();
             assert(caller_addr_after==caller_addr_before, caller_addr_before.into());
         }
@@ -463,11 +464,11 @@ fn test_simple_cheatcodes() {
             let test_address: ContractAddress = test_address();
             let old_block_number = starknet::get_block_info().unbox().block_number;
 
-            start_roll(test_address, 234);
+            start_roll(CheatTarget::One(test_address), 234);
             let new_block_number = starknet::get_block_info().unbox().block_number;
             assert(new_block_number == 234, 'Wrong block number');
 
-            stop_roll(test_address);
+            stop_roll(CheatTarget::One(test_address));
             let new_block_number = starknet::get_block_info().unbox().block_number;
             assert(new_block_number == old_block_number, 'Block num did not change back');
         }
@@ -477,11 +478,11 @@ fn test_simple_cheatcodes() {
             let test_address: ContractAddress = test_address();
             let old_block_timestamp = starknet::get_block_info().unbox().block_timestamp;
 
-            start_warp(test_address, 123);
+            start_warp(CheatTarget::One(test_address), 123);
             let new_block_timestamp = starknet::get_block_info().unbox().block_timestamp;
             assert(new_block_timestamp == 123, 'Wrong block timestamp');
 
-            stop_warp(test_address);
+            stop_warp(CheatTarget::One(test_address));
             let new_block_timestamp = starknet::get_block_info().unbox().block_timestamp;
             assert(new_block_timestamp == old_block_timestamp, 'Timestamp did not change back')
         }
@@ -494,12 +495,12 @@ fn test_simple_cheatcodes() {
             let mut tx_info_mock = TxInfoMockTrait::default();
             tx_info_mock.transaction_hash = Option::Some(421);
 
-            start_spoof(test_address, tx_info_mock);
+            start_spoof(CheatTarget::One(test_address), tx_info_mock);
             let new_tx_info = starknet::get_tx_info().unbox();
             assert(new_tx_info.nonce == old_tx_info.nonce, 'Wrong nonce');
             assert(new_tx_info.transaction_hash == 421, 'Wrong transaction_hash');
 
-            stop_spoof(test_address);
+            stop_spoof(CheatTarget::One(test_address));
             let new_tx_info = starknet::get_tx_info().unbox();
             assert(new_tx_info.nonce == old_tx_info.nonce, 'Wrong nonce');
             assert(
@@ -507,7 +508,7 @@ fn test_simple_cheatcodes() {
                 'Wrong transaction_hash'
             )
         }
-    "#
+    "
     ));
 
     let result = run_test_case(&test);
@@ -518,7 +519,7 @@ fn test_simple_cheatcodes() {
 #[test]
 fn test_spy_events_simple() {
     let test = test_case!(indoc!(
-        r#"
+        r"
             use array::ArrayTrait;
             use result::ResultTrait;
             use starknet::SyscallResultTrait;
@@ -543,7 +544,7 @@ fn test_spy_events_simple() {
 
                 assert(spy.events.len() == 0, 'There should be no events left');
             }
-        "#
+        "
     ),);
 
     let result = run_test_case(&test);
@@ -554,7 +555,7 @@ fn test_spy_events_simple() {
 #[test]
 fn test_spy_struct_events() {
     let test = test_case!(indoc!(
-        r#"
+        r"
             use array::ArrayTrait;
             use snforge_std::{ 
                 declare, ContractClassTrait, spy_events, 
@@ -606,7 +607,7 @@ fn test_spy_struct_events() {
                     ]
                 )
             }
-        "#
+        "
     ));
 
     let result = run_test_case(&test);
@@ -617,7 +618,7 @@ fn test_spy_struct_events() {
 #[test]
 fn test_inconsistent_syscall_pointers() {
     let test = test_case!(indoc!(
-        r#"
+        r"
         use starknet::ContractAddress;
         use starknet::info::get_block_number;
         use snforge_std::start_mock_call;
@@ -636,7 +637,7 @@ fn test_inconsistent_syscall_pointers() {
             let value = contract.get_value(address);
             let block_number = get_block_number();
         }
-    "#
+    "
     ),);
     let result = run_test_case(&test);
 
@@ -647,7 +648,7 @@ fn test_inconsistent_syscall_pointers() {
 fn test_caller_address_in_called_contract() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
         use result::ResultTrait;
         use array::ArrayTrait;
         use option::OptionTrait;
@@ -682,7 +683,7 @@ fn test_caller_address_in_called_contract() {
             assert(dispatcher_constructor_prank_checker.get_stored_caller_address() == test_address(), 'Incorrect caller address');
 
         }
-    "#
+    "
         ),
         Contract::from_code_path(
             "PrankChecker".to_string(),
@@ -692,7 +693,7 @@ fn test_caller_address_in_called_contract() {
         Contract::new(
             "ConstructorPrankChecker",
             indoc!(
-                r#"
+                r"
             use starknet::ContractAddress;
 
             #[starknet::interface]
@@ -722,7 +723,7 @@ fn test_caller_address_in_called_contract() {
                     }
                 }
             }
-        "#
+        "
             )
         )
     );

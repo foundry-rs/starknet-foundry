@@ -2,7 +2,7 @@ fn adder(a: felt252, b: felt252) -> felt252 {
     a + b
 }
 
-fn always_five(a: felt252, b: felt252) -> felt252{
+fn always_five(a: felt252, b: felt252) -> felt252 {
     5
 }
 

@@ -17,7 +17,7 @@ fn simple_package() {
 
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
     [..]Compiling[..]
     [..]Finished[..]
 
@@ -51,7 +51,7 @@ fn simple_package() {
     Failures:
         tests::test_simple::test_failing
         tests::test_simple::test_another_failing
-    "#}
+    "}
     );
 }
 
@@ -77,7 +77,7 @@ fn simple_package_with_git_dependency() {
             casm = true
 
             [dependencies]
-            starknet = "2.3.0"
+            starknet = "2.3.1"
             snforge_std = {{ git = "https://github.com/{}", branch = "{}" }}
             "#,
             remote_url,
@@ -94,7 +94,7 @@ fn simple_package_with_git_dependency() {
 
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -128,7 +128,7 @@ fn simple_package_with_git_dependency() {
         Failures:
             tests::test_simple::test_failing
             tests::test_simple::test_another_failing
-        "#}
+        "}
     );
 }
 
@@ -138,10 +138,10 @@ fn with_failing_scarb_build() {
     let lib_file = temp.child("src/lib.cairo");
     lib_file
         .write_str(indoc!(
-            r#"
+            r"
         mod hello_starknet;
         mods erc20;
-    "#
+    "
         ))
         .unwrap();
 
@@ -162,7 +162,7 @@ fn with_filter() {
 
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -173,7 +173,7 @@ fn with_filter() {
         [PASS] tests::test_simple::test_two
         [PASS] tests::test_simple::test_two_and_two
         Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 11 filtered out
-        "#}
+        "}
     );
 }
 
@@ -190,7 +190,7 @@ fn with_filter_matching_module() {
 
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
         
@@ -202,7 +202,7 @@ fn with_filter_matching_module() {
         [IGNORE] tests::ext_function_test::ignored_test
         [PASS] tests::ext_function_test::test_simple
         Tests: 2 passed, 0 failed, 0 skipped, 1 ignored, 10 filtered out
-        "#}
+        "}
     );
 }
 
@@ -220,7 +220,7 @@ fn with_exact_filter() {
 
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -230,7 +230,7 @@ fn with_exact_filter() {
         Running 1 test(s) from tests/
         [PASS] tests::test_simple::test_two
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 12 filtered out
-        "#}
+        "}
     );
 }
 
@@ -243,7 +243,7 @@ fn with_non_matching_filter() {
 
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -252,7 +252,7 @@ fn with_non_matching_filter() {
         Running 0 test(s) from src/
         Running 0 test(s) from tests/
         Tests: 0 passed, 0 failed, 0 skipped, 0 ignored, 13 filtered out
-        "#}
+        "}
     );
 }
 
@@ -265,7 +265,7 @@ fn with_ignored_flag() {
 
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
         
@@ -283,7 +283,7 @@ fn with_ignored_flag() {
         
         Failures:
             tests::ext_function_test::ignored_test
-        "#}
+        "}
     );
 }
 
@@ -300,7 +300,7 @@ fn with_include_ignored_flag() {
 
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
         
@@ -339,7 +339,7 @@ fn with_include_ignored_flag() {
             tests::ext_function_test::ignored_test
             tests::test_simple::test_failing
             tests::test_simple::test_another_failing
-        "#}
+        "}
     );
 }
 
@@ -357,7 +357,7 @@ fn with_ignored_flag_and_filter() {
 
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
         
@@ -374,7 +374,7 @@ fn with_ignored_flag_and_filter() {
         
         Failures:
             tests::ext_function_test::ignored_test
-        "#}
+        "}
     );
 }
 
@@ -392,7 +392,7 @@ fn with_include_ignored_flag_and_filter() {
 
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
         
@@ -410,7 +410,7 @@ fn with_include_ignored_flag_and_filter() {
         
         Failures:
             tests::ext_function_test::ignored_test
-        "#}
+        "}
     );
 }
 
@@ -423,7 +423,7 @@ fn with_print() {
 
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -459,7 +459,7 @@ fn with_print() {
         original value: [166906514068638843492736773029576256], converted to a string: [ % abc 123 !?>@]
         [PASS] tests::test_print::test_print
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
-        "#}
+        "}
     );
 }
 
@@ -472,7 +472,7 @@ fn with_panic_data_decoding() {
 
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -502,7 +502,7 @@ fn with_panic_data_decoding() {
         Failures:
             tests::test_panic_decoding::test_panic_decoding
             tests::test_panic_decoding::test_panic_decoding2
-        "#}
+        "}
     );
 }
 
@@ -519,7 +519,7 @@ fn with_exit_first() {
             version = "0.1.0"
 
             [dependencies]
-            starknet = "2.3.0"
+            starknet = "2.3.1"
             snforge_std = {{ path = "{}" }}
 
             [[target.starknet-contract]]
@@ -543,7 +543,7 @@ fn with_exit_first() {
     let output = snapbox.current_dir(&temp).assert().code(1);
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -560,7 +560,7 @@ fn with_exit_first() {
 
         Failures:
             tests::ext_function_test::simple_test
-        "#}
+        "}
     );
 }
 
@@ -572,7 +572,7 @@ fn with_exit_first_flag() {
     let output = snapbox.current_dir(&temp).assert().code(1);
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -589,7 +589,7 @@ fn with_exit_first_flag() {
 
         Failures:
             tests::ext_function_test::simple_test
-        "#}
+        "}
     );
 }
 
@@ -619,7 +619,7 @@ fn init_new_project_test() {
 
             [dependencies]
             snforge_std = {{ git = "https://github.com/foundry-rs/starknet-foundry", tag = "v{}" }}
-            starknet = "2.3.0"
+            starknet = "2.3.1"
 
             [[target.starknet-contract]]
             casm = true
@@ -631,7 +631,6 @@ fn init_new_project_test() {
 
     let remote_url = get_remote_url();
     let branch = get_current_branch();
-
     manifest_path
         .write_str(&formatdoc!(
             r#"
@@ -643,7 +642,7 @@ fn init_new_project_test() {
         casm = true
 
         [dependencies]
-        starknet = "2.3.0"
+        starknet = "2.3.1"
         snforge_std = {{ git = "https://github.com/{}", branch = "{}" }}
         "#,
             remote_url,
@@ -659,7 +658,7 @@ fn init_new_project_test() {
         .success();
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling test_name v0.1.0[..]
         [..]Finished[..]
 
@@ -670,7 +669,7 @@ fn init_new_project_test() {
         [PASS] tests::test_contract::test_increase_balance
         [PASS] tests::test_contract::test_cannot_increase_balance_with_zero_value
         Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
-    "#}
+    "}
     );
 }
 
@@ -685,7 +684,7 @@ fn should_panic() {
     let output = snapbox.current_dir(&temp).assert().code(1);
     assert_stdout_contains!(
         output,
-        indoc! { r#"
+        indoc! { r"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -719,7 +718,7 @@ fn should_panic() {
             tests::should_panic_test::should_panic_with_non_matching_data
             tests::should_panic_test::didnt_expect_panic
             tests::should_panic_test::expected_panic_but_didnt
-        "#}
+        "}
     );
 }
 
@@ -751,5 +750,21 @@ fn printing_in_contracts() {
         [PASS] tests::test_contract::test_cannot_increase_balance_with_zero_value
         Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         "#}
+    );
+}
+
+#[test]
+fn available_gas_error() {
+    let temp = setup_package("available_gas");
+    let snapbox = test_runner();
+
+    let output = snapbox.current_dir(&temp).assert().failure();
+    assert_stdout_contains!(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+        [ERROR] tests::available_gas::available_gas - Attribute `available_gas` is not supported: Contract functions execution cost would not be included in the gas calculation.
+        "}
     );
 }

@@ -1,5 +1,6 @@
 use anyhow::{bail, Result};
 use conversions::StarknetConversions;
+use forge_runner::ForkTarget;
 use itertools::Itertools;
 use serde::Deserialize;
 use starknet::core::types::{BlockId, BlockTag};
@@ -7,7 +8,6 @@ use std::collections::HashMap;
 use test_collector::RawForkParams;
 
 #[derive(Debug, PartialEq, Default)]
-#[allow(clippy::module_name_repetitions)]
 pub struct ForgeConfig {
     /// Should runner exit after first failed test
     pub exit_first: bool,
@@ -17,12 +17,6 @@ pub struct ForgeConfig {
     pub fuzzer_seed: Option<u64>,
 
     pub fork: Vec<ForkTarget>,
-}
-
-#[derive(Debug, PartialEq, Clone)]
-pub struct ForkTarget {
-    pub name: String,
-    pub params: RawForkParams,
 }
 
 /// Represents forge config deserialized from Scarb.toml using basic types like String etc.
@@ -99,13 +93,13 @@ impl TryFrom<RawForgeConfig> for ForgeConfig {
                 unreachable!()
             };
 
-            fork_targets.push(ForkTarget {
-                name: raw_fork_target.name,
-                params: RawForkParams {
+            fork_targets.push(ForkTarget::new(
+                raw_fork_target.name,
+                RawForkParams {
                     url: raw_fork_target.url,
                     block_id,
                 },
-            });
+            ));
         }
 
         Ok(ForgeConfig {

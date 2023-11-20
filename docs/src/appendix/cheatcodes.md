@@ -1,11 +1,14 @@
 # Cheatcodes Reference
 
-- [`start_prank`](cheatcodes/start_prank.md) - changes the caller address for a contract
-- [`stop_prank`](cheatcodes/stop_prank.md) - cancels the `start_prank` for the contract
-- [`start_roll`](cheatcodes/start_roll.md) - changes the block number for a contract
-- [`stop_roll`](cheatcodes/stop_roll.md) - cancels the `start_roll` for the contract
-- [`start_warp`](cheatcodes/start_warp.md) - changes the block timestamp for a contract
-- [`stop_warp`](cheatcodes/stop_warp.md) - cancels the `start_warp` for the contract
+- [`CheatTarget`](cheatcodes/cheat_target.md) - enum for selecting contracts to target with cheatcodes
+- [`start_prank`](cheatcodes/start_prank.md) - changes the caller address for contracts
+- [`stop_prank`](cheatcodes/stop_prank.md) - cancels the `start_prank` for contracts
+- [`start_roll`](cheatcodes/start_roll.md) - changes the block number for contracts
+- [`stop_roll`](cheatcodes/stop_roll.md) - cancels the `start_roll` for contracts
+- [`start_warp`](cheatcodes/start_warp.md) - changes the block timestamp for contracts
+- [`stop_warp`](cheatcodes/stop_warp.md) - cancels the `start_warp` for contracts
+- [`start_spoof`](cheatcodes/start_spoof.md) - changes the transaction context for contracts
+- [`stop_spoof`](cheatcodes/stop_spoof.md) - cancels the `start_spoof` for contracts
 - [`get_class_hash`](cheatcodes/get_class_hash.md) - retrieves a class hash of a contract
 - [`start_mock_call`](cheatcodes/start_mock_call.md) - mocks contract call to a `function_name` of a contract
 - [`stop_mock_call`](cheatcodes/stop_mock_call.md) - cancels the `start_mock_call` for the function `function_name` of a contract

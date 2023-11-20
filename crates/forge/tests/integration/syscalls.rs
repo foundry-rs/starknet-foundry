@@ -9,7 +9,7 @@ use test_utils::{assert_case_output_contains, assert_failed, assert_passed, test
 fn library_call_syscall() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
         use starknet::ContractAddress;
         use starknet::ClassHash;
         use snforge_std::{ declare, ContractClassTrait };
@@ -56,12 +56,12 @@ fn library_call_syscall() {
             let thing = executor_safe_dispatcher.get_thing().unwrap();
             assert(thing == 5, 'invalid thing');
         }
-        "#
+        "
         ),
         Contract::new(
             "Caller",
             indoc!(
-                r#"
+                r"
                 #[starknet::contract]
                 mod Caller {
                     use result::ResultTrait;
@@ -84,13 +84,13 @@ fn library_call_syscall() {
                         safe_lib_dispatcher.add_two(number).unwrap()
                     }
                 }
-                "#
+                "
             )
         ),
         Contract::new(
             "Executor",
             indoc!(
-                r#"
+                r"
                 #[starknet::contract]
                 mod Executor {
                     #[storage]
@@ -115,7 +115,7 @@ fn library_call_syscall() {
                         self.thing.read()
                     }
                 }
-                "#
+                "
             )
         )
     );
@@ -128,7 +128,7 @@ fn library_call_syscall() {
 #[test]
 fn test_keccak_syscall() {
     let test = test_case!(indoc!(
-        r#"
+        r"
         use array::ArrayTrait;
         use starknet::syscalls::keccak_syscall;
         use starknet::SyscallResultTrait;
@@ -142,7 +142,7 @@ fn test_keccak_syscall() {
                 'Wrong hash value'
             );
         }
-    "#
+    "
     ));
 
     let result = run_test_case(&test);
@@ -153,7 +153,7 @@ fn test_keccak_syscall() {
 #[test]
 fn test_keccak_syscall_too_small_input() {
     let test = test_case!(indoc!(
-        r#"
+        r"
         use array::ArrayTrait;
         use starknet::syscalls::keccak_syscall;
         use starknet::SyscallResultTrait;
@@ -167,7 +167,7 @@ fn test_keccak_syscall_too_small_input() {
                 'Wrong hash value'
             );
         }
-    "#
+    "
     ));
 
     let result = run_test_case(&test);
@@ -180,7 +180,7 @@ fn test_keccak_syscall_too_small_input() {
 #[test]
 fn test_cairo_keccak() {
     let test = test_case!(indoc!(
-        r#"
+        r"
         use array::ArrayTrait;
         use keccak::cairo_keccak;
 
@@ -211,7 +211,7 @@ fn test_cairo_keccak() {
             assert(@res.low == @0x5d291eebae35b254ff50ec1fc57832e8, 'Wrong hash low');
             assert(@res.high == @0x210740d45b1fe2ac908a497ef45509f5, 'Wrong hash high');
         }
-    "#
+    "
     ));
 
     let result = run_test_case(&test);
@@ -223,7 +223,7 @@ fn test_cairo_keccak() {
 fn test_keccak_syscall_in_contract() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
             use result::ResultTrait;
             use array::ArrayTrait;
             use option::OptionTrait;
@@ -248,7 +248,7 @@ fn test_keccak_syscall_in_contract() {
                     'Wrong hash value'
                 );
             }
-        "#
+        "
         ),
         Contract::from_code_path(
             "HelloKeccak".to_string(),
@@ -266,7 +266,7 @@ fn test_keccak_syscall_in_contract() {
 fn compare_keccak_from_contract_with_plain_keccak() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
             use result::ResultTrait;
             use array::ArrayTrait;
             use option::OptionTrait;
@@ -293,7 +293,7 @@ fn compare_keccak_from_contract_with_plain_keccak() {
 
                 assert(contract_keccak == keccak, 'Keccaks dont match');
             }
-        "#
+        "
         ),
         Contract::from_code_path(
             "HelloKeccak".to_string(),

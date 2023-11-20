@@ -155,10 +155,10 @@ async fn test_too_low_max_fee() {
         .current_dir(&created_dir)
         .args(args);
 
-    snapbox.assert().success().stderr_matches(indoc! {r#"
+    snapbox.assert().success().stderr_matches(indoc! {r"
         command: account deploy
         error: Max fee is smaller than the minimal transaction cost (validation plus fee transfer)
-    "#});
+    "});
 
     fs::remove_dir_all(created_dir).unwrap();
 }
@@ -186,10 +186,10 @@ pub async fn test_invalid_class_hash() {
         .current_dir(&created_dir)
         .args(args);
 
-    snapbox.assert().success().stderr_matches(indoc! {r#"
+    snapbox.assert().success().stderr_matches(indoc! {r"
         command: account deploy
         error: Provided class hash 0x123 does not exist
-    "#});
+    "});
 
     fs::remove_dir_all(created_dir).unwrap();
 }
@@ -215,10 +215,10 @@ pub async fn test_valid_class_hash() {
         .current_dir(&created_dir)
         .args(args);
 
-    snapbox.assert().success().stdout_matches(indoc! {r#"
+    snapbox.assert().success().stdout_matches(indoc! {r"
         command: account deploy
         transaction_hash: [..]
-    "#});
+    "});
 
     fs::remove_dir_all(created_dir).unwrap();
 }
@@ -346,10 +346,10 @@ pub async fn test_keystore_already_deployed() {
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast")).args(args);
-    snapbox.assert().stderr_matches(indoc! {r#"
+    snapbox.assert().stderr_matches(indoc! {r"
         command: account deploy
         error: Account already deployed
-    "#});
+    "});
 
     _ = fs::remove_file(account_path);
 }
@@ -382,10 +382,10 @@ pub async fn test_keystore_key_mismatch() {
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast")).args(args);
-    snapbox.assert().stderr_matches(indoc! {r#"
+    snapbox.assert().stderr_matches(indoc! {r"
         command: account deploy
         error: Public key and private key from keystore do not match
-    "#});
+    "});
 
     _ = fs::remove_file(account_path);
 }
@@ -439,10 +439,10 @@ pub async fn test_deploy_keystore_no_status() {
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast")).args(args);
-    snapbox.assert().stderr_matches(indoc! {r#"
+    snapbox.assert().stderr_matches(indoc! {r"
         command: account deploy
         error: Failed to get status from account JSON file
-    "#});
+    "});
 }
 
 #[tokio::test]
@@ -486,10 +486,10 @@ pub async fn test_deploy_keystore_other_args() {
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast")).args(args);
-    snapbox.assert().stdout_matches(indoc! {r#"
+    snapbox.assert().stdout_matches(indoc! {r"
         command: account deploy
         transaction_hash: 0x[..]
-    "#});
+    "});
 
     _ = fs::remove_file(account_path);
 }

@@ -18,13 +18,13 @@ fn get_cheated_block_info_ptr(
 
     let mut new_block_info = original_block_info.to_owned();
 
-    if let Some(rolled_number) = cheatnet_state.rolled_contracts.get(contract_address) {
-        new_block_info[0] = MaybeRelocatable::Int(rolled_number.clone());
+    if let Some(rolled_number) = cheatnet_state.get_cheated_block_number(contract_address) {
+        new_block_info[0] = MaybeRelocatable::Int(rolled_number);
     };
 
-    if let Some(warped_timestamp) = cheatnet_state.warped_contracts.get(contract_address) {
-        new_block_info[1] = MaybeRelocatable::Int(warped_timestamp.clone());
-    };
+    if let Some(warped_timestamp) = cheatnet_state.get_cheated_block_timestamp(contract_address) {
+        new_block_info[1] = MaybeRelocatable::Int(warped_timestamp);
+    }
 
     vm.load_data(ptr_cheated_block_info, &new_block_info)
         .unwrap();
@@ -43,9 +43,9 @@ fn get_cheated_tx_info_ptr(
     let mut new_tx_info = original_tx_info.to_owned();
 
     let tx_info_mock = cheatnet_state
-        .spoofed_contracts
-        .get(contract_address)
+        .get_cheated_tx_info(contract_address)
         .unwrap();
+
     let TxInfoMock {
         version,
         account_contract_address,
@@ -54,16 +54,16 @@ fn get_cheated_tx_info_ptr(
         transaction_hash,
         chain_id,
         nonce,
-    } = tx_info_mock.to_owned();
+    } = tx_info_mock;
 
     if let Some(version) = version {
-        new_tx_info[0] = MaybeRelocatable::Int(version.clone());
+        new_tx_info[0] = MaybeRelocatable::Int(version);
     };
     if let Some(account_contract_address) = account_contract_address {
-        new_tx_info[1] = MaybeRelocatable::Int(account_contract_address.clone());
+        new_tx_info[1] = MaybeRelocatable::Int(account_contract_address);
     };
     if let Some(max_fee) = max_fee {
-        new_tx_info[2] = MaybeRelocatable::Int(max_fee.clone());
+        new_tx_info[2] = MaybeRelocatable::Int(max_fee);
     };
 
     if let Some(signature) = signature {
@@ -79,13 +79,13 @@ fn get_cheated_tx_info_ptr(
     }
 
     if let Some(transaction_hash) = transaction_hash {
-        new_tx_info[5] = MaybeRelocatable::Int(transaction_hash.clone());
+        new_tx_info[5] = MaybeRelocatable::Int(transaction_hash);
     };
     if let Some(chain_id) = chain_id {
-        new_tx_info[6] = MaybeRelocatable::Int(chain_id.clone());
+        new_tx_info[6] = MaybeRelocatable::Int(chain_id);
     };
     if let Some(nonce) = nonce {
-        new_tx_info[7] = MaybeRelocatable::Int(nonce.clone());
+        new_tx_info[7] = MaybeRelocatable::Int(nonce);
     };
 
     vm.load_data(ptr_cheated_tx_info, &new_tx_info).unwrap();
@@ -105,7 +105,6 @@ pub fn get_cheated_exec_info_ptr(
 
     // Initialize as old exec_info
     let mut new_exec_info = vm.get_continuous_range(execution_info_ptr, 5).unwrap();
-
     if cheatnet_state.address_is_rolled(contract_address)
         || cheatnet_state.address_is_warped(contract_address)
     {
@@ -139,8 +138,7 @@ pub fn get_cheated_exec_info_ptr(
     if cheatnet_state.address_is_pranked(contract_address) {
         new_exec_info[2] = MaybeRelocatable::Int(stark_felt_to_felt(
             *cheatnet_state
-                .pranked_contracts
-                .get(contract_address)
+                .get_cheated_caller_address(contract_address)
                 .expect("No caller address value found for the pranked contract address")
                 .0
                 .key(),

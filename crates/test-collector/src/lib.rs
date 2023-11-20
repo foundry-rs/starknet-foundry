@@ -1,5 +1,5 @@
 use crate::sierra_casm_generator::SierraCasmGenerator;
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use cairo_felt::Felt252;
 use cairo_lang_compiler::db::RootDatabase;
 use cairo_lang_compiler::diagnostics::DiagnosticsReporter;
@@ -21,12 +21,18 @@ use cairo_lang_sierra::extensions::NamedType;
 use cairo_lang_sierra::program::{GenericArg, Program};
 use cairo_lang_sierra_generator::db::SierraGenGroup;
 use cairo_lang_sierra_generator::replace_ids::replace_sierra_ids_in_program;
+use cairo_lang_starknet::inline_macros::get_dep_component::{
+    GetDepComponentMacro, GetDepComponentMutMacro,
+};
 use cairo_lang_starknet::inline_macros::selector::SelectorMacro;
 use cairo_lang_starknet::plugin::StarkNetPlugin;
 use cairo_lang_syntax::attribute::structured::{Attribute, AttributeArg, AttributeArgVariant};
 use cairo_lang_syntax::node::ast;
+use cairo_lang_syntax::node::ast::{ArgClause, Expr};
 use cairo_lang_syntax::node::db::SyntaxGroup;
 use cairo_lang_syntax::node::helpers::GetIdentifier;
+use cairo_lang_test_plugin::test_config::{PanicExpectation, TestExpectation};
+use cairo_lang_test_plugin::{try_extract_test_config, TestConfig};
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use cairo_lang_utils::OptionHelper;
 use conversions::StarknetConversions;
@@ -44,6 +50,9 @@ mod plugin;
 
 pub mod sierra_casm_generator;
 
+const FORK_ATTR: &str = "fork";
+const FUZZER_ATTR: &str = "fuzzer";
+
 /// Expectation for a panic case.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ExpectedPanicValue {
@@ -53,6 +62,15 @@ pub enum ExpectedPanicValue {
     Exact(Vec<Felt252>),
 }
 
+impl From<PanicExpectation> for ExpectedPanicValue {
+    fn from(value: PanicExpectation) -> Self {
+        match value {
+            PanicExpectation::Any => ExpectedPanicValue::Any,
+            PanicExpectation::Exact(vec) => ExpectedPanicValue::Exact(vec),
+        }
+    }
+}
+
 /// Expectation for a result of a test.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ExpectedTestResult {
@@ -60,6 +78,17 @@ pub enum ExpectedTestResult {
     Success,
     /// Running the test should result in a panic.
     Panics(ExpectedPanicValue),
+}
+
+impl From<TestExpectation> for ExpectedTestResult {
+    fn from(value: TestExpectation) -> Self {
+        match value {
+            TestExpectation::Success => ExpectedTestResult::Success,
+            TestExpectation::Panics(panic_expectation) => {
+                ExpectedTestResult::Panics(panic_expectation.into())
+            }
+        }
+    }
 }
 
 pub trait ForkConfig {}
@@ -120,7 +149,7 @@ pub fn find_all_tests(
             };
             Some((
                 *func_id,
-                try_extract_test_config(db.upcast(), &attrs).unwrap()?,
+                forge_try_extract_test_config(db.upcast(), &attrs).unwrap()?,
             ))
         }));
     }
@@ -129,95 +158,25 @@ pub fn find_all_tests(
 
 /// Extracts the configuration of a tests from attributes, or returns the diagnostics if the
 /// attributes are set illegally.
-#[allow(clippy::too_many_lines)]
-pub fn try_extract_test_config(
+pub fn forge_try_extract_test_config(
     db: &dyn SyntaxGroup,
     attrs: &[Attribute],
 ) -> Result<Option<SingleTestConfig>, Vec<PluginDiagnostic>> {
-    let test_attr = attrs.iter().find(|attr| attr.id.as_str() == "test");
-    let ignore_attr = attrs.iter().find(|attr| attr.id.as_str() == "ignore");
-    let available_gas_attr = attrs
-        .iter()
-        .find(|attr| attr.id.as_str() == "available_gas");
-    let should_panic_attr = attrs.iter().find(|attr| attr.id.as_str() == "should_panic");
-    let fork_attr = attrs.iter().find(|attr| attr.id.as_str() == "fork");
-    let fuzzer_attr = attrs.iter().find(|attr| attr.id.as_str() == "fuzzer");
+    let maybe_test_config = try_extract_test_config(db, attrs.to_vec())?;
+    let fork_attr = attrs.iter().find(|attr| attr.id.as_str() == FORK_ATTR);
+    let fuzzer_attr = attrs.iter().find(|attr| attr.id.as_str() == FUZZER_ATTR);
+
     let mut diagnostics = vec![];
-    if let Some(attr) = test_attr {
-        if !attr.args.is_empty() {
-            diagnostics.push(PluginDiagnostic {
-                stable_ptr: attr.id_stable_ptr.untyped(),
-                message: "Attribute should not have arguments.".into(),
-            });
-        }
-    } else {
-        for attr in [
-            ignore_attr,
-            available_gas_attr,
-            should_panic_attr,
-            fork_attr,
-            fuzzer_attr,
-        ]
-        .into_iter()
-        .flatten()
-        {
+
+    if maybe_test_config.is_none() {
+        for attr in [fork_attr, fuzzer_attr].into_iter().flatten() {
             diagnostics.push(PluginDiagnostic {
                 stable_ptr: attr.id_stable_ptr.untyped(),
                 message: "Attribute should only appear on tests.".into(),
             });
         }
     }
-    let ignored = if let Some(attr) = ignore_attr {
-        if !attr.args.is_empty() {
-            diagnostics.push(PluginDiagnostic {
-                stable_ptr: attr.id_stable_ptr.untyped(),
-                message: "Attribute should not have arguments.".into(),
-            });
-        }
-        true
-    } else {
-        false
-    };
-    let available_gas = if let Some(attr) = available_gas_attr {
-        if let [AttributeArg {
-            variant:
-                AttributeArgVariant::Unnamed {
-                    value: ast::Expr::Literal(literal),
-                    ..
-                },
-            ..
-        }] = &attr.args[..]
-        {
-            literal.numeric_value(db).unwrap_or_default().to_usize()
-        } else {
-            diagnostics.push(PluginDiagnostic {
-                stable_ptr: attr.id_stable_ptr.untyped(),
-                message: "Attribute should have a single value argument.".into(),
-            });
-            None
-        }
-    } else {
-        None
-    };
-    let (should_panic, expected_panic_value) = if let Some(attr) = should_panic_attr {
-        if attr.args.is_empty() {
-            (true, None)
-        } else {
-            (
-                true,
-                extract_panic_values(db, attr).on_none(|| {
-                    diagnostics.push(PluginDiagnostic {
-                        stable_ptr: attr.args_stable_ptr.untyped(),
-                        message: "Expected panic must be of the form `expected = <tuple of \
-                                  felts>`."
-                            .into(),
-                    });
-                }),
-            )
-        }
-    } else {
-        (false, None)
-    };
+
     let fork_config = if let Some(attr) = fork_attr {
         if attr.args.is_empty() {
             None
@@ -234,6 +193,7 @@ pub fn try_extract_test_config(
     } else {
         None
     };
+
     let fuzzer_config = if let Some(attr) = fuzzer_attr {
         extract_fuzzer_config(db, attr).on_none(|| {
             diagnostics.push(PluginDiagnostic {
@@ -249,61 +209,21 @@ pub fn try_extract_test_config(
     if !diagnostics.is_empty() {
         return Err(diagnostics);
     }
-    Ok(if test_attr.is_none() {
-        None
-    } else {
-        Some(SingleTestConfig {
+
+    let result = maybe_test_config.map(
+        |TestConfig {
+             available_gas,
+             expectation,
+             ignored,
+         }| SingleTestConfig {
             available_gas,
-            expected_result: if should_panic {
-                ExpectedTestResult::Panics(if let Some(values) = expected_panic_value {
-                    ExpectedPanicValue::Exact(values)
-                } else {
-                    ExpectedPanicValue::Any
-                })
-            } else {
-                ExpectedTestResult::Success
-            },
+            expected_result: expectation.into(),
             ignored,
             fork_config,
             fuzzer_config,
-        })
-    })
-}
-
-/// Tries to extract the relevant expected panic values.
-fn extract_panic_values(db: &dyn SyntaxGroup, attr: &Attribute) -> Option<Vec<Felt252>> {
-    let [AttributeArg {
-        variant:
-            AttributeArgVariant::Named {
-                name,
-                value: panics,
-                ..
-            },
-        ..
-    }] = &attr.args[..]
-    else {
-        return None;
-    };
-    if name != "expected" {
-        return None;
-    }
-    let ast::Expr::Tuple(panics) = panics else {
-        return None;
-    };
-    panics
-        .expressions(db)
-        .elements(db)
-        .into_iter()
-        .map(|value| match value {
-            ast::Expr::Literal(literal) => {
-                Some(literal.numeric_value(db).unwrap_or_default().into())
-            }
-            ast::Expr::ShortString(literal) => {
-                Some(literal.numeric_value(db).unwrap_or_default().into())
-            }
-            _ => None,
-        })
-        .collect::<Option<Vec<_>>>()
+        },
+    );
+    Ok(result)
 }
 
 /// Tries to extract the fork configuration.
@@ -409,6 +329,19 @@ fn extract_fork_config_from_args(db: &dyn SyntaxGroup, attr: &Attribute) -> Opti
         return None;
     };
 
+    let elements: Vec<String> = block_id
+        .path(db)
+        .elements(db)
+        .iter()
+        .map(|e| e.identifier(db).to_string())
+        .collect();
+    if !(elements.len() == 2
+        && elements[0] == "BlockId"
+        && ["Number", "Hash", "Tag"].contains(&elements[1].as_str()))
+    {
+        return None;
+    }
+
     let block_id_type = block_id
         .path(db)
         .elements(db)
@@ -417,49 +350,51 @@ fn extract_fork_config_from_args(db: &dyn SyntaxGroup, attr: &Attribute) -> Opti
         .identifier(db)
         .to_string();
 
-    let block_id = block_id
-        .arguments(db)
-        .args(db)
-        .elements(db)
-        .into_iter()
-        .map(|arg| match arg.arg_clause(db) {
-            ast::ArgClause::Unnamed(unnamed_arg_clause) => Some(unnamed_arg_clause.value(db)),
-            _ => None,
-        })
-        .map(|arg| match arg {
-            Some(ast::Expr::Literal(value)) => match block_id_type.as_str() {
-                "Number" => Some(BlockId::Number(
-                    u64::try_from(value.numeric_value(db).unwrap()).unwrap(),
-                )),
-                "Hash" => Some(BlockId::Hash(
+    let args = block_id.arguments(db).args(db).elements(db);
+    let expr = match args.first()?.arg_clause(db) {
+        ArgClause::Unnamed(unnamed_arg_clause) => Some(unnamed_arg_clause.value(db)),
+        _ => None,
+    }?;
+    let block_id = try_get_block_id(db, &block_id_type, &expr)?;
+
+    Some(RawForkConfig::Params(RawForkParams { url, block_id }))
+}
+
+fn try_get_block_id(db: &dyn SyntaxGroup, block_id_type: &str, expr: &Expr) -> Option<BlockId> {
+    match block_id_type {
+        "Number" => {
+            if let Expr::Literal(value) = expr {
+                return Some(BlockId::Number(
+                    u64::try_from(value.numeric_value(db).unwrap()).ok()?,
+                ));
+            }
+            None
+        }
+        "Hash" => {
+            if let Expr::Literal(value) = expr {
+                return Some(BlockId::Hash(
                     Felt252::from(value.numeric_value(db).unwrap()).to_field_element(),
-                )),
-                _ => None,
-            },
-            Some(ast::Expr::Path(block_tag)) => {
+                ));
+            }
+            None
+        }
+        "Tag" => {
+            if let Expr::Path(block_tag) = expr {
                 let tag = block_tag
                     .elements(db)
                     .last()
                     .unwrap()
                     .identifier(db)
                     .to_string();
-                match tag.as_str() {
+                return match tag.as_str() {
                     "Latest" => Some(BlockId::Tag(BlockTag::Latest)),
                     _ => None,
-                }
+                };
             }
-            _ => None,
-        })
-        .collect::<Vec<_>>();
-
-    if block_id.len() != 1 || block_id[0].is_none() {
-        return None;
+            None
+        }
+        _ => None,
     }
-
-    Some(RawForkConfig::Params(RawForkParams {
-        url,
-        block_id: block_id[0].unwrap(),
-    }))
 }
 
 /// Represents a dependency of a Cairo project
@@ -507,8 +442,13 @@ pub fn collect_tests(
         let mut b = RootDatabase::builder();
         b.with_cfg(CfgSet::from_iter([Cfg::name("test")]));
         b.with_macro_plugin(Arc::new(TestPlugin::default()));
-        b.with_macro_plugin(Arc::new(StarkNetPlugin::default()))
-            .with_inline_macro_plugin(SelectorMacro::NAME, Arc::new(SelectorMacro));
+        b.with_macro_plugin(Arc::new(StarkNetPlugin::default()));
+        b.with_inline_macro_plugin(SelectorMacro::NAME, Arc::new(SelectorMacro));
+        b.with_inline_macro_plugin(GetDepComponentMacro::NAME, Arc::new(GetDepComponentMacro));
+        b.with_inline_macro_plugin(
+            GetDepComponentMutMacro::NAME,
+            Arc::new(GetDepComponentMutMacro),
+        );
         b.with_project_config(project_config);
         b.build()?
     };
@@ -556,15 +496,20 @@ pub fn collect_tests(
         })
         .collect_vec()
         .into_iter()
-        .map(|(test_name, config)| TestCase {
-            name: test_name,
-            available_gas: config.available_gas,
-            ignored: config.ignored,
-            expected_result: config.expected_result,
-            fork_config: config.fork_config,
-            fuzzer_config: config.fuzzer_config,
+        .map(|(test_name, config)| {
+            if config.available_gas.is_some() {
+                bail!("{} - Attribute `available_gas` is not supported: Contract functions execution cost would not be included in the gas calculation.", test_name)
+            };
+            Ok(TestCase {
+                name: test_name,
+                available_gas: config.available_gas,
+                ignored: config.ignored,
+                expected_result: config.expected_result,
+                fork_config: config.fork_config,
+                fuzzer_config: config.fuzzer_config,
+            })
         })
-        .collect();
+        .collect::<Result<Vec<_>>>()?;
 
     let sierra_program = replace_sierra_ids_in_program(db, &sierra_program);
 
