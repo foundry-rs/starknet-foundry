@@ -1037,7 +1037,6 @@ name = "cast"
 version = "0.10.2"
 dependencies = [
  "anyhow",
- "blockifier",
  "cairo-felt",
  "cairo-lang-casm",
  "cairo-lang-runner",
