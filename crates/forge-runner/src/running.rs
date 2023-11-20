@@ -16,6 +16,9 @@ use cairo_vm::types::relocatable::Relocatable;
 use cheatnet::execution::cheatable_syscall_handler::CheatableSyscallHandler;
 use itertools::chain;
 
+use crate::test_case_summary::TestCaseSummary;
+use crate::test_execution_syscall_handler::{TestExecutionState, TestExecutionSyscallHandler};
+use crate::{RunnerConfig, RunnerParams, TestCaseRunnable, ValidatedForkConfig, CACHE_DIR};
 use cairo_lang_casm::hints::Hint;
 use cairo_lang_casm::instructions::Instruction;
 use cairo_lang_runner::casm_run::hint_to_hint_params;
@@ -38,19 +41,10 @@ use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::hash::StarkHash;
 use starknet_api::patricia_key;
 use starknet_api::transaction::Calldata;
-use test_collector::TestCase;
 use tokio::runtime::Runtime;
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
 use url::Url;
-
-use crate::test_case_summary::TestCaseSummary;
-
-use crate::collecting::{TestCaseRunnable, ValidatedForkConfig};
-use crate::test_execution_syscall_handler::TestExecutionSyscallHandler;
-use crate::{RunnerConfig, RunnerParams, CACHE_DIR};
-
-use crate::test_execution_syscall_handler::TestExecutionState;
 
 /// Builds `hints_dict` required in `cairo_vm::types::program::Program` from instructions.
 fn build_hints_dict<'b>(
@@ -78,7 +72,7 @@ fn build_hints_dict<'b>(
     (hints_dict, string_to_hint)
 }
 
-pub(crate) fn run_test(
+pub fn run_test(
     case: Arc<TestCaseRunnable>,
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
@@ -200,13 +194,13 @@ pub(crate) struct ForkInfo {
     pub(crate) latest_block_number: Option<BlockNumber>,
 }
 
-pub(crate) struct RunResultWithInfo {
+pub struct RunResultWithInfo {
     pub(crate) run_result: Result<RunResult, RunnerError>,
     pub(crate) fork_info: ForkInfo,
 }
 
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn run_test_case(
+pub fn run_test_case(
     args: Vec<Felt252>,
     case: &TestCaseRunnable,
     runner: &SierraCasmRunner,
@@ -299,7 +293,7 @@ pub(crate) fn run_test_case(
 
 fn extract_test_case_summary(
     run_result: Result<RunResultWithInfo>,
-    case: &TestCase<ValidatedForkConfig>,
+    case: &TestCaseRunnable,
     args: Vec<Felt252>,
 ) -> Result<TestCaseSummary> {
     match run_result {
