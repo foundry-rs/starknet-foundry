@@ -18,9 +18,8 @@ use smol_str::SmolStr;
 use starknet::core::types::BlockId;
 use std::collections::HashMap;
 use std::sync::Arc;
-use test_collector::FuzzerConfig;
-use test_collector::TestCase;
-use test_collector::{ForkConfig, LinkedLibrary, RawForkParams};
+use test_collector::{ExpectedTestResult, FuzzerConfig};
+use test_collector::{LinkedLibrary, RawForkParams};
 use tokio::sync::mpsc::{channel, Sender};
 use tokio::task::JoinHandle;
 use url::Url;
@@ -48,36 +47,12 @@ pub static BUILTINS: Lazy<Vec<&str>> = Lazy::new(|| {
     ]
 });
 
-#[derive(Debug, PartialEq, Clone)]
-pub struct ForkTarget {
-    name: String,
-    params: RawForkParams,
-}
-
-impl ForkTarget {
-    #[must_use]
-    pub fn new(name: String, params: RawForkParams) -> Self {
-        Self { name, params }
-    }
-
-    #[must_use]
-    pub fn name(&self) -> &str {
-        &self.name
-    }
-
-    #[must_use]
-    pub fn params(&self) -> &RawForkParams {
-        &self.params
-    }
-}
-
 /// Configuration of the test runner
 #[derive(Debug, PartialEq)]
 #[non_exhaustive]
 pub struct RunnerConfig {
     pub workspace_root: Utf8PathBuf,
     pub exit_first: bool,
-    pub fork_targets: Vec<ForkTarget>,
     pub fuzzer_runs: u32,
     pub fuzzer_seed: u64,
 }
@@ -88,14 +63,12 @@ impl RunnerConfig {
     pub fn new(
         workspace_root: Utf8PathBuf,
         exit_first: bool,
-        fork_targets: Vec<ForkTarget>,
         fuzzer_runs: u32,
         fuzzer_seed: u64,
     ) -> Self {
         Self {
             workspace_root,
             exit_first,
-            fork_targets,
             fuzzer_runs,
             fuzzer_seed,
         }
@@ -150,6 +123,16 @@ pub enum RunnerStatus {
 }
 
 #[derive(Debug, Clone)]
+pub struct TestCaseRunnable {
+    pub name: String,
+    pub available_gas: Option<usize>,
+    pub ignored: bool,
+    pub expected_result: ExpectedTestResult,
+    pub fork_config: Option<ValidatedForkConfig>,
+    pub fuzzer_config: Option<FuzzerConfig>,
+}
+
+#[derive(Debug, Clone)]
 #[non_exhaustive]
 pub struct ValidatedForkConfig {
     url: Url,
@@ -174,18 +157,14 @@ impl TryFrom<RawForkParams> for ValidatedForkConfig {
     }
 }
 
-impl ForkConfig for ValidatedForkConfig {}
-
-pub type TestCaseRunnable = TestCase<ValidatedForkConfig>;
-
 #[derive(Debug, Clone)]
 #[non_exhaustive]
-pub struct CompiledTestCrate {
+pub struct CompiledTestCrateRunnable {
     sierra_program: Program,
     test_cases: Vec<TestCaseRunnable>,
 }
 
-impl CompiledTestCrate {
+impl CompiledTestCrateRunnable {
     #[must_use]
     pub fn new(sierra_program: Program, test_cases: Vec<TestCaseRunnable>) -> Self {
         Self {
@@ -206,7 +185,7 @@ pub enum TestCrateRunResult {
 }
 
 pub async fn run_tests_from_crate(
-    tests: Arc<CompiledTestCrate>,
+    tests: Arc<CompiledTestCrateRunnable>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     tests_filter: &impl TestCaseFilter,
