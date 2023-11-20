@@ -1,5 +1,5 @@
 use blockifier::abi::constants;
-use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector::StorageWrite;
+use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector::{StorageRead, StorageWrite};
 use blockifier::execution::entry_point::ExecutionResources;
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources as VmExecutionResources;
 use std::collections::HashMap;
@@ -41,7 +41,7 @@ fn call_resources_simple() {
     assert_eq!(
         output.resource_report,
         ResourceReport {
-            gas: 2.26,
+            gas: 2.16,
             resources: ExecutionResources {
                 vm_resources: VmExecutionResources {
                     n_steps: 126,
@@ -51,7 +51,7 @@ fn call_resources_simple() {
                         2
                     )]),
                 },
-                syscall_counter: Default::default()
+                syscall_counter: HashMap::from([(StorageWrite, 1), (StorageRead, 1)])
             }
         }
     );
