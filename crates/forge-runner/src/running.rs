@@ -208,11 +208,9 @@ pub fn run_test_case(
     runner_params: &Arc<RunnerParams>,
     _send_shut_down: &Sender<()>,
 ) -> Result<RunResultWithInfo> {
-    let available_gas = if let Some(available_gas) = &case.available_gas {
-        Some(*available_gas)
-    } else {
-        Some(usize::MAX)
-    };
+    assert!(&case.available_gas.is_none());
+    let available_gas = Some(usize::MAX);
+    
     let func = runner.find_function(case.name.as_str()).unwrap();
     let initial_gas = runner
         .get_initial_available_gas(func, available_gas)
