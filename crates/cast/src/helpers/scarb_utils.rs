@@ -3,11 +3,11 @@ use camino::{Utf8Path, Utf8PathBuf};
 use scarb_metadata;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::default::Default;
 use std::env;
 use std::fs::canonicalize;
 use std::process::{Command, Stdio};
 use std::str::FromStr;
-use std::default::Default;
 
 #[derive(Default, Clone, Copy)]
 pub struct ScarbOpts {
@@ -294,13 +294,17 @@ mod tests {
 
     #[test]
     fn test_get_scarb_metadata() {
-        let metadata = get_scarb_metadata(&"tests/data/contracts/map/Scarb.toml".into(), Default::default());
+        let metadata = get_scarb_metadata(
+            &"tests/data/contracts/map/Scarb.toml".into(),
+            Default::default(),
+        );
         assert!(metadata.is_ok());
     }
 
     #[test]
     fn test_get_scarb_metadata_not_found() {
-        let metadata_err = get_scarb_metadata(&"Scarb.toml".into(), Default::default()).unwrap_err();
+        let metadata_err =
+            get_scarb_metadata(&"Scarb.toml".into(), Default::default()).unwrap_err();
         assert!(metadata_err
             .to_string()
             .contains("Failed to read Scarb.toml manifest file"));

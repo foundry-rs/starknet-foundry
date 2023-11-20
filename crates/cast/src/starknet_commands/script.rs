@@ -26,7 +26,9 @@ use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cairo_vm::vm::vm_core::VirtualMachine;
 use camino::Utf8PathBuf;
 use cast::helpers::response_structs::ScriptResponse;
-use cast::helpers::scarb_utils::{get_package_metadata, get_scarb_manifest_for, get_scarb_metadata, ScarbOpts};
+use cast::helpers::scarb_utils::{
+    get_package_metadata, get_scarb_manifest_for, get_scarb_metadata, ScarbOpts,
+};
 use cheatnet::cheatcodes::EnhancedHintError;
 use clap::command;
 use clap::Args;
@@ -297,7 +299,7 @@ fn compile_script(script_path: &Utf8PathBuf) -> Result<Utf8PathBuf> {
         .env("SCARB_MANIFEST_PATH", &scarb_manifest_path)
         .run()?;
 
-    let opts = ScarbOpts{ with_deps: true };
+    let opts = ScarbOpts { with_deps: true };
     let metadata = get_scarb_metadata(&scarb_manifest_path, opts)?;
     let package_metadata = get_package_metadata(&metadata, &scarb_manifest_path)?;
 
