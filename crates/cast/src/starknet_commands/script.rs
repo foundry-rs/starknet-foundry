@@ -42,7 +42,7 @@ use starknet::providers::JsonRpcClient;
 use tokio::runtime::Runtime;
 
 #[derive(Args)]
-#[command(about = "")]
+#[command(about = "Execute a deployment script")]
 pub struct Script {
     /// Path to the package with the script folder
     #[clap(short, long)]
