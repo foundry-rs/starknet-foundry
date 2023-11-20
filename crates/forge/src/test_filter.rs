@@ -97,7 +97,7 @@ impl TestsFilter {
             cases = match get_cached_failed_tests_names(&self.cache_dir_path)? {
                 Some(result) => cases
                     .into_iter()
-                    .filter(|tc| result.iter().any(|name| name == &tc.name))
+                    .filter(|tc| (result.failed).iter().any(|name| name == &tc.name))
                     .collect(),
                 None => cases,
             }

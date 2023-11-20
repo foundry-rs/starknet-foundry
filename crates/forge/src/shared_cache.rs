@@ -4,12 +4,19 @@ pub const PREV_TESTS_FAILED: &str = ".prev_tests_failed";
 use anyhow::{Ok, Result};
 use camino::Utf8PathBuf;
 use scarb_metadata::MetadataCommand;
+use serde::{Deserialize, Serialize};
+use serde_json::json;
 use std::fs::{self, File};
 use std::io::{BufRead, BufReader, BufWriter, Write};
 
 use crate::test_case_summary::TestCaseSummary;
+#[derive(Serialize, Deserialize)]
+pub struct RerunFailed {
+    pub failed: Vec<String>,
+    pub passed: Vec<String>,
+}
 
-pub fn get_cached_failed_tests_names(cache_dir_path: &Utf8PathBuf) -> Result<Option<Vec<String>>> {
+pub fn get_cached_failed_tests_names(cache_dir_path: &Utf8PathBuf) -> Result<Option<RerunFailed>> {
     let tests_failed_path = cache_dir_path.join(PREV_TESTS_FAILED);
     if !tests_failed_path.exists() {
         return Ok(None);
@@ -17,14 +24,17 @@ pub fn get_cached_failed_tests_names(cache_dir_path: &Utf8PathBuf) -> Result<Opt
 
     let file = File::open(tests_failed_path)?;
     let buf: BufReader<File> = BufReader::new(file);
-    let tests: Vec<String> = buf
+    let tests: String = buf
         .lines()
         .map(|l| l.expect("Could not parse line"))
         .collect();
-    if tests.is_empty() {
+
+    let json: RerunFailed = serde_json::from_str(&tests)?;
+
+    if json.failed.is_empty() {
         return Ok(None);
     }
-    Ok(Some(tests))
+    Ok(Some(json))
 }
 
 fn get_or_create_cache_dir(cache_dir_path: &Utf8PathBuf) -> Result<&Utf8PathBuf> {
@@ -33,18 +43,22 @@ fn get_or_create_cache_dir(cache_dir_path: &Utf8PathBuf) -> Result<&Utf8PathBuf>
 }
 
 pub fn cache_failed_tests_names(
-    all_failed_tests: &[TestCaseSummary],
+    failed_tests_names: &[String],
+    all_passed_tests_names: &[String],
     cache_dir_path: &Utf8PathBuf,
 ) -> Result<()> {
     let tests_failed_path = get_or_create_cache_dir(cache_dir_path)?.join(PREV_TESTS_FAILED);
     dbg!(&tests_failed_path);
     let file = File::create(tests_failed_path)?;
     let mut file = BufWriter::new(file);
-    for line in all_failed_tests {
-        if let TestCaseSummary::Failed { name, .. } = line {
-            writeln!(file, "{name}")?;
-        }
-    }
+
+    let returned_failed = RerunFailed {
+        failed: failed_tests_names.to_vec(),
+        passed: all_passed_tests_names.to_vec(),
+    };
+
+    let string = serde_json::to_string(&returned_failed)?;
+    file.write(string.as_bytes())?;
 
     Ok(())
 }

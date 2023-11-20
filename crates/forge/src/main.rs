@@ -14,7 +14,7 @@ use tokio::runtime::Builder;
 
 use forge::scarb::config::ForgeConfig;
 use forge::shared_cache::{cache_failed_tests_names, clean_cache, CACHE_DIR};
-use forge::test_case_summary::TestCaseSummary;
+use forge::test_case_summary::{self, TestCaseSummary};
 use forge::test_filter::TestsFilter;
 use forge::{pretty_printing, RunnerConfig, RunnerParams, FUZZER_RUNS_DEFAULT};
 use forge::{run, TestCrateSummary};
@@ -112,6 +112,18 @@ fn extract_failed_tests(tests_summaries: Vec<TestCrateSummary>) -> Vec<TestCaseS
         .collect()
 }
 
+fn extract_passed_tests_names(tests_summaries: &Vec<TestCrateSummary>) -> Vec<String> {
+    tests_summaries
+        .into_iter()
+        .flat_map(|test_file_summary| test_file_summary.test_case_summaries.clone())
+        .filter(|test_case_summary| matches!(test_case_summary, TestCaseSummary::Passed { .. }))
+        .map(|test_case_summary| match test_case_summary {
+            TestCaseSummary::Passed { name, .. } => name,
+            _ => unreachable!(),
+        })
+        .collect()
+}
+
 fn combine_configs(
     workspace_root: &Utf8Path,
     exit_first: bool,
@@ -173,6 +185,7 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
 
     let all_failed_tests = rt.block_on({
         rt.spawn(async move {
+            let mut all_passed_tests_names = vec![];
             let mut all_failed_tests = vec![];
             for package in &packages {
                 let forge_config = config_from_scarb_for_package(&scarb_metadata, &package.id)?;
@@ -218,10 +231,25 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                 )
                 .await?;
 
+                let mut passed_tests_names = extract_passed_tests_names(&tests_file_summaries);
                 let mut failed_tests = extract_failed_tests(tests_file_summaries);
+                all_passed_tests_names.append(&mut passed_tests_names);
                 all_failed_tests.append(&mut failed_tests);
             }
-            cache_failed_tests_names(&all_failed_tests, &workspace_root.join(CACHE_DIR))?;
+
+            let failed_tests_names: Vec<String> = all_failed_tests
+                .clone()
+                .into_iter()
+                .map(|test_case_summary| match test_case_summary {
+                    TestCaseSummary::Failed { name, .. } => name,
+                    _ => unreachable!(),
+                })
+                .collect();
+            cache_failed_tests_names(
+                &failed_tests_names,
+                &all_passed_tests_names,
+                &workspace_root.join(CACHE_DIR),
+            )?;
 
             Ok::<_, anyhow::Error>(all_failed_tests)
         })
