@@ -7,6 +7,12 @@ use std::env;
 use std::fs::canonicalize;
 use std::process::{Command, Stdio};
 use std::str::FromStr;
+use std::default::Default;
+
+#[derive(Default, Clone, Copy)]
+pub struct ScarbOpts {
+    pub with_deps: bool,
+}
 
 #[derive(Deserialize, Serialize, Clone, Debug, Default)]
 pub struct CastConfig {
@@ -77,7 +83,7 @@ pub fn get_scarb_manifest_for(dir: &Utf8Path) -> Result<Utf8PathBuf> {
 
 pub fn get_scarb_metadata(
     manifest_path: &Utf8PathBuf,
-    with_deps: bool,
+    opts: ScarbOpts,
 ) -> Result<scarb_metadata::Metadata> {
     which::which("scarb")
         .context("Cannot find `scarb` binary in PATH. Make sure you have Scarb installed https://github.com/software-mansion/scarb")?;
@@ -85,7 +91,7 @@ pub fn get_scarb_metadata(
     let mut binding = scarb_metadata::MetadataCommand::new();
     let mut command = binding.inherit_stderr().manifest_path(manifest_path);
 
-    if !with_deps {
+    if !opts.with_deps {
         command = command.no_deps();
     }
 
@@ -157,7 +163,7 @@ pub fn parse_scarb_config(
         return Ok(CastConfig::default());
     }
 
-    let metadata = get_scarb_metadata(&manifest_path, false)?;
+    let metadata = get_scarb_metadata(&manifest_path, Default::default())?;
 
     match get_package_tool_sncast(&metadata) {
         Ok(package_tool_sncast) => {
@@ -288,13 +294,13 @@ mod tests {
 
     #[test]
     fn test_get_scarb_metadata() {
-        let metadata = get_scarb_metadata(&"tests/data/contracts/map/Scarb.toml".into(), false);
+        let metadata = get_scarb_metadata(&"tests/data/contracts/map/Scarb.toml".into(), Default::default());
         assert!(metadata.is_ok());
     }
 
     #[test]
     fn test_get_scarb_metadata_not_found() {
-        let metadata_err = get_scarb_metadata(&"Scarb.toml".into(), false).unwrap_err();
+        let metadata_err = get_scarb_metadata(&"Scarb.toml".into(), Default::default()).unwrap_err();
         assert!(metadata_err
             .to_string()
             .contains("Failed to read Scarb.toml manifest file"));
