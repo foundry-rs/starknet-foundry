@@ -280,7 +280,7 @@ snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry", tag = "v
 
 ## [0.1.1] - 2023-07-26
 
-### Forge & cast
+### Forge & Cast
 
 #### Fixed
 
@@ -289,7 +289,7 @@ snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry", tag = "v
 
 ## [0.1.0] - 2023-07-19
 
-### Forge & cast
+### Forge & Cast
 
 #### Added
 

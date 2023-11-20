@@ -77,7 +77,7 @@ Forge achieves performance comparable to the Cairo Test Runner with improved use
 
 To learn more about our benchmark methodology check [here](./benchmarks/).
 
-## Getting help
+## Getting Help
 
 You haven't found your answer to your question in
 the [Starknet Foundry Book](https://foundry-rs.github.io/starknet-foundry/)?

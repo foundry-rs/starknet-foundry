@@ -1,4 +1,4 @@
-# Contribution guideline
+# Contribution Guideline
 
 Starknet Foundry is under active development and is open for contributions!
 Want to get started?
@@ -8,12 +8,12 @@ Need some guidance?
 Reach out to other developers on [Telegram](https://t.me/+d8ULaPxeRqlhMDNk) or open
 a [GitHub discussion](https://github.com/foundry-rs/starknet-foundry/discussions)!
 
-### Environment setup
+### Environment Setup
 
 See [development guide](https://foundry-rs.github.io/starknet-foundry/development/environment-setup.html) in Starknet
 Foundry book for environment setup.
 
-### Running tests and checks
+### Running Tests and Checks
 
 To run tests scripts, you have to install:
 
@@ -67,17 +67,17 @@ to add hasn't been already discussed.
 We also appreciate creating a feature request before making a contribution, so it can be discussed before you get to
 work.
 
-### Writing tests
+### Writing Tests
 
 Please make sure the feature you are implementing is thoroughly tested with automatic tests.
 You can check existing tests in the repository to see the recommended approach to testing.
 
-### Breaking changes
+### Breaking Changes
 
 If the change you are introducing is changing or breaking the behavior of any already existing features, make sure to
 include that information in the pull request description.
 
-### Pull request size
+### Pull Request Size
 
 Try to make your pull request self-contained, only introducing the necessary changes.
 If your feature is complicated,

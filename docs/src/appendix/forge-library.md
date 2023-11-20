@@ -1,4 +1,4 @@
-# Library functions references
+# Library Functions References
 
 * [`declare`](forge-library/declare.md) - declares a contract and returns a struct on
   which [`precalculate_address`](forge-library/precalculate_address.md) and [`deploy`](forge-library/deploy.md) can be

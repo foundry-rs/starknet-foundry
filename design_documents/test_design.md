@@ -13,7 +13,7 @@ Current test design in Starknet Forge has some issues:
 
 Propose a solution of test design that solves most of the aforementioned issues.
 
-## Proposed solution
+## Proposed Solution
 
 Tests should be contracts (just like in the early days of Protostar).
 Basically, the code in test should behave as if it was a function called in an invoke transaction.
@@ -24,7 +24,7 @@ Solutions to aforementioned problems:
 3. See next [section](#testing-internal-functions).
 4. The confusion concerning what actually happens when using dispatchers is cleared: we just call another contract as if we were in an invoke transaction.
 
-## Testing internal functions
+## Testing internal Functions
 
 When implementing contracts, a function called `contract_state_for_testing` is created just before compilation to Sierra/CASM, just like with dispatchers.
 It can be used to obtain the state (storage) of the current (to be tested) contract. Since each test is a contract, now internal functions can be tested

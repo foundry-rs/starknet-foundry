@@ -1,4 +1,4 @@
-# Performing multicall
+# Performing Multicall
 
 ## Overview
 

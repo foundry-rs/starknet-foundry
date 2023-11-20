@@ -1,6 +1,6 @@
-# Cairo deployment scripts
+# Cairo Deployment Scripts
 
-## Table of contents
+## Table of Contents
 
 * [Context](#context)
 * [Goal](#goal)
@@ -26,29 +26,29 @@ contracts.
 
 Propose a solution with an example syntax, that would allow to write deployment scripts in cairo.
 
-## Considered solution
+## Considered Solution
 
 This section is split into smaller subsections describing things we will need to tackle while implementing the solution.
 
-### sncast commands
+### sncast Commands
 Specific sncast commands (declare, deploy, account) could be imported as regular functions to the scipts, and called as such.
 Our functions return specific types (structs defined in `cast/src/helpers/response_structs.rs`), that make retrieving
 essential information easier, so we should be good on that front.
 
 The commands would have to be implemented in the same manner as forge's cheatcodes.
 
-### sncast config
+### sncast Config
 We should allow for all flags passed to sncast to be propagated to the script. CastConfig should also be importable
 and usable from script if someone wishes so, but we should not require it. That means, we might have to review our subcommands
 and if some of them requires it directly (`account create` is one), we should try to get rid of this dependency. 
 
-### Interacting with contract
+### Interacting with Contract
 We will use contracts dispatchers to be able to call/invoke its functions directly 
 (e.g. if contract named `mycontract` has a function `myfunction`, we should be able to just do `mycontractDispatcher.myfunction();`).
 We should also support our subcommands (`invoke`, `call`) to call/invoke so dispatchers are able to use them, and for calling/invoking 
 contracts without dispatchers.
 
-### Running the script
+### Running the Script
 The script would essentially run an entrypoint function - `main`. Inside our script subcommand, we will have to compile 
 the cairo script file using a custom builder/extension, and then run it using some form of a custom runner - all similarly
 to how it is done in snforge.
@@ -79,7 +79,7 @@ that sets up the devnet to be used for dry running for users.
 The behaviour would be changed with `--broadcast` flag, that would actually execute needed transactions. We should also
 include a warning message about potential incurring cost.
 
-### Error handling
+### Error Handling
 If the transaction fails, we should put all the relevant info about it to the state file, output log information and stop
 script execution.
 If the script fails (for any reason that is not connected to transactions - eg rpc node down), we should output relevant
@@ -220,7 +220,7 @@ Picking those would ensure us that:
 
 
 
-### Example script
+### Example Script
 An example deployment script could look like this:
 
 ```cairo
@@ -259,7 +259,7 @@ fn main() {
 }
 ```
 
-### Example state file
+### Example State File
 The state file by default should be written to the current working directory, with a name `<script file name>.state.json`.
 Its schema could look like this:
 
@@ -325,7 +325,7 @@ the transaction receipt and checking its status etc)
 
 If it makes sense, some of the flags could be included in Scarb.toml config file.
 
-## Proposed steps/tasks
+## Proposed Steps/Tasks
 
 MVP:
   - allow for writing scripts using dispatchers and imported cast subcommand functions:

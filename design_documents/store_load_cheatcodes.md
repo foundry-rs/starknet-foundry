@@ -9,14 +9,14 @@ without re-deploying the contract.
 Also - some specific storage variables may not be exposed directly to the user via the contracts' interface, since it 
 would bloat the interface and would not be needed for anything but tests (which is generally an antipattern in programming).
 
-## Existing solutions
+## Existing Solutions
 
 The [store](https://book.getfoundry.sh/cheatcodes/store) and [load](https://book.getfoundry.sh/cheatcodes/load) cheatcodes known from foundry,
 provide the functionality to store and load memory in the VM for the given contract. 
 Having the correct format of data (conversion), is up to the user, since the interface accepts bytes, and returns bytes as well.
 
 
-## Proposed solution
+## Proposed Solution
 
 My proposal would be to use the generated `contract_state_for_testing` and leverage it's typed structure, to 
 enable the users to get the address of the variable, via the `<var_name>.address(<params>)` function, and 
@@ -25,12 +25,12 @@ implement a `store/load` functions, which use the:
 - Calculated variable address
 - Value (in case of `store`)
 
-## Caveats & pitfalls of the approach
+## Caveats & Pitfalls of the Approach
 
 1. Constructing `contract_state_for_testing` to only calculate the address of the variable
 2. Implementing & importing `storage_access` for the objects we want to write (needs to be implemented anyway, just a bit inconvenient)
 
-## Example usage
+## Example Usage
 ### Contract
 ```cairo
 #[starknet::contract]

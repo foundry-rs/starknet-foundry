@@ -10,7 +10,7 @@ and added to your `PATH` environment variable.
 You can find what version of Scarb is compatible with your version of Starknet Foundry
 in [release notes](https://github.com/foundry-rs/starknet-foundry/releases).
 
-### Install via installation script
+### Install Via Installation Script
 
 1. Open a terminal and run the following command:
 
@@ -27,7 +27,7 @@ You can also specify a version you wish to install:
 curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/scripts/install.sh | sh -s -- -v 0.3.0
 ```
 
-## How to build Starknet Foundry from source code
+## How to Build Starknet Foundry From Source Code
 
 If you are unable to install Starknet Foundry using the instructions above, you can try building it from
 the [source code](https://github.com/foundry-rs/starknet-foundry) as follows:

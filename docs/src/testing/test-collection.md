@@ -11,7 +11,7 @@ Starknet Forge will collect tests only from these places:
 these have to be in a module annotated with `#[cfg(test)]`
 - files inside the [`tests`](#the-tests-directory) directory
 
-## The *tests* directory
+## The *tests* Directory
 
 Forge collects tests from `tests` directory.
 Depending on the presence of `tests/lib.cairo` file, the behavior of the test collector will be different.
@@ -86,7 +86,7 @@ mod utils;
 
 tests from `tests/test_contract.cairo`, `tests/common.cairo` and `tests/common/utils.cairo` will be collected.
 
-### Sharing code between tests
+### Sharing Code Between Tests
 
 Sometimes you may want a share some code between tests to organize them. 
 The package structure of tests makes it easy! 

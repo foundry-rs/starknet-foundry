@@ -1,16 +1,16 @@
-# `StarkCurve` signatures
+# `StarkCurve` Signatures
 
 ## Context
 
 Some users would like to have a way of generating and signing with the `stark curve`. It would be useful for testing
 custom account implementations. 
 
-## Existing solutions
+## Existing Solutions
 
 Currently, it is possible only with the snForge I/O utilities which does not seem flexible. Also, to import such a signature
 users have to generate it outside the Cairo and save it somewhere. Cheatcodes should simplify that process.
 
-## Proposed solution
+## Proposed Solution
 
 My proposal would be to introduce a `StarkCurveKeyPair` struct which would implement `sign` and `verify` methods.
 
@@ -27,7 +27,7 @@ trait StarkCurveKeyPairTrait {
 }
 ```
 
-## Example usage
+## Example Usage
 
 ```cairo
 use snforge_std::{StarkCurveKeyPair, StarkCurveKeyPairTrait};

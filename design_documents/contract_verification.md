@@ -1,4 +1,4 @@
-# Cairo contract verification via block explorers
+# Cairo Contract Verification Via Block Explorers
 
 ## Context
 
@@ -8,7 +8,7 @@ Cairo smart contracts deployed to Starknet are only visible as a Cairo Bytecode 
 
 This proposal includes an extension to `sncast` utility enabling a contract owner to perform contract verification against a selected Blockchain Explorer API. We propose to create a first, reference implementation for the Voyager APIs.
 
-## Proposed solution
+## Proposed Solution
 
 We propose to design a dedicated `verify` command for the `sncast` tool, and add a mechanism whereby this command can be implemented for various Blockchain Explorers. We define a "generic" contract verification interface and propose to implement the interface by "adapters" specific to respective explorers. 
 
@@ -54,7 +54,7 @@ Options are:
  - mainnet - for verification at mainnet
  - goerli -  for verification on testnet
 
-### Contract verification interface
+### Contract Verification Interface
 
 To implement contract verification for a specific explorer, it is required to implement a generic interface (request/response), as described below. The data structures proposed can be eventually extended to cater for detailed requirements of subsequent explorer adapters.
 
@@ -73,7 +73,7 @@ To implement contract verification for a specific explorer, it is required to im
   - `ErrorMessage` - `String`
   - `ErrorDetail` - `String`
 
-### Voyager API adapter plugin
+### Voyager API Adapter Plugin
 
 A sample request in the Voyager API adapter implementation will look as follows: 
 ```rust

@@ -1,9 +1,9 @@
-# Writing tests
+# Writing Tests
 
 Forge lets you test standalone functions from your smart contracts. This technique is referred to as unit testing. You
 should write as many unit tests as possible as these are faster than integration tests.
 
-## Writing your first test
+## Writing your First Test
 
 First, add the following code to the `src/lib.cairo` file:
 
@@ -36,7 +36,7 @@ Running 1 test(s) from src/
 Tests: 1 passed, 0 failed, 0 skipped
 ```
 
-## Failing tests
+## Failing Tests
 
 If your code panics, the test is considered failed. Here's an example of a failing test.
 
@@ -72,7 +72,7 @@ Failures:
     package_name::tests::failing
 ```
 
-## Expected failures
+## Expected Failures
 
 Sometimes you want to mark a test as expected to fail. This is useful when you want to verify that an action fails as
 expected.
@@ -98,7 +98,7 @@ Running 1 test(s) from tests/
 Tests: 1 passed, 0 failed, 0 skipped
 ```
 
-## Ignoring some tests unless specifically requested
+## Ignoring Some Tests Unless Specifically Requested
 
 Sometimes you may have tests that you want to exclude during most runs of `snforge test`.
 You can achieve it using `#[ignore]` - tests marked with this attribute will be skipped by default.

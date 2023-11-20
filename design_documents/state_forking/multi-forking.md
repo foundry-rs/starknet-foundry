@@ -10,7 +10,7 @@ Foundry provides a way of interacting with multiple networks inside a single tes
 
 Above features will require us to change currently implemented `CheatnetState`.
 
-## New CheatnetState interface
+## New CheatnetState Interface
 
 ![New CheatnetState interface](./new_CheatnetState_interface.png)
 
@@ -29,7 +29,7 @@ It appears that since our tests are contracts we can abandon `CachedState` and `
 We would have to verify this idea, but if it is double we could create some class that implements `State` trait from blockifier
 and keep it as a `blockifier_state`.
 
-## Interacting with multiple forks (Cheatnet side)
+## Interacting with Multiple Forks (Cheatnet Side)
 
 Let's split common fork interaction into parts:
 
@@ -53,7 +53,7 @@ by simply implementing `StateReader` for the `StateCache`. It would search for a
 - check if contract is available in the forked network (perform call to node) - if so return it
 - throw an error
 
-## Required actions
+## Required Actions
 
 - verify if it is possible to get rid of methods using `CachedState`
 - create `StarknetState` (name can be changed) struct which will implement `State` trait

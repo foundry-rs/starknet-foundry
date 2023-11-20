@@ -1,4 +1,4 @@
-# Calling contracts
+# Calling Contracts
 
 ## Overview
 
@@ -14,7 +14,7 @@ For a detailed CLI description, see the [call command reference](../appendix/cas
 
 ## Examples
 
-### General example
+### General Example
 
 ```shell
 $ sncast \
@@ -31,7 +31,7 @@ response: [0x1, 0x23, 0x4]
 > 📝 **Note**
 > Call does not require passing account-connected parameters (`account` and `accounts-file`) because it doesn't create a transaction.
 
-### Passing `block-id` argument
+### Passing `block-id` Argument
 
 You can call a contract at the specific blok by passing `--block-id` argument.
 

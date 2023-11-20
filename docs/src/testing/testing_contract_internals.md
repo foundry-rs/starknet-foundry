@@ -9,7 +9,7 @@ Since every test is treated like a contract, using the aforementioned pattern yo
 - functions performing specific operations on the contracts' storage or context data
 - library calls directly in the tests
 
-## Utilities For testing internals
+## Utilities For testing Internals
 To facilitate such use cases, we have a handful of utilities which make a test behave like a contract. 
 
 ### `contract_state_for_testing()` - State of Test Contract
@@ -58,7 +58,7 @@ It is useful, when you want to:
 - Spy for events emitted in the test
 
 Example usages:
-#### 1. Mocking the context info
+#### 1. Mocking the Context Info
 Example for `roll`, same can be implemented for `prank`/`spoof`/`warp` etc.
 
 ```rust
@@ -84,7 +84,7 @@ fn test_roll_test_state() {
     assert(new_block_number == old_block_number, 'Block num did not change back');
 }
 ```
-#### 2. Spying for events
+#### 2. Spying for Events
 You can use both `starknet::emit_event_syscall`, and the spies will capture the events,
 emitted in a `#[test]` function, if you pass the `test_address()` as a spy parameter (or spy on all events).
 
@@ -174,7 +174,7 @@ fn test_expect_events_simple() {
 }
 ```
 
-## Using library calls with the test state context
+## Using Library Calls With the Test State Context
 
 Using the above utilities, you can avoid deploying a mock contract, to test a `library_call` with a `LibraryCallDispatcher`.
 

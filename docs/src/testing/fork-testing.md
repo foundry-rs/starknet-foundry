@@ -1,4 +1,4 @@
-# Fork testing
+# Fork Testing
 
 Forge supports testing in a forked environment. Each test can fork the state of a specified real
 network and perform actions on top of it.
@@ -11,7 +11,7 @@ There are two ways of configuring a fork:
 - by specifying `url` and `block_id` parameters in the `#[fork(...)]` attribute
 - or by passing a fork name defined in your `Scarb.toml` to the `#[fork(...)]` attribute
 
-## Configure a fork in the attribute
+## Configure a Fork in the Attribute
 
 It is possible to pass `url` and `block_id` arguments to the `fork` attribute:
 - `url` - RPC URL (short string)
@@ -42,7 +42,7 @@ fn test_using_forked_state() {
 
 Once such a configuration is passed, it is possible to use state and contracts defined on the specified network.
 
-## Configure fork in the `Scarb.toml`
+## Configure Fork in the `Scarb.toml`
 
 Although passing named arguments works fine, you have to copy-paste it each time you want to use
 the same fork in tests.

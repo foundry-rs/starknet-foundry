@@ -33,7 +33,7 @@ the address in advance with the current cheatcodes.
 
 Propose a solution that will allow knowing the address of a contract before the deployment.
 
-## Considered solutions
+## Considered Solutions
 
 ### Require Calling the `prepare` Cheatcode Before Every Deployment
 
@@ -73,7 +73,7 @@ That will use the same method of calculating the contract address as `deploy` us
 This way the user will have an ability to know the address of the contract that will be deployed, and the current
 deployment flow will remain unchanged.
 
-#### Known problems with this solution
+#### Known Problems with this Solution
 
 For the address returned by `precalculate_address` to match the address from `deploy`, the user will have to
 call `precalculate_address` immediately before the deployment or at least before any other calls to `deploy` as the
@@ -81,7 +81,7 @@ internal counter will then be incremented.
 
 This could be remedied by having separate counters for all `class_hashe`es, but it will still remain a limiting factor.
 
-#### Example usage
+#### Example Usage
 
 ```cairo
 mod HelloStarknet {
@@ -132,7 +132,7 @@ fn call_and_invoke() {
 }
 ```
 
-## Proposed solution
+## Proposed Solution
 
 Change the current deployment flow, so it can better facilitate precalculating of contract addresses.
 
@@ -167,11 +167,11 @@ Both `precalculate_address` and `deploy` should use the same way of calculating 
 Introduce the same salt counter as [discussed here](#salt-counter).
 This will allow deterministic address calculation and deploying of multiple instances of the same contract.
 
-### Known problems with this solution
+### Known Problems with this Solution
 
 Same problems as [indicated here](#known-problems-with-this-solution) apply to Proposed Solution 2 as well.
 
-### Example usage
+### Example Usage
 
 ```cairo
 mod HelloStarknet {

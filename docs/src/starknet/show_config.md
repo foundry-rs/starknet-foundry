@@ -1,4 +1,4 @@
-# Printing current configuration
+# Printing Current Configuration
 
 ## Overview
 
@@ -11,7 +11,7 @@ replace any subcommand (and its parameters) with `show-config` and it will show 
 
 ## Examples
 
-### General example
+### General Example
 
 ```shell
 $ sncast \

@@ -1,4 +1,4 @@
-# Cast CLI reference
+# Cast CLI Reference
 
 * [common flags](./cast/common.md)
 * [account](./cast/account/account.md)

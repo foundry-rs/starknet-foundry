@@ -24,14 +24,14 @@ let file_data = read_array_from_file('file.txt').unwrap();
 assert(*array[0] == *file_data[0] && *array[1] == *file_data[1], 'arrays are not equal');
 ```
 
-## Proposed solution
+## Proposed Solution
 
 Create traits that are responsible for reading data from a file and loading it into Cairo memory
 as an array of felts, returning a Result if something goes wrong (file does not exist, short string is too long, etc.).
 Then the user can deserialize it themselves to the desired structure 
 as described in [Cairo Book](https://book.cairo-lang.org/appendix-03-derivable-traits.html#serializing-with-serde).
 
-### Supported type of files
+### Supported Type of Files
 
 For now, two types of files would be supported (in the future we can support also CSV, TOML, etc.):
 - plain text files with space-separated felts like this
@@ -52,7 +52,7 @@ For now, two types of files would be supported (in the future we can support als
 ```
 Note that short strings have to be in double quotes here due to JSON grammar definition.
 
-### User interface
+### User Interface
 ```
 // struct to store path of the file
 struct File {

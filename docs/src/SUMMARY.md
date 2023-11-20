@@ -2,7 +2,7 @@
 
 [Introduction](./README.md)
 
-# Getting started
+# Getting Started
 
 * [Installation](getting-started/installation.md)
 * [First Steps with Starknet Foundry](getting-started/first-steps.md)
@@ -12,7 +12,7 @@
 
 * [Project Configuration](projects/configuration.md)
 
-# Forge overview
+# Forge Overview
 
 * [Running Tests](testing/running-tests.md)
 * [Writing Tests](testing/testing.md)
@@ -24,7 +24,7 @@
 * [Fuzz Testing](testing/fuzz-testing.md)
 * [Test Collection](testing/test-collection.md)
 
-# Cast overview
+# Cast Overview
 
 * [Outline](starknet/index.md)
 * [Creating And Deploying Accounts](starknet/account.md)
@@ -34,7 +34,7 @@
 * [Calling Contracts](starknet/call.md)
 * [Performing Multicall](starknet/multicall.md)
 
-# Foundry development
+# Foundry Development
 
 * [Environment Setup](development/environment-setup.md)
 

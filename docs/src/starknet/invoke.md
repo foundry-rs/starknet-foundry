@@ -1,4 +1,4 @@
-# Invoking contracts
+# Invoking Contracts
 
 ## Overview
 
@@ -14,7 +14,7 @@ For detailed CLI description, see [invoke command reference](../appendix/cast/in
 
 ## Examples
 
-### General example
+### General Example
 
 ```shell
 $ sncast \
@@ -32,7 +32,7 @@ transaction_hash: 0x7ad0d6e449e33b6581a4bb8df866c0fce3919a5ee05a30840ba521dafee2
 > 💡 **Info**
 > Max fee will be automatically computed if `--max-fee <MAX_FEE>` is not passed.
 
-### Invoking function without arguments
+### Invoking Function Without Arguments
 
 Not every function accepts parameters. Here is how to call it.
 

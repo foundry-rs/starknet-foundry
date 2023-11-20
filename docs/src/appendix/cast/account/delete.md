@@ -1,7 +1,7 @@
 # `delete`
 Delete an account from `accounts-file` and its associated Scarb profile.
 
-## Required common arguments - passed by CLI or specified in Scarb.toml
+## Required Common Arguments - Passed by CLI or Specified in Scarb.toml
 
 * [`url`](../common.md#--url--u-rpc_url)
 

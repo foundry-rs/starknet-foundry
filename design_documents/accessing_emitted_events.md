@@ -1,4 +1,4 @@
-# Accessing emitted events
+# Accessing Emitted Events
 
 <!-- TOC -->
 * [Accessing emitted events](#accessing-emitted-events)
@@ -20,7 +20,7 @@ Some contract functions can emit events. It is important to test if they were em
 
 Propose a solution that will allow checking if events were emitted.
 
-## Considered solutions
+## Considered Solutions
 
 1. `expect_events` cheatcode 
 2. `spy_events` cheatcode
@@ -61,7 +61,7 @@ It will panic if:
 - not all defined events were emitted
 - some other events where emitted
 
-### Usage example
+### Usage Example
 
 ```cario
 #[starknet::interface]
@@ -157,7 +157,7 @@ It is designed to enable more simplified flow:
 - `fetch_events` will be called internally, so there will always be the newest events,
 - checked events will be removed from the `events` property.
 
-### Propositions to consider
+### Propositions to Consider
 
 - `TargetedSpy` - regular spy with the target parameter for creation, which would be an enumeration of:
   ```cairo
@@ -171,7 +171,7 @@ It is designed to enable more simplified flow:
   It would clarify the confusion when `name` field is hashed when it comes from `EventSpy`.
 
 
-### Usage example
+### Usage Example
 
 ```cario
 // Contract is the same as in the previous example

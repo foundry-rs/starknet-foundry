@@ -11,7 +11,7 @@
 
 Starknet Foundry standard library adds a utility method for printing inside tests and contracts to facilitate simple debugging.
 
-## In tests
+## In Tests
 
 Here's a test with example use of [`print`](../appendix/forge-library/print.md) method:
 
@@ -86,7 +86,7 @@ original value: [27]
 Tests: 1 passed, 0 failed, 0 skipped
 ```
 
-## In contracts
+## In Contracts
 > ⚠️ **Warning**
 > 
 > - Make sure to remove all of the prints before compiling the final version of your contract. 

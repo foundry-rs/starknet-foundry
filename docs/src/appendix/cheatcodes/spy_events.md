@@ -38,7 +38,7 @@ trait EventAssertions<T, impl TEvent: starknet::Event<T>, impl TDrop: Drop<T>> {
 }
 ```
 
-## There are two ways of interaction with emitted events
+## There are Two Ways of Interaction With Emitted Events
 
 Examples are based on `SpyEventsChecker` contract implementation.
 
@@ -62,7 +62,7 @@ mod SpyEventsChecker {
 }
 ```
 
-### Complex one in which user asserts manually
+### Complex One in Which User Asserts Manually
 
 ```rust
 use snforge_std::{declare, ContractClassTrait, spy_events, SpyOn, EventSpy, EventFetcher,
@@ -118,7 +118,7 @@ Let's go through important parts of the provided code:
 - It is worth noting that when we call the method which emits an event, `spy` is not updated immediately.
   (See the last 5 lines)
 
-### Simple one in which user asserts with `assert_emitted` method
+### Simple One in Which User Asserts with `assert_emitted` Method
 
 ```rust
 use snforge_std::{declare, ContractClassTrait, spy_events, SpyOn, EventSpy,
@@ -164,7 +164,7 @@ The flow is much simpler (thanks to `EventAssertions` trait). Let's go through i
 
 - After the assertion, found events are removed from the spy. It stays clean and ready for the next events.
 
-## Splitting events between multiple spies
+## Splitting Events Between Multiple Spies
 
 Sometimes it is easier to split events between multiple spies. Let's do it.
 
@@ -223,7 +223,7 @@ fn test_simple_assertions() {
 
 The first spy gets events emitted by the first contract only. Second one gets events emitted by the rest.
 
-## Asserting events emitted with `emit_event_syscall`
+## Asserting Events Emitted With `emit_event_syscall`
 
 Events emitted with `emit_event_syscall` could have nonstandard (not defined anywhere) keys and data.
 They can also be asserted with `spy.assert_emitted` method.
