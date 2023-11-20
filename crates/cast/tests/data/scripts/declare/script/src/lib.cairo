@@ -1,1 +1,1 @@
-mod declare_happy;
+mod happy_case;
