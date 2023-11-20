@@ -311,7 +311,7 @@ fn compare_keccak_from_contract_with_plain_keccak() {
 fn test_gas_usage() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
             use option::OptionTrait;
             use traits::TryInto;
             use starknet::ContractAddress;
@@ -371,7 +371,7 @@ fn test_gas_usage() {
             fn test_keccak_builtin() {
                 keccak::keccak_u256s_le_inputs(array![1].span());
             }
-        "#
+        "
         ),
         Contract::from_code_path(
             "HelloEmpty".to_string(),
