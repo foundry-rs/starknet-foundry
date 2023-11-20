@@ -17,3 +17,4 @@ Closes #
 - [ ] Added relevant tests
 - [ ] Performed self-review of the code
 - [ ] Added changes to `CHANGELOG.md`
+- [ ] Ran benchmarks (if changes can affect the performance)
