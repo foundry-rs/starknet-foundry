@@ -43,4 +43,5 @@ flatten-serde-json = "0.1.0"
 cheatnet = { path = "../cheatnet" }
 conversions = { path = "../conversions" }
 scarb-artifacts = { path = "../scarb-artifacts" }
-test-collector = { path = "../test-collector" }
+cairo-lang-test-plugin.workspace = true
+

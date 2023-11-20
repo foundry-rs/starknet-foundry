@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 env:
-  SCARB_VERSION: 2.3.1
+  SCARB_VERSION: nightly-2023-11-21
 
 jobs:
   test-forge-unit-and-integration:

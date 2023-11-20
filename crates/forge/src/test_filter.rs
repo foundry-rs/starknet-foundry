@@ -1,8 +1,10 @@
-use crate::{collecting::CompiledTestCrateRaw, shared_cache::cached_failed_tests_names};
 use anyhow::Result;
 use camino::Utf8PathBuf;
 
-use forge_runner::{TestCaseFilter, TestCaseRunnable};
+use crate::compiled_raw::CompiledTestCrateRaw;
+use crate::shared_cache::cached_failed_tests_names;
+use forge_runner::compiled_runnable::TestCaseRunnable;
+use forge_runner::TestCaseFilter;
 
 #[derive(Debug, PartialEq)]
 // Specifies what tests should be included
@@ -126,11 +128,11 @@ impl TestCaseFilter for TestsFilter {
 
 #[cfg(test)]
 mod tests {
-    use crate::collecting::CompiledTestCrateRaw;
+    use crate::compiled_raw::CrateLocation;
+    use crate::compiled_raw::{CompiledTestCrateRaw, TestCaseRaw};
     use crate::test_filter::TestsFilter;
-    use crate::CrateLocation;
     use cairo_lang_sierra::program::Program;
-    use test_collector::{ExpectedTestResult, TestCaseRaw};
+    use forge_runner::expected_result::ExpectedTestResult;
 
     fn program_for_testing() -> Program {
         Program {
