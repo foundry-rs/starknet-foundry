@@ -5,8 +5,11 @@
 [![Telegram Chat][tg-badge]][tg-url] [![Telegram Support][tg-support-badge]][tg-support-url]
 
 [tg-badge]: https://img.shields.io/endpoint?color=neon&logo=telegram&label=chat&style=flat-square&url=https%3A%2F%2Ftg.sumanjay.workers.dev%2Fstarknet_foundry
+
 [tg-url]: https://t.me/starknet_foundry
+
 [tg-support-badge]: https://img.shields.io/endpoint?color=neon&logo=telegram&label=support&style=flat-square&url=https%3A%2F%2Ftg.sumanjay.workers.dev%2Fstarknet_foundry_support
+
 [tg-support-url]: https://t.me/starknet_foundry_support
 
 
@@ -34,6 +37,7 @@ To install Starknet Foundry, first install `snfoundryup` by running:
 ```shell
 curl -L https://raw.githubusercontent.com/foundry-rs/starknet-foundry/master/scripts/install.sh | sh
 ```
+
 Follow the instructions and then run
 
 ```shell
@@ -47,7 +51,6 @@ snfoundryup -v 0.9.0
 ```
 
 To verify that the Starknet Foundry is installed correctly, run `snforge --version` and `sncast --version`.
-
 
 ## Features
 
@@ -76,11 +79,9 @@ Starknet Foundry is under active development! Expect a lot of new features to ap
 
 ## Performance
 
-Forge achieves performance comparable to the Cairo Test Runner with improved user experience. All that is possible on just a single thread and multithreading is well on its way!
+![Performance plot](.github/images/plot.png)
 
-![Starknet test framework speed comparison](./benchmarks/plot.png)
-
-To learn more about our benchmark methodology check [here](./benchmarks/).
+Forge achieves performance comparable to the Cairo Test Runner with improved user experience.
 
 ## Getting Help
 

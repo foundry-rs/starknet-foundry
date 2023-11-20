@@ -5,7 +5,6 @@ use indoc::indoc;
 use scarb_artifacts::corelib_for_package;
 use scarb_metadata::MetadataCommand;
 
-#[allow(clippy::module_name_repetitions)]
 #[must_use]
 pub fn corelib_path() -> Utf8PathBuf {
     // create an empty scarb project to extract corelib location from metadata

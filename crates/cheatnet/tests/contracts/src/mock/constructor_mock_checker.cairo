@@ -10,9 +10,9 @@ mod ConstructorMockChecker {
     use starknet::ContractAddress;
 
     #[starknet::interface]
-     trait IHelloStarknet<TContractState> {
+    trait IHelloStarknet<TContractState> {
         fn get_balance(self: @TContractState) -> felt252;
-     }
+    }
 
     #[storage]
     struct Storage {
@@ -21,7 +21,9 @@ mod ConstructorMockChecker {
 
     #[constructor]
     fn constructor(ref self: ContractState, balance_contract_address: ContractAddress) {
-        let hello_starknet = IHelloStarknetDispatcher { contract_address: balance_contract_address };
+        let hello_starknet = IHelloStarknetDispatcher {
+            contract_address: balance_contract_address
+        };
         self.constructor_balance.write(hello_starknet.get_balance());
     }
 

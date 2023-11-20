@@ -2,7 +2,6 @@ use cairo_felt::Felt252;
 use conversions::StarknetConversions;
 use regex::Regex;
 
-#[allow(clippy::module_name_repetitions)]
 #[must_use]
 pub fn try_extract_panic_data(err: &str) -> Option<Vec<Felt252>> {
     let re = Regex::new(r#"(?m)^Got an exception while executing a hint: Hint Error: Execution failed\. Failure reason: "(.*)"\.$"#)

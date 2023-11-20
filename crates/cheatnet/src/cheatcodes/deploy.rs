@@ -27,14 +27,12 @@ use starknet_api::transaction::Calldata;
 use super::CheatcodeError;
 use crate::rpc::{CallContractFailure, ResourceReport};
 
-#[allow(clippy::module_name_repetitions)]
 #[derive(Debug)]
 pub struct DeployCallPayload {
     pub resource_report: ResourceReport,
     pub contract_address: ContractAddress,
 }
 
-#[allow(clippy::module_name_repetitions)]
 pub fn deploy_at(
     blockifier_state: &mut BlockifierState,
     cheatnet_state: &mut CheatnetState,
@@ -102,7 +100,6 @@ pub fn deploy_at(
     result
 }
 
-#[allow(clippy::module_name_repetitions)]
 pub fn deploy(
     blockifier_state: &mut BlockifierState,
     cheatnet_state: &mut CheatnetState,

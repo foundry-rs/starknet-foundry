@@ -1,7 +1,9 @@
+use core::clone::Clone;
 use starknet::{ContractAddress, testing::cheatcode, contract_address_const};
 use option::OptionTrait;
 use array::ArrayTrait;
 use array::SpanTrait;
+use snforge_std::CheatTarget;
 
 
 #[derive(Copy, Drop)]
@@ -40,9 +42,16 @@ fn option_as_tuple<T, impl TDrop: Drop<T>>(option: Option<T>, default: T) -> (bo
     }
 }
 
-fn start_spoof(contract_address: ContractAddress, tx_info_mock: TxInfoMock) {
-    let contract_address_felt: felt252 = contract_address.into();
+fn join_arrays(ref a: Array<felt252>, ref b: Span<felt252>) {
+    loop {
+        match b.pop_front() {
+            Option::Some(x) => { a.append(x.clone()); },
+            Option::None => { break (); }
+        };
+    };
+}
 
+fn start_spoof(target: CheatTarget, tx_info_mock: TxInfoMock) {
     let TxInfoMock{version,
     account_contract_address,
     max_fee,
@@ -61,10 +70,13 @@ fn start_spoof(contract_address: ContractAddress, tx_info_mock: TxInfoMock) {
     let (is_tx_hash_set, transaction_hash) = option_as_tuple(transaction_hash, 0);
     let (is_chain_id_set, chain_id) = option_as_tuple(chain_id, 0);
     let (is_nonce_set, nonce) = option_as_tuple(nonce, 0);
-    let (is_signature_set, signature) = option_as_tuple(signature, ArrayTrait::new().span());
+    let (is_signature_set, mut signature) = option_as_tuple(signature, ArrayTrait::new().span());
 
-    let mut inputs = array![
-        contract_address_felt,
+    let mut cheat_target_serialized: Array<felt252> = array![];
+    target.serialize(ref cheat_target_serialized);
+    let mut cheat_target_serialized = cheat_target_serialized.span();
+
+    let mut txn_info_serialized = array![
         is_version_set.into(),
         version,
         is_acc_address_set.into(),
@@ -79,23 +91,20 @@ fn start_spoof(contract_address: ContractAddress, tx_info_mock: TxInfoMock) {
         nonce,
         is_signature_set.into()
     ];
+    let mut txn_info_serialized = txn_info_serialized.span();
 
+    let mut inputs: Array<felt252> = array![];
+    join_arrays(ref inputs, ref cheat_target_serialized);
+    join_arrays(ref inputs, ref txn_info_serialized);
     let signature_len = signature.len();
     inputs.append(signature_len.into());
-
-    let mut i = 0;
-    loop {
-        if signature_len == i {
-            break ();
-        }
-        inputs.append(*signature[i]);
-        i += 1;
-    };
+    join_arrays(ref inputs, ref signature);
 
     cheatcode::<'start_spoof'>(inputs.span());
 }
 
-fn stop_spoof(contract_address: ContractAddress) {
-    let contract_address_felt: felt252 = contract_address.into();
-    cheatcode::<'stop_spoof'>(array![contract_address_felt].span());
+fn stop_spoof(target: CheatTarget) {
+    let mut inputs = array![];
+    target.serialize(ref inputs);
+    cheatcode::<'stop_spoof'>(inputs.span());
 }

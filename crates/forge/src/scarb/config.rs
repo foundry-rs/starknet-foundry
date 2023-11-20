@@ -8,7 +8,6 @@ use std::collections::HashMap;
 use test_collector::RawForkParams;
 
 #[derive(Debug, PartialEq, Default)]
-#[allow(clippy::module_name_repetitions)]
 pub struct ForgeConfig {
     /// Should runner exit after first failed test
     pub exit_first: bool,

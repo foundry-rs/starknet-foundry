@@ -1,5 +1,5 @@
 #[cfg(test)]
-    mod tests {
+mod tests {
     #[test]
     #[fork(url: "https://lib.com")]
     fn incorrect_fork_attributes() {
