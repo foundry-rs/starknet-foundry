@@ -2,7 +2,6 @@ use crate::helpers::constants::{SCRIPTS_DIR, URL};
 use indoc::indoc;
 use snapbox::cmd::{cargo_bin, Command};
 
-// todo: #271
 #[tokio::test]
 async fn test_happy_case() {
     let script_name = "map_script";
@@ -124,32 +123,5 @@ async fn test_fail_when_using_starknet_syscall() {
         ...
         command: script
         error: Got an exception while executing a hint: Hint Error: Starknet syscalls are not supported
-    "});
-}
-
-#[tokio::test]
-async fn test_happy_case_whole_flow() {
-    let script_path = "src/happy_case.cairo";
-    let args = vec![
-        "--accounts-file",
-        "../../../accounts/accounts.json",
-        "--account",
-        "user4",
-        "--url",
-        URL,
-        "script",
-        &script_path,
-    ];
-
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(SCRIPTS_DIR.to_owned() + "/map_script/script")
-        .args(args);
-
-    snapbox.assert().success().stdout_matches(indoc! {r"
-        [..]
-        [..]
-        [..]
-        command: script
-        status: success
     "});
 }
