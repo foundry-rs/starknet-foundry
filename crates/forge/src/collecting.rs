@@ -4,15 +4,13 @@ use cairo_lang_sierra::program::Program;
 use camino::{Utf8Path, Utf8PathBuf};
 use forge_runner::BUILTINS;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
-use test_collector::{collect_tests, ForkConfig, LinkedLibrary, RawForkConfig, TestCase};
+use test_collector::{collect_tests, LinkedLibrary, TestCaseRaw};
 use walkdir::WalkDir;
 
-pub(crate) type CompiledTestCrateRaw = CompiledTestCrate<RawForkConfig>;
-
 #[derive(Debug, Clone)]
-pub(crate) struct CompiledTestCrate<T: ForkConfig> {
+pub(crate) struct CompiledTestCrateRaw {
     pub sierra_program: Program,
-    pub test_cases: Vec<TestCase<T>>,
+    pub test_cases: Vec<TestCaseRaw>,
     pub tests_location: CrateLocation,
 }
 
@@ -40,7 +38,7 @@ impl TestCompilationTarget {
             None,
         )?;
 
-        Ok(CompiledTestCrate {
+        Ok(CompiledTestCrateRaw {
             sierra_program,
             test_cases,
             tests_location: self.crate_location,

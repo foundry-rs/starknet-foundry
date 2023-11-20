@@ -32,11 +32,11 @@ pub fn config_from_scarb_for_package(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::scarb::config::ForkTarget;
     use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
     use assert_fs::TempDir;
     use camino::Utf8PathBuf;
     use conversions::StarknetConversions;
-    use forge_runner::ForkTarget;
     use indoc::{formatdoc, indoc};
     use scarb_metadata::MetadataCommand;
     use starknet::core::types::BlockId;

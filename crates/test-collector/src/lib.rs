@@ -91,10 +91,6 @@ impl From<TestExpectation> for ExpectedTestResult {
     }
 }
 
-pub trait ForkConfig {}
-
-impl ForkConfig for RawForkConfig {}
-
 #[derive(Debug, Clone, PartialEq)]
 pub enum RawForkConfig {
     Id(String),
@@ -404,15 +400,13 @@ pub struct LinkedLibrary {
     pub path: PathBuf,
 }
 
-pub type TestCaseRaw = TestCase<RawForkConfig>;
-
 #[derive(Debug, PartialEq, Clone)]
-pub struct TestCase<T: ForkConfig> {
+pub struct TestCaseRaw {
     pub name: String,
     pub available_gas: Option<usize>,
     pub ignored: bool,
     pub expected_result: ExpectedTestResult,
-    pub fork_config: Option<T>,
+    pub fork_config: Option<RawForkConfig>,
     pub fuzzer_config: Option<FuzzerConfig>,
 }
 
@@ -500,7 +494,7 @@ pub fn collect_tests(
             if config.available_gas.is_some() {
                 bail!("{} - Attribute `available_gas` is not supported: Contract functions execution cost would not be included in the gas calculation.", test_name)
             };
-            Ok(TestCase {
+            Ok(TestCaseRaw {
                 name: test_name,
                 available_gas: config.available_gas,
                 ignored: config.ignored,

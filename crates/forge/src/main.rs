@@ -125,7 +125,6 @@ fn combine_configs(
     RunnerConfig::new(
         workspace_root.to_path_buf(),
         exit_first || forge_config.exit_first,
-        forge_config.fork.clone(),
         fuzzer_runs
             .or(forge_config.fuzzer_runs)
             .unwrap_or(FUZZER_RUNS_DEFAULT),
@@ -218,6 +217,7 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                     ),
                     runner_config,
                     runner_params,
+                    &forge_config.fork,
                 )
                 .await?;
 
@@ -291,7 +291,6 @@ mod tests {
             RunnerConfig::new(
                 workspace_root,
                 false,
-                vec![],
                 FUZZER_RUNS_DEFAULT,
                 config.fuzzer_seed
             )
@@ -309,10 +308,7 @@ mod tests {
         let workspace_root: Utf8PathBuf = Default::default();
 
         let config = combine_configs(&workspace_root, false, None, None, &config_from_scarb);
-        assert_eq!(
-            config,
-            RunnerConfig::new(workspace_root, true, vec![], 1234, 500)
-        );
+        assert_eq!(config, RunnerConfig::new(workspace_root, true, 1234, 500));
     }
 
     #[test]
@@ -332,9 +328,6 @@ mod tests {
             Some(32),
             &config_from_scarb,
         );
-        assert_eq!(
-            config,
-            RunnerConfig::new(workspace_root, true, vec![], 100, 32)
-        );
+        assert_eq!(config, RunnerConfig::new(workspace_root, true, 100, 32));
     }
 }
