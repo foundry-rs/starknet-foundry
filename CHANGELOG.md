@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Fixed
 
-- using unsupported `available_gas` attribute now fail the specific test case instead of the whole runner
+- using unsupported `available_gas` attribute now fails the specific test case instead of the whole runner
 
 ## [0.10.2] - 2023-11-13
 
