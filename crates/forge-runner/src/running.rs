@@ -78,7 +78,6 @@ pub fn run_test(
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     send: Sender<()>,
-    send_shut_down: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     tokio::task::spawn_blocking(move || {
         // Due to the inability of spawn_blocking to be abruptly cancelled,
@@ -87,14 +86,7 @@ pub fn run_test(
         if send.is_closed() {
             return Ok(TestCaseSummary::Skipped {});
         }
-        let run_result = run_test_case(
-            vec![],
-            &case,
-            &runner,
-            &runner_config,
-            &runner_params,
-            &send_shut_down,
-        );
+        let run_result = run_test_case(vec![], &case, &runner, &runner_config, &runner_params);
 
         // TODO: code below is added to fix snforge tests
         // remove it after improve exit-first tests
@@ -107,7 +99,6 @@ pub fn run_test(
     })
 }
 
-#[allow(clippy::too_many_arguments)]
 pub(crate) fn run_fuzz_test(
     args: Vec<Felt252>,
     case: Arc<TestCaseRunnable>,
@@ -116,7 +107,6 @@ pub(crate) fn run_fuzz_test(
     runner_params: Arc<RunnerParams>,
     send: Sender<()>,
     fuzzing_send: Sender<()>,
-    send_shut_down: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     tokio::task::spawn_blocking(move || {
         // Due to the inability of spawn_blocking to be abruptly cancelled,
@@ -126,14 +116,8 @@ pub(crate) fn run_fuzz_test(
             return Ok(TestCaseSummary::Skipped {});
         }
 
-        let run_result = run_test_case(
-            args.clone(),
-            &case,
-            &runner,
-            &runner_config,
-            &runner_params,
-            &send_shut_down,
-        );
+        let run_result =
+            run_test_case(args.clone(), &case, &runner, &runner_config, &runner_params);
 
         // TODO: code below is added to fix snforge tests
         // remove it after improve exit-first tests
@@ -206,7 +190,6 @@ pub fn run_test_case(
     runner: &SierraCasmRunner,
     runner_config: &Arc<RunnerConfig>,
     runner_params: &Arc<RunnerParams>,
-    _send_shut_down: &Sender<()>,
 ) -> Result<RunResultWithInfo> {
     ensure!(
         case.available_gas.is_none(),

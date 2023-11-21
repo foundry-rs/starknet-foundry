@@ -208,10 +208,6 @@ pub async fn run_tests_from_crate(
     // a channel is used to signal the task that test processing is no longer necessary.
     let (send, mut rec) = channel(1);
 
-    // The second channel serves as a hold point to ensure all tasks complete
-    // their shutdown procedures before moving forward (more info: https://tokio.rs/tokio/topics/shutdown)
-    let (send_shut_down, mut rec_shut_down) = channel(1);
-
     for case in test_cases {
         let case_name = case.name.clone();
 
@@ -236,7 +232,6 @@ pub async fn run_tests_from_crate(
             runner_config.clone(),
             runner_params.clone(),
             &send,
-            &send_shut_down,
         ));
     }
 
@@ -257,10 +252,6 @@ pub async fn run_tests_from_crate(
 
         results.push(result);
     }
-
-    // Waiting for things to finish shutting down
-    drop(send_shut_down);
-    let _ = rec_shut_down.recv().await;
 
     let contained_fuzzed_tests = results.iter().any(|summary| summary.runs().is_some());
     let summary = TestCrateSummary {
@@ -284,17 +275,9 @@ fn choose_test_strategy_and_run(
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     send: &Sender<()>,
-    send_shut_down: &Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     if args.is_empty() {
-        run_test(
-            case,
-            runner,
-            runner_config,
-            runner_params,
-            send.clone(),
-            send_shut_down.clone(),
-        )
+        run_test(case, runner, runner_config, runner_params, send.clone())
     } else {
         run_with_fuzzing(
             args,
@@ -303,7 +286,6 @@ fn choose_test_strategy_and_run(
             runner_config,
             runner_params,
             send.clone(),
-            send_shut_down.clone(),
         )
     }
 }
@@ -315,7 +297,6 @@ fn run_with_fuzzing(
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     send: Sender<()>,
-    send_shut_down: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     tokio::task::spawn(async move {
         if send.is_closed() {
@@ -355,7 +336,6 @@ fn run_with_fuzzing(
                 runner_params.clone(),
                 send.clone(),
                 fuzzing_send.clone(),
-                send_shut_down.clone(),
             ));
         }
 
