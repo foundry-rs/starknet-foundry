@@ -52,7 +52,7 @@ fn declare(contract_name: felt252, max_fee: Option<felt252>) -> DeclareResult {
     match max_fee {
         Option::Some(val) => {
             inputs.append(0);
-            inputs.append(max_fee.unwrap());
+            inputs.append(val);
         },
         Option::None => inputs.append(1),
     };
