@@ -8,7 +8,7 @@ use test_utils::{assert_passed, test_case};
 fn elect() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
             use result::ResultTrait;
             use array::ArrayTrait;
             use option::OptionTrait;
@@ -40,7 +40,7 @@ fn elect() {
                 let new_sequencer_address = dispatcher.get_sequencer_address();
                 assert(new_sequencer_address == old_sequencer_address, 'Sequencer addr did not revert');
             }
-        "#
+        "
         ),
         Contract::from_code_path(
             "ElectChecker".to_string(),

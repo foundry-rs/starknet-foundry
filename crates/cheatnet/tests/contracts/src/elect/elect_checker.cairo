@@ -32,7 +32,10 @@ mod ElectChecker {
 
         fn get_seq_addr_and_emit_event(ref self: ContractState) -> ContractAddress {
             let sequencer_address = starknet::get_block_info().unbox().sequencer_address;
-            self.emit(Event::SequencerAddressEmitted(SequencerAddressEmitted { sequencer_address }));
+            self
+                .emit(
+                    Event::SequencerAddressEmitted(SequencerAddressEmitted { sequencer_address })
+                );
             sequencer_address
         }
     }
