@@ -36,7 +36,7 @@ fn get_total_vm_usage(resources: &ExecutionResources) -> VmExecutionResources {
     // total_vm_usage consists of resources used by vm (`vm_resources`)
     // and additional resources computed from used syscalls (`get_additional_os_resources`).
     // Unfortunately `get_additional_os_resource`s function adds resources used by os,
-    // so we have to subtract them then
+    // so we have to subtract them
     let total_vm_usage = &resources.vm_resources
         + &(&get_additional_os_resources(
             &resources.syscall_counter,
