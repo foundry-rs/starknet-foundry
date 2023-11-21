@@ -8,7 +8,6 @@ use std::fs;
 use std::path::Path;
 use test_case::test_case;
 
-
 #[test_case(Some(Path::new("tests/data/files")), None ; "Scarb.toml in current_dir")]
 #[test_case(None, Some("tests/data/files/Scarb.toml") ; "Scarb.toml passed as argument")]
 #[tokio::test]

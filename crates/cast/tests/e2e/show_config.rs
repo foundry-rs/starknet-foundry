@@ -6,7 +6,10 @@ use test_case::test_case;
 #[test_case(Some(Path::new("tests/data/show_config")), None ; "Scarb.toml in current_dir")]
 #[test_case(None, Some("tests/data/show_config/Scarb.toml") ; "Scarb.toml passed as argument")]
 #[tokio::test]
-async fn test_show_config_from_scarb_toml(current_dir: Option<&Path>, path_to_scarb_toml: Option<&str>) {
+async fn test_show_config_from_scarb_toml(
+    current_dir: Option<&Path>,
+    path_to_scarb_toml: Option<&str>,
+) {
     let mut args = vec![];
     if let Some(scarb_path) = path_to_scarb_toml {
         args.append(&mut vec!["--path-to-scarb-toml", scarb_path]);
@@ -82,7 +85,10 @@ async fn test_show_config_from_cli_and_scarb(
 #[test_case(Some(Path::new("tests/data/show_config")), None ; "Scarb.toml in current_dir")]
 #[test_case(None, Some("tests/data/show_config/Scarb.toml") ; "Scarb.toml passed as argument")]
 #[tokio::test]
-async fn test_show_config_when_no_keystore(current_dir: Option<&Path>, path_to_scarb_toml: Option<&str>) {
+async fn test_show_config_when_no_keystore(
+    current_dir: Option<&Path>,
+    path_to_scarb_toml: Option<&str>,
+) {
     let mut args = vec![];
     if let Some(scarb_path) = path_to_scarb_toml {
         args.append(&mut vec!["--path-to-scarb-toml", scarb_path]);
@@ -107,7 +113,10 @@ async fn test_show_config_when_no_keystore(current_dir: Option<&Path>, path_to_s
 #[test_case(Some(Path::new("tests/data/show_config")), None ; "Scarb.toml in current_dir")]
 #[test_case(None, Some("tests/data/show_config/Scarb.toml") ; "Scarb.toml passed as argument")]
 #[tokio::test]
-async fn test_show_config_when_keystore(current_dir: Option<&Path>, path_to_scarb_toml: Option<&str>) {
+async fn test_show_config_when_keystore(
+    current_dir: Option<&Path>,
+    path_to_scarb_toml: Option<&str>,
+) {
     let mut args = vec![];
     if let Some(scarb_path) = path_to_scarb_toml {
         args.append(&mut vec!["--path-to-scarb-toml", scarb_path]);
