@@ -4,7 +4,7 @@
 
 Cancels the [`start_elect`](./start_elect.md) for the given target.
 
-- `contract_address` - instance of [`CheatTarget`](./cheat_target.md) specifying which contracts to stop electing
+- `target` - instance of [`CheatTarget`](./cheat_target.md) specifying which contracts to stop electing
 
 ```rust
 use snforge_std::{stop_elect, CheatTarget};
