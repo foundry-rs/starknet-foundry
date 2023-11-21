@@ -268,7 +268,6 @@ pub async fn wait_for_tx(
     tx_hash: FieldElement,
     retries: u8,
 ) -> Result<&str> {
-    println!("Transaction hash: {tx_hash:#x}");
     for i in (1..retries).rev() {
         match provider.get_transaction_receipt(tx_hash).await {
             Ok(receipt) => match receipt.execution_result() {
