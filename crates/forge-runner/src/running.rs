@@ -280,7 +280,7 @@ pub fn run_test_case(
     };
 
     let mut vm = VirtualMachine::new(true);
-    let res = runner.run_function_with_vm(
+    let run_result = runner.run_function_with_vm(
         func,
         &mut vm,
         &mut test_execution_syscall_handler,
@@ -326,7 +326,7 @@ pub fn run_test_case(
     );
 
     Ok(RunResultWithInfo {
-        run_result: res,
+        run_result,
         fork_info: ForkInfo {
             latest_block_number,
         },
