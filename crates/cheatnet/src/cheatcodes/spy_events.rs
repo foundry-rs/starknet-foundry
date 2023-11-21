@@ -2,7 +2,7 @@ use crate::CheatnetState;
 use blockifier::execution::call_info::OrderedEvent;
 use cairo_felt::Felt252;
 use cairo_vm::hint_processor::hint_processor_utils::felt_to_usize;
-use conversions::StarknetConversions;
+use conversions::FromConv;
 use starknet_api::core::ContractAddress;
 
 /// Represents an emitted event. It is used in the `CheatnetState` to keep track of events
@@ -15,6 +15,7 @@ pub struct Event {
 }
 
 impl Event {
+    #[must_use]
     pub fn from_ordered_event(
         ordered_event: &OrderedEvent,
         contract_address: ContractAddress,
@@ -25,14 +26,14 @@ impl Event {
                 .event
                 .keys
                 .iter()
-                .map(|key| key.0.to_felt252())
+                .map(|key| Felt252::from_(key.0))
                 .collect(),
             data: ordered_event
                 .event
                 .data
                 .0
                 .iter()
-                .map(StarknetConversions::to_felt252)
+                .map(|el| Felt252::from_(*el))
                 .collect(),
         }
     }
@@ -72,7 +73,7 @@ impl CheatnetState {
             .map(|event| {
                 let mut flattened_event = vec![];
                 if spy_on.does_spy(event.from) {
-                    flattened_event.push(event.from.to_felt252());
+                    flattened_event.push(Felt252::from_(event.from));
                     flattened_event.push(Felt252::from(event.keys.len()));
                     flattened_event.append(&mut event.keys.clone());
                     flattened_event.push(Felt252::from(event.data.len()));

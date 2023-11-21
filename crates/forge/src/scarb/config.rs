@@ -1,5 +1,5 @@
 use anyhow::{bail, Result};
-use conversions::StarknetConversions;
+use conversions::IntoConv;
 use itertools::Itertools;
 use serde::Deserialize;
 use starknet::core::types::{BlockId, BlockTag};
@@ -85,7 +85,7 @@ impl TryFrom<RawForgeConfig> for ForgeConfig {
                 .iter()
                 .map(|(id_type, value)| match id_type.as_str() {
                     "number" => BlockId::Number(value.parse().unwrap()),
-                    "hash" => BlockId::Hash(value.to_field_element()),
+                    "hash" => BlockId::Hash(value.clone().into_()),
                     "tag" => match value.as_str() {
                         "Latest" => BlockId::Tag(BlockTag::Latest),
                         _ => unreachable!(),

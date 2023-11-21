@@ -35,7 +35,7 @@ use cairo_lang_test_plugin::test_config::{PanicExpectation, TestExpectation};
 use cairo_lang_test_plugin::{try_extract_test_config, TestConfig};
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use cairo_lang_utils::OptionHelper;
-use conversions::StarknetConversions;
+use conversions::IntoConv;
 use itertools::Itertools;
 use num_bigint::BigInt;
 use num_traits::ToPrimitive;
@@ -373,7 +373,7 @@ fn try_get_block_id(db: &dyn SyntaxGroup, block_id_type: &str, expr: &Expr) -> O
         "Hash" => {
             if let Expr::Literal(value) = expr {
                 return Some(BlockId::Hash(
-                    Felt252::from(value.numeric_value(db).unwrap()).to_field_element(),
+                    Felt252::from(value.numeric_value(db).unwrap()).into_(),
                 ));
             }
             None
