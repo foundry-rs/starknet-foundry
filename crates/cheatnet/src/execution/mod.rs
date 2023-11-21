@@ -6,5 +6,4 @@ pub mod contract_execution_syscall_handler;
 pub mod deprecated;
 pub mod entry_point;
 pub mod execution_info;
-pub mod gas;
 pub mod syscall_hooks;

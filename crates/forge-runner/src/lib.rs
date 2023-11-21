@@ -29,6 +29,7 @@ pub mod test_case_summary;
 pub mod test_crate_summary;
 
 mod fuzzer;
+mod gas;
 mod printing;
 mod running;
 mod sierra_casm_runner;
