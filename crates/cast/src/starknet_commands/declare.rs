@@ -1,5 +1,6 @@
 use anyhow::{anyhow, Context, Result};
 use camino::Utf8PathBuf;
+use cast::helpers::scarb_utils::get_package_metadata;
 use cast::helpers::{response_structs::DeclareResponse, scarb_utils::get_scarb_manifest};
 use cast::{handle_rpc_error, handle_wait_for_tx};
 use clap::Args;
@@ -69,14 +70,8 @@ pub async fn declare(
         .exec()
         .context("Failed to obtain scarb metadata")?;
 
-    let package = metadata
-        .packages
-        .iter()
-        .find(|package| package.manifest_path == manifest_path)
-        .ok_or(anyhow!(
-            "Failed to find package for contract {}",
-            contract_name
-        ))?;
+    let package = get_package_metadata(&metadata, &manifest_path)
+        .with_context(|| anyhow!("Failed to find package for contract {}", contract_name))?;
     let contracts = get_contracts_map(&metadata, &package.id)?;
 
     let contract_artifacts = contracts
