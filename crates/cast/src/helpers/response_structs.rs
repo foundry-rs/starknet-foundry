@@ -19,9 +19,9 @@ pub struct DeclareResponse {
     pub transaction_hash: FieldElement,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Clone, Debug)]
 pub struct CallResponse {
-    pub response: String,
+    pub response: Vec<FieldElement>,
 }
 
 #[derive(Serialize)]
@@ -58,4 +58,10 @@ pub struct ShowConfigResponse {
     pub scarb_path: Option<Utf8PathBuf>,
     pub accounts_file_path: Option<Utf8PathBuf>,
     pub keystore: Option<Utf8PathBuf>,
+}
+
+#[derive(Serialize)]
+pub struct ScriptResponse {
+    pub status: String,
+    pub msg: Option<String>,
 }
