@@ -3,6 +3,8 @@ use crate::helpers::fixtures::default_cli_args;
 use crate::helpers::runner::runner;
 use indoc::indoc;
 use snapbox::cmd::{cargo_bin, Command};
+use std::fs::canonicalize;
+use test_case::test_case;
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
 
@@ -73,39 +75,64 @@ pub async fn test_delete_abort() {
     let _ = tokio::fs::remove_file("temp_scarb1.toml").await;
 }
 
+#[test_case("temp_2_1", false ; "Scarb.toml in current_dir")]
+#[test_case("temp_2_2", true ; "Scarb.toml passed as argument")]
 #[tokio::test]
-pub async fn test_happy_case() {
+pub async fn test_happy_case(temp_dir_path: &str, pass_path_to_scarb_toml: bool) {
     // Creating dummy accounts test file
-    create_dummy_accounts_file("temp_accounts2.json").await;
-    create_dummy_scarb_file("temp_scarb2.toml").await;
+    let relative_dummy_accounts_path = format!("{temp_dir_path}/accounts.json");
+    let relative_dummy_scarb_path = format!("{temp_dir_path}/Scarb.toml");
+
+    tokio::fs::create_dir_all(temp_dir_path).await.unwrap();
+    create_dummy_accounts_file(relative_dummy_accounts_path.as_str()).await;
+    create_dummy_scarb_file(relative_dummy_scarb_path.as_str()).await;
+
+    let dummy_accounts_path = canonicalize(&relative_dummy_accounts_path)
+        .unwrap()
+        .to_str()
+        .unwrap()
+        .to_owned();
+    let dummy_scarb_path = canonicalize(&relative_dummy_scarb_path)
+        .unwrap()
+        .to_str()
+        .unwrap()
+        .to_owned();
 
     // Now delete dummy account
-    let args = vec![
-        "--path-to-scarb-toml",
-        "temp_scarb2.toml",
+    let mut args = vec![];
+    if pass_path_to_scarb_toml {
+        args.append(&mut vec!["--path-to-scarb-toml", dummy_scarb_path.as_str()]);
+    }
+
+    args.append(&mut vec![
         "--url",
         URL,
         "--accounts-file",
-        "temp_accounts2.json",
+        &dummy_accounts_path,
         "account",
         "delete",
         "--name",
         "user3",
         "--network",
         "alpha-goerli2",
-    ];
+    ]);
 
     // Run test with an affirmative user input
-    let snapbox = Command::new(cargo_bin!("sncast")).args(args).stdin("Y");
+    // let snapbox = Command::new(cargo_bin!("sncast")).args(args).stdin("Y");
+    let snapbox = if pass_path_to_scarb_toml { 
+        Command::new(cargo_bin!("sncast")).args(args).stdin("Y") 
+    } else { 
+        Command::new(cargo_bin!("sncast")).current_dir(temp_dir_path).args(args).stdin("Y") 
+    };
+
     let bdg = snapbox.assert();
     let out = bdg.get_output();
     let stdout_str =
         std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
-
     assert!(stdout_str.contains("Account successfully removed"));
 
-    let _ = tokio::fs::remove_file("temp_accounts2.json").await;
-    let _ = tokio::fs::remove_file("temp_scarb2.toml").await;
+    let _ = tokio::fs::remove_file(relative_dummy_scarb_path).await;
+    let _ = tokio::fs::remove_file(dummy_accounts_path).await;
 }
 
 #[tokio::test]
@@ -253,7 +280,7 @@ pub async fn test_happy_case_without_network_args() {
     let _ = tokio::fs::remove_file("temp_scarb6.toml").await;
 }
 
-async fn create_dummy_accounts_file(file_name: &str) {
+async fn create_dummy_accounts_file(file_name: &str) -> File {
     let json_data = indoc! {r#"
     {
         "alpha-goerli": {
@@ -287,6 +314,8 @@ async fn create_dummy_accounts_file(file_name: &str) {
         .await
         .expect("Could not write temporary testing accounts");
     let _ = file.flush().await;
+
+    file
 }
 
 async fn create_dummy_scarb_file(file_name: &str) {
