@@ -17,6 +17,7 @@ fn main() {
     let deploy_result = deploy(
         class_hash, ArrayTrait::new(), Option::Some(salt), true, Option::Some(max_fee)
     );
+    assert(deploy_result.transaction_hash != 0, deploy_result.transaction_hash);
 
     second_contract();
 }
