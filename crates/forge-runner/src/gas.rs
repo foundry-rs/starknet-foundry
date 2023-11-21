@@ -32,12 +32,11 @@ fn vm_execution_resources_to_resource_mapping(
     ResourcesMapping(map)
 }
 
+/// `total_vm_usage` consists of resources used by vm (`vm_resources`)
+/// and additional resources computed from used syscalls (`get_additional_os_resources`).
+/// Unfortunately `get_additional_os_resources` function adds resources used by os,
+/// so we have to subtract them
 fn get_total_vm_usage(resources: &ExecutionResources) -> VmExecutionResources {
-    // total_vm_usage consists of resources used by vm (`vm_resources`)
-    // and additional resources computed from used syscalls (`get_additional_os_resources`).
-
-    // Unfortunately `get_additional_os_resources` function adds resources used by os,
-    // so we have to subtract them
     let unnecessary_added_resources = OS_RESOURCES
         .execute_txs_inner()
         .get(&TransactionType::InvokeFunction)

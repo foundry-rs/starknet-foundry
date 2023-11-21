@@ -199,7 +199,7 @@ pub(crate) struct ForkInfo {
 pub struct RunResultWithInfo {
     pub(crate) run_result: Result<RunResult, RunnerError>,
     pub(crate) fork_info: ForkInfo,
-    pub(crate) gas: f64,
+    pub(crate) total_gas_used: f64,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -289,31 +289,7 @@ pub fn run_test_case(
         builtins,
     );
 
-    test_execution_syscall_handler
-        .child
-        .child
-        .child
-        .resources
-        .vm_resources += &test_execution_syscall_handler
-        .child
-        .child
-        .cheatnet_state
-        .used_resources
-        .vm_resources;
-    test_execution_syscall_handler
-        .child
-        .child
-        .child
-        .resources
-        .syscall_counter
-        .extend(
-            &test_execution_syscall_handler
-                .child
-                .child
-                .cheatnet_state
-                .used_resources
-                .syscall_counter,
-        );
+    extend_execution_resources(&mut test_execution_syscall_handler);
 
     let gas = gas_from_execution_resources(
         &test_execution_syscall_handler
@@ -330,7 +306,7 @@ pub fn run_test_case(
         fork_info: ForkInfo {
             latest_block_number,
         },
-        gas,
+        total_gas_used: gas,
     })
 }
 
@@ -347,7 +323,7 @@ fn extract_test_case_summary(
                     case,
                     args,
                     &result_with_info.fork_info,
-                    result_with_info.gas,
+                    result_with_info.total_gas_used,
                 )),
                 // CairoRunError comes from VirtualMachineError which may come from HintException that originates in TestExecutionSyscallHandler
                 Err(RunnerError::CairoRunError(error)) => Ok(TestCaseSummary::Failed {
@@ -401,4 +377,32 @@ fn get_latest_block_number(url: &Url) -> Result<BlockId> {
         Ok(MaybePendingBlockWithTxHashes::Block(block)) => Ok(BlockId::Number(block.block_number)),
         _ => Err(anyhow!("Could not get the latest block number".to_string())),
     }
+}
+
+fn extend_execution_resources(test_execution_syscall_handler: &mut TestExecutionSyscallHandler) {
+    test_execution_syscall_handler
+        .child
+        .child
+        .child
+        .resources
+        .vm_resources += &test_execution_syscall_handler
+        .child
+        .child
+        .cheatnet_state
+        .used_resources
+        .vm_resources;
+    test_execution_syscall_handler
+        .child
+        .child
+        .child
+        .resources
+        .syscall_counter
+        .extend(
+            &test_execution_syscall_handler
+                .child
+                .child
+                .cheatnet_state
+                .used_resources
+                .syscall_counter,
+        );
 }

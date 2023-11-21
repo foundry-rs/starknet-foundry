@@ -28,7 +28,7 @@ pub enum TestCaseSummary {
         /// Number of block used if BlockId::Tag(Latest) was specified
         latest_block_number: Option<BlockNumber>,
         /// Gas used by the test case
-        gas: f64,
+        gas_used: f64,
     },
     /// Test case failed
     Failed {
@@ -98,13 +98,13 @@ impl TestCaseSummary {
                 msg,
                 arguments,
                 latest_block_number,
-                gas,
+                gas_used: gas,
                 ..
             } => TestCaseSummary::Passed {
                 name,
                 msg,
                 arguments,
-                gas,
+                gas_used: gas,
                 fuzzing_statistic: Some(FuzzingStatistics { runs }),
                 latest_block_number,
             },
@@ -146,7 +146,7 @@ impl TestCaseSummary {
                     arguments,
                     fuzzing_statistic: None,
                     latest_block_number,
-                    gas,
+                    gas_used: gas,
                 },
                 ExpectedTestResult::Panics(_) => TestCaseSummary::Failed {
                     name,
@@ -180,7 +180,7 @@ impl TestCaseSummary {
                         arguments,
                         fuzzing_statistic: None,
                         latest_block_number,
-                        gas,
+                        gas_used: gas,
                     },
                 },
             },
