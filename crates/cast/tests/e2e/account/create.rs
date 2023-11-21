@@ -261,32 +261,50 @@ pub async fn test_happy_case_keystore() {
     _ = fs::remove_file(account_path);
 }
 
+#[test_case(false ; "Scarb.toml in current_dir")]
+#[test_case(true ; "Scarb.toml passed as argument")]
 #[tokio::test]
-pub async fn test_happy_case_keystore_add_profile() {
-    let current_dir =
-        duplicate_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "50");
-    let keystore_path = "my_key.json";
-    let account_path = "my_account.json";
-    let accounts_file = "accounts.json";
+pub async fn test_happy_case_keystore_add_profile(pass_path_to_scarb_toml: bool) {
+    let salt = if pass_path_to_scarb_toml { "50" } else { "51" };
+    let contract_path =
+        duplicate_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", salt);
+    let contract_path_utf8 =
+        Utf8PathBuf::from_path_buf(contract_path.into_path().canonicalize().unwrap().clone())
+            .expect("Path contains invalid UTF-8");
+
+    let keystore_path = contract_path_utf8.clone().join("my_key.json");
+    let account_path = contract_path_utf8.clone().join("my_account.json");
+    let accounts_file_path = contract_path_utf8.clone().join("accounts.json");
+    let scarb_path = contract_path_utf8.clone().join("Scarb.toml");
+
     env::set_var(CREATE_KEYSTORE_PASSWORD_ENV_VAR, "123");
 
-    let args = vec![
+    let mut args = vec![];
+    if pass_path_to_scarb_toml {
+        args.append(&mut vec!["--path-to-scarb-toml", scarb_path.as_str()]);
+    }
+    args.append(&mut vec![
         "--url",
         URL,
         "--accounts-file",
-        accounts_file,
+        accounts_file_path.as_str(),
         "--keystore",
-        keystore_path,
+        keystore_path.as_str(),
         "--account",
-        account_path,
+        account_path.as_str(),
         "account",
         "create",
         "--class-hash",
         DEVNET_OZ_CLASS_HASH,
         "--add-profile",
-    ];
+    ]);
 
-    let snapbox = runner(&args, Some(current_dir.path()));
+    let current_dir = if pass_path_to_scarb_toml {
+        None
+    } else {
+        Some(contract_path_utf8.as_std_path())
+    };
+    let snapbox = runner(&args, current_dir);
     let bdg = snapbox.assert().success();
     let out = bdg.get_output();
 
@@ -294,26 +312,35 @@ pub async fn test_happy_case_keystore_add_profile() {
         std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
     assert!(stdout_str.contains("add_profile: Profile successfully added to Scarb.toml"));
 
-    let contents = fs::read_to_string(current_dir.path().join("Scarb.toml"))
-        .expect("Unable to read Scarb.toml");
-    assert!(contents.contains("[tool.sncast.my_account]"));
-    assert!(contents.contains("account = \"my_account.json\""));
+    let account_path_str = account_path.clone().into_os_string().into_string().unwrap();
+    let keystore_path_str = keystore_path
+        .clone()
+        .into_os_string()
+        .into_string()
+        .unwrap();
+    let accounts_file_path_str = accounts_file_path
+        .clone()
+        .into_os_string()
+        .into_string()
+        .unwrap();
 
-    let contents = fs::read_to_string(current_dir.path().join(account_path))
-        .expect("Unable to read created file");
+    let contents = fs::read_to_string(&scarb_path).expect("Unable to read Scarb.toml");
+    assert!(contents.contains("[tool.sncast.my_account]"));
+    assert!(contents.contains(&format!("account = \"{account_path_str}\"")));
+
+    let contents = fs::read_to_string(&account_path).expect("Unable to read created file");
     assert!(contents.contains("\"deployment\": {"));
     assert!(contents.contains("\"variant\": {"));
     assert!(contents.contains("\"version\": 1"));
 
-    let contents = fs::read_to_string(current_dir.path().join("Scarb.toml"))
-        .expect("Unable to read Scarb.toml");
+    let contents = fs::read_to_string(&scarb_path).expect("Unable to read Scarb.toml");
     assert!(contents.contains(r"[tool.sncast.my_account]"));
-    assert!(contents.contains(r#"account = "my_account.json""#));
-    assert!(!contents.contains(r#"accounts-file = "accounts.json""#));
-    assert!(contents.contains(r#"keystore = "my_key.json""#));
+    assert!(contents.contains(&format!(r#"account = "{account_path_str}""#)));
+    assert!(!contents.contains(&format!(r#"accounts-file = "{accounts_file_path_str}""#)));
+    assert!(contents.contains(&format!(r#"keystore = "{keystore_path_str}""#)));
     assert!(contents.contains(r#"url = "http://127.0.0.1:5055/rpc""#));
 
-    fs::remove_dir_all(current_dir).unwrap();
+    fs::remove_dir_all(contract_path_utf8).unwrap();
 }
 
 #[tokio::test]
