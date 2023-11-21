@@ -2,6 +2,7 @@ use indoc::indoc;
 use test_utils::running_tests::run_test_case;
 use test_utils::{assert_gas, assert_passed, test_case};
 
+// gas values comes from https://book.starknet.io/ch03-01-02-fee-mechanism.html#computation
 #[test]
 fn test_keccak_cost() {
     let test = test_case!(indoc!(

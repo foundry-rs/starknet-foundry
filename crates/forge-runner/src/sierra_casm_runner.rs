@@ -43,6 +43,7 @@ use num_traits::ToPrimitive;
 
 // almost entirely copied from cairo_lang_runner
 // fields are `pub` now
+// `run_function_with_vm` uses `finalize` function to extract used resources
 pub struct SierraCasmRunner {
     /// The sierra program.
     pub sierra_program: cairo_lang_sierra::program::Program,
