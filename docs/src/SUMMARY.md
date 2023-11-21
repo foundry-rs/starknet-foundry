@@ -30,6 +30,7 @@
 * [Invoking Contracts](starknet/invoke.md)
 * [Calling Contracts](starknet/call.md)
 * [Performing Multicall](starknet/multicall.md)
+* [Cairo Deployment Scripts](starknet/script.md)
 
 # Foundry Development
 
@@ -89,3 +90,4 @@
         * [new](appendix/cast/multicall/new.md)
         * [run](appendix/cast/multicall/run.md)
     * [show-config](appendix/cast/show_config.md)
+    * [script](appendix/cast/script.md)
