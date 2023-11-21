@@ -64,3 +64,59 @@ fn declare(contract_name: felt252, max_fee: Option<felt252>) -> DeclareResult {
 
     DeclareResult { class_hash, transaction_hash }
 }
+
+#[derive(Drop, Clone)]
+struct DeployResult {
+    contract_address: ContractAddress,
+    transaction_hash: felt252,
+}
+
+fn deploy(
+    class_hash: ClassHash,
+    constructor_calldata: Array::<felt252>,
+    salt: Option<felt252>,
+    unique: bool,
+    max_fee: Option<felt252>
+) -> DeployResult {
+    let class_hash_felt: felt252 = class_hash.into();
+    let mut inputs = array![class_hash_felt];
+
+    let calldata_len = constructor_calldata.len();
+    inputs.append(calldata_len.into());
+
+    let mut i = 0;
+    loop {
+        if i == calldata_len {
+            break;
+        }
+        inputs.append(*constructor_calldata[i]);
+        i += 1;
+    };
+
+    match salt {
+        Option::Some(val) => {
+            inputs.append(0);
+            inputs.append(val);
+        },
+        Option::None => inputs.append(1),
+    };
+
+    inputs.append(unique.into());
+
+    match max_fee {
+        Option::Some(val) => {
+            inputs.append(0);
+            inputs.append(val);
+        },
+        Option::None => inputs.append(1),
+    };
+
+    let buf = cheatcode::<'deploy'>(inputs.span());
+
+    let contract_address: ContractAddress = (*buf[0])
+        .try_into()
+        .expect('Invalid contract address value');
+    let transaction_hash = *buf[1];
+
+    DeployResult { contract_address, transaction_hash }
+}
