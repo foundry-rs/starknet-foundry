@@ -1,4 +1,7 @@
-use crate::collecting::CompiledTestCrateRaw;
+use crate::{collecting::CompiledTestCrateRaw, shared_cache::cached_failed_tests_names};
+use anyhow::Result;
+use camino::Utf8PathBuf;
+
 use forge_runner::{TestCaseFilter, TestCaseRunnable};
 
 #[derive(Debug, PartialEq)]
@@ -8,6 +11,10 @@ pub struct TestsFilter {
     name_filter: NameFilter,
     // based on `#[ignore]` attribute
     ignored_filter: IgnoredFilter,
+    // based on rerun_failed flag
+    last_failed_filter: bool,
+
+    cache_dir_path: Utf8PathBuf,
 }
 
 #[derive(Debug, PartialEq)]
@@ -26,11 +33,14 @@ pub(crate) enum IgnoredFilter {
 
 impl TestsFilter {
     #[must_use]
+    #[allow(clippy::fn_params_excessive_bools)]
     pub fn from_flags(
         test_name_filter: Option<String>,
         exact_match: bool,
         only_ignored: bool,
         include_ignored: bool,
+        rerun_failed: bool,
+        cache_dir_path: Utf8PathBuf,
     ) -> Self {
         assert!(
             !(only_ignored && include_ignored),
@@ -59,10 +69,15 @@ impl TestsFilter {
         Self {
             name_filter,
             ignored_filter,
+            last_failed_filter: rerun_failed,
+            cache_dir_path,
         }
     }
 
-    pub(crate) fn filter_tests(&self, test_crate: CompiledTestCrateRaw) -> CompiledTestCrateRaw {
+    pub(crate) fn filter_tests(
+        &self,
+        test_crate: CompiledTestCrateRaw,
+    ) -> Result<CompiledTestCrateRaw> {
         let mut cases = test_crate.test_cases;
 
         cases = match &self.name_filter {
@@ -76,16 +91,26 @@ impl TestsFilter {
             }
         };
 
+        if self.last_failed_filter {
+            cases = match cached_failed_tests_names(&self.cache_dir_path)? {
+                Some(result) => cases
+                    .into_iter()
+                    .filter(|tc| result.iter().any(|name| name == &tc.name))
+                    .collect(),
+                None => cases,
+            }
+        }
+
         cases = match self.ignored_filter {
             // if NotIgnored (default) we filter ignored tests later and display them as ignored
             IgnoredFilter::All | IgnoredFilter::NotIgnored => cases,
             IgnoredFilter::Ignored => cases.into_iter().filter(|tc| tc.ignored).collect(),
         };
 
-        CompiledTestCrateRaw {
+        Ok(CompiledTestCrateRaw {
             test_cases: cases,
             ..test_crate
-        }
+        })
     }
 }
 
@@ -119,13 +144,13 @@ mod tests {
     #[test]
     #[should_panic(expected = "Arguments only_ignored and include_ignored cannot be both true")]
     fn from_flags_only_ignored_and_include_ignored_both_true() {
-        let _ = TestsFilter::from_flags(None, false, true, true);
+        let _ = TestsFilter::from_flags(None, false, true, true, false, Default::default());
     }
 
     #[test]
     #[should_panic(expected = "Argument test_name_filter cannot be None with exact_match")]
     fn from_flags_exact_match_true_without_test_filter_name() {
-        let _ = TestsFilter::from_flags(None, true, false, false);
+        let _ = TestsFilter::from_flags(None, true, false, false, false, Default::default());
     }
 
     #[test]
@@ -170,8 +195,15 @@ mod tests {
             tests_location: CrateLocation::Lib,
         };
 
-        let tests_filter = TestsFilter::from_flags(Some("do".to_string()), false, false, false);
-        let filtered = tests_filter.filter_tests(mocked_tests.clone());
+        let tests_filter = TestsFilter::from_flags(
+            Some("do".to_string()),
+            false,
+            false,
+            false,
+            false,
+            Default::default(),
+        );
+        let filtered = tests_filter.filter_tests(mocked_tests.clone()).unwrap();
         assert_eq!(
             filtered.test_cases,
             vec![TestCaseRaw {
@@ -184,9 +216,15 @@ mod tests {
             },]
         );
 
-        let tests_filter =
-            TestsFilter::from_flags(Some("te2::run".to_string()), false, false, false);
-        let filtered = tests_filter.filter_tests(mocked_tests.clone());
+        let tests_filter = TestsFilter::from_flags(
+            Some("te2::run".to_string()),
+            false,
+            false,
+            false,
+            false,
+            Default::default(),
+        );
+        let filtered = tests_filter.filter_tests(mocked_tests.clone()).unwrap();
         assert_eq!(
             filtered.test_cases,
             vec![TestCaseRaw {
@@ -199,8 +237,15 @@ mod tests {
             },]
         );
 
-        let tests_filter = TestsFilter::from_flags(Some("thing".to_string()), false, false, false);
-        let filtered = tests_filter.filter_tests(mocked_tests.clone());
+        let tests_filter = TestsFilter::from_flags(
+            Some("thing".to_string()),
+            false,
+            false,
+            false,
+            false,
+            Default::default(),
+        );
+        let filtered = tests_filter.filter_tests(mocked_tests.clone()).unwrap();
         assert_eq!(
             filtered.test_cases,
             vec![
@@ -239,13 +284,26 @@ mod tests {
             ]
         );
 
-        let tests_filter =
-            TestsFilter::from_flags(Some("nonexistent".to_string()), false, false, false);
-        let filtered = tests_filter.filter_tests(mocked_tests.clone());
+        let tests_filter = TestsFilter::from_flags(
+            Some("nonexistent".to_string()),
+            false,
+            false,
+            false,
+            false,
+            Default::default(),
+        );
+        let filtered = tests_filter.filter_tests(mocked_tests.clone()).unwrap();
         assert_eq!(filtered.test_cases, vec![]);
 
-        let tests_filter = TestsFilter::from_flags(Some(String::new()), false, false, false);
-        let filtered = tests_filter.filter_tests(mocked_tests.clone());
+        let tests_filter = TestsFilter::from_flags(
+            Some(String::new()),
+            false,
+            false,
+            false,
+            false,
+            Default::default(),
+        );
+        let filtered = tests_filter.filter_tests(mocked_tests.clone()).unwrap();
         assert_eq!(
             filtered.test_cases,
             vec![
@@ -293,16 +351,31 @@ mod tests {
             tests_location: CrateLocation::Lib,
         };
 
-        let tests_filter = TestsFilter::from_flags(Some(String::new()), false, false, false);
-        let filtered = tests_filter.filter_tests(mocked_tests.clone());
+        let tests_filter = TestsFilter::from_flags(
+            Some(String::new()),
+            false,
+            false,
+            false,
+            false,
+            Default::default(),
+        );
+        let filtered = tests_filter.filter_tests(mocked_tests.clone()).unwrap();
         assert_eq!(filtered.test_cases, vec![]);
 
-        let tests_filter = TestsFilter::from_flags(Some("thing".to_string()), false, false, false);
-        let filtered = tests_filter.filter_tests(mocked_tests.clone());
+        let tests_filter = TestsFilter::from_flags(
+            Some("thing".to_string()),
+            false,
+            false,
+            false,
+            false,
+            Default::default(),
+        );
+        let filtered = tests_filter.filter_tests(mocked_tests.clone()).unwrap();
         assert_eq!(filtered.test_cases, vec![]);
     }
 
     #[test]
+    #[allow(clippy::too_many_lines)]
     fn filtering_with_exact_match() {
         let mocked_tests = CompiledTestCrateRaw {
             sierra_program: program_for_testing(),
@@ -343,17 +416,37 @@ mod tests {
             tests_location: CrateLocation::Tests,
         };
 
-        let tests_filter = TestsFilter::from_flags(Some(String::new()), true, false, false);
-        let filtered = tests_filter.filter_tests(mocked_tests.clone());
+        let tests_filter = TestsFilter::from_flags(
+            Some(String::new()),
+            true,
+            false,
+            false,
+            false,
+            Default::default(),
+        );
+        let filtered = tests_filter.filter_tests(mocked_tests.clone()).unwrap();
         assert_eq!(filtered.test_cases, vec![]);
 
-        let tests_filter = TestsFilter::from_flags(Some("thing".to_string()), true, false, false);
-        let filtered = tests_filter.filter_tests(mocked_tests.clone());
+        let tests_filter = TestsFilter::from_flags(
+            Some("thing".to_string()),
+            true,
+            false,
+            false,
+            false,
+            Default::default(),
+        );
+        let filtered = tests_filter.filter_tests(mocked_tests.clone()).unwrap();
         assert_eq!(filtered.test_cases, vec![]);
 
-        let tests_filter =
-            TestsFilter::from_flags(Some("do_thing".to_string()), true, false, false);
-        let filtered = tests_filter.filter_tests(mocked_tests.clone());
+        let tests_filter = TestsFilter::from_flags(
+            Some("do_thing".to_string()),
+            true,
+            false,
+            false,
+            false,
+            Default::default(),
+        );
+        let filtered = tests_filter.filter_tests(mocked_tests.clone()).unwrap();
         assert_eq!(
             filtered.test_cases,
             vec![TestCaseRaw {
@@ -366,9 +459,15 @@ mod tests {
             },]
         );
 
-        let tests_filter =
-            TestsFilter::from_flags(Some("crate1::do_thing".to_string()), true, false, false);
-        let filtered = tests_filter.filter_tests(mocked_tests.clone());
+        let tests_filter = TestsFilter::from_flags(
+            Some("crate1::do_thing".to_string()),
+            true,
+            false,
+            false,
+            false,
+            Default::default(),
+        );
+        let filtered = tests_filter.filter_tests(mocked_tests.clone()).unwrap();
         assert_eq!(
             filtered.test_cases,
             vec![TestCaseRaw {
@@ -386,8 +485,10 @@ mod tests {
             true,
             false,
             false,
+            false,
+            Default::default(),
         );
-        let filtered = tests_filter.filter_tests(mocked_tests.clone());
+        let filtered = tests_filter.filter_tests(mocked_tests.clone()).unwrap();
         assert_eq!(filtered.test_cases, vec![]);
 
         let tests_filter = TestsFilter::from_flags(
@@ -395,8 +496,10 @@ mod tests {
             true,
             false,
             false,
+            false,
+            Default::default(),
         );
-        let filtered = tests_filter.filter_tests(mocked_tests.clone());
+        let filtered = tests_filter.filter_tests(mocked_tests.clone()).unwrap();
         assert_eq!(
             filtered.test_cases,
             vec![TestCaseRaw {
@@ -451,8 +554,9 @@ mod tests {
             tests_location: CrateLocation::Tests,
         };
 
-        let tests_filter = TestsFilter::from_flags(None, false, true, false);
-        let filtered = tests_filter.filter_tests(mocked_tests);
+        let tests_filter =
+            TestsFilter::from_flags(None, false, true, false, false, Default::default());
+        let filtered = tests_filter.filter_tests(mocked_tests).unwrap();
         assert_eq!(
             filtered.test_cases,
             vec![
@@ -517,8 +621,9 @@ mod tests {
             tests_location: CrateLocation::Tests,
         };
 
-        let tests_filter = TestsFilter::from_flags(None, false, false, true);
-        let filtered = tests_filter.filter_tests(mocked_tests);
+        let tests_filter =
+            TestsFilter::from_flags(None, false, false, true, false, Default::default());
+        let filtered = tests_filter.filter_tests(mocked_tests).unwrap();
         assert_eq!(
             filtered.test_cases,
             vec![

@@ -1,6 +1,5 @@
 use anyhow::{anyhow, Result};
 use camino::Utf8Path;
-use itertools::Itertools;
 use std::fmt::Debug;
 use std::sync::Arc;
 
@@ -15,11 +14,11 @@ use crate::collecting::{collect_test_compilation_targets, compile_tests, Compile
 use crate::scarb::config::ForkTarget;
 use crate::test_filter::TestsFilter;
 
+mod collecting;
 pub mod pretty_printing;
 pub mod scarb;
+pub mod shared_cache;
 pub mod test_filter;
-
-mod collecting;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum CrateLocation {
@@ -110,7 +109,7 @@ pub async fn run(
     let test_crates = test_crates
         .into_iter()
         .map(|tc| tests_filter.filter_tests(tc))
-        .collect_vec();
+        .collect::<Result<Vec<CompiledTestCrateRaw>>>()?;
     let not_filtered: usize = test_crates.iter().map(|tc| tc.test_cases.len()).sum();
     let filtered = all_tests - not_filtered;
 
