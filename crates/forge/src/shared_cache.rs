@@ -8,7 +8,7 @@ use scarb_metadata::MetadataCommand;
 use std::fs::{self, File};
 use std::io::{BufRead, BufReader, BufWriter, Write};
 
-pub fn get_cached_failed_tests_names(cache_dir_path: &Utf8PathBuf) -> Result<Option<Vec<String>>> {
+pub fn cached_failed_tests_names(cache_dir_path: &Utf8PathBuf) -> Result<Option<Vec<String>>> {
     let tests_failed_path = cache_dir_path.join(PREV_TESTS_FAILED);
     if !tests_failed_path.exists() {
         return Ok(None);
@@ -31,7 +31,7 @@ fn get_or_create_cache_dir(cache_dir_path: &Utf8PathBuf) -> Result<&Utf8PathBuf>
     Ok(cache_dir_path)
 }
 
-pub fn cache_failed_tests_names(
+pub fn set_cached_failed_tests_names(
     all_failed_tests: &[TestCaseSummary],
     cache_dir_path: &Utf8PathBuf,
 ) -> Result<()> {

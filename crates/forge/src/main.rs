@@ -3,7 +3,7 @@ use camino::Utf8Path;
 use clap::{Parser, Subcommand, ValueEnum};
 use forge::scarb::config::ForgeConfig;
 use forge::scarb::config_from_scarb_for_package;
-use forge::shared_cache::{cache_failed_tests_names, clean_cache};
+use forge::shared_cache::{clean_cache, set_cached_failed_tests_names};
 use forge::test_filter::TestsFilter;
 use forge::{pretty_printing, run};
 use forge_runner::test_case_summary::TestCaseSummary;
@@ -224,7 +224,7 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                 let mut failed_tests = extract_failed_tests(tests_file_summaries);
                 all_failed_tests.append(&mut failed_tests);
             }
-            cache_failed_tests_names(&all_failed_tests, &workspace_root.join(CACHE_DIR))?;
+            set_cached_failed_tests_names(&all_failed_tests, &workspace_root.join(CACHE_DIR))?;
 
             Ok::<_, anyhow::Error>(all_failed_tests)
         })

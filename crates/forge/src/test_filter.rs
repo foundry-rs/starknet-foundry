@@ -1,4 +1,4 @@
-use crate::{collecting::CompiledTestCrateRaw, shared_cache::get_cached_failed_tests_names};
+use crate::{collecting::CompiledTestCrateRaw, shared_cache::cached_failed_tests_names};
 use anyhow::Result;
 use camino::Utf8PathBuf;
 
@@ -92,7 +92,7 @@ impl TestsFilter {
         };
 
         if self.last_failed_filter {
-            cases = match get_cached_failed_tests_names(&self.cache_dir_path)? {
+            cases = match cached_failed_tests_names(&self.cache_dir_path)? {
                 Some(result) => cases
                     .into_iter()
                     .filter(|tc| result.iter().any(|name| name == &tc.name))
