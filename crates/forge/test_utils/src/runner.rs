@@ -249,3 +249,23 @@ macro_rules! assert_case_output_contains {
         }));
     }};
 }
+
+#[macro_export]
+macro_rules! assert_gas {
+    ($result:expr, $test_case_name:expr, $asserted_gas:expr) => {{
+        use forge_runner::test_case_summary::TestCaseSummary;
+        use $crate::runner::TestCase;
+
+        let test_case_name = $test_case_name;
+        let test_name_suffix = format!("::{test_case_name}");
+
+        let result = TestCase::find_test_result(&$result);
+
+        assert!(result.test_case_summaries.iter().any(|case| {
+            match case {
+                TestCaseSummary::Passed { gas, .. } => (*gas - $asserted_gas).abs() < 0.0001,
+                _ => false,
+            }
+        }));
+    }};
+}

@@ -27,6 +27,7 @@ pub enum TestCaseSummary {
         fuzzing_statistic: Option<FuzzingStatistics>,
         /// Number of block used if BlockId::Tag(Latest) was specified
         latest_block_number: Option<BlockNumber>,
+        /// Gas used by the test case
         gas: f64,
     },
     /// Test case failed
