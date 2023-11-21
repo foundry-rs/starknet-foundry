@@ -9,11 +9,6 @@ use std::fs::canonicalize;
 use std::process::{Command, Stdio};
 use std::str::FromStr;
 
-#[derive(Default, Clone, Copy)]
-pub struct ScarbOpts {
-    pub with_deps: bool,
-}
-
 #[derive(Deserialize, Serialize, Clone, Debug, Default)]
 pub struct CastConfig {
     pub rpc_url: String,
@@ -176,7 +171,7 @@ pub fn parse_scarb_config(
         return Ok(CastConfig::default());
     }
 
-    let metadata = get_scarb_metadata(&manifest_path, Default::default())?;
+    let metadata = get_scarb_metadata(&manifest_path)?;
 
     match get_package_tool_sncast(&metadata) {
         Ok(package_tool_sncast) => {
@@ -307,17 +302,13 @@ mod tests {
 
     #[test]
     fn test_get_scarb_metadata() {
-        let metadata = get_scarb_metadata(
-            &"tests/data/contracts/map/Scarb.toml".into(),
-            Default::default(),
-        );
+        let metadata = get_scarb_metadata(&"tests/data/contracts/map/Scarb.toml".into());
         assert!(metadata.is_ok());
     }
 
     #[test]
     fn test_get_scarb_metadata_not_found() {
-        let metadata_err =
-            get_scarb_metadata(&"Scarb.toml".into(), Default::default()).unwrap_err();
+        let metadata_err = get_scarb_metadata(&"Scarb.toml".into()).unwrap_err();
         assert!(metadata_err
             .to_string()
             .contains("Failed to read Scarb.toml manifest file"));

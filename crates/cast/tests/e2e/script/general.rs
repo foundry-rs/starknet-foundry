@@ -79,30 +79,6 @@ async fn test_run_script_from_different_directory_no_path_to_scarb_toml() {
 }
 
 #[tokio::test]
-async fn test_verify_imports_within_same_package() {
-    let script_name = "verify_import";
-    let args = vec![
-        "--accounts-file",
-        "../../accounts/accounts.json",
-        "--account",
-        "user1",
-        "--url",
-        URL,
-        "script",
-        &script_name,
-    ];
-
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(SCRIPTS_DIR.to_owned() + "/misc")
-        .args(args);
-    snapbox.assert().success().stdout_matches(indoc! {r"
-        ...
-        command: script
-        status: success
-    "});
-}
-
-#[tokio::test]
 async fn test_fail_when_using_starknet_syscall() {
     let script_name = "using_starknet_syscall";
     let args = vec![

@@ -102,7 +102,7 @@ pub fn add_created_profile_to_configuration(
         Some(path) => path,
         None => get_scarb_manifest().context("Failed to obtain manifest path from scarb")?,
     };
-    let metadata = get_scarb_metadata(&manifest_path, Default::default())?;
+    let metadata = get_scarb_metadata(&manifest_path)?;
 
     if let Ok(tool_sncast) = get_package_tool_sncast(&metadata) {
         let property = tool_sncast
