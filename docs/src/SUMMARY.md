@@ -42,6 +42,7 @@
     * [init](appendix/forge/init.md)
     * [clean-cache](appendix/forge/clean-cache.md)
 * [Cheatcodes Reference](appendix/cheatcodes.md)
+    * [`CheatTarget`](appendix/cheatcodes/cheat_target.md)
     * [start_prank](appendix/cheatcodes/start_prank.md)
     * [stop_prank](appendix/cheatcodes/stop_prank.md)
     * [start_roll](appendix/cheatcodes/start_roll.md)
@@ -57,6 +58,7 @@
     * [spy_events](appendix/cheatcodes/spy_events.md)
     * [start_spoof](appendix/cheatcodes/start_spoof.md)
     * [stop_spoof](appendix/cheatcodes/stop_spoof.md)
+    
 
 * [Forge Library Functions References](appendix/forge-library.md)
     * [declare](appendix/forge-library/declare.md)

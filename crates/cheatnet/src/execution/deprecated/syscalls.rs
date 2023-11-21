@@ -266,10 +266,9 @@ pub fn get_caller_address(
     contract_address: ContractAddress,
 ) -> DeprecatedSyscallResult<GetContractAddressResponse> {
     Ok(GetContractAddressResponse {
-        address: *syscall_handler
+        address: syscall_handler
             .cheatnet_state
-            .pranked_contracts
-            .get(&contract_address)
+            .get_cheated_caller_address(&contract_address)
             .unwrap(),
     })
 }
@@ -283,8 +282,7 @@ pub fn get_block_number(
         block_number: BlockNumber(
             syscall_handler
                 .cheatnet_state
-                .rolled_contracts
-                .get(&contract_address)
+                .get_cheated_block_number(&contract_address)
                 .unwrap()
                 .to_u64()
                 .unwrap(),

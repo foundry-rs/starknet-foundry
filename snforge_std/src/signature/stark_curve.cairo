@@ -28,9 +28,9 @@ impl StarkCurveKeyPairSigner of Signer<StarkCurveKeyPair> {
     fn sign(
         ref self: StarkCurveKeyPair, message_hash: felt252
     ) -> Result<(felt252, felt252), felt252> {
-        let output = cheatcode::<'ecdsa_sign_message'>(
-            array![self.private_key, message_hash].span()
-        );
+        let output = cheatcode::<
+            'ecdsa_sign_message'
+        >(array![self.private_key, message_hash].span());
 
         if *output[0] == 0 {
             Result::Ok((*output[1], *output[2]))

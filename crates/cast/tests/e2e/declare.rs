@@ -60,10 +60,10 @@ async fn contract_already_declared() {
         .current_dir(CONTRACTS_DIR.to_string() + "/map")
         .args(args);
 
-    snapbox.assert().success().stderr_matches(indoc! {r#"
+    snapbox.assert().success().stderr_matches(indoc! {r"
         command: declare
         error: Class with hash [..] is already declared.
-    "#});
+    "});
 }
 
 #[tokio::test]
@@ -84,10 +84,10 @@ async fn wrong_contract_name_passed() {
         .current_dir(CONTRACTS_DIR.to_string() + "/map")
         .args(args);
 
-    snapbox.assert().success().stderr_matches(indoc! {r#"
+    snapbox.assert().success().stderr_matches(indoc! {r"
         command: declare
         error: Failed to find artifacts in starknet_artifacts.json file[..]
-    "#});
+    "});
 }
 
 #[test_case("/build_fails", "../../accounts/accounts.json" ; "when wrong cairo contract")]
@@ -109,11 +109,11 @@ fn scarb_build_fails(contract_path: &str, accounts_file_path: &str) {
         .current_dir(CONTRACTS_DIR.to_string() + contract_path)
         .args(args);
 
-    snapbox.assert().stderr_matches(indoc! {r#"
+    snapbox.assert().stderr_matches(indoc! {r"
         command: declare
         error: Scarb build returned non-zero exit code: 1[..]
         ...
-    "#});
+    "});
 }
 
 #[test]
@@ -141,10 +141,10 @@ fn test_too_low_max_fee() {
         .current_dir(contract_path.path())
         .args(args);
 
-    snapbox.assert().success().stderr_matches(indoc! {r#"
+    snapbox.assert().success().stderr_matches(indoc! {r"
         command: declare
         error: Max fee is smaller than the minimal transaction cost (validation plus fee transfer)
-    "#});
+    "});
 
     fs::remove_dir_all(contract_path).unwrap();
 }
@@ -168,8 +168,8 @@ fn scarb_no_artifacts(contract_path: &str, accounts_file_path: &str) {
         .current_dir(CONTRACTS_DIR.to_string() + contract_path)
         .args(args);
 
-    snapbox.assert().success().stderr_matches(indoc! {r#"
+    snapbox.assert().success().stderr_matches(indoc! {r"
         command: declare
         [..]Make sure you have enabled sierra and casm code generation in Scarb.toml[..]
-    "#});
+    "});
 }
