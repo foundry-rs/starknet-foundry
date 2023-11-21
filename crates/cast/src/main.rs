@@ -120,7 +120,7 @@ fn main() -> Result<()> {
     if let Commands::Script(script) = cli.command {
         let mut result = starknet_commands::script::run(
             &script.script_module_name,
-            &script.path_to_package,
+            &cli.path_to_scarb_toml,
             &provider,
             runtime,
         );

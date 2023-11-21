@@ -44,10 +44,6 @@ use tokio::runtime::Runtime;
 #[derive(Args)]
 #[command(about = "Execute a deployment script")]
 pub struct Script {
-    /// Path to the package with the script folder
-    #[clap(short, long)]
-    pub path_to_package: Option<Utf8PathBuf>,
-
     /// Module name that contains the `main` function, which will be executed
     pub script_module_name: String,
 }
@@ -225,11 +221,11 @@ impl CairoHintProcessor<'_> {
 
 pub fn run(
     module_name: &str,
-    path_to_package: &Option<Utf8PathBuf>,
+    path_to_scarb_toml: &Option<Utf8PathBuf>,
     provider: &JsonRpcClient<HttpTransport>,
     runtime: Runtime,
 ) -> Result<ScriptResponse> {
-    let path = compile_script(path_to_package.clone())?;
+    let path = compile_script(path_to_scarb_toml.clone())?;
 
     let sierra_program = serde_json::from_str::<VersionedProgram>(
         &fs::read_to_string(path.clone())
@@ -288,28 +284,16 @@ pub fn run(
     }
 }
 
-fn compile_script(path_to_package: Option<Utf8PathBuf>) -> Result<Utf8PathBuf> {
-    let manifest_path = match path_to_package {
-        Some(path) => path.clone(),
+fn compile_script(path_to_scarb_toml: Option<Utf8PathBuf>) -> Result<Utf8PathBuf> {
+    let scripts_manifest_path = match path_to_scarb_toml {
+        Some(path) => path,
         None => get_scarb_manifest()
             .context("Failed to obtain manifest path from scarb")
             .unwrap(),
     };
-
-    let package_folder = manifest_path
-        .parent()
-        .unwrap_or_else(|| panic!("Failed to determine parent for {manifest_path}"));
-
-    let script_folder_path = package_folder.join("scripts");
-    ensure!(
-        script_folder_path.exists(),
-        "No scripts folder in {package_folder}"
-    );
-
-    let scripts_manifest_path = script_folder_path.join("Scarb.toml");
     ensure!(
         scripts_manifest_path.exists(),
-        "No Scarb.toml in {scripts_manifest_path}"
+        "Path {scripts_manifest_path} does not exist"
     );
 
     ScarbCommand::new()

@@ -52,7 +52,7 @@ async fn test_call_failing() {
 #[tokio::test]
 async fn test_run_script_from_different_directory() {
     let script_name = "hello_world";
-    let path_to_package = "hello_world/Scarb.toml";
+    let path_to_scarb_toml = "hello_world/Scarb.toml";
     let args = vec![
         "--accounts-file",
         "../accounts/accounts.json",
@@ -60,9 +60,9 @@ async fn test_run_script_from_different_directory() {
         "user1",
         "--url",
         URL,
+        "--path-to-scarb-toml",
+        path_to_scarb_toml,
         "script",
-        "--path-to-package",
-        path_to_package,
         &script_name,
     ];
 
@@ -73,6 +73,29 @@ async fn test_run_script_from_different_directory() {
         ...
         command: script
         status: success
+    "});
+}
+
+#[tokio::test]
+async fn test_run_script_from_different_directory_no_path_to_scarb_toml() {
+    let script_name = "hello_world";
+    let args = vec![
+        "--accounts-file",
+        "../accounts/accounts.json",
+        "--account",
+        "user1",
+        "--url",
+        URL,
+        "script",
+        &script_name,
+    ];
+
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(SCRIPTS_DIR)
+        .args(args);
+    snapbox.assert().success().stderr_matches(indoc! {r"
+        ...
+        error: Path /Users/aleks/work/starknet/starknet-foundry/crates/cast/tests/data/scripts/Scarb.toml does not exist
     "});
 }
 
