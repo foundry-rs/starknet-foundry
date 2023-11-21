@@ -250,7 +250,10 @@ impl CairoHintProcessor<'_> {
                     .expect("Failed to convert calldata length to usize");
                 let constructor_calldata: Vec<FieldElement> = {
                     let calldata = Vec::from(&inputs[2..(2 + calldata_length)]);
-                    calldata.iter().map(|x| x.to_field_element()).collect()
+                    calldata
+                        .iter()
+                        .map(StarknetConversions::to_field_element)
+                        .collect()
                 };
                 let mut offset = 2 + calldata_length;
                 let salt = if inputs[offset] == 0.into() {

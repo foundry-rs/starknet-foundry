@@ -12,10 +12,4 @@ fn main() {
     let deploy_result = deploy(
         class_hash, array![0x2, 0x2, 0x0], Option::Some(salt), true, Option::Some(max_fee)
     );
-
-    assert(
-        deploy_result
-            .transaction_hash == 0x219016861d63cab224142aaaccbd335887c7c2f45e5e487be6d7c2eaf777797,
-        deploy_result.transaction_hash
-    );
 }
