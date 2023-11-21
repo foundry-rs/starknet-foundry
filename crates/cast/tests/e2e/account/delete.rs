@@ -119,10 +119,13 @@ pub async fn test_happy_case(temp_dir_path: &str, pass_path_to_scarb_toml: bool)
 
     // Run test with an affirmative user input
     // let snapbox = Command::new(cargo_bin!("sncast")).args(args).stdin("Y");
-    let snapbox = if pass_path_to_scarb_toml { 
-        Command::new(cargo_bin!("sncast")).args(args).stdin("Y") 
-    } else { 
-        Command::new(cargo_bin!("sncast")).current_dir(temp_dir_path).args(args).stdin("Y") 
+    let snapbox = if pass_path_to_scarb_toml {
+        Command::new(cargo_bin!("sncast")).args(args).stdin("Y")
+    } else {
+        Command::new(cargo_bin!("sncast"))
+            .current_dir(temp_dir_path)
+            .args(args)
+            .stdin("Y")
     };
 
     let bdg = snapbox.assert();
