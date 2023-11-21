@@ -1,9 +1,10 @@
 use blockifier::execution::execution_utils::stark_felt_to_felt;
+use cairo_felt::Felt252;
 use cairo_vm::{
     types::relocatable::{MaybeRelocatable, Relocatable},
     vm::vm_core::VirtualMachine,
 };
-use conversions::StarknetConversions;
+use conversions::FromConv;
 use starknet_api::core::ContractAddress;
 
 use crate::{cheatcodes::spoof::TxInfoMock, state::CheatnetState};
@@ -28,7 +29,7 @@ fn get_cheated_block_info_ptr(
     }
 
     if let Some(elected_address) = cheatnet_state.elected_contracts.get(contract_address) {
-        new_block_info[2] = MaybeRelocatable::Int(elected_address.to_felt252());
+        new_block_info[2] = MaybeRelocatable::Int(Felt252::from_(*elected_address));
     };
 
     vm.load_data(ptr_cheated_block_info, &new_block_info)

@@ -32,7 +32,7 @@ use cast::helpers::scarb_utils::{
 use cheatnet::cheatcodes::EnhancedHintError;
 use clap::command;
 use clap::Args;
-use conversions::StarknetConversions;
+use conversions::{FromConv, IntoConv};
 use itertools::chain;
 use num_traits::ToPrimitive;
 use scarb_metadata::ScarbCommand;
@@ -173,7 +173,7 @@ impl CairoHintProcessor<'_> {
 
         match selector {
             "call" => {
-                let contract_address = inputs[0].to_field_element();
+                let contract_address = inputs[0].clone().into_();
                 let function_name = as_cairo_short_string(&inputs[1])
                     .expect("Failed to convert function name to short string");
                 let calldata_length = inputs[2]
@@ -182,7 +182,7 @@ impl CairoHintProcessor<'_> {
                 let calldata = Vec::from(&inputs[3..(3 + calldata_length)]);
                 let calldata_felts: Vec<FieldElement> = calldata
                     .iter()
-                    .map(StarknetConversions::to_field_element)
+                    .map(|el| FieldElement::from_(el.clone()))
                     .collect();
 
                 let call_response = self.runtime.block_on(call::call(
@@ -198,12 +198,7 @@ impl CairoHintProcessor<'_> {
                     .expect("Failed to insert data length");
 
                 buffer
-                    .write_data(
-                        call_response
-                            .response
-                            .iter()
-                            .map(StarknetConversions::to_felt252),
-                    )
+                    .write_data(call_response.response.iter().map(|el| Felt252::from_(*el)))
                     .expect("Failed to insert data");
 
                 Ok(())

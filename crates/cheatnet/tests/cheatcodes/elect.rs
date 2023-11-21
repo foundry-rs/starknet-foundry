@@ -9,7 +9,7 @@ use crate::{
 use cairo_felt::Felt252;
 use cheatnet::cheatcodes::deploy::deploy;
 use cheatnet::rpc::call_contract;
-use conversions::StarknetConversions;
+use conversions::IntoConv;
 use starknet_api::core::ContractAddress;
 
 #[test]
@@ -75,7 +75,7 @@ fn elect_in_constructor() {
 
     let contracts = get_contracts();
 
-    let contract_name = "ConstructorElectChecker".to_owned().to_felt252();
+    let contract_name = "ConstructorElectChecker".to_owned().into_();
     let class_hash = blockifier_state
         .declare(&contract_name, &contracts)
         .unwrap();
@@ -239,7 +239,7 @@ fn elect_proxy() {
         &mut cheatnet_state,
         &proxy_address,
         &proxy_selector,
-        &[contract_address.to_felt252()],
+        &[contract_address.into_()],
     )
     .unwrap();
 
@@ -250,7 +250,7 @@ fn elect_proxy() {
         &mut cheatnet_state,
         &proxy_address,
         &proxy_selector,
-        &[contract_address.to_felt252()],
+        &[contract_address.into_()],
     )
     .unwrap();
 
@@ -263,7 +263,7 @@ fn elect_proxy() {
         &mut cheatnet_state,
         &proxy_address,
         &proxy_selector,
-        &[contract_address.to_felt252()],
+        &[contract_address.into_()],
     )
     .unwrap();
 
@@ -276,7 +276,7 @@ fn elect_library_call() {
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contracts = get_contracts();
-    let contract_name = "ElectChecker".to_owned().to_felt252();
+    let contract_name = "ElectChecker".to_owned().into_();
     let class_hash = blockifier_state
         .declare(&contract_name, &contracts)
         .unwrap();
@@ -294,7 +294,7 @@ fn elect_library_call() {
         &mut cheatnet_state,
         &lib_call_address,
         &lib_call_selector,
-        &[class_hash.to_felt252()],
+        &[class_hash.into_()],
     )
     .unwrap();
 
@@ -305,7 +305,7 @@ fn elect_library_call() {
         &mut cheatnet_state,
         &lib_call_address,
         &lib_call_selector,
-        &[class_hash.to_felt252()],
+        &[class_hash.into_()],
     )
     .unwrap();
 
@@ -318,7 +318,7 @@ fn elect_library_call() {
         &mut cheatnet_state,
         &lib_call_address,
         &lib_call_selector,
-        &[class_hash.to_felt252()],
+        &[class_hash.into_()],
     )
     .unwrap();
 
