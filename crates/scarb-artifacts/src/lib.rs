@@ -76,8 +76,9 @@ fn artifacts_for_package(path: &Utf8Path) -> Result<StarknetArtifacts> {
 pub fn try_get_starknet_artifacts_path(
     target_dir: &Utf8Path,
     target_name: &str,
+    current_profile: &str,
 ) -> Result<Option<Utf8PathBuf>> {
-    let path = target_dir.join("dev");
+    let path = target_dir.join(current_profile);
     let paths = fs::read_dir(path);
     let Ok(mut paths) = paths else {
         return Ok(None);
@@ -104,7 +105,8 @@ pub fn get_contracts_map(
     let target_dir = target_dir_for_package(metadata);
     let target_name = target_name_for_package(metadata, package)?;
 
-    let maybe_contracts_path = try_get_starknet_artifacts_path(&target_dir, &target_name)?;
+    let maybe_contracts_path =
+        try_get_starknet_artifacts_path(&target_dir, &target_name, &metadata.current_profile)?;
 
     let map = match maybe_contracts_path {
         Some(contracts_path) => load_contract_artifacts(&contracts_path)?,
@@ -139,7 +141,7 @@ fn compilation_unit_for_package<'a>(
         .compilation_units
         .iter()
         .filter(|unit| unit.package == *package)
-        .min_by_key(|unit| match unit.target.name.as_str() {
+        .min_by_key(|unit| match unit.target.kind.as_str() {
             name @ "starknet-contract" => (0, name),
             name @ "lib" => (1, name),
             name => (2, name),
@@ -296,6 +298,7 @@ mod tests {
         let result = try_get_starknet_artifacts_path(
             &Utf8PathBuf::from_path_buf(temp.to_path_buf().join("target")).unwrap(),
             "basic_package",
+            "dev",
         );
         let path = result.unwrap().unwrap();
         assert_eq!(
@@ -347,6 +350,7 @@ mod tests {
         let result = try_get_starknet_artifacts_path(
             &Utf8PathBuf::from_path_buf(temp.to_path_buf().join("target")).unwrap(),
             "essa",
+            "dev",
         );
         let path = result.unwrap().unwrap();
         assert_eq!(
@@ -380,6 +384,7 @@ mod tests {
         let result = try_get_starknet_artifacts_path(
             &Utf8PathBuf::from_path_buf(temp.to_path_buf().join("target")).unwrap(),
             "empty_lib",
+            "dev",
         );
         let path = result.unwrap();
         assert!(path.is_none());
@@ -392,6 +397,7 @@ mod tests {
         let result = try_get_starknet_artifacts_path(
             &Utf8PathBuf::from_path_buf(temp.to_path_buf().join("target")).unwrap(),
             "basic_package",
+            "dev",
         );
         let path = result.unwrap();
         assert!(path.is_none());
