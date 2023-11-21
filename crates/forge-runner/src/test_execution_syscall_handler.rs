@@ -269,6 +269,22 @@ impl TestExecutionSyscallHandler<'_> {
                 self.child.child.cheatnet_state.stop_warp(target);
                 Ok(())
             }
+            "start_elect" => {
+                let contract_address = inputs[0].to_contract_address();
+                let sequencer_address = inputs[1].to_contract_address();
+
+                self.child
+                    .child
+                    .cheatnet_state
+                    .start_elect(contract_address, sequencer_address);
+                Ok(())
+            }
+            "stop_elect" => {
+                let contract_address = inputs[0].to_contract_address();
+
+                self.child.child.cheatnet_state.stop_elect(contract_address);
+                Ok(())
+            }
             "start_prank" => {
                 let (target, _) = deserialize_cheat_target(&inputs[..inputs.len() - 1]);
 
@@ -803,9 +819,7 @@ fn write_call_contract_response(
                     .map(StarknetConversions::to_stark_felt)
                     .collect(),
             },
-            CallContractFailure::Error { msg, .. } => {
-                return Err(HintError::CustomHint(Box::from(msg)))
-            }
+            CallContractFailure::Error { msg, .. } => return Err(CustomHint(Box::from(msg))),
         },
     };
 

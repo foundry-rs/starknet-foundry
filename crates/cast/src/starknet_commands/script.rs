@@ -338,8 +338,7 @@ fn compile_script(path_to_scarb_toml: Option<Utf8PathBuf>) -> Result<Utf8PathBuf
         .env("SCARB_MANIFEST_PATH", &scripts_manifest_path)
         .run()?;
 
-    let opts = ScarbOpts { with_deps: true };
-    let metadata = get_scarb_metadata(&scripts_manifest_path, opts)?;
+    let metadata = get_scarb_metadata_with_deps(&scripts_manifest_path)?;
     let package_metadata = get_package_metadata(&metadata, &scripts_manifest_path)?;
 
     let filename = format!("{}.sierra.json", package_metadata.name);
@@ -359,6 +358,7 @@ fn compile_script(path_to_scarb_toml: Option<Utf8PathBuf>) -> Result<Utf8PathBuf
 
 // taken from starknet-foundry/crates/forge/src/test_case_summary.rs
 /// Helper function to build `readable_text` from a run data.
+// TODO #1127
 fn build_readable_text(data: &Vec<Felt252>) -> Option<String> {
     let mut readable_text = String::new();
 

@@ -223,6 +223,7 @@ pub struct CheatnetState {
     pub global_prank: Option<ContractAddress>,
     pub warped_contracts: HashMap<ContractAddress, CheatStatus<Felt252>>,
     pub global_warp: Option<Felt252>,
+    pub elected_contracts: HashMap<ContractAddress, ContractAddress>,
     pub mocked_functions: HashMap<ContractAddress, HashMap<EntryPointSelector, Vec<StarkFelt>>>,
     pub spoofed_contracts: HashMap<ContractAddress, CheatStatus<TxInfoMock>>,
     pub global_spoof: Option<TxInfoMock>,
@@ -255,6 +256,11 @@ impl CheatnetState {
     #[must_use]
     pub fn address_is_pranked(&self, contract_address: &ContractAddress) -> bool {
         self.get_cheated_caller_address(contract_address).is_some()
+    }
+
+    #[must_use]
+    pub fn address_is_elected(&self, contract_address: &ContractAddress) -> bool {
+        self.elected_contracts.contains_key(contract_address)
     }
 
     #[must_use]
