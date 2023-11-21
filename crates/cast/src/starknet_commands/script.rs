@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::fs;
 
 use crate::get_account;
-use crate::starknet_commands::{call, declare, deploy};
+use crate::starknet_commands::{call, declare, deploy, invoke};
 use anyhow::{anyhow, ensure, Context, Result};
 use cairo_felt::Felt252;
 use cairo_lang_casm::hints::{Hint, StarknetHint};
@@ -295,6 +295,46 @@ impl CairoHintProcessor<'_> {
 
                 buffer
                     .write(deploy_response.transaction_hash.to_felt252())
+                    .expect("Failed to insert transaction hash");
+
+                Ok(())
+            }
+            "invoke" => {
+                let contract_address = inputs[0].to_field_element();
+                let entry_point_name = as_cairo_short_string(&inputs[1])
+                    .expect("Failed to convert entry point name to short string");
+                let calldata_length = inputs[2]
+                    .to_usize()
+                    .expect("Failed to convert calldata length to usize");
+                let calldata: Vec<FieldElement> = {
+                    let calldata = Vec::from(&inputs[3..(3 + calldata_length)]);
+                    calldata.iter().map(|x| x.to_field_element()).collect()
+                };
+                let offset = 3 + calldata_length;
+                let max_fee = if inputs[offset] == 0.into() {
+                    Some(inputs[offset + 1].to_field_element())
+                } else {
+                    None
+                };
+
+                let account = self.runtime.block_on(get_account(
+                    &self.config.account,
+                    &self.config.accounts_file,
+                    self.provider,
+                    &self.config.keystore,
+                ))?;
+
+                let invoke_response = self.runtime.block_on(invoke::invoke(
+                    contract_address,
+                    &entry_point_name,
+                    calldata,
+                    max_fee,
+                    &account,
+                    true,
+                ))?;
+
+                buffer
+                    .write(invoke_response.transaction_hash.to_felt252())
                     .expect("Failed to insert transaction hash");
 
                 Ok(())
