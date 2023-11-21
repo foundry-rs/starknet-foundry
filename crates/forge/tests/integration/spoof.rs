@@ -70,6 +70,27 @@ fn start_and_stop_spoof_single_attribute() {
                 let transaction_hash = dispatcher.get_tx_hash();
                 assert(transaction_hash == tx_hash_before_mock, 'Invalid tx hash');
             }
+
+            #[test]
+            fn test_spoof_all_stop_one() {
+                let contract = declare('SpoofChecker');
+                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+                let dispatcher = ISpoofCheckerDispatcher { contract_address };
+
+                let tx_hash_before_mock = dispatcher.get_tx_hash();
+
+                let mut tx_info_mock = TxInfoMockTrait::default();
+                tx_info_mock.transaction_hash = Option::Some(421);
+                start_spoof(CheatTarget::All, tx_info_mock);
+
+                let transaction_hash = dispatcher.get_tx_hash();
+                assert(transaction_hash == 421, 'Invalid tx hash');
+
+                stop_spoof(CheatTarget::One(contract_address));
+
+                let transaction_hash = dispatcher.get_tx_hash();
+                assert(tx_hash_before_mock == transaction_hash, 'Tx hash did not change back');
+            }
         "
         ),
         Contract::from_code_path(
