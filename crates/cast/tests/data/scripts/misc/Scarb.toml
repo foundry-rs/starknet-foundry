@@ -1,5 +1,5 @@
 [package]
-name = "hello_world_script"
+name = "misc_script"
 version = "0.1.0"
 
 [dependencies]

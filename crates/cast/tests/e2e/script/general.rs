@@ -4,12 +4,12 @@ use snapbox::cmd::{cargo_bin, Command};
 
 #[tokio::test]
 async fn test_happy_case() {
-    let script_name = "hello_world";
+    let script_name = "map_script";
     let args = vec![
         "--accounts-file",
         "../../accounts/accounts.json",
         "--account",
-        "user1",
+        "user4",
         "--url",
         URL,
         "script",
@@ -17,8 +17,9 @@ async fn test_happy_case() {
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(SCRIPTS_DIR.to_owned() + "/hello_world")
+        .current_dir(SCRIPTS_DIR.to_owned() + "/map_script")
         .args(args);
+
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
         command: script
@@ -27,32 +28,9 @@ async fn test_happy_case() {
 }
 
 #[tokio::test]
-async fn test_call_failing() {
-    let script_name = "call_fail";
-    let args = vec![
-        "--accounts-file",
-        "../../accounts/accounts.json",
-        "--account",
-        "user1",
-        "--url",
-        URL,
-        "script",
-        &script_name,
-    ];
-
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(SCRIPTS_DIR.to_owned() + "/hello_world")
-        .args(args);
-    snapbox.assert().success().stderr_matches(indoc! {r"
-        command: script
-        error: Got an exception while executing a hint: Hint Error: Entry point [..] not found in contract.
-    "});
-}
-
-#[tokio::test]
 async fn test_run_script_from_different_directory() {
-    let script_name = "hello_world";
-    let path_to_scarb_toml = "hello_world/Scarb.toml";
+    let script_name = "call_happy";
+    let path_to_package = "misc/Scarb.toml";
     let args = vec![
         "--accounts-file",
         "../accounts/accounts.json",
@@ -115,7 +93,7 @@ async fn test_verify_imports_within_same_package() {
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(SCRIPTS_DIR.to_owned() + "/hello_world")
+        .current_dir(SCRIPTS_DIR.to_owned() + "/misc")
         .args(args);
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
@@ -139,7 +117,7 @@ async fn test_fail_when_using_starknet_syscall() {
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(SCRIPTS_DIR.to_owned() + "/hello_world")
+        .current_dir(SCRIPTS_DIR.to_owned() + "/misc")
         .args(args);
     snapbox.assert().success().stderr_matches(indoc! {r"
         ...
@@ -147,31 +125,3 @@ async fn test_fail_when_using_starknet_syscall() {
         error: Got an exception while executing a hint: Hint Error: Starknet syscalls are not supported
     "});
 }
-
-#[tokio::test]
-async fn test_happy_case_whole_flow() {
-    let script_name = "map_script";
-    let args = vec![
-        "--accounts-file",
-        "../../accounts/accounts.json",
-        "--account",
-        "user4",
-        "--url",
-        URL,
-        "script",
-        &script_name,
-    ];
-
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(SCRIPTS_DIR.to_owned() + "/map_script")
-        .args(args);
-
-    snapbox.assert().success().stdout_matches(indoc! {r"
-        ...
-        command: script
-        status: success
-    "});
-}
-
-// missing fields
-// declare: wrong contract name
