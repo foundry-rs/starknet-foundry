@@ -146,11 +146,7 @@ fn elect_complex() {
             trait IElectChecker<TContractState> {
                 fn get_sequencer_address(ref self: TContractState) -> ContractAddress;
             }
-            fn deploy_elect_checker()  -> IElectCheckerDispatcher {
-                let contract = declare('ElectChecker');
-                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
-                IElectCheckerDispatcher { contract_address }
-            }
+
             #[test]
             fn test_elect_complex() {
                 let contract = declare('ElectChecker');
