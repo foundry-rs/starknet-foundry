@@ -7,7 +7,7 @@ async fn test_happy_case() {
     let script_name = "map_script";
     let args = vec![
         "--accounts-file",
-        "../../accounts/accounts.json",
+        "../../../accounts/accounts.json",
         "--account",
         "user4",
         "--url",
@@ -17,7 +17,7 @@ async fn test_happy_case() {
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(SCRIPTS_DIR.to_owned() + "/map_script")
+        .current_dir(SCRIPTS_DIR.to_owned() + "/map_script/scripts")
         .args(args);
 
     snapbox.assert().success().stdout_matches(indoc! {r"
@@ -30,7 +30,7 @@ async fn test_happy_case() {
 #[tokio::test]
 async fn test_run_script_from_different_directory() {
     let script_name = "call_happy";
-    let path_to_package = "misc/Scarb.toml";
+    let path_to_scarb_toml = "misc/Scarb.toml";
     let args = vec![
         "--accounts-file",
         "../accounts/accounts.json",
@@ -56,7 +56,7 @@ async fn test_run_script_from_different_directory() {
 
 #[tokio::test]
 async fn test_run_script_from_different_directory_no_path_to_scarb_toml() {
-    let script_name = "hello_world";
+    let script_name = "call_happy";
     let args = vec![
         "--accounts-file",
         "../accounts/accounts.json",
