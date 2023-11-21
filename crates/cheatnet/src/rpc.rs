@@ -6,7 +6,7 @@ use crate::panic_data::try_extract_panic_data;
 use crate::state::BlockifierState;
 use crate::{
     constants::{build_block_context, build_transaction_context},
-    execution::{entry_point::execute_call_entry_point, gas::gas_from_execution_resources},
+    execution::entry_point::execute_call_entry_point,
     CheatnetState,
 };
 use blockifier::execution::call_info::CallInfo;
@@ -28,26 +28,11 @@ use starknet_api::{
     transaction::Calldata,
 };
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct ResourceReport {
-    pub gas: f64,
-    pub resources: ExecutionResources,
-}
-
-impl ResourceReport {
-    pub(crate) fn new(gas: f64, resources: &ExecutionResources) -> Self {
-        Self {
-            gas,
-            resources: resources.clone(),
-        }
-    }
-}
-
 /// Represents contract output, along with the data and the resources consumed during execution
 #[derive(Debug)]
 pub struct CallContractOutput {
     pub result: CallContractResult,
-    pub resource_report: ResourceReport,
+    pub used_resources: ExecutionResources,
 }
 
 /// Enum representing possible contract execution result, along with the data
@@ -241,12 +226,10 @@ pub fn call_entry_point(
         &mut context,
     );
 
-    let gas = gas_from_execution_resources(&block_context, &resources);
-    let resource_report = ResourceReport::new(gas, &resources);
     let result = CallContractResult::from_execution_result(&exec_result, contract_address);
 
     Ok(CallContractOutput {
         result,
-        resource_report,
+        used_resources: resources,
     })
 }

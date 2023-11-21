@@ -1,4 +1,3 @@
-use blockifier::abi::constants;
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector::{
     StorageRead, StorageWrite,
 };
@@ -12,9 +11,8 @@ use crate::common::{
 };
 use cairo_felt::Felt252;
 use cheatnet::cheatcodes::deploy::deploy;
-use cheatnet::rpc::{call_contract, ResourceReport};
+use cheatnet::rpc::call_contract;
 use conversions::StarknetConversions;
-use num_traits::ToPrimitive;
 
 // TODO (834): Verify values in this test
 #[test]
@@ -41,20 +39,14 @@ fn call_resources_simple() {
     .unwrap();
 
     assert_eq!(
-        output.resource_report,
-        ResourceReport {
-            gas: 2.16,
-            resources: ExecutionResources {
-                vm_resources: VmExecutionResources {
-                    n_steps: 126,
-                    n_memory_holes: 0,
-                    builtin_instance_counter: HashMap::from([(
-                        "range_check_builtin".to_owned(),
-                        2
-                    )]),
-                },
-                syscall_counter: HashMap::from([(StorageWrite, 1), (StorageRead, 1)])
-            }
+        output.used_resources,
+        ExecutionResources {
+            vm_resources: VmExecutionResources {
+                n_steps: 126,
+                n_memory_holes: 0,
+                builtin_instance_counter: HashMap::from([("range_check_builtin".to_owned(), 2)]),
+            },
+            syscall_counter: HashMap::from([(StorageWrite, 1), (StorageRead, 1)])
         }
     );
 }
@@ -74,17 +66,14 @@ fn deploy_resources_simple() {
     let payload = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[]).unwrap();
 
     assert_eq!(
-        payload.resource_report,
-        ResourceReport {
-            gas: constants::DEPLOY_GAS_COST.to_f64().unwrap(),
-            resources: ExecutionResources {
-                vm_resources: VmExecutionResources {
-                    n_steps: 0,
-                    n_memory_holes: 0,
-                    builtin_instance_counter: HashMap::new(),
-                },
-                syscall_counter: Default::default()
-            }
+        payload.used_resources,
+        ExecutionResources {
+            vm_resources: VmExecutionResources {
+                n_steps: 0,
+                n_memory_holes: 0,
+                builtin_instance_counter: HashMap::new(),
+            },
+            syscall_counter: Default::default()
         }
     );
 }
@@ -110,20 +99,14 @@ fn deploy_resources_with_constructor() {
     .unwrap();
 
     assert_eq!(
-        payload.resource_report,
-        ResourceReport {
-            gas: 13840.0 + constants::DEPLOY_GAS_COST.to_f64().unwrap(),
-            resources: ExecutionResources {
-                vm_resources: VmExecutionResources {
-                    n_steps: 88,
-                    n_memory_holes: 0,
-                    builtin_instance_counter: HashMap::from([(
-                        "range_check_builtin".to_owned(),
-                        2
-                    )]),
-                },
-                syscall_counter: HashMap::from([(StorageWrite, 1)])
-            }
+        payload.used_resources,
+        ExecutionResources {
+            vm_resources: VmExecutionResources {
+                n_steps: 88,
+                n_memory_holes: 0,
+                builtin_instance_counter: HashMap::from([("range_check_builtin".to_owned(), 2)]),
+            },
+            syscall_counter: HashMap::from([(StorageWrite, 1)])
         }
     );
 }

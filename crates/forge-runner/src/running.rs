@@ -298,7 +298,7 @@ pub fn run_test_case(
         .child
         .child
         .cheatnet_state
-        .vm_resources_used
+        .used_resources
         .vm_resources;
     test_execution_syscall_handler
         .child
@@ -311,7 +311,7 @@ pub fn run_test_case(
                 .child
                 .child
                 .cheatnet_state
-                .vm_resources_used
+                .used_resources
                 .syscall_counter,
         );
 

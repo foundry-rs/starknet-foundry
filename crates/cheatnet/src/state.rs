@@ -231,7 +231,7 @@ pub struct CheatnetState {
     pub detected_events: Vec<Event>,
     pub deploy_salt_base: u32,
     pub block_info: CheatnetBlockInfo,
-    pub vm_resources_used: ExecutionResources,
+    pub used_resources: ExecutionResources,
 }
 
 impl CheatnetState {
