@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, bail, ensure, Result};
 use blockifier::execution::common_hints::ExecutionMode;
 use blockifier::execution::entry_point::{
     CallEntryPoint, CallType, EntryPointExecutionContext, ExecutionResources,
@@ -208,11 +208,12 @@ pub fn run_test_case(
     runner_params: &Arc<RunnerParams>,
     _send_shut_down: &Sender<()>,
 ) -> Result<RunResultWithInfo> {
-    let available_gas = if let Some(available_gas) = &case.available_gas {
-        Some(*available_gas)
-    } else {
-        Some(usize::MAX)
-    };
+    ensure!(
+        case.available_gas.is_none(),
+        "\n    Attribute `available_gas` is not supported\n"
+    );
+    let available_gas = Some(usize::MAX);
+
     let func = runner.find_function(case.name.as_str()).unwrap();
     let initial_gas = runner
         .get_initial_available_gas(func, available_gas)
@@ -319,7 +320,8 @@ fn extract_test_case_summary(
                 Err(err) => bail!(err),
             }
         }
-        // `ForkStateReader.get_block_info` and `get_fork_state_reader` may return an error
+        // `ForkStateReader.get_block_info`, `get_fork_state_reader` may return an error
+        // unsupported `available_gas` attribute may be specified
         Err(error) => Ok(TestCaseSummary::Failed {
             name: case.name.clone(),
             msg: Some(error.to_string()),
