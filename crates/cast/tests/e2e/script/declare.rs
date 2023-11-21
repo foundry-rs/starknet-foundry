@@ -7,7 +7,7 @@ async fn test_missing_field() {
     let script_name = "missing_field_script";
     let args = vec![
         "--accounts-file",
-        "../accounts/accounts.json",
+        "../../../accounts/accounts.json",
         "--account",
         "user4",
         "--url",
@@ -31,7 +31,7 @@ async fn test_wrong_contract_name() {
     let script_name = "no_contract_script";
     let args = vec![
         "--accounts-file",
-        "../accounts/accounts.json",
+        "../../../accounts/accounts.json",
         "--account",
         "user4",
         "--url",

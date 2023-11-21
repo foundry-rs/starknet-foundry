@@ -255,16 +255,16 @@ impl CairoHintProcessor<'_> {
                 let mut offset = 2 + calldata_length;
                 let salt = if inputs[offset] == 0.into() {
                     offset += 1;
-                    Some(inputs[offset - 1].to_field_element())
+                    Some(inputs[offset].to_field_element())
                 } else {
                     None
                 };
-                let unique = {
-                    offset += 1;
-                    inputs[offset - 1] == 1.into()
-                };
+                offset += 1;
+                let unique = { inputs[offset] == 1.into() };
+                offset += 1;
                 let max_fee = if inputs[offset] == 0.into() {
-                    Some(inputs[offset + 1].to_field_element())
+                    offset += 1;
+                    Some(inputs[offset].to_field_element())
                 } else {
                     None
                 };
