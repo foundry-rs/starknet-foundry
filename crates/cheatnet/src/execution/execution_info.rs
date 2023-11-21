@@ -27,7 +27,7 @@ fn get_cheated_block_info_ptr(
         new_block_info[1] = MaybeRelocatable::Int(warped_timestamp);
     }
 
-    if let Some(elected_address) = cheatnet_state.elected_contracts.get(contract_address) {
+    if let Some(elected_address) = cheatnet_state.get_cheated_sequencer_address(contract_address) {
         new_block_info[2] = MaybeRelocatable::Int(elected_address.to_felt252());
     };
 

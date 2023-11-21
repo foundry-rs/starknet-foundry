@@ -319,10 +319,9 @@ pub fn get_sequencer_address(
         .verify_not_in_validate_mode("get_sequencer_address")?;
 
     Ok(GetSequencerAddressResponse {
-        address: *cheatable_syscall_handler
+        address: cheatable_syscall_handler
             .cheatnet_state
-            .elected_contracts
-            .get(&contract_address)
+            .get_cheated_sequencer_address(&contract_address)
             .unwrap(),
     })
 }
