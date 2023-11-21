@@ -96,7 +96,7 @@ fn deploy(
     match salt {
         Option::Some(val) => {
             inputs.append(0);
-            inputs.append(salt.unwrap());
+            inputs.append(val);
         },
         Option::None => inputs.append(1),
     };
@@ -106,7 +106,7 @@ fn deploy(
     match max_fee {
         Option::Some(val) => {
             inputs.append(0);
-            inputs.append(max_fee.unwrap());
+            inputs.append(val);
         },
         Option::None => inputs.append(1),
     };
