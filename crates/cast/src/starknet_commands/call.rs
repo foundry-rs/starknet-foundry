@@ -46,17 +46,7 @@ pub async fn call(
     let res = provider.call(function_call, block_id).await;
 
     match res {
-        Ok(res) => {
-            let response: String = res
-                .iter()
-                .map(|item| format!("{item:#x}"))
-                .collect::<Vec<String>>()
-                .join(", ");
-
-            Ok(CallResponse {
-                response: format!("[{response}]"),
-            })
-        }
+        Ok(response) => Ok(CallResponse { response }),
         Err(error) => handle_rpc_error(error),
     }
 }

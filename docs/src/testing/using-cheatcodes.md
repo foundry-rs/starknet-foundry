@@ -202,7 +202,7 @@ Failures:
 
 ### Pranking the constructor
 
-Most of the cheatcodes like `prank`, `mock_call`, `warp`, `roll` do work in the constructor of the contracts.
+Most of the cheatcodes like `prank`, `mock_call`, `warp`, `roll`, `elect` do work in the constructor of the contracts.
 
 Let's say, that you have a contract that saves the caller address (deployer) in the constructor, and you want it to be pre-set to a certain value.
 
@@ -224,47 +224,5 @@ fn mock_constructor_with_prank() {
 
     // The constructor will have 123 set as the caller address
     contract.deploy(constructor_arguments).unwrap();
-}
-```
-
-### Mocking the constructor with `roll`
-
-```rust
-#[test]
-fn mock_constructor_with_roll() {
-    let contract = declare('HelloStarknet');
-    let constructor_arguments = @ArrayTrait::new();
-    let contract_address = contract.precalculate_address(constructor_arguments);
-
-    // set the block number to 234 for the precalculated address
-    start_roll(CheatTarget::One(contract_address), 234);
-
-    let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
-    let dispatcher = IHelloStarknetDispatcher { contract_address };
-    let block_number = dispatcher.get_block_number_at_construction();
-
-    // asserting if block number is 234 set by start_roll()
-    assert(block_number == 234, 'Wrong block number');
-}
-```
-
-### Mocking the constructor with `warp`
-
-```rust
-#[test]
-fn mock_constructor_with_warp() {
-    let contract = declare('HelloStarknet');
-    let constructor_arguments = @ArrayTrait::new();
-    let contract_address = contract.precalculate_address(constructor_arguments);
-
-    // set the block timestamp to 1000 for the precalculated address
-    start_warp(contract_address, 1000);
-
-    let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
-    let dispatcher = IHelloStarknetDispatcher { contract_address };
-    let block_timestamp = dispatcher.get_block_timestamp_at_construction();
-
-    // asserting if block timestamp is 1000 set by start_warp()
-    assert(block_timestamp == 1000, 'Wrong block timestamp');
 }
 ```
