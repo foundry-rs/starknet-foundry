@@ -25,7 +25,6 @@ use starknet_api::{
 use std::collections::HashSet;
 
 // blockifier/src/execution/entry_point.rs:180 (CallEntryPoint::execute)
-#[allow(clippy::module_name_repetitions)]
 pub fn execute_call_entry_point(
     entry_point: &mut CallEntryPoint, // Instead of 'self'
     state: &mut dyn State,
@@ -113,7 +112,6 @@ pub fn execute_call_entry_point(
 }
 
 // blockifier/src/execution/entry_point.rs:366 (execute_constructor_entry_point)
-#[allow(clippy::module_name_repetitions)]
 pub fn execute_constructor_entry_point(
     state: &mut dyn State,
     resources: &mut ExecutionResources,

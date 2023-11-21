@@ -20,10 +20,10 @@ pub async fn test_no_accounts_in_network() {
 
     let snapbox = runner(&args, None);
 
-    snapbox.assert().stderr_matches(indoc! {r#"
+    snapbox.assert().stderr_matches(indoc! {r"
     command: account delete
     error: No accounts defined for network goerli0-network
-    "#});
+    "});
 }
 
 #[tokio::test]
@@ -33,10 +33,10 @@ pub async fn test_account_does_not_exist() {
 
     let snapbox = runner(&args, None);
 
-    snapbox.assert().stderr_matches(indoc! {r#"
+    snapbox.assert().stderr_matches(indoc! {r"
     command: account delete
     error: Account with name user99 does not exist
-    "#});
+    "});
 }
 
 #[tokio::test]
@@ -64,10 +64,10 @@ pub async fn test_delete_abort() {
     // Run test with a negative user input
     let snapbox = Command::new(cargo_bin!("sncast")).args(args).stdin("n");
 
-    snapbox.assert().stderr_matches(indoc! {r#"
+    snapbox.assert().stderr_matches(indoc! {r"
     command: account delete
     error: Delete aborted
-    "#});
+    "});
 
     let _ = tokio::fs::remove_file("temp_accounts1.json").await;
     let _ = tokio::fs::remove_file("temp_scarb1.toml").await;
@@ -172,12 +172,12 @@ pub async fn invalid_remove_profile_flag() {
     // Run test with an affirmative user input
     let snapbox = Command::new(cargo_bin!("sncast")).args(args).stdin("Y");
 
-    snapbox.assert().stderr_matches(indoc! {r#"
+    snapbox.assert().stderr_matches(indoc! {r"
     error: invalid value 'no' for '--delete-profile <DELETE_PROFILE>'
       [possible values: true, false]
 
     For more information, try '--help'.
-    "#});
+    "});
 
     let _ = tokio::fs::remove_file("temp_accounts4.json").await;
     let _ = tokio::fs::remove_file("temp_scarb4.toml").await;

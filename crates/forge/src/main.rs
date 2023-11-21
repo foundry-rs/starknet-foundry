@@ -1,29 +1,29 @@
 use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8Path;
 use clap::{Parser, Subcommand, ValueEnum};
+use forge::scarb::config::ForgeConfig;
 use forge::scarb::config_from_scarb_for_package;
+use forge::test_filter::TestsFilter;
+use forge::{pretty_printing, run};
+use forge_runner::test_case_summary::TestCaseSummary;
+use forge_runner::test_crate_summary::TestCrateSummary;
+use forge_runner::{RunnerConfig, RunnerParams, CACHE_DIR};
+use rand::{thread_rng, RngCore};
 use scarb_artifacts::{
     corelib_for_package, dependencies_for_package, get_contracts_map, name_for_package,
     paths_for_package,
 };
 use scarb_metadata::{Metadata, MetadataCommand, PackageMetadata};
 use scarb_ui::args::PackagesFilter;
+use std::process::{Command, Stdio};
 use std::sync::Arc;
+use std::thread::available_parallelism;
 use std::{env, fs};
 use tokio::runtime::Builder;
 
-use forge::{pretty_printing, RunnerConfig, RunnerParams, CACHE_DIR, FUZZER_RUNS_DEFAULT};
-
-use forge::{run, TestCrateSummary};
-
-use forge::scarb::config::ForgeConfig;
-use forge::test_case_summary::TestCaseSummary;
-use forge::test_filter::TestsFilter;
-use rand::{thread_rng, RngCore};
-use std::process::{Command, Stdio};
-use std::thread::available_parallelism;
-
 mod init;
+
+const FUZZER_RUNS_DEFAULT: u32 = 256;
 
 #[derive(Parser, Debug)]
 #[command(version)]
@@ -129,7 +129,6 @@ fn combine_configs(
     RunnerConfig::new(
         workspace_root.to_path_buf(),
         exit_first || forge_config.exit_first,
-        forge_config.fork.clone(),
         fuzzer_runs
             .or(forge_config.fuzzer_runs)
             .unwrap_or(FUZZER_RUNS_DEFAULT),
@@ -220,6 +219,7 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                     ),
                     runner_config,
                     runner_params,
+                    &forge_config.fork,
                 )
                 .await?;
 
@@ -288,13 +288,12 @@ mod tests {
         let config = combine_configs(&workspace_root, false, None, None, &Default::default());
         assert_eq!(
             config,
-            RunnerConfig {
+            RunnerConfig::new(
                 workspace_root,
-                exit_first: false,
-                fork_targets: vec![],
-                fuzzer_runs: FUZZER_RUNS_DEFAULT,
-                fuzzer_seed: config.fuzzer_seed,
-            }
+                false,
+                FUZZER_RUNS_DEFAULT,
+                config.fuzzer_seed
+            )
         );
     }
 
@@ -309,16 +308,7 @@ mod tests {
         let workspace_root: Utf8PathBuf = Default::default();
 
         let config = combine_configs(&workspace_root, false, None, None, &config_from_scarb);
-        assert_eq!(
-            config,
-            RunnerConfig {
-                workspace_root,
-                exit_first: true,
-                fork_targets: vec![],
-                fuzzer_runs: 1234,
-                fuzzer_seed: 500,
-            }
-        );
+        assert_eq!(config, RunnerConfig::new(workspace_root, true, 1234, 500));
     }
 
     #[test]
@@ -338,15 +328,6 @@ mod tests {
             Some(32),
             &config_from_scarb,
         );
-        assert_eq!(
-            config,
-            RunnerConfig {
-                workspace_root,
-                exit_first: true,
-                fork_targets: vec![],
-                fuzzer_runs: 100,
-                fuzzer_seed: 32,
-            }
-        );
+        assert_eq!(config, RunnerConfig::new(workspace_root, true, 100, 32));
     }
 }

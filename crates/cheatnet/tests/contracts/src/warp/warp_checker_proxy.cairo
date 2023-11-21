@@ -21,7 +21,9 @@ mod WarpCheckerProxy {
 
     #[external(v0)]
     impl IWarpCheckerProxy of super::IWarpCheckerProxy<ContractState> {
-        fn get_warp_checkers_block_timestamp(ref self: ContractState, address: ContractAddress) -> u64 {
+        fn get_warp_checkers_block_timestamp(
+            ref self: ContractState, address: ContractAddress
+        ) -> u64 {
             let warp_checker = IWarpCheckerDispatcher { contract_address: address };
             warp_checker.get_block_timestamp()
         }

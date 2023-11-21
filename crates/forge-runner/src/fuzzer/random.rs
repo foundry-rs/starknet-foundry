@@ -5,7 +5,6 @@ use cairo_felt::Felt252;
 use rand::prelude::StdRng;
 use rand::SeedableRng;
 
-#[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Clone)]
 pub struct RandomFuzzer {
     rng: StdRng,

@@ -1,11 +1,11 @@
 # `start_roll`
 
-> `fn start_roll(contract_address: ContractAddress, block_number: u64)`
+> `fn start_roll(target: CheatTarget, block_number: u64)`
 
-Changes the block number for a contract at the given address.
+Changes the block number for the given target.
 The change can be canceled with [`stop_roll`](./stop_roll.md).
 
-- `contract_address` - target contract address
+- `target` - instance of [`CheatTarget`](./cheat_target.md) specifying which contracts to roll
 - `block_number` - block number to be set
 
 For contract implementation:
@@ -31,16 +31,16 @@ impl IContractImpl of IContract<ContractState> {
 // ...
 ```
 
-We can use `start_roll` in a test to change the block number for a given contract:
+We can use `start_roll` in a test to change the block number for contracts:
 
 ```rust
-use snforge_std::start_roll;
+use snforge_std::{start_roll, CheatTarget};
 
 #[test]
 fn test_roll() {
     // ...
 
-    start_roll(contract_address, 234);
+    start_roll(CheatTarget::One(contract_address), 234);
 
     dispatcher.set_block_number();
     let new_block_number = dispatcher.get_block_number();

@@ -46,7 +46,7 @@ mod Blocker {
         fn read_sequencer_address(self: @ContractState) -> ContractAddress {
             self.sequencer_address.read()
         }
-        fn read_block_hash(self: @ContractState) -> felt252 { 
+        fn read_block_hash(self: @ContractState) -> felt252 {
             self.block_hash.read()
         }
     }

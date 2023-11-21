@@ -140,8 +140,8 @@ fn test_too_low_max_fee() {
 
     let snapbox = runner(&args, None);
 
-    snapbox.assert().stderr_matches(indoc! {r#"
+    snapbox.assert().stderr_matches(indoc! {r"
         command: deploy
         error: Max fee is smaller than the minimal transaction cost (validation plus fee transfer)
-    "#});
+    "});
 }

@@ -8,7 +8,7 @@ use test_utils::{assert_case_output_contains, assert_failed, assert_passed, test
 fn deploy_at_correct_address() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
         use snforge_std::{ declare, ContractClassTrait };
         use starknet::ContractAddress;
         
@@ -31,12 +31,12 @@ fn deploy_at_correct_address() {
             let real_address = IProxyDispatcher{ contract_address }.get_caller_address(prank_checker);
             assert(real_address == contract_address.into(), 'addresses should be the same');
         }
-    "#
+    "
         ),
         Contract::new(
             "Proxy",
             indoc!(
-                r#"
+                r"
                 #[starknet::contract]
                 mod Proxy {
                     use starknet::ContractAddress;
@@ -54,7 +54,7 @@ fn deploy_at_correct_address() {
                         IPrankCheckerDispatcher{ contract_address: checker_address}.get_caller_address()
                     }
                 }
-            "#
+            "
             )
         ),
         Contract::from_code_path(
@@ -73,7 +73,7 @@ fn deploy_at_correct_address() {
 fn deploy_two_at_the_same_address() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
         use snforge_std::{ declare, ContractClassTrait };
         use starknet::ContractAddress;
 
@@ -86,7 +86,7 @@ fn deploy_two_at_the_same_address() {
             assert(real_address.into() == contract_address, 'addresses should be the same');
             let real_address2 = contract.deploy_at(@array![], contract_address.try_into().unwrap()).unwrap();
         }
-    "#
+    "
         ),
         Contract::from_code_path(
             "HelloStarknet".to_string(),
@@ -109,7 +109,7 @@ fn deploy_two_at_the_same_address() {
 fn deploy_at_error_handling() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
         use array::ArrayTrait;
         use snforge_std::{ declare, ContractClassTrait, RevertedTransaction };
         use starknet::ContractAddress;
@@ -127,7 +127,7 @@ fn deploy_at_error_handling() {
                 },
             }
         }
-    "#
+    "
         ),
         Contract::from_code_path(
             "PanickingConstructor".to_string(),

@@ -235,24 +235,26 @@ impl TestExecutionSyscallHandler<'_> {
 
         match selector {
             "start_roll" => {
-                let contract_address = inputs[0].to_contract_address();
-                let value = inputs[1].clone();
+                let (target, _) = deserialize_cheat_target(&inputs[..inputs.len() - 1]);
+                let block_number = inputs.last().unwrap().clone();
+
                 self.child
                     .child
                     .cheatnet_state
-                    .start_roll(contract_address, value);
+                    .start_roll(target, block_number);
                 Ok(())
             }
             "stop_roll" => {
-                let contract_address = inputs[0].to_contract_address();
-                self.child.child.cheatnet_state.stop_roll(contract_address);
+                let (target, _) = deserialize_cheat_target(&inputs);
+
+                self.child.child.cheatnet_state.stop_roll(target);
                 Ok(())
             }
             "start_warp" => {
                 // The last element in `inputs` should be the timestamp in all cases
                 let warp_timestamp = inputs.last().unwrap().clone();
 
-                let target = deserialize_cheat_target(&inputs[..inputs.len() - 1]);
+                let (target, _) = deserialize_cheat_target(&inputs[..inputs.len() - 1]);
 
                 self.child
                     .child
@@ -262,25 +264,27 @@ impl TestExecutionSyscallHandler<'_> {
                 Ok(())
             }
             "stop_warp" => {
-                let target = deserialize_cheat_target(&inputs);
+                let (target, _) = deserialize_cheat_target(&inputs);
 
                 self.child.child.cheatnet_state.stop_warp(target);
                 Ok(())
             }
             "start_prank" => {
-                let contract_address = inputs[0].to_contract_address();
-                let caller_address = inputs[1].to_contract_address();
+                let (target, _) = deserialize_cheat_target(&inputs[..inputs.len() - 1]);
+
+                // The last element in `inputs` should be the contract address in all cases
+                let caller_address = inputs.last().unwrap().to_contract_address();
 
                 self.child
                     .child
                     .cheatnet_state
-                    .start_prank(contract_address, caller_address);
+                    .start_prank(target, caller_address);
                 Ok(())
             }
             "stop_prank" => {
-                let contract_address = inputs[0].to_contract_address();
+                let (target, _) = deserialize_cheat_target(&inputs);
 
-                self.child.child.cheatnet_state.stop_prank(contract_address);
+                self.child.child.cheatnet_state.stop_prank(target);
                 Ok(())
             }
             "start_mock_call" => {
@@ -316,24 +320,37 @@ impl TestExecutionSyscallHandler<'_> {
                 Ok(())
             }
             "start_spoof" => {
-                let contract_address = inputs[0].to_contract_address();
+                let (target, inputs_start) = deserialize_cheat_target(&inputs);
 
-                let version = inputs[1].is_one().then(|| inputs[2].clone());
-                let account_contract_address = inputs[3].is_one().then(|| inputs[4].clone());
-                let max_fee = inputs[5].is_one().then(|| inputs[6].clone());
-                let transaction_hash = inputs[7].is_one().then(|| inputs[8].clone());
-                let chain_id = inputs[9].is_one().then(|| inputs[10].clone());
-                let nonce = inputs[11].is_one().then(|| inputs[12].clone());
+                // We check for 1s - because of serialization from tx_info.cairo::option_as_tuple
+                let version = inputs[inputs_start]
+                    .is_one()
+                    .then(|| inputs[inputs_start + 1].clone());
+                let account_contract_address = inputs[inputs_start + 2]
+                    .is_one()
+                    .then(|| inputs[inputs_start + 3].clone());
+                let max_fee = inputs[inputs_start + 4]
+                    .is_one()
+                    .then(|| inputs[inputs_start + 5].clone());
+                let transaction_hash = inputs[inputs_start + 6]
+                    .is_one()
+                    .then(|| inputs[inputs_start + 7].clone());
+                let chain_id = inputs[inputs_start + 8]
+                    .is_one()
+                    .then(|| inputs[inputs_start + 9].clone());
+                let nonce = inputs[inputs_start + 10]
+                    .is_one()
+                    .then(|| inputs[inputs_start + 11].clone());
 
-                let signature_len = inputs[14]
+                let signature_len = inputs[inputs_start + 13]
                     .to_usize()
                     .expect("Failed to convert signature_len to usize");
-                let signature = inputs[13]
-                    .is_one()
-                    .then(|| Vec::from(&inputs[15..(15 + signature_len)]));
+                let signature = inputs[inputs_start + 12].is_one().then(|| {
+                    Vec::from(&inputs[inputs_start + 14..(inputs_start + 14 + signature_len)])
+                });
 
                 self.child.child.cheatnet_state.start_spoof(
-                    contract_address,
+                    target,
                     version,
                     account_contract_address,
                     max_fee,
@@ -345,9 +362,9 @@ impl TestExecutionSyscallHandler<'_> {
                 Ok(())
             }
             "stop_spoof" => {
-                let contract_address = inputs[0].to_contract_address();
+                let (target, _) = deserialize_cheat_target(&inputs);
 
-                self.child.child.cheatnet_state.stop_spoof(contract_address);
+                self.child.child.cheatnet_state.stop_spoof(target);
                 Ok(())
             }
             "declare" => {
@@ -641,20 +658,21 @@ fn handle_deploy_result(
         Err(CheatcodeError::Unrecoverable(err)) => Err(err),
     }
 }
-
-fn deserialize_cheat_target(inputs: &[Felt252]) -> CheatTarget {
+// Returns the tuple (target, n read elements)
+fn deserialize_cheat_target(inputs: &[Felt252]) -> (CheatTarget, usize) {
     // First element encodes the variant of CheatTarget
     match inputs[0].to_u8() {
-        Some(0) => CheatTarget::All,
-        Some(1) => CheatTarget::One(inputs[1].to_contract_address()),
+        Some(0) => (CheatTarget::All, 1),
+        Some(1) => (CheatTarget::One(inputs[1].to_contract_address()), 2),
         Some(2) => {
-            let contract_addresses: Vec<_> = inputs[2..]
+            let n_targets = inputs[1].to_usize().unwrap();
+            let contract_addresses: Vec<_> = inputs[2..2 + n_targets]
                 .iter()
                 .map(Felt252::to_contract_address)
                 .collect();
-            CheatTarget::Multiple(contract_addresses)
+            (CheatTarget::Multiple(contract_addresses), 2 + n_targets)
         }
-        _ => panic!("Invalid CheatTarget variant"),
+        _ => unreachable!("Invalid CheatTarget variant"),
     }
 }
 
@@ -785,9 +803,7 @@ fn write_call_contract_response(
                     .map(StarknetConversions::to_stark_felt)
                     .collect(),
             },
-            CallContractFailure::Error { msg, .. } => {
-                return Err(HintError::CustomHint(Box::from(msg)))
-            }
+            CallContractFailure::Error { msg, .. } => return Err(CustomHint(Box::from(msg))),
         },
     };
 

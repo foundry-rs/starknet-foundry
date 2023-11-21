@@ -7,7 +7,6 @@ trait IUpgradeable<T> {
 
 #[starknet::contract]
 mod GetClassHashCheckerUpg {
-
     use starknet::ClassHash;
     use result::ResultTrait;
 

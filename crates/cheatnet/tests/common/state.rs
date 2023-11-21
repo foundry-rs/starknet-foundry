@@ -6,7 +6,6 @@ use cheatnet::state::{BlockifierState, CheatnetState, ExtendedStateReader};
 use starknet::core::types::BlockId;
 use starknet::core::types::BlockTag::Latest;
 
-#[allow(clippy::module_name_repetitions)]
 pub fn create_cached_state() -> CachedState<ExtendedStateReader> {
     CachedState::new(
         ExtendedStateReader {
@@ -17,7 +16,6 @@ pub fn create_cached_state() -> CachedState<ExtendedStateReader> {
     )
 }
 
-#[allow(clippy::module_name_repetitions)]
 pub fn create_fork_cached_state() -> CachedState<ExtendedStateReader> {
     let node_url = "http://188.34.188.184:9545/rpc/v0.4".parse().unwrap();
     CachedState::new(
@@ -43,7 +41,6 @@ pub fn create_fork_cached_state_at(
     )
 }
 
-#[allow(clippy::module_name_repetitions)]
 pub fn create_cheatnet_state(state: &mut dyn State) -> (BlockifierState, CheatnetState) {
     let blockifier_state = BlockifierState::from(state);
     let cheatnet_state = CheatnetState::default();

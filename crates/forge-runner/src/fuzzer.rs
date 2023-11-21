@@ -6,7 +6,6 @@ use rand::Rng;
 mod arguments;
 mod random;
 
-#[allow(clippy::module_name_repetitions)]
 pub use random::RandomFuzzer;
 
 #[derive(Debug, Clone)]

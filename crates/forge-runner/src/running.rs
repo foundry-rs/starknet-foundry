@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, bail, ensure, Result};
 use blockifier::execution::common_hints::ExecutionMode;
 use blockifier::execution::entry_point::{
     CallEntryPoint, CallType, EntryPointExecutionContext, ExecutionResources,
@@ -16,6 +16,9 @@ use cairo_vm::types::relocatable::Relocatable;
 use cheatnet::execution::cheatable_syscall_handler::CheatableSyscallHandler;
 use itertools::chain;
 
+use crate::test_case_summary::TestCaseSummary;
+use crate::test_execution_syscall_handler::{TestExecutionState, TestExecutionSyscallHandler};
+use crate::{RunnerConfig, RunnerParams, TestCaseRunnable, ValidatedForkConfig, CACHE_DIR};
 use cairo_lang_casm::hints::Hint;
 use cairo_lang_casm::instructions::Instruction;
 use cairo_lang_runner::casm_run::hint_to_hint_params;
@@ -38,19 +41,10 @@ use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::hash::StarkHash;
 use starknet_api::patricia_key;
 use starknet_api::transaction::Calldata;
-use test_collector::TestCase;
 use tokio::runtime::Runtime;
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
 use url::Url;
-
-use crate::test_case_summary::TestCaseSummary;
-
-use crate::collecting::{TestCaseRunnable, ValidatedForkConfig};
-use crate::test_execution_syscall_handler::TestExecutionSyscallHandler;
-use crate::{RunnerConfig, RunnerParams, CACHE_DIR};
-
-use crate::test_execution_syscall_handler::TestExecutionState;
 
 /// Builds `hints_dict` required in `cairo_vm::types::program::Program` from instructions.
 fn build_hints_dict<'b>(
@@ -78,13 +72,12 @@ fn build_hints_dict<'b>(
     (hints_dict, string_to_hint)
 }
 
-pub(crate) fn run_test(
+pub fn run_test(
     case: Arc<TestCaseRunnable>,
     runner: Arc<SierraCasmRunner>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     send: Sender<()>,
-    send_shut_down: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     tokio::task::spawn_blocking(move || {
         // Due to the inability of spawn_blocking to be abruptly cancelled,
@@ -93,14 +86,7 @@ pub(crate) fn run_test(
         if send.is_closed() {
             return Ok(TestCaseSummary::Skipped {});
         }
-        let run_result = run_test_case(
-            vec![],
-            &case,
-            &runner,
-            &runner_config,
-            &runner_params,
-            &send_shut_down,
-        );
+        let run_result = run_test_case(vec![], &case, &runner, &runner_config, &runner_params);
 
         // TODO: code below is added to fix snforge tests
         // remove it after improve exit-first tests
@@ -113,7 +99,6 @@ pub(crate) fn run_test(
     })
 }
 
-#[allow(clippy::too_many_arguments)]
 pub(crate) fn run_fuzz_test(
     args: Vec<Felt252>,
     case: Arc<TestCaseRunnable>,
@@ -122,7 +107,6 @@ pub(crate) fn run_fuzz_test(
     runner_params: Arc<RunnerParams>,
     send: Sender<()>,
     fuzzing_send: Sender<()>,
-    send_shut_down: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     tokio::task::spawn_blocking(move || {
         // Due to the inability of spawn_blocking to be abruptly cancelled,
@@ -132,14 +116,8 @@ pub(crate) fn run_fuzz_test(
             return Ok(TestCaseSummary::Skipped {});
         }
 
-        let run_result = run_test_case(
-            args.clone(),
-            &case,
-            &runner,
-            &runner_config,
-            &runner_params,
-            &send_shut_down,
-        );
+        let run_result =
+            run_test_case(args.clone(), &case, &runner, &runner_config, &runner_params);
 
         // TODO: code below is added to fix snforge tests
         // remove it after improve exit-first tests
@@ -200,25 +178,25 @@ pub(crate) struct ForkInfo {
     pub(crate) latest_block_number: Option<BlockNumber>,
 }
 
-pub(crate) struct RunResultWithInfo {
+pub struct RunResultWithInfo {
     pub(crate) run_result: Result<RunResult, RunnerError>,
     pub(crate) fork_info: ForkInfo,
 }
 
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn run_test_case(
+pub fn run_test_case(
     args: Vec<Felt252>,
     case: &TestCaseRunnable,
     runner: &SierraCasmRunner,
     runner_config: &Arc<RunnerConfig>,
     runner_params: &Arc<RunnerParams>,
-    _send_shut_down: &Sender<()>,
 ) -> Result<RunResultWithInfo> {
-    let available_gas = if let Some(available_gas) = &case.available_gas {
-        Some(*available_gas)
-    } else {
-        Some(usize::MAX)
-    };
+    ensure!(
+        case.available_gas.is_none(),
+        "\n    Attribute `available_gas` is not supported\n"
+    );
+    let available_gas = Some(usize::MAX);
+
     let func = runner.find_function(case.name.as_str()).unwrap();
     let initial_gas = runner
         .get_initial_available_gas(func, available_gas)
@@ -299,7 +277,7 @@ pub(crate) fn run_test_case(
 
 fn extract_test_case_summary(
     run_result: Result<RunResultWithInfo>,
-    case: &TestCase<ValidatedForkConfig>,
+    case: &TestCaseRunnable,
     args: Vec<Felt252>,
 ) -> Result<TestCaseSummary> {
     match run_result {
@@ -325,7 +303,8 @@ fn extract_test_case_summary(
                 Err(err) => bail!(err),
             }
         }
-        // `ForkStateReader.get_block_info` and `get_fork_state_reader` may return an error
+        // `ForkStateReader.get_block_info`, `get_fork_state_reader` may return an error
+        // unsupported `available_gas` attribute may be specified
         Err(error) => Ok(TestCaseSummary::Failed {
             name: case.name.clone(),
             msg: Some(error.to_string()),

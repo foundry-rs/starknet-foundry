@@ -5,11 +5,11 @@ use test_utils::{assert_failed, assert_passed, test_case};
 #[test]
 fn simple() {
     let test = test_case!(indoc!(
-        r#"#[test]
+        r"#[test]
         fn test_two_and_two() {
             assert(2 == 2, '2 == 2');
         }
-    "#
+    "
     ));
 
     let result = run_test_case(&test);
@@ -20,11 +20,11 @@ fn simple() {
 #[test]
 fn failing() {
     let test = test_case!(indoc!(
-        r#"#[test]
+        r"#[test]
         fn test_two_and_three() {
             assert(2 == 3, '2 == 3');
         }
-    "#
+    "
     ));
 
     let result = run_test_case(&test);

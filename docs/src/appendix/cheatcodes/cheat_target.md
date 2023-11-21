@@ -1,4 +1,4 @@
-# 'CheatTarget`
+# `CheatTarget`
 
 ```rust
 enum CheatTarget {

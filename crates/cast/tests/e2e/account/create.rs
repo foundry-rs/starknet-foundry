@@ -215,10 +215,10 @@ pub async fn test_account_already_exists() {
 
     let snapbox = runner(&args, None);
 
-    snapbox.assert().stderr_matches(indoc! {r#"
+    snapbox.assert().stderr_matches(indoc! {r"
         command: account create
         error: Account with name user1 already exists in network with chain_id SN_GOERLI
-    "#});
+    "});
 }
 
 #[tokio::test]
@@ -244,13 +244,13 @@ pub async fn test_happy_case_keystore() {
 
     let snapbox = runner(&args, None);
 
-    snapbox.assert().stdout_matches(indoc! {r#"
+    snapbox.assert().stdout_matches(indoc! {r"
         command: account create
         add_profile: --add-profile flag was not set. No profile added to Scarb.toml
         address: 0x[..]
         max_fee: [..]
         message: Account successfully created[..]
-    "#});
+    "});
 
     let contents = fs::read_to_string(account_path).expect("Unable to read created file");
     assert!(contents.contains("\"deployment\": {"));
@@ -307,7 +307,7 @@ pub async fn test_happy_case_keystore_add_profile() {
 
     let contents = fs::read_to_string(current_dir.path().join("Scarb.toml"))
         .expect("Unable to read Scarb.toml");
-    assert!(contents.contains(r#"[tool.sncast.my_account]"#));
+    assert!(contents.contains(r"[tool.sncast.my_account]"));
     assert!(contents.contains(r#"account = "my_account.json""#));
     assert!(!contents.contains(r#"accounts-file = "accounts.json""#));
     assert!(contents.contains(r#"keystore = "my_key.json""#));
@@ -335,10 +335,10 @@ pub async fn test_keystore_without_account() {
 
     let snapbox = runner(&args, None);
 
-    snapbox.assert().stderr_matches(indoc! {r#"
+    snapbox.assert().stderr_matches(indoc! {r"
         command: account create
         error: --account must be passed and be a path when using --keystore
-    "#});
+    "});
 
     _ = fs::remove_file(keystore_path);
 }
@@ -392,13 +392,13 @@ pub async fn test_happy_case_keystore_int_format() {
 
     let snapbox = runner(&args, None);
 
-    snapbox.assert().stdout_matches(indoc! {r#"
+    snapbox.assert().stdout_matches(indoc! {r"
         command: account create
         add_profile: --add-profile flag was not set. No profile added to Scarb.toml
         address: [..]
         max_fee: [..]
         message: Account successfully created[..]
-    "#});
+    "});
 
     let contents = fs::read_to_string(account_path).expect("Unable to read created file");
     assert!(contents.contains("\"deployment\": {"));
@@ -433,13 +433,13 @@ pub async fn test_happy_case_keystore_hex_format() {
 
     let snapbox = runner(&args, None);
 
-    snapbox.assert().stdout_matches(indoc! {r#"
+    snapbox.assert().stdout_matches(indoc! {r"
         command: account create
         add_profile: --add-profile flag was not set. No profile added to Scarb.toml
         address: 0x[..]
         max_fee: 0x[..]
         message: Account successfully created[..]
-    "#});
+    "});
 
     let contents = fs::read_to_string(account_path).expect("Unable to read created file");
     assert!(contents.contains("\"deployment\": {"));

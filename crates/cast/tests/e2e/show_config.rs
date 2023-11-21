@@ -17,14 +17,14 @@ async fn test_show_config_from_scarb_toml(
     args.append(&mut vec!["--profile", "profile1", "show-config"]);
 
     let snapbox = runner(&args, current_dir);
-    let mut expected_output = String::from(indoc! {r#"
+    let mut expected_output = String::from(indoc! {r"
         command: show-config
         account: user1
         accounts_file_path: ../account-file
         chain_id: alpha-goerli
         profile: profile1
         rpc_url: http://127.0.0.1:5055/rpc
-    "#});
+    "});
     if let Some(scarb_path) = path_to_scarb_toml {
         expected_output.push_str(&format!("scarb_path: {scarb_path}\n"));
     }
@@ -45,13 +45,13 @@ async fn test_show_config_from_cli() {
 
     let snapbox = runner(&args, None);
 
-    snapbox.assert().success().stdout_eq(indoc! {r#"
+    snapbox.assert().success().stdout_eq(indoc! {r"
         command: show-config
         account: /path/to/account.json
         chain_id: alpha-goerli
         keystore: ../keystore
         rpc_url: http://127.0.0.1:5055/rpc
-    "#});
+    "});
 }
 
 #[test_case(Some(Path::new("tests/data/show_config")), None ; "Scarb.toml in current_dir")]
@@ -68,14 +68,14 @@ async fn test_show_config_from_cli_and_scarb(
     args.append(&mut vec!["--profile", "profile1", "show-config"]);
     let snapbox = runner(&args, current_dir);
 
-    let mut expected_output = String::from(indoc! {r#"
+    let mut expected_output = String::from(indoc! {r"
         command: show-config
         account: user2
         accounts_file_path: ../account-file
         chain_id: alpha-goerli
         profile: profile1
         rpc_url: http://127.0.0.1:5055/rpc
-    "#});
+    "});
     if let Some(scarb_path) = path_to_scarb_toml {
         expected_output.push_str(&format!("scarb_path: {scarb_path}\n"));
     }
@@ -96,14 +96,14 @@ async fn test_show_config_when_no_keystore(
     args.append(&mut vec!["--profile", "profile1", "show-config"]);
 
     let snapbox = runner(&args, current_dir);
-    let mut expected_output = String::from(indoc! {r#"
+    let mut expected_output = String::from(indoc! {r"
         command: show-config
         account: user1
         accounts_file_path: ../account-file
         chain_id: alpha-goerli
         profile: profile1
         rpc_url: http://127.0.0.1:5055/rpc
-    "#});
+    "});
     if let Some(scarb_path) = path_to_scarb_toml {
         expected_output.push_str(&format!("scarb_path: {scarb_path}\n"));
     }
@@ -125,13 +125,13 @@ async fn test_show_config_when_keystore(
 
     let snapbox = runner(&args, current_dir);
 
-    let mut expected_output = String::from(indoc! {r#"
+    let mut expected_output = String::from(indoc! {r"
         command: show-config
         account: /path/to/account.json
         chain_id: alpha-goerli
         keystore: ../keystore
         rpc_url: http://127.0.0.1:5055/rpc
-    "#});
+    "});
     if let Some(scarb_path) = path_to_scarb_toml {
         expected_output.push_str(&format!("scarb_path: {scarb_path}\n"));
     }

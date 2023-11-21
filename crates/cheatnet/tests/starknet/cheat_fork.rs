@@ -35,7 +35,10 @@ fn prank_cairo0_contract(selector: &str) {
     };
     let caller = &ret_data[0];
 
-    cheatnet_state.start_prank(contract_address, ContractAddress::from(123_u128));
+    cheatnet_state.start_prank(
+        CheatTarget::One(contract_address),
+        ContractAddress::from(123_u128),
+    );
 
     let output = call_contract(
         &mut blockifier_state,
@@ -50,7 +53,7 @@ fn prank_cairo0_contract(selector: &str) {
     };
     let pranked_caller = &ret_data[0];
 
-    cheatnet_state.stop_prank(contract_address);
+    cheatnet_state.stop_prank(CheatTarget::One(contract_address));
 
     let output = call_contract(
         &mut blockifier_state,
@@ -92,7 +95,7 @@ fn roll_cairo0_contract(selector: &str) {
     };
     let block_number = &ret_data[0];
 
-    cheatnet_state.start_roll(contract_address, Felt252::from(123));
+    cheatnet_state.start_roll(CheatTarget::One(contract_address), Felt252::from(123));
 
     let output = call_contract(
         &mut blockifier_state,
@@ -107,7 +110,7 @@ fn roll_cairo0_contract(selector: &str) {
     };
     let rolled_block_number = &ret_data[0];
 
-    cheatnet_state.stop_roll(contract_address);
+    cheatnet_state.stop_roll(CheatTarget::One(contract_address));
 
     let output = call_contract(
         &mut blockifier_state,

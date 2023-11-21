@@ -8,7 +8,7 @@ use test_utils::{assert_passed, test_case};
 fn l1_handler_executor() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
             #[derive(Copy, Serde, Drop)]
             struct L1Data {
                 balance: felt252,
@@ -79,7 +79,7 @@ fn l1_handler_executor() {
                     },
                 }
             }
-        "#
+        "
         ),
         Contract::from_code_path(
             "l1_handler_executor".to_string(),
