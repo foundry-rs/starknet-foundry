@@ -1,4 +1,4 @@
-# script
+# `script`
 Compile and run a cairo deployment script.
 
 ## `<MODULE_NAME>`

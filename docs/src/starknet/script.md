@@ -28,6 +28,61 @@ and more!
 
 ## Examples
 
+### Minimal example (without contract deployment)
+
+This example shows how to call an already deployed contract. Please find full example with contract deployment [here](#full-example-with-contract-deployment).
+
+```cairo
+use sncast_std::{invoke, call, InvokeResult, CallResult};
+
+fn main() {
+    let eth = 0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7;
+    let addr = 0x0089496091c660345BaA480dF76c1A900e57cf34759A899eFd1EADb362b20DB5;
+    let call_result = call(eth.try_into().unwrap(), 'allowance', array![addr, addr]);
+    let call_result = *call_result.data[0];
+    assert(call_result == 0, call_result);
+
+    let call_result = call(eth.try_into().unwrap(), 'decimals', array![]);
+    let call_result = *call_result.data[0];
+    assert(call_result == 18, call_result);
+}
+```
+
+The script should be included in a scarb package. The directory structure and config for this example looks like this:
+
+```shell
+$ tree
+.
+├── src
+│   ├── my_script.cairo
+│   └── lib.cairo
+└── Scarb.toml
+```
+
+```toml
+[package]
+name = "my_script"
+version = "0.1.0"
+
+[dependencies]
+starknet = ">=2.3.0"
+sncast_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.11.0" }
+```
+
+To run the script, do:
+
+```shell
+$ sncast \
+  --rpc-url http://127.0.0.1:5050 \
+  --account example_user \
+  script my_script
+
+command: script
+status: success
+```
+
+### Full example (with contract deployment)
+
 This example script declares, deploys and interacts with an example [map contract](https://github.com/foundry-rs/starknet-foundry/tree/master/crates/cast/tests/data/contracts/map):
 
 ```cairo
@@ -76,8 +131,6 @@ $ tree
     └── src
         ├── lib.cairo
         └── map_script.cairo
-
-5 directories, 5 files
 ```
 
 ```toml
@@ -111,8 +164,13 @@ To run the script, do:
 $ sncast \
   --rpc-url http://127.0.0.1:5050 \
   --account example_user \
-  script ./scripts
+  script map_script
   
-(todo: dodaj output)
-```
+[DEBUG]	Contract address               	(raw: 0x436f6e74726163742061646472657373
+[DEBUG]	                               	(raw: 0x6f9492c9c2751ba5ccab5b7611068a6347d7b313c6f073d2edea864f062d730
+[DEBUG]	Invoke tx hash                 	(raw: 0x496e766f6b652074782068617368
+[DEBUG]	                               	(raw: 0x60175b3fca296fedc38f1a0ca30337ae666bb996a43beb2f6fe3a3fa90d3e6b
 
+command: script
+status: success
+```
