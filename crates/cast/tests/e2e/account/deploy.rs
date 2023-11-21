@@ -205,7 +205,7 @@ pub async fn test_valid_class_hash() {
     snapbox.assert().success().stdout_matches(indoc! {r"
         command: account deploy
         transaction_hash: [..]
-    "#});
+    "});
 
     fs::remove_dir_all(created_dir).unwrap();
 }
