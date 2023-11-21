@@ -1,7 +1,13 @@
-[workspace]
-members = [
-    "contracts/*",
-]
+[package]
+name = "map"
+version = "0.2.0"
 
-[workspace.dependencies]
-starknet = ">=2.3.0"
+[dependencies]
+starknet = ">=2.3.1"
+
+[[target.starknet-contract]]
+sierra = true
+casm = true
+
+[lib]
+sierra = false
