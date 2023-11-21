@@ -36,12 +36,14 @@ pub fn cache_failed_tests_names(
     cache_dir_path: &Utf8PathBuf,
 ) -> Result<()> {
     let tests_failed_path = get_or_create_cache_dir(cache_dir_path)?.join(PREV_TESTS_FAILED);
-    dbg!(&tests_failed_path);
+
     let file = File::create(tests_failed_path)?;
     let mut file = BufWriter::new(file);
     for line in all_failed_tests {
         if let TestCaseSummary::Failed { name, .. } = line {
             writeln!(file, "{name}")?;
+        } else {
+            unreachable!();
         }
     }
 
