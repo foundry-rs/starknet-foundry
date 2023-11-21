@@ -73,7 +73,7 @@ fn artifacts_for_package(path: &Utf8Path) -> Result<StarknetArtifacts> {
 ///
 /// * `target_dir` - A path to the target directory of the package
 /// * `target_name` - A name of the target that is being built by Scarb
-pub fn try_get_starknet_artifacts_path(
+fn try_get_starknet_artifacts_path(
     target_dir: &Utf8Path,
     target_name: &str,
     current_profile: &str,
