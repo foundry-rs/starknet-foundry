@@ -65,17 +65,7 @@ fn deploy_resources_simple() {
 
     let payload = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[]).unwrap();
 
-    assert_eq!(
-        payload.used_resources,
-        ExecutionResources {
-            vm_resources: VmExecutionResources {
-                n_steps: 0,
-                n_memory_holes: 0,
-                builtin_instance_counter: HashMap::new(),
-            },
-            syscall_counter: Default::default()
-        }
-    );
+    assert_eq!(payload.used_resources, ExecutionResources::default());
 }
 
 #[test]

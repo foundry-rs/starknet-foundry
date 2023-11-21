@@ -35,17 +35,20 @@ fn vm_execution_resources_to_resource_mapping(
 fn get_total_vm_usage(resources: &ExecutionResources) -> VmExecutionResources {
     // total_vm_usage consists of resources used by vm (`vm_resources`)
     // and additional resources computed from used syscalls (`get_additional_os_resources`).
-    // Unfortunately `get_additional_os_resource`s function adds resources used by os,
+
+    // Unfortunately `get_additional_os_resources` function adds resources used by os,
     // so we have to subtract them
+    let unnecessary_added_resources = OS_RESOURCES
+        .execute_txs_inner()
+        .get(&TransactionType::InvokeFunction)
+        .expect("`OS_RESOURCES` must contain all transaction types.");
+
     let total_vm_usage = &resources.vm_resources
         + &(&get_additional_os_resources(
             &resources.syscall_counter,
             TransactionType::InvokeFunction,
         )
         .unwrap()
-            - OS_RESOURCES
-                .execute_txs_inner()
-                .get(&TransactionType::InvokeFunction)
-                .expect("`OS_RESOURCES` must contain all transaction types."));
+            - unnecessary_added_resources);
     total_vm_usage.filter_unused_builtins()
 }
