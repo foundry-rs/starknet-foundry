@@ -5,11 +5,9 @@ use anyhow::{Ok, Result};
 use camino::Utf8PathBuf;
 use scarb_metadata::MetadataCommand;
 use serde::{Deserialize, Serialize};
-use serde_json::json;
 use std::fs::{self, File};
 use std::io::{BufRead, BufReader, BufWriter, Write};
 
-use crate::test_case_summary::TestCaseSummary;
 #[derive(Serialize, Deserialize)]
 pub struct RerunFailed {
     pub failed: Vec<String>,
@@ -58,7 +56,7 @@ pub fn cache_failed_tests_names(
     };
 
     let string = serde_json::to_string(&returned_failed)?;
-    file.write(string.as_bytes())?;
+    file.write_all(string.as_bytes())?;
 
     Ok(())
 }

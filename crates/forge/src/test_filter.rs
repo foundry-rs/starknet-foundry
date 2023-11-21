@@ -1,10 +1,8 @@
-use crate::collecting::{CompiledTestCrate, CompiledTestCrateRaw, ValidatedForkConfig};
-use crate::TestCaseFilter;
+use crate::{collecting::CompiledTestCrateRaw, shared_cache::get_cached_failed_tests_names};
 use anyhow::Result;
 use camino::Utf8PathBuf;
-use test_collector::TestCase;
 
-use crate::shared_cache::get_cached_failed_tests_names;
+use forge_runner::{TestCaseFilter, TestCaseRunnable};
 
 #[derive(Debug, PartialEq)]
 // Specifies what tests should be included
@@ -109,7 +107,7 @@ impl TestsFilter {
             IgnoredFilter::Ignored => cases.into_iter().filter(|tc| tc.ignored).collect(),
         };
 
-        Ok(CompiledTestCrate {
+        Ok(CompiledTestCrateRaw {
             test_cases: cases,
             ..test_crate
         })
@@ -117,7 +115,7 @@ impl TestsFilter {
 }
 
 impl TestCaseFilter for TestsFilter {
-    fn should_be_run(&self, test_case: &TestCase<ValidatedForkConfig>) -> bool {
+    fn should_be_run(&self, test_case: &TestCaseRunnable) -> bool {
         match self.ignored_filter {
             IgnoredFilter::All => true,
             IgnoredFilter::Ignored => test_case.ignored,
@@ -128,11 +126,11 @@ impl TestCaseFilter for TestsFilter {
 
 #[cfg(test)]
 mod tests {
-    use crate::collecting::CompiledTestCrate;
+    use crate::collecting::CompiledTestCrateRaw;
     use crate::test_filter::TestsFilter;
     use crate::CrateLocation;
     use cairo_lang_sierra::program::Program;
-    use test_collector::{ExpectedTestResult, TestCase};
+    use test_collector::{ExpectedTestResult, TestCaseRaw};
 
     fn program_for_testing() -> Program {
         Program {
@@ -158,10 +156,10 @@ mod tests {
     #[test]
     #[allow(clippy::too_many_lines)]
     fn filtering_tests() {
-        let mocked_tests = CompiledTestCrate {
+        let mocked_tests = CompiledTestCrateRaw {
             sierra_program: program_for_testing(),
             test_cases: vec![
-                TestCase {
+                TestCaseRaw {
                     name: "crate1::do_thing".to_string(),
                     available_gas: None,
                     ignored: false,
@@ -169,7 +167,7 @@ mod tests {
                     fork_config: None,
                     fuzzer_config: None,
                 },
-                TestCase {
+                TestCaseRaw {
                     name: "crate2::run_other_thing".to_string(),
                     available_gas: None,
                     ignored: true,
@@ -177,7 +175,7 @@ mod tests {
                     fork_config: None,
                     fuzzer_config: None,
                 },
-                TestCase {
+                TestCaseRaw {
                     name: "outer::crate2::execute_next_thing".to_string(),
                     available_gas: None,
                     ignored: true,
@@ -185,7 +183,7 @@ mod tests {
                     fork_config: None,
                     fuzzer_config: None,
                 },
-                TestCase {
+                TestCaseRaw {
                     name: "thing".to_string(),
                     available_gas: None,
                     ignored: false,
@@ -208,7 +206,7 @@ mod tests {
         let filtered = tests_filter.filter_tests(mocked_tests.clone()).unwrap();
         assert_eq!(
             filtered.test_cases,
-            vec![TestCase {
+            vec![TestCaseRaw {
                 name: "crate1::do_thing".to_string(),
                 available_gas: None,
                 ignored: false,
@@ -229,7 +227,7 @@ mod tests {
         let filtered = tests_filter.filter_tests(mocked_tests.clone()).unwrap();
         assert_eq!(
             filtered.test_cases,
-            vec![TestCase {
+            vec![TestCaseRaw {
                 name: "crate2::run_other_thing".to_string(),
                 available_gas: None,
                 ignored: true,
@@ -251,7 +249,7 @@ mod tests {
         assert_eq!(
             filtered.test_cases,
             vec![
-                TestCase {
+                TestCaseRaw {
                     name: "crate1::do_thing".to_string(),
                     available_gas: None,
                     expected_result: ExpectedTestResult::Success,
@@ -259,7 +257,7 @@ mod tests {
                     fork_config: None,
                     fuzzer_config: None,
                 },
-                TestCase {
+                TestCaseRaw {
                     name: "crate2::run_other_thing".to_string(),
                     available_gas: None,
                     expected_result: ExpectedTestResult::Success,
@@ -267,7 +265,7 @@ mod tests {
                     fork_config: None,
                     fuzzer_config: None,
                 },
-                TestCase {
+                TestCaseRaw {
                     name: "outer::crate2::execute_next_thing".to_string(),
                     available_gas: None,
                     expected_result: ExpectedTestResult::Success,
@@ -275,7 +273,7 @@ mod tests {
                     fork_config: None,
                     fuzzer_config: None,
                 },
-                TestCase {
+                TestCaseRaw {
                     name: "thing".to_string(),
                     available_gas: None,
                     ignored: false,
@@ -309,7 +307,7 @@ mod tests {
         assert_eq!(
             filtered.test_cases,
             vec![
-                TestCase {
+                TestCaseRaw {
                     name: "crate1::do_thing".to_string(),
                     available_gas: None,
                     ignored: false,
@@ -317,7 +315,7 @@ mod tests {
                     fork_config: None,
                     fuzzer_config: None,
                 },
-                TestCase {
+                TestCaseRaw {
                     name: "crate2::run_other_thing".to_string(),
                     available_gas: None,
                     ignored: true,
@@ -325,7 +323,7 @@ mod tests {
                     fork_config: None,
                     fuzzer_config: None,
                 },
-                TestCase {
+                TestCaseRaw {
                     name: "outer::crate2::execute_next_thing".to_string(),
                     available_gas: None,
                     ignored: true,
@@ -333,7 +331,7 @@ mod tests {
                     fork_config: None,
                     fuzzer_config: None,
                 },
-                TestCase {
+                TestCaseRaw {
                     name: "thing".to_string(),
                     available_gas: None,
                     ignored: false,
@@ -347,7 +345,7 @@ mod tests {
 
     #[test]
     fn filtering_with_no_tests() {
-        let mocked_tests = CompiledTestCrate {
+        let mocked_tests = CompiledTestCrateRaw {
             sierra_program: program_for_testing(),
             test_cases: vec![],
             tests_location: CrateLocation::Lib,
@@ -379,10 +377,10 @@ mod tests {
     #[test]
     #[allow(clippy::too_many_lines)]
     fn filtering_with_exact_match() {
-        let mocked_tests = CompiledTestCrate {
+        let mocked_tests = CompiledTestCrateRaw {
             sierra_program: program_for_testing(),
             test_cases: vec![
-                TestCase {
+                TestCaseRaw {
                     name: "crate1::do_thing".to_string(),
                     available_gas: None,
                     ignored: false,
@@ -390,7 +388,7 @@ mod tests {
                     fork_config: None,
                     fuzzer_config: None,
                 },
-                TestCase {
+                TestCaseRaw {
                     name: "crate2::run_other_thing".to_string(),
                     available_gas: None,
                     ignored: true,
@@ -398,7 +396,7 @@ mod tests {
                     fork_config: None,
                     fuzzer_config: None,
                 },
-                TestCase {
+                TestCaseRaw {
                     name: "outer::crate3::run_other_thing".to_string(),
                     available_gas: None,
                     ignored: true,
@@ -406,7 +404,7 @@ mod tests {
                     fork_config: None,
                     fuzzer_config: None,
                 },
-                TestCase {
+                TestCaseRaw {
                     name: "do_thing".to_string(),
                     available_gas: None,
                     ignored: false,
@@ -451,7 +449,7 @@ mod tests {
         let filtered = tests_filter.filter_tests(mocked_tests.clone()).unwrap();
         assert_eq!(
             filtered.test_cases,
-            vec![TestCase {
+            vec![TestCaseRaw {
                 name: "do_thing".to_string(),
                 available_gas: None,
                 ignored: false,
@@ -472,7 +470,7 @@ mod tests {
         let filtered = tests_filter.filter_tests(mocked_tests.clone()).unwrap();
         assert_eq!(
             filtered.test_cases,
-            vec![TestCase {
+            vec![TestCaseRaw {
                 name: "crate1::do_thing".to_string(),
                 available_gas: None,
                 ignored: false,
@@ -504,7 +502,7 @@ mod tests {
         let filtered = tests_filter.filter_tests(mocked_tests.clone()).unwrap();
         assert_eq!(
             filtered.test_cases,
-            vec![TestCase {
+            vec![TestCaseRaw {
                 name: "outer::crate3::run_other_thing".to_string(),
                 available_gas: None,
                 ignored: true,
@@ -517,10 +515,10 @@ mod tests {
 
     #[test]
     fn filtering_with_only_ignored() {
-        let mocked_tests = CompiledTestCrate {
+        let mocked_tests = CompiledTestCrateRaw {
             sierra_program: program_for_testing(),
             test_cases: vec![
-                TestCase {
+                TestCaseRaw {
                     name: "crate1::do_thing".to_string(),
                     available_gas: None,
                     ignored: false,
@@ -528,7 +526,7 @@ mod tests {
                     fork_config: None,
                     fuzzer_config: None,
                 },
-                TestCase {
+                TestCaseRaw {
                     name: "crate2::run_other_thing".to_string(),
                     available_gas: None,
                     ignored: true,
@@ -536,7 +534,7 @@ mod tests {
                     fork_config: None,
                     fuzzer_config: None,
                 },
-                TestCase {
+                TestCaseRaw {
                     name: "outer::crate3::run_other_thing".to_string(),
                     available_gas: None,
                     ignored: true,
@@ -544,7 +542,7 @@ mod tests {
                     fork_config: None,
                     fuzzer_config: None,
                 },
-                TestCase {
+                TestCaseRaw {
                     name: "do_thing".to_string(),
                     available_gas: None,
                     ignored: false,
@@ -562,7 +560,7 @@ mod tests {
         assert_eq!(
             filtered.test_cases,
             vec![
-                TestCase {
+                TestCaseRaw {
                     name: "crate2::run_other_thing".to_string(),
                     available_gas: None,
                     ignored: true,
@@ -570,7 +568,7 @@ mod tests {
                     fork_config: None,
                     fuzzer_config: None,
                 },
-                TestCase {
+                TestCaseRaw {
                     name: "outer::crate3::run_other_thing".to_string(),
                     available_gas: None,
                     ignored: true,
@@ -584,10 +582,10 @@ mod tests {
 
     #[test]
     fn filtering_with_include_ignored() {
-        let mocked_tests = CompiledTestCrate {
+        let mocked_tests = CompiledTestCrateRaw {
             sierra_program: program_for_testing(),
             test_cases: vec![
-                TestCase {
+                TestCaseRaw {
                     name: "crate1::do_thing".to_string(),
                     available_gas: None,
                     ignored: false,
@@ -595,7 +593,7 @@ mod tests {
                     fork_config: None,
                     fuzzer_config: None,
                 },
-                TestCase {
+                TestCaseRaw {
                     name: "crate2::run_other_thing".to_string(),
                     available_gas: None,
                     ignored: true,
@@ -603,7 +601,7 @@ mod tests {
                     fork_config: None,
                     fuzzer_config: None,
                 },
-                TestCase {
+                TestCaseRaw {
                     name: "outer::crate3::run_other_thing".to_string(),
                     available_gas: None,
                     ignored: true,
@@ -611,7 +609,7 @@ mod tests {
                     fork_config: None,
                     fuzzer_config: None,
                 },
-                TestCase {
+                TestCaseRaw {
                     name: "do_thing".to_string(),
                     available_gas: None,
                     ignored: false,
@@ -629,7 +627,7 @@ mod tests {
         assert_eq!(
             filtered.test_cases,
             vec![
-                TestCase {
+                TestCaseRaw {
                     name: "crate1::do_thing".to_string(),
                     available_gas: None,
                     ignored: false,
@@ -637,7 +635,7 @@ mod tests {
                     fork_config: None,
                     fuzzer_config: None,
                 },
-                TestCase {
+                TestCaseRaw {
                     name: "crate2::run_other_thing".to_string(),
                     available_gas: None,
                     ignored: true,
@@ -645,7 +643,7 @@ mod tests {
                     fork_config: None,
                     fuzzer_config: None,
                 },
-                TestCase {
+                TestCaseRaw {
                     name: "outer::crate3::run_other_thing".to_string(),
                     available_gas: None,
                     ignored: true,
@@ -653,7 +651,7 @@ mod tests {
                     fork_config: None,
                     fuzzer_config: None,
                 },
-                TestCase {
+                TestCaseRaw {
                     name: "do_thing".to_string(),
                     available_gas: None,
                     ignored: false,

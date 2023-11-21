@@ -96,7 +96,7 @@ fn u256_to_felt252(val: BigUint) -> Vec<Felt252> {
 }
 
 impl CairoType {
-    pub(crate) fn from_name(name: &str) -> Result<Self> {
+    pub fn from_name(name: &str) -> Result<Self> {
         match name {
             "u8" => Ok(Self::U8),
             "u16" => Ok(Self::U16),
