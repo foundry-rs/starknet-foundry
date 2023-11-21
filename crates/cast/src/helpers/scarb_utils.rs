@@ -9,11 +9,6 @@ use std::fs::canonicalize;
 use std::process::{Command, Stdio};
 use std::str::FromStr;
 
-#[derive(Default, Clone, Copy)]
-pub struct ScarbOpts {
-    pub with_deps: bool,
-}
-
 #[derive(Deserialize, Serialize, Clone, Debug, Default)]
 pub struct CastConfig {
     pub rpc_url: String,
@@ -81,20 +76,18 @@ pub fn get_scarb_manifest_for(dir: &Utf8Path) -> Result<Utf8PathBuf> {
     Ok(path)
 }
 
-pub fn get_scarb_metadata(
-    manifest_path: &Utf8PathBuf,
-    opts: ScarbOpts,
-) -> Result<scarb_metadata::Metadata> {
+fn get_scarb_metadata_command(manifest_path: &Utf8PathBuf) -> Result<scarb_metadata::MetadataCommand> {
     which::which("scarb")
         .context("Cannot find `scarb` binary in PATH. Make sure you have Scarb installed https://github.com/software-mansion/scarb")?;
 
-    let mut binding = scarb_metadata::MetadataCommand::new();
-    let mut command = binding.inherit_stderr().manifest_path(manifest_path);
+    let mut command = scarb_metadata::MetadataCommand::new();
+    command.inherit_stderr().manifest_path(manifest_path);
+    Ok(command)
+}
 
-    if !opts.with_deps {
-        command = command.no_deps();
-    }
-
+fn execute_scarb_metadata_command(
+    command: &scarb_metadata::MetadataCommand,
+) -> Result<scarb_metadata::Metadata> {
     command.exec().context(format!(
         "Failed to read Scarb.toml manifest file, not found in current nor parent directories, {}",
         env::current_dir()
@@ -103,6 +96,19 @@ pub fn get_scarb_metadata(
             .into_string()
             .unwrap()
     ))
+}
+
+pub fn get_scarb_metadata(manifest_path: &Utf8PathBuf) -> Result<scarb_metadata::Metadata> {
+    let mut command = get_scarb_metadata_command(manifest_path)?;
+    let command = command.no_deps();
+    execute_scarb_metadata_command(command)
+}
+
+pub fn get_scarb_metadata_with_deps(
+    manifest_path: &Utf8PathBuf,
+) -> Result<scarb_metadata::Metadata> {
+    let command = get_scarb_metadata_command(manifest_path)?;
+    execute_scarb_metadata_command(&command)
 }
 
 #[must_use]
@@ -163,7 +169,7 @@ pub fn parse_scarb_config(
         return Ok(CastConfig::default());
     }
 
-    let metadata = get_scarb_metadata(&manifest_path, Default::default())?;
+    let metadata = get_scarb_metadata(&manifest_path)?;
 
     match get_package_tool_sncast(&metadata) {
         Ok(package_tool_sncast) => {
@@ -294,17 +300,13 @@ mod tests {
 
     #[test]
     fn test_get_scarb_metadata() {
-        let metadata = get_scarb_metadata(
-            &"tests/data/contracts/map/Scarb.toml".into(),
-            Default::default(),
-        );
+        let metadata = get_scarb_metadata(&"tests/data/contracts/map/Scarb.toml".into());
         assert!(metadata.is_ok());
     }
 
     #[test]
     fn test_get_scarb_metadata_not_found() {
-        let metadata_err =
-            get_scarb_metadata(&"Scarb.toml".into(), Default::default()).unwrap_err();
+        let metadata_err = get_scarb_metadata(&"Scarb.toml".into()).unwrap_err();
         assert!(metadata_err
             .to_string()
             .contains("Failed to read Scarb.toml manifest file"));
