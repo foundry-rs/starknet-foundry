@@ -15,7 +15,7 @@ use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cairo_vm::vm::vm_core::VirtualMachine;
 
-use cairo_lang_casm::hints::StarknetHint;
+use cheatnet::execution::cheatable_syscall_handler::SyscallSelector;
 
 
 pub struct StarknetRuntime <'a> {
@@ -107,15 +107,26 @@ impl <Handler, Runtime: HintProcessor> HintProcessorLogic for ExtendedRuntime::<
     }
 }
 
-
+#[allow(dead_code)]
 enum HintHandlingResult {
     Forward,
     Result(HintExecutionResult)
 }
 
-trait Extender {
-    fn handle_hint(_hint: &StarknetHint) -> HintHandlingResult {
+
+#[allow(dead_code)]
+enum CheatcodeHadlingResult {
+    Forward,
+    Result(Vec<Felt252>)
+}
+
+trait ExtensionLogic {
+    fn override_system_call(_syscall: SyscallSelector) -> HintHandlingResult {
         HintHandlingResult::Forward
+    }
+
+    fn handle_cheatcode(_selector: &str, _inputs: Vec<Felt252>) -> CheatcodeHadlingResult {
+        CheatcodeHadlingResult::Forward
     }
 }
 
