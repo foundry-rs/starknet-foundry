@@ -95,7 +95,8 @@ async fn test_run_script_from_different_directory_no_path_to_scarb_toml() {
         .args(args);
     snapbox.assert().success().stderr_matches(indoc! {r"
         ...
-        error: Path /Users/aleks/work/starknet/starknet-foundry/crates/cast/tests/data/scripts/Scarb.toml does not exist
+        command: script
+        error: Path [..]Scarb.toml does not exist
     "});
 }
 
