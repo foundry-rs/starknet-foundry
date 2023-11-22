@@ -155,8 +155,7 @@ build-external-contracts = [
 ]
 ```
 
-Please note that `map` contract was specified as the dependency. In our example, it resides in the filesystem. It has to
-be compiled in `build-external-contracts`.
+Please note that `map` contract was specified as the dependency. In our example, it resides in the filesystem. To generate the artifacts for it that will be accessible from the script you need to use the `build-external-contracts` property.
 
 To run the script, do:
 
