@@ -272,7 +272,7 @@ impl TestExecutionSyscallHandler<'_> {
             }
             "start_elect" => {
                 let (target, _) = deserialize_cheat_target(&inputs[..inputs.len() - 1]);
-                let sequencer_address = inputs.last().unwrap().into_();
+                let sequencer_address = inputs.last().unwrap().clone().into_();
 
                 self.child
                     .child

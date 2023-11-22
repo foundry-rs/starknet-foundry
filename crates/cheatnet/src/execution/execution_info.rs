@@ -29,7 +29,7 @@ fn get_cheated_block_info_ptr(
     }
 
     if let Some(elected_address) = cheatnet_state.get_cheated_sequencer_address(contract_address) {
-        new_block_info[2] = MaybeRelocatable::Int(Felt252::from_(*elected_address));
+        new_block_info[2] = MaybeRelocatable::Int(Felt252::from_(elected_address));
     };
 
     vm.load_data(ptr_cheated_block_info, &new_block_info)
