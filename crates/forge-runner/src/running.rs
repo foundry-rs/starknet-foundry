@@ -248,10 +248,6 @@ pub fn run_test_case(
         &mut context,
     );
 
-    // let starknet_runtime = StarknetRuntime {
-    //    hint_handler: syscall_handler,
-    // };
-
 
     let mut cheatnet_state = CheatnetState {
         block_info,
@@ -268,11 +264,6 @@ pub fn run_test_case(
         contracts: runner_params.contracts.clone(),
     };
 
-    // let mut test_execution_syscall_handler = TestExecutionSyscallHandler::wrap(
-    //     &mut test_execution_state,
-    //     &string_to_hint,
-    // );
-
     let mut forge_runtime = ExtendedRuntime(RuntimeExtension::<TestExecutionState, ContractExecutionSyscallHandler> {
         extended_runtime: contract_execution_syscall_handler,
         extension_state: test_execution_state
@@ -287,7 +278,6 @@ pub fn run_test_case(
     } else {
         None
     };
-    // let rt : dyn HintProcessor = forge_runtime as dyn HintProcessor;
 
     let run_result = runner.run_function(
         func,
