@@ -28,6 +28,7 @@ The extending/differentiating factors would be:
 - Extra environment-specific functions (for [katana](https://book.dojoengine.org/toolchain/katana/reference.html#custom-methods)/[devnet](https://github.com/0xSpaceShard/starknet-devnet-rs#dumping--loading) - see docs)
 - Additional RPC functions support (receipts, etc.)
 - Test-like behavior (fail/pass)
+- Idempotent functions, for functionalities that can fail when double-running them (i.e. declare)
 
 
 ## Solution architecture
