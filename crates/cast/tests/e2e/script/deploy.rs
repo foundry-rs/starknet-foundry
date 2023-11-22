@@ -7,7 +7,7 @@ async fn test_with_calldata() {
     let script_name = "with_calldata";
     let args = vec![
         "--accounts-file",
-        "../../../accounts/accounts.json",
+        "../../accounts/accounts.json",
         "--account",
         "user4",
         "--url",
@@ -17,7 +17,7 @@ async fn test_with_calldata() {
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(SCRIPTS_DIR.to_owned() + "/deploy/with_calldata")
+        .current_dir(SCRIPTS_DIR.to_owned() + "/deploy")
         .args(args);
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
