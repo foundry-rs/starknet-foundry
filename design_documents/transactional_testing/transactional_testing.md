@@ -85,6 +85,48 @@ For example:
 - Dry-run mode from cast scripts might be sufficient for some use cases (testing deployments)
 - Might be confusing to users if not communicated correctly
 
+
+## Usage examples
+1. Test transaction signing
+```
+from xxx_std import {deploy_account, deploy_contracts, end_txn, call, stark_curve, Transaction, TransactionStatus, Calldata, Call};  
+from xxx_devnet_extras import {set_time, dump};
+
+const PREFUNDED_ADDRESS = 0x31231; // Set by the user, or generated inside the test
+
+#[devnet_test(url=localhost:3000)]
+fn test_signature_validation() {
+    let account_contract = deploy_account("OZAccount", PREFUNDED_ADDRESS, );
+    let mock_contract = deploy_contract("MockContract"); // The one that account is calling
+
+    let txn = Transaction(
+        version=2,      // Different versions could be supported
+        address=account_contract.address,
+        function="__execute__", 
+        calldata=Calldata::from_calls(array![Call(...), Call(...)])),
+        max_fee=100000,
+    );
+    
+    let signed_txn = stark_curve::sign(txn); // This would also be pluggable, for users to be able to sign with different curves
+    
+    set_time(123); // Set time for txn
+    let result = send_txn(signed_txn); // Synchronous
+    match result {
+        TransactionStatus::Rejected(data) => { /* assert failure data or gas */ },
+        TransactionStatus::Accepted(data) => { /* assert result data  or gas */ }
+    };
+    
+    let account_balance = call(
+        address=mock_contract.address, 
+        function="get_balance",
+        calldata=Calldata::from_calls(array![Call(...), Call(...)])
+    );
+    
+    assert(account_balance > ..., "not correct balance");
+    dump(); // Dump can be used for pre-populating your test environment
+}
+```
+
 ## Alternative approaches
 
 ### 1. Extending the deployment scripts
@@ -103,6 +145,16 @@ We could provide utilities to test validation + execution in accounts, and/or ad
 said scenarios only (submit_txn, call, etc.). This would make for more confusing flow, if not used correctly
 (lack of intuitive separation of concerns for std funcs).
 
+
+### 3. Providing extra library to a language instead for running those kinds of tests
+Let's say we do it in python:
+We could develop a library which does all that, with python + starknet.py
+Pros: 
+- Running arbitrary code is easy
+- RPC methods already supported in starknet.py (less work to be done)
+Cons:
+- Inconsistent codebase (have to include python tooling setup for tests)
+- No existing runner re-using (would have to integrate with pytest or something like that)
 
 ## Scope for MVP
 
