@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `elect` cheatcode for mocking the sequencer address. Read more [here](./docs/src/appendix/cheatcodes/start_elect.md).
 
 #### Changed
-
+- `--rerun-failed` option to run tests that failed during the last run
 - `start_warp` and `stop_warp` now take `CheatTarget` as the first argument instead of `ContractAddress`. Read more [here](./docs/src/appendix/cheatcodes/start_warp.md). 
 - `start_prank` and `stop_prank` now take `CheatTarget` as the first argument instead of `ContractAddress`. Read more [here](./docs/src/appendix/cheatcodes/start_prank.md).
 - `start_roll` and `stop_roll` now take `CheatTarget` as the first argument instead of `ContractAddress`. Read more [here](./docs/src/appendix/cheatcodes/start_roll.md).
@@ -32,14 +32,6 @@ PS: Credits to @bllu404 for the help with the new interfaces for cheats!
 ### Added
 
 - MVP for cairo deployment scripts with declare, deploy, invoke and call
-
-## [0.10.2] - 2023-11-13
-
-### Forge
-
-#### Added
-
-- `--rerun-failed` option to run tests that failed during the last run
 
 ## [0.10.2] - 2023-11-13
 
