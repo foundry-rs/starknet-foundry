@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::fs;
 
 use crate::get_account;
-use crate::starknet_commands::{call, declare};
+use crate::starknet_commands::{call, declare, deploy};
 use anyhow::{anyhow, ensure, Context, Result};
 use cairo_felt::Felt252;
 use cairo_lang_casm::hints::{Hint, StarknetHint};
@@ -239,6 +239,62 @@ impl CairoHintProcessor<'_> {
 
                 buffer
                     .write(declare_response.transaction_hash.to_felt252())
+                    .expect("Failed to insert transaction hash");
+
+                Ok(())
+            }
+            "deploy" => {
+                let class_hash = inputs[0].to_field_element();
+                let calldata_length = inputs[1]
+                    .to_usize()
+                    .expect("Failed to convert calldata length to usize");
+                let constructor_calldata: Vec<FieldElement> = {
+                    let calldata = Vec::from(&inputs[2..(2 + calldata_length)]);
+                    calldata
+                        .iter()
+                        .map(StarknetConversions::to_field_element)
+                        .collect()
+                };
+                let mut offset = 2 + calldata_length;
+                let salt = if inputs[offset] == 0.into() {
+                    offset += 1;
+                    Some(inputs[offset].to_field_element())
+                } else {
+                    None
+                };
+                offset += 1;
+                let unique = { inputs[offset] == 1.into() };
+                offset += 1;
+                let max_fee = if inputs[offset] == 0.into() {
+                    offset += 1;
+                    Some(inputs[offset].to_field_element())
+                } else {
+                    None
+                };
+
+                let account = self.runtime.block_on(get_account(
+                    &self.config.account,
+                    &self.config.accounts_file,
+                    self.provider,
+                    &self.config.keystore,
+                ))?;
+
+                let deploy_response = self.runtime.block_on(deploy::deploy(
+                    class_hash,
+                    constructor_calldata,
+                    salt,
+                    unique,
+                    max_fee,
+                    &account,
+                    true,
+                ))?;
+
+                buffer
+                    .write(deploy_response.contract_address.to_felt252())
+                    .expect("Failed to insert contract address");
+
+                buffer
+                    .write(deploy_response.transaction_hash.to_felt252())
                     .expect("Failed to insert transaction hash");
 
                 Ok(())
