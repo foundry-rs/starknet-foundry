@@ -23,6 +23,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - using unsupported `available_gas` attribute now fails the specific test case instead of the whole runner
 
+### Cast
+
+### Added
+
+- MVP for cairo deployment scripts with declare, deploy, invoke and call
+
 ## [0.10.2] - 2023-11-13
 
 ### Forge
