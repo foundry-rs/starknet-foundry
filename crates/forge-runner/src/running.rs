@@ -16,8 +16,9 @@ use cairo_vm::types::relocatable::Relocatable;
 use cheatnet::execution::cheatable_syscall_handler::CheatableSyscallHandler;
 use itertools::chain;
 
+use crate::runtime::{RuntimeExtension, ExtendedRuntime};
 use crate::test_case_summary::TestCaseSummary;
-use crate::test_execution_syscall_handler::{TestExecutionState, TestExecutionSyscallHandler};
+use crate::test_execution_syscall_handler::TestExecutionState;
 use crate::{RunnerConfig, RunnerParams, TestCaseRunnable, ValidatedForkConfig, CACHE_DIR};
 use cairo_lang_casm::hints::Hint;
 use cairo_lang_casm::instructions::Instruction;
@@ -247,24 +248,35 @@ pub fn run_test_case(
         &mut context,
     );
 
+    // let starknet_runtime = StarknetRuntime {
+    //    hint_handler: syscall_handler,
+    // };
+
+
     let mut cheatnet_state = CheatnetState {
         block_info,
         ..Default::default()
     };
     let cheatable_syscall_handler =
         CheatableSyscallHandler::wrap(syscall_handler, &mut cheatnet_state);
+
     let contract_execution_syscall_handler =
         ContractExecutionSyscallHandler::wrap(cheatable_syscall_handler);
 
-    let mut test_execution_state = TestExecutionState {
-        environment_variables: &runner_params.environment_variables,
-        contracts: &runner_params.contracts,
+    let test_execution_state = TestExecutionState {
+        environment_variables: runner_params.environment_variables.clone(),
+        contracts: runner_params.contracts.clone(),
     };
-    let mut test_execution_syscall_handler = TestExecutionSyscallHandler::wrap(
-        contract_execution_syscall_handler,
-        &mut test_execution_state,
-        &string_to_hint,
-    );
+
+    // let mut test_execution_syscall_handler = TestExecutionSyscallHandler::wrap(
+    //     &mut test_execution_state,
+    //     &string_to_hint,
+    // );
+
+    let mut forge_runtime = ExtendedRuntime(RuntimeExtension::<TestExecutionState, ContractExecutionSyscallHandler> {
+        extended_runtime: contract_execution_syscall_handler,
+        extension_state: test_execution_state
+    });
 
     let latest_block_number = if let Some(ValidatedForkConfig {
         url: _,
@@ -275,10 +287,11 @@ pub fn run_test_case(
     } else {
         None
     };
+    // let rt : dyn HintProcessor = forge_runtime as dyn HintProcessor;
 
     let run_result = runner.run_function(
         func,
-        &mut test_execution_syscall_handler,
+        &mut forge_runtime,
         hints_dict,
         instructions,
         builtins,
