@@ -73,7 +73,7 @@ To run the script, do:
 
 ```shell
 $ sncast \
-  --rpc-url http://127.0.0.1:5050 \
+  --url http://127.0.0.1:5050 \
   --account example_user \
   script my_script
 
@@ -162,7 +162,7 @@ To run the script, do:
 
 ```shell
 $ sncast \
-  --rpc-url http://127.0.0.1:5050 \
+  --url http://127.0.0.1:5050 \
   --account example_user \
   script map_script
   
