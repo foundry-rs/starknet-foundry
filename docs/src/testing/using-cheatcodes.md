@@ -127,7 +127,7 @@ address, so it passes our validation.
 ### Pranking the Address
 
 ```rust
-use snforge_std::{ declare, ContractClassTrait, start_prank };
+use snforge_std::{ declare, ContractClassTrait, start_prank, CheatTarget };
 
 #[test]
 fn call_and_invoke() {
@@ -139,7 +139,7 @@ fn call_and_invoke() {
     assert(balance == 0, 'balance == 0');
 
     // Change the caller address to 123 when calling the contract at the `contract_address` address
-    start_prank(contract_address, 123.try_into().unwrap());
+    start_prank(CheatTarget::One(contract_address), 123.try_into().unwrap());
 
     dispatcher.increase_balance(100);
 
@@ -167,14 +167,14 @@ In case of the `start_prank`, we can cancel the address change
 using [`stop_prank`](../appendix/cheatcodes/stop_prank.md)
 
 ```rust
-use snforge_std::stop_prank;
+use snforge_std::{stop_prank, CheatTarget};
 
 #[test]
 fn call_and_invoke() {
     // ...
 
     // The address when calling contract at the `contract_address` address will no longer be changed
-    stop_prank(contract_address);
+    stop_prank(CheatTarget::One(contract_address));
 
     // This will fail
     dispatcher.increase_balance(100);
@@ -209,7 +209,7 @@ Let's say, that you have a contract that saves the caller address (deployer) in 
 To `prank` the constructor, you need to `start_prank` before it is invoked, with the right address. To achieve this, you need to precalculate the address of the contract by using the `precalculate_address` function of `ContractClassTrait` on the declared contract, and then use it in `start_prank` as an argument:
 
 ```rust
-use snforge_std::{ declare, ContractClassTrait, start_prank };
+use snforge_std::{ declare, ContractClassTrait, start_prank, CheatTarget };
 
 #[test]
 fn mock_constructor_with_prank() {
@@ -220,7 +220,7 @@ fn mock_constructor_with_prank() {
     let contract_address = contract.precalculate_address(constructor_arguments);
 
     // Change the caller address to 123 before the call to contract.deploy
-    start_prank(contract_address, 123.try_into().unwrap());
+    start_prank(CheatTarget::One(contract_address), 123.try_into().unwrap());
 
     // The constructor will have 123 set as the caller address
     contract.deploy(constructor_arguments).unwrap();
