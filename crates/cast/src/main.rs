@@ -123,6 +123,7 @@ fn main() -> Result<()> {
             &cli.path_to_scarb_toml,
             &provider,
             runtime,
+            &config,
         );
 
         print_command_result("script", &mut result, value_format, cli.json)?;

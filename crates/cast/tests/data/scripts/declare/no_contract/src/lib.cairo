@@ -1,0 +1,2 @@
+mod no_contract;
+

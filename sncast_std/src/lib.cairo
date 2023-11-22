@@ -1,4 +1,4 @@
-use starknet::{testing::cheatcode, ContractAddress};
+use starknet::{testing::cheatcode, ContractAddress, ClassHash};
 
 #[derive(Drop, Clone)]
 struct CallResult {
@@ -38,4 +38,29 @@ fn call(
     };
 
     CallResult { data: result_data }
+}
+
+#[derive(Drop, Clone)]
+struct DeclareResult {
+    class_hash: ClassHash,
+    transaction_hash: felt252,
+}
+
+fn declare(contract_name: felt252, max_fee: Option<felt252>) -> DeclareResult {
+    let mut inputs = array![contract_name];
+
+    match max_fee {
+        Option::Some(val) => {
+            inputs.append(0);
+            inputs.append(val);
+        },
+        Option::None => inputs.append(1),
+    };
+
+    let buf = cheatcode::<'declare'>(inputs.span());
+
+    let class_hash: ClassHash = (*buf[0]).try_into().expect('Invalid class hash value');
+    let transaction_hash = *buf[1];
+
+    DeclareResult { class_hash, transaction_hash }
 }
