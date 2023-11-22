@@ -34,7 +34,7 @@ The extending/differentiating factors would be:
 ## Solution architecture
 
 This is pretty straightforward. We ought to use the existing architecture for hint interception,
-provide extra functionality via libraries (one for forge, second one for devnet), and collect the cases from
+provide extra functionality via libraries (one for katana, second one for devnet, possibly more), and collect the cases from
 folders using existing collecting logic. 
 
 Note: Currently, the backend architecture between `cast script` and `forge test` is not common,
