@@ -35,7 +35,10 @@ The extending/differentiating factors would be:
 
 This is pretty straightforward. We ought to use the existing architecture for hint interception,
 provide extra functionality via libraries (one for forge, second one for devnet), and collect the cases from
-folders using existing collecting logic.
+folders using existing collecting logic. 
+
+Note: Currently, the backend architecture between `cast script` and `forge test` is not common,
+and the following effort to implement this architecture should be preceded by making that solution.
 
 ![txn_based_testing_arch.png](./txn_based_testing_arch.png)
 
