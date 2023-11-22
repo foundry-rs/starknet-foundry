@@ -65,6 +65,7 @@ from the point of user to use the deployment scripts in that way.
 
 
 ### 2. Providing utilities to emulate transactional testing
+
 It's similar to alternative 1, but rather than integrating those concepts into deployment scripts,
 we could implement them into snforge itself.
 This approach would include trying to include this kind of flow into the current tests.
