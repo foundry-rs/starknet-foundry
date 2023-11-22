@@ -78,14 +78,12 @@ pub fn get_scarb_metadata(manifest_path: Option<&Utf8PathBuf>) -> Result<Metadat
         Some(path) => MetadataCommand::new()
         .inherit_stderr()
         .manifest_path(path.clone())
-        .no_deps()
         .exec()
         .context(
             format!("Failed to read Scarb.toml manifest file, not found in {} nor parent directories.", path.clone().into_string()),
         ),
         None => MetadataCommand::new()
         .inherit_stderr()
-        .no_deps()
         .exec()
         .context(
             format!("Failed to read Scarb.toml manifest file, not found in current nor parent directories, {}", env::current_dir().unwrap().into_os_string().into_string().unwrap()),
@@ -109,9 +107,13 @@ pub fn parse_scarb_config(
 }
 
 pub fn get_package_tool_sncast(metadata: &Metadata) -> Result<&Value> {
+
+    let first_package_id = metadata.workspace.members.get(0).ok_or_else(|| anyhow!("No package found in metadata"))?;
+
     let first_package = metadata
         .packages
-        .get(0)
+        .iter()
+        .find(|p| p.id == *first_package_id )
         .ok_or_else(|| anyhow!("No package found in metadata"))?;
 
     let tool = first_package
