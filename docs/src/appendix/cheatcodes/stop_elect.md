@@ -1,19 +1,19 @@
 # `stop_elect`
 
-> `fn stop_elect(contract_address: ContractAddress)`
+> `fn stop_elect(target: CheatTarget)`
 
-Cancels the [`start_elect`](./start_elect.md) for the contract at the given address.
+Cancels the [`start_elect`](./start_elect.md) for the given target.
 
-- `contract_address` - target contract address
+- `target` - instance of [`CheatTarget`](./cheat_target.md) specifying which contracts to stop electing
 
 ```rust
-use snforge_std::stop_elect;
+use snforge_std::{stop_elect, CheatTarget};
 
 #[test]
 fn test_elect() {
     // ...
     
-    stop_elect(contract_address);
+    stop_elect(CheatTarget::One(contract_address));
     
     // ...
 }

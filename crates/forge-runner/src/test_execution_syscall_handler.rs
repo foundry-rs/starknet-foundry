@@ -271,19 +271,19 @@ impl TestExecutionSyscallHandler<'_> {
                 Ok(())
             }
             "start_elect" => {
-                let contract_address = inputs[0].clone().into_();
-                let sequencer_address = inputs[1].clone().into_();
+                let (target, _) = deserialize_cheat_target(&inputs[..inputs.len() - 1]);
+                let sequencer_address = inputs.last().unwrap().into_();
 
                 self.child
                     .child
                     .cheatnet_state
-                    .start_elect(contract_address, sequencer_address);
+                    .start_elect(target, sequencer_address);
                 Ok(())
             }
             "stop_elect" => {
-                let contract_address = inputs[0].clone().into_();
+                let (target, _) = deserialize_cheat_target(&inputs);
 
-                self.child.child.cheatnet_state.stop_elect(contract_address);
+                self.child.child.cheatnet_state.stop_elect(target);
                 Ok(())
             }
             "start_prank" => {

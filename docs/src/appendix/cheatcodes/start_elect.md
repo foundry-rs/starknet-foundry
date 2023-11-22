@@ -1,11 +1,11 @@
 # `start_elect`
 
-> `fn start_elect(contract_address: ContractAddress, sequencer_address: ContractAddress)`
+> `fn start_elect(target: CheatTarget, sequencer_address: ContractAddress)`
 
-Changes the sequencer address for a contract at the given address.
+Changes the sequencer address for a given target.
 The change can be canceled with [`stop_elect`](./stop_elect.md).
 
-- `contract_address` - target contract address
+- `target` - instance of [`CheatTarget`](./cheat_target.md) specifying which contracts to elect
 - `sequencer_address` - sequencer address to be set
 
 For contract implementation:
@@ -29,16 +29,16 @@ impl IContractImpl of IContract<ContractState> {
 }
 ```
 
-We can use `start_elect` in a test to change the sequencer address for a given contract:
+We can use `start_elect` in a test to change the sequencer address for contracts:
 
 ```rust
-use snforge_std::start_elect;
+use snforge_std::{start_elect, CheatTarget};
 
 #[test]
 fn test_elect() {
     // ...
 
-    start_elect(contract_address, 234.try_into().unwrap());
+    start_elect(CheatTarget::One(contract_address), 234.try_into().unwrap());
 
     dispatcher.set_sequencer_address();
     let new_sequencer_address = dispatcher.get_sequencer_address();

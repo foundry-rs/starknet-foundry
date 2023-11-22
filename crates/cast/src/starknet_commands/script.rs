@@ -2,7 +2,8 @@ use std::any::Any;
 use std::collections::HashMap;
 use std::fs;
 
-use crate::starknet_commands::call;
+use crate::get_account;
+use crate::starknet_commands::{call, declare, deploy, invoke};
 use anyhow::{anyhow, ensure, Context, Result};
 use cairo_felt::Felt252;
 use cairo_lang_casm::hints::{Hint, StarknetHint};
@@ -27,7 +28,7 @@ use cairo_vm::vm::vm_core::VirtualMachine;
 use camino::Utf8PathBuf;
 use cast::helpers::response_structs::ScriptResponse;
 use cast::helpers::scarb_utils::{
-    get_package_metadata, get_scarb_manifest, get_scarb_metadata_with_deps,
+    get_package_metadata, get_scarb_manifest, get_scarb_metadata_with_deps, CastConfig,
 };
 use cheatnet::cheatcodes::EnhancedHintError;
 use clap::command;
@@ -53,6 +54,7 @@ pub struct CairoHintProcessor<'a> {
     pub provider: &'a JsonRpcClient<HttpTransport>,
     pub runtime: Runtime,
     pub run_resources: RunResources,
+    pub config: &'a CastConfig,
 }
 
 // cairo/crates/cairo-lang-runner/src/casm_run/mod.rs:457 (ResourceTracker for CairoHintProcessor)
@@ -203,6 +205,138 @@ impl CairoHintProcessor<'_> {
 
                 Ok(())
             }
+            "declare" => {
+                let contract_name = as_cairo_short_string(&inputs[0])
+                    .expect("Failed to convert contract name to string");
+                let max_fee = if inputs[1] == 0.into() {
+                    Some(inputs[2].to_field_element())
+                } else {
+                    None
+                };
+                let account = self.runtime.block_on(get_account(
+                    &self.config.account,
+                    &self.config.accounts_file,
+                    self.provider,
+                    &self.config.keystore,
+                ))?;
+
+                let declare_response = self.runtime.block_on(declare::declare(
+                    &contract_name,
+                    max_fee,
+                    &account,
+                    &None,
+                    true,
+                ))?;
+
+                buffer
+                    .write(declare_response.class_hash.to_felt252())
+                    .expect("Failed to insert class hash");
+
+                buffer
+                    .write(declare_response.transaction_hash.to_felt252())
+                    .expect("Failed to insert transaction hash");
+
+                Ok(())
+            }
+            "deploy" => {
+                let class_hash = inputs[0].to_field_element();
+                let calldata_length = inputs[1]
+                    .to_usize()
+                    .expect("Failed to convert calldata length to usize");
+                let constructor_calldata: Vec<FieldElement> = {
+                    let calldata = Vec::from(&inputs[2..(2 + calldata_length)]);
+                    calldata
+                        .iter()
+                        .map(StarknetConversions::to_field_element)
+                        .collect()
+                };
+                let mut offset = 2 + calldata_length;
+                let salt = if inputs[offset] == 0.into() {
+                    offset += 1;
+                    Some(inputs[offset].to_field_element())
+                } else {
+                    None
+                };
+                offset += 1;
+                let unique = { inputs[offset] == 1.into() };
+                offset += 1;
+                let max_fee = if inputs[offset] == 0.into() {
+                    offset += 1;
+                    Some(inputs[offset].to_field_element())
+                } else {
+                    None
+                };
+
+                let account = self.runtime.block_on(get_account(
+                    &self.config.account,
+                    &self.config.accounts_file,
+                    self.provider,
+                    &self.config.keystore,
+                ))?;
+
+                let deploy_response = self.runtime.block_on(deploy::deploy(
+                    class_hash,
+                    constructor_calldata,
+                    salt,
+                    unique,
+                    max_fee,
+                    &account,
+                    true,
+                ))?;
+
+                buffer
+                    .write(deploy_response.contract_address.to_felt252())
+                    .expect("Failed to insert contract address");
+
+                buffer
+                    .write(deploy_response.transaction_hash.to_felt252())
+                    .expect("Failed to insert transaction hash");
+
+                Ok(())
+            }
+            "invoke" => {
+                let contract_address = inputs[0].to_field_element();
+                let entry_point_name = as_cairo_short_string(&inputs[1])
+                    .expect("Failed to convert entry point name to short string");
+                let calldata_length = inputs[2]
+                    .to_usize()
+                    .expect("Failed to convert calldata length to usize");
+                let calldata: Vec<FieldElement> = {
+                    let calldata = Vec::from(&inputs[3..(3 + calldata_length)]);
+                    calldata
+                        .iter()
+                        .map(conversions::StarknetConversions::to_field_element)
+                        .collect()
+                };
+                let offset = 3 + calldata_length;
+                let max_fee = if inputs[offset] == 0.into() {
+                    Some(inputs[offset + 1].to_field_element())
+                } else {
+                    None
+                };
+
+                let account = self.runtime.block_on(get_account(
+                    &self.config.account,
+                    &self.config.accounts_file,
+                    self.provider,
+                    &self.config.keystore,
+                ))?;
+
+                let invoke_response = self.runtime.block_on(invoke::invoke(
+                    contract_address,
+                    &entry_point_name,
+                    calldata,
+                    max_fee,
+                    &account,
+                    true,
+                ))?;
+
+                buffer
+                    .write(invoke_response.transaction_hash.to_felt252())
+                    .expect("Failed to insert transaction hash");
+
+                Ok(())
+            }
             _ => Err(anyhow!("Unknown cheatcode selector: {selector}")),
         }?;
 
@@ -219,6 +353,7 @@ pub fn run(
     path_to_scarb_toml: &Option<Utf8PathBuf>,
     provider: &JsonRpcClient<HttpTransport>,
     runtime: Runtime,
+    config: &CastConfig,
 ) -> Result<ScriptResponse> {
     let path = compile_script(path_to_scarb_toml.clone())?;
 
@@ -256,6 +391,7 @@ pub fn run(
         provider,
         runtime,
         run_resources: RunResources::default(),
+        config,
     };
 
     match runner.run_function(
