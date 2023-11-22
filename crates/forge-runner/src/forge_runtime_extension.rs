@@ -20,7 +20,7 @@ use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use cheatnet::cheatcodes::deploy::{deploy, deploy_at, DeployCallPayload};
 use cheatnet::cheatcodes::{CheatcodeError, EnhancedHintError};
-use cheatnet::execution::cheatable_syscall_handler::CheatableSyscallHandler;
+use cheatnet::execution::cheatable_syscall_handler::{CheatableSyscallHandler, SyscallSelector};
 use cheatnet::rpc::{call_contract, CallContractFailure, CallContractOutput, CallContractResult};
 use cheatnet::state::{BlockifierState, CheatTarget, CheatnetState};
 use conversions::StarknetConversions;
@@ -36,7 +36,7 @@ use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{casm_run::cell_ref_to_relocatable, insert_value_to_cellref};
 use starknet_api::core::ContractAddress;
 
-use crate::runtime::{RuntimeExtension, ExtensionLogic, CheatcodeHadlingResult};
+use crate::runtime::{RuntimeExtension, ExtensionLogic, CheatcodeHadlingResult, SyscallHandlingResult};
 use crate::forge_runtime_extension::file_operations::string_into_felt;
 use cairo_lang_starknet::contract::starknet_keccak;
 use cairo_vm::vm::errors::hint_errors::HintError::CustomHint;
@@ -68,7 +68,8 @@ impl<'a> ExtensionLogic for RuntimeExtension<TestExecutionState, ContractExecuti
         inputs: Vec<Felt252>,
         vm: &mut VirtualMachine,
         output_start: &CellRef,
-        output_end: &CellRef,) -> Result<CheatcodeHadlingResult, EnhancedHintError> {
+        output_end: &CellRef,
+    ) -> Result<CheatcodeHadlingResult, EnhancedHintError> {
         let mut buffer = MemBuffer::new_segment(vm);
         let result_start = buffer.ptr;
 
@@ -471,6 +472,52 @@ impl<'a> ExtensionLogic for RuntimeExtension<TestExecutionState, ContractExecuti
         insert_value_to_cellref!(vm, output_end, result_end)?;
         Ok(res)
     }
+
+
+    fn override_system_call(
+        &mut self, 
+        system: &ResOperand,
+        vm: &mut VirtualMachine,
+        exec_scopes: &mut ExecutionScopes,
+        hint_data: &Box<dyn Any>,
+        constants: &HashMap<String, Felt252>,
+    ) -> Result<SyscallHandlingResult, HintError> {
+        let (cell, offset) = extract_buffer(system);
+        let system_ptr = get_ptr(vm, cell, &offset)?;
+    
+        self.get_extended_runtime_mut()
+            .child
+            .child
+            .verify_syscall_ptr(system_ptr)?;
+        
+        // We peek into memory to check the selector
+        let selector = DeprecatedSyscallSelector::try_from(felt_to_stark_felt(
+            &vm.get_integer(self.get_extended_runtime_mut().child.child.syscall_ptr)
+                .unwrap(),
+        ))?;
+    
+        match selector {
+            DeprecatedSyscallSelector::CallContract => {
+                let call_args =
+                    CallContractArgs::read(vm, &mut self.get_extended_runtime_mut().child.child.syscall_ptr)?;
+                let cheatable_syscall_handler = &mut self.get_extended_runtime_mut().child;
+                let mut blockifier_state = BlockifierState::from(cheatable_syscall_handler.child.state);
+                let mut cheatnet_state = &mut cheatable_syscall_handler.cheatnet_state;
+
+                let call_result = execute_call_contract(
+                    &mut blockifier_state,
+                    &mut cheatnet_state, 
+                    &call_args,
+                );
+                write_call_contract_response(&mut self.get_extended_runtime_mut().child, vm, &call_args, call_result)?;
+                Ok(SyscallHandlingResult::Result(()))
+            }
+            DeprecatedSyscallSelector::ReplaceClass => Err(HintError::CustomHint(Box::from(
+                "Replace class can't be used in tests".to_string(),
+            ))),
+            _ => Ok(SyscallHandlingResult::Forward)
+        }
+    }
 }
 
 pub struct TestExecutionState {
@@ -542,47 +589,6 @@ struct ScarbStarknetContractArtifact {
     casm: Option<PathBuf>,
 }
 
-fn execute_syscall(
-    system: &ResOperand,
-    vm: &mut VirtualMachine,
-    exec_scopes: &mut ExecutionScopes,
-    hint_data: &Box<dyn Any>,
-    constants: &HashMap<String, Felt252>,
-    cheatable_syscall_handler: &mut CheatableSyscallHandler,
-) -> Result<(), HintError> {
-    let (cell, offset) = extract_buffer(system);
-    let system_ptr = get_ptr(vm, cell, &offset)?;
-
-    cheatable_syscall_handler
-        .child
-        .verify_syscall_ptr(system_ptr)?;
-
-    // We peek into memory to check the selector
-    let selector = DeprecatedSyscallSelector::try_from(felt_to_stark_felt(
-        &vm.get_integer(cheatable_syscall_handler.child.syscall_ptr)
-            .unwrap(),
-    ))?;
-
-    match selector {
-        DeprecatedSyscallSelector::CallContract => {
-            let call_args =
-                CallContractArgs::read(vm, &mut cheatable_syscall_handler.child.syscall_ptr)?;
-
-            let mut blockifier_state = BlockifierState::from(cheatable_syscall_handler.child.state);
-            let call_result = execute_call_contract(
-                &mut blockifier_state,
-                cheatable_syscall_handler.cheatnet_state,
-                &call_args,
-            );
-            write_call_contract_response(cheatable_syscall_handler, vm, &call_args, call_result)?;
-            Ok(())
-        }
-        DeprecatedSyscallSelector::ReplaceClass => Err(HintError::CustomHint(Box::from(
-            "Replace class can't be used in tests".to_string(),
-        ))),
-        _ => cheatable_syscall_handler.execute_hint(vm, exec_scopes, hint_data, constants),
-    }
-}
 
 struct CallContractArgs {
     _selector: Felt252,

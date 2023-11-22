@@ -4,12 +4,13 @@ use std::collections::HashMap;
 use anyhow::Result;
 use blockifier::execution::common_hints::HintExecutionResult;
 
+use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 
 use cairo_felt::Felt252;
 use cairo_lang_casm::hints::{Hint, StarknetHint};
-use cairo_lang_casm::operand::CellRef;
-use cairo_lang_runner::casm_run::{extract_relocatable, vm_get_range};
+use cairo_lang_casm::operand::{CellRef, ResOperand};
+use cairo_lang_runner::casm_run::{extract_relocatable, vm_get_range, extract_buffer, get_ptr};
 use cairo_vm::hint_processor::hint_processor_definition::{
     HintProcessor, HintProcessorLogic, HintReference,
 };
@@ -126,16 +127,10 @@ impl<Extension: RegisteredExtension> HintProcessorLogic for ExtendedRuntime<Exte
                 _ => ()
             }
         }
-        // if let Some(Hint::Starknet(StarknetHint::SystemCall { system })) = maybe_extended_hint {
-        //     return execute_syscall(
-        //         system,
-        //         vm,
-        //         exec_scopes,
-        //         hint_data,
-        //         constants,
-        //         &mut self.child.child,
-        //     );
-        // } // TODO make syscalls work
+        if let Some(Hint::Starknet(StarknetHint::SystemCall { system })) = maybe_extended_hint {
+            // TODO move selector parsing logic here
+            self.0.override_system_call(system, vm, exec_scopes, hint_data, constants);
+        }
         self.0.get_extended_runtime_mut().execute_hint(vm, exec_scopes, hint_data, constants)
     }
 
@@ -170,9 +165,9 @@ impl<Handler, Runtime: HintProcessor> ResourceTracker for ExtendedRuntime<Runtim
 }
 
 #[allow(dead_code)]
-pub enum HintHandlingResult {
+pub enum SyscallHandlingResult {
     Forward,
-    Result(HintExecutionResult),
+    Result(()),
 }
 
 #[allow(dead_code)]
@@ -181,6 +176,13 @@ pub enum CheatcodeHadlingResult {
     Result(()), // TODO now use buffer later rewrite to return vector
 }
 
+// system: &ResOperand,
+// vm: &mut VirtualMachine,
+// exec_scopes: &mut ExecutionScopes,
+// hint_data: &Box<dyn Any>,
+// constants: &HashMap<String, Felt252>,
+// cheatable_syscall_handler: &mut CheatableSyscallHandler,
+
 pub trait ExtensionLogic  {
     type Runtime : HintProcessorLogic;
 
@@ -188,11 +190,26 @@ pub trait ExtensionLogic  {
 
     fn get_extended_runtime(&self) -> &Self::Runtime;
 
-    fn override_system_call(&mut self, _syscall: SyscallSelector) -> HintHandlingResult {
-        HintHandlingResult::Forward
+    fn override_system_call(
+        &mut self, 
+        system: &ResOperand,
+        vm: &mut VirtualMachine,
+        exec_scopes: &mut ExecutionScopes,
+        hint_data: &Box<dyn Any>,
+        constants: &HashMap<String, Felt252>,
+) -> Result<SyscallHandlingResult, HintError> {
+        Ok(SyscallHandlingResult::Forward)
     }
+    
     // TODO remove vm, output from this signature, make it return Felt252
-    fn handle_cheatcode(&mut self, _selector: &str, _inputs: Vec<Felt252>, _vm: &mut VirtualMachine, _output_start: &CellRef, _output_end: &CellRef) -> Result<CheatcodeHadlingResult, EnhancedHintError> {
+    fn handle_cheatcode(
+        &mut self,
+        _selector: &str,
+        _inputs: Vec<Felt252>,
+        _vm: &mut VirtualMachine,
+        _output_start: &CellRef,
+        _output_end: &CellRef
+    ) -> Result<CheatcodeHadlingResult, EnhancedHintError> {
         Ok(CheatcodeHadlingResult::Forward)
     }
 }
