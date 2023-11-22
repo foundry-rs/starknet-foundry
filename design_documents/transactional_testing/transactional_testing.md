@@ -33,6 +33,7 @@ The extending/differentiating factors would be:
 
 ## Solution architecture
 
+### High-level architecture
 This is pretty straightforward. We ought to use the existing architecture for hint interception,
 provide extra functionality via libraries (one for katana, second one for devnet, possibly more), and collect the cases from
 folders using existing collecting logic. 
@@ -42,7 +43,32 @@ and the following effort to implement this architecture should be preceded by ma
 
 ![txn_based_testing_arch.png](./txn_based_testing_arch.png)
 
+### E2E tests and scarb
 
+The relation between scarb and the following tests is very much like in `cast script`:
+1. Scarb compiles the contracts
+2. The test scripts are compiled with foundry (until a plugin solution is available)
+3. The test uses artifacts from Ad. 1, runs program from Ad 2. on own VM with hint processing logic 
+
+### File organization within scarb workspace
+
+Each package can have its own contract, so each package could have its own e2e directory, 
+and the whole workspace could have it as well (to test it in integration).
+For example:
+```
+./project
+  ./Scarb.toml
+  ./e2e
+    ./e2e/test_integration.cairo
+    ./e2e/test_integration2.cairo
+  ./pkg1
+    ./src
+    ./test
+    ./e2e
+      ./test_contract_1.cairo
+  ./pkg2
+  ...
+```
 ## Solution analysis
 
 ### Pros
@@ -78,3 +104,17 @@ said scenarios only (submit_txn, call, etc.). This would make for more confusing
 (lack of intuitive separation of concerns for std funcs).
 
 
+## Scope for MVP
+
+- Basic test runner with collecting + workspaces support
+- Tests can interact with devnet via extra functions (i.e. `devnet_extras` library)
+- Tests are runnable on testnet/integration as well
+- We are able to run tests with fees and whole transaction flow (handling __validation__ failures, testing __execute__)
+
+## Next steps
+
+- Katana support
+- Predeployed accounts
+- "Verify" mode (run test on devnet, and then ignore special calls and run it on testnet)
+- Forking devnet/katana
+- Transaction-based profiling
