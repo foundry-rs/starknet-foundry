@@ -31,7 +31,7 @@ mod fuzzer;
 mod printing;
 mod running;
 mod runtime;
-mod test_execution_syscall_handler;
+mod forge_runtime_extension;
 
 pub const CACHE_DIR: &str = ".snfoundry_cache";
 

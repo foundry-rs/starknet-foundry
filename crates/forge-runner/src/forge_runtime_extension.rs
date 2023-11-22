@@ -37,7 +37,7 @@ use cairo_lang_runner::{casm_run::cell_ref_to_relocatable, insert_value_to_cellr
 use starknet_api::core::ContractAddress;
 
 use crate::runtime::{RuntimeExtension, ExtensionLogic, CheatcodeHadlingResult};
-use crate::test_execution_syscall_handler::file_operations::string_into_felt;
+use crate::forge_runtime_extension::file_operations::string_into_felt;
 use cairo_lang_starknet::contract::starknet_keccak;
 use cairo_vm::vm::errors::hint_errors::HintError::CustomHint;
 use cheatnet::cheatcodes::spy_events::SpyTarget;

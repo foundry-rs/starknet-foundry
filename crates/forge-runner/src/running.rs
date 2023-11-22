@@ -18,7 +18,7 @@ use itertools::chain;
 
 use crate::runtime::{RuntimeExtension, ExtendedRuntime};
 use crate::test_case_summary::TestCaseSummary;
-use crate::test_execution_syscall_handler::TestExecutionState;
+use crate::forge_runtime_extension::TestExecutionState;
 use crate::{RunnerConfig, RunnerParams, TestCaseRunnable, ValidatedForkConfig, CACHE_DIR};
 use cairo_lang_casm::hints::Hint;
 use cairo_lang_casm::instructions::Instruction;

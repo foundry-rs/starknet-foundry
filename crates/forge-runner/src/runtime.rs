@@ -25,7 +25,7 @@ use cheatnet::cheatcodes::EnhancedHintError;
 use cheatnet::execution::cheatable_syscall_handler::SyscallSelector;
 use cheatnet::execution::contract_execution_syscall_handler::ContractExecutionSyscallHandler;
 
-use crate::test_execution_syscall_handler::TestExecutionState;
+use crate::forge_runtime_extension::TestExecutionState;
 
 pub struct StarknetRuntime<'a> {
     pub hint_handler: SyscallHintProcessor<'a>,
