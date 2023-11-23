@@ -1,14 +1,17 @@
 use crate::fuzzer::RandomFuzzer;
 use crate::printing::print_test_result;
-use crate::running::{run_fuzz_test, run_test};
-use crate::sierra_casm_runner::SierraCasmRunner;
+use crate::running::{run_fuzz_test, run_test, TestDetails};
+use crate::sierra_casm_runner::create_metadata;
 use crate::test_case_summary::TestCaseSummary;
 use crate::test_crate_summary::TestCrateSummary;
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, Result};
+use cairo_lang_sierra::extensions::core::{CoreLibfunc, CoreType};
 use cairo_lang_sierra::ids::ConcreteTypeId;
 use cairo_lang_sierra::program::{Function, Program};
+use cairo_lang_sierra::program_registry::ProgramRegistry;
+use cairo_lang_sierra_to_casm::compiler::CairoProgram;
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
-use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
+use cairo_lang_sierra_type_size::get_type_size_map;
 use camino::Utf8PathBuf;
 use futures::stream::FuturesUnordered;
 use futures::StreamExt;
@@ -27,6 +30,7 @@ use url::Url;
 pub mod test_case_summary;
 pub mod test_crate_summary;
 
+mod casm_run;
 mod forge_runtime_extension;
 mod fuzzer;
 mod gas;
@@ -188,20 +192,71 @@ pub enum TestCrateRunResult {
     Interrupted(TestCrateSummary),
 }
 
+/// This will be removed once we migrate to outputting casm + details from the test collector in scarb.
+fn build_test_details(test_name: &str, sierra_program: &Program) -> TestDetails {
+    let sierra_program_registry =
+        ProgramRegistry::<CoreType, CoreLibfunc>::new(sierra_program).unwrap();
+    let type_sizes = get_type_size_map(sierra_program, &sierra_program_registry).unwrap();
+    let func = sierra_program
+        .funcs
+        .iter()
+        .find(|f| f.id.debug_name.clone().unwrap().ends_with(test_name))
+        .unwrap();
+    let parameter_types = func
+        .signature
+        .param_types
+        .iter()
+        .map(|pt| {
+            let td = sierra_program
+                .type_declarations
+                .iter()
+                .find(|td| &td.id == pt)
+                .unwrap();
+            let generic_id = &td.long_id.generic_id;
+            let size = type_sizes[&td.id];
+            (generic_id.clone(), size)
+        })
+        .collect::<Vec<_>>();
+    // dbg!(&func.signature.ret_types);
+    let return_types = func
+        .signature
+        .ret_types
+        .iter()
+        .map(|pt| {
+            let td = sierra_program
+                .type_declarations
+                .iter()
+                .find(|td| &td.id == pt)
+                .unwrap();
+            let generic_id = &td.long_id.generic_id;
+            let size = type_sizes[&td.id];
+            (generic_id.clone(), size)
+        })
+        .collect::<Vec<_>>();
+
+    TestDetails {
+        entry_point_offset: func.entry_point.0,
+        parameter_types,
+        return_types,
+    }
+}
+
 pub async fn run_tests_from_crate(
     tests: Arc<CompiledTestCrateRunnable>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     tests_filter: &impl TestCaseFilter,
 ) -> Result<TestCrateRunResult> {
-    let runner = Arc::new(
-        SierraCasmRunner::new(
-            tests.sierra_program.clone(),
-            Some(MetadataComputationConfig::default()),
-            OrderedHashMap::default(),
-        )
-        .context("Failed setting up runner.")?,
-    );
+    let sierra_program = tests.sierra_program.clone();
+    let metadata_config = Some(MetadataComputationConfig::default());
+    let gas_usage_check = metadata_config.is_some();
+    let metadata = create_metadata(&sierra_program, metadata_config).unwrap();
+    let casm_program =
+        cairo_lang_sierra_to_casm::compiler::compile(&sierra_program, &metadata, gas_usage_check)
+            .unwrap();
+
+    // let runner = SierraCasmRunner::new(casm_program).context("Failed setting up runner.")?;
+    let casm_program = Arc::new(casm_program);
 
     let mut tasks = FuturesUnordered::new();
     let test_cases = &tests.test_cases;
@@ -222,17 +277,22 @@ pub async fn run_tests_from_crate(
             continue;
         };
 
-        let function = runner.find_function(&case_name)?;
+        let function = sierra_program
+            .funcs
+            .iter()
+            .find(|f| f.id.debug_name.clone().unwrap().ends_with(&case_name))
+            .unwrap();
         let args = function_args(function, &BUILTINS);
 
         let case = Arc::new(case.clone());
         let args: Vec<ConcreteTypeId> = args.into_iter().cloned().collect();
-        let runner = runner.clone();
+        let test_details = Arc::new(build_test_details(&case.name, &sierra_program));
 
         tasks.push(choose_test_strategy_and_run(
             args,
             case.clone(),
-            runner,
+            casm_program.clone(),
+            test_details.clone(),
             runner_config.clone(),
             runner_params.clone(),
             &send,
@@ -275,18 +335,27 @@ pub async fn run_tests_from_crate(
 fn choose_test_strategy_and_run(
     args: Vec<ConcreteTypeId>,
     case: Arc<TestCaseRunnable>,
-    runner: Arc<SierraCasmRunner>,
+    casm_program: Arc<CairoProgram>,
+    test_details: Arc<TestDetails>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     send: &Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     if args.is_empty() {
-        run_test(case, runner, runner_config, runner_params, send.clone())
+        run_test(
+            case,
+            casm_program,
+            test_details,
+            runner_config,
+            runner_params,
+            send.clone(),
+        )
     } else {
         run_with_fuzzing(
             args,
             case,
-            runner,
+            casm_program,
+            test_details,
             runner_config,
             runner_params,
             send.clone(),
@@ -294,10 +363,13 @@ fn choose_test_strategy_and_run(
     }
 }
 
+// TODO remove
+#[allow(clippy::too_many_arguments)]
 fn run_with_fuzzing(
     args: Vec<ConcreteTypeId>,
     case: Arc<TestCaseRunnable>,
-    runner: Arc<SierraCasmRunner>,
+    casm_program: Arc<CairoProgram>,
+    test_details: Arc<TestDetails>,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     send: Sender<()>,
@@ -335,7 +407,8 @@ fn run_with_fuzzing(
             tasks.push(run_fuzz_test(
                 args,
                 case.clone(),
-                runner.clone(),
+                casm_program.clone(),
+                test_details.clone(),
                 runner_config.clone(),
                 runner_params.clone(),
                 send.clone(),

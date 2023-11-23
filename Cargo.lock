@@ -1871,6 +1871,7 @@ dependencies = [
  "conversions",
  "flatten-serde-json",
  "futures",
+ "indoc",
  "itertools 0.11.0",
  "num-bigint",
  "num-integer",

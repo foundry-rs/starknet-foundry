@@ -40,6 +40,7 @@ use itertools::Itertools;
 use num_bigint::BigInt;
 use num_traits::ToPrimitive;
 use plugin::TestPlugin;
+use serde::Deserialize;
 use smol_str::SmolStr;
 use starknet::core::types::{BlockId, BlockTag};
 use std::fs;
@@ -54,7 +55,7 @@ const FORK_ATTR: &str = "fork";
 const FUZZER_ATTR: &str = "fuzzer";
 
 /// Expectation for a panic case.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Deserialize)]
 pub enum ExpectedPanicValue {
     /// Accept any panic value.
     Any,
@@ -72,7 +73,7 @@ impl From<PanicExpectation> for ExpectedPanicValue {
 }
 
 /// Expectation for a result of a test.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Deserialize)]
 pub enum ExpectedTestResult {
     /// Running the test should not panic.
     Success,
@@ -91,19 +92,19 @@ impl From<TestExpectation> for ExpectedTestResult {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Deserialize)]
 pub enum RawForkConfig {
     Id(String),
     Params(RawForkParams),
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct RawForkParams {
     pub url: String,
     pub block_id: BlockId,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct FuzzerConfig {
     pub fuzzer_runs: u32,
     pub fuzzer_seed: u64,
@@ -400,7 +401,7 @@ pub struct LinkedLibrary {
     pub path: PathBuf,
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Deserialize)]
 pub struct TestCaseRaw {
     pub name: String,
     pub available_gas: Option<usize>,
