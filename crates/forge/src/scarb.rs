@@ -1,7 +1,7 @@
 use scarb_metadata::{Metadata, PackageId};
 use std::process::{Command, Stdio};
 
-use crate::scarb::config::{validate_raw_fork_config, ForgeConfig};
+use crate::scarb::config::{ForgeConfig, RawForgeConfig};
 use anyhow::{anyhow, Context, Result};
 use scarb_ui::args::PackagesFilter;
 
@@ -22,13 +22,14 @@ pub fn config_from_scarb_for_package(
         .ok_or_else(|| anyhow!("Failed to find metadata for package = {package}"))?
         .tool_metadata("snforge");
     let raw_config = if let Some(raw_metadata) = maybe_raw_metadata {
-        serde_json::from_value(raw_metadata.clone())?
+        serde_json::from_value::<RawForgeConfig>(raw_metadata.clone())?
     } else {
         Default::default()
     };
 
-    validate_raw_fork_config(&raw_config).context("Invalid config in Scarb.toml: ")?;
-    raw_config.try_into()
+    raw_config
+        .try_into()
+        .context("Invalid config in Scarb.toml: ")
 }
 
 pub fn build_contracts_with_scarb(filter: PackagesFilter) -> Result<()> {
@@ -71,11 +72,8 @@ mod tests {
     use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
     use assert_fs::TempDir;
     use camino::Utf8PathBuf;
-    use conversions::IntoConv;
     use indoc::{formatdoc, indoc};
     use scarb_metadata::MetadataCommand;
-    use starknet::core::types::BlockId;
-    use starknet::core::types::BlockTag::Latest;
     use std::str::FromStr;
 
     fn setup_package(package_name: &str) -> TempDir {
@@ -154,21 +152,24 @@ mod tests {
                         "FIRST_FORK_NAME".to_string(),
                         RawForkParams {
                             url: "http://some.rpc.url".to_string(),
-                            block_id: BlockId::Number(1)
+                            block_id_type: "number".to_string(),
+                            block_id_value: "1".to_string(),
                         },
                     ),
                     ForkTarget::new(
                         "SECOND_FORK_NAME".to_string(),
                         RawForkParams {
                             url: "http://some.rpc.url".to_string(),
-                            block_id: BlockId::Hash("1".to_string().into_())
+                            block_id_type: "hash".to_string(),
+                            block_id_value: "1".to_string(),
                         },
                     ),
                     ForkTarget::new(
                         "THIRD_FORK_NAME".to_string(),
                         RawForkParams {
                             url: "http://some.rpc.url".to_string(),
-                            block_id: BlockId::Tag(Latest)
+                            block_id_type: "tag".to_string(),
+                            block_id_value: "Latest".to_string(),
                         },
                     )
                 ],
@@ -313,7 +314,7 @@ mod tests {
             config_from_scarb_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
                 .unwrap_err();
         assert!(
-            format!("{err:?}").contains("block_id = wrong_variant is not valid. Possible values = are \"number\", \"hash\" and \"tag\"")
+            format!("{err:?}").contains("block_id = wrong_variant is not valid. Possible values are = \"number\", \"hash\" and \"tag\"")
         );
     }
 
