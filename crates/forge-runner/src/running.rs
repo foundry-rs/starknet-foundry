@@ -289,7 +289,7 @@ pub fn run_test_case(
         builtins,
     );
 
-    extend_execution_resources(&mut test_execution_syscall_handler);
+    let all_execution_resources = test_execution_syscall_handler.get_all_execution_resources();
 
     let gas = gas_from_execution_resources(
         &test_execution_syscall_handler
@@ -298,7 +298,7 @@ pub fn run_test_case(
             .child
             .context
             .block_context,
-        test_execution_syscall_handler.child.child.child.resources,
+        &all_execution_resources,
     );
 
     Ok(RunResultWithInfo {
@@ -377,32 +377,4 @@ fn get_latest_block_number(url: &Url) -> Result<BlockId> {
         Ok(MaybePendingBlockWithTxHashes::Block(block)) => Ok(BlockId::Number(block.block_number)),
         _ => Err(anyhow!("Could not get the latest block number".to_string())),
     }
-}
-
-fn extend_execution_resources(test_execution_syscall_handler: &mut TestExecutionSyscallHandler) {
-    test_execution_syscall_handler
-        .child
-        .child
-        .child
-        .resources
-        .vm_resources += &test_execution_syscall_handler
-        .child
-        .child
-        .cheatnet_state
-        .used_resources
-        .vm_resources;
-    test_execution_syscall_handler
-        .child
-        .child
-        .child
-        .resources
-        .syscall_counter
-        .extend(
-            &test_execution_syscall_handler
-                .child
-                .child
-                .cheatnet_state
-                .used_resources
-                .syscall_counter,
-        );
 }

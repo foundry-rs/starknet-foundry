@@ -5,6 +5,7 @@ use std::path::PathBuf;
 
 use anyhow::{anyhow, Context, Result};
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
+use blockifier::execution::entry_point::ExecutionResources;
 use blockifier::execution::execution_utils::{
     felt_to_stark_felt, stark_felt_from_ptr, stark_felt_to_felt, ReadOnlySegment,
 };
@@ -81,6 +82,26 @@ impl<'a> TestExecutionSyscallHandler<'a> {
             hints,
             run_resources: RunResources::default(),
         }
+    }
+
+    pub fn get_all_execution_resources(&mut self) -> ExecutionResources {
+        let mut all_resources = ExecutionResources::default();
+        all_resources.vm_resources += &self.child.child.child.resources.vm_resources;
+        all_resources.vm_resources += &self.child.child.cheatnet_state.used_resources.vm_resources;
+
+        all_resources
+            .syscall_counter
+            .extend(&self.child.child.child.resources.syscall_counter);
+        all_resources.syscall_counter.extend(
+            &self
+                .child
+                .child
+                .cheatnet_state
+                .used_resources
+                .syscall_counter,
+        );
+
+        all_resources
     }
 }
 
