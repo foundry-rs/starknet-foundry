@@ -71,11 +71,8 @@ mod tests {
     use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
     use assert_fs::TempDir;
     use camino::Utf8PathBuf;
-    use conversions::StarknetConversions;
     use indoc::{formatdoc, indoc};
     use scarb_metadata::MetadataCommand;
-    use starknet::core::types::BlockId;
-    use starknet::core::types::BlockTag::Latest;
     use std::str::FromStr;
 
     fn setup_package(package_name: &str) -> TempDir {
@@ -154,21 +151,24 @@ mod tests {
                         "FIRST_FORK_NAME".to_string(),
                         RawForkParams {
                             url: "http://some.rpc.url".to_string(),
-                            block_id: BlockId::Number(1)
+                            block_id_type: "Number".to_string(),
+                            block_id_value: "1".to_string(),
                         },
                     ),
                     ForkTarget::new(
                         "SECOND_FORK_NAME".to_string(),
                         RawForkParams {
                             url: "http://some.rpc.url".to_string(),
-                            block_id: BlockId::Hash("1".to_string().to_field_element())
+                            block_id_type: "Hash".to_string(),
+                            block_id_value: "1".to_string(),
                         },
                     ),
                     ForkTarget::new(
                         "THIRD_FORK_NAME".to_string(),
                         RawForkParams {
                             url: "http://some.rpc.url".to_string(),
-                            block_id: BlockId::Tag(Latest)
+                            block_id_type: "Tag".to_string(),
+                            block_id_value: "Latest".to_string(),
                         },
                     )
                 ],
@@ -313,7 +313,7 @@ mod tests {
             config_from_scarb_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
                 .unwrap_err();
         assert!(
-            format!("{err:?}").contains("block_id = wrong_variant is not valid. Possible values = are \"number\", \"hash\" and \"tag\"")
+            format!("{err:?}").contains("block_id = wrong_variant is not valid. Possible values are = \"number\", \"hash\" and \"tag\"")
         );
     }
 

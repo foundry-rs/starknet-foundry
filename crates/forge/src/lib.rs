@@ -168,8 +168,6 @@ mod tests {
     use crate::compiled_raw::{CompiledTestCrateRaw, CrateLocation, TestCaseRaw};
     use cairo_lang_sierra::program::Program;
     use forge_runner::expected_result::ExpectedTestResult;
-    use starknet::core::types::BlockId;
-    use starknet::core::types::BlockTag::Latest;
 
     #[test]
     fn to_runnable_unparsable_url() {
@@ -187,7 +185,8 @@ mod tests {
                 expected_result: ExpectedTestResult::Success,
                 fork_config: Some(RawForkConfig::Params(RawForkParams {
                     url: "unparsable_url".to_string(),
-                    block_id: BlockId::Tag(Latest),
+                    block_id_type: "Tag".to_string(),
+                    block_id_value: "Latest".to_string(),
                 })),
                 fuzzer_config: None,
             }],
@@ -223,7 +222,8 @@ mod tests {
                 "definitely_non_existing".to_string(),
                 RawForkParams {
                     url: "https://not_taken.com".to_string(),
-                    block_id: BlockId::Number(120),
+                    block_id_type: "Number".to_string(),
+                    block_id_value: "120".to_string(),
                 },
             )],
         )
