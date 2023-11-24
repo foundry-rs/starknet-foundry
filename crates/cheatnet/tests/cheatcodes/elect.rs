@@ -71,7 +71,6 @@ fn elect_with_other_syscall() {
         &[],
     )
     .unwrap();
-    dbg!(&output);
     assert_success!(output, vec![Felt252::from(123)]);
 }
 
