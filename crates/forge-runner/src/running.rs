@@ -292,12 +292,7 @@ pub fn run_test_case(
     let all_execution_resources = test_execution_syscall_handler.get_all_execution_resources();
 
     let gas = gas_from_execution_resources(
-        &test_execution_syscall_handler
-            .child
-            .child
-            .child
-            .context
-            .block_context,
+        &test_execution_syscall_handler.context().block_context,
         &all_execution_resources,
     );
 
