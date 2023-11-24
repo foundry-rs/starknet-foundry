@@ -806,6 +806,7 @@ fn write_call_contract_response(
                 .read_only_segments
                 .allocate(vm, &ret_data.iter().map(Into::into).collect())?;
 
+            // add execution resources used by call to all used resources
             cheatable_syscall_handler
                 .cheatnet_state
                 .used_resources

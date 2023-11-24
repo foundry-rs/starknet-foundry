@@ -231,6 +231,7 @@ pub struct CheatnetState {
     pub detected_events: Vec<Event>,
     pub deploy_salt_base: u32,
     pub block_info: CheatnetBlockInfo,
+    // execution resources used by all contract calls
     pub used_resources: ExecutionResources,
 }
 
