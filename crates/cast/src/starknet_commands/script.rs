@@ -432,13 +432,24 @@ fn compile_script(path_to_scarb_toml: Option<Utf8PathBuf>) -> Result<Utf8PathBuf
         "Path {scripts_manifest_path} does not exist"
     );
 
+    let metadata = get_scarb_metadata_with_deps(&scripts_manifest_path)?;
+    let package_metadata = get_package_metadata(&metadata, &scripts_manifest_path)?;
+
+    ensure!(
+        package_metadata
+            .targets
+            .iter()
+            .any(|item| item.kind == "lib"),
+        format!(
+            "Missing [lib] target for {} in Scarb.toml",
+            package_metadata.name
+        )
+    );
+
     ScarbCommand::new()
         .arg("build")
         .env("SCARB_MANIFEST_PATH", &scripts_manifest_path)
         .run()?;
-
-    let metadata = get_scarb_metadata_with_deps(&scripts_manifest_path)?;
-    let package_metadata = get_package_metadata(&metadata, &scripts_manifest_path)?;
 
     let filename = format!("{}.sierra.json", package_metadata.name);
     let path = metadata
