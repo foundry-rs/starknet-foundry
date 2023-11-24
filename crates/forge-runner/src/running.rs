@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::mem::transmute;
 use std::sync::Arc;
 
 use anyhow::{anyhow, bail, Result};
@@ -17,14 +18,15 @@ use cheatnet::execution::cheatable_syscall_handler::CheatableSyscallHandler;
 use itertools::chain;
 
 use crate::gas::gas_from_execution_resources;
-use crate::sierra_casm_runner::SierraCasmRunner;
 use crate::test_case_summary::TestCaseSummary;
 use crate::test_execution_syscall_handler::{TestExecutionState, TestExecutionSyscallHandler};
 use crate::{RunnerConfig, RunnerParams, TestCaseRunnable, ValidatedForkConfig, CACHE_DIR};
 use cairo_lang_casm::hints::Hint;
 use cairo_lang_casm::instructions::Instruction;
 use cairo_lang_runner::casm_run::hint_to_hint_params;
-use cairo_lang_runner::{Arg, RunResult, RunnerError};
+use cairo_lang_runner::{Arg, RunResult, RunnerError, SierraCasmRunner};
+use cairo_vm::vm::context::run_context::RunContext;
+use cairo_vm::vm::runners::builtin_runner::BuiltinRunner;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use camino::Utf8Path;
 use cheatnet::constants as cheatnet_constants;
@@ -226,7 +228,7 @@ pub fn run_test_case(
     let (entry_code, builtins) = runner
         .create_entry_code(func, &runner_args, initial_gas)
         .unwrap();
-    let footer = SierraCasmRunner::create_code_footer();
+    let footer = runner.create_code_footer();
     let instructions = chain!(
         entry_code.iter(),
         runner.get_casm_program().instructions.iter(),
@@ -288,7 +290,13 @@ pub fn run_test_case(
         instructions,
         builtins,
     );
-
+    let resources = &get_vm_execution_resources(vm);
+    test_execution_syscall_handler
+        .child
+        .child
+        .child
+        .resources
+        .vm_resources += resources;
     let all_execution_resources = test_execution_syscall_handler.get_all_execution_resources();
 
     let gas = gas_from_execution_resources(
@@ -303,6 +311,58 @@ pub fn run_test_case(
         },
         total_gas_used: gas,
     })
+}
+use cairo_vm::vm::runners::cairo_runner::ExecutionResources as VmExecutionResources;
+use cairo_vm::vm::trace::trace_entry::TraceEntry;
+use cairo_vm::vm::vm_memory::memory_segments::MemorySegmentManager;
+
+pub struct UnsafeVirtualMachine {
+    run_context: RunContext,
+    builtin_runners: Vec<BuiltinRunner>,
+    segments: MemorySegmentManager,
+    trace: Option<Vec<TraceEntry>>,
+    current_step: usize,
+    rc_limits: Option<(isize, isize)>,
+    trace_relocated: bool,
+    skip_instruction_execution: bool,
+    run_finished: bool,
+    instruction_cache: Vec<Option<Instruction>>,
+    #[cfg(feature = "hooks")]
+    hooks: crate::vm::hooks::Hooks,
+    relocation_table: Option<Vec<usize>>,
+}
+fn get_vm_execution_resources(vm: VirtualMachine) -> VmExecutionResources {
+    let unsafe_vm: UnsafeVirtualMachine = unsafe { transmute(vm) };
+
+    let n_steps = unsafe_vm
+        .trace
+        .as_ref()
+        .map(|x| x.len())
+        .unwrap_or(unsafe_vm.current_step);
+
+    let n_memory_holes = unsafe_vm
+        .segments
+        .get_memory_holes(unsafe_vm.builtin_runners.len())
+        .unwrap();
+
+    let mut builtin_instance_counter = HashMap::new();
+    for builtin_runner in &unsafe_vm.builtin_runners {
+        builtin_instance_counter.insert(
+            builtin_runner.name().to_string(),
+            builtin_runner
+                .get_used_instances(&unsafe_vm.segments)
+                .unwrap(),
+        );
+    }
+
+    let resources = VmExecutionResources {
+        n_steps,
+        n_memory_holes,
+        builtin_instance_counter,
+    };
+    resources.filter_unused_builtins();
+
+    resources
 }
 
 fn extract_test_case_summary(
