@@ -8,6 +8,7 @@ use cast::helpers::response_structs::AccountCreateResponse;
 use cast::helpers::scarb_utils::CastConfig;
 use cast::{extract_or_generate_salt, get_chain_id, get_keystore_password, parse_number};
 use clap::Args;
+use scarb_metadata::PackageMetadata;
 use serde_json::json;
 use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
 use starknet::core::types::{FeeEstimate, FieldElement};
@@ -43,11 +44,12 @@ pub async fn create(
     accounts_file: &Utf8PathBuf,
     keystore: &Utf8PathBuf,
     provider: &JsonRpcClient<HttpTransport>,
-    path_to_scarb_toml: Option<Utf8PathBuf>,
+    path_to_scarb_toml: Option<&Utf8PathBuf>,
     chain_id: FieldElement,
     salt: Option<FieldElement>,
     add_profile: bool,
     class_hash: Option<String>,
+    package: Option<&PackageMetadata>,
 ) -> Result<AccountCreateResponse> {
     let salt = extract_or_generate_salt(salt);
     let class_hash = {
@@ -82,13 +84,17 @@ pub async fn create(
     }
 
     if add_profile {
+        // Other cases should be unreachable
+        let path_to_scarb_toml = path_to_scarb_toml.unwrap();
+        let package = package.unwrap();
+
         let config = CastConfig {
             rpc_url: rpc_url.into(),
             account: account.into(),
             accounts_file: accounts_file.into(),
             keystore: keystore.into(),
         };
-        add_created_profile_to_configuration(&path_to_scarb_toml, &config)?;
+        add_created_profile_to_configuration(&path_to_scarb_toml, &config, &package)?;
     }
 
     Ok(AccountCreateResponse {

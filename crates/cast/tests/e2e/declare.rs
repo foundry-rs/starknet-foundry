@@ -32,7 +32,9 @@ async fn test_happy_case() {
     let snapbox = Command::new(cargo_bin!("sncast"))
         .current_dir(contract_path.path())
         .args(args);
-    let output = snapbox.assert().success().get_output().stdout.clone();
+
+    let output = snapbox.assert().success().get_output().clone();
+    let output = output.stdout.clone();
 
     let hash = get_transaction_hash(&output);
     let receipt = get_transaction_receipt(hash).await;
@@ -91,7 +93,6 @@ async fn wrong_contract_name_passed() {
 }
 
 #[test_case("/build_fails", "../../accounts/accounts.json" ; "when wrong cairo contract")]
-#[test_case("/", "../accounts/accounts.json" ; "when Scarb.toml does not exist")]
 fn scarb_build_fails(contract_path: &str, accounts_file_path: &str) {
     let args = vec![
         "--url",
@@ -112,6 +113,30 @@ fn scarb_build_fails(contract_path: &str, accounts_file_path: &str) {
     snapbox.assert().stderr_matches(indoc! {r#"
         command: declare
         error: Scarb build returned non-zero exit code: 1[..]
+        ...
+    "#});
+}
+
+#[test_case("/", "../accounts/accounts.json" ; "when Scarb.toml does not exist")]
+fn scarb_build_fails_no_toml(contract_path: &str, accounts_file_path: &str) {
+    let args = vec![
+        "--url",
+        URL,
+        "--accounts-file",
+        accounts_file_path,
+        "--account",
+        "user1",
+        "declare",
+        "--contract-name",
+        "BuildFails",
+    ];
+
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(CONTRACTS_DIR.to_string() + contract_path)
+        .args(args);
+
+    snapbox.assert().stderr_matches(indoc! {r#"
+        Error: Failed to read Scarb.toml manifest file[..]
         ...
     "#});
 }

@@ -4,6 +4,7 @@ use crate::helpers::runner::runner;
 use cast::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
 use indoc::indoc;
 use snapbox::cmd::{cargo_bin, Command};
+use tempfile::TempDir;
 use std::env;
 use std::fs;
 
@@ -119,7 +120,19 @@ async fn test_happy_case_mixed() {
 
 #[tokio::test]
 async fn test_missing_account() {
+    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
+    let manifest_path = temp_dir.path().join("./Scarb.toml");
+    let manifest_path = manifest_path.to_str().unwrap();
+
+    fs_extra::file::copy(
+        "tests/data/files/noconfig_Scarb.toml",
+        manifest_path,
+        &fs_extra::file::CopyOptions::new().overwrite(true),
+    ).unwrap();
+
     let args = vec![
+        "--path-to-scarb-toml",
+        manifest_path,
         "--accounts-file",
         ACCOUNT_FILE_PATH,
         "--url",
@@ -138,7 +151,19 @@ async fn test_missing_account() {
 
 #[tokio::test]
 async fn test_missing_url() {
+    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
+    let manifest_path = temp_dir.path().join("./Scarb.toml");
+    let manifest_path = manifest_path.to_str().unwrap();
+
+    fs_extra::file::copy(
+        "tests/data/files/noconfig_Scarb.toml",
+        manifest_path,
+        &fs_extra::file::CopyOptions::new().overwrite(true),
+    ).unwrap();
+
     let args = vec![
+        "--path-to-scarb-toml",
+        manifest_path,
         "--accounts-file",
         ACCOUNT_FILE_PATH,
         "--account",
@@ -157,7 +182,19 @@ async fn test_missing_url() {
 
 #[tokio::test]
 async fn test_inexistent_keystore() {
+    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
+    let manifest_path = temp_dir.path().join("./Scarb.toml");
+    let manifest_path = manifest_path.to_str().unwrap();
+
+    fs_extra::file::copy(
+        "tests/data/files/noconfig_Scarb.toml",
+        manifest_path,
+        &fs_extra::file::CopyOptions::new().overwrite(true),
+    ).unwrap();
+
     let args = vec![
+        "--path-to-scarb-toml",
+        manifest_path,
         "--url",
         URL,
         "--keystore",
@@ -176,7 +213,19 @@ async fn test_inexistent_keystore() {
 
 #[tokio::test]
 async fn test_keystore_account_required() {
+    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
+    let manifest_path = temp_dir.path().join("./Scarb.toml");
+    let manifest_path = manifest_path.to_str().unwrap();
+
+    fs_extra::file::copy(
+        "tests/data/files/noconfig_Scarb.toml",
+        manifest_path,
+        &fs_extra::file::CopyOptions::new().overwrite(true),
+    ).unwrap();
+
     let args = vec![
+        "--path-to-scarb-toml",
+        manifest_path,
         "--url",
         URL,
         "--keystore",
@@ -195,7 +244,19 @@ async fn test_keystore_account_required() {
 
 #[tokio::test]
 async fn test_keystore_inexistent_account() {
+    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
+    let manifest_path = temp_dir.path().join("./Scarb.toml");
+    let manifest_path = manifest_path.to_str().unwrap();
+
+    fs_extra::file::copy(
+        "tests/data/files/noconfig_Scarb.toml",
+        manifest_path,
+        &fs_extra::file::CopyOptions::new().overwrite(true),
+    ).unwrap();
+
     let args = vec![
+        "--path-to-scarb-toml",
+        manifest_path,
         "--url",
         URL,
         "--keystore",
