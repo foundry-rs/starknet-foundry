@@ -64,12 +64,12 @@ pub async fn add(
     provider: &JsonRpcClient<HttpTransport>,
     add: &Add,
 ) -> Result<AccountAddResponse> {
-    let private_key_field_element = match &add.private_key_file_path {
+    let private_key = match &add.private_key_file_path {
         Some(file_path) => get_private_key_from_file(file_path)
             .with_context(|| format!("Failed to obtain private key from the file {file_path}"))?,
         None => add.private_key.unwrap(),
     };
-    let private_key = &SigningKey::from_secret_scalar(private_key_field_element);
+    let private_key = &SigningKey::from_secret_scalar(private_key);
     if let Some(public_key) = &add.public_key {
         ensure!(
             public_key == &private_key.verifying_key().scalar(),
