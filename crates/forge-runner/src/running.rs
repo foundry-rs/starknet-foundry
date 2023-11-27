@@ -199,7 +199,7 @@ pub(crate) struct ForkInfo {
 pub struct RunResultWithInfo {
     pub(crate) run_result: Result<RunResult, RunnerError>,
     pub(crate) fork_info: ForkInfo,
-    pub(crate) total_gas_used: f64,
+    pub(crate) gas_used: f64,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -289,11 +289,11 @@ pub fn run_test_case(
         builtins,
     );
 
-    let all_execution_resources = test_execution_syscall_handler.get_all_execution_resources();
+    let execution_resources = get_all_execution_resources(&test_execution_syscall_handler);
 
     let gas = gas_from_execution_resources(
-        &test_execution_syscall_handler.context().block_context,
-        &all_execution_resources,
+        &get_context(&test_execution_syscall_handler).block_context,
+        &execution_resources,
     );
 
     Ok(RunResultWithInfo {
@@ -301,7 +301,7 @@ pub fn run_test_case(
         fork_info: ForkInfo {
             latest_block_number,
         },
-        total_gas_used: gas,
+        gas_used: gas,
     })
 }
 
@@ -318,7 +318,7 @@ fn extract_test_case_summary(
                     case,
                     args,
                     &result_with_info.fork_info,
-                    result_with_info.total_gas_used,
+                    result_with_info.gas_used,
                 )),
                 // CairoRunError comes from VirtualMachineError which may come from HintException that originates in TestExecutionSyscallHandler
                 Err(RunnerError::CairoRunError(error)) => Ok(TestCaseSummary::Failed {
@@ -372,4 +372,34 @@ fn get_latest_block_number(url: &Url) -> Result<BlockId> {
         Ok(MaybePendingBlockWithTxHashes::Block(block)) => Ok(BlockId::Number(block.block_number)),
         _ => Err(anyhow!("Could not get the latest block number".to_string())),
     }
+}
+
+fn get_all_execution_resources(
+    test_execution_syscall_handler: &TestExecutionSyscallHandler,
+) -> ExecutionResources {
+    let test_used_resources = &test_execution_syscall_handler.child.child.child.resources;
+    let cheatnet_used_resources = &test_execution_syscall_handler
+        .child
+        .child
+        .cheatnet_state
+        .used_resources;
+
+    let mut all_resources = ExecutionResources::default();
+    all_resources.vm_resources += &test_used_resources.vm_resources;
+    all_resources.vm_resources += &cheatnet_used_resources.vm_resources;
+
+    all_resources
+        .syscall_counter
+        .extend(&test_used_resources.syscall_counter);
+    all_resources
+        .syscall_counter
+        .extend(&cheatnet_used_resources.syscall_counter);
+
+    all_resources
+}
+
+fn get_context<'a>(
+    test_execution_syscall_handler: &'a TestExecutionSyscallHandler,
+) -> &'a EntryPointExecutionContext {
+    test_execution_syscall_handler.child.child.child.context
 }
