@@ -26,15 +26,16 @@ use scarb_artifacts::StarknetContractArtifacts;
 use serde::Deserialize;
 
 use cairo_lang_casm::operand::{CellRef, ResOperand};
-use cairo_lang_runner::casm_run::{
-    extract_buffer, get_ptr, MemBuffer,
-};
+use cairo_lang_runner::casm_run::{extract_buffer, get_ptr, MemBuffer};
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{casm_run::cell_ref_to_relocatable, insert_value_to_cellref};
 use starknet_api::core::ContractAddress;
 
-use crate::runtime::{RuntimeExtension, ExtensionLogic, CheatcodeHadlingResult, SyscallHandlingResult, RegisteredExtension};
 use crate::forge_runtime_extension::file_operations::string_into_felt;
+use crate::runtime::{
+    CheatcodeHadlingResult, ExtensionLogic, RegisteredExtension, RuntimeExtension,
+    SyscallHandlingResult,
+};
 use cairo_lang_starknet::contract::starknet_keccak;
 use cairo_vm::vm::errors::hint_errors::HintError::CustomHint;
 use cheatnet::cheatcodes::spy_events::SpyTarget;
@@ -46,20 +47,26 @@ use starknet::signers::SigningKey;
 
 mod file_operations;
 
-impl<'a> RegisteredExtension for RuntimeExtension<TestExecutionState, ContractExecutionSyscallHandler<'a>> {}
+impl<'a> RegisteredExtension
+    for RuntimeExtension<TestExecutionState, ContractExecutionSyscallHandler<'a>>
+{
+}
 
 // This runtime extenxion provides an implementation logic for functions from snforge_std library.
-impl<'a> ExtensionLogic for RuntimeExtension<TestExecutionState, ContractExecutionSyscallHandler<'a>> {
+impl<'a> ExtensionLogic
+    for RuntimeExtension<TestExecutionState, ContractExecutionSyscallHandler<'a>>
+{
     type Runtime = ContractExecutionSyscallHandler<'a>;
 
-    fn get_extended_runtime_mut(&mut self,) -> &mut ContractExecutionSyscallHandler<'a> {
+    fn get_extended_runtime_mut(&mut self) -> &mut ContractExecutionSyscallHandler<'a> {
         &mut self.extended_runtime
     }
 
-    fn get_extended_runtime(&self,) -> &ContractExecutionSyscallHandler<'a> {
+    fn get_extended_runtime(&self) -> &ContractExecutionSyscallHandler<'a> {
         &self.extended_runtime
     }
 
+    #[allow(clippy::too_many_lines)]
     fn handle_cheatcode(
         &mut self,
         selector: &str,
@@ -120,7 +127,10 @@ impl<'a> ExtensionLogic for RuntimeExtension<TestExecutionState, ContractExecuti
             "stop_elect" => {
                 let (target, _) = deserialize_cheat_target(&inputs);
 
-                self.extended_runtime.child.cheatnet_state.stop_elect(target);
+                self.extended_runtime
+                    .child
+                    .cheatnet_state
+                    .stop_elect(target);
                 Ok(CheatcodeHadlingResult::Result(()))
             }
             "start_prank" => {
@@ -138,7 +148,10 @@ impl<'a> ExtensionLogic for RuntimeExtension<TestExecutionState, ContractExecuti
             "stop_prank" => {
                 let (target, _) = deserialize_cheat_target(&inputs);
 
-                self.extended_runtime.child.cheatnet_state.stop_prank(target);
+                self.extended_runtime
+                    .child
+                    .cheatnet_state
+                    .stop_prank(target);
                 Ok(CheatcodeHadlingResult::Result(()))
             }
             "start_mock_call" => {
@@ -218,12 +231,16 @@ impl<'a> ExtensionLogic for RuntimeExtension<TestExecutionState, ContractExecuti
             "stop_spoof" => {
                 let (target, _) = deserialize_cheat_target(&inputs);
 
-                self.extended_runtime.child.cheatnet_state.stop_spoof(target);
+                self.extended_runtime
+                    .child
+                    .cheatnet_state
+                    .stop_spoof(target);
                 Ok(CheatcodeHadlingResult::Result(()))
             }
             "declare" => {
                 let contract_name = inputs[0].clone();
-                let mut blockifier_state = BlockifierState::from(self.extended_runtime.child.child.state);
+                let mut blockifier_state =
+                    BlockifierState::from(self.extended_runtime.child.child.state);
 
                 match blockifier_state.declare(&contract_name, &self.extension_state.contracts) {
                     Ok(class_hash) => {
@@ -247,7 +264,8 @@ impl<'a> ExtensionLogic for RuntimeExtension<TestExecutionState, ContractExecuti
                 let class_hash = inputs[0].to_class_hash();
                 let calldata_length = inputs[1].to_usize().unwrap();
                 let calldata = Vec::from(&inputs[2..(2 + calldata_length)]);
-                let mut blockifier_state = BlockifierState::from(self.extended_runtime.child.child.state);
+                let mut blockifier_state =
+                    BlockifierState::from(self.extended_runtime.child.child.state);
 
                 handle_deploy_result(
                     deploy(
@@ -265,7 +283,8 @@ impl<'a> ExtensionLogic for RuntimeExtension<TestExecutionState, ContractExecuti
                 let calldata = Vec::from(&inputs[2..(2 + calldata_length)]);
                 let contract_address = inputs[2 + calldata_length].to_contract_address();
 
-                let mut blockifier_state = BlockifierState::from(self.extended_runtime.child.child.state);
+                let mut blockifier_state =
+                    BlockifierState::from(self.extended_runtime.child.child.state);
 
                 handle_deploy_result(
                     deploy_at(
@@ -306,7 +325,9 @@ impl<'a> ExtensionLogic for RuntimeExtension<TestExecutionState, ContractExecuti
                     panic!("Failed to parse var argument = {name} as short string")
                 });
 
-                let env_var = self.extension_state.environment_variables
+                let env_var = self
+                    .extension_state
+                    .environment_variables
                     .get(&name)
                     .with_context(|| format!("Failed to read from env var = {name}"))?;
 
@@ -321,7 +342,8 @@ impl<'a> ExtensionLogic for RuntimeExtension<TestExecutionState, ContractExecuti
             "get_class_hash" => {
                 let contract_address = inputs[0].to_contract_address();
 
-                let mut blockifier_state = BlockifierState::from(self.extended_runtime.child.child.state);
+                let mut blockifier_state =
+                    BlockifierState::from(self.extended_runtime.child.child.state);
 
                 match blockifier_state.get_class_hash(contract_address) {
                     Ok(class_hash) => {
@@ -343,7 +365,8 @@ impl<'a> ExtensionLogic for RuntimeExtension<TestExecutionState, ContractExecuti
 
                 let payload = Vec::from(&inputs[4..inputs.len()]);
 
-                let mut blockifier_state = BlockifierState::from(self.extended_runtime.child.child.state);
+                let mut blockifier_state =
+                    BlockifierState::from(self.extended_runtime.child.child.state);
 
                 match blockifier_state
                     .l1_handler_execute(
@@ -356,8 +379,7 @@ impl<'a> ExtensionLogic for RuntimeExtension<TestExecutionState, ContractExecuti
                     .result
                 {
                     CallContractResult::Success { .. } => {
-                        buffer.write(0)
-                        .expect("Failed to write zero");
+                        buffer.write(0).expect("Failed to write zero");
                         Ok(CheatcodeHadlingResult::Result(()))
                     }
                     CallContractResult::Failure(CallContractFailure::Panic { panic_data }) => {
@@ -401,7 +423,11 @@ impl<'a> ExtensionLogic for RuntimeExtension<TestExecutionState, ContractExecuti
                     }
                 };
 
-                let id = self.extended_runtime.child.cheatnet_state.spy_events(spy_on);
+                let id = self
+                    .extended_runtime
+                    .child
+                    .cheatnet_state
+                    .spy_events(spy_on);
                 buffer
                     .write(Felt252::from(id))
                     .expect("Failed to insert spy id");
@@ -484,46 +510,50 @@ impl<'a> ExtensionLogic for RuntimeExtension<TestExecutionState, ContractExecuti
         Ok(res)
     }
 
-
     fn override_system_call(
-        &mut self, 
+        &mut self,
         system: &ResOperand,
         vm: &mut VirtualMachine,
     ) -> Result<SyscallHandlingResult, HintError> {
         let (cell, offset) = extract_buffer(system);
         let system_ptr = get_ptr(vm, cell, &offset)?;
-    
+
         self.get_extended_runtime_mut()
             .child
             .child
             .verify_syscall_ptr(system_ptr)?;
-        
+
         // We peek into memory to check the selector
         let selector = DeprecatedSyscallSelector::try_from(felt_to_stark_felt(
             &vm.get_integer(self.get_extended_runtime_mut().child.child.syscall_ptr)
                 .unwrap(),
         ))?;
-    
+
         match selector {
             DeprecatedSyscallSelector::CallContract => {
-                let call_args =
-                    CallContractArgs::read(vm, &mut self.get_extended_runtime_mut().child.child.syscall_ptr)?;
+                let call_args = CallContractArgs::read(
+                    vm,
+                    &mut self.get_extended_runtime_mut().child.child.syscall_ptr,
+                )?;
                 let cheatable_syscall_handler = &mut self.get_extended_runtime_mut().child;
-                let mut blockifier_state = BlockifierState::from(cheatable_syscall_handler.child.state);
-                let mut cheatnet_state = &mut cheatable_syscall_handler.cheatnet_state;
+                let mut blockifier_state =
+                    BlockifierState::from(cheatable_syscall_handler.child.state);
+                let cheatnet_state = &mut cheatable_syscall_handler.cheatnet_state;
 
-                let call_result = execute_call_contract(
-                    &mut blockifier_state,
-                    &mut cheatnet_state, 
+                let call_result =
+                    execute_call_contract(&mut blockifier_state, cheatnet_state, &call_args);
+                write_call_contract_response(
+                    &mut self.get_extended_runtime_mut().child,
+                    vm,
                     &call_args,
-                );
-                write_call_contract_response(&mut self.get_extended_runtime_mut().child, vm, &call_args, call_result)?;
+                    call_result,
+                )?;
                 Ok(SyscallHandlingResult::Result(()))
             }
             DeprecatedSyscallSelector::ReplaceClass => Err(HintError::CustomHint(Box::from(
                 "Replace class can't be used in tests".to_string(),
             ))),
-            _ => Ok(SyscallHandlingResult::Forward)
+            _ => Ok(SyscallHandlingResult::Forward),
         }
     }
 }
@@ -596,7 +626,6 @@ struct ScarbStarknetContractArtifact {
     sierra: PathBuf,
     casm: Option<PathBuf>,
 }
-
 
 struct CallContractArgs {
     _selector: Felt252,

@@ -15,10 +15,10 @@ use cairo_vm::hint_processor::hint_processor_definition::{
 use cairo_vm::serde::deserialize_program::ApTracking;
 use cairo_vm::types::exec_scope::ExecutionScopes;
 use cairo_vm::vm::errors::hint_errors::HintError;
+use cairo_vm::vm::errors::hint_errors::HintError::CustomHint;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cairo_vm::vm::vm_core::VirtualMachine;
-use cairo_vm::vm::errors::hint_errors::HintError::CustomHint;
 
 use cheatnet::cheatcodes::EnhancedHintError;
 
@@ -73,12 +73,10 @@ pub struct RuntimeExtension<ExtensionState, Runtime: HintProcessor> {
     pub extended_runtime: Runtime,
 }
 
-pub trait RegisteredExtension: ExtensionLogic {}  
-
+pub trait RegisteredExtension: ExtensionLogic {}
 
 // Required to implement the foreign trait
-pub struct ExtendedRuntime<Extension> (pub Extension);
-
+pub struct ExtendedRuntime<Extension>(pub Extension);
 
 impl<Extension: RegisteredExtension> HintProcessorLogic for ExtendedRuntime<Extension> {
     fn execute_hint(
@@ -111,21 +109,22 @@ impl<Extension: RegisteredExtension> HintProcessorLogic for ExtendedRuntime<Exte
             let inputs = vm_get_range(vm, input_start, input_end)
                 .map_err(|_| CustomHint(Box::from("Failed to read input data".to_string())))?;
 
-            let res = match self.0.handle_cheatcode(selector, inputs, vm, output_start, output_end)? {
-                CheatcodeHadlingResult::Forward => self.0.get_extended_runtime_mut().execute_hint(vm, exec_scopes, hint_data, constants)?,
-                _ => ()
-            };
-            return Ok(res);
+            if let CheatcodeHadlingResult::Result(()) = self
+                .0
+                .handle_cheatcode(selector, inputs, vm, output_start, output_end)? {
+                    return Ok(())
+                }
         }
+
         if let Some(Hint::Starknet(StarknetHint::SystemCall { system })) = maybe_extended_hint {
             // TODO move selector parsing logic here
-            let res = match self.0.override_system_call(system, vm)? {
-                SyscallHandlingResult::Forward => self.0.get_extended_runtime_mut().execute_hint(vm, exec_scopes, hint_data, constants)?,
-                _ => ()
-            };
-            return Ok(res);
+            if let SyscallHandlingResult::Result(()) =  self.0.override_system_call(system, vm)? {
+                return Ok(());
+            }
         }
-        self.0.get_extended_runtime_mut().execute_hint(vm, exec_scopes, hint_data, constants)
+        self.0
+            .get_extended_runtime_mut()
+            .execute_hint(vm, exec_scopes, hint_data, constants)
     }
 
     fn compile_hint(
@@ -135,12 +134,18 @@ impl<Extension: RegisteredExtension> HintProcessorLogic for ExtendedRuntime<Exte
         reference_ids: &HashMap<String, usize>,
         references: &[HintReference],
     ) -> Result<Box<dyn Any>, VirtualMachineError> {
-        self.0.get_extended_runtime()
-            .compile_hint(hint_code, ap_tracking_data, reference_ids, references)
+        self.0.get_extended_runtime().compile_hint(
+            hint_code,
+            ap_tracking_data,
+            reference_ids,
+            references,
+        )
     }
 }
 
-impl<Handler, Runtime: HintProcessor> ResourceTracker for ExtendedRuntime<RuntimeExtension<Handler, Runtime>> {
+impl<Handler, Runtime: HintProcessor> ResourceTracker
+    for ExtendedRuntime<RuntimeExtension<Handler, Runtime>>
+{
     fn consumed(&self) -> bool {
         self.0.extended_runtime.consumed()
     }
@@ -172,20 +177,19 @@ pub enum CheatcodeHadlingResult {
     Result(()), // TODO now use buffer later rewrite to return vector
 }
 
-
-pub trait ExtensionLogic  {
-    type Runtime : HintProcessorLogic;
+pub trait ExtensionLogic {
+    type Runtime: HintProcessorLogic;
 
     fn get_extended_runtime_mut(&mut self) -> &mut Self::Runtime;
 
     fn get_extended_runtime(&self) -> &Self::Runtime;
 
     fn override_system_call(
-        &mut self, 
+        &mut self,
         system: &ResOperand,
         vm: &mut VirtualMachine,
-) -> Result<SyscallHandlingResult, HintError>; 
-    
+    ) -> Result<SyscallHandlingResult, HintError>;
+
     // TODO remove vm, output from this signature, make it return Felt252
     fn handle_cheatcode(
         &mut self,
@@ -193,6 +197,6 @@ pub trait ExtensionLogic  {
         inputs: Vec<Felt252>,
         vm: &mut VirtualMachine,
         output_start: &CellRef,
-        output_end: &CellRef
+        output_end: &CellRef,
     ) -> Result<CheatcodeHadlingResult, EnhancedHintError>;
 }

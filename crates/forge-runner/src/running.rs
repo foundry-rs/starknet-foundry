@@ -16,9 +16,9 @@ use cairo_vm::types::relocatable::Relocatable;
 use cheatnet::execution::cheatable_syscall_handler::CheatableSyscallHandler;
 use itertools::chain;
 
-use crate::runtime::{RuntimeExtension, ExtendedRuntime};
-use crate::test_case_summary::TestCaseSummary;
 use crate::forge_runtime_extension::TestExecutionState;
+use crate::runtime::{ExtendedRuntime, RuntimeExtension};
+use crate::test_case_summary::TestCaseSummary;
 use crate::{RunnerConfig, RunnerParams, TestCaseRunnable, ValidatedForkConfig, CACHE_DIR};
 use cairo_lang_casm::hints::Hint;
 use cairo_lang_casm::instructions::Instruction;
@@ -231,7 +231,6 @@ pub fn run_test_case(
         &mut context,
     );
 
-
     let mut cheatnet_state = CheatnetState {
         block_info,
         ..Default::default()
@@ -247,9 +246,12 @@ pub fn run_test_case(
         contracts: runner_params.contracts.clone(),
     };
 
-    let mut forge_runtime = ExtendedRuntime(RuntimeExtension::<TestExecutionState, ContractExecutionSyscallHandler> {
+    let mut forge_runtime = ExtendedRuntime(RuntimeExtension::<
+        TestExecutionState,
+        ContractExecutionSyscallHandler,
+    > {
         extended_runtime: contract_execution_syscall_handler,
-        extension_state: test_execution_state
+        extension_state: test_execution_state,
     });
 
     let latest_block_number = if let Some(ValidatedForkConfig {
@@ -262,13 +264,8 @@ pub fn run_test_case(
         None
     };
 
-    let run_result = runner.run_function(
-        func,
-        &mut forge_runtime,
-        hints_dict,
-        instructions,
-        builtins,
-    );
+    let run_result =
+        runner.run_function(func, &mut forge_runtime, hints_dict, instructions, builtins);
 
     Ok(RunResultWithInfo {
         run_result,
