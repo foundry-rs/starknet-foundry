@@ -117,7 +117,7 @@ impl<Extension: RegisteredExtension> HintProcessorLogic for ExtendedRuntime<Exte
                 let result_start = buffer.ptr;
                 buffer
                     .write_data(res.iter())
-                    .expect("Failed to insert file content to memory");
+                    .expect("Failed to insert cheatcode result to memory");
                 let result_end = buffer.ptr;
                 insert_value_to_cellref!(vm, output_start, result_start)?;
                 insert_value_to_cellref!(vm, output_end, result_end)?;
