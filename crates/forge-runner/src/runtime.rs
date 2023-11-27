@@ -109,16 +109,17 @@ impl<Extension: RegisteredExtension> HintProcessorLogic for ExtendedRuntime<Exte
             let inputs = vm_get_range(vm, input_start, input_end)
                 .map_err(|_| CustomHint(Box::from("Failed to read input data".to_string())))?;
 
-            if let CheatcodeHadlingResult::Result(()) = self
-                .0
-                .handle_cheatcode(selector, inputs, vm, output_start, output_end)? {
-                    return Ok(())
-                }
+            if let CheatcodeHadlingResult::Result(()) =
+                self.0
+                    .handle_cheatcode(selector, inputs, vm, output_start, output_end)?
+            {
+                return Ok(());
+            }
         }
 
         if let Some(Hint::Starknet(StarknetHint::SystemCall { system })) = maybe_extended_hint {
             // TODO move selector parsing logic here
-            if let SyscallHandlingResult::Result(()) =  self.0.override_system_call(system, vm)? {
+            if let SyscallHandlingResult::Result(()) = self.0.override_system_call(system, vm)? {
                 return Ok(());
             }
         }
@@ -191,6 +192,7 @@ pub trait ExtensionLogic {
     ) -> Result<SyscallHandlingResult, HintError>;
 
     // TODO remove vm, output from this signature, make it return Felt252
+    #[allow(clippy::trivially_copy_pass_by_ref)]
     fn handle_cheatcode(
         &mut self,
         selector: &str,

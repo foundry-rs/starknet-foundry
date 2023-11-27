@@ -538,7 +538,7 @@ impl<'a> ExtensionLogic
                 let cheatable_syscall_handler = &mut self.get_extended_runtime_mut().child;
                 let mut blockifier_state =
                     BlockifierState::from(cheatable_syscall_handler.child.state);
-                let cheatnet_state = &mut cheatable_syscall_handler.cheatnet_state;
+                let cheatnet_state: &mut _ = cheatable_syscall_handler.cheatnet_state;
 
                 let call_result =
                     execute_call_contract(&mut blockifier_state, cheatnet_state, &call_args);
