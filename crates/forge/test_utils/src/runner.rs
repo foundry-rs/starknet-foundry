@@ -263,9 +263,7 @@ macro_rules! assert_gas {
 
         assert!(result.test_case_summaries.iter().any(|case| {
             match case {
-                TestCaseSummary::Passed { gas_used: gas, .. } => {
-                    (*gas - $asserted_gas).abs() < 0.0001
-                }
+                TestCaseSummary::Passed { gas_used: gas, .. } => *gas == $asserted_gas,
                 _ => false,
             }
         }));

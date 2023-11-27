@@ -17,7 +17,7 @@ fn test_keccak_cost() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
-    assert_gas!(result, "test_keccak_builtin", 20.48);
+    assert_gas!(result, "test_keccak_builtin", 21);
 }
 
 #[test]
@@ -34,7 +34,7 @@ fn test_range_check_cost() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
-    assert_gas!(result, "test_range_check", 0.16);
+    assert_gas!(result, "test_range_check", 1);
 }
 
 #[test]
@@ -52,7 +52,7 @@ fn test_bitwise_cost() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
-    assert_gas!(result, "test_bitwise", 0.64);
+    assert_gas!(result, "test_bitwise", 1);
 }
 
 #[test]
@@ -70,7 +70,7 @@ fn test_pedersen_cost() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
-    assert_gas!(result, "test_pedersen", 0.32);
+    assert_gas!(result, "test_pedersen", 1);
 }
 
 #[test]
@@ -94,7 +94,7 @@ fn test_poseidon_cost() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
-    assert_gas!(result, "test_poseidon", 0.32);
+    assert_gas!(result, "test_poseidon", 1);
 }
 
 #[test]
@@ -114,5 +114,5 @@ fn test_ec_op_cost() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
-    assert_gas!(result, "test_ec_op", 10.24);
+    assert_gas!(result, "test_ec_op", 11);
 }

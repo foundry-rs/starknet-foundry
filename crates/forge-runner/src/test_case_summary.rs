@@ -28,7 +28,7 @@ pub enum TestCaseSummary {
         /// Number of block used if BlockId::Tag(Latest) was specified
         latest_block_number: Option<BlockNumber>,
         /// Gas used by the test case
-        gas_used: f64,
+        gas_used: u128,
     },
     /// Test case failed
     Failed {
@@ -133,7 +133,7 @@ impl TestCaseSummary {
         test_case: &TestCaseRunnable,
         arguments: Vec<Felt252>,
         fork_info: &ForkInfo,
-        gas: f64,
+        gas: u128,
     ) -> Self {
         let name = test_case.name.to_string();
         let msg = extract_result_data(&run_result, &test_case.expected_result);

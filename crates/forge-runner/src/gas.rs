@@ -7,7 +7,7 @@ use blockifier::fee::os_usage::get_additional_os_resources;
 use blockifier::transaction::transaction_types::TransactionType;
 use blockifier::{
     abi::constants, block_context::BlockContext, execution::entry_point::ExecutionResources,
-    fee::fee_utils::calculate_l1_gas_by_vm_usage, transaction::objects::ResourcesMapping,
+    transaction::objects::ResourcesMapping,
 };
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources as VmExecutionResources;
 
