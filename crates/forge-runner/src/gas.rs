@@ -24,7 +24,10 @@ pub fn gas_from_execution_resources_and_state_change(
     let total_vm_usage = get_total_vm_usage(resources);
     let onchain_data_segment_len = get_onchain_data_segment_length(StateChangesCount::from(
         &state
-            .get_actual_state_changes_for_fee_charge(ContractAddress::from(1_u8), None)
+            .get_actual_state_changes_for_fee_charge(
+                block_context.fee_token_addresses.eth_fee_token_address,
+                None,
+            )
             .unwrap(),
     ));
 
