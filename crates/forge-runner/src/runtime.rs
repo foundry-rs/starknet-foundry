@@ -25,6 +25,7 @@ use cairo_vm::vm::errors::hint_errors::HintError::CustomHint;
 use cheatnet::cheatcodes::EnhancedHintError;
 use cheatnet::execution::cheatable_syscall_handler::SyscallSelector;
 use cheatnet::execution::contract_execution_syscall_handler::ContractExecutionSyscallHandler;
+use futures::io::SeeKRelative;
 
 use crate::forge_runtime_extension::TestExecutionState;
 
@@ -122,14 +123,19 @@ impl<Extension: RegisteredExtension> HintProcessorLogic for ExtendedRuntime<Exte
             let inputs = vm_get_range(vm, input_start, input_end)
                 .map_err(|_| CustomHint(Box::from("Failed to read input data".to_string())))?;
 
-            match self.0.handle_cheatcode(selector, inputs, vm, output_start, output_end)? {
+            let res = match self.0.handle_cheatcode(selector, inputs, vm, output_start, output_end)? {
                 CheatcodeHadlingResult::Forward => self.0.get_extended_runtime_mut().execute_hint(vm, exec_scopes, hint_data, constants)?,
                 _ => ()
-            }
+            };
+            return Ok(res);
         }
         if let Some(Hint::Starknet(StarknetHint::SystemCall { system })) = maybe_extended_hint {
             // TODO move selector parsing logic here
-            self.0.override_system_call(system, vm, exec_scopes, hint_data, constants);
+            let res = match self.0.override_system_call(system, vm, exec_scopes, hint_data, constants)? {
+                SyscallHandlingResult::Forward => self.0.get_extended_runtime_mut().execute_hint(vm, exec_scopes, hint_data, constants)?,
+                _ => ()
+            };
+            return Ok(res);
         }
         self.0.get_extended_runtime_mut().execute_hint(vm, exec_scopes, hint_data, constants)
     }
@@ -165,12 +171,14 @@ impl<Handler, Runtime: HintProcessor> ResourceTracker for ExtendedRuntime<Runtim
 }
 
 #[allow(dead_code)]
+#[derive(Debug)]
 pub enum SyscallHandlingResult {
     Forward,
     Result(()),
 }
 
 #[allow(dead_code)]
+#[derive(Debug)]
 pub enum CheatcodeHadlingResult {
     Forward,
     Result(()), // TODO now use buffer later rewrite to return vector
@@ -197,9 +205,7 @@ pub trait ExtensionLogic  {
         exec_scopes: &mut ExecutionScopes,
         hint_data: &Box<dyn Any>,
         constants: &HashMap<String, Felt252>,
-) -> Result<SyscallHandlingResult, HintError> {
-        Ok(SyscallHandlingResult::Forward)
-    }
+) -> Result<SyscallHandlingResult, HintError>; 
     
     // TODO remove vm, output from this signature, make it return Felt252
     fn handle_cheatcode(
@@ -209,7 +215,5 @@ pub trait ExtensionLogic  {
         _vm: &mut VirtualMachine,
         _output_start: &CellRef,
         _output_end: &CellRef
-    ) -> Result<CheatcodeHadlingResult, EnhancedHintError> {
-        Ok(CheatcodeHadlingResult::Forward)
-    }
+    ) -> Result<CheatcodeHadlingResult, EnhancedHintError>;
 }

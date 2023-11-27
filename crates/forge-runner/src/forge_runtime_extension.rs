@@ -346,7 +346,8 @@ impl<'a> ExtensionLogic for RuntimeExtension<TestExecutionState, ContractExecuti
                     .result
                 {
                     CallContractResult::Success { .. } => {
-                        buffer.write(0);
+                        buffer.write(0)
+                        .expect("Failed to write zero");
                         Ok(CheatcodeHadlingResult::Result(()))
                     }
                     CallContractResult::Failure(CallContractFailure::Panic { panic_data }) => {
