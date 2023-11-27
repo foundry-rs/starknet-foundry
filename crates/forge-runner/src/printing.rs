@@ -1,7 +1,7 @@
 use crate::test_case_summary::TestCaseSummary;
 use console::style;
 
-pub(crate) fn print_test_result(test_result: &TestCaseSummary) {
+pub(crate) fn print_test_result(test_result: &TestCaseSummary, print_gas_usage: bool) {
     if let TestCaseSummary::Skipped { .. } = test_result {
         return;
     }
@@ -49,5 +49,12 @@ pub(crate) fn print_test_result(test_result: &TestCaseSummary) {
         }
     };
 
-    println!("{result_header} {result_name}{fuzzer_report}{block_number_message}{result_message}");
+    let mut gas_usage = String::new();
+    if print_gas_usage {
+        if let Some(result) = test_result.gas_usage() {
+            gas_usage = format!(", gas usage: {result}")
+        }
+    }
+
+    println!("{result_header} {result_name}{fuzzer_report}{block_number_message}{result_message}{gas_usage}");
 }
