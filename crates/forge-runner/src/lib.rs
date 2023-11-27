@@ -57,7 +57,7 @@ pub struct RunnerConfig {
     pub exit_first: bool,
     pub fuzzer_runs: u32,
     pub fuzzer_seed: u64,
-    print_gas_usage: bool,
+    pub print_gas_usage: bool,
 }
 
 impl RunnerConfig {
