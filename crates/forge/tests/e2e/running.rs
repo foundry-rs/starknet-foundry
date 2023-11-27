@@ -17,7 +17,7 @@ fn simple_package() {
 
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
     [..]Compiling[..]
     [..]Finished[..]
 
@@ -51,7 +51,7 @@ fn simple_package() {
     Failures:
         tests::test_simple::test_failing
         tests::test_simple::test_another_failing
-    "#}
+    "}
     );
 }
 
@@ -94,7 +94,7 @@ fn simple_package_with_git_dependency() {
 
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -128,7 +128,7 @@ fn simple_package_with_git_dependency() {
         Failures:
             tests::test_simple::test_failing
             tests::test_simple::test_another_failing
-        "#}
+        "}
     );
 }
 
@@ -138,10 +138,10 @@ fn with_failing_scarb_build() {
     let lib_file = temp.child("src/lib.cairo");
     lib_file
         .write_str(indoc!(
-            r#"
+            r"
         mod hello_starknet;
         mods erc20;
-    "#
+    "
         ))
         .unwrap();
 
@@ -162,7 +162,7 @@ fn with_filter() {
 
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -173,7 +173,7 @@ fn with_filter() {
         [PASS] tests::test_simple::test_two
         [PASS] tests::test_simple::test_two_and_two
         Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 11 filtered out
-        "#}
+        "}
     );
 }
 
@@ -190,7 +190,7 @@ fn with_filter_matching_module() {
 
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
         
@@ -202,7 +202,7 @@ fn with_filter_matching_module() {
         [IGNORE] tests::ext_function_test::ignored_test
         [PASS] tests::ext_function_test::test_simple
         Tests: 2 passed, 0 failed, 0 skipped, 1 ignored, 10 filtered out
-        "#}
+        "}
     );
 }
 
@@ -220,7 +220,7 @@ fn with_exact_filter() {
 
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -230,7 +230,7 @@ fn with_exact_filter() {
         Running 1 test(s) from tests/
         [PASS] tests::test_simple::test_two
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 12 filtered out
-        "#}
+        "}
     );
 }
 
@@ -243,7 +243,7 @@ fn with_non_matching_filter() {
 
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -252,7 +252,7 @@ fn with_non_matching_filter() {
         Running 0 test(s) from src/
         Running 0 test(s) from tests/
         Tests: 0 passed, 0 failed, 0 skipped, 0 ignored, 13 filtered out
-        "#}
+        "}
     );
 }
 
@@ -265,7 +265,7 @@ fn with_ignored_flag() {
 
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
         
@@ -283,7 +283,7 @@ fn with_ignored_flag() {
         
         Failures:
             tests::ext_function_test::ignored_test
-        "#}
+        "}
     );
 }
 
@@ -300,7 +300,7 @@ fn with_include_ignored_flag() {
 
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
         
@@ -339,7 +339,7 @@ fn with_include_ignored_flag() {
             tests::ext_function_test::ignored_test
             tests::test_simple::test_failing
             tests::test_simple::test_another_failing
-        "#}
+        "}
     );
 }
 
@@ -357,7 +357,7 @@ fn with_ignored_flag_and_filter() {
 
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
         
@@ -374,7 +374,7 @@ fn with_ignored_flag_and_filter() {
         
         Failures:
             tests::ext_function_test::ignored_test
-        "#}
+        "}
     );
 }
 
@@ -392,7 +392,7 @@ fn with_include_ignored_flag_and_filter() {
 
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
         
@@ -410,7 +410,137 @@ fn with_include_ignored_flag_and_filter() {
         
         Failures:
             tests::ext_function_test::ignored_test
-        "#}
+        "}
+    );
+}
+
+#[test]
+fn with_rerun_failed_flag_without_cache() {
+    let temp = setup_package("simple_package");
+
+    let snapbox = test_runner();
+    let output = snapbox
+        .current_dir(&temp)
+        .arg("--rerun-failed")
+        .assert()
+        .code(1);
+
+    assert_stdout_contains!(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+        
+        
+        Collected 13 test(s) from simple_package package
+        Running 2 test(s) from src/
+        [PASS] simple_package::tests::test_fib
+        Running 11 test(s) from tests/
+        [PASS] tests::contract::call_and_invoke
+        [PASS] tests::ext_function_test::test_my_test
+
+        [PASS] tests::ext_function_test::test_simple
+        [PASS] tests::test_simple::test_simple
+        [PASS] tests::test_simple::test_simple2
+        [PASS] tests::test_simple::test_two
+        [PASS] tests::test_simple::test_two_and_two
+        [FAIL] tests::test_simple::test_failing
+
+        Failure data:
+            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+
+        [FAIL] tests::test_simple::test_another_failing
+
+        [PASS] tests::without_prefix::five
+        Failures:
+            tests::test_simple::test_failing
+            tests::test_simple::test_another_failing
+        [IGNORE] simple_package::tests::ignored_test
+        [IGNORE] tests::ext_function_test::ignored_test
+        Tests: 9 passed, 2 failed, 0 skipped, 2 ignored, 0 filtered out
+        Failure data:
+            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+
+        "}
+    );
+}
+
+#[test]
+fn with_rerun_failed_flag_and_name_filter() {
+    let temp = setup_package("simple_package");
+    let snapbox = test_runner();
+
+    snapbox.current_dir(&temp).assert().code(1);
+    let snapbox = test_runner();
+    let output = snapbox
+        .current_dir(&temp)
+        .arg("--rerun-failed")
+        .arg("test_another_failing")
+        .assert()
+        .code(1);
+
+    assert_stdout_contains!(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+        Collected 1 test(s) from simple_package package
+        Running 0 test(s) from src/
+        Running 1 test(s) from tests/
+        [FAIL] tests::test_simple::test_another_failing
+
+        Failure data:
+            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+
+        Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 12 filtered out
+
+        Failures:
+            tests::test_simple::test_another_failing
+
+        "}
+    );
+}
+
+#[test]
+fn with_rerun_failed_flag() {
+    let temp = setup_package("simple_package");
+    let snapbox = test_runner();
+
+    snapbox.current_dir(&temp).assert().code(1);
+    let snapbox = test_runner();
+    let output = snapbox
+        .current_dir(&temp)
+        .arg("--rerun-failed")
+        .assert()
+        .code(1);
+
+    assert_stdout_contains!(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+        Collected 2 test(s) from simple_package package
+        Running 0 test(s) from src/
+        Running 2 test(s) from tests/
+        [FAIL] tests::test_simple::test_another_failing
+
+        Failure data:
+            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+
+        [FAIL] tests::test_simple::test_failing
+
+        Failure data:
+            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+
+        Tests: 0 passed, 2 failed, 0 skipped, 0 ignored, 11 filtered out
+
+        Failures:
+            tests::test_simple::test_another_failing
+            tests::test_simple::test_failing
+
+        "}
     );
 }
 
@@ -423,7 +553,7 @@ fn with_print() {
 
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -459,7 +589,7 @@ fn with_print() {
         original value: [166906514068638843492736773029576256], converted to a string: [ % abc 123 !?>@]
         [PASS] tests::test_print::test_print
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
-        "#}
+        "}
     );
 }
 
@@ -472,7 +602,7 @@ fn with_panic_data_decoding() {
 
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -502,7 +632,7 @@ fn with_panic_data_decoding() {
         Failures:
             tests::test_panic_decoding::test_panic_decoding
             tests::test_panic_decoding::test_panic_decoding2
-        "#}
+        "}
     );
 }
 
@@ -543,7 +673,7 @@ fn with_exit_first() {
     let output = snapbox.current_dir(&temp).assert().code(1);
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -560,7 +690,7 @@ fn with_exit_first() {
 
         Failures:
             tests::ext_function_test::simple_test
-        "#}
+        "}
     );
 }
 
@@ -572,7 +702,7 @@ fn with_exit_first_flag() {
     let output = snapbox.current_dir(&temp).assert().code(1);
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -589,7 +719,7 @@ fn with_exit_first_flag() {
 
         Failures:
             tests::ext_function_test::simple_test
-        "#}
+        "}
     );
 }
 
@@ -658,7 +788,7 @@ fn init_new_project_test() {
         .success();
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling test_name v0.1.0[..]
         [..]Finished[..]
 
@@ -669,7 +799,7 @@ fn init_new_project_test() {
         [PASS] tests::test_contract::test_increase_balance
         [PASS] tests::test_contract::test_cannot_increase_balance_with_zero_value
         Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
-    "#}
+    "}
     );
 }
 
@@ -684,7 +814,7 @@ fn should_panic() {
     let output = snapbox.current_dir(&temp).assert().code(1);
     assert_stdout_contains!(
         output,
-        indoc! { r#"
+        indoc! { r"
         [..]Compiling[..]
         [..]Finished[..]
 
@@ -718,7 +848,7 @@ fn should_panic() {
             tests::should_panic_test::should_panic_with_non_matching_data
             tests::should_panic_test::didnt_expect_panic
             tests::should_panic_test::expected_panic_but_didnt
-        "#}
+        "}
     );
 }
 
@@ -761,10 +891,25 @@ fn available_gas_error() {
     let output = snapbox.current_dir(&temp).assert().failure();
     assert_stdout_contains!(
         output,
-        indoc! {r#"
+        indoc! {r"
         [..]Compiling[..]
         [..]Finished[..]
-        [ERROR] tests::available_gas::available_gas - Attribute `available_gas` is not supported: Contract functions execution cost would not be included in the gas calculation.
-        "#}
+        
+        
+        Collected 3 test(s) from available_gas package
+        Running 0 test(s) from src/
+        Running 3 test(s) from tests/
+        [FAIL] tests::available_gas::available_gas
+        
+        Failure data:
+            Attribute `available_gas` is not supported
+        
+        [PASS] tests::available_gas::aa_test
+        [PASS] tests::available_gas::test
+        Tests: 2 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
+        
+        Failures:
+            tests::available_gas::available_gas
+        "}
     );
 }

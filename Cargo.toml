@@ -2,6 +2,7 @@
 resolver = "2"
 members = [
     "crates/forge",
+    "crates/forge-runner",
     "crates/test-collector",
     "crates/cast",
     "crates/cheatnet",
@@ -10,7 +11,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.10.2"
+version = "0.11.0"
 edition = "2021"
 repository = "https://github.com/foundry-rs/starknet-foundry"
 license = "MIT"

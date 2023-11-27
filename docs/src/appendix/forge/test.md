@@ -41,6 +41,10 @@ Run only tests marked with `#[ignore]` attribute.
 
 Run all tests regardless of `#[ignore]` attribute.
 
+## `--rerun-failed`
+
+Run tests that failed during the last run
+
 ## `--color` `<WHEN>`
 
 Control when colored output is used. Valid values:

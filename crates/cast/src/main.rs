@@ -1,7 +1,10 @@
+use std::error::Error;
+
 use crate::starknet_commands::account::Account;
 use crate::starknet_commands::show_config::ShowConfig;
 use crate::starknet_commands::{
     account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
+    script::Script,
 };
 use anyhow::{anyhow, Context, Result};
 
@@ -16,6 +19,7 @@ use cast::{
     print_command_result, ValueFormat,
 };
 use clap::{Parser, Subcommand};
+use tokio::runtime::Runtime;
 
 use scarb_metadata::{Metadata, PackageMetadata};
 use scarb_ui::args::PackagesFilterLong;
@@ -99,11 +103,13 @@ enum Commands {
 
     /// Show current configuration being used
     ShowConfig(ShowConfig),
+
+    /// Run a deployment script
+    Script(Script),
 }
 
 #[tokio::main]
-#[allow(clippy::too_many_lines)]
-async fn main() -> Result<()> {
+async fn main() -> Result<(), Box<dyn Error>> {
     let cli = Cli::parse();
 
     // Clap validates that both are not passed at same time
@@ -188,6 +194,22 @@ async fn main() -> Result<()> {
                     return Ok(());
                 },
                 _ => unreachable!(),
+            },
+            Commands::Script(script) => {
+                let runtime = Runtime::new().expect("Could not instantiate Runtime");
+
+                let mut result = starknet_commands::script::run(
+                    &script.script_module_name,
+                    &cli.path_to_scarb_toml,
+                    &provider,
+                    runtime,
+                    &config,
+                    &metadata,
+                    &package,
+                );
+        
+                print_command_result("script", &mut result, value_format, cli.json)?;
+                return Ok(())
             },
             _ => unreachable!(),
         }
@@ -441,6 +463,7 @@ fn is_command_package_dependent(cli: &Cli) -> bool {
             account::Commands::Delete(_) => false,
         },
         Commands::ShowConfig(_) => false,
+        Commands::Script(_) => true,
     }
 }
 

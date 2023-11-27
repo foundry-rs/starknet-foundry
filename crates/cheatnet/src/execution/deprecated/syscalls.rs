@@ -138,6 +138,17 @@ impl<'a> CheatableSyscallHandler<'a> {
             response.write(vm, &mut self.child.syscall_ptr)?;
 
             return Ok(());
+        } else if DeprecatedSyscallSelector::GetSequencerAddress == selector
+            && self.cheatnet_state.address_is_elected(&contract_address)
+        {
+            self.child.syscall_ptr += 1;
+            self.increment_syscall_count(selector);
+
+            let response = get_sequencer_address(self, contract_address).unwrap();
+
+            response.write(vm, &mut self.child.syscall_ptr)?;
+
+            return Ok(());
         } else if DeprecatedSyscallSelector::DelegateCall == selector {
             self.child.syscall_ptr += 1;
             self.increment_syscall_count(selector);
@@ -255,10 +266,9 @@ pub fn get_caller_address(
     contract_address: ContractAddress,
 ) -> DeprecatedSyscallResult<GetContractAddressResponse> {
     Ok(GetContractAddressResponse {
-        address: *syscall_handler
+        address: syscall_handler
             .cheatnet_state
-            .pranked_contracts
-            .get(&contract_address)
+            .get_cheated_caller_address(&contract_address)
             .unwrap(),
     })
 }
@@ -272,8 +282,7 @@ pub fn get_block_number(
         block_number: BlockNumber(
             syscall_handler
                 .cheatnet_state
-                .rolled_contracts
-                .get(&contract_address)
+                .get_cheated_block_number(&contract_address)
                 .unwrap()
                 .to_u64()
                 .unwrap(),
@@ -295,5 +304,24 @@ pub fn get_block_timestamp(
                 .to_u64()
                 .unwrap(),
         ),
+    })
+}
+
+// blockifier/src/execution/deprecated_syscalls/mod.rs:470 (get_sequencer_address)
+type GetSequencerAddressResponse = GetContractAddressResponse;
+
+pub fn get_sequencer_address(
+    cheatable_syscall_handler: &mut CheatableSyscallHandler<'_>,
+    contract_address: ContractAddress,
+) -> DeprecatedSyscallResult<GetSequencerAddressResponse> {
+    cheatable_syscall_handler
+        .child
+        .verify_not_in_validate_mode("get_sequencer_address")?;
+
+    Ok(GetSequencerAddressResponse {
+        address: cheatable_syscall_handler
+            .cheatnet_state
+            .get_cheated_sequencer_address(&contract_address)
+            .unwrap(),
     })
 }

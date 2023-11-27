@@ -3,7 +3,8 @@ use anyhow::{anyhow, Context, Ok, Result};
 use include_dir::{include_dir, Dir};
 
 use regex::Regex;
-use std::fs;
+use std::fs::{self, OpenOptions};
+use std::io::Write;
 use std::path::Path;
 use std::process::{Command, Stdio};
 use std::str::from_utf8;
@@ -56,6 +57,16 @@ fn add_target_to_toml(path: &Path) -> Result<()> {
     doc.insert("target", Item::Table(contract));
 
     fs::write(path, doc.to_string())?;
+
+    Ok(())
+}
+
+fn extend_gitignore(path: &Path) -> Result<()> {
+    let mut file = OpenOptions::new()
+        .write(true)
+        .append(true)
+        .open(path.join(".gitignore"))?;
+    writeln!(file, ".snfoundry_cache/")?;
 
     Ok(())
 }
@@ -117,6 +128,7 @@ pub fn run(project_name: &str) -> Result<()> {
         .context("Failed to add starknet")?;
 
     add_target_to_toml(&project_path.join("Scarb.toml"))?;
+    extend_gitignore(&project_path)?;
     overwrite_files_from_scarb_template("src", &project_path, project_name)?;
     overwrite_files_from_scarb_template("tests", &project_path, project_name)?;
 

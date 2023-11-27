@@ -28,26 +28,30 @@ fn test_address() -> ContractAddress {
     contract_address_const::<469394814521890341860918960550914>()
 }
 
-fn start_roll(contract_address: ContractAddress, block_number: u64) {
-    let contract_address_felt: felt252 = contract_address.into();
-    let block_number_felt: felt252 = block_number.into();
-    cheatcode::<'start_roll'>(array![contract_address_felt, block_number_felt].span());
+fn start_roll(target: CheatTarget, block_number: u64) {
+    let mut inputs = array![];
+    target.serialize(ref inputs);
+    inputs.append(block_number.into());
+    cheatcode::<'start_roll'>(inputs.span());
 }
 
-fn stop_roll(contract_address: ContractAddress) {
-    let contract_address_felt: felt252 = contract_address.into();
-    cheatcode::<'stop_roll'>(array![contract_address_felt].span());
+fn stop_roll(target: CheatTarget) {
+    let mut inputs = array![];
+    target.serialize(ref inputs);
+    cheatcode::<'stop_roll'>(inputs.span());
 }
 
-fn start_prank(contract_address: ContractAddress, caller_address: ContractAddress) {
-    let contract_address_felt: felt252 = contract_address.into();
-    let caller_address_felt: felt252 = caller_address.into();
-    cheatcode::<'start_prank'>(array![contract_address_felt, caller_address_felt].span());
+fn start_prank(target: CheatTarget, caller_address: ContractAddress) {
+    let mut inputs = array![];
+    target.serialize(ref inputs);
+    inputs.append(caller_address.into());
+    cheatcode::<'start_prank'>(inputs.span());
 }
 
-fn stop_prank(contract_address: ContractAddress) {
-    let contract_address_felt: felt252 = contract_address.into();
-    cheatcode::<'stop_prank'>(array![contract_address_felt].span());
+fn stop_prank(target: CheatTarget) {
+    let mut inputs = array![];
+    target.serialize(ref inputs);
+    cheatcode::<'stop_prank'>(inputs.span());
 }
 
 fn start_warp(target: CheatTarget, block_number: u64) {
@@ -61,6 +65,19 @@ fn stop_warp(target: CheatTarget) {
     let mut inputs = array![];
     target.serialize(ref inputs);
     cheatcode::<'stop_warp'>(inputs.span());
+}
+
+fn start_elect(target: CheatTarget, sequencer_address: ContractAddress) {
+    let mut inputs = array![];
+    target.serialize(ref inputs);
+    inputs.append(sequencer_address.into());
+    cheatcode::<'start_elect'>(inputs.span());
+}
+
+fn stop_elect(target: CheatTarget) {
+    let mut inputs = array![];
+    target.serialize(ref inputs);
+    cheatcode::<'stop_elect'>(inputs.span());
 }
 
 fn start_mock_call<T, impl TSerde: serde::Serde<T>, impl TDestruct: Destruct<T>>(

@@ -91,6 +91,23 @@ jobs:
       - name: Run tests
         run: cargo test --release -p cast
 
+  scarbfmt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: software-mansion/setup-scarb@v1.3.2
+      - name: Check cairo files format
+        run: |
+          output=$(find . -type f -name "Scarb.toml" -execdir sh -c '
+              echo "Running \"scarb fmt\" in directory: $PWD"
+              scarb fmt --check
+          ' \;)
+          echo "$output"
+          if grep -iq "Diff" <<< "$output"; then
+              exit 1
+          fi
+          exit 0
+
   rustfmt:
     runs-on: ubuntu-latest
     steps:
@@ -99,14 +116,8 @@ jobs:
         with:
           toolchain: stable
       - uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8
-      - name: Check forge formatting
-        run: cargo fmt --check -p forge
-      - name: Check cast formatting
-        run: cargo fmt --check -p cast
-      - name: Check test-collector formatting
-        run: cargo fmt --check -p test-collector
-      - name: Check cheatnet formatting
-        run: cargo fmt --check -p cheatnet
+      - name: Check formatting
+        run: cargo fmt --check
 
   clippy:
     runs-on: ubuntu-latest

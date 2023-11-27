@@ -30,6 +30,7 @@
 * [Invoking Contracts](starknet/invoke.md)
 * [Calling Contracts](starknet/call.md)
 * [Performing Multicall](starknet/multicall.md)
+* [Cairo Deployment Scripts](starknet/script.md)
 
 # Foundry Development
 
@@ -42,12 +43,15 @@
     * [init](appendix/forge/init.md)
     * [clean-cache](appendix/forge/clean-cache.md)
 * [Cheatcodes Reference](appendix/cheatcodes.md)
+    * [`CheatTarget`](appendix/cheatcodes/cheat_target.md)
     * [start_prank](appendix/cheatcodes/start_prank.md)
     * [stop_prank](appendix/cheatcodes/stop_prank.md)
     * [start_roll](appendix/cheatcodes/start_roll.md)
     * [stop_roll](appendix/cheatcodes/stop_roll.md)
     * [start_warp](appendix/cheatcodes/start_warp.md)
     * [stop_warp](appendix/cheatcodes/stop_warp.md)
+    * [start_elect](appendix/cheatcodes/start_elect.md)
+    * [stop_elect](appendix/cheatcodes/stop_elect.md)
     * [get_class_hash](appendix/cheatcodes/get_class_hash.md)
     * [l1_handler_execute](appendix/cheatcodes/l1_handler_execute.md)
     * [start_mock_call](appendix/cheatcodes/start_mock_call.md)
@@ -55,6 +59,7 @@
     * [spy_events](appendix/cheatcodes/spy_events.md)
     * [start_spoof](appendix/cheatcodes/start_spoof.md)
     * [stop_spoof](appendix/cheatcodes/stop_spoof.md)
+    
 
 * [Forge Library Functions References](appendix/forge-library.md)
     * [declare](appendix/forge-library/declare.md)
@@ -87,3 +92,4 @@
         * [new](appendix/cast/multicall/new.md)
         * [run](appendix/cast/multicall/run.md)
     * [show-config](appendix/cast/show_config.md)
+    * [script](appendix/cast/script.md)

@@ -1,6 +1,5 @@
 #[starknet::contract]
 mod ConstructorSpyEventsChecker {
-
     #[storage]
     struct Storage {}
 

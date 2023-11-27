@@ -21,7 +21,7 @@ It is possible to pass `url` and `block_id` arguments to the `fork` attribute:
 enum BlockId {
     Tag: BlockTag,
     Hash: felt252,
-    Number: felt252,
+    Number: u64,
 }
 
 enum BlockTag {

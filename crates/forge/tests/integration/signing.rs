@@ -5,7 +5,7 @@ use test_utils::{assert_passed, test_case};
 #[test]
 fn simple_signing_flow() {
     let test = test_case!(indoc!(
-        r#"
+        r"
             use snforge_std::signature::{ StarkCurveKeyPair, StarkCurveKeyPairTrait, Signer, Verifier };
 
             #[test]
@@ -16,7 +16,7 @@ fn simple_signing_flow() {
                 let signature = key_pair.sign(message_hash).unwrap();
                 assert(key_pair.verify(message_hash, signature), 'Wrong signature');
             }
-        "#
+        "
     ));
 
     let result = run_test_case(&test);
@@ -27,7 +27,7 @@ fn simple_signing_flow() {
 #[test]
 fn try_to_sign_max_felt() {
     let test = test_case!(indoc!(
-        r#"
+        r"
             use snforge_std::signature::{ StarkCurveKeyPair, StarkCurveKeyPairTrait, Signer };
 
             #[test]
@@ -42,7 +42,7 @@ fn try_to_sign_max_felt() {
                     }
                 }
             }
-        "#
+        "
     ));
 
     let result = run_test_case(&test);

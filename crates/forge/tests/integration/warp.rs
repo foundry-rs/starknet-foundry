@@ -8,7 +8,7 @@ use test_utils::{assert_passed, test_case};
 fn warp_basic() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
             use result::ResultTrait;
             use array::ArrayTrait;
             use option::OptionTrait;
@@ -38,6 +38,23 @@ fn warp_basic() {
                 let old_block_timestamp = warp_checker.get_block_timestamp();
 
                 start_warp(CheatTarget::One(warp_checker.contract_address), 123);
+
+                let new_block_timestamp = warp_checker.get_block_timestamp();
+                assert(new_block_timestamp == 123, 'Wrong block timestamp');
+
+                stop_warp(CheatTarget::One(warp_checker.contract_address));
+
+                let new_block_timestamp = warp_checker.get_block_timestamp();
+                assert(new_block_timestamp == old_block_timestamp, 'Timestamp did not change back')
+            }
+
+            #[test]
+            fn test_warp_all_stop_one() {
+                let warp_checker = deploy_warp_checker();
+
+                let old_block_timestamp = warp_checker.get_block_timestamp();
+
+                start_warp(CheatTarget::All, 123);
 
                 let new_block_timestamp = warp_checker.get_block_timestamp();
                 assert(new_block_timestamp == 123, 'Wrong block timestamp');
@@ -101,7 +118,7 @@ fn warp_basic() {
                 assert(new_block_timestamp1 == old_block_timestamp1, 'Warp not stopped #1');
                 assert(new_block_timestamp2 == old_block_timestamp2, 'Warp not stopped #2');
             }
-        "#
+        "
         ),
         Contract::from_code_path(
             "WarpChecker".to_string(),
@@ -119,7 +136,7 @@ fn warp_basic() {
 fn warp_complex() {
     let test = test_case!(
         indoc!(
-            r#"
+            r"
             use result::ResultTrait;
             use array::ArrayTrait;
             use option::OptionTrait;
@@ -184,7 +201,7 @@ fn warp_complex() {
                 assert(new_block_timestamp1 == 789, 'Wrong block timestamp #7');
                 assert(new_block_timestamp2 == old_block_timestamp2, 'Wrong block timestamp #8');
             }
-        "#
+        "
         ),
         Contract::from_code_path(
             "WarpChecker".to_string(),

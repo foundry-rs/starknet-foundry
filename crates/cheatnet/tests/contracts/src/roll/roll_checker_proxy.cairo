@@ -21,7 +21,9 @@ mod RollCheckerProxy {
 
     #[external(v0)]
     impl IRollCheckerProxy of super::IRollCheckerProxy<ContractState> {
-        fn get_roll_checkers_block_number(ref self: ContractState, address: ContractAddress) -> u64 {
+        fn get_roll_checkers_block_number(
+            ref self: ContractState, address: ContractAddress
+        ) -> u64 {
             let roll_checker = IRollCheckerDispatcher { contract_address: address };
             roll_checker.get_block_number()
         }
