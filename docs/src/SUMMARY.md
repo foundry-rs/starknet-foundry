@@ -30,6 +30,7 @@
 * [Invoking Contracts](starknet/invoke.md)
 * [Calling Contracts](starknet/call.md)
 * [Performing Multicall](starknet/multicall.md)
+* [Cairo Deployment Scripts](starknet/script.md)
 
 # Foundry Development
 
@@ -49,6 +50,8 @@
     * [stop_roll](appendix/cheatcodes/stop_roll.md)
     * [start_warp](appendix/cheatcodes/start_warp.md)
     * [stop_warp](appendix/cheatcodes/stop_warp.md)
+    * [start_elect](appendix/cheatcodes/start_elect.md)
+    * [stop_elect](appendix/cheatcodes/stop_elect.md)
     * [get_class_hash](appendix/cheatcodes/get_class_hash.md)
     * [l1_handler_execute](appendix/cheatcodes/l1_handler_execute.md)
     * [start_mock_call](appendix/cheatcodes/start_mock_call.md)
@@ -89,3 +92,4 @@
         * [new](appendix/cast/multicall/new.md)
         * [run](appendix/cast/multicall/run.md)
     * [show-config](appendix/cast/show_config.md)
+    * [script](appendix/cast/script.md)

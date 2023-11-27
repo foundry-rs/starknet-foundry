@@ -18,11 +18,10 @@ pub fn run_test_case(test: &TestCase) -> Vec<TestCrateSummary> {
         &test.path().unwrap(),
         &String::from("src"),
         &test.path().unwrap().join("src"),
-        &TestsFilter::from_flags(None, false, false, false),
+        &TestsFilter::from_flags(None, false, false, false, false, Default::default()),
         Arc::new(RunnerConfig::new(
             Utf8PathBuf::from_path_buf(PathBuf::from(tempdir().unwrap().path())).unwrap(),
             false,
-            vec![],
             256,
             12345,
         )),
@@ -32,6 +31,7 @@ pub fn run_test_case(test: &TestCase) -> Vec<TestCrateSummary> {
             test.env().clone(),
             test.linked_libraries(),
         )),
+        &[],
     ))
     .expect("Runner fail")
 }

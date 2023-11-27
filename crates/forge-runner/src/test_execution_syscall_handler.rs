@@ -26,7 +26,6 @@ use cheatnet::cheatcodes::{CheatcodeError, EnhancedHintError};
 use cheatnet::execution::cheatable_syscall_handler::CheatableSyscallHandler;
 use cheatnet::rpc::{call_contract, CallContractFailure, CallContractOutput, CallContractResult};
 use cheatnet::state::{BlockifierState, CheatTarget, CheatnetState};
-use conversions::StarknetConversions;
 use num_traits::{One, ToPrimitive};
 use scarb_artifacts::StarknetContractArtifacts;
 use serde::Deserialize;
@@ -50,7 +49,9 @@ use cheatnet::execution::cheated_syscalls::SingleSegmentResponse;
 use cheatnet::execution::contract_execution_syscall_handler::{
     print, ContractExecutionSyscallHandler,
 };
+use conversions::{FromConv, IntoConv};
 use starknet::signers::SigningKey;
+use starknet_api::hash::StarkFelt;
 
 mod file_operations;
 
@@ -269,11 +270,27 @@ impl TestExecutionSyscallHandler<'_> {
                 self.child.child.cheatnet_state.stop_warp(target);
                 Ok(())
             }
+            "start_elect" => {
+                let (target, _) = deserialize_cheat_target(&inputs[..inputs.len() - 1]);
+                let sequencer_address = inputs.last().unwrap().clone().into_();
+
+                self.child
+                    .child
+                    .cheatnet_state
+                    .start_elect(target, sequencer_address);
+                Ok(())
+            }
+            "stop_elect" => {
+                let (target, _) = deserialize_cheat_target(&inputs);
+
+                self.child.child.cheatnet_state.stop_elect(target);
+                Ok(())
+            }
             "start_prank" => {
                 let (target, _) = deserialize_cheat_target(&inputs[..inputs.len() - 1]);
 
                 // The last element in `inputs` should be the contract address in all cases
-                let caller_address = inputs.last().unwrap().to_contract_address();
+                let caller_address = inputs.last().unwrap().clone().into_();
 
                 self.child
                     .child
@@ -288,7 +305,7 @@ impl TestExecutionSyscallHandler<'_> {
                 Ok(())
             }
             "start_mock_call" => {
-                let contract_address = inputs[0].to_contract_address();
+                let contract_address = inputs[0].clone().into_();
                 let function_name = inputs[1].clone();
 
                 let ret_data_length = inputs[2]
@@ -310,7 +327,7 @@ impl TestExecutionSyscallHandler<'_> {
                 Ok(())
             }
             "stop_mock_call" => {
-                let contract_address = inputs[0].to_contract_address();
+                let contract_address = inputs[0].clone().into_();
                 let function_name = inputs[1].clone();
 
                 self.child
@@ -390,7 +407,7 @@ impl TestExecutionSyscallHandler<'_> {
                 }
             }
             "deploy" => {
-                let class_hash = inputs[0].to_class_hash();
+                let class_hash = inputs[0].clone().into_();
                 let calldata_length = inputs[1].to_usize().unwrap();
                 let calldata = Vec::from(&inputs[2..(2 + calldata_length)]);
                 let mut blockifier_state = BlockifierState::from(self.child.child.child.state);
@@ -406,10 +423,10 @@ impl TestExecutionSyscallHandler<'_> {
                 )
             }
             "deploy_at" => {
-                let class_hash = inputs[0].to_class_hash();
+                let class_hash = inputs[0].clone().into_();
                 let calldata_length = inputs[1].to_usize().unwrap();
                 let calldata = Vec::from(&inputs[2..(2 + calldata_length)]);
-                let contract_address = inputs[2 + calldata_length].to_contract_address();
+                let contract_address = inputs[2 + calldata_length].clone().into_();
 
                 let mut blockifier_state = BlockifierState::from(self.child.child.child.state);
 
@@ -429,7 +446,7 @@ impl TestExecutionSyscallHandler<'_> {
                 Ok(())
             }
             "precalculate_address" => {
-                let class_hash = inputs[0].to_class_hash();
+                let class_hash = inputs[0].clone().into_();
                 let calldata_length = inputs[1].to_usize().unwrap();
                 let calldata = Vec::from(&inputs[2..(2 + calldata_length)]);
 
@@ -439,7 +456,7 @@ impl TestExecutionSyscallHandler<'_> {
                     .cheatnet_state
                     .precalculate_address(&class_hash, &calldata);
 
-                let felt_contract_address = contract_address.to_felt252();
+                let felt_contract_address: Felt252 = contract_address.into_();
                 buffer
                     .write(felt_contract_address)
                     .expect("Failed to insert a precalculated contract address");
@@ -465,7 +482,7 @@ impl TestExecutionSyscallHandler<'_> {
                 Ok(())
             }
             "get_class_hash" => {
-                let contract_address = inputs[0].to_contract_address();
+                let contract_address = inputs[0].clone().into_();
 
                 let mut blockifier_state = BlockifierState::from(self.child.child.child.state);
 
@@ -483,7 +500,7 @@ impl TestExecutionSyscallHandler<'_> {
                 }
             }
             "l1_handler_execute" => {
-                let contract_address = inputs[0].to_contract_address();
+                let contract_address = inputs[0].clone().into_();
                 let function_name = inputs[1].clone();
                 let from_address = inputs[2].clone();
                 let payload_length: usize = inputs[3]
@@ -538,12 +555,12 @@ impl TestExecutionSyscallHandler<'_> {
                 let spy_on = match inputs.len() {
                     0 => unreachable!("Serialized enum should always be longer than 0"),
                     1 => SpyTarget::All,
-                    2 => SpyTarget::One(inputs[1].to_contract_address()),
+                    2 => SpyTarget::One(inputs[1].clone().into_()),
                     _ => {
                         let addresses_length = inputs[1].to_usize().unwrap();
                         let addresses = Vec::from(&inputs[2..(2 + addresses_length)])
                             .iter()
-                            .map(Felt252::to_contract_address)
+                            .map(|el| ContractAddress::from_(el.clone()))
                             .collect();
 
                         SpyTarget::Multiple(addresses)
@@ -584,19 +601,19 @@ impl TestExecutionSyscallHandler<'_> {
                 let key_pair = SigningKey::from_random();
 
                 buffer
-                    .write(key_pair.secret_scalar().to_felt252())
+                    .write(Felt252::from_(key_pair.secret_scalar()))
                     .expect("Failed to insert private key");
                 buffer
-                    .write(key_pair.verifying_key().scalar().to_felt252())
+                    .write(Felt252::from_(key_pair.verifying_key().scalar()))
                     .expect("Failed to insert public key");
                 Ok(())
             }
             "get_public_key" => {
                 let private_key = inputs[0].clone();
-                let key_pair = SigningKey::from_secret_scalar(private_key.to_field_element());
+                let key_pair = SigningKey::from_secret_scalar(private_key.into_());
 
                 buffer
-                    .write(key_pair.verifying_key().scalar().to_felt252())
+                    .write(Felt252::from_(key_pair.verifying_key().scalar()))
                     .expect("Failed to insert public key");
 
                 Ok(())
@@ -605,20 +622,20 @@ impl TestExecutionSyscallHandler<'_> {
                 let private_key = inputs[0].clone();
                 let message_hash = inputs[1].clone();
 
-                let key_pair = SigningKey::from_secret_scalar(private_key.to_field_element());
+                let key_pair = SigningKey::from_secret_scalar(private_key.into_());
 
-                if let Ok(signature) = key_pair.sign(&message_hash.to_field_element()) {
+                if let Ok(signature) = key_pair.sign(&message_hash.into_()) {
                     buffer.write(0).expect("Failed to insert exit code");
                     buffer
-                        .write(signature.r.to_felt252())
+                        .write(Felt252::from_(signature.r))
                         .expect("Failed to insert signature r");
                     buffer
-                        .write(signature.s.to_felt252())
+                        .write(Felt252::from_(signature.s))
                         .expect("Failed to insert signature s");
                 } else {
                     buffer.write(1).expect("Failed to insert exit code");
                     buffer
-                        .write("message_hash out of range".to_string().to_felt252())
+                        .write(Felt252::from_("message_hash out of range".to_string()))
                         .expect("Failed to insert error message");
                 }
 
@@ -641,7 +658,7 @@ fn handle_deploy_result(
 ) -> Result<(), EnhancedHintError> {
     match deploy_result {
         Ok(deploy_payload) => {
-            let felt_contract_address: Felt252 = deploy_payload.contract_address.to_felt252();
+            let felt_contract_address = Felt252::from_(deploy_payload.contract_address);
 
             buffer
                 .write(Felt252::from(0))
@@ -663,12 +680,12 @@ fn deserialize_cheat_target(inputs: &[Felt252]) -> (CheatTarget, usize) {
     // First element encodes the variant of CheatTarget
     match inputs[0].to_u8() {
         Some(0) => (CheatTarget::All, 1),
-        Some(1) => (CheatTarget::One(inputs[1].to_contract_address()), 2),
+        Some(1) => (CheatTarget::One(inputs[1].clone().into_()), 2),
         Some(2) => {
             let n_targets = inputs[1].to_usize().unwrap();
             let contract_addresses: Vec<_> = inputs[2..2 + n_targets]
                 .iter()
-                .map(Felt252::to_contract_address)
+                .map(|el| ContractAddress::from_(el.clone()))
                 .collect();
             (CheatTarget::Multiple(contract_addresses), 2 + n_targets)
         }
@@ -751,15 +768,17 @@ struct CallContractArgs {
 
 impl SyscallRequest for CallContractArgs {
     fn read(vm: &VirtualMachine, ptr: &mut Relocatable) -> SyscallResult<CallContractArgs> {
-        let selector = stark_felt_from_ptr(vm, ptr)?.to_felt252();
-        let gas_counter = stark_felt_from_ptr(vm, ptr)?.to_felt252().to_u64().unwrap();
+        let selector = stark_felt_from_ptr(vm, ptr)?.into_();
+        let gas_counter = Felt252::from_(stark_felt_from_ptr(vm, ptr)?)
+            .to_u64()
+            .unwrap();
 
-        let contract_address = stark_felt_from_ptr(vm, ptr)?.to_contract_address();
-        let entry_point_selector = stark_felt_from_ptr(vm, ptr)?.to_felt252();
+        let contract_address = stark_felt_from_ptr(vm, ptr)?.into_();
+        let entry_point_selector = stark_felt_from_ptr(vm, ptr)?.into_();
 
         let calldata = read_felt_array::<SyscallExecutionError>(vm, ptr)?
             .iter()
-            .map(StarknetConversions::to_felt252)
+            .map(|el| (*el).into_())
             .collect();
 
         Ok(CallContractArgs {
@@ -811,7 +830,7 @@ fn write_call_contract_response(
                 gas_counter: call_args.gas_counter,
                 error_data: panic_data
                     .iter()
-                    .map(StarknetConversions::to_stark_felt)
+                    .map(|el| StarkFelt::from_(el.clone()))
                     .collect(),
             },
             CallContractFailure::Error { msg, .. } => return Err(CustomHint(Box::from(msg))),
