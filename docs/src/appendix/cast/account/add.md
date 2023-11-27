@@ -30,16 +30,14 @@ Specify account deployment status as deployed.
 If not passed, sncast will check whether the account is deployed or not.
 
 ## `--private-key <PRIVATE_KEY>`
-Optional.
+Optional. Required if `--private-key-file` is not passed.
 
 Account private key.
-Required if `--private-key-file` is not passed.
 
 ## `--private-key-file <PRIVATE_KEY_FILE_PATH>`
-Optional.
+Optional. Required if `--private-key-file` is not passed.
 
 Path to the file holding account private key.
-Required if `--private-key-file` is not passed.
 
 ## `--public-key <PUBLIC_KEY>`
 Optional.
