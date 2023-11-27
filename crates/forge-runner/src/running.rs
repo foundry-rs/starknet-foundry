@@ -290,7 +290,7 @@ pub fn run_test_case(
         instructions,
         builtins,
     );
-    let resources = &get_vm_execution_resources(vm);
+    let resources = &get_vm_execution_resources(&vm);
     test_execution_syscall_handler
         .child
         .child
@@ -331,8 +331,8 @@ pub struct UnsafeVirtualMachine {
     hooks: crate::vm::hooks::Hooks,
     relocation_table: Option<Vec<usize>>,
 }
-fn get_vm_execution_resources(vm: VirtualMachine) -> VmExecutionResources {
-    let unsafe_vm: UnsafeVirtualMachine = unsafe { transmute(vm) };
+fn get_vm_execution_resources(vm: &VirtualMachine) -> VmExecutionResources {
+    let unsafe_vm: &UnsafeVirtualMachine = unsafe { transmute(vm) };
 
     let n_steps = unsafe_vm
         .trace
