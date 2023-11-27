@@ -30,6 +30,7 @@ pub mod test_crate_summary;
 mod fuzzer;
 mod printing;
 mod running;
+mod runtime;
 mod test_execution_syscall_handler;
 
 pub const CACHE_DIR: &str = ".snfoundry_cache";
