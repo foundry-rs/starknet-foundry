@@ -2,15 +2,13 @@ use std::any::Any;
 use std::collections::HashMap;
 
 use anyhow::Result;
-use blockifier::execution::common_hints::HintExecutionResult;
 
-use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 
 use cairo_felt::Felt252;
 use cairo_lang_casm::hints::{Hint, StarknetHint};
 use cairo_lang_casm::operand::{CellRef, ResOperand};
-use cairo_lang_runner::casm_run::{extract_relocatable, vm_get_range, extract_buffer, get_ptr};
+use cairo_lang_runner::casm_run::{extract_relocatable, vm_get_range};
 use cairo_vm::hint_processor::hint_processor_definition::{
     HintProcessor, HintProcessorLogic, HintReference,
 };
@@ -23,9 +21,7 @@ use cairo_vm::vm::vm_core::VirtualMachine;
 use cairo_vm::vm::errors::hint_errors::HintError::CustomHint;
 
 use cheatnet::cheatcodes::EnhancedHintError;
-use cheatnet::execution::cheatable_syscall_handler::SyscallSelector;
 use cheatnet::execution::contract_execution_syscall_handler::ContractExecutionSyscallHandler;
-use futures::io::SeeKRelative;
 
 use crate::forge_runtime_extension::TestExecutionState;
 
@@ -184,12 +180,6 @@ pub enum CheatcodeHadlingResult {
     Result(()), // TODO now use buffer later rewrite to return vector
 }
 
-// system: &ResOperand,
-// vm: &mut VirtualMachine,
-// exec_scopes: &mut ExecutionScopes,
-// hint_data: &Box<dyn Any>,
-// constants: &HashMap<String, Felt252>,
-// cheatable_syscall_handler: &mut CheatableSyscallHandler,
 
 pub trait ExtensionLogic  {
     type Runtime : HintProcessorLogic;

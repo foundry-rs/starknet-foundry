@@ -36,7 +36,7 @@ use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{casm_run::cell_ref_to_relocatable, insert_value_to_cellref};
 use starknet_api::core::ContractAddress;
 
-use crate::runtime::{RuntimeExtension, ExtensionLogic, CheatcodeHadlingResult, SyscallHandlingResult};
+use crate::runtime::{RuntimeExtension, ExtensionLogic, CheatcodeHadlingResult, SyscallHandlingResult, RegisteredExtension};
 use crate::forge_runtime_extension::file_operations::string_into_felt;
 use cairo_lang_starknet::contract::starknet_keccak;
 use cairo_vm::vm::errors::hint_errors::HintError::CustomHint;
@@ -49,6 +49,7 @@ use starknet::signers::SigningKey;
 
 mod file_operations;
 
+// impl<'a> RegisteredExtension for RuntimeExtension<TestExecutionState, ContractExecutionSyscallHandler<'a>> {}
 
 // This runtime extenxion provides an implementation logic for functions from snforge_std library.
 impl<'a> ExtensionLogic for RuntimeExtension<TestExecutionState, ContractExecutionSyscallHandler<'a>> {
@@ -113,17 +114,17 @@ impl<'a> ExtensionLogic for RuntimeExtension<TestExecutionState, ContractExecuti
                 let (target, _) = deserialize_cheat_target(&inputs[..inputs.len() - 1]);
                 let sequencer_address = inputs.last().unwrap().to_contract_address();
 
-                self.child
+                self.extended_runtime
                     .child
                     .cheatnet_state
                     .start_elect(target, sequencer_address);
-                Ok(())
+                Ok(CheatcodeHadlingResult::Result(()))
             }
             "stop_elect" => {
                 let (target, _) = deserialize_cheat_target(&inputs);
 
-                self.child.child.cheatnet_state.stop_elect(target);
-                Ok(())
+                self.extended_runtime.child.cheatnet_state.stop_elect(target);
+                Ok(CheatcodeHadlingResult::Result(()))
             }
             "start_prank" => {
                 let (target, _) = deserialize_cheat_target(&inputs[..inputs.len() - 1]);
