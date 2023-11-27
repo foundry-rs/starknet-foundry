@@ -1,4 +1,3 @@
-use std::any::Any;
 use std::collections::HashMap;
 use std::convert::Into;
 use std::path::PathBuf;
@@ -13,14 +12,12 @@ use blockifier::execution::syscalls::{
     SyscallRequest, SyscallResponse, SyscallResponseWrapper, SyscallResult,
 };
 use cairo_felt::Felt252;
-use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
-use cairo_vm::types::exec_scope::ExecutionScopes;
 use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use cheatnet::cheatcodes::deploy::{deploy, deploy_at, DeployCallPayload};
 use cheatnet::cheatcodes::{CheatcodeError, EnhancedHintError};
-use cheatnet::execution::cheatable_syscall_handler::{CheatableSyscallHandler, SyscallSelector};
+use cheatnet::execution::cheatable_syscall_handler::CheatableSyscallHandler;
 use cheatnet::rpc::{call_contract, CallContractFailure, CallContractOutput, CallContractResult};
 use cheatnet::state::{BlockifierState, CheatTarget, CheatnetState};
 use conversions::StarknetConversions;
@@ -49,7 +46,7 @@ use starknet::signers::SigningKey;
 
 mod file_operations;
 
-// impl<'a> RegisteredExtension for RuntimeExtension<TestExecutionState, ContractExecutionSyscallHandler<'a>> {}
+impl<'a> RegisteredExtension for RuntimeExtension<TestExecutionState, ContractExecutionSyscallHandler<'a>> {}
 
 // This runtime extenxion provides an implementation logic for functions from snforge_std library.
 impl<'a> ExtensionLogic for RuntimeExtension<TestExecutionState, ContractExecutionSyscallHandler<'a>> {
@@ -343,10 +340,6 @@ impl<'a> ExtensionLogic for RuntimeExtension<TestExecutionState, ContractExecuti
                 let contract_address = inputs[0].to_contract_address();
                 let function_name = inputs[1].clone();
                 let from_address = inputs[2].clone();
-                let payload_length: usize = inputs[3]
-                    .clone()
-                    .to_usize()
-                    .expect("Payload length is expected to fit into usize type");
 
                 let payload = Vec::from(&inputs[4..inputs.len()]);
 
@@ -496,9 +489,6 @@ impl<'a> ExtensionLogic for RuntimeExtension<TestExecutionState, ContractExecuti
         &mut self, 
         system: &ResOperand,
         vm: &mut VirtualMachine,
-        exec_scopes: &mut ExecutionScopes,
-        hint_data: &Box<dyn Any>,
-        constants: &HashMap<String, Felt252>,
     ) -> Result<SyscallHandlingResult, HintError> {
         let (cell, offset) = extract_buffer(system);
         let system_ptr = get_ptr(vm, cell, &offset)?;

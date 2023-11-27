@@ -21,9 +21,6 @@ use cairo_vm::vm::vm_core::VirtualMachine;
 use cairo_vm::vm::errors::hint_errors::HintError::CustomHint;
 
 use cheatnet::cheatcodes::EnhancedHintError;
-use cheatnet::execution::contract_execution_syscall_handler::ContractExecutionSyscallHandler;
-
-use crate::forge_runtime_extension::TestExecutionState;
 
 pub struct StarknetRuntime<'a> {
     pub hint_handler: SyscallHintProcessor<'a>,
@@ -76,13 +73,8 @@ pub struct RuntimeExtension<ExtensionState, Runtime: HintProcessor> {
     pub extended_runtime: Runtime,
 }
 
+pub trait RegisteredExtension: ExtensionLogic {}  
 
-
-pub trait RegisteredExtension: ExtensionLogic {
-
-}  
-
-impl<'a> RegisteredExtension for RuntimeExtension<TestExecutionState, ContractExecutionSyscallHandler<'a>> {}
 
 // Required to implement the foreign trait
 pub struct ExtendedRuntime<Extension> (pub Extension);
@@ -127,7 +119,7 @@ impl<Extension: RegisteredExtension> HintProcessorLogic for ExtendedRuntime<Exte
         }
         if let Some(Hint::Starknet(StarknetHint::SystemCall { system })) = maybe_extended_hint {
             // TODO move selector parsing logic here
-            let res = match self.0.override_system_call(system, vm, exec_scopes, hint_data, constants)? {
+            let res = match self.0.override_system_call(system, vm)? {
                 SyscallHandlingResult::Forward => self.0.get_extended_runtime_mut().execute_hint(vm, exec_scopes, hint_data, constants)?,
                 _ => ()
             };
@@ -192,18 +184,15 @@ pub trait ExtensionLogic  {
         &mut self, 
         system: &ResOperand,
         vm: &mut VirtualMachine,
-        exec_scopes: &mut ExecutionScopes,
-        hint_data: &Box<dyn Any>,
-        constants: &HashMap<String, Felt252>,
 ) -> Result<SyscallHandlingResult, HintError>; 
     
     // TODO remove vm, output from this signature, make it return Felt252
     fn handle_cheatcode(
         &mut self,
-        _selector: &str,
-        _inputs: Vec<Felt252>,
-        _vm: &mut VirtualMachine,
-        _output_start: &CellRef,
-        _output_end: &CellRef
+        selector: &str,
+        inputs: Vec<Felt252>,
+        vm: &mut VirtualMachine,
+        output_start: &CellRef,
+        output_end: &CellRef
     ) -> Result<CheatcodeHadlingResult, EnhancedHintError>;
 }
