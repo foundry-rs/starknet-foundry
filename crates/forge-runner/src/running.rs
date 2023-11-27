@@ -8,8 +8,7 @@ use blockifier::execution::entry_point::{
 };
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
-use blockifier::fee::gas_usage::get_onchain_data_segment_length;
-use blockifier::state::cached_state::{CachedState, StateChangesCount};
+use blockifier::state::cached_state::CachedState;
 use blockifier::state::state_api::State;
 use cairo_felt::Felt252;
 use cairo_vm::serde::deserialize_program::HintParams;
@@ -17,7 +16,7 @@ use cairo_vm::types::relocatable::Relocatable;
 use cheatnet::execution::cheatable_syscall_handler::CheatableSyscallHandler;
 use itertools::chain;
 
-use crate::gas::gas_from_execution_resources;
+use crate::gas::gas_from_execution_resources_and_state_change;
 use crate::sierra_casm_runner::SierraCasmRunner;
 use crate::test_case_summary::TestCaseSummary;
 use crate::test_execution_syscall_handler::{TestExecutionState, TestExecutionSyscallHandler};
@@ -297,16 +296,10 @@ pub fn run_test_case(
         .block_context
         .clone();
 
-    let state_change = blockifier_state
-        .get_actual_state_changes_for_fee_charge(ContractAddress::from(1_u8), None)
-        .unwrap();
-    let onchain_data_segment_len =
-        get_onchain_data_segment_length(StateChangesCount::from(&state_change));
-
-    let gas = gas_from_execution_resources(
+    let gas = gas_from_execution_resources_and_state_change(
         block_context,
+        &mut blockifier_state,
         &all_execution_resources,
-        onchain_data_segment_len,
     );
 
     Ok(RunResultWithInfo {

@@ -2,30 +2,40 @@ use std::collections::HashMap;
 
 use blockifier::fee::eth_gas_constants;
 use blockifier::fee::fee_utils::calculate_tx_l1_gas_usage;
+use blockifier::fee::gas_usage::get_onchain_data_segment_length;
 use blockifier::fee::os_resources::OS_RESOURCES;
 use blockifier::fee::os_usage::get_additional_os_resources;
+use blockifier::state::cached_state::{CachedState, StateChangesCount};
 use blockifier::transaction::transaction_types::TransactionType;
 use blockifier::{
     abi::constants, block_context::BlockContext, execution::entry_point::ExecutionResources,
     transaction::objects::ResourcesMapping,
 };
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources as VmExecutionResources;
+use cheatnet::state::ExtendedStateReader;
+use starknet_api::core::ContractAddress;
 
 #[must_use]
-pub fn gas_from_execution_resources(
+pub fn gas_from_execution_resources_and_state_change(
     block_context: &BlockContext,
+    state: &mut CachedState<ExtendedStateReader>,
     resources: &ExecutionResources,
-    onchain_data_segment_len: usize,
 ) -> u128 {
     let total_vm_usage = get_total_vm_usage(resources);
+    let onchain_data_segment_len = get_onchain_data_segment_length(StateChangesCount::from(
+        &state
+            .get_actual_state_changes_for_fee_charge(ContractAddress::from(1_u8), None)
+            .unwrap(),
+    ));
+
     let resource_mapping =
-        vm_execution_resources_to_resource_mapping(&total_vm_usage, onchain_data_segment_len);
+        used_resources_to_resource_mapping(&total_vm_usage, onchain_data_segment_len);
     calculate_tx_l1_gas_usage(&resource_mapping, block_context)
         .expect("Calculating gas failed, some resources were not included.")
 }
 
 #[must_use]
-fn vm_execution_resources_to_resource_mapping(
+fn used_resources_to_resource_mapping(
     execution_resources: &VmExecutionResources,
     onchain_data_segment_len: usize,
 ) -> ResourcesMapping {
