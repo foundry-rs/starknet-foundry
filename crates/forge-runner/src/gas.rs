@@ -13,7 +13,6 @@ use blockifier::{
 };
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources as VmExecutionResources;
 use cheatnet::state::ExtendedStateReader;
-use starknet_api::core::ContractAddress;
 
 #[must_use]
 pub fn gas_from_execution_resources_and_state_change(
