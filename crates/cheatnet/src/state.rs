@@ -223,6 +223,8 @@ pub struct CheatnetState {
     pub global_prank: Option<ContractAddress>,
     pub warped_contracts: HashMap<ContractAddress, CheatStatus<Felt252>>,
     pub global_warp: Option<Felt252>,
+    pub elected_contracts: HashMap<ContractAddress, CheatStatus<ContractAddress>>,
+    pub global_elect: Option<ContractAddress>,
     pub mocked_functions: HashMap<ContractAddress, HashMap<EntryPointSelector, Vec<StarkFelt>>>,
     pub spoofed_contracts: HashMap<ContractAddress, CheatStatus<TxInfoMock>>,
     pub global_spoof: Option<TxInfoMock>,
@@ -258,6 +260,12 @@ impl CheatnetState {
     }
 
     #[must_use]
+    pub fn address_is_elected(&self, contract_address: &ContractAddress) -> bool {
+        self.get_cheated_sequencer_address(contract_address)
+            .is_some()
+    }
+
+    #[must_use]
     pub fn address_is_spoofed(&self, contract_address: &ContractAddress) -> bool {
         self.get_cheated_tx_info(contract_address).is_some()
     }
@@ -270,6 +278,14 @@ impl CheatnetState {
     #[must_use]
     pub fn get_cheated_block_timestamp(&self, address: &ContractAddress) -> Option<Felt252> {
         get_cheat_for_contract(&self.global_warp, &self.warped_contracts, address)
+    }
+
+    #[must_use]
+    pub fn get_cheated_sequencer_address(
+        &self,
+        address: &ContractAddress,
+    ) -> Option<ContractAddress> {
+        get_cheat_for_contract(&self.global_elect, &self.elected_contracts, address)
     }
 
     #[must_use]

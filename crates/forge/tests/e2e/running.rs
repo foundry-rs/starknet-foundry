@@ -415,6 +415,136 @@ fn with_include_ignored_flag_and_filter() {
 }
 
 #[test]
+fn with_rerun_failed_flag_without_cache() {
+    let temp = setup_package("simple_package");
+
+    let snapbox = test_runner();
+    let output = snapbox
+        .current_dir(&temp)
+        .arg("--rerun-failed")
+        .assert()
+        .code(1);
+
+    assert_stdout_contains!(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+        
+        
+        Collected 13 test(s) from simple_package package
+        Running 2 test(s) from src/
+        [PASS] simple_package::tests::test_fib
+        Running 11 test(s) from tests/
+        [PASS] tests::contract::call_and_invoke
+        [PASS] tests::ext_function_test::test_my_test
+
+        [PASS] tests::ext_function_test::test_simple
+        [PASS] tests::test_simple::test_simple
+        [PASS] tests::test_simple::test_simple2
+        [PASS] tests::test_simple::test_two
+        [PASS] tests::test_simple::test_two_and_two
+        [FAIL] tests::test_simple::test_failing
+
+        Failure data:
+            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+
+        [FAIL] tests::test_simple::test_another_failing
+
+        [PASS] tests::without_prefix::five
+        Failures:
+            tests::test_simple::test_failing
+            tests::test_simple::test_another_failing
+        [IGNORE] simple_package::tests::ignored_test
+        [IGNORE] tests::ext_function_test::ignored_test
+        Tests: 9 passed, 2 failed, 0 skipped, 2 ignored, 0 filtered out
+        Failure data:
+            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+
+        "}
+    );
+}
+
+#[test]
+fn with_rerun_failed_flag_and_name_filter() {
+    let temp = setup_package("simple_package");
+    let snapbox = test_runner();
+
+    snapbox.current_dir(&temp).assert().code(1);
+    let snapbox = test_runner();
+    let output = snapbox
+        .current_dir(&temp)
+        .arg("--rerun-failed")
+        .arg("test_another_failing")
+        .assert()
+        .code(1);
+
+    assert_stdout_contains!(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+        Collected 1 test(s) from simple_package package
+        Running 0 test(s) from src/
+        Running 1 test(s) from tests/
+        [FAIL] tests::test_simple::test_another_failing
+
+        Failure data:
+            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+
+        Tests: 0 passed, 1 failed, 0 skipped, 0 ignored, 12 filtered out
+
+        Failures:
+            tests::test_simple::test_another_failing
+
+        "}
+    );
+}
+
+#[test]
+fn with_rerun_failed_flag() {
+    let temp = setup_package("simple_package");
+    let snapbox = test_runner();
+
+    snapbox.current_dir(&temp).assert().code(1);
+    let snapbox = test_runner();
+    let output = snapbox
+        .current_dir(&temp)
+        .arg("--rerun-failed")
+        .assert()
+        .code(1);
+
+    assert_stdout_contains!(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+        Collected 2 test(s) from simple_package package
+        Running 0 test(s) from src/
+        Running 2 test(s) from tests/
+        [FAIL] tests::test_simple::test_another_failing
+
+        Failure data:
+            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+
+        [FAIL] tests::test_simple::test_failing
+
+        Failure data:
+            original value: [8111420071579136082810415440747], converted to a string: [failing check]
+
+        Tests: 0 passed, 2 failed, 0 skipped, 0 ignored, 11 filtered out
+
+        Failures:
+            tests::test_simple::test_another_failing
+            tests::test_simple::test_failing
+
+        "}
+    );
+}
+
+#[test]
 fn with_print() {
     let temp = setup_package("print_test");
     let snapbox = test_runner();

@@ -109,6 +109,22 @@ impl<'a> ExtensionLogic for RuntimeExtension<TestExecutionState, ContractExecuti
                 self.extended_runtime.child.cheatnet_state.stop_warp(target);
                 Ok(CheatcodeHadlingResult::Result(()))
             }
+            "start_elect" => {
+                let (target, _) = deserialize_cheat_target(&inputs[..inputs.len() - 1]);
+                let sequencer_address = inputs.last().unwrap().to_contract_address();
+
+                self.child
+                    .child
+                    .cheatnet_state
+                    .start_elect(target, sequencer_address);
+                Ok(())
+            }
+            "stop_elect" => {
+                let (target, _) = deserialize_cheat_target(&inputs);
+
+                self.child.child.cheatnet_state.stop_elect(target);
+                Ok(())
+            }
             "start_prank" => {
                 let (target, _) = deserialize_cheat_target(&inputs[..inputs.len() - 1]);
 

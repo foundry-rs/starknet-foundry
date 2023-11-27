@@ -1034,15 +1034,26 @@ dependencies = [
 
 [[package]]
 name = "cast"
-version = "0.10.2"
+version = "0.11.0"
 dependencies = [
  "anyhow",
+ "cairo-felt",
+ "cairo-lang-casm",
+ "cairo-lang-runner",
+ "cairo-lang-sierra",
+ "cairo-lang-sierra-to-casm",
+ "cairo-lang-utils",
+ "cairo-vm",
  "camino",
+ "cheatnet",
  "clap",
+ "conversions",
  "ctor",
  "dotenv",
  "fs_extra",
  "indoc",
+ "itertools 0.11.0",
+ "num-traits 0.2.17",
  "primitive-types",
  "project-root",
  "promptly",
@@ -1772,7 +1783,7 @@ checksum = "00b0228411908ca8685dba7fc2cdd70ec9990a6e753e89b6ac91a84c40fbaf4b"
 
 [[package]]
 name = "forge"
-version = "0.10.2"
+version = "0.11.0"
 dependencies = [
  "anyhow",
  "ark-ff",
@@ -1837,7 +1848,7 @@ dependencies = [
 
 [[package]]
 name = "forge_runner"
-version = "0.10.2"
+version = "0.11.0"
 dependencies = [
  "anyhow",
  "blockifier",
