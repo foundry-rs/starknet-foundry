@@ -16,8 +16,9 @@ use cairo_vm::types::relocatable::Relocatable;
 use cheatnet::execution::cheatable_syscall_handler::CheatableSyscallHandler;
 use itertools::chain;
 
+use crate::forge_runtime_extension::TestExecutionState;
+use crate::runtime::{ExtendedRuntime, RuntimeExtension};
 use crate::test_case_summary::TestCaseSummary;
-use crate::test_execution_syscall_handler::{TestExecutionState, TestExecutionSyscallHandler};
 use crate::{RunnerConfig, RunnerParams, TestCaseRunnable, ValidatedForkConfig, CACHE_DIR};
 use cairo_lang_casm::hints::Hint;
 use cairo_lang_casm::instructions::Instruction;
@@ -236,18 +237,22 @@ pub fn run_test_case(
     };
     let cheatable_syscall_handler =
         CheatableSyscallHandler::wrap(syscall_handler, &mut cheatnet_state);
+
     let contract_execution_syscall_handler =
         ContractExecutionSyscallHandler::wrap(cheatable_syscall_handler);
 
-    let mut test_execution_state = TestExecutionState {
-        environment_variables: &runner_params.environment_variables,
-        contracts: &runner_params.contracts,
+    let test_execution_state = TestExecutionState {
+        environment_variables: runner_params.environment_variables.clone(),
+        contracts: runner_params.contracts.clone(),
     };
-    let mut test_execution_syscall_handler = TestExecutionSyscallHandler::wrap(
-        contract_execution_syscall_handler,
-        &mut test_execution_state,
-        &string_to_hint,
-    );
+
+    let mut forge_runtime = ExtendedRuntime(RuntimeExtension::<
+        TestExecutionState,
+        ContractExecutionSyscallHandler,
+    > {
+        extended_runtime: contract_execution_syscall_handler,
+        extension_state: test_execution_state,
+    });
 
     let latest_block_number = if let Some(ValidatedForkConfig {
         url: _,
@@ -259,13 +264,8 @@ pub fn run_test_case(
         None
     };
 
-    let run_result = runner.run_function(
-        func,
-        &mut test_execution_syscall_handler,
-        hints_dict,
-        instructions,
-        builtins,
-    );
+    let run_result =
+        runner.run_function(func, &mut forge_runtime, hints_dict, instructions, builtins);
 
     Ok(RunResultWithInfo {
         run_result,

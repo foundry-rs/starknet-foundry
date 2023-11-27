@@ -1,9 +1,8 @@
-use std::any::Any;
 use std::collections::HashMap;
 use std::convert::Into;
 use std::path::PathBuf;
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result};
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::execution_utils::{
     felt_to_stark_felt, stark_felt_from_ptr, stark_felt_to_felt, ReadOnlySegment,
@@ -13,243 +12,88 @@ use blockifier::execution::syscalls::{
     SyscallRequest, SyscallResponse, SyscallResponseWrapper, SyscallResult,
 };
 use cairo_felt::Felt252;
-use cairo_vm::hint_processor::hint_processor_definition::HintProcessorLogic;
-use cairo_vm::hint_processor::hint_processor_definition::HintReference;
-use cairo_vm::serde::deserialize_program::ApTracking;
-use cairo_vm::types::exec_scope::ExecutionScopes;
 use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::errors::hint_errors::HintError;
-use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use cheatnet::cheatcodes::deploy::{deploy, deploy_at, DeployCallPayload};
 use cheatnet::cheatcodes::{CheatcodeError, EnhancedHintError};
 use cheatnet::execution::cheatable_syscall_handler::CheatableSyscallHandler;
 use cheatnet::rpc::{call_contract, CallContractFailure, CallContractOutput, CallContractResult};
 use cheatnet::state::{BlockifierState, CheatTarget, CheatnetState};
+use conversions::StarknetConversions;
 use num_traits::{One, ToPrimitive};
 use scarb_artifacts::StarknetContractArtifacts;
 use serde::Deserialize;
 
-use cairo_lang_casm::hints::{Hint, StarknetHint};
 use cairo_lang_casm::operand::{CellRef, ResOperand};
-use cairo_lang_runner::casm_run::{
-    extract_buffer, extract_relocatable, get_ptr, vm_get_range, MemBuffer,
-};
+use cairo_lang_runner::casm_run::{extract_buffer, get_ptr, MemBuffer};
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{casm_run::cell_ref_to_relocatable, insert_value_to_cellref};
 use starknet_api::core::ContractAddress;
 
-use crate::test_execution_syscall_handler::file_operations::string_into_felt;
+use crate::forge_runtime_extension::file_operations::string_into_felt;
+use crate::runtime::{
+    CheatcodeHadlingResult, ExtensionLogic, RegisteredExtension, RuntimeExtension,
+    SyscallHandlingResult,
+};
 use cairo_lang_starknet::contract::starknet_keccak;
-use cairo_lang_utils::bigint::BigIntAsHex;
 use cairo_vm::vm::errors::hint_errors::HintError::CustomHint;
-use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cheatnet::cheatcodes::spy_events::SpyTarget;
 use cheatnet::execution::cheated_syscalls::SingleSegmentResponse;
 use cheatnet::execution::contract_execution_syscall_handler::{
     print, ContractExecutionSyscallHandler,
 };
-use conversions::{FromConv, IntoConv};
 use starknet::signers::SigningKey;
-use starknet_api::hash::StarkFelt;
 
 mod file_operations;
 
-pub struct TestExecutionState<'a> {
-    pub environment_variables: &'a HashMap<String, String>,
-    pub contracts: &'a HashMap<String, StarknetContractArtifacts>,
+impl<'a> RegisteredExtension
+    for RuntimeExtension<TestExecutionState, ContractExecutionSyscallHandler<'a>>
+{
 }
 
-// This hint processor provides an implementation logic for functions from snforge_std library.
-// If cannot execute a hint it falls back to the CheatableSyscallHandler
-pub struct TestExecutionSyscallHandler<'a> {
-    pub child: ContractExecutionSyscallHandler<'a>,
-    pub test_execution_state: &'a mut TestExecutionState<'a>,
-    // we need to keep a copy of hints as SyscallHintProcessor keeps it as private
-    pub hints: &'a HashMap<String, Hint>,
-    pub run_resources: RunResources,
-}
+// This runtime extenxion provides an implementation logic for functions from snforge_std library.
+impl<'a> ExtensionLogic
+    for RuntimeExtension<TestExecutionState, ContractExecutionSyscallHandler<'a>>
+{
+    type Runtime = ContractExecutionSyscallHandler<'a>;
 
-impl<'a> TestExecutionSyscallHandler<'a> {
-    pub fn wrap(
-        child: ContractExecutionSyscallHandler<'a>,
-        test_execution_state: &'a mut TestExecutionState<'a>,
-        hints: &'a HashMap<String, Hint>,
-    ) -> Self {
-        TestExecutionSyscallHandler {
-            child,
-            test_execution_state,
-            hints,
-            run_resources: RunResources::default(),
-        }
-    }
-}
-
-// crates/blockifier/src/execution/syscalls/hint_processor.rs:472 (ResourceTracker for SyscallHintProcessor)
-impl ResourceTracker for TestExecutionSyscallHandler<'_> {
-    fn consumed(&self) -> bool {
-        self.child.child.child.context.vm_run_resources.consumed()
+    fn get_extended_runtime_mut(&mut self) -> &mut ContractExecutionSyscallHandler<'a> {
+        &mut self.extended_runtime
     }
 
-    fn consume_step(&mut self) {
-        self.child
-            .child
-            .child
-            .context
-            .vm_run_resources
-            .consume_step();
+    fn get_extended_runtime(&self) -> &ContractExecutionSyscallHandler<'a> {
+        &self.extended_runtime
     }
 
-    fn get_n_steps(&self) -> Option<usize> {
-        self.child
-            .child
-            .child
-            .context
-            .vm_run_resources
-            .get_n_steps()
-    }
-
-    fn run_resources(&self) -> &RunResources {
-        self.child
-            .child
-            .child
-            .context
-            .vm_run_resources
-            .run_resources()
-    }
-}
-
-impl HintProcessorLogic for TestExecutionSyscallHandler<'_> {
-    fn execute_hint(
+    #[allow(clippy::too_many_lines)]
+    fn handle_cheatcode(
         &mut self,
-        vm: &mut VirtualMachine,
-        exec_scopes: &mut ExecutionScopes,
-        hint_data: &Box<dyn Any>,
-        constants: &HashMap<String, Felt252>,
-    ) -> Result<(), HintError> {
-        let maybe_extended_hint = hint_data.downcast_ref::<Hint>();
-        if let Some(Hint::Starknet(StarknetHint::Cheatcode {
-            selector,
-            input_start,
-            input_end,
-            output_start,
-            output_end,
-        })) = maybe_extended_hint
-        {
-            return self.execute_cheatcode_hint(
-                vm,
-                exec_scopes,
-                selector,
-                input_start,
-                input_end,
-                output_start,
-                output_end,
-                self.test_execution_state.contracts,
-                self.test_execution_state.environment_variables,
-            );
-        }
-        if let Some(Hint::Starknet(StarknetHint::SystemCall { system })) = maybe_extended_hint {
-            return execute_syscall(
-                system,
-                vm,
-                exec_scopes,
-                hint_data,
-                constants,
-                &mut self.child.child,
-            );
-        }
-        self.child
-            .child
-            .execute_hint(vm, exec_scopes, hint_data, constants)
-    }
-
-    /// Trait function to store hint in the hint processor by string.
-    fn compile_hint(
-        &self,
-        hint_code: &str,
-        _ap_tracking_data: &ApTracking,
-        _reference_ids: &HashMap<String, usize>,
-        _references: &[HintReference],
-    ) -> Result<Box<dyn Any>, VirtualMachineError> {
-        Ok(Box::new(self.hints[hint_code].clone()))
-    }
-}
-
-impl TestExecutionSyscallHandler<'_> {
-    #[allow(clippy::trivially_copy_pass_by_ref, clippy::too_many_arguments)]
-    pub fn execute_cheatcode_hint(
-        &mut self,
-        vm: &mut VirtualMachine,
-        _exec_scopes: &mut ExecutionScopes,
-        selector: &BigIntAsHex,
-        input_start: &ResOperand,
-        input_end: &ResOperand,
-        output_start: &CellRef,
-        output_end: &CellRef,
-        contracts: &HashMap<String, StarknetContractArtifacts>,
-        environment_variables: &HashMap<String, String>,
-    ) -> Result<(), HintError> {
-        // Parse the selector.
-        let selector = &selector.value.to_bytes_be().1;
-        let selector = std::str::from_utf8(selector).map_err(|_| {
-            CustomHint(Box::from(
-                "Failed to parse the  cheatcode selector".to_string(),
-            ))
-        })?;
-
-        // Extract the inputs.
-        let input_start = extract_relocatable(vm, input_start)?;
-        let input_end = extract_relocatable(vm, input_end)?;
-        let inputs = vm_get_range(vm, input_start, input_end)
-            .map_err(|_| CustomHint(Box::from("Failed to read input data".to_string())))?;
-
-        self.match_cheatcode_by_selector(
-            vm,
-            selector,
-            inputs,
-            output_start,
-            output_end,
-            contracts,
-            environment_variables,
-        )
-        .map_err(Into::into)
-    }
-
-    #[allow(
-        unused,
-        clippy::too_many_lines,
-        clippy::trivially_copy_pass_by_ref,
-        clippy::too_many_arguments
-    )]
-    fn match_cheatcode_by_selector(
-        &mut self,
-        vm: &mut VirtualMachine,
         selector: &str,
         inputs: Vec<Felt252>,
+        vm: &mut VirtualMachine,
         output_start: &CellRef,
         output_end: &CellRef,
-        contracts: &HashMap<String, StarknetContractArtifacts>,
-        environment_variables: &HashMap<String, String>,
-    ) -> Result<(), EnhancedHintError> {
+    ) -> Result<CheatcodeHadlingResult, EnhancedHintError> {
         let mut buffer = MemBuffer::new_segment(vm);
         let result_start = buffer.ptr;
 
-        match selector {
+        let res = match selector {
             "start_roll" => {
                 let (target, _) = deserialize_cheat_target(&inputs[..inputs.len() - 1]);
                 let block_number = inputs.last().unwrap().clone();
 
-                self.child
+                self.extended_runtime
                     .child
                     .cheatnet_state
                     .start_roll(target, block_number);
-                Ok(())
+                Ok(CheatcodeHadlingResult::Result(()))
             }
             "stop_roll" => {
                 let (target, _) = deserialize_cheat_target(&inputs);
 
-                self.child.child.cheatnet_state.stop_roll(target);
-                Ok(())
+                self.extended_runtime.child.cheatnet_state.stop_roll(target);
+                Ok(CheatcodeHadlingResult::Result(()))
             }
             "start_warp" => {
                 // The last element in `inputs` should be the timestamp in all cases
@@ -257,55 +101,61 @@ impl TestExecutionSyscallHandler<'_> {
 
                 let (target, _) = deserialize_cheat_target(&inputs[..inputs.len() - 1]);
 
-                self.child
+                self.extended_runtime
                     .child
                     .cheatnet_state
                     .start_warp(target, warp_timestamp);
 
-                Ok(())
+                Ok(CheatcodeHadlingResult::Result(()))
             }
             "stop_warp" => {
                 let (target, _) = deserialize_cheat_target(&inputs);
 
-                self.child.child.cheatnet_state.stop_warp(target);
-                Ok(())
+                self.extended_runtime.child.cheatnet_state.stop_warp(target);
+                Ok(CheatcodeHadlingResult::Result(()))
             }
             "start_elect" => {
                 let (target, _) = deserialize_cheat_target(&inputs[..inputs.len() - 1]);
-                let sequencer_address = inputs.last().unwrap().clone().into_();
+                let sequencer_address = inputs.last().unwrap().to_contract_address();
 
-                self.child
+                self.extended_runtime
                     .child
                     .cheatnet_state
                     .start_elect(target, sequencer_address);
-                Ok(())
+                Ok(CheatcodeHadlingResult::Result(()))
             }
             "stop_elect" => {
                 let (target, _) = deserialize_cheat_target(&inputs);
 
-                self.child.child.cheatnet_state.stop_elect(target);
-                Ok(())
+                self.extended_runtime
+                    .child
+                    .cheatnet_state
+                    .stop_elect(target);
+                Ok(CheatcodeHadlingResult::Result(()))
             }
             "start_prank" => {
                 let (target, _) = deserialize_cheat_target(&inputs[..inputs.len() - 1]);
 
                 // The last element in `inputs` should be the contract address in all cases
-                let caller_address = inputs.last().unwrap().clone().into_();
+                let caller_address = inputs.last().unwrap().to_contract_address();
 
-                self.child
+                self.extended_runtime
                     .child
                     .cheatnet_state
                     .start_prank(target, caller_address);
-                Ok(())
+                Ok(CheatcodeHadlingResult::Result(()))
             }
             "stop_prank" => {
                 let (target, _) = deserialize_cheat_target(&inputs);
 
-                self.child.child.cheatnet_state.stop_prank(target);
-                Ok(())
+                self.extended_runtime
+                    .child
+                    .cheatnet_state
+                    .stop_prank(target);
+                Ok(CheatcodeHadlingResult::Result(()))
             }
             "start_mock_call" => {
-                let contract_address = inputs[0].clone().into_();
+                let contract_address = inputs[0].to_contract_address();
                 let function_name = inputs[1].clone();
 
                 let ret_data_length = inputs[2]
@@ -319,22 +169,22 @@ impl TestExecutionSyscallHandler<'_> {
                     .cloned()
                     .collect::<Vec<_>>();
 
-                self.child.child.cheatnet_state.start_mock_call(
+                self.extended_runtime.child.cheatnet_state.start_mock_call(
                     contract_address,
                     &function_name,
                     &ret_data,
                 );
-                Ok(())
+                Ok(CheatcodeHadlingResult::Result(()))
             }
             "stop_mock_call" => {
-                let contract_address = inputs[0].clone().into_();
+                let contract_address = inputs[0].to_contract_address();
                 let function_name = inputs[1].clone();
 
-                self.child
+                self.extended_runtime
                     .child
                     .cheatnet_state
                     .stop_mock_call(contract_address, &function_name);
-                Ok(())
+                Ok(CheatcodeHadlingResult::Result(()))
             }
             "start_spoof" => {
                 let (target, inputs_start) = deserialize_cheat_target(&inputs);
@@ -366,7 +216,7 @@ impl TestExecutionSyscallHandler<'_> {
                     Vec::from(&inputs[inputs_start + 14..(inputs_start + 14 + signature_len)])
                 });
 
-                self.child.child.cheatnet_state.start_spoof(
+                self.extended_runtime.child.cheatnet_state.start_spoof(
                     target,
                     version,
                     account_contract_address,
@@ -376,19 +226,23 @@ impl TestExecutionSyscallHandler<'_> {
                     chain_id,
                     nonce,
                 );
-                Ok(())
+                Ok(CheatcodeHadlingResult::Result(()))
             }
             "stop_spoof" => {
                 let (target, _) = deserialize_cheat_target(&inputs);
 
-                self.child.child.cheatnet_state.stop_spoof(target);
-                Ok(())
+                self.extended_runtime
+                    .child
+                    .cheatnet_state
+                    .stop_spoof(target);
+                Ok(CheatcodeHadlingResult::Result(()))
             }
             "declare" => {
                 let contract_name = inputs[0].clone();
-                let mut blockifier_state = BlockifierState::from(self.child.child.child.state);
+                let mut blockifier_state =
+                    BlockifierState::from(self.extended_runtime.child.child.state);
 
-                match blockifier_state.declare(&contract_name, contracts) {
+                match blockifier_state.declare(&contract_name, &self.extension_state.contracts) {
                     Ok(class_hash) => {
                         let felt_class_hash = stark_felt_to_felt(class_hash.0);
 
@@ -398,7 +252,7 @@ impl TestExecutionSyscallHandler<'_> {
                         buffer
                             .write(felt_class_hash)
                             .expect("Failed to insert declared contract class hash");
-                        Ok(())
+                        Ok(CheatcodeHadlingResult::Result(()))
                     }
                     Err(CheatcodeError::Recoverable(_)) => {
                         panic!("Declare should not fail recoverably!")
@@ -407,15 +261,16 @@ impl TestExecutionSyscallHandler<'_> {
                 }
             }
             "deploy" => {
-                let class_hash = inputs[0].clone().into_();
+                let class_hash = inputs[0].to_class_hash();
                 let calldata_length = inputs[1].to_usize().unwrap();
                 let calldata = Vec::from(&inputs[2..(2 + calldata_length)]);
-                let mut blockifier_state = BlockifierState::from(self.child.child.child.state);
+                let mut blockifier_state =
+                    BlockifierState::from(self.extended_runtime.child.child.state);
 
                 handle_deploy_result(
                     deploy(
                         &mut blockifier_state,
-                        self.child.child.cheatnet_state,
+                        self.extended_runtime.child.cheatnet_state,
                         &class_hash,
                         &calldata,
                     ),
@@ -423,17 +278,18 @@ impl TestExecutionSyscallHandler<'_> {
                 )
             }
             "deploy_at" => {
-                let class_hash = inputs[0].clone().into_();
+                let class_hash = inputs[0].to_class_hash();
                 let calldata_length = inputs[1].to_usize().unwrap();
                 let calldata = Vec::from(&inputs[2..(2 + calldata_length)]);
-                let contract_address = inputs[2 + calldata_length].clone().into_();
+                let contract_address = inputs[2 + calldata_length].to_contract_address();
 
-                let mut blockifier_state = BlockifierState::from(self.child.child.child.state);
+                let mut blockifier_state =
+                    BlockifierState::from(self.extended_runtime.child.child.state);
 
                 handle_deploy_result(
                     deploy_at(
                         &mut blockifier_state,
-                        self.child.child.cheatnet_state,
+                        self.extended_runtime.child.cheatnet_state,
                         &class_hash,
                         &calldata,
                         contract_address,
@@ -443,25 +299,25 @@ impl TestExecutionSyscallHandler<'_> {
             }
             "print" => {
                 print(inputs);
-                Ok(())
+                Ok(CheatcodeHadlingResult::Result(()))
             }
             "precalculate_address" => {
-                let class_hash = inputs[0].clone().into_();
+                let class_hash = inputs[0].to_class_hash();
                 let calldata_length = inputs[1].to_usize().unwrap();
                 let calldata = Vec::from(&inputs[2..(2 + calldata_length)]);
 
                 let contract_address = self
-                    .child
+                    .extended_runtime
                     .child
                     .cheatnet_state
                     .precalculate_address(&class_hash, &calldata);
 
-                let felt_contract_address: Felt252 = contract_address.into_();
+                let felt_contract_address = contract_address.to_felt252();
                 buffer
                     .write(felt_contract_address)
                     .expect("Failed to insert a precalculated contract address");
 
-                Ok(())
+                Ok(CheatcodeHadlingResult::Result(()))
             }
             "var" => {
                 let name = inputs[0].clone();
@@ -469,7 +325,9 @@ impl TestExecutionSyscallHandler<'_> {
                     panic!("Failed to parse var argument = {name} as short string")
                 });
 
-                let env_var = environment_variables
+                let env_var = self
+                    .extension_state
+                    .environment_variables
                     .get(&name)
                     .with_context(|| format!("Failed to read from env var = {name}"))?;
 
@@ -479,12 +337,13 @@ impl TestExecutionSyscallHandler<'_> {
                 buffer
                     .write(parsed_env_var)
                     .expect("Failed to insert parsed env var");
-                Ok(())
+                Ok(CheatcodeHadlingResult::Result(()))
             }
             "get_class_hash" => {
-                let contract_address = inputs[0].clone().into_();
+                let contract_address = inputs[0].to_contract_address();
 
-                let mut blockifier_state = BlockifierState::from(self.child.child.child.state);
+                let mut blockifier_state =
+                    BlockifierState::from(self.extended_runtime.child.child.state);
 
                 match blockifier_state.get_class_hash(contract_address) {
                     Ok(class_hash) => {
@@ -493,28 +352,25 @@ impl TestExecutionSyscallHandler<'_> {
                         buffer
                             .write(felt_class_hash)
                             .expect("Failed to insert contract class hash");
-                        Ok(())
+                        Ok(CheatcodeHadlingResult::Result(()))
                     }
                     Err(CheatcodeError::Recoverable(_)) => unreachable!(),
                     Err(CheatcodeError::Unrecoverable(err)) => Err(err),
                 }
             }
             "l1_handler_execute" => {
-                let contract_address = inputs[0].clone().into_();
+                let contract_address = inputs[0].to_contract_address();
                 let function_name = inputs[1].clone();
                 let from_address = inputs[2].clone();
-                let payload_length: usize = inputs[3]
-                    .clone()
-                    .to_usize()
-                    .expect("Payload length is expected to fit into usize type");
 
                 let payload = Vec::from(&inputs[4..inputs.len()]);
 
-                let mut blockifier_state = BlockifierState::from(self.child.child.child.state);
+                let mut blockifier_state =
+                    BlockifierState::from(self.extended_runtime.child.child.state);
 
                 match blockifier_state
                     .l1_handler_execute(
-                        self.child.child.cheatnet_state,
+                        self.extended_runtime.child.cheatnet_state,
                         contract_address,
                         &function_name,
                         &from_address,
@@ -523,12 +379,12 @@ impl TestExecutionSyscallHandler<'_> {
                     .result
                 {
                     CallContractResult::Success { .. } => {
-                        buffer.write(0);
-                        Ok(())
+                        buffer.write(0).expect("Failed to write zero");
+                        Ok(CheatcodeHadlingResult::Result(()))
                     }
                     CallContractResult::Failure(CallContractFailure::Panic { panic_data }) => {
                         write_cheatcode_panic(&mut buffer, &panic_data);
-                        Ok(())
+                        Ok(CheatcodeHadlingResult::Result(()))
                     }
                     CallContractResult::Failure(CallContractFailure::Error { msg }) => Err(
                         EnhancedHintError::from(HintError::CustomHint(Box::from(msg))),
@@ -541,7 +397,7 @@ impl TestExecutionSyscallHandler<'_> {
                 buffer
                     .write_data(parsed_content.iter())
                     .expect("Failed to insert file content to memory");
-                Ok(())
+                Ok(CheatcodeHadlingResult::Result(()))
             }
             "read_json" => {
                 let file_path = inputs[0].clone();
@@ -549,34 +405,38 @@ impl TestExecutionSyscallHandler<'_> {
                 buffer
                     .write_data(parsed_content.iter())
                     .expect("Failed to insert file content to memory");
-                Ok(())
+                Ok(CheatcodeHadlingResult::Result(()))
             }
             "spy_events" => {
                 let spy_on = match inputs.len() {
                     0 => unreachable!("Serialized enum should always be longer than 0"),
                     1 => SpyTarget::All,
-                    2 => SpyTarget::One(inputs[1].clone().into_()),
+                    2 => SpyTarget::One(inputs[1].to_contract_address()),
                     _ => {
                         let addresses_length = inputs[1].to_usize().unwrap();
                         let addresses = Vec::from(&inputs[2..(2 + addresses_length)])
                             .iter()
-                            .map(|el| ContractAddress::from_(el.clone()))
+                            .map(Felt252::to_contract_address)
                             .collect();
 
                         SpyTarget::Multiple(addresses)
                     }
                 };
 
-                let id = self.child.child.cheatnet_state.spy_events(spy_on);
+                let id = self
+                    .extended_runtime
+                    .child
+                    .cheatnet_state
+                    .spy_events(spy_on);
                 buffer
                     .write(Felt252::from(id))
                     .expect("Failed to insert spy id");
-                Ok(())
+                Ok(CheatcodeHadlingResult::Result(()))
             }
             "fetch_events" => {
                 let id = &inputs[0];
                 let (emitted_events_len, serialized_events) =
-                    self.child.child.cheatnet_state.fetch_events(id);
+                    self.extended_runtime.child.cheatnet_state.fetch_events(id);
 
                 buffer
                     .write(Felt252::from(emitted_events_len))
@@ -586,7 +446,7 @@ impl TestExecutionSyscallHandler<'_> {
                         .write(felt)
                         .expect("Failed to insert serialized events");
                 }
-                Ok(())
+                Ok(CheatcodeHadlingResult::Result(()))
             }
             "event_name_hash" => {
                 let name = inputs[0].clone();
@@ -595,70 +455,121 @@ impl TestExecutionSyscallHandler<'_> {
                 buffer
                     .write(Felt252::from(hash))
                     .expect("Failed to insert event name hash");
-                Ok(())
+                Ok(CheatcodeHadlingResult::Result(()))
             }
             "generate_ecdsa_keys" => {
                 let key_pair = SigningKey::from_random();
 
                 buffer
-                    .write(Felt252::from_(key_pair.secret_scalar()))
+                    .write(key_pair.secret_scalar().to_felt252())
                     .expect("Failed to insert private key");
                 buffer
-                    .write(Felt252::from_(key_pair.verifying_key().scalar()))
+                    .write(key_pair.verifying_key().scalar().to_felt252())
                     .expect("Failed to insert public key");
-                Ok(())
+                Ok(CheatcodeHadlingResult::Result(()))
             }
             "get_public_key" => {
                 let private_key = inputs[0].clone();
-                let key_pair = SigningKey::from_secret_scalar(private_key.into_());
+                let key_pair = SigningKey::from_secret_scalar(private_key.to_field_element());
 
                 buffer
-                    .write(Felt252::from_(key_pair.verifying_key().scalar()))
+                    .write(key_pair.verifying_key().scalar().to_felt252())
                     .expect("Failed to insert public key");
 
-                Ok(())
+                Ok(CheatcodeHadlingResult::Result(()))
             }
             "ecdsa_sign_message" => {
                 let private_key = inputs[0].clone();
                 let message_hash = inputs[1].clone();
 
-                let key_pair = SigningKey::from_secret_scalar(private_key.into_());
+                let key_pair = SigningKey::from_secret_scalar(private_key.to_field_element());
 
-                if let Ok(signature) = key_pair.sign(&message_hash.into_()) {
+                if let Ok(signature) = key_pair.sign(&message_hash.to_field_element()) {
                     buffer.write(0).expect("Failed to insert exit code");
                     buffer
-                        .write(Felt252::from_(signature.r))
+                        .write(signature.r.to_felt252())
                         .expect("Failed to insert signature r");
                     buffer
-                        .write(Felt252::from_(signature.s))
+                        .write(signature.s.to_felt252())
                         .expect("Failed to insert signature s");
                 } else {
                     buffer.write(1).expect("Failed to insert exit code");
                     buffer
-                        .write(Felt252::from_("message_hash out of range".to_string()))
+                        .write("message_hash out of range".to_string().to_felt252())
                         .expect("Failed to insert error message");
                 }
 
-                Ok(())
+                Ok(CheatcodeHadlingResult::Result(()))
             }
-            _ => Err(anyhow!("Unknown cheatcode selector: {selector}")).map_err(Into::into),
+            _ => Ok(CheatcodeHadlingResult::Forward),
         }?;
 
         let result_end = buffer.ptr;
         insert_value_to_cellref!(vm, output_start, result_start)?;
         insert_value_to_cellref!(vm, output_end, result_end)?;
-
-        Ok(())
+        Ok(res)
     }
+
+    fn override_system_call(
+        &mut self,
+        system: &ResOperand,
+        vm: &mut VirtualMachine,
+    ) -> Result<SyscallHandlingResult, HintError> {
+        let (cell, offset) = extract_buffer(system);
+        let system_ptr = get_ptr(vm, cell, &offset)?;
+
+        self.get_extended_runtime_mut()
+            .child
+            .child
+            .verify_syscall_ptr(system_ptr)?;
+
+        // We peek into memory to check the selector
+        let selector = DeprecatedSyscallSelector::try_from(felt_to_stark_felt(
+            &vm.get_integer(self.get_extended_runtime_mut().child.child.syscall_ptr)
+                .unwrap(),
+        ))?;
+
+        match selector {
+            DeprecatedSyscallSelector::CallContract => {
+                let call_args = CallContractArgs::read(
+                    vm,
+                    &mut self.get_extended_runtime_mut().child.child.syscall_ptr,
+                )?;
+                let cheatable_syscall_handler = &mut self.get_extended_runtime_mut().child;
+                let mut blockifier_state =
+                    BlockifierState::from(cheatable_syscall_handler.child.state);
+                let cheatnet_state: &mut _ = cheatable_syscall_handler.cheatnet_state;
+
+                let call_result =
+                    execute_call_contract(&mut blockifier_state, cheatnet_state, &call_args);
+                write_call_contract_response(
+                    &mut self.get_extended_runtime_mut().child,
+                    vm,
+                    &call_args,
+                    call_result,
+                )?;
+                Ok(SyscallHandlingResult::Result(()))
+            }
+            DeprecatedSyscallSelector::ReplaceClass => Err(HintError::CustomHint(Box::from(
+                "Replace class can't be used in tests".to_string(),
+            ))),
+            _ => Ok(SyscallHandlingResult::Forward),
+        }
+    }
+}
+
+pub struct TestExecutionState {
+    pub environment_variables: HashMap<String, String>,
+    pub contracts: HashMap<String, StarknetContractArtifacts>,
 }
 
 fn handle_deploy_result(
     deploy_result: Result<DeployCallPayload, CheatcodeError>,
     buffer: &mut MemBuffer,
-) -> Result<(), EnhancedHintError> {
+) -> Result<CheatcodeHadlingResult, EnhancedHintError> {
     match deploy_result {
         Ok(deploy_payload) => {
-            let felt_contract_address = Felt252::from_(deploy_payload.contract_address);
+            let felt_contract_address: Felt252 = deploy_payload.contract_address.to_felt252();
 
             buffer
                 .write(Felt252::from(0))
@@ -666,11 +577,11 @@ fn handle_deploy_result(
             buffer
                 .write(felt_contract_address)
                 .expect("Failed to insert deployed contract address");
-            Ok(())
+            Ok(CheatcodeHadlingResult::Result(()))
         }
         Err(CheatcodeError::Recoverable(panic_data)) => {
             write_cheatcode_panic(buffer, &panic_data);
-            Ok(())
+            Ok(CheatcodeHadlingResult::Result(()))
         }
         Err(CheatcodeError::Unrecoverable(err)) => Err(err),
     }
@@ -680,12 +591,12 @@ fn deserialize_cheat_target(inputs: &[Felt252]) -> (CheatTarget, usize) {
     // First element encodes the variant of CheatTarget
     match inputs[0].to_u8() {
         Some(0) => (CheatTarget::All, 1),
-        Some(1) => (CheatTarget::One(inputs[1].clone().into_()), 2),
+        Some(1) => (CheatTarget::One(inputs[1].to_contract_address()), 2),
         Some(2) => {
             let n_targets = inputs[1].to_usize().unwrap();
             let contract_addresses: Vec<_> = inputs[2..2 + n_targets]
                 .iter()
-                .map(|el| ContractAddress::from_(el.clone()))
+                .map(Felt252::to_contract_address)
                 .collect();
             (CheatTarget::Multiple(contract_addresses), 2 + n_targets)
         }
@@ -716,48 +627,6 @@ struct ScarbStarknetContractArtifact {
     casm: Option<PathBuf>,
 }
 
-fn execute_syscall(
-    system: &ResOperand,
-    vm: &mut VirtualMachine,
-    exec_scopes: &mut ExecutionScopes,
-    hint_data: &Box<dyn Any>,
-    constants: &HashMap<String, Felt252>,
-    cheatable_syscall_handler: &mut CheatableSyscallHandler,
-) -> Result<(), HintError> {
-    let (cell, offset) = extract_buffer(system);
-    let system_ptr = get_ptr(vm, cell, &offset)?;
-
-    cheatable_syscall_handler
-        .child
-        .verify_syscall_ptr(system_ptr)?;
-
-    // We peek into memory to check the selector
-    let selector = DeprecatedSyscallSelector::try_from(felt_to_stark_felt(
-        &vm.get_integer(cheatable_syscall_handler.child.syscall_ptr)
-            .unwrap(),
-    ))?;
-
-    match selector {
-        DeprecatedSyscallSelector::CallContract => {
-            let call_args =
-                CallContractArgs::read(vm, &mut cheatable_syscall_handler.child.syscall_ptr)?;
-
-            let mut blockifier_state = BlockifierState::from(cheatable_syscall_handler.child.state);
-            let call_result = execute_call_contract(
-                &mut blockifier_state,
-                cheatable_syscall_handler.cheatnet_state,
-                &call_args,
-            );
-            write_call_contract_response(cheatable_syscall_handler, vm, &call_args, call_result)?;
-            Ok(())
-        }
-        DeprecatedSyscallSelector::ReplaceClass => Err(HintError::CustomHint(Box::from(
-            "Replace class can't be used in tests".to_string(),
-        ))),
-        _ => cheatable_syscall_handler.execute_hint(vm, exec_scopes, hint_data, constants),
-    }
-}
-
 struct CallContractArgs {
     _selector: Felt252,
     gas_counter: u64,
@@ -768,17 +637,15 @@ struct CallContractArgs {
 
 impl SyscallRequest for CallContractArgs {
     fn read(vm: &VirtualMachine, ptr: &mut Relocatable) -> SyscallResult<CallContractArgs> {
-        let selector = stark_felt_from_ptr(vm, ptr)?.into_();
-        let gas_counter = Felt252::from_(stark_felt_from_ptr(vm, ptr)?)
-            .to_u64()
-            .unwrap();
+        let selector = stark_felt_from_ptr(vm, ptr)?.to_felt252();
+        let gas_counter = stark_felt_from_ptr(vm, ptr)?.to_felt252().to_u64().unwrap();
 
-        let contract_address = stark_felt_from_ptr(vm, ptr)?.into_();
-        let entry_point_selector = stark_felt_from_ptr(vm, ptr)?.into_();
+        let contract_address = stark_felt_from_ptr(vm, ptr)?.to_contract_address();
+        let entry_point_selector = stark_felt_from_ptr(vm, ptr)?.to_felt252();
 
         let calldata = read_felt_array::<SyscallExecutionError>(vm, ptr)?
             .iter()
-            .map(|el| (*el).into_())
+            .map(StarknetConversions::to_felt252)
             .collect();
 
         Ok(CallContractArgs {
@@ -819,7 +686,7 @@ fn write_call_contract_response(
                 gas_counter: call_args.gas_counter,
                 error_data: panic_data
                     .iter()
-                    .map(|el| StarkFelt::from_(el.clone()))
+                    .map(StarknetConversions::to_stark_felt)
                     .collect(),
             },
             CallContractFailure::Error { msg, .. } => return Err(CustomHint(Box::from(msg))),
