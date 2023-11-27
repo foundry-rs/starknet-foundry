@@ -75,6 +75,7 @@
     * [signature](appendix/forge-library/signature.md)
         * [Interface](appendix/forge-library/signature/interface.md)
         * [StarkCurveKeyPair](appendix/forge-library/signature/stark_curve_key_pair.md)
+* [Forge Configuration Reference](appendix/scarb-toml.md)
 * [Cast Commands](appendix/cast.md)
     * [common flags](appendix/cast/common.md)
     * [account](appendix/cast/account/account.md)
