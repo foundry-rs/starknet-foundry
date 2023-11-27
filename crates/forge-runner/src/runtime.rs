@@ -199,7 +199,6 @@ pub trait ExtensionLogic {
         vm: &mut VirtualMachine,
     ) -> Result<SyscallHandlingResult, HintError>;
 
-    // TODO remove vm, output from this signature, make it return Felt252
     #[allow(clippy::trivially_copy_pass_by_ref)]
     fn handle_cheatcode(
         &mut self,
