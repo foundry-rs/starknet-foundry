@@ -1,11 +1,11 @@
 use crate::starknet_commands::account::{
     add_created_profile_to_configuration, prepare_account_json, write_account_to_accounts_file,
 };
-use anyhow::{ensure, Result};
+use anyhow::{ensure, Context, Result};
 use camino::Utf8PathBuf;
-use cast::get_chain_id;
 use cast::helpers::response_structs::AccountAddResponse;
 use cast::helpers::scarb_utils::CastConfig;
+use cast::{get_chain_id, parse_number};
 use clap::Args;
 use starknet::core::types::BlockTag::Pending;
 use starknet::core::types::{BlockId, FieldElement};
@@ -23,7 +23,7 @@ pub struct Add {
     pub name: String,
 
     /// Address of the account
-    #[clap(short, long)]
+    #[clap(short, long, requires = "private_key_input")]
     pub address: FieldElement,
 
     /// Class hash of the account
@@ -36,8 +36,12 @@ pub struct Add {
     pub deployed: bool,
 
     /// Account private key
-    #[clap(long)]
-    pub private_key: FieldElement,
+    #[clap(long, group = "private_key_input")]
+    pub private_key: Option<FieldElement>,
+
+    /// Path to the file holding account private key
+    #[clap(long = "private-key-file", group = "private_key_input")]
+    pub private_key_file_path: Option<Utf8PathBuf>,
 
     /// Account public key
     #[clap(long)]
@@ -60,7 +64,12 @@ pub async fn add(
     provider: &JsonRpcClient<HttpTransport>,
     add: &Add,
 ) -> Result<AccountAddResponse> {
-    let private_key = &SigningKey::from_secret_scalar(add.private_key);
+    let private_key_field_element = match &add.private_key_file_path {
+        Some(file_path) => get_private_key_from_file(file_path)
+            .with_context(|| format!("Failed to obtain private key from the file {file_path}"))?,
+        None => add.private_key.unwrap(),
+    };
+    let private_key = &SigningKey::from_secret_scalar(private_key_field_element);
     if let Some(public_key) = &add.public_key {
         ensure!(
             public_key == &private_key.verifying_key().scalar(),
@@ -97,4 +106,9 @@ pub async fn add(
             "--add-profile flag was not set. No profile added to Scarb.toml".to_string()
         },
     })
+}
+
+fn get_private_key_from_file(file_path: &Utf8PathBuf) -> Result<FieldElement> {
+    let private_key_string = std::fs::read_to_string(file_path.clone())?;
+    parse_number(&private_key_string)
 }
