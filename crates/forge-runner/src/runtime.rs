@@ -7,8 +7,9 @@ use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 
 use cairo_felt::Felt252;
 use cairo_lang_casm::hints::{Hint, StarknetHint};
-use cairo_lang_casm::operand::{CellRef, ResOperand};
-use cairo_lang_runner::casm_run::{extract_relocatable, vm_get_range};
+use cairo_lang_casm::operand::ResOperand;
+use cairo_lang_runner::casm_run::{extract_relocatable, vm_get_range, MemBuffer};
+use cairo_lang_runner::{casm_run::cell_ref_to_relocatable, insert_value_to_cellref};
 use cairo_vm::hint_processor::hint_processor_definition::{
     HintProcessor, HintProcessorLogic, HintReference,
 };
@@ -109,10 +110,19 @@ impl<Extension: RegisteredExtension> HintProcessorLogic for ExtendedRuntime<Exte
             let inputs = vm_get_range(vm, input_start, input_end)
                 .map_err(|_| CustomHint(Box::from("Failed to read input data".to_string())))?;
 
-            if let CheatcodeHadlingResult::Result(()) =
+            if let CheatcodeHadlingResult::Result(res) =
                 self.0
-                    .handle_cheatcode(selector, inputs, vm, output_start, output_end)?
+                    .handle_cheatcode(selector, inputs)?
             {
+                let mut buffer = MemBuffer::new_segment(vm);
+                let result_start = buffer.ptr;
+                buffer
+                    .write_data(res.iter())
+                    .expect("Failed to insert file content to memory");
+
+                let result_end = buffer.ptr;
+                insert_value_to_cellref!(vm, output_start, result_start)?;
+                insert_value_to_cellref!(vm, output_end, result_end)?;
                 return Ok(());
             }
         }
@@ -175,7 +185,7 @@ pub enum SyscallHandlingResult {
 #[derive(Debug)]
 pub enum CheatcodeHadlingResult {
     Forward,
-    Result(()), // TODO now use buffer later rewrite to return vector
+    Result(Vec<Felt252>),
 }
 
 pub trait ExtensionLogic {
@@ -197,8 +207,5 @@ pub trait ExtensionLogic {
         &mut self,
         selector: &str,
         inputs: Vec<Felt252>,
-        vm: &mut VirtualMachine,
-        output_start: &CellRef,
-        output_end: &CellRef,
     ) -> Result<CheatcodeHadlingResult, EnhancedHintError>;
 }
