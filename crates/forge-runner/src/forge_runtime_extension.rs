@@ -25,16 +25,15 @@ use num_traits::{One, ToPrimitive};
 use scarb_artifacts::StarknetContractArtifacts;
 use serde::Deserialize;
 
-use cairo_lang_casm::operand::{CellRef, ResOperand};
-use cairo_lang_runner::casm_run::{extract_buffer, get_ptr, MemBuffer};
+use cairo_lang_casm::operand::ResOperand;
+use cairo_lang_runner::casm_run::{extract_buffer, get_ptr};
 use cairo_lang_runner::short_string::as_cairo_short_string;
-use cairo_lang_runner::{casm_run::cell_ref_to_relocatable, insert_value_to_cellref};
 use starknet_api::core::ContractAddress;
 use starknet_api::hash::StarkFelt;
 
 use crate::forge_runtime_extension::file_operations::string_into_felt;
 use crate::runtime::{
-    CheatcodeHadlingResult, ExtensionLogic, RuntimeExtension, SyscallHandlingResult,
+    CheatcodeHandlingResult, ExtensionLogic, RuntimeExtension, SyscallHandlingResult,
 };
 use cairo_lang_starknet::contract::starknet_keccak;
 use cairo_vm::vm::errors::hint_errors::HintError::CustomHint;
@@ -66,13 +65,7 @@ impl<'a> ExtensionLogic
         &mut self,
         selector: &str,
         inputs: Vec<Felt252>,
-        vm: &mut VirtualMachine,
-        output_start: &CellRef,
-        output_end: &CellRef,
-    ) -> Result<CheatcodeHadlingResult, EnhancedHintError> {
-        let mut buffer = MemBuffer::new_segment(vm);
-        let result_start = buffer.ptr;
-
+    ) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
         let res = match selector {
             "start_roll" => {
                 let (target, _) = deserialize_cheat_target(&inputs[..inputs.len() - 1]);
@@ -82,13 +75,13 @@ impl<'a> ExtensionLogic
                     .child
                     .cheatnet_state
                     .start_roll(target, block_number);
-                Ok(CheatcodeHadlingResult::Result(()))
+                Ok(CheatcodeHandlingResult::Result(vec![]))
             }
             "stop_roll" => {
                 let (target, _) = deserialize_cheat_target(&inputs);
 
                 self.extended_runtime.child.cheatnet_state.stop_roll(target);
-                Ok(CheatcodeHadlingResult::Result(()))
+                Ok(CheatcodeHandlingResult::Result(vec![]))
             }
             "start_warp" => {
                 // The last element in `inputs` should be the timestamp in all cases
@@ -101,23 +94,23 @@ impl<'a> ExtensionLogic
                     .cheatnet_state
                     .start_warp(target, warp_timestamp);
 
-                Ok(CheatcodeHadlingResult::Result(()))
+                Ok(CheatcodeHandlingResult::Result(vec![]))
             }
             "stop_warp" => {
                 let (target, _) = deserialize_cheat_target(&inputs);
 
                 self.extended_runtime.child.cheatnet_state.stop_warp(target);
-                Ok(CheatcodeHadlingResult::Result(()))
+                Ok(CheatcodeHandlingResult::Result(vec![]))
             }
             "start_elect" => {
                 let (target, _) = deserialize_cheat_target(&inputs[..inputs.len() - 1]);
                 let sequencer_address = inputs.last().unwrap().clone().into_();
 
-                self.get_extended_runtime_mut()
+                self.extended_runtime
                     .child
                     .cheatnet_state
                     .start_elect(target, sequencer_address);
-                Ok(CheatcodeHadlingResult::Result(()))
+                Ok(CheatcodeHandlingResult::Result(vec![]))
             }
             "stop_elect" => {
                 let (target, _) = deserialize_cheat_target(&inputs);
@@ -126,7 +119,7 @@ impl<'a> ExtensionLogic
                     .child
                     .cheatnet_state
                     .stop_elect(target);
-                Ok(CheatcodeHadlingResult::Result(()))
+                Ok(CheatcodeHandlingResult::Result(vec![]))
             }
             "start_prank" => {
                 let (target, _) = deserialize_cheat_target(&inputs[..inputs.len() - 1]);
@@ -138,7 +131,7 @@ impl<'a> ExtensionLogic
                     .child
                     .cheatnet_state
                     .start_prank(target, caller_address);
-                Ok(CheatcodeHadlingResult::Result(()))
+                Ok(CheatcodeHandlingResult::Result(vec![]))
             }
             "stop_prank" => {
                 let (target, _) = deserialize_cheat_target(&inputs);
@@ -147,7 +140,7 @@ impl<'a> ExtensionLogic
                     .child
                     .cheatnet_state
                     .stop_prank(target);
-                Ok(CheatcodeHadlingResult::Result(()))
+                Ok(CheatcodeHandlingResult::Result(vec![]))
             }
             "start_mock_call" => {
                 let contract_address = inputs[0].clone().into_();
@@ -169,7 +162,7 @@ impl<'a> ExtensionLogic
                     &function_name,
                     &ret_data,
                 );
-                Ok(CheatcodeHadlingResult::Result(()))
+                Ok(CheatcodeHandlingResult::Result(vec![]))
             }
             "stop_mock_call" => {
                 let contract_address = inputs[0].clone().into_();
@@ -179,7 +172,7 @@ impl<'a> ExtensionLogic
                     .child
                     .cheatnet_state
                     .stop_mock_call(contract_address, &function_name);
-                Ok(CheatcodeHadlingResult::Result(()))
+                Ok(CheatcodeHandlingResult::Result(vec![]))
             }
             "start_spoof" => {
                 let (target, inputs_start) = deserialize_cheat_target(&inputs);
@@ -221,7 +214,7 @@ impl<'a> ExtensionLogic
                     chain_id,
                     nonce,
                 );
-                Ok(CheatcodeHadlingResult::Result(()))
+                Ok(CheatcodeHandlingResult::Result(vec![]))
             }
             "stop_spoof" => {
                 let (target, _) = deserialize_cheat_target(&inputs);
@@ -230,7 +223,7 @@ impl<'a> ExtensionLogic
                     .child
                     .cheatnet_state
                     .stop_spoof(target);
-                Ok(CheatcodeHadlingResult::Result(()))
+                Ok(CheatcodeHandlingResult::Result(vec![]))
             }
             "declare" => {
                 let contract_name = inputs[0].clone();
@@ -240,14 +233,8 @@ impl<'a> ExtensionLogic
                 match blockifier_state.declare(&contract_name, &self.extension_state.contracts) {
                     Ok(class_hash) => {
                         let felt_class_hash = stark_felt_to_felt(class_hash.0);
-
-                        buffer
-                            .write(Felt252::from(0))
-                            .expect("Failed to insert error code");
-                        buffer
-                            .write(felt_class_hash)
-                            .expect("Failed to insert declared contract class hash");
-                        Ok(CheatcodeHadlingResult::Result(()))
+                        let result = vec![Felt252::from(0), felt_class_hash];
+                        Ok(CheatcodeHandlingResult::Result(result))
                     }
                     Err(CheatcodeError::Recoverable(_)) => {
                         panic!("Declare should not fail recoverably!")
@@ -262,15 +249,12 @@ impl<'a> ExtensionLogic
                 let mut blockifier_state =
                     BlockifierState::from(self.extended_runtime.child.child.state);
 
-                handle_deploy_result(
-                    deploy(
-                        &mut blockifier_state,
-                        self.extended_runtime.child.cheatnet_state,
-                        &class_hash,
-                        &calldata,
-                    ),
-                    &mut buffer,
-                )
+                handle_deploy_result(deploy(
+                    &mut blockifier_state,
+                    self.extended_runtime.child.cheatnet_state,
+                    &class_hash,
+                    &calldata,
+                ))
             }
             "deploy_at" => {
                 let class_hash = inputs[0].clone().into_();
@@ -281,20 +265,17 @@ impl<'a> ExtensionLogic
                 let mut blockifier_state =
                     BlockifierState::from(self.extended_runtime.child.child.state);
 
-                handle_deploy_result(
-                    deploy_at(
-                        &mut blockifier_state,
-                        self.extended_runtime.child.cheatnet_state,
-                        &class_hash,
-                        &calldata,
-                        contract_address,
-                    ),
-                    &mut buffer,
-                )
+                handle_deploy_result(deploy_at(
+                    &mut blockifier_state,
+                    self.extended_runtime.child.cheatnet_state,
+                    &class_hash,
+                    &calldata,
+                    contract_address,
+                ))
             }
             "print" => {
                 print(inputs);
-                Ok(CheatcodeHadlingResult::Result(()))
+                Ok(CheatcodeHandlingResult::Result(vec![]))
             }
             "precalculate_address" => {
                 let class_hash = inputs[0].clone().into_();
@@ -308,11 +289,8 @@ impl<'a> ExtensionLogic
                     .precalculate_address(&class_hash, &calldata);
 
                 let felt_contract_address: Felt252 = contract_address.into_();
-                buffer
-                    .write(felt_contract_address)
-                    .expect("Failed to insert a precalculated contract address");
 
-                Ok(CheatcodeHadlingResult::Result(()))
+                Ok(CheatcodeHandlingResult::Result(vec![felt_contract_address]))
             }
             "var" => {
                 let name = inputs[0].clone();
@@ -329,10 +307,7 @@ impl<'a> ExtensionLogic
                 let parsed_env_var = string_into_felt(env_var)
                     .with_context(|| format!("Failed to parse value = {env_var} to felt"))?;
 
-                buffer
-                    .write(parsed_env_var)
-                    .expect("Failed to insert parsed env var");
-                Ok(CheatcodeHadlingResult::Result(()))
+                Ok(CheatcodeHandlingResult::Result(vec![parsed_env_var]))
             }
             "get_class_hash" => {
                 let contract_address = inputs[0].clone().into_();
@@ -344,10 +319,7 @@ impl<'a> ExtensionLogic
                     Ok(class_hash) => {
                         let felt_class_hash = stark_felt_to_felt(class_hash.0);
 
-                        buffer
-                            .write(felt_class_hash)
-                            .expect("Failed to insert contract class hash");
-                        Ok(CheatcodeHadlingResult::Result(()))
+                        Ok(CheatcodeHandlingResult::Result(vec![felt_class_hash]))
                     }
                     Err(CheatcodeError::Recoverable(_)) => unreachable!(),
                     Err(CheatcodeError::Unrecoverable(err)) => Err(err),
@@ -374,13 +346,11 @@ impl<'a> ExtensionLogic
                     .result
                 {
                     CallContractResult::Success { .. } => {
-                        buffer.write(0).expect("Failed to write zero");
-                        Ok(CheatcodeHadlingResult::Result(()))
+                        Ok(CheatcodeHandlingResult::Result(vec![Felt252::from(0)]))
                     }
-                    CallContractResult::Failure(CallContractFailure::Panic { panic_data }) => {
-                        write_cheatcode_panic(&mut buffer, &panic_data);
-                        Ok(CheatcodeHadlingResult::Result(()))
-                    }
+                    CallContractResult::Failure(CallContractFailure::Panic { panic_data }) => Ok(
+                        CheatcodeHandlingResult::Result(cheatcode_panic_result(panic_data)),
+                    ),
                     CallContractResult::Failure(CallContractFailure::Error { msg }) => Err(
                         EnhancedHintError::from(HintError::CustomHint(Box::from(msg))),
                     ),
@@ -389,18 +359,13 @@ impl<'a> ExtensionLogic
             "read_txt" => {
                 let file_path = inputs[0].clone();
                 let parsed_content = file_operations::read_txt(&file_path)?;
-                buffer
-                    .write_data(parsed_content.iter())
-                    .expect("Failed to insert file content to memory");
-                Ok(CheatcodeHadlingResult::Result(()))
+                Ok(CheatcodeHandlingResult::Result(parsed_content))
             }
             "read_json" => {
                 let file_path = inputs[0].clone();
                 let parsed_content = file_operations::read_json(&file_path)?;
-                buffer
-                    .write_data(parsed_content.iter())
-                    .expect("Failed to insert file content to memory");
-                Ok(CheatcodeHadlingResult::Result(()))
+
+                Ok(CheatcodeHandlingResult::Result(parsed_content))
             }
             "spy_events" => {
                 let spy_on = match inputs.len() {
@@ -423,55 +388,38 @@ impl<'a> ExtensionLogic
                     .child
                     .cheatnet_state
                     .spy_events(spy_on);
-                buffer
-                    .write(Felt252::from(id))
-                    .expect("Failed to insert spy id");
-                Ok(CheatcodeHadlingResult::Result(()))
+                Ok(CheatcodeHandlingResult::Result(vec![Felt252::from(id)]))
             }
             "fetch_events" => {
                 let id = &inputs[0];
                 let (emitted_events_len, serialized_events) =
                     self.extended_runtime.child.cheatnet_state.fetch_events(id);
-
-                buffer
-                    .write(Felt252::from(emitted_events_len))
-                    .expect("Failed to insert serialized events length");
-                for felt in serialized_events {
-                    buffer
-                        .write(felt)
-                        .expect("Failed to insert serialized events");
-                }
-                Ok(CheatcodeHadlingResult::Result(()))
+                let mut result = vec![Felt252::from(emitted_events_len)];
+                result.extend(serialized_events);
+                Ok(CheatcodeHandlingResult::Result(result))
             }
             "event_name_hash" => {
                 let name = inputs[0].clone();
                 let hash = starknet_keccak(as_cairo_short_string(&name).unwrap().as_bytes());
 
-                buffer
-                    .write(Felt252::from(hash))
-                    .expect("Failed to insert event name hash");
-                Ok(CheatcodeHadlingResult::Result(()))
+                Ok(CheatcodeHandlingResult::Result(vec![Felt252::from(hash)]))
             }
             "generate_ecdsa_keys" => {
                 let key_pair = SigningKey::from_random();
 
-                buffer
-                    .write(Felt252::from_(key_pair.secret_scalar()))
-                    .expect("Failed to insert private key");
-                buffer
-                    .write(Felt252::from_(key_pair.verifying_key().scalar()))
-                    .expect("Failed to insert public key");
-                Ok(CheatcodeHadlingResult::Result(()))
+                Ok(CheatcodeHandlingResult::Result(vec![
+                    key_pair.secret_scalar().into_(),
+                    key_pair.verifying_key().scalar().into_(),
+                ]))
             }
             "get_public_key" => {
                 let private_key = inputs[0].clone();
                 let key_pair = SigningKey::from_secret_scalar(private_key.into_());
 
-                buffer
-                    .write(Felt252::from_(key_pair.verifying_key().scalar()))
-                    .expect("Failed to insert public key");
-
-                Ok(CheatcodeHadlingResult::Result(()))
+                Ok(CheatcodeHandlingResult::Result(vec![key_pair
+                    .verifying_key()
+                    .scalar()
+                    .into_()]))
             }
             "ecdsa_sign_message" => {
                 let private_key = inputs[0].clone();
@@ -480,28 +428,21 @@ impl<'a> ExtensionLogic
                 let key_pair = SigningKey::from_secret_scalar(private_key.into_());
 
                 if let Ok(signature) = key_pair.sign(&message_hash.into_()) {
-                    buffer.write(0).expect("Failed to insert exit code");
-                    buffer
-                        .write(Felt252::from_(signature.r))
-                        .expect("Failed to insert signature r");
-                    buffer
-                        .write(Felt252::from_(signature.s))
-                        .expect("Failed to insert signature s");
+                    Ok(CheatcodeHandlingResult::Result(vec![
+                        Felt252::from(0),
+                        Felt252::from_(signature.r),
+                        Felt252::from_(signature.s),
+                    ]))
                 } else {
-                    buffer.write(1).expect("Failed to insert exit code");
-                    buffer
-                        .write(Felt252::from_("message_hash out of range".to_string()))
-                        .expect("Failed to insert error message");
+                    Ok(CheatcodeHandlingResult::Result(vec![
+                        Felt252::from(1),
+                        Felt252::from_("message_hash out of range".to_string()),
+                    ]))
                 }
-
-                Ok(CheatcodeHadlingResult::Result(()))
             }
-            _ => Ok(CheatcodeHadlingResult::Forward),
+            _ => Ok(CheatcodeHandlingResult::Forward),
         }?;
 
-        let result_end = buffer.ptr;
-        insert_value_to_cellref!(vm, output_start, result_start)?;
-        insert_value_to_cellref!(vm, output_end, result_end)?;
         Ok(res)
     }
 
@@ -560,24 +501,16 @@ pub struct TestExecutionState {
 
 fn handle_deploy_result(
     deploy_result: Result<DeployCallPayload, CheatcodeError>,
-    buffer: &mut MemBuffer,
-) -> Result<CheatcodeHadlingResult, EnhancedHintError> {
+) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
     match deploy_result {
         Ok(deploy_payload) => {
             let felt_contract_address: Felt252 = deploy_payload.contract_address.into_();
-
-            buffer
-                .write(Felt252::from(0))
-                .expect("Failed to insert error code");
-            buffer
-                .write(felt_contract_address)
-                .expect("Failed to insert deployed contract address");
-            Ok(CheatcodeHadlingResult::Result(()))
+            let result = vec![Felt252::from(0), felt_contract_address];
+            Ok(CheatcodeHandlingResult::Result(result))
         }
-        Err(CheatcodeError::Recoverable(panic_data)) => {
-            write_cheatcode_panic(buffer, &panic_data);
-            Ok(CheatcodeHadlingResult::Result(()))
-        }
+        Err(CheatcodeError::Recoverable(panic_data)) => Ok(CheatcodeHandlingResult::Result(
+            cheatcode_panic_result(panic_data),
+        )),
         Err(CheatcodeError::Unrecoverable(err)) => Err(err),
     }
 }
@@ -710,12 +643,8 @@ fn execute_call_contract(
     .unwrap_or_else(|err| panic!("Transaction execution error: {err}"))
 }
 
-fn write_cheatcode_panic(buffer: &mut MemBuffer, panic_data: &[Felt252]) {
-    buffer.write(1).expect("Failed to insert err code");
-    buffer
-        .write(panic_data.len())
-        .expect("Failed to insert panic_data len");
-    buffer
-        .write_data(panic_data.iter())
-        .expect("Failed to insert error in memory");
+fn cheatcode_panic_result(panic_data: Vec<Felt252>) -> Vec<Felt252> {
+    let mut result = vec![Felt252::from(1), Felt252::from(panic_data.len())];
+    result.extend(panic_data);
+    result
 }
