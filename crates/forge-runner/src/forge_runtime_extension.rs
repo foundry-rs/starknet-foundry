@@ -25,10 +25,9 @@ use num_traits::{One, ToPrimitive};
 use scarb_artifacts::StarknetContractArtifacts;
 use serde::Deserialize;
 
-use cairo_lang_casm::operand::{CellRef, ResOperand};
-use cairo_lang_runner::casm_run::{extract_buffer, get_ptr, MemBuffer};
+use cairo_lang_casm::operand::ResOperand;
+use cairo_lang_runner::casm_run::{extract_buffer, get_ptr};
 use cairo_lang_runner::short_string::as_cairo_short_string;
-use cairo_lang_runner::{casm_run::cell_ref_to_relocatable, insert_value_to_cellref};
 use starknet_api::core::ContractAddress;
 
 use crate::forge_runtime_extension::file_operations::string_into_felt;
@@ -255,14 +254,12 @@ impl<'a> ExtensionLogic
                 let mut blockifier_state =
                     BlockifierState::from(self.extended_runtime.child.child.state);
 
-                handle_deploy_result(
-                    deploy(
-                        &mut blockifier_state,
-                        self.extended_runtime.child.cheatnet_state,
-                        &class_hash,
-                        &calldata,
-                    ),
-                )
+                handle_deploy_result(deploy(
+                    &mut blockifier_state,
+                    self.extended_runtime.child.cheatnet_state,
+                    &class_hash,
+                    &calldata,
+                ))
             }
             "deploy_at" => {
                 let class_hash = inputs[0].to_class_hash();
@@ -273,15 +270,13 @@ impl<'a> ExtensionLogic
                 let mut blockifier_state =
                     BlockifierState::from(self.extended_runtime.child.child.state);
 
-                handle_deploy_result(
-                    deploy_at(
-                        &mut blockifier_state,
-                        self.extended_runtime.child.cheatnet_state,
-                        &class_hash,
-                        &calldata,
-                        contract_address,
-                    ),
-                )
+                handle_deploy_result(deploy_at(
+                    &mut blockifier_state,
+                    self.extended_runtime.child.cheatnet_state,
+                    &class_hash,
+                    &calldata,
+                    contract_address,
+                ))
             }
             "print" => {
                 print(inputs);
@@ -358,9 +353,9 @@ impl<'a> ExtensionLogic
                     CallContractResult::Success { .. } => {
                         Ok(CheatcodeHadlingResult::Result(vec![Felt252::from(0)]))
                     }
-                    CallContractResult::Failure(CallContractFailure::Panic { panic_data }) => {
-                        Ok(CheatcodeHadlingResult::Result(cheatcode_panic_result(panic_data)))
-                    }
+                    CallContractResult::Failure(CallContractFailure::Panic { panic_data }) => Ok(
+                        CheatcodeHadlingResult::Result(cheatcode_panic_result(panic_data)),
+                    ),
                     CallContractResult::Failure(CallContractFailure::Error { msg }) => Err(
                         EnhancedHintError::from(HintError::CustomHint(Box::from(msg))),
                     ),
@@ -417,13 +412,19 @@ impl<'a> ExtensionLogic
             "generate_ecdsa_keys" => {
                 let key_pair = SigningKey::from_random();
 
-                Ok(CheatcodeHadlingResult::Result(vec![key_pair.secret_scalar().to_felt252(), key_pair.verifying_key().scalar().to_felt252()]))
+                Ok(CheatcodeHadlingResult::Result(vec![
+                    key_pair.secret_scalar().to_felt252(),
+                    key_pair.verifying_key().scalar().to_felt252(),
+                ]))
             }
             "get_public_key" => {
                 let private_key = inputs[0].clone();
                 let key_pair = SigningKey::from_secret_scalar(private_key.to_field_element());
 
-                Ok(CheatcodeHadlingResult::Result(vec![key_pair.verifying_key().scalar().to_felt252()]))
+                Ok(CheatcodeHadlingResult::Result(vec![key_pair
+                    .verifying_key()
+                    .scalar()
+                    .to_felt252()]))
             }
             "ecdsa_sign_message" => {
                 let private_key = inputs[0].clone();
@@ -432,14 +433,20 @@ impl<'a> ExtensionLogic
                 let key_pair = SigningKey::from_secret_scalar(private_key.to_field_element());
 
                 if let Ok(signature) = key_pair.sign(&message_hash.to_field_element()) {
-                    Ok(CheatcodeHadlingResult::Result(vec![Felt252::from(0), signature.r.to_felt252(), signature.s.to_felt252()]))
+                    Ok(CheatcodeHadlingResult::Result(vec![
+                        Felt252::from(0),
+                        signature.r.to_felt252(),
+                        signature.s.to_felt252(),
+                    ]))
                 } else {
-                    Ok(CheatcodeHadlingResult::Result(vec![Felt252::from(1), "message_hash out of range".to_string().to_felt252()]))
+                    Ok(CheatcodeHadlingResult::Result(vec![
+                        Felt252::from(1),
+                        "message_hash out of range".to_string().to_felt252(),
+                    ]))
                 }
             }
             _ => Ok(CheatcodeHadlingResult::Forward),
         }?;
-
 
         Ok(res)
     }
@@ -506,9 +513,9 @@ fn handle_deploy_result(
             let result = vec![Felt252::from(0), felt_contract_address];
             Ok(CheatcodeHadlingResult::Result(result))
         }
-        Err(CheatcodeError::Recoverable(panic_data)) => {
-            Ok(CheatcodeHadlingResult::Result(cheatcode_panic_result(panic_data)))
-        }
+        Err(CheatcodeError::Recoverable(panic_data)) => Ok(CheatcodeHadlingResult::Result(
+            cheatcode_panic_result(panic_data),
+        )),
         Err(CheatcodeError::Unrecoverable(err)) => Err(err),
     }
 }
@@ -641,6 +648,6 @@ fn execute_call_contract(
 
 fn cheatcode_panic_result(panic_data: Vec<Felt252>) -> Vec<Felt252> {
     let mut result = vec![Felt252::from(1), Felt252::from(panic_data.len())];
-    result.extend(panic_data.into_iter());
+    result.extend(panic_data);
     result
 }

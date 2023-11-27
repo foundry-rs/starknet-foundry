@@ -111,15 +111,13 @@ impl<Extension: RegisteredExtension> HintProcessorLogic for ExtendedRuntime<Exte
                 .map_err(|_| CustomHint(Box::from("Failed to read input data".to_string())))?;
 
             if let CheatcodeHadlingResult::Result(res) =
-                self.0
-                    .handle_cheatcode(selector, inputs)?
+                self.0.handle_cheatcode(selector, inputs)?
             {
                 let mut buffer = MemBuffer::new_segment(vm);
                 let result_start = buffer.ptr;
                 buffer
                     .write_data(res.iter())
                     .expect("Failed to insert file content to memory");
-
                 let result_end = buffer.ptr;
                 insert_value_to_cellref!(vm, output_start, result_start)?;
                 insert_value_to_cellref!(vm, output_end, result_end)?;
