@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use blockifier::fee::eth_gas_constants;
+use blockifier::fee::fee_utils::calculate_tx_l1_gas_usage;
 use blockifier::fee::os_resources::OS_RESOURCES;
 use blockifier::fee::os_usage::get_additional_os_resources;
 use blockifier::transaction::transaction_types::TransactionType;
@@ -13,21 +15,30 @@ use cairo_vm::vm::runners::cairo_runner::ExecutionResources as VmExecutionResour
 pub fn gas_from_execution_resources(
     block_context: &BlockContext,
     resources: &ExecutionResources,
-) -> f64 {
+    onchain_data_segment_len: usize,
+) -> u128 {
     let total_vm_usage = get_total_vm_usage(resources);
-    let resource_mapping = vm_execution_resources_to_resource_mapping(&total_vm_usage);
-    calculate_l1_gas_by_vm_usage(block_context, &resource_mapping)
+    let resource_mapping =
+        vm_execution_resources_to_resource_mapping(&total_vm_usage, onchain_data_segment_len);
+    calculate_tx_l1_gas_usage(&resource_mapping, block_context)
         .expect("Calculating gas failed, some resources were not included.")
 }
 
 #[must_use]
 fn vm_execution_resources_to_resource_mapping(
     execution_resources: &VmExecutionResources,
+    onchain_data_segment_len: usize,
 ) -> ResourcesMapping {
-    let mut map = HashMap::from([(
-        constants::N_STEPS_RESOURCE.to_string(),
-        execution_resources.n_steps,
-    )]);
+    let mut map = HashMap::from([
+        (
+            constants::N_STEPS_RESOURCE.to_string(),
+            execution_resources.n_steps,
+        ),
+        (
+            constants::GAS_USAGE.to_string(),
+            onchain_data_segment_len * eth_gas_constants::SHARP_GAS_PER_MEMORY_WORD,
+        ),
+    ]);
     map.extend(execution_resources.builtin_instance_counter.clone());
     ResourcesMapping(map)
 }

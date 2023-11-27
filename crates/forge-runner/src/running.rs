@@ -8,7 +8,8 @@ use blockifier::execution::entry_point::{
 };
 use blockifier::execution::execution_utils::ReadOnlySegments;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
-use blockifier::state::cached_state::CachedState;
+use blockifier::fee::gas_usage::get_onchain_data_segment_length;
+use blockifier::state::cached_state::{CachedState, StateChangesCount};
 use blockifier::state::state_api::State;
 use cairo_felt::Felt252;
 use cairo_vm::serde::deserialize_program::HintParams;
@@ -199,7 +200,7 @@ pub(crate) struct ForkInfo {
 pub struct RunResultWithInfo {
     pub(crate) run_result: Result<RunResult, RunnerError>,
     pub(crate) fork_info: ForkInfo,
-    pub(crate) total_gas_used: f64,
+    pub(crate) total_gas_used: u128,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -243,6 +244,7 @@ pub fn run_test_case(
     let mut context = build_context(block_info);
     let mut execution_resources = ExecutionResources::default();
     let mut blockifier_state = CachedState::from(state_reader);
+
     let syscall_handler = build_syscall_handler(
         &mut blockifier_state,
         &string_to_hint,
@@ -290,10 +292,21 @@ pub fn run_test_case(
     );
 
     let all_execution_resources = test_execution_syscall_handler.get_all_execution_resources();
+    let block_context = &test_execution_syscall_handler
+        .context()
+        .block_context
+        .clone();
+
+    let state_change = blockifier_state
+        .get_actual_state_changes_for_fee_charge(ContractAddress::from(1_u8), None)
+        .unwrap();
+    let onchain_data_segment_len =
+        get_onchain_data_segment_length(StateChangesCount::from(&state_change));
 
     let gas = gas_from_execution_resources(
-        &test_execution_syscall_handler.context().block_context,
+        block_context,
         &all_execution_resources,
+        onchain_data_segment_len,
     );
 
     Ok(RunResultWithInfo {
@@ -318,7 +331,7 @@ fn extract_test_case_summary(
                     case,
                     args,
                     &result_with_info.fork_info,
-                    result_with_info.total_gas_used,
+                    result_with_info.total_gas_used as f64,
                 )),
                 // CairoRunError comes from VirtualMachineError which may come from HintException that originates in TestExecutionSyscallHandler
                 Err(RunnerError::CairoRunError(error)) => Ok(TestCaseSummary::Failed {
