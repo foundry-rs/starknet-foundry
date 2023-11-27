@@ -10,7 +10,7 @@ use cairo_felt::Felt252;
 use cheatnet::cheatcodes::deploy::deploy;
 use cheatnet::rpc::call_contract;
 use cheatnet::state::CheatTarget;
-use conversions::StarknetConversions;
+use conversions::IntoConv;
 use starknet_api::core::ContractAddress;
 
 #[test]
@@ -82,7 +82,7 @@ fn prank_in_constructor() {
 
     let contracts = get_contracts();
 
-    let contract_name = "ConstructorPrankChecker".to_owned().to_felt252();
+    let contract_name = "ConstructorPrankChecker".to_owned().into_();
     let class_hash = blockifier_state
         .declare(&contract_name, &contracts)
         .unwrap();
@@ -258,7 +258,7 @@ fn prank_proxy() {
         &mut cheatnet_state,
         &proxy_address,
         &proxy_selector,
-        &[contract_address.to_felt252()],
+        &[contract_address.into_()],
     )
     .unwrap();
 
@@ -272,7 +272,7 @@ fn prank_proxy() {
         &mut cheatnet_state,
         &proxy_address,
         &proxy_selector,
-        &[contract_address.to_felt252()],
+        &[contract_address.into_()],
     )
     .unwrap();
 
@@ -285,7 +285,7 @@ fn prank_proxy() {
         &mut cheatnet_state,
         &proxy_address,
         &proxy_selector,
-        &[contract_address.to_felt252()],
+        &[contract_address.into_()],
     )
     .unwrap();
 
@@ -298,7 +298,7 @@ fn prank_library_call() {
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contracts = get_contracts();
-    let contract_name = "PrankChecker".to_owned().to_felt252();
+    let contract_name = "PrankChecker".to_owned().into_();
     let class_hash = blockifier_state
         .declare(&contract_name, &contracts)
         .unwrap();
@@ -316,7 +316,7 @@ fn prank_library_call() {
         &mut cheatnet_state,
         &lib_call_address,
         &lib_call_selector,
-        &[class_hash.to_felt252()],
+        &[class_hash.into_()],
     )
     .unwrap();
 
@@ -330,7 +330,7 @@ fn prank_library_call() {
         &mut cheatnet_state,
         &lib_call_address,
         &lib_call_selector,
-        &[class_hash.to_felt252()],
+        &[class_hash.into_()],
     )
     .unwrap();
 
@@ -343,7 +343,7 @@ fn prank_library_call() {
         &mut cheatnet_state,
         &lib_call_address,
         &lib_call_selector,
-        &[class_hash.to_felt252()],
+        &[class_hash.into_()],
     )
     .unwrap();
 
@@ -410,7 +410,7 @@ fn prank_multiple() {
     let mut cached_state = create_cached_state();
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
-    let contract = "PrankChecker".to_owned().to_felt252();
+    let contract = "PrankChecker".to_owned().into_();
     let contracts = get_contracts();
     let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
 

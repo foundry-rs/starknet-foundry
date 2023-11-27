@@ -6,14 +6,14 @@ use cairo_vm::hint_processor::hint_processor_utils::felt_to_usize;
 use cheatnet::cheatcodes::deploy::deploy;
 use cheatnet::cheatcodes::spy_events::{Event, SpyTarget};
 use cheatnet::rpc::call_contract;
-use conversions::StarknetConversions;
+use conversions::IntoConv;
 use std::vec;
 
 fn felt_vec_to_event_vec(felts: &[Felt252]) -> Vec<Event> {
     let mut events = vec![];
     let mut i = 0;
     while i < felts.len() {
-        let from = felts[i].to_contract_address();
+        let from = felts[i].clone().into_();
         let keys_length = &felts[i + 1];
         let keys = &felts[i + 2..i + 2 + felt_to_usize(keys_length).unwrap()];
         let data_length = &felts[i + 2 + felt_to_usize(keys_length).unwrap()];
@@ -125,7 +125,7 @@ fn check_events_order() {
             Felt252::from(123),
             Felt252::from(234),
             Felt252::from(345),
-            spy_events_checker_address.to_felt252(),
+            spy_events_checker_address.into_(),
         ],
     )
     .unwrap();
@@ -263,7 +263,7 @@ fn library_call_emits_event() {
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contracts = get_contracts();
-    let contract_name = "SpyEventsChecker".to_owned().to_felt252();
+    let contract_name = "SpyEventsChecker".to_owned().into_();
     let class_hash = blockifier_state
         .declare(&contract_name, &contracts)
         .unwrap();
@@ -282,7 +282,7 @@ fn library_call_emits_event() {
         &mut cheatnet_state,
         &contract_address,
         &selector,
-        &[Felt252::from(123), class_hash.to_felt252()],
+        &[Felt252::from(123), class_hash.into_()],
     )
     .unwrap();
 
@@ -342,7 +342,7 @@ fn check_if_there_is_no_interference() {
 
     let contracts = get_contracts();
 
-    let contract_name = "SpyEventsChecker".to_owned().to_felt252();
+    let contract_name = "SpyEventsChecker".to_owned().into_();
     let class_hash = blockifier_state
         .declare(&contract_name, &contracts)
         .unwrap();
@@ -400,7 +400,7 @@ fn test_nested_calls() {
 
     let contracts = get_contracts();
 
-    let contract_name = "SpyEventsCheckerProxy".to_owned().to_felt252();
+    let contract_name = "SpyEventsCheckerProxy".to_owned().into_();
     let class_hash = blockifier_state
         .declare(&contract_name, &contracts)
         .unwrap();
@@ -409,7 +409,7 @@ fn test_nested_calls() {
         &mut blockifier_state,
         &mut cheatnet_state,
         &class_hash,
-        &[spy_events_checker_address.to_felt252()],
+        &[spy_events_checker_address.into_()],
     )
     .unwrap()
     .contract_address;
@@ -417,7 +417,7 @@ fn test_nested_calls() {
         &mut blockifier_state,
         &mut cheatnet_state,
         &class_hash,
-        &[spy_events_checker_proxy_address.to_felt252()],
+        &[spy_events_checker_proxy_address.into_()],
     )
     .unwrap()
     .contract_address;
@@ -481,7 +481,7 @@ fn use_multiple_spies() {
 
     let contracts = get_contracts();
 
-    let contract_name = "SpyEventsCheckerProxy".to_owned().to_felt252();
+    let contract_name = "SpyEventsCheckerProxy".to_owned().into_();
     let class_hash = blockifier_state
         .declare(&contract_name, &contracts)
         .unwrap();
@@ -490,7 +490,7 @@ fn use_multiple_spies() {
         &mut blockifier_state,
         &mut cheatnet_state,
         &class_hash,
-        &[spy_events_checker_address.to_felt252()],
+        &[spy_events_checker_address.into_()],
     )
     .unwrap()
     .contract_address;
@@ -498,7 +498,7 @@ fn use_multiple_spies() {
         &mut blockifier_state,
         &mut cheatnet_state,
         &class_hash,
-        &[spy_events_checker_proxy_address.to_felt252()],
+        &[spy_events_checker_proxy_address.into_()],
     )
     .unwrap()
     .contract_address;
