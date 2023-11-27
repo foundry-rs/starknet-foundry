@@ -59,8 +59,6 @@
     * [spy_events](appendix/cheatcodes/spy_events.md)
     * [start_spoof](appendix/cheatcodes/start_spoof.md)
     * [stop_spoof](appendix/cheatcodes/stop_spoof.md)
-    
-
 * [Forge Library Functions References](appendix/forge-library.md)
     * [declare](appendix/forge-library/declare.md)
     * [precalculate_address](appendix/forge-library/precalculate_address.md)
