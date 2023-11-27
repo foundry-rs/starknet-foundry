@@ -7,25 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Forge
-
-#### Changed
-
-- `start_warp` and `stop_warp` now take `CheatTarget` as the first argument instead of `ContractAddress`. Read more [here](./docs/src/appendix/cheatcodes/start_warp.md). 
-- `start_prank` and `stop_prank` now take `CheatTarget` as the first argument instead of `ContractAddress`. Read more [here](./docs/src/appendix/cheatcodes/start_prank.md).
-- `start_roll` and `stop_roll` now take `CheatTarget` as the first argument instead of `ContractAddress`. Read more [here](./docs/src/appendix/cheatcodes/start_roll.md).
-
-#### Fixed
-
-- using unsupported `available_gas` attribute now fails the specific test case instead of the whole runner
-
-## [0.10.2] - 2023-11-13
+## [0.11.0] - 2023-11-22
 
 ### Forge
 
 #### Added
 
-- `--rerun-failed` option to run tests that failed during the last run
+- `elect` cheatcode for mocking the sequencer address. Read more [here](./docs/src/appendix/cheatcodes/start_elect.md).
+- `--rerun-failed` option to run tests that failed during the last run.
+
+#### Changed
+- `start_warp` and `stop_warp` now take `CheatTarget` as the first argument instead of `ContractAddress`. Read more [here](./docs/src/appendix/cheatcodes/start_warp.md). 
+- `start_prank` and `stop_prank` now take `CheatTarget` as the first argument instead of `ContractAddress`. Read more [here](./docs/src/appendix/cheatcodes/start_prank.md).
+- `start_roll` and `stop_roll` now take `CheatTarget` as the first argument instead of `ContractAddress`. Read more [here](./docs/src/appendix/cheatcodes/start_roll.md).
+
+PS: Credits to @bllu404 for the help with the new interfaces for cheats!
+
+#### Fixed
+
+- using unsupported `available_gas` attribute now fails the specific test case instead of the whole runner
+
+### Cast
+
+### Added
+
+- MVP for cairo deployment scripts with declare, deploy, invoke and call
 
 ## [0.10.2] - 2023-11-13
 
@@ -44,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Cast
 
 #### Fixed
+
 - scarb metadata in declare subcommand now takes manifest path from cli if passed instead of looking for it
 
 ## [0.10.0] - 2023-11-08
