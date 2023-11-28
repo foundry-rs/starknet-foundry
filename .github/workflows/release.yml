@@ -187,8 +187,8 @@ jobs:
           BINARY_PATH="${BINARY_PATH%.tar.gz}"
           BINARY_PATH="${BINARY_PATH#artifacts/}"
           
-          SNFORGE_PATH=$(realpath $BINARY_PATH/bin/snforge)
-          SNCAST_PATH=$(realpath $BINARY_PATH/bin/sncast)
+          SNFORGE_PATH=$(readlink -f $BINARY_PATH/bin/snforge)
+          SNCAST_PATH=$(readlink -f $BINARY_PATH/bin/sncast)
           
           REPO_URL=${{ github.repositoryUrl }}
           REVISION=${{ github.sha }}
