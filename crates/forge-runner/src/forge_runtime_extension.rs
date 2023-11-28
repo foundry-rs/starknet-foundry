@@ -33,7 +33,8 @@ use starknet_api::hash::StarkFelt;
 
 use crate::forge_runtime_extension::file_operations::string_into_felt;
 use crate::runtime::{
-    CheatcodeHandlingResult, ExtensionLogic, RuntimeExtension, SyscallHandlingResult,
+    CheatcodeHandlingResult, ExtendedRuntime, ExtensionLogic, RuntimeExtension,
+    SyscallHandlingResult,
 };
 use cairo_lang_starknet::contract::starknet_keccak;
 use cairo_vm::vm::errors::hint_errors::HintError::CustomHint;
@@ -45,6 +46,9 @@ use cheatnet::execution::contract_execution_syscall_handler::{
 use starknet::signers::SigningKey;
 
 mod file_operations;
+
+pub type ForgeRuntime<'a> =
+    ExtendedRuntime<RuntimeExtension<TestExecutionState<'a>, ContractExecutionSyscallHandler<'a>>>;
 
 pub struct TestExecutionState<'a> {
     pub environment_variables: &'a HashMap<String, String>,
@@ -601,6 +605,17 @@ fn write_call_contract_response(
                 .child
                 .read_only_segments
                 .allocate(vm, &ret_data.iter().map(Into::into).collect())?;
+
+            // add execution resources used by call to all used resources
+            cheatable_syscall_handler
+                .cheatnet_state
+                .used_resources
+                .vm_resources += &call_output.used_resources.vm_resources;
+            cheatable_syscall_handler
+                .cheatnet_state
+                .used_resources
+                .syscall_counter
+                .extend(call_output.used_resources.syscall_counter);
 
             SyscallResponseWrapper::Success {
                 gas_counter: call_args.gas_counter,
