@@ -57,10 +57,10 @@ pub async fn add(
     rpc_url: &str,
     account: &str,
     accounts_file: &Utf8PathBuf,
-    path_to_scarb_toml: Option<&Utf8PathBuf>,
+    path_to_scarb_toml: Result<Utf8PathBuf>,
     provider: &JsonRpcClient<HttpTransport>,
     add: &Add,
-    package: Option<&PackageMetadata>,
+    package: Result<PackageMetadata>,
 ) -> Result<AccountAddResponse> {
     let private_key = &SigningKey::from_secret_scalar(add.private_key);
     if let Some(public_key) = &add.public_key {
@@ -83,17 +83,13 @@ pub async fn add(
     write_account_to_accounts_file(account, accounts_file, chain_id, account_json.clone())?;
 
     if add.add_profile {
-        // Other cases should be unreachable
-        let path_to_scarb_toml = path_to_scarb_toml.unwrap();
-        let package = package.unwrap();
-
         let config = CastConfig {
             rpc_url: rpc_url.into(),
             account: account.into(),
             accounts_file: accounts_file.into(),
             keystore: Utf8PathBuf::default(),
         };
-        add_created_profile_to_configuration(path_to_scarb_toml, &config, &package)?;
+        add_created_profile_to_configuration(&path_to_scarb_toml?, &config, &package?.clone())?;
     }
 
     Ok(AccountAddResponse {

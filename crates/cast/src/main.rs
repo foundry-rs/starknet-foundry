@@ -1,5 +1,3 @@
-use std::error::Error;
-
 use crate::starknet_commands::account::Account;
 use crate::starknet_commands::show_config::ShowConfig;
 use crate::starknet_commands::{
@@ -12,14 +10,16 @@ use camino::Utf8PathBuf;
 use cast::helpers::build::build;
 use cast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
 use cast::helpers::scarb_utils::{
-    get_first_package_from_metadata, get_scarb_manifest, get_scarb_metadata, parse_scarb_config,
-    CastConfig,
+    get_first_package_from_metadata, get_scarb_manifest, get_scarb_metadata,
+    get_scarb_metadata_with_deps, parse_scarb_config, CastConfig,
 };
 use cast::{
     chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_provider,
     print_command_result, ValueFormat,
 };
 use clap::{Parser, Subcommand};
+use starknet::providers::jsonrpc::HttpTransport;
+use starknet::providers::JsonRpcClient;
 use tokio::runtime::Runtime;
 
 use scarb_metadata::{Metadata, PackageMetadata};
@@ -109,8 +109,7 @@ enum Commands {
     Script(Script),
 }
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn Error>> {
+fn main() -> Result<()> {
     let cli = Cli::parse();
 
     // Clap validates that both are not passed at same time
@@ -122,313 +121,271 @@ async fn main() -> Result<(), Box<dyn Error>> {
         ValueFormat::Default
     };
 
-    if is_command_package_dependent(&cli) {
-        let (manifest_path, metadata, package) = get_path_metadata_package(&cli)?;
+    let package_data = get_package_data(&cli);
+    let mut config = match &package_data.package {
+        Ok(package) => parse_scarb_config(&cli.profile, Some(package))?,
+        Err(_) => parse_scarb_config(&cli.profile, None)?,
+    };
 
-        let mut config = parse_scarb_config(&cli.profile, Some(&package))?;
-        update_cast_config(&mut config, &cli);
-        let provider = get_provider(&config.rpc_url)?;
+    update_cast_config(&mut config, &cli);
 
-        match cli.command {
-            Commands::Declare(declare) => {
-                let account = get_account(
-                    &config.account,
-                    &config.accounts_file,
-                    &provider,
-                    &config.keystore,
-                )
-                .await?;
+    let provider = get_provider(&config.rpc_url)?;
+    let runtime = Runtime::new().expect("Could not instantiate Runtime");
 
-                let contracts = build(&metadata, &package)?;
+    if let Commands::Script(script) = cli.command {
+        let package = package_data.package?;
+        let contracts = build(&package_data.metadata?, &package)?;
 
-                let mut result = starknet_commands::declare::declare(
-                    &declare.contract,
-                    declare.max_fee,
-                    &account,
-                    &contracts,
-                    cli.wait,
-                )
-                .await;
+        let mut result = starknet_commands::script::run(
+            &script.script_module_name,
+            &Some(package_data.manifest_path?),
+            &provider,
+            runtime,
+            &config,
+            &contracts,
+            &package.name,
+        );
 
-                print_command_result("declare", &mut result, value_format, cli.json)?;
-                return Ok(());
-            }
-            Commands::Account(account) => match account.command {
-                account::Commands::Add(add) => {
-                    config.account = add.name.clone();
-                    let mut result = starknet_commands::account::add::add(
-                        &config.rpc_url,
-                        &config.account,
-                        &config.accounts_file,
-                        Some(&manifest_path),
-                        &provider,
-                        &add,
-                        Some(&package),
-                    )
-                    .await;
-
-                    print_command_result("account add", &mut result, value_format, cli.json)?;
-                    return Ok(());
-                }
-                account::Commands::Create(create) => {
-                    let chain_id = get_chain_id(&provider).await?;
-                    if config.keystore == Utf8PathBuf::default() {
-                        config.account = create
-                            .name
-                            .ok_or_else(|| anyhow!("required argument --name not provided"))?;
-                    }
-                    let mut result = starknet_commands::account::create::create(
-                        &config.rpc_url,
-                        &config.account,
-                        &config.accounts_file,
-                        &config.keystore,
-                        &provider,
-                        Some(&manifest_path),
-                        chain_id,
-                        create.salt,
-                        create.add_profile,
-                        create.class_hash,
-                        Some(&package),
-                    )
-                    .await;
-
-                    print_command_result("account create", &mut result, value_format, cli.json)?;
-                    return Ok(());
-                }
-                _ => unreachable!(),
-            },
-            Commands::Script(script) => {
-                let runtime = Runtime::new().expect("Could not instantiate Runtime");
-
-                let mut result = starknet_commands::script::run(
-                    &script.script_module_name,
-                    &cli.path_to_scarb_toml,
-                    &provider,
-                    runtime,
-                    &config,
-                    &metadata,
-                    &package,
-                );
-
-                print_command_result("script", &mut result, value_format, cli.json)?;
-                return Ok(());
-            }
-            _ => unreachable!(),
-        }
+        print_command_result("script", &mut result, value_format, cli.json)?;
+        Ok(())
     } else {
-        let (mut manifest_path, package) = match get_path_metadata_package(&cli) {
-            Ok((path, _, pkg)) => (Some(path), Some(pkg)),
-            _ => (None, None),
-        };
+        runtime.block_on(run_async_command(
+            cli,
+            config,
+            provider,
+            value_format,
+            package_data,
+        ))
+    }
+}
 
-        manifest_path = match manifest_path {
-            Some(path) => Some(path),
-            None => cli.path_to_scarb_toml.clone(),
-        };
+#[allow(clippy::too_many_lines)]
+async fn run_async_command(
+    cli: Cli,
+    mut config: CastConfig,
+    provider: JsonRpcClient<HttpTransport>,
+    value_format: ValueFormat,
+    package_data: PackageData,
+) -> Result<()> {
+    match cli.command {
+        Commands::Declare(declare) => {
+            let account = get_account(
+                &config.account,
+                &config.accounts_file,
+                &provider,
+                &config.keystore,
+            )
+            .await?;
 
-        let mut config = parse_scarb_config(&cli.profile, package.as_ref())?;
-        update_cast_config(&mut config, &cli);
-        let provider = get_provider(&config.rpc_url)?;
+            package_data.manifest_path?;
 
-        match cli.command {
-            Commands::Deploy(deploy) => {
-                let account = get_account(
-                    &config.account,
-                    &config.accounts_file,
-                    &provider,
-                    &config.keystore,
-                )
-                .await?;
-                let mut result = starknet_commands::deploy::deploy(
-                    deploy.class_hash,
-                    deploy.constructor_calldata,
-                    deploy.salt,
-                    deploy.unique,
-                    deploy.max_fee,
-                    &account,
-                    cli.wait,
-                )
-                .await;
+            let contracts = build(&package_data.metadata?, &package_data.package?)?;
 
-                print_command_result("deploy", &mut result, value_format, cli.json)?;
-                Ok(())
-            }
-            Commands::Call(call) => {
-                let block_id = get_block_id(&call.block_id)?;
+            let mut result = starknet_commands::declare::declare(
+                &declare.contract,
+                declare.max_fee,
+                &account,
+                &contracts,
+                cli.wait,
+            )
+            .await;
 
-                let mut result = starknet_commands::call::call(
-                    call.contract_address,
-                    call.function.as_ref(),
-                    call.calldata,
-                    &provider,
-                    block_id.as_ref(),
-                )
-                .await;
+            print_command_result("declare", &mut result, value_format, cli.json)?;
+            Ok(())
+        }
+        Commands::Deploy(deploy) => {
+            let account = get_account(
+                &config.account,
+                &config.accounts_file,
+                &provider,
+                &config.keystore,
+            )
+            .await?;
+            let mut result = starknet_commands::deploy::deploy(
+                deploy.class_hash,
+                deploy.constructor_calldata,
+                deploy.salt,
+                deploy.unique,
+                deploy.max_fee,
+                &account,
+                cli.wait,
+            )
+            .await;
 
-                print_command_result("call", &mut result, value_format, cli.json)?;
-                Ok(())
-            }
-            Commands::Invoke(invoke) => {
-                let account = get_account(
-                    &config.account,
-                    &config.accounts_file,
-                    &provider,
-                    &config.keystore,
-                )
-                .await?;
-                let mut result = starknet_commands::invoke::invoke(
-                    invoke.contract_address,
-                    &invoke.function,
-                    invoke.calldata,
-                    invoke.max_fee,
-                    &account,
-                    cli.wait,
-                )
-                .await;
+            print_command_result("deploy", &mut result, value_format, cli.json)?;
+            Ok(())
+        }
+        Commands::Call(call) => {
+            let block_id = get_block_id(&call.block_id)?;
 
-                print_command_result("invoke", &mut result, value_format, cli.json)?;
-                Ok(())
-            }
-            Commands::Multicall(multicall) => {
-                match &multicall.command {
-                    starknet_commands::multicall::Commands::New(new) => {
-                        if let Some(output_path) = &new.output_path {
-                            let mut result =
-                                starknet_commands::multicall::new::new(output_path, new.overwrite);
-                            print_command_result(
-                                "multicall new",
-                                &mut result,
-                                value_format,
-                                cli.json,
-                            )?;
-                        } else {
-                            println!("{DEFAULT_MULTICALL_CONTENTS}");
-                        }
-                    }
-                    starknet_commands::multicall::Commands::Run(run) => {
-                        let account = get_account(
-                            &config.account,
-                            &config.accounts_file,
-                            &provider,
-                            &config.keystore,
-                        )
-                        .await?;
-                        let mut result = starknet_commands::multicall::run::run(
-                            &run.path,
-                            &account,
-                            run.max_fee,
-                            cli.wait,
-                        )
-                        .await;
+            let mut result = starknet_commands::call::call(
+                call.contract_address,
+                call.function.as_ref(),
+                call.calldata,
+                &provider,
+                block_id.as_ref(),
+            )
+            .await;
 
-                        print_command_result("multicall run", &mut result, value_format, cli.json)?;
+            print_command_result("call", &mut result, value_format, cli.json)?;
+            Ok(())
+        }
+        Commands::Invoke(invoke) => {
+            let account = get_account(
+                &config.account,
+                &config.accounts_file,
+                &provider,
+                &config.keystore,
+            )
+            .await?;
+            let mut result = starknet_commands::invoke::invoke(
+                invoke.contract_address,
+                &invoke.function,
+                invoke.calldata,
+                invoke.max_fee,
+                &account,
+                cli.wait,
+            )
+            .await;
+
+            print_command_result("invoke", &mut result, value_format, cli.json)?;
+            Ok(())
+        }
+        Commands::Multicall(multicall) => {
+            match &multicall.command {
+                starknet_commands::multicall::Commands::New(new) => {
+                    if let Some(output_path) = &new.output_path {
+                        let mut result =
+                            starknet_commands::multicall::new::new(output_path, new.overwrite);
+                        print_command_result("multicall new", &mut result, value_format, cli.json)?;
+                    } else {
+                        println!("{DEFAULT_MULTICALL_CONTENTS}");
                     }
                 }
-                Ok(())
-            }
-            Commands::ShowConfig(_) => {
-                let mut result = starknet_commands::show_config::show_config(
-                    &provider,
-                    config,
-                    cli.profile,
-                    manifest_path,
-                )
-                .await;
-                print_command_result("show-config", &mut result, value_format, cli.json)?;
-                Ok(())
-            }
-            Commands::Account(account) => match account.command {
-                account::Commands::Add(add) => {
-                    config.account = add.name.clone();
-                    let mut result = starknet_commands::account::add::add(
-                        &config.rpc_url,
+                starknet_commands::multicall::Commands::Run(run) => {
+                    let account = get_account(
                         &config.account,
                         &config.accounts_file,
-                        manifest_path.as_ref(),
                         &provider,
-                        &add,
-                        None,
-                    )
-                    .await;
-
-                    print_command_result("account add", &mut result, value_format, cli.json)?;
-                    return Ok(());
-                }
-                account::Commands::Create(create) => {
-                    let chain_id = get_chain_id(&provider).await?;
-                    if config.keystore == Utf8PathBuf::default() {
-                        config.account = create
-                            .name
-                            .ok_or_else(|| anyhow!("required argument --name not provided"))?;
-                    }
-                    let mut result = starknet_commands::account::create::create(
-                        &config.rpc_url,
-                        &config.account,
-                        &config.accounts_file,
                         &config.keystore,
-                        &provider,
-                        manifest_path.as_ref(),
-                        chain_id,
-                        create.salt,
-                        create.add_profile,
-                        create.class_hash,
-                        None,
                     )
-                    .await;
-
-                    print_command_result("account create", &mut result, value_format, cli.json)?;
-                    return Ok(());
-                }
-                account::Commands::Deploy(deploy) => {
-                    let chain_id = get_chain_id(&provider).await?;
-                    let keystore_path =
-                        Some(config.keystore.clone()).filter(|p| *p != Utf8PathBuf::default());
-                    let account_path = Some(Utf8PathBuf::from(config.account.clone()))
-                        .filter(|p| *p != String::default());
-                    if config.keystore == Utf8PathBuf::default() {
-                        config.account = deploy
-                            .name
-                            .ok_or_else(|| anyhow!("required argument --name not provided"))?;
-                    }
-                    let mut result = starknet_commands::account::deploy::deploy(
-                        &provider,
-                        config.accounts_file,
-                        config.account,
-                        chain_id,
-                        deploy.max_fee,
+                    .await?;
+                    let mut result = starknet_commands::multicall::run::run(
+                        &run.path,
+                        &account,
+                        run.max_fee,
                         cli.wait,
-                        deploy.class_hash,
-                        keystore_path,
-                        account_path,
                     )
                     .await;
 
-                    print_command_result("account deploy", &mut result, value_format, cli.json)?;
-                    return Ok(());
+                    print_command_result("multicall run", &mut result, value_format, cli.json)?;
                 }
-                account::Commands::Delete(delete) => {
-                    config.account = delete
+            }
+            Ok(())
+        }
+        Commands::Account(account) => match account.command {
+            account::Commands::Add(add) => {
+                config.account = add.name.clone();
+                let mut result = starknet_commands::account::add::add(
+                    &config.rpc_url,
+                    &config.account,
+                    &config.accounts_file,
+                    package_data.manifest_path,
+                    &provider,
+                    &add,
+                    package_data.package,
+                )
+                .await;
+
+                print_command_result("account add", &mut result, value_format, cli.json)?;
+                Ok(())
+            }
+            account::Commands::Create(create) => {
+                let chain_id = get_chain_id(&provider).await?;
+                if config.keystore == Utf8PathBuf::default() {
+                    config.account = create
                         .name
                         .ok_or_else(|| anyhow!("required argument --name not provided"))?;
-                    let network_name = match delete.network {
-                        Some(network) => network,
-                        None => chain_id_to_network_name(get_chain_id(&provider).await?),
-                    };
-
-                    let mut result = starknet_commands::account::delete::delete(
-                        &config.account,
-                        &config.accounts_file,
-                        &cli.path_to_scarb_toml,
-                        delete.delete_profile,
-                        &network_name,
-                    );
-
-                    print_command_result("account delete", &mut result, value_format, cli.json)?;
-                    return Ok(());
                 }
-            },
-            _ => unreachable!(),
+
+                let mut result = starknet_commands::account::create::create(
+                    &config.rpc_url,
+                    &config.account,
+                    &config.accounts_file,
+                    &config.keystore,
+                    &provider,
+                    package_data.manifest_path,
+                    chain_id,
+                    create.salt,
+                    create.add_profile,
+                    create.class_hash,
+                    package_data.package,
+                )
+                .await;
+
+                print_command_result("account create", &mut result, value_format, cli.json)?;
+                Ok(())
+            }
+            account::Commands::Deploy(deploy) => {
+                let chain_id = get_chain_id(&provider).await?;
+                let keystore_path =
+                    Some(config.keystore.clone()).filter(|p| *p != Utf8PathBuf::default());
+                let account_path = Some(Utf8PathBuf::from(config.account.clone()))
+                    .filter(|p| *p != String::default());
+                if config.keystore == Utf8PathBuf::default() {
+                    config.account = deploy
+                        .name
+                        .ok_or_else(|| anyhow!("required argument --name not provided"))?;
+                }
+                let mut result = starknet_commands::account::deploy::deploy(
+                    &provider,
+                    config.accounts_file,
+                    config.account,
+                    chain_id,
+                    deploy.max_fee,
+                    cli.wait,
+                    deploy.class_hash,
+                    keystore_path,
+                    account_path,
+                )
+                .await;
+
+                print_command_result("account deploy", &mut result, value_format, cli.json)?;
+                Ok(())
+            }
+            account::Commands::Delete(delete) => {
+                config.account = delete
+                    .name
+                    .ok_or_else(|| anyhow!("required argument --name not provided"))?;
+                let network_name = match delete.network {
+                    Some(network) => network,
+                    None => chain_id_to_network_name(get_chain_id(&provider).await?),
+                };
+
+                let mut result = starknet_commands::account::delete::delete(
+                    &config.account,
+                    &config.accounts_file,
+                    &cli.path_to_scarb_toml,
+                    delete.delete_profile,
+                    &network_name,
+                );
+
+                print_command_result("account delete", &mut result, value_format, cli.json)?;
+                Ok(())
+            }
+        },
+        Commands::ShowConfig(_) => {
+            let mut result = starknet_commands::show_config::show_config(
+                &provider,
+                config,
+                cli.profile,
+                cli.path_to_scarb_toml,
+            )
+            .await;
+            print_command_result("show-config", &mut result, value_format, cli.json)?;
+            Ok(())
         }
+        Commands::Script(_) => unreachable!(),
     }
 }
 
@@ -451,42 +408,47 @@ fn update_cast_config(config: &mut CastConfig, cli: &Cli) {
     config.accounts_file = Utf8PathBuf::from(shellexpand::tilde(&new_accounts_file).to_string());
 }
 
-fn is_command_package_dependent(cli: &Cli) -> bool {
-    match &cli.command {
-        Commands::Declare(_) => true,
-        Commands::Deploy(_) => false,
-        Commands::Call(_) => false,
-        Commands::Invoke(_) => false,
-        Commands::Multicall(_) => false,
-        Commands::Account(account) => match &account.command {
-            account::Commands::Add(add) => add.add_profile,
-            account::Commands::Create(create) => create.add_profile,
-            account::Commands::Deploy(_) => false,
-            account::Commands::Delete(_) => false,
-        },
-        Commands::ShowConfig(_) => false,
-        Commands::Script(_) => true,
-    }
+struct PackageData {
+    pub manifest_path: Result<Utf8PathBuf>,
+    pub metadata: Result<Metadata>,
+    pub package: Result<PackageMetadata>,
 }
 
-// TODO: Change into struct
-fn get_path_metadata_package(cli: &Cli) -> Result<(Utf8PathBuf, Metadata, PackageMetadata)> {
-    let manifest_path = match cli.path_to_scarb_toml.clone() {
-        Some(path) => path,
-        None => get_scarb_manifest().context("Failed to obtain manifest path from scarb")?,
+// Get all the required package information from CLI
+fn get_package_data(cli: &Cli) -> PackageData {
+    let mut result = PackageData {
+        manifest_path: Err(anyhow!("Could not retrieve the manifest path")),
+        metadata: Err(anyhow!("Could not retrieve metadata")),
+        package: Err(anyhow!("Could not retrieve package metadata")),
     };
 
-    let metadata = get_scarb_metadata(&manifest_path)?;
+    let manifest_path = match cli.path_to_scarb_toml.clone() {
+        Some(path) => Ok(path),
+        None => get_scarb_manifest().context("Failed to obtain manifest path from scarb"),
+    };
+
+    result.manifest_path = manifest_path;
+    if let Err(_) = result.manifest_path {
+        return result;
+    }
+
+    let metadata = get_scarb_metadata_with_deps(result.manifest_path.as_ref().unwrap());
+
+    result.metadata = metadata;
+    if let Err(_) = result.metadata {
+        return result;
+    }
 
     let package = match cli
         .packages_filter
         .clone()
         .into_packages_filter()
-        .match_one(&metadata)
+        .match_one(result.metadata.as_ref().unwrap())
     {
-        Ok(data) => data,
-        Err(_) => get_first_package_from_metadata(&metadata)?.clone(),
+        Ok(data) => Ok(data),
+        Err(_) => get_first_package_from_metadata(result.metadata.as_ref().unwrap()),
     };
 
-    Ok((manifest_path, metadata, package))
+    result.package = package;
+    result
 }

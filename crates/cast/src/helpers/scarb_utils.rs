@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Context, Result};
-use camino::{Utf8PathBuf, Utf8Path};
-use scarb_metadata::{self, PackageMetadata};
+use camino::{Utf8Path, Utf8PathBuf};
 use scarb_metadata::Metadata;
+use scarb_metadata::{self, PackageMetadata};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::default::Default;
@@ -183,7 +183,7 @@ pub fn get_package_tool_sncast(package: &PackageMetadata) -> Result<&Value> {
     Ok(tool_sncast)
 }
 
-pub fn get_first_package_from_metadata(metadata: &Metadata) -> Result<&PackageMetadata> {
+pub fn get_first_package_from_metadata(metadata: &Metadata) -> Result<PackageMetadata> {
     let first_package_id = metadata
         .workspace
         .members
@@ -196,7 +196,7 @@ pub fn get_first_package_from_metadata(metadata: &Metadata) -> Result<&PackageMe
         .find(|p| p.id == *first_package_id)
         .ok_or_else(|| anyhow!("No package found in metadata"))?;
 
-    Ok(first_package)
+    Ok(first_package.clone())
 }
 
 #[cfg(test)]
@@ -214,7 +214,7 @@ mod tests {
         .unwrap();
         let config = parse_scarb_config(
             &Some(String::from("myprofile")),
-            Some(get_first_package_from_metadata(&metadata).unwrap()),
+            Some(&get_first_package_from_metadata(&metadata).unwrap()),
         )
         .unwrap();
 
@@ -228,7 +228,7 @@ mod tests {
             get_scarb_metadata(&Utf8PathBuf::from("tests/data/contracts/map/Scarb.toml")).unwrap();
         let config = parse_scarb_config(
             &None,
-            Some(get_first_package_from_metadata(&metadata).unwrap()),
+            Some(&get_first_package_from_metadata(&metadata).unwrap()),
         )
         .unwrap();
         assert_eq!(config.account, String::from("user2"));
@@ -241,7 +241,7 @@ mod tests {
             get_scarb_metadata(&Utf8PathBuf::from("tests/data/files/noconfig_Scarb.toml")).unwrap();
         let config = parse_scarb_config(
             &None,
-            Some(get_first_package_from_metadata(&metadata).unwrap()),
+            Some(&get_first_package_from_metadata(&metadata).unwrap()),
         )
         .unwrap();
 
@@ -255,7 +255,7 @@ mod tests {
             get_scarb_metadata(&Utf8PathBuf::from("tests/data/contracts/map/Scarb.toml")).unwrap();
         let config = parse_scarb_config(
             &Some(String::from("mariusz")),
-            Some(get_first_package_from_metadata(&metadata).unwrap()),
+            Some(&get_first_package_from_metadata(&metadata).unwrap()),
         )
         .unwrap_err();
         assert_eq!(
@@ -270,10 +270,10 @@ mod tests {
             "tests/data/files/somemissing_Scarb.toml",
         ))
         .unwrap();
-    
+
         let config = parse_scarb_config(
             &None,
-            Some(get_first_package_from_metadata(&metadata).unwrap()),
+            Some(&get_first_package_from_metadata(&metadata).unwrap()),
         )
         .unwrap();
 

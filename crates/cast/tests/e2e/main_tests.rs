@@ -4,9 +4,9 @@ use crate::helpers::runner::runner;
 use cast::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
 use indoc::indoc;
 use snapbox::cmd::{cargo_bin, Command};
-use tempfile::TempDir;
 use std::env;
 use std::fs;
+use tempfile::TempDir;
 
 #[tokio::test]
 async fn test_happy_case_from_scarb() {
@@ -128,7 +128,8 @@ async fn test_missing_account() {
         "tests/data/files/noconfig_Scarb.toml",
         manifest_path,
         &fs_extra::file::CopyOptions::new().overwrite(true),
-    ).unwrap();
+    )
+    .unwrap();
 
     let args = vec![
         "--path-to-scarb-toml",
@@ -159,7 +160,8 @@ async fn test_missing_url() {
         "tests/data/files/noconfig_Scarb.toml",
         manifest_path,
         &fs_extra::file::CopyOptions::new().overwrite(true),
-    ).unwrap();
+    )
+    .unwrap();
 
     let args = vec![
         "--path-to-scarb-toml",
@@ -190,7 +192,8 @@ async fn test_inexistent_keystore() {
         "tests/data/files/noconfig_Scarb.toml",
         manifest_path,
         &fs_extra::file::CopyOptions::new().overwrite(true),
-    ).unwrap();
+    )
+    .unwrap();
 
     let args = vec![
         "--path-to-scarb-toml",
@@ -221,7 +224,8 @@ async fn test_keystore_account_required() {
         "tests/data/files/noconfig_Scarb.toml",
         manifest_path,
         &fs_extra::file::CopyOptions::new().overwrite(true),
-    ).unwrap();
+    )
+    .unwrap();
 
     let args = vec![
         "--path-to-scarb-toml",
@@ -252,7 +256,8 @@ async fn test_keystore_inexistent_account() {
         "tests/data/files/noconfig_Scarb.toml",
         manifest_path,
         &fs_extra::file::CopyOptions::new().overwrite(true),
-    ).unwrap();
+    )
+    .unwrap();
 
     let args = vec![
         "--path-to-scarb-toml",
