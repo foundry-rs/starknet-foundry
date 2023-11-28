@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+### Added
+
+- `--private-key-file` option to `account add` command that allows to provide a path to the file holding account private key
+
 ## [0.11.0] - 2023-11-22
 
 ### Forge
