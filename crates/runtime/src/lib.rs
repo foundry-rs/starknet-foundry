@@ -29,6 +29,8 @@ use cheatnet::cheatcodes::EnhancedHintError;
 use cheatnet::execution::cheatable_syscall_handler::SyscallSelector;
 use cheatnet::execution::contract_execution_syscall_handler::ContractExecutionSyscallHandler;
 
+pub mod forge_runtime_extension;
+
 pub trait SyscallPtrAccess {
     fn get_mut_syscall_ptr(&mut self) -> &mut Relocatable;
 
