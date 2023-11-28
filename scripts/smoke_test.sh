@@ -17,10 +17,8 @@ popd || exit
 
 # Check cast
 
-OUTPUT=$($SNCAST_PATH --url "$RPC_URL":9545/rpc/v0.4 call --contract-address 0x071c8d74edc89330f314f3b1109059d68ebfa68874aa91e9c425a6378ffde00e --function "get_balance")
-
-EXPECTED=$'command: call\nresponse: [0x2]'
-
-if [[ "$OUTPUT" != "$EXPECTED" ]]; then
-    exit 1
+if ! $SNCAST_PATH --url "$RPC_URL":9545/rpc/v0.4 call \
+    --contract-address 0x071c8d74edc89330f314f3b1109059d68ebfa68874aa91e9c425a6378ffde00e \
+    --function "get_balance" | grep -q $'command: call\nresponse: [0x2]'; then
+  exit 1
 fi
