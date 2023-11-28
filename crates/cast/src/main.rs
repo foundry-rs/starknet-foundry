@@ -9,6 +9,7 @@ use crate::starknet_commands::{
 use anyhow::{anyhow, Context, Result};
 
 use camino::Utf8PathBuf;
+use cast::helpers::build::build;
 use cast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
 use cast::helpers::scarb_utils::{
     get_first_package_from_metadata, get_scarb_manifest, get_scarb_metadata, parse_scarb_config,
@@ -130,7 +131,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
         match cli.command {
             Commands::Declare(declare) => {
-
                 let account = get_account(
                     &config.account,
                     &config.accounts_file,
@@ -138,12 +138,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
                     &config.keystore,
                 )
                 .await?;
+
+                let contracts = build(&metadata, &package)?;
+
                 let mut result = starknet_commands::declare::declare(
                     &declare.contract,
                     declare.max_fee,
                     &account,
-                    &metadata,
-                    &package,
+                    &contracts,
                     cli.wait,
                 )
                 .await;
@@ -192,7 +194,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
                     print_command_result("account create", &mut result, value_format, cli.json)?;
                     return Ok(());
-                },
+                }
                 _ => unreachable!(),
             },
             Commands::Script(script) => {
@@ -207,10 +209,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
                     &metadata,
                     &package,
                 );
-        
+
                 print_command_result("script", &mut result, value_format, cli.json)?;
-                return Ok(())
-            },
+                return Ok(());
+            }
             _ => unreachable!(),
         }
     } else {
@@ -351,7 +353,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
                     print_command_result("account add", &mut result, value_format, cli.json)?;
                     return Ok(());
-                },
+                }
                 account::Commands::Create(create) => {
                     let chain_id = get_chain_id(&provider).await?;
                     if config.keystore == Utf8PathBuf::default() {
@@ -376,7 +378,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
                     print_command_result("account create", &mut result, value_format, cli.json)?;
                     return Ok(());
-                },
+                }
                 account::Commands::Deploy(deploy) => {
                     let chain_id = get_chain_id(&provider).await?;
                     let keystore_path =
@@ -423,7 +425,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
                     print_command_result("account delete", &mut result, value_format, cli.json)?;
                     return Ok(());
-                },
+                }
             },
             _ => unreachable!(),
         }

@@ -2,8 +2,7 @@ use anyhow::{anyhow, Context, Result};
 use cast::helpers::response_structs::DeclareResponse;
 use cast::{handle_rpc_error, handle_wait_for_tx};
 use clap::Args;
-use scarb_artifacts::get_contracts_map;
-use scarb_metadata::{PackageMetadata, Metadata};
+use scarb_artifacts::StarknetContractArtifacts;
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::ConnectedAccount;
 use starknet::core::types::FieldElement;
@@ -13,7 +12,7 @@ use starknet::{
     providers::jsonrpc::{HttpTransport, JsonRpcClient},
     signers::LocalWallet,
 };
-use std::process::{Command, Stdio};
+use std::collections::HashMap;
 use std::sync::Arc;
 
 #[derive(Args)]
@@ -33,39 +32,10 @@ pub async fn declare(
     contract_name: &str,
     max_fee: Option<FieldElement>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
-    metadata: &Metadata,
-    package: &PackageMetadata,
+    contracts: &HashMap<String, StarknetContractArtifacts>,
     wait: bool,
 ) -> Result<DeclareResponse> {
     let contract_name: String = contract_name.to_string();
-
-    let command_result = Command::new("scarb")
-        .arg("--manifest-path")
-        .arg(&package.manifest_path)
-        .arg("build")
-        .arg("-p")
-        .arg(&package.name)
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .output()
-        .context("Failed to start building contracts with Scarb")?;
-
-    let result_code = command_result
-        .status
-        .code()
-        .context("Failed to obtain status code from scarb build")?;
-    let result_stdout = String::from_utf8(command_result.stdout)?;
-    let result_stderr = String::from_utf8(command_result.stderr)?;
-    if result_code != 0 {
-        anyhow::bail!(
-            "Scarb build returned non-zero exit code: {} - error message:\nstdout: {}\n stderr: {}",
-            result_code,
-            result_stdout,
-            result_stderr,
-        );
-    }
-
-    let contracts = get_contracts_map(&metadata, &package.id)?;
 
     let contract_artifacts = contracts
         .get(&contract_name)
