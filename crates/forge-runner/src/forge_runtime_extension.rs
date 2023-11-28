@@ -114,6 +114,7 @@ impl<'a> ExtensionLogic
             }
             "stop_elect" => {
                 let (target, _) = deserialize_cheat_target(&inputs);
+
                 self.extended_runtime
                     .child
                     .cheatnet_state
