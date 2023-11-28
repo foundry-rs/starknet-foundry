@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use anyhow::{Context, Result};
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::execution_utils::{
-    felt_to_stark_felt, stark_felt_from_ptr, stark_felt_to_felt, ReadOnlySegment,
+    stark_felt_from_ptr, stark_felt_to_felt, ReadOnlySegment,
 };
 use blockifier::execution::syscalls::hint_processor::{read_felt_array, SyscallExecutionError};
 use blockifier::execution::syscalls::{
@@ -17,7 +17,7 @@ use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use cheatnet::cheatcodes::deploy::{deploy, deploy_at, DeployCallPayload};
 use cheatnet::cheatcodes::{CheatcodeError, EnhancedHintError};
-use cheatnet::execution::cheatable_syscall_handler::CheatableSyscallHandler;
+use cheatnet::execution::cheatable_syscall_handler::{CheatableSyscallHandler, SyscallSelector};
 use cheatnet::rpc::{call_contract, CallContractFailure, CallContractOutput, CallContractResult};
 use cheatnet::state::{BlockifierState, CheatTarget, CheatnetState};
 use conversions::{FromConv, IntoConv};
@@ -25,8 +25,6 @@ use num_traits::{One, ToPrimitive};
 use scarb_artifacts::StarknetContractArtifacts;
 use serde::Deserialize;
 
-use cairo_lang_casm::operand::ResOperand;
-use cairo_lang_runner::casm_run::{extract_buffer, get_ptr};
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use starknet_api::core::ContractAddress;
 use starknet_api::hash::StarkFelt;
@@ -458,23 +456,9 @@ impl<'a> ExtensionLogic
 
     fn override_system_call(
         &mut self,
-        system: &ResOperand,
+        selector: SyscallSelector,
         vm: &mut VirtualMachine,
     ) -> Result<SyscallHandlingResult, HintError> {
-        let (cell, offset) = extract_buffer(system);
-        let system_ptr = get_ptr(vm, cell, &offset)?;
-
-        self.get_extended_runtime_mut()
-            .child
-            .child
-            .verify_syscall_ptr(system_ptr)?;
-
-        // We peek into memory to check the selector
-        let selector = DeprecatedSyscallSelector::try_from(felt_to_stark_felt(
-            &vm.get_integer(self.get_extended_runtime_mut().child.child.syscall_ptr)
-                .unwrap(),
-        ))?;
-
         match selector {
             DeprecatedSyscallSelector::CallContract => {
                 let call_args = CallContractArgs::read(

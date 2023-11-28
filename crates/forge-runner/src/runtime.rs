@@ -3,18 +3,22 @@ use std::collections::HashMap;
 
 use anyhow::Result;
 
+use blockifier::execution::execution_utils::felt_to_stark_felt;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
+use blockifier::execution::syscalls::SyscallResult;
 
 use cairo_felt::Felt252;
 use cairo_lang_casm::hints::{Hint, StarknetHint};
-use cairo_lang_casm::operand::ResOperand;
-use cairo_lang_runner::casm_run::{extract_relocatable, vm_get_range, MemBuffer};
+use cairo_lang_runner::casm_run::{
+    extract_buffer, extract_relocatable, get_ptr, vm_get_range, MemBuffer,
+};
 use cairo_lang_runner::{casm_run::cell_ref_to_relocatable, insert_value_to_cellref};
 use cairo_vm::hint_processor::hint_processor_definition::{
     HintProcessor, HintProcessorLogic, HintReference,
 };
 use cairo_vm::serde::deserialize_program::ApTracking;
 use cairo_vm::types::exec_scope::ExecutionScopes;
+use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::errors::hint_errors::HintError::CustomHint;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
@@ -22,9 +26,38 @@ use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cairo_vm::vm::vm_core::VirtualMachine;
 
 use cheatnet::cheatcodes::EnhancedHintError;
+use cheatnet::execution::cheatable_syscall_handler::SyscallSelector;
+use cheatnet::execution::contract_execution_syscall_handler::ContractExecutionSyscallHandler;
+
+pub trait SyscallPtrAccess {
+    fn get_mut_syscall_ptr(&mut self) -> &mut Relocatable;
+
+    fn verify_syscall_ptr(&self, actual_ptr: Relocatable) -> SyscallResult<()>;
+}
+
+// TODO this is only temporary, after we migrate everything to extension it will be auto-derived
+impl<'a> SyscallPtrAccess for ContractExecutionSyscallHandler<'a> {
+    fn get_mut_syscall_ptr(&mut self) -> &mut Relocatable {
+        &mut self.child.child.syscall_ptr
+    }
+
+    fn verify_syscall_ptr(&self, ptr: Relocatable) -> SyscallResult<()> {
+        self.child.child.verify_syscall_ptr(ptr)
+    }
+}
 
 pub struct StarknetRuntime<'a> {
     pub hint_handler: SyscallHintProcessor<'a>,
+}
+
+impl<'a> SyscallPtrAccess for StarknetRuntime<'a> {
+    fn get_mut_syscall_ptr(&mut self) -> &mut Relocatable {
+        &mut self.hint_handler.syscall_ptr
+    }
+
+    fn verify_syscall_ptr(&self, ptr: Relocatable) -> SyscallResult<()> {
+        self.hint_handler.verify_syscall_ptr(ptr)
+    }
 }
 
 impl<'a> ResourceTracker for StarknetRuntime<'a> {
@@ -77,7 +110,9 @@ pub struct RuntimeExtension<ExtensionState, Runtime: HintProcessor> {
 // Required to implement the foreign trait
 pub struct ExtendedRuntime<Extension>(pub Extension);
 
-impl<Extension: ExtensionLogic> HintProcessorLogic for ExtendedRuntime<Extension> {
+impl<Extension: ExtensionLogic + SyscallPtrAccess> HintProcessorLogic
+    for ExtendedRuntime<Extension>
+{
     fn execute_hint(
         &mut self,
         vm: &mut VirtualMachine,
@@ -124,8 +159,17 @@ impl<Extension: ExtensionLogic> HintProcessorLogic for ExtendedRuntime<Extension
         }
 
         if let Some(Hint::Starknet(StarknetHint::SystemCall { system })) = maybe_extended_hint {
-            // TODO move selector parsing logic here
-            if let SyscallHandlingResult::Handled(()) = self.0.override_system_call(system, vm)? {
+            let (cell, offset) = extract_buffer(system);
+            let system_ptr = get_ptr(vm, cell, &offset)?;
+
+            self.0.verify_syscall_ptr(system_ptr)?;
+
+            // We peek into memory to check the selector
+            let selector = SyscallSelector::try_from(felt_to_stark_felt(
+                &vm.get_integer(*self.0.get_mut_syscall_ptr()).unwrap(),
+            ))?;
+
+            if let SyscallHandlingResult::Handled(()) = self.0.override_system_call(selector, vm)? {
                 return Ok(());
             }
         }
@@ -147,6 +191,18 @@ impl<Extension: ExtensionLogic> HintProcessorLogic for ExtendedRuntime<Extension
             reference_ids,
             references,
         )
+    }
+}
+
+impl<Handler, Runtime: SyscallPtrAccess + HintProcessor> SyscallPtrAccess
+    for RuntimeExtension<Handler, Runtime>
+{
+    fn get_mut_syscall_ptr(&mut self) -> &mut Relocatable {
+        self.extended_runtime.get_mut_syscall_ptr()
+    }
+
+    fn verify_syscall_ptr(&self, ptr: Relocatable) -> SyscallResult<()> {
+        self.extended_runtime.verify_syscall_ptr(ptr)
     }
 }
 
@@ -193,7 +249,7 @@ pub trait ExtensionLogic {
 
     fn override_system_call(
         &mut self,
-        system: &ResOperand,
+        selector: SyscallSelector,
         vm: &mut VirtualMachine,
     ) -> Result<SyscallHandlingResult, HintError>;
 
