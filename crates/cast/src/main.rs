@@ -10,8 +10,8 @@ use camino::Utf8PathBuf;
 use cast::helpers::build::build;
 use cast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
 use cast::helpers::scarb_utils::{
-    get_first_package_from_metadata, get_scarb_manifest, get_scarb_metadata,
-    get_scarb_metadata_with_deps, parse_scarb_config, CastConfig,
+    get_first_package_from_metadata, get_scarb_manifest, get_scarb_metadata_with_deps,
+    parse_scarb_config, CastConfig,
 };
 use cast::{
     chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_provider,
@@ -143,7 +143,6 @@ fn main() -> Result<()> {
             runtime,
             &config,
             &contracts,
-            &package.name,
         );
 
         print_command_result("script", &mut result, value_format, cli.json)?;

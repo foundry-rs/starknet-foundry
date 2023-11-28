@@ -19,7 +19,7 @@ async fn test_missing_field() {
     let snapbox = Command::new(cargo_bin!("sncast"))
         .current_dir(SCRIPTS_DIR.to_owned() + "/declare/missing_field")
         .args(args);
-    snapbox.assert().success().stdout_matches(indoc! {r"
+    snapbox.assert().failure().stderr_matches(indoc! {r"
         ...
         error: Wrong number of arguments. Expected 2, found: 1
         ...

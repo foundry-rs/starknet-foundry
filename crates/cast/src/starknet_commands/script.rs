@@ -36,7 +36,7 @@ use clap::Args;
 use conversions::StarknetConversions;
 use itertools::chain;
 use num_traits::ToPrimitive;
-use scarb_artifacts::StarknetContractArtifacts;
+use scarb_artifacts::{target_dir_for_package, StarknetContractArtifacts};
 use scarb_metadata::ScarbCommand;
 use starknet::core::types::{BlockId, BlockTag::Pending, FieldElement};
 use starknet::providers::jsonrpc::HttpTransport;
@@ -362,21 +362,16 @@ pub fn run(
     runtime: Runtime,
     config: &CastConfig,
     contracts: &HashMap<String, StarknetContractArtifacts>,
-    package_name: &String,
 ) -> Result<ScriptResponse> {
-    // let path = compile_script(path_to_scarb_toml.clone())?;
+    let path = compile_script(path_to_scarb_toml.clone())?;
 
-    // cont
-
-    let contract_artifacts = contracts
-        .get(package_name)
-        .ok_or(anyhow!("Failed to find artifacts in starknet_artifacts.json file. Make sure you have enabled sierra and casm code generation in Scarb.toml"))?
-        .sierra.clone();
-
-    let sierra_program = serde_json::from_str::<VersionedProgram>(&contract_artifacts)
-        .with_context(|| format!("failed to deserialize Sierra program"))?
-        .into_v1()
-        .with_context(|| format!("failed to load Sierra program"))?;
+    let sierra_program = serde_json::from_str::<VersionedProgram>(
+        &fs::read_to_string(path.clone())
+            .with_context(|| format!("failed to read Sierra file: {path}"))?,
+    )
+    .with_context(|| format!("failed to deserialize Sierra program: {path}"))?
+    .into_v1()
+    .with_context(|| format!("failed to load Sierra program: {path}"))?;
 
     let runner = SierraCasmRunner::new(
         sierra_program,
@@ -429,40 +424,38 @@ pub fn run(
     }
 }
 
-// fn compile_script(path_to_scarb_toml: Option<Utf8PathBuf>) -> Result<Utf8PathBuf> {
-//     let scripts_manifest_path = match path_to_scarb_toml {
-//         Some(path) => path,
-//         None => get_scarb_manifest()
-//             .context("Failed to obtain manifest path from scarb")
-//             .unwrap(),
-//     };
-//     ensure!(
-//         scripts_manifest_path.exists(),
-//         "Path {scripts_manifest_path} does not exist"
-//     );
+fn compile_script(path_to_scarb_toml: Option<Utf8PathBuf>) -> Result<Utf8PathBuf> {
+    let scripts_manifest_path = match path_to_scarb_toml {
+        Some(path) => path,
+        None => get_scarb_manifest()
+            .context("Failed to obtain manifest path from scarb")
+            .unwrap(),
+    };
+    ensure!(
+        scripts_manifest_path.exists(),
+        "Path {scripts_manifest_path} does not exist"
+    );
 
-//     ScarbCommand::new()
-//         .arg("build")
-//         .env("SCARB_MANIFEST_PATH", &scripts_manifest_path)
-//         .run()?;
+    ScarbCommand::new()
+        .arg("build")
+        .env("SCARB_MANIFEST_PATH", &scripts_manifest_path)
+        .run()?;
 
-//     let metadata = get_scarb_metadata_with_deps(&scripts_manifest_path)?;
-//     let package_metadata = get_package_metadata(&metadata, &scripts_manifest_path)?;
+    let metadata = get_scarb_metadata_with_deps(&scripts_manifest_path)?;
+    let package_metadata = get_package_metadata(&metadata, &scripts_manifest_path)?;
 
-//     let filename = format!("{}.sierra.json", package_metadata.name);
-//     let path = metadata
-//         .target_dir
-//         .unwrap_or(metadata.workspace.root.join("target"))
-//         .join(metadata.current_profile)
-//         .join(filename.clone());
+    let filename = format!("{}.sierra.json", package_metadata.name);
+    let path = target_dir_for_package(&metadata)
+        .join(metadata.current_profile)
+        .join(filename);
 
-//     ensure!(
-//         path.exists(),
-//         "package has not been compiled, file does not exist: {path}"
-//     );
+    ensure!(
+        path.exists(),
+        "package has not been compiled, file does not exist: {path}"
+    );
 
-//     Ok(path)
-// }
+    Ok(path)
+}
 
 // taken from starknet-foundry/crates/forge/src/test_case_summary.rs
 /// Helper function to build `readable_text` from a run data.

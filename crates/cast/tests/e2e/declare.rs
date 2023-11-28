@@ -111,8 +111,7 @@ fn scarb_build_fails(contract_path: &str, accounts_file_path: &str) {
         .args(args);
 
     snapbox.assert().stderr_matches(indoc! {r"
-        command: declare
-        error: Scarb build returned non-zero exit code: 1[..]
+        [..]Scarb build returned non-zero exit code: 1[..]
         ...
     "});
 }
@@ -193,8 +192,8 @@ fn scarb_no_artifacts(contract_path: &str, accounts_file_path: &str) {
         .current_dir(CONTRACTS_DIR.to_string() + contract_path)
         .args(args);
 
-    snapbox.assert().success().stderr_matches(indoc! {r"
-        command: declare
+    snapbox.assert().failure().stderr_matches(indoc! {r"
         [..]Make sure you have enabled sierra and casm code generation in Scarb.toml[..]
+        ...
     "});
 }
