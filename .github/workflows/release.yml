@@ -139,8 +139,22 @@ jobs:
 
   test-binary:
     name: Test binary
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     needs: [ build-binaries, verify-version ]
+
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+
+          - target: aarch64-apple-darwin
+            os: macos-latest
+
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+
     steps:
       - uses: actions/checkout@v4
       - uses: software-mansion/setup-scarb@v1.3.2
@@ -157,7 +171,7 @@ jobs:
 
       - name: Get binary path
         run: |
-          BINARY_PATH="artifacts/starknet-foundry-${{ needs.verify-version.outputs.version }}-x86_64-unknown-linux-gnu.tar.gz"
+          BINARY_PATH="artifacts/starknet-foundry-${{ needs.verify-version.outputs.version }}-${{ matrix.target }}.tar.gz"
           echo "BINARY_PATH=$BINARY_PATH" >> $GITHUB_ENV
 
       - name: Unpack artifact
