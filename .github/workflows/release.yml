@@ -165,6 +165,8 @@ jobs:
           tar xzvf ${{ env.BINARY_PATH }}
 
       - name: Smoke test
+        env:
+          RPC_URL: ${{ secrets.CHEATNET_RPC_URL }}
         run: |
           BINARY_PATH="${{ env.BINARY_PATH }}"
           BINARY_PATH="${BINARY_PATH%.tar.gz}"
@@ -176,7 +178,7 @@ jobs:
           REPO_URL=${{ github.repositoryUrl }}
           REVISION=${{ github.sha }}
           
-          ./scripts/smoke_test.sh "$SNFORGE_PATH" "$SNCAST_PATH" "$REPO_URL" "$REVISION"
+          ./scripts/smoke_test.sh "$RPC_URL" "$SNFORGE_PATH" "$SNCAST_PATH" "$REPO_URL" "$REVISION"
 
   create-release:
     name: Create release
