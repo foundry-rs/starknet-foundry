@@ -179,6 +179,7 @@ jobs:
           tar xzvf ${{ env.BINARY_PATH }}
 
       - name: Smoke test
+        shell: bash
         env:
           RPC_URL: ${{ secrets.CHEATNET_RPC_URL }}
         run: |
