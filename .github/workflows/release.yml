@@ -176,7 +176,7 @@ jobs:
           REPO_URL=${{ github.repositoryUrl }}
           REVISION=${{ github.sha }}
           
-          ./scripts/smoke_test.sh $SNFORGE_PATH $SNCAST_PATH $REPO_URL $REVISION
+          ./scripts/smoke_test.sh "$SNFORGE_PATH" "$SNCAST_PATH" "$REPO_URL" "$REVISION"
 
   create-release:
     name: Create release
