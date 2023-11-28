@@ -7,8 +7,9 @@ use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 
 use cairo_felt::Felt252;
 use cairo_lang_casm::hints::{Hint, StarknetHint};
-use cairo_lang_casm::operand::{CellRef, ResOperand};
-use cairo_lang_runner::casm_run::{extract_relocatable, vm_get_range};
+use cairo_lang_casm::operand::ResOperand;
+use cairo_lang_runner::casm_run::{extract_relocatable, vm_get_range, MemBuffer};
+use cairo_lang_runner::{casm_run::cell_ref_to_relocatable, insert_value_to_cellref};
 use cairo_vm::hint_processor::hint_processor_definition::{
     HintProcessor, HintProcessorLogic, HintReference,
 };
@@ -107,17 +108,24 @@ impl<Extension: ExtensionLogic> HintProcessorLogic for ExtendedRuntime<Extension
             let inputs = vm_get_range(vm, input_start, input_end)
                 .map_err(|_| CustomHint(Box::from("Failed to read input data".to_string())))?;
 
-            if let CheatcodeHandlingResult::Result(()) =
-                self.0
-                    .handle_cheatcode(selector, inputs, vm, output_start, output_end)?
+            if let CheatcodeHandlingResult::Handled(res) =
+                self.0.handle_cheatcode(selector, inputs)?
             {
+                let mut buffer = MemBuffer::new_segment(vm);
+                let result_start = buffer.ptr;
+                buffer
+                    .write_data(res.iter())
+                    .expect("Failed to insert cheatcode result to memory");
+                let result_end = buffer.ptr;
+                insert_value_to_cellref!(vm, output_start, result_start)?;
+                insert_value_to_cellref!(vm, output_end, result_end)?;
                 return Ok(());
             }
         }
 
         if let Some(Hint::Starknet(StarknetHint::SystemCall { system })) = maybe_extended_hint {
             // TODO move selector parsing logic here
-            if let SyscallHandlingResult::Result(()) = self.0.override_system_call(system, vm)? {
+            if let SyscallHandlingResult::Handled(()) = self.0.override_system_call(system, vm)? {
                 return Ok(());
             }
         }
@@ -165,15 +173,15 @@ impl<Handler, Runtime: HintProcessor> ResourceTracker
 #[allow(dead_code)]
 #[derive(Debug)]
 pub enum SyscallHandlingResult {
-    Forward,
-    Result(()),
+    Forwarded,
+    Handled(()),
 }
 
 #[allow(dead_code)]
 #[derive(Debug)]
 pub enum CheatcodeHandlingResult {
-    Forward,
-    Result(()), // TODO now use buffer later rewrite to return vector
+    Forwarded,
+    Handled(Vec<Felt252>),
 }
 
 pub trait ExtensionLogic {
@@ -189,14 +197,10 @@ pub trait ExtensionLogic {
         vm: &mut VirtualMachine,
     ) -> Result<SyscallHandlingResult, HintError>;
 
-    // TODO remove vm, output from this signature, make it return Felt252
     #[allow(clippy::trivially_copy_pass_by_ref)]
     fn handle_cheatcode(
         &mut self,
         selector: &str,
         inputs: Vec<Felt252>,
-        vm: &mut VirtualMachine,
-        output_start: &CellRef,
-        output_end: &CellRef,
     ) -> Result<CheatcodeHandlingResult, EnhancedHintError>;
 }
