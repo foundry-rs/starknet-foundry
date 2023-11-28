@@ -3,6 +3,8 @@ use anyhow::Error;
 use console::style;
 use forge_runner::test_case_summary::TestCaseSummary;
 use forge_runner::test_crate_summary::TestCrateSummary;
+use starknet_api::block::BlockNumber;
+use std::collections::HashMap;
 
 pub fn print_error_message(error: &Error) {
     let error_tag = style("ERROR").red();
@@ -12,6 +14,16 @@ pub fn print_error_message(error: &Error) {
 pub(crate) fn print_collected_tests_count(tests_num: usize, package_name: &str) {
     let plain_text = format!("\n\nCollected {tests_num} test(s) from {package_name} package");
     println!("{}", style(plain_text).bold());
+}
+
+#[allow(clippy::implicit_hasher)]
+pub fn print_latest_blocks_numbers(url_to_latest_block_number_map: &HashMap<String, BlockNumber>) {
+    if url_to_latest_block_number_map.len() > 0 {
+        println!();
+    }
+    for (url, latest_block_number) in url_to_latest_block_number_map {
+        println!("Latest block number = {latest_block_number} for url = {url}");
+    }
 }
 
 pub(crate) fn print_running_tests(test_crate_file: CrateLocation, tests_num: usize) {

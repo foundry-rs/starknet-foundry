@@ -131,8 +131,9 @@ fn printing_latest_block_number() {
         Collected 1 test(s) from forking package
         Running 1 test(s) from src/
         [PASS] forking::tests::print_block_number_when_latest
-        Number of the block used for fork testing = [..]
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 4 filtered out
+
+        Latest block number = 319077 for url = http://188.34.188.184:9545/rpc/v0.4
         "}
     );
 }

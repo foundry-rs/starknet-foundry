@@ -3,8 +3,7 @@ use blockifier::state::state_api::State;
 use cheatnet::constants::build_testing_state;
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::state::{BlockifierState, CheatnetState, ExtendedStateReader};
-use starknet::core::types::BlockId;
-use starknet::core::types::BlockTag::Latest;
+use starknet_api::block::BlockNumber;
 
 pub fn create_cached_state() -> CachedState<ExtendedStateReader> {
     CachedState::new(
@@ -21,21 +20,26 @@ pub fn create_fork_cached_state() -> CachedState<ExtendedStateReader> {
     CachedState::new(
         ExtendedStateReader {
             dict_state_reader: build_testing_state(),
-            fork_state_reader: Some(ForkStateReader::new(node_url, BlockId::Tag(Latest), None)),
+            // TODO essa: use latest block number
+            fork_state_reader: Some(ForkStateReader::new(node_url, BlockNumber(123), None)),
         },
         GlobalContractCache::default(),
     )
 }
 
 pub fn create_fork_cached_state_at(
-    block_id: BlockId,
+    block_number: BlockNumber,
     cache_dir: &str,
 ) -> CachedState<ExtendedStateReader> {
     let node_url = "http://188.34.188.184:9545/rpc/v0.4".parse().unwrap();
     CachedState::new(
         ExtendedStateReader {
             dict_state_reader: build_testing_state(),
-            fork_state_reader: Some(ForkStateReader::new(node_url, block_id, Some(cache_dir))),
+            fork_state_reader: Some(ForkStateReader::new(
+                node_url,
+                block_number,
+                Some(cache_dir),
+            )),
         },
         GlobalContractCache::default(),
     )

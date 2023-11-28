@@ -6,7 +6,8 @@ use fs2::FileExt;
 use num_bigint::BigUint;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use starknet::core::types::{BlockId, BlockTag, ContractClass};
+use starknet::core::types::ContractClass;
+use starknet_api::block::BlockNumber;
 use starknet_api::core::{ClassHash, ContractAddress, Nonce};
 use starknet_api::hash::StarkFelt;
 use starknet_api::state::StorageKey;
@@ -79,60 +80,43 @@ impl ToString for ForkCacheContent {
 pub struct ForkCache {
     fork_cache_content: ForkCacheContent,
     cache_file: Option<String>,
-    block_id: BlockId,
 }
 
 impl Drop for ForkCache {
     fn drop(&mut self) {
-        if !matches!(self.block_id, BlockId::Tag(_)) {
-            self.save();
-        }
-    }
-}
-
-fn block_id_to_string(block_id: BlockId) -> String {
-    match block_id {
-        BlockId::Hash(x) => x.to_felt252().to_str_radix(16),
-        BlockId::Number(x) => x.to_string(),
-        BlockId::Tag(x) => match x {
-            BlockTag::Latest => "latest".to_string(),
-            BlockTag::Pending => unreachable!(),
-        },
+        self.save();
     }
 }
 
 impl ForkCache {
     #[must_use]
-    pub(crate) fn load_or_new(url: &Url, block_id: BlockId, cache_dir: Option<&str>) -> Self {
-        let (fork_cache_content, cache_file) = if let BlockId::Tag(_) = block_id {
-            (ForkCacheContent::new(), None)
+    pub(crate) fn load_or_new(
+        url: &Url,
+        block_number: BlockNumber,
+        cache_dir: Option<&str>,
+    ) -> Self {
+        let cache_file_path = cache_file_path_from_fork_config(url, block_number, cache_dir);
+        let mut file = OpenOptions::new()
+            .write(true)
+            .read(true)
+            .create(true)
+            .open(&cache_file_path)
+            .unwrap();
+
+        let mut cache_file_content: String = String::new();
+        file.read_to_string(&mut cache_file_content)
+            .expect("Could not read cache file: {path}");
+
+        // File was just created
+        let fork_cache_content = if cache_file_content.is_empty() {
+            ForkCacheContent::new()
         } else {
-            let cache_file_path = cache_file_path_from_fork_config(url, block_id, cache_dir);
-            let mut file = OpenOptions::new()
-                .write(true)
-                .read(true)
-                .create(true)
-                .open(&cache_file_path)
-                .unwrap();
-
-            let mut cache_file_content: String = String::new();
-            file.read_to_string(&mut cache_file_content)
-                .expect("Could not read cache file: {path}");
-
-            // File was just created
-            let fork_cache_content = if cache_file_content.is_empty() {
-                ForkCacheContent::new()
-            } else {
-                ForkCacheContent::from_str(cache_file_content.as_str())
-            };
-
-            (fork_cache_content, Some(cache_file_path.to_string()))
+            ForkCacheContent::from_str(cache_file_content.as_str())
         };
 
         ForkCache {
             fork_cache_content,
-            cache_file,
-            block_id,
+            cache_file: Some(cache_file_path.to_string()),
         }
     }
 
@@ -290,7 +274,7 @@ impl ForkCache {
 
 fn cache_file_path_from_fork_config(
     url: &Url,
-    block_id: BlockId,
+    block_number: BlockNumber,
     cache_dir: Option<&str>,
 ) -> Utf8PathBuf {
     let cache_dir = cache_dir.unwrap_or_else(|| {
@@ -302,7 +286,7 @@ fn cache_file_path_from_fork_config(
     let sanitized_path = re.replace_all(url.as_str(), "_").to_string();
 
     let cache_file_path = Utf8PathBuf::from(cache_dir)
-        .join(sanitized_path + "_" + block_id_to_string(block_id).as_str() + ".json");
+        .join(sanitized_path + "_" + block_number.0.to_string().as_str() + ".json");
 
     fs::create_dir_all(cache_file_path.parent().unwrap())
         .expect("Fork cache directory could not be created");

@@ -5,6 +5,7 @@ use std::process::{Command, Stdio};
 use std::sync::Arc;
 
 use camino::Utf8PathBuf;
+use forge::block_number_map::BlockNumberMap;
 use forge::compiled_raw::RawForkParams;
 use forge::run;
 use forge::scarb::config::ForkTarget;
@@ -132,6 +133,7 @@ fn fork_aliased_decorator() {
                     block_id_value: "Latest".to_string(),
                 },
             )],
+            &mut BlockNumberMap::default(),
         ))
         .expect("Runner fail");
 

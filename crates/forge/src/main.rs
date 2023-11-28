@@ -16,6 +16,7 @@ use scarb_artifacts::{get_contracts_map, target_dir_for_workspace};
 use scarb_metadata::{Metadata, MetadataCommand, PackageMetadata};
 use scarb_ui::args::PackagesFilter;
 
+use forge::block_number_map::BlockNumberMap;
 use std::env;
 use std::sync::Arc;
 use std::thread::available_parallelism;
@@ -168,6 +169,7 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
 
     let all_failed_tests = rt.block_on({
         rt.spawn(async move {
+            let mut block_number_map = BlockNumberMap::default();
             let mut all_failed_tests = vec![];
             for package in &packages {
                 env::set_current_dir(&package.root)?;
@@ -198,6 +200,7 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                     runner_config,
                     runner_params,
                     &forge_config.fork,
+                    &mut block_number_map,
                 )
                 .await?;
 
@@ -205,6 +208,9 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                 all_failed_tests.append(&mut failed_tests);
             }
             set_cached_failed_tests_names(&all_failed_tests, &workspace_root.join(CACHE_DIR))?;
+            pretty_printing::print_latest_blocks_numbers(
+                block_number_map.get_url_to_latest_block_number(),
+            );
 
             Ok::<_, anyhow::Error>(all_failed_tests)
         })

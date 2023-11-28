@@ -151,7 +151,7 @@ mod tests {
                         "FIRST_FORK_NAME".to_string(),
                         RawForkParams {
                             url: "http://some.rpc.url".to_string(),
-                            block_id_type: "Number".to_string(),
+                            block_id_type: "number".to_string(),
                             block_id_value: "1".to_string(),
                         },
                     ),
@@ -159,7 +159,7 @@ mod tests {
                         "SECOND_FORK_NAME".to_string(),
                         RawForkParams {
                             url: "http://some.rpc.url".to_string(),
-                            block_id_type: "Hash".to_string(),
+                            block_id_type: "hash".to_string(),
                             block_id_value: "1".to_string(),
                         },
                     ),
@@ -167,7 +167,7 @@ mod tests {
                         "THIRD_FORK_NAME".to_string(),
                         RawForkParams {
                             url: "http://some.rpc.url".to_string(),
-                            block_id_type: "Tag".to_string(),
+                            block_id_type: "tag".to_string(),
                             block_id_value: "Latest".to_string(),
                         },
                     )

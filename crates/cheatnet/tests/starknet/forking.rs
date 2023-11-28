@@ -14,13 +14,11 @@ use cheatnet::forking::state::ForkStateReader;
 use cheatnet::rpc::call_contract;
 use cheatnet::state::{BlockInfoReader, BlockifierState, CheatnetState, ExtendedStateReader};
 use conversions::StarknetConversions;
-use glob::glob;
 use num_bigint::BigUint;
 use num_traits::Num;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use serde_json::Value;
-use starknet::core::types::BlockTag::Latest;
-use starknet::core::types::{BlockId, BlockTag};
+use starknet_api::block::BlockNumber;
 use starknet_api::core::ContractAddress;
 use std::path::PathBuf;
 use std::str::FromStr;
@@ -124,7 +122,7 @@ fn test_forking_at_block_number() {
                 dict_state_reader: build_testing_state(),
                 fork_state_reader: Some(ForkStateReader::new(
                     node_url.clone(),
-                    BlockId::Number(309_780),
+                    BlockNumber(309_780),
                     Some(cache_dir.path().to_str().unwrap()),
                 )),
             },
@@ -137,7 +135,7 @@ fn test_forking_at_block_number() {
                 dict_state_reader: build_testing_state(),
                 fork_state_reader: Some(ForkStateReader::new(
                     node_url,
-                    BlockId::Number(309_781),
+                    BlockNumber(309_781),
                     Some(cache_dir.path().to_str().unwrap()),
                 )),
             },
@@ -304,7 +302,7 @@ fn call_forked_contract_from_constructor() {
 fn call_forked_contract_get_block_info_via_proxy() {
     let cache_dir = TempDir::new().unwrap();
     let mut cached_fork_state =
-        create_fork_cached_state_at(BlockId::Number(315_887), cache_dir.path().to_str().unwrap());
+        create_fork_cached_state_at(BlockNumber(315_887), cache_dir.path().to_str().unwrap());
     let block_info = cached_fork_state.state.get_block_info().unwrap();
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_fork_state);
     cheatnet_state.block_info = block_info;
@@ -370,7 +368,7 @@ fn call_forked_contract_get_block_info_via_proxy() {
 fn call_forked_contract_get_block_info_via_libcall() {
     let cache_dir = TempDir::new().unwrap();
     let mut cached_fork_state =
-        create_fork_cached_state_at(BlockId::Number(315_887), cache_dir.path().to_str().unwrap());
+        create_fork_cached_state_at(BlockNumber(315_887), cache_dir.path().to_str().unwrap());
     let block_info = cached_fork_state.state.get_block_info().unwrap();
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_fork_state);
     cheatnet_state.block_info = block_info;
@@ -437,10 +435,8 @@ fn call_forked_contract_get_block_info_via_libcall() {
 fn using_specified_block_nb_is_cached() {
     let cache_dir = TempDir::new().unwrap();
     let run_test = || {
-        let mut cached_state = create_fork_cached_state_at(
-            BlockId::Number(312_646),
-            cache_dir.path().to_str().unwrap(),
-        );
+        let mut cached_state =
+            create_fork_cached_state_at(BlockNumber(312_646), cache_dir.path().to_str().unwrap());
         let _ = cached_state.state.get_block_info().unwrap();
 
         let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
@@ -522,57 +518,9 @@ fn using_specified_block_nb_is_cached() {
 }
 
 #[test]
-fn using_block_tag_is_not_cached() {
-    fn test_tag(tag: BlockTag) {
-        let cache_dir = TempDir::new().unwrap();
-        {
-            let mut cached_state =
-                create_fork_cached_state_at(BlockId::Tag(tag), cache_dir.path().to_str().unwrap());
-            let (mut blockifier_state, mut cheatnet_state) =
-                create_cheatnet_state(&mut cached_state);
-            let contract_address = Felt252::from(
-                BigUint::from_str(
-                    "3216637956526895219277698311134811322769343974163380838558193911733621219342",
-                )
-                .unwrap(),
-            )
-            .to_contract_address();
-
-            let selector = felt_selector_from_name("get_balance");
-            let output = call_contract(
-                &mut blockifier_state,
-                &mut cheatnet_state,
-                &contract_address,
-                &selector,
-                &[],
-            )
-            .unwrap();
-            assert_success!(output, vec![Felt252::from(2)]);
-        }
-
-        let cache_files: Vec<PathBuf> = glob(
-            cache_dir
-                .path()
-                .join(PathBuf::from_str("*latest.json").unwrap())
-                .to_str()
-                .unwrap(),
-        )
-        .unwrap()
-        .filter_map(Result::ok)
-        .collect();
-
-        assert!(
-            cache_files.is_empty(),
-            "Cache file found for uncacheable tag"
-        );
-    }
-    test_tag(BlockTag::Latest);
-}
-
-#[test]
 fn test_cache_merging() {
     fn run_test(cache_dir: &str, contract_address: &str, balance: u64) {
-        let mut cached_state = create_fork_cached_state_at(BlockId::Number(312_767), cache_dir);
+        let mut cached_state = create_fork_cached_state_at(BlockNumber(312_767), cache_dir);
         let _ = cached_state.state.get_block_info().unwrap();
 
         let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
@@ -684,7 +632,7 @@ fn test_cache_merging() {
 #[test]
 fn test_cached_block_info_merging() {
     fn run_test(cache_dir: &str, contract_address: &str, balance: u64, call_get_block_info: bool) {
-        let mut cached_state = create_fork_cached_state_at(BlockId::Number(312_767), cache_dir);
+        let mut cached_state = create_fork_cached_state_at(BlockNumber(312_767), cache_dir);
         if call_get_block_info {
             let _ = cached_state.state.get_block_info().unwrap();
         }
@@ -754,11 +702,7 @@ fn test_calling_nonexistent_url() {
     let mut cached_fork_state = CachedState::new(
         ExtendedStateReader {
             dict_state_reader: build_testing_state(),
-            fork_state_reader: Some(ForkStateReader::new(
-                nonexistent_url,
-                BlockId::Tag(Latest),
-                None,
-            )),
+            fork_state_reader: Some(ForkStateReader::new(nonexistent_url, BlockNumber(1), None)),
         },
         GlobalContractCache::default(),
     );

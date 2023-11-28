@@ -43,11 +43,11 @@ pub struct ForkStateReader {
 
 impl ForkStateReader {
     #[must_use]
-    pub fn new(url: Url, block_id: BlockId, cache_dir: Option<&str>) -> Self {
+    pub fn new(url: Url, block_number: BlockNumber, cache_dir: Option<&str>) -> Self {
         ForkStateReader {
-            cache: ForkCache::load_or_new(&url, block_id, cache_dir),
+            cache: ForkCache::load_or_new(&url, block_number, cache_dir),
             client: JsonRpcClient::new(HttpTransport::new(url)),
-            block_id,
+            block_id: BlockId::Number(block_number.0),
             runtime: Runtime::new().expect("Could not instantiate Runtime"),
         }
     }

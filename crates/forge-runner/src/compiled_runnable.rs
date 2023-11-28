@@ -1,7 +1,7 @@
 use crate::expected_result::ExpectedTestResult;
 use cairo_lang_sierra::program::Program;
 use serde::Deserialize;
-use starknet::core::types::BlockId;
+use starknet_api::block::BlockNumber;
 use url::Url;
 
 #[derive(Debug, Clone)]
@@ -41,7 +41,7 @@ pub struct TestCaseRunnable {
 #[derive(Debug, Clone)]
 pub struct ValidatedForkConfig {
     pub url: Url,
-    pub block_id: BlockId,
+    pub block_number: BlockNumber,
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
