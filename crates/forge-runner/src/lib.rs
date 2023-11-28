@@ -32,6 +32,7 @@ mod gas;
 mod printing;
 mod running;
 mod sierra_casm_runner;
+mod sierra_casm_runner_gas;
 mod test_execution_syscall_handler;
 
 pub const CACHE_DIR: &str = ".snfoundry_cache";
