@@ -1,4 +1,3 @@
-use crate::test_execution_syscall_handler::TestExecutionSyscallHandler;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use cairo_felt::Felt252;
 use cairo_lang_runner::casm_run::RunFunctionContext;
@@ -11,6 +10,7 @@ use cairo_vm::vm::runners::cairo_runner::CairoRunner;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use std::collections::HashMap;
 
+use crate::forge_runtime_extension::ForgeRuntime;
 use cairo_lang_casm::instructions::Instruction;
 
 // casm_run::run_function
@@ -21,7 +21,7 @@ pub fn run_function<'a, 'b: 'a, Instructions>(
     additional_initialization: fn(
         context: RunFunctionContext<'_>,
     ) -> Result<(), Box<CairoRunError>>,
-    hint_processor: &mut TestExecutionSyscallHandler,
+    runtime: &mut ForgeRuntime,
     hints_dict: HashMap<usize, Vec<HintParams>>,
 ) -> Result<(Vec<Option<Felt252>>, usize), Box<CairoRunError>>
 where
@@ -56,15 +56,21 @@ where
     additional_initialization(RunFunctionContext { vm, data_len })?;
 
     runner
-        .run_until_pc(end, vm, hint_processor)
+        .run_until_pc(end, vm, runtime)
         .map_err(CairoRunError::from)?;
     runner
-        .end_run(true, false, vm, hint_processor)
+        .end_run(true, false, vm, runtime)
         .map_err(CairoRunError::from)?;
     runner.relocate(vm, true).map_err(CairoRunError::from)?;
 
     // changed region
-    finalize(vm, &runner, &mut hint_processor.child.child.child, 0, 2);
+    finalize(
+        vm,
+        &runner,
+        &mut runtime.0.extended_runtime.child.child,
+        0,
+        2,
+    );
     // end region
 
     Ok((

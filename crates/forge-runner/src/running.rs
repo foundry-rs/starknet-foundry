@@ -16,7 +16,7 @@ use cairo_vm::types::relocatable::Relocatable;
 use cheatnet::execution::cheatable_syscall_handler::CheatableSyscallHandler;
 use itertools::chain;
 
-use crate::forge_runtime_extension::TestExecutionState;
+use crate::forge_runtime_extension::{ForgeRuntime, TestExecutionState};
 use crate::gas::gas_from_execution_resources;
 use crate::runtime::{ExtendedRuntime, RuntimeExtension};
 use crate::sierra_casm_runner::SierraCasmRunner;
@@ -275,10 +275,10 @@ pub fn run_test_case(
         builtins,
     );
 
-    let execution_resources = get_all_execution_resources(&test_execution_syscall_handler);
+    let execution_resources = get_all_execution_resources(&forge_runtime);
 
     let gas = gas_from_execution_resources(
-        &get_context(&test_execution_syscall_handler).block_context,
+        &get_context(&forge_runtime).block_context,
         &execution_resources,
     );
 
@@ -361,12 +361,11 @@ fn get_latest_block_number(url: &Url) -> Result<BlockId> {
     }
 }
 
-fn get_all_execution_resources(
-    test_execution_syscall_handler: &TestExecutionSyscallHandler,
-) -> ExecutionResources {
-    let test_used_resources = &test_execution_syscall_handler.child.child.child.resources;
-    let cheatnet_used_resources = &test_execution_syscall_handler
-        .child
+fn get_all_execution_resources(runtime: &ForgeRuntime) -> ExecutionResources {
+    let test_used_resources = &runtime.0.extended_runtime.child.child.resources;
+    let cheatnet_used_resources = &runtime
+        .0
+        .extended_runtime
         .child
         .cheatnet_state
         .used_resources;
@@ -385,8 +384,6 @@ fn get_all_execution_resources(
     all_resources
 }
 
-fn get_context<'a>(
-    test_execution_syscall_handler: &'a TestExecutionSyscallHandler,
-) -> &'a EntryPointExecutionContext {
-    test_execution_syscall_handler.child.child.child.context
+fn get_context<'a>(runtime: &'a ForgeRuntime) -> &'a EntryPointExecutionContext {
+    runtime.0.extended_runtime.child.child.context
 }

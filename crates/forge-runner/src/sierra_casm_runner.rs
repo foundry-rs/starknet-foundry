@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use crate::test_execution_syscall_handler::TestExecutionSyscallHandler;
 use cairo_felt::Felt252;
 use cairo_lang_casm::instructions::Instruction;
 use cairo_lang_casm::{casm, casm_extend};
@@ -31,6 +30,7 @@ use cairo_lang_utils::extract_matches;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use cairo_vm::serde::deserialize_program::{BuiltinName, HintParams};
 
+use crate::forge_runtime_extension::ForgeRuntime;
 use crate::sierra_casm_runner_gas::run_function;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use num_traits::ToPrimitive;
@@ -91,7 +91,7 @@ impl SierraCasmRunner {
         &self,
         func: &Function,
         vm: &mut VirtualMachine,
-        hint_processor: &mut TestExecutionSyscallHandler,
+        runtime: &mut ForgeRuntime,
         hints_dict: HashMap<usize, Vec<HintParams>>,
         instructions: Instructions,
         builtins: Vec<BuiltinName>,
@@ -125,7 +125,7 @@ impl SierraCasmRunner {
                 .map_err(|e| Box::new(e.into()))?;
                 Ok(())
             },
-            hint_processor,
+            runtime,
             hints_dict,
         )?;
         let mut results_data = self.get_results_data(func, &cells, ap);

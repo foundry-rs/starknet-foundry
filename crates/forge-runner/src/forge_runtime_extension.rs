@@ -33,7 +33,8 @@ use starknet_api::hash::StarkFelt;
 
 use crate::forge_runtime_extension::file_operations::string_into_felt;
 use crate::runtime::{
-    CheatcodeHandlingResult, ExtensionLogic, RuntimeExtension, SyscallHandlingResult,
+    CheatcodeHandlingResult, ExtendedRuntime, ExtensionLogic, RuntimeExtension,
+    SyscallHandlingResult,
 };
 use cairo_lang_starknet::contract::starknet_keccak;
 use cairo_vm::vm::errors::hint_errors::HintError::CustomHint;
@@ -45,6 +46,9 @@ use cheatnet::execution::contract_execution_syscall_handler::{
 use starknet::signers::SigningKey;
 
 mod file_operations;
+
+pub type ForgeRuntime<'a> =
+    ExtendedRuntime<RuntimeExtension<TestExecutionState<'a>, ContractExecutionSyscallHandler<'a>>>;
 
 pub struct TestExecutionState<'a> {
     pub environment_variables: &'a HashMap<String, String>,
