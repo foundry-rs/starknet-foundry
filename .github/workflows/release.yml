@@ -164,17 +164,20 @@ jobs:
         with:
           path: artifacts-dl
 
-      - name: Move artifacts to staging directory
+      - name: Move artifacts to staging director
+        shell: bash
         run: |
           mkdir -p artifacts
           mv artifacts-dl/build-*/starknet-foundry-* artifacts/
 
       - name: Get binary path
+        shell: bash
         run: |
           BINARY_PATH="artifacts/starknet-foundry-${{ needs.verify-version.outputs.version }}-${{ matrix.target }}.tar.gz"
           echo "BINARY_PATH=$BINARY_PATH" >> $GITHUB_ENV
 
       - name: Unpack artifact
+        shell: bash
         run: |
           tar xzvf ${{ env.BINARY_PATH }}
 
