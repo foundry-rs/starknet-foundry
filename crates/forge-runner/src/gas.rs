@@ -15,7 +15,7 @@ use cairo_vm::vm::runners::cairo_runner::ExecutionResources as VmExecutionResour
 use cheatnet::state::ExtendedStateReader;
 
 #[must_use]
-pub fn gas_from_execution_resources_and_state_change(
+pub fn calculate_used_gas(
     block_context: &BlockContext,
     state: &mut CachedState<ExtendedStateReader>,
     resources: &ExecutionResources,

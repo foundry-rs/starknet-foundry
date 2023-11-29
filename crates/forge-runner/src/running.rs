@@ -17,7 +17,7 @@ use cheatnet::execution::cheatable_syscall_handler::CheatableSyscallHandler;
 use itertools::chain;
 
 use crate::forge_runtime_extension::{ForgeRuntime, TestExecutionState};
-use crate::gas::gas_from_execution_resources_and_state_change;
+use crate::gas::calculate_used_gas;
 use crate::runtime::{ExtendedRuntime, RuntimeExtension};
 use crate::sierra_casm_runner::SierraCasmRunner;
 use crate::test_case_summary::TestCaseSummary;
@@ -279,7 +279,7 @@ pub fn run_test_case(
     let all_execution_resources = get_all_execution_resources(&forge_runtime);
     let block_context = &get_context(&forge_runtime).block_context.clone();
 
-    let gas = gas_from_execution_resources_and_state_change(
+    let gas = calculate_used_gas(
         block_context,
         &mut blockifier_state,
         &all_execution_resources,
