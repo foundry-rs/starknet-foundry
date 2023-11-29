@@ -12,14 +12,16 @@ use blockifier::state::cached_state::CachedState;
 use blockifier::state::state_api::State;
 use cairo_felt::Felt252;
 use cairo_vm::serde::deserialize_program::HintParams;
-use cairo_vm::types::relocatable::Relocatable;
+use cairo_vm::types::relocatable::{MaybeRelocatable, Relocatable};
 use cheatnet::execution::cheatable_syscall_handler::CheatableSyscallHandler;
 use itertools::chain;
 
+use crate::casm_run;
 use crate::forge_runtime_extension::{ForgeRuntime, TestExecutionState};
 use crate::gas::gas_from_execution_resources;
 use crate::runtime::{ExtendedRuntime, RuntimeExtension};
-use crate::sierra_casm_runner::{Panicable, SierraCasmRunner};
+use crate::sierra_casm_runner::{initialize_vm, Panicable, SierraCasmRunner};
+use crate::sierra_casm_runner_gas::finalize;
 use crate::test_case_summary::TestCaseSummary;
 use crate::{RunnerConfig, RunnerParams, TestCaseRunnable, ValidatedForkConfig, CACHE_DIR};
 use cairo_lang_casm::hints::Hint;
@@ -290,32 +292,49 @@ pub fn run_test_case(
         None
     };
 
+    // copied from casm_run
     let mut vm = VirtualMachine::new(true);
-    let run_result = SierraCasmRunner::run_with_vm(
+    let data: Vec<MaybeRelocatable> = instructions
+        .flat_map(|inst| inst.assemble().encode())
+        .map(Felt252::from)
+        .map(MaybeRelocatable::from)
+        .collect();
+    let data_len = data.len();
+
+    let mut runner = casm_run::build_runner(data, builtins, hints_dict)?;
+    casm_run::run_function_with_runner(
         &mut vm,
+        data_len,
+        initialize_vm,
         &mut forge_runtime,
-        hints_dict,
-        instructions,
-        builtins,
-    )
-    .map(|(cells, ap)| {
-        let (results_data, gas_counter) =
-            SierraCasmRunner::get_results_data(&test_details.return_types, &cells, ap);
-        assert_eq!(results_data.len(), 1);
-        let (_, values) = results_data[0].clone();
-        let value = SierraCasmRunner::handle_main_return_value(
-            // Here we assume that all test either panic or do not return any value
-            // This is true for all test right now, but in case it changes
-            // this logic will need to be updated
-            &Panicable::Yes { inner_ty_size: 0 },
-            values,
-            &cells,
-        );
-        RunResult {
-            gas_counter,
-            memory: cells,
-            value,
-        }
+        &mut runner,
+    )?;
+    finalize(
+        &mut vm,
+        &runner,
+        &mut forge_runtime.0.extended_runtime.child.child,
+        0,
+        2,
+    );
+    let cells = runner.relocated_memory;
+    let ap = vm.get_relocated_trace().unwrap().last().unwrap().ap;
+
+    let (results_data, gas_counter) =
+        SierraCasmRunner::get_results_data(&test_details.return_types, &cells, ap);
+    assert_eq!(results_data.len(), 1);
+    let (_, values) = results_data[0].clone();
+    let value = SierraCasmRunner::handle_main_return_value(
+        // Here we assume that all test either panic or do not return any value
+        // This is true for all test right now, but in case it changes
+        // this logic will need to be updated
+        &Panicable::Yes { inner_ty_size: 0 },
+        values,
+        &cells,
+    );
+    let run_result = Ok(RunResult {
+        gas_counter,
+        memory: cells,
+        value,
     });
 
     let execution_resources = get_all_execution_resources(&forge_runtime);
