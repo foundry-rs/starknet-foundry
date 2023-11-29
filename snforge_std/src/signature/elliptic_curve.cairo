@@ -1,6 +1,3 @@
-mod ec;
-use ec::EllipticCurve;
-
 mod interface;
 use interface::Signer;
 use interface::Verifier;

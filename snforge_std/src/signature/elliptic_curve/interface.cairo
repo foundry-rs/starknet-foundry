@@ -1,5 +1,5 @@
 trait Signer<T> {
-    fn sign(ref self: T, message_hash: u256) -> Result<(u256, u256), felt252>;
+    fn sign(ref self: T, message_hash: u256) -> (u256, u256);
 }
 
 trait Verifier<T> {
