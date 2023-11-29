@@ -67,6 +67,19 @@ fn stop_warp(target: CheatTarget) {
     cheatcode::<'stop_warp'>(inputs.span());
 }
 
+fn start_elect(target: CheatTarget, sequencer_address: ContractAddress) {
+    let mut inputs = array![];
+    target.serialize(ref inputs);
+    inputs.append(sequencer_address.into());
+    cheatcode::<'start_elect'>(inputs.span());
+}
+
+fn stop_elect(target: CheatTarget) {
+    let mut inputs = array![];
+    target.serialize(ref inputs);
+    cheatcode::<'stop_elect'>(inputs.span());
+}
+
 fn start_mock_call<T, impl TSerde: serde::Serde<T>, impl TDestruct: Destruct<T>>(
     contract_address: ContractAddress, function_name: felt252, ret_data: T
 ) {

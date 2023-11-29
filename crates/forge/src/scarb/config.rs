@@ -1,5 +1,5 @@
 use anyhow::{bail, Result};
-use conversions::StarknetConversions;
+use conversions::IntoConv;
 use itertools::Itertools;
 use serde::Deserialize;
 use starknet::core::types::{BlockId, BlockTag};
@@ -7,7 +7,6 @@ use std::collections::HashMap;
 use test_collector::RawForkParams;
 
 #[derive(Debug, PartialEq, Default)]
-#[allow(clippy::module_name_repetitions)]
 pub struct ForgeConfig {
     /// Should runner exit after first failed test
     pub exit_first: bool,
@@ -21,8 +20,25 @@ pub struct ForgeConfig {
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct ForkTarget {
-    pub name: String,
-    pub params: RawForkParams,
+    name: String,
+    params: RawForkParams,
+}
+
+impl ForkTarget {
+    #[must_use]
+    pub fn new(name: String, params: RawForkParams) -> Self {
+        Self { name, params }
+    }
+
+    #[must_use]
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    #[must_use]
+    pub fn params(&self) -> &RawForkParams {
+        &self.params
+    }
 }
 
 /// Represents forge config deserialized from Scarb.toml using basic types like String etc.
@@ -86,7 +102,7 @@ impl TryFrom<RawForgeConfig> for ForgeConfig {
                 .iter()
                 .map(|(id_type, value)| match id_type.as_str() {
                     "number" => BlockId::Number(value.parse().unwrap()),
-                    "hash" => BlockId::Hash(value.to_field_element()),
+                    "hash" => BlockId::Hash(value.clone().into_()),
                     "tag" => match value.as_str() {
                         "Latest" => BlockId::Tag(BlockTag::Latest),
                         _ => unreachable!(),
@@ -99,13 +115,13 @@ impl TryFrom<RawForgeConfig> for ForgeConfig {
                 unreachable!()
             };
 
-            fork_targets.push(ForkTarget {
-                name: raw_fork_target.name,
-                params: RawForkParams {
+            fork_targets.push(ForkTarget::new(
+                raw_fork_target.name,
+                RawForkParams {
                     url: raw_fork_target.url,
                     block_id,
                 },
-            });
+            ));
         }
 
         Ok(ForgeConfig {

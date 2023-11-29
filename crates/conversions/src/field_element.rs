@@ -1,42 +1,17 @@
-use super::StarknetConversions;
+use crate::{from_thru_felt252, FromConv};
 use cairo_felt::Felt252;
 use starknet::core::types::FieldElement;
-use starknet_api::core::Nonce;
-use starknet_api::{
-    core::{ClassHash, ContractAddress},
-    hash::{StarkFelt, StarkHash},
-};
+use starknet_api::core::{ClassHash, ContractAddress, Nonce};
+use starknet_api::hash::StarkFelt;
 
-impl StarknetConversions for FieldElement {
-    fn to_felt252(&self) -> Felt252 {
-        Felt252::from_bytes_be(&self.to_bytes_be())
-    }
-
-    fn to_field_element(&self) -> FieldElement {
-        *self
-    }
-
-    fn to_stark_felt(&self) -> StarkFelt {
-        self.to_felt252().to_stark_felt()
-    }
-
-    fn to_stark_hash(&self) -> StarkHash {
-        self.to_felt252().to_stark_hash()
-    }
-
-    fn to_class_hash(&self) -> ClassHash {
-        self.to_felt252().to_class_hash()
-    }
-
-    fn to_contract_address(&self) -> ContractAddress {
-        self.to_felt252().to_contract_address()
-    }
-
-    fn to_short_string(&self) -> String {
-        self.to_felt252().to_short_string()
-    }
-
-    fn to_nonce(&self) -> Nonce {
-        self.to_felt252().to_nonce()
+impl FromConv<Felt252> for FieldElement {
+    fn from_(value: Felt252) -> FieldElement {
+        FieldElement::from_bytes_be(&value.to_be_bytes()).unwrap()
     }
 }
+
+from_thru_felt252!(ContractAddress, FieldElement);
+from_thru_felt252!(StarkFelt, FieldElement);
+from_thru_felt252!(ClassHash, FieldElement);
+from_thru_felt252!(String, FieldElement);
+from_thru_felt252!(Nonce, FieldElement);

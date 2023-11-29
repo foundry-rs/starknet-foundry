@@ -6,6 +6,7 @@ pub const NETWORK: &str = "testnet";
 pub const SEED: u32 = 1_053_545_548;
 
 pub const CONTRACTS_DIR: &str = "tests/data/contracts";
+pub const SCRIPTS_DIR: &str = "tests/data/scripts";
 pub const DEVNET_ENV_FILE: &str = ".env.devnet_hashes_and_addresses";
 pub const MULTICALL_CONFIGS_DIR: &str = "crates/cast/tests/data/multicall_configs";
 

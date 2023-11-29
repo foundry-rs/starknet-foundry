@@ -1046,15 +1046,26 @@ dependencies = [
 
 [[package]]
 name = "cast"
-version = "0.10.2"
+version = "0.11.0"
 dependencies = [
  "anyhow",
+ "cairo-felt",
+ "cairo-lang-casm",
+ "cairo-lang-runner",
+ "cairo-lang-sierra",
+ "cairo-lang-sierra-to-casm",
+ "cairo-lang-utils",
+ "cairo-vm",
  "camino",
+ "cheatnet",
  "clap",
+ "conversions",
  "ctor",
  "dotenv",
  "fs_extra",
  "indoc",
+ "itertools 0.11.0",
+ "num-traits 0.2.17",
  "primitive-types",
  "project-root",
  "promptly",
@@ -1849,7 +1860,7 @@ checksum = "00b0228411908ca8685dba7fc2cdd70ec9990a6e753e89b6ac91a84c40fbaf4b"
 
 [[package]]
 name = "forge"
-version = "0.10.2"
+version = "0.11.0"
 dependencies = [
  "anyhow",
  "ark-ff",
@@ -1875,6 +1886,7 @@ dependencies = [
  "console",
  "conversions",
  "flatten-serde-json",
+ "forge_runner",
  "futures",
  "include_dir",
  "indoc",
@@ -1911,6 +1923,50 @@ dependencies = [
  "url",
  "walkdir",
  "which",
+]
+
+[[package]]
+name = "forge_runner"
+version = "0.11.0"
+dependencies = [
+ "anyhow",
+ "blockifier",
+ "cairo-felt",
+ "cairo-lang-casm",
+ "cairo-lang-compiler",
+ "cairo-lang-filesystem",
+ "cairo-lang-runner",
+ "cairo-lang-sierra",
+ "cairo-lang-sierra-ap-change",
+ "cairo-lang-sierra-gas",
+ "cairo-lang-sierra-to-casm",
+ "cairo-lang-sierra-type-size",
+ "cairo-lang-starknet",
+ "cairo-lang-utils",
+ "cairo-vm",
+ "camino",
+ "cheatnet",
+ "console",
+ "conversions",
+ "flatten-serde-json",
+ "futures",
+ "itertools 0.11.0",
+ "num-bigint",
+ "num-integer",
+ "num-traits 0.2.17",
+ "once_cell",
+ "rand",
+ "scarb-artifacts",
+ "serde",
+ "serde_json",
+ "smol_str",
+ "starknet",
+ "starknet_api",
+ "test-collector",
+ "thiserror",
+ "tokio",
+ "tokio-util",
+ "url",
 ]
 
 [[package]]
@@ -4648,6 +4704,7 @@ dependencies = [
  "cairo-lang-utils",
  "camino",
  "forge",
+ "forge_runner",
  "indoc",
  "scarb-artifacts",
  "scarb-metadata",

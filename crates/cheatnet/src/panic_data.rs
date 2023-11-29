@@ -1,8 +1,7 @@
 use cairo_felt::Felt252;
-use conversions::StarknetConversions;
+use conversions::IntoConv;
 use regex::Regex;
 
-#[allow(clippy::module_name_repetitions)]
 #[must_use]
 pub fn try_extract_panic_data(err: &str) -> Option<Vec<Felt252>> {
     let re = Regex::new(r#"(?m)^Got an exception while executing a hint: Hint Error: Execution failed\. Failure reason: "(.*)"\.$"#)
@@ -16,7 +15,7 @@ pub fn try_extract_panic_data(err: &str) -> Option<Vec<Felt252>> {
             let panic_data_felts: Vec<Felt252> = panic_data_match
                 .as_str()
                 .split(", ")
-                .map(|s| s.to_owned().to_felt252())
+                .map(|s| s.to_owned().into_())
                 .collect();
 
             return Some(panic_data_felts);
