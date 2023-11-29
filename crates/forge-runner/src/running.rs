@@ -276,11 +276,8 @@ pub fn run_test_case(
         builtins,
     );
 
-    let all_execution_resources = test_execution_syscall_handler.get_all_execution_resources();
-    let block_context = &test_execution_syscall_handler
-        .context()
-        .block_context
-        .clone();
+    let all_execution_resources = get_all_execution_resources(&forge_runtime);
+    let block_context = &get_context(&forge_runtime).block_context.clone();
 
     let gas = gas_from_execution_resources_and_state_change(
         block_context,

@@ -19,7 +19,7 @@ fn test_keccak_cost() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
-    assert_gas!(result, "test_keccak_builtin", 20.48);
+    assert_gas!(result, "test_keccak_builtin", 21);
 }
 
 #[test]
@@ -54,7 +54,7 @@ fn test_contract_keccak_cost() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
-    assert_gas!(result, "test_keccak_builtin", 20.48);
+    assert_gas!(result, "test_keccak_builtin", 21);
 }
 
 #[test]
@@ -71,7 +71,7 @@ fn test_range_check_cost() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
-    assert_gas!(result, "test_range_check", 0.16);
+    assert_gas!(result, "test_range_check", 1);
 }
 
 /// Declare, deploy and function call consume 13 `range_check_builtin`s
@@ -110,7 +110,7 @@ fn test_contract_range_check_cost() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
-    assert_gas!(result, "test_range_check", 22.0 * 0.16);
+    assert_gas!(result, "test_range_check", 4);
 }
 
 #[test]
@@ -128,7 +128,7 @@ fn test_bitwise_cost() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
-    assert_gas!(result, "test_bitwise", 0.64);
+    assert_gas!(result, "test_bitwise", 1);
 }
 
 /// We have to use 6 bitwise operations in the `bitwise` function to exceed steps cost
@@ -164,7 +164,7 @@ fn test_contract_bitwise_cost() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
-    assert_gas!(result, "test_bitwise", 6.0 * 0.64);
+    assert_gas!(result, "test_bitwise", 4);
 }
 
 #[test]
@@ -182,7 +182,7 @@ fn test_pedersen_cost() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
-    assert_gas!(result, "test_pedersen", 0.32);
+    assert_gas!(result, "test_pedersen", 1);
 }
 
 /// We have to use 12 pedersen operations in the `pedersen` function to exceed steps cost
@@ -218,7 +218,7 @@ fn test_contract_pedersen_cost() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
-    assert_gas!(result, "test_pedersen", 12.0 * 0.32);
+    assert_gas!(result, "test_pedersen", 4);
 }
 
 #[test]
@@ -236,7 +236,7 @@ fn test_poseidon_cost() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
-    assert_gas!(result, "test_poseidon", 0.32);
+    assert_gas!(result, "test_poseidon", 1);
 }
 
 /// We have to use 12 poseidon operations in the `poseidon` function to exceed steps cost
@@ -272,7 +272,7 @@ fn test_contract_poseidon_cost() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
-    assert_gas!(result, "test_poseidon", 12.0 * 0.32);
+    assert_gas!(result, "test_poseidon", 4);
 }
 
 #[test]
@@ -292,7 +292,7 @@ fn test_ec_op_cost() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
-    assert_gas!(result, "test_ec_op", 10.24);
+    assert_gas!(result, "test_ec_op", 11);
 }
 
 #[test]
@@ -327,5 +327,5 @@ fn test_contract_ec_op_cost() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
-    assert_gas!(result, "test_ec_op", 10.24);
+    assert_gas!(result, "test_ec_op", 11);
 }
