@@ -1,7 +1,7 @@
+use crate::cairo_runner::sierra_casm_runner::create_metadata;
 use crate::fuzzer::RandomFuzzer;
 use crate::printing::print_test_result;
 use crate::running::{run_fuzz_test, run_test, TestDetails};
-use crate::sierra_casm_runner::create_metadata;
 use crate::test_case_summary::TestCaseSummary;
 use crate::test_crate_summary::TestCrateSummary;
 use anyhow::{anyhow, Result};
@@ -30,14 +30,13 @@ use url::Url;
 pub mod test_case_summary;
 pub mod test_crate_summary;
 
-mod casm_run;
+mod cairo_runner;
 mod forge_runtime_extension;
 mod fuzzer;
 mod gas;
 mod printing;
 mod running;
 mod runtime;
-mod sierra_casm_runner;
 
 pub const CACHE_DIR: &str = ".snfoundry_cache";
 

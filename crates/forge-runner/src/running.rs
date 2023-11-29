@@ -16,11 +16,11 @@ use cairo_vm::types::relocatable::{MaybeRelocatable, Relocatable};
 use cheatnet::execution::cheatable_syscall_handler::CheatableSyscallHandler;
 use itertools::chain;
 
-use crate::casm_run;
+use crate::cairo_runner::casm_run;
+use crate::cairo_runner::sierra_casm_runner::{initialize_vm, Panicable, SierraCasmRunner};
 use crate::forge_runtime_extension::{ForgeRuntime, TestExecutionState};
 use crate::gas::gas_from_execution_resources;
 use crate::runtime::{ExtendedRuntime, RuntimeExtension};
-use crate::sierra_casm_runner::{initialize_vm, Panicable, SierraCasmRunner};
 use crate::test_case_summary::TestCaseSummary;
 use crate::{RunnerConfig, RunnerParams, TestCaseRunnable, ValidatedForkConfig, CACHE_DIR};
 use cairo_lang_casm::hints::Hint;
