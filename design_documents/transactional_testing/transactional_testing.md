@@ -56,18 +56,18 @@ Each package can have its own contract, so each package could have its own e2e d
 and the whole workspace could have it as well (to test it in integration).
 For example:
 ```
-./project
-  ./Scarb.toml
-  ./e2e
-    ./e2e/test_integration.cairo
-    ./e2e/test_integration2.cairo
-  ./pkg1
-    ./src
-    ./test
-    ./e2e
-      ./test_contract_1.cairo
-  ./pkg2
-  ...
+project/
+├── Scarb.toml
+├── e2e/
+│   ├── test_integration.cairo
+│   └── test_integration2.cairo
+├── pkg1/
+│   ├── src
+│   ├── test
+│   └── e2e/
+│       └── test_contract_1.cairo
+├── pkg2
+└── ...
 ```
 ## Solution analysis
 
