@@ -25,6 +25,8 @@ flatten-serde-json = "0.1.0"
 cheatnet = { path = "../cheatnet" }
 conversions = { path = "../conversions" }
 scarb-artifacts = { path = "../scarb-artifacts" }
+k256 = { version = "0.13.2", features = ["sha256", "ecdsa", "serde"] }
+p256 = { version = "0.13.2", features = ["sha256", "ecdsa", "serde"] }
 
 [lib]
 name = "runtime"
