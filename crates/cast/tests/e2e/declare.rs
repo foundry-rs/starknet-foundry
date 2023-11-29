@@ -134,9 +134,9 @@ fn scarb_build_fails_no_toml(contract_path: &str, accounts_file_path: &str) {
         .current_dir(CONTRACTS_DIR.to_string() + contract_path)
         .args(args);
 
-    snapbox.assert().stderr_matches(indoc! {r#"
+    snapbox.assert().stderr_matches(indoc! {"
         Error: Could not retrieve the manifest path
-    "#});
+    "});
 }
 
 #[test]
