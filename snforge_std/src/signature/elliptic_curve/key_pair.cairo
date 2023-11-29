@@ -84,9 +84,7 @@ impl KeyPairVerifier<
     impl Secp256Impl: Secp256Trait<Secp256Point>,
     impl Secp256PointImpl: Secp256PointTrait<Secp256Point>
 > of Verifier<KeyPair<Secp256Point>> {
-    fn verify(
-        self: KeyPair<Secp256Point>, message_hash: u256, signature: (u256, u256)
-    ) -> bool {
+    fn verify(self: KeyPair<Secp256Point>, message_hash: u256, signature: (u256, u256)) -> bool {
         let (r, s) = signature;
         is_valid_signature::<Secp256Point>(message_hash, r, s, self.public_key)
     }
