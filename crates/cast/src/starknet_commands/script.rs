@@ -227,7 +227,7 @@ impl CairoHintProcessor<'_> {
                     &contract_name,
                     max_fee,
                     &account,
-                    &self.contracts,
+                    self.contracts,
                     true,
                 ))?;
 
@@ -363,9 +363,9 @@ pub fn run(
         .ok_or(anyhow!("Failed to find artifacts in starknet_artifacts.json file. Make sure you have enabled sierra and casm code generation in Scarb.toml"))?;
 
     let sierra_program = serde_json::from_str::<VersionedProgram>(&contract_artifacts.sierra)
-        .with_context(|| format!("failed to deserialize Sierra program"))?
+        .with_context(|| "failed to deserialize Sierra program")?
         .into_v1()
-        .with_context(|| format!("failed to load Sierra program"))?;
+        .with_context(|| "failed to load Sierra program")?;
 
     let runner = SierraCasmRunner::new(
         sierra_program,

@@ -45,18 +45,13 @@ pub fn build(
         // Insert lib "contract"
         let sierra_filename = format!("{}.sierra.json", package.name);
 
-        let sierra_path = target_dir_for_package(&metadata)
+        let sierra_path = target_dir_for_package(metadata)
             .join(&metadata.current_profile)
             .join(sierra_filename);
 
-        // dbg!(&sierra_path);
-        // dbg!(sierra_path.exists());
-        // let target_dir = target_dir_for_package(&metadata);
-        // dbg!(fs::read_dir(target_dir.parent().unwrap()).unwrap());
-
         let lib_artifacts = StarknetContractArtifacts {
             sierra: fs::read_to_string(sierra_path)?,
-            casm: String::from(""), // There seems to be no casm for lib
+            casm: String::new(), // There seems to be no need for casm in lib
         };
 
         contracts.insert(LIB_CONTRACT_ARTIFACTS_NAME.to_owned(), lib_artifacts);

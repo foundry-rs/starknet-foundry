@@ -439,14 +439,14 @@ fn get_package_data(cli: &Cli) -> PackageData {
         }
     };
 
-    if let Err(_) = result.manifest_path {
+    if result.manifest_path.is_err() {
         return result;
     }
 
     let metadata = get_scarb_metadata_with_deps(result.manifest_path.as_ref().unwrap());
 
     result.metadata = metadata;
-    if let Err(_) = result.metadata {
+    if result.metadata.is_err() {
         return result;
     }
 
