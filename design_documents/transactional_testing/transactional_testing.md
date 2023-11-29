@@ -88,7 +88,7 @@ project/
 
 ## Usage examples
 1. Test transaction signing
-```
+```rust
 from xxx_std import {deploy_account, deploy_contracts, end_txn, call, stark_curve, Transaction, TransactionStatus, Calldata, Call};  
 from xxx_devnet_extras import {set_time, dump};
 
