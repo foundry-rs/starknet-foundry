@@ -30,7 +30,7 @@ use starknet_api::core::ContractAddress;
 use starknet_api::hash::StarkFelt;
 
 use crate::forge_runtime_extension::file_operations::string_into_felt;
-use crate::runtime::{
+use crate::{
     CheatcodeHandlingResult, ExtendedRuntime, ExtensionLogic, RuntimeExtension,
     SyscallHandlingResult,
 };

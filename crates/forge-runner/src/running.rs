@@ -16,9 +16,7 @@ use cairo_vm::types::relocatable::Relocatable;
 use cheatnet::execution::cheatable_syscall_handler::CheatableSyscallHandler;
 use itertools::chain;
 
-use crate::forge_runtime_extension::{ForgeRuntime, TestExecutionState};
 use crate::gas::gas_from_execution_resources;
-use crate::runtime::{ExtendedRuntime, RuntimeExtension};
 use crate::sierra_casm_runner::SierraCasmRunner;
 use crate::test_case_summary::TestCaseSummary;
 use crate::{RunnerConfig, RunnerParams, TestCaseRunnable, ValidatedForkConfig, CACHE_DIR};
@@ -32,6 +30,8 @@ use cheatnet::constants as cheatnet_constants;
 use cheatnet::execution::contract_execution_syscall_handler::ContractExecutionSyscallHandler;
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::state::{BlockInfoReader, CheatnetBlockInfo, CheatnetState, ExtendedStateReader};
+use runtime::forge_runtime_extension::{ForgeRuntime, TestExecutionState};
+use runtime::{ExtendedRuntime, RuntimeExtension};
 use starknet::core::types::BlockTag::Latest;
 use starknet::core::types::{BlockId, MaybePendingBlockWithTxHashes};
 use starknet::core::utils::get_selector_from_name;
