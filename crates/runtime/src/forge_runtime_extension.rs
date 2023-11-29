@@ -463,6 +463,16 @@ impl<'a> ExtensionLogic
                                 verifying_key.to_encoded_point(false).to_bytes(),
                             )
                         }
+                        Some(1) => {
+                            let signing_key = p256::ecdsa::SigningKey::random(
+                                &mut p256::elliptic_curve::rand_core::OsRng,
+                            );
+                            let verifying_key = signing_key.verifying_key();
+                            (
+                                signing_key.to_bytes(),
+                                verifying_key.to_encoded_point(false).to_bytes(),
+                            )
+                        }
                         _ => unreachable!("Invalid EllipticCurve variant"),
                     }
                 };
@@ -483,16 +493,30 @@ impl<'a> ExtensionLogic
                 let msg_hash_low = inputs[3].clone();
                 let msg_hash_high = inputs[4].clone();
 
+                let private_key = concat_felts(&private_key_low, &private_key_high);
+                let msg_hash = concat_felts(&msg_hash_low, &msg_hash_high);
+
                 let (r_bytes, s_bytes) = {
                     match curve {
                         Some(0) => {
-                            let private_key = concat_felts(&private_key_low, &private_key_high);
                             let signing_key =
                                 k256::ecdsa::SigningKey::from_slice(&private_key).unwrap();
 
-                            let msg_hash = concat_felts(&msg_hash_low, &msg_hash_high);
                             let signature: k256::ecdsa::Signature =
-                                k256::schnorr::signature::hazmat::PrehashSigner::sign_prehash(
+                                k256::ecdsa::signature::hazmat::PrehashSigner::sign_prehash(
+                                    &signing_key,
+                                    &msg_hash,
+                                )
+                                .unwrap();
+
+                            signature.split_bytes()
+                        }
+                        Some(1) => {
+                            let signing_key =
+                                p256::ecdsa::SigningKey::from_slice(&private_key).unwrap();
+
+                            let signature: p256::ecdsa::Signature =
+                                p256::ecdsa::signature::hazmat::PrehashSigner::sign_prehash(
                                     &signing_key,
                                     &msg_hash,
                                 )
@@ -516,12 +540,22 @@ impl<'a> ExtensionLogic
                 let private_key_high = inputs[1].clone();
                 let curve = inputs[2].clone().to_u8();
 
+                let private_key = concat_felts(&private_key_low, &private_key_high);
+
                 let verifying_key_bytes = {
                     match curve {
                         Some(0) => {
-                            let private_key = concat_felts(&private_key_low, &private_key_high);
                             let signing_key =
                                 k256::ecdsa::SigningKey::from_slice(&private_key).unwrap();
+
+                            signing_key
+                                .verifying_key()
+                                .to_encoded_point(false)
+                                .to_bytes()
+                        }
+                        Some(1) => {
+                            let signing_key =
+                                p256::ecdsa::SigningKey::from_slice(&private_key).unwrap();
 
                             signing_key
                                 .verifying_key()
