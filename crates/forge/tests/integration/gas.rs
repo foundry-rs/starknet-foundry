@@ -60,7 +60,7 @@ fn test_deploy_syscall_cost() {
     // 1224 = 2 * cost per 32-byte word (contract_address and class_hash)
     // 612 - updated class (through deploy)
     // 11 - gas cost from steps
-    assert_gas!(result, "test_deploy_syscall", 1224 + 1224 + 612 + 11);
+    assert_gas!(result, "test_deploy_syscall", 1224 + 612 + 11);
 }
 
 #[test]
