@@ -6,6 +6,64 @@ use test_utils::{assert_gas, assert_passed, test_case};
 
 // gas values comes from https://book.starknet.io/ch03-01-02-fee-mechanism.html#computation
 #[test]
+fn test_declare_cost_is_omitted() {
+    let test = test_case!(
+        indoc!(
+            r"
+            use snforge_std::declare;
+
+            #[test]
+            fn test_declare() {
+                declare('GasChecker');
+            }
+        "
+        ),
+        Contract::from_code_path(
+            "GasChecker".to_string(),
+            Path::new("tests/data/contracts/gas_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test);
+
+    assert_passed!(result);
+    // 1 - initial gas cost (consists of steps required to run the code)
+    assert_gas!(result, "test_declare", 1);
+}
+
+#[test]
+fn test_deploy_syscall_cost() {
+    let test = test_case!(
+        indoc!(
+            r"
+            use snforge_std::declare;
+            use starknet::{SyscallResult, deploy_syscall};
+
+            #[test]
+            fn test_deploy_syscall() {
+                let contract = declare('GasChecker');
+                deploy_syscall(contract.class_hash, 0, array![].span(), false);
+            }
+        "
+        ),
+        Contract::from_code_path(
+            "GasChecker".to_string(),
+            Path::new("tests/data/contracts/gas_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test);
+
+    assert_passed!(result);
+    // 1224 = 2 * cost per 32-byte word (contract_address and class_hash)
+    // 612 - updated class (through deploy)
+    // 11 - gas cost from steps
+    assert_gas!(result, "test_deploy_syscall", 1224 + 1224 + 612 + 11);
+}
+
+#[test]
 fn test_keccak_cost() {
     let test = test_case!(indoc!(
         r"
@@ -54,7 +112,9 @@ fn test_contract_keccak_cost() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
-    assert_gas!(result, "test_keccak_builtin", 21);
+    // 1836 = 3 * cost per 32-byte word (deploy)
+    // 21 - cost of single keccak builtin
+    assert_gas!(result, "test_keccak_builtin", 1836 + 21);
 }
 
 #[test]
@@ -110,7 +170,9 @@ fn test_contract_range_check_cost() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
-    assert_gas!(result, "test_range_check", 4);
+    // 1836 = 3 * cost per 32-byte word (deploy)
+    // 4 - cost of 22 range check builtins
+    assert_gas!(result, "test_range_check", 1836 + 4);
 }
 
 #[test]
@@ -164,7 +226,9 @@ fn test_contract_bitwise_cost() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
-    assert_gas!(result, "test_bitwise", 4);
+    // 1836 = 3 * cost per 32-byte word (deploy)
+    // 4 - cost of 6 bitwise builtins
+    assert_gas!(result, "test_bitwise", 1836 + 4);
 }
 
 #[test]
@@ -218,7 +282,9 @@ fn test_contract_pedersen_cost() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
-    assert_gas!(result, "test_pedersen", 4);
+    // 1836 = 3 * cost per 32-byte word (deploy)
+    // 4 - cost of 12 pedersen builtins
+    assert_gas!(result, "test_pedersen", 1836 + 4);
 }
 
 #[test]
@@ -272,7 +338,9 @@ fn test_contract_poseidon_cost() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
-    assert_gas!(result, "test_poseidon", 4);
+    // 1836 = 3 * cost per 32-byte word (deploy)
+    // 4 - cost of 12 poseidon builtins
+    assert_gas!(result, "test_poseidon", 1836 + 4);
 }
 
 #[test]
@@ -327,5 +395,7 @@ fn test_contract_ec_op_cost() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
-    assert_gas!(result, "test_ec_op", 11);
+    // 1836 = 3 * cost per 32-byte word (deploy)
+    // 1 - cost of single ec_op builtin
+    assert_gas!(result, "test_ec_op", 1836 + 11);
 }
