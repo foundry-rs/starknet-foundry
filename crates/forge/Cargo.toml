@@ -63,6 +63,8 @@ tokio-util.workspace = true
 futures.workspace = true
 num-integer = "0.1.45"
 url.workspace = true
+k256 = { version = "0.13.2", features = ["sha256", "ecdsa", "serde"] }
+p256 = { version = "0.13.2", features = ["sha256", "ecdsa", "serde"] }
 
 [lib]
 name = "forge"

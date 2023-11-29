@@ -3,10 +3,10 @@ use test_utils::running_tests::run_test_case;
 use test_utils::{assert_passed, test_case};
 
 #[test]
-fn simple_signing_flow() {
+fn simple_signing_flow_stark_curve() {
     let test = test_case!(indoc!(
         r"
-            use snforge_std::signature::{ StarkCurveKeyPair, StarkCurveKeyPairTrait, Signer, Verifier };
+            use snforge_std::signature::stark_curve::{ StarkCurveKeyPair, StarkCurveKeyPairTrait, Signer, Verifier };
 
             #[test]
             fn test() {
@@ -28,7 +28,7 @@ fn simple_signing_flow() {
 fn try_to_sign_max_felt() {
     let test = test_case!(indoc!(
         r"
-            use snforge_std::signature::{ StarkCurveKeyPair, StarkCurveKeyPairTrait, Signer };
+            use snforge_std::signature::stark_curve::{ StarkCurveKeyPair, StarkCurveKeyPairTrait, Signer };
 
             #[test]
             fn test() {
@@ -41,6 +41,36 @@ fn try_to_sign_max_felt() {
                         assert(msg == 'message_hash out of range', msg);
                     }
                 }
+            }
+        "
+    ));
+
+    let result = run_test_case(&test);
+
+    assert_passed!(result);
+}
+
+#[test]
+fn test_secp_curve() {
+    let test = test_case!(indoc!(
+        r"
+            use snforge_std::signature::elliptic_curve::{ EllipticCurve, KeyPair, KeyPairTrait, Signer, Verifier };
+            use starknet::secp256k1::{ Secp256k1Point, Secp256k1PointImpl };
+
+            #[test]
+            fn test() {
+                let mut key_pair = KeyPairTrait::generate(EllipticCurve::Secp256k1);
+                
+                let msg_hash: u256 = 0xbadc0ffee;
+                let (r, s) = key_pair.sign(msg_hash).unwrap();
+
+                let is_valid = key_pair.verify(msg_hash, (r, s));
+                assert(is_valid, 'Signature should be valid');
+
+                let key_pair2 = KeyPairTrait::from_private(key_pair.private_key, EllipticCurve::Secp256k1);
+                assert(key_pair.private_key == key_pair2.private_key, 'Private keys should be equal');
+                assert(key_pair.public_key.get_coordinates() == key_pair2.public_key.get_coordinates(), 'Public keys should be equal');
+                assert(key_pair.curve == key_pair2.curve, 'Curves should be equal');
             }
         "
     ));

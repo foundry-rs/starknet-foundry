@@ -580,7 +580,7 @@ impl TestExecutionSyscallHandler<'_> {
                     .expect("Failed to insert event name hash");
                 Ok(())
             }
-            "generate_ecdsa_keys" => {
+            "generate_stark_keys" => {
                 let key_pair = SigningKey::from_random();
 
                 buffer
@@ -591,17 +591,7 @@ impl TestExecutionSyscallHandler<'_> {
                     .expect("Failed to insert public key");
                 Ok(())
             }
-            "get_public_key" => {
-                let private_key = inputs[0].clone();
-                let key_pair = SigningKey::from_secret_scalar(private_key.to_field_element());
-
-                buffer
-                    .write(key_pair.verifying_key().scalar().to_felt252())
-                    .expect("Failed to insert public key");
-
-                Ok(())
-            }
-            "ecdsa_sign_message" => {
+            "stark_sign_message" => {
                 let private_key = inputs[0].clone();
                 let message_hash = inputs[1].clone();
 
@@ -621,6 +611,109 @@ impl TestExecutionSyscallHandler<'_> {
                         .write("message_hash out of range".to_string().to_felt252())
                         .expect("Failed to insert error message");
                 }
+
+                Ok(())
+            }
+            "get_stark_public_key" => {
+                let private_key = inputs[0].clone();
+                let key_pair = SigningKey::from_secret_scalar(private_key.to_field_element());
+
+                buffer
+                    .write(key_pair.verifying_key().scalar().to_felt252())
+                    .expect("Failed to insert public key");
+
+                Ok(())
+            }
+            "generate_ecdsa_keys" => {
+                let serialized_curve = inputs[0].clone().to_u8();
+
+                let (signing_key_bytes, verifying_key_bytes) = {
+                    match serialized_curve {
+                        Some(0) => {
+                            let signing_key = k256::ecdsa::SigningKey::random(
+                                &mut k256::elliptic_curve::rand_core::OsRng,
+                            );
+                            let verifying_key = signing_key.verifying_key();
+                            (
+                                signing_key.to_bytes(),
+                                verifying_key.to_encoded_point(false).to_bytes(),
+                            )
+                        }
+                        _ => unreachable!("Invalid EllipticCurve variant"),
+                    }
+                };
+
+                insert_bytes(&mut buffer, &signing_key_bytes[16..32]);
+                insert_bytes(&mut buffer, &signing_key_bytes[0..16]);
+
+                insert_bytes(&mut buffer, &verifying_key_bytes[17..33]);
+                insert_bytes(&mut buffer, &verifying_key_bytes[1..17]);
+                insert_bytes(&mut buffer, &verifying_key_bytes[49..65]);
+                insert_bytes(&mut buffer, &verifying_key_bytes[33..49]);
+
+                Ok(())
+            }
+            "ecdsa_sign_message" => {
+                let private_key_low = inputs[0].clone();
+                let private_key_high = inputs[1].clone();
+                let serialized_curve = inputs[2].clone().to_u8();
+                let msg_hash_low = inputs[3].clone();
+                let msg_hash_high = inputs[4].clone();
+
+                let (r_bytes, s_bytes) = {
+                    match serialized_curve {
+                        Some(0) => {
+                            let private_key = concat_felts(private_key_low, private_key_high);
+                            let signing_key =
+                                k256::ecdsa::SigningKey::from_slice(&private_key).unwrap();
+
+                            let msg_hash = concat_felts(msg_hash_low, msg_hash_high);
+                            let signature: k256::ecdsa::Signature =
+                                k256::schnorr::signature::hazmat::PrehashSigner::sign_prehash(
+                                    &signing_key,
+                                    &msg_hash,
+                                )
+                                .unwrap();
+
+                            signature.split_bytes()
+                        }
+                        _ => unreachable!("Invalid EllipticCurve variant"),
+                    }
+                };
+
+                insert_bytes(&mut buffer, &r_bytes[16..32]);
+                insert_bytes(&mut buffer, &r_bytes[0..16]);
+
+                insert_bytes(&mut buffer, &s_bytes[16..32]);
+                insert_bytes(&mut buffer, &s_bytes[0..16]);
+
+                Ok(())
+            }
+            "get_public_key" => {
+                let private_key_low = inputs[0].clone();
+                let private_key_high = inputs[1].clone();
+                let serialized_curve = inputs[2].clone().to_u8();
+
+                let verifying_key_bytes = {
+                    match serialized_curve {
+                        Some(0) => {
+                            let private_key = concat_felts(private_key_low, private_key_high);
+                            let signing_key =
+                                k256::ecdsa::SigningKey::from_slice(&private_key).unwrap();
+
+                            signing_key
+                                .verifying_key()
+                                .to_encoded_point(false)
+                                .to_bytes()
+                        }
+                        _ => unreachable!("Invalid EllipticCurve variant"),
+                    }
+                };
+
+                insert_bytes(&mut buffer, &verifying_key_bytes[17..33]);
+                insert_bytes(&mut buffer, &verifying_key_bytes[1..17]);
+                insert_bytes(&mut buffer, &verifying_key_bytes[49..65]);
+                insert_bytes(&mut buffer, &verifying_key_bytes[33..49]);
 
                 Ok(())
             }
@@ -837,4 +930,18 @@ fn write_cheatcode_panic(buffer: &mut MemBuffer, panic_data: &[Felt252]) {
     buffer
         .write_data(panic_data.iter())
         .expect("Failed to insert error in memory");
+}
+
+fn insert_bytes(buffer: &mut MemBuffer, bytes: &[u8]) {
+    let felt_bytes = Felt252::from_bytes_be(bytes);
+    buffer
+        .write(&felt_bytes)
+        .expect("Failed to insert bytes to memory");
+}
+
+fn concat_felts(low: Felt252, high: Felt252) -> [u8; 32] {
+    let mut result = [0; 32];
+    result[..16].copy_from_slice(&high.to_be_bytes()[16..32]);
+    result[16..].copy_from_slice(&low.to_be_bytes()[16..32]);
+    result
 }
