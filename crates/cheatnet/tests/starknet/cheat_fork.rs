@@ -3,7 +3,7 @@ use crate::common::state::{create_cheatnet_state, create_fork_cached_state};
 use cairo_felt::Felt252;
 use cheatnet::rpc::{call_contract, CallContractResult};
 use cheatnet::state::CheatTarget;
-use conversions::StarknetConversions;
+use conversions::IntoConv;
 use num_bigint::BigUint;
 use starknet_api::core::ContractAddress;
 use std::str::FromStr;
@@ -18,8 +18,7 @@ fn prank_cairo0_contract(selector: &str) {
     let mut cached_fork_state = create_fork_cached_state();
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_fork_state);
 
-    let contract_address =
-        Felt252::from(BigUint::from_str(CAIRO0_TESTER_ADDRESS).unwrap()).to_contract_address();
+    let contract_address = Felt252::from(BigUint::from_str(CAIRO0_TESTER_ADDRESS).unwrap()).into_();
 
     let selector = felt_selector_from_name(selector);
     let output = call_contract(
@@ -78,8 +77,7 @@ fn roll_cairo0_contract(selector: &str) {
     let mut cached_fork_state = create_fork_cached_state();
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_fork_state);
 
-    let contract_address =
-        Felt252::from(BigUint::from_str(CAIRO0_TESTER_ADDRESS).unwrap()).to_contract_address();
+    let contract_address = Felt252::from(BigUint::from_str(CAIRO0_TESTER_ADDRESS).unwrap()).into_();
 
     let selector = felt_selector_from_name(selector);
     let output = call_contract(
@@ -135,8 +133,7 @@ fn warp_cairo0_contract(selector: &str) {
     let mut cached_fork_state = create_fork_cached_state();
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_fork_state);
 
-    let contract_address =
-        Felt252::from(BigUint::from_str(CAIRO0_TESTER_ADDRESS).unwrap()).to_contract_address();
+    let contract_address = Felt252::from(BigUint::from_str(CAIRO0_TESTER_ADDRESS).unwrap()).into_();
 
     let selector = felt_selector_from_name(selector);
     let output = call_contract(

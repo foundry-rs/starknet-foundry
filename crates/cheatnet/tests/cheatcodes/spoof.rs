@@ -13,7 +13,7 @@ use cheatnet::{
     rpc::call_contract,
     state::{BlockifierState, CheatnetState},
 };
-use conversions::StarknetConversions;
+use conversions::IntoConv;
 use starknet_api::core::ContractAddress;
 
 #[allow(clippy::too_many_arguments)]
@@ -489,7 +489,7 @@ fn spoof_in_constructor() {
 
     let contracts = get_contracts();
 
-    let contract_name = "ConstructorSpoofChecker".to_owned().to_felt252();
+    let contract_name = "ConstructorSpoofChecker".to_owned().into_();
     let class_hash = blockifier_state
         .declare(&contract_name, &contracts)
         .unwrap();
@@ -590,7 +590,7 @@ fn spoof_proxy() {
         &mut cheatnet_state,
         &proxy_address,
         &proxy_selector,
-        &[contract_address.to_felt252()],
+        &[contract_address.into_()],
     )
     .unwrap();
 
@@ -603,7 +603,7 @@ fn spoof_library_call() {
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contracts = get_contracts();
-    let contract_name = "SpoofChecker".to_owned().to_felt252();
+    let contract_name = "SpoofChecker".to_owned().into_();
     let class_hash = blockifier_state
         .declare(&contract_name, &contracts)
         .unwrap();
@@ -640,7 +640,7 @@ fn spoof_library_call() {
         &mut cheatnet_state,
         &lib_call_address,
         &lib_call_selector,
-        &[class_hash.to_felt252()],
+        &[class_hash.into_()],
     )
     .unwrap();
 
@@ -929,7 +929,7 @@ fn spoof_multiple() {
     let mut cached_state = create_cached_state();
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
-    let contract = "SpoofChecker".to_owned().to_felt252();
+    let contract = "SpoofChecker".to_owned().into_();
     let contracts = get_contracts();
     let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
 

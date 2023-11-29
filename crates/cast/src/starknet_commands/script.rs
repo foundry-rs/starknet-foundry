@@ -30,7 +30,7 @@ use cast::helpers::scarb_utils::CastConfig;
 use cheatnet::cheatcodes::EnhancedHintError;
 use clap::command;
 use clap::Args;
-use conversions::StarknetConversions;
+use conversions::{FromConv, IntoConv};
 use itertools::chain;
 use num_traits::ToPrimitive;
 use scarb_artifacts::StarknetContractArtifacts;
@@ -173,7 +173,7 @@ impl CairoHintProcessor<'_> {
 
         match selector {
             "call" => {
-                let contract_address = inputs[0].to_field_element();
+                let contract_address = inputs[0].clone().into_();
                 let function_name = as_cairo_short_string(&inputs[1])
                     .expect("Failed to convert function name to short string");
                 let calldata_length = inputs[2]
@@ -182,7 +182,7 @@ impl CairoHintProcessor<'_> {
                 let calldata = Vec::from(&inputs[3..(3 + calldata_length)]);
                 let calldata_felts: Vec<FieldElement> = calldata
                     .iter()
-                    .map(StarknetConversions::to_field_element)
+                    .map(|el| FieldElement::from_(el.clone()))
                     .collect();
 
                 let call_response = self.runtime.block_on(call::call(
@@ -198,12 +198,7 @@ impl CairoHintProcessor<'_> {
                     .expect("Failed to insert data length");
 
                 buffer
-                    .write_data(
-                        call_response
-                            .response
-                            .iter()
-                            .map(StarknetConversions::to_felt252),
-                    )
+                    .write_data(call_response.response.iter().map(|el| Felt252::from_(*el)))
                     .expect("Failed to insert data");
 
                 Ok(())
@@ -212,7 +207,7 @@ impl CairoHintProcessor<'_> {
                 let contract_name = as_cairo_short_string(&inputs[0])
                     .expect("Failed to convert contract name to string");
                 let max_fee = if inputs[1] == 0.into() {
-                    Some(inputs[2].to_field_element())
+                    Some(inputs[2].clone().into_())
                 } else {
                     None
                 };
@@ -232,17 +227,17 @@ impl CairoHintProcessor<'_> {
                 ))?;
 
                 buffer
-                    .write(declare_response.class_hash.to_felt252())
+                    .write(Felt252::from_(declare_response.class_hash))
                     .expect("Failed to insert class hash");
 
                 buffer
-                    .write(declare_response.transaction_hash.to_felt252())
+                    .write(Felt252::from_(declare_response.transaction_hash))
                     .expect("Failed to insert transaction hash");
 
                 Ok(())
             }
             "deploy" => {
-                let class_hash = inputs[0].to_field_element();
+                let class_hash = inputs[0].clone().into_();
                 let calldata_length = inputs[1]
                     .to_usize()
                     .expect("Failed to convert calldata length to usize");
@@ -250,13 +245,13 @@ impl CairoHintProcessor<'_> {
                     let calldata = Vec::from(&inputs[2..(2 + calldata_length)]);
                     calldata
                         .iter()
-                        .map(StarknetConversions::to_field_element)
+                        .map(|el| FieldElement::from_(el.clone()))
                         .collect()
                 };
                 let mut offset = 2 + calldata_length;
                 let salt = if inputs[offset] == 0.into() {
                     offset += 1;
-                    Some(inputs[offset].to_field_element())
+                    Some(inputs[offset].clone().into_())
                 } else {
                     None
                 };
@@ -265,7 +260,7 @@ impl CairoHintProcessor<'_> {
                 offset += 1;
                 let max_fee = if inputs[offset] == 0.into() {
                     offset += 1;
-                    Some(inputs[offset].to_field_element())
+                    Some(inputs[offset].clone().into_())
                 } else {
                     None
                 };
@@ -288,17 +283,17 @@ impl CairoHintProcessor<'_> {
                 ))?;
 
                 buffer
-                    .write(deploy_response.contract_address.to_felt252())
+                    .write(Felt252::from_(deploy_response.contract_address))
                     .expect("Failed to insert contract address");
 
                 buffer
-                    .write(deploy_response.transaction_hash.to_felt252())
+                    .write(Felt252::from_(deploy_response.transaction_hash))
                     .expect("Failed to insert transaction hash");
 
                 Ok(())
             }
             "invoke" => {
-                let contract_address = inputs[0].to_field_element();
+                let contract_address = FieldElement::from_(inputs[0].clone());
                 let entry_point_name = as_cairo_short_string(&inputs[1])
                     .expect("Failed to convert entry point name to short string");
                 let calldata_length = inputs[2]
@@ -308,12 +303,12 @@ impl CairoHintProcessor<'_> {
                     let calldata = Vec::from(&inputs[3..(3 + calldata_length)]);
                     calldata
                         .iter()
-                        .map(conversions::StarknetConversions::to_field_element)
+                        .map(|el| FieldElement::from_(el.clone()))
                         .collect()
                 };
                 let offset = 3 + calldata_length;
                 let max_fee = if inputs[offset] == 0.into() {
-                    Some(inputs[offset + 1].to_field_element())
+                    Some(inputs[offset + 1].clone().into_())
                 } else {
                     None
                 };
@@ -335,7 +330,7 @@ impl CairoHintProcessor<'_> {
                 ))?;
 
                 buffer
-                    .write(invoke_response.transaction_hash.to_felt252())
+                    .write(Felt252::from_(invoke_response.transaction_hash))
                     .expect("Failed to insert transaction hash");
 
                 Ok(())

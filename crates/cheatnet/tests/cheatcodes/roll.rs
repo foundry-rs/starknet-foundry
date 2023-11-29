@@ -10,7 +10,7 @@ use cairo_felt::Felt252;
 use cheatnet::cheatcodes::deploy::deploy;
 use cheatnet::rpc::call_contract;
 use cheatnet::state::CheatTarget;
-use conversions::StarknetConversions;
+use conversions::IntoConv;
 
 #[test]
 fn roll_simple() {
@@ -75,7 +75,7 @@ fn roll_in_constructor() {
 
     let contracts = get_contracts();
 
-    let contract_name = "ConstructorRollChecker".to_owned().to_felt252();
+    let contract_name = "ConstructorRollChecker".to_owned().into_();
     let class_hash = blockifier_state
         .declare(&contract_name, &contracts)
         .unwrap();
@@ -242,7 +242,7 @@ fn roll_proxy() {
         &mut cheatnet_state,
         &proxy_address,
         &proxy_selector,
-        &[contract_address.to_felt252()],
+        &[contract_address.into_()],
     )
     .unwrap();
 
@@ -253,7 +253,7 @@ fn roll_proxy() {
         &mut cheatnet_state,
         &proxy_address,
         &proxy_selector,
-        &[contract_address.to_felt252()],
+        &[contract_address.into_()],
     )
     .unwrap();
 
@@ -266,7 +266,7 @@ fn roll_proxy() {
         &mut cheatnet_state,
         &proxy_address,
         &proxy_selector,
-        &[contract_address.to_felt252()],
+        &[contract_address.into_()],
     )
     .unwrap();
 
@@ -279,7 +279,7 @@ fn roll_library_call() {
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contracts = get_contracts();
-    let contract_name = "RollChecker".to_owned().to_felt252();
+    let contract_name = "RollChecker".to_owned().into_();
     let class_hash = blockifier_state
         .declare(&contract_name, &contracts)
         .unwrap();
@@ -297,7 +297,7 @@ fn roll_library_call() {
         &mut cheatnet_state,
         &lib_call_address,
         &lib_call_selector,
-        &[class_hash.to_felt252()],
+        &[class_hash.into_()],
     )
     .unwrap();
 
@@ -308,7 +308,7 @@ fn roll_library_call() {
         &mut cheatnet_state,
         &lib_call_address,
         &lib_call_selector,
-        &[class_hash.to_felt252()],
+        &[class_hash.into_()],
     )
     .unwrap();
 
@@ -321,7 +321,7 @@ fn roll_library_call() {
         &mut cheatnet_state,
         &lib_call_address,
         &lib_call_selector,
-        &[class_hash.to_felt252()],
+        &[class_hash.into_()],
     )
     .unwrap();
 
@@ -474,7 +474,7 @@ fn roll_multiple() {
     let mut cached_state = create_cached_state();
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
-    let contract = "RollChecker".to_owned().to_felt252();
+    let contract = "RollChecker".to_owned().into_();
     let contracts = get_contracts();
     let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
 
