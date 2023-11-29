@@ -75,6 +75,28 @@ impl ValueFormat {
 
         input.to_string()
     }
+
+    #[must_use]
+    pub fn format_json_value(&self, value: &Value) -> Option<String> {
+        match value {
+            Value::Number(n) => {
+                let n = n
+                    .as_u64()
+                    .unwrap_or_else(|| panic!("failed to convert {n} to u64"));
+                Some(self.format_u64(n))
+            }
+            Value::String(s) => Some(self.format_str(s)),
+            Value::Array(arr) => {
+                let arr_as_string = arr
+                    .iter()
+                    .filter_map(|item| self.format_json_value(item))
+                    .collect::<Vec<String>>()
+                    .join(", ");
+                Some(format!("[{arr_as_string}]"))
+            }
+            _ => None,
+        }
+    }
 }
 
 pub fn get_provider(url: &str) -> Result<JsonRpcClient<HttpTransport>> {
@@ -246,7 +268,6 @@ pub async fn wait_for_tx(
     tx_hash: FieldElement,
     retries: u8,
 ) -> Result<&str> {
-    println!("Transaction hash: {tx_hash:#x}");
     for i in (1..retries).rev() {
         match provider.get_transaction_receipt(tx_hash).await {
             Ok(receipt) => match receipt.execution_result() {
@@ -370,18 +391,7 @@ pub fn print_command_result<T: Serialize>(
                     .as_object()
                     .expect("Invalid JSON value")
                     .iter()
-                    .filter_map(|(k, v)| {
-                        let value = match v {
-                            Value::Number(n) => {
-                                let n = n.as_u64().expect("found unexpected value");
-                                value_format.format_u64(n)
-                            }
-                            Value::String(s) => value_format.format_str(s),
-                            _ => return None,
-                        };
-
-                        Some((k.as_str(), value))
-                    })
+                    .filter_map(|(k, v)| value_format.format_json_value(v).map(|v| (k.as_str(), v)))
                     .collect::<Vec<(&str, String)>>(),
             );
         }
@@ -445,9 +455,11 @@ pub fn udc_uniqueness(unique: bool, account_address: FieldElement) -> UdcUniquen
 mod tests {
     use crate::{
         chain_id_to_network_name, extract_or_generate_salt, get_account_from_accounts_file,
-        get_block_id, udc_uniqueness,
+        get_block_id, udc_uniqueness, ValueFormat,
     };
     use camino::Utf8PathBuf;
+    use serde::Serialize;
+    use serde_json::json;
     use starknet::core::utils::UdcUniqueSettings;
     use starknet::core::utils::UdcUniqueness::{NotUnique, Unique};
     use starknet::{
@@ -458,6 +470,7 @@ mod tests {
         },
         providers::{jsonrpc::HttpTransport, JsonRpcClient},
     };
+    use test_case::test_case;
     use url::Url;
 
     #[test]
@@ -554,5 +567,39 @@ mod tests {
         assert!(err
             .to_string()
             .contains("Account user1 not found under network CUSTOM_CHAIN_ID"));
+    }
+
+    #[test_case(
+        "0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
+        "0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7";
+        "when value is hex"
+    )]
+    #[test_case("kapusta", "kapusta" ; "when value is string")]
+    #[test_case(132_435, "132435" ; "when value is uint")]
+    #[test_case([132_435, 121], "[132435, 121]" ; "when value is array of ints")]
+    #[test_case(
+        ["0x49d3657224e46f48e99674bd3fcc84644ddd6b96f7c221b1562b82f9e004dc7", "0x49d36333d4e46f48e99674bd3fcc84333ddd6b96f7c741b1562b82f9e004dc7"],
+        "[0x49d3657224e46f48e99674bd3fcc84644ddd6b96f7c221b1562b82f9e004dc7, 0x49d36333d4e46f48e99674bd3fcc84333ddd6b96f7c741b1562b82f9e004dc7]";
+        "when value is array of contract addresses"
+    )]
+    fn test_format_json_value_not_none<T: Serialize>(value: T, expected: &str) {
+        let value_format = ValueFormat::Default;
+        let json_value = serde_json::to_value(value).unwrap();
+
+        let actual = value_format.format_json_value(&json_value).unwrap();
+
+        assert_eq!(actual, expected);
+    }
+
+    #[test_case(true ; "when value is bool")]
+    #[test_case(json!({ "an": "object" }) ; "when value is an object")]
+    #[test_case(json!(null) ; "when value is null")]
+    fn test_format_json_value_is_none<T: Serialize>(value: T) {
+        let value_format = ValueFormat::Default;
+        let json_value = serde_json::to_value(value).unwrap();
+
+        let actual = value_format.format_json_value(&json_value);
+
+        assert_eq!(actual, None);
     }
 }

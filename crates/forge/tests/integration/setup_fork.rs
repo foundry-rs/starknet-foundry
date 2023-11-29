@@ -5,13 +5,14 @@ use std::sync::Arc;
 
 use camino::Utf8PathBuf;
 use forge::run;
+use forge::scarb::config::ForkTarget;
 use forge::test_filter::TestsFilter;
 use starknet::core::types::BlockId;
 use starknet::core::types::BlockTag::Latest;
 use tempfile::tempdir;
 use tokio::runtime::Runtime;
 
-use forge_runner::{ForkTarget, RunnerConfig, RunnerParams};
+use forge_runner::{RunnerConfig, RunnerParams};
 use test_collector::RawForkParams;
 use test_utils::corelib::corelib_path;
 use test_utils::runner::Contract;
@@ -106,17 +107,10 @@ fn fork_aliased_decorator() {
             &test.path().unwrap(),
             &String::from("src"),
             &test.path().unwrap().join("src"),
-            &TestsFilter::from_flags(None, false, false, false),
+            &TestsFilter::from_flags(None, false, false, false, false, Default::default()),
             Arc::new(RunnerConfig::new(
                 Utf8PathBuf::from_path_buf(PathBuf::from(tempdir().unwrap().path())).unwrap(),
                 false,
-                vec![ForkTarget::new(
-                    "FORK_NAME_FROM_SCARB_TOML".to_string(),
-                    RawForkParams {
-                        url: CHEATNET_RPC_URL.to_string(),
-                        block_id: BlockId::Tag(Latest),
-                    },
-                )],
                 256,
                 12345,
             )),
@@ -126,6 +120,13 @@ fn fork_aliased_decorator() {
                 Default::default(),
                 test.linked_libraries(),
             )),
+            &[ForkTarget::new(
+                "FORK_NAME_FROM_SCARB_TOML".to_string(),
+                RawForkParams {
+                    url: CHEATNET_RPC_URL.to_string(),
+                    block_id: BlockId::Tag(Latest),
+                },
+            )],
         ))
         .expect("Runner fail");
 

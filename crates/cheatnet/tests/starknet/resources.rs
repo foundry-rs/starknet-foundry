@@ -12,7 +12,7 @@ use crate::common::{
 use cairo_felt::Felt252;
 use cheatnet::cheatcodes::deploy::deploy;
 use cheatnet::rpc::call_contract;
-use conversions::StarknetConversions;
+use conversions::IntoConv;
 
 // TODO (834): Verify values in this test
 #[test]
@@ -58,7 +58,7 @@ fn deploy_resources_simple() {
 
     let contracts = get_contracts();
 
-    let contract_name = "HelloStarknet".to_owned().to_felt252();
+    let contract_name = "HelloStarknet".to_owned().into_();
     let class_hash = blockifier_state
         .declare(&contract_name, &contracts)
         .unwrap();
@@ -75,7 +75,7 @@ fn deploy_resources_with_constructor() {
 
     let contracts = get_contracts();
 
-    let contract_name = "ConstructorSimple".to_owned().to_felt252();
+    let contract_name = "ConstructorSimple".to_owned().into_();
     let class_hash = blockifier_state
         .declare(&contract_name, &contracts)
         .unwrap();

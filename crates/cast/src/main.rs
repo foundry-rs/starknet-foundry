@@ -2,6 +2,7 @@ use crate::starknet_commands::account::Account;
 use crate::starknet_commands::show_config::ShowConfig;
 use crate::starknet_commands::{
     account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
+    script::Script,
 };
 use anyhow::{anyhow, Result};
 
@@ -13,6 +14,9 @@ use cast::{
     print_command_result, ValueFormat,
 };
 use clap::{Parser, Subcommand};
+use starknet::providers::jsonrpc::HttpTransport;
+use starknet::providers::JsonRpcClient;
+use tokio::runtime::Runtime;
 
 mod starknet_commands;
 
@@ -90,11 +94,12 @@ enum Commands {
 
     /// Show current configuration being used
     ShowConfig(ShowConfig),
+
+    /// Run a deployment script
+    Script(Script),
 }
 
-#[tokio::main]
-#[allow(clippy::too_many_lines)]
-async fn main() -> Result<()> {
+fn main() -> Result<()> {
     let cli = Cli::parse();
 
     // Clap validates that both are not passed at same time
@@ -110,7 +115,31 @@ async fn main() -> Result<()> {
     update_cast_config(&mut config, &cli);
 
     let provider = get_provider(&config.rpc_url)?;
+    let runtime = Runtime::new().expect("Could not instantiate Runtime");
 
+    if let Commands::Script(script) = cli.command {
+        let mut result = starknet_commands::script::run(
+            &script.script_module_name,
+            &cli.path_to_scarb_toml,
+            &provider,
+            runtime,
+            &config,
+        );
+
+        print_command_result("script", &mut result, value_format, cli.json)?;
+        Ok(())
+    } else {
+        runtime.block_on(run_async_command(cli, config, provider, value_format))
+    }
+}
+
+#[allow(clippy::too_many_lines)]
+async fn run_async_command(
+    cli: Cli,
+    mut config: CastConfig,
+    provider: JsonRpcClient<HttpTransport>,
+    value_format: ValueFormat,
+) -> Result<()> {
     match cli.command {
         Commands::Declare(declare) => {
             let account = get_account(
@@ -321,6 +350,7 @@ async fn main() -> Result<()> {
             print_command_result("show-config", &mut result, value_format, cli.json)?;
             Ok(())
         }
+        Commands::Script(_) => unreachable!(),
     }
 }
 

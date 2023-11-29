@@ -1,24 +1,24 @@
 use anyhow::{anyhow, Result};
 use camino::Utf8Path;
-use itertools::Itertools;
 use std::fmt::Debug;
 use std::sync::Arc;
 
 use forge_runner::test_crate_summary::TestCrateSummary;
 use forge_runner::{
-    CompiledTestCrate, RunnerConfig, RunnerParams, TestCaseRunnable, TestCrateRunResult,
+    CompiledTestCrateRunnable, RunnerConfig, RunnerParams, TestCaseRunnable, TestCrateRunResult,
     ValidatedForkConfig,
 };
 use test_collector::{RawForkConfig, RawForkParams};
 
 use crate::collecting::{collect_test_compilation_targets, compile_tests, CompiledTestCrateRaw};
+use crate::scarb::config::ForkTarget;
 use crate::test_filter::TestsFilter;
 
+mod collecting;
 pub mod pretty_printing;
 pub mod scarb;
+pub mod shared_cache;
 pub mod test_filter;
-
-mod collecting;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum CrateLocation {
@@ -30,13 +30,12 @@ pub enum CrateLocation {
 
 fn replace_id_with_params(
     raw_fork_config: RawForkConfig,
-    runner_config: &RunnerConfig,
+    fork_targets: &[ForkTarget],
 ) -> Result<RawForkParams> {
     match raw_fork_config {
         RawForkConfig::Params(raw_fork_params) => Ok(raw_fork_params),
         RawForkConfig::Id(name) => {
-            let fork_target_from_runner_config = runner_config
-                .fork_targets
+            let fork_target_from_runner_config = fork_targets
                 .iter()
                 .find(|fork| fork.name() == name)
                 .ok_or_else(|| {
@@ -50,13 +49,13 @@ fn replace_id_with_params(
 
 fn to_runnable(
     compiled_test_crate: CompiledTestCrateRaw,
-    runner_config: &RunnerConfig,
-) -> Result<CompiledTestCrate> {
+    fork_targets: &[ForkTarget],
+) -> Result<CompiledTestCrateRunnable> {
     let mut test_cases = vec![];
 
     for case in compiled_test_crate.test_cases {
         let fork_config = if let Some(fc) = case.fork_config {
-            let raw_fork_params = replace_id_with_params(fc, runner_config)?;
+            let raw_fork_params = replace_id_with_params(fc, fork_targets)?;
             let fork_config = ValidatedForkConfig::try_from(raw_fork_params)?;
             Some(fork_config)
         } else {
@@ -73,7 +72,7 @@ fn to_runnable(
         });
     }
 
-    Ok(CompiledTestCrate::new(
+    Ok(CompiledTestCrateRunnable::new(
         compiled_test_crate.sierra_program,
         test_cases,
     ))
@@ -100,6 +99,7 @@ pub async fn run(
     tests_filter: &TestsFilter,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
+    fork_targets: &[ForkTarget],
 ) -> Result<Vec<TestCrateSummary>> {
     let compilation_targets =
         collect_test_compilation_targets(package_path, package_name, package_source_dir_path)?;
@@ -109,7 +109,7 @@ pub async fn run(
     let test_crates = test_crates
         .into_iter()
         .map(|tc| tests_filter.filter_tests(tc))
-        .collect_vec();
+        .collect::<Result<Vec<CompiledTestCrateRaw>>>()?;
     let not_filtered: usize = test_crates.iter().map(|tc| tc.test_cases.len()).sum();
     let filtered = all_tests - not_filtered;
 
@@ -126,7 +126,7 @@ pub async fn run(
             compiled_test_crate.test_cases.len(),
         );
 
-        let compiled_test_crate = to_runnable(compiled_test_crate, &runner_config)?;
+        let compiled_test_crate = to_runnable(compiled_test_crate, fork_targets)?;
         let compiled_test_crate = Arc::new(compiled_test_crate);
         let runner_config = runner_config.clone();
         let runner_params = runner_params.clone();
@@ -169,23 +169,23 @@ pub async fn run(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::collecting::CompiledTestCrate;
+    use crate::collecting::CompiledTestCrateRaw;
     use cairo_lang_sierra::program::Program;
-    use forge_runner::ForkTarget;
     use starknet::core::types::BlockId;
     use starknet::core::types::BlockTag::Latest;
-    use test_collector::{ExpectedTestResult, TestCase};
+    use test_collector::ExpectedTestResult;
+    use test_collector::TestCaseRaw;
 
     #[test]
     fn to_runnable_unparsable_url() {
-        let mocked_tests = CompiledTestCrate {
+        let mocked_tests = CompiledTestCrateRaw {
             sierra_program: Program {
                 type_declarations: vec![],
                 libfunc_declarations: vec![],
                 statements: vec![],
                 funcs: vec![],
             },
-            test_cases: vec![TestCase {
+            test_cases: vec![TestCaseRaw {
                 name: "crate1::do_thing".to_string(),
                 available_gas: None,
                 ignored: false,
@@ -198,9 +198,8 @@ mod tests {
             }],
             tests_location: CrateLocation::Lib,
         };
-        let config = RunnerConfig::new(Default::default(), false, vec![], 256, 12345);
 
-        assert!(to_runnable(mocked_tests, &config).is_err());
+        assert!(to_runnable(mocked_tests, &[]).is_err());
     }
 
     #[test]
@@ -212,7 +211,7 @@ mod tests {
                 statements: vec![],
                 funcs: vec![],
             },
-            test_cases: vec![TestCase::<RawForkConfig> {
+            test_cases: vec![TestCaseRaw {
                 name: "crate1::do_thing".to_string(),
                 available_gas: None,
                 ignored: false,
@@ -222,20 +221,17 @@ mod tests {
             }],
             tests_location: CrateLocation::Lib,
         };
-        let config = RunnerConfig::new(
-            Default::default(),
-            false,
-            vec![ForkTarget::new(
+
+        assert!(to_runnable(
+            mocked_tests,
+            &[ForkTarget::new(
                 "definitely_non_existing".to_string(),
                 RawForkParams {
                     url: "https://not_taken.com".to_string(),
                     block_id: BlockId::Number(120),
                 },
             )],
-            256,
-            12345,
-        );
-
-        assert!(to_runnable(mocked_tests, &config).is_err());
+        )
+        .is_err());
     }
 }

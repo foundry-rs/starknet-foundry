@@ -3,6 +3,7 @@ mod declare;
 mod deploy;
 mod deploy_at;
 mod dispatchers;
+mod elect;
 mod env;
 mod fuzzing;
 mod gas;

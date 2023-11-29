@@ -1,5 +1,5 @@
 use crate::sierra_casm_generator::SierraCasmGenerator;
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{anyhow, Context, Result};
 use cairo_felt::Felt252;
 use cairo_lang_compiler::db::RootDatabase;
 use cairo_lang_compiler::diagnostics::DiagnosticsReporter;
@@ -35,7 +35,7 @@ use cairo_lang_test_plugin::test_config::{PanicExpectation, TestExpectation};
 use cairo_lang_test_plugin::{try_extract_test_config, TestConfig};
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use cairo_lang_utils::OptionHelper;
-use conversions::StarknetConversions;
+use conversions::IntoConv;
 use itertools::Itertools;
 use num_bigint::BigInt;
 use num_traits::ToPrimitive;
@@ -90,10 +90,6 @@ impl From<TestExpectation> for ExpectedTestResult {
         }
     }
 }
-
-pub trait ForkConfig {}
-
-impl ForkConfig for RawForkConfig {}
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum RawForkConfig {
@@ -373,7 +369,7 @@ fn try_get_block_id(db: &dyn SyntaxGroup, block_id_type: &str, expr: &Expr) -> O
         "Hash" => {
             if let Expr::Literal(value) = expr {
                 return Some(BlockId::Hash(
-                    Felt252::from(value.numeric_value(db).unwrap()).to_field_element(),
+                    Felt252::from(value.numeric_value(db).unwrap()).into_(),
                 ));
             }
             None
@@ -404,15 +400,13 @@ pub struct LinkedLibrary {
     pub path: PathBuf,
 }
 
-pub type TestCaseRaw = TestCase<RawForkConfig>;
-
 #[derive(Debug, PartialEq, Clone)]
-pub struct TestCase<T: ForkConfig> {
+pub struct TestCaseRaw {
     pub name: String,
     pub available_gas: Option<usize>,
     pub ignored: bool,
     pub expected_result: ExpectedTestResult,
-    pub fork_config: Option<T>,
+    pub fork_config: Option<RawForkConfig>,
     pub fuzzer_config: Option<FuzzerConfig>,
 }
 
@@ -477,7 +471,7 @@ pub fn collect_tests(
         .context("Compilation failed without any diagnostics")
         .context("Failed to get sierra program")?;
 
-    let collected_tests: Vec<TestCaseRaw> = all_tests
+    let collected_tests = all_tests
         .into_iter()
         .map(|(func_id, test)| {
             (
@@ -496,20 +490,15 @@ pub fn collect_tests(
         })
         .collect_vec()
         .into_iter()
-        .map(|(test_name, config)| {
-            if config.available_gas.is_some() {
-                bail!("{} - Attribute `available_gas` is not supported: Contract functions execution cost would not be included in the gas calculation.", test_name)
-            };
-            Ok(TestCase {
-                name: test_name,
-                available_gas: config.available_gas,
-                ignored: config.ignored,
-                expected_result: config.expected_result,
-                fork_config: config.fork_config,
-                fuzzer_config: config.fuzzer_config,
-            })
+        .map(|(test_name, config)| TestCaseRaw {
+            name: test_name,
+            available_gas: config.available_gas,
+            ignored: config.ignored,
+            expected_result: config.expected_result,
+            fork_config: config.fork_config,
+            fuzzer_config: config.fuzzer_config,
         })
-        .collect::<Result<Vec<_>>>()?;
+        .collect();
 
     let sierra_program = replace_sierra_ids_in_program(db, &sierra_program);
 

@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, bail, ensure, Result};
 use blockifier::execution::common_hints::ExecutionMode;
 use blockifier::execution::entry_point::{
     CallEntryPoint, CallType, EntryPointExecutionContext, ExecutionResources,
@@ -16,10 +16,11 @@ use cairo_vm::types::relocatable::Relocatable;
 use cheatnet::execution::cheatable_syscall_handler::CheatableSyscallHandler;
 use itertools::chain;
 
+use crate::forge_runtime_extension::{ForgeRuntime, TestExecutionState};
 use crate::gas::gas_from_execution_resources_and_state_change;
+use crate::runtime::{ExtendedRuntime, RuntimeExtension};
 use crate::sierra_casm_runner::SierraCasmRunner;
 use crate::test_case_summary::TestCaseSummary;
-use crate::test_execution_syscall_handler::{TestExecutionState, TestExecutionSyscallHandler};
 use crate::{RunnerConfig, RunnerParams, TestCaseRunnable, ValidatedForkConfig, CACHE_DIR};
 use cairo_lang_casm::hints::Hint;
 use cairo_lang_casm::instructions::Instruction;
@@ -80,7 +81,6 @@ pub fn run_test(
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     send: Sender<()>,
-    send_shut_down: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     tokio::task::spawn_blocking(move || {
         // Due to the inability of spawn_blocking to be abruptly cancelled,
@@ -89,14 +89,7 @@ pub fn run_test(
         if send.is_closed() {
             return Ok(TestCaseSummary::Skipped {});
         }
-        let run_result = run_test_case(
-            vec![],
-            &case,
-            &runner,
-            &runner_config,
-            &runner_params,
-            &send_shut_down,
-        );
+        let run_result = run_test_case(vec![], &case, &runner, &runner_config, &runner_params);
 
         // TODO: code below is added to fix snforge tests
         // remove it after improve exit-first tests
@@ -109,7 +102,6 @@ pub fn run_test(
     })
 }
 
-#[allow(clippy::too_many_arguments)]
 pub(crate) fn run_fuzz_test(
     args: Vec<Felt252>,
     case: Arc<TestCaseRunnable>,
@@ -118,7 +110,6 @@ pub(crate) fn run_fuzz_test(
     runner_params: Arc<RunnerParams>,
     send: Sender<()>,
     fuzzing_send: Sender<()>,
-    send_shut_down: Sender<()>,
 ) -> JoinHandle<Result<TestCaseSummary>> {
     tokio::task::spawn_blocking(move || {
         // Due to the inability of spawn_blocking to be abruptly cancelled,
@@ -128,14 +119,8 @@ pub(crate) fn run_fuzz_test(
             return Ok(TestCaseSummary::Skipped {});
         }
 
-        let run_result = run_test_case(
-            args.clone(),
-            &case,
-            &runner,
-            &runner_config,
-            &runner_params,
-            &send_shut_down,
-        );
+        let run_result =
+            run_test_case(args.clone(), &case, &runner, &runner_config, &runner_params);
 
         // TODO: code below is added to fix snforge tests
         // remove it after improve exit-first tests
@@ -199,7 +184,7 @@ pub(crate) struct ForkInfo {
 pub struct RunResultWithInfo {
     pub(crate) run_result: Result<RunResult, RunnerError>,
     pub(crate) fork_info: ForkInfo,
-    pub(crate) total_gas_used: u128,
+    pub(crate) gas_used: u128,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -210,13 +195,13 @@ pub fn run_test_case(
     runner: &SierraCasmRunner,
     runner_config: &Arc<RunnerConfig>,
     runner_params: &Arc<RunnerParams>,
-    _send_shut_down: &Sender<()>,
 ) -> Result<RunResultWithInfo> {
-    let available_gas = if let Some(available_gas) = &case.available_gas {
-        Some(*available_gas)
-    } else {
-        Some(usize::MAX)
-    };
+    ensure!(
+        case.available_gas.is_none(),
+        "\n    Attribute `available_gas` is not supported\n"
+    );
+    let available_gas = Some(usize::MAX);
+
     let func = runner.find_function(case.name.as_str()).unwrap();
     let initial_gas = runner
         .get_initial_available_gas(func, available_gas)
@@ -257,18 +242,19 @@ pub fn run_test_case(
     };
     let cheatable_syscall_handler =
         CheatableSyscallHandler::wrap(syscall_handler, &mut cheatnet_state);
+
     let contract_execution_syscall_handler =
         ContractExecutionSyscallHandler::wrap(cheatable_syscall_handler);
 
-    let mut test_execution_state = TestExecutionState {
+    let test_execution_state = TestExecutionState {
         environment_variables: &runner_params.environment_variables,
         contracts: &runner_params.contracts,
     };
-    let mut test_execution_syscall_handler = TestExecutionSyscallHandler::wrap(
-        contract_execution_syscall_handler,
-        &mut test_execution_state,
-        &string_to_hint,
-    );
+
+    let mut forge_runtime = ExtendedRuntime(RuntimeExtension {
+        extended_runtime: contract_execution_syscall_handler,
+        extension_state: test_execution_state,
+    });
 
     let latest_block_number = if let Some(ValidatedForkConfig {
         url: _,
@@ -284,7 +270,7 @@ pub fn run_test_case(
     let run_result = runner.run_function_with_vm(
         func,
         &mut vm,
-        &mut test_execution_syscall_handler,
+        &mut forge_runtime,
         hints_dict,
         instructions,
         builtins,
@@ -307,7 +293,7 @@ pub fn run_test_case(
         fork_info: ForkInfo {
             latest_block_number,
         },
-        total_gas_used: gas,
+        gas_used: gas,
     })
 }
 
@@ -324,7 +310,7 @@ fn extract_test_case_summary(
                     case,
                     args,
                     &result_with_info.fork_info,
-                    result_with_info.total_gas_used,
+                    result_with_info.gas_used,
                 )),
                 // CairoRunError comes from VirtualMachineError which may come from HintException that originates in TestExecutionSyscallHandler
                 Err(RunnerError::CairoRunError(error)) => Ok(TestCaseSummary::Failed {
@@ -340,7 +326,8 @@ fn extract_test_case_summary(
                 Err(err) => bail!(err),
             }
         }
-        // `ForkStateReader.get_block_info` and `get_fork_state_reader` may return an error
+        // `ForkStateReader.get_block_info`, `get_fork_state_reader` may return an error
+        // unsupported `available_gas` attribute may be specified
         Err(error) => Ok(TestCaseSummary::Failed {
             name: case.name.clone(),
             msg: Some(error.to_string()),
@@ -378,4 +365,31 @@ fn get_latest_block_number(url: &Url) -> Result<BlockId> {
         Ok(MaybePendingBlockWithTxHashes::Block(block)) => Ok(BlockId::Number(block.block_number)),
         _ => Err(anyhow!("Could not get the latest block number".to_string())),
     }
+}
+
+fn get_all_execution_resources(runtime: &ForgeRuntime) -> ExecutionResources {
+    let test_used_resources = &runtime.0.extended_runtime.child.child.resources;
+    let cheatnet_used_resources = &runtime
+        .0
+        .extended_runtime
+        .child
+        .cheatnet_state
+        .used_resources;
+
+    let mut all_resources = ExecutionResources::default();
+    all_resources.vm_resources += &test_used_resources.vm_resources;
+    all_resources.vm_resources += &cheatnet_used_resources.vm_resources;
+
+    all_resources
+        .syscall_counter
+        .extend(&test_used_resources.syscall_counter);
+    all_resources
+        .syscall_counter
+        .extend(&cheatnet_used_resources.syscall_counter);
+
+    all_resources
+}
+
+fn get_context<'a>(runtime: &'a ForgeRuntime) -> &'a EntryPointExecutionContext {
+    runtime.0.extended_runtime.child.child.context
 }
