@@ -173,13 +173,21 @@ jobs:
       - name: Get binary path
         shell: bash
         run: |
-          BINARY_PATH="artifacts/starknet-foundry-${{ needs.verify-version.outputs.version }}-${{ matrix.target }}.tar.gz"
+          if [[ ${{ matrix.target }} == "*windows*" ]]; then
+            BINARY_PATH="artifacts/starknet-foundry-${{ needs.verify-version.outputs.version }}-${{ matrix.target }}.zip"
+          else
+            BINARY_PATH="artifacts/starknet-foundry-${{ needs.verify-version.outputs.version }}-${{ matrix.target }}.tar.gz"
+          fi
           echo "BINARY_PATH=$BINARY_PATH" >> $GITHUB_ENV
 
       - name: Unpack artifact
         shell: bash
         run: |
-          tar xzvf ${{ env.BINARY_PATH }}
+          if [[ ${{ matrix.target }} == "*windows*" ]]; then
+            unzip ${{ env.BINARY_PATH }}
+          else
+            tar xzvf ${{ env.BINARY_PATH }}
+          fi
 
       - name: Smoke test
         shell: bash
@@ -190,8 +198,13 @@ jobs:
           BINARY_PATH="${BINARY_PATH%.tar.gz}"
           BINARY_PATH="${BINARY_PATH#artifacts/}"
           
-          SNFORGE_PATH=$(readlink -f $BINARY_PATH/bin/snforge)
-          SNCAST_PATH=$(readlink -f $BINARY_PATH/bin/sncast)
+          if [[ ${{ matrix.target }} == "*windows*" ]]; then
+            SNFORGE_PATH=$(readlink -f $BINARY_PATH/bin/snforge.exe)
+            SNCAST_PATH=$(readlink -f $BINARY_PATH/bin/sncast.exe)
+          else
+            SNFORGE_PATH=$(readlink -f $BINARY_PATH/bin/snforge)
+            SNCAST_PATH=$(readlink -f $BINARY_PATH/bin/sncast)
+          fi
           
           REPO_URL=${{ github.repositoryUrl }}
           REVISION=${{ github.sha }}
