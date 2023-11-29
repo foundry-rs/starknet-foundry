@@ -449,10 +449,10 @@ impl<'a> ExtensionLogic
                     .into_()]))
             }
             "generate_ecdsa_keys" => {
-                let serialized_curve = inputs[0].clone().to_u8();
+                let curve = inputs[0].clone().to_u8();
 
                 let (signing_key_bytes, verifying_key_bytes) = {
-                    match serialized_curve {
+                    match curve {
                         Some(0) => {
                             let signing_key = k256::ecdsa::SigningKey::random(
                                 &mut k256::elliptic_curve::rand_core::OsRng,
@@ -479,12 +479,12 @@ impl<'a> ExtensionLogic
             "ecdsa_sign_message" => {
                 let private_key_low = inputs[0].clone();
                 let private_key_high = inputs[1].clone();
-                let serialized_curve = inputs[2].clone().to_u8();
+                let curve = inputs[2].clone().to_u8();
                 let msg_hash_low = inputs[3].clone();
                 let msg_hash_high = inputs[4].clone();
 
                 let (r_bytes, s_bytes) = {
-                    match serialized_curve {
+                    match curve {
                         Some(0) => {
                             let private_key = concat_felts(&private_key_low, &private_key_high);
                             let signing_key =
@@ -514,10 +514,10 @@ impl<'a> ExtensionLogic
             "get_public_key" => {
                 let private_key_low = inputs[0].clone();
                 let private_key_high = inputs[1].clone();
-                let serialized_curve = inputs[2].clone().to_u8();
+                let curve = inputs[2].clone().to_u8();
 
                 let verifying_key_bytes = {
-                    match serialized_curve {
+                    match curve {
                         Some(0) => {
                             let private_key = concat_felts(&private_key_low, &private_key_high);
                             let signing_key =
