@@ -486,11 +486,11 @@ impl<'a> ExtensionLogic
                 let (r_bytes, s_bytes) = {
                     match serialized_curve {
                         Some(0) => {
-                            let private_key = concat_felts(private_key_low, private_key_high);
+                            let private_key = concat_felts(&private_key_low, &private_key_high);
                             let signing_key =
                                 k256::ecdsa::SigningKey::from_slice(&private_key).unwrap();
 
-                            let msg_hash = concat_felts(msg_hash_low, msg_hash_high);
+                            let msg_hash = concat_felts(&msg_hash_low, &msg_hash_high);
                             let signature: k256::ecdsa::Signature =
                                 k256::schnorr::signature::hazmat::PrehashSigner::sign_prehash(
                                     &signing_key,
@@ -519,7 +519,7 @@ impl<'a> ExtensionLogic
                 let verifying_key_bytes = {
                     match serialized_curve {
                         Some(0) => {
-                            let private_key = concat_felts(private_key_low, private_key_high);
+                            let private_key = concat_felts(&private_key_low, &private_key_high);
                             let signing_key =
                                 k256::ecdsa::SigningKey::from_slice(&private_key).unwrap();
 
@@ -740,7 +740,7 @@ fn cheatcode_panic_result(panic_data: Vec<Felt252>) -> Vec<Felt252> {
     result
 }
 
-fn concat_felts(low: Felt252, high: Felt252) -> [u8; 32] {
+fn concat_felts(low: &Felt252, high: &Felt252) -> [u8; 32] {
     let mut result = [0; 32];
     result[..16].copy_from_slice(&high.to_be_bytes()[16..32]);
     result[16..].copy_from_slice(&low.to_be_bytes()[16..32]);
