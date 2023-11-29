@@ -7,6 +7,7 @@
 /crates/test-collector/     @foundry-rs/starknet-foundry-forge-cli
 
 # snforge-core
+/crates/runtime             @foundry-rs/starknet-foundry-forge-core
 /crates/cheatnet            @foundry-rs/starknet-foundry-forge-core
 /crates/forge/src/running.rs @foundry-rs/starknet-foundry-forge-core
 /crates/forge/src/cheatcodes_hint_processor.rs @foundry-rs/starknet-foundry-forge-core
