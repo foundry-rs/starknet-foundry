@@ -10,8 +10,8 @@ use cairo_vm::vm::runners::cairo_runner::CairoRunner;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use std::collections::HashMap;
 
-use crate::forge_runtime_extension::ForgeRuntime;
 use cairo_lang_casm::instructions::Instruction;
+use runtime::forge_runtime_extension::ForgeRuntime;
 
 // casm_run::run_function
 pub fn run_function<'a, 'b: 'a, Instructions>(

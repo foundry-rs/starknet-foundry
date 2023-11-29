@@ -7,6 +7,7 @@ members = [
     "crates/cast",
     "crates/cheatnet",
     "crates/conversions",
+    "crates/runtime",
     "crates/scarb-artifacts",
 ]
 
