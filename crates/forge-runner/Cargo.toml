@@ -44,3 +44,5 @@ cheatnet = { path = "../cheatnet" }
 conversions = { path = "../conversions" }
 scarb-artifacts = { path = "../scarb-artifacts" }
 test-collector = { path = "../test-collector" }
+k256 = { version = "0.13.2", features = ["sha256", "ecdsa", "serde"] }
+p256 = { version = "0.13.2", features = ["sha256", "ecdsa", "serde"] }
