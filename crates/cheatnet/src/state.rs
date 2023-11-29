@@ -2,7 +2,7 @@ use crate::cheatcodes;
 use crate::cheatcodes::spy_events::{Event, SpyTarget};
 use crate::constants::TEST_SEQUENCER_ADDRESS;
 use crate::forking::state::ForkStateReader;
-use blockifier::execution::entry_point::ExecutionResources;
+use crate::rpc::UsedResources;
 use blockifier::state::state_api::State;
 use blockifier::{
     execution::contract_class::ContractClass,
@@ -234,7 +234,7 @@ pub struct CheatnetState {
     pub deploy_salt_base: u32,
     pub block_info: CheatnetBlockInfo,
     // execution resources used by all contract calls
-    pub used_resources: ExecutionResources,
+    pub used_resources: UsedResources,
 }
 
 impl CheatnetState {

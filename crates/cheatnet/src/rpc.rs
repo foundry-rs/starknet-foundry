@@ -28,11 +28,30 @@ use starknet_api::{
     transaction::Calldata,
 };
 
+#[derive(Debug, Default)]
+pub struct UsedResources {
+    pub execution_resources: ExecutionResources,
+    pub l2_to_l1_payloads_length: Vec<usize>,
+}
+
+impl UsedResources {
+    pub fn extend(self: &mut UsedResources, other: &UsedResources) -> &Self {
+        self.execution_resources.vm_resources += &other.execution_resources.vm_resources;
+        self.execution_resources
+            .syscall_counter
+            .extend(&other.execution_resources.syscall_counter);
+        self.l2_to_l1_payloads_length
+            .extend(&other.l2_to_l1_payloads_length);
+
+        self
+    }
+}
+
 /// Represents contract output, along with the data and the resources consumed during execution
 #[derive(Debug)]
 pub struct CallContractOutput {
     pub result: CallContractResult,
-    pub used_resources: ExecutionResources,
+    pub used_resources: UsedResources,
 }
 
 /// Enum representing possible contract execution result, along with the data
@@ -122,7 +141,7 @@ impl CallContractResult {
     fn from_execution_result(
         result: &EntryPointExecutionResult<CallInfo>,
         contract_address: &ContractAddress,
-    ) -> Self {
+    ) -> (Self, Vec<usize>) {
         match result {
             Ok(call_info) => {
                 let raw_return_data = &call_info.execution.retdata.0;
@@ -132,14 +151,20 @@ impl CallContractResult {
                     .map(|data| Felt252::from_bytes_be(data.bytes()))
                     .collect();
 
-                CallContractResult::Success {
-                    ret_data: return_data,
-                }
+                (
+                    CallContractResult::Success {
+                        ret_data: return_data,
+                    },
+                    call_info.get_sorted_l2_to_l1_payloads_length().unwrap(),
+                )
             }
-            Err(err) => CallContractResult::Failure(CallContractFailure::from_execution_error(
-                err,
-                contract_address,
-            )),
+            Err(err) => (
+                CallContractResult::Failure(CallContractFailure::from_execution_error(
+                    err,
+                    contract_address,
+                )),
+                vec![],
+            ),
         }
     }
 }
@@ -226,10 +251,14 @@ pub fn call_entry_point(
         &mut context,
     );
 
-    let result = CallContractResult::from_execution_result(&exec_result, contract_address);
+    let (result, l2_to_l1_payloads_length) =
+        CallContractResult::from_execution_result(&exec_result, contract_address);
 
     Ok(CallContractOutput {
         result,
-        used_resources: resources,
+        used_resources: UsedResources {
+            execution_resources: resources,
+            l2_to_l1_payloads_length,
+        },
     })
 }

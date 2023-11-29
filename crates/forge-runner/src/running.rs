@@ -29,6 +29,7 @@ use camino::Utf8Path;
 use cheatnet::constants as cheatnet_constants;
 use cheatnet::execution::contract_execution_syscall_handler::ContractExecutionSyscallHandler;
 use cheatnet::forking::state::ForkStateReader;
+use cheatnet::rpc::UsedResources;
 use cheatnet::state::{BlockInfoReader, CheatnetBlockInfo, CheatnetState, ExtendedStateReader};
 use runtime::forge_runtime_extension::{ForgeRuntime, TestExecutionState};
 use runtime::{ExtendedRuntime, RuntimeExtension};
@@ -364,8 +365,8 @@ fn get_latest_block_number(url: &Url) -> Result<BlockId> {
     }
 }
 
-fn get_all_execution_resources(runtime: &ForgeRuntime) -> ExecutionResources {
-    let test_used_resources = &runtime.0.extended_runtime.child.child.resources;
+fn get_all_execution_resources(runtime: &ForgeRuntime) -> UsedResources {
+    let test_used_resources = runtime.0.extended_runtime.child.child.resources.clone();
     let cheatnet_used_resources = &runtime
         .0
         .extended_runtime
@@ -373,16 +374,12 @@ fn get_all_execution_resources(runtime: &ForgeRuntime) -> ExecutionResources {
         .cheatnet_state
         .used_resources;
 
-    let mut all_resources = ExecutionResources::default();
-    all_resources.vm_resources += &test_used_resources.vm_resources;
-    all_resources.vm_resources += &cheatnet_used_resources.vm_resources;
-
-    all_resources
-        .syscall_counter
-        .extend(&test_used_resources.syscall_counter);
-    all_resources
-        .syscall_counter
-        .extend(&cheatnet_used_resources.syscall_counter);
+    let mut all_resources = UsedResources::default();
+    all_resources.extend(&UsedResources {
+        execution_resources: test_used_resources,
+        l2_to_l1_payloads_length: vec![],
+    });
+    all_resources.extend(cheatnet_used_resources);
 
     all_resources
 }

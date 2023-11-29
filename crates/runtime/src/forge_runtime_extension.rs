@@ -594,12 +594,7 @@ fn write_call_contract_response(
             cheatable_syscall_handler
                 .cheatnet_state
                 .used_resources
-                .vm_resources += &call_output.used_resources.vm_resources;
-            cheatable_syscall_handler
-                .cheatnet_state
-                .used_resources
-                .syscall_counter
-                .extend(call_output.used_resources.syscall_counter);
+                .extend(&call_output.used_resources);
 
             SyscallResponseWrapper::Success {
                 gas_counter: call_args.gas_counter,
