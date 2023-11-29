@@ -21,14 +21,18 @@ pub fn calculate_used_gas(
     resources: &ExecutionResources,
 ) -> u128 {
     let total_vm_usage = get_total_vm_usage(resources);
-    let onchain_data_segment_len = get_onchain_data_segment_length(StateChangesCount::from(
-        &state
-            .get_actual_state_changes_for_fee_charge(
-                block_context.fee_token_addresses.eth_fee_token_address,
-                None,
-            )
-            .unwrap(),
-    ));
+    let mut state_changes = state
+        .get_actual_state_changes_for_fee_charge(
+            block_context.fee_token_addresses.eth_fee_token_address,
+            None,
+        )
+        .unwrap();
+    // compiled_class_hash_updates is used only for keeping track of declares
+    // which we don't want to include in gas cost
+    state_changes.compiled_class_hash_updates.clear();
+
+    let onchain_data_segment_len =
+        get_onchain_data_segment_length(StateChangesCount::from(&state_changes));
 
     let resource_mapping =
         used_resources_to_resource_mapping(&total_vm_usage, onchain_data_segment_len);
