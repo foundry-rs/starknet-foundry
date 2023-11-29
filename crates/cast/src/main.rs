@@ -133,12 +133,13 @@ fn main() -> Result<()> {
     let runtime = Runtime::new().expect("Could not instantiate Runtime");
 
     if let Commands::Script(script) = cli.command {
+        package_data.manifest_path?;
         let package = package_data.package?;
-        let contracts = build(&package_data.metadata?, &package)?;
+
+        let contracts = build(&package_data.metadata?, &package, true)?;
 
         let mut result = starknet_commands::script::run(
             &script.script_module_name,
-            &Some(package_data.manifest_path?),
             &provider,
             runtime,
             &config,
@@ -178,7 +179,7 @@ async fn run_async_command(
 
             package_data.manifest_path?;
 
-            let contracts = build(&package_data.metadata?, &package_data.package?)?;
+            let contracts = build(&package_data.metadata?, &package_data.package?, false)?;
 
             let mut result = starknet_commands::declare::declare(
                 &declare.contract,
@@ -413,7 +414,7 @@ struct PackageData {
     pub package: Result<PackageMetadata>,
 }
 
-// Get all the required package information from CLI
+// Lazily get all the required package information from CLI
 fn get_package_data(cli: &Cli) -> PackageData {
     let mut result = PackageData {
         manifest_path: Err(anyhow!("Could not retrieve the manifest path")),
@@ -426,7 +427,18 @@ fn get_package_data(cli: &Cli) -> PackageData {
         None => get_scarb_manifest().context("Failed to obtain manifest path from scarb"),
     };
 
-    result.manifest_path = manifest_path;
+    // Make sure the path exists
+    match &manifest_path {
+        Ok(path) => {
+            if path.exists() {
+                result.manifest_path = manifest_path;
+            }
+        }
+        Err(_) => {
+            result.manifest_path = manifest_path;
+        }
+    };
+
     if let Err(_) = result.manifest_path {
         return result;
     }

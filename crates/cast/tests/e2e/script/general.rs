@@ -71,10 +71,8 @@ async fn test_run_script_from_different_directory_no_path_to_scarb_toml() {
     let snapbox = Command::new(cargo_bin!("sncast"))
         .current_dir(SCRIPTS_DIR)
         .args(args);
-    snapbox.assert().success().stderr_matches(indoc! {r"
-        ...
-        command: script
-        error: Path [..]Scarb.toml does not exist
+    snapbox.assert().failure().stderr_matches(indoc! {r"
+        Error: Could not retrieve the manifest path
     "});
 }
 
