@@ -31,7 +31,7 @@ fn test_deploy() {
     constructor_calldata.append(21);
     constructor_calldata.append(37);
 
-    let contract_address = contract.precalculate_address(@constructor_calldata).unwrap();
+    let contract_address = contract.precalculate_address(@constructor_calldata);
     // ...
 }
 ```

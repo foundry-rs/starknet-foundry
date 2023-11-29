@@ -36,7 +36,7 @@ mod tests {
     use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
     use assert_fs::TempDir;
     use camino::Utf8PathBuf;
-    use conversions::StarknetConversions;
+    use conversions::IntoConv;
     use indoc::{formatdoc, indoc};
     use scarb_metadata::MetadataCommand;
     use starknet::core::types::BlockId;
@@ -116,27 +116,27 @@ mod tests {
             ForgeConfig {
                 exit_first: false,
                 fork: vec![
-                    ForkTarget {
-                        name: "FIRST_FORK_NAME".to_string(),
-                        params: RawForkParams {
+                    ForkTarget::new(
+                        "FIRST_FORK_NAME".to_string(),
+                        RawForkParams {
                             url: "http://some.rpc.url".to_string(),
                             block_id: BlockId::Number(1)
                         },
-                    },
-                    ForkTarget {
-                        name: "SECOND_FORK_NAME".to_string(),
-                        params: RawForkParams {
+                    ),
+                    ForkTarget::new(
+                        "SECOND_FORK_NAME".to_string(),
+                        RawForkParams {
                             url: "http://some.rpc.url".to_string(),
-                            block_id: BlockId::Hash("1".to_string().to_field_element())
+                            block_id: BlockId::Hash("1".to_string().into_())
                         },
-                    },
-                    ForkTarget {
-                        name: "THIRD_FORK_NAME".to_string(),
-                        params: RawForkParams {
+                    ),
+                    ForkTarget::new(
+                        "THIRD_FORK_NAME".to_string(),
+                        RawForkParams {
                             url: "http://some.rpc.url".to_string(),
                             block_id: BlockId::Tag(Latest)
                         },
-                    }
+                    )
                 ],
                 fuzzer_runs: None,
                 fuzzer_seed: None,

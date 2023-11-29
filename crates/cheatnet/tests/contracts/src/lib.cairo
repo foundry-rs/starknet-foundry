@@ -5,6 +5,7 @@ mod mock;
 mod prank;
 mod roll;
 mod spoof;
+mod elect;
 mod starknet;
 mod warp;
 mod segment_arena_user;

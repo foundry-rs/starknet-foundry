@@ -5,4 +5,5 @@ mod deploy;
 mod invoke;
 mod main_tests;
 mod multicall;
+mod script;
 mod show_config;

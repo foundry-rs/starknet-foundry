@@ -2,6 +2,7 @@ use crate::cheatcodes;
 use crate::cheatcodes::spy_events::{Event, SpyTarget};
 use crate::constants::TEST_SEQUENCER_ADDRESS;
 use crate::forking::state::ForkStateReader;
+use blockifier::execution::entry_point::ExecutionResources;
 use blockifier::state::state_api::State;
 use blockifier::{
     execution::contract_class::ContractClass,
@@ -223,6 +224,8 @@ pub struct CheatnetState {
     pub global_prank: Option<ContractAddress>,
     pub warped_contracts: HashMap<ContractAddress, CheatStatus<Felt252>>,
     pub global_warp: Option<Felt252>,
+    pub elected_contracts: HashMap<ContractAddress, CheatStatus<ContractAddress>>,
+    pub global_elect: Option<ContractAddress>,
     pub mocked_functions: HashMap<ContractAddress, HashMap<EntryPointSelector, Vec<StarkFelt>>>,
     pub spoofed_contracts: HashMap<ContractAddress, CheatStatus<TxInfoMock>>,
     pub global_spoof: Option<TxInfoMock>,
@@ -230,6 +233,8 @@ pub struct CheatnetState {
     pub detected_events: Vec<Event>,
     pub deploy_salt_base: u32,
     pub block_info: CheatnetBlockInfo,
+    // execution resources used by all contract calls
+    pub used_resources: ExecutionResources,
 }
 
 impl CheatnetState {
@@ -258,6 +263,12 @@ impl CheatnetState {
     }
 
     #[must_use]
+    pub fn address_is_elected(&self, contract_address: &ContractAddress) -> bool {
+        self.get_cheated_sequencer_address(contract_address)
+            .is_some()
+    }
+
+    #[must_use]
     pub fn address_is_spoofed(&self, contract_address: &ContractAddress) -> bool {
         self.get_cheated_tx_info(contract_address).is_some()
     }
@@ -270,6 +281,14 @@ impl CheatnetState {
     #[must_use]
     pub fn get_cheated_block_timestamp(&self, address: &ContractAddress) -> Option<Felt252> {
         get_cheat_for_contract(&self.global_warp, &self.warped_contracts, address)
+    }
+
+    #[must_use]
+    pub fn get_cheated_sequencer_address(
+        &self,
+        address: &ContractAddress,
+    ) -> Option<ContractAddress> {
+        get_cheat_for_contract(&self.global_elect, &self.elected_contracts, address)
     }
 
     #[must_use]
