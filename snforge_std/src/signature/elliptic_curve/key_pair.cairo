@@ -61,7 +61,7 @@ impl KeyPairSigner<
     impl Secp256Impl: Secp256Trait<Secp256Point>,
     impl Secp256PointImpl: Secp256PointTrait<Secp256Point>
 > of Signer<KeyPair<Secp256Point>> {
-    fn sign(ref self: KeyPair<Secp256Point>, message_hash: u256) -> (u256, u256) {
+    fn sign(self: KeyPair<Secp256Point>, message_hash: u256) -> (u256, u256) {
         let (pk_low, pk_high) = from_u256(self.private_key);
         let (msg_hash_low, msg_hash_high) = from_u256(message_hash);
         let curve = match_supported_curve::<Secp256Point>();
@@ -85,7 +85,7 @@ impl KeyPairVerifier<
     impl Secp256PointImpl: Secp256PointTrait<Secp256Point>
 > of Verifier<KeyPair<Secp256Point>> {
     fn verify(
-        ref self: KeyPair<Secp256Point>, message_hash: u256, signature: (u256, u256)
+        self: KeyPair<Secp256Point>, message_hash: u256, signature: (u256, u256)
     ) -> bool {
         let (r, s) = signature;
         is_valid_signature::<Secp256Point>(message_hash, r, s, self.public_key)
