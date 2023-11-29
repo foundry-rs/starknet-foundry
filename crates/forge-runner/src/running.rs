@@ -21,7 +21,6 @@ use crate::forge_runtime_extension::{ForgeRuntime, TestExecutionState};
 use crate::gas::gas_from_execution_resources;
 use crate::runtime::{ExtendedRuntime, RuntimeExtension};
 use crate::sierra_casm_runner::{initialize_vm, Panicable, SierraCasmRunner};
-use crate::sierra_casm_runner_gas::finalize;
 use crate::test_case_summary::TestCaseSummary;
 use crate::{RunnerConfig, RunnerParams, TestCaseRunnable, ValidatedForkConfig, CACHE_DIR};
 use cairo_lang_casm::hints::Hint;
@@ -30,6 +29,8 @@ use cairo_lang_runner::casm_run::hint_to_hint_params;
 use cairo_lang_runner::{Arg, RunResult, RunnerError};
 use cairo_lang_sierra::ids::GenericTypeId;
 use cairo_lang_sierra_to_casm::compiler::CairoProgram;
+use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
+use cairo_vm::vm::runners::cairo_runner::CairoRunner;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use camino::Utf8Path;
 use cheatnet::constants as cheatnet_constants;
@@ -448,4 +449,38 @@ fn get_all_execution_resources(runtime: &ForgeRuntime) -> ExecutionResources {
 
 fn get_context<'a>(runtime: &'a ForgeRuntime) -> &'a EntryPointExecutionContext {
     runtime.0.extended_runtime.child.child.context
+}
+
+pub fn finalize(
+    vm: &mut VirtualMachine,
+    runner: &CairoRunner,
+    syscall_handler: &mut SyscallHintProcessor<'_>,
+    n_total_args: usize,
+    program_extra_data_length: usize,
+) {
+    let program_start_ptr = runner
+        .program_base
+        .expect("The `program_base` field should be initialized after running the entry point.");
+    let program_end_ptr = (program_start_ptr + runner.get_program().data_len()).unwrap();
+    vm.mark_address_range_as_accessed(program_end_ptr, program_extra_data_length)
+        .unwrap();
+
+    let initial_fp = runner
+        .get_initial_fp()
+        .expect("The `initial_fp` field should be initialized after running the entry point.");
+    // When execution starts the stack holds the EP arguments + [ret_fp, ret_pc].
+    let args_ptr = (initial_fp - (n_total_args + 2)).unwrap();
+    vm.mark_address_range_as_accessed(args_ptr, n_total_args)
+        .unwrap();
+    syscall_handler
+        .read_only_segments
+        .mark_as_accessed(vm)
+        .unwrap();
+
+    let vm_resources_without_inner_calls = runner
+        .get_execution_resources(vm)
+        .map_err(VirtualMachineError::TracerError)
+        .unwrap()
+        .filter_unused_builtins();
+    syscall_handler.resources.vm_resources += &vm_resources_without_inner_calls;
 }
