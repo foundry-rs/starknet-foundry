@@ -126,7 +126,7 @@ fn main() -> Result<()> {
     let runtime = Runtime::new().expect("Could not instantiate Runtime");
 
     if let Commands::Script(script) = cli.command {
-        let mut result = starknet_commands::script::run(
+        let mut result = starknet_commands::script::run::run(
             &script.script_module_name,
             &cli.path_to_scarb_toml,
             &provider,

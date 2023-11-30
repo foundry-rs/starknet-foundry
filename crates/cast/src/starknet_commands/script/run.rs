@@ -30,8 +30,6 @@ use cast::helpers::response_structs::ScriptResponse;
 use cast::helpers::scarb_utils::{
     get_package_metadata, get_scarb_manifest, get_scarb_metadata_with_deps, CastConfig,
 };
-use clap::command;
-use clap::Args;
 use conversions::{FromConv, IntoConv};
 use itertools::chain;
 use num_traits::ToPrimitive;
@@ -42,13 +40,6 @@ use starknet::core::types::{BlockId, BlockTag::Pending, FieldElement};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use tokio::runtime::Runtime;
-
-#[derive(Args)]
-#[command(about = "Execute a deployment script")]
-pub struct Script {
-    /// Module name that contains the `main` function, which will be executed
-    pub script_module_name: String,
-}
 
 pub struct CairoHintProcessor<'a> {
     pub hints: &'a HashMap<String, Hint>,
