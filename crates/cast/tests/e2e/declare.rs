@@ -43,7 +43,7 @@ async fn test_happy_case() {
 
 #[tokio::test]
 async fn contract_already_declared() {
-    let contract_path = Path::new(CONTRACTS_DIR).join("map");
+    let contract_path = Path::new(&CONTRACTS_DIR).join("map");
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
     let args = vec![
@@ -68,7 +68,7 @@ async fn contract_already_declared() {
 
 #[tokio::test]
 async fn wrong_contract_name_passed() {
-    let contract_path = Path::new(CONTRACTS_DIR).join("map");
+    let contract_path = Path::new(&CONTRACTS_DIR).join("map");
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
 
     let args = vec![
@@ -94,7 +94,7 @@ async fn wrong_contract_name_passed() {
 #[test_case("build_fails", "../../accounts/accounts.json" ; "when wrong cairo contract")]
 #[test_case(".", "../accounts/accounts.json" ; "when Scarb.toml does not exist")]
 fn scarb_build_fails(relative_contract_path: &str, accounts_file_path: &str) {
-    let contract_path = Path::new(CONTRACTS_DIR).join(relative_contract_path);
+    let contract_path = Path::new(&CONTRACTS_DIR).join(relative_contract_path);
 
     let args = vec![
         "--url",
@@ -150,7 +150,7 @@ fn test_too_low_max_fee() {
 #[test_case("no_sierra", "../../accounts/accounts.json" ; "when there is no sierra artifact")]
 #[test_case("no_casm", "../../accounts/accounts.json" ; "when there is no casm artifact")]
 fn scarb_no_artifacts(relative_contract_path: &str, accounts_file_path: &str) {
-    let contract_path = Path::new(CONTRACTS_DIR).join(relative_contract_path);
+    let contract_path = Path::new(&CONTRACTS_DIR).join(relative_contract_path);
     let args = vec![
         "--url",
         URL,

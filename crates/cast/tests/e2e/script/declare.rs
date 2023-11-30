@@ -18,7 +18,7 @@ async fn test_missing_field() {
         &script_name,
     ];
 
-    let current_dir = Path::new(&SCRIPTS_DIR).join("declare/missing_field");
+    let current_dir = Path::new(&SCRIPTS_DIR).join("declare").join("missing_field");
     let snapbox = runner(&args, Some(current_dir.as_path()));
 
     snapbox.assert().success().stdout_matches(indoc! {r"
@@ -42,7 +42,7 @@ async fn test_wrong_contract_name() {
         &script_name,
     ];
 
-    let current_dir = Path::new(&SCRIPTS_DIR).join("declare/no_contract");
+    let current_dir = Path::new(&SCRIPTS_DIR).join("declare").join("no_contract");
     let snapbox = runner(&args, Some(current_dir.as_path()));
 
     snapbox.assert().success().stderr_matches(indoc! {r"
