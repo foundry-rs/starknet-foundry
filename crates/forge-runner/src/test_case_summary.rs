@@ -89,6 +89,7 @@ impl TestCaseSummary {
             TestCaseSummary::Ignored { .. } | TestCaseSummary::Skipped { .. } => &None,
         }
     }
+    #[must_use]
     pub fn gas_usage(&self) -> Option<f64> {
         match self {
             TestCaseSummary::Passed { gas_used, .. } => Some(*gas_used),

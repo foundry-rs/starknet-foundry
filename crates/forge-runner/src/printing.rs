@@ -52,7 +52,7 @@ pub(crate) fn print_test_result(test_result: &TestCaseSummary, print_gas_usage: 
     let mut gas_usage = String::new();
     if print_gas_usage {
         if let Some(result) = test_result.gas_usage() {
-            gas_usage = format!(", gas: ~{result}")
+            gas_usage = format!(", gas: ~{result}");
         }
     }
 
