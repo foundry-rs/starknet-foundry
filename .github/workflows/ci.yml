@@ -104,7 +104,7 @@ jobs:
         with:
           scarb-version: ${{ env.SCARB_VERSION }}
       - name: Run tests
-      - run: cargo test --release -p conversions
+        run: cargo test --release -p conversions
 
   scarbfmt:
     runs-on: ubuntu-latest
