@@ -493,11 +493,11 @@ fn test_simple_cheatcodes() {
             let test_address: ContractAddress = test_address();
             let old_sequencer_address = starknet::get_block_info().unbox().sequencer_address;
 
-            start_elect(test_address, 123.try_into().unwrap());
+            start_elect(CheatTarget::One(test_address), 123.try_into().unwrap());
             let new_sequencer_address = starknet::get_block_info().unbox().sequencer_address;
             assert(new_sequencer_address == 123.try_into().unwrap(), 'Wrong sequencer address');
 
-            stop_elect(test_address);
+            stop_elect(CheatTarget::One(test_address));
             let new_sequencer_address = starknet::get_block_info().unbox().sequencer_address;
             assert(new_sequencer_address == old_sequencer_address, 'Sequencer addr did not revert')
         }

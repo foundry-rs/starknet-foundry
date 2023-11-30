@@ -116,14 +116,8 @@ jobs:
         with:
           toolchain: stable
       - uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8
-      - name: Check forge formatting
-        run: cargo fmt --check -p forge
-      - name: Check cast formatting
-        run: cargo fmt --check -p cast
-      - name: Check test-collector formatting
-        run: cargo fmt --check -p test-collector
-      - name: Check cheatnet formatting
-        run: cargo fmt --check -p cheatnet
+      - name: Check formatting
+        run: cargo fmt --check
 
   clippy:
     runs-on: ubuntu-latest

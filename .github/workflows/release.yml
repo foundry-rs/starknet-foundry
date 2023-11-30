@@ -173,9 +173,10 @@ jobs:
 
   deploy-docs:
     name: Deploy documentation
-    needs: create-release
+    needs: [ create-release, verify-version ]
     permissions:
       contents: read
       pages: write
       id-token: write
+    if: ${{ !contains(needs.verify-version.outputs.version, '-')  }}
     uses: ./.github/workflows/docs.yml

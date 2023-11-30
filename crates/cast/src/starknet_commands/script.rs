@@ -2,7 +2,8 @@ use std::any::Any;
 use std::collections::HashMap;
 use std::fs;
 
-use crate::starknet_commands::call;
+use crate::get_account;
+use crate::starknet_commands::{call, declare, deploy, invoke};
 use anyhow::{anyhow, ensure, Context, Result};
 use cairo_felt::Felt252;
 use cairo_lang_casm::hints::{Hint, StarknetHint};
@@ -27,12 +28,12 @@ use cairo_vm::vm::vm_core::VirtualMachine;
 use camino::Utf8PathBuf;
 use cast::helpers::response_structs::ScriptResponse;
 use cast::helpers::scarb_utils::{
-    get_package_metadata, get_scarb_manifest, get_scarb_metadata_with_deps,
+    get_package_metadata, get_scarb_manifest, get_scarb_metadata_with_deps, CastConfig,
 };
 use cheatnet::cheatcodes::EnhancedHintError;
 use clap::command;
 use clap::Args;
-use conversions::StarknetConversions;
+use conversions::{FromConv, IntoConv};
 use itertools::chain;
 use num_traits::ToPrimitive;
 use scarb_metadata::ScarbCommand;
@@ -53,6 +54,7 @@ pub struct CairoHintProcessor<'a> {
     pub provider: &'a JsonRpcClient<HttpTransport>,
     pub runtime: Runtime,
     pub run_resources: RunResources,
+    pub config: &'a CastConfig,
 }
 
 // cairo/crates/cairo-lang-runner/src/casm_run/mod.rs:457 (ResourceTracker for CairoHintProcessor)
@@ -173,7 +175,7 @@ impl CairoHintProcessor<'_> {
 
         match selector {
             "call" => {
-                let contract_address = inputs[0].to_field_element();
+                let contract_address = inputs[0].clone().into_();
                 let function_name = as_cairo_short_string(&inputs[1])
                     .expect("Failed to convert function name to short string");
                 let calldata_length = inputs[2]
@@ -182,7 +184,7 @@ impl CairoHintProcessor<'_> {
                 let calldata = Vec::from(&inputs[3..(3 + calldata_length)]);
                 let calldata_felts: Vec<FieldElement> = calldata
                     .iter()
-                    .map(StarknetConversions::to_field_element)
+                    .map(|el| FieldElement::from_(el.clone()))
                     .collect();
 
                 let call_response = self.runtime.block_on(call::call(
@@ -198,13 +200,140 @@ impl CairoHintProcessor<'_> {
                     .expect("Failed to insert data length");
 
                 buffer
-                    .write_data(
-                        call_response
-                            .response
-                            .iter()
-                            .map(StarknetConversions::to_felt252),
-                    )
+                    .write_data(call_response.response.iter().map(|el| Felt252::from_(*el)))
                     .expect("Failed to insert data");
+
+                Ok(())
+            }
+            "declare" => {
+                let contract_name = as_cairo_short_string(&inputs[0])
+                    .expect("Failed to convert contract name to string");
+                let max_fee = if inputs[1] == 0.into() {
+                    Some(inputs[2].clone().into_())
+                } else {
+                    None
+                };
+                let account = self.runtime.block_on(get_account(
+                    &self.config.account,
+                    &self.config.accounts_file,
+                    self.provider,
+                    &self.config.keystore,
+                ))?;
+
+                let declare_response = self.runtime.block_on(declare::declare(
+                    &contract_name,
+                    max_fee,
+                    &account,
+                    &None,
+                    true,
+                ))?;
+
+                buffer
+                    .write(Felt252::from_(declare_response.class_hash))
+                    .expect("Failed to insert class hash");
+
+                buffer
+                    .write(Felt252::from_(declare_response.transaction_hash))
+                    .expect("Failed to insert transaction hash");
+
+                Ok(())
+            }
+            "deploy" => {
+                let class_hash = inputs[0].clone().into_();
+                let calldata_length = inputs[1]
+                    .to_usize()
+                    .expect("Failed to convert calldata length to usize");
+                let constructor_calldata: Vec<FieldElement> = {
+                    let calldata = Vec::from(&inputs[2..(2 + calldata_length)]);
+                    calldata
+                        .iter()
+                        .map(|el| FieldElement::from_(el.clone()))
+                        .collect()
+                };
+                let mut offset = 2 + calldata_length;
+                let salt = if inputs[offset] == 0.into() {
+                    offset += 1;
+                    Some(inputs[offset].clone().into_())
+                } else {
+                    None
+                };
+                offset += 1;
+                let unique = { inputs[offset] == 1.into() };
+                offset += 1;
+                let max_fee = if inputs[offset] == 0.into() {
+                    offset += 1;
+                    Some(inputs[offset].clone().into_())
+                } else {
+                    None
+                };
+
+                let account = self.runtime.block_on(get_account(
+                    &self.config.account,
+                    &self.config.accounts_file,
+                    self.provider,
+                    &self.config.keystore,
+                ))?;
+
+                let deploy_response = self.runtime.block_on(deploy::deploy(
+                    class_hash,
+                    constructor_calldata,
+                    salt,
+                    unique,
+                    max_fee,
+                    &account,
+                    true,
+                ))?;
+
+                buffer
+                    .write(Felt252::from_(deploy_response.contract_address))
+                    .expect("Failed to insert contract address");
+
+                buffer
+                    .write(Felt252::from_(deploy_response.transaction_hash))
+                    .expect("Failed to insert transaction hash");
+
+                Ok(())
+            }
+            "invoke" => {
+                let contract_address = FieldElement::from_(inputs[0].clone());
+                let entry_point_name = as_cairo_short_string(&inputs[1])
+                    .expect("Failed to convert entry point name to short string");
+                let calldata_length = inputs[2]
+                    .to_usize()
+                    .expect("Failed to convert calldata length to usize");
+                let calldata: Vec<FieldElement> = {
+                    let calldata = Vec::from(&inputs[3..(3 + calldata_length)]);
+                    calldata
+                        .iter()
+                        .map(|el| FieldElement::from_(el.clone()))
+                        .collect()
+                };
+                let offset = 3 + calldata_length;
+                let max_fee = if inputs[offset] == 0.into() {
+                    Some(inputs[offset + 1].clone().into_())
+                } else {
+                    None
+                };
+
+                let account = self.runtime.block_on(get_account(
+                    &self.config.account,
+                    &self.config.accounts_file,
+                    self.provider,
+                    &self.config.keystore,
+                ))?;
+
+                let invoke_response = self.runtime.block_on(invoke::invoke(
+                    contract_address,
+                    &entry_point_name,
+                    calldata,
+                    max_fee,
+                    &account,
+                    true,
+                ))?;
+
+                buffer
+                    .write(Felt252::from_(invoke_response.transaction_hash))
+                    .expect("Failed to insert transaction hash");
 
                 Ok(())
             }
@@ -224,6 +353,7 @@ pub fn run(
     path_to_scarb_toml: &Option<Utf8PathBuf>,
     provider: &JsonRpcClient<HttpTransport>,
     runtime: Runtime,
+    config: &CastConfig,
 ) -> Result<ScriptResponse> {
     let path = compile_script(path_to_scarb_toml.clone())?;
 
@@ -261,6 +391,7 @@ pub fn run(
         provider,
         runtime,
         run_resources: RunResources::default(),
+        config,
     };
 
     match runner.run_function(

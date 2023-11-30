@@ -4,9 +4,10 @@ use blockifier::abi::constants;
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallResult;
 use blockifier::execution::entry_point::{CallEntryPoint, CallType};
 use blockifier::execution::execution_utils::ReadOnlySegment;
+use cairo_felt::Felt252;
 use cairo_vm::types::relocatable::MaybeRelocatable;
 use cairo_vm::vm::vm_core::VirtualMachine;
-use conversions::StarknetConversions;
+use conversions::FromConv;
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector};
 use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::transaction::Calldata;
@@ -30,7 +31,7 @@ pub fn execute_inner_call(
     let retdata = &call_info.execution.retdata.0;
     let retdata: Vec<MaybeRelocatable> = retdata
         .iter()
-        .map(|&x| MaybeRelocatable::from(x.to_felt252()))
+        .map(|&x| MaybeRelocatable::from(Felt252::from_(x)))
         .collect();
     let retdata_segment_start_ptr = syscall_handler
         .child
