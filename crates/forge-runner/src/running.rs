@@ -15,8 +15,9 @@ use cairo_felt::Felt252;
 use cairo_vm::serde::deserialize_program::HintParams;
 use cairo_vm::types::relocatable::Relocatable;
 use cheatnet::execution::cheatable_syscall_handler::CheatableSyscallHandler;
+use cheatnet::runtime_extensions::forge_runtime_extension::{ForgeExtension, ForgeRuntime};
+use cheatnet::runtime_extensions::io_runtime_extension::IORuntimeExtension;
 use itertools::chain;
-use runtime::io_runtime_extension::IORuntimeExtension;
 
 use crate::gas::gas_from_execution_resources;
 use crate::sierra_casm_runner::SierraCasmRunner;
@@ -31,7 +32,6 @@ use camino::Utf8Path;
 use cheatnet::constants as cheatnet_constants;
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::state::{BlockInfoReader, CheatnetBlockInfo, CheatnetState, ExtendedStateReader};
-use runtime::forge_runtime_extension::{ForgeExtension, ForgeRuntime};
 use runtime::ExtendedRuntime;
 use starknet::core::types::BlockTag::Latest;
 use starknet::core::types::{BlockId, MaybePendingBlockWithTxHashes};
