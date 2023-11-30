@@ -1,6 +1,7 @@
 use crate::helpers::constants::{SCRIPTS_DIR, URL};
+use crate::helpers::runner::runner;
 use indoc::indoc;
-use snapbox::cmd::{cargo_bin, Command};
+use std::path::Path;
 
 #[tokio::test]
 async fn test_with_calldata() {
@@ -16,9 +17,9 @@ async fn test_with_calldata() {
         &script_name,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(SCRIPTS_DIR.to_owned() + "/deploy")
-        .args(args);
+    let current_dir = Path::new(&SCRIPTS_DIR).join("deploy");
+    let snapbox = runner(&args, Some(current_dir.as_path()));
+
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
         command: script

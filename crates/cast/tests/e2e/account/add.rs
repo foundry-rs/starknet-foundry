@@ -253,9 +253,7 @@ pub async fn test_private_key_from_file() {
         "--deployed",
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(temp_dir.path())
-        .args(args);
+    let snapbox = runner(&args, Some(temp_dir.path()));
 
     snapbox.assert().stdout_matches(indoc! {r"
         command: account add
@@ -297,7 +295,7 @@ pub async fn test_accept_only_one_private_key() {
         "./my_private_key",
     ];
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
     snapbox.assert().stderr_matches(indoc! {r"
         error: the argument '--private-key <PRIVATE_KEY>' cannot be used with '--private-key-file <PRIVATE_KEY_FILE_PATH>'
         ...
@@ -320,7 +318,7 @@ pub async fn test_invalid_private_key_file_path() {
         "--deployed",
     ];
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
 
     snapbox.assert().stderr_matches(indoc! {r"
         command: account add
