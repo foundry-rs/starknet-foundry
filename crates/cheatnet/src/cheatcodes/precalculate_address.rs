@@ -1,7 +1,7 @@
 use crate::CheatnetState;
 use blockifier::execution::execution_utils::felt_to_stark_felt;
 use cairo_felt::Felt252;
-use conversions::IntoConv;
+use conversions::TryIntoConv;
 use starknet_api::core::{calculate_contract_address, ClassHash, ContractAddress};
 use starknet_api::hash::StarkFelt;
 use starknet_api::transaction::Calldata;
@@ -18,7 +18,10 @@ impl CheatnetState {
         let salt = self.get_salt();
 
         let execute_calldata = create_execute_calldata(calldata);
-        let deployer_address = crate_constants::TEST_ADDRESS.to_string().into_();
+        let deployer_address = crate_constants::TEST_ADDRESS
+            .to_string()
+            .try_into_()
+            .unwrap();
         calculate_contract_address(salt, *class_hash, &execute_calldata, deployer_address).unwrap()
     }
 }

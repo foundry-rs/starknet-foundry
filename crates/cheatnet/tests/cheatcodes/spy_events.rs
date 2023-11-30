@@ -6,7 +6,7 @@ use cairo_vm::hint_processor::hint_processor_utils::felt_to_usize;
 use cheatnet::cheatcodes::deploy::deploy;
 use cheatnet::cheatcodes::spy_events::{Event, SpyTarget};
 use cheatnet::rpc::call_contract;
-use conversions::IntoConv;
+use conversions::{IntoConv, TryIntoConv};
 use std::vec;
 
 fn felt_vec_to_event_vec(felts: &[Felt252]) -> Vec<Event> {
@@ -263,7 +263,7 @@ fn library_call_emits_event() {
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contracts = get_contracts();
-    let contract_name = "SpyEventsChecker".to_owned().into_();
+    let contract_name = "SpyEventsChecker".to_owned().try_into_().unwrap();
     let class_hash = blockifier_state
         .declare(&contract_name, &contracts)
         .unwrap();
@@ -342,7 +342,7 @@ fn check_if_there_is_no_interference() {
 
     let contracts = get_contracts();
 
-    let contract_name = "SpyEventsChecker".to_owned().into_();
+    let contract_name = "SpyEventsChecker".to_owned().try_into_().unwrap();
     let class_hash = blockifier_state
         .declare(&contract_name, &contracts)
         .unwrap();
@@ -400,7 +400,7 @@ fn test_nested_calls() {
 
     let contracts = get_contracts();
 
-    let contract_name = "SpyEventsCheckerProxy".to_owned().into_();
+    let contract_name = "SpyEventsCheckerProxy".to_owned().try_into_().unwrap();
     let class_hash = blockifier_state
         .declare(&contract_name, &contracts)
         .unwrap();
@@ -481,7 +481,7 @@ fn use_multiple_spies() {
 
     let contracts = get_contracts();
 
-    let contract_name = "SpyEventsCheckerProxy".to_owned().into_();
+    let contract_name = "SpyEventsCheckerProxy".to_owned().try_into_().unwrap();
     let class_hash = blockifier_state
         .declare(&contract_name, &contracts)
         .unwrap();

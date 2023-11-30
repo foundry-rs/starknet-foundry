@@ -4,7 +4,7 @@ use cheatnet::cheatcodes::deploy::deploy;
 use cheatnet::rpc::CallContractOutput;
 use cheatnet::rpc::{call_contract, CallContractFailure, CallContractResult};
 use cheatnet::state::{BlockifierState, CheatnetState};
-use conversions::IntoConv;
+use conversions::TryIntoConv;
 use scarb_artifacts::{get_contracts_map, StarknetContractArtifacts};
 use starknet::core::utils::get_selector_from_name;
 use starknet_api::core::ContractAddress;
@@ -41,7 +41,7 @@ pub fn deploy_contract(
     contract_name: &str,
     calldata: &[Felt252],
 ) -> ContractAddress {
-    let contract = contract_name.to_owned().into_();
+    let contract = contract_name.to_owned().try_into_().unwrap();
     let contracts = get_contracts();
 
     let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();

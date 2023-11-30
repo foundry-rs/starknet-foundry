@@ -2,7 +2,7 @@ use crate::common::state::create_cached_state;
 use crate::common::{felt_selector_from_name, get_contracts, state::create_cheatnet_state};
 use cheatnet::cheatcodes::deploy::deploy;
 use cheatnet::rpc::call_contract;
-use conversions::IntoConv;
+use conversions::{IntoConv, TryIntoConv};
 
 #[test]
 fn get_class_hash_simple() {
@@ -10,7 +10,7 @@ fn get_class_hash_simple() {
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contracts = get_contracts();
-    let contract_name = "HelloStarknet".to_owned().into_();
+    let contract_name = "HelloStarknet".to_owned().try_into_().unwrap();
     let class_hash = blockifier_state
         .declare(&contract_name, &contracts)
         .unwrap();
@@ -30,7 +30,7 @@ fn get_class_hash_upgrade() {
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contracts = get_contracts();
-    let contract_name = "GetClassHashCheckerUpg".to_owned().into_();
+    let contract_name = "GetClassHashCheckerUpg".to_owned().try_into_().unwrap();
     let class_hash = blockifier_state
         .declare(&contract_name, &contracts)
         .unwrap();
@@ -43,7 +43,7 @@ fn get_class_hash_upgrade() {
         blockifier_state.get_class_hash(contract_address).unwrap()
     );
 
-    let contract_name = "HelloStarknet".to_owned().into_();
+    let contract_name = "HelloStarknet".to_owned().try_into_().unwrap();
     let hello_starknet_class_hash = blockifier_state
         .declare(&contract_name, &contracts)
         .unwrap();

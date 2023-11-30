@@ -20,7 +20,7 @@ use cheatnet::cheatcodes::{CheatcodeError, EnhancedHintError};
 use cheatnet::execution::cheatable_syscall_handler::{CheatableSyscallHandler, SyscallSelector};
 use cheatnet::rpc::{call_contract, CallContractFailure, CallContractOutput, CallContractResult};
 use cheatnet::state::{BlockifierState, CheatTarget, CheatnetState};
-use conversions::{FromConv, IntoConv};
+use conversions::{FromConv, IntoConv, TryFromConv};
 use num_traits::{One, ToPrimitive};
 use scarb_artifacts::StarknetContractArtifacts;
 use serde::Deserialize;
@@ -476,7 +476,7 @@ impl<'a> ExtensionLogic for RuntimeExtension<TestExecutionState<'a>, IORuntime<'
                 } else {
                     Ok(CheatcodeHandlingResult::Handled(vec![
                         Felt252::from(1),
-                        Felt252::from_("message_hash out of range".to_string()),
+                        Felt252::try_from_("message_hash out of range".to_string()).unwrap(),
                     ]))
                 }
             }

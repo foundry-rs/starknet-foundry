@@ -2,7 +2,7 @@
 mod tests_nonce {
     use crate::helpers::hex::str_hex_to_stark_felt;
     use cairo_felt::Felt252;
-    use conversions::{FromConv, IntoConv};
+    use conversions::{FromConv, IntoConv, TryFromConv, TryIntoConv};
     use starknet::core::types::FieldElement;
     use starknet_api::core::{ClassHash, ContractAddress, Nonce};
     use starknet_api::hash::{StarkFelt, StarkHash};
@@ -16,9 +16,10 @@ mod tests_nonce {
         assert_eq!(nonce, ContractAddress::from_(nonce).into_());
         assert_eq!(nonce, Felt252::from_(nonce).into_());
         assert_eq!(nonce, FieldElement::from_(nonce).into_());
-        assert_eq!(nonce, String::from_(nonce).into_());
         assert_eq!(nonce, StarkFelt::from_(nonce).into_());
         assert_eq!(nonce, StarkHash::from_(nonce).into_());
+
+        assert_eq!(nonce, String::from_(nonce).try_into_().unwrap());
     }
 
     #[test]
@@ -30,9 +31,10 @@ mod tests_nonce {
         assert_eq!(nonce, ContractAddress::from_(nonce).into_());
         assert_eq!(nonce, Felt252::from_(nonce).into_());
         assert_eq!(nonce, FieldElement::from_(nonce).into_());
-        assert_eq!(nonce, String::from_(nonce).into_());
         assert_eq!(nonce, StarkFelt::from_(nonce).into_());
         assert_eq!(nonce, StarkHash::from_(nonce).into_());
+
+        assert_eq!(nonce, String::from_(nonce).try_into_().unwrap());
     }
 
     #[test]
@@ -56,22 +58,13 @@ mod tests_nonce {
         max_value = "0x0777777777777777777777777777777777777f7f7f7f7f7f7f7f7f7f7f7f7f7f";
         nonce = Nonce(str_hex_to_stark_felt(max_value));
 
-        assert_eq!(nonce, String::from_(nonce).into_());
+        assert_eq!(nonce, String::from_(nonce).try_into_().unwrap());
     }
 
     #[test]
     fn test_nonce_conversions_out_of_range() {
-        // Can't set value bigger than max_value from cairo_felt::PRIME_STR
-        // so we can't test all conversions.
-
-        // PATRICIA_KEY_UPPER_BOUND for contract_address from starknet_api-0.4.1/src/core.rs:156
-        let mut max_value = "0x0800000000000000000000000000000000000000000000000000000000000000";
-        let mut nonce = Nonce(str_hex_to_stark_felt(max_value));
-        assert!(std::panic::catch_unwind(|| ContractAddress::from_(nonce)).is_err());
-
-        // Unknown source for this value, founded by try and error(cairo-lang-runner-2.2.0/src/short_string.rs).
-        max_value = "0x0777777777777777777777777777777777777f7f7f7f7f7f7f7f7f7f7f7f7f80";
-        nonce = Nonce(str_hex_to_stark_felt(max_value));
-        assert!(std::panic::catch_unwind(|| String::from_(nonce)).is_err());
+        let prime =
+            String::from("0x800000000000011000000000000000000000000000000000000000000000001");
+        assert!(Nonce::try_from_(prime).is_err());
     }
 }
