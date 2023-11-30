@@ -196,6 +196,7 @@ jobs:
         run: |
           BINARY_PATH="${{ env.BINARY_PATH }}"
           BINARY_PATH="${BINARY_PATH%.tar.gz}"
+          BINARY_PATH="${BINARY_PATH%.zip}"
           BINARY_PATH="${BINARY_PATH#artifacts/}"
           
           if [[ ${{ matrix.target }} == *windows* ]]; then
