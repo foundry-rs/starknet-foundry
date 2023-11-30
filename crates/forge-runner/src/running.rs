@@ -301,6 +301,7 @@ pub fn run_test_case(
         .map(MaybeRelocatable::from)
         .collect();
     let data_len = data.len();
+    // end of copied code
 
     let mut runner = casm_run::build_runner(data, builtins, hints_dict)?;
     casm_run::run_function_with_runner(
