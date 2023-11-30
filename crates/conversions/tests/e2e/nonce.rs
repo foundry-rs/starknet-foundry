@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests_nonce {
     use crate::helpers::hex::str_hex_to_stark_felt;
-    use cairo_felt::Felt252;
+    use cairo_felt::{Felt252, PRIME_STR};
     use conversions::{FromConv, IntoConv, TryFromConv, TryIntoConv};
     use starknet::core::types::FieldElement;
     use starknet_api::core::{ClassHash, ContractAddress, Nonce};
@@ -63,8 +63,7 @@ mod tests_nonce {
 
     #[test]
     fn test_nonce_conversions_out_of_range() {
-        let prime =
-            String::from("0x800000000000011000000000000000000000000000000000000000000000001");
+        let prime = String::from(PRIME_STR);
         assert!(Nonce::try_from_(prime).is_err());
     }
 }
