@@ -18,7 +18,7 @@ async fn test_happy_case() {
     ];
 
     let current_dir = Path::new(&SCRIPTS_DIR).join("map_script").join("scripts");
-    let snapbox = runner(&args,Some(current_dir.as_path()));
+    let snapbox = runner(&args, Some(current_dir.as_path()));
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
         command: script
@@ -88,7 +88,7 @@ async fn test_fail_when_using_starknet_syscall() {
     ];
 
     let current_dir = Path::new(&SCRIPTS_DIR).join("misc");
-    let snapbox = runner(&args,Some(current_dir.as_path()), );
+    let snapbox = runner(&args, Some(current_dir.as_path()));
     snapbox.assert().success().stderr_matches(indoc! {r"
         ...
         command: script
