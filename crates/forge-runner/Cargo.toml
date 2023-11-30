@@ -44,4 +44,4 @@ cheatnet = { path = "../cheatnet" }
 conversions = { path = "../conversions" }
 scarb-artifacts = { path = "../scarb-artifacts" }
 test-collector = { path = "../test-collector" }
-indoc = "2.0.4"
+indoc.workspace = true
