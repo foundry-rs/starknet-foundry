@@ -173,7 +173,7 @@ jobs:
       - name: Get binary path
         shell: bash
         run: |
-          if [[ ${{ matrix.target }} == "*windows*" ]]; then
+          if [[ ${{ matrix.target }} == *windows* ]]; then
             BINARY_PATH="artifacts/starknet-foundry-${{ needs.verify-version.outputs.version }}-${{ matrix.target }}.zip"
           else
             BINARY_PATH="artifacts/starknet-foundry-${{ needs.verify-version.outputs.version }}-${{ matrix.target }}.tar.gz"
@@ -183,7 +183,7 @@ jobs:
       - name: Unpack artifact
         shell: bash
         run: |
-          if [[ ${{ matrix.target }} == "*windows*" ]]; then
+          if [[ ${{ matrix.target }} == *windows* ]]; then
             unzip ${{ env.BINARY_PATH }}
           else
             tar xzvf ${{ env.BINARY_PATH }}
@@ -198,7 +198,7 @@ jobs:
           BINARY_PATH="${BINARY_PATH%.tar.gz}"
           BINARY_PATH="${BINARY_PATH#artifacts/}"
           
-          if [[ ${{ matrix.target }} == "*windows*" ]]; then
+          if [[ ${{ matrix.target }} == *windows* ]]; then
             SNFORGE_PATH=$(readlink -f $BINARY_PATH/bin/snforge.exe)
             SNCAST_PATH=$(readlink -f $BINARY_PATH/bin/sncast.exe)
           else
