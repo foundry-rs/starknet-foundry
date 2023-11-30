@@ -8,6 +8,7 @@ use cairo_vm::vm::errors::cairo_run_errors::CairoRunError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::runners::cairo_runner::CairoRunner;
 use cairo_vm::vm::vm_core::VirtualMachine;
+use runtime::ExtensionLogic;
 use std::collections::HashMap;
 
 use cairo_lang_casm::instructions::Instruction;
@@ -67,7 +68,12 @@ where
     finalize(
         vm,
         &runner,
-        &mut runtime.0.extended_runtime.child.child,
+        &mut runtime
+            .0
+            .get_extended_runtime_mut()
+            .0
+            .get_extended_runtime_mut()
+            .child,
         0,
         2,
     );

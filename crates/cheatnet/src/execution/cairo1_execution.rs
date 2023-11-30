@@ -1,5 +1,5 @@
 use super::cheatable_syscall_handler::CheatableSyscallHandler;
-use crate::execution::contract_execution_syscall_handler::ContractExecutionSyscallHandler;
+use super::contract_execution_syscall_handler::ContractExecutionSyscallHandler;
 use crate::state::CheatnetState;
 use blockifier::execution::call_info::CallInfo;
 use blockifier::execution::entry_point_execution::{
