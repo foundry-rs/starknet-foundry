@@ -59,6 +59,15 @@ jobs:
           scarb-version: ${{ env.SCARB_VERSION }}
       - run: cargo test --release e2e -p forge
 
+  test-forge-runner:
+    name: Test Forge Runner
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8
+      - run: cargo test --release -p forge_runner
+
   test-cheatnet:
     name: Test Cheatnet
     runs-on: ubuntu-latest
@@ -105,6 +114,18 @@ jobs:
           scarb-version: ${{ env.SCARB_VERSION }}
       - name: Run tests
         run: cargo test --release -p conversions
+
+  test-scarb-artifacts:
+    name: Test Scarb Artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8
+      - uses: software-mansion/setup-scarb@v1.3.2
+        with:
+          scarb-version: ${{ env.SCARB_VERSION }}
+      - run: cargo test --release -p scarb-artifacts
 
   scarbfmt:
     runs-on: ubuntu-latest
