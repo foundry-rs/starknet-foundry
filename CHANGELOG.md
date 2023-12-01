@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Added
+
+- `snforge_std::signature::elliptic_curve` module with `KeyPair` for `Secp256k1` and `Secp256r1` curves
+
 ### Cast
 
 ### Added
