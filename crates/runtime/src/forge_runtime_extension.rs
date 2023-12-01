@@ -449,11 +449,11 @@ impl<'a> ExtensionLogic
                     .into_()]))
             }
             "generate_ecdsa_keys" => {
-                let curve = inputs[0].clone().to_u8();
+                let curve = as_cairo_short_string(&inputs[0]);
 
                 let (signing_key_bytes, verifying_key_bytes) = {
-                    match curve {
-                        Some(0) => {
+                    match curve.as_deref() {
+                        Some("Secp256k1") => {
                             let signing_key = k256::ecdsa::SigningKey::random(
                                 &mut k256::elliptic_curve::rand_core::OsRng,
                             );
@@ -463,7 +463,7 @@ impl<'a> ExtensionLogic
                                 verifying_key.to_encoded_point(false).to_bytes(),
                             )
                         }
-                        Some(1) => {
+                        Some("Secp256r1") => {
                             let signing_key = p256::ecdsa::SigningKey::random(
                                 &mut p256::elliptic_curve::rand_core::OsRng,
                             );
@@ -487,9 +487,9 @@ impl<'a> ExtensionLogic
                 ]))
             }
             "ecdsa_sign_message" => {
-                let secret_key_low = inputs[0].clone();
-                let secret_key_high = inputs[1].clone();
-                let curve = inputs[2].clone().to_u8();
+                let curve = as_cairo_short_string(&inputs[0]);
+                let secret_key_low = inputs[1].clone();
+                let secret_key_high = inputs[2].clone();
                 let msg_hash_low = inputs[3].clone();
                 let msg_hash_high = inputs[4].clone();
 
@@ -497,8 +497,8 @@ impl<'a> ExtensionLogic
                 let msg_hash = concat_felts(&msg_hash_low, &msg_hash_high);
 
                 let (r_bytes, s_bytes) = {
-                    match curve {
-                        Some(0) => {
+                    match curve.as_deref() {
+                        Some("Secp256k1") => {
                             let signing_key =
                                 k256::ecdsa::SigningKey::from_slice(&secret_key).unwrap();
 
@@ -511,7 +511,7 @@ impl<'a> ExtensionLogic
 
                             signature.split_bytes()
                         }
-                        Some(1) => {
+                        Some("Secp256r1") => {
                             let signing_key =
                                 p256::ecdsa::SigningKey::from_slice(&secret_key).unwrap();
 
@@ -536,15 +536,15 @@ impl<'a> ExtensionLogic
                 ]))
             }
             "get_ecdsa_public_key" => {
-                let secret_key_low = inputs[0].clone();
-                let secret_key_high = inputs[1].clone();
-                let curve = inputs[2].clone().to_u8();
+                let curve = as_cairo_short_string(&inputs[0]);
+                let secret_key_low = inputs[1].clone();
+                let secret_key_high = inputs[2].clone();
 
                 let secret_key = concat_felts(&secret_key_low, &secret_key_high);
 
                 let verifying_key_bytes = {
-                    match curve {
-                        Some(0) => {
+                    match curve.as_deref() {
+                        Some("Secp256k1") => {
                             let signing_key =
                                 k256::ecdsa::SigningKey::from_slice(&secret_key).unwrap();
 
@@ -553,7 +553,7 @@ impl<'a> ExtensionLogic
                                 .to_encoded_point(false)
                                 .to_bytes()
                         }
-                        Some(1) => {
+                        Some("Secp256r1") => {
                             let signing_key =
                                 p256::ecdsa::SigningKey::from_slice(&secret_key).unwrap();
 

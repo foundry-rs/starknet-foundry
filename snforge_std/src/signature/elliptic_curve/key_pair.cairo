@@ -28,7 +28,7 @@ impl KeyPairImpl<
     fn generate() -> KeyPair<Secp256Point> {
         let curve = match_supported_curve::<Secp256Point>();
 
-        let output: Span<felt252> = cheatcode::<'generate_ecdsa_keys'>(curve.span());
+        let output: Span<felt252> = cheatcode::<'generate_ecdsa_keys'>(array![*curve[0]].span());
 
         let secret_key = to_u256(*output[0], *output[1]);
         let x = to_u256(*output[2], *output[3]);
@@ -40,10 +40,10 @@ impl KeyPairImpl<
     }
 
     fn from_private(secret_key: u256) -> KeyPair<Secp256Point> {
-        let (sk_low, sk_high) = from_u256(secret_key);
         let curve = match_supported_curve::<Secp256Point>();
+        let (sk_low, sk_high) = from_u256(secret_key);
 
-        let output = cheatcode::<'get_ecdsa_public_key'>(array![sk_low, sk_high, *curve[0]].span());
+        let output = cheatcode::<'get_ecdsa_public_key'>(array![*curve[0], sk_low, sk_high].span());
 
         let x = to_u256(*output[0], *output[1]);
         let y = to_u256(*output[2], *output[3]);
@@ -62,13 +62,13 @@ impl KeyPairSigner<
     impl Secp256PointImpl: Secp256PointTrait<Secp256Point>
 > of Signer<KeyPair<Secp256Point>> {
     fn sign(self: KeyPair<Secp256Point>, message_hash: u256) -> (u256, u256) {
+        let curve = match_supported_curve::<Secp256Point>();
         let (sk_low, sk_high) = from_u256(self.secret_key);
         let (msg_hash_low, msg_hash_high) = from_u256(message_hash);
-        let curve = match_supported_curve::<Secp256Point>();
 
         let output = cheatcode::<
             'ecdsa_sign_message'
-        >(array![sk_low, sk_high, *curve[0], msg_hash_low, msg_hash_high].span());
+        >(array![*curve[0], sk_low, sk_high, msg_hash_low, msg_hash_high].span());
 
         let r = to_u256(*output[0], *output[1]);
         let s = to_u256(*output[2], *output[3]);
@@ -103,12 +103,12 @@ fn match_supported_curve<
     let mut curve = array![];
     if curve_size == Secp256k1Impl::get_curve_size()
         && generator == Secp256k1Impl::get_generator_point().get_coordinates().unwrap_syscall() {
-        curve = array![0];
+        curve = array!['Secp256k1'];
     } else if curve_size == Secp256r1Impl::get_curve_size()
         && generator == Secp256r1Impl::get_generator_point().get_coordinates().unwrap_syscall() {
-        curve = array![1];
+        curve = array!['Secp256r1'];
     } else {
-        panic(array!['Currently only secp256k1 and', 'secp256r1 curves are supported']);
+        panic(array!['Currently only Secp256k1 and', 'Secp256r1 curves are supported']);
     }
     curve
 }
