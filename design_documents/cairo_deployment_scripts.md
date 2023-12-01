@@ -31,7 +31,7 @@ Propose a solution with an example syntax, that would allow to write deployment 
 This section is split into smaller subsections describing things we will need to tackle while implementing the solution.
 
 ### sncast commands
-Specific sncast commands (declare, deploy, account) could be imported as regular functions to the scipts, and called as such.
+Specific sncast commands (declare, deploy, account) could be imported as regular functions to the scripts, and called as such.
 Our functions return specific types (structs defined in `cast/src/helpers/response_structs.rs`), that make retrieving
 essential information easier, so we should be good on that front.
 
