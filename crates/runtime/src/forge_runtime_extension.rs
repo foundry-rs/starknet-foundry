@@ -535,7 +535,7 @@ impl<'a> ExtensionLogic
                     Felt252::from_bytes_be(&s_bytes[0..16]),
                 ]))
             }
-            "get_public_key" => {
+            "get_ecdsa_public_key" => {
                 let secret_key_low = inputs[0].clone();
                 let secret_key_high = inputs[1].clone();
                 let curve = inputs[2].clone().to_u8();

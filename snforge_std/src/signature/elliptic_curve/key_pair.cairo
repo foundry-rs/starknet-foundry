@@ -43,7 +43,7 @@ impl KeyPairImpl<
         let (sk_low, sk_high) = from_u256(secret_key);
         let curve = match_supported_curve::<Secp256Point>();
 
-        let output = cheatcode::<'get_public_key'>(array![sk_low, sk_high, *curve[0]].span());
+        let output = cheatcode::<'get_ecdsa_public_key'>(array![sk_low, sk_high, *curve[0]].span());
 
         let x = to_u256(*output[0], *output[1]);
         let y = to_u256(*output[2], *output[3]);
