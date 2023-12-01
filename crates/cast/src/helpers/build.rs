@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::process::{Command, Stdio};
 
-pub const LIB_CONTRACT_ARTIFACTS_NAME: &str = "__sncast_lib_contract";
+use super::constants::LIB_CONTRACT_ARTIFACTS_NAME;
 
 #[allow(clippy::too_many_lines)]
 pub fn build(

@@ -25,3 +25,5 @@ pub const DEFAULT_ACCOUNTS_FILE: &str = "~/.starknet_accounts/starknet_open_zepp
 
 pub const KEYSTORE_PASSWORD_ENV_VAR: &str = "KEYSTORE_PASSWORD";
 pub const CREATE_KEYSTORE_PASSWORD_ENV_VAR: &str = "CREATE_KEYSTORE_PASSWORD";
+
+pub const LIB_CONTRACT_ARTIFACTS_NAME: &str = "__sncast_lib_contract";

@@ -24,7 +24,7 @@ use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cairo_vm::vm::vm_core::VirtualMachine;
-use cast::helpers::build::LIB_CONTRACT_ARTIFACTS_NAME;
+use cast::helpers::constants::LIB_CONTRACT_ARTIFACTS_NAME;
 use cast::helpers::response_structs::ScriptResponse;
 use cast::helpers::scarb_utils::CastConfig;
 use cheatnet::cheatcodes::EnhancedHintError;

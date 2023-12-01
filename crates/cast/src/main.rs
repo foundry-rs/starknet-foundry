@@ -10,8 +10,8 @@ use camino::Utf8PathBuf;
 use cast::helpers::build::build;
 use cast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
 use cast::helpers::scarb_utils::{
-    get_first_package_from_metadata, get_scarb_manifest, get_scarb_metadata_with_deps,
-    parse_scarb_config, CastConfig,
+    get_first_package_from_metadata, get_scarb_config, get_scarb_manifest,
+    get_scarb_metadata_with_deps, CastConfig,
 };
 use cast::{
     chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_provider,
@@ -121,10 +121,13 @@ fn main() -> Result<()> {
         ValueFormat::Default
     };
 
+    which::which("scarb")
+        .context("Cannot find `scarb` binary in PATH. Make sure you have Scarb installed https://github.com/software-mansion/scarb")?;
+
     let package_data = get_package_data(&cli);
     let mut config = match &package_data.package {
-        Ok(package) => parse_scarb_config(&cli.profile, Some(package))?,
-        Err(_) => parse_scarb_config(&cli.profile, None)?,
+        Ok(package) => get_scarb_config(&cli.profile, Some(package))?,
+        Err(_) => get_scarb_config(&cli.profile, None)?,
     };
 
     update_cast_config(&mut config, &cli);

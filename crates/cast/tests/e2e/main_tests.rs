@@ -1,5 +1,7 @@
 use crate::helpers::constants::{ACCOUNT, ACCOUNT_FILE_PATH, CONTRACTS_DIR, URL};
-use crate::helpers::fixtures::{duplicate_directory_with_salt, from_env, get_keystores_path};
+use crate::helpers::fixtures::{
+    create_basic_scarb_environment, duplicate_directory_with_salt, from_env, get_keystores_path,
+};
 use crate::helpers::runner::runner;
 use cast::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
 use indoc::indoc;
@@ -120,20 +122,11 @@ async fn test_happy_case_mixed() {
 
 #[tokio::test]
 async fn test_missing_account() {
-    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
-    let manifest_path = temp_dir.path().join("./Scarb.toml");
-    let manifest_path = manifest_path.to_str().unwrap();
-
-    fs_extra::file::copy(
-        "tests/data/files/noconfig_Scarb.toml",
-        manifest_path,
-        &fs_extra::file::CopyOptions::new().overwrite(true),
-    )
-    .unwrap();
+    let manifest_path = create_basic_scarb_environment();
 
     let args = vec![
         "--path-to-scarb-toml",
-        manifest_path,
+        &manifest_path,
         "--accounts-file",
         ACCOUNT_FILE_PATH,
         "--url",
@@ -152,20 +145,11 @@ async fn test_missing_account() {
 
 #[tokio::test]
 async fn test_missing_url() {
-    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
-    let manifest_path = temp_dir.path().join("./Scarb.toml");
-    let manifest_path = manifest_path.to_str().unwrap();
-
-    fs_extra::file::copy(
-        "tests/data/files/noconfig_Scarb.toml",
-        manifest_path,
-        &fs_extra::file::CopyOptions::new().overwrite(true),
-    )
-    .unwrap();
+    let manifest_path = create_basic_scarb_environment();
 
     let args = vec![
         "--path-to-scarb-toml",
-        manifest_path,
+        &manifest_path,
         "--accounts-file",
         ACCOUNT_FILE_PATH,
         "--account",
@@ -184,20 +168,11 @@ async fn test_missing_url() {
 
 #[tokio::test]
 async fn test_inexistent_keystore() {
-    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
-    let manifest_path = temp_dir.path().join("./Scarb.toml");
-    let manifest_path = manifest_path.to_str().unwrap();
-
-    fs_extra::file::copy(
-        "tests/data/files/noconfig_Scarb.toml",
-        manifest_path,
-        &fs_extra::file::CopyOptions::new().overwrite(true),
-    )
-    .unwrap();
+    let manifest_path = create_basic_scarb_environment();
 
     let args = vec![
         "--path-to-scarb-toml",
-        manifest_path,
+        &manifest_path,
         "--url",
         URL,
         "--keystore",

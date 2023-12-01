@@ -58,9 +58,6 @@ pub fn get_scarb_manifest() -> Result<Utf8PathBuf> {
 }
 
 pub fn get_scarb_manifest_for(dir: &Utf8Path) -> Result<Utf8PathBuf> {
-    which::which("scarb")
-        .context("Cannot find `scarb` binary in PATH. Make sure you have Scarb installed https://github.com/software-mansion/scarb")?;
-
     let output = Command::new("scarb")
         .current_dir(dir)
         .arg("manifest-path")
@@ -77,15 +74,10 @@ pub fn get_scarb_manifest_for(dir: &Utf8Path) -> Result<Utf8PathBuf> {
     Ok(path)
 }
 
-fn get_scarb_metadata_command(
-    manifest_path: &Utf8PathBuf,
-) -> Result<scarb_metadata::MetadataCommand> {
-    which::which("scarb")
-        .context("Cannot find `scarb` binary in PATH. Make sure you have Scarb installed https://github.com/software-mansion/scarb")?;
-
+fn get_scarb_metadata_command(manifest_path: &Utf8PathBuf) -> scarb_metadata::MetadataCommand {
     let mut command = scarb_metadata::MetadataCommand::new();
     command.inherit_stderr().manifest_path(manifest_path);
-    Ok(command)
+    command
 }
 
 fn execute_scarb_metadata_command(
@@ -102,7 +94,7 @@ fn execute_scarb_metadata_command(
 }
 
 pub fn get_scarb_metadata(manifest_path: &Utf8PathBuf) -> Result<scarb_metadata::Metadata> {
-    let mut command = get_scarb_metadata_command(manifest_path)?;
+    let mut command = get_scarb_metadata_command(manifest_path);
     let command = command.no_deps();
     execute_scarb_metadata_command(command)
 }
@@ -110,7 +102,7 @@ pub fn get_scarb_metadata(manifest_path: &Utf8PathBuf) -> Result<scarb_metadata:
 pub fn get_scarb_metadata_with_deps(
     manifest_path: &Utf8PathBuf,
 ) -> Result<scarb_metadata::Metadata> {
-    let command = get_scarb_metadata_command(manifest_path)?;
+    let command = get_scarb_metadata_command(manifest_path);
     execute_scarb_metadata_command(&command)
 }
 
@@ -154,7 +146,7 @@ pub fn get_package_metadata<'a>(
     Ok(package)
 }
 
-pub fn parse_scarb_config(
+pub fn get_scarb_config(
     profile: &Option<String>,
     package_metadata: Option<&PackageMetadata>,
 ) -> Result<CastConfig> {
@@ -202,17 +194,17 @@ pub fn get_first_package_from_metadata(metadata: &Metadata) -> Result<PackageMet
 #[cfg(test)]
 mod tests {
     use crate::helpers::scarb_utils::get_first_package_from_metadata;
+    use crate::helpers::scarb_utils::get_scarb_config;
     use crate::helpers::scarb_utils::get_scarb_metadata;
-    use crate::helpers::scarb_utils::parse_scarb_config;
     use camino::Utf8PathBuf;
 
     #[test]
-    fn test_parse_scarb_config_happy_case_with_profile() {
+    fn test_get_scarb_config_happy_case_with_profile() {
         let metadata = get_scarb_metadata(&Utf8PathBuf::from(
             "tests/data/contracts/constructor_with_params/Scarb.toml",
         ))
         .unwrap();
-        let config = parse_scarb_config(
+        let config = get_scarb_config(
             &Some(String::from("myprofile")),
             Some(&get_first_package_from_metadata(&metadata).unwrap()),
         )
@@ -223,10 +215,10 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_scarb_config_happy_case_without_profile() {
+    fn test_get_scarb_config_happy_case_without_profile() {
         let metadata =
             get_scarb_metadata(&Utf8PathBuf::from("tests/data/contracts/map/Scarb.toml")).unwrap();
-        let config = parse_scarb_config(
+        let config = get_scarb_config(
             &None,
             Some(&get_first_package_from_metadata(&metadata).unwrap()),
         )
@@ -236,10 +228,10 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_scarb_config_not_in_file() {
+    fn test_get_scarb_config_not_in_file() {
         let metadata =
             get_scarb_metadata(&Utf8PathBuf::from("tests/data/files/noconfig_Scarb.toml")).unwrap();
-        let config = parse_scarb_config(
+        let config = get_scarb_config(
             &None,
             Some(&get_first_package_from_metadata(&metadata).unwrap()),
         )
@@ -250,10 +242,10 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_scarb_config_no_profile_found() {
+    fn test_get_scarb_config_no_profile_found() {
         let metadata =
             get_scarb_metadata(&Utf8PathBuf::from("tests/data/contracts/map/Scarb.toml")).unwrap();
-        let config = parse_scarb_config(
+        let config = get_scarb_config(
             &Some(String::from("mariusz")),
             Some(&get_first_package_from_metadata(&metadata).unwrap()),
         )
@@ -265,13 +257,13 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_scarb_config_account_missing() {
+    fn test_get_scarb_config_account_missing() {
         let metadata = get_scarb_metadata(&Utf8PathBuf::from(
             "tests/data/files/somemissing_Scarb.toml",
         ))
         .unwrap();
 
-        let config = parse_scarb_config(
+        let config = get_scarb_config(
             &None,
             Some(&get_first_package_from_metadata(&metadata).unwrap()),
         )
