@@ -39,14 +39,18 @@ impl KeyPairImpl<
         KeyPair { secret_key, public_key }
     }
 
-    fn from_private(secret_key: u256) -> KeyPair<Secp256Point> {
+    fn from_secret_key(secret_key: u256) -> KeyPair<Secp256Point> {
         let curve = match_supported_curve::<Secp256Point>();
         let (sk_low, sk_high) = from_u256(secret_key);
 
         let output = cheatcode::<'get_ecdsa_public_key'>(array![*curve[0], sk_low, sk_high].span());
 
-        let x = to_u256(*output[0], *output[1]);
-        let y = to_u256(*output[2], *output[3]);
+        if *output[0] == 1 {
+            panic_with_felt252(*output[1]);
+        }
+
+        let x = to_u256(*output[1], *output[2]);
+        let y = to_u256(*output[3], *output[4]);
 
         let public_key = Secp256Impl::secp256_ec_new_syscall(x, y).unwrap_syscall().unwrap();
 
@@ -70,8 +74,12 @@ impl KeyPairSigner<
             'ecdsa_sign_message'
         >(array![*curve[0], sk_low, sk_high, msg_hash_low, msg_hash_high].span());
 
-        let r = to_u256(*output[0], *output[1]);
-        let s = to_u256(*output[2], *output[3]);
+        if *output[0] == 1 {
+            panic_with_felt252(*output[1]);
+        }
+
+        let r = to_u256(*output[1], *output[2]);
+        let s = to_u256(*output[3], *output[4]);
 
         (r, s)
     }

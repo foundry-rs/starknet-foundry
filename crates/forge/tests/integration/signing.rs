@@ -67,7 +67,7 @@ fn test_secp256_k1_curve() {
                 let is_valid = key_pair.verify(msg_hash, (r, s));
                 assert(is_valid, 'Signature should be valid');
             
-                let key_pair2 = KeyPairTrait::<Secp256k1Point>::from_private(key_pair.secret_key);
+                let key_pair2 = KeyPairTrait::<Secp256k1Point>::from_secret_key(key_pair.secret_key);
                 assert(key_pair.secret_key == key_pair2.secret_key, 'Secret keys should be equal');
                 assert(key_pair.public_key.get_coordinates() == key_pair2.public_key.get_coordinates(), 'Public keys should be equal');
             }
@@ -96,7 +96,7 @@ fn test_secp256_r1_curve() {
                 let is_valid = key_pair.verify(msg_hash, (r, s));
                 assert(is_valid, 'Signature should be valid');
             
-                let key_pair2 = KeyPairTrait::<Secp256r1Point>::from_private(key_pair.secret_key);
+                let key_pair2 = KeyPairTrait::<Secp256r1Point>::from_secret_key(key_pair.secret_key);
                 assert(key_pair.secret_key == key_pair2.secret_key, 'Secret keys should be equal');
                 assert(key_pair.public_key.get_coordinates() == key_pair2.public_key.get_coordinates(), 'Public keys should be equal');
             }
@@ -120,8 +120,8 @@ fn test_secp256_curve() {
             fn test() {
                 let secret_key = 554433;
 
-                let key_pair_k1 = KeyPairTrait::<Secp256k1Point>::from_private(secret_key);
-                let key_pair_r1 = KeyPairTrait::<Secp256r1Point>::from_private(secret_key);
+                let key_pair_k1 = KeyPairTrait::<Secp256k1Point>::from_secret_key(secret_key);
+                let key_pair_r1 = KeyPairTrait::<Secp256r1Point>::from_secret_key(secret_key);
                 
                 assert(key_pair_k1.secret_key == key_pair_r1.secret_key, 'Secret keys should equal');
                 assert(key_pair_k1.public_key.get_coordinates() != key_pair_r1.public_key.get_coordinates(), 'Public keys should be different');
@@ -197,6 +197,47 @@ fn test_unsupported_curve() {
             #[should_panic(expected: ('Currently only Secp256k1 and', 'Secp256r1 curves are supported'))]
             fn test() {
                 let key_pair = KeyPairTrait::<UnsupportedCurvePoint>::generate();
+            }
+        "
+    ));
+
+    let result = run_test_case(&test);
+
+    assert_passed!(result);
+}
+
+#[test]
+fn test_invalid_secret_key_secp256() {
+    let test = test_case!(indoc!(
+        r"
+            use snforge_std::signature::elliptic_curve::{ KeyPair, KeyPairTrait, Signer, Verifier };
+            use starknet::secp256r1::{ Secp256r1Impl, Secp256r1Point, Secp256r1PointImpl };
+            use starknet::secp256k1::{ Secp256k1Impl, Secp256k1Point, Secp256k1PointImpl };
+
+            #[test]
+            #[should_panic(expected: ('invalid secret_key', ))]
+            fn test_from_secret_key_secp256k1() {
+                let key_pair = KeyPairTrait::<Secp256k1Point>::from_secret_key(0.into());
+            }
+
+            #[test]
+            #[should_panic(expected: ('invalid secret_key', ))]
+            fn test_from_secret_key_secp256r1() {
+                let key_pair = KeyPairTrait::<Secp256r1Point>::from_secret_key(0.into());
+            }
+
+            #[test]
+            #[should_panic(expected: ('invalid secret_key', ))]
+            fn test_sign_secp256k1() {
+                let key_pair = KeyPair { secret_key: 0.into(), public_key: Secp256k1Impl::get_generator_point() } ;
+                let (r, s) = key_pair.sign(123.into());
+            }
+
+            #[test]
+            #[should_panic(expected: ('invalid secret_key', ))]
+            fn test_sign_secp256r1() {
+                let key_pair = KeyPair { secret_key: 0.into(), public_key: Secp256r1Impl::get_generator_point() } ;
+                let (r, s) = key_pair.sign(123.into());
             }
         "
     ));

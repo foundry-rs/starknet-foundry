@@ -500,8 +500,13 @@ impl<'a> ExtensionLogic
                 let (r_bytes, s_bytes) = {
                     match curve.as_deref() {
                         Some("Secp256k1") => {
-                            let signing_key =
-                                k256::ecdsa::SigningKey::from_slice(&secret_key).unwrap();
+                            let Ok(signing_key) = k256::ecdsa::SigningKey::from_slice(&secret_key)
+                            else {
+                                return Ok(CheatcodeHandlingResult::Handled(vec![
+                                    Felt252::from(1),
+                                    Felt252::from_("invalid secret_key".to_string()),
+                                ]));
+                            };
 
                             let signature: k256::ecdsa::Signature =
                                 k256::ecdsa::signature::hazmat::PrehashSigner::sign_prehash(
@@ -513,8 +518,13 @@ impl<'a> ExtensionLogic
                             signature.split_bytes()
                         }
                         Some("Secp256r1") => {
-                            let signing_key =
-                                p256::ecdsa::SigningKey::from_slice(&secret_key).unwrap();
+                            let Ok(signing_key) = p256::ecdsa::SigningKey::from_slice(&secret_key)
+                            else {
+                                return Ok(CheatcodeHandlingResult::Handled(vec![
+                                    Felt252::from(1),
+                                    Felt252::from_("invalid secret_key".to_string()),
+                                ]));
+                            };
 
                             let signature: p256::ecdsa::Signature =
                                 p256::ecdsa::signature::hazmat::PrehashSigner::sign_prehash(
@@ -530,6 +540,7 @@ impl<'a> ExtensionLogic
                 };
 
                 Ok(CheatcodeHandlingResult::Handled(vec![
+                    Felt252::from(0),
                     Felt252::from_bytes_be(&r_bytes[16..32]),
                     Felt252::from_bytes_be(&r_bytes[0..16]),
                     Felt252::from_bytes_be(&s_bytes[16..32]),
@@ -546,8 +557,13 @@ impl<'a> ExtensionLogic
                 let verifying_key_bytes = {
                     match curve.as_deref() {
                         Some("Secp256k1") => {
-                            let signing_key =
-                                k256::ecdsa::SigningKey::from_slice(&secret_key).unwrap();
+                            let Ok(signing_key) = k256::ecdsa::SigningKey::from_slice(&secret_key)
+                            else {
+                                return Ok(CheatcodeHandlingResult::Handled(vec![
+                                    Felt252::from(1),
+                                    Felt252::from_("invalid secret_key".to_string()),
+                                ]));
+                            };
 
                             signing_key
                                 .verifying_key()
@@ -555,8 +571,13 @@ impl<'a> ExtensionLogic
                                 .to_bytes()
                         }
                         Some("Secp256r1") => {
-                            let signing_key =
-                                p256::ecdsa::SigningKey::from_slice(&secret_key).unwrap();
+                            let Ok(signing_key) = p256::ecdsa::SigningKey::from_slice(&secret_key)
+                            else {
+                                return Ok(CheatcodeHandlingResult::Handled(vec![
+                                    Felt252::from(1),
+                                    Felt252::from_("invalid secret_key".to_string()),
+                                ]));
+                            };
 
                             signing_key
                                 .verifying_key()
@@ -568,6 +589,7 @@ impl<'a> ExtensionLogic
                 };
 
                 Ok(CheatcodeHandlingResult::Handled(vec![
+                    Felt252::from(0),
                     Felt252::from_bytes_be(&verifying_key_bytes[17..33]),
                     Felt252::from_bytes_be(&verifying_key_bytes[1..17]),
                     Felt252::from_bytes_be(&verifying_key_bytes[49..65]),
