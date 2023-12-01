@@ -17,7 +17,7 @@ We propose to design a dedicated `verify` command for the `sncast` tool, and add
 Command name: `verify`
 
 The `verify` command will perform following actions:
-- select the verifiation logic to use (based on `--verifier` parameter)
+- select the verification logic to use (based on `--verifier` parameter)
 - pick the selected scarb workspace source code from local filesystem (based on `Scarb.toml` file)
 - for the selected verifier it will upload the Scarb workspace contracts source code to the verifier's API
 - call the verifier's API to trigger verification of the uploaded source code

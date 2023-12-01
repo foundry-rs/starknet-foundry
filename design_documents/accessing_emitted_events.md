@@ -59,7 +59,7 @@ fn expect_exact_events(events: Array<snforge_std::Event>)
 
 It will panic if:
 - not all defined events were emitted
-- some other events where emitted
+- some other events were emitted
 
 ### Usage example
 

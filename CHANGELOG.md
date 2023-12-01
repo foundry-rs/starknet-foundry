@@ -135,7 +135,7 @@ Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/forge.ht
 
 #### Fixed
 
-- Test output are printed in real time again
+- Test output is printed in real time again
 - Bug when application would not wait for tasks to terminate after execution was cancelled
 
 ## [0.8.2] - 2023-10-12

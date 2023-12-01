@@ -159,7 +159,7 @@ fn main() {
 ```
 
 - Use a procedural macro to automatically apply decorator-like behaviour to functions, which will decide on whether
-given function should be executetd or not (based on state file)
+given function should be executed or not (based on state file)
   - pros:
     - elegant solution
     - could be applied selectively (per function) or globally (to main)
