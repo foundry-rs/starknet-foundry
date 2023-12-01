@@ -473,7 +473,7 @@ impl<'a> ExtensionLogic
                                 verifying_key.to_encoded_point(false).to_bytes(),
                             )
                         }
-                        _ => unreachable!("Invalid EllipticCurve variant"),
+                        _ => return Ok(CheatcodeHandlingResult::Forwarded),
                     }
                 };
 
@@ -524,7 +524,7 @@ impl<'a> ExtensionLogic
 
                             signature.split_bytes()
                         }
-                        _ => unreachable!("Invalid EllipticCurve variant"),
+                        _ => return Ok(CheatcodeHandlingResult::Forwarded),
                     }
                 };
 
@@ -562,7 +562,7 @@ impl<'a> ExtensionLogic
                                 .to_encoded_point(false)
                                 .to_bytes()
                         }
-                        _ => unreachable!("Invalid EllipticCurve variant"),
+                        _ => return Ok(CheatcodeHandlingResult::Forwarded),
                     }
                 };
 
