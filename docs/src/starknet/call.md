@@ -33,7 +33,7 @@ response: [0x1, 0x23, 0x4]
 
 ### Passing `block-id` argument
 
-You can call a contract at the specific blok by passing `--block-id` argument.
+You can call a contract at the specific block by passing `--block-id` argument.
 
 ```shell
 $ sncast call \

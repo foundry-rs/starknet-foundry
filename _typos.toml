@@ -1,0 +1,5 @@
+[default.extend-words]
+ba = "ba"
+
+[files]
+extend-exclude = ["docs/theme/head.hbs"]
