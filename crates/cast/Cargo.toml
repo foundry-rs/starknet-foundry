@@ -29,6 +29,7 @@ reqwest = "=0.11.18"
 indoc.workspace = true
 tempfile.workspace = true
 cheatnet = { path = "../cheatnet" }
+runtime = { path = "../runtime" }
 conversions = { path = "../conversions" }
 cairo-lang-runner.workspace = true
 cairo-lang-casm.workspace = true
