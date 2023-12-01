@@ -6,7 +6,7 @@ use test_utils::{assert_passed, test_case};
 fn simple_signing_flow_stark_curve() {
     let test = test_case!(indoc!(
         r"
-            use snforge_std::signature::stark_curve::{ StarkCurveKeyPair, StarkCurveKeyPairTrait, Signer, Verifier };
+            use snforge_std::signature::{ StarkCurveKeyPair, StarkCurveKeyPairTrait, Signer, Verifier };
 
             #[test]
             fn test() {
@@ -28,7 +28,7 @@ fn simple_signing_flow_stark_curve() {
 fn try_to_sign_max_felt() {
     let test = test_case!(indoc!(
         r"
-            use snforge_std::signature::stark_curve::{ StarkCurveKeyPair, StarkCurveKeyPairTrait, Signer };
+            use snforge_std::signature::{ StarkCurveKeyPair, StarkCurveKeyPairTrait, Signer };
 
             #[test]
             fn test() {
