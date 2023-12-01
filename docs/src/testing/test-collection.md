@@ -2,7 +2,7 @@
 
 Forge considers all functions in your project marked with `#[test]` attribute as tests.
 By default, test functions run without any arguments.
-However, adding any arguments to function signature will enable [fuzz testing](./advanced/fuzz-testing.md) for this
+However, adding any arguments to the function signature will enable [fuzz testing](./advanced/fuzz-testing.md) for this
 test case.
 
 Starknet Forge will collect tests only from these places:
@@ -21,7 +21,7 @@ Depending on the presence of `tests/lib.cairo` file, the behavior of the test co
 If there is a `lib.cairo` file in `tests` folder,
 then it is treated as an entrypoint to the `tests` package from which tests are collected.
 
-For example, for a package structured this way:
+For example, for a package structured in this way:
 
 ```shell
 $ tree .
