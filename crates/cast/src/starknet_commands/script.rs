@@ -30,12 +30,12 @@ use cast::helpers::response_structs::ScriptResponse;
 use cast::helpers::scarb_utils::{
     get_package_metadata, get_scarb_manifest, get_scarb_metadata_with_deps, CastConfig,
 };
-use cheatnet::cheatcodes::EnhancedHintError;
 use clap::command;
 use clap::Args;
 use conversions::{FromConv, IntoConv};
 use itertools::chain;
 use num_traits::ToPrimitive;
+use runtime::EnhancedHintError;
 use scarb_metadata::ScarbCommand;
 use starknet::core::types::{BlockId, BlockTag::Pending, FieldElement};
 use starknet::providers::jsonrpc::HttpTransport;

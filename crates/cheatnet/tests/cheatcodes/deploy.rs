@@ -4,9 +4,10 @@ use crate::common::{deploy_contract, felt_selector_from_name, get_contracts};
 use cairo_felt::Felt252;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cheatnet::cheatcodes::deploy::{deploy, deploy_at};
-use cheatnet::cheatcodes::{CheatcodeError, EnhancedHintError};
+use cheatnet::cheatcodes::CheatcodeError;
 use cheatnet::rpc::{call_contract, CallContractFailure, CallContractResult};
 use conversions::IntoConv;
+use runtime::EnhancedHintError;
 use starknet_api::core::ContractAddress;
 
 #[test]
