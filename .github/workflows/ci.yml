@@ -170,3 +170,11 @@ jobs:
       - name: Build with mdBook
         run: mdbook build
         working-directory: ./docs
+
+  typos:
+    name: Check typos
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: typos-action
+        uses: crate-ci/typos@v1.16.23
