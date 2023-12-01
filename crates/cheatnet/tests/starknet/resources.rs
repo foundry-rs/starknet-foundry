@@ -1,4 +1,8 @@
-use blockifier::abi::constants;
+use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector::{
+    StorageRead, StorageWrite,
+};
+use blockifier::execution::entry_point::ExecutionResources;
+use cairo_vm::vm::runners::cairo_runner::ExecutionResources as VmExecutionResources;
 use std::collections::HashMap;
 
 use crate::common::{
@@ -7,9 +11,8 @@ use crate::common::{
 };
 use cairo_felt::Felt252;
 use cheatnet::cheatcodes::deploy::deploy;
-use cheatnet::rpc::{call_contract, ResourceReport};
-use conversions::StarknetConversions;
-use num_traits::ToPrimitive;
+use cheatnet::rpc::call_contract;
+use conversions::IntoConv;
 
 // TODO (834): Verify values in this test
 #[test]
@@ -36,11 +39,14 @@ fn call_resources_simple() {
     .unwrap();
 
     assert_eq!(
-        output.resource_report,
-        ResourceReport {
-            gas: 1.26,
-            steps: 126,
-            bultins: HashMap::from([("range_check_builtin".to_owned(), 2)]),
+        output.used_resources,
+        ExecutionResources {
+            vm_resources: VmExecutionResources {
+                n_steps: 126,
+                n_memory_holes: 0,
+                builtin_instance_counter: HashMap::from([("range_check_builtin".to_owned(), 2)]),
+            },
+            syscall_counter: HashMap::from([(StorageWrite, 1), (StorageRead, 1)])
         }
     );
 }
@@ -52,21 +58,14 @@ fn deploy_resources_simple() {
 
     let contracts = get_contracts();
 
-    let contract_name = "HelloStarknet".to_owned().to_felt252();
+    let contract_name = "HelloStarknet".to_owned().into_();
     let class_hash = blockifier_state
         .declare(&contract_name, &contracts)
         .unwrap();
 
     let payload = deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[]).unwrap();
 
-    assert_eq!(
-        payload.resource_report,
-        ResourceReport {
-            gas: constants::DEPLOY_GAS_COST.to_f64().unwrap(),
-            steps: 0, // No constructor
-            bultins: HashMap::new(),
-        }
-    );
+    assert_eq!(payload.used_resources, ExecutionResources::default());
 }
 
 #[test]
@@ -76,7 +75,7 @@ fn deploy_resources_with_constructor() {
 
     let contracts = get_contracts();
 
-    let contract_name = "ConstructorSimple".to_owned().to_felt252();
+    let contract_name = "ConstructorSimple".to_owned().into_();
     let class_hash = blockifier_state
         .declare(&contract_name, &contracts)
         .unwrap();
@@ -90,11 +89,14 @@ fn deploy_resources_with_constructor() {
     .unwrap();
 
     assert_eq!(
-        payload.resource_report,
-        ResourceReport {
-            gas: 13840.0 + constants::DEPLOY_GAS_COST.to_f64().unwrap(),
-            steps: 88, // Constructor steps
-            bultins: HashMap::from([("range_check_builtin".to_owned(), 2)]),
+        payload.used_resources,
+        ExecutionResources {
+            vm_resources: VmExecutionResources {
+                n_steps: 88,
+                n_memory_holes: 0,
+                builtin_instance_counter: HashMap::from([("range_check_builtin".to_owned(), 2)]),
+            },
+            syscall_counter: HashMap::from([(StorageWrite, 1)])
         }
     );
 }

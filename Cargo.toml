@@ -7,6 +7,7 @@ members = [
     "crates/cast",
     "crates/cheatnet",
     "crates/conversions",
+    "crates/runtime",
     "crates/scarb-artifacts",
 ]
 
@@ -37,6 +38,7 @@ cairo-lang-project = "=2.3.1"
 cairo-lang-semantic = "=2.3.1"
 cairo-lang-sierra-ap-change = "=2.3.1"
 cairo-lang-sierra-gas = "=2.3.1"
+cairo-lang-sierra-type-size = "2.3.1"
 cairo-lang-sierra-generator = "=2.3.1"
 cairo-lang-syntax = "=2.3.1"
 cairo-lang-test-plugin = "=2.3.1"

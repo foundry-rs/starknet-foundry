@@ -1859,7 +1859,10 @@ dependencies = [
  "cairo-lang-filesystem",
  "cairo-lang-runner",
  "cairo-lang-sierra",
+ "cairo-lang-sierra-ap-change",
+ "cairo-lang-sierra-gas",
  "cairo-lang-sierra-to-casm",
+ "cairo-lang-sierra-type-size",
  "cairo-lang-starknet",
  "cairo-lang-utils",
  "cairo-vm",
@@ -1875,6 +1878,7 @@ dependencies = [
  "num-traits 0.2.17",
  "once_cell",
  "rand",
+ "runtime",
  "scarb-artifacts",
  "serde",
  "serde_json",
@@ -3503,6 +3507,30 @@ checksum = "034e22c514f5c0cb8a10ff341b9b048b5ceb21591f31c8f44c43b960f9b3524a"
 dependencies = [
  "libc",
  "winapi",
+]
+
+[[package]]
+name = "runtime"
+version = "1.0.0"
+dependencies = [
+ "anyhow",
+ "blockifier",
+ "cairo-felt",
+ "cairo-lang-casm",
+ "cairo-lang-runner",
+ "cairo-lang-starknet",
+ "cairo-lang-utils",
+ "cairo-vm",
+ "cheatnet",
+ "conversions",
+ "flatten-serde-json",
+ "num-bigint",
+ "num-traits 0.2.17",
+ "scarb-artifacts",
+ "serde",
+ "serde_json",
+ "starknet",
+ "starknet_api",
 ]
 
 [[package]]

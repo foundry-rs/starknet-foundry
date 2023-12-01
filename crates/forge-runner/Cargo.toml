@@ -15,6 +15,9 @@ cairo-lang-utils.workspace = true
 cairo-lang-starknet.workspace = true
 cairo-lang-compiler.workspace = true
 cairo-lang-filesystem.workspace = true
+cairo-lang-sierra-type-size.workspace = true
+cairo-lang-sierra-gas.workspace = true
+cairo-lang-sierra-ap-change.workspace = true
 cairo-felt.workspace = true
 starknet_api.workspace = true
 starknet.workspace = true
@@ -38,6 +41,7 @@ console.workspace = true
 serde.workspace = true
 flatten-serde-json = "0.1.0"
 cheatnet = { path = "../cheatnet" }
+runtime = { path = "../runtime" }
 conversions = { path = "../conversions" }
 scarb-artifacts = { path = "../scarb-artifacts" }
 test-collector = { path = "../test-collector" }
