@@ -15,7 +15,7 @@ use starknet::{SyscallResult, SyscallResultTrait};
 
 #[derive(Copy, Drop)]
 struct KeyPair<T> {
-    private_key: u256,
+    secret_key: u256,
     public_key: T,
 }
 
@@ -30,27 +30,27 @@ impl KeyPairImpl<
 
         let output: Span<felt252> = cheatcode::<'generate_ecdsa_keys'>(curve.span());
 
-        let private_key = to_u256(*output[0], *output[1]);
+        let secret_key = to_u256(*output[0], *output[1]);
         let x = to_u256(*output[2], *output[3]);
         let y = to_u256(*output[4], *output[5]);
 
         let public_key = Secp256Impl::secp256_ec_new_syscall(x, y).unwrap_syscall().unwrap();
 
-        KeyPair { private_key, public_key }
+        KeyPair { secret_key, public_key }
     }
 
-    fn from_private(private_key: u256) -> KeyPair<Secp256Point> {
-        let (pk_low, pk_high) = from_u256(private_key);
+    fn from_private(secret_key: u256) -> KeyPair<Secp256Point> {
+        let (sk_low, sk_high) = from_u256(secret_key);
         let curve = match_supported_curve::<Secp256Point>();
 
-        let output = cheatcode::<'get_public_key'>(array![pk_low, pk_high, *curve[0]].span());
+        let output = cheatcode::<'get_public_key'>(array![sk_low, sk_high, *curve[0]].span());
 
         let x = to_u256(*output[0], *output[1]);
         let y = to_u256(*output[2], *output[3]);
 
         let public_key = Secp256Impl::secp256_ec_new_syscall(x, y).unwrap_syscall().unwrap();
 
-        KeyPair { private_key, public_key }
+        KeyPair { secret_key, public_key }
     }
 }
 
@@ -62,13 +62,13 @@ impl KeyPairSigner<
     impl Secp256PointImpl: Secp256PointTrait<Secp256Point>
 > of Signer<KeyPair<Secp256Point>> {
     fn sign(self: KeyPair<Secp256Point>, message_hash: u256) -> (u256, u256) {
-        let (pk_low, pk_high) = from_u256(self.private_key);
+        let (sk_low, sk_high) = from_u256(self.secret_key);
         let (msg_hash_low, msg_hash_high) = from_u256(message_hash);
         let curve = match_supported_curve::<Secp256Point>();
 
         let output = cheatcode::<
             'ecdsa_sign_message'
-        >(array![pk_low, pk_high, *curve[0], msg_hash_low, msg_hash_high].span());
+        >(array![sk_low, sk_high, *curve[0], msg_hash_low, msg_hash_high].span());
 
         let r = to_u256(*output[0], *output[1]);
         let s = to_u256(*output[2], *output[3]);

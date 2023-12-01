@@ -67,8 +67,8 @@ fn test_secp256_k1_curve() {
                 let is_valid = key_pair.verify(msg_hash, (r, s));
                 assert(is_valid, 'Signature should be valid');
             
-                let key_pair2 = KeyPairTrait::<Secp256k1Point>::from_private(key_pair.private_key);
-                assert(key_pair.private_key == key_pair2.private_key, 'Private keys should be equal');
+                let key_pair2 = KeyPairTrait::<Secp256k1Point>::from_private(key_pair.secret_key);
+                assert(key_pair.secret_key == key_pair2.secret_key, 'Private keys should be equal');
                 assert(key_pair.public_key.get_coordinates() == key_pair2.public_key.get_coordinates(), 'Public keys should be equal');
             }
         "
@@ -96,8 +96,8 @@ fn test_secp256_r1_curve() {
                 let is_valid = key_pair.verify(msg_hash, (r, s));
                 assert(is_valid, 'Signature should be valid');
             
-                let key_pair2 = KeyPairTrait::<Secp256r1Point>::from_private(key_pair.private_key);
-                assert(key_pair.private_key == key_pair2.private_key, 'Private keys should be equal');
+                let key_pair2 = KeyPairTrait::<Secp256r1Point>::from_private(key_pair.secret_key);
+                assert(key_pair.secret_key == key_pair2.secret_key, 'Private keys should be equal');
                 assert(key_pair.public_key.get_coordinates() == key_pair2.public_key.get_coordinates(), 'Public keys should be equal');
             }
         "
@@ -118,12 +118,12 @@ fn test_secp256_curve() {
 
             #[test]
             fn test() {
-                let private_key = 554433;
+                let secret_key = 554433;
 
-                let key_pair_k1 = KeyPairTrait::<Secp256k1Point>::from_private(private_key);
-                let key_pair_r1 = KeyPairTrait::<Secp256r1Point>::from_private(private_key);
+                let key_pair_k1 = KeyPairTrait::<Secp256k1Point>::from_private(secret_key);
+                let key_pair_r1 = KeyPairTrait::<Secp256r1Point>::from_private(secret_key);
                 
-                assert(key_pair_k1.private_key == key_pair_r1.private_key, 'Private keys should equal');
+                assert(key_pair_k1.secret_key == key_pair_r1.secret_key, 'Private keys should equal');
                 assert(key_pair_k1.public_key.get_coordinates() != key_pair_r1.public_key.get_coordinates(), 'Public keys should be different');
 
                 let msg_hash: u256 = 0xbadc0ffee;

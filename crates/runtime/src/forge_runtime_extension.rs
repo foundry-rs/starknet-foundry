@@ -487,20 +487,20 @@ impl<'a> ExtensionLogic
                 ]))
             }
             "ecdsa_sign_message" => {
-                let private_key_low = inputs[0].clone();
-                let private_key_high = inputs[1].clone();
+                let secret_key_low = inputs[0].clone();
+                let secret_key_high = inputs[1].clone();
                 let curve = inputs[2].clone().to_u8();
                 let msg_hash_low = inputs[3].clone();
                 let msg_hash_high = inputs[4].clone();
 
-                let private_key = concat_felts(&private_key_low, &private_key_high);
+                let secret_key = concat_felts(&secret_key_low, &secret_key_high);
                 let msg_hash = concat_felts(&msg_hash_low, &msg_hash_high);
 
                 let (r_bytes, s_bytes) = {
                     match curve {
                         Some(0) => {
                             let signing_key =
-                                k256::ecdsa::SigningKey::from_slice(&private_key).unwrap();
+                                k256::ecdsa::SigningKey::from_slice(&secret_key).unwrap();
 
                             let signature: k256::ecdsa::Signature =
                                 k256::ecdsa::signature::hazmat::PrehashSigner::sign_prehash(
@@ -513,7 +513,7 @@ impl<'a> ExtensionLogic
                         }
                         Some(1) => {
                             let signing_key =
-                                p256::ecdsa::SigningKey::from_slice(&private_key).unwrap();
+                                p256::ecdsa::SigningKey::from_slice(&secret_key).unwrap();
 
                             let signature: p256::ecdsa::Signature =
                                 p256::ecdsa::signature::hazmat::PrehashSigner::sign_prehash(
@@ -536,17 +536,17 @@ impl<'a> ExtensionLogic
                 ]))
             }
             "get_public_key" => {
-                let private_key_low = inputs[0].clone();
-                let private_key_high = inputs[1].clone();
+                let secret_key_low = inputs[0].clone();
+                let secret_key_high = inputs[1].clone();
                 let curve = inputs[2].clone().to_u8();
 
-                let private_key = concat_felts(&private_key_low, &private_key_high);
+                let secret_key = concat_felts(&secret_key_low, &secret_key_high);
 
                 let verifying_key_bytes = {
                     match curve {
                         Some(0) => {
                             let signing_key =
-                                k256::ecdsa::SigningKey::from_slice(&private_key).unwrap();
+                                k256::ecdsa::SigningKey::from_slice(&secret_key).unwrap();
 
                             signing_key
                                 .verifying_key()
@@ -555,7 +555,7 @@ impl<'a> ExtensionLogic
                         }
                         Some(1) => {
                             let signing_key =
-                                p256::ecdsa::SigningKey::from_slice(&private_key).unwrap();
+                                p256::ecdsa::SigningKey::from_slice(&secret_key).unwrap();
 
                             signing_key
                                 .verifying_key()
