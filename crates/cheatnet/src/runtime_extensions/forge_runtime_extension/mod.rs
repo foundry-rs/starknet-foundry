@@ -31,7 +31,6 @@ use starknet_api::hash::StarkFelt;
 
 use crate::cheatcodes::spy_events::SpyTarget;
 use crate::execution::cheated_syscalls::SingleSegmentResponse;
-use crate::execution::contract_execution_syscall_handler::print;
 use crate::runtime_extensions::forge_runtime_extension::file_operations::string_into_felt;
 use crate::runtime_extensions::io_runtime_extension::IORuntime;
 use cairo_lang_starknet::contract::starknet_keccak;
@@ -274,10 +273,6 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     &calldata,
                     contract_address,
                 ))
-            }
-            "print" => {
-                print(inputs);
-                Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "precalculate_address" => {
                 let class_hash = inputs[0].clone().into_();
