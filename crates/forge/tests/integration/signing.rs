@@ -68,7 +68,7 @@ fn test_secp256_k1_curve() {
                 assert(is_valid, 'Signature should be valid');
             
                 let key_pair2 = KeyPairTrait::<Secp256k1Point>::from_private(key_pair.secret_key);
-                assert(key_pair.secret_key == key_pair2.secret_key, 'Private keys should be equal');
+                assert(key_pair.secret_key == key_pair2.secret_key, 'Secret keys should be equal');
                 assert(key_pair.public_key.get_coordinates() == key_pair2.public_key.get_coordinates(), 'Public keys should be equal');
             }
         "
@@ -97,7 +97,7 @@ fn test_secp256_r1_curve() {
                 assert(is_valid, 'Signature should be valid');
             
                 let key_pair2 = KeyPairTrait::<Secp256r1Point>::from_private(key_pair.secret_key);
-                assert(key_pair.secret_key == key_pair2.secret_key, 'Private keys should be equal');
+                assert(key_pair.secret_key == key_pair2.secret_key, 'Secret keys should be equal');
                 assert(key_pair.public_key.get_coordinates() == key_pair2.public_key.get_coordinates(), 'Public keys should be equal');
             }
         "
@@ -123,7 +123,7 @@ fn test_secp256_curve() {
                 let key_pair_k1 = KeyPairTrait::<Secp256k1Point>::from_private(secret_key);
                 let key_pair_r1 = KeyPairTrait::<Secp256r1Point>::from_private(secret_key);
                 
-                assert(key_pair_k1.secret_key == key_pair_r1.secret_key, 'Private keys should equal');
+                assert(key_pair_k1.secret_key == key_pair_r1.secret_key, 'Secret keys should equal');
                 assert(key_pair_k1.public_key.get_coordinates() != key_pair_r1.public_key.get_coordinates(), 'Public keys should be different');
 
                 let msg_hash: u256 = 0xbadc0ffee;
@@ -138,6 +138,65 @@ fn test_secp256_curve() {
                 
                 assert(key_pair_k1.verify(msg_hash, sig_r1) == false, 'Signature should be invalid');
                 assert(key_pair_r1.verify(msg_hash, sig_k1) == false, 'Signature should be invalid');
+            }
+        "
+    ));
+
+    let result = run_test_case(&test);
+
+    assert_passed!(result);
+}
+
+#[test]
+fn test_unsupported_curve() {
+    let test = test_case!(indoc!(
+        r"
+            use snforge_std::signature::elliptic_curve::{ KeyPair, KeyPairTrait, Signer, Verifier };
+            use starknet::secp256_trait::{ Secp256Trait, Secp256PointTrait };
+            use starknet::secp256k1::{ Secp256k1Impl, Secp256k1Point, Secp256k1PointImpl, secp256k1_new_syscall };
+            use starknet::{ SyscallResult, SyscallResultTrait };
+
+            #[derive(Copy, Drop)]
+            struct UnsupportedCurvePoint {
+                inner: Secp256k1Point
+            }
+            
+            impl UnsupportedCurveImpl of Secp256Trait<UnsupportedCurvePoint> {
+                fn get_curve_size() -> u256 {
+                    0x123.into()
+                }
+                fn get_generator_point() -> UnsupportedCurvePoint {
+                    UnsupportedCurvePoint { inner: Secp256k1Impl::get_generator_point() }
+                }
+            
+                fn secp256_ec_new_syscall(x: u256, y: u256) -> SyscallResult<Option<UnsupportedCurvePoint>> {
+                    let point = UnsupportedCurvePoint { inner: Secp256k1Impl::get_generator_point() };
+                    SyscallResult::Ok(Option::Some(point))
+                }
+                fn secp256_ec_get_point_from_x_syscall(
+                    x: u256, y_parity: bool
+                ) -> SyscallResult<Option<UnsupportedCurvePoint>> {
+                    let point = UnsupportedCurvePoint { inner: Secp256k1Impl::get_generator_point() };
+                    SyscallResult::Ok(Option::Some(point))
+                }
+            }
+            
+            impl UnsupportedCurvePointImpl of Secp256PointTrait<UnsupportedCurvePoint> {
+                fn get_coordinates(self: UnsupportedCurvePoint) -> SyscallResult<(u256, u256)> {
+                    SyscallResult::Ok((1.into(), 1.into()))
+                }
+                fn add(self: UnsupportedCurvePoint, other: UnsupportedCurvePoint) -> SyscallResult<UnsupportedCurvePoint> {
+                    SyscallResult::Ok(self)
+                }
+                fn mul(self: UnsupportedCurvePoint, scalar: u256) -> SyscallResult<UnsupportedCurvePoint> {
+                    SyscallResult::Ok(self)
+                }
+            }
+            
+            #[test]
+            #[should_panic(expected: ('Currently only Secp256k1 and', 'Secp256r1 curves are supported'))]
+            fn test() {
+                let key_pair = KeyPairTrait::<UnsupportedCurvePoint>::generate();
             }
         "
     ));
