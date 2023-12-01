@@ -1060,6 +1060,7 @@ dependencies = [
  "rand",
  "reqwest",
  "rpassword",
+ "runtime",
  "scarb-artifacts",
  "scarb-metadata",
  "sealed_test",
@@ -1107,6 +1108,7 @@ dependencies = [
  "conversions",
  "ctor",
  "flate2",
+ "flatten-serde-json",
  "fs2",
  "glob",
  "indoc",
@@ -1114,6 +1116,7 @@ dependencies = [
  "num-traits 0.2.17",
  "rayon",
  "regex",
+ "runtime",
  "scarb-artifacts",
  "scarb-metadata",
  "serde",
@@ -3520,9 +3523,7 @@ dependencies = [
  "cairo-lang-starknet",
  "cairo-lang-utils",
  "cairo-vm",
- "cheatnet",
  "conversions",
- "flatten-serde-json",
  "num-bigint",
  "num-traits 0.2.17",
  "scarb-artifacts",
@@ -3530,6 +3531,7 @@ dependencies = [
  "serde_json",
  "starknet",
  "starknet_api",
+ "thiserror",
 ]
 
 [[package]]

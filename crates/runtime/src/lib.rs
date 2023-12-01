@@ -1,8 +1,10 @@
 use std::any::Any;
 use std::collections::HashMap;
+use std::io;
 
 use anyhow::Result;
 
+use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::execution_utils::felt_to_stark_felt;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::execution::syscalls::SyscallResult;
@@ -25,27 +27,15 @@ use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cairo_vm::vm::vm_core::VirtualMachine;
 
-use cheatnet::cheatcodes::EnhancedHintError;
-use cheatnet::execution::cheatable_syscall_handler::{CheatableSyscallHandler, SyscallSelector};
-
-pub mod forge_runtime_extension;
-pub mod io_runtime_extension;
+use blockifier::state::errors::StateError;
+use cairo_vm::vm::errors::memory_errors::MemoryError;
+use starknet_api::StarknetApiError;
+use thiserror::Error;
 
 pub trait SyscallPtrAccess {
     fn get_mut_syscall_ptr(&mut self) -> &mut Relocatable;
 
     fn verify_syscall_ptr(&self, actual_ptr: Relocatable) -> SyscallResult<()>;
-}
-
-// TODO this is only temporary, after we migrate everything to extension it will be auto-derived
-impl<'a> SyscallPtrAccess for CheatableSyscallHandler<'a> {
-    fn get_mut_syscall_ptr(&mut self) -> &mut Relocatable {
-        &mut self.child.syscall_ptr
-    }
-
-    fn verify_syscall_ptr(&self, ptr: Relocatable) -> SyscallResult<()> {
-        self.child.verify_syscall_ptr(ptr)
-    }
 }
 
 pub struct StarknetRuntime<'a> {
@@ -163,7 +153,7 @@ impl<Extension: ExtensionLogic> HintProcessorLogic for ExtendedRuntime<Extension
             self.verify_syscall_ptr(system_ptr)?;
 
             // We peek into memory to check the selector
-            let selector = SyscallSelector::try_from(felt_to_stark_felt(
+            let selector = DeprecatedSyscallSelector::try_from(felt_to_stark_felt(
                 &vm.get_integer(*self.get_mut_syscall_ptr()).unwrap(),
             ))?;
 
@@ -237,7 +227,7 @@ pub trait ExtensionLogic {
 
     fn override_system_call(
         &mut self,
-        _selector: SyscallSelector,
+        _selector: DeprecatedSyscallSelector,
         _vm: &mut VirtualMachine,
         _extended_runtime: &mut Self::Runtime,
     ) -> Result<SyscallHandlingResult, HintError> {
@@ -252,5 +242,38 @@ pub trait ExtensionLogic {
         _extended_runtime: &mut Self::Runtime,
     ) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
         Ok(CheatcodeHandlingResult::Forwarded)
+    }
+}
+
+// All errors that can be thrown from the hint executor have to be added here,
+// to prevent the whole runner from panicking
+#[derive(Error, Debug)]
+pub enum EnhancedHintError {
+    #[error(transparent)]
+    Hint(#[from] HintError),
+    #[error(transparent)]
+    Io(#[from] io::Error),
+    #[error(transparent)]
+    Anyhow(#[from] anyhow::Error),
+    #[error(transparent)]
+    VirtualMachine(#[from] VirtualMachineError),
+    #[error(transparent)]
+    Memory(#[from] MemoryError),
+    #[error(transparent)]
+    State(#[from] StateError),
+    #[error(transparent)]
+    SerdeJson(#[from] serde_json::Error),
+    #[error(transparent)]
+    StarknetApi(#[from] StarknetApiError),
+    #[error("Failed to parse {path} file")]
+    FileParsing { path: String },
+}
+
+impl From<EnhancedHintError> for HintError {
+    fn from(error: EnhancedHintError) -> Self {
+        match error {
+            EnhancedHintError::Hint(error) => error,
+            error => HintError::CustomHint(error.to_string().into_boxed_str()),
+        }
     }
 }

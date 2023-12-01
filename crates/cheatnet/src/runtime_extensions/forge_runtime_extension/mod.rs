@@ -2,6 +2,11 @@ use std::collections::HashMap;
 use std::convert::Into;
 use std::path::PathBuf;
 
+use crate::cheatcodes::deploy::{deploy, deploy_at, DeployCallPayload};
+use crate::cheatcodes::CheatcodeError;
+use crate::execution::cheatable_syscall_handler::{CheatableSyscallHandler, SyscallSelector};
+use crate::rpc::{call_contract, CallContractFailure, CallContractOutput, CallContractResult};
+use crate::state::{BlockifierState, CheatTarget, CheatnetState};
 use anyhow::{Context, Result};
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::execution_utils::{
@@ -15,11 +20,6 @@ use cairo_felt::Felt252;
 use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::vm_core::VirtualMachine;
-use cheatnet::cheatcodes::deploy::{deploy, deploy_at, DeployCallPayload};
-use cheatnet::cheatcodes::{CheatcodeError, EnhancedHintError};
-use cheatnet::execution::cheatable_syscall_handler::{CheatableSyscallHandler, SyscallSelector};
-use cheatnet::rpc::{call_contract, CallContractFailure, CallContractOutput, CallContractResult};
-use cheatnet::state::{BlockifierState, CheatTarget, CheatnetState};
 use conversions::{FromConv, IntoConv};
 use num_traits::{One, ToPrimitive};
 use scarb_artifacts::StarknetContractArtifacts;
@@ -29,14 +29,17 @@ use cairo_lang_runner::short_string::as_cairo_short_string;
 use starknet_api::core::ContractAddress;
 use starknet_api::hash::StarkFelt;
 
-use crate::forge_runtime_extension::file_operations::string_into_felt;
-use crate::io_runtime_extension::IORuntime;
-use crate::{CheatcodeHandlingResult, ExtendedRuntime, ExtensionLogic, SyscallHandlingResult};
+use crate::cheatcodes::spy_events::SpyTarget;
+use crate::execution::cheated_syscalls::SingleSegmentResponse;
+use crate::execution::contract_execution_syscall_handler::print;
+use crate::runtime_extensions::forge_runtime_extension::file_operations::string_into_felt;
+use crate::runtime_extensions::io_runtime_extension::IORuntime;
 use cairo_lang_starknet::contract::starknet_keccak;
 use cairo_vm::vm::errors::hint_errors::HintError::CustomHint;
-use cheatnet::cheatcodes::spy_events::SpyTarget;
-use cheatnet::execution::cheated_syscalls::SingleSegmentResponse;
-use cheatnet::execution::contract_execution_syscall_handler::print;
+use runtime::{
+    CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic,
+    SyscallHandlingResult,
+};
 use starknet::signers::SigningKey;
 
 mod file_operations;
