@@ -488,13 +488,14 @@ impl<'a> ExtensionLogic
             }
             "ecdsa_sign_message" => {
                 let curve = as_cairo_short_string(&inputs[0]);
-                let secret_key_low = inputs[1].clone();
-                let secret_key_high = inputs[2].clone();
+                let sk_low = inputs[1].clone();
+                let sk_high = inputs[2].clone();
                 let msg_hash_low = inputs[3].clone();
                 let msg_hash_high = inputs[4].clone();
 
-                let secret_key = concat_felts(&secret_key_low, &secret_key_high);
-                let msg_hash = concat_felts(&msg_hash_low, &msg_hash_high);
+                let secret_key = concat_felt_bytes(&sk_low.to_be_bytes(), &sk_high.to_be_bytes());
+                let msg_hash =
+                    concat_felt_bytes(&msg_hash_low.to_be_bytes(), &msg_hash_high.to_be_bytes());
 
                 let (r_bytes, s_bytes) = {
                     match curve.as_deref() {
@@ -537,10 +538,10 @@ impl<'a> ExtensionLogic
             }
             "get_ecdsa_public_key" => {
                 let curve = as_cairo_short_string(&inputs[0]);
-                let secret_key_low = inputs[1].clone();
-                let secret_key_high = inputs[2].clone();
+                let sk_low = inputs[1].clone();
+                let sk_high = inputs[2].clone();
 
-                let secret_key = concat_felts(&secret_key_low, &secret_key_high);
+                let secret_key = concat_felt_bytes(&sk_low.to_be_bytes(), &sk_high.to_be_bytes());
 
                 let verifying_key_bytes = {
                     match curve.as_deref() {
@@ -774,9 +775,9 @@ fn cheatcode_panic_result(panic_data: Vec<Felt252>) -> Vec<Felt252> {
     result
 }
 
-fn concat_felts(low: &Felt252, high: &Felt252) -> [u8; 32] {
+fn concat_felt_bytes(low: &[u8; 32], high: &[u8; 32]) -> [u8; 32] {
     let mut result = [0; 32];
-    result[..16].copy_from_slice(&high.to_be_bytes()[16..32]);
-    result[16..].copy_from_slice(&low.to_be_bytes()[16..32]);
+    result[..16].copy_from_slice(&high[16..32]);
+    result[16..].copy_from_slice(&low[16..32]);
     result
 }
