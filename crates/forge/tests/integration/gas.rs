@@ -507,8 +507,6 @@ fn test_l1_message_cost() {
     assert_gas!(result, "test_l1_message", 1836 + 2448 + 5);
 }
 
-// TODO: l1 message cost is not calculated for the test state
-#[ignore]
 #[test]
 fn test_l1_message_from_test_cost() {
     let test = test_case!(indoc!(
@@ -524,8 +522,8 @@ fn test_l1_message_from_test_cost() {
 
     assert_passed!(result);
     // 2448 = 4 * cost per 32-byte word (l2_l1_message, header is of length 3 and payload size is 1)
-    // 1 - gas cost of steps
-    assert_gas!(result, "test_l1_message_from_test", 2448 + 1);
+    // 2 - gas cost of steps
+    assert_gas!(result, "test_l1_message_from_test", 2448 + 2);
 }
 
 #[test]

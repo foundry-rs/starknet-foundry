@@ -1,8 +1,10 @@
 use std::collections::HashMap;
+use std::default::Default;
 use std::marker::PhantomData;
 use std::sync::Arc;
 
 use anyhow::{anyhow, bail, ensure, Result};
+use blockifier::execution::call_info::{CallExecution, CallInfo};
 use blockifier::execution::common_hints::ExecutionMode;
 use blockifier::execution::entry_point::{
     CallEntryPoint, CallType, EntryPointExecutionContext, ExecutionResources,
@@ -281,8 +283,8 @@ pub fn run_test_case(
         builtins,
     );
 
-    let execution_resources = get_all_execution_resources(&forge_runtime);
     let block_context = &get_context(&forge_runtime).block_context.clone();
+    let execution_resources = get_all_execution_resources(forge_runtime);
 
     let gas = calculate_used_gas(block_context, &mut blockifier_state, &execution_resources);
 
@@ -365,13 +367,30 @@ fn get_latest_block_number(url: &Url) -> Result<BlockId> {
     }
 }
 
-fn get_all_execution_resources(runtime: &ForgeRuntime) -> UsedResources {
-    let test_used_resources = runtime
-        .extended_runtime
-        .extended_runtime
-        .child
-        .resources
-        .clone();
+fn get_all_execution_resources(runtime: ForgeRuntime) -> UsedResources {
+    let test_used_resources = UsedResources {
+        execution_resources: runtime
+            .extended_runtime
+            .extended_runtime
+            .child
+            .resources
+            .clone(),
+        // we construct CallInfo with the `l2_to_l1_messages` field to use
+        // `get_sorted_l2_to_l1_payloads_length` method
+        l2_to_l1_payloads_length: CallInfo {
+            execution: CallExecution {
+                l2_to_l1_messages: runtime
+                    .extended_runtime
+                    .extended_runtime
+                    .child
+                    .l2_to_l1_messages,
+                ..Default::default()
+            },
+            ..Default::default()
+        }
+        .get_sorted_l2_to_l1_payloads_length()
+        .unwrap(),
+    };
     let cheatnet_used_resources = &runtime
         .extended_runtime
         .extended_runtime
@@ -379,10 +398,7 @@ fn get_all_execution_resources(runtime: &ForgeRuntime) -> UsedResources {
         .used_resources;
 
     let mut all_resources = UsedResources::default();
-    all_resources.extend(&UsedResources {
-        execution_resources: test_used_resources,
-        l2_to_l1_payloads_length: vec![],
-    });
+    all_resources.extend(&test_used_resources);
     all_resources.extend(cheatnet_used_resources);
 
     all_resources
