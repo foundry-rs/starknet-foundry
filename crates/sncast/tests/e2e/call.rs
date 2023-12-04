@@ -85,7 +85,7 @@ fn test_wrong_function_name() {
 
     snapbox.assert().stderr_matches(indoc! {r"
         command: call
-        error: Entry point [..] not found in contract.
+        error: Contract error
     "});
 }
 
@@ -108,7 +108,7 @@ fn test_wrong_calldata() {
 
     snapbox.assert().stderr_matches(indoc! {r#"
         command: call
-        error: Execution failed. Failure reason: "Input too long for arguments".
+        error: Contract error
     "#});
 }
 

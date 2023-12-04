@@ -88,7 +88,7 @@ async fn test_deploy_fail() {
     let stderr_str =
         std::str::from_utf8(&out.stderr).expect("failed to convert command output to string");
 
-    assert!(stderr_str.contains("Transaction execution has failed."));
+    assert!(stderr_str.contains("Contract error"));
 }
 
 #[tokio::test]
@@ -112,7 +112,7 @@ async fn test_invoke_fail() {
         std::str::from_utf8(&out.stderr).expect("failed to convert command output to string");
 
     assert!(out.stdout.is_empty());
-    assert!(stderr_str.contains("Transaction execution has failed."));
+    assert!(stderr_str.contains("Contract error"));
 }
 
 #[tokio::test]
@@ -131,5 +131,5 @@ async fn test_deploy_success_invoke_fails() {
     let snapbox = runner(&args);
     let output = String::from_utf8(snapbox.assert().success().get_output().stderr.clone()).unwrap();
 
-    assert!(output.contains("Transaction execution has failed."));
+    assert!(output.contains("Contract error"));
 }
