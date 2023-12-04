@@ -67,6 +67,7 @@ impl Contract {
         let build_output = Command::new("scarb")
             .current_dir(&dir)
             .arg("build")
+            .stdout(Stdio::inherit())
             .stderr(Stdio::inherit())
             .output()
             .context("Failed to build contracts with Scarb")?;

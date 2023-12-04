@@ -36,7 +36,7 @@ mod ForkingChecker {
         }
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl IForkingCheckerImpl of super::IForkingChecker<ContractState> {
         fn get_balance_call_contract(
             ref self: ContractState, contract_address: ContractAddress

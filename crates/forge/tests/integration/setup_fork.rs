@@ -254,7 +254,7 @@ fn test_fork_get_block_info_fails() {
             #[test]
             #[fork(url: "{CHEATNET_RPC_URL}", block_id: BlockId::Number(999999999999))]
             fn test_fork_get_block_info_fails() {{
-                let block_info = starknet::get_block_info().unbox();
+                starknet::get_block_info().unbox();
             }}
         "#
     )

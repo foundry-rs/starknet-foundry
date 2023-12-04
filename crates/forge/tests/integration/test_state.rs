@@ -218,7 +218,7 @@ fn test_library_calls() {
             let lib_dispatcher = ILibraryContractSafeLibraryDispatcher { class_hash };
             let value = lib_dispatcher.get_value().unwrap();
             assert(value == 0, 'Incorrect state');
-            lib_dispatcher.set_value(10);
+            lib_dispatcher.set_value(10).unwrap();
             let value = lib_dispatcher.get_value().unwrap();
             assert(value == 10, 'Incorrect state');
         }
@@ -228,6 +228,17 @@ fn test_library_calls() {
             "LibraryContract",
             indoc!(
                 r"
+                #[starknet::interface]
+                trait ILibraryContract<TContractState> {
+                    fn get_value(
+                            self: @TContractState,
+                        ) -> felt252;
+                    fn set_value(
+                        ref self: TContractState,
+                        number: felt252
+                    );
+                }
+
                 #[starknet::contract]
                 mod LibraryContract {
                     use result::ResultTrait;
@@ -239,19 +250,21 @@ fn test_library_calls() {
                         value: felt252
                     }
 
-                    #[external(v0)]
-                    fn get_value(
-                        self: @ContractState,
-                    ) -> felt252 {
-                       self.value.read()
-                    }
+                    #[abi(embed_v0)]
+                    impl LibraryContractImpl of super::ILibraryContract<ContractState> {
+                        fn get_value(
+                            self: @ContractState,
+                        ) -> felt252 {
+                           self.value.read()
+                        }
 
-                    #[external(v0)]
-                    fn set_value(
-                        ref self: ContractState,
-                        number: felt252
-                    ) {
-                       self.value.write(number);
+                        #[abi(embed_v0)]
+                        fn set_value(
+                            ref self: ContractState,
+                            number: felt252
+                        ) {
+                           self.value.write(number);
+                        }
                     }
                 }
                 "
@@ -276,7 +289,7 @@ fn test_disabled_syscalls() {
         #[test]
         fn test_replace_class() {
             let value : ClassHash = 'xd'.try_into().unwrap();
-            replace_class_syscall(value);
+            replace_class_syscall(value).unwrap();
         }
     "
         ),
@@ -362,7 +375,7 @@ fn test_cant_call_test_contract() {
                     }
         
 
-                    #[external(v0)]
+                    #[abi(embed_v0)]
                     fn call_back(ref self: ContractState, address: ContractAddress) {
                         let dispatcher = IDontExistDispatcher{contract_address: address};
                         dispatcher.test_calling_test_fails();
@@ -597,7 +610,7 @@ fn test_spy_struct_events() {
                 #[storage]
                 struct Storage {}
 
-                #[external(v0)]
+                #[abi(embed_v0)]
                 fn emit_event(
                     ref self: ContractState,
                 ) {
@@ -649,8 +662,8 @@ fn test_inconsistent_syscall_pointers() {
             let address = 'address'.try_into().unwrap();
             start_mock_call(address, 'get_value', 55);
             let contract = IContractDispatcher { contract_address: address };
-            let value = contract.get_value(address);
-            let block_number = get_block_number();
+            contract.get_value(address);
+            get_block_number();
         }
     "
     ),);
@@ -731,7 +744,7 @@ fn test_caller_address_in_called_contract() {
                     self.caller_address.write(address);
                 }
 
-                #[external(v0)]
+                #[abi(embed_v0)]
                 impl IConstructorPrankChecker of super::IConstructorPrankChecker<ContractState> {
                     fn get_stored_caller_address(ref self: ContractState) -> ContractAddress {
                         self.caller_address.read()

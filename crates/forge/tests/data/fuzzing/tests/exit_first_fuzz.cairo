@@ -4,7 +4,7 @@ use fuzzing::fib;
 
 #[test]
 fn exit_first_fails_test(b: felt252) {
-    let result = adder(0, 1);
+    adder(0, 1);
     assert(1 == 2, '2 + b == 2 + b');
 }
 

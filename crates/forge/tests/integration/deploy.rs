@@ -66,7 +66,7 @@ fn deploy_syscall() {
             assert(dispatcher.get_balance() == 10, 'balance missmatch');
             assert(dispatcher.get_caller() == test_address(), 'caller missmatch');
 
-            let (contract_address_from_zero, span) = deploy_syscall(contract.class_hash, salt, calldata.span(), true).unwrap();
+            let (contract_address_from_zero, _) = deploy_syscall(contract.class_hash, salt, calldata.span(), true).unwrap();
             assert(contract_address != contract_address_from_zero, 'deploy from zero no effect');
         }
     "

@@ -23,7 +23,7 @@ mod RollChecker {
         block_number: u64
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl IRollChecker of super::IRollChecker<ContractState> {
         fn get_block_number(ref self: ContractState) -> u64 {
             starknet::get_block_info().unbox().block_number

@@ -111,7 +111,7 @@ mod Emitter {
     #[storage]
     struct Storage {}
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     fn emit_event(
         ref self: ContractState,
     ) {
@@ -193,14 +193,14 @@ mod LibraryContract {
         value: felt252
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     fn get_value(
         self: @ContractState,
     ) -> felt252 {
        self.value.read()
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     fn set_value(
         ref self: ContractState,
         number: felt252

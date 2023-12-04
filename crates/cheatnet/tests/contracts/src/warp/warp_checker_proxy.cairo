@@ -19,7 +19,7 @@ mod WarpCheckerProxy {
     #[storage]
     struct Storage {}
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl IWarpCheckerProxy of super::IWarpCheckerProxy<ContractState> {
         fn get_warp_checkers_block_timestamp(
             ref self: ContractState, address: ContractAddress
