@@ -64,9 +64,9 @@ async fn validated_fork_config_from_fork_params(
 ) -> Result<ValidatedForkConfig> {
     let url_str = fork_params_string.url.clone();
     let url = fork_params_string.url.parse()?;
-    let block_number = match fork_params_string.block_id_type.as_str() {
-        "Number" => BlockNumber(fork_params_string.block_id_value.parse()?),
-        "Hash" => {
+    let block_number = match fork_params_string.block_id_type.to_lowercase().as_str() {
+        "number" => BlockNumber(fork_params_string.block_id_value.parse()?),
+        "hash" => {
             let block_hash =
                 Felt252::from(fork_params_string.block_id_value.parse::<BigInt>().unwrap());
             if let Some(block_number) =
@@ -79,7 +79,7 @@ async fn validated_fork_config_from_fork_params(
                 block_number
             }
         }
-        "Tag" => {
+        "tag" => {
             assert_eq!(fork_params_string.block_id_value, "Latest");
             if let Some(block_number) = block_number_map.get_latest_block_number(&url_str) {
                 *block_number
