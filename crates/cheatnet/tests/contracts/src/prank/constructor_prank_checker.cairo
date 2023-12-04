@@ -20,7 +20,7 @@ mod ConstructorPrankChecker {
         self.caller_address.write(address);
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl IConstructorPrankChecker of super::IConstructorPrankChecker<ContractState> {
         fn get_stored_caller_address(ref self: ContractState) -> ContractAddress {
             self.caller_address.read()

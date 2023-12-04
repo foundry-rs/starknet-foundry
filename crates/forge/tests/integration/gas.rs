@@ -119,7 +119,7 @@ fn test_bitwise_cost() {
         r"
             #[test]
             fn test_bitwise() {
-                let bitwise = 1_u8 & 1_u8;
+                let _bitwise = 1_u8 & 1_u8;
                 assert(1 == 1, 'error message');
             }
         "

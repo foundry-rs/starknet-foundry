@@ -19,7 +19,7 @@ mod BlockHashChecker {
         block_hash: felt252,
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl BlockHashCheckerImpl of super::BlockHashCheckerInterface<ContractState> {
         fn write_block(ref self: ContractState) {
             let block_info = get_block_info().unbox();
