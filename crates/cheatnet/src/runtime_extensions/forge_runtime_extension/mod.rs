@@ -180,7 +180,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let version = read_option_felt(&inputs, &mut idx);
                 let account_contract_address = read_option_felt(&inputs, &mut idx);
                 let max_fee = read_option_felt(&inputs, &mut idx);
-                let signature = read_option_felts(&inputs, &mut idx);
+                let signature = read_option_vec(&inputs, &mut idx);
                 let transaction_hash = read_option_felt(&inputs, &mut idx);
                 let chain_id = read_option_felt(&inputs, &mut idx);
                 let nonce = read_option_felt(&inputs, &mut idx);
@@ -641,6 +641,6 @@ fn read_option_felt(buffer: &[Felt252], idx: &mut usize) -> Option<Felt252> {
     read_option(buffer, idx).then(|| read_felt(buffer, idx))
 }
 
-fn read_option_felts(buffer: &[Felt252], idx: &mut usize) -> Option<Vec<Felt252>> {
+fn read_option_vec(buffer: &[Felt252], idx: &mut usize) -> Option<Vec<Felt252>> {
     read_option_felt(buffer, idx).map(|count| read_felts(buffer, idx, count.to_usize().unwrap()))
 }
