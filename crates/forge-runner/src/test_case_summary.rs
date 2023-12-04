@@ -27,6 +27,8 @@ pub enum TestCaseSummary {
         fuzzing_statistic: Option<FuzzingStatistics>,
         /// Number of block used if BlockId::Tag(Latest) was specified
         latest_block_number: Option<BlockNumber>,
+        /// Gas used by the test case
+        gas_used: f64,
     },
     /// Test case failed
     Failed {
@@ -96,17 +98,18 @@ impl TestCaseSummary {
                 msg,
                 arguments,
                 latest_block_number,
+                gas_used: gas,
                 ..
             } => TestCaseSummary::Passed {
                 name,
                 msg,
                 arguments,
+                gas_used: gas,
                 fuzzing_statistic: Some(FuzzingStatistics { runs }),
                 latest_block_number,
             },
             TestCaseSummary::Failed {
                 name,
-
                 msg,
                 arguments,
                 latest_block_number,
@@ -130,6 +133,7 @@ impl TestCaseSummary {
         test_case: &TestCaseRunnable,
         arguments: Vec<Felt252>,
         fork_info: &ForkInfo,
+        gas: f64,
     ) -> Self {
         let name = test_case.name.to_string();
         let msg = extract_result_data(&run_result, &test_case.expected_result);
@@ -142,6 +146,7 @@ impl TestCaseSummary {
                     arguments,
                     fuzzing_statistic: None,
                     latest_block_number,
+                    gas_used: gas,
                 },
                 ExpectedTestResult::Panics(_) => TestCaseSummary::Failed {
                     name,
@@ -175,6 +180,7 @@ impl TestCaseSummary {
                         arguments,
                         fuzzing_statistic: None,
                         latest_block_number,
+                        gas_used: gas,
                     },
                 },
             },

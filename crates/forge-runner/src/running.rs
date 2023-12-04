@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::marker::PhantomData;
 use std::sync::Arc;
 
 use anyhow::{anyhow, bail, ensure, Result};
@@ -14,21 +15,24 @@ use cairo_felt::Felt252;
 use cairo_vm::serde::deserialize_program::HintParams;
 use cairo_vm::types::relocatable::Relocatable;
 use cheatnet::execution::cheatable_syscall_handler::CheatableSyscallHandler;
+use cheatnet::runtime_extensions::forge_runtime_extension::{ForgeExtension, ForgeRuntime};
+use cheatnet::runtime_extensions::io_runtime_extension::IORuntimeExtension;
 use itertools::chain;
 
+use crate::gas::gas_from_execution_resources;
+use crate::sierra_casm_runner::SierraCasmRunner;
 use crate::test_case_summary::TestCaseSummary;
-use crate::test_execution_syscall_handler::{TestExecutionState, TestExecutionSyscallHandler};
 use crate::{RunnerConfig, RunnerParams, TestCaseRunnable, ValidatedForkConfig, CACHE_DIR};
 use cairo_lang_casm::hints::Hint;
 use cairo_lang_casm::instructions::Instruction;
 use cairo_lang_runner::casm_run::hint_to_hint_params;
-use cairo_lang_runner::{Arg, RunnerError};
-use cairo_lang_runner::{RunResult, SierraCasmRunner};
+use cairo_lang_runner::{Arg, RunResult, RunnerError};
+use cairo_vm::vm::vm_core::VirtualMachine;
 use camino::Utf8Path;
 use cheatnet::constants as cheatnet_constants;
-use cheatnet::execution::contract_execution_syscall_handler::ContractExecutionSyscallHandler;
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::state::{BlockInfoReader, CheatnetBlockInfo, CheatnetState, ExtendedStateReader};
+use runtime::ExtendedRuntime;
 use starknet::core::types::BlockTag::Latest;
 use starknet::core::types::{BlockId, MaybePendingBlockWithTxHashes};
 use starknet::core::utils::get_selector_from_name;
@@ -181,9 +185,11 @@ pub(crate) struct ForkInfo {
 pub struct RunResultWithInfo {
     pub(crate) run_result: Result<RunResult, RunnerError>,
     pub(crate) fork_info: ForkInfo,
+    pub(crate) gas_used: f64,
 }
 
 #[allow(clippy::too_many_arguments)]
+#[allow(clippy::too_many_lines)]
 pub fn run_test_case(
     args: Vec<Felt252>,
     case: &TestCaseRunnable,
@@ -206,7 +212,7 @@ pub fn run_test_case(
     let (entry_code, builtins) = runner
         .create_entry_code(func, &runner_args, initial_gas)
         .unwrap();
-    let footer = runner.create_code_footer();
+    let footer = SierraCasmRunner::create_code_footer();
     let instructions = chain!(
         entry_code.iter(),
         runner.get_casm_program().instructions.iter(),
@@ -236,18 +242,23 @@ pub fn run_test_case(
     };
     let cheatable_syscall_handler =
         CheatableSyscallHandler::wrap(syscall_handler, &mut cheatnet_state);
-    let contract_execution_syscall_handler =
-        ContractExecutionSyscallHandler::wrap(cheatable_syscall_handler);
 
-    let mut test_execution_state = TestExecutionState {
+    let io_runtime = ExtendedRuntime {
+        extension: IORuntimeExtension {
+            lifetime: &PhantomData,
+        },
+        extended_runtime: cheatable_syscall_handler,
+    };
+
+    let forge_extension = ForgeExtension {
         environment_variables: &runner_params.environment_variables,
         contracts: &runner_params.contracts,
     };
-    let mut test_execution_syscall_handler = TestExecutionSyscallHandler::wrap(
-        contract_execution_syscall_handler,
-        &mut test_execution_state,
-        &string_to_hint,
-    );
+
+    let mut forge_runtime = ExtendedRuntime {
+        extension: forge_extension,
+        extended_runtime: io_runtime,
+    };
 
     let latest_block_number = if let Some(ValidatedForkConfig {
         url: _,
@@ -259,12 +270,21 @@ pub fn run_test_case(
         None
     };
 
-    let run_result = runner.run_function(
+    let mut vm = VirtualMachine::new(true);
+    let run_result = runner.run_function_with_vm(
         func,
-        &mut test_execution_syscall_handler,
+        &mut vm,
+        &mut forge_runtime,
         hints_dict,
         instructions,
         builtins,
+    );
+
+    let execution_resources = get_all_execution_resources(&forge_runtime);
+
+    let gas = gas_from_execution_resources(
+        &get_context(&forge_runtime).block_context,
+        &execution_resources,
     );
 
     Ok(RunResultWithInfo {
@@ -272,6 +292,7 @@ pub fn run_test_case(
         fork_info: ForkInfo {
             latest_block_number,
         },
+        gas_used: gas,
     })
 }
 
@@ -288,6 +309,7 @@ fn extract_test_case_summary(
                     case,
                     args,
                     &result_with_info.fork_info,
+                    result_with_info.gas_used,
                 )),
                 // CairoRunError comes from VirtualMachineError which may come from HintException that originates in TestExecutionSyscallHandler
                 Err(RunnerError::CairoRunError(error)) => Ok(TestCaseSummary::Failed {
@@ -342,4 +364,30 @@ fn get_latest_block_number(url: &Url) -> Result<BlockId> {
         Ok(MaybePendingBlockWithTxHashes::Block(block)) => Ok(BlockId::Number(block.block_number)),
         _ => Err(anyhow!("Could not get the latest block number".to_string())),
     }
+}
+
+fn get_all_execution_resources(runtime: &ForgeRuntime) -> ExecutionResources {
+    let test_used_resources = &runtime.extended_runtime.extended_runtime.child.resources;
+    let cheatnet_used_resources = &runtime
+        .extended_runtime
+        .extended_runtime
+        .cheatnet_state
+        .used_resources;
+
+    let mut all_resources = ExecutionResources::default();
+    all_resources.vm_resources += &test_used_resources.vm_resources;
+    all_resources.vm_resources += &cheatnet_used_resources.vm_resources;
+
+    all_resources
+        .syscall_counter
+        .extend(&test_used_resources.syscall_counter);
+    all_resources
+        .syscall_counter
+        .extend(&cheatnet_used_resources.syscall_counter);
+
+    all_resources
+}
+
+fn get_context<'a>(runtime: &'a ForgeRuntime) -> &'a EntryPointExecutionContext {
+    runtime.extended_runtime.extended_runtime.child.context
 }

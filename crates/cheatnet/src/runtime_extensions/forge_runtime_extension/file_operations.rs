@@ -1,9 +1,9 @@
 use anyhow::{anyhow, bail, Context, Result};
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
-use cheatnet::cheatcodes::EnhancedHintError;
 use flatten_serde_json::flatten;
 use num_bigint::BigUint;
+use runtime::EnhancedHintError;
 use serde_json::{Map, Value};
 
 pub(super) fn read_txt(file_path: &Felt252) -> Result<Vec<Felt252>, EnhancedHintError> {
@@ -94,7 +94,7 @@ pub(super) fn string_into_felt(string: &str) -> Result<Felt252> {
 
 #[cfg(test)]
 mod tests {
-    use crate::test_execution_syscall_handler::file_operations::string_into_felt;
+    use crate::runtime_extensions::forge_runtime_extension::file_operations::string_into_felt;
     use cairo_felt::Felt252;
     use num_bigint::BigUint;
     use num_traits::One;

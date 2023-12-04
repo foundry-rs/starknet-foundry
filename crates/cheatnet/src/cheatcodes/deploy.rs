@@ -3,7 +3,6 @@ use crate::constants::{build_block_context, build_transaction_context};
 use crate::state::BlockifierState;
 use crate::CheatnetState;
 use anyhow::Result;
-use blockifier::abi::constants as blockifier_constants;
 use blockifier::execution::common_hints::ExecutionMode;
 use blockifier::execution::entry_point::{
     ConstructorContext, EntryPointExecutionContext, ExecutionResources,
@@ -14,7 +13,6 @@ use std::sync::Arc;
 use blockifier::state::state_api::State;
 use cairo_felt::Felt252;
 use cairo_vm::vm::errors::hint_errors::HintError::CustomHint;
-use num_traits::ToPrimitive;
 use starknet_api::core::PatriciaKey;
 use starknet_api::hash::StarkHash;
 use starknet_api::patricia_key;
@@ -25,11 +23,11 @@ use starknet_api::core::{ClassHash, ContractAddress};
 use starknet_api::transaction::Calldata;
 
 use super::CheatcodeError;
-use crate::rpc::{CallContractFailure, ResourceReport};
+use crate::rpc::CallContractFailure;
 
 #[derive(Debug)]
 pub struct DeployCallPayload {
-    pub resource_report: ResourceReport,
+    pub used_resources: ExecutionResources,
     pub contract_address: ContractAddress,
 }
 
@@ -77,18 +75,8 @@ pub fn deploy_at(
         u64::MAX,
         cheatnet_state,
     )
-    .map(|call_info| DeployCallPayload {
-        resource_report: ResourceReport::new(
-            call_info
-                .execution
-                .gas_consumed
-                .to_f64()
-                .expect("Conversion to f64 failed")
-                + blockifier_constants::DEPLOY_GAS_COST
-                    .to_f64()
-                    .expect("Conversion to f64 failed"),
-            resources,
-        ),
+    .map(|_call_info| DeployCallPayload {
+        used_resources: resources.clone(),
         contract_address,
     })
     .map_err(|err| {

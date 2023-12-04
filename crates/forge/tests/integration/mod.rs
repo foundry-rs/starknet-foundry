@@ -6,6 +6,7 @@ mod dispatchers;
 mod elect;
 mod env;
 mod fuzzing;
+mod gas;
 mod get_class_hash;
 mod l1_handler_executor;
 mod mock_call;

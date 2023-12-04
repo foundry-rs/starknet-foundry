@@ -7,6 +7,7 @@ members = [
     "crates/cast",
     "crates/cheatnet",
     "crates/conversions",
+    "crates/runtime",
     "crates/scarb-artifacts",
 ]
 
@@ -37,6 +38,7 @@ cairo-lang-project = "=2.3.1"
 cairo-lang-semantic = "=2.3.1"
 cairo-lang-sierra-ap-change = "=2.3.1"
 cairo-lang-sierra-gas = "=2.3.1"
+cairo-lang-sierra-type-size = "2.3.1"
 cairo-lang-sierra-generator = "=2.3.1"
 cairo-lang-syntax = "=2.3.1"
 cairo-lang-test-plugin = "=2.3.1"
@@ -60,7 +62,7 @@ starknet = { git = "https://github.com/xJonathanLEI/starknet-rs", rev="cfa3c43" 
 tempfile = "3.8.0"
 thiserror = "1.0.50"
 ctor = "0.2.4"
-url = "2.4.0"
+url = "2.5.0"
 tokio = { version = "1.28.2", features = ["full"] }
 tokio-util = "0.7.9"
 futures = "0.3.28"
