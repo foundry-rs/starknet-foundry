@@ -8,10 +8,10 @@ use cairo_vm::vm::errors::cairo_run_errors::CairoRunError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::runners::cairo_runner::CairoRunner;
 use cairo_vm::vm::vm_core::VirtualMachine;
+use cheatnet::runtime_extensions::forge_runtime_extension::ForgeRuntime;
 use std::collections::HashMap;
 
 use cairo_lang_casm::instructions::Instruction;
-use runtime::forge_runtime_extension::ForgeRuntime;
 
 // casm_run::run_function
 pub fn run_function<'a, 'b: 'a, Instructions>(
@@ -67,7 +67,7 @@ where
     finalize(
         vm,
         &runner,
-        &mut runtime.0.extended_runtime.child.child,
+        &mut runtime.extended_runtime.extended_runtime.child,
         0,
         2,
     );

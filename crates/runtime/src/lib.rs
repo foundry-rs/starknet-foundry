@@ -1,8 +1,10 @@
 use std::any::Any;
 use std::collections::HashMap;
+use std::io;
 
 use anyhow::Result;
 
+use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::execution_utils::felt_to_stark_felt;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::execution::syscalls::SyscallResult;
@@ -25,27 +27,15 @@ use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cairo_vm::vm::vm_core::VirtualMachine;
 
-use cheatnet::cheatcodes::EnhancedHintError;
-use cheatnet::execution::cheatable_syscall_handler::SyscallSelector;
-use cheatnet::execution::contract_execution_syscall_handler::ContractExecutionSyscallHandler;
-
-pub mod forge_runtime_extension;
+use blockifier::state::errors::StateError;
+use cairo_vm::vm::errors::memory_errors::MemoryError;
+use starknet_api::StarknetApiError;
+use thiserror::Error;
 
 pub trait SyscallPtrAccess {
     fn get_mut_syscall_ptr(&mut self) -> &mut Relocatable;
 
     fn verify_syscall_ptr(&self, actual_ptr: Relocatable) -> SyscallResult<()>;
-}
-
-// TODO this is only temporary, after we migrate everything to extension it will be auto-derived
-impl<'a> SyscallPtrAccess for ContractExecutionSyscallHandler<'a> {
-    fn get_mut_syscall_ptr(&mut self) -> &mut Relocatable {
-        &mut self.child.child.syscall_ptr
-    }
-
-    fn verify_syscall_ptr(&self, ptr: Relocatable) -> SyscallResult<()> {
-        self.child.child.verify_syscall_ptr(ptr)
-    }
 }
 
 pub struct StarknetRuntime<'a> {
@@ -104,17 +94,12 @@ impl<'a> HintProcessorLogic for StarknetRuntime<'a> {
     }
 }
 
-pub struct RuntimeExtension<ExtensionState, Runtime: HintProcessor> {
-    pub extension_state: ExtensionState,
-    pub extended_runtime: Runtime,
+pub struct ExtendedRuntime<Extension: ExtensionLogic> {
+    pub extension: Extension,
+    pub extended_runtime: <Extension as ExtensionLogic>::Runtime,
 }
 
-// Required to implement the foreign trait
-pub struct ExtendedRuntime<Extension>(pub Extension);
-
-impl<Extension: ExtensionLogic + SyscallPtrAccess> HintProcessorLogic
-    for ExtendedRuntime<Extension>
-{
+impl<Extension: ExtensionLogic> HintProcessorLogic for ExtendedRuntime<Extension> {
     fn execute_hint(
         &mut self,
         vm: &mut VirtualMachine,
@@ -123,60 +108,72 @@ impl<Extension: ExtensionLogic + SyscallPtrAccess> HintProcessorLogic
         constants: &HashMap<String, Felt252>,
     ) -> Result<(), HintError> {
         let maybe_extended_hint = hint_data.downcast_ref::<Hint>();
-        if let Some(Hint::Starknet(StarknetHint::Cheatcode {
-            selector,
-            input_start,
-            input_end,
-            output_start,
-            output_end,
-        })) = maybe_extended_hint
-        {
-            // Parse the selector.
-            let selector = &selector.value.to_bytes_be().1;
-            let selector = std::str::from_utf8(selector).map_err(|_| {
-                CustomHint(Box::from(
-                    "Failed to parse the cheatcode selector".to_string(),
-                ))
-            })?;
-
-            // Extract the inputs.
-            let input_start = extract_relocatable(vm, input_start)?;
-            let input_end = extract_relocatable(vm, input_end)?;
-            let inputs = vm_get_range(vm, input_start, input_end)
-                .map_err(|_| CustomHint(Box::from("Failed to read input data".to_string())))?;
-
-            if let CheatcodeHandlingResult::Handled(res) =
-                self.0.handle_cheatcode(selector, inputs)?
+        if let Some(Hint::Starknet(starknet_hint)) = maybe_extended_hint {
+            if let StarknetHint::Cheatcode {
+                selector,
+                input_start,
+                input_end,
+                output_start,
+                output_end,
+            } = starknet_hint
             {
-                let mut buffer = MemBuffer::new_segment(vm);
-                let result_start = buffer.ptr;
-                buffer
-                    .write_data(res.iter())
-                    .expect("Failed to insert cheatcode result to memory");
-                let result_end = buffer.ptr;
-                insert_value_to_cellref!(vm, output_start, result_start)?;
-                insert_value_to_cellref!(vm, output_end, result_end)?;
-                return Ok(());
+                // Parse the selector.
+                let selector = &selector.value.to_bytes_be().1;
+                let selector = std::str::from_utf8(selector).map_err(|_| {
+                    CustomHint(Box::from(
+                        "Failed to parse the cheatcode selector".to_string(),
+                    ))
+                })?;
+
+                // Extract the inputs.
+                let input_start = extract_relocatable(vm, input_start)?;
+                let input_end = extract_relocatable(vm, input_end)?;
+                let inputs = vm_get_range(vm, input_start, input_end)
+                    .map_err(|_| CustomHint(Box::from("Failed to read input data".to_string())))?;
+
+                if let CheatcodeHandlingResult::Handled(res) =
+                    self.extension
+                        .handle_cheatcode(selector, inputs, &mut self.extended_runtime)?
+                {
+                    let mut buffer = MemBuffer::new_segment(vm);
+                    let result_start = buffer.ptr;
+                    buffer
+                        .write_data(res.iter())
+                        .expect("Failed to insert cheatcode result to memory");
+                    let result_end = buffer.ptr;
+                    insert_value_to_cellref!(vm, output_start, result_start)?;
+                    insert_value_to_cellref!(vm, output_end, result_end)?;
+                    return Ok(());
+                }
+            }
+
+            if let StarknetHint::SystemCall { system } = starknet_hint {
+                let (cell, offset) = extract_buffer(system);
+                let system_ptr = get_ptr(vm, cell, &offset)?;
+
+                self.verify_syscall_ptr(system_ptr)?;
+
+                // We peek into memory to check the selector
+                let selector = DeprecatedSyscallSelector::try_from(felt_to_stark_felt(
+                    &vm.get_integer(*self.get_mut_syscall_ptr()).unwrap(),
+                ))?;
+
+                if let SyscallHandlingResult::Handled(()) =
+                    self.extension
+                        .override_system_call(selector, vm, &mut self.extended_runtime)?
+                {
+                    return Ok(());
+                }
+                let res = self
+                    .extended_runtime
+                    .execute_hint(vm, exec_scopes, hint_data, constants);
+                self.extension
+                    .post_syscall_hook(&selector, &mut self.extended_runtime);
+                return res;
             }
         }
 
-        if let Some(Hint::Starknet(StarknetHint::SystemCall { system })) = maybe_extended_hint {
-            let (cell, offset) = extract_buffer(system);
-            let system_ptr = get_ptr(vm, cell, &offset)?;
-
-            self.0.verify_syscall_ptr(system_ptr)?;
-
-            // We peek into memory to check the selector
-            let selector = SyscallSelector::try_from(felt_to_stark_felt(
-                &vm.get_integer(*self.0.get_mut_syscall_ptr()).unwrap(),
-            ))?;
-
-            if let SyscallHandlingResult::Handled(()) = self.0.override_system_call(selector, vm)? {
-                return Ok(());
-            }
-        }
-        self.0
-            .get_extended_runtime_mut()
+        self.extended_runtime
             .execute_hint(vm, exec_scopes, hint_data, constants)
     }
 
@@ -187,18 +184,12 @@ impl<Extension: ExtensionLogic + SyscallPtrAccess> HintProcessorLogic
         reference_ids: &HashMap<String, usize>,
         references: &[HintReference],
     ) -> Result<Box<dyn Any>, VirtualMachineError> {
-        self.0.get_extended_runtime().compile_hint(
-            hint_code,
-            ap_tracking_data,
-            reference_ids,
-            references,
-        )
+        self.extended_runtime
+            .compile_hint(hint_code, ap_tracking_data, reference_ids, references)
     }
 }
 
-impl<Handler, Runtime: SyscallPtrAccess + HintProcessor> SyscallPtrAccess
-    for RuntimeExtension<Handler, Runtime>
-{
+impl<Extension: ExtensionLogic> SyscallPtrAccess for ExtendedRuntime<Extension> {
     fn get_mut_syscall_ptr(&mut self) -> &mut Relocatable {
         self.extended_runtime.get_mut_syscall_ptr()
     }
@@ -208,23 +199,21 @@ impl<Handler, Runtime: SyscallPtrAccess + HintProcessor> SyscallPtrAccess
     }
 }
 
-impl<Handler, Runtime: HintProcessor> ResourceTracker
-    for ExtendedRuntime<RuntimeExtension<Handler, Runtime>>
-{
+impl<Extension: ExtensionLogic> ResourceTracker for ExtendedRuntime<Extension> {
     fn consumed(&self) -> bool {
-        self.0.extended_runtime.consumed()
+        self.extended_runtime.consumed()
     }
 
     fn consume_step(&mut self) {
-        self.0.extended_runtime.consume_step();
+        self.extended_runtime.consume_step();
     }
 
     fn get_n_steps(&self) -> Option<usize> {
-        self.0.extended_runtime.get_n_steps()
+        self.extended_runtime.get_n_steps()
     }
 
     fn run_resources(&self) -> &RunResources {
-        self.0.extended_runtime.run_resources()
+        self.extended_runtime.run_resources()
     }
 }
 
@@ -243,22 +232,65 @@ pub enum CheatcodeHandlingResult {
 }
 
 pub trait ExtensionLogic {
-    type Runtime: HintProcessorLogic;
-
-    fn get_extended_runtime_mut(&mut self) -> &mut Self::Runtime;
-
-    fn get_extended_runtime(&self) -> &Self::Runtime;
+    type Runtime: HintProcessor + SyscallPtrAccess;
 
     fn override_system_call(
         &mut self,
-        selector: SyscallSelector,
-        vm: &mut VirtualMachine,
-    ) -> Result<SyscallHandlingResult, HintError>;
+        _selector: DeprecatedSyscallSelector,
+        _vm: &mut VirtualMachine,
+        _extended_runtime: &mut Self::Runtime,
+    ) -> Result<SyscallHandlingResult, HintError> {
+        Ok(SyscallHandlingResult::Forwarded)
+    }
+
+    #[allow(clippy::trivially_copy_pass_by_ref)]
+    fn post_syscall_hook(
+        &mut self,
+        _selector: &DeprecatedSyscallSelector,
+        _extended_runtime: &mut Self::Runtime,
+    ) {
+    }
 
     #[allow(clippy::trivially_copy_pass_by_ref)]
     fn handle_cheatcode(
         &mut self,
-        selector: &str,
-        inputs: Vec<Felt252>,
-    ) -> Result<CheatcodeHandlingResult, EnhancedHintError>;
+        _selector: &str,
+        _inputs: Vec<Felt252>,
+        _extended_runtime: &mut Self::Runtime,
+    ) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
+        Ok(CheatcodeHandlingResult::Forwarded)
+    }
+}
+
+// All errors that can be thrown from the hint executor have to be added here,
+// to prevent the whole runner from panicking
+#[derive(Error, Debug)]
+pub enum EnhancedHintError {
+    #[error(transparent)]
+    Hint(#[from] HintError),
+    #[error(transparent)]
+    Io(#[from] io::Error),
+    #[error(transparent)]
+    Anyhow(#[from] anyhow::Error),
+    #[error(transparent)]
+    VirtualMachine(#[from] VirtualMachineError),
+    #[error(transparent)]
+    Memory(#[from] MemoryError),
+    #[error(transparent)]
+    State(#[from] StateError),
+    #[error(transparent)]
+    SerdeJson(#[from] serde_json::Error),
+    #[error(transparent)]
+    StarknetApi(#[from] StarknetApiError),
+    #[error("Failed to parse {path} file")]
+    FileParsing { path: String },
+}
+
+impl From<EnhancedHintError> for HintError {
+    fn from(error: EnhancedHintError) -> Self {
+        match error {
+            EnhancedHintError::Hint(error) => error,
+            error => HintError::CustomHint(error.to_string().into_boxed_str()),
+        }
+    }
 }
