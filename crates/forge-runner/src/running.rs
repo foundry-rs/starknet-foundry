@@ -201,12 +201,7 @@ pub fn run_test_case(
         case.available_gas.is_none(),
         "\n    Attribute `available_gas` is not supported\n"
     );
-
-    let available_gas = if let Some(available_gas) = &case.available_gas {
-        Some(*available_gas)
-    } else {
-        Some(usize::MAX)
-    };
+    let available_gas = Some(usize::MAX);
 
     let func = runner.find_function(case.name.as_str()).unwrap();
     let initial_gas = runner
