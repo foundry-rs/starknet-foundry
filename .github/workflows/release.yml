@@ -29,7 +29,7 @@ jobs:
 
       - name: Get version from Cargo.toml
         id: lookupVersion
-        uses: mikefarah/yq@a198f72367ce9da70b564a2cc25399de8e27bf37
+        uses: mikefarah/yq@c11a53322bce866fbfa3032e326f58c89e8c0759
         with:
           cmd: yq -oy '"v" + .workspace.package.version' 'Cargo.toml'
 
@@ -137,10 +137,85 @@ jobs:
           name: build-${{ matrix.target }}
           path: ${{ env.PKG_FULL_NAME }}.*
 
+  test-binary:
+    name: Test binary
+    runs-on: ${{ matrix.os }}
+    needs: [ build-binaries, verify-version ]
+
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+
+          - target: x86_64-apple-darwin
+            os: macos-latest
+
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: software-mansion/setup-scarb@v1.3.2
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts-dl
+
+      - name: Move artifacts to staging director
+        shell: bash
+        run: |
+          mkdir -p artifacts
+          mv artifacts-dl/build-*/starknet-foundry-* artifacts/
+
+      - name: Get binary path
+        shell: bash
+        run: |
+          if [[ ${{ matrix.target }} == *windows* ]]; then
+            BINARY_PATH="artifacts/starknet-foundry-${{ needs.verify-version.outputs.version }}-${{ matrix.target }}.zip"
+          else
+            BINARY_PATH="artifacts/starknet-foundry-${{ needs.verify-version.outputs.version }}-${{ matrix.target }}.tar.gz"
+          fi
+          echo "BINARY_PATH=$BINARY_PATH" >> $GITHUB_ENV
+
+      - name: Unpack artifact
+        shell: bash
+        run: |
+          if [[ ${{ matrix.target }} == *windows* ]]; then
+            unzip ${{ env.BINARY_PATH }}
+          else
+            tar xzvf ${{ env.BINARY_PATH }}
+          fi
+
+      - name: Smoke test
+        shell: bash
+        env:
+          RPC_URL: ${{ secrets.CHEATNET_RPC_URL }}
+        run: |
+          BINARY_PATH="${{ env.BINARY_PATH }}"
+          BINARY_PATH="${BINARY_PATH%.tar.gz}"
+          BINARY_PATH="${BINARY_PATH%.zip}"
+          BINARY_PATH="${BINARY_PATH#artifacts/}"
+          
+          if [[ ${{ matrix.target }} == *windows* ]]; then
+            SNFORGE_PATH=$(readlink -f $BINARY_PATH/bin/snforge.exe)
+            SNCAST_PATH=$(readlink -f $BINARY_PATH/bin/sncast.exe)
+          else
+            SNFORGE_PATH=$(readlink -f $BINARY_PATH/bin/snforge)
+            SNCAST_PATH=$(readlink -f $BINARY_PATH/bin/sncast)
+          fi
+          
+          REPO_URL=${{ github.repositoryUrl }}
+          REVISION=${{ github.sha }}
+          
+          ./scripts/smoke_test.sh "$RPC_URL" "$SNFORGE_PATH" "$SNCAST_PATH" "$REPO_URL" "$REVISION"
+
   create-release:
     name: Create release
     runs-on: ubuntu-latest
-    needs: [ build-binaries, verify-version ]
+    needs: [ test-binary, verify-version ]
     steps:
       - uses: actions/checkout@v4
 
