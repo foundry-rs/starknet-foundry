@@ -122,21 +122,30 @@ fn main() -> Result<()> {
     let mut config = parse_scarb_config(&cli.profile, &cli.path_to_scarb_toml)?;
     update_cast_config(&mut config, &cli);
 
-    let provider = get_provider(&config.rpc_url)?;
     let runtime = Runtime::new().expect("Could not instantiate Runtime");
 
     if let Commands::Script(script) = cli.command {
-        let mut result = starknet_commands::script::run::run(
-            &script.script_module_name,
-            &cli.path_to_scarb_toml,
-            &provider,
-            runtime,
-            &config,
-        );
+        if let Some(command) = script.command {
+            match command {
+                starknet_commands::script::Commands::Init(init) => {
+                    starknet_commands::script::init::init(init)?;
+                }
+            }
+        } else {
+            let provider = get_provider(&config.rpc_url)?;
+            let mut result = starknet_commands::script::run::run(
+                &script.script_module_name.unwrap(),
+                &cli.path_to_scarb_toml,
+                &provider,
+                runtime,
+                &config,
+            );
 
-        print_command_result("script", &mut result, value_format, cli.json)?;
+            print_command_result("script", &mut result, value_format, cli.json)?;
+        }
         Ok(())
     } else {
+        let provider = get_provider(&config.rpc_url)?;
         runtime.block_on(run_async_command(cli, config, provider, value_format))
     }
 }
