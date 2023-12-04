@@ -65,3 +65,19 @@ Or using our defined alias
 ```shell
 $ cargo lint
 ```
+
+## Spelling
+
+Starknet Foundry uses [typos](https://github.com/marketplace/actions/typos-action) for spelling checks.
+
+You can run the checker with
+
+```shell
+$ typos
+```
+
+Some typos can be automatically fixed by running
+
+```shell
+$ typos -w
+```
