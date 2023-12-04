@@ -283,10 +283,10 @@ pub fn run_test_case(
         builtins,
     );
 
-    let block_context = &get_context(&forge_runtime).block_context.clone();
+    let block_context = get_context(&forge_runtime).block_context.clone();
     let execution_resources = get_all_execution_resources(forge_runtime);
 
-    let gas = calculate_used_gas(block_context, &mut blockifier_state, &execution_resources);
+    let gas = calculate_used_gas(&block_context, &mut blockifier_state, &execution_resources);
 
     Ok(RunResultWithInfo {
         run_result,
@@ -368,7 +368,7 @@ fn get_latest_block_number(url: &Url) -> Result<BlockId> {
 }
 
 fn get_all_execution_resources(runtime: ForgeRuntime) -> UsedResources {
-    let test_used_resources = UsedResources {
+    let mut all_resources = UsedResources {
         execution_resources: runtime
             .extended_runtime
             .extended_runtime
@@ -391,14 +391,12 @@ fn get_all_execution_resources(runtime: ForgeRuntime) -> UsedResources {
         .get_sorted_l2_to_l1_payloads_length()
         .unwrap(),
     };
+
     let cheatnet_used_resources = &runtime
         .extended_runtime
         .extended_runtime
         .cheatnet_state
         .used_resources;
-
-    let mut all_resources = UsedResources::default();
-    all_resources.extend(&test_used_resources);
     all_resources.extend(cheatnet_used_resources);
 
     all_resources

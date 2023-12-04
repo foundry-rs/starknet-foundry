@@ -141,7 +141,7 @@ impl CallContractResult {
     fn from_execution_result(
         result: &EntryPointExecutionResult<CallInfo>,
         contract_address: &ContractAddress,
-    ) -> (Self, Vec<usize>) {
+    ) -> Self {
         match result {
             Ok(call_info) => {
                 let raw_return_data = &call_info.execution.retdata.0;
@@ -151,20 +151,14 @@ impl CallContractResult {
                     .map(|data| Felt252::from_bytes_be(data.bytes()))
                     .collect();
 
-                (
-                    CallContractResult::Success {
-                        ret_data: return_data,
-                    },
-                    call_info.get_sorted_l2_to_l1_payloads_length().unwrap(),
-                )
+                CallContractResult::Success {
+                    ret_data: return_data,
+                }
             }
-            Err(err) => (
-                CallContractResult::Failure(CallContractFailure::from_execution_error(
-                    err,
-                    contract_address,
-                )),
-                vec![],
-            ),
+            Err(err) => CallContractResult::Failure(CallContractFailure::from_execution_error(
+                err,
+                contract_address,
+            )),
         }
     }
 }
@@ -251,14 +245,15 @@ pub fn call_entry_point(
         &mut context,
     );
 
-    let (result, l2_to_l1_payloads_length) =
-        CallContractResult::from_execution_result(&exec_result, contract_address);
+    let result = CallContractResult::from_execution_result(&exec_result, contract_address);
 
     Ok(CallContractOutput {
         result,
         used_resources: UsedResources {
             execution_resources: resources,
-            l2_to_l1_payloads_length,
+            l2_to_l1_payloads_length: exec_result.map_or(vec![], |call_info| {
+                call_info.get_sorted_l2_to_l1_payloads_length().unwrap()
+            }),
         },
     })
 }
