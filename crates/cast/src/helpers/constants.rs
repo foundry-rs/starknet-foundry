@@ -16,9 +16,11 @@ pub const UDC_ADDRESS: &str = "0x041a78e741e5af2fec34b695679bc6891742439f7afb848
 pub const OZ_CLASS_HASH: &str =
     "0x058d97f7d76e78f44905cc30cb65b91ea49a4b908a76703c54197bca90f81773";
 
-// used in wait_for_tx. Txs are fetched every 5 seconds
+// used in wait_for_tx. Txs will be fetched every 5s with timeout of 60s - so 12 attempts
 #[allow(dead_code)]
-pub const DEFAULT_RETRIES: u8 = 12;
+pub const WAIT_TIMEOUT: u16 = 60;
+#[allow(dead_code)]
+pub const WAIT_RETRY_INTERVAL: u8 = 5;
 
 #[allow(dead_code)]
 pub const DEFAULT_ACCOUNTS_FILE: &str = "~/.starknet_accounts/starknet_open_zeppelin_accounts.json";

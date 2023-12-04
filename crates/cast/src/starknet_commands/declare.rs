@@ -2,7 +2,7 @@ use anyhow::{anyhow, Context, Result};
 use camino::Utf8PathBuf;
 use cast::helpers::scarb_utils::get_package_metadata;
 use cast::helpers::{response_structs::DeclareResponse, scarb_utils::get_scarb_manifest};
-use cast::{handle_rpc_error, handle_wait_for_tx};
+use cast::{handle_rpc_error, handle_wait_for_tx, WaitForTx};
 use clap::Args;
 use scarb_artifacts::get_contracts_map;
 use starknet::accounts::AccountError::Provider;
@@ -35,7 +35,7 @@ pub async fn declare(
     max_fee: Option<FieldElement>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     path_to_scarb_toml: &Option<Utf8PathBuf>,
-    wait: bool,
+    wait_config: WaitForTx,
 ) -> Result<DeclareResponse> {
     let contract_name: String = contract_name.to_string();
     let manifest_path = match path_to_scarb_toml.clone() {
@@ -102,7 +102,7 @@ pub async fn declare(
                     class_hash: result.class_hash,
                     transaction_hash: result.transaction_hash,
                 },
-                wait,
+                wait_config,
             )
             .await
         }

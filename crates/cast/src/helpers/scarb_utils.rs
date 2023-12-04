@@ -1,3 +1,4 @@
+use super::constants::{WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
 use anyhow::{anyhow, bail, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use scarb_metadata;
@@ -9,12 +10,14 @@ use std::fs::canonicalize;
 use std::process::{Command, Stdio};
 use std::str::FromStr;
 
-#[derive(Deserialize, Serialize, Clone, Debug, Default)]
+#[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct CastConfig {
     pub rpc_url: String,
     pub account: String,
     pub accounts_file: Utf8PathBuf,
     pub keystore: Utf8PathBuf,
+    pub wait_timeout: u16,
+    pub wait_retry_interval: u8,
 }
 
 impl CastConfig {
@@ -29,7 +32,59 @@ impl CastConfig {
             account: get_property(tool, "account"),
             accounts_file: get_property(tool, "accounts-file"),
             keystore: get_property(tool, "keystore"),
+            wait_timeout: get_property(tool, "wait_timeout"),
+            wait_retry_interval: get_property(tool, "wait_retry_interval"),
         })
+    }
+}
+
+impl Default for CastConfig {
+    fn default() -> Self {
+        Self {
+            rpc_url: String::default(),
+            account: String::default(),
+            accounts_file: Utf8PathBuf::default(),
+            keystore: Utf8PathBuf::default(),
+            wait_timeout: WAIT_TIMEOUT,
+            wait_retry_interval: WAIT_RETRY_INTERVAL,
+        }
+    }
+}
+
+pub trait PropertyFromCastConfig: Sized {
+    fn from_toml_value(value: &Value) -> Option<Self>;
+}
+
+impl PropertyFromCastConfig for String {
+    fn from_toml_value(value: &Value) -> Option<Self> {
+        value.as_str().map(std::borrow::ToOwned::to_owned)
+    }
+}
+
+impl PropertyFromCastConfig for Utf8PathBuf {
+    fn from_toml_value(value: &Value) -> Option<Self> {
+        value.as_str().map(Utf8PathBuf::from)
+    }
+}
+
+impl PropertyFromCastConfig for u8 {
+    fn from_toml_value(value: &Value) -> Option<Self> {
+        value.as_u64().and_then(|i| i.try_into().ok())
+    }
+}
+
+impl PropertyFromCastConfig for u16 {
+    fn from_toml_value(value: &Value) -> Option<Self> {
+        value.as_u64().and_then(|i| i.try_into().ok())
+    }
+}
+
+impl<T> PropertyFromCastConfig for Option<T>
+where
+    T: PropertyFromCastConfig,
+{
+    fn from_toml_value(value: &Value) -> Option<Self> {
+        T::from_toml_value(value).map(Some)
     }
 }
 
@@ -42,13 +97,12 @@ pub fn get_profile<'a>(tool_sncast: &'a Value, profile: &Option<String>) -> Resu
     }
 }
 
-pub fn get_property<'a, T>(tool: &'a Value, field: &str) -> T
+pub fn get_property<T>(tool: &Value, field: &str) -> T
 where
-    T: From<&'a str> + Default,
+    T: PropertyFromCastConfig + Default,
 {
     tool.get(field)
-        .and_then(Value::as_str)
-        .map(T::from)
+        .and_then(T::from_toml_value)
         .unwrap_or_default()
 }
 

@@ -2,8 +2,8 @@ use std::any::Any;
 use std::collections::HashMap;
 use std::fs;
 
-use crate::get_account;
 use crate::starknet_commands::{call, declare, deploy, invoke};
+use crate::{get_account, WaitForTx};
 use anyhow::{anyhow, ensure, Context, Result};
 use cairo_felt::Felt252;
 use cairo_lang_casm::hints::{Hint, StarknetHint};
@@ -225,7 +225,11 @@ impl CairoHintProcessor<'_> {
                     max_fee,
                     &account,
                     &None,
-                    true,
+                    WaitForTx {
+                        wait: true,
+                        timeout: self.config.wait_timeout,
+                        retry_interval: self.config.wait_retry_interval,
+                    },
                 ))?;
 
                 buffer
@@ -281,7 +285,11 @@ impl CairoHintProcessor<'_> {
                     unique,
                     max_fee,
                     &account,
-                    true,
+                    WaitForTx {
+                        wait: true,
+                        timeout: self.config.wait_timeout,
+                        retry_interval: self.config.wait_retry_interval,
+                    },
                 ))?;
 
                 buffer
@@ -328,7 +336,11 @@ impl CairoHintProcessor<'_> {
                     calldata,
                     max_fee,
                     &account,
-                    true,
+                    WaitForTx {
+                        wait: true,
+                        timeout: self.config.wait_timeout,
+                        retry_interval: self.config.wait_retry_interval,
+                    },
                 ))?;
 
                 buffer

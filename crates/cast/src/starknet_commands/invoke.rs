@@ -2,7 +2,7 @@ use anyhow::{anyhow, Result};
 use clap::Args;
 
 use cast::helpers::response_structs::InvokeResponse;
-use cast::{handle_rpc_error, handle_wait_for_tx};
+use cast::{handle_rpc_error, handle_wait_for_tx, WaitForTx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{Account, Call, ConnectedAccount, SingleOwnerAccount};
 use starknet::core::types::FieldElement;
@@ -37,7 +37,7 @@ pub async fn invoke(
     calldata: Vec<FieldElement>,
     max_fee: Option<FieldElement>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
-    wait: bool,
+    wait_config: WaitForTx,
 ) -> Result<InvokeResponse> {
     let call = Call {
         to: contract_address,
@@ -45,14 +45,14 @@ pub async fn invoke(
         calldata,
     };
 
-    execute_calls(account, vec![call], max_fee, wait).await
+    execute_calls(account, vec![call], max_fee, wait_config).await
 }
 
 pub async fn execute_calls(
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     calls: Vec<Call>,
     max_fee: Option<FieldElement>,
-    wait: bool,
+    wait_config: WaitForTx,
 ) -> Result<InvokeResponse> {
     let execution = account.execute(calls);
 
@@ -70,7 +70,7 @@ pub async fn execute_calls(
                 InvokeResponse {
                     transaction_hash: result.transaction_hash,
                 },
-                wait,
+                wait_config,
             )
             .await
         }

@@ -3,7 +3,7 @@ use anyhow::{anyhow, Context, Result};
 use camino::Utf8PathBuf;
 use cast::helpers::constants::UDC_ADDRESS;
 use cast::helpers::response_structs::InvokeResponse;
-use cast::{extract_or_generate_salt, parse_number, udc_uniqueness};
+use cast::{extract_or_generate_salt, parse_number, udc_uniqueness, WaitForTx};
 use clap::Args;
 use serde::Deserialize;
 use starknet::accounts::{Account, Call, SingleOwnerAccount};
@@ -50,7 +50,7 @@ pub async fn run(
     path: &Utf8PathBuf,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     max_fee: Option<FieldElement>,
-    wait: bool,
+    wait_config: WaitForTx,
 ) -> Result<InvokeResponse> {
     let contents = std::fs::read_to_string(path)?;
     let items_map: HashMap<String, Vec<toml::Value>> =
@@ -119,7 +119,7 @@ pub async fn run(
         }
     }
 
-    execute_calls(account, parsed_calls, max_fee, wait).await
+    execute_calls(account, parsed_calls, max_fee, wait_config).await
 }
 
 fn parse_inputs(

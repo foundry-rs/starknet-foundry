@@ -11,7 +11,7 @@ use cast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS
 use cast::helpers::scarb_utils::{parse_scarb_config, CastConfig};
 use cast::{
     chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_provider,
-    print_command_result, ValueFormat,
+    print_command_result, ValueFormat, WaitForTx,
 };
 use clap::{Parser, Subcommand};
 use starknet::providers::jsonrpc::HttpTransport;
@@ -65,8 +65,16 @@ struct Cli {
     json: bool,
 
     /// If passed, command will wait until transaction is accepted or rejected
-    #[clap(short, long)]
+    #[clap(short = 'w', long)]
     wait: bool,
+
+    /// Adjusts the time after which --wait assumes transaction was not received or rejected
+    #[clap(short = 't', long)]
+    wait_timeout: Option<u16>,
+
+    /// Adjusts the time between consecutive attempts to fetch transaction by --wait flag
+    #[clap(long)]
+    wait_retry_interval: Option<u8>,
 
     #[command(subcommand)]
     command: Commands,
@@ -140,6 +148,11 @@ async fn run_async_command(
     provider: JsonRpcClient<HttpTransport>,
     value_format: ValueFormat,
 ) -> Result<()> {
+    let wait_config = WaitForTx {
+        wait: cli.wait,
+        timeout: config.wait_timeout,
+        retry_interval: config.wait_retry_interval,
+    };
     match cli.command {
         Commands::Declare(declare) => {
             let account = get_account(
@@ -154,7 +167,7 @@ async fn run_async_command(
                 declare.max_fee,
                 &account,
                 &cli.path_to_scarb_toml,
-                cli.wait,
+                wait_config,
             )
             .await;
 
@@ -176,7 +189,7 @@ async fn run_async_command(
                 deploy.unique,
                 deploy.max_fee,
                 &account,
-                cli.wait,
+                wait_config,
             )
             .await;
 
@@ -212,7 +225,7 @@ async fn run_async_command(
                 invoke.calldata,
                 invoke.max_fee,
                 &account,
-                cli.wait,
+                wait_config,
             )
             .await;
 
@@ -242,7 +255,7 @@ async fn run_async_command(
                         &run.path,
                         &account,
                         run.max_fee,
-                        cli.wait,
+                        wait_config,
                     )
                     .await;
 
@@ -308,7 +321,7 @@ async fn run_async_command(
                     config.account,
                     chain_id,
                     deploy.max_fee,
-                    cli.wait,
+                    wait_config,
                     deploy.class_hash,
                     keystore_path,
                     account_path,
@@ -371,4 +384,8 @@ fn update_cast_config(config: &mut CastConfig, cli: &Cli) {
     let new_accounts_file = clone_or_else!(cli.accounts_file_path, config.accounts_file);
 
     config.accounts_file = Utf8PathBuf::from(shellexpand::tilde(&new_accounts_file).to_string());
+
+    config.wait_timeout = clone_or_else!(cli.wait_timeout, config.wait_timeout);
+    config.wait_retry_interval =
+        clone_or_else!(cli.wait_retry_interval, config.wait_retry_interval);
 }

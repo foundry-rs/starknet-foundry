@@ -11,7 +11,7 @@ use starknet::signers::LocalWallet;
 
 use cast::helpers::response_structs::DeployResponse;
 use cast::{extract_or_generate_salt, udc_uniqueness};
-use cast::{handle_rpc_error, handle_wait_for_tx};
+use cast::{handle_rpc_error, handle_wait_for_tx, WaitForTx};
 
 #[derive(Args)]
 #[command(about = "Deploy a contract on Starknet")]
@@ -44,7 +44,7 @@ pub async fn deploy(
     unique: bool,
     max_fee: Option<FieldElement>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
-    wait: bool,
+    wait_config: WaitForTx,
 ) -> Result<DeployResponse> {
     let salt = extract_or_generate_salt(salt);
 
@@ -73,7 +73,7 @@ pub async fn deploy(
                     ),
                     transaction_hash: result.transaction_hash,
                 },
-                wait,
+                wait_config,
             )
             .await
         }

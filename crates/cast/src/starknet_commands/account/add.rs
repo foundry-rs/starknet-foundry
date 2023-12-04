@@ -94,7 +94,7 @@ pub async fn add(
             rpc_url: rpc_url.into(),
             account: account.into(),
             accounts_file: accounts_file.into(),
-            keystore: Utf8PathBuf::default(),
+            ..Default::default()
         };
         add_created_profile_to_configuration(path_to_scarb_toml, &config)?;
     }
