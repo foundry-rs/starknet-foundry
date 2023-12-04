@@ -77,8 +77,6 @@ jobs:
       - name: Install starknet-devnet-rs
         run: ./scripts/install_devnet.sh
       - uses: software-mansion/setup-scarb@v1.3.2
-        with:
-          scarb-version: ${{ env.SCARB_VERSION }}
       - name: Run tests
         run: cargo test --release -p cast
 
