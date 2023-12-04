@@ -527,3 +527,54 @@ fn test_l1_message_from_test_cost() {
     // 1 - gas cost of steps
     assert_gas!(result, "test_l1_message_from_test", 2448 + 1);
 }
+
+#[test]
+fn test_l1_message_cost_for_proxy() {
+    let test = test_case!(
+        indoc!(
+            r"
+            use starknet::ContractAddress;
+            use snforge_std::{ declare, ContractClassTrait };
+
+            #[starknet::interface]
+            trait IGasCheckerProxy<TContractState> {
+                fn send_l1_message_from_gas_checker(
+                    self: @TContractState,
+                    address: ContractAddress
+                );
+            }
+
+            #[test]
+            fn test_l1_message_for_proxy() {
+                let contract = declare('GasChecker');
+                let gas_checker_address = contract.deploy(@ArrayTrait::new()).unwrap();
+
+                let contract = declare('GasCheckerProxy');
+                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+                let dispatcher = IGasCheckerProxyDispatcher { contract_address };
+
+                dispatcher.send_l1_message_from_gas_checker(gas_checker_address);
+            }
+        "
+        ),
+        Contract::from_code_path(
+            "GasChecker".to_string(),
+            Path::new("tests/data/contracts/gas_checker.cairo"),
+        )
+        .unwrap(),
+        Contract::from_code_path(
+            "GasCheckerProxy".to_string(),
+            Path::new("tests/data/contracts/gas_checker_proxy.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test);
+
+    assert_passed!(result);
+    // 1836 = 3 * cost per 32-byte word (deploy)
+    // 1836 = 3 * cost per 32-byte word (deploy)
+    // 2448 = 4 * cost per 32-byte word (l2_l1_message, header is of length 3 and payload size is 1)
+    // 15 - gas cost of steps
+    assert_gas!(result, "test_l1_message_for_proxy", 1836 + 1836 + 2448 + 15);
+}
