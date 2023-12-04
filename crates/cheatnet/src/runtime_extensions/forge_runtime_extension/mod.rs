@@ -175,33 +175,15 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
             }
             "start_spoof" => {
                 let (target, inputs_start) = deserialize_cheat_target(&inputs);
+                let mut idx = inputs_start;
 
-                // We check for 1s - because of serialization from tx_info.cairo::option_as_tuple
-                let version = inputs[inputs_start]
-                    .is_one()
-                    .then(|| inputs[inputs_start + 1].clone());
-                let account_contract_address = inputs[inputs_start + 2]
-                    .is_one()
-                    .then(|| inputs[inputs_start + 3].clone());
-                let max_fee = inputs[inputs_start + 4]
-                    .is_one()
-                    .then(|| inputs[inputs_start + 5].clone());
-                let transaction_hash = inputs[inputs_start + 6]
-                    .is_one()
-                    .then(|| inputs[inputs_start + 7].clone());
-                let chain_id = inputs[inputs_start + 8]
-                    .is_one()
-                    .then(|| inputs[inputs_start + 9].clone());
-                let nonce = inputs[inputs_start + 10]
-                    .is_one()
-                    .then(|| inputs[inputs_start + 11].clone());
-
-                let signature_len = inputs[inputs_start + 13]
-                    .to_usize()
-                    .expect("Failed to convert signature_len to usize");
-                let signature = inputs[inputs_start + 12].is_one().then(|| {
-                    Vec::from(&inputs[inputs_start + 14..(inputs_start + 14 + signature_len)])
-                });
+                let version = read_option_felt(&inputs, &mut idx);
+                let account_contract_address = read_option_felt(&inputs, &mut idx);
+                let max_fee = read_option_felt(&inputs, &mut idx);
+                let signature = read_option_vec(&inputs, &mut idx);
+                let transaction_hash = read_option_felt(&inputs, &mut idx);
+                let chain_id = read_option_felt(&inputs, &mut idx);
+                let nonce = read_option_felt(&inputs, &mut idx);
 
                 extended_runtime
                     .extended_runtime
@@ -638,4 +620,23 @@ fn cheatcode_panic_result(panic_data: Vec<Felt252>) -> Vec<Felt252> {
     let mut result = vec![Felt252::from(1), Felt252::from(panic_data.len())];
     result.extend(panic_data);
     result
+}
+
+fn read_felt(buffer: &[Felt252], idx: &mut usize) -> Felt252 {
+    *idx += 1;
+    buffer[*idx - 1].clone()
+}
+
+fn read_vec(buffer: &[Felt252], idx: &mut usize, count: usize) -> Vec<Felt252> {
+    *idx += count;
+    buffer[*idx - count..*idx].to_vec()
+}
+
+fn read_option_felt(buffer: &[Felt252], idx: &mut usize) -> Option<Felt252> {
+    *idx += 1;
+    (!buffer[*idx - 1].is_one()).then(|| read_felt(buffer, idx))
+}
+
+fn read_option_vec(buffer: &[Felt252], idx: &mut usize) -> Option<Vec<Felt252>> {
+    read_option_felt(buffer, idx).map(|count| read_vec(buffer, idx, count.to_usize().unwrap()))
 }
