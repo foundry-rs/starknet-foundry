@@ -67,7 +67,11 @@ where
     finalize(
         vm,
         &runner,
-        &mut runtime.extended_runtime.extended_runtime.child,
+        &mut runtime
+            .extended_runtime
+            .extended_runtime
+            .extended_runtime
+            .hint_handler,
         0,
         2,
     );
