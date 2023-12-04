@@ -439,6 +439,37 @@ fn test_storage_write_cost() {
 }
 
 #[test]
+fn test_storage_write_from_test_cost() {
+    let test = test_case!(indoc!(
+        r"
+        #[starknet::contract]
+        mod Contract {
+            #[storage]
+            struct Storage {
+                balance: felt252,
+            }
+        }
+
+        use tests::test_case::Contract::balanceContractMemberStateTrait;
+
+        #[test]
+        fn test_storage_write_from_test() {
+            let mut state = Contract::contract_state_for_testing();
+            state.balance.write(10);
+        }
+    "
+    ),);
+
+    let result = run_test_case(&test);
+
+    assert_passed!(result);
+    // 1224 = 2 * cost per 32-byte word (modified contract)
+    // 1224 = 2 * cost per 32-byte word (storage write)
+    // 1 - gas cost of steps
+    assert_gas!(result, "test_storage_write_from_test", 1224 + 1224 + 1);
+}
+
+#[test]
 fn test_l1_message_cost() {
     let test = test_case!(
         indoc!(
@@ -474,4 +505,25 @@ fn test_l1_message_cost() {
     // 2448 = 4 * cost per 32-byte word (l2_l1_message, header is of length 3 and payload size is 1)
     // 5 - gas cost of steps
     assert_gas!(result, "test_l1_message", 1836 + 2448 + 5);
+}
+
+// TODO: l1 message cost is not calculated for the test state
+#[ignore]
+#[test]
+fn test_l1_message_from_test_cost() {
+    let test = test_case!(indoc!(
+        r"
+        #[test]
+        fn test_l1_message_from_test() {
+            starknet::send_message_to_l1_syscall(1, array![1].span()).unwrap();
+        }
+    "
+    ),);
+
+    let result = run_test_case(&test);
+
+    assert_passed!(result);
+    // 2448 = 4 * cost per 32-byte word (l2_l1_message, header is of length 3 and payload size is 1)
+    // 1 - gas cost of steps
+    assert_gas!(result, "test_l1_message_from_test", 2448 + 1);
 }
