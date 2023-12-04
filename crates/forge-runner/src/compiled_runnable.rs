@@ -6,26 +6,8 @@ use url::Url;
 
 #[derive(Debug, Clone)]
 pub struct CompiledTestCrateRunnable {
-    sierra_program: Program,
-    test_cases: Vec<TestCaseRunnable>,
-}
-
-impl CompiledTestCrateRunnable {
-    #[must_use]
-    pub fn new(sierra_program: Program, test_cases: Vec<TestCaseRunnable>) -> Self {
-        Self {
-            sierra_program,
-            test_cases,
-        }
-    }
-
-    pub(crate) fn test_cases(&self) -> &Vec<TestCaseRunnable> {
-        &self.test_cases
-    }
-
-    pub(crate) fn sierra_program(&self) -> &Program {
-        &self.sierra_program
-    }
+    pub sierra_program: Program,
+    pub test_cases: Vec<TestCaseRunnable>,
 }
 
 #[derive(Debug, Clone)]

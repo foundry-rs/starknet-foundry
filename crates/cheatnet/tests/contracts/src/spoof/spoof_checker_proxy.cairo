@@ -20,7 +20,7 @@ mod SpoofCheckerProxy {
     #[storage]
     struct Storage {}
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl ISpoofCheckerProxy of super::ISpoofCheckerProxy<ContractState> {
         fn get_spoof_checkers_tx_hash(
             ref self: ContractState, address: ContractAddress

@@ -24,6 +24,8 @@ pub enum TestCaseSummary {
         arguments: Vec<Felt252>,
         /// Statistic for fuzzing test
         fuzzing_statistic: Option<FuzzingStatistics>,
+        /// Gas used by the test case
+        gas_used: f64,
     },
     /// Test case failed
     Failed {
@@ -76,16 +78,17 @@ impl TestCaseSummary {
                 name,
                 msg,
                 arguments,
+                gas_used: gas,
                 ..
             } => TestCaseSummary::Passed {
                 name,
                 msg,
                 arguments,
+                gas_used: gas,
                 fuzzing_statistic: Some(FuzzingStatistics { runs }),
             },
             TestCaseSummary::Failed {
                 name,
-
                 msg,
                 arguments,
                 ..
@@ -106,6 +109,7 @@ impl TestCaseSummary {
         run_result: RunResult,
         test_case: &TestCaseRunnable,
         arguments: Vec<Felt252>,
+        gas: f64,
     ) -> Self {
         let name = test_case.name.to_string();
         let msg = extract_result_data(&run_result, &test_case.expected_result);
@@ -116,6 +120,7 @@ impl TestCaseSummary {
                     msg,
                     arguments,
                     fuzzing_statistic: None,
+                    gas_used: gas,
                 },
                 ExpectedTestResult::Panics(_) => TestCaseSummary::Failed {
                     name,
@@ -145,6 +150,7 @@ impl TestCaseSummary {
                         msg,
                         arguments,
                         fuzzing_statistic: None,
+                        gas_used: gas,
                     },
                 },
             },

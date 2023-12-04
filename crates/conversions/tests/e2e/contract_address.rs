@@ -1,7 +1,11 @@
 #[cfg(test)]
 mod tests_contract_address {
     use crate::helpers::hex::str_hex_to_stark_felt;
-    use conversions::StarknetConversions;
+    use cairo_felt::Felt252;
+    use conversions::{FromConv, IntoConv};
+    use starknet::core::types::FieldElement;
+    use starknet_api::core::{ClassHash, Nonce};
+    use starknet_api::hash::StarkHash;
     use starknet_api::{
         core::{ContractAddress, PatriciaKey},
         hash::StarkFelt,
@@ -12,34 +16,16 @@ mod tests_contract_address {
         let felt: StarkFelt = StarkFelt::new([1u8; 32]).unwrap();
         let contract_address = ContractAddress(PatriciaKey::try_from(felt).unwrap());
 
+        assert_eq!(contract_address, ClassHash::from_(contract_address).into_(),);
+        assert_eq!(contract_address, Felt252::from_(contract_address).into_());
         assert_eq!(
             contract_address,
-            contract_address.to_class_hash().to_contract_address(),
+            FieldElement::from_(contract_address).into_()
         );
-        assert_eq!(
-            contract_address,
-            contract_address.to_felt252().to_contract_address()
-        );
-        assert_eq!(
-            contract_address,
-            contract_address.to_field_element().to_contract_address()
-        );
-        assert_eq!(
-            contract_address,
-            contract_address.to_nonce().to_contract_address()
-        );
-        assert_eq!(
-            contract_address,
-            contract_address.to_short_string().to_contract_address()
-        );
-        assert_eq!(
-            contract_address,
-            contract_address.to_stark_felt().to_contract_address()
-        );
-        assert_eq!(
-            contract_address,
-            contract_address.to_stark_hash().to_contract_address()
-        );
+        assert_eq!(contract_address, Nonce::from_(contract_address).into_());
+        assert_eq!(contract_address, String::from_(contract_address).into_());
+        assert_eq!(contract_address, StarkFelt::from_(contract_address).into_());
+        assert_eq!(contract_address, StarkHash::from_(contract_address).into_());
     }
 
     #[test]
@@ -47,34 +33,16 @@ mod tests_contract_address {
         let felt: StarkFelt = StarkFelt::new([0u8; 32]).unwrap();
         let contract_address = ContractAddress(PatriciaKey::try_from(felt).unwrap());
 
+        assert_eq!(contract_address, ClassHash::from_(contract_address).into_(),);
+        assert_eq!(contract_address, Felt252::from_(contract_address).into_());
         assert_eq!(
             contract_address,
-            contract_address.to_class_hash().to_contract_address(),
+            FieldElement::from_(contract_address).into_()
         );
-        assert_eq!(
-            contract_address,
-            contract_address.to_felt252().to_contract_address()
-        );
-        assert_eq!(
-            contract_address,
-            contract_address.to_field_element().to_contract_address()
-        );
-        assert_eq!(
-            contract_address,
-            contract_address.to_nonce().to_contract_address()
-        );
-        assert_eq!(
-            contract_address,
-            contract_address.to_short_string().to_contract_address()
-        );
-        assert_eq!(
-            contract_address,
-            contract_address.to_stark_felt().to_contract_address()
-        );
-        assert_eq!(
-            contract_address,
-            contract_address.to_stark_hash().to_contract_address()
-        );
+        assert_eq!(contract_address, Nonce::from_(contract_address).into_());
+        assert_eq!(contract_address, String::from_(contract_address).into_());
+        assert_eq!(contract_address, StarkFelt::from_(contract_address).into_());
+        assert_eq!(contract_address, StarkHash::from_(contract_address).into_());
     }
 
     #[test]
@@ -84,40 +52,22 @@ mod tests_contract_address {
         let mut contract_address =
             ContractAddress(PatriciaKey::try_from(str_hex_to_stark_felt(max_value)).unwrap());
 
+        assert_eq!(contract_address, ClassHash::from_(contract_address).into_(),);
+        assert_eq!(contract_address, Felt252::from_(contract_address).into_());
         assert_eq!(
             contract_address,
-            contract_address.to_class_hash().to_contract_address()
+            FieldElement::from_(contract_address).into_()
         );
-        assert_eq!(
-            contract_address,
-            contract_address.to_felt252().to_contract_address()
-        );
-        assert_eq!(
-            contract_address,
-            contract_address.to_field_element().to_contract_address()
-        );
-        assert_eq!(
-            contract_address,
-            contract_address.to_nonce().to_contract_address()
-        );
-        assert_eq!(
-            contract_address,
-            contract_address.to_stark_felt().to_contract_address()
-        );
-        assert_eq!(
-            contract_address,
-            contract_address.to_stark_hash().to_contract_address()
-        );
+        assert_eq!(contract_address, Nonce::from_(contract_address).into_());
+        assert_eq!(contract_address, StarkFelt::from_(contract_address).into_());
+        assert_eq!(contract_address, StarkHash::from_(contract_address).into_());
 
         // Unknown source for this value, founded by try and error(cairo-lang-runner-2.2.0/src/short_string.rs).
         max_value = "0x0777777777777777777777777777777777777f7f7f7f7f7f7f7f7f7f7f7f7f7f";
         contract_address =
             ContractAddress(PatriciaKey::try_from(str_hex_to_stark_felt(max_value)).unwrap());
 
-        assert_eq!(
-            contract_address,
-            contract_address.to_short_string().to_contract_address()
-        );
+        assert_eq!(contract_address, String::from_(contract_address).into_());
     }
 
     #[test]
@@ -130,6 +80,6 @@ mod tests_contract_address {
         let contract_address =
             ContractAddress(PatriciaKey::try_from(str_hex_to_stark_felt(max_value)).unwrap());
 
-        assert!(std::panic::catch_unwind(|| contract_address.to_short_string()).is_err());
+        assert!(std::panic::catch_unwind(|| String::from_(contract_address)).is_err());
     }
 }

@@ -61,7 +61,7 @@ pub(crate) struct RawForkTarget {
     pub block_id: HashMap<String, String>,
 }
 
-pub(super) fn validate_raw_fork_config(raw_config: &RawForgeConfig) -> Result<()> {
+fn validate_raw_fork_config(raw_config: &RawForgeConfig) -> Result<()> {
     let forks = &raw_config.fork;
     let names: Vec<String> = forks.iter().map(|fork| fork.name.clone()).collect();
     let removed_duplicated_names: Vec<String> = names.clone().into_iter().unique().collect();
@@ -92,6 +92,7 @@ impl TryFrom<RawForgeConfig> for ForgeConfig {
     type Error = anyhow::Error;
 
     fn try_from(value: RawForgeConfig) -> Result<Self, Self::Error> {
+        validate_raw_fork_config(&value)?;
         let mut fork_targets = vec![];
 
         for raw_fork_target in value.fork {

@@ -67,6 +67,7 @@ impl Contract {
         let build_output = Command::new("scarb")
             .current_dir(&dir)
             .arg("build")
+            .stdout(Stdio::inherit())
             .stderr(Stdio::inherit())
             .output()
             .context("Failed to build contracts with Scarb")?;
@@ -281,6 +282,28 @@ macro_rules! assert_case_output_contains {
                     name,
                     ..
                 } => msg.contains($asserted_msg) && name.ends_with(test_name_suffix.as_str()),
+                _ => false,
+            }
+        }));
+    }};
+}
+
+#[macro_export]
+macro_rules! assert_gas {
+    ($result:expr, $test_case_name:expr, $asserted_gas:expr) => {{
+        use forge_runner::test_case_summary::TestCaseSummary;
+        use $crate::runner::TestCase;
+
+        let test_case_name = $test_case_name;
+        let test_name_suffix = format!("::{test_case_name}");
+
+        let result = TestCase::find_test_result(&$result);
+
+        assert!(result.test_case_summaries.iter().any(|case| {
+            match case {
+                TestCaseSummary::Passed { gas_used: gas, .. } => {
+                    (*gas - $asserted_gas).abs() < 0.0001
+                }
                 _ => false,
             }
         }));

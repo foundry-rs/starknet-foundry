@@ -13,7 +13,7 @@ use cheatnet::constants::build_testing_state;
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::rpc::call_contract;
 use cheatnet::state::{BlockInfoReader, BlockifierState, CheatnetState, ExtendedStateReader};
-use conversions::StarknetConversions;
+use conversions::IntoConv;
 use num_bigint::BigUint;
 use num_traits::Num;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
@@ -36,7 +36,7 @@ fn fork_simple() {
         )
         .unwrap(),
     )
-    .to_contract_address();
+    .into_();
 
     let selector = felt_selector_from_name("get_balance");
     let output = call_contract(
@@ -98,7 +98,7 @@ fn try_deploying_undeclared_class() {
     let mut cached_fork_state = create_fork_cached_state();
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_fork_state);
 
-    let class_hash = "1".to_owned().to_class_hash();
+    let class_hash = "1".to_owned().into_();
 
     assert!(
         match deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[]) {
@@ -149,7 +149,7 @@ fn test_forking_at_block_number() {
             )
             .unwrap(),
         )
-        .to_contract_address();
+        .into_();
 
         let selector = felt_selector_from_name("get_balance");
         let output = call_contract(
@@ -446,7 +446,7 @@ fn using_specified_block_nb_is_cached() {
             )
             .unwrap(),
         )
-        .to_contract_address();
+        .into_();
 
         let selector = felt_selector_from_name("get_balance");
         let output = call_contract(
@@ -524,8 +524,7 @@ fn test_cache_merging() {
         let _ = cached_state.state.get_block_info().unwrap();
 
         let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
-        let contract_address =
-            Felt252::from(BigUint::from_str(contract_address).unwrap()).to_contract_address();
+        let contract_address = Felt252::from(BigUint::from_str(contract_address).unwrap()).into_();
 
         let selector = felt_selector_from_name("get_balance");
         let output = call_contract(
@@ -637,8 +636,7 @@ fn test_cached_block_info_merging() {
             let _ = cached_state.state.get_block_info().unwrap();
         }
         let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
-        let contract_address =
-            Felt252::from(BigUint::from_str(contract_address).unwrap()).to_contract_address();
+        let contract_address = Felt252::from(BigUint::from_str(contract_address).unwrap()).into_();
 
         let selector = felt_selector_from_name("get_balance");
         let output = call_contract(
@@ -715,7 +713,7 @@ fn test_calling_nonexistent_url() {
         )
         .unwrap(),
     )
-    .to_contract_address();
+    .into_();
 
     let selector = felt_selector_from_name("get_balance");
     let output = call_contract(

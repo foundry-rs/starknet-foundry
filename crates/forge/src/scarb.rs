@@ -1,7 +1,7 @@
 use scarb_metadata::{Metadata, PackageId};
 use std::process::{Command, Stdio};
 
-use crate::scarb::config::{validate_raw_fork_config, ForgeConfig};
+use crate::scarb::config::{ForgeConfig, RawForgeConfig};
 use anyhow::{anyhow, Context, Result};
 use scarb_ui::args::PackagesFilter;
 
@@ -22,13 +22,14 @@ pub fn config_from_scarb_for_package(
         .ok_or_else(|| anyhow!("Failed to find metadata for package = {package}"))?
         .tool_metadata("snforge");
     let raw_config = if let Some(raw_metadata) = maybe_raw_metadata {
-        serde_json::from_value(raw_metadata.clone())?
+        serde_json::from_value::<RawForgeConfig>(raw_metadata.clone())?
     } else {
         Default::default()
     };
 
-    validate_raw_fork_config(&raw_config).context("Invalid config in Scarb.toml: ")?;
-    raw_config.try_into()
+    raw_config
+        .try_into()
+        .context("Invalid config in Scarb.toml: ")
 }
 
 pub fn build_contracts_with_scarb(filter: PackagesFilter) -> Result<()> {

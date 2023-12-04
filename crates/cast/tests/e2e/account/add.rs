@@ -6,6 +6,7 @@ use indoc::indoc;
 use serde_json::json;
 use snapbox::cmd::{cargo_bin, Command};
 use std::fs;
+use tempfile::TempDir;
 
 #[tokio::test]
 pub async fn test_happy_case() {
@@ -214,7 +215,106 @@ pub async fn test_missing_arguments() {
     snapbox.assert().stderr_matches(indoc! {r"
         error: the following required arguments were not provided:
           --address <ADDRESS>
-          --private-key <PRIVATE_KEY>
+          <--private-key <PRIVATE_KEY>|--private-key-file <PRIVATE_KEY_FILE_PATH>>
         ...
+    "});
+}
+
+#[tokio::test]
+pub async fn test_private_key_from_file() {
+    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
+    let accounts_file = "./accounts.json";
+    let private_key_file = "./my_private_key";
+
+    fs::write(temp_dir.path().join(private_key_file), "0x456").unwrap();
+
+    let args = vec![
+        "--url",
+        URL,
+        "--accounts-file",
+        "./accounts.json",
+        "account",
+        "add",
+        "--name",
+        "my_account_add",
+        "--address",
+        "0x123",
+        "--private-key-file",
+        private_key_file,
+        "--deployed",
+    ];
+
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(temp_dir.path())
+        .args(args);
+
+    snapbox.assert().stdout_matches(indoc! {r"
+        command: account add
+        add_profile: --add-profile flag was not set. No profile added to Scarb.toml
+    "});
+
+    let contents = fs::read_to_string(temp_dir.path().join(accounts_file))
+        .expect("Unable to read created file");
+    let contents_json: serde_json::Value = serde_json::from_str(&contents).unwrap();
+    assert_eq!(
+        contents_json,
+        json!(
+            {
+                "alpha-goerli": {
+                  "my_account_add": {
+                    "address": "0x123",
+                    "deployed": true,
+                    "private_key": "0x456",
+                    "public_key": "0x5f679dacd8278105bd3b84a15548fe84079068276b0e84d6cc093eb5430f063"
+                  }
+                }
+            }
+        )
+    );
+}
+
+#[tokio::test]
+pub async fn test_accept_only_one_private_key() {
+    let args = vec![
+        "account",
+        "add",
+        "--name",
+        "my_account_add",
+        "--address",
+        "0x123",
+        "--private-key",
+        "0x456",
+        "--private-key-file",
+        "./my_private_key",
+    ];
+
+    let snapbox = runner(&args);
+    snapbox.assert().stderr_matches(indoc! {r"
+        error: the argument '--private-key <PRIVATE_KEY>' cannot be used with '--private-key-file <PRIVATE_KEY_FILE_PATH>'
+        ...
+    "});
+}
+
+#[tokio::test]
+pub async fn test_invalid_private_key_file_path() {
+    let args = vec![
+        "--url",
+        URL,
+        "account",
+        "add",
+        "--name",
+        "my_account_add",
+        "--address",
+        "0x123",
+        "--private-key-file",
+        "./my_private_key",
+        "--deployed",
+    ];
+
+    let snapbox = runner(&args);
+
+    snapbox.assert().stderr_matches(indoc! {r"
+        command: account add
+        error: Failed to obtain private key from the file [..]
     "});
 }

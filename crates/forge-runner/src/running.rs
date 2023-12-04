@@ -17,14 +17,17 @@ use cheatnet::execution::cheatable_syscall_handler::CheatableSyscallHandler;
 use itertools::chain;
 
 use crate::compiled_runnable::ValidatedForkConfig;
+use crate::forge_runtime_extension::{ForgeRuntime, TestExecutionState};
+use crate::gas::gas_from_execution_resources;
+use crate::runtime::{ExtendedRuntime, RuntimeExtension};
+use crate::sierra_casm_runner::SierraCasmRunner;
 use crate::test_case_summary::TestCaseSummary;
-use crate::test_execution_syscall_handler::{TestExecutionState, TestExecutionSyscallHandler};
 use crate::{RunnerConfig, RunnerParams, TestCaseRunnable, CACHE_DIR};
 use cairo_lang_casm::hints::Hint;
 use cairo_lang_casm::instructions::Instruction;
 use cairo_lang_runner::casm_run::hint_to_hint_params;
-use cairo_lang_runner::{Arg, RunnerError};
-use cairo_lang_runner::{RunResult, SierraCasmRunner};
+use cairo_lang_runner::{Arg, RunResult, RunnerError};
+use cairo_vm::vm::vm_core::VirtualMachine;
 use camino::Utf8Path;
 use cheatnet::constants as cheatnet_constants;
 use cheatnet::execution::contract_execution_syscall_handler::ContractExecutionSyscallHandler;
@@ -170,9 +173,11 @@ fn build_syscall_handler<'a>(
 
 pub struct RunResultWithInfo {
     pub(crate) run_result: Result<RunResult, RunnerError>,
+    pub(crate) gas_used: f64,
 }
 
 #[allow(clippy::too_many_arguments)]
+#[allow(clippy::too_many_lines)]
 pub fn run_test_case(
     args: Vec<Felt252>,
     case: &TestCaseRunnable,
@@ -195,7 +200,7 @@ pub fn run_test_case(
     let (entry_code, builtins) = runner
         .create_entry_code(func, &runner_args, initial_gas)
         .unwrap();
-    let footer = runner.create_code_footer();
+    let footer = SierraCasmRunner::create_code_footer();
     let instructions = chain!(
         entry_code.iter(),
         runner.get_casm_program().instructions.iter(),
@@ -225,28 +230,41 @@ pub fn run_test_case(
     };
     let cheatable_syscall_handler =
         CheatableSyscallHandler::wrap(syscall_handler, &mut cheatnet_state);
+
     let contract_execution_syscall_handler =
         ContractExecutionSyscallHandler::wrap(cheatable_syscall_handler);
 
-    let mut test_execution_state = TestExecutionState {
+    let test_execution_state = TestExecutionState {
         environment_variables: &runner_params.environment_variables,
         contracts: &runner_params.contracts,
     };
-    let mut test_execution_syscall_handler = TestExecutionSyscallHandler::wrap(
-        contract_execution_syscall_handler,
-        &mut test_execution_state,
-        &string_to_hint,
-    );
 
-    let run_result = runner.run_function(
+    let mut forge_runtime = ExtendedRuntime(RuntimeExtension {
+        extended_runtime: contract_execution_syscall_handler,
+        extension_state: test_execution_state,
+    });
+
+    let mut vm = VirtualMachine::new(true);
+    let run_result = runner.run_function_with_vm(
         func,
-        &mut test_execution_syscall_handler,
+        &mut vm,
+        &mut forge_runtime,
         hints_dict,
         instructions,
         builtins,
     );
 
-    Ok(RunResultWithInfo { run_result })
+    let execution_resources = get_all_execution_resources(&forge_runtime);
+
+    let gas = gas_from_execution_resources(
+        &get_context(&forge_runtime).block_context,
+        &execution_resources,
+    );
+
+    Ok(RunResultWithInfo {
+        run_result,
+        gas_used: gas,
+    })
 }
 
 fn extract_test_case_summary(
@@ -258,7 +276,10 @@ fn extract_test_case_summary(
         Ok(result_with_info) => {
             match result_with_info.run_result {
                 Ok(run_result) => Ok(TestCaseSummary::from_run_result_and_info(
-                    run_result, case, args,
+                    run_result,
+                    case,
+                    args,
+                    result_with_info.gas_used,
                 )),
                 // CairoRunError comes from VirtualMachineError which may come from HintException that originates in TestExecutionSyscallHandler
                 Err(RunnerError::CairoRunError(error)) => Ok(TestCaseSummary::Failed {
@@ -297,4 +318,31 @@ fn get_fork_state_reader(
                 Some(workspace_root.join(CACHE_DIR).as_ref()),
             )
         })
+}
+
+fn get_all_execution_resources(runtime: &ForgeRuntime) -> ExecutionResources {
+    let test_used_resources = &runtime.0.extended_runtime.child.child.resources;
+    let cheatnet_used_resources = &runtime
+        .0
+        .extended_runtime
+        .child
+        .cheatnet_state
+        .used_resources;
+
+    let mut all_resources = ExecutionResources::default();
+    all_resources.vm_resources += &test_used_resources.vm_resources;
+    all_resources.vm_resources += &cheatnet_used_resources.vm_resources;
+
+    all_resources
+        .syscall_counter
+        .extend(&test_used_resources.syscall_counter);
+    all_resources
+        .syscall_counter
+        .extend(&cheatnet_used_resources.syscall_counter);
+
+    all_resources
+}
+
+fn get_context<'a>(runtime: &'a ForgeRuntime) -> &'a EntryPointExecutionContext {
+    runtime.0.extended_runtime.child.child.context
 }

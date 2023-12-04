@@ -9,23 +9,20 @@ use cairo_lang_starknet::abi::Contract;
 use cairo_lang_starknet::casm_contract_class::CasmContractClass;
 use cairo_lang_starknet::contract_class::{ContractClass, ContractEntryPoints};
 use cairo_lang_utils::bigint::BigUintAsHex;
-use conversions::StarknetConversions;
+use conversions::{FromConv, IntoConv};
 use flate2::read::GzDecoder;
 use num_bigint::BigUint;
 use starknet::core::types::{
-    BlockId, ContractClass as ContractClassStarknet, MaybePendingBlockWithTxHashes,
+    BlockId, ContractClass as ContractClassStarknet, FieldElement, MaybePendingBlockWithTxHashes,
 };
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::{JsonRpcClient, Provider, ProviderError};
 use starknet_api::block::{BlockNumber, BlockTimestamp};
-use starknet_api::core::PatriciaKey;
 use starknet_api::core::{ClassHash, CompiledClassHash, ContractAddress, Nonce};
 use starknet_api::deprecated_contract_class::{
     ContractClass as DeprecatedContractClass, ContractClassAbiEntry, EntryPoint, EntryPointType,
 };
 use starknet_api::hash::StarkFelt;
-use starknet_api::hash::StarkHash;
-use starknet_api::patricia_key;
 use starknet_api::state::StorageKey;
 use std::collections::HashMap;
 use std::io::Read;
@@ -67,9 +64,7 @@ impl BlockInfoReader for ForkStateReader {
                 let block_info = CheatnetBlockInfo {
                     block_number: BlockNumber(block.block_number),
                     timestamp: BlockTimestamp(block.timestamp),
-                    sequencer_address: ContractAddress(patricia_key!(block
-                        .sequencer_address
-                        .to_stark_felt())),
+                    sequencer_address: block.sequencer_address.into_(),
                 };
 
                 self.cache.cache_get_block_info(block_info);
@@ -114,12 +109,12 @@ impl StateReader for ForkStateReader {
         }
 
         match self.runtime.block_on(self.client.get_storage_at(
-            contract_address.to_field_element(),
-            key.0.key().to_field_element(),
+            FieldElement::from_(contract_address),
+            FieldElement::from_(*key.0.key()),
             self.block_id,
         )) {
             Ok(value) => {
-                let value_sf = value.to_stark_felt();
+                let value_sf: StarkFelt = value.into_();
                 self.cache
                     .cache_get_storage_at(contract_address, key, value_sf);
                 Ok(value_sf)
@@ -138,10 +133,10 @@ impl StateReader for ForkStateReader {
 
         match self.runtime.block_on(
             self.client
-                .get_nonce(self.block_id, contract_address.to_field_element()),
+                .get_nonce(self.block_id, FieldElement::from_(contract_address)),
         ) {
             Ok(nonce) => {
-                let nonce = nonce.to_nonce();
+                let nonce = nonce.into_();
                 self.cache.cache_get_nonce_at(contract_address, nonce);
                 Ok(nonce)
             }
@@ -159,10 +154,10 @@ impl StateReader for ForkStateReader {
 
         match self.runtime.block_on(
             self.client
-                .get_class_hash_at(self.block_id, contract_address.to_field_element()),
+                .get_class_hash_at(self.block_id, FieldElement::from_(contract_address)),
         ) {
             Ok(class_hash) => {
-                let class_hash = class_hash.to_class_hash();
+                let class_hash: ClassHash = class_hash.into_();
                 self.cache
                     .cache_get_class_hash_at(contract_address, class_hash);
                 Ok(class_hash)
@@ -184,7 +179,7 @@ impl StateReader for ForkStateReader {
             } else {
                 match self.runtime.block_on(
                     self.client
-                        .get_class(self.block_id, class_hash.to_field_element()),
+                        .get_class(self.block_id, FieldElement::from_(*class_hash)),
                 ) {
                     Ok(contract_class) => {
                         self.cache

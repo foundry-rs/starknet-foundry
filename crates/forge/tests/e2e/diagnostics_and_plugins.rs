@@ -3,6 +3,7 @@ use indoc::formatdoc;
 
 use crate::e2e::common::runner::{setup_package, test_runner};
 
+#[allow(clippy::too_many_lines)]
 #[test]
 fn print_error_if_attributes_incorrect() {
     let mock_tests_dir = setup_package("diagnostics_and_plugins");
@@ -116,6 +117,19 @@ fn print_error_if_attributes_incorrect() {
               ^***************************************************************************************^
         Error: Failed to compile test artifact, for detailed information go through the logs above
 
+
+        Stack backtrace:
+           0: std::backtrace::Backtrace::capture
+           1: anyhow::error::<impl anyhow::Error>::msg
+           2: scarb_snforge_test_collector::compilation::test_collector::collect_tests
+           3: rayon::iter::plumbing::bridge_producer_consumer::helper
+           4: rayon_core::join::join_context::[..].57472
+           5: <rayon_core::job::StackJob<L,F,R> as rayon_core::job::Job>::execute
+           6: rayon_core::registry::WorkerThread::wait_until_cold
+           7: std::sys_common::backtrace::__rust_begin_short_backtrace
+           8: core::ops::function::FnOnce::call_once[..]
+           9: std::sys::unix::thread::Thread::new::thread_start
+          10: __pthread_joiner_wake
     "#}
     );
 }

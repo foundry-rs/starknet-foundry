@@ -18,7 +18,7 @@ pub(crate) fn print_collected_tests_count(tests_num: usize, package_name: &str) 
 
 #[allow(clippy::implicit_hasher)]
 pub fn print_latest_blocks_numbers(url_to_latest_block_number_map: &HashMap<String, BlockNumber>) {
-    if url_to_latest_block_number_map.len() > 0 {
+    if !url_to_latest_block_number_map.is_empty() {
         println!();
     }
     for (url, latest_block_number) in url_to_latest_block_number_map {

@@ -2,10 +2,10 @@ use crate::compiled_runnable::{CompiledTestCrateRunnable, FuzzerConfig, TestCase
 use crate::fuzzer::RandomFuzzer;
 use crate::printing::print_test_result;
 use crate::running::{run_fuzz_test, run_test};
+use crate::sierra_casm_runner::SierraCasmRunner;
 use crate::test_case_summary::TestCaseSummary;
 use crate::test_crate_summary::TestCrateSummary;
 use anyhow::{anyhow, Context, Result};
-use cairo_lang_runner::SierraCasmRunner;
 use cairo_lang_sierra::ids::ConcreteTypeId;
 use cairo_lang_sierra::program::Function;
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
@@ -26,10 +26,14 @@ pub mod expected_result;
 pub mod test_case_summary;
 pub mod test_crate_summary;
 
+mod forge_runtime_extension;
 mod fuzzer;
+mod gas;
 mod printing;
 mod running;
-mod test_execution_syscall_handler;
+mod runtime;
+mod sierra_casm_runner;
+mod sierra_casm_runner_gas;
 
 pub const CACHE_DIR: &str = ".snfoundry_cache";
 
@@ -124,7 +128,7 @@ pub async fn run_tests_from_crate(
 ) -> Result<TestCrateRunResult> {
     let runner = Arc::new(
         SierraCasmRunner::new(
-            tests.sierra_program().clone(),
+            tests.sierra_program.clone(),
             Some(MetadataComputationConfig::default()),
             OrderedHashMap::default(),
         )
@@ -132,7 +136,6 @@ pub async fn run_tests_from_crate(
     );
 
     let mut tasks = FuturesUnordered::new();
-    let test_cases = tests.test_cases();
     // Initiate two channels to manage the `--exit-first` flag.
     // Owing to `cheatnet` fork's utilization of its own Tokio runtime for RPC requests,
     // test execution must occur within a `tokio::spawn_blocking`.
@@ -140,7 +143,7 @@ pub async fn run_tests_from_crate(
     // a channel is used to signal the task that test processing is no longer necessary.
     let (send, mut rec) = channel(1);
 
-    for case in test_cases {
+    for case in &tests.test_cases {
         let case_name = case.name.clone();
 
         if !tests_filter.should_be_run(case) {

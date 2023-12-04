@@ -52,7 +52,7 @@ fn read_invalid_felt252() {
 
         #[test]
         fn test_read_invalid_felt252() {
-            let result = var('MY_ENV_VAR');
+            var('MY_ENV_VAR');
         }
     "
     ));
@@ -78,7 +78,7 @@ fn read_invalid_short_string() {
 
         #[test]
         fn test_read_invalid_short_string() {
-            let result = var('MY_ENV_VAR');
+            var('MY_ENV_VAR');
         }
     "
     ));
@@ -105,7 +105,7 @@ fn read_non_existent() {
 
         #[test]
         fn test_read_invalid_short_string() {
-            let result = var('MY_ENV_VAR');
+            var('MY_ENV_VAR');
         }
     "
     ));
