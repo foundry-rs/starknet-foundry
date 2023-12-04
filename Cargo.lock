@@ -3729,9 +3729,9 @@ dependencies = [
 
 [[package]]
 name = "scarb-ui"
-version = "0.1.1"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3b0a5fbc818eb4fe09dd99101218d7f22c64cbfb17ae1ab41f5fbadcb2aaee1a"
+checksum = "594b2705c01824dff3d57f5f0a65754fc1d0d25ab047045e883d7440bab061f5"
 dependencies = [
  "anyhow",
  "camino",
