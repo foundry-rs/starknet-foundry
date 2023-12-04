@@ -284,11 +284,7 @@ pub fn run_test_case(
     let execution_resources = get_all_execution_resources(&forge_runtime);
     let block_context = &get_context(&forge_runtime).block_context.clone();
 
-    let gas = calculate_used_gas(
-        block_context,
-        &mut blockifier_state,
-        &execution_resources,
-    );
+    let gas = calculate_used_gas(block_context, &mut blockifier_state, &execution_resources);
 
     Ok(RunResultWithInfo {
         run_result,
@@ -370,7 +366,12 @@ fn get_latest_block_number(url: &Url) -> Result<BlockId> {
 }
 
 fn get_all_execution_resources(runtime: &ForgeRuntime) -> UsedResources {
-    let test_used_resources = &runtime.extended_runtime.extended_runtime.child.resources.clone();
+    let test_used_resources = runtime
+        .extended_runtime
+        .extended_runtime
+        .child
+        .resources
+        .clone();
     let cheatnet_used_resources = &runtime
         .extended_runtime
         .extended_runtime
