@@ -233,6 +233,34 @@ fn with_exact_filter() {
         "}
     );
 }
+#[test]
+fn with_gas_usage_flag() {
+    let temp = setup_package("simple_package");
+    let snapbox = test_runner();
+
+    let output = snapbox
+        .current_dir(&temp)
+        .arg("tests::test_simple::test_two")
+        .arg("--exact")
+        .arg("--print-gas-usage")
+        .assert()
+        .success();
+
+    assert_stdout_contains!(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 1 test(s) from simple_package package
+        Running 0 test(s) from src/
+        Running 1 test(s) from tests/
+        [PASS] tests::test_simple::test_two, gas: ~0.1
+        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 12 filtered out
+        "}
+    );
+}
 
 #[test]
 fn with_non_matching_filter() {
