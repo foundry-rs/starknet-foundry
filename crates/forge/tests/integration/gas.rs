@@ -438,7 +438,6 @@ fn test_storage_write_cost() {
     assert_gas!(result, "test_storage_write", 1836 + 1224 + 5);
 }
 
-// TODO: l1 message cost is not calculated!
 #[test]
 fn test_l1_message_cost() {
     let test = test_case!(
@@ -472,6 +471,7 @@ fn test_l1_message_cost() {
 
     assert_passed!(result);
     // 1836 = 3 * cost per 32-byte word (deploy)
+    // 2448 = 4 * cost per 32-byte word (l2_l1_message, header is of length 3 and payload size is 1)
     // 5 - gas cost of steps
-    assert_gas!(result, "test_l1_message", 1836 + 5);
+    assert_gas!(result, "test_l1_message", 1836 + 2448 + 5);
 }
