@@ -2,6 +2,7 @@ use anyhow::{anyhow, Context, Ok, Result};
 use camino::Utf8PathBuf;
 use std::fs;
 
+use cast::helpers::constants::SCRIPTS_DIR;
 use cast::helpers::response_structs::ScriptInitResponse;
 use clap::Args;
 use indoc::{formatdoc, indoc};
@@ -31,9 +32,9 @@ fn get_script_root_dir_path(script_name: &str) -> Result<String> {
     let script_root_dir_path = current_dir
         .file_name()
         .and_then(|dir_name| dir_name.to_str())
-        .filter(|&dir_name| dir_name == "scripts")
+        .filter(|&dir_name| dir_name == SCRIPTS_DIR)
         .map_or_else(
-            || current_dir.join("scripts").join(script_name),
+            || current_dir.join(SCRIPTS_DIR).join(script_name),
             |_| current_dir.join(script_name),
         );
 
@@ -135,9 +136,7 @@ fn create_script_main_file(script_root_dir: &str, script_name: &str) -> Result<(
 }
 
 fn overwrite_lib_file(script_root_dir: &str, script_name: &str) -> Result<()> {
-    let lib_file_path = Utf8PathBuf::from(script_root_dir)
-        .join("src")
-        .join("lib.cairo");
+    let lib_file_path = Utf8PathBuf::from(script_root_dir).join("src/lib.cairo");
 
     fs::write(
         lib_file_path,
