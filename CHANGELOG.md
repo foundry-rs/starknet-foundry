@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added 
 
 - `--yes` option to `account delete` command that allows to skip confirmation prompt
+- `script init` command to create template files structure for deployment script
 
 #### Changed
 
