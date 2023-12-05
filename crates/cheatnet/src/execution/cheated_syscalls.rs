@@ -1,6 +1,6 @@
-use crate::execution::cheatable_syscall_handler::CheatableSyscallHandler;
 use crate::execution::entry_point::execute_constructor_entry_point;
 use crate::state::CheatnetState;
+use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::execution::syscalls::{
     DeployRequest, DeployResponse, LibraryCallRequest, SyscallResponse, SyscallResult,
 };
@@ -42,21 +42,16 @@ pub type SyscallSelector = DeprecatedSyscallSelector;
 pub fn get_execution_info_syscall(
     _request: EmptyRequest,
     vm: &mut VirtualMachine,
-    syscall_handler: &mut CheatableSyscallHandler<'_>, // Modified parameter type
+    syscall_handler: &mut SyscallHintProcessor<'_>,
+    cheatnet_state: &mut CheatnetState,
     _remaining_gas: &mut u64,
 ) -> SyscallResult<GetExecutionInfoResponse> {
-    let execution_info_ptr = syscall_handler
-        .child
-        .get_or_allocate_execution_info_segment(vm)?;
+    let execution_info_ptr = syscall_handler.get_or_allocate_execution_info_segment(vm)?;
 
-    let contract_address = syscall_handler.child.storage_address();
+    let contract_address = syscall_handler.storage_address();
 
-    let ptr_cheated_exec_info = get_cheated_exec_info_ptr(
-        syscall_handler.cheatnet_state,
-        vm,
-        execution_info_ptr,
-        &contract_address,
-    );
+    let ptr_cheated_exec_info =
+        get_cheated_exec_info_ptr(cheatnet_state, vm, execution_info_ptr, &contract_address);
 
     Ok(GetExecutionInfoResponse {
         execution_info_ptr: ptr_cheated_exec_info,
@@ -67,11 +62,12 @@ pub fn get_execution_info_syscall(
 pub fn deploy_syscall(
     request: DeployRequest,
     vm: &mut VirtualMachine,
-    syscall_handler: &mut CheatableSyscallHandler<'_>, // Modified parameter type
+    syscall_handler: &mut SyscallHintProcessor<'_>,
+    cheatnet_state: &mut CheatnetState,
     remaining_gas: &mut u64,
 ) -> SyscallResult<DeployResponse> {
     // region: Modified blockifier code
-    let deployer_address = syscall_handler.child.storage_address();
+    let deployer_address = syscall_handler.storage_address();
     // endregion
     let deployer_address_for_calculation = if request.deploy_from_zero {
         ContractAddress::default()
@@ -93,23 +89,20 @@ pub fn deploy_syscall(
         caller_address: deployer_address,
     };
     let call_info = execute_deployment(
-        syscall_handler.child.state,
-        syscall_handler.child.resources,
-        syscall_handler.child.context,
+        syscall_handler.state,
+        syscall_handler.resources,
+        syscall_handler.context,
         ctor_context,
         request.constructor_calldata,
         *remaining_gas,
-        syscall_handler.cheatnet_state,
+        cheatnet_state,
     )?;
 
-    let constructor_retdata = create_retdata_segment(
-        vm,
-        &mut syscall_handler.child,
-        &call_info.execution.retdata.0,
-    )?;
+    let constructor_retdata =
+        create_retdata_segment(vm, syscall_handler, &call_info.execution.retdata.0)?;
     update_remaining_gas(remaining_gas, &call_info);
 
-    syscall_handler.child.inner_calls.push(call_info);
+    syscall_handler.inner_calls.push(call_info);
 
     Ok(DeployResponse {
         contract_address: deployed_contract_address,
@@ -154,12 +147,14 @@ pub fn execute_deployment(
 pub fn library_call_syscall(
     request: LibraryCallRequest,
     vm: &mut VirtualMachine,
-    syscall_handler: &mut CheatableSyscallHandler<'_>, // Modified parameter type
+    syscall_handler: &mut SyscallHintProcessor<'_>, // Modified parameter type
+    cheatnet_state: &mut CheatnetState,
     remaining_gas: &mut u64,
 ) -> SyscallResult<SingleSegmentResponse> {
     let call_to_external = true;
     let retdata_segment = execute_library_call(
         syscall_handler,
+        cheatnet_state,
         vm,
         request.class_hash,
         call_to_external,
@@ -177,7 +172,8 @@ pub fn library_call_syscall(
 pub fn call_contract_syscall(
     request: CallContractRequest,
     vm: &mut VirtualMachine,
-    syscall_handler: &mut CheatableSyscallHandler<'_>, // Modified parameter type
+    syscall_handler: &mut SyscallHintProcessor<'_>,
+    cheatnet_state: &mut CheatnetState,
     remaining_gas: &mut u64,
 ) -> SyscallResult<SingleSegmentResponse> {
     let storage_address = request.contract_address;
@@ -188,11 +184,17 @@ pub fn call_contract_syscall(
         entry_point_selector: request.function_selector,
         calldata: request.calldata,
         storage_address,
-        caller_address: syscall_handler.child.storage_address(),
+        caller_address: syscall_handler.storage_address(),
         call_type: CallType::Call,
         initial_gas: *remaining_gas,
     };
-    let retdata_segment = execute_inner_call(&mut entry_point, vm, syscall_handler, remaining_gas)?;
+    let retdata_segment = execute_inner_call(
+        &mut entry_point,
+        vm,
+        syscall_handler,
+        cheatnet_state,
+        remaining_gas,
+    )?;
 
     // region: Modified blockifier code
     Ok(SingleSegmentResponse {

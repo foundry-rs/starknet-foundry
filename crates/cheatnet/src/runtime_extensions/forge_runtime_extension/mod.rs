@@ -2,12 +2,18 @@ use std::collections::HashMap;
 use std::convert::Into;
 use std::path::PathBuf;
 
+use crate::cheatcodes::deploy::{deploy, deploy_at, DeployCallPayload};
+use crate::cheatcodes::CheatcodeError;
+use crate::rpc::{call_contract, CallContractFailure, CallContractOutput, CallContractResult};
+use crate::state::{BlockifierState, CheatTarget, CheatnetState};
 use anyhow::{Context, Result};
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::execution_utils::{
     stark_felt_from_ptr, stark_felt_to_felt, ReadOnlySegment,
 };
-use blockifier::execution::syscalls::hint_processor::{read_felt_array, SyscallExecutionError};
+use blockifier::execution::syscalls::hint_processor::{
+    read_felt_array, SyscallExecutionError, SyscallHintProcessor,
+};
 use blockifier::execution::syscalls::{
     SyscallRequest, SyscallResponse, SyscallResponseWrapper, SyscallResult,
 };
@@ -15,11 +21,6 @@ use cairo_felt::Felt252;
 use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::vm_core::VirtualMachine;
-use cheatnet::cheatcodes::deploy::{deploy, deploy_at, DeployCallPayload};
-use cheatnet::cheatcodes::{CheatcodeError, EnhancedHintError};
-use cheatnet::execution::cheatable_syscall_handler::{CheatableSyscallHandler, SyscallSelector};
-use cheatnet::rpc::{call_contract, CallContractFailure, CallContractOutput, CallContractResult};
-use cheatnet::state::{BlockifierState, CheatTarget, CheatnetState};
 use conversions::{FromConv, IntoConv, TryFromConv};
 use num_traits::{One, ToPrimitive};
 use scarb_artifacts::StarknetContractArtifacts;
@@ -29,55 +30,47 @@ use cairo_lang_runner::short_string::as_cairo_short_string;
 use starknet_api::core::ContractAddress;
 use starknet_api::hash::StarkFelt;
 
-use crate::forge_runtime_extension::file_operations::string_into_felt;
-use crate::io_runtime_extension::IORuntime;
-use crate::{
-    CheatcodeHandlingResult, ExtendedRuntime, ExtensionLogic, RuntimeExtension,
-    SyscallHandlingResult,
-};
+use crate::cheatcodes::spy_events::SpyTarget;
+use crate::execution::cheated_syscalls::SingleSegmentResponse;
+use crate::runtime_extensions::forge_runtime_extension::file_operations::string_into_felt;
+use crate::runtime_extensions::io_runtime_extension::IORuntime;
 use cairo_lang_starknet::contract::starknet_keccak;
 use cairo_vm::vm::errors::hint_errors::HintError::CustomHint;
-use cheatnet::cheatcodes::spy_events::SpyTarget;
-use cheatnet::execution::cheated_syscalls::SingleSegmentResponse;
-use cheatnet::execution::contract_execution_syscall_handler::print;
+use runtime::{
+    CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic,
+    SyscallHandlingResult, SyscallPtrAccess,
+};
 use starknet::signers::SigningKey;
+
+use super::cheatable_starknet_runtime_extension::SyscallSelector;
 
 mod file_operations;
 
-pub type ForgeRuntime<'a> =
-    ExtendedRuntime<RuntimeExtension<TestExecutionState<'a>, IORuntime<'a>>>;
+pub type ForgeRuntime<'a> = ExtendedRuntime<ForgeExtension<'a>>;
 
-pub struct TestExecutionState<'a> {
+pub struct ForgeExtension<'a> {
     pub environment_variables: &'a HashMap<String, String>,
     pub contracts: &'a HashMap<String, StarknetContractArtifacts>,
 }
 
 // This runtime extension provides an implementation logic for functions from snforge_std library.
-impl<'a> ExtensionLogic for RuntimeExtension<TestExecutionState<'a>, IORuntime<'a>> {
+impl<'a> ExtensionLogic for ForgeExtension<'a> {
     type Runtime = IORuntime<'a>;
-
-    fn get_extended_runtime_mut(&mut self) -> &mut IORuntime<'a> {
-        &mut self.extended_runtime
-    }
-
-    fn get_extended_runtime(&self) -> &IORuntime<'a> {
-        &self.extended_runtime
-    }
 
     #[allow(clippy::too_many_lines)]
     fn handle_cheatcode(
         &mut self,
         selector: &str,
         inputs: Vec<Felt252>,
+        extended_runtime: &mut IORuntime<'a>,
     ) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
         let res = match selector {
             "start_roll" => {
                 let (target, _) = deserialize_cheat_target(&inputs[..inputs.len() - 1]);
                 let block_number = inputs.last().unwrap().clone();
-
-                self.get_extended_runtime_mut()
-                    .0
-                    .get_extended_runtime_mut()
+                extended_runtime
+                    .extended_runtime
+                    .extension
                     .cheatnet_state
                     .start_roll(target, block_number);
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
@@ -85,9 +78,9 @@ impl<'a> ExtensionLogic for RuntimeExtension<TestExecutionState<'a>, IORuntime<'
             "stop_roll" => {
                 let (target, _) = deserialize_cheat_target(&inputs);
 
-                self.get_extended_runtime_mut()
-                    .0
-                    .get_extended_runtime_mut()
+                extended_runtime
+                    .extended_runtime
+                    .extension
                     .cheatnet_state
                     .stop_roll(target);
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
@@ -98,9 +91,9 @@ impl<'a> ExtensionLogic for RuntimeExtension<TestExecutionState<'a>, IORuntime<'
 
                 let (target, _) = deserialize_cheat_target(&inputs[..inputs.len() - 1]);
 
-                self.get_extended_runtime_mut()
-                    .0
-                    .get_extended_runtime_mut()
+                extended_runtime
+                    .extended_runtime
+                    .extension
                     .cheatnet_state
                     .start_warp(target, warp_timestamp);
 
@@ -109,9 +102,9 @@ impl<'a> ExtensionLogic for RuntimeExtension<TestExecutionState<'a>, IORuntime<'
             "stop_warp" => {
                 let (target, _) = deserialize_cheat_target(&inputs);
 
-                self.get_extended_runtime_mut()
-                    .0
-                    .get_extended_runtime_mut()
+                extended_runtime
+                    .extended_runtime
+                    .extension
                     .cheatnet_state
                     .stop_warp(target);
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
@@ -120,18 +113,18 @@ impl<'a> ExtensionLogic for RuntimeExtension<TestExecutionState<'a>, IORuntime<'
                 let (target, _) = deserialize_cheat_target(&inputs[..inputs.len() - 1]);
                 let sequencer_address = inputs.last().unwrap().clone().into_();
 
-                self.get_extended_runtime_mut()
-                    .0
-                    .get_extended_runtime_mut()
+                extended_runtime
+                    .extended_runtime
+                    .extension
                     .cheatnet_state
                     .start_elect(target, sequencer_address);
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "stop_elect" => {
                 let (target, _) = deserialize_cheat_target(&inputs);
-                self.get_extended_runtime_mut()
-                    .0
-                    .get_extended_runtime_mut()
+                extended_runtime
+                    .extended_runtime
+                    .extension
                     .cheatnet_state
                     .stop_elect(target);
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
@@ -142,9 +135,9 @@ impl<'a> ExtensionLogic for RuntimeExtension<TestExecutionState<'a>, IORuntime<'
                 // The last element in `inputs` should be the contract address in all cases
                 let caller_address = inputs.last().unwrap().clone().into_();
 
-                self.get_extended_runtime_mut()
-                    .0
-                    .get_extended_runtime_mut()
+                extended_runtime
+                    .extended_runtime
+                    .extension
                     .cheatnet_state
                     .start_prank(target, caller_address);
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
@@ -152,9 +145,9 @@ impl<'a> ExtensionLogic for RuntimeExtension<TestExecutionState<'a>, IORuntime<'
             "stop_prank" => {
                 let (target, _) = deserialize_cheat_target(&inputs);
 
-                self.get_extended_runtime_mut()
-                    .0
-                    .get_extended_runtime_mut()
+                extended_runtime
+                    .extended_runtime
+                    .extension
                     .cheatnet_state
                     .stop_prank(target);
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
@@ -174,9 +167,9 @@ impl<'a> ExtensionLogic for RuntimeExtension<TestExecutionState<'a>, IORuntime<'
                     .cloned()
                     .collect::<Vec<_>>();
 
-                self.get_extended_runtime_mut()
-                    .0
-                    .get_extended_runtime_mut()
+                extended_runtime
+                    .extended_runtime
+                    .extension
                     .cheatnet_state
                     .start_mock_call(contract_address, &function_name, &ret_data);
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
@@ -185,46 +178,28 @@ impl<'a> ExtensionLogic for RuntimeExtension<TestExecutionState<'a>, IORuntime<'
                 let contract_address = inputs[0].clone().into_();
                 let function_name = inputs[1].clone();
 
-                self.get_extended_runtime_mut()
-                    .0
-                    .get_extended_runtime_mut()
+                extended_runtime
+                    .extended_runtime
+                    .extension
                     .cheatnet_state
                     .stop_mock_call(contract_address, &function_name);
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "start_spoof" => {
                 let (target, inputs_start) = deserialize_cheat_target(&inputs);
+                let mut idx = inputs_start;
 
-                // We check for 1s - because of serialization from tx_info.cairo::option_as_tuple
-                let version = inputs[inputs_start]
-                    .is_one()
-                    .then(|| inputs[inputs_start + 1].clone());
-                let account_contract_address = inputs[inputs_start + 2]
-                    .is_one()
-                    .then(|| inputs[inputs_start + 3].clone());
-                let max_fee = inputs[inputs_start + 4]
-                    .is_one()
-                    .then(|| inputs[inputs_start + 5].clone());
-                let transaction_hash = inputs[inputs_start + 6]
-                    .is_one()
-                    .then(|| inputs[inputs_start + 7].clone());
-                let chain_id = inputs[inputs_start + 8]
-                    .is_one()
-                    .then(|| inputs[inputs_start + 9].clone());
-                let nonce = inputs[inputs_start + 10]
-                    .is_one()
-                    .then(|| inputs[inputs_start + 11].clone());
+                let version = read_option_felt(&inputs, &mut idx);
+                let account_contract_address = read_option_felt(&inputs, &mut idx);
+                let max_fee = read_option_felt(&inputs, &mut idx);
+                let signature = read_option_vec(&inputs, &mut idx);
+                let transaction_hash = read_option_felt(&inputs, &mut idx);
+                let chain_id = read_option_felt(&inputs, &mut idx);
+                let nonce = read_option_felt(&inputs, &mut idx);
 
-                let signature_len = inputs[inputs_start + 13]
-                    .to_usize()
-                    .expect("Failed to convert signature_len to usize");
-                let signature = inputs[inputs_start + 12].is_one().then(|| {
-                    Vec::from(&inputs[inputs_start + 14..(inputs_start + 14 + signature_len)])
-                });
-
-                self.get_extended_runtime_mut()
-                    .0
-                    .get_extended_runtime_mut()
+                extended_runtime
+                    .extended_runtime
+                    .extension
                     .cheatnet_state
                     .start_spoof(
                         target,
@@ -241,21 +216,21 @@ impl<'a> ExtensionLogic for RuntimeExtension<TestExecutionState<'a>, IORuntime<'
             "stop_spoof" => {
                 let (target, _) = deserialize_cheat_target(&inputs);
 
-                self.get_extended_runtime_mut()
-                    .0
-                    .get_extended_runtime_mut()
+                extended_runtime
+                    .extended_runtime
+                    .extension
                     .cheatnet_state
                     .stop_spoof(target);
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "declare" => {
                 let contract_name = inputs[0].clone();
-                let contracts = self.extension_state.contracts;
+                let contracts = self.contracts;
                 let mut blockifier_state = BlockifierState::from(
-                    self.get_extended_runtime_mut()
-                        .0
-                        .get_extended_runtime_mut()
-                        .child
+                    extended_runtime
+                        .extended_runtime
+                        .extended_runtime
+                        .hint_handler
                         .state,
                 );
                 match blockifier_state.declare(&contract_name, contracts) {
@@ -274,12 +249,17 @@ impl<'a> ExtensionLogic for RuntimeExtension<TestExecutionState<'a>, IORuntime<'
                 let class_hash = inputs[0].clone().into_();
                 let calldata_length = inputs[1].to_usize().unwrap();
                 let calldata = Vec::from(&inputs[2..(2 + calldata_length)]);
-                let cheatnet_state = self.get_extended_runtime_mut().0.get_extended_runtime_mut();
-                let mut blockifier_state = BlockifierState::from(cheatnet_state.child.state);
+                let cheatable_starknet_runtime = &mut extended_runtime.extended_runtime;
+                let mut blockifier_state = BlockifierState::from(
+                    cheatable_starknet_runtime
+                        .extended_runtime
+                        .hint_handler
+                        .state,
+                );
 
                 handle_deploy_result(deploy(
                     &mut blockifier_state,
-                    cheatnet_state.cheatnet_state,
+                    cheatable_starknet_runtime.extension.cheatnet_state,
                     &class_hash,
                     &calldata,
                 ))
@@ -289,30 +269,26 @@ impl<'a> ExtensionLogic for RuntimeExtension<TestExecutionState<'a>, IORuntime<'
                 let calldata_length = inputs[1].to_usize().unwrap();
                 let calldata = Vec::from(&inputs[2..(2 + calldata_length)]);
                 let contract_address = inputs[2 + calldata_length].clone().into_();
-                let cheatnet_runtime = self.get_extended_runtime_mut().0.get_extended_runtime_mut();
-                let mut blockifier_state = BlockifierState::from(cheatnet_runtime.child.state);
+                let cheatnet_runtime = &mut extended_runtime.extended_runtime;
+                let mut blockifier_state =
+                    BlockifierState::from(cheatnet_runtime.extended_runtime.hint_handler.state);
 
                 handle_deploy_result(deploy_at(
                     &mut blockifier_state,
-                    cheatnet_runtime.cheatnet_state,
+                    cheatnet_runtime.extension.cheatnet_state,
                     &class_hash,
                     &calldata,
                     contract_address,
                 ))
-            }
-            "print" => {
-                print(inputs);
-                Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
             "precalculate_address" => {
                 let class_hash = inputs[0].clone().into_();
                 let calldata_length = inputs[1].to_usize().unwrap();
                 let calldata = Vec::from(&inputs[2..(2 + calldata_length)]);
 
-                let contract_address = self
-                    .get_extended_runtime()
-                    .0
-                    .get_extended_runtime()
+                let contract_address = extended_runtime
+                    .extended_runtime
+                    .extension
                     .cheatnet_state
                     .precalculate_address(&class_hash, &calldata);
 
@@ -329,7 +305,6 @@ impl<'a> ExtensionLogic for RuntimeExtension<TestExecutionState<'a>, IORuntime<'
                 });
 
                 let env_var = self
-                    .extension_state
                     .environment_variables
                     .get(&name)
                     .with_context(|| format!("Failed to read from env var = {name}"))?;
@@ -343,10 +318,10 @@ impl<'a> ExtensionLogic for RuntimeExtension<TestExecutionState<'a>, IORuntime<'
                 let contract_address = inputs[0].clone().into_();
 
                 let mut blockifier_state = BlockifierState::from(
-                    self.extended_runtime
-                        .0
-                        .get_extended_runtime_mut()
-                        .child
+                    extended_runtime
+                        .extended_runtime
+                        .extended_runtime
+                        .hint_handler
                         .state,
                 );
 
@@ -367,12 +342,13 @@ impl<'a> ExtensionLogic for RuntimeExtension<TestExecutionState<'a>, IORuntime<'
 
                 let payload = Vec::from(&inputs[4..inputs.len()]);
 
-                let cheatnet_runtime = self.get_extended_runtime_mut().0.get_extended_runtime_mut();
-                let mut blockifier_state = BlockifierState::from(cheatnet_runtime.child.state);
+                let cheatnet_runtime = &mut extended_runtime.extended_runtime;
+                let mut blockifier_state =
+                    BlockifierState::from(cheatnet_runtime.extended_runtime.hint_handler.state);
 
                 match blockifier_state
                     .l1_handler_execute(
-                        cheatnet_runtime.cheatnet_state,
+                        cheatnet_runtime.extension.cheatnet_state,
                         contract_address,
                         &function_name,
                         &from_address,
@@ -418,20 +394,18 @@ impl<'a> ExtensionLogic for RuntimeExtension<TestExecutionState<'a>, IORuntime<'
                     }
                 };
 
-                let id = self
-                    .get_extended_runtime_mut()
-                    .0
-                    .get_extended_runtime_mut()
+                let id = extended_runtime
+                    .extended_runtime
+                    .extension
                     .cheatnet_state
                     .spy_events(spy_on);
                 Ok(CheatcodeHandlingResult::Handled(vec![Felt252::from(id)]))
             }
             "fetch_events" => {
                 let id = &inputs[0];
-                let (emitted_events_len, serialized_events) = self
-                    .get_extended_runtime_mut()
-                    .0
-                    .get_extended_runtime_mut()
+                let (emitted_events_len, serialized_events) = extended_runtime
+                    .extended_runtime
+                    .extension
                     .cheatnet_state
                     .fetch_events(id);
                 let mut result = vec![Felt252::from(emitted_events_len)];
@@ -490,28 +464,21 @@ impl<'a> ExtensionLogic for RuntimeExtension<TestExecutionState<'a>, IORuntime<'
         &mut self,
         selector: SyscallSelector,
         vm: &mut VirtualMachine,
+        extended_runtime: &mut IORuntime<'a>,
     ) -> Result<SyscallHandlingResult, HintError> {
         match selector {
             DeprecatedSyscallSelector::CallContract => {
-                let call_args = CallContractArgs::read(
-                    vm,
-                    &mut self
-                        .get_extended_runtime_mut()
-                        .0
-                        .get_extended_runtime_mut()
-                        .child
-                        .syscall_ptr,
-                )?;
-                let cheatable_syscall_handler =
-                    self.get_extended_runtime_mut().0.get_extended_runtime_mut();
-                let mut blockifier_state =
-                    BlockifierState::from(cheatable_syscall_handler.child.state);
-                let cheatnet_state: &mut _ = cheatable_syscall_handler.cheatnet_state;
+                let call_args = CallContractArgs::read(vm, extended_runtime.get_mut_syscall_ptr())?;
+                let cheatable_starknet_runtime = &mut extended_runtime.extended_runtime;
+                let cheatnet_state: &mut _ = cheatable_starknet_runtime.extension.cheatnet_state;
+                let syscall_handler = &mut cheatable_starknet_runtime.extended_runtime.hint_handler;
+                let mut blockifier_state = BlockifierState::from(syscall_handler.state);
 
                 let call_result =
                     execute_call_contract(&mut blockifier_state, cheatnet_state, &call_args);
                 write_call_contract_response(
-                    self.get_extended_runtime_mut().0.get_extended_runtime_mut(),
+                    syscall_handler,
+                    cheatnet_state,
                     vm,
                     &call_args,
                     call_result,
@@ -616,25 +583,21 @@ impl SyscallRequest for CallContractArgs {
 }
 
 fn write_call_contract_response(
-    cheatable_syscall_handler: &mut CheatableSyscallHandler,
+    syscall_handler: &mut SyscallHintProcessor<'_>,
+    cheatnet_state: &mut CheatnetState,
     vm: &mut VirtualMachine,
     call_args: &CallContractArgs,
     call_output: CallContractOutput,
 ) -> Result<(), HintError> {
     let response_wrapper: SyscallResponseWrapper<SingleSegmentResponse> = match call_output.result {
         CallContractResult::Success { ret_data, .. } => {
-            let memory_segment_start_ptr = cheatable_syscall_handler
-                .child
+            let memory_segment_start_ptr = syscall_handler
                 .read_only_segments
                 .allocate(vm, &ret_data.iter().map(Into::into).collect())?;
 
             // add execution resources used by call to all used resources
-            cheatable_syscall_handler
-                .cheatnet_state
-                .used_resources
-                .vm_resources += &call_output.used_resources.vm_resources;
-            cheatable_syscall_handler
-                .cheatnet_state
+            cheatnet_state.used_resources.vm_resources += &call_output.used_resources.vm_resources;
+            cheatnet_state
                 .used_resources
                 .syscall_counter
                 .extend(call_output.used_resources.syscall_counter);
@@ -661,7 +624,7 @@ fn write_call_contract_response(
         },
     };
 
-    response_wrapper.write(vm, &mut cheatable_syscall_handler.child.syscall_ptr)?;
+    response_wrapper.write(vm, &mut syscall_handler.syscall_ptr)?;
 
     Ok(())
 }
@@ -685,4 +648,23 @@ fn cheatcode_panic_result(panic_data: Vec<Felt252>) -> Vec<Felt252> {
     let mut result = vec![Felt252::from(1), Felt252::from(panic_data.len())];
     result.extend(panic_data);
     result
+}
+
+fn read_felt(buffer: &[Felt252], idx: &mut usize) -> Felt252 {
+    *idx += 1;
+    buffer[*idx - 1].clone()
+}
+
+fn read_vec(buffer: &[Felt252], idx: &mut usize, count: usize) -> Vec<Felt252> {
+    *idx += count;
+    buffer[*idx - count..*idx].to_vec()
+}
+
+fn read_option_felt(buffer: &[Felt252], idx: &mut usize) -> Option<Felt252> {
+    *idx += 1;
+    (!buffer[*idx - 1].is_one()).then(|| read_felt(buffer, idx))
+}
+
+fn read_option_vec(buffer: &[Felt252], idx: &mut usize) -> Option<Vec<Felt252>> {
+    read_option_felt(buffer, idx).map(|count| read_vec(buffer, idx, count.to_usize().unwrap()))
 }

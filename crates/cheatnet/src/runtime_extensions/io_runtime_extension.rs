@@ -1,32 +1,27 @@
+use std::marker::PhantomData;
+
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_vm::vm::errors::hint_errors::HintError;
-use cheatnet::{
-    cheatcodes::EnhancedHintError, execution::cheatable_syscall_handler::CheatableSyscallHandler,
-};
 
-use crate::{CheatcodeHandlingResult, ExtendedRuntime, ExtensionLogic, RuntimeExtension};
+use runtime::{CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic};
 
-pub struct IORuntimeState {}
+use super::cheatable_starknet_runtime_extension::CheatableStarknetRuntime;
 
-pub type IORuntime<'a> =
-    ExtendedRuntime<RuntimeExtension<IORuntimeState, CheatableSyscallHandler<'a>>>;
+pub struct IORuntimeExtension<'a> {
+    pub lifetime: &'a PhantomData<()>,
+}
 
-impl<'a> ExtensionLogic for RuntimeExtension<IORuntimeState, CheatableSyscallHandler<'a>> {
-    type Runtime = CheatableSyscallHandler<'a>;
+pub type IORuntime<'a> = ExtendedRuntime<IORuntimeExtension<'a>>;
 
-    fn get_extended_runtime_mut(&mut self) -> &mut CheatableSyscallHandler<'a> {
-        &mut self.extended_runtime
-    }
-
-    fn get_extended_runtime(&self) -> &CheatableSyscallHandler<'a> {
-        &self.extended_runtime
-    }
+impl<'a> ExtensionLogic for IORuntimeExtension<'a> {
+    type Runtime = CheatableStarknetRuntime<'a>;
 
     fn handle_cheatcode(
         &mut self,
         selector: &str,
         inputs: Vec<Felt252>,
+        _extended_runtime: &mut Self::Runtime,
     ) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
         match selector {
             "print" => {
