@@ -7,9 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Added
+
+- Support for test collector built-in in Scarb with the `--use-scarb-collector` flag. Requires at least `nightly-2023-12-04` version of Scarb.
+
 ### Cast
 
-### Added
+#### Added
 
 - `--private-key-file` option to `account add` command that allows to provide a path to the file holding account private key
 
