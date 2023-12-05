@@ -55,5 +55,5 @@ pub(crate) fn print_test_result(test_result: &TestCaseSummary) {
         gas_usage = format!(", gas: ~{result}");
     }
 
-    println!("{result_header} {result_name}{fuzzer_report}{block_number_message}{result_message}{gas_usage}");
+    println!("{result_header} {result_name}{fuzzer_report}{gas_usage}{block_number_message}{result_message}");
 }
