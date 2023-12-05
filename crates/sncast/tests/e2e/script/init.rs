@@ -7,11 +7,14 @@ fn test_init_files_content() {
     let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
     let script_dir_path = temp_dir.path().join("scripts/myscript");
 
-    Command::new(cargo_bin!("sncast"))
+    let snapbox = Command::new(cargo_bin!("sncast"))
         .current_dir(temp_dir.path())
-        .args(["script", "init", "myscript"])
-        .assert()
-        .success();
+        .args(["script", "init", "myscript"]);
+
+    snapbox.assert().stdout_eq(indoc! {r"
+        command: script init
+        status: Successfully initialized `myscript`
+    "});
 
     let scarb_toml_content = std::fs::read_to_string(script_dir_path.join("Scarb.toml")).unwrap();
     let lib_cairo_content = std::fs::read_to_string(script_dir_path.join("src/lib.cairo")).unwrap();
@@ -62,11 +65,14 @@ fn test_init_creates_scripts_dir() {
         "Scripts directory already exists in the current directory"
     );
 
-    Command::new(cargo_bin!("sncast"))
+    let snapbox = Command::new(cargo_bin!("sncast"))
         .current_dir(temp_dir.path())
-        .args(["script", "init", "myscript"])
-        .assert()
-        .success();
+        .args(["script", "init", "myscript"]);
+
+    snapbox.assert().stdout_eq(indoc! {r"
+        command: script init
+        status: Successfully initialized `myscript`
+    "});
 
     assert!(temp_dir.path().join("scripts").exists());
     assert!(temp_dir.path().join("scripts/myscript").exists());
@@ -81,11 +87,14 @@ fn test_init_from_scripts_dir() {
         .expect("Failed to create scripts directory in the current temp directory");
     assert!(scripts_dir_path.exists());
 
-    Command::new(cargo_bin!("sncast"))
-        .current_dir(&scripts_dir_path)
-        .args(["script", "init", "myscript"])
-        .assert()
-        .success();
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(temp_dir.path())
+        .args(["script", "init", "myscript"]);
+
+    snapbox.assert().stdout_eq(indoc! {r"
+        command: script init
+        status: Successfully initialized `myscript`
+    "});
 
     assert!(scripts_dir_path.join("myscript").exists());
     assert!(!scripts_dir_path.join("scripts/myscript").exists());
