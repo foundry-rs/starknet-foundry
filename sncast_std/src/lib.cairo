@@ -46,7 +46,9 @@ struct DeclareResult {
     transaction_hash: felt252,
 }
 
-fn declare(contract_name: felt252, max_fee: Option<felt252>, nonce: Option<felt252>) -> DeclareResult {
+fn declare(
+    contract_name: felt252, max_fee: Option<felt252>, nonce: Option<felt252>
+) -> DeclareResult {
     let mut inputs = array![contract_name];
 
     match max_fee {

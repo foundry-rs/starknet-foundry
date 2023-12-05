@@ -5,7 +5,12 @@ use sncast_std::{
 fn second_contract() {
     let declare_result = declare('Mapa2', Option::None, Option::None);
     let deploy_result = deploy(
-        declare_result.class_hash, ArrayTrait::new(), Option::None, false, Option::None, Option::None
+        declare_result.class_hash,
+        ArrayTrait::new(),
+        Option::None,
+        false,
+        Option::None,
+        Option::None
     );
     assert(deploy_result.transaction_hash != 0, deploy_result.transaction_hash);
 
