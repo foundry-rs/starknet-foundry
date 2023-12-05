@@ -1,10 +1,10 @@
 use crate::forge_bench::collect_tests;
 use assert_fs::TempDir;
 use camino::Utf8PathBuf;
-use forge::{CrateLocation};
+use forge::collecting::TestCompilationTarget;
+use forge::CrateLocation;
 use std::path::PathBuf;
 use std::str::FromStr;
-use forge::collecting::TestCompilationTarget;
 use test_collector::LinkedLibrary;
 use test_utils::corelib::corelib_path;
 
