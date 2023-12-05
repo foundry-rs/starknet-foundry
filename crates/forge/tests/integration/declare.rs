@@ -26,6 +26,12 @@ fn simple_declare() {
             "HelloStarknet",
             indoc!(
                 r"
+                #[starknet::interface]
+                trait IHelloStarknet<TContractState> {
+                    fn increase_balance(ref self: ContractState, amount: felt252);
+                    fn decrease_balance(ref self: ContractState, amount: felt252)
+                }
+
                 #[starknet::contract]
                 mod HelloStarknet {
                     #[storage]
@@ -34,15 +40,16 @@ fn simple_declare() {
                     }
         
                     // Increases the balance by the given amount.
-                    #[external(v0)]
-                    fn increase_balance(ref self: ContractState, amount: felt252) {
-                        self.balance.write(self.balance.read() + amount);
-                    }
-        
-                    // Decreases the balance by the given amount.
-                    #[external(v0)]
-                    fn decrease_balance(ref self: ContractState, amount: felt252) {
-                        self.balance.write(self.balance.read() - amount);
+                    #[abi(embed_v0)]
+                    impl HelloStarknetImpl of super::IHelloStarknet<ContractState> {
+                        fn increase_balance(ref self: ContractState, amount: felt252) {
+                            self.balance.write(self.balance.read() + amount);
+                        }
+
+                        // Decreases the balance by the given amount.
+                        fn decrease_balance(ref self: ContractState, amount: felt252) {
+                            self.balance.write(self.balance.read() - amount);
+                        }
                     }
                 }
                 "

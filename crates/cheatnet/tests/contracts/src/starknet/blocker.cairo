@@ -25,7 +25,7 @@ mod Blocker {
         sequencer_address: ContractAddress,
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl IBlockerImpl of super::IBlocker<ContractState> {
         fn write_block(ref self: ContractState) {
             let block_info = get_block_info().unbox();

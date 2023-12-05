@@ -335,6 +335,8 @@ fn proxy_storage() {
             "Caller",
             indoc!(
                 r"
+            use starknet::ContractAddress;
+
             #[derive(Drop, Serde, starknet::Store)]
             struct NestedStruct {
                 d: felt252, 
@@ -346,12 +348,22 @@ fn proxy_storage() {
                 b: felt252,
                 c: NestedStruct,
             }
+
+            #[starknet::interface]
+            trait ICaller<TContractState> {
+                fn call_executor(
+                    self: @TContractState,
+                    executor_address: ContractAddress,
+                    custom_struct: CustomStruct
+                ) -> felt252;
+            }
             
             #[starknet::contract]
             mod Caller {
                 use super::CustomStruct;
                 use result::ResultTrait;
-            
+                use starknet::ContractAddress;
+
                 #[starknet::interface]
                 trait IExecutor<T> {
                     fn store_and_add_5(self: @T, custom_struct: CustomStruct) -> felt252;
@@ -360,14 +372,16 @@ fn proxy_storage() {
                 #[storage]
                 struct Storage {}
             
-                #[external(v0)]
-                fn call_executor(
-                    self: @ContractState,
-                    executor_address: starknet::ContractAddress,
-                    custom_struct: CustomStruct
-                ) -> felt252 {
-                    let safe_dispatcher = IExecutorDispatcher { contract_address: executor_address };
-                    safe_dispatcher.store_and_add_5(custom_struct)
+                #[abi(embed_v0)]
+                impl CallerImpl of super::ICaller<ContractState> {
+                    fn call_executor(
+                        self: @ContractState,
+                        executor_address: ContractAddress,
+                        custom_struct: CustomStruct
+                    ) -> felt252 {
+                        let safe_dispatcher = IExecutorDispatcher { contract_address: executor_address };
+                        safe_dispatcher.store_and_add_5(custom_struct)
+                    }
                 }
             }
             "
@@ -388,6 +402,12 @@ fn proxy_storage() {
                 b: felt252,
                 c: NestedStruct,
             }
+
+            #[starknet::interface]
+            trait IExecutor<TContractState> {
+                fn store_and_add_5(ref self: TContractState, custom_struct: CustomStruct) -> felt252;
+                fn read_storage(ref self: TContractState) -> CustomStruct;
+            }
             
             #[starknet::contract]
             mod Executor {
@@ -396,16 +416,17 @@ fn proxy_storage() {
                 struct Storage {
                     thing: CustomStruct
                 }
-            
-                #[external(v0)]
-                fn store_and_add_5(ref self: ContractState, custom_struct: CustomStruct) -> felt252 {
-                    self.thing.write(custom_struct);
-                    5 + self.thing.read().c.d
-                }
-            
-                #[external(v0)]
-                fn read_storage(ref self: ContractState) -> CustomStruct {
-                    self.thing.read()
+
+                #[abi(embed_v0)]
+                impl ExecutorImpl of super::IExecutor<ContractState> {
+                    fn store_and_add_5(ref self: ContractState, custom_struct: CustomStruct) -> felt252 {
+                        self.thing.write(custom_struct);
+                        5 + self.thing.read().c.d
+                    }
+
+                    fn read_storage(ref self: ContractState) -> CustomStruct {
+                        self.thing.read()
+                    }
                 }
             }
             "
@@ -462,6 +483,13 @@ fn proxy_dispatcher_panic() {
             "Caller",
             indoc!(
                 r"
+            #[starknet::interface]
+            trait ICaller<TContractState> {
+                fn invoke_executor(
+                    self: @TContractState,
+                );
+            }
+
             #[starknet::contract]
             mod Caller {
                 use result::ResultTrait;
@@ -482,12 +510,14 @@ fn proxy_dispatcher_panic() {
                     self.executor_address.write(executor_address);
                 }
                 
-                #[external(v0)]
-                fn invoke_executor(
-                    self: @ContractState,
-                ) {
-                    let dispatcher = IExecutorDispatcher { contract_address: self.executor_address.read() };
-                    dispatcher.invoke_with_panic()
+                #[abi(embed_v0)]
+                impl CallerImpl of super::ICaller<ContractState> {
+                    fn invoke_executor(
+                        self: @ContractState,
+                    ) {
+                        let dispatcher = IExecutorDispatcher { contract_address: self.executor_address.read() };
+                        dispatcher.invoke_with_panic()
+                    }
                 }
             }
             "
@@ -497,14 +527,21 @@ fn proxy_dispatcher_panic() {
             "Executor",
             indoc!(
                 r"
+            #[starknet::interface]
+            trait IExecutor<TContractState> {
+                fn invoke_with_panic(ref self: TContractState);
+            }
+
             #[starknet::contract]
             mod Executor {
                 #[storage]
                 struct Storage {}
             
-                #[external(v0)]
-                fn invoke_with_panic(ref self: ContractState){
-                    panic_with_felt252('panic_msg');
+                #[abi(embed_v0)]
+                impl ExecutorImpl of super::IExecutor<ContractState> {
+                    fn invoke_with_panic(ref self: ContractState) {
+                        panic_with_felt252('panic_msg');
+                    }
                 }
             }
             "
@@ -619,6 +656,13 @@ fn nonexistent_libcall_function() {
             "LibCaller",
             indoc!(
                 r"
+                use starknet::ClassHash;
+
+                #[starknet::interface]
+                trait IContract<TContractState> {
+                    fn invoke_nonexistent_libcall_from_contract(ref self: TContractState, class_hash: ClassHash);
+                }
+
                 #[starknet::contract]
                 mod Contract {
                     use starknet::ClassHash;
@@ -632,14 +676,16 @@ fn nonexistent_libcall_function() {
                     trait ICaller<T> {
                         fn invoke_nonexistent(ref self: T);
                     }
-                    
-                    #[external(v0)]
-                    fn invoke_nonexistent_libcall_from_contract(ref self: ContractState, class_hash: ClassHash) {
-                        let lib_dispatcher = ICallerSafeLibraryDispatcher { class_hash };
-                        
-                        match lib_dispatcher.invoke_nonexistent() {
-                            Result::Ok(_) => panic_with_felt252('should have panicked'),
-                            Result::Err(x) => assert(*x.at(0) == 'panic_msg', 'wrong panic msg')
+
+                    #[abi(embed_v0)]
+                    impl ContractImpl of super::IContract<ContractState> {
+                        fn invoke_nonexistent_libcall_from_contract(ref self: ContractState, class_hash: ClassHash) {
+                            let lib_dispatcher = ICallerSafeLibraryDispatcher { class_hash };
+
+                            match lib_dispatcher.invoke_nonexistent() {
+                                Result::Ok(_) => panic_with_felt252('should have panicked'),
+                                Result::Err(x) => assert(*x.at(0) == 'panic_msg', 'wrong panic msg')
+                            }
                         }
                     }
                 }
@@ -736,6 +782,11 @@ fn nonexistent_class_libcall() {
             "LibCaller",
             indoc!(
                 r"
+                #[starknet::interface]
+                trait IContract<TContractState> {
+                    fn invoke_nonexistent_libcall_from_contract(ref self: TContractState);
+                }
+
                 #[starknet::contract]
                 mod Contract {
                     use starknet::class_hash::class_hash_try_from_felt252;
@@ -752,12 +803,14 @@ fn nonexistent_class_libcall() {
                     trait ICaller<T> {
                         fn invoke_nonexistent(ref self: T);
                     }
-                    
-                    #[external(v0)]
-                    fn invoke_nonexistent_libcall_from_contract(ref self: ContractState) {
-                        let target_class_hash: ClassHash = class_hash_try_from_felt252(5_felt252).unwrap();
-                        let lib_dispatcher = ICallerSafeLibraryDispatcher { class_hash: target_class_hash  };
-                        lib_dispatcher.invoke_nonexistent();
+
+                    #[abi(embed_v0)]
+                    impl ContractImpl of super::IContract<ContractState> {
+                        fn invoke_nonexistent_libcall_from_contract(ref self: ContractState) {
+                            let target_class_hash: ClassHash = class_hash_try_from_felt252(5_felt252).unwrap();
+                            let lib_dispatcher = ICallerSafeLibraryDispatcher { class_hash: target_class_hash  };
+                            lib_dispatcher.invoke_nonexistent();
+                        }
                     }
                 }
                 "

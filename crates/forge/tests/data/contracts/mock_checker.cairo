@@ -29,7 +29,7 @@ mod MockChecker {
         self.stored_thing.write(arg1)
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl IMockCheckerImpl of super::IMockChecker<ContractState> {
         fn get_thing(ref self: ContractState) -> felt252 {
             self.stored_thing.read()

@@ -24,7 +24,7 @@ mod WarpChecker {
     }
 
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl WarpChecker of super::IWarpChecker<ContractState> {
         fn get_block_timestamp(ref self: ContractState) -> u64 {
             starknet::get_block_info().unbox().block_timestamp

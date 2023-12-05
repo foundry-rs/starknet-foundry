@@ -21,7 +21,7 @@ mod ConstructorElectChecker {
         self.seq_addr.write(sequencer_address);
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl IConstructorElectChecker of super::IConstructorElectChecker<ContractState> {
         fn get_stored_sequencer_address(ref self: ContractState) -> ContractAddress {
             self.seq_addr.read()
