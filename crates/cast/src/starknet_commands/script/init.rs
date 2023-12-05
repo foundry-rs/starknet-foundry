@@ -104,7 +104,7 @@ fn add_starknet_dependency(script_root_dir: &Utf8PathBuf) -> Result<()> {
 
 fn modify_files_in_src_dir(script_name: &str, script_root_dir: &Utf8PathBuf) -> Result<()> {
     create_script_main_file(script_name, script_root_dir)
-        .context(format!("Failed to create {}.cairo file", script_name))?;
+        .context(format!("Failed to create {script_name}.cairo file"))?;
     overwrite_lib_file(script_name, script_root_dir).context("Failed to overwrite lib.cairo file")
 }
 
@@ -114,14 +114,14 @@ fn create_script_main_file(script_name: &str, script_root_dir: &Utf8PathBuf) -> 
 
     fs::write(
         script_main_file_path,
-        indoc! {r#"
+        indoc! {r"
             use sncast_std;
             use debug::PrintTrait;
 
             fn main() {
                 'Put your code here!'.print();
             }
-        "#},
+        "},
     )?;
 
     Ok(())

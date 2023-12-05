@@ -125,7 +125,7 @@ fn main() -> Result<()> {
     let runtime = Runtime::new().expect("Could not instantiate Runtime");
 
     if let Commands::Script(script) = &cli.command {
-        run_script_command(&cli, runtime, config, script, value_format)
+        run_script_command(&cli, runtime, &config, script, value_format)
     } else {
         let provider = get_provider(&config.rpc_url)?;
         runtime.block_on(run_async_command(cli, config, provider, value_format))
@@ -364,7 +364,7 @@ async fn run_async_command(
 fn run_script_command(
     cli: &Cli,
     runtime: Runtime,
-    config: CastConfig,
+    config: &CastConfig,
     script: &Script,
     value_format: ValueFormat,
 ) -> Result<()> {
@@ -382,7 +382,7 @@ fn run_script_command(
             &cli.path_to_scarb_toml,
             &provider,
             runtime,
-            &config,
+            config,
         );
 
         print_command_result("script", &mut result, value_format, cli.json)?;

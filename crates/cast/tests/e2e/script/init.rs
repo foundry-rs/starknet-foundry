@@ -26,7 +26,7 @@ fn test_script_init_files_created() {
     assert!(script_dir_path.join("src").exists());
     assert!(script_dir_path.join("src/lib.cairo").exists());
     assert!(script_dir_path
-        .join(format!("src/{}.cairo", script_name))
+        .join(format!("src/{script_name}.cairo"))
         .exists());
 }
 
@@ -50,7 +50,7 @@ fn test_script_init_files_content() {
     let scarb_toml_content = std::fs::read_to_string(&scarb_toml_path).unwrap();
     let lib_cairo_content = std::fs::read_to_string(script_dir_path.join("src/lib.cairo")).unwrap();
     let main_file_content =
-        std::fs::read_to_string(script_dir_path.join(format!("src/{}.cairo", script_name)))
+        std::fs::read_to_string(script_dir_path.join(format!("src/{script_name}.cairo")))
             .unwrap();
 
     let cast_version = env!("CARGO_PKG_VERSION");
@@ -81,14 +81,14 @@ fn test_script_init_files_content() {
     );
     assert_eq!(
         main_file_content,
-        indoc! {r#"
+        indoc! {r"
             use sncast_std;
             use debug::PrintTrait;
 
             fn main() {
                 'Put your code here!'.print();
             }
-        "#}
+        "}
     );
 }
 
