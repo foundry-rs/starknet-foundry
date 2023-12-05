@@ -41,6 +41,7 @@ pub struct Deploy {
     pub nonce: Option<FieldElement>,
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn deploy(
     class_hash: FieldElement,
     constructor_calldata: Vec<FieldElement>,
@@ -56,6 +57,7 @@ pub async fn deploy(
     let factory = ContractFactory::new(class_hash, account);
     let deployment = factory.deploy(constructor_calldata.clone(), salt, unique);
 
+    // todo: refactor setting max_fee and nonce
     let execution_with_fee = if let Some(max_fee) = max_fee {
         deployment.max_fee(max_fee)
     } else {

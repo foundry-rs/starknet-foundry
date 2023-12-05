@@ -394,6 +394,6 @@ mod tests {
     fn test_config_defaults() {
         let config = CastConfig::default();
         assert_eq!(config.wait_timeout, WAIT_TIMEOUT);
-        assert_eq!(config.wait_retry_interval, WAIT_RETRY_INTERVAL)
+        assert_eq!(config.wait_retry_interval, WAIT_RETRY_INTERVAL);
     }
 }

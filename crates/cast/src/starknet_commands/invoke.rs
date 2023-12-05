@@ -62,6 +62,7 @@ pub async fn execute_calls(
 ) -> Result<InvokeResponse> {
     let execution_calls = account.execute(calls);
 
+    // todo: refactor setting max_fee and nonce
     let execution_with_fee = if let Some(max_fee) = max_fee {
         execution_calls.max_fee(max_fee)
     } else {
