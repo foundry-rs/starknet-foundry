@@ -7,7 +7,7 @@ use tempfile::TempDir;
 
 #[test]
 fn test_script_init_files_created() {
-    let script_name = "myscript";
+    let script_name = "my_script";
     let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
 
     let snapbox = Command::new(cargo_bin!("sncast"))
@@ -32,7 +32,7 @@ fn test_script_init_files_created() {
 
 #[test]
 fn test_script_init_files_content() {
-    let script_name = "myscript";
+    let script_name = "my_script";
     let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
 
     let snapbox = Command::new(cargo_bin!("sncast"))
@@ -94,7 +94,7 @@ fn test_script_init_files_content() {
 
 #[test]
 fn test_init_creates_scripts_dir() {
-    let script_name = "myscript";
+    let script_name = "my_script";
     let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
 
     assert!(
@@ -117,7 +117,7 @@ fn test_init_creates_scripts_dir() {
 
 #[test]
 fn test_init_from_scripts_dir() {
-    let script_name = "myscript";
+    let script_name = "my_script";
     let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
     let scripts_dir_path = temp_dir.path().join(SCRIPTS_DIR);
 
