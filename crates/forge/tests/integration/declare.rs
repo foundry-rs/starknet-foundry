@@ -28,8 +28,8 @@ fn simple_declare() {
                 r"
                 #[starknet::interface]
                 trait IHelloStarknet<TContractState> {
-                    fn increase_balance(ref self: ContractState, amount: felt252);
-                    fn decrease_balance(ref self: ContractState, amount: felt252)
+                    fn increase_balance(ref self: TContractState, amount: felt252);
+                    fn decrease_balance(ref self: TContractState, amount: felt252);
                 }
 
                 #[starknet::contract]
