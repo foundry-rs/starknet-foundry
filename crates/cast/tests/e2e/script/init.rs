@@ -50,8 +50,7 @@ fn test_script_init_files_content() {
     let scarb_toml_content = std::fs::read_to_string(&scarb_toml_path).unwrap();
     let lib_cairo_content = std::fs::read_to_string(script_dir_path.join("src/lib.cairo")).unwrap();
     let main_file_content =
-        std::fs::read_to_string(script_dir_path.join(format!("src/{script_name}.cairo")))
-            .unwrap();
+        std::fs::read_to_string(script_dir_path.join(format!("src/{script_name}.cairo"))).unwrap();
 
     let cast_version = env!("CARGO_PKG_VERSION");
 
