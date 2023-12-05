@@ -45,7 +45,7 @@ console.workspace = true
 rand.workspace = true
 which.workspace = true
 scarb-metadata.workspace = true
-scarb-ui = "0.1.0"
+scarb-ui = "0.1.2"
 schemars = { version = "0.8.12", features = ["preserve_order"] }
 parity-scale-codec = "3.5.0"
 parity-scale-codec-derive = "3.6.5"

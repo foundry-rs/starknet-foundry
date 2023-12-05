@@ -1,20 +1,21 @@
-use crate::cheatcodes::spy_events::Event;
-use crate::execution::cheatable_syscall_handler::CheatableSyscallHandler;
+use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 
-pub fn emit_event_hook(syscall_handler: &mut CheatableSyscallHandler<'_>) {
+use crate::{cheatcodes::spy_events::Event, state::CheatnetState};
+
+pub fn emit_event_hook(
+    syscall_handler: &mut SyscallHintProcessor<'_>,
+    cheatnet_state: &mut CheatnetState,
+) {
     let contract_address = syscall_handler
-        .child
         .call
         .code_address
-        .unwrap_or(syscall_handler.child.call.storage_address);
+        .unwrap_or(syscall_handler.call.storage_address);
 
-    for spy_on in &mut syscall_handler.cheatnet_state.spies {
+    for spy_on in &mut cheatnet_state.spies {
         if spy_on.does_spy(contract_address) {
-            let event = Event::from_ordered_event(
-                syscall_handler.child.events.last().unwrap(),
-                contract_address,
-            );
-            syscall_handler.cheatnet_state.detected_events.push(event);
+            let event =
+                Event::from_ordered_event(syscall_handler.events.last().unwrap(), contract_address);
+            cheatnet_state.detected_events.push(event);
             break;
         }
     }

@@ -1,25 +1,12 @@
 use std::marker::PhantomData;
 
-use crate::execution::cheatable_syscall_handler::CheatableSyscallHandler;
-use blockifier::execution::syscalls::SyscallResult;
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
-use cairo_vm::{types::relocatable::Relocatable, vm::errors::hint_errors::HintError};
+use cairo_vm::vm::errors::hint_errors::HintError;
 
-use runtime::{
-    CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic, SyscallPtrAccess,
-};
+use runtime::{CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic};
 
-// TODO this is only temporary, after we migrate everything to extension it will be auto-derived
-impl<'a> SyscallPtrAccess for CheatableSyscallHandler<'a> {
-    fn get_mut_syscall_ptr(&mut self) -> &mut Relocatable {
-        &mut self.child.syscall_ptr
-    }
-
-    fn verify_syscall_ptr(&self, ptr: Relocatable) -> SyscallResult<()> {
-        self.child.verify_syscall_ptr(ptr)
-    }
-}
+use super::cheatable_starknet_runtime_extension::CheatableStarknetRuntime;
 
 pub struct IORuntimeExtension<'a> {
     pub lifetime: &'a PhantomData<()>,
@@ -28,13 +15,13 @@ pub struct IORuntimeExtension<'a> {
 pub type IORuntime<'a> = ExtendedRuntime<IORuntimeExtension<'a>>;
 
 impl<'a> ExtensionLogic for IORuntimeExtension<'a> {
-    type Runtime = CheatableSyscallHandler<'a>;
+    type Runtime = CheatableStarknetRuntime<'a>;
 
     fn handle_cheatcode(
         &mut self,
         selector: &str,
         inputs: Vec<Felt252>,
-        _extended_runtime: &mut CheatableSyscallHandler<'a>,
+        _extended_runtime: &mut Self::Runtime,
     ) -> Result<CheatcodeHandlingResult, EnhancedHintError> {
         match selector {
             "print" => {
