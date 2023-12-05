@@ -12,7 +12,7 @@ pub struct Init {
     pub script_name: String,
 }
 
-pub fn init(init_args: Init) -> Result<()> {
+pub fn init(init_args: &Init) -> Result<()> {
     let script_root_dir_path = get_script_root_dir_path(&init_args.script_name)?;
 
     init_scarb_project(&script_root_dir_path, &init_args.script_name)?;
