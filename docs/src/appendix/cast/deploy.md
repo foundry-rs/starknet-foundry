@@ -25,3 +25,8 @@ If passed, the salt will be additionally modified with an account address.
 Optional.
 
 Max fee for the transaction. If not provided, max fee will be automatically estimated.
+
+## `--nonce, -n <NONCE>`
+Optional.
+
+Nonce for transaction. If not provided, nonce will be set automatically.
