@@ -97,6 +97,7 @@ struct TestArgs {
     #[arg(long)]
     rerun_failed: bool,
 
+    /// [EXPERIMENTAL] Uses Scarb to find and compile tests. Requires at least Scarb nightly-2023-12-04
     #[arg(long)]
     use_scarb_collector: bool,
 }
