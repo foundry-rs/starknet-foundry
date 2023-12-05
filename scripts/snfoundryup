@@ -516,7 +516,7 @@ clone_and_build() {
   local _build_output_dir="$PWD/target/release"
 
   create_install_dir "${_commit_hash}/bin"
-  local _installdir=${RETVAL%????} # create_symlinks expects a PATH with /bin stripped, rather than modifiyng the function, we just strip it here.
+  local _installdir=${RETVAL%????} # create_symlinks expects a PATH with /bin stripped, rather than modifying the function, we just strip it here.
   assert_nz "$_installdir" "installdir"
 
   ensure cp "$_build_output_dir/snforge" "$_installdir/bin/snforge"

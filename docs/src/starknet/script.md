@@ -10,7 +10,7 @@ It aims to provide similar functionality to Foundry's `forge script`.
 To start writing a deployment script in Cairo just add `cast_std` as a dependency to you scarb package and make sure to
 have a `main` function in the module you want to run.
 
-Please note that **`sncast script` is in develoment**. While it is already possible to declare, deploy, invoke and call 
+Please note that **`sncast script` is in development**. While it is already possible to declare, deploy, invoke and call 
 contracts from within Cairo, its interface, internals and feature set can change rapidly each version. 
 
 Some of the planned features that will be included in future versions are:

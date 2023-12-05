@@ -133,7 +133,7 @@ fn test_forking_at_block_number() {
         );
         let mut state_before_deploy = BlockifierState::from(&mut cached_state_before_delopy);
 
-        let cached_state_afer_deploy = &mut CachedState::new(
+        let cached_state_after_deploy = &mut CachedState::new(
             ExtendedStateReader {
                 dict_state_reader: build_testing_state(),
                 fork_state_reader: Some(ForkStateReader::new(
@@ -144,7 +144,7 @@ fn test_forking_at_block_number() {
             },
             GlobalContractCache::default(),
         );
-        let mut state_after_deploy = BlockifierState::from(cached_state_afer_deploy);
+        let mut state_after_deploy = BlockifierState::from(cached_state_after_deploy);
 
         let contract_address = Felt252::from(
             BigUint::from_str(

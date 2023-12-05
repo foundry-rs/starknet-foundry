@@ -75,7 +75,7 @@ fn declare_same_contract() {
 }
 
 #[test]
-fn declare_non_existant() {
+fn declare_non_existent() {
     let contract_name = "GoodbyeStarknet";
 
     let mut cached_state = create_cached_state();

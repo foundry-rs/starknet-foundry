@@ -142,7 +142,7 @@ $ sncast \
 
 #### Importing an account
 
-To import an account into the file holding the accounts info (`~/.starknet_accounts/starknet_open_zeppelin_accounts.json` by deafult), use the `account add` command.
+To import an account into the file holding the accounts info (`~/.starknet_accounts/starknet_open_zeppelin_accounts.json` by default), use the `account add` command.
 
 ```shell
 $ sncast \
