@@ -56,7 +56,7 @@ Control when colored output is used. Valid values:
 
 Uses Scarb to find and compile tests. Requires at least Scarb nightly-2023-12-04
 
-> ⚠️ **Info**
+> ⚠️ **Warning**
 > 
 > This is an experimental feature. Some functionalities might not work.
 
