@@ -42,14 +42,21 @@ impl FromConv<Nonce> for Felt252 {
 impl TryFromConv<String> for Felt252 {
     type Error = ParseFeltError;
 
-    /// Parse decimal felt or shortstring
+    /// Parse decimal felt
     fn try_from_(value: String) -> Result<Felt252, Self::Error> {
-        match Felt252::from_str_radix(&value, 10) {
-            Ok(felt) => Ok(felt),
-            Err(_) if value.len() <= 31 && value.is_ascii() => {
-                Ok(Felt252::from_bytes_be(value.as_bytes()))
-            }
-            _ => Err(ParseFeltError),
+        Felt252::from_str_radix(&value, 10)
+    }
+}
+
+pub trait FromShortString<T>: Sized {
+    fn from_short_string(short_string: &str) -> Result<T, ParseFeltError>;
+}
+
+impl FromShortString<Felt252> for Felt252 {
+    fn from_short_string(short_string: &str) -> Result<Felt252, ParseFeltError> {
+        if short_string.len() <= 31 && short_string.is_ascii() {
+            return Ok(Felt252::from_bytes_be(short_string.as_bytes()));
         }
+        Err(ParseFeltError)
     }
 }

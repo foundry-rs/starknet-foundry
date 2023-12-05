@@ -2,9 +2,10 @@ use std::collections::HashMap;
 
 use crate::common::state::create_cheatnet_state;
 use crate::common::{get_contracts, state::create_cached_state};
+use cairo_felt::Felt252;
 use cheatnet::cheatcodes::declare::get_class_hash;
 use cheatnet::cheatcodes::{CheatcodeError, EnhancedHintError};
-use conversions::TryIntoConv;
+use conversions::felt252::FromShortString;
 use scarb_artifacts::StarknetContractArtifacts;
 use starknet_api::core::ClassHash;
 
@@ -23,7 +24,7 @@ fn declare_simple() {
     let mut cached_state = create_cached_state();
     let (mut blockifier_state, _) = create_cheatnet_state(&mut cached_state);
 
-    let contract = contract_name.to_owned().try_into_().unwrap();
+    let contract = Felt252::from_short_string(contract_name).unwrap();
     let contracts = get_contracts();
 
     let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
@@ -42,7 +43,7 @@ fn declare_multiple() {
     let contracts = get_contracts();
 
     for contract_name in contract_names {
-        let contract = contract_name.to_owned().try_into_().unwrap();
+        let contract = Felt252::from_short_string(contract_name).unwrap();
         let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
         let expected_class_hash = get_contract_class_hash(contract_name, &contracts);
         assert_eq!(class_hash, expected_class_hash);
@@ -56,7 +57,7 @@ fn declare_same_contract() {
     let mut cached_state = create_cached_state();
     let (mut blockifier_state, _) = create_cheatnet_state(&mut cached_state);
 
-    let contract = contract_name.to_owned().try_into_().unwrap();
+    let contract = Felt252::from_short_string(contract_name).unwrap();
     let contracts = get_contracts();
 
     let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
@@ -80,7 +81,7 @@ fn declare_non_existant() {
     let mut cached_state = create_cached_state();
     let (mut blockifier_state, _) = create_cheatnet_state(&mut cached_state);
 
-    let contract = contract_name.to_owned().try_into_().unwrap();
+    let contract = Felt252::from_short_string(contract_name).unwrap();
     let contracts = get_contracts();
 
     let output = blockifier_state.declare(&contract, &contracts);

@@ -10,7 +10,8 @@ use cairo_felt::Felt252;
 use cheatnet::cheatcodes::deploy::deploy;
 use cheatnet::rpc::call_contract;
 use cheatnet::state::CheatTarget;
-use conversions::{IntoConv, TryIntoConv};
+use conversions::felt252::FromShortString;
+use conversions::IntoConv;
 use starknet_api::core::ContractAddress;
 
 #[test]
@@ -82,7 +83,7 @@ fn prank_in_constructor() {
 
     let contracts = get_contracts();
 
-    let contract_name = "ConstructorPrankChecker".to_owned().try_into_().unwrap();
+    let contract_name = Felt252::from_short_string("ConstructorPrankChecker").unwrap();
     let class_hash = blockifier_state
         .declare(&contract_name, &contracts)
         .unwrap();
@@ -298,7 +299,7 @@ fn prank_library_call() {
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contracts = get_contracts();
-    let contract_name = "PrankChecker".to_owned().try_into_().unwrap();
+    let contract_name = Felt252::from_short_string("PrankChecker").unwrap();
     let class_hash = blockifier_state
         .declare(&contract_name, &contracts)
         .unwrap();
@@ -410,7 +411,7 @@ fn prank_multiple() {
     let mut cached_state = create_cached_state();
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
-    let contract = "PrankChecker".to_owned().try_into_().unwrap();
+    let contract = Felt252::from_short_string("PrankChecker").unwrap();
     let contracts = get_contracts();
     let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
 
