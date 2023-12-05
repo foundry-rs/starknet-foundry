@@ -21,7 +21,8 @@ use cairo_felt::Felt252;
 use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use cairo_vm::vm::vm_core::VirtualMachine;
-use conversions::{FromConv, IntoConv, TryFromConv};
+use conversions::felt252::FromShortString;
+use conversions::{FromConv, IntoConv};
 use num_traits::{One, ToPrimitive};
 use scarb_artifacts::StarknetContractArtifacts;
 use serde::Deserialize;
@@ -450,7 +451,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 } else {
                     Ok(CheatcodeHandlingResult::Handled(vec![
                         Felt252::from(1),
-                        Felt252::try_from_("message_hash out of range".to_string()).unwrap(),
+                        Felt252::from_short_string("message_hash out of range").unwrap(),
                     ]))
                 }
             }
