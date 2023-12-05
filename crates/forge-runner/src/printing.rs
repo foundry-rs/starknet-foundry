@@ -52,7 +52,7 @@ pub(crate) fn print_test_result(test_result: &TestCaseSummary) {
     let mut gas_usage = String::new();
 
     if let Some(result) = test_result.gas_usage() {
-        gas_usage = format!(", gas: ~{result}");
+        gas_usage = format!(", gas: {result}");
     }
 
     println!("{result_header} {result_name}{fuzzer_report}{gas_usage}{block_number_message}{result_message}");
