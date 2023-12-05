@@ -135,7 +135,8 @@ fn scarb_build_fails_no_toml(contract_path: &str, accounts_file_path: &str) {
         .args(args);
 
     snapbox.assert().stderr_matches(indoc! {"
-        Error: Could not retrieve the manifest path
+        Error: Failed to read Scarb.toml manifest file[..]
+        ...
     "});
 }
 

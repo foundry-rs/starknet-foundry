@@ -430,7 +430,12 @@ fn get_package_data(cli: &Cli) -> PackageData {
             if path.exists() {
                 Ok(path)
             } else {
-                Err(anyhow!("No manifest found at the given path"))
+                Err(anyhow!(format!(
+                    "No manifest found at the given path ({})",
+                    cli.path_to_scarb_toml
+                        .as_ref()
+                        .expect("Path Scarb.toml empty")
+                )))
             }
         }
         None => get_scarb_manifest().context("Failed to obtain manifest path from scarb"),
