@@ -17,10 +17,6 @@ Test filter must be a whole qualified test name e.g. `package_name::my_test` ins
 
 Stop executing tests after the first failed test.
 
-## `-g`, `--print-gas-usage`
-
-Print gas usage for each executed test
-
 ## `-p`, `--package <SPEC>`
 
 Packages to run this command on, can be a concrete package name (`foobar`) or a prefix glob (`foo*`).

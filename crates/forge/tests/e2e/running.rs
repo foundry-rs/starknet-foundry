@@ -242,7 +242,6 @@ fn with_gas_usage_flag() {
         .current_dir(&temp)
         .arg("tests::test_simple::test_two")
         .arg("--exact")
-        .arg("--print-gas-usage")
         .assert()
         .success();
 
