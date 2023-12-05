@@ -104,7 +104,7 @@ enum Commands {
     /// Show current configuration being used
     ShowConfig(ShowConfig),
 
-    /// Run a deployment script
+    /// Run or initialize a deployment script
     Script(Script),
 }
 
