@@ -1,13 +1,14 @@
+use camino::Utf8PathBuf;
 use cast::helpers::constants::SCRIPTS_DIR;
+use cast::helpers::scarb_utils::get_cairo_version;
 use indoc::{formatdoc, indoc};
 use snapbox::cmd::{cargo_bin, Command};
 use tempfile::TempDir;
 
 #[test]
-fn test_init_files_content() {
+fn test_script_init_files_created() {
     let script_name = "myscript";
     let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
-    let script_dir_path = temp_dir.path().join(SCRIPTS_DIR).join(script_name);
 
     let snapbox = Command::new(cargo_bin!("sncast"))
         .current_dir(temp_dir.path())
@@ -18,13 +19,45 @@ fn test_init_files_content() {
         status: Successfully initialized `{script_name}`
     "});
 
-    let scarb_toml_content = std::fs::read_to_string(script_dir_path.join("Scarb.toml")).unwrap();
+    let script_dir_path = temp_dir.path().join(SCRIPTS_DIR).join(script_name);
+
+    assert!(script_dir_path.exists());
+    assert!(script_dir_path.join("Scarb.toml").exists());
+    assert!(script_dir_path.join("src").exists());
+    assert!(script_dir_path.join("src/lib.cairo").exists());
+    assert!(script_dir_path
+        .join(format!("src/{}.cairo", script_name))
+        .exists());
+}
+
+#[test]
+fn test_script_init_files_content() {
+    let script_name = "myscript";
+    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
+
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(temp_dir.path())
+        .args(["script", "init", script_name]);
+
+    snapbox.assert().stdout_eq(formatdoc! {r"
+        command: script init
+        status: Successfully initialized `{script_name}`
+    "});
+
+    let script_dir_path = temp_dir.path().join(SCRIPTS_DIR).join(script_name);
+    let scarb_toml_path = script_dir_path.join("Scarb.toml");
+
+    let scarb_toml_content = std::fs::read_to_string(&scarb_toml_path).unwrap();
     let lib_cairo_content = std::fs::read_to_string(script_dir_path.join("src/lib.cairo")).unwrap();
     let main_file_content =
         std::fs::read_to_string(script_dir_path.join(format!("src/{}.cairo", script_name)))
             .unwrap();
 
     let cast_version = env!("CARGO_PKG_VERSION");
+
+    let scarb_toml_path = Utf8PathBuf::from_path_buf(scarb_toml_path).unwrap();
+    let cairo_version = get_cairo_version(&scarb_toml_path).unwrap();
+
     let expected_scarb_toml = formatdoc!(
         r#"
             [package]
@@ -34,10 +67,9 @@ fn test_init_files_content() {
             # See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest.html
 
             [dependencies]
-            sncast_std = {{ git = "https://github.com/foundry-rs/starknet-foundry", tag = "v{}" }}
-            starknet = ">=2.3.1"
-        "#,
-        cast_version
+            sncast_std = {{ git = "https://github.com/foundry-rs/starknet-foundry", tag = "v{cast_version}" }}
+            starknet = ">={cairo_version}"
+        "#
     );
 
     assert_eq!(scarb_toml_content, expected_scarb_toml);

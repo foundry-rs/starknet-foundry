@@ -4,9 +4,10 @@ use std::fs;
 
 use cast::helpers::constants::SCRIPTS_DIR;
 use cast::helpers::response_structs::ScriptInitResponse;
+use cast::helpers::scarb_utils::get_cairo_version;
 use clap::Args;
 use indoc::{formatdoc, indoc};
-use scarb_metadata::{MetadataCommand, ScarbCommand};
+use scarb_metadata::ScarbCommand;
 
 #[derive(Args, Debug)]
 pub struct Init {
@@ -90,8 +91,9 @@ fn add_sncast_std_dependency(script_root_dir: &str) -> Result<()> {
 }
 
 fn add_starknet_dependency(script_root_dir: &str) -> Result<()> {
+    let scarb_manifest_path = Utf8PathBuf::from(script_root_dir).join("Scarb.toml");
     let cairo_version =
-        get_cairo_version(script_root_dir).context("Failed to obtain cairo version")?;
+        get_cairo_version(&scarb_manifest_path).context("Failed to obtain cairo version")?;
     let starknet_dependency = format!("starknet@>={cairo_version}");
 
     ScarbCommand::new()
@@ -100,12 +102,6 @@ fn add_starknet_dependency(script_root_dir: &str) -> Result<()> {
         .run()?;
 
     Ok(())
-}
-
-fn get_cairo_version(path: &str) -> Result<String> {
-    let scarb_metadata = MetadataCommand::new().current_dir(path).no_deps().exec()?;
-
-    Ok(scarb_metadata.app_version_info.cairo.version.to_string())
 }
 
 fn modify_files_in_src_dir(script_root_dir: &str, script_name: &str) -> Result<()> {
