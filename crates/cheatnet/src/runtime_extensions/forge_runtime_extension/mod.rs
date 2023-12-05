@@ -484,12 +484,12 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 };
 
                 Ok(CheatcodeHandlingResult::Handled(vec![
-                    Felt252::from_bytes_be(&signing_key_bytes[16..32]),     // 16 low  bytes of secret_key
-                    Felt252::from_bytes_be(&signing_key_bytes[0..16]),      // 16 high bytes of secret_key
-                    Felt252::from_bytes_be(&verifying_key_bytes[17..33]),   // 16 low  bytes of public_key's x-coordinate
-                    Felt252::from_bytes_be(&verifying_key_bytes[1..17]),    // 16 high bytes of public_key's x-coordinate
-                    Felt252::from_bytes_be(&verifying_key_bytes[49..65]),   // 16 low  bytes of public_key's y-coordinate
-                    Felt252::from_bytes_be(&verifying_key_bytes[33..49]),   // 16 high bytes of public_key's y-coordinate
+                    Felt252::from_bytes_be(&signing_key_bytes[16..32]), // 16 low  bytes of secret_key
+                    Felt252::from_bytes_be(&signing_key_bytes[0..16]), // 16 high bytes of secret_key
+                    Felt252::from_bytes_be(&verifying_key_bytes[17..33]), // 16 low  bytes of public_key's x-coordinate
+                    Felt252::from_bytes_be(&verifying_key_bytes[1..17]), // 16 high bytes of public_key's x-coordinate
+                    Felt252::from_bytes_be(&verifying_key_bytes[49..65]), // 16 low  bytes of public_key's y-coordinate
+                    Felt252::from_bytes_be(&verifying_key_bytes[33..49]), // 16 high bytes of public_key's y-coordinate
                 ]))
             }
             "ecdsa_sign_message" => {
@@ -547,10 +547,10 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 Ok(CheatcodeHandlingResult::Handled(vec![
                     Felt252::from(0),
-                    Felt252::from_bytes_be(&r_bytes[16..32]),   // 16 low  bytes of r
-                    Felt252::from_bytes_be(&r_bytes[0..16]),    // 16 high bytes of r
-                    Felt252::from_bytes_be(&s_bytes[16..32]),   // 16 low  bytes of s
-                    Felt252::from_bytes_be(&s_bytes[0..16]),    // 16 high bytes of s
+                    Felt252::from_bytes_be(&r_bytes[16..32]), // 16 low  bytes of r
+                    Felt252::from_bytes_be(&r_bytes[0..16]),  // 16 high bytes of r
+                    Felt252::from_bytes_be(&s_bytes[16..32]), // 16 low  bytes of s
+                    Felt252::from_bytes_be(&s_bytes[0..16]),  // 16 high bytes of s
                 ]))
             }
             "get_ecdsa_public_key" => {
@@ -596,10 +596,10 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
 
                 Ok(CheatcodeHandlingResult::Handled(vec![
                     Felt252::from(0),
-                    Felt252::from_bytes_be(&verifying_key_bytes[17..33]),   // 16 low  bytes of public_key's x-coordinate
-                    Felt252::from_bytes_be(&verifying_key_bytes[1..17]),    // 16 high bytes of public_key's x-coordinate
-                    Felt252::from_bytes_be(&verifying_key_bytes[49..65]),   // 16 low  bytes of public_key's y-coordinate
-                    Felt252::from_bytes_be(&verifying_key_bytes[33..49]),   // 16 high bytes of public_key's y-coordinate
+                    Felt252::from_bytes_be(&verifying_key_bytes[17..33]), // 16 low  bytes of public_key's x-coordinate
+                    Felt252::from_bytes_be(&verifying_key_bytes[1..17]), // 16 high bytes of public_key's x-coordinate
+                    Felt252::from_bytes_be(&verifying_key_bytes[49..65]), // 16 low  bytes of public_key's y-coordinate
+                    Felt252::from_bytes_be(&verifying_key_bytes[33..49]), // 16 high bytes of public_key's y-coordinate
                 ]))
             }
             _ => Ok(CheatcodeHandlingResult::Forwarded),
