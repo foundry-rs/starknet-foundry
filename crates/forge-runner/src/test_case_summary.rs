@@ -104,17 +104,13 @@ impl TestCaseSummary {
                 fuzzing_statistic,
                 ..
             } => match fuzzing_statistic {
-                Some(FuzzingStatistics { gas_usage, .. }) => {
-                    if let Some(gas_usage) = gas_usage {
-                        return Some(format!(
-                            "(max: ~{}, min: ~{}, avg: ~{})",
-                            gas_usage.max, gas_usage.min, gas_usage.avg
-                        ));
-                    } else {
-                        None
-                    }
-                }
-                None => Some(format!("~{}", gas_used)),
+                Some(FuzzingStatistics { gas_usage, .. }) => gas_usage.as_ref().map(|gas_usage| {
+                    format!(
+                        "(max: ~{}, min: ~{}, avg: ~{})",
+                        gas_usage.max, gas_usage.min, gas_usage.avg
+                    )
+                }),
+                None => Some(format!("~{gas_used}")),
             },
             _ => None,
         }
@@ -135,10 +131,7 @@ impl TestCaseSummary {
                 msg,
                 arguments,
                 gas_used: gas,
-                fuzzing_statistic: Some(FuzzingStatistics {
-                    runs,
-                    gas_usage: gas_usage,
-                }),
+                fuzzing_statistic: Some(FuzzingStatistics { runs, gas_usage }),
                 latest_block_number,
             },
             TestCaseSummary::Failed {
