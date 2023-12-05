@@ -14,7 +14,7 @@ use crate::collecting::{collect_test_compilation_targets, compile_tests, Compile
 use crate::scarb::config::ForkTarget;
 use crate::test_filter::TestsFilter;
 
-mod collecting;
+pub mod collecting;
 pub mod pretty_printing;
 pub mod scarb;
 pub mod shared_cache;

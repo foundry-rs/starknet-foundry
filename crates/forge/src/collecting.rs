@@ -8,22 +8,22 @@ use test_collector::{collect_tests, LinkedLibrary, TestCaseRaw};
 use walkdir::WalkDir;
 
 #[derive(Debug, Clone)]
-pub(crate) struct CompiledTestCrateRaw {
+pub struct CompiledTestCrateRaw {
     pub sierra_program: Program,
     pub test_cases: Vec<TestCaseRaw>,
     pub tests_location: CrateLocation,
 }
 
 #[derive(Debug, PartialEq)]
-pub(crate) struct TestCompilationTarget {
-    pub(crate) crate_root: Utf8PathBuf,
-    pub(crate) crate_name: String,
-    pub(crate) crate_location: CrateLocation,
-    pub(crate) lib_content: String,
+pub struct TestCompilationTarget {
+    pub crate_root: Utf8PathBuf,
+    pub crate_name: String,
+    pub crate_location: CrateLocation,
+    pub lib_content: String,
 }
 
 impl TestCompilationTarget {
-    pub(crate) fn compile_tests(
+    pub fn compile_tests(
         &self,
         linked_libraries: &[LinkedLibrary],
         corelib_path: &Utf8Path,
@@ -46,7 +46,7 @@ impl TestCompilationTarget {
     }
 }
 
-pub(crate) fn collect_test_compilation_targets(
+pub fn collect_test_compilation_targets(
     package_path: &Utf8Path,
     package_name: &str,
     package_source_dir_path: &Utf8Path,
