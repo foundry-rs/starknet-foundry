@@ -1060,6 +1060,7 @@ dependencies = [
  "rand",
  "reqwest",
  "rpassword",
+ "runtime",
  "scarb-artifacts",
  "scarb-metadata",
  "sealed_test",
@@ -1071,7 +1072,7 @@ dependencies = [
  "tempfile",
  "test-case",
  "tokio",
- "toml 0.8.6",
+ "toml 0.8.8",
  "url",
  "which",
 ]
@@ -1107,6 +1108,7 @@ dependencies = [
  "conversions",
  "ctor",
  "flate2",
+ "flatten-serde-json",
  "fs2",
  "glob",
  "indoc",
@@ -1114,6 +1116,7 @@ dependencies = [
  "num-traits 0.2.17",
  "rayon",
  "regex",
+ "runtime",
  "scarb-artifacts",
  "scarb-metadata",
  "serde",
@@ -1876,6 +1879,7 @@ dependencies = [
  "num-traits 0.2.17",
  "once_cell",
  "rand",
+ "runtime",
  "scarb-artifacts",
  "serde",
  "serde_json",
@@ -1890,9 +1894,9 @@ dependencies = [
 
 [[package]]
 name = "form_urlencoded"
-version = "1.2.0"
+version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a62bc1cf6f830c2ec14a513a9fb124d0a213a629668a4186f329db21fe045652"
+checksum = "e13624c2627564efccf4934284bdd98cbaa14e79b0b5a141218e507b3a823456"
 dependencies = [
  "percent-encoding",
 ]
@@ -2314,9 +2318,9 @@ checksum = "b9e0384b61958566e926dc50660321d12159025e767c18e043daf26b70104c39"
 
 [[package]]
 name = "idna"
-version = "0.4.0"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7d20d6b07bfbc108882d88ed8e37d39636dcc260e15e30c45e6ba089610b917c"
+checksum = "634d9b1461af396cad843f47fdba5597a4f9e6ddd4bfb6ff5d85028c25cb12f6"
 dependencies = [
  "unicode-bidi",
  "unicode-normalization",
@@ -2884,9 +2888,9 @@ checksum = "0ab1bc2a289d34bd04a330323ac98a1b4bc82c9d9fcb1e66b63caa84da26b575"
 
 [[package]]
 name = "openssl"
-version = "0.10.58"
+version = "0.10.60"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a9dfc0783362704e97ef3bd24261995a699468440099ef95d869b4d9732f829a"
+checksum = "79a4c6c3a2b158f7f8f2a2fc5a969fa3a068df6fc9dbb4a43845436e3af7c800"
 dependencies = [
  "bitflags 2.4.1",
  "cfg-if",
@@ -2925,9 +2929,9 @@ dependencies = [
 
 [[package]]
 name = "openssl-sys"
-version = "0.9.94"
+version = "0.9.96"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2f55da20b29f956fb01f0add8683eb26ee13ebe3ebd935e49898717c6b4b2830"
+checksum = "3812c071ba60da8b5677cc12bcb1d42989a65553772897a7e0355545a819838f"
 dependencies = [
  "cc",
  "libc",
@@ -3039,9 +3043,9 @@ dependencies = [
 
 [[package]]
 name = "percent-encoding"
-version = "2.3.0"
+version = "2.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9b2a4787296e9989611394c33f193f676704af1686e70b8f8033ab5ba9a35a94"
+checksum = "e3148f5046208a5d56bcfc03053e3ca6334e51da8dfb19b6cdc8b306fae3283e"
 
 [[package]]
 name = "petgraph"
@@ -3486,13 +3490,13 @@ dependencies = [
 
 [[package]]
 name = "rpassword"
-version = "7.2.0"
+version = "7.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6678cf63ab3491898c0d021b493c94c9b221d91295294a2a5746eacbe5928322"
+checksum = "80472be3c897911d0137b2d2b9055faf6eeac5b14e324073d83bc17b191d7e3f"
 dependencies = [
  "libc",
  "rtoolbox",
- "winapi",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]
@@ -3503,6 +3507,29 @@ checksum = "034e22c514f5c0cb8a10ff341b9b048b5ceb21591f31c8f44c43b960f9b3524a"
 dependencies = [
  "libc",
  "winapi",
+]
+
+[[package]]
+name = "runtime"
+version = "1.0.0"
+dependencies = [
+ "anyhow",
+ "blockifier",
+ "cairo-felt",
+ "cairo-lang-casm",
+ "cairo-lang-runner",
+ "cairo-lang-starknet",
+ "cairo-lang-utils",
+ "cairo-vm",
+ "conversions",
+ "num-bigint",
+ "num-traits 0.2.17",
+ "scarb-artifacts",
+ "serde",
+ "serde_json",
+ "starknet",
+ "starknet_api",
+ "thiserror",
 ]
 
 [[package]]
@@ -3699,9 +3726,9 @@ dependencies = [
 
 [[package]]
 name = "scarb-ui"
-version = "0.1.1"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3b0a5fbc818eb4fe09dd99101218d7f22c64cbfb17ae1ab41f5fbadcb2aaee1a"
+checksum = "594b2705c01824dff3d57f5f0a65754fc1d0d25ab047045e883d7440bab061f5"
 dependencies = [
  "anyhow",
  "camino",
@@ -4659,14 +4686,14 @@ dependencies = [
 
 [[package]]
 name = "toml"
-version = "0.8.6"
+version = "0.8.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8ff9e3abce27ee2c9a37f9ad37238c1bdd4e789c84ba37df76aa4d528f5072cc"
+checksum = "a1a195ec8c9da26928f773888e0742ca3ca1040c6cd859c919c9f59c1954ab35"
 dependencies = [
  "serde",
  "serde_spanned",
  "toml_datetime",
- "toml_edit 0.20.7",
+ "toml_edit 0.21.0",
 ]
 
 [[package]]
@@ -4696,6 +4723,17 @@ name = "toml_edit"
 version = "0.20.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "70f427fce4d84c72b5b732388bf4a9f4531b53f74e2887e3ecb2481f68f66d81"
+dependencies = [
+ "indexmap 2.1.0",
+ "toml_datetime",
+ "winnow",
+]
+
+[[package]]
+name = "toml_edit"
+version = "0.21.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d34d383cd00a163b4a5b85053df514d45bc330f6de7737edfe0a93311d1eaa03"
 dependencies = [
  "indexmap 2.1.0",
  "serde",
@@ -4809,9 +4847,9 @@ checksum = "8ecb6da28b8a351d773b68d5825ac39017e680750f980f3a1a85cd8dd28a47c1"
 
 [[package]]
 name = "url"
-version = "2.4.1"
+version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "143b538f18257fac9cad154828a57c6bf5157e1aa604d4816b5995bf6de87ae5"
+checksum = "31e6302e3bb753d46e83516cae55ae196fc0c309407cf11ab35cc51a4c2a4633"
 dependencies = [
  "form_urlencoded",
  "idna",

@@ -29,8 +29,8 @@ use cairo_lang_utils::casts::IntoOrPanic;
 use cairo_lang_utils::extract_matches;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use cairo_vm::serde::deserialize_program::{BuiltinName, HintParams};
+use cheatnet::runtime_extensions::forge_runtime_extension::ForgeRuntime;
 
-use crate::forge_runtime_extension::ForgeRuntime;
 use crate::sierra_casm_runner_gas::run_function;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use num_traits::ToPrimitive;

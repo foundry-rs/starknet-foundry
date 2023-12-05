@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::marker::PhantomData;
 use std::sync::Arc;
 
 use anyhow::{anyhow, bail, ensure, Result};
@@ -13,13 +14,13 @@ use blockifier::state::state_api::State;
 use cairo_felt::Felt252;
 use cairo_vm::serde::deserialize_program::HintParams;
 use cairo_vm::types::relocatable::Relocatable;
-use cheatnet::execution::cheatable_syscall_handler::CheatableSyscallHandler;
+use cheatnet::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
+use cheatnet::runtime_extensions::forge_runtime_extension::{ForgeExtension, ForgeRuntime};
+use cheatnet::runtime_extensions::io_runtime_extension::IORuntimeExtension;
 use itertools::chain;
 
 use crate::compiled_runnable::ValidatedForkConfig;
-use crate::forge_runtime_extension::{ForgeRuntime, TestExecutionState};
 use crate::gas::gas_from_execution_resources;
-use crate::runtime::{ExtendedRuntime, RuntimeExtension};
 use crate::sierra_casm_runner::SierraCasmRunner;
 use crate::test_case_summary::TestCaseSummary;
 use crate::{RunnerConfig, RunnerParams, TestCaseRunnable, CACHE_DIR};
@@ -30,9 +31,9 @@ use cairo_lang_runner::{Arg, RunResult, RunnerError};
 use cairo_vm::vm::vm_core::VirtualMachine;
 use camino::Utf8Path;
 use cheatnet::constants as cheatnet_constants;
-use cheatnet::execution::contract_execution_syscall_handler::ContractExecutionSyscallHandler;
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::state::{BlockInfoReader, CheatnetBlockInfo, CheatnetState, ExtendedStateReader};
+use runtime::{ExtendedRuntime, StarknetRuntime};
 use starknet::core::types::BlockTag::Latest;
 use starknet::core::types::{BlockId, MaybePendingBlockWithTxHashes};
 use starknet::core::utils::get_selector_from_name;
@@ -240,21 +241,32 @@ pub fn run_test_case(
         block_info,
         ..Default::default()
     };
-    let cheatable_syscall_handler =
-        CheatableSyscallHandler::wrap(syscall_handler, &mut cheatnet_state);
 
-    let contract_execution_syscall_handler =
-        ContractExecutionSyscallHandler::wrap(cheatable_syscall_handler);
+    let cheatable_runtime = ExtendedRuntime {
+        extension: CheatableStarknetRuntimeExtension {
+            cheatnet_state: &mut cheatnet_state,
+        },
+        extended_runtime: StarknetRuntime {
+            hint_handler: syscall_handler,
+        },
+    };
 
-    let test_execution_state = TestExecutionState {
+    let io_runtime = ExtendedRuntime {
+        extension: IORuntimeExtension {
+            lifetime: &PhantomData,
+        },
+        extended_runtime: cheatable_runtime,
+    };
+
+    let forge_extension = ForgeExtension {
         environment_variables: &runner_params.environment_variables,
         contracts: &runner_params.contracts,
     };
 
-    let mut forge_runtime = ExtendedRuntime(RuntimeExtension {
-        extended_runtime: contract_execution_syscall_handler,
-        extension_state: test_execution_state,
-    });
+    let mut forge_runtime = ExtendedRuntime {
+        extension: forge_extension,
+        extended_runtime: io_runtime,
+    };
 
     let latest_block_number = if let Some(ValidatedForkConfig {
         url: _,
@@ -363,11 +375,16 @@ fn get_latest_block_number(url: &Url) -> Result<BlockId> {
 }
 
 fn get_all_execution_resources(runtime: &ForgeRuntime) -> ExecutionResources {
-    let test_used_resources = &runtime.0.extended_runtime.child.child.resources;
-    let cheatnet_used_resources = &runtime
-        .0
+    let test_used_resources = &runtime
         .extended_runtime
-        .child
+        .extended_runtime
+        .extended_runtime
+        .hint_handler
+        .resources;
+    let cheatnet_used_resources = &runtime
+        .extended_runtime
+        .extended_runtime
+        .extension
         .cheatnet_state
         .used_resources;
 
@@ -386,5 +403,10 @@ fn get_all_execution_resources(runtime: &ForgeRuntime) -> ExecutionResources {
 }
 
 fn get_context<'a>(runtime: &'a ForgeRuntime) -> &'a EntryPointExecutionContext {
-    runtime.0.extended_runtime.child.child.context
+    runtime
+        .extended_runtime
+        .extended_runtime
+        .extended_runtime
+        .hint_handler
+        .context
 }

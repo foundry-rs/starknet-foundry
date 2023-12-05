@@ -3,8 +3,9 @@ use std::collections::HashMap;
 use crate::common::state::create_cheatnet_state;
 use crate::common::{get_contracts, state::create_cached_state};
 use cheatnet::cheatcodes::declare::get_class_hash;
-use cheatnet::cheatcodes::{CheatcodeError, EnhancedHintError};
+use cheatnet::cheatcodes::CheatcodeError;
 use conversions::IntoConv;
+use runtime::EnhancedHintError;
 use scarb_artifacts::StarknetContractArtifacts;
 use starknet_api::core::ClassHash;
 
@@ -74,7 +75,7 @@ fn declare_same_contract() {
 }
 
 #[test]
-fn declare_non_existant() {
+fn declare_non_existent() {
     let contract_name = "GoodbyeStarknet";
 
     let mut cached_state = create_cached_state();

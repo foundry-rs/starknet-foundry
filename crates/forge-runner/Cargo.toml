@@ -41,6 +41,7 @@ console.workspace = true
 serde.workspace = true
 flatten-serde-json = "0.1.0"
 cheatnet = { path = "../cheatnet" }
+runtime = { path = "../runtime" }
 conversions = { path = "../conversions" }
 scarb-artifacts = { path = "../scarb-artifacts" }
 cairo-lang-test-plugin.workspace = true
