@@ -97,8 +97,6 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8
       - uses: software-mansion/setup-scarb@v1.3.2
-        with:
-          scarb-version: ${{ env.SCARB_VERSION }}
       - run: cargo test --release -p scarb-artifacts
 
   scarbfmt:
