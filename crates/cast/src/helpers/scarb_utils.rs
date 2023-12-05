@@ -187,6 +187,12 @@ pub fn get_scarb_metadata_with_deps(
     execute_scarb_metadata_command(&command)
 }
 
+pub fn get_cairo_version(manifest_path: &Utf8PathBuf) -> Result<String> {
+    let scarb_metadata = get_scarb_metadata(manifest_path)?;
+
+    Ok(scarb_metadata.app_version_info.cairo.version.to_string())
+}
+
 #[must_use]
 pub fn verify_or_determine_scarb_manifest_path(
     path_to_scarb_toml: &Option<Utf8PathBuf>,
