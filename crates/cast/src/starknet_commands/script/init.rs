@@ -18,16 +18,16 @@ pub struct Init {
 pub fn init(init_args: &Init) -> Result<ScriptInitResponse> {
     let script_root_dir_path = get_script_root_dir_path(&init_args.script_name)?;
 
-    init_scarb_project(&script_root_dir_path, &init_args.script_name)?;
+    init_scarb_project(&init_args.script_name, &script_root_dir_path)?;
     add_dependencies(&script_root_dir_path)?;
-    modify_files_in_src_dir(&script_root_dir_path, &init_args.script_name)?;
+    modify_files_in_src_dir(&init_args.script_name, &script_root_dir_path)?;
 
     Ok(ScriptInitResponse {
         status: format!("Successfully initialized `{}`", init_args.script_name),
     })
 }
 
-fn get_script_root_dir_path(script_name: &str) -> Result<String> {
+fn get_script_root_dir_path(script_name: &str) -> Result<Utf8PathBuf> {
     let current_dir = std::env::current_dir()?;
 
     let script_root_dir_path = current_dir
@@ -39,13 +39,11 @@ fn get_script_root_dir_path(script_name: &str) -> Result<String> {
             |_| current_dir.join(script_name),
         );
 
-    script_root_dir_path
-        .to_str()
-        .ok_or_else(|| anyhow!("Failed to get script root dir"))
-        .map(|s| s.to_owned())
+    Utf8PathBuf::from_path_buf(script_root_dir_path)
+        .map_err(|_| anyhow!("Failed to obtain script root dir path"))
 }
 
-fn init_scarb_project(script_root_dir: &str, script_name: &str) -> Result<()> {
+fn init_scarb_project(script_name: &str, script_root_dir: &Utf8PathBuf) -> Result<()> {
     ScarbCommand::new()
         .args([
             "new",
@@ -53,7 +51,7 @@ fn init_scarb_project(script_root_dir: &str, script_name: &str) -> Result<()> {
             &script_name,
             "--no-vcs",
             "--quiet",
-            &script_root_dir,
+            script_root_dir.as_str(),
         ])
         .run()
         .context("Failed to init Scarb project")?;
@@ -61,7 +59,7 @@ fn init_scarb_project(script_root_dir: &str, script_name: &str) -> Result<()> {
     Ok(())
 }
 
-fn add_dependencies(script_root_dir: &str) -> Result<()> {
+fn add_dependencies(script_root_dir: &Utf8PathBuf) -> Result<()> {
     add_sncast_std_dependency(script_root_dir)
         .context("Failed to add sncast_std dependency to Scarb.toml")?;
     add_starknet_dependency(script_root_dir)
@@ -70,7 +68,7 @@ fn add_dependencies(script_root_dir: &str) -> Result<()> {
     Ok(())
 }
 
-fn add_sncast_std_dependency(script_root_dir: &str) -> Result<()> {
+fn add_sncast_std_dependency(script_root_dir: &Utf8PathBuf) -> Result<()> {
     let cast_version = env!("CARGO_PKG_VERSION");
     let cast_version = &format!("v{cast_version}");
 
@@ -90,8 +88,8 @@ fn add_sncast_std_dependency(script_root_dir: &str) -> Result<()> {
     Ok(())
 }
 
-fn add_starknet_dependency(script_root_dir: &str) -> Result<()> {
-    let scarb_manifest_path = Utf8PathBuf::from(script_root_dir).join("Scarb.toml");
+fn add_starknet_dependency(script_root_dir: &Utf8PathBuf) -> Result<()> {
+    let scarb_manifest_path = script_root_dir.join("Scarb.toml");
     let cairo_version =
         get_cairo_version(&scarb_manifest_path).context("Failed to obtain cairo version")?;
     let starknet_dependency = format!("starknet@>={cairo_version}");
@@ -104,17 +102,15 @@ fn add_starknet_dependency(script_root_dir: &str) -> Result<()> {
     Ok(())
 }
 
-fn modify_files_in_src_dir(script_root_dir: &str, script_name: &str) -> Result<()> {
-    create_script_main_file(script_root_dir, script_name)
+fn modify_files_in_src_dir(script_name: &str, script_root_dir: &Utf8PathBuf) -> Result<()> {
+    create_script_main_file(script_name, script_root_dir)
         .context(format!("Failed to create {}.cairo file", script_name))?;
-    overwrite_lib_file(script_root_dir, script_name).context("Failed to overwrite lib.cairo file")
+    overwrite_lib_file(script_name, script_root_dir).context("Failed to overwrite lib.cairo file")
 }
 
-fn create_script_main_file(script_root_dir: &str, script_name: &str) -> Result<()> {
+fn create_script_main_file(script_name: &str, script_root_dir: &Utf8PathBuf) -> Result<()> {
     let script_main_file_name = format!("{script_name}.cairo");
-    let script_main_file_path = Utf8PathBuf::from(script_root_dir)
-        .join("src")
-        .join(script_main_file_name);
+    let script_main_file_path = script_root_dir.join("src").join(script_main_file_name);
 
     fs::write(
         script_main_file_path,
@@ -131,8 +127,8 @@ fn create_script_main_file(script_root_dir: &str, script_name: &str) -> Result<(
     Ok(())
 }
 
-fn overwrite_lib_file(script_root_dir: &str, script_name: &str) -> Result<()> {
-    let lib_file_path = Utf8PathBuf::from(script_root_dir).join("src/lib.cairo");
+fn overwrite_lib_file(script_name: &str, script_root_dir: &Utf8PathBuf) -> Result<()> {
+    let lib_file_path = script_root_dir.join("src/lib.cairo");
 
     fs::write(
         lib_file_path,
