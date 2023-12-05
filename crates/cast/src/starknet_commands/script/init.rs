@@ -2,6 +2,7 @@ use anyhow::{anyhow, Context, Ok, Result};
 use camino::Utf8PathBuf;
 use std::fs;
 
+use cast::helpers::response_structs::ScriptInitResponse;
 use clap::Args;
 use indoc::{formatdoc, indoc};
 use scarb_metadata::{MetadataCommand, ScarbCommand};
@@ -12,12 +13,16 @@ pub struct Init {
     pub script_name: String,
 }
 
-pub fn init(init_args: &Init) -> Result<()> {
+pub fn init(init_args: &Init) -> Result<ScriptInitResponse> {
     let script_root_dir_path = get_script_root_dir_path(&init_args.script_name)?;
 
     init_scarb_project(&script_root_dir_path, &init_args.script_name)?;
     add_dependencies(&script_root_dir_path)?;
-    modify_files_in_src_dir(&script_root_dir_path, &init_args.script_name)
+    modify_files_in_src_dir(&script_root_dir_path, &init_args.script_name)?;
+
+    Ok(ScriptInitResponse {
+        status: format!("Successfully initialized `{}`", init_args.script_name),
+    })
 }
 
 fn get_script_root_dir_path(script_name: &str) -> Result<String> {
@@ -40,7 +45,14 @@ fn get_script_root_dir_path(script_name: &str) -> Result<String> {
 
 fn init_scarb_project(script_root_dir: &str, script_name: &str) -> Result<()> {
     ScarbCommand::new()
-        .args(["new", "--name", &script_name, "--no-vcs", &script_root_dir])
+        .args([
+            "new",
+            "--name",
+            &script_name,
+            "--no-vcs",
+            "--quiet",
+            &script_root_dir,
+        ])
         .run()
         .context("Failed to init Scarb project")?;
 

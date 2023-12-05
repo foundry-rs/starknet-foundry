@@ -369,7 +369,8 @@ fn run_script_command(
     value_format: ValueFormat,
 ) -> Result<()> {
     if let Some(starknet_commands::script::Commands::Init(init)) = &script.command {
-        starknet_commands::script::init::init(init)?;
+        let mut result = starknet_commands::script::init::init(init);
+        print_command_result("script init", &mut result, value_format, cli.json)?;
     } else {
         let provider = get_provider(&config.rpc_url)?;
         let script_module_name = script.script_module_name.as_ref().ok_or_else(|| {
