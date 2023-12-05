@@ -15,7 +15,7 @@ mod Noncer {
         nonce: felt252,
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl INoncerImpl of super::INoncer<ContractState> {
         fn write_nonce(ref self: ContractState) {
             let tx_info = get_tx_info().unbox();

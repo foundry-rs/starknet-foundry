@@ -62,6 +62,15 @@ fn library_call_syscall() {
             "Caller",
             indoc!(
                 r"
+                use starknet::ClassHash;
+
+                #[starknet::interface]
+                trait ICaller<TContractState> {
+                    fn call_add_two(
+                        self: @TContractState, class_hash: ClassHash, number: felt252
+                    ) -> felt252;
+                }
+
                 #[starknet::contract]
                 mod Caller {
                     use result::ResultTrait;
@@ -76,12 +85,14 @@ fn library_call_syscall() {
                     #[storage]
                     struct Storage {}
 
-                    #[external(v0)]
-                    fn call_add_two(
-                        self: @ContractState, class_hash: ClassHash, number: felt252
-                    ) -> felt252 {
-                        let safe_lib_dispatcher = IExecutorSafeLibraryDispatcher { class_hash };
-                        safe_lib_dispatcher.add_two(number).unwrap()
+                    #[abi(embed_v0)]
+                    impl CallerImpl of super::ICaller<ContractState> {
+                        fn call_add_two(
+                            self: @ContractState, class_hash: ClassHash, number: felt252
+                        ) -> felt252 {
+                            let safe_lib_dispatcher = IExecutorSafeLibraryDispatcher { class_hash };
+                            safe_lib_dispatcher.add_two(number).unwrap()
+                        }
                     }
                 }
                 "
@@ -91,6 +102,12 @@ fn library_call_syscall() {
             "Executor",
             indoc!(
                 r"
+                #[starknet::interface]
+                trait IExecutor<TContractState> {
+                    fn add_two(ref self: TContractState, number: felt252) -> felt252;
+                    fn get_thing(self: @TContractState) -> felt252;
+                }
+
                 #[starknet::contract]
                 mod Executor {
                     #[storage]
@@ -104,15 +121,17 @@ fn library_call_syscall() {
                         self.thing.write(5);
                     }
 
-                    #[external(v0)]
-                    fn add_two(ref self: ContractState, number: felt252) -> felt252 {
-                        self.thing.write(10);
-                        number + 2
-                    }
+                    #[abi(embed_v0)]
+                    impl ExecutorImpl of super::IExecutor<ContractState> {
+                        fn add_two(ref self: ContractState, number: felt252) -> felt252 {
+                            self.thing.write(10);
+                            number + 2
+                        }
 
-                    #[external(v0)]
-                    fn get_thing(self: @ContractState) -> felt252 {
-                        self.thing.read()
+                        #[abi(embed_v0)]
+                        fn get_thing(self: @ContractState) -> felt252 {
+                            self.thing.read()
+                        }
                     }
                 }
                 "

@@ -17,7 +17,7 @@ mod ConstructorRollChecker {
         self.blk_nb.write(block_numb);
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl IConstructorRollChecker of super::IConstructorRollChecker<ContractState> {
         fn get_stored_block_number(ref self: ContractState) -> u64 {
             self.blk_nb.read()

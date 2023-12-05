@@ -31,7 +31,7 @@ mod HelloStarknet {
         balance: felt252,
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl HelloStarknetImpl of super::IHelloStarknet<ContractState> {
         // Increases the balance by the given amount.
         fn increase_balance(ref self: ContractState, amount: felt252) {
@@ -109,7 +109,7 @@ mod HelloStarknet {
 
     // ...
     
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl HelloStarknetImpl of super::IHelloStarknet<ContractState> {
         // ...
 

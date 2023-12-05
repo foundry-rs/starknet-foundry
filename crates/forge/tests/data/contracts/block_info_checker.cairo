@@ -18,7 +18,7 @@ mod BlockInfoChecker {
     #[storage]
     struct Storage {}
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl IBlockInfoChecker of super::IBlockInfoChecker<ContractState> {
         fn read_block_number(self: @ContractState) -> u64 {
             get_block_info().unbox().block_number

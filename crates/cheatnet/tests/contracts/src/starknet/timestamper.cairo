@@ -14,7 +14,7 @@ mod Timestamper {
         time: u64,
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl ITimestamperImpl of super::ITimestamper<ContractState> {
         fn write_timestamp(ref self: ContractState) {
             let time = get_block_timestamp();

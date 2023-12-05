@@ -9,8 +9,6 @@ use forge::compiled_raw::RawForkParams;
 use forge::run;
 use forge::scarb::config::ForkTarget;
 use forge::test_filter::TestsFilter;
-use starknet::core::types::BlockId;
-use starknet::core::types::BlockTag::Latest;
 use tempfile::tempdir;
 use tokio::runtime::Runtime;
 
@@ -130,7 +128,8 @@ fn fork_aliased_decorator() {
                 "FORK_NAME_FROM_SCARB_TOML".to_string(),
                 RawForkParams {
                     url: CHEATNET_RPC_URL.to_string(),
-                    block_id: BlockId::Tag(Latest),
+                    block_id_type: "Tag".to_string(),
+                    block_id_value: "Latest".to_string(),
                 },
             )],
         ))
@@ -255,7 +254,7 @@ fn test_fork_get_block_info_fails() {
             #[test]
             #[fork(url: "{CHEATNET_RPC_URL}", block_id: BlockId::Number(999999999999))]
             fn test_fork_get_block_info_fails() {{
-                let block_info = starknet::get_block_info().unbox();
+                starknet::get_block_info().unbox();
             }}
         "#
     )

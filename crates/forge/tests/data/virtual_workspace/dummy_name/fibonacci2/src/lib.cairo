@@ -15,7 +15,7 @@ mod FibonacciContract {
     #[storage]
     struct Storage {}
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     fn answer(ref self: ContractState) -> felt252 {
         subtract(fib(0, 1, 16), fib(0, 1, 8))
     }

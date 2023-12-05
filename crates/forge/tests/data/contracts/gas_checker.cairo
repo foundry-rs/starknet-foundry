@@ -15,7 +15,7 @@ mod GasChecker {
     #[storage]
     struct Storage {}
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl IGasCheckerImpl of super::IGasChecker<ContractState> {
         fn keccak(self: @ContractState) {
             keccak::keccak_u256s_le_inputs(array![1].span());
