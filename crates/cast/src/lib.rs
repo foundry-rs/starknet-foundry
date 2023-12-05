@@ -275,6 +275,8 @@ pub async fn wait_for_tx(
     timeout: u16,
     retry_interval: u8,
 ) -> Result<&str> {
+    println!("Transaction hash: {tx_hash:#x}");
+
     if retry_interval == 0 || timeout == 0 || u16::from(retry_interval) > timeout {
         return Err(anyhow!("Invalid values for retry_interval and/or timeout!"));
     }
@@ -293,16 +295,17 @@ pub async fn wait_for_tx(
                 code: MaybeUnknownErrorCode::Known(StarknetError::TransactionHashNotFound),
                 message: _,
             })) => {
-                println!("Waiting for transaction to be received ({i} retries left)");
+                let remaining_time = i * u16::from(retry_interval);
+                println!("Waiting for transaction to be accepted ({i} retries / {remaining_time}s left until timeout)");
             }
             Err(err) => return Err(err.into()),
         };
 
-        sleep(Duration::from_secs(timeout.into()));
+        sleep(Duration::from_secs(retry_interval.into()));
     }
 
     Err(anyhow!(
-        "Could not get transaction with hash: {tx_hash:#x}. Transaction rejected or not received."
+        "Could not get transaction with hash: {tx_hash:#x}. Transaction rejected, not received or cast timed out."
     ))
 }
 

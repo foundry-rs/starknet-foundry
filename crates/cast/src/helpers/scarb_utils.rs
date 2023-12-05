@@ -32,8 +32,8 @@ impl CastConfig {
             account: get_property(tool, "account"),
             accounts_file: get_property(tool, "accounts-file"),
             keystore: get_property(tool, "keystore"),
-            wait_timeout: get_property(tool, "wait_timeout"),
-            wait_retry_interval: get_property(tool, "wait_retry_interval"),
+            wait_timeout: get_property(tool, "wait-timeout"),
+            wait_retry_interval: get_property(tool, "wait-retry-interval"),
         })
     }
 }
@@ -53,11 +53,16 @@ impl Default for CastConfig {
 
 pub trait PropertyFromCastConfig: Sized {
     fn from_toml_value(value: &Value) -> Option<Self>;
+    fn default_value() -> Self;
 }
 
 impl PropertyFromCastConfig for String {
     fn from_toml_value(value: &Value) -> Option<Self> {
         value.as_str().map(std::borrow::ToOwned::to_owned)
+    }
+
+    fn default_value() -> Self {
+        String::default()
     }
 }
 
@@ -65,17 +70,29 @@ impl PropertyFromCastConfig for Utf8PathBuf {
     fn from_toml_value(value: &Value) -> Option<Self> {
         value.as_str().map(Utf8PathBuf::from)
     }
+
+    fn default_value() -> Self {
+        Utf8PathBuf::default()
+    }
 }
 
 impl PropertyFromCastConfig for u8 {
     fn from_toml_value(value: &Value) -> Option<Self> {
         value.as_u64().and_then(|i| i.try_into().ok())
     }
+
+    fn default_value() -> Self {
+        WAIT_RETRY_INTERVAL
+    }
 }
 
 impl PropertyFromCastConfig for u16 {
     fn from_toml_value(value: &Value) -> Option<Self> {
         value.as_u64().and_then(|i| i.try_into().ok())
+    }
+
+    fn default_value() -> Self {
+        WAIT_TIMEOUT
     }
 }
 
@@ -85,6 +102,9 @@ where
 {
     fn from_toml_value(value: &Value) -> Option<Self> {
         T::from_toml_value(value).map(Some)
+    }
+    fn default_value() -> Self {
+        Some(T::default_value())
     }
 }
 
@@ -103,7 +123,7 @@ where
 {
     tool.get(field)
         .and_then(T::from_toml_value)
-        .unwrap_or_default()
+        .unwrap_or_else(T::default_value)
 }
 
 pub fn get_scarb_manifest() -> Result<Utf8PathBuf> {
@@ -258,6 +278,8 @@ pub fn get_package_tool_sncast(metadata: &scarb_metadata::Metadata) -> Result<&V
 mod tests {
     use crate::helpers::scarb_utils::get_scarb_metadata;
     use crate::helpers::scarb_utils::parse_scarb_config;
+    use crate::helpers::scarb_utils::CastConfig;
+    use crate::helpers::scarb_utils::{WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
     use camino::Utf8PathBuf;
     use sealed_test::prelude::rusty_fork_test;
     use sealed_test::prelude::sealed_test;
@@ -366,5 +388,12 @@ mod tests {
         assert!(metadata_err
             .to_string()
             .contains("Failed to read Scarb.toml manifest file"));
+    }
+
+    #[test]
+    fn test_config_defaults() {
+        let config = CastConfig::default();
+        assert_eq!(config.wait_timeout, WAIT_TIMEOUT);
+        assert_eq!(config.wait_retry_interval, WAIT_RETRY_INTERVAL)
     }
 }

@@ -208,8 +208,17 @@ impl CairoHintProcessor<'_> {
             "declare" => {
                 let contract_name = as_cairo_short_string(&inputs[0])
                     .expect("Failed to convert contract name to string");
-                let max_fee = if inputs[1] == 0.into() {
-                    Some(inputs[2].clone().into_())
+                let mut offset = 1;
+                let max_fee = if inputs[offset] == 0.into() {
+                    offset += 1;
+                    Some(inputs[offset].clone().into_())
+                } else {
+                    None
+                };
+                offset += 1;
+                let nonce = if inputs[offset] == 0.into() {
+                    offset += 1;
+                    Some(inputs[offset].clone().into_())
                 } else {
                     None
                 };
@@ -225,6 +234,7 @@ impl CairoHintProcessor<'_> {
                     max_fee,
                     &account,
                     &None,
+                    nonce,
                     WaitForTx {
                         wait: true,
                         timeout: self.config.wait_timeout,
@@ -270,6 +280,13 @@ impl CairoHintProcessor<'_> {
                 } else {
                     None
                 };
+                offset += 1;
+                let nonce = if inputs[offset] == 0.into() {
+                    offset += 1;
+                    Some(inputs[offset].clone().into_())
+                } else {
+                    None
+                };
 
                 let account = self.runtime.block_on(get_account(
                     &self.config.account,
@@ -285,6 +302,7 @@ impl CairoHintProcessor<'_> {
                     unique,
                     max_fee,
                     &account,
+                    nonce,
                     WaitForTx {
                         wait: true,
                         timeout: self.config.wait_timeout,
@@ -316,9 +334,17 @@ impl CairoHintProcessor<'_> {
                         .map(|el| FieldElement::from_(el.clone()))
                         .collect()
                 };
-                let offset = 3 + calldata_length;
+                let mut offset = 3 + calldata_length;
                 let max_fee = if inputs[offset] == 0.into() {
-                    Some(inputs[offset + 1].clone().into_())
+                    offset += 1;
+                    Some(inputs[offset].clone().into_())
+                } else {
+                    None
+                };
+                offset += 1;
+                let nonce = if inputs[offset] == 0.into() {
+                    offset += 1;
+                    Some(inputs[offset].clone().into_())
                 } else {
                     None
                 };
@@ -336,6 +362,7 @@ impl CairoHintProcessor<'_> {
                     calldata,
                     max_fee,
                     &account,
+                    nonce,
                     WaitForTx {
                         wait: true,
                         timeout: self.config.wait_timeout,

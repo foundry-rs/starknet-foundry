@@ -10,7 +10,7 @@ fn main() {
         .expect('Invalid class hash value');
 
     let deploy_result = deploy(
-        class_hash, array![0x2, 0x2, 0x0], Option::Some(salt), true, Option::Some(max_fee)
+        class_hash, array![0x2, 0x2, 0x0], Option::Some(salt), true, Option::Some(max_fee), Option::None
     );
 
     assert(deploy_result.transaction_hash != 0, deploy_result.transaction_hash);

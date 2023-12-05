@@ -35,6 +35,10 @@ pub struct Deploy {
     /// Max fee for the transaction. If not provided, max fee will be automatically estimated
     #[clap(short, long)]
     pub max_fee: Option<FieldElement>,
+
+    /// Nonce of the transaction. If not provided, nonce will be set automatically
+    #[clap(short, long)]
+    pub nonce: Option<FieldElement>,
 }
 
 pub async fn deploy(
@@ -44,6 +48,7 @@ pub async fn deploy(
     unique: bool,
     max_fee: Option<FieldElement>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
+    nonce: Option<FieldElement>,
     wait_config: WaitForTx,
 ) -> Result<DeployResponse> {
     let salt = extract_or_generate_salt(salt);
@@ -51,10 +56,16 @@ pub async fn deploy(
     let factory = ContractFactory::new(class_hash, account);
     let deployment = factory.deploy(constructor_calldata.clone(), salt, unique);
 
-    let execution = if let Some(max_fee) = max_fee {
+    let execution_with_fee = if let Some(max_fee) = max_fee {
         deployment.max_fee(max_fee)
     } else {
         deployment
+    };
+
+    let execution = if let Some(nonce) = nonce {
+        execution_with_fee.nonce(nonce)
+    } else {
+        execution_with_fee
     };
 
     let result = execution.send().await;

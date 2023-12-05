@@ -119,7 +119,7 @@ pub async fn run(
         }
     }
 
-    execute_calls(account, parsed_calls, max_fee, wait_config).await
+    execute_calls(account, parsed_calls, max_fee, None, wait_config).await
 }
 
 fn parse_inputs(

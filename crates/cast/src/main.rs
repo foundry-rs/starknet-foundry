@@ -167,6 +167,7 @@ async fn run_async_command(
                 declare.max_fee,
                 &account,
                 &cli.path_to_scarb_toml,
+                declare.nonce,
                 wait_config,
             )
             .await;
@@ -189,6 +190,7 @@ async fn run_async_command(
                 deploy.unique,
                 deploy.max_fee,
                 &account,
+                deploy.nonce,
                 wait_config,
             )
             .await;
@@ -225,6 +227,7 @@ async fn run_async_command(
                 invoke.calldata,
                 invoke.max_fee,
                 &account,
+                invoke.nonce,
                 wait_config,
             )
             .await;
