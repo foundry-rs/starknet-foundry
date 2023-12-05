@@ -32,12 +32,12 @@ pub async fn declare(
     contract_name: &str,
     max_fee: Option<FieldElement>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
-    contracts: &HashMap<String, StarknetContractArtifacts>,
+    artifacts: &HashMap<String, StarknetContractArtifacts>,
     wait: bool,
 ) -> Result<DeclareResponse> {
     let contract_name: String = contract_name.to_string();
 
-    let contract_artifacts = contracts
+    let contract_artifacts = artifacts
         .get(&contract_name)
         .ok_or(anyhow!("Failed to find artifacts in starknet_artifacts.json file. Make sure you have enabled sierra and casm code generation in Scarb.toml"))?;
 

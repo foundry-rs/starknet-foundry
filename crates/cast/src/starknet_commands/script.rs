@@ -52,7 +52,7 @@ pub struct CairoHintProcessor<'a> {
     pub runtime: Runtime,
     pub run_resources: RunResources,
     pub config: &'a CastConfig,
-    pub contracts: &'a HashMap<String, StarknetContractArtifacts>,
+    pub artifacts: &'a HashMap<String, StarknetContractArtifacts>,
 }
 
 // cairo/crates/cairo-lang-runner/src/casm_run/mod.rs:457 (ResourceTracker for CairoHintProcessor)
@@ -222,7 +222,7 @@ impl CairoHintProcessor<'_> {
                     &contract_name,
                     max_fee,
                     &account,
-                    self.contracts,
+                    self.artifacts,
                     true,
                 ))?;
 
@@ -351,9 +351,9 @@ pub fn run(
     provider: &JsonRpcClient<HttpTransport>,
     runtime: Runtime,
     config: &CastConfig,
-    contracts: &HashMap<String, StarknetContractArtifacts>,
+    artifacts: &HashMap<String, StarknetContractArtifacts>,
 ) -> Result<ScriptResponse> {
-    let contract_artifacts = contracts
+    let contract_artifacts = artifacts
         .get(LIB_CONTRACT_ARTIFACTS_NAME)
         .ok_or(anyhow!("Failed to find artifacts in starknet_artifacts.json file. Make sure you have enabled sierra and casm code generation in Scarb.toml"))?;
 
@@ -389,7 +389,7 @@ pub fn run(
         runtime,
         run_resources: RunResources::default(),
         config,
-        contracts,
+        artifacts,
     };
 
     match runner.run_function(

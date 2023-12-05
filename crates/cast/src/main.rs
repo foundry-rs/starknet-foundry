@@ -139,14 +139,14 @@ fn main() -> Result<()> {
         package_data.manifest_path?;
         let package = package_data.package?;
 
-        let contracts = build(&package_data.metadata?, &package, true)?;
+        let artifacts = build(&package_data.metadata?, &package, true)?;
 
         let mut result = starknet_commands::script::run(
             &script.script_module_name,
             &provider,
             runtime,
             &config,
-            &contracts,
+            &artifacts,
         );
 
         print_command_result("script", &mut result, value_format, cli.json)?;
@@ -182,13 +182,13 @@ async fn run_async_command(
 
             package_data.manifest_path?;
 
-            let contracts = build(&package_data.metadata?, &package_data.package?, false)?;
+            let artifacts = build(&package_data.metadata?, &package_data.package?, false)?;
 
             let mut result = starknet_commands::declare::declare(
                 &declare.contract,
                 declare.max_fee,
                 &account,
-                &contracts,
+                &artifacts,
                 cli.wait,
             )
             .await;
@@ -425,21 +425,15 @@ fn get_package_data(cli: &Cli) -> PackageData {
         package: Err(anyhow!("Could not retrieve package metadata")),
     };
 
-    let manifest_path = match cli.path_to_scarb_toml.clone() {
-        Some(path) => Ok(path),
-        None => get_scarb_manifest().context("Failed to obtain manifest path from scarb"),
-    };
-
-    // Make sure the path exists
-    match &manifest_path {
-        Ok(path) => {
+    result.manifest_path = match cli.path_to_scarb_toml.clone() {
+        Some(path) => {
             if path.exists() {
-                result.manifest_path = manifest_path;
+                Ok(path)
+            } else {
+                Err(anyhow!("No manifest found at the given path"))
             }
         }
-        Err(_) => {
-            result.manifest_path = manifest_path;
-        }
+        None => get_scarb_manifest().context("Failed to obtain manifest path from scarb"),
     };
 
     if result.manifest_path.is_err() {

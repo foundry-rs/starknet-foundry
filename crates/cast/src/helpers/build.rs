@@ -39,10 +39,9 @@ pub fn build(
         );
     }
 
-    let mut contracts = get_contracts_map(metadata, &package.id)?;
+    let mut artifacts = get_contracts_map(metadata, &package.id)?;
 
     if for_scripts {
-        // Insert lib "contract"
         let sierra_filename = format!("{}.sierra.json", package.name);
 
         let sierra_path = target_dir_for_package(metadata)
@@ -54,8 +53,8 @@ pub fn build(
             casm: String::new(), // There seems to be no need for casm in lib
         };
 
-        contracts.insert(LIB_CONTRACT_ARTIFACTS_NAME.to_owned(), lib_artifacts);
+        artifacts.insert(LIB_CONTRACT_ARTIFACTS_NAME.to_owned(), lib_artifacts);
     }
 
-    Ok(contracts)
+    Ok(artifacts)
 }
