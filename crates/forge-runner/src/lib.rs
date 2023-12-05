@@ -5,17 +5,21 @@ use crate::sierra_casm_runner::SierraCasmRunner;
 use crate::test_case_summary::TestCaseSummary;
 use crate::test_crate_summary::TestCrateSummary;
 use anyhow::{anyhow, Context, Result};
+use cairo_felt::Felt252;
 use cairo_lang_sierra::ids::ConcreteTypeId;
 use cairo_lang_sierra::program::{Function, Program};
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use camino::Utf8PathBuf;
+use conversions::IntoConv;
 use futures::stream::FuturesUnordered;
 use futures::StreamExt;
+use num_bigint::BigInt;
 use once_cell::sync::Lazy;
 use scarb_artifacts::StarknetContractArtifacts;
 use smol_str::SmolStr;
 use starknet::core::types::BlockId;
+use starknet::core::types::BlockTag::Latest;
 use std::collections::HashMap;
 use std::sync::Arc;
 use test_collector::{ExpectedTestResult, FuzzerConfig};
@@ -151,10 +155,21 @@ impl ValidatedForkConfig {
 impl TryFrom<RawForkParams> for ValidatedForkConfig {
     type Error = anyhow::Error;
 
-    fn try_from(value: RawForkParams) -> std::result::Result<Self, Self::Error> {
+    fn try_from(value: RawForkParams) -> Result<Self, Self::Error> {
+        let block_id = match value.block_id_type.to_lowercase().as_str() {
+            "number" => BlockId::Number(value.block_id_value.parse().unwrap()),
+            "hash" => BlockId::Hash(
+                Felt252::from(value.block_id_value.parse::<BigInt>().unwrap()).into_(),
+            ),
+            "tag" => {
+                assert_eq!(value.block_id_value, "Latest");
+                BlockId::Tag(Latest)
+            }
+            _ => unreachable!(),
+        };
         Ok(ValidatedForkConfig {
             url: value.url.parse()?,
-            block_id: value.block_id,
+            block_id,
         })
     }
 }

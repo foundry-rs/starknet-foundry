@@ -4,10 +4,11 @@ use cairo_lang_sierra::program::Program;
 use camino::{Utf8Path, Utf8PathBuf};
 use forge_runner::BUILTINS;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
+use serde::Deserialize;
 use test_collector::{collect_tests, LinkedLibrary, TestCaseRaw};
 use walkdir::WalkDir;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Deserialize)]
 pub(crate) struct CompiledTestCrateRaw {
     pub sierra_program: Program,
     pub test_cases: Vec<TestCaseRaw>,
