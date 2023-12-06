@@ -72,7 +72,7 @@ async fn test_run_script_from_different_directory_no_path_to_scarb_toml() {
         .current_dir(SCRIPTS_DIR)
         .args(args);
     snapbox.assert().failure().stderr_matches(indoc! {r"
-        Error: Could not retrieve the manifest path
+        Error: No manifest found at the given path[..]
     "});
 }
 
