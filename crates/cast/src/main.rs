@@ -457,9 +457,7 @@ fn get_package_data(cli: &Cli) -> PackageData {
             } else {
                 Err(anyhow!(format!(
                     "No manifest found at the given path ({})",
-                    cli.path_to_scarb_toml
-                        .as_ref()
-                        .expect("Path Scarb.toml empty")
+                    path
                 )))
             }
         }
