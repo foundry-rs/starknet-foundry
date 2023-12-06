@@ -18,6 +18,7 @@ use smol_str::SmolStr;
 use starknet::core::types::BlockId;
 use std::collections::HashMap;
 use std::sync::Arc;
+use test_case_summary::FuzzingGasUsage;
 use test_collector::{ExpectedTestResult, FuzzerConfig};
 use test_collector::{LinkedLibrary, RawForkParams};
 use tokio::sync::mpsc::{channel, Sender};
@@ -342,7 +343,7 @@ fn run_with_fuzzing(
         }
 
         let mut results = vec![];
-
+        let mut gas_usages = None;
         while let Some(task) = tasks.next().await {
             let result = task??;
 
@@ -377,9 +378,34 @@ fn run_with_fuzzing(
             if runs != fuzzer_runs {
                 return Ok(TestCaseSummary::Skipped {});
             };
+
+            let gas_usages_vec: Vec<&f64> = results
+                .iter()
+                .filter(|item| matches!(item, TestCaseSummary::Passed { .. }))
+                .map(|a| match a {
+                    TestCaseSummary::Passed { gas_used, .. } => gas_used,
+                    _ => unreachable!(),
+                })
+                .collect();
+
+            let max = gas_usages_vec
+                .clone()
+                .into_iter()
+                .copied()
+                .reduce(f64::max)
+                .unwrap();
+            let min = gas_usages_vec
+                .into_iter()
+                .copied()
+                .reduce(f64::min)
+                .unwrap();
+
+            gas_usages = Some(FuzzingGasUsage { min, max });
         };
 
-        Ok(final_result.clone().with_runs(runs))
+        Ok(final_result
+            .clone()
+            .with_runs_and_gas_usage(runs, gas_usages))
     })
 }
 
