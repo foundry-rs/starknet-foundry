@@ -10,8 +10,7 @@ use camino::Utf8PathBuf;
 use cast::helpers::build::build;
 use cast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
 use cast::helpers::scarb_utils::{
-    get_first_package_from_metadata, get_scarb_config, get_scarb_manifest,
-    get_scarb_metadata_with_deps, CastConfig,
+    get_scarb_config, get_scarb_manifest, get_scarb_metadata_with_deps, CastConfig,
 };
 use cast::{
     chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_provider,
@@ -452,15 +451,11 @@ fn get_package_data(cli: &Cli) -> PackageData {
         return result;
     }
 
-    let package = match cli
+    let package = cli
         .packages_filter
         .clone()
         .into_packages_filter()
-        .match_one(result.metadata.as_ref().unwrap())
-    {
-        Ok(data) => Ok(data),
-        Err(_) => get_first_package_from_metadata(result.metadata.as_ref().unwrap()),
-    };
+        .match_one(result.metadata.as_ref().unwrap());
 
     result.package = package;
     result

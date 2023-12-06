@@ -1,0 +1,14 @@
+[package]
+name = "fibonacci"
+version.workspace = true
+
+[dependencies]
+addition = { path = "../addition" }
+starknet.workspace = true
+
+[[target.starknet-contract]]
+sierra = true
+casm = true
+build-external-contracts = ["addition::AdditionContract"]
+
+[lib]

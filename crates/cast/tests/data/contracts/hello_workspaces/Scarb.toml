@@ -1,0 +1,23 @@
+[workspace]
+members = [
+    "crates/*",
+]
+
+[workspace.dependencies]
+starknet = "2.3.1"
+
+[workspace.package]
+version = "0.1.0"
+
+[package]
+name = "hello_workspaces"
+version.workspace = true
+
+[dependencies]
+starknet.workspace = true
+fibonacci = { path = "crates/fibonacci" }
+addition = { path = "crates/addition" }
+
+[[target.starknet-contract]]
+sierra = true
+casm = true

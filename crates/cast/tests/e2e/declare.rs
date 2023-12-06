@@ -1,6 +1,7 @@
 use crate::helpers::constants::{CONTRACTS_DIR, URL};
 use crate::helpers::fixtures::{
-    duplicate_directory_with_salt, get_accounts_path, get_transaction_hash, get_transaction_receipt,
+    duplicate_directory, duplicate_directory_with_salt, get_accounts_path, get_transaction_hash,
+    get_transaction_receipt,
 };
 use indoc::indoc;
 use snapbox::cmd::{cargo_bin, Command};
@@ -40,6 +41,148 @@ async fn test_happy_case() {
     let receipt = get_transaction_receipt(hash).await;
 
     assert!(matches!(receipt, Declare(_)));
+
+    fs::remove_dir_all(contract_path).unwrap();
+}
+
+#[tokio::test]
+async fn test_worskpaces_package_specified() {
+    let contract_path = duplicate_directory(CONTRACTS_DIR.to_string() + "/hello_workspaces");
+
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+    let args = vec![
+        "--url",
+        URL,
+        "--accounts-file",
+        accounts_json_path.as_str(),
+        "--account",
+        "user8",
+        "--int-format",
+        "--json",
+        "--package",
+        "addition",
+        "declare",
+        "--contract-name",
+        "AdditionContract",
+        "--max-fee",
+        "99999999999999999",
+    ];
+
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(contract_path.path())
+        .args(args);
+
+    let output = snapbox.assert().success().get_output().clone();
+    let output = output.stdout.clone();
+
+    let hash = get_transaction_hash(&output);
+    let receipt = get_transaction_receipt(hash).await;
+
+    assert!(matches!(receipt, Declare(_)));
+
+    fs::remove_dir_all(contract_path).unwrap();
+}
+
+#[tokio::test]
+async fn test_worskpaces_package_not_specified() {
+    let contract_path = duplicate_directory(CONTRACTS_DIR.to_string() + "/hello_workspaces");
+
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+    let args = vec![
+        "--url",
+        URL,
+        "--accounts-file",
+        accounts_json_path.as_str(),
+        "--account",
+        "user8",
+        "--int-format",
+        "declare",
+        "--contract-name",
+        "AdditionContract",
+        "--max-fee",
+        "99999999999999999",
+    ];
+
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(contract_path.path())
+        .args(args);
+
+    snapbox.assert().success().stderr_matches(indoc! {r"
+        command: declare
+        error: Failed to find artifacts in starknet_artifacts.json file[..]
+    "});
+
+    fs::remove_dir_all(contract_path).unwrap();
+}
+
+#[tokio::test]
+async fn test_worskpaces_package_specified_virtual() {
+    let contract_path =
+        duplicate_directory(CONTRACTS_DIR.to_string() + "/hello_workspaces_virtual");
+
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+    let args = vec![
+        "--url",
+        URL,
+        "--accounts-file",
+        accounts_json_path.as_str(),
+        "--account",
+        "user8",
+        "--int-format",
+        "--json",
+        "--package",
+        "addition",
+        "declare",
+        "--contract-name",
+        "AdditionContract",
+        "--max-fee",
+        "99999999999999999",
+    ];
+
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(contract_path.path())
+        .args(args);
+
+    let output = snapbox.assert().success().get_output().clone();
+    let output = output.stdout.clone();
+
+    let hash = get_transaction_hash(&output);
+    let receipt = get_transaction_receipt(hash).await;
+
+    assert!(matches!(receipt, Declare(_)));
+
+    fs::remove_dir_all(contract_path).unwrap();
+}
+
+#[tokio::test]
+async fn test_worskpaces_package_not_specified_virtual() {
+    let contract_path =
+        duplicate_directory(CONTRACTS_DIR.to_string() + "/hello_workspaces_virtual");
+
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+    let args = vec![
+        "--url",
+        URL,
+        "--accounts-file",
+        accounts_json_path.as_str(),
+        "--account",
+        "user8",
+        "--int-format",
+        "declare",
+        "--contract-name",
+        "AdditionContract",
+        "--max-fee",
+        "99999999999999999",
+    ];
+
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(contract_path.path())
+        .args(args);
+
+    snapbox.assert().failure().stderr_matches(indoc! {r"
+        Error: could not determine which package to work on
+        help: use the `--package` option to specify the package
+    "});
 
     fs::remove_dir_all(contract_path).unwrap();
 }
