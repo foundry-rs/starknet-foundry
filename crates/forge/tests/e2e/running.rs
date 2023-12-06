@@ -255,7 +255,7 @@ fn with_gas_usage() {
         Collected 1 test(s) from simple_package package
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
-        [PASS] tests::test_simple::test_two, gas: ~0.1
+        [PASS] tests::test_simple::test_two, gas: ~1
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 12 filtered out
         "}
     );
