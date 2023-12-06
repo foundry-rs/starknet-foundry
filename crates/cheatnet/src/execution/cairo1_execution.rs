@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use super::cheatable_syscall_handler::CheatableSyscallHandler;
+use crate::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
 use crate::runtime_extensions::io_runtime_extension::IORuntimeExtension;
 use crate::state::CheatnetState;
 use blockifier::execution::call_info::CallInfo;
@@ -26,7 +26,7 @@ use cairo_vm::{
         vm_core::VirtualMachine,
     },
 };
-use runtime::ExtendedRuntime;
+use runtime::{ExtendedRuntime, StarknetRuntime};
 
 // blockifier/src/execution/cairo1_execution.rs:48 (execute_entry_point_call)
 pub fn execute_entry_point_call_cairo1(
@@ -59,13 +59,19 @@ pub fn execute_entry_point_call_cairo1(
     let previous_vm_resources = syscall_handler.resources.vm_resources.clone();
 
     // region: Modified blockifier code
-    let cheatable_syscall_handler = CheatableSyscallHandler::wrap(syscall_handler, cheatnet_state);
+
+    let cheatable_runtime = ExtendedRuntime {
+        extension: CheatableStarknetRuntimeExtension { cheatnet_state },
+        extended_runtime: StarknetRuntime {
+            hint_handler: syscall_handler,
+        },
+    };
 
     let mut io_runtime = ExtendedRuntime {
         extension: IORuntimeExtension {
             lifetime: &PhantomData,
         },
-        extended_runtime: cheatable_syscall_handler,
+        extended_runtime: cheatable_runtime,
     };
 
     // Execute.
@@ -82,7 +88,7 @@ pub fn execute_entry_point_call_cairo1(
     let call_info = finalize_execution(
         vm,
         runner,
-        io_runtime.extended_runtime.child,
+        io_runtime.extended_runtime.extended_runtime.hint_handler,
         previous_vm_resources,
         n_total_args,
         program_extra_data_length,
