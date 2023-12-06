@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::fs;
 
 use crate::starknet_commands::{call, declare, deploy, invoke};
-use crate::{get_account, WaitForTx};
+use crate::{get_account, get_nonce, WaitForTx};
 use anyhow::{anyhow, ensure, Context, Result};
 use cairo_felt::Felt252;
 use cairo_lang_casm::hints::{Hint, StarknetHint};
@@ -37,6 +37,7 @@ use itertools::chain;
 use num_traits::ToPrimitive;
 use runtime::EnhancedHintError;
 use scarb_metadata::ScarbCommand;
+use starknet::accounts::Account;
 use starknet::core::types::{BlockId, BlockTag::Pending, FieldElement};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
@@ -220,6 +221,7 @@ impl CairoHintProcessor<'_> {
                     offset += 1;
                     Some(inputs[offset].clone().into_())
                 } else {
+                    //get_nonce(self.provider, "latest".as_str(), &account.address)
                     None
                 };
                 let account = self.runtime.block_on(get_account(
@@ -373,6 +375,27 @@ impl CairoHintProcessor<'_> {
                 buffer
                     .write(Felt252::from_(invoke_response.transaction_hash))
                     .expect("Failed to insert transaction hash");
+
+                Ok(())
+            }
+            "get_nonce" => {
+                let block_id = as_cairo_short_string(&inputs[0])
+                    .expect("Failed to convert entry point name to short string");
+                let account = self.runtime.block_on(get_account(
+                    &self.config.account,
+                    &self.config.accounts_file,
+                    self.provider,
+                    &self.config.keystore,
+                ))?;
+
+                let nonce = self.runtime.block_on(get_nonce(
+                    self.provider,
+                    &block_id,
+                    account.address(),
+                ))?;
+                buffer
+                    .write(Felt252::from_(nonce))
+                    .expect("Failed to insert nonce");
 
                 Ok(())
             }

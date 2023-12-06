@@ -10,7 +10,7 @@ use camino::Utf8PathBuf;
 use cast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
 use cast::helpers::scarb_utils::{parse_scarb_config, CastConfig};
 use cast::{
-    chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_provider,
+    chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_nonce, get_provider,
     print_command_result, ValueFormat, WaitForTx,
 };
 use clap::{Parser, Subcommand};
