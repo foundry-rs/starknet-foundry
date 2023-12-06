@@ -30,7 +30,7 @@ mod SpoofChecker {
     use box::BoxTrait;
     use starknet::ContractAddress;
     use starknet::info::v2::ResourceBounds;
-    use starknet::{ SyscallResultTrait, SyscallResult, syscalls::get_execution_info_v2_syscall };
+    use starknet::{SyscallResultTrait, SyscallResult, syscalls::get_execution_info_v2_syscall};
 
     #[storage]
     struct Storage {
