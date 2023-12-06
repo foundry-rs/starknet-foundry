@@ -229,6 +229,7 @@ fn fuzzing_exit_first_single_fail() {
             tests::exit_first_single_fail::exit_first_fails_test
 
         Tests: 0 passed, 1 failed, 1 skipped, 0 ignored, 16 filtered out
+        Fuzzer seed: [..]
         "}
     );
 }
