@@ -4,6 +4,7 @@ use serde::Deserialize;
 use std::collections::HashMap;
 use test_collector::RawForkParams;
 
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug, PartialEq, Default)]
 pub struct ForgeConfig {
     /// Should runner exit after first failed test
@@ -61,7 +62,7 @@ pub(crate) struct RawForkTarget {
     pub block_id: HashMap<String, String>,
 }
 
-fn validate_raw_fork_config(raw_config: &RawForgeConfig) -> Result<()> {
+fn validate_raw_fork_config(raw_config: RawForgeConfig) -> Result<RawForgeConfig> {
     let forks = &raw_config.fork;
     let names: Vec<String> = forks.iter().map(|fork| fork.name.clone()).collect();
     let removed_duplicated_names: Vec<String> = names.clone().into_iter().unique().collect();
@@ -85,14 +86,14 @@ fn validate_raw_fork_config(raw_config: &RawForgeConfig) -> Result<()> {
         }
     }
 
-    Ok(())
+    Ok(raw_config)
 }
 
 impl TryFrom<RawForgeConfig> for ForgeConfig {
     type Error = anyhow::Error;
 
     fn try_from(value: RawForgeConfig) -> Result<Self, Self::Error> {
-        validate_raw_fork_config(&value)?;
+        let value = validate_raw_fork_config(value)?;
         let mut fork_targets = vec![];
 
         for raw_fork_target in value.fork {
