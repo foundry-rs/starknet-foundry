@@ -8,19 +8,49 @@ use std::option::Option;
 use test_collector::{ExpectedPanicValue, ExpectedTestResult};
 
 #[derive(Debug, PartialEq, Clone)]
-pub struct FuzzingGasUsage {
+pub struct GasStatistics {
     pub min: f64,
     pub max: f64,
 }
 #[derive(Debug, PartialEq, Clone)]
 pub struct FuzzingStatistics {
-    runs: u32,
-    gas_usage: Option<FuzzingGasUsage>,
+    pub runs: usize,
 }
 
-/// Summary of running a single test case
+pub trait TestType: GasInfo + TestStatistics {}
+
 #[derive(Debug, PartialEq, Clone)]
-pub enum TestCaseSummary {
+pub struct Fuzzing;
+impl TestType for Fuzzing {}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct Single;
+impl TestType for Single {}
+
+trait GasInfo {
+    type Type: std::fmt::Debug + Clone;
+}
+impl GasInfo for Fuzzing {
+    type Type = GasStatistics;
+}
+impl GasInfo for Single {
+    type Type = f64;
+}
+
+trait TestStatistics {
+    type Type: std::fmt::Debug + Clone;
+}
+impl TestStatistics for Fuzzing {
+    type Type = FuzzingStatistics;
+}
+impl TestStatistics for Single {
+    type Type = ();
+}
+
+
+/// Summary of running a single test case
+#[derive(Debug, Clone)]
+pub enum TestCaseSummary<T : TestType> {
     /// Test case passed
     Passed {
         /// Name of the test case
@@ -29,12 +59,13 @@ pub enum TestCaseSummary {
         msg: Option<String>,
         /// Arguments used in the test case run
         arguments: Vec<Felt252>,
-        /// Statistic for fuzzing test
-        fuzzing_statistic: Option<FuzzingStatistics>,
+        /// Information on used gas
+        gas_info: <T as GasInfo>::Type,
+        /// Statistics of the test run
+        test_statistics: <T as TestStatistics>::Type,
         /// Number of block used if BlockId::Tag(Latest) was specified
         latest_block_number: Option<BlockNumber>,
-        /// Gas used by the test case
-        gas_used: f64,
+
     },
     /// Test case failed
     Failed {
@@ -44,8 +75,8 @@ pub enum TestCaseSummary {
         msg: Option<String>,
         /// Arguments used in the test case run
         arguments: Vec<Felt252>,
-        /// Statistic for fuzzing test
-        fuzzing_statistic: Option<FuzzingStatistics>,
+        /// Statistics of the test run
+        test_statistics: <T as TestStatistics>::Type,
         /// Number of block used if BlockId::Tag(Latest) was specified
         latest_block_number: Option<BlockNumber>,
     },
@@ -58,7 +89,7 @@ pub enum TestCaseSummary {
     Skipped {},
 }
 
-impl TestCaseSummary {
+impl<T: TestType> TestCaseSummary<T> {
     #[must_use]
     pub fn arguments(&self) -> Vec<Felt252> {
         match self {
@@ -67,20 +98,7 @@ impl TestCaseSummary {
             TestCaseSummary::Ignored { .. } | TestCaseSummary::Skipped { .. } => vec![],
         }
     }
-    #[must_use]
-    pub fn runs(&self) -> Option<u32> {
-        match self {
-            TestCaseSummary::Failed {
-                fuzzing_statistic, ..
-            }
-            | TestCaseSummary::Passed {
-                fuzzing_statistic, ..
-            } => fuzzing_statistic
-                .as_ref()
-                .map(|FuzzingStatistics { runs, .. }| *runs),
-            TestCaseSummary::Ignored { .. } | TestCaseSummary::Skipped { .. } => None,
-        }
-    }
+
 
     pub(crate) fn latest_block_number(&self) -> &Option<BlockNumber> {
         match self {
@@ -95,63 +113,31 @@ impl TestCaseSummary {
             TestCaseSummary::Ignored { .. } | TestCaseSummary::Skipped { .. } => &None,
         }
     }
+}
+
+impl TestCaseSummary<Fuzzing> {
     #[must_use]
     pub fn gas_usage(&self) -> Option<String> {
         match self {
             TestCaseSummary::Passed {
-                gas_used,
-                fuzzing_statistic,
+                gas_info,
                 ..
-            } => match fuzzing_statistic {
-                Some(FuzzingStatistics { gas_usage, .. }) => gas_usage
-                    .as_ref()
-                    .map(|gas_usage| format!("(max: ~{}, min: ~{})", gas_usage.max, gas_usage.min)),
-                None => Some(format!("~{gas_used}")),
-            },
+            } => Some(format!("(max: ~{}, min: ~{})", gas_info.max, gas_info.min)),
             _ => None,
         }
     }
 
     #[must_use]
-    pub fn with_runs_and_gas_usage(self, runs: u32, gas_usage: Option<FuzzingGasUsage>) -> Self {
+    pub fn runs(&self) -> Option<usize> {
         match self {
-            TestCaseSummary::Passed {
-                name,
-                msg,
-                arguments,
-                latest_block_number,
-                gas_used: gas,
-                ..
-            } => TestCaseSummary::Passed {
-                name,
-                msg,
-                arguments,
-                gas_used: gas,
-                fuzzing_statistic: Some(FuzzingStatistics { runs, gas_usage }),
-                latest_block_number,
-            },
-            TestCaseSummary::Failed {
-                name,
-                msg,
-                arguments,
-                latest_block_number,
-                ..
-            } => TestCaseSummary::Failed {
-                name,
-                msg,
-                arguments,
-                fuzzing_statistic: Some(FuzzingStatistics {
-                    runs,
-                    gas_usage: None,
-                }),
-                latest_block_number,
-            },
-            TestCaseSummary::Ignored { .. } | TestCaseSummary::Skipped {} => self,
+            TestCaseSummary::Passed { test_statistics: FuzzingStatistics { runs }, .. } => Some(runs.clone()),
+            TestCaseSummary::Failed { test_statistics: FuzzingStatistics { runs }, .. } =>  Some(runs.clone()),
+            _ => None,
         }
     }
 }
 
-impl TestCaseSummary {
+impl TestCaseSummary<Single> {
     #[must_use]
     pub(crate) fn from_run_result_and_info(
         run_result: RunResult,
@@ -169,15 +155,15 @@ impl TestCaseSummary {
                     name,
                     msg,
                     arguments,
-                    fuzzing_statistic: None,
+                    test_statistics: (),
                     latest_block_number,
-                    gas_used: gas,
+                    gas_info: gas,
                 },
                 ExpectedTestResult::Panics(_) => TestCaseSummary::Failed {
                     name,
                     msg,
                     arguments,
-                    fuzzing_statistic: None,
+                    test_statistics: (),
                     latest_block_number,
                 },
             },
@@ -186,7 +172,7 @@ impl TestCaseSummary {
                     name,
                     msg,
                     arguments,
-                    fuzzing_statistic: None,
+                    test_statistics: (),
                     latest_block_number,
                 },
                 ExpectedTestResult::Panics(panic_expectation) => match panic_expectation {
@@ -195,7 +181,7 @@ impl TestCaseSummary {
                             name,
                             msg,
                             arguments,
-                            fuzzing_statistic: None,
+                            test_statistics: (),
                             latest_block_number,
                         }
                     }
@@ -203,12 +189,23 @@ impl TestCaseSummary {
                         name,
                         msg,
                         arguments,
-                        fuzzing_statistic: None,
+                        test_statistics: (),
                         latest_block_number,
-                        gas_used: gas,
+                        gas_info: gas,
                     },
                 },
             },
+        }
+    }
+
+    #[must_use]
+    pub fn gas_usage(&self) -> Option<String> {
+        match self {
+            TestCaseSummary::Passed {
+                gas_info,
+                ..
+            } => Some(format!("~{gas_info}")),
+            _ => None,
         }
     }
 }

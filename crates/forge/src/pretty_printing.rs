@@ -1,8 +1,8 @@
 use crate::CrateLocation;
 use anyhow::Error;
 use console::style;
-use forge_runner::test_case_summary::TestCaseSummary;
-use forge_runner::test_crate_summary::TestCrateSummary;
+use forge_runner::test_case_summary::{TestCaseSummary, TestType};
+use forge_runner::test_crate_summary::{TestCrateSummary, AnyTestCaseSummary};
 
 pub fn print_error_message(error: &Error) {
     let error_tag = style("ERROR").red();
@@ -45,19 +45,31 @@ pub(crate) fn print_test_seed(seed: u64) {
     println!("{}: {seed}", style("Fuzzer seed").bold());
 }
 
-pub fn print_failures(all_failed_tests: &[TestCaseSummary]) {
+pub fn print_failures(all_failed_tests: &[AnyTestCaseSummary]) {
     if all_failed_tests.is_empty() {
         return;
     }
-
     let failed_tests_names: Vec<&String> = all_failed_tests
         .iter()
-        .map(|test_case_summary| match test_case_summary {
-            TestCaseSummary::Failed { name, .. } => name,
-            TestCaseSummary::Passed { .. }
-            | TestCaseSummary::Ignored { .. }
-            | TestCaseSummary::Skipped {} => unreachable!(),
-        })
+        .map(|any_test_case_summary| match any_test_case_summary {
+                AnyTestCaseSummary::Fuzzing(test_case_summary) => {
+                    match test_case_summary {
+                        TestCaseSummary::Failed { name, .. } => name,
+                        TestCaseSummary::Passed { .. }
+                        | TestCaseSummary::Ignored { .. }
+                        | TestCaseSummary::Skipped {} => unreachable!(),
+                    }
+                },
+                AnyTestCaseSummary::Single(test_case_summary) => {
+                    match test_case_summary {
+                        TestCaseSummary::Failed { name, .. } => name,
+                        TestCaseSummary::Passed { .. }
+                        | TestCaseSummary::Ignored { .. }
+                        | TestCaseSummary::Skipped {} => unreachable!(),
+                    }
+                }
+            }
+        )
         .collect();
 
     println!("\nFailures:");
