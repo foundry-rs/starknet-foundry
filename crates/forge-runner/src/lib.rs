@@ -395,14 +395,12 @@ fn run_with_fuzzing(
                 .reduce(f64::max)
                 .unwrap();
             let min = gas_usages_vec
-                .clone()
                 .into_iter()
                 .copied()
                 .reduce(f64::min)
                 .unwrap();
-            //TODO: compute avg
-            let avg: f64 = 3.23;
-            gas_usages = Some(FuzzingGasUsage { min, max, avg });
+
+            gas_usages = Some(FuzzingGasUsage { min, max });
         };
 
         Ok(final_result

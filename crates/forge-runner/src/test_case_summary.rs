@@ -11,7 +11,6 @@ use test_collector::{ExpectedPanicValue, ExpectedTestResult};
 pub struct FuzzingGasUsage {
     pub min: f64,
     pub max: f64,
-    pub avg: f64,
 }
 #[derive(Debug, PartialEq, Clone)]
 pub struct FuzzingStatistics {
@@ -104,12 +103,9 @@ impl TestCaseSummary {
                 fuzzing_statistic,
                 ..
             } => match fuzzing_statistic {
-                Some(FuzzingStatistics { gas_usage, .. }) => gas_usage.as_ref().map(|gas_usage| {
-                    format!(
-                        "(max: ~{}, min: ~{}, avg: ~{})",
-                        gas_usage.max, gas_usage.min, gas_usage.avg
-                    )
-                }),
+                Some(FuzzingStatistics { gas_usage, .. }) => gas_usage
+                    .as_ref()
+                    .map(|gas_usage| format!("(max: ~{}, min: ~{})", gas_usage.max, gas_usage.min)),
                 None => Some(format!("~{gas_used}")),
             },
             _ => None,
