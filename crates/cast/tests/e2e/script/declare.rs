@@ -1,6 +1,8 @@
 use crate::helpers::constants::{SCRIPTS_DIR, URL};
+use crate::helpers::runner::runner;
 use indoc::indoc;
-use snapbox::cmd::{cargo_bin, Command};
+
+use std::path::Path;
 
 #[tokio::test]
 async fn test_missing_field() {
@@ -16,9 +18,11 @@ async fn test_missing_field() {
         &script_name,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(SCRIPTS_DIR.to_owned() + "/declare/missing_field")
-        .args(args);
+    let current_dir = Path::new(&SCRIPTS_DIR)
+        .join("declare")
+        .join("missing_field");
+    let snapbox = runner(&args, Some(current_dir.as_path()));
+
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
         error: Wrong number of arguments. Expected 3, found: 2
@@ -40,9 +44,9 @@ async fn test_wrong_contract_name() {
         &script_name,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(SCRIPTS_DIR.to_owned() + "/declare/no_contract")
-        .args(args);
+    let current_dir = Path::new(&SCRIPTS_DIR).join("declare").join("no_contract");
+    let snapbox = runner(&args, Some(current_dir.as_path()));
+
     snapbox.assert().success().stderr_matches(indoc! {r"
         command: script
         error: Got an exception while executing a hint: [..]

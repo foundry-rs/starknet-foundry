@@ -1,6 +1,7 @@
 use crate::helpers::constants::{SCRIPTS_DIR, URL};
+use crate::helpers::runner::runner;
 use indoc::indoc;
-use snapbox::cmd::{cargo_bin, Command};
+use std::path::Path;
 
 #[tokio::test]
 async fn test_happy_case() {
@@ -16,10 +17,8 @@ async fn test_happy_case() {
         &script_name,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(SCRIPTS_DIR.to_owned() + "/map_script/scripts")
-        .args(args);
-
+    let current_dir = Path::new(&SCRIPTS_DIR).join("map_script").join("scripts");
+    let snapbox = runner(&args, Some(current_dir.as_path()));
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
         command: script
@@ -44,9 +43,7 @@ async fn test_run_script_from_different_directory() {
         &script_name,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(SCRIPTS_DIR)
-        .args(args);
+    let snapbox = runner(&args, Some(Path::new(&SCRIPTS_DIR)));
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
         command: script
@@ -68,9 +65,7 @@ async fn test_run_script_from_different_directory_no_path_to_scarb_toml() {
         &script_name,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(SCRIPTS_DIR)
-        .args(args);
+    let snapbox = runner(&args, Some(Path::new(&SCRIPTS_DIR)));
     snapbox.assert().success().stderr_matches(indoc! {r"
         ...
         command: script
@@ -92,9 +87,8 @@ async fn test_fail_when_using_starknet_syscall() {
         &script_name,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(SCRIPTS_DIR.to_owned() + "/misc")
-        .args(args);
+    let current_dir = Path::new(&SCRIPTS_DIR).join("misc");
+    let snapbox = runner(&args, Some(current_dir.as_path()));
     snapbox.assert().success().stderr_matches(indoc! {r"
         ...
         command: script

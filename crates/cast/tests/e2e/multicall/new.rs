@@ -9,7 +9,7 @@ async fn test_happy_case_stdout() {
 
     args.append(&mut vec!["multicall", "new"]);
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
     let bdg = snapbox.assert();
     let out = bdg.get_output();
 
@@ -30,7 +30,7 @@ async fn test_happy_case_file() {
 
     args.append(&mut vec!["multicall", "new", "--output-path", tmp_path]);
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
     let bdg = snapbox.assert();
     let out = bdg.get_output();
 
@@ -59,7 +59,7 @@ async fn test_directory_non_existent() {
 
     args.append(&mut vec!["multicall", "new", "--output-path", tmp_path]);
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
     let bdg = snapbox.assert();
     let out = bdg.get_output();
 
@@ -83,7 +83,7 @@ async fn test_file_invalid_path() {
 
     args.append(&mut vec!["multicall", "new", "--output-path", tmp_path]);
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
     let bdg = snapbox.assert();
     let out = bdg.get_output();
 

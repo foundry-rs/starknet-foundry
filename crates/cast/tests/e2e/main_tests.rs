@@ -3,25 +3,31 @@ use crate::helpers::fixtures::{duplicate_directory_with_salt, from_env, get_keys
 use crate::helpers::runner::runner;
 use cast::helpers::constants::KEYSTORE_PASSWORD_ENV_VAR;
 use indoc::indoc;
-use snapbox::cmd::{cargo_bin, Command};
 use std::env;
 use std::fs;
+use std::path::Path;
+use test_case::test_case;
 
+#[test_case(Some(Path::new("tests/data/files")), None ; "Scarb.toml in current_dir")]
+#[test_case(None, Some("tests/data/files/Scarb.toml") ; "Scarb.toml passed as argument")]
 #[tokio::test]
-async fn test_happy_case_from_scarb() {
-    let args = vec![
+async fn test_happy_case_from_scarb(current_dir: Option<&Path>, path_to_scarb_toml: Option<&str>) {
+    let mut args = vec![];
+    if let Some(scarb_path) = path_to_scarb_toml {
+        args.append(&mut vec!["--path-to-scarb-toml", scarb_path]);
+    }
+
+    args.append(&mut vec![
         "--accounts-file",
         ACCOUNT_FILE_PATH,
-        "--path-to-scarb-toml",
-        "tests/data/files/correct_Scarb.toml",
         "call",
         "--contract-address",
         "0x0",
         "--function",
         "doesnotmatter",
-    ];
+    ]);
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, current_dir);
 
     snapbox.assert().success().stderr_matches(indoc! {r"
         command: call
@@ -45,7 +51,7 @@ async fn test_happy_case_from_cli_no_scarb() {
         "doesnotmatter",
     ];
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
 
     snapbox.assert().success().stderr_matches(indoc! {r"
         command: call
@@ -60,7 +66,7 @@ async fn test_happy_case_from_cli_with_scarb() {
         "--accounts-file",
         ACCOUNT_FILE_PATH,
         "--path-to-scarb-toml",
-        "tests/data/files/correct_Scarb.toml",
+        "tests/data/files/Scarb.toml",
         "--profile",
         "profile1",
         "--url",
@@ -78,7 +84,7 @@ async fn test_happy_case_from_cli_with_scarb() {
         "latest",
     ];
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
 
     snapbox.assert().success().stdout_eq(indoc! {r"
         command: call
@@ -93,7 +99,7 @@ async fn test_happy_case_mixed() {
         "--accounts-file",
         ACCOUNT_FILE_PATH,
         "--path-to-scarb-toml",
-        "tests/data/files/correct_Scarb.toml",
+        "tests/data/files/Scarb.toml",
         "--profile",
         "profile2",
         "--account",
@@ -109,7 +115,7 @@ async fn test_happy_case_mixed() {
         "latest",
     ];
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
 
     snapbox.assert().success().stdout_eq(indoc! {r"
         command: call
@@ -129,7 +135,7 @@ async fn test_missing_account() {
         "whatever",
     ];
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
 
     snapbox.assert().stderr_matches(indoc! {r"
         Error: Account name not passed nor found in Scarb.toml
@@ -148,7 +154,7 @@ async fn test_missing_url() {
         "whatever",
     ];
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
 
     snapbox.assert().stderr_matches(indoc! {r"
         Error: RPC url not passed nor found in Scarb.toml
@@ -167,7 +173,7 @@ async fn test_inexistent_keystore() {
         "my_contract",
     ];
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
 
     snapbox.assert().stderr_matches(indoc! {r"
         Error: keystore file does not exist
@@ -186,7 +192,7 @@ async fn test_keystore_account_required() {
         "my_contract",
     ];
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
 
     snapbox.assert().stderr_matches(indoc! {r"
         Error: Path passed with --account cannot be empty!
@@ -207,7 +213,7 @@ async fn test_keystore_inexistent_account() {
         "my_contract",
     ];
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
 
     snapbox.assert().stderr_matches(indoc! {r"
         Error: account file does not exist; [..]
@@ -235,9 +241,7 @@ async fn test_keystore_undeployed_account() {
     ];
 
     env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(contract_path.path())
-        .args(args);
+    let snapbox = runner(&args, Some(contract_path.path()));
 
     snapbox.assert().stderr_matches(indoc! {r"
         Error: [..] make sure the account is deployed
@@ -265,9 +269,7 @@ async fn test_keystore_declare() {
     ];
 
     env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(contract_path.path())
-        .args(args);
+    let snapbox = runner(&args, Some(contract_path.path()));
 
     snapbox.assert().success().get_output().stderr.is_empty();
 

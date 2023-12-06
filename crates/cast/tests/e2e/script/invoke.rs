@@ -1,6 +1,7 @@
 use crate::helpers::constants::{SCRIPTS_DIR, URL};
+use crate::helpers::runner::runner;
 use indoc::indoc;
-use snapbox::cmd::{cargo_bin, Command};
+use std::path::Path;
 
 #[tokio::test]
 async fn test_max_fee_too_low() {
@@ -16,9 +17,9 @@ async fn test_max_fee_too_low() {
         &script_name,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(SCRIPTS_DIR.to_owned() + "/invoke")
-        .args(args);
+    let current_dir = Path::new(&SCRIPTS_DIR).join("invoke");
+    let snapbox = runner(&args, Some(current_dir.as_path()));
+
     snapbox.assert().success().stderr_matches(indoc! {r"
         ...
         command: script
@@ -40,9 +41,9 @@ async fn test_contract_does_not_exist() {
         &script_name,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(SCRIPTS_DIR.to_owned() + "/invoke")
-        .args(args);
+    let current_dir = Path::new(&SCRIPTS_DIR).join("invoke");
+    let snapbox = runner(&args, Some(current_dir.as_path()));
+
     snapbox.assert().success().stderr_matches(indoc! {r"
         ...
         command: script
@@ -64,9 +65,9 @@ fn test_wrong_function_name() {
         &script_name,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(SCRIPTS_DIR.to_owned() + "/invoke")
-        .args(args);
+    let current_dir = Path::new(&SCRIPTS_DIR).join("invoke");
+    let snapbox = runner(&args, Some(current_dir.as_path()));
+
     snapbox.assert().success().stderr_matches(indoc! {r"
         ...
         command: script
@@ -87,10 +88,8 @@ fn test_wrong_calldata() {
         "script",
         &script_name,
     ];
-
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(SCRIPTS_DIR.to_owned() + "/invoke")
-        .args(args);
+    let current_dir = Path::new(&SCRIPTS_DIR).join("invoke");
+    let snapbox = runner(&args, Some(current_dir.as_path()));
     snapbox.assert().success().stderr_matches(indoc! {r"
         ...
         command: script

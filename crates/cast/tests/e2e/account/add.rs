@@ -4,9 +4,9 @@ use crate::helpers::runner::runner;
 use camino::Utf8PathBuf;
 use indoc::indoc;
 use serde_json::json;
-use snapbox::cmd::{cargo_bin, Command};
 use std::fs;
 use tempfile::TempDir;
+use test_case::test_case;
 
 #[tokio::test]
 pub async fn test_happy_case() {
@@ -29,7 +29,7 @@ pub async fn test_happy_case() {
         "--deployed",
     ];
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
 
     snapbox.assert().stdout_matches(indoc! {r"
         command: account add
@@ -57,18 +57,30 @@ pub async fn test_happy_case() {
     fs::remove_dir_all(Utf8PathBuf::from(accounts_file).parent().unwrap()).unwrap();
 }
 
+#[test_case(false ; "Scarb.toml in current_dir")]
+#[test_case(true ; "Scarb.toml passed as argument")]
 #[tokio::test]
-pub async fn test_happy_case_add_profile() {
-    let current_dir =
-        duplicate_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "30");
+pub async fn test_happy_case_add_profile(pass_path_to_scarb_toml: bool) {
+    let salt = if pass_path_to_scarb_toml { "30" } else { "31" };
+    let contract_path =
+        duplicate_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", salt);
+    let contract_path_utf8 =
+        Utf8PathBuf::from_path_buf(contract_path.into_path().canonicalize().unwrap().clone())
+            .expect("Path contains invalid UTF-8");
 
-    let accounts_file = "./accounts.json";
+    let scarb_path = contract_path_utf8.clone().join("Scarb.toml");
+    let accounts_file_path = contract_path_utf8.clone().join("accounts.json");
 
-    let args = vec![
+    let mut args = vec![];
+    if pass_path_to_scarb_toml {
+        args.append(&mut vec!["--path-to-scarb-toml", scarb_path.as_str()]);
+    }
+
+    args.append(&mut vec![
         "--url",
         URL,
         "--accounts-file",
-        accounts_file,
+        accounts_file_path.as_str(),
         "account",
         "add",
         "--name",
@@ -84,22 +96,20 @@ pub async fn test_happy_case_add_profile() {
         "--class-hash",
         "0x4",
         "--add-profile",
-    ];
-
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(current_dir.path())
-        .args(args);
+    ]);
+    let current_dir = if pass_path_to_scarb_toml {
+        None
+    } else {
+        Some(contract_path_utf8.as_std_path())
+    };
+    let snapbox = runner(&args, current_dir);
 
     snapbox.assert().stdout_matches(indoc! {r"
         command: account add
         add_profile: Profile successfully added to Scarb.toml
     "});
-    let current_dir_utf8 =
-        Utf8PathBuf::from_path_buf(current_dir.into_path()).expect("Path contains invalid UTF-8");
-    let mut file = current_dir_utf8.clone();
-    file.push(Utf8PathBuf::from(accounts_file));
 
-    let contents = fs::read_to_string(file).expect("Unable to read created file");
+    let contents = fs::read_to_string(accounts_file_path).expect("Unable to read created file");
     let contents_json: serde_json::Value = serde_json::from_str(&contents).unwrap();
     assert_eq!(
         contents_json,
@@ -119,8 +129,7 @@ pub async fn test_happy_case_add_profile() {
         )
     );
 
-    let contents =
-        fs::read_to_string(current_dir_utf8.join("Scarb.toml")).expect("Unable to read Scarb.toml");
+    let contents = fs::read_to_string(scarb_path).expect("Unable to read Scarb.toml");
     assert!(contents.contains("[tool.sncast.my_account_add]"));
     assert!(contents.contains("account = \"my_account_add\""));
 }
@@ -145,7 +154,7 @@ pub async fn test_detect_deployed() {
         "0x5",
     ];
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
 
     snapbox.assert().stdout_matches(indoc! {r"
         command: account add
@@ -191,7 +200,7 @@ pub async fn test_invalid_public_key() {
         "--deployed",
     ];
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
 
     snapbox.assert().stderr_matches(indoc! {r"
         command: account add
@@ -211,7 +220,7 @@ pub async fn test_missing_arguments() {
         "--deployed",
     ];
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
     snapbox.assert().stderr_matches(indoc! {r"
         error: the following required arguments were not provided:
           --address <ADDRESS>
@@ -244,9 +253,7 @@ pub async fn test_private_key_from_file() {
         "--deployed",
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(temp_dir.path())
-        .args(args);
+    let snapbox = runner(&args, Some(temp_dir.path()));
 
     snapbox.assert().stdout_matches(indoc! {r"
         command: account add
@@ -288,7 +295,7 @@ pub async fn test_accept_only_one_private_key() {
         "./my_private_key",
     ];
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
     snapbox.assert().stderr_matches(indoc! {r"
         error: the argument '--private-key <PRIVATE_KEY>' cannot be used with '--private-key-file <PRIVATE_KEY_FILE_PATH>'
         ...
@@ -311,7 +318,7 @@ pub async fn test_invalid_private_key_file_path() {
         "--deployed",
     ];
 
-    let snapbox = runner(&args);
+    let snapbox = runner(&args, None);
 
     snapbox.assert().stderr_matches(indoc! {r"
         command: account add
