@@ -47,7 +47,7 @@ async fn test_happy_case() {
 
 #[tokio::test]
 async fn test_worskpaces_package_specified() {
-    let contract_path = duplicate_directory(CONTRACTS_DIR.to_string() + "/hello_workspaces");
+    let contract_path = duplicate_directory(CONTRACTS_DIR.to_string() + "/hello_workspaces_cast");
 
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
     let args = vec![
@@ -85,7 +85,7 @@ async fn test_worskpaces_package_specified() {
 
 #[tokio::test]
 async fn test_worskpaces_package_not_specified() {
-    let contract_path = duplicate_directory(CONTRACTS_DIR.to_string() + "/hello_workspaces");
+    let contract_path = duplicate_directory(CONTRACTS_DIR.to_string() + "/hello_workspaces_cast");
 
     let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
     let args = vec![
