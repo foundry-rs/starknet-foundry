@@ -55,8 +55,9 @@ pub trait FromShortString<T>: Sized {
 impl FromShortString<Felt252> for Felt252 {
     fn from_short_string(short_string: &str) -> Result<Felt252, ParseFeltError> {
         if short_string.len() <= 31 && short_string.is_ascii() {
-            return Ok(Felt252::from_bytes_be(short_string.as_bytes()));
+            Ok(Felt252::from_bytes_be(short_string.as_bytes()))
+        } else {
+            Err(ParseFeltError)
         }
-        Err(ParseFeltError)
     }
 }
