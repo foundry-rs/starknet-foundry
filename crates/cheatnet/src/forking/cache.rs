@@ -1,7 +1,7 @@
 use crate::state::CheatnetBlockInfo;
 use cairo_felt::Felt252;
 use camino::Utf8PathBuf;
-use conversions::{FromConv, IntoConv};
+use conversions::{FromConv, IntoConv, TryIntoConv};
 use fs2::FileExt;
 use num_bigint::BigUint;
 use regex::Regex;
@@ -215,7 +215,7 @@ impl ForkCache {
         self.fork_cache_content
             .nonce_at
             .get(&String::from_(address))
-            .map(|el| el.clone().into_())
+            .map(|el| el.clone().try_into_().unwrap())
     }
 
     pub(crate) fn cache_get_nonce_at(&mut self, contract_address: ContractAddress, nonce: Nonce) {

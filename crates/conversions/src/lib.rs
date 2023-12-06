@@ -1,3 +1,5 @@
+use std::convert::Infallible;
+
 pub mod class_hash;
 pub mod contract_address;
 pub mod dec_string;
@@ -6,7 +8,7 @@ pub mod field_element;
 pub mod nonce;
 pub mod stark_felt;
 
-pub trait FromConv<T> {
+pub trait FromConv<T>: Sized {
     fn from_(value: T) -> Self;
 }
 
@@ -14,6 +16,7 @@ pub trait IntoConv<T>: Sized {
     fn into_(self) -> T;
 }
 
+// FromConv implies IntoConv
 impl<T, U> IntoConv<U> for T
 where
     U: FromConv<T>,
@@ -24,12 +27,67 @@ where
     }
 }
 
+pub trait TryFromConv<T>: Sized {
+    type Error;
+
+    fn try_from_(value: T) -> Result<Self, Self::Error>;
+}
+
+pub trait TryIntoConv<T>: Sized {
+    type Error;
+
+    fn try_into_(self) -> Result<T, Self::Error>;
+}
+
+// TryFromConv implies TryIntoConv
+impl<T, U> TryIntoConv<U> for T
+where
+    U: TryFromConv<T>,
+{
+    type Error = U::Error;
+
+    #[inline]
+    fn try_into_(self) -> Result<U, U::Error> {
+        U::try_from_(self)
+    }
+}
+
+// Infallible conversions are semantically equivalent to fallible conversions
+// with an uninhabited error type.
+impl<T, U> TryFromConv<U> for T
+where
+    U: IntoConv<T>,
+{
+    type Error = Infallible;
+
+    #[inline]
+    fn try_from_(value: U) -> Result<Self, Self::Error> {
+        Ok(U::into_(value))
+    }
+}
+
 #[macro_export]
 macro_rules! from_thru_felt252 {
     ($from:ty, $to:ty) => {
         impl FromConv<$from> for $to {
             fn from_(value: $from) -> Self {
                 Self::from_(Felt252::from_(value))
+            }
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! try_from_thru_felt252 {
+    ($from:ty, $to:ty) => {
+        impl TryFromConv<$from> for $to {
+            type Error = ParseFeltError;
+
+            fn try_from_(value: $from) -> Result<Self, Self::Error> {
+                match Felt252::try_from_(value) {
+                    Ok(felt) => Ok(Self::from_(felt)),
+                    Err(err) => Err(err),
+                }
             }
         }
     };
