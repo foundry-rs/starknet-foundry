@@ -131,7 +131,7 @@ async fn test_worskpaces_package_specified_virtual() {
         "--int-format",
         "--json",
         "--package",
-        "addition",
+        "addition_virtual",
         "declare",
         "--contract-name",
         "AdditionContract",
