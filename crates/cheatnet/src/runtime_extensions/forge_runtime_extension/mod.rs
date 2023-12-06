@@ -196,6 +196,19 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let transaction_hash = read_option_felt(&inputs, &mut idx);
                 let chain_id = read_option_felt(&inputs, &mut idx);
                 let nonce = read_option_felt(&inputs, &mut idx);
+                let resource_bounds =
+                    read_option_felt(&inputs, &mut idx).map(|resource_bounds_len| {
+                        read_vec(
+                            &inputs,
+                            &mut idx,
+                            3 * resource_bounds_len.to_usize().unwrap(), // ResourceBounds struct has 3 fields
+                        )
+                    });
+                let tip = read_option_felt(&inputs, &mut idx);
+                let paymaster_data = read_option_vec(&inputs, &mut idx);
+                let nonce_data_availabilty_mode = read_option_felt(&inputs, &mut idx);
+                let fee_data_availabilty_mode = read_option_felt(&inputs, &mut idx);
+                let account_deployment_data = read_option_vec(&inputs, &mut idx);
 
                 extended_runtime
                     .extended_runtime
@@ -210,6 +223,12 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                         transaction_hash,
                         chain_id,
                         nonce,
+                        resource_bounds,
+                        tip,
+                        paymaster_data,
+                        nonce_data_availabilty_mode,
+                        fee_data_availabilty_mode,
+                        account_deployment_data,
                     );
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }

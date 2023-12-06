@@ -60,6 +60,12 @@ fn get_cheated_tx_info_ptr(
         transaction_hash,
         chain_id,
         nonce,
+        resource_bounds,
+        tip,
+        paymaster_data,
+        nonce_data_availabilty_mode,
+        fee_data_availabilty_mode,
+        account_deployment_data,
     } = tx_info_mock;
 
     if let Some(version) = version {
@@ -73,13 +79,7 @@ fn get_cheated_tx_info_ptr(
     };
 
     if let Some(signature) = signature {
-        let signature_len = signature.len();
-        let signature_start_ptr = vm.add_memory_segment();
-        let signature_end_ptr = (signature_start_ptr + signature_len).unwrap();
-        let signature: Vec<MaybeRelocatable> =
-            signature.iter().map(MaybeRelocatable::from).collect();
-        vm.load_data(signature_start_ptr, &signature).unwrap();
-
+        let (signature_start_ptr, signature_end_ptr) = add_vec_memory_segment(&signature, vm);
         new_tx_info[3] = signature_start_ptr.into();
         new_tx_info[4] = signature_end_ptr.into();
     }
@@ -93,6 +93,33 @@ fn get_cheated_tx_info_ptr(
     if let Some(nonce) = nonce {
         new_tx_info[7] = MaybeRelocatable::Int(nonce);
     };
+    if let Some(resource_bounds) = resource_bounds {
+        let (resource_bounds_start_ptr, resource_bounds_end_ptr) =
+            add_vec_memory_segment(&resource_bounds, vm);
+        new_tx_info[8] = resource_bounds_start_ptr.into();
+        new_tx_info[9] = resource_bounds_end_ptr.into();
+    }
+    if let Some(tip) = tip {
+        new_tx_info[10] = MaybeRelocatable::Int(tip);
+    };
+    if let Some(paymaster_data) = paymaster_data {
+        let (paymaster_data_start_ptr, paymaster_data_end_ptr) =
+            add_vec_memory_segment(&paymaster_data, vm);
+        new_tx_info[11] = paymaster_data_start_ptr.into();
+        new_tx_info[12] = paymaster_data_end_ptr.into();
+    };
+    if let Some(nonce_data_availabilty_mode) = nonce_data_availabilty_mode {
+        new_tx_info[13] = MaybeRelocatable::Int(nonce_data_availabilty_mode);
+    };
+    if let Some(fee_data_availabilty_mode) = fee_data_availabilty_mode {
+        new_tx_info[14] = MaybeRelocatable::Int(fee_data_availabilty_mode);
+    };
+    if let Some(account_deployment_data) = account_deployment_data {
+        let (account_deployment_data_start_ptr, account_deployment_data_end_ptr) =
+            add_vec_memory_segment(&account_deployment_data, vm);
+        new_tx_info[15] = account_deployment_data_start_ptr.into();
+        new_tx_info[16] = account_deployment_data_end_ptr.into();
+    };
 
     vm.load_data(ptr_cheated_tx_info, &new_tx_info).unwrap();
     ptr_cheated_tx_info
@@ -104,9 +131,6 @@ pub fn get_cheated_exec_info_ptr(
     execution_info_ptr: Relocatable,
     contract_address: &ContractAddress,
 ) -> Relocatable {
-    // ExecutionInfo from corelib/src/starknet/info.cairo
-    // block_info, tx_info, caller_address, contract_address, entry_point_selector
-
     let ptr_cheated_exec_info = vm.add_memory_segment();
 
     // Initialize as old exec_info
@@ -133,7 +157,7 @@ pub fn get_cheated_exec_info_ptr(
     if cheatnet_state.address_is_spoofed(contract_address) {
         let data = vm.get_range(execution_info_ptr, 2)[1].clone();
         if let MaybeRelocatable::RelocatableValue(tx_info_ptr) = data.unwrap().into_owned() {
-            let original_tx_info = vm.get_continuous_range(tx_info_ptr, 8).unwrap();
+            let original_tx_info = vm.get_continuous_range(tx_info_ptr, 17).unwrap();
 
             let ptr_cheated_tx_info =
                 get_cheated_tx_info_ptr(cheatnet_state, vm, &original_tx_info, contract_address);
@@ -155,4 +179,18 @@ pub fn get_cheated_exec_info_ptr(
     vm.load_data(ptr_cheated_exec_info, &new_exec_info).unwrap();
 
     ptr_cheated_exec_info
+}
+
+fn add_vec_memory_segment(
+    vector: &Vec<Felt252>,
+    vm: &mut VirtualMachine,
+) -> (Relocatable, Relocatable) {
+    let vector_len = vector.len();
+    let vector_start_ptr = vm.add_memory_segment();
+    let vector_end_ptr = (vector_start_ptr + vector_len).unwrap();
+
+    let vector: Vec<MaybeRelocatable> = vector.iter().map(MaybeRelocatable::from).collect();
+    vm.load_data(vector_start_ptr, &vector).unwrap();
+
+    (vector_start_ptr, vector_end_ptr)
 }

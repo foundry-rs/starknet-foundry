@@ -1,5 +1,6 @@
 use core::clone::Clone;
 use starknet::{ContractAddress, testing::cheatcode, contract_address_const};
+use starknet::info::v2::ResourceBounds;
 use option::OptionTrait;
 use array::ArrayTrait;
 use array::SpanTrait;
@@ -15,6 +16,12 @@ struct TxInfoMock {
     transaction_hash: Option<felt252>,
     chain_id: Option<felt252>,
     nonce: Option<felt252>,
+    resource_bounds: Option<Span<ResourceBounds>>,
+    tip: Option<u128>,
+    paymaster_data: Option<Span<felt252>>,
+    nonce_data_availabilty_mode: Option<u32>,
+    fee_data_availabilty_mode: Option<u32>,
+    account_deployment_data: Option<Span<felt252>>,
 }
 
 trait TxInfoMockTrait {
@@ -31,6 +38,12 @@ impl TxInfoMockImpl of TxInfoMockTrait {
             transaction_hash: Option::None(()),
             chain_id: Option::None(()),
             nonce: Option::None(()),
+            resource_bounds: Option::None(()),
+            tip: Option::None(()),
+            paymaster_data: Option::None(()),
+            nonce_data_availabilty_mode: Option::None(()),
+            fee_data_availabilty_mode: Option::None(()),
+            account_deployment_data: Option::None(()),
         }
     }
 }
