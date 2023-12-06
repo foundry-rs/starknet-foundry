@@ -13,6 +13,7 @@ async fn test_max_fee_too_low() {
         "--url",
         URL,
         "script",
+        "run",
         &script_name,
     ];
 
@@ -21,7 +22,7 @@ async fn test_max_fee_too_low() {
         .args(args);
     snapbox.assert().success().stderr_matches(indoc! {r"
         ...
-        command: script
+        command: script run
         error: Got an exception while executing a hint: Hint Error: Max fee is smaller than the minimal transaction cost (validation plus fee transfer)
     "});
 }
@@ -37,6 +38,7 @@ async fn test_contract_does_not_exist() {
         "--url",
         URL,
         "script",
+        "run",
         &script_name,
     ];
 
@@ -45,7 +47,7 @@ async fn test_contract_does_not_exist() {
         .args(args);
     snapbox.assert().success().stderr_matches(indoc! {r"
         ...
-        command: script
+        command: script run
         error: Got an exception while executing a hint: Hint Error: Transaction execution has failed.
     "});
 }
@@ -61,6 +63,7 @@ fn test_wrong_function_name() {
         "--url",
         URL,
         "script",
+        "run",
         &script_name,
     ];
 
@@ -69,7 +72,7 @@ fn test_wrong_function_name() {
         .args(args);
     snapbox.assert().success().stderr_matches(indoc! {r"
         ...
-        command: script
+        command: script run
         error: Got an exception while executing a hint: Hint Error: Transaction execution has failed.
     "});
 }
@@ -85,6 +88,7 @@ fn test_wrong_calldata() {
         "--url",
         URL,
         "script",
+        "run",
         &script_name,
     ];
 
@@ -93,7 +97,7 @@ fn test_wrong_calldata() {
         .args(args);
     snapbox.assert().success().stderr_matches(indoc! {r"
         ...
-        command: script
+        command: script run
         error: Got an exception while executing a hint: Hint Error: Transaction execution has failed.
     "});
 }

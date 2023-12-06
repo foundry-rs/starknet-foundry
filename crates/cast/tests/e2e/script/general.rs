@@ -13,6 +13,7 @@ async fn test_happy_case() {
         "--url",
         URL,
         "script",
+        "run",
         &script_name,
     ];
 
@@ -22,7 +23,7 @@ async fn test_happy_case() {
 
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
-        command: script
+        command: script run
         status: success
     "});
 }
@@ -41,6 +42,7 @@ async fn test_run_script_from_different_directory() {
         "--path-to-scarb-toml",
         path_to_scarb_toml,
         "script",
+        "run",
         &script_name,
     ];
 
@@ -49,7 +51,7 @@ async fn test_run_script_from_different_directory() {
         .args(args);
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
-        command: script
+        command: script run
         status: success
     "});
 }
@@ -65,6 +67,7 @@ async fn test_run_script_from_different_directory_no_path_to_scarb_toml() {
         "--url",
         URL,
         "script",
+        "run",
         &script_name,
     ];
 
@@ -73,7 +76,7 @@ async fn test_run_script_from_different_directory_no_path_to_scarb_toml() {
         .args(args);
     snapbox.assert().success().stderr_matches(indoc! {r"
         ...
-        command: script
+        command: script run
         error: Path [..]Scarb.toml does not exist
     "});
 }
@@ -89,6 +92,7 @@ async fn test_fail_when_using_starknet_syscall() {
         "--url",
         URL,
         "script",
+        "run",
         &script_name,
     ];
 
@@ -97,7 +101,7 @@ async fn test_fail_when_using_starknet_syscall() {
         .args(args);
     snapbox.assert().success().stderr_matches(indoc! {r"
         ...
-        command: script
+        command: script run
         error: Got an exception while executing a hint: Hint Error: Starknet syscalls are not supported
     "});
 }

@@ -13,6 +13,7 @@ async fn test_with_calldata() {
         "--url",
         URL,
         "script",
+        "run",
         &script_name,
     ];
 
@@ -21,7 +22,7 @@ async fn test_with_calldata() {
         .args(args);
     snapbox.assert().success().stdout_matches(indoc! {r"
         ...
-        command: script
+        command: script run
         status: success
     "});
 }
