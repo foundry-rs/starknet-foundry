@@ -4,7 +4,7 @@ use crate::running::{run_fuzz_test, run_test};
 use crate::sierra_casm_runner::SierraCasmRunner;
 use crate::test_case_summary::TestCaseSummary;
 use crate::test_crate_summary::TestCrateSummary;
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use cairo_felt::Felt252;
 use cairo_lang_sierra::ids::ConcreteTypeId;
 use cairo_lang_sierra::program::{Function, Program};
@@ -166,7 +166,7 @@ impl TryFrom<RawForkParams> for ValidatedForkConfig {
                 assert_eq!(value.block_id_value, "Latest");
                 BlockId::Tag(Latest)
             }
-            _ => unreachable!(),
+            value => bail!("Invalid value passed for block_id = {value}"),
         };
         Ok(ValidatedForkConfig {
             url: value.url.parse()?,
