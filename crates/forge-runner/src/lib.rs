@@ -308,10 +308,37 @@ fn choose_test_strategy_and_run(
     }
 }
 
-fn fuzzing_run_summary(results: &[TestCaseSummary<Single>]) -> Result<TestCaseSummary<Fuzzing>>  {
-    let last = results.last().expect("Fuzz test should always run at least once");
+fn fuzzing_run_summary(results: Vec<TestCaseSummary<Single>>) -> Result<TestCaseSummary<Fuzzing>>  {
+    let last: TestCaseSummary<Single> = results.iter().last().cloned().expect("Fuzz test should always run at least once");
     match last {
-        TestCaseSummary::Passed { name, msg, arguments, gas_info, test_statistics, latest_block_number} => todo!(),
+        TestCaseSummary::Passed { name, msg, arguments, gas_info: _, test_statistics: _, latest_block_number} => {
+            let runs = results.len();
+            let gas_usages_vec = results
+                .into_iter()
+                .filter(|item| matches!(item, TestCaseSummary::Passed { .. }))
+                .map(|a| match a {
+                    TestCaseSummary::Passed { gas_info, .. } => gas_info,
+                    _ => unreachable!(),
+                });
+
+            let max = gas_usages_vec
+                .clone()
+                .reduce(f64::max)
+                .unwrap();
+            let min = gas_usages_vec
+                .reduce(f64::min)
+                .unwrap();
+
+            Ok(TestCaseSummary::Passed {
+                name: name.clone(),
+                msg: msg.clone(),
+                gas_info: GasStatistics { min, max },
+                arguments: arguments.clone(),
+                test_statistics: FuzzingStatistics { runs: runs },
+                latest_block_number: latest_block_number.clone()
+            })
+
+        },
         TestCaseSummary::Failed { name, msg, arguments, test_statistics: (), latest_block_number } => {
             Ok(TestCaseSummary::Failed {
                 name: name.clone(),
@@ -376,7 +403,6 @@ fn run_with_fuzzing(
         }
 
         let mut results = vec![];
-        let mut gas_usages = None;
         while let Some(task) = tasks.next().await {
             let result = task??;
 
@@ -401,7 +427,7 @@ fn run_with_fuzzing(
                 .count(),
         )?;
 
-        let fuzzing_run_summary = fuzzing_run_summary(&results)?;
+        let fuzzing_run_summary = fuzzing_run_summary(results)?;
 
         if let TestCaseSummary::Passed { .. } = fuzzing_run_summary {
             // Because we execute tests parallel, it's possible to
@@ -410,24 +436,6 @@ fn run_with_fuzzing(
             if runs != fuzzer_runs {
                 return Ok(TestCaseSummary::Skipped {});
             };
-
-            let gas_usages_vec = results
-                .into_iter()
-                .filter(|item| matches!(item, TestCaseSummary::Passed { .. }))
-                .map(|a| match a {
-                    TestCaseSummary::Passed { gas_info, .. } => gas_info,
-                    _ => unreachable!(),
-                });
-
-            let max = gas_usages_vec
-                .clone()
-                .reduce(f64::max)
-                .unwrap();
-            let min = gas_usages_vec
-                .reduce(f64::min)
-                .unwrap();
-
-            gas_usages = Some(GasStatistics { min, max });
         };
 
         Ok(fuzzing_run_summary)

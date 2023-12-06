@@ -3,7 +3,7 @@ pub const PREV_TESTS_FAILED: &str = ".prev_tests_failed";
 
 use anyhow::{Ok, Result};
 use camino::Utf8PathBuf;
-use forge_runner::test_case_summary::{TestCaseSummary, TestType};
+use forge_runner::test_case_summary::TestCaseSummary;
 use forge_runner::test_crate_summary::AnyTestCaseSummary;
 use scarb_metadata::MetadataCommand;
 use std::fs::{self, File};

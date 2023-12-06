@@ -27,7 +27,7 @@ impl TestType for Fuzzing {}
 pub struct Single;
 impl TestType for Single {}
 
-trait GasInfo {
+pub trait GasInfo {
     type Type: std::fmt::Debug + Clone;
 }
 impl GasInfo for Fuzzing {
@@ -37,7 +37,7 @@ impl GasInfo for Single {
     type Type = f64;
 }
 
-trait TestStatistics {
+pub trait TestStatistics {
     type Type: std::fmt::Debug + Clone;
 }
 impl TestStatistics for Fuzzing {

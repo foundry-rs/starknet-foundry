@@ -87,6 +87,21 @@ pub(crate) fn print_test_result(any_test_result: &AnyTestCaseSummary) {
                 TestCaseSummary::Failed { msg: Some(msg), .. } => format!("\n\nFailure data:{msg}"),
                 _ => String::new(),
             };
+
+            let block_number_message = match test_result.latest_block_number() {
+                None => String::new(),
+                Some(latest_block_number) => {
+                    format!("\nNumber of the block used for fork testing = {latest_block_number}")
+                }
+            };
+
+            let mut gas_usage = String::new();
+
+            if let Some(result) = test_result.gas_usage() {
+                gas_usage = format!(", gas: {result}");
+            }
+
+            println!("{result_header} {result_name}{gas_usage}{block_number_message}{result_message}");
         }
     }
 }
