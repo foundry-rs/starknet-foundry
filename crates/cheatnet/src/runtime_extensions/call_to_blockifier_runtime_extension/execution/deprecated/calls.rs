@@ -1,5 +1,5 @@
-use crate::execution::deprecated::syscalls::CheatableSyscallHandler;
-use crate::execution::entry_point::execute_call_entry_point;
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::deprecated::syscalls::CheatableSyscallHandler;
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::execute_call_entry_point;
 use blockifier::abi::constants;
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallResult;
 use blockifier::execution::entry_point::{CallEntryPoint, CallType};

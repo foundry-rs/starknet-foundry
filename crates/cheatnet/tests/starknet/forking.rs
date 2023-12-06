@@ -11,7 +11,7 @@ use cheatnet::cheatcodes::deploy::deploy;
 use cheatnet::cheatcodes::CheatcodeError;
 use cheatnet::constants::build_testing_state;
 use cheatnet::forking::state::ForkStateReader;
-use cheatnet::rpc::call_contract;
+use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::call_contract;
 use cheatnet::state::{BlockInfoReader, BlockifierState, CheatnetState, ExtendedStateReader};
 use conversions::{IntoConv, TryIntoConv};
 use glob::glob;

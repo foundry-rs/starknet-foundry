@@ -2,7 +2,7 @@ use crate::common::state::create_cached_state;
 use crate::common::{felt_selector_from_name, get_contracts, state::create_cheatnet_state};
 use cairo_felt::Felt252;
 use cheatnet::cheatcodes::deploy::deploy;
-use cheatnet::rpc::call_contract;
+use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::call_contract;
 use conversions::felt252::FromShortString;
 use conversions::IntoConv;
 
