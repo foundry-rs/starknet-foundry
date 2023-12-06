@@ -3,7 +3,7 @@ name = "fibonacci_virtual"
 version = "0.1.0"
 
 [dependencies]
-addition = { path = "../addition" }
+addition = { path = "../addition_virtual" }
 starknet.workspace = true
 
 [[target.starknet-contract]]
