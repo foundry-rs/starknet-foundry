@@ -17,7 +17,7 @@ use crate::scarb_test_collector::load_test_artifacts;
 use crate::test_filter::TestsFilter;
 
 mod collecting;
-mod scarb_test_collector;
+pub mod scarb_test_collector;
 
 pub mod pretty_printing;
 pub mod scarb;

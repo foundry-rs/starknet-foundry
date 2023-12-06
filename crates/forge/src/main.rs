@@ -2,9 +2,7 @@ use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8Path;
 use clap::{Parser, Subcommand, ValueEnum};
 use forge::scarb::config::ForgeConfig;
-use forge::scarb::{
-    build_contracts_with_scarb, build_test_artifacts_with_scarb, config_from_scarb_for_package,
-};
+use forge::scarb::{build_contracts_with_scarb, config_from_scarb_for_package};
 use forge::shared_cache::{clean_cache, set_cached_failed_tests_names};
 use forge::test_filter::TestsFilter;
 use forge::{pretty_printing, run, run_with_scarb_collector};
@@ -19,6 +17,7 @@ use scarb_artifacts::{
 use scarb_metadata::{Metadata, MetadataCommand, PackageMetadata};
 use scarb_ui::args::PackagesFilter;
 
+use forge::scarb_test_collector::build_test_artifacts_with_scarb;
 use std::env;
 use std::sync::Arc;
 use std::thread::available_parallelism;

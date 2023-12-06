@@ -9,7 +9,7 @@ use test_collector::{collect_tests, LinkedLibrary, TestCaseRaw};
 use walkdir::WalkDir;
 
 #[derive(Debug, Clone, Deserialize)]
-pub(crate) struct CompiledTestCrateRaw {
+pub struct CompiledTestCrateRaw {
     pub sierra_program: Program,
     pub test_cases: Vec<TestCaseRaw>,
     pub tests_location: CrateLocation,
