@@ -10,7 +10,7 @@ fn fib(a: felt252, b: felt252, n: felt252) -> felt252 {
 #[starknet::contract]
 mod FibonacciContract {
     use addition_virtual::add;
-    use fibonacci::fib;
+    use fibonacci_virtual::fib;
 
     #[storage]
     struct Storage {}
