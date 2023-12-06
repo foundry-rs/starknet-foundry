@@ -69,8 +69,7 @@ fn add_dependencies(script_root_dir: &Utf8PathBuf) -> Result<()> {
 }
 
 fn add_sncast_std_dependency(script_root_dir: &Utf8PathBuf) -> Result<()> {
-    let cast_version = env!("CARGO_PKG_VERSION");
-    let cast_version = format!("v{cast_version}");
+    let cast_version = format!("v{}", env!("CARGO_PKG_VERSION"));
 
     ScarbCommand::new()
         .current_dir(script_root_dir)
