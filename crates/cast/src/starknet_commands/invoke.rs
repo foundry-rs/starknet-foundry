@@ -2,7 +2,7 @@ use anyhow::{anyhow, Result};
 use clap::Args;
 
 use cast::helpers::response_structs::InvokeResponse;
-use cast::{handle_rpc_error, handle_wait_for_tx};
+use cast::{handle_rpc_error, handle_wait_for_tx, WaitForTx};
 use starknet::accounts::AccountError::Provider;
 use starknet::accounts::{Account, Call, ConnectedAccount, SingleOwnerAccount};
 use starknet::core::types::FieldElement;
@@ -29,6 +29,10 @@ pub struct Invoke {
     /// Max fee for the transaction. If not provided, max fee will be automatically estimated
     #[clap(short, long)]
     pub max_fee: Option<FieldElement>,
+
+    /// Nonce of the transaction. If not provided, nonce will be set automatically
+    #[clap(short, long)]
+    pub nonce: Option<FieldElement>,
 }
 
 pub async fn invoke(
@@ -37,7 +41,8 @@ pub async fn invoke(
     calldata: Vec<FieldElement>,
     max_fee: Option<FieldElement>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
-    wait: bool,
+    nonce: Option<FieldElement>,
+    wait_config: WaitForTx,
 ) -> Result<InvokeResponse> {
     let call = Call {
         to: contract_address,
@@ -45,21 +50,29 @@ pub async fn invoke(
         calldata,
     };
 
-    execute_calls(account, vec![call], max_fee, wait).await
+    execute_calls(account, vec![call], max_fee, nonce, wait_config).await
 }
 
 pub async fn execute_calls(
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     calls: Vec<Call>,
     max_fee: Option<FieldElement>,
-    wait: bool,
+    nonce: Option<FieldElement>,
+    wait_config: WaitForTx,
 ) -> Result<InvokeResponse> {
-    let execution = account.execute(calls);
+    let execution_calls = account.execute(calls);
 
-    let execution = if let Some(max_fee) = max_fee {
-        execution.max_fee(max_fee)
+    // todo: refactor setting max_fee and nonce
+    let execution_with_fee = if let Some(max_fee) = max_fee {
+        execution_calls.max_fee(max_fee)
     } else {
-        execution
+        execution_calls
+    };
+
+    let execution = if let Some(nonce) = nonce {
+        execution_with_fee.nonce(nonce)
+    } else {
+        execution_with_fee
     };
 
     match execution.send().await {
@@ -70,7 +83,7 @@ pub async fn execute_calls(
                 InvokeResponse {
                     transaction_hash: result.transaction_hash,
                 },
-                wait,
+                wait_config,
             )
             .await
         }

@@ -21,7 +21,7 @@ async fn test_missing_field() {
         .args(args);
     snapbox.assert().failure().stderr_matches(indoc! {r"
         ...
-        error: Wrong number of arguments. Expected 2, found: 1
+        error: Wrong number of arguments. Expected 3, found: 2
         ...
     "});
 }

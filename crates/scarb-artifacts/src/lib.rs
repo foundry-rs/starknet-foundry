@@ -155,6 +155,14 @@ pub fn target_name_for_package(metadata: &Metadata, package: &PackageId) -> Resu
     Ok(compilation_unit.target.name.clone())
 }
 
+#[must_use]
+pub fn target_dir_for_workspace(metadata: &Metadata) -> Utf8PathBuf {
+    metadata
+        .target_dir
+        .clone()
+        .unwrap_or_else(|| metadata.workspace.root.join("target"))
+}
+
 /// Get the path to Cairo corelib for the given package
 pub fn corelib_for_package(metadata: &Metadata, package: &PackageId) -> Result<Utf8PathBuf> {
     let compilation_unit = compilation_unit_for_package(metadata, package)?;

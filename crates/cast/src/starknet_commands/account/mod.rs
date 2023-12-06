@@ -154,7 +154,6 @@ pub fn add_created_profile_to_configuration(
 
 #[cfg(test)]
 mod tests {
-    use camino::Utf8PathBuf;
     use cast::helpers::constants::DEFAULT_ACCOUNTS_FILE;
     use cast::helpers::scarb_utils::get_first_package_from_metadata;
     use cast::helpers::scarb_utils::get_scarb_manifest;
@@ -176,7 +175,7 @@ mod tests {
             rpc_url: String::from("http://some-url"),
             account: String::from("some-name"),
             accounts_file: "accounts".into(),
-            keystore: Utf8PathBuf::default(),
+            ..Default::default()
         };
         let res = add_created_profile_to_configuration(&path_to_scarb_toml, &config, &package);
 
@@ -199,7 +198,7 @@ mod tests {
             rpc_url: String::from("http://some-url"),
             account: String::from("myprofile"),
             accounts_file: DEFAULT_ACCOUNTS_FILE.into(),
-            keystore: Utf8PathBuf::default(),
+            ..Default::default()
         };
         let res = add_created_profile_to_configuration(&path_to_scarb_toml, &config, &package);
 

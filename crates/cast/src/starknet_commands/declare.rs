@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Context, Result};
 use cast::helpers::response_structs::DeclareResponse;
-use cast::{handle_rpc_error, handle_wait_for_tx};
+use cast::{handle_rpc_error, handle_wait_for_tx, WaitForTx};
 use clap::Args;
 use scarb_artifacts::StarknetContractArtifacts;
 use starknet::accounts::AccountError::Provider;
@@ -25,6 +25,10 @@ pub struct Declare {
     /// Max fee for the transaction. If not provided, max fee will be automatically estimated
     #[clap(short, long)]
     pub max_fee: Option<FieldElement>,
+
+    /// Nonce of the transaction. If not provided, nonce will be set automatically
+    #[clap(short, long)]
+    pub nonce: Option<FieldElement>,
 }
 
 #[allow(clippy::too_many_lines)]
@@ -33,7 +37,8 @@ pub async fn declare(
     max_fee: Option<FieldElement>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
     artifacts: &HashMap<String, StarknetContractArtifacts>,
-    wait: bool,
+    nonce: Option<FieldElement>,
+    wait_config: WaitForTx,
 ) -> Result<DeclareResponse> {
     let contract_name: String = contract_name.to_string();
 
@@ -49,10 +54,16 @@ pub async fn declare(
     let casm_class_hash = casm_contract_definition.class_hash()?;
 
     let declaration = account.declare(Arc::new(contract_definition.flatten()?), casm_class_hash);
-    let execution = if let Some(max_fee) = max_fee {
+    // todo: refactor setting max_fee and nonce
+    let execution_with_fee = if let Some(max_fee) = max_fee {
         declaration.max_fee(max_fee)
     } else {
         declaration
+    };
+    let execution = if let Some(nonce) = nonce {
+        execution_with_fee.nonce(nonce)
+    } else {
+        execution_with_fee
     };
     let declared = execution.send().await;
 
@@ -65,7 +76,7 @@ pub async fn declare(
                     class_hash: result.class_hash,
                     transaction_hash: result.transaction_hash,
                 },
-                wait,
+                wait_config,
             )
             .await
         }

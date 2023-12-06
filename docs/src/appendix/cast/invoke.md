@@ -21,3 +21,8 @@ Calldata arguments may be either 0x hex or decimal felts.
 Optional.
 
 Max fee for the transaction. If not provided, it will be automatically estimated.
+
+## `--nonce, -n <NONCE>`
+Optional.
+
+Nonce for transaction. If not provided, nonce will be set automatically.

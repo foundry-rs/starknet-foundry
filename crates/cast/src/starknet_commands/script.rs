@@ -1,8 +1,8 @@
 use std::any::Any;
 use std::collections::HashMap;
 
-use crate::get_account;
 use crate::starknet_commands::{call, declare, deploy, invoke};
+use crate::{get_account, get_nonce, WaitForTx};
 use anyhow::{anyhow, Context, Result};
 use cairo_felt::Felt252;
 use cairo_lang_casm::hints::{Hint, StarknetHint};
@@ -34,6 +34,7 @@ use itertools::chain;
 use num_traits::ToPrimitive;
 use runtime::EnhancedHintError;
 use scarb_artifacts::StarknetContractArtifacts;
+use starknet::accounts::Account;
 use starknet::core::types::{BlockId, BlockTag::Pending, FieldElement};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
@@ -206,8 +207,17 @@ impl CairoHintProcessor<'_> {
             "declare" => {
                 let contract_name = as_cairo_short_string(&inputs[0])
                     .expect("Failed to convert contract name to string");
-                let max_fee = if inputs[1] == 0.into() {
-                    Some(inputs[2].clone().into_())
+                let mut offset = 1;
+                let max_fee = if inputs[offset] == 0.into() {
+                    offset += 1;
+                    Some(inputs[offset].clone().into_())
+                } else {
+                    None
+                };
+                offset += 1;
+                let nonce = if inputs[offset] == 0.into() {
+                    offset += 1;
+                    Some(inputs[offset].clone().into_())
                 } else {
                     None
                 };
@@ -223,7 +233,12 @@ impl CairoHintProcessor<'_> {
                     max_fee,
                     &account,
                     self.artifacts,
-                    true,
+                    nonce,
+                    WaitForTx {
+                        wait: true,
+                        timeout: self.config.wait_timeout,
+                        retry_interval: self.config.wait_retry_interval,
+                    },
                 ))?;
 
                 buffer
@@ -264,6 +279,13 @@ impl CairoHintProcessor<'_> {
                 } else {
                     None
                 };
+                offset += 1;
+                let nonce = if inputs[offset] == 0.into() {
+                    offset += 1;
+                    Some(inputs[offset].clone().into_())
+                } else {
+                    None
+                };
 
                 let account = self.runtime.block_on(get_account(
                     &self.config.account,
@@ -279,7 +301,12 @@ impl CairoHintProcessor<'_> {
                     unique,
                     max_fee,
                     &account,
-                    true,
+                    nonce,
+                    WaitForTx {
+                        wait: true,
+                        timeout: self.config.wait_timeout,
+                        retry_interval: self.config.wait_retry_interval,
+                    },
                 ))?;
 
                 buffer
@@ -306,9 +333,17 @@ impl CairoHintProcessor<'_> {
                         .map(|el| FieldElement::from_(el.clone()))
                         .collect()
                 };
-                let offset = 3 + calldata_length;
+                let mut offset = 3 + calldata_length;
                 let max_fee = if inputs[offset] == 0.into() {
-                    Some(inputs[offset + 1].clone().into_())
+                    offset += 1;
+                    Some(inputs[offset].clone().into_())
+                } else {
+                    None
+                };
+                offset += 1;
+                let nonce = if inputs[offset] == 0.into() {
+                    offset += 1;
+                    Some(inputs[offset].clone().into_())
                 } else {
                     None
                 };
@@ -326,12 +361,38 @@ impl CairoHintProcessor<'_> {
                     calldata,
                     max_fee,
                     &account,
-                    true,
+                    nonce,
+                    WaitForTx {
+                        wait: true,
+                        timeout: self.config.wait_timeout,
+                        retry_interval: self.config.wait_retry_interval,
+                    },
                 ))?;
 
                 buffer
                     .write(Felt252::from_(invoke_response.transaction_hash))
                     .expect("Failed to insert transaction hash");
+
+                Ok(())
+            }
+            "get_nonce" => {
+                let block_id = as_cairo_short_string(&inputs[0])
+                    .expect("Failed to convert entry point name to short string");
+                let account = self.runtime.block_on(get_account(
+                    &self.config.account,
+                    &self.config.accounts_file,
+                    self.provider,
+                    &self.config.keystore,
+                ))?;
+
+                let nonce = self.runtime.block_on(get_nonce(
+                    self.provider,
+                    &block_id,
+                    account.address(),
+                ))?;
+                buffer
+                    .write(Felt252::from_(nonce))
+                    .expect("Failed to insert nonce");
 
                 Ok(())
             }
