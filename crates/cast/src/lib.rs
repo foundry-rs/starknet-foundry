@@ -163,6 +163,20 @@ pub fn decode_chain_id(chain_id: FieldElement) -> String {
     String::from_utf8(non_zero_bytes).unwrap_or_default()
 }
 
+pub async fn get_nonce(
+    provider: &JsonRpcClient<HttpTransport>,
+    block_id: &str,
+    address: FieldElement,
+) -> Result<FieldElement> {
+    Ok(provider
+        .get_nonce(
+            get_block_id(block_id).expect("Could not obtain block id"),
+            address,
+        )
+        .await
+        .expect("Could not get nonce"))
+}
+
 pub async fn get_account<'a>(
     account: &str,
     accounts_file: &Utf8PathBuf,

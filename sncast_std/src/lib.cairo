@@ -189,3 +189,9 @@ fn invoke(
 
     InvokeResult { transaction_hash }
 }
+
+fn get_nonce(block_tag: felt252) -> felt252 {
+    let inputs = array![block_tag];
+    let buf = cheatcode::<'get_nonce'>(inputs.span());
+    *buf[0]
+}

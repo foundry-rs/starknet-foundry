@@ -1,5 +1,5 @@
 use sncast_std::{
-    declare, deploy, invoke, call, DeclareResult, DeployResult, InvokeResult, CallResult
+    declare, deploy, invoke, call, DeclareResult, DeployResult, InvokeResult, CallResult, get_nonce
 };
 
 fn second_contract() {
@@ -27,16 +27,28 @@ fn main() {
     let max_fee = 99999999999999999;
     let salt = 0x3;
 
-    let declare_result = declare('Mapa', Option::Some(max_fee), Option::None);
+    let declare_nonce = get_nonce('latest');
+    let declare_result = declare('Mapa', Option::Some(max_fee), Option::Some(declare_nonce));
 
     let class_hash = declare_result.class_hash;
+    let deploy_nonce = get_nonce('latest');
     let deploy_result = deploy(
-        class_hash, ArrayTrait::new(), Option::Some(salt), true, Option::Some(max_fee), Option::None
+        class_hash,
+        ArrayTrait::new(),
+        Option::Some(salt),
+        true,
+        Option::Some(max_fee),
+        Option::Some(deploy_nonce)
     );
     assert(deploy_result.transaction_hash != 0, deploy_result.transaction_hash);
 
+    let invoke_nonce = get_nonce('pending');
     let invoke_result = invoke(
-        deploy_result.contract_address, 'put', array![0x1, 0x2], Option::Some(max_fee), Option::None
+        deploy_result.contract_address,
+        'put',
+        array![0x1, 0x2],
+        Option::Some(max_fee),
+        Option::Some(invoke_nonce)
     );
     assert(invoke_result.transaction_hash != 0, invoke_result.transaction_hash);
 
