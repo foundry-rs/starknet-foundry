@@ -7,7 +7,7 @@ use starknet_api::hash::StarkFelt;
 impl FromConv<Felt252> for String {
     // Yields decimal string
     fn from_(value: Felt252) -> String {
-        value.to_string()
+        value.to_str_radix(10)
     }
 }
 

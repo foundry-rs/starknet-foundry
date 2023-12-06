@@ -4,20 +4,25 @@ use crate::running::{run_fuzz_test, run_test};
 use crate::sierra_casm_runner::SierraCasmRunner;
 use crate::test_case_summary::TestCaseSummary;
 use crate::test_crate_summary::TestCrateSummary;
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
+use cairo_felt::Felt252;
 use cairo_lang_sierra::ids::ConcreteTypeId;
 use cairo_lang_sierra::program::{Function, Program};
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use camino::Utf8PathBuf;
+use conversions::IntoConv;
 use futures::stream::FuturesUnordered;
 use futures::StreamExt;
+use num_bigint::BigInt;
 use once_cell::sync::Lazy;
 use scarb_artifacts::StarknetContractArtifacts;
 use smol_str::SmolStr;
 use starknet::core::types::BlockId;
+use starknet::core::types::BlockTag::Latest;
 use std::collections::HashMap;
 use std::sync::Arc;
+use test_case_summary::FuzzingGasUsage;
 use test_collector::{ExpectedTestResult, FuzzerConfig};
 use test_collector::{LinkedLibrary, RawForkParams};
 use tokio::sync::mpsc::{channel, Sender};
@@ -151,10 +156,21 @@ impl ValidatedForkConfig {
 impl TryFrom<RawForkParams> for ValidatedForkConfig {
     type Error = anyhow::Error;
 
-    fn try_from(value: RawForkParams) -> std::result::Result<Self, Self::Error> {
+    fn try_from(value: RawForkParams) -> Result<Self, Self::Error> {
+        let block_id = match value.block_id_type.to_lowercase().as_str() {
+            "number" => BlockId::Number(value.block_id_value.parse().unwrap()),
+            "hash" => BlockId::Hash(
+                Felt252::from(value.block_id_value.parse::<BigInt>().unwrap()).into_(),
+            ),
+            "tag" => {
+                assert_eq!(value.block_id_value, "Latest");
+                BlockId::Tag(Latest)
+            }
+            value => bail!("Invalid value passed for block_id = {value}"),
+        };
         Ok(ValidatedForkConfig {
             url: value.url.parse()?,
-            block_id: value.block_id,
+            block_id,
         })
     }
 }
@@ -342,7 +358,7 @@ fn run_with_fuzzing(
         }
 
         let mut results = vec![];
-
+        let mut gas_usages = None;
         while let Some(task) = tasks.next().await {
             let result = task??;
 
@@ -377,9 +393,34 @@ fn run_with_fuzzing(
             if runs != fuzzer_runs {
                 return Ok(TestCaseSummary::Skipped {});
             };
+
+            let gas_usages_vec: Vec<&f64> = results
+                .iter()
+                .filter(|item| matches!(item, TestCaseSummary::Passed { .. }))
+                .map(|a| match a {
+                    TestCaseSummary::Passed { gas_used, .. } => gas_used,
+                    _ => unreachable!(),
+                })
+                .collect();
+
+            let max = gas_usages_vec
+                .clone()
+                .into_iter()
+                .copied()
+                .reduce(f64::max)
+                .unwrap();
+            let min = gas_usages_vec
+                .into_iter()
+                .copied()
+                .reduce(f64::min)
+                .unwrap();
+
+            gas_usages = Some(FuzzingGasUsage { min, max });
         };
 
-        Ok(final_result.clone().with_runs(runs))
+        Ok(final_result
+            .clone()
+            .with_runs_and_gas_usage(runs, gas_usages))
     })
 }
 

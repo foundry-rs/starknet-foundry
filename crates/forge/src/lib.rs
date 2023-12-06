@@ -1,5 +1,6 @@
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Error, Result};
 use camino::Utf8Path;
+use serde::Deserialize;
 use std::fmt::Debug;
 use std::sync::Arc;
 
@@ -12,15 +13,18 @@ use test_collector::{RawForkConfig, RawForkParams};
 
 use crate::collecting::{collect_test_compilation_targets, compile_tests, CompiledTestCrateRaw};
 use crate::scarb::config::ForkTarget;
+use crate::scarb_test_collector::load_test_artifacts;
 use crate::test_filter::TestsFilter;
 
 mod collecting;
+pub mod scarb_test_collector;
+
 pub mod pretty_printing;
 pub mod scarb;
 pub mod shared_cache;
 pub mod test_filter;
 
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Clone, Copy, Deserialize)]
 pub enum CrateLocation {
     /// Main crate in a package
     Lib,
@@ -83,14 +87,12 @@ fn to_runnable(
 /// # Arguments
 ///
 /// * `package_path` - Absolute path to the top-level of the Cairo package
-/// * `lib_path` - Absolute path to the main file in the package (usually `src/lib.cairo`)
-/// * `linked_libraries` - Dependencies needed to run the package at `package_path`
+/// * `package_name` - Name of the package specified in Scarb.toml
+/// * `package_source_dir_path` - Absolute path to the root of the package
+/// * `tests_filter` - `TestFilter` structure used to determine what tests to run
 /// * `runner_config` - A configuration of the test runner
-/// * `corelib_path` - Absolute path to the Cairo corelib
-/// * `contracts` - Map with names of contract used in tests and corresponding sierra and casm artifacts
-/// * `predeployed_contracts` - Absolute path to predeployed contracts used by starknet state e.g. account contracts
-///
-
+/// * `runner_params` - A struct with parameters required to run tests e.g. map with contracts
+/// * `fork_target` - A configuration of forks used in tests
 #[allow(clippy::implicit_hasher)]
 pub async fn run(
     package_path: &Utf8Path,
@@ -104,6 +106,58 @@ pub async fn run(
     let compilation_targets =
         collect_test_compilation_targets(package_path, package_name, package_source_dir_path)?;
     let test_crates = compile_tests(&compilation_targets, &runner_params)?;
+
+    run_internal(
+        package_name,
+        tests_filter,
+        runner_config,
+        runner_params,
+        fork_targets,
+        test_crates,
+    )
+    .await?
+}
+
+/// Run the tests in the package at the given path
+///
+/// # Arguments
+///
+/// * `package_name` - Name of the package specified in Scarb.toml
+/// * `snforge_target_dir_path` - Absolute path to the directory with snforge test artifacts (usually `{package_path}/target/{profile_name}/snforge`)
+/// * `tests_filter` - `TestFilter` structure used to determine what tests to run
+/// * `runner_config` - A configuration of the test runner
+/// * `runner_params` - A struct with parameters required to run tests e.g. map with contracts
+/// * `fork_target` - A configuration of forks used in tests
+#[allow(clippy::implicit_hasher)]
+pub async fn run_with_scarb_collector(
+    package_name: &str,
+    snforge_target_dir_path: &Utf8Path,
+    tests_filter: &TestsFilter,
+    runner_config: Arc<RunnerConfig>,
+    runner_params: Arc<RunnerParams>,
+    fork_targets: &[ForkTarget],
+) -> Result<Vec<TestCrateSummary>> {
+    let test_crates = load_test_artifacts(snforge_target_dir_path, package_name)?;
+
+    run_internal(
+        package_name,
+        tests_filter,
+        runner_config,
+        runner_params,
+        fork_targets,
+        test_crates,
+    )
+    .await?
+}
+
+async fn run_internal(
+    package_name: &str,
+    tests_filter: &TestsFilter,
+    runner_config: Arc<RunnerConfig>,
+    runner_params: Arc<RunnerParams>,
+    fork_targets: &[ForkTarget],
+    test_crates: Vec<CompiledTestCrateRaw>,
+) -> Result<Result<Vec<TestCrateSummary>, Error>, Error> {
     let all_tests: usize = test_crates.iter().map(|tc| tc.test_cases.len()).sum();
 
     let test_crates = test_crates
@@ -163,7 +217,7 @@ pub async fn run(
         pretty_printing::print_test_seed(runner_config.fuzzer_seed);
     }
 
-    Ok(summaries)
+    Ok(Ok(summaries))
 }
 
 #[cfg(test)]
@@ -171,8 +225,6 @@ mod tests {
     use super::*;
     use crate::collecting::CompiledTestCrateRaw;
     use cairo_lang_sierra::program::Program;
-    use starknet::core::types::BlockId;
-    use starknet::core::types::BlockTag::Latest;
     use test_collector::ExpectedTestResult;
     use test_collector::TestCaseRaw;
 
@@ -192,7 +244,8 @@ mod tests {
                 expected_result: ExpectedTestResult::Success,
                 fork_config: Some(RawForkConfig::Params(RawForkParams {
                     url: "unparsable_url".to_string(),
-                    block_id: BlockId::Tag(Latest),
+                    block_id_type: "Tag".to_string(),
+                    block_id_value: "Latest".to_string(),
                 })),
                 fuzzer_config: None,
             }],
@@ -228,7 +281,8 @@ mod tests {
                 "definitely_non_existing".to_string(),
                 RawForkParams {
                     url: "https://not_taken.com".to_string(),
-                    block_id: BlockId::Number(120),
+                    block_id_type: "Number".to_string(),
+                    block_id_value: "120".to_string(),
                 },
             )],
         )
