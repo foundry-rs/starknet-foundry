@@ -59,6 +59,16 @@ Optional.
 
 If passed, command will wait until transaction is accepted or rejected.
 
+## `--wait-timeout <TIME_IN_SECONDS>`
+Optional.
+
+If `--wait` is passed, this will set the time after which cast times out. Defaults to 60s.
+
+## `--wait-retry-timeout <TIME_IN_SECONDS>`
+Optional.
+
+If `--wait` is passed, this will set the retry interval - how often cast should fetch tx info from the node. Defaults to 5s.
+
 ## `--version, -v`
 
 Prints out `sncast` version.

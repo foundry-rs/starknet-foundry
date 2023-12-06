@@ -28,20 +28,19 @@ use cairo_lang_starknet::inline_macros::selector::SelectorMacro;
 use cairo_lang_starknet::plugin::StarkNetPlugin;
 use cairo_lang_syntax::attribute::structured::{Attribute, AttributeArg, AttributeArgVariant};
 use cairo_lang_syntax::node::ast;
-use cairo_lang_syntax::node::ast::{ArgClause, Expr};
+use cairo_lang_syntax::node::ast::{ArgClause, Expr, PathSegment};
 use cairo_lang_syntax::node::db::SyntaxGroup;
 use cairo_lang_syntax::node::helpers::GetIdentifier;
 use cairo_lang_test_plugin::test_config::{PanicExpectation, TestExpectation};
 use cairo_lang_test_plugin::{try_extract_test_config, TestConfig};
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use cairo_lang_utils::OptionHelper;
-use conversions::IntoConv;
 use itertools::Itertools;
 use num_bigint::BigInt;
 use num_traits::ToPrimitive;
 use plugin::TestPlugin;
+use serde::Deserialize;
 use smol_str::SmolStr;
-use starknet::core::types::{BlockId, BlockTag};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -54,7 +53,7 @@ const FORK_ATTR: &str = "fork";
 const FUZZER_ATTR: &str = "fuzzer";
 
 /// Expectation for a panic case.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Deserialize)]
 pub enum ExpectedPanicValue {
     /// Accept any panic value.
     Any,
@@ -72,7 +71,7 @@ impl From<PanicExpectation> for ExpectedPanicValue {
 }
 
 /// Expectation for a result of a test.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Deserialize)]
 pub enum ExpectedTestResult {
     /// Running the test should not panic.
     Success,
@@ -91,19 +90,20 @@ impl From<TestExpectation> for ExpectedTestResult {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Deserialize)]
 pub enum RawForkConfig {
     Id(String),
     Params(RawForkParams),
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct RawForkParams {
     pub url: String,
-    pub block_id: BlockId,
+    pub block_id_type: String,
+    pub block_id_value: String,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct FuzzerConfig {
     pub fuzzer_runs: u32,
     pub fuzzer_seed: u64,
@@ -313,7 +313,7 @@ fn extract_fork_config_from_args(db: &dyn SyntaxGroup, attr: &Attribute) -> Opti
     if url_arg_name != "url" {
         return None;
     }
-    let ast::Expr::String(url_str) = url else {
+    let Expr::String(url_str) = url else {
         return None;
     };
     let url = url_str.string_value(db)?;
@@ -321,7 +321,7 @@ fn extract_fork_config_from_args(db: &dyn SyntaxGroup, attr: &Attribute) -> Opti
     if block_id_arg_name != "block_id" {
         return None;
     }
-    let ast::Expr::FunctionCall(block_id) = block_id else {
+    let Expr::FunctionCall(block_id) = block_id else {
         return None;
     };
 
@@ -338,59 +338,58 @@ fn extract_fork_config_from_args(db: &dyn SyntaxGroup, attr: &Attribute) -> Opti
         return None;
     }
 
-    let block_id_type = block_id
-        .path(db)
-        .elements(db)
-        .last()
-        .unwrap()
-        .identifier(db)
-        .to_string();
+    let block_id_type = elements[1].clone();
 
     let args = block_id.arguments(db).args(db).elements(db);
     let expr = match args.first()?.arg_clause(db) {
         ArgClause::Unnamed(unnamed_arg_clause) => Some(unnamed_arg_clause.value(db)),
         _ => None,
     }?;
-    let block_id = try_get_block_id(db, &block_id_type, &expr)?;
+    let block_id_value = try_get_block_id(db, &block_id_type, &expr)?;
 
-    Some(RawForkConfig::Params(RawForkParams { url, block_id }))
+    Some(RawForkConfig::Params(RawForkParams {
+        url,
+        block_id_type,
+        block_id_value,
+    }))
 }
 
-fn try_get_block_id(db: &dyn SyntaxGroup, block_id_type: &str, expr: &Expr) -> Option<BlockId> {
+fn try_get_block_id(db: &dyn SyntaxGroup, block_id_type: &str, expr: &Expr) -> Option<String> {
     match block_id_type {
         "Number" => {
             if let Expr::Literal(value) = expr {
-                return Some(BlockId::Number(
-                    u64::try_from(value.numeric_value(db).unwrap()).ok()?,
-                ));
+                return Some(
+                    u64::try_from(value.numeric_value(db).unwrap())
+                        .ok()?
+                        .to_string(),
+                );
             }
-            None
         }
         "Hash" => {
+            // TODO #1179: add range check
             if let Expr::Literal(value) = expr {
-                return Some(BlockId::Hash(
-                    Felt252::from(value.numeric_value(db).unwrap()).into_(),
-                ));
+                return Some(value.numeric_value(db).unwrap().to_string());
             }
-            None
         }
         "Tag" => {
             if let Expr::Path(block_tag) = expr {
-                let tag = block_tag
-                    .elements(db)
-                    .last()
-                    .unwrap()
-                    .identifier(db)
-                    .to_string();
-                return match tag.as_str() {
-                    "Latest" => Some(BlockId::Tag(BlockTag::Latest)),
-                    _ => None,
-                };
+                let tag_elements = block_tag.elements(db);
+                if tag_path_is_valid(&tag_elements, db) {
+                    return Some("Latest".to_string());
+                }
             }
-            None
         }
-        _ => None,
-    }
+        _ => (),
+    };
+
+    None
+}
+
+// Only valid options are `BlockTag::Latest` and `Latest`
+fn tag_path_is_valid(tag_elements: &[PathSegment], db: &dyn SyntaxGroup) -> bool {
+    (tag_elements.len() == 1
+        || (tag_elements.len() == 2 && tag_elements[0].identifier(db).as_str() == "BlockTag"))
+        && tag_elements.last().unwrap().identifier(db).as_str() == "Latest"
 }
 
 /// Represents a dependency of a Cairo project
@@ -400,7 +399,7 @@ pub struct LinkedLibrary {
     pub path: PathBuf,
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Deserialize)]
 pub struct TestCaseRaw {
     pub name: String,
     pub available_gas: Option<usize>,

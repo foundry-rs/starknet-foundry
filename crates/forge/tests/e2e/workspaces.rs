@@ -20,7 +20,7 @@ fn root_workspace_without_arguments() {
 
         Collected 3 test(s) from hello_workspaces package
         Running 1 test(s) from src/
-        [PASS] hello_workspaces::tests::test_simple
+        [PASS] hello_workspaces::tests::test_simple,[..]
         Running 2 test(s) from tests/
         [FAIL] tests::test_failing::test_failing
         
@@ -57,12 +57,12 @@ fn root_workspace_specific_package() {
 
         Collected 5 test(s) from addition package
         Running 1 test(s) from src/
-        [PASS] addition::tests::it_works
+        [PASS] addition::tests::it_works,[..]
         Running 4 test(s) from tests/
-        [PASS] tests::nested::simple_case
-        [PASS] tests::nested::contract_test
-        [PASS] tests::nested::test_nested::test_two
-        [PASS] tests::nested::test_nested::test_two_and_two
+        [PASS] tests::nested::simple_case,[..]
+        [PASS] tests::nested::contract_test,[..]
+        [PASS] tests::nested::test_nested::test_two,[..]
+        [PASS] tests::nested::test_nested::test_two_and_two,[..]
         Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         "}
     );
@@ -84,12 +84,12 @@ fn root_workspace_specific_package2() {
 
         Collected 6 test(s) from fibonacci package
         Running 2 test(s) from src/
-        [PASS] fibonacci::tests::it_works
-        [PASS] fibonacci::tests::contract_test
+        [PASS] fibonacci::tests::it_works,[..]
+        [PASS] fibonacci::tests::contract_test,[..]
         Running 4 test(s) from tests/
-        [PASS] tests::lib_test
-        [PASS] tests::abc::abc_test
-        [PASS] tests::abc::efg::efg_test
+        [PASS] tests::lib_test,[..]
+        [PASS] tests::abc::abc_test,[..]
+        [PASS] tests::abc::efg::efg_test,[..]
         [FAIL] tests::abc::efg::failing_test
         
         Failure data:
@@ -120,7 +120,7 @@ fn root_workspace_specific_package_and_name() {
         Collected 1 test(s) from addition package
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
-        [PASS] tests::nested::simple_case
+        [PASS] tests::nested::simple_case,[..]
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 4 filtered out
         "}
     );
@@ -141,7 +141,7 @@ fn root_workspace_specify_root_package() {
 
         Collected 3 test(s) from hello_workspaces package
         Running 1 test(s) from src/
-        [PASS] hello_workspaces::tests::test_simple
+        [PASS] hello_workspaces::tests::test_simple,[..]
         Running 2 test(s) from tests/
         [FAIL] tests::test_failing::test_failing
         
@@ -180,12 +180,12 @@ fn root_workspace_inside_nested_package() {
 
         Collected 5 test(s) from addition package
         Running 1 test(s) from src/
-        [PASS] addition::tests::it_works
+        [PASS] addition::tests::it_works,[..]
         Running 4 test(s) from tests/
-        [PASS] tests::nested::simple_case
-        [PASS] tests::nested::contract_test
-        [PASS] tests::nested::test_nested::test_two
-        [PASS] tests::nested::test_nested::test_two_and_two
+        [PASS] tests::nested::simple_case,[..]
+        [PASS] tests::nested::contract_test,[..]
+        [PASS] tests::nested::test_nested::test_two,[..]
+        [PASS] tests::nested::test_nested::test_two_and_two,[..]
         Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         "}
     );
@@ -210,23 +210,23 @@ fn root_workspace_for_entire_workspace() {
         
         Collected 5 test(s) from addition package
         Running 1 test(s) from src/
-        [PASS] addition::tests::it_works
+        [PASS] addition::tests::it_works,[..]
         Running 4 test(s) from tests/
-        [PASS] tests::nested::simple_case
-        [PASS] tests::nested::contract_test
-        [PASS] tests::nested::test_nested::test_two
-        [PASS] tests::nested::test_nested::test_two_and_two
+        [PASS] tests::nested::simple_case,[..]
+        [PASS] tests::nested::contract_test,[..]
+        [PASS] tests::nested::test_nested::test_two,[..]
+        [PASS] tests::nested::test_nested::test_two_and_two,[..]
         Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         
         
         Collected 6 test(s) from fibonacci package
         Running 2 test(s) from src/
-        [PASS] fibonacci::tests::it_works
-        [PASS] fibonacci::tests::contract_test
+        [PASS] fibonacci::tests::it_works,[..]
+        [PASS] fibonacci::tests::contract_test,[..]
         Running 4 test(s) from tests/
-        [PASS] tests::lib_test
-        [PASS] tests::abc::abc_test
-        [PASS] tests::abc::efg::efg_test
+        [PASS] tests::lib_test,[..]
+        [PASS] tests::abc::abc_test,[..]
+        [PASS] tests::abc::efg::efg_test,[..]
         [FAIL] tests::abc::efg::failing_test
         
         Failure data:
@@ -237,7 +237,7 @@ fn root_workspace_for_entire_workspace() {
         
         Collected 3 test(s) from hello_workspaces package
         Running 1 test(s) from src/
-        [PASS] hello_workspaces::tests::test_simple
+        [PASS] hello_workspaces::tests::test_simple,[..]
         Running 2 test(s) from tests/
         [FAIL] tests::test_failing::test_failing
         
@@ -279,23 +279,23 @@ fn root_workspace_for_entire_workspace_inside_package() {
         
         Collected 5 test(s) from addition package
         Running 1 test(s) from src/
-        [PASS] addition::tests::it_works
+        [PASS] addition::tests::it_works,[..]
         Running 4 test(s) from tests/
-        [PASS] tests::nested::simple_case
-        [PASS] tests::nested::contract_test
-        [PASS] tests::nested::test_nested::test_two
-        [PASS] tests::nested::test_nested::test_two_and_two
+        [PASS] tests::nested::simple_case,[..]
+        [PASS] tests::nested::contract_test,[..]
+        [PASS] tests::nested::test_nested::test_two,[..]
+        [PASS] tests::nested::test_nested::test_two_and_two,[..]
         Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         
         
         Collected 6 test(s) from fibonacci package
         Running 2 test(s) from src/
-        [PASS] fibonacci::tests::it_works
-        [PASS] fibonacci::tests::contract_test
+        [PASS] fibonacci::tests::it_works,[..]
+        [PASS] fibonacci::tests::contract_test,[..]
         Running 4 test(s) from tests/
-        [PASS] tests::lib_test
-        [PASS] tests::abc::abc_test
-        [PASS] tests::abc::efg::efg_test
+        [PASS] tests::lib_test,[..]
+        [PASS] tests::abc::abc_test,[..]
+        [PASS] tests::abc::efg::efg_test,[..]
         [FAIL] tests::abc::efg::failing_test
         
         Failure data:
@@ -306,7 +306,7 @@ fn root_workspace_for_entire_workspace_inside_package() {
         
         Collected 3 test(s) from hello_workspaces package
         Running 1 test(s) from src/
-        [PASS] hello_workspaces::tests::test_simple
+        [PASS] hello_workspaces::tests::test_simple,[..]
         Running 2 test(s) from tests/
         [FAIL] tests::test_failing::test_failing
         
@@ -372,12 +372,12 @@ fn virtual_workspace_without_arguments() {
         
         Collected 6 test(s) from fibonacci2 package
         Running 2 test(s) from src/
-        [PASS] fibonacci2::tests::it_works
-        [PASS] fibonacci2::tests::contract_test
+        [PASS] fibonacci2::tests::it_works,[..]
+        [PASS] fibonacci2::tests::contract_test,[..]
         Running 4 test(s) from tests/
-        [PASS] tests::lib_test
-        [PASS] tests::abc::abc_test
-        [PASS] tests::abc::efg::efg_test
+        [PASS] tests::lib_test,[..]
+        [PASS] tests::abc::abc_test,[..]
+        [PASS] tests::abc::efg::efg_test,[..]
         [FAIL] tests::abc::efg::failing_test
         
         Failure data:
@@ -388,12 +388,12 @@ fn virtual_workspace_without_arguments() {
 
         Collected 5 test(s) from subtraction package
         Running 1 test(s) from src/
-        [PASS] subtraction::tests::it_works
+        [PASS] subtraction::tests::it_works,[..]
         Running 4 test(s) from tests/
-        [PASS] tests::nested::simple_case
-        [PASS] tests::nested::contract_test
-        [PASS] tests::nested::test_nested::test_two
-        [PASS] tests::nested::test_nested::test_two_and_two
+        [PASS] tests::nested::simple_case,[..]
+        [PASS] tests::nested::contract_test,[..]
+        [PASS] tests::nested::test_nested::test_two,[..]
+        [PASS] tests::nested::test_nested::test_two_and_two,[..]
         Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
@@ -418,12 +418,12 @@ fn virtual_workspace_specify_package() {
 
         Collected 5 test(s) from subtraction package
         Running 1 test(s) from src/
-        [PASS] subtraction::tests::it_works
+        [PASS] subtraction::tests::it_works,[..]
         Running 4 test(s) from tests/
-        [PASS] tests::nested::simple_case
-        [PASS] tests::nested::contract_test
-        [PASS] tests::nested::test_nested::test_two
-        [PASS] tests::nested::test_nested::test_two_and_two
+        [PASS] tests::nested::simple_case,[..]
+        [PASS] tests::nested::contract_test,[..]
+        [PASS] tests::nested::test_nested::test_two,[..]
+        [PASS] tests::nested::test_nested::test_two_and_two,[..]
         Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         "}
     );
@@ -444,12 +444,12 @@ fn virtual_workspace_specific_package2() {
         
         Collected 6 test(s) from fibonacci2 package
         Running 2 test(s) from src/
-        [PASS] fibonacci2::tests::it_works
-        [PASS] fibonacci2::tests::contract_test
+        [PASS] fibonacci2::tests::it_works,[..]
+        [PASS] fibonacci2::tests::contract_test,[..]
         Running 4 test(s) from tests/
-        [PASS] tests::lib_test
-        [PASS] tests::abc::abc_test
-        [PASS] tests::abc::efg::efg_test
+        [PASS] tests::lib_test,[..]
+        [PASS] tests::abc::abc_test,[..]
+        [PASS] tests::abc::efg::efg_test,[..]
         [FAIL] tests::abc::efg::failing_test
         
         Failure data:
@@ -483,7 +483,7 @@ fn virtual_workspace_specific_package_and_name() {
         Collected 1 test(s) from subtraction package
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
-        [PASS] tests::nested::simple_case
+        [PASS] tests::nested::simple_case,[..]
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 4 filtered out
         "}
     );
@@ -507,12 +507,12 @@ fn virtual_workspace_inside_nested_package() {
 
         Collected 5 test(s) from subtraction package
         Running 1 test(s) from src/
-        [PASS] subtraction::tests::it_works
+        [PASS] subtraction::tests::it_works,[..]
         Running 4 test(s) from tests/
-        [PASS] tests::nested::simple_case
-        [PASS] tests::nested::contract_test
-        [PASS] tests::nested::test_nested::test_two
-        [PASS] tests::nested::test_nested::test_two_and_two
+        [PASS] tests::nested::simple_case,[..]
+        [PASS] tests::nested::contract_test,[..]
+        [PASS] tests::nested::test_nested::test_two,[..]
+        [PASS] tests::nested::test_nested::test_two_and_two,[..]
         Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         "}
     );
@@ -535,12 +535,12 @@ fn virtual_workspace_for_entire_workspace() {
         
         Collected 6 test(s) from fibonacci2 package
         Running 2 test(s) from src/
-        [PASS] fibonacci2::tests::it_works
-        [PASS] fibonacci2::tests::contract_test
+        [PASS] fibonacci2::tests::it_works,[..]
+        [PASS] fibonacci2::tests::contract_test,[..]
         Running 4 test(s) from tests/
-        [PASS] tests::lib_test
-        [PASS] tests::abc::abc_test
-        [PASS] tests::abc::efg::efg_test
+        [PASS] tests::lib_test,[..]
+        [PASS] tests::abc::abc_test,[..]
+        [PASS] tests::abc::efg::efg_test,[..]
         [FAIL] tests::abc::efg::failing_test
         
         Failure data:
@@ -551,12 +551,12 @@ fn virtual_workspace_for_entire_workspace() {
 
         Collected 5 test(s) from subtraction package
         Running 1 test(s) from src/
-        [PASS] subtraction::tests::it_works
+        [PASS] subtraction::tests::it_works,[..]
         Running 4 test(s) from tests/
-        [PASS] tests::nested::simple_case
-        [PASS] tests::nested::contract_test
-        [PASS] tests::nested::test_nested::test_two
-        [PASS] tests::nested::test_nested::test_two_and_two
+        [PASS] tests::nested::simple_case,[..]
+        [PASS] tests::nested::contract_test,[..]
+        [PASS] tests::nested::test_nested::test_two,[..]
+        [PASS] tests::nested::test_nested::test_two_and_two,[..]
         Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
@@ -583,12 +583,12 @@ fn virtual_workspace_for_entire_workspace_inside_package() {
         
         Collected 6 test(s) from fibonacci2 package
         Running 2 test(s) from src/
-        [PASS] fibonacci2::tests::it_works
-        [PASS] fibonacci2::tests::contract_test
+        [PASS] fibonacci2::tests::it_works,[..]
+        [PASS] fibonacci2::tests::contract_test,[..]
         Running 4 test(s) from tests/
-        [PASS] tests::lib_test
-        [PASS] tests::abc::abc_test
-        [PASS] tests::abc::efg::efg_test
+        [PASS] tests::lib_test,[..]
+        [PASS] tests::abc::abc_test,[..]
+        [PASS] tests::abc::efg::efg_test,[..]
         [FAIL] tests::abc::efg::failing_test
         
         Failure data:
@@ -599,12 +599,12 @@ fn virtual_workspace_for_entire_workspace_inside_package() {
 
         Collected 5 test(s) from subtraction package
         Running 1 test(s) from src/
-        [PASS] subtraction::tests::it_works
+        [PASS] subtraction::tests::it_works,[..]
         Running 4 test(s) from tests/
-        [PASS] tests::nested::simple_case
-        [PASS] tests::nested::contract_test
-        [PASS] tests::nested::test_nested::test_two
-        [PASS] tests::nested::test_nested::test_two_and_two
+        [PASS] tests::nested::simple_case,[..]
+        [PASS] tests::nested::contract_test,[..]
+        [PASS] tests::nested::test_nested::test_two,[..]
+        [PASS] tests::nested::test_nested::test_two_and_two,[..]
         Tests: 5 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
