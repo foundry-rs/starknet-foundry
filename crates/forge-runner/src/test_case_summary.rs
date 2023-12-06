@@ -8,8 +8,14 @@ use std::option::Option;
 use test_collector::{ExpectedPanicValue, ExpectedTestResult};
 
 #[derive(Debug, PartialEq, Clone)]
+pub struct FuzzingGasUsage {
+    pub min: f64,
+    pub max: f64,
+}
+#[derive(Debug, PartialEq, Clone)]
 pub struct FuzzingStatistics {
     runs: u32,
+    gas_usage: Option<FuzzingGasUsage>,
 }
 
 /// Summary of running a single test case
@@ -89,9 +95,25 @@ impl TestCaseSummary {
             TestCaseSummary::Ignored { .. } | TestCaseSummary::Skipped { .. } => &None,
         }
     }
+    #[must_use]
+    pub fn gas_usage(&self) -> Option<String> {
+        match self {
+            TestCaseSummary::Passed {
+                gas_used,
+                fuzzing_statistic,
+                ..
+            } => match fuzzing_statistic {
+                Some(FuzzingStatistics { gas_usage, .. }) => gas_usage
+                    .as_ref()
+                    .map(|gas_usage| format!("(max: ~{}, min: ~{})", gas_usage.max, gas_usage.min)),
+                None => Some(format!("~{gas_used}")),
+            },
+            _ => None,
+        }
+    }
 
     #[must_use]
-    pub fn with_runs(self, runs: u32) -> Self {
+    pub fn with_runs_and_gas_usage(self, runs: u32, gas_usage: Option<FuzzingGasUsage>) -> Self {
         match self {
             TestCaseSummary::Passed {
                 name,
@@ -105,7 +127,7 @@ impl TestCaseSummary {
                 msg,
                 arguments,
                 gas_used: gas,
-                fuzzing_statistic: Some(FuzzingStatistics { runs }),
+                fuzzing_statistic: Some(FuzzingStatistics { runs, gas_usage }),
                 latest_block_number,
             },
             TestCaseSummary::Failed {
@@ -118,7 +140,10 @@ impl TestCaseSummary {
                 name,
                 msg,
                 arguments,
-                fuzzing_statistic: Some(FuzzingStatistics { runs }),
+                fuzzing_statistic: Some(FuzzingStatistics {
+                    runs,
+                    gas_usage: None,
+                }),
                 latest_block_number,
             },
             TestCaseSummary::Ignored { .. } | TestCaseSummary::Skipped {} => self,

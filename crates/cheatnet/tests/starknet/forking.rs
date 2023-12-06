@@ -13,7 +13,7 @@ use cheatnet::constants::build_testing_state;
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::rpc::call_contract;
 use cheatnet::state::{BlockInfoReader, BlockifierState, CheatnetState, ExtendedStateReader};
-use conversions::IntoConv;
+use conversions::{IntoConv, TryIntoConv};
 use glob::glob;
 use num_bigint::BigUint;
 use num_traits::Num;
@@ -101,7 +101,7 @@ fn try_deploying_undeclared_class() {
     let mut cached_fork_state = create_fork_cached_state();
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_fork_state);
 
-    let class_hash = "1".to_owned().into_();
+    let class_hash = "1".to_owned().try_into_().unwrap();
 
     assert!(
         match deploy(&mut blockifier_state, &mut cheatnet_state, &class_hash, &[]) {
@@ -133,7 +133,7 @@ fn test_forking_at_block_number() {
         );
         let mut state_before_deploy = BlockifierState::from(&mut cached_state_before_delopy);
 
-        let cached_state_afer_deploy = &mut CachedState::new(
+        let cached_state_after_deploy = &mut CachedState::new(
             ExtendedStateReader {
                 dict_state_reader: build_testing_state(),
                 fork_state_reader: Some(ForkStateReader::new(
@@ -144,7 +144,7 @@ fn test_forking_at_block_number() {
             },
             GlobalContractCache::default(),
         );
-        let mut state_after_deploy = BlockifierState::from(cached_state_afer_deploy);
+        let mut state_after_deploy = BlockifierState::from(cached_state_after_deploy);
 
         let contract_address = Felt252::from(
             BigUint::from_str(

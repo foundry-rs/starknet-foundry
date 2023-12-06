@@ -191,7 +191,7 @@ mod tests {
     }
 
     #[test]
-    fn test_string_into_felt_shortstring_missmatched_quotes() {
+    fn test_string_into_felt_shortstring_mismatched_quotes() {
         let string = "\'1he5llo9\"";
         assert!(string_into_felt(string).is_err());
         let string = "\"1he5llo9\'";

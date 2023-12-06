@@ -10,6 +10,7 @@ use cairo_felt::Felt252;
 use cheatnet::cheatcodes::deploy::deploy;
 use cheatnet::rpc::call_contract;
 use cheatnet::state::CheatTarget;
+use conversions::felt252::FromShortString;
 use conversions::IntoConv;
 
 #[test]
@@ -74,7 +75,7 @@ fn warp_in_constructor() {
 
     let contracts = get_contracts();
 
-    let contract_name = "ConstructorWarpChecker".to_owned().into_();
+    let contract_name = Felt252::from_short_string("ConstructorWarpChecker").unwrap();
     let class_hash = blockifier_state
         .declare(&contract_name, &contracts)
         .unwrap();
@@ -273,7 +274,7 @@ fn warp_library_call() {
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contracts = get_contracts();
-    let contract_name = "WarpChecker".to_owned().into_();
+    let contract_name = Felt252::from_short_string("WarpChecker").unwrap();
     let class_hash = blockifier_state
         .declare(&contract_name, &contracts)
         .unwrap();
@@ -325,7 +326,7 @@ fn warp_all_simple() {
     let mut cached_state = create_cached_state();
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
-    let contract = "WarpChecker".to_owned().into_();
+    let contract = Felt252::from_short_string("WarpChecker").unwrap();
     let contracts = get_contracts();
     let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
 
@@ -482,7 +483,7 @@ fn warp_multiple() {
     let mut cached_state = create_cached_state();
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
-    let contract = "WarpChecker".to_owned().into_();
+    let contract = Felt252::from_short_string("WarpChecker").unwrap();
     let contracts = get_contracts();
     let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
 

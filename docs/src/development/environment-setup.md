@@ -57,11 +57,27 @@ $ cargo fmt
 For linting, it uses [clippy](https://github.com/rust-lang/rust-clippy). You can run it with this command:
 
 ```shell
-$ cargo clippy --all-targets --all-features -- --no-deps -W clippy::pedantic -A clippy::missing_errors_doc -A clippy::missing_panics_doc -A clippy::default_trait_acces
+$ cargo clippy --all-targets --all-features -- --no-deps -W clippy::pedantic -A clippy::missing_errors_doc -A clippy::missing_panics_doc -A clippy::default_trait_access
 ```
 
 Or using our defined alias
 
 ```shell
 $ cargo lint
+```
+
+## Spelling
+
+Starknet Foundry uses [typos](https://github.com/marketplace/actions/typos-action) for spelling checks.
+
+You can run the checker with
+
+```shell
+$ typos
+```
+
+Some typos can be automatically fixed by running
+
+```shell
+$ typos -w
 ```

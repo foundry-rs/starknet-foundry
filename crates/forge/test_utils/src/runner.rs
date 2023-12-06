@@ -84,7 +84,7 @@ impl Contract {
 pub struct TestCase {
     dir: TempDir,
     contracts: Vec<Contract>,
-    enviroment_variables: HashMap<String, String>,
+    environment_variables: HashMap<String, String>,
 }
 
 impl<'a> TestCase {
@@ -102,17 +102,17 @@ impl<'a> TestCase {
         Ok(Self {
             dir,
             contracts,
-            enviroment_variables: HashMap::new(),
+            environment_variables: HashMap::new(),
         })
     }
 
     pub fn set_env(&mut self, key: &str, value: &str) {
-        self.enviroment_variables.insert(key.into(), value.into());
+        self.environment_variables.insert(key.into(), value.into());
     }
 
     #[must_use]
     pub fn env(&self) -> &HashMap<String, String> {
-        &self.enviroment_variables
+        &self.environment_variables
     }
 
     pub fn path(&self) -> Result<Utf8PathBuf> {

@@ -1,7 +1,7 @@
 const semver = require('semver')
 
 if (process.argv.length !== 4) {
-    console.error('Two arguments requred');
+    console.error('Two arguments required');
     process.exit(1);
 }
 

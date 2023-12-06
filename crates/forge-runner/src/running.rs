@@ -16,7 +16,7 @@ use blockifier::state::state_api::State;
 use cairo_felt::Felt252;
 use cairo_vm::serde::deserialize_program::HintParams;
 use cairo_vm::types::relocatable::Relocatable;
-use cheatnet::execution::cheatable_syscall_handler::CheatableSyscallHandler;
+use cheatnet::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
 use cheatnet::runtime_extensions::forge_runtime_extension::{ForgeExtension, ForgeRuntime};
 use cheatnet::runtime_extensions::io_runtime_extension::IORuntimeExtension;
 use itertools::chain;
@@ -35,7 +35,7 @@ use cheatnet::constants as cheatnet_constants;
 use cheatnet::forking::state::ForkStateReader;
 use cheatnet::rpc::UsedResources;
 use cheatnet::state::{BlockInfoReader, CheatnetBlockInfo, CheatnetState, ExtendedStateReader};
-use runtime::ExtendedRuntime;
+use runtime::{ExtendedRuntime, StarknetRuntime};
 use starknet::core::types::BlockTag::Latest;
 use starknet::core::types::{BlockId, MaybePendingBlockWithTxHashes};
 use starknet::core::utils::get_selector_from_name;
@@ -243,14 +243,21 @@ pub fn run_test_case(
         block_info,
         ..Default::default()
     };
-    let cheatable_syscall_handler =
-        CheatableSyscallHandler::wrap(syscall_handler, &mut cheatnet_state);
+
+    let cheatable_runtime = ExtendedRuntime {
+        extension: CheatableStarknetRuntimeExtension {
+            cheatnet_state: &mut cheatnet_state,
+        },
+        extended_runtime: StarknetRuntime {
+            hint_handler: syscall_handler,
+        },
+    };
 
     let io_runtime = ExtendedRuntime {
         extension: IORuntimeExtension {
             lifetime: &PhantomData,
         },
-        extended_runtime: cheatable_syscall_handler,
+        extended_runtime: cheatable_runtime,
     };
 
     let forge_extension = ForgeExtension {
@@ -367,12 +374,13 @@ fn get_latest_block_number(url: &Url) -> Result<BlockId> {
     }
 }
 
-fn get_all_execution_resources(runtime: ForgeRuntime) -> UsedResources {
+fn get_all_execution_resources(runtime: &ForgeRuntime) -> UsedResources {
     let mut all_resources = UsedResources {
         execution_resources: runtime
             .extended_runtime
             .extended_runtime
-            .child
+            .extended_runtime
+            .hint_handler
             .resources
             .clone(),
         // we construct CallInfo with the `l2_to_l1_messages` field to use
@@ -395,6 +403,7 @@ fn get_all_execution_resources(runtime: ForgeRuntime) -> UsedResources {
     let cheatnet_used_resources = &runtime
         .extended_runtime
         .extended_runtime
+        .extension
         .cheatnet_state
         .used_resources;
     all_resources.extend(cheatnet_used_resources);
@@ -403,5 +412,10 @@ fn get_all_execution_resources(runtime: ForgeRuntime) -> UsedResources {
 }
 
 fn get_context<'a>(runtime: &'a ForgeRuntime) -> &'a EntryPointExecutionContext {
-    runtime.extended_runtime.extended_runtime.child.context
+    runtime
+        .extended_runtime
+        .extended_runtime
+        .extended_runtime
+        .hint_handler
+        .context
 }

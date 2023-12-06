@@ -17,22 +17,22 @@ fn fuzzing() {
         
         Collected 12 test(s) from fuzzing package
         Running 12 test(s) from src/
-        [PASS] fuzzing::tests::adding
-        [PASS] fuzzing::tests::fuzzed_argument (fuzzer runs = 256)
-        [PASS] fuzzing::tests::fuzzed_both_arguments (fuzzer runs = 256)
-        [PASS] fuzzing::tests::passing
+        [PASS] fuzzing::tests::adding,[..]
+        [PASS] fuzzing::tests::fuzzed_argument (fuzzer runs = 256),[..]
+        [PASS] fuzzing::tests::fuzzed_both_arguments (fuzzer runs = 256),[..]
+        [PASS] fuzzing::tests::passing,[..]
         [FAIL] fuzzing::tests::failing_fuzz (fuzzer runs = 1, arguments = [[..], [..]])
 
         Failure data:
             original value: [593979512822486835600413552099926114], converted to a string: [result == a + b]
 
-        [PASS] fuzzing::tests::custom_fuzzer_config (fuzzer runs = 10)
-        [PASS] fuzzing::tests::uint8_arg (fuzzer runs = 256)
-        [PASS] fuzzing::tests::uint16_arg (fuzzer runs = 256)
-        [PASS] fuzzing::tests::uint32_arg (fuzzer runs = 256)
-        [PASS] fuzzing::tests::uint64_arg (fuzzer runs = 256)
-        [PASS] fuzzing::tests::uint128_arg (fuzzer runs = 256)
-        [PASS] fuzzing::tests::uint256_arg (fuzzer runs = 256)
+        [PASS] fuzzing::tests::custom_fuzzer_config (fuzzer runs = 10),[..]
+        [PASS] fuzzing::tests::uint8_arg (fuzzer runs = 256),[..]
+        [PASS] fuzzing::tests::uint16_arg (fuzzer runs = 256),[..]
+        [PASS] fuzzing::tests::uint32_arg (fuzzer runs = 256),[..]
+        [PASS] fuzzing::tests::uint64_arg (fuzzer runs = 256),[..]
+        [PASS] fuzzing::tests::uint128_arg (fuzzer runs = 256),[..]
+        [PASS] fuzzing::tests::uint256_arg (fuzzer runs = 256),[..]
         Running 0 test(s) from tests/
         Tests: 11 passed, 1 failed, 0 skipped, 0 ignored, 6 filtered out
         Fuzzer seed: [..]
@@ -62,22 +62,22 @@ fn fuzzing_set_runs() {
         
         Collected 12 test(s) from fuzzing package
         Running 12 test(s) from src/
-        [PASS] fuzzing::tests::adding
-        [PASS] fuzzing::tests::fuzzed_argument (fuzzer runs = 10)
-        [PASS] fuzzing::tests::fuzzed_both_arguments (fuzzer runs = 10)
-        [PASS] fuzzing::tests::passing
+        [PASS] fuzzing::tests::adding,[..]
+        [PASS] fuzzing::tests::fuzzed_argument (fuzzer runs = 10),[..]
+        [PASS] fuzzing::tests::fuzzed_both_arguments (fuzzer runs = 10),[..]
+        [PASS] fuzzing::tests::passing,[..]
         [FAIL] fuzzing::tests::failing_fuzz (fuzzer runs = 1, arguments = [[..], [..]])
 
         Failure data:
             original value: [593979512822486835600413552099926114], converted to a string: [result == a + b]
 
-        [PASS] fuzzing::tests::custom_fuzzer_config (fuzzer runs = 10)
-        [PASS] fuzzing::tests::uint8_arg (fuzzer runs = 10)
-        [PASS] fuzzing::tests::uint16_arg (fuzzer runs = 10)
-        [PASS] fuzzing::tests::uint32_arg (fuzzer runs = 10)
-        [PASS] fuzzing::tests::uint64_arg (fuzzer runs = 10)
-        [PASS] fuzzing::tests::uint128_arg (fuzzer runs = 10)
-        [PASS] fuzzing::tests::uint256_arg (fuzzer runs = 10)
+        [PASS] fuzzing::tests::custom_fuzzer_config (fuzzer runs = 10),[..]
+        [PASS] fuzzing::tests::uint8_arg (fuzzer runs = 10),[..]
+        [PASS] fuzzing::tests::uint16_arg (fuzzer runs = 10),[..]
+        [PASS] fuzzing::tests::uint32_arg (fuzzer runs = 10),[..]
+        [PASS] fuzzing::tests::uint64_arg (fuzzer runs = 10),[..]
+        [PASS] fuzzing::tests::uint128_arg (fuzzer runs = 10),[..]
+        [PASS] fuzzing::tests::uint256_arg (fuzzer runs = 10),[..]
         Running 0 test(s) from tests/
         Tests: 11 passed, 1 failed, 0 skipped, 0 ignored, 6 filtered out
         Fuzzer seed: [..]
@@ -107,22 +107,22 @@ fn fuzzing_set_seed() {
         
         Collected 12 test(s) from fuzzing package
         Running 12 test(s) from src/
-        [PASS] fuzzing::tests::adding
-        [PASS] fuzzing::tests::fuzzed_argument (fuzzer runs = 256)
-        [PASS] fuzzing::tests::fuzzed_both_arguments (fuzzer runs = 256)
-        [PASS] fuzzing::tests::passing
+        [PASS] fuzzing::tests::adding,[..]
+        [PASS] fuzzing::tests::fuzzed_argument (fuzzer runs = 256),[..]
+        [PASS] fuzzing::tests::fuzzed_both_arguments (fuzzer runs = 256),[..]
+        [PASS] fuzzing::tests::passing,[..]
         [FAIL] fuzzing::tests::failing_fuzz (fuzzer runs = 1, arguments = [[..], [..]])
 
         Failure data:
             original value: [..], converted to a string: [result == a + b]
 
-        [PASS] fuzzing::tests::custom_fuzzer_config (fuzzer runs = 10)
-        [PASS] fuzzing::tests::uint8_arg (fuzzer runs = 256)
-        [PASS] fuzzing::tests::uint16_arg (fuzzer runs = 256)
-        [PASS] fuzzing::tests::uint32_arg (fuzzer runs = 256)
-        [PASS] fuzzing::tests::uint64_arg (fuzzer runs = 256)
-        [PASS] fuzzing::tests::uint128_arg (fuzzer runs = 256)
-        [PASS] fuzzing::tests::uint256_arg (fuzzer runs = 256)
+        [PASS] fuzzing::tests::custom_fuzzer_config (fuzzer runs = 10),[..]
+        [PASS] fuzzing::tests::uint8_arg (fuzzer runs = 256),[..]
+        [PASS] fuzzing::tests::uint16_arg (fuzzer runs = 256),[..]
+        [PASS] fuzzing::tests::uint32_arg (fuzzer runs = 256),[..]
+        [PASS] fuzzing::tests::uint64_arg (fuzzer runs = 256),[..]
+        [PASS] fuzzing::tests::uint128_arg (fuzzer runs = 256),[..]
+        [PASS] fuzzing::tests::uint256_arg (fuzzer runs = 256),[..]
         Running 0 test(s) from tests/
         Tests: 11 passed, 1 failed, 0 skipped, 0 ignored, 6 filtered out
         Fuzzer seed: 1234

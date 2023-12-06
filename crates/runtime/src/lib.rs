@@ -108,62 +108,71 @@ impl<Extension: ExtensionLogic> HintProcessorLogic for ExtendedRuntime<Extension
         constants: &HashMap<String, Felt252>,
     ) -> Result<(), HintError> {
         let maybe_extended_hint = hint_data.downcast_ref::<Hint>();
-        if let Some(Hint::Starknet(StarknetHint::Cheatcode {
-            selector,
-            input_start,
-            input_end,
-            output_start,
-            output_end,
-        })) = maybe_extended_hint
-        {
-            // Parse the selector.
-            let selector = &selector.value.to_bytes_be().1;
-            let selector = std::str::from_utf8(selector).map_err(|_| {
-                CustomHint(Box::from(
-                    "Failed to parse the cheatcode selector".to_string(),
-                ))
-            })?;
-
-            // Extract the inputs.
-            let input_start = extract_relocatable(vm, input_start)?;
-            let input_end = extract_relocatable(vm, input_end)?;
-            let inputs = vm_get_range(vm, input_start, input_end)
-                .map_err(|_| CustomHint(Box::from("Failed to read input data".to_string())))?;
-
-            if let CheatcodeHandlingResult::Handled(res) =
-                self.extension
-                    .handle_cheatcode(selector, inputs, &mut self.extended_runtime)?
+        if let Some(Hint::Starknet(starknet_hint)) = maybe_extended_hint {
+            if let StarknetHint::Cheatcode {
+                selector,
+                input_start,
+                input_end,
+                output_start,
+                output_end,
+            } = starknet_hint
             {
-                let mut buffer = MemBuffer::new_segment(vm);
-                let result_start = buffer.ptr;
-                buffer
-                    .write_data(res.iter())
-                    .expect("Failed to insert cheatcode result to memory");
-                let result_end = buffer.ptr;
-                insert_value_to_cellref!(vm, output_start, result_start)?;
-                insert_value_to_cellref!(vm, output_end, result_end)?;
-                return Ok(());
+                // Parse the selector.
+                let selector = &selector.value.to_bytes_be().1;
+                let selector = std::str::from_utf8(selector).map_err(|_| {
+                    CustomHint(Box::from(
+                        "Failed to parse the cheatcode selector".to_string(),
+                    ))
+                })?;
+
+                // Extract the inputs.
+                let input_start = extract_relocatable(vm, input_start)?;
+                let input_end = extract_relocatable(vm, input_end)?;
+                let inputs = vm_get_range(vm, input_start, input_end)
+                    .map_err(|_| CustomHint(Box::from("Failed to read input data".to_string())))?;
+
+                if let CheatcodeHandlingResult::Handled(res) =
+                    self.extension
+                        .handle_cheatcode(selector, inputs, &mut self.extended_runtime)?
+                {
+                    let mut buffer = MemBuffer::new_segment(vm);
+                    let result_start = buffer.ptr;
+                    buffer
+                        .write_data(res.iter())
+                        .expect("Failed to insert cheatcode result to memory");
+                    let result_end = buffer.ptr;
+                    insert_value_to_cellref!(vm, output_start, result_start)?;
+                    insert_value_to_cellref!(vm, output_end, result_end)?;
+                    return Ok(());
+                }
+            }
+
+            if let StarknetHint::SystemCall { system } = starknet_hint {
+                let (cell, offset) = extract_buffer(system);
+                let system_ptr = get_ptr(vm, cell, &offset)?;
+
+                self.verify_syscall_ptr(system_ptr)?;
+
+                // We peek into memory to check the selector
+                let selector = DeprecatedSyscallSelector::try_from(felt_to_stark_felt(
+                    &vm.get_integer(*self.get_mut_syscall_ptr()).unwrap(),
+                ))?;
+
+                if let SyscallHandlingResult::Handled(()) =
+                    self.extension
+                        .override_system_call(selector, vm, &mut self.extended_runtime)?
+                {
+                    return Ok(());
+                }
+                let res = self
+                    .extended_runtime
+                    .execute_hint(vm, exec_scopes, hint_data, constants);
+                self.extension
+                    .post_syscall_hook(&selector, &mut self.extended_runtime);
+                return res;
             }
         }
 
-        if let Some(Hint::Starknet(StarknetHint::SystemCall { system })) = maybe_extended_hint {
-            let (cell, offset) = extract_buffer(system);
-            let system_ptr = get_ptr(vm, cell, &offset)?;
-
-            self.verify_syscall_ptr(system_ptr)?;
-
-            // We peek into memory to check the selector
-            let selector = DeprecatedSyscallSelector::try_from(felt_to_stark_felt(
-                &vm.get_integer(*self.get_mut_syscall_ptr()).unwrap(),
-            ))?;
-
-            if let SyscallHandlingResult::Handled(()) =
-                self.extension
-                    .override_system_call(selector, vm, &mut self.extended_runtime)?
-            {
-                return Ok(());
-            }
-        }
         self.extended_runtime
             .execute_hint(vm, exec_scopes, hint_data, constants)
     }
@@ -232,6 +241,14 @@ pub trait ExtensionLogic {
         _extended_runtime: &mut Self::Runtime,
     ) -> Result<SyscallHandlingResult, HintError> {
         Ok(SyscallHandlingResult::Forwarded)
+    }
+
+    #[allow(clippy::trivially_copy_pass_by_ref)]
+    fn post_syscall_hook(
+        &mut self,
+        _selector: &DeprecatedSyscallSelector,
+        _extended_runtime: &mut Self::Runtime,
+    ) {
     }
 
     #[allow(clippy::trivially_copy_pass_by_ref)]

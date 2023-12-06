@@ -12,7 +12,7 @@ An address with no contract can be mocked as well. Mock can be canceled with [`s
 - `ret_data` - data to return by the function `function_name`
 
 > 📝 **Note**
-> Mocks do not have any effect on function calls withing the contract itself.
+> Mocks do not have any effect on function calls within the contract itself.
 > E.g. for a function within a contract defined like this:
 >
 > ```rust
