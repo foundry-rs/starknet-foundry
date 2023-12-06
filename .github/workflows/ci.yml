@@ -89,6 +89,18 @@ jobs:
       - name: Run tests
         run: cargo test --release -p cast
 
+  test-conversions:
+    name: Test Conversions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@439cf607258077187679211f12aa6f19af4a0af7
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8
+      - name: Run tests
+        run: cargo test --release -p conversions
+
   test-scarb-artifacts:
     name: Test Scarb Artifacts
     runs-on: ubuntu-latest

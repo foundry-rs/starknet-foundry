@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests_short_string {
     use cairo_felt::Felt252;
-    use conversions::FromConv;
+    use conversions::{FromConv, TryFromConv};
     use starknet::core::types::FieldElement;
     use starknet_api::core::{ClassHash, ContractAddress, Nonce};
     use starknet_api::hash::{StarkFelt, StarkHash};
@@ -12,31 +12,31 @@ mod tests_short_string {
 
         assert_eq!(
             short_string,
-            String::from_(ClassHash::from_(short_string.clone()))
+            String::from_(ClassHash::try_from_(short_string.clone()).unwrap())
         );
         assert_eq!(
             short_string,
-            String::from_(ContractAddress::from_(short_string.clone()))
+            String::from_(ContractAddress::try_from_(short_string.clone()).unwrap())
         );
         assert_eq!(
             short_string,
-            String::from_(Felt252::from_(short_string.clone()))
+            String::from_(Felt252::try_from_(short_string.clone()).unwrap())
         );
         assert_eq!(
             short_string,
-            String::from_(FieldElement::from_(short_string.clone()))
+            String::from_(FieldElement::try_from_(short_string.clone()).unwrap())
         );
         assert_eq!(
             short_string,
-            String::from_(Nonce::from_(short_string.clone()))
+            String::from_(Nonce::try_from_(short_string.clone()).unwrap())
         );
         assert_eq!(
             short_string,
-            String::from_(StarkFelt::from_(short_string.clone()))
+            String::from_(StarkFelt::try_from_(short_string.clone()).unwrap())
         );
         assert_eq!(
             short_string,
-            String::from_(StarkHash::from_(short_string.clone()))
+            String::from_(StarkHash::try_from_(short_string.clone()).unwrap())
         );
     }
 
@@ -46,31 +46,31 @@ mod tests_short_string {
 
         assert_eq!(
             short_string,
-            String::from_(ClassHash::from_(short_string.clone()))
+            String::from_(ClassHash::try_from_(short_string.clone()).unwrap())
         );
         assert_eq!(
             short_string,
-            String::from_(ContractAddress::from_(short_string.clone()))
+            String::from_(ContractAddress::try_from_(short_string.clone()).unwrap())
         );
         assert_eq!(
             short_string,
-            String::from_(Felt252::from_(short_string.clone()))
+            String::from_(Felt252::try_from_(short_string.clone()).unwrap())
         );
         assert_eq!(
             short_string,
-            String::from_(FieldElement::from_(short_string.clone()))
+            String::from_(FieldElement::try_from_(short_string.clone()).unwrap())
         );
         assert_eq!(
             short_string,
-            String::from_(Nonce::from_(short_string.clone()))
+            String::from_(Nonce::try_from_(short_string.clone()).unwrap())
         );
         assert_eq!(
             short_string,
-            String::from_(StarkFelt::from_(short_string.clone()))
+            String::from_(StarkFelt::try_from_(short_string.clone()).unwrap())
         );
         assert_eq!(
             short_string,
-            String::from_(StarkHash::from_(short_string.clone()))
+            String::from_(StarkHash::try_from_(short_string.clone()).unwrap())
         );
     }
 
@@ -81,31 +81,31 @@ mod tests_short_string {
 
         assert_eq!(
             short_string,
-            String::from_(ClassHash::from_(short_string.clone()))
+            String::from_(ClassHash::try_from_(short_string.clone()).unwrap())
         );
         assert_eq!(
             short_string,
-            String::from_(Felt252::from_(short_string.clone()))
+            String::from_(Felt252::try_from_(short_string.clone()).unwrap())
         );
         assert_eq!(
             short_string,
-            String::from_(FieldElement::from_(short_string.clone()))
+            String::from_(FieldElement::try_from_(short_string.clone()).unwrap())
         );
         assert_eq!(
             short_string,
-            String::from_(Nonce::from_(short_string.clone()))
+            String::from_(Nonce::try_from_(short_string.clone()).unwrap())
         );
         assert_eq!(
             short_string,
-            String::from_(StarkFelt::from_(short_string.clone()))
+            String::from_(StarkFelt::try_from_(short_string.clone()).unwrap())
         );
         assert_eq!(
             short_string,
-            String::from_(StarkHash::from_(short_string.clone()))
+            String::from_(StarkHash::try_from_(short_string.clone()).unwrap())
         );
         assert_eq!(
             short_string,
-            String::from_(ContractAddress::from_(short_string.clone()))
+            String::from_(ContractAddress::try_from_(short_string.clone()).unwrap())
         );
     }
 }
