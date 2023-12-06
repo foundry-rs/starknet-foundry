@@ -338,7 +338,7 @@ mod tests {
                 workspace_root,
                 false,
                 FUZZER_RUNS_DEFAULT,
-                config.fuzzer_seed
+                config.fuzzer_seed,
             )
         );
     }
@@ -374,6 +374,7 @@ mod tests {
             Some(32),
             &config_from_scarb,
         );
-        assert_eq!(config, RunnerConfig::new(workspace_root, true, 100, 32));
+
+        assert_eq!(config, RunnerConfig::new(workspace_root, true, 100, 32,));
     }
 }

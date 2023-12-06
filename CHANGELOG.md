@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 
+- print gas usage for each test
 - Support for test collector built-in in Scarb with the `--use-scarb-collector` flag. Requires at least `nightly-2023-12-04` version of Scarb.
 
 ### Cast
