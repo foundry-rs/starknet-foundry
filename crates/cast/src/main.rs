@@ -444,8 +444,14 @@ fn get_package_data(cli: &Cli) -> PackageData {
         package: Err(anyhow!("Could not retrieve package metadata")),
     };
 
-    result.manifest_path = match cli.path_to_scarb_toml.clone() {
-        Some(path) => {
+    let path = match cli.path_to_scarb_toml.clone() {
+        Some(path) => Ok(path),
+        None => get_scarb_manifest().context("Failed to obtain manifest path from scarb"),
+    };
+
+    // Check if the path is actually valid
+    result.manifest_path = match path {
+        Ok(path) => {
             if path.exists() {
                 Ok(path)
             } else {
@@ -457,7 +463,7 @@ fn get_package_data(cli: &Cli) -> PackageData {
                 )))
             }
         }
-        None => get_scarb_manifest().context("Failed to obtain manifest path from scarb"),
+        Err(x) => Err(x),
     };
 
     if result.manifest_path.is_err() {
@@ -471,12 +477,11 @@ fn get_package_data(cli: &Cli) -> PackageData {
         return result;
     }
 
-    let package = cli
+    result.package = cli
         .packages_filter
         .clone()
         .into_packages_filter()
         .match_one(result.metadata.as_ref().unwrap());
 
-    result.package = package;
     result
 }
