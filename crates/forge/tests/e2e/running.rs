@@ -24,17 +24,17 @@ fn simple_package() {
 
     Collected 13 test(s) from simple_package package
     Running 2 test(s) from src/
-    [PASS] simple_package::tests::test_fib
+    [PASS] simple_package::tests::test_fib,[..]
     [IGNORE] simple_package::tests::ignored_test
     Running 11 test(s) from tests/
-    [PASS] tests::contract::call_and_invoke
-    [PASS] tests::ext_function_test::test_my_test
+    [PASS] tests::contract::call_and_invoke,[..]
+    [PASS] tests::ext_function_test::test_my_test,[..]
     [IGNORE] tests::ext_function_test::ignored_test
-    [PASS] tests::ext_function_test::test_simple
-    [PASS] tests::test_simple::test_simple
-    [PASS] tests::test_simple::test_simple2
-    [PASS] tests::test_simple::test_two
-    [PASS] tests::test_simple::test_two_and_two
+    [PASS] tests::ext_function_test::test_simple,[..]
+    [PASS] tests::test_simple::test_simple,[..]
+    [PASS] tests::test_simple::test_simple2,[..]
+    [PASS] tests::test_simple::test_two,[..]
+    [PASS] tests::test_simple::test_two_and_two,[..]
     [FAIL] tests::test_simple::test_failing
     
     Failure data:
@@ -45,7 +45,7 @@ fn simple_package() {
     Failure data:
         original value: [8111420071579136082810415440747], converted to a string: [failing check]
     
-    [PASS] tests::without_prefix::five
+    [PASS] tests::without_prefix::five,[..]
     Tests: 9 passed, 2 failed, 0 skipped, 2 ignored, 0 filtered out
     
     Failures:
@@ -101,17 +101,17 @@ fn simple_package_with_git_dependency() {
 
         Collected 13 test(s) from simple_package package
         Running 2 test(s) from src/
-        [PASS] simple_package::tests::test_fib
+        [PASS] simple_package::tests::test_fib,[..]
         [IGNORE] simple_package::tests::ignored_test
         Running 11 test(s) from tests/
-        [PASS] tests::contract::call_and_invoke
-        [PASS] tests::ext_function_test::test_my_test
+        [PASS] tests::contract::call_and_invoke,[..]
+        [PASS] tests::ext_function_test::test_my_test,[..]
         [IGNORE] tests::ext_function_test::ignored_test
-        [PASS] tests::ext_function_test::test_simple
-        [PASS] tests::test_simple::test_simple
-        [PASS] tests::test_simple::test_simple2
-        [PASS] tests::test_simple::test_two
-        [PASS] tests::test_simple::test_two_and_two
+        [PASS] tests::ext_function_test::test_simple,[..]
+        [PASS] tests::test_simple::test_simple,[..]
+        [PASS] tests::test_simple::test_simple2,[..]
+        [PASS] tests::test_simple::test_two,[..]
+        [PASS] tests::test_simple::test_two_and_two,[..]
         [FAIL] tests::test_simple::test_failing
         
         Failure data:
@@ -122,7 +122,7 @@ fn simple_package_with_git_dependency() {
         Failure data:
             original value: [8111420071579136082810415440747], converted to a string: [failing check]
         
-        [PASS] tests::without_prefix::five
+        [PASS] tests::without_prefix::five,[..]
         Tests: 9 passed, 2 failed, 0 skipped, 2 ignored, 0 filtered out
         
         Failures:
@@ -150,7 +150,7 @@ fn with_failing_scarb_build() {
     let result = snapbox.current_dir(&temp).assert().code(2);
 
     let stdout = String::from_utf8_lossy(&result.get_output().stdout);
-    assert!(stdout.contains("Scarb build did not succeed"));
+    assert!(stdout.contains("scarb build did not succeed"));
 }
 
 #[test]
@@ -170,8 +170,8 @@ fn with_filter() {
         Collected 2 test(s) from simple_package package
         Running 0 test(s) from src/
         Running 2 test(s) from tests/
-        [PASS] tests::test_simple::test_two
-        [PASS] tests::test_simple::test_two_and_two
+        [PASS] tests::test_simple::test_two,[..]
+        [PASS] tests::test_simple::test_two_and_two,[..]
         Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 11 filtered out
         "}
     );
@@ -198,9 +198,9 @@ fn with_filter_matching_module() {
         Collected 3 test(s) from simple_package package
         Running 0 test(s) from src/
         Running 3 test(s) from tests/
-        [PASS] tests::ext_function_test::test_my_test
+        [PASS] tests::ext_function_test::test_my_test,[..]
         [IGNORE] tests::ext_function_test::ignored_test
-        [PASS] tests::ext_function_test::test_simple
+        [PASS] tests::ext_function_test::test_simple,[..]
         Tests: 2 passed, 0 failed, 0 skipped, 1 ignored, 10 filtered out
         "}
     );
@@ -228,7 +228,34 @@ fn with_exact_filter() {
         Collected 1 test(s) from simple_package package
         Running 0 test(s) from src/
         Running 1 test(s) from tests/
-        [PASS] tests::test_simple::test_two
+        [PASS] tests::test_simple::test_two,[..]
+        Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 12 filtered out
+        "}
+    );
+}
+#[test]
+fn with_gas_usage() {
+    let temp = setup_package("simple_package");
+    let snapbox = test_runner();
+
+    let output = snapbox
+        .current_dir(&temp)
+        .arg("tests::test_simple::test_two")
+        .arg("--exact")
+        .assert()
+        .success();
+
+    assert_stdout_contains!(
+        output,
+        indoc! {r"
+        [..]Compiling[..]
+        [..]Finished[..]
+
+
+        Collected 1 test(s) from simple_package package
+        Running 0 test(s) from src/
+        Running 1 test(s) from tests/
+        [PASS] tests::test_simple::test_two, gas: ~0.1
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 12 filtered out
         "}
     );
@@ -272,7 +299,7 @@ fn with_ignored_flag() {
         
         Collected 2 test(s) from simple_package package
         Running 1 test(s) from src/
-        [PASS] simple_package::tests::ignored_test
+        [PASS] simple_package::tests::ignored_test,[..]
         Running 1 test(s) from tests/
         [FAIL] tests::ext_function_test::ignored_test
         
@@ -307,21 +334,21 @@ fn with_include_ignored_flag() {
         
         Collected 13 test(s) from simple_package package
         Running 2 test(s) from src/
-        [PASS] simple_package::tests::test_fib
-        [PASS] simple_package::tests::ignored_test
+        [PASS] simple_package::tests::test_fib,[..]
+        [PASS] simple_package::tests::ignored_test,[..]
         Running 11 test(s) from tests/
-        [PASS] tests::contract::call_and_invoke
-        [PASS] tests::ext_function_test::test_my_test
+        [PASS] tests::contract::call_and_invoke,[..]
+        [PASS] tests::ext_function_test::test_my_test,[..]
         [FAIL] tests::ext_function_test::ignored_test
         
         Failure data:
             original value: [133508164996995645235097191], converted to a string: [not passing]
         
-        [PASS] tests::ext_function_test::test_simple
-        [PASS] tests::test_simple::test_simple
-        [PASS] tests::test_simple::test_simple2
-        [PASS] tests::test_simple::test_two
-        [PASS] tests::test_simple::test_two_and_two
+        [PASS] tests::ext_function_test::test_simple,[..]
+        [PASS] tests::test_simple::test_simple,[..]
+        [PASS] tests::test_simple::test_simple2,[..]
+        [PASS] tests::test_simple::test_two,[..]
+        [PASS] tests::test_simple::test_two_and_two,[..]
         [FAIL] tests::test_simple::test_failing
         
         Failure data:
@@ -332,7 +359,7 @@ fn with_include_ignored_flag() {
         Failure data:
             original value: [8111420071579136082810415440747], converted to a string: [failing check]
         
-        [PASS] tests::without_prefix::five
+        [PASS] tests::without_prefix::five,[..]
         Tests: 10 passed, 3 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
@@ -399,7 +426,7 @@ fn with_include_ignored_flag_and_filter() {
         
         Collected 2 test(s) from simple_package package
         Running 1 test(s) from src/
-        [PASS] simple_package::tests::ignored_test
+        [PASS] simple_package::tests::ignored_test,[..]
         Running 1 test(s) from tests/
         [FAIL] tests::ext_function_test::ignored_test
         
@@ -434,16 +461,16 @@ fn with_rerun_failed_flag_without_cache() {
         
         Collected 13 test(s) from simple_package package
         Running 2 test(s) from src/
-        [PASS] simple_package::tests::test_fib
+        [PASS] simple_package::tests::test_fib,[..]
         Running 11 test(s) from tests/
-        [PASS] tests::contract::call_and_invoke
-        [PASS] tests::ext_function_test::test_my_test
+        [PASS] tests::contract::call_and_invoke,[..]
+        [PASS] tests::ext_function_test::test_my_test,[..]
 
-        [PASS] tests::ext_function_test::test_simple
-        [PASS] tests::test_simple::test_simple
-        [PASS] tests::test_simple::test_simple2
-        [PASS] tests::test_simple::test_two
-        [PASS] tests::test_simple::test_two_and_two
+        [PASS] tests::ext_function_test::test_simple,[..]
+        [PASS] tests::test_simple::test_simple,[..]
+        [PASS] tests::test_simple::test_simple2,[..]
+        [PASS] tests::test_simple::test_two,[..]
+        [PASS] tests::test_simple::test_two_and_two,[..]
         [FAIL] tests::test_simple::test_failing
 
         Failure data:
@@ -451,7 +478,7 @@ fn with_rerun_failed_flag_without_cache() {
 
         [FAIL] tests::test_simple::test_another_failing
 
-        [PASS] tests::without_prefix::five
+        [PASS] tests::without_prefix::five,[..]
         Failures:
             tests::test_simple::test_failing
             tests::test_simple::test_another_failing
@@ -587,7 +614,7 @@ fn with_print() {
         original value: [127]
         original value: [32], converted to a string: [ ]
         original value: [166906514068638843492736773029576256], converted to a string: [ % abc 123 !?>@]
-        [PASS] tests::test_print::test_print
+        [PASS] tests::test_print::test_print,[..]
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         "}
     );
@@ -610,7 +637,7 @@ fn with_panic_data_decoding() {
         Collected 4 test(s) from panic_decoding package
         Running 0 test(s) from src/
         Running 4 test(s) from tests/
-        [PASS] tests::test_panic_decoding::test_simple
+        [PASS] tests::test_panic_decoding::test_simple,[..]
         [FAIL] tests::test_panic_decoding::test_panic_decoding
         
         Failure data:
@@ -626,7 +653,7 @@ fn with_panic_data_decoding() {
         Failure data:
             original value: [128]
         
-        [PASS] tests::test_panic_decoding::test_simple2
+        [PASS] tests::test_panic_decoding::test_simple2,[..]
         Tests: 2 passed, 2 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:
@@ -796,8 +823,8 @@ fn init_new_project_test() {
         Collected 2 test(s) from test_name package
         Running 0 test(s) from src/
         Running 2 test(s) from tests/
-        [PASS] tests::test_contract::test_increase_balance
-        [PASS] tests::test_contract::test_cannot_increase_balance_with_zero_value
+        [PASS] tests::test_contract::test_increase_balance,[..]
+        [PASS] tests::test_contract::test_cannot_increase_balance_with_zero_value,[..]
         Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
     "}
     );
@@ -822,13 +849,13 @@ fn should_panic() {
         Collected 6 test(s) from should_panic_test package
         Running 0 test(s) from src/
         Running 6 test(s) from tests/
-        [PASS] tests::should_panic_test::should_panic_no_data
+        [PASS] tests::should_panic_test::should_panic_no_data,[..]
 
         Success data:
             original value: [0], converted to a string: []
 
-        [PASS] tests::should_panic_test::should_panic_check_data
-        [PASS] tests::should_panic_test::should_panic_multiple_messages
+        [PASS] tests::should_panic_test::should_panic_check_data,[..]
+        [PASS] tests::should_panic_test::should_panic_multiple_messages,[..]
         [FAIL] tests::should_panic_test::should_panic_with_non_matching_data
 
         Failure data:
@@ -876,8 +903,8 @@ fn printing_in_contracts() {
         Running 0 test(s) from src/
         Running 2 test(s) from tests/
         original value: [22405534230753963835153736737], converted to a string: [Hello world!]
-        [PASS] tests::test_contract::test_increase_balance
-        [PASS] tests::test_contract::test_cannot_increase_balance_with_zero_value
+        [PASS] tests::test_contract::test_increase_balance,[..]
+        [PASS] tests::test_contract::test_cannot_increase_balance_with_zero_value,[..]
         Tests: 2 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
         "#}
     );
@@ -904,8 +931,8 @@ fn available_gas_error() {
         Failure data:
             Attribute `available_gas` is not supported
         
-        [PASS] tests::available_gas::aa_test
-        [PASS] tests::available_gas::test
+        [PASS] tests::available_gas::aa_test,[..]
+        [PASS] tests::available_gas::test,[..]
         Tests: 2 passed, 1 failed, 0 skipped, 0 ignored, 0 filtered out
         
         Failures:

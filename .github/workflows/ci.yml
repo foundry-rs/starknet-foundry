@@ -8,9 +8,6 @@ on:
       - master
   workflow_dispatch:
 
-env:
-  SCARB_VERSION: 2.3.1
-
 jobs:
   test-forge-unit-and-integration:
     name: Test Forge / Unit and Integration Tests
@@ -20,8 +17,6 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8
       - uses: software-mansion/setup-scarb@v1.3.2
-        with:
-          scarb-version: ${{ env.SCARB_VERSION }}
       - run: cargo test --release --lib -p forge
       - run: cargo test --release integration -p forge
 
@@ -55,9 +50,16 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8
       - uses: software-mansion/setup-scarb@v1.3.2
-        with:
-          scarb-version: ${{ env.SCARB_VERSION }}
       - run: cargo test --release e2e -p forge
+
+  test-forge-runner:
+    name: Test Forge Runner
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8
+      - run: cargo test --release -p forge_runner
 
   test-cheatnet:
     name: Test Cheatnet
@@ -67,8 +69,6 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8
       - uses: software-mansion/setup-scarb@v1.3.2
-        with:
-          scarb-version: ${{ env.SCARB_VERSION }}
       - name: Run Cheatnet tests
         run: cargo test -p cheatnet
 
@@ -86,10 +86,30 @@ jobs:
       - name: Install starknet-devnet-rs
         run: ./scripts/install_devnet.sh
       - uses: software-mansion/setup-scarb@v1.3.2
-        with:
-          scarb-version: ${{ env.SCARB_VERSION }}
       - name: Run tests
         run: cargo test --release -p cast
+
+  test-conversions:
+    name: Test Conversions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@439cf607258077187679211f12aa6f19af4a0af7
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8
+      - name: Run tests
+        run: cargo test --release -p conversions
+
+  test-scarb-artifacts:
+    name: Test Scarb Artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8
+      - uses: software-mansion/setup-scarb@v1.3.2
+      - run: cargo test --release -p scarb-artifacts
 
   scarbfmt:
     runs-on: ubuntu-latest
@@ -149,3 +169,11 @@ jobs:
       - name: Build with mdBook
         run: mdbook build
         working-directory: ./docs
+
+  typos:
+    name: Check typos
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: typos-action
+        uses: crate-ci/typos@v1.16.23

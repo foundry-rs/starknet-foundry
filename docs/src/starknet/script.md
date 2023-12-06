@@ -8,9 +8,9 @@ Starknet Foundry cast can be used to run deployment scripts written in Cairo, us
 It aims to provide similar functionality to Foundry's `forge script`. 
 
 To start writing a deployment script in Cairo just add `cast_std` as a dependency to you scarb package and make sure to
-have a `main` function in the module you want to run.
+have a `main` function in the module you want to run. `cast_std` docs can be found [here](../appendix/cast-library.md).
 
-Please note that **`sncast script` is in develoment**. While it is already possible to declare, deploy, invoke and call 
+Please note that **`sncast script` is in development**. While it is already possible to declare, deploy, invoke and call 
 contracts from within Cairo, its interface, internals and feature set can change rapidly each version. 
 
 Some of the planned features that will be included in future versions are:
@@ -87,26 +87,28 @@ This example script declares, deploys and interacts with an example [map contrac
 
 ```cairo
 use sncast_std::{
-    declare, deploy, invoke, call, DeclareResult, DeployResult, InvokeResult, CallResult
+    declare, deploy, invoke, call, DeclareResult, DeployResult, InvokeResult, CallResult, get_nonce
 };
 use debug::PrintTrait;
 
 fn main() {
     let max_fee = 99999999999999999;
     let salt = 0x3;
+    let nonce = get_nonce('latest');
 
-    let declare_result = declare('Map', Option::Some(max_fee));
+    let declare_result = declare('Map', Option::Some(max_fee), Option::Nonce);
 
     let class_hash = declare_result.class_hash;
     let deploy_result = deploy(
-        class_hash, ArrayTrait::new(), Option::Some(salt), true, Option::Some(max_fee)
+        class_hash, ArrayTrait::new(), Option::Some(salt), true, Option::Some(max_fee), Option::Some(nonce)
     );
     
     'Deployed the contract to address'.print();
     deploy_result.contract_address.print();
 
+    let invoke_nonce = get_nonce('pending');
     let invoke_result = invoke(
-        deploy_result.contract_address, 'put', array![0x1, 0x2], Option::Some(max_fee)
+        deploy_result.contract_address, 'put', array![0x1, 0x2], Option::Some(max_fee), Option::Some(invoke_nonce)
     );
     
     'Invoke tx hash is'.print();

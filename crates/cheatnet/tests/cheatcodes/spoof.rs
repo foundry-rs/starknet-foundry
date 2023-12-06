@@ -13,7 +13,7 @@ use cheatnet::{
     rpc::call_contract,
     state::{BlockifierState, CheatnetState},
 };
-use conversions::IntoConv;
+use conversions::{felt252::FromShortString, IntoConv};
 use starknet_api::core::ContractAddress;
 
 #[allow(clippy::too_many_arguments)]
@@ -489,7 +489,7 @@ fn spoof_in_constructor() {
 
     let contracts = get_contracts();
 
-    let contract_name = "ConstructorSpoofChecker".to_owned().into_();
+    let contract_name = Felt252::from_short_string("ConstructorSpoofChecker").unwrap();
     let class_hash = blockifier_state
         .declare(&contract_name, &contracts)
         .unwrap();
@@ -603,7 +603,7 @@ fn spoof_library_call() {
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contracts = get_contracts();
-    let contract_name = "SpoofChecker".to_owned().into_();
+    let contract_name = Felt252::from_short_string("SpoofChecker").unwrap();
     let class_hash = blockifier_state
         .declare(&contract_name, &contracts)
         .unwrap();
@@ -929,7 +929,7 @@ fn spoof_multiple() {
     let mut cached_state = create_cached_state();
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
-    let contract = "SpoofChecker".to_owned().into_();
+    let contract = Felt252::from_short_string("SpoofChecker").unwrap();
     let contracts = get_contracts();
     let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
 
