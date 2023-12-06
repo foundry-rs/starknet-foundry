@@ -4,7 +4,7 @@ fn add(a: felt252, b: felt252) -> felt252 {
 
 #[starknet::contract]
 mod AdditionContract {
-    use addition::add;
+    use addition_cast::add;
 
     #[storage]
     struct Storage {}

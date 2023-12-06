@@ -1,5 +1,5 @@
 [package]
-name = "addition"
+name = "addition_cast"
 version.workspace = true
 
 [dependencies]

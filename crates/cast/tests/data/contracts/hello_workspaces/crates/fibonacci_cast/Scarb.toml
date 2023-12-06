@@ -1,9 +1,9 @@
 [package]
-name = "fibonacci"
+name = "fibonacci_cast"
 version.workspace = true
 
 [dependencies]
-addition = { path = "../addition" }
+addition_cast = { path = "../addition_cast" }
 starknet.workspace = true
 
 [[target.starknet-contract]]

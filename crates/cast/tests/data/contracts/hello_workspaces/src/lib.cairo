@@ -1,7 +1,7 @@
 #[starknet::contract]
 mod FibContract {
-    use addition::add;
-    use fibonacci::fib;
+    use addition_cast::add;
+    use fibonacci_cast::fib;
 
     #[storage]
     struct Storage {}

@@ -15,8 +15,8 @@ version.workspace = true
 
 [dependencies]
 starknet.workspace = true
-fibonacci = { path = "crates/fibonacci" }
-addition = { path = "crates/addition" }
+fibonacci_cast = { path = "crates/fibonacci_cast" }
+addition_cast = { path = "crates/addition_cast" }
 
 [[target.starknet-contract]]
 sierra = true

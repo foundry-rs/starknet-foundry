@@ -60,7 +60,7 @@ async fn test_worskpaces_package_specified() {
         "--int-format",
         "--json",
         "--package",
-        "addition",
+        "addition_cast",
         "declare",
         "--contract-name",
         "AdditionContract",

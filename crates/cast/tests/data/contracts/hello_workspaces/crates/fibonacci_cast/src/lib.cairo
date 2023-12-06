@@ -1,4 +1,4 @@
-use addition::add;
+use addition_cast::add;
 
 fn fib(a: felt252, b: felt252, n: felt252) -> felt252 {
     match n {
@@ -9,8 +9,8 @@ fn fib(a: felt252, b: felt252, n: felt252) -> felt252 {
 
 #[starknet::contract]
 mod FibonacciContract {
-    use addition::add;
-    use fibonacci::fib;
+    use addition_cast::add;
+    use fibonacci_cast::fib;
 
     #[storage]
     struct Storage {}
