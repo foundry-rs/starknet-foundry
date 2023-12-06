@@ -279,7 +279,6 @@ fn scarb_build_fails_no_toml(contract_path: &str, accounts_file_path: &str) {
 
     snapbox.assert().stderr_matches(indoc! {"
         Error: No manifest found at the given path[..]
-        ...
     "});
 }
 
