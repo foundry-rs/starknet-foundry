@@ -96,3 +96,4 @@
     * [deploy](appendix/cast-library/deploy.md)
     * [invoke](appendix/cast-library/invoke.md)
     * [call](appendix/cast-library/call.md)
+    * [get_nonce](appendix/cast-library/get_nonce.md)
