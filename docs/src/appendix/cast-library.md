@@ -4,6 +4,7 @@
 * [`deploy`](cast-library/deploy.md) - deploys a contract
 * [`invoke`](cast-library/invoke.md) - invokes a contract's function
 * [`call`](cast-library/call.md) - calls a contract's function
+* [`get_nonce`](cast-library/get_nonce.md) - gets current account's nonce in given block
 
 > ℹ️ **Info**
 > To use the library functions you need to add `sncast_std` package as a dependency in
