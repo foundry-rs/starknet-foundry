@@ -10,7 +10,7 @@ starknet = "2.3.1"
 version = "0.1.0"
 
 [package]
-name = "hello_workspaces"
+name = "hello_workspaces_cast"
 version.workspace = true
 
 [dependencies]
