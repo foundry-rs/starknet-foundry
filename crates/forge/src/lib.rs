@@ -87,12 +87,12 @@ fn to_runnable(
 /// # Arguments
 ///
 /// * `package_path` - Absolute path to the top-level of the Cairo package
-/// * `lib_path` - Absolute path to the main file in the package (usually `src/lib.cairo`)
-/// * `linked_libraries` - Dependencies needed to run the package at `package_path`
+/// * `package_name` - Name of the package specified in Scarb.toml
+/// * `package_source_dir_path` - Absolute path to the root of the package
+/// * `tests_filter` - `TestFilter` structure used to determine what tests to run
 /// * `runner_config` - A configuration of the test runner
-/// * `corelib_path` - Absolute path to the Cairo corelib
-/// * `contracts` - Map with names of contract used in tests and corresponding sierra and casm artifacts
-/// * `predeployed_contracts` - Absolute path to predeployed contracts used by starknet state e.g. account contracts
+/// * `runner_params` - A struct with parameters required to run tests e.g. map with contracts
+/// * `fork_target` - A configuration of forks used in tests
 #[allow(clippy::implicit_hasher)]
 pub async fn run(
     package_path: &Utf8Path,
@@ -118,6 +118,16 @@ pub async fn run(
     .await?
 }
 
+/// Run the tests in the package at the given path
+///
+/// # Arguments
+///
+/// * `package_name` - Name of the package specified in Scarb.toml
+/// * `snforge_target_dir_path` - Absolute path to the directory with snforge test artifacts (usually `{package_path}/target/{profile_name}/snforge`)
+/// * `tests_filter` - `TestFilter` structure used to determine what tests to run
+/// * `runner_config` - A configuration of the test runner
+/// * `runner_params` - A struct with parameters required to run tests e.g. map with contracts
+/// * `fork_target` - A configuration of forks used in tests
 #[allow(clippy::implicit_hasher)]
 pub async fn run_with_scarb_collector(
     package_name: &str,
