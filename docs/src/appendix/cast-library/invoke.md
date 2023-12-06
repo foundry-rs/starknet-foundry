@@ -8,7 +8,7 @@
     nonce: Option<felt252>
 ) -> InvokeResult`
 
-Deploys a contract and returns `InvokeResult`.
+Invokes a contract and returns `InvokeResult`.
 
 ```rust
 #[derive(Drop, Clone)]
