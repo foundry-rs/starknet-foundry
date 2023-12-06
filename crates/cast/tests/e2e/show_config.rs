@@ -5,7 +5,7 @@ use indoc::indoc;
 async fn test_show_config_from_scarb_toml() {
     let args = vec![
         "--path-to-scarb-toml",
-        "tests/data/show_config/all_Scarb.toml",
+        "tests/data/show_config/wait_Scarb.toml",
         "--profile",
         "profile1",
         "show-config",
@@ -20,9 +20,9 @@ async fn test_show_config_from_scarb_toml() {
         chain_id: alpha-goerli
         profile: profile1
         rpc_url: http://127.0.0.1:5055/rpc
-        scarb_path: tests/data/show_config/all_Scarb.toml
-        wait_retry_interval: 5
-        wait_timeout: 300
+        scarb_path: tests/data/show_config/wait_Scarb.toml
+        wait_retry_interval: 12
+        wait_timeout: 123
     "});
 }
 
