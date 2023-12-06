@@ -174,7 +174,7 @@ pub async fn get_nonce(
             address,
         )
         .await
-        .expect("Could not get current nonce"))
+        .expect("Could not get nonce"))
 }
 
 pub async fn get_account<'a>(
