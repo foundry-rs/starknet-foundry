@@ -21,6 +21,8 @@ async fn test_show_config_from_scarb_toml() {
         profile: profile1
         rpc_url: http://127.0.0.1:5055/rpc
         scarb_path: tests/data/show_config/all_Scarb.toml
+        wait_retry_interval: 5
+        wait_timeout: 300
     "});
 }
 
@@ -33,6 +35,10 @@ async fn test_show_config_from_cli() {
         "http://127.0.0.1:5055/rpc",
         "--keystore",
         "../keystore",
+        "--wait-timeout",
+        "2",
+        "--wait-retry-interval",
+        "1",
         "show-config",
     ];
 
@@ -44,6 +50,8 @@ async fn test_show_config_from_cli() {
         chain_id: alpha-goerli
         keystore: ../keystore
         rpc_url: http://127.0.0.1:5055/rpc
+        wait_retry_interval: 1
+        wait_timeout: 2
     "});
 }
 
@@ -69,6 +77,8 @@ async fn test_show_config_from_cli_and_scarb() {
         profile: profile1
         rpc_url: http://127.0.0.1:5055/rpc
         scarb_path: tests/data/show_config/all_Scarb.toml
+        wait_retry_interval: 5
+        wait_timeout: 300
     "});
 }
 
@@ -92,6 +102,8 @@ async fn test_show_config_when_no_keystore() {
         profile: profile1
         rpc_url: http://127.0.0.1:5055/rpc
         scarb_path: tests/data/show_config/all_Scarb.toml
+        wait_retry_interval: 5
+        wait_timeout: 300
     "});
 }
 
@@ -112,5 +124,7 @@ async fn test_show_config_when_keystore() {
         keystore: ../keystore
         rpc_url: http://127.0.0.1:5055/rpc
         scarb_path: tests/data/show_config/all_Scarb.toml
+        wait_retry_interval: 5
+        wait_timeout: 300
     "});
 }
