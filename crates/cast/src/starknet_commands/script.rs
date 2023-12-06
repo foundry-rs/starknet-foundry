@@ -221,7 +221,6 @@ impl CairoHintProcessor<'_> {
                     offset += 1;
                     Some(inputs[offset].clone().into_())
                 } else {
-                    //get_nonce(self.provider, "latest".as_str(), &account.address)
                     None
                 };
                 let account = self.runtime.block_on(get_account(
