@@ -6,10 +6,6 @@ use snapbox::cmd::{cargo_bin, Command};
 async fn test_happy_case() {
     let script_name = "call_happy";
     let args = vec![
-        "--accounts-file",
-        "../../accounts/accounts.json",
-        "--account",
-        "user1",
         "--url",
         URL,
         "script",
@@ -30,10 +26,6 @@ async fn test_happy_case() {
 async fn test_failing() {
     let script_name = "call_fail";
     let args = vec![
-        "--accounts-file",
-        "../../accounts/accounts.json",
-        "--account",
-        "user1",
         "--url",
         URL,
         "script",
