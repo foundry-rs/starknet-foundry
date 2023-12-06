@@ -1,4 +1,4 @@
-use addition::add;
+use addition_virtual::add;
 
 fn fib(a: felt252, b: felt252, n: felt252) -> felt252 {
     match n {
@@ -9,7 +9,7 @@ fn fib(a: felt252, b: felt252, n: felt252) -> felt252 {
 
 #[starknet::contract]
 mod FibonacciContract {
-    use addition::add;
+    use addition_virtual::add;
     use fibonacci::fib;
 
     #[storage]
