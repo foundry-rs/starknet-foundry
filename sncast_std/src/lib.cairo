@@ -46,10 +46,20 @@ struct DeclareResult {
     transaction_hash: felt252,
 }
 
-fn declare(contract_name: felt252, max_fee: Option<felt252>) -> DeclareResult {
+fn declare(
+    contract_name: felt252, max_fee: Option<felt252>, nonce: Option<felt252>
+) -> DeclareResult {
     let mut inputs = array![contract_name];
 
     match max_fee {
+        Option::Some(val) => {
+            inputs.append(0);
+            inputs.append(val);
+        },
+        Option::None => inputs.append(1),
+    };
+
+    match nonce {
         Option::Some(val) => {
             inputs.append(0);
             inputs.append(val);
@@ -76,7 +86,8 @@ fn deploy(
     constructor_calldata: Array::<felt252>,
     salt: Option<felt252>,
     unique: bool,
-    max_fee: Option<felt252>
+    max_fee: Option<felt252>,
+    nonce: Option<felt252>
 ) -> DeployResult {
     let class_hash_felt: felt252 = class_hash.into();
     let mut inputs = array![class_hash_felt];
@@ -111,6 +122,14 @@ fn deploy(
         Option::None => inputs.append(1),
     };
 
+    match nonce {
+        Option::Some(val) => {
+            inputs.append(0);
+            inputs.append(val);
+        },
+        Option::None => inputs.append(1),
+    };
+
     let buf = cheatcode::<'deploy'>(inputs.span());
 
     let contract_address: ContractAddress = (*buf[0])
@@ -130,7 +149,8 @@ fn invoke(
     contract_address: ContractAddress,
     entry_point_selector: felt252,
     calldata: Array::<felt252>,
-    max_fee: Option<felt252>
+    max_fee: Option<felt252>,
+    nonce: Option<felt252>
 ) -> InvokeResult {
     let contract_address_felt: felt252 = contract_address.into();
     let mut inputs = array![contract_address_felt, entry_point_selector];
@@ -148,6 +168,14 @@ fn invoke(
     };
 
     match max_fee {
+        Option::Some(val) => {
+            inputs.append(0);
+            inputs.append(val);
+        },
+        Option::None => inputs.append(1),
+    };
+
+    match nonce {
         Option::Some(val) => {
             inputs.append(0);
             inputs.append(val);

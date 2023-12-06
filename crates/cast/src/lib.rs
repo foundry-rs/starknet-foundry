@@ -1,6 +1,6 @@
 use anyhow::{anyhow, bail, Context, Error, Result};
 use camino::Utf8PathBuf;
-use helpers::constants::{DEFAULT_RETRIES, KEYSTORE_PASSWORD_ENV_VAR, UDC_ADDRESS};
+use helpers::constants::{KEYSTORE_PASSWORD_ENV_VAR, UDC_ADDRESS};
 use rand::rngs::OsRng;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
@@ -97,6 +97,12 @@ impl ValueFormat {
             _ => None,
         }
     }
+}
+
+pub struct WaitForTx {
+    pub wait: bool,
+    pub timeout: u16,
+    pub retry_interval: u8,
 }
 
 pub fn get_provider(url: &str) -> Result<JsonRpcClient<HttpTransport>> {
@@ -266,8 +272,15 @@ pub fn get_block_id(value: &str) -> Result<BlockId> {
 pub async fn wait_for_tx(
     provider: &JsonRpcClient<HttpTransport>,
     tx_hash: FieldElement,
-    retries: u8,
+    timeout: u16,
+    retry_interval: u8,
 ) -> Result<&str> {
+    println!("Transaction hash: {tx_hash:#x}");
+
+    if retry_interval == 0 || timeout == 0 || u16::from(retry_interval) > timeout {
+        return Err(anyhow!("Invalid values for retry_interval and/or timeout!"));
+    }
+    let retries = timeout / u16::from(retry_interval);
     for i in (1..retries).rev() {
         match provider.get_transaction_receipt(tx_hash).await {
             Ok(receipt) => match receipt.execution_result() {
@@ -282,16 +295,17 @@ pub async fn wait_for_tx(
                 code: MaybeUnknownErrorCode::Known(StarknetError::TransactionHashNotFound),
                 message: _,
             })) => {
-                println!("Waiting for transaction to be received ({i} retries left)");
+                let remaining_time = i * u16::from(retry_interval);
+                println!("Waiting for transaction to be accepted ({i} retries / {remaining_time}s left until timeout)");
             }
             Err(err) => return Err(err.into()),
         };
 
-        sleep(Duration::from_secs(5));
+        sleep(Duration::from_secs(retry_interval.into()));
     }
 
     Err(anyhow!(
-        "Could not get transaction with hash: {tx_hash:#x}. Transaction rejected or not received."
+        "Could not get transaction with hash: {tx_hash:#x}. Transaction rejected, not received or cast timed out."
     ))
 }
 
@@ -344,10 +358,17 @@ pub async fn handle_wait_for_tx<T>(
     provider: &JsonRpcClient<HttpTransport>,
     transaction_hash: FieldElement,
     return_value: T,
-    wait: bool,
+    wait_config: WaitForTx,
 ) -> Result<T> {
-    if wait {
-        return match wait_for_tx(provider, transaction_hash, DEFAULT_RETRIES).await {
+    if wait_config.wait {
+        return match wait_for_tx(
+            provider,
+            transaction_hash,
+            wait_config.timeout,
+            wait_config.retry_interval,
+        )
+        .await
+        {
             Ok(_) => Ok(return_value),
             Err(message) => Err(anyhow!(message)),
         };
