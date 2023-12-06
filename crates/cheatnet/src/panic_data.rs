@@ -1,5 +1,4 @@
 use cairo_felt::Felt252;
-use conversions::IntoConv;
 use regex::Regex;
 
 #[must_use]
@@ -15,7 +14,7 @@ pub fn try_extract_panic_data(err: &str) -> Option<Vec<Felt252>> {
             let panic_data_felts: Vec<Felt252> = panic_data_match
                 .as_str()
                 .split(", ")
-                .map(|s| s.to_owned().into_())
+                .map(|s| Felt252::from_bytes_be(s.to_owned().as_bytes()))
                 .collect();
 
             return Some(panic_data_felts);

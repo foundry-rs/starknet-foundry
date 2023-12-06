@@ -36,7 +36,7 @@ mod tests {
     use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
     use assert_fs::TempDir;
     use camino::Utf8PathBuf;
-    use conversions::IntoConv;
+    use conversions::TryIntoConv;
     use indoc::{formatdoc, indoc};
     use scarb_metadata::MetadataCommand;
     use starknet::core::types::BlockId;
@@ -127,7 +127,7 @@ mod tests {
                         "SECOND_FORK_NAME".to_string(),
                         RawForkParams {
                             url: "http://some.rpc.url".to_string(),
-                            block_id: BlockId::Hash("1".to_string().into_())
+                            block_id: BlockId::Hash("1".to_string().try_into_().unwrap())
                         },
                     ),
                     ForkTarget::new(
