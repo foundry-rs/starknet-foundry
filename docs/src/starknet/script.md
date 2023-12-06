@@ -4,7 +4,7 @@
 
 > ⚠️⚠️⚠️ Highly experimental code, a subject to change  ⚠️⚠️⚠️
 
-Starknet Foundry cast can be used to run deployment scripts written in Cairo, using `script` subcommand. 
+Starknet Foundry cast can be used to run deployment scripts written in Cairo, using `script run` subcommand. 
 It aims to provide similar functionality to Foundry's `forge script`. 
 
 To start writing a deployment script in Cairo just add `cast_std` as a dependency to you scarb package and make sure to
@@ -74,9 +74,9 @@ To run the script, do:
 ```shell
 $ sncast \
   --url http://127.0.0.1:5050 \
-  script my_script
+  script run my_script
 
-command: script
+command: script run
 status: success
 ```
 
@@ -164,13 +164,13 @@ To run the script, do:
 $ sncast \
   --url http://127.0.0.1:5050 \
   --account example_user \
-  script map_script
+  script run map_script
   
 [DEBUG]	Contract address               	(raw: 0x436f6e74726163742061646472657373
 [DEBUG]	                               	(raw: 0x6f9492c9c2751ba5ccab5b7611068a6347d7b313c6f073d2edea864f062d730
 [DEBUG]	Invoke tx hash                 	(raw: 0x496e766f6b652074782068617368
 [DEBUG]	                               	(raw: 0x60175b3fca296fedc38f1a0ca30337ae666bb996a43beb2f6fe3a3fa90d3e6b
 
-command: script
+command: script run
 status: success
 ```

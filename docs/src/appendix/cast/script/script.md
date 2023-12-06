@@ -1,7 +1,6 @@
 # `script`
-Compile and run a cairo deployment script or initialize script template by using subcommand [`init`](./init.md)
+Provide commands to manage deployment scripts.
 
-## `<SCRIPT_NAME>`
-Required.
-
-Script module name that contains the 'main' function that will be executed.
+Script has the following subcommands:
+* [`init`](./init.md)
+* [`run`](./run.md)
