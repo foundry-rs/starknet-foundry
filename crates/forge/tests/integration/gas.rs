@@ -470,6 +470,45 @@ fn test_storage_write_from_test_cost() {
 }
 
 #[test]
+fn test_multiple_storage_writes_cost() {
+    let test = test_case!(
+        indoc!(
+            r"
+            use snforge_std::{ declare, ContractClassTrait };
+
+            #[starknet::interface]
+            trait IGasChecker<TContractState> {
+                fn change_balance(ref self: TContractState, new_balance: u64);
+            }
+
+            #[test]
+            fn test_multiple_storage_writes() {
+                let contract = declare('GasChecker');
+                let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
+                let dispatcher = IGasCheckerDispatcher { contract_address };
+
+                dispatcher.change_balance(1);
+                dispatcher.change_balance(1);
+            }
+        "
+        ),
+        Contract::from_code_path(
+            "GasChecker".to_string(),
+            Path::new("tests/data/contracts/gas_checker.cairo"),
+        )
+        .unwrap()
+    );
+
+    let result = run_test_case(&test);
+
+    assert_passed!(result);
+    // 1836 = 3 * cost per 32-byte word (deploy)
+    // 1224 = 2 * cost per 32-byte word (storage write)
+    // 6 - gas cost of steps
+    assert_gas!(result, "test_storage_write", 1836 + 1224 + 6);
+}
+
+#[test]
 fn test_l1_message_cost() {
     let test = test_case!(
         indoc!(
