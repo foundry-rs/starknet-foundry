@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `--wait-timeout` to set timeout for waiting for tx on network using `--wait` flag (default 60s)
 - `--wait-retry-interval` to adjust the time between consecutive attempts to fetch tx from network using `--wait` flag (default 5s)
 - allow setting nonce in declare, deploy and invoke (using `--nonce` and in deployment scripts)
+- add `get_nonce` function to cast_std
 - `--private-key-file` option to `account add` command that allows to provide a path to the file holding account private key
 
 ## [0.11.0] - 2023-11-22
