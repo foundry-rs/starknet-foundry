@@ -58,6 +58,8 @@ pub struct ShowConfigResponse {
     pub scarb_path: Option<Utf8PathBuf>,
     pub accounts_file_path: Option<Utf8PathBuf>,
     pub keystore: Option<Utf8PathBuf>,
+    pub wait_timeout: Option<u16>,
+    pub wait_retry_interval: Option<u8>,
 }
 
 #[derive(Serialize)]
