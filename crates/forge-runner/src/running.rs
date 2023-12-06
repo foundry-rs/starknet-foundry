@@ -374,30 +374,37 @@ fn get_latest_block_number(url: &Url) -> Result<BlockId> {
     }
 }
 
-fn get_all_execution_resources(runtime: &ForgeRuntime) -> UsedResources {
-    let mut all_resources = UsedResources {
-        execution_resources: runtime
-            .extended_runtime
-            .extended_runtime
-            .extended_runtime
-            .hint_handler
-            .resources
-            .clone(),
-        // we construct CallInfo with the `l2_to_l1_messages` field to use
-        // `get_sorted_l2_to_l1_payloads_length` method
-        l2_to_l1_payloads_length: CallInfo {
-            execution: CallExecution {
-                l2_to_l1_messages: runtime
-                    .extended_runtime
-                    .extended_runtime
-                    .child
-                    .l2_to_l1_messages,
-                ..Default::default()
-            },
+fn get_all_execution_resources(runtime: ForgeRuntime) -> UsedResources {
+    let runtime_execution_resources = runtime
+        .extended_runtime
+        .extended_runtime
+        .extended_runtime
+        .hint_handler
+        .resources
+        .clone();
+    let runtime_l1_to_l2_messages = runtime
+        .extended_runtime
+        .extended_runtime
+        .extended_runtime
+        .hint_handler
+        .l2_to_l1_messages;
+
+    // we construct CallInfo with the `l2_to_l1_messages` field to use
+    // `get_sorted_l2_to_l1_payloads_length` method
+    let runtime_call_info = CallInfo {
+        execution: CallExecution {
+            l2_to_l1_messages: runtime_l1_to_l2_messages,
             ..Default::default()
-        }
+        },
+        ..Default::default()
+    };
+    let runtime_l2_to_l1_payloads_length = runtime_call_info
         .get_sorted_l2_to_l1_payloads_length()
-        .unwrap(),
+        .unwrap();
+
+    let mut all_resources = UsedResources {
+        execution_resources: runtime_execution_resources,
+        l2_to_l1_payloads_length: runtime_l2_to_l1_payloads_length,
     };
 
     let cheatnet_used_resources = &runtime

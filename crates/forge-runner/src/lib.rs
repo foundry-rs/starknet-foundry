@@ -379,7 +379,7 @@ fn run_with_fuzzing(
                 return Ok(TestCaseSummary::Skipped {});
             };
 
-            let gas_usages_vec: Vec<&f64> = results
+            let gas_usages_vec: Vec<&u128> = results
                 .iter()
                 .filter(|item| matches!(item, TestCaseSummary::Passed { .. }))
                 .map(|a| match a {
@@ -392,12 +392,12 @@ fn run_with_fuzzing(
                 .clone()
                 .into_iter()
                 .copied()
-                .reduce(f64::max)
+                .reduce(u128::max)
                 .unwrap();
             let min = gas_usages_vec
                 .into_iter()
                 .copied()
-                .reduce(f64::min)
+                .reduce(u128::min)
                 .unwrap();
 
             gas_usages = Some(FuzzingGasUsage { min, max });

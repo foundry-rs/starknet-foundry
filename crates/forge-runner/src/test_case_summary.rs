@@ -9,8 +9,8 @@ use test_collector::{ExpectedPanicValue, ExpectedTestResult};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct FuzzingGasUsage {
-    pub min: f64,
-    pub max: f64,
+    pub min: u128,
+    pub max: u128,
 }
 #[derive(Debug, PartialEq, Clone)]
 pub struct FuzzingStatistics {
