@@ -10,9 +10,8 @@ use forge::test_filter::TestsFilter;
 use tempfile::tempdir;
 use tokio::runtime::Runtime;
 
+use forge::compiled_raw::RawForkParams;
 use forge_runner::{RunnerConfig, RunnerParams};
-use test_collector::RawForkParams;
-use test_utils::corelib::corelib_path;
 use test_utils::runner::Contract;
 use test_utils::running_tests::run_test_case;
 use test_utils::{assert_case_output_contains, assert_failed, assert_passed, test_case};
@@ -102,9 +101,8 @@ fn fork_aliased_decorator() {
 
     let result = rt
         .block_on(run(
-            &test.path().unwrap(),
-            &String::from("src"),
-            &test.path().unwrap().join("src"),
+            &String::from("test_package"),
+            &test.path().unwrap().join("target/dev/snforge"),
             &TestsFilter::from_flags(None, false, false, false, false, Default::default()),
             Arc::new(RunnerConfig::new(
                 Utf8PathBuf::from_path_buf(PathBuf::from(tempdir().unwrap().path())).unwrap(),
@@ -113,10 +111,8 @@ fn fork_aliased_decorator() {
                 12345,
             )),
             Arc::new(RunnerParams::new(
-                corelib_path(),
-                test.contracts(&corelib_path()).unwrap(),
-                Default::default(),
-                test.linked_libraries(),
+                test.contracts().unwrap(),
+                test.env().clone(),
             )),
             &[ForkTarget::new(
                 "FORK_NAME_FROM_SCARB_TOML".to_string(),

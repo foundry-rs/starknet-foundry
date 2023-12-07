@@ -67,6 +67,7 @@ pub fn build_test_artifacts_with_scarb(filter: PackagesFilter) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::compiled_raw::RawForkParams;
     use crate::scarb::config::ForkTarget;
     use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
     use assert_fs::TempDir;
@@ -74,7 +75,6 @@ mod tests {
     use indoc::{formatdoc, indoc};
     use scarb_metadata::MetadataCommand;
     use std::str::FromStr;
-    use test_collector::RawForkParams;
 
     fn setup_package(package_name: &str) -> TempDir {
         let temp = TempDir::new().unwrap();
@@ -104,7 +104,7 @@ mod tests {
                 casm = true
 
                 [dependencies]
-                starknet = "2.3.1"
+                starknet = "2.4.0"
                 snforge_std = {{ path = "{}" }}
 
                 [[tool.snforge.fork]]

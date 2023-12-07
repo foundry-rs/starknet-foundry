@@ -4,7 +4,7 @@ use serde::Deserialize;
 use std::fmt::Debug;
 use std::sync::Arc;
 
-use compiled_raw::{CompiledTestCrateRaw, RawForkConfig, RawForkParams};
+use compiled_raw::{CompiledTestCrateRaw, CrateLocation, RawForkConfig, RawForkParams};
 use forge_runner::test_crate_summary::TestCrateSummary;
 use forge_runner::{RunnerConfig, RunnerParams, TestCrateRunResult};
 
@@ -21,14 +21,6 @@ pub mod pretty_printing;
 pub mod scarb;
 pub mod shared_cache;
 pub mod test_filter;
-
-#[derive(Debug, PartialEq, Clone, Copy, Deserialize)]
-pub enum CrateLocation {
-    /// Main crate in a package
-    Lib,
-    /// Crate in the `tests/` directory
-    Tests,
-}
 
 fn replace_id_with_params(
     raw_fork_config: RawForkConfig,
@@ -198,10 +190,9 @@ async fn run_internal(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::collecting::CompiledTestCrateRaw;
+    use crate::compiled_raw::{CompiledTestCrateRaw, TestCaseRaw};
     use cairo_lang_sierra::program::Program;
-    use test_collector::ExpectedTestResult;
-    use test_collector::TestCaseRaw;
+    use forge_runner::expected_result::ExpectedTestResult;
 
     #[test]
     fn to_runnable_unparsable_url() {
