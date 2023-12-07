@@ -5,7 +5,6 @@ use cairo_lang_compiler::db::RootDatabase;
 use cairo_lang_compiler::project::setup_project;
 use cairo_lang_compiler::CompilerConfig;
 use cairo_lang_filesystem::db::init_dev_corelib;
-use cairo_lang_starknet::allowed_libfuncs::{validate_compatible_sierra_version, ListSelector};
 use cairo_lang_starknet::casm_contract_class::CasmContractClass;
 use cairo_lang_starknet::contract_class::compile_contract_in_prepared_db;
 use cairo_lang_starknet::inline_macros::selector::SelectorMacro;
@@ -46,8 +45,6 @@ impl Contract {
         contract_path.touch()?;
         contract_path.write_str(&self.code)?;
 
-        let allowed_libfuncs_list = Some(ListSelector::default());
-
         let db = &mut {
             RootDatabase::builder()
                 .with_macro_plugin(Arc::new(StarkNetPlugin::default()))
@@ -60,15 +57,6 @@ impl Contract {
 
         let contract =
             compile_contract_in_prepared_db(db, None, main_crate_ids, CompilerConfig::default())?;
-
-        validate_compatible_sierra_version(
-            &contract,
-            if let Some(allowed_libfuncs_list) = allowed_libfuncs_list {
-                allowed_libfuncs_list
-            } else {
-                ListSelector::default()
-            },
-        )?;
 
         let sierra =
             serde_json::to_string_pretty(&contract).with_context(|| "Serialization failed.")?;
