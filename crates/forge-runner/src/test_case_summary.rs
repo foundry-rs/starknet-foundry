@@ -36,7 +36,6 @@ impl TestType for Single {
     type TestStatistics = ();
 }
 
-
 pub trait TestStatistics {
     type Type: std::fmt::Debug + Clone;
 }
@@ -47,10 +46,9 @@ impl TestStatistics for Single {
     type Type = ();
 }
 
-
 /// Summary of running a single test case
 #[derive(Debug, Clone)]
-pub enum TestCaseSummary<T : TestType> {
+pub enum TestCaseSummary<T: TestType> {
     /// Test case passed
     Passed {
         /// Name of the test case
@@ -65,7 +63,6 @@ pub enum TestCaseSummary<T : TestType> {
         test_statistics: <T as TestType>::TestStatistics,
         /// Number of block used if BlockId::Tag(Latest) was specified
         latest_block_number: Option<BlockNumber>,
-
     },
     /// Test case failed
     Failed {
@@ -95,7 +92,7 @@ impl<T: TestType> TestCaseSummary<T> {
         match self {
             TestCaseSummary::Failed { name, .. }
             | TestCaseSummary::Passed { name, .. }
-            | TestCaseSummary::Ignored { name, .. }=> Some(&name),
+            | TestCaseSummary::Ignored { name, .. } => Some(name),
             TestCaseSummary::Skipped { .. } => None,
         }
     }
@@ -104,7 +101,7 @@ impl<T: TestType> TestCaseSummary<T> {
     pub fn msg(&self) -> Option<&String> {
         match self {
             TestCaseSummary::Failed { msg: Some(msg), .. }
-            | TestCaseSummary::Passed { msg: Some(msg), .. } => Some(&msg),
+            | TestCaseSummary::Passed { msg: Some(msg), .. } => Some(msg),
             _ => None,
         }
     }
@@ -117,7 +114,6 @@ impl<T: TestType> TestCaseSummary<T> {
             TestCaseSummary::Ignored { .. } | TestCaseSummary::Skipped { .. } => vec![],
         }
     }
-
 
     pub(crate) fn latest_block_number(&self) -> Option<&BlockNumber> {
         match self {
@@ -138,8 +134,14 @@ impl TestCaseSummary<Fuzzing> {
     #[must_use]
     pub fn runs(&self) -> Option<usize> {
         match self {
-            TestCaseSummary::Passed { test_statistics: FuzzingStatistics { runs }, .. }
-            | TestCaseSummary::Failed { test_statistics: FuzzingStatistics { runs }, .. } =>  Some(runs.clone()),
+            TestCaseSummary::Passed {
+                test_statistics: FuzzingStatistics { runs },
+                ..
+            }
+            | TestCaseSummary::Failed {
+                test_statistics: FuzzingStatistics { runs },
+                ..
+            } => Some(*runs),
             _ => None,
         }
     }

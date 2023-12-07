@@ -190,10 +190,11 @@ macro_rules! assert_passed {
             "No test results found"
         );
         assert!(
-            result
-                .test_case_summaries
-                .iter()
-                .all(|r| matches!(r, AnyTestCaseSummary::Fuzzing(TestCaseSummary::Passed { .. }) | AnyTestCaseSummary::Single(TestCaseSummary::Passed { .. }) )),
+            result.test_case_summaries.iter().all(|r| matches!(
+                r,
+                AnyTestCaseSummary::Fuzzing(TestCaseSummary::Passed { .. })
+                    | AnyTestCaseSummary::Single(TestCaseSummary::Passed { .. })
+            )),
             "Some tests didn't pass"
         );
     }};
@@ -213,10 +214,11 @@ macro_rules! assert_failed {
             "No test results found"
         );
         assert!(
-            result
-                .test_case_summaries
-                .iter()
-                .all(|r| matches!(r, AnyTestCaseSummary::Fuzzing(TestCaseSummary::Failed { .. }) | AnyTestCaseSummary::Single(TestCaseSummary::Failed { .. }) )),
+            result.test_case_summaries.iter().all(|r| matches!(
+                r,
+                AnyTestCaseSummary::Fuzzing(TestCaseSummary::Failed { .. })
+                    | AnyTestCaseSummary::Single(TestCaseSummary::Failed { .. })
+            )),
             "Some tests didn't fail"
         );
     }};
@@ -237,37 +239,32 @@ macro_rules! assert_case_output_contains {
 
         assert!(result.test_case_summaries.iter().any(|any_case| {
             match any_case {
-                AnyTestCaseSummary::Fuzzing(case) => {
-                    match case {
-                        TestCaseSummary::Failed {
-                            msg: Some(msg),
-                            name,
-                            ..
-                        }
-                        | TestCaseSummary::Passed {
-                            msg: Some(msg),
-                            name,
-                            ..
-                        } => msg.contains($asserted_msg) && name.ends_with(test_name_suffix.as_str()),
-                        _ => false,
+                AnyTestCaseSummary::Fuzzing(case) => match case {
+                    TestCaseSummary::Failed {
+                        msg: Some(msg),
+                        name,
+                        ..
                     }
+                    | TestCaseSummary::Passed {
+                        msg: Some(msg),
+                        name,
+                        ..
+                    } => msg.contains($asserted_msg) && name.ends_with(test_name_suffix.as_str()),
+                    _ => false,
                 },
-                AnyTestCaseSummary::Single(case) => {
-                    match case {
-                        TestCaseSummary::Failed {
-                            msg: Some(msg),
-                            name,
-                            ..
-                        }
-                        | TestCaseSummary::Passed {
-                            msg: Some(msg),
-                            name,
-                            ..
-                        } => msg.contains($asserted_msg) && name.ends_with(test_name_suffix.as_str()),
-                        _ => false,
+                AnyTestCaseSummary::Single(case) => match case {
+                    TestCaseSummary::Failed {
+                        msg: Some(msg),
+                        name,
+                        ..
                     }
-                }
-
+                    | TestCaseSummary::Passed {
+                        msg: Some(msg),
+                        name,
+                        ..
+                    } => msg.contains($asserted_msg) && name.ends_with(test_name_suffix.as_str()),
+                    _ => false,
+                },
             }
         }));
     }};
@@ -289,14 +286,12 @@ macro_rules! assert_gas {
             match any_case {
                 AnyTestCaseSummary::Fuzzing(case) => {
                     panic!("Cannot use assert_gas! for fuzzing tests")
-                },
-                AnyTestCaseSummary::Single(case) => {
-                    match case {
-                        TestCaseSummary::Passed { gas_info: gas, .. } => {
-                            (*gas - $asserted_gas).abs() < 0.0001
-                        }
-                        _ => false,
+                }
+                AnyTestCaseSummary::Single(case) => match case {
+                    TestCaseSummary::Passed { gas_info: gas, .. } => {
+                        (*gas - $asserted_gas).abs() < 0.0001
                     }
+                    _ => false,
                 },
             }
         }));

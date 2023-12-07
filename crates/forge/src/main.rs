@@ -7,7 +7,7 @@ use forge::shared_cache::{clean_cache, set_cached_failed_tests_names};
 use forge::test_filter::TestsFilter;
 use forge::{pretty_printing, run};
 use forge_runner::test_case_summary::TestCaseSummary;
-use forge_runner::test_crate_summary::{TestCrateSummary, AnyTestCaseSummary};
+use forge_runner::test_crate_summary::{AnyTestCaseSummary, TestCrateSummary};
 use forge_runner::{RunnerConfig, RunnerParams, CACHE_DIR};
 use rand::{thread_rng, RngCore};
 use scarb_artifacts::{
@@ -111,7 +111,13 @@ fn extract_failed_tests(tests_summaries: Vec<TestCrateSummary>) -> Vec<AnyTestCa
     tests_summaries
         .into_iter()
         .flat_map(|test_file_summary| test_file_summary.test_case_summaries)
-        .filter(|test_case_summary| matches!(test_case_summary, AnyTestCaseSummary::Fuzzing(TestCaseSummary::Failed { .. }) | AnyTestCaseSummary::Single(TestCaseSummary::Failed { .. })))
+        .filter(|test_case_summary| {
+            matches!(
+                test_case_summary,
+                AnyTestCaseSummary::Fuzzing(TestCaseSummary::Failed { .. })
+                    | AnyTestCaseSummary::Single(TestCaseSummary::Failed { .. })
+            )
+        })
         .collect()
 }
 

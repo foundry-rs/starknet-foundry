@@ -14,7 +14,6 @@ fn result_header(any_test_result: &AnyTestCaseSummary) -> String {
     unreachable!()
 }
 
-
 pub(crate) fn print_test_result(any_test_result: &AnyTestCaseSummary) {
     let result_header = result_header(any_test_result);
     let result_name = any_test_result.name().unwrap();
@@ -48,5 +47,7 @@ pub(crate) fn print_test_result(any_test_result: &AnyTestCaseSummary) {
         }
         _ => {}
     }
-    println!("{result_header} {result_name}{fuzzer_report}{gas_usage}{block_number_message}{result_msg}");
+    println!(
+        "{result_header} {result_name}{fuzzer_report}{gas_usage}{block_number_message}{result_msg}"
+    );
 }

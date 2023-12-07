@@ -3,7 +3,7 @@ use camino::Utf8Path;
 use std::fmt::Debug;
 use std::sync::Arc;
 
-use forge_runner::test_crate_summary::TestCrateSummary;
+use forge_runner::test_crate_summary::{AnyTestCaseSummary, TestCrateSummary};
 use forge_runner::{
     CompiledTestCrateRunnable, RunnerConfig, RunnerParams, TestCaseRunnable, TestCrateRunResult,
     ValidatedForkConfig,
@@ -156,10 +156,15 @@ pub async fn run(
 
     pretty_printing::print_test_summary(&summaries, filtered);
 
-    if summaries
-        .iter()
-        .any(|summary| summary.contained_fuzzed_tests)
-    {
+    let any_fuzz_test_was_run = summaries.iter().any(|crate_summary| {
+        crate_summary
+            .test_case_summaries
+            .iter()
+            .filter(|summary| matches!(summary, AnyTestCaseSummary::Fuzzing(_)))
+            .any(|summary| summary.is_passed() || summary.is_failed())
+    });
+
+    if any_fuzz_test_was_run {
         pretty_printing::print_test_seed(runner_config.fuzzer_seed);
     }
 

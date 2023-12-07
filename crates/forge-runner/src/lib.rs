@@ -2,7 +2,7 @@ use crate::fuzzer::RandomFuzzer;
 use crate::printing::print_test_result;
 use crate::running::{run_fuzz_test, run_test};
 use crate::sierra_casm_runner::SierraCasmRunner;
-use crate::test_case_summary::{TestCaseSummary, GasStatistics};
+use crate::test_case_summary::{GasStatistics, TestCaseSummary};
 use crate::test_crate_summary::TestCrateSummary;
 use anyhow::{anyhow, Context, Result};
 use cairo_lang_sierra::ids::ConcreteTypeId;
@@ -16,12 +16,12 @@ use once_cell::sync::Lazy;
 use scarb_artifacts::StarknetContractArtifacts;
 use smol_str::SmolStr;
 use starknet::core::types::BlockId;
-use test_case_summary::{Fuzzing, Single, FuzzingStatistics};
-use test_crate_summary::AnyTestCaseSummary;
 use std::collections::HashMap;
 use std::sync::Arc;
+use test_case_summary::{Fuzzing, FuzzingStatistics, Single};
 use test_collector::{ExpectedTestResult, FuzzerConfig};
 use test_collector::{LinkedLibrary, RawForkParams};
+use test_crate_summary::AnyTestCaseSummary;
 use tokio::sync::mpsc::{channel, Sender};
 use tokio::task::JoinHandle;
 use url::Url;
@@ -218,7 +218,9 @@ pub async fn run_tests_from_crate(
         if !tests_filter.should_be_run(case) {
             tasks.push(tokio::task::spawn(async {
                 // TODO TestCaseType should also be encoded in the test case definiton
-                Ok(AnyTestCaseSummary::Single(TestCaseSummary::Ignored { name: case_name }))
+                Ok(AnyTestCaseSummary::Single(TestCaseSummary::Ignored {
+                    name: case_name,
+                }))
             }));
             continue;
         };
@@ -248,21 +250,17 @@ pub async fn run_tests_from_crate(
 
         print_test_result(&result);
 
-        if result.is_failed() {
-            if runner_config.exit_first {
-                interrupted = true;
-                rec.close();
-            }
+        if result.is_failed() && runner_config.exit_first {
+            interrupted = true;
+            rec.close();
         }
 
         results.push(result);
     }
 
-    let contained_fuzzed_tests = results.iter().any(|s| matches!(s, AnyTestCaseSummary::Fuzzing(_)));
     let summary = TestCrateSummary {
         test_case_summaries: results,
         runner_exit_status: RunnerStatus::Default,
-        contained_fuzzed_tests,
     };
 
     if interrupted {
@@ -282,30 +280,34 @@ fn choose_test_strategy_and_run(
     send: Sender<()>,
 ) -> JoinHandle<Result<AnyTestCaseSummary>> {
     if args.is_empty() {
-        tokio::task::spawn(async move { 
+        tokio::task::spawn(async move {
             let res = run_test(case, runner, runner_config, runner_params, send).await??;
-            Ok(AnyTestCaseSummary::Single(res)) 
+            Ok(AnyTestCaseSummary::Single(res))
         })
     } else {
-        tokio::task::spawn(async move { 
-            let res = run_with_fuzzing(
-                args,
-                case,
-                runner,
-                runner_config,
-                runner_params,
-                send,
-            ).await??;
-            Ok(AnyTestCaseSummary::Fuzzing(res)) 
+        tokio::task::spawn(async move {
+            let res =
+                run_with_fuzzing(args, case, runner, runner_config, runner_params, send).await??;
+            Ok(AnyTestCaseSummary::Fuzzing(res))
         })
-
     }
 }
 
-fn fuzzing_run_summary(results: Vec<TestCaseSummary<Single>>) -> Result<TestCaseSummary<Fuzzing>>  {
-    let last: TestCaseSummary<Single> = results.iter().last().cloned().expect("Fuzz test should always run at least once");
+fn fuzzing_run_summary(results: Vec<TestCaseSummary<Single>>) -> TestCaseSummary<Fuzzing> {
+    let last: TestCaseSummary<Single> = results
+        .iter()
+        .last()
+        .cloned()
+        .expect("Fuzz test should always run at least once");
     match last {
-        TestCaseSummary::Passed { name, msg, arguments, gas_info: _, test_statistics: _, latest_block_number} => {
+        TestCaseSummary::Passed {
+            name,
+            msg,
+            arguments,
+            gas_info: _,
+            test_statistics: (),
+            latest_block_number,
+        } => {
             let runs = results.len();
             let gas_usages_vec = results
                 .into_iter()
@@ -315,35 +317,35 @@ fn fuzzing_run_summary(results: Vec<TestCaseSummary<Single>>) -> Result<TestCase
                     _ => unreachable!(),
                 });
 
-            let max = gas_usages_vec
-                .clone()
-                .reduce(f64::max)
-                .unwrap();
-            let min = gas_usages_vec
-                .reduce(f64::min)
-                .unwrap();
+            let max = gas_usages_vec.clone().reduce(f64::max).unwrap();
+            let min = gas_usages_vec.reduce(f64::min).unwrap();
 
-            Ok(TestCaseSummary::Passed {
-                name: name.clone(),
-                msg: msg.clone(),
+            TestCaseSummary::Passed {
+                name,
+                msg,
                 gas_info: GasStatistics { min, max },
-                arguments: arguments.clone(),
-                test_statistics: FuzzingStatistics { runs: runs },
-                latest_block_number: latest_block_number.clone()
-            })
-
+                arguments,
+                test_statistics: FuzzingStatistics { runs },
+                latest_block_number,
+            }
+        }
+        TestCaseSummary::Failed {
+            name,
+            msg,
+            arguments,
+            test_statistics: (),
+            latest_block_number,
+        } => TestCaseSummary::Failed {
+            name,
+            msg,
+            arguments,
+            test_statistics: FuzzingStatistics {
+                runs: results.len(),
+            },
+            latest_block_number,
         },
-        TestCaseSummary::Failed { name, msg, arguments, test_statistics: (), latest_block_number } => {
-            Ok(TestCaseSummary::Failed {
-                name: name.clone(),
-                msg: msg.clone(),
-                arguments: arguments.clone(),
-                test_statistics: FuzzingStatistics { runs: results.len() },
-                latest_block_number: latest_block_number.clone()
-            })
-        },
-        TestCaseSummary::Ignored { name } => Ok(TestCaseSummary::Ignored { name: name.clone() }),
-        TestCaseSummary::Skipped { }  => Ok(TestCaseSummary::Skipped {})
+        TestCaseSummary::Ignored { name } => TestCaseSummary::Ignored { name: name.clone() },
+        TestCaseSummary::Skipped {} => TestCaseSummary::Skipped {},
     }
 }
 
@@ -408,7 +410,6 @@ fn run_with_fuzzing(
             }
         }
 
-
         let runs = u32::try_from(
             results
                 .iter()
@@ -421,7 +422,7 @@ fn run_with_fuzzing(
                 .count(),
         )?;
 
-        let fuzzing_run_summary = fuzzing_run_summary(results)?;
+        let fuzzing_run_summary = fuzzing_run_summary(results);
 
         if let TestCaseSummary::Passed { .. } = fuzzing_run_summary {
             // Because we execute tests parallel, it's possible to

@@ -21,7 +21,7 @@ use itertools::chain;
 
 use crate::gas::gas_from_execution_resources;
 use crate::sierra_casm_runner::SierraCasmRunner;
-use crate::test_case_summary::{TestCaseSummary, Single};
+use crate::test_case_summary::{Single, TestCaseSummary};
 use crate::{RunnerConfig, RunnerParams, TestCaseRunnable, ValidatedForkConfig, CACHE_DIR};
 use cairo_lang_casm::hints::Hint;
 use cairo_lang_casm::instructions::Instruction;
