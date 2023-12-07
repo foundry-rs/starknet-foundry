@@ -12,13 +12,13 @@ struct StarkCurveKeyPair {
 #[generate_trait]
 impl StarkCurveKeyPairImpl of StarkCurveKeyPairTrait {
     fn generate() -> StarkCurveKeyPair {
-        let output = cheatcode::<'generate_stark_keys'>(array![].span());
+        let output = cheatcode::<'generate_ecdsa_keys'>(array![].span());
 
         StarkCurveKeyPair { private_key: *output[0], public_key: *output[1] }
     }
 
     fn from_private_key(private_key: felt252) -> StarkCurveKeyPair {
-        let output = cheatcode::<'get_stark_public_key'>(array![private_key].span());
+        let output = cheatcode::<'get_public_key'>(array![private_key].span());
 
         StarkCurveKeyPair { private_key, public_key: *output[0] }
     }
@@ -29,7 +29,7 @@ impl StarkCurveKeyPairSigner of Signer<StarkCurveKeyPair> {
         ref self: StarkCurveKeyPair, message_hash: felt252
     ) -> Result<(felt252, felt252), felt252> {
         let output = cheatcode::<
-            'stark_sign_message'
+            'ecdsa_sign_message'
         >(array![self.private_key, message_hash].span());
 
         if *output[0] == 0 {
