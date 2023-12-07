@@ -9,9 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Cast
 
-### Added
+#### Added
 
 - `script init` command to create template files structure for deployment script
+
+#### Changed
+
+- to run a deployment script it is required to use `script run` subcommand
 
 ## [0.12.0] - 2023-12-06
 

@@ -13,6 +13,7 @@ async fn test_missing_field() {
         "--url",
         URL,
         "script",
+        "run",
         &script_name,
     ];
 
@@ -37,6 +38,7 @@ async fn test_wrong_contract_name() {
         "--url",
         URL,
         "script",
+        "run",
         &script_name,
     ];
 
@@ -44,7 +46,7 @@ async fn test_wrong_contract_name() {
         .current_dir(SCRIPTS_DIR.to_owned() + "/declare/no_contract")
         .args(args);
     snapbox.assert().success().stderr_matches(indoc! {r"
-        command: script
+        command: script run
         error: Got an exception while executing a hint: [..]
     "});
 }

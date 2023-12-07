@@ -368,25 +368,25 @@ fn run_script_command(
     script: &Script,
     value_format: ValueFormat,
 ) -> Result<()> {
-    if let Some(starknet_commands::script::Commands::Init(init)) = &script.command {
-        let mut result = starknet_commands::script::init::init(init);
-        print_command_result("script init", &mut result, value_format, cli.json)?;
-    } else {
-        let provider = get_provider(&config.rpc_url)?;
-        let script_module_name = script.script_module_name.as_ref().ok_or_else(|| {
-            anyhow!("required positional argument SCRIPT_MODULE_NAME not provided")
-        })?;
+    match &script.command {
+        starknet_commands::script::Commands::Init(init) => {
+            let mut result = starknet_commands::script::init::init(init);
+            print_command_result("script init", &mut result, value_format, cli.json)?;
+        }
+        starknet_commands::script::Commands::Run(run) => {
+            let provider = get_provider(&config.rpc_url)?;
+            let mut result = starknet_commands::script::run::run(
+                &run.script_name,
+                &cli.path_to_scarb_toml,
+                &provider,
+                runtime,
+                config,
+            );
 
-        let mut result = starknet_commands::script::run::run(
-            script_module_name,
-            &cli.path_to_scarb_toml,
-            &provider,
-            runtime,
-            config,
-        );
-
-        print_command_result("script", &mut result, value_format, cli.json)?;
+            print_command_result("script run", &mut result, value_format, cli.json)?;
+        }
     }
+
     Ok(())
 }
 
