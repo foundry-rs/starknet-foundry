@@ -106,10 +106,10 @@ fn test_wrong_calldata() {
 
     let snapbox = runner(&args);
 
-    snapbox.assert().stderr_matches(indoc! {r#"
+    snapbox.assert().stderr_matches(indoc! {r"
         command: call
         error: Contract error
-    "#});
+    "});
 }
 
 #[tokio::test]
