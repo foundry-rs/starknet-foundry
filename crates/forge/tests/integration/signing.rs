@@ -3,7 +3,7 @@ use test_utils::running_tests::run_test_case;
 use test_utils::{assert_passed, test_case};
 
 #[test]
-fn simple_signing_flow() {
+fn simple_signing_flow_stark_curve() {
     let test = test_case!(indoc!(
         r"
             use snforge_std::signature::{ StarkCurveKeyPair, StarkCurveKeyPairTrait, Signer, Verifier };
@@ -41,6 +41,203 @@ fn try_to_sign_max_felt() {
                         assert(msg == 'message_hash out of range', msg);
                     }
                 }
+            }
+        "
+    ));
+
+    let result = run_test_case(&test);
+
+    assert_passed!(result);
+}
+
+#[test]
+fn test_secp256_k1_curve() {
+    let test = test_case!(indoc!(
+        r"
+            use snforge_std::signature::elliptic_curve::{ KeyPair, KeyPairTrait, Signer, Verifier };
+            use starknet::secp256k1::{ Secp256k1Impl, Secp256k1Point, Secp256k1PointImpl };
+
+            #[test]
+            fn test() {
+                let key_pair = KeyPairTrait::<Secp256k1Point>::generate();
+                
+                let msg_hash: u256 = 0xbadc0ffee;
+                let (r, s) = key_pair.sign(msg_hash);
+            
+                let is_valid = key_pair.verify(msg_hash, (r, s));
+                assert(is_valid, 'Signature should be valid');
+            
+                let key_pair2 = KeyPairTrait::<Secp256k1Point>::from_secret_key(key_pair.secret_key);
+                assert(key_pair.secret_key == key_pair2.secret_key, 'Secret keys should be equal');
+                assert(key_pair.public_key.get_coordinates() == key_pair2.public_key.get_coordinates(), 'Public keys should be equal');
+            }
+        "
+    ));
+
+    let result = run_test_case(&test);
+
+    assert_passed!(result);
+}
+
+#[test]
+fn test_secp256_r1_curve() {
+    let test = test_case!(indoc!(
+        r"
+            use snforge_std::signature::elliptic_curve::{ KeyPair, KeyPairTrait, Signer, Verifier };
+            use starknet::secp256r1::{ Secp256r1Impl, Secp256r1Point, Secp256r1PointImpl };
+
+            #[test]
+            fn test() {
+                let key_pair = KeyPairTrait::<Secp256r1Point>::generate();
+                
+                let msg_hash: u256 = 0xbadc0ffee;
+                let (r, s) = key_pair.sign(msg_hash);
+            
+                let is_valid = key_pair.verify(msg_hash, (r, s));
+                assert(is_valid, 'Signature should be valid');
+            
+                let key_pair2 = KeyPairTrait::<Secp256r1Point>::from_secret_key(key_pair.secret_key);
+                assert(key_pair.secret_key == key_pair2.secret_key, 'Secret keys should be equal');
+                assert(key_pair.public_key.get_coordinates() == key_pair2.public_key.get_coordinates(), 'Public keys should be equal');
+            }
+        "
+    ));
+
+    let result = run_test_case(&test);
+
+    assert_passed!(result);
+}
+
+#[test]
+fn test_secp256_curve() {
+    let test = test_case!(indoc!(
+        r"
+            use snforge_std::signature::elliptic_curve::{ KeyPair, KeyPairTrait, Signer, Verifier };
+            use starknet::secp256r1::{ Secp256r1Impl, Secp256r1Point, Secp256r1PointImpl };
+            use starknet::secp256k1::{ Secp256k1Impl, Secp256k1Point, Secp256k1PointImpl };
+
+            #[test]
+            fn test() {
+                let secret_key = 554433;
+
+                let key_pair_k1 = KeyPairTrait::<Secp256k1Point>::from_secret_key(secret_key);
+                let key_pair_r1 = KeyPairTrait::<Secp256r1Point>::from_secret_key(secret_key);
+                
+                assert(key_pair_k1.secret_key == key_pair_r1.secret_key, 'Secret keys should equal');
+                assert(key_pair_k1.public_key.get_coordinates() != key_pair_r1.public_key.get_coordinates(), 'Public keys should be different');
+
+                let msg_hash: u256 = 0xbadc0ffee;
+
+                let sig_k1 = key_pair_k1.sign(msg_hash);
+                let sig_r1 = key_pair_r1.sign(msg_hash);
+                
+                assert(sig_k1 != sig_r1, 'Signatures should be different');
+
+                assert(key_pair_k1.verify(msg_hash, sig_k1) == true, 'Signature should be valid');
+                assert(key_pair_r1.verify(msg_hash, sig_r1) == true, 'Signature should be valid');
+                
+                assert(key_pair_k1.verify(msg_hash, sig_r1) == false, 'Signature should be invalid');
+                assert(key_pair_r1.verify(msg_hash, sig_k1) == false, 'Signature should be invalid');
+            }
+        "
+    ));
+
+    let result = run_test_case(&test);
+
+    assert_passed!(result);
+}
+
+#[test]
+fn test_unsupported_curve() {
+    let test = test_case!(indoc!(
+        r"
+            use snforge_std::signature::elliptic_curve::{ KeyPair, KeyPairTrait, Signer, Verifier };
+            use starknet::secp256_trait::{ Secp256Trait, Secp256PointTrait };
+            use starknet::secp256k1::{ Secp256k1Impl, Secp256k1Point, Secp256k1PointImpl, secp256k1_new_syscall };
+            use starknet::{ SyscallResult, SyscallResultTrait };
+
+            #[derive(Copy, Drop)]
+            struct UnsupportedCurvePoint {
+                inner: Secp256k1Point
+            }
+            
+            impl UnsupportedCurveImpl of Secp256Trait<UnsupportedCurvePoint> {
+                fn get_curve_size() -> u256 {
+                    0x123.into()
+                }
+                fn get_generator_point() -> UnsupportedCurvePoint {
+                    UnsupportedCurvePoint { inner: Secp256k1Impl::get_generator_point() }
+                }
+            
+                fn secp256_ec_new_syscall(x: u256, y: u256) -> SyscallResult<Option<UnsupportedCurvePoint>> {
+                    let point = UnsupportedCurvePoint { inner: Secp256k1Impl::get_generator_point() };
+                    SyscallResult::Ok(Option::Some(point))
+                }
+                fn secp256_ec_get_point_from_x_syscall(
+                    x: u256, y_parity: bool
+                ) -> SyscallResult<Option<UnsupportedCurvePoint>> {
+                    let point = UnsupportedCurvePoint { inner: Secp256k1Impl::get_generator_point() };
+                    SyscallResult::Ok(Option::Some(point))
+                }
+            }
+            
+            impl UnsupportedCurvePointImpl of Secp256PointTrait<UnsupportedCurvePoint> {
+                fn get_coordinates(self: UnsupportedCurvePoint) -> SyscallResult<(u256, u256)> {
+                    SyscallResult::Ok((1.into(), 1.into()))
+                }
+                fn add(self: UnsupportedCurvePoint, other: UnsupportedCurvePoint) -> SyscallResult<UnsupportedCurvePoint> {
+                    SyscallResult::Ok(self)
+                }
+                fn mul(self: UnsupportedCurvePoint, scalar: u256) -> SyscallResult<UnsupportedCurvePoint> {
+                    SyscallResult::Ok(self)
+                }
+            }
+            
+            #[test]
+            #[should_panic(expected: ('Currently only Secp256k1 and', 'Secp256r1 curves are supported'))]
+            fn test() {
+                let key_pair = KeyPairTrait::<UnsupportedCurvePoint>::generate();
+            }
+        "
+    ));
+
+    let result = run_test_case(&test);
+
+    assert_passed!(result);
+}
+
+#[test]
+fn test_invalid_secret_key_secp256() {
+    let test = test_case!(indoc!(
+        r"
+            use snforge_std::signature::elliptic_curve::{ KeyPair, KeyPairTrait, Signer, Verifier };
+            use starknet::secp256r1::{ Secp256r1Impl, Secp256r1Point, Secp256r1PointImpl };
+            use starknet::secp256k1::{ Secp256k1Impl, Secp256k1Point, Secp256k1PointImpl };
+
+            #[test]
+            #[should_panic(expected: ('invalid secret_key', ))]
+            fn test_from_secret_key_secp256k1() {
+                let key_pair = KeyPairTrait::<Secp256k1Point>::from_secret_key(0.into());
+            }
+
+            #[test]
+            #[should_panic(expected: ('invalid secret_key', ))]
+            fn test_from_secret_key_secp256r1() {
+                let key_pair = KeyPairTrait::<Secp256r1Point>::from_secret_key(0.into());
+            }
+
+            #[test]
+            #[should_panic(expected: ('invalid secret_key', ))]
+            fn test_sign_secp256k1() {
+                let key_pair = KeyPair { secret_key: 0.into(), public_key: Secp256k1Impl::get_generator_point() } ;
+                let (r, s) = key_pair.sign(123.into());
+            }
+
+            #[test]
+            #[should_panic(expected: ('invalid secret_key', ))]
+            fn test_sign_secp256r1() {
+                let key_pair = KeyPair { secret_key: 0.into(), public_key: Secp256r1Impl::get_generator_point() } ;
+                let (r, s) = key_pair.sign(123.into());
             }
         "
     ));
