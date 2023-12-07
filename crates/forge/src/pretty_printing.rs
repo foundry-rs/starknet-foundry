@@ -1,7 +1,6 @@
 use crate::CrateLocation;
 use anyhow::Error;
 use console::style;
-use forge_runner::test_case_summary::TestCaseSummary;
 use forge_runner::test_crate_summary::{TestCrateSummary, AnyTestCaseSummary};
 
 pub fn print_error_message(error: &Error) {
@@ -51,25 +50,7 @@ pub fn print_failures(all_failed_tests: &[AnyTestCaseSummary]) {
     }
     let failed_tests_names: Vec<&String> = all_failed_tests
         .iter()
-        .map(|any_test_case_summary| match any_test_case_summary {
-                AnyTestCaseSummary::Fuzzing(test_case_summary) => {
-                    match test_case_summary {
-                        TestCaseSummary::Failed { name, .. } => name,
-                        TestCaseSummary::Passed { .. }
-                        | TestCaseSummary::Ignored { .. }
-                        | TestCaseSummary::Skipped {} => unreachable!(),
-                    }
-                },
-                AnyTestCaseSummary::Single(test_case_summary) => {
-                    match test_case_summary {
-                        TestCaseSummary::Failed { name, .. } => name,
-                        TestCaseSummary::Passed { .. }
-                        | TestCaseSummary::Ignored { .. }
-                        | TestCaseSummary::Skipped {} => unreachable!(),
-                    }
-                }
-            }
-        )
+        .map(|any_test_case_summary| any_test_case_summary.name().unwrap())
         .collect();
 
     println!("\nFailures:");

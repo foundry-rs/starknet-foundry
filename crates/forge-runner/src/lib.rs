@@ -248,13 +248,7 @@ pub async fn run_tests_from_crate(
 
         print_test_result(&result);
 
-        if let AnyTestCaseSummary::Single(TestCaseSummary::Failed { .. }) = result {
-            if runner_config.exit_first {
-                interrupted = true;
-                rec.close();
-            }
-        }
-        if let AnyTestCaseSummary::Fuzzing(TestCaseSummary::Failed { .. }) = result {
+        if result.is_failed() {
             if runner_config.exit_first {
                 interrupted = true;
                 rec.close();

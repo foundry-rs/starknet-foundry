@@ -17,25 +17,25 @@ pub struct FuzzingStatistics {
     pub runs: usize,
 }
 
-pub trait TestType: GasInfo + TestStatistics {}
+pub trait TestType {
+    type GasInfo: std::fmt::Debug + Clone;
+    type TestStatistics: std::fmt::Debug + Clone;
+}
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Fuzzing;
-impl TestType for Fuzzing {}
+impl TestType for Fuzzing {
+    type GasInfo = GasStatistics;
+    type TestStatistics = FuzzingStatistics;
+}
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Single;
-impl TestType for Single {}
+impl TestType for Single {
+    type GasInfo = f64;
+    type TestStatistics = ();
+}
 
-pub trait GasInfo {
-    type Type: std::fmt::Debug + Clone;
-}
-impl GasInfo for Fuzzing {
-    type Type = GasStatistics;
-}
-impl GasInfo for Single {
-    type Type = f64;
-}
 
 pub trait TestStatistics {
     type Type: std::fmt::Debug + Clone;
@@ -60,9 +60,9 @@ pub enum TestCaseSummary<T : TestType> {
         /// Arguments used in the test case run
         arguments: Vec<Felt252>,
         /// Information on used gas
-        gas_info: <T as GasInfo>::Type,
+        gas_info: <T as TestType>::GasInfo,
         /// Statistics of the test run
-        test_statistics: <T as TestStatistics>::Type,
+        test_statistics: <T as TestType>::TestStatistics,
         /// Number of block used if BlockId::Tag(Latest) was specified
         latest_block_number: Option<BlockNumber>,
 
@@ -76,7 +76,7 @@ pub enum TestCaseSummary<T : TestType> {
         /// Arguments used in the test case run
         arguments: Vec<Felt252>,
         /// Statistics of the test run
-        test_statistics: <T as TestStatistics>::Type,
+        test_statistics: <T as TestType>::TestStatistics,
         /// Number of block used if BlockId::Tag(Latest) was specified
         latest_block_number: Option<BlockNumber>,
     },
@@ -91,6 +91,25 @@ pub enum TestCaseSummary<T : TestType> {
 
 impl<T: TestType> TestCaseSummary<T> {
     #[must_use]
+    pub fn name(&self) -> Option<&String> {
+        match self {
+            TestCaseSummary::Failed { name, .. }
+            | TestCaseSummary::Passed { name, .. }
+            | TestCaseSummary::Ignored { name, .. }=> Some(&name),
+            TestCaseSummary::Skipped { .. } => None,
+        }
+    }
+
+    #[must_use]
+    pub fn msg(&self) -> Option<&String> {
+        match self {
+            TestCaseSummary::Failed { msg: Some(msg), .. }
+            | TestCaseSummary::Passed { msg: Some(msg), .. } => Some(&msg),
+            _ => None,
+        }
+    }
+
+    #[must_use]
     pub fn arguments(&self) -> Vec<Felt252> {
         match self {
             TestCaseSummary::Failed { arguments, .. }
@@ -100,38 +119,27 @@ impl<T: TestType> TestCaseSummary<T> {
     }
 
 
-    pub(crate) fn latest_block_number(&self) -> &Option<BlockNumber> {
+    pub(crate) fn latest_block_number(&self) -> Option<&BlockNumber> {
         match self {
             TestCaseSummary::Failed {
-                latest_block_number,
+                latest_block_number: Some(latest_block_number),
                 ..
             }
             | TestCaseSummary::Passed {
-                latest_block_number,
+                latest_block_number: Some(latest_block_number),
                 ..
-            } => latest_block_number,
-            TestCaseSummary::Ignored { .. } | TestCaseSummary::Skipped { .. } => &None,
+            } => Some(latest_block_number),
+            _ => None,
         }
     }
 }
 
 impl TestCaseSummary<Fuzzing> {
     #[must_use]
-    pub fn gas_usage(&self) -> Option<String> {
-        match self {
-            TestCaseSummary::Passed {
-                gas_info,
-                ..
-            } => Some(format!("(max: ~{}, min: ~{})", gas_info.max, gas_info.min)),
-            _ => None,
-        }
-    }
-
-    #[must_use]
     pub fn runs(&self) -> Option<usize> {
         match self {
-            TestCaseSummary::Passed { test_statistics: FuzzingStatistics { runs }, .. } => Some(runs.clone()),
-            TestCaseSummary::Failed { test_statistics: FuzzingStatistics { runs }, .. } =>  Some(runs.clone()),
+            TestCaseSummary::Passed { test_statistics: FuzzingStatistics { runs }, .. }
+            | TestCaseSummary::Failed { test_statistics: FuzzingStatistics { runs }, .. } =>  Some(runs.clone()),
             _ => None,
         }
     }
@@ -195,17 +203,6 @@ impl TestCaseSummary<Single> {
                     },
                 },
             },
-        }
-    }
-
-    #[must_use]
-    pub fn gas_usage(&self) -> Option<String> {
-        match self {
-            TestCaseSummary::Passed {
-                gas_info,
-                ..
-            } => Some(format!("~{gas_info}")),
-            _ => None,
         }
     }
 }

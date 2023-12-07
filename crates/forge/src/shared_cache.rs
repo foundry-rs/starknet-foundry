@@ -3,7 +3,6 @@ pub const PREV_TESTS_FAILED: &str = ".prev_tests_failed";
 
 use anyhow::{Ok, Result};
 use camino::Utf8PathBuf;
-use forge_runner::test_case_summary::TestCaseSummary;
 use forge_runner::test_crate_summary::AnyTestCaseSummary;
 use scarb_metadata::MetadataCommand;
 use std::fs::{self, File};
@@ -41,26 +40,9 @@ pub fn set_cached_failed_tests_names(
     let file = File::create(tests_failed_path)?;
     let mut file = BufWriter::new(file);
     for line in all_failed_tests {
-        match line {
-            AnyTestCaseSummary::Fuzzing(line) => {
-                if let TestCaseSummary::Failed { name, .. } = line {
-                    writeln!(file, "{name}")?;
-                } else {
-                    unreachable!();
-                }
-            },
-            AnyTestCaseSummary::Single(line) => {
-                if let TestCaseSummary::Failed { name, .. } = line {
-                    writeln!(file, "{name}")?;
-                } else {
-                    unreachable!();
-                }
-            }
-
-        }
-
+        let name = line.name().unwrap();
+        writeln!(file, "{name}")?;
     }
-
     Ok(())
 }
 
