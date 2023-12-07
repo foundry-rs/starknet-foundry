@@ -139,3 +139,23 @@ fn test_init_from_scripts_dir() {
         .join(script_name)
         .exists());
 }
+
+#[test]
+fn test_init_fails_when_destination_exist() {
+    let script_name = "my_script";
+    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
+    let script_root_dir_path = temp_dir.path().join(SCRIPTS_DIR).join(script_name);
+
+    std::fs::create_dir_all(&script_root_dir_path)
+        .expect("Failed to create script root directory in the current temp directory");
+    assert!(script_root_dir_path.exists());
+
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(temp_dir.path())
+        .args(["script", "init", script_name]);
+
+    snapbox.assert().stderr_matches(formatdoc! {r#"
+        command: script init
+        error: Script destination [..] already exists
+    "#});
+}
