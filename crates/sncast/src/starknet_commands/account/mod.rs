@@ -160,7 +160,6 @@ pub fn add_created_profile_to_configuration(
 
 #[cfg(test)]
 mod tests {
-    use camino::Utf8PathBuf;
     use sealed_test::prelude::rusty_fork_test;
     use sealed_test::prelude::sealed_test;
     use sncast::helpers::constants::DEFAULT_ACCOUNTS_FILE;
@@ -175,7 +174,7 @@ mod tests {
             rpc_url: String::from("http://some-url"),
             account: String::from("some-name"),
             accounts_file: "accounts".into(),
-            keystore: Utf8PathBuf::default(),
+            ..Default::default()
         };
         let res = add_created_profile_to_configuration(&None, &config);
 
@@ -194,7 +193,7 @@ mod tests {
             rpc_url: String::from("http://some-url"),
             account: String::from("myprofile"),
             accounts_file: DEFAULT_ACCOUNTS_FILE.into(),
-            keystore: Utf8PathBuf::default(),
+            ..Default::default()
         };
         let res = add_created_profile_to_configuration(&None, &config);
 

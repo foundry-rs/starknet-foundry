@@ -1,11 +1,13 @@
-use cheatnet::rpc::{CallContractOutput, CallContractResult};
+use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
+    CallContractOutput, CallContractResult,
+};
 #[macro_export]
 macro_rules! assert_success {
     ($call_contract_output:expr,$expected_data:expr) => {
         assert!(
             matches!(
                 $call_contract_output.result,
-                cheatnet::rpc::CallContractResult::Success { ret_data, .. }
+                cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallContractResult::Success { ret_data, .. }
                 if ret_data == $expected_data,
             )
         )
@@ -33,8 +35,8 @@ macro_rules! assert_error {
         assert!(
             matches!(
                 $call_contract_output.result,
-                cheatnet::rpc::CallContractResult::Failure(
-                    cheatnet::rpc::CallContractFailure::Error { msg, .. }
+                cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallContractResult::Failure(
+                    cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallContractFailure::Error { msg, .. }
                 )
                 if msg == $expected_data,
             )

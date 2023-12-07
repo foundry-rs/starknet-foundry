@@ -17,7 +17,7 @@ use starknet::signers::{LocalWallet, SigningKey};
 
 use sncast::{
     account_file_exists, chain_id_to_network_name, get_keystore_password, handle_rpc_error,
-    handle_wait_for_tx, parse_number,
+    handle_wait_for_tx, parse_number, WaitForTx,
 };
 
 use sncast::helpers::response_structs::InvokeResponse;
@@ -45,7 +45,7 @@ pub async fn deploy(
     name: String,
     chain_id: FieldElement,
     max_fee: FieldElement,
-    wait: bool,
+    wait_config: WaitForTx,
     class_hash: Option<String>,
     keystore_path: Option<Utf8PathBuf>,
     account_path: Option<Utf8PathBuf>,
@@ -59,7 +59,7 @@ pub async fn deploy(
             provider,
             chain_id,
             max_fee,
-            wait,
+            wait_config,
             keystore_path_,
             account_path_,
         )
@@ -75,7 +75,7 @@ pub async fn deploy(
             name,
             chain_id,
             max_fee,
-            wait,
+            wait_config,
             class_hash,
         )
         .await
@@ -86,7 +86,7 @@ async fn deploy_from_keystore(
     provider: &JsonRpcClient<HttpTransport>,
     chain_id: FieldElement,
     max_fee: FieldElement,
-    wait: bool,
+    wait_config: WaitForTx,
     keystore_path: Utf8PathBuf,
     account_path: Utf8PathBuf,
 ) -> Result<InvokeResponse> {
@@ -163,7 +163,7 @@ async fn deploy_from_keystore(
             salt,
             chain_id,
             max_fee,
-            wait,
+            wait_config,
         )
         .await?
     };
@@ -189,7 +189,7 @@ async fn deploy_from_accounts_file(
     name: String,
     chain_id: FieldElement,
     max_fee: FieldElement,
-    wait: bool,
+    wait_config: WaitForTx,
     class_hash: Option<String>,
 ) -> Result<InvokeResponse> {
     let network_name = chain_id_to_network_name(chain_id);
@@ -243,7 +243,7 @@ async fn deploy_from_accounts_file(
         .context("Couldn't parse salt")?,
         chain_id,
         max_fee,
-        wait,
+        wait_config,
     )
     .await?;
 
@@ -261,7 +261,7 @@ async fn deploy_oz_account(
     salt: FieldElement,
     chain_id: FieldElement,
     max_fee: FieldElement,
-    wait: bool,
+    wait_config: WaitForTx,
 ) -> Result<InvokeResponse> {
     let factory = OpenZeppelinAccountFactory::new(
         oz_class_hash,
@@ -294,7 +294,7 @@ async fn deploy_oz_account(
                 provider,
                 result.transaction_hash,
                 return_value.clone(),
-                wait,
+                wait_config,
             )
             .await
             {

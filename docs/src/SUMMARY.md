@@ -59,8 +59,6 @@
     * [spy_events](appendix/cheatcodes/spy_events.md)
     * [start_spoof](appendix/cheatcodes/start_spoof.md)
     * [stop_spoof](appendix/cheatcodes/stop_spoof.md)
-    
-
 * [Forge Library Functions References](appendix/forge-library.md)
     * [declare](appendix/forge-library/declare.md)
     * [precalculate_address](appendix/forge-library/precalculate_address.md)
@@ -93,3 +91,9 @@
         * [run](appendix/cast/multicall/run.md)
     * [show-config](appendix/cast/show_config.md)
     * [script](appendix/cast/script.md)
+* [Cast Library Functions References](appendix/cast-library.md)
+    * [declare](appendix/cast-library/declare.md)
+    * [deploy](appendix/cast-library/deploy.md)
+    * [invoke](appendix/cast-library/invoke.md)
+    * [call](appendix/cast-library/call.md)
+    * [get_nonce](appendix/cast-library/get_nonce.md)

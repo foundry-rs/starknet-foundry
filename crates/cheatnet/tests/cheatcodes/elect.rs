@@ -7,9 +7,10 @@ use crate::{
     },
 };
 use cairo_felt::Felt252;
-use cheatnet::cheatcodes::deploy::deploy;
-use cheatnet::rpc::call_contract;
+use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::call_contract;
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::deploy;
 use cheatnet::state::CheatTarget;
+use conversions::felt252::FromShortString;
 use conversions::IntoConv;
 use starknet_api::core::ContractAddress;
 
@@ -81,7 +82,7 @@ fn elect_in_constructor() {
 
     let contracts = get_contracts();
 
-    let contract_name = "ConstructorElectChecker".to_owned().into_();
+    let contract_name = Felt252::from_short_string("ConstructorElectChecker").unwrap();
     let class_hash = blockifier_state
         .declare(&contract_name, &contracts)
         .unwrap();
@@ -297,7 +298,7 @@ fn elect_library_call() {
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
     let contracts = get_contracts();
-    let contract_name = "ElectChecker".to_owned().into_();
+    let contract_name = Felt252::from_short_string("ElectChecker").unwrap();
     let class_hash = blockifier_state
         .declare(&contract_name, &contracts)
         .unwrap();
@@ -501,7 +502,7 @@ fn elect_multiple() {
     let mut cached_state = create_cached_state();
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_state);
 
-    let contract = "ElectChecker".to_owned().into_();
+    let contract = Felt252::from_short_string("ElectChecker").unwrap();
     let contracts = get_contracts();
     let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();
 

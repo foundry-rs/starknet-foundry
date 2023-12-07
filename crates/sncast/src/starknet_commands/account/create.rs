@@ -87,6 +87,7 @@ pub async fn create(
             account: account.into(),
             accounts_file: accounts_file.into(),
             keystore: keystore.into(),
+            ..Default::default()
         };
         add_created_profile_to_configuration(&path_to_scarb_toml, &config)?;
     }
