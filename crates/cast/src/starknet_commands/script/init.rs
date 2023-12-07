@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Context, Ok, Result};
+use anyhow::{anyhow, ensure, Context, Ok, Result};
 use camino::Utf8PathBuf;
 use std::fs;
 
@@ -18,13 +18,25 @@ pub struct Init {
 pub fn init(init_args: &Init) -> Result<ScriptInitResponse> {
     let script_root_dir_path = get_script_root_dir_path(&init_args.script_name)?;
 
-    init_scarb_project(&init_args.script_name, &script_root_dir_path)?;
-    add_dependencies(&script_root_dir_path)?;
-    modify_files_in_src_dir(&init_args.script_name, &script_root_dir_path)?;
+    ensure!(
+        !script_root_dir_path.exists(),
+        "Script destination `{script_root_dir_path}` already exists"
+    );
 
-    Ok(ScriptInitResponse {
-        status: format!("Successfully initialized `{}`", init_args.script_name),
-    })
+    init_scarb_project(&init_args.script_name, &script_root_dir_path)?;
+
+    let modify_files_result = add_dependencies(&script_root_dir_path)
+        .and_then(|()| modify_files_in_src_dir(&init_args.script_name, &script_root_dir_path));
+
+    match modify_files_result {
+        Result::Ok(()) => Ok(ScriptInitResponse {
+            status: format!("Successfully initialized `{}`", init_args.script_name),
+        }),
+        Err(err) => {
+            clean_created_dir_and_files(&script_root_dir_path);
+            Err(err)
+        }
+    }
 }
 
 fn get_script_root_dir_path(script_name: &str) -> Result<Utf8PathBuf> {
@@ -137,4 +149,10 @@ fn overwrite_lib_file(script_name: &str, script_root_dir: &Utf8PathBuf) -> Resul
     )?;
 
     Ok(())
+}
+
+fn clean_created_dir_and_files(script_root_dir: &Utf8PathBuf) {
+    if fs::remove_dir_all(script_root_dir).is_err() {
+        eprintln!("Failed to clean created files by init command in location {script_root_dir}");
+    }
 }
