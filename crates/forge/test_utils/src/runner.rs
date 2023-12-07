@@ -190,11 +190,7 @@ macro_rules! assert_passed {
             "No test results found"
         );
         assert!(
-            result.test_case_summaries.iter().all(|r| matches!(
-                r,
-                AnyTestCaseSummary::Fuzzing(TestCaseSummary::Passed { .. })
-                    | AnyTestCaseSummary::Single(TestCaseSummary::Passed { .. })
-            )),
+            result.test_case_summaries.iter().all(|t| t.is_passed()),
             "Some tests didn't pass"
         );
     }};
@@ -214,11 +210,7 @@ macro_rules! assert_failed {
             "No test results found"
         );
         assert!(
-            result.test_case_summaries.iter().all(|r| matches!(
-                r,
-                AnyTestCaseSummary::Fuzzing(TestCaseSummary::Failed { .. })
-                    | AnyTestCaseSummary::Single(TestCaseSummary::Failed { .. })
-            )),
+            result.test_case_summaries.iter().all(|t| t.is_failed()),
             "Some tests didn't fail"
         );
     }};
@@ -238,34 +230,14 @@ macro_rules! assert_case_output_contains {
         let result = TestCase::find_test_result(&$result);
 
         assert!(result.test_case_summaries.iter().any(|any_case| {
-            match any_case {
-                AnyTestCaseSummary::Fuzzing(case) => match case {
-                    TestCaseSummary::Failed {
-                        msg: Some(msg),
-                        name,
-                        ..
-                    }
-                    | TestCaseSummary::Passed {
-                        msg: Some(msg),
-                        name,
-                        ..
-                    } => msg.contains($asserted_msg) && name.ends_with(test_name_suffix.as_str()),
-                    _ => false,
-                },
-                AnyTestCaseSummary::Single(case) => match case {
-                    TestCaseSummary::Failed {
-                        msg: Some(msg),
-                        name,
-                        ..
-                    }
-                    | TestCaseSummary::Passed {
-                        msg: Some(msg),
-                        name,
-                        ..
-                    } => msg.contains($asserted_msg) && name.ends_with(test_name_suffix.as_str()),
-                    _ => false,
-                },
+            if any_case.is_passed() || any_case.is_failed() {
+                return any_case.msg().unwrap().contains($asserted_msg)
+                    && any_case
+                        .name()
+                        .unwrap()
+                        .ends_with(test_name_suffix.as_str());
             }
+            false
         }));
     }};
 }

@@ -217,7 +217,7 @@ pub async fn run_tests_from_crate(
 
         if !tests_filter.should_be_run(case) {
             tasks.push(tokio::task::spawn(async {
-                // TODO TestCaseType should also be encoded in the test case definiton
+                // TODO TestCaseType should also be encoded in the test case definition
                 Ok(AnyTestCaseSummary::Single(TestCaseSummary::Ignored {
                     name: case_name,
                 }))
