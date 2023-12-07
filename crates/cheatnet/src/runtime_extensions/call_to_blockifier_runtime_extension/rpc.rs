@@ -2,11 +2,11 @@ use anyhow::Result;
 use std::sync::Arc;
 
 use crate::constants::TEST_ADDRESS;
-use crate::panic_data::try_extract_panic_data;
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::panic_data::try_extract_panic_data;
 use crate::state::BlockifierState;
 use crate::{
     constants::{build_block_context, build_transaction_context},
-    execution::entry_point::execute_call_entry_point,
+    runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::execute_call_entry_point,
     CheatnetState,
 };
 use blockifier::execution::call_info::CallInfo;

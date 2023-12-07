@@ -1,7 +1,9 @@
 use crate::common::felt_selector_from_name;
 use crate::common::state::{create_cheatnet_state, create_fork_cached_state};
 use cairo_felt::Felt252;
-use cheatnet::rpc::{call_contract, CallContractResult};
+use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
+    call_contract, CallContractResult,
+};
 use cheatnet::state::CheatTarget;
 use conversions::IntoConv;
 use num_bigint::BigUint;
