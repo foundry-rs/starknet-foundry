@@ -10,15 +10,27 @@ with [stop_spoof](./stop_spoof.md).
 
 To mock the field of `TxInfo`, set the corresponding field of `TxInfoMock` to `Some(mocked_value)`. Setting the field to `None` will use a default value - the field will not be mocked. Using `None` will also cancel current mock for that field. See below for practical example.
 
+> 📝 **Note**
+>
+> To get access to fields from `starknet::info::v2::TxInfo`, you can use
+> `get_execution_info_v2_syscall().unwrap_syscall().unbox().tx_info.unbox()`
+
 ```rust
 struct TxInfoMock {
     version: Option<felt252>,
-    account_contract_address: Option<felt252>,
+    account_contract_address: Option<ContractAddress>,
     max_fee: Option<u128>,
-    signature: Option<Array<felt252>>,
+    signature: Option<Span<felt252>>,
     transaction_hash: Option<felt252>,
     chain_id: Option<felt252>,
     nonce: Option<felt252>,
+    // starknet::info::v2::TxInfo fields
+    resource_bounds: Option<Span<ResourceBounds>>,
+    tip: Option<u128>,
+    paymaster_data: Option<Span<felt252>>,
+    nonce_data_availabilty_mode: Option<u32>,
+    fee_data_availabilty_mode: Option<u32>,
+    account_deployment_data: Option<Span<felt252>>,
 }
 
 trait TxInfoMockTrait {

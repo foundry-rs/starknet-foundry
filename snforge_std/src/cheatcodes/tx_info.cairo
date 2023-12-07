@@ -16,6 +16,7 @@ struct TxInfoMock {
     transaction_hash: Option<felt252>,
     chain_id: Option<felt252>,
     nonce: Option<felt252>,
+    // starknet::info::v2::TxInfo fields
     resource_bounds: Option<Span<ResourceBounds>>,
     tip: Option<u128>,
     paymaster_data: Option<Span<felt252>>,
