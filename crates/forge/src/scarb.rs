@@ -1,10 +1,10 @@
 use scarb_metadata::{Metadata, PackageId};
-use std::process::{Command, Stdio};
 
 use crate::compiled_raw::CompiledTestCrateRaw;
 use crate::scarb::config::{ForgeConfig, RawForgeConfig};
 use anyhow::{anyhow, Context, Result};
 use camino::Utf8Path;
+use scarb_artifacts::ScarbCommand;
 use scarb_ui::args::PackagesFilter;
 
 pub mod config;
@@ -35,35 +35,21 @@ pub fn config_from_scarb_for_package(
 }
 
 pub fn build_contracts_with_scarb(filter: PackagesFilter) -> Result<()> {
-    let build_output = Command::new("scarb")
+    ScarbCommand::stdio()
         .arg("build")
-        .env("SCARB_PACKAGES_FILTER", filter.to_env())
-        .stderr(Stdio::inherit())
-        .stdout(Stdio::inherit())
-        .output()
+        .packages_filter(filter)
+        .run()
         .context("Failed to build contracts with Scarb")?;
-
-    if build_output.status.success() {
-        Ok(())
-    } else {
-        Err(anyhow!("scarb build did not succeed"))
-    }
+    Ok(())
 }
 
 pub fn build_test_artifacts_with_scarb(filter: PackagesFilter) -> Result<()> {
-    let build_output = Command::new("scarb")
+    ScarbCommand::stdio()
         .arg("snforge-test-collector")
-        .env("SCARB_PACKAGES_FILTER", filter.to_env())
-        .stderr(Stdio::inherit())
-        .stdout(Stdio::inherit())
-        .output()
+        .packages_filter(filter)
+        .run()
         .context("Failed to build test artifacts with Scarb")?;
-
-    if build_output.status.success() {
-        Ok(())
-    } else {
-        Err(anyhow!("scarb snforge-test-collector did not succeed"))
-    }
+    Ok(())
 }
 
 pub(crate) fn load_test_artifacts(

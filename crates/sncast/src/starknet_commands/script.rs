@@ -32,7 +32,7 @@ use conversions::{FromConv, IntoConv};
 use itertools::chain;
 use num_traits::ToPrimitive;
 use runtime::EnhancedHintError;
-use scarb_metadata::ScarbCommand;
+use scarb_artifacts::ScarbCommand;
 use sncast::helpers::response_structs::ScriptResponse;
 use sncast::helpers::scarb_utils::{
     get_package_metadata, get_scarb_manifest, get_scarb_metadata_with_deps, CastConfig,
@@ -489,10 +489,11 @@ fn compile_script(path_to_scarb_toml: Option<Utf8PathBuf>) -> Result<Utf8PathBuf
         "Path {scripts_manifest_path} does not exist"
     );
 
-    ScarbCommand::new()
+    ScarbCommand::stdio()
         .arg("build")
-        .env("SCARB_MANIFEST_PATH", &scripts_manifest_path)
-        .run()?;
+        .manifest_path(&scripts_manifest_path)
+        .run()
+        .context("failed to compile script with scarb")?;
 
     let metadata = get_scarb_metadata_with_deps(&scripts_manifest_path)?;
     let package_metadata = get_package_metadata(&metadata, &scripts_manifest_path)?;

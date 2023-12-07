@@ -5,6 +5,10 @@ use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs;
 
+pub use command::*;
+
+mod command;
+
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 struct StarknetArtifacts {
     version: u32,
@@ -179,7 +183,6 @@ mod tests {
     use camino::Utf8PathBuf;
     use indoc::{formatdoc, indoc};
     use scarb_metadata::MetadataCommand;
-    use std::process::Command;
     use std::str::FromStr;
 
     fn setup_package(package_name: &str) -> TempDir {
@@ -240,12 +243,11 @@ mod tests {
     fn get_starknet_artifacts_path() {
         let temp = setup_package("basic_package");
 
-        let build_output = Command::new("scarb")
-            .current_dir(&temp)
+        ScarbCommand::stdio()
+            .current_dir(temp.path())
             .arg("build")
-            .output()
+            .run()
             .unwrap();
-        assert!(build_output.status.success());
 
         let result = try_get_starknet_artifacts_path(
             &Utf8PathBuf::from_path_buf(temp.to_path_buf().join("target")).unwrap(),
@@ -292,12 +294,11 @@ mod tests {
             ))
             .unwrap();
 
-        let build_output = Command::new("scarb")
-            .current_dir(&temp)
+        ScarbCommand::stdio()
+            .current_dir(temp.path())
             .arg("build")
-            .output()
+            .run()
             .unwrap();
-        assert!(build_output.status.success());
 
         let result = try_get_starknet_artifacts_path(
             &Utf8PathBuf::from_path_buf(temp.to_path_buf().join("target")).unwrap(),
@@ -326,12 +327,11 @@ mod tests {
             ))
             .unwrap();
 
-        let build_output = Command::new("scarb")
-            .current_dir(&temp)
+        ScarbCommand::stdio()
+            .current_dir(temp.path())
             .arg("build")
-            .output()
+            .run()
             .unwrap();
-        assert!(build_output.status.success());
 
         let result = try_get_starknet_artifacts_path(
             &Utf8PathBuf::from_path_buf(temp.to_path_buf().join("target")).unwrap(),
@@ -359,12 +359,11 @@ mod tests {
     fn parsing_starknet_artifacts() {
         let temp = setup_package("basic_package");
 
-        let build_output = Command::new("scarb")
-            .current_dir(&temp)
+        ScarbCommand::stdio()
+            .current_dir(temp.path())
             .arg("build")
-            .output()
+            .run()
             .unwrap();
-        assert!(build_output.status.success());
 
         let artifacts_path = temp
             .path()
@@ -394,14 +393,13 @@ mod tests {
     fn get_contracts() {
         let temp = setup_package("basic_package");
 
-        let build_output = Command::new("scarb")
-            .current_dir(&temp)
+        ScarbCommand::stdio()
+            .current_dir(temp.path())
             .arg("build")
-            .output()
+            .run()
             .unwrap();
-        assert!(build_output.status.success());
 
-        let metadata = scarb_metadata::MetadataCommand::new()
+        let metadata = MetadataCommand::new()
             .inherit_stderr()
             .manifest_path(temp.join("Scarb.toml"))
             .exec()
