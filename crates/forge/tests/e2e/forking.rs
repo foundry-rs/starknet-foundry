@@ -24,10 +24,10 @@ fn without_cache() {
 
         Collected 4 test(s) from forking package
         Running 4 test(s) from src/
-        [PASS] forking::tests::test_fork_simple
-        [PASS] forking::tests::test_fork_simple_number_hex
-        [PASS] forking::tests::test_fork_simple_hash_hex
-        [PASS] forking::tests::test_fork_simple_hash_number
+        [PASS] forking::tests::test_fork_simple,[..]
+        [PASS] forking::tests::test_fork_simple_number_hex,[..]
+        [PASS] forking::tests::test_fork_simple_hash_hex,[..]
+        [PASS] forking::tests::test_fork_simple_hash_number,[..]
         Tests: 4 passed, 0 failed, 0 skipped, 0 ignored, 1 filtered out
         "}
     );
@@ -101,7 +101,7 @@ fn with_clean_cache() {
 
         Collected 1 test(s) from forking package
         Running 1 test(s) from src/
-        [PASS] forking::tests::test_fork_simple
+        [PASS] forking::tests::test_fork_simple,[..]
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 4 filtered out
         "}
     );
@@ -130,7 +130,7 @@ fn printing_latest_block_number() {
 
         Collected 1 test(s) from forking package
         Running 1 test(s) from src/
-        [PASS] forking::tests::print_block_number_when_latest
+        [PASS] forking::tests::print_block_number_when_latest,[..]
         Number of the block used for fork testing = [..]
         Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 4 filtered out
         "}

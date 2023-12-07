@@ -13,10 +13,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `snforge_std::signature::elliptic_curve` module with `KeyPair` for `Secp256k1` and `Secp256r1` curves
 
+## [0.12.0] - 2023-12-06
+
+### Forge
+
+#### Added
+
+- print gas usage for each test
+- Support for test collector built-in in Scarb with the `--use-scarb-collector` flag. Requires at least `nightly-2023-12-04` version of Scarb.
+
 ### Cast
 
-### Added
+#### Added
 
+- `--wait-timeout` to set timeout for waiting for tx on network using `--wait` flag (default 60s)
+- `--wait-retry-interval` to adjust the time between consecutive attempts to fetch tx from network using `--wait` flag (default 5s)
+- allow setting nonce in declare, deploy and invoke (using `--nonce` and in deployment scripts)
+- add `get_nonce` function to cast_std
 - `--private-key-file` option to `account add` command that allows to provide a path to the file holding account private key
 
 ## [0.11.0] - 2023-11-22

@@ -1,10 +1,12 @@
 use cairo_felt::Felt252;
 use camino::Utf8PathBuf;
 use cheatnet::cheatcodes::deploy::deploy;
-use cheatnet::rpc::CallContractOutput;
-use cheatnet::rpc::{call_contract, CallContractFailure, CallContractResult};
+use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallContractOutput;
+use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
+    call_contract, CallContractFailure, CallContractResult,
+};
 use cheatnet::state::{BlockifierState, CheatnetState};
-use conversions::IntoConv;
+use conversions::felt252::FromShortString;
 use scarb_artifacts::{get_contracts_map, StarknetContractArtifacts};
 use starknet::core::utils::get_selector_from_name;
 use starknet_api::core::ContractAddress;
@@ -41,7 +43,7 @@ pub fn deploy_contract(
     contract_name: &str,
     calldata: &[Felt252],
 ) -> ContractAddress {
-    let contract = contract_name.to_owned().into_();
+    let contract = Felt252::from_short_string(contract_name).unwrap();
     let contracts = get_contracts();
 
     let class_hash = blockifier_state.declare(&contract, &contracts).unwrap();

@@ -2,7 +2,6 @@ use std::marker::PhantomData;
 
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
-use cairo_vm::vm::errors::hint_errors::HintError;
 
 use runtime::{CheatcodeHandlingResult, EnhancedHintError, ExtendedRuntime, ExtensionLogic};
 
@@ -28,9 +27,7 @@ impl<'a> ExtensionLogic for IORuntimeExtension<'a> {
                 print(inputs);
                 Ok(CheatcodeHandlingResult::Handled(vec![]))
             }
-            _ => Err(EnhancedHintError::from(HintError::CustomHint(
-                "Only `print` cheatcode is available in contracts.".into(),
-            ))),
+            _ => Ok(CheatcodeHandlingResult::Forwarded),
         }
     }
 }
