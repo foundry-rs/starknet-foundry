@@ -495,6 +495,7 @@ fn start_spoof_multiple() {
 }
 
 #[test]
+#[allow(clippy::too_many_lines)]
 fn start_spoof_all() {
     let test = test_case!(
         indoc!(
