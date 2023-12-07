@@ -531,7 +531,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                             else {
                                 return Ok(CheatcodeHandlingResult::Handled(vec![
                                     Felt252::from(1),
-                                    Felt252::from_("invalid secret_key".to_string()),
+                                    Felt252::from_short_string("invalid secret_key").unwrap(),
                                 ]));
                             };
 
@@ -549,7 +549,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                             else {
                                 return Ok(CheatcodeHandlingResult::Handled(vec![
                                     Felt252::from(1),
-                                    Felt252::from_("invalid secret_key".to_string()),
+                                    Felt252::from_short_string("invalid secret_key").unwrap(),
                                 ]));
                             };
 
@@ -588,7 +588,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                             else {
                                 return Ok(CheatcodeHandlingResult::Handled(vec![
                                     Felt252::from(1),
-                                    Felt252::from_("invalid secret_key".to_string()),
+                                    Felt252::from_short_string("invalid secret_key").unwrap(),
                                 ]));
                             };
 
@@ -602,7 +602,7 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                             else {
                                 return Ok(CheatcodeHandlingResult::Handled(vec![
                                     Felt252::from(1),
-                                    Felt252::from_("invalid secret_key".to_string()),
+                                    Felt252::from_short_string("invalid secret_key").unwrap(),
                                 ]));
                             };
 
