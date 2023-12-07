@@ -1,3 +1,4 @@
+use crate::compiled_runnable::{CompiledTestCrateRunnable, FuzzerConfig,TestCaseRunnable};
 use crate::fuzzer::RandomFuzzer;
 use crate::printing::print_test_result;
 use crate::running::{run_fuzz_test, run_test};
@@ -23,12 +24,13 @@ use starknet::core::types::BlockTag::Latest;
 use std::collections::HashMap;
 use std::sync::Arc;
 use test_case_summary::FuzzingGasUsage;
-use test_collector::{ExpectedTestResult, FuzzerConfig};
-use test_collector::{LinkedLibrary, RawForkParams};
+use crate::expected_result::ExpectedTestResult;
 use tokio::sync::mpsc::{channel, Sender};
 use tokio::task::JoinHandle;
 use url::Url;
 
+pub mod compiled_runnable;
+pub mod expected_result;
 pub mod test_case_summary;
 pub mod test_crate_summary;
 
@@ -85,35 +87,20 @@ impl RunnerConfig {
 #[non_exhaustive]
 #[derive(Debug, Clone)]
 pub struct RunnerParams {
-    corelib_path: Utf8PathBuf,
     contracts: HashMap<String, StarknetContractArtifacts>,
     environment_variables: HashMap<String, String>,
-    linked_libraries: Vec<LinkedLibrary>,
 }
 
 impl RunnerParams {
     #[must_use]
     pub fn new(
-        corelib_path: Utf8PathBuf,
         contracts: HashMap<String, StarknetContractArtifacts>,
         environment_variables: HashMap<String, String>,
-        linked_libraries: Vec<LinkedLibrary>,
     ) -> Self {
         Self {
-            corelib_path,
             contracts,
             environment_variables,
-            linked_libraries,
         }
-    }
-
-    #[must_use]
-    pub fn linked_libraries(&self) -> &Vec<LinkedLibrary> {
-        &self.linked_libraries
-    }
-    #[must_use]
-    pub fn corelib_path(&self) -> &Utf8PathBuf {
-        &self.corelib_path
     }
 }
 
@@ -127,69 +114,6 @@ pub enum RunnerStatus {
     TestFailed,
     /// Runner did not run, e.g. when test cases got skipped
     DidNotRun,
-}
-
-#[derive(Debug, Clone)]
-pub struct TestCaseRunnable {
-    pub name: String,
-    pub available_gas: Option<usize>,
-    pub ignored: bool,
-    pub expected_result: ExpectedTestResult,
-    pub fork_config: Option<ValidatedForkConfig>,
-    pub fuzzer_config: Option<FuzzerConfig>,
-}
-
-#[derive(Debug, Clone)]
-#[non_exhaustive]
-pub struct ValidatedForkConfig {
-    url: Url,
-    block_id: BlockId,
-}
-
-impl ValidatedForkConfig {
-    #[must_use]
-    pub fn new(url: Url, block_id: BlockId) -> Self {
-        Self { url, block_id }
-    }
-}
-
-impl TryFrom<RawForkParams> for ValidatedForkConfig {
-    type Error = anyhow::Error;
-
-    fn try_from(value: RawForkParams) -> Result<Self, Self::Error> {
-        let block_id = match value.block_id_type.to_lowercase().as_str() {
-            "number" => BlockId::Number(value.block_id_value.parse().unwrap()),
-            "hash" => BlockId::Hash(
-                Felt252::from(value.block_id_value.parse::<BigInt>().unwrap()).into_(),
-            ),
-            "tag" => {
-                assert_eq!(value.block_id_value, "Latest");
-                BlockId::Tag(Latest)
-            }
-            value => bail!("Invalid value passed for block_id = {value}"),
-        };
-        Ok(ValidatedForkConfig {
-            url: value.url.parse()?,
-            block_id,
-        })
-    }
-}
-
-#[derive(Debug, Clone)]
-#[non_exhaustive]
-pub struct CompiledTestCrateRunnable {
-    sierra_program: Program,
-    test_cases: Vec<TestCaseRunnable>,
-}
-
-impl CompiledTestCrateRunnable {
-    #[must_use]
-    pub fn new(sierra_program: Program, test_cases: Vec<TestCaseRunnable>) -> Self {
-        Self {
-            sierra_program,
-            test_cases,
-        }
-    }
 }
 
 pub trait TestCaseFilter {

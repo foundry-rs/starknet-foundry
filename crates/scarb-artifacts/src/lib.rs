@@ -4,7 +4,6 @@ use scarb_metadata::{CompilationUnitMetadata, Metadata, PackageId};
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs;
-use test_collector::LinkedLibrary;
 
 #[derive(Deserialize, Debug, PartialEq, Clone)]
 struct StarknetArtifacts {
@@ -102,9 +101,8 @@ pub fn get_contracts_map(
     metadata: &Metadata,
     package: &PackageId,
 ) -> Result<HashMap<String, StarknetContractArtifacts>> {
-    let target_dir = target_dir_for_package(metadata);
     let target_name = target_name_for_package(metadata, package)?;
-
+    let target_dir = target_dir_for_workspace(metadata);
     let maybe_contracts_path =
         try_get_starknet_artifacts_path(&target_dir, &target_name, &metadata.current_profile)?;
 
@@ -163,41 +161,6 @@ pub fn target_dir_for_workspace(metadata: &Metadata) -> Utf8PathBuf {
         .unwrap_or_else(|| metadata.workspace.root.join("target"))
 }
 
-/// Get the path to Cairo corelib for the given package
-pub fn corelib_for_package(metadata: &Metadata, package: &PackageId) -> Result<Utf8PathBuf> {
-    let compilation_unit = compilation_unit_for_package(metadata, package)?;
-    let corelib = compilation_unit
-        .components
-        .iter()
-        .find(|du| du.name == "core")
-        .context("corelib could not be found")?;
-    Ok(Utf8PathBuf::from(corelib.source_root()))
-}
-
-/// Get the top-level and main file paths for the given package
-pub fn paths_for_package(
-    metadata: &Metadata,
-    package: &PackageId,
-) -> Result<(Utf8PathBuf, Utf8PathBuf)> {
-    let compilation_unit = compilation_unit_for_package(metadata, package)?;
-
-    let package = metadata
-        .get_package(package)
-        .ok_or_else(|| anyhow!("Failed to find metadata for package = {package}"))?;
-
-    let package_path = package.root.clone();
-    let package_source_dir_path = compilation_unit.target.source_root();
-
-    Ok((package_path, Utf8PathBuf::from(package_source_dir_path)))
-}
-
-fn target_dir_for_package(metadata: &Metadata) -> Utf8PathBuf {
-    metadata
-        .target_dir
-        .clone()
-        .unwrap_or_else(|| metadata.workspace.root.join("target"))
-}
-
 /// Get a name of the given package
 pub fn name_for_package(metadata: &Metadata, package: &PackageId) -> Result<String> {
     let package = metadata
@@ -205,25 +168,6 @@ pub fn name_for_package(metadata: &Metadata, package: &PackageId) -> Result<Stri
         .ok_or_else(|| anyhow!("Failed to find metadata for package = {package}"))?;
 
     Ok(package.name.clone())
-}
-
-/// Get the dependencies for the given package
-pub fn dependencies_for_package(
-    metadata: &Metadata,
-    package: &PackageId,
-) -> Result<Vec<LinkedLibrary>> {
-    let compilation_unit = compilation_unit_for_package(metadata, package)?;
-    let dependencies = compilation_unit
-        .components
-        .iter()
-        .filter(|du| &du.name != "core")
-        .map(|cu| LinkedLibrary {
-            name: cu.name.clone(),
-            path: cu.source_root().to_owned().into_std_path_buf(),
-        })
-        .collect();
-
-    Ok(dependencies)
 }
 
 #[cfg(test)]
@@ -494,41 +438,6 @@ mod tests {
     }
 
     #[test]
-    fn get_dependencies_for_package() {
-        let temp = setup_package("basic_package");
-        let scarb_metadata = MetadataCommand::new()
-            .inherit_stderr()
-            .current_dir(temp.path())
-            .exec()
-            .unwrap();
-
-        let dependencies =
-            dependencies_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0])
-                .unwrap();
-
-        assert!(!dependencies.is_empty());
-        assert!(dependencies.iter().all(|dep| dep.path.exists()));
-    }
-
-    #[test]
-    fn get_paths_for_package() {
-        let temp = setup_package("basic_package");
-        let scarb_metadata = MetadataCommand::new()
-            .inherit_stderr()
-            .current_dir(temp.path())
-            .exec()
-            .unwrap();
-
-        let (package_path, package_source_dir_path) =
-            paths_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0]).unwrap();
-
-        assert!(package_path.is_dir());
-        assert!(package_source_dir_path.is_dir());
-        assert_eq!(package_source_dir_path, package_path.join("src"));
-        assert!(package_source_dir_path.starts_with(package_path));
-    }
-
-    #[test]
     fn get_name_for_package() {
         let temp = setup_package("basic_package");
         let scarb_metadata = MetadataCommand::new()
@@ -544,25 +453,6 @@ mod tests {
     }
 
     #[test]
-    fn get_corelib_path_for_package() {
-        let temp = setup_package("basic_package");
-        let scarb_metadata = MetadataCommand::new()
-            .inherit_stderr()
-            .current_dir(temp.path())
-            .exec()
-            .unwrap();
-
-        let corelib_path =
-            corelib_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0]).unwrap();
-
-        assert!(corelib_path.is_dir());
-        assert!(corelib_path.exists());
-
-        let lib_path = corelib_path.join("lib.cairo");
-        assert!(lib_path.exists());
-    }
-
-    #[test]
     fn get_target_name_for_package() {
         let temp = setup_package("basic_package");
         let scarb_metadata = MetadataCommand::new()
@@ -575,23 +465,5 @@ mod tests {
             target_name_for_package(&scarb_metadata, &scarb_metadata.workspace.members[0]).unwrap();
 
         assert_eq!(target_name, "basic_package");
-    }
-
-    #[test]
-    fn get_dependencies_for_package_err_on_invalid_package() {
-        let temp = setup_package("basic_package");
-        let scarb_metadata = MetadataCommand::new()
-            .inherit_stderr()
-            .current_dir(temp.path())
-            .exec()
-            .unwrap();
-
-        let result =
-            dependencies_for_package(&scarb_metadata, &PackageId::from(String::from("12345679")));
-        let err = result.unwrap_err();
-
-        assert!(err
-            .to_string()
-            .contains("Failed to find metadata for package"));
     }
 }

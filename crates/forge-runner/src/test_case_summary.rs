@@ -1,11 +1,11 @@
+use crate::expected_result::{ExpectedTestResult, ExpectedPanicValue};
+use crate::compiled_runnable::TestCaseRunnable;
 use crate::running::ForkInfo;
-use crate::TestCaseRunnable;
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{RunResult, RunResultValue};
 use starknet_api::block::BlockNumber;
 use std::option::Option;
-use test_collector::{ExpectedPanicValue, ExpectedTestResult};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct FuzzingGasUsage {

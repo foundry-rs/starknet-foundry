@@ -1838,7 +1838,6 @@ dependencies = [
  "starknet",
  "starknet_api",
  "tempfile",
- "test-collector",
  "test_utils",
  "thiserror",
  "tokio",
@@ -1866,6 +1865,7 @@ dependencies = [
  "cairo-lang-sierra-to-casm",
  "cairo-lang-sierra-type-size",
  "cairo-lang-starknet",
+ "cairo-lang-test-plugin",
  "cairo-lang-utils",
  "cairo-vm",
  "camino",
@@ -1887,7 +1887,6 @@ dependencies = [
  "smol_str",
  "starknet",
  "starknet_api",
- "test-collector",
  "thiserror",
  "tokio",
  "tokio-util",
@@ -3711,7 +3710,6 @@ dependencies = [
  "scarb-metadata",
  "serde",
  "serde_json",
- "test-collector",
 ]
 
 [[package]]
@@ -4483,46 +4481,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "test-collector"
-version = "1.0.0"
-dependencies = [
- "anyhow",
- "cairo-felt",
- "cairo-lang-casm",
- "cairo-lang-compiler",
- "cairo-lang-debug",
- "cairo-lang-defs",
- "cairo-lang-diagnostics",
- "cairo-lang-filesystem",
- "cairo-lang-lowering",
- "cairo-lang-plugins",
- "cairo-lang-project",
- "cairo-lang-runner",
- "cairo-lang-semantic",
- "cairo-lang-sierra",
- "cairo-lang-sierra-ap-change",
- "cairo-lang-sierra-gas",
- "cairo-lang-sierra-generator",
- "cairo-lang-sierra-to-casm",
- "cairo-lang-starknet",
- "cairo-lang-syntax",
- "cairo-lang-test-plugin",
- "cairo-lang-utils",
- "cairo-vm",
- "conversions",
- "itertools 0.11.0",
- "num-bigint",
- "num-integer",
- "num-traits 0.2.17",
- "serde",
- "serde_json",
- "smol_str",
- "starknet",
- "thiserror",
- "url",
-]
-
-[[package]]
 name = "test_utils"
 version = "0.1.0"
 dependencies = [
@@ -4545,7 +4503,6 @@ dependencies = [
  "serde",
  "serde_json",
  "tempfile",
- "test-collector",
  "tokio",
 ]
 

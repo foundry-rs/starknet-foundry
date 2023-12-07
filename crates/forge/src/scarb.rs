@@ -48,6 +48,22 @@ pub fn build_contracts_with_scarb(filter: PackagesFilter) -> Result<()> {
     }
 }
 
+pub fn build_test_artifacts_with_scarb(filter: PackagesFilter) -> Result<()> {
+    let build_output = Command::new("scarb")
+        .arg("snforge-test-collector")
+        .env("SCARB_PACKAGES_FILTER", filter.to_env())
+        .stderr(Stdio::inherit())
+        .stdout(Stdio::inherit())
+        .output()
+        .context("Failed to build test artifacts with Scarb")?;
+
+    if build_output.status.success() {
+        Ok(())
+    } else {
+        Err(anyhow!("scarb snforge-test-collector did not succeed"))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
