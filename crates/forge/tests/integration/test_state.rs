@@ -639,7 +639,7 @@ fn test_spy_struct_events() {
                 let mut spy = spy_events(SpyOn::One(contract_address));
                 
                 let mut testing_state = Emitter::contract_state_for_testing();
-                Emitter::emit_event(ref testing_state);
+                Emitter::EmitterImpl::emit_event(ref testing_state);
                 
                 spy.assert_emitted(
                     @array![
