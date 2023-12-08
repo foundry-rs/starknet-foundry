@@ -28,7 +28,7 @@ fn test_declare_cost_is_omitted() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
-    // 1 - initial gas cost (consists of steps required to run the code)
+    // 1 because of steps required to run the code
     assert_gas!(result, "test_declare", 1);
 }
 
