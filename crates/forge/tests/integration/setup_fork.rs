@@ -1,6 +1,8 @@
 use indoc::formatdoc;
 use std::path::Path;
 use std::path::PathBuf;
+use std::process::Command;
+use std::process::Stdio;
 use std::sync::Arc;
 
 use camino::Utf8PathBuf;
@@ -98,6 +100,15 @@ fn fork_aliased_decorator() {
     ).as_str());
 
     let rt = Runtime::new().expect("Could not instantiate Runtime");
+
+    let test_build_output = Command::new("scarb")
+        .current_dir(test.path().unwrap())
+        .arg("snforge-test-collector")
+        .stdout(Stdio::inherit())
+        .stderr(Stdio::inherit())
+        .output()
+        .unwrap();
+    assert!(test_build_output.status.success());
 
     let result = rt
         .block_on(run(

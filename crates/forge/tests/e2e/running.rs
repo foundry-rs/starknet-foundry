@@ -133,7 +133,7 @@ fn simple_package_with_git_dependency() {
 }
 
 #[test]
-fn with_failing_scarb() {
+fn with_failing_scarb_build() {
     let temp = setup_package("simple_package");
     let lib_file = temp.child("src/lib.cairo");
     lib_file
@@ -150,8 +150,7 @@ fn with_failing_scarb() {
     let result = snapbox.current_dir(&temp).assert().code(2);
 
     let stdout = String::from_utf8_lossy(&result.get_output().stdout);
-    dbg!(&stdout);
-    assert!(stdout.contains("scarb snforge-test-collector did not succeed"));
+    assert!(stdout.contains("scarb build did not succeed"));
 }
 
 #[test]
@@ -772,7 +771,6 @@ fn init_new_project_test() {
             [package]
             name = "test_name"
             version = "0.1.0"
-            edition = "2023_10"
 
             # See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest.html
 
