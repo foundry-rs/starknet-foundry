@@ -54,9 +54,9 @@ To verify that the Starknet Foundry is installed correctly, run `snforge --versi
 
 ## Features
 
-- Fast testing framework `Forge` written in Rust
+- Fast testing framework `snforge` written in Rust
 - High-quality dependency management using [scarb](https://github.com/software-mansion/scarb)
-- Intuitive interactions and deployment of Starknet contracts through `Cast`
+- Intuitive interactions and deployment of Starknet contracts through `sncast`
 
 ## Roadmap
 

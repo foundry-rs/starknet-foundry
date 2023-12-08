@@ -22,7 +22,7 @@ mod starknet_commands;
 
 #[derive(Parser)]
 #[command(version)]
-#[command(about = "Cast - a Starknet Foundry CLI", long_about = None)]
+#[command(about = "sncast - a Starknet Foundry CLI", long_about = None)]
 #[clap(name = "sncast")]
 #[allow(clippy::struct_excessive_bools)]
 struct Cli {

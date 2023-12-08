@@ -1,4 +1,4 @@
-# Cast - Starknet Foundry CLI
+# sncast - Starknet Foundry CLI
 
 Starknet Foundry `sncast` is a command line tool for performing Starknet RPC calls. With it, you can easily interact with Starknet contracts!
 

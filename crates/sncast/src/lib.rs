@@ -319,7 +319,7 @@ pub async fn wait_for_tx(
     }
 
     Err(anyhow!(
-        "Could not get transaction with hash: {tx_hash:#x}. Transaction rejected, not received or cast timed out."
+        "Could not get transaction with hash: {tx_hash:#x}. Transaction rejected, not received or sncast timed out."
     ))
 }
 
