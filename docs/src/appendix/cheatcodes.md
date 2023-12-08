@@ -24,5 +24,5 @@
 >
 > ```toml
 > [dependencies]
-> snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.7.1" }
+> snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.12.0" }
 > ```
