@@ -261,10 +261,9 @@ pub async fn run_tests_from_crate(
 ) -> Result<TestCrateRunResult> {
     let sierra_program = tests.sierra_program.clone();
     let metadata_config = Some(MetadataComputationConfig::default());
-    let gas_usage_check = metadata_config.is_some();
     let metadata = create_metadata(&sierra_program, metadata_config).unwrap();
     let casm_program =
-        cairo_lang_sierra_to_casm::compiler::compile(&sierra_program, &metadata, gas_usage_check)
+        cairo_lang_sierra_to_casm::compiler::compile(&sierra_program, &metadata, true)
             .unwrap();
 
     // let runner = SierraCasmRunner::new(casm_program).context("Failed setting up runner.")?;
