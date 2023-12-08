@@ -58,8 +58,8 @@ fn test_deploy_syscall_cost() {
 
     assert_passed!(result);
     // 1224 = 2 * cost per 32-byte word (contract_address and contract modification info)
-    // 612 - updated class_hash (through deploy)
-    // 11 - gas cost from steps
+    // 612 = updated class_hash (through deploy)
+    // 11 = gas cost from steps
     assert_gas!(result, "test_deploy_syscall", 1224 + 612 + 11);
 }
 
@@ -113,7 +113,7 @@ fn test_contract_keccak_cost() {
 
     assert_passed!(result);
     // 1836 = 3 * cost per 32-byte word (deploy)
-    // 21 - cost of single keccak builtin
+    // 21 = cost of single keccak builtin
     assert_gas!(result, "test_keccak_builtin", 1836 + 21);
 }
 
@@ -171,7 +171,7 @@ fn test_contract_range_check_cost() {
 
     assert_passed!(result);
     // 1836 = 3 * cost per 32-byte word (deploy)
-    // 4 - cost of 22 range check builtins
+    // 4 = cost of 22 range check builtins
     assert_gas!(result, "test_range_check", 1836 + 4);
 }
 
@@ -227,7 +227,7 @@ fn test_contract_bitwise_cost() {
 
     assert_passed!(result);
     // 1836 = 3 * cost per 32-byte word (deploy)
-    // 4 - cost of 6 bitwise builtins
+    // 4 = cost of 6 bitwise builtins
     assert_gas!(result, "test_bitwise", 1836 + 4);
 }
 
@@ -283,7 +283,7 @@ fn test_contract_pedersen_cost() {
 
     assert_passed!(result);
     // 1836 = 3 * cost per 32-byte word (deploy)
-    // 4 - cost of 12 pedersen builtins
+    // 4 = cost of 12 pedersen builtins
     assert_gas!(result, "test_pedersen", 1836 + 4);
 }
 
@@ -339,7 +339,7 @@ fn test_contract_poseidon_cost() {
 
     assert_passed!(result);
     // 1836 = 3 * cost per 32-byte word (deploy)
-    // 4 - cost of 12 poseidon builtins
+    // 4 = cost of 12 poseidon builtins
     assert_gas!(result, "test_poseidon", 1836 + 4);
 }
 
@@ -396,7 +396,7 @@ fn test_contract_ec_op_cost() {
 
     assert_passed!(result);
     // 1836 = 3 * cost per 32-byte word (deploy)
-    // 11 - cost of single ec_op builtin
+    // 11 = cost of single ec_op builtin
     assert_gas!(result, "test_ec_op", 1836 + 11);
 }
 
@@ -434,7 +434,7 @@ fn test_storage_write_cost() {
     assert_passed!(result);
     // 1836 = 3 * cost per 32-byte word (deploy)
     // 1224 = 2 * cost per 32-byte word (storage write)
-    // 5 - gas cost of steps
+    // 5 = gas cost of steps
     assert_gas!(result, "test_storage_write", 1836 + 1224 + 5);
 }
 
@@ -465,7 +465,7 @@ fn test_storage_write_from_test_cost() {
     assert_passed!(result);
     // 1224 = 2 * cost per 32-byte word (modified contract)
     // 1224 = 2 * cost per 32-byte word (storage write)
-    // 1 - gas cost of steps
+    // 1 = gas cost of steps
     assert_gas!(result, "test_storage_write_from_test", 1224 + 1224 + 1);
 }
 
@@ -504,7 +504,7 @@ fn test_multiple_storage_writes_cost() {
     assert_passed!(result);
     // 1836 = 3 * cost per 32-byte word (deploy)
     // 1224 = 2 * cost per 32-byte word (storage write)
-    // 6 - gas cost of steps
+    // 6 = gas cost of steps
     assert_gas!(result, "test_storage_write", 1836 + 1224 + 6);
 }
 
@@ -542,7 +542,7 @@ fn test_l1_message_cost() {
     assert_passed!(result);
     // 1836 = 3 * cost per 32-byte word (deploy)
     // 2448 = 4 * cost per 32-byte word (l2_l1_message, header is of length 3 and payload size is 1)
-    // 5 - gas cost of steps
+    // 5 = gas cost of steps
     assert_gas!(result, "test_l1_message", 1836 + 2448 + 5);
 }
 
@@ -561,7 +561,7 @@ fn test_l1_message_from_test_cost() {
 
     assert_passed!(result);
     // 2448 = 4 * cost per 32-byte word (l2_l1_message, header is of length 3 and payload size is 1)
-    // 2 - gas cost of steps
+    // 2 = gas cost of steps
     assert_gas!(result, "test_l1_message_from_test", 2448 + 2);
 }
 
@@ -612,6 +612,6 @@ fn test_l1_message_cost_for_proxy() {
     // 1836 = 3 * cost per 32-byte word (deploy)
     // 1836 = 3 * cost per 32-byte word (deploy)
     // 2448 = 4 * cost per 32-byte word (l2_l1_message, header is of length 3 and payload size is 1)
-    // 15 - gas cost of steps
+    // 15 = gas cost of steps
     assert_gas!(result, "test_l1_message_for_proxy", 1836 + 1836 + 2448 + 15);
 }

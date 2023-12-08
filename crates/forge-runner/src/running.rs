@@ -399,8 +399,6 @@ fn get_all_execution_resources(runtime: ForgeRuntime) -> UsedResources {
         .hint_handler
         .l2_to_l1_messages;
 
-    // we construct CallInfo with the `l2_to_l1_messages` field to use
-    // `get_sorted_l2_to_l1_payloads_length` method
     let runtime_call_info = CallInfo {
         execution: CallExecution {
             l2_to_l1_messages: runtime_l1_to_l2_messages,
