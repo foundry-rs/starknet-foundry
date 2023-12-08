@@ -34,7 +34,7 @@ use cairo_vm::vm::vm_core::VirtualMachine;
 use camino::Utf8Path;
 use cheatnet::constants as cheatnet_constants;
 use cheatnet::forking::state::ForkStateReader;
-use cheatnet::rpc::UsedResources;
+use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::state::{BlockInfoReader, CheatnetBlockInfo, CheatnetState, ExtendedStateReader};
 use runtime::{ExtendedRuntime, StarknetRuntime};
 use starknet::core::types::BlockTag::Latest;
@@ -392,6 +392,7 @@ fn get_all_execution_resources(runtime: ForgeRuntime) -> UsedResources {
         .resources
         .clone();
     let runtime_l1_to_l2_messages = runtime
+        .extended_runtime
         .extended_runtime
         .extended_runtime
         .extended_runtime

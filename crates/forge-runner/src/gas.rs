@@ -12,7 +12,7 @@ use blockifier::{
     transaction::objects::ResourcesMapping,
 };
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources as VmExecutionResources;
-use cheatnet::rpc::UsedResources;
+use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::state::ExtendedStateReader;
 
 #[must_use]
