@@ -1,6 +1,9 @@
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 
-use crate::{cheatcodes::spy_events::Event, state::CheatnetState};
+use crate::{
+    runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::Event,
+    state::CheatnetState,
+};
 
 pub fn emit_event_hook(
     syscall_handler: &mut SyscallHintProcessor<'_>,

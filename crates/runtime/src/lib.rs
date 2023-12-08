@@ -11,10 +11,12 @@ use blockifier::execution::syscalls::SyscallResult;
 
 use cairo_felt::Felt252;
 use cairo_lang_casm::hints::{Hint, StarknetHint};
+use cairo_lang_casm::operand::ResOperand;
 use cairo_lang_runner::casm_run::{
     extract_buffer, extract_relocatable, get_ptr, vm_get_range, MemBuffer,
 };
 use cairo_lang_runner::{casm_run::cell_ref_to_relocatable, insert_value_to_cellref};
+use cairo_lang_utils::bigint::BigIntAsHex;
 use cairo_vm::hint_processor::hint_processor_definition::{
     HintProcessor, HintProcessorLogic, HintReference,
 };
@@ -70,6 +72,28 @@ impl<'a> ResourceTracker for StarknetRuntime<'a> {
     }
 }
 
+fn parse_selector(selector: &BigIntAsHex) -> Result<String, HintError> {
+    let selector = &selector.value.to_bytes_be().1;
+    let selector = std::str::from_utf8(selector).map_err(|_| {
+        CustomHint(Box::from(
+            "Failed to parse the cheatcode selector".to_string(),
+        ))
+    })?;
+    Ok(String::from(selector))
+}
+
+fn fetch_cheatcode_input(
+    vm: &mut VirtualMachine,
+    input_start: &ResOperand,
+    input_end: &ResOperand,
+) -> Result<Vec<Felt252>, HintError> {
+    let input_start = extract_relocatable(vm, input_start)?;
+    let input_end = extract_relocatable(vm, input_end)?;
+    let inputs = vm_get_range(vm, input_start, input_end)
+        .map_err(|_| CustomHint(Box::from("Failed to read input data".to_string())))?;
+    Ok(inputs)
+}
+
 impl<'a> HintProcessorLogic for StarknetRuntime<'a> {
     fn execute_hint(
         &mut self,
@@ -78,6 +102,21 @@ impl<'a> HintProcessorLogic for StarknetRuntime<'a> {
         hint_data: &Box<dyn Any>,
         constants: &HashMap<String, Felt252>,
     ) -> Result<(), HintError> {
+        let maybe_extended_hint = hint_data.downcast_ref::<Hint>();
+        if let Some(Hint::Starknet(StarknetHint::Cheatcode {
+            selector,
+            input_start: _,
+            input_end: _,
+            output_start: _,
+            output_end: _,
+        })) = maybe_extended_hint
+        {
+            let selector = parse_selector(selector)?;
+            return Err(HintError::CustomHint(
+                format!("Cheatcode `{selector}` is not supported in this runtime").into(),
+            ));
+        }
+
         self.hint_handler
             .execute_hint(vm, exec_scopes, hint_data, constants)
     }
@@ -117,24 +156,14 @@ impl<Extension: ExtensionLogic> HintProcessorLogic for ExtendedRuntime<Extension
                 output_end,
             } = starknet_hint
             {
-                // Parse the selector.
-                let selector = &selector.value.to_bytes_be().1;
-                let selector = std::str::from_utf8(selector).map_err(|_| {
-                    CustomHint(Box::from(
-                        "Failed to parse the cheatcode selector".to_string(),
-                    ))
-                })?;
+                let selector = parse_selector(selector)?;
+                let inputs = fetch_cheatcode_input(vm, input_start, input_end)?;
 
-                // Extract the inputs.
-                let input_start = extract_relocatable(vm, input_start)?;
-                let input_end = extract_relocatable(vm, input_end)?;
-                let inputs = vm_get_range(vm, input_start, input_end)
-                    .map_err(|_| CustomHint(Box::from("Failed to read input data".to_string())))?;
-
-                if let CheatcodeHandlingResult::Handled(res) =
-                    self.extension
-                        .handle_cheatcode(selector, inputs, &mut self.extended_runtime)?
-                {
+                if let CheatcodeHandlingResult::Handled(res) = self.extension.handle_cheatcode(
+                    &selector,
+                    inputs,
+                    &mut self.extended_runtime,
+                )? {
                     let mut buffer = MemBuffer::new_segment(vm);
                     let result_start = buffer.ptr;
                     buffer
@@ -172,7 +201,6 @@ impl<Extension: ExtensionLogic> HintProcessorLogic for ExtendedRuntime<Extension
                 return res;
             }
         }
-
         self.extended_runtime
             .execute_hint(vm, exec_scopes, hint_data, constants)
     }
