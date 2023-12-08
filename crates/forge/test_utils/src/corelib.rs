@@ -1,8 +1,8 @@
-use assert_fs::fixture::{FileTouch, FileWriteStr, PathChild, PathCopy};
+use assert_fs::fixture::{PathCopy};
 use assert_fs::TempDir;
-use camino::Utf8PathBuf;
-use indoc::indoc;
-use scarb_metadata::MetadataCommand;
+
+
+
 
 #[must_use]
 pub fn predeployed_contracts() -> TempDir {
