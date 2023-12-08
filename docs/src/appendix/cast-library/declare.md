@@ -22,7 +22,7 @@ use debug::PrintTrait;
 
 fn main() {
     let max_fee = 9999999;
-    let declare_result = declare('HelloStarknet', Option::Some(max_fee), nonce::None);
+    let declare_result = declare('HelloStarknet', Option::Some(max_fee), Option::None);
 
     let class_hash = declare_result.class_hash;
     class_hash.print();

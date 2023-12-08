@@ -4,14 +4,14 @@
 
 > ⚠️⚠️⚠️ Highly experimental code, a subject to change  ⚠️⚠️⚠️
 
-Starknet Foundry cast can be used to run deployment scripts written in Cairo, using `script` subcommand. 
-It aims to provide similar functionality to Foundry's `forge script`. 
+Starknet Foundry cast can be used to run deployment scripts written in Cairo, using `script` subcommand.
+It aims to provide similar functionality to Foundry's `forge script`.
 
 To start writing a deployment script in Cairo just add `cast_std` as a dependency to you scarb package and make sure to
 have a `main` function in the module you want to run. `cast_std` docs can be found [here](../appendix/cast-library.md).
 
-Please note that **`sncast script` is in development**. While it is already possible to declare, deploy, invoke and call 
-contracts from within Cairo, its interface, internals and feature set can change rapidly each version. 
+Please note that **`sncast script` is in development**. While it is already possible to declare, deploy, invoke and call
+contracts from within Cairo, its interface, internals and feature set can change rapidly each version.
 
 Some of the planned features that will be included in future versions are:
 
@@ -93,15 +93,14 @@ use debug::PrintTrait;
 fn main() {
     let max_fee = 99999999999999999;
     let salt = 0x3;
-    let nonce = get_nonce('latest');
 
-    let declare_result = declare('Map', Option::Some(max_fee), Option::Nonce);
+    let declare_result = declare('Map', Option::Some(max_fee), Option::None);
 
     let class_hash = declare_result.class_hash;
     let deploy_result = deploy(
         class_hash, ArrayTrait::new(), Option::Some(salt), true, Option::Some(max_fee), Option::Some(nonce)
     );
-    
+
     'Deployed the contract to address'.print();
     deploy_result.contract_address.print();
 
@@ -109,7 +108,7 @@ fn main() {
     let invoke_result = invoke(
         deploy_result.contract_address, 'put', array![0x1, 0x2], Option::Some(max_fee), Option::Some(invoke_nonce)
     );
-    
+
     'Invoke tx hash is'.print();
     invoke_result.transaction_hash.print();
 
@@ -165,7 +164,7 @@ $ sncast \
   --url http://127.0.0.1:5050 \
   --account example_user \
   script map_script
-  
+
 [DEBUG]	Contract address               	(raw: 0x436f6e74726163742061646472657373
 [DEBUG]	                               	(raw: 0x6f9492c9c2751ba5ccab5b7611068a6347d7b313c6f073d2edea864f062d730
 [DEBUG]	Invoke tx hash                 	(raw: 0x496e766f6b652074782068617368
