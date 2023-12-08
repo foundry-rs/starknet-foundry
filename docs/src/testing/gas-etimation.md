@@ -16,8 +16,8 @@ When the test passes with no errors, estimated gas is displayed this way:
 
 ## Calculating gas from VM resources
 
-[General case](https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/fee-mechanism/#general_case)
-of the docs is focused on gas used by running Cairo code. It is mentioned that the gas cost is connected to
+[Starknet documentation](https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/fee-mechanism/#general_case)
+mentions that the gas cost is connected to
 the most costly component. What does it mean?
 
 Let's assume we have a function which uses 100 `Cairo steps`, 12 `range check builtins` and one `keccak builtin`.
