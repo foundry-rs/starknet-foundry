@@ -9,7 +9,11 @@ use starknet::testing::cheatcode;
 
 use snforge_std::signature::key_pair::{KeyPair, KeyPairTrait, SignerTrait, VerifierTrait};
 
-impl SecpCurveKeyPairImpl<Secp256Point, +Drop<Secp256Point>, impl Secp256Impl: Secp256Trait<Secp256Point>, impl Secp256PointImpl: Secp256PointTrait<Secp256Point>> of KeyPairTrait<u256, Secp256Point> {
+impl SecpCurveKeyPairImpl<
+    Secp256Point,
+    impl Secp256Impl: Secp256Trait<Secp256Point>,
+    impl Secp256PointImpl: Secp256PointTrait<Secp256Point>
+> of KeyPairTrait<u256, Secp256Point> {
     fn generate() -> KeyPair<u256, Secp256Point> {
         let curve = match_supported_curve::<Secp256Point>();
 
@@ -37,7 +41,15 @@ impl SecpCurveKeyPairImpl<Secp256Point, +Drop<Secp256Point>, impl Secp256Impl: S
     }
 }
 
-impl SecpCurveSignerImpl<Secp256Point, +Drop<Secp256Point>, impl Secp256Impl: Secp256Trait<Secp256Point>, impl Secp256PointImpl: Secp256PointTrait<Secp256Point>, H, +Drop<H>, impl HIntoU256: Into<H, u256>> of SignerTrait<KeyPair<u256, Secp256Point>, H, u256> {
+impl SecpCurveSignerImpl<
+    Secp256Point,
+    +Drop<Secp256Point>,
+    impl Secp256Impl: Secp256Trait<Secp256Point>,
+    impl Secp256PointImpl: Secp256PointTrait<Secp256Point>,
+    H,
+    +Drop<H>,
+    impl HIntoU256: Into<H, u256>
+> of SignerTrait<KeyPair<u256, Secp256Point>, H, u256> {
     fn sign(self: KeyPair<u256, Secp256Point>, message_hash: H) -> (u256, u256) {
         let curve = match_supported_curve::<Secp256Point>();
 
@@ -59,14 +71,27 @@ impl SecpCurveSignerImpl<Secp256Point, +Drop<Secp256Point>, impl Secp256Impl: Se
     }
 }
 
-impl SecpCurveVerifierImpl<Secp256Point, +Drop<Secp256Point>, impl Secp256Impl: Secp256Trait<Secp256Point>, impl Secp256PointImpl: Secp256PointTrait<Secp256Point>, H, impl HIntoU256: Into<H, u256>> of VerifierTrait<KeyPair<u256, Secp256Point>, H, u256> {
+impl SecpCurveVerifierImpl<
+    Secp256Point,
+    +Drop<Secp256Point>,
+    impl Secp256Impl: Secp256Trait<Secp256Point>,
+    impl Secp256PointImpl: Secp256PointTrait<Secp256Point>,
+    H,
+    impl HIntoU256: Into<H, u256>
+> of VerifierTrait<KeyPair<u256, Secp256Point>, H, u256> {
     fn verify(self: KeyPair<u256, Secp256Point>, message_hash: H, signature: (u256, u256)) -> bool {
         let (r, s) = signature;
         is_valid_signature::<Secp256Point>(message_hash.into(), r, s, self.public_key)
     }
 }
 
-fn match_supported_curve<Secp256Point, impl Secp256Impl: Secp256Trait<Secp256Point>, impl Secp256PointImpl: Secp256PointTrait<Secp256Point>>() -> Array<felt252> {
+fn match_supported_curve<
+    Secp256Point,
+    impl Secp256Impl: Secp256Trait<Secp256Point>,
+    impl Secp256PointImpl: Secp256PointTrait<Secp256Point>
+>() -> Array<
+    felt252
+> {
     let curve_size = Secp256Impl::get_curve_size();
     let generator = Secp256Impl::get_generator_point().get_coordinates().unwrap_syscall();
 
