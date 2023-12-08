@@ -26,8 +26,10 @@ use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::runners::cairo_runner::{ResourceTracker, RunResources};
 use cairo_vm::vm::vm_core::VirtualMachine;
 use camino::Utf8PathBuf;
+use sncast::{print_formatted, ValueFormat};
 use clap::command;
 use clap::Args;
+use clap_verbosity_flag;
 use conversions::{FromConv, IntoConv};
 use itertools::chain;
 use num_traits::ToPrimitive;
@@ -38,16 +40,97 @@ use sncast::helpers::scarb_utils::{
     get_package_metadata, get_scarb_manifest, get_scarb_metadata_with_deps, CastConfig,
 };
 use starknet::accounts::Account;
+use serde::Serialize;
+use serde_json::Value;
 use starknet::core::types::{BlockId, BlockTag::Pending, FieldElement};
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use tokio::runtime::Runtime;
+
+#[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Ord, PartialOrd)]
+pub enum Verbosity {
+    Quiet,
+
+    #[default]
+    Normal,
+}
+
+pub struct ScriptUI {
+    verbosity: Verbosity,
+    value_format: ValueFormat,
+    json: bool,
+}
+
+impl ScriptUI {
+    pub fn new(verbosity: Verbosity, value_format: ValueFormat, json: bool) -> Self {
+        Self {
+            verbosity,
+            value_format,
+            json,
+        }
+    }
+
+    pub fn is_quiet(&self) -> bool {
+        self.verbosity < Verbosity::Normal
+    }
+
+    pub fn print(&self, message: String) {
+        if self.verbosity >= Verbosity::Normal {
+            println!("{}", message);
+        }
+    }
+
+    pub fn print_cheatcode_result<T: Serialize>(
+        &self,
+        cheatcode: &str,
+        result: &mut Result<T>,
+    ) -> Result<()> {
+        if self.verbosity >= Verbosity::Normal {
+            let mut output = vec![("cheatcode", cheatcode.to_string())];
+            let json_value: Value;
+
+            let mut error = false;
+            match result {
+                Ok(result) => {
+                    json_value = serde_json::to_value(result).map_err(|_| {
+                        anyhow!("Failed to convert command result to serde_json::Value")
+                    })?;
+
+                    output.extend(
+                        json_value
+                            .as_object()
+                            .expect("Invalid JSON value")
+                            .iter()
+                            .filter_map(|(k, v)| {
+                                self.value_format
+                                    .format_json_value(v)
+                                    .map(|v| (k.as_str(), v))
+                            })
+                            .collect::<Vec<(&str, String)>>(),
+                    );
+                }
+                Err(message) => {
+                    output.push(("error", format!("{message:#}")));
+                    error = true;
+                }
+            };
+            let res = print_formatted(output, self.json, error);
+            println!();
+            return res;
+        }
+        Ok(())
+    }
+}
 
 #[derive(Args)]
 #[command(about = "Execute a deployment script")]
 pub struct Script {
     /// Module name that contains the `main` function, which will be executed
     pub script_module_name: String,
+
+    /// Logging verbosity
+    #[command(flatten)]
+    pub verbose: clap_verbosity_flag::Verbosity,
 }
 
 pub struct CairoHintProcessor<'a> {
@@ -56,6 +139,7 @@ pub struct CairoHintProcessor<'a> {
     pub runtime: Runtime,
     pub run_resources: RunResources,
     pub config: &'a CastConfig,
+    pub script_ui: ScriptUI,
 }
 
 // cairo/crates/cairo-lang-runner/src/casm_run/mod.rs:457 (ResourceTracker for CairoHintProcessor)
@@ -204,6 +288,9 @@ impl CairoHintProcessor<'_> {
                     .write_data(call_response.response.iter().map(|el| Felt252::from_(*el)))
                     .expect("Failed to insert data");
 
+                self.script_ui
+                    .print_cheatcode_result("call", &mut Ok(call_response))?;
+
                 Ok(())
             }
             "declare" => {
@@ -250,6 +337,9 @@ impl CairoHintProcessor<'_> {
                 buffer
                     .write(Felt252::from_(declare_response.transaction_hash))
                     .expect("Failed to insert transaction hash");
+
+                self.script_ui
+                    .print_cheatcode_result("declare", &mut Ok(declare_response))?;
 
                 Ok(())
             }
@@ -319,6 +409,9 @@ impl CairoHintProcessor<'_> {
                     .write(Felt252::from_(deploy_response.transaction_hash))
                     .expect("Failed to insert transaction hash");
 
+                self.script_ui
+                    .print_cheatcode_result("deploy", &mut Ok(deploy_response))?;
+
                 Ok(())
             }
             "invoke" => {
@@ -375,6 +468,9 @@ impl CairoHintProcessor<'_> {
                     .write(Felt252::from_(invoke_response.transaction_hash))
                     .expect("Failed to insert transaction hash");
 
+                self.script_ui
+                    .print_cheatcode_result("invoke", &mut Ok(invoke_response))?;
+
                 Ok(())
             }
             "get_nonce" => {
@@ -415,8 +511,9 @@ pub fn run(
     provider: &JsonRpcClient<HttpTransport>,
     runtime: Runtime,
     config: &CastConfig,
+    script_ui: ScriptUI,
 ) -> Result<ScriptResponse> {
-    let path = compile_script(path_to_scarb_toml.clone())?;
+    let path = compile_script(path_to_scarb_toml.clone(), &script_ui)?;
 
     let sierra_program = serde_json::from_str::<VersionedProgram>(
         &fs::read_to_string(path.clone())
@@ -453,8 +550,10 @@ pub fn run(
         runtime,
         run_resources: RunResources::default(),
         config,
+        script_ui,
     };
 
+    cairo_hint_processor.script_ui.print(format!("\n\nExecuting script \"{}\"\n", module_name));
     match runner.run_function(
         func,
         &mut cairo_hint_processor,
@@ -476,7 +575,7 @@ pub fn run(
     }
 }
 
-fn compile_script(path_to_scarb_toml: Option<Utf8PathBuf>) -> Result<Utf8PathBuf> {
+fn compile_script(path_to_scarb_toml: Option<Utf8PathBuf>, script_ui: &ScriptUI) -> Result<Utf8PathBuf> {
     let scripts_manifest_path = match path_to_scarb_toml {
         Some(path) => path,
         None => get_scarb_manifest()
@@ -488,8 +587,13 @@ fn compile_script(path_to_scarb_toml: Option<Utf8PathBuf>) -> Result<Utf8PathBuf
         "Path {scripts_manifest_path} does not exist"
     );
 
+    let mut scarb_args = vec!["build"];
+    if script_ui.is_quiet() {
+        scarb_args.push("--quiet")
+    }
+
     ScarbCommand::new()
-        .arg("build")
+        .args(scarb_args)
         .env("SCARB_MANIFEST_PATH", &scripts_manifest_path)
         .run()?;
 

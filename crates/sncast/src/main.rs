@@ -2,10 +2,11 @@ use crate::starknet_commands::account::Account;
 use crate::starknet_commands::show_config::ShowConfig;
 use crate::starknet_commands::{
     account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
-    script::Script,
+    script, script::Script,
 };
 use anyhow::{anyhow, Result};
 
+use crate::starknet_commands::script::ScriptUI;
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
 use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
@@ -14,6 +15,7 @@ use sncast::{
     chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_nonce, get_provider,
     print_command_result, ValueFormat, WaitForTx,
 };
+use clap_verbosity_flag::LevelFilter;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use tokio::runtime::Runtime;
@@ -126,12 +128,14 @@ fn main() -> Result<()> {
     let runtime = Runtime::new().expect("Could not instantiate Runtime");
 
     if let Commands::Script(script) = cli.command {
+        let script_ui = ScriptUI::new(ui_verbosity(script.verbose), value_format, cli.json);
         let mut result = starknet_commands::script::run(
             &script.script_module_name,
             &cli.path_to_scarb_toml,
             &provider,
             runtime,
             &config,
+            script_ui,
         );
 
         print_command_result("script", &mut result, value_format, cli.json)?;
@@ -391,4 +395,13 @@ fn update_cast_config(config: &mut CastConfig, cli: &Cli) {
     config.wait_timeout = clone_or_else!(cli.wait_timeout, config.wait_timeout);
     config.wait_retry_interval =
         clone_or_else!(cli.wait_retry_interval, config.wait_retry_interval);
+}
+
+pub fn ui_verbosity(cli_verbosity: clap_verbosity_flag::Verbosity) -> script::Verbosity {
+    let filter = cli_verbosity.log_level_filter();
+    if filter > LevelFilter::Off {
+        script::Verbosity::Normal
+    } else {
+        script::Verbosity::Quiet
+    }
 }

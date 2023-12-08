@@ -289,8 +289,6 @@ pub async fn wait_for_tx(
     timeout: u16,
     retry_interval: u8,
 ) -> Result<&str> {
-    println!("Transaction hash: {tx_hash:#x}");
-
     if retry_interval == 0 || timeout == 0 || u16::from(retry_interval) > timeout {
         return Err(anyhow!("Invalid values for retry_interval and/or timeout!"));
     }
@@ -384,7 +382,10 @@ pub async fn handle_wait_for_tx<T>(
         .await
         {
             Ok(_) => Ok(return_value),
-            Err(message) => Err(anyhow!(message)),
+            Err(message) => {
+                eprintln!("Transaction hash: {transaction_hash:#x}\n");
+                Err(anyhow!(message))
+            },
         };
     }
 
