@@ -21,7 +21,9 @@ mentions that the gas cost is connected to
 the most costly component. What does it mean?
 
 Let's assume we have a function which uses 100 `Cairo steps`, 12 `range check builtins` and one `keccak builtin`.
-Table (from the `General case`) has gas cost defined for all builtins. In our case:
+[Table](https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/fee-mechanism/#general_case:~:text=and%20builtins%20used.-,The%20weights%20are%3A,-Step) (from the `Starknet documentation`) has gas cost defined
+for all builtins.
+In our case:
 - `Cairo step` - 0.01
 - `range check builtin` - 0.16
 - `keccak builtin` - 20.48
@@ -35,6 +37,5 @@ We should remember that only the most expensive factor will be taken into accoun
 
 ## Estimated gas vs Starknet transaction fee
 
-Transaction fees are a product of the `gas usage` and `gas price`. Although, fees are based on the `gas usage` it is
-impossible to accurately predict the fee because cost of some parts varies depending on the block. However, estimated gas
-can give you good insight into the final transaction fee.
+Transaction fees are a product of the `gas usage` and `gas price`. Remember that `gas_price` will vary between 
+different blocks.
