@@ -19,12 +19,13 @@ struct DeclareResult {
 ```rust
 use sncast_std::{declare, DeclareResult};
 use debug::PrintTrait;
+use starknet::class_hash_to_felt252
 
 fn main() {
     let max_fee = 9999999;
     let declare_result = declare('HelloStarknet', Option::Some(max_fee), Option::None);
 
     let class_hash = declare_result.class_hash;
-    class_hash.print();
+    class_hash_to_felt252(class_hash).print();
 }
 ```
