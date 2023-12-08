@@ -28,7 +28,7 @@ We should remember that only the most expensive factor will be taken into accoun
 
 ## Displaying estimated gas
 
-When the test ends with no errors, estimated gas is displayed this way:
+When the test passes with no errors, estimated gas is displayed this way:
 ```shell
 [PASS] tests::simple_test, gas: ~0.1
 ```
