@@ -1,4 +1,4 @@
-use crate::execution::entry_point::execute_constructor_entry_point;
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::entry_point::execute_constructor_entry_point;
 use crate::state::CheatnetState;
 use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::execution::syscalls::{

@@ -16,6 +16,7 @@ use blockifier::state::state_api::State;
 use cairo_felt::Felt252;
 use cairo_vm::serde::deserialize_program::HintParams;
 use cairo_vm::types::relocatable::Relocatable;
+use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::CallToBlockifierExtension;
 use cheatnet::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
 use cheatnet::runtime_extensions::forge_runtime_extension::{ForgeExtension, ForgeRuntime};
 use cheatnet::runtime_extensions::io_runtime_extension::IORuntimeExtension;
@@ -260,6 +261,13 @@ pub fn run_test_case(
         extended_runtime: cheatable_runtime,
     };
 
+    let call_to_blockifier_runtime = ExtendedRuntime {
+        extension: CallToBlockifierExtension {
+            lifetime: &PhantomData,
+        },
+        extended_runtime: io_runtime,
+    };
+
     let forge_extension = ForgeExtension {
         environment_variables: &runner_params.environment_variables,
         contracts: &runner_params.contracts,
@@ -267,7 +275,7 @@ pub fn run_test_case(
 
     let mut forge_runtime = ExtendedRuntime {
         extension: forge_extension,
-        extended_runtime: io_runtime,
+        extended_runtime: call_to_blockifier_runtime,
     };
 
     let latest_block_number = if let Some(ValidatedForkConfig {
@@ -379,6 +387,7 @@ fn get_all_execution_resources(runtime: ForgeRuntime) -> UsedResources {
         .extended_runtime
         .extended_runtime
         .extended_runtime
+        .extended_runtime
         .hint_handler
         .resources
         .clone();
@@ -410,6 +419,7 @@ fn get_all_execution_resources(runtime: ForgeRuntime) -> UsedResources {
     let cheatnet_used_resources = &runtime
         .extended_runtime
         .extended_runtime
+        .extended_runtime
         .extension
         .cheatnet_state
         .used_resources;
@@ -420,6 +430,7 @@ fn get_all_execution_resources(runtime: ForgeRuntime) -> UsedResources {
 
 fn get_context<'a>(runtime: &'a ForgeRuntime) -> &'a EntryPointExecutionContext {
     runtime
+        .extended_runtime
         .extended_runtime
         .extended_runtime
         .extended_runtime
