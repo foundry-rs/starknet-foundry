@@ -2,20 +2,124 @@ use indoc::indoc;
 use test_utils::running_tests::run_test_case;
 use test_utils::{assert_passed, test_case};
 
+// #[should_panic(expected: ('Currently only Secp256k1 and', 'Secp256r1 curves are supported'))]
+
+// key_pair.secret_key.print();
+// let pk = key_pair.public_key.get_coordinates().unwrap_syscall();
+// let (x, y) = pk;
+// x.print();
+// y.print();
+
+#[test]
+fn test_key_pair() {
+    let test = test_case!(indoc!(
+        r"
+            use snforge_std::signature::elliptic_curve::{ KeyPair, KeyPairTrait };
+            use starknet::secp256k1::{ Secp256k1Impl, Secp256k1Point, Secp256k1PointImpl };
+            use starknet::secp256r1::{ Secp256r1Impl, Secp256r1Point, Secp256r1PointImpl };
+
+            #[test]
+            fn test_u256_k1() {
+                let key_pair = KeyPairTrait::<u256, Secp256k1Point>::generate();
+            }
+
+            #[test]
+            fn test_u256_r1() {
+                let key_pair = KeyPairTrait::<u256, Secp256k1Point>::generate();
+            }
+
+            #[test]
+            fn test_u256_felt252() {
+                let key_pair = KeyPairTrait::<u256, felt252>::generate();
+            }
+
+            #[test]
+            fn test_felt252_u256() {
+                let key_pair = KeyPairTrait::<felt252, u256>::generate();
+            }
+
+            #[test]
+            fn test_felt252_felt252() {
+                let key_pair = KeyPairTrait::<felt252, felt252>::generate();
+            }
+
+            #[test]
+            fn test_u256_u256() {
+                let key_pair = KeyPairTrait::<u256, u256>::generate();
+            }
+        "
+    ));
+
+    let result = run_test_case(&test);
+
+    assert_passed!(result);
+}
+
+// #[test]
+// fn test_invalid_key_pair() {
+//     let test = test_case!(indoc!(
+//         r"
+//             use snforge_std::signature::elliptic_curve::{ KeyPair, KeyPairTrait, Signer, Verifier };
+//             use starknet::secp256k1::{ Secp256k1Impl, Secp256k1Point, Secp256k1PointImpl };
+//             use starknet::secp256r1::{ Secp256r1Impl, Secp256r1Point, Secp256r1PointImpl };
+
+//             #[test]
+//             #[should_panic]
+//             fn test_u256_r1() {
+//                 let key_pair = KeyPairTrait::<Secp256k1Point, Secp256k1Point>::generate();
+//             }
+
+//             #[test]
+//             #[should_panic]
+//             fn test_u256_r1() {
+//                 let key_pair = KeyPairTrait::<felt252, Secp256k1Point>::generate();
+//             }
+
+//             #[test]
+//             #[should_panic]
+//             fn test_u128_felt252() {
+//                 let key_pair = KeyPairTrait::<u128, felt252>::generate();
+//             }
+
+//             #[test]
+//             #[should_panic]
+//             fn test_felt252_u128() {
+//                 let key_pair = KeyPairTrait::<felt252, u128>::generate();
+//             }
+//         "
+//     ));
+
+//     let result = run_test_case(&test);
+
+//     assert_passed!(result);
+// }
+
 #[test]
 fn simple_signing_flow_stark_curve() {
     let test = test_case!(indoc!(
         r"
-            use snforge_std::signature::{ StarkCurveKeyPair, StarkCurveKeyPairTrait, Signer, Verifier };
+        use snforge_std::signature::elliptic_curve::interface::{ KeyPair, KeyPairTrait, Signer, Verifier };
+        use snforge_std::signature::elliptic_curve::stark_curve::{ StarkCurveKeyPairImpl, StarkCurveSignerImpl, StarkCurveVerifierImpl };
+        use ec::{ EcPointTrait, NonZeroEcPoint };
 
-            #[test]
-            fn test() {
-                let mut key_pair = StarkCurveKeyPairTrait::generate();
-                let message_hash = 123456;
+        #[test]
+        fn test() {
+            // let mut key_pair = KeyPairTrait::<felt252, felt252>::generate();
+            // let message_hash = 123456;
 
-                let signature = key_pair.sign(message_hash).unwrap();
-                assert(key_pair.verify(message_hash, signature), 'Wrong signature');
-            }
+            // let signature = key_pair.sign(message_hash);
+            // assert(key_pair.verify(message_hash, signature), 'Wrong signature');
+
+            let mut key_pair = KeyPairTrait::<felt252, NonZeroEcPoint>::generate();
+            let message_hash = 123456;
+
+            let signature = key_pair.sign(message_hash);
+            assert(key_pair.verify(message_hash, signature), 'Wrong signature');
+
+            let key_pair2 = KeyPairTrait::<felt252, NonZeroEcPoint>::from_secret_key(key_pair.secret_key);
+            assert(key_pair.secret_key == key_pair2.secret_key, 'Secret keys should be equal');
+            assert(key_pair.public_key.coordinates() == key_pair2.public_key.coordinates(), 'Public keys should be equal');
+        }
         "
     ));
 
