@@ -1,7 +1,6 @@
 use anyhow::{anyhow, Error, Result};
 use camino::Utf8Path;
 
-
 use std::sync::Arc;
 
 use compiled_raw::{CompiledTestCrateRaw, RawForkConfig, RawForkParams};
@@ -190,7 +189,7 @@ async fn run_internal(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::compiled_raw::{CompiledTestCrateRaw, TestCaseRaw};
+    use crate::compiled_raw::{CompiledTestCrateRaw, CrateLocation, TestCaseRaw};
     use cairo_lang_sierra::program::Program;
     use forge_runner::expected_result::ExpectedTestResult;
 
