@@ -27,6 +27,7 @@ cairo-lang-sierra-to-casm = "=2.3.1"
 cairo-lang-sierra = "=2.3.1"
 cairo-lang-utils = "=2.3.1"
 cairo-lang-starknet = "=2.3.1"
+cairo-lang-starknet-sierra3 = {package = "cairo-lang-starknet", git = "https://github.com/starkware-libs/cairo.git", tag = "v1.0.0-alpha.6"}
 cairo-lang-compiler = "=2.3.1"
 cairo-lang-filesystem = "=2.3.1"
 cairo-lang-debug = "=2.3.1"
