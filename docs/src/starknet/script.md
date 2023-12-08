@@ -96,6 +96,7 @@ fn main() {
 
     let declare_result = declare('Map', Option::Some(max_fee), Option::None);
 
+    let nonce = get_nonce('latest');
     let class_hash = declare_result.class_hash;
     let deploy_result = deploy(
         class_hash, ArrayTrait::new(), Option::Some(salt), true, Option::Some(max_fee), Option::Some(nonce)
