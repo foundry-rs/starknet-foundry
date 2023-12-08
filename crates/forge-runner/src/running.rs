@@ -20,6 +20,7 @@ use cheatnet::runtime_extensions::forge_runtime_extension::{ForgeExtension, Forg
 use cheatnet::runtime_extensions::io_runtime_extension::IORuntimeExtension;
 use itertools::chain;
 
+use crate::compiled_runnable::ValidatedForkConfig;
 use crate::gas::gas_from_execution_resources;
 use crate::sierra_casm_runner::SierraCasmRunner;
 use crate::test_case_summary::TestCaseSummary;
@@ -50,7 +51,6 @@ use tokio::runtime::Runtime;
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
 use url::Url;
-use crate::compiled_runnable::{ ValidatedForkConfig};
 
 /// Builds `hints_dict` required in `cairo_vm::types::program::Program` from instructions.
 fn build_hints_dict<'b>(

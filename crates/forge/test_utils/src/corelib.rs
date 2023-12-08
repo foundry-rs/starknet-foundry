@@ -1,8 +1,5 @@
-use assert_fs::fixture::{PathCopy};
+use assert_fs::fixture::PathCopy;
 use assert_fs::TempDir;
-
-
-
 
 #[must_use]
 pub fn predeployed_contracts() -> TempDir {
