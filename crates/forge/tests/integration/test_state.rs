@@ -360,7 +360,7 @@ fn test_cant_call_test_contract() {
                 r"
                 use starknet::ContractAddress;
 
-                [starknet::interface]
+                #[starknet::interface]
                 trait ICallsBack<TContractState> {
                     fn call_back(ref self: TContractState, address: ContractAddress);
                 }
