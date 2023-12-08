@@ -7,6 +7,13 @@ Forge supports gas estimation for each test case. All computations are based on 
 
 > ⚠️ In the next releases, gas estimation will be improved to include [onchain data cost](https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/fee-mechanism/#_on_chain_data)  ⚠️
 
+## Displaying estimated gas
+
+When the test passes with no errors, estimated gas is displayed this way:
+```shell
+[PASS] tests::simple_test, gas: ~0.1
+```
+
 ## Calculating gas from VM resources
 
 [General case](https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/fee-mechanism/#general_case)
@@ -26,9 +33,8 @@ Multiplication of those values gives us a gas cost for each component:
 
 We should remember that only the most expensive factor will be taken into account, so our overall gas cost is `20.48`.
 
-## Displaying estimated gas
+## Estimated gas vs Starknet transaction fee
 
-When the test passes with no errors, estimated gas is displayed this way:
-```shell
-[PASS] tests::simple_test, gas: ~0.1
-```
+Transaction fees are a product of the `gas usage` and `gas price`. Although, fees are based on the `gas usage` it is
+impossible to accurately predict the fee because cost of some parts varies depending on the block. However, estimated gas
+can give you good insight into the final transaction fee.
