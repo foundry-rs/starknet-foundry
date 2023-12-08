@@ -61,7 +61,6 @@ async fn test_default_verbosity() {
     "#});
 }
 
-
 #[tokio::test]
 async fn test_quiet() {
     let script_name = "map_script";
@@ -74,19 +73,18 @@ async fn test_quiet() {
         URL,
         "script",
         &script_name,
-        "--quiet"
+        "--quiet",
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
         .current_dir(SCRIPTS_DIR.to_owned() + "/map_script/scripts")
         .args(args);
 
-    snapbox.assert().success().stdout_matches(indoc! {r#"
+    snapbox.assert().success().stdout_matches(indoc! {r"
         command: script
         status: success
-    "#});
+    "});
 }
-
 
 #[tokio::test]
 async fn test_one_of_the_steps_failing() {

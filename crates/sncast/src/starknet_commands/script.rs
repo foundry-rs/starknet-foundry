@@ -74,9 +74,9 @@ impl ScriptUI {
         self.verbosity < Verbosity::Normal
     }
 
-    pub fn print(&self, message: String) {
+    pub fn print(&self, message: &str) {
         if self.verbosity >= Verbosity::Normal {
-            println!("{}", message);
+            println!("{message}");
         }
     }
 
@@ -553,7 +553,9 @@ pub fn run(
         script_ui,
     };
 
-    cairo_hint_processor.script_ui.print(format!("\n\nExecuting script \"{}\"\n", module_name));
+    cairo_hint_processor
+        .script_ui
+        .print(format!("\n\nExecuting script \"{module_name}\"\n").as_str());
     match runner.run_function(
         func,
         &mut cairo_hint_processor,
@@ -575,7 +577,10 @@ pub fn run(
     }
 }
 
-fn compile_script(path_to_scarb_toml: Option<Utf8PathBuf>, script_ui: &ScriptUI) -> Result<Utf8PathBuf> {
+fn compile_script(
+    path_to_scarb_toml: Option<Utf8PathBuf>,
+    script_ui: &ScriptUI,
+) -> Result<Utf8PathBuf> {
     let scripts_manifest_path = match path_to_scarb_toml {
         Some(path) => path,
         None => get_scarb_manifest()
@@ -589,7 +594,7 @@ fn compile_script(path_to_scarb_toml: Option<Utf8PathBuf>, script_ui: &ScriptUI)
 
     let mut scarb_args = vec!["build"];
     if script_ui.is_quiet() {
-        scarb_args.push("--quiet")
+        scarb_args.push("--quiet");
     }
 
     ScarbCommand::new()

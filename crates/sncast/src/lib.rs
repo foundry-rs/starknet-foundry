@@ -385,7 +385,7 @@ pub async fn handle_wait_for_tx<T>(
             Err(message) => {
                 eprintln!("Transaction hash: {transaction_hash:#x}\n");
                 Err(anyhow!(message))
-            },
+            }
         };
     }
 

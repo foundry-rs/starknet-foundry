@@ -128,7 +128,7 @@ fn main() -> Result<()> {
     let runtime = Runtime::new().expect("Could not instantiate Runtime");
 
     if let Commands::Script(script) = cli.command {
-        let script_ui = ScriptUI::new(ui_verbosity(script.verbose), value_format, cli.json);
+        let script_ui = ScriptUI::new(ui_verbosity(&script.verbose), value_format, cli.json);
         let mut result = starknet_commands::script::run(
             &script.script_module_name,
             &cli.path_to_scarb_toml,
@@ -397,7 +397,8 @@ fn update_cast_config(config: &mut CastConfig, cli: &Cli) {
         clone_or_else!(cli.wait_retry_interval, config.wait_retry_interval);
 }
 
-pub fn ui_verbosity(cli_verbosity: clap_verbosity_flag::Verbosity) -> script::Verbosity {
+#[must_use]
+pub fn ui_verbosity(cli_verbosity: &clap_verbosity_flag::Verbosity) -> script::Verbosity {
     let filter = cli_verbosity.log_level_filter();
     if filter > LevelFilter::Off {
         script::Verbosity::Normal
