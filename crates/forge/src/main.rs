@@ -2,23 +2,23 @@ use anyhow::{anyhow, bail, Context, Result};
 use camino::Utf8Path;
 use clap::{Parser, Subcommand, ValueEnum};
 use forge::scarb::config::ForgeConfig;
-use forge::scarb::config_from_scarb_for_package;
+use forge::scarb::{build_contracts_with_scarb, config_from_scarb_for_package};
 use forge::shared_cache::{clean_cache, set_cached_failed_tests_names};
 use forge::test_filter::TestsFilter;
-use forge::{pretty_printing, run};
+use forge::{pretty_printing, run, run_with_scarb_collector};
 use forge_runner::test_case_summary::TestCaseSummary;
 use forge_runner::test_crate_summary::{AnyTestCaseSummary, TestCrateSummary};
 use forge_runner::{RunnerConfig, RunnerParams, CACHE_DIR};
 use rand::{thread_rng, RngCore};
 use scarb_artifacts::{
     corelib_for_package, dependencies_for_package, get_contracts_map, name_for_package,
-    paths_for_package,
+    paths_for_package, target_dir_for_workspace,
 };
 use scarb_metadata::{Metadata, MetadataCommand, PackageMetadata};
 use scarb_ui::args::PackagesFilter;
 
+use forge::scarb_test_collector::build_test_artifacts_with_scarb;
 use std::env;
-use std::process::{Command, Stdio};
 use std::sync::Arc;
 use std::thread::available_parallelism;
 use tokio::runtime::Builder;
@@ -95,6 +95,10 @@ struct TestArgs {
     /// Run tests that failed during the last run
     #[arg(long)]
     rerun_failed: bool,
+
+    /// [EXPERIMENTAL] Uses Scarb to find and compile tests. Requires at least Scarb nightly-2023-12-04
+    #[arg(long)]
+    use_scarb_collector: bool,
 }
 
 fn validate_fuzzer_runs_value(val: &str) -> Result<u32> {
@@ -140,6 +144,7 @@ fn combine_configs(
     )
 }
 
+#[allow(clippy::too_many_lines)]
 fn test_workspace(args: TestArgs) -> Result<bool> {
     match args.color {
         ColorOption::Always => env::set_var("CLICOLOR_FORCE", "1"),
@@ -149,6 +154,9 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
 
     let scarb_metadata = MetadataCommand::new().inherit_stderr().exec()?;
     let workspace_root = scarb_metadata.workspace.root.clone();
+    let snforge_target_dir_path = target_dir_for_workspace(&scarb_metadata)
+        .join(&scarb_metadata.current_profile)
+        .join("snforge");
 
     let packages: Vec<PackageMetadata> = args
         .packages_filter
@@ -156,16 +164,11 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
         .context("Failed to find any packages matching the specified filter")?;
 
     let filter = PackagesFilter::generate_for::<Metadata>(packages.iter());
-    let build_output = Command::new("scarb")
-        .arg("build")
-        .env("SCARB_PACKAGES_FILTER", filter.to_env())
-        .stderr(Stdio::inherit())
-        .stdout(Stdio::inherit())
-        .output()
-        .context("Failed to build contracts with Scarb")?;
-    if !build_output.status.success() {
-        bail!("Scarb build did not succeed")
+
+    if args.use_scarb_collector {
+        build_test_artifacts_with_scarb(filter.clone())?;
     }
+    build_contracts_with_scarb(filter.clone())?;
 
     let cores = if let Ok(available_cores) = available_parallelism() {
         available_cores.get()
@@ -183,52 +186,95 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
         rt.spawn(async move {
             let mut all_failed_tests = vec![];
             for package in &packages {
-                let forge_config = config_from_scarb_for_package(&scarb_metadata, &package.id)?;
-                let (package_path, package_source_dir_path) =
-                    paths_for_package(&scarb_metadata, &package.id)?;
-                env::set_current_dir(package_path.clone())?;
+                if args.use_scarb_collector {
+                    env::set_current_dir(&package.root)?;
 
-                let package_name = Arc::new(name_for_package(&scarb_metadata, &package.id)?);
-                let dependencies = dependencies_for_package(&scarb_metadata, &package.id)?;
-                let corelib_path = corelib_for_package(&scarb_metadata, &package.id)?;
+                    let forge_config = config_from_scarb_for_package(&scarb_metadata, &package.id)?;
+                    let contracts =
+                        get_contracts_map(&scarb_metadata, &package.id).unwrap_or_default();
 
-                let contracts = get_contracts_map(&scarb_metadata, &package.id).unwrap_or_default();
+                    let runner_config = Arc::new(combine_configs(
+                        &workspace_root,
+                        args.exit_first,
+                        args.fuzzer_runs,
+                        args.fuzzer_seed,
+                        &forge_config,
+                    ));
+                    let runner_params = Arc::new(RunnerParams::new(
+                        Default::default(),
+                        contracts,
+                        env::vars().collect(),
+                        Default::default(),
+                    ));
 
-                let runner_config = Arc::new(combine_configs(
-                    &workspace_root,
-                    args.exit_first,
-                    args.fuzzer_runs,
-                    args.fuzzer_seed,
-                    &forge_config,
-                ));
+                    let tests_file_summaries = run_with_scarb_collector(
+                        &package.name,
+                        &snforge_target_dir_path,
+                        &TestsFilter::from_flags(
+                            args.test_filter.clone(),
+                            args.exact,
+                            args.only_ignored,
+                            args.include_ignored,
+                            args.rerun_failed,
+                            workspace_root.join(CACHE_DIR),
+                        ),
+                        runner_config,
+                        runner_params,
+                        &forge_config.fork,
+                    )
+                    .await?;
 
-                let runner_params = Arc::new(RunnerParams::new(
-                    corelib_path,
-                    contracts,
-                    env::vars().collect(),
-                    dependencies,
-                ));
+                    let mut failed_tests = extract_failed_tests(tests_file_summaries);
+                    all_failed_tests.append(&mut failed_tests);
+                } else {
+                    let forge_config = config_from_scarb_for_package(&scarb_metadata, &package.id)?;
+                    let (package_path, package_source_dir_path) =
+                        paths_for_package(&scarb_metadata, &package.id)?;
+                    env::set_current_dir(package_path.clone())?;
 
-                let tests_file_summaries = run(
-                    &package_path,
-                    &package_name,
-                    &package_source_dir_path,
-                    &TestsFilter::from_flags(
-                        args.test_filter.clone(),
-                        args.exact,
-                        args.only_ignored,
-                        args.include_ignored,
-                        args.rerun_failed,
-                        workspace_root.join(CACHE_DIR),
-                    ),
-                    runner_config,
-                    runner_params,
-                    &forge_config.fork,
-                )
-                .await?;
+                    let package_name = Arc::new(name_for_package(&scarb_metadata, &package.id)?);
+                    let dependencies = dependencies_for_package(&scarb_metadata, &package.id)?;
+                    let corelib_path = corelib_for_package(&scarb_metadata, &package.id)?;
 
-                let mut failed_tests = extract_failed_tests(tests_file_summaries);
-                all_failed_tests.append(&mut failed_tests);
+                    let contracts =
+                        get_contracts_map(&scarb_metadata, &package.id).unwrap_or_default();
+
+                    let runner_config = Arc::new(combine_configs(
+                        &workspace_root,
+                        args.exit_first,
+                        args.fuzzer_runs,
+                        args.fuzzer_seed,
+                        &forge_config,
+                    ));
+
+                    let runner_params = Arc::new(RunnerParams::new(
+                        corelib_path,
+                        contracts,
+                        env::vars().collect(),
+                        dependencies,
+                    ));
+
+                    let tests_file_summaries = run(
+                        &package_path,
+                        &package_name,
+                        &package_source_dir_path,
+                        &TestsFilter::from_flags(
+                            args.test_filter.clone(),
+                            args.exact,
+                            args.only_ignored,
+                            args.include_ignored,
+                            args.rerun_failed,
+                            workspace_root.join(CACHE_DIR),
+                        ),
+                        runner_config,
+                        runner_params,
+                        &forge_config.fork,
+                    )
+                    .await?;
+
+                    let mut failed_tests = extract_failed_tests(tests_file_summaries);
+                    all_failed_tests.append(&mut failed_tests);
+                }
             }
             set_cached_failed_tests_names(&all_failed_tests, &workspace_root.join(CACHE_DIR))?;
 

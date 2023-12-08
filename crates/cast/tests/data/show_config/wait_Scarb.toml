@@ -1,0 +1,24 @@
+[package]
+name = "correct"
+version = "0.1.0"
+
+[dependencies]
+starknet = ">=1.1.1"
+
+[[target.starknet-contract]]
+casm = true
+
+[lib]
+sierra = false
+
+[tool.sncast]
+url = "http://127.0.0.1:5055/rpc"
+account = "/path/to/account.json"
+keystore = "../keystore"
+
+[tool.sncast.profile1]
+url = "http://127.0.0.1:5055/rpc"
+account = "user1"
+accounts-file = "../account-file"
+wait-timeout = 123
+wait-retry-interval = 12

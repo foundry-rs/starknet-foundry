@@ -1,3 +1,4 @@
+use super::constants::{WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
 use anyhow::{anyhow, bail, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use scarb_metadata;
@@ -9,12 +10,14 @@ use std::fs::canonicalize;
 use std::process::{Command, Stdio};
 use std::str::FromStr;
 
-#[derive(Deserialize, Serialize, Clone, Debug, Default)]
+#[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct CastConfig {
     pub rpc_url: String,
     pub account: String,
     pub accounts_file: Utf8PathBuf,
     pub keystore: Utf8PathBuf,
+    pub wait_timeout: u16,
+    pub wait_retry_interval: u8,
 }
 
 impl CastConfig {
@@ -29,7 +32,79 @@ impl CastConfig {
             account: get_property(tool, "account"),
             accounts_file: get_property(tool, "accounts-file"),
             keystore: get_property(tool, "keystore"),
+            wait_timeout: get_property(tool, "wait-timeout"),
+            wait_retry_interval: get_property(tool, "wait-retry-interval"),
         })
+    }
+}
+
+impl Default for CastConfig {
+    fn default() -> Self {
+        Self {
+            rpc_url: String::default(),
+            account: String::default(),
+            accounts_file: Utf8PathBuf::default(),
+            keystore: Utf8PathBuf::default(),
+            wait_timeout: WAIT_TIMEOUT,
+            wait_retry_interval: WAIT_RETRY_INTERVAL,
+        }
+    }
+}
+
+pub trait PropertyFromCastConfig: Sized {
+    fn from_toml_value(value: &Value) -> Option<Self>;
+    fn default_value() -> Self;
+}
+
+impl PropertyFromCastConfig for String {
+    fn from_toml_value(value: &Value) -> Option<Self> {
+        value.as_str().map(std::borrow::ToOwned::to_owned)
+    }
+
+    fn default_value() -> Self {
+        String::default()
+    }
+}
+
+impl PropertyFromCastConfig for Utf8PathBuf {
+    fn from_toml_value(value: &Value) -> Option<Self> {
+        value.as_str().map(Utf8PathBuf::from)
+    }
+
+    fn default_value() -> Self {
+        Utf8PathBuf::default()
+    }
+}
+
+impl PropertyFromCastConfig for u8 {
+    fn from_toml_value(value: &Value) -> Option<Self> {
+        value.as_u64().and_then(|i| i.try_into().ok())
+    }
+
+    fn default_value() -> Self {
+        WAIT_RETRY_INTERVAL
+    }
+}
+
+impl PropertyFromCastConfig for u16 {
+    fn from_toml_value(value: &Value) -> Option<Self> {
+        value.as_u64().and_then(|i| i.try_into().ok())
+    }
+
+    fn default_value() -> Self {
+        WAIT_TIMEOUT
+    }
+}
+
+impl<T> PropertyFromCastConfig for Option<T>
+where
+    T: PropertyFromCastConfig,
+{
+    fn from_toml_value(value: &Value) -> Option<Self> {
+        T::from_toml_value(value).map(Some)
+    }
+    fn default_value() -> Self {
+        Some(T::default_value())
     }
 }
 
@@ -42,14 +117,13 @@ pub fn get_profile<'a>(tool_sncast: &'a Value, profile: &Option<String>) -> Resu
     }
 }
 
-pub fn get_property<'a, T>(tool: &'a Value, field: &str) -> T
+pub fn get_property<T>(tool: &Value, field: &str) -> T
 where
-    T: From<&'a str> + Default,
+    T: PropertyFromCastConfig + Default,
 {
     tool.get(field)
-        .and_then(Value::as_str)
-        .map(T::from)
-        .unwrap_or_default()
+        .and_then(T::from_toml_value)
+        .unwrap_or_else(T::default_value)
 }
 
 pub fn get_scarb_manifest() -> Result<Utf8PathBuf> {
@@ -204,6 +278,8 @@ pub fn get_package_tool_sncast(metadata: &scarb_metadata::Metadata) -> Result<&V
 mod tests {
     use crate::helpers::scarb_utils::get_scarb_metadata;
     use crate::helpers::scarb_utils::parse_scarb_config;
+    use crate::helpers::scarb_utils::CastConfig;
+    use crate::helpers::scarb_utils::{WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
     use camino::Utf8PathBuf;
     use sealed_test::prelude::rusty_fork_test;
     use sealed_test::prelude::sealed_test;
@@ -312,5 +388,12 @@ mod tests {
         assert!(metadata_err
             .to_string()
             .contains("Failed to read Scarb.toml manifest file"));
+    }
+
+    #[test]
+    fn test_config_defaults() {
+        let config = CastConfig::default();
+        assert_eq!(config.wait_timeout, WAIT_TIMEOUT);
+        assert_eq!(config.wait_retry_interval, WAIT_RETRY_INTERVAL);
     }
 }
