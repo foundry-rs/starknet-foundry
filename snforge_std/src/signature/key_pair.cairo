@@ -9,11 +9,10 @@ trait KeyPairTrait<SK, PK> {
     fn from_secret_key(secret_key: SK) -> KeyPair<SK, PK>;
 }
 
-trait Signer<S, H, U> {
-    fn sign(self: S, message_hash: H) -> (U, U);
+trait SignerTrait<T, H, U> {
+    fn sign(self: T, message_hash: H) -> (U, U);
 }
 
-// TODO: ref self?
-trait Verifier<S, H, U> {
-    fn verify(self: S, message_hash: H, signature: (U, U)) -> bool;
+trait VerifierTrait<T, H, U> {
+    fn verify(self: T, message_hash: H, signature: (U, U)) -> bool;
 }
