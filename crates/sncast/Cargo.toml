@@ -1,6 +1,6 @@
 [package]
 name = "sncast"
-description = "Cast - a Starknet Foundry CLI client"
+description = "sncast - a Starknet Foundry CLI client"
 version.workspace = true
 edition.workspace = true
 
