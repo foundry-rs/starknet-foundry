@@ -45,7 +45,7 @@ fn get_total_vm_usage(resources: &ExecutionResources) -> VmExecutionResources {
             &resources.syscall_counter,
             TransactionType::InvokeFunction,
         )
-        .unwrap())
-        - unnecessary_added_resources;
+        .unwrap()
+            - unnecessary_added_resources);
     total_vm_usage.filter_unused_builtins()
 }
