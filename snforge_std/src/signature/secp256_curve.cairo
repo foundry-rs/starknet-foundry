@@ -9,7 +9,7 @@ use starknet::testing::cheatcode;
 
 use snforge_std::signature::key_pair::{KeyPair, KeyPairTrait, SignerTrait, VerifierTrait};
 
-impl SecpCurveKeyPairImpl<
+impl Secp256CurveKeyPairImpl<
     Secp256Point,
     impl Secp256Impl: Secp256Trait<Secp256Point>,
     impl Secp256PointImpl: Secp256PointTrait<Secp256Point>
@@ -41,7 +41,7 @@ impl SecpCurveKeyPairImpl<
     }
 }
 
-impl SecpCurveSignerImpl<
+impl Secp256CurveSignerImpl<
     Secp256Point,
     +Drop<Secp256Point>,
     impl Secp256Impl: Secp256Trait<Secp256Point>,
@@ -71,7 +71,7 @@ impl SecpCurveSignerImpl<
     }
 }
 
-impl SecpCurveVerifierImpl<
+impl Secp256CurveVerifierImpl<
     Secp256Point,
     +Drop<Secp256Point>,
     impl Secp256Impl: Secp256Trait<Secp256Point>,
