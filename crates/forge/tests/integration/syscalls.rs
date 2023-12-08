@@ -128,7 +128,6 @@ fn library_call_syscall() {
                             number + 2
                         }
 
-                        #[abi(embed_v0)]
                         fn get_thing(self: @ContractState) -> felt252 {
                             self.thing.read()
                         }

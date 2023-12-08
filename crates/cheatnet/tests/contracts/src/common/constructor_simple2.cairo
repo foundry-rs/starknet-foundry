@@ -24,7 +24,6 @@ mod ConstructorSimple2 {
             new_number
         }
 
-        #[abi(embed_v0)]
         fn get_number(self: @ContractState) -> felt252 {
             self.number.read()
         }

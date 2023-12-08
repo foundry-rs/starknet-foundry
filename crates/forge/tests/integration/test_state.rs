@@ -258,7 +258,6 @@ fn test_library_calls() {
                            self.value.read()
                         }
 
-                        #[abi(embed_v0)]
                         fn set_value(
                             ref self: ContractState,
                             number: felt252
@@ -359,6 +358,13 @@ fn test_cant_call_test_contract() {
             "CallsBack",
             indoc!(
                 r"
+                use starknet::ContractAddress;
+
+                [starknet::interface]
+                trait ICallsBack<TContractState> {
+                    fn call_back(ref self: TContractState, address: ContractAddress);
+                }
+
                 #[starknet::contract]
                 mod CallsBack {
                     use result::ResultTrait;
@@ -376,9 +382,11 @@ fn test_cant_call_test_contract() {
         
 
                     #[abi(embed_v0)]
-                    fn call_back(ref self: ContractState, address: ContractAddress) {
-                        let dispatcher = IDontExistDispatcher{contract_address: address};
-                        dispatcher.test_calling_test_fails();
+                    impl CallsBackImpl of super::ICallsBack<ContractState> {
+                        fn call_back(ref self: ContractState, address: ContractAddress) {
+                            let dispatcher = IDontExistDispatcher{contract_address: address};
+                            dispatcher.test_calling_test_fails();
+                        }
                     }
                 }
                 "
@@ -590,8 +598,13 @@ fn test_spy_struct_events() {
                 EventSpy, EventFetcher, 
                 EventAssertions, Event, SpyOn, test_address 
             };
+
+            #[starknet::interface]
+            trait IEmitter<TContractState> {
+              fn emit_event(ref self: TContractState);
+            }
                 
-           #[starknet::contract]
+            #[starknet::contract]
             mod Emitter {
                 use result::ResultTrait;
                 use starknet::ClassHash;
@@ -611,10 +624,12 @@ fn test_spy_struct_events() {
                 struct Storage {}
 
                 #[abi(embed_v0)]
-                fn emit_event(
-                    ref self: ContractState,
-                ) {
-                    self.emit(Event::ThingEmitted(ThingEmitted { thing: 420 }));
+                impl EmitterImpl of super::IEmitter<ContractState> {
+                    fn emit_event(
+                        ref self: ContractState,
+                    ) {
+                        self.emit(Event::ThingEmitted(ThingEmitted { thing: 420 }));
+                    }
                 }
             }
 
