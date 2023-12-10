@@ -400,7 +400,9 @@ fn update_cast_config(config: &mut CastConfig, cli: &Cli) {
 #[must_use]
 pub fn ui_verbosity(cli_verbosity: &clap_verbosity_flag::Verbosity) -> script::Verbosity {
     let filter = cli_verbosity.log_level_filter();
-    if filter > LevelFilter::Off {
+    if filter >= LevelFilter::Warn {
+        script::Verbosity::Verbose
+    } else if filter > LevelFilter::Off {
         script::Verbosity::Normal
     } else {
         script::Verbosity::Quiet

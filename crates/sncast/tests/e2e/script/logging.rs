@@ -134,3 +134,126 @@ async fn test_one_of_the_steps_failing() {
        ...
     "#});
 }
+
+#[tokio::test]
+async fn test_verbose() {
+    let script_name = "map_script";
+    let args = vec![
+        "--accounts-file",
+        "../../../accounts/accounts.json",
+        "--account",
+        "user4",
+        "--url",
+        URL,
+        "script",
+        &script_name,
+        "--verbose",
+    ];
+
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(SCRIPTS_DIR.to_owned() + "/map_script/scripts")
+        .args(args);
+
+    snapbox.assert().success().stdout_matches(indoc! {r#"
+           Compiling lib(map_script) map_script v0.1.0 [..]
+           Compiling starknet-contract(map_script) map_script v0.1.0 [..]
+            Finished release target(s) in [..] seconds
+
+
+        Executing script "map_script"
+
+        Args passed to "declare" cheatcode:
+        {
+        	contract_name = "Mapa",
+        	max_fee = Some(
+        	    FieldElement {
+        	        inner: 0x000000000000000000000000000000000000000000000000016345785d89ffff,
+        	    },
+        	),
+        	nonce = Some(
+        	    FieldElement {
+        	        inner: 0x0000000000000000000000000000000000000000000000000000000000000001,
+        	    },
+        	),
+        }
+
+        cheatcode: declare
+        class_hash: 0x[..]
+        transaction_hash: 0x[..]
+
+        Args passed to "deploy" cheatcode:
+        {
+        	class_hash = FieldElement {
+        	    inner: 0x[..],
+        	},
+        	constructor_calldata = [],
+        	salt = Some(
+        	    FieldElement {
+        	        inner: 0x0000000000000000000000000000000000000000000000000000000000000003,
+        	    },
+        	),
+        	unique = true,
+        	max_fee = Some(
+        	    FieldElement {
+        	        inner: 0x000000000000000000000000000000000000000000000000016345785d89ffff,
+        	    },
+        	),
+        	nonce = Some(
+        	    FieldElement {
+        	        inner: 0x0000000000000000000000000000000000000000000000000000000000000002,
+        	    },
+        	),
+        }
+
+        cheatcode: deploy
+        contract_address: 0x[..]
+        transaction_hash: 0x[..]
+
+        Args passed to "invoke" cheatcode:
+        {
+        	contract_address = FieldElement {
+        	    inner: 0x[..],
+        	},
+        	entry_point_name = "put",
+        	calldata = [
+        	    FieldElement {
+        	        inner: 0x0000000000000000000000000000000000000000000000000000000000000001,
+        	    },
+        	    FieldElement {
+        	        inner: 0x0000000000000000000000000000000000000000000000000000000000000002,
+        	    },
+        	],
+        	max_fee = Some(
+        	    FieldElement {
+        	        inner: 0x000000000000000000000000000000000000000000000000016345785d89ffff,
+        	    },
+        	),
+        	nonce = Some(
+        	    FieldElement {
+        	        inner: 0x0000000000000000000000000000000000000000000000000000000000000003,
+        	    },
+        	),
+        }
+
+        cheatcode: invoke
+        transaction_hash: 0x[..]
+
+        Args passed to "call" cheatcode:
+        {
+        	contract_address = FieldElement {
+        	    inner: 0x[..],
+        	},
+        	function_name = "get",
+        	calldata_felts = [
+        	    FieldElement {
+        	        inner: 0x0000000000000000000000000000000000000000000000000000000000000001,
+        	    },
+        	],
+        }
+
+        cheatcode: call
+        response: [0x2]
+
+        ...
+    "#});
+}

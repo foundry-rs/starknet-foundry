@@ -53,12 +53,28 @@ pub enum Verbosity {
 
     #[default]
     Normal,
+
+    Verbose,
 }
 
+#[derive(Debug)]
 pub struct ScriptUI {
     verbosity: Verbosity,
     value_format: ValueFormat,
     json: bool,
+}
+
+macro_rules! stringify_args {
+    ( $( $x:expr ),* ) => {
+        {
+            let mut temp_str = String::new();
+            $(
+                let stringified_arg = format!("{} = {:#?},\n", stringify!($x), &$x);
+                temp_str.push_str(&stringified_arg);
+            )*
+            temp_str
+        }
+    };
 }
 
 impl ScriptUI {
@@ -80,7 +96,19 @@ impl ScriptUI {
         }
     }
 
-    pub fn print_cheatcode_result<T: Serialize>(
+    pub fn verbose(&self, message: &str) {
+        if self.verbosity >= Verbosity::Verbose {
+            println!("{message}");
+        }
+    }
+
+    pub fn print_cheatcode_args(&self, cheatcode: &str, args: String) {
+        self.verbose(&format!("Args passed to \"{}\" cheatcode:", cheatcode));
+        let indented_str = args.lines().map(|item| format!("\t{}\n", item)).collect::<Vec<String>>().concat();
+        self.verbose(&format!("{{\n{}}}\n", indented_str));
+    }
+
+    pub fn print_cheatcode_response<T: Serialize>(
         &self,
         cheatcode: &str,
         result: &mut Result<T>,
@@ -272,6 +300,11 @@ impl CairoHintProcessor<'_> {
                     .map(|el| FieldElement::from_(el.clone()))
                     .collect();
 
+                self.script_ui.print_cheatcode_args(
+                    "call",
+                    stringify_args!(contract_address, function_name, calldata_felts),
+                );
+
                 let call_response = self.runtime.block_on(call::call(
                     contract_address,
                     &function_name,
@@ -289,7 +322,7 @@ impl CairoHintProcessor<'_> {
                     .expect("Failed to insert data");
 
                 self.script_ui
-                    .print_cheatcode_result("call", &mut Ok(call_response))?;
+                    .print_cheatcode_response("call", &mut Ok(call_response))?;
 
                 Ok(())
             }
@@ -310,6 +343,12 @@ impl CairoHintProcessor<'_> {
                 } else {
                     None
                 };
+
+                self.script_ui.print_cheatcode_args(
+                    "declare",
+                    stringify_args!(contract_name, max_fee, nonce),
+                );
+
                 let account = self.runtime.block_on(get_account(
                     &self.config.account,
                     &self.config.accounts_file,
@@ -339,7 +378,7 @@ impl CairoHintProcessor<'_> {
                     .expect("Failed to insert transaction hash");
 
                 self.script_ui
-                    .print_cheatcode_result("declare", &mut Ok(declare_response))?;
+                    .print_cheatcode_response("declare", &mut Ok(declare_response))?;
 
                 Ok(())
             }
@@ -379,6 +418,18 @@ impl CairoHintProcessor<'_> {
                     None
                 };
 
+                self.script_ui.print_cheatcode_args(
+                    "deploy",
+                    stringify_args!(
+                        class_hash,
+                        constructor_calldata,
+                        salt,
+                        unique,
+                        max_fee,
+                        nonce
+                    ),
+                );
+
                 let account = self.runtime.block_on(get_account(
                     &self.config.account,
                     &self.config.accounts_file,
@@ -410,7 +461,7 @@ impl CairoHintProcessor<'_> {
                     .expect("Failed to insert transaction hash");
 
                 self.script_ui
-                    .print_cheatcode_result("deploy", &mut Ok(deploy_response))?;
+                    .print_cheatcode_response("deploy", &mut Ok(deploy_response))?;
 
                 Ok(())
             }
@@ -443,6 +494,17 @@ impl CairoHintProcessor<'_> {
                     None
                 };
 
+                self.script_ui.print_cheatcode_args(
+                    "invoke",
+                    stringify_args!(
+                        contract_address,
+                        entry_point_name,
+                        calldata,
+                        max_fee,
+                        nonce
+                    ),
+                );
+
                 let account = self.runtime.block_on(get_account(
                     &self.config.account,
                     &self.config.accounts_file,
@@ -469,7 +531,7 @@ impl CairoHintProcessor<'_> {
                     .expect("Failed to insert transaction hash");
 
                 self.script_ui
-                    .print_cheatcode_result("invoke", &mut Ok(invoke_response))?;
+                    .print_cheatcode_response("invoke", &mut Ok(invoke_response))?;
 
                 Ok(())
             }
