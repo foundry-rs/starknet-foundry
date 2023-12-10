@@ -301,7 +301,7 @@ impl CairoHintProcessor<'_> {
                     .collect();
 
                 self.script_ui.print_cheatcode_args(
-                    "call",
+                    selector,
                     stringify_args!(contract_address, function_name, calldata_felts),
                 );
 
@@ -322,7 +322,7 @@ impl CairoHintProcessor<'_> {
                     .expect("Failed to insert data");
 
                 self.script_ui
-                    .print_cheatcode_response("call", &mut Ok(call_response))?;
+                    .print_cheatcode_response(selector, &mut Ok(call_response))?;
 
                 Ok(())
             }
@@ -345,7 +345,7 @@ impl CairoHintProcessor<'_> {
                 };
 
                 self.script_ui.print_cheatcode_args(
-                    "declare",
+                    selector,
                     stringify_args!(contract_name, max_fee, nonce),
                 );
 
@@ -378,7 +378,7 @@ impl CairoHintProcessor<'_> {
                     .expect("Failed to insert transaction hash");
 
                 self.script_ui
-                    .print_cheatcode_response("declare", &mut Ok(declare_response))?;
+                    .print_cheatcode_response(selector, &mut Ok(declare_response))?;
 
                 Ok(())
             }
@@ -419,7 +419,7 @@ impl CairoHintProcessor<'_> {
                 };
 
                 self.script_ui.print_cheatcode_args(
-                    "deploy",
+                    selector,
                     stringify_args!(
                         class_hash,
                         constructor_calldata,
@@ -461,7 +461,7 @@ impl CairoHintProcessor<'_> {
                     .expect("Failed to insert transaction hash");
 
                 self.script_ui
-                    .print_cheatcode_response("deploy", &mut Ok(deploy_response))?;
+                    .print_cheatcode_response(selector, &mut Ok(deploy_response))?;
 
                 Ok(())
             }
@@ -495,7 +495,7 @@ impl CairoHintProcessor<'_> {
                 };
 
                 self.script_ui.print_cheatcode_args(
-                    "invoke",
+                    selector,
                     stringify_args!(
                         contract_address,
                         entry_point_name,
@@ -531,7 +531,7 @@ impl CairoHintProcessor<'_> {
                     .expect("Failed to insert transaction hash");
 
                 self.script_ui
-                    .print_cheatcode_response("invoke", &mut Ok(invoke_response))?;
+                    .print_cheatcode_response(selector, &mut Ok(invoke_response))?;
 
                 Ok(())
             }
