@@ -104,7 +104,11 @@ impl ScriptUI {
 
     pub fn print_cheatcode_args(&self, cheatcode: &str, args: String) {
         self.verbose(&format!("Args passed to \"{}\" cheatcode:", cheatcode));
-        let indented_str = args.lines().map(|item| format!("\t{}\n", item)).collect::<Vec<String>>().concat();
+        let indented_str = args
+            .lines()
+            .map(|item| format!("\t{}\n", item))
+            .collect::<Vec<String>>()
+            .concat();
         self.verbose(&format!("{{\n{}}}\n", indented_str));
     }
 
@@ -344,10 +348,8 @@ impl CairoHintProcessor<'_> {
                     None
                 };
 
-                self.script_ui.print_cheatcode_args(
-                    selector,
-                    stringify_args!(contract_name, max_fee, nonce),
-                );
+                self.script_ui
+                    .print_cheatcode_args(selector, stringify_args!(contract_name, max_fee, nonce));
 
                 let account = self.runtime.block_on(get_account(
                     &self.config.account,
@@ -496,13 +498,7 @@ impl CairoHintProcessor<'_> {
 
                 self.script_ui.print_cheatcode_args(
                     selector,
-                    stringify_args!(
-                        contract_address,
-                        entry_point_name,
-                        calldata,
-                        max_fee,
-                        nonce
-                    ),
+                    stringify_args!(contract_address, entry_point_name, calldata, max_fee, nonce),
                 );
 
                 let account = self.runtime.block_on(get_account(
