@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::str::FromStr;
 
 use crate::cheatcodes::deploy::{deploy, deploy_at, DeployCallPayload};
 use crate::cheatcodes::CheatcodeError;
@@ -21,7 +20,6 @@ use scarb_artifacts::StarknetContractArtifacts;
 use serde::Deserialize;
 
 use cairo_lang_runner::short_string::as_cairo_short_string;
-use starknet::core::types::FieldElement;
 use starknet_api::core::ContractAddress;
 
 use crate::cheatcodes::spy_events::SpyTarget;
