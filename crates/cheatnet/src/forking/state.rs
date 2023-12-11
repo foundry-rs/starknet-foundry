@@ -15,7 +15,7 @@ use starknet::providers::{JsonRpcClient, Provider, ProviderError};
 use starknet_api::block::{BlockNumber, BlockTimestamp};
 use starknet_api::core::{ClassHash, CompiledClassHash, ContractAddress, Nonce};
 use starknet_api::deprecated_contract_class::{
-    ContractClass as DeprecatedContractClass, ContractClassAbiEntry, EntryPoint, EntryPointType,
+    ContractClass as DeprecatedContractClass, EntryPoint, EntryPointType,
 };
 use starknet_api::hash::StarkFelt;
 use starknet_api::state::StorageKey;
@@ -201,9 +201,6 @@ impl StateReader for ForkStateReader {
                         &serde_json::to_string(&legacy_class.entry_points_by_type).unwrap(),
                     )
                     .unwrap();
-                let converted_abi: Option<Vec<ContractClassAbiEntry>> =
-                    serde_json::from_str(&serde_json::to_string(&legacy_class.abi).unwrap())
-                        .unwrap();
 
                 let mut decoder = GzDecoder::new(&legacy_class.program[..]);
                 let mut converted_program = String::new();
@@ -211,7 +208,7 @@ impl StateReader for ForkStateReader {
 
                 Ok(ContractClassBlockifier::V0(
                     ContractClassV0::try_from(DeprecatedContractClass {
-                        abi: converted_abi,
+                        abi: None,
                         program: serde_json::from_str(&converted_program).unwrap(),
                         entry_points_by_type: converted_entry_points,
                     })

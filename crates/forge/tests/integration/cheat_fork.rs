@@ -1,5 +1,4 @@
 use indoc::formatdoc;
-use indoc::indoc;
 use test_utils::running_tests::run_test_case;
 use test_utils::{assert_passed, test_case};
 
@@ -145,36 +144,6 @@ fn warp_cairo0_contract() {
         CHEATNET_RPC_URL,
     )
     .as_str());
-
-    let result = run_test_case(&test);
-
-    assert_passed!(result);
-}
-
-#[test]
-fn abi() {
-    let test = test_case!(indoc!(
-        r#"
-            #[derive(Serde)]
-            struct Propdetails {
-                payload: felt252,
-            }
-
-            #[starknet::interface]
-            trait IGovernance<State> {
-                fn get_proposal_details(self: @State, param: felt252) -> Propdetails;
-            }
-
-            #[test]
-            #[fork(url: "https://rpc.starknet-testnet.lava.build", block_id: BlockId::Number(904597))]
-            fn test_forking_functionality() {
-                let gov_contract_addr: starknet::ContractAddress = 0x7ba1d4836a1142c09dde23cb39b2885fe350912591461b5764454a255bdbac6.try_into().unwrap();
-                let dispatcher = IGovernanceDispatcher { contract_address: gov_contract_addr };
-                let propdetails = dispatcher.get_proposal_details(1);
-                assert(propdetails.payload==0x78b4ccacdc1c902281f6f13d94b6d17b1f4c44ff811c01dea504d43a264f611, 'payload not match');
-            }
-        "#,
-    ));
 
     let result = run_test_case(&test);
 
