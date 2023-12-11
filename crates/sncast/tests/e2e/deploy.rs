@@ -79,7 +79,7 @@ fn test_wrong_calldata() {
     let output = String::from_utf8(snapbox.assert().success().get_output().stderr.clone()).unwrap();
 
     assert!(output.contains("error: "));
-    assert!(output.contains("Transaction execution has failed."));
+    assert!(output.contains("Contract error"));
 }
 
 #[tokio::test]
@@ -96,7 +96,7 @@ async fn test_contract_not_declared() {
     let snapbox = runner(&args);
     let output = String::from_utf8(snapbox.assert().get_output().stderr.clone()).unwrap();
 
-    assert!(output.contains("Transaction execution has failed."));
+    assert!(output.contains("Contract error"));
 }
 
 #[test]
@@ -117,7 +117,7 @@ fn test_contract_already_deployed() {
     let snapbox = runner(&args);
     let output = String::from_utf8(snapbox.assert().get_output().stderr.clone()).unwrap();
 
-    assert!(output.contains("Transaction execution has failed"));
+    assert!(output.contains("Contract error"));
 }
 
 #[test]

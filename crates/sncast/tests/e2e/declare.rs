@@ -62,7 +62,7 @@ async fn contract_already_declared() {
 
     snapbox.assert().success().stderr_matches(indoc! {r"
         command: declare
-        error: Class with hash [..] is already declared.
+        error: Contract error
     "});
 }
 
