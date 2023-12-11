@@ -16,9 +16,7 @@ const PRIME_DIV_2: u256 = 0x4000000000000088000000000000000000000000000000000000
 // Note that the points returned as public keys from
 // generate() and from_secret_key(secret_key: felt252)
 // might have different y coordinates
-impl StarkCurveKeyPairImpl<
-    // impl EcPointImpl: EcPointTrait
-> of KeyPairTrait<felt252, NonZeroEcPoint> {
+impl StarkCurveKeyPairImpl of KeyPairTrait<felt252, NonZeroEcPoint> {
     fn generate() -> KeyPair<felt252, NonZeroEcPoint> {
         let output = cheatcode::<'generate_stark_keys'>(array![].span());
 
@@ -72,7 +70,7 @@ impl StarkCurveSignerImpl<
 }
 
 impl StarkCurveVerifierImpl<
-    impl EcPointImpl: EcPointTrait, H, +Drop<H>, impl HIntoFelt252: Into<H, felt252>
+    H, +Drop<H>, impl HIntoFelt252: Into<H, felt252>
 > of VerifierTrait<KeyPair<felt252, NonZeroEcPoint>, H, felt252> {
     fn verify(
         self: KeyPair<felt252, NonZeroEcPoint>, message_hash: H, signature: (felt252, felt252)
