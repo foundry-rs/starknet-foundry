@@ -3,7 +3,7 @@ name = "map"
 version = "0.2.0"
 
 [dependencies]
-starknet = ">=2.3.1"
+starknet = ">=2.4.0"
 
 [[target.starknet-contract]]
 sierra = true
