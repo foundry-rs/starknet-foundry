@@ -259,11 +259,11 @@ pub async fn run_tests_from_crate(
     runner_params: Arc<RunnerParams>,
     tests_filter: &impl TestCaseFilter,
 ) -> Result<TestCrateRunResult> {
-    let sierra_program = tests.sierra_program.clone();
+    let sierra_program = &tests.sierra_program;
     let metadata_config = Some(MetadataComputationConfig::default());
-    let metadata = create_metadata(&sierra_program, metadata_config).unwrap();
+    let metadata = create_metadata(sierra_program, metadata_config).unwrap();
     let casm_program =
-        cairo_lang_sierra_to_casm::compiler::compile(&sierra_program, &metadata, true)
+        cairo_lang_sierra_to_casm::compiler::compile(sierra_program, &metadata, true)
             .unwrap();
 
     // let runner = SierraCasmRunner::new(casm_program).context("Failed setting up runner.")?;
@@ -297,7 +297,7 @@ pub async fn run_tests_from_crate(
 
         let case = Arc::new(case.clone());
         let args: Vec<ConcreteTypeId> = args.into_iter().cloned().collect();
-        let test_details = Arc::new(build_test_details(&case.name, &sierra_program));
+        let test_details = Arc::new(build_test_details(&case.name, sierra_program));
 
         tasks.push(choose_test_strategy_and_run(
             args,
