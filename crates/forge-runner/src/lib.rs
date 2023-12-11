@@ -333,10 +333,10 @@ impl TestCaseSummary<Fuzzing> {
                         TestCaseSummary::Passed { gas_info, .. } => gas_info,
                         _ => unreachable!(),
                     });
-    
+
                 let max = gas_usages_vec.clone().reduce(f64::max).unwrap();
                 let min = gas_usages_vec.reduce(f64::min).unwrap();
-    
+
                 TestCaseSummary::Passed {
                     name,
                     msg,
@@ -366,7 +366,6 @@ impl TestCaseSummary<Fuzzing> {
         }
     }
 }
-
 
 fn run_with_fuzzing(
     args: Vec<ConcreteTypeId>,
