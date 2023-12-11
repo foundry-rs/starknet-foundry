@@ -17,7 +17,6 @@ cairo-lang-casm.workspace = true
 cairo-lang-runner.workspace = true
 cairo-lang-utils.workspace = true
 cairo-lang-starknet.workspace = true
-cairo-lang-starknet-sierra3.workspace = true
 cairo-vm.workspace = true
 regex.workspace = true
 starknet.workspace = true
@@ -35,6 +34,7 @@ fs2 = "0.4.3"
 flate2 = "1.0.27"
 scarb-artifacts = { path = "../scarb-artifacts" }
 runtime = { path = "../runtime" }
+sierra-casm = { path = "../sierra-casm" }
 
 [dev-dependencies]
 ctor.workspace = true
