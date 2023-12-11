@@ -1,5 +1,5 @@
-# Cast
-/crates/cast/               @foundry-rs/starknet-foundry-cast
+# chain-interactions
+/crates/sncast/             @foundry-rs/starknet-foundry-cast
 
 # snforge-cli
 /crates/forge               @foundry-rs/starknet-foundry-forge-cli

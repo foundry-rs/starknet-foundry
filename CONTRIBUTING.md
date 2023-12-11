@@ -41,7 +41,7 @@ $ cargo test integration  # runs all integration tests
 $ cargo test e2e          # runs all e2e tests
 ```
 
-Similarly, to run cast tests make sure you are in `crates/cast` directory:
+Similarly, to run sncast tests make sure you are in `crates/sncast` directory:
 
 ```shell
 $ cargo test --lib        # runs lib unit tests

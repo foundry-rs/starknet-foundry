@@ -225,10 +225,10 @@ An example deployment script could look like this:
 
 ```cairo
 // we might need to rename account functions to avoid confusion
-use cast::starknet_commands::account::create::create as create_account
-use cast::starknet_commands::account::deploy::deploy as deploy_account
-use cast::{get_provider, get_account};
-use cast::starknet_commands::{declare, deploy, invoke, call};
+use sncast::starknet_commands::account::create::create as create_account
+use sncast::starknet_commands::account::deploy::deploy as deploy_account
+use sncast::{get_provider, get_account};
+use sncast::starknet_commands::{declare, deploy, invoke, call};
 (...)
 
 fn make_account(provider: &JsonRpcClient<HttpTransport>) -> Result<SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, LocalWallet>> {
