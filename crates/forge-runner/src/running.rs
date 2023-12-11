@@ -23,8 +23,8 @@ use itertools::chain;
 use crate::compiled_runnable::ValidatedForkConfig;
 use crate::gas::gas_from_execution_resources;
 use crate::sierra_casm_runner::SierraCasmRunner;
-use crate::test_case_summary::TestCaseSummary;
-use crate::{RunnerConfig, RunnerParams, TestCaseRunnable, CACHE_DIR};
+use crate::test_case_summary::{Single, TestCaseSummary};
+use crate::{RunnerConfig, RunnerParams, TestCaseRunnable, ValidatedForkConfig, CACHE_DIR};
 use cairo_lang_casm::hints::Hint;
 use cairo_lang_casm::instructions::Instruction;
 use cairo_lang_runner::casm_run::hint_to_hint_params;
@@ -84,7 +84,7 @@ pub fn run_test(
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     send: Sender<()>,
-) -> JoinHandle<Result<TestCaseSummary>> {
+) -> JoinHandle<Result<TestCaseSummary<Single>>> {
     tokio::task::spawn_blocking(move || {
         // Due to the inability of spawn_blocking to be abruptly cancelled,
         // a channel is used to receive information indicating
@@ -113,7 +113,7 @@ pub(crate) fn run_fuzz_test(
     runner_params: Arc<RunnerParams>,
     send: Sender<()>,
     fuzzing_send: Sender<()>,
-) -> JoinHandle<Result<TestCaseSummary>> {
+) -> JoinHandle<Result<TestCaseSummary<Single>>> {
     tokio::task::spawn_blocking(move || {
         // Due to the inability of spawn_blocking to be abruptly cancelled,
         // a channel is used to receive information indicating
@@ -316,7 +316,7 @@ fn extract_test_case_summary(
     run_result: Result<RunResultWithInfo>,
     case: &TestCaseRunnable,
     args: Vec<Felt252>,
-) -> Result<TestCaseSummary> {
+) -> Result<TestCaseSummary<Single>> {
     match run_result {
         Ok(result_with_info) => {
             match result_with_info.run_result {
@@ -335,7 +335,7 @@ fn extract_test_case_summary(
                         error.to_string().replace(" Custom Hint Error: ", "\n    ")
                     )),
                     arguments: args,
-                    fuzzing_statistic: None,
+                    test_statistics: (),
                     latest_block_number: result_with_info.fork_info.latest_block_number,
                 }),
                 Err(err) => bail!(err),
@@ -347,7 +347,7 @@ fn extract_test_case_summary(
             name: case.name.clone(),
             msg: Some(error.to_string()),
             arguments: args,
-            fuzzing_statistic: None,
+            test_statistics: (),
             latest_block_number: None,
         }),
     }

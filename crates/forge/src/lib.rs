@@ -1,6 +1,9 @@
 use anyhow::{anyhow, Error, Result};
 use camino::Utf8Path;
 
+use forge_runner::test_case_summary::AnyTestCaseSummary;
+use serde::Deserialize;
+use std::fmt::Debug;
 use std::sync::Arc;
 
 use compiled_raw::{CompiledTestCrateRaw, RawForkConfig, RawForkParams};
@@ -15,9 +18,9 @@ use crate::scarb::config::ForkTarget;
 use crate::test_filter::TestsFilter;
 
 pub mod compiled_raw;
-
 pub mod pretty_printing;
 pub mod scarb;
+pub mod scarb_test_collector;
 pub mod shared_cache;
 pub mod test_filter;
 
@@ -176,10 +179,15 @@ async fn run_internal(
 
     pretty_printing::print_test_summary(&summaries, filtered);
 
-    if summaries
-        .iter()
-        .any(|summary| summary.contained_fuzzed_tests)
-    {
+    let any_fuzz_test_was_run = summaries.iter().any(|crate_summary| {
+        crate_summary
+            .test_case_summaries
+            .iter()
+            .filter(|summary| matches!(summary, AnyTestCaseSummary::Fuzzing(_)))
+            .any(|summary| summary.is_passed() || summary.is_failed())
+    });
+
+    if any_fuzz_test_was_run {
         pretty_printing::print_test_seed(runner_config.fuzzer_seed);
     }
 
