@@ -12,4 +12,4 @@
 /crates/forge/src/running.rs @foundry-rs/starknet-foundry-forge-core
 /crates/forge/src/cheatcodes_hint_processor.rs @foundry-rs/starknet-foundry-forge-core
 /crates/forge/tests/integration @foundry-rs/starknet-foundry-forge-core
-
+/crates/sierra-casm         @foundry-rs/starknet-foundry-forge-core
