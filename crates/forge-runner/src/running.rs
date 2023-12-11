@@ -13,13 +13,14 @@ use blockifier::state::cached_state::CachedState;
 use blockifier::state::state_api::State;
 use cairo_felt::Felt252;
 use cairo_vm::serde::deserialize_program::HintParams;
-use cairo_vm::types::relocatable::{MaybeRelocatable, Relocatable};
+use cairo_vm::types::relocatable::Relocatable;
 use cheatnet::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
 use cheatnet::runtime_extensions::forge_runtime_extension::{ForgeExtension, ForgeRuntime};
 use cheatnet::runtime_extensions::io_runtime_extension::IORuntimeExtension;
 use itertools::chain;
 
 use crate::cairo_runner::casm_run;
+use crate::cairo_runner::casm_run::build_program_data;
 use crate::cairo_runner::sierra_casm_runner::{initialize_vm, Panicable, SierraCasmRunner};
 use crate::gas::gas_from_execution_resources;
 use crate::test_case_summary::TestCaseSummary;
@@ -310,11 +311,7 @@ pub fn run_test_case(
 
     // copied from casm_run
     let mut vm = VirtualMachine::new(true);
-    let data: Vec<MaybeRelocatable> = instructions
-        .flat_map(|inst| inst.assemble().encode())
-        .map(Felt252::from)
-        .map(MaybeRelocatable::from)
-        .collect();
+    let data = build_program_data(instructions);
     let data_len = data.len();
     // end of copied code
 

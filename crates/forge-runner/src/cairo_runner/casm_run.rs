@@ -59,6 +59,17 @@ pub fn build_runner(
         .map_err(Box::new)
 }
 
+pub fn build_program_data<'a, Instructions>(instructions: Instructions) -> Vec<MaybeRelocatable>
+where
+    Instructions: Iterator<Item = &'a Instruction> + Clone,
+{
+    instructions
+        .flat_map(|inst| inst.assemble().encode())
+        .map(Felt252::from)
+        .map(MaybeRelocatable::from)
+        .collect()
+}
+
 #[allow(dead_code)]
 /// Runs `program` on layout with prime, and returns the memory layout and ap value.
 /// Allows injecting custom `HintProcessor`.
@@ -75,11 +86,7 @@ pub fn run_function<'a, 'b: 'a, Instructions>(
 where
     Instructions: Iterator<Item = &'a Instruction> + Clone,
 {
-    let data: Vec<MaybeRelocatable> = instructions
-        .flat_map(|inst| inst.assemble().encode())
-        .map(Felt252::from)
-        .map(MaybeRelocatable::from)
-        .collect();
+    let data = build_program_data(instructions);
 
     let data_len = data.len();
     let mut runner = build_runner(data, builtins, hints_dict)?;
