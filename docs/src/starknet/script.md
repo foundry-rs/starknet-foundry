@@ -66,7 +66,7 @@ version = "0.1.0"
 
 [dependencies]
 starknet = ">=2.3.0"
-sncast_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.11.0" }
+sncast_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.12.0" }
 ```
 
 To run the script, do:
@@ -74,7 +74,6 @@ To run the script, do:
 ```shell
 $ sncast \
   --url http://127.0.0.1:5050 \
-  --account example_user \
   script my_script
 
 command: script
@@ -142,7 +141,7 @@ version = "0.1.0"
 
 [dependencies]
 starknet = ">=2.3.0"
-sncast_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.11.0" }
+sncast_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.12.0" }
 map = { path = "../contracts" }
 
 [lib]

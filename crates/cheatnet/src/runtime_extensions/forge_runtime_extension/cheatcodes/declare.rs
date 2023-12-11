@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 
-use crate::cheatcodes::{CheatcodeError, EnhancedHintError};
+use crate::runtime_extensions::forge_runtime_extension::cheatcodes::{
+    CheatcodeError, EnhancedHintError,
+};
 use anyhow::{anyhow, Context, Result};
 use blockifier::execution::contract_class::{
     ContractClass as BlockifierContractClass, ContractClassV1,

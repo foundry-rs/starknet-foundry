@@ -1,4 +1,4 @@
-use crate::execution::deprecated::syscalls::CheatableSyscallHandler;
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::deprecated::syscalls::CheatableSyscallHandler;
 use crate::state::CheatnetState;
 use blockifier::execution::call_info::CallInfo;
 use blockifier::execution::contract_class::ContractClassV0;

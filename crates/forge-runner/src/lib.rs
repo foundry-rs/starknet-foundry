@@ -1,4 +1,4 @@
-use crate::compiled_runnable::{CompiledTestCrateRunnable, FuzzerConfig,TestCaseRunnable};
+use crate::compiled_runnable::{CompiledTestCrateRunnable, FuzzerConfig, TestCaseRunnable};
 use crate::fuzzer::RandomFuzzer;
 use crate::printing::print_test_result;
 use crate::running::{run_fuzz_test, run_test};
@@ -8,7 +8,7 @@ use crate::test_crate_summary::TestCrateSummary;
 use anyhow::{anyhow, Context, Result};
 
 use cairo_lang_sierra::ids::ConcreteTypeId;
-use cairo_lang_sierra::program::{Function};
+use cairo_lang_sierra::program::Function;
 use cairo_lang_sierra_to_casm::metadata::MetadataComputationConfig;
 use cairo_lang_utils::ordered_hash_map::OrderedHashMap;
 use camino::Utf8PathBuf;
@@ -20,14 +20,12 @@ use once_cell::sync::Lazy;
 use scarb_artifacts::StarknetContractArtifacts;
 use smol_str::SmolStr;
 
-
 use std::collections::HashMap;
 use std::sync::Arc;
 use test_case_summary::FuzzingGasUsage;
 
 use tokio::sync::mpsc::{channel, Sender};
 use tokio::task::JoinHandle;
-
 
 pub mod compiled_runnable;
 pub mod expected_result;

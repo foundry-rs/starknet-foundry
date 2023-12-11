@@ -1,7 +1,9 @@
-use crate::cheatcodes;
-use crate::cheatcodes::spy_events::{Event, SpyTarget};
 use crate::constants::TEST_SEQUENCER_ADDRESS;
 use crate::forking::state::ForkStateReader;
+use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spoof::TxInfoMock;
+use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::{
+    Event, SpyTarget,
+};
 use blockifier::execution::entry_point::ExecutionResources;
 use blockifier::state::state_api::State;
 use blockifier::{
@@ -13,7 +15,6 @@ use blockifier::{
     },
 };
 use cairo_felt::Felt252;
-use cheatcodes::spoof::TxInfoMock;
 use serde::{Deserialize, Serialize};
 use starknet_api::block::{BlockNumber, BlockTimestamp};
 use starknet_api::core::EntryPointSelector;

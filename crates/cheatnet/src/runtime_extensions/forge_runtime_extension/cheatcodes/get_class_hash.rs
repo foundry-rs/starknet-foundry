@@ -1,5 +1,5 @@
 use crate::{
-    cheatcodes::{CheatcodeError, EnhancedHintError},
+    runtime_extensions::forge_runtime_extension::cheatcodes::{CheatcodeError, EnhancedHintError},
     state::BlockifierState,
 };
 use blockifier::state::state_api::State;

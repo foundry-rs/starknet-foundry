@@ -1,5 +1,5 @@
-use crate::expected_result::{ExpectedTestResult, ExpectedPanicValue};
 use crate::compiled_runnable::TestCaseRunnable;
+use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
 use crate::running::ForkInfo;
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;

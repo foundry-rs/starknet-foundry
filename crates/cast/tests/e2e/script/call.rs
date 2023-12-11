@@ -5,16 +5,7 @@ use snapbox::cmd::{cargo_bin, Command};
 #[tokio::test]
 async fn test_happy_case() {
     let script_name = "call_happy";
-    let args = vec![
-        "--accounts-file",
-        "../../accounts/accounts.json",
-        "--account",
-        "user1",
-        "--url",
-        URL,
-        "script",
-        &script_name,
-    ];
+    let args = vec!["--url", URL, "script", &script_name];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
         .current_dir(SCRIPTS_DIR.to_owned() + "/misc")
@@ -29,16 +20,7 @@ async fn test_happy_case() {
 #[tokio::test]
 async fn test_failing() {
     let script_name = "call_fail";
-    let args = vec![
-        "--accounts-file",
-        "../../accounts/accounts.json",
-        "--account",
-        "user1",
-        "--url",
-        URL,
-        "script",
-        &script_name,
-    ];
+    let args = vec!["--url", URL, "script", &script_name];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
         .current_dir(SCRIPTS_DIR.to_owned() + "/misc")

@@ -1,4 +1,4 @@
-use crate::rpc::CallContractFailure;
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallContractFailure;
 use cairo_felt::Felt252;
 use cairo_vm::vm::errors::hint_errors::HintError;
 use runtime::EnhancedHintError;

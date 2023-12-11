@@ -7,10 +7,10 @@ use crate::{
     },
 };
 use cairo_felt::Felt252;
-use cheatnet::cheatcodes::deploy::deploy;
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::deploy;
 use cheatnet::state::CheatTarget;
 use cheatnet::{
-    rpc::call_contract,
+    runtime_extensions::call_to_blockifier_runtime_extension::rpc::call_contract,
     state::{BlockifierState, CheatnetState},
 };
 use conversions::{felt252::FromShortString, IntoConv};

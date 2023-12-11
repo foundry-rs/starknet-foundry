@@ -1,4 +1,6 @@
-use crate::rpc::{call_l1_handler, CallContractOutput};
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
+    call_l1_handler, CallContractOutput,
+};
 use crate::state::{BlockifierState, CheatnetState};
 use blockifier::abi::abi_utils::starknet_keccak;
 use cairo_felt::Felt252;

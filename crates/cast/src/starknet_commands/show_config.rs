@@ -29,6 +29,8 @@ pub async fn show_config(
     if keystore.is_some() {
         accounts_file_path = None;
     }
+    let wait_timeout = Some(cast_config.wait_timeout);
+    let wait_retry_interval = Some(cast_config.wait_retry_interval);
 
     Ok(ShowConfigResponse {
         profile,
@@ -38,5 +40,7 @@ pub async fn show_config(
         scarb_path,
         accounts_file_path,
         keystore,
+        wait_timeout,
+        wait_retry_interval,
     })
 }

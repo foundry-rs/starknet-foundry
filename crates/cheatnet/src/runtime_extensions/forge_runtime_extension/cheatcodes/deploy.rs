@@ -1,5 +1,6 @@
 use crate::constants::TEST_ADDRESS;
 use crate::constants::{build_block_context, build_transaction_context};
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallContractFailure;
 use crate::state::BlockifierState;
 use crate::CheatnetState;
 use anyhow::Result;
@@ -8,6 +9,7 @@ use blockifier::execution::entry_point::{
     ConstructorContext, EntryPointExecutionContext, ExecutionResources,
 };
 use blockifier::execution::execution_utils::felt_to_stark_felt;
+use runtime::EnhancedHintError;
 use std::sync::Arc;
 
 use blockifier::state::state_api::State;
@@ -17,13 +19,11 @@ use starknet_api::core::PatriciaKey;
 use starknet_api::hash::StarkHash;
 use starknet_api::patricia_key;
 
-use crate::cheatcodes::EnhancedHintError;
-use crate::execution::cheated_syscalls;
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::cheated_syscalls;
 use starknet_api::core::{ClassHash, ContractAddress};
 use starknet_api::transaction::Calldata;
 
 use super::CheatcodeError;
-use crate::rpc::CallContractFailure;
 
 #[derive(Debug)]
 pub struct DeployCallPayload {
