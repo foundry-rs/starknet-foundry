@@ -36,7 +36,8 @@ pub(crate) fn print_test_result(any_test_result: &AnyTestCaseSummary) {
             }
         };
     }
-    let fuzzer_report = fuzzer_report.unwrap_or(String::new());
+
+    let fuzzer_report = fuzzer_report.unwrap_or_else(String::new);
 
     let block_number_message = match any_test_result.latest_block_number() {
         None => String::new(),
