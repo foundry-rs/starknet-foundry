@@ -6,8 +6,8 @@ use forge::scarb::{build_contracts_with_scarb, config_from_scarb_for_package};
 use forge::shared_cache::{clean_cache, set_cached_failed_tests_names};
 use forge::test_filter::TestsFilter;
 use forge::{pretty_printing, run, run_with_scarb_collector};
-use forge_runner::test_case_summary::TestCaseSummary;
-use forge_runner::test_crate_summary::{AnyTestCaseSummary, TestCrateSummary};
+use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
+use forge_runner::test_crate_summary::TestCrateSummary;
 use forge_runner::{RunnerConfig, RunnerParams, CACHE_DIR};
 use rand::{thread_rng, RngCore};
 use scarb_artifacts::{

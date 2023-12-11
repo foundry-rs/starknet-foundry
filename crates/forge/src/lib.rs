@@ -1,10 +1,11 @@
 use anyhow::{anyhow, Error, Result};
 use camino::Utf8Path;
+use forge_runner::test_case_summary::AnyTestCaseSummary;
 use serde::Deserialize;
 use std::fmt::Debug;
 use std::sync::Arc;
 
-use forge_runner::test_crate_summary::{AnyTestCaseSummary, TestCrateSummary};
+use forge_runner::test_crate_summary::TestCrateSummary;
 use forge_runner::{
     CompiledTestCrateRunnable, RunnerConfig, RunnerParams, TestCaseRunnable, TestCrateRunResult,
     ValidatedForkConfig,

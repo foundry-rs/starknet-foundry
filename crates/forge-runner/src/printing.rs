@@ -1,4 +1,4 @@
-use crate::{test_case_summary::TestCaseSummary, test_crate_summary::AnyTestCaseSummary};
+use crate::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
 use console::style;
 
 pub(crate) fn print_test_result(any_test_result: &AnyTestCaseSummary) {
