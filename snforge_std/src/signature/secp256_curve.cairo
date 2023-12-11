@@ -30,7 +30,7 @@ impl Secp256CurveKeyPairImpl<
 
     fn from_secret_key(secret_key: u256) -> KeyPair<u256, Secp256Point> {
         if (secret_key == 0_u256 || secret_key >= Secp256Impl::get_curve_size()) {
-            panic_with_felt252('invalid secret key');
+            panic_with_felt252('invalid secret_key');
         }
 
         let generator = Secp256Impl::get_generator_point();

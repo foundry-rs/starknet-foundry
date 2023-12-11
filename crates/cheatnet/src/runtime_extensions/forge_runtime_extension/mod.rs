@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
+use std::str::FromStr;
 
 use crate::cheatcodes::deploy::{deploy, deploy_at, DeployCallPayload};
 use crate::cheatcodes::CheatcodeError;
@@ -20,6 +21,7 @@ use scarb_artifacts::StarknetContractArtifacts;
 use serde::Deserialize;
 
 use cairo_lang_runner::short_string::as_cairo_short_string;
+use starknet::core::types::FieldElement;
 use starknet_api::core::ContractAddress;
 
 use crate::cheatcodes::spy_events::SpyTarget;
@@ -451,6 +453,13 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                 let private_key = inputs[0].clone();
                 let message_hash = inputs[1].clone();
 
+                if private_key == Felt252::from(0) {
+                    return Ok(CheatcodeHandlingResult::Handled(vec![
+                        Felt252::from(1),
+                        Felt252::from_short_string("invalid secret_key").unwrap(),
+                    ]));
+                }
+
                 let key_pair = SigningKey::from_secret_scalar(private_key.into_());
 
                 if let Ok(signature) = key_pair.sign(&message_hash.into_()) {
@@ -465,15 +474,6 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                         Felt252::from_short_string("message_hash out of range").unwrap(),
                     ]))
                 }
-            }
-            "get_stark_public_key" => {
-                let private_key = inputs[0].clone();
-                let key_pair = SigningKey::from_secret_scalar(private_key.into_());
-
-                Ok(CheatcodeHandlingResult::Handled(vec![key_pair
-                    .verifying_key()
-                    .scalar()
-                    .into_()]))
             }
             "generate_ecdsa_keys" => {
                 let curve = as_cairo_short_string(&inputs[0]);
@@ -572,55 +572,6 @@ impl<'a> ExtensionLogic for ForgeExtension<'a> {
                     Felt252::from_bytes_be(&r_bytes[0..16]),  // 16 high bytes of r
                     Felt252::from_bytes_be(&s_bytes[16..32]), // 16 low  bytes of s
                     Felt252::from_bytes_be(&s_bytes[0..16]),  // 16 high bytes of s
-                ]))
-            }
-            "get_ecdsa_public_key" => {
-                let curve = as_cairo_short_string(&inputs[0]);
-                let sk_low = inputs[1].clone();
-                let sk_high = inputs[2].clone();
-
-                let secret_key = concat_felt_bytes(&sk_low.to_be_bytes(), &sk_high.to_be_bytes());
-
-                let verifying_key_bytes = {
-                    match curve.as_deref() {
-                        Some("Secp256k1") => {
-                            let Ok(signing_key) = k256::ecdsa::SigningKey::from_slice(&secret_key)
-                            else {
-                                return Ok(CheatcodeHandlingResult::Handled(vec![
-                                    Felt252::from(1),
-                                    Felt252::from_short_string("invalid secret_key").unwrap(),
-                                ]));
-                            };
-
-                            signing_key
-                                .verifying_key()
-                                .to_encoded_point(false)
-                                .to_bytes()
-                        }
-                        Some("Secp256r1") => {
-                            let Ok(signing_key) = p256::ecdsa::SigningKey::from_slice(&secret_key)
-                            else {
-                                return Ok(CheatcodeHandlingResult::Handled(vec![
-                                    Felt252::from(1),
-                                    Felt252::from_short_string("invalid secret_key").unwrap(),
-                                ]));
-                            };
-
-                            signing_key
-                                .verifying_key()
-                                .to_encoded_point(false)
-                                .to_bytes()
-                        }
-                        _ => return Ok(CheatcodeHandlingResult::Forwarded),
-                    }
-                };
-
-                Ok(CheatcodeHandlingResult::Handled(vec![
-                    Felt252::from(0),
-                    Felt252::from_bytes_be(&verifying_key_bytes[17..33]), // 16 low  bytes of public_key's x-coordinate
-                    Felt252::from_bytes_be(&verifying_key_bytes[1..17]), // 16 high bytes of public_key's x-coordinate
-                    Felt252::from_bytes_be(&verifying_key_bytes[49..65]), // 16 low  bytes of public_key's y-coordinate
-                    Felt252::from_bytes_be(&verifying_key_bytes[33..49]), // 16 high bytes of public_key's y-coordinate
                 ]))
             }
             _ => Ok(CheatcodeHandlingResult::Forwarded),
