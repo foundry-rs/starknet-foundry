@@ -35,12 +35,11 @@ use num_traits::ToPrimitive;
 use runtime::EnhancedHintError;
 use scarb_metadata::ScarbCommand;
 use serde::Serialize;
-use serde_json::Value;
 use sncast::helpers::response_structs::ScriptResponse;
 use sncast::helpers::scarb_utils::{
     get_package_metadata, get_scarb_manifest, get_scarb_metadata_with_deps, CastConfig,
 };
-use sncast::{print_formatted, ValueFormat};
+use sncast::{print_formatted, stringify_command_result_struct, ValueFormat};
 use starknet::accounts::Account;
 use starknet::core::types::{BlockId, BlockTag::Pending, FieldElement};
 use starknet::providers::jsonrpc::HttpTransport;
@@ -115,40 +114,14 @@ impl UI {
     pub fn print_cheatcode_response<T: Serialize>(
         &self,
         cheatcode: &str,
-        result: &mut Result<T>,
+        result: &T,
     ) -> Result<()> {
         if self.verbosity >= Verbosity::Normal {
-            let mut output = vec![("cheatcode", cheatcode.to_string())];
-            let json_value: Value;
+            let mut output = vec![("cheatcode".to_string(), cheatcode.to_string())];
+            output.extend(stringify_command_result_struct(result, self.value_format)?);
 
-            let mut error = false;
-            match result {
-                Ok(result) => {
-                    json_value = serde_json::to_value(result).map_err(|_| {
-                        anyhow!("Failed to convert command result to serde_json::Value")
-                    })?;
-
-                    output.extend(
-                        json_value
-                            .as_object()
-                            .expect("Invalid JSON value")
-                            .iter()
-                            .filter_map(|(k, v)| {
-                                self.value_format
-                                    .format_json_value(v)
-                                    .map(|v| (k.as_str(), v))
-                            })
-                            .collect::<Vec<(&str, String)>>(),
-                    );
-                }
-                Err(message) => {
-                    output.push(("error", format!("{message:#}")));
-                    error = true;
-                }
-            };
-            let res = print_formatted(output, self.json, error);
+            print_formatted(output, self.json, false)?;
             println!();
-            return res;
         }
         Ok(())
     }
@@ -326,7 +299,7 @@ impl CairoHintProcessor<'_> {
                     .expect("Failed to insert data");
 
                 self.script_ui
-                    .print_cheatcode_response(selector, &mut Ok(call_response))?;
+                    .print_cheatcode_response(selector, &call_response)?;
 
                 Ok(())
             }
@@ -382,7 +355,7 @@ impl CairoHintProcessor<'_> {
                     .expect("Failed to insert transaction hash");
 
                 self.script_ui
-                    .print_cheatcode_response(selector, &mut Ok(declare_response))?;
+                    .print_cheatcode_response(selector, &declare_response)?;
 
                 Ok(())
             }
@@ -465,7 +438,7 @@ impl CairoHintProcessor<'_> {
                     .expect("Failed to insert transaction hash");
 
                 self.script_ui
-                    .print_cheatcode_response(selector, &mut Ok(deploy_response))?;
+                    .print_cheatcode_response(selector, &deploy_response)?;
 
                 Ok(())
             }
@@ -529,7 +502,7 @@ impl CairoHintProcessor<'_> {
                     .expect("Failed to insert transaction hash");
 
                 self.script_ui
-                    .print_cheatcode_response(selector, &mut Ok(invoke_response))?;
+                    .print_cheatcode_response(selector, &invoke_response)?;
 
                 Ok(())
             }
