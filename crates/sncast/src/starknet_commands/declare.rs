@@ -32,26 +32,32 @@ pub struct Declare {
     pub nonce: Option<FieldElement>,
 }
 
+pub struct BuildConfig {
+    pub scarb_toml_path: Option<Utf8PathBuf>,
+    pub json: bool,
+}
+
 #[allow(clippy::too_many_lines)]
 pub async fn declare(
     contract_name: &str,
     max_fee: Option<FieldElement>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
-    path_to_scarb_toml: &Option<Utf8PathBuf>,
     nonce: Option<FieldElement>,
+    build_config: BuildConfig,
     wait_config: WaitForTx,
 ) -> Result<DeclareResponse> {
     let contract_name: String = contract_name.to_string();
-    let manifest_path = match path_to_scarb_toml.clone() {
+    let manifest_path = match build_config.scarb_toml_path.clone() {
         Some(path) => path,
         None => get_scarb_manifest().context("Failed to obtain manifest path from scarb")?,
     };
 
-    ScarbCommand::stdio()
-        .arg("build")
-        .manifest_path(&manifest_path)
-        .run()
-        .context("Failed to build contracts with Scarb")?;
+    let mut cmd = ScarbCommand::stdio();
+    cmd.arg("build").manifest_path(&manifest_path);
+    if build_config.json {
+        cmd.json();
+    }
+    cmd.run().context("Failed to build contracts with Scarb")?;
 
     let metadata = scarb_metadata::MetadataCommand::new()
         .manifest_path(&manifest_path)

@@ -6,6 +6,7 @@ use crate::starknet_commands::{
 };
 use anyhow::{anyhow, Result};
 
+use crate::starknet_commands::declare::BuildConfig;
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
 use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
@@ -153,6 +154,10 @@ async fn run_async_command(
         timeout: config.wait_timeout,
         retry_interval: config.wait_retry_interval,
     };
+    let build_config = BuildConfig {
+        scarb_toml_path: cli.path_to_scarb_toml.clone(),
+        json: cli.json,
+    };
     match cli.command {
         Commands::Declare(declare) => {
             let account = get_account(
@@ -166,8 +171,8 @@ async fn run_async_command(
                 &declare.contract,
                 declare.max_fee,
                 &account,
-                &cli.path_to_scarb_toml,
                 declare.nonce,
+                build_config,
                 wait_config,
             )
             .await;

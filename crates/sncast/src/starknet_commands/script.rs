@@ -2,6 +2,7 @@ use std::any::Any;
 use std::collections::HashMap;
 use std::fs;
 
+use crate::starknet_commands::declare::BuildConfig;
 use crate::starknet_commands::{call, declare, deploy, invoke};
 use crate::{get_account, get_nonce, WaitForTx};
 use anyhow::{anyhow, ensure, Context, Result};
@@ -234,8 +235,11 @@ impl CairoHintProcessor<'_> {
                     &contract_name,
                     max_fee,
                     &account,
-                    &None,
                     nonce,
+                    BuildConfig {
+                        scarb_toml_path: None,
+                        json: false,
+                    },
                     WaitForTx {
                         wait: true,
                         timeout: self.config.wait_timeout,
