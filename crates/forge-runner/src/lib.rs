@@ -260,11 +260,7 @@ pub async fn run_tests_from_crate(
     tests_filter: &impl TestCaseFilter,
 ) -> Result<TestCrateRunResult> {
     let sierra_program = &tests.sierra_program;
-    let metadata_config = Some(MetadataComputationConfig::default());
-    let metadata = create_metadata(sierra_program, metadata_config).unwrap();
-    let casm_program =
-        cairo_lang_sierra_to_casm::compiler::compile(sierra_program, &metadata, true)
-            .unwrap();
+    let casm_program = compile_sierra_to_casm(sierra_program);
 
     // let runner = SierraCasmRunner::new(casm_program).context("Failed setting up runner.")?;
     let casm_program = Arc::new(casm_program);
@@ -340,6 +336,12 @@ pub async fn run_tests_from_crate(
     } else {
         Ok(TestCrateRunResult::Ok(summary))
     }
+}
+
+fn compile_sierra_to_casm(sierra_program: &Program) -> CairoProgram {
+    let metadata_config = Some(MetadataComputationConfig::default());
+    let metadata = create_metadata(sierra_program, metadata_config).unwrap();
+    cairo_lang_sierra_to_casm::compiler::compile(sierra_program, &metadata, true).unwrap()
 }
 
 #[allow(clippy::too_many_arguments)]
