@@ -20,6 +20,7 @@
 * [Debugging](testing/debugging.md)
 * [Fuzz Testing](testing/fuzz-testing.md)
 * [Test Collection](testing/test-collection.md)
+* [Gas Estimation](testing/gas-etimation.md)
 
 # Cast Overview
 
