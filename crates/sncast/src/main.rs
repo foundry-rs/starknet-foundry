@@ -6,7 +6,7 @@ use crate::starknet_commands::{
 };
 use anyhow::{anyhow, Result};
 
-use crate::starknet_commands::script::ScriptUI;
+use crate::starknet_commands::script::UI as ScriptUI;
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
 use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};

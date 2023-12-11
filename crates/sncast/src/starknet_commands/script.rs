@@ -58,7 +58,7 @@ pub enum Verbosity {
 }
 
 #[derive(Debug)]
-pub struct ScriptUI {
+pub struct UI {
     verbosity: Verbosity,
     value_format: ValueFormat,
     json: bool,
@@ -77,7 +77,7 @@ macro_rules! stringify_args {
     };
 }
 
-impl ScriptUI {
+impl UI {
     pub fn new(verbosity: Verbosity, value_format: ValueFormat, json: bool) -> Self {
         Self {
             verbosity,
@@ -102,14 +102,14 @@ impl ScriptUI {
         }
     }
 
-    pub fn print_cheatcode_args(&self, cheatcode: &str, args: String) {
-        self.verbose(&format!("Args passed to \"{}\" cheatcode:", cheatcode));
+    pub fn print_cheatcode_args(&self, cheatcode: &str, args: &str) {
+        self.verbose(&format!("Args passed to \"{cheatcode}\" cheatcode:"));
         let indented_str = args
             .lines()
-            .map(|item| format!("\t{}\n", item))
+            .map(|item| format!("\t{item}\n"))
             .collect::<Vec<String>>()
             .concat();
-        self.verbose(&format!("{{\n{}}}\n", indented_str));
+        self.verbose(&format!("{{\n{indented_str}}}\n"));
     }
 
     pub fn print_cheatcode_response<T: Serialize>(
@@ -171,7 +171,7 @@ pub struct CairoHintProcessor<'a> {
     pub runtime: Runtime,
     pub run_resources: RunResources,
     pub config: &'a CastConfig,
-    pub script_ui: ScriptUI,
+    pub script_ui: UI,
 }
 
 // cairo/crates/cairo-lang-runner/src/casm_run/mod.rs:457 (ResourceTracker for CairoHintProcessor)
@@ -306,7 +306,7 @@ impl CairoHintProcessor<'_> {
 
                 self.script_ui.print_cheatcode_args(
                     selector,
-                    stringify_args!(contract_address, function_name, calldata_felts),
+                    &stringify_args!(contract_address, function_name, calldata_felts),
                 );
 
                 let call_response = self.runtime.block_on(call::call(
@@ -348,8 +348,10 @@ impl CairoHintProcessor<'_> {
                     None
                 };
 
-                self.script_ui
-                    .print_cheatcode_args(selector, stringify_args!(contract_name, max_fee, nonce));
+                self.script_ui.print_cheatcode_args(
+                    selector,
+                    &stringify_args!(contract_name, max_fee, nonce),
+                );
 
                 let account = self.runtime.block_on(get_account(
                     &self.config.account,
@@ -422,7 +424,7 @@ impl CairoHintProcessor<'_> {
 
                 self.script_ui.print_cheatcode_args(
                     selector,
-                    stringify_args!(
+                    &stringify_args!(
                         class_hash,
                         constructor_calldata,
                         salt,
@@ -498,7 +500,7 @@ impl CairoHintProcessor<'_> {
 
                 self.script_ui.print_cheatcode_args(
                     selector,
-                    stringify_args!(contract_address, entry_point_name, calldata, max_fee, nonce),
+                    &stringify_args!(contract_address, entry_point_name, calldata, max_fee, nonce),
                 );
 
                 let account = self.runtime.block_on(get_account(
@@ -569,7 +571,7 @@ pub fn run(
     provider: &JsonRpcClient<HttpTransport>,
     runtime: Runtime,
     config: &CastConfig,
-    script_ui: ScriptUI,
+    script_ui: UI,
 ) -> Result<ScriptResponse> {
     let path = compile_script(path_to_scarb_toml.clone(), &script_ui)?;
 
@@ -635,10 +637,7 @@ pub fn run(
     }
 }
 
-fn compile_script(
-    path_to_scarb_toml: Option<Utf8PathBuf>,
-    script_ui: &ScriptUI,
-) -> Result<Utf8PathBuf> {
+fn compile_script(path_to_scarb_toml: Option<Utf8PathBuf>, script_ui: &UI) -> Result<Utf8PathBuf> {
     let scripts_manifest_path = match path_to_scarb_toml {
         Some(path) => path,
         None => get_scarb_manifest()

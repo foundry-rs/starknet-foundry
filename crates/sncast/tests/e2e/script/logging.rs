@@ -136,6 +136,7 @@ async fn test_one_of_the_steps_failing() {
 }
 
 #[tokio::test]
+#[allow(clippy::too_many_lines)]
 async fn test_verbose() {
     let script_name = "map_script";
     let args = vec![
