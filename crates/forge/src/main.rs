@@ -6,7 +6,7 @@ use forge::scarb::{build_contracts_with_scarb, config_from_scarb_for_package};
 use forge::shared_cache::{clean_cache, set_cached_failed_tests_names};
 use forge::test_filter::TestsFilter;
 use forge::{pretty_printing, run, run_with_scarb_collector};
-use forge_runner::test_case_summary::TestCaseSummary;
+use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
 use forge_runner::test_crate_summary::TestCrateSummary;
 use forge_runner::{RunnerConfig, RunnerParams, CACHE_DIR};
 use rand::{thread_rng, RngCore};
@@ -111,11 +111,17 @@ fn validate_fuzzer_runs_value(val: &str) -> Result<u32> {
     Ok(parsed_val)
 }
 
-fn extract_failed_tests(tests_summaries: Vec<TestCrateSummary>) -> Vec<TestCaseSummary> {
+fn extract_failed_tests(tests_summaries: Vec<TestCrateSummary>) -> Vec<AnyTestCaseSummary> {
     tests_summaries
         .into_iter()
         .flat_map(|test_file_summary| test_file_summary.test_case_summaries)
-        .filter(|test_case_summary| matches!(test_case_summary, TestCaseSummary::Failed { .. }))
+        .filter(|test_case_summary| {
+            matches!(
+                test_case_summary,
+                AnyTestCaseSummary::Fuzzing(TestCaseSummary::Failed { .. })
+                    | AnyTestCaseSummary::Single(TestCaseSummary::Failed { .. })
+            )
+        })
         .collect()
 }
 

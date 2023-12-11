@@ -180,7 +180,7 @@ macro_rules! test_case {
 #[macro_export]
 macro_rules! assert_passed {
     ($result:expr) => {{
-        use forge_runner::test_case_summary::TestCaseSummary;
+        use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
         use $crate::runner::TestCase;
 
         let result = TestCase::find_test_result(&$result);
@@ -189,10 +189,7 @@ macro_rules! assert_passed {
             "No test results found"
         );
         assert!(
-            result
-                .test_case_summaries
-                .iter()
-                .all(|r| matches!(r, TestCaseSummary::Passed { .. })),
+            result.test_case_summaries.iter().all(|t| t.is_passed()),
             "Some tests didn't pass"
         );
     }};
@@ -201,7 +198,7 @@ macro_rules! assert_passed {
 #[macro_export]
 macro_rules! assert_failed {
     ($result:expr) => {{
-        use forge_runner::test_case_summary::TestCaseSummary;
+        use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
 
         use $crate::runner::TestCase;
 
@@ -211,10 +208,7 @@ macro_rules! assert_failed {
             "No test results found"
         );
         assert!(
-            result
-                .test_case_summaries
-                .iter()
-                .all(|r| matches!(r, TestCaseSummary::Failed { .. })),
+            result.test_case_summaries.iter().all(|t| t.is_failed()),
             "Some tests didn't fail"
         );
     }};
@@ -223,7 +217,7 @@ macro_rules! assert_failed {
 #[macro_export]
 macro_rules! assert_case_output_contains {
     ($result:expr, $test_case_name:expr, $asserted_msg:expr) => {{
-        use forge_runner::test_case_summary::TestCaseSummary;
+        use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
 
         use $crate::runner::TestCase;
 
@@ -232,20 +226,15 @@ macro_rules! assert_case_output_contains {
 
         let result = TestCase::find_test_result(&$result);
 
-        assert!(result.test_case_summaries.iter().any(|case| {
-            match case {
-                TestCaseSummary::Failed {
-                    msg: Some(msg),
-                    name,
-                    ..
-                }
-                | TestCaseSummary::Passed {
-                    msg: Some(msg),
-                    name,
-                    ..
-                } => msg.contains($asserted_msg) && name.ends_with(test_name_suffix.as_str()),
-                _ => false,
+        assert!(result.test_case_summaries.iter().any(|any_case| {
+            if any_case.is_passed() || any_case.is_failed() {
+                return any_case.msg().unwrap().contains($asserted_msg)
+                    && any_case
+                        .name()
+                        .unwrap()
+                        .ends_with(test_name_suffix.as_str());
             }
+            false
         }));
     }};
 }
@@ -253,7 +242,7 @@ macro_rules! assert_case_output_contains {
 #[macro_export]
 macro_rules! assert_gas {
     ($result:expr, $test_case_name:expr, $asserted_gas:expr) => {{
-        use forge_runner::test_case_summary::TestCaseSummary;
+        use forge_runner::test_case_summary::{AnyTestCaseSummary, TestCaseSummary};
         use $crate::runner::TestCase;
 
         let test_case_name = $test_case_name;
@@ -261,12 +250,17 @@ macro_rules! assert_gas {
 
         let result = TestCase::find_test_result(&$result);
 
-        assert!(result.test_case_summaries.iter().any(|case| {
-            match case {
-                TestCaseSummary::Passed { gas_used: gas, .. } => {
-                    (*gas - $asserted_gas).abs() < 0.0001
+        assert!(result.test_case_summaries.iter().any(|any_case| {
+            match any_case {
+                AnyTestCaseSummary::Fuzzing(case) => {
+                    panic!("Cannot use assert_gas! for fuzzing tests")
                 }
-                _ => false,
+                AnyTestCaseSummary::Single(case) => match case {
+                    TestCaseSummary::Passed { gas_info: gas, .. } => {
+                        (*gas - $asserted_gas).abs() < 0.0001
+                    }
+                    _ => false,
+                },
             }
         }));
     }};
