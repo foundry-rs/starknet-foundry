@@ -1,7 +1,7 @@
 use crate::helpers::constants::{CONTRACTS_DIR, DEVNET_OZ_CLASS_HASH, URL};
 use crate::helpers::fixtures::convert_to_hex;
 use crate::helpers::fixtures::{
-    duplicate_directory_with_salt, get_address_from_keystore, get_transaction_hash,
+    duplicate_contract_directory_with_salt, get_address_from_keystore, get_transaction_hash,
     get_transaction_receipt, mint_token,
 };
 use camino::Utf8PathBuf;
@@ -224,7 +224,7 @@ pub async fn test_valid_class_hash() {
 }
 
 pub async fn create_account(salt: &str, add_profile: bool) -> (Utf8PathBuf, &str) {
-    let created_dir = duplicate_directory_with_salt(
+    let created_dir = duplicate_contract_directory_with_salt(
         CONTRACTS_DIR.to_string() + "/constructor_with_params",
         "put",
         salt,

@@ -1,15 +1,30 @@
 use crate::helpers::constants::{SCRIPTS_DIR, URL};
+use crate::helpers::fixtures::{duplicate_directory_and_salt_file, get_accounts_path};
 use indoc::indoc;
 use snapbox::cmd::{cargo_bin, Command};
+use tempfile::TempDir;
+
+fn duplicate_map_script(salt: &str) -> TempDir {
+    duplicate_directory_and_salt_file(
+        SCRIPTS_DIR.to_owned() + "/map_script",
+        Some(SCRIPTS_DIR.to_owned()),
+        "dummy",
+        "contracts/src/lib.cairo",
+        salt,
+    )
+}
 
 #[tokio::test]
 async fn test_default_verbosity() {
+    let current_dir = duplicate_map_script("13");
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+
     let script_name = "map_script";
     let args = vec![
         "--accounts-file",
-        "../../../accounts/accounts.json",
+        accounts_json_path.as_str(),
         "--account",
-        "user4",
+        "user3",
         "--url",
         URL,
         "script",
@@ -17,7 +32,7 @@ async fn test_default_verbosity() {
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(SCRIPTS_DIR.to_owned() + "/map_script/scripts")
+        .current_dir(current_dir.path().join("scripts"))
         .args(args);
 
     snapbox.assert().success().stdout_matches(indoc! {r#"
@@ -63,12 +78,15 @@ async fn test_default_verbosity() {
 
 #[tokio::test]
 async fn test_quiet() {
+    let current_dir = duplicate_map_script("14");
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+
     let script_name = "map_script";
     let args = vec![
         "--accounts-file",
-        "../../../accounts/accounts.json",
+        accounts_json_path.as_str(),
         "--account",
-        "user4",
+        "user5",
         "--url",
         URL,
         "script",
@@ -77,7 +95,7 @@ async fn test_quiet() {
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(SCRIPTS_DIR.to_owned() + "/map_script/scripts")
+        .current_dir(current_dir.path().join("scripts"))
         .args(args);
 
     snapbox.assert().success().stdout_matches(indoc! {r"
@@ -88,12 +106,15 @@ async fn test_quiet() {
 
 #[tokio::test]
 async fn test_one_of_the_steps_failing() {
+    let current_dir = duplicate_map_script("15");
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+
     let script_name = "map_script_failing_step";
     let args = vec![
         "--accounts-file",
-        "../../../accounts/accounts.json",
+        accounts_json_path.as_str(),
         "--account",
-        "user4",
+        "user6",
         "--url",
         URL,
         "script",
@@ -101,7 +122,7 @@ async fn test_one_of_the_steps_failing() {
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(SCRIPTS_DIR.to_owned() + "/map_script/scripts")
+        .current_dir(current_dir.path().join("scripts"))
         .args(args);
 
     let result = snapbox.assert().success();
@@ -138,12 +159,15 @@ async fn test_one_of_the_steps_failing() {
 #[tokio::test]
 #[allow(clippy::too_many_lines)]
 async fn test_verbose() {
+    let current_dir = duplicate_map_script("16");
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+
     let script_name = "map_script";
     let args = vec![
         "--accounts-file",
-        "../../../accounts/accounts.json",
+        accounts_json_path.as_str(),
         "--account",
-        "user4",
+        "user7",
         "--url",
         URL,
         "script",
@@ -152,7 +176,7 @@ async fn test_verbose() {
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
-        .current_dir(SCRIPTS_DIR.to_owned() + "/map_script/scripts")
+        .current_dir(current_dir.path().join("scripts"))
         .args(args);
 
     snapbox.assert().success().stdout_matches(indoc! {r#"
@@ -173,7 +197,7 @@ async fn test_verbose() {
         	),
         	nonce = Some(
         	    FieldElement {
-        	        inner: 0x0000000000000000000000000000000000000000000000000000000000000001,
+        	        inner: 0x[..],
         	    },
         	),
         }
@@ -201,7 +225,7 @@ async fn test_verbose() {
         	),
         	nonce = Some(
         	    FieldElement {
-        	        inner: 0x0000000000000000000000000000000000000000000000000000000000000002,
+        	        inner: 0x[..],
         	    },
         	),
         }
@@ -231,7 +255,7 @@ async fn test_verbose() {
         	),
         	nonce = Some(
         	    FieldElement {
-        	        inner: 0x0000000000000000000000000000000000000000000000000000000000000003,
+        	        inner: 0x[..],
         	    },
         	),
         }

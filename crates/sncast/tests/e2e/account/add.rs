@@ -1,5 +1,5 @@
 use crate::helpers::constants::{CONTRACTS_DIR, DEVNET_PREDEPLOYED_ACCOUNT_ADDRESS, URL};
-use crate::helpers::fixtures::duplicate_directory_with_salt;
+use crate::helpers::fixtures::duplicate_contract_directory_with_salt;
 use crate::helpers::runner::runner;
 use camino::Utf8PathBuf;
 use indoc::indoc;
@@ -60,7 +60,7 @@ pub async fn test_happy_case() {
 #[tokio::test]
 pub async fn test_happy_case_add_profile() {
     let current_dir =
-        duplicate_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "30");
+        duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "30");
 
     let accounts_file = "./accounts.json";
 
