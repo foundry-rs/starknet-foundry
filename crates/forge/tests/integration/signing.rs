@@ -8,13 +8,12 @@ fn test_stark_sign_msg_hash_range() {
         r"
             use snforge_std::signature::key_pair::{KeyPair, KeyPairTrait, SignerTrait, VerifierTrait};
             use snforge_std::signature::stark_curve::{StarkCurveKeyPairImpl, StarkCurveSignerImpl, StarkCurveVerifierImpl};
-            use ec::{NonZeroEcPoint, EcPointTrait};
             
             const UPPER_BOUND: felt252 = 0x800000000000000000000000000000000000000000000000000000000000000;
 
             #[test]
             fn test_valid_range() {
-                let key_pair = KeyPairTrait::<felt252, NonZeroEcPoint>::generate();
+                let key_pair = KeyPairTrait::<felt252, felt252>::generate();
                 
                 let msg_hash = UPPER_BOUND - 1;
                 let (r, s) = key_pair.sign(msg_hash);
@@ -26,7 +25,7 @@ fn test_stark_sign_msg_hash_range() {
             #[test]
             #[should_panic(expected: ('message_hash out of range', ))]
             fn test_invalid_range() {
-                let key_pair = KeyPairTrait::<felt252, NonZeroEcPoint>::generate();
+                let key_pair = KeyPairTrait::<felt252, felt252>::generate();
                 
                 // message_hash should be smaller than UPPER_BOUND
                 // https://github.com/starkware-libs/crypto-cpp/blob/78e3ed8dc7a0901fe6d62f4e99becc6e7936adfd/src/starkware/crypto/ecdsa.cc#L65
@@ -45,26 +44,23 @@ fn test_stark_sign_msg_hash_range() {
 fn test_stark_curve() {
     let test = test_case!(indoc!(
         r"
-            use snforge_std::signature::key_pair::{KeyPair, KeyPairTrait, SignerTrait, VerifierTrait};
-            use snforge_std::signature::stark_curve::{StarkCurveKeyPairImpl, StarkCurveSignerImpl, StarkCurveVerifierImpl};
-            use ec::{NonZeroEcPoint, EcPointTrait};
-
-            use snforge_std::PrintTrait;
+        use snforge_std::signature::key_pair::{KeyPair, KeyPairTrait, SignerTrait, VerifierTrait};
+        use snforge_std::signature::stark_curve::{StarkCurveKeyPairImpl, StarkCurveSignerImpl, StarkCurveVerifierImpl};
+        
+        #[test]
+        fn test() {
+            let key_pair = KeyPairTrait::<felt252, felt252>::generate();
             
-            #[test]
-            fn test() {
-                let key_pair = KeyPairTrait::<felt252, NonZeroEcPoint>::generate();
-                
-                let msg_hash = 0xbadc0ffee;
-                let (r, s) = key_pair.sign(msg_hash);
-            
-                let is_valid = key_pair.verify(msg_hash, (r, s));
-                assert(is_valid, 'Signature should be valid');
-            
-                let key_pair2 = KeyPairTrait::<felt252, NonZeroEcPoint>::from_secret_key(key_pair.secret_key);
-                assert(key_pair.secret_key == key_pair2.secret_key, 'Secret keys should be equal');
-                assert(key_pair.public_key.coordinates() == key_pair2.public_key.coordinates(), 'Public keys should be equal');
-            }
+            let msg_hash = 0xbadc0ffee;
+            let (r, s) = key_pair.sign(msg_hash);
+        
+            let is_valid = key_pair.verify(msg_hash, (r, s));
+            assert(is_valid, 'Signature should be valid');
+        
+            let key_pair2 = KeyPairTrait::<felt252, felt252>::from_secret_key(key_pair.secret_key);
+            assert(key_pair.secret_key == key_pair2.secret_key, 'Secret keys should be equal');
+            assert(key_pair.public_key == key_pair2.public_key, 'Public keys should be equal');
+        }
         "
     ));
 
@@ -184,23 +180,20 @@ fn test_stark_secp256_curves() {
             use snforge_std::signature::stark_curve::{StarkCurveKeyPairImpl, StarkCurveSignerImpl, StarkCurveVerifierImpl};
             use snforge_std::signature::secp256_curve::{Secp256CurveKeyPairImpl, Secp256CurveSignerImpl, Secp256CurveVerifierImpl};
             use starknet::secp256k1::{Secp256k1Impl, Secp256k1Point, Secp256k1PointImpl};
-            use ec::{NonZeroEcPoint, EcPointTrait};
             use core::starknet::SyscallResultTrait;
             
             #[test]
             fn test() {
                 let secret_key = 554433;
             
-                let key_pair_stark = KeyPairTrait::<felt252, NonZeroEcPoint>::from_secret_key(secret_key);
+                let key_pair_stark = KeyPairTrait::<felt252, felt252>::from_secret_key(secret_key);
                 let key_pair_secp256 = KeyPairTrait::<u256, Secp256k1Point>::from_secret_key(secret_key.into());
                 
                 assert(key_pair_stark.secret_key.into() == key_pair_secp256.secret_key, 'Secret keys should equal');
             
-                let (pk_x_stark, pk_y_stark) = key_pair_stark.public_key.coordinates();
                 let (pk_x_secp256, pk_y_secp256) = key_pair_secp256.public_key.get_coordinates().unwrap_syscall();
             
-                assert(pk_x_stark.into() != pk_x_secp256, 'Public keys should be different');
-                assert(pk_y_stark.into() != pk_y_secp256, 'Public keys should be different');
+                assert(key_pair_stark.public_key.into() != pk_x_secp256, 'Public keys should be different');
             
                 let msg_hash = 0xbadc0ffee;
             
@@ -295,13 +288,11 @@ fn test_invalid_secret_key() {
             use starknet::secp256k1::{Secp256k1Impl, Secp256k1Point, Secp256k1PointImpl};
             use starknet::secp256r1::{Secp256r1Impl, Secp256r1Point, Secp256r1PointImpl};
             use starknet::secp256_trait::{Secp256Trait, Secp256PointTrait};
-            use starknet::{SyscallResult, SyscallResultTrait};
-            use ec::{NonZeroEcPoint, EcPointImpl, EcPointTrait};
             
             #[test]
             #[should_panic(expected: ('invalid secret_key', ))]
             fn test_from_secret_key_stark() {
-                let key_pair = KeyPairTrait::<felt252, NonZeroEcPoint>::from_secret_key(0);
+                let key_pair = KeyPairTrait::<felt252, felt252>::from_secret_key(0);
             }
             
             #[test]
@@ -319,8 +310,7 @@ fn test_invalid_secret_key() {
             #[test]
             #[should_panic(expected: ('invalid secret_key', ))]
             fn test_sign_stark() {
-                let generator: NonZeroEcPoint = EcPointImpl::new(ec::stark_curve::GEN_X, ec::stark_curve::GEN_Y).unwrap().try_into().unwrap();
-                let key_pair = KeyPair { secret_key: 0, public_key: generator } ;
+                let key_pair = KeyPair { secret_key: 0, public_key: 0x321 } ;
                 let (r, s) = key_pair.sign(123);
             }
             
