@@ -18,8 +18,7 @@ pub fn compile(definition: &FlattenedSierraClass) -> anyhow::Result<CasmContract
     macro_rules! compile_contract {
         ($sierra_type:ty, $casm_type:ty) => {{
             let sierra_class = flattened_sierra_to_contract_class::<$sierra_type>(definition)?;
-            let maybe_casm_class =
-                <$casm_type>::from_contract_class(sierra_class, true);
+            let maybe_casm_class = <$casm_type>::from_contract_class(sierra_class, true);
             if let Ok(casm_class) = maybe_casm_class {
                 return casm_to_main_casm::<$casm_type>(&casm_class);
             }
