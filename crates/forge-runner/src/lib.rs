@@ -308,61 +308,65 @@ fn choose_test_strategy_and_run(
     }
 }
 
-fn fuzzing_run_summary(results: Vec<TestCaseSummary<Single>>) -> TestCaseSummary<Fuzzing> {
-    let last: TestCaseSummary<Single> = results
-        .iter()
-        .last()
-        .cloned()
-        .expect("Fuzz test should always run at least once");
-    match last {
-        TestCaseSummary::Passed {
-            name,
-            msg,
-            arguments,
-            gas_info: _,
-            test_statistics: (),
-            latest_block_number,
-        } => {
-            let runs = results.len();
-            let gas_usages_vec = results
-                .into_iter()
-                .filter(|item| matches!(item, TestCaseSummary::Passed { .. }))
-                .map(|a| match a {
-                    TestCaseSummary::Passed { gas_info, .. } => gas_info,
-                    _ => unreachable!(),
-                });
-
-            let max = gas_usages_vec.clone().reduce(f64::max).unwrap();
-            let min = gas_usages_vec.reduce(f64::min).unwrap();
-
+impl TestCaseSummary<Fuzzing> {
+    fn from(results: Vec<TestCaseSummary<Single>>) -> TestCaseSummary<Fuzzing> {
+        let last: TestCaseSummary<Single> = results
+            .iter()
+            .last()
+            .cloned()
+            .expect("Fuzz test should always run at least once");
+        // Only the last result matters as fuzzing is cancelled after first fail
+        match last {
             TestCaseSummary::Passed {
                 name,
                 msg,
-                gas_info: GasStatistics { min, max },
                 arguments,
-                test_statistics: FuzzingStatistics { runs },
+                gas_info: _,
+                test_statistics: (),
                 latest_block_number,
+            } => {
+                let runs = results.len();
+                let gas_usages_vec = results
+                    .into_iter()
+                    .filter(|item| matches!(item, TestCaseSummary::Passed { .. }))
+                    .map(|a| match a {
+                        TestCaseSummary::Passed { gas_info, .. } => gas_info,
+                        _ => unreachable!(),
+                    });
+    
+                let max = gas_usages_vec.clone().reduce(f64::max).unwrap();
+                let min = gas_usages_vec.reduce(f64::min).unwrap();
+    
+                TestCaseSummary::Passed {
+                    name,
+                    msg,
+                    gas_info: GasStatistics { min, max },
+                    arguments,
+                    test_statistics: FuzzingStatistics { runs },
+                    latest_block_number,
+                }
             }
-        }
-        TestCaseSummary::Failed {
-            name,
-            msg,
-            arguments,
-            test_statistics: (),
-            latest_block_number,
-        } => TestCaseSummary::Failed {
-            name,
-            msg,
-            arguments,
-            test_statistics: FuzzingStatistics {
-                runs: results.len(),
+            TestCaseSummary::Failed {
+                name,
+                msg,
+                arguments,
+                test_statistics: (),
+                latest_block_number,
+            } => TestCaseSummary::Failed {
+                name,
+                msg,
+                arguments,
+                test_statistics: FuzzingStatistics {
+                    runs: results.len(),
+                },
+                latest_block_number,
             },
-            latest_block_number,
-        },
-        TestCaseSummary::Ignored { name } => TestCaseSummary::Ignored { name: name.clone() },
-        TestCaseSummary::Skipped {} => TestCaseSummary::Skipped {},
+            TestCaseSummary::Ignored { name } => TestCaseSummary::Ignored { name: name.clone() },
+            TestCaseSummary::Skipped {} => TestCaseSummary::Skipped {},
+        }
     }
 }
+
 
 fn run_with_fuzzing(
     args: Vec<ConcreteTypeId>,
@@ -437,7 +441,7 @@ fn run_with_fuzzing(
                 .count(),
         )?;
 
-        let fuzzing_run_summary = fuzzing_run_summary(results);
+        let fuzzing_run_summary: TestCaseSummary<Fuzzing> = TestCaseSummary::from(results);
 
         if let TestCaseSummary::Passed { .. } = fuzzing_run_summary {
             // Because we execute tests parallel, it's possible to
