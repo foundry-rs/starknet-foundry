@@ -16,11 +16,10 @@ use crate::scarb::config::ForkTarget;
 use crate::scarb_test_collector::load_test_artifacts;
 use crate::test_filter::TestsFilter;
 
-mod collecting;
-pub mod scarb_test_collector;
-
+pub mod collecting;
 pub mod pretty_printing;
 pub mod scarb;
+pub mod scarb_test_collector;
 pub mod shared_cache;
 pub mod test_filter;
 

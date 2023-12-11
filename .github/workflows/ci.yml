@@ -82,12 +82,12 @@ jobs:
           toolchain: stable
       - uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8
         with:
-          cache-directories: crates/cast/tests/utils/devnet
+          cache-directories: crates/sncast/tests/utils/devnet
       - name: Install starknet-devnet-rs
         run: ./scripts/install_devnet.sh
       - uses: software-mansion/setup-scarb@v1.3.2
       - name: Run tests
-        run: cargo test --release -p cast
+        run: cargo test --release -p sncast
 
   test-conversions:
     name: Test Conversions
