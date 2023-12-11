@@ -1,10 +1,10 @@
-use crate::collecting::CompiledTestCrateRaw;
+use crate::compiled_raw::CompiledTestCrateRaw;
 use anyhow::{anyhow, Context, Result};
 use camino::Utf8Path;
 use scarb_ui::args::PackagesFilter;
 use std::process::{Command, Stdio};
 
-pub fn load_test_artifacts(
+pub(crate) fn load_test_artifacts(
     snforge_target_dir_path: &Utf8Path,
     package_name: &str,
 ) -> Result<Vec<CompiledTestCrateRaw>> {
