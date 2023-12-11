@@ -4,7 +4,7 @@ members = [
     "crates/forge",
     "crates/forge-runner",
     "crates/test-collector",
-    "crates/cast",
+    "crates/sncast",
     "crates/cheatnet",
     "crates/conversions",
     "crates/runtime",
