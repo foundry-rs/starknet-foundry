@@ -9,13 +9,13 @@ use anyhow::{anyhow, Result};
 use crate::starknet_commands::script::UI as ScriptUI;
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
+use clap_verbosity_flag::LevelFilter;
 use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
 use sncast::helpers::scarb_utils::{parse_scarb_config, CastConfig};
 use sncast::{
     chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_nonce, get_provider,
     print_command_result, ValueFormat, WaitForTx,
 };
-use clap_verbosity_flag::LevelFilter;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use tokio::runtime::Runtime;
