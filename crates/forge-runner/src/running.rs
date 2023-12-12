@@ -57,7 +57,7 @@ use tokio::task::JoinHandle;
 use url::Url;
 
 /// Builds `hints_dict` required in `cairo_vm::types::program::Program` from instructions.
-pub fn build_hints_dict<'b>(
+fn build_hints_dict<'b>(
     instructions: impl Iterator<Item = &'b Instruction>,
 ) -> (HashMap<usize, Vec<HintParams>>, HashMap<String, Hint>) {
     let mut hints_dict: HashMap<usize, Vec<HintParams>> = HashMap::new();
@@ -156,13 +156,13 @@ pub(crate) fn run_fuzz_test(
     })
 }
 
-pub fn build_context(block_info: CheatnetBlockInfo) -> EntryPointExecutionContext {
+fn build_context(block_info: CheatnetBlockInfo) -> EntryPointExecutionContext {
     let block_context = cheatnet_constants::build_block_context(block_info);
     let account_context = cheatnet_constants::build_transaction_context();
     EntryPointExecutionContext::new(&block_context, &account_context, ExecutionMode::Execute)
 }
 
-pub fn build_syscall_handler<'a>(
+fn build_syscall_handler<'a>(
     blockifier_state: &'a mut dyn State,
     string_to_hint: &'a HashMap<String, Hint>,
     execution_resources: &'a mut ExecutionResources,
@@ -417,7 +417,7 @@ fn extract_test_case_summary(
     }
 }
 
-pub fn get_fork_state_reader(
+fn get_fork_state_reader(
     workspace_root: &Utf8Path,
     fork_config: &Option<ValidatedForkConfig>,
 ) -> Result<Option<ForkStateReader>> {
@@ -483,7 +483,7 @@ fn get_context<'a>(runtime: &'a ForgeRuntime) -> &'a EntryPointExecutionContext 
         .context
 }
 
-pub fn finalize(
+fn finalize(
     vm: &mut VirtualMachine,
     runner: &CairoRunner,
     syscall_handler: &mut SyscallHintProcessor<'_>,
