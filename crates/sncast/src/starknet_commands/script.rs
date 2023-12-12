@@ -64,12 +64,51 @@ pub struct UI {
     json: bool,
 }
 
+pub trait DebugArgVal {
+    fn get_arg_val(&self) -> String;
+}
+
+impl DebugArgVal for String {
+    fn get_arg_val(&self) -> String {
+        format!("\"{}\"", self.to_owned())
+    }
+}
+
+impl DebugArgVal for FieldElement {
+    fn get_arg_val(&self) -> String {
+        format!("{:#064x}", self)
+    }
+}
+
+impl<T: DebugArgVal> DebugArgVal for Vec<T> {
+    fn get_arg_val(&self) -> String {
+        let res: Vec<String> = self.iter().map(|item| item.get_arg_val()).collect();
+        let res = res.join(",");
+        format!("[{res}]")
+    }
+}
+
+impl<T: DebugArgVal> DebugArgVal for Option<T> {
+    fn get_arg_val(&self) -> String {
+        match self {
+            Some(v) => format!("Some({})", v.get_arg_val()),
+            None => "None".to_string()
+        }
+    }
+}
+
+impl DebugArgVal for bool {
+    fn get_arg_val(&self) -> String {
+        self.to_string()
+    }
+}
+
 macro_rules! stringify_args {
     ( $( $x:expr ),* ) => {
         {
             let mut temp_vec = Vec::new();
             $(
-                let stringified_arg = (stringify!($x).to_string(), format!("{:?}", &$x));
+                let stringified_arg = (stringify!($x).to_string(), $x.get_arg_val());
                 temp_vec.push(stringified_arg);
             )*
             temp_vec
@@ -294,7 +333,7 @@ impl CairoHintProcessor<'_> {
 
         match selector {
             "call" => {
-                let contract_address = inputs[0].clone().into_();
+                let contract_address: FieldElement = inputs[0].clone().into_();
                 let function_name = as_cairo_short_string(&inputs[1])
                     .expect("Failed to convert function name to short string");
                 let calldata_length = inputs[2]
@@ -387,7 +426,7 @@ impl CairoHintProcessor<'_> {
                 Ok(())
             }
             "deploy" => {
-                let class_hash = inputs[0].clone().into_();
+                let class_hash: FieldElement = inputs[0].clone().into_();
                 let calldata_length = inputs[1]
                     .to_usize()
                     .expect("Failed to convert calldata length to usize");

@@ -184,8 +184,8 @@ async fn test_verbose() {
         cheatcode: declare
         args_passed: [
         	contract_name: "Mapa",
-        	max_fee: Some(FieldElement { inner: 0x000000000000000000000000000000000000000000000000016345785d89ffff }),
-        	nonce: Some(FieldElement { inner: 0x[..] }),
+        	max_fee: Some(0x000000000000000000000000000000000000000000000000016345785d89ffff),
+        	nonce: Some(0x[..]),
         ]
 
         cheatcode: declare
@@ -194,12 +194,12 @@ async fn test_verbose() {
 
         cheatcode: deploy
         args_passed: [
-        	class_hash: FieldElement { inner: 0x[..] },
+        	class_hash: 0x[..],
         	constructor_calldata: [],
-        	salt: Some(FieldElement { inner: 0x0000000000000000000000000000000000000000000000000000000000000003 }),
+        	salt: Some(0x0000000000000000000000000000000000000000000000000000000000000003),
         	unique: true,
-        	max_fee: Some(FieldElement { inner: 0x000000000000000000000000000000000000000000000000016345785d89ffff }),
-        	nonce: Some(FieldElement { inner: 0x[..] }),
+        	max_fee: Some(0x000000000000000000000000000000000000000000000000016345785d89ffff),
+        	nonce: Some(0x[..]),
         ]
 
         cheatcode: deploy
@@ -208,11 +208,11 @@ async fn test_verbose() {
 
         cheatcode: invoke
         args_passed: [
-        	contract_address: FieldElement { inner: 0x[..] },
+        	contract_address: 0x[..],
         	entry_point_name: "put",
-        	calldata: [FieldElement { inner: 0x0000000000000000000000000000000000000000000000000000000000000001 }, FieldElement { inner: 0x0000000000000000000000000000000000000000000000000000000000000002 }],
-        	max_fee: Some(FieldElement { inner: 0x000000000000000000000000000000000000000000000000016345785d89ffff }),
-        	nonce: Some(FieldElement { inner: 0x[..] }),
+        	calldata: [0x0000000000000000000000000000000000000000000000000000000000000001,0x0000000000000000000000000000000000000000000000000000000000000002],
+        	max_fee: Some(0x000000000000000000000000000000000000000000000000016345785d89ffff),
+        	nonce: Some(0x[..]),
         ]
 
         cheatcode: invoke
@@ -220,9 +220,9 @@ async fn test_verbose() {
 
         cheatcode: call
         args_passed: [
-        	contract_address: FieldElement { inner: 0x[..] },
+        	contract_address: 0x[..],
         	function_name: "get",
-        	calldata_felts: [FieldElement { inner: 0x0000000000000000000000000000000000000000000000000000000000000001 }],
+        	calldata_felts: [0x0000000000000000000000000000000000000000000000000000000000000001],
         ]
 
         cheatcode: call
@@ -266,8 +266,8 @@ async fn test_verbose_with_json() {
         {
           "args_passed": {
             "contract_name": "Mapa",
-            "max_fee": "Some(FieldElement { inner: 0x000000000000000000000000000000000000000000000000016345785d89ffff })",
-            "nonce": "Some(FieldElement { inner: 0x[..] })"
+            "max_fee": "Some(0x000000000000000000000000000000000000000000000000016345785d89ffff)",
+            "nonce": "Some(0x[..])"
           },
           "cheatcode": "declare"
         }
@@ -280,11 +280,11 @@ async fn test_verbose_with_json() {
 
         {
           "args_passed": {
-            "class_hash": "FieldElement { inner: 0x[..] }",
+            "class_hash": "0x[..]",
             "constructor_calldata": [],
-            "max_fee": "Some(FieldElement { inner: 0x000000000000000000000000000000000000000000000000016345785d89ffff })",
-            "nonce": "Some(FieldElement { inner: 0x[..] })",
-            "salt": "Some(FieldElement { inner: 0x0000000000000000000000000000000000000000000000000000000000000003 })",
+            "max_fee": "Some(0x000000000000000000000000000000000000000000000000016345785d89ffff)",
+            "nonce": "Some(0x[..])",
+            "salt": "Some(0x0000000000000000000000000000000000000000000000000000000000000003)",
             "unique": true
           },
           "cheatcode": "deploy"
@@ -298,11 +298,11 @@ async fn test_verbose_with_json() {
 
         {
           "args_passed": {
-            "calldata": "[FieldElement { inner: 0x0000000000000000000000000000000000000000000000000000000000000001 }, FieldElement { inner: 0x0000000000000000000000000000000000000000000000000000000000000002 }]",
-            "contract_address": "FieldElement { inner: 0x[..] }",
+            "calldata": "[0x0000000000000000000000000000000000000000000000000000000000000001,0x0000000000000000000000000000000000000000000000000000000000000002]",
+            "contract_address": "0x[..]",
             "entry_point_name": "put",
-            "max_fee": "Some(FieldElement { inner: 0x000000000000000000000000000000000000000000000000016345785d89ffff })",
-            "nonce": "Some(FieldElement { inner: 0x[..] })"
+            "max_fee": "Some(0x000000000000000000000000000000000000000000000000016345785d89ffff)",
+            "nonce": "Some(0x[..])"
           },
           "cheatcode": "invoke"
         }
@@ -314,8 +314,8 @@ async fn test_verbose_with_json() {
 
         {
           "args_passed": {
-            "calldata_felts": "[FieldElement { inner: 0x0000000000000000000000000000000000000000000000000000000000000001 }]",
-            "contract_address": "FieldElement { inner: 0x[..] }",
+            "calldata_felts": "[0x0000000000000000000000000000000000000000000000000000000000000001]",
+            "contract_address": "0x[..]",
             "function_name": "get"
           },
           "cheatcode": "call"
