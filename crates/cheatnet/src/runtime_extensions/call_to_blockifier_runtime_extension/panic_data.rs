@@ -3,7 +3,7 @@ use regex::Regex;
 
 #[must_use]
 pub fn try_extract_panic_data(err: &str) -> Option<Vec<Felt252>> {
-    let re = Regex::new(r#"(?m)^Got an exception while executing a hint: Hint Error: Execution failed\. Failure reason: "(.*)"\.$"#)
+    let re = Regex::new(r#"Got an exception while executing a hint: Custom Hint Error: Execution failed. Failure reason: (.*)\."#)
         .expect("Could not create panic_data matching regex");
 
     if let Some(captures) = re.captures(err) {
