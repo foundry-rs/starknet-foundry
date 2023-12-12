@@ -17,7 +17,7 @@ use test_utils::runner::Contract;
 use test_utils::running_tests::run_test_case;
 use test_utils::{assert_case_output_contains, assert_failed, assert_passed, test_case};
 
-static CHEATNET_RPC_URL: &str = "http://188.34.188.184:9545/rpc/v0.4";
+static CHEATNET_RPC_URL: &str = "http://188.34.188.184:9545/rpc/v0.5";
 
 #[test]
 fn fork_simple_decorator() {

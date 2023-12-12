@@ -1,11 +1,13 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 
-use crate::cheatcodes::deploy::{deploy, deploy_at, DeployCallPayload};
-use crate::cheatcodes::CheatcodeError;
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     CallContractFailure, CallContractResult,
 };
+use crate::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::{
+    deploy, deploy_at, DeployCallPayload,
+};
+use crate::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
 use crate::state::{BlockifierState, CheatTarget};
 use anyhow::{Context, Result};
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
@@ -22,7 +24,7 @@ use serde::Deserialize;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use starknet_api::core::ContractAddress;
 
-use crate::cheatcodes::spy_events::SpyTarget;
+use crate::runtime_extensions::forge_runtime_extension::cheatcodes::spy_events::SpyTarget;
 use crate::runtime_extensions::forge_runtime_extension::file_operations::string_into_felt;
 use cairo_lang_starknet::contract::starknet_keccak;
 use runtime::{
@@ -34,6 +36,7 @@ use starknet::signers::SigningKey;
 use super::call_to_blockifier_runtime_extension::CallToBlockifierRuntime;
 use super::cheatable_starknet_runtime_extension::SyscallSelector;
 
+pub mod cheatcodes;
 mod file_operations;
 
 pub type ForgeRuntime<'a> = ExtendedRuntime<ForgeExtension<'a>>;

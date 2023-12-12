@@ -8,19 +8,47 @@ use std::option::Option;
 use test_collector::{ExpectedPanicValue, ExpectedTestResult};
 
 #[derive(Debug, PartialEq, Clone)]
-pub struct FuzzingGasUsage {
+pub struct GasStatistics {
     pub min: f64,
     pub max: f64,
 }
 #[derive(Debug, PartialEq, Clone)]
 pub struct FuzzingStatistics {
-    runs: u32,
-    gas_usage: Option<FuzzingGasUsage>,
+    pub runs: usize,
+}
+
+pub trait TestType {
+    type GasInfo: std::fmt::Debug + Clone;
+    type TestStatistics: std::fmt::Debug + Clone;
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct Fuzzing;
+impl TestType for Fuzzing {
+    type GasInfo = GasStatistics;
+    type TestStatistics = FuzzingStatistics;
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct Single;
+impl TestType for Single {
+    type GasInfo = f64;
+    type TestStatistics = ();
+}
+
+pub trait TestStatistics {
+    type Type: std::fmt::Debug + Clone;
+}
+impl TestStatistics for Fuzzing {
+    type Type = FuzzingStatistics;
+}
+impl TestStatistics for Single {
+    type Type = ();
 }
 
 /// Summary of running a single test case
-#[derive(Debug, PartialEq, Clone)]
-pub enum TestCaseSummary {
+#[derive(Debug, Clone)]
+pub enum TestCaseSummary<T: TestType> {
     /// Test case passed
     Passed {
         /// Name of the test case
@@ -29,12 +57,12 @@ pub enum TestCaseSummary {
         msg: Option<String>,
         /// Arguments used in the test case run
         arguments: Vec<Felt252>,
-        /// Statistic for fuzzing test
-        fuzzing_statistic: Option<FuzzingStatistics>,
+        /// Information on used gas
+        gas_info: <T as TestType>::GasInfo,
+        /// Statistics of the test run
+        test_statistics: <T as TestType>::TestStatistics,
         /// Number of block used if BlockId::Tag(Latest) was specified
         latest_block_number: Option<BlockNumber>,
-        /// Gas used by the test case
-        gas_used: f64,
     },
     /// Test case failed
     Failed {
@@ -44,8 +72,8 @@ pub enum TestCaseSummary {
         msg: Option<String>,
         /// Arguments used in the test case run
         arguments: Vec<Felt252>,
-        /// Statistic for fuzzing test
-        fuzzing_statistic: Option<FuzzingStatistics>,
+        /// Statistics of the test run
+        test_statistics: <T as TestType>::TestStatistics,
         /// Number of block used if BlockId::Tag(Latest) was specified
         latest_block_number: Option<BlockNumber>,
     },
@@ -58,7 +86,32 @@ pub enum TestCaseSummary {
     Skipped {},
 }
 
-impl TestCaseSummary {
+#[derive(Debug)]
+pub enum AnyTestCaseSummary {
+    Fuzzing(TestCaseSummary<Fuzzing>),
+    Single(TestCaseSummary<Single>),
+}
+
+impl<T: TestType> TestCaseSummary<T> {
+    #[must_use]
+    pub fn name(&self) -> Option<&String> {
+        match self {
+            TestCaseSummary::Failed { name, .. }
+            | TestCaseSummary::Passed { name, .. }
+            | TestCaseSummary::Ignored { name, .. } => Some(name),
+            TestCaseSummary::Skipped { .. } => None,
+        }
+    }
+
+    #[must_use]
+    pub fn msg(&self) -> Option<&String> {
+        match self {
+            TestCaseSummary::Failed { msg: Some(msg), .. }
+            | TestCaseSummary::Passed { msg: Some(msg), .. } => Some(msg),
+            _ => None,
+        }
+    }
+
     #[must_use]
     pub fn arguments(&self) -> Vec<Felt252> {
         match self {
@@ -67,91 +120,40 @@ impl TestCaseSummary {
             TestCaseSummary::Ignored { .. } | TestCaseSummary::Skipped { .. } => vec![],
         }
     }
-    #[must_use]
-    pub fn runs(&self) -> Option<u32> {
-        match self {
-            TestCaseSummary::Failed {
-                fuzzing_statistic, ..
-            }
-            | TestCaseSummary::Passed {
-                fuzzing_statistic, ..
-            } => fuzzing_statistic
-                .as_ref()
-                .map(|FuzzingStatistics { runs, .. }| *runs),
-            TestCaseSummary::Ignored { .. } | TestCaseSummary::Skipped { .. } => None,
-        }
-    }
 
-    pub(crate) fn latest_block_number(&self) -> &Option<BlockNumber> {
+    pub(crate) fn latest_block_number(&self) -> Option<&BlockNumber> {
         match self {
             TestCaseSummary::Failed {
-                latest_block_number,
+                latest_block_number: Some(latest_block_number),
                 ..
             }
             | TestCaseSummary::Passed {
-                latest_block_number,
+                latest_block_number: Some(latest_block_number),
                 ..
-            } => latest_block_number,
-            TestCaseSummary::Ignored { .. } | TestCaseSummary::Skipped { .. } => &None,
-        }
-    }
-    #[must_use]
-    pub fn gas_usage(&self) -> Option<String> {
-        match self {
-            TestCaseSummary::Passed {
-                gas_used,
-                fuzzing_statistic,
-                ..
-            } => match fuzzing_statistic {
-                Some(FuzzingStatistics { gas_usage, .. }) => gas_usage
-                    .as_ref()
-                    .map(|gas_usage| format!("(max: ~{}, min: ~{})", gas_usage.max, gas_usage.min)),
-                None => Some(format!("~{gas_used}")),
-            },
+            } => Some(latest_block_number),
             _ => None,
-        }
-    }
-
-    #[must_use]
-    pub fn with_runs_and_gas_usage(self, runs: u32, gas_usage: Option<FuzzingGasUsage>) -> Self {
-        match self {
-            TestCaseSummary::Passed {
-                name,
-                msg,
-                arguments,
-                latest_block_number,
-                gas_used: gas,
-                ..
-            } => TestCaseSummary::Passed {
-                name,
-                msg,
-                arguments,
-                gas_used: gas,
-                fuzzing_statistic: Some(FuzzingStatistics { runs, gas_usage }),
-                latest_block_number,
-            },
-            TestCaseSummary::Failed {
-                name,
-                msg,
-                arguments,
-                latest_block_number,
-                ..
-            } => TestCaseSummary::Failed {
-                name,
-                msg,
-                arguments,
-                fuzzing_statistic: Some(FuzzingStatistics {
-                    runs,
-                    gas_usage: None,
-                }),
-                latest_block_number,
-            },
-            TestCaseSummary::Ignored { .. } | TestCaseSummary::Skipped {} => self,
         }
     }
 }
 
-impl TestCaseSummary {
+impl TestCaseSummary<Fuzzing> {
+    #[must_use]
+    pub fn runs(&self) -> Option<usize> {
+        match self {
+            TestCaseSummary::Passed {
+                test_statistics: FuzzingStatistics { runs },
+                ..
+            }
+            | TestCaseSummary::Failed {
+                test_statistics: FuzzingStatistics { runs },
+                ..
+            } => Some(*runs),
+            _ => None,
+        }
+    }
+}
+
+impl TestCaseSummary<Single> {
     #[must_use]
     pub(crate) fn from_run_result_and_info(
         run_result: RunResult,
@@ -169,15 +171,15 @@ impl TestCaseSummary {
                     name,
                     msg,
                     arguments,
-                    fuzzing_statistic: None,
+                    test_statistics: (),
                     latest_block_number,
-                    gas_used: gas,
+                    gas_info: gas,
                 },
                 ExpectedTestResult::Panics(_) => TestCaseSummary::Failed {
                     name,
                     msg,
                     arguments,
-                    fuzzing_statistic: None,
+                    test_statistics: (),
                     latest_block_number,
                 },
             },
@@ -186,7 +188,7 @@ impl TestCaseSummary {
                     name,
                     msg,
                     arguments,
-                    fuzzing_statistic: None,
+                    test_statistics: (),
                     latest_block_number,
                 },
                 ExpectedTestResult::Panics(panic_expectation) => match panic_expectation {
@@ -195,7 +197,7 @@ impl TestCaseSummary {
                             name,
                             msg,
                             arguments,
-                            fuzzing_statistic: None,
+                            test_statistics: (),
                             latest_block_number,
                         }
                     }
@@ -203,9 +205,9 @@ impl TestCaseSummary {
                         name,
                         msg,
                         arguments,
-                        fuzzing_statistic: None,
+                        test_statistics: (),
                         latest_block_number,
-                        gas_used: gas,
+                        gas_info: gas,
                     },
                 },
             },
@@ -272,5 +274,67 @@ fn extract_result_data(run_result: &RunResult, expectation: &ExpectedTestResult)
                 None => build_readable_text(panic_data),
             }
         }
+    }
+}
+
+impl AnyTestCaseSummary {
+    #[must_use]
+    pub fn name(&self) -> Option<&String> {
+        match self {
+            AnyTestCaseSummary::Fuzzing(case) => case.name(),
+            AnyTestCaseSummary::Single(case) => case.name(),
+        }
+    }
+
+    #[must_use]
+    pub fn msg(&self) -> Option<&String> {
+        match self {
+            AnyTestCaseSummary::Fuzzing(case) => case.msg(),
+            AnyTestCaseSummary::Single(case) => case.msg(),
+        }
+    }
+
+    #[must_use]
+    pub fn latest_block_number(&self) -> Option<&BlockNumber> {
+        match self {
+            AnyTestCaseSummary::Fuzzing(case) => case.latest_block_number(),
+            AnyTestCaseSummary::Single(case) => case.latest_block_number(),
+        }
+    }
+
+    #[must_use]
+    pub fn is_passed(&self) -> bool {
+        matches!(
+            self,
+            AnyTestCaseSummary::Single(TestCaseSummary::Passed { .. })
+                | AnyTestCaseSummary::Fuzzing(TestCaseSummary::Passed { .. })
+        )
+    }
+
+    #[must_use]
+    pub fn is_failed(&self) -> bool {
+        matches!(
+            self,
+            AnyTestCaseSummary::Single(TestCaseSummary::Failed { .. })
+                | AnyTestCaseSummary::Fuzzing(TestCaseSummary::Failed { .. })
+        )
+    }
+
+    #[must_use]
+    pub fn is_skipped(&self) -> bool {
+        matches!(
+            self,
+            AnyTestCaseSummary::Single(TestCaseSummary::Skipped { .. })
+                | AnyTestCaseSummary::Fuzzing(TestCaseSummary::Skipped { .. })
+        )
+    }
+
+    #[must_use]
+    pub fn is_ignored(&self) -> bool {
+        matches!(
+            self,
+            AnyTestCaseSummary::Single(TestCaseSummary::Ignored { .. })
+                | AnyTestCaseSummary::Fuzzing(TestCaseSummary::Ignored { .. })
+        )
     }
 }

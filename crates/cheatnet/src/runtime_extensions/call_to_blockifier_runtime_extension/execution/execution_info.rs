@@ -7,7 +7,10 @@ use cairo_vm::{
 use conversions::FromConv;
 use starknet_api::core::ContractAddress;
 
-use crate::{cheatcodes::spoof::TxInfoMock, state::CheatnetState};
+use crate::{
+    runtime_extensions::forge_runtime_extension::cheatcodes::spoof::TxInfoMock,
+    state::CheatnetState,
+};
 
 fn get_cheated_block_info_ptr(
     cheatnet_state: &CheatnetState,
