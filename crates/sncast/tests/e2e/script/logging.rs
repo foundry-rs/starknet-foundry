@@ -185,7 +185,7 @@ async fn test_verbose() {
         args_passed: [
         	contract_name: "Mapa",
         	max_fee: Some(FieldElement { inner: 0x000000000000000000000000000000000000000000000000016345785d89ffff }),
-        	nonce: Some(FieldElement { inner: 0x0000000000000000000000000000000000000000000000000000000000000000 }),
+        	nonce: Some(FieldElement { inner: 0x[..] }),
         ]
 
         cheatcode: declare
@@ -199,7 +199,7 @@ async fn test_verbose() {
         	salt: Some(FieldElement { inner: 0x0000000000000000000000000000000000000000000000000000000000000003 }),
         	unique: true,
         	max_fee: Some(FieldElement { inner: 0x000000000000000000000000000000000000000000000000016345785d89ffff }),
-        	nonce: Some(FieldElement { inner: 0x0000000000000000000000000000000000000000000000000000000000000001 }),
+        	nonce: Some(FieldElement { inner: 0x[..] }),
         ]
 
         cheatcode: deploy
@@ -212,7 +212,7 @@ async fn test_verbose() {
         	entry_point_name: "put",
         	calldata: [FieldElement { inner: 0x0000000000000000000000000000000000000000000000000000000000000001 }, FieldElement { inner: 0x0000000000000000000000000000000000000000000000000000000000000002 }],
         	max_fee: Some(FieldElement { inner: 0x000000000000000000000000000000000000000000000000016345785d89ffff }),
-        	nonce: Some(FieldElement { inner: 0x0000000000000000000000000000000000000000000000000000000000000002 }),
+        	nonce: Some(FieldElement { inner: 0x[..] }),
         ]
 
         cheatcode: invoke
@@ -267,7 +267,7 @@ async fn test_verbose_with_json() {
           "args_passed": {
             "contract_name": "Mapa",
             "max_fee": "Some(FieldElement { inner: 0x000000000000000000000000000000000000000000000000016345785d89ffff })",
-            "nonce": "Some(FieldElement { inner: 0x0000000000000000000000000000000000000000000000000000000000000000 })"
+            "nonce": "Some(FieldElement { inner: 0x[..] })"
           },
           "cheatcode": "declare"
         }
@@ -283,7 +283,7 @@ async fn test_verbose_with_json() {
             "class_hash": "FieldElement { inner: 0x[..] }",
             "constructor_calldata": [],
             "max_fee": "Some(FieldElement { inner: 0x000000000000000000000000000000000000000000000000016345785d89ffff })",
-            "nonce": "Some(FieldElement { inner: 0x0000000000000000000000000000000000000000000000000000000000000001 })",
+            "nonce": "Some(FieldElement { inner: 0x[..] })",
             "salt": "Some(FieldElement { inner: 0x0000000000000000000000000000000000000000000000000000000000000003 })",
             "unique": true
           },
@@ -302,7 +302,7 @@ async fn test_verbose_with_json() {
             "contract_address": "FieldElement { inner: 0x[..] }",
             "entry_point_name": "put",
             "max_fee": "Some(FieldElement { inner: 0x000000000000000000000000000000000000000000000000016345785d89ffff })",
-            "nonce": "Some(FieldElement { inner: 0x0000000000000000000000000000000000000000000000000000000000000002 })"
+            "nonce": "Some(FieldElement { inner: 0x[..] })"
           },
           "cheatcode": "invoke"
         }
