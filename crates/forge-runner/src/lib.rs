@@ -262,7 +262,6 @@ pub async fn run_tests_from_crate(
     let sierra_program = &tests.sierra_program;
     let casm_program = compile_sierra_to_casm(sierra_program);
 
-    // let runner = SierraCasmRunner::new(casm_program).context("Failed setting up runner.")?;
     let casm_program = Arc::new(casm_program);
 
     let mut tasks = FuturesUnordered::new();
