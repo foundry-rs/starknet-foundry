@@ -20,8 +20,8 @@ async fn test_with_calldata() {
         .current_dir(SCRIPTS_DIR.to_owned() + "/deploy")
         .args(args);
     snapbox.assert().success().stdout_matches(indoc! {r"
-        ...
-        command: script
-        status: success
+        [..]Compiling[..]
+        [..]Finished[..]
+        [..]Transaction hash[..]
     "});
 }
