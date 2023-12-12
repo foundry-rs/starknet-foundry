@@ -76,13 +76,13 @@ impl DebugArgVal for String {
 
 impl DebugArgVal for FieldElement {
     fn get_arg_val(&self) -> String {
-        format!("{:#064x}", self)
+        format!("{self:#064x}")
     }
 }
 
 impl<T: DebugArgVal> DebugArgVal for Vec<T> {
     fn get_arg_val(&self) -> String {
-        let res: Vec<String> = self.iter().map(|item| item.get_arg_val()).collect();
+        let res: Vec<String> = self.iter().map(DebugArgVal::get_arg_val).collect();
         let res = res.join(",");
         format!("[{res}]")
     }
@@ -92,7 +92,7 @@ impl<T: DebugArgVal> DebugArgVal for Option<T> {
     fn get_arg_val(&self) -> String {
         match self {
             Some(v) => format!("Some({})", v.get_arg_val()),
-            None => "None".to_string()
+            None => "None".to_string(),
         }
     }
 }
