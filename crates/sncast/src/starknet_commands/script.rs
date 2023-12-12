@@ -35,6 +35,7 @@ use num_traits::ToPrimitive;
 use runtime::EnhancedHintError;
 use scarb_metadata::ScarbCommand;
 use serde::Serialize;
+use serde_json::{json, Value};
 use sncast::helpers::response_structs::ScriptResponse;
 use sncast::helpers::scarb_utils::{
     get_package_metadata, get_scarb_manifest, get_scarb_metadata_with_deps, CastConfig,
@@ -66,12 +67,12 @@ pub struct UI {
 macro_rules! stringify_args {
     ( $( $x:expr ),* ) => {
         {
-            let mut temp_str = String::new();
+            let mut temp_vec = Vec::new();
             $(
-                let stringified_arg = format!("{} = {:#?},\n", stringify!($x), &$x);
-                temp_str.push_str(&stringified_arg);
+                let stringified_arg = (stringify!($x).to_string(), format!("{:?}", &$x));
+                temp_vec.push(stringified_arg);
             )*
-            temp_str
+            temp_vec
         }
     };
 }
@@ -89,26 +90,54 @@ impl UI {
         self.verbosity < Verbosity::Normal
     }
 
-    pub fn print(&self, message: &str) {
+    pub fn print(&self, msg: &str) {
         if self.verbosity >= Verbosity::Normal {
-            println!("{message}");
+            println!("{msg}");
         }
     }
 
-    pub fn verbose(&self, message: &str) {
-        if self.verbosity >= Verbosity::Verbose {
-            println!("{message}");
+    fn format_args_as_json(&self, args: Vec<(String, String)>) -> Result<Value> {
+        let mut json_args_map: HashMap<String, Value> = HashMap::new();
+        for (key, value) in args {
+            let json_value = match serde_json::from_str(&value).ok(){
+                Some(v) => v,
+                None => serde_json::to_value(value)?
+            };
+            json_args_map.insert(key, json_value);
         }
+        let json_value_args: Value = serde_json::to_value(json_args_map)?;
+        Ok(json_value_args)
     }
 
-    pub fn print_cheatcode_args(&self, cheatcode: &str, args: &str) {
-        self.verbose(&format!("Args passed to \"{cheatcode}\" cheatcode:"));
-        let indented_str = args
-            .lines()
-            .map(|item| format!("\t{item}\n"))
+    fn format_args_as_string(&self, args: Vec<(String, String)>) -> String {
+        let formatted_args = args
+            .iter()
+            .map(|(k, v)| format!("\t{k}: {v},\n"))
             .collect::<Vec<String>>()
             .concat();
-        self.verbose(&format!("{{\n{indented_str}}}\n"));
+        format!("[\n{formatted_args}]")
+    }
+
+    pub fn print_cheatcode_args(&self, cheatcode: &str, args: Vec<(String, String)>) -> Result<()> {
+        if self.verbosity >= Verbosity::Verbose {
+            if self.json {
+                let json_value_args = self.format_args_as_json(args)?;
+                let json_output = json!({
+                    "cheatcode": cheatcode,
+                    "args_passed": json_value_args
+                });
+                let json_output = serde_json::to_string_pretty(&json_output)?;
+                println!("{json_output}");
+            } else {
+                let formatted_args = self.format_args_as_string(args);
+                let header = ("cheatcode".to_string(), cheatcode.to_string());
+                let body = ("args_passed".to_string(), formatted_args);
+                let output = vec![header, body];
+                print_formatted(output, self.json, false)?;
+            }
+            println!();
+        }
+        Ok(())
     }
 
     pub fn print_cheatcode_response<T: Serialize>(
@@ -279,7 +308,7 @@ impl CairoHintProcessor<'_> {
 
                 self.script_ui.print_cheatcode_args(
                     selector,
-                    &stringify_args!(contract_address, function_name, calldata_felts),
+                    stringify_args!(contract_address, function_name, calldata_felts),
                 );
 
                 let call_response = self.runtime.block_on(call::call(
@@ -321,10 +350,8 @@ impl CairoHintProcessor<'_> {
                     None
                 };
 
-                self.script_ui.print_cheatcode_args(
-                    selector,
-                    &stringify_args!(contract_name, max_fee, nonce),
-                );
+                self.script_ui
+                    .print_cheatcode_args(selector, stringify_args!(contract_name, max_fee, nonce));
 
                 let account = self.runtime.block_on(get_account(
                     &self.config.account,
@@ -397,7 +424,7 @@ impl CairoHintProcessor<'_> {
 
                 self.script_ui.print_cheatcode_args(
                     selector,
-                    &stringify_args!(
+                    stringify_args!(
                         class_hash,
                         constructor_calldata,
                         salt,
@@ -473,7 +500,7 @@ impl CairoHintProcessor<'_> {
 
                 self.script_ui.print_cheatcode_args(
                     selector,
-                    &stringify_args!(contract_address, entry_point_name, calldata, max_fee, nonce),
+                    stringify_args!(contract_address, entry_point_name, calldata, max_fee, nonce),
                 );
 
                 let account = self.runtime.block_on(get_account(
@@ -586,9 +613,7 @@ pub fn run(
         script_ui,
     };
 
-    cairo_hint_processor
-        .script_ui
-        .print(format!("\n\nExecuting script \"{module_name}\"\n").as_str());
+    cairo_hint_processor.script_ui.print("\n");
     match runner.run_function(
         func,
         &mut cairo_hint_processor,
@@ -625,6 +650,9 @@ fn compile_script(path_to_scarb_toml: Option<Utf8PathBuf>, script_ui: &UI) -> Re
     let mut scarb_args = vec!["build"];
     if script_ui.is_quiet() {
         scarb_args.push("--quiet");
+    }
+    if script_ui.json {
+        scarb_args.insert(0, "--json");
     }
 
     ScarbCommand::new()
