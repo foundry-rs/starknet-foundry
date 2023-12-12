@@ -18,7 +18,7 @@ license = "MIT"
 license-file = "LICENSE"
 
 [workspace.dependencies]
-blockifier = { git = "https://github.com/starkware-libs/blockifier.git", rev = "51b343f" }
+blockifier = "0.4.0"
 starknet_api = "0.6.0-rc2"
 cairo-lang-casm = "=2.4.0"
 cairo-lang-runner = "=2.4.0"
