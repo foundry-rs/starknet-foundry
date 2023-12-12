@@ -52,7 +52,7 @@ pub async fn declare(
         None => get_scarb_manifest().context("Failed to obtain manifest path from scarb")?,
     };
 
-    let mut cmd = ScarbCommand::stdio();
+    let mut cmd = ScarbCommand::new_with_stdio();
     cmd.arg("build").manifest_path(&manifest_path);
     if build_config.json {
         cmd.json();

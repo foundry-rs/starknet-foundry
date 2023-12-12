@@ -17,7 +17,7 @@ tempfile.workspace = true
 rayon.workspace = true
 cheatnet = { path = "../cheatnet" }
 conversions = { path = "../conversions" }
-scarb-artifacts = { path = "../scarb-artifacts" }
+scarb-api = { path = "../scarb-api" }
 forge_runner = { path = "../forge-runner" }
 cairo-lang-runner.workspace = true
 cairo-lang-casm.workspace = true

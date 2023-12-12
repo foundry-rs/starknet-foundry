@@ -7,8 +7,8 @@ members = [
     "crates/cheatnet",
     "crates/conversions",
     "crates/runtime",
-    "crates/scarb-artifacts",
-    "crates/sierra-casm"
+    "crates/sierra-casm",
+    "crates/scarb-api"
 ]
 
 [workspace.package]

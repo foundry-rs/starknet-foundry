@@ -2253,7 +2253,7 @@ dependencies = [
  "rayon",
  "regex",
  "runtime",
- "scarb-artifacts",
+ "scarb-api",
  "scarb-metadata",
  "serde",
  "serde_json",
@@ -3040,7 +3040,7 @@ dependencies = [
  "rand",
  "rayon",
  "regex",
- "scarb-artifacts",
+ "scarb-api",
  "scarb-metadata",
  "scarb-ui",
  "schemars",
@@ -3093,7 +3093,7 @@ dependencies = [
  "once_cell",
  "rand",
  "runtime",
- "scarb-artifacts",
+ "scarb-api",
  "serde",
  "serde_json",
  "smol_str 0.2.0",
@@ -4863,7 +4863,7 @@ dependencies = [
  "conversions",
  "num-bigint",
  "num-traits 0.2.17",
- "scarb-artifacts",
+ "scarb-api",
  "serde",
  "serde_json",
  "starknet",
@@ -5038,7 +5038,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "scarb-artifacts"
+name = "scarb-api"
 version = "1.0.0"
 dependencies = [
  "anyhow",
@@ -5447,7 +5447,7 @@ dependencies = [
  "reqwest",
  "rpassword",
  "runtime",
- "scarb-artifacts",
+ "scarb-api",
  "scarb-metadata",
  "sealed_test",
  "serde",
@@ -5933,7 +5933,7 @@ dependencies = [
  "forge",
  "forge_runner",
  "indoc 2.0.4",
- "scarb-artifacts",
+ "scarb-api",
  "scarb-metadata",
  "serde",
  "serde_json",

@@ -44,7 +44,7 @@ impl ScarbCommand {
 
     /// Creates a default `scarb` command, with inherited standard error and standard output.
     #[must_use]
-    pub fn stdio() -> Self {
+    pub fn new_with_stdio() -> Self {
         let mut cmd = Self::new();
         cmd.inherit_stderr();
         cmd.inherit_stdout();

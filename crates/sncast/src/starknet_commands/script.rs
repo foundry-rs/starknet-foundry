@@ -493,7 +493,7 @@ fn compile_script(path_to_scarb_toml: Option<Utf8PathBuf>) -> Result<Utf8PathBuf
         "Path {scripts_manifest_path} does not exist"
     );
 
-    ScarbCommand::stdio()
+    ScarbCommand::new_with_stdio()
         .arg("build")
         .manifest_path(&scripts_manifest_path)
         .run()

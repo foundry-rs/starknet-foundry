@@ -74,7 +74,7 @@ fn extend_gitignore(path: &Path) -> Result<()> {
 pub fn run(project_name: &str) -> Result<()> {
     let project_path = std::env::current_dir()?.join(project_name);
 
-    ScarbCommand::stdio()
+    ScarbCommand::new_with_stdio()
         .current_dir(std::env::current_dir().context("Failed to get current directory")?)
         .arg("new")
         .arg(&project_path)
@@ -83,7 +83,7 @@ pub fn run(project_name: &str) -> Result<()> {
 
     let version = env!("CARGO_PKG_VERSION");
 
-    ScarbCommand::stdio()
+    ScarbCommand::new_with_stdio()
         .current_dir(&project_path)
         .offline()
         .arg("add")
@@ -114,7 +114,7 @@ pub fn run(project_name: &str) -> Result<()> {
         .expect("Could not find cairo version")
         .as_str();
 
-    ScarbCommand::stdio()
+    ScarbCommand::new_with_stdio()
         .current_dir(&project_path)
         .offline()
         .arg("add")

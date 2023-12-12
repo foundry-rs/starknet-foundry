@@ -243,7 +243,7 @@ mod tests {
     fn get_starknet_artifacts_path() {
         let temp = setup_package("basic_package");
 
-        ScarbCommand::stdio()
+        ScarbCommand::new_with_stdio()
             .current_dir(temp.path())
             .arg("build")
             .run()
@@ -294,7 +294,7 @@ mod tests {
             ))
             .unwrap();
 
-        ScarbCommand::stdio()
+        ScarbCommand::new_with_stdio()
             .current_dir(temp.path())
             .arg("build")
             .run()
@@ -327,7 +327,7 @@ mod tests {
             ))
             .unwrap();
 
-        ScarbCommand::stdio()
+        ScarbCommand::new_with_stdio()
             .current_dir(temp.path())
             .arg("build")
             .run()
@@ -359,7 +359,7 @@ mod tests {
     fn parsing_starknet_artifacts() {
         let temp = setup_package("basic_package");
 
-        ScarbCommand::stdio()
+        ScarbCommand::new_with_stdio()
             .current_dir(temp.path())
             .arg("build")
             .run()
@@ -393,7 +393,7 @@ mod tests {
     fn get_contracts() {
         let temp = setup_package("basic_package");
 
-        ScarbCommand::stdio()
+        ScarbCommand::new_with_stdio()
             .current_dir(temp.path())
             .arg("build")
             .run()

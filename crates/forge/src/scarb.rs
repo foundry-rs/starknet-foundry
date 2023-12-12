@@ -35,7 +35,7 @@ pub fn config_from_scarb_for_package(
 }
 
 pub fn build_contracts_with_scarb(filter: PackagesFilter) -> Result<()> {
-    ScarbCommand::stdio()
+    ScarbCommand::new_with_stdio()
         .arg("build")
         .packages_filter(filter)
         .run()
@@ -44,7 +44,7 @@ pub fn build_contracts_with_scarb(filter: PackagesFilter) -> Result<()> {
 }
 
 pub fn build_test_artifacts_with_scarb(filter: PackagesFilter) -> Result<()> {
-    ScarbCommand::stdio()
+    ScarbCommand::new_with_stdio()
         .arg("snforge-test-collector")
         .packages_filter(filter)
         .run()
