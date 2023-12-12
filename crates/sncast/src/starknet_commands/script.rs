@@ -96,12 +96,12 @@ impl UI {
         }
     }
 
-    fn format_args_as_json(&self, args: Vec<(String, String)>) -> Result<Value> {
+    fn format_args_as_json(args: Vec<(String, String)>) -> Result<Value> {
         let mut json_args_map: HashMap<String, Value> = HashMap::new();
         for (key, value) in args {
-            let json_value = match serde_json::from_str(&value).ok(){
+            let json_value = match serde_json::from_str(&value).ok() {
                 Some(v) => v,
-                None => serde_json::to_value(value)?
+                None => serde_json::to_value(value)?,
             };
             json_args_map.insert(key, json_value);
         }
@@ -109,7 +109,7 @@ impl UI {
         Ok(json_value_args)
     }
 
-    fn format_args_as_string(&self, args: Vec<(String, String)>) -> String {
+    fn format_args_as_string(args: &[(String, String)]) -> String {
         let formatted_args = args
             .iter()
             .map(|(k, v)| format!("\t{k}: {v},\n"))
@@ -121,7 +121,7 @@ impl UI {
     pub fn print_cheatcode_args(&self, cheatcode: &str, args: Vec<(String, String)>) -> Result<()> {
         if self.verbosity >= Verbosity::Verbose {
             if self.json {
-                let json_value_args = self.format_args_as_json(args)?;
+                let json_value_args = UI::format_args_as_json(args)?;
                 let json_output = json!({
                     "cheatcode": cheatcode,
                     "args_passed": json_value_args
@@ -129,7 +129,7 @@ impl UI {
                 let json_output = serde_json::to_string_pretty(&json_output)?;
                 println!("{json_output}");
             } else {
-                let formatted_args = self.format_args_as_string(args);
+                let formatted_args = UI::format_args_as_string(&args);
                 let header = ("cheatcode".to_string(), cheatcode.to_string());
                 let body = ("args_passed".to_string(), formatted_args);
                 let output = vec![header, body];
