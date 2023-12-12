@@ -11,7 +11,7 @@ Propose a way of adding support for parametrized tests to Starknet Foundry's `sn
 
 ## Proposed Solution
 
-Introduce three new attributes: `parametrize`, `case` and.
+Introduce two new attributes: `parametrize` and `case`.
 
 - `parametrize` - defines a parametrized test.
 - `case` - defines a specific test case
