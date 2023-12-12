@@ -21,7 +21,7 @@ use itertools::chain;
 
 use crate::cairo_runner::casm_run;
 use crate::cairo_runner::casm_run::build_program_data;
-use crate::cairo_runner::sierra_casm_runner::{initialize_vm, Panicable, SierraCasmRunner};
+use crate::cairo_runner::sierra_casm_runner::{initialize_vm, SierraCasmRunner};
 use crate::gas::gas_from_execution_resources;
 use crate::test_case_summary::TestCaseSummary;
 use crate::{RunnerConfig, RunnerParams, TestCaseRunnable, ValidatedForkConfig, CACHE_DIR};
@@ -347,7 +347,7 @@ pub fn run_test_case(
                 // Here we assume that all test either panic or do not return any value
                 // This is true for all test right now, but in case it changes
                 // this logic will need to be updated
-                &Panicable::Yes { inner_ty_size: 0 },
+                Some(0),
                 values,
                 &cells,
             );

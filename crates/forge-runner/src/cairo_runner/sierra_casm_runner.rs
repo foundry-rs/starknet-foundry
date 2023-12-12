@@ -58,12 +58,6 @@ pub struct SierraCasmRunner {
 }
 
 #[allow(dead_code)]
-pub enum Panicable {
-    Yes { inner_ty_size: i16 },
-    No,
-}
-
-#[allow(dead_code)]
 impl SierraCasmRunner {
     pub fn new(
         sierra_program: cairo_lang_sierra::program::Program,
@@ -179,18 +173,16 @@ impl SierraCasmRunner {
                 })
                 .unwrap();
 
-            let panicable = if ty == EnumType::ID
+            if ty == EnumType::ID
                 && matches!(&info.long_id.generic_args[0], GenericArg::UserType(ut)
                 if ut.debug_name.as_ref().unwrap().starts_with("core::panics::PanicResult::"))
             {
                 let inner_ty = extract_matches!(&info.long_id.generic_args[1], GenericArg::Type);
                 let inner_ty_size = self.type_sizes[inner_ty];
-                Panicable::Yes { inner_ty_size }
+                Self::handle_main_return_value(Some(inner_ty_size), values, &cells)
             } else {
-                Panicable::No
-            };
-
-            Self::handle_main_return_value(&panicable, values, &cells)
+                Self::handle_main_return_value(None, values, &cells)
+            }
         };
 
         Ok(RunResult {
@@ -228,15 +220,15 @@ impl SierraCasmRunner {
     #[allow(clippy::cast_sign_loss)]
     /// Handling the main return value to create a `RunResultValue`.
     pub fn handle_main_return_value(
-        panicable: &Panicable,
+        inner_type_size: Option<i16>,
         values: Vec<Felt252>,
         cells: &[Option<Felt252>],
     ) -> RunResultValue {
-        if let Panicable::Yes { inner_ty_size } = panicable {
+        if let Some(inner_type_size) = inner_type_size {
             // The function includes a panic wrapper.
             if values[0] == Felt252::from(0) {
                 // The run resulted successfully, returning the inner value.
-                let inner_ty_size = *inner_ty_size as usize;
+                let inner_ty_size = inner_type_size as usize;
                 let skip_size = values.len() - inner_ty_size;
                 RunResultValue::Success(values.into_iter().skip(skip_size).collect())
             } else {
@@ -247,7 +239,7 @@ impl SierraCasmRunner {
                     cells[err_data_start..err_data_end]
                         .iter()
                         .cloned()
-                        .map(std::option::Option::unwrap)
+                        .map(Option::unwrap)
                         .collect(),
                 )
             }
