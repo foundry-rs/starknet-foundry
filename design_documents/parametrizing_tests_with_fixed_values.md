@@ -104,3 +104,65 @@ fn my_test_generated(a: felt252) {
     // ...
 }
 ```
+
+Alternatively, we could generate code where arguments of `my_fixture` are injected:
+
+```cairo
+// ...
+#[test]
+fn my_test_generated(a: felt252, my_fixture_a: felt252, my_fixture_b: felt252, my_fixture_c: felt252) {
+    let b = my_fixture(my_fixture_a, my_fixture_b, my_fixture_c);
+    // ...
+}
+```
+
+This has the benefit of only needing to generate one version of the test. Necessary arguments just need to be injected.
+
+The code generation solution has some problems that will need to be addressed before it is implemented.
+See [section below](#possible-problems-with-code-generation) for details.
+
+## Required Changes to Test Collector
+
+To support parametric test, we need to introduce some changes to the test collector in Scarb.
+
+### Define the Necessary Attributes
+
+This change is mostly straightforward: It can be done in the same manner as all other attributes.
+
+### Code Generation
+
+For each test that has cases containing fixtures, we need to generate a new test that has calls to these fixtures
+inline.
+Additionally, if we follow the alternative approach of handling [parametrized fixtures](#parametrized-fixtures),
+we will also need to generate the neccessary argument definitions.
+
+### Argument Injection
+
+The structure representing a test case (currently named `TestCaseRaw`), should gain additional field `cases` containing
+arguments for each of the parametrized cases.
+
+```cairo
+struct TestCaseRaw {
+    // ...
+    cases: Vec<Vec<String>>
+}
+```
+
+Where each `Vec<String>` represents arguments for a single case.
+Arguments should be only defined using primitive types.
+
+These arguments could be then handled in `snforge` and injected in the same manner as fuzzer arguments are.
+
+## Possible Problems With Code Generation
+
+In case the parametrized test case uses different fixtures in different cases, we will have to generate multiple
+versions of the test case.
+
+This is problematic because `snforge` would treat these generated tests as completely separate entities.
+
+Some possible solutions for this problem would be:
+
+- Modifying the `TestCaseRaw` so it contains some additional field that allow tests cases to reference each other: This
+  way would know which tests are just different cases of the same sour code.
+- Modify `TestCaseRaw` so it can contain references to multiple "implementations".
+  `snforge` would then find these implementations and run them in a bundle.
