@@ -134,7 +134,7 @@ This change is mostly straightforward: It can be done in the same manner as all 
 For each test that has cases containing fixtures, we need to generate a new test that has calls to these fixtures
 inline.
 Additionally, if we follow the alternative approach of handling [parametrized fixtures](#parametrized-fixtures),
-we will also need to generate the neccessary argument definitions.
+we will also need to generate the necessary argument definitions.
 
 ### Argument Injection
 
