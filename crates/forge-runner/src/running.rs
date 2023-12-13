@@ -139,7 +139,7 @@ pub(crate) fn run_fuzz_test(
 fn build_context(block_info: CheatnetBlockInfo) -> EntryPointExecutionContext {
     let block_context = cheatnet_constants::build_block_context(block_info);
     let account_context = cheatnet_constants::build_transaction_context();
-    //TODO:: check limit_steps_by...
+
     EntryPointExecutionContext::new(
         &block_context,
         &account_context,

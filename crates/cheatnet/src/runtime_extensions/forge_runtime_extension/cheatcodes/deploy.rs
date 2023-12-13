@@ -47,7 +47,7 @@ pub fn deploy_at(
             )));
         }
     }
-    //TODO::check what we want to do with limit_steps_by_resources
+
     let entry_point_execution_ctx = &mut EntryPointExecutionContext::new(
         &build_block_context(cheatnet_state.block_info),
         &build_transaction_context(),
