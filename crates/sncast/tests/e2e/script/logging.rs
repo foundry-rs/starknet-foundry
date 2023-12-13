@@ -73,7 +73,6 @@ async fn test_default_verbosity() {
     "});
 }
 
-
 #[tokio::test]
 async fn test_default_verbosity_with_json() {
     let current_dir = duplicate_map_script("14");
