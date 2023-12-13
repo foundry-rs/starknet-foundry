@@ -1,7 +1,6 @@
 use anyhow::{anyhow, Result};
 use camino::Utf8Path;
 
-use crate::scarb::load_test_artifacts;
 use forge_runner::test_case_summary::AnyTestCaseSummary;
 use std::sync::Arc;
 
@@ -22,56 +21,6 @@ pub mod scarb;
 pub mod shared_cache;
 pub mod test_filter;
 
-fn replace_id_with_params(
-    raw_fork_config: RawForkConfig,
-    fork_targets: &[ForkTarget],
-) -> Result<RawForkParams> {
-    match raw_fork_config {
-        RawForkConfig::Params(raw_fork_params) => Ok(raw_fork_params),
-        RawForkConfig::Id(name) => {
-            let fork_target_from_runner_config = fork_targets
-                .iter()
-                .find(|fork| fork.name() == name)
-                .ok_or_else(|| {
-                    anyhow!("Fork configuration named = {name} not found in the Scarb.toml")
-                })?;
-
-            Ok(fork_target_from_runner_config.params().clone())
-        }
-    }
-}
-
-fn to_runnable(
-    compiled_test_crate: CompiledTestCrateRaw,
-    fork_targets: &[ForkTarget],
-) -> Result<CompiledTestCrateRunnable> {
-    let mut test_cases = vec![];
-
-    for case in compiled_test_crate.test_cases {
-        let fork_config = if let Some(fc) = case.fork_config {
-            let raw_fork_params = replace_id_with_params(fc, fork_targets)?;
-            let fork_config = ValidatedForkConfig::try_from(raw_fork_params)?;
-            Some(fork_config)
-        } else {
-            None
-        };
-
-        test_cases.push(TestCaseRunnable {
-            name: case.name,
-            available_gas: case.available_gas,
-            ignored: case.ignored,
-            expected_result: case.expected_result,
-            fork_config,
-            fuzzer_config: case.fuzzer_config,
-        });
-    }
-
-    Ok(CompiledTestCrateRunnable {
-        sierra_program: compiled_test_crate.sierra_program,
-        test_cases,
-    })
-}
-
 /// Run the tests in the package at the given path
 ///
 /// # Arguments
@@ -85,19 +34,17 @@ fn to_runnable(
 #[allow(clippy::implicit_hasher)]
 pub async fn run(
     package_name: &str,
-    snforge_target_dir_path: &Utf8Path,
+    test_crates: Vec<CompiledTestCrateRunnable>,
     tests_filter: &TestsFilter,
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
-    fork_targets: &[ForkTarget],
 ) -> Result<Vec<TestCrateSummary>> {
-    let test_crates = load_test_artifacts(snforge_target_dir_path, package_name)?;
     let all_tests: usize = test_crates.iter().map(|tc| tc.test_cases.len()).sum();
 
     let test_crates = test_crates
         .into_iter()
         .map(|tc| tests_filter.filter_tests(tc))
-        .collect::<Result<Vec<CompiledTestCrateRaw>>>()?;
+        .collect::<Result<Vec<CompiledTestCrateRunnable>>>()?;
     let not_filtered: usize = test_crates.iter().map(|tc| tc.test_cases.len()).sum();
     let filtered = all_tests - not_filtered;
 
@@ -114,7 +61,6 @@ pub async fn run(
             compiled_test_crate.test_cases.len(),
         );
 
-        let compiled_test_crate = to_runnable(compiled_test_crate, fork_targets)?;
         let compiled_test_crate = Arc::new(compiled_test_crate);
         let runner_config = runner_config.clone();
         let runner_params = runner_params.clone();

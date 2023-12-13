@@ -4,10 +4,18 @@ use serde::Deserialize;
 use starknet::core::types::BlockId;
 use url::Url;
 
+#[derive(Debug, PartialEq, Clone, Copy, Deserialize)]
+pub enum CrateLocation {
+    /// Main crate in a package
+    Lib,
+    /// Crate in the `tests/` directory
+    Tests,
+}
 #[derive(Debug, Clone)]
 pub struct CompiledTestCrateRunnable {
     pub sierra_program: Program,
     pub test_cases: Vec<TestCaseRunnable>,
+    pub tests_location: CrateLocation,
 }
 
 #[derive(Debug, Clone)]

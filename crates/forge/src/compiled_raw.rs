@@ -1,18 +1,23 @@
 use cairo_felt::Felt252;
 use cairo_lang_sierra::program::Program;
 use conversions::IntoConv;
-use forge_runner::compiled_runnable::{FuzzerConfig, ValidatedForkConfig};
+use forge_runner::compiled_runnable::{
+    CompiledTestCrateRunnable, CrateLocation, FuzzerConfig, TestCaseRunnable, ValidatedForkConfig,
+};
 use forge_runner::expected_result::ExpectedTestResult;
 use num_bigint::BigInt;
 use serde::Deserialize;
 use starknet::core::types::BlockId;
 use starknet::core::types::BlockTag::Latest;
 
+use crate::scarb::config::ForkTarget;
+use anyhow::{anyhow, Result};
+
 #[derive(Debug, Clone, Deserialize)]
-pub(crate) struct CompiledTestCrateRaw {
+pub struct CompiledTestCrateRaw {
     pub sierra_program: Program,
-    pub test_cases: Vec<TestCaseRaw>,
-    pub tests_location: CrateLocation,
+    test_cases: Vec<TestCaseRaw>,
+    tests_location: CrateLocation,
 }
 
 #[derive(Debug, PartialEq, Clone, Deserialize)]
@@ -23,14 +28,6 @@ pub(crate) struct TestCaseRaw {
     pub expected_result: ExpectedTestResult,
     pub fork_config: Option<RawForkConfig>,
     pub fuzzer_config: Option<FuzzerConfig>,
-}
-
-#[derive(Debug, PartialEq, Clone, Copy, Deserialize)]
-pub(crate) enum CrateLocation {
-    /// Main crate in a package
-    Lib,
-    /// Crate in the `tests/` directory
-    Tests,
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
@@ -65,5 +62,57 @@ impl TryFrom<RawForkParams> for ValidatedForkConfig {
             url: value.url.parse()?,
             block_id,
         })
+    }
+}
+
+impl CompiledTestCrateRaw {
+    pub(crate) fn to_runnable(
+        self: Self,
+        fork_targets: &[ForkTarget],
+    ) -> Result<CompiledTestCrateRunnable> {
+        let mut test_cases = vec![];
+
+        for case in self.test_cases {
+            let fork_config = if let Some(fc) = case.fork_config {
+                let raw_fork_params = fc.replace_id_with_params(fork_targets)?;
+                let fork_config = ValidatedForkConfig::try_from(raw_fork_params)?;
+                Some(fork_config)
+            } else {
+                None
+            };
+
+            test_cases.push(TestCaseRunnable {
+                name: case.name,
+                available_gas: case.available_gas,
+                ignored: case.ignored,
+                expected_result: case.expected_result,
+                fork_config,
+                fuzzer_config: case.fuzzer_config,
+            });
+        }
+
+        Ok(CompiledTestCrateRunnable {
+            tests_location: self.tests_location,
+            sierra_program: self.sierra_program,
+            test_cases,
+        })
+    }
+}
+
+impl RawForkConfig {
+    fn replace_id_with_params(self: Self, fork_targets: &[ForkTarget]) -> Result<RawForkParams> {
+        match self {
+            RawForkConfig::Params(raw_fork_params) => Ok(raw_fork_params),
+            RawForkConfig::Id(name) => {
+                let fork_target_from_runner_config = fork_targets
+                    .iter()
+                    .find(|fork| fork.name() == name)
+                    .ok_or_else(|| {
+                        anyhow!("Fork configuration named = {name} not found in the Scarb.toml")
+                    })?;
+
+                Ok(fork_target_from_runner_config.params().clone())
+            }
+        }
     }
 }
