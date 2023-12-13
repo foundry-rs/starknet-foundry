@@ -16,7 +16,7 @@ pub(crate) struct CompiledTestCrateRaw {
 }
 
 #[derive(Debug, PartialEq, Clone, Deserialize)]
-pub struct TestCaseRaw {
+pub(crate) struct TestCaseRaw {
     pub name: String,
     pub available_gas: Option<usize>,
     pub ignored: bool,
@@ -26,7 +26,7 @@ pub struct TestCaseRaw {
 }
 
 #[derive(Debug, PartialEq, Clone, Copy, Deserialize)]
-pub enum CrateLocation {
+pub(crate) enum CrateLocation {
     /// Main crate in a package
     Lib,
     /// Crate in the `tests/` directory
@@ -34,7 +34,7 @@ pub enum CrateLocation {
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
-pub enum RawForkConfig {
+pub(crate) enum RawForkConfig {
     Id(String),
     Params(RawForkParams),
 }
