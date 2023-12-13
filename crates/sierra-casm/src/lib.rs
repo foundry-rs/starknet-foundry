@@ -20,7 +20,7 @@ pub fn compile(definition: &FlattenedSierraClass) -> anyhow::Result<CasmContract
             let sierra_class = flattened_sierra_to_contract_class::<$sierra_type>(definition)?;
             let maybe_casm_class = <$casm_type>::from_contract_class(sierra_class, true);
             if let Ok(casm_class) = maybe_casm_class {
-                return casm_to_main_casm::<$casm_type>(&casm_class);
+                return old_casm_to_newest_casm::<$casm_type>(&casm_class);
             }
         }};
     }
@@ -54,7 +54,9 @@ fn flattened_sierra_to_contract_class<T: DeserializeOwned>(
     serde_json::from_value::<T>(json)
 }
 
-fn casm_to_main_casm<T>(value: &T) -> anyhow::Result<CasmContractClass>
+/// converts `CasmContractClass` from the old `cairo_lang_starknet` library version
+/// to the `CasmContractClass` from the newest version
+fn old_casm_to_newest_casm<T>(value: &T) -> anyhow::Result<CasmContractClass>
 where
     T: Serialize + DeserializeOwned,
 {
