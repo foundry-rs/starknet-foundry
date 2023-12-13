@@ -1,8 +1,3 @@
-mod interface;
-use interface::Signer;
-use interface::Verifier;
-
+mod key_pair;
+mod secp256_curve;
 mod stark_curve;
-
-use stark_curve::StarkCurveKeyPair;
-use stark_curve::StarkCurveKeyPairTrait;

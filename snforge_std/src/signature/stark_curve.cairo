@@ -1,52 +1,62 @@
-use starknet::testing::cheatcode;
+use array::{ArrayTrait, SpanTrait};
 use ecdsa::check_ecdsa_signature;
-use super::interface::Signer;
-use super::interface::Verifier;
+use traits::{Into, TryInto};
+use ec::{EcPointImpl};
 
-#[derive(Copy, Drop)]
-struct StarkCurveKeyPair {
-    private_key: felt252,
-    public_key: felt252
-}
+use starknet::testing::cheatcode;
 
-#[generate_trait]
-impl StarkCurveKeyPairImpl of StarkCurveKeyPairTrait {
-    fn generate() -> StarkCurveKeyPair {
-        let output = cheatcode::<'generate_ecdsa_keys'>(array![].span());
+use snforge_std::signature::key_pair::{KeyPair, KeyPairTrait, SignerTrait, VerifierTrait};
 
-        StarkCurveKeyPair { private_key: *output[0], public_key: *output[1] }
+impl StarkCurveKeyPairImpl of KeyPairTrait<felt252, felt252> {
+    fn generate() -> KeyPair<felt252, felt252> {
+        let output = cheatcode::<'generate_stark_keys'>(array![].span());
+
+        let secret_key = *output[0];
+        let public_key = *output[1];
+
+        KeyPair { secret_key, public_key }
     }
 
-    fn from_private_key(private_key: felt252) -> StarkCurveKeyPair {
-        let output = cheatcode::<'get_public_key'>(array![private_key].span());
-
-        StarkCurveKeyPair { private_key, public_key: *output[0] }
-    }
-}
-
-impl StarkCurveKeyPairSigner of Signer<StarkCurveKeyPair> {
-    fn sign(
-        ref self: StarkCurveKeyPair, message_hash: felt252
-    ) -> Result<(felt252, felt252), felt252> {
-        let output = cheatcode::<
-            'ecdsa_sign_message'
-        >(array![self.private_key, message_hash].span());
-
-        if *output[0] == 0 {
-            Result::Ok((*output[1], *output[2]))
-        } else if *output[0] == 1 {
-            Result::Err(*output[1])
-        } else {
-            panic_with_felt252('Should not be reached')
+    fn from_secret_key(secret_key: felt252) -> KeyPair<felt252, felt252> {
+        if (secret_key == 0) {
+            panic_with_felt252('invalid secret_key');
         }
+
+        let generator = EcPointImpl::new(ec::stark_curve::GEN_X, ec::stark_curve::GEN_Y).unwrap();
+
+        let public_key: EcPoint = EcPointImpl::mul(generator, secret_key);
+
+        let (pk_x, pk_y) = public_key.try_into().unwrap().coordinates();
+
+        KeyPair { secret_key, public_key: pk_x }
     }
 }
 
-impl StarkCurveKeyPairVerifier of Verifier<StarkCurveKeyPair> {
+impl StarkCurveSignerImpl<
+    H, +Drop<H>, impl HIntoFelt252: Into<H, felt252>
+> of SignerTrait<KeyPair<felt252, felt252>, H, felt252> {
+    fn sign(self: KeyPair<felt252, felt252>, message_hash: H) -> (felt252, felt252) {
+        let output = cheatcode::<
+            'stark_sign_message'
+        >(array![self.secret_key, message_hash.into()].span());
+        if *output[0] == 1 {
+            panic_with_felt252(*output[1]);
+        }
+
+        let r = *output[1];
+        let s = *output[2];
+
+        (r, s)
+    }
+}
+
+impl StarkCurveVerifierImpl<
+    H, +Drop<H>, impl HIntoFelt252: Into<H, felt252>
+> of VerifierTrait<KeyPair<felt252, felt252>, H, felt252> {
     fn verify(
-        ref self: StarkCurveKeyPair, message_hash: felt252, signature: (felt252, felt252)
+        self: KeyPair<felt252, felt252>, message_hash: H, signature: (felt252, felt252)
     ) -> bool {
         let (r, s) = signature;
-        check_ecdsa_signature(message_hash, self.public_key, r, s)
+        check_ecdsa_signature(message_hash.into(), self.public_key, r, s)
     }
 }
