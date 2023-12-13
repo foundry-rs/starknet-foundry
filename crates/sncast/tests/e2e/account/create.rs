@@ -1,5 +1,5 @@
 use crate::helpers::constants::{CONTRACTS_DIR, DEVNET_OZ_CLASS_HASH, URL};
-use crate::helpers::fixtures::{default_cli_args, duplicate_directory_with_salt};
+use crate::helpers::fixtures::{default_cli_args, duplicate_contract_directory_with_salt};
 use crate::helpers::runner::runner;
 use camino::Utf8PathBuf;
 use indoc::indoc;
@@ -92,7 +92,7 @@ pub async fn test_happy_case_generate_salt() {
 #[tokio::test]
 pub async fn test_happy_case_add_profile() {
     let current_dir =
-        duplicate_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "10");
+        duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "10");
     let accounts_file = "./accounts.json";
 
     let args = vec![
@@ -172,7 +172,7 @@ pub async fn test_happy_case_accounts_file_already_exists() {
 
 #[tokio::test]
 pub async fn test_profile_already_exists() {
-    let current_dir = duplicate_directory_with_salt(
+    let current_dir = duplicate_contract_directory_with_salt(
         CONTRACTS_DIR.to_string() + "/constructor_with_params",
         "put",
         "20",
@@ -271,7 +271,7 @@ pub async fn test_happy_case_keystore() {
 #[tokio::test]
 pub async fn test_happy_case_keystore_add_profile() {
     let current_dir =
-        duplicate_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "50");
+        duplicate_contract_directory_with_salt(CONTRACTS_DIR.to_string() + "/map", "put", "50");
     let keystore_path = "my_key.json";
     let account_path = "my_account.json";
     let accounts_file = "accounts.json";

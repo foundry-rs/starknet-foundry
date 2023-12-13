@@ -45,6 +45,7 @@ pub async fn declare(
     nonce: Option<FieldElement>,
     build_config: BuildConfig,
     wait_config: WaitForTx,
+    is_scarb_quiet: bool,
 ) -> Result<DeclareResponse> {
     let contract_name: String = contract_name.to_string();
     let manifest_path = match build_config.scarb_toml_path.clone() {
@@ -54,6 +55,9 @@ pub async fn declare(
 
     let mut cmd = ScarbCommand::new_with_stdio();
     cmd.arg("build").manifest_path(&manifest_path);
+    if is_scarb_quiet {
+        cmd.arg("--quiet");
+    }
     if build_config.json {
         cmd.json();
     }

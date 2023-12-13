@@ -212,29 +212,49 @@ pub fn create_test_provider() -> JsonRpcClient<HttpTransport> {
 }
 
 #[must_use]
-pub fn duplicate_directory_with_salt(src_path: String, to_be_salted: &str, salt: &str) -> TempDir {
+pub fn duplicate_contract_directory_with_salt(
+    src_path: String,
+    to_be_salted: &str,
+    salt: &str,
+) -> TempDir {
+    duplicate_directory_and_salt_file(src_path, None, to_be_salted, "src/lib.cairo", salt)
+}
+
+#[must_use]
+pub fn duplicate_directory_and_salt_file(
+    src_path: String,
+    dst_path: Option<String>,
+    code_to_be_salted: &str,
+    file_to_be_salted: &str,
+    salt: &str,
+) -> TempDir {
     let src_dir = Utf8PathBuf::from(src_path);
-    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
+    let temp_dir = match dst_path {
+        Some(dst_path) => TempDir::new_in(dst_path),
+        None => TempDir::new(),
+    };
+    let temp_dir = temp_dir.expect("Unable to create a temporary directory");
+
     let dest_dir = Utf8PathBuf::from_path_buf(temp_dir.path().to_path_buf())
         .expect("Failed to create Utf8PathBuf from PathBuf");
 
-    fs_extra::dir::copy(
-        src_dir.join("src"),
+    let paths = fs::read_dir(src_dir.clone())
+        .unwrap()
+        .filter_map(Result::ok)
+        .map(|dir_entry| dir_entry.path())
+        .collect::<Vec<_>>();
+    fs_extra::copy_items(
+        &paths,
         &dest_dir,
         &fs_extra::dir::CopyOptions::new().overwrite(true),
     )
-    .expect("Unable to copy the src directory");
-    fs_extra::file::copy(
-        src_dir.join("Scarb.toml"),
-        dest_dir.join("Scarb.toml"),
-        &fs_extra::file::CopyOptions::new().overwrite(true),
-    )
-    .expect("Unable to copy Scarb.toml");
+    .unwrap();
 
     let contract_code =
-        fs::read_to_string(src_dir.join("src/lib.cairo")).expect("Unable to get contract code");
-    let updated_code = contract_code.replace(to_be_salted, &(to_be_salted.to_string() + salt));
-    fs::write(dest_dir.join("src/lib.cairo"), updated_code)
+        fs::read_to_string(src_dir.join(file_to_be_salted)).expect("Unable to get contract code");
+    let updated_code =
+        contract_code.replace(code_to_be_salted, &(code_to_be_salted.to_string() + salt));
+    fs::write(dest_dir.join(file_to_be_salted), updated_code)
         .expect("Unable to change contract code");
 
     temp_dir

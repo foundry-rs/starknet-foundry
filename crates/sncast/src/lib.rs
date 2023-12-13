@@ -298,8 +298,6 @@ pub async fn wait_for_tx(
     timeout: u16,
     retry_interval: u8,
 ) -> Result<&str> {
-    println!("Transaction hash = {tx_hash:#x}");
-
     if retry_interval == 0 || timeout == 0 || u16::from(retry_interval) > timeout {
         return Err(anyhow!("Invalid values for retry_interval and/or timeout!"));
     }
@@ -393,16 +391,19 @@ pub async fn handle_wait_for_tx<T>(
         .await
         {
             Ok(_) => Ok(return_value),
-            Err(message) => Err(anyhow!(message)),
+            Err(message) => {
+                eprintln!("Transaction hash = {transaction_hash:#x}\n");
+                Err(anyhow!(message))
+            }
         };
     }
 
     Ok(return_value)
 }
 
-pub fn print_formatted(output: Vec<(&str, String)>, json: bool, error: bool) -> Result<()> {
+pub fn print_formatted(output: Vec<(String, String)>, json: bool, error: bool) -> Result<()> {
     if json {
-        let json_output: HashMap<&str, String> = output.into_iter().collect();
+        let json_output: HashMap<String, String> = output.into_iter().collect();
         let json_value: Value = serde_json::to_value(json_output)?;
 
         write_to_output(serde_json::to_string(&json_value)?, error);
@@ -421,30 +422,39 @@ pub fn print_command_result<T: Serialize>(
     value_format: ValueFormat,
     json: bool,
 ) -> Result<()> {
-    let mut output = vec![("command", command.to_string())];
-    let json_value: Value;
+    let mut output = vec![("command".to_string(), command.to_string())];
 
     let mut error = false;
     match result {
         Ok(result) => {
-            json_value = serde_json::to_value(result)
-                .map_err(|_| anyhow!("Failed to convert command result to serde_json::Value"))?;
-
-            output.extend(
-                json_value
-                    .as_object()
-                    .expect("Failed to parse JSON value")
-                    .iter()
-                    .filter_map(|(k, v)| value_format.format_json_value(v).map(|v| (k.as_str(), v)))
-                    .collect::<Vec<(&str, String)>>(),
-            );
+            output.extend(stringify_command_result_struct(result, value_format)?);
         }
         Err(message) => {
-            output.push(("error", format!("{message:#}")));
+            output.push(("error".to_string(), format!("{message:#}")));
             error = true;
         }
     };
     print_formatted(output, json, error)
+}
+
+pub fn stringify_command_result_struct<T: Serialize>(
+    command_result: &T,
+    value_format: ValueFormat,
+) -> Result<Vec<(String, String)>> {
+    let json_value = serde_json::to_value(command_result)
+        .map_err(|_| anyhow!("Failed to convert command result to serde_json::Value"))?;
+
+    let result = if let Some(json_object) = json_value.as_object() {
+        json_object
+            .iter()
+            .filter_map(|(k, v)| value_format.format_json_value(v).map(|v| (k.to_owned(), v)))
+            .collect::<Vec<(String, String)>>()
+    } else {
+        let value = json_value.as_str().expect("Invalid JSON string");
+        vec![("response".to_string(), value.to_string())]
+    };
+
+    Ok(result)
 }
 
 fn write_to_output<T: std::fmt::Display>(value: T, error: bool) {

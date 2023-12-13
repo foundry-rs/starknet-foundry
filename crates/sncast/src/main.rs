@@ -7,6 +7,7 @@ use crate::starknet_commands::{
 use anyhow::{Context, Result};
 
 use crate::starknet_commands::declare::BuildConfig;
+use crate::starknet_commands::script::UI as ScriptUI;
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
 use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
@@ -127,12 +128,14 @@ fn main() -> Result<()> {
     let runtime = Runtime::new().expect("Failed to instantiate Runtime");
 
     if let Commands::Script(script) = cli.command {
+        let script_ui = ScriptUI::from_cli_args(script.quiet, value_format, cli.json);
         let mut result = starknet_commands::script::run(
             &script.script_module_name,
             &cli.path_to_scarb_toml,
             &provider,
             runtime,
             &config,
+            script_ui,
         );
 
         print_command_result("script", &mut result, value_format, cli.json)?;
@@ -174,6 +177,7 @@ async fn run_async_command(
                 declare.nonce,
                 build_config,
                 wait_config,
+                false,
             )
             .await;
 
