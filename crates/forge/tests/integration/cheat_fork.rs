@@ -2,7 +2,7 @@ use indoc::formatdoc;
 use test_utils::running_tests::run_test_case;
 use test_utils::{assert_passed, test_case};
 
-static CHEATNET_RPC_URL: &str = "http://188.34.188.184:9545/rpc/v0.4";
+static CHEATNET_RPC_URL: &str = "http://188.34.188.184:9545/rpc/v0.5";
 
 #[test]
 fn prank_cairo0_contract() {

@@ -1,3 +1,4 @@
+mod benchmarks;
 mod cheat_fork;
 mod declare;
 mod deploy;

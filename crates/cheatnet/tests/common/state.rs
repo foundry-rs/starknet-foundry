@@ -17,7 +17,7 @@ pub fn create_cached_state() -> CachedState<ExtendedStateReader> {
 }
 
 pub fn create_fork_cached_state() -> CachedState<ExtendedStateReader> {
-    let node_url = "http://188.34.188.184:9545/rpc/v0.4".parse().unwrap();
+    let node_url = "http://188.34.188.184:9545/rpc/v0.5".parse().unwrap();
     CachedState::new(
         ExtendedStateReader {
             dict_state_reader: build_testing_state(),
@@ -31,7 +31,7 @@ pub fn create_fork_cached_state_at(
     block_id: BlockId,
     cache_dir: &str,
 ) -> CachedState<ExtendedStateReader> {
-    let node_url = "http://188.34.188.184:9545/rpc/v0.4".parse().unwrap();
+    let node_url = "http://188.34.188.184:9545/rpc/v0.5".parse().unwrap();
     CachedState::new(
         ExtendedStateReader {
             dict_state_reader: build_testing_state(),
