@@ -325,21 +325,19 @@ impl TestCaseSummary<Fuzzing> {
                 latest_block_number,
             } => {
                 let runs = results.len();
-                let gas_usages_vec = results
+                let gas_usages_vec: Vec<f64> = results
                     .into_iter()
                     .filter(|item| matches!(item, TestCaseSummary::Passed { .. }))
                     .map(|a| match a {
                         TestCaseSummary::Passed { gas_info, .. } => gas_info,
                         _ => unreachable!(),
-                    });
-
-                let max = gas_usages_vec.clone().reduce(f64::max).unwrap();
-                let min = gas_usages_vec.reduce(f64::min).unwrap();
+                    })
+                    .collect();
 
                 TestCaseSummary::Passed {
                     name,
                     msg,
-                    gas_info: GasStatistics { min, max },
+                    gas_info: gas_usage_statistics(&gas_usages_vec),
                     arguments,
                     test_statistics: FuzzingStatistics { runs },
                     latest_block_number,
@@ -466,4 +464,30 @@ fn function_args<'a>(function: &'a Function, builtins: &[&str]) -> Vec<&'a Concr
         .iter()
         .filter(|pt| !builtins.contains(&pt.debug_name))
         .collect()
+}
+
+fn gas_usage_statistics(gas_usages: &[f64]) -> GasStatistics {
+    let max = gas_usages.iter().copied().reduce(f64::max).unwrap();
+    let min = gas_usages.iter().copied().reduce(f64::min).unwrap();
+
+    let n = gas_usages.len() as f64;
+    if n <= 1.0 {
+        return GasStatistics {
+            max,
+            min,
+            mean: None,
+            std_deviation: None,
+        };
+    }
+
+    let mean = gas_usages.iter().sum::<f64>() / n;
+
+    let sum_squared_diff = gas_usages.iter().map(|&x| (x - mean).powi(2)).sum::<f64>();
+
+    GasStatistics {
+        max,
+        min,
+        mean: Some(mean),
+        std_deviation: Some((sum_squared_diff / (n - 1.0)).sqrt()),
+    }
 }
