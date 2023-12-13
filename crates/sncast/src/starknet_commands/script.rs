@@ -34,6 +34,7 @@ use num_traits::ToPrimitive;
 use runtime::EnhancedHintError;
 use scarb_metadata::ScarbCommand;
 use serde::Serialize;
+use serde_json::{json, Value};
 use sncast::helpers::response_structs::ScriptResponse;
 use sncast::helpers::scarb_utils::{
     get_package_metadata, get_scarb_manifest, get_scarb_metadata_with_deps, CastConfig,
@@ -51,6 +52,8 @@ pub enum Verbosity {
 
     #[default]
     Normal,
+
+    Verbose,
 }
 
 #[derive(Debug)]
@@ -60,14 +63,61 @@ pub struct UI {
     json: bool,
 }
 
-impl UI {
-    pub fn from_cli_args(is_quiet: bool, value_format: ValueFormat, json: bool) -> Self {
-        let verbosity = if is_quiet {
-            Verbosity::Quiet
-        } else {
-            Verbosity::Normal
-        };
 
+pub trait DebugArgVal {
+    fn get_arg_val(&self) -> String;
+}
+
+impl DebugArgVal for String {
+    fn get_arg_val(&self) -> String {
+        format!("\"{}\"", self.to_owned())
+    }
+}
+
+impl DebugArgVal for FieldElement {
+    fn get_arg_val(&self) -> String {
+        format!("{self:#064x}")
+    }
+}
+
+impl<T: DebugArgVal> DebugArgVal for Vec<T> {
+    fn get_arg_val(&self) -> String {
+        let res: Vec<String> = self.iter().map(DebugArgVal::get_arg_val).collect();
+        let res = res.join(",");
+        format!("[{res}]")
+    }
+}
+
+impl<T: DebugArgVal> DebugArgVal for Option<T> {
+    fn get_arg_val(&self) -> String {
+        match self {
+            Some(v) => format!("Some({})", v.get_arg_val()),
+            None => "None".to_string(),
+        }
+    }
+}
+
+impl DebugArgVal for bool {
+    fn get_arg_val(&self) -> String {
+        self.to_string()
+    }
+}
+
+macro_rules! stringify_args {
+    ( $( $x:expr ),* ) => {
+        {
+            let mut temp_vec = Vec::new();
+            $(
+                let stringified_arg = (stringify!($x).to_string(), $x.get_arg_val());
+                temp_vec.push(stringified_arg);
+            )*
+            temp_vec
+        }
+    };
+}
+
+impl UI {
+    pub fn new(verbosity: Verbosity, value_format: ValueFormat, json: bool) -> Self {
         Self {
             verbosity,
             value_format,
@@ -83,6 +133,50 @@ impl UI {
         if self.verbosity >= Verbosity::Normal {
             println!("{msg}");
         }
+    }
+
+    fn format_args_as_json(args: Vec<(String, String)>) -> Result<Value> {
+        let mut json_args_map: HashMap<String, Value> = HashMap::new();
+        for (key, value) in args {
+            let json_value = match serde_json::from_str(&value).ok() {
+                Some(v) => v,
+                None => serde_json::to_value(value)?,
+            };
+            json_args_map.insert(key, json_value);
+        }
+        let json_value_args: Value = serde_json::to_value(json_args_map)?;
+        Ok(json_value_args)
+    }
+
+    fn format_args_as_string(args: &[(String, String)]) -> String {
+        let formatted_args = args
+            .iter()
+            .map(|(k, v)| format!("\t{k}: {v},\n"))
+            .collect::<Vec<String>>()
+            .concat();
+        format!("[\n{formatted_args}]")
+    }
+
+    pub fn print_cheatcode_args(&self, cheatcode: &str, args: Vec<(String, String)>) -> Result<()> {
+        if self.verbosity >= Verbosity::Verbose {
+            if self.json {
+                let json_value_args = UI::format_args_as_json(args)?;
+                let json_output = json!({
+                    "cheatcode": cheatcode,
+                    "args_passed": json_value_args
+                });
+                let json_output = serde_json::to_string_pretty(&json_output)?;
+                println!("{json_output}");
+            } else {
+                let formatted_args = UI::format_args_as_string(&args);
+                let header = ("cheatcode".to_string(), cheatcode.to_string());
+                let body = ("args_passed".to_string(), formatted_args);
+                let output = vec![header, body];
+                print_formatted(output, self.json, false)?;
+            }
+            println!();
+        }
+        Ok(())
     }
 
     pub fn print_cheatcode_response<T: Serialize>(
@@ -107,9 +201,9 @@ pub struct Script {
     /// Module name that contains the `main` function, which will be executed
     pub script_module_name: String,
 
-    /// Silence script output
-    #[clap(long)]
-    pub quiet: bool,
+    /// Logging verbosity
+    #[command(flatten)]
+    pub verbose: clap_verbosity_flag::Verbosity,
 }
 
 pub struct CairoHintProcessor<'a> {
@@ -239,7 +333,7 @@ impl CairoHintProcessor<'_> {
 
         match selector {
             "call" => {
-                let contract_address = inputs[0].clone().into_();
+                let contract_address: FieldElement = inputs[0].clone().into_();
                 let function_name = as_cairo_short_string(&inputs[1])
                     .expect("Failed to convert function name to short string");
                 let calldata_length = inputs[2]
@@ -250,6 +344,11 @@ impl CairoHintProcessor<'_> {
                     .iter()
                     .map(|el| FieldElement::from_(el.clone()))
                     .collect();
+
+                self.script_ui.print_cheatcode_args(
+                    selector,
+                    stringify_args!(contract_address, function_name, calldata_felts),
+                );
 
                 let call_response = self.runtime.block_on(call::call(
                     contract_address,
@@ -289,6 +388,10 @@ impl CairoHintProcessor<'_> {
                 } else {
                     None
                 };
+
+                self.script_ui
+                    .print_cheatcode_args(selector, stringify_args!(contract_name, max_fee, nonce));
+
                 let account = self.runtime.block_on(get_account(
                     &self.config.account,
                     &self.config.accounts_file,
@@ -323,7 +426,7 @@ impl CairoHintProcessor<'_> {
                 Ok(())
             }
             "deploy" => {
-                let class_hash = inputs[0].clone().into_();
+                let class_hash: FieldElement = inputs[0].clone().into_();
                 let calldata_length = inputs[1]
                     .to_usize()
                     .expect("Failed to convert calldata length to usize");
@@ -357,6 +460,18 @@ impl CairoHintProcessor<'_> {
                 } else {
                     None
                 };
+
+                self.script_ui.print_cheatcode_args(
+                    selector,
+                    stringify_args!(
+                        class_hash,
+                        constructor_calldata,
+                        salt,
+                        unique,
+                        max_fee,
+                        nonce
+                    ),
+                );
 
                 let account = self.runtime.block_on(get_account(
                     &self.config.account,
@@ -422,6 +537,11 @@ impl CairoHintProcessor<'_> {
                     None
                 };
 
+                self.script_ui.print_cheatcode_args(
+                    selector,
+                    stringify_args!(contract_address, entry_point_name, calldata, max_fee, nonce),
+                );
+
                 let account = self.runtime.block_on(get_account(
                     &self.config.account,
                     &self.config.accounts_file,
@@ -455,6 +575,12 @@ impl CairoHintProcessor<'_> {
             "get_nonce" => {
                 let block_id = as_cairo_short_string(&inputs[0])
                     .expect("Failed to convert entry point name to short string");
+
+                self.script_ui.print_cheatcode_args(
+                    selector,
+                    stringify_args!(block_id),
+                );
+
                 let account = self.runtime.block_on(get_account(
                     &self.config.account,
                     &self.config.accounts_file,

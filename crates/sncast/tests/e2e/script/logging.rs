@@ -227,3 +227,244 @@ async fn test_one_of_the_steps_failing() {
        ...
     "#});
 }
+
+#[tokio::test]
+#[allow(clippy::too_many_lines)]
+async fn test_verbose() {
+    let current_dir = duplicate_map_script("17");
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+
+    let script_name = "map_script_all_cheatcodes";
+    let args = vec![
+        "--accounts-file",
+        accounts_json_path.as_str(),
+        "--account",
+        "user7",
+        "--url",
+        URL,
+        "script",
+        &script_name,
+        "--verbose",
+    ];
+
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(current_dir.path().join("scripts"))
+        .args(args);
+
+    snapbox.assert().success().stdout_matches(indoc! {r#"
+           Compiling lib(map_script) map_script v0.1.0 [..]
+           Compiling starknet-contract(map_script) map_script v0.1.0 [..]
+            Finished release target(s) in [..] seconds
+
+
+        cheatcode: get_nonce
+        args_passed: [
+        	block_id: "latest",
+        ]
+
+        cheatcode: get_nonce
+        response: [..]
+
+        cheatcode: declare
+        args_passed: [
+        	contract_name: "Mapa",
+        	max_fee: Some(0x000000000000000000000000000000000000000000000000016345785d89ffff),
+        	nonce: Some(0x[..]),
+        ]
+
+        cheatcode: declare
+        class_hash: 0x[..]
+        transaction_hash: 0x[..]
+
+        cheatcode: get_nonce
+        args_passed: [
+        	block_id: "latest",
+        ]
+
+        cheatcode: get_nonce
+        response: [..]
+
+        cheatcode: deploy
+        args_passed: [
+        	class_hash: 0x[..],
+        	constructor_calldata: [],
+        	salt: Some(0x0000000000000000000000000000000000000000000000000000000000000003),
+        	unique: true,
+        	max_fee: Some(0x000000000000000000000000000000000000000000000000016345785d89ffff),
+        	nonce: Some(0x[..]),
+        ]
+
+        cheatcode: deploy
+        contract_address: 0x[..]
+        transaction_hash: 0x[..]
+
+        cheatcode: get_nonce
+        args_passed: [
+        	block_id: "pending",
+        ]
+
+        cheatcode: get_nonce
+        response: [..]
+
+        cheatcode: invoke
+        args_passed: [
+        	contract_address: 0x[..],
+        	entry_point_name: "put",
+        	calldata: [0x0000000000000000000000000000000000000000000000000000000000000001,0x0000000000000000000000000000000000000000000000000000000000000002],
+        	max_fee: Some(0x000000000000000000000000000000000000000000000000016345785d89ffff),
+        	nonce: Some(0x[..]),
+        ]
+
+        cheatcode: invoke
+        transaction_hash: 0x[..]
+
+        cheatcode: call
+        args_passed: [
+        	contract_address: 0x[..],
+        	function_name: "get",
+        	calldata_felts: [0x0000000000000000000000000000000000000000000000000000000000000001],
+        ]
+
+        cheatcode: call
+        response: [0x2]
+
+        command: script
+        status: success
+    "#});
+}
+
+#[tokio::test]
+#[allow(clippy::too_many_lines)]
+async fn test_verbose_with_json() {
+    let current_dir = duplicate_map_script("18");
+    let accounts_json_path = get_accounts_path("tests/data/accounts/accounts.json");
+
+    let script_name = "map_script_all_cheatcodes";
+    let args = vec![
+        "--accounts-file",
+        accounts_json_path.as_str(),
+        "--account",
+        "user8",
+        "--url",
+        URL,
+        "--json",
+        "script",
+        &script_name,
+        "--verbose",
+    ];
+
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(current_dir.path().join("scripts"))
+        .args(args);
+
+    snapbox.assert().success().stdout_matches(indoc! {r#"
+        {"status":"compiling","message":"lib(map_script) map_script v0.1.0 [..]"}
+        {"status":"compiling","message":"starknet-contract(map_script) map_script v0.1.0 [..]"}
+        {"status":"finished","message":"release target(s) in [..] seconds"}
+
+
+        {
+          "args_passed": {
+            "block_id": "latest"
+          },
+          "cheatcode": "get_nonce"
+        }
+
+        {
+          "cheatcode": "get_nonce",
+          "response": [..]
+        }
+
+        {
+          "args_passed": {
+            "contract_name": "Mapa",
+            "max_fee": "Some(0x000000000000000000000000000000000000000000000000016345785d89ffff)",
+            "nonce": "Some(0x[..])"
+          },
+          "cheatcode": "declare"
+        }
+
+        {
+          "cheatcode": "declare",
+          "class_hash": "0x[..]",
+          "transaction_hash": "0x[..]"
+        }
+
+        {
+          "args_passed": {
+            "block_id": "latest"
+          },
+          "cheatcode": "get_nonce"
+        }
+
+        {
+          "cheatcode": "get_nonce",
+          "response": [..]
+        }
+
+        {
+          "args_passed": {
+            "class_hash": "0x[..]",
+            "constructor_calldata": [],
+            "max_fee": "Some(0x000000000000000000000000000000000000000000000000016345785d89ffff)",
+            "nonce": "Some(0x[..])",
+            "salt": "Some(0x0000000000000000000000000000000000000000000000000000000000000003)",
+            "unique": true
+          },
+          "cheatcode": "deploy"
+        }
+
+        {
+          "cheatcode": "deploy",
+          "contract_address": "0x[..]",
+          "transaction_hash": "0x[..]"
+        }
+
+        {
+          "args_passed": {
+            "block_id": "pending"
+          },
+          "cheatcode": "get_nonce"
+        }
+
+        {
+          "cheatcode": "get_nonce",
+          "response": [..]
+        }
+
+        {
+          "args_passed": {
+            "calldata": "[0x0000000000000000000000000000000000000000000000000000000000000001,0x0000000000000000000000000000000000000000000000000000000000000002]",
+            "contract_address": "0x[..]",
+            "entry_point_name": "put",
+            "max_fee": "Some(0x000000000000000000000000000000000000000000000000016345785d89ffff)",
+            "nonce": "Some(0x[..])"
+          },
+          "cheatcode": "invoke"
+        }
+
+        {
+          "cheatcode": "invoke",
+          "transaction_hash": "0x[..]"
+        }
+
+        {
+          "args_passed": {
+            "calldata_felts": "[0x0000000000000000000000000000000000000000000000000000000000000001]",
+            "contract_address": "0x[..]",
+            "function_name": "get"
+          },
+          "cheatcode": "call"
+        }
+
+        {
+          "cheatcode": "call",
+          "response": "[0x2]"
+        }
+
+        {
+          "command": "script",
+          "status": "success"
+        }
+    "#});
+}

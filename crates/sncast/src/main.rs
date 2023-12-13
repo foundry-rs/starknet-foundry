@@ -1,14 +1,12 @@
 use crate::starknet_commands::account::Account;
 use crate::starknet_commands::show_config::ShowConfig;
-use crate::starknet_commands::{
-    account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
-    script::Script,
-};
+use crate::starknet_commands::{account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall, script, script::Script};
 use anyhow::{anyhow, Result};
 
 use crate::starknet_commands::script::UI as ScriptUI;
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
+use clap_verbosity_flag::LevelFilter;
 use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
 use sncast::helpers::scarb_utils::{parse_scarb_config, CastConfig};
 use sncast::{
@@ -127,7 +125,7 @@ fn main() -> Result<()> {
     let runtime = Runtime::new().expect("Could not instantiate Runtime");
 
     if let Commands::Script(script) = cli.command {
-        let script_ui = ScriptUI::from_cli_args(script.quiet, value_format, cli.json);
+        let script_ui = ScriptUI::new(script_ui_verbosity(&script.verbose), value_format, cli.json);
         let mut result = starknet_commands::script::run(
             &script.script_module_name,
             &cli.path_to_scarb_toml,
@@ -394,4 +392,17 @@ fn update_cast_config(config: &mut CastConfig, cli: &Cli) {
     config.wait_timeout = clone_or_else!(cli.wait_timeout, config.wait_timeout);
     config.wait_retry_interval =
         clone_or_else!(cli.wait_retry_interval, config.wait_retry_interval);
+}
+
+
+#[must_use]
+pub fn script_ui_verbosity(cli_verbosity: &clap_verbosity_flag::Verbosity) -> script::Verbosity {
+    let filter = cli_verbosity.log_level_filter();
+    if filter >= LevelFilter::Warn {
+        script::Verbosity::Verbose
+    } else if filter > LevelFilter::Off {
+        script::Verbosity::Normal
+    } else {
+        script::Verbosity::Quiet
+    }
 }
