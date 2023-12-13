@@ -9,8 +9,8 @@ use test_collector::{ExpectedPanicValue, ExpectedTestResult};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct GasStatistics {
-    pub min: f64,
-    pub max: f64,
+    pub min: u128,
+    pub max: u128,
     pub mean: Option<f64>,
     pub std_deviation: Option<f64>,
 }
@@ -34,18 +34,8 @@ impl TestType for Fuzzing {
 #[derive(Debug, PartialEq, Clone)]
 pub struct Single;
 impl TestType for Single {
-    type GasInfo = f64;
+    type GasInfo = u128;
     type TestStatistics = ();
-}
-
-pub trait TestStatistics {
-    type Type: std::fmt::Debug + Clone;
-}
-impl TestStatistics for Fuzzing {
-    type Type = FuzzingStatistics;
-}
-impl TestStatistics for Single {
-    type Type = ();
 }
 
 /// Summary of running a single test case
@@ -162,7 +152,7 @@ impl TestCaseSummary<Single> {
         test_case: &TestCaseRunnable,
         arguments: Vec<Felt252>,
         fork_info: &ForkInfo,
-        gas: f64,
+        gas: u128,
     ) -> Self {
         let name = test_case.name.to_string();
         let msg = extract_result_data(&run_result, &test_case.expected_result);

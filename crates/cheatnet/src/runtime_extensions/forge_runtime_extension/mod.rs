@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
-    CallContractFailure, CallContractResult,
+    CallContractFailure, CallContractResult, UsedResources,
 };
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::{
     deploy, deploy_at, DeployCallPayload,
@@ -10,6 +10,7 @@ use crate::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::{
 use crate::runtime_extensions::forge_runtime_extension::cheatcodes::CheatcodeError;
 use crate::state::{BlockifierState, CheatTarget};
 use anyhow::{Context, Result};
+use blockifier::execution::call_info::{CallExecution, CallInfo};
 use blockifier::execution::deprecated_syscalls::DeprecatedSyscallSelector;
 use blockifier::execution::execution_utils::stark_felt_to_felt;
 use cairo_felt::Felt252;
@@ -578,4 +579,50 @@ fn read_option_felt(buffer: &[Felt252], idx: &mut usize) -> Option<Felt252> {
 
 fn read_option_vec(buffer: &[Felt252], idx: &mut usize) -> Option<Vec<Felt252>> {
     read_option_felt(buffer, idx).map(|count| read_vec(buffer, idx, count.to_usize().unwrap()))
+}
+
+#[must_use]
+pub fn get_all_execution_resources(runtime: ForgeRuntime) -> UsedResources {
+    let runtime_execution_resources = runtime
+        .extended_runtime
+        .extended_runtime
+        .extended_runtime
+        .extended_runtime
+        .hint_handler
+        .resources
+        .clone();
+    let runtime_l1_to_l2_messages = runtime
+        .extended_runtime
+        .extended_runtime
+        .extended_runtime
+        .extended_runtime
+        .hint_handler
+        .l2_to_l1_messages;
+
+    let runtime_call_info = CallInfo {
+        execution: CallExecution {
+            l2_to_l1_messages: runtime_l1_to_l2_messages,
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+    let runtime_l2_to_l1_payloads_length = runtime_call_info
+        .get_sorted_l2_to_l1_payloads_length()
+        .unwrap();
+
+    let mut all_resources = UsedResources {
+        execution_resources: runtime_execution_resources,
+        l2_to_l1_payloads_length: runtime_l2_to_l1_payloads_length,
+    };
+
+    let cheatnet_used_resources = &runtime
+        .extended_runtime
+        .extended_runtime
+        .extended_runtime
+        .extension
+        .cheatnet_state
+        .used_resources;
+    all_resources.extend(cheatnet_used_resources);
+
+    all_resources
 }

@@ -39,7 +39,7 @@ fn call_resources_simple() {
     .unwrap();
 
     assert_eq!(
-        output.used_resources,
+        output.used_resources.execution_resources,
         ExecutionResources {
             vm_resources: VmExecutionResources {
                 n_steps: 126,

@@ -27,6 +27,6 @@ async fn test_failing() {
         .args(args);
     snapbox.assert().success().stderr_matches(indoc! {r"
         command: script
-        error: Got an exception while executing a hint: Hint Error: Entry point [..] not found in contract.
+        error: Got an exception while executing a hint: Hint Error: Contract error
     "});
 }
