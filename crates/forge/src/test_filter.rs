@@ -2,7 +2,7 @@ use crate::compiled_raw::CompiledTestCrateRaw;
 use crate::shared_cache::cached_failed_tests_names;
 use anyhow::Result;
 use camino::Utf8PathBuf;
-use forge_runner::compiled_runnable::TestCaseRunnable;
+use forge_runner::compiled_runnable::{CompiledTestCrateRunnable, TestCaseRunnable};
 use forge_runner::TestCaseFilter;
 
 #[derive(Debug, PartialEq)]
@@ -77,8 +77,8 @@ impl TestsFilter {
 
     pub(crate) fn filter_tests(
         &self,
-        test_crate: CompiledTestCrateRaw,
-    ) -> Result<CompiledTestCrateRaw> {
+        test_crate: CompiledTestCrateRunnable,
+    ) -> Result<CompiledTestCrateRunnable> {
         let mut cases = test_crate.test_cases;
 
         cases = match &self.name_filter {
@@ -108,7 +108,7 @@ impl TestsFilter {
             IgnoredFilter::Ignored => cases.into_iter().filter(|tc| tc.ignored).collect(),
         };
 
-        Ok(CompiledTestCrateRaw {
+        Ok(CompiledTestCrateRunnable {
             test_cases: cases,
             ..test_crate
         })

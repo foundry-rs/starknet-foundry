@@ -1,3 +1,4 @@
+use forge_runner::compiled_runnable::CompiledTestCrateRunnable;
 use scarb_metadata::{Metadata, PackageId};
 use std::process::{Command, Stdio};
 
@@ -6,6 +7,8 @@ use crate::scarb::config::{ForgeConfig, RawForgeConfig};
 use anyhow::{anyhow, Context, Result};
 use camino::Utf8Path;
 use scarb_ui::args::PackagesFilter;
+
+use self::config::ForkTarget;
 
 pub mod config;
 
@@ -66,16 +69,21 @@ pub fn build_test_artifacts_with_scarb(filter: PackagesFilter) -> Result<()> {
     }
 }
 
-pub(crate) fn load_test_artifacts(
+pub fn load_test_artifacts(
     snforge_target_dir_path: &Utf8Path,
     package_name: &str,
-) -> Result<Vec<CompiledTestCrateRaw>> {
+    fork: &Vec<ForkTarget>,
+) -> Result<Vec<CompiledTestCrateRunnable>> {
     let snforge_test_artifact_path =
         snforge_target_dir_path.join(format!("{package_name}.snforge_sierra.json"));
     let test_crates = serde_json::from_str::<Vec<CompiledTestCrateRaw>>(&std::fs::read_to_string(
         snforge_test_artifact_path,
     )?)?;
-    Ok(test_crates)
+
+    test_crates
+        .iter()
+        .map(|test_crate| test_crate.to_owned().to_runnable(fork))
+        .collect::<Result<Vec<CompiledTestCrateRunnable>>>()
 }
 
 #[cfg(test)]

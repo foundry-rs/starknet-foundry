@@ -16,12 +16,16 @@ use scarb_artifacts::{get_contracts_map, target_dir_for_workspace};
 use scarb_metadata::{Metadata, MetadataCommand, PackageMetadata};
 use scarb_ui::args::PackagesFilter;
 
+use forge::scarb::load_test_artifacts;
 use std::env;
 use std::sync::Arc;
 use std::thread::available_parallelism;
 use tokio::runtime::Builder;
-
 mod init;
+
+use forge_runner::compiled_runnable::{
+    CompiledTestCrateRunnable, TestCaseRunnable, ValidatedForkConfig,
+};
 
 const FUZZER_RUNS_DEFAULT: u32 = 256;
 
@@ -178,9 +182,15 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
         rt.spawn(async move {
             let mut all_failed_tests = vec![];
             for package in &packages {
+                let forge_config = config_from_scarb_for_package(&scarb_metadata, &package.id)?;
+                let test_crates = load_test_artifacts(
+                    &snforge_target_dir_path,
+                    &package.name,
+                    &forge_config.fork,
+                )?;
+
                 env::set_current_dir(&package.root)?;
 
-                let forge_config = config_from_scarb_for_package(&scarb_metadata, &package.id)?;
                 let contracts = get_contracts_map(&scarb_metadata, &package.id).unwrap_or_default();
 
                 let runner_config = Arc::new(combine_configs(
@@ -194,7 +204,7 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
 
                 let tests_file_summaries = run(
                     &package.name,
-                    &snforge_target_dir_path,
+                    test_crates,
                     &TestsFilter::from_flags(
                         args.test_filter.clone(),
                         args.exact,
@@ -205,7 +215,6 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                     ),
                     runner_config,
                     runner_params,
-                    &forge_config.fork,
                 )
                 .await?;
 
