@@ -4,7 +4,6 @@ use std::marker::PhantomData;
 use std::sync::Arc;
 
 use anyhow::{anyhow, bail, ensure, Result};
-use blockifier::execution::call_info::{CallExecution, CallInfo};
 use blockifier::execution::common_hints::ExecutionMode;
 use blockifier::execution::entry_point::{
     CallEntryPoint, CallType, EntryPointExecutionContext, ExecutionResources,
@@ -18,7 +17,9 @@ use cairo_vm::serde::deserialize_program::HintParams;
 use cairo_vm::types::relocatable::Relocatable;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::CallToBlockifierExtension;
 use cheatnet::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
-use cheatnet::runtime_extensions::forge_runtime_extension::{ForgeExtension, ForgeRuntime};
+use cheatnet::runtime_extensions::forge_runtime_extension::{
+    get_all_execution_resources, ForgeExtension, ForgeRuntime,
+};
 use cheatnet::runtime_extensions::io_runtime_extension::IORuntimeExtension;
 use itertools::chain;
 
@@ -34,7 +35,6 @@ use cairo_vm::vm::vm_core::VirtualMachine;
 use camino::Utf8Path;
 use cheatnet::constants as cheatnet_constants;
 use cheatnet::forking::state::ForkStateReader;
-use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::state::{BlockInfoReader, CheatnetBlockInfo, CheatnetState, ExtendedStateReader};
 use runtime::{ExtendedRuntime, StarknetRuntime};
 use starknet::core::types::BlockTag::Latest;
@@ -382,52 +382,7 @@ fn get_latest_block_number(url: &Url) -> Result<BlockId> {
     }
 }
 
-fn get_all_execution_resources(runtime: ForgeRuntime) -> UsedResources {
-    let runtime_execution_resources = runtime
-        .extended_runtime
-        .extended_runtime
-        .extended_runtime
-        .extended_runtime
-        .hint_handler
-        .resources
-        .clone();
-    let runtime_l1_to_l2_messages = runtime
-        .extended_runtime
-        .extended_runtime
-        .extended_runtime
-        .extended_runtime
-        .hint_handler
-        .l2_to_l1_messages;
-
-    let runtime_call_info = CallInfo {
-        execution: CallExecution {
-            l2_to_l1_messages: runtime_l1_to_l2_messages,
-            ..Default::default()
-        },
-        ..Default::default()
-    };
-    let runtime_l2_to_l1_payloads_length = runtime_call_info
-        .get_sorted_l2_to_l1_payloads_length()
-        .unwrap();
-
-    let mut all_resources = UsedResources {
-        execution_resources: runtime_execution_resources,
-        l2_to_l1_payloads_length: runtime_l2_to_l1_payloads_length,
-    };
-
-    let cheatnet_used_resources = &runtime
-        .extended_runtime
-        .extended_runtime
-        .extended_runtime
-        .extension
-        .cheatnet_state
-        .used_resources;
-    all_resources.extend(cheatnet_used_resources);
-
-    all_resources
-}
-
-fn get_context<'a>(runtime: &'a ForgeRuntime) -> &'a EntryPointExecutionContext {
+pub fn get_context<'a>(runtime: &'a ForgeRuntime) -> &'a EntryPointExecutionContext {
     runtime
         .extended_runtime
         .extended_runtime
