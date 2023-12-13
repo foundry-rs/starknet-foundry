@@ -103,7 +103,7 @@ async fn test_default_verbosity_with_json() {
 
         {
           "cheatcode": "get_nonce",
-          "response": [..]
+          "response": "[..]"
         }
 
         {
@@ -114,7 +114,7 @@ async fn test_default_verbosity_with_json() {
 
         {
           "cheatcode": "get_nonce",
-          "response": [..]
+          "response": "[..]"
         }
 
         {
@@ -125,7 +125,7 @@ async fn test_default_verbosity_with_json() {
 
         {
           "cheatcode": "get_nonce",
-          "response": [..]
+          "response": "[..]"
         }
 
         {
