@@ -333,8 +333,8 @@ impl TestCaseSummary<Fuzzing> {
                         _ => unreachable!(),
                     });
 
-                let max = gas_usages_vec.clone().reduce(f64::max).unwrap();
-                let min = gas_usages_vec.reduce(f64::min).unwrap();
+                let max = gas_usages_vec.clone().reduce(u128::max).unwrap();
+                let min = gas_usages_vec.reduce(u128::min).unwrap();
 
                 TestCaseSummary::Passed {
                     name,
