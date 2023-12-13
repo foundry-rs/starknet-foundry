@@ -23,7 +23,7 @@ pub fn load(
                 current_slot.clone(),
             ))?),
         );
-        values.push(Felt252::from_(storage_value.unwrap()));
+        values.push(Felt252::from_(storage_value?));
         current_slot += Felt252::from(1);
     }
     Ok(values)
