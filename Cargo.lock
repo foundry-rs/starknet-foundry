@@ -2249,7 +2249,6 @@ dependencies = [
  "scarb-metadata",
  "serde",
  "serde_json",
- "sierra-casm",
  "starknet",
  "starknet_api",
  "tempfile",
