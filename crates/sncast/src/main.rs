@@ -1,6 +1,9 @@
 use crate::starknet_commands::account::Account;
 use crate::starknet_commands::show_config::ShowConfig;
-use crate::starknet_commands::{account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall, script, script::Script};
+use crate::starknet_commands::{
+    account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
+    script, script::Script,
+};
 use anyhow::{anyhow, Result};
 
 use crate::starknet_commands::script::UI as ScriptUI;
@@ -393,7 +396,6 @@ fn update_cast_config(config: &mut CastConfig, cli: &Cli) {
     config.wait_retry_interval =
         clone_or_else!(cli.wait_retry_interval, config.wait_retry_interval);
 }
-
 
 #[must_use]
 pub fn script_ui_verbosity(cli_verbosity: &clap_verbosity_flag::Verbosity) -> script::Verbosity {

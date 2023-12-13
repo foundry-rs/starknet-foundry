@@ -63,7 +63,6 @@ pub struct UI {
     json: bool,
 }
 
-
 pub trait DebugArgVal {
     fn get_arg_val(&self) -> String;
 }
@@ -576,10 +575,8 @@ impl CairoHintProcessor<'_> {
                 let block_id = as_cairo_short_string(&inputs[0])
                     .expect("Failed to convert entry point name to short string");
 
-                self.script_ui.print_cheatcode_args(
-                    selector,
-                    stringify_args!(block_id),
-                );
+                self.script_ui
+                    .print_cheatcode_args(selector, stringify_args!(block_id));
 
                 let account = self.runtime.block_on(get_account(
                     &self.config.account,
