@@ -32,7 +32,7 @@ impl TestType for Fuzzing {
 #[derive(Debug, PartialEq, Clone)]
 pub struct Single;
 impl TestType for Single {
-    type GasInfo = f64;
+    type GasInfo = u128;
     type TestStatistics = ();
 }
 
