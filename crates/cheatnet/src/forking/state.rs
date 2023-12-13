@@ -205,14 +205,13 @@ impl StateReader for ForkStateReader {
                     &serde_json::to_string(&flattened_class.entry_points_by_type).unwrap(),
                 )
                 .unwrap();
-                let converted_abi: Contract = serde_json::from_str(&flattened_class.abi).unwrap();
 
                 let sierra_contract_class: ContractClass = ContractClass {
                     sierra_program: converted_sierra_program,
                     sierra_program_debug_info: None,
                     contract_class_version: flattened_class.contract_class_version,
                     entry_points_by_type: converted_entry_points,
-                    abi: Some(converted_abi),
+                    abi: None,
                 };
                 let casm_contract_class: CasmContractClass =
                     CasmContractClass::from_contract_class(sierra_contract_class, false).unwrap();
@@ -227,9 +226,6 @@ impl StateReader for ForkStateReader {
                         &serde_json::to_string(&legacy_class.entry_points_by_type).unwrap(),
                     )
                     .unwrap();
-                let converted_abi: Option<Vec<ContractClassAbiEntry>> =
-                    serde_json::from_str(&serde_json::to_string(&legacy_class.abi).unwrap())
-                        .unwrap();
 
                 let mut decoder = GzDecoder::new(&legacy_class.program[..]);
                 let mut converted_program = String::new();
@@ -237,7 +233,7 @@ impl StateReader for ForkStateReader {
 
                 Ok(ContractClassBlockifier::V0(
                     ContractClassV0::try_from(DeprecatedContractClass {
-                        abi: converted_abi,
+                        abi: None,
                         program: serde_json::from_str(&converted_program).unwrap(),
                         entry_points_by_type: converted_entry_points,
                     })
