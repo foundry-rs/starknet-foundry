@@ -2,5 +2,13 @@
 
 Module containing struct and interface for creating `ecdsa` signatures
 
-* [`Interface`](signature/interface.md) - keeps `Signer` and `Verifier` interfaces
-* [`StarkCurveKeyPair`](signature/stark_curve_key_pair.md) - implementation of stark curve signer
+* [`Key Pair`](signature/key_pair.md) - keeps the `KeyPair` struct and connected traits
+* [`STARK Curve`](signature/stark_curve.md) - implementation of `KeyPair` for the STARK curve
+* [`Secp256 Curve`](signature/secp256_curve.md) - implementation of `KeyPair` for `Secp256k1` and `Secp256r1` curves
+
+
+> ⚠️ **Security Warning**
+>
+> Please note that some parts of the internal code for the features in this module are still experimental and **have not been audited yet**.
+>
+> Use at your own risk!
