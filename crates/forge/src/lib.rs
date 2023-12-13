@@ -1,8 +1,8 @@
-use anyhow::{anyhow, Error, Result};
+use anyhow::{anyhow, Result};
 use camino::Utf8Path;
 
+use crate::scarb::load_test_artifacts;
 use forge_runner::test_case_summary::AnyTestCaseSummary;
-use scarb_test_collector::load_test_artifacts;
 use std::sync::Arc;
 
 use compiled_raw::{CompiledTestCrateRaw, RawForkConfig, RawForkParams};
@@ -19,7 +19,6 @@ use crate::test_filter::TestsFilter;
 pub mod compiled_raw;
 pub mod pretty_printing;
 pub mod scarb;
-pub mod scarb_test_collector;
 pub mod shared_cache;
 pub mod test_filter;
 
@@ -93,26 +92,6 @@ pub async fn run(
     fork_targets: &[ForkTarget],
 ) -> Result<Vec<TestCrateSummary>> {
     let test_crates = load_test_artifacts(snforge_target_dir_path, package_name)?;
-
-    run_internal(
-        package_name,
-        tests_filter,
-        runner_config,
-        runner_params,
-        fork_targets,
-        test_crates,
-    )
-    .await?
-}
-
-async fn run_internal(
-    package_name: &str,
-    tests_filter: &TestsFilter,
-    runner_config: Arc<RunnerConfig>,
-    runner_params: Arc<RunnerParams>,
-    fork_targets: &[ForkTarget],
-    test_crates: Vec<CompiledTestCrateRaw>,
-) -> Result<Result<Vec<TestCrateSummary>, Error>, Error> {
     let all_tests: usize = test_crates.iter().map(|tc| tc.test_cases.len()).sum();
 
     let test_crates = test_crates
@@ -177,7 +156,7 @@ async fn run_internal(
         pretty_printing::print_test_seed(runner_config.fuzzer_seed);
     }
 
-    Ok(Ok(summaries))
+    Ok(summaries)
 }
 
 #[cfg(test)]

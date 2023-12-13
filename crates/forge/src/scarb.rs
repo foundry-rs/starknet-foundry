@@ -1,8 +1,10 @@
 use scarb_metadata::{Metadata, PackageId};
 use std::process::{Command, Stdio};
 
+use crate::compiled_raw::CompiledTestCrateRaw;
 use crate::scarb::config::{ForgeConfig, RawForgeConfig};
 use anyhow::{anyhow, Context, Result};
+use camino::Utf8Path;
 use scarb_ui::args::PackagesFilter;
 
 pub mod config;
@@ -62,6 +64,18 @@ pub fn build_test_artifacts_with_scarb(filter: PackagesFilter) -> Result<()> {
     } else {
         Err(anyhow!("scarb snforge-test-collector did not succeed"))
     }
+}
+
+pub(crate) fn load_test_artifacts(
+    snforge_target_dir_path: &Utf8Path,
+    package_name: &str,
+) -> Result<Vec<CompiledTestCrateRaw>> {
+    let snforge_test_artifact_path =
+        snforge_target_dir_path.join(format!("{package_name}.snforge_sierra.json"));
+    let test_crates = serde_json::from_str::<Vec<CompiledTestCrateRaw>>(&std::fs::read_to_string(
+        snforge_test_artifact_path,
+    )?)?;
+    Ok(test_crates)
 }
 
 #[cfg(test)]
