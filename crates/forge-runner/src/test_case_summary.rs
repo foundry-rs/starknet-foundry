@@ -11,8 +11,8 @@ use test_collector::{ExpectedPanicValue, ExpectedTestResult};
 pub struct GasStatistics {
     pub min: u128,
     pub max: u128,
-    pub mean: Option<f64>,
-    pub std_deviation: Option<f64>,
+    pub mean: Option<u128>,
+    pub std_deviation: Option<u128>,
 }
 #[derive(Debug, PartialEq, Clone)]
 pub struct FuzzingStatistics {

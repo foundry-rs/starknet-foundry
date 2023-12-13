@@ -15,6 +15,7 @@ use conversions::IntoConv;
 use futures::stream::FuturesUnordered;
 use futures::StreamExt;
 use num_bigint::BigInt;
+use num_integer::Roots;
 use once_cell::sync::Lazy;
 use scarb_artifacts::StarknetContractArtifacts;
 use smol_str::SmolStr;
@@ -325,7 +326,7 @@ impl TestCaseSummary<Fuzzing> {
                 latest_block_number,
             } => {
                 let runs = results.len();
-                let gas_usages_vec: Vec<f64> = results
+                let gas_usages_vec: Vec<u128> = results
                     .into_iter()
                     .filter(|item| matches!(item, TestCaseSummary::Passed { .. }))
                     .map(|a| match a {
@@ -466,12 +467,12 @@ fn function_args<'a>(function: &'a Function, builtins: &[&str]) -> Vec<&'a Concr
         .collect()
 }
 
-fn gas_usage_statistics(gas_usages: &[f64]) -> GasStatistics {
-    let max = gas_usages.iter().copied().reduce(f64::max).unwrap();
-    let min = gas_usages.iter().copied().reduce(f64::min).unwrap();
+fn gas_usage_statistics(gas_usages: &[u128]) -> GasStatistics {
+    let max = gas_usages.iter().copied().reduce(u128::max).unwrap();
+    let min = gas_usages.iter().copied().reduce(u128::min).unwrap();
 
-    let n = gas_usages.len() as f64;
-    if n <= 1.0 {
+    let n = gas_usages.len() as u128;
+    if n <= 1 {
         return GasStatistics {
             max,
             min,
@@ -480,14 +481,14 @@ fn gas_usage_statistics(gas_usages: &[f64]) -> GasStatistics {
         };
     }
 
-    let mean = gas_usages.iter().sum::<f64>() / n;
+    let mean = gas_usages.iter().sum::<u128>() / n;
 
-    let sum_squared_diff = gas_usages.iter().map(|&x| (x - mean).powi(2)).sum::<f64>();
+    let sum_squared_diff = gas_usages.iter().map(|&x| (x - mean).pow(2)).sum::<u128>();
 
     GasStatistics {
         max,
         min,
         mean: Some(mean),
-        std_deviation: Some((sum_squared_diff / (n - 1.0)).sqrt()),
+        std_deviation: Some((sum_squared_diff / (n - 1)).sqrt()),
     }
 }
