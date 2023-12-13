@@ -9,11 +9,7 @@ cairo-lang-starknet-v1_0_0-alpha6 = {package = "cairo-lang-starknet", git = "htt
 cairo-lang-starknet-v1_0_0-rc0 = { package = "cairo-lang-starknet", git = "https://github.com/starkware-libs/cairo", tag = "v1.0.0-rc0" }
 cairo-lang-starknet-v1_1_1 = { package = "cairo-lang-starknet", git = "https://github.com/starkware-libs/cairo", tag = "v1.1.1" }
 cairo-lang-starknet.workspace = true
-anyhow.workspace = true
 cairo-lang-casm.workspace = true
-cairo-lang-utils.workspace = true
-num-bigint.workspace = true
-starknet.workspace = true
 serde_json.workspace = true
 serde.workspace = true
 

@@ -5319,17 +5319,13 @@ dependencies = [
 name = "sierra-casm"
 version = "1.0.0"
 dependencies = [
- "anyhow",
  "cairo-lang-casm 2.3.1",
  "cairo-lang-starknet 1.0.0-alpha.6",
  "cairo-lang-starknet 1.0.0-rc0",
  "cairo-lang-starknet 1.1.1",
  "cairo-lang-starknet 2.3.1",
- "cairo-lang-utils 2.3.1",
- "num-bigint",
  "serde",
  "serde_json",
- "starknet",
 ]
 
 [[package]]
