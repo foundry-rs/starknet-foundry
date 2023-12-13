@@ -28,11 +28,28 @@ use starknet_api::{
     transaction::Calldata,
 };
 
+#[derive(Debug, Default)]
+pub struct UsedResources {
+    pub execution_resources: ExecutionResources,
+    pub l2_to_l1_payloads_length: Vec<usize>,
+}
+
+impl UsedResources {
+    pub fn extend(self: &mut UsedResources, other: &UsedResources) {
+        self.execution_resources.vm_resources += &other.execution_resources.vm_resources;
+        self.execution_resources
+            .syscall_counter
+            .extend(&other.execution_resources.syscall_counter);
+        self.l2_to_l1_payloads_length
+            .extend(&other.l2_to_l1_payloads_length);
+    }
+}
+
 /// Represents contract output, along with the data and the resources consumed during execution
 #[derive(Debug)]
 pub struct CallContractOutput {
     pub result: CallContractResult,
-    pub used_resources: ExecutionResources,
+    pub used_resources: UsedResources,
 }
 
 /// Enum representing possible contract execution result, along with the data
@@ -235,6 +252,11 @@ pub fn call_entry_point(
 
     Ok(CallContractOutput {
         result,
-        used_resources: resources,
+        used_resources: UsedResources {
+            execution_resources: resources,
+            l2_to_l1_payloads_length: exec_result.map_or(vec![], |call_info| {
+                call_info.get_sorted_l2_to_l1_payloads_length().unwrap()
+            }),
+        },
     })
 }

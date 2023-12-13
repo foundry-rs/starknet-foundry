@@ -1,7 +1,13 @@
 use std::collections::HashMap;
+use std::default::Default;
 use std::marker::PhantomData;
 use std::sync::Arc;
 
+use crate::compiled_runnable::ValidatedForkConfig;
+use crate::gas::calculate_used_gas;
+use crate::sierra_casm_runner::SierraCasmRunner;
+use crate::test_case_summary::{Single, TestCaseSummary};
+use crate::{RunnerConfig, RunnerParams, TestCaseRunnable, CACHE_DIR};
 use anyhow::{anyhow, bail, ensure, Result};
 use blockifier::execution::common_hints::ExecutionMode;
 use blockifier::execution::entry_point::{
@@ -12,28 +18,24 @@ use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::cached_state::CachedState;
 use blockifier::state::state_api::State;
 use cairo_felt::Felt252;
-use cairo_vm::serde::deserialize_program::HintParams;
-use cairo_vm::types::relocatable::Relocatable;
-use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::CallToBlockifierExtension;
-use cheatnet::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
-use cheatnet::runtime_extensions::forge_runtime_extension::{ForgeExtension, ForgeRuntime};
-use cheatnet::runtime_extensions::io_runtime_extension::IORuntimeExtension;
-use itertools::chain;
-
-use crate::compiled_runnable::ValidatedForkConfig;
-use crate::gas::gas_from_execution_resources;
-use crate::sierra_casm_runner::SierraCasmRunner;
-use crate::test_case_summary::{Single, TestCaseSummary};
-use crate::{RunnerConfig, RunnerParams, TestCaseRunnable, CACHE_DIR};
 use cairo_lang_casm::hints::Hint;
 use cairo_lang_casm::instructions::Instruction;
 use cairo_lang_runner::casm_run::hint_to_hint_params;
 use cairo_lang_runner::{Arg, RunResult, RunnerError};
+use cairo_vm::serde::deserialize_program::HintParams;
+use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use camino::Utf8Path;
 use cheatnet::constants as cheatnet_constants;
 use cheatnet::forking::state::ForkStateReader;
+use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::CallToBlockifierExtension;
+use cheatnet::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
+use cheatnet::runtime_extensions::forge_runtime_extension::{
+    get_all_execution_resources, ForgeExtension, ForgeRuntime,
+};
+use cheatnet::runtime_extensions::io_runtime_extension::IORuntimeExtension;
 use cheatnet::state::{BlockInfoReader, CheatnetBlockInfo, CheatnetState, ExtendedStateReader};
+use itertools::chain;
 use runtime::{ExtendedRuntime, StarknetRuntime};
 use starknet::core::types::BlockTag::Latest;
 use starknet::core::types::{BlockId, MaybePendingBlockWithTxHashes};
@@ -194,7 +196,7 @@ pub(crate) struct ForkInfo {
 pub struct RunResultWithInfo {
     pub(crate) run_result: Result<RunResult, RunnerError>,
     pub(crate) fork_info: ForkInfo,
-    pub(crate) gas_used: f64,
+    pub(crate) gas_used: u128,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -303,12 +305,10 @@ pub fn run_test_case(
         builtins,
     );
 
-    let execution_resources = get_all_execution_resources(&forge_runtime);
+    let block_context = get_context(&forge_runtime).block_context.clone();
+    let execution_resources = get_all_execution_resources(forge_runtime);
 
-    let gas = gas_from_execution_resources(
-        &get_context(&forge_runtime).block_context,
-        &execution_resources,
-    );
+    let gas = calculate_used_gas(&block_context, &mut blockifier_state, &execution_resources);
 
     Ok(RunResultWithInfo {
         run_result,
@@ -387,36 +387,6 @@ fn get_latest_block_number(url: &Url) -> Result<BlockId> {
         Ok(MaybePendingBlockWithTxHashes::Block(block)) => Ok(BlockId::Number(block.block_number)),
         _ => Err(anyhow!("Could not get the latest block number".to_string())),
     }
-}
-
-fn get_all_execution_resources(runtime: &ForgeRuntime) -> ExecutionResources {
-    let test_used_resources = &runtime
-        .extended_runtime
-        .extended_runtime
-        .extended_runtime
-        .extended_runtime
-        .hint_handler
-        .resources;
-    let cheatnet_used_resources = &runtime
-        .extended_runtime
-        .extended_runtime
-        .extended_runtime
-        .extension
-        .cheatnet_state
-        .used_resources;
-
-    let mut all_resources = ExecutionResources::default();
-    all_resources.vm_resources += &test_used_resources.vm_resources;
-    all_resources.vm_resources += &cheatnet_used_resources.vm_resources;
-
-    all_resources
-        .syscall_counter
-        .extend(&test_used_resources.syscall_counter);
-    all_resources
-        .syscall_counter
-        .extend(&cheatnet_used_resources.syscall_counter);
-
-    all_resources
 }
 
 fn get_context<'a>(runtime: &'a ForgeRuntime) -> &'a EntryPointExecutionContext {

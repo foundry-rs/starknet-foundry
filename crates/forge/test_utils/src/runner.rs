@@ -294,9 +294,7 @@ macro_rules! assert_gas {
                     panic!("Cannot use assert_gas! for fuzzing tests")
                 }
                 AnyTestCaseSummary::Single(case) => match case {
-                    TestCaseSummary::Passed { gas_info: gas, .. } => {
-                        (*gas - $asserted_gas).abs() < 0.0001
-                    }
+                    TestCaseSummary::Passed { gas_info: gas, .. } => *gas == $asserted_gas,
                     _ => false,
                 },
             }
