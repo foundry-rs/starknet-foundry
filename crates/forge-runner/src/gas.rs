@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use blockifier::fee::eth_gas_constants;
 use blockifier::fee::fee_utils::calculate_tx_l1_gas_usage;
-use blockifier::fee::gas_usage::{get_message_segment_length, get_onchain_data_segment_length};
+use blockifier::fee::gas_usage::get_message_segment_length;
 use blockifier::fee::os_resources::OS_RESOURCES;
 use blockifier::fee::os_usage::get_additional_os_resources;
 use blockifier::state::cached_state::{CachedState, StateChangesCount};
@@ -87,4 +87,22 @@ fn get_l1_gas_usage(
 
     message_segment_length * eth_gas_constants::SHARP_GAS_PER_MEMORY_WORD
         + onchain_data_segment_length * eth_gas_constants::SHARP_GAS_PER_MEMORY_WORD
+}
+
+// TODO::copied from blockifier, because it became private
+fn get_onchain_data_segment_length(state_changes_count: StateChangesCount) -> usize {
+    // For each newly modified contract:
+    // contract address (1 word).
+    // + 1 word with the following info: A flag indicating whether the class hash was updated, the
+    // number of entry updates, and the new nonce.
+    let mut onchain_data_segment_length = state_changes_count.n_modified_contracts * 2;
+    // For each class updated (through a deploy or a class replacement).
+    onchain_data_segment_length +=
+        state_changes_count.n_class_hash_updates * constants::CLASS_UPDATE_SIZE;
+    // For each modified storage cell: key, new value.
+    onchain_data_segment_length += state_changes_count.n_storage_updates * 2;
+    // For each compiled class updated (through declare): class_hash, compiled_class_hash
+    onchain_data_segment_length += state_changes_count.n_compiled_class_hash_updates * 2;
+
+    onchain_data_segment_length
 }
