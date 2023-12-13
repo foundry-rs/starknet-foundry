@@ -36,16 +36,6 @@ impl TestType for Single {
     type TestStatistics = ();
 }
 
-pub trait TestStatistics {
-    type Type: std::fmt::Debug + Clone;
-}
-impl TestStatistics for Fuzzing {
-    type Type = FuzzingStatistics;
-}
-impl TestStatistics for Single {
-    type Type = ();
-}
-
 /// Summary of running a single test case
 #[derive(Debug, Clone)]
 pub enum TestCaseSummary<T: TestType> {
