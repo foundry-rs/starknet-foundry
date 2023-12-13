@@ -16,7 +16,7 @@ pub fn load(
     let mut values: Vec<Felt252> = vec![];
     let mut current_slot = storage_address.clone();
 
-    while current_slot < storage_address.clone() + size.clone() {
+    while current_slot < storage_address + size {
         let storage_value = blockifier_state.blockifier_state.get_storage_at(
             target,
             StorageKey(PatriciaKey::try_from(StarkHash::from_(
