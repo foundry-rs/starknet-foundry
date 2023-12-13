@@ -27,3 +27,4 @@ forge = { path = "../../forge" }
 test-collector = { path = "../../test-collector" }
 scarb-artifacts = { path = "../../scarb-artifacts" }
 forge_runner = { path = "../../forge-runner" }
+sierra-casm = { path = "../../sierra-casm" }

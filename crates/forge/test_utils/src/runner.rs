@@ -6,13 +6,13 @@ use cairo_lang_compiler::project::setup_project;
 use cairo_lang_compiler::CompilerConfig;
 use cairo_lang_filesystem::db::init_dev_corelib;
 use cairo_lang_starknet::allowed_libfuncs::{validate_compatible_sierra_version, ListSelector};
-use cairo_lang_starknet::casm_contract_class::CasmContractClass;
 use cairo_lang_starknet::contract_class::compile_contract_in_prepared_db;
 use cairo_lang_starknet::inline_macros::selector::SelectorMacro;
 use cairo_lang_starknet::plugin::StarkNetPlugin;
 use camino::{Utf8Path, Utf8PathBuf};
 use forge_runner::test_crate_summary::TestCrateSummary;
 use scarb_artifacts::StarknetContractArtifacts;
+use sierra_casm::compile;
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -73,7 +73,12 @@ impl Contract {
         let sierra =
             serde_json::to_string_pretty(&contract).with_context(|| "Serialization failed.")?;
 
-        let casm = CasmContractClass::from_contract_class(contract, true)?;
+        let casm = compile(serde_json::json!({
+            "sierra_program": contract.sierra_program,
+            "contract_class_version": "",
+            "entry_points_by_type": contract.entry_points_by_type
+        }))
+        .unwrap();
         let casm = serde_json::to_string_pretty(&casm)?;
 
         Ok((sierra, casm))
