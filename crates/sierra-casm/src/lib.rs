@@ -32,7 +32,10 @@ pub fn compile(mut sierra_json: Value) -> Result<CasmContractClass, String> {
     compile_contract!(ContractClassV1Rc0, CasmContractClassV1Rc0);
     compile_contract!(ContractClassV1Alpha, CasmContractClassV1Alpha);
 
-    Err("Unable to compile Sierra to Casm".to_string())
+    Err(
+        "Unable to compile Sierra to Casm. No matching ContractClass or CasmContractClass found"
+            .to_string(),
+    )
 }
 
 /// converts `CasmContractClass` from the old `cairo_lang_starknet` library version
