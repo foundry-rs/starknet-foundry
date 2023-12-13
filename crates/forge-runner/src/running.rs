@@ -382,7 +382,7 @@ fn get_latest_block_number(url: &Url) -> Result<BlockId> {
     }
 }
 
-pub fn get_context<'a>(runtime: &'a ForgeRuntime) -> &'a EntryPointExecutionContext {
+fn get_context<'a>(runtime: &'a ForgeRuntime) -> &'a EntryPointExecutionContext {
     runtime
         .extended_runtime
         .extended_runtime
