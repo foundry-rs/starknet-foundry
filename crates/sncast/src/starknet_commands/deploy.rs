@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Result};
 use clap::Args;
 use starknet::accounts::AccountError::Provider;
-use starknet::accounts::{Account, ConnectedAccount, SingleOwnerAccount};
+use starknet::accounts::{Account, AccountDeployment, ConnectedAccount, Execution, SingleOwnerAccount};
 use starknet::contract::ContractFactory;
 use starknet::core::types::FieldElement;
 use starknet::core::utils::get_udc_deployed_address;
@@ -57,7 +57,8 @@ pub async fn deploy(
     let factory = ContractFactory::new(class_hash, account);
     let deployment = factory.deploy(constructor_calldata.clone(), salt, unique);
 
-    // todo: refactor setting max_fee and nonce
+    // todo: use apply_optional here when `Deployment` in starknet-rs is public
+    //  otherwise we cannot pass the necessary reference to a function
     let execution_with_fee = if let Some(max_fee) = max_fee {
         deployment.max_fee(max_fee)
     } else {
