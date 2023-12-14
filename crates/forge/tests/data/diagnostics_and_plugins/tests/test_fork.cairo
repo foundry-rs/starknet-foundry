@@ -81,3 +81,15 @@ fn incorrect_fork_attributes13() {
 fn incorrect_fork_attributes14() {
     assert(1 == 1, 'ok')
 }
+
+#[test]
+#[fork(url: "http://188.34.188.184:9545/rpc/v0.5", block_id: BlockId::Tag(xddd::hwdp::hehe::BlockTag::Latest))]
+fn incorrect_fork_attributes15() {
+    assert(1 == 1, 'ok')
+}
+
+#[test]
+#[fork(url: "http://188.34.188.184:9545/rpc/v0.5", block_id: BlockId::Tag(sumting::Latest))]
+fn incorrect_fork_attributes16() {
+    assert(1 == 1, 'ok')
+}

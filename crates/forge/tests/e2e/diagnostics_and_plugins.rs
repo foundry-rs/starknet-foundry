@@ -116,6 +116,16 @@ fn print_error_if_attributes_incorrect() {
         #[should_panic(url: "https://test.com")]
                       ^***********************^
         Error: Failed to compile test artifact, for detailed information go through the logs above
+        
+        error: Plugin diagnostic: Expected fork config must be of the form `url: <double quote string>, block_id: <snforge_std::BlockId>`.
+         --> {mock_tests_dir_path_str}/tests/test_fork.cairo:86:7
+        #[fork(url: "http://188.34.188.184:9545/rpc/v0.5", block_id: BlockId::Tag(xddd::hwdp::hehe::BlockTag::Latest))]
+              ^******************************************************************************************************^
+
+        error: Plugin diagnostic: Expected fork config must be of the form `url: <double quote string>, block_id: <snforge_std::BlockId>`.
+         --> {mock_tests_dir_path_str}/tests/test_fork.cairo:92:7
+        #[fork(url: "http://188.34.188.184:9545/rpc/v0.5", block_id: BlockId::Tag(sumting::Latest))]
+              ^***********************************************************************************^
     "#}
     );
 }
