@@ -340,9 +340,7 @@ async fn run_async_command(
                 Ok(())
             }
             account::Commands::Delete(delete) => {
-                config.account = delete
-                    .name
-                    .ok_or_else(|| anyhow!("required argument --name not provided"))?;
+                config.account = delete.name;
                 let network_name = match delete.network {
                     Some(network) => network,
                     None => chain_id_to_network_name(get_chain_id(&provider).await?),
