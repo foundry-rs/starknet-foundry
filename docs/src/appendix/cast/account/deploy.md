@@ -11,11 +11,11 @@ Required.
 Name of the (previously created) account to be deployed.
 
 ## `--max-fee, -m <MAX_FEE>`
-Required.
+Optional.
 
-Max fee for deploy account transaction.
+Maximum fee for the `deploy_account` transaction. When not used, defaults to auto-estimation.
 
 ## `--class-hash, -c`
 Optional.
 
-Class hash of a custom openzeppelin account contract declared to the network.
+Class hash of a custom OpenZeppelin account contract declared to the network.
