@@ -6,7 +6,7 @@ use test_utils::{assert_case_output_contains, assert_failed, assert_passed, test
 
 #[test]
 #[allow(clippy::too_many_lines)]
-fn library_call_syscall() {
+fn library_call_syscall_is_usable() {
     let test = test_case!(
         indoc!(
             r"
@@ -33,7 +33,7 @@ fn library_call_syscall() {
         }
 
         #[test]
-        fn library_call_syscall() {
+        fn library_call_syscall_is_usable() {
             let caller_address = deploy_contract('Caller');
             let caller_safe_dispatcher = ICallerSafeDispatcher {
                 contract_address: caller_address
@@ -126,7 +126,7 @@ fn library_call_syscall() {
 }
 
 #[test]
-fn keccak_syscall() {
+fn keccak_syscall_is_usable() {
     let test = test_case!(indoc!(
         r"
         use array::ArrayTrait;
@@ -134,7 +134,7 @@ fn keccak_syscall() {
         use starknet::SyscallResultTrait;
 
         #[test]
-        fn keccak_syscall() {
+        fn keccak_syscall_is_usable() {
             let input = array![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
             assert(
                 @keccak_syscall(input.span()).unwrap_syscall()
@@ -182,14 +182,14 @@ fn keccak_syscall_too_small_input() {
 }
 
 #[test]
-fn cairo_keccak() {
+fn cairo_keccak_is_usable() {
     let test = test_case!(indoc!(
         r"
         use array::ArrayTrait;
         use keccak::cairo_keccak;
 
         #[test]
-        fn cairo_keccak() {
+        fn cairo_keccak_is_usable() {
             let mut input = array![
                 0x0000000000000001,
                 0x0000000000000002,
