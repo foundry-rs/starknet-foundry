@@ -138,8 +138,12 @@ pub(crate) fn run_fuzz_test(
     })
 }
 
-fn build_context(block_info: CheatnetBlockInfo) -> EntryPointExecutionContext {
-    let block_context = cheatnet_constants::build_block_context(block_info);
+fn build_context(
+    block_info: CheatnetBlockInfo,
+    runner_config: Arc<RunnerConfig>,
+) -> EntryPointExecutionContext {
+    let block_context =
+        cheatnet_constants::build_block_context(block_info, runner_config.max_steps);
     let account_context = cheatnet_constants::build_transaction_context();
 
     EntryPointExecutionContext::new(
@@ -237,7 +241,7 @@ pub fn run_test_case(
     };
     let block_info = state_reader.get_block_info()?;
 
-    let mut context = build_context(block_info);
+    let mut context = build_context(block_info, runner_config);
     let mut execution_resources = ExecutionResources::default();
     let mut blockifier_state = CachedState::from(state_reader);
     let syscall_handler = build_syscall_handler(

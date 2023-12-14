@@ -61,6 +61,7 @@ pub struct RunnerConfig {
     pub exit_first: bool,
     pub fuzzer_runs: u32,
     pub fuzzer_seed: u64,
+    pub max_steps: Option<u32>,
 }
 
 impl RunnerConfig {
@@ -71,12 +72,14 @@ impl RunnerConfig {
         exit_first: bool,
         fuzzer_runs: u32,
         fuzzer_seed: u64,
+        max_steps: Option<u32>,
     ) -> Self {
         Self {
             workspace_root,
             exit_first,
             fuzzer_runs,
             fuzzer_seed,
+            max_steps,
         }
     }
 }

@@ -63,6 +63,7 @@ fn to_runnable(
             expected_result: case.expected_result,
             fork_config,
             fuzzer_config: case.fuzzer_config,
+            max_steps: case.max_steps,
         });
     }
 
@@ -186,6 +187,7 @@ mod tests {
                     block_id_value: "Latest".to_string(),
                 })),
                 fuzzer_config: None,
+                max_steps: None,
             }],
             tests_location: CrateLocation::Lib,
         };
@@ -209,6 +211,7 @@ mod tests {
                 expected_result: ExpectedTestResult::Success,
                 fork_config: Some(RawForkConfig::Id("non_existent".to_string())),
                 fuzzer_config: None,
+                max_steps: None,
             }],
             tests_location: CrateLocation::Lib,
         };

@@ -78,6 +78,9 @@ struct TestArgs {
     /// Seed for the fuzzer
     #[arg(short = 's', long)]
     fuzzer_seed: Option<u64>,
+    ///Max steps
+    #[arg(short = 'm', long)]
+    max_steps: Option<u32>,
 
     /// Run only tests marked with `#[ignore]` attribute
     #[arg(long = "ignored")]
@@ -124,6 +127,7 @@ fn combine_configs(
     exit_first: bool,
     fuzzer_runs: Option<u32>,
     fuzzer_seed: Option<u64>,
+    max_steps: Option<u32>,
     forge_config: &ForgeConfig,
 ) -> RunnerConfig {
     RunnerConfig::new(
@@ -135,6 +139,7 @@ fn combine_configs(
         fuzzer_seed
             .or(forge_config.fuzzer_seed)
             .unwrap_or_else(|| thread_rng().next_u64()),
+        max_steps,
     )
 }
 
@@ -188,6 +193,7 @@ fn test_workspace(args: TestArgs) -> Result<bool> {
                     args.exit_first,
                     args.fuzzer_runs,
                     args.fuzzer_seed,
+                    args.max_steps,
                     &forge_config,
                 ));
                 let runner_params = Arc::new(RunnerParams::new(contracts, env::vars().collect()));
@@ -262,8 +268,22 @@ mod tests {
     #[test]
     fn fuzzer_default_seed() {
         let workspace_root: Utf8PathBuf = Default::default();
-        let config = combine_configs(&workspace_root, false, None, None, &Default::default());
-        let config2 = combine_configs(&workspace_root, false, None, None, &Default::default());
+        let config = combine_configs(
+            &workspace_root,
+            false,
+            None,
+            None,
+            None,
+            &Default::default(),
+        );
+        let config2 = combine_configs(
+            &workspace_root,
+            false,
+            None,
+            None,
+            None,
+            &Default::default(),
+        );
 
         assert_ne!(config.fuzzer_seed, 0);
         assert_ne!(config2.fuzzer_seed, 0);
@@ -273,7 +293,14 @@ mod tests {
     #[test]
     fn runner_config_default_arguments() {
         let workspace_root: Utf8PathBuf = Default::default();
-        let config = combine_configs(&workspace_root, false, None, None, &Default::default());
+        let config = combine_configs(
+            &workspace_root,
+            false,
+            None,
+            None,
+            None,
+            &Default::default(),
+        );
         assert_eq!(
             config,
             RunnerConfig::new(
@@ -281,6 +308,7 @@ mod tests {
                 false,
                 FUZZER_RUNS_DEFAULT,
                 config.fuzzer_seed,
+                config.max_steps
             )
         );
     }
@@ -295,8 +323,11 @@ mod tests {
         };
         let workspace_root: Utf8PathBuf = Default::default();
 
-        let config = combine_configs(&workspace_root, false, None, None, &config_from_scarb);
-        assert_eq!(config, RunnerConfig::new(workspace_root, true, 1234, 500));
+        let config = combine_configs(&workspace_root, false, None, None, None, &config_from_scarb);
+        assert_eq!(
+            config,
+            RunnerConfig::new(workspace_root, true, 1234, 500, None)
+        );
     }
 
     #[test]
@@ -314,9 +345,13 @@ mod tests {
             true,
             Some(100),
             Some(32),
+            None,
             &config_from_scarb,
         );
 
-        assert_eq!(config, RunnerConfig::new(workspace_root, true, 100, 32,));
+        assert_eq!(
+            config,
+            RunnerConfig::new(workspace_root, true, 100, 32, None)
+        );
     }
 }
