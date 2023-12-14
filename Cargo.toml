@@ -12,7 +12,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.12.0"
+version = "0.13.0"
 edition = "2021"
 repository = "https://github.com/foundry-rs/starknet-foundry"
 license = "MIT"
@@ -75,3 +75,7 @@ which = "4.4.0"
 conversions = { path = "./crates/conversions" }
 test-case = "3.1.0"
 scarb-metadata = "1.8.0"
+flatten-serde-json = "0.1.0"
+snapbox = "0.4.13"
+smol_str = "0.2.0"
+num-integer = "0.1.45"
