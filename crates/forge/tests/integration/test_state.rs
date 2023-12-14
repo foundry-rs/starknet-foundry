@@ -148,7 +148,7 @@ fn simple_syscalls() {
 }
 
 #[test]
-fn get_block_hash_syscall() {
+fn get_block_hash_syscall_in_dispatcher() {
     let test = test_case!(
         indoc!(
             r"
@@ -167,7 +167,7 @@ fn get_block_hash_syscall() {
         }
 
         #[test]
-        fn get_block_hash_syscall() {
+        fn get_block_hash_syscall_in_dispatcher() {
             let block_hash_checker = declare('BlockHashChecker');
             let block_hash_checker_address = block_hash_checker.deploy(@ArrayTrait::new()).unwrap();
             let block_hash_checker_dispatcher = BlockHashCheckerDispatcher { contract_address: block_hash_checker_address };
