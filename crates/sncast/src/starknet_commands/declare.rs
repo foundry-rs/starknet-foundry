@@ -6,7 +6,7 @@ use sncast::helpers::scarb_utils::get_package_metadata;
 use sncast::helpers::{response_structs::DeclareResponse, scarb_utils::get_scarb_manifest};
 use sncast::{handle_rpc_error, handle_wait_for_tx, WaitForTx};
 use starknet::accounts::AccountError::Provider;
-use starknet::accounts::ConnectedAccount;
+use starknet::accounts::{ConnectedAccount, Declaration};
 use starknet::core::types::FieldElement;
 use starknet::{
     accounts::{Account, SingleOwnerAccount},
@@ -119,5 +119,12 @@ pub async fn declare(
         }
         Err(Provider(error)) => handle_rpc_error(error),
         _ => Err(anyhow!("Unknown RPC error")),
+    }
+}
+
+pub fn apply_optional<T, R, F: FnOnce(T, R) -> T>(initial: T, option: Option<R>, function: F) -> T {
+    match option {
+        Some(value) => function(initial, value),
+        None => initial,
     }
 }
