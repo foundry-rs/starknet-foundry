@@ -1,10 +1,10 @@
 # Library Functions References
 
-* [`declare`](cast-library/declare.md) - declares a contract
-* [`deploy`](cast-library/deploy.md) - deploys a contract
-* [`invoke`](cast-library/invoke.md) - invokes a contract's function
-* [`call`](cast-library/call.md) - calls a contract's function
-* [`get_nonce`](cast-library/get_nonce.md) - gets account's nonce for a given block tag
+* [`declare`](sncast-library/declare.md) - declares a contract
+* [`deploy`](sncast-library/deploy.md) - deploys a contract
+* [`invoke`](sncast-library/invoke.md) - invokes a contract's function
+* [`call`](sncast-library/call.md) - calls a contract's function
+* [`get_nonce`](sncast-library/get_nonce.md) - gets account's nonce for a given block tag
 
 > ℹ️ **Info**
 > To use the library functions you need to add `sncast_std` package as a dependency in

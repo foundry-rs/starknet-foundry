@@ -25,9 +25,9 @@ Need help getting started with Starknet Foundry? Read the
 
 Starknet Foundry, like its [Ethereum counterpart](https://github.com/foundry-rs/foundry), consists of different modules
 
-- [Forge](https://github.com/foundry-rs/starknet-foundry/tree/master/crates/forge): Starknet testing
+- [snforge](https://github.com/foundry-rs/starknet-foundry/tree/master/crates/forge): Starknet testing
   framework (like Truffle, Hardhat and DappTools but for Starknet).
-- [Cast](https://github.com/foundry-rs/starknet-foundry/tree/master/crates/sncast): All-in-one tool for
+- [sncast](https://github.com/foundry-rs/starknet-foundry/tree/master/crates/sncast): All-in-one tool for
   interacting with Starknet smart contracts, sending transactions and getting chain data.
 
 ## Installation

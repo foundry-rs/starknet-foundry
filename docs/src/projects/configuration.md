@@ -16,14 +16,14 @@ exit_first = true
 
 Forge automatically looks for `Scarb.toml` in the directory you are running the tests in or in any of its parents.
 
-## Cast
+## `sncast`
 
 ### Defining Profiles in `Scarb.toml`
 
-To be able to work with the network, you need to supply cast with a few parameters —
+To be able to work with the network, you need to supply `sncast` with a few parameters —
 namely the rpc node url and an account name that should be used to interact with it.
 This can be done
-by either supplying cast with those parameters directly [see more detailed CLI description,](../appendix/cast.md)
+by either supplying `sncast` with those parameters directly [see more detailed CLI description,](../appendix/sncast.md)
 or you can put them into `Scarb.toml` file:
 
 ```toml
@@ -35,7 +35,7 @@ url = "http://127.0.0.1:5050/rpc"
 # ...
 ```
 
-With `Scarb.toml` configured this way, we can just pass `--profile myprofile` argument to make sure cast uses parameters
+With `Scarb.toml` configured this way, we can just pass `--profile myprofile` argument to make sure `sncast` uses parameters
 defined in the profile.
 
 > 📝 **Note**
