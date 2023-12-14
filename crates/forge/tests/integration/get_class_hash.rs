@@ -14,7 +14,7 @@ fn get_class_hash() {
             use snforge_std::{ declare, ContractClassTrait, get_class_hash };
 
             #[test]
-            fn test_get_class_hash() {
+            fn get_class_hash() {
                 let contract = declare('HelloStarknet');
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 assert(get_class_hash(contract_address) == contract.class_hash, 'Incorrect class hash');

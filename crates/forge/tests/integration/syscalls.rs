@@ -33,7 +33,7 @@ fn library_call_syscall() {
         }
 
         #[test]
-        fn test_library_call() {
+        fn library_call_syscall() {
             let caller_address = deploy_contract('Caller');
             let caller_safe_dispatcher = ICallerSafeDispatcher {
                 contract_address: caller_address
@@ -134,7 +134,7 @@ fn test_keccak_syscall() {
         use starknet::SyscallResultTrait;
 
         #[test]
-        fn test_execute_cairo_keccak() {
+        fn test_keccak_syscall() {
             let input = array![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
             assert(
                 @keccak_syscall(input.span()).unwrap_syscall()
@@ -159,7 +159,7 @@ fn test_keccak_syscall_too_small_input() {
         use starknet::SyscallResultTrait;
 
         #[test]
-        fn test_execute_cairo_keccak() {
+        fn test_keccak_syscall_too_small_input() {
             let input = array![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
             assert(
                 @keccak_syscall(input.span()).unwrap_syscall()
@@ -172,7 +172,11 @@ fn test_keccak_syscall_too_small_input() {
 
     let result = run_test_case(&test);
 
-    assert_case_output_contains!(result, "test_execute_cairo_keccak", "Invalid input length");
+    assert_case_output_contains!(
+        result,
+        "test_keccak_syscall_too_small_input",
+        "Invalid input length"
+    );
 
     assert_failed!(result);
 }
@@ -185,7 +189,7 @@ fn test_cairo_keccak() {
         use keccak::cairo_keccak;
 
         #[test]
-        fn test_execute_cairo_keccak() {
+        fn test_cairo_keccak() {
             let mut input = array![
                 0x0000000000000001,
                 0x0000000000000002,
@@ -220,7 +224,7 @@ fn test_cairo_keccak() {
 }
 
 #[test]
-fn test_keccak_syscall_in_contract() {
+fn keccak_syscall_in_contract() {
     let test = test_case!(
         indoc!(
             r"
@@ -237,7 +241,7 @@ fn test_keccak_syscall_in_contract() {
             }
 
             #[test]
-            fn test_keccak_simple() {
+            fn keccak_syscall_in_contract() {
                 let contract = declare('HelloKeccak');
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IHelloKeccakDispatcher { contract_address };
@@ -282,7 +286,7 @@ fn compare_keccak_from_contract_with_plain_keccak() {
             }
 
             #[test]
-            fn test_keccak_simple() {
+            fn compare_keccak_from_contract_with_plain_keccak() {
                 let contract = declare('HelloKeccak');
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IHelloKeccakDispatcher { contract_address };

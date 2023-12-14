@@ -14,7 +14,7 @@ fn error_handling() {
         use array::ArrayTrait;
 
         #[test]
-        fn test_deploy_error_handling() {
+        fn error_handling() {
             let contract = declare('PanickingConstructor');
 
             match contract.deploy(@ArrayTrait::new()) {
@@ -54,7 +54,7 @@ fn deploy_syscall() {
         }
 
         #[test]
-        fn test_deploy_syscall() {
+        fn deploy_syscall() {
             let contract = declare('DeployChecker');
             let salt = 1;
             let calldata = array![10];

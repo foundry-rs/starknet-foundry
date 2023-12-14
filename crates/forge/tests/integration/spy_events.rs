@@ -40,7 +40,7 @@ fn spy_events_simple() {
             }
 
             #[test]
-            fn test_expect_events_simple() {
+            fn spy_events_simple() {
                 let contract = declare('SpyEventsChecker');
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
@@ -110,7 +110,7 @@ fn assert_emitted_fails() {
             }
 
             #[test]
-            fn test_expect_events_simple() {
+            fn assert_emitted_fails() {
                 let contract = declare('SpyEventsChecker');
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
@@ -201,7 +201,7 @@ fn expect_three_events_while_two_emitted() {
             }
 
             #[test]
-            fn test_expect_three_events_while_two_emitted() {
+            fn expect_three_events_while_two_emitted() {
                 let contract = declare('SpyEventsChecker');
                 let contract_address = contract.deploy(@array![]).unwrap();
                 let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
@@ -248,12 +248,12 @@ fn expect_three_events_while_two_emitted() {
     assert_failed!(result);
     assert_case_output_contains!(
         result,
-        "test_expect_three_events_while_two_emitted",
+        "expect_three_events_while_two_emitted",
         "Event with matching data and"
     );
     assert_case_output_contains!(
         result,
-        "test_expect_three_events_while_two_emitted",
+        "expect_three_events_while_two_emitted",
         "keys was not emitted"
     );
 }
@@ -309,7 +309,7 @@ fn expect_two_events_while_three_emitted() {
             }
 
             #[test]
-            fn test_expect_three_events_while_two_emitted() {
+            fn expect_two_events_while_three_emitted() {
                 let contract = declare('SpyEventsChecker');
                 let contract_address = contract.deploy(@array![]).unwrap();
                 let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
@@ -386,7 +386,7 @@ fn event_emitted_wrong_data_asserted() {
             }
 
             #[test]
-            fn test_assert_wrong_data() {
+            fn event_emitted_wrong_data_asserted() {
                 let contract = declare('SpyEventsChecker');
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = ISpyEventsCheckerDispatcher { contract_address };
@@ -417,17 +417,17 @@ fn event_emitted_wrong_data_asserted() {
     assert_failed!(result);
     assert_case_output_contains!(
         result,
-        "test_assert_wrong_data",
+        "event_emitted_wrong_data_asserted",
         "Event with matching data and"
     );
     assert_case_output_contains!(
         result,
-        "test_assert_wrong_data",
+        "event_emitted_wrong_data_asserted",
         "keys was not emitted from"
     );
     assert_case_output_contains!(
         result,
-        "test_assert_wrong_data",
+        "event_emitted_wrong_data_asserted",
         "2004704341135420872438152444339940174968271850429444763384575162285907940280"
     );
 }
@@ -452,7 +452,7 @@ fn emit_unnamed_event() {
             }
 
             #[test]
-            fn test_assert_unnamed_event() {
+            fn emit_unnamed_event() {
                 let contract = declare('SpyEventsChecker');
                 let contract_address = contract.deploy(@array![]).unwrap();
                 let dispatcher = ISpyEventsCheckerDispatcher { contract_address };

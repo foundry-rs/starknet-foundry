@@ -28,7 +28,7 @@ fn fuzzer_different_types() {
     let test = test_case!(indoc!(
         r"
         #[test]
-        fn uint256_arg(a: u256) {
+        fn fuzzer_different_types(a: u256) {
             if a <= 5_u256 {
                 assert(2 == 2, '2 == 2');
             } else {

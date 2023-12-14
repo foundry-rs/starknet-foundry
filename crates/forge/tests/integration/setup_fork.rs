@@ -41,7 +41,7 @@ fn fork_simple_decorator() {
 
             #[test]
             #[fork(url: "{}", block_id: BlockId::Number(313388))]
-            fn test_fork_simple() {{
+            fn fork_simple_decorator() {{
                 let dispatcher = IHelloStarknetDispatcher {{
                     contract_address: contract_address_const::<3216637956526895219277698311134811322769343974163380838558193911733621219342>()
                 }};
@@ -83,7 +83,7 @@ fn fork_aliased_decorator() {
 
             #[test]
             #[fork("FORK_NAME_FROM_SCARB_TOML")]
-            fn test_fork_simple() {{
+            fn fork_aliased_decorator() {{
                 let dispatcher = IHelloStarknetDispatcher {{
                     contract_address: contract_address_const::<3216637956526895219277698311134811322769343974163380838558193911733621219342>()
                 }};
@@ -152,7 +152,7 @@ fn fork_cairo0_contract() {
 
             #[test]
             #[fork(url: "{}", block_id: BlockId::Number(313494))]
-            fn test_timestamp() {{
+            fn fork_cairo0_contract() {{
                 let contract_address = contract_address_const::<0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7>();
 
                 let dispatcher = IERC20CamelDispatcher {{ contract_address }};
@@ -249,12 +249,12 @@ fn get_block_info_in_forked_block() {
 }
 
 #[test]
-fn test_fork_get_block_info_fails() {
+fn fork_get_block_info_fails() {
     let test = test_case!(formatdoc!(
         r#"
             #[test]
             #[fork(url: "{CHEATNET_RPC_URL}", block_id: BlockId::Number(999999999999))]
-            fn test_fork_get_block_info_fails() {{
+            fn fork_get_block_info_fails() {{
                 let block_info = starknet::get_block_info().unbox();
             }}
         "#
@@ -266,7 +266,7 @@ fn test_fork_get_block_info_fails() {
     assert_failed!(result);
     assert_case_output_contains!(
         result,
-        "test_fork_get_block_info_fails",
+        "fork_get_block_info_fails",
         "Unable to get block with tx hashes from fork"
     );
 }

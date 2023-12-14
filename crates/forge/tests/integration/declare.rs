@@ -15,7 +15,7 @@ fn simple_declare() {
         use snforge_std::declare;
 
         #[test]
-        fn test_declare_simple() {
+        fn simple_declare() {
             assert(1 == 1, 'simple check');
             let contract = declare('HelloStarknet');
             assert(contract.class_hash.into() != 0, 'proper class hash');
@@ -56,7 +56,7 @@ fn simple_declare() {
 }
 
 #[test]
-fn simple_declare_from_contract_code() {
+fn test_declare_simple() {
     let contract = Contract::from_code_path(
         "Contract1".to_string(),
         Path::new("tests/data/contracts/hello_starknet.cairo"),

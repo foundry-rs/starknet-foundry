@@ -49,7 +49,7 @@ fn warp_basic() {
             }
 
             #[test]
-            fn test_warp_all_stop_one() {
+            fn warp_all_stop_one() {
                 let warp_checker = deploy_warp_checker();
 
                 let old_block_timestamp = warp_checker.get_block_timestamp();
@@ -66,7 +66,7 @@ fn warp_basic() {
             }
 
             #[test]
-            fn test_warp_multiple() {
+            fn warp_multiple() {
                 let contract = declare('WarpChecker');
 
                 let warp_checker1 = IWarpCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
@@ -93,7 +93,7 @@ fn warp_basic() {
             }
 
             #[test]
-            fn test_warp_all() {
+            fn warp_all() {
                 let contract = declare('WarpChecker');
 
                 let warp_checker1 = IWarpCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
@@ -160,7 +160,7 @@ fn warp_complex() {
             }
 
             #[test]
-            fn test_warp_complex() {
+            fn warp_complex() {
                 let contract = declare('WarpChecker');
 
                 let warp_checker1 = IWarpCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
