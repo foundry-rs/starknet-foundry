@@ -91,18 +91,9 @@ pub async fn declare(
     let casm_class_hash = casm_contract_definition.class_hash()?;
 
     let declaration = account.declare(Arc::new(contract_definition.flatten()?), casm_class_hash);
-    // todo: refactor setting max_fee and nonce
-    let execution_with_fee = if let Some(max_fee) = max_fee {
-        declaration.max_fee(max_fee)
-    } else {
-        declaration
-    };
-    let execution = if let Some(nonce) = nonce {
-        execution_with_fee.nonce(nonce)
-    } else {
-        execution_with_fee
-    };
-    let declared = execution.send().await;
+    let declaration = apply_optional(declaration, max_fee, Declaration::max_fee);
+    let declaration = apply_optional(declaration, nonce, Declaration::nonce);
+    let declared = declaration.send().await;
 
     match declared {
         Ok(result) => {
