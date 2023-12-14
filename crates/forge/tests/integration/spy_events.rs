@@ -141,7 +141,7 @@ fn assert_emitted_fails() {
     assert_failed!(result);
     assert_case_output_contains!(
         result,
-        "test_expect_events_simple",
+        "assert_emitted_fails",
         "Event with matching data and"
     );
     assert_case_output_contains!(result, "assert_emitted_fails", "keys was not emitted");
