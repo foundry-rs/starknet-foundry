@@ -228,7 +228,7 @@ impl CairoHintProcessor<'_> {
                     &self.config.account,
                     &self.config.accounts_file,
                     self.provider,
-                    &self.config.keystore,
+                    self.config.keystore.clone(),
                 ))?;
 
                 let declare_response = self.runtime.block_on(declare::declare(
@@ -297,7 +297,7 @@ impl CairoHintProcessor<'_> {
                     &self.config.account,
                     &self.config.accounts_file,
                     self.provider,
-                    &self.config.keystore,
+                    self.config.keystore.clone(),
                 ))?;
 
                 let deploy_response = self.runtime.block_on(deploy::deploy(
@@ -358,7 +358,7 @@ impl CairoHintProcessor<'_> {
                     &self.config.account,
                     &self.config.accounts_file,
                     self.provider,
-                    &self.config.keystore,
+                    self.config.keystore.clone(),
                 ))?;
 
                 let invoke_response = self.runtime.block_on(invoke::invoke(
@@ -388,7 +388,7 @@ impl CairoHintProcessor<'_> {
                     &self.config.account,
                     &self.config.accounts_file,
                     self.provider,
-                    &self.config.keystore,
+                    self.config.keystore.clone(),
                 ))?;
 
                 let nonce = self.runtime.block_on(get_nonce(

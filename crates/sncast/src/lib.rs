@@ -181,13 +181,13 @@ pub async fn get_account<'a>(
     account: &str,
     accounts_file: &Utf8PathBuf,
     provider: &'a JsonRpcClient<HttpTransport>,
-    keystore: &Utf8PathBuf,
+    keystore: Option<Utf8PathBuf>,
 ) -> Result<SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, LocalWallet>> {
     let chain_id = get_chain_id(provider).await?;
-    let account = if keystore == &Utf8PathBuf::default() {
-        get_account_from_accounts_file(account, accounts_file, provider, chain_id)?
+    let account = if let Some(keystore) = keystore {
+        get_account_from_keystore(provider, chain_id, &keystore, account)?
     } else {
-        get_account_from_keystore(provider, chain_id, keystore, account)?
+        get_account_from_accounts_file(account, accounts_file, provider, chain_id)?
     };
     Ok(account)
 }
