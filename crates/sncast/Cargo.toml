@@ -42,7 +42,7 @@ cairo-vm.workspace = true
 
 [dev-dependencies]
 ctor.workspace = true
-snapbox = "0.4.13"
+snapbox.workspace = true
 indoc.workspace = true
 reqwest = "0.11.18"
 tempfile = "3.8.0"
