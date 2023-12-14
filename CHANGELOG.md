@@ -7,13 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Cast
+
+#### Added 
+
+- `--yes` option to `account delete` command that allows to skip confirmation prompt
+
 ## [0.13.0] - 2023-12-14
 
 #### Changed
 
 - Bump cairo to 2.4.0.
 - Migrated test compilation and collection to Scarb, snforge should now be compatible with every Scarb version >= 2.4.0 unless breaking changes happen
-- Add `--yes` option to `account delete` command that allows to skip confirmation prompt
 
 ## [0.12.0] - 2023-12-06
 
