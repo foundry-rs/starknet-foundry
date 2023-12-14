@@ -8,6 +8,7 @@ members = [
     "crates/conversions",
     "crates/runtime",
     "crates/scarb-artifacts",
+    "crates/sierra-casm"
 ]
 
 [workspace.package]
