@@ -152,7 +152,7 @@ fn roll_complex() {
             }
 
             #[test]
-            fn test_roll_complex() {
+            fn roll_complex() {
                 let contract = declare('RollChecker');
 
                 let roll_checker1 = IRollCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };

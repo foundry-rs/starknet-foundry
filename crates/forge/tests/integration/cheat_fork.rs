@@ -16,7 +16,7 @@ fn prank_cairo0_contract() {
 
             #[test]
             #[fork(url: "{}", block_id: BlockId::Number(314821))]
-            fn test() {{
+            fn prank_cairo0_contract() {{
                 let caller = starknet::library_call_syscall(
                     CAIRO0_CLASS_HASH.try_into().unwrap(),
                     LIB_CALL_SELECTOR,
@@ -64,7 +64,7 @@ fn roll_cairo0_contract() {
 
             #[test]
             #[fork(url: "{}", block_id: BlockId::Number(314821))]
-            fn test() {{
+            fn roll_cairo0_contract() {{
                 let block_number = starknet::library_call_syscall(
                     CAIRO0_CLASS_HASH.try_into().unwrap(),
                     LIB_CALL_SELECTOR,
@@ -112,7 +112,7 @@ fn warp_cairo0_contract() {
 
             #[test]
             #[fork(url: "{}", block_id: BlockId::Number(314821))]
-            fn test() {{
+            fn warp_cairo0_contract() {{
                 let block_timestamp = starknet::library_call_syscall(
                     CAIRO0_CLASS_HASH.try_into().unwrap(),
                     LIB_CALL_SELECTOR,
