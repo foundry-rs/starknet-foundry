@@ -232,7 +232,7 @@ pub async fn test_private_key_from_file() {
         "--url",
         URL,
         "--accounts-file",
-        "./accounts.json",
+        accounts_file,
         "account",
         "add",
         "--name",
@@ -317,4 +317,88 @@ pub async fn test_invalid_private_key_file_path() {
         command: account add
         error: Failed to obtain private key from the file [..]
     "});
+}
+
+#[tokio::test]
+pub async fn test_invalid_private_key_in_file() {
+    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
+    let private_key_file = "./my_private_key";
+
+    fs::write(temp_dir.path().join(private_key_file), "0x456y").unwrap();
+
+    let args = vec![
+        "--url",
+        URL,
+        "--accounts-file",
+        "./accounts.json",
+        "account",
+        "add",
+        "--name",
+        "my_account_add",
+        "--address",
+        "0x123",
+        "--private-key-file",
+        private_key_file,
+    ];
+
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(temp_dir.path())
+        .args(args);
+
+    snapbox.assert().stderr_matches(indoc! {r"
+        command: account add
+        error: Failed to obtain private key from the file ./my_private_key: invalid character
+    "});
+}
+
+#[tokio::test]
+pub async fn test_private_key_as_int_in_file() {
+    let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
+    let accounts_file = "./accounts.json";
+    let private_key_file = "./my_private_key";
+
+    fs::write(temp_dir.path().join(private_key_file), "1110").unwrap();
+
+    let args = vec![
+        "--url",
+        URL,
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "add",
+        "--name",
+        "my_account_add",
+        "--address",
+        "0x123",
+        "--private-key-file",
+        private_key_file,
+    ];
+
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(temp_dir.path())
+        .args(args);
+
+    snapbox.assert().stdout_matches(indoc! {r"
+        command: account add
+        add_profile: --add-profile flag was not set. No profile added to Scarb.toml
+    "});
+
+    let contents = fs::read_to_string(temp_dir.path().join(accounts_file))
+        .expect("Unable to read created file");
+    let contents_json: serde_json::Value = serde_json::from_str(&contents).unwrap();
+    assert_eq!(
+        contents_json,
+        json!(
+            {
+                "alpha-goerli": {
+                  "my_account_add": {
+                    "address": "0x123",
+                    "deployed": false,
+                    "private_key": "0x456",
+                    "public_key": "0x5f679dacd8278105bd3b84a15548fe84079068276b0e84d6cc093eb5430f063"
+                  }
+                }
+            }
+        )
+    );
 }
