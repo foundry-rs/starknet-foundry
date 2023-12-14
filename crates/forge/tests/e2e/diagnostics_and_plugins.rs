@@ -119,11 +119,11 @@ fn print_error_if_attributes_incorrect() {
         
         error: Plugin diagnostic: Expected fork config must be of the form `url: <double quote string>, block_id: <snforge_std::BlockId>`.
          --> {mock_tests_dir_path_str}/tests/test_fork.cairo:86:7
-        #[fork(url: "http://188.34.188.184:9545/rpc/v0.5", block_id: BlockId::Tag(xddd::hwdp::hehe::BlockTag::Latest))]
-              ^******************************************************************************************************^
+        #[fork(
+              ^
 
         error: Plugin diagnostic: Expected fork config must be of the form `url: <double quote string>, block_id: <snforge_std::BlockId>`.
-         --> {mock_tests_dir_path_str}/tests/test_fork.cairo:92:7
+         --> {mock_tests_dir_path_str}/tests/test_fork.cairo:95:7
         #[fork(url: "http://188.34.188.184:9545/rpc/v0.5", block_id: BlockId::Tag(sumting::Latest))]
               ^***********************************************************************************^
     "#}
