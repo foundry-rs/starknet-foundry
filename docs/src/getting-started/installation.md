@@ -55,3 +55,19 @@ the [source code](https://github.com/foundry-rs/starknet-foundry) as follows:
 2. Run `cd starknet-foundry && cargo build --release`. This will create a `target` directory.
 3. Move the `target` directory to the desired location (e.g. `~/.starknet-foundry`).
 4. Add `DESIRED_LOCATION/target/release/` to your `PATH`.
+
+
+### Installation on Windows
+
+As for now, Starknet Foundry on Windows needs manual installation, but necessary steps are kept to minimum:
+
+1. [Download the release](https://github.com/foundry-rs/starknet-foundry/releases) archive matching your CPU architecture.
+2. Extract it to a location where you would like to have Starknet Foundry installed. A folder named snfoundry in your [`%LOCALAPPDATA%\Programs`](https://learn.microsoft.com/en-us/windows/win32/shell/knownfolderid?redirectedfrom=MSDN#FOLDERID_UserProgramFiles) directory will suffice:
+```batch
+%LOCALAPPDATA%\Programs\snfoundry
+```
+3. Add path to the snfoundry\bin directory to your PATH environment variable.
+4. Verify installation by running the following command in new terminal session:
+```shell
+snforge --version
+```
