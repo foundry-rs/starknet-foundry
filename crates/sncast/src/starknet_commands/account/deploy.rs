@@ -31,7 +31,7 @@ pub struct Deploy {
 
     /// Max fee for the transaction
     #[clap(short, long)]
-    pub max_fee: FieldElement,
+    pub max_fee: Option<FieldElement>,
 
     /// Custom open zeppelin contract class hash of declared contract
     #[clap(short, long)]
@@ -44,7 +44,7 @@ pub async fn deploy(
     accounts_file: Utf8PathBuf,
     name: String,
     chain_id: FieldElement,
-    max_fee: FieldElement,
+    max_fee: Option<FieldElement>,
     wait_config: WaitForTx,
     class_hash: Option<String>,
     keystore_path: Option<Utf8PathBuf>,
@@ -85,7 +85,7 @@ pub async fn deploy(
 async fn deploy_from_keystore(
     provider: &JsonRpcClient<HttpTransport>,
     chain_id: FieldElement,
-    max_fee: FieldElement,
+    max_fee: Option<FieldElement>,
     wait_config: WaitForTx,
     keystore_path: Utf8PathBuf,
     account_path: Utf8PathBuf,
@@ -188,7 +188,7 @@ async fn deploy_from_accounts_file(
     accounts_file: Utf8PathBuf,
     name: String,
     chain_id: FieldElement,
-    max_fee: FieldElement,
+    max_fee: Option<FieldElement>,
     wait_config: WaitForTx,
     class_hash: Option<String>,
 ) -> Result<InvokeResponse> {
@@ -260,7 +260,7 @@ async fn deploy_oz_account(
     private_key: SigningKey,
     salt: FieldElement,
     chain_id: FieldElement,
-    max_fee: FieldElement,
+    max_fee: Option<FieldElement>,
     wait_config: WaitForTx,
 ) -> Result<InvokeResponse> {
     let factory = OpenZeppelinAccountFactory::new(
@@ -272,7 +272,16 @@ async fn deploy_oz_account(
     .await?;
 
     let deployment = factory.deploy(salt);
-    let result = deployment.max_fee(max_fee).send().await;
+    let deploy_max_fee = if let Some(max_fee) = max_fee {
+        max_fee
+    } else {
+        match deployment.estimate_fee().await {
+            Ok(max_fee) => FieldElement::from(max_fee.overall_fee),
+            Err(AccountFactoryError::Provider(error)) => return handle_rpc_error(error),
+            Err(_) => bail!("Unknown RPC error"),
+        }
+    };
+    let result = deployment.max_fee(deploy_max_fee).send().await;
 
     match result {
         Err(AccountFactoryError::Provider(error)) => match error {

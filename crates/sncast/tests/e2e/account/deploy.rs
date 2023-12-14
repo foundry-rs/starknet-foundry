@@ -493,3 +493,45 @@ pub async fn test_deploy_keystore_other_args() {
 
     _ = fs::remove_file(account_path);
 }
+
+#[tokio::test]
+pub async fn test_happy_case_auto_estimate() {
+    let (created_dir, accounts_file) = create_account("3", false).await;
+
+    let args = vec![
+        "--url",
+        URL,
+        "--accounts-file",
+        accounts_file,
+        "--json",
+        "account",
+        "deploy",
+        "--name",
+        "my_account",
+        "--class-hash",
+        DEVNET_OZ_CLASS_HASH,
+    ];
+
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(&created_dir)
+        .args(&args);
+    let bdg = snapbox.assert();
+    let out = bdg.get_output();
+
+    let hash = get_transaction_hash(&out.stdout);
+    let receipt = get_transaction_receipt(hash).await;
+
+    assert!(matches!(receipt, DeployAccount(_)));
+
+    let stdout_str =
+        std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
+    assert!(stdout_str.contains("account deploy"));
+    assert!(stdout_str.contains("transaction_hash"));
+
+    let contents = fs::read_to_string(created_dir.join(accounts_file)).unwrap();
+    let items: serde_json::Value =
+        serde_json::from_str(&contents).expect("Failed to parse accounts file at ");
+    assert_eq!(items["alpha-goerli"]["my_account"]["deployed"], true);
+
+    fs::remove_dir_all(created_dir).unwrap();
+}
