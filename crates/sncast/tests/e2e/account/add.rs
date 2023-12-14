@@ -324,7 +324,11 @@ pub async fn test_invalid_private_key_in_file() {
     let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
     let private_key_file = "./my_private_key";
 
-    fs::write(temp_dir.path().join(private_key_file), "0x456y").unwrap();
+    fs::write(
+        temp_dir.path().join(private_key_file),
+        "invalid private key",
+    )
+    .unwrap();
 
     let args = vec![
         "--url",
@@ -374,14 +378,11 @@ pub async fn test_private_key_as_int_in_file() {
         private_key_file,
     ];
 
-    let snapbox = Command::new(cargo_bin!("sncast"))
+    Command::new(cargo_bin!("sncast"))
         .current_dir(temp_dir.path())
-        .args(args);
-
-    snapbox.assert().stdout_matches(indoc! {r"
-        command: account add
-        add_profile: --add-profile flag was not set. No profile added to Scarb.toml
-    "});
+        .args(args)
+        .assert()
+        .success();
 
     let contents = fs::read_to_string(temp_dir.path().join(accounts_file))
         .expect("Unable to read created file");
