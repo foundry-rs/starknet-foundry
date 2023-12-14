@@ -70,4 +70,5 @@ As for now, Starknet Foundry on Windows needs manual installation, but necessary
 4. Verify installation by running the following command in new terminal session:
 ```shell
 snforge --version
+sncast --version
 ```
