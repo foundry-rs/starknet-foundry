@@ -19,7 +19,7 @@ fn call(
 
     let mut buf = cheatcode::<'call'>(inputs.span());
 
-    let result_data: Array::<felt252> = Serde::<Array::<felt252>>::deserialize(ref buf).unwrap();
+    let result_data: Array::<felt252> = Serde::<Array<felt252>>::deserialize(ref buf).unwrap();
 
     CallResult { data: result_data }
 }
@@ -79,7 +79,7 @@ fn deploy(
     max_fee.serialize(ref max_fee_serialized);
 
     let mut nonce_serialized = array![];
-    nonce.serialize(ref nonce_serialized);    
+    nonce.serialize(ref nonce_serialized);
 
     extend_array(ref inputs, constructor_calldata_serialized.span());
     extend_array(ref inputs, salt_serialized.span());
@@ -119,7 +119,7 @@ fn invoke(
     max_fee.serialize(ref max_fee_serialized);
 
     let mut nonce_serialized = array![];
-    nonce.serialize(ref nonce_serialized);    
+    nonce.serialize(ref nonce_serialized);
 
     extend_array(ref inputs, calldata_serialized.span());
     extend_array(ref inputs, max_fee_serialized.span());
