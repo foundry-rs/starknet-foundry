@@ -81,13 +81,13 @@ pub(crate) fn load_test_artifacts(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::compiled_raw::RawForkParams;
     use crate::scarb::config::ForkTarget;
     use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
     use assert_fs::TempDir;
     use camino::Utf8PathBuf;
     use indoc::{formatdoc, indoc};
     use scarb_metadata::MetadataCommand;
+    use snforge_test_collector_interface::RawForkParams;
     use std::str::FromStr;
 
     fn setup_package(package_name: &str) -> TempDir {

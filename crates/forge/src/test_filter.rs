@@ -127,10 +127,10 @@ impl TestCaseFilter for TestsFilter {
 
 #[cfg(test)]
 mod tests {
-    use crate::compiled_raw::{CompiledTestCrateRaw, CrateLocation, TestCaseRaw};
+    use crate::compiled_raw::CompiledTestCrateRaw;
     use crate::test_filter::TestsFilter;
     use cairo_lang_sierra::program::Program;
-    use forge_runner::expected_result::ExpectedTestResult;
+    use snforge_test_collector_interface::{CrateLocation, ExpectedTestResult, TestCaseRaw};
 
     fn program_for_testing() -> Program {
         Program {

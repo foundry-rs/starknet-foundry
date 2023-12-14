@@ -5,10 +5,11 @@ use crate::scarb::load_test_artifacts;
 use forge_runner::test_case_summary::AnyTestCaseSummary;
 use std::sync::Arc;
 
-use compiled_raw::{CompiledTestCrateRaw, RawForkConfig, RawForkParams};
 use forge_runner::test_crate_summary::TestCrateSummary;
 use forge_runner::{RunnerConfig, RunnerParams, TestCrateRunResult};
+use snforge_test_collector_interface::{RawForkConfig, RawForkParams};
 
+use crate::compiled_raw::CompiledTestCrateRaw;
 use forge_runner::compiled_runnable::{
     CompiledTestCrateRunnable, TestCaseRunnable, ValidatedForkConfig,
 };
@@ -50,7 +51,7 @@ fn to_runnable(
     for case in compiled_test_crate.test_cases {
         let fork_config = if let Some(fc) = case.fork_config {
             let raw_fork_params = replace_id_with_params(fc, fork_targets)?;
-            let fork_config = ValidatedForkConfig::try_from(raw_fork_params)?;
+            let fork_config: ValidatedForkConfig = raw_fork_params.try_into()?;
             Some(fork_config)
         } else {
             None
@@ -110,7 +111,7 @@ pub async fn run(
 
     for compiled_test_crate in test_crates {
         pretty_printing::print_running_tests(
-            compiled_test_crate.tests_location,
+            &compiled_test_crate.tests_location,
             compiled_test_crate.test_cases.len(),
         );
 
@@ -162,9 +163,9 @@ pub async fn run(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::compiled_raw::{CompiledTestCrateRaw, CrateLocation, TestCaseRaw};
+    use crate::compiled_raw::CompiledTestCrateRaw;
     use cairo_lang_sierra::program::Program;
-    use forge_runner::expected_result::ExpectedTestResult;
+    use snforge_test_collector_interface::{CrateLocation, ExpectedTestResult, TestCaseRaw};
 
     #[test]
     fn to_runnable_unparsable_url() {

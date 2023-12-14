@@ -1,9 +1,9 @@
 use crate::compiled_runnable::TestCaseRunnable;
-use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
 use crate::running::ForkInfo;
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{RunResult, RunResultValue};
+use snforge_test_collector_interface::{ExpectedPanicValue, ExpectedTestResult};
 use starknet_api::block::BlockNumber;
 use std::option::Option;
 

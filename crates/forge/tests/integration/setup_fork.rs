@@ -9,10 +9,10 @@ use camino::Utf8PathBuf;
 use forge::run;
 use forge::scarb::config::ForkTarget;
 use forge::test_filter::TestsFilter;
+use snforge_test_collector_interface::RawForkParams;
 use tempfile::tempdir;
 use tokio::runtime::Runtime;
 
-use forge::compiled_raw::RawForkParams;
 use forge_runner::{RunnerConfig, RunnerParams};
 use test_utils::runner::Contract;
 use test_utils::running_tests::run_test_case;

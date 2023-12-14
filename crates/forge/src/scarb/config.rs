@@ -1,7 +1,7 @@
-use crate::compiled_raw::RawForkParams;
 use anyhow::{bail, Result};
 use itertools::Itertools;
 use serde::Deserialize;
+use snforge_test_collector_interface::RawForkParams;
 use std::collections::HashMap;
 
 #[allow(clippy::module_name_repetitions)]

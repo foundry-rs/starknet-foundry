@@ -1,7 +1,7 @@
-use crate::compiled_raw::CrateLocation;
 use anyhow::Error;
 use console::style;
 use forge_runner::{test_case_summary::AnyTestCaseSummary, test_crate_summary::TestCrateSummary};
+use snforge_test_collector_interface::CrateLocation;
 
 pub fn print_error_message(error: &Error) {
     let error_tag = style("ERROR").red();
@@ -13,7 +13,7 @@ pub(crate) fn print_collected_tests_count(tests_num: usize, package_name: &str) 
     println!("{}", style(plain_text).bold());
 }
 
-pub(crate) fn print_running_tests(test_crate_file: CrateLocation, tests_num: usize) {
+pub(crate) fn print_running_tests(test_crate_file: &CrateLocation, tests_num: usize) {
     let dir_name = match test_crate_file {
         CrateLocation::Lib => "src",
         CrateLocation::Tests => "tests",
