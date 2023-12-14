@@ -171,7 +171,7 @@ async fn deploy_from_keystore(
     items.get_mut("deployment").and_then(|deployment| {
         deployment
             .as_object_mut()
-            .expect("should be an object")
+            .expect("Failed to get deployment as an object")
             .remove("salt")
     });
     items["deployment"]["address"] = format!("{address:#x}").into();

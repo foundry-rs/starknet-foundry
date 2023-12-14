@@ -123,7 +123,7 @@ fn main() -> Result<()> {
     update_cast_config(&mut config, &cli);
 
     let provider = get_provider(&config.rpc_url)?;
-    let runtime = Runtime::new().expect("Could not instantiate Runtime");
+    let runtime = Runtime::new().expect("Failed to instantiate Runtime");
 
     if let Commands::Script(script) = cli.command {
         let mut result = starknet_commands::script::run(

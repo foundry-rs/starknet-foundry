@@ -180,7 +180,7 @@ mod tests {
 
         assert!(res.is_ok());
 
-        let contents = fs::read_to_string("Scarb.toml").expect("Unable to read Scarb.toml");
+        let contents = fs::read_to_string("Scarb.toml").expect("Failed to read Scarb.toml");
         assert!(contents.contains("[tool.sncast.some-name]"));
         assert!(contents.contains("account = \"some-name\""));
         assert!(contents.contains("url = \"http://some-url\""));

@@ -179,11 +179,11 @@ pub async fn get_nonce(
 ) -> Result<FieldElement> {
     Ok(provider
         .get_nonce(
-            get_block_id(block_id).expect("Could not obtain block id"),
+            get_block_id(block_id).expect("Failed to obtain block id"),
             address,
         )
         .await
-        .expect("Could not get nonce"))
+        .expect("Failed to get a nonce"))
 }
 
 pub async fn get_account<'a>(
@@ -604,7 +604,7 @@ mod tests {
             &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
             &mock_provider,
             FieldElement::from_hex_be("0x435553544f4d5f434841494e5f4944")
-                .expect("Should convert from hex"),
+                .expect("Failed to convert chain id from hex"),
         );
         let err = account.unwrap_err();
         assert!(err
