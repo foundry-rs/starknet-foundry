@@ -278,7 +278,7 @@ async fn deploy_oz_account(
         match deployment.estimate_fee().await {
             Ok(max_fee) => FieldElement::from(max_fee.overall_fee),
             Err(AccountFactoryError::Provider(error)) => return handle_rpc_error(error),
-            Err(_) => bail!("Unknown RPC error"),
+            Err(error) => bail!(error),
         }
     };
     let result = deployment.max_fee(deploy_max_fee).send().await;
