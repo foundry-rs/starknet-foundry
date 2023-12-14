@@ -144,7 +144,7 @@ fn assert_emitted_fails() {
         "test_expect_events_simple",
         "Event with matching data and"
     );
-    assert_case_output_contains!(result, "test_expect_events_simple", "keys was not emitted");
+    assert_case_output_contains!(result, "assert_emitted_fails", "keys was not emitted");
 }
 
 #[test]
