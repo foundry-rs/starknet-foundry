@@ -52,7 +52,9 @@ pub fn deploy_at(
         &build_block_context(cheatnet_state.block_info),
         &build_transaction_context(),
         ExecutionMode::Execute,
-    );
+        false,
+    )
+    .unwrap();
 
     let ctor_context = ConstructorContext {
         class_hash: *class_hash,

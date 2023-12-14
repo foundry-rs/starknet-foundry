@@ -128,7 +128,7 @@ fn test_too_low_max_fee() {
         "--accounts-file",
         accounts_json_path.as_str(),
         "--account",
-        "user2",
+        "user6",
         "--wait",
         "declare",
         "--contract-name",
