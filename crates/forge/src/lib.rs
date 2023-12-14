@@ -9,7 +9,7 @@ use compiled_raw::{CompiledTestCrateRaw, RawForkConfig, RawForkParams};
 use forge_runner::test_crate_summary::TestCrateSummary;
 use forge_runner::{RunnerConfig, RunnerParams, TestCrateRunResult};
 
-use crate::block_number_map::{validated_fork_config_from_fork_params, BlockNumberMap};
+use crate::block_number_map::BlockNumberMap;
 use forge_runner::compiled_runnable::{CompiledTestCrateRunnable, TestCaseRunnable};
 
 use crate::scarb::config::ForkTarget;
@@ -51,8 +51,9 @@ async fn to_runnable(
     for case in compiled_test_crate.test_cases {
         let fork_config = if let Some(fc) = case.fork_config {
             let raw_fork_params = replace_id_with_params(fc, fork_targets)?;
-            let fork_config =
-                validated_fork_config_from_fork_params(&raw_fork_params, block_number_map).await?;
+            let fork_config = block_number_map
+                .validated_fork_config_from_fork_params(&raw_fork_params)
+                .await?;
             Some(fork_config)
         } else {
             None

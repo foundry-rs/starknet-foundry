@@ -20,36 +20,63 @@ pub struct BlockNumberMap {
 }
 
 impl BlockNumberMap {
-    pub fn add_latest_block_number(&mut self, url: String, latest_block_number: BlockNumber) {
+    fn add_latest_block_number(&mut self, url: String, latest_block_number: BlockNumber) {
         self.url_to_latest_block_number
             .insert(url, latest_block_number);
     }
 
-    pub fn add_block_number_for_hash(
-        &mut self,
-        url: String,
-        hash: Felt252,
-        block_number: BlockNumber,
-    ) {
+    fn add_block_number_for_hash(&mut self, url: String, hash: Felt252, block_number: BlockNumber) {
         self.url_and_hash_to_block_number
             .insert((url, hash), block_number);
     }
 
-    pub fn get_latest_block_number(&mut self, url: &String) -> Option<&BlockNumber> {
+    fn get_latest_block_number(&mut self, url: &String) -> Option<&BlockNumber> {
         self.url_to_latest_block_number.get(url)
     }
 
-    pub fn get_block_number_for_hash(
-        &mut self,
-        url: String,
-        hash: Felt252,
-    ) -> Option<&BlockNumber> {
+    fn get_block_number_for_hash(&mut self, url: String, hash: Felt252) -> Option<&BlockNumber> {
         self.url_and_hash_to_block_number.get(&(url, hash))
     }
 
     #[must_use]
     pub fn get_url_to_latest_block_number(&self) -> &HashMap<String, BlockNumber> {
         &self.url_to_latest_block_number
+    }
+
+    pub async fn validated_fork_config_from_fork_params(
+        &mut self,
+        fork_params_string: &RawForkParams,
+    ) -> Result<ValidatedForkConfig> {
+        let url_str = fork_params_string.url.clone();
+        let url = fork_params_string.url.parse()?;
+        let block_number = match fork_params_string.block_id_type.to_lowercase().as_str() {
+            "number" => BlockNumber(fork_params_string.block_id_value.parse()?),
+            "hash" => {
+                let block_hash =
+                    Felt252::from(fork_params_string.block_id_value.parse::<BigInt>().unwrap());
+                if let Some(block_number) =
+                    self.get_block_number_for_hash(url_str.clone(), block_hash.clone())
+                {
+                    *block_number
+                } else {
+                    let block_number = get_block_number_from_hash(&url, &block_hash).await?;
+                    self.add_block_number_for_hash(url_str, block_hash, block_number);
+                    block_number
+                }
+            }
+            "tag" => {
+                assert_eq!(fork_params_string.block_id_value, "Latest");
+                if let Some(block_number) = self.get_latest_block_number(&url_str) {
+                    *block_number
+                } else {
+                    let latest_block_number = get_latest_block_number(&url).await?;
+                    self.add_latest_block_number(url_str, latest_block_number);
+                    latest_block_number
+                }
+            }
+            _ => unreachable!(),
+        };
+        Ok(ValidatedForkConfig { url, block_number })
     }
 }
 
@@ -79,40 +106,4 @@ async fn get_block_number_from_hash(url: &Url, block_hash: &Felt252) -> Result<B
             block_hash.to_str_radix(16)
         ))),
     }
-}
-
-pub async fn validated_fork_config_from_fork_params(
-    fork_params_string: &RawForkParams,
-    block_number_map: &mut BlockNumberMap,
-) -> Result<ValidatedForkConfig> {
-    let url_str = fork_params_string.url.clone();
-    let url = fork_params_string.url.parse()?;
-    let block_number = match fork_params_string.block_id_type.to_lowercase().as_str() {
-        "number" => BlockNumber(fork_params_string.block_id_value.parse()?),
-        "hash" => {
-            let block_hash =
-                Felt252::from(fork_params_string.block_id_value.parse::<BigInt>().unwrap());
-            if let Some(block_number) =
-                block_number_map.get_block_number_for_hash(url_str.clone(), block_hash.clone())
-            {
-                *block_number
-            } else {
-                let block_number = get_block_number_from_hash(&url, &block_hash).await?;
-                block_number_map.add_block_number_for_hash(url_str, block_hash, block_number);
-                block_number
-            }
-        }
-        "tag" => {
-            assert_eq!(fork_params_string.block_id_value, "Latest");
-            if let Some(block_number) = block_number_map.get_latest_block_number(&url_str) {
-                *block_number
-            } else {
-                let latest_block_number = get_latest_block_number(&url).await?;
-                block_number_map.add_latest_block_number(url_str, latest_block_number);
-                latest_block_number
-            }
-        }
-        _ => unreachable!(),
-    };
-    Ok(ValidatedForkConfig { url, block_number })
 }
