@@ -126,7 +126,7 @@ fn library_call_syscall() {
 }
 
 #[test]
-fn test_keccak_syscall() {
+fn keccak_syscall() {
     let test = test_case!(indoc!(
         r"
         use array::ArrayTrait;
@@ -134,7 +134,7 @@ fn test_keccak_syscall() {
         use starknet::SyscallResultTrait;
 
         #[test]
-        fn test_keccak_syscall() {
+        fn keccak_syscall() {
             let input = array![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
             assert(
                 @keccak_syscall(input.span()).unwrap_syscall()
@@ -151,7 +151,7 @@ fn test_keccak_syscall() {
 }
 
 #[test]
-fn test_keccak_syscall_too_small_input() {
+fn keccak_syscall_too_small_input() {
     let test = test_case!(indoc!(
         r"
         use array::ArrayTrait;
@@ -159,7 +159,7 @@ fn test_keccak_syscall_too_small_input() {
         use starknet::SyscallResultTrait;
 
         #[test]
-        fn test_keccak_syscall_too_small_input() {
+        fn keccak_syscall_too_small_input() {
             let input = array![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
             assert(
                 @keccak_syscall(input.span()).unwrap_syscall()
@@ -174,7 +174,7 @@ fn test_keccak_syscall_too_small_input() {
 
     assert_case_output_contains!(
         result,
-        "test_keccak_syscall_too_small_input",
+        "keccak_syscall_too_small_input",
         "Invalid input length"
     );
 
@@ -182,14 +182,14 @@ fn test_keccak_syscall_too_small_input() {
 }
 
 #[test]
-fn test_cairo_keccak() {
+fn cairo_keccak() {
     let test = test_case!(indoc!(
         r"
         use array::ArrayTrait;
         use keccak::cairo_keccak;
 
         #[test]
-        fn test_cairo_keccak() {
+        fn cairo_keccak() {
             let mut input = array![
                 0x0000000000000001,
                 0x0000000000000002,

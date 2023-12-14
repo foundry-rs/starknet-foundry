@@ -40,7 +40,7 @@ fn error_handling() {
 }
 
 #[test]
-fn deploy_syscall() {
+fn deploy_syscall_check() {
     let test = test_case!(
         indoc!(
             r"
@@ -54,7 +54,7 @@ fn deploy_syscall() {
         }
 
         #[test]
-        fn deploy_syscall() {
+        fn deploy_syscall_check() {
             let contract = declare('DeployChecker');
             let salt = 1;
             let calldata = array![10];
