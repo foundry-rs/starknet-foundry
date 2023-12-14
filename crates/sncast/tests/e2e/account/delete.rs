@@ -277,7 +277,7 @@ pub async fn test_happy_case_with_yes_flag() {
         "true",
     ];
 
-    // Run test with an affirmative user input
+    // Run test with no additional user input
     let snapbox = Command::new(cargo_bin!("sncast")).args(args);
     let bdg = snapbox.assert();
     let out = bdg.get_output();
