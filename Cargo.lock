@@ -457,7 +457,7 @@ dependencies = [
  "cairo-lang-runner",
  "cairo-lang-starknet 2.4.0",
  "cairo-lang-utils 2.4.0",
- "cairo-vm",
+ "cairo-vm 0.8.3",
  "ctor",
  "derive_more",
  "indexmap 2.1.0",
@@ -579,6 +579,19 @@ name = "cairo-felt"
 version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9ce04b099042dc52ad1579cfa54aca08a1049b0026c4c62d0f64944621c05de2"
+dependencies = [
+ "lazy_static",
+ "num-bigint",
+ "num-integer",
+ "num-traits 0.2.17",
+ "serde",
+]
+
+[[package]]
+name = "cairo-felt"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ae932292b9ba497a4e892b56aa4e0c6f329a455180fdbdc132700dfe68d9b153"
 dependencies = [
  "lazy_static",
  "num-bigint",
@@ -1330,7 +1343,7 @@ dependencies = [
  "cairo-lang-sierra-type-size",
  "cairo-lang-starknet 2.4.0",
  "cairo-lang-utils 2.4.0",
- "cairo-vm",
+ "cairo-vm 0.8.3",
  "itertools 0.11.0",
  "keccak",
  "num-bigint",
@@ -2199,6 +2212,36 @@ dependencies = [
 ]
 
 [[package]]
+name = "cairo-vm"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "947ccd45a46d593951c6e09dfc3ca4e769ec17f050addb5326d3f3eabb9a76aa"
+dependencies = [
+ "anyhow",
+ "bincode",
+ "bitvec",
+ "cairo-felt 0.9.1",
+ "generic-array",
+ "hashbrown 0.14.3",
+ "hex",
+ "keccak",
+ "lazy_static",
+ "mimalloc",
+ "nom",
+ "num-bigint",
+ "num-integer",
+ "num-prime",
+ "num-traits 0.2.17",
+ "rand",
+ "serde",
+ "serde_json",
+ "sha2",
+ "sha3",
+ "starknet-crypto 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "thiserror-no-std",
+]
+
+[[package]]
 name = "camino"
 version = "1.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2239,7 +2282,7 @@ dependencies = [
  "cairo-lang-runner",
  "cairo-lang-starknet 2.4.0",
  "cairo-lang-utils 2.4.0",
- "cairo-vm",
+ "cairo-vm 0.9.1",
  "camino",
  "conversions",
  "ctor",
@@ -2435,7 +2478,7 @@ dependencies = [
  "cairo-lang-runner",
  "cairo-lang-starknet 2.4.0",
  "cairo-lang-utils 2.4.0",
- "cairo-vm",
+ "cairo-vm 0.9.1",
  "ctor",
  "indoc 2.0.4",
  "num-traits 0.2.17",
@@ -3017,7 +3060,7 @@ dependencies = [
  "cairo-lang-starknet 2.4.0",
  "cairo-lang-test-plugin",
  "cairo-lang-utils 2.4.0",
- "cairo-vm",
+ "cairo-vm 0.9.1",
  "camino",
  "cheatnet",
  "clap",
@@ -3080,7 +3123,7 @@ dependencies = [
  "cairo-lang-starknet 2.4.0",
  "cairo-lang-test-plugin",
  "cairo-lang-utils 2.4.0",
- "cairo-vm",
+ "cairo-vm 0.9.1",
  "camino",
  "cheatnet",
  "console",
@@ -4860,7 +4903,7 @@ dependencies = [
  "cairo-lang-runner",
  "cairo-lang-starknet 2.4.0",
  "cairo-lang-utils 2.4.0",
- "cairo-vm",
+ "cairo-vm 0.9.1",
  "conversions",
  "num-bigint",
  "num-traits 0.2.17",
@@ -5428,7 +5471,7 @@ dependencies = [
  "cairo-lang-sierra 2.4.0",
  "cairo-lang-sierra-to-casm 2.4.0",
  "cairo-lang-utils 2.4.0",
- "cairo-vm",
+ "cairo-vm 0.9.1",
  "camino",
  "clap",
  "conversions",
