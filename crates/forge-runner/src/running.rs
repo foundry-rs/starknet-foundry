@@ -140,7 +140,7 @@ pub(crate) fn run_fuzz_test(
 
 fn build_context(
     block_info: CheatnetBlockInfo,
-    runner_config: Arc<RunnerConfig>,
+    runner_config: &Arc<RunnerConfig>,
 ) -> EntryPointExecutionContext {
     let block_context =
         cheatnet_constants::build_block_context(block_info, runner_config.max_steps);
