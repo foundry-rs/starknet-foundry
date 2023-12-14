@@ -1,3 +1,4 @@
+use core::array::ArrayTrait;
 use core::serde::Serde;
 use starknet::{testing::cheatcode, ContractAddress, ClassHash};
 
@@ -15,7 +16,7 @@ fn call(
     let mut calldata_serialized = array![];
     calldata.serialize(ref calldata_serialized);
 
-    extend_array(ref inputs, calldata_serialized.span());
+    inputs.append_span(calldata_serialized.span());
 
     let mut buf = cheatcode::<'call'>(inputs.span());
 
@@ -41,8 +42,8 @@ fn declare(
     let mut nonce_serialized = array![];
     nonce.serialize(ref nonce_serialized);
 
-    extend_array(ref inputs, max_fee_serialized.span());
-    extend_array(ref inputs, nonce_serialized.span());
+    inputs.append_span(max_fee_serialized.span());
+    inputs.append_span(nonce_serialized.span());
 
     let buf = cheatcode::<'declare'>(inputs.span());
 
@@ -81,11 +82,11 @@ fn deploy(
     let mut nonce_serialized = array![];
     nonce.serialize(ref nonce_serialized);
 
-    extend_array(ref inputs, constructor_calldata_serialized.span());
-    extend_array(ref inputs, salt_serialized.span());
+    inputs.append_span(constructor_calldata_serialized.span());
+    inputs.append_span(salt_serialized.span());
     inputs.append(unique.into());
-    extend_array(ref inputs, max_fee_serialized.span());
-    extend_array(ref inputs, nonce_serialized.span());
+    inputs.append_span(max_fee_serialized.span());
+    inputs.append_span(nonce_serialized.span());
 
     let buf = cheatcode::<'deploy'>(inputs.span());
 
@@ -121,9 +122,9 @@ fn invoke(
     let mut nonce_serialized = array![];
     nonce.serialize(ref nonce_serialized);
 
-    extend_array(ref inputs, calldata_serialized.span());
-    extend_array(ref inputs, max_fee_serialized.span());
-    extend_array(ref inputs, nonce_serialized.span());
+    inputs.append_span(calldata_serialized.span());
+    inputs.append_span(max_fee_serialized.span());
+    inputs.append_span(nonce_serialized.span());
 
     let buf = cheatcode::<'invoke'>(inputs.span());
 
@@ -136,13 +137,4 @@ fn get_nonce(block_tag: felt252) -> felt252 {
     let inputs = array![block_tag];
     let buf = cheatcode::<'get_nonce'>(inputs.span());
     *buf[0]
-}
-
-fn extend_array(ref array: Array<felt252>, mut span: Span<felt252>) {
-    loop {
-        match span.pop_front() {
-            Option::Some(x) => { array.append(x.clone()); },
-            Option::None => { break; }
-        };
-    };
 }
