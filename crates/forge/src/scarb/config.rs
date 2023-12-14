@@ -1,8 +1,8 @@
+use crate::compiled_raw::RawForkParams;
 use anyhow::{bail, Result};
 use itertools::Itertools;
 use serde::Deserialize;
 use std::collections::HashMap;
-use test_collector::RawForkParams;
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(Debug, PartialEq, Default)]

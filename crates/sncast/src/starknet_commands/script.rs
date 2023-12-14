@@ -424,7 +424,8 @@ pub fn run(
     )
     .with_context(|| format!("failed to deserialize Sierra program: {path}"))?
     .into_v1()
-    .with_context(|| format!("failed to load Sierra program: {path}"))?;
+    .with_context(|| format!("failed to load Sierra program: {path}"))?
+    .program;
 
     let runner = SierraCasmRunner::new(
         sierra_program,

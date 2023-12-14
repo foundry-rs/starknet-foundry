@@ -77,7 +77,7 @@ fn simple_package_with_git_dependency() {
             casm = true
 
             [dependencies]
-            starknet = "2.3.1"
+            starknet = "2.4.0"
             snforge_std = {{ git = "https://github.com/{}", branch = "{}" }}
             "#,
             remote_url,
@@ -150,7 +150,7 @@ fn with_failing_scarb_build() {
     let result = snapbox.current_dir(&temp).assert().code(2);
 
     let stdout = String::from_utf8_lossy(&result.get_output().stdout);
-    assert!(stdout.contains("scarb build did not succeed"));
+    assert!(stdout.contains("scarb snforge-test-collector did not succeed"));
 }
 
 #[test]
@@ -676,7 +676,7 @@ fn with_exit_first() {
             version = "0.1.0"
 
             [dependencies]
-            starknet = "2.3.1"
+            starknet = "2.4.0"
             snforge_std = {{ path = "{}" }}
 
             [[target.starknet-contract]]
@@ -771,12 +771,13 @@ fn init_new_project_test() {
             [package]
             name = "test_name"
             version = "0.1.0"
+            edition = "2023_10"
 
             # See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest.html
 
             [dependencies]
             snforge_std = {{ git = "https://github.com/foundry-rs/starknet-foundry", tag = "v{}" }}
-            starknet = "2.3.1"
+            starknet = "2.4.0"
 
             [[target.starknet-contract]]
             casm = true
@@ -799,7 +800,7 @@ fn init_new_project_test() {
         casm = true
 
         [dependencies]
-        starknet = "2.3.1"
+        starknet = "2.4.0"
         snforge_std = {{ git = "https://github.com/{}", branch = "{}" }}
         "#,
             remote_url,

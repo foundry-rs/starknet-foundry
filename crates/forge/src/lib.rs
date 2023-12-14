@@ -1,36 +1,26 @@
-use anyhow::{anyhow, Error, Result};
+use anyhow::{anyhow, Result};
 use camino::Utf8Path;
+
+use crate::scarb::load_test_artifacts;
 use forge_runner::test_case_summary::AnyTestCaseSummary;
-use serde::Deserialize;
-use std::fmt::Debug;
 use std::sync::Arc;
 
+use compiled_raw::{CompiledTestCrateRaw, RawForkConfig, RawForkParams};
 use forge_runner::test_crate_summary::TestCrateSummary;
-use forge_runner::{
-    CompiledTestCrateRunnable, RunnerConfig, RunnerParams, TestCaseRunnable, TestCrateRunResult,
-    ValidatedForkConfig,
-};
-use test_collector::{RawForkConfig, RawForkParams};
+use forge_runner::{RunnerConfig, RunnerParams, TestCrateRunResult};
 
-use crate::collecting::{collect_test_compilation_targets, compile_tests, CompiledTestCrateRaw};
+use forge_runner::compiled_runnable::{
+    CompiledTestCrateRunnable, TestCaseRunnable, ValidatedForkConfig,
+};
+
 use crate::scarb::config::ForkTarget;
-use crate::scarb_test_collector::load_test_artifacts;
 use crate::test_filter::TestsFilter;
 
-pub mod collecting;
+pub mod compiled_raw;
 pub mod pretty_printing;
 pub mod scarb;
-pub mod scarb_test_collector;
 pub mod shared_cache;
 pub mod test_filter;
-
-#[derive(Debug, PartialEq, Clone, Copy, Deserialize)]
-pub enum CrateLocation {
-    /// Main crate in a package
-    Lib,
-    /// Crate in the `tests/` directory
-    Tests,
-}
 
 fn replace_id_with_params(
     raw_fork_config: RawForkConfig,
@@ -76,46 +66,10 @@ fn to_runnable(
         });
     }
 
-    Ok(CompiledTestCrateRunnable::new(
-        compiled_test_crate.sierra_program,
+    Ok(CompiledTestCrateRunnable {
+        sierra_program: compiled_test_crate.sierra_program,
         test_cases,
-    ))
-}
-
-/// Run the tests in the package at the given path
-///
-/// # Arguments
-///
-/// * `package_path` - Absolute path to the top-level of the Cairo package
-/// * `package_name` - Name of the package specified in Scarb.toml
-/// * `package_source_dir_path` - Absolute path to the root of the package
-/// * `tests_filter` - `TestFilter` structure used to determine what tests to run
-/// * `runner_config` - A configuration of the test runner
-/// * `runner_params` - A struct with parameters required to run tests e.g. map with contracts
-/// * `fork_target` - A configuration of forks used in tests
-#[allow(clippy::implicit_hasher)]
-pub async fn run(
-    package_path: &Utf8Path,
-    package_name: &str,
-    package_source_dir_path: &Utf8Path,
-    tests_filter: &TestsFilter,
-    runner_config: Arc<RunnerConfig>,
-    runner_params: Arc<RunnerParams>,
-    fork_targets: &[ForkTarget],
-) -> Result<Vec<TestCrateSummary>> {
-    let compilation_targets =
-        collect_test_compilation_targets(package_path, package_name, package_source_dir_path)?;
-    let test_crates = compile_tests(&compilation_targets, &runner_params)?;
-
-    run_internal(
-        package_name,
-        tests_filter,
-        runner_config,
-        runner_params,
-        fork_targets,
-        test_crates,
-    )
-    .await?
+    })
 }
 
 /// Run the tests in the package at the given path
@@ -129,7 +83,7 @@ pub async fn run(
 /// * `runner_params` - A struct with parameters required to run tests e.g. map with contracts
 /// * `fork_target` - A configuration of forks used in tests
 #[allow(clippy::implicit_hasher)]
-pub async fn run_with_scarb_collector(
+pub async fn run(
     package_name: &str,
     snforge_target_dir_path: &Utf8Path,
     tests_filter: &TestsFilter,
@@ -138,26 +92,6 @@ pub async fn run_with_scarb_collector(
     fork_targets: &[ForkTarget],
 ) -> Result<Vec<TestCrateSummary>> {
     let test_crates = load_test_artifacts(snforge_target_dir_path, package_name)?;
-
-    run_internal(
-        package_name,
-        tests_filter,
-        runner_config,
-        runner_params,
-        fork_targets,
-        test_crates,
-    )
-    .await?
-}
-
-async fn run_internal(
-    package_name: &str,
-    tests_filter: &TestsFilter,
-    runner_config: Arc<RunnerConfig>,
-    runner_params: Arc<RunnerParams>,
-    fork_targets: &[ForkTarget],
-    test_crates: Vec<CompiledTestCrateRaw>,
-) -> Result<Result<Vec<TestCrateSummary>, Error>, Error> {
     let all_tests: usize = test_crates.iter().map(|tc| tc.test_cases.len()).sum();
 
     let test_crates = test_crates
@@ -222,16 +156,15 @@ async fn run_internal(
         pretty_printing::print_test_seed(runner_config.fuzzer_seed);
     }
 
-    Ok(Ok(summaries))
+    Ok(summaries)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::collecting::CompiledTestCrateRaw;
+    use crate::compiled_raw::{CompiledTestCrateRaw, CrateLocation, TestCaseRaw};
     use cairo_lang_sierra::program::Program;
-    use test_collector::ExpectedTestResult;
-    use test_collector::TestCaseRaw;
+    use forge_runner::expected_result::ExpectedTestResult;
 
     #[test]
     fn to_runnable_unparsable_url() {

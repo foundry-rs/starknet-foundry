@@ -3,6 +3,11 @@ use std::default::Default;
 use std::marker::PhantomData;
 use std::sync::Arc;
 
+use crate::compiled_runnable::ValidatedForkConfig;
+use crate::gas::calculate_used_gas;
+use crate::sierra_casm_runner::SierraCasmRunner;
+use crate::test_case_summary::{Single, TestCaseSummary};
+use crate::{RunnerConfig, RunnerParams, TestCaseRunnable, CACHE_DIR};
 use anyhow::{anyhow, bail, ensure, Result};
 use blockifier::execution::common_hints::ExecutionMode;
 use blockifier::execution::entry_point::{
@@ -13,29 +18,24 @@ use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::cached_state::CachedState;
 use blockifier::state::state_api::State;
 use cairo_felt::Felt252;
+use cairo_lang_casm::hints::Hint;
+use cairo_lang_casm::instructions::Instruction;
+use cairo_lang_runner::casm_run::hint_to_hint_params;
+use cairo_lang_runner::{Arg, RunResult, RunnerError};
 use cairo_vm::serde::deserialize_program::HintParams;
 use cairo_vm::types::relocatable::Relocatable;
+use cairo_vm::vm::vm_core::VirtualMachine;
+use camino::Utf8Path;
+use cheatnet::constants as cheatnet_constants;
+use cheatnet::forking::state::ForkStateReader;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::CallToBlockifierExtension;
 use cheatnet::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
 use cheatnet::runtime_extensions::forge_runtime_extension::{
     get_all_execution_resources, ForgeExtension, ForgeRuntime,
 };
 use cheatnet::runtime_extensions::io_runtime_extension::IORuntimeExtension;
-use itertools::chain;
-
-use crate::gas::calculate_used_gas;
-use crate::sierra_casm_runner::SierraCasmRunner;
-use crate::test_case_summary::{Single, TestCaseSummary};
-use crate::{RunnerConfig, RunnerParams, TestCaseRunnable, ValidatedForkConfig, CACHE_DIR};
-use cairo_lang_casm::hints::Hint;
-use cairo_lang_casm::instructions::Instruction;
-use cairo_lang_runner::casm_run::hint_to_hint_params;
-use cairo_lang_runner::{Arg, RunResult, RunnerError};
-use cairo_vm::vm::vm_core::VirtualMachine;
-use camino::Utf8Path;
-use cheatnet::constants as cheatnet_constants;
-use cheatnet::forking::state::ForkStateReader;
 use cheatnet::state::{BlockInfoReader, CheatnetBlockInfo, CheatnetState, ExtendedStateReader};
+use itertools::chain;
 use runtime::{ExtendedRuntime, StarknetRuntime};
 use starknet::core::types::BlockTag::Latest;
 use starknet::core::types::{BlockId, MaybePendingBlockWithTxHashes};
@@ -141,7 +141,14 @@ pub(crate) fn run_fuzz_test(
 fn build_context(block_info: CheatnetBlockInfo) -> EntryPointExecutionContext {
     let block_context = cheatnet_constants::build_block_context(block_info);
     let account_context = cheatnet_constants::build_transaction_context();
-    EntryPointExecutionContext::new(&block_context, &account_context, ExecutionMode::Execute)
+
+    EntryPointExecutionContext::new(
+        &block_context,
+        &account_context,
+        ExecutionMode::Execute,
+        false,
+    )
+    .unwrap()
 }
 
 fn build_syscall_handler<'a>(
