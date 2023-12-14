@@ -9,3 +9,4 @@ Scarb.lock
 !snforge_std/Scarb.lock
 */node_modules
 .spr.yml
+crates/cast/tests/utils

@@ -9,13 +9,13 @@ use compiled_raw::{CompiledTestCrateRaw, RawForkConfig, RawForkParams};
 use forge_runner::test_crate_summary::TestCrateSummary;
 use forge_runner::{RunnerConfig, RunnerParams, TestCrateRunResult};
 
-use forge_runner::compiled_runnable::{
-    CompiledTestCrateRunnable, TestCaseRunnable, ValidatedForkConfig,
-};
+use crate::block_number_map::{validated_fork_config_from_fork_params, BlockNumberMap};
+use forge_runner::compiled_runnable::{CompiledTestCrateRunnable, TestCaseRunnable};
 
 use crate::scarb::config::ForkTarget;
 use crate::test_filter::TestsFilter;
 
+pub mod block_number_map;
 pub mod compiled_raw;
 pub mod pretty_printing;
 pub mod scarb;
@@ -41,16 +41,18 @@ fn replace_id_with_params(
     }
 }
 
-fn to_runnable(
+async fn to_runnable(
     compiled_test_crate: CompiledTestCrateRaw,
     fork_targets: &[ForkTarget],
+    block_number_map: &mut BlockNumberMap,
 ) -> Result<CompiledTestCrateRunnable> {
     let mut test_cases = vec![];
 
     for case in compiled_test_crate.test_cases {
         let fork_config = if let Some(fc) = case.fork_config {
             let raw_fork_params = replace_id_with_params(fc, fork_targets)?;
-            let fork_config = ValidatedForkConfig::try_from(raw_fork_params)?;
+            let fork_config =
+                validated_fork_config_from_fork_params(&raw_fork_params, block_number_map).await?;
             Some(fork_config)
         } else {
             None
@@ -90,6 +92,7 @@ pub async fn run(
     runner_config: Arc<RunnerConfig>,
     runner_params: Arc<RunnerParams>,
     fork_targets: &[ForkTarget],
+    block_number_map: &mut BlockNumberMap,
 ) -> Result<Vec<TestCrateSummary>> {
     let test_crates = load_test_artifacts(snforge_target_dir_path, package_name)?;
     let all_tests: usize = test_crates.iter().map(|tc| tc.test_cases.len()).sum();
@@ -114,7 +117,8 @@ pub async fn run(
             compiled_test_crate.test_cases.len(),
         );
 
-        let compiled_test_crate = to_runnable(compiled_test_crate, fork_targets)?;
+        let compiled_test_crate =
+            to_runnable(compiled_test_crate, fork_targets, block_number_map).await?;
         let compiled_test_crate = Arc::new(compiled_test_crate);
         let runner_config = runner_config.clone();
         let runner_params = runner_params.clone();
@@ -166,8 +170,8 @@ mod tests {
     use cairo_lang_sierra::program::Program;
     use forge_runner::expected_result::ExpectedTestResult;
 
-    #[test]
-    fn to_runnable_unparsable_url() {
+    #[tokio::test]
+    async fn to_runnable_unparsable_url() {
         let mocked_tests = CompiledTestCrateRaw {
             sierra_program: Program {
                 type_declarations: vec![],
@@ -190,11 +194,15 @@ mod tests {
             tests_location: CrateLocation::Lib,
         };
 
-        assert!(to_runnable(mocked_tests, &[]).is_err());
+        assert!(
+            to_runnable(mocked_tests, &[], &mut BlockNumberMap::default())
+                .await
+                .is_err()
+        );
     }
 
-    #[test]
-    fn to_runnable_non_existent_id() {
+    #[tokio::test]
+    async fn to_runnable_non_existent_id() {
         let mocked_tests = CompiledTestCrateRaw {
             sierra_program: Program {
                 type_declarations: vec![],
@@ -223,7 +231,9 @@ mod tests {
                     block_id_value: "120".to_string(),
                 },
             )],
+            &mut BlockNumberMap::default()
         )
+        .await
         .is_err());
     }
 }
