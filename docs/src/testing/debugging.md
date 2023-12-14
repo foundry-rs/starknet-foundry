@@ -86,7 +86,7 @@ original value: [27]
 Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
 
-## In contracts
+## In Contracts
 > ⚠️ **Warning**
 >
 > - Make sure to remove all of the prints before compiling the final version of your contract.

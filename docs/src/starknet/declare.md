@@ -1,4 +1,4 @@
-# Declaring new contracts
+# Declaring New Contracts
 
 Starknet provides a distinction between contract class and instance. This is similar to the difference between writing the code of a `class MyClass {}` and creating a new instance of it `let myInstance = MyClass()` in object-oriented programming languages.
 
@@ -8,7 +8,7 @@ For a detailed CLI description, see [declare command reference](../appendix/cast
 
 ## Examples
 
-### General example
+### General Example
 
 > 📝 **Note**
 > Building a contract before running `declare` is not required. Starknet Foundry `sncast` builds a contract during declaration under the hood using [Scarb](https://docs.swmansion.com/scarb).
