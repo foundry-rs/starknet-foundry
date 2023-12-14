@@ -9,7 +9,9 @@ use conversions::IntoConv;
 use num_bigint::BigUint;
 use starknet_api::core::ContractAddress;
 use std::str::FromStr;
+use tempfile::TempDir;
 use test_case::test_case;
+use tokio::runtime::Runtime;
 
 const CAIRO0_TESTER_ADDRESS: &str =
     "1825832089891106126806210124294467331434544162488231781791271899226056323189";
@@ -17,7 +19,11 @@ const CAIRO0_TESTER_ADDRESS: &str =
 #[test_case("return_caller_address"; "when common call")]
 #[test_case("return_proxied_caller_address"; "when library call")]
 fn prank_cairo0_contract(selector: &str) {
-    let mut cached_fork_state = create_fork_cached_state();
+    let rt = Runtime::new().unwrap();
+    let cache_dir = TempDir::new().unwrap();
+
+    let mut cached_fork_state =
+        rt.block_on(create_fork_cached_state(cache_dir.path().to_str().unwrap()));
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_fork_state);
 
     let contract_address = Felt252::from(BigUint::from_str(CAIRO0_TESTER_ADDRESS).unwrap()).into_();
@@ -76,7 +82,11 @@ fn prank_cairo0_contract(selector: &str) {
 #[test_case("return_block_number"; "when common call")]
 #[test_case("return_proxied_block_number"; "when library call")]
 fn roll_cairo0_contract(selector: &str) {
-    let mut cached_fork_state = create_fork_cached_state();
+    let rt = Runtime::new().unwrap();
+    let cache_dir = TempDir::new().unwrap();
+
+    let mut cached_fork_state =
+        rt.block_on(create_fork_cached_state(cache_dir.path().to_str().unwrap()));
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_fork_state);
 
     let contract_address = Felt252::from(BigUint::from_str(CAIRO0_TESTER_ADDRESS).unwrap()).into_();
@@ -132,7 +142,11 @@ fn roll_cairo0_contract(selector: &str) {
 #[test_case("return_block_timestamp"; "when common call")]
 #[test_case("return_proxied_block_timestamp"; "when library call")]
 fn warp_cairo0_contract(selector: &str) {
-    let mut cached_fork_state = create_fork_cached_state();
+    let rt = Runtime::new().unwrap();
+    let cache_dir = TempDir::new().unwrap();
+
+    let mut cached_fork_state =
+        rt.block_on(create_fork_cached_state(cache_dir.path().to_str().unwrap()));
     let (mut blockifier_state, mut cheatnet_state) = create_cheatnet_state(&mut cached_fork_state);
 
     let contract_address = Felt252::from(BigUint::from_str(CAIRO0_TESTER_ADDRESS).unwrap()).into_();
