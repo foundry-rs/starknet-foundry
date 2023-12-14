@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::path::PathBuf;
 
 use crate::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     CallContractFailure, CallContractResult, UsedResources,
@@ -20,7 +19,6 @@ use conversions::felt252::FromShortString;
 use conversions::{FromConv, IntoConv};
 use num_traits::{One, ToPrimitive};
 use scarb_artifacts::StarknetContractArtifacts;
-use serde::Deserialize;
 
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use starknet_api::core::ContractAddress;
@@ -531,29 +529,6 @@ fn deserialize_cheat_target(inputs: &[Felt252]) -> (CheatTarget, usize) {
         }
         _ => unreachable!("Invalid CheatTarget variant"),
     }
-}
-
-#[allow(dead_code)]
-#[derive(Deserialize)]
-struct ScarbStarknetArtifacts {
-    version: u32,
-    contracts: Vec<ScarbStarknetContract>,
-}
-
-#[allow(dead_code)]
-#[derive(Deserialize)]
-struct ScarbStarknetContract {
-    id: String,
-    package_name: String,
-    contract_name: String,
-    artifacts: ScarbStarknetContractArtifact,
-}
-
-#[allow(dead_code)]
-#[derive(Deserialize)]
-struct ScarbStarknetContractArtifact {
-    sierra: PathBuf,
-    casm: Option<PathBuf>,
 }
 
 fn cheatcode_panic_result(panic_data: Vec<Felt252>) -> Vec<Felt252> {
