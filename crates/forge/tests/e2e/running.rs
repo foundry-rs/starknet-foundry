@@ -145,12 +145,13 @@ fn with_failing_scarb_build() {
         ))
         .unwrap();
 
-    let snapbox = test_runner();
-
-    let result = snapbox.current_dir(&temp).assert().code(2);
-
-    let stdout = String::from_utf8_lossy(&result.get_output().stdout);
-    assert!(stdout.contains("Failed to build contracts with Scarb"));
+    test_runner()
+        .current_dir(&temp)
+        .assert()
+        .code(2)
+        .stdout_eq(indoc! {r"
+            [ERROR] Failed to build test artifacts with Scarb
+        "});
 }
 
 #[test]
