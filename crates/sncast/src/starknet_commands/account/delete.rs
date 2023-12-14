@@ -25,8 +25,8 @@ pub struct Delete {
     pub network: Option<String>,
 
     /// Assume "yes" as answer to confirmation prompt and run non-interactively
-    #[clap(long, num_args = 1, default_value = "false")]
-    pub yes: Option<bool>,
+    #[clap(long, default_value = "false")]
+    pub yes: bool,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -36,7 +36,7 @@ pub fn delete(
     path_to_scarb_toml: &Option<Utf8PathBuf>,
     delete_profile: Option<bool>,
     network_name: &str,
-    yes: Option<bool>,
+    yes: bool,
 ) -> Result<AccountDeleteResponse> {
     let contents = std::fs::read_to_string(path.clone()).context("Couldn't read accounts file")?;
     let items: serde_json::Value = serde_json::from_str(&contents)
@@ -53,7 +53,7 @@ pub fn delete(
         serde_json::from_str(&contents).expect("failed to read file { path }");
 
     // Let's ask confirmation
-    if yes != Some(true) {
+    if !yes {
         let prompt_text =
             format!("Do you want to remove the account {name} deployed to network {network_name} from local file {path}? (Y/n)");
         let input: String = prompt(prompt_text)?;

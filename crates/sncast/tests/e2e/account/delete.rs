@@ -274,7 +274,6 @@ pub async fn test_happy_case_with_yes_flag() {
         "--network",
         "alpha-goerli2",
         "--yes",
-        "true",
     ];
 
     // Run test with no additional user input
