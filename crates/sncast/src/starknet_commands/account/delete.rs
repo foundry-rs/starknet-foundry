@@ -33,12 +33,12 @@ pub fn delete(
     delete_profile: Option<bool>,
     network_name: &str,
 ) -> Result<AccountDeleteResponse> {
-    let contents = std::fs::read_to_string(path.clone()).context("Couldn't read accounts file")?;
+    let contents = std::fs::read_to_string(path.clone()).context("Failed to read accounts file")?;
     let items: serde_json::Value = serde_json::from_str(&contents)
         .map_err(|_| anyhow!("Failed to parse accounts file at {path}"))?;
 
     if items[&network_name].is_null() {
-        bail!("No accounts defined for network {}", network_name);
+        bail!("No accounts defined for network = {network_name}");
     }
     if items[&network_name][&name].is_null() {
         bail!("Account with name {name} does not exist")
