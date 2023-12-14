@@ -200,7 +200,7 @@ Failures:
     tests::call_and_invoke
 ```
 
-### Pranking the constructor
+### Pranking the Constructor
 
 Most of the cheatcodes like `prank`, `mock_call`, `warp`, `roll`, `elect` do work in the constructor of the contracts.
 
