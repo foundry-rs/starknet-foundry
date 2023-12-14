@@ -7,62 +7,63 @@ edition.workspace = true
 
 [dependencies]
 anyhow.workspace = true
+ark-ff = "0.4.0-alpha.7"
+ark-secp256k1 = "0.4.0"
+ark-secp256r1 = "0.4.0"
+ark-std = "0.4.0"
 assert_fs.workspace = true
 blockifier.workspace = true
-camino.workspace = true
-include_dir.workspace = true
-indoc.workspace = true
-starknet_api.workspace = true
-tempfile.workspace = true
-rayon.workspace = true
-cheatnet = { path = "../cheatnet" }
-conversions = { path = "../conversions" }
-scarb-artifacts = { path = "../scarb-artifacts" }
-forge_runner = { path = "../forge-runner" }
-cairo-lang-runner.workspace = true
+cairo-felt.workspace = true
 cairo-lang-casm.workspace = true
-cairo-lang-sierra-to-casm.workspace = true
-cairo-lang-sierra.workspace = true
-cairo-lang-utils.workspace = true
-cairo-lang-starknet.workspace = true
 cairo-lang-compiler.workspace = true
 cairo-lang-filesystem.workspace = true
+cairo-lang-runner.workspace = true
+cairo-lang-sierra-to-casm.workspace = true
+cairo-lang-sierra.workspace = true
+cairo-lang-starknet.workspace = true
 cairo-lang-test-plugin.workspace = true
-cairo-felt.workspace = true
-itertools.workspace = true
-regex.workspace = true
-serde_json.workspace = true
-serde.workspace = true
-starknet.workspace = true
-thiserror.workspace = true
-num-traits.workspace = true
-once_cell.workspace = true
-walkdir.workspace = true
-num-bigint.workspace = true
+cairo-lang-utils.workspace = true
+cairo-vm = "0.8.1"
+camino.workspace = true
+cheatnet = { path = "../cheatnet" }
 clap.workspace = true
 console.workspace = true
+conversions = { path = "../conversions" }
+flatten-serde-json.workspace = true
+forge_runner = { path = "../forge-runner" }
+futures.workspace = true
+include_dir.workspace = true
+indoc.workspace = true
+itertools.workspace = true
+num-bigint.workspace = true
+num-integer.workspace = true
+num-traits.workspace = true
+once_cell.workspace = true
+openssl = { version = "0.10", features = ["vendored"] }
+parity-scale-codec = "3.5.0"
+parity-scale-codec-derive = "3.6.5"
 rand.workspace = true
-which.workspace = true
+rayon.workspace = true
+regex.workspace = true
+scarb-artifacts = { path = "../scarb-artifacts" }
 scarb-metadata.workspace = true
 scarb-ui = "0.1.2"
 schemars = { version = "0.8.12", features = ["preserve_order"] }
-parity-scale-codec = "3.5.0"
-parity-scale-codec-derive = "3.6.5"
-snapbox.workspace = true
-cairo-vm = "0.8.1"
-ark-ff = "0.4.0-alpha.7"
-ark-std = "0.4.0"
-ark-secp256k1 = "0.4.0"
-ark-secp256r1 = "0.4.0"
-openssl = { version = "0.10", features = ["vendored"] }
-toml_edit = "0.20.7"
-flatten-serde-json.workspace = true
+serde.workspace = true
+serde_json.workspace = true
 smol_str.workspace = true
-tokio.workspace = true
+snapbox.workspace = true
+snforge-test-collector-interface.workspace = true
+starknet.workspace = true
+starknet_api.workspace = true
+tempfile.workspace = true
+thiserror.workspace = true
 tokio-util.workspace = true
-futures.workspace = true
-num-integer.workspace = true
+tokio.workspace = true
+toml_edit = "0.20.7"
 url.workspace = true
+walkdir.workspace = true
+which.workspace = true
 
 [lib]
 name = "forge"

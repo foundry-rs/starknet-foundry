@@ -1,7 +1,10 @@
-use crate::expected_result::ExpectedTestResult;
+use cairo_felt::Felt252;
 use cairo_lang_sierra::program::Program;
-use serde::Deserialize;
+use conversions::IntoConv;
+use num_bigint::BigInt;
+use snforge_test_collector_interface::{ExpectedTestResult, FuzzerConfig, RawForkParams};
 use starknet::core::types::BlockId;
+use starknet::core::types::BlockTag::Latest;
 use url::Url;
 
 #[derive(Debug, Clone)]
@@ -26,8 +29,24 @@ pub struct ValidatedForkConfig {
     pub block_id: BlockId,
 }
 
-#[derive(Debug, Clone, PartialEq, Deserialize)]
-pub struct FuzzerConfig {
-    pub fuzzer_runs: u32,
-    pub fuzzer_seed: u64,
+impl TryInto<ValidatedForkConfig> for RawForkParams {
+    type Error = anyhow::Error;
+
+    fn try_into(self) -> Result<ValidatedForkConfig, Self::Error> {
+        let block_id = match self.block_id_type.to_lowercase().as_str() {
+            "number" => BlockId::Number(self.block_id_value.parse().unwrap()),
+            "hash" => {
+                BlockId::Hash(Felt252::from(self.block_id_value.parse::<BigInt>().unwrap()).into_())
+            }
+            "tag" => {
+                assert_eq!(self.block_id_value, "Latest");
+                BlockId::Tag(Latest)
+            }
+            _ => unreachable!(),
+        };
+        Ok(ValidatedForkConfig {
+            url: self.url.parse()?,
+            block_id,
+        })
+    }
 }

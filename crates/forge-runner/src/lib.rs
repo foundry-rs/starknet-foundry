@@ -1,4 +1,4 @@
-use crate::compiled_runnable::{CompiledTestCrateRunnable, FuzzerConfig, TestCaseRunnable};
+use crate::compiled_runnable::{CompiledTestCrateRunnable, TestCaseRunnable};
 use crate::fuzzer::RandomFuzzer;
 use crate::printing::print_test_result;
 use crate::running::{run_fuzz_test, run_test};
@@ -6,6 +6,7 @@ use crate::sierra_casm_runner::SierraCasmRunner;
 use crate::test_case_summary::{GasStatistics, TestCaseSummary};
 use crate::test_crate_summary::TestCrateSummary;
 use anyhow::{anyhow, Context, Result};
+use snforge_test_collector_interface::FuzzerConfig;
 
 use cairo_lang_sierra::ids::ConcreteTypeId;
 use cairo_lang_sierra::program::Function;
@@ -27,7 +28,6 @@ use tokio::sync::mpsc::{channel, Sender};
 use tokio::task::JoinHandle;
 
 pub mod compiled_runnable;
-pub mod expected_result;
 pub mod test_case_summary;
 pub mod test_crate_summary;
 
