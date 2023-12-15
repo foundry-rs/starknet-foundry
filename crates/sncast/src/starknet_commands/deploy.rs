@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Result};
 use clap::Args;
 use starknet::accounts::AccountError::Provider;
-use starknet::accounts::{Account, AccountDeployment, ConnectedAccount, Execution, SingleOwnerAccount};
+use starknet::accounts::{Account, ConnectedAccount, SingleOwnerAccount};
 use starknet::contract::ContractFactory;
 use starknet::core::types::FieldElement;
 use starknet::core::utils::get_udc_deployed_address;

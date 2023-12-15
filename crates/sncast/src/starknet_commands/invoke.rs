@@ -4,9 +4,7 @@ use clap::Args;
 use sncast::helpers::response_structs::InvokeResponse;
 use sncast::{apply_optional, handle_rpc_error, handle_wait_for_tx, WaitForTx};
 use starknet::accounts::AccountError::Provider;
-use starknet::accounts::{
-    Account, Call, ConnectedAccount, Execution, SingleOwnerAccount,
-};
+use starknet::accounts::{Account, Call, ConnectedAccount, Execution, SingleOwnerAccount};
 use starknet::core::types::FieldElement;
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
