@@ -13,7 +13,7 @@ use starknet_api::state::StorageKey;
 /// * `blockifier_state`: Blockifier state reader
 /// * `target`: The address of the contract we want to target
 /// * `storage_address`: Beginning of the storage of the variable
-/// * `size`: How many felts we want to read from the calculated offset (target + storage_address)
+/// * `size`: How many felts we want to read from the calculated offset (`target` + `storage_address`)
 ///
 /// returns: Result<Vec<Felt252>, Error> - a result containing the read data  
 ///
@@ -41,7 +41,7 @@ pub fn load(
 
 /// The address after hashing with pedersen, needs to be taken with a specific modulo value (2^251 - 256)
 /// For details see:
-/// https://docs.starknet.io/documentation/architecture_and_concepts/Smart_Contracts/contract-storage
+/// <https://docs.starknet.io/documentation/architecture_and_concepts/Smart_Contracts/contract-storage>
 #[must_use]
 pub fn map_storage_address(address: FieldElement) -> FieldElement {
     let modulus = Felt252::from(2).pow(251) - Felt252::from(256);
