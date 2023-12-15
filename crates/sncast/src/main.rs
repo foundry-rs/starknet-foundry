@@ -4,7 +4,7 @@ use crate::starknet_commands::{
     account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
     script::Script,
 };
-use anyhow::{anyhow, Result};
+use anyhow::{Context, Result};
 
 use crate::starknet_commands::declare::BuildConfig;
 use camino::Utf8PathBuf;
@@ -124,7 +124,7 @@ fn main() -> Result<()> {
     update_cast_config(&mut config, &cli);
 
     let provider = get_provider(&config.rpc_url)?;
-    let runtime = Runtime::new().expect("Could not instantiate Runtime");
+    let runtime = Runtime::new().expect("Failed to instantiate Runtime");
 
     if let Commands::Script(script) = cli.command {
         let mut result = starknet_commands::script::run(
@@ -292,7 +292,7 @@ async fn run_async_command(
                 let account = if config.keystore.is_none() {
                     create
                         .name
-                        .ok_or_else(|| anyhow!("required argument --name not provided"))?
+                        .context("Required argument `--name` not provided")?
                 } else {
                     config.account
                 };
@@ -321,7 +321,7 @@ async fn run_async_command(
                 let account = if config.keystore.is_none() {
                     deploy
                         .name
-                        .ok_or_else(|| anyhow!("required argument --name not provided"))?
+                        .context("Required argument `--name` not provided")?
                 } else {
                     config.account
                 };

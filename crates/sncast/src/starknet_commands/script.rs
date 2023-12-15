@@ -424,11 +424,11 @@ pub fn run(
 
     let sierra_program = serde_json::from_str::<VersionedProgram>(
         &fs::read_to_string(path.clone())
-            .with_context(|| format!("failed to read Sierra file: {path}"))?,
+            .with_context(|| format!("Failed to read Sierra file at path = {path}"))?,
     )
-    .with_context(|| format!("failed to deserialize Sierra program: {path}"))?
+    .with_context(|| format!("Failed to deserialize Sierra program at path = {path}"))?
     .into_v1()
-    .with_context(|| format!("failed to load Sierra program: {path}"))?
+    .with_context(|| format!("Failed to load Sierra program at path = {path}"))?
     .program;
 
     let runner = SierraCasmRunner::new(
@@ -436,7 +436,7 @@ pub fn run(
         Some(MetadataComputationConfig::default()),
         OrderedHashMap::default(),
     )
-    .with_context(|| "Failed setting up runner.")?;
+    .with_context(|| "Failed to set up runner")?;
 
     let name_suffix = module_name.to_string() + "::main";
     let func = runner.find_function(name_suffix.as_str())?;
@@ -482,15 +482,14 @@ pub fn run(
 }
 
 fn compile_script(path_to_scarb_toml: Option<Utf8PathBuf>) -> Result<Utf8PathBuf> {
-    let scripts_manifest_path = match path_to_scarb_toml {
-        Some(path) => path,
-        None => get_scarb_manifest()
-            .context("Failed to obtain manifest path from scarb")
-            .unwrap(),
-    };
+    let scripts_manifest_path = path_to_scarb_toml.unwrap_or_else(|| {
+        get_scarb_manifest()
+            .context("Failed to retrieve manifest path from scarb")
+            .unwrap()
+    });
     ensure!(
         scripts_manifest_path.exists(),
-        "Path {scripts_manifest_path} does not exist"
+        "The path = {scripts_manifest_path} does not exist"
     );
 
     ScarbCommand::new_with_stdio()
@@ -511,7 +510,7 @@ fn compile_script(path_to_scarb_toml: Option<Utf8PathBuf>) -> Result<Utf8PathBuf
 
     ensure!(
         path.exists(),
-        "package has not been compiled, file does not exist: {path}"
+        "The package has not been compiled, the file at path = {path} does not exist"
     );
 
     Ok(path)

@@ -113,23 +113,32 @@ pub fn get_provider(url: &str) -> Result<JsonRpcClient<HttpTransport>> {
 }
 
 pub async fn get_chain_id(provider: &JsonRpcClient<HttpTransport>) -> Result<FieldElement> {
-    provider.chain_id().await.context("Couldn't fetch chain_id")
+    provider
+        .chain_id()
+        .await
+        .context("Failed to fetch chain_id")
 }
 
 fn get_account_info(name: &str, chain_id: FieldElement, path: &Utf8PathBuf) -> Result<Account> {
     raise_if_empty(name, "Account name")?;
     let file_content =
-        fs::read_to_string(path).with_context(|| format!("Cannot read a file {path}"))?;
+        fs::read_to_string(path).with_context(|| format!("Failed to read a file = {path}"))?;
     let accounts: HashMap<String, HashMap<String, Account>> =
         serde_json::from_str(&file_content)
-            .with_context(|| format!("Cannot parse file {path} to JSON"))?;
+            .with_context(|| format!("Failed to parse file = {path} to JSON"))?;
     let network_name = chain_id_to_network_name(chain_id);
     let account = accounts
         .get(&network_name)
         .and_then(|accounts_map| accounts_map.get(name))
         .cloned();
 
-    account.ok_or_else(|| anyhow!("Account {} not found under network {}", name, network_name))
+    account.ok_or_else(|| {
+        anyhow!(
+            "Account = {} not found under network = {}",
+            name,
+            network_name
+        )
+    })
 }
 
 pub fn get_keystore_password(env_var: &str) -> std::io::Result<String> {
@@ -170,11 +179,11 @@ pub async fn get_nonce(
 ) -> Result<FieldElement> {
     Ok(provider
         .get_nonce(
-            get_block_id(block_id).expect("Could not obtain block id"),
+            get_block_id(block_id).expect("Failed to obtain block id"),
             address,
         )
         .await
-        .expect("Could not get nonce"))
+        .expect("Failed to get a nonce"))
 }
 
 pub async fn get_account<'a>(
@@ -199,14 +208,14 @@ fn get_account_from_keystore<'a>(
     account: &str,
 ) -> Result<SingleOwnerAccount<&'a JsonRpcClient<HttpTransport>, LocalWallet>> {
     if !keystore_path.exists() {
-        bail!("keystore file does not exist");
+        bail!("Failed to find keystore file");
     }
     if account.is_empty() {
-        bail!("Path passed with --account cannot be empty!");
+        bail!("Passed empty path for `--account`");
     }
     let path_to_account = Utf8PathBuf::from(account);
     if !path_to_account.exists() {
-        bail!("account file does not exist; when using --keystore, --account argument should be a path to the starkli JSON account file");
+        bail!("File containing the account does not exist: When using `--keystore` argument, the `--account` argument should be a path to the starkli JSON account file");
     }
 
     let signer = LocalWallet::from(SigningKey::from_keystore(
@@ -215,9 +224,9 @@ fn get_account_from_keystore<'a>(
     )?);
 
     let file_content = fs::read_to_string(path_to_account.clone())
-        .with_context(|| format!("Cannot read a file {}", &path_to_account))?;
+        .with_context(|| format!("Failed to read a file = {}", &path_to_account))?;
     let account_info: serde_json::Value = serde_json::from_str(&file_content)
-        .with_context(|| format!("Cannot parse file {} to JSON", &path_to_account))?;
+        .with_context(|| format!("Failed to parse file = {} to JSON", &path_to_account))?;
     let address = FieldElement::from_hex_be(
         account_info
             .get("deployment")
@@ -246,14 +255,14 @@ fn get_account_from_accounts_file<'a>(
     let signer = LocalWallet::from(SigningKey::from_secret_scalar(
         FieldElement::from_hex_be(&account_info.private_key).with_context(|| {
             format!(
-                "Failed to convert private key: {} to FieldElement",
+                "Failed to convert private key = {} to FieldElement",
                 &account_info.private_key
             )
         })?,
     ));
     let address = FieldElement::from_hex_be(&account_info.address).with_context(|| {
         format!(
-            "Failed to convert account address: {} to FieldElement",
+            "Failed to convert account address = {} to FieldElement",
             &account_info.address
         )
     })?;
@@ -276,8 +285,7 @@ pub fn get_block_id(value: &str) -> Result<BlockId> {
         _ => match value.parse::<u64>() {
             Ok(value) => Ok(BlockId::Number(value)),
             Err(_) => Err(anyhow::anyhow!(
-                "No such block id {}! Possible values are pending, latest, block hash (hex) and block number (u64).",
-                value
+                "Incorrect value passed for block_id = {value}. Possible values are pending, latest, block hash (hex) and block number (u64)"
             )),
         },
     }
@@ -289,7 +297,7 @@ pub async fn wait_for_tx(
     timeout: u16,
     retry_interval: u8,
 ) -> Result<&str> {
-    println!("Transaction hash: {tx_hash:#x}");
+    println!("Transaction hash = {tx_hash:#x}");
 
     if retry_interval == 0 || timeout == 0 || u16::from(retry_interval) > timeout {
         return Err(anyhow!("Invalid values for retry_interval and/or timeout!"));
@@ -302,7 +310,7 @@ pub async fn wait_for_tx(
                     return Ok("Transaction accepted");
                 }
                 ExecutionResult::Reverted { reason } => {
-                    return Err(anyhow!("Transaction has been reverted: {}", reason));
+                    return Err(anyhow!("Transaction has been reverted = {reason}"));
                 }
             },
             Err(ProviderError::StarknetError(StarknetErrorWithMessage {
@@ -319,7 +327,7 @@ pub async fn wait_for_tx(
     }
 
     Err(anyhow!(
-        "Could not get transaction with hash: {tx_hash:#x}. Transaction rejected, not received or sncast timed out."
+        "Could not get transaction with hash = {tx_hash:#x}. Transaction rejected, not received or sncast timed out"
     ))
 }
 
@@ -424,7 +432,7 @@ pub fn print_command_result<T: Serialize>(
             output.extend(
                 json_value
                     .as_object()
-                    .expect("Invalid JSON value")
+                    .expect("Failed to parse JSON value")
                     .iter()
                     .filter_map(|(k, v)| value_format.format_json_value(v).map(|v| (k.as_str(), v)))
                     .collect::<Vec<(&str, String)>>(),
@@ -463,8 +471,8 @@ pub fn raise_if_empty(value: &str, value_name: &str) -> Result<()> {
 
 pub fn account_file_exists(accounts_file_path: &Utf8PathBuf) -> Result<()> {
     if !accounts_file_path.exists() {
-        bail! {"Accounts file {} does not exist! If you do not have an account create one with `account create` command \
-        or if you're using a custom accounts file, make sure to supply correct path to it with --accounts-file argument.", accounts_file_path}
+        bail! {"Accounts file = {} does not exist! If you do not have an account create one with `account create` command \
+        or if you're using a custom accounts file, make sure to supply correct path to it with `--accounts-file` argument.", accounts_file_path}
     }
     Ok(())
 }
@@ -603,7 +611,7 @@ mod tests {
             &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
             &mock_provider,
             FieldElement::from_hex_be("0x435553544f4d5f434841494e5f4944")
-                .expect("Should convert from hex"),
+                .expect("Failed to convert chain id from hex"),
         );
         let err = account.unwrap_err();
         assert!(err

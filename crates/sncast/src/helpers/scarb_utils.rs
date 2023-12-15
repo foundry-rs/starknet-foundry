@@ -143,13 +143,13 @@ pub fn get_scarb_manifest_for(dir: &Utf8Path) -> Result<Utf8PathBuf> {
         .arg("manifest-path")
         .command()
         .output()
-        .context("Failed to execute scarb manifest-path command")?;
+        .context("Failed to execute the `scarb manifest-path` command")?;
 
     let output_str = String::from_utf8(output.stdout)
-        .context("Invalid output of scarb manifest-path command")?;
+        .context("`scarb manifest-path` command failed to provide valid output")?;
 
     let path = Utf8PathBuf::from_str(output_str.trim())
-        .context("Scarb manifest-path returned invalid path")?;
+        .context("`scarb manifest-path` failed. Invalid location returned")?;
 
     Ok(path)
 }
@@ -168,12 +168,12 @@ fn execute_scarb_metadata_command(
     command: &scarb_metadata::MetadataCommand,
 ) -> Result<scarb_metadata::Metadata> {
     command.exec().context(format!(
-        "Failed to read Scarb.toml manifest file, not found in current nor parent directories, {}",
+        "Failed to read the `Scarb.toml` manifest file. Doesn't exist in the current or parent directories = {}",
         env::current_dir()
-            .unwrap()
+            .expect("Failed to access the current directory")
             .into_os_string()
             .into_string()
-            .unwrap()
+            .expect("Failed to convert current directory into a string")
     ))
 }
 
@@ -195,15 +195,14 @@ pub fn verify_or_determine_scarb_manifest_path(
     path_to_scarb_toml: &Option<Utf8PathBuf>,
 ) -> Option<Utf8PathBuf> {
     if let Some(path) = path_to_scarb_toml {
-        assert!(path.exists(), "{path} file does not exist!");
+        assert!(path.exists(), "Failed to locate file at path = {path}");
     }
 
-    let manifest_path = match path_to_scarb_toml.clone() {
-        Some(path) => path,
-        None => get_scarb_manifest()
+    let manifest_path = path_to_scarb_toml.clone().unwrap_or_else(|| {
+        get_scarb_manifest()
             .context("Failed to obtain manifest path from scarb")
-            .unwrap(),
-    };
+            .unwrap()
+    });
 
     if !manifest_path.exists() {
         return None;
@@ -224,7 +223,7 @@ pub fn get_package_metadata<'a>(
         .iter()
         .find(|package| package.manifest_path == manifest_path)
         .ok_or(anyhow!(
-            "Path {} not found in scarb metadata",
+            "Path = {} not found in scarb metadata",
             manifest_path.display()
         ))?;
     Ok(package)
@@ -237,7 +236,7 @@ pub fn parse_scarb_config(
     let manifest_path = match path.clone() {
         Some(path) => {
             if !(path.exists()) {
-                bail!("{path} file does not exist!");
+                bail!("Failed to locate file at path = {path}");
             }
             path
         }

@@ -1,7 +1,7 @@
 use crate::starknet_commands::account::{
     add_created_profile_to_configuration, prepare_account_json, write_account_to_accounts_file,
 };
-use anyhow::{anyhow, bail, Result};
+use anyhow::{bail, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
 use serde_json::json;
@@ -62,19 +62,19 @@ pub async fn create(
     let address = parse_number(
         account_json["address"]
             .as_str()
-            .ok_or_else(|| anyhow!("Invalid address"))?,
+            .context("Invalid address")?,
     )?;
 
     if let Some(keystore) = keystore.clone() {
         let account_path = Utf8PathBuf::from(&account);
         if account_path == Utf8PathBuf::default() {
-            bail!("--account must be passed and be a path when using --keystore");
+            bail!("Argument `--account` must be passed and be a path when using `--keystore`");
         }
 
         let private_key = parse_number(
             account_json["private_key"]
                 .as_str()
-                .ok_or_else(|| anyhow!("Invalid private_key"))?,
+                .context("Invalid private_key")?,
         )?;
         create_to_keystore(private_key, salt, class_hash, &keystore, &account_path)?;
     } else {
