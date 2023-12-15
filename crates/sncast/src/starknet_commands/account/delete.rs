@@ -50,7 +50,7 @@ pub fn delete(
     }
 
     let mut items: Map<String, serde_json::Value> =
-        serde_json::from_str(&contents).expect("Failed to read file { path }");
+        serde_json::from_str(&contents).unwrap_or_else(|_| panic!("Failed to read file {path}"));
 
     // Let's ask confirmation
     if !yes {
