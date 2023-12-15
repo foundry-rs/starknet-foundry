@@ -12,6 +12,7 @@ cairo-lang-starknet.workspace = true
 cairo-lang-casm.workspace = true
 serde_json.workspace = true
 serde.workspace = true
+test-case.workspace = true
 
 [lib]
 name = "sierra_casm"

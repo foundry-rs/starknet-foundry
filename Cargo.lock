@@ -5341,6 +5341,7 @@ dependencies = [
  "cairo-lang-starknet 2.4.0",
  "serde",
  "serde_json",
+ "test-case",
 ]
 
 [[package]]
