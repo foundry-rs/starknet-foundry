@@ -30,7 +30,7 @@ pub async fn declare_contract(account: &str, path: &str, shortname: &str) -> Fie
         account,
         &Utf8PathBuf::from(ACCOUNT_FILE_PATH),
         &provider,
-        &Utf8PathBuf::default(),
+        None,
     )
     .await
     .expect("Could not get the account");
@@ -77,7 +77,7 @@ pub async fn declare_deploy_contract(account: &str, path: &str, shortname: &str)
         account,
         &Utf8PathBuf::from(ACCOUNT_FILE_PATH),
         &provider,
-        &Utf8PathBuf::default(),
+        None,
     )
     .await
     .expect("Could not get the account");
@@ -104,7 +104,7 @@ pub async fn invoke_map_contract(key: &str, value: &str, account: &str, contract
         account,
         &Utf8PathBuf::from(ACCOUNT_FILE_PATH),
         &provider,
-        &Utf8PathBuf::default(),
+        None,
     )
     .await
     .expect("Could not get the account");
