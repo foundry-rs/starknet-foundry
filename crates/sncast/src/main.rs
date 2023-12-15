@@ -4,8 +4,9 @@ use crate::starknet_commands::{
     account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
     script::Script,
 };
-use anyhow::{anyhow, Result};
+use anyhow::{Context, Result};
 
+use crate::starknet_commands::declare::BuildConfig;
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
 use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTENTS};
@@ -117,7 +118,7 @@ fn main() -> Result<()> {
     update_cast_config(&mut config, &cli);
 
     let provider = get_provider(&config.rpc_url)?;
-    let runtime = Runtime::new().expect("Could not instantiate Runtime");
+    let runtime = Runtime::new().expect("Failed to instantiate Runtime");
 
     if let Commands::Script(script) = cli.command {
         let mut result = starknet_commands::script::run(
@@ -144,7 +145,7 @@ fn main() -> Result<()> {
 #[allow(clippy::too_many_lines)]
 async fn run_async_command(
     cli: Cli,
-    mut config: CastConfig,
+    config: CastConfig,
     provider: JsonRpcClient<HttpTransport>,
     numbers_format: NumbersFormat,
     output_format: OutputFormat,
@@ -154,21 +155,25 @@ async fn run_async_command(
         timeout: config.wait_timeout,
         retry_interval: config.wait_retry_interval,
     };
+    let build_config = BuildConfig {
+        scarb_toml_path: cli.path_to_scarb_toml.clone(),
+        json: cli.json,
+    };
     match cli.command {
         Commands::Declare(declare) => {
             let account = get_account(
                 &config.account,
                 &config.accounts_file,
                 &provider,
-                &config.keystore,
+                config.keystore,
             )
             .await?;
             let mut result = starknet_commands::declare::declare(
                 &declare.contract,
                 declare.max_fee,
                 &account,
-                &cli.path_to_scarb_toml,
                 declare.nonce,
+                build_config,
                 wait_config,
             )
             .await;
@@ -181,7 +186,7 @@ async fn run_async_command(
                 &config.account,
                 &config.accounts_file,
                 &provider,
-                &config.keystore,
+                config.keystore,
             )
             .await?;
             let mut result = starknet_commands::deploy::deploy(
@@ -219,7 +224,7 @@ async fn run_async_command(
                 &config.account,
                 &config.accounts_file,
                 &provider,
-                &config.keystore,
+                config.keystore,
             )
             .await?;
             let mut result = starknet_commands::invoke::invoke(
@@ -257,7 +262,7 @@ async fn run_async_command(
                         &config.account,
                         &config.accounts_file,
                         &provider,
-                        &config.keystore,
+                        config.keystore,
                     )
                     .await?;
                     let mut result = starknet_commands::multicall::run::run(
@@ -280,10 +285,9 @@ async fn run_async_command(
         }
         Commands::Account(account) => match account.command {
             account::Commands::Add(add) => {
-                config.account = add.name.clone();
                 let mut result = starknet_commands::account::add::add(
                     &config.rpc_url,
-                    &config.account,
+                    &add.name.clone(),
                     &config.accounts_file,
                     &cli.path_to_scarb_toml,
                     &provider,
@@ -296,16 +300,18 @@ async fn run_async_command(
             }
             account::Commands::Create(create) => {
                 let chain_id = get_chain_id(&provider).await?;
-                if config.keystore == Utf8PathBuf::default() {
-                    config.account = create
+                let account = if config.keystore.is_none() {
+                    create
                         .name
-                        .ok_or_else(|| anyhow!("required argument --name not provided"))?;
-                }
+                        .context("Required argument `--name` not provided")?
+                } else {
+                    config.account
+                };
                 let mut result = starknet_commands::account::create::create(
                     &config.rpc_url,
-                    &config.account,
+                    &account,
                     &config.accounts_file,
-                    &config.keystore,
+                    config.keystore,
                     &provider,
                     cli.path_to_scarb_toml,
                     chain_id,
@@ -325,19 +331,20 @@ async fn run_async_command(
             }
             account::Commands::Deploy(deploy) => {
                 let chain_id = get_chain_id(&provider).await?;
-                let keystore_path =
-                    Some(config.keystore.clone()).filter(|p| *p != Utf8PathBuf::default());
+                let keystore_path = config.keystore.clone();
                 let account_path = Some(Utf8PathBuf::from(config.account.clone()))
                     .filter(|p| *p != String::default());
-                if config.keystore == Utf8PathBuf::default() {
-                    config.account = deploy
+                let account = if config.keystore.is_none() {
+                    deploy
                         .name
-                        .ok_or_else(|| anyhow!("required argument --name not provided"))?;
-                }
+                        .context("Required argument `--name` not provided")?
+                } else {
+                    config.account
+                };
                 let mut result = starknet_commands::account::deploy::deploy(
                     &provider,
                     config.accounts_file,
-                    config.account,
+                    account,
                     chain_id,
                     deploy.max_fee,
                     wait_config,
@@ -356,20 +363,18 @@ async fn run_async_command(
                 Ok(())
             }
             account::Commands::Delete(delete) => {
-                config.account = delete
-                    .name
-                    .ok_or_else(|| anyhow!("required argument --name not provided"))?;
                 let network_name = match delete.network {
                     Some(network) => network,
                     None => chain_id_to_network_name(get_chain_id(&provider).await?),
                 };
 
                 let mut result = starknet_commands::account::delete::delete(
-                    &config.account,
+                    &delete.name,
                     &config.accounts_file,
                     &cli.path_to_scarb_toml,
                     delete.delete_profile,
                     &network_name,
+                    delete.yes,
                 );
 
                 print_command_result(
@@ -405,7 +410,7 @@ fn update_cast_config(config: &mut CastConfig, cli: &Cli) {
 
     config.rpc_url = clone_or_else!(cli.rpc_url, config.rpc_url);
     config.account = clone_or_else!(cli.account, config.account);
-    config.keystore = clone_or_else!(cli.keystore, config.keystore);
+    config.keystore = cli.keystore.clone().or(config.keystore.clone());
 
     if config.accounts_file == Utf8PathBuf::default() {
         config.accounts_file = Utf8PathBuf::from(DEFAULT_ACCOUNTS_FILE);

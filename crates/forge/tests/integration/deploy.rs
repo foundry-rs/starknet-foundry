@@ -14,7 +14,7 @@ fn error_handling() {
         use array::ArrayTrait;
 
         #[test]
-        fn test_deploy_error_handling() {
+        fn error_handling() {
             let contract = declare('PanickingConstructor');
 
             match contract.deploy(@ArrayTrait::new()) {
@@ -40,7 +40,7 @@ fn error_handling() {
 }
 
 #[test]
-fn deploy_syscall() {
+fn deploy_syscall_check() {
     let test = test_case!(
         indoc!(
             r"
@@ -54,7 +54,7 @@ fn deploy_syscall() {
         }
 
         #[test]
-        fn test_deploy_syscall() {
+        fn deploy_syscall_check() {
             let contract = declare('DeployChecker');
             let salt = 1;
             let calldata = array![10];
@@ -66,7 +66,7 @@ fn deploy_syscall() {
             assert(dispatcher.get_balance() == 10, 'balance mismatch');
             assert(dispatcher.get_caller() == test_address(), 'caller mismatch');
 
-            let (contract_address_from_zero, span) = deploy_syscall(contract.class_hash, salt, calldata.span(), true).unwrap();
+            let (contract_address_from_zero, _) = deploy_syscall(contract.class_hash, salt, calldata.span(), true).unwrap();
             assert(contract_address != contract_address_from_zero, 'deploy from zero no effect');
         }
     "

@@ -28,7 +28,7 @@ and more!
 
 ## Examples
 
-### Minimal example (without contract deployment)
+### Minimal Example (Without Contract Deployment)
 
 This example shows how to call an already deployed contract. Please find full example with contract deployment [here](#full-example-with-contract-deployment).
 
@@ -80,7 +80,7 @@ command: script
 status: success
 ```
 
-### Full example (with contract deployment)
+### Full Example (With Contract Deployment)
 
 This example script declares, deploys and interacts with an example [map contract](https://github.com/foundry-rs/starknet-foundry/tree/master/crates/cast/tests/data/contracts/map):
 

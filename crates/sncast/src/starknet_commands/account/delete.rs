@@ -14,7 +14,7 @@ use std::io::Write;
 pub struct Delete {
     /// Name of the account to be deleted
     #[clap(short, long)]
-    pub name: Option<String>,
+    pub name: String,
 
     /// If passed with false, Scarb profile won't be removed
     #[clap(long, num_args = 1, default_value = "true")]
@@ -23,6 +23,10 @@ pub struct Delete {
     /// Network where the account exists; defaults to network of rpc node
     #[clap(long)]
     pub network: Option<String>,
+
+    /// Assume "yes" as answer to confirmation prompt and run non-interactively
+    #[clap(long, default_value = "false")]
+    pub yes: bool,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -32,36 +36,39 @@ pub fn delete(
     path_to_scarb_toml: &Option<Utf8PathBuf>,
     delete_profile: Option<bool>,
     network_name: &str,
+    yes: bool,
 ) -> Result<AccountDeleteResponse> {
-    let contents = std::fs::read_to_string(path.clone()).context("Couldn't read accounts file")?;
+    let contents = std::fs::read_to_string(path.clone()).context("Failed to read accounts file")?;
     let items: serde_json::Value = serde_json::from_str(&contents)
         .map_err(|_| anyhow!("Failed to parse accounts file at {path}"))?;
 
     if items[&network_name].is_null() {
-        bail!("No accounts defined for network {}", network_name);
+        bail!("No accounts defined for network = {network_name}");
     }
     if items[&network_name][&name].is_null() {
         bail!("Account with name {name} does not exist")
     }
 
     let mut items: Map<String, serde_json::Value> =
-        serde_json::from_str(&contents).expect("failed to read file { path }");
+        serde_json::from_str(&contents).expect("Failed to read file { path }");
 
     // Let's ask confirmation
-    let prompt_text =
-        format!("Do you want to remove the account {name} deployed to network {network_name} from local file {path}? (Y/n)");
-    let input: String = prompt(prompt_text)?;
+    if !yes {
+        let prompt_text =
+            format!("Do you want to remove the account {name} deployed to network {network_name} from local file {path}? (Y/n)");
+        let input: String = prompt(prompt_text)?;
 
-    if !input.starts_with('Y') {
-        bail!("Delete aborted");
+        if !input.starts_with('Y') {
+            bail!("Delete aborted");
+        }
     }
 
     // get to the nested object "nested"
     let nested = items
         .get_mut(network_name)
-        .expect("can't find network")
+        .expect("Failed to find network")
         .as_object_mut()
-        .expect("invalid network format");
+        .expect("Failed to convert network");
 
     // now remove the child from there
     nested.remove(name);
