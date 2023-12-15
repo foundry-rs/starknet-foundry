@@ -27,7 +27,7 @@ For contract implementation:
 
 ```rust
 // ...
-#[external(v0)]
+#[abi(embed_v0)]
 impl IContractImpl of IContract<ContractState> {
     #[storage]
     struct Storage {
@@ -87,7 +87,7 @@ impl IOtherContract<TContractState> {
     fn function_not_actually_implemented(self: @TContractState) -> felt252;
 }
 
-#[external(v0)]
+#[abi(embed_v0)]
 impl IContractImpl of IContract<ContractState> {
     fn call_not_actually_implemented(self: @ContractState) -> felt252 {
         // ...

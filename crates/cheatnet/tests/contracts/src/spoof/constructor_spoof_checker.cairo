@@ -17,7 +17,7 @@ mod ConstructorSpoofChecker {
         self.stored_tx_hash.write(tx_hash);
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl IConstructorSpoofChecker of super::IConstructorSpoofChecker<ContractState> {
         fn get_stored_tx_hash(ref self: ContractState) -> felt252 {
             self.stored_tx_hash.read()

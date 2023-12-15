@@ -19,7 +19,7 @@ mod RollCheckerProxy {
     #[storage]
     struct Storage {}
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl IRollCheckerProxy of super::IRollCheckerProxy<ContractState> {
         fn get_roll_checkers_block_number(
             ref self: ContractState, address: ContractAddress
