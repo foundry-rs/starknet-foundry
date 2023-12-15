@@ -49,8 +49,8 @@ pub fn delete(
         bail!("Account with name {name} does not exist")
     }
 
-    let mut items: Map<String, serde_json::Value> =
-        serde_json::from_str(&contents).expect("Failed to read file { path }");
+    let mut items: Map<String, serde_json::Value> = serde_json::from_str(&contents)
+        .unwrap_or_else(|_| panic!("Failed to read file at path = {path}"));
 
     // Let's ask confirmation
     if !yes {
