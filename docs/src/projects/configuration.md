@@ -1,10 +1,10 @@
 # Project Configuration
 
-## Forge
+## `snforge`
 
-### Configuring Forge Settings in `Scarb.toml`
+### Configuring `snforge` Settings in `Scarb.toml`
 
-It is possible to configure forge for all test runs through `Scarb.toml`.
+It is possible to configure `snforge` for all test runs through `Scarb.toml`.
 Instead of passing arguments in the command line, set them directly in the file.
 
 ```toml
@@ -14,7 +14,7 @@ exit_first = true
 # ...
 ```
 
-Forge automatically looks for `Scarb.toml` in the directory you are running the tests in or in any of its parents.
+`snforge` automatically looks for `Scarb.toml` in the directory you are running the tests in or in any of its parents.
 
 ## `sncast`
 

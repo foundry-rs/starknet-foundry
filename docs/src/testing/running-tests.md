@@ -1,6 +1,6 @@
 # Running Tests
 
-To run tests with Forge, simply run the `snforge test` command from the package directory.
+To run tests with `snforge`, simply run the `snforge test` command from the package directory.
 
 ```shell
 $ snforge test
@@ -64,7 +64,7 @@ Failures:
 
 ## Scarb Workspaces Support
 
-Forge supports Scarb Workspaces.
+`snforge` supports Scarb Workspaces.
 To make sure you know how workspaces work,
 check Scarb documentation [here](https://docs.swmansion.com/scarb/docs/reference/workspaces.html).
 

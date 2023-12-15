@@ -132,7 +132,7 @@ PS: Credits to @bllu404 for the help with the new interfaces for cheats!
   - tests in `src` folder now have to be in a module annotated with `#[cfg(test)]`
 - `snforge_std::PrintTrait` will not convert values representing ASCII control characters to strings
 - separated `snforge` to subcommands: `snforge test`, `snforge init` and `snforge clean-cache`. 
-Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/forge.html).
+Read more [here](https://foundry-rs.github.io/starknet-foundry/appendix/snforge.html).
 - `starknet::get_block_info` now returns correct block info in a forked block
 
 ### Cast

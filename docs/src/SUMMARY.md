@@ -39,7 +39,7 @@
 
 # Appendix
 
-* [`snforge` Commands](appendix/forge.md)
+* [`snforge` Commands](appendix/snforge.md)
     * [test](appendix/snforge/test.md)
     * [init](appendix/snforge/init.md)
     * [clean-cache](appendix/snforge/clean-cache.md)

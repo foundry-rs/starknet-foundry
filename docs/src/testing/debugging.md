@@ -62,7 +62,7 @@ original value: [439721161573], converted to a string: [false]
 Tests: 1 passed, 0 failed, 0 skipped, 0 ignored, 0 filtered out
 ```
 
-Forge tries to convert values to strings when possible. In case conversion is not possible,
+`snforge` tries to convert values to strings when possible. In case conversion is not possible,
 just `original value` is printed.
 
 If the parsed value contains ASCII control characters (e.g. 27: `ESC`), it will not be converted to a string.
