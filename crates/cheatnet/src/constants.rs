@@ -46,7 +46,7 @@ pub const TEST_CONTRACT_CLASS_HASH: &str = "0x117";
 pub const STEP_RESOURCE_COST: f64 = 0.01_f64;
 // snforge_std/src/cheatcodes.cairo::test_address
 pub const TEST_ADDRESS: &str = "0x01724987234973219347210837402";
-pub const DEFAULT_MAX_STEPS: u32 = 3_000_000;
+pub const DEFAULT_MAX_TX_STEPS: u32 = 3_000_000;
 // HOW TO FIND:
 // 1. https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/fee-mechanism/#general_case
 // 2. src/starkware/cairo/lang/instances.py::starknet_with_keccak_instance
@@ -93,8 +93,8 @@ pub fn build_block_context(block_info: CheatnetBlockInfo, max_steps: Option<u32>
         block_timestamp: block_info.timestamp,
         sequencer_address: block_info.sequencer_address,
         vm_resource_fee_cost,
-        invoke_tx_max_n_steps: max_steps.unwrap_or(DEFAULT_MAX_STEPS),
-        validate_max_n_steps: max_steps.unwrap_or(DEFAULT_MAX_STEPS),
+        invoke_tx_max_n_steps: max_steps.unwrap_or(DEFAULT_MAX_TX_STEPS),
+        validate_max_n_steps: 1_000_000,
         max_recursion_depth: 50,
         fee_token_addresses: FeeTokenAddresses {
             strk_fee_token_address: ContractAddress(patricia_key!(TEST_ERC20_CONTRACT_ADDRESS)),
