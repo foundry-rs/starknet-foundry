@@ -111,8 +111,7 @@ fn scarb_build_fails(contract_path: &str, accounts_file_path: &str) {
 
     snapbox.assert().stderr_matches(indoc! {r"
         command: declare
-        error: Scarb build returned non-zero exit code: 1[..]
-        ...
+        error: Failed to build contracts with Scarb: `scarb` exited with error
     "});
 }
 

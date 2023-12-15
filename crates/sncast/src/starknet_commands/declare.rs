@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
-use scarb_artifacts::get_contracts_map;
+use scarb_artifacts::{get_contracts_map, ScarbCommand};
 use sncast::helpers::scarb_utils::get_package_metadata;
 use sncast::helpers::{response_structs::DeclareResponse, scarb_utils::get_scarb_manifest};
 use sncast::{apply_optional, handle_rpc_error, handle_wait_for_tx, WaitForTx};
@@ -14,7 +14,6 @@ use starknet::{
     providers::jsonrpc::{HttpTransport, JsonRpcClient},
     signers::LocalWallet,
 };
-use std::process::{Command, Stdio};
 use std::sync::Arc;
 
 #[derive(Args)]
@@ -33,41 +32,32 @@ pub struct Declare {
     pub nonce: Option<FieldElement>,
 }
 
+pub struct BuildConfig {
+    pub scarb_toml_path: Option<Utf8PathBuf>,
+    pub json: bool,
+}
+
 #[allow(clippy::too_many_lines)]
 pub async fn declare(
     contract_name: &str,
     max_fee: Option<FieldElement>,
     account: &SingleOwnerAccount<&JsonRpcClient<HttpTransport>, LocalWallet>,
-    path_to_scarb_toml: &Option<Utf8PathBuf>,
     nonce: Option<FieldElement>,
+    build_config: BuildConfig,
     wait_config: WaitForTx,
 ) -> Result<DeclareResponse> {
     let contract_name: String = contract_name.to_string();
-    let manifest_path = match path_to_scarb_toml.clone() {
+    let manifest_path = match build_config.scarb_toml_path.clone() {
         Some(path) => path,
         None => get_scarb_manifest().context("Failed to obtain manifest path from scarb")?,
     };
 
-    let command_result = Command::new("scarb")
-        .arg("--manifest-path")
-        .arg(&manifest_path)
-        .arg("build")
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .output()
-        .context("Failed to start building contracts with Scarb")?;
-    let result_code = command_result
-        .status
-        .code()
-        .context("Failed to obtain status code from scarb build")?;
-    let result_msg = String::from_utf8(command_result.stdout)?;
-    if result_code != 0 {
-        anyhow::bail!(
-            "Scarb build returned non-zero exit code: {} - error message: {}",
-            result_code,
-            result_msg
-        );
+    let mut cmd = ScarbCommand::new_with_stdio();
+    cmd.arg("build").manifest_path(&manifest_path);
+    if build_config.json {
+        cmd.json();
     }
+    cmd.run().context("Failed to build contracts with Scarb")?;
 
     let metadata = scarb_metadata::MetadataCommand::new()
         .manifest_path(&manifest_path)

@@ -18,4 +18,9 @@ If passed, the account's associated profile won't be removed from Scarb.toml.
 ## `--network`
 Optional.
 
-Network in `accounts-file` associated with the account. By default the network of rpc node.
+Network in `accounts-file` associated with the account. By default, the network of rpc node.
+
+## `--yes`
+Optional.
+
+If passed, assume "yes" as answer to confirmation prompt and run non-interactively
