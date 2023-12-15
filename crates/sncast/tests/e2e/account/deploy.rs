@@ -99,8 +99,8 @@ pub async fn test_happy_case_add_profile() {
 
 #[test_case("{}", "error: No accounts defined for network alpha-goerli" ; "when empty file")]
 #[test_case("{\"alpha-goerli\": {}}", "error: Account with name my_account does not exist" ; "when account name not present")]
-#[test_case("{\"alpha-goerli\": {\"my_account\" : {}}}", "error: Couldn't get private key from accounts file" ; "when private key not present")]
-#[test_case("{\"alpha-goerli\": {\"my_account\" : {\"private_key\": \"0x1\"}}}", "error: Couldn't get salt from accounts file" ; "when salt not present")]
+#[test_case("{\"alpha-goerli\": {\"my_account\" : {}}}", "error: Failed to get private key from accounts file" ; "when private key not present")]
+#[test_case("{\"alpha-goerli\": {\"my_account\" : {\"private_key\": \"0x1\"}}}", "error: Failed to get salt from accounts file" ; "when salt not present")]
 fn test_account_deploy_error(accounts_content: &str, error: &str) {
     let temp_dir = TempDir::new().expect("Unable to create a temporary directory");
 
@@ -209,6 +209,35 @@ pub async fn test_valid_class_hash() {
         "my_account",
         "--max-fee",
         "10000000000000000",
+    ];
+
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(&created_dir)
+        .args(args);
+
+    snapbox.assert().success().stdout_matches(indoc! {r"
+        command: account deploy
+        transaction_hash: [..]
+    "});
+
+    fs::remove_dir_all(created_dir).unwrap();
+}
+
+#[tokio::test]
+pub async fn test_valid_no_max_fee() {
+    let (created_dir, accounts_file) = create_account("11", true).await;
+
+    let args = vec![
+        "--url",
+        URL,
+        "--profile",
+        "my_account",
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "deploy",
+        "--name",
+        "my_account",
     ];
 
     let snapbox = Command::new(cargo_bin!("sncast"))
@@ -390,8 +419,8 @@ pub async fn test_keystore_key_mismatch() {
     _ = fs::remove_file(account_path);
 }
 
-#[test_case("tests/data/keystore/my_key_inexistent.json", "tests/data/keystore/my_account_undeployed.json", "error: Couldn't read keystore file" ; "when inexistent keystore")]
-#[test_case("tests/data/keystore/my_key.json", "tests/data/keystore/my_account_inexistent.json", "error: Couldn't read account file" ; "when inexistent account")]
+#[test_case("tests/data/keystore/my_key_inexistent.json", "tests/data/keystore/my_account_undeployed.json", "error: Failed to read keystore file" ; "when inexistent keystore")]
+#[test_case("tests/data/keystore/my_key.json", "tests/data/keystore/my_account_inexistent.json", "error: Failed to read account file" ; "when inexistent account")]
 pub fn test_deploy_keystore_inexistent_file(keystore_path: &str, account_path: &str, error: &str) {
     env::set_var(KEYSTORE_PASSWORD_ENV_VAR, "123");
     let args = vec![

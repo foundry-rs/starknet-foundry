@@ -57,7 +57,8 @@ pub async fn deploy(
     let factory = ContractFactory::new(class_hash, account);
     let deployment = factory.deploy(constructor_calldata.clone(), salt, unique);
 
-    // todo: refactor setting max_fee and nonce
+    // TODO(#1396): use apply_optional here when `Deployment` in starknet-rs is public
+    //  otherwise we cannot pass the necessary reference to a function
     let execution_with_fee = if let Some(max_fee) = max_fee {
         deployment.max_fee(max_fee)
     } else {

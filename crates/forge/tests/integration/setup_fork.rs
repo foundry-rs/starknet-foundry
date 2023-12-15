@@ -6,6 +6,7 @@ use std::process::Stdio;
 use std::sync::Arc;
 
 use camino::Utf8PathBuf;
+use forge::block_number_map::BlockNumberMap;
 use forge::run;
 use forge::scarb::config::ForkTarget;
 use forge::test_filter::TestsFilter;
@@ -133,6 +134,7 @@ fn fork_aliased_decorator() {
                     block_id_value: "Latest".to_string(),
                 },
             )],
+            &mut BlockNumberMap::default(),
         ))
         .expect("Runner fail");
 
@@ -255,7 +257,7 @@ fn fork_get_block_info_fails() {
             #[test]
             #[fork(url: "{CHEATNET_RPC_URL}", block_id: BlockId::Number(999999999999))]
             fn fork_get_block_info_fails() {{
-                let block_info = starknet::get_block_info().unbox();
+                starknet::get_block_info().unbox();
             }}
         "#
     )

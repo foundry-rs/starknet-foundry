@@ -2,7 +2,7 @@
 mod SegmentArenaUser {
     #[storage]
     struct Storage {}
-    #[external(v0)]
+    #[abi(embed_v0)]
     fn interface_function(ref self: ContractState) {
         let felt_dict: Felt252Dict<felt252> = Default::default();
     }

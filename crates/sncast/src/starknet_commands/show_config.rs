@@ -24,8 +24,7 @@ pub async fn show_config(
     let account = Some(cast_config.account).filter(|p| !p.is_empty());
     let mut accounts_file_path =
         Some(cast_config.accounts_file).filter(|p| p != &Utf8PathBuf::default());
-    let keystore = Some(cast_config.keystore).filter(|p| p != &Utf8PathBuf::default());
-
+    let keystore = cast_config.keystore;
     if keystore.is_some() {
         accounts_file_path = None;
     }

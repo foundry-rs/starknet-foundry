@@ -36,7 +36,7 @@ struct Storage {
     stored_hash: felt252
 }
 
-#[external(v0)]
+#[abi(embed_v0)]
 impl IContractImpl of IContract<ContractState> {
     fn store_tx_hash(ref self: ContractState) {
         let tx_info = get_tx_info().unbox();

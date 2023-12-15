@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Forge
+
+#### Changed 
+
+- consistent latest block numbers for each url are now used across the whole run when testing against forks
+
+### Cast
+
+#### Added 
+
+- `--yes` option to `account delete` command that allows to skip confirmation prompt
+
+#### Changed
+
+- Argument `max-fee` in `account deploy` is now optional
+
 ## [0.13.0] - 2023-12-14
 
 ### Forge

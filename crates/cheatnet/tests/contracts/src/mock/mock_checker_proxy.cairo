@@ -34,7 +34,7 @@ mod MockCheckerProxy {
         thing: felt252
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl IMockCheckerProxy of super::IMockCheckerProxy<ContractState> {
         fn get_thing_from_contract(ref self: ContractState, address: ContractAddress) -> felt252 {
             let dispatcher = IMockCheckerDispatcher { contract_address: address };

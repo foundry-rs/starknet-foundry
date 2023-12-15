@@ -1,5 +1,5 @@
 use crate::starknet_commands::invoke::execute_calls;
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result};
 use camino::Utf8PathBuf;
 use clap::Args;
 use serde::Deserialize;
@@ -54,7 +54,7 @@ pub async fn run(
 ) -> Result<InvokeResponse> {
     let contents = std::fs::read_to_string(path)?;
     let items_map: HashMap<String, Vec<toml::Value>> =
-        toml::from_str(&contents).map_err(|_| anyhow!("Failed to parse {path}"))?;
+        toml::from_str(&contents).with_context(|| format!("Failed to parse {path}"))?;
 
     let mut contracts = HashMap::new();
     let mut parsed_calls: Vec<Call> = vec![];
@@ -62,13 +62,13 @@ pub async fn run(
     for call in items_map.get("call").unwrap_or(&vec![]) {
         let call_type = call.get("call_type");
         if call_type.is_none() {
-            anyhow::bail!("`call_type` field is missing in a call specification");
+            anyhow::bail!("`Field call_type` is missing in a call specification");
         }
 
         match call_type.unwrap().as_str() {
             Some("deploy") => {
                 let deploy_call: DeployCall = toml::from_str(toml::to_string(&call)?.as_str())
-                    .map_err(|_| anyhow!("Failed to parse toml `deploy` call"))?;
+                    .context("Failed to parse toml `deploy` call")?;
 
                 let salt = extract_or_generate_salt(deploy_call.salt);
                 let mut calldata = vec![
@@ -97,7 +97,7 @@ pub async fn run(
             }
             Some("invoke") => {
                 let invoke_call: InvokeCall = toml::from_str(toml::to_string(&call)?.as_str())
-                    .context("failed to parse toml `invoke` call")?;
+                    .context("Failed to parse toml `invoke` call")?;
                 let mut contract_address = &invoke_call.contract_address;
                 if let Some(addr) = contracts.get(&invoke_call.contract_address) {
                     contract_address = addr;
@@ -107,15 +107,15 @@ pub async fn run(
 
                 parsed_calls.push(Call {
                     to: parse_number(contract_address)
-                        .context("Unable to parse contract address to FieldElement")?,
+                        .context("Failed to parse contract address to FieldElement")?,
                     selector: get_selector_from_name(&invoke_call.function)?,
                     calldata,
                 });
             }
             Some(unsupported) => {
-                anyhow::bail!("unsupported call type found: {}", unsupported);
+                anyhow::bail!("Unsupported call type found = {}", unsupported);
             }
-            None => anyhow::bail!("`call_type` field is missing in a call specification"),
+            None => anyhow::bail!("Field `call_type` is missing in a call specification"),
         }
     }
 
@@ -130,7 +130,7 @@ fn parse_inputs(
     for input in inputs {
         let current_input = contracts.get(input).unwrap_or(input);
         parsed_inputs
-            .push(parse_number(current_input).context("Unable to parse input to FieldElement")?);
+            .push(parse_number(current_input).context("Failed to parse input to FieldElement")?);
     }
 
     Ok(parsed_inputs)

@@ -2,6 +2,7 @@ use std::any::Any;
 use std::collections::HashMap;
 use std::fs;
 
+use crate::starknet_commands::declare::BuildConfig;
 use crate::starknet_commands::{call, declare, deploy, invoke};
 use crate::{get_account, get_nonce, WaitForTx};
 use anyhow::{anyhow, ensure, Context, Result};
@@ -32,7 +33,7 @@ use conversions::{FromConv, IntoConv};
 use itertools::chain;
 use num_traits::ToPrimitive;
 use runtime::EnhancedHintError;
-use scarb_metadata::ScarbCommand;
+use scarb_artifacts::ScarbCommand;
 use sncast::helpers::response_structs::ScriptResponse;
 use sncast::helpers::scarb_utils::{
     get_package_metadata, get_scarb_manifest, get_scarb_metadata_with_deps, CastConfig,
@@ -227,15 +228,18 @@ impl CairoHintProcessor<'_> {
                     &self.config.account,
                     &self.config.accounts_file,
                     self.provider,
-                    &self.config.keystore,
+                    self.config.keystore.clone(),
                 ))?;
 
                 let declare_response = self.runtime.block_on(declare::declare(
                     &contract_name,
                     max_fee,
                     &account,
-                    &None,
                     nonce,
+                    BuildConfig {
+                        scarb_toml_path: None,
+                        json: false,
+                    },
                     WaitForTx {
                         wait: true,
                         timeout: self.config.wait_timeout,
@@ -293,7 +297,7 @@ impl CairoHintProcessor<'_> {
                     &self.config.account,
                     &self.config.accounts_file,
                     self.provider,
-                    &self.config.keystore,
+                    self.config.keystore.clone(),
                 ))?;
 
                 let deploy_response = self.runtime.block_on(deploy::deploy(
@@ -354,7 +358,7 @@ impl CairoHintProcessor<'_> {
                     &self.config.account,
                     &self.config.accounts_file,
                     self.provider,
-                    &self.config.keystore,
+                    self.config.keystore.clone(),
                 ))?;
 
                 let invoke_response = self.runtime.block_on(invoke::invoke(
@@ -384,7 +388,7 @@ impl CairoHintProcessor<'_> {
                     &self.config.account,
                     &self.config.accounts_file,
                     self.provider,
-                    &self.config.keystore,
+                    self.config.keystore.clone(),
                 ))?;
 
                 let nonce = self.runtime.block_on(get_nonce(
@@ -420,11 +424,11 @@ pub fn run(
 
     let sierra_program = serde_json::from_str::<VersionedProgram>(
         &fs::read_to_string(path.clone())
-            .with_context(|| format!("failed to read Sierra file: {path}"))?,
+            .with_context(|| format!("Failed to read Sierra file at path = {path}"))?,
     )
-    .with_context(|| format!("failed to deserialize Sierra program: {path}"))?
+    .with_context(|| format!("Failed to deserialize Sierra program at path = {path}"))?
     .into_v1()
-    .with_context(|| format!("failed to load Sierra program: {path}"))?
+    .with_context(|| format!("Failed to load Sierra program at path = {path}"))?
     .program;
 
     let runner = SierraCasmRunner::new(
@@ -432,7 +436,7 @@ pub fn run(
         Some(MetadataComputationConfig::default()),
         OrderedHashMap::default(),
     )
-    .with_context(|| "Failed setting up runner.")?;
+    .with_context(|| "Failed to set up runner")?;
 
     let name_suffix = module_name.to_string() + "::main";
     let func = runner.find_function(name_suffix.as_str())?;
@@ -478,21 +482,21 @@ pub fn run(
 }
 
 fn compile_script(path_to_scarb_toml: Option<Utf8PathBuf>) -> Result<Utf8PathBuf> {
-    let scripts_manifest_path = match path_to_scarb_toml {
-        Some(path) => path,
-        None => get_scarb_manifest()
-            .context("Failed to obtain manifest path from scarb")
-            .unwrap(),
-    };
+    let scripts_manifest_path = path_to_scarb_toml.unwrap_or_else(|| {
+        get_scarb_manifest()
+            .context("Failed to retrieve manifest path from scarb")
+            .unwrap()
+    });
     ensure!(
         scripts_manifest_path.exists(),
-        "Path {scripts_manifest_path} does not exist"
+        "The path = {scripts_manifest_path} does not exist"
     );
 
-    ScarbCommand::new()
+    ScarbCommand::new_with_stdio()
         .arg("build")
-        .env("SCARB_MANIFEST_PATH", &scripts_manifest_path)
-        .run()?;
+        .manifest_path(&scripts_manifest_path)
+        .run()
+        .context("failed to compile script with scarb")?;
 
     let metadata = get_scarb_metadata_with_deps(&scripts_manifest_path)?;
     let package_metadata = get_package_metadata(&metadata, &scripts_manifest_path)?;
@@ -506,7 +510,7 @@ fn compile_script(path_to_scarb_toml: Option<Utf8PathBuf>) -> Result<Utf8PathBuf
 
     ensure!(
         path.exists(),
-        "package has not been compiled, file does not exist: {path}"
+        "The package has not been compiled, the file at path = {path} does not exist"
     );
 
     Ok(path)

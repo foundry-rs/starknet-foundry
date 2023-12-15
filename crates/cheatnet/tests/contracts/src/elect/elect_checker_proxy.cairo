@@ -21,7 +21,7 @@ mod ElectCheckerProxy {
     #[storage]
     struct Storage {}
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl IElectCheckerProxy of super::IElectCheckerProxy<ContractState> {
         fn get_elect_checkers_seq_addr(
             ref self: ContractState, address: ContractAddress
