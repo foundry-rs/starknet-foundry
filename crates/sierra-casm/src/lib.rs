@@ -4,12 +4,12 @@ use serde_json::Value;
 
 use cairo_lang_starknet::casm_contract_class::CasmContractClass;
 use cairo_lang_starknet::contract_class::ContractClass;
-use cairo_lang_starknet_v1_0_0_alpha6::casm_contract_class::CasmContractClass as CasmContractClassV1Alpha;
-use cairo_lang_starknet_v1_0_0_alpha6::contract_class::ContractClass as ContractClassV1Alpha;
-use cairo_lang_starknet_v1_0_0_rc0::casm_contract_class::CasmContractClass as CasmContractClassV1Rc0;
-use cairo_lang_starknet_v1_0_0_rc0::contract_class::ContractClass as ContractClassV1Rc0;
-use cairo_lang_starknet_v1_1_1::casm_contract_class::CasmContractClass as CasmContractClassV1_1;
-use cairo_lang_starknet_v1_1_1::contract_class::ContractClass as ContractClassV1_1;
+use cairo_lang_starknet_sierra_0_1_0::casm_contract_class::CasmContractClass as CasmContractClassSierraV0;
+use cairo_lang_starknet_sierra_0_1_0::contract_class::ContractClass as ContractClassSierraV0;
+use cairo_lang_starknet_sierra_1_0_0::casm_contract_class::CasmContractClass as CasmContractClassSierraV1;
+use cairo_lang_starknet_sierra_1_0_0::contract_class::ContractClass as ContractClassSierraV1;
+use cairo_lang_starknet_sierra_1_1_0::casm_contract_class::CasmContractClass as CasmContractClassSierraV1_1;
+use cairo_lang_starknet_sierra_1_1_0::contract_class::ContractClass as ContractClassSierraV1_1;
 
 /// `sierra_json` should be a json containing `sierra_program` and `entry_points_by_type`
 pub fn compile(mut sierra_json: Value) -> Result<CasmContractClass, String> {
@@ -19,18 +19,24 @@ pub fn compile(mut sierra_json: Value) -> Result<CasmContractClass, String> {
 
     macro_rules! compile_contract {
         ($sierra_type:ty, $casm_type:ty) => {{
-            if let Ok(sierra_class) = serde_json::from_value::<$sierra_type>(sierra_json.clone()) {
-                if let Ok(casm_class) = <$casm_type>::from_contract_class(sierra_class, true) {
-                    return Ok(old_casm_to_newest_casm::<$casm_type>(&casm_class));
-                }
-            }
+            let sierra_class = serde_json::from_value::<$sierra_type>(sierra_json.clone()).unwrap();
+            let casm_class = <$casm_type>::from_contract_class(sierra_class, true).unwrap();
+            return Ok(old_casm_to_newest_casm::<$casm_type>(&casm_class));
         }};
     }
 
-    compile_contract!(ContractClass, CasmContractClass);
-    compile_contract!(ContractClassV1_1, CasmContractClassV1_1);
-    compile_contract!(ContractClassV1Rc0, CasmContractClassV1Rc0);
-    compile_contract!(ContractClassV1Alpha, CasmContractClassV1Alpha);
+    let major = parse_sierra_version(1, &sierra_json)?;
+    if major.as_str() == "0" {
+        compile_contract!(ContractClassSierraV0, CasmContractClassSierraV0)
+    }
+
+    let sierra_version = parse_sierra_version(3, &sierra_json)?;
+    match sierra_version.as_str() {
+        "1.4.0" | "1.3.0" | "1.2.0" => compile_contract!(ContractClass, CasmContractClass),
+        "1.1.0" => compile_contract!(ContractClassSierraV1, CasmContractClassSierraV1),
+        "1.0.0" => compile_contract!(ContractClassSierraV1_1, CasmContractClassSierraV1_1),
+        _ => {}
+    };
 
     Err(
         "Unable to compile Sierra to Casm. No matching ContractClass or CasmContractClass found"
@@ -46,4 +52,20 @@ where
 {
     let serialized = serde_json::to_value(value).unwrap();
     serde_json::from_value::<CasmContractClass>(serialized).unwrap()
+}
+
+fn parse_sierra_version(slice_length: usize, sierra_json: &Value) -> Result<String, String> {
+    let parsed_values: Vec<String> = sierra_json["sierra_program"]
+        .as_array()
+        .ok_or("Unable to read sierra_program. Make sure it is an array of felts")?
+        .iter()
+        .take(slice_length)
+        .map(|x| {
+            u8::from_str_radix(&x.as_str().unwrap()[2..], 16)
+                .unwrap_or_default()
+                .to_string()
+        })
+        .collect();
+
+    Ok(parsed_values.join("."))
 }
