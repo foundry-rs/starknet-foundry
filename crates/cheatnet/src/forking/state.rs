@@ -48,6 +48,10 @@ impl ForkStateReader {
             runtime: Runtime::new().expect("Could not instantiate Runtime"),
         }
     }
+
+    fn get_block_id(&self) -> BlockId {
+        BlockId::Number(self.block_number.0)
+    }
 }
 
 impl BlockInfoReader for ForkStateReader {
@@ -56,10 +60,10 @@ impl BlockInfoReader for ForkStateReader {
             return Ok(cache_hit);
         }
 
-        match self.runtime.block_on(
-            self.client
-                .get_block_with_tx_hashes(BlockId::Number(self.block_number.0)),
-        ) {
+        match self
+            .runtime
+            .block_on(self.client.get_block_with_tx_hashes(self.get_block_id()))
+        {
             Ok(MaybePendingBlockWithTxHashes::Block(block)) => {
                 let block_info = CheatnetBlockInfo {
                     block_number: BlockNumber(block.block_number),
@@ -111,7 +115,7 @@ impl StateReader for ForkStateReader {
         match self.runtime.block_on(self.client.get_storage_at(
             FieldElement::from_(contract_address),
             FieldElement::from_(*key.0.key()),
-            BlockId::Number(self.block_number.0),
+            self.get_block_id(),
         )) {
             Ok(value) => {
                 let value_sf: StarkFelt = value.into_();
@@ -131,10 +135,10 @@ impl StateReader for ForkStateReader {
             return Ok(cache_hit);
         }
 
-        match self.runtime.block_on(self.client.get_nonce(
-            BlockId::Number(self.block_number.0),
-            FieldElement::from_(contract_address),
-        )) {
+        match self.runtime.block_on(
+            self.client
+                .get_nonce(self.get_block_id(), FieldElement::from_(contract_address)),
+        ) {
             Ok(nonce) => {
                 let nonce = nonce.into_();
                 self.cache.cache_get_nonce_at(contract_address, nonce);
@@ -152,10 +156,10 @@ impl StateReader for ForkStateReader {
             return Ok(cache_hit);
         }
 
-        match self.runtime.block_on(self.client.get_class_hash_at(
-            BlockId::Number(self.block_number.0),
-            FieldElement::from_(contract_address),
-        )) {
+        match self.runtime.block_on(
+            self.client
+                .get_class_hash_at(self.get_block_id(), FieldElement::from_(contract_address)),
+        ) {
             Ok(class_hash) => {
                 let class_hash: ClassHash = class_hash.into_();
                 self.cache
@@ -177,10 +181,10 @@ impl StateReader for ForkStateReader {
             if let Some(cache_hit) = self.cache.get_compiled_contract_class(class_hash) {
                 Ok(cache_hit)
             } else {
-                match self.runtime.block_on(self.client.get_class(
-                    BlockId::Number(self.block_number.0),
-                    FieldElement::from_(*class_hash),
-                )) {
+                match self.runtime.block_on(
+                    self.client
+                        .get_class(self.get_block_id(), FieldElement::from_(*class_hash)),
+                ) {
                     Ok(contract_class) => {
                         self.cache
                             .cache_get_compiled_contract_class(class_hash, &contract_class);
