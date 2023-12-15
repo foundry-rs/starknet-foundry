@@ -69,19 +69,11 @@ impl NumbersFormat {
 
 fn apply_numbers_formatting(value: Value, formatting: NumbersFormat) -> Value {
     match value {
-        Value::Number(n) => {
-            let nu64 = n
-                .as_u64()
-                .unwrap_or_else(|| panic!("failed to convert {n} to u64"));
-            match formatting {
-                NumbersFormat::Hex => Value::String(format!("{nu64:#x}")),
-                _ => Value::Number(n),
-            }
-        }
         Value::String(input) => {
             if let Ok(field) = FieldElement::from_str(&input) {
                 return match formatting {
                     NumbersFormat::Decimal => Value::String(format!("{field:#}")),
+                    NumbersFormat::Hex => Value::String(format!("{field:#x}")),
                     _ => Value::String(input),
                 };
             }
@@ -514,11 +506,11 @@ pub fn udc_uniqueness(unique: bool, account_address: FieldElement) -> UdcUniquen
 #[cfg(test)]
 mod tests {
     use crate::{
-        apply_numbers_formatting, chain_id_to_network_name, extract_or_generate_salt,
-        get_account_from_accounts_file, get_block_id, udc_uniqueness, NumbersFormat,
+        chain_id_to_network_name, extract_or_generate_salt,
+        get_account_from_accounts_file, get_block_id, udc_uniqueness, NumbersFormat, apply_numbers_formatting,
     };
     use camino::Utf8PathBuf;
-    use serde::Serialize;
+    use serde_json::Value;
     use starknet::core::utils::UdcUniqueSettings;
     use starknet::core::utils::UdcUniqueness::{NotUnique, Unique};
     use starknet::{
@@ -529,7 +521,6 @@ mod tests {
         },
         providers::{jsonrpc::HttpTransport, JsonRpcClient},
     };
-    use test_case::test_case;
     use url::Url;
 
     #[test]
@@ -628,24 +619,45 @@ mod tests {
             .contains("Account user1 not found under network CUSTOM_CHAIN_ID"));
     }
 
-    #[test_case(
-        "0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
-        "0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7";
-        "when value is hex"
-    )]
-    #[test_case("kapusta", "kapusta" ; "when value is string")]
-    #[test_case(132_435, "132435" ; "when value is uint")]
-    #[test_case([132_435, 121], "[132435, 121]" ; "when value is array of ints")]
-    #[test_case(
-        ["0x49d3657224e46f48e99674bd3fcc84644ddd6b96f7c221b1562b82f9e004dc7", "0x49d36333d4e46f48e99674bd3fcc84333ddd6b96f7c741b1562b82f9e004dc7"],
-        "[0x49d3657224e46f48e99674bd3fcc84644ddd6b96f7c221b1562b82f9e004dc7, 0x49d36333d4e46f48e99674bd3fcc84333ddd6b96f7c741b1562b82f9e004dc7]";
-        "when value is array of contract addresses"
-    )]
-    fn test_format_json_value_not_none<T: Serialize>(value: T, expected: &str) {
-        let value_format = NumbersFormat::Default;
-        let json_value = serde_json::to_value(value).unwrap();
 
-        let actual = apply_numbers_formatting(json_value, value_format);
+    #[test]
+    fn test_format_json_value_force_decimal() {
+        let json_value = Value::Array(vec![
+            Value::String(String::from("0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7")),
+        ]);
+        
+        
+        let actual = apply_numbers_formatting(json_value, NumbersFormat::Decimal);
+        let v = "2087021424722619777119509474943472645767659996348769578120564519014510906823";
+        let expected = Value::Array(vec![
+            Value::String(String::from(v)),
+        ]);
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn test_format_json_value_leave_default() {
+        let json_value = Value::Array(vec![
+            Value::String(String::from("0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7")),
+        ]);
+        
+        let actual = apply_numbers_formatting(json_value, NumbersFormat::Default);
+        let expected = Value::Array(vec![
+            Value::String(String::from("0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7")),
+        ]);
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn test_format_json_value_force_hex() {
+        let json_value = Value::Array(vec![
+            Value::String(String::from("2087021424722619777119509474943472645767659996348769578120564519014510906823")),
+        ]);
+        
+        let actual = apply_numbers_formatting(json_value, NumbersFormat::Hex);
+        let expected = Value::Array(vec![
+            Value::String(String::from("0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7")),
+        ]);
         assert_eq!(actual, expected);
     }
 }
