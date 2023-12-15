@@ -8,7 +8,7 @@ use crate::gas::calculate_used_gas;
 use crate::sierra_casm_runner::SierraCasmRunner;
 use crate::test_case_summary::{Single, TestCaseSummary};
 use crate::{RunnerConfig, RunnerParams, TestCaseRunnable, CACHE_DIR};
-use anyhow::{bail, ensure, Result};
+use anyhow::{bail, ensure, Context, Result};
 use blockifier::execution::common_hints::ExecutionMode;
 use blockifier::execution::entry_point::{
     CallEntryPoint, CallType, EntryPointExecutionContext, ExecutionResources,
@@ -28,6 +28,7 @@ use cairo_vm::vm::vm_core::VirtualMachine;
 use camino::Utf8Path;
 use cheatnet::constants as cheatnet_constants;
 use cheatnet::forking::state::ForkStateReader;
+use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::UsedResources;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::CallToBlockifierExtension;
 use cheatnet::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
 use cheatnet::runtime_extensions::forge_runtime_extension::{
@@ -36,6 +37,7 @@ use cheatnet::runtime_extensions::forge_runtime_extension::{
 use cheatnet::runtime_extensions::io_runtime_extension::IORuntimeExtension;
 use cheatnet::state::{BlockInfoReader, CheatnetBlockInfo, CheatnetState, ExtendedStateReader};
 use itertools::chain;
+use num_traits::ToPrimitive;
 use runtime::{ExtendedRuntime, StarknetRuntime};
 use starknet::core::types::BlockId;
 use starknet::core::utils::get_selector_from_name;
@@ -132,12 +134,8 @@ pub(crate) fn run_fuzz_test(
     })
 }
 
-fn build_context(
-    block_info: CheatnetBlockInfo,
-    runner_config: &Arc<RunnerConfig>,
-) -> EntryPointExecutionContext {
-    let block_context =
-        cheatnet_constants::build_block_context(block_info, runner_config.max_steps);
+fn build_context(block_info: CheatnetBlockInfo) -> EntryPointExecutionContext {
+    let block_context = cheatnet_constants::build_block_context(block_info);
     let account_context = cheatnet_constants::build_transaction_context();
 
     EntryPointExecutionContext::new(
@@ -230,7 +228,7 @@ pub fn run_test_case(
     };
     let block_info = state_reader.get_block_info()?;
 
-    let mut context = build_context(block_info, runner_config);
+    let mut context = build_context(block_info);
     let mut execution_resources = ExecutionResources::default();
     let mut blockifier_state = CachedState::from(state_reader);
     let syscall_handler = build_syscall_handler(
@@ -291,6 +289,7 @@ pub fn run_test_case(
     let block_context = get_context(&forge_runtime).block_context.clone();
     let execution_resources = get_all_execution_resources(forge_runtime);
 
+    check_max_steps_limit(&execution_resources, runner_config.max_steps)?;
     let gas = calculate_used_gas(&block_context, &mut blockifier_state, &execution_resources);
 
     Ok(RunResultWithInfo {
@@ -360,4 +359,21 @@ fn get_context<'a>(runtime: &'a ForgeRuntime) -> &'a EntryPointExecutionContext 
         .extended_runtime
         .hint_handler
         .context
+}
+
+fn check_max_steps_limit(
+    execution_resources: &UsedResources,
+    max_steps: Option<u32>,
+) -> Result<()> {
+    let executed_steps = execution_resources.execution_resources.vm_resources.n_steps;
+    if let Some(max_steps) = max_steps {
+        if executed_steps
+            > max_steps
+                .to_usize()
+                .context("Converting max_steps to usize")?
+        {
+            bail!(" Max steps limit exceeded. Limit: {max_steps}. Executed: {executed_steps}")
+        }
+    }
+    Ok(())
 }
