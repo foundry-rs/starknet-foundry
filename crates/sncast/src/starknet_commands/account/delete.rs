@@ -45,7 +45,7 @@ pub fn delete(
     }
 
     let mut items: Map<String, serde_json::Value> =
-        serde_json::from_str(&contents).expect("failed to read file { path }");
+        serde_json::from_str(&contents).expect("Failed to read file { path }");
 
     // Let's ask confirmation
     let prompt_text =
@@ -59,9 +59,9 @@ pub fn delete(
     // get to the nested object "nested"
     let nested = items
         .get_mut(network_name)
-        .expect("can't find network")
+        .expect("Failed to find network")
         .as_object_mut()
-        .expect("invalid network format");
+        .expect("Failed to convert network".);
 
     // now remove the child from there
     nested.remove(name);

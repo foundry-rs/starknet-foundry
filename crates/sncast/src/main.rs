@@ -288,7 +288,7 @@ async fn run_async_command(
                 if config.keystore == Utf8PathBuf::default() {
                     config.account = create
                         .name
-                        .context("required argument `--name` not provided")?;
+                        .context("Required argument `--name` not provided")?;
                 }
                 let mut result = starknet_commands::account::create::create(
                     &config.rpc_url,
@@ -316,7 +316,7 @@ async fn run_async_command(
                 if config.keystore == Utf8PathBuf::default() {
                     config.account = deploy
                         .name
-                        .context("required argument `--name` not provided")?;
+                        .context("Required argument `--name` not provided")?;
                 }
                 let mut result = starknet_commands::account::deploy::deploy(
                     &provider,
@@ -337,7 +337,7 @@ async fn run_async_command(
             account::Commands::Delete(delete) => {
                 config.account = delete
                     .name
-                    .context("required argument `--name` not provided")?;
+                    .context("Required argument `--name` not provided")?;
                 let network_name = match delete.network {
                     Some(network) => network,
                     None => chain_id_to_network_name(get_chain_id(&provider).await?),
