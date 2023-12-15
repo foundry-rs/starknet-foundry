@@ -1,3 +1,4 @@
+mod benchmarks;
 mod cheat_fork;
 mod declare;
 mod deploy;
@@ -14,6 +15,7 @@ mod prank;
 mod precalculate_address;
 mod pure_cairo;
 mod roll;
+mod runtime;
 mod setup_fork;
 mod should_panic;
 mod signing;

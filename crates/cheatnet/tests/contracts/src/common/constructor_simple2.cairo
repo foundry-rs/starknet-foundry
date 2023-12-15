@@ -1,3 +1,9 @@
+#[starknet::interface]
+trait IConstructorSimple2<TContractState> {
+    fn add_to_number(ref self: TContractState, number: felt252) -> felt252;
+    fn get_number(self: @TContractState) -> felt252;
+}
+
 #[starknet::contract]
 mod ConstructorSimple2 {
     #[storage]
@@ -10,15 +16,16 @@ mod ConstructorSimple2 {
         self.number.write(number + number2);
     }
 
-    #[external(v0)]
-    fn add_to_number(ref self: ContractState, number: felt252) -> felt252 {
-        let new_number = self.number.read() + number;
-        self.number.write(new_number);
-        new_number
-    }
+    #[abi(embed_v0)]
+    impl ConstructorSimple2Impl of super::IConstructorSimple2<ContractState> {
+        fn add_to_number(ref self: ContractState, number: felt252) -> felt252 {
+            let new_number = self.number.read() + number;
+            self.number.write(new_number);
+            new_number
+        }
 
-    #[external(v0)]
-    fn get_number(self: @ContractState) -> felt252 {
-        self.number.read()
+        fn get_number(self: @ContractState) -> felt252 {
+            self.number.read()
+        }
     }
 }

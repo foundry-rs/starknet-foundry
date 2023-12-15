@@ -1,0 +1,8 @@
+[package]
+name = "deploy_script"
+version = "0.1.0"
+
+[dependencies]
+starknet = ">=2.4.0"
+sncast_std = { path = "../../../../../../sncast_std" }
+

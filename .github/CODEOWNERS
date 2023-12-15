@@ -1,10 +1,9 @@
-# Cast
-/crates/cast/               @foundry-rs/starknet-foundry-cast
+# chain-interactions
+/crates/sncast/             @foundry-rs/starknet-foundry-cast
 
 # snforge-cli
 /crates/forge               @foundry-rs/starknet-foundry-forge-cli
 /crates/forge-runner        @foundry-rs/starknet-foundry-forge-cli
-/crates/test-collector/     @foundry-rs/starknet-foundry-forge-cli
 
 # snforge-core
 /crates/runtime             @foundry-rs/starknet-foundry-forge-core
@@ -12,4 +11,4 @@
 /crates/forge/src/running.rs @foundry-rs/starknet-foundry-forge-core
 /crates/forge/src/cheatcodes_hint_processor.rs @foundry-rs/starknet-foundry-forge-core
 /crates/forge/tests/integration @foundry-rs/starknet-foundry-forge-core
-
+/crates/sierra-casm         @foundry-rs/starknet-foundry-forge-core

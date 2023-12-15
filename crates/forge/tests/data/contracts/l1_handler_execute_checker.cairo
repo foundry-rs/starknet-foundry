@@ -27,7 +27,7 @@ mod l1_handler_executor {
         self.l1_caller.write(l1_caller);
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl IBalanceTokenImpl of super::IBalanceToken<ContractState> {
         // Returns the current balance.
         fn get_balance(self: @ContractState) -> felt252 {

@@ -12,7 +12,7 @@ mod HelloKeccak {
     #[storage]
     struct Storage {}
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl IHelloKeccakImpl of super::IHelloKeccak<ContractState> {
         fn run_keccak(ref self: ContractState, input: Array<u64>) -> u256 {
             keccak_syscall(input.span()).unwrap_syscall()

@@ -1,4 +1,6 @@
-use crate::execution::{cheated_syscalls, syscall_hooks};
+use crate::runtime_extensions::call_to_blockifier_runtime_extension::execution::{
+    cheated_syscalls, syscall_hooks,
+};
 use crate::state::CheatnetState;
 use anyhow::Result;
 use blockifier::execution::syscalls::{
