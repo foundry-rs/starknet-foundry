@@ -159,9 +159,9 @@ versions of the test case.
 
 This is problematic because `snforge` would treat these generated tests as completely separate entities.
 
-Some possible solutions for this problem would be:
+Some possible solutions to this problem would be:
 
-- Modifying the `TestCaseRaw` so it contains some additional field that allow tests cases to reference each other: This
+- Modifying the `TestCaseRaw` so it contains some additional field that allows tests cases to reference each other: This
   way would know which tests are just different cases of the same sour code.
 - Modify `TestCaseRaw` so it can contain references to multiple "implementations".
   `snforge` would then find these implementations and run them in a bundle.
