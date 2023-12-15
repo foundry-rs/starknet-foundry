@@ -110,7 +110,7 @@ pub async fn declare(
                 account.provider(),
                 result.transaction_hash,
                 DeclareResponse {
-                    class_hash: result.class_hash,
+                    class_hash:result.class_hash,
                     transaction_hash: result.transaction_hash,
                 },
                 wait_config,

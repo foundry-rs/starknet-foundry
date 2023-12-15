@@ -1,6 +1,7 @@
 use anyhow::{anyhow, bail, Context, Error, Result};
 use camino::Utf8PathBuf;
 use helpers::constants::{KEYSTORE_PASSWORD_ENV_VAR, UDC_ADDRESS};
+use helpers::response_structs::CommandResponse;
 use rand::rngs::OsRng;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
@@ -46,56 +47,54 @@ struct Account {
 }
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
-pub enum ValueFormat {
-    // Addresses as hex, fees as int
+pub enum NumbersFormat {
     Default,
-    // everything as int
-    Int,
-    // everything as hex
+    Decimal,
     Hex,
 }
 
-impl ValueFormat {
-    #[must_use]
-    pub fn format_u64(&self, input: u64) -> String {
-        match self {
-            ValueFormat::Default | ValueFormat::Int => format!("{input}"),
-            ValueFormat::Hex => format!("{input:#x}"),
+impl NumbersFormat {
+    pub fn from_flags(hex_format: bool, dec_format: bool) -> Self {
+        // Clap validates that both are not passed at same time
+        if hex_format {
+            NumbersFormat::Hex
+        } else if dec_format {
+            NumbersFormat::Decimal
+        } else {
+            NumbersFormat::Default
         }
     }
+}
 
-    #[must_use]
-    pub fn format_str(&self, input: &str) -> String {
-        if let Ok(field) = FieldElement::from_str(input) {
-            return match self {
-                ValueFormat::Int => format!("{field:#}"),
-                ValueFormat::Hex | ValueFormat::Default => format!("{field:#x}"),
-            };
-        }
 
-        input.to_string()
-    }
-
-    #[must_use]
-    pub fn format_json_value(&self, value: &Value) -> Option<String> {
-        match value {
-            Value::Number(n) => {
-                let n = n
+fn apply_numbers_formatting(value: Value, formatting: NumbersFormat) -> Value {
+    match value {
+        Value::Number(n) => {
+            let nu64 = n
                     .as_u64()
-                    .unwrap_or_else(|| panic!("failed to convert {n} to u64"));
-                Some(self.format_u64(n))
+                    .expect(&format!("failed to convert {n} to u64"));
+            match formatting {
+                NumbersFormat::Hex => Value::String(format!("{nu64:#x}")),
+                _                => Value::Number(n)
             }
-            Value::String(s) => Some(self.format_str(s)),
-            Value::Array(arr) => {
-                let arr_as_string = arr
-                    .iter()
-                    .filter_map(|item| self.format_json_value(item))
-                    .collect::<Vec<String>>()
-                    .join(", ");
-                Some(format!("[{arr_as_string}]"))
-            }
-            _ => None,
         }
+        Value::String(input) => {
+            if let Ok(field) = FieldElement::from_str(&input) {
+                return match formatting {
+                    NumbersFormat::Decimal => Value::String(format!("{field:#}")),
+                    _ => Value::String(input),
+                };
+            }
+            Value::String(input.to_string())
+        },
+        Value::Array(arr) => {
+            let formatted_arr = arr
+                .into_iter()
+                .map(|item| apply_numbers_formatting(item, formatting))
+                .collect();
+            Value::Array(formatted_arr)
+        }
+        _ => panic!("Response value not supported")
     }
 }
 
@@ -391,59 +390,87 @@ pub async fn handle_wait_for_tx<T>(
     Ok(return_value)
 }
 
-pub fn print_formatted(output: Vec<(&str, String)>, json: bool, error: bool) -> Result<()> {
-    if json {
-        let json_output: HashMap<&str, String> = output.into_iter().collect();
-        let json_value: Value = serde_json::to_value(json_output)?;
-
-        write_to_output(serde_json::to_string_pretty(&json_value)?, error);
-    } else {
-        for (key, value) in &output {
-            write_to_output(format!("{key}: {value}"), error);
-        }
-    }
-
-    Ok(())
+pub enum OutputFormat {
+    Json,
+    Human
 }
 
-pub fn print_command_result<T: Serialize>(
-    command: &str,
-    result: &mut Result<T>,
-    value_format: ValueFormat,
-    json: bool,
-) -> Result<()> {
-    let mut output = vec![("command", command.to_string())];
-    let json_value: Value;
+impl OutputFormat {
+    pub fn from_flag(json: bool) -> Self {
+        if json {
+            OutputFormat::Json
+        } else {
+            OutputFormat::Human
+        }
+    }
+}
 
-    let mut error = false;
+fn pretty_output(output: OutputData, output_format: OutputFormat) -> Result<Vec<String>> {
+    match output_format {
+        OutputFormat::Json => {
+            let json_output: HashMap<String, Value> = output.into_iter().collect();
+            let pretty_string = serde_json::to_string_pretty(&json_output)?;
+            Ok(vec![pretty_string])
+        }
+        OutputFormat::Human => {
+            let mut result = vec![];
+            for (key, value) in &output {
+                result.push(format!("{key}: {value}"));
+            }
+            Ok(result)
+        }
+    }
+}
+
+type OutputData = Vec<(String, Value)>;
+
+fn json_value_to_output_data(json_value: Value) -> OutputData {
+    match json_value {
+        Value::Object(obj) => {
+            obj
+                .into_iter()
+                .collect()
+        },
+        _ => panic!("Expected an object")
+    }
+
+}
+
+fn result_as_output_data<T: CommandResponse>(result: &mut Result<T>) -> OutputData {
     match result {
-        Ok(result) => {
-            json_value = serde_json::to_value(result)
-                .map_err(|_| anyhow!("Failed to convert command result to serde_json::Value"))?;
-
-            output.extend(
-                json_value
-                    .as_object()
-                    .expect("Invalid JSON value")
-                    .iter()
-                    .filter_map(|(k, v)| value_format.format_json_value(v).map(|v| (k.as_str(), v)))
-                    .collect::<Vec<(&str, String)>>(),
-            );
+        Ok(response) => {
+            let json_value = serde_json::to_value(response)
+                                .expect("Failed to serialize CommandResponse");
+            json_value_to_output_data(json_value)
         }
         Err(message) => {
-            output.push(("error", format!("{message:#}")));
-            error = true;
+            vec![(String::from("command"), Value::String(format!("{message:#}")))]
         }
-    };
-    print_formatted(output, json, error)
+    }
 }
 
-fn write_to_output<T: std::fmt::Display>(value: T, error: bool) {
-    if error {
-        eprintln!("{value}");
-    } else {
-        println!("{value}");
+pub fn print_command_result<T: CommandResponse>(
+    command: &str,
+    result: &mut Result<T>,
+    numbers_format: NumbersFormat,
+    output_format: OutputFormat,
+) -> Result<()> {
+    let mut output: OutputData = vec![];
+    output.push((String::from("command"), Value::String(command.to_string())));
+    output.extend(result_as_output_data(result));
+    let formatted_output = output
+                            .into_iter()
+                            .map(|(k, v)| (k, apply_numbers_formatting(v, numbers_format)))
+                            .collect();
+
+
+    for val in pretty_output(formatted_output, output_format)? {
+        match result  {
+            Ok(_) => println!("{val}"),
+            Err(_) => eprintln!("{val}"),
+        }
     }
+    Ok(())
 }
 
 pub fn parse_number(number_as_str: &str) -> Result<FieldElement> {
@@ -490,11 +517,10 @@ pub fn udc_uniqueness(unique: bool, account_address: FieldElement) -> UdcUniquen
 mod tests {
     use crate::{
         chain_id_to_network_name, extract_or_generate_salt, get_account_from_accounts_file,
-        get_block_id, udc_uniqueness, ValueFormat,
+        get_block_id, udc_uniqueness, NumbersFormat, apply_numbers_formatting,
     };
     use camino::Utf8PathBuf;
     use serde::Serialize;
-    use serde_json::json;
     use starknet::core::utils::UdcUniqueSettings;
     use starknet::core::utils::UdcUniqueness::{NotUnique, Unique};
     use starknet::{
@@ -618,23 +644,11 @@ mod tests {
         "when value is array of contract addresses"
     )]
     fn test_format_json_value_not_none<T: Serialize>(value: T, expected: &str) {
-        let value_format = ValueFormat::Default;
+        let value_format = NumbersFormat::Default;
         let json_value = serde_json::to_value(value).unwrap();
 
-        let actual = value_format.format_json_value(&json_value).unwrap();
-
+        let actual = apply_numbers_formatting(json_value, value_format);
         assert_eq!(actual, expected);
     }
 
-    #[test_case(true ; "when value is bool")]
-    #[test_case(json!({ "an": "object" }) ; "when value is an object")]
-    #[test_case(json!(null) ; "when value is null")]
-    fn test_format_json_value_is_none<T: Serialize>(value: T) {
-        let value_format = ValueFormat::Default;
-        let json_value = serde_json::to_value(value).unwrap();
-
-        let actual = value_format.format_json_value(&json_value);
-
-        assert_eq!(actual, None);
-    }
 }
