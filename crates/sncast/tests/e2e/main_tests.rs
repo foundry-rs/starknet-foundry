@@ -170,7 +170,7 @@ async fn test_inexistent_keystore() {
     let snapbox = runner(&args);
 
     snapbox.assert().stderr_matches(indoc! {r"
-        Error: keystore file does not exist
+        Error: Failed to find keystore file
     "});
 }
 
@@ -189,7 +189,7 @@ async fn test_keystore_account_required() {
     let snapbox = runner(&args);
 
     snapbox.assert().stderr_matches(indoc! {r"
-        Error: Path passed with --account cannot be empty!
+        Error: Passed empty path for `--account`
     "});
 }
 
@@ -210,7 +210,7 @@ async fn test_keystore_inexistent_account() {
     let snapbox = runner(&args);
 
     snapbox.assert().stderr_matches(indoc! {r"
-        Error: account file does not exist; [..]
+        Error: File containing the account does not exist[..]
     "});
 }
 
