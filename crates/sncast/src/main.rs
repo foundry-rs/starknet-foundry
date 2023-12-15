@@ -4,7 +4,7 @@ use crate::starknet_commands::{
     account, call::Call, declare::Declare, deploy::Deploy, invoke::Invoke, multicall::Multicall,
     script::Script,
 };
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 
 use crate::starknet_commands::declare::BuildConfig;
 use camino::Utf8PathBuf;

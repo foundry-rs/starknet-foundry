@@ -1,8 +1,8 @@
 use camino::Utf8PathBuf;
-use cast::helpers::constants::SCRIPTS_DIR;
-use cast::helpers::scarb_utils::get_cairo_version;
 use indoc::{formatdoc, indoc};
 use snapbox::cmd::{cargo_bin, Command};
+use sncast::helpers::constants::SCRIPTS_DIR;
+use sncast::helpers::scarb_utils::get_cairo_version;
 use tempfile::TempDir;
 
 #[test]
