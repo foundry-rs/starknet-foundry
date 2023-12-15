@@ -13,7 +13,7 @@ The trait is implemented for types:
 - `i8`, `i16`, `i32`, `i64`, `i128`
 - `bool`
 
-Forge will attempt to convert these values to strings and display them.
+`snforge` will attempt to convert these values to strings and display them.
 In case the value contains parts that evaluate to ascii control characters (e.g. 27: `ESC`), the value will not be
 printed.
 

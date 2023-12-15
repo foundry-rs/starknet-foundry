@@ -2,7 +2,7 @@
 
 Transaction gas cost is always important for the users. Developers need to know if their contracts are well-optimised
 and gas-efficient.
-Forge supports gas estimation for each test case. All computations are based on the official
+`snforge` supports gas estimation for each test case. All computations are based on the official
 [Starknet docs](https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/fee-mechanism/#how_much_fee_is_charged_high_level_overview).
 
 > ⚠️ In the next releases, gas estimation will be improved to include [onchain data cost](https://docs.starknet.io/documentation/architecture_and_concepts/Network_Architecture/fee-mechanism/#_on_chain_data)  ⚠️
