@@ -1,6 +1,8 @@
 use crate::helpers::constants::{ACCOUNT_FILE_PATH, CONTRACTS_DIR, DEVNET_ENV_FILE, URL};
 use camino::Utf8PathBuf;
 use primitive_types::U256;
+use serde::de::DeserializeOwned;
+use serde::Deserialize;
 use serde_json::{json, Map, Value};
 use sncast::get_keystore_password;
 use sncast::{get_account, get_provider, parse_number};
@@ -14,11 +16,10 @@ use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
 use starknet::signers::SigningKey;
-use std::collections::HashMap;
 use std::env;
 use std::fs;
 use std::fs::OpenOptions;
-use std::io::Write;
+use std::io::{BufRead, Write};
 use std::sync::Arc;
 use tempfile::TempDir;
 use url::Url;
@@ -145,17 +146,30 @@ pub fn default_cli_args() -> Vec<&'static str> {
     vec!["--url", URL, "--accounts-file", ACCOUNT_FILE_PATH]
 }
 
+fn parse_output<T: DeserializeOwned>(output: &[u8]) -> T {
+    for line in BufRead::split(output, b'\n') {
+        let line = line.expect("Failed to read line from stdout");
+        match serde_json::de::from_slice::<T>(&line) {
+            Ok(t) => return t,
+            Err(_) => continue,
+        }
+    }
+    panic!("Failed to deserialize stdout to JSON");
+}
+
+#[derive(Deserialize)]
+#[allow(dead_code)]
+struct TransactionHashOutput {
+    pub transaction_hash: String,
+    contract_address: Option<String>,
+    class_hash: Option<String>,
+    command: Option<String>,
+}
+
 #[must_use]
 pub fn get_transaction_hash(output: &[u8]) -> FieldElement {
-    let output: HashMap<String, String> =
-        serde_json::from_slice(output).expect("Could not serialize transaction output to HashMap");
-
-    parse_number(
-        output
-            .get("transaction_hash")
-            .expect("Could not get transaction_hash from output"),
-    )
-    .expect("Could not parse a number")
+    let output = parse_output::<TransactionHashOutput>(output);
+    parse_number(output.transaction_hash.as_str()).expect("Could not parse a number")
 }
 
 pub async fn get_transaction_receipt(tx_hash: FieldElement) -> TransactionReceipt {
