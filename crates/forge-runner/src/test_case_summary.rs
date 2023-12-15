@@ -1,16 +1,14 @@
-use crate::running::ForkInfo;
-use crate::TestCaseRunnable;
+use crate::compiled_runnable::TestCaseRunnable;
+use crate::expected_result::{ExpectedPanicValue, ExpectedTestResult};
 use cairo_felt::Felt252;
 use cairo_lang_runner::short_string::as_cairo_short_string;
 use cairo_lang_runner::{RunResult, RunResultValue};
-use starknet_api::block::BlockNumber;
 use std::option::Option;
-use test_collector::{ExpectedPanicValue, ExpectedTestResult};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct GasStatistics {
-    pub min: f64,
-    pub max: f64,
+    pub min: u128,
+    pub max: u128,
 }
 #[derive(Debug, PartialEq, Clone)]
 pub struct FuzzingStatistics {
@@ -32,18 +30,8 @@ impl TestType for Fuzzing {
 #[derive(Debug, PartialEq, Clone)]
 pub struct Single;
 impl TestType for Single {
-    type GasInfo = f64;
+    type GasInfo = u128;
     type TestStatistics = ();
-}
-
-pub trait TestStatistics {
-    type Type: std::fmt::Debug + Clone;
-}
-impl TestStatistics for Fuzzing {
-    type Type = FuzzingStatistics;
-}
-impl TestStatistics for Single {
-    type Type = ();
 }
 
 /// Summary of running a single test case
@@ -61,8 +49,6 @@ pub enum TestCaseSummary<T: TestType> {
         gas_info: <T as TestType>::GasInfo,
         /// Statistics of the test run
         test_statistics: <T as TestType>::TestStatistics,
-        /// Number of block used if BlockId::Tag(Latest) was specified
-        latest_block_number: Option<BlockNumber>,
     },
     /// Test case failed
     Failed {
@@ -74,8 +60,6 @@ pub enum TestCaseSummary<T: TestType> {
         arguments: Vec<Felt252>,
         /// Statistics of the test run
         test_statistics: <T as TestType>::TestStatistics,
-        /// Number of block used if BlockId::Tag(Latest) was specified
-        latest_block_number: Option<BlockNumber>,
     },
     /// Test case ignored due to `#[ignored]` attribute or `--ignored` flag
     Ignored {
@@ -120,20 +104,6 @@ impl<T: TestType> TestCaseSummary<T> {
             TestCaseSummary::Ignored { .. } | TestCaseSummary::Skipped { .. } => vec![],
         }
     }
-
-    pub(crate) fn latest_block_number(&self) -> Option<&BlockNumber> {
-        match self {
-            TestCaseSummary::Failed {
-                latest_block_number: Some(latest_block_number),
-                ..
-            }
-            | TestCaseSummary::Passed {
-                latest_block_number: Some(latest_block_number),
-                ..
-            } => Some(latest_block_number),
-            _ => None,
-        }
-    }
 }
 
 impl TestCaseSummary<Fuzzing> {
@@ -159,12 +129,10 @@ impl TestCaseSummary<Single> {
         run_result: RunResult,
         test_case: &TestCaseRunnable,
         arguments: Vec<Felt252>,
-        fork_info: &ForkInfo,
-        gas: f64,
+        gas: u128,
     ) -> Self {
         let name = test_case.name.to_string();
         let msg = extract_result_data(&run_result, &test_case.expected_result);
-        let latest_block_number = fork_info.latest_block_number;
         match run_result.value {
             RunResultValue::Success(_) => match &test_case.expected_result {
                 ExpectedTestResult::Success => TestCaseSummary::Passed {
@@ -172,7 +140,6 @@ impl TestCaseSummary<Single> {
                     msg,
                     arguments,
                     test_statistics: (),
-                    latest_block_number,
                     gas_info: gas,
                 },
                 ExpectedTestResult::Panics(_) => TestCaseSummary::Failed {
@@ -180,7 +147,6 @@ impl TestCaseSummary<Single> {
                     msg,
                     arguments,
                     test_statistics: (),
-                    latest_block_number,
                 },
             },
             RunResultValue::Panic(value) => match &test_case.expected_result {
@@ -189,7 +155,6 @@ impl TestCaseSummary<Single> {
                     msg,
                     arguments,
                     test_statistics: (),
-                    latest_block_number,
                 },
                 ExpectedTestResult::Panics(panic_expectation) => match panic_expectation {
                     ExpectedPanicValue::Exact(expected) if &value != expected => {
@@ -198,7 +163,6 @@ impl TestCaseSummary<Single> {
                             msg,
                             arguments,
                             test_statistics: (),
-                            latest_block_number,
                         }
                     }
                     _ => TestCaseSummary::Passed {
@@ -206,7 +170,6 @@ impl TestCaseSummary<Single> {
                         msg,
                         arguments,
                         test_statistics: (),
-                        latest_block_number,
                         gas_info: gas,
                     },
                 },
@@ -291,14 +254,6 @@ impl AnyTestCaseSummary {
         match self {
             AnyTestCaseSummary::Fuzzing(case) => case.msg(),
             AnyTestCaseSummary::Single(case) => case.msg(),
-        }
-    }
-
-    #[must_use]
-    pub fn latest_block_number(&self) -> Option<&BlockNumber> {
-        match self {
-            AnyTestCaseSummary::Fuzzing(case) => case.latest_block_number(),
-            AnyTestCaseSummary::Single(case) => case.latest_block_number(),
         }
     }
 

@@ -1,8 +1,8 @@
 use crate::collecting::CompiledTestCrateRaw;
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result};
 use camino::Utf8Path;
+use scarb_artifacts::ScarbCommand;
 use scarb_ui::args::PackagesFilter;
-use std::process::{Command, Stdio};
 
 pub fn load_test_artifacts(
     snforge_target_dir_path: &Utf8Path,
@@ -17,17 +17,10 @@ pub fn load_test_artifacts(
 }
 
 pub fn build_test_artifacts_with_scarb(filter: PackagesFilter) -> Result<()> {
-    let build_output = Command::new("scarb")
+    ScarbCommand::new_with_stdio()
         .arg("snforge-test-collector")
-        .env("SCARB_PACKAGES_FILTER", filter.to_env())
-        .stderr(Stdio::inherit())
-        .stdout(Stdio::inherit())
-        .output()
-        .context("Failed to build test artifacts with Scarb")?;
-
-    if build_output.status.success() {
-        Ok(())
-    } else {
-        Err(anyhow!("scarb snforge-test-collector did not succeed"))
-    }
+        .packages_filter(filter)
+        .run()
+        .context("scarb snforge-test-collector did not succeed")?;
+    Ok(())
 }

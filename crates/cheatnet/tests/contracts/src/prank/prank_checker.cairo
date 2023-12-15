@@ -28,7 +28,7 @@ mod PrankChecker {
         caller_address: felt252
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl IPrankChecker of super::IPrankChecker<ContractState> {
         fn get_caller_address(ref self: ContractState) -> felt252 {
             starknet::get_caller_address().into()

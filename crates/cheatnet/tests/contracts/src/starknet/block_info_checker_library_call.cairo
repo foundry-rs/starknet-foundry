@@ -26,7 +26,7 @@ mod BlockInfoCheckerLibCall {
     #[storage]
     struct Storage {}
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl IBlockInfoCheckerLibCall of super::IBlockInfoCheckerLibCall<ContractState> {
         fn read_block_number_with_lib_call(ref self: ContractState, class_hash: ClassHash) -> u64 {
             let block_info_checker = IBlockInfoCheckerLibraryDispatcher { class_hash };

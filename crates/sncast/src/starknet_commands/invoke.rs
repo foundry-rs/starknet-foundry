@@ -2,9 +2,9 @@ use anyhow::{anyhow, Result};
 use clap::Args;
 
 use sncast::helpers::response_structs::InvokeResponse;
-use sncast::{handle_rpc_error, handle_wait_for_tx, WaitForTx};
+use sncast::{apply_optional, handle_rpc_error, handle_wait_for_tx, WaitForTx};
 use starknet::accounts::AccountError::Provider;
-use starknet::accounts::{Account, Call, ConnectedAccount, SingleOwnerAccount};
+use starknet::accounts::{Account, Call, ConnectedAccount, Execution, SingleOwnerAccount};
 use starknet::core::types::FieldElement;
 use starknet::core::utils::get_selector_from_name;
 use starknet::providers::jsonrpc::HttpTransport;
@@ -62,18 +62,8 @@ pub async fn execute_calls(
 ) -> Result<InvokeResponse> {
     let execution_calls = account.execute(calls);
 
-    // todo: refactor setting max_fee and nonce
-    let execution_with_fee = if let Some(max_fee) = max_fee {
-        execution_calls.max_fee(max_fee)
-    } else {
-        execution_calls
-    };
-
-    let execution = if let Some(nonce) = nonce {
-        execution_with_fee.nonce(nonce)
-    } else {
-        execution_with_fee
-    };
+    let execution = apply_optional(execution_calls, max_fee, Execution::max_fee);
+    let execution = apply_optional(execution, nonce, Execution::nonce);
 
     match execution.send().await {
         Ok(result) => {

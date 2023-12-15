@@ -87,7 +87,9 @@ jobs:
         run: ./scripts/install_devnet.sh
       - uses: software-mansion/setup-scarb@v1.3.2
       - name: Run tests
-        run: cargo test --release -p sncast
+        run: cargo test --release -p sncast e2e::account::add::test_accept_only_one_private_key
+      - name: debug
+        run: cat crates/sncast/.env.devnet_hashes_and_addresses
 
   test-conversions:
     name: Test Conversions
@@ -101,15 +103,27 @@ jobs:
       - name: Run tests
         run: cargo test --release -p conversions
 
-  test-scarb-artifacts:
-    name: Test Scarb Artifacts
+  test-sierra-casm:
+    name: Test Sierra Casm
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@439cf607258077187679211f12aa6f19af4a0af7
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8
+      - name: Run tests
+        run: cargo test --release -p sierra-casm
+
+  test-scarb-api:
+    name: Test Scarb Api
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@3cf7f8cc28d1b4e7d01e3783be10a97d55d483c8
       - uses: software-mansion/setup-scarb@v1.3.2
-      - run: cargo test --release -p scarb-artifacts
+      - run: cargo test --release -p scarb-api
 
   scarbfmt:
     runs-on: ubuntu-latest

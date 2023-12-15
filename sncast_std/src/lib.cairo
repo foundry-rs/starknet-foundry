@@ -1,3 +1,5 @@
+use core::array::ArrayTrait;
+use core::serde::Serde;
 use starknet::{testing::cheatcode, ContractAddress, ClassHash};
 
 #[derive(Drop, Clone)]
@@ -11,31 +13,14 @@ fn call(
     let contract_address_felt: felt252 = contract_address.into();
     let mut inputs = array![contract_address_felt, function_name];
 
-    let calldata_len = calldata.len();
-    inputs.append(calldata_len.into());
+    let mut calldata_serialized = array![];
+    calldata.serialize(ref calldata_serialized);
 
-    let mut i = 0;
-    loop {
-        if i == calldata_len {
-            break;
-        }
-        inputs.append(*calldata[i]);
-        i += 1;
-    };
+    inputs.append_span(calldata_serialized.span());
 
-    let buf = cheatcode::<'call'>(inputs.span());
+    let mut buf = cheatcode::<'call'>(inputs.span());
 
-    let result_data_len = (*buf[0]).try_into().unwrap();
-
-    let mut result_data = array![];
-    let mut i = 1;
-    loop {
-        if result_data_len + 1 == i {
-            break;
-        }
-        result_data.append(*buf[i]);
-        i += 1;
-    };
+    let result_data: Array::<felt252> = Serde::<Array<felt252>>::deserialize(ref buf).unwrap();
 
     CallResult { data: result_data }
 }
@@ -51,21 +36,14 @@ fn declare(
 ) -> DeclareResult {
     let mut inputs = array![contract_name];
 
-    match max_fee {
-        Option::Some(val) => {
-            inputs.append(0);
-            inputs.append(val);
-        },
-        Option::None => inputs.append(1),
-    };
+    let mut max_fee_serialized = array![];
+    max_fee.serialize(ref max_fee_serialized);
 
-    match nonce {
-        Option::Some(val) => {
-            inputs.append(0);
-            inputs.append(val);
-        },
-        Option::None => inputs.append(1),
-    };
+    let mut nonce_serialized = array![];
+    nonce.serialize(ref nonce_serialized);
+
+    inputs.append_span(max_fee_serialized.span());
+    inputs.append_span(nonce_serialized.span());
 
     let buf = cheatcode::<'declare'>(inputs.span());
 
@@ -92,43 +70,23 @@ fn deploy(
     let class_hash_felt: felt252 = class_hash.into();
     let mut inputs = array![class_hash_felt];
 
-    let calldata_len = constructor_calldata.len();
-    inputs.append(calldata_len.into());
+    let mut constructor_calldata_serialized = array![];
+    constructor_calldata.serialize(ref constructor_calldata_serialized);
 
-    let mut i = 0;
-    loop {
-        if i == calldata_len {
-            break;
-        }
-        inputs.append(*constructor_calldata[i]);
-        i += 1;
-    };
+    let mut salt_serialized = array![];
+    salt.serialize(ref salt_serialized);
 
-    match salt {
-        Option::Some(val) => {
-            inputs.append(0);
-            inputs.append(val);
-        },
-        Option::None => inputs.append(1),
-    };
+    let mut max_fee_serialized = array![];
+    max_fee.serialize(ref max_fee_serialized);
 
+    let mut nonce_serialized = array![];
+    nonce.serialize(ref nonce_serialized);
+
+    inputs.append_span(constructor_calldata_serialized.span());
+    inputs.append_span(salt_serialized.span());
     inputs.append(unique.into());
-
-    match max_fee {
-        Option::Some(val) => {
-            inputs.append(0);
-            inputs.append(val);
-        },
-        Option::None => inputs.append(1),
-    };
-
-    match nonce {
-        Option::Some(val) => {
-            inputs.append(0);
-            inputs.append(val);
-        },
-        Option::None => inputs.append(1),
-    };
+    inputs.append_span(max_fee_serialized.span());
+    inputs.append_span(nonce_serialized.span());
 
     let buf = cheatcode::<'deploy'>(inputs.span());
 
@@ -155,33 +113,18 @@ fn invoke(
     let contract_address_felt: felt252 = contract_address.into();
     let mut inputs = array![contract_address_felt, entry_point_selector];
 
-    let calldata_len = calldata.len();
-    inputs.append(calldata_len.into());
+    let mut calldata_serialized = array![];
+    calldata.serialize(ref calldata_serialized);
 
-    let mut i = 0;
-    loop {
-        if i == calldata_len {
-            break;
-        }
-        inputs.append(*calldata[i]);
-        i += 1;
-    };
+    let mut max_fee_serialized = array![];
+    max_fee.serialize(ref max_fee_serialized);
 
-    match max_fee {
-        Option::Some(val) => {
-            inputs.append(0);
-            inputs.append(val);
-        },
-        Option::None => inputs.append(1),
-    };
+    let mut nonce_serialized = array![];
+    nonce.serialize(ref nonce_serialized);
 
-    match nonce {
-        Option::Some(val) => {
-            inputs.append(0);
-            inputs.append(val);
-        },
-        Option::None => inputs.append(1),
-    };
+    inputs.append_span(calldata_serialized.span());
+    inputs.append_span(max_fee_serialized.span());
+    inputs.append_span(nonce_serialized.span());
 
     let buf = cheatcode::<'invoke'>(inputs.span());
 

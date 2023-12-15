@@ -1,7 +1,7 @@
 # `delete`
 Delete an account from `accounts-file` and its associated Scarb profile.
 
-## Required common arguments - passed by CLI or specified in Scarb.toml
+## Required Common Arguments — Passed By CLI or Specified in `Scarb.toml`
 
 * [`url`](../common.md#--url--u-rpc_url)
 
@@ -18,4 +18,9 @@ If passed, the account's associated profile won't be removed from Scarb.toml.
 ## `--network`
 Optional.
 
-Network in `accounts-file` associated with the account. By default the network of rpc node.
+Network in `accounts-file` associated with the account. By default, the network of rpc node.
+
+## `--yes`
+Optional.
+
+If passed, assume "yes" as answer to confirmation prompt and run non-interactively

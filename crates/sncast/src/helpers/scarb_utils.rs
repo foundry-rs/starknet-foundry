@@ -1,13 +1,13 @@
 use super::constants::{WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
 use anyhow::{anyhow, bail, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
+use scarb_artifacts::ScarbCommand;
 use scarb_metadata;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::default::Default;
 use std::env;
 use std::fs::canonicalize;
-use std::process::{Command, Stdio};
 use std::str::FromStr;
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
@@ -15,7 +15,7 @@ pub struct CastConfig {
     pub rpc_url: String,
     pub account: String,
     pub accounts_file: Utf8PathBuf,
-    pub keystore: Utf8PathBuf,
+    pub keystore: Option<Utf8PathBuf>,
     pub wait_timeout: u16,
     pub wait_retry_interval: u8,
 }
@@ -31,7 +31,7 @@ impl CastConfig {
             rpc_url: get_property(tool, "url"),
             account: get_property(tool, "account"),
             accounts_file: get_property(tool, "accounts-file"),
-            keystore: get_property(tool, "keystore"),
+            keystore: get_property_optional(tool, "keystore"),
             wait_timeout: get_property(tool, "wait-timeout"),
             wait_retry_interval: get_property(tool, "wait-retry-interval"),
         })
@@ -44,7 +44,7 @@ impl Default for CastConfig {
             rpc_url: String::default(),
             account: String::default(),
             accounts_file: Utf8PathBuf::default(),
-            keystore: Utf8PathBuf::default(),
+            keystore: None,
             wait_timeout: WAIT_TIMEOUT,
             wait_retry_interval: WAIT_RETRY_INTERVAL,
         }
@@ -121,9 +121,14 @@ pub fn get_property<T>(tool: &Value, field: &str) -> T
 where
     T: PropertyFromCastConfig + Default,
 {
-    tool.get(field)
-        .and_then(T::from_toml_value)
-        .unwrap_or_else(T::default_value)
+    get_property_optional(tool, field).unwrap_or_else(T::default_value)
+}
+
+pub fn get_property_optional<T>(tool: &Value, field: &str) -> Option<T>
+where
+    T: PropertyFromCastConfig + Default,
+{
+    tool.get(field).and_then(T::from_toml_value)
 }
 
 pub fn get_scarb_manifest() -> Result<Utf8PathBuf> {
@@ -131,21 +136,20 @@ pub fn get_scarb_manifest() -> Result<Utf8PathBuf> {
 }
 
 pub fn get_scarb_manifest_for(dir: &Utf8Path) -> Result<Utf8PathBuf> {
-    which::which("scarb")
-        .context("Cannot find `scarb` binary in PATH. Make sure you have Scarb installed https://github.com/software-mansion/scarb")?;
+    ScarbCommand::new().ensure_available()?;
 
-    let output = Command::new("scarb")
+    let output = ScarbCommand::new()
         .current_dir(dir)
         .arg("manifest-path")
-        .stdout(Stdio::piped())
+        .command()
         .output()
-        .context("Failed to execute scarb manifest-path command")?;
+        .context("Failed to execute the `scarb manifest-path` command")?;
 
     let output_str = String::from_utf8(output.stdout)
-        .context("Invalid output of scarb manifest-path command")?;
+        .context("`scarb manifest-path` command failed to provide valid output")?;
 
     let path = Utf8PathBuf::from_str(output_str.trim())
-        .context("Scarb manifest-path returned invalid path")?;
+        .context("`scarb manifest-path` failed. Invalid location returned")?;
 
     Ok(path)
 }
@@ -153,8 +157,7 @@ pub fn get_scarb_manifest_for(dir: &Utf8Path) -> Result<Utf8PathBuf> {
 fn get_scarb_metadata_command(
     manifest_path: &Utf8PathBuf,
 ) -> Result<scarb_metadata::MetadataCommand> {
-    which::which("scarb")
-        .context("Cannot find `scarb` binary in PATH. Make sure you have Scarb installed https://github.com/software-mansion/scarb")?;
+    ScarbCommand::new().ensure_available()?;
 
     let mut command = scarb_metadata::MetadataCommand::new();
     command.inherit_stderr().manifest_path(manifest_path);
@@ -165,12 +168,12 @@ fn execute_scarb_metadata_command(
     command: &scarb_metadata::MetadataCommand,
 ) -> Result<scarb_metadata::Metadata> {
     command.exec().context(format!(
-        "Failed to read Scarb.toml manifest file, not found in current nor parent directories, {}",
+        "Failed to read the `Scarb.toml` manifest file. Doesn't exist in the current or parent directories = {}",
         env::current_dir()
-            .unwrap()
+            .expect("Failed to access the current directory")
             .into_os_string()
             .into_string()
-            .unwrap()
+            .expect("Failed to convert current directory into a string")
     ))
 }
 
@@ -192,15 +195,14 @@ pub fn verify_or_determine_scarb_manifest_path(
     path_to_scarb_toml: &Option<Utf8PathBuf>,
 ) -> Option<Utf8PathBuf> {
     if let Some(path) = path_to_scarb_toml {
-        assert!(path.exists(), "{path} file does not exist!");
+        assert!(path.exists(), "Failed to locate file at path = {path}");
     }
 
-    let manifest_path = match path_to_scarb_toml.clone() {
-        Some(path) => path,
-        None => get_scarb_manifest()
+    let manifest_path = path_to_scarb_toml.clone().unwrap_or_else(|| {
+        get_scarb_manifest()
             .context("Failed to obtain manifest path from scarb")
-            .unwrap(),
-    };
+            .unwrap()
+    });
 
     if !manifest_path.exists() {
         return None;
@@ -221,7 +223,7 @@ pub fn get_package_metadata<'a>(
         .iter()
         .find(|package| package.manifest_path == manifest_path)
         .ok_or(anyhow!(
-            "Path {} not found in scarb metadata",
+            "Path = {} not found in scarb metadata",
             manifest_path.display()
         ))?;
     Ok(package)
@@ -234,7 +236,7 @@ pub fn parse_scarb_config(
     let manifest_path = match path.clone() {
         Some(path) => {
             if !(path.exists()) {
-                bail!("{path} file does not exist!");
+                bail!("Failed to locate file at path = {path}");
             }
             path
         }

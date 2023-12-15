@@ -1,8 +1,14 @@
 use std::collections::HashMap;
+use std::default::Default;
 use std::marker::PhantomData;
 use std::sync::Arc;
 
-use anyhow::{anyhow, bail, ensure, Result};
+use crate::compiled_runnable::ValidatedForkConfig;
+use crate::gas::calculate_used_gas;
+use crate::sierra_casm_runner::SierraCasmRunner;
+use crate::test_case_summary::{Single, TestCaseSummary};
+use crate::{RunnerConfig, RunnerParams, TestCaseRunnable, CACHE_DIR};
+use anyhow::{bail, ensure, Result};
 use blockifier::execution::common_hints::ExecutionMode;
 use blockifier::execution::entry_point::{
     CallEntryPoint, CallType, EntryPointExecutionContext, ExecutionResources,
@@ -12,44 +18,35 @@ use blockifier::execution::syscalls::hint_processor::SyscallHintProcessor;
 use blockifier::state::cached_state::CachedState;
 use blockifier::state::state_api::State;
 use cairo_felt::Felt252;
-use cairo_vm::serde::deserialize_program::HintParams;
-use cairo_vm::types::relocatable::Relocatable;
-use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::CallToBlockifierExtension;
-use cheatnet::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
-use cheatnet::runtime_extensions::forge_runtime_extension::{ForgeExtension, ForgeRuntime};
-use cheatnet::runtime_extensions::io_runtime_extension::IORuntimeExtension;
-use itertools::chain;
-
-use crate::gas::gas_from_execution_resources;
-use crate::sierra_casm_runner::SierraCasmRunner;
-use crate::test_case_summary::{Single, TestCaseSummary};
-use crate::{RunnerConfig, RunnerParams, TestCaseRunnable, ValidatedForkConfig, CACHE_DIR};
 use cairo_lang_casm::hints::Hint;
 use cairo_lang_casm::instructions::Instruction;
 use cairo_lang_runner::casm_run::hint_to_hint_params;
 use cairo_lang_runner::{Arg, RunResult, RunnerError};
+use cairo_vm::serde::deserialize_program::HintParams;
+use cairo_vm::types::relocatable::Relocatable;
 use cairo_vm::vm::vm_core::VirtualMachine;
 use camino::Utf8Path;
 use cheatnet::constants as cheatnet_constants;
 use cheatnet::forking::state::ForkStateReader;
+use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::CallToBlockifierExtension;
+use cheatnet::runtime_extensions::cheatable_starknet_runtime_extension::CheatableStarknetRuntimeExtension;
+use cheatnet::runtime_extensions::forge_runtime_extension::{
+    get_all_execution_resources, ForgeExtension, ForgeRuntime,
+};
+use cheatnet::runtime_extensions::io_runtime_extension::IORuntimeExtension;
 use cheatnet::state::{BlockInfoReader, CheatnetBlockInfo, CheatnetState, ExtendedStateReader};
+use itertools::chain;
 use runtime::{ExtendedRuntime, StarknetRuntime};
-use starknet::core::types::BlockTag::Latest;
-use starknet::core::types::{BlockId, MaybePendingBlockWithTxHashes};
+use starknet::core::types::BlockId;
 use starknet::core::utils::get_selector_from_name;
-use starknet::providers::jsonrpc::HttpTransport;
-use starknet::providers::{JsonRpcClient, Provider};
-use starknet_api::block::BlockNumber;
 use starknet_api::core::PatriciaKey;
 use starknet_api::core::{ContractAddress, EntryPointSelector};
 use starknet_api::deprecated_contract_class::EntryPointType;
 use starknet_api::hash::StarkHash;
 use starknet_api::patricia_key;
 use starknet_api::transaction::Calldata;
-use tokio::runtime::Runtime;
 use tokio::sync::mpsc::Sender;
 use tokio::task::JoinHandle;
-use url::Url;
 
 /// Builds `hints_dict` required in `cairo_vm::types::program::Program` from instructions.
 fn build_hints_dict<'b>(
@@ -138,7 +135,14 @@ pub(crate) fn run_fuzz_test(
 fn build_context(block_info: CheatnetBlockInfo) -> EntryPointExecutionContext {
     let block_context = cheatnet_constants::build_block_context(block_info);
     let account_context = cheatnet_constants::build_transaction_context();
-    EntryPointExecutionContext::new(&block_context, &account_context, ExecutionMode::Execute)
+
+    EntryPointExecutionContext::new(
+        &block_context,
+        &account_context,
+        ExecutionMode::Execute,
+        false,
+    )
+    .unwrap()
 }
 
 fn build_syscall_handler<'a>(
@@ -179,14 +183,9 @@ fn build_syscall_handler<'a>(
     )
 }
 
-pub(crate) struct ForkInfo {
-    pub(crate) latest_block_number: Option<BlockNumber>,
-}
-
 pub struct RunResultWithInfo {
     pub(crate) run_result: Result<RunResult, RunnerError>,
-    pub(crate) fork_info: ForkInfo,
-    pub(crate) gas_used: f64,
+    pub(crate) gas_used: u128,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -223,7 +222,7 @@ pub fn run_test_case(
 
     let mut state_reader = ExtendedStateReader {
         dict_state_reader: cheatnet_constants::build_testing_state(),
-        fork_state_reader: get_fork_state_reader(&runner_config.workspace_root, &case.fork_config)?,
+        fork_state_reader: get_fork_state_reader(&runner_config.workspace_root, &case.fork_config),
     };
     let block_info = state_reader.get_block_info()?;
 
@@ -275,16 +274,6 @@ pub fn run_test_case(
         extended_runtime: call_to_blockifier_runtime,
     };
 
-    let latest_block_number = if let Some(ValidatedForkConfig {
-        url: _,
-        block_id: BlockId::Tag(Latest),
-    }) = &case.fork_config
-    {
-        Some(block_info.block_number)
-    } else {
-        None
-    };
-
     let mut vm = VirtualMachine::new(true);
     let run_result = runner.run_function_with_vm(
         func,
@@ -295,18 +284,13 @@ pub fn run_test_case(
         builtins,
     );
 
-    let execution_resources = get_all_execution_resources(&forge_runtime);
+    let block_context = get_context(&forge_runtime).block_context.clone();
+    let execution_resources = get_all_execution_resources(forge_runtime);
 
-    let gas = gas_from_execution_resources(
-        &get_context(&forge_runtime).block_context,
-        &execution_resources,
-    );
+    let gas = calculate_used_gas(&block_context, &mut blockifier_state, &execution_resources);
 
     Ok(RunResultWithInfo {
         run_result,
-        fork_info: ForkInfo {
-            latest_block_number,
-        },
         gas_used: gas,
     })
 }
@@ -323,7 +307,6 @@ fn extract_test_case_summary(
                     run_result,
                     case,
                     args,
-                    &result_with_info.fork_info,
                     result_with_info.gas_used,
                 )),
                 // CairoRunError comes from VirtualMachineError which may come from HintException that originates in TestExecutionSyscallHandler
@@ -335,7 +318,6 @@ fn extract_test_case_summary(
                     )),
                     arguments: args,
                     test_statistics: (),
-                    latest_block_number: result_with_info.fork_info.latest_block_number,
                 }),
                 Err(err) => bail!(err),
             }
@@ -347,7 +329,6 @@ fn extract_test_case_summary(
             msg: Some(error.to_string()),
             arguments: args,
             test_statistics: (),
-            latest_block_number: None,
         }),
     }
 }
@@ -355,60 +336,16 @@ fn extract_test_case_summary(
 fn get_fork_state_reader(
     workspace_root: &Utf8Path,
     fork_config: &Option<ValidatedForkConfig>,
-) -> Result<Option<ForkStateReader>> {
-    match fork_config {
-        Some(ValidatedForkConfig { url, mut block_id }) => {
-            if let BlockId::Tag(Latest) = block_id {
-                block_id = get_latest_block_number(url)?;
-            }
-            Ok(Some(ForkStateReader::new(
+) -> Option<ForkStateReader> {
+    fork_config
+        .as_ref()
+        .map(|ValidatedForkConfig { url, block_number }| {
+            ForkStateReader::new(
                 url.clone(),
-                block_id,
+                BlockId::Number(block_number.0),
                 Some(workspace_root.join(CACHE_DIR).as_ref()),
-            )))
-        }
-        None => Ok(None),
-    }
-}
-
-fn get_latest_block_number(url: &Url) -> Result<BlockId> {
-    let client = JsonRpcClient::new(HttpTransport::new(url.clone()));
-    let runtime = Runtime::new().expect("Could not instantiate Runtime");
-
-    match runtime.block_on(client.get_block_with_tx_hashes(BlockId::Tag(Latest))) {
-        Ok(MaybePendingBlockWithTxHashes::Block(block)) => Ok(BlockId::Number(block.block_number)),
-        _ => Err(anyhow!("Could not get the latest block number".to_string())),
-    }
-}
-
-fn get_all_execution_resources(runtime: &ForgeRuntime) -> ExecutionResources {
-    let test_used_resources = &runtime
-        .extended_runtime
-        .extended_runtime
-        .extended_runtime
-        .extended_runtime
-        .hint_handler
-        .resources;
-    let cheatnet_used_resources = &runtime
-        .extended_runtime
-        .extended_runtime
-        .extended_runtime
-        .extension
-        .cheatnet_state
-        .used_resources;
-
-    let mut all_resources = ExecutionResources::default();
-    all_resources.vm_resources += &test_used_resources.vm_resources;
-    all_resources.vm_resources += &cheatnet_used_resources.vm_resources;
-
-    all_resources
-        .syscall_counter
-        .extend(&test_used_resources.syscall_counter);
-    all_resources
-        .syscall_counter
-        .extend(&cheatnet_used_resources.syscall_counter);
-
-    all_resources
+            )
+        })
 }
 
 fn get_context<'a>(runtime: &'a ForgeRuntime) -> &'a EntryPointExecutionContext {
