@@ -6,7 +6,7 @@ use test_utils::{assert_failed, assert_passed, test_case};
 fn simple() {
     let test = test_case!(indoc!(
         r"#[test]
-        fn test_two_and_two() {
+        fn simple() {
             assert(2 == 2, '2 == 2');
         }
     "
@@ -21,7 +21,7 @@ fn simple() {
 fn failing() {
     let test = test_case!(indoc!(
         r"#[test]
-        fn test_two_and_three() {
+        fn failing() {
             assert(2 == 3, '2 == 3');
         }
     "

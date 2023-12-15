@@ -9,7 +9,7 @@ fn simple_signing_flow() {
             use snforge_std::signature::{ StarkCurveKeyPair, StarkCurveKeyPairTrait, Signer, Verifier };
 
             #[test]
-            fn test() {
+            fn simple_signing_flow() {
                 let mut key_pair = StarkCurveKeyPairTrait::generate();
                 let message_hash = 123456;
 
@@ -31,7 +31,7 @@ fn try_to_sign_max_felt() {
             use snforge_std::signature::{ StarkCurveKeyPair, StarkCurveKeyPairTrait, Signer };
 
             #[test]
-            fn test() {
+            fn try_to_sign_max_felt() {
                 let mut key_pair = StarkCurveKeyPairTrait::generate();
                 let max_felt = 3618502788666131213697322783095070105623107215331596699973092056135872020480;
 

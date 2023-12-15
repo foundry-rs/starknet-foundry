@@ -25,7 +25,7 @@ mod BlockInfoCheckerProxy {
     #[storage]
     struct Storage {}
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl IBlockInfoCheckerProxy of super::IBlockInfoCheckerProxy<ContractState> {
         fn read_block_number(ref self: ContractState, address: ContractAddress) -> u64 {
             let block_info_checker = IBlockInfoCheckerDispatcher { contract_address: address };

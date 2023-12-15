@@ -17,7 +17,7 @@ mod ConstructorWarpChecker {
         self.blk_timestamp.write(blk_timestamp);
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl IConstructorWarpChecker of super::IConstructorWarpChecker<ContractState> {
         fn get_stored_block_timestamp(ref self: ContractState) -> u64 {
             self.blk_timestamp.read()

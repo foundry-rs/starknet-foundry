@@ -19,7 +19,7 @@ mod SpyEventsLibCall {
     #[storage]
     struct Storage {}
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl ISpyEventsLibCallImpl of super::ISpyEventsLibCall<ContractState> {
         fn call_lib_call(ref self: ContractState, data: felt252, class_hash: ClassHash) {
             let spy_events_checker = ISpyEventsCheckerLibraryDispatcher { class_hash };
