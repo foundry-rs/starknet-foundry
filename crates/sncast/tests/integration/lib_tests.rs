@@ -60,7 +60,7 @@ async fn test_get_account_no_file() {
     let err = account.unwrap_err();
     assert!(err
         .to_string()
-        .contains("Accounts file tests/data/accounts/nonexistentfile.json does not exist!"));
+        .contains("Accounts file = tests/data/accounts/nonexistentfile.json does not exist!"));
 }
 
 #[tokio::test]
@@ -106,7 +106,7 @@ async fn test_get_account_no_user_for_network() {
     let err = account.unwrap_err();
     assert!(err
         .to_string()
-        .contains("Account user10 not found under network alpha-goerli"));
+        .contains("Account = user10 not found under network = alpha-goerli"));
 }
 
 #[tokio::test]
@@ -122,7 +122,7 @@ async fn test_get_account_failed_to_convert_field_elements() {
     let err1 = account1.unwrap_err();
     assert!(err1
         .to_string()
-        .contains("Failed to convert private key: privatekey to FieldElement"));
+        .contains("Failed to convert private key = privatekey to FieldElement"));
 
     let account2 = get_account(
         "with_wrong_address",
@@ -134,5 +134,5 @@ async fn test_get_account_failed_to_convert_field_elements() {
     let err2 = account2.unwrap_err();
     assert!(err2
         .to_string()
-        .contains("Failed to convert account address: address to FieldElement"));
+        .contains("Failed to convert account address = address to FieldElement"));
 }

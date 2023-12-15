@@ -22,7 +22,7 @@ pub async fn test_no_accounts_in_network() {
 
     snapbox.assert().stderr_matches(indoc! {r"
     command: account delete
-    error: No accounts defined for network goerli0-network
+    error: No accounts defined for network = goerli0-network
     "});
 }
 
