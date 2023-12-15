@@ -4957,11 +4957,9 @@ dependencies = [
 name = "sierra-casm"
 version = "1.0.0"
 dependencies = [
- "cairo-lang-casm 2.4.0",
  "cairo-lang-starknet 1.0.0-alpha.6",
  "cairo-lang-starknet 1.0.0-rc0",
  "cairo-lang-starknet 2.4.0",
- "cairo-lang-utils 2.4.0",
  "serde",
  "serde_json",
  "test-case",
