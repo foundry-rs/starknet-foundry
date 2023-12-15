@@ -54,6 +54,7 @@ pub enum NumbersFormat {
 }
 
 impl NumbersFormat {
+    #[must_use]
     pub fn from_flags(hex_format: bool, dec_format: bool) -> Self {
         // Clap validates that both are not passed at same time
         if hex_format {
@@ -66,16 +67,15 @@ impl NumbersFormat {
     }
 }
 
-
 fn apply_numbers_formatting(value: Value, formatting: NumbersFormat) -> Value {
     match value {
         Value::Number(n) => {
             let nu64 = n
-                    .as_u64()
-                    .expect(&format!("failed to convert {n} to u64"));
+                .as_u64()
+                .unwrap_or_else(|| panic!("failed to convert {n} to u64"));
             match formatting {
                 NumbersFormat::Hex => Value::String(format!("{nu64:#x}")),
-                _                => Value::Number(n)
+                _ => Value::Number(n),
             }
         }
         Value::String(input) => {
@@ -86,7 +86,7 @@ fn apply_numbers_formatting(value: Value, formatting: NumbersFormat) -> Value {
                 };
             }
             Value::String(input.to_string())
-        },
+        }
         Value::Array(arr) => {
             let formatted_arr = arr
                 .into_iter()
@@ -94,7 +94,7 @@ fn apply_numbers_formatting(value: Value, formatting: NumbersFormat) -> Value {
                 .collect();
             Value::Array(formatted_arr)
         }
-        _ => panic!("Response value not supported")
+        _ => panic!("Response value not supported"),
     }
 }
 
@@ -392,10 +392,11 @@ pub async fn handle_wait_for_tx<T>(
 
 pub enum OutputFormat {
     Json,
-    Human
+    Human,
 }
 
 impl OutputFormat {
+    #[must_use]
     pub fn from_flag(json: bool) -> Self {
         if json {
             OutputFormat::Json
@@ -405,7 +406,7 @@ impl OutputFormat {
     }
 }
 
-fn pretty_output(output: OutputData, output_format: OutputFormat) -> Result<Vec<String>> {
+fn pretty_output(output: OutputData, output_format: &OutputFormat) -> Result<Vec<String>> {
     match output_format {
         OutputFormat::Json => {
             let json_output: HashMap<String, Value> = output.into_iter().collect();
@@ -426,25 +427,23 @@ type OutputData = Vec<(String, Value)>;
 
 fn json_value_to_output_data(json_value: Value) -> OutputData {
     match json_value {
-        Value::Object(obj) => {
-            obj
-                .into_iter()
-                .collect()
-        },
-        _ => panic!("Expected an object")
+        Value::Object(obj) => obj.into_iter().collect(),
+        _ => panic!("Expected an object"),
     }
-
 }
 
 fn result_as_output_data<T: CommandResponse>(result: &mut Result<T>) -> OutputData {
     match result {
         Ok(response) => {
-            let json_value = serde_json::to_value(response)
-                                .expect("Failed to serialize CommandResponse");
+            let json_value =
+                serde_json::to_value(response).expect("Failed to serialize CommandResponse");
             json_value_to_output_data(json_value)
         }
         Err(message) => {
-            vec![(String::from("command"), Value::String(format!("{message:#}")))]
+            vec![(
+                String::from("command"),
+                Value::String(format!("{message:#}")),
+            )]
         }
     }
 }
@@ -453,19 +452,18 @@ pub fn print_command_result<T: CommandResponse>(
     command: &str,
     result: &mut Result<T>,
     numbers_format: NumbersFormat,
-    output_format: OutputFormat,
+    output_format: &OutputFormat,
 ) -> Result<()> {
     let mut output: OutputData = vec![];
     output.push((String::from("command"), Value::String(command.to_string())));
     output.extend(result_as_output_data(result));
     let formatted_output = output
-                            .into_iter()
-                            .map(|(k, v)| (k, apply_numbers_formatting(v, numbers_format)))
-                            .collect();
-
+        .into_iter()
+        .map(|(k, v)| (k, apply_numbers_formatting(v, numbers_format)))
+        .collect();
 
     for val in pretty_output(formatted_output, output_format)? {
-        match result  {
+        match result {
             Ok(_) => println!("{val}"),
             Err(_) => eprintln!("{val}"),
         }
@@ -516,8 +514,8 @@ pub fn udc_uniqueness(unique: bool, account_address: FieldElement) -> UdcUniquen
 #[cfg(test)]
 mod tests {
     use crate::{
-        chain_id_to_network_name, extract_or_generate_salt, get_account_from_accounts_file,
-        get_block_id, udc_uniqueness, NumbersFormat, apply_numbers_formatting,
+        apply_numbers_formatting, chain_id_to_network_name, extract_or_generate_salt,
+        get_account_from_accounts_file, get_block_id, udc_uniqueness, NumbersFormat,
     };
     use camino::Utf8PathBuf;
     use serde::Serialize;
@@ -650,5 +648,4 @@ mod tests {
         let actual = apply_numbers_formatting(json_value, value_format);
         assert_eq!(actual, expected);
     }
-
 }

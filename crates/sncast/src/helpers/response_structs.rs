@@ -2,9 +2,7 @@ use camino::Utf8PathBuf;
 use serde::Serialize;
 use starknet::core::types::FieldElement;
 
-
 pub trait CommandResponse: Serialize {}
-
 
 #[derive(Serialize, Clone)]
 pub struct CallResponse {
@@ -25,15 +23,12 @@ pub struct DeployResponse {
 }
 impl CommandResponse for DeployResponse {}
 
-
 #[derive(Serialize)]
 pub struct DeclareResponse {
     pub class_hash: FieldElement,
     pub transaction_hash: FieldElement,
 }
 impl CommandResponse for DeclareResponse {}
-
-
 
 #[derive(Serialize)]
 pub struct AccountCreateResponse {

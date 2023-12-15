@@ -12,7 +12,7 @@ use sncast::helpers::constants::{DEFAULT_ACCOUNTS_FILE, DEFAULT_MULTICALL_CONTEN
 use sncast::helpers::scarb_utils::{parse_scarb_config, CastConfig};
 use sncast::{
     chain_id_to_network_name, get_account, get_block_id, get_chain_id, get_nonce, get_provider,
-    WaitForTx, NumbersFormat, OutputFormat, print_command_result,
+    print_command_result, NumbersFormat, OutputFormat, WaitForTx,
 };
 use starknet::providers::jsonrpc::HttpTransport;
 use starknet::providers::JsonRpcClient;
@@ -128,10 +128,16 @@ fn main() -> Result<()> {
             &config,
         );
 
-        print_command_result("script", &mut result, numbers_format, output_format)?;
+        print_command_result("script", &mut result, numbers_format, &output_format)?;
         Ok(())
     } else {
-        runtime.block_on(run_async_command(cli, config, provider, numbers_format, output_format))
+        runtime.block_on(run_async_command(
+            cli,
+            config,
+            provider,
+            numbers_format,
+            output_format,
+        ))
     }
 }
 
@@ -141,7 +147,7 @@ async fn run_async_command(
     mut config: CastConfig,
     provider: JsonRpcClient<HttpTransport>,
     numbers_format: NumbersFormat,
-    output_format: OutputFormat
+    output_format: OutputFormat,
 ) -> Result<()> {
     let wait_config = WaitForTx {
         wait: cli.wait,
@@ -167,7 +173,7 @@ async fn run_async_command(
             )
             .await;
 
-            print_command_result("declare", &mut result, numbers_format, output_format)?;
+            print_command_result("declare", &mut result, numbers_format, &output_format)?;
             Ok(())
         }
         Commands::Deploy(deploy) => {
@@ -190,7 +196,7 @@ async fn run_async_command(
             )
             .await;
 
-            print_command_result("deploy", &mut result, numbers_format, output_format)?;
+            print_command_result("deploy", &mut result, numbers_format, &output_format)?;
             Ok(())
         }
         Commands::Call(call) => {
@@ -205,7 +211,7 @@ async fn run_async_command(
             )
             .await;
 
-            print_command_result("call", &mut result, numbers_format, output_format)?;
+            print_command_result("call", &mut result, numbers_format, &output_format)?;
             Ok(())
         }
         Commands::Invoke(invoke) => {
@@ -227,7 +233,7 @@ async fn run_async_command(
             )
             .await;
 
-            print_command_result("invoke", &mut result, numbers_format, output_format)?;
+            print_command_result("invoke", &mut result, numbers_format, &output_format)?;
             Ok(())
         }
         Commands::Multicall(multicall) => {
@@ -236,7 +242,12 @@ async fn run_async_command(
                     if let Some(output_path) = &new.output_path {
                         let mut result =
                             starknet_commands::multicall::new::new(output_path, new.overwrite);
-                        print_command_result("multicall new", &mut result, numbers_format, output_format)?;
+                        print_command_result(
+                            "multicall new",
+                            &mut result,
+                            numbers_format,
+                            &output_format,
+                        )?;
                     } else {
                         println!("{DEFAULT_MULTICALL_CONTENTS}");
                     }
@@ -257,7 +268,12 @@ async fn run_async_command(
                     )
                     .await;
 
-                    print_command_result("multicall run", &mut result, numbers_format, output_format)?;
+                    print_command_result(
+                        "multicall run",
+                        &mut result,
+                        numbers_format,
+                        &output_format,
+                    )?;
                 }
             }
             Ok(())
@@ -275,7 +291,7 @@ async fn run_async_command(
                 )
                 .await;
 
-                print_command_result("account add", &mut result, numbers_format, output_format)?;
+                print_command_result("account add", &mut result, numbers_format, &output_format)?;
                 Ok(())
             }
             account::Commands::Create(create) => {
@@ -299,7 +315,12 @@ async fn run_async_command(
                 )
                 .await;
 
-                print_command_result("account create", &mut result, numbers_format, output_format)?;
+                print_command_result(
+                    "account create",
+                    &mut result,
+                    numbers_format,
+                    &output_format,
+                )?;
                 Ok(())
             }
             account::Commands::Deploy(deploy) => {
@@ -326,7 +347,12 @@ async fn run_async_command(
                 )
                 .await;
 
-                print_command_result("account deploy", &mut result, numbers_format, output_format)?;
+                print_command_result(
+                    "account deploy",
+                    &mut result,
+                    numbers_format,
+                    &output_format,
+                )?;
                 Ok(())
             }
             account::Commands::Delete(delete) => {
@@ -346,7 +372,12 @@ async fn run_async_command(
                     &network_name,
                 );
 
-                print_command_result("account delete", &mut result, numbers_format, output_format)?;
+                print_command_result(
+                    "account delete",
+                    &mut result,
+                    numbers_format,
+                    &output_format,
+                )?;
                 Ok(())
             }
         },
@@ -358,7 +389,7 @@ async fn run_async_command(
                 cli.path_to_scarb_toml,
             )
             .await;
-            print_command_result("show-config", &mut result, numbers_format, output_format)?;
+            print_command_result("show-config", &mut result, numbers_format, &output_format)?;
             Ok(())
         }
         Commands::Script(_) => unreachable!(),
