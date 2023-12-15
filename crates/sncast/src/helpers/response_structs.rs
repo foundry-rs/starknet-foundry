@@ -1,6 +1,23 @@
 use camino::Utf8PathBuf;
-use serde::Serialize;
+use serde::{Serialize, Serializer};
 use starknet::core::types::FieldElement;
+
+pub struct Uint(u64);
+
+impl Uint {
+    pub fn from(v: u64) -> Self {
+        Uint(v)
+    }
+}
+
+impl Serialize for Uint {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(&self.0.to_string())
+    }
+}
 
 pub trait CommandResponse: Serialize {}
 
@@ -33,7 +50,7 @@ impl CommandResponse for DeclareResponse {}
 #[derive(Serialize)]
 pub struct AccountCreateResponse {
     pub address: FieldElement,
-    pub max_fee: u64,
+    pub max_fee: Uint,
     pub add_profile: String,
     pub message: String,
 }

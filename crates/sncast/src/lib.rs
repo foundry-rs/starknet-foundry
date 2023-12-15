@@ -521,8 +521,8 @@ pub fn apply_optional<T, R, F: FnOnce(T, R) -> T>(initial: T, option: Option<R>,
 #[cfg(test)]
 mod tests {
     use crate::{
-        chain_id_to_network_name, extract_or_generate_salt,
-        get_account_from_accounts_file, get_block_id, udc_uniqueness, NumbersFormat, apply_numbers_formatting,
+        apply_numbers_formatting, chain_id_to_network_name, extract_or_generate_salt,
+        get_account_from_accounts_file, get_block_id, udc_uniqueness, NumbersFormat,
     };
     use camino::Utf8PathBuf;
     use serde_json::Value;
@@ -634,45 +634,41 @@ mod tests {
             .contains("Account user1 not found under network CUSTOM_CHAIN_ID"));
     }
 
-
     #[test]
     fn test_format_json_value_force_decimal() {
-        let json_value = Value::Array(vec![
-            Value::String(String::from("0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7")),
-        ]);
-        
-        
+        let json_value = Value::Array(vec![Value::String(String::from(
+            "0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
+        ))]);
+
         let actual = apply_numbers_formatting(json_value, NumbersFormat::Decimal);
         let v = "2087021424722619777119509474943472645767659996348769578120564519014510906823";
-        let expected = Value::Array(vec![
-            Value::String(String::from(v)),
-        ]);
+        let expected = Value::Array(vec![Value::String(String::from(v))]);
         assert_eq!(actual, expected);
     }
 
     #[test]
     fn test_format_json_value_leave_default() {
-        let json_value = Value::Array(vec![
-            Value::String(String::from("0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7")),
-        ]);
-        
+        let json_value = Value::Array(vec![Value::String(String::from(
+            "0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
+        ))]);
+
         let actual = apply_numbers_formatting(json_value, NumbersFormat::Default);
-        let expected = Value::Array(vec![
-            Value::String(String::from("0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7")),
-        ]);
+        let expected = Value::Array(vec![Value::String(String::from(
+            "0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
+        ))]);
         assert_eq!(actual, expected);
     }
 
     #[test]
     fn test_format_json_value_force_hex() {
-        let json_value = Value::Array(vec![
-            Value::String(String::from("2087021424722619777119509474943472645767659996348769578120564519014510906823")),
-        ]);
-        
+        let json_value = Value::Array(vec![Value::String(String::from(
+            "2087021424722619777119509474943472645767659996348769578120564519014510906823",
+        ))]);
+
         let actual = apply_numbers_formatting(json_value, NumbersFormat::Hex);
-        let expected = Value::Array(vec![
-            Value::String(String::from("0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7")),
-        ]);
+        let expected = Value::Array(vec![Value::String(String::from(
+            "0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
+        ))]);
         assert_eq!(actual, expected);
     }
 }

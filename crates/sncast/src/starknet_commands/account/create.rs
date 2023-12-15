@@ -6,7 +6,7 @@ use camino::Utf8PathBuf;
 use clap::Args;
 use serde_json::json;
 use sncast::helpers::constants::{CREATE_KEYSTORE_PASSWORD_ENV_VAR, OZ_CLASS_HASH};
-use sncast::helpers::response_structs::AccountCreateResponse;
+use sncast::helpers::response_structs::{AccountCreateResponse, Uint};
 use sncast::helpers::scarb_utils::CastConfig;
 use sncast::{extract_or_generate_salt, get_chain_id, get_keystore_password, parse_number};
 use starknet::accounts::{AccountFactory, OpenZeppelinAccountFactory};
@@ -94,7 +94,7 @@ pub async fn create(
 
     Ok(AccountCreateResponse {
         address,
-        max_fee,
+        max_fee: Uint::from(max_fee),
         add_profile: if add_profile {
             "Profile successfully added to Scarb.toml".to_string()
         } else {
