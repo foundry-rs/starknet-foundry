@@ -486,6 +486,13 @@ pub fn udc_uniqueness(unique: bool, account_address: FieldElement) -> UdcUniquen
     }
 }
 
+pub fn apply_optional<T, R, F: FnOnce(T, R) -> T>(initial: T, option: Option<R>, function: F) -> T {
+    match option {
+        Some(value) => function(initial, value),
+        None => initial,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::{
