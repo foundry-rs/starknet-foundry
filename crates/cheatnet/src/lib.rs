@@ -1,6 +1,5 @@
 use state::CheatnetState;
 
-pub mod cheatcodes;
 pub mod constants;
 pub mod forking;
 pub mod runtime_extensions;

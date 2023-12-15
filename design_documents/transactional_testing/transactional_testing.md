@@ -82,7 +82,7 @@ project/
 - Keeping up the specialized libraries updated as tech adds new features/changes
 - Overall higher maintenance cost
 - Test execution speed significantly lower (depending on the used endpoints' throughput)
-- Dry-run mode from cast scripts might be sufficient for some use cases (testing deployments)
+- Dry-run mode from sncast scripts might be sufficient for some use cases (testing deployments)
 - Might be confusing to users if not communicated correctly
 
 

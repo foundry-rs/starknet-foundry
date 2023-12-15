@@ -11,7 +11,7 @@ fn read_short_string() {
         use snforge_std::env::var;
 
         #[test]
-        fn test_read_short_string() {
+        fn read_short_string() {
             let result = var('MY_ENV_VAR');
             assert(result == 'env_var_value', 'failed reading env var');
         }
@@ -31,7 +31,7 @@ fn read_felt252() {
         use snforge_std::env::var;
 
         #[test]
-        fn test_read_felt252() {
+        fn read_felt252() {
             let result = var('MY_ENV_VAR');
             assert(result == 1234567, 'failed reading env var');
         }
@@ -51,7 +51,7 @@ fn read_invalid_felt252() {
         use snforge_std::env::var;
 
         #[test]
-        fn test_read_invalid_felt252() {
+        fn read_invalid_felt252() {
             var('MY_ENV_VAR');
         }
     "
@@ -65,7 +65,7 @@ fn read_invalid_felt252() {
     assert_failed!(result);
     assert_case_output_contains!(
         result,
-        "test_read_invalid_felt252",
+        "read_invalid_felt252",
         &format!("Failed to parse value = {value} to felt")
     );
 }
@@ -77,7 +77,7 @@ fn read_invalid_short_string() {
         use snforge_std::env::var;
 
         #[test]
-        fn test_read_invalid_short_string() {
+        fn read_invalid_short_string() {
             var('MY_ENV_VAR');
         }
     "
@@ -92,7 +92,7 @@ fn read_invalid_short_string() {
     assert_failed!(result);
     assert_case_output_contains!(
         result,
-        "test_read_invalid_short_string",
+        "read_invalid_short_string",
         &format!("Failed to parse value = {value} to felt")
     );
 }
@@ -104,7 +104,7 @@ fn read_non_existent() {
         use snforge_std::env::var;
 
         #[test]
-        fn test_read_invalid_short_string() {
+        fn read_invalid_short_string() {
             var('MY_ENV_VAR');
         }
     "
@@ -114,7 +114,7 @@ fn read_non_existent() {
     assert_failed!(result);
     assert_case_output_contains!(
         result,
-        "test_read_invalid_short_string",
+        "read_invalid_short_string",
         "Failed to read from env var = MY_ENV_VAR"
     );
 }

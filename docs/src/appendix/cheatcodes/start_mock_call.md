@@ -65,7 +65,7 @@ fn test_mock_call() {
 }
 ```
 
-## Mocking non-existent functions
+## Mocking Non-existent Functions
 
 It is also possible to simulate contract having a specific method by mocking a non-existent selector.
 

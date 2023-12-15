@@ -26,7 +26,7 @@ fn simple_call_and_invoke() {
         }
 
         #[test]
-        fn call_and_invoke() {
+        fn simple_call_and_invoke() {
             let contract = declare('HelloStarknet');
             let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
             let dispatcher = IHelloStarknetDispatcher { contract_address };
@@ -234,7 +234,7 @@ fn serding() {
         }
         
         #[test]
-        fn test_serding() {
+        fn serding() {
             let contract = declare('Serding');
             let contract_address = contract.deploy( @ArrayTrait::new()).unwrap();
         
@@ -311,7 +311,7 @@ fn proxy_storage() {
         }
         
         #[test]
-        fn test_proxy_storage() {
+        fn proxy_storage() {
             let caller_address = deploy_contract('Caller');
             let executor_address = deploy_contract('Executor');
         
@@ -465,7 +465,7 @@ fn proxy_dispatcher_panic() {
         }
         
         #[test]
-        fn test_proxy_storage() {
+        fn proxy_dispatcher_panic() {
             let executor_address = deploy_contract('Executor', @ArrayTrait::new());
             let caller_constructor_calldata: Array<felt252> = array![executor_address.into()]; 
             let caller_address = deploy_contract('Caller', @caller_constructor_calldata);
@@ -580,7 +580,7 @@ fn nonexistent_method_call() {
         }
         
         #[test]
-        fn test_nonexistent_method_call() {
+        fn nonexistent_method_call() {
             let contract_address = deploy_contract('Contract', @ArrayTrait::new());
         
             let caller_dispatcher = ICallerSafeDispatcher { contract_address };
@@ -612,8 +612,8 @@ fn nonexistent_method_call() {
     assert_failed!(result);
     assert_case_output_contains!(
         result,
-        "test_nonexistent_method_call",
-        "Entry point selector 0x01fdb214e1495025fa4baf660d34f03c0d8b5037cf10311d2a3202a806aa9485 not found in contract 0x0146c579fb12dfb2a4de780cf9c872727ca0a70e1b2a5cbde76a9a62b89714be"
+        "nonexistent_method_call",
+        "Entry point selector 0x01fdb214e1495025fa4baf660d34f03c0d8b5037cf10311d2a3202a806aa9485 not found in contract 0x05b71a7e6cd8d69f42a1755b5f3b4646a865bb7698c6504e0c8500d30e14f453"
     );
 }
 
@@ -643,7 +643,7 @@ fn nonexistent_libcall_function() {
         }
 
         #[test]
-        fn test_nonexistent_libcall() {
+        fn nonexistent_libcall_function() {
             let class = declare('Contract');
             let contract_address = deploy_contract('LibCaller');
             
@@ -712,7 +712,7 @@ fn nonexistent_libcall_function() {
     assert_failed!(result);
     assert_case_output_contains!(
         result,
-        "test_nonexistent_libcall",
+        "nonexistent_libcall_function",
         "Entry point EntryPointSelector(StarkFelt(\"0x01fdb214e1495025fa4baf660d34f03c0d8b5037cf10311d2a3202a806aa9485\")) not found in contract"
     );
 }
@@ -731,7 +731,7 @@ fn undeclared_class_call() {
         }
 
         #[test]
-        fn test_undeclared_call() {
+        fn undeclared_class_call() {
             let dispatcher = IContractDispatcher { contract_address: 5.try_into().unwrap() };
             dispatcher.invoke_nonexistent();
         }
@@ -743,7 +743,7 @@ fn undeclared_class_call() {
     assert_failed!(result);
     assert_case_output_contains!(
         result,
-        "test_undeclared_call",
+        "undeclared_class_call",
         "Contract not deployed at address: 0x0000000000000000000000000000000000000000000000000000000000000005"
     );
 }

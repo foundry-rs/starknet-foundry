@@ -1,10 +1,10 @@
 use cairo_felt::Felt252;
 use camino::Utf8PathBuf;
-use cheatnet::cheatcodes::deploy::deploy;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::CallContractOutput;
 use cheatnet::runtime_extensions::call_to_blockifier_runtime_extension::rpc::{
     call_contract, CallContractFailure, CallContractResult,
 };
+use cheatnet::runtime_extensions::forge_runtime_extension::cheatcodes::deploy::deploy;
 use cheatnet::state::{BlockifierState, CheatnetState};
 use conversions::felt252::FromShortString;
 use scarb_artifacts::{get_contracts_map, StarknetContractArtifacts};

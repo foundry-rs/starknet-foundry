@@ -18,7 +18,7 @@ fn deploy_at_correct_address() {
         }
 
         #[test]
-        fn test_deploy_at() {
+        fn deploy_at_correct_address() {
             let contract = declare('PrankChecker');
             let prank_checker = contract.deploy(@array![]).unwrap();
         
@@ -87,7 +87,7 @@ fn deploy_two_at_the_same_address() {
         use starknet::ContractAddress;
 
         #[test]
-        fn test_deploy_two_at_the_same_address() {
+        fn deploy_two_at_the_same_address() {
             let contract_address = 123;
         
             let contract = declare('HelloStarknet');
@@ -109,7 +109,7 @@ fn deploy_two_at_the_same_address() {
     assert_failed!(result);
     assert_case_output_contains!(
         result,
-        "test_deploy_two_at_the_same_address",
+        "deploy_two_at_the_same_address",
         "Address is already taken"
     );
 }
@@ -124,7 +124,7 @@ fn deploy_at_error_handling() {
         use starknet::ContractAddress;
 
         #[test]
-        fn test_deploy_at_error_handling() {
+        fn deploy_at_error_handling() {
             let contract_address = 123;
         
             let contract = declare('PanickingConstructor');

@@ -439,7 +439,7 @@ fn start_spoof_all() {
                 assert(transaction_hash == 421, 'Invalid tx hash');
             }
             
-              #[test]
+            #[test]
             fn start_spoof_all_multiple_params() {
                 let contract = declare('SpoofChecker');
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();

@@ -135,11 +135,9 @@ fn write_call_contract_response(
                 .allocate(vm, &ret_data.iter().map(Into::into).collect())?;
 
             // add execution resources used by call to all used resources
-            cheatnet_state.used_resources.vm_resources += &call_output.used_resources.vm_resources;
             cheatnet_state
                 .used_resources
-                .syscall_counter
-                .extend(call_output.used_resources.syscall_counter);
+                .extend(&call_output.used_resources);
 
             SyscallResponseWrapper::Success {
                 gas_counter: call_args.gas_counter,
