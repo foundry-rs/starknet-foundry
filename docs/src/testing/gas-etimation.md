@@ -14,7 +14,7 @@ When the test passes with no errors, estimated gas is displayed this way:
 
 > 📝 **Note**
 > 
-> Estimated gas will always be rounded to the next integer.
+> Estimated gas will always be rounded up to the next integer.
 
 ## Calculating Gas
 
