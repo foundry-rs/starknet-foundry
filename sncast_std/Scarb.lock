@@ -2,5 +2,5 @@
 version = 1
 
 [[package]]
-name = "cheatnet_testing_contracts"
+name = "sncast_std"
 version = "0.1.0"

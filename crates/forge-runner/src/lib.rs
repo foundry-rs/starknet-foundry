@@ -246,7 +246,6 @@ impl TestCaseSummary<Fuzzing> {
                 arguments,
                 gas_info: _,
                 test_statistics: (),
-                latest_block_number,
             } => {
                 let runs = results.len();
                 let gas_usages_vec = results
@@ -266,7 +265,6 @@ impl TestCaseSummary<Fuzzing> {
                     gas_info: GasStatistics { min, max },
                     arguments,
                     test_statistics: FuzzingStatistics { runs },
-                    latest_block_number,
                 }
             }
             TestCaseSummary::Failed {
@@ -274,7 +272,6 @@ impl TestCaseSummary<Fuzzing> {
                 msg,
                 arguments,
                 test_statistics: (),
-                latest_block_number,
             } => TestCaseSummary::Failed {
                 name,
                 msg,
@@ -282,7 +279,6 @@ impl TestCaseSummary<Fuzzing> {
                 test_statistics: FuzzingStatistics {
                     runs: results.len(),
                 },
-                latest_block_number,
             },
             TestCaseSummary::Ignored { name } => TestCaseSummary::Ignored { name: name.clone() },
             TestCaseSummary::Skipped {} => TestCaseSummary::Skipped {},

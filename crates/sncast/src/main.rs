@@ -349,6 +349,7 @@ async fn run_async_command(
                     &cli.path_to_scarb_toml,
                     delete.delete_profile,
                     &network_name,
+                    delete.yes,
                 );
 
                 print_command_result("account delete", &mut result, value_format, cli.json)?;
