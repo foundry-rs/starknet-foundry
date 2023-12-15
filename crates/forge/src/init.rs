@@ -3,10 +3,10 @@ use anyhow::{anyhow, Context, Ok, Result};
 use include_dir::{include_dir, Dir};
 
 use regex::Regex;
+use scarb_artifacts::ScarbCommand;
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::Path;
-use std::process::{Command, Stdio};
 use std::str::from_utf8;
 use toml_edit::{ArrayOfTables, Document, Item, Table};
 
@@ -74,34 +74,31 @@ fn extend_gitignore(path: &Path) -> Result<()> {
 pub fn run(project_name: &str) -> Result<()> {
     let project_path = std::env::current_dir()?.join(project_name);
 
-    Command::new("scarb")
+    ScarbCommand::new_with_stdio()
         .current_dir(std::env::current_dir().context("Failed to get current directory")?)
         .arg("new")
         .arg(&project_path)
-        .stderr(Stdio::inherit())
-        .stdout(Stdio::inherit())
-        .output()
+        .run()
         .context("Failed to initialize a new project")?;
 
     let version = env!("CARGO_PKG_VERSION");
 
-    Command::new("scarb")
+    ScarbCommand::new_with_stdio()
         .current_dir(&project_path)
-        .arg("--offline")
+        .offline()
         .arg("add")
         .arg("snforge_std")
         .arg("--git")
         .arg("https://github.com/foundry-rs/starknet-foundry.git")
         .arg("--tag")
         .arg(format!("v{version}"))
-        .stderr(Stdio::inherit())
-        .stdout(Stdio::inherit())
-        .output()
+        .run()
         .context("Failed to add snforge_std")?;
 
-    let scarb_version = Command::new("scarb")
+    let scarb_version = ScarbCommand::new()
         .arg("--version")
-        .stderr(Stdio::inherit())
+        .inherit_stderr()
+        .command()
         .output()
         .context("Failed to execute `scarb --version`")?;
     let version_output = from_utf8(&scarb_version.stdout)
@@ -117,14 +114,12 @@ pub fn run(project_name: &str) -> Result<()> {
         .expect("Could not find cairo version")
         .as_str();
 
-    Command::new("scarb")
+    ScarbCommand::new_with_stdio()
         .current_dir(&project_path)
-        .arg("--offline")
+        .offline()
         .arg("add")
         .arg(format!("starknet@{cairo_version}"))
-        .stderr(Stdio::inherit())
-        .stdout(Stdio::inherit())
-        .output()
+        .run()
         .context("Failed to add starknet")?;
 
     add_target_to_toml(&project_path.join("Scarb.toml"))?;
