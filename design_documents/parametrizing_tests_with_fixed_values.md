@@ -131,8 +131,7 @@ This change is mostly straightforward: It can be done in the same manner as all 
 
 ### Code Generation
 
-For each test that has cases containing fixtures, we need to generate a new test that has calls to these fixtures
-inline.
+If the parameterized test case uses different fixtures, we will have to generate several versions of the test case.
 Additionally, if we follow the alternative approach of handling [parametrized fixtures](#parametrized-fixtures),
 we will also need to generate the necessary argument definitions.
 
