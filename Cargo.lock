@@ -2253,7 +2253,7 @@ dependencies = [
  "rayon",
  "regex",
  "runtime",
- "scarb-artifacts",
+ "scarb-api",
  "scarb-metadata",
  "serde",
  "serde_json",
@@ -3040,7 +3040,7 @@ dependencies = [
  "rand",
  "rayon",
  "regex",
- "scarb-artifacts",
+ "scarb-api",
  "scarb-metadata",
  "scarb-ui",
  "schemars",
@@ -3058,7 +3058,6 @@ dependencies = [
  "toml_edit 0.20.7",
  "url",
  "walkdir",
- "which",
 ]
 
 [[package]]
@@ -3094,7 +3093,7 @@ dependencies = [
  "once_cell",
  "rand",
  "runtime",
- "scarb-artifacts",
+ "scarb-api",
  "serde",
  "serde_json",
  "smol_str 0.2.0",
@@ -4864,7 +4863,7 @@ dependencies = [
  "conversions",
  "num-bigint",
  "num-traits 0.2.17",
- "scarb-artifacts",
+ "scarb-api",
  "serde",
  "serde_json",
  "starknet",
@@ -5039,7 +5038,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "scarb-artifacts"
+name = "scarb-api"
 version = "1.0.0"
 dependencies = [
  "anyhow",
@@ -5047,8 +5046,11 @@ dependencies = [
  "camino",
  "indoc 2.0.4",
  "scarb-metadata",
+ "scarb-ui",
  "serde",
  "serde_json",
+ "thiserror",
+ "which",
 ]
 
 [[package]]
@@ -5445,7 +5447,7 @@ dependencies = [
  "reqwest",
  "rpassword",
  "runtime",
- "scarb-artifacts",
+ "scarb-api",
  "scarb-metadata",
  "sealed_test",
  "serde",
@@ -5458,7 +5460,6 @@ dependencies = [
  "tokio",
  "toml 0.8.8",
  "url",
- "which",
 ]
 
 [[package]]
@@ -5932,7 +5933,7 @@ dependencies = [
  "forge",
  "forge_runner",
  "indoc 2.0.4",
- "scarb-artifacts",
+ "scarb-api",
  "scarb-metadata",
  "serde",
  "serde_json",
@@ -6436,14 +6437,15 @@ dependencies = [
 
 [[package]]
 name = "which"
-version = "4.4.2"
+version = "5.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "87ba24419a2078cd2b0f2ede2691b6c66d8e47836da3b6db8265ebad47afbfc7"
+checksum = "9bf3ea8596f3a0dd5980b46430f2058dfe2c36a27ccfbb1845d6fbfcd9ba6e14"
 dependencies = [
  "either",
  "home",
  "once_cell",
  "rustix",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]

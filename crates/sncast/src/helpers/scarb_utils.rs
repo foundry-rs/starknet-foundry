@@ -1,13 +1,13 @@
 use super::constants::{WAIT_RETRY_INTERVAL, WAIT_TIMEOUT};
 use anyhow::{anyhow, bail, Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
+use scarb_artifacts::ScarbCommand;
 use scarb_metadata;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::default::Default;
 use std::env;
 use std::fs::canonicalize;
-use std::process::{Command, Stdio};
 use std::str::FromStr;
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
@@ -131,13 +131,12 @@ pub fn get_scarb_manifest() -> Result<Utf8PathBuf> {
 }
 
 pub fn get_scarb_manifest_for(dir: &Utf8Path) -> Result<Utf8PathBuf> {
-    which::which("scarb")
-        .context("Failed to find `scarb` binary in your PATH. Have you installed Scarb? Check out https://github.com/software-mansion/scarb")?;
+    ScarbCommand::new().ensure_available()?;
 
-    let output = Command::new("scarb")
+    let output = ScarbCommand::new()
         .current_dir(dir)
         .arg("manifest-path")
-        .stdout(Stdio::piped())
+        .command()
         .output()
         .context("Failed to execute the `scarb manifest-path` command")?;
 
@@ -153,8 +152,7 @@ pub fn get_scarb_manifest_for(dir: &Utf8Path) -> Result<Utf8PathBuf> {
 fn get_scarb_metadata_command(
     manifest_path: &Utf8PathBuf,
 ) -> Result<scarb_metadata::MetadataCommand> {
-    which::which("scarb")
-        .context("Cannot find `scarb` binary in PATH. Make sure you have Scarb installed https://github.com/software-mansion/scarb")?;
+    ScarbCommand::new().ensure_available()?;
 
     let mut command = scarb_metadata::MetadataCommand::new();
     command.inherit_stderr().manifest_path(manifest_path);

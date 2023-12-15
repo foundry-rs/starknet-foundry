@@ -404,7 +404,7 @@ pub fn print_formatted(output: Vec<(&str, String)>, json: bool, error: bool) -> 
         let json_output: HashMap<&str, String> = output.into_iter().collect();
         let json_value: Value = serde_json::to_value(json_output)?;
 
-        write_to_output(serde_json::to_string_pretty(&json_value)?, error);
+        write_to_output(serde_json::to_string(&json_value)?, error);
     } else {
         for (key, value) in &output {
             write_to_output(format!("{key}: {value}"), error);
