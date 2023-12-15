@@ -142,10 +142,10 @@ pub fn get_scarb_manifest_for(dir: &Utf8Path) -> Result<Utf8PathBuf> {
         .context("Failed to execute the `scarb manifest-path` command")?;
 
     let output_str = String::from_utf8(output.stdout)
-        .context("scarb manifest-path` command failed to provide valid output")?;
+        .context("`scarb manifest-path` command failed to provide valid output")?;
 
     let path = Utf8PathBuf::from_str(output_str.trim())
-        .context("`Scarb manifest-path` failed. Invalid location returned")?;
+        .context("`scarb manifest-path` failed. Invalid location returned")?;
 
     Ok(path)
 }
