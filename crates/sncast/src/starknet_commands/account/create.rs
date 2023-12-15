@@ -41,7 +41,7 @@ pub async fn create(
     rpc_url: &str,
     account: &str,
     accounts_file: &Utf8PathBuf,
-    keystore: &Utf8PathBuf,
+    keystore: Option<Utf8PathBuf>,
     provider: &JsonRpcClient<HttpTransport>,
     path_to_scarb_toml: Option<Utf8PathBuf>,
     chain_id: FieldElement,
@@ -65,9 +65,7 @@ pub async fn create(
             .context("Invalid address")?,
     )?;
 
-    if keystore == &Utf8PathBuf::default() {
-        write_account_to_accounts_file(account, accounts_file, chain_id, account_json.clone())?;
-    } else {
+    if let Some(keystore) = keystore.clone() {
         let account_path = Utf8PathBuf::from(&account);
         if account_path == Utf8PathBuf::default() {
             bail!("Argument `--account` must be passed and be a path when using `--keystore`");
@@ -78,7 +76,9 @@ pub async fn create(
                 .as_str()
                 .context("Invalid private_key")?,
         )?;
-        create_to_keystore(private_key, salt, class_hash, keystore, &account_path)?;
+        create_to_keystore(private_key, salt, class_hash, &keystore, &account_path)?;
+    } else {
+        write_account_to_accounts_file(account, accounts_file, chain_id, account_json.clone())?;
     }
 
     if add_profile {
@@ -86,7 +86,7 @@ pub async fn create(
             rpc_url: rpc_url.into(),
             account: account.into(),
             accounts_file: accounts_file.into(),
-            keystore: keystore.into(),
+            keystore,
             ..Default::default()
         };
         add_created_profile_to_configuration(&path_to_scarb_toml, &config)?;

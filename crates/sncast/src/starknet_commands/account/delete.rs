@@ -14,7 +14,7 @@ use std::io::Write;
 pub struct Delete {
     /// Name of the account to be deleted
     #[clap(short, long)]
-    pub name: Option<String>,
+    pub name: String,
 
     /// If passed with false, Scarb profile won't be removed
     #[clap(long, num_args = 1, default_value = "true")]

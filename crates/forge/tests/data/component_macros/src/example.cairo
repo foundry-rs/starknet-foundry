@@ -51,9 +51,11 @@ mod MyContract {
         self.accesscontrol._grant_role(MINTER_ROLE, minter);
     }
 
-    /// This function can only be called by a minter.
-    #[external(v0)]
-    fn mint(ref self: ContractState) {
-        self.accesscontrol.assert_only_role(MINTER_ROLE);
+    #[abi(embed_v0)]
+    impl MyContractImpl of super::IMyContract<ContractState> {
+        /// This function can only be called by a minter.
+        fn mint(ref self: ContractState) {
+            self.accesscontrol.assert_only_role(MINTER_ROLE);
+        }
     }
 }

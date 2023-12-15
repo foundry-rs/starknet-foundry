@@ -15,7 +15,7 @@ pub struct CastConfig {
     pub rpc_url: String,
     pub account: String,
     pub accounts_file: Utf8PathBuf,
-    pub keystore: Utf8PathBuf,
+    pub keystore: Option<Utf8PathBuf>,
     pub wait_timeout: u16,
     pub wait_retry_interval: u8,
 }
@@ -31,7 +31,7 @@ impl CastConfig {
             rpc_url: get_property(tool, "url"),
             account: get_property(tool, "account"),
             accounts_file: get_property(tool, "accounts-file"),
-            keystore: get_property(tool, "keystore"),
+            keystore: get_property_optional(tool, "keystore"),
             wait_timeout: get_property(tool, "wait-timeout"),
             wait_retry_interval: get_property(tool, "wait-retry-interval"),
         })
@@ -44,7 +44,7 @@ impl Default for CastConfig {
             rpc_url: String::default(),
             account: String::default(),
             accounts_file: Utf8PathBuf::default(),
-            keystore: Utf8PathBuf::default(),
+            keystore: None,
             wait_timeout: WAIT_TIMEOUT,
             wait_retry_interval: WAIT_RETRY_INTERVAL,
         }
@@ -121,9 +121,14 @@ pub fn get_property<T>(tool: &Value, field: &str) -> T
 where
     T: PropertyFromCastConfig + Default,
 {
-    tool.get(field)
-        .and_then(T::from_toml_value)
-        .unwrap_or_else(T::default_value)
+    get_property_optional(tool, field).unwrap_or_else(T::default_value)
+}
+
+pub fn get_property_optional<T>(tool: &Value, field: &str) -> Option<T>
+where
+    T: PropertyFromCastConfig + Default,
+{
+    tool.get(field).and_then(T::from_toml_value)
 }
 
 pub fn get_scarb_manifest() -> Result<Utf8PathBuf> {

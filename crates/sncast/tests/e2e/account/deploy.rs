@@ -223,6 +223,35 @@ pub async fn test_valid_class_hash() {
     fs::remove_dir_all(created_dir).unwrap();
 }
 
+#[tokio::test]
+pub async fn test_valid_no_max_fee() {
+    let (created_dir, accounts_file) = create_account("11", true).await;
+
+    let args = vec![
+        "--url",
+        URL,
+        "--profile",
+        "my_account",
+        "--accounts-file",
+        accounts_file,
+        "account",
+        "deploy",
+        "--name",
+        "my_account",
+    ];
+
+    let snapbox = Command::new(cargo_bin!("sncast"))
+        .current_dir(&created_dir)
+        .args(args);
+
+    snapbox.assert().success().stdout_matches(indoc! {r"
+        command: account deploy
+        transaction_hash: [..]
+    "});
+
+    fs::remove_dir_all(created_dir).unwrap();
+}
+
 pub async fn create_account(salt: &str, add_profile: bool) -> (Utf8PathBuf, &str) {
     let created_dir = duplicate_directory_with_salt(
         CONTRACTS_DIR.to_string() + "/constructor_with_params",

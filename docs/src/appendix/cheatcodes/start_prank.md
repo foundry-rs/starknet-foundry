@@ -18,7 +18,7 @@ struct Storage {
     stored_caller_address: ContractAddress
 }
 
-#[external(v0)]
+#[abi(embed_v0)]
 impl IContractImpl of IContract<ContractState> {
     fn set_caller_address(ref self: ContractState) {
         self.stored_caller_address.write(starknet::get_caller_address());

@@ -4,9 +4,9 @@ use clap::Args;
 use scarb_artifacts::{get_contracts_map, ScarbCommand};
 use sncast::helpers::scarb_utils::get_package_metadata;
 use sncast::helpers::{response_structs::DeclareResponse, scarb_utils::get_scarb_manifest};
-use sncast::{handle_rpc_error, handle_wait_for_tx, WaitForTx};
+use sncast::{apply_optional, handle_rpc_error, handle_wait_for_tx, WaitForTx};
 use starknet::accounts::AccountError::Provider;
-use starknet::accounts::ConnectedAccount;
+use starknet::accounts::{ConnectedAccount, Declaration};
 use starknet::core::types::FieldElement;
 use starknet::{
     accounts::{Account, SingleOwnerAccount},
@@ -81,18 +81,9 @@ pub async fn declare(
     let casm_class_hash = casm_contract_definition.class_hash()?;
 
     let declaration = account.declare(Arc::new(contract_definition.flatten()?), casm_class_hash);
-    // todo: refactor setting max_fee and nonce
-    let execution_with_fee = if let Some(max_fee) = max_fee {
-        declaration.max_fee(max_fee)
-    } else {
-        declaration
-    };
-    let execution = if let Some(nonce) = nonce {
-        execution_with_fee.nonce(nonce)
-    } else {
-        execution_with_fee
-    };
-    let declared = execution.send().await;
+    let declaration = apply_optional(declaration, max_fee, Declaration::max_fee);
+    let declaration = apply_optional(declaration, nonce, Declaration::nonce);
+    let declared = declaration.send().await;
 
     match declared {
         Ok(result) => {
