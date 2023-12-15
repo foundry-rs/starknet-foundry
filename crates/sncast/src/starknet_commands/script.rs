@@ -304,7 +304,7 @@ impl CairoHintProcessor<'_> {
                     nonce,
                     BuildConfig {
                         scarb_toml_path: None,
-                        json: false,
+                        json: self.script_ui.json,
                     },
                     WaitForTx {
                         wait: true,

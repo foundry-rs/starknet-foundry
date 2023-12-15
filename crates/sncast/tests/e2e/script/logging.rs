@@ -101,47 +101,25 @@ async fn test_default_verbosity_with_json() {
         {"status":"finished","message":"release target(s) in [..] seconds"}
 
 
-        {
-          "cheatcode": "get_nonce",
-          "response": "[..]"
-        }
+        {"cheatcode":"get_nonce","response":"[..]"}
 
-        {
-          "cheatcode": "declare",
-          "class_hash": "0x[..]",
-          "transaction_hash": "0x[..]"
-        }
+        {"status":"compiling","message":"lib(map_script) map_script v0.1.0 ([..])"}
+        {"status":"compiling","message":"starknet-contract(map_script) map_script v0.1.0 ([..])"}
+        {"status":"finished","message":"release target(s) in [..] seconds"}
 
-        {
-          "cheatcode": "get_nonce",
-          "response": "[..]"
-        }
+        {"cheatcode":"declare","class_hash":"0x[..]","transaction_hash":"0x[..]"}
 
-        {
-          "cheatcode": "deploy",
-          "contract_address": "0x[..]",
-          "transaction_hash": "0x[..]"
-        }
+        {"cheatcode":"get_nonce","response":"[..]"}
 
-        {
-          "cheatcode": "get_nonce",
-          "response": "[..]"
-        }
+        {"cheatcode":"deploy","contract_address":"0x[..]","transaction_hash":"0x[..]"}
 
-        {
-          "cheatcode": "invoke",
-          "transaction_hash": "0x[..]"
-        }
+        {"cheatcode":"get_nonce","response":"[..]"}
 
-        {
-          "cheatcode": "call",
-          "response": "[0x2]"
-        }
+        {"cheatcode":"invoke","transaction_hash":"0x[..]"}
 
-        {
-          "command": "script",
-          "status": "success"
-        }
+        {"cheatcode":"call","response":"[0x2]"}
+
+        {"command":"script","status":"success"}
     "#});
 }
 
