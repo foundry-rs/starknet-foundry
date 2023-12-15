@@ -31,7 +31,7 @@ pub fn compile(mut sierra_json: Value) -> Result<CasmContractClass, String> {
         _ => {
             Err(
                 "Unable to compile Sierra to Casm. No matching ContractClass or CasmContractClass found for version "
-                    .to_string() + sierra_version.join("."),
+                    .to_string() + &sierra_version.iter().map(|&num| num.to_string()).collect::<Vec<String>>().join("."),
             )
         }
     };
