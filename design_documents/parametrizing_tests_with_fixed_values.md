@@ -140,7 +140,7 @@ we will also need to generate the necessary argument definitions.
 The structure representing a test case (currently named `TestCaseRaw`), should gain additional field `cases` containing
 arguments for each of the parametrized cases.
 
-```cairo
+```rust
 struct TestCaseRaw {
     // ...
     cases: Vec<Vec<String>>
