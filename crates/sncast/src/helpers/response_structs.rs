@@ -2,15 +2,19 @@ use camino::Utf8PathBuf;
 use serde::{Serialize, Serializer};
 use starknet::core::types::FieldElement;
 
-pub struct Uint(u64);
+pub struct Decimal(u64);
 
-impl Uint {
+// FieldElement is serialized to hex string by default
+type Hex = FieldElement;
+
+impl Decimal {
+    #[must_use]
     pub fn from(v: u64) -> Self {
-        Uint(v)
+        Decimal(v)
     }
 }
 
-impl Serialize for Uint {
+impl Serialize for Decimal {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -23,34 +27,34 @@ pub trait CommandResponse: Serialize {}
 
 #[derive(Serialize, Clone)]
 pub struct CallResponse {
-    pub response: Vec<FieldElement>,
+    pub response: Vec<Hex>,
 }
 impl CommandResponse for CallResponse {}
 
 #[derive(Serialize, Clone)]
 pub struct InvokeResponse {
-    pub transaction_hash: FieldElement,
+    pub transaction_hash: Hex,
 }
 impl CommandResponse for InvokeResponse {}
 
 #[derive(Serialize)]
 pub struct DeployResponse {
-    pub contract_address: FieldElement,
-    pub transaction_hash: FieldElement,
+    pub contract_address: Hex,
+    pub transaction_hash: Hex,
 }
 impl CommandResponse for DeployResponse {}
 
 #[derive(Serialize)]
 pub struct DeclareResponse {
-    pub class_hash: FieldElement,
-    pub transaction_hash: FieldElement,
+    pub class_hash: Hex,
+    pub transaction_hash: Hex,
 }
 impl CommandResponse for DeclareResponse {}
 
 #[derive(Serialize)]
 pub struct AccountCreateResponse {
-    pub address: FieldElement,
-    pub max_fee: Uint,
+    pub address: Hex,
+    pub max_fee: Decimal,
     pub add_profile: String,
     pub message: String,
 }

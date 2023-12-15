@@ -74,7 +74,7 @@ fn apply_numbers_formatting(value: Value, formatting: NumbersFormat) -> Value {
                 return match formatting {
                     NumbersFormat::Decimal => Value::String(format!("{field:#}")),
                     NumbersFormat::Hex => Value::String(format!("{field:#x}")),
-                    _ => Value::String(input),
+                    NumbersFormat::Default => Value::String(input),
                 };
             }
             Value::String(input.to_string())
@@ -86,7 +86,9 @@ fn apply_numbers_formatting(value: Value, formatting: NumbersFormat) -> Value {
                 .collect();
             Value::Array(formatted_arr)
         }
-        _ => panic!("Response value not supported"),
+        _ => panic!(
+            "Response value not supported, Response struct should serialize to arrays and strings"
+        ),
     }
 }
 
