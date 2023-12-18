@@ -18,7 +18,7 @@ mod SpoofCheckerLibCall {
     #[storage]
     struct Storage {}
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl ISpoofCheckerLibCall of super::ISpoofCheckerLibCall<ContractState> {
         fn get_tx_hash_with_lib_call(ref self: ContractState, class_hash: ClassHash) -> felt252 {
             let spoof_checker = ISpoofCheckerLibraryDispatcher { class_hash };

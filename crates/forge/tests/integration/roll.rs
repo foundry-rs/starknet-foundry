@@ -152,13 +152,12 @@ fn roll_complex() {
             }
 
             #[test]
-            fn test_roll_complex() {
+            fn roll_complex() {
                 let contract = declare('RollChecker');
 
                 let roll_checker1 = IRollCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
                 let roll_checker2 = IRollCheckerDispatcher { contract_address: contract.deploy(@ArrayTrait::new()).unwrap() };
 
-                let old_block_number1 = roll_checker1.get_block_number();
                 let old_block_number2 = roll_checker2.get_block_number();
 
                 start_roll(CheatTarget::All, 123);

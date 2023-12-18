@@ -232,8 +232,13 @@ pub fn call_entry_point(
     let account_context = build_transaction_context();
     let block_context = build_block_context(cheatnet_state.block_info);
 
-    let mut context =
-        EntryPointExecutionContext::new(&block_context, &account_context, ExecutionMode::Execute);
+    let mut context = EntryPointExecutionContext::new(
+        &block_context,
+        &account_context,
+        ExecutionMode::Execute,
+        false,
+    )
+    .unwrap();
 
     let exec_result = execute_call_entry_point(
         &mut entry_point,

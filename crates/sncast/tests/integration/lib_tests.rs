@@ -35,7 +35,7 @@ async fn test_get_account() {
         "user1",
         &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
         &provider,
-        &Utf8PathBuf::default(),
+        None,
     )
     .await;
 
@@ -54,13 +54,13 @@ async fn test_get_account_no_file() {
         "user1",
         &Utf8PathBuf::from("tests/data/accounts/nonexistentfile.json"),
         &provider,
-        &Utf8PathBuf::default(),
+        None,
     )
     .await;
     let err = account.unwrap_err();
     assert!(err
         .to_string()
-        .contains("Accounts file tests/data/accounts/nonexistentfile.json does not exist!"));
+        .contains("Accounts file = tests/data/accounts/nonexistentfile.json does not exist!"));
 }
 
 #[tokio::test]
@@ -70,7 +70,7 @@ async fn test_get_account_invalid_file() {
         "user1",
         &Utf8PathBuf::from("tests/data/accounts/invalid_format.json"),
         &provider,
-        &Utf8PathBuf::default(),
+        None,
     )
     .await;
     let err = account.unwrap_err();
@@ -84,7 +84,7 @@ async fn test_get_account_no_account() {
         "",
         &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
         &provider,
-        &Utf8PathBuf::default(),
+        None,
     )
     .await;
     let err = account.unwrap_err();
@@ -100,13 +100,13 @@ async fn test_get_account_no_user_for_network() {
         "user10",
         &Utf8PathBuf::from("tests/data/accounts/accounts.json"),
         &provider,
-        &Utf8PathBuf::default(),
+        None,
     )
     .await;
     let err = account.unwrap_err();
     assert!(err
         .to_string()
-        .contains("Account user10 not found under network alpha-goerli"));
+        .contains("Account = user10 not found under network = alpha-goerli"));
 }
 
 #[tokio::test]
@@ -116,23 +116,23 @@ async fn test_get_account_failed_to_convert_field_elements() {
         "with_wrong_private_key",
         &Utf8PathBuf::from("tests/data/accounts/faulty_accounts.json"),
         &provider,
-        &Utf8PathBuf::default(),
+        None,
     )
     .await;
     let err1 = account1.unwrap_err();
     assert!(err1
         .to_string()
-        .contains("Failed to convert private key: privatekey to FieldElement"));
+        .contains("Failed to convert private key = privatekey to FieldElement"));
 
     let account2 = get_account(
         "with_wrong_address",
         &Utf8PathBuf::from("tests/data/accounts/faulty_accounts.json"),
         &provider,
-        &Utf8PathBuf::default(),
+        None,
     )
     .await;
     let err2 = account2.unwrap_err();
     assert!(err2
         .to_string()
-        .contains("Failed to convert account address: address to FieldElement"));
+        .contains("Failed to convert account address = address to FieldElement"));
 }

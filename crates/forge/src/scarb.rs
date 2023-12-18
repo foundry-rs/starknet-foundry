@@ -1,8 +1,10 @@
 use scarb_metadata::{Metadata, PackageId};
-use std::process::{Command, Stdio};
 
+use crate::compiled_raw::CompiledTestCrateRaw;
 use crate::scarb::config::{ForgeConfig, RawForgeConfig};
 use anyhow::{anyhow, Context, Result};
+use camino::Utf8Path;
+use scarb_artifacts::ScarbCommand;
 use scarb_ui::args::PackagesFilter;
 
 pub mod config;
@@ -33,24 +35,39 @@ pub fn config_from_scarb_for_package(
 }
 
 pub fn build_contracts_with_scarb(filter: PackagesFilter) -> Result<()> {
-    let build_output = Command::new("scarb")
+    ScarbCommand::new_with_stdio()
         .arg("build")
-        .env("SCARB_PACKAGES_FILTER", filter.to_env())
-        .stderr(Stdio::inherit())
-        .stdout(Stdio::inherit())
-        .output()
+        .packages_filter(filter)
+        .run()
         .context("Failed to build contracts with Scarb")?;
+    Ok(())
+}
 
-    if build_output.status.success() {
-        Ok(())
-    } else {
-        Err(anyhow!("scarb build did not succeed"))
-    }
+pub fn build_test_artifacts_with_scarb(filter: PackagesFilter) -> Result<()> {
+    ScarbCommand::new_with_stdio()
+        .arg("snforge-test-collector")
+        .packages_filter(filter)
+        .run()
+        .context("Failed to build test artifacts with Scarb")?;
+    Ok(())
+}
+
+pub(crate) fn load_test_artifacts(
+    snforge_target_dir_path: &Utf8Path,
+    package_name: &str,
+) -> Result<Vec<CompiledTestCrateRaw>> {
+    let snforge_test_artifact_path =
+        snforge_target_dir_path.join(format!("{package_name}.snforge_sierra.json"));
+    let test_crates = serde_json::from_str::<Vec<CompiledTestCrateRaw>>(&std::fs::read_to_string(
+        snforge_test_artifact_path,
+    )?)?;
+    Ok(test_crates)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::compiled_raw::RawForkParams;
     use crate::scarb::config::ForkTarget;
     use assert_fs::fixture::{FileWriteStr, PathChild, PathCopy};
     use assert_fs::TempDir;
@@ -58,7 +75,6 @@ mod tests {
     use indoc::{formatdoc, indoc};
     use scarb_metadata::MetadataCommand;
     use std::str::FromStr;
-    use test_collector::RawForkParams;
 
     fn setup_package(package_name: &str) -> TempDir {
         let temp = TempDir::new().unwrap();
@@ -88,7 +104,7 @@ mod tests {
                 casm = true
 
                 [dependencies]
-                starknet = "2.3.1"
+                starknet = "2.4.0"
                 snforge_std = {{ path = "{}" }}
 
                 [[tool.snforge.fork]]

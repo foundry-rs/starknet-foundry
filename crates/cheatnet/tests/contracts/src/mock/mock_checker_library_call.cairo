@@ -18,7 +18,7 @@ mod MockCheckerLibCall {
     #[storage]
     struct Storage {}
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl IMockCheckerLibCall of super::IMockCheckerLibCall<ContractState> {
         fn get_constant_thing_with_lib_call(
             ref self: ContractState, class_hash: ClassHash

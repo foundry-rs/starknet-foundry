@@ -22,7 +22,7 @@ pub async fn test_no_accounts_in_network() {
 
     snapbox.assert().stderr_matches(indoc! {r"
     command: account delete
-    error: No accounts defined for network goerli0-network
+    error: No accounts defined for network = goerli0-network
     "});
 }
 
@@ -251,6 +251,43 @@ pub async fn test_happy_case_without_network_args() {
 
     let _ = tokio::fs::remove_file("temp_accounts6.json").await;
     let _ = tokio::fs::remove_file("temp_scarb6.toml").await;
+}
+
+#[tokio::test]
+pub async fn test_happy_case_with_yes_flag() {
+    // Creating dummy accounts test file
+    create_dummy_accounts_file("temp_accounts7.json").await;
+    create_dummy_scarb_file("temp_scarb7.toml").await;
+
+    // Now delete dummy account
+    let args = vec![
+        "--path-to-scarb-toml",
+        "temp_scarb7.toml",
+        "--url",
+        URL,
+        "--accounts-file",
+        "temp_accounts7.json",
+        "account",
+        "delete",
+        "--name",
+        "user3",
+        "--network",
+        "alpha-goerli2",
+        "--yes",
+    ];
+
+    // Run test with no additional user input
+    let snapbox = Command::new(cargo_bin!("sncast")).args(args);
+    let bdg = snapbox.assert();
+    let out = bdg.get_output();
+    let stdout_str =
+        std::str::from_utf8(&out.stdout).expect("failed to convert command output to string");
+
+    assert!(out.stderr.is_empty());
+    assert!(stdout_str.contains("Account successfully removed"));
+
+    let _ = tokio::fs::remove_file("temp_accounts7.json").await;
+    let _ = tokio::fs::remove_file("temp_scarb7.toml").await;
 }
 
 async fn create_dummy_accounts_file(file_name: &str) {

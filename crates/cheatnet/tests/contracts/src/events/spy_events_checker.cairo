@@ -51,7 +51,7 @@ mod SpyEventsChecker {
         even_more_data: u256
     }
 
-    #[external(v0)]
+    #[abi(embed_v0)]
     impl ISpyEventsChecker of super::ISpyEventsChecker<ContractState> {
         fn do_not_emit(ref self: ContractState) {}
 

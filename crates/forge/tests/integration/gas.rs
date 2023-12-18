@@ -6,14 +6,14 @@ use test_utils::{assert_gas, assert_passed, test_case};
 
 // gas values comes from https://book.starknet.io/ch03-01-02-fee-mechanism.html#computation
 #[test]
-fn test_declare_cost_is_omitted() {
+fn declare_cost_is_omitted() {
     let test = test_case!(
         indoc!(
             r"
             use snforge_std::declare;
 
             #[test]
-            fn test_declare() {
+            fn declare_cost_is_omitted() {
                 declare('GasChecker');
             }
         "
@@ -29,11 +29,11 @@ fn test_declare_cost_is_omitted() {
 
     assert_passed!(result);
     // 1 because of steps required to run the code
-    assert_gas!(result, "test_declare", 1);
+    assert_gas!(result, "declare_cost_is_omitted", 1);
 }
 
 #[test]
-fn test_deploy_syscall_cost() {
+fn deploy_syscall_cost() {
     let test = test_case!(
         indoc!(
             r"
@@ -41,7 +41,7 @@ fn test_deploy_syscall_cost() {
             use starknet::{SyscallResult, deploy_syscall};
 
             #[test]
-            fn test_deploy_syscall() {
+            fn deploy_syscall_cost() {
                 let contract = declare('GasChecker');
                 deploy_syscall(contract.class_hash, 0, array![].span(), false);
             }
@@ -60,15 +60,15 @@ fn test_deploy_syscall_cost() {
     // 1224 = 2 * cost per 32-byte word (contract_address and contract modification info)
     // 612 = updated class_hash (through deploy)
     // 11 = gas cost from steps
-    assert_gas!(result, "test_deploy_syscall", 1224 + 612 + 11);
+    assert_gas!(result, "deploy_syscall_cost", 1224 + 612 + 11);
 }
 
 #[test]
-fn test_keccak_cost() {
+fn keccak_cost() {
     let test = test_case!(indoc!(
         r"
             #[test]
-            fn test_keccak_builtin() {
+            fn keccak_cost() {
                 keccak::keccak_u256s_le_inputs(array![1].span());
             }
         "
@@ -77,11 +77,11 @@ fn test_keccak_cost() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
-    assert_gas!(result, "test_keccak_builtin", 21);
+    assert_gas!(result, "keccak_cost", 21);
 }
 
 #[test]
-fn test_contract_keccak_cost() {
+fn contract_keccak_cost() {
     let test = test_case!(
         indoc!(
             r"
@@ -93,7 +93,7 @@ fn test_contract_keccak_cost() {
             }
 
             #[test]
-            fn test_keccak_builtin() {
+            fn contract_keccak_cost() {
                 let contract = declare('GasChecker');
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IGasCheckerDispatcher { contract_address };
@@ -114,15 +114,15 @@ fn test_contract_keccak_cost() {
     assert_passed!(result);
     // 1836 = 3 * cost per 32-byte word (deploy)
     // 21 = cost of single keccak builtin
-    assert_gas!(result, "test_keccak_builtin", 1836 + 21);
+    assert_gas!(result, "contract_keccak_cost", 1836 + 21);
 }
 
 #[test]
-fn test_range_check_cost() {
+fn range_check_cost() {
     let test = test_case!(indoc!(
         r"
             #[test]
-            fn test_range_check() {
+            fn range_check_cost() {
                 assert(1_u8 >= 1_u8, 'error message');
             }
         "
@@ -131,7 +131,7 @@ fn test_range_check_cost() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
-    assert_gas!(result, "test_range_check", 1);
+    assert_gas!(result, "range_check_cost", 1);
 }
 
 /// Declare, deploy and function call consume 13 `range_check_builtin`s
@@ -139,7 +139,7 @@ fn test_range_check_cost() {
 /// overall cost will be 22 * range check builtin cost.
 /// We have to use 9 of them in the `range_check` to exceed steps cost
 #[test]
-fn test_contract_range_check_cost() {
+fn contract_range_check_cost() {
     let test = test_case!(
         indoc!(
             r"
@@ -151,7 +151,7 @@ fn test_contract_range_check_cost() {
             }
 
             #[test]
-            fn test_range_check() {
+            fn contract_range_check_cost() {
                 let contract = declare('GasChecker');
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IGasCheckerDispatcher { contract_address };
@@ -172,16 +172,16 @@ fn test_contract_range_check_cost() {
     assert_passed!(result);
     // 1836 = 3 * cost per 32-byte word (deploy)
     // 4 = cost of 22 range check builtins
-    assert_gas!(result, "test_range_check", 1836 + 4);
+    assert_gas!(result, "contract_range_check_cost", 1836 + 4);
 }
 
 #[test]
-fn test_bitwise_cost() {
+fn bitwise_cost() {
     let test = test_case!(indoc!(
         r"
             #[test]
-            fn test_bitwise() {
-                let bitwise = 1_u8 & 1_u8;
+            fn bitwise_cost() {
+                let _bitwise = 1_u8 & 1_u8;
                 assert(1 == 1, 'error message');
             }
         "
@@ -190,12 +190,12 @@ fn test_bitwise_cost() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
-    assert_gas!(result, "test_bitwise", 1);
+    assert_gas!(result, "bitwise_cost", 1);
 }
 
 /// We have to use 6 bitwise operations in the `bitwise` function to exceed steps cost
 #[test]
-fn test_contract_bitwise_cost() {
+fn contract_bitwise_cost() {
     let test = test_case!(
         indoc!(
             r"
@@ -207,7 +207,7 @@ fn test_contract_bitwise_cost() {
             }
 
             #[test]
-            fn test_bitwise() {
+            fn contract_bitwise_cost() {
                 let contract = declare('GasChecker');
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IGasCheckerDispatcher { contract_address };
@@ -228,15 +228,15 @@ fn test_contract_bitwise_cost() {
     assert_passed!(result);
     // 1836 = 3 * cost per 32-byte word (deploy)
     // 4 = cost of 6 bitwise builtins
-    assert_gas!(result, "test_bitwise", 1836 + 4);
+    assert_gas!(result, "contract_bitwise_cost", 1836 + 4);
 }
 
 #[test]
-fn test_pedersen_cost() {
+fn pedersen_cost() {
     let test = test_case!(indoc!(
         r"
             #[test]
-            fn test_pedersen() {
+            fn pedersen_cost() {
                 core::pedersen::pedersen(1, 2);
                 assert(1 == 1, 'error message');
             }
@@ -246,12 +246,12 @@ fn test_pedersen_cost() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
-    assert_gas!(result, "test_pedersen", 1);
+    assert_gas!(result, "pedersen_cost", 1);
 }
 
 /// We have to use 12 pedersen operations in the `pedersen` function to exceed steps cost
 #[test]
-fn test_contract_pedersen_cost() {
+fn contract_pedersen_cost() {
     let test = test_case!(
         indoc!(
             r"
@@ -263,7 +263,7 @@ fn test_contract_pedersen_cost() {
             }
 
             #[test]
-            fn test_pedersen() {
+            fn contract_pedersen_cost() {
                 let contract = declare('GasChecker');
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IGasCheckerDispatcher { contract_address };
@@ -284,15 +284,15 @@ fn test_contract_pedersen_cost() {
     assert_passed!(result);
     // 1836 = 3 * cost per 32-byte word (deploy)
     // 4 = cost of 12 pedersen builtins
-    assert_gas!(result, "test_pedersen", 1836 + 4);
+    assert_gas!(result, "contract_pedersen_cost", 1836 + 4);
 }
 
 #[test]
-fn test_poseidon_cost() {
+fn poseidon_cost() {
     let test = test_case!(indoc!(
         r"
             #[test]
-            fn test_poseidon() {
+            fn poseidon_cost() {
                 core::poseidon::hades_permutation(0, 0, 0);
                 assert(1 == 1, 'error message');
             }
@@ -302,12 +302,12 @@ fn test_poseidon_cost() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
-    assert_gas!(result, "test_poseidon", 1);
+    assert_gas!(result, "poseidon_cost", 1);
 }
 
 /// We have to use 12 poseidon operations in the `poseidon` function to exceed steps cost
 #[test]
-fn test_contract_poseidon_cost() {
+fn contract_poseidon_cost() {
     let test = test_case!(
         indoc!(
             r"
@@ -319,7 +319,7 @@ fn test_contract_poseidon_cost() {
             }
 
             #[test]
-            fn test_poseidon() {
+            fn contract_poseidon_cost() {
                 let contract = declare('GasChecker');
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IGasCheckerDispatcher { contract_address };
@@ -340,17 +340,17 @@ fn test_contract_poseidon_cost() {
     assert_passed!(result);
     // 1836 = 3 * cost per 32-byte word (deploy)
     // 4 = cost of 12 poseidon builtins
-    assert_gas!(result, "test_poseidon", 1836 + 4);
+    assert_gas!(result, "contract_poseidon_cost", 1836 + 4);
 }
 
 #[test]
-fn test_ec_op_cost() {
+fn ec_op_cost() {
     let test = test_case!(indoc!(
         r"
             use core::{ec, ec::{EcPoint, EcPointTrait}};
 
             #[test]
-            fn test_ec_op() {
+            fn ec_op_cost() {
                 EcPointTrait::new_from_x(1).unwrap().mul(2);
                 assert(1 == 1, 'error message');
             }
@@ -360,11 +360,11 @@ fn test_ec_op_cost() {
     let result = run_test_case(&test);
 
     assert_passed!(result);
-    assert_gas!(result, "test_ec_op", 11);
+    assert_gas!(result, "ec_op_cost", 11);
 }
 
 #[test]
-fn test_contract_ec_op_cost() {
+fn contract_ec_op_cost() {
     let test = test_case!(
         indoc!(
             r"
@@ -376,7 +376,7 @@ fn test_contract_ec_op_cost() {
             }
 
             #[test]
-            fn test_ec_op() {
+            fn contract_ec_op_cost() {
                 let contract = declare('GasChecker');
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IGasCheckerDispatcher { contract_address };
@@ -397,11 +397,11 @@ fn test_contract_ec_op_cost() {
     assert_passed!(result);
     // 1836 = 3 * cost per 32-byte word (deploy)
     // 11 = cost of single ec_op builtin
-    assert_gas!(result, "test_ec_op", 1836 + 11);
+    assert_gas!(result, "contract_ec_op_cost", 1836 + 11);
 }
 
 #[test]
-fn test_storage_write_cost() {
+fn storage_write_cost() {
     let test = test_case!(
         indoc!(
             r"
@@ -413,7 +413,7 @@ fn test_storage_write_cost() {
             }
 
             #[test]
-            fn test_storage_write() {
+            fn storage_write_cost() {
                 let contract = declare('GasChecker');
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IGasCheckerDispatcher { contract_address };
@@ -435,11 +435,11 @@ fn test_storage_write_cost() {
     // 1836 = 3 * cost per 32-byte word (deploy)
     // 1224 = 2 * cost per 32-byte word (storage write)
     // 5 = gas cost of steps
-    assert_gas!(result, "test_storage_write", 1836 + 1224 + 5);
+    assert_gas!(result, "storage_write_cost", 1836 + 1224 + 5);
 }
 
 #[test]
-fn test_storage_write_from_test_cost() {
+fn storage_write_from_test_cost() {
     let test = test_case!(indoc!(
         r"
         #[starknet::contract]
@@ -453,7 +453,7 @@ fn test_storage_write_from_test_cost() {
         use tests::test_case::Contract::balanceContractMemberStateTrait;
 
         #[test]
-        fn test_storage_write_from_test() {
+        fn storage_write_from_test_cost() {
             let mut state = Contract::contract_state_for_testing();
             state.balance.write(10);
         }
@@ -466,11 +466,11 @@ fn test_storage_write_from_test_cost() {
     // 1224 = 2 * cost per 32-byte word (modified contract)
     // 1224 = 2 * cost per 32-byte word (storage write)
     // 1 = gas cost of steps
-    assert_gas!(result, "test_storage_write_from_test", 1224 + 1224 + 1);
+    assert_gas!(result, "storage_write_from_test_cost", 1224 + 1224 + 1);
 }
 
 #[test]
-fn test_multiple_storage_writes_cost() {
+fn multiple_storage_writes_cost() {
     let test = test_case!(
         indoc!(
             r"
@@ -482,7 +482,7 @@ fn test_multiple_storage_writes_cost() {
             }
 
             #[test]
-            fn test_multiple_storage_writes() {
+            fn multiple_storage_writes_cost() {
                 let contract = declare('GasChecker');
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IGasCheckerDispatcher { contract_address };
@@ -505,11 +505,11 @@ fn test_multiple_storage_writes_cost() {
     // 1836 = 3 * cost per 32-byte word (deploy)
     // 1224 = 2 * cost per 32-byte word (storage write)
     // 6 = gas cost of steps
-    assert_gas!(result, "test_storage_write", 1836 + 1224 + 6);
+    assert_gas!(result, "multiple_storage_writes_cost", 1836 + 1224 + 6);
 }
 
 #[test]
-fn test_l1_message_cost() {
+fn l1_message_cost() {
     let test = test_case!(
         indoc!(
             r"
@@ -521,7 +521,7 @@ fn test_l1_message_cost() {
             }
 
             #[test]
-            fn test_l1_message() {
+            fn l1_message_cost() {
                 let contract = declare('GasChecker');
                 let contract_address = contract.deploy(@ArrayTrait::new()).unwrap();
                 let dispatcher = IGasCheckerDispatcher { contract_address };
@@ -543,15 +543,15 @@ fn test_l1_message_cost() {
     // 1836 = 3 * cost per 32-byte word (deploy)
     // 2448 = 4 * cost per 32-byte word (l2_l1_message, header is of length 3 and payload size is 1)
     // 5 = gas cost of steps
-    assert_gas!(result, "test_l1_message", 1836 + 2448 + 5);
+    assert_gas!(result, "l1_message_cost", 1836 + 2448 + 5);
 }
 
 #[test]
-fn test_l1_message_from_test_cost() {
+fn l1_message_from_test_cost() {
     let test = test_case!(indoc!(
         r"
         #[test]
-        fn test_l1_message_from_test() {
+        fn l1_message_from_test_cost() {
             starknet::send_message_to_l1_syscall(1, array![1].span()).unwrap();
         }
     "
@@ -562,11 +562,11 @@ fn test_l1_message_from_test_cost() {
     assert_passed!(result);
     // 2448 = 4 * cost per 32-byte word (l2_l1_message, header is of length 3 and payload size is 1)
     // 2 = gas cost of steps
-    assert_gas!(result, "test_l1_message_from_test", 2448 + 2);
+    assert_gas!(result, "l1_message_from_test_cost", 2448 + 2);
 }
 
 #[test]
-fn test_l1_message_cost_for_proxy() {
+fn l1_message_cost_for_proxy() {
     let test = test_case!(
         indoc!(
             r"
@@ -582,7 +582,7 @@ fn test_l1_message_cost_for_proxy() {
             }
 
             #[test]
-            fn test_l1_message_for_proxy() {
+            fn l1_message_cost_for_proxy() {
                 let contract = declare('GasChecker');
                 let gas_checker_address = contract.deploy(@ArrayTrait::new()).unwrap();
 
@@ -613,5 +613,5 @@ fn test_l1_message_cost_for_proxy() {
     // 1836 = 3 * cost per 32-byte word (deploy)
     // 2448 = 4 * cost per 32-byte word (l2_l1_message, header is of length 3 and payload size is 1)
     // 15 = gas cost of steps
-    assert_gas!(result, "test_l1_message_for_proxy", 1836 + 1836 + 2448 + 15);
+    assert_gas!(result, "l1_message_cost_for_proxy", 1836 + 1836 + 2448 + 15);
 }
