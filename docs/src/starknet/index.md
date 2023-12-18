@@ -1,13 +1,13 @@
-# Cast Overview
+# `sncast` Overview
 
 Starknet Foundry `sncast` is a command line tool for performing Starknet RPC calls. With it, you can easily interact with Starknet contracts!
 
 > 💡 **Info**
 > At the moment, `sncast` only supports contracts written in [Cairo](https://github.com/starkware-libs/cairo) v1 and v2.
 
-## How to Use Cast
+## How to Use `sncast`
 
-To use cast, run the `sncast` command followed by a subcommand (see [available commands](../appendix/cast.md)):
+To use `sncast`, run the `sncast` command followed by a subcommand (see [available commands](../appendix/sncast.md)):
 ```shell
 $ sncast <subcommand>
 ```
@@ -38,7 +38,7 @@ response: [0x0]
 ```
 
 > 📝 **Note**
-> In the above example we supply cast with `--account` and `--url` flags. If `Scarb.toml` is present, and have these properties set, values provided using these flags will override values from `Scarb.toml`. Learn more about `Scarb.toml` configuration [here](../projects/configuration.md#cast).
+> In the above example we supply `sncast` with `--account` and `--url` flags. If `Scarb.toml` is present, and have these properties set, values provided using these flags will override values from `Scarb.toml`. Learn more about `Scarb.toml` configuration [here](../projects/configuration.md#sncast).
 
 ### How to Use `--wait` Flag
 

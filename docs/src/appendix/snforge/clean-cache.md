@@ -1,6 +1,6 @@
 # `snforge clean-cache`
 
-Clean Forge cache directory.
+Clean `snforge` cache directory.
 
 ## `-h`, `--help`
 
